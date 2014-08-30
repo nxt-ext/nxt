@@ -2,6 +2,8 @@ package nxt.http;
 
 import nxt.DigitalGoodsStore;
 import nxt.NxtException;
+import nxt.db.DbIterator;
+import nxt.db.DbUtils;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
@@ -28,27 +30,25 @@ public final class GetDGSGoods extends APIServlet.APIRequestHandler {
         JSONArray goodsJSON = new JSONArray();
         response.put("goods", goodsJSON);
 
-        List<DigitalGoodsStore.Goods> goods;
-        if (sellerId == null) {
-            if (inStockOnly) {
-                goods = DigitalGoodsStore.getGoodsInStock();
+        DbIterator<DigitalGoodsStore.Goods> goods = null;
+        try {
+            if (sellerId == null) {
+                if (inStockOnly) {
+                    goods = DigitalGoodsStore.getGoodsInStock(firstIndex, lastIndex);
+                } else {
+                    goods = DigitalGoodsStore.getAllGoods(firstIndex, lastIndex);
+                }
             } else {
-                goods = DigitalGoodsStore.getAllGoods();
+                goods = DigitalGoodsStore.getSellerGoods(sellerId, inStockOnly, firstIndex, lastIndex);
             }
-        } else {
-            goods = DigitalGoodsStore.getSellerGoods(sellerId, inStockOnly);
-        }
-
-        int count = 0;
-        for (DigitalGoodsStore.Goods good : goods) {
-            if (count > lastIndex) {
-                break;
-            }
-            if (count >= firstIndex) {
+            while (goods.hasNext()) {
+                DigitalGoodsStore.Goods good = goods.next();
                 goodsJSON.add(JSONData.goods(good));
             }
-            count++;
+        } finally {
+            DbUtils.close(goods);
         }
+
         return response;
     }
 

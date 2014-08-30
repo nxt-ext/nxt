@@ -700,9 +700,12 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
 
         Set<TransactionImpl> sortedTransactions = new TreeSet<>();
 
-        for (TransactionImpl transaction : transactionProcessor.getAllUnconfirmedTransactions()) {
-            if (hasAllReferencedTransactions(transaction, transaction.getTimestamp(), 0)) {
-                sortedTransactions.add(transaction);
+        try (DbIterator<TransactionImpl> transactions = transactionProcessor.getAllUnconfirmedTransactions()) {
+            while (transactions.hasNext()) {
+                TransactionImpl transaction = transactions.next();
+                if (hasAllReferencedTransactions(transaction, transaction.getTimestamp(), 0)) {
+                    sortedTransactions.add(transaction);
+                }
             }
         }
 
@@ -851,7 +854,12 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             if (validateAtScan) {
                 Logger.logDebugMessage("Also verifying signatures and validating transactions...");
             }
-            Set<TransactionImpl> lostTransactions = new HashSet<>(transactionProcessor.getAllUnconfirmedTransactions());
+            Set<TransactionImpl> lostTransactions = new HashSet<>();
+            try (DbIterator<TransactionImpl> iterator = transactionProcessor.getAllUnconfirmedTransactions()) {
+                while (iterator.hasNext()) {
+                    lostTransactions.add(iterator.next());
+                }
+            }
             for (DerivedDbTable table : derivedTables) {
                 table.truncate();
             }

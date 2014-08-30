@@ -1,5 +1,6 @@
 package nxt;
 
+import nxt.db.DbIterator;
 import nxt.db.DbKey;
 import nxt.db.VersionedEntityDbTable;
 
@@ -86,12 +87,14 @@ public class Hub {
                 if (! currentLastBlockId.equals(block.getId())) {
                     return Collections.emptyList();
                 }
-                List<Hub> hubs = hubTable.getAll();
-                for (Hub hub : hubs) {
-                    Account account = Account.getAccount(hub.getAccountId());
-                    if (account != null && account.getEffectiveBalanceNXT() >= Constants.MIN_HUB_EFFECTIVE_BALANCE
-                            && account.getPublicKey() != null) {
-                        currentHits.add(new Hit(hub, Generator.getHitTime(account, block)));
+                try (DbIterator<Hub> hubs = hubTable.getAll(0, -1)) {
+                    while (hubs.hasNext()) {
+                        Hub hub = hubs.next();
+                        Account account = Account.getAccount(hub.getAccountId());
+                        if (account != null && account.getEffectiveBalanceNXT() >= Constants.MIN_HUB_EFFECTIVE_BALANCE
+                                && account.getPublicKey() != null) {
+                            currentHits.add(new Hit(hub, Generator.getHitTime(account, block)));
+                        }
                     }
                 }
             }

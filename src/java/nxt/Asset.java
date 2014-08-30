@@ -1,5 +1,6 @@
 package nxt;
 
+import nxt.db.DbIterator;
 import nxt.db.DbKey;
 import nxt.db.EntityDbTable;
 
@@ -40,8 +41,8 @@ public final class Asset {
 
     };
 
-    public static Collection<Asset> getAllAssets() {
-        return assetTable.getAll();
+    public static DbIterator<Asset> getAllAssets(int from, int to) {
+        return assetTable.getAll(from, to);
     }
 
     public static int getCount() {
@@ -52,8 +53,8 @@ public final class Asset {
         return assetTable.get(assetDbKeyFactory.newKey(id));
     }
 
-    public static List<Asset> getAssetsIssuedBy(Long accountId) {
-        return assetTable.getManyBy("account_id", accountId);
+    public static DbIterator<Asset> getAssetsIssuedBy(Long accountId, int from, int to) {
+        return assetTable.getManyBy("account_id", accountId, from, to);
     }
 
     static void addAsset(Transaction transaction, Attachment.ColoredCoinsAssetIssuance attachment) {

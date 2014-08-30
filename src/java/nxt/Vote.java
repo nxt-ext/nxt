@@ -1,7 +1,9 @@
 package nxt;
 
 import nxt.db.Db;
+import nxt.db.DbIterator;
 import nxt.db.DbKey;
+import nxt.db.DbUtils;
 import nxt.db.EntityDbTable;
 
 import java.sql.Connection;
@@ -61,9 +63,11 @@ public final class Vote {
         try (Connection con = Db.getConnection();
              PreparedStatement pstmt = con.prepareStatement("SELECT * FROM vote WHERE poll_id = ?")) {
             pstmt.setLong(1, poll.getId());
-            List<Vote> votes = voteTable.getManyBy(con, pstmt, true);
-            for (Vote vote : votes) {
-                map.put(vote.getVoterId(), vote.getId());
+            try (DbIterator<Vote> voteIterator = voteTable.getManyBy(con, pstmt, true)) {
+                while (voteIterator.hasNext()) {
+                    Vote vote = voteIterator.next();
+                    map.put(vote.getVoterId(), vote.getId());
+                }
             }
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);

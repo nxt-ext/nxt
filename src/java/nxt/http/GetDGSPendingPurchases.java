@@ -2,6 +2,8 @@ package nxt.http;
 
 import nxt.DigitalGoodsStore;
 import nxt.NxtException;
+import nxt.db.DbIterator;
+import nxt.db.DbUtils;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
@@ -29,19 +31,15 @@ public final class GetDGSPendingPurchases extends APIServlet.APIRequestHandler {
         int firstIndex = ParameterParser.getFirstIndex(req);
         int lastIndex = ParameterParser.getLastIndex(req);
 
-        Collection<DigitalGoodsStore.Purchase> purchases = DigitalGoodsStore.getPendingSellerPurchases(sellerId);
         JSONObject response = new JSONObject();
         JSONArray purchasesJSON = new JSONArray();
-        int i = 0;
-        for (DigitalGoodsStore.Purchase purchase : purchases) {
-            if (i > lastIndex) {
-                break;
+
+        try (DbIterator<DigitalGoodsStore.Purchase> purchases = DigitalGoodsStore.getPendingSellerPurchases(sellerId, firstIndex, lastIndex)) {
+            while (purchases.hasNext()) {
+                purchasesJSON.add(JSONData.purchase(purchases.next()));
             }
-            if (i >= firstIndex) {
-                purchasesJSON.add(JSONData.purchase(purchase));
-            }
-            i++;
         }
+
         response.put("purchases", purchasesJSON);
         return response;
     }

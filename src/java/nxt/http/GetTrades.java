@@ -2,6 +2,8 @@ package nxt.http;
 
 import nxt.NxtException;
 import nxt.Trade;
+import nxt.Transaction;
+import nxt.db.DbIterator;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
@@ -27,10 +29,9 @@ public final class GetTrades extends APIServlet.APIRequestHandler {
         JSONObject response = new JSONObject();
 
         JSONArray tradesData = new JSONArray();
-        try {
-            List<Trade> trades = Trade.getTrades(assetId);
-            for (int i = firstIndex; i <= lastIndex && i < trades.size(); i++) {
-                tradesData.add(JSONData.trade(trades.get(trades.size() - 1 - i)));
+        try (DbIterator<Trade> trades = Trade.getTrades(assetId, firstIndex, lastIndex)) {
+            while (trades.hasNext()) {
+                tradesData.add(JSONData.trade(trades.next()));
             }
         } catch (RuntimeException e) {
             response.put("error", e.toString());

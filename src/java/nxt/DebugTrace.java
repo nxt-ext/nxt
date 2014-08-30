@@ -1,5 +1,6 @@
 package nxt;
 
+import nxt.db.DbIterator;
 import nxt.util.Convert;
 import nxt.util.Listener;
 import nxt.util.Logger;
@@ -210,8 +211,10 @@ public final class DebugTrace {
         for (Long accountId : accountIds) {
             Account account = Account.getAccount(accountId);
             if (account != null) {
-                for (Account lessor : account.getLessors()) {
-                    log(lessorGuaranteedBalance(lessor, accountId));
+                try (DbIterator<Account> lessors = account.getLessors()) {
+                    while (lessors.hasNext()) {
+                        log(lessorGuaranteedBalance(lessors.next(), accountId));
+                    }
                 }
             }
         }

@@ -1,6 +1,7 @@
 package nxt;
 
 import nxt.db.Db;
+import nxt.db.DbIterator;
 import nxt.db.DbKey;
 import nxt.db.EntityDbTable;
 import nxt.peer.Peer;
@@ -227,8 +228,8 @@ final class TransactionProcessorImpl implements TransactionProcessor {
     }
 
     @Override
-    public Collection<TransactionImpl> getAllUnconfirmedTransactions() {
-        return unconfirmedTransactionTable.getAll();
+    public DbIterator<TransactionImpl> getAllUnconfirmedTransactions() {
+        return unconfirmedTransactionTable.getAll(0, -1);
     }
 
     @Override
@@ -320,9 +321,12 @@ final class TransactionProcessorImpl implements TransactionProcessor {
 
     Set<Long> undoAllUnconfirmed() {
         HashSet<Long> undone = new HashSet<>();
-        for (TransactionImpl transaction : unconfirmedTransactionTable.getAll()) {
-            transaction.undoUnconfirmed();
-            undone.add(transaction.getId());
+        try (DbIterator<TransactionImpl> transactions = unconfirmedTransactionTable.getAll(0, -1)) {
+            while (transactions.hasNext()) {
+                TransactionImpl transaction = transactions.next();
+                transaction.undoUnconfirmed();
+                undone.add(transaction.getId());
+            }
         }
         return undone;
     }

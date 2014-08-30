@@ -2,6 +2,7 @@ package nxt.http;
 
 import nxt.NxtException;
 import nxt.Order;
+import nxt.db.DbIterator;
 import nxt.util.Convert;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -15,27 +16,22 @@ public final class GetBidOrderIds extends APIServlet.APIRequestHandler {
     static final GetBidOrderIds instance = new GetBidOrderIds();
 
     private GetBidOrderIds() {
-        super(new APITag[] {APITag.AE}, "asset", "limit");
+        super(new APITag[] {APITag.AE}, "asset", "firstIndex", "lastIndex");
     }
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
 
         Long assetId = ParameterParser.getAsset(req).getId();
-
-        int limit;
-        try {
-            limit = Integer.parseInt(req.getParameter("limit"));
-        } catch (NumberFormatException e) {
-            limit = Integer.MAX_VALUE;
-        }
+        int firstIndex = ParameterParser.getFirstIndex(req);
+        int lastIndex = ParameterParser.getLastIndex(req);
 
         JSONArray orderIds = new JSONArray();
-        Iterator<Order.Bid> bidOrders = Order.Bid.getSortedOrders(assetId).iterator();
-        while (bidOrders.hasNext() && limit-- > 0) {
-            orderIds.add(Convert.toUnsignedLong(bidOrders.next().getId()));
+        try (DbIterator<Order.Bid> bidOrders = Order.Bid.getSortedOrders(assetId, firstIndex, lastIndex)) {
+            while (bidOrders.hasNext()) {
+                orderIds.add(Convert.toUnsignedLong(bidOrders.next().getId()));
+            }
         }
-
         JSONObject response = new JSONObject();
         response.put("bidOrderIds", orderIds);
         return response;

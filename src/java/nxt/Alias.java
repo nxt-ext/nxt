@@ -1,5 +1,6 @@
 package nxt;
 
+import nxt.db.DbIterator;
 import nxt.db.DbKey;
 import nxt.db.DbUtils;
 import nxt.db.VersionedEntityDbTable;
@@ -116,8 +117,8 @@ public final class Alias {
         return aliasTable.getCount();
     }
 
-    public static List<Alias> getAliasesByOwner(Long accountId) {
-        return aliasTable.getManyBy("account_id", accountId);
+    public static DbIterator<Alias> getAliasesByOwner(Long accountId, int from, int to) {
+        return aliasTable.getManyBy("account_id", accountId, from, to);
     }
 
     public static Alias getAlias(String aliasName) {

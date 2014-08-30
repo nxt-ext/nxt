@@ -275,10 +275,10 @@ final class BlockchainImpl implements Blockchain {
             }
             buf.append("ORDER BY block_timestamp DESC, id DESC");
             if (to >= from && to < Integer.MAX_VALUE) {
-                buf.append(" LIMIT " + (to - from + 1));
+                buf.append(" LIMIT ? ");
             }
             if (from > 0) {
-                buf.append(" OFFSET " + from);
+                buf.append(" OFFSET ?");
             }
             con = Db.getConnection();
             PreparedStatement pstmt;
@@ -310,6 +310,12 @@ final class BlockchainImpl implements Blockchain {
             }
             if (height < Integer.MAX_VALUE) {
                 pstmt.setInt(++i, height);
+            }
+            if (to >= from && to < Integer.MAX_VALUE) {
+                pstmt.setInt(++i, to - from + 1);
+            }
+            if (from > 0) {
+                pstmt.setInt(++i, from);
             }
             return getTransactions(con, pstmt);
         } catch (SQLException e) {

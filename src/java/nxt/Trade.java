@@ -1,5 +1,7 @@
 package nxt;
 
+import nxt.db.Db;
+import nxt.db.DbIterator;
 import nxt.db.DbKey;
 import nxt.db.EntityDbTable;
 import nxt.util.Convert;
@@ -49,8 +51,8 @@ public final class Trade {
 
     };
 
-    public static Collection<Trade> getAllTrades() {
-        return tradeTable.getAll();
+    public static DbIterator<Trade> getAllTrades(int from, int to) {
+        return tradeTable.getAll(from, to);
     }
 
     public static int getCount() {
@@ -65,8 +67,21 @@ public final class Trade {
         return listeners.removeListener(listener, eventType);
     }
 
-    public static List<Trade> getTrades(Long assetId) {
-        return tradeTable.getManyBy("asset_id", assetId);
+    public static DbIterator<Trade> getTrades(Long assetId, int from, int to) {
+        return tradeTable.getManyBy("asset_id", assetId, from, to);
+    }
+
+    public static int getTradeCount(Long assetId) {
+        try (Connection con = Db.getConnection();
+             PreparedStatement pstmt = con.prepareStatement("SELECT COUNT(*) FROM trade WHERE asset_id = ?")) {
+            pstmt.setLong(1, assetId);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                rs.next();
+                return rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e.toString(), e);
+        }
     }
 
     static Trade addTrade(Long assetId, Block block, Long askOrderId, Long bidOrderId, long quantityQNT, long priceNQT) {

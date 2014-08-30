@@ -67,7 +67,7 @@ final class JSONData {
         json.put("decimals", asset.getDecimals());
         json.put("quantityQNT", String.valueOf(asset.getQuantityQNT()));
         json.put("asset", Convert.toUnsignedLong(asset.getId()));
-        json.put("numberOfTrades", Trade.getTrades(asset.getId()).size());
+        json.put("numberOfTrades", Trade.getTradeCount(asset.getId()));
         return json;
     }
 

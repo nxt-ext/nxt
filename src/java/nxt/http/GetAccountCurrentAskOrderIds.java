@@ -2,6 +2,7 @@ package nxt.http;
 
 import nxt.NxtException;
 import nxt.Order;
+import nxt.db.DbIterator;
 import nxt.util.Convert;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -15,7 +16,7 @@ public final class GetAccountCurrentAskOrderIds extends APIServlet.APIRequestHan
     static final GetAccountCurrentAskOrderIds instance = new GetAccountCurrentAskOrderIds();
 
     private GetAccountCurrentAskOrderIds() {
-        super(new APITag[] {APITag.ACCOUNTS, APITag.AE}, "account", "asset");
+        super(new APITag[] {APITag.ACCOUNTS, APITag.AE}, "account", "asset", "firstIndex", "lastIndex");
     }
 
     @Override
@@ -28,18 +29,23 @@ public final class GetAccountCurrentAskOrderIds extends APIServlet.APIRequestHan
         } catch (RuntimeException e) {
             // ignore
         }
+        int firstIndex = ParameterParser.getFirstIndex(req);
+        int lastIndex = ParameterParser.getLastIndex(req);
 
-        List<Order.Ask> askOrders;
+        DbIterator<Order.Ask> askOrders;
         if (assetId == null) {
-            askOrders = Order.Ask.getAskOrdersByAccount(accountId);
+            askOrders = Order.Ask.getAskOrdersByAccount(accountId, firstIndex, lastIndex);
         } else {
-            askOrders = Order.Ask.getAskOrdersByAccountAsset(accountId, assetId);
+            askOrders = Order.Ask.getAskOrdersByAccountAsset(accountId, assetId, firstIndex, lastIndex);
         }
         JSONArray orderIds = new JSONArray();
-        for (Order.Ask askOrder : askOrders) {
-            orderIds.add(Convert.toUnsignedLong(askOrder.getId()));
+        try {
+            while (askOrders.hasNext()) {
+                orderIds.add(Convert.toUnsignedLong(askOrders.next().getId()));
+            }
+        } finally {
+            askOrders.close();
         }
-
         JSONObject response = new JSONObject();
         response.put("askOrderIds", orderIds);
         return response;

@@ -1,5 +1,6 @@
 package nxt;
 
+import nxt.db.DbIterator;
 import nxt.db.DbKey;
 import nxt.db.EntityDbTable;
 
@@ -94,8 +95,8 @@ public final class Poll {
         return pollTable.get(pollDbKeyFactory.newKey(id));
     }
 
-    public static List<Poll> getAllPolls() {
-        return pollTable.getAll();
+    public static DbIterator<Poll> getAllPolls(int from, int to) {
+        return pollTable.getAll(from, to);
     }
 
     public static int getCount() {
