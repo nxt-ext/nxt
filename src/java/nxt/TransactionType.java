@@ -57,6 +57,7 @@ public abstract class TransactionType {
     private static final byte SUBTYPE_MONETARY_SYSTEM_SHUFFLING_INITIATION = 7;
     private static final byte SUBTYPE_MONETARY_SYSTEM_SHUFFLING_CONTINUATION = 8;
     private static final byte SUBTYPE_MONETARY_SYSTEM_SHUFFLING_FINALIZATION = 9;
+    private static final byte SUBTYPE_MONETARY_SYSTEM_SHUFFLING_CANCELLATION = 10;
 
     private static final byte SUBTYPE_ACCOUNT_CONTROL_EFFECTIVE_BALANCE_LEASING = 0;
 
@@ -151,6 +152,14 @@ public abstract class TransactionType {
                         return MonetarySystem.EXCHANGE;
                     case SUBTYPE_MONETARY_SYSTEM_MONEY_MINTING:
                         return MonetarySystem.MONEY_MINTING;
+                    case SUBTYPE_MONETARY_SYSTEM_SHUFFLING_INITIATION:
+                        return MonetarySystem.SHUFFLING_INITIATION;
+                    case SUBTYPE_MONETARY_SYSTEM_SHUFFLING_CONTINUATION:
+                        return MonetarySystem.SHUFFLING_CONTINUATION;
+                    case SUBTYPE_MONETARY_SYSTEM_SHUFFLING_FINALIZATION:
+                        return MonetarySystem.SHUFFLING_FINALIZATION;
+                    case SUBTYPE_MONETARY_SYSTEM_SHUFFLING_CANCELLATION:
+                        return MonetarySystem.SHUFFLING_CANCELLATION;
                 }
             default:
                 return null;
@@ -2571,6 +2580,61 @@ public abstract class TransactionType {
             @Override
             void undoAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) throws UndoNotSupportedException {
                 throw new UndoNotSupportedException("Reversal of shuffling finalization not supported");
+            }
+
+            @Override
+            void updateSpending(Transaction transaction, SuperComplexNumber spending) {
+                throw new UnsupportedOperationException("Not required in DB-based version");
+            }
+
+            @Override
+            public boolean hasRecipient() {
+                return false;
+            }
+        };
+
+        public static final TransactionType SHUFFLING_CANCELLATION = new MonetarySystem() {
+
+            @Override
+            public byte getSubtype() {
+                return SUBTYPE_MONETARY_SYSTEM_SHUFFLING_CANCELLATION;
+            }
+
+            @Override
+            Attachment.AbstractAttachment parseAttachment(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
+                return new Attachment.MonetarySystemShufflingCancellation(buffer, transactionVersion);
+            }
+
+            @Override
+            Attachment.AbstractAttachment parseAttachment(JSONObject attachmentData) throws NxtException.NotValidException {
+                return new Attachment.MonetarySystemShufflingCancellation(attachmentData);
+            }
+
+            @Override
+            void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
+                if (Nxt.getBlockchain().getLastBlock().getHeight() < Constants.MONETARY_SYSTEM_BLOCK) {
+                    throw new NxtException.NotYetEnabledException("Monetary System not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
+                }
+            }
+
+            @Override
+            boolean applyAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
+                /**/return false;
+            }
+
+            @Override
+            void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
+
+            }
+
+            @Override
+            void undoAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
+
+            }
+
+            @Override
+            void undoAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) throws UndoNotSupportedException {
+                throw new UndoNotSupportedException("Reversal of shuffling cancellation not supported");
             }
 
             @Override
