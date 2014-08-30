@@ -72,7 +72,12 @@ public abstract class VersionedEntityDbTable<T> extends EntityDbTable<T> {
              PreparedStatement pstmtSelectToDelete = con.prepareStatement("SELECT " + dbKeyFactory.getDistinctClause()
                      + " FROM " + table + " WHERE height >= ?");
              PreparedStatement pstmtDelete = con.prepareStatement("DELETE FROM " + table + dbKeyFactory.getPKClause()
-                     + " AND height < ?")) {
+                     + " AND height < ?");
+             PreparedStatement pstmtSelectOlderToDelete = con.prepareStatement("SELECT " + dbKeyFactory.getDistinctClause()
+                     + " FROM " + table + " WHERE height < ?");
+             PreparedStatement pstmtDeleteOlder = con.prepareStatement("DELETE FROM " + table + dbKeyFactory.getPKClause()
+                     + " AND height < (SELECT MAX(height) FROM " + table + dbKeyFactory.getPKClause() + ")")) {
+
             pstmtSelectToDelete.setInt(1, height);
             try (ResultSet rs = pstmtSelectToDelete.executeQuery()) {
                 while (rs.next()) {
@@ -81,6 +86,16 @@ public abstract class VersionedEntityDbTable<T> extends EntityDbTable<T> {
                     i = dbKey.setPK(pstmtDelete, i);
                     pstmtDelete.setInt(i, height);
                     pstmtDelete.executeUpdate();
+                }
+            }
+            pstmtSelectOlderToDelete.setInt(1, height);
+            try (ResultSet rs = pstmtSelectOlderToDelete.executeQuery()) {
+                while (rs.next()) {
+                    DbKey dbKey = dbKeyFactory.newKey(rs);
+                    int i = 1;
+                    i = dbKey.setPK(pstmtDeleteOlder, i);
+                    i = dbKey.setPK(pstmtDeleteOlder, i);
+                    pstmtDeleteOlder.executeUpdate();
                 }
             }
         } catch (SQLException e) {
