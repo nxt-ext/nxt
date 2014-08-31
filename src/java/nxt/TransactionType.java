@@ -2527,7 +2527,7 @@ public abstract class TransactionType {
                 Attachment.MonetarySystemShufflingContinuation attachment = (Attachment.MonetarySystemShufflingContinuation)transaction.getAttachment();
                 if (!Genesis.CREATOR_ID.equals(transaction.getRecipientId())
                         || transaction.getAmountNQT() != 0
-                        || !CoinShuffler.isValid(attachment.getShufflingId())) {
+                        || !CoinShuffler.isContinued(attachment.getShufflingId())) {
                     throw new NxtException.NotValidException("Invalid shuffling continuation: " + attachment.getJSONObject());
                 }
             }
@@ -2588,7 +2588,7 @@ public abstract class TransactionType {
                 Attachment.MonetarySystemShufflingFinalization attachment = (Attachment.MonetarySystemShufflingFinalization)transaction.getAttachment();
                 if (!Genesis.CREATOR_ID.equals(transaction.getRecipientId())
                         || transaction.getAmountNQT() != 0
-                        || !CoinShuffler.isValid(attachment.getShufflingId())
+                        || !CoinShuffler.isFinalized(attachment.getShufflingId())
                         || attachment.getRecipients().length != CoinShuffler.getNumberOfParticipants(attachment.getShufflingId())) {
                     throw new NxtException.NotValidException("Invalid shuffling finalization: " + attachment.getJSONObject());
                 }
@@ -2650,9 +2650,9 @@ public abstract class TransactionType {
                 Attachment.MonetarySystemShufflingCancellation attachment = (Attachment.MonetarySystemShufflingCancellation)transaction.getAttachment();
                 if (!Genesis.CREATOR_ID.equals(transaction.getRecipientId())
                         || transaction.getAmountNQT() != 0
-                        || !CoinShuffler.isValid(attachment.getShufflingId())
+                        || (!CoinShuffler.isFinalized(attachment.getShufflingId()) && !CoinShuffler.isCancelled(attachment.getShufflingId()))
                         || attachment.getNonce().length != 32) {
-                    throw new NxtException.NotValidException("Invalid shuffling finalization: " + attachment.getJSONObject());
+                    throw new NxtException.NotValidException("Invalid shuffling cancellation: " + attachment.getJSONObject());
                 }
             }
 
