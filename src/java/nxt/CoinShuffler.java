@@ -1,6 +1,7 @@
 package nxt;
 
 import nxt.crypto.EncryptedData;
+import nxt.util.Listener;
 
 import java.util.*;
 
@@ -75,6 +76,70 @@ public final class CoinShuffler {
             lastActionTimestamp = BlockchainImpl.getInstance().getLastBlock().getTimestamp();
         }
 
+    }
+
+    static {
+        Nxt.getBlockchainProcessor().addListener(new Listener<Block>() {
+            @Override
+            public void notify(Block block) {
+                for (Map.Entry<Long, Shuffling> shufflingEntry : shufflings.entrySet()) {
+                    Long shufflingId = shufflingEntry.getKey();
+                    Shuffling shuffling = shufflingEntry.getValue();
+                    switch (shuffling.state) {
+                        case INITIATED: {
+                            if (block.getTimestamp() - shuffling.lastActionTimestamp > shuffling.maxInitiationDelay) {
+                                for (Long accountId : shuffling.participants) {
+                                    Account.getAccount(accountId).addToCurrencyAndUnconfirmedCurrencyBalanceQNT(shuffling.currencyId, shuffling.amount);
+                                }
+                                shufflings.remove(shufflingId);
+                            }
+                        } break;
+
+                        case CONTINUED: {
+                            if (block.getTimestamp() - shuffling.lastActionTimestamp > shuffling.maxContinuationDelay) {
+                                boolean rogueIsPenalised = false;
+                                for (Long accountId : shuffling.participants) {
+                                    if (!rogueIsPenalised && shuffling.encryptedRecipients.get(accountId) == null) {
+                                        rogueIsPenalised = true;
+                                        continue;
+                                    }
+                                    Account.getAccount(accountId).addToCurrencyAndUnconfirmedCurrencyBalanceQNT(shuffling.currencyId, shuffling.amount);
+                                }
+                                shufflings.remove(shufflingId);
+                            }
+                        } break;
+
+                        case FINALIZED: {
+                            if (block.getTimestamp() - shuffling.lastActionTimestamp > shuffling.maxFinalizationDelay) {
+                                boolean rogueIsPenalised = false;
+                                for (Long accountId : shuffling.participants) {
+                                    if (!rogueIsPenalised && shuffling.decryptedRecipients.get(accountId) == null) {
+                                        rogueIsPenalised = true;
+                                        continue;
+                                    }
+                                    Account.getAccount(accountId).addToCurrencyAndUnconfirmedCurrencyBalanceQNT(shuffling.currencyId, shuffling.amount);
+                                }
+                                shufflings.remove(shufflingId);
+                            }
+                        } break;
+
+                        default: {
+                            if (block.getTimestamp() - shuffling.lastActionTimestamp > shuffling.maxCancellationDelay) {
+                                boolean rogueIsPenalised = false;
+                                for (Long accountId : shuffling.participants) {
+                                    if (!rogueIsPenalised && shuffling.keys.get(accountId) == null) {
+                                        rogueIsPenalised = true;
+                                        continue;
+                                    }
+                                    Account.getAccount(accountId).addToCurrencyAndUnconfirmedCurrencyBalanceQNT(shuffling.currencyId, shuffling.amount);
+                                }
+                                shufflings.remove(shufflingId);
+                            }
+                        }
+                    }
+                }
+            }
+        }, BlockchainProcessor.Event.AFTER_BLOCK_APPLY);
     }
 
     private static final Map<Long, Shuffling> shufflings = new HashMap<>();
@@ -155,8 +220,8 @@ public final class CoinShuffler {
         if (shuffling.decryptedRecipients.size() == shuffling.numberOfParticipants) {
             for (Long recipientAccountId : shuffling.decryptedRecipients.values().toArray(new Long[0][0])[0]) {
                 Account.getAccount(recipientAccountId).addToCurrencyAndUnconfirmedCurrencyBalanceQNT(shuffling.currencyId, shuffling.amount);
-                shufflings.remove(shufflingId);
             }
+            shufflings.remove(shufflingId);
         } else {
             shuffling.lastActionTimestamp = BlockchainImpl.getInstance().getLastBlock().getTimestamp();
         }
