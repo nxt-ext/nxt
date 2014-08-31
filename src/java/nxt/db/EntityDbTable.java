@@ -145,6 +145,17 @@ public abstract class EntityDbTable<T> extends DerivedDbTable {
         }
     }
 
+    public final int getRowCount() {
+        try (Connection con = Db.getConnection();
+             PreparedStatement pstmt = con.prepareStatement("SELECT COUNT(*) FROM " + table());
+             ResultSet rs = pstmt.executeQuery()) {
+            rs.next();
+            return rs.getInt(1);
+        } catch (SQLException e) {
+            throw new RuntimeException(e.toString(), e);
+        }
+    }
+
     public final void insert(T t) {
         DbKey dbKey = dbKeyFactory.newKey(t);
         T cachedT = (T)Db.getCache(table()).get(dbKey);

@@ -1,5 +1,7 @@
 package nxt.db;
 
+import nxt.util.Logger;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -36,7 +38,10 @@ public abstract class VersionedEntityDbTable<T> extends EntityDbTable<T> {
 
     @Override
     public final void trim(int height) {
+        //Logger.logDebugMessage("Trimming table " + table());
+        //Logger.logDebugMessage("Initial entity count is " + getCount() + " row count is " + getRowCount());
         trim(table(), height, dbKeyFactory);
+        //Logger.logDebugMessage("Final entity count is " + getCount() + " row count is " + getRowCount());
     }
 
     static void rollback(String table, int height, DbKey.Factory dbKeyFactory) {
@@ -67,7 +72,6 @@ public abstract class VersionedEntityDbTable<T> extends EntityDbTable<T> {
     }
 
     static void trim(String table, int height, DbKey.Factory dbKeyFactory) {
-        //Logger.logDebugMessage("Trimming table " + table);
         try (Connection con = Db.getConnection();
              PreparedStatement pstmtSelect = con.prepareStatement("SELECT " + dbKeyFactory.getDistinctClause()
                      + " FROM " + table + " WHERE height < ?");
