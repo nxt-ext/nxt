@@ -39,14 +39,19 @@ public abstract class VersionedEntityDbTable<T> extends EntityDbTable<T> {
     @Override
     public final void trim(int height) {
         //Logger.logDebugMessage("Trimming table " + table());
-        //Logger.logDebugMessage("Initial entity count is " + getCount() + " row count is " + getRowCount());
+        //int beforeCount = getCount();
+        //Logger.logDebugMessage("Initial entity count is " + beforeCount + " row count is " + getRowCount());
         trim(table(), height, dbKeyFactory);
-        //Logger.logDebugMessage("Final entity count is " + getCount() + " row count is " + getRowCount());
+        //int afterCount = getCount();
+        //Logger.logDebugMessage("Final entity count is " + afterCount + " row count is " + getRowCount());
+        //if (beforeCount != afterCount) {
+        //    throw new RuntimeException("ERROR: Entity count changed during trimming!");
+        //}
     }
 
     static void rollback(String table, int height, DbKey.Factory dbKeyFactory) {
         try (Connection con = Db.getConnection();
-             PreparedStatement pstmtSelectToDelete = con.prepareStatement("SELECT " + dbKeyFactory.getDistinctClause()
+             PreparedStatement pstmtSelectToDelete = con.prepareStatement("SELECT DISTINCT " + dbKeyFactory.getPKColumns()
                      + " FROM " + table + " WHERE height >= ?");
              PreparedStatement pstmtDelete = con.prepareStatement("DELETE FROM " + table
                      + " WHERE height >= ?");
@@ -73,18 +78,18 @@ public abstract class VersionedEntityDbTable<T> extends EntityDbTable<T> {
 
     static void trim(String table, int height, DbKey.Factory dbKeyFactory) {
         try (Connection con = Db.getConnection();
-             PreparedStatement pstmtSelect = con.prepareStatement("SELECT " + dbKeyFactory.getDistinctClause()
-                     + " FROM " + table + " WHERE height < ?");
+             PreparedStatement pstmtSelect = con.prepareStatement("SELECT " + dbKeyFactory.getPKColumns() + ", MAX(height) AS max_height"
+                     + " FROM " + table + " WHERE height < ? GROUP BY " + dbKeyFactory.getPKColumns() + " HAVING COUNT(DISTINCT height) > 1");
              PreparedStatement pstmtDelete = con.prepareStatement("DELETE FROM " + table + dbKeyFactory.getPKClause()
-                     + " AND height < (SELECT MAX(height) FROM " + table + dbKeyFactory.getPKClause() + " AND height < ?)")) {
+                     + " AND height < ?")) {
             pstmtSelect.setInt(1, height);
             try (ResultSet rs = pstmtSelect.executeQuery()) {
                 while (rs.next()) {
                     DbKey dbKey = dbKeyFactory.newKey(rs);
+                    int maxHeight = rs.getInt("max_height");
                     int i = 1;
                     i = dbKey.setPK(pstmtDelete, i);
-                    i = dbKey.setPK(pstmtDelete, i);
-                    pstmtDelete.setInt(i, height);
+                    pstmtDelete.setInt(i, maxHeight);
                     pstmtDelete.executeUpdate();
                 }
             }

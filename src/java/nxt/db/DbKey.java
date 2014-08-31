@@ -14,7 +14,7 @@ public interface DbKey {
 
         String getPKClause();
 
-        String getDistinctClause();
+        String getPKColumns();
 
     }
 
@@ -46,8 +46,8 @@ public interface DbKey {
         }
 
         @Override
-        public String getDistinctClause() {
-            return " DISTINCT " + idColumn + " ";
+        public String getPKColumns() {
+            return idColumn;
         }
 
     }
@@ -77,8 +77,8 @@ public interface DbKey {
         }
 
         @Override
-        public String getDistinctClause() {
-            return " DISTINCT " + idColumnA + ", " + idColumnB + " ";
+        public String getPKColumns() {
+            return idColumnA + ", " + idColumnB;
         }
     }
 
