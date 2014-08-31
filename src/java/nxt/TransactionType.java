@@ -2527,7 +2527,9 @@ public abstract class TransactionType {
                 Attachment.MonetarySystemShufflingContinuation attachment = (Attachment.MonetarySystemShufflingContinuation)transaction.getAttachment();
                 if (!Genesis.CREATOR_ID.equals(transaction.getRecipientId())
                         || transaction.getAmountNQT() != 0
-                        || !CoinShuffler.isContinued(attachment.getShufflingId())) {
+                        || !CoinShuffler.isContinued(attachment.getShufflingId())
+                        || !CoinShuffler.isParticipant(transaction.getSenderId(), attachment.getShufflingId())
+                        || CoinShuffler.sentEncryptedRecipients(transaction.getSenderId(), attachment.getShufflingId())) {
                     throw new NxtException.NotValidException("Invalid shuffling continuation: " + attachment.getJSONObject());
                 }
             }
@@ -2589,6 +2591,8 @@ public abstract class TransactionType {
                 if (!Genesis.CREATOR_ID.equals(transaction.getRecipientId())
                         || transaction.getAmountNQT() != 0
                         || !CoinShuffler.isFinalized(attachment.getShufflingId())
+                        || !CoinShuffler.isParticipant(transaction.getSenderId(), attachment.getShufflingId())
+                        || CoinShuffler.sentDecryptedRecipients(transaction.getSenderId(), attachment.getShufflingId())
                         || attachment.getRecipients().length != CoinShuffler.getNumberOfParticipants(attachment.getShufflingId())) {
                     throw new NxtException.NotValidException("Invalid shuffling finalization: " + attachment.getJSONObject());
                 }
@@ -2651,6 +2655,8 @@ public abstract class TransactionType {
                 if (!Genesis.CREATOR_ID.equals(transaction.getRecipientId())
                         || transaction.getAmountNQT() != 0
                         || (!CoinShuffler.isFinalized(attachment.getShufflingId()) && !CoinShuffler.isCancelled(attachment.getShufflingId()))
+                        || !CoinShuffler.isParticipant(transaction.getSenderId(), attachment.getShufflingId())
+                        || CoinShuffler.sentNonce(transaction.getSenderId(), attachment.getShufflingId())
                         || attachment.getNonce().length != 32) {
                     throw new NxtException.NotValidException("Invalid shuffling cancellation: " + attachment.getJSONObject());
                 }

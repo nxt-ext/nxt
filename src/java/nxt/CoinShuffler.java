@@ -31,6 +31,9 @@ public final class CoinShuffler {
 
         private State state;
         private final List<Long> participants;
+        private final Map<Long, EncryptedData> encryptedRecipients;
+        private final Map<Long, Long[]> decryptedRecipients;
+        private final Map<Long, byte[]> nonces;
 
         Shuffling(Long shufflingId, Long currencyId, long amount, byte numberOfParticipants, short maxInitiationDelay, short maxContinuationDelay, short maxFinalizationDelay, short maxCancellationDelay) {
             this.shufflingId = shufflingId;
@@ -46,6 +49,9 @@ public final class CoinShuffler {
 
             state = State.INITIATED;
             participants = new ArrayList<>(numberOfParticipants);
+            encryptedRecipients = new HashMap<>();
+            decryptedRecipients = new HashMap<>();
+            nonces = new HashMap<>();
         }
 
         @Override
@@ -97,6 +103,23 @@ public final class CoinShuffler {
 
     public static byte getNumberOfParticipants(Long shufflingId) {
         return shufflings.get(shufflingId).numberOfParticipants;
+    }
+
+    public static boolean isParticipant(Long accountId, Long shufflingId) {
+        Shuffling shuffling = shufflings.get(shufflingId);
+        return shuffling != null && shuffling.participants.contains(accountId);
+    }
+
+    public static boolean sentEncryptedRecipients(Long accountId, Long shufflingId) {
+        return shufflings.get(shufflingId).encryptedRecipients.get(accountId) != null;
+    }
+
+    public static boolean sentDecryptedRecipients(Long accountId, Long shufflingId) {
+        return shufflings.get(shufflingId).decryptedRecipients.get(accountId) != null;
+    }
+
+    public static boolean sentNonce(Long accountId, Long shufflingId) {
+        return shufflings.get(shufflingId).nonces.get(accountId) != null;
     }
 
     public static void initiateShuffling(Long transactionId, Account account, Long currencyId, long amount, byte numberOfParticipants, short maxInitiationDelay, short maxContinuationDelay, short maxFinalizationDelay, short maxCancellationDelay) {
