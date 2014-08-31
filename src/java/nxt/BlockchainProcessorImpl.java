@@ -654,11 +654,16 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 transactionProcessor.updateUnconfirmedTransactions(block);
 
                 Db.commitTransaction();
-            } catch (Exception e) {
+            } catch (RuntimeException e) {
                 Logger.logMessage("Error pushing block, will rollback", e);
                 Db.rollbackTransaction();
                 blockchain.setLastBlock(previousLastBlock);
-                throw new BlockNotAcceptedException(e.toString());
+                throw e;
+            } catch (Exception e) {
+                Logger.logDebugMessage("Error pushing block, will rollback: " + e.toString());
+                Db.rollbackTransaction();
+                blockchain.setLastBlock(previousLastBlock);
+                throw e;
             } finally {
                 Db.endTransaction();
             }
