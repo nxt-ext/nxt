@@ -9,6 +9,13 @@ import java.util.Map;
 
 public final class CoinShuffler {
 
+    private static enum State {
+        INITIATED,
+        CONTINUED,
+        FINALIZED,
+        CANCELLED
+    }
+
     private static class Shuffling {
 
         private final Long shufflingId;
@@ -22,6 +29,7 @@ public final class CoinShuffler {
 
         private final int hashCode;
 
+        private State state;
         private final List<Long> participants;
 
         Shuffling(Long shufflingId, Long currencyId, long amount, byte numberOfParticipants, short maxInitiationDelay, short maxContinuationDelay, short maxFinalizationDelay, short maxCancellationDelay) {
@@ -36,6 +44,7 @@ public final class CoinShuffler {
 
             hashCode = currencyId.hashCode() ^ Long.valueOf(amount).hashCode() ^ Byte.valueOf(numberOfParticipants).hashCode() ^ Short.valueOf(maxInitiationDelay).hashCode() ^ Short.valueOf(maxContinuationDelay).hashCode() ^ Short.valueOf(maxFinalizationDelay).hashCode() ^ Short.valueOf(maxCancellationDelay).hashCode();
 
+            state = State.INITIATED;
             participants = new ArrayList<>(numberOfParticipants);
         }
 
@@ -58,48 +67,36 @@ public final class CoinShuffler {
         public void addParticipant(Long accountId) {
             participants.add(accountId);
             if (participants.size() == numberOfParticipants) {
-                initiatedShufflings.remove(shufflingId);
-                continuedShufflings.put(shufflingId, this);
+                state = State.CONTINUED;
             }
         }
 
     }
 
-    private static final Map<Long, Shuffling> initiatedShufflings = new HashMap<>();
-    private static final Map<Long, Shuffling> continuedShufflings = new HashMap<>();
-    private static final Map<Long, Shuffling> finalizedShufflings = new HashMap<>();
-    private static final Map<Long, Shuffling> cancelledShufflings = new HashMap<>();
+    private static final Map<Long, Shuffling> shufflings = new HashMap<>();
 
     public static boolean isInitiated(Long shufflingId) {
-        return initiatedShufflings.containsKey(shufflingId);
+        Shuffling shuffling = shufflings.get(shufflingId);
+        return shuffling != null && shuffling.state == State.INITIATED;
     }
 
     public static boolean isContinued(Long shufflingId) {
-        return continuedShufflings.containsKey(shufflingId);
+        Shuffling shuffling = shufflings.get(shufflingId);
+        return shuffling != null && shuffling.state == State.CONTINUED;
     }
 
     public static boolean isFinalized(Long shufflingId) {
-        return finalizedShufflings.containsKey(shufflingId);
+        Shuffling shuffling = shufflings.get(shufflingId);
+        return shuffling != null && shuffling.state == State.FINALIZED;
     }
 
     public static boolean isCancelled(Long shufflingId) {
-        return cancelledShufflings.containsKey(shufflingId);
+        Shuffling shuffling = shufflings.get(shufflingId);
+        return shuffling != null && shuffling.state == State.CANCELLED;
     }
 
     public static byte getNumberOfParticipants(Long shufflingId) {
-        Shuffling shuffling = initiatedShufflings.get(shufflingId);
-        if (shuffling != null) {
-            return shuffling.numberOfParticipants;
-        }
-        shuffling = continuedShufflings.get(shufflingId);
-        if (shuffling != null) {
-            return shuffling.numberOfParticipants;
-        }
-        shuffling = finalizedShufflings.get(shufflingId);
-        if (shuffling != null) {
-            return shuffling.numberOfParticipants;
-        }
-        return cancelledShufflings.get(shufflingId).numberOfParticipants;
+        return shufflings.get(shufflingId).numberOfParticipants;
     }
 
     public static void initiateShuffling(Long transactionId, Account account, Long currencyId, long amount, byte numberOfParticipants, short maxInitiationDelay, short maxContinuationDelay, short maxFinalizationDelay, short maxCancellationDelay) {
@@ -107,14 +104,14 @@ public final class CoinShuffler {
 
         Shuffling newShuffling = new Shuffling(transactionId, currencyId, amount, numberOfParticipants, maxInitiationDelay, maxContinuationDelay, maxFinalizationDelay, maxCancellationDelay);
 
-        for (Shuffling existingShuffling : initiatedShufflings.values()) {
-            if (newShuffling.equals(existingShuffling)) {
+        for (Shuffling existingShuffling : shufflings.values()) {
+            if (existingShuffling.state == State.INITIATED && newShuffling.equals(existingShuffling)) {
                 existingShuffling.addParticipant(account.getId());
                 return;
             }
         }
 
-        initiatedShufflings.put(transactionId, newShuffling);
+        shufflings.put(transactionId, newShuffling);
     }
 
     public static void continueShuffling(Account account, Long shufflingId, EncryptedData recipients) {
