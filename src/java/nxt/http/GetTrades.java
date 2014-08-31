@@ -2,14 +2,12 @@ package nxt.http;
 
 import nxt.NxtException;
 import nxt.Trade;
-import nxt.Transaction;
 import nxt.db.DbIterator;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.List;
 
 public final class GetTrades extends APIServlet.APIRequestHandler {
 

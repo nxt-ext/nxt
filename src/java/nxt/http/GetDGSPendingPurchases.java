@@ -3,13 +3,11 @@ package nxt.http;
 import nxt.DigitalGoodsStore;
 import nxt.NxtException;
 import nxt.db.DbIterator;
-import nxt.db.DbUtils;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.Collection;
 
 import static nxt.http.JSONResponses.MISSING_SELLER;
 

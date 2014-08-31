@@ -24,13 +24,16 @@ public final class GetAliases extends APIServlet.APIRequestHandler {
         int firstIndex = ParameterParser.getFirstIndex(req);
         int lastIndex = ParameterParser.getLastIndex(req);
 
-        //TODO: do the filtering by timestamp in the database
         JSONArray aliases = new JSONArray();
         try (DbIterator<Alias> aliasIterator = Alias.getAliasesByOwner(accountId, 0, -1)) {
-            while (aliasIterator.hasNext()) {
+            int count = 0;
+            while (aliasIterator.hasNext() && count <= lastIndex) {
                 Alias alias = aliasIterator.next();
                 if (alias.getTimestamp() >= timestamp) {
-                    aliases.add(JSONData.alias(alias));
+                    if (count >= firstIndex) {
+                        aliases.add(JSONData.alias(alias));
+                    }
+                    count += 1;
                 }
             }
         }

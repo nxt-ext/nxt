@@ -4,7 +4,6 @@ import nxt.db.DbIterator;
 import nxt.util.Observable;
 import org.json.simple.JSONObject;
 
-import java.util.Collection;
 import java.util.List;
 
 public interface TransactionProcessor extends Observable<List<Transaction>,TransactionProcessor.Event> {

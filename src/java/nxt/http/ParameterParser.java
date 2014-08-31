@@ -384,12 +384,16 @@ final class ParameterParser {
     }
 
     static int getLastIndex(HttpServletRequest req) {
+        int lastIndex;
         try {
-            return Integer.parseInt(req.getParameter("lastIndex"));
+            lastIndex = Integer.parseInt(req.getParameter("lastIndex"));
+            if (lastIndex < 0) {
+                return Integer.MAX_VALUE;
+            }
         } catch (NumberFormatException e) {
             return Integer.MAX_VALUE;
         }
-
+        return lastIndex;
     }
 
     static int getNumberOfConfirmations(HttpServletRequest req) throws ParameterException {

@@ -3,7 +3,6 @@ package nxt;
 import nxt.db.Db;
 import nxt.db.DbIterator;
 import nxt.db.DbKey;
-import nxt.db.DbUtils;
 import nxt.db.EntityDbTable;
 
 import java.sql.Connection;
@@ -11,7 +10,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 public final class Vote {

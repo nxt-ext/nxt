@@ -2,14 +2,12 @@ package nxt.http;
 
 import nxt.NxtException;
 import nxt.Trade;
-import nxt.Transaction;
 import nxt.db.DbIterator;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.Collection;
 
 public final class GetAllTrades extends APIServlet.APIRequestHandler {
 
@@ -25,14 +23,17 @@ public final class GetAllTrades extends APIServlet.APIRequestHandler {
         int firstIndex = ParameterParser.getFirstIndex(req);
         int lastIndex = ParameterParser.getLastIndex(req);
 
-        //TODO: optimize to do the filtering by timestamp in the database
         JSONObject response = new JSONObject();
         JSONArray tradesData = new JSONArray();
         try (DbIterator<Trade> trades = Trade.getAllTrades(0, -1)) {
-            while (trades.hasNext()) {
+            int count = 0;
+            while (trades.hasNext() && count <= lastIndex) {
                 Trade trade = trades.next();
                 if (trade.getTimestamp() >= timestamp) {
-                    tradesData.add(JSONData.trade(trade));
+                    if (count >= firstIndex) {
+                        tradesData.add(JSONData.trade(trade));
+                    }
+                    count += 1;
                 }
             }
         }

@@ -9,7 +9,6 @@ import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.List;
 
 public final class GetAccount extends APIServlet.APIRequestHandler {
 

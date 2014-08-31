@@ -9,7 +9,6 @@ import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.Collection;
 
 public final class GetDGSPurchases extends APIServlet.APIRequestHandler {
 
@@ -33,27 +32,22 @@ public final class GetDGSPurchases extends APIServlet.APIRequestHandler {
         JSONArray purchasesJSON = new JSONArray();
         response.put("purchases", purchasesJSON);
 
-        //TODO: optimize to do the filtering by completed in the database
         if (sellerId == null && buyerId == null) {
             try (DbIterator<DigitalGoodsStore.Purchase> purchases = DigitalGoodsStore.getAllPurchases(0, -1)) {
                 int count = 0;
-                while (count - 1 <= lastIndex && purchases.hasNext()) {
+                while (purchases.hasNext() && count <= lastIndex) {
                     DigitalGoodsStore.Purchase purchase = purchases.next();
-                    if (completed && purchase.isPending()) {
-                        continue;
-                    }
-                    if (count < firstIndex) {
+                    if (! (completed && purchase.isPending())) {
+                        if (count >= firstIndex) {
+                            purchasesJSON.add(JSONData.purchase(purchase));
+                        }
                         count++;
-                        continue;
                     }
-                    purchasesJSON.add(JSONData.purchase(purchase));
-                    count++;
                 }
             }
             return response;
         }
 
-        //TODO: optimize to do the filtering by completed in the database
         DbIterator<DigitalGoodsStore.Purchase> purchases = null;
         try {
             if (sellerId != null && buyerId == null) {
@@ -64,18 +58,14 @@ public final class GetDGSPurchases extends APIServlet.APIRequestHandler {
                 purchases = DigitalGoodsStore.getSellerBuyerPurchases(sellerId, buyerId, 0, -1);
             }
             int count = 0;
-            while (purchases.hasNext()) {
+            while (purchases.hasNext() && count <= lastIndex) {
                 DigitalGoodsStore.Purchase purchase = purchases.next();
-                if (count > lastIndex) {
-                    break;
-                }
-                if (count >= firstIndex) {
-                    if (completed && purchase.isPending()) {
-                        continue;
+                if (! (completed && purchase.isPending())) {
+                    if (count >= firstIndex) {
+                        purchasesJSON.add(JSONData.purchase(purchase));
                     }
-                    purchasesJSON.add(JSONData.purchase(purchase));
+                    count++;
                 }
-                count++;
             }
         } finally {
             DbUtils.close(purchases);
