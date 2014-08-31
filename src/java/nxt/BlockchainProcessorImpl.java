@@ -94,11 +94,14 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                         return;
                     }
                     BigInteger betterCumulativeDifficulty = new BigInteger(peerCumulativeDifficulty);
-                    if (betterCumulativeDifficulty.compareTo(curCumulativeDifficulty) <= 0) {
+                    if (betterCumulativeDifficulty.compareTo(curCumulativeDifficulty) < 0) {
                         return;
                     }
                     if (response.get("blockchainHeight") != null) {
                         lastBlockchainFeederHeight = ((Long) response.get("blockchainHeight")).intValue();
+                    }
+                    if (betterCumulativeDifficulty.equals(curCumulativeDifficulty)) {
+                        return;
                     }
 
                     Long commonBlockId = Genesis.GENESIS_BLOCK_ID;
