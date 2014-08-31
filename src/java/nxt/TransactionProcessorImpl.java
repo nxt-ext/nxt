@@ -420,7 +420,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                 synchronized (BlockchainImpl.getInstance()) {
                     try {
                         Db.beginTransaction();
-                        if (Nxt.getBlockchain().getHeight() < Constants.NQT_BLOCK) {
+                        if (Nxt.getBlockchainProcessor().isDownloading() || Nxt.getBlockchain().getHeight() < Constants.DIGITAL_GOODS_STORE_BLOCK) {
                             break; // not ready to process transactions
                         }
 

@@ -1,5 +1,7 @@
 package nxt.db;
 
+import nxt.util.Logger;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;

@@ -20,6 +20,8 @@ public interface BlockchainProcessor extends Observable<Block,BlockchainProcesso
 
     boolean isScanning();
 
+    boolean isDownloading();
+
     void processPeerBlock(JSONObject request) throws NxtException;
 
     void fullReset();

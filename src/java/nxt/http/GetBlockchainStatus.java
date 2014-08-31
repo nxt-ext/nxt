@@ -33,6 +33,7 @@ public final class GetBlockchainStatus extends APIServlet.APIRequestHandler {
         response.put("lastBlockchainFeeder", lastBlockchainFeeder == null ? null : lastBlockchainFeeder.getAnnouncedAddress());
         response.put("lastBlockchainFeederHeight", blockchainProcessor.getLastBlockchainFeederHeight());
         response.put("isScanning", blockchainProcessor.isScanning());
+        response.put("isDownloading", Nxt.getBlockchainProcessor().isDownloading());
         return response;
     }
 
