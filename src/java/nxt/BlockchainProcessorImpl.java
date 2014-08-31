@@ -848,6 +848,10 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
     }
 
     private void scan() {
+        scan(false);
+    }
+
+    private void scan(boolean inner) {
         synchronized (blockchain) {
             isScanning = true;
             Logger.logMessage("Scanning blockchain...");
@@ -865,7 +869,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             }
             transactionProcessor.clear();
             Generator.clear();
-            try (Connection con = Db.beginTransaction();
+            try (Connection con = inner ? Db.getConnection() : Db.beginTransaction();
                  PreparedStatement pstmt = con.prepareStatement("SELECT * FROM block ORDER BY db_id ASC");
                  ResultSet rs = pstmt.executeQuery()) {
                 blockchain.setLastBlock(BlockDb.findBlock(Genesis.GENESIS_BLOCK_ID));
@@ -948,10 +952,12 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                             }
                         }
                         BlockDb.deleteBlocksFrom(currentBlockId);
-                        scan();
+                        scan(true);
                     }
                 }
-                Db.endTransaction();
+                if (!inner) {
+                    Db.endTransaction();
+                }
             } catch (SQLException e) {
                 throw new RuntimeException(e.toString(), e);
             }
