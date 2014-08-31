@@ -80,6 +80,9 @@ final class TransactionProcessorImpl implements TransactionProcessor {
             return "";
         }
 
+        @Override
+        public void rollback(int height) {}
+
     };
 
     private final ConcurrentMap<Long, TransactionImpl> nonBroadcastedTransactions = new ConcurrentHashMap<>();
