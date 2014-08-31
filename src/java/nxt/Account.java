@@ -648,6 +648,9 @@ public final class Account {
     }
 
     void addToAssetBalanceQNT(Long assetId, long quantityQNT) {
+        if (quantityQNT == 0) {
+            return;
+        }
         AccountAsset accountAsset;
         accountAsset = accountAssetTable.get(accountAssetDbKeyFactory.newKey(this.id, assetId));
         long assetBalance = accountAsset == null ? 0 : accountAsset.quantityQNT;
@@ -663,6 +666,9 @@ public final class Account {
     }
 
     void addToUnconfirmedAssetBalanceQNT(Long assetId, long quantityQNT) {
+        if (quantityQNT == 0) {
+            return;
+        }
         AccountAsset accountAsset;
         accountAsset = accountAssetTable.get(accountAssetDbKeyFactory.newKey(this.id, assetId));
         long unconfirmedAssetBalance = accountAsset == null ? 0 : accountAsset.unconfirmedQuantityQNT;
@@ -678,6 +684,9 @@ public final class Account {
     }
 
     void addToAssetAndUnconfirmedAssetBalanceQNT(Long assetId, long quantityQNT) {
+        if (quantityQNT == 0) {
+            return;
+        }
         AccountAsset accountAsset;
         accountAsset = accountAssetTable.get(accountAssetDbKeyFactory.newKey(this.id, assetId));
         long assetBalance = accountAsset == null ? 0 : accountAsset.quantityQNT;
@@ -698,13 +707,14 @@ public final class Account {
     }
 
     void addToBalanceNQT(long amountNQT) {
+        if (amountNQT == 0) {
+            return;
+        }
         this.balanceNQT = Convert.safeAdd(this.balanceNQT, amountNQT);
         addToGuaranteedBalanceNQT(amountNQT);
         checkBalance();
         accountTable.insert(this);
-        if (amountNQT != 0) {
-            listeners.notify(this, Event.BALANCE);
-        }
+        listeners.notify(this, Event.BALANCE);
     }
 
     void addToUnconfirmedBalanceNQT(long amountNQT) {
@@ -718,18 +728,22 @@ public final class Account {
     }
 
     void addToBalanceAndUnconfirmedBalanceNQT(long amountNQT) {
+        if (amountNQT == 0) {
+            return;
+        }
         this.balanceNQT = Convert.safeAdd(this.balanceNQT, amountNQT);
         this.unconfirmedBalanceNQT = Convert.safeAdd(this.unconfirmedBalanceNQT, amountNQT);
         addToGuaranteedBalanceNQT(amountNQT);
         checkBalance();
         accountTable.insert(this);
-        if (amountNQT != 0) {
-            listeners.notify(this, Event.BALANCE);
-            listeners.notify(this, Event.UNCONFIRMED_BALANCE);
-        }
+        listeners.notify(this, Event.BALANCE);
+        listeners.notify(this, Event.UNCONFIRMED_BALANCE);
     }
 
     void addToForgedBalanceNQT(long amountNQT) {
+        if (amountNQT == 0) {
+            return;
+        }
         this.forgedBalanceNQT = Convert.safeAdd(this.forgedBalanceNQT, amountNQT);
         accountTable.insert(this);
     }

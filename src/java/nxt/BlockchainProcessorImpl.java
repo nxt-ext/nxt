@@ -629,7 +629,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 }
 
                 blockListeners.notify(block, Event.BEFORE_BLOCK_APPLY);
-                transactionProcessor.apply(block);
+                block.apply();
                 blockListeners.notify(block, Event.AFTER_BLOCK_APPLY);
                 blockListeners.notify(block, Event.BLOCK_PUSHED);
                 transactionProcessor.updateUnconfirmedTransactions(block);
@@ -929,9 +929,6 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                         blockchain.setLastBlock(currentBlock);
                         blockListeners.notify(currentBlock, Event.BEFORE_BLOCK_APPLY);
                         currentBlock.apply();
-                        for (TransactionImpl transaction : currentBlock.getTransactions()) {
-                            transaction.apply();
-                        }
                         blockListeners.notify(currentBlock, Event.AFTER_BLOCK_APPLY);
                         blockListeners.notify(currentBlock, Event.BLOCK_SCANNED);
                         currentBlockId = currentBlock.getNextBlockId();

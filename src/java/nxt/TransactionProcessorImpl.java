@@ -289,13 +289,6 @@ final class TransactionProcessorImpl implements TransactionProcessor {
         nonBroadcastedTransactions.clear();
     }
 
-    void apply(BlockImpl block) {
-        block.apply();
-        for (TransactionImpl transaction : block.getTransactions()) {
-            transaction.apply();
-        }
-    }
-
     void undo(BlockImpl block) {
         List<Transaction> addedUnconfirmedTransactions = new ArrayList<>();
         for (TransactionImpl transaction : block.getTransactions()) {
