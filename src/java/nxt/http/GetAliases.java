@@ -2,7 +2,7 @@ package nxt.http;
 
 import nxt.Alias;
 import nxt.NxtException;
-import nxt.db.DbIterator;
+import nxt.db.FilteringIterator;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
@@ -19,22 +19,21 @@ public final class GetAliases extends APIServlet.APIRequestHandler {
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
-        int timestamp = ParameterParser.getTimestamp(req);
-        Long accountId = ParameterParser.getAccount(req).getId();
+        final int timestamp = ParameterParser.getTimestamp(req);
+        final Long accountId = ParameterParser.getAccount(req).getId();
         int firstIndex = ParameterParser.getFirstIndex(req);
         int lastIndex = ParameterParser.getLastIndex(req);
 
         JSONArray aliases = new JSONArray();
-        try (DbIterator<Alias> aliasIterator = Alias.getAliasesByOwner(accountId, 0, -1)) {
-            int count = 0;
-            while (aliasIterator.hasNext() && count <= lastIndex) {
-                Alias alias = aliasIterator.next();
-                if (alias.getTimestamp() >= timestamp) {
-                    if (count >= firstIndex) {
-                        aliases.add(JSONData.alias(alias));
+        try (FilteringIterator<Alias> aliasIterator = new FilteringIterator<>(Alias.getAliasesByOwner(accountId, 0, -1),
+                new FilteringIterator.Filter<Alias>() {
+                    @Override
+                    public boolean ok(Alias alias) {
+                        return alias.getTimestamp() >= timestamp;
                     }
-                    count += 1;
-                }
+                }, firstIndex, lastIndex)) {
+            while(aliasIterator.hasNext()) {
+                aliases.add(JSONData.alias(aliasIterator.next()));
             }
         }
 

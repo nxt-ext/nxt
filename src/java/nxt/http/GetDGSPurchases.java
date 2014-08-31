@@ -3,7 +3,7 @@ package nxt.http;
 import nxt.DigitalGoodsStore;
 import nxt.NxtException;
 import nxt.db.DbIterator;
-import nxt.db.DbUtils;
+import nxt.db.FilteringIterator;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
@@ -25,7 +25,7 @@ public final class GetDGSPurchases extends APIServlet.APIRequestHandler {
         Long buyerId = ParameterParser.getBuyerId(req);
         int firstIndex = ParameterParser.getFirstIndex(req);
         int lastIndex = ParameterParser.getLastIndex(req);
-        boolean completed = "true".equalsIgnoreCase(req.getParameter("completed"));
+        final boolean completed = "true".equalsIgnoreCase(req.getParameter("completed"));
 
 
         JSONObject response = new JSONObject();
@@ -33,42 +33,38 @@ public final class GetDGSPurchases extends APIServlet.APIRequestHandler {
         response.put("purchases", purchasesJSON);
 
         if (sellerId == null && buyerId == null) {
-            try (DbIterator<DigitalGoodsStore.Purchase> purchases = DigitalGoodsStore.getAllPurchases(0, -1)) {
-                int count = 0;
-                while (purchases.hasNext() && count <= lastIndex) {
-                    DigitalGoodsStore.Purchase purchase = purchases.next();
-                    if (! (completed && purchase.isPending())) {
-                        if (count >= firstIndex) {
-                            purchasesJSON.add(JSONData.purchase(purchase));
+            try (FilteringIterator<DigitalGoodsStore.Purchase> purchaseIterator = new FilteringIterator<>(DigitalGoodsStore.getAllPurchases(0, -1),
+                    new FilteringIterator.Filter<DigitalGoodsStore.Purchase>() {
+                        @Override
+                        public boolean ok(DigitalGoodsStore.Purchase purchase) {
+                            return ! (completed && purchase.isPending());
                         }
-                        count++;
-                    }
+                    }, firstIndex, lastIndex)) {
+                while (purchaseIterator.hasNext()) {
+                    purchasesJSON.add(JSONData.purchase(purchaseIterator.next()));
                 }
             }
             return response;
         }
 
-        DbIterator<DigitalGoodsStore.Purchase> purchases = null;
-        try {
-            if (sellerId != null && buyerId == null) {
-                purchases = DigitalGoodsStore.getSellerPurchases(sellerId, 0, -1);
-            } else if (sellerId == null) {
-                purchases = DigitalGoodsStore.getBuyerPurchases(buyerId, 0, -1);
-            } else {
-                purchases = DigitalGoodsStore.getSellerBuyerPurchases(sellerId, buyerId, 0, -1);
-            }
-            int count = 0;
-            while (purchases.hasNext() && count <= lastIndex) {
-                DigitalGoodsStore.Purchase purchase = purchases.next();
-                if (! (completed && purchase.isPending())) {
-                    if (count >= firstIndex) {
-                        purchasesJSON.add(JSONData.purchase(purchase));
+        DbIterator<DigitalGoodsStore.Purchase> purchases;
+        if (sellerId != null && buyerId == null) {
+            purchases = DigitalGoodsStore.getSellerPurchases(sellerId, 0, -1);
+        } else if (sellerId == null) {
+            purchases = DigitalGoodsStore.getBuyerPurchases(buyerId, 0, -1);
+        } else {
+            purchases = DigitalGoodsStore.getSellerBuyerPurchases(sellerId, buyerId, 0, -1);
+        }
+        try (FilteringIterator<DigitalGoodsStore.Purchase> purchaseIterator = new FilteringIterator<>(purchases,
+                new FilteringIterator.Filter<DigitalGoodsStore.Purchase>() {
+                    @Override
+                    public boolean ok(DigitalGoodsStore.Purchase purchase) {
+                        return ! (completed && purchase.isPending());
                     }
-                    count++;
-                }
+                }, firstIndex, lastIndex)) {
+            while (purchaseIterator.hasNext()) {
+                purchasesJSON.add(JSONData.purchase(purchaseIterator.next()));
             }
-        } finally {
-            DbUtils.close(purchases);
         }
         return response;
     }

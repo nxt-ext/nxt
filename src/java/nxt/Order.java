@@ -237,7 +237,7 @@ public abstract class Order {
                          + "AND latest = TRUE ORDER BY price ASC, height ASC, id ASC LIMIT 1")) {
                 pstmt.setLong(1, assetId);
                 try (DbIterator<Ask> askOrders = askOrderTable.getManyBy(con, pstmt, true)) {
-                    return askOrders.next();
+                    return askOrders.hasNext() ? askOrders.next() : null;
                 }
             } catch (SQLException e) {
                 throw new RuntimeException(e.toString(), e);
@@ -384,7 +384,7 @@ public abstract class Order {
                          + "AND latest = TRUE ORDER BY price DESC, height ASC, id ASC LIMIT 1")) {
                 pstmt.setLong(1, assetId);
                 try (DbIterator<Bid> bidOrders = bidOrderTable.getManyBy(con, pstmt, true)) {
-                    return bidOrders.next();
+                    return bidOrders.hasNext() ? bidOrders.next() : null;
                 }
             } catch (SQLException e) {
                 throw new RuntimeException(e.toString(), e);

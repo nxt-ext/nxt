@@ -29,8 +29,6 @@ public final class GetAllOpenBidOrders extends APIServlet.APIRequestHandler {
             while (bidOrders.hasNext()) {
                 ordersData.add(JSONData.bidOrder(bidOrders.next()));
             }
-        } catch (RuntimeException e) {
-            response.put("error", e.toString());
         }
 
         response.put("openOrders", ordersData);
