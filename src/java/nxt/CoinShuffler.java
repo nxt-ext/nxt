@@ -30,7 +30,7 @@ public final class CoinShuffler {
         private final List<Long> participants;
         private final Map<Long, EncryptedData> encryptedRecipients;
         private final Map<Long, Long[]> decryptedRecipients;
-        private final Map<Long, byte[]> nonces;
+        private final Map<Long, byte[]> keys;
 
         Shuffling(Long currencyId, long amount, byte numberOfParticipants, short maxInitiationDelay, short maxContinuationDelay, short maxFinalizationDelay, short maxCancellationDelay) {
             this.currencyId = currencyId;
@@ -48,7 +48,7 @@ public final class CoinShuffler {
             participants = new ArrayList<>(numberOfParticipants);
             encryptedRecipients = new HashMap<>();
             decryptedRecipients = new HashMap<>();
-            nonces = new HashMap<>();
+            keys = new HashMap<>();
         }
 
         @Override
@@ -116,8 +116,8 @@ public final class CoinShuffler {
         return shufflings.get(shufflingId).decryptedRecipients.get(accountId) != null;
     }
 
-    public static boolean sentNonce(Long accountId, Long shufflingId) {
-        return shufflings.get(shufflingId).nonces.get(accountId) != null;
+    public static boolean sentKeys(Long accountId, Long shufflingId) {
+        return shufflings.get(shufflingId).keys.get(accountId) != null;
     }
 
     public static void initiateShuffling(Long transactionId, Account account, Long currencyId, long amount, byte numberOfParticipants, short maxInitiationDelay, short maxContinuationDelay, short maxFinalizationDelay, short maxCancellationDelay) {
@@ -162,8 +162,15 @@ public final class CoinShuffler {
         }
     }
 
-    public static void cancelShuffling(Account account, Long shuffling, byte[] nonce) {
-        // TODO: Implement!
+    public static void cancelShuffling(Account account, Long shufflingId, byte[] keys) {
+        Shuffling shuffling = shufflings.get(shufflingId);
+        shuffling.keys.put(account.getId(), keys);
+        if (shuffling.keys.size() == shuffling.numberOfParticipants) {
+            // TODO: Decrypt and analyze data to find rogues
+        } else {
+            shuffling.state = State.CANCELLED;
+            shuffling.lastActionTimestamp = BlockchainImpl.getInstance().getLastBlock().getTimestamp();
+        }
     }
 
 }

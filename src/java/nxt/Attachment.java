@@ -2431,23 +2431,24 @@ public interface Attachment extends Appendix {
     public final static class MonetarySystemShufflingCancellation extends AbstractAttachment {
 
         private final Long shufflingId;
-        private final byte[] nonce;
+        private final byte[] keys;
 
         MonetarySystemShufflingCancellation(ByteBuffer buffer, byte transactionVersion) {
             super(buffer, transactionVersion);
             this.shufflingId = buffer.getLong();
-            buffer.get(this.nonce = new byte[32]);
+            this.keys = new byte[32 * buffer.get()];
+            buffer.get(this.keys);
         }
 
         MonetarySystemShufflingCancellation(JSONObject attachmentData) {
             super(attachmentData);
             this.shufflingId = Convert.parseUnsignedLong((String)attachmentData.get("shuffling"));
-            this.nonce = Convert.parseHexString((String)attachmentData.get("nonce"));
+            this.keys = Convert.parseHexString((String)attachmentData.get("keys"));
         }
 
-        MonetarySystemShufflingCancellation(Long shufflingId, byte[] nonce) {
+        MonetarySystemShufflingCancellation(Long shufflingId, byte[] keys) {
             this.shufflingId = shufflingId;
-            this.nonce = nonce;
+            this.keys = keys;
         }
 
         @Override
@@ -2457,19 +2458,20 @@ public interface Attachment extends Appendix {
 
         @Override
         int getMySize() {
-            return 8 + 32;
+            return 8 + 1 + keys.length;
         }
 
         @Override
         void putMyBytes(ByteBuffer buffer) {
             buffer.putLong(shufflingId);
-            buffer.put(nonce);
+            buffer.put((byte)(keys.length / 32));
+            buffer.put(keys);
         }
 
         @Override
         void putMyJSON(JSONObject attachment) {
             attachment.put("shuffling", Convert.toUnsignedLong(shufflingId));
-            attachment.put("nonce", Convert.toHexString(nonce));
+            attachment.put("keys", Convert.toHexString(keys));
         }
 
         @Override
@@ -2481,8 +2483,8 @@ public interface Attachment extends Appendix {
             return shufflingId;
         }
 
-        public byte[] getNonce() {
-            return nonce;
+        public byte[] getKeys() {
+            return keys;
         }
     }
 

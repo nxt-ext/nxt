@@ -2657,8 +2657,8 @@ public abstract class TransactionType {
                         || (!CoinShuffler.isFinalized(attachment.getShufflingId()) && !CoinShuffler.isCancelled(attachment.getShufflingId()))
                         || !CoinShuffler.isParticipant(transaction.getSenderId(), attachment.getShufflingId())
                         || CoinShuffler.sentDecryptedRecipients(transaction.getSenderId(), attachment.getShufflingId())
-                        || CoinShuffler.sentNonce(transaction.getSenderId(), attachment.getShufflingId())
-                        || attachment.getNonce().length != 32) {
+                        || CoinShuffler.sentKeys(transaction.getSenderId(), attachment.getShufflingId())
+                        || attachment.getKeys().length > 32 * (CoinShuffler.getNumberOfParticipants(attachment.getShufflingId()) - 1)) {
                     throw new NxtException.NotValidException("Invalid shuffling cancellation: " + attachment.getJSONObject());
                 }
             }
@@ -2671,7 +2671,7 @@ public abstract class TransactionType {
             @Override
             void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
                 Attachment.MonetarySystemShufflingCancellation attachment = (Attachment.MonetarySystemShufflingCancellation)transaction.getAttachment();
-                CoinShuffler.cancelShuffling(senderAccount, attachment.getShufflingId(), attachment.getNonce());
+                CoinShuffler.cancelShuffling(senderAccount, attachment.getShufflingId(), attachment.getKeys());
             }
 
             @Override
