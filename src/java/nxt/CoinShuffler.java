@@ -30,6 +30,7 @@ public final class CoinShuffler {
         private final int hashCode;
 
         private State state;
+        private int lastActionTimestamp;
         private final List<Long> participants;
         private final Map<Long, EncryptedData> encryptedRecipients;
         private final Map<Long, Long[]> decryptedRecipients;
@@ -48,6 +49,7 @@ public final class CoinShuffler {
             hashCode = currencyId.hashCode() ^ Long.valueOf(amount).hashCode() ^ Byte.valueOf(numberOfParticipants).hashCode() ^ Short.valueOf(maxInitiationDelay).hashCode() ^ Short.valueOf(maxContinuationDelay).hashCode() ^ Short.valueOf(maxFinalizationDelay).hashCode() ^ Short.valueOf(maxCancellationDelay).hashCode();
 
             state = State.INITIATED;
+            lastActionTimestamp = BlockchainImpl.getInstance().getLastBlock().getTimestamp();
             participants = new ArrayList<>(numberOfParticipants);
             encryptedRecipients = new HashMap<>();
             decryptedRecipients = new HashMap<>();
@@ -75,6 +77,7 @@ public final class CoinShuffler {
             if (participants.size() == numberOfParticipants) {
                 state = State.CONTINUED;
             }
+            lastActionTimestamp = BlockchainImpl.getInstance().getLastBlock().getTimestamp();
         }
 
     }
@@ -138,7 +141,12 @@ public final class CoinShuffler {
     }
 
     public static void continueShuffling(Account account, Long shufflingId, EncryptedData recipients) {
-        // TODO: Implement!
+        Shuffling shuffling = shufflings.get(shufflingId);
+        shuffling.encryptedRecipients.put(account.getId(), recipients);
+        if (shuffling.encryptedRecipients.size() == shuffling.numberOfParticipants) {
+            shuffling.state = State.FINALIZED;
+        }
+        shuffling.lastActionTimestamp = BlockchainImpl.getInstance().getLastBlock().getTimestamp();
     }
 
     public static void finalizeShuffling(Account account, Long shufflingId, Long[] recipients) {
