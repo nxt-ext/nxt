@@ -14,8 +14,8 @@ public final class Alias {
 
     public static class Offer {
 
-        private final long priceNQT;
-        private final Long buyerId;
+        private long priceNQT;
+        private Long buyerId;
         private final Long aliasId;
 
         private Offer(Long aliasId, long priceNQT, Long buyerId) {
@@ -150,7 +150,14 @@ public final class Alias {
         final Long buyerId = transaction.getRecipientId();
         if (priceNQT > 0) {
             Alias alias = getAlias(aliasName);
-            offerTable.insert(new Offer(alias.id, priceNQT, buyerId));
+            Offer offer = getOffer(alias);
+            if (offer == null) {
+                offerTable.insert(new Offer(alias.id, priceNQT, buyerId));
+            } else {
+                offer.priceNQT = priceNQT;
+                offer.buyerId = buyerId;
+                offerTable.insert(offer);
+            }
         } else {
             changeOwner(buyerId, aliasName, transaction.getBlockTimestamp());
         }
