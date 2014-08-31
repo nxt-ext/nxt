@@ -23,9 +23,11 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -294,7 +296,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             synchronized (blockchain) {
                 BigInteger curCumulativeDifficulty = blockchain.getLastBlock().getCumulativeDifficulty();
 
-                popOffTo(commonBlock);
+                Deque<BlockImpl> poppedOffBlocks = popOffTo(commonBlock);
 
                 int pushedForkBlocks = 0;
                 if (blockchain.getLastBlock().getId().equals(commonBlock.getId())) {
@@ -315,6 +317,15 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     Logger.logDebugMessage("Pop off caused by peer " + peer.getPeerAddress() + ", blacklisting");
                     peer.blacklist();
                     popOffTo(commonBlock);
+                    while (!poppedOffBlocks.isEmpty()) {
+                        BlockImpl block = poppedOffBlocks.pop();
+                        try {
+                            pushBlock(block);
+                        } catch (BlockNotAcceptedException e) {
+                            Logger.logErrorMessage("Popped off block no longer acceptable: " + block.getJSONObject().toJSONString(), e);
+                            return;
+                        }
+                    }
                 }
             } // synchronized
 
@@ -651,43 +662,43 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
 
     }
 
-    //TODO: optimize to use rollback
-    private void popOffTo(Block commonBlock) {
-        Long lastBlockId = blockchain.getLastBlock().getId();
-        while (! lastBlockId.equals(commonBlock.getId()) && ! lastBlockId.equals(Genesis.GENESIS_BLOCK_ID)) {
-            lastBlockId = popLastBlock();
-        }
-    }
-
-    private Long popLastBlock() {
+    private Deque<BlockImpl> popOffTo(Block commonBlock) {
+        Deque<BlockImpl> poppedOffBlocks = new ArrayDeque<>();
         synchronized (blockchain) {
             try {
                 Db.beginTransaction();
                 BlockImpl block = blockchain.getLastBlock();
-                Logger.logDebugMessage("Will pop block " + block.getStringId() + " at height " + block.getHeight());
-                if (block.getId().equals(Genesis.GENESIS_BLOCK_ID)) {
-                    throw new RuntimeException("Cannot pop off genesis block");
+                while (!block.getId().equals(commonBlock.getId()) && !block.getId().equals(Genesis.GENESIS_BLOCK_ID)) {
+                    poppedOffBlocks.push(block);
+                    block = popLastBlock();
                 }
-                BlockImpl previousBlock = BlockDb.findBlock(block.getPreviousBlockId());
-                blockListeners.notify(block, Event.BEFORE_BLOCK_UNDO);
-                blockchain.setLastBlock(block, previousBlock);
-                transactionProcessor.undo(block);
-                BlockDb.deleteBlocksFrom(block.getId());
-                blockListeners.notify(block, Event.BLOCK_POPPED);
                 for (DerivedDbTable table : derivedTables) {
-                    table.rollback(block.getHeight());
+                    table.rollback(commonBlock.getHeight());
                 }
                 Db.commitTransaction();
-                return previousBlock.getId();
             } catch (RuntimeException e) {
                 Db.rollbackTransaction();
-                Logger.logDebugMessage("Error popping last block: " + e.toString());
+                Logger.logDebugMessage("Error popping off to " + commonBlock.getHeight(), e);
                 throw e;
             } finally {
                 Db.endTransaction();
             }
         } // synchronized
+        return poppedOffBlocks;
+    }
 
+    private BlockImpl popLastBlock() {
+        BlockImpl block = blockchain.getLastBlock();
+        Logger.logDebugMessage("Will pop block " + block.getStringId() + " at height " + block.getHeight());
+        if (block.getId().equals(Genesis.GENESIS_BLOCK_ID)) {
+            throw new RuntimeException("Cannot pop off genesis block");
+        }
+        BlockImpl previousBlock = BlockDb.findBlock(block.getPreviousBlockId());
+        blockchain.setLastBlock(block, previousBlock);
+        transactionProcessor.undo(block);
+        BlockDb.deleteBlocksFrom(block.getId());
+        blockListeners.notify(block, Event.BLOCK_POPPED);
+        return previousBlock;
     }
 
     int getBlockVersion(int previousBlockHeight) {

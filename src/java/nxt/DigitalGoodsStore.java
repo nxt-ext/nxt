@@ -41,23 +41,6 @@ public final class DigitalGoodsStore {
                 }
             }
         }, BlockchainProcessor.Event.AFTER_BLOCK_APPLY);
-
-        // reverse any pending purchase expiration that was caused by the block that got popped off
-        Nxt.getBlockchainProcessor().addListener(new Listener<Block>() {
-            @Override
-            public void notify(Block block) {
-                Block previousBlock = Nxt.getBlockchain().getLastBlock();
-                try (DbIterator<Purchase> purchases = getPurchasesExpiredBetween(previousBlock.getTimestamp(), block.getTimestamp())) {
-                    while (purchases.hasNext()) {
-                        Purchase purchase = purchases.next();
-                        Account buyer = Account.getAccount(purchase.getBuyerId());
-                        buyer.addToUnconfirmedBalanceNQT(-Convert.safeMultiply(purchase.getQuantity(), purchase.getPriceNQT()));
-                        getGoods(purchase.getGoodsId()).changeQuantity(-purchase.getQuantity());
-                        purchase.setPending(true);
-                    }
-                }
-            }
-        }, BlockchainProcessor.Event.BLOCK_POPPED);
     }
 
     private static final Listeners<Goods,Event> goodsListeners = new Listeners<>();
