@@ -2656,6 +2656,7 @@ public abstract class TransactionType {
                         || transaction.getAmountNQT() != 0
                         || (!CoinShuffler.isFinalized(attachment.getShufflingId()) && !CoinShuffler.isCancelled(attachment.getShufflingId()))
                         || !CoinShuffler.isParticipant(transaction.getSenderId(), attachment.getShufflingId())
+                        || CoinShuffler.sentDecryptedRecipients(transaction.getSenderId(), attachment.getShufflingId())
                         || CoinShuffler.sentNonce(transaction.getSenderId(), attachment.getShufflingId())
                         || attachment.getNonce().length != 32) {
                     throw new NxtException.NotValidException("Invalid shuffling cancellation: " + attachment.getJSONObject());

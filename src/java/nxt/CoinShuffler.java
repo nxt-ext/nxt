@@ -2,10 +2,7 @@ package nxt;
 
 import nxt.crypto.EncryptedData;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public final class CoinShuffler {
 
@@ -18,7 +15,6 @@ public final class CoinShuffler {
 
     private static class Shuffling {
 
-        private final Long shufflingId;
         private final Long currencyId;
         private final long amount;
         private final byte numberOfParticipants;
@@ -36,8 +32,7 @@ public final class CoinShuffler {
         private final Map<Long, Long[]> decryptedRecipients;
         private final Map<Long, byte[]> nonces;
 
-        Shuffling(Long shufflingId, Long currencyId, long amount, byte numberOfParticipants, short maxInitiationDelay, short maxContinuationDelay, short maxFinalizationDelay, short maxCancellationDelay) {
-            this.shufflingId = shufflingId;
+        Shuffling(Long currencyId, long amount, byte numberOfParticipants, short maxInitiationDelay, short maxContinuationDelay, short maxFinalizationDelay, short maxCancellationDelay) {
             this.currencyId = currencyId;
             this.amount = amount;
             this.numberOfParticipants = numberOfParticipants;
@@ -128,7 +123,7 @@ public final class CoinShuffler {
     public static void initiateShuffling(Long transactionId, Account account, Long currencyId, long amount, byte numberOfParticipants, short maxInitiationDelay, short maxContinuationDelay, short maxFinalizationDelay, short maxCancellationDelay) {
         account.addToCurrencyBalanceQNT(currencyId, -amount);
 
-        Shuffling newShuffling = new Shuffling(transactionId, currencyId, amount, numberOfParticipants, maxInitiationDelay, maxContinuationDelay, maxFinalizationDelay, maxCancellationDelay);
+        Shuffling newShuffling = new Shuffling(currencyId, amount, numberOfParticipants, maxInitiationDelay, maxContinuationDelay, maxFinalizationDelay, maxCancellationDelay);
 
         for (Shuffling existingShuffling : shufflings.values()) {
             if (existingShuffling.state == State.INITIATED && newShuffling.equals(existingShuffling)) {
@@ -150,7 +145,21 @@ public final class CoinShuffler {
     }
 
     public static void finalizeShuffling(Account account, Long shufflingId, Long[] recipients) {
-        // TODO: Implement!
+        Shuffling shuffling = shufflings.get(shufflingId);
+        if (shuffling.decryptedRecipients.size() > 0 && !Arrays.equals(recipients, shuffling.decryptedRecipients.values().toArray(new Long[0][0])[0])) {
+            shuffling.state = State.CANCELLED;
+            shuffling.lastActionTimestamp = BlockchainImpl.getInstance().getLastBlock().getTimestamp();
+            return;
+        }
+        shuffling.decryptedRecipients.put(account.getId(), recipients);
+        if (shuffling.decryptedRecipients.size() == shuffling.numberOfParticipants) {
+            for (Long recipientAccountId : shuffling.decryptedRecipients.values().toArray(new Long[0][0])[0]) {
+                Account.getAccount(recipientAccountId).addToCurrencyAndUnconfirmedCurrencyBalanceQNT(shuffling.currencyId, shuffling.amount);
+                shufflings.remove(shufflingId);
+            }
+        } else {
+            shuffling.lastActionTimestamp = BlockchainImpl.getInstance().getLastBlock().getTimestamp();
+        }
     }
 
     public static void cancelShuffling(Account account, Long shuffling, byte[] nonce) {
