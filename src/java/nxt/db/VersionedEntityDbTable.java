@@ -69,33 +69,19 @@ public abstract class VersionedEntityDbTable<T> extends EntityDbTable<T> {
     static void trim(String table, int height, DbKey.Factory dbKeyFactory) {
         //Logger.logDebugMessage("Trimming table " + table);
         try (Connection con = Db.getConnection();
-             PreparedStatement pstmtSelectToDelete = con.prepareStatement("SELECT " + dbKeyFactory.getDistinctClause()
-                     + " FROM " + table + " WHERE height >= ?");
-             PreparedStatement pstmtDelete = con.prepareStatement("DELETE FROM " + table + dbKeyFactory.getPKClause()
-                     + " AND height < ?");
-             PreparedStatement pstmtSelectOlderToDelete = con.prepareStatement("SELECT " + dbKeyFactory.getDistinctClause()
+             PreparedStatement pstmtSelect = con.prepareStatement("SELECT " + dbKeyFactory.getDistinctClause()
                      + " FROM " + table + " WHERE height < ?");
-             PreparedStatement pstmtDeleteOlder = con.prepareStatement("DELETE FROM " + table + dbKeyFactory.getPKClause()
-                     + " AND height < (SELECT MAX(height) FROM " + table + dbKeyFactory.getPKClause() + ")")) {
-
-            pstmtSelectToDelete.setInt(1, height);
-            try (ResultSet rs = pstmtSelectToDelete.executeQuery()) {
+             PreparedStatement pstmtDelete = con.prepareStatement("DELETE FROM " + table + dbKeyFactory.getPKClause()
+                     + " AND height < (SELECT MAX(height) FROM " + table + dbKeyFactory.getPKClause() + " AND height < ?)")) {
+            pstmtSelect.setInt(1, height);
+            try (ResultSet rs = pstmtSelect.executeQuery()) {
                 while (rs.next()) {
                     DbKey dbKey = dbKeyFactory.newKey(rs);
                     int i = 1;
                     i = dbKey.setPK(pstmtDelete, i);
+                    i = dbKey.setPK(pstmtDelete, i);
                     pstmtDelete.setInt(i, height);
                     pstmtDelete.executeUpdate();
-                }
-            }
-            pstmtSelectOlderToDelete.setInt(1, height);
-            try (ResultSet rs = pstmtSelectOlderToDelete.executeQuery()) {
-                while (rs.next()) {
-                    DbKey dbKey = dbKeyFactory.newKey(rs);
-                    int i = 1;
-                    i = dbKey.setPK(pstmtDeleteOlder, i);
-                    i = dbKey.setPK(pstmtDeleteOlder, i);
-                    pstmtDeleteOlder.executeUpdate();
                 }
             }
         } catch (SQLException e) {
