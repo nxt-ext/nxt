@@ -30,12 +30,14 @@ public final class Account {
 
         private final Long accountId;
         private final Long assetId;
+        private final DbKey dbKey;
         private long quantityQNT;
         private long unconfirmedQuantityQNT;
 
         private AccountAsset(Long accountId, Long assetId, long quantityQNT, long unconfirmedQuantityQNT) {
             this.accountId = accountId;
             this.assetId = assetId;
+            this.dbKey = accountAssetDbKeyFactory.newKey(this.accountId, this.assetId);
             this.quantityQNT = quantityQNT;
             this.unconfirmedQuantityQNT = unconfirmedQuantityQNT;
         }
@@ -43,6 +45,7 @@ public final class Account {
         private AccountAsset(ResultSet rs) throws SQLException {
             this.accountId = rs.getLong("account_id");
             this.assetId = rs.getLong("asset_id");
+            this.dbKey = accountAssetDbKeyFactory.newKey(this.accountId, this.assetId);
             this.quantityQNT = rs.getLong("quantity");
             this.unconfirmedQuantityQNT = rs.getLong("unconfirmed_quantity");
         }
@@ -164,7 +167,7 @@ public final class Account {
 
         @Override
         public DbKey newKey(Account account) {
-            return newKey(account.getId());
+            return account.dbKey;
         }
 
     };
@@ -191,7 +194,7 @@ public final class Account {
 
         @Override
         public DbKey newKey(AccountAsset accountAsset) {
-            return newKey(accountAsset.accountId, accountAsset.assetId);
+            return accountAsset.dbKey;
         }
 
     };
@@ -315,6 +318,7 @@ public final class Account {
 
 
     private final Long id;
+    private final DbKey dbKey;
     private final int creationHeight;
     private byte[] publicKey;
     private int keyHeight;
@@ -336,12 +340,14 @@ public final class Account {
             Logger.logMessage("CRITICAL ERROR: Reed-Solomon encoding fails for " + id);
         }
         this.id = id;
+        this.dbKey = accountDbKeyFactory.newKey(this.id);
         this.creationHeight = Nxt.getBlockchain().getLastBlock().getHeight();
         currentLeasingHeightFrom = Integer.MAX_VALUE;
     }
 
     private Account(ResultSet rs) throws SQLException {
         this.id = rs.getLong("id");
+        this.dbKey = accountDbKeyFactory.newKey(this.id);
         this.creationHeight = rs.getInt("creation_height");
         this.publicKey = rs.getBytes("public_key");
         this.keyHeight = rs.getInt("key_height");

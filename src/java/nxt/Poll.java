@@ -16,7 +16,7 @@ public final class Poll {
 
         @Override
         public DbKey newKey(Poll poll) {
-            return newKey(poll.getId());
+            return poll.dbKey;
         }
 
     };
@@ -44,6 +44,7 @@ public final class Poll {
 
 
     private final Long id;
+    private final DbKey dbKey;
     private final String name;
     private final String description;
     private final String[] options;
@@ -52,6 +53,7 @@ public final class Poll {
 
     private Poll(Long id, Attachment.MessagingPollCreation attachment) {
         this.id = id;
+        this.dbKey = pollDbKeyFactory.newKey(this.id);
         this.name = attachment.getPollName();
         this.description = attachment.getPollDescription();
         this.options = attachment.getPollOptions();
@@ -62,6 +64,7 @@ public final class Poll {
 
     private Poll(ResultSet rs) throws SQLException {
         this.id = rs.getLong("id");
+        this.dbKey = pollDbKeyFactory.newKey(this.id);
         this.name = rs.getString("name");
         this.description = rs.getString("description");
         this.options = (String[])rs.getArray("options").getArray();

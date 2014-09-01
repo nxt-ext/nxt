@@ -154,7 +154,7 @@ public abstract class Order {
 
             @Override
             public DbKey newKey(Ask ask) {
-                return newKey(ask.getId());
+                return ask.dbKey;
             }
 
         };
@@ -257,12 +257,16 @@ public abstract class Order {
         static void init() {}
 
 
+        private final DbKey dbKey;
+
         private Ask(Transaction transaction, Attachment.ColoredCoinsAskOrderPlacement attachment) {
             super(transaction, attachment);
+            this.dbKey = askOrderDbKeyFactory.newKey(super.id);
         }
 
         private Ask(ResultSet rs) throws SQLException {
             super(rs);
+            this.dbKey = askOrderDbKeyFactory.newKey(super.id);
         }
 
         private void save(Connection con, String table) throws SQLException {
@@ -302,7 +306,7 @@ public abstract class Order {
 
             @Override
             public DbKey newKey(Bid bid) {
-                return newKey(bid.getId());
+                return bid.dbKey;
             }
 
         };
@@ -404,12 +408,16 @@ public abstract class Order {
         static void init() {}
 
 
+        private final DbKey dbKey;
+
         private Bid(Transaction transaction, Attachment.ColoredCoinsBidOrderPlacement attachment) {
             super(transaction, attachment);
+            this.dbKey = bidOrderDbKeyFactory.newKey(super.id);
         }
 
         private Bid(ResultSet rs) throws SQLException {
             super(rs);
+            this.dbKey = bidOrderDbKeyFactory.newKey(super.id);
         }
 
         private void save(Connection con, String table) throws SQLException {

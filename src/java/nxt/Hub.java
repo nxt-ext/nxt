@@ -42,7 +42,7 @@ public class Hub {
 
         @Override
         public DbKey newKey(Hub hub) {
-            return newKey(hub.getAccountId());
+            return hub.dbKey;
         }
 
     };
@@ -111,17 +111,20 @@ public class Hub {
 
 
     private final Long accountId;
+    private final DbKey dbKey;
     private final long minFeePerByteNQT;
     private final List<String> uris;
 
     private Hub(Transaction transaction, Attachment.MessagingHubAnnouncement attachment) {
         this.accountId = transaction.getSenderId();
+        this.dbKey = hubDbKeyFactory.newKey(this.accountId);
         this.minFeePerByteNQT = attachment.getMinFeePerByteNQT();
         this.uris = Collections.unmodifiableList(Arrays.asList(attachment.getUris()));
     }
 
     private Hub(ResultSet rs) throws SQLException {
         this.accountId = rs.getLong("account_id");
+        this.dbKey = hubDbKeyFactory.newKey(this.accountId);
         this.minFeePerByteNQT = rs.getLong("min_fee_per_byte");
         this.uris = Collections.unmodifiableList(Arrays.asList((String[])rs.getObject("uris")));
     }

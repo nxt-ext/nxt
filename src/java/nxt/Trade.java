@@ -25,7 +25,7 @@ public final class Trade {
 
         @Override
         public DbKey newKey(Trade trade) {
-            return newKey(trade.askOrderId, trade.bidOrderId);
+            return trade.dbKey;
         }
 
     };
@@ -96,7 +96,9 @@ public final class Trade {
     private final Long assetId;
     private final Long blockId;
     private final int height;
-    private final Long askOrderId, bidOrderId;
+    private final Long askOrderId;
+    private final Long bidOrderId;
+    private final DbKey dbKey;
     private final long quantityQNT;
     private final long priceNQT;
 
@@ -107,6 +109,7 @@ public final class Trade {
         this.timestamp = block.getTimestamp();
         this.askOrderId = askOrderId;
         this.bidOrderId = bidOrderId;
+        this.dbKey = tradeDbKeyFactory.newKey(this.askOrderId, this.bidOrderId);
         this.quantityQNT = quantityQNT;
         this.priceNQT = priceNQT;
     }
@@ -116,6 +119,7 @@ public final class Trade {
         this.blockId = rs.getLong("block_id");
         this.askOrderId = rs.getLong("ask_order_id");
         this.bidOrderId = rs.getLong("bid_order_id");
+        this.dbKey = tradeDbKeyFactory.newKey(this.askOrderId, this.bidOrderId);
         this.quantityQNT = rs.getLong("quantity");
         this.priceNQT = rs.getLong("price");
         this.timestamp = rs.getInt("timestamp");

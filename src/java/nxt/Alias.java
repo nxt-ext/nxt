@@ -17,15 +17,18 @@ public final class Alias {
         private long priceNQT;
         private Long buyerId;
         private final Long aliasId;
+        private final DbKey dbKey;
 
         private Offer(Long aliasId, long priceNQT, Long buyerId) {
             this.priceNQT = priceNQT;
             this.buyerId = buyerId;
             this.aliasId = aliasId;
+            this.dbKey = offerDbKeyFactory.newKey(this.aliasId);
         }
 
         private Offer(ResultSet rs) throws SQLException {
             this.aliasId = rs.getLong("id");
+            this.dbKey = offerDbKeyFactory.newKey(this.aliasId);
             this.priceNQT = rs.getLong("price");
             this.buyerId  = DbUtils.getLong(rs, "buyer_id");
         }
@@ -60,7 +63,7 @@ public final class Alias {
 
         @Override
         public DbKey newKey(Alias alias) {
-            return newKey(alias.getId());
+            return alias.dbKey;
         }
 
     };
@@ -88,7 +91,7 @@ public final class Alias {
 
         @Override
         public DbKey newKey(Offer offer) {
-            return newKey(offer.getId());
+            return offer.dbKey;
         }
 
     };
@@ -178,12 +181,14 @@ public final class Alias {
 
     private Long accountId;
     private final Long id;
+    private final DbKey dbKey;
     private final String aliasName;
     private String aliasURI;
     private int timestamp;
 
     private Alias(Long id, Long accountId, String aliasName, String aliasURI, int timestamp) {
         this.id = id;
+        this.dbKey = aliasDbKeyFactory.newKey(this.id);
         this.accountId = accountId;
         this.aliasName = aliasName;
         this.aliasURI = aliasURI;
@@ -197,6 +202,7 @@ public final class Alias {
 
     private Alias(ResultSet rs) throws SQLException {
         this.id = rs.getLong("id");
+        this.dbKey = aliasDbKeyFactory.newKey(this.id);
         this.accountId = rs.getLong("account_id");
         this.aliasName = rs.getString("alias_name");
         this.aliasURI = rs.getString("alias_uri");
