@@ -289,10 +289,11 @@ final class TransactionProcessorImpl implements TransactionProcessor {
         nonBroadcastedTransactions.clear();
     }
 
-    void undo(BlockImpl block) {
+    void undo(BlockImpl block, Set<Long> unappliedUnconfirmed) {
         List<Transaction> addedUnconfirmedTransactions = new ArrayList<>();
         for (TransactionImpl transaction : block.getTransactions()) {
             transaction.undo();
+            unappliedUnconfirmed.add(transaction.getId());
             unconfirmedTransactionTable.insert(transaction);
             addedUnconfirmedTransactions.add(transaction);
         }
@@ -316,7 +317,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
     }
 
     Set<Long> undoAllUnconfirmed() {
-        HashSet<Long> undone = new HashSet<>();
+        Set<Long> undone = new HashSet<>();
         try (DbIterator<TransactionImpl> transactions = unconfirmedTransactionTable.getAll(0, -1)) {
             while (transactions.hasNext()) {
                 TransactionImpl transaction = transactions.next();

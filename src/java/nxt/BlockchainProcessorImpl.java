@@ -677,14 +677,16 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         synchronized (blockchain) {
             try {
                 Db.beginTransaction();
+                Set<Long> unappliedUnconfirmed = transactionProcessor.undoAllUnconfirmed();
                 BlockImpl block = blockchain.getLastBlock();
                 while (!block.getId().equals(commonBlock.getId()) && !block.getId().equals(Genesis.GENESIS_BLOCK_ID)) {
                     poppedOffBlocks.push(block);
-                    block = popLastBlock();
+                    block = popLastBlock(unappliedUnconfirmed);
                 }
                 for (DerivedDbTable table : derivedTables) {
                     table.rollback(commonBlock.getHeight());
                 }
+                transactionProcessor.applyUnconfirmed(unappliedUnconfirmed);
                 Db.commitTransaction();
             } catch (RuntimeException e) {
                 Db.rollbackTransaction();
@@ -697,7 +699,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         return poppedOffBlocks;
     }
 
-    private BlockImpl popLastBlock() {
+    private BlockImpl popLastBlock(Set<Long> unappliedUnconfirmed) {
         BlockImpl block = blockchain.getLastBlock();
         Logger.logDebugMessage("Will pop block " + block.getStringId() + " at height " + block.getHeight());
         if (block.getId().equals(Genesis.GENESIS_BLOCK_ID)) {
@@ -705,7 +707,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         }
         BlockImpl previousBlock = BlockDb.findBlock(block.getPreviousBlockId());
         blockchain.setLastBlock(block, previousBlock);
-        transactionProcessor.undo(block);
+        transactionProcessor.undo(block, unappliedUnconfirmed);
         BlockDb.deleteBlocksFrom(block.getId());
         blockListeners.notify(block, Event.BLOCK_POPPED);
         return previousBlock;
