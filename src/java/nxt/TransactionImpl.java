@@ -1,6 +1,7 @@
 package nxt;
 
 import nxt.crypto.Crypto;
+import nxt.db.DbKey;
 import nxt.util.Convert;
 import nxt.util.Logger;
 import org.json.simple.JSONObject;
@@ -188,6 +189,7 @@ final class TransactionImpl implements Transaction {
     private volatile String stringId;
     private volatile Long senderId;
     private volatile String fullHash;
+    private volatile DbKey dbKey;
 
     private TransactionImpl(BuilderImpl builder) throws NxtException.NotValidException {
 
@@ -425,6 +427,13 @@ final class TransactionImpl implements Transaction {
             senderId = Account.getId(senderPublicKey);
         }
         return senderId;
+    }
+
+    DbKey getDbKey() {
+        if (dbKey == null) {
+            dbKey = TransactionProcessorImpl.unconfirmedTransactionDbKeyFactory.newKey(getId());
+        }
+        return dbKey;
     }
 
     @Override
