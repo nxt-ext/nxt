@@ -82,8 +82,6 @@ public interface Appendix {
 
         abstract void apply(Transaction transaction, Account senderAccount, Account recipientAccount);
 
-        abstract void undo(Transaction transaction, Account senderAccount, Account recipientAccount) throws TransactionType.UndoNotSupportedException;
-
     }
 
     public static class Message extends AbstractAppendix {
@@ -167,9 +165,6 @@ public interface Appendix {
         @Override
         void apply(Transaction transaction, Account senderAccount, Account recipientAccount) {}
 
-        @Override
-        void undo(Transaction transaction, Account senderAccount, Account recipientAccount) {}
-
         public byte[] getMessage() {
             return message;
         }
@@ -238,9 +233,6 @@ public interface Appendix {
         }
 
         void apply(Transaction transaction, Account senderAccount, Account recipientAccount) {}
-
-        @Override
-        void undo(Transaction transaction, Account senderAccount, Account recipientAccount) {}
 
         public final EncryptedData getEncryptedData() {
             return encryptedData;
@@ -413,11 +405,6 @@ public interface Appendix {
             if (recipientAccount.setOrVerify(publicKey, transaction.getHeight())) {
                 recipientAccount.apply(this.publicKey, transaction.getHeight());
             }
-        }
-
-        @Override
-        void undo(Transaction transaction, Account senderAccount, Account recipientAccount) {
-            recipientAccount.undo(transaction.getHeight());
         }
 
         public byte[] getPublicKey() {

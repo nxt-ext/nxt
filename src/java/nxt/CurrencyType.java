@@ -125,10 +125,6 @@ public abstract class CurrencyType {
 
     public abstract void applyCurrencyIssuanceAttachment(Transaction transaction, Account senderAccount, Account recipientAccount);
 
-    public void undoCurrencyIssuanceAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) throws TransactionType.UndoNotSupportedException {
-        throw new TransactionType.UndoNotSupportedException("Reversal of currency issuance not supported");
-    }
-
     public boolean isMintable() {
         return false;
     }

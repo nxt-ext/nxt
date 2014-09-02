@@ -1,5 +1,6 @@
 package nxt;
 
+import nxt.db.DerivedDbTable;
 import nxt.peer.Peer;
 import nxt.util.Observable;
 import org.json.simple.JSONObject;
@@ -10,8 +11,7 @@ public interface BlockchainProcessor extends Observable<Block,BlockchainProcesso
         BLOCK_PUSHED, BLOCK_POPPED, BLOCK_GENERATED, BLOCK_SCANNED,
         RESCAN_BEGIN, RESCAN_END,
         BEFORE_BLOCK_ACCEPT,
-        BEFORE_BLOCK_APPLY, AFTER_BLOCK_APPLY,
-        BEFORE_BLOCK_UNDO
+        BEFORE_BLOCK_APPLY, AFTER_BLOCK_APPLY
     }
 
     Peer getLastBlockchainFeeder();
@@ -20,9 +20,13 @@ public interface BlockchainProcessor extends Observable<Block,BlockchainProcesso
 
     boolean isScanning();
 
+    boolean isDownloading();
+
     void processPeerBlock(JSONObject request) throws NxtException;
 
     void fullReset();
+
+    void registerDerivedTable(DerivedDbTable table);
 
 
     public static class BlockNotAcceptedException extends NxtException {

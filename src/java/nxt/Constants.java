@@ -24,7 +24,6 @@ public final class Constants {
     public static final int MAX_ACCOUNT_DESCRIPTION_LENGTH = 1000;
 
     public static final long MAX_ASSET_QUANTITY_QNT = 1000000000L * 100000000L;
-    public static final long ASSET_ISSUANCE_FEE_NQT = 1000 * ONE_NXT;
     public static final int MIN_ASSET_NAME_LENGTH = 3;
     public static final int MAX_ASSET_NAME_LENGTH = 10;
     public static final int MAX_ASSET_DESCRIPTION_LENGTH = 1000;

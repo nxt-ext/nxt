@@ -152,7 +152,7 @@ public final class Users {
                         userServer.start();
                         Logger.logMessage("Started user interface server at " + host + ":" + port);
                     } catch (Exception e) {
-                        Logger.logDebugMessage("Failed to start user interface server", e);
+                        Logger.logErrorMessage("Failed to start user interface server", e);
                         throw new RuntimeException(e.toString(), e);
                     }
                 }
@@ -603,7 +603,7 @@ public final class Users {
             try {
                 userServer.stop();
             } catch (Exception e) {
-                Logger.logDebugMessage("Failed to stop user interface server", e);
+                Logger.logShutdownMessage("Failed to stop user interface server", e);
             }
         }
     }

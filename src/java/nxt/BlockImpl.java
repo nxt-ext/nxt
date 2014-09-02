@@ -13,7 +13,9 @@ import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
@@ -357,7 +359,7 @@ final class BlockImpl implements Block {
 
             BigInteger hit = new BigInteger(1, new byte[] {generationSignatureHash[7], generationSignatureHash[6], generationSignatureHash[5], generationSignatureHash[4], generationSignatureHash[3], generationSignatureHash[2], generationSignatureHash[1], generationSignatureHash[0]});
 
-            return Generator.verifyHit(hit, effectiveBalance, previousBlock, timestamp);
+            return Generator.verifyHit(hit, effectiveBalance, previousBlock, timestamp) || (this.height < Constants.TRANSPARENT_FORGING_BLOCK_5 && badBlocks.contains(this.getId()));
 
         } catch (RuntimeException e) {
 
@@ -368,18 +370,18 @@ final class BlockImpl implements Block {
 
     }
 
+    private static final Set<Long> badBlocks = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(
+            5113090348579089956L, 8032405266942971936L, 7702042872885598917L, -407022268390237559L, -3320029330888410250L,
+            -6568770202903512165L, 4288642518741472722L, 5315076199486616536L, -6175599071600228543L)));
+
     void apply() {
         Account generatorAccount = Account.addOrGetAccount(getGeneratorId());
         generatorAccount.apply(generatorPublicKey, this.height);
         generatorAccount.addToBalanceAndUnconfirmedBalanceNQT(totalFeeNQT);
         generatorAccount.addToForgedBalanceNQT(totalFeeNQT);
-    }
-
-    void undo() {
-        Account generatorAccount = Account.getAccount(getGeneratorId());
-        generatorAccount.undo(getHeight());
-        generatorAccount.addToBalanceAndUnconfirmedBalanceNQT(-totalFeeNQT);
-        generatorAccount.addToForgedBalanceNQT(-totalFeeNQT);
+        for (TransactionImpl transaction : getTransactions()) {
+            transaction.apply();
+        }
     }
 
     void setPrevious(BlockImpl previousBlock) {

@@ -3,7 +3,9 @@
  */
 var NRS = (function(NRS, $, undefined) {
 	NRS.pages.peers = function() {
-		NRS.sendRequest("getPeers+", function(response) {
+		NRS.sendRequest("getPeers+", {
+			"active": "true"
+		}, function(response) {
 			if (response.peers && response.peers.length) {
 				var peers = {};
 				var nrPeers = 0;
@@ -38,23 +40,21 @@ var NRS = (function(NRS, $, undefined) {
 									continue;
 								}
 
-								if (peer.state != 0) {
-									activePeers++;
-									downloaded += peer.downloadedVolume;
-									uploaded += peer.uploadedVolume;
-									if (peer.state == 1) {
-										connected++;
-									}
-
-									var versionToCompare = (!NRS.isTestNet ? NRS.normalVersion.versionNr : NRS.state.version);
-
-									if (NRS.versionCompare(peer.version, versionToCompare) >= 0) {
-										upToDate++;
-									}
-
-									rows += "<tr><td>" + (peer.state == 1 ? "<i class='fa fa-check-circle' style='color:#5cb85c' title='Connected'></i>" : "<i class='fa fa-times-circle' style='color:#f0ad4e' title='Disconnected'></i>") + "&nbsp;&nbsp;" + (peer.announcedAddress ? String(peer.announcedAddress).escapeHTML() : "No name") + "</td><td" + (peer.weight > 0 ? " style='font-weight:bold'" : "") + ">" + NRS.formatWeight(peer.weight) + "</td><td>" + NRS.formatVolume(peer.downloadedVolume) + "</td><td>" + NRS.formatVolume(peer.uploadedVolume) + "</td><td><span class='label label-" +
-										(NRS.versionCompare(peer.version, versionToCompare) >= 0 ? "success" : "danger") + "'>" + (peer.application && peer.version ? String(peer.application).escapeHTML() + " " + String(peer.version).escapeHTML() : "?") + "</label></td><td>" + (peer.platform ? String(peer.platform).escapeHTML() : "?") + "</td></tr>";
+								activePeers++;
+								downloaded += peer.downloadedVolume;
+								uploaded += peer.uploadedVolume;
+								if (peer.state == 1) {
+									connected++;
 								}
+
+								var versionToCompare = (!NRS.isTestNet ? NRS.normalVersion.versionNr : NRS.state.version);
+
+								if (NRS.versionCompare(peer.version, versionToCompare) >= 0) {
+									upToDate++;
+								}
+
+								rows += "<tr><td>" + (peer.state == 1 ? "<i class='fa fa-check-circle' style='color:#5cb85c' title='Connected'></i>" : "<i class='fa fa-times-circle' style='color:#f0ad4e' title='Disconnected'></i>") + "&nbsp;&nbsp;" + (peer.announcedAddress ? String(peer.announcedAddress).escapeHTML() : "No name") + "</td><td" + (peer.weight > 0 ? " style='font-weight:bold'" : "") + ">" + NRS.formatWeight(peer.weight) + "</td><td>" + NRS.formatVolume(peer.downloadedVolume) + "</td><td>" + NRS.formatVolume(peer.uploadedVolume) + "</td><td><span class='label label-" +
+									(NRS.versionCompare(peer.version, versionToCompare) >= 0 ? "success" : "danger") + "'>" + (peer.application && peer.version ? String(peer.application).escapeHTML() + " " + String(peer.version).escapeHTML() : "?") + "</label></td><td>" + (peer.platform ? String(peer.platform).escapeHTML() : "?") + "</td></tr>";
 							}
 
 							$("#peers_uploaded_volume").html(NRS.formatVolume(uploaded)).removeClass("loading_dots");

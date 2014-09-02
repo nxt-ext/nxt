@@ -450,6 +450,9 @@ var NRS = (function(NRS, $, undefined) {
 				$.i18n.setLng(NRS.settings["language"], null, function() {
 					$("[data-i18n]").i18n();
 				});
+				if (key && window.localstorage) {
+					window.localStorage.setItem('i18next_lng', NRS.settings["language"]);
+				}
 				if (NRS.inApp) {
 					parent.postMessage({
 						"type": "language",

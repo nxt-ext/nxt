@@ -1,6 +1,6 @@
 package nxt;
 
-import nxt.util.DbIterator;
+import nxt.db.DbIterator;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -13,6 +13,8 @@ public interface Blockchain {
     int getHeight();
 
     Block getBlock(Long blockId);
+
+    Block getBlockAtHeight(int height);
 
     boolean hasBlock(Long blockId);
 
@@ -42,9 +44,9 @@ public interface Blockchain {
 
     DbIterator<? extends Transaction> getAllTransactions();
 
-    DbIterator<? extends Transaction> getTransactions(Account account, byte type, byte subtype, int timestamp);
+    DbIterator<? extends Transaction> getTransactions(Account account, byte type, byte subtype, int blockTimestamp);
 
-    DbIterator<? extends Transaction> getTransactions(Account account, byte type, byte subtype, int timestamp, int from, int to);
+    DbIterator<? extends Transaction> getTransactions(Account account, int numberOfConfirmations, byte type, byte subtype, int blockTimestamp, int from, int to);
 
     DbIterator<? extends Transaction> getTransactions(Connection con, PreparedStatement pstmt);
 

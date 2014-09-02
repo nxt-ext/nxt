@@ -205,8 +205,8 @@ final class PeerImpl implements Peer {
             // prevents erroneous blacklisting during loading of blockchain from scratch
             return;
         }
-        if (! isBlacklisted()) {
-            Logger.logDebugMessage("Blacklisting " + peerAddress + " because of: " + cause.toString());
+        if (! isBlacklisted() && ! (cause instanceof IOException)) {
+            Logger.logDebugMessage("Blacklisting " + peerAddress + " because of: " + cause.toString(), cause);
         }
         blacklist();
     }
@@ -414,8 +414,8 @@ final class PeerImpl implements Peer {
             String host = uri.getHost();
 
             Hallmark hallmark = Hallmark.parseHallmark(hallmarkString);
-            if (! hallmark.isValid()
-                    || ! (hallmark.getHost().equals(host) || InetAddress.getByName(host).equals(InetAddress.getByName(hallmark.getHost())))) {
+            if (!hallmark.isValid()
+                    || !(hallmark.getHost().equals(host) || InetAddress.getByName(host).equals(InetAddress.getByName(hallmark.getHost())))) {
                 //Logger.logDebugMessage("Invalid hallmark for " + host + ", hallmark host is " + hallmark.getHost());
                 return false;
             }
@@ -446,7 +446,8 @@ final class PeerImpl implements Peer {
 
             return true;
 
-        } catch (URISyntaxException | UnknownHostException | RuntimeException e) {
+        } catch (UnknownHostException ignore) {
+        } catch (URISyntaxException | RuntimeException e) {
             Logger.logDebugMessage("Failed to analyze hallmark for peer " + address + ", " + e.toString());
         }
         return false;

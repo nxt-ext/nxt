@@ -88,6 +88,8 @@ var NRS = (function(NRS, $, undefined) {
 						}
 						NRS.loadAssetExchangeSidebar(callback);
 					});
+				} else {
+					NRS.loadAssetExchangeSidebar(callback);
 				}
 			} else {
 				NRS.loadAssetExchangeSidebar(callback);
@@ -246,8 +248,9 @@ var NRS = (function(NRS, $, undefined) {
 				newAssetIds.push({
 					"asset": String(asset.asset)
 				});
-			} else {
+			} else if (NRS.assetIds.indexOf(asset.asset) == -1) {
 				NRS.assetIds.push(asset.asset);
+				newAsset.name = newAsset.name.toLowerCase();
 				NRS.assets.push(newAsset);
 			}
 		});
@@ -305,7 +308,7 @@ var NRS = (function(NRS, $, undefined) {
 	//called on opening the asset exchange page and automatic refresh
 	NRS.loadAssetExchangeSidebar = function(callback) {
 		if (!NRS.assets.length) {
-			NRS.pageLoaded();
+			NRS.pageLoaded(callback);
 			$("#asset_exchange_sidebar_content").empty();
 			$("#no_asset_selected, #loading_asset_data, #no_asset_search_results, #asset_details").hide();
 			$("#no_assets_available").show();
@@ -1696,11 +1699,6 @@ var NRS = (function(NRS, $, undefined) {
 		delete data.decimals;
 
 		if (!data.add_message) {
-			delete data.add_message;
-			delete data.message;
-			delete data.encrypt_message;
-		} else if (!NRS.dgsBlockPassed) {
-			data.comment = data.message;
 			delete data.add_message;
 			delete data.message;
 			delete data.encrypt_message;
