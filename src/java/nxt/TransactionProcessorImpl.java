@@ -289,11 +289,11 @@ final class TransactionProcessorImpl implements TransactionProcessor {
         nonBroadcastedTransactions.clear();
     }
 
-    void undo(BlockImpl block, Set<Long> unappliedUnconfirmed) {
+    void undo(BlockImpl block, Set<TransactionImpl> unappliedUnconfirmed) {
         List<Transaction> addedUnconfirmedTransactions = new ArrayList<>();
         for (TransactionImpl transaction : block.getTransactions()) {
             transaction.undo();
-            unappliedUnconfirmed.add(transaction.getId());
+            unappliedUnconfirmed.add(transaction);
             unconfirmedTransactionTable.insert(transaction);
             addedUnconfirmedTransactions.add(transaction);
         }
@@ -302,10 +302,9 @@ final class TransactionProcessorImpl implements TransactionProcessor {
         }
     }
 
-    void applyUnconfirmed(Set<Long> unapplied) {
+    void applyUnconfirmed(Set<TransactionImpl> unapplied) {
         List<Transaction> removedUnconfirmedTransactions = new ArrayList<>();
-        for (Long transactionId : unapplied) {
-            TransactionImpl transaction = unconfirmedTransactionTable.get(unconfirmedTransactionDbKeyFactory.newKey(transactionId));
+        for (TransactionImpl transaction : unapplied) {
             if (! transaction.applyUnconfirmed()) {
                 unconfirmedTransactionTable.delete(transaction);
                 removedUnconfirmedTransactions.add(transaction);
@@ -316,13 +315,13 @@ final class TransactionProcessorImpl implements TransactionProcessor {
         }
     }
 
-    Set<Long> undoAllUnconfirmed() {
-        Set<Long> undone = new HashSet<>();
+    Set<TransactionImpl> undoAllUnconfirmed() {
+        Set<TransactionImpl> undone = new HashSet<>();
         try (DbIterator<TransactionImpl> transactions = unconfirmedTransactionTable.getAll(0, -1)) {
             while (transactions.hasNext()) {
                 TransactionImpl transaction = transactions.next();
                 transaction.undoUnconfirmed();
-                undone.add(transaction.getId());
+                undone.add(transaction);
             }
         }
         return undone;
@@ -334,7 +333,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
 
         for (TransactionImpl transaction : block.getTransactions()) {
             addedConfirmedTransactions.add(transaction);
-            TransactionImpl unconfirmedTransaction = unconfirmedTransactionTable.get(unconfirmedTransactionDbKeyFactory.newKey(transaction.getId()));
+            TransactionImpl unconfirmedTransaction = unconfirmedTransactionTable.get(transaction.getDbKey());
             if (unconfirmedTransaction != null) {
                 unconfirmedTransactionTable.delete(unconfirmedTransaction);
                 removedUnconfirmedTransactions.add(unconfirmedTransaction);
@@ -356,7 +355,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
             try {
                 Db.beginTransaction();
                 for (TransactionImpl transaction : transactions) {
-                    if (unconfirmedTransactionTable.get(unconfirmedTransactionDbKeyFactory.newKey(transaction.getId())) != null) {
+                    if (unconfirmedTransactionTable.get(transaction.getDbKey()) != null) {
                         unconfirmedTransactionTable.delete(transaction);
                         transaction.undoUnconfirmed();
                         removedList.add(transaction);
@@ -429,7 +428,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                         }
 
                         Long id = transaction.getId();
-                        if (TransactionDb.hasTransaction(id) || unconfirmedTransactionTable.get(unconfirmedTransactionDbKeyFactory.newKey(id)) != null) {
+                        if (TransactionDb.hasTransaction(id) || unconfirmedTransactionTable.get(transaction.getDbKey()) != null) {
                             continue;
                         }
 
