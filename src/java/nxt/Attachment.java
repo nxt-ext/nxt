@@ -7,6 +7,7 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -2181,6 +2182,308 @@ public interface Attachment extends Appendix {
             return counter;
         }
 
+    }
+
+    public final static class MonetarySystemShufflingInitiation extends AbstractAttachment {
+
+        private final Long currencyId;
+        private final long amount;
+        private final byte numberOfParticipants;
+        private final short maxInitiationDelay;
+        private final short maxContinuationDelay;
+        private final short maxFinalizationDelay;
+        private final short maxCancellationDelay;
+
+        MonetarySystemShufflingInitiation(ByteBuffer buffer, byte transactionVersion) {
+            super(buffer, transactionVersion);
+            this.currencyId = buffer.getLong();
+            this.amount = buffer.getLong();
+            this.numberOfParticipants = buffer.get();
+            this.maxInitiationDelay = buffer.getShort();
+            this.maxContinuationDelay = buffer.getShort();
+            this.maxFinalizationDelay = buffer.getShort();
+            this.maxCancellationDelay = buffer.getShort();
+        }
+
+        MonetarySystemShufflingInitiation(JSONObject attachmentData) {
+            super(attachmentData);
+            this.currencyId = Convert.parseUnsignedLong((String)attachmentData.get("currency"));
+            this.amount = (Long)attachmentData.get("amount");
+            this.numberOfParticipants = ((Long)attachmentData.get("numberOfParticipants")).byteValue();
+            this.maxInitiationDelay = ((Long)attachmentData.get("maxInitiationDelay")).shortValue();
+            this.maxContinuationDelay = ((Long)attachmentData.get("maxContinuationDelay")).shortValue();
+            this.maxFinalizationDelay = ((Long)attachmentData.get("maxFinalizationDelay")).shortValue();
+            this.maxCancellationDelay = ((Long)attachmentData.get("maxCancellationDelay")).shortValue();
+        }
+
+        MonetarySystemShufflingInitiation(Long currencyId, long amount, byte numberOfParticipants, short maxInitiationDelay, short maxContinuationDelay, short maxFinalizationDelay, short maxCancellationDelay) {
+            this.currencyId = currencyId;
+            this.amount = amount;
+            this.numberOfParticipants = numberOfParticipants;
+            this.maxInitiationDelay = maxInitiationDelay;
+            this.maxContinuationDelay = maxContinuationDelay;
+            this.maxFinalizationDelay = maxFinalizationDelay;
+            this.maxCancellationDelay = maxCancellationDelay;
+        }
+
+        @Override
+        String getAppendixName() {
+            return "ShufflingInitiation";
+        }
+
+        @Override
+        int getMySize() {
+            return 8 + 8 + 1 + 2 + 2 + 2 + 2;
+        }
+
+        @Override
+        void putMyBytes(ByteBuffer buffer) {
+            buffer.putLong(currencyId);
+            buffer.putLong(amount);
+            buffer.put(numberOfParticipants);
+            buffer.putShort(maxInitiationDelay);
+            buffer.putShort(maxContinuationDelay);
+            buffer.putShort(maxFinalizationDelay);
+            buffer.putShort(maxCancellationDelay);
+        }
+
+        @Override
+        void putMyJSON(JSONObject attachment) {
+            attachment.put("currency", Convert.toUnsignedLong(currencyId));
+            attachment.put("amount", amount);
+            attachment.put("numberOfParticipants", numberOfParticipants);
+            attachment.put("maxInitiationDelay", maxInitiationDelay);
+            attachment.put("maxContinuationDelay", maxContinuationDelay);
+            attachment.put("maxFinalizationDelay", maxFinalizationDelay);
+            attachment.put("maxCancellationDelay", maxCancellationDelay);
+        }
+
+        @Override
+        public TransactionType getTransactionType() {
+            return TransactionType.MonetarySystem.SHUFFLING_INITIATION;
+        }
+
+        public Long getCurrencyId() {
+            return currencyId;
+        }
+
+        public long getAmount() {
+            return amount;
+        }
+
+        public byte getNumberOfParticipants() {
+            return numberOfParticipants;
+        }
+
+        public short getMaxInitiationDelay() {
+            return maxInitiationDelay;
+        }
+
+        public short getMaxContinuationDelay() {
+            return maxContinuationDelay;
+        }
+
+        public short getMaxFinalizationDelay() {
+            return maxFinalizationDelay;
+        }
+
+        public short getMaxCancellationDelay() {
+            return maxCancellationDelay;
+        }
+    }
+
+    public final static class MonetarySystemShufflingContinuation extends AbstractAttachment {
+
+        private final Long shufflingId;
+        private final EncryptedData recipients;
+
+        MonetarySystemShufflingContinuation(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
+            super(buffer, transactionVersion);
+            this.shufflingId = buffer.getLong();
+            this.recipients = EncryptedData.readEncryptedData(buffer, buffer.getInt(), Constants.MAX_SHUFFLING_RECIPIENTS_LENGTH, this.shufflingId);
+        }
+
+        MonetarySystemShufflingContinuation(JSONObject attachmentData) {
+            super(attachmentData);
+            this.shufflingId = Convert.parseUnsignedLong((String)attachmentData.get("shuffling"));
+            this.recipients = new EncryptedData(Convert.parseHexString((String)attachmentData.get("recipients")), this.shufflingId);
+        }
+
+        MonetarySystemShufflingContinuation(Long shufflingId, EncryptedData recipients) {
+            this.shufflingId = shufflingId;
+            this.recipients = recipients;
+        }
+
+        @Override
+        String getAppendixName() {
+            return "ShufflingContinuation";
+        }
+
+        @Override
+        int getMySize() {
+            return 8 + 4 + recipients.getData().length;
+        }
+
+        @Override
+        void putMyBytes(ByteBuffer buffer) {
+            buffer.putLong(shufflingId);
+            buffer.putInt(recipients.getData().length);
+            buffer.put(recipients.getData());
+        }
+
+        @Override
+        void putMyJSON(JSONObject attachment) {
+            attachment.put("shuffling", Convert.toUnsignedLong(shufflingId));
+            attachment.put("recipients", Convert.toHexString(recipients.getData()));
+
+        }
+
+        @Override
+        public TransactionType getTransactionType() {
+            return TransactionType.MonetarySystem.SHUFFLING_CONTINUATION;
+        }
+
+        public Long getShufflingId() {
+            return shufflingId;
+        }
+
+        public EncryptedData getRecipients() {
+            return recipients;
+        }
+    }
+
+    public final static class MonetarySystemShufflingFinalization extends AbstractAttachment {
+
+        private final Long shufflingId;
+        private final Long[] recipients;
+
+        MonetarySystemShufflingFinalization(ByteBuffer buffer, byte transactionVersion) {
+            super(buffer, transactionVersion);
+            this.shufflingId = buffer.getLong();
+            byte numberOfEntries = buffer.get();
+            this.recipients = new Long[numberOfEntries];
+            for (int i = 0; i < this.recipients.length; i++) {
+                this.recipients[i] = buffer.getLong();
+            }
+            Arrays.sort(this.recipients);
+        }
+
+        MonetarySystemShufflingFinalization(JSONObject attachmentData) {
+            super(attachmentData);
+            this.shufflingId = Convert.parseUnsignedLong((String)attachmentData.get("shuffling"));
+            JSONArray recipientsData = (JSONArray)attachmentData.get("recipients");
+            this.recipients = new Long[recipientsData.size()];
+            for (int i = 0; i < this.recipients.length; i++) {
+                this.recipients[i] = Convert.parseUnsignedLong((String)recipientsData.get(i));
+            }
+            Arrays.sort(this.recipients);
+        }
+
+        MonetarySystemShufflingFinalization(Long shufflingId, Long[] recipients) {
+            this.shufflingId = shufflingId;
+            this.recipients = recipients;
+        }
+
+        @Override
+        String getAppendixName() {
+            return "ShufflingFinalization";
+        }
+
+        @Override
+        int getMySize() {
+            return 8 + 1 + recipients.length * 8;
+        }
+
+        @Override
+        void putMyBytes(ByteBuffer buffer) {
+            buffer.putLong(shufflingId);
+            buffer.put((byte)recipients.length);
+            for (Long recipient : recipients) {
+                buffer.putLong(recipient);
+            }
+        }
+
+        @Override
+        void putMyJSON(JSONObject attachment) {
+            attachment.put("shuffling", Convert.toUnsignedLong(shufflingId));
+            JSONArray recipientsData = new JSONArray();
+            for (Long recipient : recipients) {
+                recipientsData.add(Convert.toUnsignedLong(recipient));
+            }
+            attachment.put("recipients", recipientsData);
+        }
+
+        @Override
+        public TransactionType getTransactionType() {
+            return TransactionType.MonetarySystem.SHUFFLING_FINALIZATION;
+        }
+
+        public Long getShufflingId() {
+            return shufflingId;
+        }
+
+        public Long[] getRecipients() {
+            return recipients;
+        }
+    }
+
+
+    public final static class MonetarySystemShufflingCancellation extends AbstractAttachment {
+
+        private final Long shufflingId;
+        private final byte[] nonce;
+
+        MonetarySystemShufflingCancellation(ByteBuffer buffer, byte transactionVersion) {
+            super(buffer, transactionVersion);
+            this.shufflingId = buffer.getLong();
+            buffer.get(this.nonce = new byte[32]);
+        }
+
+        MonetarySystemShufflingCancellation(JSONObject attachmentData) {
+            super(attachmentData);
+            this.shufflingId = Convert.parseUnsignedLong((String)attachmentData.get("shuffling"));
+            this.nonce = Convert.parseHexString((String)attachmentData.get("nonce"));
+        }
+
+        MonetarySystemShufflingCancellation(Long shufflingId, byte[] nonce) {
+            this.shufflingId = shufflingId;
+            this.nonce = nonce;
+        }
+
+        @Override
+        String getAppendixName() {
+            return "ShufflingCancellation";
+        }
+
+        @Override
+        int getMySize() {
+            return 8 + 32;
+        }
+
+        @Override
+        void putMyBytes(ByteBuffer buffer) {
+            buffer.putLong(shufflingId);
+            buffer.put(nonce);
+        }
+
+        @Override
+        void putMyJSON(JSONObject attachment) {
+            attachment.put("shuffling", Convert.toUnsignedLong(shufflingId));
+            attachment.put("nonce", Convert.toHexString(nonce));
+        }
+
+        @Override
+        public TransactionType getTransactionType() {
+            return TransactionType.MonetarySystem.SHUFFLING_CANCELLATION;
+        }
+
+        public Long getShufflingId() {
+            return shufflingId;
+        }
+
+        public byte[] getNonce() {
+            return nonce;
+        }
     }
 
 }

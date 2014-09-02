@@ -54,6 +54,10 @@ public abstract class TransactionType {
     private static final byte SUBTYPE_MONETARY_SYSTEM_EXCHANGE_OFFER_PUBLICATION = 4;
     private static final byte SUBTYPE_MONETARY_SYSTEM_EXCHANGE = 5;
     private static final byte SUBTYPE_MONETARY_SYSTEM_MONEY_MINTING = 6;
+    private static final byte SUBTYPE_MONETARY_SYSTEM_SHUFFLING_INITIATION = 7;
+    private static final byte SUBTYPE_MONETARY_SYSTEM_SHUFFLING_CONTINUATION = 8;
+    private static final byte SUBTYPE_MONETARY_SYSTEM_SHUFFLING_FINALIZATION = 9;
+    private static final byte SUBTYPE_MONETARY_SYSTEM_SHUFFLING_CANCELLATION = 10;
 
     private static final byte SUBTYPE_ACCOUNT_CONTROL_EFFECTIVE_BALANCE_LEASING = 0;
 
@@ -148,6 +152,14 @@ public abstract class TransactionType {
                         return MonetarySystem.EXCHANGE;
                     case SUBTYPE_MONETARY_SYSTEM_MONEY_MINTING:
                         return MonetarySystem.MONEY_MINTING;
+                    case SUBTYPE_MONETARY_SYSTEM_SHUFFLING_INITIATION:
+                        return MonetarySystem.SHUFFLING_INITIATION;
+                    case SUBTYPE_MONETARY_SYSTEM_SHUFFLING_CONTINUATION:
+                        return MonetarySystem.SHUFFLING_CONTINUATION;
+                    case SUBTYPE_MONETARY_SYSTEM_SHUFFLING_FINALIZATION:
+                        return MonetarySystem.SHUFFLING_FINALIZATION;
+                    case SUBTYPE_MONETARY_SYSTEM_SHUFFLING_CANCELLATION:
+                        return MonetarySystem.SHUFFLING_CANCELLATION;
                 }
             default:
                 return null;
@@ -2414,6 +2426,265 @@ public abstract class TransactionType {
                 return false;
             }
 
+        };
+
+        public static final TransactionType SHUFFLING_INITIATION = new MonetarySystem() {
+
+            @Override
+            public byte getSubtype() {
+                return SUBTYPE_MONETARY_SYSTEM_SHUFFLING_INITIATION;
+            }
+
+            @Override
+            Attachment.AbstractAttachment parseAttachment(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
+                return new Attachment.MonetarySystemShufflingInitiation(buffer, transactionVersion);
+            }
+
+            @Override
+            Attachment.AbstractAttachment parseAttachment(JSONObject attachmentData) throws NxtException.NotValidException {
+                return new Attachment.MonetarySystemShufflingInitiation(attachmentData);
+            }
+
+            @Override
+            void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
+                if (Nxt.getBlockchain().getLastBlock().getHeight() < Constants.MONETARY_SYSTEM_BLOCK) {
+                    throw new NxtException.NotYetEnabledException("Monetary System not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
+                }
+                Attachment.MonetarySystemShufflingInitiation attachment = (Attachment.MonetarySystemShufflingInitiation)transaction.getAttachment();
+                if (!Genesis.CREATOR_ID.equals(transaction.getRecipientId())
+                        || transaction.getAmountNQT() != 0
+                        || !Currency.isIssued(attachment.getCurrencyId())
+                        || attachment.getAmount() <= 0 || attachment.getAmount() > Constants.MAX_CURRENCY_TOTAL_SUPPLY
+                        || attachment.getNumberOfParticipants() < Constants.MIN_NUMBER_OF_SHUFFLING_PARTICIPANTS || attachment.getNumberOfParticipants() > Constants.MAX_NUMBER_OF_SHUFFLING_PARTICIPANTS
+                        || attachment.getMaxInitiationDelay() < Constants.MIN_SHUFFLING_DELAY || attachment.getMaxInitiationDelay() > Constants.MAX_SHUFFLING_DELAY
+                        || attachment.getMaxContinuationDelay() < Constants.MIN_SHUFFLING_DELAY || attachment.getMaxContinuationDelay() > Constants.MAX_SHUFFLING_DELAY
+                        || attachment.getMaxFinalizationDelay() < Constants.MIN_SHUFFLING_DELAY || attachment.getMaxFinalizationDelay() > Constants.MAX_SHUFFLING_DELAY
+                        || attachment.getMaxCancellationDelay() < Constants.MIN_SHUFFLING_DELAY || attachment.getMaxCancellationDelay() > Constants.MAX_SHUFFLING_DELAY) {
+                    throw new NxtException.NotValidException("Invalid shuffling initiation: " + attachment.getJSONObject());
+                }
+            }
+
+            @Override
+            boolean applyAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
+                Attachment.MonetarySystemShufflingInitiation attachment = (Attachment.MonetarySystemShufflingInitiation)transaction.getAttachment();
+                if (senderAccount.getUnconfirmedCurrencyBalanceQNT(attachment.getCurrencyId()) >= attachment.getAmount()) {
+                    senderAccount.addToCurrencyAndUnconfirmedCurrencyBalanceQNT(attachment.getCurrencyId(), -attachment.getAmount());
+                    return true;
+                }
+                return false;
+            }
+
+            @Override
+            void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
+                Attachment.MonetarySystemShufflingInitiation attachment = (Attachment.MonetarySystemShufflingInitiation)transaction.getAttachment();
+                CoinShuffler.initiateShuffling(senderAccount, attachment.getCurrencyId(), attachment.getAmount(), attachment.getNumberOfParticipants(), attachment.getMaxInitiationDelay(), attachment.getMaxContinuationDelay(), attachment.getMaxFinalizationDelay(), attachment.getMaxCancellationDelay());
+            }
+
+            @Override
+            void undoAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
+                Attachment.MonetarySystemShufflingInitiation attachment = (Attachment.MonetarySystemShufflingInitiation)transaction.getAttachment();
+                senderAccount.addToCurrencyAndUnconfirmedCurrencyBalanceQNT(attachment.getCurrencyId(), attachment.getAmount());
+            }
+
+            @Override
+            void undoAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) throws UndoNotSupportedException {
+                throw new UndoNotSupportedException("Reversal of shuffling initiation not supported");
+            }
+
+            @Override
+            void updateSpending(Transaction transaction, SuperComplexNumber spending) {
+                throw new UnsupportedOperationException("Not required in DB-based version");
+            }
+
+            @Override
+            public boolean hasRecipient() {
+                return false;
+            }
+        };
+
+        public static final TransactionType SHUFFLING_CONTINUATION = new MonetarySystem() {
+
+            @Override
+            public byte getSubtype() {
+                return SUBTYPE_MONETARY_SYSTEM_SHUFFLING_CONTINUATION;
+            }
+
+            @Override
+            Attachment.AbstractAttachment parseAttachment(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
+                return new Attachment.MonetarySystemShufflingContinuation(buffer, transactionVersion);
+            }
+
+            @Override
+            Attachment.AbstractAttachment parseAttachment(JSONObject attachmentData) throws NxtException.NotValidException {
+                return new Attachment.MonetarySystemShufflingContinuation(attachmentData);
+            }
+
+            @Override
+            void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
+                if (Nxt.getBlockchain().getLastBlock().getHeight() < Constants.MONETARY_SYSTEM_BLOCK) {
+                    throw new NxtException.NotYetEnabledException("Monetary System not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
+                }
+                Attachment.MonetarySystemShufflingContinuation attachment = (Attachment.MonetarySystemShufflingContinuation)transaction.getAttachment();
+                if (!Genesis.CREATOR_ID.equals(transaction.getRecipientId())
+                        || transaction.getAmountNQT() != 0
+                        || !CoinShuffler.isValid(attachment.getShufflingId())) {
+                    throw new NxtException.NotValidException("Invalid shuffling continuation: " + attachment.getJSONObject());
+                }
+            }
+
+            @Override
+            boolean applyAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
+                return true;
+            }
+
+            @Override
+            void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
+                Attachment.MonetarySystemShufflingContinuation attachment = (Attachment.MonetarySystemShufflingContinuation)transaction.getAttachment();
+                CoinShuffler.continueShuffling(senderAccount, attachment.getShufflingId(), attachment.getRecipients());
+            }
+
+            @Override
+            void undoAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
+            }
+
+            @Override
+            void undoAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) throws UndoNotSupportedException {
+                throw new UndoNotSupportedException("Reversal of shuffling continuation not supported");
+            }
+
+            @Override
+            void updateSpending(Transaction transaction, SuperComplexNumber spending) {
+                throw new UnsupportedOperationException("Not required in DB-based version");
+            }
+
+            @Override
+            public boolean hasRecipient() {
+                return false;
+            }
+        };
+
+        public static final TransactionType SHUFFLING_FINALIZATION = new MonetarySystem() {
+
+            @Override
+            public byte getSubtype() {
+                return SUBTYPE_MONETARY_SYSTEM_SHUFFLING_FINALIZATION;
+            }
+
+            @Override
+            Attachment.AbstractAttachment parseAttachment(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
+                return new Attachment.MonetarySystemShufflingFinalization(buffer, transactionVersion);
+            }
+
+            @Override
+            Attachment.AbstractAttachment parseAttachment(JSONObject attachmentData) throws NxtException.NotValidException {
+                return new Attachment.MonetarySystemShufflingFinalization(attachmentData);
+            }
+
+            @Override
+            void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
+                if (Nxt.getBlockchain().getLastBlock().getHeight() < Constants.MONETARY_SYSTEM_BLOCK) {
+                    throw new NxtException.NotYetEnabledException("Monetary System not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
+                }
+                Attachment.MonetarySystemShufflingFinalization attachment = (Attachment.MonetarySystemShufflingFinalization)transaction.getAttachment();
+                if (!Genesis.CREATOR_ID.equals(transaction.getRecipientId())
+                        || transaction.getAmountNQT() != 0
+                        || !CoinShuffler.isValid(attachment.getShufflingId())
+                        || attachment.getRecipients().length != CoinShuffler.getNumberOfParticipants(attachment.getShufflingId())) {
+                    throw new NxtException.NotValidException("Invalid shuffling finalization: " + attachment.getJSONObject());
+                }
+            }
+
+            @Override
+            boolean applyAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
+                return true;
+            }
+
+            @Override
+            void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
+                Attachment.MonetarySystemShufflingFinalization attachment = (Attachment.MonetarySystemShufflingFinalization)transaction.getAttachment();
+                CoinShuffler.finalizeShuffling(senderAccount, attachment.getShufflingId(), attachment.getRecipients());
+            }
+
+            @Override
+            void undoAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
+            }
+
+            @Override
+            void undoAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) throws UndoNotSupportedException {
+                throw new UndoNotSupportedException("Reversal of shuffling finalization not supported");
+            }
+
+            @Override
+            void updateSpending(Transaction transaction, SuperComplexNumber spending) {
+                throw new UnsupportedOperationException("Not required in DB-based version");
+            }
+
+            @Override
+            public boolean hasRecipient() {
+                return false;
+            }
+        };
+
+        public static final TransactionType SHUFFLING_CANCELLATION = new MonetarySystem() {
+
+            @Override
+            public byte getSubtype() {
+                return SUBTYPE_MONETARY_SYSTEM_SHUFFLING_CANCELLATION;
+            }
+
+            @Override
+            Attachment.AbstractAttachment parseAttachment(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
+                return new Attachment.MonetarySystemShufflingCancellation(buffer, transactionVersion);
+            }
+
+            @Override
+            Attachment.AbstractAttachment parseAttachment(JSONObject attachmentData) throws NxtException.NotValidException {
+                return new Attachment.MonetarySystemShufflingCancellation(attachmentData);
+            }
+
+            @Override
+            void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
+                if (Nxt.getBlockchain().getLastBlock().getHeight() < Constants.MONETARY_SYSTEM_BLOCK) {
+                    throw new NxtException.NotYetEnabledException("Monetary System not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
+                }
+                Attachment.MonetarySystemShufflingCancellation attachment = (Attachment.MonetarySystemShufflingCancellation)transaction.getAttachment();
+                if (!Genesis.CREATOR_ID.equals(transaction.getRecipientId())
+                        || transaction.getAmountNQT() != 0
+                        || !CoinShuffler.isValid(attachment.getShufflingId())
+                        || attachment.getNonce().length != 32) {
+                    throw new NxtException.NotValidException("Invalid shuffling finalization: " + attachment.getJSONObject());
+                }
+            }
+
+            @Override
+            boolean applyAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
+                return true;
+            }
+
+            @Override
+            void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
+                Attachment.MonetarySystemShufflingCancellation attachment = (Attachment.MonetarySystemShufflingCancellation)transaction.getAttachment();
+                CoinShuffler.cancelShuffling(senderAccount, attachment.getShufflingId(), attachment.getNonce());
+            }
+
+            @Override
+            void undoAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
+            }
+
+            @Override
+            void undoAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) throws UndoNotSupportedException {
+                throw new UndoNotSupportedException("Reversal of shuffling cancellation not supported");
+            }
+
+            @Override
+            void updateSpending(Transaction transaction, SuperComplexNumber spending) {
+                throw new UnsupportedOperationException("Not required in DB-based version");
+            }
+
+            @Override
+            public boolean hasRecipient() {
+                return false;
+            }
         };
 
     }
