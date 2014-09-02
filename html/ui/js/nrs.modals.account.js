@@ -29,13 +29,15 @@ var NRS = (function(NRS, $, undefined) {
 
 		$("#user_info_modal_account").html(NRS.getAccountFormatted(NRS.userInfoModal.user));
 
-		$("#user_info_modal_actions button").data("account", NRS.userInfoModal.user);
-
 		if (NRS.userInfoModal.user in NRS.contacts) {
+			var accountButton = NRS.contacts[NRS.userInfoModal.user].name.escapeHTML();
 			$("#user_info_modal_add_as_contact").hide();
 		} else {
+			var accountButton = NRS.userInfoModal.user;
 			$("#user_info_modal_add_as_contact").show();
 		}
+
+		$("#user_info_modal_actions button").data("account", accountButton);
 
 		if (NRS.fetchingModalData) {
 			NRS.sendRequest("getAccount", {
