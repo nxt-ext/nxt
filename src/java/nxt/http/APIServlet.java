@@ -134,6 +134,7 @@ public final class APIServlet extends HttpServlet {
         map.put("getBidOrders", GetBidOrders.instance);
         map.put("issueAsset", IssueAsset.instance);
         map.put("leaseBalance", LeaseBalance.instance);
+        map.put("longConvert", LongConvert.instance);
         map.put("markHost", MarkHost.instance);
         map.put("parseTransaction", ParseTransaction.instance);
         map.put("placeAskOrder", PlaceAskOrder.instance);
