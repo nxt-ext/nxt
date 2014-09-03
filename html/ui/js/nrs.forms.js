@@ -381,7 +381,7 @@ var NRS = (function(NRS, $, undefined) {
 
 					if (strippedRegex == "[0-9]+") {
 						regexType = "numeric";
-					} else if (strippedRegex == "[a-z0-9]+" || strippedRegex == "[a-zA-Z0-9]+") {
+					} else if (strippedRegex == "[a-z0-9]+" || strippedRegex.toLowerCase() == "[a-za-z0-9]+" || strippedRegex == "[a-z0-9]+") {
 						regexType = "alphanumeric";
 					} else {
 						regexType = "custom";
@@ -395,32 +395,20 @@ var NRS = (function(NRS, $, undefined) {
 							var minLength = parseInt(lengthRequirement[0], 10);
 							if (lengthRequirement[1]) {
 								var maxLength = parseInt(lengthRequirement[1], 10);
-								if (data.message.length < minLength || data.message.length > maxLength) {
-									errorMessage = $.t("error_merchant_message_" + regexType + "_range_length", {
-										"minLength": minLength,
-										"maxLength": maxLength
-									});
-								} else {
-									errorMessage = $.t("error_merchant_message_" + regexType);
-								}
+								errorMessage = $.t("error_merchant_message_" + regexType + "_range_length", {
+									"minLength": minLength,
+									"maxLength": maxLength
+								});
 							} else {
-								if (data.message.length < minLength) {
-									errorMessage = $.t("error_merchant_message_" + regexType + "_min_length", {
-										"minLength": minLength
-									});
-								} else {
-									errorMessage = $.t("error_merchant_message_" + regexType);
-								}
+								errorMessage = $.t("error_merchant_message_" + regexType + "_min_length", {
+									"minLength": minLength
+								});
 							}
 						} else {
 							var requiredLength = parseInt(lengthRequirement[1], 10);
-							if (data.message.length != requiredLength) {
-								errorMessage = $.t("error_merchant_message_" + regexType + "_length", {
-									"length": requiredLength
-								});
-							} else {
-								errorMessage = $.t("error_merchant_message_" + regexType);
-							}
+							errorMessage = $.t("error_merchant_message_" + regexType + "_length", {
+								"length": requiredLength
+							});
 						}
 					} else {
 						errorMessage = $.t("error_merchant_message_" + regexType);
