@@ -1,6 +1,12 @@
 package nxt.http;
 
-import nxt.*;
+import nxt.Account;
+import nxt.Alias;
+import nxt.Asset;
+import nxt.Constants;
+import nxt.Currency;
+import nxt.DigitalGoodsStore;
+import nxt.Nxt;
 import nxt.crypto.Crypto;
 import nxt.crypto.EncryptedData;
 import nxt.util.Convert;
@@ -454,6 +460,22 @@ final class ParameterParser {
             return Integer.MAX_VALUE;
         }
 
+    }
+
+    static int getNumberOfConfirmations(HttpServletRequest req) throws ParameterException {
+        String numberOfConfirmationsValue = Convert.emptyToNull(req.getParameter("numberOfConfirmations"));
+        if (numberOfConfirmationsValue != null) {
+            try {
+                int numberOfConfirmations = Integer.parseInt(numberOfConfirmationsValue);
+                if (numberOfConfirmations <= Nxt.getBlockchain().getHeight()) {
+                    return numberOfConfirmations;
+                }
+                throw new ParameterException(INCORRECT_NUMBER_OF_CONFIRMATIONS);
+            } catch (NumberFormatException e) {
+                throw new ParameterException(INCORRECT_NUMBER_OF_CONFIRMATIONS);
+            }
+        }
+        return 0;
     }
 
     private ParameterParser() {} // never

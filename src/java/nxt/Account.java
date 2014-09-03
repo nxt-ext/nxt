@@ -169,7 +169,15 @@ public final class Account {
     }
 
     public static Account getAccount(byte[] publicKey) {
-        return accounts.get(getId(publicKey));
+        Account account = accounts.get(getId(publicKey));
+        if (account == null) {
+            return null;
+        }
+        if (account.getPublicKey() == null || Arrays.equals(account.getPublicKey(), publicKey)) {
+            return account;
+        }
+        throw new RuntimeException("DUPLICATE KEY for account " + Convert.toUnsignedLong(account.getId())
+                + " existing key " + Convert.toHexString(account.getPublicKey()) + " new key " + Convert.toHexString(publicKey));
     }
 
     public static Long getId(byte[] publicKey) {

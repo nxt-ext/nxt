@@ -1,0 +1,47 @@
+API changes:
+
+The timestamp parameter in getAccountTransactionIds and getAccountTransactions
+now refers to the timestamp of the block in which the transaction was included
+rather than the transaction timestamp itself. Transactions are sorted in
+descending order of block timestamp and transaction id, instead of transaction
+timestamp. This is so that the sorting matches the order in which transactions
+are processed, and because transactions with earlier timestamps may appear in
+the blockchain after transactions with later timestamps have already been
+processed, thus being unintentionally skipped while navigating the transactions
+list by transaction timestamp.
+
+The getAccountTransactionIds and getAccountTransactions requests now accept an
+optional numberOfConfirmations parameter, which can be used to retrieve only
+transactions with at least numberOfConfirmations number of confirmations.
+
+The getBlock API now optionally accepts height instead of block parameter, to
+retrieve the block at that height. If both block and height are specified,
+height parameter is ignored.
+
+The getBlock API now also accepts includeTransactions parameter, if set to
+true, full transaction JSON is returned instead of only transaction ids.
+
+There are no other changes between 1.2.7 and 1.2.8, so those who rely on the
+old behavior of the above APIs can continue to use 1.2.7 for the time being.
+
+Client GUI: 
+
+Added the option for merchants to specify a specially formatted message that
+is required to be added to a payment transaction or an asset transfer.
+
+To activate this behavior, you must set your account info description to the
+following format: #merchant:[0-9]+#
+
+This example will only accept a numeric message.
+
+If the message should be of a particular length use this: 
+#merchant:[a-zA-Z0-9]{4,8}#
+
+This format will only allow messages that have a length of 4 to 8 characters 
+and is alphanumeric.
+
+Note that the regex is case sensitive.
+
+Fixed issue with public key field not showing when using a contact in the
+recipient field.
+

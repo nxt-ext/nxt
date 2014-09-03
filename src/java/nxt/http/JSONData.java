@@ -12,7 +12,6 @@ import nxt.Poll;
 import nxt.Token;
 import nxt.Trade;
 import nxt.Transaction;
-import nxt.TransactionType;
 import nxt.crypto.Crypto;
 import nxt.crypto.EncryptedData;
 import nxt.peer.Hallmark;
@@ -97,8 +96,9 @@ final class JSONData {
         return json;
     }
 
-    static JSONObject block(Block block) {
+    static JSONObject block(Block block, boolean includeTransactions) {
         JSONObject json = new JSONObject();
+        json.put("block", block.getStringId());
         json.put("height", block.getHeight());
         putAccount(json, "generator", block.getGeneratorId());
         json.put("generatorPublicKey", Convert.toHexString(block.getGeneratorPublicKey()));
@@ -122,8 +122,8 @@ final class JSONData {
         }
         json.put("blockSignature", Convert.toHexString(block.getBlockSignature()));
         JSONArray transactions = new JSONArray();
-        for (Long transactionId : block.getTransactionIds()) {
-            transactions.add(Convert.toUnsignedLong(transactionId));
+        for (Transaction transaction : block.getTransactions()) {
+            transactions.add(includeTransactions ? transaction(transaction) : Convert.toUnsignedLong(transaction.getId()));
         }
         json.put("transactions", transactions);
         return json;
@@ -290,14 +290,6 @@ final class JSONData {
         }
         if (! attachmentJSON.isEmpty()) {
             modifyAttachmentJSON(attachmentJSON);
-            if (transaction.getType() == TransactionType.ColoredCoins.ASSET_TRANSFER) {
-                //TODO: remove some time after DGS block
-                String comment = (String)attachmentJSON.get("comment");
-                String message = (String)attachmentJSON.get("message");
-                if (comment == null && message != null) {
-                    attachmentJSON.put("comment", message);
-                }
-            }
             json.put("attachment", attachmentJSON);
         }
         putAccount(json, "sender", transaction.getSenderId());
