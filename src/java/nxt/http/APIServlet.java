@@ -150,7 +150,7 @@ public final class APIServlet extends HttpServlet {
         map.put("getForging", GetForging.instance);
         map.put("transferAsset", TransferAsset.instance);
 
-        if (Nxt.getBooleanProperty("nxt.enableDebugAPI")) {
+        if (API.enableDebugAPI) {
             map.put("fullReset", FullReset.instance);
             map.put("popOff", PopOff.instance);
             map.put("scan", Scan.instance);
