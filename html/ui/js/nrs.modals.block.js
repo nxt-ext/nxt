@@ -14,17 +14,12 @@ var NRS = (function(NRS, $, undefined) {
 
 		var blockHeight = $(this).data("block");
 
-		var block = $(NRS.blocks).filter(function() {
-			return parseInt(this.height) == parseInt(blockHeight);
-		}).get(0);
-
-		if (!block) {
-			NRS.getBlock($(this).data("blockid"), function(response) {
-				NRS.showBlockModal(response);
-			});
-		} else {
-			NRS.showBlockModal(block);
-		}
+		NRS.sendRequest("getBlock+", {
+			"height": blockHeight,
+			"includeTransactions": "true"
+		}, function(response) {
+			NRS.showBlockModal(response);
+		});
 	});
 
 	NRS.showBlockModal = function(block) {
@@ -47,37 +42,27 @@ var NRS = (function(NRS, $, undefined) {
 			$("#block_info_transactions_none").hide();
 			$("#block_info_transactions_table").show();
 
-			var transactions = {};
-			var nrTransactions = 0;
+			var rows = "";
+
+			block.transactions.sort(function(a, b) {
+				return a.timestamp - b.timestamp;
+			});
 
 			for (var i = 0; i < block.transactions.length; i++) {
-				NRS.sendRequest("getTransaction", {
-					"transaction": block.transactions[i]
-				}, function(transaction, input) {
-					nrTransactions++;
-					transactions[input.transaction] = transaction;
+				var transaction = block.transactions[i];
 
-					if (nrTransactions == block.transactions.length) {
-						var rows = "";
+				if (transaction.amountNQT) {
+					transaction.amount = new BigInteger(transaction.amountNQT);
+					transaction.fee = new BigInteger(transaction.feeNQT);
+				}
 
-						for (var i = 0; i < nrTransactions; i++) {
-							var transaction = transactions[block.transactions[i]];
-
-							if (transaction.amountNQT) {
-								transaction.amount = new BigInteger(transaction.amountNQT);
-								transaction.fee = new BigInteger(transaction.feeNQT);
-							}
-
-							rows += "<tr><td>" + NRS.formatTime(transaction.timestamp) + "</td><td>" + NRS.formatAmount(transaction.amount) + "</td><td>" + NRS.formatAmount(transaction.fee) + "</td><td>" + NRS.getAccountTitle(transaction, "recipient") + "</td><td>" + NRS.getAccountTitle(transaction, "sender") + "</td></tr>";
-						}
-
-						$("#block_info_transactions_table tbody").empty().append(rows);
-						$("#block_info_modal").modal("show");
-
-						NRS.fetchingModalData = false;
-					}
-				});
+				rows += "<tr><td>" + NRS.formatTime(transaction.timestamp) + "</td><td>" + NRS.formatAmount(transaction.amount) + "</td><td>" + NRS.formatAmount(transaction.fee) + "</td><td>" + NRS.getAccountTitle(transaction, "recipient") + "</td><td>" + NRS.getAccountTitle(transaction, "sender") + "</td></tr>";
 			}
+
+			$("#block_info_transactions_table tbody").empty().append(rows);
+			$("#block_info_modal").modal("show");
+
+			NRS.fetchingModalData = false;
 		} else {
 			$("#block_info_transactions_none").show();
 			$("#block_info_transactions_table").hide();

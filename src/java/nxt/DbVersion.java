@@ -289,6 +289,10 @@ final class DbVersion {
             case 68:
                 apply("ALTER TABLE transaction ADD COLUMN IF NOT EXISTS has_encrypttoself_message BOOLEAN NOT NULL DEFAULT FALSE");
             case 69:
+                apply("CREATE INDEX IF NOT EXISTS transaction_block_timestamp_idx ON transaction (block_timestamp DESC)");
+            case 70:
+                apply("DROP INDEX transaction_timestamp_idx");
+            case 71:
                 return;
             default:
                 throw new RuntimeException("Database inconsistent with code, probably trying to run older code on newer database");
