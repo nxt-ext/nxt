@@ -24,3 +24,20 @@ true, full transaction JSON is returned instead of only transaction ids.
 There are no other changes between 1.2.7 and 1.2.8, so those who rely on the
 old behavior of the above APIs can continue to use 1.2.7 for the time being.
 
+Client GUI: 
+
+Added the option for merchants to specify a specially formatted message that
+is required to be added to a payment transaction or an asset transfer.
+
+To activate this behavior, you must set your account info description to the
+following format: #merchant:[0-9]+#
+
+This example will only accept a numeric message.
+
+If the message should be of a particular length use this: 
+#merchant:[a-zA-Z0-9]{4,8}
+
+This format will only allow messages that have a length of 4 to 8 characters 
+and is alphanumeric.
+
+Note that the regex is case sensitive.
