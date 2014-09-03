@@ -161,9 +161,11 @@ var NRS = (function(NRS, $, undefined) {
 
 		var callout = modal.find(".account_info").first();
 		var accountInputField = modal.find("input[name=converted_account_id]");
+		var merchantInfoField = modal.find("input[name=merchant_info]");
 		var recipientPublicKeyField = modal.find("input[name=recipientPublicKey]");
 
 		accountInputField.val("");
+		merchantInfoField.val("");
 
 		account = $.trim(account);
 
@@ -178,6 +180,9 @@ var NRS = (function(NRS, $, undefined) {
 					} else {
 						modal.find("input[name=recipientPublicKey]").val("");
 						modal.find(".recipient_public_key").hide();
+					}
+					if (response.account && response.account.description) {
+						checkForMerchant(response.account.description, modal);
 					}
 
 					var message = response.message.escapeHTML();
@@ -215,6 +220,9 @@ var NRS = (function(NRS, $, undefined) {
 							} else {
 								modal.find("input[name=recipientPublicKey]").val("");
 								modal.find(".recipient_public_key").hide();
+							}
+							if (response.account && response.account.description) {
+								checkForMerchant(response.account.description, modal);
 							}
 
 							callout.removeClass(classes).addClass("callout-" + response.type).html($.t("contact_account_link", {
@@ -291,6 +299,9 @@ var NRS = (function(NRS, $, undefined) {
 								modal.find("input[name=recipientPublicKey]").val("");
 								modal.find(".recipient_public_key").hide();
 							}
+							if (response.account && response.account.description) {
+								checkForMerchant(response.account.description, modal);
+							}
 
 							accountInputField.val(match[1].escapeHTML());
 							callout.html($.t("alias_account_link", {
@@ -311,6 +322,20 @@ var NRS = (function(NRS, $, undefined) {
 				}
 			}
 		});
+	}
+
+	function checkForMerchant(accountInfo, modal) {
+		var requestType = modal.find("input[name=request_type]").val();
+
+		if (requestType == "sendMoney" || requestType == "transferAsset") {
+			if (accountInfo.match(/merchant/i)) {
+				modal.find("input[name=merchant_info]").val(accountInfo);
+				var checkbox = modal.find("input[name=add_message]");
+				if (!checkbox.is(":checked")) {
+					checkbox.prop("checked", true).trigger("change");
+				}
+			}
+		}
 	}
 
 	return NRS;
