@@ -416,6 +416,11 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
     }
 
     @Override
+    public Deque<BlockImpl> popOffTo(int height) {
+        return popOffTo(blockchain.getBlockAtHeight(height));
+    }
+
+    @Override
     public void fullReset() {
         synchronized (blockchain) {
             //BlockDb.deleteBlock(Genesis.GENESIS_BLOCK_ID); // fails with stack overflow in H2
@@ -423,6 +428,11 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             addGenesisBlock();
             scan();
         }
+    }
+
+    @Override
+    public void scan() {
+        scan(false);
     }
 
     private void addBlock(BlockImpl block) {
@@ -443,6 +453,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             return;
         }
         Logger.logMessage("Genesis block not in database, starting from scratch");
+        blockchain.setLastBlock(null);
         try {
             SortedMap<Long,TransactionImpl> transactionsMap = new TreeMap<>();
 
@@ -870,10 +881,6 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
 
     void validateAtNextScan() {
         validateAtScan = true;
-    }
-
-    private void scan() {
-        scan(false);
     }
 
     private void scan(boolean inner) {

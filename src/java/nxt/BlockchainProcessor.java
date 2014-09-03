@@ -5,6 +5,8 @@ import nxt.peer.Peer;
 import nxt.util.Observable;
 import org.json.simple.JSONObject;
 
+import java.util.Deque;
+
 public interface BlockchainProcessor extends Observable<Block,BlockchainProcessor.Event> {
 
     public static enum Event {
@@ -25,6 +27,10 @@ public interface BlockchainProcessor extends Observable<Block,BlockchainProcesso
     void processPeerBlock(JSONObject request) throws NxtException;
 
     void fullReset();
+
+    void scan();
+
+    Deque<? extends Block> popOffTo(int height);
 
     void registerDerivedTable(DerivedDbTable table);
 
