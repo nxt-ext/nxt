@@ -18,7 +18,7 @@ public abstract class DerivedDbTable {
 
     public void rollback(int height) {
         try (Connection con = Db.getConnection();
-             PreparedStatement pstmtDelete = con.prepareStatement("DELETE FROM " + table() + " WHERE height >= ?")) {
+             PreparedStatement pstmtDelete = con.prepareStatement("DELETE FROM " + table() + " WHERE height > ?")) {
             pstmtDelete.setInt(1, height);
             pstmtDelete.executeUpdate();
         } catch (SQLException e) {

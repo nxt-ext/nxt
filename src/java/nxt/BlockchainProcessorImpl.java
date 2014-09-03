@@ -553,8 +553,8 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 long calculatedTotalFee = 0;
                 MessageDigest digest = Crypto.sha256();
 
-                Set<Long> unappliedUnconfirmed = transactionProcessor.undoAllUnconfirmed();
-                Set<Long> appliedUnconfirmed = new HashSet<>();
+                Set<TransactionImpl> unappliedUnconfirmed = transactionProcessor.undoAllUnconfirmed();
+                Set<TransactionImpl> appliedUnconfirmed = new HashSet<>();
 
                 try {
 
@@ -610,7 +610,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                         }
 
                         if (transaction.applyUnconfirmed()) {
-                            appliedUnconfirmed.add(transaction.getId());
+                            appliedUnconfirmed.add(transaction);
                         } else {
                             throw new TransactionNotAcceptedException("Double spending transaction: " + transaction.getStringId(), transaction);
                         }
@@ -638,7 +638,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
 
                 } catch (TransactionNotAcceptedException | RuntimeException e) {
                     for (TransactionImpl transaction : block.getTransactions()) {
-                        if (appliedUnconfirmed.contains(transaction.getId())) {
+                        if (appliedUnconfirmed.contains(transaction)) {
                             transaction.undoUnconfirmed();
                         }
                     }
@@ -655,9 +655,11 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
 
                 Db.commitTransaction();
             } catch (Exception e) {
+                /*
                 if (! (e instanceof BlockOutOfOrderException)) {
                     Logger.logMessage("Error pushing block " + block.getStringId() + " at blockchain height " + previousLastBlock.getHeight() + " , will rollback", e);
                 }
+                */
                 Db.rollbackTransaction();
                 blockchain.setLastBlock(previousLastBlock);
                 throw e;
@@ -677,7 +679,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         synchronized (blockchain) {
             try {
                 Db.beginTransaction();
-                Set<Long> unappliedUnconfirmed = transactionProcessor.undoAllUnconfirmed();
+                Set<TransactionImpl> unappliedUnconfirmed = transactionProcessor.undoAllUnconfirmed();
                 BlockImpl block = blockchain.getLastBlock();
                 while (!block.getId().equals(commonBlock.getId()) && !block.getId().equals(Genesis.GENESIS_BLOCK_ID)) {
                     poppedOffBlocks.push(block);
@@ -699,7 +701,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         return poppedOffBlocks;
     }
 
-    private BlockImpl popLastBlock(Set<Long> unappliedUnconfirmed) {
+    private BlockImpl popLastBlock(Set<TransactionImpl> unappliedUnconfirmed) {
         BlockImpl block = blockchain.getLastBlock();
         Logger.logDebugMessage("Will pop block " + block.getStringId() + " at height " + block.getHeight());
         if (block.getId().equals(Genesis.GENESIS_BLOCK_ID)) {

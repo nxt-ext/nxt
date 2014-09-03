@@ -50,9 +50,9 @@ public abstract class VersionedEntityDbTable<T> extends EntityDbTable<T> {
     static void rollback(String table, int height, DbKey.Factory dbKeyFactory) {
         try (Connection con = Db.getConnection();
              PreparedStatement pstmtSelectToDelete = con.prepareStatement("SELECT DISTINCT " + dbKeyFactory.getPKColumns()
-                     + " FROM " + table + " WHERE height >= ?");
+                     + " FROM " + table + " WHERE height > ?");
              PreparedStatement pstmtDelete = con.prepareStatement("DELETE FROM " + table
-                     + " WHERE height >= ?");
+                     + " WHERE height > ?");
              PreparedStatement pstmtSetLatest = con.prepareStatement("UPDATE " + table
                      + " SET latest = TRUE " + dbKeyFactory.getPKClause() + " AND height ="
                      + " (SELECT MAX(height) FROM " + table + dbKeyFactory.getPKClause() + ")")) {

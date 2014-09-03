@@ -96,6 +96,7 @@ final class JSONData {
 
     static JSONObject block(Block block, boolean includeTransactions) {
         JSONObject json = new JSONObject();
+        json.put("block", block.getStringId());
         json.put("height", block.getHeight());
         putAccount(json, "generator", block.getGeneratorId());
         json.put("generatorPublicKey", Convert.toHexString(block.getGeneratorPublicKey()));

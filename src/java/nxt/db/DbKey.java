@@ -36,7 +36,7 @@ public interface DbKey {
             return new LongKey(rs.getLong(idColumn));
         }
 
-        public DbKey newKey(Long id) {
+        public DbKey newKey(long id) {
             return new LongKey(id);
         }
 
@@ -67,7 +67,7 @@ public interface DbKey {
             return new LinkKey(rs.getLong(idColumnA), rs.getLong(idColumnB));
         }
 
-        public DbKey newKey(Long idA, Long idB) {
+        public DbKey newKey(long idA, long idB) {
             return new LinkKey(idA, idB);
         }
 
@@ -84,9 +84,9 @@ public interface DbKey {
 
     static final class LongKey implements DbKey {
 
-        private final Long id;
+        private final long id;
 
-        private LongKey(Long id) {
+        private LongKey(long id) {
             this.id = id;
         }
 
@@ -103,22 +103,22 @@ public interface DbKey {
 
         @Override
         public boolean equals(Object o) {
-            return o instanceof LongKey && ((LongKey)o).id.equals(id);
+            return o instanceof LongKey && ((LongKey)o).id == id;
         }
 
         @Override
         public int hashCode() {
-            return id.hashCode();
+            return (int)(id ^ (id >>> 32));
         }
 
     }
 
     static final class LinkKey implements DbKey {
 
-        private final Long idA;
-        private final Long idB;
+        private final long idA;
+        private final long idB;
 
-        private LinkKey(Long idA, Long idB) {
+        private LinkKey(long idA, long idB) {
             this.idA = idA;
             this.idB = idB;
         }
@@ -137,12 +137,12 @@ public interface DbKey {
 
         @Override
         public boolean equals(Object o) {
-            return o instanceof LinkKey && ((LinkKey) o).idA.equals(idA) && ((LinkKey) o).idB.equals(idB);
+            return o instanceof LinkKey && ((LinkKey) o).idA == idA && ((LinkKey) o).idB == idB;
         }
 
         @Override
         public int hashCode() {
-            return idA.hashCode() ^ idB.hashCode();
+            return (int)(idA ^ (idA >>> 32)) ^ (int)(idB ^ (idB >>> 32));
         }
 
     }
