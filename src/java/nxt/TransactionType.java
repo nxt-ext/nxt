@@ -1,14 +1,10 @@
 package nxt;
 
 import nxt.util.Convert;
-import nxt.util.SuperComplexNumber;
 import org.json.simple.JSONObject;
 
 import java.nio.ByteBuffer;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 
 public abstract class TransactionType {
@@ -1944,17 +1940,25 @@ public abstract class TransactionType {
             @Override
             boolean applyAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
                 Attachment.MonetarySystemMoneyTransfer attachment = (Attachment.MonetarySystemMoneyTransfer)transaction.getAttachment();
-                if (attachment.getTransfer().isCovered(senderAccount.getUnconfirmedCurrencyBalances())) {
-                    senderAccount.getUnconfirmedCurrencyBalances().subtract(attachment.getTransfer());
-                    return true;
+                List<Attachment.MonetarySystemMoneyTransfer.Entry> transfers = attachment.getTransfers();
+                for (Attachment.MonetarySystemMoneyTransfer.Entry transfer : transfers) {
+                    if (transfer.getUnits() > senderAccount.getUnconfirmedCurrencyBalanceQNT(transfer.getCurrencyId())) {
+                        return false;
+                    }
                 }
-                return false;
+                for (Attachment.MonetarySystemMoneyTransfer.Entry transfer : transfers) {
+                    senderAccount.addToUnconfirmedCurrencyBalanceQNT(transfer.getCurrencyId(), -transfer.getUnits());
+                }
+                return true;
             }
 
             @Override
             void undoAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
                 Attachment.MonetarySystemMoneyTransfer attachment = (Attachment.MonetarySystemMoneyTransfer)transaction.getAttachment();
-                senderAccount.getUnconfirmedCurrencyBalances().add(attachment.getTransfer());
+                List<Attachment.MonetarySystemMoneyTransfer.Entry> transfers = attachment.getTransfers();
+                for (Attachment.MonetarySystemMoneyTransfer.Entry transfer : transfers) {
+                    senderAccount.addToUnconfirmedCurrencyBalanceQNT(transfer.getCurrencyId(), transfer.getUnits());
+                }
             }
 
             @Override

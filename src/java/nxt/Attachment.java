@@ -2,7 +2,6 @@ package nxt;
 
 import nxt.crypto.EncryptedData;
 import nxt.util.Convert;
-import nxt.util.SuperComplexNumber;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
@@ -1896,12 +1895,8 @@ public interface Attachment extends Appendix {
             return comment;
         }
 
-        public SuperComplexNumber getTransfer() {
-            SuperComplexNumber superComplexNumber = new SuperComplexNumber();
-            for (Entry entry : entries) {
-                superComplexNumber.add(entry.getCurrencyId(), entry.getUnits());
-            }
-            return superComplexNumber;
+        public List<Entry> getTransfers() {
+            return entries;
         }
 
     }

@@ -4,7 +4,6 @@ import nxt.crypto.Crypto;
 import nxt.db.DbKey;
 import nxt.util.Convert;
 import nxt.util.Logger;
-import nxt.util.SuperComplexNumber;
 import org.json.simple.JSONObject;
 
 import java.math.BigInteger;

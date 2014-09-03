@@ -437,9 +437,25 @@ final class DbVersion {
             case 119:
                 apply("CREATE UNIQUE INDEX IF NOT EXISTS unconfirmed_transaction_id_idx ON unconfirmed_transaction (id)");
             case 120:
+                apply("CREATE TABLE IF NOT EXISTS currency (db_id INT IDENTITY, id BIGINT NOT NULL, account_id BIGINT NOT NULL, "
+                        + "name VARCHAR NOT NULL, code VARCHAR NOT NULL, description VARCHAR, type TINYINT NOT NULL, total_supply BIGINT NOT NULL, "
+                        + "issuance_height INT NOT NULL, min_reserve_per_unit_nqt BIGINT NOT NULL, min_difficulty TINYINT NOT NULL, "
+                        + "max_difficulty TINYINT NOT NULL, ruleset TINYINT NOT NULL, current_supply BIGINT NOT NULL, "
+                        + "current_reserve_per_unit_nqt BIGINT NOT NULL)");
+            case 121:
+                apply("CREATE UNIQUE INDEX IF NOT EXISTS currency_id_idx ON currency (id)");
+            case 122:
+                apply("CREATE INDEX IF NOT EXISTS currency_account_id_idx ON currency (account_id)");
+            case 123:
+                apply("CREATE TABLE IF NOT EXISTS account_currency (db_id INT IDENTITY, account_id BIGINT NOT NULL, "
+                        + "currency_id BIGINT NOT NULL, units BIGINT NOT NULL, unconfirmed_units BIGINT NOT NULL, height INT NOT NULL, "
+                        + "latest BOOLEAN NOT NULL DEFAULT TRUE)");
+            case 124:
+                apply("CREATE UNIQUE INDEX IF NOT EXISTS account_currency_id_height_idx ON account_asset (account_id, currency_id, height DESC)");
+            case 125:
                 BlockchainProcessorImpl.getInstance().forceScanAtStart();
                 apply(null);
-            case 121:
+            case 126:
                 return;
             default:
                 throw new RuntimeException("Database inconsistent with code, probably trying to run older code on newer database");

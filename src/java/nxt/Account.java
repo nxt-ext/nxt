@@ -2,17 +2,11 @@ package nxt;
 
 import nxt.crypto.Crypto;
 import nxt.crypto.EncryptedData;
-import nxt.db.Db;
-import nxt.db.DbIterator;
-import nxt.db.DbKey;
-import nxt.db.DbUtils;
-import nxt.db.DerivedDbTable;
-import nxt.db.VersionedEntityDbTable;
+import nxt.db.*;
 import nxt.util.Convert;
 import nxt.util.Listener;
 import nxt.util.Listeners;
 import nxt.util.Logger;
-import nxt.util.SuperComplexNumber;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -22,10 +16,11 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
+@SuppressWarnings({"UnusedDeclaration", "SuspiciousNameCombination"})
 public final class Account {
 
     public static enum Event {
-        BALANCE, UNCONFIRMED_BALANCE, ASSET_BALANCE, UNCONFIRMED_ASSET_BALANCE,
+        BALANCE, UNCONFIRMED_BALANCE, ASSET_BALANCE, UNCONFIRMED_ASSET_BALANCE, CURRENCY_BALANCE, UNCONFIRMED_CURRENCY_BALANCE,
         LEASE_SCHEDULED, LEASE_STARTED, LEASE_ENDED
     }
 
@@ -97,6 +92,79 @@ public final class Account {
         public String toString() {
             return "AccountAsset account_id: " + Convert.toUnsignedLong(accountId) + " asset_id: " + Convert.toUnsignedLong(assetId)
                     + " quantity: " + quantityQNT + " unconfirmedQuantity: " + unconfirmedQuantityQNT;
+        }
+    }
+
+    @SuppressWarnings("UnusedDeclaration")
+    public static class AccountCurrency {
+
+        private final Long accountId;
+        private final Long currencyId;
+        private final DbKey dbKey;
+        private long units;
+        private long unconfirmedUnits;
+
+        private AccountCurrency(Long accountId, Long currencyId, long quantityQNT, long unconfirmedQuantityQNT) {
+            this.accountId = accountId;
+            this.currencyId = currencyId;
+            this.dbKey = accountCurrencyDbKeyFactory.newKey(this.accountId, this.currencyId);
+            this.units = quantityQNT;
+            this.unconfirmedUnits = unconfirmedQuantityQNT;
+        }
+
+        private AccountCurrency(ResultSet rs) throws SQLException {
+            this.accountId = rs.getLong("account_id");
+            this.currencyId = rs.getLong("currency_id");
+            this.dbKey = accountAssetDbKeyFactory.newKey(this.accountId, this.currencyId);
+            this.units = rs.getLong("units");
+            this.unconfirmedUnits = rs.getLong("unconfirmed_units");
+        }
+
+        private void save(Connection con) throws SQLException {
+            try (PreparedStatement pstmt = con.prepareStatement("MERGE INTO account_currency "
+                    + "(account_id, currency_id, units, unconfirmed_units, height, latest) "
+                    + "KEY (account_id, asset_id, height) VALUES (?, ?, ?, ?, ?, TRUE)")) {
+                int i = 0;
+                pstmt.setLong(++i, this.accountId);
+                pstmt.setLong(++i, this.currencyId);
+                pstmt.setLong(++i, this.units);
+                pstmt.setLong(++i, this.unconfirmedUnits);
+                pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
+                pstmt.executeUpdate();
+            }
+        }
+
+        public Long getAccountId() {
+            return accountId;
+        }
+
+        public Long getAssetId() {
+            return currencyId;
+        }
+
+        public long getUnits() {
+            return units;
+        }
+
+        public long getUnconfirmedUnits() {
+            return unconfirmedUnits;
+        }
+
+        private void save() {
+            if (this.units > 0 || this.unconfirmedUnits > 0) {
+                accountCurrencyTable.insert(this);
+            } else if (this.units == 0 && this.unconfirmedUnits == 0) {
+                accountCurrencyTable.delete(this);
+            } else if (this.units < 0 || this.unconfirmedUnits < 0) {
+                throw new DoubleSpendingException(String.format("Negative currency balance for account %s currency %s units %d unconfirmedUnits %d",
+                        Convert.toUnsignedLong(this.accountId), Convert.toUnsignedLong(this.currencyId), units, unconfirmedUnits));
+            }
+        }
+
+        @Override
+        public String toString() {
+            return "AccountCurrency account_id: " + Convert.toUnsignedLong(accountId) + " currency_id: " + Convert.toUnsignedLong(currencyId)
+                    + " quantity: " + units + " unconfirmedQuantity: " + unconfirmedUnits;
         }
     }
 
@@ -221,6 +289,34 @@ public final class Account {
 
     };
 
+    private static final DbKey.LinkKeyFactory<AccountCurrency> accountCurrencyDbKeyFactory = new DbKey.LinkKeyFactory<AccountCurrency>("account_id", "currency_id") {
+
+        @Override
+        public DbKey newKey(AccountCurrency accountCurrency) {
+            return accountCurrency.dbKey;
+        }
+
+    };
+
+    private static final VersionedEntityDbTable<AccountCurrency> accountCurrencyTable = new VersionedEntityDbTable<AccountCurrency>(accountCurrencyDbKeyFactory) {
+
+        @Override
+        protected String table() {
+            return "account_currency";
+        }
+
+        @Override
+        protected AccountCurrency load(Connection con, ResultSet rs) throws SQLException {
+            return new AccountCurrency(rs);
+        }
+
+        @Override
+        protected void save(Connection con, AccountCurrency accountCurrency) throws SQLException {
+            accountCurrency.save(con);
+        }
+
+    };
+
     private static final DerivedDbTable accountGuaranteedBalanceTable = new DerivedDbTable() {
 
         @Override
@@ -247,6 +343,8 @@ public final class Account {
 
     private static final Listeners<AccountAsset,Event> assetListeners = new Listeners<>();
 
+    private static final Listeners<AccountCurrency,Event> currencyListeners = new Listeners<>();
+
     private static final Listeners<AccountLease,Event> leaseListeners = new Listeners<>();
 
     public static boolean addListener(Listener<Account> listener, Event eventType) {
@@ -263,6 +361,14 @@ public final class Account {
 
     public static boolean removeAssetListener(Listener<AccountAsset> listener, Event eventType) {
         return assetListeners.removeListener(listener, eventType);
+    }
+
+    public static boolean addCurrencyListener(Listener<AccountCurrency> listener, Event eventType) {
+        return currencyListeners.addListener(listener, eventType);
+    }
+
+    public static boolean removeCurrencyListener(Listener<AccountCurrency> listener, Event eventType) {
+        return currencyListeners.removeListener(listener, eventType);
     }
 
     public static boolean addLeaseListener(Listener<AccountLease> listener, Event eventType) {
@@ -558,8 +664,9 @@ public final class Account {
         return accountAsset == null ? 0 : accountAsset.unconfirmedQuantityQNT;
     }
 
-    public synchronized long getUnconfirmedCurrencyBalanceQNT(Long currencyId) {
-        return -1; // unconfirmedCurrencyBalances.get(currencyId);
+    public long getUnconfirmedCurrencyBalanceQNT(Long currencyId) {
+        AccountCurrency accountCurrency = accountCurrencyTable.get(accountCurrencyDbKeyFactory.newKey(this.id, currencyId));
+        return accountCurrency == null ? 0 : accountCurrency.unconfirmedUnits;
     }
 
     public Long getCurrentLesseeId() {
@@ -728,38 +835,63 @@ public final class Account {
         assetListeners.notify(accountAsset, Event.UNCONFIRMED_ASSET_BALANCE);
     }
 
-    public SuperComplexNumber getCurrencyBalances() {
-        return null; // currencyBalances;
-    }
-
-    public SuperComplexNumber getUnconfirmedCurrencyBalances() {
-        return null; // unconfirmedCurrencyBalances;
-    }
-
-    synchronized long getCurrencyBalanceQNT(Long currencyId) {
-        return -1; // currencyBalances.get(currencyId);
-    }
-
     void addToCurrencyBalanceQNT(Long currencyId, long units) {
-//        synchronized (this) {
-//            currencyBalances.add(currencyId, units);
-//        }
-        // TODO: Add listener notification if necessary
+        if (units == 0) {
+            return;
+        }
+        AccountCurrency accountCurrency;
+        accountCurrency = accountCurrencyTable.get(accountCurrencyDbKeyFactory.newKey(this.id, currencyId));
+        long currencyUnits = accountCurrency == null ? 0 : accountCurrency.units;
+        currencyUnits = Convert.safeAdd(currencyUnits, units);
+        if (accountCurrency == null) {
+            accountCurrency = new AccountCurrency(this.id, currencyId, currencyUnits, 0);
+        } else {
+            accountCurrency.units = currencyUnits;
+        }
+        accountCurrency.save();
+        listeners.notify(this, Event.CURRENCY_BALANCE);
+        currencyListeners.notify(accountCurrency, Event.CURRENCY_BALANCE);
     }
 
     void addToUnconfirmedCurrencyBalanceQNT(Long currencyId, long units) {
-//        synchronized (this) {
-//            unconfirmedCurrencyBalances.add(currencyId, units);
-//        }
-        // TODO: Add listener notification if necessary
+        if (units == 0) {
+            return;
+        }
+        AccountCurrency accountCurrency;
+        accountCurrency = accountCurrencyTable.get(accountCurrencyDbKeyFactory.newKey(this.id, currencyId));
+        long unconfirmedCurrencyUnits = accountCurrency == null ? 0 : accountCurrency.unconfirmedUnits;
+        unconfirmedCurrencyUnits = Convert.safeAdd(unconfirmedCurrencyUnits, units);
+        if (accountCurrency == null) {
+            accountCurrency = new AccountCurrency(this.id, currencyId, 0, unconfirmedCurrencyUnits);
+        } else {
+            accountCurrency.unconfirmedUnits = unconfirmedCurrencyUnits;
+        }
+        accountCurrency.save();
+        listeners.notify(this, Event.UNCONFIRMED_CURRENCY_BALANCE);
+        currencyListeners.notify(accountCurrency, Event.UNCONFIRMED_CURRENCY_BALANCE);
     }
 
     void addToCurrencyAndUnconfirmedCurrencyBalanceQNT(Long currencyId, long units) {
-//        synchronized (this) {
-//            currencyBalances.add(currencyId, units);
-//            unconfirmedCurrencyBalances.add(currencyId, units);
-//        }
-        // TODO: Add listener notification if necessary
+        if (units == 0) {
+            return;
+        }
+        AccountCurrency accountCurrency;
+        accountCurrency = accountCurrencyTable.get(accountCurrencyDbKeyFactory.newKey(this.id, currencyId));
+        long currencyUnits = accountCurrency == null ? 0 : accountCurrency.units;
+        currencyUnits = Convert.safeAdd(currencyUnits, units);
+        long unconfirmedCurrencyUnits = accountCurrency == null ? 0 : accountCurrency.unconfirmedUnits;
+        unconfirmedCurrencyUnits = Convert.safeAdd(unconfirmedCurrencyUnits, units);
+        if (accountCurrency == null) {
+            accountCurrency = new AccountCurrency(this.id, currencyId, currencyUnits, unconfirmedCurrencyUnits);
+        } else {
+            accountCurrency.units = currencyUnits;
+            accountCurrency.unconfirmedUnits = unconfirmedCurrencyUnits;
+        }
+        accountCurrency.save();
+        listeners.notify(this, Event.CURRENCY_BALANCE);
+        listeners.notify(this, Event.UNCONFIRMED_CURRENCY_BALANCE);
+        currencyListeners.notify(accountCurrency, Event.CURRENCY_BALANCE);
+        currencyListeners.notify(accountCurrency, Event.UNCONFIRMED_CURRENCY_BALANCE);
     }
 
     void addToBalanceNQT(long amountNQT) {
