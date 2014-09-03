@@ -448,7 +448,17 @@
 	}
 
 	function needsPlural(options) {
-		return (options.count !== undefined && typeof options.count != 'string' && options.count !== 1);
+		if (options.count == undefined) {
+			return false;
+		} else if (typeof options.count == 'string') {
+			if (options.count !== "1") {
+				return true;
+			} else {
+				return false;
+			}
+		} else {
+			return (options.count !== 1);
+		}
 	}
 
 	function exists(key, options) {
