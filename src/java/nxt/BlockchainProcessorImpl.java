@@ -60,6 +60,8 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
     private volatile int lastBlockchainFeederHeight;
 
     private volatile boolean isScanning;
+    private volatile boolean forceScan = Nxt.getBooleanProperty("nxt.forceScan");
+    private volatile boolean validateAtScan = Nxt.getBooleanProperty("nxt.forceValidate");
 
     private final Runnable getMoreBlocksThread = new Runnable() {
 
@@ -433,6 +435,16 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
     @Override
     public void scan() {
         scan(false);
+    }
+
+    @Override
+    public void forceScanAtStart() {
+        forceScan = true;
+    }
+
+    @Override
+    public void validateAtNextScan() {
+        validateAtScan = true;
     }
 
     private void addBlock(BlockImpl block) {
@@ -869,18 +881,6 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         }
         transaction = TransactionDb.findTransactionByFullHash(transaction.getReferencedTransactionFullHash());
         return transaction != null && hasAllReferencedTransactions(transaction, timestamp, count + 1);
-    }
-
-    private volatile boolean forceScan = Nxt.getBooleanProperty("nxt.forceScan");
-
-    void forceScanAtStart() {
-        forceScan = true;
-    }
-
-    private volatile boolean validateAtScan = Nxt.getBooleanProperty("nxt.forceValidate");
-
-    void validateAtNextScan() {
-        validateAtScan = true;
     }
 
     private void scan(boolean inner) {

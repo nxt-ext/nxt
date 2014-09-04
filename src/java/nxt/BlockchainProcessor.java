@@ -30,6 +30,10 @@ public interface BlockchainProcessor extends Observable<Block,BlockchainProcesso
 
     void scan();
 
+    void forceScanAtStart();
+
+    void validateAtNextScan();
+
     Deque<? extends Block> popOffTo(int height);
 
     void registerDerivedTable(DerivedDbTable table);
