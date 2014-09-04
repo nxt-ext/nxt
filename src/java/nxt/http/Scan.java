@@ -21,8 +21,11 @@ public final class Scan extends APIServlet.APIRequestHandler {
             if ("true".equalsIgnoreCase(req.getParameter("validate"))) {
                 Nxt.getBlockchainProcessor().validateAtNextScan();
             }
+            long start = System.currentTimeMillis();
             Nxt.getBlockchainProcessor().scan();
+            long end = System.currentTimeMillis();
             response.put("done", true);
+            response.put("scanTime", (end - start)/1000);
         } catch (RuntimeException e) {
             response.put("error", e.toString());
         }
