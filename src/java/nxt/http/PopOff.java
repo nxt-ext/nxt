@@ -7,7 +7,7 @@ import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.Deque;
+import java.util.List;
 
 public final class PopOff extends APIServlet.APIRequestHandler {
 
@@ -30,7 +30,7 @@ public final class PopOff extends APIServlet.APIRequestHandler {
             height = Integer.parseInt(req.getParameter("height"));
         } catch (NumberFormatException e) {}
 
-        Deque<? extends Block> blocks;
+        List<? extends Block> blocks;
         JSONArray blocksJSON = new JSONArray();
         if (numBlocks > 0) {
             blocks = Nxt.getBlockchainProcessor().popOffTo(Nxt.getBlockchain().getHeight() - numBlocks);

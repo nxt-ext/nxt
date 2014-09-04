@@ -5,7 +5,7 @@ import nxt.peer.Peer;
 import nxt.util.Observable;
 import org.json.simple.JSONObject;
 
-import java.util.Deque;
+import java.util.List;
 
 public interface BlockchainProcessor extends Observable<Block,BlockchainProcessor.Event> {
 
@@ -34,7 +34,7 @@ public interface BlockchainProcessor extends Observable<Block,BlockchainProcesso
 
     void validateAtNextScan();
 
-    Deque<? extends Block> popOffTo(int height);
+    List<? extends Block> popOffTo(int height);
 
     void registerDerivedTable(DerivedDbTable table);
 
