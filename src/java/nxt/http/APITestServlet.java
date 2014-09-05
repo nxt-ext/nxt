@@ -20,12 +20,35 @@ import java.util.TreeSet;
 
 public class APITestServlet extends HttpServlet {
 
+    private static final List<String> allRequestTypes = new ArrayList<>(APIServlet.apiRequestHandlers.keySet());
+    static {
+        Collections.sort(allRequestTypes);
+    }
+
+    private static final SortedMap<String, SortedSet<String>> requestTags = new TreeMap<>();
+    static {
+        for (Map.Entry<String, APIServlet.APIRequestHandler> entry : APIServlet.apiRequestHandlers.entrySet()) {
+            String requestType = entry.getKey();
+            Set<APITag> apiTags = entry.getValue().getAPITags();
+            for (APITag apiTag : apiTags) {
+                SortedSet<String> set = requestTags.get(apiTag.name());
+                if (set == null) {
+                    set = new TreeSet<>();
+                    requestTags.put(apiTag.name(), set);
+                }
+                set.add(requestType);
+            }
+        }
+    }
+
     private static final String links;
     static {
         StringBuilder buf = new StringBuilder();
         for (APITag apiTag : APITag.values()) {
-            buf.append("<a class=\"navbar-brand\" href=\"/test?requestTag=").append(apiTag.name()).append("\">");
-            buf.append(apiTag.getDisplayName()).append("</a>").append(" ");
+            if (requestTags.get(apiTag.name()) != null) {
+                buf.append("<a class=\"navbar-brand\" href=\"/test?requestTag=").append(apiTag.name()).append("\">");
+                buf.append(apiTag.getDisplayName()).append("</a>").append(" ");
+            }
         }
         links = buf.toString();
     }
@@ -98,33 +121,17 @@ public class APITestServlet extends HttpServlet {
             "</body>\n" +
             "</html>\n";
 
-    private static final List<String> allRequestTypes = new ArrayList<>(APIServlet.apiRequestHandlers.keySet());
-    static {
-        Collections.sort(allRequestTypes);
-    }
-
-    private static final SortedMap<String, SortedSet<String>> requestTags = new TreeMap<>();
-    static {
-        for (Map.Entry<String, APIServlet.APIRequestHandler> entry : APIServlet.apiRequestHandlers.entrySet()) {
-            String requestType = entry.getKey();
-            Set<APITag> apiTags = entry.getValue().getAPITags();
-            for (APITag apiTag : apiTags) {
-                SortedSet<String> set = requestTags.get(apiTag.name());
-                if (set == null) {
-                    set = new TreeSet<>();
-                    requestTags.put(apiTag.name(), set);
-                }
-                set.add(requestType);
-            }
-        }
-    }
-
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 
         resp.setHeader("Cache-Control", "no-cache, no-store, must-revalidate, private");
         resp.setHeader("Pragma", "no-cache");
         resp.setDateHeader("Expires", 0);
         resp.setContentType("text/html; charset=UTF-8");
+
+        if (API.allowedBotHosts != null && ! API.allowedBotHosts.contains(req.getRemoteHost())) {
+            resp.sendError(HttpServletResponse.SC_FORBIDDEN);
+            return;
+        }
 
         try (PrintWriter writer = resp.getWriter()) {
             writer.print(header);

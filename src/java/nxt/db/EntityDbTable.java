@@ -47,7 +47,7 @@ public abstract class EntityDbTable<T> extends DerivedDbTable {
     public final T getBy(String columnName, String value) {
         try (Connection con = Db.getConnection();
              PreparedStatement pstmt = con.prepareStatement("SELECT * FROM " + table()
-                     + " WHERE " + columnName + " = ?" + (multiversion ? " AND latest = TRUE" : ""))) {
+                     + " WHERE " + columnName + " = ?" + (multiversion ? " AND latest = TRUE LIMIT 1" : ""))) {
             pstmt.setString(1, value);
             return get(con, pstmt);
         } catch (SQLException e) {

@@ -23,11 +23,9 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -60,6 +58,8 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
     private volatile int lastBlockchainFeederHeight;
 
     private volatile boolean isScanning;
+    private volatile boolean forceScan = Nxt.getBooleanProperty("nxt.forceScan");
+    private volatile boolean validateAtScan = Nxt.getBooleanProperty("nxt.forceValidate");
 
     private final Runnable getMoreBlocksThread = new Runnable() {
 
@@ -299,7 +299,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             synchronized (blockchain) {
                 BigInteger curCumulativeDifficulty = blockchain.getLastBlock().getCumulativeDifficulty();
 
-                Deque<BlockImpl> poppedOffBlocks = popOffTo(commonBlock);
+                List<BlockImpl> poppedOffBlocks = popOffTo(commonBlock);
 
                 int pushedForkBlocks = 0;
                 if (blockchain.getLastBlock().getId().equals(commonBlock.getId())) {
@@ -320,8 +320,8 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     Logger.logDebugMessage("Pop off caused by peer " + peer.getPeerAddress() + ", blacklisting");
                     peer.blacklist();
                     popOffTo(commonBlock);
-                    while (!poppedOffBlocks.isEmpty()) {
-                        BlockImpl block = poppedOffBlocks.pop();
+                    for (int i = poppedOffBlocks.size() - 1; i >= 0; i--) {
+                        BlockImpl block = poppedOffBlocks.get(i);
                         try {
                             pushBlock(block);
                         } catch (BlockNotAcceptedException e) {
@@ -416,6 +416,11 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
     }
 
     @Override
+    public List<BlockImpl> popOffTo(int height) {
+        return popOffTo(blockchain.getBlockAtHeight(height));
+    }
+
+    @Override
     public void fullReset() {
         synchronized (blockchain) {
             //BlockDb.deleteBlock(Genesis.GENESIS_BLOCK_ID); // fails with stack overflow in H2
@@ -423,6 +428,21 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             addGenesisBlock();
             scan();
         }
+    }
+
+    @Override
+    public void scan() {
+        scan(false);
+    }
+
+    @Override
+    public void forceScanAtStart() {
+        forceScan = true;
+    }
+
+    @Override
+    public void validateAtNextScan() {
+        validateAtScan = true;
     }
 
     private void addBlock(BlockImpl block) {
@@ -443,6 +463,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             return;
         }
         Logger.logMessage("Genesis block not in database, starting from scratch");
+        blockchain.setLastBlock(null);
         try {
             SortedMap<Long,TransactionImpl> transactionsMap = new TreeMap<>();
 
@@ -674,15 +695,15 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
 
     }
 
-    private Deque<BlockImpl> popOffTo(Block commonBlock) {
-        Deque<BlockImpl> poppedOffBlocks = new ArrayDeque<>();
+    private List<BlockImpl> popOffTo(Block commonBlock) {
+        List<BlockImpl> poppedOffBlocks = new ArrayList<>();
         synchronized (blockchain) {
             try {
                 Db.beginTransaction();
                 Set<TransactionImpl> unappliedUnconfirmed = transactionProcessor.undoAllUnconfirmed();
                 BlockImpl block = blockchain.getLastBlock();
                 while (!block.getId().equals(commonBlock.getId()) && !block.getId().equals(Genesis.GENESIS_BLOCK_ID)) {
-                    poppedOffBlocks.push(block);
+                    poppedOffBlocks.add(block);
                     block = popLastBlock(unappliedUnconfirmed);
                 }
                 for (DerivedDbTable table : derivedTables) {
@@ -858,22 +879,6 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         }
         transaction = TransactionDb.findTransactionByFullHash(transaction.getReferencedTransactionFullHash());
         return transaction != null && hasAllReferencedTransactions(transaction, timestamp, count + 1);
-    }
-
-    private volatile boolean forceScan = Nxt.getBooleanProperty("nxt.forceScan");
-
-    void forceScanAtStart() {
-        forceScan = true;
-    }
-
-    private volatile boolean validateAtScan = Nxt.getBooleanProperty("nxt.forceValidate");
-
-    void validateAtNextScan() {
-        validateAtScan = true;
-    }
-
-    private void scan() {
-        scan(false);
     }
 
     private void scan(boolean inner) {

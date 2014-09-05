@@ -81,13 +81,13 @@ final class BlockDb {
 
     static BlockImpl findLastBlock() {
         try (Connection con = Db.getConnection();
-             PreparedStatement pstmt = con.prepareStatement("SELECT * FROM block WHERE db_id = (SELECT MAX(db_id) FROM block)")) {
-            ResultSet rs = pstmt.executeQuery();
+             PreparedStatement pstmt = con.prepareStatement("SELECT * FROM block ORDER BY db_id DESC LIMIT 1")) {
             BlockImpl block = null;
-            if (rs.next()) {
-                block = loadBlock(con, rs);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    block = loadBlock(con, rs);
+                }
             }
-            rs.close();
             return block;
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);

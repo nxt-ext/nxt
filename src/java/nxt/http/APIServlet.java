@@ -135,6 +135,7 @@ public final class APIServlet extends HttpServlet {
         map.put("issueAsset", IssueAsset.instance);
         map.put("issueCurrency", IssueCurrency.instance);
         map.put("leaseBalance", LeaseBalance.instance);
+        map.put("longConvert", LongConvert.instance);
         map.put("markHost", MarkHost.instance);
         map.put("msIncreaseReserve", MSIncreaseReserve.instance);
         map.put("msReserveClaim", MSReserveClaim.instance);
@@ -152,6 +153,12 @@ public final class APIServlet extends HttpServlet {
         map.put("stopForging", StopForging.instance);
         map.put("getForging", GetForging.instance);
         map.put("transferAsset", TransferAsset.instance);
+
+        if (API.enableDebugAPI) {
+            map.put("fullReset", FullReset.instance);
+            map.put("popOff", PopOff.instance);
+            map.put("scan", Scan.instance);
+        }
 
         apiRequestHandlers = Collections.unmodifiableMap(map);
     }
