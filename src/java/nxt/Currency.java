@@ -6,17 +6,13 @@ import nxt.db.EntityDbTable;
 import nxt.db.VersionedEntityDbTable;
 import nxt.util.Convert;
 import nxt.util.Listener;
-import org.eclipse.jetty.util.ConcurrentHashSet;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -63,6 +59,14 @@ public final class Currency {
         return currencyTable.get(currencyDbKeyFactory.newKey(id));
     }
 
+    public static Currency getCurrencyByName(String name) {
+        return currencyTable.getBy("name", name);
+    }
+
+    public static Currency getCurrencyByCode(String code) {
+        return currencyTable.getBy("code", code);
+    }
+
     public static DbIterator<Currency> getCurrencyIssuedBy(Long accountId, int from, int to) {
         return currencyTable.getManyBy("account_id", accountId, from, to);
     }
@@ -70,11 +74,6 @@ public final class Currency {
     static void addCurrency(Transaction transaction, Attachment.MonetarySystemCurrencyIssuance attachment) {
         currencyTable.insert(new Currency(transaction, attachment));
     }
-
-    private static final ConcurrentMap<Long, Currency> currencies = new ConcurrentHashMap<>();
-    private static final Collection<Currency> allCurrencies = Collections.unmodifiableCollection(currencies.values());
-    private static final Set<String> currencyNames = new ConcurrentHashSet<>();
-    private static final Set<String> currencyCodes = new ConcurrentHashSet<>();
 
     private static final ConcurrentMap<Long, NonIssuedCurrency> nonIssuedCurrencies = new ConcurrentHashMap<>();
 
@@ -92,12 +91,8 @@ public final class Currency {
                             for (Map.Entry<Long, Long> founderEntry : nonIssuedCurrency.getFounders().entrySet()) {
                                 Account.getAccount(founderEntry.getKey()).addToBalanceAndUnconfirmedBalanceNQT(founderEntry.getValue());
                             }
-
-                            currencies.remove(nonIssuedCurrencyEntry.getKey());
-                            currencyNames.remove(currency.getName());
-                            currencyCodes.remove(currency.getCode());
+                            currencyTable.delete(currency);
                         }
-
                         nonIssuedCurrencies.remove(nonIssuedCurrencyEntry.getKey());
                     }
                 }
@@ -106,40 +101,36 @@ public final class Currency {
 
     }
 
-    public static Collection<Currency> getAllCurrencies() {
-        return allCurrencies;
-    }
-
     static void addNXTCurrency() {
         addCurrency(0L, Genesis.GENESIS_BLOCK_ID, "Nxt", "NXT", "", (byte)0, Constants.MAX_BALANCE_NQT, 0, 1, (byte)0, (byte)0, (byte)0, Constants.MAX_BALANCE_NQT, 0);
     }
 
     static void addCurrency(Long currencyId, Long accountId, String name, String code, String description, byte type, long totalSupply, int issuanceHeight, long minReservePerUnitNQT, byte minDifficulty, byte maxDifficulty, byte ruleset, long currentSupply, long currentReservePerUnitNQT) {
-        Currency currency = new Currency(currencyId, accountId, name, code, description, type, totalSupply, issuanceHeight, minReservePerUnitNQT, minDifficulty, maxDifficulty, ruleset, currentSupply, currentReservePerUnitNQT);
-        if (Currency.currencies.putIfAbsent(currencyId, currency) != null) {
+        Currency currency = getCurrency(currencyId);
+        if (currency != null) {
             throw new IllegalStateException("Currency with id " + Convert.toUnsignedLong(currencyId) + " already exists");
         }
-        currencyNames.add(name.toLowerCase());
-        currencyCodes.add(code);
-
+        currency = getCurrencyByName(name);
+        if (currency != null) {
+            throw new IllegalStateException("Currency with name " + name + " already exists");
+        }
+        currency = getCurrencyByCode(code);
+        if (currency != null) {
+            throw new IllegalStateException("Currency with code " + code + " already exists");
+        }
+        currency = new Currency(currencyId, accountId, name, code, description, type, totalSupply, issuanceHeight, minReservePerUnitNQT, minDifficulty, maxDifficulty, ruleset, currentSupply, currentReservePerUnitNQT);
+        currencyTable.insert(currency);
         if (currency.getIssuanceHeight() > 0) {
             nonIssuedCurrencies.put(currencyId, new NonIssuedCurrency(currency));
         }
     }
 
-    static void clear() {
-        currencies.clear();
-        currencyNames.clear();
-        currencyCodes.clear();
-        addNXTCurrency();
-    }
-
     static boolean isNameSquatted(String name) {
-        return currencyNames.contains(name);
+        return getCurrencyByName(name) != null;
     }
 
     static boolean isCodeSquatted(String code) {
-        return currencyCodes.contains(code);
+        return getCurrencyByCode(code) != null;
     }
 
     private final Long currencyId;
@@ -283,7 +274,7 @@ public final class Currency {
     }
 
     public static boolean isIssued(Long currencyId) {
-        Currency currency = currencies.get(currencyId);
+        Currency currency = getCurrency(currencyId);
         return currency != null && currency.getIssuanceHeight() <= BlockchainImpl.getInstance().getLastBlock().getHeight();
     }
 
