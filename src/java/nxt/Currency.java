@@ -14,7 +14,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -23,35 +22,6 @@ import java.util.concurrent.ConcurrentMap;
 
 @SuppressWarnings("UnusedDeclaration")
 public final class Currency {
-
-    public static final class NonIssuedCurrency {
-
-        private final Currency currency;
-        private final Map<Long, Long> founders;
-
-        NonIssuedCurrency(Currency currency) {
-            this.currency = currency;
-            this.founders = new HashMap<>();
-        }
-
-        public Currency getCurrency() {
-            return currency;
-        }
-
-        public Map<Long, Long> getFounders() {
-            return founders;
-        }
-
-        public void addFounder(Long accountId, Long amount) {
-            Long initialAmount = founders.get(accountId);
-            if (initialAmount == null) {
-                founders.put(accountId, amount);
-            } else {
-                founders.put(accountId, initialAmount + amount);
-            }
-        }
-
-    }
 
     private static final DbKey.LongKeyFactory<Currency> currencyDbKeyFactory = new DbKey.LongKeyFactory<Currency>("id") {
 
@@ -145,7 +115,7 @@ public final class Currency {
     }
 
     static void addCurrency(Long currencyId, Long accountId, String name, String code, String description, byte type, long totalSupply, int issuanceHeight, long minReservePerUnitNQT, byte minDifficulty, byte maxDifficulty, byte ruleset, long currentSupply, long currentReservePerUnitNQT) {
-        Currency currency = new Currency(currencyId, (long)-1, name, code, description, type, totalSupply, issuanceHeight, minReservePerUnitNQT, minDifficulty, maxDifficulty, ruleset, currentSupply, currentReservePerUnitNQT);
+        Currency currency = new Currency(currencyId, accountId, name, code, description, type, totalSupply, issuanceHeight, minReservePerUnitNQT, minDifficulty, maxDifficulty, ruleset, currentSupply, currentReservePerUnitNQT);
         if (Currency.currencies.putIfAbsent(currencyId, currency) != null) {
             throw new IllegalStateException("Currency with id " + Convert.toUnsignedLong(currencyId) + " already exists");
         }

@@ -3,9 +3,6 @@ package nxt;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
-* Created by lyaf on 9/6/2014.
-*/
 public final class NonIssuedCurrency {
 
     private final Currency currency;
