@@ -15,6 +15,7 @@ public final class ThreadPool {
     private static Map<Runnable,Long> backgroundJobs = new HashMap<>();
     private static List<Runnable> beforeStartJobs = new ArrayList<>();
     private static List<Runnable> lastBeforeStartJobs = new ArrayList<>();
+    private static List<Runnable> afterStartJobs = new ArrayList<>();
 
     public static synchronized void runBeforeStart(Runnable runnable, boolean runLast) {
         if (scheduledThreadPool != null) {
@@ -25,6 +26,10 @@ public final class ThreadPool {
         } else {
             beforeStartJobs.add(runnable);
         }
+    }
+
+    public static synchronized void runAfterStart(Runnable runnable) {
+        afterStartJobs.add(runnable);
     }
 
     public static synchronized void scheduleThread(Runnable runnable, int delay) {
@@ -57,6 +62,16 @@ public final class ThreadPool {
             scheduledThreadPool.scheduleWithFixedDelay(entry.getKey(), 0, entry.getValue(), TimeUnit.MILLISECONDS);
         }
         backgroundJobs = null;
+
+        Logger.logDebugMessage("Running " + afterStartJobs.size() + " after start tasks");
+        Thread thread = new Thread() {
+            @Override
+            public void run() {
+                runAll(afterStartJobs);
+            }
+        };
+        thread.setDaemon(true);
+        thread.start();
     }
 
     public static synchronized void shutdown() {
