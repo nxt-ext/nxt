@@ -141,10 +141,10 @@ public final class Currency {
     }
 
     static void addNXTCurrency() {
-        addCurrency(0L, "Nxt", "NXT", "", (byte)0, Constants.MAX_BALANCE_NQT, 0, 1, (byte)0, (byte)0, (byte)0, Constants.MAX_BALANCE_NQT, 0);
+        addCurrency(0L, Genesis.GENESIS_BLOCK_ID, "Nxt", "NXT", "", (byte)0, Constants.MAX_BALANCE_NQT, 0, 1, (byte)0, (byte)0, (byte)0, Constants.MAX_BALANCE_NQT, 0);
     }
 
-    static void addCurrency(Long currencyId, String name, String code, String description, byte type, long totalSupply, int issuanceHeight, long minReservePerUnitNQT, byte minDifficulty, byte maxDifficulty, byte ruleset, long currentSupply, long currentReservePerUnitNQT) {
+    static void addCurrency(Long currencyId, Long accountId, String name, String code, String description, byte type, long totalSupply, int issuanceHeight, long minReservePerUnitNQT, byte minDifficulty, byte maxDifficulty, byte ruleset, long currentSupply, long currentReservePerUnitNQT) {
         Currency currency = new Currency(currencyId, (long)-1, name, code, description, type, totalSupply, issuanceHeight, minReservePerUnitNQT, minDifficulty, maxDifficulty, ruleset, currentSupply, currentReservePerUnitNQT);
         if (Currency.currencies.putIfAbsent(currencyId, currency) != null) {
             throw new IllegalStateException("Currency with id " + Convert.toUnsignedLong(currencyId) + " already exists");
@@ -191,7 +191,7 @@ public final class Currency {
     private long currentReservePerUnitNQT;
 
     public Currency(Transaction transaction, Attachment.MonetarySystemCurrencyIssuance attachment) {
-        this(transaction.getId(), (long)0, attachment.getName(), attachment.getCode(), attachment.getDescription(), attachment.getType(),
+        this(transaction.getId(), transaction.getSenderId(), attachment.getName(), attachment.getCode(), attachment.getDescription(), attachment.getType(),
                 attachment.getTotalSupply(), attachment.getIssuanceHeight(), attachment.getMinReservePerUnitNQT(),
                 attachment.getMinDifficulty(), attachment.getMaxDifficulty(), attachment.getRuleset(), attachment.getTotalSupply(), 0);
     }
