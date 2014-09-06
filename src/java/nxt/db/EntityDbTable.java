@@ -55,7 +55,7 @@ public abstract class EntityDbTable<T> extends DerivedDbTable {
         }
     }
 
-    private T get(Connection con, PreparedStatement pstmt) throws SQLException {
+    public T get(Connection con, PreparedStatement pstmt) throws SQLException {
         final boolean cache = Db.isInTransaction();
         try (ResultSet rs = pstmt.executeQuery()) {
             if (!rs.next()) {

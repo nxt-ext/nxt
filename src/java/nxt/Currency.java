@@ -12,9 +12,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 
 @SuppressWarnings("UnusedDeclaration")
 public final class Currency {
@@ -44,7 +41,6 @@ public final class Currency {
         protected void save(Connection con, Currency currency) throws SQLException {
             currency.save(con);
         }
-
     };
 
     public static DbIterator<Currency> getAllCurrencies(int from, int to) {
@@ -75,25 +71,27 @@ public final class Currency {
         currencyTable.insert(new Currency(transaction, attachment));
     }
 
-    private static final ConcurrentMap<Long, NonIssuedCurrency> nonIssuedCurrencies = new ConcurrentHashMap<>();
-
     static {
         addNXTCurrency();
 
         Nxt.getBlockchainProcessor().addListener(new Listener<Block>() {
             @Override
             public void notify(Block block) {
-                for (Map.Entry<Long, NonIssuedCurrency> nonIssuedCurrencyEntry : nonIssuedCurrencies.entrySet()) {
-                    NonIssuedCurrency nonIssuedCurrency = nonIssuedCurrencyEntry.getValue();
-                    Currency currency = nonIssuedCurrency.getCurrency();
-                    if (currency.getIssuanceHeight() <= block.getHeight()) {
-                        if (currency.getCurrentReservePerUnitNQT() < currency.getMinReservePerUnitNQT()) {
-                            for (Map.Entry<Long, Long> founderEntry : nonIssuedCurrency.getFounders().entrySet()) {
-                                Account.getAccount(founderEntry.getKey()).addToBalanceAndUnconfirmedBalanceNQT(founderEntry.getValue());
+                try (DbIterator<Currency> currencies = currencyTable.getAll(0, getCount() - 1)) {
+                    while (currencies.hasNext()) {
+                        Currency currency = currencies.next();
+                        if (currency.getIssuanceHeight() > 0 && currency.getIssuanceHeight() <= block.getHeight()) {
+                            if (currency.getCurrentReservePerUnitNQT() < currency.getMinReservePerUnitNQT()) {
+                                try (DbIterator<CurrencyFounder> founders = CurrencyFounder.getCurrencyFounders(currency.getCurrencyId())) {
+                                    while (founders.hasNext()) {
+                                        CurrencyFounder founder = founders.next();
+                                        Account.getAccount(founder.getAccountId()).addToBalanceAndUnconfirmedBalanceNQT(founder.getValue());
+                                    }
+                                }
+                                currencyTable.delete(currency);
                             }
-                            currencyTable.delete(currency);
+                            CurrencyFounder.remove(currency.getCurrencyId());
                         }
-                        nonIssuedCurrencies.remove(nonIssuedCurrencyEntry.getKey());
                     }
                 }
             }
@@ -120,9 +118,6 @@ public final class Currency {
         }
         currency = new Currency(currencyId, accountId, name, code, description, type, totalSupply, issuanceHeight, minReservePerUnitNQT, minDifficulty, maxDifficulty, ruleset, currentSupply, currentReservePerUnitNQT);
         currencyTable.insert(currency);
-        if (currency.getIssuanceHeight() > 0) {
-            nonIssuedCurrencies.put(currencyId, new NonIssuedCurrency(currency));
-        }
     }
 
     static boolean isNameSquatted(String name) {
@@ -282,14 +277,15 @@ public final class Currency {
         Currency currency = Currency.getCurrency(currencyId);
         account.addToBalanceNQT(-Convert.safeMultiply(currency.getTotalSupply(), amountNQT));
         currency.currentReservePerUnitNQT += amountNQT;
-
-        nonIssuedCurrencies.get(currencyId).addFounder(account.getId(), Convert.safeMultiply(currency.getTotalSupply(), amountNQT));
+        currencyTable.insert(currency);
+        CurrencyFounder.addFounder(currencyId, account.getId(), Convert.safeMultiply(currency.getTotalSupply(), amountNQT));
     }
 
     public static void claimReserve(Account account, Long currencyId, long units) {
         account.addToCurrencyBalanceQNT(currencyId, -units);
         Currency currency = Currency.getCurrency(currencyId);
         currency.totalSupply -= units;
+        currencyTable.insert(currency);
         account.addToBalanceAndUnconfirmedBalanceNQT(Convert.safeMultiply(units, currency.currentReservePerUnitNQT));
     }
 
@@ -302,6 +298,7 @@ public final class Currency {
 
     public void increaseSupply(int units) {
         currentSupply += units;
+        currencyTable.insert(this);
     }
 
 }

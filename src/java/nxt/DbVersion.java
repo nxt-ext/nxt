@@ -454,9 +454,19 @@ final class DbVersion {
             case 124:
                 apply("CREATE UNIQUE INDEX IF NOT EXISTS account_currency_id_height_idx ON account_currency (account_id, currency_id, height DESC)");
             case 125:
+                apply("CREATE TABLE IF NOT EXISTS currency_founder (db_id INT IDENTITY, currency_id BIGINT NOT NULL, "
+                        + "account_id BIGINT NOT NULL, value BIGINT NOT NULL)");
+            case 126:
+                apply("CREATE INDEX IF NOT EXISTS currency_founder_currency_id_idx ON account_currency (currency_id)");
+            case 127:
+                apply("CREATE TABLE IF NOT EXISTS currency_mint (db_id INT IDENTITY, currency_id BIGINT NOT NULL, "
+                        + "account_id BIGINT NOT NULL, counter BIGINT NOT NULL)");
+            case 128:
+                apply("CREATE UNIQUE INDEX IF NOT EXISTS currency_mint_currency_id_account_id_idx ON account_currency (currency_id, account_id)");
+            case 129:
                 BlockchainProcessorImpl.getInstance().forceScanAtStart();
                 apply(null);
-            case 126:
+            case 130:
                 return;
             default:
                 throw new RuntimeException("Database inconsistent with code, probably trying to run older code on newer database");
