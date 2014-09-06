@@ -433,9 +433,9 @@ final class DbVersion {
                 apply("CREATE INDEX IF NOT EXISTS purchase_public_feedback_id_height_idx ON purchase_public_feedback (id, height DESC)");
             case 118:
                 apply("CREATE TABLE IF NOT EXISTS unconfirmed_transaction (id BIGINT NOT NULL, expiration INT NOT NULL, "
-                        + "transaction_bytes VARBINARY NOT NULL, height INT NULL DEFAULT NULL)");
+                        + "transaction_bytes VARBINARY NOT NULL, height INT NOT NULL, latest BOOLEAN NOT NULL DEFAULT TRUE)");
             case 119:
-                apply("CREATE UNIQUE INDEX IF NOT EXISTS unconfirmed_transaction_id_idx ON unconfirmed_transaction (id)");
+                apply("CREATE UNIQUE INDEX IF NOT EXISTS unconfirmed_transaction_id_height_idx ON unconfirmed_transaction (id, height DESC)");
             case 120:
                 BlockchainProcessorImpl.getInstance().forceScanAtStart();
                 apply(null);

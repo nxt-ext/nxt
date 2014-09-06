@@ -12,11 +12,10 @@ public abstract class VersionedEntityDbTable<T> extends EntityDbTable<T> {
     }
 
     @Override
-    public final void rollback(int height) {
+    public void rollback(int height) {
         rollback(table(), height, dbKeyFactory);
     }
 
-    @Override
     public final void delete(T t) {
         if (t == null) {
             return;

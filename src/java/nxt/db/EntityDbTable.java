@@ -179,19 +179,4 @@ public abstract class EntityDbTable<T> extends DerivedDbTable {
         }
     }
 
-    public void delete(T t) {
-        if (t == null) {
-            return;
-        }
-        DbKey dbKey = dbKeyFactory.newKey(t);
-        Db.getCache(table()).remove(dbKey);
-        try (Connection con = Db.getConnection();
-             PreparedStatement pstmt = con.prepareStatement("DELETE FROM " + table() + dbKeyFactory.getPKClause())) {
-            dbKey.setPK(pstmt);
-            pstmt.executeUpdate();
-        } catch (SQLException e) {
-            throw new RuntimeException(e.toString(), e);
-        }
-    }
-
 }

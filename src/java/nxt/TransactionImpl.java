@@ -345,7 +345,7 @@ final class TransactionImpl implements Transaction {
         this.blockTimestamp = block.getTimestamp();
     }
 
-    private void unsetBlock() {
+    void unsetBlock() {
         this.block = null;
         this.blockId = null;
         this.blockTimestamp = -1;
@@ -365,7 +365,7 @@ final class TransactionImpl implements Transaction {
 
     @Override
     public int getExpiration() {
-        return timestamp + deadline * 60;
+        return timestamp + Math.min(deadline, 1440) * 60;
     }
 
     @Override
@@ -431,7 +431,7 @@ final class TransactionImpl implements Transaction {
 
     DbKey getDbKey() {
         if (dbKey == null) {
-            dbKey = TransactionProcessorImpl.unconfirmedTransactionDbKeyFactory.newKey(getId());
+            dbKey = TransactionProcessorImpl.getInstance().unconfirmedTransactionDbKeyFactory.newKey(getId());
         }
         return dbKey;
     }
@@ -810,10 +810,6 @@ final class TransactionImpl implements Transaction {
     void undoUnconfirmed() {
         Account senderAccount = Account.getAccount(getSenderId());
         type.undoUnconfirmed(this, senderAccount);
-    }
-
-    void undo() {
-        unsetBlock();
     }
 
     boolean isDuplicate(Map<TransactionType, Set<String>> duplicates) {
