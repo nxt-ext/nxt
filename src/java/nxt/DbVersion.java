@@ -451,7 +451,7 @@ final class DbVersion {
                         + "currency_id BIGINT NOT NULL, units BIGINT NOT NULL, unconfirmed_units BIGINT NOT NULL, height INT NOT NULL, "
                         + "latest BOOLEAN NOT NULL DEFAULT TRUE)");
             case 124:
-                apply("CREATE UNIQUE INDEX IF NOT EXISTS account_currency_id_height_idx ON account_asset (account_id, currency_id, height DESC)");
+                apply("CREATE UNIQUE INDEX IF NOT EXISTS account_currency_id_height_idx ON account_currency (account_id, currency_id, height DESC)");
             case 125:
                 BlockchainProcessorImpl.getInstance().forceScanAtStart();
                 apply(null);
