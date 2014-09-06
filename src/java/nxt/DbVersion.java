@@ -333,7 +333,7 @@ final class DbVersion {
             case 83:
                 apply("CREATE TABLE IF NOT EXISTS ask_order (db_id INT IDENTITY, id BIGINT NOT NULL, account_id BIGINT NOT NULL, "
                         + "asset_id BIGINT NOT NULL, price BIGINT NOT NULL, "
-                        + "quantity BIGINT NOT NULL, height INT NOT NULL, "
+                        + "quantity BIGINT NOT NULL, creation_height INT NOT NULL, height INT NOT NULL, "
                         + "latest BOOLEAN NOT NULL DEFAULT TRUE)");
             case 84:
                 apply("CREATE UNIQUE INDEX IF NOT EXISTS ask_order_id_height_idx ON ask_order (id, height DESC)");
@@ -343,7 +343,8 @@ final class DbVersion {
                 apply("CREATE INDEX IF NOT EXISTS ask_order_asset_id_price_idx ON ask_order (asset_id, price)");
             case 87:
                 apply("CREATE TABLE IF NOT EXISTS bid_order (db_id INT IDENTITY, id BIGINT NOT NULL, account_id BIGINT NOT NULL, "
-                        + "asset_id BIGINT NOT NULL, price BIGINT NOT NULL, quantity BIGINT NOT NULL, height INT NOT NULL, "
+                        + "asset_id BIGINT NOT NULL, price BIGINT NOT NULL, "
+                        + "quantity BIGINT NOT NULL, creation_height INT NOT NULL, height INT NOT NULL, "
                         + "latest BOOLEAN NOT NULL DEFAULT TRUE)");
             case 88:
                 apply("CREATE UNIQUE INDEX IF NOT EXISTS bid_order_id_height_idx ON bid_order (id, height DESC)");
