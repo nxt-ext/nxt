@@ -441,7 +441,8 @@ final class DbVersion {
                         + "name VARCHAR NOT NULL, code VARCHAR NOT NULL, description VARCHAR, type TINYINT NOT NULL, total_supply BIGINT NOT NULL, "
                         + "issuance_height INT NOT NULL, min_reserve_per_unit_nqt BIGINT NOT NULL, min_difficulty TINYINT NOT NULL, "
                         + "max_difficulty TINYINT NOT NULL, ruleset TINYINT NOT NULL, current_supply BIGINT NOT NULL, "
-                        + "current_reserve_per_unit_nqt BIGINT NOT NULL)");
+                        + "current_reserve_per_unit_nqt BIGINT NOT NULL, "
+                        + "height INT NOT NULL, latest BOOLEAN NOT NULL DEFAULT TRUE)");
             case 121:
                 apply("CREATE UNIQUE INDEX IF NOT EXISTS currency_id_idx ON currency (id)");
             case 122:

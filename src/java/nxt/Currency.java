@@ -3,6 +3,7 @@ package nxt;
 import nxt.db.DbIterator;
 import nxt.db.DbKey;
 import nxt.db.EntityDbTable;
+import nxt.db.VersionedEntityDbTable;
 import nxt.util.Convert;
 import nxt.util.Listener;
 import org.eclipse.jetty.util.ConcurrentHashSet;
@@ -61,7 +62,7 @@ public final class Currency {
 
     };
 
-    private static final EntityDbTable<Currency> currencyTable = new EntityDbTable<Currency>(currencyDbKeyFactory) {
+    private static final EntityDbTable<Currency> currencyTable = new VersionedEntityDbTable<Currency>(currencyDbKeyFactory) {
 
         @Override
         protected String table() {
