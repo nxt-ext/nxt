@@ -25,7 +25,7 @@ public final class Currency {
 
     };
 
-    private static final EntityDbTable<Currency> currencyTable = new VersionedEntityDbTable<Currency>(currencyDbKeyFactory) {
+    private static final VersionedEntityDbTable<Currency> currencyTable = new VersionedEntityDbTable<Currency>(currencyDbKeyFactory) {
 
         @Override
         protected String table() {

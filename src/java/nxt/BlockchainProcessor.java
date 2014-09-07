@@ -28,7 +28,7 @@ public interface BlockchainProcessor extends Observable<Block,BlockchainProcesso
 
     void fullReset();
 
-    void scan();
+    void scan(int height);
 
     void forceScanAtStart();
 

@@ -188,9 +188,11 @@ public final class Peers {
         getMorePeers = Nxt.getBooleanProperty("nxt.getMorePeers");
         dumpPeersVersion = Nxt.getStringProperty("nxt.dumpPeersVersion");
 
+        final List<Future<String>> unresolvedPeers = Collections.synchronizedList(new ArrayList<Future<String>>());
+
         ThreadPool.runBeforeStart(new Runnable() {
 
-            private void loadPeers(List<Future<String>> unresolved, Collection<String> addresses) {
+            private void loadPeers(Collection<String> addresses) {
                 for (final String address : addresses) {
                     Future<String> unresolvedAddress = sendToPeersService.submit(new Callable<String>() {
                         @Override
@@ -199,20 +201,25 @@ public final class Peers {
                             return peer == null ? address : null;
                         }
                     });
-                    unresolved.add(unresolvedAddress);
+                    unresolvedPeers.add(unresolvedAddress);
                 }
             }
 
             @Override
             public void run() {
-                List<Future<String>> unresolvedPeers = new ArrayList<>();
                 if (! wellKnownPeers.isEmpty()) {
-                    loadPeers(unresolvedPeers, wellKnownPeers);
+                    loadPeers(wellKnownPeers);
                 }
                 if (usePeersDb) {
                     Logger.logDebugMessage("Loading known peers from the database...");
-                    loadPeers(unresolvedPeers, PeerDb.loadPeers());
+                    loadPeers(PeerDb.loadPeers());
                 }
+            }
+        }, false);
+
+        ThreadPool.runAfterStart(new Runnable() {
+            @Override
+            public void run() {
                 for (Future<String> unresolvedPeer : unresolvedPeers) {
                     try {
                         String badAddress = unresolvedPeer.get(5, TimeUnit.SECONDS);
@@ -228,7 +235,7 @@ public final class Peers {
                 }
                 Logger.logDebugMessage("Known peers: " + peers.size());
             }
-        }, false);
+        });
 
     }
 
