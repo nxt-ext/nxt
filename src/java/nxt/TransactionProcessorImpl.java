@@ -114,6 +114,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                         if (rs.next()) {
                             int height = rs.getInt("height");
                             if (!rs.wasNull()) {
+                                Logger.logDebugMessage("Transaction accepted at height " + height + " expired, will rescan");
                                 Nxt.getBlockchainProcessor().scan(height);
                             }
                         }
@@ -347,6 +348,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                 }
                 Db.commitTransaction();
             } catch (Exception e) {
+                Logger.logErrorMessage(e.toString(), e);
                 Db.rollbackTransaction();
             } finally {
                 Db.endTransaction();
