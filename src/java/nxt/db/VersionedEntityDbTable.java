@@ -1,9 +1,13 @@
 package nxt.db;
 
+import nxt.util.Logger;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
 public abstract class VersionedEntityDbTable<T> extends EntityDbTable<T> {
 
@@ -12,11 +16,10 @@ public abstract class VersionedEntityDbTable<T> extends EntityDbTable<T> {
     }
 
     @Override
-    public final void rollback(int height) {
+    public void rollback(int height) {
         rollback(table(), height, dbKeyFactory);
     }
 
-    @Override
     public final void delete(T t) {
         if (t == null) {
             return;
@@ -48,6 +51,7 @@ public abstract class VersionedEntityDbTable<T> extends EntityDbTable<T> {
     }
 
     static void rollback(String table, int height, DbKey.Factory dbKeyFactory) {
+        Logger.logDebugMessage("Rollback " + table + " to " + height);
         try (Connection con = Db.getConnection();
              PreparedStatement pstmtSelectToDelete = con.prepareStatement("SELECT DISTINCT " + dbKeyFactory.getPKColumns()
                      + " FROM " + table + " WHERE height > ?");
@@ -57,17 +61,20 @@ public abstract class VersionedEntityDbTable<T> extends EntityDbTable<T> {
                      + " SET latest = TRUE " + dbKeyFactory.getPKClause() + " AND height ="
                      + " (SELECT MAX(height) FROM " + table + dbKeyFactory.getPKClause() + ")")) {
             pstmtSelectToDelete.setInt(1, height);
+            List<DbKey> dbKeys = new ArrayList<>();
             try (ResultSet rs = pstmtSelectToDelete.executeQuery()) {
                 while (rs.next()) {
-                    DbKey dbKey = dbKeyFactory.newKey(rs);
-                    pstmtDelete.setInt(1, height);
-                    pstmtDelete.executeUpdate();
-                    int i = 1;
-                    i = dbKey.setPK(pstmtSetLatest, i);
-                    i = dbKey.setPK(pstmtSetLatest, i);
-                    pstmtSetLatest.executeUpdate();
-                    Db.getCache(table).remove(dbKey);
+                    dbKeys.add(dbKeyFactory.newKey(rs));
                 }
+            }
+            pstmtDelete.setInt(1, height);
+            pstmtDelete.executeUpdate();
+            for (DbKey dbKey : dbKeys) {
+                int i = 1;
+                i = dbKey.setPK(pstmtSetLatest, i);
+                i = dbKey.setPK(pstmtSetLatest, i);
+                pstmtSetLatest.executeUpdate();
+                Db.getCache(table).remove(dbKey);
             }
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);

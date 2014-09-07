@@ -345,7 +345,7 @@ final class TransactionImpl implements Transaction {
         this.blockTimestamp = block.getTimestamp();
     }
 
-    private void unsetBlock() {
+    void unsetBlock() {
         this.block = null;
         this.blockId = null;
         this.blockTimestamp = -1;
@@ -431,7 +431,7 @@ final class TransactionImpl implements Transaction {
 
     DbKey getDbKey() {
         if (dbKey == null) {
-            dbKey = TransactionProcessorImpl.unconfirmedTransactionDbKeyFactory.newKey(getId());
+            dbKey = TransactionProcessorImpl.getInstance().unconfirmedTransactionDbKeyFactory.newKey(getId());
         }
         return dbKey;
     }
@@ -773,12 +773,6 @@ final class TransactionImpl implements Transaction {
 
     @Override
     public void validate() throws NxtException.ValidationException {
-        if (Nxt.getBlockchain().getHeight() >= Constants.PUBLIC_KEY_ANNOUNCEMENT_BLOCK && type.hasRecipient() && recipientId != null) {
-            Account recipientAccount = Account.getAccount(recipientId);
-            if ((recipientAccount == null || recipientAccount.getPublicKey() == null) && publicKeyAnnouncement == null) {
-                throw new NxtException.NotCurrentlyValidException("Recipient account does not have a public key, must attach a public key announcement");
-            }
-        }
         for (Appendix.AbstractAppendix appendage : appendages) {
             appendage.validate(this);
         }
@@ -786,6 +780,17 @@ final class TransactionImpl implements Transaction {
         if (feeNQT < minimumFeeNQT) {
             throw new NxtException.NotCurrentlyValidException(String.format("Transaction fee %d less than minimum fee %d at height %d",
                     feeNQT, minimumFeeNQT, Nxt.getBlockchain().getHeight()));
+        }
+        if (Nxt.getBlockchain().getHeight() >= Constants.PUBLIC_KEY_ANNOUNCEMENT_BLOCK) {
+            if (deadline > 1440) {
+                throw new NxtException.NotCurrentlyValidException("Invalid deadline " + deadline + ", maximum allowed is 1440");
+            }
+            if (type.hasRecipient() && recipientId != null) {
+                Account recipientAccount = Account.getAccount(recipientId);
+                if ((recipientAccount == null || recipientAccount.getPublicKey() == null) && publicKeyAnnouncement == null) {
+                    throw new NxtException.NotCurrentlyValidException("Recipient account does not have a public key, must attach a public key announcement");
+                }
+            }
         }
     }
 
@@ -810,10 +815,6 @@ final class TransactionImpl implements Transaction {
     void undoUnconfirmed() {
         Account senderAccount = Account.getAccount(getSenderId());
         type.undoUnconfirmed(this, senderAccount);
-    }
-
-    void undo() {
-        unsetBlock();
     }
 
     boolean isDuplicate(Map<TransactionType, Set<String>> duplicates) {

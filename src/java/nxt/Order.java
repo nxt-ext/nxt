@@ -59,7 +59,7 @@ public abstract class Order {
     private final Long accountId;
     private final Long assetId;
     private final long priceNQT;
-    private final int height;
+    private final int creationHeight;
 
     private long quantityQNT;
 
@@ -69,7 +69,7 @@ public abstract class Order {
         this.assetId = attachment.getAssetId();
         this.quantityQNT = attachment.getQuantityQNT();
         this.priceNQT = attachment.getPriceNQT();
-        this.height = transaction.getHeight();
+        this.creationHeight = transaction.getHeight();
     }
 
     private Order(ResultSet rs) throws SQLException {
@@ -78,12 +78,12 @@ public abstract class Order {
         this.assetId = rs.getLong("asset_id");
         this.priceNQT = rs.getLong("price");
         this.quantityQNT = rs.getLong("quantity");
-        this.height = rs.getInt("height");
+        this.creationHeight = rs.getInt("creation_height");
     }
 
     private void save(Connection con, String table) throws SQLException {
         try (PreparedStatement pstmt = con.prepareStatement("MERGE INTO " + table + " (id, account_id, asset_id, "
-                + "price, quantity, height, latest) KEY (id, height) VALUES (?, ?, ?, ?, ?, ?, TRUE)")) {
+                + "price, quantity, creation_height, height, latest) KEY (id, height) VALUES (?, ?, ?, ?, ?, ?, ?, TRUE)")) {
             int i = 0;
             pstmt.setLong(++i, this.getId());
             pstmt.setLong(++i, this.getAccountId());
@@ -91,6 +91,7 @@ public abstract class Order {
             pstmt.setLong(++i, this.getPriceNQT());
             pstmt.setLong(++i, this.getQuantityQNT());
             pstmt.setInt(++i, this.getHeight());
+            pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
             pstmt.executeUpdate();
         }
     }
@@ -116,13 +117,13 @@ public abstract class Order {
     }
 
     public int getHeight() {
-        return height;
+        return creationHeight;
     }
 
     @Override
     public String toString() {
         return getClass().getSimpleName() + " id: " + Convert.toUnsignedLong(id) + " account: " + Convert.toUnsignedLong(accountId)
-                + " asset: " + Convert.toUnsignedLong(assetId) + " price: " + priceNQT + " quantity: " + quantityQNT + " height: " + height;
+                + " asset: " + Convert.toUnsignedLong(assetId) + " price: " + priceNQT + " quantity: " + quantityQNT + " height: " + creationHeight;
     }
 
     private void setQuantityQNT(long quantityQNT) {
@@ -220,7 +221,7 @@ public abstract class Order {
             try {
                 con = Db.getConnection();
                 PreparedStatement pstmt = con.prepareStatement("SELECT * FROM ask_order WHERE asset_id = ? "
-                        + "AND latest = TRUE ORDER BY price ASC, height ASC, id ASC"
+                        + "AND latest = TRUE ORDER BY price ASC, creation_height ASC, id ASC"
                         + DbUtils.limitsClause(from, to));
                 pstmt.setLong(1, assetId);
                 DbUtils.setLimits(2, pstmt, from, to);
@@ -234,7 +235,7 @@ public abstract class Order {
         private static Ask getNextOrder(Long assetId) {
             try (Connection con = Db.getConnection();
                  PreparedStatement pstmt = con.prepareStatement("SELECT * FROM ask_order WHERE asset_id = ? "
-                         + "AND latest = TRUE ORDER BY price ASC, height ASC, id ASC LIMIT 1")) {
+                         + "AND latest = TRUE ORDER BY price ASC, creation_height ASC, id ASC LIMIT 1")) {
                 pstmt.setLong(1, assetId);
                 try (DbIterator<Ask> askOrders = askOrderTable.getManyBy(con, pstmt, true)) {
                     return askOrders.hasNext() ? askOrders.next() : null;
@@ -371,7 +372,7 @@ public abstract class Order {
             try {
                 con = Db.getConnection();
                 PreparedStatement pstmt = con.prepareStatement("SELECT * FROM bid_order WHERE asset_id = ? "
-                        + "AND latest = TRUE ORDER BY price DESC, height ASC, id ASC"
+                        + "AND latest = TRUE ORDER BY price DESC, creation_height ASC, id ASC"
                         + DbUtils.limitsClause(from, to));
                 pstmt.setLong(1, assetId);
                 DbUtils.setLimits(2, pstmt, from, to);
@@ -385,7 +386,7 @@ public abstract class Order {
         private static Bid getNextOrder(Long assetId) {
             try (Connection con = Db.getConnection();
                  PreparedStatement pstmt = con.prepareStatement("SELECT * FROM bid_order WHERE asset_id = ? "
-                         + "AND latest = TRUE ORDER BY price DESC, height ASC, id ASC LIMIT 1")) {
+                         + "AND latest = TRUE ORDER BY price DESC, creation_height ASC, id ASC LIMIT 1")) {
                 pstmt.setLong(1, assetId);
                 try (DbIterator<Bid> bidOrders = bidOrderTable.getManyBy(con, pstmt, true)) {
                     return bidOrders.hasNext() ? bidOrders.next() : null;
