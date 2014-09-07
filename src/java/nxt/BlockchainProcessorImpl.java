@@ -119,7 +119,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     }
 
                     final Block commonBlock = BlockDb.findBlock(commonBlockId);
-                    if (blockchain.getLastBlock().getHeight() - commonBlock.getHeight() >= 720) {
+                    if (commonBlock == null || blockchain.getHeight() - commonBlock.getHeight() >= 720) {
                         return;
                     }
 
@@ -640,12 +640,6 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                             throw new TransactionNotAcceptedException(e.getMessage(), transaction);
                         }
 
-                        if (transaction.applyUnconfirmed()) {
-                            appliedUnconfirmed.add(transaction);
-                        } else {
-                            throw new TransactionNotAcceptedException("Double spending transaction: " + transaction.getStringId(), transaction);
-                        }
-
                         calculatedTotalAmount += transaction.getAmountNQT();
 
                         calculatedTotalFee += transaction.getFeeNQT();
@@ -664,6 +658,14 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     block.setPrevious(previousLastBlock);
                     blockListeners.notify(block, Event.BEFORE_BLOCK_ACCEPT);
                     addBlock(block);
+
+                    for (TransactionImpl transaction : block.getTransactions()) {
+                        if (transaction.applyUnconfirmed()) {
+                            appliedUnconfirmed.add(transaction);
+                        } else {
+                            throw new TransactionNotAcceptedException("Double spending transaction: " + transaction.getStringId(), transaction);
+                        }
+                    }
 
                     unappliedUnconfirmed.removeAll(appliedUnconfirmed);
 
@@ -976,14 +978,14 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                                      }
                                  }
                              }
+                             blockListeners.notify(currentBlock, Event.BEFORE_BLOCK_ACCEPT);
+                             blockchain.setLastBlock(currentBlock);
                              for (TransactionImpl transaction : currentBlock.getTransactions()) {
                                  if (!transaction.applyUnconfirmed()) {
                                      throw new TransactionNotAcceptedException("Double spending transaction: "
                                              + transaction.getStringId(), transaction);
                                  }
                              }
-                             blockListeners.notify(currentBlock, Event.BEFORE_BLOCK_ACCEPT);
-                             blockchain.setLastBlock(currentBlock);
                              blockListeners.notify(currentBlock, Event.BEFORE_BLOCK_APPLY);
                              currentBlock.apply();
                              blockListeners.notify(currentBlock, Event.AFTER_BLOCK_APPLY);
@@ -1006,7 +1008,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                                  }
                              }
                              BlockDb.deleteBlocksFrom(currentBlockId);
-                             scan(height, true);
+                             scan(height - 1, true);
                          }
                      }
                      if (!inner) {
