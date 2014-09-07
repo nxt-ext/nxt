@@ -884,8 +884,12 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
     private void scan(int height, boolean inner) {
         synchronized (blockchain) {
             TransactionProcessorImpl transactionProcessor = TransactionProcessorImpl.getInstance();
-            if (height > 0 && trimDerivedTables && Nxt.getBlockchain().getHeight() - height > Constants.MAX_ROLLBACK) {
-                height = Nxt.getBlockchain().getHeight() - Constants.MAX_ROLLBACK;
+            int blockchainHeight = Nxt.getBlockchain().getHeight();
+            if (height > blockchainHeight) {
+                throw new IllegalArgumentException("Height " + height + " exceeds current blockchain height of " + blockchainHeight);
+            }
+            if (height > 0 && trimDerivedTables && blockchainHeight - height > Constants.MAX_ROLLBACK) {
+                height = blockchainHeight - Constants.MAX_ROLLBACK;
                 Logger.logErrorMessage("Rollback of more than 1440 blocks not supported, will rollback 1440 blocks only");
             }
             isScanning = true;
@@ -915,92 +919,94 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     }
                 }
                 try (ResultSet rs = pstmt.executeQuery()) {
-                     blockchain.setLastBlock(BlockDb.findBlockAtHeight(height));
-                     if (height == 0) {
-                         Account.addOrGetAccount(Genesis.CREATOR_ID).apply(Genesis.CREATOR_PUBLIC_KEY, 0);
-                     }
-                     Long currentBlockId = blockchain.getLastBlock().getId();
-                     BlockImpl currentBlock = null;
-                     while (rs.next()) {
-                         try {
-                             currentBlock = BlockDb.loadBlock(con, rs);
-                             if (!currentBlock.getId().equals(currentBlockId)) {
-                                 throw new NxtException.NotValidException("Database blocks in the wrong order!");
-                             }
-                             if (validateAtScan && !currentBlockId.equals(Genesis.GENESIS_BLOCK_ID)) {
-                                 if (!currentBlock.verifyBlockSignature() || !currentBlock.verifyGenerationSignature()) {
-                                     throw new NxtException.NotValidException("Invalid block signature");
-                                 }
-                                 if (currentBlock.getVersion() != getBlockVersion(blockchain.getHeight())) {
-                                     throw new NxtException.NotValidException("Invalid block version");
-                                 }
-                                 byte[] blockBytes = currentBlock.getBytes();
-                                 JSONObject blockJSON = (JSONObject) JSONValue.parse(currentBlock.getJSONObject().toJSONString());
-                                 if (!Arrays.equals(blockBytes, parseBlock(blockJSON).getBytes())) {
-                                     throw new NxtException.NotValidException("Block JSON cannot be parsed back to the same block");
-                                 }
-                                 for (TransactionImpl transaction : currentBlock.getTransactions()) {
-                                     if (!transaction.verifySignature()) {
-                                         throw new NxtException.NotValidException("Invalid transaction signature");
-                                     }
-                                     if (transaction.getVersion() != transactionProcessor.getTransactionVersion(blockchain.getHeight())) {
-                                         throw new NxtException.NotValidException("Invalid transaction version");
-                                     }
-                                     if (!EconomicClustering.verifyFork(transaction)) {
-                                         Logger.logDebugMessage("Found transaction that was generated on a fork: " + transaction.getStringId()
-                                                 + " in block " + currentBlock.getStringId() + " at height " + currentBlock.getHeight()
-                                                 + " ecBlockHeight " + transaction.getECBlockHeight() + " ecBlockId " + Convert.toUnsignedLong(transaction.getECBlockId()));
-                                         //throw new NxtException.NotValidException("Invalid transaction fork");
-                                     }
-                                     transaction.validate();
-                                     byte[] transactionBytes = transaction.getBytes();
-                                     if (currentBlock.getHeight() > Constants.NQT_BLOCK
-                                             && !Arrays.equals(transactionBytes, transactionProcessor.parseTransaction(transactionBytes).getBytes())) {
-                                         throw new NxtException.NotValidException("Transaction bytes cannot be parsed back to the same transaction");
-                                     }
-                                     JSONObject transactionJSON = (JSONObject) JSONValue.parse(transaction.getJSONObject().toJSONString());
-                                     if (!Arrays.equals(transactionBytes, transactionProcessor.parseTransaction(transactionJSON).getBytes())) {
-                                         throw new NxtException.NotValidException("Transaction JSON cannot be parsed back to the same transaction");
-                                     }
-                                 }
-                             }
-                             blockListeners.notify(currentBlock, Event.BEFORE_BLOCK_ACCEPT);
-                             blockchain.setLastBlock(currentBlock);
-                             for (TransactionImpl transaction : currentBlock.getTransactions()) {
-                                 if (!transaction.applyUnconfirmed()) {
-                                     throw new TransactionNotAcceptedException("Double spending transaction: "
-                                             + transaction.getStringId(), transaction);
-                                 }
-                             }
-                             blockListeners.notify(currentBlock, Event.BEFORE_BLOCK_APPLY);
-                             currentBlock.apply();
-                             blockListeners.notify(currentBlock, Event.AFTER_BLOCK_APPLY);
-                             blockListeners.notify(currentBlock, Event.BLOCK_SCANNED);
-                             currentBlockId = currentBlock.getNextBlockId();
-                             Db.commitTransaction();
-                         } catch (NxtException | RuntimeException e) {
-                             Db.rollbackTransaction();
-                             Logger.logDebugMessage(e.toString(), e);
-                             Logger.logDebugMessage("Applying block " + Convert.toUnsignedLong(currentBlockId) + " at height "
-                                     + (currentBlock == null ? 0 : currentBlock.getHeight()) + " failed, deleting from database");
-                             if (currentBlock != null) {
-                                 transactionProcessor.processLater(currentBlock.getTransactions());
-                             }
-                             while (rs.next()) {
-                                 try {
-                                     currentBlock = BlockDb.loadBlock(con, rs);
-                                     transactionProcessor.processLater(currentBlock.getTransactions());
-                                 } catch (NxtException.ValidationException ignore) {
-                                 }
-                             }
-                             BlockDb.deleteBlocksFrom(currentBlockId);
-                             scan(height - 1, true);
-                         }
-                     }
-                     if (!inner) {
-                         Db.endTransaction();
-                     }
-                 }
+                    BlockImpl currentBlock = BlockDb.findBlockAtHeight(height);
+                    blockListeners.notify(currentBlock, Event.RESCAN_BEGIN);
+                    Long currentBlockId = currentBlock.getId();
+                    blockchain.setLastBlock(currentBlock);
+                    if (height == 0) {
+                        Account.addOrGetAccount(Genesis.CREATOR_ID).apply(Genesis.CREATOR_PUBLIC_KEY, 0);
+                    }
+                    while (rs.next()) {
+                        try {
+                            currentBlock = BlockDb.loadBlock(con, rs);
+                            if (!currentBlock.getId().equals(currentBlockId)) {
+                                throw new NxtException.NotValidException("Database blocks in the wrong order!");
+                            }
+                            if (validateAtScan && !currentBlockId.equals(Genesis.GENESIS_BLOCK_ID)) {
+                                if (!currentBlock.verifyBlockSignature() || !currentBlock.verifyGenerationSignature()) {
+                                    throw new NxtException.NotValidException("Invalid block signature");
+                                }
+                                if (currentBlock.getVersion() != getBlockVersion(blockchain.getHeight())) {
+                                    throw new NxtException.NotValidException("Invalid block version");
+                                }
+                                byte[] blockBytes = currentBlock.getBytes();
+                                JSONObject blockJSON = (JSONObject) JSONValue.parse(currentBlock.getJSONObject().toJSONString());
+                                if (!Arrays.equals(blockBytes, parseBlock(blockJSON).getBytes())) {
+                                    throw new NxtException.NotValidException("Block JSON cannot be parsed back to the same block");
+                                }
+                                for (TransactionImpl transaction : currentBlock.getTransactions()) {
+                                    if (!transaction.verifySignature()) {
+                                        throw new NxtException.NotValidException("Invalid transaction signature");
+                                    }
+                                    if (transaction.getVersion() != transactionProcessor.getTransactionVersion(blockchain.getHeight())) {
+                                        throw new NxtException.NotValidException("Invalid transaction version");
+                                    }
+                                    if (!EconomicClustering.verifyFork(transaction)) {
+                                        Logger.logDebugMessage("Found transaction that was generated on a fork: " + transaction.getStringId()
+                                                + " in block " + currentBlock.getStringId() + " at height " + currentBlock.getHeight()
+                                                + " ecBlockHeight " + transaction.getECBlockHeight() + " ecBlockId " + Convert.toUnsignedLong(transaction.getECBlockId()));
+                                        //throw new NxtException.NotValidException("Invalid transaction fork");
+                                    }
+                                    transaction.validate();
+                                    byte[] transactionBytes = transaction.getBytes();
+                                    if (currentBlock.getHeight() > Constants.NQT_BLOCK
+                                            && !Arrays.equals(transactionBytes, transactionProcessor.parseTransaction(transactionBytes).getBytes())) {
+                                        throw new NxtException.NotValidException("Transaction bytes cannot be parsed back to the same transaction");
+                                    }
+                                    JSONObject transactionJSON = (JSONObject) JSONValue.parse(transaction.getJSONObject().toJSONString());
+                                    if (!Arrays.equals(transactionBytes, transactionProcessor.parseTransaction(transactionJSON).getBytes())) {
+                                        throw new NxtException.NotValidException("Transaction JSON cannot be parsed back to the same transaction");
+                                    }
+                                }
+                            }
+                            blockListeners.notify(currentBlock, Event.BEFORE_BLOCK_ACCEPT);
+                            blockchain.setLastBlock(currentBlock);
+                            for (TransactionImpl transaction : currentBlock.getTransactions()) {
+                                if (!transaction.applyUnconfirmed()) {
+                                    throw new TransactionNotAcceptedException("Double spending transaction: "
+                                            + transaction.getStringId(), transaction);
+                                }
+                            }
+                            blockListeners.notify(currentBlock, Event.BEFORE_BLOCK_APPLY);
+                            currentBlock.apply();
+                            blockListeners.notify(currentBlock, Event.AFTER_BLOCK_APPLY);
+                            blockListeners.notify(currentBlock, Event.BLOCK_SCANNED);
+                            currentBlockId = currentBlock.getNextBlockId();
+                            Db.commitTransaction();
+                        } catch (NxtException | RuntimeException e) {
+                            Db.rollbackTransaction();
+                            Logger.logDebugMessage(e.toString(), e);
+                            Logger.logDebugMessage("Applying block " + Convert.toUnsignedLong(currentBlockId) + " at height "
+                                    + (currentBlock == null ? 0 : currentBlock.getHeight()) + " failed, deleting from database");
+                            if (currentBlock != null) {
+                                transactionProcessor.processLater(currentBlock.getTransactions());
+                            }
+                            while (rs.next()) {
+                                try {
+                                    currentBlock = BlockDb.loadBlock(con, rs);
+                                    transactionProcessor.processLater(currentBlock.getTransactions());
+                                } catch (NxtException.ValidationException ignore) {
+                                }
+                            }
+                            BlockDb.deleteBlocksFrom(currentBlockId);
+                            scan(height - 1, true);
+                        }
+                    }
+                    if (!inner) {
+                        Db.endTransaction();
+                    }
+                    blockListeners.notify(currentBlock, Event.RESCAN_END);
+                }
             } catch (SQLException e) {
                 throw new RuntimeException(e.toString(), e);
             }
