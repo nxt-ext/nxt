@@ -1,5 +1,7 @@
 package nxt.db;
 
+import nxt.util.Logger;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -47,6 +49,7 @@ public abstract class VersionedEntityDbTable<T> extends EntityDbTable<T> {
     }
 
     static void rollback(String table, int height, DbKey.Factory dbKeyFactory) {
+        Logger.logDebugMessage("Rollback " + table + " to " + height);
         try (Connection con = Db.getConnection();
              PreparedStatement pstmtSelectToDelete = con.prepareStatement("SELECT DISTINCT " + dbKeyFactory.getPKColumns()
                      + " FROM " + table + " WHERE height > ?");

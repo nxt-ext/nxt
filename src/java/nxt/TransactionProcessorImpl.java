@@ -80,7 +80,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
         public void rollback(int height) {
             List<TransactionImpl> transactions = new ArrayList<>();
             try (Connection con = Db.getConnection();
-                 PreparedStatement pstmt = con.prepareStatement("SELECT * FROM unconfirmed_transaction WHERE height > ?")) {
+                 PreparedStatement pstmt = con.prepareStatement("SELECT * FROM unconfirmed_transaction WHERE height > ? AND latest = TRUE")) {
                 pstmt.setInt(1, height);
                 try (ResultSet rs = pstmt.executeQuery()) {
                     while (rs.next()) {
@@ -113,8 +113,8 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                     try (ResultSet rs = pstmt.executeQuery()) {
                         if (rs.next()) {
                             int height = rs.getInt("height");
-                            if (height > 0) {
-                                Nxt.getBlockchainProcessor().scan(height - 1);
+                            if (!rs.wasNull()) {
+                                Nxt.getBlockchainProcessor().scan(height);
                             }
                         }
                     }
@@ -287,15 +287,17 @@ final class TransactionProcessorImpl implements TransactionProcessor {
     }
 
     void applyUnconfirmed(Set<TransactionImpl> unapplied) {
-        List<Transaction> removedUnconfirmedTransactions = new ArrayList<>();
+        List<Transaction> addedUnconfirmedTransactions = new ArrayList<>();
         for (TransactionImpl transaction : unapplied) {
-            if (! transaction.applyUnconfirmed()) {
+            if (transaction.applyUnconfirmed()) {
+                unconfirmedTransactionTable.insert(transaction);
+                addedUnconfirmedTransactions.add(transaction);
+            } else {
                 unconfirmedTransactionTable.delete(transaction);
-                removedUnconfirmedTransactions.add(transaction);
             }
         }
-        if (removedUnconfirmedTransactions.size() > 0) {
-            transactionListeners.notify(removedUnconfirmedTransactions, TransactionProcessor.Event.REMOVED_UNCONFIRMED_TRANSACTIONS);
+        if (addedUnconfirmedTransactions.size() > 0) {
+            transactionListeners.notify(addedUnconfirmedTransactions, TransactionProcessor.Event.REMOVED_UNCONFIRMED_TRANSACTIONS);
         }
     }
 
@@ -307,6 +309,12 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                 transaction.undoUnconfirmed();
                 undone.add(transaction);
             }
+        }
+        for (TransactionImpl transaction : undone) {
+            unconfirmedTransactionTable.delete(transaction);
+        }
+        if (undone.size() > 0) {
+            transactionListeners.notify(new ArrayList<Transaction>(undone), TransactionProcessor.Event.REMOVED_UNCONFIRMED_TRANSACTIONS);
         }
         return undone;
     }

@@ -374,7 +374,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             public void run() {
                 addGenesisBlock();
                 if (forceScan) {
-                    scan(-1);
+                    scan(0);
                 }
             }
         }, false);
@@ -435,7 +435,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             //BlockDb.deleteBlock(Genesis.GENESIS_BLOCK_ID); // fails with stack overflow in H2
             BlockDb.deleteAll();
             addGenesisBlock();
-            scan(-1);
+            scan(0);
         }
     }
 
@@ -895,11 +895,12 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         return transaction != null && hasAllReferencedTransactions(transaction, timestamp, count + 1);
     }
 
-    private void scan(final int height, final boolean inner) {
+    private void scan(int height, boolean inner) {
         synchronized (blockchain) {
-            TransactionProcessorImpl transactionProcessor = TransactionProcessorImpl.getInstance(); // workaround Java initialization problem
-            if (height >= 0 && trimDerivedTables && Nxt.getBlockchain().getHeight() - height > Constants.MAX_ROLLBACK) {
-                throw new IllegalArgumentException("Rollback of more than 1440 blocks not supported");
+            TransactionProcessorImpl transactionProcessor = TransactionProcessorImpl.getInstance();
+            if (height > 0 && trimDerivedTables && Nxt.getBlockchain().getHeight() - height > Constants.MAX_ROLLBACK) {
+                height = Nxt.getBlockchain().getHeight() - Constants.MAX_ROLLBACK;
+                Logger.logErrorMessage("Rollback of more than 1440 blocks not supported, will rollback 1440 blocks only");
             }
             isScanning = true;
             Logger.logMessage("Scanning blockchain starting from height " + height + "...");
@@ -912,22 +913,22 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     lostTransactions.add(iterator.next());
                 }
             }
-            for (DerivedDbTable table : derivedTables) {
-                if (height < 0) {
-                    table.truncate();
-                } else {
-                    table.rollback(height);
-                }
-            }
             transactionProcessor.clear();
             transactionProcessor.processLater(lostTransactions);
             Generator.clear();
             try (Connection con = inner ? Db.getConnection() : Db.beginTransaction();
-                 PreparedStatement pstmt = con.prepareStatement("SELECT * FROM block WHERE height > ? ORDER BY db_id ASC")) {
+                 PreparedStatement pstmt = con.prepareStatement("SELECT * FROM block WHERE height >= ? ORDER BY db_id ASC")) {
                 pstmt.setInt(1, height);
-                 try (ResultSet rs = pstmt.executeQuery()) {
-                     blockchain.setLastBlock(BlockDb.findBlockAtHeight(height + 1));
-                     if (height < 0) {
+                for (DerivedDbTable table : derivedTables) {
+                    if (height == 0) {
+                        table.truncate();
+                    } else {
+                        table.rollback(height - 1);
+                    }
+                }
+                try (ResultSet rs = pstmt.executeQuery()) {
+                     blockchain.setLastBlock(BlockDb.findBlockAtHeight(height));
+                     if (height == 0) {
                          Account.addOrGetAccount(Genesis.CREATOR_ID).apply(Genesis.CREATOR_PUBLIC_KEY, 0);
                      }
                      Long currentBlockId = blockchain.getLastBlock().getId();
