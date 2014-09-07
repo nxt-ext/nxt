@@ -287,17 +287,15 @@ final class TransactionProcessorImpl implements TransactionProcessor {
     }
 
     void applyUnconfirmed(Set<TransactionImpl> unapplied) {
-        List<Transaction> addedUnconfirmedTransactions = new ArrayList<>();
+        List<Transaction> removedUnconfirmedTransactions = new ArrayList<>();
         for (TransactionImpl transaction : unapplied) {
-            if (transaction.applyUnconfirmed()) {
-                unconfirmedTransactionTable.insert(transaction);
-                addedUnconfirmedTransactions.add(transaction);
-            } else {
+            if (! transaction.applyUnconfirmed()) {
+                removedUnconfirmedTransactions.add(transaction);
                 unconfirmedTransactionTable.delete(transaction);
             }
         }
-        if (addedUnconfirmedTransactions.size() > 0) {
-            transactionListeners.notify(addedUnconfirmedTransactions, TransactionProcessor.Event.REMOVED_UNCONFIRMED_TRANSACTIONS);
+        if (removedUnconfirmedTransactions.size() > 0) {
+            transactionListeners.notify(removedUnconfirmedTransactions, TransactionProcessor.Event.REMOVED_UNCONFIRMED_TRANSACTIONS);
         }
     }
 
@@ -309,12 +307,6 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                 transaction.undoUnconfirmed();
                 undone.add(transaction);
             }
-        }
-        for (TransactionImpl transaction : undone) {
-            unconfirmedTransactionTable.delete(transaction);
-        }
-        if (undone.size() > 0) {
-            transactionListeners.notify(new ArrayList<Transaction>(undone), TransactionProcessor.Event.REMOVED_UNCONFIRMED_TRANSACTIONS);
         }
         return undone;
     }

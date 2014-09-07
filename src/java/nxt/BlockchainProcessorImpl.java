@@ -584,101 +584,85 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 long calculatedTotalFee = 0;
                 MessageDigest digest = Crypto.sha256();
 
-                Set<TransactionImpl> unappliedUnconfirmed = transactionProcessor.undoAllUnconfirmed();
-                Set<TransactionImpl> appliedUnconfirmed = new HashSet<>();
+                for (TransactionImpl transaction : block.getTransactions()) {
 
-                try {
-
-                    for (TransactionImpl transaction : block.getTransactions()) {
-
-                        // cfb: Block 303 contains a transaction which expired before the block timestamp
-                        if (transaction.getTimestamp() > curTime + 15 || transaction.getTimestamp() > block.getTimestamp() + 15
-                                || (transaction.getExpiration() < block.getTimestamp() && previousLastBlock.getHeight() != 303)) {
-                            throw new TransactionNotAcceptedException("Invalid transaction timestamp " + transaction.getTimestamp()
-                                    + " for transaction " + transaction.getStringId() + ", current time is " + curTime
-                                    + ", block timestamp is " + block.getTimestamp(), transaction);
-                        }
-                        if (TransactionDb.hasTransaction(transaction.getId())) {
-                            throw new TransactionNotAcceptedException("Transaction " + transaction.getStringId()
-                                    + " is already in the blockchain", transaction);
-                        }
-                        if (transaction.getReferencedTransactionFullHash() != null) {
-                            if ((previousLastBlock.getHeight() < Constants.REFERENCED_TRANSACTION_FULL_HASH_BLOCK
-                                    && !TransactionDb.hasTransaction(Convert.fullHashToId(transaction.getReferencedTransactionFullHash())))
-                                    || (previousLastBlock.getHeight() >= Constants.REFERENCED_TRANSACTION_FULL_HASH_BLOCK
-                                    && !hasAllReferencedTransactions(transaction, transaction.getTimestamp(), 0))) {
-                                throw new TransactionNotAcceptedException("Missing or invalid referenced transaction "
-                                        + transaction.getReferencedTransactionFullHash()
-                                        + " for transaction " + transaction.getStringId(), transaction);
-                            }
-                        }
-                        if (transaction.getVersion() != transactionProcessor.getTransactionVersion(previousLastBlock.getHeight())) {
-                            throw new TransactionNotAcceptedException("Invalid transaction version " + transaction.getVersion()
-                                    + " at height " + previousLastBlock.getHeight(), transaction);
-                        }
-                        if (!transaction.verifySignature()) {
-                            throw new TransactionNotAcceptedException("Signature verification failed for transaction "
-                                    + transaction.getStringId() + " at height " + previousLastBlock.getHeight(), transaction);
-                        }
-                        if (!EconomicClustering.verifyFork(transaction)) {
-                            Logger.logDebugMessage("Block " + block.getStringId() + " height " + (previousLastBlock.getHeight() + 1)
-                                    + " contains transaction that was generated on a fork: "
-                                    + transaction.getStringId() + " ecBlockHeight " + transaction.getECBlockHeight() + " ecBlockId "
-                                    + Convert.toUnsignedLong(transaction.getECBlockId()));
-                            //throw new TransactionNotAcceptedException("Transaction belongs to a different fork", transaction);
-                        }
-                        if (transaction.getId().equals(Long.valueOf(0L))) {
-                            throw new TransactionNotAcceptedException("Invalid transaction id", transaction);
-                        }
-                        if (transaction.isDuplicate(duplicates)) {
-                            throw new TransactionNotAcceptedException("Transaction is a duplicate: "
-                                    + transaction.getStringId(), transaction);
-                        }
-                        try {
-                            transaction.validate();
-                        } catch (NxtException.ValidationException e) {
-                            throw new TransactionNotAcceptedException(e.getMessage(), transaction);
-                        }
-
-                        calculatedTotalAmount += transaction.getAmountNQT();
-
-                        calculatedTotalFee += transaction.getFeeNQT();
-
-                        digest.update(transaction.getBytes());
-
+                    // cfb: Block 303 contains a transaction which expired before the block timestamp
+                    if (transaction.getTimestamp() > curTime + 15 || transaction.getTimestamp() > block.getTimestamp() + 15
+                            || (transaction.getExpiration() < block.getTimestamp() && previousLastBlock.getHeight() != 303)) {
+                        throw new TransactionNotAcceptedException("Invalid transaction timestamp " + transaction.getTimestamp()
+                                + " for transaction " + transaction.getStringId() + ", current time is " + curTime
+                                + ", block timestamp is " + block.getTimestamp(), transaction);
                     }
-
-                    if (calculatedTotalAmount != block.getTotalAmountNQT() || calculatedTotalFee != block.getTotalFeeNQT()) {
-                        throw new BlockNotAcceptedException("Total amount or fee don't match transaction totals");
+                    if (TransactionDb.hasTransaction(transaction.getId())) {
+                        throw new TransactionNotAcceptedException("Transaction " + transaction.getStringId()
+                                + " is already in the blockchain", transaction);
                     }
-                    if (!Arrays.equals(digest.digest(), block.getPayloadHash())) {
-                        throw new BlockNotAcceptedException("Payload hash doesn't match");
-                    }
-
-                    block.setPrevious(previousLastBlock);
-                    blockListeners.notify(block, Event.BEFORE_BLOCK_ACCEPT);
-                    addBlock(block);
-
-                    for (TransactionImpl transaction : block.getTransactions()) {
-                        if (transaction.applyUnconfirmed()) {
-                            appliedUnconfirmed.add(transaction);
-                        } else {
-                            throw new TransactionNotAcceptedException("Double spending transaction: " + transaction.getStringId(), transaction);
+                    if (transaction.getReferencedTransactionFullHash() != null) {
+                        if ((previousLastBlock.getHeight() < Constants.REFERENCED_TRANSACTION_FULL_HASH_BLOCK
+                                && !TransactionDb.hasTransaction(Convert.fullHashToId(transaction.getReferencedTransactionFullHash())))
+                                || (previousLastBlock.getHeight() >= Constants.REFERENCED_TRANSACTION_FULL_HASH_BLOCK
+                                && !hasAllReferencedTransactions(transaction, transaction.getTimestamp(), 0))) {
+                            throw new TransactionNotAcceptedException("Missing or invalid referenced transaction "
+                                    + transaction.getReferencedTransactionFullHash()
+                                    + " for transaction " + transaction.getStringId(), transaction);
                         }
                     }
-
-                    unappliedUnconfirmed.removeAll(appliedUnconfirmed);
-
-                } catch (TransactionNotAcceptedException | RuntimeException e) {
-                    for (TransactionImpl transaction : block.getTransactions()) {
-                        if (appliedUnconfirmed.contains(transaction)) {
-                            transaction.undoUnconfirmed();
-                        }
+                    if (transaction.getVersion() != transactionProcessor.getTransactionVersion(previousLastBlock.getHeight())) {
+                        throw new TransactionNotAcceptedException("Invalid transaction version " + transaction.getVersion()
+                                + " at height " + previousLastBlock.getHeight(), transaction);
                     }
-                    throw e;
-                } finally {
-                    transactionProcessor.applyUnconfirmed(unappliedUnconfirmed);
+                    if (!transaction.verifySignature()) {
+                        throw new TransactionNotAcceptedException("Signature verification failed for transaction "
+                                + transaction.getStringId() + " at height " + previousLastBlock.getHeight(), transaction);
+                    }
+                    if (!EconomicClustering.verifyFork(transaction)) {
+                        Logger.logDebugMessage("Block " + block.getStringId() + " height " + (previousLastBlock.getHeight() + 1)
+                                + " contains transaction that was generated on a fork: "
+                                + transaction.getStringId() + " ecBlockHeight " + transaction.getECBlockHeight() + " ecBlockId "
+                                + Convert.toUnsignedLong(transaction.getECBlockId()));
+                        //throw new TransactionNotAcceptedException("Transaction belongs to a different fork", transaction);
+                    }
+                    if (transaction.getId().equals(Long.valueOf(0L))) {
+                        throw new TransactionNotAcceptedException("Invalid transaction id", transaction);
+                    }
+                    if (transaction.isDuplicate(duplicates)) {
+                        throw new TransactionNotAcceptedException("Transaction is a duplicate: "
+                                + transaction.getStringId(), transaction);
+                    }
+                    try {
+                        transaction.validate();
+                    } catch (NxtException.ValidationException e) {
+                        throw new TransactionNotAcceptedException(e.getMessage(), transaction);
+                    }
+
+                    calculatedTotalAmount += transaction.getAmountNQT();
+
+                    calculatedTotalFee += transaction.getFeeNQT();
+
+                    digest.update(transaction.getBytes());
+
                 }
+
+                if (calculatedTotalAmount != block.getTotalAmountNQT() || calculatedTotalFee != block.getTotalFeeNQT()) {
+                    throw new BlockNotAcceptedException("Total amount or fee don't match transaction totals");
+                }
+                if (!Arrays.equals(digest.digest(), block.getPayloadHash())) {
+                    throw new BlockNotAcceptedException("Payload hash doesn't match");
+                }
+
+                block.setPrevious(previousLastBlock);
+                blockListeners.notify(block, Event.BEFORE_BLOCK_ACCEPT);
+                addBlock(block);
+
+                Set<TransactionImpl> unappliedUnconfirmed = transactionProcessor.undoAllUnconfirmed();
+                for (TransactionImpl transaction : block.getTransactions()) {
+                    if (transaction.applyUnconfirmed()) {
+                        unappliedUnconfirmed.remove(transaction);
+                    } else {
+                        throw new TransactionNotAcceptedException("Double spending transaction: " + transaction.getStringId(), transaction);
+                    }
+                }
+                transactionProcessor.applyUnconfirmed(unappliedUnconfirmed);
 
                 blockListeners.notify(block, Event.BEFORE_BLOCK_APPLY);
                 block.apply();
@@ -909,14 +893,16 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             if (validateAtScan) {
                 Logger.logDebugMessage("Also verifying signatures and validating transactions...");
             }
-            Set<TransactionImpl> lostTransactions = new HashSet<>();
-            try (DbIterator<TransactionImpl> iterator = transactionProcessor.getAllUnconfirmedTransactions()) {
-                while (iterator.hasNext()) {
-                    lostTransactions.add(iterator.next());
+            if (height == 0) {
+                Set<TransactionImpl> lostTransactions = new HashSet<>();
+                try (DbIterator<TransactionImpl> iterator = transactionProcessor.getAllUnconfirmedTransactions()) {
+                    while (iterator.hasNext()) {
+                        lostTransactions.add(iterator.next());
+                    }
                 }
+                transactionProcessor.processLater(lostTransactions);
+                transactionProcessor.clear();
             }
-            transactionProcessor.clear();
-            transactionProcessor.processLater(lostTransactions);
             Generator.clear();
             try (Connection con = inner ? Db.getConnection() : Db.beginTransaction();
                  PreparedStatement pstmt = con.prepareStatement("SELECT * FROM block WHERE height >= ? ORDER BY db_id ASC")) {
