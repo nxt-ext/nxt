@@ -63,7 +63,7 @@ public final class ThreadPool {
         }
         backgroundJobs = null;
 
-        Logger.logDebugMessage("Starting " + afterStartJobs.size() + " after start tasks");
+        Logger.logDebugMessage("Starting " + afterStartJobs.size() + " delayed tasks");
         Thread thread = new Thread() {
             @Override
             public void run() {
