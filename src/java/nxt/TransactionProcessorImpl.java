@@ -376,11 +376,10 @@ final class TransactionProcessorImpl implements TransactionProcessor {
         List<TransactionImpl> transactions = new ArrayList<>();
         for (Object transactionData : transactionsData) {
             try {
-                TransactionImpl transaction = parseTransaction((JSONObject)transactionData);
-                try {
-                    transaction.validate();
-                } catch (NxtException.NotCurrentlyValidException ignore) {}
+                TransactionImpl transaction = parseTransaction((JSONObject) transactionData);
+                transaction.validate();
                 transactions.add(transaction);
+            } catch (NxtException.NotCurrentlyValidException ignore) {
             } catch (NxtException.NotValidException e) {
                 Logger.logDebugMessage("Invalid transaction from peer: " + ((JSONObject) transactionData).toJSONString());
                 throw e;
