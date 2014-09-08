@@ -895,8 +895,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 throw new IllegalArgumentException("Height " + height + " exceeds current blockchain height of " + blockchainHeight);
             }
             if (height > 0 && trimDerivedTables && blockchainHeight - height > Constants.MAX_ROLLBACK) {
-                height = blockchainHeight - Constants.MAX_ROLLBACK;
-                Logger.logErrorMessage("Rollback of more than 1440 blocks not supported, will rollback 1440 blocks only");
+                throw new IllegalArgumentException("Rollback of more than " + Constants.MAX_ROLLBACK + " blocks not supported");
             }
             isScanning = true;
             Logger.logMessage("Scanning blockchain starting from height " + height + "...");
