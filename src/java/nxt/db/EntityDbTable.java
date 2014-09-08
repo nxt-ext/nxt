@@ -157,6 +157,9 @@ public abstract class EntityDbTable<T> extends DerivedDbTable {
     }
 
     public final void insert(T t) {
+        if (!Db.isInTransaction()) {
+            throw new IllegalStateException("Not in transaction");
+        }
         DbKey dbKey = dbKeyFactory.newKey(t);
         T cachedT = (T)Db.getCache(table()).get(dbKey);
         if (cachedT == null) {

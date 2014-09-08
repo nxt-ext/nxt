@@ -18,6 +18,9 @@ public abstract class DerivedDbTable {
 
     public void rollback(int height) {
         Logger.logDebugMessage("Rollback " + table() + " to " + height);
+        if (!Db.isInTransaction()) {
+            throw new IllegalStateException("Not in transaction");
+        }
         try (Connection con = Db.getConnection();
              PreparedStatement pstmtDelete = con.prepareStatement("DELETE FROM " + table() + " WHERE height > ?")) {
             pstmtDelete.setInt(1, height);
@@ -29,6 +32,9 @@ public abstract class DerivedDbTable {
 
     public final void truncate() {
         Logger.logDebugMessage("Truncating table " + table());
+        if (!Db.isInTransaction()) {
+            throw new IllegalStateException("Not in transaction");
+        }
         try (Connection con = Db.getConnection();
              Statement stmt = con.createStatement()) {
             stmt.executeUpdate("SET REFERENTIAL_INTEGRITY FALSE");
