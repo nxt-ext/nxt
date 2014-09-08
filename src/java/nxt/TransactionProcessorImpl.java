@@ -334,7 +334,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
 
     }
 
-    void removeUnconfirmedTransactions(Collection<TransactionImpl> transactions) {
+    void removeUnconfirmedTransactions(Iterable<TransactionImpl> transactions) {
         List<Transaction> removedList = new ArrayList<>();
         synchronized (BlockchainImpl.getInstance()) {
             try {
@@ -358,7 +358,9 @@ final class TransactionProcessorImpl implements TransactionProcessor {
     }
 
     void shutdown() {
-        //removeUnconfirmedTransactions(new ArrayList<>(unconfirmedTransactionTable.getAll()));
+        try (DbIterator<TransactionImpl> transactions = unconfirmedTransactionTable.getAll(0, -1)) {
+            removeUnconfirmedTransactions(transactions);
+        }
     }
 
     int getTransactionVersion(int previousBlockHeight) {
