@@ -29,7 +29,7 @@ final class TransactionDb {
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
         } catch (NxtException.ValidationException e) {
-            throw new RuntimeException("Transaction already in database, id = " + transactionId + ", does not pass validation!");
+            throw new RuntimeException("Transaction already in database, id = " + transactionId + ", does not pass validation!", e);
         }
     }
 
@@ -46,7 +46,7 @@ final class TransactionDb {
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
         } catch (NxtException.ValidationException e) {
-            throw new RuntimeException("Transaction already in database, full_hash = " + fullHash + ", does not pass validation!");
+            throw new RuntimeException("Transaction already in database, full_hash = " + fullHash + ", does not pass validation!", e);
         }
     }
 

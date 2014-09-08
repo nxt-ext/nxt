@@ -28,7 +28,7 @@ final class BlockDb {
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
         } catch (NxtException.ValidationException e) {
-            throw new RuntimeException("Block already in database, id = " + blockId + ", does not pass validation!");
+            throw new RuntimeException("Block already in database, id = " + blockId + ", does not pass validation!", e);
         }
     }
 
@@ -75,24 +75,24 @@ final class BlockDb {
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
         } catch (NxtException.ValidationException e) {
-            throw new RuntimeException("Block already in database at height " + height + ", does not pass validation!");
+            throw new RuntimeException("Block already in database at height " + height + ", does not pass validation!", e);
         }
     }
 
     static BlockImpl findLastBlock() {
         try (Connection con = Db.getConnection();
-             PreparedStatement pstmt = con.prepareStatement("SELECT * FROM block WHERE db_id = (SELECT MAX(db_id) FROM block)")) {
-            ResultSet rs = pstmt.executeQuery();
+             PreparedStatement pstmt = con.prepareStatement("SELECT * FROM block ORDER BY db_id DESC LIMIT 1")) {
             BlockImpl block = null;
-            if (rs.next()) {
-                block = loadBlock(con, rs);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    block = loadBlock(con, rs);
+                }
             }
-            rs.close();
             return block;
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
         } catch (NxtException.ValidationException e) {
-            throw new RuntimeException("Last block already in database does not pass validation!");
+            throw new RuntimeException("Last block already in database does not pass validation!", e);
         }
     }
 

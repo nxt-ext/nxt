@@ -1,5 +1,6 @@
 package nxt;
 
+import nxt.db.DbIterator;
 import nxt.db.DbKey;
 import nxt.db.VersionedEntityDbTable;
 
@@ -41,7 +42,7 @@ public class Hub {
 
         @Override
         public DbKey newKey(Hub hub) {
-            return newKey(hub.getAccountId());
+            return hub.dbKey;
         }
 
     };
@@ -86,12 +87,14 @@ public class Hub {
                 if (! currentLastBlockId.equals(block.getId())) {
                     return Collections.emptyList();
                 }
-                List<Hub> hubs = hubTable.getAll();
-                for (Hub hub : hubs) {
-                    Account account = Account.getAccount(hub.getAccountId());
-                    if (account != null && account.getEffectiveBalanceNXT() >= Constants.MIN_HUB_EFFECTIVE_BALANCE
-                            && account.getPublicKey() != null) {
-                        currentHits.add(new Hit(hub, Generator.getHitTime(account, block)));
+                try (DbIterator<Hub> hubs = hubTable.getAll(0, -1)) {
+                    while (hubs.hasNext()) {
+                        Hub hub = hubs.next();
+                        Account account = Account.getAccount(hub.getAccountId());
+                        if (account != null && account.getEffectiveBalanceNXT() >= Constants.MIN_HUB_EFFECTIVE_BALANCE
+                                && account.getPublicKey() != null) {
+                            currentHits.add(new Hit(hub, Generator.getHitTime(account, block)));
+                        }
                     }
                 }
             }
@@ -108,17 +111,20 @@ public class Hub {
 
 
     private final Long accountId;
+    private final DbKey dbKey;
     private final long minFeePerByteNQT;
     private final List<String> uris;
 
     private Hub(Transaction transaction, Attachment.MessagingHubAnnouncement attachment) {
         this.accountId = transaction.getSenderId();
+        this.dbKey = hubDbKeyFactory.newKey(this.accountId);
         this.minFeePerByteNQT = attachment.getMinFeePerByteNQT();
         this.uris = Collections.unmodifiableList(Arrays.asList(attachment.getUris()));
     }
 
     private Hub(ResultSet rs) throws SQLException {
         this.accountId = rs.getLong("account_id");
+        this.dbKey = hubDbKeyFactory.newKey(this.accountId);
         this.minFeePerByteNQT = rs.getLong("min_fee_per_byte");
         this.uris = Collections.unmodifiableList(Arrays.asList((String[])rs.getObject("uris")));
     }

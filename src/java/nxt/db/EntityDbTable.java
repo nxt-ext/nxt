@@ -4,8 +4,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
 
 public abstract class EntityDbTable<T> extends DerivedDbTable {
 
@@ -49,7 +47,7 @@ public abstract class EntityDbTable<T> extends DerivedDbTable {
     public final T getBy(String columnName, String value) {
         try (Connection con = Db.getConnection();
              PreparedStatement pstmt = con.prepareStatement("SELECT * FROM " + table()
-                     + " WHERE " + columnName + " = ?" + (multiversion ? " AND latest = TRUE" : ""))) {
+                     + " WHERE " + columnName + " = ?" + (multiversion ? " AND latest = TRUE LIMIT 1" : ""))) {
             pstmt.setString(1, value);
             return get(con, pstmt);
         } catch (SQLException e) {
@@ -82,50 +80,55 @@ public abstract class EntityDbTable<T> extends DerivedDbTable {
         }
     }
 
-    public final List<T> getManyBy(String columnName, Long value) {
-        try (Connection con = Db.getConnection();
-             PreparedStatement pstmt = con.prepareStatement("SELECT * FROM " + table()
-                     + " WHERE " + columnName + " = ?" + (multiversion ? " AND latest = TRUE " : " ") + defaultSort())) {
-            pstmt.setLong(1, value);
-            return getManyBy(con, pstmt, true);
-        } catch (SQLException e) {
-            throw new RuntimeException(e.toString(), e);
-        }
-    }
-
-    public final List<T> getManyBy(Connection con, PreparedStatement pstmt, boolean cache) {
-        cache = cache && Db.isInTransaction();
+    public final DbIterator<T> getManyBy(String columnName, Long value, int from, int to) {
+        Connection con = null;
         try {
-            List<T> result = new ArrayList<>();
-            try (ResultSet rs = pstmt.executeQuery()) {
-                while (rs.next()) {
-                    T t = null;
-                    DbKey dbKey = null;
-                    if (cache) {
-                        dbKey = dbKeyFactory.newKey(rs);
-                        t = (T) Db.getCache(table()).get(dbKey);
-                    }
-                    if (t == null) {
-                        t = load(con, rs);
-                        if (cache) {
-                            Db.getCache(table()).put(dbKey, t);
-                        }
-                    }
-                    result.add(t);
-                }
-            }
-            return result;
+            con = Db.getConnection();
+            PreparedStatement pstmt = con.prepareStatement("SELECT * FROM " + table()
+                    + " WHERE " + columnName + " = ?" + (multiversion ? " AND latest = TRUE " : " ") + defaultSort()
+                    + DbUtils.limitsClause(from, to));
+            pstmt.setLong(1, value);
+            DbUtils.setLimits(2, pstmt, from, to);
+            return getManyBy(con, pstmt, true);
         } catch (SQLException e) {
+            DbUtils.close(con);
             throw new RuntimeException(e.toString(), e);
         }
     }
 
-    public final List<T> getAll() {
-        try (Connection con = Db.getConnection();
-             PreparedStatement pstmt = con.prepareStatement("SELECT * FROM " + table()
-                     + (multiversion ? " WHERE latest = TRUE " : " ") + defaultSort())) {
+    public final DbIterator<T> getManyBy(Connection con, PreparedStatement pstmt, boolean cache) {
+        final boolean doCache = cache && Db.isInTransaction();
+        return new DbIterator<>(con, pstmt, new DbIterator.ResultSetReader<T>() {
+            @Override
+            public T get(Connection con, ResultSet rs) throws Exception {
+                T t = null;
+                DbKey dbKey = null;
+                if (doCache) {
+                    dbKey = dbKeyFactory.newKey(rs);
+                    t = (T) Db.getCache(table()).get(dbKey);
+                }
+                if (t == null) {
+                    t = load(con, rs);
+                    if (doCache) {
+                        Db.getCache(table()).put(dbKey, t);
+                    }
+                }
+                return t;
+            }
+        });
+    }
+
+    public final DbIterator<T> getAll(int from, int to) {
+        Connection con = null;
+        try {
+            con = Db.getConnection();
+            PreparedStatement pstmt = con.prepareStatement("SELECT * FROM " + table()
+                     + (multiversion ? " WHERE latest = TRUE " : " ") + defaultSort()
+                    + DbUtils.limitsClause(from, to));
+            DbUtils.setLimits(1, pstmt, from, to);
             return getManyBy(con, pstmt, true);
         } catch (SQLException e) {
+            DbUtils.close(con);
             throw new RuntimeException(e.toString(), e);
         }
     }
@@ -142,7 +145,21 @@ public abstract class EntityDbTable<T> extends DerivedDbTable {
         }
     }
 
+    public final int getRowCount() {
+        try (Connection con = Db.getConnection();
+             PreparedStatement pstmt = con.prepareStatement("SELECT COUNT(*) FROM " + table());
+             ResultSet rs = pstmt.executeQuery()) {
+            rs.next();
+            return rs.getInt(1);
+        } catch (SQLException e) {
+            throw new RuntimeException(e.toString(), e);
+        }
+    }
+
     public final void insert(T t) {
+        if (!Db.isInTransaction()) {
+            throw new IllegalStateException("Not in transaction");
+        }
         DbKey dbKey = dbKeyFactory.newKey(t);
         T cachedT = (T)Db.getCache(table()).get(dbKey);
         if (cachedT == null) {
@@ -160,21 +177,6 @@ public abstract class EntityDbTable<T> extends DerivedDbTable {
                 }
             }
             save(con, t);
-        } catch (SQLException e) {
-            throw new RuntimeException(e.toString(), e);
-        }
-    }
-
-    public void delete(T t) {
-        if (t == null) {
-            return;
-        }
-        DbKey dbKey = dbKeyFactory.newKey(t);
-        Db.getCache(table()).remove(dbKey);
-        try (Connection con = Db.getConnection();
-             PreparedStatement pstmt = con.prepareStatement("DELETE FROM " + table() + dbKeyFactory.getPKClause())) {
-            dbKey.setPK(pstmt);
-            pstmt.executeUpdate();
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
         }

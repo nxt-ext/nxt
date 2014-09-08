@@ -2,13 +2,13 @@ package nxt.http;
 
 import nxt.Account;
 import nxt.NxtException;
+import nxt.db.DbIterator;
 import nxt.util.Convert;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.List;
 
 public final class GetAccount extends APIServlet.APIRequestHandler {
 
@@ -45,36 +45,40 @@ public final class GetAccount extends APIServlet.APIRequestHandler {
                 response.put("nextLeasingHeightTo", account.getNextLeasingHeightTo());
             }
         }
-        List<Account> lessors = account.getLessors();
-        if (!lessors.isEmpty()) {
-            JSONArray lessorIds = new JSONArray();
-            JSONArray lessorIdsRS = new JSONArray();
-            for (Account lessor : lessors) {
-                lessorIds.add(Convert.toUnsignedLong(lessor.getId()));
-                lessorIdsRS.add(Convert.rsAccount(lessor.getId()));
+        try (DbIterator<Account> lessors = account.getLessors()) {
+            if (lessors.hasNext()) {
+                JSONArray lessorIds = new JSONArray();
+                JSONArray lessorIdsRS = new JSONArray();
+                while (lessors.hasNext()) {
+                    Account lessor = lessors.next();
+                    lessorIds.add(Convert.toUnsignedLong(lessor.getId()));
+                    lessorIdsRS.add(Convert.rsAccount(lessor.getId()));
+                }
+                response.put("lessors", lessorIds);
+                response.put("lessorsRS", lessorIdsRS);
             }
-            response.put("lessors", lessorIds);
-            response.put("lessorsRS", lessorIdsRS);
         }
 
-        List<Account.AccountAsset> accountAssets = account.getAccountAssets();
-        JSONArray assetBalances = new JSONArray();
-        JSONArray unconfirmedAssetBalances = new JSONArray();
-        for (Account.AccountAsset accountAsset : accountAssets) {
-            JSONObject assetBalance = new JSONObject();
-            assetBalance.put("asset", Convert.toUnsignedLong(accountAsset.getAssetId()));
-            assetBalance.put("balanceQNT", String.valueOf(accountAsset.getQuantityQNT()));
-            assetBalances.add(assetBalance);
-            JSONObject unconfirmedAssetBalance = new JSONObject();
-            unconfirmedAssetBalance.put("asset", Convert.toUnsignedLong(accountAsset.getAssetId()));
-            unconfirmedAssetBalance.put("unconfirmedBalanceQNT", String.valueOf(accountAsset.getUnconfirmedQuantityQNT()));
-            unconfirmedAssetBalances.add(unconfirmedAssetBalance);
-        }
-        if (assetBalances.size() > 0) {
-            response.put("assetBalances", assetBalances);
-        }
-        if (unconfirmedAssetBalances.size() > 0) {
-            response.put("unconfirmedAssetBalances", unconfirmedAssetBalances);
+        try (DbIterator<Account.AccountAsset> accountAssets = account.getAccountAssets(0, -1)) {
+            JSONArray assetBalances = new JSONArray();
+            JSONArray unconfirmedAssetBalances = new JSONArray();
+            while (accountAssets.hasNext()) {
+                Account.AccountAsset accountAsset = accountAssets.next();
+                JSONObject assetBalance = new JSONObject();
+                assetBalance.put("asset", Convert.toUnsignedLong(accountAsset.getAssetId()));
+                assetBalance.put("balanceQNT", String.valueOf(accountAsset.getQuantityQNT()));
+                assetBalances.add(assetBalance);
+                JSONObject unconfirmedAssetBalance = new JSONObject();
+                unconfirmedAssetBalance.put("asset", Convert.toUnsignedLong(accountAsset.getAssetId()));
+                unconfirmedAssetBalance.put("unconfirmedBalanceQNT", String.valueOf(accountAsset.getUnconfirmedQuantityQNT()));
+                unconfirmedAssetBalances.add(unconfirmedAssetBalance);
+            }
+            if (assetBalances.size() > 0) {
+                response.put("assetBalances", assetBalances);
+            }
+            if (unconfirmedAssetBalances.size() > 0) {
+                response.put("unconfirmedAssetBalances", unconfirmedAssetBalances);
+            }
         }
         return response;
 

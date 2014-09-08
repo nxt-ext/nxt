@@ -1,6 +1,7 @@
 package nxt;
 
 import nxt.db.Db;
+import nxt.db.DbIterator;
 import nxt.db.DbKey;
 import nxt.db.EntityDbTable;
 
@@ -9,7 +10,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 public final class Vote {
@@ -18,7 +18,7 @@ public final class Vote {
 
         @Override
         public DbKey newKey(Vote vote) {
-            return newKey(vote.getId());
+            return vote.dbKey;
         }
 
     };
@@ -61,9 +61,11 @@ public final class Vote {
         try (Connection con = Db.getConnection();
              PreparedStatement pstmt = con.prepareStatement("SELECT * FROM vote WHERE poll_id = ?")) {
             pstmt.setLong(1, poll.getId());
-            List<Vote> votes = voteTable.getManyBy(con, pstmt, true);
-            for (Vote vote : votes) {
-                map.put(vote.getVoterId(), vote.getId());
+            try (DbIterator<Vote> voteIterator = voteTable.getManyBy(con, pstmt, true)) {
+                while (voteIterator.hasNext()) {
+                    Vote vote = voteIterator.next();
+                    map.put(vote.getVoterId(), vote.getId());
+                }
             }
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
@@ -75,12 +77,14 @@ public final class Vote {
 
 
     private final Long id;
+    private final DbKey dbKey;
     private final Long pollId;
     private final Long voterId;
     private final byte[] voteBytes;
 
     private Vote(Transaction transaction, Attachment.MessagingVoteCasting attachment) {
         this.id = transaction.getId();
+        this.dbKey = voteDbKeyFactory.newKey(this.id);
         this.pollId = attachment.getPollId();
         this.voterId = transaction.getSenderId();
         this.voteBytes = attachment.getPollVote();
@@ -88,6 +92,7 @@ public final class Vote {
 
     private Vote(ResultSet rs) throws SQLException {
         this.id = rs.getLong("id");
+        this.dbKey = voteDbKeyFactory.newKey(this.id);
         this.pollId = rs.getLong("poll_id");
         this.voterId = rs.getLong("voter_id");
         this.voteBytes = rs.getBytes("vote_bytes");

@@ -1,9 +1,9 @@
 package nxt;
 
+import nxt.db.DbIterator;
 import nxt.util.Observable;
 import org.json.simple.JSONObject;
 
-import java.util.Collection;
 import java.util.List;
 
 public interface TransactionProcessor extends Observable<List<Transaction>,TransactionProcessor.Event> {
@@ -15,7 +15,7 @@ public interface TransactionProcessor extends Observable<List<Transaction>,Trans
         ADDED_DOUBLESPENDING_TRANSACTIONS
     }
 
-    Collection<? extends Transaction> getAllUnconfirmedTransactions();
+    DbIterator<? extends Transaction> getAllUnconfirmedTransactions();
 
     Transaction getUnconfirmedTransaction(Long transactionId);
 

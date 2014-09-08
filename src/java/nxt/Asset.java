@@ -1,5 +1,6 @@
 package nxt;
 
+import nxt.db.DbIterator;
 import nxt.db.DbKey;
 import nxt.db.EntityDbTable;
 
@@ -7,8 +8,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Collection;
-import java.util.List;
 
 public final class Asset {
 
@@ -16,7 +15,7 @@ public final class Asset {
 
         @Override
         public DbKey newKey(Asset asset) {
-            return newKey(asset.getId());
+            return asset.dbKey;
         }
 
     };
@@ -40,8 +39,8 @@ public final class Asset {
 
     };
 
-    public static Collection<Asset> getAllAssets() {
-        return assetTable.getAll();
+    public static DbIterator<Asset> getAllAssets(int from, int to) {
+        return assetTable.getAll(from, to);
     }
 
     public static int getCount() {
@@ -52,8 +51,8 @@ public final class Asset {
         return assetTable.get(assetDbKeyFactory.newKey(id));
     }
 
-    public static List<Asset> getAssetsIssuedBy(Long accountId) {
-        return assetTable.getManyBy("account_id", accountId);
+    public static DbIterator<Asset> getAssetsIssuedBy(Long accountId, int from, int to) {
+        return assetTable.getManyBy("account_id", accountId, from, to);
     }
 
     static void addAsset(Transaction transaction, Attachment.ColoredCoinsAssetIssuance attachment) {
@@ -64,6 +63,7 @@ public final class Asset {
 
 
     private final Long assetId;
+    private final DbKey dbKey;
     private final Long accountId;
     private final String name;
     private final String description;
@@ -72,6 +72,7 @@ public final class Asset {
 
     private Asset(Transaction transaction, Attachment.ColoredCoinsAssetIssuance attachment) {
         this.assetId = transaction.getId();
+        this.dbKey = assetDbKeyFactory.newKey(this.assetId);
         this.accountId = transaction.getSenderId();
         this.name = attachment.getName();
         this.description = attachment.getDescription();
@@ -81,6 +82,7 @@ public final class Asset {
 
     private Asset(ResultSet rs) throws SQLException {
         this.assetId = rs.getLong("id");
+        this.dbKey = assetDbKeyFactory.newKey(this.assetId);
         this.accountId = rs.getLong("account_id");
         this.name = rs.getString("name");
         this.description = rs.getString("description");

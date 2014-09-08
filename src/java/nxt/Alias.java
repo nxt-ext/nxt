@@ -1,5 +1,6 @@
 package nxt;
 
+import nxt.db.DbIterator;
 import nxt.db.DbKey;
 import nxt.db.DbUtils;
 import nxt.db.VersionedEntityDbTable;
@@ -8,24 +9,26 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.List;
 
 public final class Alias {
 
     public static class Offer {
 
-        private final long priceNQT;
-        private final Long buyerId;
+        private long priceNQT;
+        private Long buyerId;
         private final Long aliasId;
+        private final DbKey dbKey;
 
         private Offer(Long aliasId, long priceNQT, Long buyerId) {
             this.priceNQT = priceNQT;
             this.buyerId = buyerId;
             this.aliasId = aliasId;
+            this.dbKey = offerDbKeyFactory.newKey(this.aliasId);
         }
 
         private Offer(ResultSet rs) throws SQLException {
             this.aliasId = rs.getLong("id");
+            this.dbKey = offerDbKeyFactory.newKey(this.aliasId);
             this.priceNQT = rs.getLong("price");
             this.buyerId  = DbUtils.getLong(rs, "buyer_id");
         }
@@ -60,7 +63,7 @@ public final class Alias {
 
         @Override
         public DbKey newKey(Alias alias) {
-            return newKey(alias.getId());
+            return alias.dbKey;
         }
 
     };
@@ -88,7 +91,7 @@ public final class Alias {
 
         @Override
         public DbKey newKey(Offer offer) {
-            return newKey(offer.getId());
+            return offer.dbKey;
         }
 
     };
@@ -116,8 +119,8 @@ public final class Alias {
         return aliasTable.getCount();
     }
 
-    public static List<Alias> getAliasesByOwner(Long accountId) {
-        return aliasTable.getManyBy("account_id", accountId);
+    public static DbIterator<Alias> getAliasesByOwner(Long accountId, int from, int to) {
+        return aliasTable.getManyBy("account_id", accountId, from, to);
     }
 
     public static Alias getAlias(String aliasName) {
@@ -150,7 +153,14 @@ public final class Alias {
         final Long buyerId = transaction.getRecipientId();
         if (priceNQT > 0) {
             Alias alias = getAlias(aliasName);
-            offerTable.insert(new Offer(alias.id, priceNQT, buyerId));
+            Offer offer = getOffer(alias);
+            if (offer == null) {
+                offerTable.insert(new Offer(alias.id, priceNQT, buyerId));
+            } else {
+                offer.priceNQT = priceNQT;
+                offer.buyerId = buyerId;
+                offerTable.insert(offer);
+            }
         } else {
             changeOwner(buyerId, aliasName, transaction.getBlockTimestamp());
         }
@@ -171,12 +181,14 @@ public final class Alias {
 
     private Long accountId;
     private final Long id;
+    private final DbKey dbKey;
     private final String aliasName;
     private String aliasURI;
     private int timestamp;
 
     private Alias(Long id, Long accountId, String aliasName, String aliasURI, int timestamp) {
         this.id = id;
+        this.dbKey = aliasDbKeyFactory.newKey(this.id);
         this.accountId = accountId;
         this.aliasName = aliasName;
         this.aliasURI = aliasURI;
@@ -190,6 +202,7 @@ public final class Alias {
 
     private Alias(ResultSet rs) throws SQLException {
         this.id = rs.getLong("id");
+        this.dbKey = aliasDbKeyFactory.newKey(this.id);
         this.accountId = rs.getLong("account_id");
         this.aliasName = rs.getString("alias_name");
         this.aliasURI = rs.getString("alias_uri");

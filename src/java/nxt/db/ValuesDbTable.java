@@ -62,6 +62,9 @@ public abstract class ValuesDbTable<T,V> extends DerivedDbTable {
     }
 
     public final void insert(T t, V v) {
+        if (!Db.isInTransaction()) {
+            throw new IllegalStateException("Not in transaction");
+        }
         DbKey dbKey = dbKeyFactory.newKey(t);
         Db.getCache(table()).remove(dbKey);
         try (Connection con = Db.getConnection()) {
@@ -79,6 +82,9 @@ public abstract class ValuesDbTable<T,V> extends DerivedDbTable {
     }
 
     public final void insert(T t, List<V> values) {
+        if (!Db.isInTransaction()) {
+            throw new IllegalStateException("Not in transaction");
+        }
         DbKey dbKey = dbKeyFactory.newKey(t);
         Db.getCache(table()).put(dbKey, values);
         try (Connection con = Db.getConnection()) {

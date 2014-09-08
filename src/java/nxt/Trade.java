@@ -1,5 +1,7 @@
 package nxt;
 
+import nxt.db.Db;
+import nxt.db.DbIterator;
 import nxt.db.DbKey;
 import nxt.db.EntityDbTable;
 import nxt.util.Convert;
@@ -10,8 +12,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Collection;
-import java.util.List;
 
 public final class Trade {
 
@@ -25,7 +25,7 @@ public final class Trade {
 
         @Override
         public DbKey newKey(Trade trade) {
-            return newKey(trade.askOrderId, trade.bidOrderId);
+            return trade.dbKey;
         }
 
     };
@@ -49,8 +49,8 @@ public final class Trade {
 
     };
 
-    public static Collection<Trade> getAllTrades() {
-        return tradeTable.getAll();
+    public static DbIterator<Trade> getAllTrades(int from, int to) {
+        return tradeTable.getAll(from, to);
     }
 
     public static int getCount() {
@@ -65,8 +65,21 @@ public final class Trade {
         return listeners.removeListener(listener, eventType);
     }
 
-    public static List<Trade> getTrades(Long assetId) {
-        return tradeTable.getManyBy("asset_id", assetId);
+    public static DbIterator<Trade> getTrades(Long assetId, int from, int to) {
+        return tradeTable.getManyBy("asset_id", assetId, from, to);
+    }
+
+    public static int getTradeCount(Long assetId) {
+        try (Connection con = Db.getConnection();
+             PreparedStatement pstmt = con.prepareStatement("SELECT COUNT(*) FROM trade WHERE asset_id = ?")) {
+            pstmt.setLong(1, assetId);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                rs.next();
+                return rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e.toString(), e);
+        }
     }
 
     static Trade addTrade(Long assetId, Block block, Long askOrderId, Long bidOrderId, long quantityQNT, long priceNQT) {
@@ -83,7 +96,9 @@ public final class Trade {
     private final Long assetId;
     private final Long blockId;
     private final int height;
-    private final Long askOrderId, bidOrderId;
+    private final Long askOrderId;
+    private final Long bidOrderId;
+    private final DbKey dbKey;
     private final long quantityQNT;
     private final long priceNQT;
 
@@ -94,6 +109,7 @@ public final class Trade {
         this.timestamp = block.getTimestamp();
         this.askOrderId = askOrderId;
         this.bidOrderId = bidOrderId;
+        this.dbKey = tradeDbKeyFactory.newKey(this.askOrderId, this.bidOrderId);
         this.quantityQNT = quantityQNT;
         this.priceNQT = priceNQT;
     }
@@ -103,6 +119,7 @@ public final class Trade {
         this.blockId = rs.getLong("block_id");
         this.askOrderId = rs.getLong("ask_order_id");
         this.bidOrderId = rs.getLong("bid_order_id");
+        this.dbKey = tradeDbKeyFactory.newKey(this.askOrderId, this.bidOrderId);
         this.quantityQNT = rs.getLong("quantity");
         this.priceNQT = rs.getLong("price");
         this.timestamp = rs.getInt("timestamp");

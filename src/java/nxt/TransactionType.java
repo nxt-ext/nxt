@@ -47,6 +47,13 @@ public abstract class TransactionType {
 
     private static final byte SUBTYPE_ACCOUNT_CONTROL_EFFECTIVE_BALANCE_LEASING = 0;
 
+    private static final int BASELINE_FEE_HEIGHT = 1; // At release time must be less than current block - 1440
+    private static final Fee BASELINE_FEE = new Fee(Constants.ONE_NXT, 0);
+    private static final Fee BASELINE_ASSET_ISSUANCE_FEE = new Fee(1000 * Constants.ONE_NXT, 0);
+    private static final int NEXT_FEE_HEIGHT = Integer.MAX_VALUE;
+    private static final Fee NEXT_FEE = new Fee(Constants.ONE_NXT, 0);
+    private static final Fee NEXT_ASSET_ISSUANCE_FEE = new Fee(1000 * Constants.ONE_NXT, 0);
+
     public static TransactionType findTransactionType(byte type, byte subtype) {
         switch (type) {
             case TYPE_PAYMENT:
@@ -176,12 +183,12 @@ public abstract class TransactionType {
     abstract void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount);
 
     final void undoUnconfirmed(Transaction transaction, Account senderAccount) {
+        undoAttachmentUnconfirmed(transaction, senderAccount);
         senderAccount.addToUnconfirmedBalanceNQT(Convert.safeAdd(transaction.getAmountNQT(), transaction.getFeeNQT()));
         if (transaction.getReferencedTransactionFullHash() != null
                 && transaction.getTimestamp() > Constants.REFERENCED_TRANSACTION_FULL_HASH_BLOCK_TIMESTAMP) {
             senderAccount.addToUnconfirmedBalanceNQT(Constants.UNCONFIRMED_POOL_DEPOSIT_NQT);
         }
-        undoAttachmentUnconfirmed(transaction, senderAccount);
     }
 
     abstract void undoAttachmentUnconfirmed(Transaction transaction, Account senderAccount);
@@ -722,6 +729,16 @@ public abstract class TransactionType {
             }
 
             @Override
+            public Fee getBaselineFee() {
+                return BASELINE_ASSET_ISSUANCE_FEE;
+            }
+
+            @Override
+            public Fee getNextFee() {
+                return NEXT_ASSET_ISSUANCE_FEE;
+            }
+
+            @Override
             Attachment.ColoredCoinsAssetIssuance parseAttachment(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
                 return new Attachment.ColoredCoinsAssetIssuance(buffer, transactionVersion);
             }
@@ -751,8 +768,7 @@ public abstract class TransactionType {
             @Override
             void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
                 Attachment.ColoredCoinsAssetIssuance attachment = (Attachment.ColoredCoinsAssetIssuance)transaction.getAttachment();
-                if (transaction.getFeeNQT() < Constants.ASSET_ISSUANCE_FEE_NQT
-                        || attachment.getName().length() < Constants.MIN_ASSET_NAME_LENGTH
+                if (attachment.getName().length() < Constants.MIN_ASSET_NAME_LENGTH
                         || attachment.getName().length() > Constants.MAX_ASSET_NAME_LENGTH
                         || attachment.getDescription().length() > Constants.MAX_ASSET_DESCRIPTION_LENGTH
                         || attachment.getDecimals() < 0 || attachment.getDecimals() > 8
@@ -1612,6 +1628,53 @@ public abstract class TransactionType {
 
         };
 
+    }
+
+    long minimumFeeNQT(int height, int appendagesSize) {
+        if (height < BASELINE_FEE_HEIGHT) {
+            return 0; // No need to validate fees before baseline block
+        }
+        Fee fee;
+        if (height >= NEXT_FEE_HEIGHT) {
+            fee = getNextFee();
+        } else {
+            fee = getBaselineFee();
+        }
+        return Convert.safeAdd(fee.getConstantFee(), Convert.safeMultiply(appendagesSize, fee.getAppendagesFee()));
+    }
+
+    protected Fee getBaselineFee() {
+        return BASELINE_FEE;
+    }
+
+    protected Fee getNextFee() {
+        return NEXT_FEE;
+    }
+
+    public static final class Fee {
+        private final long constantFee;
+        private final long appendagesFee;
+
+        public Fee(long constantFee, long appendagesFee) {
+            this.constantFee = constantFee;
+            this.appendagesFee = appendagesFee;
+        }
+
+        public long getConstantFee() {
+            return constantFee;
+        }
+
+        public long getAppendagesFee() {
+            return appendagesFee;
+        }
+
+        @Override
+        public String toString() {
+            return "Fee{" +
+                    "constantFee=" + constantFee +
+                    ", appendagesFee=" + appendagesFee +
+                    '}';
+        }
     }
 
 }
