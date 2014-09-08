@@ -35,7 +35,7 @@ public abstract class CurrencyOffer {
         this.currencyId = rs.getLong("currency_id");
         this.accountId = rs.getLong("account_id");
         this.rateNQT = rs.getLong("rate");
-        this.limit = rs.getLong("limit");
+        this.limit = rs.getLong("unit_limit");
         this.supply = rs.getLong("supply");
         this.expirationHeight = rs.getInt("expiration_height");
         this.height = rs.getInt("height");
@@ -43,7 +43,7 @@ public abstract class CurrencyOffer {
 
     protected void save(Connection con, String table) throws SQLException {
         try (PreparedStatement pstmt = con.prepareStatement("MERGE INTO " + table + " (id, currency_id, account_id, "
-                + "rate, limit, supply, expiration_height, height, latest) KEY (id, height) VALUES (?, ?, ?, ?, ?, ?, ?, ?, TRUE)")) {
+                + "rate, unit_limit, supply, expiration_height, height, latest) KEY (id, height) VALUES (?, ?, ?, ?, ?, ?, ?, ?, TRUE)")) {
             int i = 0;
             pstmt.setLong(++i, this.getId());
             pstmt.setLong(++i, this.getCurrencyId());
