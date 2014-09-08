@@ -60,9 +60,11 @@ public abstract class TransactionType {
     private static final int BASELINE_FEE_HEIGHT = 1; // At release time must be less than current block - 1440
     private static final Fee BASELINE_FEE = new Fee(Constants.ONE_NXT, 0);
     private static final Fee BASELINE_ASSET_ISSUANCE_FEE = new Fee(1000 * Constants.ONE_NXT, 0);
+    private static final Fee BASELINE_CURRENCY_ISSUANCE_FEE = new Fee(1000 * Constants.ONE_NXT, 0);
     private static final int NEXT_FEE_HEIGHT = Integer.MAX_VALUE;
     private static final Fee NEXT_FEE = new Fee(Constants.ONE_NXT, 0);
     private static final Fee NEXT_ASSET_ISSUANCE_FEE = new Fee(1000 * Constants.ONE_NXT, 0);
+    private static final Fee NEXT_CURRENCY_ISSUANCE_FEE = new Fee(1000 * Constants.ONE_NXT, 0);
 
     public static TransactionType findTransactionType(byte type, byte subtype) {
         switch (type) {
@@ -1700,6 +1702,16 @@ public abstract class TransactionType {
             }
 
             @Override
+            public Fee getBaselineFee() {
+                return BASELINE_CURRENCY_ISSUANCE_FEE;
+            }
+
+            @Override
+            public Fee getNextFee() {
+                return NEXT_CURRENCY_ISSUANCE_FEE;
+            }
+
+            @Override
             Attachment.MonetarySystemCurrencyIssuance parseAttachment(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
                 return new Attachment.MonetarySystemCurrencyIssuance(buffer, transactionVersion);
             }
@@ -1725,7 +1737,6 @@ public abstract class TransactionType {
                 //TODO: fix exceptions
                 if (!Genesis.CREATOR_ID.equals(transaction.getRecipientId())
                         || transaction.getAmountNQT() != 0
-                        || transaction.getFeeNQT() < Constants.CURRENCY_ISSUANCE_FEE_NQT
                         || attachment.getName().length() < Constants.MIN_CURRENCY_NAME_LENGTH || attachment.getName().length() > Constants.MAX_CURRENCY_NAME_LENGTH
                         || attachment.getCode().length() != Constants.CURRENCY_CODE_LENGTH
                         || attachment.getDescription().length() > Constants.MAX_CURRENCY_DESCRIPTION_LENGTH

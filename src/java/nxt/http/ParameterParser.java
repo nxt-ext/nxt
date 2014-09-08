@@ -44,7 +44,7 @@ final class ParameterParser {
     static byte getByte(HttpServletRequest req, String name, byte min, byte max) throws ParameterException {
         String paramValue = Convert.emptyToNull(req.getParameter(name));
         if (paramValue == null) {
-            throw new ParameterException(missing(name));
+            return 0;
         }
         byte value;
         try {
@@ -61,7 +61,7 @@ final class ParameterParser {
     static int getInt(HttpServletRequest req, String name, int min, int max) throws ParameterException {
         String paramValue = Convert.emptyToNull(req.getParameter(name));
         if (paramValue == null) {
-            throw new ParameterException(missing(name));
+            return 0;
         }
         int value;
         try {
@@ -78,7 +78,7 @@ final class ParameterParser {
     static long getLong(HttpServletRequest req, String name, long min, long max) throws ParameterException {
         String paramValue = Convert.emptyToNull(req.getParameter(name));
         if (paramValue == null) {
-            throw new ParameterException(missing(name));
+            return 0;
         }
         long value;
         try {
