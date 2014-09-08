@@ -705,6 +705,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     poppedOffBlocks.add(block);
                     block = popLastBlock();
                 }
+                Logger.logDebugMessage("Rollback to " + commonBlock.getHeight());
                 for (DerivedDbTable table : derivedTables) {
                     table.rollback(commonBlock.getHeight());
                 }
@@ -889,7 +890,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 throw new IllegalArgumentException("Height " + height + " exceeds current blockchain height of " + blockchainHeight);
             }
             if (height > 0 && trimDerivedTables && blockchainHeight - height > Constants.MAX_ROLLBACK) {
-                Logger.logErrorMessage("Rollback of more than " + Constants.MAX_ROLLBACK + " blocks not supported, will do a full scan");
+                Logger.logMessage("Rollback of more than " + Constants.MAX_ROLLBACK + " blocks not supported, will do a full scan");
                 height = 0;
             }
             isScanning = true;

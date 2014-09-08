@@ -66,7 +66,6 @@ public abstract class VersionedEntityDbTable<T> extends EntityDbTable<T> {
     }
 
     static void rollback(String table, int height, DbKey.Factory dbKeyFactory) {
-        Logger.logDebugMessage("Rollback " + table + " to " + height);
         if (!Db.isInTransaction()) {
             throw new IllegalStateException("Not in transaction");
         }
