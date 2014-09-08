@@ -1,13 +1,8 @@
 package nxt;
 
+import nxt.db.DbIterator;
 import nxt.util.Convert;
 import nxt.util.Listener;
-
-import java.util.Map;
-import java.util.SortedSet;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.ConcurrentSkipListSet;
 
 public final class CurrencyExchange {
 
@@ -21,226 +16,33 @@ public final class CurrencyExchange {
 
     }
 
-    public static final class BuyingOffer implements Comparable<BuyingOffer> {
-
-        private final long rateNQT;
-        private long limit;
-        private long supply;
-        private final int expirationHeight;
-        private final Long accountId;
-        private final int publicationHeight;
-        private SellingOffer counterOffer;
-
-        public BuyingOffer(long rateNQT, long limit, long supply, int expirationHeight, Long accountId, int publicationHeight) {
-            this.rateNQT = rateNQT;
-            this.limit = limit;
-            this.supply = supply;
-            this.expirationHeight = expirationHeight;
-            this.accountId = accountId;
-            this.publicationHeight = publicationHeight;
-        }
-
-        public long getRateNQT() {
-            return rateNQT;
-        }
-
-        public long getLimit() {
-            return limit;
-        }
-
-        public long getSupply() {
-            return supply;
-        }
-
-        public int getExpirationHeight() {
-            return expirationHeight;
-        }
-
-        public Long getAccountId() {
-            return accountId;
-        }
-
-        public int getPublicationHeight() {
-            return publicationHeight;
-        }
-
-        public SellingOffer getCounterOffer() {
-            return counterOffer;
-        }
-
-        public void increaseSupply(long delta) {
-            supply += delta;
-        }
-
-        public void decreaseLimitAndSupply(long delta) {
-            limit -= delta;
-            supply -= delta;
-        }
-
-        public void setCounterOffer(SellingOffer counterOffer) {
-            this.counterOffer = counterOffer;
-        }
-
-        @Override
-        public int compareTo(BuyingOffer offer) {
-            if (rateNQT > offer.getRateNQT()) {
-                return -1;
-            } else if (rateNQT < offer.getRateNQT()) {
-                return 1;
-            } else {
-                if (publicationHeight < offer.getPublicationHeight()) {
-                    return -1;
-                } else if (publicationHeight > offer.getPublicationHeight()) {
-                    return 1;
-                } else {
-                    if (accountId < offer.getAccountId()) {
-                        return -1;
-                    } else if (accountId > offer.getAccountId()) {
-                        return 1;
-                    } else {
-                        return 0;
-                    }
-                }
-            }
-        }
-
-    }
-
-    public static final class SellingOffer implements Comparable<SellingOffer> {
-
-        private final long rateNQT;
-        private long limit;
-        private long supply;
-        private final int expirationHeight;
-        private final Long accountId;
-        private final int publicationHeight;
-        private BuyingOffer counterOffer;
-
-        public SellingOffer(long rateNQT, long limit, long supply, int expirationHeight, Long accountId, int publicationHeight) {
-            this.rateNQT = rateNQT;
-            this.limit = limit;
-            this.supply = supply;
-            this.expirationHeight = expirationHeight;
-            this.accountId = accountId;
-            this.publicationHeight = publicationHeight;
-        }
-
-        public long getRateNQT() {
-            return rateNQT;
-        }
-
-        public long getLimit() {
-            return limit;
-        }
-
-        public long getSupply() {
-            return supply;
-        }
-
-        public int getExpirationHeight() {
-            return expirationHeight;
-        }
-
-        public Long getAccountId() {
-            return accountId;
-        }
-
-        public int getPublicationHeight() {
-            return publicationHeight;
-        }
-
-        public BuyingOffer getCounterOffer() {
-            return counterOffer;
-        }
-
-        public void increaseSupply(long delta) {
-            supply += delta;
-        }
-
-        public void decreaseLimitAndSupply(long delta) {
-            limit -= delta;
-            supply -= delta;
-        }
-
-        public void setCounterOffer(BuyingOffer counterOffer) {
-            this.counterOffer = counterOffer;
-        }
-
-        @Override
-        public int compareTo(SellingOffer offer) {
-            if (rateNQT < offer.getRateNQT()) {
-                return -1;
-            } else if (rateNQT > offer.getRateNQT()) {
-                return 1;
-            } else {
-                if (publicationHeight < offer.getPublicationHeight()) {
-                    return -1;
-                } else if (publicationHeight > offer.getPublicationHeight()) {
-                    return 1;
-                } else {
-                    if (accountId < offer.getAccountId()) {
-                        return -1;
-                    } else if (accountId > offer.getAccountId()) {
-                        return 1;
-                    } else {
-                        return 0;
-                    }
-                }
-            }
-        }
-
-    }
-
-    private static final ConcurrentMap<Long, SortedSet<BuyingOffer>> buyingOffers = new ConcurrentHashMap<>();
-    private static final ConcurrentMap<Long, SortedSet<SellingOffer>> sellingOffers = new ConcurrentHashMap<>();
-
-    static void clear() {
-        buyingOffers.clear();
-        sellingOffers.clear();
-    }
-
-    static void removeExpiredOffers(int height) {
-        for (Map.Entry<Long, SortedSet<BuyingOffer>> buyingOffersEntry : CurrencyExchange.buyingOffers.entrySet()) {
-            for (BuyingOffer offer : buyingOffersEntry.getValue()) {
-                if (offer.getExpirationHeight() <= height) {
-                    removeOffer(buyingOffersEntry.getKey(), offer);
-                }
+    private static void removeExpiredOffers(int height) {
+        DbIterator<CurrencyOffer> buyOffers = CurrencyBuy.getAll(0, CurrencyBuy.getCount() - 1);
+        for (CurrencyOffer offer : buyOffers) {
+            if (offer.getExpirationHeight() <= height) {
+                removeOffer(offer.getCurrencyId(), offer);
             }
         }
     }
 
-    static void publishOffer(Account account, Long currencyId, long buyingRateNQT, long sellingRateNQT, long totalBuyingLimit, long totalSellingLimit,
-                             long initialBuyingSupply, long initialSellingSupply, int expirationHeight) {
+    static void publishOffer(long id, Account account, Long currencyId, long buyRateNQT, long sellRateNQT, long totalBuyLimit, long totalSellLimit,
+                             long initialBuySupply, long initialSellSupply, int expirationHeight) {
         removeOffer(currencyId, account.getId());
 
-        int publicationHeight = BlockchainImpl.getInstance().getHeight();
-        BuyingOffer buyingOffer = new BuyingOffer(buyingRateNQT, totalBuyingLimit, initialBuyingSupply, expirationHeight, account.getId(), publicationHeight);
-        SellingOffer sellingOffer = new SellingOffer(sellingRateNQT, totalSellingLimit, initialSellingSupply, expirationHeight, account.getId(), publicationHeight);
-        buyingOffer.setCounterOffer(sellingOffer);
-        sellingOffer.setCounterOffer(buyingOffer);
-
-        SortedSet<BuyingOffer> currencyBuyingOffers = buyingOffers.get(currencyId);
-        if (currencyBuyingOffers == null) {
-            currencyBuyingOffers = new ConcurrentSkipListSet<>();
-            buyingOffers.put(currencyId, currencyBuyingOffers);
-        }
-        currencyBuyingOffers.add(buyingOffer);
-
-        SortedSet<SellingOffer> currencySellingOffers = sellingOffers.get(currencyId);
-        if (currencySellingOffers == null) {
-            currencySellingOffers = new ConcurrentSkipListSet<>();
-            sellingOffers.put(currencyId, currencySellingOffers);
-        }
-        currencySellingOffers.add(sellingOffer);
+        int height = BlockchainImpl.getInstance().getHeight();
+        CurrencyBuy.addOffer(
+                new CurrencyBuy(id, currencyId, account.getId(), buyRateNQT, totalBuyLimit, initialBuySupply, expirationHeight, height));
+        CurrencySell.addOffer(
+                new CurrencySell(id, currencyId, account.getId(), sellRateNQT, totalSellLimit, initialSellSupply, expirationHeight, height));
     }
 
     static void exchangeMoneyForNXT(Account account, Long currencyId, long rateNQT, long units) {
         long extraAmountNQT = 0;
         long remainingUnits = units;
 
-        SortedSet<BuyingOffer> currencyBuyingOffers = buyingOffers.get(currencyId);
-        if (currencyBuyingOffers != null && !currencyBuyingOffers.isEmpty()) {
-            for (BuyingOffer offer : currencyBuyingOffers) {
+        DbIterator<CurrencyOffer> currencyBuyOffers = CurrencyBuy.getCurrencyOffers(currencyId);
+        if (currencyBuyOffers != null) {
+            for (CurrencyOffer offer : currencyBuyOffers) {
                 if (offer.getRateNQT() < rateNQT) {
                     break;
                 }
@@ -273,9 +75,9 @@ public final class CurrencyExchange {
         long extraUnits = 0;
         long remainingAmountNQT = Convert.safeMultiply(units, rateNQT);
 
-        SortedSet<SellingOffer> currencySellingOffers = sellingOffers.get(currencyId);
-        if (currencySellingOffers != null && !currencySellingOffers.isEmpty()) {
-            for (SellingOffer offer : currencySellingOffers) {
+        DbIterator<CurrencyOffer> currencySellOffers = CurrencySell.getCurrencyOffers(currencyId);
+        if (currencySellOffers != null) {
+            for (CurrencyOffer offer : currencySellOffers) {
                 if (offer.getRateNQT() > rateNQT) {
                     break;
                 }
@@ -304,23 +106,24 @@ public final class CurrencyExchange {
         account.addToUnconfirmedBalanceNQT(remainingAmountNQT);
     }
 
-    static void removeOffer(Long currencyId, BuyingOffer buyingOffer) {
-        SellingOffer sellingOffer = buyingOffer.getCounterOffer();
+    private static void removeOffer(long currencyId, CurrencyOffer buyOffer) {
+        CurrencyOffer sellOffer = buyOffer.getCounterOffer();
 
-        buyingOffers.get(currencyId).remove(buyingOffer);
-        sellingOffers.get(currencyId).remove(sellingOffer);
+        CurrencyBuy.remove(buyOffer);
+        CurrencySell.remove(sellOffer);
 
-        Account account = Account.getAccount(buyingOffer.getAccountId());
-        account.addToUnconfirmedBalanceNQT(buyingOffer.getSupply());
-        account.addToUnconfirmedCurrencyBalanceQNT(currencyId, sellingOffer.getSupply());
+        Account account = Account.getAccount(buyOffer.getAccountId());
+        account.addToUnconfirmedBalanceNQT(buyOffer.getSupply());
+        account.addToUnconfirmedCurrencyBalanceQNT(currencyId, sellOffer.getSupply());
     }
 
-    static void removeOffer(Long currencyId, Long accountId) {
-        if (buyingOffers.get(currencyId) == null) {
+    private static void removeOffer(Long currencyId, Long accountId) {
+        DbIterator<CurrencyOffer> buyOffers = CurrencyBuy.getCurrencyOffers(currencyId);
+        if (buyOffers == null) {
             return;
         }
 
-        for (BuyingOffer offer : buyingOffers.get(currencyId)) {
+        for (CurrencyOffer offer : buyOffers) {
             if (offer.getAccountId().equals(accountId)) {
                 removeOffer(currencyId, offer);
                 return;

@@ -190,8 +190,8 @@ public final class Currency {
     private void save(Connection con) throws SQLException {
         try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO currency (id, account_id, name, code, "
                 + "description, type, total_supply, issuance_height, min_reserve_per_unit_nqt, "
-                + "min_difficulty, max_difficulty, ruleset, current_supply, current_reserve_per_unit_nqt) "
-                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
+                + "min_difficulty, max_difficulty, ruleset, current_supply, current_reserve_per_unit_nqt, height) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
             int i = 0;
             pstmt.setLong(++i, this.getCurrencyId());
             pstmt.setLong(++i, this.getAccountId());
@@ -207,6 +207,7 @@ public final class Currency {
             pstmt.setByte(++i, this.getRuleset());
             pstmt.setLong(++i, this.getCurrentSupply());
             pstmt.setLong(++i, this.getCurrentReservePerUnitNQT());
+            pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
             pstmt.executeUpdate();
         }
     }

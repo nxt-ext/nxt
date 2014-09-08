@@ -7,7 +7,12 @@ import java.sql.SQLException;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
-public final class DbIterator<T> implements Iterator<T>, AutoCloseable {
+public final class DbIterator<T> implements Iterator<T>, Iterable<T>, AutoCloseable {
+
+    @Override
+    public Iterator<T> iterator() {
+        return this;
+    }
 
     public interface ResultSetReader<T> {
         T get(Connection con, ResultSet rs) throws Exception;
@@ -59,12 +64,11 @@ public final class DbIterator<T> implements Iterator<T>, AutoCloseable {
 
     @Override
     public void remove() {
-        throw new UnsupportedOperationException("Removal not suported");
+        throw new UnsupportedOperationException("Removal not supported");
     }
 
     @Override
     public void close() {
         DbUtils.close(rs, pstmt, con);
     }
-
 }

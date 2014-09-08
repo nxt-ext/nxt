@@ -13,8 +13,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
 
 @SuppressWarnings({"UnusedDeclaration", "SuspiciousNameCombination"})
 public final class Account {
@@ -451,7 +449,6 @@ public final class Account {
     private Long nextLesseeId;
     private String name;
     private String description;
-    private final Map<Long, Integer> mintingCounters = new HashMap<>();
 
     private Account(Long id) {
         if (! id.equals(Crypto.rsDecode(Crypto.rsEncode(id)))) {
@@ -976,14 +973,5 @@ public final class Account {
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
         }
-    }
-
-    int getMintingCounter(Long currencyId) {
-        Integer counter = mintingCounters.get(currencyId);
-        return counter == null ? 0 : counter;
-    }
-
-    void setMintingCounter(Long currencyId, int counter) {
-        mintingCounters.put(currencyId, counter);
     }
 }

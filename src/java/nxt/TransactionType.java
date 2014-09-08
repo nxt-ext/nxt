@@ -2034,7 +2034,7 @@ public abstract class TransactionType {
             @Override
             void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
                 Attachment.MonetarySystemExchangeOfferPublication attachment = (Attachment.MonetarySystemExchangeOfferPublication)transaction.getAttachment();
-                CurrencyExchange.publishOffer(senderAccount, attachment.getCurrencyId(), attachment.getBuyingRateNQT(), attachment.getSellingRateNQT(), attachment.getTotalBuyingLimit(), attachment.getTotalSellingLimit(), attachment.getInitialBuyingSupply(), attachment.getInitialSellingSupply(), attachment.getExpirationHeight());
+                CurrencyExchange.publishOffer(transaction.getId(), senderAccount, attachment.getCurrencyId(), attachment.getBuyingRateNQT(), attachment.getSellingRateNQT(), attachment.getTotalBuyingLimit(), attachment.getTotalSellingLimit(), attachment.getInitialBuyingSupply(), attachment.getInitialSellingSupply(), attachment.getExpirationHeight());
             }
 
             @Override

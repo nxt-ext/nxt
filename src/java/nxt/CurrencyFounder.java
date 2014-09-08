@@ -64,12 +64,13 @@ public class CurrencyFounder {
     }
 
     private void save(Connection con) throws SQLException {
-        try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO currency_founder (currency_id, account_id, value)"
-                + "VALUES (?, ?, ?)")) {
+        try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO currency_founder (currency_id, account_id, value, height)"
+                + "VALUES (?, ?, ?, ?)")) {
             int i = 0;
             pstmt.setLong(++i, this.getCurrencyId());
             pstmt.setLong(++i, this.getAccountId());
             pstmt.setLong(++i, this.getValue());
+            pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
             pstmt.executeUpdate();
         }
     }
