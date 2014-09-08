@@ -889,7 +889,8 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 throw new IllegalArgumentException("Height " + height + " exceeds current blockchain height of " + blockchainHeight);
             }
             if (height > 0 && trimDerivedTables && blockchainHeight - height > Constants.MAX_ROLLBACK) {
-                throw new IllegalArgumentException("Rollback of more than " + Constants.MAX_ROLLBACK + " blocks not supported");
+                Logger.logErrorMessage("Rollback of more than " + Constants.MAX_ROLLBACK + " blocks not supported, will do a full scan");
+                height = 0;
             }
             isScanning = true;
             Logger.logMessage("Scanning blockchain starting from height " + height + "...");
@@ -1010,7 +1011,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 throw new RuntimeException(e.toString(), e);
             }
             validateAtScan = false;
-            Logger.logMessage("...done");
+            Logger.logMessage("...done at height " + Nxt.getBlockchain().getHeight());
             isScanning = false;
         } // synchronized
     }
