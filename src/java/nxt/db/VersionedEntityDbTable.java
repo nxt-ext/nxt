@@ -24,17 +24,18 @@ public abstract class VersionedEntityDbTable<T> extends EntityDbTable<T> {
         if (t == null) {
             return;
         }
-        insert(t); // make sure current height is saved
         DbKey dbKey = dbKeyFactory.newKey(t);
-        Db.getCache(table()).remove(dbKey);
         try (Connection con = Db.getConnection();
              PreparedStatement pstmt = con.prepareStatement("UPDATE " + table()
                      + " SET latest = FALSE " + dbKeyFactory.getPKClause() + " AND latest = TRUE LIMIT 1")) {
             dbKey.setPK(pstmt);
             pstmt.executeUpdate();
+            save(con, t);
+            pstmt.executeUpdate(); // delete after the save
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
         }
+        Db.getCache(table()).remove(dbKey);
     }
 
     @Override
