@@ -9,11 +9,6 @@ import java.util.NoSuchElementException;
 
 public final class DbIterator<T> implements Iterator<T>, Iterable<T>, AutoCloseable {
 
-    @Override
-    public Iterator<T> iterator() {
-        return this;
-    }
-
     public interface ResultSetReader<T> {
         T get(Connection con, ResultSet rs) throws Exception;
     }
@@ -70,5 +65,10 @@ public final class DbIterator<T> implements Iterator<T>, Iterable<T>, AutoClosea
     @Override
     public void close() {
         DbUtils.close(rs, pstmt, con);
+    }
+
+    @Override
+    public Iterator<T> iterator() {
+        return this;
     }
 }

@@ -3,7 +3,7 @@ package nxt.db;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
-public final class FilteringIterator<T> implements Iterator<T>, AutoCloseable {
+public final class FilteringIterator<T> implements Iterator<T>, Iterable<T>, AutoCloseable {
 
     public static interface Filter<T> {
         boolean ok(T t);
@@ -85,5 +85,10 @@ public final class FilteringIterator<T> implements Iterator<T>, AutoCloseable {
     @Override
     public void remove() {
         throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Iterator<T> iterator() {
+        return this;
     }
 }
