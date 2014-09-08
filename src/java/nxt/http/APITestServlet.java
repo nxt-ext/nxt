@@ -82,6 +82,7 @@ public class APITestServlet extends HttpServlet {
             "                params += '=';\n" +
             "                params += encodeURIComponent(form.elements[i].value);\n" +
             "            }\n" +
+            "            if (window.console) { console.log('Request params: ' + params); }\n" +
             "            var request = new XMLHttpRequest();\n" +
             "            request.open(\"POST\", url, false);\n" +
             "            request.setRequestHeader(\"Content-type\", \"application/x-www-form-urlencoded\");\n" +

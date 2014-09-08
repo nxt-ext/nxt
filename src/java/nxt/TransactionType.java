@@ -1784,7 +1784,7 @@ public abstract class TransactionType {
 
             @Override
             public boolean hasRecipient() {
-                return false;
+                return true;
             }
 
         };

@@ -15,7 +15,7 @@ public final class IssueCurrency extends CreateTransaction {
     private IssueCurrency() {
         super(new APITag[] {APITag.MS, APITag.CREATE_TRANSACTION},
                 "name", "code", "description", "type", "totalSupply", "issuanceHeight", "minReservePerUnitNQT",
-                "minDifficulty", "maxDifficulty", "ruleset");
+                "minDifficulty", "maxDifficulty", "ruleset", "recipient");
     }
 
     @Override
@@ -48,9 +48,11 @@ public final class IssueCurrency extends CreateTransaction {
         byte maxDifficulty = ParameterParser.getByte(req, "maxDifficulty", (byte)0, Byte.MAX_VALUE);
         byte ruleset = ParameterParser.getByte(req, "ruleset", (byte)0, Byte.MAX_VALUE);
         Account account = ParameterParser.getSenderAccount(req);
+        long recipientId = ParameterParser.getRecipientId(req);
         Attachment attachment = new Attachment.MonetarySystemCurrencyIssuance(name, code, description, type, totalSupply,
                 issuanceHeight, minReservePerUnit, minDifficulty, maxDifficulty, ruleset);
-        return createTransaction(req, account, attachment);
+
+        return createTransaction(req, account, recipientId, (long)0, attachment);
 
     }
 }
