@@ -2,7 +2,7 @@ package nxt;
 
 import nxt.db.DbIterator;
 import nxt.db.DbKey;
-import nxt.db.EntityDbTable;
+import nxt.db.VersionedEntityDbTable;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -25,7 +25,7 @@ public class CurrencyFounder {
 
     };
 
-    public static final EntityDbTable<CurrencyFounder> currencyFounderTable = new EntityDbTable<CurrencyFounder>(currencyFounderDbKeyFactory) {
+    public static final VersionedEntityDbTable<CurrencyFounder> currencyFounderTable = new VersionedEntityDbTable<CurrencyFounder>(currencyFounderDbKeyFactory) {
 
         @Override
         protected String table() {

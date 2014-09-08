@@ -2,7 +2,6 @@ package nxt;
 
 import nxt.db.DbIterator;
 import nxt.db.DbKey;
-import nxt.db.EntityDbTable;
 import nxt.db.VersionedEntityDbTable;
 import nxt.util.Convert;
 import nxt.util.Listener;
@@ -25,7 +24,7 @@ public final class Currency {
 
     };
 
-    private static final EntityDbTable<Currency> currencyTable = new VersionedEntityDbTable<Currency>(currencyDbKeyFactory) {
+    private static final VersionedEntityDbTable<Currency> currencyTable = new VersionedEntityDbTable<Currency>(currencyDbKeyFactory) {
 
         @Override
         protected String table() {

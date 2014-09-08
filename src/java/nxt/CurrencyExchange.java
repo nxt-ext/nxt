@@ -12,7 +12,6 @@ import java.util.concurrent.ConcurrentSkipListSet;
 public final class CurrencyExchange {
 
     static {
-
         Nxt.getBlockchainProcessor().addListener(new Listener<Block>() {
             @Override
             public void notify(Block block) {
@@ -210,7 +209,8 @@ public final class CurrencyExchange {
         }
     }
 
-    static void publicateOffer(Account account, Long currencyId, long buyingRateNQT, long sellingRateNQT, long totalBuyingLimit, long totalSellingLimit, long initialBuyingSupply, long initialSellingSupply, int expirationHeight) {
+    static void publishOffer(Account account, Long currencyId, long buyingRateNQT, long sellingRateNQT, long totalBuyingLimit, long totalSellingLimit,
+                             long initialBuyingSupply, long initialSellingSupply, int expirationHeight) {
         removeOffer(currencyId, account.getId());
 
         int publicationHeight = BlockchainImpl.getInstance().getHeight();
@@ -321,12 +321,10 @@ public final class CurrencyExchange {
         }
 
         for (BuyingOffer offer : buyingOffers.get(currencyId)) {
-            if (offer.getAccountId() == accountId) {
+            if (offer.getAccountId().equals(accountId)) {
                 removeOffer(currencyId, offer);
-
                 return;
             }
         }
     }
-
 }
