@@ -19,9 +19,9 @@ public final class MSReserveClaim extends CreateTransaction {
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
         Currency currency = ParameterParser.getCurrency(req);
-        long units = ParameterParser.getLong(req, "units", 0, currency.getTotalSupply());
+        long units = ParameterParser.getLong(req, "units", 0, currency.getTotalSupply(), false);
         Account account = ParameterParser.getSenderAccount(req);
-        Attachment attachment = new Attachment.MonetarySystemReserveClaim(currency.getCurrencyId(), units);
+        Attachment attachment = new Attachment.MonetarySystemReserveClaim(currency.getId(), units);
         return createTransaction(req, account, attachment);
 
     }

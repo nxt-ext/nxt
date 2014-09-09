@@ -41,9 +41,9 @@ public final class IssueCurrency extends CreateTransaction {
         }
 
         byte type = ParameterParser.getByte(req, "type", (byte)0, (byte)(CurrencyType.getSize() - 1));
-        long totalSupply = ParameterParser.getLong(req, "totalSupply", 1, Constants.MAX_CURRENCY_TOTAL_SUPPLY);
-        int issuanceHeight = ParameterParser.getInt(req, "issuanceHeight", 0, Integer.MAX_VALUE);
-        long minReservePerUnit = ParameterParser.getLong(req, "minReservePerUnitNQT", 0, Constants.MAX_BALANCE_NQT);
+        long totalSupply = ParameterParser.getLong(req, "totalSupply", 1, Constants.MAX_CURRENCY_TOTAL_SUPPLY, false);
+        int issuanceHeight = ParameterParser.getInt(req, "issuanceHeight", 0, Integer.MAX_VALUE, false);
+        long minReservePerUnit = ParameterParser.getLong(req, "minReservePerUnitNQT", 0, Constants.MAX_BALANCE_NQT, false);
         byte minDifficulty = ParameterParser.getByte(req, "minDifficulty", (byte)0, Byte.MAX_VALUE);
         byte maxDifficulty = ParameterParser.getByte(req, "maxDifficulty", (byte)0, Byte.MAX_VALUE);
         byte ruleset = ParameterParser.getByte(req, "ruleset", (byte)0, Byte.MAX_VALUE);

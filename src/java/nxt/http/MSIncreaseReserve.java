@@ -21,7 +21,7 @@ public final class MSIncreaseReserve extends CreateTransaction {
         Currency currency = ParameterParser.getCurrency(req);
         long amountNQT = ParameterParser.getAmountNQT(req);
         Account account = ParameterParser.getSenderAccount(req);
-        Attachment attachment = new Attachment.MonetarySystemReserveIncrease(currency.getCurrencyId(), amountNQT);
+        Attachment attachment = new Attachment.MonetarySystemReserveIncrease(currency.getId(), amountNQT);
         return createTransaction(req, account, attachment);
 
     }

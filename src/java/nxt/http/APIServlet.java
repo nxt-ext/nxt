@@ -91,6 +91,7 @@ public final class APIServlet extends HttpServlet {
         map.put("getAlias", GetAlias.instance);
         map.put("getAliases", GetAliases.instance);
         map.put("getAllAssets", GetAllAssets.instance);
+        map.put("getAllCurrencies", GetAllCurrencies.instance);
         map.put("getAsset", GetAsset.instance);
         map.put("getAssets", GetAssets.instance);
         map.put("getAssetIds", GetAssetIds.instance);
@@ -100,6 +101,10 @@ public final class APIServlet extends HttpServlet {
         map.put("getBlockId", GetBlockId.instance);
         map.put("getBlockchainStatus", GetBlockchainStatus.instance);
         map.put("getConstants", GetConstants.instance);
+        map.put("getCurrency", GetCurrency.instance);
+        map.put("getCurrencys", GetCurrencies.instance);
+        map.put("getCurrencyIds", GetCurrencyIds.instance);
+        map.put("getCurrenciesByIssuer", GetCurrenciesByIssuer.instance);
         map.put("getDGSGoods", GetDGSGoods.instance);
         map.put("getDGSGood", GetDGSGood.instance);
         map.put("getDGSPurchases", GetDGSPurchases.instance);
@@ -126,6 +131,7 @@ public final class APIServlet extends HttpServlet {
         map.put("getAccountCurrentBidOrderIds", GetAccountCurrentBidOrderIds.instance);
         map.put("getAllOpenAskOrders", GetAllOpenAskOrders.instance);
         map.put("getAllOpenBidOrders", GetAllOpenBidOrders.instance);
+        map.put("getAllOffers", GetAllOffers.instance);
         map.put("getAskOrder", GetAskOrder.instance);
         map.put("getAskOrderIds", GetAskOrderIds.instance);
         map.put("getAskOrders", GetAskOrders.instance);
@@ -142,6 +148,7 @@ public final class APIServlet extends HttpServlet {
         map.put("parseTransaction", ParseTransaction.instance);
         map.put("placeAskOrder", PlaceAskOrder.instance);
         map.put("placeBidOrder", PlaceBidOrder.instance);
+        map.put("publishExchangeOffer", PublishExchangeOffer.instance);
         map.put("rsConvert", RSConvert.instance);
         map.put("readMessage", ReadMessage.instance);
         map.put("sendMessage", SendMessage.instance);

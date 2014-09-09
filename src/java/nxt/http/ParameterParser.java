@@ -58,9 +58,12 @@ final class ParameterParser {
         return value;
     }
 
-    static int getInt(HttpServletRequest req, String name, int min, int max) throws ParameterException {
+    static int getInt(HttpServletRequest req, String name, int min, int max, boolean isMandatory) throws ParameterException {
         String paramValue = Convert.emptyToNull(req.getParameter(name));
         if (paramValue == null) {
+            if (isMandatory) {
+                throw new ParameterException(missing(name));
+            }
             return 0;
         }
         int value;
@@ -75,9 +78,12 @@ final class ParameterParser {
         return value;
     }
 
-    static long getLong(HttpServletRequest req, String name, long min, long max) throws ParameterException {
+    static long getLong(HttpServletRequest req, String name, long min, long max, boolean isMandatory) throws ParameterException {
         String paramValue = Convert.emptyToNull(req.getParameter(name));
         if (paramValue == null) {
+            if (isMandatory) {
+                throw new ParameterException(missing(name));
+            }
             return 0;
         }
         long value;

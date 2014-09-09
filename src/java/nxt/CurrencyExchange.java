@@ -30,13 +30,13 @@ public final class CurrencyExchange {
         removeOffer(currencyId, account.getId());
 
         int height = BlockchainImpl.getInstance().getHeight();
-        CurrencyBuy.addOffer(
-                new CurrencyBuy(id, currencyId, account.getId(), buyRateNQT, totalBuyLimit, initialBuySupply, expirationHeight, height));
-        CurrencySell.addOffer(
-                new CurrencySell(id, currencyId, account.getId(), sellRateNQT, totalSellLimit, initialSellSupply, expirationHeight, height));
+        CurrencyBuy.addOffer(new CurrencyBuy(id, currencyId, account.getId(), buyRateNQT, totalBuyLimit, initialBuySupply,
+                expirationHeight, height));
+        CurrencySell.addOffer(new CurrencySell(id, currencyId, account.getId(), sellRateNQT, totalSellLimit, initialSellSupply,
+                expirationHeight, height));
     }
 
-    static void exchangeMoneyForNXT(Account account, Long currencyId, long rateNQT, long units) {
+    static void exchangeCurrencyForNXT(Account account, Long currencyId, long rateNQT, long units) {
         long extraAmountNQT = 0;
         long remainingUnits = units;
 
@@ -71,7 +71,7 @@ public final class CurrencyExchange {
         account.addToUnconfirmedCurrencyBalanceQNT(currencyId, remainingUnits);
     }
 
-    static void exchangeNXTForMoney(Account account, Long currencyId, long rateNQT, long units) {
+    static void exchangeNXTForCurrency(Account account, Long currencyId, long rateNQT, long units) {
         long extraUnits = 0;
         long remainingAmountNQT = Convert.safeMultiply(units, rateNQT);
 

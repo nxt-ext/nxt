@@ -147,6 +147,14 @@ public final class JSONResponses {
         NOT_ENOUGH_ASSETS = JSON.prepare(response);
     }
 
+    public static final JSONStreamAware NOT_ENOUGH_CURRENCY;
+    static {
+        JSONObject response = new JSONObject();
+        response.put("errorCode", 6);
+        response.put("errorDescription", "Not enough currency");
+        NOT_ENOUGH_CURRENCY = JSON.prepare(response);
+    }
+
     public static final JSONStreamAware ERROR_NOT_ALLOWED;
     static {
         JSONObject response = new JSONObject();

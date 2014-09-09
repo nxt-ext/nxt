@@ -82,7 +82,7 @@ public final class Currency {
                         Currency currency = currencies.next();
                         if (currency.getIssuanceHeight() > 0 && currency.getIssuanceHeight() <= block.getHeight()) {
                             if (currency.getCurrentReservePerUnitNQT() < currency.getMinReservePerUnitNQT()) {
-                                try (DbIterator<CurrencyFounder> founders = CurrencyFounder.getCurrencyFounders(currency.getCurrencyId())) {
+                                try (DbIterator<CurrencyFounder> founders = CurrencyFounder.getCurrencyFounders(currency.getId())) {
                                     while (founders.hasNext()) {
                                         CurrencyFounder founder = founders.next();
                                         Account.getAccount(founder.getAccountId()).addToBalanceAndUnconfirmedBalanceNQT(founder.getValue());
@@ -90,7 +90,7 @@ public final class Currency {
                                 }
                                 currencyTable.delete(currency);
                             }
-                            CurrencyFounder.remove(currency.getCurrencyId());
+                            CurrencyFounder.remove(currency.getId());
                         }
                     }
                 }
@@ -206,7 +206,7 @@ public final class Currency {
                 + "min_difficulty, max_difficulty, ruleset, current_supply, current_reserve_per_unit_nqt, height) "
                 + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
             int i = 0;
-            pstmt.setLong(++i, this.getCurrencyId());
+            pstmt.setLong(++i, this.getId());
             pstmt.setLong(++i, this.getAccountId());
             pstmt.setString(++i, this.getName());
             pstmt.setString(++i, this.getCode());
@@ -225,7 +225,7 @@ public final class Currency {
         }
     }
 
-    public Long getCurrencyId() {
+    public Long getId() {
         return currencyId;
     }
 

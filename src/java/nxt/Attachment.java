@@ -1904,47 +1904,47 @@ public interface Attachment extends Appendix {
     public final static class MonetarySystemExchangeOfferPublication extends AbstractAttachment {
 
         private final Long currencyId;
-        private final long buyingRateNQT;
-        private final long sellingRateNQT;
-        private final long totalBuyingLimit;
-        private final long totalSellingLimit;
-        private final long initialBuyingSupply;
-        private final long initialSellingSupply;
+        private final long buyRateNQT;
+        private final long sellRateNQT;
+        private final long totalBuyLimit;
+        private final long totalSellLimit;
+        private final long initialBuySupply;
+        private final long initialSellSupply;
         private final int expirationHeight;
 
         MonetarySystemExchangeOfferPublication(ByteBuffer buffer, byte transactionVersion) {
             super(buffer, transactionVersion);
             this.currencyId = buffer.getLong();
-            this.buyingRateNQT = buffer.getLong();
-            this.sellingRateNQT = buffer.getLong();
-            this.totalBuyingLimit = buffer.getLong();
-            this.totalSellingLimit = buffer.getLong();
-            this.initialBuyingSupply = buffer.getLong();
-            this.initialSellingSupply = buffer.getLong();
+            this.buyRateNQT = buffer.getLong();
+            this.sellRateNQT = buffer.getLong();
+            this.totalBuyLimit = buffer.getLong();
+            this.totalSellLimit = buffer.getLong();
+            this.initialBuySupply = buffer.getLong();
+            this.initialSellSupply = buffer.getLong();
             this.expirationHeight = buffer.getInt();
         }
 
         MonetarySystemExchangeOfferPublication(JSONObject attachmentData) {
             super(attachmentData);
             this.currencyId = (Long)attachmentData.get("currency");
-            this.buyingRateNQT = (Long)attachmentData.get("buyingRateNQT");
-            this.sellingRateNQT = (Long)attachmentData.get("sellingRateNQT");
-            this.totalBuyingLimit = (Long)attachmentData.get("totalBuyingLimit");
-            this.totalSellingLimit = (Long)attachmentData.get("totalSellingLimit");
-            this.initialBuyingSupply = (Long)attachmentData.get("initialBuyingSupply");
-            this.initialSellingSupply = (Long)attachmentData.get("initialSellingSupply");
+            this.buyRateNQT = (Long)attachmentData.get("buyRateNQT");
+            this.sellRateNQT = (Long)attachmentData.get("sellRateNQT");
+            this.totalBuyLimit = (Long)attachmentData.get("totalBuyLimit");
+            this.totalSellLimit = (Long)attachmentData.get("totalSellLimit");
+            this.initialBuySupply = (Long)attachmentData.get("initialBuySupply");
+            this.initialSellSupply = (Long)attachmentData.get("initialSellSupply");
             this.expirationHeight = ((Long)attachmentData.get("expirationHeight")).intValue();
         }
 
-        public MonetarySystemExchangeOfferPublication(Long currencyId, long buyingRateNQT, long sellingRateNQT, long totalBuyingLimit,
-                                                      long totalSellingLimit, long initialBuyingSupply, long initialSellingSupply, int expirationHeight) {
+        public MonetarySystemExchangeOfferPublication(Long currencyId, long buyRateNQT, long sellRateNQT, long totalBuyLimit,
+                                                      long totalSellLimit, long initialBuySupply, long initialSellSupply, int expirationHeight) {
             this.currencyId = currencyId;
-            this.buyingRateNQT = buyingRateNQT;
-            this.sellingRateNQT = sellingRateNQT;
-            this.totalBuyingLimit = totalBuyingLimit;
-            this.totalSellingLimit = totalSellingLimit;
-            this.initialBuyingSupply = initialBuyingSupply;
-            this.initialSellingSupply = initialSellingSupply;
+            this.buyRateNQT = buyRateNQT;
+            this.sellRateNQT = sellRateNQT;
+            this.totalBuyLimit = totalBuyLimit;
+            this.totalSellLimit = totalSellLimit;
+            this.initialBuySupply = initialBuySupply;
+            this.initialSellSupply = initialSellSupply;
             this.expirationHeight = expirationHeight;
         }
 
@@ -1961,24 +1961,24 @@ public interface Attachment extends Appendix {
         @Override
         void putMyBytes(ByteBuffer buffer) {
             buffer.putLong(currencyId);
-            buffer.putLong(buyingRateNQT);
-            buffer.putLong(sellingRateNQT);
-            buffer.putLong(totalBuyingLimit);
-            buffer.putLong(totalSellingLimit);
-            buffer.putLong(initialBuyingSupply);
-            buffer.putLong(initialSellingSupply);
+            buffer.putLong(buyRateNQT);
+            buffer.putLong(sellRateNQT);
+            buffer.putLong(totalBuyLimit);
+            buffer.putLong(totalSellLimit);
+            buffer.putLong(initialBuySupply);
+            buffer.putLong(initialSellSupply);
             buffer.putInt(expirationHeight);
         }
 
         @Override
         void putMyJSON(JSONObject attachment) {
             attachment.put("currency", Convert.toUnsignedLong(currencyId));
-            attachment.put("buyingRateNQT", buyingRateNQT);
-            attachment.put("sellingRateNQT", sellingRateNQT);
-            attachment.put("totalBuyingLimit", totalBuyingLimit);
-            attachment.put("totalSellingLimit", totalSellingLimit);
-            attachment.put("initialBuyingSupply", initialBuyingSupply);
-            attachment.put("initialSellingSupply", initialSellingSupply);
+            attachment.put("buyRateNQT", buyRateNQT);
+            attachment.put("sellRateNQT", sellRateNQT);
+            attachment.put("totalBuyLimit", totalBuyLimit);
+            attachment.put("totalSellLimit", totalSellLimit);
+            attachment.put("initialBuySupply", initialBuySupply);
+            attachment.put("initialSellSupply", initialSellSupply);
             attachment.put("expirationHeight", expirationHeight);
         }
 
@@ -1991,28 +1991,28 @@ public interface Attachment extends Appendix {
             return currencyId;
         }
 
-        public long getBuyingRateNQT() {
-            return buyingRateNQT;
+        public long getBuyRateNQT() {
+            return buyRateNQT;
         }
 
-        public long getSellingRateNQT() {
-            return sellingRateNQT;
+        public long getSellRateNQT() {
+            return sellRateNQT;
         }
 
-        public long getTotalBuyingLimit() {
-            return totalBuyingLimit;
+        public long getTotalBuyLimit() {
+            return totalBuyLimit;
         }
 
-        public long getTotalSellingLimit() {
-            return totalSellingLimit;
+        public long getTotalSellLimit() {
+            return totalSellLimit;
         }
 
-        public long getInitialBuyingSupply() {
-            return initialBuyingSupply;
+        public long getInitialBuySupply() {
+            return initialBuySupply;
         }
 
-        public long getInitialSellingSupply() {
-            return initialSellingSupply;
+        public long getInitialSellSupply() {
+            return initialSellSupply;
         }
 
         public int getExpirationHeight() {
