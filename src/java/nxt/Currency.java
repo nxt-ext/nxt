@@ -100,9 +100,16 @@ public final class Currency {
     }
 
     static void addNXTCurrency() {
-        Db.beginTransaction();
-        addCurrency(0L, Genesis.GENESIS_BLOCK_ID, "Nxt", "NXT", "", (byte) 0, Constants.MAX_BALANCE_NQT, 0, 1, (byte) 0, (byte) 0, (byte) 0, Constants.MAX_BALANCE_NQT, 0);
-        Db.endTransaction();
+        try {
+            Db.beginTransaction();
+            addCurrency(0L, Genesis.GENESIS_BLOCK_ID, "Nxt", "NXT", "", (byte) 0, Constants.MAX_BALANCE_NQT, 0, 1, (byte) 0, (byte) 0, (byte) 0, Constants.MAX_BALANCE_NQT, 0);
+            Db.commitTransaction();
+        } catch (Exception e) {
+            Db.rollbackTransaction();
+            throw e;
+        } finally {
+            Db.endTransaction();
+        }
     }
 
     static void addCurrency(Long currencyId, Long accountId, String name, String code, String description, byte type, long totalSupply, int issuanceHeight, long minReservePerUnitNQT, byte minDifficulty, byte maxDifficulty, byte ruleset, long currentSupply, long currentReservePerUnitNQT) {
