@@ -1723,7 +1723,11 @@ public abstract class TransactionType {
 
             @Override
             boolean isDuplicate(Transaction transaction, Map<TransactionType, Set<String>> duplicates) {
-                return true; // TODO: cfb: @JLP, how is it better to check duplicates of NAMES and CODES if the same NAME and CODE is allowed?
+                // @TODO verify with cfb & jlp
+                Attachment.MonetarySystemCurrencyIssuance attachment = (Attachment.MonetarySystemCurrencyIssuance)transaction.getAttachment();
+                boolean isDuplicate = TransactionType.isDuplicate(CURRENCY_ISSUANCE, attachment.getName(), duplicates);
+                isDuplicate = isDuplicate || TransactionType.isDuplicate(CURRENCY_ISSUANCE, attachment.getCode(), duplicates);
+                return isDuplicate;
             }
 
             @Override

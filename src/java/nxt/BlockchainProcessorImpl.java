@@ -641,12 +641,6 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
 
                     digest.update(transaction.getBytes());
 
-                	if (calculatedTotalAmount != block.getTotalAmountNQT() || calculatedTotalFee != block.getTotalFeeNQT()) {
-                    	throw new BlockNotAcceptedException("Total amount or fee don't match transaction totals");
-	                }
-    	            if (!Arrays.equals(digest.digest(), block.getPayloadHash())) {
-        	            throw new BlockNotAcceptedException("Payload hash doesn't match");
-            	    }
                 }
 
                 if (calculatedTotalAmount != block.getTotalAmountNQT() || calculatedTotalFee != block.getTotalFeeNQT()) {
@@ -683,6 +677,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     Logger.logMessage("Error pushing block " + block.getStringId() + " at blockchain height " + previousLastBlock.getHeight() + " , will rollback", e);
                 }
                 */
+                Logger.logErrorMessage("pushBlock failed", e);
                 Db.rollbackTransaction();
                 blockchain.setLastBlock(previousLastBlock);
                 throw e;

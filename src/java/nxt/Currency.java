@@ -100,6 +100,9 @@ public final class Currency {
     }
 
     static void addNXTCurrency() {
+        if (isCodeSquatted("NXT")) {
+            return;
+        }
         try {
             Db.beginTransaction();
             addCurrency(0L, Genesis.GENESIS_BLOCK_ID, "Nxt", "NXT", "", (byte) 0, Constants.MAX_BALANCE_NQT, 0, 1, (byte) 0, (byte) 0, (byte) 0, Constants.MAX_BALANCE_NQT, 0);

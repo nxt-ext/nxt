@@ -212,6 +212,9 @@ public final class APIServlet extends HttpServlet {
             } catch (NxtException |RuntimeException e) {
                 Logger.logDebugMessage("Error processing API request", e);
                 response = ERROR_INCORRECT_REQUEST;
+            } catch (ExceptionInInitializerError err) {
+                Logger.logErrorMessage("Initialization Error", (Exception)err.getCause());
+                response = ERROR_INCORRECT_REQUEST;
             }
 
         } finally {
