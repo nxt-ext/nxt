@@ -136,8 +136,8 @@ final class BlockDb {
         try {
             try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO block (id, version, timestamp, previous_block_id, "
                     + "total_amount, total_fee, payload_length, generator_public_key, previous_block_hash, cumulative_difficulty, "
-                    + "base_target, next_block_id, height, generation_signature, block_signature, payload_hash, generator_id) "
-                    + " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
+                    + "base_target, height, generation_signature, block_signature, payload_hash, generator_id) "
+                    + " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
                 int i = 0;
                 pstmt.setLong(++i, block.getId());
                 pstmt.setInt(++i, block.getVersion());
@@ -150,7 +150,6 @@ final class BlockDb {
                 pstmt.setBytes(++i, block.getPreviousBlockHash());
                 pstmt.setBytes(++i, block.getCumulativeDifficulty().toByteArray());
                 pstmt.setLong(++i, block.getBaseTarget());
-                DbUtils.setLong(pstmt, ++i, block.getNextBlockId());
                 pstmt.setInt(++i, block.getHeight());
                 pstmt.setBytes(++i, block.getGenerationSignature());
                 pstmt.setBytes(++i, block.getBlockSignature());
