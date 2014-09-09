@@ -2,6 +2,7 @@ package nxt;
 
 import nxt.crypto.EncryptedData;
 import nxt.util.Convert;
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 import java.nio.ByteBuffer;
@@ -191,7 +192,7 @@ public interface Appendix {
 
         private AbstractEncryptedMessage(JSONObject attachmentJSON, JSONObject encryptedMessageJSON) throws NxtException.NotValidException {
             super(attachmentJSON);
-            byte[] data = Convert.parseHexString((String)encryptedMessageJSON.get("data"));
+            byte[] data = Convert.parseHexString((String) encryptedMessageJSON.get("data"));
             byte[] nonce = Convert.parseHexString((String)encryptedMessageJSON.get("nonce"));
             this.encryptedData = new EncryptedData(data, nonce);
             this.isText = Boolean.TRUE.equals(encryptedMessageJSON.get("isText"));
@@ -258,7 +259,7 @@ public interface Appendix {
         }
 
         EncryptedMessage(JSONObject attachmentData) throws NxtException.NotValidException {
-            super(attachmentData, (JSONObject)attachmentData.get("encryptedMessage"));
+            super(attachmentData, (JSONObject) attachmentData.get("encryptedMessage"));
         }
 
         public EncryptedMessage(EncryptedData encryptedData, boolean isText) {
@@ -415,11 +416,31 @@ public interface Appendix {
 
     public static class TwoPhased extends AbstractAppendix {
         static TwoPhased parse(JSONObject attachmentData) throws NxtException.NotValidException {
-            return null;
+            return new TwoPhased(attachmentData);
         }
 
-        TwoPhased(ByteBuffer buffer, byte transactionVersion) {}
-        TwoPhased(JSONObject attachmentData) {}
+        private final int maxHeight;
+        private final long consensusThreshold;
+        private final long voteThreshold;
+        private final byte votingModel;
+        private final Long[] possibleVoters;
+
+        /*TwoPhased(ByteBuffer buffer, byte transactionVersion) {
+
+        } */
+
+        TwoPhased(JSONObject attachmentData) throws NxtException.NotValidException {
+            super(attachmentData);
+            maxHeight = (Integer)attachmentData.get("maxHeight");
+            consensusThreshold = (Long)attachmentData.get("consensusThreshold");
+            voteThreshold = (Long)attachmentData.get("voteThreshold");
+            votingModel = (Byte)attachmentData.get("votingModel");
+            JSONArray pvArr = (JSONArray)(attachmentData.get("possibleVoters"));
+            possibleVoters = new Long[pvArr.size()];
+            for (int i = 0; i < possibleVoters.length; i++) {
+                possibleVoters[i] = (Long) pvArr.get(i);
+            }
+        }
 
         @Override
         String getAppendixName() {
