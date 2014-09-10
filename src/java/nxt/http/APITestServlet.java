@@ -35,6 +35,17 @@ public class APITestServlet extends HttpServlet {
             "        .result {white-space: pre; font-family: monospace; overflow: auto;}\n" +
             "    </style>\n" +
             "    <script type=\"text/javascript\">\n" +
+            "        var apiCalls;\n" +
+            "        function performSearch(searchStr) {\n" +
+            "            $('.api-call-All').hide();\n" +
+            "            $('.topic-link').css('font-weight', 'normal');\n" +
+            "            for(var i=0; i<apiCalls.length; i++) {\n" +
+            "                var apiCall = apiCalls[i];\n" +
+            "                if (new RegExp(searchStr.toLowerCase()).test(apiCall.toLowerCase())) {\n" +
+            "                    $('#api-call-' + apiCall).show();\n" +
+            "                }\n" +
+            "            }\n" +
+            "        }\n" +
             "        function submitForm(form) {\n" +
             "            var url = '/nxt';\n" +
             "            var params = {};\n" +
@@ -88,7 +99,7 @@ public class APITestServlet extends HttpServlet {
             "  <div  class=\"col-xs-8 col-sm-9 col-md-10\">" +
             "    <div class=\"panel-group\" id=\"accordion\">";
 
-    private static final String footer =
+    private static final String footer1 =
             "    </div> <!-- panel-group -->" +
             "  </div> <!-- col -->" +
             "</div> <!-- row -->" +
@@ -96,10 +107,18 @@ public class APITestServlet extends HttpServlet {
             "<script src=\"js/3rdparty/jquery.js\"></script>" +
             "<script src=\"js/3rdparty/bootstrap.js\" type=\"text/javascript\"></script>" +
             "<script>" + 
-            "  $(document).ready(function() {" + 
+            "  $(document).ready(function() {" +
+            "    apiCalls = [];\n";
+
+    private static final String footer2 =
             "    $(\".collapse-link\").click(function(event) {" +
             "       event.preventDefault();" +    
             "    });" +
+            "    $('#search').keyup(function(e) {\n" +
+            "      if (e.keyCode == 13 && $(this).val().length > 0) {\n" +
+            "        performSearch($(this).val());\n" +
+            "      }\n" +
+            "    });\n" +
             "  });" + 
             "</script>" +
             "</body>\n" +
@@ -158,24 +177,30 @@ public class APITestServlet extends HttpServlet {
             writer.print(header2);
             String requestType = Convert.nullToEmpty(req.getParameter("requestType"));
             APIServlet.APIRequestHandler requestHandler = APIServlet.apiRequestHandlers.get(requestType);
+            StringBuilder bufJSCalls = new StringBuilder();
             if (requestHandler != null) {
                 writer.print(form(requestType, true, requestHandler.getClass().getName(), requestHandler.getParameters()));
+                bufJSCalls.append("apiCalls.push(\"").append(requestType).append("\");\n");
             } else {
                 String requestTag = Convert.nullToEmpty(req.getParameter("requestTag"));
                 Set<String> taggedTypes = requestTags.get(requestTag);
                 for (String type : (taggedTypes != null ? taggedTypes : allRequestTypes)) {
                     requestHandler = APIServlet.apiRequestHandlers.get(type);
                     writer.print(form(type, false, requestHandler.getClass().getName(), APIServlet.apiRequestHandlers.get(type).getParameters()));
+                    bufJSCalls.append("apiCalls.push(\"").append(type).append("\");\n");
                 }
             }
-            writer.print(footer);
+            writer.print(footer1);
+            writer.print(bufJSCalls.toString());
+            writer.print(footer2);
         }
 
     }
 
     private static String form(String requestType, boolean singleView, String className, List<String> parameters) {
         StringBuilder buf = new StringBuilder();
-        buf.append("<div class=\"panel panel-default\">");
+        buf.append("<div class=\"panel panel-default api-call-All\" ");
+        buf.append("id=\"api-call-").append(requestType).append("\">");
         buf.append("<div class=\"panel-heading\">");
         buf.append("<h4 class=\"panel-title\">");
         buf.append("<a data-toggle=\"collapse\" class=\"collapse-link\" data-target=\"#collapse").append(requestType).append("\" href=\"#\">");
