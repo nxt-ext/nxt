@@ -4,6 +4,7 @@ import nxt.crypto.Crypto;
 import nxt.db.Db;
 import nxt.db.DbIterator;
 import nxt.db.DerivedDbTable;
+import nxt.db.FilteringIterator;
 import nxt.peer.Peer;
 import nxt.peer.Peers;
 import nxt.util.Convert;
@@ -33,7 +34,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
-import java.util.TreeSet;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 final class BlockchainProcessorImpl implements BlockchainProcessor {
@@ -653,31 +653,11 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 block.setPrevious(previousLastBlock);
                 blockListeners.notify(block, Event.BEFORE_BLOCK_ACCEPT);
                 addBlock(block);
-
-                Set<TransactionImpl> unappliedUnconfirmed = transactionProcessor.undoAllUnconfirmed();
-                for (TransactionImpl transaction : block.getTransactions()) {
-                    if (transaction.applyUnconfirmed()) {
-                        unappliedUnconfirmed.remove(transaction);
-                    } else {
-                        throw new TransactionNotAcceptedException("Double spending transaction: " + transaction.getStringId(), transaction);
-                    }
-                }
-                transactionProcessor.applyUnconfirmed(unappliedUnconfirmed);
-
-                blockListeners.notify(block, Event.BEFORE_BLOCK_APPLY);
-                block.apply();
-                blockListeners.notify(block, Event.AFTER_BLOCK_APPLY);
+                accept(block);
                 blockListeners.notify(block, Event.BLOCK_PUSHED);
-                transactionProcessor.updateUnconfirmedTransactions(block);
 
                 Db.commitTransaction();
             } catch (Exception e) {
-                /*
-                if (! (e instanceof BlockOutOfOrderException)) {
-                    Logger.logMessage("Error pushing block " + block.getStringId() + " at blockchain height " + previousLastBlock.getHeight() + " , will rollback", e);
-                }
-                */
-                Logger.logErrorMessage("pushBlock failed", e);
                 Db.rollbackTransaction();
                 blockchain.setLastBlock(previousLastBlock);
                 throw e;
@@ -690,6 +670,23 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             Peers.sendToSomePeers(block);
         }
 
+    }
+
+    private void accept(BlockImpl block) throws TransactionNotAcceptedException {
+        TransactionProcessorImpl transactionProcessor = TransactionProcessorImpl.getInstance();
+        Set<TransactionImpl> unappliedUnconfirmed = transactionProcessor.undoAllUnconfirmed();
+        for (TransactionImpl transaction : block.getTransactions()) {
+            if (transaction.applyUnconfirmed()) {
+                unappliedUnconfirmed.remove(transaction);
+            } else {
+                throw new TransactionNotAcceptedException("Double spending transaction: " + transaction.getStringId(), transaction);
+            }
+        }
+        transactionProcessor.applyUnconfirmed(unappliedUnconfirmed);
+        blockListeners.notify(block, Event.BEFORE_BLOCK_APPLY);
+        block.apply();
+        blockListeners.notify(block, Event.AFTER_BLOCK_APPLY);
+        transactionProcessor.updateUnconfirmedTransactions(block);
     }
 
     private List<BlockImpl> popOffTo(Block commonBlock) {
@@ -751,13 +748,16 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
     boolean generateBlock(String secretPhrase, int blockTimestamp) {
 
         TransactionProcessorImpl transactionProcessor = TransactionProcessorImpl.getInstance();
-        Set<TransactionImpl> sortedTransactions = new TreeSet<>();
-        try (DbIterator<TransactionImpl> transactions = transactionProcessor.getAllUnconfirmedTransactions()) {
-            while (transactions.hasNext()) {
-                TransactionImpl transaction = transactions.next();
-                if (hasAllReferencedTransactions(transaction, transaction.getTimestamp(), 0)) {
-                    sortedTransactions.add(transaction);
-                }
+        List<TransactionImpl> sortedTransactions = new ArrayList<>();
+        try (FilteringIterator<TransactionImpl> transactions = new FilteringIterator<>(transactionProcessor.getAllUnconfirmedTransactions(),
+                new FilteringIterator.Filter<TransactionImpl>() {
+                    @Override
+                    public boolean ok(TransactionImpl transaction) {
+                        return hasAllReferencedTransactions(transaction, transaction.getTimestamp(), 0);
+                    }
+                })) {
+            for (TransactionImpl transaction : transactions) {
+                sortedTransactions.add(transaction);
             }
         }
 
@@ -977,20 +977,8 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                             }
                             blockListeners.notify(currentBlock, Event.BEFORE_BLOCK_ACCEPT);
                             blockchain.setLastBlock(currentBlock);
-                            Set<TransactionImpl> unappliedUnconfirmed = transactionProcessor.undoAllUnconfirmed();
-                            for (TransactionImpl transaction : currentBlock.getTransactions()) {
-                                if (transaction.applyUnconfirmed()) {
-                                    unappliedUnconfirmed.remove(transaction);
-                                } else {
-                                    throw new TransactionNotAcceptedException("Double spending transaction: " + transaction.getStringId(), transaction);
-                                }
-                            }
-                            transactionProcessor.applyUnconfirmed(unappliedUnconfirmed);
-                            blockListeners.notify(currentBlock, Event.BEFORE_BLOCK_APPLY);
-                            currentBlock.apply();
-                            blockListeners.notify(currentBlock, Event.AFTER_BLOCK_APPLY);
+                            accept(currentBlock);
                             blockListeners.notify(currentBlock, Event.BLOCK_SCANNED);
-                            transactionProcessor.updateUnconfirmedTransactions(currentBlock);
                             currentBlockId = currentBlock.getNextBlockId();
                             Db.commitTransaction();
                         } catch (NxtException | RuntimeException e) {

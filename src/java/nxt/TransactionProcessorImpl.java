@@ -52,7 +52,9 @@ final class TransactionProcessorImpl implements TransactionProcessor {
         protected TransactionImpl load(Connection con, ResultSet rs) throws SQLException {
             byte[] transactionBytes = rs.getBytes("transaction_bytes");
             try {
-                return TransactionImpl.parseTransaction(transactionBytes);
+                TransactionImpl transaction = TransactionImpl.parseTransaction(transactionBytes);
+                transaction.setHeight(rs.getInt("transaction_height"));
+                return transaction;
             } catch (NxtException.ValidationException e) {
                 throw new RuntimeException(e.toString(), e);
             }
@@ -60,10 +62,14 @@ final class TransactionProcessorImpl implements TransactionProcessor {
 
         @Override
         protected void save(Connection con, TransactionImpl transaction) throws SQLException {
-            try (PreparedStatement pstmt = con.prepareStatement("MERGE INTO unconfirmed_transaction (id, expiration, transaction_bytes, height, latest) "
-                    + "KEY (id, height) VALUES (?, ?, ?, ?, TRUE)")) {
+            try (PreparedStatement pstmt = con.prepareStatement("MERGE INTO unconfirmed_transaction (id, transaction_height, "
+                    + "fee_per_byte, timestamp, expiration, transaction_bytes, height, latest) "
+                    + "KEY (id, height) VALUES (?, ?, ?, ?, ?, ?, ?, TRUE)")) {
                 int i = 0;
                 pstmt.setLong(++i, transaction.getId());
+                pstmt.setInt(++i, transaction.getHeight());
+                pstmt.setLong(++i, transaction.getFeeNQT() / transaction.getSize());
+                pstmt.setInt(++i, transaction.getTimestamp());
                 pstmt.setInt(++i, transaction.getExpiration());
                 pstmt.setBytes(++i, transaction.getBytes());
                 pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
@@ -92,6 +98,11 @@ final class TransactionProcessorImpl implements TransactionProcessor {
             }
             super.rollback(height);
             TransactionProcessorImpl.this.processLater(transactions);
+        }
+
+        @Override
+        protected String defaultSort() {
+            return " ORDER BY transaction_height ASC, fee_per_byte DESC, timestamp ASC, id ASC ";
         }
 
     };
