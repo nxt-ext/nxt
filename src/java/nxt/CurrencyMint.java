@@ -91,7 +91,7 @@ public final class CurrencyMint {
     }
 
 
-    static void mintMoney(Account account, long nonce, Long currencyId, int units, int counter) {
+    static void mintMoney(Account account, long nonce, Long currencyId, long units, long counter) {
         Connection con = null;
         CurrencyMint currencyMint;
         try {
@@ -109,12 +109,12 @@ public final class CurrencyMint {
             return;
         }
 
-        ByteBuffer buffer = ByteBuffer.allocate(8 + 8 + 4 + 4 + 8);
+        ByteBuffer buffer = ByteBuffer.allocate(8 + 8 + 8 + 8 + 8);
         buffer.order(ByteOrder.LITTLE_ENDIAN);
         buffer.putLong(nonce);
         buffer.putLong(currencyId);
-        buffer.putInt(units);
-        buffer.putInt(counter);
+        buffer.putLong(units);
+        buffer.putLong(counter);
         buffer.putLong(account.getId());
         byte[] hash = new byte[32];
         KNV.hash(buffer.array(), 0, buffer.array().length, hash, 0);
@@ -122,7 +122,7 @@ public final class CurrencyMint {
         if (new BigInteger(hash).compareTo(getCurrencyDifficulty(currencyId)) >= 0) {
             currencyMintTable.insert(new CurrencyMint(currencyId, account.getId(), counter));
             Currency currency = Currency.getCurrency(currencyId);
-            units = (int)Math.min((long)units, currency.getTotalSupply() - currency.getCurrentSupply());
+            units = Math.min(units, currency.getTotalSupply() - currency.getCurrentSupply());
             account.addToCurrencyAndUnconfirmedCurrencyBalanceQNT(currencyId, units);
             currency.increaseSupply(units);
         }

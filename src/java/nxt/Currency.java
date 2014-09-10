@@ -10,7 +10,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.List;
 
 @SuppressWarnings("UnusedDeclaration")
 public final class Currency {
@@ -283,14 +282,12 @@ public final class Currency {
         account.addToBalanceAndUnconfirmedBalanceNQT(Convert.safeMultiply(units, currency.currentReservePerUnitNQT));
     }
 
-    public static void transferMoney(Account account, List<Attachment.MonetarySystemMoneyTransfer.Entry> entries) {
-        for (Attachment.MonetarySystemMoneyTransfer.Entry entry : entries) {
-            account.addToCurrencyBalanceQNT(entry.getCurrencyId(), -entry.getUnits());
-            Account.addOrGetAccount(entry.getRecipientId()).addToCurrencyAndUnconfirmedCurrencyBalanceQNT(entry.getCurrencyId(), entry.getUnits());
-        }
+    public static void transferMoney(Account account, long recipientId, long currencyId, long units) {
+        account.addToCurrencyBalanceQNT(currencyId, -units);
+        Account.addOrGetAccount(recipientId).addToCurrencyAndUnconfirmedCurrencyBalanceQNT(currencyId, units);
     }
 
-    public void increaseSupply(int units) {
+    public void increaseSupply(long units) {
         currentSupply += units;
         currencyTable.insert(this);
     }

@@ -8,8 +8,6 @@ import org.json.simple.JSONObject;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
 
 public interface Attachment extends Appendix {
 
@@ -1776,65 +1774,28 @@ public interface Attachment extends Appendix {
 
     public final static class MonetarySystemMoneyTransfer extends AbstractAttachment {
 
-        public static final class Entry {
-
-            private final Long recipientId;
-            private final Long currencyId;
-            private final long units;
-
-            public Entry(Long recipientId, Long currencyId, long units) {
-                this.recipientId = recipientId;
-                this.currencyId = currencyId;
-                this.units = units;
-            }
-
-            public Long getRecipientId() {
-                return recipientId;
-            }
-
-            public Long getCurrencyId() {
-                return currencyId;
-            }
-
-            public long getUnits() {
-                return units;
-            }
-
-        }
-
-        private final List<Entry> entries;
-        private final String comment;
+        private final Long recipientId;
+        private final Long currencyId;
+        private final long units;
 
         MonetarySystemMoneyTransfer(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
             super(buffer, transactionVersion);
-            this.entries = new LinkedList<>();
-            short numberOfEntries = buffer.getShort();
-            for (int i = 0; i < numberOfEntries; i++) {
-                Long recipientId = buffer.getLong();
-                Long currencyId = buffer.getLong();
-                long units = buffer.getLong();
-                entries.add(new Attachment.MonetarySystemMoneyTransfer.Entry(recipientId, currencyId, units));
-            }
-            this.comment = Convert.readString(buffer, buffer.getShort(), Constants.MAX_MONEY_TRANSFER_COMMENT_LENGTH);
+            this.recipientId = buffer.getLong();
+            this.currencyId = buffer.getLong();
+            this.units = buffer.getLong();
         }
 
         MonetarySystemMoneyTransfer(JSONObject attachmentData) {
             super(attachmentData);
-            this.entries = new LinkedList<>();
-            JSONArray entriesArray = (JSONArray)attachmentData.get("transfers");
-            for (int i = 0; i < entriesArray.size(); i++) {
-                JSONObject entryObject = (JSONObject)entriesArray.get(i);
-                Long recipientId = (Long)entryObject.get("recipient");
-                Long currencyId = (Long)entryObject.get("currency");
-                long units = (Long)entryObject.get("units");
-                entries.add(new Attachment.MonetarySystemMoneyTransfer.Entry(recipientId, currencyId, units));
-            }
-            this.comment = (String)attachmentData.get("comment");
+            this.recipientId = (Long)attachmentData.get("recipient");
+            this.currencyId = (Long)attachmentData.get("currency");
+            this.units = (Long)attachmentData.get("units");
         }
 
-        public MonetarySystemMoneyTransfer(List<Entry> entries, String comment) {
-            this.entries = entries;
-            this.comment = Convert.nullToEmpty(comment);
+        public MonetarySystemMoneyTransfer(long recipientId, long currencyId, long units) {
+            this.recipientId = recipientId;
+            this.currencyId = currencyId;
+            this.units = units;
         }
 
         @Override
@@ -1844,34 +1805,21 @@ public interface Attachment extends Appendix {
 
         @Override
         int getMySize() {
-            return 2 + entries.size() * (8 + 8 + 8) + 2 + Convert.toBytes(comment).length;
+            return 8 + 8 + 8;
         }
 
         @Override
         void putMyBytes(ByteBuffer buffer) {
-            byte[] comment = Convert.toBytes(this.comment);
-            buffer.putShort((short)entries.size());
-            for (Entry entry : entries) {
-                buffer.putLong(entry.getRecipientId());
-                buffer.putLong(entry.getCurrencyId());
-                buffer.putLong(entry.getUnits());
-            }
-            buffer.putShort((short)comment.length);
-            buffer.put(comment);
+            buffer.putLong(getRecipientId());
+            buffer.putLong(getCurrencyId());
+            buffer.putLong(getUnits());
         }
 
         @Override
         void putMyJSON(JSONObject attachment) {
-            JSONArray entriesArray = new JSONArray();
-            for (Entry entry : entries) {
-                JSONObject entryObject = new JSONObject();
-                entryObject.put("recipient", Convert.toUnsignedLong(entry.getRecipientId()));
-                entryObject.put("currency", Convert.toUnsignedLong(entry.getCurrencyId()));
-                entryObject.put("units", entry.getUnits());
-                entriesArray.add(entryObject);
-            }
-            attachment.put("transfers", entriesArray);
-            attachment.put("comment", comment);
+            attachment.put("recipient", Convert.toUnsignedLong(getRecipientId()));
+            attachment.put("currency", Convert.toUnsignedLong(getCurrencyId()));
+            attachment.put("units", getUnits());
         }
 
         @Override
@@ -1879,26 +1827,17 @@ public interface Attachment extends Appendix {
             return TransactionType.MonetarySystem.MONEY_TRANSFER;
         }
 
-        public List<Entry> getEntries() {
-            return entries;
+        public Long getRecipientId() {
+            return recipientId;
         }
 
-        public int getNumberOfEntries() {
-            return entries.size();
+        public Long getCurrencyId() {
+            return currencyId;
         }
 
-        public Entry getEntry(int index) {
-            return entries.get(index);
+        public long getUnits() {
+            return units;
         }
-
-        public String getComment() {
-            return comment;
-        }
-
-        public List<Entry> getTransfers() {
-            return entries;
-        }
-
     }
 
     public final static class MonetarySystemExchangeOfferPublication extends AbstractAttachment {
@@ -2088,7 +2027,7 @@ public interface Attachment extends Appendix {
             return units;
         }
 
-        public boolean isPurchase() {
+        public boolean isBuy() {
             return units > 0;
         }
 
@@ -2098,26 +2037,26 @@ public interface Attachment extends Appendix {
 
         private final long nonce;
         private final Long currencyId;
-        private final int units;
-        private final int counter;
+        private final long units;
+        private final long counter;
 
         MonetarySystemMoneyMinting(ByteBuffer buffer, byte transactionVersion) {
             super(buffer, transactionVersion);
             this.nonce = buffer.getLong();
             this.currencyId = buffer.getLong();
-            this.units = buffer.getInt();
-            this.counter = buffer.getInt();
+            this.units = buffer.getLong();
+            this.counter = buffer.getLong();
         }
 
         MonetarySystemMoneyMinting(JSONObject attachmentData) {
             super(attachmentData);
             this.nonce = (Long)attachmentData.get("nonce");
             this.currencyId = (Long)attachmentData.get("currency");
-            this.units = ((Long)attachmentData.get("units")).intValue();
-            this.counter = ((Long)attachmentData.get("counter")).intValue();
+            this.units = (Long)attachmentData.get("units");
+            this.counter = (Long)attachmentData.get("counter");
         }
 
-        public MonetarySystemMoneyMinting(long nonce, Long currencyId, int units, int counter) {
+        public MonetarySystemMoneyMinting(long nonce, Long currencyId, long units, long counter) {
             this.nonce = nonce;
             this.currencyId = currencyId;
             this.units = units;
@@ -2131,15 +2070,15 @@ public interface Attachment extends Appendix {
 
         @Override
         int getMySize() {
-            return 8 + 8 + 4 + 4;
+            return 8 + 8 + 8 + 8;
         }
 
         @Override
         void putMyBytes(ByteBuffer buffer) {
             buffer.putLong(nonce);
             buffer.putLong(currencyId);
-            buffer.putInt(units);
-            buffer.putInt(counter);
+            buffer.putLong(units);
+            buffer.putLong(counter);
         }
 
         @Override
@@ -2163,11 +2102,11 @@ public interface Attachment extends Appendix {
             return currencyId;
         }
 
-        public int getUnits() {
+        public long getUnits() {
             return units;
         }
 
-        public int getCounter() {
+        public long getCounter() {
             return counter;
         }
 

@@ -67,6 +67,8 @@ public final class APIServlet extends HttpServlet {
         map.put("cancelBidOrder", CancelBidOrder.instance);
         map.put("castVote", CastVote.instance);
         map.put("createPoll", CreatePoll.instance);
+        map.put("currencyExchange", CurrencyExchange.instance);
+        map.put("currencyMint", CurrencyMint.instance);
         map.put("decryptFrom", DecryptFrom.instance);
         map.put("dgsListing", DGSListing.instance);
         map.put("dgsDelisting", DGSDelisting.instance);
@@ -160,6 +162,7 @@ public final class APIServlet extends HttpServlet {
         map.put("stopForging", StopForging.instance);
         map.put("getForging", GetForging.instance);
         map.put("transferAsset", TransferAsset.instance);
+        map.put("transferCurrency", TransferCurrency.instance);
 
         if (API.enableDebugAPI) {
             map.put("fullReset", FullReset.instance);
@@ -220,7 +223,7 @@ public final class APIServlet extends HttpServlet {
                 Logger.logDebugMessage("Error processing API request", e);
                 response = ERROR_INCORRECT_REQUEST;
             } catch (ExceptionInInitializerError err) {
-                Logger.logErrorMessage("Initialization Error", (Exception)err.getCause());
+                Logger.logErrorMessage("Initialization Error", (Exception) err.getCause());
                 response = ERROR_INCORRECT_REQUEST;
             }
 
