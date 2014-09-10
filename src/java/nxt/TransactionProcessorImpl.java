@@ -106,18 +106,21 @@ final class TransactionProcessorImpl implements TransactionProcessor {
         public void run() {
 
             try {
-                try (Connection con = Db.getConnection();
-                     PreparedStatement pstmt = con.prepareStatement("SELECT MIN(height) AS height FROM unconfirmed_transaction "
-                             + "WHERE expiration < ?")) {
-                    pstmt.setInt(1, Convert.getEpochTime());
-                    try (ResultSet rs = pstmt.executeQuery()) {
-                        if (rs.next()) {
-                            int height = rs.getInt("height");
-                            if (!rs.wasNull()) {
-                                Logger.logDebugMessage("Transaction accepted at height " + height + " expired, will rescan");
-                                Nxt.getBlockchainProcessor().scan(height);
+                try {
+                    int minHeight = 0;
+                    try (Connection con = Db.getConnection();
+                         PreparedStatement pstmt = con.prepareStatement("SELECT MIN(height) AS min_height FROM unconfirmed_transaction "
+                                 + "WHERE expiration < ?")) {
+                        pstmt.setInt(1, Convert.getEpochTime());
+                        try (ResultSet rs = pstmt.executeQuery()) {
+                            if (rs.next()) {
+                                minHeight = rs.getInt("min_height");
                             }
                         }
+                    }
+                    if (minHeight > 0) {
+                        Logger.logDebugMessage("Transaction accepted at height " + minHeight + " expired, will rescan");
+                        Nxt.getBlockchainProcessor().scan(minHeight);
                     }
                 } catch (Exception e) {
                     Logger.logDebugMessage("Error removing unconfirmed transactions", e);
