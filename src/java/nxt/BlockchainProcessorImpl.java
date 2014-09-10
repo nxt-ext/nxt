@@ -692,12 +692,16 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
     }
 
     private List<BlockImpl> popOffTo(Block commonBlock) {
-        List<BlockImpl> poppedOffBlocks = new ArrayList<>();
         synchronized (blockchain) {
-            if (trimDerivedTables && Nxt.getBlockchain().getHeight() - commonBlock.getHeight() > Constants.MAX_ROLLBACK) {
+            if (trimDerivedTables && blockchain.getHeight() - commonBlock.getHeight() > Constants.MAX_ROLLBACK) {
                 throw new IllegalArgumentException("Rollback to height " + commonBlock.getHeight() + " not suppported, "
                         + "current height " + Nxt.getBlockchain().getHeight());
             }
+            if (blockchain.getBlock(commonBlock.getId()) == null) {
+                Logger.logDebugMessage("Block " + commonBlock.getStringId() + " not found in blockchain, nothing to pop off");
+                return Collections.emptyList();
+            }
+            List<BlockImpl> poppedOffBlocks = new ArrayList<>();
             try {
                 Db.beginTransaction();
                 BlockImpl block = blockchain.getLastBlock();
@@ -717,8 +721,8 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             } finally {
                 Db.endTransaction();
             }
+            return poppedOffBlocks;
         } // synchronized
-        return poppedOffBlocks;
     }
 
     private BlockImpl popLastBlock() {
@@ -886,10 +890,10 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         synchronized (blockchain) {
             TransactionProcessorImpl transactionProcessor = TransactionProcessorImpl.getInstance();
             int blockchainHeight = Nxt.getBlockchain().getHeight();
-            if (height > blockchainHeight) {
-                throw new IllegalArgumentException("Height " + height + " exceeds current blockchain height of " + blockchainHeight);
+            if (height > blockchainHeight + 1) {
+                throw new IllegalArgumentException("Rollback height " + (height - 1) + " exceeds current blockchain height of " + blockchainHeight);
             }
-            if (height > 0 && trimDerivedTables && blockchainHeight - height > Constants.MAX_ROLLBACK) {
+            if (height > 0 && trimDerivedTables && blockchainHeight - height >= Constants.MAX_ROLLBACK) {
                 Logger.logMessage("Rollback of more than " + Constants.MAX_ROLLBACK + " blocks not supported, will do a full scan");
                 height = 0;
             }
@@ -972,16 +976,20 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                             }
                             blockListeners.notify(currentBlock, Event.BEFORE_BLOCK_ACCEPT);
                             blockchain.setLastBlock(currentBlock);
+                            Set<TransactionImpl> unappliedUnconfirmed = transactionProcessor.undoAllUnconfirmed();
                             for (TransactionImpl transaction : currentBlock.getTransactions()) {
-                                if (!transaction.applyUnconfirmed()) {
-                                    throw new TransactionNotAcceptedException("Double spending transaction: "
-                                            + transaction.getStringId(), transaction);
+                                if (transaction.applyUnconfirmed()) {
+                                    unappliedUnconfirmed.remove(transaction);
+                                } else {
+                                    throw new TransactionNotAcceptedException("Double spending transaction: " + transaction.getStringId(), transaction);
                                 }
                             }
+                            transactionProcessor.applyUnconfirmed(unappliedUnconfirmed);
                             blockListeners.notify(currentBlock, Event.BEFORE_BLOCK_APPLY);
                             currentBlock.apply();
                             blockListeners.notify(currentBlock, Event.AFTER_BLOCK_APPLY);
                             blockListeners.notify(currentBlock, Event.BLOCK_SCANNED);
+                            transactionProcessor.updateUnconfirmedTransactions(currentBlock);
                             currentBlockId = currentBlock.getNextBlockId();
                             Db.commitTransaction();
                         } catch (NxtException | RuntimeException e) {
