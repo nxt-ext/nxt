@@ -50,26 +50,34 @@ public class APITestServlet extends HttpServlet {
             "            var url = '/nxt';\n" +
             "            var params = {};\n" +
             "            for (i = 0; i < form.elements.length; i++) {\n" +
-            "                type = form.method;\n" +
             "                if (form.elements[i].type != 'button' && form.elements[i].value) {\n" +
             "                    params[form.elements[i].name] = form.elements[i].value;\n" +
             "                }\n" +
             "            }\n" +
             "            $.ajax({\n" +
             "                url: url,\n" +
-            "                type: type,\n" +
+            "                type: 'POST',\n" +
             "                data: params\n" +
             "            })\n" +
             "            .done(function(result) {\n" +
             "                var resultStr = JSON.stringify(JSON.parse(result), null, 4);\n" +
-            "                var uri = 'http://' + window.location.host + this.url;\n" +
-            "                //form.getElementsByClassName(\"uri\")[0].textContent = uri;\n" +
-            "                //form.getElementsByClassName(\"uri-link\")[0].href = uri;\n" +
             "                form.getElementsByClassName(\"result\")[0].textContent = resultStr;\n" +
             "            })\n" +
             "            .error(function() {\n" +
             "                alert('API not available, check if Nxt Server is running!');\n" +
             "            });\n" +
+            "            if ($(form).has('.uri-link').length > 0) {\n" + 
+            "              $.ajax({\n" +
+            "                  url: url,\n" +
+            "                  type: 'GET',\n" +
+            "                  data: params\n" +
+            "              })\n" +
+            "              .done(function(result) {\n" +
+            "                  var uri = 'http://' + window.location.host + this.url;\n" +
+            "                  var html = '<a href=\"' + uri + '\" target=\"_blank\" style=\"font-size:14px;font-weight:normal;\">Open GET URL</a>';" +
+            "                  form.getElementsByClassName(\"uri-link\")[0].innerHTML = html;\n" +
+            "              })\n" +
+            "            }" +
             "            return false;\n" +
             "        }\n" +
             "    </script>\n" +
@@ -90,6 +98,15 @@ public class APITestServlet extends HttpServlet {
             "   </div>" + 
             "</div>" +
             "<div class=\"container\">" +
+            "<div class=\"row\">" + 
+            "  <div class=\"col-xs-12\" style=\"margin-bottom:15px;\">" +
+            "    <div class=\"pull-right\">" +
+            "      <a href=\"#\" id=\"navi-show-open\">Show Open</a>" +
+            "       | " +
+            "      <a href=\"#\" id=\"navi-show-all\">Show All</a>" +
+            "    </div>" +
+            "  </div>" +
+            "</div>" +
             "<div class=\"row\" style=\"margin-bottom:15px;\">" +
             "  <div class=\"col-xs-4 col-sm-3 col-md-2\">" +
             "    <ul class=\"nav nav-pills nav-stacked\">";
@@ -119,6 +136,20 @@ public class APITestServlet extends HttpServlet {
             "        performSearch($(this).val());\n" +
             "      }\n" +
             "    });\n" +
+            "    $('#navi-show-open').click(function(e) {" +
+            "      $('.api-call-All').each(function() {" +
+            "        if($(this).find('.panel-collapse.in').length != 0) {" +
+            "          $(this).show();" +
+            "        } else {" +
+            "          $(this).hide();" +
+            "        }" +
+            "      });" +
+            "      e.preventDefault();" +
+            "    });" +
+            "    $('#navi-show-all').click(function(e) {" +
+            "      $('.api-call-All').show();" +
+            "      e.preventDefault();" +
+            "    });" +
             "  });" + 
             "</script>" +
             "</body>\n" +
@@ -179,14 +210,15 @@ public class APITestServlet extends HttpServlet {
             APIServlet.APIRequestHandler requestHandler = APIServlet.apiRequestHandlers.get(requestType);
             StringBuilder bufJSCalls = new StringBuilder();
             if (requestHandler != null) {
-                writer.print(form(requestType, true, requestHandler.getClass().getName(), requestHandler.getParameters()));
+                writer.print(form(requestType, true, requestHandler.getClass().getName(), requestHandler.getParameters(), requestHandler.requirePost()));
                 bufJSCalls.append("apiCalls.push(\"").append(requestType).append("\");\n");
             } else {
                 String requestTag = Convert.nullToEmpty(req.getParameter("requestTag"));
                 Set<String> taggedTypes = requestTags.get(requestTag);
                 for (String type : (taggedTypes != null ? taggedTypes : allRequestTypes)) {
                     requestHandler = APIServlet.apiRequestHandlers.get(type);
-                    writer.print(form(type, false, requestHandler.getClass().getName(), APIServlet.apiRequestHandlers.get(type).getParameters()));
+                    writer.print(form(type, false, requestHandler.getClass().getName(), APIServlet.apiRequestHandlers.get(type).getParameters(), 
+                                      APIServlet.apiRequestHandlers.get(type).requirePost()));
                     bufJSCalls.append("apiCalls.push(\"").append(type).append("\");\n");
                 }
             }
@@ -197,7 +229,7 @@ public class APITestServlet extends HttpServlet {
 
     }
 
-    private static String form(String requestType, boolean singleView, String className, List<String> parameters) {
+    private static String form(String requestType, boolean singleView, String className, List<String> parameters, boolean requirePost) {
         StringBuilder buf = new StringBuilder();
         buf.append("<div class=\"panel panel-default api-call-All\" ");
         buf.append("id=\"api-call-").append(requestType).append("\">");
@@ -240,7 +272,17 @@ public class APITestServlet extends HttpServlet {
         buf.append("</tr>");
         buf.append("</table>");
         buf.append("</div>");
-        buf.append("<pre class=\"result col-xs-12 col-lg-6\">JSON response</pre>");
+        buf.append("<div class=\"col-xs-12 col-lg-6\">");
+        buf.append("<h5 style=\"margin-top:0px;\">");
+        if (!requirePost) {
+            buf.append("<span style=\"float:right;\" class=\"uri-link\">");
+            buf.append("</span>");
+        } else {
+            buf.append("<span style=\"float:right;font-size:14px;font-weight:normal;\">POST only</span>");
+        }
+        buf.append("Response</h5>");
+        buf.append("<pre class=\"result\">JSON response</pre>");
+        buf.append("</div>");
         buf.append("</form>");
         buf.append("</div> <!-- panel-body -->");
         buf.append("</div> <!-- panel-collapse -->");
