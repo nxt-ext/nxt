@@ -4,6 +4,7 @@ import nxt.crypto.Crypto;
 import nxt.db.Db;
 import nxt.db.DbIterator;
 import nxt.db.DerivedDbTable;
+import nxt.db.FilteringIterator;
 import nxt.peer.Peer;
 import nxt.peer.Peers;
 import nxt.util.Convert;
@@ -33,7 +34,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
-import java.util.TreeSet;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 final class BlockchainProcessorImpl implements BlockchainProcessor {
@@ -748,13 +748,16 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
     boolean generateBlock(String secretPhrase, int blockTimestamp) {
 
         TransactionProcessorImpl transactionProcessor = TransactionProcessorImpl.getInstance();
-        Set<TransactionImpl> sortedTransactions = new TreeSet<>();
-        try (DbIterator<TransactionImpl> transactions = transactionProcessor.getAllUnconfirmedTransactions()) {
-            while (transactions.hasNext()) {
-                TransactionImpl transaction = transactions.next();
-                if (hasAllReferencedTransactions(transaction, transaction.getTimestamp(), 0)) {
-                    sortedTransactions.add(transaction);
-                }
+        List<TransactionImpl> sortedTransactions = new ArrayList<>();
+        try (FilteringIterator<TransactionImpl> transactions = new FilteringIterator<>(transactionProcessor.getAllUnconfirmedTransactions(),
+                new FilteringIterator.Filter<TransactionImpl>() {
+                    @Override
+                    public boolean ok(TransactionImpl transaction) {
+                        return hasAllReferencedTransactions(transaction, transaction.getTimestamp(), 0);
+                    }
+                })) {
+            for (TransactionImpl transaction : transactions) {
+                sortedTransactions.add(transaction);
             }
         }
 
