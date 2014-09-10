@@ -19,6 +19,7 @@ public abstract class TransactionType {
     private static final byte TYPE_ACCOUNT_CONTROL = 4;
 
     private static final byte SUBTYPE_PAYMENT_ORDINARY_PAYMENT = 0;
+    private static final byte SUBTYPE_PENDING_PAYMENT_VOTE_CASTING = 1;
 
     private static final byte SUBTYPE_MESSAGING_ARBITRARY_MESSAGE = 0;
     private static final byte SUBTYPE_MESSAGING_ALIAS_ASSIGNMENT = 1;
@@ -60,6 +61,8 @@ public abstract class TransactionType {
                 switch (subtype) {
                     case SUBTYPE_PAYMENT_ORDINARY_PAYMENT:
                         return Payment.ORDINARY;
+                    case SUBTYPE_PENDING_PAYMENT_VOTE_CASTING:
+                        return Payment.PENDING_PAYMENT_VOTE_CASTING;
                     default:
                         return null;
                 }
@@ -213,16 +216,6 @@ public abstract class TransactionType {
         return "type: " + getType() + ", subtype: " + getSubtype();
     }
 
-    /*
-    Collection<TransactionType> getPhasingTransactionTypes() {
-        return Collections.emptyList();
-    }
-
-    Collection<TransactionType> getPhasedTransactionTypes() {
-        return Collections.emptyList();
-    }
-    */
-
     public static abstract class Payment extends TransactionType {
 
         private Payment() {
@@ -274,7 +267,30 @@ public abstract class TransactionType {
                     throw new NxtException.NotValidException("Invalid ordinary payment");
                 }
             }
+        };
 
+        public static final TransactionType PENDING_PAYMENT_VOTE_CASTING = new Payment() {
+            @Override
+            public final byte getSubtype() {
+                return TransactionType.SUBTYPE_PENDING_PAYMENT_VOTE_CASTING;
+            }
+
+            @Override
+            Attachment.EmptyAttachment parseAttachment(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
+                return Attachment.ORDINARY_PAYMENT;
+            }
+
+            @Override
+            Attachment.EmptyAttachment parseAttachment(JSONObject attachmentData) throws NxtException.NotValidException {
+                return Attachment.ORDINARY_PAYMENT;
+            }
+
+            @Override
+            void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
+                if (transaction.getAmountNQT() <= 0 || transaction.getAmountNQT() >= Constants.MAX_BALANCE_NQT) {
+                    throw new NxtException.NotValidException("Invalid ordinary payment");
+                }
+            }
         };
 
     }

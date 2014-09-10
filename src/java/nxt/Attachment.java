@@ -95,6 +95,42 @@ public interface Attachment extends Appendix {
 
     };
 
+    public final static class PendingPaymentVoteCasting extends AbstractAttachment {
+        PendingPaymentVoteCasting(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
+            super(buffer, transactionVersion);
+        }
+
+        PendingPaymentVoteCasting(JSONObject attachmentData) {
+            super(attachmentData);
+        }
+
+        @Override
+        String getAppendixName() {
+            return "PendingPaymentVoteCasting";
+        }
+
+        @Override
+        int getMySize() {
+            return 1; //todo: fix
+        }
+
+        @Override
+        void putMyBytes(ByteBuffer buffer) {
+
+        }
+
+        @Override
+        void putMyJSON(JSONObject attachment) {
+
+        }
+
+        @Override
+        public TransactionType getTransactionType() {
+            return TransactionType.Payment.PENDING_PAYMENT_VOTE_CASTING;
+        }
+    }
+
+
     public final static class MessagingAliasAssignment extends AbstractAttachment {
 
         private final String aliasName;
