@@ -264,7 +264,7 @@ public class APITestServlet extends HttpServlet {
             buf.append("<td>").append(parameter).append(":</td>");
             buf.append("<td><input type=\"");
             buf.append("secretPhrase".equals(parameter) ? "password" : "text");
-            buf.append("\" name=\"").append(parameter).append("\" style=\"width:200px;\"/></td>");
+            buf.append("\" name=\"").append(parameter).append("\" style=\"width:100%;min-width:200px;\"/></td>");
             buf.append("</tr>");
         }
         buf.append("<tr>");
