@@ -130,8 +130,8 @@ public final class Generator {
         return hit.compareTo(target) < 0
                 && (previousBlock.getHeight() < Constants.TRANSPARENT_FORGING_BLOCK_8
                 || hit.compareTo(prevTarget) >= 0
-                || (Constants.isTestnet ? elapsedTime > 300 : elapsedTime > 3600))
-                || Constants.isOffline;
+                || (Constants.isTestnet ? elapsedTime > 300 : elapsedTime > 3600)
+                || Constants.isOffline);
     }
 
     static long getHitTime(Account account, Block block) {
