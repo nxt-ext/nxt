@@ -20,17 +20,7 @@ import java.util.TreeSet;
 
 public class APITestServlet extends HttpServlet {
 
-    private static final String links;
-    static {
-        StringBuilder buf = new StringBuilder();
-        for (APITag apiTag : APITag.values()) {
-            buf.append("<a class=\"navbar-brand\" href=\"/test?requestTag=").append(apiTag.name()).append("\">");
-            buf.append(apiTag.getDisplayName()).append("</a>").append(" ");
-        }
-        links = buf.toString();
-    }
-
-    private static final String header =
+    private static final String header1 =
             "<!DOCTYPE html>\n" +
             "<html>\n" +
             "<head>\n" +
@@ -75,30 +65,43 @@ public class APITestServlet extends HttpServlet {
             "</head>\n" +
             "<body>\n" +
             "<div class=\"navbar navbar-default\" role=\"navigation\">" +
-            "   <div class=\"container\" style=\"width: 90%;\">" +
+            "   <div class=\"container\">" + 
             "       <div class=\"navbar-header\">" +
-            "           <a class=\"navbar-brand\" href=\"/test\">All</a> " + links +
+            "           <a class=\"navbar-brand\" href=\"/test\">Nxt http API</a>" + 
             "       </div>" +
             "       <div class=\"navbar-collapse collapse\">" +
             "           <ul class=\"nav navbar-nav navbar-right\">" +
-            "               <li><a href=\"https://wiki.nxtcrypto.org/wiki/Nxt_API\" target=\"_blank\">wiki docs</a></li>" +
+            "               <li><input type=\"text\" class=\"form-control\" id=\"search\" " + 
+            "                    placeholder=\"Search\" style=\"margin-top:8px;\"></li>\n" +
+            "               <li><a href=\"https://wiki.nxtcrypto.org/wiki/Nxt_API\" target=\"_blank\" style=\"margin-left:20px;\">Wiki Docs</a></li>" +
             "           </ul>" +
             "       </div>" +
             "   </div>" + 
             "</div>" +
-            "<div class=\"container\" style=\"width: 90%;\">" +
-            "<div class=\"row\">" +
-            "<div class=\"col-xs-12\">" +
-            "<div class=\"panel-group\" id=\"accordion\">";
+            "<div class=\"container\">" +
+            "<div class=\"row\" style=\"margin-bottom:15px;\">" +
+            "  <div class=\"col-xs-4 col-sm-3 col-md-2\">" +
+            "    <ul class=\"nav nav-pills nav-stacked\">";
+    private static final String header2 =
+            "    </ul>" +
+            "  </div> <!-- col -->" +
+            "  <div  class=\"col-xs-8 col-sm-9 col-md-10\">" +
+            "    <div class=\"panel-group\" id=\"accordion\">";
 
     private static final String footer =
-            "</div> <!-- panel-group -->" +
-            "<br/><br/>" +
-            "</div> <!-- col -->" +
+            "    </div> <!-- panel-group -->" +
+            "  </div> <!-- col -->" +
             "</div> <!-- row -->" +
             "</div> <!-- container -->" +
             "<script src=\"js/3rdparty/jquery.js\"></script>" +
             "<script src=\"js/3rdparty/bootstrap.js\" type=\"text/javascript\"></script>" +
+            "<script>" + 
+            "  $(document).ready(function() {" + 
+            "    $(\".collapse-link\").click(function(event) {" +
+            "       event.preventDefault();" +    
+            "    });" +
+            "  });" + 
+            "</script>" +
             "</body>\n" +
             "</html>\n";
 
@@ -123,6 +126,25 @@ public class APITestServlet extends HttpServlet {
         }
     }
 
+    private static String buildLinks(HttpServletRequest req) {
+        StringBuilder buf = new StringBuilder();
+        String requestTag = Convert.nullToEmpty(req.getParameter("requestTag"));
+        buf.append("<li");
+        if (requestTag.equals("")) {
+            buf.append(" class=\"active\"");
+        }
+        buf.append("><a href=\"/test\">All</a></li>");
+        for (APITag apiTag : APITag.values()) {
+            buf.append("<li");
+            if (requestTag.equals(apiTag.name())) {
+                buf.append(" class=\"active\"");
+            }
+            buf.append("><a href=\"/test?requestTag=").append(apiTag.name()).append("\">");
+            buf.append(apiTag.getDisplayName()).append("</a></li>").append(" ");
+        }
+        return buf.toString();
+    }
+
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 
         resp.setHeader("Cache-Control", "no-cache, no-store, must-revalidate, private");
@@ -131,7 +153,9 @@ public class APITestServlet extends HttpServlet {
         resp.setContentType("text/html; charset=UTF-8");
 
         try (PrintWriter writer = resp.getWriter()) {
-            writer.print(header);
+            writer.print(header1);
+            writer.print(buildLinks(req));
+            writer.print(header2);
             String requestType = Convert.nullToEmpty(req.getParameter("requestType"));
             APIServlet.APIRequestHandler requestHandler = APIServlet.apiRequestHandlers.get(requestType);
             if (requestHandler != null) {
@@ -154,19 +178,19 @@ public class APITestServlet extends HttpServlet {
         buf.append("<div class=\"panel panel-default\">");
         buf.append("<div class=\"panel-heading\">");
         buf.append("<h4 class=\"panel-title\">");
-        buf.append("<a data-toggle=\"collapse\" data-parent=\"#accordion\" href=\"#collapse");
-        buf.append(requestType).append("\">");
+        buf.append("<a data-toggle=\"collapse\" class=\"collapse-link\" data-target=\"#collapse").append(requestType).append("\" href=\"#\">");
         buf.append(requestType);
         buf.append("</a>");
-        buf.append("<a style=\"float:right;\" href=\"/doc/").append(className.replace('.','/')).append(".html\" target=\"_blank\">javadoc</a>");
+        buf.append("<a style=\"float:right;font-weight:normal;font-size:14px;\" href=\"/doc/");
+        buf.append(className.replace('.','/')).append(".html\" target=\"_blank\">javadoc</a>");
         buf.append("</h4>");
         buf.append("</div> <!-- panel-heading -->");
         buf.append("<div id=\"collapse").append(requestType).append("\" class=\"panel-collapse collapse\">");
         buf.append("<div class=\"panel-body\">");
         buf.append("<form action=\"/nxt\" method=\"POST\" onsubmit=\"return submitForm(this);\">");
-        buf.append("<pre class=\"result\" style=\"float:right;width:50%;\">JSON response</pre>");
         buf.append("<input type=\"hidden\" name=\"requestType\" value=\"").append(requestType).append("\"/>");
-        buf.append("<table class=\"table\" style=\"width:46%;\">");
+        buf.append("<div class=\"col-xs-12 col-lg-6\">");
+        buf.append("<table class=\"table\">");
         for (String parameter : parameters) {
             buf.append("<tr>");
             buf.append("<td>").append(parameter).append(":</td>");
@@ -179,6 +203,8 @@ public class APITestServlet extends HttpServlet {
         buf.append("<td colspan=\"2\"><input type=\"submit\" class=\"btn btn-default\" value=\"submit\"/></td>");
         buf.append("</tr>");
         buf.append("</table>");
+        buf.append("</div>");
+        buf.append("<pre class=\"result col-xs-12 col-lg-6\">JSON response</pre>");
         buf.append("</form>");
         buf.append("</div> <!-- panel-body -->");
         buf.append("</div> <!-- panel-collapse -->");
