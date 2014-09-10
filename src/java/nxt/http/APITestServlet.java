@@ -47,24 +47,28 @@ public class APITestServlet extends HttpServlet {
             "    <script type=\"text/javascript\">\n" +
             "        function submitForm(form) {\n" +
             "            var url = '/nxt';\n" +
-            "            var params = '';\n" +
+            "            var params = {};\n" +
             "            for (i = 0; i < form.elements.length; i++) {\n" +
-            "                if (! form.elements[i].name) {\n" +
-            "                    continue;\n" +
+            "                type = form.method;\n" +
+            "                if (form.elements[i].type != 'button' && form.elements[i].value) {\n" +
+            "                    params[form.elements[i].name] = form.elements[i].value;\n" +
             "                }\n" +
-            "                if (i > 0) {\n" +
-            "                    params += '&';\n" +
-            "                }\n" +
-            "                params += encodeURIComponent(form.elements[i].name);\n" +
-            "                params += '=';\n" +
-            "                params += encodeURIComponent(form.elements[i].value);\n" +
             "            }\n" +
-            "            var request = new XMLHttpRequest();\n" +
-            "            request.open(\"POST\", url, false);\n" +
-            "            request.setRequestHeader(\"Content-type\", \"application/x-www-form-urlencoded\");\n" +
-            "            request.send(params);\n" +
-            "            var result = JSON.stringify(JSON.parse(request.responseText), null, 4);\n" +
-            "            form.getElementsByClassName(\"result\")[0].textContent = result;\n" +
+            "            $.ajax({\n" +
+            "                url: url,\n" +
+            "                type: type,\n" +
+            "                data: params\n" +
+            "            })\n" +
+            "            .done(function(result) {\n" +
+            "                var resultStr = JSON.stringify(JSON.parse(result), null, 4);\n" +
+            "                var uri = 'http://' + window.location.host + this.url;\n" +
+            "                //form.getElementsByClassName(\"uri\")[0].textContent = uri;\n" +
+            "                //form.getElementsByClassName(\"uri-link\")[0].href = uri;\n" +
+            "                form.getElementsByClassName(\"result\")[0].textContent = resultStr;\n" +
+            "            })\n" +
+            "            .error(function() {\n" +
+            "                alert('API not available, check if Nxt Server is running!');\n" +
+            "            });\n" +
             "            return false;\n" +
             "        }\n" +
             "    </script>\n" +
