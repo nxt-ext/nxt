@@ -159,13 +159,13 @@ public class APITestServlet extends HttpServlet {
             String requestType = Convert.nullToEmpty(req.getParameter("requestType"));
             APIServlet.APIRequestHandler requestHandler = APIServlet.apiRequestHandlers.get(requestType);
             if (requestHandler != null) {
-                writer.print(form(requestType, requestHandler.getClass().getName(), requestHandler.getParameters()));
+                writer.print(form(requestType, true, requestHandler.getClass().getName(), requestHandler.getParameters()));
             } else {
                 String requestTag = Convert.nullToEmpty(req.getParameter("requestTag"));
                 Set<String> taggedTypes = requestTags.get(requestTag);
                 for (String type : (taggedTypes != null ? taggedTypes : allRequestTypes)) {
                     requestHandler = APIServlet.apiRequestHandlers.get(type);
-                    writer.print(form(type, requestHandler.getClass().getName(), APIServlet.apiRequestHandlers.get(type).getParameters()));
+                    writer.print(form(type, false, requestHandler.getClass().getName(), APIServlet.apiRequestHandlers.get(type).getParameters()));
                 }
             }
             writer.print(footer);
@@ -173,7 +173,7 @@ public class APITestServlet extends HttpServlet {
 
     }
 
-    private static String form(String requestType, String className, List<String> parameters) {
+    private static String form(String requestType, boolean singleView, String className, List<String> parameters) {
         StringBuilder buf = new StringBuilder();
         buf.append("<div class=\"panel panel-default\">");
         buf.append("<div class=\"panel-heading\">");
@@ -181,11 +181,22 @@ public class APITestServlet extends HttpServlet {
         buf.append("<a data-toggle=\"collapse\" class=\"collapse-link\" data-target=\"#collapse").append(requestType).append("\" href=\"#\">");
         buf.append(requestType);
         buf.append("</a>");
-        buf.append("<a style=\"float:right;font-weight:normal;font-size:14px;\" href=\"/doc/");
+        buf.append("<span style=\"float:right;font-weight:normal;font-size:14px;\">");
+        if (!singleView) {
+            buf.append("<a href=\"/test?requestType=").append(requestType);
+            buf.append("\" target=\"_blank\" style=\"font-weight:normal;font-size:14px;color:#777;\"><span class=\"glyphicon glyphicon-new-window\"></span></a>");
+            buf.append(" &nbsp;&nbsp;");
+        }
+        buf.append("<a style=\"font-weight:normal;font-size:14px;color:#777;\" href=\"/doc/");
         buf.append(className.replace('.','/')).append(".html\" target=\"_blank\">javadoc</a>");
+        buf.append("</span>");
         buf.append("</h4>");
         buf.append("</div> <!-- panel-heading -->");
-        buf.append("<div id=\"collapse").append(requestType).append("\" class=\"panel-collapse collapse\">");
+        buf.append("<div id=\"collapse").append(requestType).append("\" class=\"panel-collapse collapse");
+        if (singleView) {
+            buf.append(" in");
+        }
+        buf.append("\">");
         buf.append("<div class=\"panel-body\">");
         buf.append("<form action=\"/nxt\" method=\"POST\" onsubmit=\"return submitForm(this);\">");
         buf.append("<input type=\"hidden\" name=\"requestType\" value=\"").append(requestType).append("\"/>");
