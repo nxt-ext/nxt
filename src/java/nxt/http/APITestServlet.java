@@ -50,7 +50,7 @@ public class APITestServlet extends HttpServlet {
             "            var url = '/nxt';\n" +
             "            var params = {};\n" +
             "            for (i = 0; i < form.elements.length; i++) {\n" +
-            "                if (form.elements[i].type != 'button' && form.elements[i].value) {\n" +
+            "                if (form.elements[i].type != 'button' && form.elements[i].value && form.elements[i].value != 'submit') {\n" +
             "                    params[form.elements[i].name] = form.elements[i].value;\n" +
             "                }\n" +
             "            }\n" +
@@ -74,7 +74,7 @@ public class APITestServlet extends HttpServlet {
             "              })\n" +
             "              .done(function(result) {\n" +
             "                  var uri = 'http://' + window.location.host + this.url;\n" +
-            "                  var html = '<a href=\"' + uri + '\" target=\"_blank\" style=\"font-size:14px;font-weight:normal;\">Open GET URL</a>';" +
+            "                  var html = '<a href=\"' + uri + '\" target=\"_blank\" style=\"font-size:12px;font-weight:normal;\">Open GET URL</a>';" +
             "                  form.getElementsByClassName(\"uri-link\")[0].innerHTML = html;\n" +
             "              })\n" +
             "            }" +
@@ -278,7 +278,7 @@ public class APITestServlet extends HttpServlet {
             buf.append("<span style=\"float:right;\" class=\"uri-link\">");
             buf.append("</span>");
         } else {
-            buf.append("<span style=\"float:right;font-size:14px;font-weight:normal;\">POST only</span>");
+            buf.append("<span style=\"float:right;font-size:12px;font-weight:normal;\">POST only</span>");
         }
         buf.append("Response</h5>");
         buf.append("<pre class=\"result\">JSON response</pre>");
