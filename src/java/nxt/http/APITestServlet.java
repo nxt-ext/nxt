@@ -96,7 +96,7 @@ public class APITestServlet extends HttpServlet {
             "    <div class=\"pull-right\">" +
             "      <a href=\"#\" id=\"navi-show-open\">Show Open</a>" +
             "       | " +
-            "      <a href=\"#\" id=\"navi-show-all\">Show All</a>" +
+            "      <a href=\"#\" id=\"navi-show-all\" style=\"font-weight:bold;\">Show All</a>" +
             "    </div>" +
             "  </div>" +
             "</div>" +
@@ -137,10 +137,14 @@ public class APITestServlet extends HttpServlet {
             "          $(this).hide();" +
             "        }" +
             "      });" +
+            "      $('#navi-show-all').css('font-weight', 'normal');" +
+            "      $(this).css('font-weight', 'bold');" +
             "      e.preventDefault();" +
             "    });" +
             "    $('#navi-show-all').click(function(e) {" +
             "      $('.api-call-All').show();" +
+            "      $('#navi-show-open').css('font-weight', 'normal');" +
+            "      $(this).css('font-weight', 'bold');" +
             "      e.preventDefault();" +
             "    });" +
             "  });" + 
