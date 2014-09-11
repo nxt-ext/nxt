@@ -67,16 +67,9 @@ public class APITestServlet extends HttpServlet {
             "                alert('API not available, check if Nxt Server is running!');\n" +
             "            });\n" +
             "            if ($(form).has('.uri-link').length > 0) {\n" + 
-            "              $.ajax({\n" +
-            "                  url: url,\n" +
-            "                  type: 'GET',\n" +
-            "                  data: params\n" +
-            "              })\n" +
-            "              .done(function(result) {\n" +
-            "                  var uri = 'http://' + window.location.host + this.url;\n" +
+            "                  var uri = 'http://' + window.location.host + '/nxt?' + jQuery.param(params);\n" +
             "                  var html = '<a href=\"' + uri + '\" target=\"_blank\" style=\"font-size:12px;font-weight:normal;\">Open GET URL</a>';" +
             "                  form.getElementsByClassName(\"uri-link\")[0].innerHTML = html;\n" +
-            "              })\n" +
             "            }" +
             "            return false;\n" +
             "        }\n" +
