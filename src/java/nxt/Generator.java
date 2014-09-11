@@ -25,6 +25,7 @@ public final class Generator {
 
     private static final ConcurrentMap<Long, Block> lastBlocks = new ConcurrentHashMap<>();
     private static final ConcurrentMap<Long, BigInteger> hits = new ConcurrentHashMap<>();
+    private static final ConcurrentMap<Long, Long> effectiveBalances = new ConcurrentHashMap<>();
 
     private static final ConcurrentMap<String, Generator> generators = new ConcurrentHashMap<>();
     private static final Collection<Generator> allGenerators = Collections.unmodifiableCollection(generators.values());
@@ -67,6 +68,7 @@ public final class Generator {
     static void clear() {
         lastBlocks.clear();
         hits.clear();
+        effectiveBalances.clear();
     }
 
     public static boolean addListener(Listener<Generator> listener, Event eventType) {
@@ -186,15 +188,6 @@ public final class Generator {
             return;
         }
 
-        Account account = Account.getAccount(accountId);
-        if (account == null) {
-            return;
-        }
-        long effectiveBalance = account.getEffectiveBalanceNXT();
-        if (effectiveBalance <= 0) {
-            return;
-        }
-
         Block lastBlock = Nxt.getBlockchain().getLastBlock();
 
         if (lastBlock.getHeight() < Constants.DIGITAL_GOODS_STORE_BLOCK) {
@@ -202,19 +195,28 @@ public final class Generator {
         }
 
         if (! lastBlock.equals(lastBlocks.get(accountId))) {
+            Account account = Account.getAccount(accountId);
+            if (account == null) {
+                return;
+            }
+            long effectiveBalance = account.getEffectiveBalanceNXT();
+            if (effectiveBalance <= 0) {
+                return;
+            }
 
             BigInteger hit = getHit(publicKey, lastBlock);
 
             lastBlocks.put(accountId, lastBlock);
             hits.put(accountId, hit);
+            effectiveBalances.put(accountId, effectiveBalance);
 
-            deadline = Math.max(getHitTime(account.getEffectiveBalanceNXT(), hit, lastBlock) - Convert.getEpochTime(), 0);
+            deadline = Math.max(getHitTime(effectiveBalance, hit, lastBlock) - Convert.getEpochTime(), 0);
 
             listeners.notify(this, Event.GENERATION_DEADLINE);
 
         }
 
-        if (verifyHit(hits.get(accountId), effectiveBalance, lastBlock, timestamp)) {
+        if (verifyHit(hits.get(accountId), effectiveBalances.get(accountId), lastBlock, timestamp)) {
             while (! BlockchainProcessorImpl.getInstance().generateBlock(secretPhrase, timestamp)) {
                 if (Convert.getEpochTime() - timestamp > 10) {
                     break;
