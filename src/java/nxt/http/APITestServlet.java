@@ -37,13 +37,17 @@ public class APITestServlet extends HttpServlet {
             "    <script type=\"text/javascript\">\n" +
             "        var apiCalls;\n" +
             "        function performSearch(searchStr) {\n" +
-            "            $('.api-call-All').hide();\n" +
-            "            $('.topic-link').css('font-weight', 'normal');\n" +
-            "            for(var i=0; i<apiCalls.length; i++) {\n" +
+            "            if (searchStr == '') {\n" +
+            "              $('.api-call-All').show();\n" +
+            "            } else {\n" +
+            "              $('.api-call-All').hide();\n" +
+            "              $('.topic-link').css('font-weight', 'normal');\n" +
+            "              for(var i=0; i<apiCalls.length; i++) {\n" +
             "                var apiCall = apiCalls[i];\n" +
             "                if (new RegExp(searchStr.toLowerCase()).test(apiCall.toLowerCase())) {\n" +
-            "                    $('#api-call-' + apiCall).show();\n" +
+            "                  $('#api-call-' + apiCall).show();\n" +
             "                }\n" +
+            "              }\n" +
             "            }\n" +
             "        }\n" +
             "        function submitForm(form) {\n" +
@@ -125,7 +129,7 @@ public class APITestServlet extends HttpServlet {
             "       event.preventDefault();" +    
             "    });" +
             "    $('#search').keyup(function(e) {\n" +
-            "      if (e.keyCode == 13 && $(this).val().length > 0) {\n" +
+            "      if (e.keyCode == 13) {\n" +
             "        performSearch($(this).val());\n" +
             "      }\n" +
             "    });\n" +
