@@ -20,8 +20,9 @@ public interface Transaction extends Comparable<Transaction> {
 
         Builder publicKeyAnnouncement(Appendix.PublicKeyAnnouncement publicKeyAnnouncement);
 
-        Transaction build() throws NxtException.NotValidException;
+        Builder twoPhased(Appendix.TwoPhased twoPhased);
 
+        Transaction build() throws NxtException.NotValidException;
     }
 
     Long getId();
@@ -82,16 +83,14 @@ public interface Transaction extends Comparable<Transaction> {
 
     Appendix.EncryptToSelfMessage getEncryptToSelfMessage();
 
+    Appendix.TwoPhased getTwoPhasedSpecification();
+
     List<? extends Appendix> getAppendages();
-
-    /*
-    Collection<TransactionType> getPhasingTransactionTypes();
-
-    Collection<TransactionType> getPhasedTransactionTypes();
-    */
 
     int getECBlockHeight();
 
     Long getECBlockId();
+
+    boolean isPending();
 
 }

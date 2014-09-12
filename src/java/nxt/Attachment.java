@@ -96,12 +96,16 @@ public interface Attachment extends Appendix {
     };
 
     public final static class PendingPaymentVoteCasting extends AbstractAttachment {
+        private final long pendingTransactionId;
+
         PendingPaymentVoteCasting(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
             super(buffer, transactionVersion);
+            pendingTransactionId = buffer.getLong();
         }
 
         PendingPaymentVoteCasting(JSONObject attachmentData) {
             super(attachmentData);
+            pendingTransactionId = (Long)(attachmentData.get("pendingTxId"));
         }
 
         @Override
@@ -111,23 +115,28 @@ public interface Attachment extends Appendix {
 
         @Override
         int getMySize() {
-            return 1; //todo: fix
+            return 8;
         }
 
         @Override
         void putMyBytes(ByteBuffer buffer) {
-
+            buffer.putLong(pendingTransactionId);
         }
 
         @Override
         void putMyJSON(JSONObject attachment) {
-
+            attachment.put("pendingTxId", pendingTransactionId);
         }
 
         @Override
         public TransactionType getTransactionType() {
             return TransactionType.Payment.PENDING_PAYMENT_VOTE_CASTING;
         }
+
+        public long getPendingTransactionId() {
+            return pendingTransactionId;
+        }
+
     }
 
 

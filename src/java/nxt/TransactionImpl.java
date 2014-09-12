@@ -5,17 +5,11 @@ import nxt.db.DbKey;
 import nxt.util.Convert;
 import nxt.util.Logger;
 import org.json.simple.JSONObject;
-
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.security.MessageDigest;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 final class TransactionImpl implements Transaction {
 
@@ -37,6 +31,7 @@ final class TransactionImpl implements Transaction {
         private Appendix.EncryptedMessage encryptedMessage;
         private Appendix.EncryptToSelfMessage encryptToSelfMessage;
         private Appendix.PublicKeyAnnouncement publicKeyAnnouncement;
+        private Appendix.TwoPhased twoPhased;
         private Long blockId;
         private int height = Integer.MAX_VALUE;
         private Long id;
@@ -103,6 +98,12 @@ final class TransactionImpl implements Transaction {
         @Override
         public BuilderImpl publicKeyAnnouncement(Appendix.PublicKeyAnnouncement publicKeyAnnouncement) {
             this.publicKeyAnnouncement = publicKeyAnnouncement;
+            return this;
+        }
+
+        @Override
+        public Builder twoPhased(Appendix.TwoPhased twoPhased) {
+            this.twoPhased = twoPhased;
             return this;
         }
 
@@ -176,6 +177,7 @@ final class TransactionImpl implements Transaction {
     private final Appendix.EncryptedMessage encryptedMessage;
     private final Appendix.EncryptToSelfMessage encryptToSelfMessage;
     private final Appendix.PublicKeyAnnouncement publicKeyAnnouncement;
+    private final Appendix.TwoPhased twoPhased;
 
     private final List<? extends Appendix.AbstractAppendix> appendages;
     private final int appendagesSize;
@@ -226,6 +228,9 @@ final class TransactionImpl implements Transaction {
         }
         if ((this.encryptToSelfMessage = builder.encryptToSelfMessage) != null) {
             list.add(this.encryptToSelfMessage);
+        }
+        if ((this.twoPhased = builder.twoPhased) != null) {
+            list.add(this.twoPhased);
         }
         this.appendages = Collections.unmodifiableList(list);
         int appendagesSize = 0;
@@ -451,6 +456,11 @@ final class TransactionImpl implements Transaction {
         return encryptToSelfMessage;
     }
 
+    @Override
+    public Appendix.TwoPhased getTwoPhasedSpecification() {
+        return twoPhased;
+    }
+
     Appendix.PublicKeyAnnouncement getPublicKeyAnnouncement() {
         return publicKeyAnnouncement;
     }
@@ -600,18 +610,6 @@ final class TransactionImpl implements Transaction {
         return zeroSignature(getBytes());
     }
 
-    /*
-    @Override
-    public Collection<TransactionType> getPhasingTransactionTypes() {
-        return getType().getPhasingTransactionTypes();
-    }
-
-    @Override
-    public Collection<TransactionType> getPhasedTransactionTypes() {
-        return getType().getPhasedTransactionTypes();
-    }
-    */
-
     @Override
     public JSONObject getJSONObject() {
         JSONObject json = new JSONObject();
@@ -675,6 +673,7 @@ final class TransactionImpl implements Transaction {
                 builder.encryptedMessage(Appendix.EncryptedMessage.parse(attachmentData));
                 builder.publicKeyAnnouncement((Appendix.PublicKeyAnnouncement.parse(attachmentData)));
                 builder.encryptToSelfMessage(Appendix.EncryptToSelfMessage.parse(attachmentData));
+                builder.twoPhased(Appendix.TwoPhased.parse(attachmentData));
             }
             if (version > 0) {
                 builder.ecBlockHeight(((Long) transactionData.get("ecBlockHeight")).intValue());
@@ -696,6 +695,11 @@ final class TransactionImpl implements Transaction {
     @Override
     public Long getECBlockId() {
         return ecBlockId;
+    }
+
+    @Override
+    public boolean isPending() {
+        return !(twoPhased==null); //todo: fix
     }
 
     @Override

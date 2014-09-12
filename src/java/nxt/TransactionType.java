@@ -232,10 +232,6 @@ public abstract class TransactionType {
         }
 
         @Override
-        final void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
-        }
-
-        @Override
         final void undoAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
         }
 
@@ -262,6 +258,10 @@ public abstract class TransactionType {
             }
 
             @Override
+            final void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
+            }
+
+            @Override
             void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
                 if (transaction.getAmountNQT() <= 0 || transaction.getAmountNQT() >= Constants.MAX_BALANCE_NQT) {
                     throw new NxtException.NotValidException("Invalid ordinary payment");
@@ -269,27 +269,44 @@ public abstract class TransactionType {
             }
         };
 
+
         public static final TransactionType PENDING_PAYMENT_VOTE_CASTING = new Payment() {
+
             @Override
             public final byte getSubtype() {
                 return TransactionType.SUBTYPE_PENDING_PAYMENT_VOTE_CASTING;
             }
 
             @Override
-            Attachment.EmptyAttachment parseAttachment(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
-                return Attachment.ORDINARY_PAYMENT;
+            Attachment.PendingPaymentVoteCasting parseAttachment(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
+                return new Attachment.PendingPaymentVoteCasting(buffer, transactionVersion);
             }
 
             @Override
-            Attachment.EmptyAttachment parseAttachment(JSONObject attachmentData) throws NxtException.NotValidException {
-                return Attachment.ORDINARY_PAYMENT;
+            Attachment.PendingPaymentVoteCasting parseAttachment(JSONObject attachmentData) throws NxtException.NotValidException {
+                return new Attachment.PendingPaymentVoteCasting(attachmentData);
             }
 
             @Override
             void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
                 if (transaction.getAmountNQT() <= 0 || transaction.getAmountNQT() >= Constants.MAX_BALANCE_NQT) {
-                    throw new NxtException.NotValidException("Invalid ordinary payment");
+                    throw new NxtException.NotValidException("Invalid payment");
                 }
+                if(!(transaction.getAttachment() instanceof Attachment.PendingPaymentVoteCasting)){
+                    throw new NxtException.NotValidException("Wrong kind of attachment");
+                }
+
+                Attachment.PendingPaymentVoteCasting att = (Attachment.PendingPaymentVoteCasting)transaction.getAttachment();
+                long pendingTxId = att.getPendingTransactionId();
+                if(TransactionDb.findTransaction(pendingTxId) == null){
+                    throw new NxtException.NotValidException("Wrong pending transaction");
+                }
+            }
+
+            @Override
+            final void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
+                Attachment.PendingPaymentVoteCasting att = (Attachment.PendingPaymentVoteCasting)transaction.getAttachment();
+
             }
         };
 
@@ -322,13 +339,13 @@ public abstract class TransactionType {
             }
 
             @Override
-            Attachment.EmptyAttachment parseAttachment(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
-                return Attachment.ARBITRARY_MESSAGE;
+            Attachment.PendingPaymentVoteCasting parseAttachment(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
+                return new Attachment.PendingPaymentVoteCasting(buffer, transactionVersion);
             }
 
             @Override
-            Attachment.EmptyAttachment parseAttachment(JSONObject attachmentData) throws NxtException.NotValidException {
-                return Attachment.ARBITRARY_MESSAGE;
+            Attachment.PendingPaymentVoteCasting parseAttachment(JSONObject attachmentData) throws NxtException.NotValidException {
+                return new Attachment.PendingPaymentVoteCasting(attachmentData);
             }
 
             @Override

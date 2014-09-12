@@ -459,6 +459,15 @@ public interface Appendix {
             }
         }
 
+        //todo: builder?
+        TwoPhased(int maxHeight, byte votingModel, long consensusThreshold, long voteThreshold, Long[] possibleVoters) {
+            this.maxHeight = maxHeight;
+            this.votingModel = votingModel;
+            this.consensusThreshold = consensusThreshold;
+            this.voteThreshold = voteThreshold;
+            this.possibleVoters = possibleVoters;
+        }
+
         @Override
         String getAppendixName() {
             return "TwoPhased";
@@ -475,7 +484,7 @@ public interface Appendix {
             buffer.putLong(consensusThreshold);
             buffer.putLong(voteThreshold);
             buffer.put(votingModel);
-            buffer.put((byte) possibleVoters.length); //todo: safety?
+            buffer.put((byte) possibleVoters.length);
             for (Long pv : possibleVoters) {
                 buffer.putLong(pv);
             }
