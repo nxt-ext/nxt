@@ -119,14 +119,23 @@ final class TransactionProcessorImpl implements TransactionProcessor {
             try {
                 try {
                     int minHeight = 0;
-                    try (Connection con = Db.getConnection();
-                         PreparedStatement pstmt = con.prepareStatement("SELECT MIN(height) AS min_height FROM unconfirmed_transaction "
-                                 + "WHERE expiration < ?")) {
-                        pstmt.setInt(1, Convert.getEpochTime());
-                        try (ResultSet rs = pstmt.executeQuery()) {
-                            if (rs.next()) {
-                                minHeight = rs.getInt("min_height");
+                    synchronized (Nxt.getBlockchain()) {
+                        try (Connection con = Db.beginTransaction();
+                             PreparedStatement pstmt = con.prepareStatement("SELECT MIN(height) AS min_height FROM unconfirmed_transaction "
+                                     + "WHERE expiration < ?")) {
+                            unconfirmedTransactionTable.trim(Nxt.getBlockchain().getHeight() - Constants.MAX_ROLLBACK);
+                            pstmt.setInt(1, Convert.getEpochTime());
+                            try (ResultSet rs = pstmt.executeQuery()) {
+                                if (rs.next()) {
+                                    minHeight = rs.getInt("min_height");
+                                }
                             }
+                            Db.commitTransaction();
+                        } catch (Exception e) {
+                            Logger.logErrorMessage(e.toString(), e);
+                            Db.rollbackTransaction();
+                        } finally {
+                            Db.endTransaction();
                         }
                     }
                     if (minHeight > 0) {
