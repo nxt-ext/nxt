@@ -45,8 +45,10 @@ var NRS = (function(NRS, $, undefined) {
 	$(".add_message").on("change", function(e) {
 		if ($(this).is(":checked")) {
 			$(this).closest("form").find(".optional_message").fadeIn();
+			$(this).closest(".form-group").css("margin-bottom", "5px");
 		} else {
 			$(this).closest("form").find(".optional_message").hide();
+			$(this).closest(".form-group").css("margin-bottom", "");
 		}
 	});
 
@@ -82,6 +84,8 @@ var NRS = (function(NRS, $, undefined) {
 				$visible_modal.modal("hide");
 			}
 		}
+
+		$(this).find(".form-group").css("margin-bottom", "");
 	});
 
 	$(".modal").on("shown.bs.modal", function() {
@@ -202,9 +206,6 @@ var NRS = (function(NRS, $, undefined) {
 
 		if (text == $.t("advanced")) {
 			var not = ".optional_note";
-			if (!NRS.dgsBlockPassed) {
-				not += ", .dgs_block";
-			}
 			$modal.find(".advanced").not(not).fadeIn();
 		} else {
 			$modal.find(".advanced").hide();

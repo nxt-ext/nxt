@@ -36,6 +36,7 @@ public final class GetState extends APIServlet.APIRequestHandler {
         response.put("lastBlock", Nxt.getBlockchain().getLastBlock().getStringId());
         response.put("cumulativeDifficulty", Nxt.getBlockchain().getLastBlock().getCumulativeDifficulty().toString());
 
+        /*
         long totalEffectiveBalance = 0;
         //TODO: rewrite
         for (Account account : Account.getAllAccounts()) {
@@ -45,6 +46,7 @@ public final class GetState extends APIServlet.APIRequestHandler {
             }
         }
         response.put("totalEffectiveBalanceNXT", totalEffectiveBalance);
+        */
 
         response.put("numberOfBlocks", Nxt.getBlockchain().getHeight() + 1);
         response.put("numberOfTransactions", Nxt.getBlockchain().getTransactionCount());
@@ -61,6 +63,7 @@ public final class GetState extends APIServlet.APIRequestHandler {
         response.put("lastBlockchainFeeder", lastBlockchainFeeder == null ? null : lastBlockchainFeeder.getAnnouncedAddress());
         response.put("lastBlockchainFeederHeight", Nxt.getBlockchainProcessor().getLastBlockchainFeederHeight());
         response.put("isScanning", Nxt.getBlockchainProcessor().isScanning());
+        response.put("isDownloading", Nxt.getBlockchainProcessor().isDownloading());
         response.put("availableProcessors", Runtime.getRuntime().availableProcessors());
         response.put("maxMemory", Runtime.getRuntime().maxMemory());
         response.put("totalMemory", Runtime.getRuntime().totalMemory());

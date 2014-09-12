@@ -32,6 +32,7 @@ public final class API {
     private static final int TESTNET_API_PORT = 6876;
 
     static final Set<String> allowedBotHosts;
+    static final boolean enableDebugAPI = Nxt.getBooleanProperty("nxt.enableDebugAPI");
 
     private static final Server apiServer;
 
@@ -109,6 +110,9 @@ public final class API {
             }
 
             apiHandler.addServlet(APITestServlet.class, "/test");
+            if (enableDebugAPI) {
+                apiHandler.addServlet(DbShellServlet.class, "/dbshell");
+            }
 
             if (Nxt.getBooleanProperty("nxt.apiServerCORS")) {
                 FilterHolder filterHolder = apiHandler.addFilter(CrossOriginFilter.class, "/*", null);
@@ -129,7 +133,7 @@ public final class API {
                         apiServer.start();
                         Logger.logMessage("Started API server at " + host + ":" + port);
                     } catch (Exception e) {
-                        Logger.logDebugMessage("Failed to start API server", e);
+                        Logger.logErrorMessage("Failed to start API server", e);
                         throw new RuntimeException(e.toString(), e);
                     }
 

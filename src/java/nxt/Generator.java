@@ -23,15 +23,13 @@ public final class Generator {
 
     private static final Listeners<Generator,Event> listeners = new Listeners<>();
 
-    private static final ConcurrentMap<Long, Block> lastBlocks = new ConcurrentHashMap<>();
-    private static final ConcurrentMap<Long, BigInteger> hits = new ConcurrentHashMap<>();
-
     private static final ConcurrentMap<String, Generator> generators = new ConcurrentHashMap<>();
     private static final Collection<Generator> allGenerators = Collections.unmodifiableCollection(generators.values());
 
     private static final Runnable generateBlockThread = new Runnable() {
 
         private volatile int lastTimestamp;
+        private volatile Long lastBlockId;
 
         @Override
         public void run() {
@@ -41,8 +39,19 @@ public final class Generator {
                     int timestamp = Convert.getEpochTime();
                     if (timestamp != lastTimestamp) {
                         lastTimestamp = timestamp;
+                        if (Nxt.getBlockchainProcessor().isScanning()) {
+                            return;
+                        }
+                        Block lastBlock = Nxt.getBlockchain().getLastBlock();
+                        if (lastBlock.getHeight() < Constants.DIGITAL_GOODS_STORE_BLOCK) {
+                            return;
+                        }
+                        boolean reset = ! lastBlock.getId().equals(lastBlockId);
+                        if (reset) {
+                            lastBlockId = lastBlock.getId();
+                        }
                         for (Generator generator : generators.values()) {
-                            generator.forge(timestamp);
+                            generator.forge(lastBlock, timestamp, reset);
                         }
                     }
                 } catch (Exception e) {
@@ -63,11 +72,6 @@ public final class Generator {
     }
 
     static void init() {}
-
-    static void clear() {
-        lastBlocks.clear();
-        hits.clear();
-    }
 
     public static boolean addListener(Listener<Generator> listener, Event eventType) {
         return listeners.addListener(listener, eventType);
@@ -102,8 +106,6 @@ public final class Generator {
     public static Generator stopForging(String secretPhrase) {
         Generator generator = generators.remove(secretPhrase);
         if (generator != null) {
-            lastBlocks.remove(generator.accountId);
-            hits.remove(generator.accountId);
             Logger.logDebugMessage("Account " + Convert.toUnsignedLong(generator.getAccountId()) + " stopped forging");
             listeners.notify(generator, Event.STOP_FORGING);
         }
@@ -150,8 +152,7 @@ public final class Generator {
 
     private static long getHitTime(long effectiveBalanceNXT, BigInteger hit, Block block) {
         return block.getTimestamp()
-                + hit.divide(BigInteger.valueOf(block.getBaseTarget())
-                .multiply(BigInteger.valueOf(effectiveBalanceNXT))).longValue();
+                + hit.divide(BigInteger.valueOf(block.getBaseTarget()).multiply(BigInteger.valueOf(effectiveBalanceNXT))).longValue();
     }
 
 
@@ -159,13 +160,17 @@ public final class Generator {
     private final String secretPhrase;
     private final byte[] publicKey;
     private volatile long deadline;
+    private volatile BigInteger hit;
+    private volatile long effectiveBalance;
 
     private Generator(String secretPhrase, byte[] publicKey, Account account) {
         this.secretPhrase = secretPhrase;
         this.publicKey = publicKey;
         // need to store publicKey in addition to accountId, because the account may not have had its publicKey set yet
         this.accountId = account.getId();
-        forge(Convert.getEpochTime()); // initialize deadline
+        if (Nxt.getBlockchain().getHeight() > Constants.DIGITAL_GOODS_STORE_BLOCK) {
+            forge(Nxt.getBlockchain().getLastBlock(), Convert.getEpochTime(), true); // initialize deadline
+        }
     }
 
     public byte[] getPublicKey() {
@@ -180,44 +185,30 @@ public final class Generator {
         return deadline;
     }
 
-    private void forge(int timestamp) {
+    private void forge(Block lastBlock, int timestamp, boolean reset) {
 
-        if (Nxt.getBlockchainProcessor().isScanning()) {
-            return;
-        }
-
-        Account account = Account.getAccount(accountId);
-        if (account == null) {
-            return;
-        }
-
-        //kushti: comment here to have fast block generation with any balance
-        long effectiveBalance = account.getEffectiveBalanceNXT();
-        if (effectiveBalance <= 0) {
-            return;
-        }
-
-        Block lastBlock = Nxt.getBlockchain().getLastBlock();
-
-        if (lastBlock.getHeight() < Constants.ASSET_EXCHANGE_BLOCK) {
-            return;
-        }
-
-        if (! lastBlock.equals(lastBlocks.get(accountId))) {
-
-            BigInteger hit = getHit(publicKey, lastBlock);
-
-            lastBlocks.put(accountId, lastBlock);
-            hits.put(accountId, hit);
-
-            deadline = Math.max(getHitTime(account.getEffectiveBalanceNXT(), hit, lastBlock) - Convert.getEpochTime(), 0);
-
+        if (reset) {
+            Account account = Account.getAccount(accountId);
+            if (account == null) {
+                return;
+            }
+            effectiveBalance = account.getEffectiveBalanceNXT();
+            if (effectiveBalance <= 0) {
+                return;
+            }
+            hit = getHit(publicKey, lastBlock);
+            deadline = Math.max(getHitTime(effectiveBalance, hit, lastBlock) - timestamp, 0);
             listeners.notify(this, Event.GENERATION_DEADLINE);
-
         }
 
-        if (verifyHit(hits.get(accountId), effectiveBalance, lastBlock, timestamp)) {
-            BlockchainProcessorImpl.getInstance().generateBlock(secretPhrase, timestamp);
+        if (verifyHit(hit, effectiveBalance, lastBlock, timestamp)) {
+            while (! BlockchainProcessorImpl.getInstance().generateBlock(secretPhrase, timestamp)) {
+                if (Convert.getEpochTime() - timestamp > 10) {
+                    break;
+                }
+            }
         }
+
     }
+
 }

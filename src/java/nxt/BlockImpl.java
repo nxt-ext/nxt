@@ -378,6 +378,9 @@ final class BlockImpl implements Block {
         generatorAccount.apply(generatorPublicKey, this.height);
         generatorAccount.addToBalanceAndUnconfirmedBalanceNQT(totalFeeNQT);
         generatorAccount.addToForgedBalanceNQT(totalFeeNQT);
+        for (TransactionImpl transaction : getTransactions()) {
+            transaction.apply();
+        }
     }
 
     void setPrevious(BlockImpl previousBlock) {

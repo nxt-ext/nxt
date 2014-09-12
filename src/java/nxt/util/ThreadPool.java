@@ -15,6 +15,7 @@ public final class ThreadPool {
     private static Map<Runnable,Long> backgroundJobs = new HashMap<>();
     private static List<Runnable> beforeStartJobs = new ArrayList<>();
     private static List<Runnable> lastBeforeStartJobs = new ArrayList<>();
+    private static List<Runnable> afterStartJobs = new ArrayList<>();
 
     public static synchronized void runBeforeStart(Runnable runnable, boolean runLast) {
         if (scheduledThreadPool != null) {
@@ -25,6 +26,10 @@ public final class ThreadPool {
         } else {
             beforeStartJobs.add(runnable);
         }
+    }
+
+    public static synchronized void runAfterStart(Runnable runnable) {
+        afterStartJobs.add(runnable);
     }
 
     public static synchronized void scheduleThread(Runnable runnable, int delay) {
@@ -57,13 +62,25 @@ public final class ThreadPool {
             scheduledThreadPool.scheduleWithFixedDelay(entry.getKey(), 0, entry.getValue(), TimeUnit.MILLISECONDS);
         }
         backgroundJobs = null;
+
+        Logger.logDebugMessage("Starting " + afterStartJobs.size() + " delayed tasks");
+        Thread thread = new Thread() {
+            @Override
+            public void run() {
+                runAll(afterStartJobs);
+            }
+        };
+        thread.setDaemon(true);
+        thread.start();
     }
 
     public static synchronized void shutdown() {
-        Logger.logShutdownMessage("Stopping background jobs...");
-        shutdownExecutor(scheduledThreadPool);
-        scheduledThreadPool = null;
-        Logger.logShutdownMessage("...Done");
+        if (scheduledThreadPool != null) {
+	        Logger.logShutdownMessage("Stopping background jobs...");
+    	    shutdownExecutor(scheduledThreadPool);
+        	scheduledThreadPool = null;
+        	Logger.logShutdownMessage("...Done");
+        }
     }
 
     public static void shutdownExecutor(ExecutorService executor) {
@@ -81,8 +98,20 @@ public final class ThreadPool {
 
     private static void runAll(List<Runnable> jobs) {
         List<Thread> threads = new ArrayList<>();
-        for (Runnable runnable : jobs) {
-            Thread thread = new Thread(runnable);
+        final StringBuffer errors = new StringBuffer();
+        for (final Runnable runnable : jobs) {
+            Thread thread = new Thread() {
+                @Override
+                public void run() {
+                    try {
+                        runnable.run();
+                    } catch (Throwable t) {
+                        errors.append(t.getMessage()).append('\n');
+                        throw t;
+                    }
+                }
+            };
+            thread.setDaemon(true);
             thread.start();
             threads.add(thread);
         }
@@ -92,6 +121,9 @@ public final class ThreadPool {
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }
+        }
+        if (errors.length() > 0) {
+            throw new RuntimeException("Errors running startup tasks:\n" + errors.toString());
         }
     }
 

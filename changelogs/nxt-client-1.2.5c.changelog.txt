@@ -1,0 +1,20 @@
+Bugfixes making sure unconfirmed transactions are more reliably preserved.
+
+The changelog from 1.2.5b is repeated below:
+
+
+This release disables all outgoing transactions from the BTER account:
+10715382765594435905 after block height 209885.
+
+If you use this release, existing blocks after that height will be deleted,
+but the transactions in them preserved and reprocessed, except those originating
+from the BTER account, and those with deadline already expired.
+
+A rescan with validation will be performed automatically at start, it will take
+longer and perform another rescan at the end.
+
+This is an optional release. Forgers have a choice whether to use it, or stay
+with the old 1.2.5 release, the community needs to decide whether to do the
+rollback or stay with the old fork.
+
+

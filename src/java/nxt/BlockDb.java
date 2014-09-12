@@ -18,17 +18,17 @@ final class BlockDb {
         try (Connection con = Db.getConnection();
              PreparedStatement pstmt = con.prepareStatement("SELECT * FROM block WHERE id = ?")) {
             pstmt.setLong(1, blockId);
-            ResultSet rs = pstmt.executeQuery();
-            BlockImpl block = null;
-            if (rs.next()) {
-                block = loadBlock(con, rs);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                BlockImpl block = null;
+                if (rs.next()) {
+                    block = loadBlock(con, rs);
+                }
+                return block;
             }
-            rs.close();
-            return block;
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
         } catch (NxtException.ValidationException e) {
-            throw new RuntimeException("Block already in database, id = " + blockId + ", does not pass validation!");
+            throw new RuntimeException("Block already in database, id = " + blockId + ", does not pass validation!", e);
         }
     }
 
@@ -36,8 +36,9 @@ final class BlockDb {
         try (Connection con = Db.getConnection();
              PreparedStatement pstmt = con.prepareStatement("SELECT 1 FROM block WHERE id = ?")) {
             pstmt.setLong(1, blockId);
-            ResultSet rs = pstmt.executeQuery();
-            return rs.next();
+            try (ResultSet rs = pstmt.executeQuery()) {
+                return rs.next();
+            }
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
         }
@@ -47,16 +48,51 @@ final class BlockDb {
         try (Connection con = Db.getConnection();
              PreparedStatement pstmt = con.prepareStatement("SELECT id FROM block WHERE height = ?")) {
             pstmt.setInt(1, height);
-            ResultSet rs = pstmt.executeQuery();
-            if (! rs.next()) {
-                rs.close();
-                throw new RuntimeException("Block at height " + height + " not found in database!");
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (!rs.next()) {
+                    throw new RuntimeException("Block at height " + height + " not found in database!");
+                }
+                return rs.getLong("id");
             }
-            long id = rs.getLong("id");
-            rs.close();
-            return id;
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
+        }
+    }
+
+    static BlockImpl findBlockAtHeight(int height) {
+        try (Connection con = Db.getConnection();
+             PreparedStatement pstmt = con.prepareStatement("SELECT * FROM block WHERE height = ?")) {
+            pstmt.setInt(1, height);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                BlockImpl block;
+                if (rs.next()) {
+                    block = loadBlock(con, rs);
+                } else {
+                    throw new RuntimeException("Block at height " + height + " not found in database!");
+                }
+                return block;
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e.toString(), e);
+        } catch (NxtException.ValidationException e) {
+            throw new RuntimeException("Block already in database at height " + height + ", does not pass validation!", e);
+        }
+    }
+
+    static BlockImpl findLastBlock() {
+        try (Connection con = Db.getConnection();
+             PreparedStatement pstmt = con.prepareStatement("SELECT * FROM block ORDER BY db_id DESC LIMIT 1")) {
+            BlockImpl block = null;
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    block = loadBlock(con, rs);
+                }
+            }
+            return block;
+        } catch (SQLException e) {
+            throw new RuntimeException(e.toString(), e);
+        } catch (NxtException.ValidationException e) {
+            throw new RuntimeException("Last block already in database does not pass validation!", e);
         }
     }
 
@@ -100,8 +136,8 @@ final class BlockDb {
         try {
             try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO block (id, version, timestamp, previous_block_id, "
                     + "total_amount, total_fee, payload_length, generator_public_key, previous_block_hash, cumulative_difficulty, "
-                    + "base_target, next_block_id, height, generation_signature, block_signature, payload_hash, generator_id) "
-                    + " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
+                    + "base_target, height, generation_signature, block_signature, payload_hash, generator_id) "
+                    + " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
                 int i = 0;
                 pstmt.setLong(++i, block.getId());
                 pstmt.setInt(++i, block.getVersion());
@@ -114,7 +150,6 @@ final class BlockDb {
                 pstmt.setBytes(++i, block.getPreviousBlockHash());
                 pstmt.setBytes(++i, block.getCumulativeDifficulty().toByteArray());
                 pstmt.setLong(++i, block.getBaseTarget());
-                DbUtils.setLong(pstmt, ++i, block.getNextBlockId());
                 pstmt.setInt(++i, block.getHeight());
                 pstmt.setBytes(++i, block.getGenerationSignature());
                 pstmt.setBytes(++i, block.getBlockSignature());
@@ -152,18 +187,18 @@ final class BlockDb {
         }
         try (Connection con = Db.getConnection();
              PreparedStatement pstmtSelect = con.prepareStatement("SELECT db_id FROM block WHERE db_id >= "
-             + "(SELECT db_id FROM block WHERE id = ?) ORDER BY db_id DESC");
+                     + "(SELECT db_id FROM block WHERE id = ?) ORDER BY db_id DESC");
              PreparedStatement pstmtDelete = con.prepareStatement("DELETE FROM block WHERE db_id = ?")) {
             try {
                 pstmtSelect.setLong(1, blockId);
-                ResultSet rs = pstmtSelect.executeQuery();
-                Db.commitTransaction();
-                while (rs.next()) {
-                    pstmtDelete.setInt(1, rs.getInt("db_id"));
-                    pstmtDelete.executeUpdate();
-                    Db.commitTransaction();
-                }
-                rs.close();
+                try (ResultSet rs = pstmtSelect.executeQuery()) {
+	                Db.commitTransaction();
+    	            while (rs.next()) {
+        	            pstmtDelete.setInt(1, rs.getInt("db_id"));
+            	        pstmtDelete.executeUpdate();
+                	    Db.commitTransaction();
+	                }
+	            }
             } catch (SQLException e) {
                 Db.rollbackTransaction();
                 throw e;

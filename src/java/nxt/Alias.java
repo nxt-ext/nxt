@@ -1,32 +1,48 @@
 package nxt;
 
+import nxt.db.DbIterator;
+import nxt.db.DbKey;
 import nxt.db.DbUtils;
-import nxt.db.VersioningDbTable;
+import nxt.db.VersionedEntityDbTable;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.List;
 
 public final class Alias {
 
     public static class Offer {
 
-        private final long priceNQT;
-        private final Long buyerId;
+        private long priceNQT;
+        private Long buyerId;
         private final Long aliasId;
+        private final DbKey dbKey;
 
         private Offer(Long aliasId, long priceNQT, Long buyerId) {
             this.priceNQT = priceNQT;
             this.buyerId = buyerId;
             this.aliasId = aliasId;
+            this.dbKey = offerDbKeyFactory.newKey(this.aliasId);
         }
 
         private Offer(ResultSet rs) throws SQLException {
             this.aliasId = rs.getLong("id");
+            this.dbKey = offerDbKeyFactory.newKey(this.aliasId);
             this.priceNQT = rs.getLong("price");
             this.buyerId  = DbUtils.getLong(rs, "buyer_id");
+        }
+
+        private void save(Connection con) throws SQLException {
+            try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO alias_offer (id, price, buyer_id, "
+                    + "height) VALUES (?, ?, ?, ?)")) {
+                int i = 0;
+                pstmt.setLong(++i, this.getId());
+                pstmt.setLong(++i, this.getPriceNQT());
+                DbUtils.setLong(pstmt, ++i, this.getBuyerId());
+                pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
+                pstmt.executeUpdate();
+            }
         }
 
         public Long getId() {
@@ -43,16 +59,20 @@ public final class Alias {
 
     }
 
-    private static final VersioningDbTable<Alias> aliasTable = new VersioningDbTable<Alias>() {
+    private static final DbKey.LongKeyFactory<Alias> aliasDbKeyFactory = new DbKey.LongKeyFactory<Alias>("id") {
+
+        @Override
+        public DbKey newKey(Alias alias) {
+            return alias.dbKey;
+        }
+
+    };
+
+    private static final VersionedEntityDbTable<Alias> aliasTable = new VersionedEntityDbTable<Alias>(aliasDbKeyFactory) {
 
         @Override
         protected String table() {
             return "alias";
-        }
-
-        @Override
-        protected Long getId(Alias alias) {
-            return alias.getId();
         }
 
         @Override
@@ -62,32 +82,25 @@ public final class Alias {
 
         @Override
         protected void save(Connection con, Alias alias) throws SQLException {
-            try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO alias (id, account_id, alias_name, "
-                    + "alias_uri, timestamp, height) "
-                    + "VALUES (?, ?, ?, ?, ?, ?)")) {
-                int i = 0;
-                pstmt.setLong(++i, alias.getId());
-                pstmt.setLong(++i, alias.getAccountId());
-                pstmt.setString(++i, alias.getAliasName());
-                pstmt.setString(++i, alias.getAliasURI());
-                pstmt.setInt(++i, alias.getTimestamp());
-                pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
-                pstmt.executeUpdate();
-            }
+            alias.save(con);
         }
 
     };
 
-    private static final VersioningDbTable<Offer> offerTable = new VersioningDbTable<Offer>() {
+    private static final DbKey.LongKeyFactory<Offer> offerDbKeyFactory = new DbKey.LongKeyFactory<Offer>("id") {
+
+        @Override
+        public DbKey newKey(Offer offer) {
+            return offer.dbKey;
+        }
+
+    };
+
+    private static final VersionedEntityDbTable<Offer> offerTable = new VersionedEntityDbTable<Offer>(offerDbKeyFactory) {
 
         @Override
         protected String table() {
             return "alias_offer";
-        }
-
-        @Override
-        protected Long getId(Offer offer) {
-            return offer.getId();
         }
 
         @Override
@@ -97,15 +110,7 @@ public final class Alias {
 
         @Override
         protected void save(Connection con, Offer offer) throws SQLException {
-            try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO alias_offer (id, price, buyer_id, "
-                    + "height) VALUES (?, ?, ?, ?)")) {
-                int i = 0;
-                pstmt.setLong(++i, offer.getId());
-                pstmt.setLong(++i, offer.getPriceNQT());
-                DbUtils.setLong(pstmt, ++i, offer.getBuyerId());
-                pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
-                pstmt.executeUpdate();
-            }
+            offer.save(con);
         }
 
     };
@@ -114,8 +119,8 @@ public final class Alias {
         return aliasTable.getCount();
     }
 
-    public static List<Alias> getAliasesByOwner(Long accountId) {
-        return aliasTable.getManyBy("account_id", accountId);
+    public static DbIterator<Alias> getAliasesByOwner(Long accountId, int from, int to) {
+        return aliasTable.getManyBy("account_id", accountId, from, to);
     }
 
     public static Alias getAlias(String aliasName) {
@@ -123,11 +128,11 @@ public final class Alias {
     }
 
     public static Alias getAlias(Long id) {
-        return aliasTable.get(id);
+        return aliasTable.get(aliasDbKeyFactory.newKey(id));
     }
 
     public static Offer getOffer(Alias alias) {
-        return offerTable.get(alias.getId());
+        return offerTable.get(offerDbKeyFactory.newKey(alias.getId()));
     }
 
     static void addOrUpdateAlias(Transaction transaction, Attachment.MessagingAliasAssignment attachment) {
@@ -148,7 +153,14 @@ public final class Alias {
         final Long buyerId = transaction.getRecipientId();
         if (priceNQT > 0) {
             Alias alias = getAlias(aliasName);
-            offerTable.insert(new Offer(alias.id, priceNQT, buyerId));
+            Offer offer = getOffer(alias);
+            if (offer == null) {
+                offerTable.insert(new Offer(alias.id, priceNQT, buyerId));
+            } else {
+                offer.priceNQT = priceNQT;
+                offer.buyerId = buyerId;
+                offerTable.insert(offer);
+            }
         } else {
             changeOwner(buyerId, aliasName, transaction.getBlockTimestamp());
         }
@@ -164,19 +176,19 @@ public final class Alias {
         offerTable.delete(offer);
     }
 
-    static void clear() {
-        aliasTable.truncate();
-        offerTable.truncate();
-    }
+    static void init() {}
+
 
     private Long accountId;
     private final Long id;
+    private final DbKey dbKey;
     private final String aliasName;
     private String aliasURI;
     private int timestamp;
 
     private Alias(Long id, Long accountId, String aliasName, String aliasURI, int timestamp) {
         this.id = id;
+        this.dbKey = aliasDbKeyFactory.newKey(this.id);
         this.accountId = accountId;
         this.aliasName = aliasName;
         this.aliasURI = aliasURI;
@@ -190,10 +202,26 @@ public final class Alias {
 
     private Alias(ResultSet rs) throws SQLException {
         this.id = rs.getLong("id");
+        this.dbKey = aliasDbKeyFactory.newKey(this.id);
         this.accountId = rs.getLong("account_id");
         this.aliasName = rs.getString("alias_name");
         this.aliasURI = rs.getString("alias_uri");
         this.timestamp = rs.getInt("timestamp");
+    }
+
+    private void save(Connection con) throws SQLException {
+        try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO alias (id, account_id, alias_name, "
+                + "alias_uri, timestamp, height) "
+                + "VALUES (?, ?, ?, ?, ?, ?)")) {
+            int i = 0;
+            pstmt.setLong(++i, this.getId());
+            pstmt.setLong(++i, this.getAccountId());
+            pstmt.setString(++i, this.getAliasName());
+            pstmt.setString(++i, this.getAliasURI());
+            pstmt.setInt(++i, this.getTimestamp());
+            pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
+            pstmt.executeUpdate();
+        }
     }
 
     public Long getId() {

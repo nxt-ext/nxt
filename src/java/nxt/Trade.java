@@ -1,6 +1,9 @@
 package nxt;
 
-import nxt.db.DbTable;
+import nxt.db.Db;
+import nxt.db.DbIterator;
+import nxt.db.DbKey;
+import nxt.db.EntityDbTable;
 import nxt.util.Convert;
 import nxt.util.Listener;
 import nxt.util.Listeners;
@@ -9,8 +12,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Collection;
-import java.util.List;
 
 public final class Trade {
 
@@ -20,7 +21,16 @@ public final class Trade {
 
     private static final Listeners<Trade,Event> listeners = new Listeners<>();
 
-    private static final DbTable<Trade> tradeTable = new DbTable<Trade>() {
+    private static final DbKey.LinkKeyFactory<Trade> tradeDbKeyFactory = new DbKey.LinkKeyFactory<Trade>("ask_order_id", "bid_order_id") {
+
+        @Override
+        public DbKey newKey(Trade trade) {
+            return trade.dbKey;
+        }
+
+    };
+
+    private static final EntityDbTable<Trade> tradeTable = new EntityDbTable<Trade>(tradeDbKeyFactory) {
 
         @Override
         protected String table() {
@@ -34,35 +44,13 @@ public final class Trade {
 
         @Override
         protected void save(Connection con, Trade trade) throws SQLException {
-            try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO trade (asset_id, block_id, "
-                    + "ask_order_id, bid_order_id, quantity, price, timestamp, height) VALUES (?, ?, ?, ?, ?, ?, ?, ?)")) {
-                int i = 0;
-                pstmt.setLong(++i, trade.getAssetId());
-                pstmt.setLong(++i, trade.getBlockId());
-                pstmt.setLong(++i, trade.getAskOrderId());
-                pstmt.setLong(++i, trade.getBidOrderId());
-                pstmt.setLong(++i, trade.getQuantityQNT());
-                pstmt.setLong(++i, trade.getPriceNQT());
-                pstmt.setInt(++i, trade.getTimestamp());
-                pstmt.setInt(++i, trade.getHeight());
-                pstmt.executeUpdate();
-            }
-        }
-
-        @Override
-        protected void delete(Connection con, Trade trade) throws SQLException {
-            try (PreparedStatement pstmt = con.prepareStatement(
-                    "DELETE FROM trade WHERE ask_order_id = ? AND bid_order_id = ?")) {
-                pstmt.setLong(1, trade.getAskOrderId());
-                pstmt.setLong(2, trade.getBidOrderId());
-                pstmt.executeUpdate();
-            }
+            trade.save(con);
         }
 
     };
 
-    public static Collection<Trade> getAllTrades() {
-        return tradeTable.getAll();
+    public static DbIterator<Trade> getAllTrades(int from, int to) {
+        return tradeTable.getAll(from, to);
     }
 
     public static int getCount() {
@@ -77,8 +65,21 @@ public final class Trade {
         return listeners.removeListener(listener, eventType);
     }
 
-    public static List<Trade> getTrades(Long assetId) {
-        return tradeTable.getManyBy("asset_id", assetId);
+    public static DbIterator<Trade> getTrades(Long assetId, int from, int to) {
+        return tradeTable.getManyBy("asset_id", assetId, from, to);
+    }
+
+    public static int getTradeCount(Long assetId) {
+        try (Connection con = Db.getConnection();
+             PreparedStatement pstmt = con.prepareStatement("SELECT COUNT(*) FROM trade WHERE asset_id = ?")) {
+            pstmt.setLong(1, assetId);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                rs.next();
+                return rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e.toString(), e);
+        }
     }
 
     static Trade addTrade(Long assetId, Block block, Long askOrderId, Long bidOrderId, long quantityQNT, long priceNQT) {
@@ -88,15 +89,16 @@ public final class Trade {
         return trade;
     }
 
-    static void clear() {
-        tradeTable.truncate();
-    }
+    static void init() {}
+
 
     private final int timestamp;
     private final Long assetId;
     private final Long blockId;
     private final int height;
-    private final Long askOrderId, bidOrderId;
+    private final Long askOrderId;
+    private final Long bidOrderId;
+    private final DbKey dbKey;
     private final long quantityQNT;
     private final long priceNQT;
 
@@ -107,6 +109,7 @@ public final class Trade {
         this.timestamp = block.getTimestamp();
         this.askOrderId = askOrderId;
         this.bidOrderId = bidOrderId;
+        this.dbKey = tradeDbKeyFactory.newKey(this.askOrderId, this.bidOrderId);
         this.quantityQNT = quantityQNT;
         this.priceNQT = priceNQT;
     }
@@ -116,10 +119,27 @@ public final class Trade {
         this.blockId = rs.getLong("block_id");
         this.askOrderId = rs.getLong("ask_order_id");
         this.bidOrderId = rs.getLong("bid_order_id");
+        this.dbKey = tradeDbKeyFactory.newKey(this.askOrderId, this.bidOrderId);
         this.quantityQNT = rs.getLong("quantity");
         this.priceNQT = rs.getLong("price");
         this.timestamp = rs.getInt("timestamp");
         this.height = rs.getInt("height");
+    }
+
+    private void save(Connection con) throws SQLException {
+        try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO trade (asset_id, block_id, "
+                + "ask_order_id, bid_order_id, quantity, price, timestamp, height) VALUES (?, ?, ?, ?, ?, ?, ?, ?)")) {
+            int i = 0;
+            pstmt.setLong(++i, this.getAssetId());
+            pstmt.setLong(++i, this.getBlockId());
+            pstmt.setLong(++i, this.getAskOrderId());
+            pstmt.setLong(++i, this.getBidOrderId());
+            pstmt.setLong(++i, this.getQuantityQNT());
+            pstmt.setLong(++i, this.getPriceNQT());
+            pstmt.setInt(++i, this.getTimestamp());
+            pstmt.setInt(++i, this.getHeight());
+            pstmt.executeUpdate();
+        }
     }
 
     public Long getBlockId() { return blockId; }

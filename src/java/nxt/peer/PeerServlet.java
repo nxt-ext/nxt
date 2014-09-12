@@ -15,7 +15,6 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
@@ -35,6 +34,7 @@ public final class PeerServlet extends HttpServlet {
 
     static {
         Map<String,PeerRequestHandler> map = new HashMap<>();
+        map.put("addPeers", AddPeers.instance);
         map.put("getCumulativeDifficulty", GetCumulativeDifficulty.instance);
         map.put("getInfo", GetInfo.instance);
         map.put("getMilestoneBlockIds", GetMilestoneBlockIds.instance);
@@ -86,7 +86,7 @@ public final class PeerServlet extends HttpServlet {
 
             JSONObject request;
             CountingInputStream cis = new CountingInputStream(req.getInputStream());
-            try (Reader reader = new BufferedReader(new InputStreamReader(cis, "UTF-8"))) {
+            try (Reader reader = new InputStreamReader(cis, "UTF-8")) {
                 request = (JSONObject) JSONValue.parse(reader);
             }
             if (request == null) {
@@ -95,7 +95,9 @@ public final class PeerServlet extends HttpServlet {
 
             if (peer.getState() == Peer.State.DISCONNECTED) {
                 peer.setState(Peer.State.CONNECTED);
-                Peers.updateAddress(peer);
+                if (peer.getAnnouncedAddress() != null) {
+                    Peers.updateAddress(peer);
+                }
             }
             peer.updateDownloadedVolume(cis.getCount());
             if (! peer.analyzeHallmark(peer.getPeerAddress(), (String)request.get("hallmark"))) {
@@ -123,21 +125,28 @@ public final class PeerServlet extends HttpServlet {
         }
 
         resp.setContentType("text/plain; charset=UTF-8");
-        long byteCount;
-        if (isGzipEnabled) {
-            try (Writer writer = new OutputStreamWriter(resp.getOutputStream(), "UTF-8")) {
-                response.writeJSONString(writer);
+        try {
+            long byteCount;
+            if (isGzipEnabled) {
+                try (Writer writer = new OutputStreamWriter(resp.getOutputStream(), "UTF-8")) {
+                    response.writeJSONString(writer);
+                }
+                byteCount = ((Response) ((CompressedResponseWrapper) resp).getResponse()).getContentCount();
+            } else {
+                CountingOutputStream cos = new CountingOutputStream(resp.getOutputStream());
+                try (Writer writer = new OutputStreamWriter(cos, "UTF-8")) {
+                    response.writeJSONString(writer);
+                }
+                byteCount = cos.getCount();
             }
-            byteCount = ((Response) ((CompressedResponseWrapper) resp).getResponse()).getContentCount();
-        } else {
-            CountingOutputStream cos = new CountingOutputStream(resp.getOutputStream());
-            try (Writer writer = new OutputStreamWriter(cos, "UTF-8")) {
-                response.writeJSONString(writer);
+            if (peer != null) {
+                peer.updateUploadedVolume(byteCount);
             }
-            byteCount = cos.getCount();
-        }
-        if (peer != null) {
-            peer.updateUploadedVolume(byteCount);
+        } catch (Exception e) {
+            if (peer != null) {
+                peer.blacklist(e);
+            }
+            throw e;
         }
     }
 

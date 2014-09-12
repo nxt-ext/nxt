@@ -1,5 +1,8 @@
 @ECHO OFF
-IF EXIST java (
+
+for %%X in (java.exe) do (set IS_JAVA_IN_PATH=%%~$PATH:X)
+
+IF defined IS_JAVA_IN_PATH (
 	start "NXT NRS" java -cp nxt.jar;lib\*;conf nxt.Nxt
 ) ELSE (
 	IF EXIST "%PROGRAMFILES%\Java\jre7" (
@@ -13,4 +16,3 @@ IF EXIST java (
 		)
 	)
 )
-

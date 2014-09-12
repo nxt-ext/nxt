@@ -59,6 +59,22 @@ public final class DbUtils {
         return rs.wasNull() ? null : n;
     }
 
+    public static String limitsClause(int from, int to) {
+        int limit = to >=0 && to >= from && to < Integer.MAX_VALUE ? to - from + 1 : 0;
+        return (limit > 0 ? " LIMIT ? " : "") + (from > 0 ? " OFFSET ? ": "");
+    }
+
+    public static int setLimits(int index, PreparedStatement pstmt, int from, int to) throws SQLException {
+        int limit = to >=0 && to >= from && to < Integer.MAX_VALUE ? to - from + 1 : 0;
+        if (limit > 0) {
+            pstmt.setInt(index++, limit);
+        }
+        if (from > 0) {
+            pstmt.setInt(index++, from);
+        }
+        return index;
+    }
+
     private DbUtils() {} // never
 
 }

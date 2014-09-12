@@ -83,9 +83,7 @@ var NRS = (function(NRS, $, undefined) {
 		};
 
 		if (data.add_message && data.message) {
-			if (!NRS.dgsBlockPassed) {
-				data.message = converters.stringToHexString(data.message);
-			} else if (data.encrypt_message) {
+			if (data.encrypt_message) {
 				try {
 					var options = {};
 
@@ -118,24 +116,20 @@ var NRS = (function(NRS, $, undefined) {
 		}
 
 		if (data.add_note_to_self && data.note_to_self) {
-			if (!NRS.dgsBlockPassed) {
+			try {
+				var options = {};
+
+				var encrypted = NRS.encryptNote(data.note_to_self, {
+					"publicKey": converters.hexStringToByteArray(NRS.generatePublicKey(data.secretPhrase))
+				}, data.secretPhrase);
+
+				data.encryptToSelfMessageData = encrypted.message;
+				data.encryptToSelfMessageNonce = encrypted.nonce;
+				data.messageToEncryptToSelfIsText = "true";
+
 				delete data.note_to_self;
-			} else {
-				try {
-					var options = {};
-
-					var encrypted = NRS.encryptNote(data.note_to_self, {
-						"publicKey": converters.hexStringToByteArray(NRS.generatePublicKey(data.secretPhrase))
-					}, data.secretPhrase);
-
-					data.encryptToSelfMessageData = encrypted.message;
-					data.encryptToSelfMessageNonce = encrypted.nonce;
-					data.messageToEncryptToSelfIsText = "true";
-
-					delete data.note_to_self;
-				} catch (err) {
-					throw err;
-				}
+			} catch (err) {
+				throw err;
 			}
 		} else {
 			delete data.note_to_self;
@@ -327,6 +321,105 @@ var NRS = (function(NRS, $, undefined) {
 					data["_extra"] = {
 						"convertedAccount": true
 					};
+				}
+			}
+		}
+
+		if (requestType == "sendMoney" || requestType == "transferAsset") {
+			var merchantInfo = $modal.find("input[name=merchant_info]").val();
+
+			var result = merchantInfo.match(/#merchant:(.*)#/i);
+
+			if (result && result[1]) {
+				merchantInfo = $.trim(result[1]);
+
+				if (!data.add_message || !data.message) {
+					$form.find(".error_message").html($.t("info_merchant_message_required")).show();
+					if (formErrorFunction) {
+						formErrorFunction(false, data);
+					}
+					NRS.unlockForm($modal, $btn);
+					return;
+				}
+
+				if (merchantInfo == "numeric") {
+					merchantInfo = "[0-9]+";
+				} else if (merchantInfo == "alphanumeric") {
+					merchantInfo = "[a-zA-Z0-9]+";
+				}
+
+				var regexParts = merchantInfo.match(/^\/(.*?)\/(.*)$/);
+
+				if (!regexParts) {
+					regexParts = ["", merchantInfo, ""];
+				}
+
+				var strippedRegex = regexParts[1].replace(/^[\^\(]*/, "").replace(/[\$\)]*$/, "");
+
+				if (regexParts[1].charAt(0) != "^") {
+					regexParts[1] = "^" + regexParts[1];
+				}
+
+				if (regexParts[1].slice(-1) != "$") {
+					regexParts[1] = regexParts[1] + "$";
+				}
+
+				if (regexParts[2].indexOf("i") !== -1) {
+					var regexp = new RegExp(regexParts[1], "i");
+				} else {
+					var regexp = new RegExp(regexParts[1]);
+				}
+
+				if (!regexp.test(data.message)) {
+					var regexType;
+					var errorMessage;
+					var lengthRequirement = strippedRegex.match(/\{(.*)\}/);
+
+					if (lengthRequirement) {
+						strippedRegex = strippedRegex.replace(lengthRequirement[0], "+");
+					}
+
+					if (strippedRegex == "[0-9]+") {
+						regexType = "numeric";
+					} else if (strippedRegex == "[a-z0-9]+" || strippedRegex.toLowerCase() == "[a-za-z0-9]+" || strippedRegex == "[a-z0-9]+") {
+						regexType = "alphanumeric";
+					} else {
+						regexType = "custom";
+					}
+
+					if (lengthRequirement) {
+						var minLength, maxLength, requiredLength;
+
+						if (lengthRequirement[1].indexOf(",") != -1) {
+							lengthRequirement = lengthRequirement[1].split(",");
+							var minLength = parseInt(lengthRequirement[0], 10);
+							if (lengthRequirement[1]) {
+								var maxLength = parseInt(lengthRequirement[1], 10);
+								errorMessage = $.t("error_merchant_message_" + regexType + "_range_length", {
+									"minLength": minLength,
+									"maxLength": maxLength
+								});
+							} else {
+								errorMessage = $.t("error_merchant_message_" + regexType + "_min_length", {
+									"minLength": minLength
+								});
+							}
+						} else {
+							var requiredLength = parseInt(lengthRequirement[1], 10);
+							errorMessage = $.t("error_merchant_message_" + regexType + "_length", {
+								"length": requiredLength
+							});
+						}
+					} else {
+						errorMessage = $.t("error_merchant_message_" + regexType);
+					}
+
+					$form.find(".error_message").html(errorMessage).show();
+					if (formErrorFunction) {
+						formErrorFunction(false, data);
+					}
+					NRS.unlockForm($modal, $btn);
+					return;
 				}
 			}
 		}

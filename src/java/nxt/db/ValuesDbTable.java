@@ -7,26 +7,47 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-//TODO: caching?
-public abstract class ValuesDbTable<T,V> extends BasicDbTable {
+public abstract class ValuesDbTable<T,V> extends DerivedDbTable {
+
+    private final boolean multiversion;
+    protected final DbKey.Factory<T> dbKeyFactory;
+
+    protected ValuesDbTable(DbKey.Factory<T> dbKeyFactory) {
+        this(dbKeyFactory, false);
+    }
+
+    ValuesDbTable(DbKey.Factory<T> dbKeyFactory, boolean multiversion) {
+        this.dbKeyFactory = dbKeyFactory;
+        this.multiversion = multiversion;
+    }
 
     protected abstract V load(Connection con, ResultSet rs) throws SQLException;
 
     protected abstract void save(Connection con, T t, V v) throws SQLException;
 
-    protected abstract void delete(Connection con, T t) throws SQLException;
-
-    public List<V> get(Long id) {
+    public final List<V> get(DbKey dbKey) {
+        List<V> values;
+        if (Db.isInTransaction()) {
+            values = (List<V>)Db.getCache(table()).get(dbKey);
+            if (values != null) {
+                return values;
+            }
+        }
         try (Connection con = Db.getConnection();
-             PreparedStatement pstmt = con.prepareStatement("SELECT * FROM " + table() + " WHERE id = ?")) {
-            pstmt.setLong(1, id);
-            return getManyBy(con, pstmt);
+             PreparedStatement pstmt = con.prepareStatement("SELECT * FROM " + table() + dbKeyFactory.getPKClause()
+             + (multiversion ? " AND latest = TRUE" : ""))) {
+            dbKey.setPK(pstmt);
+            values = get(con, pstmt);
+            if (Db.isInTransaction()) {
+                Db.getCache(table()).put(dbKey, values);
+            }
+            return values;
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
         }
     }
 
-    public final List<V> getManyBy(Connection con, PreparedStatement pstmt) {
+    private List<V> get(Connection con, PreparedStatement pstmt) {
         try {
             List<V> result = new ArrayList<>();
             try (ResultSet rs = pstmt.executeQuery()) {
@@ -40,30 +61,43 @@ public abstract class ValuesDbTable<T,V> extends BasicDbTable {
         }
     }
 
-    public void insert(T t, V v) {
+    public final void insert(T t, V v) {
+        if (!Db.isInTransaction()) {
+            throw new IllegalStateException("Not in transaction");
+        }
+        DbKey dbKey = dbKeyFactory.newKey(t);
+        Db.getCache(table()).remove(dbKey);
         try (Connection con = Db.getConnection()) {
+            if (multiversion) {
+                try (PreparedStatement pstmt = con.prepareStatement("UPDATE " + table()
+                        + " SET latest = FALSE " + dbKeyFactory.getPKClause() + " AND latest = TRUE LIMIT 1")) {
+                    dbKey.setPK(pstmt);
+                    pstmt.executeUpdate();
+                }
+            }
             save(con, t, v);
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
         }
     }
 
-    public void insert(T t, List<V> values) {
+    public final void insert(T t, List<V> values) {
+        if (!Db.isInTransaction()) {
+            throw new IllegalStateException("Not in transaction");
+        }
+        DbKey dbKey = dbKeyFactory.newKey(t);
+        Db.getCache(table()).put(dbKey, values);
         try (Connection con = Db.getConnection()) {
+            if (multiversion) {
+                try (PreparedStatement pstmt = con.prepareStatement("UPDATE " + table()
+                        + " SET latest = FALSE " + dbKeyFactory.getPKClause() + " AND latest = TRUE")) {
+                    dbKey.setPK(pstmt);
+                    pstmt.executeUpdate();
+                }
+            }
             for (V v : values) {
                 save(con, t, v);
             }
-        } catch (SQLException e) {
-            throw new RuntimeException(e.toString(), e);
-        }
-    }
-
-    public final void delete(T t) {
-        if (t == null) {
-            return;
-        }
-        try (Connection con = Db.getConnection()) {
-            delete(con, t);
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
         }

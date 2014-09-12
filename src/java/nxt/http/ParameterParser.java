@@ -5,6 +5,7 @@ import nxt.Alias;
 import nxt.Asset;
 import nxt.Constants;
 import nxt.DigitalGoodsStore;
+import nxt.Nxt;
 import nxt.crypto.Crypto;
 import nxt.crypto.EncryptedData;
 import nxt.util.Convert;
@@ -67,7 +68,7 @@ final class ParameterParser {
         } catch (RuntimeException e) {
             throw new ParameterException(INCORRECT_FEE);
         }
-        if (feeNQT <= 0 || feeNQT >= Constants.MAX_BALANCE_NQT) {
+        if (feeNQT < 0 || feeNQT >= Constants.MAX_BALANCE_NQT) {
             throw new ParameterException(INCORRECT_FEE);
         }
         return feeNQT;
@@ -383,12 +384,32 @@ final class ParameterParser {
     }
 
     static int getLastIndex(HttpServletRequest req) {
+        int lastIndex;
         try {
-            return Integer.parseInt(req.getParameter("lastIndex"));
+            lastIndex = Integer.parseInt(req.getParameter("lastIndex"));
+            if (lastIndex < 0) {
+                return Integer.MAX_VALUE;
+            }
         } catch (NumberFormatException e) {
             return Integer.MAX_VALUE;
         }
+        return lastIndex;
+    }
 
+    static int getNumberOfConfirmations(HttpServletRequest req) throws ParameterException {
+        String numberOfConfirmationsValue = Convert.emptyToNull(req.getParameter("numberOfConfirmations"));
+        if (numberOfConfirmationsValue != null) {
+            try {
+                int numberOfConfirmations = Integer.parseInt(numberOfConfirmationsValue);
+                if (numberOfConfirmations <= Nxt.getBlockchain().getHeight()) {
+                    return numberOfConfirmations;
+                }
+                throw new ParameterException(INCORRECT_NUMBER_OF_CONFIRMATIONS);
+            } catch (NumberFormatException e) {
+                throw new ParameterException(INCORRECT_NUMBER_OF_CONFIRMATIONS);
+            }
+        }
+        return 0;
     }
 
     private ParameterParser() {} // never
