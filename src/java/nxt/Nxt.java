@@ -171,6 +171,7 @@ public final class Nxt {
                 Hub.init();
                 Order.init();
                 Poll.init();
+                PollResults.init();
                 Trade.init();
                 Vote.init();
                 Peers.init();

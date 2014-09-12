@@ -1,8 +1,10 @@
 package nxt;
 
-import nxt.db.CachingDbTable;
+import nxt.db.DbIterator;
+import nxt.db.DbKey;
+import nxt.db.EntityDbTable;
+
 import nxt.db.Db;
-import nxt.db.DbTable;
 import nxt.util.*;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -23,7 +25,21 @@ public final class Poll {
 
     public static final byte NO_ASSET_CODE = 0;
 
-    private static class PollTable extends CachingDbTable<Poll> {
+    private static final DbKey.LongKeyFactory<Poll> pollDbKeyFactory = new DbKey.LongKeyFactory<Poll>("id") {
+
+        @Override
+        public DbKey newKey(Poll poll) {
+            return poll.dbKey;
+        }
+
+    };
+
+    private static class PollTable extends EntityDbTable<Poll> {
+
+        protected PollTable(DbKey.Factory<Poll> dbKeyFactory) {
+            super(dbKeyFactory);
+        }
+
         @Override
         protected String table() {
             return "poll";
@@ -61,14 +77,6 @@ public final class Poll {
             }
         }
 
-        @Override
-        protected void delete(Connection con, Poll poll) throws SQLException {
-            try (PreparedStatement pstmt = con.prepareStatement("DELETE FROM poll WHERE id = ?")) {
-                pstmt.setLong(1, poll.getId());
-                pstmt.executeUpdate();
-            }
-        }
-
         public void updateActive(Boolean active, long id){
             String query = "UPDATE poll SET active="+active.toString()+" WHERE ID="+id;
             try (Connection con = Db.getConnection();
@@ -79,18 +87,18 @@ public final class Poll {
             }
         }
 
-        @Override
         protected Long getId(Poll poll) {
             return poll.getId();
         }
     }
 
+    private final static PollTable pollTable = new PollTable(pollDbKeyFactory);
 
-    private final static PollTable pollTable = new PollTable();
-
+    static void init() {}
 
 
     private final Long id;
+    private final DbKey dbKey;
     private final String name;
     private final String description;
     private final String[] options;
@@ -129,6 +137,7 @@ public final class Poll {
                  byte optionModel, byte votingModel, long minBalance,
                  long assetId, byte minNumberOfOptions, byte maxNumberOfOptions) {
         this.id = id;
+        this.dbKey = pollDbKeyFactory.newKey(this.id);
         this.name = name;
         this.description = description;
         this.options = options;
@@ -144,6 +153,7 @@ public final class Poll {
 
     private Poll(ResultSet rs) throws SQLException {
         this.id = rs.getLong("id");
+        this.dbKey = pollDbKeyFactory.newKey(this.id);
         this.name = rs.getString("name");
         this.description = rs.getString("description");
         this.options = (String[])rs.getArray("options").getArray();
@@ -159,6 +169,7 @@ public final class Poll {
 
     private Poll(Transaction transaction, Attachment.MessagingPollCreation attachment){
         this.id = transaction.getId();
+        this.dbKey = pollDbKeyFactory.newKey(this.id);
         this.name = attachment.getPollName();
         this.description = attachment.getPollDescription();
         this.options = attachment.getPollOptions();
@@ -189,24 +200,24 @@ public final class Poll {
         pollTable.insert(poll);
     }
 
-    static void clear() {
-        pollTable.truncate();
-    }
-
-    static boolean exists(long pollId){
-        return pollTable.get(pollId) != null;
+    static boolean exists(long id){
+        return getPoll(id) != null;
     }
 
     public static Poll getPoll(Long id) {
-        return pollTable.get(id);
+        return pollTable.get(pollDbKeyFactory.newKey(id));
     }
 
-    public static Collection<Poll> getActivePolls() {
-        return pollTable.getManyBy("active", true);
+    public static DbIterator<Poll> getActivePolls() {
+        return pollTable.getManyBy("active", true, 0, Integer.MAX_VALUE);
     }
 
-    public static Collection<Poll> getFinishedPolls() {
-        return pollTable.getManyBy("active", false);
+    public static DbIterator<Poll> getFinishedPolls() {
+        return pollTable.getManyBy("active", false, 0, Integer.MAX_VALUE);
+    }
+
+    public static DbIterator<Poll> getAllPolls(int from, int to) {
+        return pollTable.getAll(from, to);
     }
 
     public static int getCount() {
@@ -214,8 +225,7 @@ public final class Poll {
     }
 
     public static boolean isActive(long pollId) {
-        Poll poll = pollTable.get(pollId);
-        return poll.isActive();
+        return getPoll(pollId).isActive();
     }
 
     public static void markPollAsFinished(Poll poll){

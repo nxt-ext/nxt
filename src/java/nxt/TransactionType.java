@@ -840,7 +840,6 @@ public abstract class TransactionType {
             }
 
         };
-
     }
 
     public static abstract class ColoredCoins extends TransactionType {

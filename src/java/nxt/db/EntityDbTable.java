@@ -4,6 +4,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
 public abstract class EntityDbTable<T> extends DerivedDbTable {
 
@@ -80,14 +82,20 @@ public abstract class EntityDbTable<T> extends DerivedDbTable {
         }
     }
 
-    public final DbIterator<T> getManyBy(String columnName, Long value, int from, int to) {
+    public final DbIterator<T> getManyBy(String columnName, Object value, int from, int to) {
         Connection con = null;
         try {
             con = Db.getConnection();
             PreparedStatement pstmt = con.prepareStatement("SELECT * FROM " + table()
                     + " WHERE " + columnName + " = ?" + (multiversion ? " AND latest = TRUE " : " ") + defaultSort()
                     + DbUtils.limitsClause(from, to));
-            pstmt.setLong(1, value);
+            if(value instanceof Long){
+                pstmt.setLong(1, (Long)value);
+            }else if(value instanceof Boolean){
+                pstmt.setBoolean(1, (Boolean)value);
+            }else if(value instanceof String){
+                pstmt.setString(1, (String)value);
+            }
             DbUtils.setLimits(2, pstmt, from, to);
             return getManyBy(con, pstmt, true);
         } catch (SQLException e) {
@@ -116,6 +124,24 @@ public abstract class EntityDbTable<T> extends DerivedDbTable {
                 return t;
             }
         });
+    }
+
+    //change resulting type to DbIterator?
+    public List<Long> getManyIdsBy(String targetColumnName, String filterColumnName, Long value) {
+        try (Connection con = Db.getConnection();
+             PreparedStatement pstmt = con.prepareStatement("SELECT " + targetColumnName + " FROM " + table()
+                     + " WHERE " + filterColumnName + " = ? ")) {
+            pstmt.setLong(1, value);
+            List<Long> result = new ArrayList<>();
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    result.add(rs.getLong(targetColumnName));
+                }
+            }
+            return result;
+        } catch (SQLException e) {
+            throw new RuntimeException(e.toString(), e);
+        }
     }
 
     public final DbIterator<T> getAll(int from, int to) {

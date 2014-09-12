@@ -1,6 +1,7 @@
 package nxt;
 
-import nxt.db.DbTable;
+import nxt.db.DbKey;
+import nxt.db.EntityDbTable;
 import nxt.util.Pair;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -10,7 +11,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -19,20 +19,14 @@ public abstract class PollResults<K, V> {
     public static final byte BINARY_RESULTS = 1;
     public static final byte CHOICE_RESULTS = 2;
 
-    protected long pollId;
-    protected Map<K, V> results;
+    private static final DbKey.LongKeyFactory<PollResults> pollResultsDbKeyFactory = new DbKey.LongKeyFactory<PollResults>("pollId") {
+        @Override
+        public DbKey newKey(PollResults results) {
+            return results.dbKey;
+        }
+    };
 
-    PollResults(long pollId, Map<K,V> results) {
-        this.pollId = pollId;
-        this.results = results;
-    }
-
-    PollResults(long pollId, String resultsAsJson) throws NxtException.ValidationException {
-        this.pollId = pollId;
-        this.results = decodeResultsFromJson(resultsAsJson);
-    }
-
-    private static final DbTable<PollResults> pollResultsTable = new DbTable<PollResults>() {
+    private static final EntityDbTable<PollResults> resultsTable = new EntityDbTable<PollResults>(pollResultsDbKeyFactory) {
         public static final String TABLE_NAME = "poll_results";
 
         @Override
@@ -69,15 +63,25 @@ public abstract class PollResults<K, V> {
                 throw new SQLException(ve);
             }
         }
-
-        @Override
-        protected void delete(Connection con, PollResults pr) throws SQLException {
-            try (PreparedStatement pstmt = con.prepareStatement("DELETE FROM "+TABLE_NAME+" WHERE id = ?")) {
-                pstmt.setLong(1, pr.getPollId());
-                pstmt.executeUpdate();
-            }
-        }
     };
+
+    static void init() {}
+
+    protected long pollId;
+    private final DbKey dbKey;
+    protected Map<K, V> results;
+
+    PollResults(long pollId, Map<K,V> results) {
+        this.pollId = pollId;
+        this.dbKey = pollResultsDbKeyFactory.newKey(this.pollId);
+        this.results = results;
+    }
+
+    PollResults(long pollId, String resultsAsJson) throws NxtException.ValidationException {
+        this.pollId = pollId;
+        this.dbKey = pollResultsDbKeyFactory.newKey(this.pollId);
+        this.results = decodeResultsFromJson(resultsAsJson);
+    }
 
     protected static PollResults fromResultSet(ResultSet rs) throws SQLException {
         Long pollId = rs.getLong("id");
@@ -111,19 +115,11 @@ public abstract class PollResults<K, V> {
     }
 
     public static PollResults get(long pollId) {
-        return pollResultsTable.get(pollId);
-    }
-
-    public static Collection<PollResults> getAllPollResults() {
-        return pollResultsTable.getAll();
+        return resultsTable.get(pollResultsDbKeyFactory.newKey(pollId));
     }
 
     public static void save(PollResults pr){
-        pollResultsTable.insert(pr);
-    }
-
-    static void clear(){
-        pollResultsTable.truncate();
+        resultsTable.insert(pr);
     }
 
     protected String encodeResultsAsJson() throws NxtException.ValidationException {
