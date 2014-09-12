@@ -132,8 +132,8 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                             }
                             Db.commitTransaction();
                         } catch (Exception e) {
-                            Logger.logErrorMessage(e.toString(), e);
                             Db.rollbackTransaction();
+                            throw e;
                         } finally {
                             Db.endTransaction();
                         }
