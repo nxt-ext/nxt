@@ -97,7 +97,6 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                 throw new RuntimeException(e.toString(), e);
             }
             super.rollback(height);
-            removeExpiredTransactions();
             processLater(transactions);
         }
 
@@ -119,7 +118,27 @@ final class TransactionProcessorImpl implements TransactionProcessor {
 
             try {
                 try {
-                    removeExpiredTransactions();
+                    synchronized (BlockchainImpl.getInstance()) {
+                        try {
+                            Db.beginTransaction();
+                            try (Connection con = Db.getConnection();
+                                 PreparedStatement pstmt = con.prepareStatement("SELECT * FROM unconfirmed_transaction WHERE expiration < ? AND latest = TRUE")) {
+                                pstmt.setInt(1, Convert.getEpochTime());
+                                try (DbIterator<TransactionImpl> iterator = unconfirmedTransactionTable.getManyBy(con, pstmt, true)) {
+                                    for (TransactionImpl transaction : iterator) {
+                                        unconfirmedTransactionTable.delete(transaction);
+                                        transaction.undoUnconfirmed();
+                                    }
+                                }
+                            }
+                            Db.commitTransaction();
+                        } catch (Exception e) {
+                            Db.rollbackTransaction();
+                            throw e;
+                        } finally {
+                            Db.endTransaction();
+                        }
+                    } // synchronized
                 } catch (Exception e) {
                     Logger.logDebugMessage("Error removing unconfirmed transactions", e);
                 }
@@ -343,6 +362,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                 } catch (Exception e) {
                     Logger.logErrorMessage(e.toString(), e);
                     Db.rollbackTransaction();
+                    throw e;
                 } finally {
                     Db.endTransaction();
                 }
@@ -373,36 +393,6 @@ final class TransactionProcessorImpl implements TransactionProcessor {
         synchronized (BlockchainImpl.getInstance()) {
             lostTransactions.addAll(transactions);
         }
-    }
-
-    private void removeExpiredTransactions() {
-        synchronized (BlockchainImpl.getInstance()) {
-            if (!Db.isInTransaction()) {
-                try {
-                    Db.beginTransaction();
-                    removeExpiredTransactions();
-                    Db.commitTransaction();
-                } catch (Exception e) {
-                    Logger.logErrorMessage(e.toString(), e);
-                    Db.rollbackTransaction();
-                } finally {
-                    Db.endTransaction();
-                }
-                return;
-            }
-            try (Connection con = Db.getConnection();
-                 PreparedStatement pstmt = con.prepareStatement("SELECT * FROM unconfirmed_transaction WHERE expiration < ? AND latest = TRUE")) {
-                pstmt.setInt(1, Convert.getEpochTime());
-                try (DbIterator<TransactionImpl> iterator = unconfirmedTransactionTable.getManyBy(con, pstmt, true)) {
-                    for (TransactionImpl transaction : iterator) {
-                        unconfirmedTransactionTable.delete(transaction);
-                        transaction.undoUnconfirmed();
-                    }
-                }
-            } catch (SQLException e) {
-                throw new RuntimeException(e.toString(), e);
-            }
-        } // synchronized
     }
 
     private void processPeerTransactions(JSONArray transactionsData, final boolean sendToPeers) throws NxtException.ValidationException {
