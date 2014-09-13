@@ -258,9 +258,9 @@ final class DbVersion {
                             }
                         }
                         stmt.executeUpdate("UPDATE version SET next_update = next_update + 1");
-                        con.commit();
+                        Db.commitTransaction();
                     } catch (SQLException e) {
-                        con.rollback();
+                        Db.rollbackTransaction();
                         throw e;
                     }
                 } catch (SQLException e) {

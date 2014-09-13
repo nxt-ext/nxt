@@ -20,9 +20,9 @@ public abstract class VersionedEntityDbTable<T> extends EntityDbTable<T> {
         rollback(table(), height, dbKeyFactory);
     }
 
-    public final void delete(T t) {
+    public final boolean delete(T t) {
         if (t == null) {
-            return;
+            return false;
         }
         if (!Db.isInTransaction()) {
             throw new IllegalStateException("Not in transaction");
@@ -43,17 +43,19 @@ public abstract class VersionedEntityDbTable<T> extends EntityDbTable<T> {
                         save(con, t);
                         pstmt.executeUpdate(); // delete after the save
                     }
+                    return true;
                 } else {
                     try (PreparedStatement pstmtDelete = con.prepareStatement("DELETE FROM " + table() + dbKeyFactory.getPKClause())) {
                         dbKey.setPK(pstmtDelete);
-                        pstmtDelete.executeUpdate();
+                        return pstmtDelete.executeUpdate() > 0;
                     }
                 }
             }
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
+        } finally {
+            Db.getCache(table()).remove(dbKey);
         }
-        Db.getCache(table()).remove(dbKey);
     }
 
     @Override

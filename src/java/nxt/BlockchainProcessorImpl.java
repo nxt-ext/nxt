@@ -913,7 +913,6 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 transactionProcessor.processLater(lostTransactions);
                 transactionProcessor.clear();
             }
-            Generator.clear();
             try (Connection con = inner ? Db.getConnection() : Db.beginTransaction();
                  PreparedStatement pstmt = con.prepareStatement("SELECT * FROM block WHERE height >= ? ORDER BY db_id ASC")) {
                 pstmt.setInt(1, height);
