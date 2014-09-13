@@ -317,12 +317,10 @@ final class TransactionProcessorImpl implements TransactionProcessor {
         List<Transaction> addedConfirmedTransactions = new ArrayList<>();
         List<Transaction> removedUnconfirmedTransactions = new ArrayList<>();
 
-        for (TransactionImpl transaction : block.getTransactions()) {
-            addedConfirmedTransactions.add(transaction);
-            TransactionImpl unconfirmedTransaction = unconfirmedTransactionTable.get(transaction.getDbKey());
-            if (unconfirmedTransaction != null) {
-                unconfirmedTransactionTable.delete(unconfirmedTransaction);
-                removedUnconfirmedTransactions.add(unconfirmedTransaction);
+        for (TransactionImpl blockTransaction : block.getTransactions()) {
+            addedConfirmedTransactions.add(blockTransaction);
+            if (unconfirmedTransactionTable.delete(blockTransaction)) {
+                removedUnconfirmedTransactions.add(blockTransaction);
             }
         }
 
@@ -352,8 +350,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
             }
             List<Transaction> removedList = new ArrayList<>();
             for (TransactionImpl transaction : transactions) {
-                if (unconfirmedTransactionTable.get(transaction.getDbKey()) != null) {
-                    unconfirmedTransactionTable.delete(transaction);
+                if (unconfirmedTransactionTable.delete(transaction)) {
                     transaction.undoUnconfirmed();
                     removedList.add(transaction);
                 }
