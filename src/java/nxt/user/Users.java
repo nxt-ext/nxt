@@ -381,9 +381,9 @@ public final class Users {
                 }
             }, Peers.Event.NEW_PEER);
 
-            Nxt.getTransactionProcessor().addListener(new Listener<List<Transaction>>() {
+            Nxt.getTransactionProcessor().addListener(new Listener<List<? extends Transaction>>() {
                 @Override
-                public void notify(List<Transaction> transactions) {
+                public void notify(List<? extends Transaction> transactions) {
                     JSONObject response = new JSONObject();
                     JSONArray removedUnconfirmedTransactions = new JSONArray();
                     for (Transaction transaction : transactions) {
@@ -396,9 +396,9 @@ public final class Users {
                 }
             }, TransactionProcessor.Event.REMOVED_UNCONFIRMED_TRANSACTIONS);
 
-            Nxt.getTransactionProcessor().addListener(new Listener<List<Transaction>>() {
+            Nxt.getTransactionProcessor().addListener(new Listener<List<? extends Transaction>>() {
                 @Override
-                public void notify(List<Transaction> transactions) {
+                public void notify(List<? extends Transaction> transactions) {
                     JSONObject response = new JSONObject();
                     JSONArray addedUnconfirmedTransactions = new JSONArray();
                     for (Transaction transaction : transactions) {
@@ -418,9 +418,9 @@ public final class Users {
                 }
             }, TransactionProcessor.Event.ADDED_UNCONFIRMED_TRANSACTIONS);
 
-            Nxt.getTransactionProcessor().addListener(new Listener<List<Transaction>>() {
+            Nxt.getTransactionProcessor().addListener(new Listener<List<? extends Transaction>>() {
                 @Override
-                public void notify(List<Transaction> transactions) {
+                public void notify(List<? extends Transaction> transactions) {
                     JSONObject response = new JSONObject();
                     JSONArray addedConfirmedTransactions = new JSONArray();
                     for (Transaction transaction : transactions) {
@@ -440,9 +440,9 @@ public final class Users {
                 }
             }, TransactionProcessor.Event.ADDED_CONFIRMED_TRANSACTIONS);
 
-            Nxt.getTransactionProcessor().addListener(new Listener<List<Transaction>>() {
+            Nxt.getTransactionProcessor().addListener(new Listener<List<? extends Transaction>>() {
                 @Override
-                public void notify(List<Transaction> transactions) {
+                public void notify(List<? extends Transaction> transactions) {
                     JSONObject response = new JSONObject();
                     JSONArray newTransactions = new JSONArray();
                     for (Transaction transaction : transactions) {
