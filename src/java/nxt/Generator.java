@@ -9,13 +9,15 @@ import nxt.util.ThreadPool;
 
 import java.math.BigInteger;
 import java.security.MessageDigest;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 
-public final class Generator {
+public final class Generator implements Comparable<Generator> {
 
     public static enum Event {
         GENERATION_DEADLINE, START_FORGING, STOP_FORGING
@@ -37,23 +39,35 @@ public final class Generator {
             try {
                 try {
                     int timestamp = Convert.getEpochTime();
-                    if (timestamp != lastTimestamp) {
-                        lastTimestamp = timestamp;
-                        if (Nxt.getBlockchainProcessor().isScanning()) {
-                            return;
-                        }
-                        Block lastBlock = Nxt.getBlockchain().getLastBlock();
-                        if (lastBlock.getHeight() < Constants.DIGITAL_GOODS_STORE_BLOCK) {
-                            return;
-                        }
-                        boolean reset = ! lastBlock.getId().equals(lastBlockId);
-                        if (reset) {
-                            lastBlockId = lastBlock.getId();
-                        }
-                        for (Generator generator : generators.values()) {
-                            generator.forge(lastBlock, timestamp, reset);
-                        }
+                    if (timestamp == lastTimestamp) {
+                        return;
                     }
+                    lastTimestamp = timestamp;
+                    synchronized (Nxt.getBlockchain()) {
+                        Block lastBlock = Nxt.getBlockchain().getLastBlock();
+                        if (lastBlock == null || lastBlock.getHeight() < Constants.DIGITAL_GOODS_STORE_BLOCK) {
+                            return;
+                        }
+                        List<Generator> sortedGenerators = new ArrayList<>();
+                        if (!lastBlock.getId().equals(lastBlockId)) {
+                            lastBlockId = lastBlock.getId();
+                            for (Generator generator : generators.values()) {
+                                generator.setLastBlock(lastBlock, timestamp);
+                                if (generator.effectiveBalance.signum() > 0) {
+                                    sortedGenerators.add(generator);
+                                }
+                            }
+                            if (sortedGenerators.size() > 0) {
+                                Collections.sort(sortedGenerators);
+                                Logger.logDebugMessage("Generation deadlines:\n" + sortedGenerators.toString());
+                            }
+                        }
+                        for (Generator generator : sortedGenerators) {
+                            if (generator.forge(lastBlock, timestamp)) {
+                                return;
+                            }
+                        }
+                    } // synchronized
                 } catch (Exception e) {
                     Logger.logDebugMessage("Error in block generation thread", e);
                 }
@@ -120,15 +134,14 @@ public final class Generator {
         return allGenerators;
     }
 
-    static boolean verifyHit(BigInteger hit, long effectiveBalance, Block previousBlock, int timestamp) {
+    static boolean verifyHit(BigInteger hit, BigInteger effectiveBalance, Block previousBlock, int timestamp) {
         int elapsedTime = timestamp - previousBlock.getTimestamp();
         if (elapsedTime <= 0) {
             return false;
         }
-        BigInteger effectiveBaseTarget = BigInteger.valueOf(previousBlock.getBaseTarget()).multiply(BigInteger.valueOf(effectiveBalance));
+        BigInteger effectiveBaseTarget = BigInteger.valueOf(previousBlock.getBaseTarget()).multiply(effectiveBalance);
         BigInteger prevTarget = effectiveBaseTarget.multiply(BigInteger.valueOf(elapsedTime - 1));
         BigInteger target = prevTarget.add(effectiveBaseTarget);
-
         return hit.compareTo(target) < 0
                 && (previousBlock.getHeight() < Constants.TRANSPARENT_FORGING_BLOCK_8
                 || hit.compareTo(prevTarget) >= 0
@@ -137,7 +150,7 @@ public final class Generator {
     }
 
     static long getHitTime(Account account, Block block) {
-        return getHitTime(account.getEffectiveBalanceNXT(), getHit(account.getPublicKey(), block), block);
+        return getHitTime(BigInteger.valueOf(account.getEffectiveBalanceNXT()), getHit(account.getPublicKey(), block), block);
     }
 
     private static BigInteger getHit(byte[] publicKey, Block block) {
@@ -150,9 +163,9 @@ public final class Generator {
         return new BigInteger(1, new byte[] {generationSignatureHash[7], generationSignatureHash[6], generationSignatureHash[5], generationSignatureHash[4], generationSignatureHash[3], generationSignatureHash[2], generationSignatureHash[1], generationSignatureHash[0]});
     }
 
-    private static long getHitTime(long effectiveBalanceNXT, BigInteger hit, Block block) {
+    private static long getHitTime(BigInteger effectiveBalance, BigInteger hit, Block block) {
         return block.getTimestamp()
-                + hit.divide(BigInteger.valueOf(block.getBaseTarget()).multiply(BigInteger.valueOf(effectiveBalanceNXT))).longValue();
+                + hit.divide(BigInteger.valueOf(block.getBaseTarget()).multiply(effectiveBalance)).longValue();
     }
 
 
@@ -161,7 +174,7 @@ public final class Generator {
     private final byte[] publicKey;
     private volatile long deadline;
     private volatile BigInteger hit;
-    private volatile long effectiveBalance;
+    private volatile BigInteger effectiveBalance;
 
     private Generator(String secretPhrase, byte[] publicKey, Account account) {
         this.secretPhrase = secretPhrase;
@@ -169,7 +182,7 @@ public final class Generator {
         // need to store publicKey in addition to accountId, because the account may not have had its publicKey set yet
         this.accountId = account.getId();
         if (Nxt.getBlockchain().getHeight() > Constants.DIGITAL_GOODS_STORE_BLOCK) {
-            forge(Nxt.getBlockchain().getLastBlock(), Convert.getEpochTime(), true); // initialize deadline
+            setLastBlock(Nxt.getBlockchain().getLastBlock(), Convert.getEpochTime());
         }
     }
 
@@ -185,30 +198,45 @@ public final class Generator {
         return deadline;
     }
 
-    private void forge(Block lastBlock, int timestamp, boolean reset) {
-
-        if (reset) {
-            Account account = Account.getAccount(accountId);
-            if (account == null) {
-                return;
-            }
-            effectiveBalance = account.getEffectiveBalanceNXT();
-            if (effectiveBalance <= 0) {
-                return;
-            }
-            hit = getHit(publicKey, lastBlock);
-            deadline = Math.max(getHitTime(effectiveBalance, hit, lastBlock) - timestamp, 0);
-            listeners.notify(this, Event.GENERATION_DEADLINE);
+    @Override
+    public int compareTo(Generator g) {
+        int i = this.hit.multiply(g.effectiveBalance).compareTo(g.hit.multiply(this.effectiveBalance));
+        if (i != 0) {
+            return i;
         }
+        return accountId.compareTo(g.accountId);
+    }
 
+    @Override
+    public String toString() {
+        return "account: " + Convert.toUnsignedLong(accountId) + " deadline: " + deadline;
+    }
+
+    private void setLastBlock(Block lastBlock, int timestamp) {
+        Account account = Account.getAccount(accountId);
+        effectiveBalance = BigInteger.valueOf(account == null || account.getEffectiveBalanceNXT() <= 0 ? 0 : account.getEffectiveBalanceNXT());
+        if (effectiveBalance.signum() == 0) {
+            return;
+        }
+        hit = getHit(publicKey, lastBlock);
+        deadline = Math.max(getHitTime(effectiveBalance, hit, lastBlock) - timestamp, 0);
+        listeners.notify(this, Event.GENERATION_DEADLINE);
+    }
+
+    private boolean forge(Block lastBlock, int timestamp) throws BlockchainProcessor.BlockNotAcceptedException {
         if (verifyHit(hit, effectiveBalance, lastBlock, timestamp)) {
-            while (! BlockchainProcessorImpl.getInstance().generateBlock(secretPhrase, timestamp)) {
-                if (Convert.getEpochTime() - timestamp > 10) {
-                    break;
+            while (true) {
+                try {
+                    BlockchainProcessorImpl.getInstance().generateBlock(secretPhrase, timestamp);
+                    return true;
+                } catch (BlockchainProcessor.TransactionNotAcceptedException e) {
+                    if (Convert.getEpochTime() - timestamp > 10) {
+                        throw e;
+                    }
                 }
             }
         }
-
+        return false;
     }
 
 }

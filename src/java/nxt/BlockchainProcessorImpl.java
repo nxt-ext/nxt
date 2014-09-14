@@ -746,7 +746,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 : 3;
     }
 
-    boolean generateBlock(String secretPhrase, int blockTimestamp) {
+    void generateBlock(String secretPhrase, int blockTimestamp) throws BlockNotAcceptedException {
 
         TransactionProcessorImpl transactionProcessor = TransactionProcessorImpl.getInstance();
         List<TransactionImpl> sortedTransactions = new ArrayList<>();
@@ -763,9 +763,6 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         }
 
         BlockImpl previousBlock = blockchain.getLastBlock();
-        if (previousBlock.getHeight() < Constants.DIGITAL_GOODS_STORE_BLOCK) {
-            return true;
-        }
 
         SortedMap<Long, TransactionImpl> newTransactions = new TreeMap<>();
         Map<TransactionType, Set<String>> duplicates = new HashMap<>();
@@ -847,14 +844,10 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         } catch (NxtException.ValidationException e) {
             // shouldn't happen because all transactions are already validated
             Logger.logMessage("Error generating block", e);
-            return true;
+            return;
         }
 
         block.sign(secretPhrase);
-
-        if (isScanning) {
-            return true;
-        }
 
         block.setPrevious(previousBlock);
 
@@ -863,17 +856,16 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             blockListeners.notify(block, Event.BLOCK_GENERATED);
             Logger.logDebugMessage("Account " + Convert.toUnsignedLong(block.getGeneratorId()) + " generated block " + block.getStringId()
                     + " at height " + block.getHeight());
-            return true;
         } catch (TransactionNotAcceptedException e) {
             Logger.logDebugMessage("Generate block failed: " + e.getMessage());
             Transaction transaction = e.getTransaction();
             Logger.logDebugMessage("Removing invalid transaction: " + transaction.getStringId());
             transactionProcessor.removeUnconfirmedTransactions(Collections.singletonList((TransactionImpl)transaction));
-            return false;
+            throw e;
         } catch (BlockNotAcceptedException e) {
             Logger.logDebugMessage("Generate block failed: " + e.getMessage());
+            throw e;
         }
-        return true;
     }
 
     private BlockImpl parseBlock(JSONObject blockData) throws NxtException.ValidationException {
