@@ -15,6 +15,7 @@ public final class FilteringIterator<T> implements Iterator<T>, Iterable<T>, Aut
     private final int to;
     private T next;
     private boolean hasNext;
+    private boolean iterated;
     private int count;
 
     public FilteringIterator(DbIterator<T> dbIterator, Filter<T> filter) {
@@ -89,6 +90,11 @@ public final class FilteringIterator<T> implements Iterator<T>, Iterable<T>, Aut
 
     @Override
     public Iterator<T> iterator() {
+        if (iterated) {
+            throw new IllegalStateException("Already iterated");
+        }
+        iterated = true;
         return this;
     }
+
 }

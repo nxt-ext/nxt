@@ -19,6 +19,7 @@ public final class DbIterator<T> implements Iterator<T>, Iterable<T>, AutoClosea
     private final ResultSet rs;
 
     private boolean hasNext;
+    private boolean iterated;
 
     public DbIterator(Connection con, PreparedStatement pstmt, ResultSetReader<T> rsReader) {
         this.con = con;
@@ -69,6 +70,10 @@ public final class DbIterator<T> implements Iterator<T>, Iterable<T>, AutoClosea
 
     @Override
     public Iterator<T> iterator() {
+        if (iterated) {
+            throw new IllegalStateException("Already iterated");
+        }
+        iterated = true;
         return this;
     }
 

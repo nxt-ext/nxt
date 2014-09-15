@@ -652,8 +652,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 block.setPrevious(previousLastBlock);
                 blockListeners.notify(block, Event.BEFORE_BLOCK_ACCEPT);
                 try (DbIterator<TransactionImpl> unconfirmedTransactions = transactionProcessor.getAllUnconfirmedTransactions()) {
-                    transactionProcessor.removeUnconfirmedTransactions(unconfirmedTransactions);
-                    transactionProcessor.processLater(unconfirmedTransactions);
+                    transactionProcessor.removeUnconfirmedTransactions(unconfirmedTransactions, true);
                 }
                 addBlock(block);
                 accept(block);
@@ -799,7 +798,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 } catch (NxtException.NotCurrentlyValidException e) {
                     continue;
                 } catch (NxtException.ValidationException e) {
-                    transactionProcessor.removeUnconfirmedTransactions(Collections.singletonList(transaction));
+                    transactionProcessor.removeUnconfirmedTransactions(Collections.singleton(transaction), false);
                     continue;
                 }
 
@@ -860,7 +859,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             Logger.logDebugMessage("Generate block failed: " + e.getMessage());
             Transaction transaction = e.getTransaction();
             Logger.logDebugMessage("Removing invalid transaction: " + transaction.getStringId());
-            transactionProcessor.removeUnconfirmedTransactions(Collections.singletonList((TransactionImpl)transaction));
+            transactionProcessor.removeUnconfirmedTransactions(Collections.singleton((TransactionImpl)transaction), false);
             throw e;
         } catch (BlockNotAcceptedException e) {
             Logger.logDebugMessage("Generate block failed: " + e.getMessage());
@@ -900,8 +899,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             try (Connection con = inner ? Db.getConnection() : Db.beginTransaction();
                  PreparedStatement pstmt = con.prepareStatement("SELECT * FROM block WHERE height >= ? ORDER BY db_id ASC")) {
                 try (DbIterator<TransactionImpl> unconfirmedTransactions = transactionProcessor.getAllUnconfirmedTransactions()) {
-                    transactionProcessor.removeUnconfirmedTransactions(unconfirmedTransactions);
-                    transactionProcessor.processLater(unconfirmedTransactions);
+                    transactionProcessor.removeUnconfirmedTransactions(unconfirmedTransactions, true);
                 }
                 for (DerivedDbTable table : derivedTables) {
                     if (height == 0) {

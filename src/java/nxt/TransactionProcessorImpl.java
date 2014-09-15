@@ -311,12 +311,12 @@ final class TransactionProcessorImpl implements TransactionProcessor {
         nonBroadcastedTransactions.clear();
     }
 
-    void removeUnconfirmedTransactions(Iterable<TransactionImpl> transactions) {
+    void removeUnconfirmedTransactions(Iterable<TransactionImpl> transactions, boolean processLater) {
         synchronized (BlockchainImpl.getInstance()) {
             if (!Db.isInTransaction()) {
                 try {
                     Db.beginTransaction();
-                    removeUnconfirmedTransactions(transactions);
+                    removeUnconfirmedTransactions(transactions, processLater);
                     Db.commitTransaction();
                 } catch (Exception e) {
                     Logger.logErrorMessage(e.toString(), e);
@@ -333,6 +333,9 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                     transaction.undoUnconfirmed();
                     removed.add(transaction);
                 }
+                if (processLater) {
+                    lostTransactions.add(transaction);
+                }
             }
             transactionListeners.notify(removed, Event.REMOVED_UNCONFIRMED_TRANSACTIONS);
         } // synchronized
@@ -340,7 +343,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
 
     void shutdown() {
         try (DbIterator<TransactionImpl> transactions = unconfirmedTransactionTable.getAll(0, -1)) {
-            removeUnconfirmedTransactions(transactions);
+            removeUnconfirmedTransactions(transactions, false);
         }
     }
 
@@ -348,7 +351,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
         return previousBlockHeight < Constants.DIGITAL_GOODS_STORE_BLOCK ? 0 : 1;
     }
 
-    void processLater(Iterable<TransactionImpl> transactions) {
+    void processLater(Collection<TransactionImpl> transactions) {
         synchronized (BlockchainImpl.getInstance()) {
             for (TransactionImpl transaction : transactions) {
                 lostTransactions.add(transaction);

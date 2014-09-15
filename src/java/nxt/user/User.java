@@ -1,6 +1,5 @@
 package nxt.user;
 
-import nxt.Account;
 import nxt.Generator;
 import nxt.crypto.Crypto;
 import nxt.util.JSON;
