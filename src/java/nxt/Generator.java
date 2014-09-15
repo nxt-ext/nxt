@@ -65,7 +65,7 @@ public final class Generator implements Comparable<Generator> {
                             }
                         }
                         for (Generator generator : sortedForgers) {
-                            if (generator.getHitTime() > timestamp || generator.forge(lastBlock, timestamp)) {
+                            if (generator.getHitTime() > timestamp + 1 || generator.forge(lastBlock, timestamp)) {
                                 return;
                             }
                         }
