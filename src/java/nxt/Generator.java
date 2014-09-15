@@ -53,7 +53,7 @@ public final class Generator implements Comparable<Generator> {
                             lastBlockId = lastBlock.getId();
                             List<Generator> forgers = new ArrayList<>();
                             for (Generator generator : generators.values()) {
-                                generator.setLastBlock(lastBlock, timestamp);
+                                generator.setLastBlock(lastBlock);
                                 if (generator.effectiveBalance.signum() > 0) {
                                     forgers.add(generator);
                                 }
@@ -65,7 +65,7 @@ public final class Generator implements Comparable<Generator> {
                             }
                         }
                         for (Generator generator : sortedForgers) {
-                            if (generator.forge(lastBlock, timestamp)) {
+                            if (generator.getHitTime() > timestamp || generator.forge(lastBlock, timestamp)) {
                                 return;
                             }
                         }
@@ -98,23 +98,14 @@ public final class Generator implements Comparable<Generator> {
     }
 
     public static Generator startForging(String secretPhrase) {
-        byte[] publicKey = Crypto.getPublicKey(secretPhrase);
-        return startForging(secretPhrase, publicKey);
-    }
-
-    public static Generator startForging(String secretPhrase, byte[] publicKey) {
-        Account account = Account.getAccount(publicKey);
-        if (account == null) {
-            return null;
-        }
-        Generator generator = new Generator(secretPhrase, publicKey, account);
+        Generator generator = new Generator(secretPhrase);
         Generator old = generators.putIfAbsent(secretPhrase, generator);
         if (old != null) {
-            Logger.logDebugMessage("Account " + Convert.toUnsignedLong(account.getId()) + " is already forging");
+            Logger.logDebugMessage("Account " + Convert.toUnsignedLong(old.getAccountId()) + " is already forging");
             return old;
         }
         listeners.notify(generator, Event.START_FORGING);
-        Logger.logDebugMessage("Account " + Convert.toUnsignedLong(account.getId()) + " started forging, deadline "
+        Logger.logDebugMessage("Account " + Convert.toUnsignedLong(generator.getAccountId()) + " started forging, deadline "
                 + generator.getDeadline() + " seconds");
         return generator;
     }
@@ -175,17 +166,16 @@ public final class Generator implements Comparable<Generator> {
     private final Long accountId;
     private final String secretPhrase;
     private final byte[] publicKey;
-    private volatile long deadline;
+    private volatile long hitTime;
     private volatile BigInteger hit;
     private volatile BigInteger effectiveBalance;
 
-    private Generator(String secretPhrase, byte[] publicKey, Account account) {
+    private Generator(String secretPhrase) {
         this.secretPhrase = secretPhrase;
-        this.publicKey = publicKey;
-        // need to store publicKey in addition to accountId, because the account may not have had its publicKey set yet
-        this.accountId = account.getId();
+        this.publicKey = Crypto.getPublicKey(secretPhrase);
+        this.accountId = Account.getId(publicKey);
         if (Nxt.getBlockchain().getHeight() > Constants.DIGITAL_GOODS_STORE_BLOCK) {
-            setLastBlock(Nxt.getBlockchain().getLastBlock(), Convert.getEpochTime());
+            setLastBlock(Nxt.getBlockchain().getLastBlock());
         }
         sortedForgers = null;
     }
@@ -199,7 +189,11 @@ public final class Generator implements Comparable<Generator> {
     }
 
     public long getDeadline() {
-        return deadline;
+        return Math.max(hitTime - Nxt.getBlockchain().getLastBlock().getTimestamp(), 0);
+    }
+
+    public long getHitTime() {
+        return hitTime;
     }
 
     @Override
@@ -213,17 +207,17 @@ public final class Generator implements Comparable<Generator> {
 
     @Override
     public String toString() {
-        return "account: " + Convert.toUnsignedLong(accountId) + " deadline: " + deadline;
+        return "account: " + Convert.toUnsignedLong(accountId) + " deadline: " + getDeadline();
     }
 
-    private void setLastBlock(Block lastBlock, int timestamp) {
+    private void setLastBlock(Block lastBlock) {
         Account account = Account.getAccount(accountId);
         effectiveBalance = BigInteger.valueOf(account == null || account.getEffectiveBalanceNXT() <= 0 ? 0 : account.getEffectiveBalanceNXT());
         if (effectiveBalance.signum() == 0) {
             return;
         }
         hit = getHit(publicKey, lastBlock);
-        deadline = Math.max(getHitTime(effectiveBalance, hit, lastBlock) - timestamp, 0);
+        hitTime = getHitTime(effectiveBalance, hit, lastBlock);
         listeners.notify(this, Event.GENERATION_DEADLINE);
     }
 
