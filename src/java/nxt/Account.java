@@ -553,6 +553,10 @@ public final class Account {
         return accountAssetTable.getManyBy("account_id", this.id, from, to);
     }
 
+    public DbIterator<Trade> getTrades(int from, int to) {
+        return Trade.getAccountTrades(this.id, from, to);
+    }
+
     public Long getUnconfirmedAssetBalanceQNT(Long assetId) {
         AccountAsset accountAsset = accountAssetTable.get(accountAssetDbKeyFactory.newKey(this.id, assetId));
         return accountAsset == null ? 0 : accountAsset.unconfirmedQuantityQNT;

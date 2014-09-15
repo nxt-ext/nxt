@@ -265,6 +265,8 @@ final class JSONData {
         json.put("asset", Convert.toUnsignedLong(trade.getAssetId()));
         json.put("askOrder", Convert.toUnsignedLong(trade.getAskOrderId()));
         json.put("bidOrder", Convert.toUnsignedLong(trade.getBidOrderId()));
+        putAccount(json, "seller", trade.getSellerId());
+        putAccount(json, "buyer", trade.getBuyerId());
         json.put("block", Convert.toUnsignedLong(trade.getBlockId()));
         json.put("height", trade.getHeight());
         return json;
