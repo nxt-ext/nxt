@@ -17,7 +17,7 @@ public final class GetUnconfirmedTransactions extends APIServlet.APIRequestHandl
     static final GetUnconfirmedTransactions instance = new GetUnconfirmedTransactions();
 
     private GetUnconfirmedTransactions() {
-        super(new APITag[] {APITag.TRANSACTIONS}, "account");
+        super(new APITag[] {APITag.TRANSACTIONS, APITag.ACCOUNTS}, "account");
     }
 
     @Override
@@ -28,7 +28,7 @@ public final class GetUnconfirmedTransactions extends APIServlet.APIRequestHandl
 
         if (accountIdString != null) {
             try {
-                accountId = Convert.parseUnsignedLong(accountIdString);
+                accountId = Convert.parseAccountId(accountIdString);
             } catch (RuntimeException e) {
                 return INCORRECT_ACCOUNT;
             }
