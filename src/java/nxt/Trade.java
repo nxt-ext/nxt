@@ -65,7 +65,7 @@ public final class Trade {
         return listeners.removeListener(listener, eventType);
     }
 
-    public static DbIterator<Trade> getTrades(Long assetId, int from, int to) {
+    public static DbIterator<Trade> getAssetTrades(Long assetId, int from, int to) {
         return tradeTable.getManyBy("asset_id", assetId, from, to);
     }
 

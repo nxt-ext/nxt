@@ -1,8 +1,8 @@
 package nxt.http;
 
+import nxt.Account;
 import nxt.Asset;
 import nxt.NxtException;
-import nxt.Trade;
 import nxt.db.DbIterator;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -10,11 +10,11 @@ import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
 
-public final class GetTrades extends APIServlet.APIRequestHandler {
+public final class GetAssetAccounts extends APIServlet.APIRequestHandler {
 
-    static final GetTrades instance = new GetTrades();
+    static final GetAssetAccounts instance = new GetAssetAccounts();
 
-    private GetTrades() {
+    private GetAssetAccounts() {
         super(new APITag[] {APITag.AE}, "asset", "firstIndex", "lastIndex");
     }
 
@@ -25,19 +25,18 @@ public final class GetTrades extends APIServlet.APIRequestHandler {
         int firstIndex = ParameterParser.getFirstIndex(req);
         int lastIndex = ParameterParser.getLastIndex(req);
 
-        JSONObject response = new JSONObject();
-
-        JSONArray tradesData = new JSONArray();
-        try (DbIterator<Trade> trades = asset.getTrades(firstIndex, lastIndex)) {
-            while (trades.hasNext()) {
-                tradesData.add(JSONData.trade(trades.next()));
+        JSONArray accountAssets = new JSONArray();
+        try (DbIterator<Account.AccountAsset> iterator = asset.getAccounts(firstIndex, lastIndex)) {
+            while (iterator.hasNext()) {
+                Account.AccountAsset accountAsset = iterator.next();
+                accountAssets.add(JSONData.accountAsset(accountAsset));
             }
-        } catch (RuntimeException e) {
-            response.put("error", e.toString());
         }
-        response.put("trades", tradesData);
 
+        JSONObject response = new JSONObject();
+        response.put("accountAssets", accountAssets);
         return response;
+
     }
 
 }

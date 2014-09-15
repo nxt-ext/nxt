@@ -71,6 +71,15 @@ final class JSONData {
         return json;
     }
 
+    static JSONObject accountAsset(Account.AccountAsset accountAsset) {
+        JSONObject json = new JSONObject();
+        putAccount(json, "account", accountAsset.getAccountId());
+        json.put("asset", Convert.toUnsignedLong(accountAsset.getAssetId()));
+        json.put("quantityQNT", String.valueOf(accountAsset.getQuantityQNT()));
+        json.put("unconfirmedQuantityQNT", String.valueOf(accountAsset.getUnconfirmedQuantityQNT()));
+        return json;
+    }
+
     static JSONObject askOrder(Order.Ask order) {
         JSONObject json = order(order);
         json.put("type", "ask");

@@ -129,4 +129,12 @@ public final class Asset {
         return decimals;
     }
 
+    public DbIterator<Account.AccountAsset> getAccounts(int from, int to) {
+        return Account.getAssetAccounts(this.assetId, from, to);
+    }
+
+    public DbIterator<Trade> getTrades(int from, int to) {
+        return Trade.getAssetTrades(this.assetId, from, to);
+    }
+
 }
