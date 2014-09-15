@@ -60,9 +60,6 @@ public final class Generator implements Comparable<Generator> {
                             }
                             Collections.sort(forgers);
                             sortedForgers = Collections.unmodifiableList(forgers);
-                            if (sortedForgers.size() > 0) {
-                                Logger.logDebugMessage("Generation deadlines:\n" + sortedForgers.toString());
-                            }
                         }
                         for (Generator generator : sortedForgers) {
                             if (generator.getHitTime() > timestamp + 1 || generator.forge(lastBlock, timestamp)) {
