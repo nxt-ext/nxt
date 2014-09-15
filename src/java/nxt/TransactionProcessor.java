@@ -30,4 +30,6 @@ public interface TransactionProcessor extends Observable<List<Transaction>,Trans
     Transaction.Builder newTransactionBuilder(byte[] senderPublicKey, long amountNQT, long feeNQT, short deadline, Attachment attachment)
             throws NxtException.ValidationException;
 
+    public void shutdown();
+
 }

@@ -1994,8 +1994,7 @@ public abstract class TransactionType {
                     throw new NxtException.NotYetEnabledException("Monetary System not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
                 }
                 Attachment.MonetarySystemExchangeOfferPublication attachment = (Attachment.MonetarySystemExchangeOfferPublication)transaction.getAttachment();
-                if (!Genesis.CREATOR_ID.equals(transaction.getRecipientId())
-                        || transaction.getAmountNQT() != 0
+                if (transaction.getAmountNQT() != 0
                         || !Currency.isIssued(attachment.getCurrencyId())
                         || attachment.getBuyRateNQT() <= 0
                         || attachment.getSellRateNQT() <= 0
@@ -2139,8 +2138,7 @@ public abstract class TransactionType {
                     throw new NxtException.NotYetEnabledException("Monetary System not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
                 }
                 Attachment.MonetarySystemMoneyMinting attachment = (Attachment.MonetarySystemMoneyMinting)transaction.getAttachment();
-                if (!Genesis.CREATOR_ID.equals(transaction.getRecipientId())
-                        || transaction.getAmountNQT() != 0
+                if (transaction.getAmountNQT() != 0
                         || !Currency.isIssued(attachment.getCurrencyId())
                         || !CurrencyType.getCurrencyType(Currency.getCurrency(attachment.getCurrencyId()).getType()).isMintable()
                         || attachment.getUnits() <= 0 || attachment.getUnits() > Currency.getCurrency(attachment.getCurrencyId()).getTotalSupply() / Constants.MAX_MINTING_RATIO) {
@@ -2193,8 +2191,7 @@ public abstract class TransactionType {
                     throw new NxtException.NotYetEnabledException("Monetary System not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
                 }
                 Attachment.MonetarySystemShufflingInitiation attachment = (Attachment.MonetarySystemShufflingInitiation)transaction.getAttachment();
-                if (!Genesis.CREATOR_ID.equals(transaction.getRecipientId())
-                        || transaction.getAmountNQT() != 0
+                if (transaction.getAmountNQT() != 0
                         || !Currency.isIssued(attachment.getCurrencyId())
                         || attachment.getAmount() <= 0 || attachment.getAmount() > Constants.MAX_CURRENCY_TOTAL_SUPPLY
                         || attachment.getNumberOfParticipants() < Constants.MIN_NUMBER_OF_SHUFFLING_PARTICIPANTS || attachment.getNumberOfParticipants() > Constants.MAX_NUMBER_OF_SHUFFLING_PARTICIPANTS
@@ -2257,8 +2254,7 @@ public abstract class TransactionType {
                     throw new NxtException.NotYetEnabledException("Monetary System not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
                 }
                 Attachment.MonetarySystemShufflingContinuation attachment = (Attachment.MonetarySystemShufflingContinuation)transaction.getAttachment();
-                if (!Genesis.CREATOR_ID.equals(transaction.getRecipientId())
-                        || transaction.getAmountNQT() != 0
+                if (transaction.getAmountNQT() != 0
                         || !CoinShuffler.isContinued(attachment.getShufflingId())
                         || !CoinShuffler.isParticipant(transaction.getSenderId(), attachment.getShufflingId())
                         || CoinShuffler.sentEncryptedRecipients(transaction.getSenderId(), attachment.getShufflingId())) {
@@ -2310,8 +2306,7 @@ public abstract class TransactionType {
                     throw new NxtException.NotYetEnabledException("Monetary System not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
                 }
                 Attachment.MonetarySystemShufflingFinalization attachment = (Attachment.MonetarySystemShufflingFinalization)transaction.getAttachment();
-                if (!Genesis.CREATOR_ID.equals(transaction.getRecipientId())
-                        || transaction.getAmountNQT() != 0
+                if (transaction.getAmountNQT() != 0
                         || !CoinShuffler.isFinalized(attachment.getShufflingId())
                         || !CoinShuffler.isParticipant(transaction.getSenderId(), attachment.getShufflingId())
                         || CoinShuffler.sentDecryptedRecipients(transaction.getSenderId(), attachment.getShufflingId())
@@ -2364,8 +2359,7 @@ public abstract class TransactionType {
                     throw new NxtException.NotYetEnabledException("Monetary System not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
                 }
                 Attachment.MonetarySystemShufflingCancellation attachment = (Attachment.MonetarySystemShufflingCancellation)transaction.getAttachment();
-                if (!Genesis.CREATOR_ID.equals(transaction.getRecipientId())
-                        || transaction.getAmountNQT() != 0
+                if (transaction.getAmountNQT() != 0
                         || (!CoinShuffler.isFinalized(attachment.getShufflingId()) && !CoinShuffler.isCancelled(attachment.getShufflingId()))
                         || !CoinShuffler.isParticipant(transaction.getSenderId(), attachment.getShufflingId())
                         || CoinShuffler.sentDecryptedRecipients(transaction.getSenderId(), attachment.getShufflingId())

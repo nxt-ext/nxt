@@ -379,7 +379,8 @@ final class TransactionProcessorImpl implements TransactionProcessor {
         } // synchronized
     }
 
-    void shutdown() {
+    @Override
+    public void shutdown() {
         try (DbIterator<TransactionImpl> transactions = unconfirmedTransactionTable.getAll(0, -1)) {
             removeUnconfirmedTransactions(transactions);
         }

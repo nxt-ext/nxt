@@ -692,7 +692,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
     private List<BlockImpl> popOffTo(Block commonBlock) {
         synchronized (blockchain) {
             if (trimDerivedTables && blockchain.getHeight() - commonBlock.getHeight() > Constants.MAX_ROLLBACK) {
-                throw new IllegalArgumentException("Rollback to height " + commonBlock.getHeight() + " not suppported, "
+                throw new IllegalArgumentException("Rollback to height " + commonBlock.getHeight() + " not supported, "
                         + "current height " + Nxt.getBlockchain().getHeight());
             }
             if (blockchain.getBlock(commonBlock.getId()) == null) {
