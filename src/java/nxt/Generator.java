@@ -27,6 +27,7 @@ public final class Generator implements Comparable<Generator> {
 
     private static final ConcurrentMap<String, Generator> generators = new ConcurrentHashMap<>();
     private static final Collection<Generator> allGenerators = Collections.unmodifiableCollection(generators.values());
+    private static volatile List<Generator> sortedForgers;
 
     private static final Runnable generateBlockThread = new Runnable() {
 
@@ -48,21 +49,22 @@ public final class Generator implements Comparable<Generator> {
                         if (lastBlock == null || lastBlock.getHeight() < Constants.DIGITAL_GOODS_STORE_BLOCK) {
                             return;
                         }
-                        List<Generator> sortedGenerators = new ArrayList<>();
-                        if (!lastBlock.getId().equals(lastBlockId)) {
+                        if (!lastBlock.getId().equals(lastBlockId) || sortedForgers == null) {
                             lastBlockId = lastBlock.getId();
+                            List<Generator> forgers = new ArrayList<>();
                             for (Generator generator : generators.values()) {
                                 generator.setLastBlock(lastBlock, timestamp);
                                 if (generator.effectiveBalance.signum() > 0) {
-                                    sortedGenerators.add(generator);
+                                    forgers.add(generator);
                                 }
                             }
-                            if (sortedGenerators.size() > 0) {
-                                Collections.sort(sortedGenerators);
-                                Logger.logDebugMessage("Generation deadlines:\n" + sortedGenerators.toString());
+                            Collections.sort(forgers);
+                            sortedForgers = Collections.unmodifiableList(forgers);
+                            if (sortedForgers.size() > 0) {
+                                Logger.logDebugMessage("Generation deadlines:\n" + sortedForgers.toString());
                             }
                         }
-                        for (Generator generator : sortedGenerators) {
+                        for (Generator generator : sortedForgers) {
                             if (generator.forge(lastBlock, timestamp)) {
                                 return;
                             }
@@ -120,6 +122,7 @@ public final class Generator implements Comparable<Generator> {
     public static Generator stopForging(String secretPhrase) {
         Generator generator = generators.remove(secretPhrase);
         if (generator != null) {
+            sortedForgers = null;
             Logger.logDebugMessage("Account " + Convert.toUnsignedLong(generator.getAccountId()) + " stopped forging");
             listeners.notify(generator, Event.STOP_FORGING);
         }
@@ -184,6 +187,7 @@ public final class Generator implements Comparable<Generator> {
         if (Nxt.getBlockchain().getHeight() > Constants.DIGITAL_GOODS_STORE_BLOCK) {
             setLastBlock(Nxt.getBlockchain().getLastBlock(), Convert.getEpochTime());
         }
+        sortedForgers = null;
     }
 
     public byte[] getPublicKey() {
