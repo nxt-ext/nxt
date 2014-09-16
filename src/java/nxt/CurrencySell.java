@@ -91,4 +91,14 @@ public final class CurrencySell extends CurrencyOffer {
             throw new RuntimeException(e.toString(), e);
         }
     }
+
+    public void increaseSupply(long delta) {
+        super.increaseSupply(delta);
+        sellOfferTable.insert(this);
+    }
+
+    public void decreaseLimitAndSupply(long delta) {
+        super.decreaseLimitAndSupply(delta);
+        sellOfferTable.insert(this);
+    }
 }

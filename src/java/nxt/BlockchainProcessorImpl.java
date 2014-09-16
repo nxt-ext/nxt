@@ -564,7 +564,9 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 if (block.getVersion() != 1 && !Arrays.equals(Crypto.sha256().digest(previousLastBlock.getBytes()), block.getPreviousBlockHash())) {
                     throw new BlockNotAcceptedException("Previous block hash doesn't match");
                 }
-                if (block.getTimestamp() > curTime + 15 || block.getTimestamp() <= previousLastBlock.getTimestamp()) {
+                if (block.getTimestamp() > curTime + 15
+                        || !Nxt.isIsUnitTest() && block.getTimestamp() <= previousLastBlock.getTimestamp()
+                        || Nxt.isIsUnitTest() && block.getTimestamp() < previousLastBlock.getTimestamp()) {
                     throw new BlockOutOfOrderException("Invalid timestamp: " + block.getTimestamp()
                             + " current time is " + curTime + ", previous block timestamp is " + previousLastBlock.getTimestamp());
                 }
@@ -745,7 +747,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 : 3;
     }
 
-    void generateBlock(String secretPhrase, int blockTimestamp) throws BlockNotAcceptedException {
+    public void generateBlock(String secretPhrase, int blockTimestamp) throws BlockNotAcceptedException {
 
         TransactionProcessorImpl transactionProcessor = TransactionProcessorImpl.getInstance();
         List<TransactionImpl> sortedTransactions = new ArrayList<>();

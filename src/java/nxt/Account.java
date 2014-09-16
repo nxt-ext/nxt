@@ -572,7 +572,7 @@ public final class Account {
 
     public long getEffectiveBalanceNXT() {
 
-        if (Constants.isTestnet && Constants.isOffline) {
+        if (Constants.isTestnet && Constants.isOffline && Nxt.isIsUnitTest()) {
             return Constants.MAX_BALANCE_NXT;
         }
 
@@ -860,8 +860,7 @@ public final class Account {
         if (units == 0) {
             return;
         }
-        AccountCurrency accountCurrency;
-        accountCurrency = accountCurrencyTable.get(accountCurrencyDbKeyFactory.newKey(this.id, currencyId));
+        AccountCurrency accountCurrency = accountCurrencyTable.get(accountCurrencyDbKeyFactory.newKey(this.id, currencyId));
         long unconfirmedCurrencyUnits = accountCurrency == null ? 0 : accountCurrency.unconfirmedUnits;
         unconfirmedCurrencyUnits = Convert.safeAdd(unconfirmedCurrencyUnits, units);
         if (accountCurrency == null) {

@@ -1,23 +1,14 @@
 package nxt.http;
 
 import nxt.*;
-import nxt.db.Db;
-import nxt.util.Listener;
-import org.h2.tools.Shell;
+import nxt.crypto.Crypto;
+import nxt.util.Convert;
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
-import org.json.simple.JSONValue;
 import org.junit.*;
 
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.*;
-import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
-
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 public class TestCurrency {
 
@@ -26,10 +17,11 @@ public class TestCurrency {
     @BeforeClass
     public static void init() {
         Nxt.init();
-        Nxt.getBlockchainProcessor().addListener(new BlockListener(), BlockchainProcessor.Event.BLOCK_GENERATED);
+        Nxt.getBlockchainProcessor().addListener(new Helper.BlockListener(), BlockchainProcessor.Event.BLOCK_GENERATED);
+        Nxt.setIsUnitTest(true);
         baseHeight = Nxt.getBlockchain().getHeight();
-        executeQuery("select * from currency");
-        executeQuery("select * from unconfirmed_transaction");
+        Helper.executeQuery("select * from currency");
+        Helper.executeQuery("select * from unconfirmed_transaction");
     }
 
     @Test
@@ -50,15 +42,14 @@ public class TestCurrency {
         reqParams.put("type", "1");
         reqParams.put("totalSupply", "100000");
 
-        JSONObject issueCurrencyResponse = processRequest(reqParams);
+        JSONObject issueCurrencyResponse = (JSONObject) APIHelper.processRequest(reqParams);
         String currencyId = (String) issueCurrencyResponse.get("transaction");
         System.out.println("issueCurrencyResponse: " + issueCurrencyResponse.toJSONString());
-        Generator.startForging(secretPhrase);
-        Generator.stopForging(secretPhrase);
+        Helper.generateBlock(secretPhrase);
         reqParams.clear();
         reqParams.put("requestType", "getCurrency");
         reqParams.put("currency", currencyId);
-        JSONObject getCurrencyResponse = processRequest(reqParams);
+        JSONObject getCurrencyResponse = (JSONObject) APIHelper.processRequest(reqParams);
         System.out.println("getCurrencyResponse:" + getCurrencyResponse.toJSONString());
         Assert.assertEquals(currencyId, getCurrencyResponse.get("currency"));
         Assert.assertEquals("TSX", getCurrencyResponse.get("code"));
@@ -69,29 +60,58 @@ public class TestCurrency {
     public void exchange() {
         String currencyId = issueCurrencyImpl();
 
+        String secretPhrase = "hope peace happen touch easy pretend worthless talk them indeed wheel state";
+        Account account = Account.getAccount(Crypto.getPublicKey(secretPhrase));
+        long unconfirmedBalanceNQT = account.getUnconfirmedBalanceNQT();
+        Assert.assertEquals(409700000000L, unconfirmedBalanceNQT);
+        long unconfirmedCurrencyBalanceQNT = account.getUnconfirmedCurrencyBalanceQNT(Convert.parseUnsignedLong(currencyId));
+        Assert.assertEquals(100000, unconfirmedCurrencyBalanceQNT);
+
         Map<String, String> reqParams = new HashMap<>();
         reqParams.put("requestType", "publishExchangeOffer");
-        String secretPhrase = "hope peace happen touch easy pretend worthless talk them indeed wheel state";
         reqParams.put("secretPhrase", secretPhrase);
         reqParams.put("deadline", "1440");
         reqParams.put("feeNQT", "" + Constants.ONE_NXT);
         reqParams.put("currency", currencyId);
-        reqParams.put("buyRateNQT", "" + Constants.ONE_NXT);
-        reqParams.put("sellRateNQT", "" + 100 * Constants.ONE_NXT);
-        reqParams.put("totalBuyLimit", "1000");
-        reqParams.put("totalSellLimit", "1000");
-        reqParams.put("initialBuySupply", "1");
-        reqParams.put("initialSellSupply", "1");
+        reqParams.put("buyRateNQT", "" + 10 * Constants.ONE_NXT);
+        reqParams.put("sellRateNQT", "" + 20 * Constants.ONE_NXT);
+        reqParams.put("totalBuyLimit", "30");
+        reqParams.put("totalSellLimit", "40");
+        reqParams.put("initialBuySupply", "50");
+        reqParams.put("initialSellSupply", "60");
         reqParams.put("expirationHeight", "130000");
 
-        JSONObject publishExchangeOfferResponse = processRequest(reqParams);
+        JSONObject publishExchangeOfferResponse = (JSONObject) APIHelper.processRequest(reqParams);
         System.out.println("publishExchangeOfferResponse: " + publishExchangeOfferResponse.toJSONString());
-        Generator.startForging(secretPhrase);
-        Generator.stopForging(secretPhrase);
+        Helper.generateBlock(secretPhrase);
+        Helper.executeQuery("select * from buy_offer");
+        Helper.executeQuery("select * from sell_offer");
         reqParams.clear();
         reqParams.put("requestType", "getAllOffers");
-        JSONObject getAllOffersResponse = processRequest(reqParams);
+        JSONObject getAllOffersResponse = (JSONObject) APIHelper.processRequest(reqParams);
         System.out.println("getAllOffersResponse:" + getAllOffersResponse.toJSONString());
+        JSONArray offer = (JSONArray)getAllOffersResponse.get("openOffers");
+        Assert.assertEquals(publishExchangeOfferResponse.get("transaction"), ((JSONObject) offer.get(0)).get("offer"));
+        unconfirmedBalanceNQT = account.getUnconfirmedBalanceNQT();
+        Assert.assertEquals(409700000000L, unconfirmedBalanceNQT); // not sure if this is correct
+        unconfirmedCurrencyBalanceQNT = account.getUnconfirmedCurrencyBalanceQNT(Convert.parseUnsignedLong(currencyId));
+        Assert.assertEquals(99940, unconfirmedCurrencyBalanceQNT); // not sure if this is correct
+
+        reqParams.clear();
+        reqParams.put("requestType", "currencyExchange");
+        reqParams.put("secretPhrase", secretPhrase);
+        reqParams.put("deadline", "1440");
+        reqParams.put("feeNQT", "" + Constants.ONE_NXT);
+        reqParams.put("currency", currencyId);
+        reqParams.put("rateNQT", "" + 10 * Constants.ONE_NXT);
+        reqParams.put("units", "20");
+        JSONObject currencyExchangeResponse = (JSONObject) APIHelper.processRequest(reqParams);
+        System.out.println(currencyExchangeResponse);
+        Helper.generateBlock(secretPhrase);
+        unconfirmedBalanceNQT = account.getUnconfirmedBalanceNQT();
+        Assert.assertEquals(409700000000L, unconfirmedBalanceNQT); // not sure if this is correct
+        unconfirmedCurrencyBalanceQNT = account.getUnconfirmedCurrencyBalanceQNT(Convert.parseUnsignedLong(currencyId));
+        Assert.assertEquals(99940, unconfirmedCurrencyBalanceQNT); // not sure if this is correct
     }
 
     @After
@@ -99,59 +119,18 @@ public class TestCurrency {
         Map<String, String> reqParams = new HashMap<>();
         reqParams.put("requestType", "popOff");
         reqParams.put("height", "" + baseHeight);
-        JSONObject popOffResponse = processRequest(reqParams);
+        JSONObject popOffResponse = (JSONObject) APIHelper.processRequest(reqParams);
         System.out.println("popOffResponse:" + popOffResponse.toJSONString());
-        executeQuery("select * from currency");
-        executeQuery("select * from unconfirmed_transaction");
+        Helper.executeQuery("select * from currency");
+        Helper.executeQuery("select * from unconfirmed_transaction");
         Nxt.getTransactionProcessor().shutdown();
     }
 
     @AfterClass
     public static void shutdown() {
-        executeQuery("select * from currency");
-        executeQuery("select * from unconfirmed_transaction");
+        Helper.executeQuery("select * from currency");
+        Helper.executeQuery("select * from unconfirmed_transaction");
         Nxt.shutdown();
     }
 
-    private static JSONObject processRequest(Map<String, String> reqParams) {
-        HttpServletRequest req = mock(HttpServletRequest.class);
-        HttpServletResponse resp = mock(HttpServletResponse.class);
-        when(req.getRemoteHost()).thenReturn("localhost");
-        when(req.getMethod()).thenReturn("POST");
-        for (String key : reqParams.keySet()) {
-            when(req.getParameter(key)).thenReturn(reqParams.get(key));
-        }
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        PrintWriter writer = new PrintWriter(new OutputStreamWriter(out));
-        try {
-            when(resp.getWriter()).thenReturn(writer);
-            APIServlet apiServlet = new APIServlet();
-            apiServlet.doPost(req, resp);
-        } catch (ServletException | IOException e) {
-            Assert.fail();
-        }
-        return (JSONObject) JSONValue.parse(new InputStreamReader(new ByteArrayInputStream(out.toByteArray())));
-    }
-
-    private static void executeQuery(String line) {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        PrintStream out = new PrintStream(baos);
-        out.println(line);
-        try {
-            Shell shell = new Shell();
-            shell.setErr(out);
-            shell.setOut(out);
-            shell.runTool(Db.getConnection(), "-sql", line);
-        } catch (SQLException e) {
-            out.println(e.toString());
-        }
-        System.out.println(new String(baos.toByteArray()));
-    }
-
-    private static class BlockListener implements Listener<Block> {
-        @Override
-        public void notify(Block block) {
-            System.out.printf("Block Generated at height %d with %d transactions\n", block.getHeight(), block.getTransactionIds().size());
-        }
-    }
 }

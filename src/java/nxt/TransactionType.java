@@ -1787,7 +1787,7 @@ public abstract class TransactionType {
 
             @Override
             public boolean hasRecipient() {
-                return true;
+                return false;
             }
 
         };
@@ -2010,7 +2010,8 @@ public abstract class TransactionType {
             @Override
             boolean applyAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
                 Attachment.MonetarySystemExchangeOfferPublication attachment = (Attachment.MonetarySystemExchangeOfferPublication)transaction.getAttachment();
-                if (senderAccount.getUnconfirmedBalanceNQT() >= Convert.safeMultiply(attachment.getInitialBuySupply(), attachment.getBuyRateNQT()) && senderAccount.getUnconfirmedCurrencyBalanceQNT(attachment.getCurrencyId()) >= attachment.getInitialSellSupply()) {
+                if (senderAccount.getUnconfirmedBalanceNQT() >= Convert.safeMultiply(attachment.getInitialBuySupply(), attachment.getBuyRateNQT())
+                        && senderAccount.getUnconfirmedCurrencyBalanceQNT(attachment.getCurrencyId()) >= attachment.getInitialSellSupply()) {
                     senderAccount.addToUnconfirmedBalanceNQT(-Convert.safeMultiply(attachment.getInitialBuySupply(), attachment.getBuyRateNQT()));
                     senderAccount.addToUnconfirmedCurrencyBalanceQNT(attachment.getCurrencyId(), -attachment.getInitialSellSupply());
                     return true;
@@ -2034,7 +2035,7 @@ public abstract class TransactionType {
 
             @Override
             public boolean hasRecipient() {
-                return true;
+                return false;
             }
 
         };
