@@ -19,7 +19,7 @@ public abstract class PollResults<K, V> {
     public static final byte BINARY_RESULTS = 1;
     public static final byte CHOICE_RESULTS = 2;
 
-    private static final DbKey.LongKeyFactory<PollResults> pollResultsDbKeyFactory = new DbKey.LongKeyFactory<PollResults>("pollId") {
+    private static final DbKey.LongKeyFactory<PollResults> pollResultsDbKeyFactory = new DbKey.LongKeyFactory<PollResults>("id") {
         @Override
         public DbKey newKey(PollResults results) {
             return results.dbKey;
@@ -128,8 +128,7 @@ public abstract class PollResults<K, V> {
 
     protected Map<K,V> decodeResultsFromJson(String json) throws NxtException.ValidationException{
         try {
-            JSONParser parser = new JSONParser();
-            return (Map<K, V>)(parser.parse(json));
+            return (Map<K, V>)(new JSONParser().parse(json));
         } catch (ParseException e) {
             throw new NxtException.NotValidException("Illegal contents of pollresults: "+json);
         }

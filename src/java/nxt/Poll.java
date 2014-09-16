@@ -6,10 +6,11 @@ import nxt.db.EntityDbTable;
 
 import nxt.db.Db;
 import nxt.util.*;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import org.json.simple.JSONArray;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
+
+import java.sql.*;
 import java.util.*;
 
 public final class Poll {
@@ -47,26 +48,32 @@ public final class Poll {
 
         @Override
         protected Poll load(Connection con, ResultSet rs) throws SQLException {
-            return new Poll(rs);
+            try {
+                return new Poll(rs);
+            } catch (Exception e) {
+                throw new SQLException(e);
+            }
         }
 
         @Override
         protected void save(Connection con, Poll poll) throws SQLException {
             try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO poll (id, name, description, "
                     + "options, finish, option_model, voting_model, min_balance, asset_id, "
-                    + "min_num_options, max_num_options, active, height) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
+                    + "min_num_options, max_num_options, active, height) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
                 int i = 0;
                 pstmt.setLong(++i, poll.getId());
                 pstmt.setString(++i, poll.getName());
                 pstmt.setString(++i, poll.getDescription());
-                pstmt.setObject(++i, poll.getOptions());
+                String optionsJson = JSONArray.toJSONString(Arrays.asList(poll.getOptions()));
+                System.out.println("Options json: "+optionsJson);
+                pstmt.setString(++i, optionsJson);
                 pstmt.setInt(++i, poll.getFinishBlockHeight());
                 pstmt.setByte(++i, poll.getOptionModel());
                 pstmt.setByte(++i, poll.getVotingModel());
                 pstmt.setLong(++i, poll.getMinBalance());
-                if(poll.getAssetId()==Poll.NO_ASSET_CODE){
-                    pstmt.setObject(++i, null);
-                }else{
+                if (poll.getAssetId() == Poll.NO_ASSET_CODE) {
+                    pstmt.setNull(++i, Types.INTEGER);
+                } else {
                     pstmt.setLong(++i, poll.getAssetId());
                 }
                 pstmt.setByte(++i, poll.getMinNumberOfOptions());
@@ -77,8 +84,8 @@ public final class Poll {
             }
         }
 
-        public void updateActive(Boolean active, long id){
-            String query = "UPDATE poll SET active="+active.toString()+" WHERE ID="+id;
+        public void updateActive(Boolean active, long id) {
+            String query = "UPDATE poll SET active=" + active.toString() + " WHERE ID=" + id;
             try (Connection con = Db.getConnection();
                  PreparedStatement pstmt = con.prepareStatement(query)) {
                 pstmt.executeUpdate();
@@ -94,7 +101,8 @@ public final class Poll {
 
     private final static PollTable pollTable = new PollTable(pollDbKeyFactory);
 
-    static void init() {}
+    static void init() {
+    }
 
 
     private final Long id;
@@ -151,12 +159,19 @@ public final class Poll {
         this.active = true;
     }
 
-    private Poll(ResultSet rs) throws SQLException {
+    private Poll(ResultSet rs) throws Exception {
         this.id = rs.getLong("id");
         this.dbKey = pollDbKeyFactory.newKey(this.id);
         this.name = rs.getString("name");
         this.description = rs.getString("description");
-        this.options = (String[])rs.getArray("options").getArray();
+
+        String optionsJson = rs.getString("options");
+        if(optionsJson.startsWith("(")){  //kushti: possible quoting bug in JDBC driver
+            optionsJson = optionsJson.substring(1,optionsJson.length()-1);
+        }
+        List<String> optionsList = ((List<String>) (new JSONParser().parse(optionsJson)));
+        this.options = optionsList.toArray(new String[optionsList.size()]);
+
         this.finishBlockHeight = rs.getInt("finish");
         this.optionModel = rs.getByte("option_model");
         this.votingModel = rs.getByte("voting_model");
@@ -167,7 +182,7 @@ public final class Poll {
         this.active = rs.getBoolean("active");
     }
 
-    private Poll(Transaction transaction, Attachment.MessagingPollCreation attachment){
+    private Poll(Transaction transaction, Attachment.MessagingPollCreation attachment) {
         this.id = transaction.getId();
         this.dbKey = pollDbKeyFactory.newKey(this.id);
         this.name = attachment.getPollName();
@@ -200,7 +215,7 @@ public final class Poll {
         pollTable.insert(poll);
     }
 
-    static boolean exists(long id){
+    static boolean exists(long id) {
         return getPoll(id) != null;
     }
 
@@ -228,7 +243,7 @@ public final class Poll {
         return getPoll(pollId).isActive();
     }
 
-    public static void markPollAsFinished(Poll poll){
+    public static void markPollAsFinished(Poll poll) {
         pollTable.updateActive(false, poll.getId());
     }
 
@@ -280,11 +295,11 @@ public final class Poll {
         return Vote.getVoters(this);
     }
 
-    public boolean isActive(){
+    public boolean isActive() {
         return active;
     }
 
-    public void setActive(boolean active){
+    public void setActive(boolean active) {
         this.active = active;
     }
 

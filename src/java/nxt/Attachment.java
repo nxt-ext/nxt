@@ -12,7 +12,7 @@ public interface Attachment extends Appendix {
 
     TransactionType getTransactionType();
 
-    abstract static class AbstractAttachment extends AbstractAppendix implements Attachment {
+    abstract static class AbstractAttachment extends Appendix.AbstractAppendix implements Attachment {
 
         private AbstractAttachment(ByteBuffer buffer, byte transactionVersion) {
             super(buffer, transactionVersion);
@@ -452,12 +452,12 @@ public interface Attachment extends Appendix {
             buffer.put(name);
             buffer.putShort((short) description.length);
             buffer.put(description);
+            buffer.putInt(finishBlockHeight);
             buffer.put((byte) options.length);
             for (byte[] option : options) {
                 buffer.putShort((short) option.length);
                 buffer.put(option);
             }
-            buffer.putInt(finishBlockHeight);
             buffer.put(this.optionModel);
             buffer.put(this.votingModel);
             buffer.putLong(minBalance);
@@ -466,7 +466,6 @@ public interface Attachment extends Appendix {
                 buffer.put(this.minNumberOfOptions);
                 buffer.put(this.maxNumberOfOptions);
             }
-
             if (votingModel == Poll.VOTING_MODEL_ASSET) {
                 buffer.putLong(this.assetId);
             }
@@ -551,6 +550,7 @@ public interface Attachment extends Appendix {
         private final byte[] pollVote;
 
         public MessagingVoteCasting(ByteBuffer buffer, byte transactionVersion){
+            super(buffer, transactionVersion);
             pollId = buffer.getLong();
             int numberOfOptions = buffer.get();
             pollVote = new byte[numberOfOptions];
@@ -558,6 +558,7 @@ public interface Attachment extends Appendix {
         }
 
         public MessagingVoteCasting(JSONObject attachmentData){
+            super(attachmentData);
             pollId = Convert.parseUnsignedLong((String)attachmentData.get("pollId"));
             JSONArray vote = (JSONArray)attachmentData.get("vote");
             pollVote = new byte[vote.size()];
