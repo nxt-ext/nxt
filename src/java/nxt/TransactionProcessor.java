@@ -6,7 +6,7 @@ import org.json.simple.JSONObject;
 
 import java.util.List;
 
-public interface TransactionProcessor extends Observable<List<Transaction>,TransactionProcessor.Event> {
+public interface TransactionProcessor extends Observable<List<? extends Transaction>,TransactionProcessor.Event> {
 
     public static enum Event {
         REMOVED_UNCONFIRMED_TRANSACTIONS,

@@ -78,6 +78,15 @@ final class JSONData {
         return json;
     }
 
+    static JSONObject accountAsset(Account.AccountAsset accountAsset) {
+        JSONObject json = new JSONObject();
+        putAccount(json, "account", accountAsset.getAccountId());
+        json.put("asset", Convert.toUnsignedLong(accountAsset.getAssetId()));
+        json.put("quantityQNT", String.valueOf(accountAsset.getQuantityQNT()));
+        json.put("unconfirmedQuantityQNT", String.valueOf(accountAsset.getUnconfirmedQuantityQNT()));
+        return json;
+    }
+
     static JSONObject askOrder(Order.Ask order) {
         JSONObject json = order(order);
         json.put("type", "ask");
@@ -280,6 +289,8 @@ final class JSONData {
         json.put("asset", Convert.toUnsignedLong(trade.getAssetId()));
         json.put("askOrder", Convert.toUnsignedLong(trade.getAskOrderId()));
         json.put("bidOrder", Convert.toUnsignedLong(trade.getBidOrderId()));
+        putAccount(json, "seller", trade.getSellerId());
+        putAccount(json, "buyer", trade.getBuyerId());
         json.put("block", Convert.toUnsignedLong(trade.getBlockId()));
         json.put("height", trade.getHeight());
         return json;

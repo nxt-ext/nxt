@@ -1,8 +1,12 @@
 package nxt.http;
 
+import nxt.Account;
+import nxt.Asset;
 import nxt.NxtException;
 import nxt.Trade;
 import nxt.db.DbIterator;
+import nxt.db.DbUtils;
+import nxt.util.Convert;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
@@ -14,25 +18,38 @@ public final class GetTrades extends APIServlet.APIRequestHandler {
     static final GetTrades instance = new GetTrades();
 
     private GetTrades() {
-        super(new APITag[] {APITag.AE}, "asset", "firstIndex", "lastIndex");
+        super(new APITag[] {APITag.AE}, "asset", "account", "firstIndex", "lastIndex");
     }
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
 
-        Long assetId = ParameterParser.getAsset(req).getId();
+        String assetId = Convert.emptyToNull(req.getParameter("asset"));
+        String accountId = Convert.emptyToNull(req.getParameter("account"));
+
         int firstIndex = ParameterParser.getFirstIndex(req);
         int lastIndex = ParameterParser.getLastIndex(req);
 
         JSONObject response = new JSONObject();
-
         JSONArray tradesData = new JSONArray();
-        try (DbIterator<Trade> trades = Trade.getTrades(assetId, firstIndex, lastIndex)) {
+        DbIterator<Trade> trades = null;
+        try {
+            if (accountId == null) {
+                Asset asset = ParameterParser.getAsset(req);
+                trades = asset.getTrades(firstIndex, lastIndex);
+            } else if (assetId == null) {
+                Account account = ParameterParser.getAccount(req);
+                trades = account.getTrades(firstIndex, lastIndex);
+            } else {
+                Asset asset = ParameterParser.getAsset(req);
+                Account account = ParameterParser.getAccount(req);
+                trades = Trade.getAccountAssetTrades(account.getId(), asset.getId(), firstIndex, lastIndex);
+            }
             while (trades.hasNext()) {
                 tradesData.add(JSONData.trade(trades.next()));
             }
-        } catch (RuntimeException e) {
-            response.put("error", e.toString());
+        } finally {
+            DbUtils.close(trades);
         }
         response.put("trades", tradesData);
 

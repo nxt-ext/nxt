@@ -108,7 +108,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
     };
 
     private final ConcurrentMap<Long, TransactionImpl> nonBroadcastedTransactions = new ConcurrentHashMap<>();
-    private final Listeners<List<Transaction>,Event> transactionListeners = new Listeners<>();
+    private final Listeners<List<? extends Transaction>,Event> transactionListeners = new Listeners<>();
     private final Set<TransactionImpl> lostTransactions = new HashSet<>();
 
     private final Runnable removeUnconfirmedTransactionsThread = new Runnable() {
@@ -239,13 +239,17 @@ final class TransactionProcessorImpl implements TransactionProcessor {
     }
 
     @Override
-    public boolean addListener(Listener<List<Transaction>> listener, Event eventType) {
+    public boolean addListener(Listener<List<? extends Transaction>> listener, Event eventType) {
         return transactionListeners.addListener(listener, eventType);
     }
 
     @Override
-    public boolean removeListener(Listener<List<Transaction>> listener, Event eventType) {
+    public boolean removeListener(Listener<List<? extends Transaction>> listener, Event eventType) {
         return transactionListeners.removeListener(listener, eventType);
+    }
+
+    void notifyListeners(List<? extends Transaction> transactions, Event eventType) {
+        transactionListeners.notify(transactions, eventType);
     }
 
     @Override
@@ -307,57 +311,12 @@ final class TransactionProcessorImpl implements TransactionProcessor {
         nonBroadcastedTransactions.clear();
     }
 
-    void applyUnconfirmed(Set<TransactionImpl> unapplied) {
-        List<Transaction> removedUnconfirmedTransactions = new ArrayList<>();
-        for (TransactionImpl transaction : unapplied) {
-            if (! transaction.applyUnconfirmed()) {
-                removedUnconfirmedTransactions.add(transaction);
-                unconfirmedTransactionTable.delete(transaction);
-            }
-        }
-        if (removedUnconfirmedTransactions.size() > 0) {
-            transactionListeners.notify(removedUnconfirmedTransactions, TransactionProcessor.Event.REMOVED_UNCONFIRMED_TRANSACTIONS);
-        }
-    }
-
-    Set<TransactionImpl> undoAllUnconfirmed() {
-        Set<TransactionImpl> undone = new HashSet<>();
-        try (DbIterator<TransactionImpl> transactions = unconfirmedTransactionTable.getAll(0, -1)) {
-            while (transactions.hasNext()) {
-                TransactionImpl transaction = transactions.next();
-                transaction.undoUnconfirmed();
-                undone.add(transaction);
-            }
-        }
-        return undone;
-    }
-
-    void updateUnconfirmedTransactions(BlockImpl block) {
-        List<Transaction> addedConfirmedTransactions = new ArrayList<>();
-        List<Transaction> removedUnconfirmedTransactions = new ArrayList<>();
-
-        for (TransactionImpl blockTransaction : block.getTransactions()) {
-            addedConfirmedTransactions.add(blockTransaction);
-            if (unconfirmedTransactionTable.delete(blockTransaction)) {
-                removedUnconfirmedTransactions.add(blockTransaction);
-            }
-        }
-
-        if (removedUnconfirmedTransactions.size() > 0) {
-            transactionListeners.notify(removedUnconfirmedTransactions, TransactionProcessor.Event.REMOVED_UNCONFIRMED_TRANSACTIONS);
-        }
-        if (addedConfirmedTransactions.size() > 0) {
-            transactionListeners.notify(addedConfirmedTransactions, TransactionProcessor.Event.ADDED_CONFIRMED_TRANSACTIONS);
-        }
-
-    }
-
-    void removeUnconfirmedTransactions(Iterable<TransactionImpl> transactions) {
+    void removeUnconfirmedTransactions(Iterable<TransactionImpl> transactions, boolean processLater) {
         synchronized (BlockchainImpl.getInstance()) {
             if (!Db.isInTransaction()) {
                 try {
                     Db.beginTransaction();
-                    removeUnconfirmedTransactions(transactions);
+                    removeUnconfirmedTransactions(transactions, processLater);
                     Db.commitTransaction();
                 } catch (Exception e) {
                     Logger.logErrorMessage(e.toString(), e);
@@ -368,21 +327,24 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                 }
                 return;
             }
-            List<Transaction> removedList = new ArrayList<>();
+            List<Transaction> removed = new ArrayList<>();
             for (TransactionImpl transaction : transactions) {
                 if (unconfirmedTransactionTable.delete(transaction)) {
                     transaction.undoUnconfirmed();
-                    removedList.add(transaction);
+                    removed.add(transaction);
+                }
+                if (processLater) {
+                    lostTransactions.add(transaction);
                 }
             }
-            transactionListeners.notify(removedList, Event.REMOVED_UNCONFIRMED_TRANSACTIONS);
+            transactionListeners.notify(removed, Event.REMOVED_UNCONFIRMED_TRANSACTIONS);
         } // synchronized
     }
 
     @Override
     public void shutdown() {
         try (DbIterator<TransactionImpl> transactions = unconfirmedTransactionTable.getAll(0, -1)) {
-            removeUnconfirmedTransactions(transactions);
+            removeUnconfirmedTransactions(transactions, false);
         }
     }
 
@@ -392,7 +354,9 @@ final class TransactionProcessorImpl implements TransactionProcessor {
 
     void processLater(Collection<TransactionImpl> transactions) {
         synchronized (BlockchainImpl.getInstance()) {
-            lostTransactions.addAll(transactions);
+            for (TransactionImpl transaction : transactions) {
+                lostTransactions.add(transaction);
+            }
         }
     }
 

@@ -429,6 +429,10 @@ public final class Account {
         }
     }
 
+    public static DbIterator<AccountAsset> getAssetAccounts(Long assetId, int from, int to) {
+        return accountAssetTable.getManyBy("asset_id", assetId, from, to);
+    }
+
     static void init() {}
 
 
@@ -650,8 +654,12 @@ public final class Account {
         }
     }
 
-    public DbIterator<AccountAsset> getAccountAssets(int from, int to) {
+    public DbIterator<AccountAsset> getAssets(int from, int to) {
         return accountAssetTable.getManyBy("account_id", this.id, from, to);
+    }
+
+    public DbIterator<Trade> getTrades(int from, int to) {
+        return Trade.getAccountTrades(this.id, from, to);
     }
 
     public Long getUnconfirmedAssetBalanceQNT(Long assetId) {
