@@ -59,7 +59,7 @@ public final class GetAccount extends APIServlet.APIRequestHandler {
             }
         }
 
-        try (DbIterator<Account.AccountAsset> accountAssets = account.getAccountAssets(0, -1)) {
+        try (DbIterator<Account.AccountAsset> accountAssets = account.getAssets(0, -1)) {
             JSONArray assetBalances = new JSONArray();
             JSONArray unconfirmedAssetBalances = new JSONArray();
             while (accountAssets.hasNext()) {

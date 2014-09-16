@@ -28,7 +28,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -652,6 +651,9 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
 
                 block.setPrevious(previousLastBlock);
                 blockListeners.notify(block, Event.BEFORE_BLOCK_ACCEPT);
+                try (DbIterator<TransactionImpl> unconfirmedTransactions = transactionProcessor.getAllUnconfirmedTransactions()) {
+                    transactionProcessor.removeUnconfirmedTransactions(unconfirmedTransactions, true);
+                }
                 addBlock(block);
                 accept(block);
                 blockListeners.notify(block, Event.BLOCK_PUSHED);
@@ -674,19 +676,17 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
 
     private void accept(BlockImpl block) throws TransactionNotAcceptedException {
         TransactionProcessorImpl transactionProcessor = TransactionProcessorImpl.getInstance();
-        Set<TransactionImpl> unappliedUnconfirmed = transactionProcessor.undoAllUnconfirmed();
         for (TransactionImpl transaction : block.getTransactions()) {
-            if (transaction.applyUnconfirmed()) {
-                unappliedUnconfirmed.remove(transaction);
-            } else {
+            if (! transaction.applyUnconfirmed()) {
                 throw new TransactionNotAcceptedException("Double spending transaction: " + transaction.getStringId(), transaction);
             }
         }
-        transactionProcessor.applyUnconfirmed(unappliedUnconfirmed);
         blockListeners.notify(block, Event.BEFORE_BLOCK_APPLY);
         block.apply();
         blockListeners.notify(block, Event.AFTER_BLOCK_APPLY);
-        transactionProcessor.updateUnconfirmedTransactions(block);
+        if (block.getTransactions().size() > 0) {
+            transactionProcessor.notifyListeners(block.getTransactions(), TransactionProcessor.Event.ADDED_CONFIRMED_TRANSACTIONS);
+        }
     }
 
     private List<BlockImpl> popOffTo(Block commonBlock) {
@@ -745,7 +745,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 : 3;
     }
 
-    boolean generateBlock(String secretPhrase, int blockTimestamp) {
+    void generateBlock(String secretPhrase, int blockTimestamp) throws BlockNotAcceptedException {
 
         TransactionProcessorImpl transactionProcessor = TransactionProcessorImpl.getInstance();
         List<TransactionImpl> sortedTransactions = new ArrayList<>();
@@ -762,9 +762,6 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         }
 
         BlockImpl previousBlock = blockchain.getLastBlock();
-        if (previousBlock.getHeight() < Constants.DIGITAL_GOODS_STORE_BLOCK) {
-            return true;
-        }
 
         SortedMap<Long, TransactionImpl> newTransactions = new TreeMap<>();
         Map<TransactionType, Set<String>> duplicates = new HashMap<>();
@@ -801,7 +798,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 } catch (NxtException.NotCurrentlyValidException e) {
                     continue;
                 } catch (NxtException.ValidationException e) {
-                    transactionProcessor.removeUnconfirmedTransactions(Collections.singletonList(transaction));
+                    transactionProcessor.removeUnconfirmedTransactions(Collections.singleton(transaction), false);
                     continue;
                 }
 
@@ -846,14 +843,10 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         } catch (NxtException.ValidationException e) {
             // shouldn't happen because all transactions are already validated
             Logger.logMessage("Error generating block", e);
-            return true;
+            return;
         }
 
         block.sign(secretPhrase);
-
-        if (isScanning) {
-            return true;
-        }
 
         block.setPrevious(previousBlock);
 
@@ -862,17 +855,16 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             blockListeners.notify(block, Event.BLOCK_GENERATED);
             Logger.logDebugMessage("Account " + Convert.toUnsignedLong(block.getGeneratorId()) + " generated block " + block.getStringId()
                     + " at height " + block.getHeight());
-            return true;
         } catch (TransactionNotAcceptedException e) {
             Logger.logDebugMessage("Generate block failed: " + e.getMessage());
             Transaction transaction = e.getTransaction();
             Logger.logDebugMessage("Removing invalid transaction: " + transaction.getStringId());
-            transactionProcessor.removeUnconfirmedTransactions(Collections.singletonList((TransactionImpl)transaction));
-            return false;
+            transactionProcessor.removeUnconfirmedTransactions(Collections.singleton((TransactionImpl)transaction), false);
+            throw e;
         } catch (BlockNotAcceptedException e) {
             Logger.logDebugMessage("Generate block failed: " + e.getMessage());
+            throw e;
         }
-        return true;
     }
 
     private BlockImpl parseBlock(JSONObject blockData) throws NxtException.ValidationException {
@@ -903,19 +895,12 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             if (validateAtScan) {
                 Logger.logDebugMessage("Also verifying signatures and validating transactions...");
             }
-            if (height == 0) {
-                Set<TransactionImpl> lostTransactions = new HashSet<>();
-                try (DbIterator<TransactionImpl> iterator = transactionProcessor.getAllUnconfirmedTransactions()) {
-                    while (iterator.hasNext()) {
-                        lostTransactions.add(iterator.next());
-                    }
-                }
-                transactionProcessor.processLater(lostTransactions);
-                transactionProcessor.clear();
-            }
+            transactionProcessor.clear();
             try (Connection con = inner ? Db.getConnection() : Db.beginTransaction();
                  PreparedStatement pstmt = con.prepareStatement("SELECT * FROM block WHERE height >= ? ORDER BY db_id ASC")) {
-                pstmt.setInt(1, height);
+                try (DbIterator<TransactionImpl> unconfirmedTransactions = transactionProcessor.getAllUnconfirmedTransactions()) {
+                    transactionProcessor.removeUnconfirmedTransactions(unconfirmedTransactions, true);
+                }
                 for (DerivedDbTable table : derivedTables) {
                     if (height == 0) {
                         table.truncate();
@@ -923,6 +908,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                         table.rollback(height - 1);
                     }
                 }
+                pstmt.setInt(1, height);
                 try (ResultSet rs = pstmt.executeQuery()) {
                     BlockImpl currentBlock = BlockDb.findBlockAtHeight(height);
                     blockListeners.notify(currentBlock, Event.RESCAN_BEGIN);

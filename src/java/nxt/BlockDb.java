@@ -209,6 +209,19 @@ final class BlockDb {
     }
 
     static void deleteAll() {
+        if (! Db.isInTransaction()) {
+            try {
+                Db.beginTransaction();
+                deleteAll();
+                Db.commitTransaction();
+            } catch (Exception e) {
+                Db.rollbackTransaction();
+                throw e;
+            } finally {
+                Db.endTransaction();
+            }
+            return;
+        }
         Logger.logMessage("Deleting blockchain...");
         try (Connection con = Db.getConnection();
              Statement stmt = con.createStatement()) {
@@ -217,9 +230,9 @@ final class BlockDb {
                 stmt.executeUpdate("TRUNCATE TABLE transaction");
                 stmt.executeUpdate("TRUNCATE TABLE block");
                 stmt.executeUpdate("SET REFERENTIAL_INTEGRITY TRUE");
-                con.commit();
+                Db.commitTransaction();
             } catch (SQLException e) {
-                con.rollback();
+                Db.rollbackTransaction();
                 throw e;
             }
         } catch (SQLException e) {
