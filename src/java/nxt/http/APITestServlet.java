@@ -71,7 +71,7 @@ public class APITestServlet extends HttpServlet {
             "                alert('API not available, check if Nxt Server is running!');\n" +
             "            });\n" +
             "            if ($(form).has('.uri-link').length > 0) {\n" + 
-            "                  var uri = 'http://' + window.location.host + '/nxt?' + jQuery.param(params);\n" +
+            "                  var uri = '/nxt?' + jQuery.param(params);\n" +
             "                  var html = '<a href=\"' + uri + '\" target=\"_blank\" style=\"font-size:12px;font-weight:normal;\">Open GET URL</a>';" +
             "                  form.getElementsByClassName(\"uri-link\")[0].innerHTML = html;\n" +
             "            }" +
@@ -81,7 +81,7 @@ public class APITestServlet extends HttpServlet {
             "</head>\n" +
             "<body>\n" +
             "<div class=\"navbar navbar-default\" role=\"navigation\">" +
-            "   <div class=\"container\">" + 
+            "   <div class=\"container\" style=\"min-width: 90%;\">" +
             "       <div class=\"navbar-header\">" +
             "           <a class=\"navbar-brand\" href=\"/test\">Nxt http API</a>" + 
             "       </div>" +
@@ -94,7 +94,7 @@ public class APITestServlet extends HttpServlet {
             "       </div>" +
             "   </div>" + 
             "</div>" +
-            "<div class=\"container\">" +
+            "<div class=\"container\" style=\"min-width: 90%;\">" +
             "<div class=\"row\">" + 
             "  <div class=\"col-xs-12\" style=\"margin-bottom:15px;\">" +
             "    <div class=\"pull-right\">" +
@@ -258,7 +258,7 @@ public class APITestServlet extends HttpServlet {
         buf.append("<div class=\"panel-body\">");
         buf.append("<form action=\"/nxt\" method=\"POST\" onsubmit=\"return submitForm(this);\">");
         buf.append("<input type=\"hidden\" name=\"requestType\" value=\"").append(requestType).append("\"/>");
-        buf.append("<div class=\"col-xs-12 col-lg-6\">");
+        buf.append("<div class=\"col-xs-12 col-lg-6\" style=\"width: 40%;\">");
         buf.append("<table class=\"table\">");
         for (String parameter : parameters) {
             buf.append("<tr>");
@@ -273,7 +273,7 @@ public class APITestServlet extends HttpServlet {
         buf.append("</tr>");
         buf.append("</table>");
         buf.append("</div>");
-        buf.append("<div class=\"col-xs-12 col-lg-6\">");
+        buf.append("<div class=\"col-xs-12 col-lg-6\" style=\"min-width: 60%;\">");
         buf.append("<h5 style=\"margin-top:0px;\">");
         if (!requirePost) {
             buf.append("<span style=\"float:right;\" class=\"uri-link\">");
