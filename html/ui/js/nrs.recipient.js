@@ -288,7 +288,8 @@ var NRS = (function(NRS, $, undefined) {
 								match[1] = address.toString();
 							} else {
 								accountInputField.val("");
-								callout.html("Invalid account alias.");
+								callout.removeClass(classes).addClass("callout-danger").html($.t("error_invalid_account_id")).show();
+								return;
 							}
 						}
 
@@ -303,12 +304,15 @@ var NRS = (function(NRS, $, undefined) {
 								checkForMerchant(response.account.description, modal);
 							}
 
-							accountInputField.val(match[1].escapeHTML());
-							callout.html($.t("alias_account_link", {
+							callout.removeClass(classes).addClass("callout-" + response.type).html($.t("alias_account_link", {
 								"account_id": String(match[1]).escapeHTML()
-							}) + ". " + $.t("recipient_unknown_pka") + " " + $.t("alias_last_adjusted", {
+							}) + " " + response.message.escapeHTML() + " " + $.t("alias_last_adjusted", {
 								"timestamp": NRS.formatTimestamp(timestamp)
-							})).removeClass(classes).addClass("callout-" + response.type).show();
+							})).show();
+
+							if (response.type == "info" || response.type == "warning") {
+								accountInputField.val(String(match[1]).escapeHTML());
+							}
 						});
 					} else {
 						callout.removeClass(classes).addClass("callout-danger").html($.t("alias_account_no_link") + (!alias ? $.t("error_uri_empty") : $.t("uri_is", {
