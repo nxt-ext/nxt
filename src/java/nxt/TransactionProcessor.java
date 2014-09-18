@@ -17,7 +17,7 @@ public interface TransactionProcessor extends Observable<List<? extends Transact
 
     DbIterator<? extends Transaction> getAllUnconfirmedTransactions();
 
-    Transaction getUnconfirmedTransaction(Long transactionId);
+    Transaction getUnconfirmedTransaction(long transactionId);
 
     void broadcast(Transaction transaction) throws NxtException.ValidationException;
 

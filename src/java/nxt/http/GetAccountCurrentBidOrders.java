@@ -20,8 +20,8 @@ public final class GetAccountCurrentBidOrders extends APIServlet.APIRequestHandl
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws ParameterException {
 
-        Long accountId = ParameterParser.getAccount(req).getId();
-        Long assetId = null;
+        long accountId = ParameterParser.getAccount(req).getId();
+        long assetId = 0;
         try {
             assetId = Convert.parseUnsignedLong(req.getParameter("asset"));
         } catch (RuntimeException e) {
@@ -31,7 +31,7 @@ public final class GetAccountCurrentBidOrders extends APIServlet.APIRequestHandl
         int lastIndex = ParameterParser.getLastIndex(req);
 
         DbIterator<Order.Bid> bidOrders;
-        if (assetId == null) {
+        if (assetId == 0) {
             bidOrders = Order.Bid.getBidOrdersByAccount(accountId, firstIndex, lastIndex);
         } else {
             bidOrders = Order.Bid.getBidOrdersByAccountAsset(accountId, assetId, firstIndex, lastIndex);

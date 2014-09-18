@@ -81,7 +81,7 @@ public abstract class EntityDbTable<T> extends DerivedDbTable {
         }
     }
 
-    public final DbIterator<T> getManyBy(String columnName, Long value, int from, int to) {
+    public final DbIterator<T> getManyBy(String columnName, long value, int from, int to) {
         Connection con = null;
         try {
             con = Db.getConnection();

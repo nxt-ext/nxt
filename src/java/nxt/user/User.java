@@ -59,7 +59,7 @@ final class User {
         secretPhrase = null;
     }
 
-    Long unlockAccount(String secretPhrase) {
+    long unlockAccount(String secretPhrase) {
         this.publicKey = Crypto.getPublicKey(secretPhrase);
         this.secretPhrase = secretPhrase;
         return Generator.startForging(secretPhrase).getAccountId();

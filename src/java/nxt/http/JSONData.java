@@ -34,7 +34,7 @@ final class JSONData {
         Alias.Offer offer = Alias.getOffer(alias);
         if (offer != null) {
             json.put("priceNQT", String.valueOf(offer.getPriceNQT()));
-            if (offer.getBuyerId() != null) {
+            if (offer.getBuyerId() != 0) {
                 json.put("buyer", Convert.toUnsignedLong(offer.getBuyerId()));
             }
         }
@@ -116,10 +116,10 @@ final class JSONData {
         json.put("payloadLength", block.getPayloadLength());
         json.put("version", block.getVersion());
         json.put("baseTarget", Convert.toUnsignedLong(block.getBaseTarget()));
-        if (block.getPreviousBlockId() != null) {
+        if (block.getPreviousBlockId() != 0) {
             json.put("previousBlock", Convert.toUnsignedLong(block.getPreviousBlockId()));
         }
-        if (block.getNextBlockId() != null) {
+        if (block.getNextBlockId() != 0) {
             json.put("nextBlock", Convert.toUnsignedLong(block.getNextBlockId()));
         }
         json.put("payloadHash", Convert.toHexString(block.getPayloadHash()));
@@ -279,7 +279,7 @@ final class JSONData {
         json.put("timestamp", transaction.getTimestamp());
         json.put("deadline", transaction.getDeadline());
         json.put("senderPublicKey", Convert.toHexString(transaction.getSenderPublicKey()));
-        if (transaction.getRecipientId() != null) {
+        if (transaction.getRecipientId() != 0) {
             putAccount(json, "recipient", transaction.getRecipientId());
         }
         json.put("amountNQT", String.valueOf(transaction.getAmountNQT()));
@@ -341,7 +341,7 @@ final class JSONData {
         }
     }
 
-    static void putAccount(JSONObject json, String name, Long accountId) {
+    static void putAccount(JSONObject json, String name, long accountId) {
         json.put(name, Convert.toUnsignedLong(accountId));
         json.put(name + "RS", Convert.rsAccount(accountId));
     }

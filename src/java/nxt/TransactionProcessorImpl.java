@@ -27,7 +27,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 
 final class TransactionProcessorImpl implements TransactionProcessor {
 
@@ -102,7 +101,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
 
     };
 
-    private final ConcurrentMap<Long, TransactionImpl> nonBroadcastedTransactions = new ConcurrentHashMap<>();
+    private final Set<TransactionImpl> nonBroadcastedTransactions = Collections.newSetFromMap(new ConcurrentHashMap<TransactionImpl,Boolean>());
     private final Listeners<List<? extends Transaction>,Event> transactionListeners = new Listeners<>();
     private final Set<TransactionImpl> lostTransactions = new HashSet<>();
 
@@ -156,9 +155,9 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                 try {
                     List<Transaction> transactionList = new ArrayList<>();
                     int curTime = Convert.getEpochTime();
-                    for (TransactionImpl transaction : nonBroadcastedTransactions.values()) {
+                    for (TransactionImpl transaction : nonBroadcastedTransactions) {
                         if (TransactionDb.hasTransaction(transaction.getId()) || transaction.getExpiration() < curTime) {
-                            nonBroadcastedTransactions.remove(transaction.getId());
+                            nonBroadcastedTransactions.remove(transaction);
                         } else if (transaction.getTimestamp() < curTime - 30) {
                             transactionList.add(transaction);
                         }
@@ -253,7 +252,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
     }
 
     @Override
-    public Transaction getUnconfirmedTransaction(Long transactionId) {
+    public Transaction getUnconfirmedTransaction(long transactionId) {
         return unconfirmedTransactionTable.get(unconfirmedTransactionDbKeyFactory.newKey(transactionId));
     }
 
@@ -278,7 +277,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
         }
         List<Transaction> validTransactions = processTransactions(Collections.singleton((TransactionImpl) transaction), true);
         if (validTransactions.contains(transaction)) {
-            nonBroadcastedTransactions.put(transaction.getId(), (TransactionImpl) transaction);
+            nonBroadcastedTransactions.add((TransactionImpl) transaction);
             Logger.logDebugMessage("Accepted new transaction " + transaction.getStringId());
         } else {
             Logger.logDebugMessage("Rejecting double spending transaction " + transaction.getStringId());
@@ -371,9 +370,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
             }
         }
         processTransactions(transactions, sendToPeers);
-        for (TransactionImpl transaction : transactions) {
-            nonBroadcastedTransactions.remove(transaction.getId());
-        }
+        nonBroadcastedTransactions.removeAll(transactions);
     }
 
     List<Transaction> processTransactions(Collection<TransactionImpl> transactions, final boolean sendToPeers) {
@@ -401,7 +398,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                             break; // not ready to process transactions
                         }
 
-                        Long id = transaction.getId();
+                        long id = transaction.getId();
                         if (TransactionDb.hasTransaction(id) || unconfirmedTransactionTable.get(transaction.getDbKey()) != null) {
                             continue;
                         }
@@ -415,10 +412,10 @@ final class TransactionProcessorImpl implements TransactionProcessor {
 
                         if (transaction.applyUnconfirmed()) {
                             if (sendToPeers) {
-                                if (nonBroadcastedTransactions.containsKey(id)) {
+                                if (nonBroadcastedTransactions.contains(transaction)) {
                                     Logger.logDebugMessage("Received back transaction " + transaction.getStringId()
                                             + " that we generated, will not forward to peers");
-                                    nonBroadcastedTransactions.remove(id);
+                                    nonBroadcastedTransactions.remove(transaction);
                                 } else {
                                     sendToPeersTransactions.add(transaction);
                                 }

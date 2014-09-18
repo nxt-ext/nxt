@@ -61,11 +61,11 @@ public final class Trade {
         return listeners.removeListener(listener, eventType);
     }
 
-    public static DbIterator<Trade> getAssetTrades(Long assetId, int from, int to) {
+    public static DbIterator<Trade> getAssetTrades(long assetId, int from, int to) {
         return tradeTable.getManyBy("asset_id", assetId, from, to);
     }
 
-    public static DbIterator<Trade> getAccountTrades(Long accountId, int from, int to) {
+    public static DbIterator<Trade> getAccountTrades(long accountId, int from, int to) {
         Connection con = null;
         try {
             con = Db.getConnection();
@@ -84,7 +84,7 @@ public final class Trade {
         }
     }
 
-    public static DbIterator<Trade> getAccountAssetTrades(Long accountId, Long assetId, int from, int to) {
+    public static DbIterator<Trade> getAccountAssetTrades(long accountId, long assetId, int from, int to) {
         Connection con = null;
         try {
             con = Db.getConnection();
@@ -105,7 +105,7 @@ public final class Trade {
         }
     }
 
-    public static int getTradeCount(Long assetId) {
+    public static int getTradeCount(long assetId) {
         try (Connection con = Db.getConnection();
              PreparedStatement pstmt = con.prepareStatement("SELECT COUNT(*) FROM trade WHERE asset_id = ?")) {
             pstmt.setLong(1, assetId);
@@ -118,7 +118,7 @@ public final class Trade {
         }
     }
 
-    static Trade addTrade(Long assetId, Block block, Order.Ask askOrder, Order.Bid bidOrder, long quantityQNT, long priceNQT) {
+    static Trade addTrade(long assetId, Block block, Order.Ask askOrder, Order.Bid bidOrder, long quantityQNT, long priceNQT) {
         Trade trade = new Trade(assetId, block, askOrder, bidOrder, quantityQNT, priceNQT);
         tradeTable.insert(trade);
         listeners.notify(trade, Event.TRADE);
@@ -129,18 +129,18 @@ public final class Trade {
 
 
     private final int timestamp;
-    private final Long assetId;
-    private final Long blockId;
+    private final long assetId;
+    private final long blockId;
     private final int height;
-    private final Long askOrderId;
-    private final Long bidOrderId;
-    private final Long sellerId;
-    private final Long buyerId;
+    private final long askOrderId;
+    private final long bidOrderId;
+    private final long sellerId;
+    private final long buyerId;
     private final DbKey dbKey;
     private final long quantityQNT;
     private final long priceNQT;
 
-    private Trade(Long assetId, Block block, Order.Ask askOrder, Order.Bid bidOrder, long quantityQNT, long priceNQT) {
+    private Trade(long assetId, Block block, Order.Ask askOrder, Order.Bid bidOrder, long quantityQNT, long priceNQT) {
         this.blockId = block.getId();
         this.height = block.getHeight();
         this.assetId = assetId;
@@ -186,17 +186,17 @@ public final class Trade {
         }
     }
 
-    public Long getBlockId() { return blockId; }
+    public long getBlockId() { return blockId; }
 
-    public Long getAskOrderId() { return askOrderId; }
+    public long getAskOrderId() { return askOrderId; }
 
-    public Long getBidOrderId() { return bidOrderId; }
+    public long getBidOrderId() { return bidOrderId; }
 
-    public Long getSellerId() {
+    public long getSellerId() {
         return sellerId;
     }
 
-    public Long getBuyerId() {
+    public long getBuyerId() {
         return buyerId;
     }
 
@@ -204,7 +204,7 @@ public final class Trade {
 
     public long getPriceNQT() { return priceNQT; }
     
-    public Long getAssetId() { return assetId; }
+    public long getAssetId() { return assetId; }
     
     public int getTimestamp() { return timestamp; }
 

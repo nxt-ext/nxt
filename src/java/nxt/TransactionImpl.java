@@ -30,21 +30,21 @@ final class TransactionImpl implements Transaction {
         private final int timestamp;
         private final Attachment.AbstractAttachment attachment;
 
-        private Long recipientId;
+        private long recipientId;
         private String referencedTransactionFullHash;
         private byte[] signature;
         private Appendix.Message message;
         private Appendix.EncryptedMessage encryptedMessage;
         private Appendix.EncryptToSelfMessage encryptToSelfMessage;
         private Appendix.PublicKeyAnnouncement publicKeyAnnouncement;
-        private Long blockId;
+        private long blockId;
         private int height = Integer.MAX_VALUE;
-        private Long id;
-        private Long senderId;
+        private long id;
+        private long senderId;
         private int blockTimestamp = -1;
         private String fullHash;
         private int ecBlockHeight;
-        private Long ecBlockId;
+        private long ecBlockId;
 
         BuilderImpl(byte version, byte[] senderPublicKey, long amountNQT, long feeNQT, int timestamp, short deadline,
                     Attachment.AbstractAttachment attachment) {
@@ -64,7 +64,7 @@ final class TransactionImpl implements Transaction {
         }
 
         @Override
-        public BuilderImpl recipientId(Long recipientId) {
+        public BuilderImpl recipientId(long recipientId) {
             this.recipientId = recipientId;
             return this;
         }
@@ -106,7 +106,7 @@ final class TransactionImpl implements Transaction {
             return this;
         }
 
-        BuilderImpl id(Long id) {
+        BuilderImpl id(long id) {
             this.id = id;
             return this;
         }
@@ -116,7 +116,7 @@ final class TransactionImpl implements Transaction {
             return this;
         }
 
-        BuilderImpl blockId(Long blockId) {
+        BuilderImpl blockId(long blockId) {
             this.blockId = blockId;
             return this;
         }
@@ -126,7 +126,7 @@ final class TransactionImpl implements Transaction {
             return this;
         }
 
-        BuilderImpl senderId(Long senderId) {
+        BuilderImpl senderId(long senderId) {
             this.senderId = senderId;
             return this;
         }
@@ -153,7 +153,7 @@ final class TransactionImpl implements Transaction {
             return this;
         }
 
-        BuilderImpl ecBlockId(Long blockId) {
+        BuilderImpl ecBlockId(long blockId) {
             this.ecBlockId = blockId;
             return this;
         }
@@ -162,13 +162,13 @@ final class TransactionImpl implements Transaction {
 
     private final short deadline;
     private final byte[] senderPublicKey;
-    private final Long recipientId;
+    private final long recipientId;
     private final long amountNQT;
     private final long feeNQT;
     private final String referencedTransactionFullHash;
     private final TransactionType type;
     private final int ecBlockHeight;
-    private final Long ecBlockId;
+    private final long ecBlockId;
     private final byte version;
     private final int timestamp;
     private final Attachment.AbstractAttachment attachment;
@@ -181,13 +181,13 @@ final class TransactionImpl implements Transaction {
     private final int appendagesSize;
 
     private volatile int height = Integer.MAX_VALUE;
-    private volatile Long blockId;
+    private volatile long blockId;
     private volatile Block block;
     private volatile byte[] signature;
     private volatile int blockTimestamp = -1;
-    private volatile Long id;
+    private volatile long id;
     private volatile String stringId;
-    private volatile Long senderId;
+    private volatile long senderId;
     private volatile String fullHash;
     private volatile DbKey dbKey;
 
@@ -261,7 +261,7 @@ final class TransactionImpl implements Transaction {
         }
 
         if (! type.hasRecipient()) {
-            if (recipientId != null || getAmountNQT() != 0) {
+            if (recipientId != 0 || getAmountNQT() != 0) {
                 throw new NxtException.NotValidException("Transactions of this type must have recipient == Genesis, amount == 0");
             }
         }
@@ -286,7 +286,7 @@ final class TransactionImpl implements Transaction {
     }
 
     @Override
-    public Long getRecipientId() {
+    public long getRecipientId() {
         return recipientId;
     }
 
@@ -330,13 +330,13 @@ final class TransactionImpl implements Transaction {
     }
 
     @Override
-    public Long getBlockId() {
+    public long getBlockId() {
         return blockId;
     }
 
     @Override
     public Block getBlock() {
-        if (block == null && blockId != null) {
+        if (block == null && blockId != 0) {
             block = BlockDb.findBlock(blockId);
         }
         return block;
@@ -351,7 +351,7 @@ final class TransactionImpl implements Transaction {
 
     void unsetBlock() {
         this.block = null;
-        this.blockId = null;
+        this.blockId = 0;
         this.blockTimestamp = -1;
         // must keep the height set, as transactions already having been included in a popped-off block before
         // get priority when sorted for inclusion in a new block
@@ -383,8 +383,8 @@ final class TransactionImpl implements Transaction {
     }
 
     @Override
-    public Long getId() {
-        if (id == null) {
+    public long getId() {
+        if (id == 0) {
             if (signature == null) {
                 throw new IllegalStateException("Transaction is not signed yet");
             }
@@ -426,8 +426,8 @@ final class TransactionImpl implements Transaction {
     }
 
     @Override
-    public Long getSenderId() {
-        if (senderId == null) {
+    public long getSenderId() {
+        if (senderId == 0) {
             senderId = Account.getId(senderPublicKey);
         }
         return senderId;
@@ -469,7 +469,7 @@ final class TransactionImpl implements Transaction {
             buffer.putInt(timestamp);
             buffer.putShort(deadline);
             buffer.put(senderPublicKey);
-            buffer.putLong(type.hasRecipient() ? Convert.nullToZero(recipientId) : Genesis.CREATOR_ID);
+            buffer.putLong(type.hasRecipient() ? recipientId : Genesis.CREATOR_ID);
             if (useNQT()) {
                 buffer.putLong(amountNQT);
                 buffer.putLong(feeNQT);
@@ -515,7 +515,7 @@ final class TransactionImpl implements Transaction {
             short deadline = buffer.getShort();
             byte[] senderPublicKey = new byte[32];
             buffer.get(senderPublicKey);
-            Long recipientId = Convert.zeroToNull(buffer.getLong());
+            long recipientId = buffer.getLong();
             long amountNQT = buffer.getLong();
             long feeNQT = buffer.getLong();
             String referencedTransactionFullHash = null;
@@ -529,7 +529,7 @@ final class TransactionImpl implements Transaction {
             signature = Convert.emptyToNull(signature);
             int flags = 0;
             int ecBlockHeight = 0;
-            Long ecBlockId = null;
+            long ecBlockId = 0;
             if (version > 0) {
                 flags = buffer.getInt();
                 ecBlockHeight = buffer.getInt();
@@ -640,7 +640,7 @@ final class TransactionImpl implements Transaction {
                     .referencedTransactionFullHash(referencedTransactionFullHash)
                     .signature(signature);
             if (transactionType.hasRecipient()) {
-                Long recipientId = Convert.parseUnsignedLong((String) transactionData.get("recipient"));
+                long recipientId = Convert.parseUnsignedLong((String) transactionData.get("recipient"));
                 builder.recipientId(recipientId);
             }
             if (attachmentData != null) {
@@ -667,7 +667,7 @@ final class TransactionImpl implements Transaction {
     }
 
     @Override
-    public Long getECBlockId() {
+    public long getECBlockId() {
         return ecBlockId;
     }
 
@@ -681,12 +681,17 @@ final class TransactionImpl implements Transaction {
 
     @Override
     public boolean equals(Object o) {
-        return o instanceof TransactionImpl && this.getId().equals(((Transaction)o).getId());
+        return o instanceof TransactionImpl && this.getId() == ((Transaction)o).getId();
     }
 
     @Override
     public int hashCode() {
-        return getId().hashCode();
+        return (int)(getId() ^ (getId() >>> 32));
+    }
+
+    @Override
+    public int compareTo(Transaction other) {
+        return Long.compare(this.getId(), other.getId());
     }
 
     public boolean verifySignature() {
@@ -758,7 +763,7 @@ final class TransactionImpl implements Transaction {
             if (deadline > 1440) {
                 throw new NxtException.NotCurrentlyValidException("Invalid deadline " + deadline + ", maximum allowed is 1440");
             }
-            if (type.hasRecipient() && recipientId != null) {
+            if (type.hasRecipient() && recipientId != 0) {
                 Account recipientAccount = Account.getAccount(recipientId);
                 if ((recipientAccount == null || recipientAccount.getPublicKey() == null) && publicKeyAnnouncement == null) {
                     throw new NxtException.NotCurrentlyValidException("Recipient account does not have a public key, must attach a public key announcement");
@@ -777,7 +782,7 @@ final class TransactionImpl implements Transaction {
         Account senderAccount = Account.getAccount(getSenderId());
         senderAccount.apply(senderPublicKey, this.getHeight());
         Account recipientAccount = Account.getAccount(recipientId);
-        if (recipientAccount == null && recipientId != null) {
+        if (recipientAccount == null && recipientId != 0) {
             recipientAccount = Account.addOrGetAccount(recipientId);
         }
         for (Appendix.AbstractAppendix appendage : appendages) {

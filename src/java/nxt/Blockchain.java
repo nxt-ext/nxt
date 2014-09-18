@@ -12,11 +12,11 @@ public interface Blockchain {
 
     int getHeight();
 
-    Block getBlock(Long blockId);
+    Block getBlock(long blockId);
 
     Block getBlockAtHeight(int height);
 
-    boolean hasBlock(Long blockId);
+    boolean hasBlock(long blockId);
 
     DbIterator<? extends Block> getAllBlocks();
 
@@ -26,19 +26,19 @@ public interface Blockchain {
 
     DbIterator<? extends Block> getBlocks(Connection con, PreparedStatement pstmt);
 
-    List<Long> getBlockIdsAfter(Long blockId, int limit);
+    List<Long> getBlockIdsAfter(long blockId, int limit);
 
-    List<? extends Block> getBlocksAfter(Long blockId, int limit);
+    List<? extends Block> getBlocksAfter(long blockId, int limit);
 
     long getBlockIdAtHeight(int height);
 
     List<? extends Block> getBlocksFromHeight(int height);
 
-    Transaction getTransaction(Long transactionId);
+    Transaction getTransaction(long transactionId);
 
     Transaction getTransactionByFullHash(String fullHash);
 
-    boolean hasTransaction(Long transactionId);
+    boolean hasTransaction(long transactionId);
 
     boolean hasTransactionByFullHash(String fullHash);
 

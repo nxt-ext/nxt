@@ -35,11 +35,11 @@ public final class GetAccount extends APIServlet.APIRequestHandler {
         if (account.getDescription() != null) {
             response.put("description", account.getDescription());
         }
-        if (account.getCurrentLesseeId() != null) {
+        if (account.getCurrentLesseeId() != 0) {
             JSONData.putAccount(response, "currentLessee", account.getCurrentLesseeId());
             response.put("currentLeasingHeightFrom", account.getCurrentLeasingHeightFrom());
             response.put("currentLeasingHeightTo", account.getCurrentLeasingHeightTo());
-            if (account.getNextLesseeId() != null) {
+            if (account.getNextLesseeId() != 0) {
                 JSONData.putAccount(response, "nextLessee", account.getNextLesseeId());
                 response.put("nextLeasingHeightFrom", account.getNextLeasingHeightFrom());
                 response.put("nextLeasingHeightTo", account.getNextLeasingHeightTo());

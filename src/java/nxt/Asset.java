@@ -42,11 +42,11 @@ public final class Asset {
         return assetTable.getCount();
     }
 
-    public static Asset getAsset(Long id) {
+    public static Asset getAsset(long id) {
         return assetTable.get(assetDbKeyFactory.newKey(id));
     }
 
-    public static DbIterator<Asset> getAssetsIssuedBy(Long accountId, int from, int to) {
+    public static DbIterator<Asset> getAssetsIssuedBy(long accountId, int from, int to) {
         return assetTable.getManyBy("account_id", accountId, from, to);
     }
 
@@ -57,9 +57,9 @@ public final class Asset {
     static void init() {}
 
 
-    private final Long assetId;
+    private final long assetId;
     private final DbKey dbKey;
-    private final Long accountId;
+    private final long accountId;
     private final String name;
     private final String description;
     private final long quantityQNT;
@@ -100,11 +100,11 @@ public final class Asset {
         }
     }
 
-    public Long getId() {
+    public long getId() {
         return assetId;
     }
 
-    public Long getAccountId() {
+    public long getAccountId() {
         return accountId;
     }
 

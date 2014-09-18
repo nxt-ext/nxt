@@ -9,7 +9,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -47,12 +46,12 @@ final class BlockchainImpl implements Blockchain {
     }
 
     @Override
-    public BlockImpl getBlock(Long blockId) {
+    public BlockImpl getBlock(long blockId) {
         return BlockDb.findBlock(blockId);
     }
 
     @Override
-    public boolean hasBlock(Long blockId) {
+    public boolean hasBlock(long blockId) {
         return BlockDb.hasBlock(blockId);
     }
 
@@ -106,28 +105,20 @@ final class BlockchainImpl implements Blockchain {
     }
 
     @Override
-    public List<Long> getBlockIdsAfter(Long blockId, int limit) {
+    public List<Long> getBlockIdsAfter(long blockId, int limit) {
         if (limit > 1440) {
             throw new IllegalArgumentException("Can't get more than 1440 blocks at a time");
         }
         try (Connection con = Db.getConnection();
-             PreparedStatement pstmt1 = con.prepareStatement("SELECT db_id FROM block WHERE id = ?");
-             PreparedStatement pstmt2 = con.prepareStatement("SELECT id FROM block WHERE db_id > ? ORDER BY db_id ASC LIMIT ?")) {
-            pstmt1.setLong(1, blockId);
-            ResultSet rs = pstmt1.executeQuery();
-            if (! rs.next()) {
-                rs.close();
-                return Collections.emptyList();
-            }
+             PreparedStatement pstmt = con.prepareStatement("SELECT id FROM block WHERE db_id > (SELECT db_id FROM block WHERE id = ?) ORDER BY db_id ASC LIMIT ?")) {
             List<Long> result = new ArrayList<>();
-            int dbId = rs.getInt("db_id");
-            pstmt2.setInt(1, dbId);
-            pstmt2.setInt(2, limit);
-            rs = pstmt2.executeQuery();
-            while (rs.next()) {
-                result.add(rs.getLong("id"));
+            pstmt.setLong(1, blockId);
+            pstmt.setInt(2, limit);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    result.add(rs.getLong("id"));
+                }
             }
-            rs.close();
             return result;
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
@@ -135,7 +126,7 @@ final class BlockchainImpl implements Blockchain {
     }
 
     @Override
-    public List<BlockImpl> getBlocksAfter(Long blockId, int limit) {
+    public List<BlockImpl> getBlocksAfter(long blockId, int limit) {
         if (limit > 1440) {
             throw new IllegalArgumentException("Can't get more than 1440 blocks at a time");
         }
@@ -144,11 +135,11 @@ final class BlockchainImpl implements Blockchain {
             List<BlockImpl> result = new ArrayList<>();
             pstmt.setLong(1, blockId);
             pstmt.setInt(2, limit);
-            ResultSet rs = pstmt.executeQuery();
-            while (rs.next()) {
-                result.add(BlockDb.loadBlock(con, rs));
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    result.add(BlockDb.loadBlock(con, rs));
+                }
             }
-            rs.close();
             return result;
         } catch (NxtException.ValidationException|SQLException e) {
             throw new RuntimeException(e.toString(), e);
@@ -187,10 +178,11 @@ final class BlockchainImpl implements Blockchain {
         try (Connection con = Db.getConnection();
              PreparedStatement pstmt = con.prepareStatement("SELECT * FROM block WHERE height >= ? ORDER BY height ASC")) {
             pstmt.setInt(1, height);
-            ResultSet rs = pstmt.executeQuery();
             List<BlockImpl> result = new ArrayList<>();
-            while (rs.next()) {
-                result.add(BlockDb.loadBlock(con, rs));
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    result.add(BlockDb.loadBlock(con, rs));
+                }
             }
             return result;
         } catch (SQLException|NxtException.ValidationException e) {
@@ -199,7 +191,7 @@ final class BlockchainImpl implements Blockchain {
     }
 
     @Override
-    public Transaction getTransaction(Long transactionId) {
+    public Transaction getTransaction(long transactionId) {
         return TransactionDb.findTransaction(transactionId);
     }
 
@@ -209,7 +201,7 @@ final class BlockchainImpl implements Blockchain {
     }
 
     @Override
-    public boolean hasTransaction(Long transactionId) {
+    public boolean hasTransaction(long transactionId) {
         return TransactionDb.hasTransaction(transactionId);
     }
 
@@ -220,8 +212,8 @@ final class BlockchainImpl implements Blockchain {
 
     @Override
     public int getTransactionCount() {
-        try (Connection con = Db.getConnection(); PreparedStatement pstmt = con.prepareStatement("SELECT COUNT(*) FROM transaction")) {
-            ResultSet rs = pstmt.executeQuery();
+        try (Connection con = Db.getConnection(); PreparedStatement pstmt = con.prepareStatement("SELECT COUNT(*) FROM transaction");
+             ResultSet rs = pstmt.executeQuery()) {
             rs.next();
             return rs.getInt(1);
         } catch (SQLException e) {

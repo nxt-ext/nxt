@@ -47,7 +47,7 @@ public final class Vote {
         return voteTable.getCount();
     }
 
-    public static Vote getVote(Long id) {
+    public static Vote getVote(long id) {
         return voteTable.get(voteDbKeyFactory.newKey(id));
     }
 
@@ -71,10 +71,10 @@ public final class Vote {
     static void init() {}
 
 
-    private final Long id;
+    private final long id;
     private final DbKey dbKey;
-    private final Long pollId;
-    private final Long voterId;
+    private final long pollId;
+    private final long voterId;
     private final byte[] voteBytes;
 
     private Vote(Transaction transaction, Attachment.MessagingVoteCasting attachment) {
@@ -106,13 +106,13 @@ public final class Vote {
         }
     }
 
-    public Long getId() {
+    public long getId() {
         return id;
     }
 
-    public Long getPollId() { return pollId; }
+    public long getPollId() { return pollId; }
 
-    public Long getVoterId() { return voterId; }
+    public long getVoterId() { return voterId; }
 
     public byte[] getVote() { return voteBytes; }
 

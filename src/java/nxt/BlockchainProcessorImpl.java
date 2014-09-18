@@ -31,8 +31,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.SortedMap;
-import java.util.TreeMap;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 final class BlockchainProcessorImpl implements BlockchainProcessor {
@@ -103,17 +103,17 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                         return;
                     }
 
-                    Long commonBlockId = Genesis.GENESIS_BLOCK_ID;
+                    long commonBlockId = Genesis.GENESIS_BLOCK_ID;
 
-                    if (! blockchain.getLastBlock().getId().equals(Genesis.GENESIS_BLOCK_ID)) {
+                    if (blockchain.getLastBlock().getId() != Genesis.GENESIS_BLOCK_ID) {
                         commonBlockId = getCommonMilestoneBlockId(peer);
                     }
-                    if (commonBlockId == null || !peerHasMore) {
+                    if (commonBlockId == 0 || !peerHasMore) {
                         return;
                     }
 
                     commonBlockId = getCommonBlockId(peer, commonBlockId);
-                    if (commonBlockId == null || !peerHasMore) {
+                    if (commonBlockId == 0 || !peerHasMore) {
                         return;
                     }
 
@@ -122,7 +122,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                         return;
                     }
 
-                    Long currentBlockId = commonBlockId;
+                    long currentBlockId = commonBlockId;
                     List<BlockImpl> forkBlocks = new ArrayList<>();
 
                     boolean processedAll = true;
@@ -153,7 +153,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                                 }
                                 currentBlockId = block.getId();
 
-                                if (blockchain.getLastBlock().getId().equals(block.getPreviousBlockId())) {
+                                if (blockchain.getLastBlock().getId() == block.getPreviousBlockId()) {
                                     try {
                                         pushBlock(block);
                                     } catch (BlockNotAcceptedException e) {
@@ -189,7 +189,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
 
         }
 
-        private Long getCommonMilestoneBlockId(Peer peer) {
+        private long getCommonMilestoneBlockId(Peer peer) {
 
             String lastMilestoneBlockId = null;
 
@@ -204,11 +204,11 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
 
                 JSONObject response = peer.send(JSON.prepareRequest(milestoneBlockIdsRequest));
                 if (response == null) {
-                    return null;
+                    return 0;
                 }
                 JSONArray milestoneBlockIds = (JSONArray) response.get("milestoneBlockIds");
                 if (milestoneBlockIds == null) {
-                    return null;
+                    return 0;
                 }
                 if (milestoneBlockIds.isEmpty()) {
                     return Genesis.GENESIS_BLOCK_ID;
@@ -217,13 +217,13 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 if (milestoneBlockIds.size() > 20) {
                     Logger.logDebugMessage("Obsolete or rogue peer " + peer.getPeerAddress() + " sends too many milestoneBlockIds, blacklisting");
                     peer.blacklist();
-                    return null;
+                    return 0;
                 }
                 if (Boolean.TRUE.equals(response.get("last"))) {
                     peerHasMore = false;
                 }
                 for (Object milestoneBlockId : milestoneBlockIds) {
-                    Long blockId = Convert.parseUnsignedLong((String) milestoneBlockId);
+                    long blockId = Convert.parseUnsignedLong((String) milestoneBlockId);
                     if (BlockDb.hasBlock(blockId)) {
                         if (lastMilestoneBlockId == null && milestoneBlockIds.size() > 1) {
                             peerHasMore = false;
@@ -236,7 +236,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
 
         }
 
-        private Long getCommonBlockId(Peer peer, Long commonBlockId) {
+        private long getCommonBlockId(Peer peer, long commonBlockId) {
 
             while (true) {
                 JSONObject request = new JSONObject();
@@ -244,21 +244,21 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 request.put("blockId", Convert.toUnsignedLong(commonBlockId));
                 JSONObject response = peer.send(JSON.prepareRequest(request));
                 if (response == null) {
-                    return null;
+                    return 0;
                 }
                 JSONArray nextBlockIds = (JSONArray) response.get("nextBlockIds");
                 if (nextBlockIds == null || nextBlockIds.size() == 0) {
-                    return null;
+                    return 0;
                 }
                 // prevent overloading with blockIds
                 if (nextBlockIds.size() > 1440) {
                     Logger.logDebugMessage("Obsolete or rogue peer " + peer.getPeerAddress() + " sends too many nextBlockIds, blacklisting");
                     peer.blacklist();
-                    return null;
+                    return 0;
                 }
 
                 for (Object nextBlockId : nextBlockIds) {
-                    Long blockId = Convert.parseUnsignedLong((String) nextBlockId);
+                    long blockId = Convert.parseUnsignedLong((String) nextBlockId);
                     if (! BlockDb.hasBlock(blockId)) {
                         return commonBlockId;
                     }
@@ -268,7 +268,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
 
         }
 
-        private JSONArray getNextBlocks(Peer peer, Long curBlockId) {
+        private JSONArray getNextBlocks(Peer peer, long curBlockId) {
 
             JSONObject request = new JSONObject();
             request.put("requestType", "getNextBlocks");
@@ -301,9 +301,9 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 List<BlockImpl> myPoppedOffBlocks = popOffTo(commonBlock);
 
                 int pushedForkBlocks = 0;
-                if (blockchain.getLastBlock().getId().equals(commonBlock.getId())) {
+                if (blockchain.getLastBlock().getId() == commonBlock.getId()) {
                     for (BlockImpl block : forkBlocks) {
-                        if (blockchain.getLastBlock().getId().equals(block.getPreviousBlockId())) {
+                        if (blockchain.getLastBlock().getId() == block.getPreviousBlockId()) {
                             try {
                                 pushBlock(block);
                                 pushedForkBlocks += 1;
@@ -473,8 +473,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         Logger.logMessage("Genesis block not in database, starting from scratch");
         blockchain.setLastBlock(null);
         try {
-            SortedMap<Long,TransactionImpl> transactionsMap = new TreeMap<>();
-
+            List<TransactionImpl> transactions = new ArrayList<>();
             for (int i = 0; i < Genesis.GENESIS_RECIPIENTS.length; i++) {
                 TransactionImpl transaction = new TransactionImpl.BuilderImpl((byte) 0, Genesis.CREATOR_PUBLIC_KEY,
                         Genesis.GENESIS_AMOUNTS[i] * Constants.ONE_NXT, 0, 0, (short) 0,
@@ -482,21 +481,17 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                         .recipientId(Genesis.GENESIS_RECIPIENTS[i])
                         .signature(Genesis.GENESIS_SIGNATURES[i])
                         .build();
-                transactionsMap.put(transaction.getId(), transaction);
+                transactions.add(transaction);
             }
-
+            Collections.sort(transactions);
             MessageDigest digest = Crypto.sha256();
-            for (Transaction transaction : transactionsMap.values()) {
+            for (Transaction transaction : transactions) {
                 digest.update(transaction.getBytes());
             }
-
-            BlockImpl genesisBlock = new BlockImpl(-1, 0, null, Constants.MAX_BALANCE_NQT, 0, transactionsMap.size() * 128, digest.digest(),
-                    Genesis.CREATOR_PUBLIC_KEY, new byte[64], Genesis.GENESIS_BLOCK_SIGNATURE, null, new ArrayList<>(transactionsMap.values()));
-
+            BlockImpl genesisBlock = new BlockImpl(-1, 0, 0, Constants.MAX_BALANCE_NQT, 0, transactions.size() * 128, digest.digest(),
+                    Genesis.CREATOR_PUBLIC_KEY, new byte[64], Genesis.GENESIS_BLOCK_SIGNATURE, null, transactions);
             genesisBlock.setPrevious(null);
-
             addBlock(genesisBlock);
-
         } catch (NxtException.ValidationException e) {
             Logger.logMessage(e.getMessage());
             throw new RuntimeException(e.toString(), e);
@@ -529,7 +524,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 Db.beginTransaction();
                 previousLastBlock = blockchain.getLastBlock();
 
-                if (!previousLastBlock.getId().equals(block.getPreviousBlockId())) {
+                if (previousLastBlock.getId() != block.getPreviousBlockId()) {
                     throw new BlockOutOfOrderException("Previous block id doesn't match");
                 }
 
@@ -568,7 +563,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     throw new BlockOutOfOrderException("Invalid timestamp: " + block.getTimestamp()
                             + " current time is " + curTime + ", previous block timestamp is " + previousLastBlock.getTimestamp());
                 }
-                if (block.getId().equals(Long.valueOf(0L)) || BlockDb.hasBlock(block.getId())) {
+                if (block.getId() == 0L || BlockDb.hasBlock(block.getId())) {
                     throw new BlockNotAcceptedException("Duplicate block or invalid id");
                 }
                 if (!block.verifyGenerationSignature()) {
@@ -621,7 +616,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                                 + Convert.toUnsignedLong(transaction.getECBlockId()));
                         //throw new TransactionNotAcceptedException("Transaction belongs to a different fork", transaction);
                     }
-                    if (transaction.getId().equals(Long.valueOf(0L))) {
+                    if (transaction.getId() == 0L) {
                         throw new TransactionNotAcceptedException("Invalid transaction id", transaction);
                     }
                     if (transaction.isDuplicate(duplicates)) {
@@ -703,7 +698,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             try {
                 Db.beginTransaction();
                 BlockImpl block = blockchain.getLastBlock();
-                while (!block.getId().equals(commonBlock.getId()) && !block.getId().equals(Genesis.GENESIS_BLOCK_ID)) {
+                while (block.getId() != commonBlock.getId() && block.getId() != Genesis.GENESIS_BLOCK_ID) {
                     poppedOffBlocks.add(block);
                     block = popLastBlock();
                 }
@@ -726,7 +721,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
     private BlockImpl popLastBlock() {
         BlockImpl block = blockchain.getLastBlock();
         Logger.logDebugMessage("Will pop block " + block.getStringId() + " at height " + block.getHeight());
-        if (block.getId().equals(Genesis.GENESIS_BLOCK_ID)) {
+        if (block.getId() == Genesis.GENESIS_BLOCK_ID) {
             throw new RuntimeException("Cannot pop off genesis block");
         }
         BlockImpl previousBlock = BlockDb.findBlock(block.getPreviousBlockId());
@@ -763,7 +758,8 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
 
         BlockImpl previousBlock = blockchain.getLastBlock();
 
-        SortedMap<Long, TransactionImpl> newTransactions = new TreeMap<>();
+        SortedSet<TransactionImpl> newTransactions = new TreeSet<>();
+
         Map<TransactionType, Set<String>> duplicates = new HashMap<>();
 
         long totalAmountNQT = 0;
@@ -777,7 +773,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             for (TransactionImpl transaction : sortedTransactions) {
 
                 int transactionLength = transaction.getSize();
-                if (newTransactions.get(transaction.getId()) != null || payloadLength + transactionLength > Constants.MAX_PAYLOAD_LENGTH) {
+                if (newTransactions.contains(transaction) || payloadLength + transactionLength > Constants.MAX_PAYLOAD_LENGTH) {
                     continue;
                 }
 
@@ -808,7 +804,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     //continue;
                 }
 
-                newTransactions.put(transaction.getId(), transaction);
+                newTransactions.add(transaction);
                 payloadLength += transactionLength;
                 totalAmountNQT += transaction.getAmountNQT();
                 totalFeeNQT += transaction.getFeeNQT();
@@ -823,7 +819,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         final byte[] publicKey = Crypto.getPublicKey(secretPhrase);
 
         MessageDigest digest = Crypto.sha256();
-        for (Transaction transaction : newTransactions.values()) {
+        for (Transaction transaction : newTransactions) {
             digest.update(transaction.getBytes());
         }
 
@@ -838,7 +834,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         try {
 
             block = new BlockImpl(getBlockVersion(previousBlock.getHeight()), blockTimestamp, previousBlock.getId(), totalAmountNQT, totalFeeNQT, payloadLength,
-                    payloadHash, publicKey, generationSignature, null, previousBlockHash, new ArrayList<>(newTransactions.values()));
+                    payloadHash, publicKey, generationSignature, null, previousBlockHash, new ArrayList<>(newTransactions));
 
         } catch (NxtException.ValidationException e) {
             // shouldn't happen because all transactions are already validated
@@ -912,7 +908,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 try (ResultSet rs = pstmt.executeQuery()) {
                     BlockImpl currentBlock = BlockDb.findBlockAtHeight(height);
                     blockListeners.notify(currentBlock, Event.RESCAN_BEGIN);
-                    Long currentBlockId = currentBlock.getId();
+                    long currentBlockId = currentBlock.getId();
                     blockchain.setLastBlock(currentBlock);
                     if (height == 0) {
                         Account.addOrGetAccount(Genesis.CREATOR_ID).apply(Genesis.CREATOR_PUBLIC_KEY, 0);
@@ -920,10 +916,10 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     while (rs.next()) {
                         try {
                             currentBlock = BlockDb.loadBlock(con, rs);
-                            if (!currentBlock.getId().equals(currentBlockId)) {
+                            if (currentBlock.getId() != currentBlockId) {
                                 throw new NxtException.NotValidException("Database blocks in the wrong order!");
                             }
-                            if (validateAtScan && !currentBlockId.equals(Genesis.GENESIS_BLOCK_ID)) {
+                            if (validateAtScan && currentBlockId != Genesis.GENESIS_BLOCK_ID) {
                                 if (!currentBlock.verifyBlockSignature() || !currentBlock.verifyGenerationSignature()) {
                                     throw new NxtException.NotValidException("Invalid block signature");
                                 }

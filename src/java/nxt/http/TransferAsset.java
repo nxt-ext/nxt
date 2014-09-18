@@ -24,7 +24,7 @@ public final class TransferAsset extends CreateTransaction {
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
 
-        Long recipient = ParameterParser.getRecipientId(req);
+        long recipient = ParameterParser.getRecipientId(req);
 
         String comment = Convert.nullToEmpty(req.getParameter("comment")).trim();
         if (comment.length() > Constants.MAX_ASSET_TRANSFER_COMMENT_LENGTH) {
@@ -35,8 +35,8 @@ public final class TransferAsset extends CreateTransaction {
         long quantityQNT = ParameterParser.getQuantityQNT(req);
         Account account = ParameterParser.getSenderAccount(req);
 
-        Long assetBalance = account.getUnconfirmedAssetBalanceQNT(asset.getId());
-        if (assetBalance == null || quantityQNT > assetBalance) {
+        long assetBalance = account.getUnconfirmedAssetBalanceQNT(asset.getId());
+        if (assetBalance < 0 || quantityQNT > assetBalance) {
             return NOT_ENOUGH_ASSETS;
         }
 

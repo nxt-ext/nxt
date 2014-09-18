@@ -28,13 +28,13 @@ public final class Account {
 
     public static class AccountAsset {
 
-        private final Long accountId;
-        private final Long assetId;
+        private final long accountId;
+        private final long assetId;
         private final DbKey dbKey;
         private long quantityQNT;
         private long unconfirmedQuantityQNT;
 
-        private AccountAsset(Long accountId, Long assetId, long quantityQNT, long unconfirmedQuantityQNT) {
+        private AccountAsset(long accountId, long assetId, long quantityQNT, long unconfirmedQuantityQNT) {
             this.accountId = accountId;
             this.assetId = assetId;
             this.dbKey = accountAssetDbKeyFactory.newKey(this.accountId, this.assetId);
@@ -64,11 +64,11 @@ public final class Account {
             }
         }
 
-        public Long getAccountId() {
+        public long getAccountId() {
             return accountId;
         }
 
-        public Long getAssetId() {
+        public long getAssetId() {
             return assetId;
         }
 
@@ -99,12 +99,12 @@ public final class Account {
 
     public static class AccountLease {
 
-        public final Long lessorId;
-        public final Long lesseeId;
+        public final long lessorId;
+        public final long lesseeId;
         public final int fromHeight;
         public final int toHeight;
 
-        private AccountLease(Long lessorId, Long lesseeId, int fromHeight, int toHeight) {
+        private AccountLease(long lessorId, long lesseeId, int fromHeight, int toHeight) {
             this.lessorId = lessorId;
             this.lesseeId = lesseeId;
             this.fromHeight = fromHeight;
@@ -140,14 +140,14 @@ public final class Account {
                                     Event.LEASE_ENDED);
                             if (account.nextLeasingHeightFrom == Integer.MAX_VALUE) {
                                 account.currentLeasingHeightFrom = Integer.MAX_VALUE;
-                                account.currentLesseeId = null;
+                                account.currentLesseeId = 0;
                                 accountTable.insert(account);
                             } else {
                                 account.currentLeasingHeightFrom = account.nextLeasingHeightFrom;
                                 account.currentLeasingHeightTo = account.nextLeasingHeightTo;
                                 account.currentLesseeId = account.nextLesseeId;
                                 account.nextLeasingHeightFrom = Integer.MAX_VALUE;
-                                account.nextLesseeId = null;
+                                account.nextLesseeId = 0;
                                 accountTable.insert(account);
                                 if (height == account.currentLeasingHeightFrom) {
                                     leaseListeners.notify(
@@ -264,8 +264,8 @@ public final class Account {
         return accountTable.getCount();
     }
 
-    public static Account getAccount(Long id) {
-        return id == null ? null : accountTable.get(accountDbKeyFactory.newKey(id));
+    public static Account getAccount(long id) {
+        return id == 0 ? null : accountTable.get(accountDbKeyFactory.newKey(id));
     }
 
     public static Account getAccount(byte[] publicKey) {
@@ -280,12 +280,12 @@ public final class Account {
                 + " existing key " + Convert.toHexString(account.getPublicKey()) + " new key " + Convert.toHexString(publicKey));
     }
 
-    public static Long getId(byte[] publicKey) {
+    public static long getId(byte[] publicKey) {
         byte[] publicKeyHash = Crypto.sha256().digest(publicKey);
         return Convert.fullHashToId(publicKeyHash);
     }
 
-    static Account addOrGetAccount(Long id) {
+    static Account addOrGetAccount(long id) {
         Account account = accountTable.get(accountDbKeyFactory.newKey(id));
         if (account == null) {
             account = new Account(id);
@@ -308,14 +308,14 @@ public final class Account {
         }
     }
 
-    public static DbIterator<AccountAsset> getAssetAccounts(Long assetId, int from, int to) {
+    public static DbIterator<AccountAsset> getAssetAccounts(long assetId, int from, int to) {
         return accountAssetTable.getManyBy("asset_id", assetId, from, to);
     }
 
     static void init() {}
 
 
-    private final Long id;
+    private final long id;
     private final DbKey dbKey;
     private final int creationHeight;
     private byte[] publicKey;
@@ -326,15 +326,15 @@ public final class Account {
 
     private int currentLeasingHeightFrom;
     private int currentLeasingHeightTo;
-    private Long currentLesseeId;
+    private long currentLesseeId;
     private int nextLeasingHeightFrom;
     private int nextLeasingHeightTo;
-    private Long nextLesseeId;
+    private long nextLesseeId;
     private String name;
     private String description;
 
-    private Account(Long id) {
-        if (! id.equals(Crypto.rsDecode(Crypto.rsEncode(id)))) {
+    private Account(long id) {
+        if (id != Crypto.rsDecode(Crypto.rsEncode(id))) {
             Logger.logMessage("CRITICAL ERROR: Reed-Solomon encoding fails for " + id);
         }
         this.id = id;
@@ -356,10 +356,10 @@ public final class Account {
         this.description = rs.getString("description");
         this.currentLeasingHeightFrom = rs.getInt("current_leasing_height_from");
         this.currentLeasingHeightTo = rs.getInt("current_leasing_height_to");
-        this.currentLesseeId = DbUtils.getLong(rs, "current_lessee_id");
+        this.currentLesseeId = rs.getLong("current_lessee_id");
         this.nextLeasingHeightFrom = rs.getInt("next_leasing_height_from");
         this.nextLeasingHeightTo = rs.getInt("next_leasing_height_to");
-        this.nextLesseeId = DbUtils.getLong(rs, "next_lessee_id");
+        this.nextLesseeId = rs.getLong("next_lessee_id");
     }
 
     private void save(Connection con) throws SQLException {
@@ -379,18 +379,18 @@ public final class Account {
             pstmt.setLong(++i, this.getForgedBalanceNQT());
             DbUtils.setString(pstmt, ++i, this.getName());
             DbUtils.setString(pstmt, ++i, this.getDescription());
-            DbUtils.setInt(pstmt, ++i, Convert.zeroToNull(this.getCurrentLeasingHeightFrom()));
-            DbUtils.setInt(pstmt, ++i, Convert.zeroToNull(this.getCurrentLeasingHeightTo()));
-            DbUtils.setLong(pstmt, ++i, this.getCurrentLesseeId());
-            DbUtils.setInt(pstmt, ++i, Convert.zeroToNull(this.getNextLeasingHeightFrom()));
-            DbUtils.setInt(pstmt, ++i, Convert.zeroToNull(this.getNextLeasingHeightTo()));
-            DbUtils.setLong(pstmt, ++i, this.getNextLesseeId());
+            DbUtils.setIntZeroToNull(pstmt, ++i, this.getCurrentLeasingHeightFrom());
+            DbUtils.setIntZeroToNull(pstmt, ++i, this.getCurrentLeasingHeightTo());
+            DbUtils.setLongZeroToNull(pstmt, ++i, this.getCurrentLesseeId());
+            DbUtils.setIntZeroToNull(pstmt, ++i, this.getNextLeasingHeightFrom());
+            DbUtils.setIntZeroToNull(pstmt, ++i, this.getNextLeasingHeightTo());
+            DbUtils.setLongZeroToNull(pstmt, ++i, this.getNextLesseeId());
             pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
             pstmt.executeUpdate();
         }
     }
 
-    public Long getId() {
+    public long getId() {
         return id;
     }
 
@@ -472,7 +472,7 @@ public final class Account {
             }
             long receivedInlastBlock = 0;
             for (Transaction transaction : lastBlock.getTransactions()) {
-                if (id.equals(transaction.getRecipientId())) {
+                if (id == transaction.getRecipientId()) {
                     receivedInlastBlock += transaction.getAmountNQT();
                 }
             }
@@ -543,16 +543,16 @@ public final class Account {
         return Trade.getAccountTrades(this.id, from, to);
     }
 
-    public Long getUnconfirmedAssetBalanceQNT(Long assetId) {
+    public long getUnconfirmedAssetBalanceQNT(long assetId) {
         AccountAsset accountAsset = accountAssetTable.get(accountAssetDbKeyFactory.newKey(this.id, assetId));
         return accountAsset == null ? 0 : accountAsset.unconfirmedQuantityQNT;
     }
 
-    public Long getCurrentLesseeId() {
+    public long getCurrentLesseeId() {
         return currentLesseeId;
     }
 
-    public Long getNextLesseeId() {
+    public long getNextLesseeId() {
         return nextLesseeId;
     }
 
@@ -572,7 +572,7 @@ public final class Account {
         return nextLeasingHeightTo;
     }
 
-    void leaseEffectiveBalance(Long lesseeId, short period) {
+    void leaseEffectiveBalance(long lesseeId, short period) {
         Account lessee = Account.getAccount(lesseeId);
         if (lessee != null && lessee.getPublicKey() != null) {
             Block lastBlock = Nxt.getBlockchain().getLastBlock();
@@ -650,12 +650,12 @@ public final class Account {
         }
     }
 
-    long getAssetBalanceQNT(Long assetId) {
+    long getAssetBalanceQNT(long assetId) {
         AccountAsset accountAsset = accountAssetTable.get(accountAssetDbKeyFactory.newKey(this.id, assetId));
         return accountAsset == null ? 0 : accountAsset.quantityQNT;
     }
 
-    void addToAssetBalanceQNT(Long assetId, long quantityQNT) {
+    void addToAssetBalanceQNT(long assetId, long quantityQNT) {
         if (quantityQNT == 0) {
             return;
         }
@@ -673,7 +673,7 @@ public final class Account {
         assetListeners.notify(accountAsset, Event.ASSET_BALANCE);
     }
 
-    void addToUnconfirmedAssetBalanceQNT(Long assetId, long quantityQNT) {
+    void addToUnconfirmedAssetBalanceQNT(long assetId, long quantityQNT) {
         if (quantityQNT == 0) {
             return;
         }
@@ -691,7 +691,7 @@ public final class Account {
         assetListeners.notify(accountAsset, Event.UNCONFIRMED_ASSET_BALANCE);
     }
 
-    void addToAssetAndUnconfirmedAssetBalanceQNT(Long assetId, long quantityQNT) {
+    void addToAssetAndUnconfirmedAssetBalanceQNT(long assetId, long quantityQNT) {
         if (quantityQNT == 0) {
             return;
         }
@@ -757,7 +757,7 @@ public final class Account {
     }
 
     private void checkBalance() {
-        if (id.equals(Genesis.CREATOR_ID)) {
+        if (id == Genesis.CREATOR_ID) {
             return;
         }
         if (balanceNQT < 0) {
