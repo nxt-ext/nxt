@@ -1,3 +1,5 @@
+
+
 package nxt.http;
 
 import nxt.Constants;
@@ -181,5 +183,5 @@ public final class GetConstants extends APIServlet.APIRequestHandler {
     JSONStreamAware processRequest(HttpServletRequest req) {
         return CONSTANTS;
     }
-
 }
+

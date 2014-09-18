@@ -120,6 +120,10 @@ public final class Nxt {
     }
 
     public static void main(String[] args) {
+        if (! Constants.isTestnet) {
+            Logger.logMessage("This release is for testnet only, exiting!");
+            System.exit(1);
+        }
         Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
             @Override
             public void run() {
@@ -167,6 +171,7 @@ public final class Nxt {
                 Hub.init();
                 Order.init();
                 Poll.init();
+                PollResults.init();
                 Trade.init();
                 Vote.init();
                 Peers.init();

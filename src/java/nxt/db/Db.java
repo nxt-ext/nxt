@@ -16,7 +16,7 @@ public final class Db {
     private static final JdbcConnectionPool cp;
     private static volatile int maxActiveConnections;
 
-    private static final ThreadLocal<Connection> localConnection = new ThreadLocal<>();
+    private static final ThreadLocal<DbConnection> localConnection = new ThreadLocal<>();
     private static final ThreadLocal<Map<String,Map<DbKey,Object>>> transactionCaches = new ThreadLocal<>();
 
     private static final class DbConnection extends FilteredConnection {
@@ -28,6 +28,36 @@ public final class Db {
         @Override
         public void setAutoCommit(boolean autoCommit) throws SQLException {
             throw new UnsupportedOperationException("Use Db.beginTransaction() to start a new transaction");
+        }
+
+        @Override
+        public void commit() throws SQLException {
+            if (localConnection.get() == null) {
+                super.commit();
+            } else if (! this.equals(localConnection.get())) {
+                throw new IllegalStateException("Previous connection not committed");
+            } else {
+                throw new UnsupportedOperationException("Use Db.commitTransaction() to commit the transaction");
+            }
+        }
+
+        private void doCommit() throws SQLException {
+            super.commit();
+        }
+
+        @Override
+        public void rollback() throws SQLException {
+            if (localConnection.get() == null) {
+                super.rollback();
+            } else if (! this.equals(localConnection.get())) {
+                throw new IllegalStateException("Previous connection not committed");
+            } else {
+                throw new UnsupportedOperationException("Use Db.rollbackTransaction() to rollback the transaction");
+            }
+        }
+
+        private void doRollback() throws SQLException {
+            super.rollback();
         }
 
         @Override
@@ -119,7 +149,7 @@ public final class Db {
             Connection con = getPooledConnection();
             con.setAutoCommit(false);
             con = new DbConnection(con);
-            localConnection.set(con);
+            localConnection.set((DbConnection)con);
             transactionCaches.set(new HashMap<String, Map<DbKey, Object>>());
             return con;
         } catch (SQLException e) {
@@ -128,24 +158,24 @@ public final class Db {
     }
 
     public static void commitTransaction() {
-        Connection con = localConnection.get();
+        DbConnection con = localConnection.get();
         if (con == null) {
             throw new IllegalStateException("Not in transaction");
         }
         try {
-            con.commit();
+            con.doCommit();
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
         }
     }
 
     public static void rollbackTransaction() {
-        Connection con = localConnection.get();
+        DbConnection con = localConnection.get();
         if (con == null) {
             throw new IllegalStateException("Not in transaction");
         }
         try {
-            con.rollback();
+            con.doRollback();
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
         }

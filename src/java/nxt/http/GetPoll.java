@@ -37,7 +37,6 @@ public final class GetPoll extends APIServlet.APIRequestHandler {
         }
 
         return JSONData.poll(pollData);
-
     }
 
 }

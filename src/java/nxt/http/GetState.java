@@ -9,6 +9,7 @@ import nxt.Order;
 import nxt.Poll;
 import nxt.Trade;
 import nxt.Vote;
+import nxt.db.DbIterator;
 import nxt.peer.Peer;
 import nxt.peer.Peers;
 import nxt.util.Convert;
@@ -36,17 +37,16 @@ public final class GetState extends APIServlet.APIRequestHandler {
         response.put("lastBlock", Nxt.getBlockchain().getLastBlock().getStringId());
         response.put("cumulativeDifficulty", Nxt.getBlockchain().getLastBlock().getCumulativeDifficulty().toString());
 
-        /*
         long totalEffectiveBalance = 0;
-        //TODO: rewrite
-        for (Account account : Account.getAllAccounts()) {
-            long effectiveBalanceNXT = account.getEffectiveBalanceNXT();
-            if (effectiveBalanceNXT > 0) {
-                totalEffectiveBalance += effectiveBalanceNXT;
+        try (DbIterator<Account> accounts = Account.getAllAccounts(0, -1)) {
+            for (Account account : accounts) {
+                long effectiveBalanceNXT = account.getEffectiveBalanceNXT();
+                if (effectiveBalanceNXT > 0) {
+                    totalEffectiveBalance += effectiveBalanceNXT;
+                }
             }
         }
         response.put("totalEffectiveBalanceNXT", totalEffectiveBalance);
-        */
 
         response.put("numberOfBlocks", Nxt.getBlockchain().getHeight() + 1);
         response.put("numberOfTransactions", Nxt.getBlockchain().getTransactionCount());

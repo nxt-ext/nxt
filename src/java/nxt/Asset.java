@@ -55,6 +55,14 @@ public final class Asset {
         return assetTable.getManyBy("account_id", accountId, from, to);
     }
 
+    public static DbIterator<Asset> getAssetsWithName(String name, int from, int to){
+        return assetTable.getManyBy("name", name, from, to);
+    }
+
+    public static DbIterator<Asset> getAssetsWithName(String name){
+        return getAssetsWithName(name, 0, Integer.MAX_VALUE);
+    }
+
     static void addAsset(Transaction transaction, Attachment.ColoredCoinsAssetIssuance attachment) {
         assetTable.insert(new Asset(transaction, attachment));
     }
@@ -127,6 +135,14 @@ public final class Asset {
 
     public byte getDecimals() {
         return decimals;
+    }
+
+    public DbIterator<Account.AccountAsset> getAccounts(int from, int to) {
+        return Account.getAssetAccounts(this.assetId, from, to);
+    }
+
+    public DbIterator<Trade> getTrades(int from, int to) {
+        return Trade.getAssetTrades(this.assetId, from, to);
     }
 
 }

@@ -20,3 +20,5 @@
 /.project
 /.settings/
 /compile.bat
+deploy.sh
+

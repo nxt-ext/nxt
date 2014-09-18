@@ -315,6 +315,10 @@ final class TransactionImpl implements Transaction {
         return height;
     }
 
+    void setHeight(int height) {
+        this.height = height;
+    }
+
     @Override
     public byte[] getSignature() {
         return signature;
@@ -463,37 +467,6 @@ final class TransactionImpl implements Transaction {
 
     Appendix.PublicKeyAnnouncement getPublicKeyAnnouncement() {
         return publicKeyAnnouncement;
-    }
-
-    public int compareTo(Transaction o) {
-
-        if (height < o.getHeight()) {
-            return -1;
-        }
-        if (height > o.getHeight()) {
-            return 1;
-        }
-        // equivalent to: fee * 1048576L / getSize() > o.fee * 1048576L / o.getSize()
-        if (Convert.safeMultiply(feeNQT, ((TransactionImpl)o).getSize()) > Convert.safeMultiply(o.getFeeNQT(), getSize())) {
-            return -1;
-        }
-        if (Convert.safeMultiply(feeNQT, ((TransactionImpl)o).getSize()) < Convert.safeMultiply(o.getFeeNQT(), getSize())) {
-            return 1;
-        }
-        if (timestamp < o.getTimestamp()) {
-            return -1;
-        }
-        if (timestamp > o.getTimestamp()) {
-            return 1;
-        }
-        if (getId() < o.getId()) {
-            return -1;
-        }
-        if (getId() > o.getId()) {
-            return 1;
-        }
-        return 0;
-
     }
 
     @Override

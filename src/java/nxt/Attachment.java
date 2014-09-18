@@ -12,7 +12,7 @@ public interface Attachment extends Appendix {
 
     TransactionType getTransactionType();
 
-    abstract static class AbstractAttachment extends AbstractAppendix implements Attachment {
+    abstract static class AbstractAttachment extends Appendix.AbstractAppendix implements Attachment {
 
         private AbstractAttachment(ByteBuffer buffer, byte transactionVersion) {
             super(buffer, transactionVersion);
@@ -314,51 +314,147 @@ public interface Attachment extends Appendix {
 
     public final static class MessagingPollCreation extends AbstractAttachment {
 
+        public final static class PollBuilder {
+            private final String pollName;
+            private final String pollDescription;
+            private final String[] pollOptions;
+
+            private final int finishBlockHeight;
+
+            private final byte optionModel;
+            private final byte votingModel;
+
+            private long minBalance = Poll.DEFAULT_MIN_BALANCE;
+            private byte minNumberOfOptions = Poll.DEFAULT_MIN_NUMBER_OF_CHOICES, maxNumberOfOptions;
+            private long assetId;
+
+            public PollBuilder(final String pollName, final String pollDescription, final String[] pollOptions,
+                               final int finishBlockHeight, final byte optionModel, final byte votingModel) {
+                this.pollName = pollName;
+                this.pollDescription = pollDescription;
+                this.pollOptions = pollOptions;
+
+                this.finishBlockHeight = finishBlockHeight;
+                this.optionModel = optionModel;
+                this.votingModel = votingModel;
+            }
+
+            public PollBuilder minBalance(long minBalance) {
+                this.minBalance = minBalance;
+                return this;
+            }
+
+            public PollBuilder optionsNumRange(byte minNumberOfOptions, byte maxNumberOfOptions) {
+                this.minNumberOfOptions = minNumberOfOptions;
+                this.maxNumberOfOptions = maxNumberOfOptions;
+                return this;
+            }
+
+            public PollBuilder assetId(long assetId) {
+                this.assetId = assetId;
+                return this;
+            }
+
+            public MessagingPollCreation buildAttachment() {
+                return new MessagingPollCreation(this);
+            }
+        }
+
         private final String pollName;
         private final String pollDescription;
         private final String[] pollOptions;
-        private final byte minNumberOfOptions, maxNumberOfOptions;
-        private final boolean optionsAreBinary;
+
+        private final int finishBlockHeight;
+
+        private final byte optionModel;
+        private final byte votingModel;
+
+        private final long minBalance; //for all kinds of voting
+        private byte minNumberOfOptions = Poll.DEFAULT_MIN_NUMBER_OF_CHOICES, maxNumberOfOptions; //only for choice voting
+        private long assetId = 0; // only for asset voting
+
 
         MessagingPollCreation(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
             super(buffer, transactionVersion);
-            this.pollName = Convert.readString(buffer, buffer.getShort(), Constants.MAX_POLL_NAME_LENGTH);
-            this.pollDescription = Convert.readString(buffer, buffer.getShort(), Constants.MAX_POLL_DESCRIPTION_LENGTH);
+            pollName = Convert.readString(buffer, buffer.getShort(), Constants.MAX_POLL_NAME_LENGTH);
+            pollDescription = Convert.readString(buffer, buffer.getShort(), Constants.MAX_POLL_DESCRIPTION_LENGTH);
+
+            finishBlockHeight = buffer.getInt();
+
             int numberOfOptions = buffer.get();
             if (numberOfOptions > Constants.MAX_POLL_OPTION_COUNT) {
                 throw new NxtException.NotValidException("Invalid number of poll options: " + numberOfOptions);
             }
-            this.pollOptions = new String[numberOfOptions];
+
+            pollOptions = new String[numberOfOptions];
             for (int i = 0; i < numberOfOptions; i++) {
                 pollOptions[i] = Convert.readString(buffer, buffer.getShort(), Constants.MAX_POLL_OPTION_LENGTH);
             }
-            this.minNumberOfOptions = buffer.get();
-            this.maxNumberOfOptions = buffer.get();
-            this.optionsAreBinary = buffer.get() != 0;
+
+            optionModel = buffer.get();
+
+            votingModel = buffer.get();
+
+            minBalance = buffer.getLong();
+
+            if (optionModel == Poll.OPTION_MODEL_CHOICE) {
+                minNumberOfOptions = buffer.get();
+                maxNumberOfOptions = buffer.get();
+            }
+
+
+            if (votingModel == Poll.VOTING_MODEL_ASSET) {
+                assetId = buffer.getLong();
+            }
         }
 
-        MessagingPollCreation(JSONObject attachmentData) {
+        MessagingPollCreation(JSONObject attachmentData) throws NxtException.NotValidException {
             super(attachmentData);
-            this.pollName = ((String) attachmentData.get("name")).trim();
-            this.pollDescription = ((String) attachmentData.get("description")).trim();
+
+            pollName = ((String) attachmentData.get("name")).trim();
+            pollDescription = ((String) attachmentData.get("description")).trim();
+            finishBlockHeight = ((Long) attachmentData.get("finishBlockHeight")).intValue();
+
             JSONArray options = (JSONArray) attachmentData.get("options");
-            this.pollOptions = new String[options.size()];
+            pollOptions = new String[options.size()];
             for (int i = 0; i < pollOptions.length; i++) {
                 pollOptions[i] = ((String) options.get(i)).trim();
             }
-            this.minNumberOfOptions = ((Long) attachmentData.get("minNumberOfOptions")).byteValue();
-            this.maxNumberOfOptions = ((Long) attachmentData.get("maxNumberOfOptions")).byteValue();
-            this.optionsAreBinary = (Boolean) attachmentData.get("optionsAreBinary");
+
+            minBalance = (Long) attachmentData.get("minBalance");
+
+            optionModel = ((Long) attachmentData.get("optionModel")).byteValue();
+            votingModel = ((Long) attachmentData.get("votingModel")).byteValue();
+
+            /*PollBuilder builder = new PollBuilder(pollName, pollDescription, pollOptions,
+                    finishBlockHeight, optionModel, votingModel);
+
+            builder.minBalance(minBalance);*/
+
+            if (optionModel == Poll.OPTION_MODEL_CHOICE) {
+                minNumberOfOptions = ((Long) attachmentData.get("minNumberOfOptions")).byteValue();
+                maxNumberOfOptions = ((Long) attachmentData.get("maxNumberOfOptions")).byteValue();
+            }
+
+            if (votingModel == Poll.VOTING_MODEL_ASSET) {
+                assetId = (Long) attachmentData.get("assetId");
+//                builder.assetId(assetId);
+            }
         }
 
-        public MessagingPollCreation(String pollName, String pollDescription, String[] pollOptions, byte minNumberOfOptions,
-                                     byte maxNumberOfOptions, boolean optionsAreBinary) {
-            this.pollName = pollName;
-            this.pollDescription = pollDescription;
-            this.pollOptions = pollOptions;
-            this.minNumberOfOptions = minNumberOfOptions;
-            this.maxNumberOfOptions = maxNumberOfOptions;
-            this.optionsAreBinary = optionsAreBinary;
+        public MessagingPollCreation(PollBuilder builder) {
+            this.pollName = builder.pollName;
+            this.pollDescription = builder.pollDescription;
+            this.pollOptions = builder.pollOptions;
+            this.finishBlockHeight = builder.finishBlockHeight;
+
+            this.optionModel = builder.optionModel;
+            this.votingModel = builder.votingModel;
+
+            this.minNumberOfOptions = builder.minNumberOfOptions;
+            this.maxNumberOfOptions = builder.maxNumberOfOptions;
+            this.minBalance = builder.minBalance;
+            this.assetId = builder.assetId;
         }
 
         @Override
@@ -372,7 +468,19 @@ public interface Attachment extends Appendix {
             for (String pollOption : pollOptions) {
                 size += 2 + Convert.toBytes(pollOption).length;
             }
-            size +=  1 + 1 + 1;
+
+            size += 4 + 1 + 1;
+
+            if (optionModel == Poll.OPTION_MODEL_CHOICE) {
+                size += 1 + 1;
+            }
+
+            if (votingModel == Poll.VOTING_MODEL_ASSET) {
+                size += 8;
+            }
+
+            size += 8;
+
             return size;
         }
 
@@ -384,32 +492,55 @@ public interface Attachment extends Appendix {
             for (int i = 0; i < this.pollOptions.length; i++) {
                 options[i] = Convert.toBytes(this.pollOptions[i]);
             }
-            buffer.putShort((short)name.length);
+
+            buffer.putShort((short) name.length);
             buffer.put(name);
-            buffer.putShort((short)description.length);
+            buffer.putShort((short) description.length);
             buffer.put(description);
+            buffer.putInt(finishBlockHeight);
             buffer.put((byte) options.length);
             for (byte[] option : options) {
                 buffer.putShort((short) option.length);
                 buffer.put(option);
             }
-            buffer.put(this.minNumberOfOptions);
-            buffer.put(this.maxNumberOfOptions);
-            buffer.put(this.optionsAreBinary ? (byte)1 : (byte)0);
+            buffer.put(this.optionModel);
+            buffer.put(this.votingModel);
+            buffer.putLong(minBalance);
+
+            if (optionModel == Poll.OPTION_MODEL_CHOICE) {
+                buffer.put(this.minNumberOfOptions);
+                buffer.put(this.maxNumberOfOptions);
+            }
+            if (votingModel == Poll.VOTING_MODEL_ASSET) {
+                buffer.putLong(this.assetId);
+            }
         }
 
         @Override
         void putMyJSON(JSONObject attachment) {
             attachment.put("name", this.pollName);
             attachment.put("description", this.pollDescription);
+            attachment.put("finishBlockHeight", this.finishBlockHeight);
             JSONArray options = new JSONArray();
             if (this.pollOptions != null) {
                 Collections.addAll(options, this.pollOptions);
             }
             attachment.put("options", options);
-            attachment.put("minNumberOfOptions", this.minNumberOfOptions);
-            attachment.put("maxNumberOfOptions", this.maxNumberOfOptions);
-            attachment.put("optionsAreBinary", this.optionsAreBinary);
+
+            attachment.put("optionModel", this.optionModel);
+
+            if (optionModel == Poll.OPTION_MODEL_CHOICE) {
+                attachment.put("minNumberOfOptions", this.minNumberOfOptions);
+                attachment.put("maxNumberOfOptions", this.maxNumberOfOptions);
+            }
+
+            attachment.put("votingModel", this.votingModel);
+
+            if (votingModel == Poll.VOTING_MODEL_ASSET) {
+                attachment.put("assetId", this.assetId);
+            }
+
+            attachment.put("minBalance", this.minBalance);
         }
 
         @Override
@@ -417,18 +548,45 @@ public interface Attachment extends Appendix {
             return TransactionType.Messaging.POLL_CREATION;
         }
 
-        public String getPollName() { return pollName; }
+        public String getPollName() {
+            return pollName;
+        }
 
-        public String getPollDescription() { return pollDescription; }
+        public String getPollDescription() {
+            return pollDescription;
+        }
 
-        public String[] getPollOptions() { return pollOptions; }
+        public int getFinishBlockHeight() {
+            return finishBlockHeight;
+        }
 
-        public byte getMinNumberOfOptions() { return minNumberOfOptions; }
+        public String[] getPollOptions() {
+            return pollOptions;
+        }
 
-        public byte getMaxNumberOfOptions() { return maxNumberOfOptions; }
+        public byte getMinNumberOfOptions() {
+            return minNumberOfOptions;
+        }
 
-        public boolean isOptionsAreBinary() { return optionsAreBinary; }
+        public byte getMaxNumberOfOptions() {
+            return maxNumberOfOptions;
+        }
 
+        public byte getOptionModel() {
+            return optionModel;
+        }
+
+        public byte getVotingModel() {
+            return votingModel;
+        }
+
+        public long getMinBalance() {
+            return minBalance;
+        }
+
+        public long getAssetId() {
+            return assetId;
+        }
     }
 
     public final static class MessagingVoteCasting extends AbstractAttachment {
@@ -436,22 +594,19 @@ public interface Attachment extends Appendix {
         private final Long pollId;
         private final byte[] pollVote;
 
-        MessagingVoteCasting(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
+        public MessagingVoteCasting(ByteBuffer buffer, byte transactionVersion){
             super(buffer, transactionVersion);
-            this.pollId = buffer.getLong();
+            pollId = buffer.getLong();
             int numberOfOptions = buffer.get();
-            if (numberOfOptions > Constants.MAX_POLL_OPTION_COUNT) {
-                throw new NxtException.NotValidException("Error parsing vote casting parameters");
-            }
-            this.pollVote = new byte[numberOfOptions];
+            pollVote = new byte[numberOfOptions];
             buffer.get(pollVote);
         }
 
-        MessagingVoteCasting(JSONObject attachmentData) {
+        public MessagingVoteCasting(JSONObject attachmentData){
             super(attachmentData);
-            this.pollId = Convert.parseUnsignedLong((String)attachmentData.get("pollId"));
+            pollId = Convert.parseUnsignedLong((String)attachmentData.get("pollId"));
             JSONArray vote = (JSONArray)attachmentData.get("vote");
-            this.pollVote = new byte[vote.size()];
+            pollVote = new byte[vote.size()];
             for (int i = 0; i < pollVote.length; i++) {
                 pollVote[i] = ((Long) vote.get(i)).byteValue();
             }
@@ -473,7 +628,7 @@ public interface Attachment extends Appendix {
         }
 
         @Override
-        void putMyBytes(ByteBuffer buffer) {
+        public void putMyBytes(ByteBuffer buffer) {
             buffer.putLong(this.pollId);
             buffer.put((byte) this.pollVote.length);
             buffer.put(this.pollVote);
@@ -496,10 +651,13 @@ public interface Attachment extends Appendix {
             return TransactionType.Messaging.VOTE_CASTING;
         }
 
-        public Long getPollId() { return pollId; }
+        public Long getPollId() {
+            return pollId;
+        }
 
-        public byte[] getPollVote() { return pollVote; }
-
+        public byte[] getPollVote() {
+            return pollVote;
+        }
     }
 
     public final static class MessagingHubAnnouncement extends AbstractAttachment {
@@ -1049,7 +1207,7 @@ public interface Attachment extends Appendix {
         @Override
         int getMySize() {
             return 2 + Convert.toBytes(name).length + 2 + Convert.toBytes(description).length + 2
-                        + Convert.toBytes(tags).length + 4 + 8;
+                    + Convert.toBytes(tags).length + 4 + 8;
         }
 
         @Override

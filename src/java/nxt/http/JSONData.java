@@ -1,26 +1,17 @@
 package nxt.http;
 
-import nxt.Account;
-import nxt.Alias;
-import nxt.Appendix;
-import nxt.Asset;
-import nxt.Block;
-import nxt.DigitalGoodsStore;
-import nxt.Nxt;
-import nxt.Order;
-import nxt.Poll;
-import nxt.Token;
-import nxt.Trade;
-import nxt.Transaction;
+import nxt.*;
 import nxt.crypto.Crypto;
 import nxt.crypto.EncryptedData;
 import nxt.peer.Hallmark;
 import nxt.peer.Peer;
 import nxt.util.Convert;
+import nxt.util.Pair;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 import java.util.Collections;
+import java.util.Map;
 
 final class JSONData {
 
@@ -68,6 +59,15 @@ final class JSONData {
         json.put("quantityQNT", String.valueOf(asset.getQuantityQNT()));
         json.put("asset", Convert.toUnsignedLong(asset.getId()));
         json.put("numberOfTrades", Trade.getTradeCount(asset.getId()));
+        return json;
+    }
+
+    static JSONObject accountAsset(Account.AccountAsset accountAsset) {
+        JSONObject json = new JSONObject();
+        putAccount(json, "account", accountAsset.getAccountId());
+        json.put("asset", Convert.toUnsignedLong(accountAsset.getAssetId()));
+        json.put("quantityQNT", String.valueOf(accountAsset.getQuantityQNT()));
+        json.put("unconfirmedQuantityQNT", String.valueOf(accountAsset.getUnconfirmedQuantityQNT()));
         return json;
     }
 
@@ -192,14 +192,51 @@ final class JSONData {
         JSONArray options = new JSONArray();
         Collections.addAll(options, poll.getOptions());
         json.put("options", options);
-        json.put("minNumberOfOptions", poll.getMinNumberOfOptions());
-        json.put("maxNumberOfOptions", poll.getMaxNumberOfOptions());
-        json.put("optionsAreBinary", poll.isOptionsAreBinary());
+        json.put("finishBlockHeight", poll.getFinishBlockHeight());
+
+        json.put("optionModel", poll.getOptionModel());
+        json.put("votingModel", poll.getVotingModel());
+
+        if(poll.getOptionModel()==Poll.OPTION_MODEL_CHOICE){
+            json.put("minNumberOfOptions", poll.getMinNumberOfOptions());
+            json.put("maxNumberOfOptions", poll.getMaxNumberOfOptions());
+        }
+
+        json.put("minBalance", poll.getMinBalance());
+
+        if(poll.getVotingModel() == Poll.VOTING_MODEL_ASSET){
+            json.put("assetId", Convert.toUnsignedLong(poll.getAssetId()));
+        }
+
         JSONArray voters = new JSONArray();
-        for (Long voterId : poll.getVoters().keySet()) {
+        for (Long voterId : poll.getVoters()) {
             voters.add(Convert.toUnsignedLong(voterId));
         }
         json.put("voters", voters);
+        return json;
+    }
+
+    static JSONObject pollResults(PollResults pollResults) {
+        JSONObject json = new JSONObject();
+        json.put("pollId", Convert.toUnsignedLong(pollResults.getPollId()));
+
+        JSONObject choices = new JSONObject();
+        if(pollResults instanceof PollResults.Choice){
+            json.put("resultsType","choice");
+            for(Map.Entry<String,Long> entry : ((PollResults.Choice) pollResults).getResults().entrySet()){
+                choices.put(entry.getKey(), entry.getValue());
+            }
+        }else if(pollResults instanceof PollResults.Binary){
+            json.put("resultsType","binary");
+            for(Map.Entry<String,Pair.YesNoCounts> entry : ((PollResults.Binary) pollResults).getResults().entrySet()){
+                JSONObject yesNo = new JSONObject();
+                yesNo.put("yes", entry.getValue().getYes());
+                yesNo.put("no", entry.getValue().getNo());
+                choices.put(entry.getKey(), yesNo);
+            }
+        }
+
+        json.put("results", choices);
         return json;
     }
 
@@ -256,6 +293,8 @@ final class JSONData {
         json.put("asset", Convert.toUnsignedLong(trade.getAssetId()));
         json.put("askOrder", Convert.toUnsignedLong(trade.getAskOrderId()));
         json.put("bidOrder", Convert.toUnsignedLong(trade.getBidOrderId()));
+        putAccount(json, "seller", trade.getSellerId());
+        putAccount(json, "buyer", trade.getBuyerId());
         json.put("block", Convert.toUnsignedLong(trade.getBlockId()));
         json.put("height", trade.getHeight());
         return json;

@@ -32,7 +32,7 @@ public abstract class Order {
                     && askOrder.getId() < bidOrder.getId())
                     ? askOrder.getPriceNQT() : bidOrder.getPriceNQT();
 
-            Trade.addTrade(assetId, Nxt.getBlockchain().getLastBlock(), askOrder.getId(), bidOrder.getId(), quantityQNT, priceNQT);
+            Trade.addTrade(assetId, Nxt.getBlockchain().getLastBlock(), askOrder, bidOrder, quantityQNT, priceNQT);
 
             askOrder.updateQuantityQNT(Convert.safeSubtract(askOrder.getQuantityQNT(), quantityQNT));
             Account askAccount = Account.getAccount(askOrder.getAccountId());

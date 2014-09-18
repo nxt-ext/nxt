@@ -32,7 +32,5 @@ public final class GetPollIds extends APIServlet.APIRequestHandler {
         JSONObject response = new JSONObject();
         response.put("pollIds", pollIds);
         return response;
-
     }
-
 }

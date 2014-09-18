@@ -4,7 +4,7 @@ import org.json.simple.JSONObject;
 
 import java.util.List;
 
-public interface Transaction extends Comparable<Transaction> {
+public interface Transaction {
 
     public static interface Builder {
 

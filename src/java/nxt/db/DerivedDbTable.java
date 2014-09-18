@@ -1,7 +1,6 @@
 package nxt.db;
 
 import nxt.Nxt;
-import nxt.util.Logger;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -17,7 +16,6 @@ public abstract class DerivedDbTable {
     protected abstract String table();
 
     public void rollback(int height) {
-        Logger.logDebugMessage("Rollback " + table() + " to " + height);
         if (!Db.isInTransaction()) {
             throw new IllegalStateException("Not in transaction");
         }
@@ -31,7 +29,6 @@ public abstract class DerivedDbTable {
     }
 
     public final void truncate() {
-        Logger.logDebugMessage("Truncating table " + table());
         if (!Db.isInTransaction()) {
             throw new IllegalStateException("Not in transaction");
         }

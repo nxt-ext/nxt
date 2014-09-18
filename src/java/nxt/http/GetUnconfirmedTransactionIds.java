@@ -28,7 +28,7 @@ public final class GetUnconfirmedTransactionIds extends APIServlet.APIRequestHan
 
         if (accountIdString != null) {
             try {
-                accountId = Convert.parseUnsignedLong(accountIdString);
+                accountId = Convert.parseAccountId(accountIdString);
             } catch (RuntimeException e) {
                 return INCORRECT_ACCOUNT;
             }
