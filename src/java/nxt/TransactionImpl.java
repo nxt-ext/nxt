@@ -337,7 +337,7 @@ final class TransactionImpl implements Transaction {
     @Override
     public Block getBlock() {
         if (block == null && blockId != 0) {
-            block = BlockDb.findBlock(blockId);
+            block = Nxt.getBlockchain().getBlock(blockId);
         }
         return block;
     }

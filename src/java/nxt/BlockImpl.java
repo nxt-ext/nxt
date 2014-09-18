@@ -14,8 +14,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.SortedSet;
-import java.util.TreeSet;
 
 final class BlockImpl implements Block {
 
@@ -66,9 +64,9 @@ final class BlockImpl implements Block {
 
         this.previousBlockHash = previousBlockHash;
         this.blockTransactions = Collections.unmodifiableList(transactions);
-        long previousId = Long.MIN_VALUE;
+        long previousId = 0;
         for (Transaction transaction : this.blockTransactions) {
-            if (transaction.getId() < previousId) {
+            if (transaction.getId() <= previousId && previousId != 0) {
                 throw new NxtException.NotValidException("Block transactions are not sorted!");
             }
             previousId = transaction.getId();
@@ -251,16 +249,12 @@ final class BlockImpl implements Block {
         byte[] generationSignature = Convert.parseHexString((String) blockData.get("generationSignature"));
         byte[] blockSignature = Convert.parseHexString((String) blockData.get("blockSignature"));
         byte[] previousBlockHash = version == 1 ? null : Convert.parseHexString((String) blockData.get("previousBlockHash"));
-        SortedSet<TransactionImpl> blockTransactions = new TreeSet<>();
-        JSONArray transactionsData = (JSONArray)blockData.get("transactions");
-        for (Object transactionData : transactionsData) {
-            TransactionImpl transaction = TransactionImpl.parseTransaction((JSONObject) transactionData);
-            if (! blockTransactions.add(transaction)) {
-                throw new NxtException.NotValidException("Block contains duplicate transactions: " + transaction.getStringId());
-            }
+        List<TransactionImpl> blockTransactions = new ArrayList<>();
+        for (Object transactionData : (JSONArray)blockData.get("transactions")) {
+            blockTransactions.add(TransactionImpl.parseTransaction((JSONObject) transactionData));
         }
         return new BlockImpl(version, timestamp, previousBlock, totalAmountNQT, totalFeeNQT, payloadLength, payloadHash, generatorPublicKey,
-                generationSignature, blockSignature, previousBlockHash, new ArrayList<>(blockTransactions));
+                generationSignature, blockSignature, previousBlockHash, blockTransactions);
     }
 
     byte[] getBytes() {
