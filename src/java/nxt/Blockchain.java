@@ -22,6 +22,8 @@ public interface Blockchain {
 
     DbIterator<? extends Block> getBlocks(Account account, int timestamp);
 
+    DbIterator<? extends Block> getBlocks(Account account, int timestamp, int from, int to);
+
     DbIterator<? extends Block> getBlocks(Connection con, PreparedStatement pstmt);
 
     List<Long> getBlockIdsAfter(Long blockId, int limit);

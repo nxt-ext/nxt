@@ -71,12 +71,23 @@ final class BlockchainImpl implements Blockchain {
 
     @Override
     public DbIterator<BlockImpl> getBlocks(Account account, int timestamp) {
+        return getBlocks(account, timestamp, 0, -1);
+    }
+
+    @Override
+    public DbIterator<BlockImpl> getBlocks(Account account, int timestamp, int from, int to) {
         Connection con = null;
         try {
             con = Db.getConnection();
-            PreparedStatement pstmt = con.prepareStatement("SELECT * FROM block WHERE timestamp >= ? AND generator_id = ? ORDER BY db_id ASC");
-            pstmt.setInt(1, timestamp);
-            pstmt.setLong(2, account.getId());
+            PreparedStatement pstmt = con.prepareStatement("SELECT * FROM block WHERE generator_id = ? "
+                    + (timestamp > 0 ? " AND timestamp >= ? " : " ") + "ORDER BY db_id DESC"
+                    + DbUtils.limitsClause(from, to));
+            int i = 0;
+            pstmt.setLong(++i, account.getId());
+            if (timestamp > 0) {
+                pstmt.setInt(++i, timestamp);
+            }
+            DbUtils.setLimits(++i, pstmt, from, to);
             return getBlocks(con, pstmt);
         } catch (SQLException e) {
             DbUtils.close(con);
@@ -274,12 +285,7 @@ final class BlockchainImpl implements Blockchain {
                 buf.append("AND height <= ? ");
             }
             buf.append("ORDER BY block_timestamp DESC, id DESC");
-            if (to >= from && to < Integer.MAX_VALUE) {
-                buf.append(" LIMIT ? ");
-            }
-            if (from > 0) {
-                buf.append(" OFFSET ?");
-            }
+            buf.append(DbUtils.limitsClause(from, to));
             con = Db.getConnection();
             PreparedStatement pstmt;
             int i = 0;
@@ -311,12 +317,7 @@ final class BlockchainImpl implements Blockchain {
             if (height < Integer.MAX_VALUE) {
                 pstmt.setInt(++i, height);
             }
-            if (to >= from && to < Integer.MAX_VALUE) {
-                pstmt.setInt(++i, to - from + 1);
-            }
-            if (from > 0) {
-                pstmt.setInt(++i, from);
-            }
+            DbUtils.setLimits(++i, pstmt, from, to);
             return getTransactions(con, pstmt);
         } catch (SQLException e) {
             DbUtils.close(con);
