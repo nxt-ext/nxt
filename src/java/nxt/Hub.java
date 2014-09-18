@@ -47,12 +47,7 @@ public class Hub {
 
     };
 
-    private static final VersionedEntityDbTable<Hub> hubTable = new VersionedEntityDbTable<Hub>(hubDbKeyFactory) {
-
-        @Override
-        protected String table() {
-            return "hub";
-        }
+    private static final VersionedEntityDbTable<Hub> hubTable = new VersionedEntityDbTable<Hub>("hub", hubDbKeyFactory) {
 
         @Override
         protected Hub load(Connection con, ResultSet rs) throws SQLException {

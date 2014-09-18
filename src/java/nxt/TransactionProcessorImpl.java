@@ -46,7 +46,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
 
     };
 
-    private final VersionedEntityDbTable<TransactionImpl> unconfirmedTransactionTable = new VersionedEntityDbTable<TransactionImpl>(unconfirmedTransactionDbKeyFactory) {
+    private final VersionedEntityDbTable<TransactionImpl> unconfirmedTransactionTable = new VersionedEntityDbTable<TransactionImpl>("unconfirmed_transaction", unconfirmedTransactionDbKeyFactory) {
 
         @Override
         protected TransactionImpl load(Connection con, ResultSet rs) throws SQLException {
@@ -75,11 +75,6 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                 pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
                 pstmt.executeUpdate();
             }
-        }
-
-        @Override
-        protected String table() {
-            return "unconfirmed_transaction";
         }
 
         @Override

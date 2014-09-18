@@ -21,12 +21,7 @@ public final class Poll {
 
     };
 
-    private static final EntityDbTable<Poll> pollTable = new EntityDbTable<Poll>(pollDbKeyFactory) {
-
-        @Override
-        protected String table() {
-            return "poll";
-        }
+    private static final EntityDbTable<Poll> pollTable = new EntityDbTable<Poll>("poll", pollDbKeyFactory) {
 
         @Override
         protected Poll load(Connection con, ResultSet rs) throws SQLException {

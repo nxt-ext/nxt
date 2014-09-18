@@ -160,13 +160,7 @@ public abstract class Order {
 
         };
 
-        private static final VersionedEntityDbTable<Ask> askOrderTable = new VersionedEntityDbTable<Ask>(askOrderDbKeyFactory) {
-
-            @Override
-            protected String table() {
-                return "ask_order";
-            }
-
+        private static final VersionedEntityDbTable<Ask> askOrderTable = new VersionedEntityDbTable<Ask>("ask_order", askOrderDbKeyFactory) {
             @Override
             protected Ask load(Connection con, ResultSet rs) throws SQLException {
                 return new Ask(rs);
@@ -174,7 +168,7 @@ public abstract class Order {
 
             @Override
             protected void save(Connection con, Ask ask) throws SQLException {
-                ask.save(con, table());
+                ask.save(con, table);
             }
 
         };
@@ -312,12 +306,7 @@ public abstract class Order {
 
         };
 
-        private static final VersionedEntityDbTable<Bid> bidOrderTable = new VersionedEntityDbTable<Bid>(bidOrderDbKeyFactory) {
-
-            @Override
-            protected String table() {
-                return "bid_order";
-            }
+        private static final VersionedEntityDbTable<Bid> bidOrderTable = new VersionedEntityDbTable<Bid>("bid_order", bidOrderDbKeyFactory) {
 
             @Override
             protected Bid load(Connection con, ResultSet rs) throws SQLException {
@@ -326,7 +315,7 @@ public abstract class Order {
 
             @Override
             protected void save(Connection con, Bid bid) throws SQLException {
-                bid.save(con, table());
+                bid.save(con, table);
             }
         };
 

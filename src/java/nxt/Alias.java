@@ -68,12 +68,7 @@ public final class Alias {
 
     };
 
-    private static final VersionedEntityDbTable<Alias> aliasTable = new VersionedEntityDbTable<Alias>(aliasDbKeyFactory) {
-
-        @Override
-        protected String table() {
-            return "alias";
-        }
+    private static final VersionedEntityDbTable<Alias> aliasTable = new VersionedEntityDbTable<Alias>("alias", aliasDbKeyFactory) {
 
         @Override
         protected Alias load(Connection con, ResultSet rs) throws SQLException {
@@ -96,12 +91,7 @@ public final class Alias {
 
     };
 
-    private static final VersionedEntityDbTable<Offer> offerTable = new VersionedEntityDbTable<Offer>(offerDbKeyFactory) {
-
-        @Override
-        protected String table() {
-            return "alias_offer";
-        }
+    private static final VersionedEntityDbTable<Offer> offerTable = new VersionedEntityDbTable<Offer>("alias_offer", offerDbKeyFactory) {
 
         @Override
         protected Offer load(Connection con, ResultSet rs) throws SQLException {

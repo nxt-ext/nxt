@@ -172,11 +172,7 @@ public final class Account {
 
     };
 
-    private static final VersionedEntityDbTable<Account> accountTable = new VersionedEntityDbTable<Account>(accountDbKeyFactory) {
-
-        protected String table() {
-            return "account";
-        }
+    private static final VersionedEntityDbTable<Account> accountTable = new VersionedEntityDbTable<Account>("account", accountDbKeyFactory) {
 
         @Override
         protected Account load(Connection con, ResultSet rs) throws SQLException {
@@ -199,12 +195,7 @@ public final class Account {
 
     };
 
-    private static final VersionedEntityDbTable<AccountAsset> accountAssetTable = new VersionedEntityDbTable<AccountAsset>(accountAssetDbKeyFactory) {
-
-        @Override
-        protected String table() {
-            return "account_asset";
-        }
+    private static final VersionedEntityDbTable<AccountAsset> accountAssetTable = new VersionedEntityDbTable<AccountAsset>("account_asset", accountAssetDbKeyFactory) {
 
         @Override
         protected AccountAsset load(Connection con, ResultSet rs) throws SQLException {
@@ -218,12 +209,7 @@ public final class Account {
 
     };
 
-    private static final DerivedDbTable accountGuaranteedBalanceTable = new DerivedDbTable() {
-
-        @Override
-        protected String table() {
-            return "account_guaranteed_balance";
-        }
+    private static final DerivedDbTable accountGuaranteedBalanceTable = new DerivedDbTable("account_guaranteed_balance") {
 
         @Override
         public void trim(int height) {

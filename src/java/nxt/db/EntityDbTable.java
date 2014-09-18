@@ -10,11 +10,12 @@ public abstract class EntityDbTable<T> extends DerivedDbTable {
     private final boolean multiversion;
     protected final DbKey.Factory<T> dbKeyFactory;
 
-    protected EntityDbTable(DbKey.Factory<T> dbKeyFactory) {
-        this(dbKeyFactory, false);
+    protected EntityDbTable(String table, DbKey.Factory<T> dbKeyFactory) {
+        this(table, dbKeyFactory, false);
     }
 
-    EntityDbTable(DbKey.Factory<T> dbKeyFactory, boolean multiversion) {
+    EntityDbTable(String table, DbKey.Factory<T> dbKeyFactory, boolean multiversion) {
+        super(table);
         this.dbKeyFactory = dbKeyFactory;
         this.multiversion = multiversion;
     }
@@ -29,13 +30,13 @@ public abstract class EntityDbTable<T> extends DerivedDbTable {
 
     public final T get(DbKey dbKey) {
         if (Db.isInTransaction()) {
-            T t = (T)Db.getCache(table()).get(dbKey);
+            T t = (T)Db.getCache(table).get(dbKey);
             if (t != null) {
                 return t;
             }
         }
         try (Connection con = Db.getConnection();
-             PreparedStatement pstmt = con.prepareStatement("SELECT * FROM " + table() + dbKeyFactory.getPKClause()
+             PreparedStatement pstmt = con.prepareStatement("SELECT * FROM " + table + dbKeyFactory.getPKClause()
              + (multiversion ? " AND latest = TRUE LIMIT 1" : ""))) {
             dbKey.setPK(pstmt);
             return get(con, pstmt);
@@ -46,7 +47,7 @@ public abstract class EntityDbTable<T> extends DerivedDbTable {
 
     public final T getBy(String columnName, String value) {
         try (Connection con = Db.getConnection();
-             PreparedStatement pstmt = con.prepareStatement("SELECT * FROM " + table()
+             PreparedStatement pstmt = con.prepareStatement("SELECT * FROM " + table
                      + " WHERE " + columnName + " = ?" + (multiversion ? " AND latest = TRUE LIMIT 1" : ""))) {
             pstmt.setString(1, value);
             return get(con, pstmt);
@@ -65,12 +66,12 @@ public abstract class EntityDbTable<T> extends DerivedDbTable {
             DbKey dbKey = null;
             if (cache) {
                 dbKey = dbKeyFactory.newKey(rs);
-                t = (T) Db.getCache(table()).get(dbKey);
+                t = (T) Db.getCache(table).get(dbKey);
             }
             if (t == null) {
                 t = load(con, rs);
                 if (cache) {
-                    Db.getCache(table()).put(dbKey, t);
+                    Db.getCache(table).put(dbKey, t);
                 }
             }
             if (rs.next()) {
@@ -84,7 +85,7 @@ public abstract class EntityDbTable<T> extends DerivedDbTable {
         Connection con = null;
         try {
             con = Db.getConnection();
-            PreparedStatement pstmt = con.prepareStatement("SELECT * FROM " + table()
+            PreparedStatement pstmt = con.prepareStatement("SELECT * FROM " + table
                     + " WHERE " + columnName + " = ?" + (multiversion ? " AND latest = TRUE " : " ") + defaultSort()
                     + DbUtils.limitsClause(from, to));
             pstmt.setLong(1, value);
@@ -105,12 +106,12 @@ public abstract class EntityDbTable<T> extends DerivedDbTable {
                 DbKey dbKey = null;
                 if (doCache) {
                     dbKey = dbKeyFactory.newKey(rs);
-                    t = (T) Db.getCache(table()).get(dbKey);
+                    t = (T) Db.getCache(table).get(dbKey);
                 }
                 if (t == null) {
                     t = load(con, rs);
                     if (doCache) {
-                        Db.getCache(table()).put(dbKey, t);
+                        Db.getCache(table).put(dbKey, t);
                     }
                 }
                 return t;
@@ -122,7 +123,7 @@ public abstract class EntityDbTable<T> extends DerivedDbTable {
         Connection con = null;
         try {
             con = Db.getConnection();
-            PreparedStatement pstmt = con.prepareStatement("SELECT * FROM " + table()
+            PreparedStatement pstmt = con.prepareStatement("SELECT * FROM " + table
                      + (multiversion ? " WHERE latest = TRUE " : " ") + defaultSort()
                     + DbUtils.limitsClause(from, to));
             DbUtils.setLimits(1, pstmt, from, to);
@@ -135,7 +136,7 @@ public abstract class EntityDbTable<T> extends DerivedDbTable {
 
     public final int getCount() {
         try (Connection con = Db.getConnection();
-             PreparedStatement pstmt = con.prepareStatement("SELECT COUNT(*) FROM " + table()
+             PreparedStatement pstmt = con.prepareStatement("SELECT COUNT(*) FROM " + table
                      + (multiversion ? " WHERE latest = TRUE" : ""));
              ResultSet rs = pstmt.executeQuery()) {
             rs.next();
@@ -147,7 +148,7 @@ public abstract class EntityDbTable<T> extends DerivedDbTable {
 
     public final int getRowCount() {
         try (Connection con = Db.getConnection();
-             PreparedStatement pstmt = con.prepareStatement("SELECT COUNT(*) FROM " + table());
+             PreparedStatement pstmt = con.prepareStatement("SELECT COUNT(*) FROM " + table);
              ResultSet rs = pstmt.executeQuery()) {
             rs.next();
             return rs.getInt(1);
@@ -161,16 +162,16 @@ public abstract class EntityDbTable<T> extends DerivedDbTable {
             throw new IllegalStateException("Not in transaction");
         }
         DbKey dbKey = dbKeyFactory.newKey(t);
-        T cachedT = (T)Db.getCache(table()).get(dbKey);
+        T cachedT = (T)Db.getCache(table).get(dbKey);
         if (cachedT == null) {
-            Db.getCache(table()).put(dbKey, t);
+            Db.getCache(table).put(dbKey, t);
         } else if (t != cachedT) { // not a bug
             throw new IllegalStateException("Different instance found in Db cache, perhaps trying to save an object "
                     + "that was read outside the current transaction");
         }
         try (Connection con = Db.getConnection()) {
             if (multiversion) {
-                try (PreparedStatement pstmt = con.prepareStatement("UPDATE " + table()
+                try (PreparedStatement pstmt = con.prepareStatement("UPDATE " + table
                         + " SET latest = FALSE " + dbKeyFactory.getPKClause() + " AND latest = TRUE LIMIT 1")) {
                     dbKey.setPK(pstmt);
                     pstmt.executeUpdate();

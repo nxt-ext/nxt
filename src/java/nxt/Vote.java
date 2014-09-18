@@ -23,12 +23,7 @@ public final class Vote {
 
     };
 
-    private static final EntityDbTable<Vote> voteTable = new EntityDbTable<Vote>(voteDbKeyFactory) {
-
-        @Override
-        protected String table() {
-            return "vote";
-        }
+    private static final EntityDbTable<Vote> voteTable = new EntityDbTable<Vote>("vote", voteDbKeyFactory) {
 
         @Override
         protected Vote load(Connection con, ResultSet rs) throws SQLException {

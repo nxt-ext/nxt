@@ -20,12 +20,7 @@ public final class Asset {
 
     };
 
-    private static final EntityDbTable<Asset> assetTable = new EntityDbTable<Asset>(assetDbKeyFactory) {
-
-        @Override
-        protected String table() {
-            return "asset";
-        }
+    private static final EntityDbTable<Asset> assetTable = new EntityDbTable<Asset>("asset", assetDbKeyFactory) {
 
         @Override
         protected Asset load(Connection con, ResultSet rs) throws SQLException {

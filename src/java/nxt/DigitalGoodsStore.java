@@ -79,12 +79,7 @@ public final class DigitalGoodsStore {
 
         };
 
-        private static final VersionedEntityDbTable<Goods> goodsTable = new VersionedEntityDbTable<Goods>(goodsDbKeyFactory) {
-
-            @Override
-            protected String table() {
-                return "goods";
-            }
+        private static final VersionedEntityDbTable<Goods> goodsTable = new VersionedEntityDbTable<Goods>("goods", goodsDbKeyFactory) {
 
             @Override
             protected Goods load(Connection con, ResultSet rs) throws SQLException {
@@ -239,12 +234,7 @@ public final class DigitalGoodsStore {
 
         };
 
-        private static final VersionedEntityDbTable<Purchase> purchaseTable = new VersionedEntityDbTable<Purchase>(purchaseDbKeyFactory) {
-
-            @Override
-            protected String table() {
-                return "purchase";
-            }
+        private static final VersionedEntityDbTable<Purchase> purchaseTable = new VersionedEntityDbTable<Purchase>("purchase", purchaseDbKeyFactory) {
 
             @Override
             protected Purchase load(Connection con, ResultSet rs) throws SQLException {
@@ -267,12 +257,7 @@ public final class DigitalGoodsStore {
 
         };
 
-        private static final VersionedValuesDbTable<Purchase, EncryptedData> feedbackTable = new VersionedValuesDbTable<Purchase, EncryptedData>(feedbackDbKeyFactory) {
-
-            @Override
-            protected String table() {
-                return "purchase_feedback";
-            }
+        private static final VersionedValuesDbTable<Purchase, EncryptedData> feedbackTable = new VersionedValuesDbTable<Purchase, EncryptedData>("purchase_feedback", feedbackDbKeyFactory) {
 
             @Override
             protected EncryptedData load(Connection con, ResultSet rs) throws SQLException {
@@ -305,12 +290,7 @@ public final class DigitalGoodsStore {
 
         };
 
-        private static final VersionedValuesDbTable<Purchase, String> publicFeedbackTable = new VersionedValuesDbTable<Purchase, String>(publicFeedbackDbKeyFactory) {
-
-            @Override
-            protected String table() {
-                return "purchase_public_feedback";
-            }
+        private static final VersionedValuesDbTable<Purchase, String> publicFeedbackTable = new VersionedValuesDbTable<Purchase, String>("purchase_public_feedback", publicFeedbackDbKeyFactory) {
 
             @Override
             protected String load(Connection con, ResultSet rs) throws SQLException {

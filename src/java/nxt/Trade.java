@@ -31,12 +31,7 @@ public final class Trade {
 
     };
 
-    private static final EntityDbTable<Trade> tradeTable = new EntityDbTable<Trade>(tradeDbKeyFactory) {
-
-        @Override
-        protected String table() {
-            return "trade";
-        }
+    private static final EntityDbTable<Trade> tradeTable = new EntityDbTable<Trade>("trade", tradeDbKeyFactory) {
 
         @Override
         protected Trade load(Connection con, ResultSet rs) throws SQLException {
