@@ -90,6 +90,8 @@ Compiling:
 
 The source is included in the src subdirectory. To compile it on linux, just
 run the enclosed compile.sh script. This will compile all java classes and
-package them in an nxt.jar file, replacing the existing one.
-
+put them under the classes subdirectory, which is already in the classpath
+used by the run.sh startup script. The compiled class files can optionally be
+packaged in a nxt.jar file using the enclosed jar.sh script, and then nxt.jar
+should be included in the classpath instead of the classes subdirectory.
 
