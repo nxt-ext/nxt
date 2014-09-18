@@ -102,19 +102,19 @@ public interface Attachment extends Appendix {
 
         MessagingAliasAssignment(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
             super(buffer, transactionVersion);
-            aliasName = Convert.readString(buffer, buffer.get(), Constants.MAX_ALIAS_LENGTH).trim().intern();
-            aliasURI = Convert.readString(buffer, buffer.getShort(), Constants.MAX_ALIAS_URI_LENGTH).trim().intern();
+            aliasName = Convert.readString(buffer, buffer.get(), Constants.MAX_ALIAS_LENGTH).trim();
+            aliasURI = Convert.readString(buffer, buffer.getShort(), Constants.MAX_ALIAS_URI_LENGTH).trim();
         }
 
         MessagingAliasAssignment(JSONObject attachmentData) {
             super(attachmentData);
-            aliasName = (Convert.nullToEmpty((String) attachmentData.get("alias"))).trim().intern();
-            aliasURI = (Convert.nullToEmpty((String) attachmentData.get("uri"))).trim().intern();
+            aliasName = (Convert.nullToEmpty((String) attachmentData.get("alias"))).trim();
+            aliasURI = (Convert.nullToEmpty((String) attachmentData.get("uri"))).trim();
         }
 
         public MessagingAliasAssignment(String aliasName, String aliasURI) {
-            this.aliasName = aliasName.trim().intern();
-            this.aliasURI = aliasURI.trim().intern();
+            this.aliasName = aliasName.trim();
+            this.aliasURI = aliasURI.trim();
         }
 
         @Override

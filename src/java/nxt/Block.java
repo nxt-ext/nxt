@@ -35,8 +35,6 @@ public interface Block {
 
     byte[] getPayloadHash();
 
-    List<Long> getTransactionIds();
-
     List<? extends Transaction> getTransactions();
 
     byte[] getGenerationSignature();

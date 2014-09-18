@@ -31,7 +31,6 @@ final class BlockImpl implements Block {
     private final int payloadLength;
     private final byte[] generationSignature;
     private final byte[] payloadHash;
-    private final List<Long> transactionIds;
     private final List<TransactionImpl> blockTransactions;
 
     private byte[] blockSignature;
@@ -69,17 +68,13 @@ final class BlockImpl implements Block {
 
         this.previousBlockHash = previousBlockHash;
         this.blockTransactions = Collections.unmodifiableList(transactions);
-        List<Long> transactionIds = new ArrayList<>(this.blockTransactions.size());
         Long previousId = Long.MIN_VALUE;
         for (Transaction transaction : this.blockTransactions) {
             if (transaction.getId() < previousId) {
                 throw new NxtException.NotValidException("Block transactions are not sorted!");
             }
-            transactionIds.add(transaction.getId());
             previousId = transaction.getId();
         }
-        this.transactionIds = Collections.unmodifiableList(transactionIds);
-
     }
 
     BlockImpl(int version, int timestamp, Long previousBlockId, long totalAmountNQT, long totalFeeNQT, int payloadLength,
@@ -134,11 +129,6 @@ final class BlockImpl implements Block {
     @Override
     public int getPayloadLength() {
         return payloadLength;
-    }
-
-    @Override
-    public List<Long> getTransactionIds() {
-        return transactionIds;
     }
 
     @Override
