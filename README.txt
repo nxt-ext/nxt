@@ -12,6 +12,9 @@ successfully". Open a browser, without stopping the java process, and go to
 http://localhost:7876 , where the Nxt UI should now be available. To stop the
 application, type Ctrl-C inside the console window.
 
+Warning: It is better to use only latin characters and no spaces in the path
+to the Nxt installation directory, as the use of special characters may result
+in permissions denied error in the browser, which is a known jetty issue.
 
 Customization:
 

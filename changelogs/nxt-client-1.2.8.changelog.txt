@@ -35,9 +35,13 @@ following format: #merchant:[0-9]+#
 This example will only accept a numeric message.
 
 If the message should be of a particular length use this: 
-#merchant:[a-zA-Z0-9]{4,8}
+#merchant:[a-zA-Z0-9]{4,8}#
 
 This format will only allow messages that have a length of 4 to 8 characters 
 and is alphanumeric.
 
 Note that the regex is case sensitive.
+
+Fixed issue with public key field not showing when using a contact in the
+recipient field.
+
