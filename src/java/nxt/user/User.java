@@ -1,6 +1,5 @@
 package nxt.user;
 
-import nxt.Account;
 import nxt.Generator;
 import nxt.crypto.Crypto;
 import nxt.util.JSON;
@@ -63,8 +62,7 @@ final class User {
     Long unlockAccount(String secretPhrase) {
         this.publicKey = Crypto.getPublicKey(secretPhrase);
         this.secretPhrase = secretPhrase;
-        Generator.startForging(secretPhrase, publicKey);
-        return Account.getId(publicKey);
+        return Generator.startForging(secretPhrase).getAccountId();
     }
 
     synchronized void processPendingResponses(HttpServletRequest req, HttpServletResponse resp) throws IOException {

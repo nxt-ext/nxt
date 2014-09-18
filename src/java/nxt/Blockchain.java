@@ -1,6 +1,6 @@
 package nxt;
 
-import nxt.util.DbIterator;
+import nxt.db.DbIterator;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;

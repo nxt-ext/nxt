@@ -13,7 +13,9 @@ import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
@@ -29,7 +31,6 @@ final class BlockImpl implements Block {
     private final int payloadLength;
     private final byte[] generationSignature;
     private final byte[] payloadHash;
-    private final List<Long> transactionIds;
     private final List<TransactionImpl> blockTransactions;
 
     private byte[] blockSignature;
@@ -67,17 +68,13 @@ final class BlockImpl implements Block {
 
         this.previousBlockHash = previousBlockHash;
         this.blockTransactions = Collections.unmodifiableList(transactions);
-        List<Long> transactionIds = new ArrayList<>(this.blockTransactions.size());
         Long previousId = Long.MIN_VALUE;
         for (Transaction transaction : this.blockTransactions) {
             if (transaction.getId() < previousId) {
                 throw new NxtException.NotValidException("Block transactions are not sorted!");
             }
-            transactionIds.add(transaction.getId());
             previousId = transaction.getId();
         }
-        this.transactionIds = Collections.unmodifiableList(transactionIds);
-
     }
 
     BlockImpl(int version, int timestamp, Long previousBlockId, long totalAmountNQT, long totalFeeNQT, int payloadLength,
@@ -132,11 +129,6 @@ final class BlockImpl implements Block {
     @Override
     public int getPayloadLength() {
         return payloadLength;
-    }
-
-    @Override
-    public List<Long> getTransactionIds() {
-        return transactionIds;
     }
 
     @Override
@@ -357,7 +349,7 @@ final class BlockImpl implements Block {
 
             BigInteger hit = new BigInteger(1, new byte[] {generationSignatureHash[7], generationSignatureHash[6], generationSignatureHash[5], generationSignatureHash[4], generationSignatureHash[3], generationSignatureHash[2], generationSignatureHash[1], generationSignatureHash[0]});
 
-            return Generator.verifyHit(hit, effectiveBalance, previousBlock, timestamp);
+            return Generator.verifyHit(hit, BigInteger.valueOf(effectiveBalance), previousBlock, timestamp) || (this.height < Constants.TRANSPARENT_FORGING_BLOCK_5 && badBlocks.contains(this.getId()));
 
         } catch (RuntimeException e) {
 
@@ -368,18 +360,18 @@ final class BlockImpl implements Block {
 
     }
 
+    private static final Set<Long> badBlocks = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(
+            5113090348579089956L, 8032405266942971936L, 7702042872885598917L, -407022268390237559L, -3320029330888410250L,
+            -6568770202903512165L, 4288642518741472722L, 5315076199486616536L, -6175599071600228543L)));
+
     void apply() {
         Account generatorAccount = Account.addOrGetAccount(getGeneratorId());
         generatorAccount.apply(generatorPublicKey, this.height);
         generatorAccount.addToBalanceAndUnconfirmedBalanceNQT(totalFeeNQT);
         generatorAccount.addToForgedBalanceNQT(totalFeeNQT);
-    }
-
-    void undo() {
-        Account generatorAccount = Account.getAccount(getGeneratorId());
-        generatorAccount.undo(getHeight());
-        generatorAccount.addToBalanceAndUnconfirmedBalanceNQT(-totalFeeNQT);
-        generatorAccount.addToForgedBalanceNQT(-totalFeeNQT);
+        for (TransactionImpl transaction : getTransactions()) {
+            transaction.apply();
+        }
     }
 
     void setPrevious(BlockImpl previousBlock) {

@@ -1,5 +1,6 @@
 package nxt;
 
+import nxt.db.Db;
 import nxt.http.API;
 import nxt.peer.Peers;
 import nxt.user.Users;
@@ -16,7 +17,7 @@ import java.util.Properties;
 
 public final class Nxt {
 
-    public static final String VERSION = "1.2.8";
+    public static final String VERSION = "1.3.0";
     public static final String APPLICATION = "NRS";
 
     private static final Properties defaultProperties = new Properties();
@@ -138,14 +139,14 @@ public final class Nxt {
     }
 
     public static void shutdown() {
-        Logger.logMessage("Shutting down...");
+        Logger.logShutdownMessage("Shutting down...");
         API.shutdown();
         Users.shutdown();
         Peers.shutdown();
         TransactionProcessorImpl.getInstance().shutdown();
         ThreadPool.shutdown();
         Db.shutdown();
-        Logger.logMessage("Nxt server " + VERSION + " stopped.");
+        Logger.logShutdownMessage("Nxt server " + VERSION + " stopped.");
         Logger.shutdown();
     }
 
@@ -156,8 +157,18 @@ public final class Nxt {
                 long startTime = System.currentTimeMillis();
                 Logger.init();
                 Db.init();
-                BlockchainProcessorImpl.getInstance();
                 TransactionProcessorImpl.getInstance();
+                BlockchainProcessorImpl.getInstance();
+                DbVersion.init();
+                Account.init();
+                Alias.init();
+                Asset.init();
+                DigitalGoodsStore.init();
+                Hub.init();
+                Order.init();
+                Poll.init();
+                Trade.init();
+                Vote.init();
                 Peers.init();
                 Generator.init();
                 API.init();

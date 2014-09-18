@@ -1,12 +1,15 @@
 package nxt.peer;
 
 import nxt.Account;
+import nxt.Block;
 import nxt.BlockchainProcessor;
 import nxt.Constants;
+import nxt.Nxt;
 import nxt.NxtException;
 import nxt.util.Convert;
 import nxt.util.CountingInputStream;
 import nxt.util.CountingOutputStream;
+import nxt.util.Listener;
 import nxt.util.Logger;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
@@ -33,9 +36,22 @@ import java.net.URL;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.zip.GZIPInputStream;
 
 final class PeerImpl implements Peer {
+
+    private static final ConcurrentMap<Long, Long> hallmarkBalances = new ConcurrentHashMap<>();
+
+    static {
+        Nxt.getBlockchainProcessor().addListener(new Listener<Block>() {
+            @Override
+            public void notify(Block block) {
+                hallmarkBalances.clear();
+            }
+        }, BlockchainProcessor.Event.AFTER_BLOCK_APPLY);
+    }
 
     private final String peerAddress;
     private volatile String announcedAddress;
@@ -186,11 +202,13 @@ final class PeerImpl implements Peer {
         if (hallmark == null) {
             return 0;
         }
-        Account account = Account.getAccount(hallmark.getAccountId());
-        if (account == null) {
-            return 0;
+        Long hallmarkBalance = hallmarkBalances.get(hallmark.getAccountId());
+        if (hallmarkBalance == null) {
+            Account account = Account.getAccount(hallmark.getAccountId());
+            hallmarkBalance = account == null ? 0 : account.getBalanceNQT();
+            hallmarkBalances.put(hallmark.getAccountId(), hallmarkBalance);
         }
-        return (int)(adjustedWeight * (account.getBalanceNQT() / Constants.ONE_NXT) / Constants.MAX_BALANCE_NXT);
+        return (int)(adjustedWeight * (hallmarkBalance / Constants.ONE_NXT) / Constants.MAX_BALANCE_NXT);
     }
 
     @Override
@@ -206,7 +224,7 @@ final class PeerImpl implements Peer {
             return;
         }
         if (! isBlacklisted() && ! (cause instanceof IOException)) {
-            Logger.logDebugMessage("Blacklisting " + peerAddress + " because of: " + cause.toString());
+            Logger.logDebugMessage("Blacklisting " + peerAddress + " because of: " + cause.toString(), cause);
         }
         blacklist();
     }

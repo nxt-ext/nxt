@@ -127,6 +127,10 @@ public final class Convert {
         return l == 0 ? null : l;
     }
 
+    public static Integer zeroToNull(int i) {
+        return i == 0 ? null : i;
+    }
+
     public static long nullToZero(Long l) {
         return l == null ? 0 : l;
     }
@@ -165,7 +169,7 @@ public final class Convert {
 
     public static String toString(byte[] bytes) {
         try {
-            return new String(bytes, "UTF-8").trim().intern();
+            return new String(bytes, "UTF-8").trim();
         } catch (UnsupportedEncodingException e) {
             throw new RuntimeException(e.toString(), e);
         }

@@ -95,6 +95,7 @@ public final class APIServlet extends HttpServlet {
         map.put("getAssets", GetAssets.instance);
         map.put("getAssetIds", GetAssetIds.instance);
         map.put("getAssetsByIssuer", GetAssetsByIssuer.instance);
+        map.put("getAssetAccounts", GetAssetAccounts.instance);
         map.put("getBalance", GetBalance.instance);
         map.put("getBlock", GetBlock.instance);
         map.put("getBlockId", GetBlockId.instance);
@@ -124,7 +125,8 @@ public final class APIServlet extends HttpServlet {
         map.put("getUnconfirmedTransactions", GetUnconfirmedTransactions.instance);
         map.put("getAccountCurrentAskOrderIds", GetAccountCurrentAskOrderIds.instance);
         map.put("getAccountCurrentBidOrderIds", GetAccountCurrentBidOrderIds.instance);
-        map.put("getAllOpenOrders", GetAllOpenOrders.instance);
+        map.put("getAllOpenAskOrders", GetAllOpenAskOrders.instance);
+        map.put("getAllOpenBidOrders", GetAllOpenBidOrders.instance);
         map.put("getAskOrder", GetAskOrder.instance);
         map.put("getAskOrderIds", GetAskOrderIds.instance);
         map.put("getAskOrders", GetAskOrders.instance);
@@ -133,6 +135,7 @@ public final class APIServlet extends HttpServlet {
         map.put("getBidOrders", GetBidOrders.instance);
         map.put("issueAsset", IssueAsset.instance);
         map.put("leaseBalance", LeaseBalance.instance);
+        map.put("longConvert", LongConvert.instance);
         map.put("markHost", MarkHost.instance);
         map.put("parseTransaction", ParseTransaction.instance);
         map.put("placeAskOrder", PlaceAskOrder.instance);
@@ -148,6 +151,12 @@ public final class APIServlet extends HttpServlet {
         map.put("stopForging", StopForging.instance);
         map.put("getForging", GetForging.instance);
         map.put("transferAsset", TransferAsset.instance);
+
+        if (API.enableDebugAPI) {
+            map.put("fullReset", FullReset.instance);
+            map.put("popOff", PopOff.instance);
+            map.put("scan", Scan.instance);
+        }
 
         apiRequestHandlers = Collections.unmodifiableMap(map);
     }

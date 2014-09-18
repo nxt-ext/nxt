@@ -1,12 +1,17 @@
 package nxt;
 
+import nxt.db.DbIterator;
+import nxt.db.DbKey;
+import nxt.db.VersionedEntityDbTable;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 
 public class Hub {
 
@@ -33,14 +38,31 @@ public class Hub {
 
     }
 
-    private static final ConcurrentMap<Long, Hub> hubs = new ConcurrentHashMap<>();
+    private static final DbKey.LongKeyFactory<Hub> hubDbKeyFactory = new DbKey.LongKeyFactory<Hub>("account_id") {
 
-    static void addOrUpdateHub(Long accountId, long minFeePerByteNQT, String[] uris) {
-        hubs.put(accountId, new Hub(accountId, minFeePerByteNQT, uris));
-    }
+        @Override
+        public DbKey newKey(Hub hub) {
+            return hub.dbKey;
+        }
 
-    static void removeHub(Long accountId) {
-        hubs.remove(accountId);
+    };
+
+    private static final VersionedEntityDbTable<Hub> hubTable = new VersionedEntityDbTable<Hub>("hub", hubDbKeyFactory) {
+
+        @Override
+        protected Hub load(Connection con, ResultSet rs) throws SQLException {
+            return new Hub(rs);
+        }
+
+        @Override
+        protected void save(Connection con, Hub hub) throws SQLException {
+            hub.save(con);
+        }
+
+    };
+
+    static void addOrUpdateHub(Transaction transaction, Attachment.MessagingHubAnnouncement attachment) {
+        hubTable.insert(new Hub(transaction, attachment));
     }
 
     private static Long lastBlockId;
@@ -60,11 +82,14 @@ public class Hub {
                 if (! currentLastBlockId.equals(block.getId())) {
                     return Collections.emptyList();
                 }
-                for (Map.Entry<Long, Hub> hubEntry : hubs.entrySet()) {
-                    Account account = Account.getAccount(hubEntry.getKey());
-                    if (account != null && account.getEffectiveBalanceNXT() >= Constants.MIN_HUB_EFFECTIVE_BALANCE
-                            && account.getPublicKey() != null) {
-                        currentHits.add(new Hit(hubEntry.getValue(), Generator.getHitTime(account, block)));
+                try (DbIterator<Hub> hubs = hubTable.getAll(0, -1)) {
+                    while (hubs.hasNext()) {
+                        Hub hub = hubs.next();
+                        Account account = Account.getAccount(hub.getAccountId());
+                        if (account != null && account.getEffectiveBalanceNXT() >= Constants.MIN_HUB_EFFECTIVE_BALANCE
+                                && account.getPublicKey() != null) {
+                            currentHits.add(new Hit(hub, Generator.getHitTime(account, block)));
+                        }
                     }
                 }
             }
@@ -77,14 +102,38 @@ public class Hub {
 
     }
 
+    static void init() {}
+
+
     private final Long accountId;
+    private final DbKey dbKey;
     private final long minFeePerByteNQT;
     private final List<String> uris;
 
-    private Hub(Long accountId, long minFeePerByteNQT, String[] uris) {
-        this.accountId = accountId;
-        this.minFeePerByteNQT = minFeePerByteNQT;
-        this.uris = Collections.unmodifiableList(Arrays.asList(uris));
+    private Hub(Transaction transaction, Attachment.MessagingHubAnnouncement attachment) {
+        this.accountId = transaction.getSenderId();
+        this.dbKey = hubDbKeyFactory.newKey(this.accountId);
+        this.minFeePerByteNQT = attachment.getMinFeePerByteNQT();
+        this.uris = Collections.unmodifiableList(Arrays.asList(attachment.getUris()));
+    }
+
+    private Hub(ResultSet rs) throws SQLException {
+        this.accountId = rs.getLong("account_id");
+        this.dbKey = hubDbKeyFactory.newKey(this.accountId);
+        this.minFeePerByteNQT = rs.getLong("min_fee_per_byte");
+        this.uris = Collections.unmodifiableList(Arrays.asList((String[])rs.getObject("uris")));
+    }
+
+    private void save(Connection con) throws SQLException {
+        try (PreparedStatement pstmt = con.prepareStatement("MERGE INTO hub (account_id, min_fee_per_byte, "
+                + "uris, height) KEY (account_id, height) VALUES (?, ?, ?, ?)")) {
+            int i = 0;
+            pstmt.setLong(++i, this.getAccountId());
+            pstmt.setLong(++i, this.getMinFeePerByteNQT());
+            pstmt.setObject(++i, this.getUris().toArray(new String[this.getUris().size()]));
+            pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
+            pstmt.executeUpdate();
+        }
     }
 
     public Long getAccountId() {

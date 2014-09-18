@@ -1,14 +1,18 @@
 package nxt;
 
+import nxt.db.Db;
+import nxt.db.DbIterator;
+import nxt.db.DbKey;
+import nxt.db.DbUtils;
+import nxt.db.EntityDbTable;
+import nxt.util.Convert;
 import nxt.util.Listener;
 import nxt.util.Listeners;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 
 public final class Trade {
 
@@ -18,11 +22,35 @@ public final class Trade {
 
     private static final Listeners<Trade,Event> listeners = new Listeners<>();
 
-    private static final ConcurrentMap<Long, List<Trade>> trades = new ConcurrentHashMap<>();
-    private static final Collection<List<Trade>> allTrades = Collections.unmodifiableCollection(trades.values());
+    private static final DbKey.LinkKeyFactory<Trade> tradeDbKeyFactory = new DbKey.LinkKeyFactory<Trade>("ask_order_id", "bid_order_id") {
 
-    public static Collection<List<Trade>> getAllTrades() {
-        return allTrades;
+        @Override
+        public DbKey newKey(Trade trade) {
+            return trade.dbKey;
+        }
+
+    };
+
+    private static final EntityDbTable<Trade> tradeTable = new EntityDbTable<Trade>("trade", tradeDbKeyFactory) {
+
+        @Override
+        protected Trade load(Connection con, ResultSet rs) throws SQLException {
+            return new Trade(rs);
+        }
+
+        @Override
+        protected void save(Connection con, Trade trade) throws SQLException {
+            trade.save(con);
+        }
+
+    };
+
+    public static DbIterator<Trade> getAllTrades(int from, int to) {
+        return tradeTable.getAll(from, to);
+    }
+
+    public static int getCount() {
+        return tradeTable.getCount();
     }
 
     public static boolean addListener(Listener<Trade> listener, Event eventType) {
@@ -33,47 +61,129 @@ public final class Trade {
         return listeners.removeListener(listener, eventType);
     }
 
-    public static List<Trade> getTrades(Long assetId) {
-        List<Trade> assetTrades = trades.get(assetId);
-        if (assetTrades != null) {
-            return Collections.unmodifiableList(assetTrades);
-        }
-        return Collections.emptyList();
+    public static DbIterator<Trade> getAssetTrades(Long assetId, int from, int to) {
+        return tradeTable.getManyBy("asset_id", assetId, from, to);
     }
 
-    static void addTrade(Long assetId, int timestamp, Long blockId, Long askOrderId, Long bidOrderId, long quantityQNT, long priceNQT) {
-        List<Trade> assetTrades = trades.get(assetId);
-        if (assetTrades == null) {
-            assetTrades = new CopyOnWriteArrayList<>();
-            // cfb: CopyOnWriteArrayList requires a lot of resources to grow but this happens only when a new block is pushed/applied, I can't decide if we should replace it with another class
-            trades.put(assetId, assetTrades);
+    public static DbIterator<Trade> getAccountTrades(Long accountId, int from, int to) {
+        Connection con = null;
+        try {
+            con = Db.getConnection();
+            PreparedStatement pstmt = con.prepareStatement("SELECT * FROM trade WHERE seller_id = ?"
+                    + " UNION ALL SELECT * FROM trade WHERE buyer_id = ? AND seller_id <> ? ORDER BY height DESC"
+                    + DbUtils.limitsClause(from, to));
+            int i = 0;
+            pstmt.setLong(++i, accountId);
+            pstmt.setLong(++i, accountId);
+            pstmt.setLong(++i, accountId);
+            DbUtils.setLimits(++i, pstmt, from, to);
+            return tradeTable.getManyBy(con, pstmt, false);
+        } catch (SQLException e) {
+            DbUtils.close(con);
+            throw new RuntimeException(e.toString(), e);
         }
-        Trade trade = new Trade(blockId, timestamp, assetId, askOrderId, bidOrderId, quantityQNT, priceNQT);
-        assetTrades.add(trade);
+    }
+
+    public static DbIterator<Trade> getAccountAssetTrades(Long accountId, Long assetId, int from, int to) {
+        Connection con = null;
+        try {
+            con = Db.getConnection();
+            PreparedStatement pstmt = con.prepareStatement("SELECT * FROM trade WHERE seller_id = ? AND asset_id = ?"
+                    + " UNION ALL SELECT * FROM trade WHERE buyer_id = ? AND seller_id <> ? AND asset_id = ? ORDER BY height DESC"
+                    + DbUtils.limitsClause(from, to));
+            int i = 0;
+            pstmt.setLong(++i, accountId);
+            pstmt.setLong(++i, assetId);
+            pstmt.setLong(++i, accountId);
+            pstmt.setLong(++i, accountId);
+            pstmt.setLong(++i, assetId);
+            DbUtils.setLimits(++i, pstmt, from, to);
+            return tradeTable.getManyBy(con, pstmt, false);
+        } catch (SQLException e) {
+            DbUtils.close(con);
+            throw new RuntimeException(e.toString(), e);
+        }
+    }
+
+    public static int getTradeCount(Long assetId) {
+        try (Connection con = Db.getConnection();
+             PreparedStatement pstmt = con.prepareStatement("SELECT COUNT(*) FROM trade WHERE asset_id = ?")) {
+            pstmt.setLong(1, assetId);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                rs.next();
+                return rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e.toString(), e);
+        }
+    }
+
+    static Trade addTrade(Long assetId, Block block, Order.Ask askOrder, Order.Bid bidOrder, long quantityQNT, long priceNQT) {
+        Trade trade = new Trade(assetId, block, askOrder, bidOrder, quantityQNT, priceNQT);
+        tradeTable.insert(trade);
         listeners.notify(trade, Event.TRADE);
+        return trade;
     }
 
-    static void clear() {
-        trades.clear();
-    }
+    static void init() {}
+
 
     private final int timestamp;
     private final Long assetId;
     private final Long blockId;
-    private final Long askOrderId, bidOrderId;
+    private final int height;
+    private final Long askOrderId;
+    private final Long bidOrderId;
+    private final Long sellerId;
+    private final Long buyerId;
+    private final DbKey dbKey;
     private final long quantityQNT;
     private final long priceNQT;
 
-    private Trade(Long blockId, int timestamp, Long assetId, Long askOrderId, Long bidOrderId, long quantityQNT, long priceNQT) {
-
-        this.blockId = blockId;
+    private Trade(Long assetId, Block block, Order.Ask askOrder, Order.Bid bidOrder, long quantityQNT, long priceNQT) {
+        this.blockId = block.getId();
+        this.height = block.getHeight();
         this.assetId = assetId;
-        this.timestamp = timestamp;
-        this.askOrderId = askOrderId;
-        this.bidOrderId = bidOrderId;
+        this.timestamp = block.getTimestamp();
+        this.askOrderId = askOrder.getId();
+        this.bidOrderId = bidOrder.getId();
+        this.sellerId = askOrder.getAccountId();
+        this.buyerId = bidOrder.getAccountId();
+        this.dbKey = tradeDbKeyFactory.newKey(this.askOrderId, this.bidOrderId);
         this.quantityQNT = quantityQNT;
         this.priceNQT = priceNQT;
+    }
 
+    private Trade(ResultSet rs) throws SQLException {
+        this.assetId = rs.getLong("asset_id");
+        this.blockId = rs.getLong("block_id");
+        this.askOrderId = rs.getLong("ask_order_id");
+        this.bidOrderId = rs.getLong("bid_order_id");
+        this.sellerId = rs.getLong("seller_id");
+        this.buyerId = rs.getLong("buyer_id");
+        this.dbKey = tradeDbKeyFactory.newKey(this.askOrderId, this.bidOrderId);
+        this.quantityQNT = rs.getLong("quantity");
+        this.priceNQT = rs.getLong("price");
+        this.timestamp = rs.getInt("timestamp");
+        this.height = rs.getInt("height");
+    }
+
+    private void save(Connection con) throws SQLException {
+        try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO trade (asset_id, block_id, "
+                + "ask_order_id, bid_order_id, seller_id, buyer_id, quantity, price, timestamp, height) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
+            int i = 0;
+            pstmt.setLong(++i, this.getAssetId());
+            pstmt.setLong(++i, this.getBlockId());
+            pstmt.setLong(++i, this.getAskOrderId());
+            pstmt.setLong(++i, this.getBidOrderId());
+            pstmt.setLong(++i, this.getSellerId());
+            pstmt.setLong(++i, this.getBuyerId());
+            pstmt.setLong(++i, this.getQuantityQNT());
+            pstmt.setLong(++i, this.getPriceNQT());
+            pstmt.setInt(++i, this.getTimestamp());
+            pstmt.setInt(++i, this.getHeight());
+            pstmt.executeUpdate();
+        }
     }
 
     public Long getBlockId() { return blockId; }
@@ -82,6 +192,14 @@ public final class Trade {
 
     public Long getBidOrderId() { return bidOrderId; }
 
+    public Long getSellerId() {
+        return sellerId;
+    }
+
+    public Long getBuyerId() {
+        return buyerId;
+    }
+
     public long getQuantityQNT() { return quantityQNT; }
 
     public long getPriceNQT() { return priceNQT; }
@@ -89,5 +207,15 @@ public final class Trade {
     public Long getAssetId() { return assetId; }
     
     public int getTimestamp() { return timestamp; }
+
+    public int getHeight() {
+        return height;
+    }
+
+    @Override
+    public String toString() {
+        return "Trade asset: " + Convert.toUnsignedLong(assetId) + " ask: " + Convert.toUnsignedLong(askOrderId)
+                + " bid: " + Convert.toUnsignedLong(bidOrderId) + " price: " + priceNQT + " quantity: " + quantityQNT + " height: " + height;
+    }
 
 }

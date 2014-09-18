@@ -9,6 +9,7 @@ import nxt.Order;
 import nxt.Poll;
 import nxt.Trade;
 import nxt.Vote;
+import nxt.db.DbIterator;
 import nxt.peer.Peer;
 import nxt.peer.Peers;
 import nxt.util.Convert;
@@ -16,7 +17,6 @@ import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.List;
 
 public final class GetState extends APIServlet.APIRequestHandler {
 
@@ -38,33 +38,32 @@ public final class GetState extends APIServlet.APIRequestHandler {
         response.put("cumulativeDifficulty", Nxt.getBlockchain().getLastBlock().getCumulativeDifficulty().toString());
 
         long totalEffectiveBalance = 0;
-        for (Account account : Account.getAllAccounts()) {
-            long effectiveBalanceNXT = account.getEffectiveBalanceNXT();
-            if (effectiveBalanceNXT > 0) {
-                totalEffectiveBalance += effectiveBalanceNXT;
+        try (DbIterator<Account> accounts = Account.getAllAccounts(0, -1)) {
+            for (Account account : accounts) {
+                long effectiveBalanceNXT = account.getEffectiveBalanceNXT();
+                if (effectiveBalanceNXT > 0) {
+                    totalEffectiveBalance += effectiveBalanceNXT;
+                }
             }
         }
         response.put("totalEffectiveBalanceNXT", totalEffectiveBalance);
 
         response.put("numberOfBlocks", Nxt.getBlockchain().getHeight() + 1);
         response.put("numberOfTransactions", Nxt.getBlockchain().getTransactionCount());
-        response.put("numberOfAccounts", Account.getAllAccounts().size());
-        response.put("numberOfAssets", Asset.getAllAssets().size());
-        response.put("numberOfOrders", Order.Ask.getAllAskOrders().size() + Order.Bid.getAllBidOrders().size());
-        int numberOfTrades = 0;
-        for (List<Trade> assetTrades : Trade.getAllTrades()) {
-            numberOfTrades += assetTrades.size();
-        }
-        response.put("numberOfTrades", numberOfTrades);
-        response.put("numberOfAliases", Alias.getAllAliases().size());
-        response.put("numberOfPolls", Poll.getAllPolls().size());
-        response.put("numberOfVotes", Vote.getVotes().size());
+        response.put("numberOfAccounts", Account.getCount());
+        response.put("numberOfAssets", Asset.getCount());
+        response.put("numberOfOrders", Order.Ask.getCount() + Order.Bid.getCount());
+        response.put("numberOfTrades", Trade.getCount());
+        response.put("numberOfAliases", Alias.getCount());
+        response.put("numberOfPolls", Poll.getCount());
+        response.put("numberOfVotes", Vote.getCount());
         response.put("numberOfPeers", Peers.getAllPeers().size());
         response.put("numberOfUnlockedAccounts", Generator.getAllGenerators().size());
         Peer lastBlockchainFeeder = Nxt.getBlockchainProcessor().getLastBlockchainFeeder();
         response.put("lastBlockchainFeeder", lastBlockchainFeeder == null ? null : lastBlockchainFeeder.getAnnouncedAddress());
         response.put("lastBlockchainFeederHeight", Nxt.getBlockchainProcessor().getLastBlockchainFeederHeight());
         response.put("isScanning", Nxt.getBlockchainProcessor().isScanning());
+        response.put("isDownloading", Nxt.getBlockchainProcessor().isDownloading());
         response.put("availableProcessors", Runtime.getRuntime().availableProcessors());
         response.put("maxMemory", Runtime.getRuntime().maxMemory());
         response.put("totalMemory", Runtime.getRuntime().totalMemory());

@@ -1,5 +1,7 @@
 package nxt;
 
+import nxt.db.Db;
+import nxt.db.DbUtils;
 import nxt.util.Convert;
 
 import java.nio.ByteBuffer;
@@ -27,7 +29,7 @@ final class TransactionDb {
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
         } catch (NxtException.ValidationException e) {
-            throw new RuntimeException("Transaction already in database, id = " + transactionId + ", does not pass validation!");
+            throw new RuntimeException("Transaction already in database, id = " + transactionId + ", does not pass validation!", e);
         }
     }
 
@@ -44,7 +46,7 @@ final class TransactionDb {
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
         } catch (NxtException.ValidationException e) {
-            throw new RuntimeException("Transaction already in database, full_hash = " + fullHash + ", does not pass validation!");
+            throw new RuntimeException("Transaction already in database, full_hash = " + fullHash + ", does not pass validation!", e);
         }
     }
 
@@ -174,18 +176,10 @@ final class TransactionDb {
                     pstmt.setLong(++i, transaction.getId());
                     pstmt.setShort(++i, transaction.getDeadline());
                     pstmt.setBytes(++i, transaction.getSenderPublicKey());
-                    if (transaction.getType().hasRecipient() && transaction.getRecipientId() != null) {
-                        pstmt.setLong(++i, transaction.getRecipientId());
-                    } else {
-                        pstmt.setNull(++i, Types.BIGINT);
-                    }
+                    DbUtils.setLong(pstmt, ++i, transaction.getRecipientId());
                     pstmt.setLong(++i, transaction.getAmountNQT());
                     pstmt.setLong(++i, transaction.getFeeNQT());
-                    if (transaction.getReferencedTransactionFullHash() != null) {
-                        pstmt.setBytes(++i, Convert.parseHexString(transaction.getReferencedTransactionFullHash()));
-                    } else {
-                        pstmt.setNull(++i, Types.BINARY);
-                    }
+                    DbUtils.setBytes(pstmt, ++i, Convert.parseHexString(transaction.getReferencedTransactionFullHash()));
                     pstmt.setInt(++i, transaction.getHeight());
                     pstmt.setLong(++i, transaction.getBlockId());
                     pstmt.setBytes(++i, transaction.getSignature());
@@ -215,11 +209,7 @@ final class TransactionDb {
                     pstmt.setBoolean(++i, transaction.getPublicKeyAnnouncement() != null);
                     pstmt.setBoolean(++i, transaction.getEncryptToSelfMessage() != null);
                     pstmt.setInt(++i, transaction.getECBlockHeight());
-                    if (transaction.getECBlockId() != null) {
-                        pstmt.setLong(++i, transaction.getECBlockId());
-                    } else {
-                        pstmt.setNull(++i, Types.BIGINT);
-                    }
+                    DbUtils.setLong(pstmt, ++i, transaction.getECBlockId());
                     pstmt.executeUpdate();
                 }
             }

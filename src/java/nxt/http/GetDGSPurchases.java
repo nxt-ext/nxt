@@ -2,12 +2,13 @@ package nxt.http;
 
 import nxt.DigitalGoodsStore;
 import nxt.NxtException;
+import nxt.db.DbIterator;
+import nxt.db.FilteringIterator;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.Collection;
 
 public final class GetDGSPurchases extends APIServlet.APIRequestHandler {
 
@@ -24,7 +25,7 @@ public final class GetDGSPurchases extends APIServlet.APIRequestHandler {
         Long buyerId = ParameterParser.getBuyerId(req);
         int firstIndex = ParameterParser.getFirstIndex(req);
         int lastIndex = ParameterParser.getLastIndex(req);
-        boolean completed = "true".equalsIgnoreCase(req.getParameter("completed"));
+        final boolean completed = "true".equalsIgnoreCase(req.getParameter("completed"));
 
 
         JSONObject response = new JSONObject();
@@ -32,41 +33,38 @@ public final class GetDGSPurchases extends APIServlet.APIRequestHandler {
         response.put("purchases", purchasesJSON);
 
         if (sellerId == null && buyerId == null) {
-            DigitalGoodsStore.Purchase[] purchases = DigitalGoodsStore.getAllPurchases().toArray(new DigitalGoodsStore.Purchase[0]);
-            for (int i = 0, count = 0; count - 1 <= lastIndex && i < purchases.length; i++) {
-                if (completed && purchases[purchases.length - 1 - i].isPending()) {
-                    continue;
+            try (FilteringIterator<DigitalGoodsStore.Purchase> purchaseIterator = new FilteringIterator<>(DigitalGoodsStore.getAllPurchases(0, -1),
+                    new FilteringIterator.Filter<DigitalGoodsStore.Purchase>() {
+                        @Override
+                        public boolean ok(DigitalGoodsStore.Purchase purchase) {
+                            return ! (completed && purchase.isPending());
+                        }
+                    }, firstIndex, lastIndex)) {
+                while (purchaseIterator.hasNext()) {
+                    purchasesJSON.add(JSONData.purchase(purchaseIterator.next()));
                 }
-                if (count < firstIndex) {
-                    count++;
-                    continue;
-                }
-                purchasesJSON.add(JSONData.purchase(purchases[purchases.length - 1 - i]));
-                count++;
             }
             return response;
         }
 
-        Collection<DigitalGoodsStore.Purchase> purchases;
+        DbIterator<DigitalGoodsStore.Purchase> purchases;
         if (sellerId != null && buyerId == null) {
-            purchases = DigitalGoodsStore.getSellerPurchases(sellerId);
+            purchases = DigitalGoodsStore.getSellerPurchases(sellerId, 0, -1);
         } else if (sellerId == null) {
-            purchases = DigitalGoodsStore.getBuyerPurchases(buyerId);
+            purchases = DigitalGoodsStore.getBuyerPurchases(buyerId, 0, -1);
         } else {
-            purchases = DigitalGoodsStore.getSellerBuyerPurchases(sellerId, buyerId);
+            purchases = DigitalGoodsStore.getSellerBuyerPurchases(sellerId, buyerId, 0, -1);
         }
-        int count = 0;
-        for (DigitalGoodsStore.Purchase purchase : purchases) {
-            if (count > lastIndex) {
-                break;
+        try (FilteringIterator<DigitalGoodsStore.Purchase> purchaseIterator = new FilteringIterator<>(purchases,
+                new FilteringIterator.Filter<DigitalGoodsStore.Purchase>() {
+                    @Override
+                    public boolean ok(DigitalGoodsStore.Purchase purchase) {
+                        return ! (completed && purchase.isPending());
+                    }
+                }, firstIndex, lastIndex)) {
+            while (purchaseIterator.hasNext()) {
+                purchasesJSON.add(JSONData.purchase(purchaseIterator.next()));
             }
-            if (count >= firstIndex) {
-                if (completed && purchase.isPending()) {
-                    continue;
-                }
-                purchasesJSON.add(JSONData.purchase(purchase));
-            }
-            count++;
         }
         return response;
     }
