@@ -125,6 +125,8 @@ public final class APIServlet extends HttpServlet {
         map.put("getUnconfirmedTransactions", GetUnconfirmedTransactions.instance);
         map.put("getAccountCurrentAskOrderIds", GetAccountCurrentAskOrderIds.instance);
         map.put("getAccountCurrentBidOrderIds", GetAccountCurrentBidOrderIds.instance);
+        map.put("getAccountCurrentAskOrders", GetAccountCurrentAskOrders.instance);
+        map.put("getAccountCurrentBidOrders", GetAccountCurrentBidOrders.instance);
         map.put("getAllOpenAskOrders", GetAllOpenAskOrders.instance);
         map.put("getAllOpenBidOrders", GetAllOpenBidOrders.instance);
         map.put("getAskOrder", GetAskOrder.instance);
