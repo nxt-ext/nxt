@@ -7,9 +7,6 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.junit.*;
 
-import java.util.HashMap;
-import java.util.Map;
-
 public class TestCurrency {
 
     static int baseHeight;
@@ -30,26 +27,28 @@ public class TestCurrency {
     }
 
     public String issueCurrencyImpl() {
-        Map<String, String> reqParams = new HashMap<>();
-        reqParams.put("requestType", "issueCurrency");
         String secretPhrase = "hope peace happen touch easy pretend worthless talk them indeed wheel state";
-        reqParams.put("secretPhrase", secretPhrase);
-        reqParams.put("deadline", "1440");
-        reqParams.put("feeNQT", "100000000000");
-        reqParams.put("name", "Test1");
-        reqParams.put("code", "TSX");
-        reqParams.put("description", "Test Currency 1");
-        reqParams.put("type", "1");
-        reqParams.put("totalSupply", "100000");
+        APICall apiCall = new APICall.Builder("issueCurrency").
+                secretPhrase(secretPhrase).
+                feeNQT("" + 1000 * Constants.ONE_NXT).
+                param("name", "Test1").
+                param("code", "TSX").
+                param("code", "TSX").
+                param("description", "Test Currency 1").
+                param("type", "1").
+                param("totalSupply", "100000").
+                build();
 
-        JSONObject issueCurrencyResponse = (JSONObject) APIHelper.processRequest(reqParams);
+        JSONObject issueCurrencyResponse = apiCall.invoke();
         String currencyId = (String) issueCurrencyResponse.get("transaction");
         System.out.println("issueCurrencyResponse: " + issueCurrencyResponse.toJSONString());
         Helper.generateBlock(secretPhrase);
-        reqParams.clear();
-        reqParams.put("requestType", "getCurrency");
-        reqParams.put("currency", currencyId);
-        JSONObject getCurrencyResponse = (JSONObject) APIHelper.processRequest(reqParams);
+
+        apiCall = new APICall.Builder("getCurrency").
+                param("currency", currencyId).
+                build();
+
+        JSONObject getCurrencyResponse = apiCall.invoke();
         System.out.println("getCurrencyResponse:" + getCurrencyResponse.toJSONString());
         Assert.assertEquals(currencyId, getCurrencyResponse.get("currency"));
         Assert.assertEquals("TSX", getCurrencyResponse.get("code"));
@@ -60,66 +59,63 @@ public class TestCurrency {
     public void exchange() {
         String currencyId = issueCurrencyImpl();
 
-        String secretPhrase = "hope peace happen touch easy pretend worthless talk them indeed wheel state";
-        Account account = Account.getAccount(Crypto.getPublicKey(secretPhrase));
-        long unconfirmedBalanceNQT = account.getUnconfirmedBalanceNQT();
-        Assert.assertEquals(409700000000L, unconfirmedBalanceNQT);
-        long unconfirmedCurrencyBalanceQNT = account.getUnconfirmedCurrencyBalanceQNT(Convert.parseUnsignedLong(currencyId));
-        Assert.assertEquals(100000, unconfirmedCurrencyBalanceQNT);
+        String secretPhrase1 = "hope peace happen touch easy pretend worthless talk them indeed wheel state";
+        Account issuerAccount = Account.getAccount(Crypto.getPublicKey(secretPhrase1));
+        String secretPhrase2 = "rshw9abtpsa2";
+        Account buyerAccount = Account.getAccount(Crypto.getPublicKey(secretPhrase2));
+        long issuerStartBalanceNQT = issuerAccount.getBalanceNQT();
+        long issuerStartCurrencyBalanceQNT = issuerAccount.getUnconfirmedCurrencyBalanceQNT(Convert.parseUnsignedLong(currencyId));
+        long buyerStartBalanceNQT = buyerAccount.getUnconfirmedBalanceNQT();
+        Assert.assertEquals(100000, issuerStartCurrencyBalanceQNT);
 
-        Map<String, String> reqParams = new HashMap<>();
-        reqParams.put("requestType", "publishExchangeOffer");
-        reqParams.put("secretPhrase", secretPhrase);
-        reqParams.put("deadline", "1440");
-        reqParams.put("feeNQT", "" + Constants.ONE_NXT);
-        reqParams.put("currency", currencyId);
-        reqParams.put("buyRateNQT", "" + 10 * Constants.ONE_NXT);
-        reqParams.put("sellRateNQT", "" + 20 * Constants.ONE_NXT);
-        reqParams.put("totalBuyLimit", "30");
-        reqParams.put("totalSellLimit", "40");
-        reqParams.put("initialBuySupply", "50");
-        reqParams.put("initialSellSupply", "60");
-        reqParams.put("expirationHeight", "130000");
+        APICall apiCall = new APICall.Builder("publishExchangeOffer").
+                secretPhrase(secretPhrase1).feeNQT("" + Constants.ONE_NXT).
+                param("requestType", "publishExchangeOffer").
+                param("secretPhrase", secretPhrase1).
+                param("deadline", "1440").
+                param("feeNQT", "" + Constants.ONE_NXT).
+                param("currency", currencyId).
+                param("buyRateNQT", "" + 105).
+                param("sellRateNQT", "" + 95).
+                param("totalBuyLimit", "10000").
+                param("totalSellLimit", "10000").
+                param("initialBuySupply", "1000").
+                param("initialSellSupply", "1000").
+                param("expirationHeight", "" + Integer.MAX_VALUE).
+                build();
 
-        JSONObject publishExchangeOfferResponse = (JSONObject) APIHelper.processRequest(reqParams);
+        JSONObject publishExchangeOfferResponse = apiCall.invoke();
         System.out.println("publishExchangeOfferResponse: " + publishExchangeOfferResponse.toJSONString());
-        Helper.generateBlock(secretPhrase);
+        Helper.generateBlock(secretPhrase1);
         Helper.executeQuery("select * from buy_offer");
         Helper.executeQuery("select * from sell_offer");
-        reqParams.clear();
-        reqParams.put("requestType", "getAllOffers");
-        JSONObject getAllOffersResponse = (JSONObject) APIHelper.processRequest(reqParams);
+        apiCall = new APICall.Builder("getAllOffers").build();
+        JSONObject getAllOffersResponse = apiCall.invoke();
         System.out.println("getAllOffersResponse:" + getAllOffersResponse.toJSONString());
         JSONArray offer = (JSONArray)getAllOffersResponse.get("openOffers");
-        Assert.assertEquals(publishExchangeOfferResponse.get("transaction"), ((JSONObject) offer.get(0)).get("offer"));
-        unconfirmedBalanceNQT = account.getUnconfirmedBalanceNQT();
-        Assert.assertEquals(409700000000L, unconfirmedBalanceNQT); // not sure if this is correct
-        unconfirmedCurrencyBalanceQNT = account.getUnconfirmedCurrencyBalanceQNT(Convert.parseUnsignedLong(currencyId));
-        Assert.assertEquals(99940, unconfirmedCurrencyBalanceQNT); // not sure if this is correct
+        Assert.assertEquals(publishExchangeOfferResponse.get("transaction"), ((JSONObject)offer.get(0)).get("offer"));
+        Assert.assertEquals(issuerStartBalanceNQT, issuerAccount.getBalanceNQT()); // balance not reduced yet (why ? bug ?)
+        Assert.assertEquals(issuerStartCurrencyBalanceQNT - 1000, issuerAccount.getUnconfirmedCurrencyBalanceQNT(Convert.parseUnsignedLong(currencyId))); // currency balance reduced by initial supply
 
-        reqParams.clear();
-        reqParams.put("requestType", "currencyExchange");
-        reqParams.put("secretPhrase", secretPhrase);
-        reqParams.put("deadline", "1440");
-        reqParams.put("feeNQT", "" + Constants.ONE_NXT);
-        reqParams.put("currency", currencyId);
-        reqParams.put("rateNQT", "" + 10 * Constants.ONE_NXT);
-        reqParams.put("units", "20");
-        JSONObject currencyExchangeResponse = (JSONObject) APIHelper.processRequest(reqParams);
+        apiCall = new APICall.Builder("currencyExchange").
+        secretPhrase(secretPhrase2).feeNQT("" + Constants.ONE_NXT).
+                param("currency", currencyId).
+                param("rateNQT", "" + 96).
+                param("units", "200").
+                build();
+        JSONObject currencyExchangeResponse = apiCall.invoke();
         System.out.println(currencyExchangeResponse);
-        Helper.generateBlock(secretPhrase);
-        unconfirmedBalanceNQT = account.getUnconfirmedBalanceNQT();
-        Assert.assertEquals(409700000000L, unconfirmedBalanceNQT); // not sure if this is correct
-        unconfirmedCurrencyBalanceQNT = account.getUnconfirmedCurrencyBalanceQNT(Convert.parseUnsignedLong(currencyId));
-        Assert.assertEquals(99940, unconfirmedCurrencyBalanceQNT); // not sure if this is correct
+        Helper.generateBlock(secretPhrase1);
+        Assert.assertEquals(issuerStartBalanceNQT, issuerAccount.getBalanceNQT()); // not sure if this is correct
+        Assert.assertEquals(buyerStartBalanceNQT, buyerAccount.getUnconfirmedBalanceNQT()); // not sure if this is correct
+        Assert.assertEquals(issuerStartCurrencyBalanceQNT - 1000, issuerAccount.getUnconfirmedCurrencyBalanceQNT(Convert.parseUnsignedLong(currencyId))); // not sure if this is correct
+        Assert.assertEquals(202, buyerAccount.getUnconfirmedCurrencyBalanceQNT(Convert.parseUnsignedLong(currencyId))); // not sure if this is correct
     }
 
     @After
     public void destroy() {
-        Map<String, String> reqParams = new HashMap<>();
-        reqParams.put("requestType", "popOff");
-        reqParams.put("height", "" + baseHeight);
-        JSONObject popOffResponse = (JSONObject) APIHelper.processRequest(reqParams);
+        APICall apiCall = new APICall.Builder("popOff").param("height", "" + baseHeight).build();
+        JSONObject popOffResponse = apiCall.invoke();
         System.out.println("popOffResponse:" + popOffResponse.toJSONString());
         Helper.executeQuery("select * from currency");
         Helper.executeQuery("select * from unconfirmed_transaction");
