@@ -779,6 +779,11 @@ public final class Account {
         return accountAsset == null ? 0 : accountAsset.quantityQNT;
     }
 
+    public long getCurrencyBalanceQNT(Long currencyId) {
+        AccountCurrency accountCurrency = accountCurrencyTable.get(accountCurrencyDbKeyFactory.newKey(this.id, currencyId));
+        return accountCurrency == null ? 0 : accountCurrency.units;
+    }
+
     void addToAssetBalanceQNT(Long assetId, long quantityQNT) {
         if (quantityQNT == 0) {
             return;

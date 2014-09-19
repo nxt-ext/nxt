@@ -3,6 +3,7 @@ package nxt.http;
 import nxt.*;
 import nxt.crypto.Crypto;
 import nxt.util.Convert;
+import nxt.util.Logger;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.junit.*;
@@ -10,6 +11,7 @@ import org.junit.*;
 public class TestCurrency {
 
     static int baseHeight;
+    static String forgerSecretPhrase = "aSykrgKGZNlSVOMDxkZZgbTvQqJPGtsBggb";
 
     @BeforeClass
     public static void init() {
@@ -42,14 +44,11 @@ public class TestCurrency {
         JSONObject issueCurrencyResponse = apiCall.invoke();
         String currencyId = (String) issueCurrencyResponse.get("transaction");
         System.out.println("issueCurrencyResponse: " + issueCurrencyResponse.toJSONString());
-        Helper.generateBlock(secretPhrase);
+        Helper.generateBlock(forgerSecretPhrase);
 
-        apiCall = new APICall.Builder("getCurrency").
-                param("currency", currencyId).
-                build();
-
+        apiCall = new APICall.Builder("getCurrency").param("currency", currencyId).build();
         JSONObject getCurrencyResponse = apiCall.invoke();
-        System.out.println("getCurrencyResponse:" + getCurrencyResponse.toJSONString());
+        Logger.logDebugMessage("getCurrencyResponse:" + getCurrencyResponse.toJSONString());
         Assert.assertEquals(currencyId, getCurrencyResponse.get("currency"));
         Assert.assertEquals("TSX", getCurrencyResponse.get("code"));
         return currencyId;
@@ -62,11 +61,15 @@ public class TestCurrency {
         String secretPhrase1 = "hope peace happen touch easy pretend worthless talk them indeed wheel state";
         Account issuerAccount = Account.getAccount(Crypto.getPublicKey(secretPhrase1));
         String secretPhrase2 = "rshw9abtpsa2";
-        Account buyerAccount = Account.getAccount(Crypto.getPublicKey(secretPhrase2));
         long issuerStartBalanceNQT = issuerAccount.getBalanceNQT();
         long issuerStartCurrencyBalanceQNT = issuerAccount.getUnconfirmedCurrencyBalanceQNT(Convert.parseUnsignedLong(currencyId));
-        long buyerStartBalanceNQT = buyerAccount.getUnconfirmedBalanceNQT();
+
+        Account buyerAccount = Account.getAccount(Crypto.getPublicKey(secretPhrase2));
+        long buyerStartBalanceNQT = buyerAccount.getBalanceNQT();
+        Logger.logDebugMessage("buyerStartBalanceNQT = " + buyerStartBalanceNQT);
         Assert.assertEquals(100000, issuerStartCurrencyBalanceQNT);
+
+        long forgerStartBalance = Account.getAccount(Crypto.getPublicKey(forgerSecretPhrase)).getBalanceNQT();
 
         APICall apiCall = new APICall.Builder("publishExchangeOffer").
                 secretPhrase(secretPhrase1).feeNQT("" + Constants.ONE_NXT).
@@ -85,16 +88,16 @@ public class TestCurrency {
                 build();
 
         JSONObject publishExchangeOfferResponse = apiCall.invoke();
-        System.out.println("publishExchangeOfferResponse: " + publishExchangeOfferResponse.toJSONString());
-        Helper.generateBlock(secretPhrase1);
-        Helper.executeQuery("select * from buy_offer");
-        Helper.executeQuery("select * from sell_offer");
+        Logger.logDebugMessage("publishExchangeOfferResponse: " + publishExchangeOfferResponse.toJSONString());
+        Helper.generateBlock(forgerSecretPhrase);
         apiCall = new APICall.Builder("getAllOffers").build();
         JSONObject getAllOffersResponse = apiCall.invoke();
-        System.out.println("getAllOffersResponse:" + getAllOffersResponse.toJSONString());
+        Logger.logDebugMessage("getAllOffersResponse:" + getAllOffersResponse.toJSONString());
         JSONArray offer = (JSONArray)getAllOffersResponse.get("openOffers");
         Assert.assertEquals(publishExchangeOfferResponse.get("transaction"), ((JSONObject)offer.get(0)).get("offer"));
-        Assert.assertEquals(issuerStartBalanceNQT, issuerAccount.getBalanceNQT()); // balance not reduced yet (why ? bug ?)
+        issuerAccount = Account.getAccount(Crypto.getPublicKey(secretPhrase1));
+        Assert.assertEquals(issuerStartBalanceNQT - 1000 * 105 - Constants.ONE_NXT, issuerAccount.getUnconfirmedBalanceNQT());
+        Assert.assertEquals(issuerStartBalanceNQT - Constants.ONE_NXT, issuerAccount.getBalanceNQT());
         Assert.assertEquals(issuerStartCurrencyBalanceQNT - 1000, issuerAccount.getUnconfirmedCurrencyBalanceQNT(Convert.parseUnsignedLong(currencyId))); // currency balance reduced by initial supply
 
         apiCall = new APICall.Builder("currencyExchange").
@@ -104,19 +107,31 @@ public class TestCurrency {
                 param("units", "200").
                 build();
         JSONObject currencyExchangeResponse = apiCall.invoke();
-        System.out.println(currencyExchangeResponse);
-        Helper.generateBlock(secretPhrase1);
-        Assert.assertEquals(issuerStartBalanceNQT, issuerAccount.getBalanceNQT()); // not sure if this is correct
-        Assert.assertEquals(buyerStartBalanceNQT, buyerAccount.getUnconfirmedBalanceNQT()); // not sure if this is correct
-        Assert.assertEquals(issuerStartCurrencyBalanceQNT - 1000, issuerAccount.getUnconfirmedCurrencyBalanceQNT(Convert.parseUnsignedLong(currencyId))); // not sure if this is correct
+        Logger.logDebugMessage("currencyExchangeResponse:" + currencyExchangeResponse);
+        Helper.generateBlock(forgerSecretPhrase);
+
+        issuerAccount = Account.getAccount(Crypto.getPublicKey(secretPhrase1));
+        Assert.assertEquals(issuerStartBalanceNQT - 1000 * 105 - Constants.ONE_NXT, issuerAccount.getUnconfirmedBalanceNQT());
+        Assert.assertEquals(issuerStartBalanceNQT + 202 * 95 - Constants.ONE_NXT, issuerAccount.getBalanceNQT());
+        Assert.assertEquals(100000 - 1000, issuerAccount.getUnconfirmedCurrencyBalanceQNT(Convert.parseUnsignedLong(currencyId)));
+        Assert.assertEquals(100000 - 202, issuerAccount.getCurrencyBalanceQNT(Convert.parseUnsignedLong(currencyId)));
+
+        buyerAccount = Account.getAccount(Crypto.getPublicKey(secretPhrase2));
+        Assert.assertEquals(buyerStartBalanceNQT - 202 * 95 - Constants.ONE_NXT, buyerAccount.getUnconfirmedBalanceNQT());
+        Assert.assertEquals(buyerStartBalanceNQT - 202 * 95 - Constants.ONE_NXT, buyerAccount.getBalanceNQT());
         Assert.assertEquals(202, buyerAccount.getUnconfirmedCurrencyBalanceQNT(Convert.parseUnsignedLong(currencyId))); // not sure if this is correct
+        Assert.assertEquals(202, buyerAccount.getCurrencyBalanceQNT(Convert.parseUnsignedLong(currencyId))); // not sure if this is correct
+
+        Account forgerAccount = Account.getAccount(Crypto.getPublicKey(forgerSecretPhrase));
+        Assert.assertEquals(forgerStartBalance + 2 * Constants.ONE_NXT, forgerAccount.getUnconfirmedBalanceNQT());
+        Assert.assertEquals(forgerStartBalance + 2 * Constants.ONE_NXT, forgerAccount.getBalanceNQT());
     }
 
     @After
     public void destroy() {
         APICall apiCall = new APICall.Builder("popOff").param("height", "" + baseHeight).build();
         JSONObject popOffResponse = apiCall.invoke();
-        System.out.println("popOffResponse:" + popOffResponse.toJSONString());
+        Logger.logDebugMessage("popOffResponse:" + popOffResponse.toJSONString());
         Helper.executeQuery("select * from currency");
         Helper.executeQuery("select * from unconfirmed_transaction");
         Nxt.getTransactionProcessor().shutdown();
