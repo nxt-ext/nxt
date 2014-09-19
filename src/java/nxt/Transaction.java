@@ -83,7 +83,7 @@ public interface Transaction {
 
     Appendix.EncryptToSelfMessage getEncryptToSelfMessage();
 
-    Appendix.TwoPhased getTwoPhasedSpecification();
+    Appendix.TwoPhased getTwoPhased();
 
     List<? extends Appendix> getAppendages();
 

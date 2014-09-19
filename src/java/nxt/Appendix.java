@@ -475,7 +475,7 @@ public interface Appendix {
 
         @Override
         int getMySize() {
-            return 4 + 8 + 8 + 1 + 1 + 4 * possibleVoters.length;
+            return 4 + 8 + 8 + 1 + 1 + 8 * possibleVoters.length;
         }
 
         @Override

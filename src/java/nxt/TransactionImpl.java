@@ -461,7 +461,7 @@ final class TransactionImpl implements Transaction {
     }
 
     @Override
-    public Appendix.TwoPhased getTwoPhasedSpecification() {
+    public Appendix.TwoPhased getTwoPhased() {
         return twoPhased;
     }
 
@@ -570,6 +570,10 @@ final class TransactionImpl implements Transaction {
             position <<= 1;
             if ((flags & position) != 0) {
                 builder.encryptToSelfMessage(new Appendix.EncryptToSelfMessage(buffer, version));
+            }
+            position <<= 1;
+            if ((flags & position) != 0) {
+                builder.twoPhased(new Appendix.TwoPhased(buffer, version));
             }
             return builder.build();
         } catch (NxtException.NotValidException|RuntimeException e) {
@@ -743,6 +747,10 @@ final class TransactionImpl implements Transaction {
         }
         position <<= 1;
         if (encryptToSelfMessage != null) {
+            flags |= position;
+        }
+        position <<= 1;
+        if (twoPhased != null) {
             flags |= position;
         }
         return flags;

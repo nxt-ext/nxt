@@ -339,8 +339,8 @@ public abstract class TransactionType {
             }
 
             @Override
-            Attachment.PendingPaymentVoteCasting parseAttachment(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
-                return new Attachment.PendingPaymentVoteCasting(buffer, transactionVersion);
+            Attachment.EmptyAttachment parseAttachment(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
+                return Attachment.ARBITRARY_MESSAGE;
             }
 
             @Override

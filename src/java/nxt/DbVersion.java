@@ -459,6 +459,8 @@ final class DbVersion {
                 apply("CREATE TABLE IF NOT EXISTS poll_results (db_id INT IDENTITY, id BIGINT NOT NULL, "
                         + "results_type TINYINT NOT NULL, results_json VARCHAR NOT NULL)");
             case 126:
+                apply("ALTER TABLE transaction ADD COLUMN IF NOT EXISTS two_phased BOOLEAN NOT NULL DEFAULT FALSE");
+            case 127:
                 return;
             default:
                 throw new RuntimeException("Database inconsistent with code, probably trying to run older code on newer database");
