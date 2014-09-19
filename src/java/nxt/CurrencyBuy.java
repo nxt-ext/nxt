@@ -18,12 +18,7 @@ public final class CurrencyBuy extends CurrencyOffer {
 
     };
 
-    private static final VersionedEntityDbTable<CurrencyOffer> buyOfferTable = new VersionedEntityDbTable<CurrencyOffer>(buyOfferDbKeyFactory) {
-
-        @Override
-        protected String table() {
-            return "buy_offer";
-        }
+    private static final VersionedEntityDbTable<CurrencyOffer> buyOfferTable = new VersionedEntityDbTable<CurrencyOffer>("buy_offer", buyOfferDbKeyFactory) {
 
         @Override
         protected CurrencyBuy load(Connection con, ResultSet rs) throws SQLException {
@@ -32,7 +27,7 @@ public final class CurrencyBuy extends CurrencyOffer {
 
         @Override
         protected void save(Connection con, CurrencyOffer buy) throws SQLException {
-            buy.save(con, table());
+            buy.save(con, table);
         }
 
     };

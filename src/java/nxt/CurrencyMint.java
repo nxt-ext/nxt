@@ -29,12 +29,7 @@ public final class CurrencyMint {
 
     };
 
-    public static final EntityDbTable<CurrencyMint> currencyMintTable = new EntityDbTable<CurrencyMint>(currencyMintDbKeyFactory) {
-
-        @Override
-        protected String table() {
-            return "currency_mint";
-        }
+    public static final EntityDbTable<CurrencyMint> currencyMintTable = new EntityDbTable<CurrencyMint>("currency_mint", currencyMintDbKeyFactory) {
 
         @Override
         protected CurrencyMint load(Connection con, ResultSet rs) throws SQLException {

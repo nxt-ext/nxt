@@ -23,12 +23,7 @@ public final class Currency {
 
     };
 
-    private static final VersionedEntityDbTable<Currency> currencyTable = new VersionedEntityDbTable<Currency>(currencyDbKeyFactory) {
-
-        @Override
-        protected String table() {
-            return "currency";
-        }
+    private static final VersionedEntityDbTable<Currency> currencyTable = new VersionedEntityDbTable<Currency>("currency", currencyDbKeyFactory) {
 
         @Override
         protected Currency load(Connection con, ResultSet rs) throws SQLException {

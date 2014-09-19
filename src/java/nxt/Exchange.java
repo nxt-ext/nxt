@@ -27,12 +27,7 @@ public final class Exchange {
 
     };
 
-    private static final EntityDbTable<Exchange> exchangeTable = new EntityDbTable<Exchange>(exchangeDbKeyFactory) {
-
-        @Override
-        protected String table() {
-            return "exchange";
-        }
+    private static final EntityDbTable<Exchange> exchangeTable = new EntityDbTable<Exchange>("exchange", exchangeDbKeyFactory) {
 
         @Override
         protected Exchange load(Connection con, ResultSet rs) throws SQLException {

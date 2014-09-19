@@ -25,12 +25,7 @@ public class CurrencyFounder {
 
     };
 
-    public static final VersionedEntityDbTable<CurrencyFounder> currencyFounderTable = new VersionedEntityDbTable<CurrencyFounder>(currencyFounderDbKeyFactory) {
-
-        @Override
-        protected String table() {
-            return "currency_founder";
-        }
+    public static final VersionedEntityDbTable<CurrencyFounder> currencyFounderTable = new VersionedEntityDbTable<CurrencyFounder>("currency_founder", currencyFounderDbKeyFactory) {
 
         @Override
         protected CurrencyFounder load(Connection con, ResultSet rs) throws SQLException {

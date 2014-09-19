@@ -41,7 +41,7 @@ public class Helper {
     public static class BlockListener implements Listener<Block> {
         @Override
         public void notify(Block block) {
-            System.out.printf("Block Generated at height %d with %d transactions\n", block.getHeight(), block.getTransactionIds().size());
+            System.out.printf("Block Generated at height %d with %d transactions\n", block.getHeight(), block.getTransactions().size());
         }
     }
 }

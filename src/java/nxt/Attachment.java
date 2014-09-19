@@ -1656,7 +1656,7 @@ public interface Attachment extends Appendix {
 
     public final static class MonetarySystemReserveIncrease extends AbstractAttachment {
 
-        private final Long currencyId;
+        private final long currencyId;
         private final long amountNQT;
 
         MonetarySystemReserveIncrease(ByteBuffer buffer, byte transactionVersion) {
@@ -1671,7 +1671,7 @@ public interface Attachment extends Appendix {
             this.amountNQT = (Long)attachmentData.get("amountNQT");
         }
 
-        public MonetarySystemReserveIncrease(Long currencyId, long amountNQT) {
+        public MonetarySystemReserveIncrease(long currencyId, long amountNQT) {
             this.currencyId = currencyId;
             this.amountNQT = amountNQT;
         }
@@ -1688,7 +1688,7 @@ public interface Attachment extends Appendix {
 
         @Override
         void putMyBytes(ByteBuffer buffer) {
-            buffer.putLong(Convert.nullToZero(currencyId));
+            buffer.putLong(currencyId);
             buffer.putLong(amountNQT);
         }
 
