@@ -147,19 +147,19 @@ public final class DebugTrace {
         }
     }
 
-    private boolean include(Long accountId) {
-        return accountId != null && (accountIds.isEmpty() || accountIds.contains(accountId));
+    private boolean include(long accountId) {
+        return accountId != 0 && (accountIds.isEmpty() || accountIds.contains(accountId));
     }
 
     private boolean include(Attachment attachment) {
         if (attachment instanceof Attachment.DigitalGoodsPurchase) {
-            Long sellerId = DigitalGoodsStore.getGoods(((Attachment.DigitalGoodsPurchase)attachment).getGoodsId()).getSellerId();
+            long sellerId = DigitalGoodsStore.getGoods(((Attachment.DigitalGoodsPurchase)attachment).getGoodsId()).getSellerId();
             return include(sellerId);
         } else if (attachment instanceof Attachment.DigitalGoodsDelivery) {
-            Long buyerId = DigitalGoodsStore.getPurchase(((Attachment.DigitalGoodsDelivery)attachment).getPurchaseId()).getBuyerId();
+            long buyerId = DigitalGoodsStore.getPurchase(((Attachment.DigitalGoodsDelivery)attachment).getPurchaseId()).getBuyerId();
             return include(buyerId);
         } else if (attachment instanceof Attachment.DigitalGoodsRefund) {
-            Long buyerId = DigitalGoodsStore.getPurchase(((Attachment.DigitalGoodsRefund)attachment).getPurchaseId()).getBuyerId();
+            long buyerId = DigitalGoodsStore.getPurchase(((Attachment.DigitalGoodsRefund)attachment).getPurchaseId()).getBuyerId();
             return include(buyerId);
         }
         return false;
@@ -167,8 +167,8 @@ public final class DebugTrace {
 
     // Note: Trade events occur before the change in account balances
     private void trace(Trade trade) {
-        Long askAccountId = Order.Ask.getAskOrder(trade.getAskOrderId()).getAccountId();
-        Long bidAccountId = Order.Bid.getBidOrder(trade.getBidOrderId()).getAccountId();
+        long askAccountId = Order.Ask.getAskOrder(trade.getAskOrderId()).getAccountId();
+        long bidAccountId = Order.Bid.getBidOrder(trade.getBidOrderId()).getAccountId();
         if (include(askAccountId)) {
             log(getValues(askAccountId, trade, true));
         }
@@ -198,11 +198,11 @@ public final class DebugTrace {
     }
 
     private void traceBeforeAccept(Block block) {
-        Long generatorId = block.getGeneratorId();
+        long generatorId = block.getGeneratorId();
         if (include(generatorId)) {
             log(getValues(generatorId, block));
         }
-        for (Long accountId : accountIds) {
+        for (long accountId : accountIds) {
             Account account = Account.getAccount(accountId);
             if (account != null) {
                 try (DbIterator<Account> lessors = account.getLessors()) {
@@ -216,12 +216,12 @@ public final class DebugTrace {
 
     private void trace(Block block) {
         for (Transaction transaction : block.getTransactions()) {
-            Long senderId = transaction.getSenderId();
+            long senderId = transaction.getSenderId();
             if (include(senderId)) {
                 log(getValues(senderId, transaction, false));
                 log(getValues(senderId, transaction, transaction.getAttachment(), false));
             }
-            Long recipientId = transaction.getRecipientId();
+            long recipientId = transaction.getRecipientId();
             if (include(recipientId)) {
                 log(getValues(recipientId, transaction, true));
                 log(getValues(recipientId, transaction, transaction.getAttachment(), true));
@@ -234,7 +234,7 @@ public final class DebugTrace {
         }
     }
 
-    private Map<String,String> lessorGuaranteedBalance(Account account, Long lesseeId) {
+    private Map<String,String> lessorGuaranteedBalance(Account account, long lesseeId) {
         Map<String,String> map = new HashMap<>();
         map.put("account", Convert.toUnsignedLong(account.getId()));
         map.put("lessor guaranteed balance", String.valueOf(account.getGuaranteedBalanceNQT(1440)));
@@ -245,7 +245,7 @@ public final class DebugTrace {
         return map;
     }
 
-    private Map<String,String> getValues(Long accountId, boolean unconfirmed) {
+    private Map<String,String> getValues(long accountId, boolean unconfirmed) {
         Map<String,String> map = new HashMap<>();
         map.put("account", Convert.toUnsignedLong(accountId));
         Account account = Account.getAccount(accountId);
@@ -257,7 +257,7 @@ public final class DebugTrace {
         return map;
     }
 
-    private Map<String,String> getValues(Long accountId, Trade trade, boolean isAsk) {
+    private Map<String,String> getValues(long accountId, Trade trade, boolean isAsk) {
         Map<String,String> map = getValues(accountId, false);
         map.put("asset", Convert.toUnsignedLong(trade.getAssetId()));
         map.put("trade quantity", String.valueOf(isAsk ? - trade.getQuantityQNT() : trade.getQuantityQNT()));
@@ -268,7 +268,7 @@ public final class DebugTrace {
         return map;
     }
 
-    private Map<String,String> getValues(Long accountId, Transaction transaction, boolean isRecipient) {
+    private Map<String,String> getValues(long accountId, Transaction transaction, boolean isRecipient) {
         long amount = transaction.getAmountNQT();
         long fee = transaction.getFeeNQT();
         if (isRecipient) {
@@ -294,7 +294,7 @@ public final class DebugTrace {
         return map;
     }
 
-    private Map<String,String> getValues(Long accountId, Block block) {
+    private Map<String,String> getValues(long accountId, Block block) {
         long fee = block.getTotalFeeNQT();
         if (fee == 0) {
             return Collections.emptyMap();
@@ -309,14 +309,14 @@ public final class DebugTrace {
         return map;
     }
 
-    private Map<String,String> getValues(Long accountId, Account.AccountAsset accountAsset, boolean unconfirmed) {
+    private Map<String,String> getValues(long accountId, Account.AccountAsset accountAsset, boolean unconfirmed) {
         Map<String,String> map = new HashMap<>();
         map.put("account", Convert.toUnsignedLong(accountId));
         map.put("asset", Convert.toUnsignedLong(accountAsset.getAssetId()));
         if (unconfirmed) {
-            map.put("unconfirmed asset balance", String.valueOf(Convert.nullToZero(accountAsset.getUnconfirmedQuantityQNT())));
+            map.put("unconfirmed asset balance", String.valueOf(accountAsset.getUnconfirmedQuantityQNT()));
         } else {
-            map.put("asset balance", String.valueOf(Convert.nullToZero(accountAsset.getQuantityQNT())));
+            map.put("asset balance", String.valueOf(accountAsset.getQuantityQNT()));
         }
         map.put("timestamp", String.valueOf(Nxt.getBlockchain().getLastBlock().getTimestamp()));
         map.put("height", String.valueOf(Nxt.getBlockchain().getLastBlock().getHeight()));
@@ -324,7 +324,7 @@ public final class DebugTrace {
         return map;
     }
 
-    private Map<String,String> getValues(Long accountId, Account.AccountLease accountLease, boolean start) {
+    private Map<String,String> getValues(long accountId, Account.AccountLease accountLease, boolean start) {
         Map<String,String> map = new HashMap<>();
         map.put("account", Convert.toUnsignedLong(accountId));
         map.put("event", start ? "lease begin" : "lease end");
@@ -334,7 +334,7 @@ public final class DebugTrace {
         return map;
     }
 
-    private Map<String,String> getValues(Long accountId, Transaction transaction, Attachment attachment, boolean isRecipient) {
+    private Map<String,String> getValues(long accountId, Transaction transaction, Attachment attachment, boolean isRecipient) {
         Map<String,String> map = getValues(accountId, false);
         if (attachment instanceof Attachment.ColoredCoinsOrderPlacement) {
             if (isRecipient) {

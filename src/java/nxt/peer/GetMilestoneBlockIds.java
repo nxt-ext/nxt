@@ -25,12 +25,12 @@ final class GetMilestoneBlockIds extends PeerServlet.PeerRequestHandler {
 
             String lastBlockIdString = (String) request.get("lastBlockId");
             if (lastBlockIdString != null) {
-                Long lastBlockId = Convert.parseUnsignedLong(lastBlockIdString);
-                Long myLastBlockId = Nxt.getBlockchain().getLastBlock().getId();
-                if (myLastBlockId.equals(lastBlockId) || Nxt.getBlockchain().hasBlock(lastBlockId)) {
+                long lastBlockId = Convert.parseUnsignedLong(lastBlockIdString);
+                long myLastBlockId = Nxt.getBlockchain().getLastBlock().getId();
+                if (myLastBlockId == lastBlockId || Nxt.getBlockchain().hasBlock(lastBlockId)) {
                     milestoneBlockIds.add(lastBlockIdString);
                     response.put("milestoneBlockIds", milestoneBlockIds);
-                    if (myLastBlockId.equals(lastBlockId)) {
+                    if (myLastBlockId == lastBlockId) {
                         response.put("last", Boolean.TRUE);
                     }
                     return response;

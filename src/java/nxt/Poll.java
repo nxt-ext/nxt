@@ -21,12 +21,7 @@ public final class Poll {
 
     };
 
-    private static final EntityDbTable<Poll> pollTable = new EntityDbTable<Poll>(pollDbKeyFactory) {
-
-        @Override
-        protected String table() {
-            return "poll";
-        }
+    private static final EntityDbTable<Poll> pollTable = new EntityDbTable<Poll>("poll", pollDbKeyFactory) {
 
         @Override
         protected Poll load(Connection con, ResultSet rs) throws SQLException {
@@ -43,7 +38,7 @@ public final class Poll {
     static void init() {}
 
 
-    private final Long id;
+    private final long id;
     private final DbKey dbKey;
     private final String name;
     private final String description;
@@ -51,7 +46,7 @@ public final class Poll {
     private final byte minNumberOfOptions, maxNumberOfOptions;
     private final boolean optionsAreBinary;
 
-    private Poll(Long id, Attachment.MessagingPollCreation attachment) {
+    private Poll(long id, Attachment.MessagingPollCreation attachment) {
         this.id = id;
         this.dbKey = pollDbKeyFactory.newKey(this.id);
         this.name = attachment.getPollName();
@@ -93,7 +88,7 @@ public final class Poll {
         pollTable.insert(new Poll(transaction.getId(), attachment));
     }
 
-    public static Poll getPoll(Long id) {
+    public static Poll getPoll(long id) {
         return pollTable.get(pollDbKeyFactory.newKey(id));
     }
 
@@ -106,7 +101,7 @@ public final class Poll {
     }
 
 
-    public Long getId() {
+    public long getId() {
         return id;
     }
 

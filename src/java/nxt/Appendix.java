@@ -19,7 +19,8 @@ public interface Appendix {
         private final byte version;
 
         AbstractAppendix(JSONObject attachmentData) {
-            version = (byte)Convert.nullToZero(((Long) attachmentData.get("version." + getAppendixName())));
+            Long l = (Long) attachmentData.get("version." + getAppendixName());
+            version = (byte) (l == null ? 0 : l);
         }
 
         AbstractAppendix(ByteBuffer buffer, byte transactionVersion) {
@@ -387,8 +388,8 @@ public interface Appendix {
             if (publicKey.length != 32) {
                 throw new NxtException.NotValidException("Invalid recipient public key length: " + Convert.toHexString(publicKey));
             }
-            Long recipientId = transaction.getRecipientId();
-            if (! Account.getId(this.publicKey).equals(recipientId)) {
+            long recipientId = transaction.getRecipientId();
+            if (Account.getId(this.publicKey) != recipientId) {
                 throw new NxtException.NotValidException("Announced public key does not match recipient accountId");
             }
             if (transaction.getVersion() == 0) {

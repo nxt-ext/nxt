@@ -21,7 +21,7 @@ public final class GetBidOrderIds extends APIServlet.APIRequestHandler {
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
 
-        Long assetId = ParameterParser.getAsset(req).getId();
+        long assetId = ParameterParser.getAsset(req).getId();
         int firstIndex = ParameterParser.getFirstIndex(req);
         int lastIndex = ParameterParser.getLastIndex(req);
 

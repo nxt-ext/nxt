@@ -14,7 +14,7 @@ import java.util.List;
 
 final class BlockDb {
 
-    static BlockImpl findBlock(Long blockId) {
+    static BlockImpl findBlock(long blockId) {
         try (Connection con = Db.getConnection();
              PreparedStatement pstmt = con.prepareStatement("SELECT * FROM block WHERE id = ?")) {
             pstmt.setLong(1, blockId);
@@ -32,7 +32,7 @@ final class BlockDb {
         }
     }
 
-    static boolean hasBlock(Long blockId) {
+    static boolean hasBlock(long blockId) {
         try (Connection con = Db.getConnection();
              PreparedStatement pstmt = con.prepareStatement("SELECT 1 FROM block WHERE id = ?")) {
             pstmt.setLong(1, blockId);
@@ -100,7 +100,7 @@ final class BlockDb {
         try {
             int version = rs.getInt("version");
             int timestamp = rs.getInt("timestamp");
-            Long previousBlockId = DbUtils.getLong(rs, "previous_block_id");
+            long previousBlockId = rs.getLong("previous_block_id");
             long totalAmountNQT = rs.getLong("total_amount");
             long totalFeeNQT = rs.getLong("total_fee");
             int payloadLength = rs.getInt("payload_length");
@@ -108,13 +108,13 @@ final class BlockDb {
             byte[] previousBlockHash = rs.getBytes("previous_block_hash");
             BigInteger cumulativeDifficulty = new BigInteger(rs.getBytes("cumulative_difficulty"));
             long baseTarget = rs.getLong("base_target");
-            Long nextBlockId = DbUtils.getLong(rs, "next_block_id");
+            long nextBlockId = rs.getLong("next_block_id");
             int height = rs.getInt("height");
             byte[] generationSignature = rs.getBytes("generation_signature");
             byte[] blockSignature = rs.getBytes("block_signature");
             byte[] payloadHash = rs.getBytes("payload_hash");
 
-            Long id = rs.getLong("id");
+            long id = rs.getLong("id");
             List<TransactionImpl> transactions = TransactionDb.findBlockTransactions(con, id);
 
             BlockImpl block = new BlockImpl(version, timestamp, previousBlockId, totalAmountNQT, totalFeeNQT, payloadLength, payloadHash,
@@ -142,7 +142,7 @@ final class BlockDb {
                 pstmt.setLong(++i, block.getId());
                 pstmt.setInt(++i, block.getVersion());
                 pstmt.setInt(++i, block.getTimestamp());
-                DbUtils.setLong(pstmt, ++i, block.getPreviousBlockId());
+                DbUtils.setLongZeroToNull(pstmt, ++i, block.getPreviousBlockId());
                 pstmt.setLong(++i, block.getTotalAmountNQT());
                 pstmt.setLong(++i, block.getTotalFeeNQT());
                 pstmt.setInt(++i, block.getPayloadLength());
@@ -158,7 +158,7 @@ final class BlockDb {
                 pstmt.executeUpdate();
                 TransactionDb.saveTransactions(con, block.getTransactions());
             }
-            if (block.getPreviousBlockId() != null) {
+            if (block.getPreviousBlockId() != 0) {
                 try (PreparedStatement pstmt = con.prepareStatement("UPDATE block SET next_block_id = ? WHERE id = ?")) {
                     pstmt.setLong(1, block.getId());
                     pstmt.setLong(2, block.getPreviousBlockId());
@@ -171,7 +171,7 @@ final class BlockDb {
     }
 
     // relying on cascade triggers in the database to delete the transactions for all deleted blocks
-    static void deleteBlocksFrom(Long blockId) {
+    static void deleteBlocksFrom(long blockId) {
         if (! Db.isInTransaction()) {
             try {
                 Db.beginTransaction();

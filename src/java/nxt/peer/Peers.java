@@ -468,7 +468,7 @@ public final class Peers {
             @Override
             public void notify(Account account) {
                 for (PeerImpl peer : Peers.peers.values()) {
-                    if (peer.getHallmark() != null && peer.getHallmark().getAccountId().equals(account.getId())) {
+                    if (peer.getHallmark() != null && peer.getHallmark().getAccountId() == account.getId()) {
                         Peers.listeners.notify(peer, Peers.Event.WEIGHT);
                     }
                 }

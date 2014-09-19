@@ -32,7 +32,7 @@ public final class Generator implements Comparable<Generator> {
     private static final Runnable generateBlockThread = new Runnable() {
 
         private volatile int lastTimestamp;
-        private volatile Long lastBlockId;
+        private volatile long lastBlockId;
 
         @Override
         public void run() {
@@ -49,7 +49,7 @@ public final class Generator implements Comparable<Generator> {
                         if (lastBlock == null || lastBlock.getHeight() < Constants.DIGITAL_GOODS_STORE_BLOCK) {
                             return;
                         }
-                        if (!lastBlock.getId().equals(lastBlockId) || sortedForgers == null) {
+                        if (lastBlock.getId() != lastBlockId || sortedForgers == null) {
                             lastBlockId = lastBlock.getId();
                             List<Generator> forgers = new ArrayList<>();
                             for (Generator generator : generators.values()) {
@@ -166,7 +166,7 @@ public final class Generator implements Comparable<Generator> {
     }
 
 
-    private final Long accountId;
+    private final long accountId;
     private final String secretPhrase;
     private final byte[] publicKey;
     private volatile long hitTime;
@@ -187,7 +187,7 @@ public final class Generator implements Comparable<Generator> {
         return publicKey;
     }
 
-    public Long getAccountId() {
+    public long getAccountId() {
         return accountId;
     }
 
@@ -205,7 +205,7 @@ public final class Generator implements Comparable<Generator> {
         if (i != 0) {
             return i;
         }
-        return accountId.compareTo(g.accountId);
+        return Long.compare(accountId, g.accountId);
     }
 
     @Override

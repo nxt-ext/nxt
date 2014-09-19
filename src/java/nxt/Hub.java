@@ -32,7 +32,7 @@ public class Hub {
             } else if (this.hitTime > hit.hitTime) {
                 return 1;
             } else {
-                return this.hub.accountId.compareTo(hit.hub.accountId);
+                return Long.compare(this.hub.accountId, hit.hub.accountId);
             }
         }
 
@@ -47,12 +47,7 @@ public class Hub {
 
     };
 
-    private static final VersionedEntityDbTable<Hub> hubTable = new VersionedEntityDbTable<Hub>(hubDbKeyFactory) {
-
-        @Override
-        protected String table() {
-            return "hub";
-        }
+    private static final VersionedEntityDbTable<Hub> hubTable = new VersionedEntityDbTable<Hub>("hub", hubDbKeyFactory) {
 
         @Override
         protected Hub load(Connection con, ResultSet rs) throws SQLException {
@@ -70,21 +65,21 @@ public class Hub {
         hubTable.insert(new Hub(transaction, attachment));
     }
 
-    private static Long lastBlockId;
+    private static long lastBlockId;
     private static List<Hit> lastHits;
 
     public static List<Hit> getHubHits(Block block) {
 
         synchronized (Hub.class) {
-            if (block.getId().equals(lastBlockId) && lastHits != null) {
+            if (block.getId() == lastBlockId && lastHits != null) {
                 return lastHits;
             }
             List<Hit> currentHits = new ArrayList<>();
-            Long currentLastBlockId;
+            long currentLastBlockId;
 
             synchronized (BlockchainImpl.getInstance()) {
                 currentLastBlockId = BlockchainImpl.getInstance().getLastBlock().getId();
-                if (! currentLastBlockId.equals(block.getId())) {
+                if (currentLastBlockId != block.getId()) {
                     return Collections.emptyList();
                 }
                 try (DbIterator<Hub> hubs = hubTable.getAll(0, -1)) {
@@ -110,7 +105,7 @@ public class Hub {
     static void init() {}
 
 
-    private final Long accountId;
+    private final long accountId;
     private final DbKey dbKey;
     private final long minFeePerByteNQT;
     private final List<String> uris;
@@ -141,7 +136,7 @@ public class Hub {
         }
     }
 
-    public Long getAccountId() {
+    public long getAccountId() {
         return accountId;
     }
 

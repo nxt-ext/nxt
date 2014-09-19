@@ -438,7 +438,7 @@ final class PeerImpl implements Peer {
                 return false;
             }
             this.hallmark = hallmark;
-            Long accountId = Account.getId(hallmark.getPublicKey());
+            long accountId = Account.getId(hallmark.getPublicKey());
             List<PeerImpl> groupedPeers = new ArrayList<>();
             int mostRecentDate = 0;
             long totalWeight = 0;
@@ -446,7 +446,7 @@ final class PeerImpl implements Peer {
                 if (peer.hallmark == null) {
                     continue;
                 }
-                if (accountId.equals(peer.hallmark.getAccountId())) {
+                if (accountId == peer.hallmark.getAccountId()) {
                     groupedPeers.add(peer);
                     if (peer.hallmark.getDate() > mostRecentDate) {
                         mostRecentDate = peer.hallmark.getDate();

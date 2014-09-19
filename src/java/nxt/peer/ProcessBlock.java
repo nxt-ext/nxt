@@ -32,7 +32,7 @@ final class ProcessBlock extends PeerServlet.PeerRequestHandler {
 
         try {
 
-            if (! Nxt.getBlockchain().getLastBlock().getId().equals(Convert.parseUnsignedLong((String) request.get("previousBlock")))) {
+            if (Nxt.getBlockchain().getLastBlock().getId() != Convert.parseUnsignedLong((String) request.get("previousBlock"))) {
                 // do this check first to avoid validation failures of future blocks and transactions
                 // when loading blockchain from scratch
                 return NOT_ACCEPTED;

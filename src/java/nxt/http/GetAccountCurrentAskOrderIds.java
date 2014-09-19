@@ -21,8 +21,8 @@ public final class GetAccountCurrentAskOrderIds extends APIServlet.APIRequestHan
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
 
-        Long accountId = ParameterParser.getAccount(req).getId();
-        Long assetId = null;
+        long accountId = ParameterParser.getAccount(req).getId();
+        long assetId = 0;
         try {
             assetId = Convert.parseUnsignedLong(req.getParameter("asset"));
         } catch (RuntimeException e) {
@@ -32,7 +32,7 @@ public final class GetAccountCurrentAskOrderIds extends APIServlet.APIRequestHan
         int lastIndex = ParameterParser.getLastIndex(req);
 
         DbIterator<Order.Ask> askOrders;
-        if (assetId == null) {
+        if (assetId == 0) {
             askOrders = Order.Ask.getAskOrdersByAccount(accountId, firstIndex, lastIndex);
         } else {
             askOrders = Order.Ask.getAskOrdersByAccountAsset(accountId, assetId, firstIndex, lastIndex);

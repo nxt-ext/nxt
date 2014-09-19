@@ -24,7 +24,7 @@ public final class GetUnconfirmedTransactions extends APIServlet.APIRequestHandl
     JSONStreamAware processRequest(HttpServletRequest req) {
 
         String accountIdString = Convert.emptyToNull(req.getParameter("account"));
-        Long accountId = null;
+        long accountId = 0;
 
         if (accountIdString != null) {
             try {
@@ -38,7 +38,7 @@ public final class GetUnconfirmedTransactions extends APIServlet.APIRequestHandl
         try (DbIterator<? extends Transaction> transactionsIterator = Nxt.getTransactionProcessor().getAllUnconfirmedTransactions()) {
             while (transactionsIterator.hasNext()) {
                 Transaction transaction = transactionsIterator.next();
-                if (accountId != null && !(accountId.equals(transaction.getSenderId()) || accountId.equals(transaction.getRecipientId()))) {
+                if (accountId != 0 && !(accountId == transaction.getSenderId() || accountId == transaction.getRecipientId())) {
                     continue;
                 }
                 transactions.add(JSONData.unconfirmedTransaction(transaction));

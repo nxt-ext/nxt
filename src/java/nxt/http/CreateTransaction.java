@@ -44,15 +44,15 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
 
     final JSONStreamAware createTransaction(HttpServletRequest req, Account senderAccount, Attachment attachment)
         throws NxtException {
-        return createTransaction(req, senderAccount, null, 0, attachment);
+        return createTransaction(req, senderAccount, 0, 0, attachment);
     }
 
-    final JSONStreamAware createTransaction(HttpServletRequest req, Account senderAccount, Long recipientId, long amountNQT)
+    final JSONStreamAware createTransaction(HttpServletRequest req, Account senderAccount, long recipientId, long amountNQT)
             throws NxtException {
         return createTransaction(req, senderAccount, recipientId, amountNQT, Attachment.ORDINARY_PAYMENT);
     }
 
-    final JSONStreamAware createTransaction(HttpServletRequest req, Account senderAccount, Long recipientId,
+    final JSONStreamAware createTransaction(HttpServletRequest req, Account senderAccount, long recipientId,
                                             long amountNQT, Attachment attachment)
             throws NxtException {
         String deadlineValue = req.getParameter("deadline");

@@ -1,5 +1,6 @@
 package nxt.http;
 
+import nxt.NxtException;
 import nxt.Order;
 import nxt.db.DbIterator;
 import nxt.util.Convert;
@@ -9,16 +10,16 @@ import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
 
-public final class GetAccountCurrentBidOrderIds extends APIServlet.APIRequestHandler {
+public final class GetAccountCurrentAskOrders extends APIServlet.APIRequestHandler {
 
-    static final GetAccountCurrentBidOrderIds instance = new GetAccountCurrentBidOrderIds();
+    static final GetAccountCurrentAskOrders instance = new GetAccountCurrentAskOrders();
 
-    private GetAccountCurrentBidOrderIds() {
+    private GetAccountCurrentAskOrders() {
         super(new APITag[] {APITag.ACCOUNTS, APITag.AE}, "account", "asset", "firstIndex", "lastIndex");
     }
 
     @Override
-    JSONStreamAware processRequest(HttpServletRequest req) throws ParameterException {
+    JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
 
         long accountId = ParameterParser.getAccount(req).getId();
         long assetId = 0;
@@ -30,22 +31,22 @@ public final class GetAccountCurrentBidOrderIds extends APIServlet.APIRequestHan
         int firstIndex = ParameterParser.getFirstIndex(req);
         int lastIndex = ParameterParser.getLastIndex(req);
 
-        DbIterator<Order.Bid> bidOrders;
+        DbIterator<Order.Ask> askOrders;
         if (assetId == 0) {
-            bidOrders = Order.Bid.getBidOrdersByAccount(accountId, firstIndex, lastIndex);
+            askOrders = Order.Ask.getAskOrdersByAccount(accountId, firstIndex, lastIndex);
         } else {
-            bidOrders = Order.Bid.getBidOrdersByAccountAsset(accountId, assetId, firstIndex, lastIndex);
+            askOrders = Order.Ask.getAskOrdersByAccountAsset(accountId, assetId, firstIndex, lastIndex);
         }
-        JSONArray orderIds = new JSONArray();
+        JSONArray orders = new JSONArray();
         try {
-            while (bidOrders.hasNext()) {
-                orderIds.add(Convert.toUnsignedLong(bidOrders.next().getId()));
+            while (askOrders.hasNext()) {
+                orders.add(JSONData.askOrder(askOrders.next()));
             }
         } finally {
-            bidOrders.close();
+            askOrders.close();
         }
         JSONObject response = new JSONObject();
-        response.put("bidOrderIds", orderIds);
+        response.put("askOrders", orders);
         return response;
     }
 

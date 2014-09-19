@@ -26,7 +26,8 @@ public final class PlaceAskOrder extends CreateTransaction {
         long quantityQNT = ParameterParser.getQuantityQNT(req);
         Account account = ParameterParser.getSenderAccount(req);
 
-        if (quantityQNT > account.getUnconfirmedAssetBalanceQNT(asset.getId())) {
+        long assetBalance = account.getUnconfirmedAssetBalanceQNT(asset.getId());
+        if (assetBalance < 0 || quantityQNT > assetBalance) {
             return NOT_ENOUGH_ASSETS;
         }
 

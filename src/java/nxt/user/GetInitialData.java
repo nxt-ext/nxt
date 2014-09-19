@@ -102,7 +102,7 @@ public final class GetInitialData extends UserServlet.UserRequestHandler {
             JSONObject recentBlock = new JSONObject();
             recentBlock.put("index", Users.getIndex(block));
             recentBlock.put("timestamp", block.getTimestamp());
-            recentBlock.put("numberOfTransactions", block.getTransactionIds().size());
+            recentBlock.put("numberOfTransactions", block.getTransactions().size());
             recentBlock.put("totalAmountNQT", block.getTotalAmountNQT());
             recentBlock.put("totalFeeNQT", block.getTotalFeeNQT());
             recentBlock.put("payloadLength", block.getPayloadLength());

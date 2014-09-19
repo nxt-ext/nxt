@@ -1,12 +1,6 @@
 package nxt.http;
 
-import nxt.Account;
-import nxt.Alias;
-import nxt.Asset;
-import nxt.Constants;
-import nxt.Currency;
-import nxt.DigitalGoodsStore;
-import nxt.Nxt;
+import nxt.*;
 import nxt.crypto.Crypto;
 import nxt.crypto.EncryptedData;
 import nxt.util.Convert;
@@ -19,29 +13,7 @@ import static nxt.http.JSONResponses.*;
 
 final class ParameterParser {
 
-    static Alias getAlias(HttpServletRequest req) throws ParameterException {
-        Long aliasId;
-        try {
-            aliasId = Convert.parseUnsignedLong(Convert.emptyToNull(req.getParameter("alias")));
-        } catch (RuntimeException e) {
-            throw new ParameterException(INCORRECT_ALIAS);
-        }
-        String aliasName = Convert.emptyToNull(req.getParameter("aliasName"));
-        Alias alias;
-        if (aliasId != null) {
-            alias = Alias.getAlias(aliasId);
-        } else if (aliasName != null) {
-            alias = Alias.getAlias(aliasName);
-        } else {
-            throw new ParameterException(MISSING_ALIAS_OR_ALIAS_NAME);
-        }
-        if (alias == null) {
-            throw new ParameterException(UNKNOWN_ALIAS);
-        }
-        return alias;
-    }
-
-    static byte getByte(HttpServletRequest req, String name, byte min, byte max) throws ParameterException {
+        static byte getByte(HttpServletRequest req, String name, byte min, byte max) throws ParameterException {
         String paramValue = Convert.emptyToNull(req.getParameter(name));
         if (paramValue == null) {
             return 0;
@@ -96,6 +68,28 @@ final class ParameterParser {
             throw new ParameterException(incorrect(name));
         }
         return value;
+    }
+
+    static Alias getAlias(HttpServletRequest req) throws ParameterException {
+        long aliasId;
+        try {
+            aliasId = Convert.parseUnsignedLong(Convert.emptyToNull(req.getParameter("alias")));
+        } catch (RuntimeException e) {
+            throw new ParameterException(INCORRECT_ALIAS);
+        }
+        String aliasName = Convert.emptyToNull(req.getParameter("aliasName"));
+        Alias alias;
+        if (aliasId != 0) {
+            alias = Alias.getAlias(aliasId);
+        } else if (aliasName != null) {
+            alias = Alias.getAlias(aliasName);
+        } else {
+            throw new ParameterException(MISSING_ALIAS_OR_ALIAS_NAME);
+        }
+        if (alias == null) {
+            throw new ParameterException(UNKNOWN_ALIAS);
+        }
+        return alias;
     }
 
     static long getAmountNQT(HttpServletRequest req) throws ParameterException {
@@ -156,7 +150,7 @@ final class ParameterParser {
         }
         Asset asset;
         try {
-            Long assetId = Convert.parseUnsignedLong(assetValue);
+            long assetId = Convert.parseUnsignedLong(assetValue);
             asset = Asset.getAsset(assetId);
         } catch (RuntimeException e) {
             throw new ParameterException(INCORRECT_ASSET);
@@ -167,7 +161,7 @@ final class ParameterParser {
         return asset;
     }
 
-    static Currency getCurrency(HttpServletRequest req) throws ParameterException {
+        static Currency getCurrency(HttpServletRequest req) throws ParameterException {
         String currencyValue = Convert.emptyToNull(req.getParameter("currency"));
         if (currencyValue == null) {
             throw new ParameterException(MISSING_CURRENCY);
@@ -202,7 +196,7 @@ final class ParameterParser {
         return quantityQNT;
     }
 
-    static Long getOrderId(HttpServletRequest req) throws ParameterException {
+    static long getOrderId(HttpServletRequest req) throws ParameterException {
         String orderValue = Convert.emptyToNull(req.getParameter("order"));
         if (orderValue == null) {
             throw new ParameterException(MISSING_ORDER);
@@ -221,7 +215,7 @@ final class ParameterParser {
         }
         DigitalGoodsStore.Goods goods;
         try {
-            Long goodsId = Convert.parseUnsignedLong(goodsValue);
+            long goodsId = Convert.parseUnsignedLong(goodsValue);
             goods = DigitalGoodsStore.getGoods(goodsId);
             if (goods == null) {
                 throw new ParameterException(UNKNOWN_GOODS);
@@ -411,24 +405,24 @@ final class ParameterParser {
         return timestamp;
     }
 
-    static Long getRecipientId(HttpServletRequest req) throws ParameterException {
+    static long getRecipientId(HttpServletRequest req) throws ParameterException {
         String recipientValue = Convert.emptyToNull(req.getParameter("recipient"));
         if (recipientValue == null || "0".equals(recipientValue)) {
             throw new ParameterException(MISSING_RECIPIENT);
         }
-        Long recipientId;
+        long recipientId;
         try {
             recipientId = Convert.parseAccountId(recipientValue);
         } catch (RuntimeException e) {
             throw new ParameterException(INCORRECT_RECIPIENT);
         }
-        if (recipientId == null) {
+        if (recipientId == 0) {
             throw new ParameterException(INCORRECT_RECIPIENT);
         }
         return recipientId;
     }
 
-    static Long getSellerId(HttpServletRequest req) throws ParameterException {
+    static long getSellerId(HttpServletRequest req) throws ParameterException {
         String sellerIdValue = Convert.emptyToNull(req.getParameter("seller"));
         try {
             return Convert.parseAccountId(sellerIdValue);
@@ -437,7 +431,7 @@ final class ParameterParser {
         }
     }
 
-    static Long getBuyerId(HttpServletRequest req) throws ParameterException {
+    static long getBuyerId(HttpServletRequest req) throws ParameterException {
         String buyerIdValue = Convert.emptyToNull(req.getParameter("buyer"));
         try {
             return Convert.parseAccountId(buyerIdValue);

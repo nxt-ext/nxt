@@ -11,12 +11,12 @@ import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
 
-public final class GetAccountBlockIds extends APIServlet.APIRequestHandler {
+public final class GetAccountBlocks extends APIServlet.APIRequestHandler {
 
-    static final GetAccountBlockIds instance = new GetAccountBlockIds();
+    static final GetAccountBlocks instance = new GetAccountBlocks();
 
-    private GetAccountBlockIds() {
-        super(new APITag[] {APITag.ACCOUNTS}, "account", "timestamp", "firstIndex", "lastIndex");
+    private GetAccountBlocks() {
+        super(new APITag[] {APITag.ACCOUNTS}, "account", "timestamp", "firstIndex", "lastIndex", "includeTransactions");
     }
 
     @Override
@@ -27,16 +27,18 @@ public final class GetAccountBlockIds extends APIServlet.APIRequestHandler {
         int firstIndex = ParameterParser.getFirstIndex(req);
         int lastIndex = ParameterParser.getLastIndex(req);
 
-        JSONArray blockIds = new JSONArray();
+        boolean includeTransactions = "true".equalsIgnoreCase(req.getParameter("includeTransactions"));
+
+        JSONArray blocks = new JSONArray();
         try (DbIterator<? extends Block> iterator = Nxt.getBlockchain().getBlocks(account, timestamp, firstIndex, lastIndex)) {
             while (iterator.hasNext()) {
                 Block block = iterator.next();
-                blockIds.add(block.getStringId());
+                blocks.add(JSONData.block(block, includeTransactions));
             }
         }
 
         JSONObject response = new JSONObject();
-        response.put("blockIds", blockIds);
+        response.put("blocks", blocks);
 
         return response;
     }

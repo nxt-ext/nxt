@@ -79,12 +79,7 @@ public final class DigitalGoodsStore {
 
         };
 
-        private static final VersionedEntityDbTable<Goods> goodsTable = new VersionedEntityDbTable<Goods>(goodsDbKeyFactory) {
-
-            @Override
-            protected String table() {
-                return "goods";
-            }
+        private static final VersionedEntityDbTable<Goods> goodsTable = new VersionedEntityDbTable<Goods>("goods", goodsDbKeyFactory) {
 
             @Override
             protected Goods load(Connection con, ResultSet rs) throws SQLException {
@@ -101,9 +96,9 @@ public final class DigitalGoodsStore {
         static void init() {}
 
 
-        private final Long id;
+        private final long id;
         private final DbKey dbKey;
-        private final Long sellerId;
+        private final long sellerId;
         private final String name;
         private final String description;
         private final String tags;
@@ -157,11 +152,11 @@ public final class DigitalGoodsStore {
             }
         }
 
-        public Long getId() {
+        public long getId() {
             return id;
         }
 
-        public Long getSellerId() {
+        public long getSellerId() {
             return sellerId;
         }
 
@@ -239,12 +234,7 @@ public final class DigitalGoodsStore {
 
         };
 
-        private static final VersionedEntityDbTable<Purchase> purchaseTable = new VersionedEntityDbTable<Purchase>(purchaseDbKeyFactory) {
-
-            @Override
-            protected String table() {
-                return "purchase";
-            }
+        private static final VersionedEntityDbTable<Purchase> purchaseTable = new VersionedEntityDbTable<Purchase>("purchase", purchaseDbKeyFactory) {
 
             @Override
             protected Purchase load(Connection con, ResultSet rs) throws SQLException {
@@ -267,12 +257,7 @@ public final class DigitalGoodsStore {
 
         };
 
-        private static final VersionedValuesDbTable<Purchase, EncryptedData> feedbackTable = new VersionedValuesDbTable<Purchase, EncryptedData>(feedbackDbKeyFactory) {
-
-            @Override
-            protected String table() {
-                return "purchase_feedback";
-            }
+        private static final VersionedValuesDbTable<Purchase, EncryptedData> feedbackTable = new VersionedValuesDbTable<Purchase, EncryptedData>("purchase_feedback", feedbackDbKeyFactory) {
 
             @Override
             protected EncryptedData load(Connection con, ResultSet rs) throws SQLException {
@@ -305,12 +290,7 @@ public final class DigitalGoodsStore {
 
         };
 
-        private static final VersionedValuesDbTable<Purchase, String> publicFeedbackTable = new VersionedValuesDbTable<Purchase, String>(publicFeedbackDbKeyFactory) {
-
-            @Override
-            protected String table() {
-                return "purchase_public_feedback";
-            }
+        private static final VersionedValuesDbTable<Purchase, String> publicFeedbackTable = new VersionedValuesDbTable<Purchase, String>("purchase_public_feedback", publicFeedbackDbKeyFactory) {
 
             @Override
             protected String load(Connection con, ResultSet rs) throws SQLException {
@@ -334,11 +314,11 @@ public final class DigitalGoodsStore {
         static void init() {}
 
 
-        private final Long id;
+        private final long id;
         private final DbKey dbKey;
-        private final Long buyerId;
-        private final Long goodsId;
-        private final Long sellerId;
+        private final long buyerId;
+        private final long goodsId;
+        private final long sellerId;
         private final int quantity;
         private final long priceNQT;
         private final int deadline;
@@ -355,7 +335,7 @@ public final class DigitalGoodsStore {
         private long discountNQT;
         private long refundNQT;
 
-        private Purchase(Transaction transaction, Attachment.DigitalGoodsPurchase attachment, Long sellerId) {
+        private Purchase(Transaction transaction, Attachment.DigitalGoodsPurchase attachment, long sellerId) {
             this.id = transaction.getId();
             this.dbKey = purchaseDbKeyFactory.newKey(this.id);
             this.buyerId = transaction.getSenderId();
@@ -419,19 +399,19 @@ public final class DigitalGoodsStore {
             }
         }
 
-        public Long getId() {
+        public long getId() {
             return id;
         }
 
-        public Long getBuyerId() {
+        public long getBuyerId() {
             return buyerId;
         }
 
-        public Long getGoodsId() {
+        public long getGoodsId() {
             return goodsId;
         }
 
-        public Long getSellerId() { return sellerId; }
+        public long getSellerId() { return sellerId; }
 
         public int getQuantity() {
             return quantity;
@@ -558,7 +538,7 @@ public final class DigitalGoodsStore {
 
     }
 
-    public static Goods getGoods(Long goodsId) {
+    public static Goods getGoods(long goodsId) {
         return Goods.goodsTable.get(Goods.goodsDbKeyFactory.newKey(goodsId));
     }
 
@@ -582,7 +562,7 @@ public final class DigitalGoodsStore {
         }
     }
 
-    public static DbIterator<Goods> getSellerGoods(Long sellerId, boolean inStockOnly, int from, int to) {
+    public static DbIterator<Goods> getSellerGoods(long sellerId, boolean inStockOnly, int from, int to) {
         Connection con = null;
         try {
             con = Db.getConnection();
@@ -603,7 +583,7 @@ public final class DigitalGoodsStore {
         return Purchase.purchaseTable.getAll(from, to);
     }
 
-    public static DbIterator<Purchase> getSellerPurchases(Long sellerId, int from, int to) {
+    public static DbIterator<Purchase> getSellerPurchases(long sellerId, int from, int to) {
         Connection con = null;
         try {
             con = Db.getConnection();
@@ -619,7 +599,7 @@ public final class DigitalGoodsStore {
         }
     }
 
-    public static DbIterator<Purchase> getBuyerPurchases(Long buyerId, int from, int to) {
+    public static DbIterator<Purchase> getBuyerPurchases(long buyerId, int from, int to) {
         Connection con = null;
         try {
             con = Db.getConnection();
@@ -635,7 +615,7 @@ public final class DigitalGoodsStore {
         }
     }
 
-    public static DbIterator<Purchase> getSellerBuyerPurchases(Long sellerId, Long buyerId, int from, int to) {
+    public static DbIterator<Purchase> getSellerBuyerPurchases(long sellerId, long buyerId, int from, int to) {
         Connection con = null;
         try {
             con = Db.getConnection();
@@ -652,11 +632,11 @@ public final class DigitalGoodsStore {
         }
     }
 
-    public static Purchase getPurchase(Long purchaseId) {
+    public static Purchase getPurchase(long purchaseId) {
         return Purchase.purchaseTable.get(Purchase.purchaseDbKeyFactory.newKey(purchaseId));
     }
 
-    public static DbIterator<Purchase> getPendingSellerPurchases(Long sellerId, int from, int to) {
+    public static DbIterator<Purchase> getPendingSellerPurchases(long sellerId, int from, int to) {
         Connection con = null;
         try {
             con = Db.getConnection();
@@ -672,7 +652,7 @@ public final class DigitalGoodsStore {
         }
     }
 
-    static Purchase getPendingPurchase(Long purchaseId) {
+    static Purchase getPendingPurchase(long purchaseId) {
         Purchase purchase = getPurchase(purchaseId);
         return purchase == null || ! purchase.isPending() ? null : purchase;
     }
@@ -706,7 +686,7 @@ public final class DigitalGoodsStore {
         }
     }
 
-    private static void addPurchase(Transaction transaction,  Attachment.DigitalGoodsPurchase attachment, Long sellerId) {
+    private static void addPurchase(Transaction transaction,  Attachment.DigitalGoodsPurchase attachment, long sellerId) {
         Purchase purchase = new Purchase(transaction, attachment, sellerId);
         Purchase.purchaseTable.insert(purchase);
         purchaseListeners.notify(purchase, Event.PURCHASE);
@@ -718,7 +698,7 @@ public final class DigitalGoodsStore {
         goodsListeners.notify(goods, Event.GOODS_LISTED);
     }
 
-    static void delistGoods(Long goodsId) {
+    static void delistGoods(long goodsId) {
         Goods goods = Goods.goodsTable.get(Goods.goodsDbKeyFactory.newKey(goodsId));
         if (! goods.isDelisted()) {
             goods.setDelisted(true);
@@ -728,7 +708,7 @@ public final class DigitalGoodsStore {
         }
     }
 
-    static void changePrice(Long goodsId, long priceNQT) {
+    static void changePrice(long goodsId, long priceNQT) {
         Goods goods = Goods.goodsTable.get(Goods.goodsDbKeyFactory.newKey(goodsId));
         if (! goods.isDelisted()) {
             goods.changePrice(priceNQT);
@@ -738,7 +718,7 @@ public final class DigitalGoodsStore {
         }
     }
 
-    static void changeQuantity(Long goodsId, int deltaQuantity) {
+    static void changeQuantity(long goodsId, int deltaQuantity) {
         Goods goods = Goods.goodsTable.get(Goods.goodsDbKeyFactory.newKey(goodsId));
         if (! goods.isDelisted()) {
             goods.changeQuantity(deltaQuantity);
@@ -775,7 +755,7 @@ public final class DigitalGoodsStore {
         purchaseListeners.notify(purchase, Event.DELIVERY);
     }
 
-    static void refund(Long sellerId, Long purchaseId, long refundNQT, Appendix.EncryptedMessage encryptedMessage) {
+    static void refund(long sellerId, long purchaseId, long refundNQT, Appendix.EncryptedMessage encryptedMessage) {
         Purchase purchase = Purchase.purchaseTable.get(Purchase.purchaseDbKeyFactory.newKey(purchaseId));
         Account seller = Account.getAccount(sellerId);
         seller.addToBalanceNQT(-refundNQT);
@@ -788,7 +768,7 @@ public final class DigitalGoodsStore {
         purchaseListeners.notify(purchase, Event.REFUND);
     }
 
-    static void feedback(Long purchaseId, Appendix.EncryptedMessage encryptedMessage, Appendix.Message message) {
+    static void feedback(long purchaseId, Appendix.EncryptedMessage encryptedMessage, Appendix.Message message) {
         Purchase purchase = Purchase.purchaseTable.get(Purchase.purchaseDbKeyFactory.newKey(purchaseId));
         if (encryptedMessage != null) {
             purchase.addFeedbackNote(encryptedMessage.getEncryptedData());

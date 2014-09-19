@@ -28,7 +28,7 @@ public final class GetTransactionBytes extends APIServlet.APIRequestHandler {
             return MISSING_TRANSACTION;
         }
 
-        Long transactionId;
+        long transactionId;
         Transaction transaction;
         try {
             transactionId = Convert.parseUnsignedLong(transactionValue);

@@ -9,11 +9,11 @@ import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
 
-public final class GetAccountCurrentBidOrderIds extends APIServlet.APIRequestHandler {
+public final class GetAccountCurrentBidOrders extends APIServlet.APIRequestHandler {
 
-    static final GetAccountCurrentBidOrderIds instance = new GetAccountCurrentBidOrderIds();
+    static final GetAccountCurrentBidOrders instance = new GetAccountCurrentBidOrders();
 
-    private GetAccountCurrentBidOrderIds() {
+    private GetAccountCurrentBidOrders() {
         super(new APITag[] {APITag.ACCOUNTS, APITag.AE}, "account", "asset", "firstIndex", "lastIndex");
     }
 
@@ -36,16 +36,16 @@ public final class GetAccountCurrentBidOrderIds extends APIServlet.APIRequestHan
         } else {
             bidOrders = Order.Bid.getBidOrdersByAccountAsset(accountId, assetId, firstIndex, lastIndex);
         }
-        JSONArray orderIds = new JSONArray();
+        JSONArray orders = new JSONArray();
         try {
             while (bidOrders.hasNext()) {
-                orderIds.add(Convert.toUnsignedLong(bidOrders.next().getId()));
+                orders.add(JSONData.bidOrder(bidOrders.next()));
             }
         } finally {
             bidOrders.close();
         }
         JSONObject response = new JSONObject();
-        response.put("bidOrderIds", orderIds);
+        response.put("bidOrders", orders);
         return response;
     }
 
