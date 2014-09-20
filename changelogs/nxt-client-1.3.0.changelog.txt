@@ -90,11 +90,11 @@ getAllOpenAskOrders and getAllOpenBidOrders now replace getAllOpenOrders, but
 only returning ask or bid orders respectively, and allow firstIndex/lastIndex
 pagination.
 
-getAssetAccounts - accepts an asset parameter and returns all account holding
+getAssetAccounts - accepts an asset parameter and returns all accounts holding
 this asset as of the current height, and the asset quantity each one owns.
 
 longConvert - an utility API to convert between signed long ids as used in the
-database and unsigned long ids represented as string. Accepts an id in either
+database and unsigned long ids represented as strings. Accepts an id in either
 form and returns both the signed and unsigned versions.
 
 
@@ -128,7 +128,8 @@ http://localhost:7876/dbshell
 This page uses the H2 shell tool to allow querying the database at runtime,
 directly from the browser, without having to enable auto server mode in the jdbc
 url. This servlet is only enabled if nxt.enableDebugAPI=true, and is very unwise
-to enable on a publicly accessible node as it allows full access to the database.
+to enable on a publicly accessible node as it allows full read and write access
+to the database.
 
 
 The usability of the http://localhost:7876/test API access page has been further
