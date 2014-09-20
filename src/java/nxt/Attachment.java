@@ -708,10 +708,10 @@ public interface Attachment extends Appendix {
             this.comment = getVersion() == 0 ? Convert.nullToEmpty((String) attachmentData.get("comment")) : null;
         }
 
-        public ColoredCoinsAssetTransfer(long assetId, long quantityQNT, String comment) {
+        public ColoredCoinsAssetTransfer(long assetId, long quantityQNT) {
             this.assetId = assetId;
             this.quantityQNT = quantityQNT;
-            this.comment = getVersion() == 0 ? Convert.nullToEmpty(comment) : null;
+            this.comment = null;
         }
 
         @Override

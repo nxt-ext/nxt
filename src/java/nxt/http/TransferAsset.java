@@ -18,18 +18,13 @@ public final class TransferAsset extends CreateTransaction {
     static final TransferAsset instance = new TransferAsset();
 
     private TransferAsset() {
-        super(new APITag[] {APITag.AE, APITag.CREATE_TRANSACTION}, "recipient", "asset", "quantityQNT", "comment");
+        super(new APITag[] {APITag.AE, APITag.CREATE_TRANSACTION}, "recipient", "asset", "quantityQNT");
     }
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
 
         long recipient = ParameterParser.getRecipientId(req);
-
-        String comment = Convert.nullToEmpty(req.getParameter("comment")).trim();
-        if (comment.length() > Constants.MAX_ASSET_TRANSFER_COMMENT_LENGTH) {
-            return INCORRECT_ASSET_TRANSFER_COMMENT;
-        }
 
         Asset asset = ParameterParser.getAsset(req);
         long quantityQNT = ParameterParser.getQuantityQNT(req);
@@ -40,7 +35,7 @@ public final class TransferAsset extends CreateTransaction {
             return NOT_ENOUGH_ASSETS;
         }
 
-        Attachment attachment = new Attachment.ColoredCoinsAssetTransfer(asset.getId(), quantityQNT, comment);
+        Attachment attachment = new Attachment.ColoredCoinsAssetTransfer(asset.getId(), quantityQNT);
         return createTransaction(req, account, recipient, 0, attachment);
 
     }

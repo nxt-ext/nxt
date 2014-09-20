@@ -4,7 +4,6 @@ import nxt.db.Db;
 import nxt.util.Logger;
 
 import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -218,60 +217,30 @@ final class DbVersion {
             case 46:
                 apply("ALTER TABLE transaction ADD COLUMN IF NOT EXISTS attachment_bytes VARBINARY");
             case 47:
-                BlockDb.deleteAll();
                 apply(null);
             case 48:
                 apply("ALTER TABLE transaction DROP COLUMN attachment");
             case 49:
-                apply("UPDATE transaction a SET a.referenced_transaction_full_hash = "
-                        + "(SELECT full_hash FROM transaction b WHERE b.id = a.referenced_transaction_id) "
-                        + "WHERE a.referenced_transaction_full_hash IS NULL");
+                apply(null);
             case 50:
                 apply("ALTER TABLE transaction DROP COLUMN referenced_transaction_id");
             case 51:
                 apply("ALTER TABLE transaction DROP COLUMN hash");
             case 52:
-                if (Constants.isTestnet) {
-                    BlockchainProcessorImpl.getInstance().validateAtNextScan();
-                }
                 apply(null);
             case 53:
                 apply("DROP INDEX transaction_recipient_id_idx");
             case 54:
                 apply("ALTER TABLE transaction ALTER COLUMN recipient_id SET NULL");
             case 55:
-                try (Connection con = Db.getConnection();
-                     Statement stmt = con.createStatement();
-                     PreparedStatement pstmt = con.prepareStatement("UPDATE transaction SET recipient_id = null WHERE type = ? AND subtype = ?")) {
-                    try {
-                        for (byte type = 0; type <= 4; type++) {
-                            for (byte subtype = 0; subtype <= 8; subtype++) {
-                                TransactionType transactionType = TransactionType.findTransactionType(type, subtype);
-                                if (transactionType == null) {
-                                    continue;
-                                }
-                                if (!transactionType.hasRecipient()) {
-                                    pstmt.setByte(1, type);
-                                    pstmt.setByte(2, subtype);
-                                    pstmt.executeUpdate();
-                                }
-                            }
-                        }
-                        stmt.executeUpdate("UPDATE version SET next_update = next_update + 1");
-                        Db.commitTransaction();
-                    } catch (SQLException e) {
-                        Db.rollbackTransaction();
-                        throw e;
-                    }
-                } catch (SQLException e) {
-                    throw new RuntimeException(e);
-                }
+                BlockDb.deleteAll();
+                apply(null);
             case 56:
                 apply("CREATE INDEX IF NOT EXISTS transaction_recipient_id_idx ON transaction (recipient_id)");
             case 57:
-                apply("DROP INDEX transaction_timestamp_idx");
+                apply(null);
             case 58:
-                apply("CREATE INDEX IF NOT EXISTS transaction_timestamp_idx ON transaction (timestamp DESC)");
+                apply(null);
             case 59:
                 apply("ALTER TABLE transaction ADD COLUMN IF NOT EXISTS version TINYINT");
             case 60:
