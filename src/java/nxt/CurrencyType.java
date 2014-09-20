@@ -34,7 +34,9 @@ public abstract class CurrencyType {
             @Override
             public void applyCurrencyIssuanceAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
                 Attachment.MonetarySystemCurrencyIssuance attachment = (Attachment.MonetarySystemCurrencyIssuance) transaction.getAttachment();
-                Currency.addCurrency(transaction.getId(), transaction.getSenderId(), attachment.getName(), attachment.getCode(), attachment.getDescription(), attachment.getType(), attachment.getTotalSupply(), attachment.getIssuanceHeight(), attachment.getMinReservePerUnitNQT(), attachment.getMinDifficulty(), attachment.getMaxDifficulty(), attachment.getRuleset(), attachment.getTotalSupply(), 0);
+                Currency.addCurrency(transaction.getId(), transaction.getSenderId(), attachment.getName(), attachment.getCode(), attachment.getDescription(),
+                        attachment.getType(), attachment.getTotalSupply(), attachment.getIssuanceHeight(), attachment.getMinReservePerUnitNQT(),
+                        attachment.getMinDifficulty(), attachment.getMaxDifficulty(), attachment.getRuleset(), attachment.getAlgorithm(), attachment.getTotalSupply(), 0);
                 senderAccount.addToCurrencyAndUnconfirmedCurrencyBalanceQNT(transaction.getId(), attachment.getTotalSupply());
             }
 
@@ -64,7 +66,9 @@ public abstract class CurrencyType {
             @Override
             public void applyCurrencyIssuanceAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
                 Attachment.MonetarySystemCurrencyIssuance attachment = (Attachment.MonetarySystemCurrencyIssuance)transaction.getAttachment();
-                Currency.addCurrency(transaction.getId(), transaction.getSenderId(), attachment.getName(), attachment.getCode(), attachment.getDescription(), attachment.getType(), attachment.getTotalSupply(), attachment.getIssuanceHeight(), attachment.getMinReservePerUnitNQT(), attachment.getMinDifficulty(), attachment.getMaxDifficulty(), attachment.getRuleset(), attachment.getTotalSupply(), 0);
+                Currency.addCurrency(transaction.getId(), transaction.getSenderId(), attachment.getName(), attachment.getCode(), attachment.getDescription(),
+                        attachment.getType(), attachment.getTotalSupply(), attachment.getIssuanceHeight(), attachment.getMinReservePerUnitNQT(),
+                        attachment.getMinDifficulty(), attachment.getMaxDifficulty(), attachment.getRuleset(), attachment.getAlgorithm(), attachment.getTotalSupply(), 0);
             }
 
         });
@@ -93,7 +97,9 @@ public abstract class CurrencyType {
             @Override
             public void applyCurrencyIssuanceAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
                 Attachment.MonetarySystemCurrencyIssuance attachment = (Attachment.MonetarySystemCurrencyIssuance)transaction.getAttachment();
-                Currency.addCurrency(transaction.getId(), transaction.getSenderId(), attachment.getName(), attachment.getCode(), attachment.getDescription(), attachment.getType(), attachment.getTotalSupply(), attachment.getIssuanceHeight(), attachment.getMinReservePerUnitNQT(), attachment.getMinDifficulty(), attachment.getMaxDifficulty(), attachment.getRuleset(), 0, 0);
+                Currency.addCurrency(transaction.getId(), transaction.getSenderId(), attachment.getName(), attachment.getCode(), attachment.getDescription(),
+                        attachment.getType(), attachment.getTotalSupply(), attachment.getIssuanceHeight(), attachment.getMinReservePerUnitNQT(),
+                        attachment.getMinDifficulty(), attachment.getMaxDifficulty(), attachment.getRuleset(), attachment.getAlgorithm(), 0, 0);
             }
 
             @Override

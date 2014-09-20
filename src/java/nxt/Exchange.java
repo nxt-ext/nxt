@@ -18,7 +18,7 @@ public final class Exchange {
 
     private static final Listeners<Exchange,Event> listeners = new Listeners<>();
 
-    private static final DbKey.LinkKeyFactory<Exchange> exchangeDbKeyFactory = new DbKey.LinkKeyFactory<Exchange>("buy_offer_id", "sell_offer_id") {
+    private static final DbKey.LongKeyFactory<Exchange> exchangeDbKeyFactory = new DbKey.LongKeyFactory<Exchange>("offer_id") {
 
         @Override
         public DbKey newKey(Exchange exchange) {
@@ -114,8 +114,8 @@ public final class Exchange {
         }
     }
 
-    static Exchange addExchange(Long currencyId, Block block, CurrencyBuy currencyBuy, CurrencySell currencySell, long quantityQNT, long priceNQT) {
-        Exchange exchange = new Exchange(currencyId, block, currencyBuy, currencySell, quantityQNT, priceNQT);
+    static Exchange addExchange(Long currencyId, Block block, long offerId, long sellerId, long buyerId, long units, long rate) {
+        Exchange exchange = new Exchange(currencyId, block, offerId, sellerId, buyerId, units, rate);
         exchangeTable.insert(exchange);
         listeners.notify(exchange, Event.EXCHANGE);
         return exchange;
@@ -125,58 +125,53 @@ public final class Exchange {
 
 
     private final int timestamp;
-    private final Long currencyId;
-    private final Long blockId;
+    private final long currencyId;
+    private final long blockId;
     private final int height;
-    private final Long buyOfferId;
-    private final Long sellOfferId;
-    private final Long sellerId;
-    private final Long buyerId;
+    private final long offerId;
+    private final long sellerId;
+    private final long buyerId;
     private final DbKey dbKey;
-    private final long quantityQNT;
-    private final long priceNQT;
+    private final long units;
+    private final long rate;
 
-    // @TODO still work in progress need to define database table, insert exchanges, exchange APIs
-    private Exchange(Long currencyId, Block block, CurrencyBuy currencyBuy, CurrencySell currencySell, long quantityQNT, long priceNQT) {
+    private Exchange(Long currencyId, Block block, long offerId, long sellerId, long buyerId, long units, long rate) {
         this.blockId = block.getId();
         this.height = block.getHeight();
         this.currencyId = currencyId;
         this.timestamp = block.getTimestamp();
-        this.buyOfferId = currencyBuy.getId();
-        this.sellOfferId = currencySell.getId();
-        this.sellerId = currencyBuy.getAccountId();
-        this.buyerId = currencySell.getAccountId();
-        this.dbKey = exchangeDbKeyFactory.newKey(this.buyOfferId, this.sellOfferId);
-        this.quantityQNT = quantityQNT;
-        this.priceNQT = priceNQT;
+        this.offerId = offerId;
+        this.sellerId = sellerId;
+        this.buyerId = buyerId;
+        this.dbKey = exchangeDbKeyFactory.newKey(this.offerId); // TODO, not unique
+        this.units = units;
+        this.rate = rate;
     }
 
     private Exchange(ResultSet rs) throws SQLException {
         this.currencyId = rs.getLong("currency_id");
         this.blockId = rs.getLong("block_id");
-        this.buyOfferId = rs.getLong("buy_offer_id");
-        this.sellOfferId = rs.getLong("sell_offer_id");
+        this.offerId = rs.getLong("offer_id");
         this.sellerId = rs.getLong("seller_id");
         this.buyerId = rs.getLong("buyer_id");
-        this.dbKey = exchangeDbKeyFactory.newKey(this.buyOfferId, this.sellOfferId);
-        this.quantityQNT = rs.getLong("quantity");
-        this.priceNQT = rs.getLong("price");
+        this.dbKey = exchangeDbKeyFactory.newKey(this.offerId); // TODO, not unique
+        this.units = rs.getLong("units");
+        this.rate = rs.getLong("rate");
         this.timestamp = rs.getInt("timestamp");
         this.height = rs.getInt("height");
     }
 
     private void save(Connection con) throws SQLException {
         try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO exchange (currency_id, block_id, "
-                + "buy_offer_id, sell_offer_id, seller_id, buyer_id, quantity, price, timestamp, height) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
+                + "offer_id, seller_id, buyer_id, units, rate, timestamp, height) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
             int i = 0;
             pstmt.setLong(++i, this.getCurrencyId());
             pstmt.setLong(++i, this.getBlockId());
-            pstmt.setLong(++i, this.getBuyOfferId());
-            pstmt.setLong(++i, this.getSellOfferId());
+            pstmt.setLong(++i, this.getOfferId());
             pstmt.setLong(++i, this.getSellerId());
             pstmt.setLong(++i, this.getBuyerId());
-            pstmt.setLong(++i, this.getQuantityQNT());
-            pstmt.setLong(++i, this.getPriceNQT());
+            pstmt.setLong(++i, this.getUnits());
+            pstmt.setLong(++i, this.getRate());
             pstmt.setInt(++i, this.getTimestamp());
             pstmt.setInt(++i, this.getHeight());
             pstmt.executeUpdate();
@@ -185,9 +180,7 @@ public final class Exchange {
 
     public Long getBlockId() { return blockId; }
 
-    public Long getBuyOfferId() { return buyOfferId; }
-
-    public Long getSellOfferId() { return sellOfferId; }
+    public Long getOfferId() { return offerId; }
 
     public Long getSellerId() {
         return sellerId;
@@ -197,9 +190,9 @@ public final class Exchange {
         return buyerId;
     }
 
-    public long getQuantityQNT() { return quantityQNT; }
+    public long getUnits() { return units; }
 
-    public long getPriceNQT() { return priceNQT; }
+    public long getRate() { return rate; }
     
     public Long getCurrencyId() { return currencyId; }
     
@@ -211,8 +204,8 @@ public final class Exchange {
 
     @Override
     public String toString() {
-        return "Exchange currency: " + Convert.toUnsignedLong(currencyId) + " buy: " + Convert.toUnsignedLong(buyOfferId)
-                + " sell: " + Convert.toUnsignedLong(sellOfferId) + " price: " + priceNQT + " quantity: " + quantityQNT + " height: " + height;
+        return "Exchange currency: " + Convert.toUnsignedLong(currencyId) + " offer: " + Convert.toUnsignedLong(offerId)
+                + " rate: " + rate + " units: " + units + " height: " + height;
     }
 
 }

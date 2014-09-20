@@ -1519,6 +1519,7 @@ public interface Attachment extends Appendix {
         private final byte minDifficulty;
         private final byte maxDifficulty;
         private final byte ruleset;
+        private final byte algorithm;
 
         MonetarySystemCurrencyIssuance(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
             super(buffer, transactionVersion);
@@ -1534,6 +1535,7 @@ public interface Attachment extends Appendix {
             this.minDifficulty = buffer.get();
             this.maxDifficulty = buffer.get();
             this.ruleset = buffer.get();
+            this.algorithm = buffer.get();
         }
 
         MonetarySystemCurrencyIssuance(JSONObject attachmentData) throws NxtException.NotValidException {
@@ -1548,10 +1550,12 @@ public interface Attachment extends Appendix {
             this.minDifficulty = ((Long)attachmentData.get("minDifficulty")).byteValue();
             this.maxDifficulty = ((Long)attachmentData.get("maxDifficulty")).byteValue();
             this.ruleset = ((Long)attachmentData.get("ruleset")).byteValue();
+            this.algorithm = ((Long)attachmentData.get("algorithm")).byteValue();
         }
 
         public MonetarySystemCurrencyIssuance(String name, String code, String description, byte type, long totalSupply,
-                                              int issuanceHeight, long minReservePerUnitNQT, byte minDifficulty, byte maxDifficulty, byte ruleset) {
+                                              int issuanceHeight, long minReservePerUnitNQT, byte minDifficulty, byte maxDifficulty,
+                                              byte ruleset, byte algorithm) {
             this.name = name;
             this.code = code;
             this.description = description;
@@ -1562,6 +1566,7 @@ public interface Attachment extends Appendix {
             this.minDifficulty = minDifficulty;
             this.maxDifficulty = maxDifficulty;
             this.ruleset = ruleset;
+            this.algorithm = algorithm;
         }
 
         @Override
@@ -1572,7 +1577,7 @@ public interface Attachment extends Appendix {
         @Override
         int getMySize() {
             return 1 + Convert.toBytes(name).length + Constants.CURRENCY_CODE_LENGTH + 2 +
-                    Convert.toBytes(description).length + 1 + 8 + 4 + 8 + 1 + 1 + 1;
+                    Convert.toBytes(description).length + 1 + 8 + 4 + 8 + 1 + 1 + 1 + 1;
         }
 
         @Override
@@ -1591,6 +1596,7 @@ public interface Attachment extends Appendix {
             buffer.put(minDifficulty);
             buffer.put(maxDifficulty);
             buffer.put(ruleset);
+            buffer.put(algorithm);
         }
 
         @Override
@@ -1605,6 +1611,7 @@ public interface Attachment extends Appendix {
             attachment.put("minDifficulty", minDifficulty & 0xFF);
             attachment.put("maxDifficulty", maxDifficulty & 0xFF);
             attachment.put("ruleset", ruleset & 0xFF);
+            attachment.put("algorithm", algorithm & 0xFF);
         }
 
         @Override
@@ -1652,6 +1659,9 @@ public interface Attachment extends Appendix {
             return ruleset;
         }
 
+        public byte getAlgorithm() {
+            return algorithm;
+        }
     }
 
     public final static class MonetarySystemReserveIncrease extends AbstractAttachment {

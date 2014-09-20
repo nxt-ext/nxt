@@ -296,6 +296,20 @@ final class JSONData {
         return json;
     }
 
+    static JSONObject exchange(Exchange exchange) {
+        JSONObject json = new JSONObject();
+        json.put("timestamp", exchange.getTimestamp());
+        json.put("units", String.valueOf(exchange.getUnits()));
+        json.put("rateNQT", String.valueOf(exchange.getRate()));
+        json.put("currency", Convert.toUnsignedLong(exchange.getCurrencyId()));
+        json.put("offer", Convert.toUnsignedLong(exchange.getOfferId()));
+        putAccount(json, "seller", exchange.getSellerId());
+        putAccount(json, "buyer", exchange.getBuyerId());
+        json.put("block", Convert.toUnsignedLong(exchange.getBlockId()));
+        json.put("height", exchange.getHeight());
+        return json;
+    }
+
     static JSONObject unconfirmedTransaction(Transaction transaction) {
         JSONObject json = new JSONObject();
         json.put("type", transaction.getType().getType());

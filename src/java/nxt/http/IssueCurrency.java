@@ -47,9 +47,10 @@ public final class IssueCurrency extends CreateTransaction {
         byte minDifficulty = ParameterParser.getByte(req, "minDifficulty", (byte)0, Byte.MAX_VALUE);
         byte maxDifficulty = ParameterParser.getByte(req, "maxDifficulty", (byte)0, Byte.MAX_VALUE);
         byte ruleset = ParameterParser.getByte(req, "ruleset", (byte)0, Byte.MAX_VALUE);
+        byte algorithm = ParameterParser.getByte(req, "algorithm", (byte)0, Byte.MAX_VALUE);
         Account account = ParameterParser.getSenderAccount(req);
         Attachment attachment = new Attachment.MonetarySystemCurrencyIssuance(name, code, description, type, totalSupply,
-                issuanceHeight, minReservePerUnit, minDifficulty, maxDifficulty, ruleset);
+                issuanceHeight, minReservePerUnit, minDifficulty, maxDifficulty, ruleset, algorithm);
 
         return createTransaction(req, account, attachment);
 

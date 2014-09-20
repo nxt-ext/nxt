@@ -63,6 +63,8 @@ public final class CurrencyExchange {
                 Account counterAccount = Account.getAccount(offer.getAccountId());
                 counterAccount.addToBalanceNQT(-curAmountNQT);
                 counterAccount.addToCurrencyBalanceQNT(currencyId, curUnits);
+                Exchange.addExchange(currencyId, Nxt.getBlockchain().getLastBlock(),
+                        offer.getId(), account.getId(), offer.getAccountId(), curUnits, offer.getRateNQT());
             }
         }
 
@@ -98,6 +100,8 @@ public final class CurrencyExchange {
                 Account counterAccount = Account.getAccount(offer.getAccountId());
                 counterAccount.addToBalanceNQT(curAmountNQT);
                 counterAccount.addToCurrencyBalanceQNT(currencyId, -curUnits);
+                Exchange.addExchange(currencyId, Nxt.getBlockchain().getLastBlock(),
+                        offer.getId(), offer.getAccountId(), account.getId(), curUnits, offer.getRateNQT());
             }
         }
 

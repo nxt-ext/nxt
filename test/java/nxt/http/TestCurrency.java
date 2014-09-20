@@ -125,6 +125,17 @@ public class TestCurrency {
         Account forgerAccount = Account.getAccount(Crypto.getPublicKey(forgerSecretPhrase));
         Assert.assertEquals(forgerStartBalance + 2 * Constants.ONE_NXT, forgerAccount.getUnconfirmedBalanceNQT());
         Assert.assertEquals(forgerStartBalance + 2 * Constants.ONE_NXT, forgerAccount.getBalanceNQT());
+
+        apiCall = new APICall.Builder("getAllExchanges").build();
+        JSONObject getAllExchangesResponse = apiCall.invoke();
+        Logger.logDebugMessage("getAllExchangesResponse: " + getAllExchangesResponse);
+        JSONArray exchanges = (JSONArray)getAllExchangesResponse.get("exchanges");
+        JSONObject exchange = (JSONObject) exchanges.get(0);
+        Assert.assertEquals("95", exchange.get("rateNQT"));
+        Assert.assertEquals("202", exchange.get("units"));
+        Assert.assertEquals(currencyId, exchange.get("currency"));
+        Assert.assertEquals(issuerAccount.getId(), Convert.parseUnsignedLong((String)exchange.get("seller")));
+        Assert.assertEquals(buyerAccount.getId(), Convert.parseUnsignedLong((String)exchange.get("buyer")));
     }
 
     @After
