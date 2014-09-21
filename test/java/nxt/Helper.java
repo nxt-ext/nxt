@@ -23,7 +23,7 @@ public class Helper {
         }
     }
 
-    public static void executeQuery(String line) {
+    public static String executeQuery(String line) {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         PrintStream out = new PrintStream(baos);
         out.println(line);
@@ -35,7 +35,7 @@ public class Helper {
         } catch (SQLException e) {
             out.println(e.toString());
         }
-        System.out.println(new String(baos.toByteArray()));
+        return new String(baos.toByteArray());
     }
 
     public static class BlockListener implements Listener<Block> {

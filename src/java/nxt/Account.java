@@ -643,6 +643,10 @@ public final class Account {
         return Trade.getAccountTrades(this.id, from, to);
     }
 
+    public DbIterator<Exchange> getExchanges(int from, int to) {
+        return Exchange.getAccountExchanges(this.id, from, to);
+    }
+
     public long getUnconfirmedAssetBalanceQNT(long assetId) {
         AccountAsset accountAsset = accountAssetTable.get(accountAssetDbKeyFactory.newKey(this.id, assetId));
         return accountAsset == null ? 0 : accountAsset.unconfirmedQuantityQNT;

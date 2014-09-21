@@ -300,4 +300,8 @@ public final class Currency {
         currencyTable.insert(this);
     }
 
+    public DbIterator<Exchange> getExchanges(int from, int to) {
+        return Exchange.getCurrencyExchanges(this.currencyId, from, to);
+    }
+
 }

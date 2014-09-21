@@ -1877,8 +1877,7 @@ public abstract class TransactionType {
                     throw new NxtException.NotYetEnabledException("Monetary System not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
                 }
                 Attachment.MonetarySystemReserveClaim attachment = (Attachment.MonetarySystemReserveClaim)transaction.getAttachment();
-                if (Genesis.CREATOR_ID != transaction.getRecipientId()
-                        || transaction.getAmountNQT() != 0
+                if (transaction.getAmountNQT() != 0
                         || !Currency.isIssued(attachment.getCurrencyId())
                         || attachment.getUnits() <= 0) {
                     throw new NxtException.NotValidException("Invalid reserve claim: " + attachment.getJSONObject());

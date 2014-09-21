@@ -43,6 +43,7 @@ public final class CurrencyExchange {
         DbIterator<CurrencyOffer> currencyBuyOffers = CurrencyBuy.getCurrencyOffers(currencyId);
         if (currencyBuyOffers != null) {
             for (CurrencyOffer offer : currencyBuyOffers) {
+                // @TODO should we allow an account to accept it's own offer ?
                 if (offer.getRateNQT() < rateNQT) {
                     break;
                 }
