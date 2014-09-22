@@ -543,6 +543,11 @@ public final class Account {
         return Trade.getAccountTrades(this.id, from, to);
     }
 
+    public long getAssetBalanceQNT(long assetId) {
+        AccountAsset accountAsset = accountAssetTable.get(accountAssetDbKeyFactory.newKey(this.id, assetId));
+        return accountAsset == null ? 0 : accountAsset.quantityQNT;
+    }
+
     public long getUnconfirmedAssetBalanceQNT(long assetId) {
         AccountAsset accountAsset = accountAssetTable.get(accountAssetDbKeyFactory.newKey(this.id, assetId));
         return accountAsset == null ? 0 : accountAsset.unconfirmedQuantityQNT;
@@ -648,11 +653,6 @@ public final class Account {
             this.keyHeight = height;
             accountTable.insert(this);
         }
-    }
-
-    long getAssetBalanceQNT(long assetId) {
-        AccountAsset accountAsset = accountAssetTable.get(accountAssetDbKeyFactory.newKey(this.id, assetId));
-        return accountAsset == null ? 0 : accountAsset.quantityQNT;
     }
 
     void addToAssetBalanceQNT(long assetId, long quantityQNT) {
