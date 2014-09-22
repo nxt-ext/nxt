@@ -466,7 +466,7 @@ final class PeerImpl implements Peer {
 
         } catch (UnknownHostException ignore) {
         } catch (URISyntaxException | RuntimeException e) {
-            Logger.logDebugMessage("Failed to analyze hallmark for peer " + address + ", " + e.toString());
+            Logger.logDebugMessage("Failed to analyze hallmark for peer " + address + ", " + e.toString(), e);
         }
         return false;
 
