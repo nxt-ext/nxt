@@ -10,7 +10,12 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 
 @RunWith(Suite.class)
-@Suite.SuiteClasses({ TestCurrencyIssuance.class, TestCurrencyExchange.class })
+@Suite.SuiteClasses({
+        TestCurrencyIssuance.class,
+        TestCurrencyExchange.class,
+        TestCurrencyReserveAndClaim.class,
+        TestCurrencyMint.class
+})
 
 public class CurrencySuite {
 

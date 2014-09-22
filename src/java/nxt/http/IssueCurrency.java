@@ -40,7 +40,7 @@ public final class IssueCurrency extends CreateTransaction {
             return INCORRECT_CURRENCY_DESCRIPTION;
         }
 
-        byte type = ParameterParser.getByte(req, "type", (byte)0, (byte)(CurrencyType.getSize() - 1));
+        byte type = ParameterParser.getByte(req, "type", (byte)0, CurrencyType.getSize());
         long totalSupply = ParameterParser.getLong(req, "totalSupply", 1, Constants.MAX_CURRENCY_TOTAL_SUPPLY, false);
         int issuanceHeight = ParameterParser.getInt(req, "issuanceHeight", 0, Integer.MAX_VALUE, false);
         long minReservePerUnit = ParameterParser.getLong(req, "minReservePerUnitNQT", 0, Constants.MAX_BALANCE_NQT, false);

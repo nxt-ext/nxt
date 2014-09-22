@@ -45,13 +45,11 @@ public final class Constants {
     public static final int MAX_HUB_ANNOUNCEMENT_URI_LENGTH = 1000;
     public static final long MIN_HUB_EFFECTIVE_BALANCE = 100000;
 
-    public static final long CURRENCY_ISSUANCE_FEE_NQT = 1000 * ONE_NXT;
     public static final int MIN_CURRENCY_NAME_LENGTH = 3;
     public static final int MAX_CURRENCY_NAME_LENGTH = 10;
     public static final int CURRENCY_CODE_LENGTH = 3;
     public static final int MAX_CURRENCY_DESCRIPTION_LENGTH = 1000;
     public static final long MAX_CURRENCY_TOTAL_SUPPLY = 1000000000L * 100000000L;
-    public static final int MAX_MONEY_TRANSFER_COMMENT_LENGTH = 1000;
     public static final int MAX_MINTING_RATIO = 1000000;
     public static final byte MIN_NUMBER_OF_SHUFFLING_PARTICIPANTS = 3;
     public static final byte MAX_NUMBER_OF_SHUFFLING_PARTICIPANTS = 100;
@@ -99,8 +97,6 @@ public final class Constants {
 
     public static final String ALPHABET = "0123456789abcdefghijklmnopqrstuvwxyz";
     public static final String ALLOWED_CURRENCY_CODE_LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-
-    public static final Long NXT_CURRENCY_ID = Long.valueOf(0);
 
     public static final int EC_RULE_TERMINATOR = 600; /* cfb: This constant defines a straight edge when "longest chain"
                                                         rule is outweighed by "economic majority" rule; the terminator

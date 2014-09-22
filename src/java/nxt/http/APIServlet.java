@@ -68,6 +68,8 @@ public final class APIServlet extends HttpServlet {
         map.put("castVote", CastVote.instance);
         map.put("createPoll", CreatePoll.instance);
         map.put("currencyExchange", CurrencyExchange.instance);
+        map.put("currencyReserveIncrease", CurrencyReserveIncrease.instance);
+        map.put("currencyReserveClaim", CurrencyReserveClaim.instance);
         map.put("currencyMint", CurrencyMint.instance);
         map.put("decryptFrom", DecryptFrom.instance);
         map.put("dgsListing", DGSListing.instance);
@@ -106,7 +108,8 @@ public final class APIServlet extends HttpServlet {
         map.put("getBlockchainStatus", GetBlockchainStatus.instance);
         map.put("getConstants", GetConstants.instance);
         map.put("getCurrency", GetCurrency.instance);
-        map.put("getCurrencys", GetCurrencies.instance);
+        map.put("getCurrencies", GetCurrencies.instance);
+        map.put("getCurrencyFounders", GetCurrencyFounders.instance);
         map.put("getCurrencyIds", GetCurrencyIds.instance);
         map.put("getCurrenciesByIssuer", GetCurrenciesByIssuer.instance);
         map.put("getDGSGoods", GetDGSGoods.instance);
@@ -151,8 +154,6 @@ public final class APIServlet extends HttpServlet {
         map.put("leaseBalance", LeaseBalance.instance);
         map.put("longConvert", LongConvert.instance);
         map.put("markHost", MarkHost.instance);
-        map.put("msIncreaseReserve", MSIncreaseReserve.instance);
-        map.put("msReserveClaim", MSReserveClaim.instance);
         map.put("parseTransaction", ParseTransaction.instance);
         map.put("placeAskOrder", PlaceAskOrder.instance);
         map.put("placeBidOrder", PlaceBidOrder.instance);

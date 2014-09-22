@@ -36,17 +36,30 @@ public class APICall {
             return this;
         }
 
+        public Builder param(String key, byte value) {
+            params.put(key, "" + value);
+            return this;
+        }
+
+        public Builder param(String key, int value) {
+            params.put(key, "" + value);
+            return this;
+        }
+
+        public Builder param(String key, long value) {
+            params.put(key, "" + value);
+            return this;
+        }
+
         public Builder secretPhrase(String value) {
             params.put("secretPhrase", value);
             return this;
         }
 
-        public Builder feeNQT(String value) {
-            params.put("feeNQT", value);
+        public Builder feeNQT(long value) {
+            params.put("feeNQT", "" + value);
             return this;
         }
-
-
 
         public APICall build() {
             return new APICall(this);

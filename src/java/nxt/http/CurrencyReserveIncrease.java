@@ -8,20 +8,20 @@ import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
 
-public final class MSReserveClaim extends CreateTransaction {
+public final class CurrencyReserveIncrease extends CreateTransaction {
 
-    static final MSReserveClaim instance = new MSReserveClaim();
+    static final CurrencyReserveIncrease instance = new CurrencyReserveIncrease();
 
-    private MSReserveClaim() {
-        super(new APITag[] {APITag.MS, APITag.CREATE_TRANSACTION}, "currency", "units");
+    private CurrencyReserveIncrease() {
+        super(new APITag[] {APITag.MS, APITag.CREATE_TRANSACTION}, "currency", "amountNQT");
     }
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
         Currency currency = ParameterParser.getCurrency(req);
-        long units = ParameterParser.getLong(req, "units", 0, currency.getTotalSupply(), false);
+        long amountNQT = ParameterParser.getAmountNQT(req);
         Account account = ParameterParser.getSenderAccount(req);
-        Attachment attachment = new Attachment.MonetarySystemReserveClaim(currency.getId(), units);
+        Attachment attachment = new Attachment.MonetarySystemReserveIncrease(currency.getId(), amountNQT);
         return createTransaction(req, account, attachment);
 
     }

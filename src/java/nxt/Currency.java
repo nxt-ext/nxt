@@ -65,28 +65,7 @@ public final class Currency {
     }
 
     static {
-        Nxt.getBlockchainProcessor().addListener(new Listener<Block>() {
-            @Override
-            public void notify(Block block) {
-                try (DbIterator<Currency> currencies = currencyTable.getAll(0, getCount() - 1)) {
-                    while (currencies.hasNext()) {
-                        Currency currency = currencies.next();
-                        if (currency.getIssuanceHeight() > 0 && currency.getIssuanceHeight() <= block.getHeight()) {
-                            if (currency.getCurrentReservePerUnitNQT() < currency.getMinReservePerUnitNQT()) {
-                                try (DbIterator<CurrencyFounder> founders = CurrencyFounder.getCurrencyFounders(currency.getId())) {
-                                    while (founders.hasNext()) {
-                                        CurrencyFounder founder = founders.next();
-                                        Account.getAccount(founder.getAccountId()).addToBalanceAndUnconfirmedBalanceNQT(founder.getValue());
-                                    }
-                                }
-                                currencyTable.delete(currency);
-                            }
-                            CurrencyFounder.remove(currency.getId());
-                        }
-                    }
-                }
-            }
-        }, BlockchainProcessor.Event.AFTER_BLOCK_APPLY);
+        Nxt.getBlockchainProcessor().addListener(new CrowdFundingListener(), BlockchainProcessor.Event.AFTER_BLOCK_APPLY);
 
     }
 
@@ -184,10 +163,10 @@ public final class Currency {
     }
 
     private void save(Connection con) throws SQLException {
-        try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO currency (id, account_id, name, code, "
+        try (PreparedStatement pstmt = con.prepareStatement("MERGE INTO currency (id, account_id, name, code, "
                 + "description, type, total_supply, issuance_height, min_reserve_per_unit_nqt, "
-                + "min_difficulty, max_difficulty, ruleset, algorithm, current_supply, current_reserve_per_unit_nqt, height) "
-                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
+                + "min_difficulty, max_difficulty, ruleset, algorithm, current_supply, current_reserve_per_unit_nqt, height, latest) "
+                + "KEY (id, height) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, TRUE)")) {
             int i = 0;
             pstmt.setLong(++i, this.getId());
             pstmt.setLong(++i, this.getAccountId());
@@ -279,7 +258,7 @@ public final class Currency {
         account.addToBalanceNQT(-Convert.safeMultiply(currency.getTotalSupply(), amountNQT));
         currency.currentReservePerUnitNQT += amountNQT;
         currencyTable.insert(currency);
-        CurrencyFounder.addFounder(currencyId, account.getId(), Convert.safeMultiply(currency.getTotalSupply(), amountNQT));
+        CurrencyFounder.addOrUpdateFounder(currencyId, account.getId(), Convert.safeMultiply(currency.getTotalSupply(), amountNQT));
     }
 
     public static void claimReserve(Account account, long currencyId, long units) {
@@ -304,4 +283,39 @@ public final class Currency {
         return Exchange.getCurrencyExchanges(this.currencyId, from, to);
     }
 
+    private static class CrowdFundingListener implements Listener<Block> {
+
+        @Override
+        public void notify(Block block) {
+            for (Currency currency : currencyTable.getAll(0, Integer.MAX_VALUE)) {
+                if (currency.getIssuanceHeight() == 0 || currency.getIssuanceHeight() > block.getHeight()) {
+                    continue;
+                }
+                if (currency.getCurrentReservePerUnitNQT() < currency.getMinReservePerUnitNQT()) {
+                    undoCrowdFunding(currency);
+                } else {
+                    distributeCurrency(currency);
+                }
+            }
+        }
+
+        private void undoCrowdFunding(Currency currency) {
+            for (CurrencyFounder founder : CurrencyFounder.getCurrencyFounders(currency.getId(), 0, Integer.MAX_VALUE)) {
+                Account.getAccount(founder.getAccountId()).addToBalanceAndUnconfirmedBalanceNQT(founder.getValue());
+            }
+            currencyTable.delete(currency);
+            CurrencyFounder.remove(currency.getId());
+        }
+
+        private void distributeCurrency(Currency currency) {
+            long totalValue = 0;
+            for (CurrencyFounder founder : CurrencyFounder.getCurrencyFounders(currency.getId(), 0, Integer.MAX_VALUE)) {
+                totalValue += founder.getValue();
+            }
+            for (CurrencyFounder founder : CurrencyFounder.getCurrencyFounders(currency.getId(), 0, Integer.MAX_VALUE)) {
+                long units = Convert.safeDivide(Convert.safeMultiply(currency.getTotalSupply(), founder.getValue()), totalValue);
+                Account.getAccount(founder.getAccountId()).addToCurrencyAndUnconfirmedCurrencyBalanceQNT(currency.getId(), units);
+            }
+        }
+    }
 }

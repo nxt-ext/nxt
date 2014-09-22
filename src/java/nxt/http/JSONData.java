@@ -78,6 +78,14 @@ final class JSONData {
         return json;
     }
 
+    static JSONObject currencyFounder(CurrencyFounder founder) {
+        JSONObject json = new JSONObject();
+        json.put("currency", Convert.toUnsignedLong(founder.getCurrencyId()));
+        putAccount(json, "account", founder.getAccountId());
+        json.put("value", founder.getValue());
+        return json;
+    }
+
     static JSONObject accountAsset(Account.AccountAsset accountAsset) {
         JSONObject json = new JSONObject();
         putAccount(json, "account", accountAsset.getAccountId());

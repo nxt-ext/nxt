@@ -1,8 +1,6 @@
 package nxt.http;
 
-import nxt.BlockchainTest;
-import nxt.Constants;
-import nxt.Helper;
+import nxt.*;
 import nxt.util.Logger;
 import org.json.simple.JSONObject;
 import org.junit.Assert;
@@ -16,22 +14,34 @@ public class TestCurrencyIssuance extends BlockchainTest {
     }
 
     public static String issueCurrencyImpl() {
-        String secretPhrase = "hope peace happen touch easy pretend worthless talk them indeed wheel state";
+        return issueCurrencyImpl(CurrencyType.SIMPLE, 0, 0);
+    }
+
+    public static String issueCurrencyImpl(byte type, int issuanceHeight, long minReservePerUnitNQT) {
+        return issueCurrencyImpl(type, issuanceHeight, minReservePerUnitNQT, 100000, (byte)0, (byte)0);
+    }
+
+    public static String issueCurrencyImpl(byte type, int issuanceHeight, long minReservePerUnitNQT,
+                                           long totalSupply, byte minDiff, byte maxDiff) {
         APICall apiCall = new APICall.Builder("issueCurrency").
-                secretPhrase(secretPhrase).
-                feeNQT("" + 1000 * Constants.ONE_NXT).
+                secretPhrase(secretPhrase1).
+                feeNQT(1000 * Constants.ONE_NXT).
                 param("name", "Test1").
                 param("code", "TSX").
                 param("code", "TSX").
                 param("description", "Test Currency 1").
-                param("type", "1").
-                param("totalSupply", "100000").
+                param("type", type).
+                param("totalSupply", totalSupply).
+                param("issuanceHeight", issuanceHeight).
+                param("minReservePerUnitNQT", minReservePerUnitNQT).
+                param("minDifficulty", minDiff).
+                param("maxDifficulty", maxDiff).
                 build();
 
         JSONObject issueCurrencyResponse = apiCall.invoke();
         String currencyId = (String) issueCurrencyResponse.get("transaction");
         System.out.println("issueCurrencyResponse: " + issueCurrencyResponse.toJSONString());
-        Helper.generateBlock(forgerSecretPhrase);
+        generateBlock();
 
         apiCall = new APICall.Builder("getCurrency").param("currency", currencyId).build();
         JSONObject getCurrencyResponse = apiCall.invoke();

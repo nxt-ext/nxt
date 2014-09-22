@@ -1,8 +1,6 @@
 package nxt;
 
-import nxt.db.DbIterator;
-import nxt.db.DbKey;
-import nxt.db.VersionedEntityDbTable;
+import nxt.db.*;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -16,9 +14,9 @@ import java.sql.SQLException;
  */
 public class CurrencyFounder {
 
-    private static final DbKey.LongKeyFactory<CurrencyFounder> currencyFounderDbKeyFactory = new DbKey.LongKeyFactory<CurrencyFounder>("currency_id") {
+    private static final DbKey.LinkKeyFactory<CurrencyFounder> currencyFounderDbKeyFactory = new DbKey.LinkKeyFactory<CurrencyFounder>("currency_id", "account_id") {
 
-        @Override
+            @Override
         public DbKey newKey(CurrencyFounder currencyFounder) {
             return currencyFounder.dbKey;
         }
@@ -42,19 +40,19 @@ public class CurrencyFounder {
     private final DbKey dbKey;
     private final long currencyId;
     private final long accountId;
-    private final long value;
+    private long value;
 
     CurrencyFounder(long currencyId, long accountId, long value) {
         this.currencyId = currencyId;
-        this.dbKey = currencyFounderDbKeyFactory.newKey(currencyId);
+        this.dbKey = currencyFounderDbKeyFactory.newKey(currencyId, accountId);
         this.accountId = accountId;
         this.value = value;
     }
 
     CurrencyFounder(ResultSet rs) throws SQLException {
         this.currencyId = rs.getLong("currency_id");
-        this.dbKey = currencyFounderDbKeyFactory.newKey(currencyId);
         this.accountId = rs.getLong("account_id");
+        this.dbKey = currencyFounderDbKeyFactory.newKey(currencyId, accountId);
         this.value = rs.getLong("value");
     }
 
@@ -82,21 +80,27 @@ public class CurrencyFounder {
         return value;
     }
 
-    public static void addFounder(long currencyId, Long accountId, long value) {
-        currencyFounderTable.insert(new CurrencyFounder(currencyId, accountId, value));
+    public static void addOrUpdateFounder(long currencyId, Long accountId, long value) {
+        CurrencyFounder founder = getFounder(currencyId, accountId);
+        if (founder == null) {
+            founder = new CurrencyFounder(currencyId, accountId, value);
+        } else {
+            founder.value += value;
+        }
+        currencyFounderTable.insert(founder);
     }
 
-    public static DbIterator<CurrencyFounder> getCurrencyFounders(long currencyId) {
-        return currencyFounderTable.getManyBy("currency_id", currencyId, 0, currencyFounderTable.getCount() - 1);
+    public static CurrencyFounder getFounder(long currencyId, Long accountId) {
+        return currencyFounderTable.get(currencyFounderDbKeyFactory.newKey(currencyId, accountId));
+    }
+
+    public static DbIterator<CurrencyFounder> getCurrencyFounders(long currencyId, int from, int to) {
+        return currencyFounderTable.getManyBy("currency_id", currencyId, from, to);
     }
 
     public static void remove(Long currencyId) {
-        // Inefficient
-        try (DbIterator<CurrencyFounder> founders = CurrencyFounder.getCurrencyFounders(currencyId)) {
-            while (founders.hasNext()) {
-                CurrencyFounder founderEntry = founders.next();
-                currencyFounderTable.delete(founderEntry);
-            }
+        for (CurrencyFounder founder : CurrencyFounder.getCurrencyFounders(currencyId, 0, Integer.MAX_VALUE)) {
+            currencyFounderTable.delete(founder);
         }
     }
 }

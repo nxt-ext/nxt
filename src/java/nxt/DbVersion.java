@@ -423,7 +423,7 @@ final class DbVersion {
                         + "current_reserve_per_unit_nqt BIGINT NOT NULL, "
                         + "height INT NOT NULL, latest BOOLEAN NOT NULL DEFAULT TRUE)");
             case 124:
-                apply("CREATE UNIQUE INDEX IF NOT EXISTS currency_id_idx ON currency (id)");
+                apply("CREATE UNIQUE INDEX IF NOT EXISTS currency_id_height_idx ON currency (id, height DESC)");
             case 125:
                 apply("CREATE INDEX IF NOT EXISTS currency_account_id_idx ON currency (account_id)");
             case 126:

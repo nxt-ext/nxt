@@ -1,9 +1,6 @@
 package nxt.http;
 
-import nxt.Account;
-import nxt.BlockchainTest;
-import nxt.Constants;
-import nxt.Helper;
+import nxt.*;
 import nxt.crypto.Crypto;
 import nxt.util.Convert;
 import nxt.util.Logger;
@@ -31,7 +28,7 @@ public class TestCurrencyExchange extends BlockchainTest {
 
         JSONObject publishExchangeOfferResponse = publishExchangeOffer(currencyId, secretPhrase1);
 
-        Helper.generateBlock(forgerSecretPhrase);
+        generateBlock();
 
         APICall apiCall = new APICall.Builder("getAllOffers").build();
         JSONObject getAllOffersResponse = apiCall.invoke();
@@ -44,14 +41,14 @@ public class TestCurrencyExchange extends BlockchainTest {
         Assert.assertEquals(issuerStartCurrencyBalanceQNT - 1000, issuerAccount.getUnconfirmedCurrencyBalanceQNT(Convert.parseUnsignedLong(currencyId))); // currency balance reduced by initial supply
 
         apiCall = new APICall.Builder("currencyExchange").
-                secretPhrase(secretPhrase2).feeNQT("" + Constants.ONE_NXT).
+                secretPhrase(secretPhrase2).feeNQT(Constants.ONE_NXT).
                 param("currency", currencyId).
                 param("rateNQT", "" + 96).
                 param("units", "200").
                 build();
         JSONObject currencyExchangeResponse = apiCall.invoke();
         Logger.logDebugMessage("currencyExchangeResponse:" + currencyExchangeResponse);
-        Helper.generateBlock(forgerSecretPhrase);
+        generateBlock();
 
         issuerAccount = Account.getAccount(Crypto.getPublicKey(secretPhrase1));
         Assert.assertEquals(issuerStartBalanceNQT - 1000 * 105 - Constants.ONE_NXT, issuerAccount.getUnconfirmedBalanceNQT());
@@ -97,7 +94,7 @@ public class TestCurrencyExchange extends BlockchainTest {
         long forgerStartBalance = Account.getAccount(Crypto.getPublicKey(forgerSecretPhrase)).getBalanceNQT();
 
         JSONObject publishExchangeOfferResponse = publishExchangeOffer(currencyId, secretPhrase1);
-        Helper.generateBlock(forgerSecretPhrase);
+        generateBlock();
 
         APICall apiCall = new APICall.Builder("getAllOffers").build();
         JSONObject getAllOffersResponse = apiCall.invoke();
@@ -110,13 +107,13 @@ public class TestCurrencyExchange extends BlockchainTest {
         Assert.assertEquals(issuerStartCurrencyBalanceQNT - 1000, issuerAccount.getUnconfirmedCurrencyBalanceQNT(Convert.parseUnsignedLong(currencyId))); // currency balance reduced by initial supply
 
         apiCall = new APICall.Builder("transferCurrency").
-                secretPhrase(secretPhrase1).feeNQT("" + Constants.ONE_NXT).
+                secretPhrase(secretPhrase1).feeNQT(Constants.ONE_NXT).
                 param("currency", currencyId).
                 param("recipient", Convert.toUnsignedLong(buyerAccount.getId())).
                 param("units", "2000").
                 build();
         apiCall.invoke();
-        Helper.generateBlock(forgerSecretPhrase);
+        generateBlock();
         issuerAccount = Account.getAccount(Crypto.getPublicKey(secretPhrase1));
         Assert.assertEquals(100000 - 2000 - 1000, issuerAccount.getUnconfirmedCurrencyBalanceQNT(Convert.parseUnsignedLong(currencyId)));
         Assert.assertEquals(100000 - 2000, issuerAccount.getCurrencyBalanceQNT(Convert.parseUnsignedLong(currencyId)));
@@ -124,14 +121,14 @@ public class TestCurrencyExchange extends BlockchainTest {
         Assert.assertEquals(2000, buyerAccount.getCurrencyBalanceQNT(Convert.parseUnsignedLong(currencyId)));
 
         apiCall = new APICall.Builder("currencyExchange").
-                secretPhrase(secretPhrase2).feeNQT("" + Constants.ONE_NXT).
+                secretPhrase(secretPhrase2).feeNQT(Constants.ONE_NXT).
                 param("currency", currencyId).
                 param("rateNQT", "" + 104).
                 param("units", "-200").
                 build();
         JSONObject currencyExchangeResponse = apiCall.invoke();
         Logger.logDebugMessage("currencyExchangeResponse:" + currencyExchangeResponse);
-        Helper.generateBlock(forgerSecretPhrase);
+        generateBlock();
 
         issuerAccount = Account.getAccount(Crypto.getPublicKey(secretPhrase1));
         Assert.assertEquals(-1000 * 105, issuerAccount.getUnconfirmedBalanceNQT() - issuerStartBalanceNQT +  2*Constants.ONE_NXT);
@@ -163,10 +160,9 @@ public class TestCurrencyExchange extends BlockchainTest {
 
     private JSONObject publishExchangeOffer(String currencyId, String secretPhrase) {
         APICall apiCall = new APICall.Builder("publishExchangeOffer").
-                secretPhrase(secretPhrase1).feeNQT("" + Constants.ONE_NXT).
+                secretPhrase(secretPhrase1).feeNQT(Constants.ONE_NXT).
                 param("secretPhrase", secretPhrase).
                 param("deadline", "1440").
-                param("feeNQT", "" + Constants.ONE_NXT).
                 param("currency", currencyId).
                 param("buyRateNQT", "" + 105).
                 param("sellRateNQT", "" + 95).
