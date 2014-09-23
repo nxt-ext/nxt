@@ -202,11 +202,12 @@ final class PeerImpl implements Peer {
         if (hallmark == null) {
             return 0;
         }
-        Long hallmarkBalance = hallmarkBalances.get(hallmark.getAccountId());
+        long accountId = hallmark.getAccountId();
+        Long hallmarkBalance = hallmarkBalances.get(accountId);
         if (hallmarkBalance == null) {
-            Account account = Account.getAccount(hallmark.getAccountId());
+            Account account = Account.getAccount(accountId);
             hallmarkBalance = account == null ? 0 : account.getBalanceNQT();
-            hallmarkBalances.put(hallmark.getAccountId(), hallmarkBalance);
+            hallmarkBalances.put(accountId, hallmarkBalance);
         }
         return (int)(adjustedWeight * (hallmarkBalance / Constants.ONE_NXT) / Constants.MAX_BALANCE_NXT);
     }
