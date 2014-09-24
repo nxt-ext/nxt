@@ -478,10 +478,10 @@ public final class Peers {
 
     static {
         if (! Constants.isOffline) {
-            ThreadPool.scheduleThread(Peers.peerConnectingThread, 5);
-            ThreadPool.scheduleThread(Peers.peerUnBlacklistingThread, 1);
+            ThreadPool.scheduleThread("PeerConnecting", Peers.peerConnectingThread, 5);
+            ThreadPool.scheduleThread("PeerUnBlacklisting", Peers.peerUnBlacklistingThread, 1);
             if (Peers.getMorePeers) {
-                ThreadPool.scheduleThread(Peers.getMorePeersThread, 5);
+                ThreadPool.scheduleThread("GetMorePeers", Peers.getMorePeersThread, 5);
             }
         }
     }

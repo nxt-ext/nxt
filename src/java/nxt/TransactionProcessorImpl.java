@@ -227,9 +227,9 @@ final class TransactionProcessorImpl implements TransactionProcessor {
     };
 
     private TransactionProcessorImpl() {
-        ThreadPool.scheduleThread(processTransactionsThread, 5);
-        ThreadPool.scheduleThread(removeUnconfirmedTransactionsThread, 1);
-        ThreadPool.scheduleThread(rebroadcastTransactionsThread, 60);
+        ThreadPool.scheduleThread("ProcessTransactions", processTransactionsThread, 5);
+        ThreadPool.scheduleThread("RemoveUnconfirmedTransactions", removeUnconfirmedTransactionsThread, 1);
+        ThreadPool.scheduleThread("RebroadcastTransactions", rebroadcastTransactionsThread, 60);
     }
 
     @Override

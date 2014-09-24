@@ -55,6 +55,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
     private final Listeners<Block, Event> blockListeners = new Listeners<>();
     private volatile Peer lastBlockchainFeeder;
     private volatile int lastBlockchainFeederHeight;
+    private volatile boolean getMoreBlocks = true;
 
     private volatile boolean isScanning;
     private volatile boolean forceScan = Nxt.getBooleanProperty("nxt.forceScan");
@@ -77,6 +78,9 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
 
             try {
                 try {
+                    if (!getMoreBlocks) {
+                        return;
+                    }
                     peerHasMore = true;
                     Peer peer = Peers.getAnyPeer(Peer.State.CONNECTED, true);
                     if (peer == null) {
@@ -378,7 +382,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             }
         }, false);
 
-        ThreadPool.scheduleThread(getMoreBlocksThread, 1);
+        ThreadPool.scheduleThread("GetMoreBlocks", getMoreBlocksThread, 1);
 
     }
 
@@ -451,6 +455,10 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
     @Override
     public void validateAtNextScan() {
         validateAtScan = true;
+    }
+
+    void setGetMoreBlocks(boolean getMoreBlocks) {
+        this.getMoreBlocks = getMoreBlocks;
     }
 
     private void addBlock(BlockImpl block) {
