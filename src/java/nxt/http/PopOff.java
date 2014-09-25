@@ -47,4 +47,9 @@ public final class PopOff extends APIServlet.APIRequestHandler {
         return response;
     }
 
+    @Override
+    final boolean requirePost() {
+        return true;
+    }
+
 }
