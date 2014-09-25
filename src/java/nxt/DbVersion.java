@@ -440,9 +440,9 @@ final class DbVersion {
                 apply("CREATE INDEX IF NOT EXISTS currency_founder_currency_id_idx ON account_currency (currency_id)");
             case 130:
                 apply("CREATE TABLE IF NOT EXISTS currency_mint (db_id INT IDENTITY, currency_id BIGINT NOT NULL, "
-                        + "account_id BIGINT NOT NULL, counter BIGINT NOT NULL)");
+                        + "account_id BIGINT NOT NULL, counter BIGINT NOT NULL, height INT NOT NULL, latest BOOLEAN NOT NULL DEFAULT TRUE)");
             case 131:
-                apply("CREATE UNIQUE INDEX IF NOT EXISTS currency_mint_currency_id_account_id_idx ON currency_mint (currency_id, account_id)");
+                apply("CREATE UNIQUE INDEX IF NOT EXISTS currency_mint_currency_id_account_id_height_idx ON currency_mint (currency_id, account_id, height)");
             case 132:
                 apply("CREATE TABLE IF NOT EXISTS buy_offer (db_id INT IDENTITY, id BIGINT NOT NULL, currency_id BIGINT NOT NULL, account_id BIGINT NOT NULL,"
                         + "rate BIGINT NOT NULL, unit_limit BIGINT NOT NULL, supply BIGINT NOT NULL, expiration_height INT NOT NULL,"

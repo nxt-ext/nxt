@@ -1,10 +1,7 @@
 package nxt;
 
 import nxt.crypto.KNV;
-import nxt.db.Db;
-import nxt.db.DbKey;
-import nxt.db.DbUtils;
-import nxt.db.EntityDbTable;
+import nxt.db.*;
 
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
@@ -20,7 +17,7 @@ import java.sql.SQLException;
 public final class CurrencyMint {
 
 
-    private static final DbKey.LongKeyFactory<CurrencyMint> currencyMintDbKeyFactory = new DbKey.LongKeyFactory<CurrencyMint>("currency_id") {
+    private static final DbKey.LinkKeyFactory<CurrencyMint> currencyMintDbKeyFactory = new DbKey.LinkKeyFactory<CurrencyMint>("currency_id", "account_id") {
 
         @Override
         public DbKey newKey(CurrencyMint currencyMint) {
@@ -29,7 +26,7 @@ public final class CurrencyMint {
 
     };
 
-    public static final EntityDbTable<CurrencyMint> currencyMintTable = new EntityDbTable<CurrencyMint>("currency_mint", currencyMintDbKeyFactory) {
+    public static final VersionedEntityDbTable<CurrencyMint> currencyMintTable = new VersionedEntityDbTable<CurrencyMint>("currency_mint", currencyMintDbKeyFactory) {
 
         @Override
         protected CurrencyMint load(Connection con, ResultSet rs) throws SQLException {
@@ -50,15 +47,15 @@ public final class CurrencyMint {
 
     CurrencyMint(long currencyId, long accountId, long counter) {
         this.currencyId = currencyId;
-        this.dbKey = currencyMintDbKeyFactory.newKey(currencyId);
         this.accountId = accountId;
+        this.dbKey = currencyMintDbKeyFactory.newKey(currencyId, accountId);
         this.counter = counter;
     }
 
     CurrencyMint(ResultSet rs) throws SQLException {
         this.currencyId = rs.getLong("currency_id");
-        this.dbKey = currencyMintDbKeyFactory.newKey(currencyId);
         this.accountId = rs.getLong("account_id");
+        this.dbKey = currencyMintDbKeyFactory.newKey(currencyId, accountId);
         this.counter = rs.getLong("counter");
     }
 

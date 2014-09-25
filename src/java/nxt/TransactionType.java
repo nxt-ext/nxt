@@ -1819,6 +1819,9 @@ public abstract class TransactionType {
                     throw new NxtException.NotYetEnabledException("Monetary System not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
                 }
                 Attachment.MonetarySystemReserveIncrease attachment = (Attachment.MonetarySystemReserveIncrease)transaction.getAttachment();
+                if (Currency.isIssued(attachment.getCurrencyId())) {
+                    throw new NxtException.NotValidException("Cannot increase reserve, currency already issued at height: " + Currency.getCurrency(attachment.getCurrencyId()).getIssuanceHeight());
+                }
                 if (transaction.getAmountNQT() != 0 || attachment.getAmountNQT() <= 0) {
                     throw new NxtException.NotValidException("Invalid reserve increase: " + attachment.getJSONObject());
                 }

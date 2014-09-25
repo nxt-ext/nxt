@@ -27,6 +27,7 @@ public class TestCurrencyMint extends BlockchainTest {
                 build();
         JSONObject mintResponse = apiCall.invoke();
         Logger.logDebugMessage("mintResponse: " + mintResponse);
+        generateBlock();
     }
 
 }
