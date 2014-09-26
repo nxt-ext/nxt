@@ -10,6 +10,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Arrays;
 
 /**
  * Manages currency proof of work minting
@@ -44,12 +45,14 @@ public final class CurrencyMint {
     private final long currencyId;
     private final long accountId;
     private final long counter;
+    private final int height;
 
     CurrencyMint(long currencyId, long accountId, long counter) {
         this.currencyId = currencyId;
         this.accountId = accountId;
         this.dbKey = currencyMintDbKeyFactory.newKey(currencyId, accountId);
         this.counter = counter;
+        this.height = Nxt.getBlockchain().getHeight();
     }
 
     CurrencyMint(ResultSet rs) throws SQLException {
@@ -57,15 +60,17 @@ public final class CurrencyMint {
         this.accountId = rs.getLong("account_id");
         this.dbKey = currencyMintDbKeyFactory.newKey(currencyId, accountId);
         this.counter = rs.getLong("counter");
+        this.height = rs.getInt("height");
     }
 
     private void save(Connection con) throws SQLException {
-        try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO currency_mint (currency_id, account_id, counter)"
-                + "VALUES (?, ?, ?)")) {
+        try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO currency_mint (currency_id, account_id, counter, height)"
+                + "VALUES (?, ?, ?, ?)")) {
             int i = 0;
             pstmt.setLong(++i, this.getCurrencyId());
             pstmt.setLong(++i, this.getAccountId());
             pstmt.setLong(++i, this.getCounter());
+            pstmt.setInt(++i, this.getHeight());
             pstmt.executeUpdate();
         }
     }
@@ -82,8 +87,11 @@ public final class CurrencyMint {
         return counter;
     }
 
+    public int getHeight() {
+        return height;
+    }
 
-    static void mintMoney(Account account, long nonce, Long currencyId, long units, long counter) {
+    static void mintMoney(Account account, long nonce, long currencyId, long units, long counter) {
         Connection con = null;
         CurrencyMint currencyMint;
         try {
@@ -101,30 +109,62 @@ public final class CurrencyMint {
             return;
         }
 
-        ByteBuffer buffer = ByteBuffer.allocate(8 + 8 + 8 + 8 + 8);
-        buffer.order(ByteOrder.LITTLE_ENDIAN);
-        buffer.putLong(nonce);
-        buffer.putLong(currencyId);
-        buffer.putLong(units);
-        buffer.putLong(counter);
-        buffer.putLong(account.getId());
-        byte[] hash = new byte[32];
-        KNV.hash(buffer.array(), 0, buffer.array().length, hash, 0);
-
-        if (new BigInteger(hash).compareTo(getCurrencyDifficulty(currencyId)) >= 0) {
+        byte[] hash = getHash(nonce, currencyId, units, counter, account.getId());
+        Currency currency = Currency.getCurrency(currencyId);
+        byte[] target = getTarget(currency.getMinDifficulty(), currency.getMaxDifficulty(),
+                units, currency.getCurrentSupply(), currency.getTotalSupply());
+        if (meetsTarget(hash, target)) {
             currencyMintTable.insert(new CurrencyMint(currencyId, account.getId(), counter));
-            Currency currency = Currency.getCurrency(currencyId);
             units = Math.min(units, currency.getTotalSupply() - currency.getCurrentSupply());
             account.addToCurrencyAndUnconfirmedCurrencyBalanceQNT(currencyId, units);
             currency.increaseSupply(units);
         }
     }
 
-    static BigInteger getCurrencyDifficulty(Long currencyId) {
-        Currency currency = Currency.getCurrency(currencyId);
-        BigInteger minDifficulty = BigInteger.valueOf(2).pow(currency.getMinDifficulty() & 0xFF);
-        BigInteger maxDifficulty = BigInteger.valueOf(2).pow(currency.getMaxDifficulty() & 0xFF);
-        return minDifficulty.add(maxDifficulty.subtract(minDifficulty).multiply(BigInteger.valueOf(currency.getCurrentSupply())).divide(BigInteger.valueOf(currency.getTotalSupply()))); // minDifficulty + (maxDifficulty - minDifficulty) * currentSupply / totalSupply
+    public static boolean meetsTarget(byte[] hash, byte[] target) {
+        for (int i = hash.length - 1; i >= 0; i--) {
+            if ((hash[i] & 0xff) > (target[i] & 0xff)) {
+                return false;
+            }
+            if ((hash[i] & 0xff) < (target[i] & 0xff)) {
+                return true;
+            }
+        }
+        return true;
     }
 
+    static byte[] getHash(long nonce, long currencyId, long units, long counter, long accountId) {
+        ByteBuffer buffer = ByteBuffer.allocate(8 + 8 + 8 + 8 + 8);
+        buffer.order(ByteOrder.LITTLE_ENDIAN);
+        buffer.putLong(nonce);
+        buffer.putLong(currencyId);
+        buffer.putLong(units);
+        buffer.putLong(counter);
+        buffer.putLong(accountId);
+        byte[] hash = new byte[32];
+        KNV.hash(buffer.array(), 0, buffer.array().length, hash, 0);
+        return hash;
+    }
+
+    static byte[] getTarget(byte min, byte max, long units, long currentSupply, long totalSupply) {
+        int exp = 256 - (min + Math.round((max - min) * ((float)currentSupply / (float)totalSupply)));
+        BigInteger targetNum = (BigInteger.valueOf(2).pow(exp)).divide(BigInteger.valueOf(units));
+        byte[] targetRowBytes = targetNum.toByteArray();
+        if (targetRowBytes.length == 32) {
+            return reverse(targetRowBytes);
+        }
+        byte[] targetBytes = new byte[32];
+        Arrays.fill(targetBytes, 0, 32 - targetRowBytes.length, (byte) 0);
+        System.arraycopy(targetRowBytes, 0, targetBytes, 32 - targetRowBytes.length, targetRowBytes.length);
+        return reverse(targetBytes);
+    }
+
+    static byte[] reverse(byte[] b) {
+        for(int i=0; i < b.length/2; i++) {
+            byte temp = b[i];
+            b[i] = b[b.length - i - 1];
+            b[b.length - i - 1] = temp;
+        }
+        return b;
+    }
 }
