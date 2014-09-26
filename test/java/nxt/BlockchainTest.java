@@ -19,6 +19,7 @@ public abstract class BlockchainTest {
     @Before
     public void init() {
         baseHeight = Nxt.getBlockchain().getHeight();
+        Logger.logDebugMessage("baseHeight: " + baseHeight);
     }
 
     @After
