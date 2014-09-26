@@ -127,14 +127,8 @@ public final class Generator implements Comparable<Generator> {
 
     static boolean verifyHit(BigInteger hit, BigInteger effectiveBalance, Block previousBlock, int timestamp) {
         int elapsedTime = timestamp - previousBlock.getTimestamp();
-        if (Nxt.isIsUnitTest()) {
-            if (elapsedTime < 0) {
-                return false;
-            }
-        } else {
-            if (elapsedTime <= 0) {
-                return false;
-            }
+        if (elapsedTime <= 0) {
+            return false;
         }
         BigInteger effectiveBaseTarget = BigInteger.valueOf(previousBlock.getBaseTarget()).multiply(effectiveBalance);
         BigInteger prevTarget = effectiveBaseTarget.multiply(BigInteger.valueOf(elapsedTime - 1));

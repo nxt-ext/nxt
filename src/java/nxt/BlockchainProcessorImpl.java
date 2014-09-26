@@ -560,8 +560,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     throw new BlockNotAcceptedException("Previous block hash doesn't match");
                 }
                 if (block.getTimestamp() > curTime + 15
-                        || !Nxt.isIsUnitTest() && block.getTimestamp() <= previousLastBlock.getTimestamp()
-                        || Nxt.isIsUnitTest() && block.getTimestamp() < previousLastBlock.getTimestamp()) {
+                        || block.getTimestamp() <= previousLastBlock.getTimestamp()) {
                     throw new BlockOutOfOrderException("Invalid timestamp: " + block.getTimestamp()
                             + " current time is " + curTime + ", previous block timestamp is " + previousLastBlock.getTimestamp());
                 }
