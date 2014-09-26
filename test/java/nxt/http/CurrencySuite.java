@@ -14,7 +14,8 @@ import org.junit.runners.Suite;
         TestCurrencyIssuance.class,
         TestCurrencyExchange.class,
         TestCurrencyReserveAndClaim.class,
-        TestCurrencyMint.class
+        TestCurrencyMint.class,
+        nxt.TestMintCalculations.class,
 })
 
 public class CurrencySuite {

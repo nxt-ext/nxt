@@ -1,10 +1,9 @@
 package nxt.http;
 
-import nxt.BlockchainTest;
-import nxt.Constants;
-import nxt.CurrencyType;
+import nxt.*;
 import nxt.util.Logger;
 import org.json.simple.JSONObject;
+import org.junit.Assert;
 import org.junit.Test;
 
 public class TestCurrencyMint extends BlockchainTest {
@@ -28,6 +27,13 @@ public class TestCurrencyMint extends BlockchainTest {
         JSONObject mintResponse = apiCall.invoke();
         Logger.logDebugMessage("mintResponse: " + mintResponse);
         generateBlock();
+        apiCall = new APICall.Builder("getCurrency").
+                secretPhrase(secretPhrase1).
+                feeNQT(Constants.ONE_NXT).
+                param("currency", currencyId).
+                build();
+        JSONObject getCurrencyResponse = apiCall.invoke();
+        Logger.logDebugMessage("getCurrencyResponse: " + getCurrencyResponse);
+        Assert.assertEquals("0", getCurrencyResponse.get("currentSupply"));
     }
-
 }
