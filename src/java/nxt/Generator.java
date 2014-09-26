@@ -29,7 +29,7 @@ public final class Generator implements Comparable<Generator> {
     private static final Collection<Generator> allGenerators = Collections.unmodifiableCollection(generators.values());
     private static volatile List<Generator> sortedForgers;
 
-    private static final Runnable generateBlockThread = new Runnable() {
+    private static final Runnable generateBlocksThread = new Runnable() {
 
         private volatile int lastTimestamp;
         private volatile long lastBlockId;
@@ -81,7 +81,7 @@ public final class Generator implements Comparable<Generator> {
     };
 
     static {
-        ThreadPool.scheduleThread(generateBlockThread, 500, TimeUnit.MILLISECONDS);
+        ThreadPool.scheduleThread("GenerateBlocks", generateBlocksThread, 500, TimeUnit.MILLISECONDS);
     }
 
     static void init() {}

@@ -24,6 +24,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -55,6 +56,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
     private final Listeners<Block, Event> blockListeners = new Listeners<>();
     private volatile Peer lastBlockchainFeeder;
     private volatile int lastBlockchainFeederHeight;
+    private volatile boolean getMoreBlocks = true;
 
     private volatile boolean isScanning;
     private volatile boolean forceScan = Nxt.getBooleanProperty("nxt.forceScan");
@@ -77,6 +79,9 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
 
             try {
                 try {
+                    if (!getMoreBlocks) {
+                        return;
+                    }
                     peerHasMore = true;
                     Peer peer = Peers.getAnyPeer(Peer.State.CONNECTED, true);
                     if (peer == null) {
@@ -368,6 +373,32 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             }, Event.AFTER_BLOCK_APPLY);
         }
 
+        blockListeners.addListener(new Listener<Block>() {
+            @Override
+            public void notify(Block block) {
+                if (block.getHeight() % 1440 == 0) {
+                    try (Connection con = Db.getConnection();
+                         Statement stmt = con.createStatement()) {
+                        stmt.execute("ANALYZE SAMPLE_SIZE 0");
+                    } catch (SQLException e) {
+                        throw new RuntimeException(e.toString(), e);
+                    }
+                }
+            }
+        }, Event.BLOCK_PUSHED);
+
+        blockListeners.addListener(new Listener<Block>() {
+            @Override
+            public void notify(Block block) {
+                try (Connection con = Db.getConnection();
+                     Statement stmt = con.createStatement()) {
+                    stmt.execute("ANALYZE SAMPLE_SIZE 0");
+                } catch (SQLException e) {
+                    throw new RuntimeException(e.toString(), e);
+                }
+            }
+        }, Event.RESCAN_END);
+
         ThreadPool.runBeforeStart(new Runnable() {
             @Override
             public void run() {
@@ -378,7 +409,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             }
         }, false);
 
-        ThreadPool.scheduleThread(getMoreBlocksThread, 1);
+        ThreadPool.scheduleThread("GetMoreBlocks", getMoreBlocksThread, 1);
 
     }
 
@@ -451,6 +482,10 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
     @Override
     public void validateAtNextScan() {
         validateAtScan = true;
+    }
+
+    void setGetMoreBlocks(boolean getMoreBlocks) {
+        this.getMoreBlocks = getMoreBlocks;
     }
 
     private void addBlock(BlockImpl block) {
@@ -652,7 +687,6 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 }
                 addBlock(block);
                 accept(block);
-                blockListeners.notify(block, Event.BLOCK_PUSHED);
 
                 Db.commitTransaction();
             } catch (Exception e) {
@@ -663,6 +697,8 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 Db.endTransaction();
             }
         } // synchronized
+
+        blockListeners.notify(block, Event.BLOCK_PUSHED);
 
         if (block.getTimestamp() >= Convert.getEpochTime() - 15) {
             Peers.sendToSomePeers(block);
@@ -960,7 +996,6 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                             blockListeners.notify(currentBlock, Event.BEFORE_BLOCK_ACCEPT);
                             blockchain.setLastBlock(currentBlock);
                             accept(currentBlock);
-                            blockListeners.notify(currentBlock, Event.BLOCK_SCANNED);
                             currentBlockId = currentBlock.getNextBlockId();
                             Db.commitTransaction();
                         } catch (NxtException | RuntimeException e) {
@@ -981,6 +1016,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                             BlockDb.deleteBlocksFrom(currentBlockId);
                             scan(height - 1, true);
                         }
+                        blockListeners.notify(currentBlock, Event.BLOCK_SCANNED);
                     }
                     if (!inner) {
                         Db.endTransaction();

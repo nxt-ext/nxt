@@ -1,5 +1,7 @@
 package nxt.util;
 
+import nxt.Nxt;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -32,15 +34,19 @@ public final class ThreadPool {
         afterStartJobs.add(runnable);
     }
 
-    public static synchronized void scheduleThread(Runnable runnable, int delay) {
-        scheduleThread(runnable, delay, TimeUnit.SECONDS);
+    public static synchronized void scheduleThread(String name, Runnable runnable, int delay) {
+        scheduleThread(name, runnable, delay, TimeUnit.SECONDS);
     }
 
-    public static synchronized void scheduleThread(Runnable runnable, int delay, TimeUnit timeUnit) {
+    public static synchronized void scheduleThread(String name, Runnable runnable, int delay, TimeUnit timeUnit) {
         if (scheduledThreadPool != null) {
             throw new IllegalStateException("Executor service already started, no new jobs accepted");
         }
-        backgroundJobs.put(runnable, timeUnit.toMillis(delay));
+        if (! Nxt.getBooleanProperty("nxt.disable" + name + "Thread")) {
+            backgroundJobs.put(runnable, timeUnit.toMillis(delay));
+        } else {
+            Logger.logMessage("Will not run " + name + " thread");
+        }
     }
 
     public static synchronized void start() {

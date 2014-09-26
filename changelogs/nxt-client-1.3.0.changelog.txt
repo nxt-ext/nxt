@@ -35,7 +35,7 @@ can be triggered using the new scan API request, see below.
 
 To allow for the increased use of database, default max number of database 
 connection has been increased to nxt.maxDbConnections=30, and lock timeout
-increased to nxt.dbDefaultLockTimeout=600 in nxt-default.properties.
+increased to nxt.dbDefaultLockTimeout=60 in nxt-default.properties.
 
 To help with debugging potential bugs, default logging level has been set to
 nxt.level=FINE in logging-default.properties for this release, which will cause
