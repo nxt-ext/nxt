@@ -1,6 +1,7 @@
 package nxt.util;
 
 import nxt.Constants;
+import nxt.Nxt;
 import nxt.NxtException;
 import nxt.crypto.Crypto;
 
@@ -16,6 +17,7 @@ public final class Convert {
     private static final long[] multipliers = {1, 10, 100, 1000, 10000, 100000, 1000000, 10000000, 100000000};
 
     public static final BigInteger two64 = new BigInteger("18446744073709551616");
+    public static int counter;
 
     private Convert() {} //never
 
@@ -112,7 +114,13 @@ public final class Convert {
     }
 
     public static int getEpochTime() {
-        return (int)((System.currentTimeMillis() - Constants.EPOCH_BEGINNING + 500) / 1000);
+        int time = (int) ((System.currentTimeMillis() - Constants.EPOCH_BEGINNING + 500) / 1000);
+        // Make sure blocks do not use the same time stamp during unit tests
+        if (Nxt.isIsUnitTest()) {
+            time += counter;
+            counter ++;
+        }
+        return time;
     }
 
     public static Date fromEpochTime(int epochTime) {
