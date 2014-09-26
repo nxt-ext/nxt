@@ -87,7 +87,6 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     if (peer == null) {
                         return;
                     }
-                    lastBlockchainFeeder = peer;
                     JSONObject response = peer.send(getCumulativeDifficultyRequest);
                     if (response == null) {
                         return;
@@ -102,6 +101,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                         return;
                     }
                     if (response.get("blockchainHeight") != null) {
+                        lastBlockchainFeeder = peer;
                         lastBlockchainFeederHeight = ((Long) response.get("blockchainHeight")).intValue();
                     }
                     if (betterCumulativeDifficulty.equals(curCumulativeDifficulty)) {
