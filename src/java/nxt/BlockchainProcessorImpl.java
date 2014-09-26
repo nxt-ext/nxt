@@ -387,6 +387,18 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             }
         }, Event.BLOCK_PUSHED);
 
+        blockListeners.addListener(new Listener<Block>() {
+            @Override
+            public void notify(Block block) {
+                try (Connection con = Db.getConnection();
+                     Statement stmt = con.createStatement()) {
+                    stmt.execute("ANALYZE SAMPLE_SIZE 0");
+                } catch (SQLException e) {
+                    throw new RuntimeException(e.toString(), e);
+                }
+            }
+        }, Event.RESCAN_END);
+
         ThreadPool.runBeforeStart(new Runnable() {
             @Override
             public void run() {
