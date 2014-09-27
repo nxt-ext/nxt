@@ -179,7 +179,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                         processedAll = false;
                     }
 
-                    if (! processedAll && blockchain.getLastBlock().getHeight() - commonBlock.getHeight() < 720) {
+                    if (! processedAll && blockchain.getHeight() - commonBlock.getHeight() < 720) {
                         processFork(peer, forkBlocks, commonBlock);
                     }
 
@@ -949,9 +949,11 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     BlockImpl currentBlock = BlockDb.findBlockAtHeight(height);
                     blockListeners.notify(currentBlock, Event.RESCAN_BEGIN);
                     long currentBlockId = currentBlock.getId();
-                    blockchain.setLastBlock(currentBlock);
                     if (height == 0) {
+                        blockchain.setLastBlock(null);
                         Account.addOrGetAccount(Genesis.CREATOR_ID).apply(Genesis.CREATOR_PUBLIC_KEY, 0);
+                    } else {
+                        blockchain.setLastBlock(BlockDb.findBlockAtHeight(height - 1));
                     }
                     while (rs.next()) {
                         try {

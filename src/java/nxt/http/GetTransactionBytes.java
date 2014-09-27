@@ -44,7 +44,7 @@ public final class GetTransactionBytes extends APIServlet.APIRequestHandler {
                 return UNKNOWN_TRANSACTION;
             }
         } else {
-            response.put("confirmations", Nxt.getBlockchain().getLastBlock().getHeight() - transaction.getHeight());
+            response.put("confirmations", Nxt.getBlockchain().getHeight() - transaction.getHeight());
         }
         response.put("transactionBytes", Convert.toHexString(transaction.getBytes()));
         response.put("unsignedTransactionBytes", Convert.toHexString(transaction.getUnsignedBytes()));

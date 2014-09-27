@@ -176,7 +176,7 @@ final class BlockchainImpl implements Blockchain {
 
     @Override
     public List<BlockImpl> getBlocksFromHeight(int height) {
-        if (height < 0 || lastBlock.get().getHeight() - height > 1440) {
+        if (height < 0 || getHeight() - height > 1440) {
             throw new IllegalArgumentException("Can't go back more than 1440 blocks");
         }
         try (Connection con = Db.getConnection();

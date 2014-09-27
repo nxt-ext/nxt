@@ -316,7 +316,7 @@ final class JSONData {
     static JSONObject transaction(Transaction transaction) {
         JSONObject json = unconfirmedTransaction(transaction);
         json.put("block", Convert.toUnsignedLong(transaction.getBlockId()));
-        json.put("confirmations", Nxt.getBlockchain().getLastBlock().getHeight() - transaction.getHeight());
+        json.put("confirmations", Nxt.getBlockchain().getHeight() - transaction.getHeight());
         json.put("blockTimestamp", transaction.getBlockTimestamp());
         return json;
     }

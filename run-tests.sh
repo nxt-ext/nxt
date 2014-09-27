@@ -1,7 +1,12 @@
 #!/bin/sh
 CP=conf/:classes/:lib/*:testlib/*
 SP=src/java/:test/java/
+
+if [ $# -eq 0 ]; then
 TESTS="nxt.crypto.Curve25519Test nxt.crypto.ReedSolomonTest nxt.peer.HallmarkTest nxt.TokenTest"
+else
+TESTS=$@
+fi
 
 /bin/rm -f nxt.jar
 /bin/rm -rf classes
