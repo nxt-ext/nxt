@@ -87,7 +87,6 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     if (peer == null) {
                         return;
                     }
-                    lastBlockchainFeeder = peer;
                     JSONObject response = peer.send(getCumulativeDifficultyRequest);
                     if (response == null) {
                         return;
@@ -102,6 +101,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                         return;
                     }
                     if (response.get("blockchainHeight") != null) {
+                        lastBlockchainFeeder = peer;
                         lastBlockchainFeederHeight = ((Long) response.get("blockchainHeight")).intValue();
                     }
                     if (betterCumulativeDifficulty.equals(curCumulativeDifficulty)) {
@@ -616,8 +616,12 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
 
                 for (TransactionImpl transaction : block.getTransactions()) {
 
+                    if (transaction.getTimestamp() > curTime) {
+                        throw new BlockOutOfOrderException("Invalid transaction timestamp: " + transaction.getTimestamp()
+                                + ", current time is " + curTime);
+                    }
                     // cfb: Block 303 contains a transaction which expired before the block timestamp
-                    if (transaction.getTimestamp() > curTime + 15 || transaction.getTimestamp() > block.getTimestamp() + 15
+                    if (transaction.getTimestamp() > block.getTimestamp() + 15
                             || (transaction.getExpiration() < block.getTimestamp() && previousLastBlock.getHeight() != 303)) {
                         throw new TransactionNotAcceptedException("Invalid transaction timestamp " + transaction.getTimestamp()
                                 + " for transaction " + transaction.getStringId() + ", current time is " + curTime
