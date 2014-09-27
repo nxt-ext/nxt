@@ -1,7 +1,10 @@
 package nxt;
 
-import nxt.crypto.KNV;
-import nxt.db.*;
+import nxt.crypto.HashFunction;
+import nxt.db.Db;
+import nxt.db.DbKey;
+import nxt.db.DbUtils;
+import nxt.db.VersionedEntityDbTable;
 
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
@@ -109,8 +112,8 @@ public final class CurrencyMint {
             return;
         }
 
-        byte[] hash = getHash(nonce, currencyId, units, counter, account.getId());
         Currency currency = Currency.getCurrency(currencyId);
+        byte[] hash = getHash(currency.getAlgorithm(), nonce, currencyId, units, counter, account.getId());
         byte[] target = getTarget(currency.getMinDifficulty(), currency.getMaxDifficulty(),
                 units, currency.getCurrentSupply(), currency.getTotalSupply());
         if (meetsTarget(hash, target)) {
@@ -133,7 +136,7 @@ public final class CurrencyMint {
         return true;
     }
 
-    static byte[] getHash(long nonce, long currencyId, long units, long counter, long accountId) {
+    public static byte[] getHash(byte algorithm, long nonce, long currencyId, long units, long counter, long accountId) {
         ByteBuffer buffer = ByteBuffer.allocate(8 + 8 + 8 + 8 + 8);
         buffer.order(ByteOrder.LITTLE_ENDIAN);
         buffer.putLong(nonce);
@@ -141,12 +144,10 @@ public final class CurrencyMint {
         buffer.putLong(units);
         buffer.putLong(counter);
         buffer.putLong(accountId);
-        byte[] hash = new byte[32];
-        KNV.hash(buffer.array(), 0, buffer.array().length, hash, 0);
-        return hash;
+        return HashFunction.getHashFunction(algorithm).hash(buffer.array());
     }
 
-    static byte[] getTarget(byte min, byte max, long units, long currentSupply, long totalSupply) {
+    public static byte[] getTarget(byte min, byte max, long units, long currentSupply, long totalSupply) {
         int exp = 256 - (min + Math.round((max - min) * ((float)currentSupply / (float)totalSupply)));
         BigInteger targetNum = (BigInteger.valueOf(2).pow(exp)).divide(BigInteger.valueOf(units));
         byte[] targetRowBytes = targetNum.toByteArray();

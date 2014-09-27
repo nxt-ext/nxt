@@ -15,7 +15,7 @@ public final class IssueCurrency extends CreateTransaction {
     private IssueCurrency() {
         super(new APITag[] {APITag.MS, APITag.CREATE_TRANSACTION},
                 "name", "code", "description", "type", "totalSupply", "issuanceHeight", "minReservePerUnitNQT",
-                "minDifficulty", "maxDifficulty", "ruleset", "recipient");
+                "minDifficulty", "maxDifficulty", "ruleset", "algorithm");
     }
 
     @Override

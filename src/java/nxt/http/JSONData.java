@@ -75,6 +75,7 @@ final class JSONData {
         json.put("currentReservePerUnitNQT", currency.getCurrentReservePerUnitNQT());
         json.put("minDifficulty", currency.getMinDifficulty());
         json.put("maxDifficulty", currency.getMaxDifficulty());
+        json.put("algorithm", currency.getAlgorithm());
         return json;
     }
 

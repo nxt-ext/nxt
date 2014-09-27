@@ -1,5 +1,6 @@
 package nxt;
 
+import nxt.crypto.Crypto;
 import nxt.http.APICall;
 import nxt.util.Convert;
 import nxt.util.Logger;
@@ -16,10 +17,15 @@ public abstract class BlockchainTest {
     protected static final String secretPhrase1 = "hope peace happen touch easy pretend worthless talk them indeed wheel state";
     protected static final String secretPhrase2 = "rshw9abtpsa2";
 
+    protected static long id1;
+    protected static long id2;
+
     @Before
     public void init() {
         baseHeight = Nxt.getBlockchain().getHeight();
         Logger.logDebugMessage("baseHeight: " + baseHeight);
+        id1 = Account.getAccount(Crypto.getPublicKey(secretPhrase1)).getId();
+        id2 = Account.getAccount(Crypto.getPublicKey(secretPhrase2)).getId();
     }
 
     @After

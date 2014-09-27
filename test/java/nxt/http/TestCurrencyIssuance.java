@@ -18,11 +18,11 @@ public class TestCurrencyIssuance extends BlockchainTest {
     }
 
     public static String issueCurrencyImpl(byte type, int issuanceHeight, long minReservePerUnitNQT) {
-        return issueCurrencyImpl(type, issuanceHeight, minReservePerUnitNQT, 100000, (byte)0, (byte)0);
+        return issueCurrencyImpl(type, issuanceHeight, minReservePerUnitNQT, 100000, (byte)0, (byte)0, (byte)0);
     }
 
     public static String issueCurrencyImpl(byte type, int issuanceHeight, long minReservePerUnitNQT,
-                                           long totalSupply, byte minDiff, byte maxDiff) {
+                                           long totalSupply, byte minDiff, byte maxDiff, byte algorithm) {
         APICall apiCall = new APICall.Builder("issueCurrency").
                 secretPhrase(secretPhrase1).
                 feeNQT(1000 * Constants.ONE_NXT).
@@ -36,6 +36,7 @@ public class TestCurrencyIssuance extends BlockchainTest {
                 param("minReservePerUnitNQT", minReservePerUnitNQT).
                 param("minDifficulty", minDiff).
                 param("maxDifficulty", maxDiff).
+                param("algorithm", algorithm).
                 build();
 
         JSONObject issueCurrencyResponse = apiCall.invoke();
