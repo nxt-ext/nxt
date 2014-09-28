@@ -613,7 +613,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
 
                 for (TransactionImpl transaction : block.getTransactions()) {
 
-                    if (transaction.getTimestamp() > curTime) {
+                    if (transaction.getTimestamp() > curTime + 15) {
                         throw new BlockOutOfOrderException("Invalid transaction timestamp: " + transaction.getTimestamp()
                                 + ", current time is " + curTime);
                     }
@@ -819,7 +819,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     continue;
                 }
 
-                if (transaction.getTimestamp() > blockTimestamp || transaction.getExpiration() < blockTimestamp) {
+                if (transaction.getTimestamp() > blockTimestamp + 15 || transaction.getExpiration() < blockTimestamp) {
                     continue;
                 }
 
