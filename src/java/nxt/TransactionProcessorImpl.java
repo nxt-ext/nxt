@@ -336,9 +336,11 @@ final class TransactionProcessorImpl implements TransactionProcessor {
     }
 
     void shutdown() {
+        /*
         try (DbIterator<TransactionImpl> transactions = unconfirmedTransactionTable.getAll(0, -1)) {
             removeUnconfirmedTransactions(transactions, false);
         }
+        */
     }
 
     int getTransactionVersion(int previousBlockHeight) {
