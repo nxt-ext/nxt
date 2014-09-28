@@ -926,6 +926,9 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 Logger.logMessage("Rollback of more than " + Constants.MAX_ROLLBACK + " blocks not supported, will do a full scan");
                 height = 0;
             }
+            if (height < 0) {
+                height = 0;
+            }
             isScanning = true;
             Logger.logMessage("Scanning blockchain starting from height " + height + "...");
             if (validateAtScan) {
