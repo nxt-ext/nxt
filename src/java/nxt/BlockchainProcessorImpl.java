@@ -819,7 +819,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     continue;
                 }
 
-                if (transaction.getTimestamp() > blockTimestamp + 15 || (transaction.getExpiration() < blockTimestamp)) {
+                if (transaction.getTimestamp() > blockTimestamp || transaction.getExpiration() < blockTimestamp) {
                     continue;
                 }
 
