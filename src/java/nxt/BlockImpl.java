@@ -238,23 +238,28 @@ final class BlockImpl implements Block {
     }
 
     static BlockImpl parseBlock(JSONObject blockData) throws NxtException.ValidationException {
-        int version = ((Long)blockData.get("version")).intValue();
-        int timestamp = ((Long)blockData.get("timestamp")).intValue();
-        long previousBlock = Convert.parseUnsignedLong((String) blockData.get("previousBlock"));
-        long totalAmountNQT = Convert.parseLong(blockData.get("totalAmountNQT"));
-        long totalFeeNQT = Convert.parseLong(blockData.get("totalFeeNQT"));
-        int payloadLength = ((Long)blockData.get("payloadLength")).intValue();
-        byte[] payloadHash = Convert.parseHexString((String) blockData.get("payloadHash"));
-        byte[] generatorPublicKey = Convert.parseHexString((String) blockData.get("generatorPublicKey"));
-        byte[] generationSignature = Convert.parseHexString((String) blockData.get("generationSignature"));
-        byte[] blockSignature = Convert.parseHexString((String) blockData.get("blockSignature"));
-        byte[] previousBlockHash = version == 1 ? null : Convert.parseHexString((String) blockData.get("previousBlockHash"));
-        List<TransactionImpl> blockTransactions = new ArrayList<>();
-        for (Object transactionData : (JSONArray)blockData.get("transactions")) {
-            blockTransactions.add(TransactionImpl.parseTransaction((JSONObject) transactionData));
+        try {
+            int version = ((Long) blockData.get("version")).intValue();
+            int timestamp = ((Long) blockData.get("timestamp")).intValue();
+            long previousBlock = Convert.parseUnsignedLong((String) blockData.get("previousBlock"));
+            long totalAmountNQT = Convert.parseLong(blockData.get("totalAmountNQT"));
+            long totalFeeNQT = Convert.parseLong(blockData.get("totalFeeNQT"));
+            int payloadLength = ((Long) blockData.get("payloadLength")).intValue();
+            byte[] payloadHash = Convert.parseHexString((String) blockData.get("payloadHash"));
+            byte[] generatorPublicKey = Convert.parseHexString((String) blockData.get("generatorPublicKey"));
+            byte[] generationSignature = Convert.parseHexString((String) blockData.get("generationSignature"));
+            byte[] blockSignature = Convert.parseHexString((String) blockData.get("blockSignature"));
+            byte[] previousBlockHash = version == 1 ? null : Convert.parseHexString((String) blockData.get("previousBlockHash"));
+            List<TransactionImpl> blockTransactions = new ArrayList<>();
+            for (Object transactionData : (JSONArray) blockData.get("transactions")) {
+                blockTransactions.add(TransactionImpl.parseTransaction((JSONObject) transactionData));
+            }
+            return new BlockImpl(version, timestamp, previousBlock, totalAmountNQT, totalFeeNQT, payloadLength, payloadHash, generatorPublicKey,
+                    generationSignature, blockSignature, previousBlockHash, blockTransactions);
+        } catch (NxtException.ValidationException|RuntimeException e) {
+            Logger.logDebugMessage("Failed to parse block: " + blockData.toJSONString());
+            throw e;
         }
-        return new BlockImpl(version, timestamp, previousBlock, totalAmountNQT, totalFeeNQT, payloadLength, payloadHash, generatorPublicKey,
-                generationSignature, blockSignature, previousBlockHash, blockTransactions);
     }
 
     byte[] getBytes() {

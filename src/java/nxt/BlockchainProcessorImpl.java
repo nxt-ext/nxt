@@ -145,7 +145,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                                 JSONObject blockData = (JSONObject) o;
                                 BlockImpl block;
                                 try {
-                                    block = parseBlock(blockData);
+                                    block = BlockImpl.parseBlock(blockData);
                                 } catch (NxtException.NotCurrentlyValidException e) {
                                     Logger.logDebugMessage("Cannot validate block: " + e.toString()
                                             + ", will try again later", e);
@@ -453,7 +453,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
 
     @Override
     public void processPeerBlock(JSONObject request) throws NxtException {
-        BlockImpl block = parseBlock(request);
+        BlockImpl block = BlockImpl.parseBlock(request);
         pushBlock(block);
     }
 
@@ -901,10 +901,6 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         }
     }
 
-    private BlockImpl parseBlock(JSONObject blockData) throws NxtException.ValidationException {
-        return BlockImpl.parseBlock(blockData);
-    }
-
     private boolean hasAllReferencedTransactions(Transaction transaction, int timestamp, int count) {
         if (transaction.getReferencedTransactionFullHash() == null) {
             return timestamp - transaction.getTimestamp() < 60 * 1440 * 60 && count < 10;
@@ -972,7 +968,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                                 }
                                 byte[] blockBytes = currentBlock.getBytes();
                                 JSONObject blockJSON = (JSONObject) JSONValue.parse(currentBlock.getJSONObject().toJSONString());
-                                if (!Arrays.equals(blockBytes, parseBlock(blockJSON).getBytes())) {
+                                if (!Arrays.equals(blockBytes, BlockImpl.parseBlock(blockJSON).getBytes())) {
                                     throw new NxtException.NotValidException("Block JSON cannot be parsed back to the same block");
                                 }
                                 for (TransactionImpl transaction : currentBlock.getTransactions()) {
