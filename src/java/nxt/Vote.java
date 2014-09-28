@@ -14,28 +14,9 @@ import java.util.Map;
 
 public final class Vote {
 
-    private static final DbKey.LongKeyFactory<Vote> voteDbKeyFactory = new DbKey.LongKeyFactory<Vote>("id") {
+    private static final DbKey.LongKeyFactory<Vote> voteDbKeyFactory = null;
 
-        @Override
-        public DbKey newKey(Vote vote) {
-            return vote.dbKey;
-        }
-
-    };
-
-    private static final EntityDbTable<Vote> voteTable = new EntityDbTable<Vote>("vote", voteDbKeyFactory) {
-
-        @Override
-        protected Vote load(Connection con, ResultSet rs) throws SQLException {
-            return new Vote(rs);
-        }
-
-        @Override
-        protected void save(Connection con, Vote vote) throws SQLException {
-            vote.save(con);
-        }
-
-    };
+    private static final EntityDbTable<Vote> voteTable = null;
 
     static Vote addVote(Transaction transaction, Attachment.MessagingVoteCasting attachment) {
         Vote vote = new Vote(transaction, attachment);

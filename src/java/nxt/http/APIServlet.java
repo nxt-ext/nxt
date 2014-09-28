@@ -65,8 +65,8 @@ public final class APIServlet extends HttpServlet {
         map.put("calculateFullHash", CalculateFullHash.instance);
         map.put("cancelAskOrder", CancelAskOrder.instance);
         map.put("cancelBidOrder", CancelBidOrder.instance);
-        map.put("castVote", CastVote.instance);
-        map.put("createPoll", CreatePoll.instance);
+        //map.put("castVote", CastVote.instance);
+        //map.put("createPoll", CreatePoll.instance);
         map.put("decryptFrom", DecryptFrom.instance);
         map.put("dgsListing", DGSListing.instance);
         map.put("dgsDelisting", DGSDelisting.instance);
@@ -109,13 +109,11 @@ public final class APIServlet extends HttpServlet {
         map.put("getDGSPendingPurchases", GetDGSPendingPurchases.instance);
         map.put("getGuaranteedBalance", GetGuaranteedBalance.instance);
         map.put("getMyInfo", GetMyInfo.instance);
-        if (Constants.isTestnet) {
-            map.put("getNextBlockGenerators", GetNextBlockGenerators.instance);
-        }
+        //map.put("getNextBlockGenerators", GetNextBlockGenerators.instance);
         map.put("getPeer", GetPeer.instance);
         map.put("getPeers", GetPeers.instance);
-        map.put("getPoll", GetPoll.instance);
-        map.put("getPollIds", GetPollIds.instance);
+        //map.put("getPoll", GetPoll.instance);
+        //map.put("getPollIds", GetPollIds.instance);
         map.put("getState", GetState.instance);
         map.put("getTime", GetTime.instance);
         map.put("getTrades", GetTrades.instance);
