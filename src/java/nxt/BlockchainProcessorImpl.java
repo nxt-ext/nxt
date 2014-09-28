@@ -324,6 +324,13 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     Logger.logDebugMessage("Pop off caused by peer " + peer.getPeerAddress() + ", blacklisting");
                     peer.blacklist();
                     List<BlockImpl> peerPoppedOffBlocks = popOffTo(commonBlock);
+                    pushedForkBlocks = 0;
+                    for (BlockImpl block : peerPoppedOffBlocks) {
+                        TransactionProcessorImpl.getInstance().processLater(block.getTransactions());
+                    }
+                }
+
+                if (pushedForkBlocks == 0) {
                     for (int i = myPoppedOffBlocks.size() - 1; i >= 0; i--) {
                         BlockImpl block = myPoppedOffBlocks.remove(i);
                         try {
@@ -333,14 +340,10 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                             break;
                         }
                     }
-
-                    for (BlockImpl block : peerPoppedOffBlocks) {
+                } else {
+                    for (BlockImpl block : myPoppedOffBlocks) {
                         TransactionProcessorImpl.getInstance().processLater(block.getTransactions());
                     }
-                }
-
-                for (BlockImpl block : myPoppedOffBlocks) {
-                    TransactionProcessorImpl.getInstance().processLater(block.getTransactions());
                 }
 
             } // synchronized
@@ -467,11 +470,6 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             addGenesisBlock();
             scan(0);
         }
-    }
-
-    @Override
-    public void scan(int height) {
-        scan(height, false);
     }
 
     @Override
@@ -915,7 +913,8 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         return transaction != null && hasAllReferencedTransactions(transaction, timestamp, count + 1);
     }
 
-    private void scan(int height, boolean inner) {
+    @Override
+    public void scan(int height) {
         synchronized (blockchain) {
             TransactionProcessorImpl transactionProcessor = TransactionProcessorImpl.getInstance();
             int blockchainHeight = Nxt.getBlockchain().getHeight();
@@ -935,7 +934,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 Logger.logDebugMessage("Also verifying signatures and validating transactions...");
             }
             transactionProcessor.clear();
-            try (Connection con = inner ? Db.getConnection() : Db.beginTransaction();
+            try (Connection con = Db.beginTransaction();
                  PreparedStatement pstmt = con.prepareStatement("SELECT * FROM block WHERE height >= ? ORDER BY db_id ASC")) {
                 try (DbIterator<TransactionImpl> unconfirmedTransactions = transactionProcessor.getAllUnconfirmedTransactions()) {
                     transactionProcessor.removeUnconfirmedTransactions(unconfirmedTransactions, true);
@@ -1022,13 +1021,11 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                                 }
                             }
                             BlockDb.deleteBlocksFrom(currentBlockId);
-                            scan(height - 1, true);
+                            blockchain.setLastBlock(BlockDb.findLastBlock());
                         }
                         blockListeners.notify(currentBlock, Event.BLOCK_SCANNED);
                     }
-                    if (!inner) {
-                        Db.endTransaction();
-                    }
+                    Db.endTransaction();
                     blockListeners.notify(currentBlock, Event.RESCAN_END);
                 }
             } catch (SQLException e) {
