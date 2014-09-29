@@ -231,11 +231,16 @@ final class TransactionProcessorImpl implements TransactionProcessor {
         ThreadPool.scheduleThread("ProcessTransactions", processTransactionsThread, 5);
         ThreadPool.scheduleThread("RemoveUnconfirmedTransactions", removeUnconfirmedTransactionsThread, 1);
         ThreadPool.scheduleThread("RebroadcastTransactions", rebroadcastTransactionsThread, 60);
-        try (DbIterator<TransactionImpl> oldNonBroadcastedTransactions = getAllUnconfirmedTransactions()) {
-            for (TransactionImpl transaction : oldNonBroadcastedTransactions) {
-                nonBroadcastedTransactions.add(transaction);
+        ThreadPool.runAfterStart(new Runnable() {
+            @Override
+            public void run() {
+                try (DbIterator<TransactionImpl> oldNonBroadcastedTransactions = getAllUnconfirmedTransactions()) {
+                    for (TransactionImpl transaction : oldNonBroadcastedTransactions) {
+                        nonBroadcastedTransactions.add(transaction);
+                    }
+                }
             }
-        }
+        });
     }
 
     @Override
