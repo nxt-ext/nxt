@@ -504,7 +504,6 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             return;
         }
         Logger.logMessage("Genesis block not in database, starting from scratch");
-        blockchain.setLastBlock(null);
         try {
             List<TransactionImpl> transactions = new ArrayList<>();
             for (int i = 0; i < Genesis.GENESIS_RECIPIENTS.length; i++) {
@@ -513,6 +512,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                         Attachment.ORDINARY_PAYMENT)
                         .recipientId(Genesis.GENESIS_RECIPIENTS[i])
                         .signature(Genesis.GENESIS_SIGNATURES[i])
+                        .height(0)
                         .build();
                 transactions.add(transaction);
             }
@@ -949,7 +949,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     blockListeners.notify(currentBlock, Event.RESCAN_BEGIN);
                     long currentBlockId = currentBlock.getId();
                     if (height == 0) {
-                        blockchain.setLastBlock(null);
+                        blockchain.setLastBlock(currentBlock); // special case to avoid no last block
                         Account.addOrGetAccount(Genesis.CREATOR_ID).apply(Genesis.CREATOR_PUBLIC_KEY, 0);
                     } else {
                         blockchain.setLastBlock(BlockDb.findBlockAtHeight(height - 1));
