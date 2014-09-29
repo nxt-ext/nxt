@@ -85,6 +85,20 @@ public final class DebugTrace {
                 }
             }, Account.Event.UNCONFIRMED_ASSET_BALANCE);
         }
+        Account.addCurrencyListener(new Listener<Account.AccountCurrency>() {
+            @Override
+            public void notify(Account.AccountCurrency accountCurrency) {
+                debugTrace.trace(accountCurrency, false);
+            }
+        }, Account.Event.CURRENCY_BALANCE);
+        if (LOG_UNCONFIRMED) {
+            Account.addCurrencyListener(new Listener<Account.AccountCurrency>() {
+                @Override
+                public void notify(Account.AccountCurrency accountCurrency) {
+                    debugTrace.trace(accountCurrency, true);
+                }
+            }, Account.Event.UNCONFIRMED_CURRENCY_BALANCE);
+        }
         Account.addLeaseListener(new Listener<Account.AccountLease>() {
             @Override
             public void notify(Account.AccountLease accountLease) {
@@ -192,6 +206,13 @@ public final class DebugTrace {
             return;
         }
         log(getValues(accountAsset.getAccountId(), accountAsset, unconfirmed));
+    }
+
+    private void trace(Account.AccountCurrency accountCurrency, boolean unconfirmed) {
+        if (! include(accountCurrency.getAccountId())) {
+            return;
+        }
+        log(getValues(accountCurrency.getAccountId(), accountCurrency, unconfirmed));
     }
 
     private void trace(Account.AccountLease accountLease, boolean start) {
@@ -328,6 +349,21 @@ public final class DebugTrace {
         return map;
     }
 
+    private Map<String,String> getValues(long accountId, Account.AccountCurrency accountCurrency, boolean unconfirmed) {
+        Map<String,String> map = new HashMap<>();
+        map.put("account", Convert.toUnsignedLong(accountId));
+        map.put("currency", Convert.toUnsignedLong(accountCurrency.getCurrencyId()));
+        if (unconfirmed) {
+            map.put("unconfirmed currency balance", String.valueOf(accountCurrency.getUnconfirmedUnits()));
+        } else {
+            map.put("currency balance", String.valueOf(accountCurrency.getUnits()));
+        }
+        map.put("timestamp", String.valueOf(Nxt.getBlockchain().getLastBlock().getTimestamp()));
+        map.put("height", String.valueOf(Nxt.getBlockchain().getHeight()));
+        map.put("event", "currency balance");
+        return map;
+    }
+
     private Map<String,String> getValues(long accountId, Account.AccountLease accountLease, boolean start) {
         Map<String,String> map = new HashMap<>();
         map.put("account", Convert.toUnsignedLong(accountId));
@@ -432,6 +468,7 @@ public final class DebugTrace {
             } else {
                 map.put("recipient", Convert.toUnsignedLong(transaction.getRecipientId()));
             }
+        // TODO add MS
         } else {
             return Collections.emptyMap();
         }

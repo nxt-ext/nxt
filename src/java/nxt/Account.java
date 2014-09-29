@@ -136,7 +136,7 @@ public final class Account {
             return accountId;
         }
 
-        public Long getAssetId() {
+        public Long getCurrencyId() {
             return currencyId;
         }
 
