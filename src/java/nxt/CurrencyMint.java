@@ -148,8 +148,7 @@ public final class CurrencyMint {
     }
 
     public static byte[] getTarget(byte min, byte max, long units, long currentSupply, long totalSupply) {
-        int exp = 256 - (min + Math.round((max - min) * ((float)currentSupply / (float)totalSupply)));
-        BigInteger targetNum = (BigInteger.valueOf(2).pow(exp)).divide(BigInteger.valueOf(units));
+        BigInteger targetNum = getNumericTarget(min, max, units, currentSupply, totalSupply);
         byte[] targetRowBytes = targetNum.toByteArray();
         if (targetRowBytes.length == 32) {
             return reverse(targetRowBytes);
@@ -158,6 +157,11 @@ public final class CurrencyMint {
         Arrays.fill(targetBytes, 0, 32 - targetRowBytes.length, (byte) 0);
         System.arraycopy(targetRowBytes, 0, targetBytes, 32 - targetRowBytes.length, targetRowBytes.length);
         return reverse(targetBytes);
+    }
+
+    public static BigInteger getNumericTarget(byte min, byte max, long units, float currentSupply, float totalSupply) {
+        int exp = 256 - (min + Math.round((max - min) * (currentSupply / totalSupply)));
+        return (BigInteger.valueOf(2).pow(exp)).divide(BigInteger.valueOf(units));
     }
 
     static byte[] reverse(byte[] b) {

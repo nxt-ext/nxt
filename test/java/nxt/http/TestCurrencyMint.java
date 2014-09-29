@@ -70,5 +70,14 @@ public class TestCurrencyMint extends BlockchainTest {
         getCurrencyResponse = apiCall.invoke();
         Logger.logDebugMessage("getCurrencyResponse: " + getCurrencyResponse);
         Assert.assertEquals("" + units, getCurrencyResponse.get("currentSupply"));
+
+        apiCall = new APICall.Builder("getMintingTarget").
+                param("currency", currencyId).
+                param("units", "1000").
+                build();
+        JSONObject getMintingTargetResponse = apiCall.invoke();
+        Logger.logDebugMessage("getMintingTargetResponse: " + getMintingTargetResponse);
+        Assert.assertEquals(4000, getMintingTargetResponse.get("difficulty"));
+        Assert.assertEquals("a9f1d24d62105839b4c876be9f1a2fdd24068195438b6ce7fba9f1d24d621000", getMintingTargetResponse.get("targetBytes"));
     }
 }
