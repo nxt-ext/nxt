@@ -441,7 +441,7 @@ public final class Account {
         }
         this.id = id;
         this.dbKey = accountDbKeyFactory.newKey(this.id);
-        this.creationHeight = Nxt.getBlockchain().getLastBlock().getHeight();
+        this.creationHeight = Nxt.getBlockchain().getHeight();
         currentLeasingHeightFrom = Integer.MAX_VALUE;
     }
 
@@ -612,7 +612,7 @@ public final class Account {
     }
 
     public long getGuaranteedBalanceNQT(final int numberOfConfirmations) {
-        if (numberOfConfirmations >= Nxt.getBlockchain().getLastBlock().getHeight()) {
+        if (numberOfConfirmations >= Nxt.getBlockchain().getHeight()) {
             return 0;
         }
         if (numberOfConfirmations > 2880 || numberOfConfirmations < 0) {
@@ -689,10 +689,9 @@ public final class Account {
     void leaseEffectiveBalance(long lesseeId, short period) {
         Account lessee = Account.getAccount(lesseeId);
         if (lessee != null && lessee.getPublicKey() != null) {
-            Block lastBlock = Nxt.getBlockchain().getLastBlock();
+            int height = Nxt.getBlockchain().getHeight();
             if (currentLeasingHeightFrom == Integer.MAX_VALUE) {
-
-                currentLeasingHeightFrom = lastBlock.getHeight() + 1440;
+                currentLeasingHeightFrom = height + 1440;
                 currentLeasingHeightTo = currentLeasingHeightFrom + period;
                 currentLesseeId = lesseeId;
                 nextLeasingHeightFrom = Integer.MAX_VALUE;
@@ -700,10 +699,8 @@ public final class Account {
                 leaseListeners.notify(
                         new AccountLease(this.getId(), lesseeId, currentLeasingHeightFrom, currentLeasingHeightTo),
                         Event.LEASE_SCHEDULED);
-
             } else {
-
-                nextLeasingHeightFrom = lastBlock.getHeight() + 1440;
+                nextLeasingHeightFrom = height + 1440;
                 if (nextLeasingHeightFrom < currentLeasingHeightTo) {
                     nextLeasingHeightFrom = currentLeasingHeightTo;
                 }

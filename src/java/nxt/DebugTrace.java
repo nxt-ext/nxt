@@ -25,23 +25,32 @@ public final class DebugTrace {
     static final boolean LOG_UNCONFIRMED = Nxt.getBooleanProperty("nxt.debugLogUnconfirmed");
 
     static void init() {
-        List<String> accountIds = Nxt.getStringListProperty("nxt.debugTraceAccounts");
+        List<String> accountIdStrings = Nxt.getStringListProperty("nxt.debugTraceAccounts");
         String logName = Nxt.getStringProperty("nxt.debugTraceLog");
-        if (accountIds.isEmpty() || logName == null) {
+        if (accountIdStrings.isEmpty() || logName == null) {
             return;
         }
-        addDebugTrace(accountIds, logName);
+        Set<Long> accountIds = new HashSet<>();
+        for (String accountId : accountIdStrings) {
+            if ("*".equals(accountId)) {
+                accountIds.clear();
+                break;
+            }
+            accountIds.add(Convert.parseUnsignedLong(accountId));
+        }
+        final DebugTrace debugTrace = addDebugTrace(accountIds, logName);
+        Nxt.getBlockchainProcessor().addListener(new Listener<Block>() {
+            @Override
+            public void notify(Block block) {
+                debugTrace.resetLog();
+            }
+        }, BlockchainProcessor.Event.RESCAN_BEGIN);
         Logger.logDebugMessage("Debug tracing of " + (accountIds.contains("*") ? "ALL"
                 : String.valueOf(accountIds.size())) + " accounts enabled");
     }
 
-    public static void addDebugTrace(List<String> accountIds, String logName) {
+    public static DebugTrace addDebugTrace(Set<Long> accountIds, String logName) {
         final DebugTrace debugTrace = new DebugTrace(accountIds, logName);
-        final Map<String, String> headers = new HashMap<>();
-        for (String entry : columns) {
-            headers.put(entry, entry);
-        }
-        debugTrace.log(headers);
         Trade.addListener(new Listener<Trade>() {
             @Override
             public void notify(Trade trade) {
@@ -91,13 +100,6 @@ public final class DebugTrace {
         Nxt.getBlockchainProcessor().addListener(new Listener<Block>() {
             @Override
             public void notify(Block block) {
-                debugTrace.resetLog();
-                debugTrace.log(headers);
-            }
-        }, BlockchainProcessor.Event.RESCAN_BEGIN);
-        Nxt.getBlockchainProcessor().addListener(new Listener<Block>() {
-            @Override
-            public void notify(Block block) {
                 debugTrace.traceBeforeAccept(block);
             }
         }, BlockchainProcessor.Event.BEFORE_BLOCK_ACCEPT);
@@ -107,6 +109,7 @@ public final class DebugTrace {
                 debugTrace.trace(block);
             }
         }, BlockchainProcessor.Event.BEFORE_BLOCK_APPLY);
+        return debugTrace;
     }
 
     private static final String[] columns = {"height", "event", "account", "asset", "balance", "unconfirmed balance",
@@ -118,19 +121,19 @@ public final class DebugTrace {
             "purchase", "purchase price", "purchase quantity", "purchase cost", "discount", "refund",
             "sender", "recipient", "block", "timestamp"};
 
+    private static final Map<String,String> headers = new HashMap<>();
+    static {
+        for (String entry : columns) {
+            headers.put(entry, entry);
+        }
+    }
+
     private final Set<Long> accountIds;
     private final String logName;
     private PrintWriter log;
 
-    private DebugTrace(List<String> accountIds, String logName) {
-        this.accountIds = new HashSet<>();
-        for (String accountId : accountIds) {
-            if ("*".equals(accountId)) {
-                this.accountIds.clear();
-                break;
-            }
-            this.accountIds.add(Convert.parseUnsignedLong(accountId));
-        }
+    private DebugTrace(Set<Long> accountIds, String logName) {
+        this.accountIds = accountIds;
         this.logName = logName;
         resetLog();
     }
@@ -145,6 +148,7 @@ public final class DebugTrace {
             Logger.logDebugMessage("Debug tracing to " + logName + " not possible", e);
             throw new RuntimeException(e);
         }
+        this.log(headers);
     }
 
     private boolean include(long accountId) {
@@ -240,7 +244,7 @@ public final class DebugTrace {
         map.put("lessor guaranteed balance", String.valueOf(account.getGuaranteedBalanceNQT(1440)));
         map.put("lessee", Convert.toUnsignedLong(lesseeId));
         map.put("timestamp", String.valueOf(Nxt.getBlockchain().getLastBlock().getTimestamp()));
-        map.put("height", String.valueOf(Nxt.getBlockchain().getLastBlock().getHeight()));
+        map.put("height", String.valueOf(Nxt.getBlockchain().getHeight()));
         map.put("event", "lessor guaranteed balance");
         return map;
     }
@@ -252,7 +256,7 @@ public final class DebugTrace {
         map.put("balance", String.valueOf(account != null ? account.getBalanceNQT() : 0));
         map.put("unconfirmed balance", String.valueOf(account != null ? account.getUnconfirmedBalanceNQT() : 0));
         map.put("timestamp", String.valueOf(Nxt.getBlockchain().getLastBlock().getTimestamp()));
-        map.put("height", String.valueOf(Nxt.getBlockchain().getLastBlock().getHeight()));
+        map.put("height", String.valueOf(Nxt.getBlockchain().getHeight()));
         map.put("event", unconfirmed ? "unconfirmed balance" : "balance");
         return map;
     }
@@ -319,7 +323,7 @@ public final class DebugTrace {
             map.put("asset balance", String.valueOf(accountAsset.getQuantityQNT()));
         }
         map.put("timestamp", String.valueOf(Nxt.getBlockchain().getLastBlock().getTimestamp()));
-        map.put("height", String.valueOf(Nxt.getBlockchain().getLastBlock().getHeight()));
+        map.put("height", String.valueOf(Nxt.getBlockchain().getHeight()));
         map.put("event", "asset balance");
         return map;
     }
@@ -329,7 +333,7 @@ public final class DebugTrace {
         map.put("account", Convert.toUnsignedLong(accountId));
         map.put("event", start ? "lease begin" : "lease end");
         map.put("timestamp", String.valueOf(Nxt.getBlockchain().getLastBlock().getTimestamp()));
-        map.put("height", String.valueOf(Nxt.getBlockchain().getLastBlock().getHeight()));
+        map.put("height", String.valueOf(Nxt.getBlockchain().getHeight()));
         map.put("lessee", Convert.toUnsignedLong(accountLease.lesseeId));
         return map;
     }
@@ -421,7 +425,7 @@ public final class DebugTrace {
             map = new HashMap<>();
             map.put("account", Convert.toUnsignedLong(accountId));
             map.put("timestamp", String.valueOf(Nxt.getBlockchain().getLastBlock().getTimestamp()));
-            map.put("height", String.valueOf(Nxt.getBlockchain().getLastBlock().getHeight()));
+            map.put("height", String.valueOf(Nxt.getBlockchain().getHeight()));
             map.put("event", attachment == Attachment.ARBITRARY_MESSAGE ? "message" : "encrypted message");
             if (isRecipient) {
                 map.put("sender", Convert.toUnsignedLong(transaction.getSenderId()));

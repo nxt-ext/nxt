@@ -38,28 +38,9 @@ public class Hub {
 
     }
 
-    private static final DbKey.LongKeyFactory<Hub> hubDbKeyFactory = new DbKey.LongKeyFactory<Hub>("account_id") {
+    private static final DbKey.LongKeyFactory<Hub> hubDbKeyFactory = null;
 
-        @Override
-        public DbKey newKey(Hub hub) {
-            return hub.dbKey;
-        }
-
-    };
-
-    private static final VersionedEntityDbTable<Hub> hubTable = new VersionedEntityDbTable<Hub>("hub", hubDbKeyFactory) {
-
-        @Override
-        protected Hub load(Connection con, ResultSet rs) throws SQLException {
-            return new Hub(rs);
-        }
-
-        @Override
-        protected void save(Connection con, Hub hub) throws SQLException {
-            hub.save(con);
-        }
-
-    };
+    private static final VersionedEntityDbTable<Hub> hubTable = null;
 
     static void addOrUpdateHub(Transaction transaction, Attachment.MessagingHubAnnouncement attachment) {
         hubTable.insert(new Hub(transaction, attachment));

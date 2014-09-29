@@ -37,6 +37,13 @@ To allow for the increased use of database, default max number of database
 connection has been increased to nxt.maxDbConnections=30, and lock timeout
 increased to nxt.dbDefaultLockTimeout=60 in nxt-default.properties.
 
+Slower machines and high traffic public nodes may experience database lock
+timeouts with the default settings. To prevent those, MVCC mode can be enabled
+by appending MVCC=TRUE to the jdbc url in nxt.properties. MVCC is not enabled
+by default however, because while providing for higher concurrency under
+multiple simultaneous connections, and thus avoiding timeouts, it is also slower
+overall and less well tested.
+
 To help with debugging potential bugs, default logging level has been set to
 nxt.level=FINE in logging-default.properties for this release, which will cause
 more output than usual in the log.
@@ -144,7 +151,9 @@ after compilation, instead of being packaged in a nxt.jar file. The run.sh and
 run.bat scripts have been modified to include this directory on the classpath
 instead of the nxt.jar file. Those who still prefer to build a nxt.jar file, can
 easily do that with the included jar.sh script, and modify the classpath to use
-it.
+it. A pre-built nxt.jar file will still be included for a few releases, as it
+is expected by the restart code when upgrading from an older version, but is not
+otherwise used.
 
 
 Other internal changes:

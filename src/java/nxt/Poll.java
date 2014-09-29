@@ -12,28 +12,9 @@ import java.util.Map;
 
 public final class Poll {
 
-    private static final DbKey.LongKeyFactory<Poll> pollDbKeyFactory = new DbKey.LongKeyFactory<Poll>("id") {
+    private static final DbKey.LongKeyFactory<Poll> pollDbKeyFactory = null;
 
-        @Override
-        public DbKey newKey(Poll poll) {
-            return poll.dbKey;
-        }
-
-    };
-
-    private static final EntityDbTable<Poll> pollTable = new EntityDbTable<Poll>("poll", pollDbKeyFactory) {
-
-        @Override
-        protected Poll load(Connection con, ResultSet rs) throws SQLException {
-            return new Poll(rs);
-        }
-
-        @Override
-        protected void save(Connection con, Poll poll) throws SQLException {
-            poll.save(con);
-        }
-
-    };
+    private static final EntityDbTable<Poll> pollTable = null;
 
     static void init() {}
 

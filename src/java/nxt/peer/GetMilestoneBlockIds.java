@@ -48,11 +48,11 @@ final class GetMilestoneBlockIds extends PeerServlet.PeerRequestHandler {
                     throw new IllegalStateException("Don't have block " + lastMilestoneBlockIdString);
                 }
                 height = lastMilestoneBlock.getHeight();
-                jump = Math.min(1440, Nxt.getBlockchain().getLastBlock().getHeight() - height);
+                jump = Math.min(1440, Nxt.getBlockchain().getHeight() - height);
                 height = Math.max(height - jump, 0);
                 limit = 10;
             } else if (lastBlockIdString != null) {
-                height = Nxt.getBlockchain().getLastBlock().getHeight();
+                height = Nxt.getBlockchain().getHeight();
                 jump = 10;
                 limit = 10;
             } else {
