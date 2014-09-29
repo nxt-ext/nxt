@@ -151,7 +151,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                                             + ", will try again later", e);
                                     processedAll = false;
                                     break outer;
-                                } catch (RuntimeException|NxtException.ValidationException e) {
+                                } catch (RuntimeException | NxtException.ValidationException e) {
                                     Logger.logDebugMessage("Failed to parse block: " + e.toString(), e);
                                     peer.blacklist(e);
                                     return;
@@ -165,7 +165,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                                         peer.blacklist(e);
                                         return;
                                     }
-                                } else if (! BlockDb.hasBlock(block.getId())) {
+                                } else if (!BlockDb.hasBlock(block.getId())) {
                                     forkBlocks.add(block);
                                 }
 
@@ -179,12 +179,15 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                         processedAll = false;
                     }
 
-                    if (! processedAll && blockchain.getHeight() - commonBlock.getHeight() < 720) {
+                    if (!processedAll && blockchain.getHeight() - commonBlock.getHeight() < 720) {
                         processFork(peer, forkBlocks, commonBlock);
                     }
 
+                } catch (NxtException.StopException e) {
+                    getMoreBlocks = false;
+                    Logger.logMessage("Blockchain download stopped: " + e.getMessage());
                 } catch (Exception e) {
-                    Logger.logDebugMessage("Error in milestone blocks processing thread", e);
+                    Logger.logDebugMessage("Error in blockchain download thread", e);
                 }
             } catch (Throwable t) {
                 Logger.logMessage("CRITICAL ERROR. PLEASE REPORT TO THE DEVELOPERS.\n" + t.toString());
@@ -929,7 +932,6 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             if (validateAtScan) {
                 Logger.logDebugMessage("Also verifying signatures and validating transactions...");
             }
-            transactionProcessor.clear();
             try (Connection con = Db.beginTransaction();
                  PreparedStatement pstmt = con.prepareStatement("SELECT * FROM block WHERE height >= ? ORDER BY db_id ASC")) {
                 try (DbIterator<TransactionImpl> unconfirmedTransactions = transactionProcessor.getAllUnconfirmedTransactions()) {

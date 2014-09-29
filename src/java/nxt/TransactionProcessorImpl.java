@@ -301,10 +301,6 @@ final class TransactionProcessorImpl implements TransactionProcessor {
         return TransactionImpl.parseTransaction(transactionData);
     }
 
-    void clear() {
-        nonBroadcastedTransactions.clear();
-    }
-
     void removeUnconfirmedTransactions(Iterable<TransactionImpl> transactions, boolean processLater) {
         synchronized (BlockchainImpl.getInstance()) {
             if (!Db.isInTransaction()) {

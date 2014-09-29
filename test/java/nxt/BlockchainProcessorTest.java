@@ -146,12 +146,11 @@ public class BlockchainProcessorTest {
             @Override
             public void notify(Block block) {
                 if (blockchain.getHeight() == endHeight) {
-                    blockchainProcessor.setGetMoreBlocks(false);
                     synchronized (downloadLock) {
                         done = true;
                         downloadLock.notifyAll();
                     }
-                    throw new RuntimeException("Stopping blockchain download, this is not an error!");
+                    throw new NxtException.StopException("Reached height " + endHeight);
                 }
             }
         };

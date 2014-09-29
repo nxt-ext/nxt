@@ -1,6 +1,5 @@
 package nxt.http;
 
-import nxt.Constants;
 import nxt.Nxt;
 import nxt.NxtException;
 import nxt.util.JSON;
