@@ -3,6 +3,7 @@ package nxt;
 import nxt.db.Db;
 import nxt.db.DbIterator;
 import nxt.db.DbKey;
+import nxt.db.FilteringIterator;
 import nxt.db.VersionedEntityDbTable;
 import nxt.peer.Peer;
 import nxt.peer.Peers;
@@ -230,6 +231,11 @@ final class TransactionProcessorImpl implements TransactionProcessor {
         ThreadPool.scheduleThread("ProcessTransactions", processTransactionsThread, 5);
         ThreadPool.scheduleThread("RemoveUnconfirmedTransactions", removeUnconfirmedTransactionsThread, 1);
         ThreadPool.scheduleThread("RebroadcastTransactions", rebroadcastTransactionsThread, 60);
+        try (DbIterator<TransactionImpl> oldNonBroadcastedTransactions = getAllUnconfirmedTransactions()) {
+            for (TransactionImpl transaction : oldNonBroadcastedTransactions) {
+                nonBroadcastedTransactions.add(transaction);
+            }
+        }
     }
 
     @Override
@@ -332,11 +338,15 @@ final class TransactionProcessorImpl implements TransactionProcessor {
     }
 
     void shutdown() {
-        /*
-        try (DbIterator<TransactionImpl> transactions = unconfirmedTransactionTable.getAll(0, -1)) {
-            removeUnconfirmedTransactions(transactions, false);
+        try (FilteringIterator<TransactionImpl> notNonBroadcasted = new FilteringIterator<>(
+                unconfirmedTransactionTable.getAll(0, -1), new FilteringIterator.Filter<TransactionImpl>() {
+            @Override
+            public boolean ok(TransactionImpl transaction) {
+                return ! nonBroadcastedTransactions.contains(transaction);
+            }
+        })) {
+            removeUnconfirmedTransactions(notNonBroadcasted, false);
         }
-        */
     }
 
     int getTransactionVersion(int previousBlockHeight) {
