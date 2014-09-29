@@ -362,7 +362,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
     }
 
     private void processPeerTransactions(JSONArray transactionsData, final boolean sendToPeers) throws NxtException.ValidationException {
-        if (Nxt.getBlockchainProcessor().isDownloading() || Nxt.getBlockchain().getHeight() < Constants.DIGITAL_GOODS_STORE_BLOCK) {
+        if (Nxt.getBlockchain().getLastBlock().getTimestamp() < Convert.getEpochTime() - 60 * 1440) {
             return;
         }
         List<TransactionImpl> transactions = new ArrayList<>();

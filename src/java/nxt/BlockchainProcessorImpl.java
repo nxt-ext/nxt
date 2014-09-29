@@ -450,11 +450,6 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
     }
 
     @Override
-    public boolean isDownloading() {
-        return lastBlockchainFeederHeight > blockchain.getHeight() + 1440;
-    }
-
-    @Override
     public void processPeerBlock(JSONObject request) throws NxtException {
         BlockImpl block = BlockImpl.parseBlock(request);
         pushBlock(block);
