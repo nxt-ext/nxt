@@ -30,6 +30,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 final class TransactionProcessorImpl implements TransactionProcessor {
 
+    private static final boolean enableTransactionRebroadcasting = Nxt.getBooleanProperty("nxt.enableTransactionRebroadcasting");
+
     private static final TransactionProcessorImpl instance = new TransactionProcessorImpl();
 
     static TransactionProcessorImpl getInstance() {
@@ -210,7 +212,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                         return;
                     }
                     try {
-                        processPeerTransactions(transactionsData, false);
+                        processPeerTransactions(transactionsData);
                     } catch (NxtException.ValidationException|RuntimeException e) {
                         peer.blacklist(e);
                     }
@@ -229,17 +231,19 @@ final class TransactionProcessorImpl implements TransactionProcessor {
     private TransactionProcessorImpl() {
         ThreadPool.scheduleThread("ProcessTransactions", processTransactionsThread, 5);
         ThreadPool.scheduleThread("RemoveUnconfirmedTransactions", removeUnconfirmedTransactionsThread, 1);
-        ThreadPool.scheduleThread("RebroadcastTransactions", rebroadcastTransactionsThread, 60);
-        ThreadPool.runAfterStart(new Runnable() {
-            @Override
-            public void run() {
-                try (DbIterator<TransactionImpl> oldNonBroadcastedTransactions = getAllUnconfirmedTransactions()) {
-                    for (TransactionImpl transaction : oldNonBroadcastedTransactions) {
-                        nonBroadcastedTransactions.add(transaction);
+        if (enableTransactionRebroadcasting) {
+            ThreadPool.scheduleThread("RebroadcastTransactions", rebroadcastTransactionsThread, 60);
+            ThreadPool.runAfterStart(new Runnable() {
+                @Override
+                public void run() {
+                    try (DbIterator<TransactionImpl> oldNonBroadcastedTransactions = getAllUnconfirmedTransactions()) {
+                        for (TransactionImpl transaction : oldNonBroadcastedTransactions) {
+                            nonBroadcastedTransactions.add(transaction);
+                        }
                     }
                 }
-            }
-        });
+            });
+        }
     }
 
     @Override
@@ -287,7 +291,9 @@ final class TransactionProcessorImpl implements TransactionProcessor {
         }
         List<Transaction> validTransactions = processTransactions(Collections.singleton((TransactionImpl) transaction), true);
         if (validTransactions.contains(transaction)) {
-            nonBroadcastedTransactions.add((TransactionImpl) transaction);
+            if (enableTransactionRebroadcasting) {
+                nonBroadcastedTransactions.add((TransactionImpl) transaction);
+            }
             Logger.logDebugMessage("Accepted new transaction " + transaction.getStringId());
         } else {
             Logger.logDebugMessage("Rejecting double spending transaction " + transaction.getStringId());
@@ -298,7 +304,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
     @Override
     public void processPeerTransactions(JSONObject request) throws NxtException.ValidationException {
         JSONArray transactionsData = (JSONArray)request.get("transactions");
-        processPeerTransactions(transactionsData, true);
+        processPeerTransactions(transactionsData);
     }
 
     @Override
@@ -365,7 +371,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
         }
     }
 
-    private void processPeerTransactions(JSONArray transactionsData, final boolean sendToPeers) throws NxtException.ValidationException {
+    private void processPeerTransactions(JSONArray transactionsData) throws NxtException.ValidationException {
         if (Nxt.getBlockchain().getLastBlock().getTimestamp() < Nxt.getEpochTime() - 60 * 1440) {
             return;
         }
@@ -381,7 +387,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                 throw e;
             }
         }
-        processTransactions(transactions, sendToPeers);
+        processTransactions(transactions, true);
         nonBroadcastedTransactions.removeAll(transactions);
     }
 
