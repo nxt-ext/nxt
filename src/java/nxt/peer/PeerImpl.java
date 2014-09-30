@@ -283,7 +283,14 @@ final class PeerImpl implements Peer {
         try {
 
             String address = announcedAddress != null ? announcedAddress : peerAddress;
-            URL url = new URL("http://" + address + (port <= 0 ? ":" + (Constants.isTestnet ? Peers.TESTNET_PEER_PORT : Peers.DEFAULT_PEER_PORT) : "") + "/nxt");
+            StringBuilder buf = new StringBuilder("http://");
+            buf.append(address);
+            if (port <= 0) {
+                buf.append(':');
+                buf.append(Constants.isTestnet ? Peers.TESTNET_PEER_PORT : Peers.DEFAULT_PEER_PORT);
+            }
+            buf.append("/nxt");
+            URL url = new URL(buf.toString());
 
             if (Peers.communicationLoggingMask != 0) {
                 StringWriter stringWriter = new StringWriter();
