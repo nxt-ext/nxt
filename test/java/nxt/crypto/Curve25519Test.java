@@ -6,7 +6,8 @@ import org.junit.Test;
 
 import java.security.SecureRandom;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.fail;
 
 public class Curve25519Test {
 

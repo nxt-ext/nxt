@@ -24,12 +24,8 @@ public final class Generator implements Comparable<Generator> {
         GENERATION_DEADLINE, START_FORGING, STOP_FORGING
     }
 
-    private static final byte[] fakeForgingPublicKey;
-    static {
-        String testForgingSecretPhrase = Nxt.getStringProperty("nxt.testForgingSecretPhrase");
-        fakeForgingPublicKey = (Nxt.getBooleanProperty("nxt.enableFakeForging") && testForgingSecretPhrase != null)
-                ? Crypto.getPublicKey(testForgingSecretPhrase) : null;
-    }
+    private static final byte[] fakeForgingPublicKey = Nxt.getBooleanProperty("nxt.enableFakeForging")
+            ? Account.getAccount(Convert.parseAccountId(Nxt.getStringProperty("nxt.fakeForgingAccount"))).getPublicKey() : null;
 
     private static final Listeners<Generator,Event> listeners = new Listeners<>();
 
@@ -153,7 +149,7 @@ public final class Generator implements Comparable<Generator> {
     }
 
     static boolean allowsFakeForging(byte[] publicKey) {
-        return publicKey != null && Arrays.equals(publicKey, fakeForgingPublicKey);
+        return Constants.isTestnet && publicKey != null && Arrays.equals(publicKey, fakeForgingPublicKey);
     }
 
     private static BigInteger getHit(byte[] publicKey, Block block) {
