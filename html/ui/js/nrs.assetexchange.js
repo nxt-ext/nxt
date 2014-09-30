@@ -9,6 +9,7 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.lastIssuerCheck = false;
 	NRS.viewingAsset = false; //viewing non-bookmarked asset
 	NRS.currentAsset = {};
+	NRS.assetTradeHistoryType = "everyone";
 	var currentAssetID = 0;
 
 	NRS.pages.asset_exchange = function(callback) {
@@ -671,35 +672,7 @@ var NRS = (function(NRS, $, undefined) {
 		NRS.loadAssetOrders("ask", assetId, refresh);
 		NRS.loadAssetOrders("bid", assetId, refresh);
 
-		//todo NRS.currentSubPageID ??...
-		NRS.sendRequest("getTrades+" + assetId, {
-			"asset": assetId,
-			"firstIndex": 0,
-			"lastIndex": 50
-		}, function(response, input) {
-			if (response.trades && response.trades.length) {
-				var trades = response.trades;
-
-				var rows = "";
-
-				for (var i = 0; i < trades.length; i++) {
-					trades[i].priceNQT = new BigInteger(trades[i].priceNQT);
-					trades[i].quantityQNT = new BigInteger(trades[i].quantityQNT);
-					trades[i].totalNQT = new BigInteger(NRS.calculateOrderTotalNQT(trades[i].priceNQT, trades[i].quantityQNT));
-
-					rows += "<tr><td>" + NRS.formatTimestamp(trades[i].timestamp) + "</td><td>" + NRS.formatQuantity(trades[i].quantityQNT, NRS.currentAsset.decimals) + "</td><td class='asset_price'>" + NRS.formatOrderPricePerWholeQNT(trades[i].priceNQT, NRS.currentAsset.decimals) + "</td><td>" + NRS.formatAmount(trades[i].totalNQT) + "</td>" +
-						"<td><a href='#' data-user='" + NRS.getAccountFormatted(trades[i], "buyer") + "' class='user_info'>" + (trades[i].buyerRS == NRS.currentAsset.accountRS ? "Asset Issuer" : NRS.getAccountTitle(trades[i], "buyer")) + "</a></td>" +
-						"<td><a href='#' data-user='" + NRS.getAccountFormatted(trades[i], "seller") + "' class='user_info'>" + (trades[i].sellerRS == NRS.currentAsset.accountRS ? "Asset Issuer" : NRS.getAccountTitle(trades[i], "seller")) + "</a></td>" +
-						"</tr>";
-				}
-
-				$("#asset_exchange_trade_history_table tbody").empty().append(rows);
-				NRS.dataLoadFinished($("#asset_exchange_trade_history_table"), !refresh);
-			} else {
-				$("#asset_exchange_trade_history_table tbody").empty();
-				NRS.dataLoadFinished($("#asset_exchange_trade_history_table"), !refresh);
-			}
-		});
+		NRS.getAssetTradeHistory(assetId, refresh);
 	}
 
 	NRS.loadAssetOrders = function(type, assetId, refresh) {
@@ -789,6 +762,51 @@ var NRS = (function(NRS, $, undefined) {
 
 		return false;
 	}
+
+	NRS.getAssetTradeHistory = function(assetId, refresh) {
+		var options = {
+			"asset": assetId,
+			"firstIndex": 0,
+			"lastIndex": 50
+		};
+
+		if (NRS.assetTradeHistoryType == "you") {
+			options["account"] = NRS.accountRS;
+		}
+
+		NRS.sendRequest("getTrades+" + assetId, options, function(response, input) {
+			if (response.trades && response.trades.length) {
+				var trades = response.trades;
+
+				var rows = "";
+
+				for (var i = 0; i < trades.length; i++) {
+					trades[i].priceNQT = new BigInteger(trades[i].priceNQT);
+					trades[i].quantityQNT = new BigInteger(trades[i].quantityQNT);
+					trades[i].totalNQT = new BigInteger(NRS.calculateOrderTotalNQT(trades[i].priceNQT, trades[i].quantityQNT));
+
+					rows += "<tr><td>" + NRS.formatTimestamp(trades[i].timestamp) + "</td><td>" + NRS.formatQuantity(trades[i].quantityQNT, NRS.currentAsset.decimals) + "</td><td class='asset_price'>" + NRS.formatOrderPricePerWholeQNT(trades[i].priceNQT, NRS.currentAsset.decimals) + "</td><td>" + NRS.formatAmount(trades[i].totalNQT) + "</td>" +
+						"<td><a href='#' data-user='" + NRS.getAccountFormatted(trades[i], "buyer") + "' class='user_info'>" + (trades[i].buyerRS == NRS.currentAsset.accountRS ? "Asset Issuer" : NRS.getAccountTitle(trades[i], "buyer")) + "</a></td>" +
+						"<td><a href='#' data-user='" + NRS.getAccountFormatted(trades[i], "seller") + "' class='user_info'>" + (trades[i].sellerRS == NRS.currentAsset.accountRS ? "Asset Issuer" : NRS.getAccountTitle(trades[i], "seller")) + "</a></td>" +
+						"</tr>";
+				}
+
+				$("#asset_exchange_trade_history_table tbody").empty().append(rows);
+				NRS.dataLoadFinished($("#asset_exchange_trade_history_table"), !refresh);
+			} else {
+				$("#asset_exchange_trade_history_table tbody").empty();
+				NRS.dataLoadFinished($("#asset_exchange_trade_history_table"), !refresh);
+			}
+		});
+	}
+
+	$("#asset_exchange_trade_history_type .btn").click(function(e) {
+		e.preventDefault();
+
+		NRS.assetTradeHistoryType = $(this).data("type");
+
+		NRS.getAssetTradeHistory(NRS.currentAsset.asset, true);
+	});
 
 	$("#asset_exchange_search").on("submit", function(e) {
 		e.preventDefault();
@@ -1410,14 +1428,13 @@ var NRS = (function(NRS, $, undefined) {
 		$("#asset_exchange_group_new_group_div").val("").hide();
 	});
 
+	/* TRADE HISTORY PAGE */
 	NRS.pages.trade_history = function() {
 		NRS.sendRequest("getTrades+", {
 			"account": NRS.accountRS,
 			"firstIndex": 0,
 			"lastIndex": 100
 		}, function(response, input) {
-			console.log(response);
-
 			if (response.trades && response.trades.length) {
 				var trades = response.trades;
 

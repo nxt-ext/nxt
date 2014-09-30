@@ -990,7 +990,19 @@
 					                        </div>
 							                        
 					                        <div class="box box-primary" style="max-height:500px;overflow:auto;margin-bottom:10px;">
-					                            <div class="box-header"><h3 class="box-title" data-i18n="trade_history">Trade History</h3></div>
+					                            <div class="box-header">
+                                                    <h3 class="box-title" data-i18n="trade_history">Trade History</h3>
+                                                    <div style="position:absolute;top:9px;right:9px;">
+                                                        <div class="btn-group" data-toggle="buttons" id="asset_exchange_trade_history_type">
+                                                            <label class="btn btn-default active" data-type="everyone">
+                                                                <input type="radio" name="asset_exchange_trade_history_type"> <span data-i18n="everyone">Everyone</span>
+                                                            </label>
+                                                            <label class="btn btn-default" data-type="you">
+                                                                <input type="radio" name="asset_exchange_trade_history_type"> <span data-i18n="you">You</span>
+                                                            </label>
+                                                        </div>
+                                                    </div>
+                                                </div>
 					                            <div class="box-body no-padding">
 					                            	<div class="data-container data-loading" data-no-padding="true">
 						                                <table class="table table-striped" id="asset_exchange_trade_history_table">
