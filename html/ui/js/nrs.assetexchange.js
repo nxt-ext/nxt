@@ -1432,77 +1432,47 @@ var NRS = (function(NRS, $, undefined) {
 					continue;
 				}
 
-				NRS.sendRequest("getAskOrderIds+", {
+				NRS.sendRequest("getAskOrders+", {
 					"asset": NRS.accountInfo.assetBalances[i].asset,
-					"limit": 1,
-					"timestamp": 0
+					"firstIndex": 0,
+					"lastIndex": 1
 				}, function(response, input) {
 					if (NRS.currentPage != "my_assets") {
 						return;
 					}
 
-					if (response.askOrderIds && response.askOrderIds.length) {
-						NRS.sendRequest("getAskOrder+", {
-							"order": response.askOrderIds[0],
-							"_extra": {
-								"asset": input.asset
-							}
-						}, function(response, input) {
-							if (NRS.currentPage != "my_assets") {
-								return;
-							}
-
-							response.priceNQT = new BigInteger(response.priceNQT);
-
-							result.ask_orders[input["_extra"].asset] = response.priceNQT;
-							count.ask_orders++;
-							if (NRS.checkMyAssetsPageLoaded(count)) {
-								NRS.myAssetsPageLoaded(result);
-							}
-						});
-					} else {
+					if (response.askOrders && response.askOrders.length) {
+						result.ask_orders[input.asset] = new BigInteger(response.askOrders[0].priceNQT);
+						]
+					else {
 						result.ask_orders[input.asset] = -1;
-						count.ask_orders++;
-						if (NRS.checkMyAssetsPageLoaded(count)) {
-							NRS.myAssetsPageLoaded(result);
-						}
+					}
+
+					count.ask_orders++;
+					if (NRS.checkMyAssetsPageLoaded(count)) {
+						NRS.myAssetsPageLoaded(result);
 					}
 				});
 
-				NRS.sendRequest("getBidOrderIds+", {
+				NRS.sendRequest("getBidOrders+", {
 					"asset": NRS.accountInfo.assetBalances[i].asset,
-					"limit": 1,
-					"timestamp": 0
+					"firstIndex": 0,
+					"lastIndex": 1
 				}, function(response, input) {
 					if (NRS.currentPage != "my_assets") {
 						return;
 					}
 
-					if (response.bidOrderIds && response.bidOrderIds.length) {
-						NRS.sendRequest("getBidOrder+", {
-							"order": response.bidOrderIds[0],
-							"_extra": {
-								"asset": input.asset
-							}
-						}, function(response, input) {
-							if (NRS.currentPage != "my_assets") {
-								return;
-							}
-
-							response.priceNQT = new BigInteger(response.priceNQT);
-
-							result.bid_orders[input["_extra"].asset] = response.priceNQT;
-							count.bid_orders++;
-							if (NRS.checkMyAssetsPageLoaded(count)) {
-								NRS.myAssetsPageLoaded(result);
-							}
-						});
+					if (response.bidOrders && response.bidOrders.length) {
+						result.bid_orders[input.asset] = new BigInteger(response.bidOrders[0].priceNQT);
 					} else {
 						result.bid_orders[input.asset] = -1;
-						count.bid_orders++;
-						if (NRS.checkMyAssetsPageLoaded(count)) {
-							NRS.myAssetsPageLoaded(result);
-						}
+					}
+
+					count.bid_orders++;
+
+					if (NRS.checkMyAssetsPageLoaded(count)) {
+						NRS.myAssetsPageLoaded(result);
 					}
 				});
 
