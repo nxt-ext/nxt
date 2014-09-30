@@ -293,9 +293,9 @@ final class DbVersion {
                 apply("CREATE INDEX IF NOT EXISTS asset_account_id_idx ON asset (account_id)");
             case 80:
                 apply("CREATE TABLE IF NOT EXISTS trade (db_id INT IDENTITY, asset_id BIGINT NOT NULL, block_id BIGINT NOT NULL, "
-                        + "ask_order_id BIGINT NOT NULL, bid_order_id BIGINT NOT NULL, seller_id BIGINT NOT NULL, "
-                        + "buyer_id BIGINT NOT NULL, quantity BIGINT NOT NULL, "
-                        + "price BIGINT NOT NULL, timestamp INT NOT NULL, height INT NOT NULL)");
+                        + "ask_order_id BIGINT NOT NULL, bid_order_id BIGINT NOT NULL, ask_order_height INT NOT NULL, "
+                        + "bid_order_height INT NOT NULL, seller_id BIGINT NOT NULL, buyer_id BIGINT NOT NULL, "
+                        + "quantity BIGINT NOT NULL, price BIGINT NOT NULL, timestamp INT NOT NULL, height INT NOT NULL)");
             case 81:
                 apply("CREATE UNIQUE INDEX IF NOT EXISTS trade_ask_bid_idx ON trade (ask_order_id, bid_order_id)");
             case 82:
