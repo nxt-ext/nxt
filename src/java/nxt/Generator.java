@@ -50,7 +50,7 @@ public final class Generator implements Comparable<Generator> {
                     lastTimestamp = timestamp;
                     synchronized (Nxt.getBlockchain()) {
                         Block lastBlock = Nxt.getBlockchain().getLastBlock();
-                        if (lastBlock == null || lastBlock.getHeight() < Constants.DIGITAL_GOODS_STORE_BLOCK) {
+                        if (lastBlock == null || lastBlock.getHeight() < Constants.LAST_KNOWN_BLOCK) {
                             return;
                         }
                         if (lastBlock.getId() != lastBlockId || sortedForgers == null) {
@@ -182,7 +182,7 @@ public final class Generator implements Comparable<Generator> {
         this.secretPhrase = secretPhrase;
         this.publicKey = Crypto.getPublicKey(secretPhrase);
         this.accountId = Account.getId(publicKey);
-        if (Nxt.getBlockchain().getHeight() > Constants.DIGITAL_GOODS_STORE_BLOCK) {
+        if (Nxt.getBlockchain().getHeight() >= Constants.LAST_KNOWN_BLOCK) {
             setLastBlock(Nxt.getBlockchain().getLastBlock());
         }
         sortedForgers = null;

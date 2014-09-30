@@ -5,7 +5,6 @@ import nxt.util.Time;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.util.Arrays;
 import java.util.Properties;
 
 public class ManualForgingTest extends AbstractForgingTest {

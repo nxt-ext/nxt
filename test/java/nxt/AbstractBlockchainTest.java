@@ -5,7 +5,6 @@ import nxt.util.Listener;
 import nxt.util.Logger;
 import org.junit.Assert;
 
-import java.util.Arrays;
 import java.util.Properties;
 
 public abstract class AbstractBlockchainTest {
