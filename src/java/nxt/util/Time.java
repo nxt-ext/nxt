@@ -4,11 +4,11 @@ import nxt.Constants;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
-public abstract class Time {
+public interface Time {
 
-    public abstract int getTime();
+    int getTime();
 
-    public static final class EpochTime extends Time {
+    public static final class EpochTime implements Time {
 
         public int getTime() {
             return (int)((System.currentTimeMillis() - Constants.EPOCH_BEGINNING + 500) / 1000);
@@ -16,7 +16,7 @@ public abstract class Time {
 
     }
 
-    public static final class ConstantTime extends Time {
+    public static final class ConstantTime implements Time {
 
         private final int time;
 
@@ -30,7 +30,7 @@ public abstract class Time {
 
     }
 
-    public static final class FasterTime extends Time {
+    public static final class FasterTime implements Time {
 
         private final int multiplier;
         private final long systemStartTime;
@@ -51,7 +51,7 @@ public abstract class Time {
 
     }
 
-    public static final class CounterTime extends Time {
+    public static final class CounterTime implements Time {
 
         private final AtomicInteger counter;
 
