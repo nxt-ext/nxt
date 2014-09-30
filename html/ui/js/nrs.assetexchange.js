@@ -1804,71 +1804,44 @@ var NRS = (function(NRS, $, undefined) {
 		var uppercase = type.charAt(0).toUpperCase() + type.slice(1).toLowerCase();
 		var lowercase = type.toLowerCase();
 
-		var getCurrentOrderIds = "getAccountCurrent" + uppercase + "OrderIds+";
-		var orderIds = lowercase + "OrderIds";
+		var getAccountCurrentOrders = "getAccountCurrent" + uppercase + "Orders+";
+		var accountOrders = lowercase + "Orders";
 		var getOrder = "get" + uppercase + "Order+";
 
 		var orders = [];
 
-		NRS.sendRequest(getCurrentOrderIds, {
+		NRS.sendRequest(getAccountCurrentOrders, {
 			"account": NRS.account,
-			"timestamp": 0
+			"firstIndex": 0,
+			"lastIndex": 100
 		}, function(response) {
-			if (response[orderIds] && response[orderIds].length) {
-				var nr_orders = 0;
+			if (response[accountOrders] && response[accountOrders].length) {
+				var nrOrders = 0;
 
-				for (var i = 0; i < response[orderIds].length; i++) {
-					NRS.sendRequest(getOrder, {
-						"order": response[orderIds][i]
-					}, function(order, input) {
+				for (var i = 0; i < response[accountOrders].length; i++) {
+					NRS.sendRequest("getAsset+", {
+						"asset": response[accountOrders][i].asset,
+						"_extra": {
+							"id": i
+						}
+					}, function(asset, input) {
 						if (NRS.currentPage != "open_orders") {
 							return;
 						}
 
-						order.order = input.order;
-						orders.push(order);
+						response[accountOrders][input["_extra"].id].assetName = asset.name;
+						response[accountOrders][input["_extra"].id].decimals = asset.decimals;
 
-						nr_orders++;
+						nrOrders++;
 
-						if (nr_orders == response[orderIds].length) {
-							var nr_orders_complete = 0;
-
-							for (var i = 0; i < nr_orders; i++) {
-								var order = orders[i];
-
-								NRS.sendRequest("getAsset+", {
-									"asset": order.asset,
-									"_extra": {
-										"id": i
-									}
-								}, function(asset, input) {
-									if (NRS.currentPage != "open_orders") {
-										return;
-									}
-
-									orders[input["_extra"].id].assetName = asset.name;
-									orders[input["_extra"].id].decimals = asset.decimals;
-
-									nr_orders_complete++;
-
-									if (nr_orders_complete == nr_orders) {
-										NRS.getUnconfirmedOrders(type, function(unconfirmedOrders) {
-											NRS.openOrdersLoaded(orders.concat(unconfirmedOrders), lowercase, callback);
-										});
-									}
-								});
-
-								if (NRS.currentPage != "open_orders") {
-									return;
-								}
-							}
+						if (nrOrders == response[accountOrders].length) {
+							NRS.getUnconfirmedOrders(type, function(unconfirmedOrders) {
+								NRS.openOrdersLoaded(response[accountOrders].concat(unconfirmedOrders), lowercase, callback);
+							});
 						}
 					});
-
-					if (NRS.currentPage != "open_orders") {
-						return;
-					}
 				}
+
 			} else {
 				NRS.getUnconfirmedOrders(type, function(unconfirmedOrders) {
 					NRS.openOrdersLoaded(unconfirmedOrders, lowercase, callback);
