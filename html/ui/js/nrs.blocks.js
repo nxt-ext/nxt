@@ -150,6 +150,7 @@ var NRS = (function(NRS, $, undefined) {
 					if (NRS.settings["console_log"] && !NRS.inApp) {
 						$("#show_console").show();
 					}
+					//todo: update the dashboard blocks!
 					$.growl($.t("success_blockchain_up_to_date"), {
 						"type": "success"
 					});
@@ -233,41 +234,13 @@ var NRS = (function(NRS, $, undefined) {
 			$("#forged_fees_total_box, #forged_blocks_total_box").show();
 			$("#blocks_transactions_per_hour_box, #blocks_generation_time_box").hide();
 
-			NRS.sendRequest("getAccountBlockIds+", {
+			NRS.sendRequest("getAccountBlocks+", {
 				"account": NRS.account,
-				"timestamp": 0
+				"firstIndex": 0,
+				"lastIndex": 100
 			}, function(response) {
-				if (response.blockIds && response.blockIds.length) {
-					var blocks = [];
-					var nrBlocks = 0;
-
-					var blockIds = response.blockIds.reverse().slice(0, 100);
-
-					if (response.blockIds.length > 100) {
-						$("#blocks_page_forged_warning").show();
-					}
-
-					for (var i = 0; i < blockIds.length; i++) {
-						NRS.sendRequest("getBlock+", {
-							"block": blockIds[i],
-							"_extra": {
-								"nr": i
-							}
-						}, function(block, input) {
-							if (NRS.currentPage != "blocks") {
-								blocks = {};
-								return;
-							}
-
-							block["block"] = input.block;
-							blocks[input["_extra"].nr] = block;
-							nrBlocks++;
-
-							if (nrBlocks == blockIds.length) {
-								NRS.blocksPageLoaded(blocks);
-							}
-						});
-					}
+				if (response.blocks && response.blocks.length) {
+					NRS.blocksPageLoaded(response.blocks);
 				} else {
 					NRS.blocksPageLoaded([]);
 				}
