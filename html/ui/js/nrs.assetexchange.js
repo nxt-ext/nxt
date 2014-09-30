@@ -687,7 +687,10 @@ var NRS = (function(NRS, $, undefined) {
 					trades[i].quantityQNT = new BigInteger(trades[i].quantityQNT);
 					trades[i].totalNQT = new BigInteger(NRS.calculateOrderTotalNQT(trades[i].priceNQT, trades[i].quantityQNT));
 
-					rows += "<tr><td>" + NRS.formatTimestamp(trades[i].timestamp) + "</td><td>" + NRS.formatQuantity(trades[i].quantityQNT, NRS.currentAsset.decimals) + "</td><td class='asset_price'>" + NRS.formatOrderPricePerWholeQNT(trades[i].priceNQT, NRS.currentAsset.decimals) + "</td><td>" + NRS.formatAmount(trades[i].totalNQT) + "</td><td>" + String(trades[i].askOrder).escapeHTML() + "</td><td>" + String(trades[i].bidOrder).escapeHTML() + "</td></tr>";
+					rows += "<tr><td>" + NRS.formatTimestamp(trades[i].timestamp) + "</td><td>" + NRS.formatQuantity(trades[i].quantityQNT, NRS.currentAsset.decimals) + "</td><td class='asset_price'>" + NRS.formatOrderPricePerWholeQNT(trades[i].priceNQT, NRS.currentAsset.decimals) + "</td><td>" + NRS.formatAmount(trades[i].totalNQT) + "</td>" +
+						"<td><a href='#' data-user='" + NRS.getAccountFormatted(trades[i], "buyer") + "' class='user_info'>" + (trades[i].buyerRS == NRS.currentAsset.accountRS ? "Asset Issuer" : NRS.getAccountTitle(trades[i], "buyer")) + "</a></td>" +
+						"<td><a href='#' data-user='" + NRS.getAccountFormatted(trades[i], "seller") + "' class='user_info'>" + (trades[i].sellerRS == NRS.currentAsset.accountRS ? "Asset Issuer" : NRS.getAccountTitle(trades[i], "seller")) + "</a></td>" +
+						"</tr>";
 				}
 
 				$("#asset_exchange_trade_history_table tbody").empty().append(rows);
@@ -704,8 +707,8 @@ var NRS = (function(NRS, $, undefined) {
 
 		NRS.sendRequest("get" + type.capitalize() + "Orders+" + assetId, {
 			"asset": assetId,
-			"timestamp": 0,
-			"limit": 50
+			"firstIndex": 0,
+			"lastIndex": 50
 		}, function(response, input) {
 			var orders = response[type + "Orders"];
 
@@ -1407,6 +1410,10 @@ var NRS = (function(NRS, $, undefined) {
 		$("#asset_exchange_group_new_group_div").val("").hide();
 	});
 
+	NRS.pages.trading_history = function() {
+
+	}
+
 	/* MY ASSETS PAGE */
 	NRS.pages.my_assets = function() {
 		if (NRS.accountInfo.assetBalances && NRS.accountInfo.assetBalances.length) {
@@ -1443,8 +1450,7 @@ var NRS = (function(NRS, $, undefined) {
 
 					if (response.askOrders && response.askOrders.length) {
 						result.ask_orders[input.asset] = new BigInteger(response.askOrders[0].priceNQT);
-						]
-					else {
+					} else {
 						result.ask_orders[input.asset] = -1;
 					}
 
