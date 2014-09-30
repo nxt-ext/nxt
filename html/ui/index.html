@@ -247,7 +247,7 @@
                         	<a href="#" data-page="asset_exchange"><i class="fa fa-signal"></i><span data-i18n="asset_exchange">Asset Exchange</span><i class="fa pull-right fa-angle-right" style="padding-top:3px"></i></a>
                             <ul class="treeview-menu" style="display: none;">
                                  <li><a href="#" data-page="asset_exchange"><i class="fa fa-angle-double-right"></i> <span data-i18n="asset_exchange">Asset Exchange</span></a></li>
-                                 <li><a href="#" data-page="trading_history"><i class="fa fa-angle-double-right"></i> <span data-i18n="trading_history">Trading History</span></a></li>
+                                 <li><a href="#" data-page="trade_history"><i class="fa fa-angle-double-right"></i> <span data-i18n="trade_history">Trade History</span></a></li>
                             	<li><a href="#" data-page="my_assets"><i class="fa fa-angle-double-right"></i> <span data-i18n="my_assets">My Assets</span></a></li>
                                 <li><a href="#" data-page="open_orders"><i class="fa fa-angle-double-right"></i> <span data-i18n="open_orders">Open Orders</span></a></li>
                                 <li><a href="#" data-toggle="modal" data-target="#issue_asset_modal"><i class="fa fa-angle-double-right"></i> <span data-i18n="issue_asset">Issue Asset</span></a></li>
@@ -704,7 +704,33 @@
 	                 	</div>
                  	</section>
                 </div>
-                                					
+                             
+                <div id="trade_history_page" class="page">
+                    <section class="content-header"><h1 data-i18n="trade_history">Trade History</h1></section>
+                    <section class="content">
+                        <div class="data-container data-loading">
+                            <table class="table table-striped" id="trade_history_table">
+                                <thead>
+                                <tr>
+                                    <th data-i18n="asset">Asset</th>
+                                    <th data-i18n="date">Date</th>
+                                    <th data-i18n="quantity">Quantity</th>
+                                    <th data-i18n="price">Price</th>
+                                    <th data-i18n="total">Total</th>
+                                    <th data-i18n="buyer">Buyer</th>
+                                    <th data-i18n="seller">Seller</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                
+                                </tbody>
+                            </table>
+                            <div class="data-loading-container"><img src="img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
+                            <div class="data-empty-container"><p data-i18n="no_trade_history">No trade history available.</p></div>
+                        </div>
+                    </section>
+                </div>
+
                 <div id="my_assets_page" class="page">
 	                <section class="content-header"><h1 data-i18n="my_assets">My Assets</h1></section>
 					<section class="content">
@@ -994,14 +1020,7 @@
 						</div>
 	                </section>
                 </div>
-                
-                <div id="trade_history_page" class="page">
-					<section class="content-header"><h1 data-i18n="trade_history">Trade History</h1></section>
-					<section class="content">
-						<p data-i18n="todo">Todo!</p>
-					</section>
-                </div>
-                
+
                 <div id="dgs_search_page" class="paginated page">
                     <section class="content-header">
                     	<h1 data-i18n="search_marketplace">Search Marketplace</h1>

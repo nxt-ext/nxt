@@ -1410,8 +1410,35 @@ var NRS = (function(NRS, $, undefined) {
 		$("#asset_exchange_group_new_group_div").val("").hide();
 	});
 
-	NRS.pages.trading_history = function() {
+	NRS.pages.trade_history = function() {
+		NRS.sendRequest("getTrades+", {
+			"account": NRS.accountRS,
+			"firstIndex": 0,
+			"lastIndex": 100
+		}, function(response, input) {
+			console.log(response);
 
+			if (response.trades && response.trades.length) {
+				var trades = response.trades;
+
+				var rows = "";
+
+				for (var i = 0; i < trades.length; i++) {
+					trades[i].priceNQT = new BigInteger(trades[i].priceNQT);
+					trades[i].quantityQNT = new BigInteger(trades[i].quantityQNT);
+					trades[i].totalNQT = new BigInteger(NRS.calculateOrderTotalNQT(trades[i].priceNQT, trades[i].quantityQNT));
+
+					rows += "<tr><td>" + String(trades[i].asset).escapeHTML() + "</td><td>" + NRS.formatTimestamp(trades[i].timestamp) + "</td><td>" + NRS.formatQuantity(trades[i].quantityQNT, NRS.currentAsset.decimals) + "</td><td class='asset_price'>" + NRS.formatOrderPricePerWholeQNT(trades[i].priceNQT, NRS.currentAsset.decimals) + "</td><td>" + NRS.formatAmount(trades[i].totalNQT) + "</td>" +
+						"<td><a href='#' data-user='" + NRS.getAccountFormatted(trades[i], "buyer") + "' class='user_info'>" + (trades[i].buyerRS == NRS.currentAsset.accountRS ? "Asset Issuer" : NRS.getAccountTitle(trades[i], "buyer")) + "</a></td>" +
+						"<td><a href='#' data-user='" + NRS.getAccountFormatted(trades[i], "seller") + "' class='user_info'>" + (trades[i].sellerRS == NRS.currentAsset.accountRS ? "Asset Issuer" : NRS.getAccountTitle(trades[i], "seller")) + "</a></td>" +
+						"</tr>";
+				}
+
+				NRS.dataLoaded(rows);
+			} else {
+				NRS.dataLoaded();
+			}
+		});
 	}
 
 	/* MY ASSETS PAGE */
