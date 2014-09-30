@@ -10,6 +10,7 @@ import nxt.util.ThreadPool;
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -21,6 +22,13 @@ public final class Generator implements Comparable<Generator> {
 
     public static enum Event {
         GENERATION_DEADLINE, START_FORGING, STOP_FORGING
+    }
+
+    private static final byte[] fakeForgingPublicKey;
+    static {
+        String testForgingSecretPhrase = Nxt.getStringProperty("nxt.testForgingSecretPhrase");
+        fakeForgingPublicKey = (Nxt.getBooleanProperty("nxt.enableFakeForging") && testForgingSecretPhrase != null)
+                ? Crypto.getPublicKey(testForgingSecretPhrase) : null;
     }
 
     private static final Listeners<Generator,Event> listeners = new Listeners<>();
@@ -39,7 +47,7 @@ public final class Generator implements Comparable<Generator> {
 
             try {
                 try {
-                    int timestamp = Convert.getEpochTime();
+                    int timestamp = Nxt.getEpochTime();
                     if (timestamp == lastTimestamp) {
                         return;
                     }
@@ -144,7 +152,14 @@ public final class Generator implements Comparable<Generator> {
         return getHitTime(BigInteger.valueOf(account.getEffectiveBalanceNXT()), getHit(account.getPublicKey(), block), block);
     }
 
+    static boolean allowsFakeForging(byte[] publicKey) {
+        return publicKey != null && Arrays.equals(publicKey, fakeForgingPublicKey);
+    }
+
     private static BigInteger getHit(byte[] publicKey, Block block) {
+        if (allowsFakeForging(publicKey)) {
+            return BigInteger.ZERO;
+        }
         if (block.getHeight() < Constants.TRANSPARENT_FORGING_BLOCK) {
             throw new IllegalArgumentException("Not supported below Transparent Forging Block");
         }
@@ -225,7 +240,7 @@ public final class Generator implements Comparable<Generator> {
                     BlockchainProcessorImpl.getInstance().generateBlock(secretPhrase, timestamp);
                     return true;
                 } catch (BlockchainProcessor.TransactionNotAcceptedException e) {
-                    if (Convert.getEpochTime() - timestamp > 10) {
+                    if (Nxt.getEpochTime() - timestamp > 10) {
                         throw e;
                     }
                 }

@@ -546,7 +546,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
 
     private void pushBlock(final BlockImpl block) throws BlockNotAcceptedException {
 
-        int curTime = Convert.getEpochTime();
+        int curTime = Nxt.getEpochTime();
 
         synchronized (blockchain) {
             TransactionProcessorImpl transactionProcessor = TransactionProcessorImpl.getInstance();
@@ -597,7 +597,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 if (block.getId() == 0L || BlockDb.hasBlock(block.getId())) {
                     throw new BlockNotAcceptedException("Duplicate block or invalid id");
                 }
-                if (!block.verifyGenerationSignature()) {
+                if (!block.verifyGenerationSignature() && !Generator.allowsFakeForging(block.getGeneratorPublicKey())) {
                     throw new BlockNotAcceptedException("Generation signature verification failed");
                 }
                 if (!block.verifyBlockSignature()) {
@@ -699,7 +699,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
 
         blockListeners.notify(block, Event.BLOCK_PUSHED);
 
-        if (block.getTimestamp() >= Convert.getEpochTime() - 15) {
+        if (block.getTimestamp() >= Nxt.getEpochTime() - 15) {
             Peers.sendToSomePeers(block);
         }
 
@@ -957,8 +957,11 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                                 throw new NxtException.NotValidException("Database blocks in the wrong order!");
                             }
                             if (validateAtScan && currentBlockId != Genesis.GENESIS_BLOCK_ID) {
-                                if (!currentBlock.verifyBlockSignature() || !currentBlock.verifyGenerationSignature()) {
+                                if (!currentBlock.verifyBlockSignature()) {
                                     throw new NxtException.NotValidException("Invalid block signature");
+                                }
+                                if (!currentBlock.verifyGenerationSignature() && !Generator.allowsFakeForging(currentBlock.getGeneratorPublicKey())) {
+                                    throw new NxtException.NotValidException("Invalid block generation signature");
                                 }
                                 if (currentBlock.getVersion() != getBlockVersion(blockchain.getHeight())) {
                                     throw new NxtException.NotValidException("Invalid block version");

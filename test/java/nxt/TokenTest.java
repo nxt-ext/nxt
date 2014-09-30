@@ -1,6 +1,5 @@
 package nxt;
 
-import nxt.util.Convert;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
@@ -26,9 +25,9 @@ public class TokenTest {
 
     @Test
     public void testGenerateToken() throws Exception {
-        int start = Convert.getEpochTime();
+        int start = Nxt.getEpochTime();
         String tokenString = Token.generateToken("secret", "http://nxt.org");
-        int end = Convert.getEpochTime();
+        int end = Nxt.getEpochTime();
         Token token = Token.parseToken(tokenString, "http://nxt.org");
 
         assertTrue(token.isValid());

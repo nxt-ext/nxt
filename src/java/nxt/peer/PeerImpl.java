@@ -407,7 +407,7 @@ final class PeerImpl implements Peer {
             } else {
                 blacklist();
             }
-            lastUpdated = Convert.getEpochTime();
+            lastUpdated = Nxt.getEpochTime();
         } else {
             setState(State.NON_CONNECTED);
         }

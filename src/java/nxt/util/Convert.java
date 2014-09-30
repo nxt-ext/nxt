@@ -111,10 +111,6 @@ public final class Convert {
         return fullHashToId(Convert.parseHexString(hash));
     }
 
-    public static int getEpochTime() {
-        return (int)((System.currentTimeMillis() - Constants.EPOCH_BEGINNING + 500) / 1000);
-    }
-
     public static Date fromEpochTime(int epochTime) {
         return new Date(epochTime * 1000L + Constants.EPOCH_BEGINNING - 500L);
     }

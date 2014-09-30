@@ -10,7 +10,6 @@ import nxt.Trade;
 import nxt.db.DbIterator;
 import nxt.peer.Peer;
 import nxt.peer.Peers;
-import nxt.util.Convert;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
@@ -31,7 +30,7 @@ public final class GetState extends APIServlet.APIRequestHandler {
 
         response.put("application", Nxt.APPLICATION);
         response.put("version", Nxt.VERSION);
-        response.put("time", Convert.getEpochTime());
+        response.put("time", Nxt.getEpochTime());
         response.put("lastBlock", Nxt.getBlockchain().getLastBlock().getStringId());
         response.put("cumulativeDifficulty", Nxt.getBlockchain().getLastBlock().getCumulativeDifficulty().toString());
 

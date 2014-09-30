@@ -7,7 +7,6 @@ import nxt.db.FilteringIterator;
 import nxt.db.VersionedEntityDbTable;
 import nxt.peer.Peer;
 import nxt.peer.Peers;
-import nxt.util.Convert;
 import nxt.util.JSON;
 import nxt.util.Listener;
 import nxt.util.Listeners;
@@ -118,7 +117,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                             Db.beginTransaction();
                             try (Connection con = Db.getConnection();
                                  PreparedStatement pstmt = con.prepareStatement("SELECT * FROM unconfirmed_transaction WHERE expiration < ? AND latest = TRUE")) {
-                                pstmt.setInt(1, Convert.getEpochTime());
+                                pstmt.setInt(1, Nxt.getEpochTime());
                                 try (DbIterator<TransactionImpl> iterator = unconfirmedTransactionTable.getManyBy(con, pstmt, true)) {
                                     for (TransactionImpl transaction : iterator) {
                                         unconfirmedTransactionTable.delete(transaction);
@@ -155,7 +154,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
             try {
                 try {
                     List<Transaction> transactionList = new ArrayList<>();
-                    int curTime = Convert.getEpochTime();
+                    int curTime = Nxt.getEpochTime();
                     for (TransactionImpl transaction : nonBroadcastedTransactions) {
                         if (TransactionDb.hasTransaction(transaction.getId()) || transaction.getExpiration() < curTime) {
                             nonBroadcastedTransactions.remove(transaction);
@@ -270,7 +269,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
     public Transaction.Builder newTransactionBuilder(byte[] senderPublicKey, long amountNQT, long feeNQT, short deadline,
                                                      Attachment attachment) throws NxtException.ValidationException {
         byte version = (byte) getTransactionVersion(Nxt.getBlockchain().getHeight());
-        int timestamp = Convert.getEpochTime();
+        int timestamp = Nxt.getEpochTime();
         TransactionImpl.BuilderImpl builder = new TransactionImpl.BuilderImpl(version, senderPublicKey, amountNQT, feeNQT, timestamp,
                 deadline, (Attachment.AbstractAttachment)attachment);
         if (version > 0) {
@@ -367,7 +366,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
     }
 
     private void processPeerTransactions(JSONArray transactionsData, final boolean sendToPeers) throws NxtException.ValidationException {
-        if (Nxt.getBlockchain().getLastBlock().getTimestamp() < Convert.getEpochTime() - 60 * 1440) {
+        if (Nxt.getBlockchain().getLastBlock().getTimestamp() < Nxt.getEpochTime() - 60 * 1440) {
             return;
         }
         List<TransactionImpl> transactions = new ArrayList<>();
@@ -395,7 +394,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
 
             try {
 
-                int curTime = Convert.getEpochTime();
+                int curTime = Nxt.getEpochTime();
                 if (transaction.getTimestamp() > curTime + 15 || transaction.getExpiration() < curTime
                         || transaction.getDeadline() > 1440) {
                     continue;
