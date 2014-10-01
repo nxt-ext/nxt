@@ -84,6 +84,7 @@ public class TestCurrencyExchange extends BlockchainTest {
 
         Account issuerAccount = Account.getAccount(Crypto.getPublicKey(secretPhrase1));
         long issuerStartBalanceNQT = issuerAccount.getBalanceNQT();
+        long issuerStartUnconfirmedBalanceNQT = issuerAccount.getUnconfirmedBalanceNQT();
         long issuerStartCurrencyBalanceQNT = issuerAccount.getUnconfirmedCurrencyBalanceQNT(Convert.parseUnsignedLong(currencyId));
 
         Account buyerAccount = Account.getAccount(Crypto.getPublicKey(secretPhrase2));
@@ -102,7 +103,7 @@ public class TestCurrencyExchange extends BlockchainTest {
         JSONArray offer = (JSONArray)getAllOffersResponse.get("openOffers");
         Assert.assertEquals(publishExchangeOfferResponse.get("transaction"), ((JSONObject)offer.get(0)).get("offer"));
         issuerAccount = Account.getAccount(Crypto.getPublicKey(secretPhrase1));
-        Assert.assertEquals(issuerStartBalanceNQT - 1000 * 105 - Constants.ONE_NXT, issuerAccount.getUnconfirmedBalanceNQT());
+        Assert.assertEquals(issuerStartUnconfirmedBalanceNQT - 1000 * 105 - Constants.ONE_NXT, issuerAccount.getUnconfirmedBalanceNQT());
         Assert.assertEquals(issuerStartBalanceNQT - Constants.ONE_NXT, issuerAccount.getBalanceNQT());
         Assert.assertEquals(issuerStartCurrencyBalanceQNT - 1000, issuerAccount.getUnconfirmedCurrencyBalanceQNT(Convert.parseUnsignedLong(currencyId))); // currency balance reduced by initial supply
 
@@ -161,7 +162,6 @@ public class TestCurrencyExchange extends BlockchainTest {
     private JSONObject publishExchangeOffer(String currencyId, String secretPhrase) {
         APICall apiCall = new APICall.Builder("publishExchangeOffer").
                 secretPhrase(secretPhrase1).feeNQT(Constants.ONE_NXT).
-                param("secretPhrase", secretPhrase).
                 param("deadline", "1440").
                 param("currency", currencyId).
                 param("buyRateNQT", "" + 105).
