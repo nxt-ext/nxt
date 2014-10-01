@@ -89,11 +89,11 @@ public final class Currency {
         currencyTable.insert(currency);
     }
 
-    static boolean isNameSquatted(String name) {
+    static boolean isNameUsed(String name) {
         return getCurrencyByName(name) != null;
     }
 
-    static boolean isCodeSquatted(String code) {
+    static boolean isCodeUsed(String code) {
         return getCurrencyByCode(code) != null;
     }
 

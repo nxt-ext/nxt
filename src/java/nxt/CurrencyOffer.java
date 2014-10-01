@@ -9,17 +9,17 @@ import java.sql.SQLException;
 
 public abstract class CurrencyOffer {
 
-    protected final Long id;
+    protected final long id;
     protected DbKey dbKey;
-    protected final Long currencyId;
-    protected final Long accountId;
+    protected final long currencyId;
+    protected final long accountId;
     protected final long rateNQT;
-    protected long limit;
-    protected long supply;
+    protected long limit; // limit on the total sum of units for this offer across transactions
+    protected long supply; // total units supply for the offer
     protected final int expirationHeight;
     protected final int height;
 
-    public CurrencyOffer(long id, long currencyId, Long accountId, long rateNQT, long limit, long supply, int expirationHeight, int height) {
+    public CurrencyOffer(long id, long currencyId, long accountId, long rateNQT, long limit, long supply, int expirationHeight, int height) {
         this.id = id;
         this.currencyId = currencyId;
         this.accountId = accountId;
@@ -57,15 +57,15 @@ public abstract class CurrencyOffer {
         }
     }
 
-    public Long getId() {
+    public long getId() {
         return id;
     }
 
-    public Long getCurrencyId() {
+    public long getCurrencyId() {
         return currencyId;
     }
 
-    public Long getAccountId() {
+    public long getAccountId() {
         return accountId;
     }
 

@@ -57,6 +57,12 @@ public final class DebugTrace {
                 debugTrace.trace(trade);
             }
         }, Trade.Event.TRADE);
+        Exchange.addListener(new Listener<Exchange>() {
+            @Override
+            public void notify(Exchange exchange) {
+                debugTrace.trace(exchange);
+            }
+        }, Exchange.Event.EXCHANGE);
         Account.addListener(new Listener<Account>() {
             @Override
             public void notify(Account account) {
@@ -126,12 +132,14 @@ public final class DebugTrace {
         return debugTrace;
     }
 
-    private static final String[] columns = {"height", "event", "account", "asset", "balance", "unconfirmed balance",
-            "asset balance", "unconfirmed asset balance",
+    private static final String[] columns = {"height", "event", "account", "asset", "currency", "balance", "unconfirmed balance",
+            "asset balance", "unconfirmed asset balance", "currency balance", "unconfirmed currency balance",
             "transaction amount", "transaction fee", "generation fee", "effective balance",
             "order", "order price", "order quantity", "order cost",
+            "offer", "buy rate", "sell rate", "buy units", "sell units", "buy cost", "sell cost",
             "trade price", "trade quantity", "trade cost",
-            "asset quantity", "transaction", "lessee", "lessor guaranteed balance",
+            "exchange rate", "exchange quantity", "exchange cost",
+            "asset quantity", "currency units", "transaction", "lessee", "lessor guaranteed balance",
             "purchase", "purchase price", "purchase quantity", "purchase cost", "discount", "refund",
             "sender", "recipient", "block", "timestamp"};
 
@@ -192,6 +200,17 @@ public final class DebugTrace {
         }
         if (include(bidAccountId)) {
             log(getValues(bidAccountId, trade, false));
+        }
+    }
+
+    private void trace(Exchange exchange) {
+        long sellerAccountId = exchange.getSellerId();
+        long buyerAccountId = exchange.getBuyerId();
+        if (include(sellerAccountId)) {
+            log(getValues(sellerAccountId, exchange, true));
+        }
+        if (include(buyerAccountId)) {
+            log(getValues(buyerAccountId, exchange, false));
         }
     }
 
@@ -290,6 +309,17 @@ public final class DebugTrace {
         long tradeCost = Convert.safeMultiply(trade.getQuantityQNT(), trade.getPriceNQT());
         map.put("trade cost", String.valueOf((isAsk ? tradeCost : - tradeCost)));
         map.put("event", "trade");
+        return map;
+    }
+
+    private Map<String,String> getValues(long accountId, Exchange exchange, boolean isSell) {
+        Map<String,String> map = getValues(accountId, false);
+        map.put("currency", Convert.toUnsignedLong(exchange.getCurrencyId()));
+        map.put("exchange quantity", String.valueOf(isSell ? -exchange.getUnits() : exchange.getUnits()));
+        map.put("exchange rate", String.valueOf(exchange.getRate()));
+        long exchangeCost = Convert.safeMultiply(exchange.getUnits(), exchange.getRate());
+        map.put("exchange cost", String.valueOf((isSell ? exchangeCost : - exchangeCost)));
+        map.put("event", "exchange");
         return map;
     }
 
@@ -468,7 +498,41 @@ public final class DebugTrace {
             } else {
                 map.put("recipient", Convert.toUnsignedLong(transaction.getRecipientId()));
             }
-        // TODO add MS
+        } else if (attachment instanceof Attachment.MonetarySystemExchangeOfferPublication) {
+            if (isRecipient) {
+                return Collections.emptyMap();
+            }
+            Attachment.MonetarySystemExchangeOfferPublication publishOffer = (Attachment.MonetarySystemExchangeOfferPublication)attachment;
+            map.put("currency", Convert.toUnsignedLong(publishOffer.getCurrencyId()));
+            map.put("offer", transaction.getStringId());
+            map.put("buy rate", String.valueOf(publishOffer.getBuyRateNQT()));
+            map.put("sell rate", String.valueOf(publishOffer.getSellRateNQT()));
+            long buyUnits = publishOffer.getInitialBuySupply();
+            map.put("buy units", String.valueOf(buyUnits));
+            long sellUnits = publishOffer.getInitialSellSupply();
+            map.put("sell units", String.valueOf(sellUnits));
+            BigInteger buyCost = BigInteger.valueOf(publishOffer.getBuyRateNQT()).multiply(BigInteger.valueOf(buyUnits));
+            map.put("buy cost", buyCost.toString());
+            BigInteger sellCost = BigInteger.valueOf(publishOffer.getSellRateNQT()).multiply(BigInteger.valueOf(sellUnits));
+            map.put("sell cost", sellCost.toString());
+            map.put("event", "offer");
+        } else if (attachment instanceof Attachment.MonetarySystemCurrencyIssuance) {
+            if (isRecipient) {
+                return Collections.emptyMap();
+            }
+            Attachment.MonetarySystemCurrencyIssuance currencyIssuance = (Attachment.MonetarySystemCurrencyIssuance)attachment;
+            map.put("currency", transaction.getStringId());
+            map.put("currency units", String.valueOf(currencyIssuance.getTotalSupply()));
+            map.put("event", "currency issuance");
+        } else if (attachment instanceof Attachment.MonetarySystemMoneyTransfer) {
+            Attachment.MonetarySystemMoneyTransfer currencyTransfer = (Attachment.MonetarySystemMoneyTransfer)attachment;
+            map.put("currency", Convert.toUnsignedLong(currencyTransfer.getCurrencyId()));
+            long units = currencyTransfer.getUnits();
+            if (!isRecipient) {
+                units = -units;
+            }
+            map.put("currency units", String.valueOf(units));
+            map.put("event", "currency transfer");
         } else {
             return Collections.emptyMap();
         }

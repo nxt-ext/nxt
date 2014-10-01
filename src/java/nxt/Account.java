@@ -96,13 +96,13 @@ public final class Account {
     @SuppressWarnings("UnusedDeclaration")
     public static class AccountCurrency {
 
-        private final Long accountId;
-        private final Long currencyId;
+        private final long accountId;
+        private final long currencyId;
         private final DbKey dbKey;
         private long units;
         private long unconfirmedUnits;
 
-        private AccountCurrency(Long accountId, Long currencyId, long quantityQNT, long unconfirmedQuantityQNT) {
+        private AccountCurrency(long accountId, long currencyId, long quantityQNT, long unconfirmedQuantityQNT) {
             this.accountId = accountId;
             this.currencyId = currencyId;
             this.dbKey = accountCurrencyDbKeyFactory.newKey(this.accountId, this.currencyId);
@@ -132,11 +132,11 @@ public final class Account {
             }
         }
 
-        public Long getAccountId() {
+        public long getAccountId() {
             return accountId;
         }
 
-        public Long getCurrencyId() {
+        public long getCurrencyId() {
             return currencyId;
         }
 
@@ -655,7 +655,7 @@ public final class Account {
         return accountAsset == null ? 0 : accountAsset.unconfirmedQuantityQNT;
     }
 
-    public long getUnconfirmedCurrencyBalanceQNT(Long currencyId) {
+    public long getUnconfirmedCurrencyBalanceQNT(long currencyId) {
         AccountCurrency accountCurrency = accountCurrencyTable.get(accountCurrencyDbKeyFactory.newKey(this.id, currencyId));
         return accountCurrency == null ? 0 : accountCurrency.unconfirmedUnits;
     }
@@ -759,7 +759,7 @@ public final class Account {
         }
     }
 
-    public long getCurrencyBalanceQNT(Long currencyId) {
+    public long getCurrencyBalanceQNT(long currencyId) {
         AccountCurrency accountCurrency = accountCurrencyTable.get(accountCurrencyDbKeyFactory.newKey(this.id, currencyId));
         return accountCurrency == null ? 0 : accountCurrency.units;
     }
@@ -823,7 +823,7 @@ public final class Account {
         assetListeners.notify(accountAsset, Event.UNCONFIRMED_ASSET_BALANCE);
     }
 
-    void addToCurrencyBalanceQNT(Long currencyId, long units) {
+    void addToCurrencyBalanceQNT(long currencyId, long units) {
         if (units == 0) {
             return;
         }
@@ -841,7 +841,7 @@ public final class Account {
         currencyListeners.notify(accountCurrency, Event.CURRENCY_BALANCE);
     }
 
-    void addToUnconfirmedCurrencyBalanceQNT(Long currencyId, long units) {
+    void addToUnconfirmedCurrencyBalanceQNT(long currencyId, long units) {
         if (units == 0) {
             return;
         }
@@ -858,7 +858,7 @@ public final class Account {
         currencyListeners.notify(accountCurrency, Event.UNCONFIRMED_CURRENCY_BALANCE);
     }
 
-    void addToCurrencyAndUnconfirmedCurrencyBalanceQNT(Long currencyId, long units) {
+    void addToCurrencyAndUnconfirmedCurrencyBalanceQNT(long currencyId, long units) {
         if (units == 0) {
             return;
         }

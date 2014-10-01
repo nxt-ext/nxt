@@ -36,7 +36,7 @@ public final class CurrencyBuy extends CurrencyOffer {
         return buyOfferTable.getCount();
     }
 
-    public static CurrencyOffer getBuyOffer(Long offerId) {
+    public static CurrencyOffer getBuyOffer(long offerId) {
         return buyOfferTable.get(buyOfferDbKeyFactory.newKey(offerId));
     }
 
@@ -46,7 +46,7 @@ public final class CurrencyBuy extends CurrencyOffer {
 
     static void init() {}
 
-    public CurrencyBuy(long id, long currencyId, Long accountId, long rateNQT, long limit, long supply, int expirationHeight, int publicationHeight) {
+    public CurrencyBuy(long id, long currencyId, long accountId, long rateNQT, long limit, long supply, int expirationHeight, int publicationHeight) {
         super(id, currencyId, accountId, rateNQT, limit, supply, expirationHeight, publicationHeight);
         this.dbKey = buyOfferDbKeyFactory.newKey(id);
     }

@@ -80,7 +80,7 @@ public class CurrencyFounder {
         return value;
     }
 
-    public static void addOrUpdateFounder(long currencyId, Long accountId, long value) {
+    public static void addOrUpdateFounder(long currencyId, long accountId, long value) {
         CurrencyFounder founder = getFounder(currencyId, accountId);
         if (founder == null) {
             founder = new CurrencyFounder(currencyId, accountId, value);
@@ -90,7 +90,7 @@ public class CurrencyFounder {
         currencyFounderTable.insert(founder);
     }
 
-    public static CurrencyFounder getFounder(long currencyId, Long accountId) {
+    public static CurrencyFounder getFounder(long currencyId, long accountId) {
         return currencyFounderTable.get(currencyFounderDbKeyFactory.newKey(currencyId, accountId));
     }
 
@@ -98,7 +98,7 @@ public class CurrencyFounder {
         return currencyFounderTable.getManyBy("currency_id", currencyId, from, to);
     }
 
-    public static void remove(Long currencyId) {
+    public static void remove(long currencyId) {
         for (CurrencyFounder founder : CurrencyFounder.getCurrencyFounders(currencyId, 0, Integer.MAX_VALUE)) {
             currencyFounderTable.delete(founder);
         }

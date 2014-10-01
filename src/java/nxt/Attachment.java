@@ -1713,7 +1713,7 @@ public interface Attachment extends Appendix {
             return TransactionType.MonetarySystem.RESERVE_INCREASE;
         }
 
-        public Long getCurrencyId() {
+        public long getCurrencyId() {
             return currencyId;
         }
 
@@ -1725,7 +1725,7 @@ public interface Attachment extends Appendix {
 
     public final static class MonetarySystemReserveClaim extends AbstractAttachment {
 
-        private final Long currencyId;
+        private final long currencyId;
         private final long units;
 
         MonetarySystemReserveClaim(ByteBuffer buffer, byte transactionVersion) {
@@ -1740,7 +1740,7 @@ public interface Attachment extends Appendix {
             this.units = (Long)attachmentData.get("units");
         }
 
-        public MonetarySystemReserveClaim(Long currencyId, long units) {
+        public MonetarySystemReserveClaim(long currencyId, long units) {
             this.currencyId = currencyId;
             this.units = units;
         }
@@ -1772,7 +1772,7 @@ public interface Attachment extends Appendix {
             return TransactionType.MonetarySystem.RESERVE_CLAIM;
         }
 
-        public Long getCurrencyId() {
+        public long getCurrencyId() {
             return currencyId;
         }
 
@@ -1784,8 +1784,8 @@ public interface Attachment extends Appendix {
 
     public final static class MonetarySystemMoneyTransfer extends AbstractAttachment {
 
-        private final Long recipientId;
-        private final Long currencyId;
+        private final long recipientId;
+        private final long currencyId;
         private final long units;
 
         MonetarySystemMoneyTransfer(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
@@ -1837,11 +1837,11 @@ public interface Attachment extends Appendix {
             return TransactionType.MonetarySystem.MONEY_TRANSFER;
         }
 
-        public Long getRecipientId() {
+        public long getRecipientId() {
             return recipientId;
         }
 
-        public Long getCurrencyId() {
+        public long getCurrencyId() {
             return currencyId;
         }
 
@@ -1852,7 +1852,7 @@ public interface Attachment extends Appendix {
 
     public final static class MonetarySystemExchangeOfferPublication extends AbstractAttachment {
 
-        private final Long currencyId;
+        private final long currencyId;
         private final long buyRateNQT;
         private final long sellRateNQT;
         private final long totalBuyLimit;
@@ -1936,7 +1936,7 @@ public interface Attachment extends Appendix {
             return TransactionType.MonetarySystem.EXCHANGE_OFFER_PUBLICATION;
         }
 
-        public Long getCurrencyId() {
+        public long getCurrencyId() {
             return currencyId;
         }
 
@@ -1972,7 +1972,7 @@ public interface Attachment extends Appendix {
 
     public final static class MonetarySystemExchange extends AbstractAttachment {
 
-        private final Long currencyId;
+        private final long currencyId;
         private final long rateNQT;
         private final long units;
 
@@ -1990,7 +1990,7 @@ public interface Attachment extends Appendix {
             this.units = (Long)attachmentData.get("units");
         }
 
-        public MonetarySystemExchange(Long currencyId, long rateNQT, long units) {
+        public MonetarySystemExchange(long currencyId, long rateNQT, long units) {
             this.currencyId = currencyId;
             this.rateNQT = rateNQT;
             this.units = units;
@@ -2025,7 +2025,7 @@ public interface Attachment extends Appendix {
             return TransactionType.MonetarySystem.EXCHANGE;
         }
 
-        public Long getCurrencyId() {
+        public long getCurrencyId() {
             return currencyId;
         }
 
@@ -2046,7 +2046,7 @@ public interface Attachment extends Appendix {
     public final static class MonetarySystemMoneyMinting extends AbstractAttachment {
 
         private final long nonce;
-        private final Long currencyId;
+        private final long currencyId;
         private final long units;
         private final long counter;
 

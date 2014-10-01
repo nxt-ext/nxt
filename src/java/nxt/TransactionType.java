@@ -1727,7 +1727,6 @@ public abstract class TransactionType {
 
             @Override
             boolean isDuplicate(Transaction transaction, Map<TransactionType, Set<String>> duplicates) {
-                // @TODO verify with cfb & jlp
                 Attachment.MonetarySystemCurrencyIssuance attachment = (Attachment.MonetarySystemCurrencyIssuance)transaction.getAttachment();
                 boolean isDuplicate = TransactionType.isDuplicate(CURRENCY_ISSUANCE, attachment.getName(), duplicates);
                 isDuplicate = isDuplicate || TransactionType.isDuplicate(CURRENCY_ISSUANCE, attachment.getCode(), duplicates);
@@ -1761,16 +1760,16 @@ public abstract class TransactionType {
                         throw new NxtException.NotValidException("Invalid currency name: " + normalizedName);
                     }
                 }
-                if (Currency.isNameSquatted(normalizedName)) {
-                    throw new NxtException.NotValidException("Currency name already squatted: " + normalizedName);
+                if (Currency.isNameUsed(normalizedName)) {
+                    throw new NxtException.NotValidException("Currency name already used: " + normalizedName);
                 }
                 for (int i = 0; i < attachment.getCode().length(); i++) {
                     if (Constants.ALLOWED_CURRENCY_CODE_LETTERS.indexOf(attachment.getCode().charAt(i)) < 0) {
                         throw new NxtException.NotValidException("Invalid currency code: " + attachment.getCode());
                     }
                 }
-                if (Currency.isCodeSquatted(attachment.getCode())) {
-                    throw new NxtException.NotValidException("Currency code already squatted: " + attachment.getCode());
+                if (Currency.isCodeUsed(attachment.getCode())) {
+                    throw new NxtException.NotValidException("Currency code already used: " + attachment.getCode());
                 }
             }
 

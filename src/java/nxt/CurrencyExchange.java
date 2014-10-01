@@ -25,7 +25,7 @@ public final class CurrencyExchange {
         }
     }
 
-    static void publishOffer(long id, Account account, Long currencyId, long buyRateNQT, long sellRateNQT, long totalBuyLimit, long totalSellLimit,
+    static void publishOffer(long id, Account account, long currencyId, long buyRateNQT, long sellRateNQT, long totalBuyLimit, long totalSellLimit,
                              long initialBuySupply, long initialSellSupply, int expirationHeight) {
         removeOffer(currencyId, account.getId());
 
@@ -36,14 +36,13 @@ public final class CurrencyExchange {
                 expirationHeight, height));
     }
 
-    static void exchangeCurrencyForNXT(Account account, Long currencyId, long rateNQT, long units) {
+    static void exchangeCurrencyForNXT(Account account, long currencyId, long rateNQT, long units) {
         long extraAmountNQT = 0;
         long remainingUnits = units;
 
         DbIterator<CurrencyOffer> currencyBuyOffers = CurrencyBuy.getCurrencyOffers(currencyId);
         if (currencyBuyOffers != null) {
             for (CurrencyOffer offer : currencyBuyOffers) {
-                // @TODO should we allow an account to accept it's own offer ?
                 if (offer.getRateNQT() < rateNQT) {
                     break;
                 }
@@ -74,7 +73,7 @@ public final class CurrencyExchange {
         account.addToUnconfirmedCurrencyBalanceQNT(currencyId, remainingUnits);
     }
 
-    static void exchangeNXTForCurrency(Account account, Long currencyId, long rateNQT, long units) {
+    static void exchangeNXTForCurrency(Account account, long currencyId, long rateNQT, long units) {
         long extraUnits = 0;
         long remainingAmountNQT = Convert.safeMultiply(units, rateNQT);
 
@@ -122,14 +121,14 @@ public final class CurrencyExchange {
         account.addToUnconfirmedCurrencyBalanceQNT(currencyId, sellOffer.getSupply());
     }
 
-    private static void removeOffer(Long currencyId, Long accountId) {
+    private static void removeOffer(long currencyId, long accountId) {
         DbIterator<CurrencyOffer> buyOffers = CurrencyBuy.getCurrencyOffers(currencyId);
         if (buyOffers == null) {
             return;
         }
 
         for (CurrencyOffer offer : buyOffers) {
-            if (offer.getAccountId().equals(accountId)) {
+            if (offer.getAccountId() == accountId) {
                 removeOffer(currencyId, offer);
                 return;
             }
