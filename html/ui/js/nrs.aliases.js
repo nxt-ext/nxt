@@ -5,7 +5,8 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.pages.aliases = function() {
 		NRS.sendRequest("getAliases+", {
 			"account": NRS.account,
-			"timestamp": 0
+			"firstIndex": 0,
+			"lastIndex": 100
 		}, function(response) {
 			if (response.aliases && response.aliases.length) {
 				var aliases = response.aliases;
