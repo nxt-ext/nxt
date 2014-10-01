@@ -4,7 +4,7 @@ import org.junit.Test;
 
 import java.nio.BufferUnderflowException;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 public class HallmarkTest {
     @Test(expected = StringIndexOutOfBoundsException.class)

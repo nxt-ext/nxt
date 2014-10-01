@@ -167,4 +167,5 @@ transaction size.
 
 Updated Jetty to version 9.2.3.
 
-
+Added an option to disable transaction re-broadcasting by setting the property
+nxt.enableTransactionRebroadcasting to false (default is enabled).

@@ -134,6 +134,8 @@ public final class Trade {
     private final int height;
     private final long askOrderId;
     private final long bidOrderId;
+    private final int askOrderHeight;
+    private final int bidOrderHeight;
     private final long sellerId;
     private final long buyerId;
     private final DbKey dbKey;
@@ -147,6 +149,8 @@ public final class Trade {
         this.timestamp = block.getTimestamp();
         this.askOrderId = askOrder.getId();
         this.bidOrderId = bidOrder.getId();
+        this.askOrderHeight = askOrder.getHeight();
+        this.bidOrderHeight = bidOrder.getHeight();
         this.sellerId = askOrder.getAccountId();
         this.buyerId = bidOrder.getAccountId();
         this.dbKey = tradeDbKeyFactory.newKey(this.askOrderId, this.bidOrderId);
@@ -159,6 +163,8 @@ public final class Trade {
         this.blockId = rs.getLong("block_id");
         this.askOrderId = rs.getLong("ask_order_id");
         this.bidOrderId = rs.getLong("bid_order_id");
+        this.askOrderHeight = rs.getInt("ask_order_height");
+        this.bidOrderHeight = rs.getInt("bid_order_height");
         this.sellerId = rs.getLong("seller_id");
         this.buyerId = rs.getLong("buyer_id");
         this.dbKey = tradeDbKeyFactory.newKey(this.askOrderId, this.bidOrderId);
@@ -170,12 +176,15 @@ public final class Trade {
 
     private void save(Connection con) throws SQLException {
         try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO trade (asset_id, block_id, "
-                + "ask_order_id, bid_order_id, seller_id, buyer_id, quantity, price, timestamp, height) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
+                + "ask_order_id, bid_order_id, ask_order_height, bid_order_height, seller_id, buyer_id, quantity, price, timestamp, height) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
             int i = 0;
             pstmt.setLong(++i, this.getAssetId());
             pstmt.setLong(++i, this.getBlockId());
             pstmt.setLong(++i, this.getAskOrderId());
             pstmt.setLong(++i, this.getBidOrderId());
+            pstmt.setInt(++i, this.getAskOrderHeight());
+            pstmt.setInt(++i, this.getBidOrderHeight());
             pstmt.setLong(++i, this.getSellerId());
             pstmt.setLong(++i, this.getBuyerId());
             pstmt.setLong(++i, this.getQuantityQNT());
@@ -191,6 +200,14 @@ public final class Trade {
     public long getAskOrderId() { return askOrderId; }
 
     public long getBidOrderId() { return bidOrderId; }
+
+    public int getAskOrderHeight() {
+        return askOrderHeight;
+    }
+
+    public int getBidOrderHeight() {
+        return bidOrderHeight;
+    }
 
     public long getSellerId() {
         return sellerId;

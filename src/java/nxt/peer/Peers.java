@@ -6,7 +6,6 @@ import nxt.Constants;
 import nxt.Nxt;
 import nxt.Transaction;
 import nxt.db.Db;
-import nxt.util.Convert;
 import nxt.util.JSON;
 import nxt.util.Listener;
 import nxt.util.Listeners;
@@ -341,7 +340,7 @@ public final class Peers {
                         }
                     }
 
-                    int now = Convert.getEpochTime();
+                    int now = Nxt.getEpochTime();
                     for (PeerImpl peer : peers.values()) {
                         if (peer.getState() == Peer.State.CONNECTED && now - peer.getLastUpdated() > 3600) {
                             peer.connect();

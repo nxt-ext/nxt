@@ -451,12 +451,6 @@ public final class Account {
 
     public long getEffectiveBalanceNXT() {
 
-        /*
-        if (Constants.isTestnet && Constants.isOffline) {
-            return Constants.MAX_BALANCE_NXT;
-        }
-        */
-
         Block lastBlock = Nxt.getBlockchain().getLastBlock();
         if (lastBlock.getHeight() >= Constants.TRANSPARENT_FORGING_BLOCK_6
                 && (getPublicKey() == null || lastBlock.getHeight() - keyHeight <= 1440)) {
