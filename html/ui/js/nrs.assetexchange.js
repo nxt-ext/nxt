@@ -575,6 +575,7 @@ var NRS = (function(NRS, $, undefined) {
 			$(".asset_name").html(String(asset.name).escapeHTML());
 			$("#sell_asset_button").data("asset", assetId);
 			$("#buy_asset_button").data("asset", assetId);
+			$("#view_asset_distribution_link").data("asset", assetId);
 			$("#sell_asset_for_nxt").html($.t("sell_asset_for_nxt", {
 				"assetName": String(asset.name).escapeHTML()
 			}));
@@ -1636,6 +1637,39 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.incoming.my_assets = function() {
 		NRS.loadPage("my_assets");
 	}
+
+	$("#asset_distribution_modal").on("show.bs.modal", function(e) {
+		var $invoker = $(e.relatedTarget);
+
+		var assetId = $invoker.data("asset");
+
+		NRS.sendRequest("getAssetAccounts", {
+			"asset": assetId
+		}, function(response) {
+			var rows = "";
+
+			if (response.accountAssets) {
+				response.accountAssets.sort(function(a, b) {
+					return new BigInteger(b.quantityQNT).compareTo(new BigInteger(a.quantityQNT));
+				});
+
+				for (var i = 0; i < response.accountAssets.length; i++) {
+					var account = response.accountAssets[i];
+					var percentageAsset = NRS.calculatePercentage(account.quantityQNT, NRS.currentAsset.quantityQNT);
+
+					rows += "<tr><td><a href='#' data-user='" + NRS.getAccountFormatted(account, "account") + "' class='user_info'>" + (account.accountRS == NRS.currentAsset.accountRS ? "Asset Issuer" : NRS.getAccountTitle(account, "account")) + "</a></td><td>" + NRS.formatQuantity(account.quantityQNT, NRS.currentAsset.decimals) + "</td><td>" + percentageAsset + "%</td></tr>";
+				}
+			}
+
+			$("#asset_distribution_table tbody").empty().append(rows);
+			NRS.dataLoadFinished($("#asset_distribution_table"));
+		});
+	});
+
+	$("#asset_distribution_modal").on("hidden.bs.modal", function(e) {
+		$("#asset_distribution_table tbody").empty();
+		$("#asset_distribution_table").parent().addClass("data-loading");
+	});
 
 	$("#transfer_asset_modal").on("show.bs.modal", function(e) {
 		var $invoker = $(e.relatedTarget);
