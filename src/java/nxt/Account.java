@@ -537,6 +537,10 @@ public final class Account {
         return Trade.getAccountTrades(this.id, from, to);
     }
 
+    public DbIterator<Transfer> getTransfers(int from, int to) {
+        return Transfer.getAccountAssetTransfers(this.id, from, to);
+    }
+
     public long getAssetBalanceQNT(long assetId) {
         AccountAsset accountAsset = accountAssetTable.get(accountAssetDbKeyFactory.newKey(this.id, assetId));
         return accountAsset == null ? 0 : accountAsset.quantityQNT;

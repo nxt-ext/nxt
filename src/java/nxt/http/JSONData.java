@@ -12,6 +12,7 @@ import nxt.Poll;
 import nxt.Token;
 import nxt.Trade;
 import nxt.Transaction;
+import nxt.Transfer;
 import nxt.crypto.Crypto;
 import nxt.crypto.EncryptedData;
 import nxt.peer.Hallmark;
@@ -271,6 +272,17 @@ final class JSONData {
         putAccount(json, "buyer", trade.getBuyerId());
         json.put("block", Convert.toUnsignedLong(trade.getBlockId()));
         json.put("height", trade.getHeight());
+        return json;
+    }
+
+    static JSONObject transfer(Transfer transfer) {
+        JSONObject json = new JSONObject();
+        json.put("transfer", Convert.toUnsignedLong(transfer.getId()));
+        json.put("asset", Convert.toUnsignedLong(transfer.getAssetId()));
+        putAccount(json, "sender", transfer.getSenderId());
+        putAccount(json, "recipient", transfer.getRecipientId());
+        json.put("quantityQNT", String.valueOf(transfer.getQuantityQNT()));
+        json.put("height", transfer.getHeight());
         return json;
     }
 

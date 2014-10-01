@@ -132,4 +132,7 @@ public final class Asset {
         return Trade.getAssetTrades(this.assetId, from, to);
     }
 
+    public DbIterator<Transfer> getTransfers(int from, int to) {
+        return Transfer.getAssetTransfers(this.assetId, from, to);
+    }
 }
