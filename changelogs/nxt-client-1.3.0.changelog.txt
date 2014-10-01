@@ -73,8 +73,9 @@ a specific asset only.
 getUnconfirmedTransactions and getUnconfirmedTransactionIds now also accept
 the RS account number format.
 
-The Trade JSON now includes buyer and seller account ids, and the height at which
-the trade occurred.
+The Trade JSON now includes buyer and seller account ids, the height at which
+the trade occurred, the asset name, and the heights at which the ask and bid
+orders were accepted in the blockchain.
 
 parseTransaction does not just return an error when trying to parse an invalid
 transaction bytes or JSON, but adds a validate=false field, plus the actual error 
@@ -159,6 +160,7 @@ Everywhere, object ids that used to be Longs are now primitive longs, as their
 use as HashMap keys is no longer needed.
 
 Preserve and re-process unconfirmed transactions after fork resolution pop-off.
+Improved propagation of unconfirmed transactions.
 
 Multiple minor improvements and optimizations based on profiling results.
 
