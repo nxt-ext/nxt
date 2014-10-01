@@ -74,6 +74,7 @@ public final class ThreadPool {
             @Override
             public void run() {
                 runAll(afterStartJobs);
+                afterStartJobs = null;
             }
         };
         thread.setDaemon(true);

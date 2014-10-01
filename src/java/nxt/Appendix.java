@@ -111,10 +111,10 @@ public interface Appendix {
             buffer.get(this.message);
         }
 
-        Message(JSONObject attachmentData) throws NxtException.NotValidException {
+        Message(JSONObject attachmentData) {
             super(attachmentData);
             String messageString = (String)attachmentData.get("message");
-            this.isText = Boolean.TRUE.equals((Boolean)attachmentData.get("messageIsText"));
+            this.isText = Boolean.TRUE.equals(attachmentData.get("messageIsText"));
             this.message = isText ? Convert.toBytes(messageString) : Convert.parseHexString(messageString);
         }
 
@@ -190,7 +190,7 @@ public interface Appendix {
             this.encryptedData = EncryptedData.readEncryptedData(buffer, length, Constants.MAX_ENCRYPTED_MESSAGE_LENGTH);
         }
 
-        private AbstractEncryptedMessage(JSONObject attachmentJSON, JSONObject encryptedMessageJSON) throws NxtException.NotValidException {
+        private AbstractEncryptedMessage(JSONObject attachmentJSON, JSONObject encryptedMessageJSON) {
             super(attachmentJSON);
             byte[] data = Convert.parseHexString((String)encryptedMessageJSON.get("data"));
             byte[] nonce = Convert.parseHexString((String)encryptedMessageJSON.get("nonce"));
@@ -351,7 +351,7 @@ public interface Appendix {
             buffer.get(this.publicKey);
         }
 
-        PublicKeyAnnouncement(JSONObject attachmentData) throws NxtException.NotValidException {
+        PublicKeyAnnouncement(JSONObject attachmentData) {
             super(attachmentData);
             this.publicKey = Convert.parseHexString((String)attachmentData.get("recipientPublicKey"));
         }

@@ -271,7 +271,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
     }
 
     public Transaction.Builder newTransactionBuilder(byte[] senderPublicKey, long amountNQT, long feeNQT, short deadline,
-                                                     Attachment attachment) throws NxtException.ValidationException {
+                                                     Attachment attachment) {
         byte version = (byte) getTransactionVersion(Nxt.getBlockchain().getHeight());
         int timestamp = Nxt.getEpochTime();
         TransactionImpl.BuilderImpl builder = new TransactionImpl.BuilderImpl(version, senderPublicKey, amountNQT, feeNQT, timestamp,

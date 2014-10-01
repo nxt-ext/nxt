@@ -42,6 +42,7 @@ public final class GetForging extends APIServlet.APIRequestHandler {
         JSONObject response = new JSONObject();
         long deadline = generator.getDeadline();
         response.put("deadline", deadline);
+        response.put("hitTime", generator.getHitTime());
         int elapsedTime = Nxt.getEpochTime() - Nxt.getBlockchain().getLastBlock().getTimestamp();
         response.put("remaining", Math.max(deadline - elapsedTime, 0));
         return response;
