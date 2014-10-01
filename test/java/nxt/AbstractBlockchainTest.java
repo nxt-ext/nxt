@@ -49,7 +49,7 @@ public abstract class AbstractBlockchainTest {
     }
 
     protected static void shutdown() {
-        Nxt.shutdown();
+        TransactionProcessorImpl.getInstance().shutdown();
     }
 
     protected static void downloadTo(final int endHeight) {

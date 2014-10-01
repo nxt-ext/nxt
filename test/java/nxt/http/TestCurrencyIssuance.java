@@ -1,6 +1,8 @@
 package nxt.http;
 
-import nxt.*;
+import nxt.BlockchainTest;
+import nxt.Constants;
+import nxt.CurrencyType;
 import nxt.util.Logger;
 import org.json.simple.JSONObject;
 import org.junit.Assert;
@@ -41,12 +43,12 @@ public class TestCurrencyIssuance extends BlockchainTest {
 
         JSONObject issueCurrencyResponse = apiCall.invoke();
         String currencyId = (String) issueCurrencyResponse.get("transaction");
-        System.out.println("issueCurrencyResponse: " + issueCurrencyResponse.toJSONString());
+        Logger.logMessage("issueCurrencyResponse: " + issueCurrencyResponse.toJSONString());
         generateBlock();
 
         apiCall = new APICall.Builder("getCurrency").param("currency", currencyId).build();
         JSONObject getCurrencyResponse = apiCall.invoke();
-        Logger.logDebugMessage("getCurrencyResponse:" + getCurrencyResponse.toJSONString());
+        Logger.logMessage("getCurrencyResponse:" + getCurrencyResponse.toJSONString());
         Assert.assertEquals(currencyId, getCurrencyResponse.get("currency"));
         Assert.assertEquals("TSX", getCurrencyResponse.get("code"));
         return currencyId;

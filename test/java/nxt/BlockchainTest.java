@@ -1,14 +1,15 @@
 package nxt;
 
 import nxt.crypto.Crypto;
-import nxt.http.APICall;
 import nxt.util.Logger;
-import org.json.simple.JSONObject;
+import nxt.util.Time;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 
-public abstract class BlockchainTest {
+import java.util.Properties;
+
+public abstract class BlockchainTest extends AbstractBlockchainTest {
 
     protected static int baseHeight;
 
@@ -21,23 +22,29 @@ public abstract class BlockchainTest {
 
     @Before
     public void init() {
-        baseHeight = Nxt.getBlockchain().getHeight();
-        Logger.logDebugMessage("baseHeight: " + baseHeight);
         id1 = Account.getAccount(Crypto.getPublicKey(secretPhrase1)).getId();
         id2 = Account.getAccount(Crypto.getPublicKey(secretPhrase2)).getId();
+
+        Properties properties = ManualForgingTest.newTestProperties();
+        properties.setProperty("nxt.isTestnet", "true");
+        properties.setProperty("nxt.isOffline", "true");
+        properties.setProperty("nxt.enableFakeForging", "true");
+        properties.setProperty("nxt.timeMultiplier", "1");
+        AbstractForgingTest.init(properties);
+        Assert.assertTrue("nxt.fakeForgingAccount must be defined in nxt.properties", Nxt.getStringProperty("nxt.fakeForgingAccount") != null);
+        Nxt.setTime(new Time.CounterTime(Nxt.getEpochTime()));
+        baseHeight = blockchain.getHeight();
+        Logger.logMessage("baseHeight: " + baseHeight);
     }
 
     @After
     public void destroy() {
-        APICall apiCall = new APICall.Builder("popOff").param("height", "" + baseHeight).build();
-        JSONObject popOffResponse = apiCall.invoke();
-        Logger.logDebugMessage("popOffResponse:" + popOffResponse.toJSONString());
-        Helper.executeQuery("select * from unconfirmed_transaction");
+        AbstractForgingTest.shutdown();
     }
 
     public static void generateBlock() {
         try {
-            Nxt.getBlockchainProcessor().generateBlock(forgerSecretPhrase, Nxt.getEpochTime());
+            blockchainProcessor.generateBlock(forgerSecretPhrase, Nxt.getEpochTime());
         } catch (BlockchainProcessor.BlockNotAcceptedException e) {
             e.printStackTrace();
             Assert.fail();

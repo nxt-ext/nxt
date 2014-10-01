@@ -26,7 +26,7 @@ public class TestCurrencyExchange extends BlockchainTest {
 
         long forgerStartBalance = Account.getAccount(Crypto.getPublicKey(forgerSecretPhrase)).getBalanceNQT();
 
-        JSONObject publishExchangeOfferResponse = publishExchangeOffer(currencyId, secretPhrase1);
+        JSONObject publishExchangeOfferResponse = publishExchangeOffer(currencyId);
 
         generateBlock();
 
@@ -94,7 +94,7 @@ public class TestCurrencyExchange extends BlockchainTest {
 
         long forgerStartBalance = Account.getAccount(Crypto.getPublicKey(forgerSecretPhrase)).getBalanceNQT();
 
-        JSONObject publishExchangeOfferResponse = publishExchangeOffer(currencyId, secretPhrase1);
+        JSONObject publishExchangeOfferResponse = publishExchangeOffer(currencyId);
         generateBlock();
 
         APICall apiCall = new APICall.Builder("getAllOffers").build();
@@ -159,7 +159,7 @@ public class TestCurrencyExchange extends BlockchainTest {
         Assert.assertEquals(issuerAccount.getId(), Convert.parseUnsignedLong((String)exchange.get("buyer")));
     }
 
-    private JSONObject publishExchangeOffer(String currencyId, String secretPhrase) {
+    private JSONObject publishExchangeOffer(String currencyId) {
         APICall apiCall = new APICall.Builder("publishExchangeOffer").
                 secretPhrase(secretPhrase1).feeNQT(Constants.ONE_NXT).
                 param("deadline", "1440").

@@ -135,7 +135,7 @@ public final class Nxt {
         return time.getTime();
     }
 
-    static void setTime(Time time) {
+    public static void setTime(Time time) {
         Nxt.time = time;
     }
 

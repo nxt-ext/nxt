@@ -30,7 +30,7 @@ public class TestCurrencyReserveAndClaim extends BlockchainTest {
                 param("currency", currencyId).
                 build();
         JSONObject getFoundersResponse = apiCall.invoke();
-        Logger.logDebugMessage("getFoundersResponse: " + getFoundersResponse);
+        Logger.logMessage("getFoundersResponse: " + getFoundersResponse);
         Assert.assertEquals(5L, getFoundersResponse.get("errorCode"));
         Assert.assertEquals("Unknown currency", getFoundersResponse.get("errorDescription"));
         Assert.assertEquals(balanceNQT1 - Constants.ONE_NXT, Account.getAccount(Crypto.getPublicKey(secretPhrase1)).getBalanceNQT());
@@ -59,7 +59,7 @@ public class TestCurrencyReserveAndClaim extends BlockchainTest {
                 param("amountNQT", "" + 2).
                 build();
         JSONObject reserveIncreaseResponse = apiCall.invoke();
-        Logger.logDebugMessage("reserveIncreaseResponse: " + reserveIncreaseResponse);
+        Logger.logMessage("reserveIncreaseResponse: " + reserveIncreaseResponse);
         generateBlock();
 
         // Two increase reserve transactions in the same block
@@ -70,7 +70,7 @@ public class TestCurrencyReserveAndClaim extends BlockchainTest {
                 param("amountNQT", "" + 3).
                 build();
         reserveIncreaseResponse = apiCall.invoke();
-        Logger.logDebugMessage("reserveIncreaseResponse: " + reserveIncreaseResponse);
+        Logger.logMessage("reserveIncreaseResponse: " + reserveIncreaseResponse);
 
         apiCall = new APICall.Builder("currencyReserveIncrease").
                 secretPhrase(secretPhrase2).
@@ -79,7 +79,7 @@ public class TestCurrencyReserveAndClaim extends BlockchainTest {
                 param("amountNQT", "" + 5).
                 build();
         reserveIncreaseResponse = apiCall.invoke();
-        Logger.logDebugMessage("reserveIncreaseResponse: " + reserveIncreaseResponse);
+        Logger.logMessage("reserveIncreaseResponse: " + reserveIncreaseResponse);
 
         generateBlock();
 
@@ -89,7 +89,7 @@ public class TestCurrencyReserveAndClaim extends BlockchainTest {
                 param("currency", currencyId).
                 build();
         JSONObject getFoundersResponse = apiCall.invoke();
-        Logger.logDebugMessage("getFoundersResponse: " + getFoundersResponse);
+        Logger.logMessage("getFoundersResponse: " + getFoundersResponse);
 
         JSONArray founders = (JSONArray)getFoundersResponse.get("founders");
         JSONObject founder1 = (JSONObject)founders.get(0);
