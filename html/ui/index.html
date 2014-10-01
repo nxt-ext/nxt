@@ -247,6 +247,7 @@
                         	<a href="#" data-page="asset_exchange"><i class="fa fa-signal"></i><span data-i18n="asset_exchange">Asset Exchange</span><i class="fa pull-right fa-angle-right" style="padding-top:3px"></i></a>
                             <ul class="treeview-menu" style="display: none;">
                                  <li><a href="#" data-page="asset_exchange"><i class="fa fa-angle-double-right"></i> <span data-i18n="asset_exchange">Asset Exchange</span></a></li>
+                                 <li><a href="#" data-page="trade_history"><i class="fa fa-angle-double-right"></i> <span data-i18n="trade_history">Trade History</span></a></li>
                             	<li><a href="#" data-page="my_assets"><i class="fa fa-angle-double-right"></i> <span data-i18n="my_assets">My Assets</span></a></li>
                                 <li><a href="#" data-page="open_orders"><i class="fa fa-angle-double-right"></i> <span data-i18n="open_orders">Open Orders</span></a></li>
                                 <li><a href="#" data-toggle="modal" data-target="#issue_asset_modal"><i class="fa fa-angle-double-right"></i> <span data-i18n="issue_asset">Issue Asset</span></a></li>
@@ -703,7 +704,34 @@
 	                 	</div>
                  	</section>
                 </div>
-                                					
+                             
+                <div id="trade_history_page" class="page">
+                    <section class="content-header"><h1 data-i18n="trade_history">Trade History</h1></section>
+                    <section class="content">
+                        <div class="data-container data-loading">
+                            <table class="table table-striped" id="trade_history_table">
+                                <thead>
+                                <tr>
+                                    <th data-i18n="asset">Asset</th>
+                                    <th data-i18n="date">Date</th>
+                                    <th data-i18n="type">Type</th>
+                                    <th data-i18n="quantity">Quantity</th>
+                                    <th data-i18n="price">Price</th>
+                                    <th data-i18n="total">Total</th>
+                                    <th data-i18n="buyer">Buyer</th>
+                                    <th data-i18n="seller">Seller</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                
+                                </tbody>
+                            </table>
+                            <div class="data-loading-container"><img src="img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
+                            <div class="data-empty-container"><p data-i18n="no_trade_history">No trade history available.</p></div>
+                        </div>
+                    </section>
+                </div>
+
                 <div id="my_assets_page" class="page">
 	                <section class="content-header"><h1 data-i18n="my_assets">My Assets</h1></section>
 					<section class="content">
@@ -784,8 +812,9 @@
 							                <h3 style="margin-top:0" id="asset_name"></h3>
 
 							                <div style="color:#838383;margin-bottom:5px">
-								                <strong data-i18n="quantity">Quantity</strong>: <span id="asset_quantity"></span>
-								                <strong data-i18n="asset_decimals">Asset Decimals</strong>: <span id="asset_decimals"></span>
+								                <strong data-i18n="quantity">Quantity</strong>: <span id="asset_quantity"></span> | 
+								                <strong data-i18n="asset_decimals">Asset Decimals</strong>: <span id="asset_decimals"></span> | 
+                                                <strong data-i18n="distribution">Distribution</strong>: <a href="#" data-toggle="modal" data-target="#asset_distribution_modal" data-i18n="view_asset_distribution" data-asset="" id="view_asset_distribution_link">View Asset Distribution</a>
 							                </div>
 
 							                <div id="asset_description"></div>
@@ -963,7 +992,19 @@
 					                        </div>
 							                        
 					                        <div class="box box-primary" style="max-height:500px;overflow:auto;margin-bottom:10px;">
-					                            <div class="box-header"><h3 class="box-title" data-i18n="trade_history">Trade History</h3></div>
+					                            <div class="box-header">
+                                                    <h3 class="box-title" data-i18n="trade_history">Trade History</h3>
+                                                    <div style="position:absolute;top:9px;right:9px;">
+                                                        <div class="btn-group" data-toggle="buttons" id="asset_exchange_trade_history_type">
+                                                            <label class="btn btn-default active" data-type="everyone">
+                                                                <input type="radio" name="asset_exchange_trade_history_type"> <span data-i18n="everyone">Everyone</span>
+                                                            </label>
+                                                            <label class="btn btn-default" data-type="you">
+                                                                <input type="radio" name="asset_exchange_trade_history_type"> <span data-i18n="you">You</span>
+                                                            </label>
+                                                        </div>
+                                                    </div>
+                                                </div>
 					                            <div class="box-body no-padding">
 					                            	<div class="data-container data-loading" data-no-padding="true">
 						                                <table class="table table-striped" id="asset_exchange_trade_history_table">
@@ -973,8 +1014,8 @@
 						                                        <th data-i18n="quantity">Quantity</th>
 						                                        <th data-i18n="price">Price</th>
 						                                        <th data-i18n="total">Total</th>
-						                                        <th data-i18n="ask_order_id">Ask Order ID</th>
-						                                        <th data-i18n="bid_order_id">Bid Order ID</th>
+						                                        <th data-i18n="buyer">Buyer</th>
+						                                        <th data-i18n="seller">Seller</th>
 						                                    </tr>
 						                                    </thead>
 						                                    <tbody>
@@ -993,14 +1034,7 @@
 						</div>
 	                </section>
                 </div>
-                
-                <div id="trade_history_page" class="page">
-					<section class="content-header"><h1 data-i18n="trade_history">Trade History</h1></section>
-					<section class="content">
-						<p data-i18n="todo">Todo!</p>
-					</section>
-                </div>
-                
+
                 <div id="dgs_search_page" class="paginated page">
                     <section class="content-header">
                     	<h1 data-i18n="search_marketplace">Search Marketplace</h1>
@@ -3982,6 +4016,37 @@
 			</div>
 		</div>
 		
+        <div class="modal fade" id="asset_distribution_modal" tabindex="-1" role="dialog" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-wider">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                        <h4 class="modal-title" data-i18n="Asset Distribution">Asset Distribution</h4>
+                    </div>
+                    <div class="modal-body">                            
+                        <div class="data-container data-loading" style="max-height:350px;overflow:auto">
+                            <table class="table table-striped" id="asset_distribution_table">
+                                <thead>
+                                <tr>
+                                    <th data-i18n="account">Account</th>
+                                    <th data-i18n="quantity">Quantity</th>
+                                    <th data-i18n="percentage">Percentage</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                
+                                </tbody>
+                            </table>
+                            <div class="data-loading-container"><img src="img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
+                            <div class="data-empty-container"><p data-i18n="error">Error</p></div>
+                        </div>
+                    </div>
+                    <div class="modal-footer" style="margin-top:0;">
+                        <button type="button" class="btn btn-primary" data-dismiss="modal" data-i18n="close">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
 
 		<div class="modal fade" id="nrs_modal" tabindex="-1" role="dialog" aria-hidden="true">
 			<div class="modal-dialog modal-dialog-wide">
