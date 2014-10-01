@@ -4,7 +4,6 @@ import nxt.Block;
 import nxt.BlockchainProcessor;
 import nxt.Nxt;
 import nxt.peer.Peer;
-import nxt.util.Convert;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
@@ -23,7 +22,7 @@ public final class GetBlockchainStatus extends APIServlet.APIRequestHandler {
         JSONObject response = new JSONObject();
         response.put("application", Nxt.APPLICATION);
         response.put("version", Nxt.VERSION);
-        response.put("time", Convert.getEpochTime());
+        response.put("time", Nxt.getEpochTime());
         Block lastBlock = Nxt.getBlockchain().getLastBlock();
         response.put("lastBlock", lastBlock.getStringId());
         response.put("cumulativeDifficulty", lastBlock.getCumulativeDifficulty().toString());
@@ -33,7 +32,6 @@ public final class GetBlockchainStatus extends APIServlet.APIRequestHandler {
         response.put("lastBlockchainFeeder", lastBlockchainFeeder == null ? null : lastBlockchainFeeder.getAnnouncedAddress());
         response.put("lastBlockchainFeederHeight", blockchainProcessor.getLastBlockchainFeederHeight());
         response.put("isScanning", blockchainProcessor.isScanning());
-        response.put("isDownloading", Nxt.getBlockchainProcessor().isDownloading());
         return response;
     }
 

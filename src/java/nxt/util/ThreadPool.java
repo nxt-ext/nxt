@@ -49,7 +49,7 @@ public final class ThreadPool {
         }
     }
 
-    public static synchronized void start() {
+    public static synchronized void start(int timeMultiplier) {
         if (scheduledThreadPool != null) {
             throw new IllegalStateException("Executor service already started");
         }
@@ -65,7 +65,7 @@ public final class ThreadPool {
         Logger.logDebugMessage("Starting " + backgroundJobs.size() + " background jobs");
         scheduledThreadPool = Executors.newScheduledThreadPool(backgroundJobs.size());
         for (Map.Entry<Runnable,Long> entry : backgroundJobs.entrySet()) {
-            scheduledThreadPool.scheduleWithFixedDelay(entry.getKey(), 0, entry.getValue(), TimeUnit.MILLISECONDS);
+            scheduledThreadPool.scheduleWithFixedDelay(entry.getKey(), 0, Math.max(entry.getValue() / timeMultiplier, 1), TimeUnit.MILLISECONDS);
         }
         backgroundJobs = null;
 
@@ -74,6 +74,7 @@ public final class ThreadPool {
             @Override
             public void run() {
                 runAll(afterStartJobs);
+                afterStartJobs = null;
             }
         };
         thread.setDaemon(true);

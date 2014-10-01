@@ -70,9 +70,6 @@ getTrades now accepts an optional account parameter, in addition to asset, to
 allow retrieving trade history for a specific account, for either all assets or
 a specific asset only.
 
-getBlockchainStatus and getState now also return isDownloading, true if current
-height is more than 1440 blocks behind current blockchain feeder peer height.
-
 getUnconfirmedTransactions and getUnconfirmedTransactionIds now also accept
 the RS account number format.
 
@@ -170,4 +167,5 @@ transaction size.
 
 Updated Jetty to version 9.2.3.
 
-
+Added an option to disable transaction re-broadcasting by setting the property
+nxt.enableTransactionRebroadcasting to false (default is enabled).

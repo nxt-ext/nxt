@@ -2,7 +2,6 @@ package nxt;
 
 import nxt.crypto.Crypto;
 import nxt.http.APICall;
-import nxt.util.Convert;
 import nxt.util.Logger;
 import org.json.simple.JSONObject;
 import org.junit.After;
@@ -34,12 +33,11 @@ public abstract class BlockchainTest {
         JSONObject popOffResponse = apiCall.invoke();
         Logger.logDebugMessage("popOffResponse:" + popOffResponse.toJSONString());
         Helper.executeQuery("select * from unconfirmed_transaction");
-        Nxt.getTransactionProcessor().shutdown();
     }
 
     public static void generateBlock() {
         try {
-            Nxt.getBlockchainProcessor().generateBlock(forgerSecretPhrase, Convert.getEpochTime());
+            Nxt.getBlockchainProcessor().generateBlock(forgerSecretPhrase, Nxt.getEpochTime());
         } catch (BlockchainProcessor.BlockNotAcceptedException e) {
             e.printStackTrace();
             Assert.fail();

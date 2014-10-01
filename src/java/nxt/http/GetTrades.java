@@ -12,6 +12,8 @@ import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.HashMap;
+import java.util.Map;
 
 public final class GetTrades extends APIServlet.APIRequestHandler {
 
@@ -45,8 +47,9 @@ public final class GetTrades extends APIServlet.APIRequestHandler {
                 Account account = ParameterParser.getAccount(req);
                 trades = Trade.getAccountAssetTrades(account.getId(), asset.getId(), firstIndex, lastIndex);
             }
+            Map<Long,String> assetNames = new HashMap<>();
             while (trades.hasNext()) {
-                tradesData.add(JSONData.trade(trades.next()));
+                tradesData.add(trade(trades.next(), assetNames));
             }
         } finally {
             DbUtils.close(trades);
@@ -54,6 +57,17 @@ public final class GetTrades extends APIServlet.APIRequestHandler {
         response.put("trades", tradesData);
 
         return response;
+    }
+
+    static JSONObject trade(Trade trade, Map<Long,String> assetNames) {
+        JSONObject tradeJSON = JSONData.trade(trade);
+        String assetName = assetNames.get(trade.getAssetId());
+        if (assetName == null) {
+            assetName = Asset.getAsset(trade.getAssetId()).getName();
+            assetNames.put(trade.getAssetId(), assetName);
+        }
+        tradeJSON.put("name", assetName);
+        return tradeJSON;
     }
 
 }

@@ -6,13 +6,10 @@ import nxt.Asset;
 import nxt.Generator;
 import nxt.Nxt;
 import nxt.Order;
-import nxt.Poll;
 import nxt.Trade;
-import nxt.Vote;
 import nxt.db.DbIterator;
 import nxt.peer.Peer;
 import nxt.peer.Peers;
-import nxt.util.Convert;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
@@ -33,7 +30,7 @@ public final class GetState extends APIServlet.APIRequestHandler {
 
         response.put("application", Nxt.APPLICATION);
         response.put("version", Nxt.VERSION);
-        response.put("time", Convert.getEpochTime());
+        response.put("time", Nxt.getEpochTime());
         response.put("lastBlock", Nxt.getBlockchain().getLastBlock().getStringId());
         response.put("cumulativeDifficulty", Nxt.getBlockchain().getLastBlock().getCumulativeDifficulty().toString());
 
@@ -63,7 +60,6 @@ public final class GetState extends APIServlet.APIRequestHandler {
         response.put("lastBlockchainFeeder", lastBlockchainFeeder == null ? null : lastBlockchainFeeder.getAnnouncedAddress());
         response.put("lastBlockchainFeederHeight", Nxt.getBlockchainProcessor().getLastBlockchainFeederHeight());
         response.put("isScanning", Nxt.getBlockchainProcessor().isScanning());
-        response.put("isDownloading", Nxt.getBlockchainProcessor().isDownloading());
         response.put("availableProcessors", Runtime.getRuntime().availableProcessors());
         response.put("maxMemory", Runtime.getRuntime().maxMemory());
         response.put("totalMemory", Runtime.getRuntime().totalMemory());

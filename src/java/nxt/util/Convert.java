@@ -113,16 +113,6 @@ public final class Convert {
         return fullHashToId(Convert.parseHexString(hash));
     }
 
-    public static int getEpochTime() {
-        int time = (int) ((System.currentTimeMillis() - Constants.EPOCH_BEGINNING + 500) / 1000);
-        // Make sure blocks do not use the same time stamp during unit tests
-        if (Nxt.isIsUnitTest()) {
-            time += counter;
-            counter ++;
-        }
-        return time;
-    }
-
     public static Date fromEpochTime(int epochTime) {
         return new Date(epochTime * 1000L + Constants.EPOCH_BEGINNING - 500L);
     }

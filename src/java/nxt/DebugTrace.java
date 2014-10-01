@@ -45,7 +45,7 @@ public final class DebugTrace {
                 debugTrace.resetLog();
             }
         }, BlockchainProcessor.Event.RESCAN_BEGIN);
-        Logger.logDebugMessage("Debug tracing of " + (accountIds.contains("*") ? "ALL"
+        Logger.logDebugMessage("Debug tracing of " + (accountIdStrings.contains("*") ? "ALL"
                 : String.valueOf(accountIds.size())) + " accounts enabled");
     }
 

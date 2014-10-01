@@ -50,7 +50,7 @@ public final class DbShellServlet extends HttpServlet {
                     "</body>\n" +
                     "</html>\n";
 
-    private static String form =
+    private static final String form =
             "<form action=\"/dbshell\" method=\"POST\" onsubmit=\"return submitForm(this);\">" +
                     "<table class=\"table\" style=\"width:90%;\">" +
                     "<tr><td><pre class=\"result\" style=\"float:top;width:90%;\">" +
