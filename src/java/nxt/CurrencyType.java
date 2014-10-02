@@ -41,7 +41,7 @@ public abstract class CurrencyType {
                 Currency.addCurrency(transaction.getId(), transaction.getSenderId(), attachment.getName(), attachment.getCode(), attachment.getDescription(),
                         attachment.getType(), attachment.getTotalSupply(), attachment.getIssuanceHeight(), attachment.getMinReservePerUnitNQT(),
                         attachment.getMinDifficulty(), attachment.getMaxDifficulty(), attachment.getRuleset(), attachment.getAlgorithm(), attachment.getTotalSupply(), 0);
-                senderAccount.addToCurrencyAndUnconfirmedCurrencyBalanceQNT(transaction.getId(), attachment.getTotalSupply());
+                senderAccount.addToCurrencyAndUnconfirmedCurrencyUnits(transaction.getId(), attachment.getTotalSupply());
             }
 
         });

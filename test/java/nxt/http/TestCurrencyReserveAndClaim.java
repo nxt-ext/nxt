@@ -45,8 +45,8 @@ public class TestCurrencyReserveAndClaim extends BlockchainTest {
         long balanceNQT2 = Account.getAccount(Crypto.getPublicKey(secretPhrase2)).getBalanceNQT();
         reserveIncreaseImpl(currencyId);
         generateBlock(); // distribution of currency to founders
-        Assert.assertEquals(20000, Account.getAccount(Crypto.getPublicKey(secretPhrase1)).getCurrencyBalanceQNT(Convert.parseAccountId(currencyId)));
-        Assert.assertEquals(80000, Account.getAccount(Crypto.getPublicKey(secretPhrase2)).getCurrencyBalanceQNT(Convert.parseAccountId(currencyId)));
+        Assert.assertEquals(20000, Account.getAccount(Crypto.getPublicKey(secretPhrase1)).getCurrencyUnits(Convert.parseAccountId(currencyId)));
+        Assert.assertEquals(80000, Account.getAccount(Crypto.getPublicKey(secretPhrase2)).getCurrencyUnits(Convert.parseAccountId(currencyId)));
         Assert.assertEquals(balanceNQT1 - Constants.ONE_NXT - 200000, Account.getAccount(Crypto.getPublicKey(secretPhrase1)).getBalanceNQT());
         Assert.assertEquals(balanceNQT2 - 2*Constants.ONE_NXT - 800000, Account.getAccount(Crypto.getPublicKey(secretPhrase2)).getBalanceNQT());
     }

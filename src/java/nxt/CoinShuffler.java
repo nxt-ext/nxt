@@ -89,7 +89,7 @@ public final class CoinShuffler {
                         case INITIATED: {
                             if (block.getTimestamp() - shuffling.lastActionTimestamp > shuffling.maxInitiationDelay) {
                                 for (Long accountId : shuffling.participants) {
-                                    Account.getAccount(accountId).addToCurrencyAndUnconfirmedCurrencyBalanceQNT(shuffling.currencyId, shuffling.amount);
+                                    Account.getAccount(accountId).addToCurrencyAndUnconfirmedCurrencyUnits(shuffling.currencyId, shuffling.amount);
                                 }
                                 shufflings.remove(shufflingId);
                             }
@@ -103,7 +103,7 @@ public final class CoinShuffler {
                                         rogueIsPenalised = true;
                                         continue;
                                     }
-                                    Account.getAccount(accountId).addToCurrencyAndUnconfirmedCurrencyBalanceQNT(shuffling.currencyId, shuffling.amount);
+                                    Account.getAccount(accountId).addToCurrencyAndUnconfirmedCurrencyUnits(shuffling.currencyId, shuffling.amount);
                                 }
                                 shufflings.remove(shufflingId);
                             }
@@ -117,7 +117,7 @@ public final class CoinShuffler {
                                         rogueIsPenalised = true;
                                         continue;
                                     }
-                                    Account.getAccount(accountId).addToCurrencyAndUnconfirmedCurrencyBalanceQNT(shuffling.currencyId, shuffling.amount);
+                                    Account.getAccount(accountId).addToCurrencyAndUnconfirmedCurrencyUnits(shuffling.currencyId, shuffling.amount);
                                 }
                                 shufflings.remove(shufflingId);
                             }
@@ -131,7 +131,7 @@ public final class CoinShuffler {
                                         rogueIsPenalised = true;
                                         continue;
                                     }
-                                    Account.getAccount(accountId).addToCurrencyAndUnconfirmedCurrencyBalanceQNT(shuffling.currencyId, shuffling.amount);
+                                    Account.getAccount(accountId).addToCurrencyAndUnconfirmedCurrencyUnits(shuffling.currencyId, shuffling.amount);
                                 }
                                 shufflings.remove(shufflingId);
                             }
@@ -186,7 +186,7 @@ public final class CoinShuffler {
     }
 
     public static void initiateShuffling(Long transactionId, Account account, Long currencyId, long amount, byte numberOfParticipants, short maxInitiationDelay, short maxContinuationDelay, short maxFinalizationDelay, short maxCancellationDelay) {
-        account.addToCurrencyBalanceQNT(currencyId, -amount);
+        account.addToCurrencyUnits(currencyId, -amount);
 
         Shuffling newShuffling = new Shuffling(currencyId, amount, numberOfParticipants, maxInitiationDelay, maxContinuationDelay, maxFinalizationDelay, maxCancellationDelay);
 
@@ -219,7 +219,7 @@ public final class CoinShuffler {
         shuffling.decryptedRecipients.put(account.getId(), recipients);
         if (shuffling.decryptedRecipients.size() == shuffling.numberOfParticipants) {
             for (Long recipientAccountId : shuffling.decryptedRecipients.values().toArray(new Long[0][0])[0]) {
-                Account.getAccount(recipientAccountId).addToCurrencyAndUnconfirmedCurrencyBalanceQNT(shuffling.currencyId, shuffling.amount);
+                Account.getAccount(recipientAccountId).addToCurrencyAndUnconfirmedCurrencyUnits(shuffling.currencyId, shuffling.amount);
             }
             shufflings.remove(shufflingId);
         } else {

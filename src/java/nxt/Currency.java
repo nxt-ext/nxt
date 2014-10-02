@@ -262,7 +262,7 @@ public final class Currency {
     }
 
     public static void claimReserve(Account account, long currencyId, long units) {
-        account.addToCurrencyBalanceQNT(currencyId, -units);
+        account.addToCurrencyUnits(currencyId, -units);
         Currency currency = Currency.getCurrency(currencyId);
         currency.totalSupply -= units;
         currencyTable.insert(currency);
@@ -270,8 +270,8 @@ public final class Currency {
     }
 
     public static void transferMoney(Account account, long recipientId, long currencyId, long units) {
-        account.addToCurrencyBalanceQNT(currencyId, -units);
-        Account.addOrGetAccount(recipientId).addToCurrencyAndUnconfirmedCurrencyBalanceQNT(currencyId, units);
+        account.addToCurrencyUnits(currencyId, -units);
+        Account.addOrGetAccount(recipientId).addToCurrencyAndUnconfirmedCurrencyUnits(currencyId, units);
     }
 
     public void increaseSupply(long units) {
@@ -314,7 +314,7 @@ public final class Currency {
             }
             for (CurrencyFounder founder : CurrencyFounder.getCurrencyFounders(currency.getId(), 0, Integer.MAX_VALUE)) {
                 long units = Convert.safeDivide(Convert.safeMultiply(currency.getTotalSupply(), founder.getValue()), totalValue);
-                Account.getAccount(founder.getAccountId()).addToCurrencyAndUnconfirmedCurrencyBalanceQNT(currency.getId(), units);
+                Account.getAccount(founder.getAccountId()).addToCurrencyAndUnconfirmedCurrencyUnits(currency.getId(), units);
             }
         }
     }

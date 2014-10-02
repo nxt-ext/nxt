@@ -27,7 +27,7 @@ public final class TransferCurrency extends CreateTransaction {
         long units = ParameterParser.getLong(req, "units", 0, Long.MAX_VALUE, true);
         Account account = ParameterParser.getSenderAccount(req);
 
-        if (units > account.getUnconfirmedCurrencyBalanceQNT(currency.getId())) {
+        if (units > account.getUnconfirmedCurrencyUnits(currency.getId())) {
             return NOT_ENOUGH_CURRENCY;
         }
 

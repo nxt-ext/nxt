@@ -64,7 +64,8 @@ public final class APIServlet extends HttpServlet {
         map.put("calculateFullHash", CalculateFullHash.instance);
         map.put("cancelAskOrder", CancelAskOrder.instance);
         map.put("cancelBidOrder", CancelBidOrder.instance);
-        map.put("currencyExchange", CurrencyExchange.instance);
+        map.put("currencyBuy", CurrencyBuy.instance);
+        map.put("currencySell", CurrencySell.instance);
         map.put("currencyReserveIncrease", CurrencyReserveIncrease.instance);
         map.put("currencyReserveClaim", CurrencyReserveClaim.instance);
         map.put("currencyMint", CurrencyMint.instance);

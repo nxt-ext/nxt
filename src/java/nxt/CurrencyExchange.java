@@ -62,15 +62,15 @@ public final class CurrencyExchange {
 
                 Account counterAccount = Account.getAccount(offer.getAccountId());
                 counterAccount.addToBalanceNQT(-curAmountNQT);
-                counterAccount.addToCurrencyBalanceQNT(currencyId, curUnits);
+                counterAccount.addToCurrencyUnits(currencyId, curUnits);
                 Exchange.addExchange(currencyId, Nxt.getBlockchain().getLastBlock(),
                         offer.getId(), account.getId(), offer.getAccountId(), curUnits, offer.getRateNQT());
             }
         }
 
         account.addToBalanceAndUnconfirmedBalanceNQT(extraAmountNQT);
-        account.addToCurrencyBalanceQNT(currencyId, -(units - remainingUnits));
-        account.addToUnconfirmedCurrencyBalanceQNT(currencyId, remainingUnits);
+        account.addToCurrencyUnits(currencyId, -(units - remainingUnits));
+        account.addToUnconfirmedCurrencyUnits(currencyId, remainingUnits);
     }
 
     static void exchangeNXTForCurrency(Account account, long currencyId, long rateNQT, long units) {
@@ -99,13 +99,13 @@ public final class CurrencyExchange {
 
                 Account counterAccount = Account.getAccount(offer.getAccountId());
                 counterAccount.addToBalanceNQT(curAmountNQT);
-                counterAccount.addToCurrencyBalanceQNT(currencyId, -curUnits);
+                counterAccount.addToCurrencyUnits(currencyId, -curUnits);
                 Exchange.addExchange(currencyId, Nxt.getBlockchain().getLastBlock(),
                         offer.getId(), offer.getAccountId(), account.getId(), curUnits, offer.getRateNQT());
             }
         }
 
-        account.addToCurrencyAndUnconfirmedCurrencyBalanceQNT(currencyId, extraUnits);
+        account.addToCurrencyAndUnconfirmedCurrencyUnits(currencyId, extraUnits);
         account.addToBalanceNQT(-(Convert.safeMultiply(units, rateNQT) - remainingAmountNQT));
         account.addToUnconfirmedBalanceNQT(remainingAmountNQT);
     }
@@ -118,7 +118,7 @@ public final class CurrencyExchange {
 
         Account account = Account.getAccount(buyOffer.getAccountId());
         account.addToUnconfirmedBalanceNQT(buyOffer.getSupply());
-        account.addToUnconfirmedCurrencyBalanceQNT(currencyId, sellOffer.getSupply());
+        account.addToUnconfirmedCurrencyUnits(currencyId, sellOffer.getSupply());
     }
 
     private static void removeOffer(long currencyId, long accountId) {

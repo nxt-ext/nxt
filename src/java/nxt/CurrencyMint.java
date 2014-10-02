@@ -119,7 +119,7 @@ public final class CurrencyMint {
         if (meetsTarget(hash, target)) {
             currencyMintTable.insert(new CurrencyMint(currencyId, account.getId(), counter));
             units = Math.min(units, currency.getTotalSupply() - currency.getCurrentSupply());
-            account.addToCurrencyAndUnconfirmedCurrencyBalanceQNT(currencyId, units);
+            account.addToCurrencyAndUnconfirmedCurrencyUnits(currencyId, units);
             currency.increaseSupply(units);
         }
     }
