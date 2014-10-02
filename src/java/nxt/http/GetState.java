@@ -53,6 +53,7 @@ public final class GetState extends APIServlet.APIRequestHandler {
         response.put("numberOfOrders", Order.Ask.getCount() + Order.Bid.getCount());
         response.put("numberOfTrades", Trade.getCount());
         response.put("numberOfTransfers", Transfer.getCount());
+        // TODO add currency numbers
         response.put("numberOfAliases", Alias.getCount());
         //response.put("numberOfPolls", Poll.getCount());
         //response.put("numberOfVotes", Vote.getCount());
