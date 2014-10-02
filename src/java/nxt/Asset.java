@@ -128,6 +128,13 @@ public final class Asset {
         return Account.getAssetAccounts(this.assetId, from, to);
     }
 
+    public DbIterator<Account.AccountAsset> getAccounts(int height, int from, int to) {
+        if (height < 0) {
+            return getAccounts(from, to);
+        }
+        return Account.getAssetAccounts(this.assetId, height, from, to);
+    }
+
     public DbIterator<Trade> getTrades(int from, int to) {
         return Trade.getAssetTrades(this.assetId, from, to);
     }

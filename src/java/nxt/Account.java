@@ -33,6 +33,7 @@ public final class Account {
         private final DbKey dbKey;
         private long quantityQNT;
         private long unconfirmedQuantityQNT;
+        private int height;
 
         private AccountAsset(long accountId, long assetId, long quantityQNT, long unconfirmedQuantityQNT) {
             this.accountId = accountId;
@@ -48,6 +49,7 @@ public final class Account {
             this.dbKey = accountAssetDbKeyFactory.newKey(this.accountId, this.assetId);
             this.quantityQNT = rs.getLong("quantity");
             this.unconfirmedQuantityQNT = rs.getLong("unconfirmed_quantity");
+            this.height = rs.getInt("height");
         }
 
         private void save(Connection con) throws SQLException {
@@ -78,6 +80,10 @@ public final class Account {
 
         public long getUnconfirmedQuantityQNT() {
             return unconfirmedQuantityQNT;
+        }
+
+        public int getHeight() {
+            return height;
         }
 
         private void save() {
@@ -312,6 +318,13 @@ public final class Account {
         return accountAssetTable.getManyBy("asset_id", assetId, from, to);
     }
 
+    public static DbIterator<AccountAsset> getAssetAccounts(long assetId, int height, int from, int to) {
+        if (height < 0) {
+            return getAssetAccounts(assetId, from, to);
+        }
+        return accountAssetTable.getManyBy("asset_id", assetId, height, from, to);
+    }
+
     static void init() {}
 
 
@@ -499,6 +512,44 @@ public final class Account {
             pstmt.setInt(2, height);
             pstmt.setInt(3, height);
             return accountTable.getManyBy(con, pstmt, true);
+        } catch (SQLException e) {
+            DbUtils.close(con);
+            throw new RuntimeException(e.toString(), e);
+        }
+    }
+
+    public DbIterator<Account> getLessors(int height) {
+        if (height < 0) {
+            return getLessors();
+        }
+        accountTable.checkAvailable(height);
+        Connection con = null;
+        try {
+            con = Db.getConnection();
+            PreparedStatement pstmt = con.prepareStatement("SELECT * FROM account AS a WHERE "
+                    + "a.current_lessee_id = ? AND a.current_leasing_height_from <= ? AND a.current_leasing_height_to > ? "
+                    + "AND a.height <= ? AND (a.latest = TRUE OR (a.latest = FALSE "
+                    + "AND EXISTS (SELECT 1 FROM account AS b WHERE "
+                    + "b.current_lessee_id = ? AND b.current_leasing_height_from <= ? AND b.current_leasing_height_to > ? "
+                    + "AND b.height > ? AND a.id = b.id)"
+                    + "AND NOT EXISTS (SELECT 1 FROM account AS b WHERE "
+                    + "b.current_lessee_id = ? AND b.current_leasing_height_from <= ? AND b.current_leasing_height_to > ? "
+                    + "AND b.height <= ? AND a.id = b.id AND b.height > a.height)"
+                    + "))");
+            int i = 0;
+            pstmt.setLong(++i, this.id);
+            pstmt.setInt(++i, height);
+            pstmt.setInt(++i, height);
+            pstmt.setInt(++i, height);
+            pstmt.setLong(++i, this.id);
+            pstmt.setInt(++i, height);
+            pstmt.setInt(++i, height);
+            pstmt.setInt(++i, height);
+            pstmt.setLong(++i, this.id);
+            pstmt.setInt(++i, height);
+            pstmt.setInt(++i, height);
+            pstmt.setInt(++i, height);
+            return accountTable.getManyBy(con, pstmt, false);
         } catch (SQLException e) {
             DbUtils.close(con);
             throw new RuntimeException(e.toString(), e);

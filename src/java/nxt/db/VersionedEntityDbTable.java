@@ -60,10 +60,7 @@ public abstract class VersionedEntityDbTable<T> extends EntityDbTable<T> {
 
     @Override
     public final void trim(int height) {
-        //Logger.logDebugMessage("Trimming table " + table());
-        //Logger.logDebugMessage("Initial entity count is " + getCount() + " row count is " + getRowCount());
         trim(table, height, dbKeyFactory);
-        //Logger.logDebugMessage("Final entity count is " + getCount() + " row count is " + getRowCount());
     }
 
     static void rollback(final String table, final int height, final DbKey.Factory dbKeyFactory) {

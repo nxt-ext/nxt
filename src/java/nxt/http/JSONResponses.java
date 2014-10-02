@@ -220,6 +220,14 @@ public final class JSONResponses {
         NO_MESSAGE = JSON.prepare(response);
     }
 
+    public static final JSONStreamAware HEIGHT_NOT_AVAILABLE;
+    static {
+        JSONObject response = new JSONObject();
+        response.put("errorCode", 8);
+        response.put("errorDescription", "Requested height not available");
+        HEIGHT_NOT_AVAILABLE = JSON.prepare(response);
+    }
+
     private static JSONStreamAware missing(String... paramNames) {
         JSONObject response = new JSONObject();
         response.put("errorCode", 3);

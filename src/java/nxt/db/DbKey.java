@@ -10,10 +10,12 @@ public interface DbKey {
 
         private final String pkClause;
         private final String pkColumns;
+        private final String selfJoinClause;
 
-        protected Factory(String pkClause, String pkColumns) {
+        protected Factory(String pkClause, String pkColumns, String selfJoinClause) {
             this.pkClause = pkClause;
             this.pkColumns = pkColumns;
+            this.selfJoinClause = selfJoinClause;
         }
 
         public abstract DbKey newKey(T t);
@@ -28,6 +30,11 @@ public interface DbKey {
             return pkColumns;
         }
 
+        // expects tables to be named a and b
+        public final String getSelfJoinClause() {
+            return selfJoinClause;
+        }
+
     }
 
     int setPK(PreparedStatement pstmt) throws SQLException;
@@ -40,7 +47,9 @@ public interface DbKey {
         private final String idColumn;
 
         public LongKeyFactory(String idColumn) {
-            super(" WHERE " + idColumn + " = ? ", idColumn);
+            super(" WHERE " + idColumn + " = ? ",
+                    idColumn,
+                    " a." + idColumn + " = b." + idColumn + " ");
             this.idColumn = idColumn;
         }
 
@@ -61,7 +70,9 @@ public interface DbKey {
         private final String idColumnB;
 
         public LinkKeyFactory(String idColumnA, String idColumnB) {
-            super(" WHERE " + idColumnA + " = ? AND " + idColumnB + " = ? ", idColumnA + ", " + idColumnB);
+            super(" WHERE " + idColumnA + " = ? AND " + idColumnB + " = ? ",
+                    idColumnA + ", " + idColumnB,
+                    " a." + idColumnA + " = b." + idColumnA + " AND a." + idColumnB + " = b." + idColumnB + " ");
             this.idColumnA = idColumnA;
             this.idColumnB = idColumnB;
         }
