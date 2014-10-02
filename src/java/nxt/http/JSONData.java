@@ -57,6 +57,7 @@ final class JSONData {
         json.put("quantityQNT", String.valueOf(asset.getQuantityQNT()));
         json.put("asset", Convert.toUnsignedLong(asset.getId()));
         json.put("numberOfTrades", Trade.getTradeCount(asset.getId()));
+        json.put("numberOfTransfers", Transfer.getTransferCount(asset.getId()));
         return json;
     }
 
@@ -304,6 +305,17 @@ final class JSONData {
         putAccount(json, "buyer", trade.getBuyerId());
         json.put("block", Convert.toUnsignedLong(trade.getBlockId()));
         json.put("height", trade.getHeight());
+        return json;
+    }
+
+    static JSONObject transfer(Transfer transfer) {
+        JSONObject json = new JSONObject();
+        json.put("transfer", Convert.toUnsignedLong(transfer.getId()));
+        json.put("asset", Convert.toUnsignedLong(transfer.getAssetId()));
+        putAccount(json, "sender", transfer.getSenderId());
+        putAccount(json, "recipient", transfer.getRecipientId());
+        json.put("quantityQNT", String.valueOf(transfer.getQuantityQNT()));
+        json.put("height", transfer.getHeight());
         return json;
     }
 

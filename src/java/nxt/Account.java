@@ -641,6 +641,10 @@ public final class Account {
         return Trade.getAccountTrades(this.id, from, to);
     }
 
+    public DbIterator<Transfer> getTransfers(int from, int to) {
+        return Transfer.getAccountAssetTransfers(this.id, from, to);
+    }
+
     public DbIterator<Exchange> getExchanges(int from, int to) {
         return Exchange.getAccountExchanges(this.id, from, to);
     }

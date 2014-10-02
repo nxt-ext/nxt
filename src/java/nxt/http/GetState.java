@@ -7,6 +7,7 @@ import nxt.Generator;
 import nxt.Nxt;
 import nxt.Order;
 import nxt.Trade;
+import nxt.Transfer;
 import nxt.db.DbIterator;
 import nxt.peer.Peer;
 import nxt.peer.Peers;
@@ -51,6 +52,7 @@ public final class GetState extends APIServlet.APIRequestHandler {
         response.put("numberOfAssets", Asset.getCount());
         response.put("numberOfOrders", Order.Ask.getCount() + Order.Bid.getCount());
         response.put("numberOfTrades", Trade.getCount());
+        response.put("numberOfTransfers", Transfer.getCount());
         response.put("numberOfAliases", Alias.getCount());
         //response.put("numberOfPolls", Poll.getCount());
         //response.put("numberOfVotes", Vote.getCount());

@@ -4,7 +4,10 @@ import nxt.util.Convert;
 import org.json.simple.JSONObject;
 
 import java.nio.ByteBuffer;
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 
 public abstract class TransactionType {
@@ -862,6 +865,7 @@ public abstract class TransactionType {
                 Attachment.ColoredCoinsAssetTransfer attachment = (Attachment.ColoredCoinsAssetTransfer) transaction.getAttachment();
                 senderAccount.addToAssetBalanceQNT(attachment.getAssetId(), -attachment.getQuantityQNT());
                 recipientAccount.addToAssetAndUnconfirmedAssetBalanceQNT(attachment.getAssetId(), attachment.getQuantityQNT());
+                Transfer.addTransfer(transaction, attachment);
             }
 
             @Override

@@ -98,6 +98,8 @@ pagination.
 getAssetAccounts - accepts an asset parameter and returns all accounts holding
 this asset as of the current height, and the asset quantity each one owns.
 
+getTransfers - retrieves the asset transfers for an asset, account, or both.
+
 longConvert - an utility API to convert between signed long ids as used in the
 database and unsigned long ids represented as strings. Accepts an id in either
 form and returns both the signed and unsigned versions.
@@ -171,3 +173,18 @@ Updated Jetty to version 9.2.3.
 
 Added an option to disable transaction re-broadcasting by setting the property
 nxt.enableTransactionRebroadcasting to false (default is enabled).
+
+
+Testnet:
+
+This release will reset the testnet blockchain back to height 77431. Testnet
+nodes staying with 1.2.8 are already on a different fork.
+
+
+There is no urgency to upgrade on main net, both 1.2.8 and 1.3.0 versions can
+coexist on the network and there is no hard fork involved. The local database
+changes however are not reversible, if you upgrade to 1.3.0 and decide to go
+back to 1.2.8, you will need to delete the nxt_db folder and re-download the
+blockchain.
+
+
