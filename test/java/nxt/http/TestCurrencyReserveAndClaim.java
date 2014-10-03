@@ -13,13 +13,15 @@ public class TestCurrencyReserveAndClaim extends BlockchainTest {
 
     @Test
     public void reserveIncrease() {
-        String currencyId = TestCurrencyIssuance.issueCurrencyImpl(CurrencyType.CROWD_FUNDING, baseHeight + 5, 0);
+        String currencyId = TestCurrencyIssuance.issueCurrencyImpl((byte)(CurrencyType.RESERVABLE.getCode() | CurrencyType.EXCHANGEABLE.getCode()),
+                baseHeight + 5, 0);
         reserveIncreaseImpl(currencyId);
     }
 
     @Test
     public void cancelCrowdFunding() {
-        String currencyId = TestCurrencyIssuance.issueCurrencyImpl(CurrencyType.CROWD_FUNDING, baseHeight + 4, 11);
+        String currencyId = TestCurrencyIssuance.issueCurrencyImpl((byte)(CurrencyType.RESERVABLE.getCode() | CurrencyType.EXCHANGEABLE.getCode()),
+                baseHeight + 4, 11);
         long balanceNQT1 = Account.getAccount(Crypto.getPublicKey(secretPhrase1)).getBalanceNQT();
         long balanceNQT2 = Account.getAccount(Crypto.getPublicKey(secretPhrase2)).getBalanceNQT();
         reserveIncreaseImpl(currencyId);
@@ -40,7 +42,8 @@ public class TestCurrencyReserveAndClaim extends BlockchainTest {
 
     @Test
     public void crowdFundingDistribution() {
-        String currencyId = TestCurrencyIssuance.issueCurrencyImpl(CurrencyType.CROWD_FUNDING, baseHeight + 4, 10, 100000, 0, (byte)0, (byte)0, (byte)0);
+        String currencyId = TestCurrencyIssuance.issueCurrencyImpl((byte)(CurrencyType.RESERVABLE.getCode() | CurrencyType.EXCHANGEABLE.getCode()),
+                baseHeight + 4, 10, 100000, 0, (byte)0, (byte)0, (byte)0);
         long balanceNQT1 = Account.getAccount(Crypto.getPublicKey(secretPhrase1)).getBalanceNQT();
         long balanceNQT2 = Account.getAccount(Crypto.getPublicKey(secretPhrase2)).getBalanceNQT();
         reserveIncreaseImpl(currencyId);

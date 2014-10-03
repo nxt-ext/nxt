@@ -53,18 +53,9 @@ public abstract class MonetarySystem extends TransactionType {
 
         @Override
         void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
-            if (Nxt.getBlockchain().getLastBlock().getHeight() < Constants.MONETARY_SYSTEM_BLOCK) {
-                throw new NxtException.NotYetEnabledException("Monetary System not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
-            }
-
             Attachment.MonetarySystemCurrencyIssuance attachment = (Attachment.MonetarySystemCurrencyIssuance) transaction.getAttachment();
-            if (transaction.getAmountNQT() != 0) {
-                throw new NxtException.NotValidException("Currency issuance NXT amount must be 0");
-            }
-            validateCurrencyNaming(attachment);
-            if (!CurrencyType.getCurrencyType(attachment.getType()).isCurrencyIssuanceAttachmentValid(transaction)) {
-                throw new NxtException.NotValidException("Invalid currency issuance, type specific problem: " + attachment.getJSONObject());
-            }
+            CurrencyType.validateCurrencyNaming(attachment);
+            CurrencyType.validate(attachment, attachment.getType(), transaction);
             if (attachment.getTotalSupply() > Constants.MAX_CURRENCY_TOTAL_SUPPLY
                     || attachment.getIssuanceHeight() < 0
                     || attachment.getMinReservePerUnitNQT() < 0 || attachment.getMinReservePerUnitNQT() > Constants.MAX_BALANCE_NQT
@@ -73,30 +64,6 @@ public abstract class MonetarySystem extends TransactionType {
             }
         }
 
-        private void validateCurrencyNaming(Attachment.MonetarySystemCurrencyIssuance attachment) throws NxtException.NotValidException {
-            if (attachment.getName().length() < Constants.MIN_CURRENCY_NAME_LENGTH || attachment.getName().length() > Constants.MAX_CURRENCY_NAME_LENGTH
-                    || attachment.getCode().length() != Constants.CURRENCY_CODE_LENGTH
-                    || attachment.getDescription().length() > Constants.MAX_CURRENCY_DESCRIPTION_LENGTH) {
-                throw new NxtException.NotValidException("Invalid currency name code or description: " + attachment.getJSONObject());
-            }
-            String normalizedName = attachment.getName().toLowerCase();
-            for (int i = 0; i < normalizedName.length(); i++) {
-                if (Constants.ALPHABET.indexOf(normalizedName.charAt(i)) < 0) {
-                    throw new NxtException.NotValidException("Invalid currency name: " + normalizedName);
-                }
-            }
-            if (Currency.isNameUsed(normalizedName)) {
-                throw new NxtException.NotValidException("Currency name already used: " + normalizedName);
-            }
-            for (int i = 0; i < attachment.getCode().length(); i++) {
-                if (Constants.ALLOWED_CURRENCY_CODE_LETTERS.indexOf(attachment.getCode().charAt(i)) < 0) {
-                    throw new NxtException.NotValidException("Invalid currency code: " + attachment.getCode());
-                }
-            }
-            if (Currency.isCodeUsed(attachment.getCode())) {
-                throw new NxtException.NotValidException("Currency code already used: " + attachment.getCode());
-            }
-        }
 
         @Override
         boolean applyAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
@@ -142,15 +109,11 @@ public abstract class MonetarySystem extends TransactionType {
 
         @Override
         void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
-            if (Nxt.getBlockchain().getLastBlock().getHeight() < Constants.MONETARY_SYSTEM_BLOCK) {
-                throw new NxtException.NotYetEnabledException("Monetary System not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
-            }
             Attachment.MonetarySystemReserveIncrease attachment = (Attachment.MonetarySystemReserveIncrease) transaction.getAttachment();
-            if (Currency.isActive(attachment.getCurrencyId())) {
-                throw new NxtException.NotValidException("Cannot increase reserve, currency already issued at height: " + Currency.getCurrency(attachment.getCurrencyId()).getIssuanceHeight());
-            }
-            if (transaction.getAmountNQT() != 0 || attachment.getAmountNQT() <= 0) {
-                throw new NxtException.NotValidException("Invalid reserve increase: " + attachment.getJSONObject());
+            byte type = CurrencyType.getCurrencyType(attachment.getCurrencyId());
+            CurrencyType.validate(attachment, type, transaction);
+            if (attachment.getAmountNQT() <= 0) {
+                throw new NxtException.NotValidException("Reserve increase NXT amount must be positive: " + attachment.getAmountNQT());
             }
         }
 
@@ -200,17 +163,13 @@ public abstract class MonetarySystem extends TransactionType {
             return new Attachment.MonetarySystemReserveClaim(attachmentData);
         }
 
-        //TODO: exceptions
         @Override
         void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
-            if (Nxt.getBlockchain().getLastBlock().getHeight() < Constants.MONETARY_SYSTEM_BLOCK) {
-                throw new NxtException.NotYetEnabledException("Monetary System not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
-            }
             Attachment.MonetarySystemReserveClaim attachment = (Attachment.MonetarySystemReserveClaim) transaction.getAttachment();
-            if (transaction.getAmountNQT() != 0
-                    || !Currency.isActive(attachment.getCurrencyId())
-                    || attachment.getUnits() <= 0) {
-                throw new NxtException.NotValidException("Invalid reserve claim: " + attachment.getJSONObject());
+            byte type = CurrencyType.getCurrencyType(attachment.getCurrencyId());
+            CurrencyType.validate(attachment, type, transaction);
+            if (attachment.getUnits() <= 0) {
+                throw new NxtException.NotValidException("Reserve claim number of units must be positive: " + attachment.getUnits());
             }
         }
 
@@ -262,14 +221,10 @@ public abstract class MonetarySystem extends TransactionType {
 
         @Override
         void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
-            if (Nxt.getBlockchain().getLastBlock().getHeight() < Constants.MONETARY_SYSTEM_BLOCK) {
-                throw new NxtException.NotYetEnabledException("Monetary System not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
-            }
             Attachment.MonetarySystemMoneyTransfer attachment = (Attachment.MonetarySystemMoneyTransfer) transaction.getAttachment();
+            byte type = CurrencyType.getCurrencyType(attachment.getCurrencyId());
+            CurrencyType.validate(attachment, type, transaction);
             if (!Currency.isActive(attachment.getCurrencyId()) || attachment.getUnits() <= 0) {
-                throw new NxtException.NotValidException("Invalid money transfer: " + attachment.getJSONObject());
-            }
-            if (transaction.getAmountNQT() != 0) {
                 throw new NxtException.NotValidException("Invalid money transfer: " + attachment.getJSONObject());
             }
         }
@@ -320,15 +275,12 @@ public abstract class MonetarySystem extends TransactionType {
             return new Attachment.MonetarySystemExchangeOfferPublication(attachmentData);
         }
 
-        //TODO: exceptions
         @Override
         void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
-            if (Nxt.getBlockchain().getLastBlock().getHeight() < Constants.MONETARY_SYSTEM_BLOCK) {
-                throw new NxtException.NotYetEnabledException("Monetary System not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
-            }
             Attachment.MonetarySystemExchangeOfferPublication attachment = (Attachment.MonetarySystemExchangeOfferPublication) transaction.getAttachment();
-            if (transaction.getAmountNQT() != 0
-                    || !Currency.isActive(attachment.getCurrencyId())
+            byte type = CurrencyType.getCurrencyType(attachment.getCurrencyId());
+            CurrencyType.validate(attachment, type, transaction);
+            if (!Currency.isActive(attachment.getCurrencyId())
                     || attachment.getBuyRateNQT() <= 0
                     || attachment.getSellRateNQT() <= 0
                     || attachment.getTotalBuyLimit() < 0
@@ -392,12 +344,10 @@ public abstract class MonetarySystem extends TransactionType {
 
         @Override
         void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
-            if (Nxt.getBlockchain().getLastBlock().getHeight() < Constants.MONETARY_SYSTEM_BLOCK) {
-                throw new NxtException.NotYetEnabledException("Monetary System not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
-            }
             Attachment.MonetarySystemExchange attachment = (Attachment.MonetarySystemExchange) transaction.getAttachment();
-            if (transaction.getAmountNQT() != 0
-                    || !Currency.isActive(attachment.getCurrencyId())
+            byte type = CurrencyType.getCurrencyType(attachment.getCurrencyId());
+            CurrencyType.validate(attachment, type, transaction);
+            if (!Currency.isActive(attachment.getCurrencyId())
                     || attachment.getRateNQT() <= 0
                     || attachment.getUnits() == 0) {
                 throw new NxtException.NotValidException("Invalid exchange: " + attachment.getJSONObject());
@@ -465,17 +415,14 @@ public abstract class MonetarySystem extends TransactionType {
             return new Attachment.MonetarySystemMoneyMinting(attachmentData);
         }
 
-        //TODO: exceptions
         @Override
         void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
-            if (Nxt.getBlockchain().getLastBlock().getHeight() < Constants.MONETARY_SYSTEM_BLOCK) {
-                throw new NxtException.NotYetEnabledException("Monetary System not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
-            }
             Attachment.MonetarySystemMoneyMinting attachment = (Attachment.MonetarySystemMoneyMinting) transaction.getAttachment();
-            if (transaction.getAmountNQT() != 0
-                    || !Currency.isActive(attachment.getCurrencyId())
-                    || !CurrencyType.getCurrencyType(Currency.getCurrency(attachment.getCurrencyId()).getType()).isMintable()
-                    || attachment.getUnits() <= 0 || attachment.getUnits() > Currency.getCurrency(attachment.getCurrencyId()).getTotalSupply() / Constants.MAX_MINTING_RATIO) {
+            byte type = CurrencyType.getCurrencyType(attachment.getCurrencyId());
+            CurrencyType.validate(attachment, type, transaction);
+            if (!Currency.isActive(attachment.getCurrencyId()) ||
+                    attachment.getUnits() <= 0 ||
+                    attachment.getUnits() > Currency.getCurrency(attachment.getCurrencyId()).getTotalSupply() / Constants.MAX_MINTING_RATIO) {
                 throw new NxtException.NotValidException("Invalid money minting: " + attachment.getJSONObject());
             }
         }
@@ -521,12 +468,10 @@ public abstract class MonetarySystem extends TransactionType {
 
         @Override
         void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
-            if (Nxt.getBlockchain().getLastBlock().getHeight() < Constants.MONETARY_SYSTEM_BLOCK) {
-                throw new NxtException.NotYetEnabledException("Monetary System not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
-            }
             Attachment.MonetarySystemShufflingInitiation attachment = (Attachment.MonetarySystemShufflingInitiation) transaction.getAttachment();
-            if (transaction.getAmountNQT() != 0
-                    || !Currency.isActive(attachment.getCurrencyId())
+            byte type = CurrencyType.getCurrencyType(attachment.getCurrencyId());
+            CurrencyType.validate(attachment, type, transaction);
+            if (!Currency.isActive(attachment.getCurrencyId())
                     || attachment.getAmount() <= 0 || attachment.getAmount() > Constants.MAX_CURRENCY_TOTAL_SUPPLY
                     || attachment.getNumberOfParticipants() < Constants.MIN_NUMBER_OF_SHUFFLING_PARTICIPANTS || attachment.getNumberOfParticipants() > Constants.MAX_NUMBER_OF_SHUFFLING_PARTICIPANTS
                     || attachment.getMaxInitiationDelay() < Constants.MIN_SHUFFLING_DELAY || attachment.getMaxInitiationDelay() > Constants.MAX_SHUFFLING_DELAY
@@ -584,12 +529,10 @@ public abstract class MonetarySystem extends TransactionType {
 
         @Override
         void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
-            if (Nxt.getBlockchain().getLastBlock().getHeight() < Constants.MONETARY_SYSTEM_BLOCK) {
-                throw new NxtException.NotYetEnabledException("Monetary System not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
-            }
             Attachment.MonetarySystemShufflingContinuation attachment = (Attachment.MonetarySystemShufflingContinuation) transaction.getAttachment();
-            if (transaction.getAmountNQT() != 0
-                    || !CoinShuffler.isContinued(attachment.getShufflingId())
+            byte type = CurrencyType.getCurrencyType(attachment.getCurrencyId());
+            CurrencyType.validate(attachment, type, transaction);
+            if (!CoinShuffler.isContinued(attachment.getShufflingId())
                     || !CoinShuffler.isParticipant(transaction.getSenderId(), attachment.getShufflingId())
                     || CoinShuffler.sentEncryptedRecipients(transaction.getSenderId(), attachment.getShufflingId())) {
                 throw new NxtException.NotValidException("Invalid shuffling continuation: " + attachment.getJSONObject());
@@ -636,12 +579,10 @@ public abstract class MonetarySystem extends TransactionType {
 
         @Override
         void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
-            if (Nxt.getBlockchain().getLastBlock().getHeight() < Constants.MONETARY_SYSTEM_BLOCK) {
-                throw new NxtException.NotYetEnabledException("Monetary System not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
-            }
             Attachment.MonetarySystemShufflingFinalization attachment = (Attachment.MonetarySystemShufflingFinalization) transaction.getAttachment();
-            if (transaction.getAmountNQT() != 0
-                    || !CoinShuffler.isFinalized(attachment.getShufflingId())
+            byte type = CurrencyType.getCurrencyType(attachment.getCurrencyId());
+            CurrencyType.validate(attachment, type, transaction);
+            if (!CoinShuffler.isFinalized(attachment.getShufflingId())
                     || !CoinShuffler.isParticipant(transaction.getSenderId(), attachment.getShufflingId())
                     || CoinShuffler.sentDecryptedRecipients(transaction.getSenderId(), attachment.getShufflingId())
                     || attachment.getRecipients().length != CoinShuffler.getNumberOfParticipants(attachment.getShufflingId())) {
@@ -689,12 +630,10 @@ public abstract class MonetarySystem extends TransactionType {
 
         @Override
         void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
-            if (Nxt.getBlockchain().getLastBlock().getHeight() < Constants.MONETARY_SYSTEM_BLOCK) {
-                throw new NxtException.NotYetEnabledException("Monetary System not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
-            }
             Attachment.MonetarySystemShufflingCancellation attachment = (Attachment.MonetarySystemShufflingCancellation) transaction.getAttachment();
-            if (transaction.getAmountNQT() != 0
-                    || (!CoinShuffler.isFinalized(attachment.getShufflingId()) && !CoinShuffler.isCancelled(attachment.getShufflingId()))
+            byte type = CurrencyType.getCurrencyType(attachment.getCurrencyId());
+            CurrencyType.validate(attachment, type, transaction);
+            if (!CoinShuffler.isFinalized(attachment.getShufflingId()) && !CoinShuffler.isCancelled(attachment.getShufflingId())
                     || !CoinShuffler.isParticipant(transaction.getSenderId(), attachment.getShufflingId())
                     || CoinShuffler.sentDecryptedRecipients(transaction.getSenderId(), attachment.getShufflingId())
                     || CoinShuffler.sentKeys(transaction.getSenderId(), attachment.getShufflingId())

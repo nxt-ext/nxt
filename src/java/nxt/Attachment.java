@@ -2134,7 +2134,7 @@ public interface Attachment extends Appendix {
 
     public final static class MonetarySystemShufflingInitiation extends AbstractAttachment {
 
-        private final Long currencyId;
+        private final long currencyId;
         private final long amount;
         private final byte numberOfParticipants;
         private final short maxInitiationDelay;
@@ -2164,7 +2164,7 @@ public interface Attachment extends Appendix {
             this.maxCancellationDelay = ((Long)attachmentData.get("maxCancellationDelay")).shortValue();
         }
 
-        MonetarySystemShufflingInitiation(Long currencyId, long amount, byte numberOfParticipants, short maxInitiationDelay, short maxContinuationDelay, short maxFinalizationDelay, short maxCancellationDelay) {
+        MonetarySystemShufflingInitiation(long currencyId, long amount, byte numberOfParticipants, short maxInitiationDelay, short maxContinuationDelay, short maxFinalizationDelay, short maxCancellationDelay) {
             this.currencyId = currencyId;
             this.amount = amount;
             this.numberOfParticipants = numberOfParticipants;
@@ -2211,7 +2211,7 @@ public interface Attachment extends Appendix {
             return MonetarySystem.SHUFFLING_INITIATION;
         }
 
-        public Long getCurrencyId() {
+        public long getCurrencyId() {
             return currencyId;
         }
 
@@ -2242,22 +2242,26 @@ public interface Attachment extends Appendix {
 
     public final static class MonetarySystemShufflingContinuation extends AbstractAttachment {
 
-        private final Long shufflingId;
+        private final long currencyId;
+        private final long shufflingId;
         private final EncryptedData recipients;
 
         MonetarySystemShufflingContinuation(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
             super(buffer, transactionVersion);
+            this.currencyId = buffer.getLong();
             this.shufflingId = buffer.getLong();
             this.recipients = EncryptedData.readEncryptedData(buffer, buffer.getInt(), Constants.MAX_SHUFFLING_RECIPIENTS_LENGTH, this.shufflingId);
         }
 
         MonetarySystemShufflingContinuation(JSONObject attachmentData) {
             super(attachmentData);
+            this.currencyId = Convert.parseUnsignedLong((String)attachmentData.get("currency"));
             this.shufflingId = Convert.parseUnsignedLong((String)attachmentData.get("shuffling"));
             this.recipients = new EncryptedData(Convert.parseHexString((String)attachmentData.get("recipients")), this.shufflingId);
         }
 
-        MonetarySystemShufflingContinuation(Long shufflingId, EncryptedData recipients) {
+        MonetarySystemShufflingContinuation(long currencyId, long shufflingId, EncryptedData recipients) {
+            this.currencyId = currencyId;
             this.shufflingId = shufflingId;
             this.recipients = recipients;
         }
@@ -2269,11 +2273,12 @@ public interface Attachment extends Appendix {
 
         @Override
         int getMySize() {
-            return 8 + 4 + recipients.getData().length;
+            return 8 + 8 + 4 + recipients.getData().length;
         }
 
         @Override
         void putMyBytes(ByteBuffer buffer) {
+            buffer.putLong(currencyId);
             buffer.putLong(shufflingId);
             buffer.putInt(recipients.getData().length);
             buffer.put(recipients.getData());
@@ -2281,6 +2286,7 @@ public interface Attachment extends Appendix {
 
         @Override
         void putMyJSON(JSONObject attachment) {
+            attachment.put("currency", Convert.toUnsignedLong(currencyId));
             attachment.put("shuffling", Convert.toUnsignedLong(shufflingId));
             attachment.put("recipients", Convert.toHexString(recipients.getData()));
 
@@ -2291,7 +2297,11 @@ public interface Attachment extends Appendix {
             return MonetarySystem.SHUFFLING_CONTINUATION;
         }
 
-        public Long getShufflingId() {
+        public long getCurrencyId() {
+            return currencyId;
+        }
+
+        public long getShufflingId() {
             return shufflingId;
         }
 
@@ -2302,11 +2312,13 @@ public interface Attachment extends Appendix {
 
     public final static class MonetarySystemShufflingFinalization extends AbstractAttachment {
 
-        private final Long shufflingId;
+        private final long currencyId;
+        private final long shufflingId;
         private final Long[] recipients;
 
         MonetarySystemShufflingFinalization(ByteBuffer buffer, byte transactionVersion) {
             super(buffer, transactionVersion);
+            this.currencyId = buffer.getLong();
             this.shufflingId = buffer.getLong();
             byte numberOfEntries = buffer.get();
             this.recipients = new Long[numberOfEntries];
@@ -2318,8 +2330,11 @@ public interface Attachment extends Appendix {
 
         MonetarySystemShufflingFinalization(JSONObject attachmentData) {
             super(attachmentData);
+            this.currencyId = Convert.parseUnsignedLong((String)attachmentData.get("currency"));
             this.shufflingId = Convert.parseUnsignedLong((String)attachmentData.get("shuffling"));
             JSONArray recipientsData = (JSONArray)attachmentData.get("recipients");
+
+            // TODO change this, cannot receive more than one recipient per transaction - dos problem
             this.recipients = new Long[recipientsData.size()];
             for (int i = 0; i < this.recipients.length; i++) {
                 this.recipients[i] = Convert.parseUnsignedLong((String)recipientsData.get(i));
@@ -2327,7 +2342,8 @@ public interface Attachment extends Appendix {
             Arrays.sort(this.recipients);
         }
 
-        MonetarySystemShufflingFinalization(Long shufflingId, Long[] recipients) {
+        MonetarySystemShufflingFinalization(long currencyId, long shufflingId, Long[] recipients) {
+            this.currencyId = currencyId;
             this.shufflingId = shufflingId;
             this.recipients = recipients;
         }
@@ -2339,23 +2355,25 @@ public interface Attachment extends Appendix {
 
         @Override
         int getMySize() {
-            return 8 + 1 + recipients.length * 8;
+            return 8 + 8 + 1 + recipients.length * 8;
         }
 
         @Override
         void putMyBytes(ByteBuffer buffer) {
+            buffer.putLong(currencyId);
             buffer.putLong(shufflingId);
             buffer.put((byte)recipients.length);
-            for (Long recipient : recipients) {
+            for (long recipient : recipients) {
                 buffer.putLong(recipient);
             }
         }
 
         @Override
         void putMyJSON(JSONObject attachment) {
+            attachment.put("currency", Convert.toUnsignedLong(currencyId));
             attachment.put("shuffling", Convert.toUnsignedLong(shufflingId));
             JSONArray recipientsData = new JSONArray();
-            for (Long recipient : recipients) {
+            for (long recipient : recipients) {
                 recipientsData.add(Convert.toUnsignedLong(recipient));
             }
             attachment.put("recipients", recipientsData);
@@ -2366,7 +2384,11 @@ public interface Attachment extends Appendix {
             return MonetarySystem.SHUFFLING_FINALIZATION;
         }
 
-        public Long getShufflingId() {
+        public long getCurrencyId() {
+            return currencyId;
+        }
+
+        public long getShufflingId() {
             return shufflingId;
         }
 
@@ -2378,23 +2400,28 @@ public interface Attachment extends Appendix {
 
     public final static class MonetarySystemShufflingCancellation extends AbstractAttachment {
 
-        private final Long shufflingId;
+        private final long currencyId;
+        private final long shufflingId;
         private final byte[] keys;
 
         MonetarySystemShufflingCancellation(ByteBuffer buffer, byte transactionVersion) {
             super(buffer, transactionVersion);
+            this.currencyId = buffer.getLong();
             this.shufflingId = buffer.getLong();
+            // TODO denial of service problem
             this.keys = new byte[32 * buffer.get()];
             buffer.get(this.keys);
         }
 
         MonetarySystemShufflingCancellation(JSONObject attachmentData) {
             super(attachmentData);
+            this.currencyId = Convert.parseUnsignedLong((String)attachmentData.get("currency"));
             this.shufflingId = Convert.parseUnsignedLong((String)attachmentData.get("shuffling"));
             this.keys = Convert.parseHexString((String)attachmentData.get("keys"));
         }
 
-        MonetarySystemShufflingCancellation(Long shufflingId, byte[] keys) {
+        MonetarySystemShufflingCancellation(long currencyId, long shufflingId, byte[] keys) {
+            this.currencyId = currencyId;
             this.shufflingId = shufflingId;
             this.keys = keys;
         }
@@ -2406,11 +2433,12 @@ public interface Attachment extends Appendix {
 
         @Override
         int getMySize() {
-            return 8 + 1 + keys.length;
+            return 8 + 8 + 1 + keys.length;
         }
 
         @Override
         void putMyBytes(ByteBuffer buffer) {
+            buffer.putLong(currencyId);
             buffer.putLong(shufflingId);
             buffer.put((byte)(keys.length / 32));
             buffer.put(keys);
@@ -2418,6 +2446,7 @@ public interface Attachment extends Appendix {
 
         @Override
         void putMyJSON(JSONObject attachment) {
+            attachment.put("currency", Convert.toUnsignedLong(currencyId));
             attachment.put("shuffling", Convert.toUnsignedLong(shufflingId));
             attachment.put("keys", Convert.toHexString(keys));
         }
@@ -2427,7 +2456,11 @@ public interface Attachment extends Appendix {
             return MonetarySystem.SHUFFLING_CANCELLATION;
         }
 
-        public Long getShufflingId() {
+        public long getCurrencyId() {
+            return currencyId;
+        }
+
+        public long getShufflingId() {
             return shufflingId;
         }
 

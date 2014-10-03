@@ -16,7 +16,7 @@ public class TestCurrencyIssuance extends BlockchainTest {
     }
 
     public static String issueCurrencyImpl() {
-        return issueCurrencyImpl(CurrencyType.SIMPLE, 0, 0);
+        return issueCurrencyImpl(CurrencyType.EXCHANGEABLE.getCode(), 0, 0);
     }
 
     public static String issueCurrencyImpl(byte type, int issuanceHeight, long minReservePerUnitNQT) {
