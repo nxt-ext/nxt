@@ -50,7 +50,8 @@ public final class Constants {
     public static final int CURRENCY_CODE_LENGTH = 3;
     public static final int MAX_CURRENCY_DESCRIPTION_LENGTH = 1000;
     public static final long MAX_CURRENCY_TOTAL_SUPPLY = 1000000000L * 100000000L;
-    public static final int MAX_MINTING_RATIO = 1000000;
+    public static final long MAX_CURRENCY_INITIAL_SUPPLY = 1000000000L * 100000000L;
+    public static final int MAX_MINTING_RATIO = 10000; // per mint units not more than 0.01% of total supply
     public static final byte MIN_NUMBER_OF_SHUFFLING_PARTICIPANTS = 3;
     public static final byte MAX_NUMBER_OF_SHUFFLING_PARTICIPANTS = 100;
     public static final short MIN_SHUFFLING_DELAY = 5;

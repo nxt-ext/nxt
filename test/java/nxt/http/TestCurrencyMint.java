@@ -14,7 +14,7 @@ public class TestCurrencyMint extends BlockchainTest {
     @Test
     public void mint() {
         String currencyId = TestCurrencyIssuance.issueCurrencyImpl(CurrencyType.MINTABLE, baseHeight, 0,
-                10000000, (byte)2, (byte)8, HashFunction.SHA256.getId());
+                10000000, 0, (byte)2, (byte)8, HashFunction.SHA256.getId());
         mintCurrency(currencyId);
     }
 

@@ -26,15 +26,6 @@ public abstract class CurrencyType {
                         && attachment.getMaxDifficulty() == 0;
             }
 
-            @Override
-            public void applyCurrencyIssuanceAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
-                Attachment.MonetarySystemCurrencyIssuance attachment = (Attachment.MonetarySystemCurrencyIssuance) transaction.getAttachment();
-                Currency.addCurrency(transaction.getId(), transaction.getSenderId(), attachment.getName(), attachment.getCode(), attachment.getDescription(),
-                        attachment.getType(), attachment.getTotalSupply(), attachment.getIssuanceHeight(), attachment.getMinReservePerUnitNQT(),
-                        attachment.getMinDifficulty(), attachment.getMaxDifficulty(), attachment.getRuleset(), attachment.getAlgorithm(), attachment.getTotalSupply(), 0);
-                senderAccount.addToCurrencyAndUnconfirmedCurrencyUnits(transaction.getId(), attachment.getTotalSupply());
-            }
-
         });
 
         // This currency is issued at some height if min required amount of NXT is collected, the money is split proportionally to reserved NXT
@@ -49,14 +40,6 @@ public abstract class CurrencyType {
                         && attachment.getMaxDifficulty() == 0;
             }
 
-            @Override
-            public void applyCurrencyIssuanceAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
-                Attachment.MonetarySystemCurrencyIssuance attachment = (Attachment.MonetarySystemCurrencyIssuance)transaction.getAttachment();
-                Currency.addCurrency(transaction.getId(), transaction.getSenderId(), attachment.getName(), attachment.getCode(), attachment.getDescription(),
-                        attachment.getType(), attachment.getTotalSupply(), attachment.getIssuanceHeight(), attachment.getMinReservePerUnitNQT(),
-                        attachment.getMinDifficulty(), attachment.getMaxDifficulty(), attachment.getRuleset(), attachment.getAlgorithm(), attachment.getTotalSupply(), 0);
-            }
-
         });
 
         // This currency is issued at some height, the money is minted over time in a PoW manner
@@ -66,17 +49,7 @@ public abstract class CurrencyType {
             public boolean isCurrencyIssuanceAttachmentValid(Transaction transaction) {
                 Attachment.MonetarySystemCurrencyIssuance attachment = (Attachment.MonetarySystemCurrencyIssuance)transaction.getAttachment();
 
-                return attachment.getTotalSupply() >= Constants.MAX_MINTING_RATIO
-                        && attachment.getIssuanceHeight() > 0
-                        && attachment.getMinReservePerUnitNQT() == 0;
-            }
-
-            @Override
-            public void applyCurrencyIssuanceAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
-                Attachment.MonetarySystemCurrencyIssuance attachment = (Attachment.MonetarySystemCurrencyIssuance)transaction.getAttachment();
-                Currency.addCurrency(transaction.getId(), transaction.getSenderId(), attachment.getName(), attachment.getCode(), attachment.getDescription(),
-                        attachment.getType(), attachment.getTotalSupply(), attachment.getIssuanceHeight(), attachment.getMinReservePerUnitNQT(),
-                        attachment.getMinDifficulty(), attachment.getMaxDifficulty(), attachment.getRuleset(), attachment.getAlgorithm(), 0, 0);
+                return true;
             }
 
             @Override
@@ -93,8 +66,6 @@ public abstract class CurrencyType {
     }
 
     public abstract boolean isCurrencyIssuanceAttachmentValid(Transaction transaction);
-
-    public abstract void applyCurrencyIssuanceAttachment(Transaction transaction, Account senderAccount, Account recipientAccount);
 
     public boolean isMintable() {
         return false;

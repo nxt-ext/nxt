@@ -1514,6 +1514,7 @@ public interface Attachment extends Appendix {
         private final String description;
         private final byte type;
         private final long totalSupply;
+        private final long currentSupply;
         private final int issuanceHeight;
         private final long minReservePerUnitNQT;
         private final byte minDifficulty;
@@ -1530,6 +1531,7 @@ public interface Attachment extends Appendix {
             this.description = Convert.readString(buffer, buffer.getShort(), Constants.MAX_CURRENCY_DESCRIPTION_LENGTH);
             this.type = buffer.get();
             this.totalSupply = buffer.getLong();
+            this.currentSupply = buffer.getLong();
             this.issuanceHeight = buffer.getInt();
             this.minReservePerUnitNQT = buffer.getLong();
             this.minDifficulty = buffer.get();
@@ -1545,6 +1547,7 @@ public interface Attachment extends Appendix {
             this.description = (String)attachmentData.get("description");
             this.type = ((Long)attachmentData.get("type")).byteValue();
             this.totalSupply = (Long)attachmentData.get("totalSupply");
+            this.currentSupply = (Long)attachmentData.get("currentSupply");
             this.issuanceHeight = ((Long)attachmentData.get("issuanceHeight")).intValue();
             this.minReservePerUnitNQT = (Long)attachmentData.get("minReservePerUnitNQT");
             this.minDifficulty = ((Long)attachmentData.get("minDifficulty")).byteValue();
@@ -1554,13 +1557,14 @@ public interface Attachment extends Appendix {
         }
 
         public MonetarySystemCurrencyIssuance(String name, String code, String description, byte type, long totalSupply,
-                                              int issuanceHeight, long minReservePerUnitNQT, byte minDifficulty, byte maxDifficulty,
+                                              long currentSupply, int issuanceHeight, long minReservePerUnitNQT, byte minDifficulty, byte maxDifficulty,
                                               byte ruleset, byte algorithm) {
             this.name = name;
             this.code = code;
             this.description = description;
             this.type = type;
             this.totalSupply = totalSupply;
+            this.currentSupply = currentSupply;
             this.issuanceHeight = issuanceHeight;
             this.minReservePerUnitNQT = minReservePerUnitNQT;
             this.minDifficulty = minDifficulty;
@@ -1577,7 +1581,7 @@ public interface Attachment extends Appendix {
         @Override
         int getMySize() {
             return 1 + Convert.toBytes(name).length + Constants.CURRENCY_CODE_LENGTH + 2 +
-                    Convert.toBytes(description).length + 1 + 8 + 4 + 8 + 1 + 1 + 1 + 1;
+                    Convert.toBytes(description).length + 1 + 8 + 8 + 4 + 8 + 1 + 1 + 1 + 1;
         }
 
         @Override
@@ -1591,6 +1595,7 @@ public interface Attachment extends Appendix {
             buffer.put(description);
             buffer.put(type);
             buffer.putLong(totalSupply);
+            buffer.putLong(currentSupply);
             buffer.putInt(issuanceHeight);
             buffer.putLong(minReservePerUnitNQT);
             buffer.put(minDifficulty);
@@ -1606,6 +1611,7 @@ public interface Attachment extends Appendix {
             attachment.put("description", description);
             attachment.put("type", type);
             attachment.put("totalSupply", totalSupply);
+            attachment.put("currentSupply", currentSupply);
             attachment.put("issuanceHeight", issuanceHeight);
             attachment.put("minReservePerUnitNQT", minReservePerUnitNQT);
             attachment.put("minDifficulty", minDifficulty & 0xFF);
@@ -1637,6 +1643,10 @@ public interface Attachment extends Appendix {
 
         public long getTotalSupply() {
             return totalSupply;
+        }
+
+        public long getCurrentSupply() {
+            return currentSupply;
         }
 
         public int getIssuanceHeight() {

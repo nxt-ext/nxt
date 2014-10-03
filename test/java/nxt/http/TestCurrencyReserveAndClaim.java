@@ -40,7 +40,7 @@ public class TestCurrencyReserveAndClaim extends BlockchainTest {
 
     @Test
     public void crowdFundingDistribution() {
-        String currencyId = TestCurrencyIssuance.issueCurrencyImpl(CurrencyType.CROWD_FUNDING, baseHeight + 4, 10);
+        String currencyId = TestCurrencyIssuance.issueCurrencyImpl(CurrencyType.CROWD_FUNDING, baseHeight + 4, 10, 100000, 0, (byte)0, (byte)0, (byte)0);
         long balanceNQT1 = Account.getAccount(Crypto.getPublicKey(secretPhrase1)).getBalanceNQT();
         long balanceNQT2 = Account.getAccount(Crypto.getPublicKey(secretPhrase2)).getBalanceNQT();
         reserveIncreaseImpl(currencyId);

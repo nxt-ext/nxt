@@ -70,8 +70,8 @@ public final class Currency {
     }
 
     static void addCurrency(long currencyId, long accountId, String name, String code, String description, byte type, long totalSupply,
-                            int issuanceHeight, long minReservePerUnitNQT, byte minDifficulty, byte maxDifficulty, byte ruleset,
-                            byte algorithm, long currentSupply, long currentReservePerUnitNQT) {
+                            long currentSupply, int issuanceHeight, long minReservePerUnitNQT, byte minDifficulty, byte maxDifficulty, byte ruleset,
+                            byte algorithm) {
         Currency currency = getCurrency(currencyId);
         if (currency != null) {
             throw new IllegalStateException("Currency with id " + Convert.toUnsignedLong(currencyId) + " already exists");
@@ -84,8 +84,8 @@ public final class Currency {
         if (currency != null) {
             throw new IllegalStateException("Currency with code " + code + " already exists");
         }
-        currency = new Currency(currencyId, accountId, name, code, description, type, totalSupply, issuanceHeight, minReservePerUnitNQT,
-                minDifficulty, maxDifficulty, ruleset, algorithm, currentSupply, currentReservePerUnitNQT);
+        currency = new Currency(currencyId, accountId, name, code, description, type, totalSupply, currentSupply, issuanceHeight, minReservePerUnitNQT,
+                minDifficulty, maxDifficulty, ruleset, algorithm);
         currencyTable.insert(currency);
     }
 
@@ -118,13 +118,13 @@ public final class Currency {
 
     public Currency(Transaction transaction, Attachment.MonetarySystemCurrencyIssuance attachment) {
         this(transaction.getId(), transaction.getSenderId(), attachment.getName(), attachment.getCode(), attachment.getDescription(), attachment.getType(),
-                attachment.getTotalSupply(), attachment.getIssuanceHeight(), attachment.getMinReservePerUnitNQT(),
-                attachment.getMinDifficulty(), attachment.getMaxDifficulty(), attachment.getRuleset(), attachment.getAlgorithm(), attachment.getTotalSupply(), 0);
+                attachment.getTotalSupply(), attachment.getTotalSupply(), attachment.getIssuanceHeight(), attachment.getMinReservePerUnitNQT(),
+                attachment.getMinDifficulty(), attachment.getMaxDifficulty(), attachment.getRuleset(), attachment.getAlgorithm());
     }
 
     private Currency(long currencyId, long accountId, String name, String code, String description, byte type, long totalSupply,
-                     int issuanceHeight, long minReservePerUnitNQT, byte minDifficulty, byte maxDifficulty,
-                     byte ruleset, byte algorithm, long currentSupply, long currentReservePerUnitNQT) {
+                     long currentSupply, int issuanceHeight, long minReservePerUnitNQT, byte minDifficulty, byte maxDifficulty,
+                     byte ruleset, byte algorithm) {
         this.currencyId = currencyId;
         this.dbKey = currencyDbKeyFactory.newKey(this.currencyId);
         this.accountId = accountId;
@@ -140,7 +140,7 @@ public final class Currency {
         this.ruleset = ruleset;
         this.algorithm = algorithm;
         this.currentSupply = currentSupply;
-        this.currentReservePerUnitNQT = currentReservePerUnitNQT;
+        this.currentReservePerUnitNQT = 0;
     }
 
     private Currency(ResultSet rs) throws SQLException {

@@ -58,20 +58,27 @@ public abstract class MonetarySystem extends TransactionType {
             }
 
             Attachment.MonetarySystemCurrencyIssuance attachment = (Attachment.MonetarySystemCurrencyIssuance) transaction.getAttachment();
-
-            //TODO: fix exceptions
-            if (transaction.getAmountNQT() != 0
-                    || attachment.getName().length() < Constants.MIN_CURRENCY_NAME_LENGTH || attachment.getName().length() > Constants.MAX_CURRENCY_NAME_LENGTH
-                    || attachment.getCode().length() != Constants.CURRENCY_CODE_LENGTH
-                    || attachment.getDescription().length() > Constants.MAX_CURRENCY_DESCRIPTION_LENGTH
-                    || !CurrencyType.getCurrencyType(attachment.getType()).isCurrencyIssuanceAttachmentValid(transaction)
-                    || attachment.getTotalSupply() <= 0 || attachment.getTotalSupply() > Constants.MAX_CURRENCY_TOTAL_SUPPLY
+            if (transaction.getAmountNQT() != 0) {
+                throw new NxtException.NotValidException("Currency issuance NXT amount must be 0");
+            }
+            validateCurrencyNaming(attachment);
+            if (!CurrencyType.getCurrencyType(attachment.getType()).isCurrencyIssuanceAttachmentValid(transaction)) {
+                throw new NxtException.NotValidException("Invalid currency issuance, type specific problem: " + attachment.getJSONObject());
+            }
+            if (attachment.getTotalSupply() > Constants.MAX_CURRENCY_TOTAL_SUPPLY
                     || attachment.getIssuanceHeight() < 0
                     || attachment.getMinReservePerUnitNQT() < 0 || attachment.getMinReservePerUnitNQT() > Constants.MAX_BALANCE_NQT
                     || attachment.getRuleset() != 0) {
                 throw new NxtException.NotValidException("Invalid currency issuance: " + attachment.getJSONObject());
             }
+        }
 
+        private void validateCurrencyNaming(Attachment.MonetarySystemCurrencyIssuance attachment) throws NxtException.NotValidException {
+            if (attachment.getName().length() < Constants.MIN_CURRENCY_NAME_LENGTH || attachment.getName().length() > Constants.MAX_CURRENCY_NAME_LENGTH
+                    || attachment.getCode().length() != Constants.CURRENCY_CODE_LENGTH
+                    || attachment.getDescription().length() > Constants.MAX_CURRENCY_DESCRIPTION_LENGTH) {
+                throw new NxtException.NotValidException("Invalid currency name code or description: " + attachment.getJSONObject());
+            }
             String normalizedName = attachment.getName().toLowerCase();
             for (int i = 0; i < normalizedName.length(); i++) {
                 if (Constants.ALPHABET.indexOf(normalizedName.charAt(i)) < 0) {
@@ -102,7 +109,11 @@ public abstract class MonetarySystem extends TransactionType {
 
         @Override
         void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
-            CurrencyType.getCurrencyType(((Attachment.MonetarySystemCurrencyIssuance) transaction.getAttachment()).getType()).applyCurrencyIssuanceAttachment(transaction, senderAccount, recipientAccount);
+            Attachment.MonetarySystemCurrencyIssuance attachment = (Attachment.MonetarySystemCurrencyIssuance) transaction.getAttachment();
+            Currency.addCurrency(transaction.getId(), transaction.getSenderId(), attachment.getName(), attachment.getCode(), attachment.getDescription(),
+                    attachment.getType(), attachment.getTotalSupply(), attachment.getCurrentSupply(), attachment.getIssuanceHeight(), attachment.getMinReservePerUnitNQT(),
+                    attachment.getMinDifficulty(), attachment.getMaxDifficulty(), attachment.getRuleset(), attachment.getAlgorithm());
+            senderAccount.addToCurrencyAndUnconfirmedCurrencyUnits(transaction.getId(), attachment.getCurrentSupply());
         }
 
         @Override
