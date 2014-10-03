@@ -102,6 +102,22 @@ public final class Account {
             return "AccountAsset account_id: " + Convert.toUnsignedLong(accountId) + " asset_id: " + Convert.toUnsignedLong(assetId)
                     + " quantity: " + quantityQNT + " unconfirmedQuantity: " + unconfirmedQuantityQNT;
         }
+
+        @Override
+        public boolean equals(Object o) {
+            if (! (o instanceof AccountAsset)) {
+                return false;
+            }
+            AccountAsset other = (AccountAsset)o;
+            return this.accountId == other.accountId && this.assetId == other.assetId && this.quantityQNT == other.quantityQNT
+                    && this.unconfirmedQuantityQNT == other.unconfirmedQuantityQNT && this.height == other.height;
+        }
+
+        @Override
+        public int hashCode() {
+            return (int)(accountId ^ (accountId >>> 32) ^ assetId ^ (assetId >>> 32) ^ quantityQNT ^ (quantityQNT >>> 32)
+                    ^ unconfirmedQuantityQNT ^ (unconfirmedQuantityQNT >>> 32) ^ height);
+        }
     }
 
     public static class AccountLease {
