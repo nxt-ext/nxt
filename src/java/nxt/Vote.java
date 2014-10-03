@@ -1,6 +1,6 @@
 package nxt;
 
-import nxt.db.Db;
+import nxt.db.DbClause;
 import nxt.db.DbIterator;
 import nxt.db.DbKey;
 import nxt.db.EntityDbTable;
@@ -34,17 +34,11 @@ public final class Vote {
 
     public static Map<Long,Long> getVoters(Poll poll) {
         Map<Long,Long> map = new HashMap<>();
-        try (Connection con = Db.getConnection();
-             PreparedStatement pstmt = con.prepareStatement("SELECT * FROM vote WHERE poll_id = ?")) {
-            pstmt.setLong(1, poll.getId());
-            try (DbIterator<Vote> voteIterator = voteTable.getManyBy(con, pstmt, true)) {
-                while (voteIterator.hasNext()) {
-                    Vote vote = voteIterator.next();
-                    map.put(vote.getVoterId(), vote.getId());
-                }
+        try (DbIterator<Vote> voteIterator = voteTable.getManyBy(new DbClause.LongClause("poll_id", poll.getId()), 0, -1)) {
+            while (voteIterator.hasNext()) {
+                Vote vote = voteIterator.next();
+                map.put(vote.getVoterId(), vote.getId());
             }
-        } catch (SQLException e) {
-            throw new RuntimeException(e.toString(), e);
         }
         return map;
     }

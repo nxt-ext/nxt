@@ -1,5 +1,6 @@
 package nxt;
 
+import nxt.db.DbClause;
 import nxt.db.DbIterator;
 import nxt.db.DbKey;
 import nxt.db.EntityDbTable;
@@ -47,7 +48,7 @@ public final class Asset {
     }
 
     public static DbIterator<Asset> getAssetsIssuedBy(long accountId, int from, int to) {
-        return assetTable.getManyBy("account_id", accountId, from, to);
+        return assetTable.getManyBy(new DbClause.LongClause("account_id", accountId), from, to);
     }
 
     static void addAsset(Transaction transaction, Attachment.ColoredCoinsAssetIssuance attachment) {

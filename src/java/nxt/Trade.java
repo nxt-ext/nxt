@@ -1,6 +1,7 @@
 package nxt;
 
 import nxt.db.Db;
+import nxt.db.DbClause;
 import nxt.db.DbIterator;
 import nxt.db.DbKey;
 import nxt.db.DbUtils;
@@ -62,7 +63,7 @@ public final class Trade {
     }
 
     public static DbIterator<Trade> getAssetTrades(long assetId, int from, int to) {
-        return tradeTable.getManyBy("asset_id", assetId, from, to);
+        return tradeTable.getManyBy(new DbClause.LongClause("asset_id", assetId), from, to);
     }
 
     public static DbIterator<Trade> getAccountTrades(long accountId, int from, int to) {

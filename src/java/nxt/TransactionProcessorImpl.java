@@ -116,8 +116,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                 try {
                     synchronized (BlockchainImpl.getInstance()) {
                         try {
-                            Db.beginTransaction();
-                            try (Connection con = Db.getConnection();
+                            try (Connection con = Db.beginTransaction();
                                  PreparedStatement pstmt = con.prepareStatement("SELECT * FROM unconfirmed_transaction WHERE expiration < ? AND latest = TRUE")) {
                                 pstmt.setInt(1, Nxt.getEpochTime());
                                 try (DbIterator<TransactionImpl> iterator = unconfirmedTransactionTable.getManyBy(con, pstmt, true)) {

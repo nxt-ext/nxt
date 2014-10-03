@@ -71,28 +71,28 @@ public abstract class EntityDbTable<T> extends DerivedDbTable {
         }
     }
 
-    public final T getBy(String columnName, String value) {
+    public final T getBy(DbClause dbClause) {
         try (Connection con = Db.getConnection();
              PreparedStatement pstmt = con.prepareStatement("SELECT * FROM " + table
-                     + " WHERE " + columnName + " = ?" + (multiversion ? " AND latest = TRUE LIMIT 1" : ""))) {
-            pstmt.setString(1, value);
+                     + " WHERE " + dbClause.getClause() + (multiversion ? " AND latest = TRUE LIMIT 1" : ""))) {
+            dbClause.set(pstmt, 1);
             return get(con, pstmt, true);
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
         }
     }
 
-    public final T getBy(String columnName, String value, int height) {
+    public final T getBy(DbClause dbClause, int height) {
         checkAvailable(height);
         try (Connection con = Db.getConnection();
-             PreparedStatement pstmt = con.prepareStatement("SELECT * FROM " + table + " WHERE " + columnName + " = ?"
+             PreparedStatement pstmt = con.prepareStatement("SELECT * FROM " + table + " WHERE " + dbClause.getClause()
                      + " AND height <= ?" + (multiversion ? " AND (latest = TRUE OR EXISTS ("
-                     + "SELECT 1 FROM " + table + " WHERE " + columnName + " = ? AND height > ?)) ORDER BY height DESC LIMIT 1" : ""))) {
+                     + "SELECT 1 FROM " + table + " WHERE " + dbClause.getClause() + " AND height > ?)) ORDER BY height DESC LIMIT 1" : ""))) {
             int i = 0;
-            pstmt.setString(++i, value);
+            dbClause.set(pstmt, ++i);
             pstmt.setInt(++i, height);
             if (multiversion) {
-                pstmt.setString(++i, value);
+                dbClause.set(pstmt, ++i);
                 pstmt.setInt(++i, height);
             }
             return get(con, pstmt, false);
@@ -126,15 +126,20 @@ public abstract class EntityDbTable<T> extends DerivedDbTable {
         }
     }
 
-    public final DbIterator<T> getManyBy(String columnName, long value, int from, int to) {
+    public final DbIterator<T> getManyBy(DbClause dbClause, int from, int to) {
+        return getManyBy(dbClause, from, to, defaultSort());
+    }
+
+    public final DbIterator<T> getManyBy(DbClause dbClause, int from, int to, String sort) {
         Connection con = null;
         try {
             con = Db.getConnection();
             PreparedStatement pstmt = con.prepareStatement("SELECT * FROM " + table
-                    + " WHERE " + columnName + " = ?" + (multiversion ? " AND latest = TRUE " : " ") + defaultSort()
+                    + " WHERE " + dbClause.getClause() + (multiversion ? " AND latest = TRUE " : " ") + sort
                     + DbUtils.limitsClause(from, to));
-            pstmt.setLong(1, value);
-            DbUtils.setLimits(2, pstmt, from, to);
+            int i = 0;
+            i = dbClause.set(pstmt, ++i);
+            i = DbUtils.setLimits(i, pstmt, from, to);
             return getManyBy(con, pstmt, true);
         } catch (SQLException e) {
             DbUtils.close(con);
@@ -142,27 +147,31 @@ public abstract class EntityDbTable<T> extends DerivedDbTable {
         }
     }
 
-    public final DbIterator<T> getManyBy(String columnName, long value, int height, int from, int to) {
+    public final DbIterator<T> getManyBy(DbClause dbClause, int height, int from, int to) {
+        return getManyBy(dbClause, height, from, to, defaultSort());
+    }
+
+    public final DbIterator<T> getManyBy(DbClause dbClause, int height, int from, int to, String sort) {
         checkAvailable(height);
         Connection con = null;
         try {
             con = Db.getConnection();
-            PreparedStatement pstmt = con.prepareStatement("SELECT * FROM " + table + " AS a WHERE " + columnName + " = ? "
+            PreparedStatement pstmt = con.prepareStatement("SELECT * FROM " + table + " AS a WHERE " + dbClause.getClause()
                     + "AND a.height <= ?" + (multiversion ? " AND (a.latest = TRUE OR (a.latest = FALSE "
                     + "AND EXISTS (SELECT 1 FROM " + table + " AS b WHERE " + dbKeyFactory.getSelfJoinClause() + " AND "
-                    + columnName + " = ? AND b.height > ?) "
+                    + dbClause.getClause() + " AND b.height > ?) "
                     + "AND NOT EXISTS (SELECT 1 FROM " + table + " AS b WHERE " + dbKeyFactory.getSelfJoinClause() + " AND "
-                    + columnName + " = ? AND b.height <= ? AND b.height > a.height))) "
-                    : " ") + defaultSort()
+                    + dbClause.getClause() + " AND b.height <= ? AND b.height > a.height))) "
+                    : " ") + sort
                     + DbUtils.limitsClause(from, to));
             int i = 0;
-            pstmt.setLong(++i, value);
-            pstmt.setInt(++i, height);
+            i = dbClause.set(pstmt, ++i);
+            pstmt.setInt(i, height);
             if (multiversion) {
-                pstmt.setLong(++i, value);
-                pstmt.setInt(++i, height);
-                pstmt.setLong(++i, value);
-                pstmt.setInt(++i, height);
+                i = dbClause.set(pstmt, ++i);
+                pstmt.setInt(i, height);
+                i = dbClause.set(pstmt, ++i);
+                pstmt.setInt(i, height);
             }
             i = DbUtils.setLimits(++i, pstmt, from, to);
             return getManyBy(con, pstmt, false);

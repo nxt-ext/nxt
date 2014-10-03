@@ -1,5 +1,6 @@
 package nxt;
 
+import nxt.db.DbClause;
 import nxt.db.DbIterator;
 import nxt.db.DbKey;
 import nxt.db.DbUtils;
@@ -110,11 +111,11 @@ public final class Alias {
     }
 
     public static DbIterator<Alias> getAliasesByOwner(long accountId, int from, int to) {
-        return aliasTable.getManyBy("account_id", accountId, from, to);
+        return aliasTable.getManyBy(new DbClause.LongClause("account_id", accountId), from, to);
     }
 
     public static Alias getAlias(String aliasName) {
-        return aliasTable.getBy("alias_name_lower", aliasName.toLowerCase());
+        return aliasTable.getBy(new DbClause.StringClause("alias_name_lower", aliasName.toLowerCase()));
     }
 
     public static Alias getAlias(long id) {

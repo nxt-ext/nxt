@@ -3,6 +3,7 @@ package nxt;
 import nxt.crypto.Crypto;
 import nxt.crypto.EncryptedData;
 import nxt.db.Db;
+import nxt.db.DbClause;
 import nxt.db.DbIterator;
 import nxt.db.DbKey;
 import nxt.db.DbUtils;
@@ -300,29 +301,27 @@ public final class Account {
         return account;
     }
 
-    public static DbIterator<Account> getLeasingAccounts() {
-        Connection con = null;
-        try {
-            con = Db.getConnection();
-            PreparedStatement pstmt = con.prepareStatement("SELECT * FROM account WHERE current_lessee_id >= ? AND latest = TRUE "
-                    + "ORDER BY id ASC");
-            pstmt.setLong(1, Long.MIN_VALUE); // this forces H2 to use the index, unlike WHERE IS NOT NULL which does a table scan
-            return accountTable.getManyBy(con, pstmt, true);
-        } catch (SQLException e) {
-            DbUtils.close(con);
-            throw new RuntimeException(e.toString(), e);
+    private static final DbClause leasingAccountsClause = new DbClause(" current_lessee_id >= ? ") {
+        @Override
+        public int set(PreparedStatement pstmt, int index) throws SQLException {
+            pstmt.setLong(index++, Long.MIN_VALUE);
+            return index;
         }
+    };
+
+    public static DbIterator<Account> getLeasingAccounts() {
+        return accountTable.getManyBy(leasingAccountsClause, 0, -1, " ORDER BY id ASC ");
     }
 
     public static DbIterator<AccountAsset> getAssetAccounts(long assetId, int from, int to) {
-        return accountAssetTable.getManyBy("asset_id", assetId, from, to);
+        return accountAssetTable.getManyBy(new DbClause.LongClause("asset_id", assetId), from, to);
     }
 
     public static DbIterator<AccountAsset> getAssetAccounts(long assetId, int height, int from, int to) {
         if (height < 0) {
             return getAssetAccounts(assetId, from, to);
         }
-        return accountAssetTable.getManyBy("asset_id", assetId, height, from, to);
+        return accountAssetTable.getManyBy(new DbClause.LongClause("asset_id", assetId), height, from, to);
     }
 
     static void init() {}
@@ -501,59 +500,28 @@ public final class Account {
         return lessorsGuaranteedBalanceNQT;
     }
 
+    private DbClause getLessorsClause() {
+        return new DbClause(" current_lessee_id = ? AND current_leasing_height_from <= ? AND current_leasing_height_to > ? ") {
+            @Override
+            public int set(PreparedStatement pstmt, int index) throws SQLException {
+                int height = Nxt.getBlockchain().getHeight();
+                pstmt.setLong(index++, getId());
+                pstmt.setInt(index++, height);
+                pstmt.setInt(index++, height);
+                return index;
+            }
+        };
+    }
+
     public DbIterator<Account> getLessors() {
-        Connection con = null;
-        try {
-            con = Db.getConnection();
-            PreparedStatement pstmt = con.prepareStatement("SELECT * FROM account WHERE current_lessee_id = ? "
-                    + "AND current_leasing_height_from <= ? AND current_leasing_height_to > ? AND latest = TRUE ");
-            pstmt.setLong(1, this.id);
-            int height = Nxt.getBlockchain().getHeight();
-            pstmt.setInt(2, height);
-            pstmt.setInt(3, height);
-            return accountTable.getManyBy(con, pstmt, true);
-        } catch (SQLException e) {
-            DbUtils.close(con);
-            throw new RuntimeException(e.toString(), e);
-        }
+        return accountTable.getManyBy(getLessorsClause(), 0, -1);
     }
 
     public DbIterator<Account> getLessors(int height) {
         if (height < 0) {
             return getLessors();
         }
-        accountTable.checkAvailable(height);
-        Connection con = null;
-        try {
-            con = Db.getConnection();
-            PreparedStatement pstmt = con.prepareStatement("SELECT * FROM account AS a WHERE "
-                    + "a.current_lessee_id = ? AND a.current_leasing_height_from <= ? AND a.current_leasing_height_to > ? "
-                    + "AND a.height <= ? AND (a.latest = TRUE OR (a.latest = FALSE "
-                    + "AND EXISTS (SELECT 1 FROM account AS b WHERE "
-                    + "b.current_lessee_id = ? AND b.current_leasing_height_from <= ? AND b.current_leasing_height_to > ? "
-                    + "AND b.height > ? AND a.id = b.id)"
-                    + "AND NOT EXISTS (SELECT 1 FROM account AS b WHERE "
-                    + "b.current_lessee_id = ? AND b.current_leasing_height_from <= ? AND b.current_leasing_height_to > ? "
-                    + "AND b.height <= ? AND a.id = b.id AND b.height > a.height)"
-                    + "))");
-            int i = 0;
-            pstmt.setLong(++i, this.id);
-            pstmt.setInt(++i, height);
-            pstmt.setInt(++i, height);
-            pstmt.setInt(++i, height);
-            pstmt.setLong(++i, this.id);
-            pstmt.setInt(++i, height);
-            pstmt.setInt(++i, height);
-            pstmt.setInt(++i, height);
-            pstmt.setLong(++i, this.id);
-            pstmt.setInt(++i, height);
-            pstmt.setInt(++i, height);
-            pstmt.setInt(++i, height);
-            return accountTable.getManyBy(con, pstmt, false);
-        } catch (SQLException e) {
-            DbUtils.close(con);
-            throw new RuntimeException(e.toString(), e);
-        }
+        return accountTable.getManyBy(getLessorsClause(), height, 0, -1);
     }
 
     public long getGuaranteedBalanceNQT(final int numberOfConfirmations) {
@@ -581,7 +549,7 @@ public final class Account {
     }
 
     public DbIterator<AccountAsset> getAssets(int from, int to) {
-        return accountAssetTable.getManyBy("account_id", this.id, from, to);
+        return accountAssetTable.getManyBy(new DbClause.LongClause("account_id", this.id), from, to);
     }
 
     public DbIterator<Trade> getTrades(int from, int to) {
