@@ -2,8 +2,8 @@ package nxt.http;
 
 import nxt.Account;
 import nxt.Asset;
+import nxt.AssetTransfer;
 import nxt.NxtException;
-import nxt.Transfer;
 import nxt.db.DbIterator;
 import nxt.db.DbUtils;
 import nxt.util.Convert;
@@ -13,11 +13,11 @@ import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
 
-public final class GetTransfers extends APIServlet.APIRequestHandler {
+public final class GetAssetTransfers extends APIServlet.APIRequestHandler {
 
-    static final GetTransfers instance = new GetTransfers();
+    static final GetAssetTransfers instance = new GetAssetTransfers();
 
-    private GetTransfers() {
+    private GetAssetTransfers() {
         super(new APITag[] {APITag.AE}, "asset", "account", "firstIndex", "lastIndex");
     }
 
@@ -32,18 +32,18 @@ public final class GetTransfers extends APIServlet.APIRequestHandler {
 
         JSONObject response = new JSONObject();
         JSONArray transfersData = new JSONArray();
-        DbIterator<Transfer> transfers = null;
+        DbIterator<AssetTransfer> transfers = null;
         try {
             if (accountId == null) {
                 Asset asset = ParameterParser.getAsset(req);
-                transfers = asset.getTransfers(firstIndex, lastIndex);
+                transfers = asset.getAssetTransfers(firstIndex, lastIndex);
             } else if (assetId == null) {
                 Account account = ParameterParser.getAccount(req);
-                transfers = account.getTransfers(firstIndex, lastIndex);
+                transfers = account.getAssetTransfers(firstIndex, lastIndex);
             } else {
                 Asset asset = ParameterParser.getAsset(req);
                 Account account = ParameterParser.getAccount(req);
-                transfers = Transfer.getAccountAssetTransfers(account.getId(), asset.getId(), firstIndex, lastIndex);
+                transfers = AssetTransfer.getAccountAssetTransfers(account.getId(), asset.getId(), firstIndex, lastIndex);
             }
             while (transfers.hasNext()) {
                 transfersData.add(JSONData.transfer(transfers.next()));

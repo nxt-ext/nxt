@@ -588,8 +588,8 @@ public final class Account {
         return Trade.getAccountTrades(this.id, from, to);
     }
 
-    public DbIterator<Transfer> getTransfers(int from, int to) {
-        return Transfer.getAccountAssetTransfers(this.id, from, to);
+    public DbIterator<AssetTransfer> getAssetTransfers(int from, int to) {
+        return AssetTransfer.getAccountAssetTransfers(this.id, from, to);
     }
 
     public long getAssetBalanceQNT(long assetId) {

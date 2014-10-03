@@ -398,22 +398,20 @@ final class DbVersion {
                 apply("CREATE INDEX IF NOT EXISTS unconfirmed_transaction_height_fee_timestamp_idx ON unconfirmed_transaction "
                         + "(transaction_height ASC, fee_per_byte DESC, timestamp ASC)");
             case 116:
-                apply(null);
-            case 117:
-                apply("CREATE TABLE IF NOT EXISTS transfer (db_id INT IDENTITY, id BIGINT NOT NULL, asset_id BIGINT NOT NULL, "
+                apply("CREATE TABLE IF NOT EXISTS asset_transfer (db_id INT IDENTITY, id BIGINT NOT NULL, asset_id BIGINT NOT NULL, "
                         + "sender_id BIGINT NOT NULL, recipient_id BIGINT NOT NULL, quantity BIGINT NOT NULL, height INT NOT NULL)");
+            case 117:
+                apply("CREATE UNIQUE INDEX IF NOT EXISTS asset_transfer_id_idx ON asset_transfer (id)");
             case 118:
-                apply("CREATE UNIQUE INDEX IF NOT EXISTS transfer_id_idx ON transfer (id)");
+                apply("CREATE INDEX IF NOT EXISTS asset_transfer_asset_id_idx ON asset_transfer (asset_id, height DESC)");
             case 119:
-                apply("CREATE INDEX IF NOT EXISTS transfer_asset_id_idx ON transfer (asset_id, height DESC)");
+                apply("CREATE INDEX IF NOT EXISTS asset_transfer_sender_id_idx ON asset_transfer (sender_id, height DESC)");
             case 120:
-                apply("CREATE INDEX IF NOT EXISTS transfer_sender_id_idx ON transfer (sender_id, height DESC)");
+                apply("CREATE INDEX IF NOT EXISTS asset_transfer_recipient_id_idx ON asset_transfer (recipient_id, height DESC)");
             case 121:
-                apply("CREATE INDEX IF NOT EXISTS transfer_recipient_id_idx ON transfer (recipient_id, height DESC)");
-            case 122:
                 BlockchainProcessorImpl.getInstance().forceScanAtStart();
                 apply(null);
-            case 123:
+            case 122:
                 return;
             default:
                 throw new RuntimeException("Database inconsistent with code, probably trying to run older code on newer database");
