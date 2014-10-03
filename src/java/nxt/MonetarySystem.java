@@ -146,7 +146,7 @@ public abstract class MonetarySystem extends TransactionType {
                 throw new NxtException.NotYetEnabledException("Monetary System not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
             }
             Attachment.MonetarySystemReserveIncrease attachment = (Attachment.MonetarySystemReserveIncrease) transaction.getAttachment();
-            if (Currency.isIssued(attachment.getCurrencyId())) {
+            if (Currency.isActive(attachment.getCurrencyId())) {
                 throw new NxtException.NotValidException("Cannot increase reserve, currency already issued at height: " + Currency.getCurrency(attachment.getCurrencyId()).getIssuanceHeight());
             }
             if (transaction.getAmountNQT() != 0 || attachment.getAmountNQT() <= 0) {
@@ -208,7 +208,7 @@ public abstract class MonetarySystem extends TransactionType {
             }
             Attachment.MonetarySystemReserveClaim attachment = (Attachment.MonetarySystemReserveClaim) transaction.getAttachment();
             if (transaction.getAmountNQT() != 0
-                    || !Currency.isIssued(attachment.getCurrencyId())
+                    || !Currency.isActive(attachment.getCurrencyId())
                     || attachment.getUnits() <= 0) {
                 throw new NxtException.NotValidException("Invalid reserve claim: " + attachment.getJSONObject());
             }
@@ -266,7 +266,7 @@ public abstract class MonetarySystem extends TransactionType {
                 throw new NxtException.NotYetEnabledException("Monetary System not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
             }
             Attachment.MonetarySystemMoneyTransfer attachment = (Attachment.MonetarySystemMoneyTransfer) transaction.getAttachment();
-            if (!Currency.isIssued(attachment.getCurrencyId()) || attachment.getUnits() <= 0) {
+            if (!Currency.isActive(attachment.getCurrencyId()) || attachment.getUnits() <= 0) {
                 throw new NxtException.NotValidException("Invalid money transfer: " + attachment.getJSONObject());
             }
             if (transaction.getAmountNQT() != 0) {
@@ -328,7 +328,7 @@ public abstract class MonetarySystem extends TransactionType {
             }
             Attachment.MonetarySystemExchangeOfferPublication attachment = (Attachment.MonetarySystemExchangeOfferPublication) transaction.getAttachment();
             if (transaction.getAmountNQT() != 0
-                    || !Currency.isIssued(attachment.getCurrencyId())
+                    || !Currency.isActive(attachment.getCurrencyId())
                     || attachment.getBuyRateNQT() <= 0
                     || attachment.getSellRateNQT() <= 0
                     || attachment.getTotalBuyLimit() < 0
@@ -397,7 +397,7 @@ public abstract class MonetarySystem extends TransactionType {
             }
             Attachment.MonetarySystemExchange attachment = (Attachment.MonetarySystemExchange) transaction.getAttachment();
             if (transaction.getAmountNQT() != 0
-                    || !Currency.isIssued(attachment.getCurrencyId())
+                    || !Currency.isActive(attachment.getCurrencyId())
                     || attachment.getRateNQT() <= 0
                     || attachment.getUnits() == 0) {
                 throw new NxtException.NotValidException("Invalid exchange: " + attachment.getJSONObject());
@@ -473,7 +473,7 @@ public abstract class MonetarySystem extends TransactionType {
             }
             Attachment.MonetarySystemMoneyMinting attachment = (Attachment.MonetarySystemMoneyMinting) transaction.getAttachment();
             if (transaction.getAmountNQT() != 0
-                    || !Currency.isIssued(attachment.getCurrencyId())
+                    || !Currency.isActive(attachment.getCurrencyId())
                     || !CurrencyType.getCurrencyType(Currency.getCurrency(attachment.getCurrencyId()).getType()).isMintable()
                     || attachment.getUnits() <= 0 || attachment.getUnits() > Currency.getCurrency(attachment.getCurrencyId()).getTotalSupply() / Constants.MAX_MINTING_RATIO) {
                 throw new NxtException.NotValidException("Invalid money minting: " + attachment.getJSONObject());
@@ -526,7 +526,7 @@ public abstract class MonetarySystem extends TransactionType {
             }
             Attachment.MonetarySystemShufflingInitiation attachment = (Attachment.MonetarySystemShufflingInitiation) transaction.getAttachment();
             if (transaction.getAmountNQT() != 0
-                    || !Currency.isIssued(attachment.getCurrencyId())
+                    || !Currency.isActive(attachment.getCurrencyId())
                     || attachment.getAmount() <= 0 || attachment.getAmount() > Constants.MAX_CURRENCY_TOTAL_SUPPLY
                     || attachment.getNumberOfParticipants() < Constants.MIN_NUMBER_OF_SHUFFLING_PARTICIPANTS || attachment.getNumberOfParticipants() > Constants.MAX_NUMBER_OF_SHUFFLING_PARTICIPANTS
                     || attachment.getMaxInitiationDelay() < Constants.MIN_SHUFFLING_DELAY || attachment.getMaxInitiationDelay() > Constants.MAX_SHUFFLING_DELAY

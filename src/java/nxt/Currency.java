@@ -248,7 +248,7 @@ public final class Currency {
         return currentReservePerUnitNQT;
     }
 
-    public static boolean isIssued(long currencyId) {
+    public static boolean isActive(long currencyId) {
         Currency currency = getCurrency(currencyId);
         return currency != null && currency.getIssuanceHeight() <= BlockchainImpl.getInstance().getLastBlock().getHeight();
     }

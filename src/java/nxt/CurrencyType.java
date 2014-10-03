@@ -1,5 +1,6 @@
 package nxt;
 
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -47,8 +48,6 @@ public abstract class CurrencyType {
 
             @Override
             public boolean isCurrencyIssuanceAttachmentValid(Transaction transaction) {
-                Attachment.MonetarySystemCurrencyIssuance attachment = (Attachment.MonetarySystemCurrencyIssuance)transaction.getAttachment();
-
                 return true;
             }
 
@@ -69,6 +68,33 @@ public abstract class CurrencyType {
 
     public boolean isMintable() {
         return false;
+    }
+
+    public static void validate(Attachment attachment, byte type, Transaction transaction) throws NxtException.ValidationException {
+        // sanity checks for all currency types
+        if (Nxt.getBlockchain().getLastBlock().getHeight() < Constants.MONETARY_SYSTEM_BLOCK) {
+            throw new NxtException.NotYetEnabledException("Monetary System not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
+        }
+        if (transaction.getAmountNQT() != 0) {
+            throw new NxtException.NotValidException("Currency issuance NXT amount must be 0");
+        }
+
+        final EnumSet<CurrencyValidator> validators = EnumSet.noneOf(CurrencyValidator.class);
+        for (CurrencyValidator validator : CurrencyValidator.values()) {
+            if ((validator.getCode() & type) != 0) {
+                validators.add(validator);
+            }
+        }
+        if (validators.isEmpty()) {
+            throw new NxtException.NotValidException("Invalid currency type " + type);
+        }
+        for (CurrencyValidator validator : CurrencyValidator.values()) {
+            if ((validator.getCode() & type) != 0) {
+                validator.validate(attachment, validators);
+            } else {
+                validator.validateMissing(attachment, validators);
+            }
+        }
     }
 
 }
