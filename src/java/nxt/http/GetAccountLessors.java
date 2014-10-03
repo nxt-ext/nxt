@@ -28,20 +28,20 @@ public final class GetAccountLessors extends APIServlet.APIRequestHandler {
         JSONObject response = new JSONObject();
         JSONData.putAccount(response, "account", account.getId());
         response.put("height", height < 0 ? Nxt.getBlockchain().getHeight() : height);
+        JSONArray lessorIds = new JSONArray();
+        JSONArray lessorIdsRS = new JSONArray();
 
         try (DbIterator<Account> lessors = account.getLessors(height)) {
             if (lessors.hasNext()) {
-                JSONArray lessorIds = new JSONArray();
-                JSONArray lessorIdsRS = new JSONArray();
                 while (lessors.hasNext()) {
                     Account lessor = lessors.next();
                     lessorIds.add(Convert.toUnsignedLong(lessor.getId()));
                     lessorIdsRS.add(Convert.rsAccount(lessor.getId()));
                 }
-                response.put("lessors", lessorIds);
-                response.put("lessorsRS", lessorIdsRS);
             }
         }
+        response.put("lessors", lessorIds);
+        response.put("lessorsRS", lessorIdsRS);
         return response;
 
     }
