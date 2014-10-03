@@ -1616,7 +1616,7 @@ public interface Attachment extends Appendix {
 
         @Override
         public TransactionType getTransactionType() {
-            return TransactionType.MonetarySystem.CURRENCY_ISSUANCE;
+            return MonetarySystem.CURRENCY_ISSUANCE;
         }
 
         public String getName() {
@@ -1710,7 +1710,7 @@ public interface Attachment extends Appendix {
 
         @Override
         public TransactionType getTransactionType() {
-            return TransactionType.MonetarySystem.RESERVE_INCREASE;
+            return MonetarySystem.RESERVE_INCREASE;
         }
 
         public long getCurrencyId() {
@@ -1769,7 +1769,7 @@ public interface Attachment extends Appendix {
 
         @Override
         public TransactionType getTransactionType() {
-            return TransactionType.MonetarySystem.RESERVE_CLAIM;
+            return MonetarySystem.RESERVE_CLAIM;
         }
 
         public long getCurrencyId() {
@@ -1834,7 +1834,7 @@ public interface Attachment extends Appendix {
 
         @Override
         public TransactionType getTransactionType() {
-            return TransactionType.MonetarySystem.MONEY_TRANSFER;
+            return MonetarySystem.MONEY_TRANSFER;
         }
 
         public long getRecipientId() {
@@ -1933,7 +1933,7 @@ public interface Attachment extends Appendix {
 
         @Override
         public TransactionType getTransactionType() {
-            return TransactionType.MonetarySystem.EXCHANGE_OFFER_PUBLICATION;
+            return MonetarySystem.EXCHANGE_OFFER_PUBLICATION;
         }
 
         public long getCurrencyId() {
@@ -2022,7 +2022,7 @@ public interface Attachment extends Appendix {
 
         @Override
         public TransactionType getTransactionType() {
-            return TransactionType.MonetarySystem.EXCHANGE;
+            return MonetarySystem.EXCHANGE;
         }
 
         public long getCurrencyId() {
@@ -2101,7 +2101,7 @@ public interface Attachment extends Appendix {
 
         @Override
         public TransactionType getTransactionType() {
-            return TransactionType.MonetarySystem.MONEY_MINTING;
+            return MonetarySystem.MONEY_MINTING;
         }
 
         public long getNonce() {
@@ -2198,7 +2198,7 @@ public interface Attachment extends Appendix {
 
         @Override
         public TransactionType getTransactionType() {
-            return TransactionType.MonetarySystem.SHUFFLING_INITIATION;
+            return MonetarySystem.SHUFFLING_INITIATION;
         }
 
         public Long getCurrencyId() {
@@ -2278,7 +2278,7 @@ public interface Attachment extends Appendix {
 
         @Override
         public TransactionType getTransactionType() {
-            return TransactionType.MonetarySystem.SHUFFLING_CONTINUATION;
+            return MonetarySystem.SHUFFLING_CONTINUATION;
         }
 
         public Long getShufflingId() {
@@ -2353,7 +2353,7 @@ public interface Attachment extends Appendix {
 
         @Override
         public TransactionType getTransactionType() {
-            return TransactionType.MonetarySystem.SHUFFLING_FINALIZATION;
+            return MonetarySystem.SHUFFLING_FINALIZATION;
         }
 
         public Long getShufflingId() {
@@ -2414,7 +2414,7 @@ public interface Attachment extends Appendix {
 
         @Override
         public TransactionType getTransactionType() {
-            return TransactionType.MonetarySystem.SHUFFLING_CANCELLATION;
+            return MonetarySystem.SHUFFLING_CANCELLATION;
         }
 
         public Long getShufflingId() {
