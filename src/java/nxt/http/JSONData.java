@@ -274,6 +274,9 @@ final class JSONData {
         putAccount(json, "buyer", trade.getBuyerId());
         json.put("block", Convert.toUnsignedLong(trade.getBlockId()));
         json.put("height", trade.getHeight());
+        Asset asset = Asset.getAsset(trade.getAssetId());
+        json.put("name", asset.getName());
+        json.put("decimals", asset.getDecimals());
         return json;
     }
 
@@ -285,6 +288,9 @@ final class JSONData {
         putAccount(json, "recipient", assetTransfer.getRecipientId());
         json.put("quantityQNT", String.valueOf(assetTransfer.getQuantityQNT()));
         json.put("height", assetTransfer.getHeight());
+        Asset asset = Asset.getAsset(assetTransfer.getAssetId());
+        json.put("name", asset.getName());
+        json.put("decimals", asset.getDecimals());
         return json;
     }
 

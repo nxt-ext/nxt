@@ -2,6 +2,7 @@ package nxt.http;
 
 import nxt.Nxt;
 import nxt.NxtException;
+import nxt.db.Db;
 import nxt.util.JSON;
 import nxt.util.Logger;
 import org.json.simple.JSONStreamAware;
@@ -48,6 +49,10 @@ public final class APIServlet extends HttpServlet {
 
         boolean requirePost() {
             return false;
+        }
+
+        boolean startDbTransaction() {
+            return true;
         }
 
     }
@@ -206,12 +211,19 @@ public final class APIServlet extends HttpServlet {
             }
 
             try {
+                if (apiRequestHandler.startDbTransaction()) {
+                    Db.beginTransaction();
+                }
                 response = apiRequestHandler.processRequest(req);
             } catch (ParameterException e) {
                 response = e.getErrorResponse();
             } catch (NxtException |RuntimeException e) {
                 Logger.logDebugMessage("Error processing API request", e);
                 response = ERROR_INCORRECT_REQUEST;
+            } finally {
+                if (apiRequestHandler.startDbTransaction()) {
+                    Db.endTransaction();
+                }
             }
 
         } finally {
