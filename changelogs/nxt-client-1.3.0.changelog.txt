@@ -18,9 +18,9 @@ state at previous heights up to 1440 blocks back, it is possible to completely
 eliminate the need for blockchain rescans on startup, and on fork resolution.
 
 On upgrade from 1.2.8 and older releases, this version will perform an initial
-build of the derived objects tables, which on a fast machine takes about 3 min,
+build of the derived objects tables, which on a fast machine takes about 4 min,
 but may take longer depending on your hardware. The database size will again grow
-during this rescan, but after shutdown should shrink back to around 500 MB.
+during this rescan, but after shutdown should shrink back to around 550 MB.
 
 There will be no rescans on subsequent restarts, and the startup time is now
 reduced to a few seconds only. There will also be no rescans at runtime on block
