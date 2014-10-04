@@ -49,10 +49,10 @@ public abstract class TransactionType {
     static final byte SUBTYPE_MONETARY_SYSTEM_CURRENCY_ISSUANCE = 0;
     static final byte SUBTYPE_MONETARY_SYSTEM_RESERVE_INCREASE = 1;
     static final byte SUBTYPE_MONETARY_SYSTEM_RESERVE_CLAIM = 2;
-    static final byte SUBTYPE_MONETARY_SYSTEM_MONEY_TRANSFER = 3;
+    static final byte SUBTYPE_MONETARY_SYSTEM_CURRENCY_TRANSFER = 3;
     static final byte SUBTYPE_MONETARY_SYSTEM_EXCHANGE_OFFER_PUBLICATION = 4;
     static final byte SUBTYPE_MONETARY_SYSTEM_EXCHANGE = 5;
-    static final byte SUBTYPE_MONETARY_SYSTEM_MONEY_MINTING = 6;
+    static final byte SUBTYPE_MONETARY_SYSTEM_CURRENCY_MINTING = 6;
     static final byte SUBTYPE_MONETARY_SYSTEM_SHUFFLING_INITIATION = 7;
     static final byte SUBTYPE_MONETARY_SYSTEM_SHUFFLING_CONTINUATION = 8;
     static final byte SUBTYPE_MONETARY_SYSTEM_SHUFFLING_FINALIZATION = 9;
@@ -152,14 +152,14 @@ public abstract class TransactionType {
                         return MonetarySystem.RESERVE_INCREASE;
                     case SUBTYPE_MONETARY_SYSTEM_RESERVE_CLAIM:
                         return MonetarySystem.RESERVE_CLAIM;
-                    case SUBTYPE_MONETARY_SYSTEM_MONEY_TRANSFER:
-                        return MonetarySystem.MONEY_TRANSFER;
+                    case SUBTYPE_MONETARY_SYSTEM_CURRENCY_TRANSFER:
+                        return MonetarySystem.CURRENCY_TRANSFER;
                     case SUBTYPE_MONETARY_SYSTEM_EXCHANGE_OFFER_PUBLICATION:
                         return MonetarySystem.EXCHANGE_OFFER_PUBLICATION;
                     case SUBTYPE_MONETARY_SYSTEM_EXCHANGE:
                         return MonetarySystem.EXCHANGE;
-                    case SUBTYPE_MONETARY_SYSTEM_MONEY_MINTING:
-                        return MonetarySystem.MONEY_MINTING;
+                    case SUBTYPE_MONETARY_SYSTEM_CURRENCY_MINTING:
+                        return MonetarySystem.CURRNECY_MINTING;
                     case SUBTYPE_MONETARY_SYSTEM_SHUFFLING_INITIATION:
                         return MonetarySystem.SHUFFLING_INITIATION;
                     case SUBTYPE_MONETARY_SYSTEM_SHUFFLING_CONTINUATION:

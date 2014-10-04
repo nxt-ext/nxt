@@ -77,6 +77,8 @@ final class JSONData {
         json.put("minDifficulty", currency.getMinDifficulty());
         json.put("maxDifficulty", currency.getMaxDifficulty());
         json.put("algorithm", currency.getAlgorithm());
+        json.put("numberOfExchanges", Exchange.getExchangeCount(currency.getId()));
+        json.put("numberOfTransfers", CurrencyTransfer.getTransferCount(currency.getId()));
         return json;
     }
 
@@ -315,6 +317,17 @@ final class JSONData {
         putAccount(json, "sender", transfer.getSenderId());
         putAccount(json, "recipient", transfer.getRecipientId());
         json.put("quantityQNT", String.valueOf(transfer.getQuantityQNT()));
+        json.put("height", transfer.getHeight());
+        return json;
+    }
+
+    static JSONObject currencyTransfer(CurrencyTransfer transfer) {
+        JSONObject json = new JSONObject();
+        json.put("transfer", Convert.toUnsignedLong(transfer.getId()));
+        json.put("currency", Convert.toUnsignedLong(transfer.getCurrencyId()));
+        putAccount(json, "sender", transfer.getSenderId());
+        putAccount(json, "recipient", transfer.getRecipientId());
+        json.put("units", String.valueOf(transfer.getUnits()));
         json.put("height", transfer.getHeight());
         return json;
     }

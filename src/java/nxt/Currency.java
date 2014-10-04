@@ -269,7 +269,7 @@ public final class Currency {
         account.addToBalanceAndUnconfirmedBalanceNQT(Convert.safeMultiply(units, currency.currentReservePerUnitNQT));
     }
 
-    public static void transferMoney(Account account, long recipientId, long currencyId, long units) {
+    public static void transferCurrency(Account account, long recipientId, long currencyId, long units) {
         account.addToCurrencyUnits(currencyId, -units);
         Account.addOrGetAccount(recipientId).addToCurrencyAndUnconfirmedCurrencyUnits(currencyId, units);
     }
@@ -281,6 +281,10 @@ public final class Currency {
 
     public DbIterator<Exchange> getExchanges(int from, int to) {
         return Exchange.getCurrencyExchanges(this.currencyId, from, to);
+    }
+
+    public DbIterator<CurrencyTransfer> getTransfers(int from, int to) {
+        return CurrencyTransfer.getCurrencyTransfers(this.currencyId, from, to);
     }
 
     private static class CrowdFundingListener implements Listener<Block> {

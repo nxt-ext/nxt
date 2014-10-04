@@ -1792,27 +1792,27 @@ public interface Attachment extends Appendix {
 
     }
 
-    public final static class MonetarySystemMoneyTransfer extends AbstractAttachment {
+    public final static class MonetarySystemCurrencyTransfer extends AbstractAttachment {
 
         private final long recipientId;
         private final long currencyId;
         private final long units;
 
-        MonetarySystemMoneyTransfer(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
+        MonetarySystemCurrencyTransfer(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
             super(buffer, transactionVersion);
             this.recipientId = buffer.getLong();
             this.currencyId = buffer.getLong();
             this.units = buffer.getLong();
         }
 
-        MonetarySystemMoneyTransfer(JSONObject attachmentData) {
+        MonetarySystemCurrencyTransfer(JSONObject attachmentData) {
             super(attachmentData);
             this.recipientId = (Long)attachmentData.get("recipient");
             this.currencyId = (Long)attachmentData.get("currency");
             this.units = (Long)attachmentData.get("units");
         }
 
-        public MonetarySystemMoneyTransfer(long recipientId, long currencyId, long units) {
+        public MonetarySystemCurrencyTransfer(long recipientId, long currencyId, long units) {
             this.recipientId = recipientId;
             this.currencyId = currencyId;
             this.units = units;
@@ -1820,7 +1820,7 @@ public interface Attachment extends Appendix {
 
         @Override
         String getAppendixName() {
-            return "MoneyTransfer";
+            return "CurrencyTransfer";
         }
 
         @Override
@@ -1844,7 +1844,7 @@ public interface Attachment extends Appendix {
 
         @Override
         public TransactionType getTransactionType() {
-            return MonetarySystem.MONEY_TRANSFER;
+            return MonetarySystem.CURRENCY_TRANSFER;
         }
 
         public long getRecipientId() {
@@ -2053,14 +2053,14 @@ public interface Attachment extends Appendix {
 
     }
 
-    public final static class MonetarySystemMoneyMinting extends AbstractAttachment {
+    public final static class MonetarySystemCurrencyMinting extends AbstractAttachment {
 
         private final long nonce;
         private final long currencyId;
         private final long units;
         private final long counter;
 
-        MonetarySystemMoneyMinting(ByteBuffer buffer, byte transactionVersion) {
+        MonetarySystemCurrencyMinting(ByteBuffer buffer, byte transactionVersion) {
             super(buffer, transactionVersion);
             this.nonce = buffer.getLong();
             this.currencyId = buffer.getLong();
@@ -2068,7 +2068,7 @@ public interface Attachment extends Appendix {
             this.counter = buffer.getLong();
         }
 
-        MonetarySystemMoneyMinting(JSONObject attachmentData) {
+        MonetarySystemCurrencyMinting(JSONObject attachmentData) {
             super(attachmentData);
             this.nonce = (Long)attachmentData.get("nonce");
             this.currencyId = (Long)attachmentData.get("currency");
@@ -2076,7 +2076,7 @@ public interface Attachment extends Appendix {
             this.counter = (Long)attachmentData.get("counter");
         }
 
-        public MonetarySystemMoneyMinting(long nonce, Long currencyId, long units, long counter) {
+        public MonetarySystemCurrencyMinting(long nonce, Long currencyId, long units, long counter) {
             this.nonce = nonce;
             this.currencyId = currencyId;
             this.units = units;
@@ -2085,7 +2085,7 @@ public interface Attachment extends Appendix {
 
         @Override
         String getAppendixName() {
-            return "MoneyMinting";
+            return "CurrencyMinting";
         }
 
         @Override
@@ -2111,7 +2111,7 @@ public interface Attachment extends Appendix {
 
         @Override
         public TransactionType getTransactionType() {
-            return MonetarySystem.MONEY_MINTING;
+            return MonetarySystem.CURRNECY_MINTING;
         }
 
         public long getNonce() {

@@ -94,7 +94,7 @@ public final class CurrencyMint {
         return height;
     }
 
-    static void mintMoney(Account account, long nonce, long currencyId, long units, long counter) {
+    static void mintCurrency(Account account, long nonce, long currencyId, long units, long counter) {
         Connection con = null;
         CurrencyMint currencyMint;
         try {

@@ -31,7 +31,7 @@ public final class TransferCurrency extends CreateTransaction {
             return NOT_ENOUGH_CURRENCY;
         }
 
-        Attachment attachment = new Attachment.MonetarySystemMoneyTransfer(recipient, currency.getId(), units);
+        Attachment attachment = new Attachment.MonetarySystemCurrencyTransfer(recipient, currency.getId(), units);
         return createTransaction(req, account, recipient, 0, attachment);
     }
 

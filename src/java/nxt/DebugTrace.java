@@ -524,8 +524,8 @@ public final class DebugTrace {
             map.put("currency", transaction.getStringId());
             map.put("currency units", String.valueOf(currencyIssuance.getTotalSupply()));
             map.put("event", "currency issuance");
-        } else if (attachment instanceof Attachment.MonetarySystemMoneyTransfer) {
-            Attachment.MonetarySystemMoneyTransfer currencyTransfer = (Attachment.MonetarySystemMoneyTransfer)attachment;
+        } else if (attachment instanceof Attachment.MonetarySystemCurrencyTransfer) {
+            Attachment.MonetarySystemCurrencyTransfer currencyTransfer = (Attachment.MonetarySystemCurrencyTransfer)attachment;
             map.put("currency", Convert.toUnsignedLong(currencyTransfer.getCurrencyId()));
             long units = currencyTransfer.getUnits();
             if (!isRecipient) {

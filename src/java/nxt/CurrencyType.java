@@ -106,7 +106,7 @@ public enum CurrencyType {
                     throw new NxtException.NotValidException("Non mintable currency should not specify algorithm or difficulty");
                 }
             }
-            if (attachment instanceof Attachment.MonetarySystemMoneyMinting) {
+            if (attachment instanceof Attachment.MonetarySystemCurrencyMinting) {
                 throw new NxtException.NotValidException("Currency is not mintable");
             }
         }

@@ -645,6 +645,10 @@ public final class Account {
         return Transfer.getAccountAssetTransfers(this.id, from, to);
     }
 
+    public DbIterator<CurrencyTransfer> getCurrencyTransfers(int from, int to) {
+        return CurrencyTransfer.getAccountCurrencyTransfers(this.id, from, to);
+    }
+
     public DbIterator<Exchange> getExchanges(int from, int to) {
         return Exchange.getAccountExchanges(this.id, from, to);
     }
