@@ -50,7 +50,15 @@ public final class DbUtils {
 
     public static String limitsClause(int from, int to) {
         int limit = to >=0 && to >= from && to < Integer.MAX_VALUE ? to - from + 1 : 0;
-        return (limit > 0 ? " LIMIT ? " : "") + (from > 0 ? " OFFSET ? ": "");
+        if (limit > 0 && from > 0) {
+            return " LIMIT ? OFFSET ? ";
+        } else if (limit > 0) {
+            return " LIMIT ? ";
+        } else if (from > 0) {
+            return " OFFSET ? ";
+        } else {
+            return "";
+        }
     }
 
     public static int setLimits(int index, PreparedStatement pstmt, int from, int to) throws SQLException {
