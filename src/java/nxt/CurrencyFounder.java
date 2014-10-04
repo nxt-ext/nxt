@@ -95,7 +95,7 @@ public class CurrencyFounder {
     }
 
     public static DbIterator<CurrencyFounder> getCurrencyFounders(long currencyId, int from, int to) {
-        return currencyFounderTable.getManyBy("currency_id", currencyId, from, to);
+        return currencyFounderTable.getManyBy(new DbClause.LongClause("currency_id", currencyId), from, to);
     }
 
     public static void remove(long currencyId) {

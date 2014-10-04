@@ -488,6 +488,25 @@ final class ParameterParser {
         return 0;
     }
 
+    static int getHeight(HttpServletRequest req) throws ParameterException {
+        String heightValue = Convert.emptyToNull(req.getParameter("height"));
+        if (heightValue != null) {
+            try {
+                int height = Integer.parseInt(heightValue);
+                if (height < 0 || height > Nxt.getBlockchain().getHeight()) {
+                    throw new ParameterException(INCORRECT_HEIGHT);
+                }
+                if (height < Nxt.getBlockchainProcessor().getMinRollbackHeight()) {
+                    throw new ParameterException(HEIGHT_NOT_AVAILABLE);
+                }
+                return height;
+            } catch (NumberFormatException e) {
+                throw new ParameterException(INCORRECT_HEIGHT);
+            }
+        }
+        return -1;
+    }
+
     private ParameterParser() {} // never
 
 }

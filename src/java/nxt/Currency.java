@@ -1,5 +1,6 @@
 package nxt;
 
+import nxt.db.DbClause;
 import nxt.db.DbIterator;
 import nxt.db.DbKey;
 import nxt.db.VersionedEntityDbTable;
@@ -49,15 +50,15 @@ public final class Currency {
     }
 
     public static Currency getCurrencyByName(String name) {
-        return currencyTable.getBy("name", name);
+        return currencyTable.getBy(new DbClause.StringClause("name", name));
     }
 
     public static Currency getCurrencyByCode(String code) {
-        return currencyTable.getBy("code", code);
+        return currencyTable.getBy(new DbClause.StringClause("code", code));
     }
 
     public static DbIterator<Currency> getCurrencyIssuedBy(long accountId, int from, int to) {
-        return currencyTable.getManyBy("account_id", accountId, from, to);
+        return currencyTable.getManyBy(new DbClause.LongClause("account_id", accountId), from, to);
     }
 
     static void addCurrency(Transaction transaction, Attachment.MonetarySystemCurrencyIssuance attachment) {

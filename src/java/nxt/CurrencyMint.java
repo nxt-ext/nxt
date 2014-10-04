@@ -1,9 +1,7 @@
 package nxt;
 
 import nxt.crypto.HashFunction;
-import nxt.db.Db;
 import nxt.db.DbKey;
-import nxt.db.DbUtils;
 import nxt.db.VersionedEntityDbTable;
 
 import java.math.BigInteger;
@@ -95,19 +93,7 @@ public final class CurrencyMint {
     }
 
     static void mintCurrency(Account account, long nonce, long currencyId, long units, long counter) {
-        Connection con = null;
-        CurrencyMint currencyMint;
-        try {
-            con = Db.getConnection();
-            PreparedStatement pstmt = con.prepareStatement("SELECT * FROM currency_mint WHERE currency_id = ? AND account_id = ?");
-            pstmt.setLong(1, currencyId);
-            pstmt.setLong(2, account.getId());
-            currencyMint = currencyMintTable.get(con, pstmt);
-        } catch (SQLException e) {
-            DbUtils.close(con);
-            throw new RuntimeException(e.toString(), e);
-        }
-
+        CurrencyMint currencyMint = currencyMintTable.get(currencyMintDbKeyFactory.newKey(currencyId, account.getId()), Nxt.getBlockchain().getHeight());
         if (currencyMint != null && counter <= currencyMint.getCounter()) {
             return;
         }

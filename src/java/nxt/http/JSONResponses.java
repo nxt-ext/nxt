@@ -243,7 +243,7 @@ public final class JSONResponses {
         HEIGHT_NOT_AVAILABLE = JSON.prepare(response);
     }
 
-    private static JSONStreamAware missing(String... paramNames) {
+    static JSONStreamAware missing(String... paramNames) {
         JSONObject response = new JSONObject();
         response.put("errorCode", 3);
         if (paramNames.length == 1) {

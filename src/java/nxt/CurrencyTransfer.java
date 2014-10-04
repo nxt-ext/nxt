@@ -57,7 +57,7 @@ public final class CurrencyTransfer {
     }
 
     public static DbIterator<CurrencyTransfer> getCurrencyTransfers(long currencyId, int from, int to) {
-        return currencyTransferTable.getManyBy("currency_id", currencyId, from, to);
+        return currencyTransferTable.getManyBy(new DbClause.LongClause("currency_id", currencyId), from, to);
     }
 
     public static DbIterator<CurrencyTransfer> getAccountCurrencyTransfers(long accountId, int from, int to) {

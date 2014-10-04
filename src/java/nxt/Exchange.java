@@ -58,7 +58,7 @@ public final class Exchange {
     }
 
     public static DbIterator<Exchange> getCurrencyExchanges(Long currencyId, int from, int to) {
-        return exchangeTable.getManyBy("currency_id", currencyId, from, to);
+        return exchangeTable.getManyBy(new DbClause.LongClause("currency_id", currencyId), from, to);
     }
 
     public static DbIterator<Exchange> getAccountExchanges(Long accountId, int from, int to) {
