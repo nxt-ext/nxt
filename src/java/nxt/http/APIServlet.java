@@ -52,7 +52,7 @@ public final class APIServlet extends HttpServlet {
         }
 
         boolean startDbTransaction() {
-            return true;
+            return false;
         }
 
     }

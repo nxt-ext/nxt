@@ -56,4 +56,8 @@ public final class GetAssetTransfers extends APIServlet.APIRequestHandler {
         return response;
     }
 
+    @Override
+    boolean startDbTransaction() {
+        return true;
+    }
 }

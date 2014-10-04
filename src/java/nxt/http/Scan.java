@@ -52,9 +52,4 @@ public final class Scan extends APIServlet.APIRequestHandler {
         return true;
     }
 
-    @Override
-    boolean startDbTransaction() {
-        return false;
-    }
-
 }
