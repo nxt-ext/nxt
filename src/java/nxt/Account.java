@@ -2,7 +2,13 @@ package nxt;
 
 import nxt.crypto.Crypto;
 import nxt.crypto.EncryptedData;
-import nxt.db.*;
+import nxt.db.Db;
+import nxt.db.DbClause;
+import nxt.db.DbIterator;
+import nxt.db.DbKey;
+import nxt.db.DbUtils;
+import nxt.db.DerivedDbTable;
+import nxt.db.VersionedEntityDbTable;
 import nxt.util.Convert;
 import nxt.util.Listener;
 import nxt.util.Listeners;
@@ -29,6 +35,7 @@ public final class Account {
         private final DbKey dbKey;
         private long quantityQNT;
         private long unconfirmedQuantityQNT;
+        private int height;
 
         private AccountAsset(long accountId, long assetId, long quantityQNT, long unconfirmedQuantityQNT) {
             this.accountId = accountId;
@@ -44,6 +51,7 @@ public final class Account {
             this.dbKey = accountAssetDbKeyFactory.newKey(this.accountId, this.assetId);
             this.quantityQNT = rs.getLong("quantity");
             this.unconfirmedQuantityQNT = rs.getLong("unconfirmed_quantity");
+            this.height = rs.getInt("height");
         }
 
         private void save(Connection con) throws SQLException {
@@ -76,6 +84,10 @@ public final class Account {
             return unconfirmedQuantityQNT;
         }
 
+        public int getHeight() {
+            return height;
+        }
+
         private void save() {
             if (this.quantityQNT > 0 || this.unconfirmedQuantityQNT > 0) {
                 accountAssetTable.insert(this);
@@ -90,6 +102,22 @@ public final class Account {
         public String toString() {
             return "AccountAsset account_id: " + Convert.toUnsignedLong(accountId) + " asset_id: " + Convert.toUnsignedLong(assetId)
                     + " quantity: " + quantityQNT + " unconfirmedQuantity: " + unconfirmedQuantityQNT;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (! (o instanceof AccountAsset)) {
+                return false;
+            }
+            AccountAsset other = (AccountAsset)o;
+            return this.accountId == other.accountId && this.assetId == other.assetId && this.quantityQNT == other.quantityQNT
+                    && this.unconfirmedQuantityQNT == other.unconfirmedQuantityQNT && this.height == other.height;
+        }
+
+        @Override
+        public int hashCode() {
+            return (int)(accountId ^ (accountId >>> 32) ^ assetId ^ (assetId >>> 32) ^ quantityQNT ^ (quantityQNT >>> 32)
+                    ^ unconfirmedQuantityQNT ^ (unconfirmedQuantityQNT >>> 32) ^ height);
         }
     }
 
@@ -396,22 +424,27 @@ public final class Account {
         return account;
     }
 
-    public static DbIterator<Account> getLeasingAccounts() {
-        Connection con = null;
-        try {
-            con = Db.getConnection();
-            PreparedStatement pstmt = con.prepareStatement("SELECT * FROM account WHERE current_lessee_id >= ? AND latest = TRUE "
-                    + "ORDER BY id ASC");
-            pstmt.setLong(1, Long.MIN_VALUE); // this forces H2 to use the index, unlike WHERE IS NOT NULL which does a table scan
-            return accountTable.getManyBy(con, pstmt, true);
-        } catch (SQLException e) {
-            DbUtils.close(con);
-            throw new RuntimeException(e.toString(), e);
+    private static final DbClause leasingAccountsClause = new DbClause(" current_lessee_id >= ? ") {
+        @Override
+        public int set(PreparedStatement pstmt, int index) throws SQLException {
+            pstmt.setLong(index++, Long.MIN_VALUE);
+            return index;
         }
+    };
+
+    public static DbIterator<Account> getLeasingAccounts() {
+        return accountTable.getManyBy(leasingAccountsClause, 0, -1, " ORDER BY id ASC ");
     }
 
     public static DbIterator<AccountAsset> getAssetAccounts(long assetId, int from, int to) {
-        return accountAssetTable.getManyBy("asset_id", assetId, from, to);
+        return accountAssetTable.getManyBy(new DbClause.LongClause("asset_id", assetId), from, to);
+    }
+
+    public static DbIterator<AccountAsset> getAssetAccounts(long assetId, int height, int from, int to) {
+        if (height < 0) {
+            return getAssetAccounts(assetId, from, to);
+        }
+        return accountAssetTable.getManyBy(new DbClause.LongClause("asset_id", assetId), height, from, to);
     }
 
     static void init() {}
@@ -592,21 +625,27 @@ public final class Account {
         return lessorsGuaranteedBalanceNQT;
     }
 
+    private DbClause getLessorsClause(final int height) {
+        return new DbClause(" current_lessee_id = ? AND current_leasing_height_from <= ? AND current_leasing_height_to > ? ") {
+            @Override
+            public int set(PreparedStatement pstmt, int index) throws SQLException {
+                pstmt.setLong(index++, getId());
+                pstmt.setInt(index++, height);
+                pstmt.setInt(index++, height);
+                return index;
+            }
+        };
+    }
+
     public DbIterator<Account> getLessors() {
-        Connection con = null;
-        try {
-            con = Db.getConnection();
-            PreparedStatement pstmt = con.prepareStatement("SELECT * FROM account WHERE current_lessee_id = ? "
-                    + "AND current_leasing_height_from <= ? AND current_leasing_height_to > ? AND latest = TRUE ");
-            pstmt.setLong(1, this.id);
-            int height = Nxt.getBlockchain().getHeight();
-            pstmt.setInt(2, height);
-            pstmt.setInt(3, height);
-            return accountTable.getManyBy(con, pstmt, true);
-        } catch (SQLException e) {
-            DbUtils.close(con);
-            throw new RuntimeException(e.toString(), e);
+        return accountTable.getManyBy(getLessorsClause(Nxt.getBlockchain().getHeight()), 0, -1);
+    }
+
+    public DbIterator<Account> getLessors(int height) {
+        if (height < 0) {
+            return getLessors();
         }
+        return accountTable.getManyBy(getLessorsClause(height), height, 0, -1);
     }
 
     public long getGuaranteedBalanceNQT(final int numberOfConfirmations) {
@@ -634,15 +673,15 @@ public final class Account {
     }
 
     public DbIterator<AccountAsset> getAssets(int from, int to) {
-        return accountAssetTable.getManyBy("account_id", this.id, from, to);
+        return accountAssetTable.getManyBy(new DbClause.LongClause("account_id", this.id), from, to);
     }
 
     public DbIterator<Trade> getTrades(int from, int to) {
         return Trade.getAccountTrades(this.id, from, to);
     }
 
-    public DbIterator<Transfer> getTransfers(int from, int to) {
-        return Transfer.getAccountAssetTransfers(this.id, from, to);
+    public DbIterator<AssetTransfer> getAssetTransfers(int from, int to) {
+        return AssetTransfer.getAccountAssetTransfers(this.id, from, to);
     }
 
     public DbIterator<CurrencyTransfer> getCurrencyTransfers(int from, int to) {

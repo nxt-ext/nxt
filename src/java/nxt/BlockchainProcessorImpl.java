@@ -52,6 +52,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
 
     private final List<DerivedDbTable> derivedTables = new CopyOnWriteArrayList<>();
     private final boolean trimDerivedTables = Nxt.getBooleanProperty("nxt.trimDerivedTables");
+    private volatile int lastTrimHeight;
 
     private final Listeners<Block, Event> blockListeners = new Listeners<>();
     private volatile Peer lastBlockchainFeeder;
@@ -371,8 +372,9 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 @Override
                 public void notify(Block block) {
                     if (block.getHeight() % 1440 == 0) {
+                        lastTrimHeight = block.getHeight() - Constants.MAX_ROLLBACK;
                         for (DerivedDbTable table : derivedTables) {
-                            table.trim(block.getHeight() - Constants.MAX_ROLLBACK);
+                            table.trim(lastTrimHeight);
                         }
                     }
                 }
@@ -447,6 +449,11 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
     @Override
     public boolean isScanning() {
         return isScanning;
+    }
+
+    @Override
+    public int getMinRollbackHeight() {
+        return trimDerivedTables ? (lastTrimHeight > 0 ? lastTrimHeight : blockchain.getHeight() - Constants.MAX_ROLLBACK) : 0;
     }
 
     @Override
@@ -722,7 +729,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
 
     private List<BlockImpl> popOffTo(Block commonBlock) {
         synchronized (blockchain) {
-            if (trimDerivedTables && blockchain.getHeight() - commonBlock.getHeight() > Constants.MAX_ROLLBACK) {
+            if (commonBlock.getHeight() < getMinRollbackHeight()) {
                 throw new IllegalArgumentException("Rollback to height " + commonBlock.getHeight() + " not suppported, "
                         + "current height " + Nxt.getBlockchain().getHeight());
             }
@@ -916,7 +923,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             if (height > blockchainHeight + 1) {
                 throw new IllegalArgumentException("Rollback height " + (height - 1) + " exceeds current blockchain height of " + blockchainHeight);
             }
-            if (height > 0 && trimDerivedTables && blockchainHeight - height >= Constants.MAX_ROLLBACK) {
+            if (height > 0 && height < getMinRollbackHeight()) {
                 Logger.logMessage("Rollback of more than " + Constants.MAX_ROLLBACK + " blocks not supported, will do a full scan");
                 height = 0;
             }

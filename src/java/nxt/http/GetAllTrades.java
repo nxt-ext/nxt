@@ -8,8 +8,6 @@ import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.HashMap;
-import java.util.Map;
 
 public final class GetAllTrades extends APIServlet.APIRequestHandler {
 
@@ -34,9 +32,8 @@ public final class GetAllTrades extends APIServlet.APIRequestHandler {
                         return trade.getTimestamp() >= timestamp;
                     }
                 }, firstIndex, lastIndex)) {
-            Map<Long,String> assetNames = new HashMap<>();
             while (tradeIterator.hasNext()) {
-                trades.add(GetTrades.trade(tradeIterator.next(), assetNames));
+                trades.add(JSONData.trade(tradeIterator.next()));
             }
         }
         response.put("trades", trades);

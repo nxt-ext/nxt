@@ -1,6 +1,17 @@
 package nxt.http;
 
-import nxt.*;
+import nxt.Account;
+import nxt.Alias;
+import nxt.Asset;
+import nxt.AssetTransfer;
+import nxt.Generator;
+import nxt.Nxt;
+import nxt.Order;
+import nxt.Trade;
+import nxt.Currency;
+import nxt.Exchange;
+import nxt.CurrencyTransfer;
+
 import nxt.db.DbIterator;
 import nxt.peer.Peer;
 import nxt.peer.Peers;
@@ -45,7 +56,7 @@ public final class GetState extends APIServlet.APIRequestHandler {
         response.put("numberOfAssets", Asset.getCount());
         response.put("numberOfOrders", Order.Ask.getCount() + Order.Bid.getCount());
         response.put("numberOfTrades", Trade.getCount());
-        response.put("numberOfTransfers", Transfer.getCount());
+        response.put("numberOfTransfers", AssetTransfer.getCount());
         response.put("numberOfCurrencies", Currency.getCount());
         response.put("numberOfOffers", nxt.CurrencyBuy.getCount());
         response.put("numberOfExchanges", Exchange.getCount());

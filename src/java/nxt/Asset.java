@@ -1,5 +1,6 @@
 package nxt;
 
+import nxt.db.DbClause;
 import nxt.db.DbIterator;
 import nxt.db.DbKey;
 import nxt.db.EntityDbTable;
@@ -47,7 +48,7 @@ public final class Asset {
     }
 
     public static DbIterator<Asset> getAssetsIssuedBy(long accountId, int from, int to) {
-        return assetTable.getManyBy("account_id", accountId, from, to);
+        return assetTable.getManyBy(new DbClause.LongClause("account_id", accountId), from, to);
     }
 
     static void addAsset(Transaction transaction, Attachment.ColoredCoinsAssetIssuance attachment) {
@@ -128,11 +129,18 @@ public final class Asset {
         return Account.getAssetAccounts(this.assetId, from, to);
     }
 
+    public DbIterator<Account.AccountAsset> getAccounts(int height, int from, int to) {
+        if (height < 0) {
+            return getAccounts(from, to);
+        }
+        return Account.getAssetAccounts(this.assetId, height, from, to);
+    }
+
     public DbIterator<Trade> getTrades(int from, int to) {
         return Trade.getAssetTrades(this.assetId, from, to);
     }
 
-    public DbIterator<Transfer> getTransfers(int from, int to) {
-        return Transfer.getAssetTransfers(this.assetId, from, to);
+    public DbIterator<AssetTransfer> getAssetTransfers(int from, int to) {
+        return AssetTransfer.getAssetTransfers(this.assetId, from, to);
     }
 }

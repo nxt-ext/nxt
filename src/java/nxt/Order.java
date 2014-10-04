@@ -1,9 +1,9 @@
 package nxt;
 
 import nxt.db.Db;
+import nxt.db.DbClause;
 import nxt.db.DbIterator;
 import nxt.db.DbKey;
-import nxt.db.DbUtils;
 import nxt.db.VersionedEntityDbTable;
 import nxt.util.Convert;
 
@@ -186,44 +186,28 @@ public abstract class Order {
         }
 
         public static DbIterator<Ask> getAskOrdersByAccount(long accountId, int from, int to) {
-            return askOrderTable.getManyBy("account_id", accountId, from, to);
+            return askOrderTable.getManyBy(new DbClause.LongClause("account_id", accountId), from, to);
         }
 
         public static DbIterator<Ask> getAskOrdersByAsset(long assetId, int from, int to) {
-            return askOrderTable.getManyBy("asset_id", assetId, from, to);
+            return askOrderTable.getManyBy(new DbClause.LongClause("asset_id", assetId), from, to);
         }
 
-        public static DbIterator<Ask> getAskOrdersByAccountAsset(long accountId, long assetId, int from, int to) {
-            Connection con = null;
-            try {
-                con = Db.getConnection();
-                PreparedStatement pstmt = con.prepareStatement("SELECT * FROM ask_order WHERE account_id = ? "
-                        + "AND asset_id = ? AND latest = TRUE ORDER BY height DESC"
-                        + DbUtils.limitsClause(from, to));
-                pstmt.setLong(1, accountId);
-                pstmt.setLong(2, assetId);
-                DbUtils.setLimits(3, pstmt, from, to);
-                return askOrderTable.getManyBy(con, pstmt, true);
-            } catch (SQLException e) {
-                DbUtils.close(con);
-                throw new RuntimeException(e.toString(), e);
-            }
+        public static DbIterator<Ask> getAskOrdersByAccountAsset(final long accountId, final long assetId, int from, int to) {
+            DbClause dbClause = new DbClause(" account_id = ? AND asset_id = ? ") {
+                @Override
+                public int set(PreparedStatement pstmt, int index) throws SQLException {
+                    pstmt.setLong(index++, accountId);
+                    pstmt.setLong(index++, assetId);
+                    return index;
+                }
+            };
+            return askOrderTable.getManyBy(dbClause, from, to);
         }
 
         public static DbIterator<Ask> getSortedOrders(long assetId, int from, int to) {
-            Connection con = null;
-            try {
-                con = Db.getConnection();
-                PreparedStatement pstmt = con.prepareStatement("SELECT * FROM ask_order WHERE asset_id = ? "
-                        + "AND latest = TRUE ORDER BY price ASC, creation_height ASC, id ASC"
-                        + DbUtils.limitsClause(from, to));
-                pstmt.setLong(1, assetId);
-                DbUtils.setLimits(2, pstmt, from, to);
-                return askOrderTable.getManyBy(con, pstmt, true);
-            } catch (SQLException e) {
-                DbUtils.close(con);
-                throw new RuntimeException(e.toString(), e);
-            }
+            return askOrderTable.getManyBy(new DbClause.LongClause("asset_id", assetId), from, to,
+                    " ORDER BY price ASC, creation_height ASC, id ASC ");
         }
 
         private static Ask getNextOrder(long assetId) {
@@ -332,44 +316,28 @@ public abstract class Order {
         }
 
         public static DbIterator<Bid> getBidOrdersByAccount(long accountId, int from, int to) {
-            return bidOrderTable.getManyBy("account_id", accountId, from, to);
+            return bidOrderTable.getManyBy(new DbClause.LongClause("account_id", accountId), from, to);
         }
 
         public static DbIterator<Bid> getBidOrdersByAsset(long assetId, int from, int to) {
-            return bidOrderTable.getManyBy("asset_id", assetId, from, to);
+            return bidOrderTable.getManyBy(new DbClause.LongClause("asset_id", assetId), from, to);
         }
 
-        public static DbIterator<Bid> getBidOrdersByAccountAsset(long accountId, long assetId, int from, int to) {
-            Connection con = null;
-            try {
-                con = Db.getConnection();
-                PreparedStatement pstmt = con.prepareStatement("SELECT * FROM bid_order WHERE account_id = ? "
-                        + "AND asset_id = ? AND latest = TRUE ORDER BY height DESC"
-                        + DbUtils.limitsClause(from, to));
-                pstmt.setLong(1, accountId);
-                pstmt.setLong(2, assetId);
-                DbUtils.setLimits(3, pstmt, from, to);
-                return bidOrderTable.getManyBy(con, pstmt, true);
-            } catch (SQLException e) {
-                DbUtils.close(con);
-                throw new RuntimeException(e.toString(), e);
-            }
+        public static DbIterator<Bid> getBidOrdersByAccountAsset(final long accountId, final long assetId, int from, int to) {
+            DbClause dbClause = new DbClause(" account_id = ? AND asset_id = ? ") {
+                @Override
+                public int set(PreparedStatement pstmt, int index) throws SQLException {
+                    pstmt.setLong(index++, accountId);
+                    pstmt.setLong(index++, assetId);
+                    return index;
+                }
+            };
+            return bidOrderTable.getManyBy(dbClause, from, to);
         }
 
         public static DbIterator<Bid> getSortedOrders(long assetId, int from, int to) {
-            Connection con = null;
-            try {
-                con = Db.getConnection();
-                PreparedStatement pstmt = con.prepareStatement("SELECT * FROM bid_order WHERE asset_id = ? "
-                        + "AND latest = TRUE ORDER BY price DESC, creation_height ASC, id ASC"
-                        + DbUtils.limitsClause(from, to));
-                pstmt.setLong(1, assetId);
-                DbUtils.setLimits(2, pstmt, from, to);
-                return bidOrderTable.getManyBy(con, pstmt, true);
-            } catch (SQLException e) {
-                DbUtils.close(con);
-                throw new RuntimeException(e.toString(), e);
-            }
+            return bidOrderTable.getManyBy(new DbClause.LongClause("asset_id", assetId), from, to,
+                    " ORDER BY price DESC, creation_height ASC, id ASC ");
         }
 
         private static Bid getNextOrder(long assetId) {

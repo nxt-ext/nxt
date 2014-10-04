@@ -2,6 +2,7 @@ package nxt.http;
 
 import nxt.Nxt;
 import nxt.NxtException;
+import nxt.db.Db;
 import nxt.util.JSON;
 import nxt.util.Logger;
 import org.json.simple.JSONStreamAware;
@@ -50,6 +51,10 @@ public final class APIServlet extends HttpServlet {
             return false;
         }
 
+        boolean startDbTransaction() {
+            return false;
+        }
+
     }
 
     private static final boolean enforcePost = Nxt.getBooleanProperty("nxt.apiServerEnforcePOST");
@@ -91,6 +96,7 @@ public final class APIServlet extends HttpServlet {
         map.put("getAccountPublicKey", GetAccountPublicKey.instance);
         map.put("getAccountTransactionIds", GetAccountTransactionIds.instance);
         map.put("getAccountTransactions", GetAccountTransactions.instance);
+        map.put("getAccountLessors", GetAccountLessors.instance);
         map.put("sellAlias", SellAlias.instance);
         map.put("buyAlias", BuyAlias.instance);
         map.put("getAlias", GetAlias.instance);
@@ -130,7 +136,7 @@ public final class APIServlet extends HttpServlet {
         map.put("getExchanges", GetExchanges.instance);
         map.put("getAllTrades", GetAllTrades.instance);
         map.put("getAllExchanges", GetAllExchanges.instance);
-        map.put("getTransfers", GetTransfers.instance);
+        map.put("getAssetTransfers", GetAssetTransfers.instance);
         map.put("getCurrencyTransfers", GetCurrencyTransfers.instance);
         map.put("getTransaction", GetTransaction.instance);
         map.put("getTransactionBytes", GetTransactionBytes.instance);
@@ -224,6 +230,9 @@ public final class APIServlet extends HttpServlet {
             }
 
             try {
+                if (apiRequestHandler.startDbTransaction()) {
+                    Db.beginTransaction();
+                }
                 response = apiRequestHandler.processRequest(req);
             } catch (ParameterException e) {
                 response = e.getErrorResponse();
@@ -233,6 +242,10 @@ public final class APIServlet extends HttpServlet {
             } catch (ExceptionInInitializerError err) {
                 Logger.logErrorMessage("Initialization Error", (Exception) err.getCause());
                 response = ERROR_INCORRECT_REQUEST;
+            } finally {
+                if (apiRequestHandler.startDbTransaction()) {
+                    Db.endTransaction();
+                }
             }
 
         } finally {

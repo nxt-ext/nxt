@@ -33,6 +33,12 @@ can be disabled by setting nxt.trimDerivedTables=false (default is true) in
 nxt.properties. After changing this property, a rebuild of the derived tables
 can be triggered using the new scan API request, see below.
 
+The default number of rollback records kept can be increased while still keeping
+trimming enabled, by setting nxt.maxRollback to a higher value (default and
+lowest possible is 1440). This should provide a compromise for those who want to
+keep history of more than the default 1440 blocks, yet want to avoid the
+performance penalty of never trimming the derived objects tables.
+
 To allow for the increased use of database, default max number of database 
 connection has been increased to nxt.maxDbConnections=30, and lock timeout
 increased to nxt.dbDefaultLockTimeout=60 in nxt-default.properties.
@@ -95,10 +101,20 @@ getAllOpenAskOrders and getAllOpenBidOrders now replace getAllOpenOrders, but
 only returning ask or bid orders respectively, and allow firstIndex/lastIndex
 pagination.
 
+getAssetTransfers - retrieves the asset transfers for an asset, account, or both.
+
 getAssetAccounts - accepts an asset parameter and returns all accounts holding
 this asset as of the current height, and the asset quantity each one owns.
+Takes an optional height parameter to allow retrieving asset holders as of a
+previous blockchain height.
 
-getTransfers - retrieves the asset transfers for an asset, account, or both.
+getAccountLessors - retrieves the accounts that have leased their balance to the
+specified account, takes an optional height parameter to allow querying previous
+blockchain heights.
+
+The historical height query feature in getAssetAccounts and getAccountLessors
+depends on the specified height records still being available, i.e. either table
+trimming disabled, or maxRollback set high enough to cover that height.
 
 longConvert - an utility API to convert between signed long ids as used in the
 database and unsigned long ids represented as strings. Accepts an id in either

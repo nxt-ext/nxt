@@ -1,6 +1,23 @@
 package nxt.http;
 
-import nxt.*;
+import nxt.Account;
+import nxt.Alias;
+import nxt.Appendix;
+import nxt.Asset;
+import nxt.AssetTransfer;
+import nxt.Block;
+import nxt.Currency;
+import nxt.CurrencyFounder;
+import nxt.CurrencyOffer;
+import nxt.CurrencyTransfer;
+import nxt.DigitalGoodsStore;
+import nxt.Exchange;
+import nxt.Nxt;
+import nxt.Order;
+import nxt.Poll;
+import nxt.Token;
+import nxt.Trade;
+import nxt.Transaction;
 import nxt.crypto.Crypto;
 import nxt.crypto.EncryptedData;
 import nxt.peer.Hallmark;
@@ -57,7 +74,7 @@ final class JSONData {
         json.put("quantityQNT", String.valueOf(asset.getQuantityQNT()));
         json.put("asset", Convert.toUnsignedLong(asset.getId()));
         json.put("numberOfTrades", Trade.getTradeCount(asset.getId()));
-        json.put("numberOfTransfers", Transfer.getTransferCount(asset.getId()));
+        json.put("numberOfTransfers", AssetTransfer.getTransferCount(asset.getId()));
         return json;
     }
 
@@ -96,6 +113,7 @@ final class JSONData {
         json.put("asset", Convert.toUnsignedLong(accountAsset.getAssetId()));
         json.put("quantityQNT", String.valueOf(accountAsset.getQuantityQNT()));
         json.put("unconfirmedQuantityQNT", String.valueOf(accountAsset.getUnconfirmedQuantityQNT()));
+        json.put("height", accountAsset.getHeight());
         return json;
     }
 
@@ -307,17 +325,23 @@ final class JSONData {
         putAccount(json, "buyer", trade.getBuyerId());
         json.put("block", Convert.toUnsignedLong(trade.getBlockId()));
         json.put("height", trade.getHeight());
+        Asset asset = Asset.getAsset(trade.getAssetId());
+        json.put("name", asset.getName());
+        json.put("decimals", asset.getDecimals());
         return json;
     }
 
-    static JSONObject transfer(Transfer transfer) {
+    static JSONObject assetTransfer(AssetTransfer assetTransfer) {
         JSONObject json = new JSONObject();
-        json.put("transfer", Convert.toUnsignedLong(transfer.getId()));
-        json.put("asset", Convert.toUnsignedLong(transfer.getAssetId()));
-        putAccount(json, "sender", transfer.getSenderId());
-        putAccount(json, "recipient", transfer.getRecipientId());
-        json.put("quantityQNT", String.valueOf(transfer.getQuantityQNT()));
-        json.put("height", transfer.getHeight());
+        json.put("assetTransfer", Convert.toUnsignedLong(assetTransfer.getId()));
+        json.put("asset", Convert.toUnsignedLong(assetTransfer.getAssetId()));
+        putAccount(json, "sender", assetTransfer.getSenderId());
+        putAccount(json, "recipient", assetTransfer.getRecipientId());
+        json.put("quantityQNT", String.valueOf(assetTransfer.getQuantityQNT()));
+        json.put("height", assetTransfer.getHeight());
+        Asset asset = Asset.getAsset(assetTransfer.getAssetId());
+        json.put("name", asset.getName());
+        json.put("decimals", asset.getDecimals());
         return json;
     }
 

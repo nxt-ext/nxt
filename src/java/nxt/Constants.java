@@ -13,7 +13,12 @@ public final class Constants {
     public static final long MAX_BALANCE_NQT = MAX_BALANCE_NXT * ONE_NXT;
     public static final long INITIAL_BASE_TARGET = 153722867;
     public static final long MAX_BASE_TARGET = MAX_BALANCE_NXT * INITIAL_BASE_TARGET;
-    public static final int MAX_ROLLBACK = 1440;
+    public static final int MAX_ROLLBACK = Nxt.getIntProperty("nxt.maxRollback");
+    static {
+        if (MAX_ROLLBACK < 1440) {
+            throw new RuntimeException("nxt.maxRollback must be at least 1440");
+        }
+    }
 
     public static final int MAX_ALIAS_URI_LENGTH = 1000;
     public static final int MAX_ALIAS_LENGTH = 100;

@@ -1,5 +1,6 @@
 package nxt;
 
+import nxt.db.DbIterator;
 import nxt.util.Logger;
 import org.junit.AfterClass;
 import org.junit.Assert;
@@ -10,13 +11,20 @@ import org.junit.Test;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 
 public class BlockchainProcessorTest extends AbstractBlockchainTest {
 
     private static final String defaultTraceFile = "nxt-trace-default.csv";
     private static final String testTraceFile = "nxt-trace.csv";
     private static final int maxHeight = Constants.LAST_KNOWN_BLOCK;
+
+    private static final long[] testLesseeAccounts = new long[]{1460178482, -318308835203526404L, 3312398282095696184L, 6373452498729869295L,
+            1088641461782019913L, -7984504957518839920L, 814976497827634325L};
+    private static final long[] testAssets = new long[]{6775372232354238105L, 3061160746493230502L, -5981557335608550881L, 4551058913252105307L,
+            -318057271556719590L, -2234297255166670436L};
 
     private static DebugTrace debugTrace;
 
@@ -96,8 +104,70 @@ public class BlockchainProcessorTest extends AbstractBlockchainTest {
 
     private static void redownload(final int numBlocks) {
         int endHeight = blockchain.getHeight();
+        List<List<Long>> allLessorsBefore = new ArrayList<>();
+        for (long accountId : testLesseeAccounts) {
+            List<Long> lessors = new ArrayList<>();
+            allLessorsBefore.add(lessors);
+            Account account = Account.getAccount(accountId);
+            if (account == null) {
+                continue;
+            }
+            try (DbIterator<Account> iter = account.getLessors(endHeight - numBlocks)) {
+                for (Account lessor : iter) {
+                    lessors.add(lessor.getId());
+                }
+            }
+        }
+        List<List<Account.AccountAsset>> allAccountAssetsBefore = new ArrayList<>();
+        for (long assetId : testAssets) {
+            List<Account.AccountAsset> accountAssets = new ArrayList<>();
+            allAccountAssetsBefore.add(accountAssets);
+            Asset asset = Asset.getAsset(assetId);
+            if (asset == null) {
+                continue;
+            }
+            try (DbIterator<Account.AccountAsset> iter = asset.getAccounts(endHeight - numBlocks, 0, -1)) {
+                for (Account.AccountAsset accountAsset : iter) {
+                    accountAssets.add(accountAsset);
+                }
+            }
+        }
         blockchainProcessor.popOffTo(endHeight - numBlocks);
         Assert.assertEquals(endHeight - numBlocks, blockchain.getHeight());
+        List<List<Long>> allLessorsAfter = new ArrayList<>();
+        for (long accountId : testLesseeAccounts) {
+            List<Long> lessors = new ArrayList<>();
+            allLessorsAfter.add(lessors);
+            Account account = Account.getAccount(accountId);
+            if (account == null) {
+                continue;
+            }
+            try (DbIterator<Account> iter = account.getLessors()) {
+                for (Account lessor : iter) {
+                    lessors.add(lessor.getId());
+                }
+            }
+        }
+        Assert.assertEquals(allLessorsBefore, allLessorsAfter);
+        //Logger.logDebugMessage("Before: " + allLessorsBefore);
+        //Logger.logDebugMessage("After: " + allLessorsAfter);
+        List<List<Account.AccountAsset>> allAccountAssetsAfter = new ArrayList<>();
+        for (long assetId : testAssets) {
+            List<Account.AccountAsset> accountAssets = new ArrayList<>();
+            allAccountAssetsAfter.add(accountAssets);
+            Asset asset = Asset.getAsset(assetId);
+            if (asset == null) {
+                continue;
+            }
+            try (DbIterator<Account.AccountAsset> iter = asset.getAccounts(0, -1)) {
+                for (Account.AccountAsset accountAsset : iter) {
+                    accountAssets.add(accountAsset);
+                }
+            }
+        }
+        Assert.assertEquals(allAccountAssetsBefore, allAccountAssetsAfter);
+        //Logger.logDebugMessage("Assets Before: " + allAccountAssetsBefore);
+        //Logger.logDebugMessage("Assets After: " + allAccountAssetsAfter);
         downloadTo(endHeight);
         Logger.logMessage("Successfully redownloaded blockchain from " + (endHeight - numBlocks) + " to " + endHeight);
         compareTraceFiles();

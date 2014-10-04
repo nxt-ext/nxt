@@ -173,4 +173,5 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
     final boolean requirePost() {
         return true;
     }
+
 }
