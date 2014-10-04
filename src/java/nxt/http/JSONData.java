@@ -277,9 +277,9 @@ final class JSONData {
         return json;
     }
 
-    static JSONObject transfer(AssetTransfer assetTransfer) {
+    static JSONObject assetTransfer(AssetTransfer assetTransfer) {
         JSONObject json = new JSONObject();
-        json.put("transfer", Convert.toUnsignedLong(assetTransfer.getId()));
+        json.put("assetTransfer", Convert.toUnsignedLong(assetTransfer.getId()));
         json.put("asset", Convert.toUnsignedLong(assetTransfer.getAssetId()));
         putAccount(json, "sender", assetTransfer.getSenderId());
         putAccount(json, "recipient", assetTransfer.getRecipientId());

@@ -46,7 +46,7 @@ public final class GetAssetTransfers extends APIServlet.APIRequestHandler {
                 transfers = AssetTransfer.getAccountAssetTransfers(account.getId(), asset.getId(), firstIndex, lastIndex);
             }
             while (transfers.hasNext()) {
-                transfersData.add(JSONData.transfer(transfers.next()));
+                transfersData.add(JSONData.assetTransfer(transfers.next()));
             }
         } finally {
             DbUtils.close(transfers);

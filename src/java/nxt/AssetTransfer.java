@@ -118,7 +118,7 @@ public final class AssetTransfer {
         }
     }
 
-    static AssetTransfer addTransfer(Transaction transaction, Attachment.ColoredCoinsAssetTransfer attachment) {
+    static AssetTransfer addAssetTransfer(Transaction transaction, Attachment.ColoredCoinsAssetTransfer attachment) {
         AssetTransfer assetTransfer = new AssetTransfer(transaction, attachment);
         transferTable.insert(assetTransfer);
         listeners.notify(assetTransfer, Event.ASSET_TRANSFER);
