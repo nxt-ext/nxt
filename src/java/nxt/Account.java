@@ -516,11 +516,10 @@ public final class Account {
         return lessorsGuaranteedBalanceNQT;
     }
 
-    private DbClause getLessorsClause() {
+    private DbClause getLessorsClause(final int height) {
         return new DbClause(" current_lessee_id = ? AND current_leasing_height_from <= ? AND current_leasing_height_to > ? ") {
             @Override
             public int set(PreparedStatement pstmt, int index) throws SQLException {
-                int height = Nxt.getBlockchain().getHeight();
                 pstmt.setLong(index++, getId());
                 pstmt.setInt(index++, height);
                 pstmt.setInt(index++, height);
@@ -530,14 +529,14 @@ public final class Account {
     }
 
     public DbIterator<Account> getLessors() {
-        return accountTable.getManyBy(getLessorsClause(), 0, -1);
+        return accountTable.getManyBy(getLessorsClause(Nxt.getBlockchain().getHeight()), 0, -1);
     }
 
     public DbIterator<Account> getLessors(int height) {
         if (height < 0) {
             return getLessors();
         }
-        return accountTable.getManyBy(getLessorsClause(), height, 0, -1);
+        return accountTable.getManyBy(getLessorsClause(height), height, 0, -1);
     }
 
     public long getGuaranteedBalanceNQT(final int numberOfConfirmations) {

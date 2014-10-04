@@ -85,14 +85,14 @@ public abstract class EntityDbTable<T> extends DerivedDbTable {
     public final T getBy(DbClause dbClause, int height) {
         checkAvailable(height);
         try (Connection con = Db.getConnection();
-             PreparedStatement pstmt = con.prepareStatement("SELECT * FROM " + table + " WHERE " + dbClause.getClause()
+             PreparedStatement pstmt = con.prepareStatement("SELECT * FROM " + table + " AS a WHERE " + dbClause.getClause()
                      + " AND height <= ?" + (multiversion ? " AND (latest = TRUE OR EXISTS ("
-                     + "SELECT 1 FROM " + table + " WHERE " + dbClause.getClause() + " AND height > ?)) ORDER BY height DESC LIMIT 1" : ""))) {
+                     + "SELECT 1 FROM " + table + " AS b WHERE " + dbKeyFactory.getSelfJoinClause()
+                     + " AND b.height > ?)) ORDER BY height DESC LIMIT 1" : ""))) {
             int i = 0;
-            dbClause.set(pstmt, ++i);
-            pstmt.setInt(++i, height);
+            i = dbClause.set(pstmt, ++i);
+            pstmt.setInt(i, height);
             if (multiversion) {
-                dbClause.set(pstmt, ++i);
                 pstmt.setInt(++i, height);
             }
             return get(con, pstmt, false);
@@ -158,20 +158,17 @@ public abstract class EntityDbTable<T> extends DerivedDbTable {
             con = Db.getConnection();
             PreparedStatement pstmt = con.prepareStatement("SELECT * FROM " + table + " AS a WHERE " + dbClause.getClause()
                     + "AND a.height <= ?" + (multiversion ? " AND (a.latest = TRUE OR (a.latest = FALSE "
-                    + "AND EXISTS (SELECT 1 FROM " + table + " AS b WHERE " + dbKeyFactory.getSelfJoinClause() + " AND "
-                    + dbClause.getClause() + " AND b.height > ?) "
-                    + "AND NOT EXISTS (SELECT 1 FROM " + table + " AS b WHERE " + dbKeyFactory.getSelfJoinClause() + " AND "
-                    + dbClause.getClause() + " AND b.height <= ? AND b.height > a.height))) "
+                    + "AND EXISTS (SELECT 1 FROM " + table + " AS b WHERE " + dbKeyFactory.getSelfJoinClause() + " AND b.height > ?) "
+                    + "AND NOT EXISTS (SELECT 1 FROM " + table + " AS b WHERE " + dbKeyFactory.getSelfJoinClause()
+                    + " AND b.height <= ? AND b.height > a.height))) "
                     : " ") + sort
                     + DbUtils.limitsClause(from, to));
             int i = 0;
             i = dbClause.set(pstmt, ++i);
             pstmt.setInt(i, height);
             if (multiversion) {
-                i = dbClause.set(pstmt, ++i);
-                pstmt.setInt(i, height);
-                i = dbClause.set(pstmt, ++i);
-                pstmt.setInt(i, height);
+                pstmt.setInt(++i, height);
+                pstmt.setInt(++i, height);
             }
             i = DbUtils.setLimits(++i, pstmt, from, to);
             return getManyBy(con, pstmt, false);
