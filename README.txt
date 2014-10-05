@@ -12,6 +12,9 @@ successfully". Open a browser, without stopping the java process, and go to
 http://localhost:7876 , where the Nxt UI should now be available. To stop the
 application, type Ctrl-C inside the console window.
 
+Warning: It is better to use only latin characters and no spaces in the path
+to the Nxt installation directory, as the use of special characters may result
+in permissions denied error in the browser, which is a known jetty issue.
 
 Customization:
 
@@ -87,6 +90,8 @@ Compiling:
 
 The source is included in the src subdirectory. To compile it on linux, just
 run the enclosed compile.sh script. This will compile all java classes and
-package them in an nxt.jar file, replacing the existing one.
-
+put them under the classes subdirectory, which is already in the classpath
+used by the run.sh startup script. The compiled class files can optionally be
+packaged in a nxt.jar file using the enclosed jar.sh script, and then nxt.jar
+should be included in the classpath instead of the classes subdirectory.
 

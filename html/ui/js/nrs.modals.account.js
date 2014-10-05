@@ -7,7 +7,7 @@ var NRS = (function(NRS, $, undefined) {
 		"user": 0
 	};
 
-	$("#blocks_table, #polls_table, #contacts_table, #transactions_table, #dashboard_transactions_table, #asset_account, #asset_exchange_ask_orders_table, #asset_exchange_bid_orders_table, #alias_info_table, .dgs_page_contents, .modal-content, #register_alias_modal").on("click", "a[data-user]", function(e) {
+	$("#blocks_table, #polls_table, #contacts_table, #transactions_table, #dashboard_transactions_table, #asset_account, #asset_exchange_ask_orders_table, #asset_exchange_bid_orders_table, #alias_info_table, .dgs_page_contents, .modal-content, #register_alias_modal, #asset_exchange_trade_history_table, #trade_history_table").on("click", "a[data-user]", function(e) {
 		e.preventDefault();
 
 		var account = $(this).data("user");
@@ -29,13 +29,15 @@ var NRS = (function(NRS, $, undefined) {
 
 		$("#user_info_modal_account").html(NRS.getAccountFormatted(NRS.userInfoModal.user));
 
-		$("#user_info_modal_actions button").data("account", NRS.userInfoModal.user);
-
 		if (NRS.userInfoModal.user in NRS.contacts) {
+			var accountButton = NRS.contacts[NRS.userInfoModal.user].name.escapeHTML();
 			$("#user_info_modal_add_as_contact").hide();
 		} else {
+			var accountButton = NRS.userInfoModal.user;
 			$("#user_info_modal_add_as_contact").show();
 		}
+
+		$("#user_info_modal_actions button").data("account", accountButton);
 
 		if (NRS.fetchingModalData) {
 			NRS.sendRequest("getAccount", {

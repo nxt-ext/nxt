@@ -3,7 +3,6 @@ package nxt.http;
 import nxt.Account;
 import nxt.Appendix;
 import nxt.Attachment;
-import nxt.Constants;
 import nxt.Nxt;
 import nxt.NxtException;
 import nxt.Transaction;
@@ -19,7 +18,6 @@ import java.util.Arrays;
 import static nxt.http.JSONResponses.FEATURE_NOT_AVAILABLE;
 import static nxt.http.JSONResponses.INCORRECT_ARBITRARY_MESSAGE;
 import static nxt.http.JSONResponses.INCORRECT_DEADLINE;
-import static nxt.http.JSONResponses.INCORRECT_FEE;
 import static nxt.http.JSONResponses.INCORRECT_REFERENCED_TRANSACTION;
 import static nxt.http.JSONResponses.MISSING_DEADLINE;
 import static nxt.http.JSONResponses.MISSING_SECRET_PHRASE;
@@ -46,15 +44,15 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
 
     final JSONStreamAware createTransaction(HttpServletRequest req, Account senderAccount, Attachment attachment)
         throws NxtException {
-        return createTransaction(req, senderAccount, null, 0, attachment);
+        return createTransaction(req, senderAccount, 0, 0, attachment);
     }
 
-    final JSONStreamAware createTransaction(HttpServletRequest req, Account senderAccount, Long recipientId, long amountNQT)
+    final JSONStreamAware createTransaction(HttpServletRequest req, Account senderAccount, long recipientId, long amountNQT)
             throws NxtException {
         return createTransaction(req, senderAccount, recipientId, amountNQT, Attachment.ORDINARY_PAYMENT);
     }
 
-    final JSONStreamAware createTransaction(HttpServletRequest req, Account senderAccount, Long recipientId,
+    final JSONStreamAware createTransaction(HttpServletRequest req, Account senderAccount, long recipientId,
                                             long amountNQT, Attachment attachment)
             throws NxtException {
         String deadlineValue = req.getParameter("deadline");
@@ -175,4 +173,5 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
     final boolean requirePost() {
         return true;
     }
+
 }
