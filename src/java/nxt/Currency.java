@@ -280,6 +280,17 @@ public final class Currency {
         currencyTable.insert(this);
     }
 
+    public DbIterator<Account.AccountCurrency> getAccounts(int from, int to) {
+        return Account.getCurrencyAccounts(this.currencyId, from, to);
+    }
+
+    public DbIterator<Account.AccountCurrency> getAccounts(int height, int from, int to) {
+        if (height < 0) {
+            return getAccounts(from, to);
+        }
+        return Account.getCurrencyAccounts(this.currencyId, height, from, to);
+    }
+
     public DbIterator<Exchange> getExchanges(int from, int to) {
         return Exchange.getCurrencyExchanges(this.currencyId, from, to);
     }

@@ -117,6 +117,16 @@ final class JSONData {
         return json;
     }
 
+    static JSONObject accountCurrency(Account.AccountCurrency accountCurrency) {
+        JSONObject json = new JSONObject();
+        putAccount(json, "account", accountCurrency.getAccountId());
+        json.put("currency", Convert.toUnsignedLong(accountCurrency.getCurrencyId()));
+        json.put("units", String.valueOf(accountCurrency.getUnits()));
+        json.put("unconfirmedUnits", String.valueOf(accountCurrency.getUnconfirmedUnits()));
+        json.put("height", accountCurrency.getHeight());
+        return json;
+    }
+
     static JSONObject askOrder(Order.Ask order) {
         JSONObject json = order(order);
         json.put("type", "ask");

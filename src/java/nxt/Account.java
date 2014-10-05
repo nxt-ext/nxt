@@ -129,6 +129,7 @@ public final class Account {
         private final DbKey dbKey;
         private long units;
         private long unconfirmedUnits;
+        private int height;
 
         private AccountCurrency(long accountId, long currencyId, long quantityQNT, long unconfirmedQuantityQNT) {
             this.accountId = accountId;
@@ -136,6 +137,7 @@ public final class Account {
             this.dbKey = accountCurrencyDbKeyFactory.newKey(this.accountId, this.currencyId);
             this.units = quantityQNT;
             this.unconfirmedUnits = unconfirmedQuantityQNT;
+            // TODO update height ?
         }
 
         private AccountCurrency(ResultSet rs) throws SQLException {
@@ -144,6 +146,7 @@ public final class Account {
             this.dbKey = accountAssetDbKeyFactory.newKey(this.accountId, this.currencyId);
             this.units = rs.getLong("units");
             this.unconfirmedUnits = rs.getLong("unconfirmed_units");
+            this.height = rs.getInt("height");
         }
 
         private void save(Connection con) throws SQLException {
@@ -176,6 +179,10 @@ public final class Account {
             return unconfirmedUnits;
         }
 
+        public int getHeight() {
+            return height;
+        }
+
         private void save() {
             if (this.units > 0 || this.unconfirmedUnits > 0) {
                 accountCurrencyTable.insert(this);
@@ -190,7 +197,7 @@ public final class Account {
         @Override
         public String toString() {
             return "AccountCurrency account_id: " + Convert.toUnsignedLong(accountId) + " currency_id: " + Convert.toUnsignedLong(currencyId)
-                    + " quantity: " + units + " unconfirmedQuantity: " + unconfirmedUnits;
+                    + " quantity: " + units + " unconfirmedQuantity: " + unconfirmedUnits + " height: " + height;
         }
     }
 
@@ -445,6 +452,17 @@ public final class Account {
             return getAssetAccounts(assetId, from, to);
         }
         return accountAssetTable.getManyBy(new DbClause.LongClause("asset_id", assetId), height, from, to);
+    }
+
+    public static DbIterator<AccountCurrency> getCurrencyAccounts(long currencyId, int from, int to) {
+        return accountCurrencyTable.getManyBy(new DbClause.LongClause("currency_id", currencyId), from, to);
+    }
+
+    public static DbIterator<AccountCurrency> getCurrencyAccounts(long currencyId, int height, int from, int to) {
+        if (height < 0) {
+            return getCurrencyAccounts(currencyId, from, to);
+        }
+        return accountCurrencyTable.getManyBy(new DbClause.LongClause("currency_id", currencyId), height, from, to);
     }
 
     static void init() {}
@@ -702,6 +720,11 @@ public final class Account {
         return accountAsset == null ? 0 : accountAsset.unconfirmedQuantityQNT;
     }
 
+    public long getCurrencyUnits(long currencyId) {
+        AccountCurrency accountCurrency = accountCurrencyTable.get(accountCurrencyDbKeyFactory.newKey(this.id, currencyId));
+        return accountCurrency == null ? 0 : accountCurrency.units;
+    }
+
     public long getUnconfirmedCurrencyUnits(long currencyId) {
         AccountCurrency accountCurrency = accountCurrencyTable.get(accountCurrencyDbKeyFactory.newKey(this.id, currencyId));
         return accountCurrency == null ? 0 : accountCurrency.unconfirmedUnits;
@@ -804,11 +827,6 @@ public final class Account {
             this.keyHeight = height;
             accountTable.insert(this);
         }
-    }
-
-    public long getCurrencyUnits(long currencyId) {
-        AccountCurrency accountCurrency = accountCurrencyTable.get(accountCurrencyDbKeyFactory.newKey(this.id, currencyId));
-        return accountCurrency == null ? 0 : accountCurrency.units;
     }
 
     void addToAssetBalanceQNT(long assetId, long quantityQNT) {

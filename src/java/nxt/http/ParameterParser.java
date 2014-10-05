@@ -167,7 +167,7 @@ final class ParameterParser {
         return asset;
     }
 
-        static Currency getCurrency(HttpServletRequest req) throws ParameterException {
+    static Currency getCurrency(HttpServletRequest req) throws ParameterException {
         String currencyValue = Convert.emptyToNull(req.getParameter("currency"));
         if (currencyValue == null) {
             throw new ParameterException(MISSING_CURRENCY);
