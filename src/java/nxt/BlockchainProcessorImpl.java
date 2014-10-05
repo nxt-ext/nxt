@@ -733,7 +733,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 throw new IllegalArgumentException("Rollback to height " + commonBlock.getHeight() + " not suppported, "
                         + "current height " + Nxt.getBlockchain().getHeight());
             }
-            if (blockchain.getBlock(commonBlock.getId()) == null) {
+            if (! blockchain.hasBlock(commonBlock.getId())) {
                 Logger.logDebugMessage("Block " + commonBlock.getStringId() + " not found in blockchain, nothing to pop off");
                 return Collections.emptyList();
             }
@@ -741,11 +741,11 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             try {
                 Db.beginTransaction();
                 BlockImpl block = blockchain.getLastBlock();
+                Logger.logDebugMessage("Rollback from " + block.getHeight() + " to " + commonBlock.getHeight());
                 while (block.getId() != commonBlock.getId() && block.getId() != Genesis.GENESIS_BLOCK_ID) {
                     poppedOffBlocks.add(block);
                     block = popLastBlock();
                 }
-                Logger.logDebugMessage("Rollback to " + commonBlock.getHeight());
                 for (DerivedDbTable table : derivedTables) {
                     table.rollback(commonBlock.getHeight());
                 }
@@ -763,7 +763,6 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
 
     private BlockImpl popLastBlock() {
         BlockImpl block = blockchain.getLastBlock();
-        Logger.logDebugMessage("Will pop block " + block.getStringId() + " at height " + block.getHeight());
         if (block.getId() == Genesis.GENESIS_BLOCK_ID) {
             throw new RuntimeException("Cannot pop off genesis block");
         }
