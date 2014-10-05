@@ -37,14 +37,14 @@ import static nxt.http.JSONResponses.*;
  * <p/>
  * Constraints
  * <ul>
- * <li>Currency must be either {@link nxt.CurrencyType#EXCHANGEABLE} or {@link nxt.CurrencyType#INFLATABLE} but not both.<br>
- * Therefore you can either {@link PublishExchangeOffer} and {@link CurrencyBuy} / {@link CurrencySell} or<br>
- * {@link CurrencyReserveIncrease} and {@link CurrencyReserveClaim} but not both
+ * <li>A given currency must be either {@link nxt.CurrencyType#EXCHANGEABLE} or {@link nxt.CurrencyType#CLAIMABLE} but not both.<br>
+ * Therefore you can either use the {@link PublishExchangeOffer} and {@link CurrencyBuy} / {@link CurrencySell} APIs or<br>
+ * the {@link CurrencyReserveClaim} API but not both
  * <li>Currency becomes active once the blockchain height reaches the currency issuance height.<br>
  * At this time, in case the currency is {@link nxt.CurrencyType#RESERVABLE} and the minReservePerUnitNQT has not been reached the currency issuance is cancelled and
  * funds are returned to the founders.<br>
  * Otherwise the currency becomes active and remain active forever
- * <li>When issuing a {@link nxt.CurrencyType#MINTABLE} currency, the number of units per mint cannot exceed 0.01% of the
+ * <li>When issuing a {@link nxt.CurrencyType#MINTABLE} currency, the number of units per {@link nxt.http.CurrencyMint} cannot exceed 0.01% of the
  * total supply. Therefore make sure totalSupply > 10000 or otherwise the currency cannot be minted
  * <li>difficulty is calculated as follows<br>
  * difficulty of minting the first unit is based on 2^minDifficulty<br>
