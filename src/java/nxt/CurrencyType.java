@@ -19,8 +19,8 @@ public enum CurrencyType {
         @Override
         public void validate(Attachment attachment, Set<CurrencyType> validators) throws NxtException.NotValidException {
             if (attachment instanceof Attachment.MonetarySystemCurrencyIssuance) {
-                if (validators.contains(INFLATABLE)) {
-                    throw new NxtException.NotValidException("Exchangeable currency cannot be inflated once active");
+                if (validators.contains(CLAIMABLE)) {
+                    throw new NxtException.NotValidException("Exchangeable currency cannot be claimed");
                 }
             }
         }
@@ -28,8 +28,8 @@ public enum CurrencyType {
         @Override
         public void validateMissing(Attachment attachment, Set<CurrencyType> validators) throws NxtException.NotValidException {
             if (attachment instanceof Attachment.MonetarySystemCurrencyIssuance) {
-                if (!validators.contains(INFLATABLE)) {
-                    throw new NxtException.NotValidException("Currency is not exchangeable and not inflatable");
+                if (!validators.contains(CLAIMABLE)) {
+                    throw new NxtException.NotValidException("Currency is not exchangeable and not claimable");
                 }
             }
             if (attachment instanceof Attachment.MonetarySystemExchange ||
@@ -39,7 +39,7 @@ public enum CurrencyType {
         }
     },
     /**
-     * Can be reserved/claimed before the currency is active<br>
+     * Can be reserved before the currency is active, reserve is distributed to founders once the currency becomes active<br>
      * Bit mask 0x02
      */
     RESERVABLE((byte)0x02) {
@@ -54,28 +54,9 @@ public enum CurrencyType {
                                 issuanceHeight, Nxt.getBlockchain().getLastBlock().getHeight()));
                 }
             }
-        }
-
-        @Override
-        public void validateMissing(Attachment attachment, Set<CurrencyType> validators) throws NxtException.NotValidException {
-            if (attachment instanceof Attachment.MonetarySystemReserveIncrease ||
-                    attachment instanceof Attachment.MonetarySystemReserveClaim) {
-                throw new NxtException.NotValidException("Cannot insrease or claim reserve since currency is not reservable");
-            }
-        }
-    },
-    /**
-     * Is {@link #RESERVABLE} and can be reserved/claimed after currency is active<br>
-     * Cannot be {@link #EXCHANGEABLE}
-     * Bit mask 0x04
-     */
-    INFLATABLE((byte)0x04) {
-
-        @Override
-        public void validate(Attachment attachment, Set<CurrencyType> validators) throws NxtException.NotValidException {
-            if (attachment instanceof Attachment.MonetarySystemCurrencyIssuance) {
-                if (!validators.contains(RESERVABLE)) {
-                    throw new NxtException.NotValidException("Inflatable currency must be reservable");
+            if (attachment instanceof Attachment.MonetarySystemReserveIncrease) {
+                if (Currency.isActive(((Attachment.MonetarySystemReserveIncrease)attachment).getCurrencyId())) {
+                    throw new NxtException.NotValidException("Cannot increase reserve for active currency");
                 }
             }
         }
@@ -83,14 +64,35 @@ public enum CurrencyType {
         @Override
         public void validateMissing(Attachment attachment, Set<CurrencyType> validators) throws NxtException.NotValidException {
             if (attachment instanceof Attachment.MonetarySystemReserveIncrease) {
-                if (Currency.isActive(((Attachment.MonetarySystemReserveIncrease) attachment).getCurrencyId())) {
-                    throw new NxtException.NotValidException("Cannot increase reserve for active currency since currency is not inflatable");
+                throw new NxtException.NotValidException("Cannot increase reserve since currency is not reservable");
+            }
+        }
+    },
+    /**
+     * Is {@link #RESERVABLE} and can be claimed after currency is active<br>
+     * Cannot be {@link #EXCHANGEABLE}
+     * Bit mask 0x04
+     */
+    CLAIMABLE((byte)0x04) {
+
+        @Override
+        public void validate(Attachment attachment, Set<CurrencyType> validators) throws NxtException.NotValidException {
+            if (attachment instanceof Attachment.MonetarySystemCurrencyIssuance) {
+                if (!validators.contains(RESERVABLE)) {
+                    throw new NxtException.NotValidException("Claimable currency must be reservable");
                 }
             }
             if (attachment instanceof Attachment.MonetarySystemReserveClaim) {
-                if (Currency.isActive(((Attachment.MonetarySystemReserveClaim)attachment).getCurrencyId())) {
-                    throw new NxtException.NotValidException("Cannot claim reserve for active currency since currency is not inflatable");
+                if (!Currency.isActive(((Attachment.MonetarySystemReserveIncrease)attachment).getCurrencyId())) {
+                    throw new NxtException.NotValidException("Cannot claim reserve since currency is not yet active");
                 }
+            }
+        }
+
+        @Override
+        public void validateMissing(Attachment attachment, Set<CurrencyType> validators) throws NxtException.NotValidException {
+            if (attachment instanceof Attachment.MonetarySystemReserveClaim) {
+                throw new NxtException.NotValidException("Cannot claim reserve since currency is not claimable");
             }
         }
     },
