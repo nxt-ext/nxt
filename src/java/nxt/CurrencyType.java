@@ -5,8 +5,15 @@ import nxt.crypto.HashFunction;
 import java.util.EnumSet;
 import java.util.Set;
 
+/**
+ * Define and validate currency capabilities
+ */
 public enum CurrencyType {
 
+    /**
+     * Can be exchanged from/to NXT<br>
+     * Bit mask 0x01
+     */
     EXCHANGEABLE((byte)0x01) {
 
         @Override
@@ -31,6 +38,10 @@ public enum CurrencyType {
             }
         }
     },
+    /**
+     * Can be reserved/claimed before the currency is active<br>
+     * Bit mask 0x02
+     */
     RESERVABLE((byte)0x02) {
 
         @Override
@@ -53,6 +64,11 @@ public enum CurrencyType {
             }
         }
     },
+    /**
+     * Is {@link #RESERVABLE} and can be reserved/claimed after currency is active<br>
+     * Cannot be {@link #EXCHANGEABLE}
+     * Bit mask 0x04
+     */
     INFLATABLE((byte)0x04) {
 
         @Override
@@ -77,7 +93,12 @@ public enum CurrencyType {
                 }
             }
         }
-    }, MINTABLE((byte)0x08) {
+    },
+    /**
+     * Can be minted using proof of work algorithm<br>
+     * Bit mask 0x08
+     */
+    MINTABLE((byte)0x08) {
         @Override
         public void validate(Attachment attachment, Set<CurrencyType> validators) throws NxtException.NotValidException {
             if (attachment instanceof Attachment.MonetarySystemCurrencyIssuance) {
@@ -111,7 +132,12 @@ public enum CurrencyType {
             }
         }
 
-    }, SHUFFLEABLE((byte)0x10);
+    },
+    /**
+     * Support shuffling - not implemented yet<br>
+     * Bit mask 0x10
+     */
+    SHUFFLEABLE((byte)0x10);
 
     private final byte code;
 

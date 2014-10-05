@@ -4,15 +4,26 @@ import org.bouncycastle.jcajce.provider.digest.SHA3;
 
 public enum HashFunction {
 
+    /**
+     * Use Java implementation of SHA256 (code 2)
+     */
     SHA256((byte)2) {
         public byte[] hash(byte[] input) {
             return Crypto.sha256().digest(input);
         }
-    }, SHA3((byte)3) {
+    },
+    /**
+     * Use Bouncy Castle implementation of SHA3 (code 3)
+     */
+    SHA3((byte)3) {
         public byte[] hash(byte[] input) {
             return new SHA3.DigestSHA3(256).digest(input);
         }
-    }, Keccak25((byte)25) {
+    },
+    /**
+     * Use proprietary NXT implementation of Keccak with 25 rounds (code 25)
+     */
+    Keccak25((byte)25) {
         public byte[] hash(byte[] input) {
             return KNV25.hash(input);
         }

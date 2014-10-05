@@ -9,6 +9,15 @@ import org.json.simple.JSONStreamAware;
 import javax.servlet.http.HttpServletRequest;
 import java.math.BigInteger;
 
+/**
+ * Currency miners can use this API to obtain their target hash value for minting currency units
+ * </p>
+ * Parameters
+ * <ul>
+ * <li>currency - currency id
+ * <li>units - number of currency units the miner is trying to mint
+ * </ul>
+ */
 public final class GetMintingTarget extends APIServlet.APIRequestHandler {
 
     static final GetMintingTarget instance = new GetMintingTarget();

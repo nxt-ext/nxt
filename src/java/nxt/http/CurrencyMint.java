@@ -8,6 +8,25 @@ import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
 
+/**
+ * Generate new currency units
+ * </p>
+ * Parameters
+ * <ul>
+ * <li>currency - currency id of the minted currency</li>
+ * <li>nonce - a unique nonce provided by the miner</li>
+ * <li>units - number of units minted per this transaction</li>
+ * <li>counter - a sequential number counting the ordinal mint operation number per currency/account combination<br>
+ * this ever increasing value ensures that the same mint transaction cannot execute more than once</li>
+ * </ul>
+ *
+ * Each minting request triggers a hash calculation based on the submitted data and the currency hash algorithm<br>
+ * The resulting hash code is compared to the target value derived from the current difficulty.<br>
+ * If the hash code is smaller than the target the currency units are generated into the sender account.<br>
+ * It is recommended to calculate the hash value offline before submitting the transaction.<br>
+ * Use the {@link GetMintingTarget} transaction to retrieve the current hash target and then calculate the hash offline
+ * by following the procedure used in {@link nxt.CurrencyMint#mintCurrency}<br>
+ */
 public final class CurrencyMint extends CreateTransaction {
 
     static final CurrencyMint instance = new CurrencyMint();

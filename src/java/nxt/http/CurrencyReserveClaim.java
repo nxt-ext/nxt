@@ -8,6 +8,22 @@ import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
 
+/**
+ * Reduce the value of currency units and claim back NXT invested into this currency
+ * </p>
+ * Parameters
+ * <ul>
+ * <li>currency - currency id
+ * <li>units - the number of currency units claimed.<br>
+ * This value is multiplied by current the currency total supply and the result is added  to the sender NXT account balance.
+ * </ul>
+ * </p>
+ * Constraints
+ * <This transaction is allowed only in case the currency is {@link nxt.CurrencyType#INFLATABLE} or in case
+ * the currency is {@link nxt.CurrencyType#RESERVABLE} and is not yet active.<br>
+ * In case the currency is not active yet, only founders can claim their investment.
+ * Once the currency is active
+ */
 public final class CurrencyReserveClaim extends CreateTransaction {
 
     static final CurrencyReserveClaim instance = new CurrencyReserveClaim();
