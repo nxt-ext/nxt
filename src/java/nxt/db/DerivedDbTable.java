@@ -27,6 +27,7 @@ public abstract class DerivedDbTable {
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
         }
+        Db.getCache(table).clear();
     }
 
     public final void truncate() {
@@ -41,6 +42,7 @@ public abstract class DerivedDbTable {
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
         }
+        Db.getCache(table).clear();
     }
 
     public void trim(int height) {

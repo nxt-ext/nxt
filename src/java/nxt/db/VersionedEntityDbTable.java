@@ -89,11 +89,12 @@ public abstract class VersionedEntityDbTable<T> extends EntityDbTable<T> {
                 i = dbKey.setPK(pstmtSetLatest, i);
                 i = dbKey.setPK(pstmtSetLatest, i);
                 pstmtSetLatest.executeUpdate();
-                Db.getCache(table).remove(dbKey);
+                //Db.getCache(table).remove(dbKey);
             }
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
         }
+        Db.getCache(table).clear();
     }
 
     static void trim(final String table, final int height, final DbKey.Factory dbKeyFactory) {
