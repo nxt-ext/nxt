@@ -34,7 +34,7 @@ public final class Account {
         private final DbKey dbKey;
         private long quantityQNT;
         private long unconfirmedQuantityQNT;
-        private final int height;
+        private int height;
 
         private AccountAsset(long accountId, long assetId, long quantityQNT, long unconfirmedQuantityQNT) {
             this.accountId = accountId;
@@ -55,6 +55,7 @@ public final class Account {
         }
 
         private void save(Connection con) throws SQLException {
+            this.height = Nxt.getBlockchain().getHeight();
             try (PreparedStatement pstmt = con.prepareStatement("MERGE INTO account_asset "
                     + "(account_id, asset_id, quantity, unconfirmed_quantity, height, latest) "
                     + "KEY (account_id, asset_id, height) VALUES (?, ?, ?, ?, ?, TRUE)")) {
@@ -63,7 +64,7 @@ public final class Account {
                 pstmt.setLong(++i, this.assetId);
                 pstmt.setLong(++i, this.quantityQNT);
                 pstmt.setLong(++i, this.unconfirmedQuantityQNT);
-                pstmt.setInt(++i, height);
+                pstmt.setInt(++i, this.height);
                 pstmt.executeUpdate();
             }
         }
