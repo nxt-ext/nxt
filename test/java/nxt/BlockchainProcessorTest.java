@@ -20,6 +20,7 @@ public class BlockchainProcessorTest extends AbstractBlockchainTest {
     private static final String defaultTraceFile = "nxt-trace-default.csv";
     private static final String testTraceFile = "nxt-trace.csv";
     private static final int maxHeight = Constants.LAST_KNOWN_BLOCK;
+    private static final int startHeight = 0;
 
     private static final long[] testLesseeAccounts = new long[]{1460178482, -318308835203526404L, 3312398282095696184L, 6373452498729869295L,
             1088641461782019913L, -7984504957518839920L, 814976497827634325L};
@@ -54,8 +55,9 @@ public class BlockchainProcessorTest extends AbstractBlockchainTest {
 
     @Test
     public void multipleRescanTest() {
-        int start = 0;
+        int start = startHeight;
         int end;
+        downloadTo(start);
         while ((end = start + 2000) <= maxHeight) {
             download(start, end);
             rescan(500);
@@ -71,8 +73,9 @@ public class BlockchainProcessorTest extends AbstractBlockchainTest {
 
     @Test
     public void multiplePopOffTest() {
-        int start = 0;
+        int start = startHeight;
         int end;
+        downloadTo(start);
         while ((end = start + 2000) <= maxHeight) {
             download(start, end);
             redownload(800);

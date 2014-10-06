@@ -18,14 +18,15 @@ public abstract class AbstractBlockchainTest {
         Properties testProperties = new Properties();
         testProperties.setProperty("nxt.shareMyAddress", "false");
         testProperties.setProperty("nxt.savePeers", "false");
-        testProperties.setProperty("nxt.enableAPIServer", "false");
-        testProperties.setProperty("nxt.enableUIServer", "false");
+        //testProperties.setProperty("nxt.enableAPIServer", "false");
+        //testProperties.setProperty("nxt.enableUIServer", "false");
         testProperties.setProperty("nxt.disableGenerateBlocksThread", "true");
-        testProperties.setProperty("nxt.disableProcessTransactionsThread", "true");
-        testProperties.setProperty("nxt.disableRemoveUnconfirmedTransactionsThread", "true");
-        testProperties.setProperty("nxt.disableRebroadcastTransactionsThread", "true");
-        testProperties.setProperty("nxt.disablePeerUnBlacklistingThread", "true");
-        testProperties.setProperty("nxt.getMorePeers", "false");
+        //testProperties.setProperty("nxt.disableProcessTransactionsThread", "true");
+        //testProperties.setProperty("nxt.disableRemoveUnconfirmedTransactionsThread", "true");
+        //testProperties.setProperty("nxt.disableRebroadcastTransactionsThread", "true");
+        //testProperties.setProperty("nxt.disablePeerUnBlacklistingThread", "true");
+        //testProperties.setProperty("nxt.getMorePeers", "false");
+        testProperties.setProperty("nxt.testUnconfirmedTransactions", "true");
         testProperties.setProperty("nxt.debugTraceAccounts", "");
         testProperties.setProperty("nxt.debugLogUnconfirmed", "false");
         testProperties.setProperty("nxt.debugTraceQuote", "\"");
@@ -53,7 +54,10 @@ public abstract class AbstractBlockchainTest {
     }
 
     protected static void downloadTo(final int endHeight) {
-        Assert.assertTrue(blockchain.getHeight() <= endHeight);
+        if (blockchain.getHeight() == endHeight) {
+            return;
+        }
+        Assert.assertTrue(blockchain.getHeight() < endHeight);
         Listener<Block> stopListener = new Listener<Block>() {
             @Override
             public void notify(Block block) {
@@ -84,6 +88,9 @@ public abstract class AbstractBlockchainTest {
     }
 
     protected static void forgeTo(final int endHeight, final String secretPhrase) {
+        if (blockchain.getHeight() == endHeight) {
+            return;
+        }
         Assert.assertTrue(blockchain.getHeight() < endHeight);
         Listener<Block> stopListener = new Listener<Block>() {
             @Override

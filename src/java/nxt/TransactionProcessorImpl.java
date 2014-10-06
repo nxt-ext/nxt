@@ -31,6 +31,7 @@ import java.util.concurrent.ConcurrentHashMap;
 final class TransactionProcessorImpl implements TransactionProcessor {
 
     private static final boolean enableTransactionRebroadcasting = Nxt.getBooleanProperty("nxt.enableTransactionRebroadcasting");
+    private static final boolean testUnconfirmedTransactions = Nxt.getBooleanProperty("nxt.testUnconfirmedTransactions");
 
     private static final TransactionProcessorImpl instance = new TransactionProcessorImpl();
 
@@ -371,7 +372,10 @@ final class TransactionProcessorImpl implements TransactionProcessor {
     }
 
     private void processPeerTransactions(JSONArray transactionsData) throws NxtException.ValidationException {
-        if (Nxt.getBlockchain().getLastBlock().getTimestamp() < Nxt.getEpochTime() - 60 * 1440) {
+        if (Nxt.getBlockchain().getLastBlock().getTimestamp() < Nxt.getEpochTime() - 60 * 1440 && ! testUnconfirmedTransactions) {
+            return;
+        }
+        if (Nxt.getBlockchain().getHeight() <= Constants.NQT_BLOCK) {
             return;
         }
         List<TransactionImpl> transactions = new ArrayList<>();
