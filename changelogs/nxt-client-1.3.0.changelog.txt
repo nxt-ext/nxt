@@ -83,6 +83,9 @@ The Trade JSON now includes buyer and seller account ids, the height at which
 the trade occurred, the asset name, and the heights at which the ask and bid
 orders were accepted in the blockchain.
 
+The Asset JSON now includes total number of transfers, and number of accounts
+holding the asset.
+
 parseTransaction does not just return an error when trying to parse an invalid
 transaction bytes or JSON, but adds a validate=false field, plus the actual error 
 message, in addition to the parsed transaction JSON.
