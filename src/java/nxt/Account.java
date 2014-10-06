@@ -274,6 +274,19 @@ public final class Account {
         return accountTable.getCount();
     }
 
+    public static int getAssetAccountsCount(long assetId) {
+        try (Connection con = Db.getConnection();
+             PreparedStatement pstmt = con.prepareStatement("SELECT COUNT(*) FROM account_asset WHERE asset_id = ? AND latest = TRUE")) {
+            pstmt.setLong(1, assetId);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                rs.next();
+                return rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e.toString(), e);
+        }
+    }
+
     public static Account getAccount(long id) {
         return id == 0 ? null : accountTable.get(accountDbKeyFactory.newKey(id));
     }

@@ -70,6 +70,7 @@ final class JSONData {
         json.put("asset", Convert.toUnsignedLong(asset.getId()));
         json.put("numberOfTrades", Trade.getTradeCount(asset.getId()));
         json.put("numberOfTransfers", AssetTransfer.getTransferCount(asset.getId()));
+        json.put("numberOfAccounts", Account.getAssetAccountsCount(asset.getId()));
         return json;
     }
 
