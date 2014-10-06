@@ -139,7 +139,7 @@ public final class Account {
             this.dbKey = accountCurrencyDbKeyFactory.newKey(this.accountId, this.currencyId);
             this.units = quantityQNT;
             this.unconfirmedUnits = unconfirmedQuantityQNT;
-            // TODO update height ?
+            this.height = Nxt.getBlockchain().getHeight();
         }
 
         private AccountCurrency(ResultSet rs) throws SQLException {
@@ -160,7 +160,7 @@ public final class Account {
                 pstmt.setLong(++i, this.currencyId);
                 pstmt.setLong(++i, this.units);
                 pstmt.setLong(++i, this.unconfirmedUnits);
-                pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
+                pstmt.setInt(++i, this.height);
                 pstmt.executeUpdate();
             }
         }
@@ -200,6 +200,22 @@ public final class Account {
         public String toString() {
             return "AccountCurrency account_id: " + Convert.toUnsignedLong(accountId) + " currency_id: " + Convert.toUnsignedLong(currencyId)
                     + " quantity: " + units + " unconfirmedQuantity: " + unconfirmedUnits + " height: " + height;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (! (o instanceof AccountCurrency)) {
+                return false;
+            }
+            AccountCurrency other = (AccountCurrency)o;
+            return this.accountId == other.accountId && this.currencyId == other.currencyId && this.units == other.units
+                    && this.unconfirmedUnits == other.unconfirmedUnits && this.height == other.height;
+        }
+
+        @Override
+        public int hashCode() {
+            return (int)(accountId ^ (accountId >>> 32) ^ currencyId ^ (currencyId >>> 32) ^ units ^ (units >>> 32)
+                    ^ unconfirmedUnits ^ (unconfirmedUnits >>> 32) ^ height);
         }
     }
 
