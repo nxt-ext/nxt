@@ -43,6 +43,7 @@ public final class Account {
             this.dbKey = accountAssetDbKeyFactory.newKey(this.accountId, this.assetId);
             this.quantityQNT = quantityQNT;
             this.unconfirmedQuantityQNT = unconfirmedQuantityQNT;
+            this.height = Nxt.getBlockchain().getHeight();
         }
 
         private AccountAsset(ResultSet rs) throws SQLException {
@@ -55,6 +56,7 @@ public final class Account {
         }
 
         private void save(Connection con) throws SQLException {
+            this.height = Nxt.getBlockchain().getHeight();
             try (PreparedStatement pstmt = con.prepareStatement("MERGE INTO account_asset "
                     + "(account_id, asset_id, quantity, unconfirmed_quantity, height, latest) "
                     + "KEY (account_id, asset_id, height) VALUES (?, ?, ?, ?, ?, TRUE)")) {
@@ -63,7 +65,7 @@ public final class Account {
                 pstmt.setLong(++i, this.assetId);
                 pstmt.setLong(++i, this.quantityQNT);
                 pstmt.setLong(++i, this.unconfirmedQuantityQNT);
-                pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
+                pstmt.setInt(++i, this.height);
                 pstmt.executeUpdate();
             }
         }
@@ -101,7 +103,7 @@ public final class Account {
         @Override
         public String toString() {
             return "AccountAsset account_id: " + Convert.toUnsignedLong(accountId) + " asset_id: " + Convert.toUnsignedLong(assetId)
-                    + " quantity: " + quantityQNT + " unconfirmedQuantity: " + unconfirmedQuantityQNT;
+                    + " quantity: " + quantityQNT + " unconfirmedQuantity: " + unconfirmedQuantityQNT + " height: " + height;
         }
 
         @Override
