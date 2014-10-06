@@ -253,6 +253,15 @@
                                 <li><a href="#" data-toggle="modal" data-target="#issue_asset_modal"><i class="fa fa-angle-double-right"></i> <span data-i18n="issue_asset">Issue Asset</span></a></li>
                         	</ul>
                         </li>
+                        <li class="treeview" id="sidebar_monetary_system">
+                        	<a href="#" data-page="monetary_system"><i class="fa fa-signal"></i><span data-i18n="monetary_system">Monetary System</span><i class="fa pull-right fa-angle-right" style="padding-top:3px"></i></a>
+                            <ul class="treeview-menu" style="display: none;">
+                                 <li><a href="#" data-page="monetary_system"><i class="fa fa-angle-double-right"></i> <span data-i18n="monetary_system">Monetary System</span></a></li>
+                                 <li><a href="#" data-page="exchange_history"><i class="fa fa-angle-double-right"></i> <span data-i18n="exchange_history">Exchange History</span></a></li>
+                            	<li><a href="#" data-page="my_currencies"><i class="fa fa-angle-double-right"></i> <span data-i18n="my_currencies">My Currencies</span></a></li>
+                                <li><a href="#" data-toggle="modal" data-target="#issue_currency_modal"><i class="fa fa-angle-double-right"></i> <span data-i18n="issue_currency">Issue Currency</span></a></li>
+                        	</ul>
+                        </li>
                         <li class="treeview" id="sidebar_dgs_buyer">
                         	<a href="#" data-page="dgs_search"><i class="fa fa-shopping-cart"></i><span data-i18n="marketplace">Marketplace</span><i class="fa pull-right fa-angle-right" style="padding-top:3px"></i></a>
                             <ul class="treeview-menu" style="display: none;">
@@ -2124,6 +2133,112 @@
 			</div>
 		</div>
 		
+		<div class="modal fade" id="issue_currency_modal" tabindex="-1" role="dialog" aria-hidden="true">
+			<div class="modal-dialog">
+		    	<div class="modal-content">
+		      		<div class="modal-header">
+		      			<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+		        		<h4 class="modal-title" data-i18n="issue_currency">Issue Currency</h4>
+		      		</div>
+			      	<div class="modal-body">
+						<form role="form" autocomplete="off">
+							<div class="callout callout-danger never_hide" data-i18n="[html]issue_currency_warning"><strong>Warning</strong>: Once submitted, you will not be able to change this information again, ever. Make sure it is correct.</div>
+							<div class="callout callout-danger error_message" style="display:none"></div>
+							<div class="form-group">
+								<label for="issue_currency_name"><span data-i18n="currency_name">CURRENCY NAME</span> <i class="fa fa-question-circle show_popover" data-content="The currency name is unique. Should be between 3 and 10 characters long." data-i18n="[data-content]currency_name_help" data-container="body" style="color:#4CAA6E" ></i></label>
+								<input type="text" class="form-control" name="name" id="issue_currency_name" placeholder="Currency Name" data-i18n="[placeholder]currency_name" autofocus tabindex="1" />
+							</div>
+							<div class="form-group">
+								<label for="issue_currency_code"><span data-i18n="currency_code">CURRENCY CODE</span> <i class="fa fa-question-circle show_popover" data-content="The currency code is unique. Its composed of 3 upper case letters." data-i18n="[data-content]currency_code_help" data-container="body" style="color:#4CAA6E" ></i></label>
+								<input type="text" class="form-control" name="code" id="issue_currency_code" placeholder="Currency Code" data-i18n="[placeholder]currency_code" autofocus tabindex="2" />
+							</div>
+							<div class="form-group">
+								<label for="issue_currency_description" data-i18n="description">DESCRIPTION</label>
+								<textarea class="form-control" id="issue_currency_description" name="description" rows="3" tabindex="3"></textarea>
+							</div>
+							<div class="form-group">
+								<label for="issue_currency_type" data-i18n="type">TYPE</label>
+								<input type="text" class="form-control" name="type" id="issue_currency_type" placeholder="Currency Type" data-i18n="[placeholder]currency_type" autofocus tabindex="4" />
+							</div>
+                            <div class="form-group">
+                                <label for="issue_currency_total_supply" data-i18n="total_supply">TOTAL SUPPLY</label>
+                                <input type="number" name="totalSupply" id="issue_currency_total_supply" class="form-control" min="1" placeholder="Total Supply" data-i18n="total_supply" tabindex="5">
+                            </div>
+                            <div class="form-group">
+                                <label for="issue_currency_initial_supply" data-i18n="initial_supply">INITIAL SUPPLY</label>
+                                <input type="number" name="initialSupply" id="issue_currency_initial_supply" class="form-control" min="1" placeholder="Initial Supply" data-i18n="Initial_supply" tabindex="6">
+                            </div>
+                            <div class="form-group">
+                                <label for="issue_currency_issuance_height" data-i18n="issuance_height">ISSUANCE_HEIGHT</label>
+                                <input type="number" name="issuanceHeight" id="issue_currency_issuance_height" class="form-control" min="1" placeholder="Issuance Height" data-i18n="issuance_height" tabindex="7">
+                            </div>
+                            <div class="form-group">
+                                <label for="issue_currency_min_reserve" data-i18n="min_reserve">MINIMUM RESERVE</label>
+                                <input type="number" name="minReservePerUnitNQT" id="issue_currency_min_reserve" class="form-control" min="1" placeholder="Minimum Reserve" data-i18n="minimum_reserve" tabindex="8">
+                            </div>
+                            <div class="form-group">
+                                <label for="issue_currency_min_difficulty" data-i18n="min_difficulty">MINIMUM DIFFICULTY</label>
+                                <input type="number" name="minDifficulty" id="issue_currency_min_difficulty" class="form-control" min="1" placeholder="Minimum Difficulty" data-i18n="minimum_difficulty" tabindex="9">
+                            </div>
+                            <div class="form-group">
+                                <label for="issue_currency_max_difficulty" data-i18n="max_difficulty">MAXIMUM DIFFICULTY</label>
+                                <input type="number" name="maxDifficulty" id="issue_currency_max_difficulty" class="form-control" min="1" placeholder="Maximum Difficulty" data-i18n="maximum_difficulty" tabindex="10">
+                            </div>
+                            <div class="form-group">
+                                <label for="issue_currency_algorithm" data-i18n="max_algorithm">ALGORITHM</label>
+                                <input type="number" name="algorithm" id="issue_currency_algorithm" class="form-control" min="1" placeholder="Algorithm" data-i18n="algorithm" tabindex="11">
+                            </div>
+                            <div class="row">
+								<div class="col-xs-12 col-sm-12 col-md-12 advanced_extend" data-normal="12" data-advanced="6">
+									<div class="form-group">
+										<label for="issue_asset_fee"><span data-i18n="fee">FEE</span> <i class="fa fa-exclamation-circle show_popover" data-content="The minimum fee to issue an asset is 1,000 Nxt." data-i18n="[data-content]asset_minimum_fee_help" data-container="body" style="color:red"></i></label>
+										<div class="input-group">
+											<input type="number" name="feeNXT" id="issue_asset_fee" class="form-control" placeholder="Fee" step="any" min="1000" data-default="1000" value="1000" tabindex="6">
+											<span class="input-group-addon">NXT</span>
+										</div>
+									</div>
+								</div>
+								<div class="col-xs-6 col-sm-6 col-md-6 advanced">
+									<div class="form-group">
+										<label for="issue_asset_deadline" data-i18n="deadline_hours">DEADLINE (HOURS)</label>
+										<input type="number" name="deadline" id="issue_asset_deadline" class="form-control" placeholder="Deadline" data-i18n="deadline" min="1" data-default="24" value="24" tabindex="7">
+									</div>
+								</div>
+							</div>
+							<div class="form-group secret_phrase">
+								<label for="issue_asset_password" data-i18n="passphrase">PASSPHRASE</label>
+								<input type="password" name="secretPhrase" id="issue_asset_password" class="form-control" placeholder="" tabindex="8">
+							</div>
+							<div class="form-group advanced">
+								<label for="issue_asset_referenced_transaction" data-i18n="referenced_transaction_hash">REFERENCED TRANSACTION HASH</label>
+								<input type="text" class="form-control" name="referencedTransactionFullHash" id="issue_asset_referenced_transaction" placeholder="Referenced Transaction Full Hash" data-i18n="referenced_transaction_full_hash" tabindex="6" spellcheck="false" />
+							</div>
+							<div class="form-group advanced" style="margin-bottom:0;">
+								<input type="checkbox" name="doNotBroadcast" id="issue_asset_do_not_broadcast" value="1" /> <label for="issue_asset_do_not_broadcast" style="font-weight:normal;" tabindex="7" data-i18n="do_not_broadcast">Do Not Broadcast</label>
+							</div>
+                            <div class="form-group advanced">
+                                <input type="checkbox" name="add_note_to_self" id="issue_asset_add_note_to_self" class="add_note_to_self" tabindex="8" /> <label for="issue_asset_add_note_to_self" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_note_to_self">Add Note to Self?</span></label>
+                            </div>
+                            <div class="form-group advanced optional_note">
+                                <label for="issue_asset_note_to_self" data-i18n="note_to_self">Note to Self</label>
+                                <textarea class="form-control" id="issue_asset_note_to_self" name="note_to_self" rows="4" tabindex="9"></textarea>
+                                <div style="margin-top:3px;">
+                                    <label style="font-weight:normal;color:#666" data-i18n="note_is_encrypted">This note is encrypted.</span></label>
+                                </div>
+                            </div>
+							<input type="hidden" name="request_type" value="issueAsset" />
+						</form>
+			    	</div>
+					<div class="modal-footer" style="margin-top:0;">
+						<div class="advanced_info"><strong data-i18n="fee">Fee</strong>: <span class="advanced_fee">1'000 NXT</span> - <a href="#" data-i18n="advanced">advanced</a></div>
+
+				    	<button type="button" class="btn btn-default" data-dismiss="modal" data-i18n="cancel">Cancel</button>
+				        <button type="button" class="btn btn-primary" data-loading-text="Submitting..." data-i18n="issue_asset;[data-loading-text]submitting">Issue Asset</button>
+				    </div>
+				</div>
+			</div>
+		</div>
+
 		<div class="modal fade" id="dgs_listing_modal" tabindex="-1" role="dialog" aria-hidden="true">
 			<div class="modal-dialog">
 		    	<div class="modal-content">
