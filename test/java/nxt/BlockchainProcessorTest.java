@@ -121,9 +121,9 @@ public class BlockchainProcessorTest extends AbstractBlockchainTest {
                 }
             }
         }
-        List<List<Account.AccountAsset>> allAccountAssetsBefore = new ArrayList<>();
+        List<List<TestAccountAsset>> allAccountAssetsBefore = new ArrayList<>();
         for (long assetId : testAssets) {
-            List<Account.AccountAsset> accountAssets = new ArrayList<>();
+            List<TestAccountAsset> accountAssets = new ArrayList<>();
             allAccountAssetsBefore.add(accountAssets);
             Asset asset = Asset.getAsset(assetId);
             if (asset == null) {
@@ -131,7 +131,7 @@ public class BlockchainProcessorTest extends AbstractBlockchainTest {
             }
             try (DbIterator<Account.AccountAsset> iter = asset.getAccounts(endHeight - numBlocks, 0, -1)) {
                 for (Account.AccountAsset accountAsset : iter) {
-                    accountAssets.add(accountAsset);
+                    accountAssets.add(new TestAccountAsset(accountAsset));
                 }
             }
         }
@@ -154,9 +154,9 @@ public class BlockchainProcessorTest extends AbstractBlockchainTest {
         Assert.assertEquals(allLessorsBefore, allLessorsAfter);
         //Logger.logDebugMessage("Before: " + allLessorsBefore);
         //Logger.logDebugMessage("After: " + allLessorsAfter);
-        List<List<Account.AccountAsset>> allAccountAssetsAfter = new ArrayList<>();
+        List<List<TestAccountAsset>> allAccountAssetsAfter = new ArrayList<>();
         for (long assetId : testAssets) {
-            List<Account.AccountAsset> accountAssets = new ArrayList<>();
+            List<TestAccountAsset> accountAssets = new ArrayList<>();
             allAccountAssetsAfter.add(accountAssets);
             Asset asset = Asset.getAsset(assetId);
             if (asset == null) {
@@ -164,7 +164,7 @@ public class BlockchainProcessorTest extends AbstractBlockchainTest {
             }
             try (DbIterator<Account.AccountAsset> iter = asset.getAccounts(0, -1)) {
                 for (Account.AccountAsset accountAsset : iter) {
-                    accountAssets.add(accountAsset);
+                    accountAssets.add(new TestAccountAsset(accountAsset));
                 }
             }
         }
@@ -208,4 +208,26 @@ public class BlockchainProcessorTest extends AbstractBlockchainTest {
         return Integer.parseInt(line.substring(1, line.indexOf(DebugTrace.SEPARATOR) - 1));
     }
 
+    private static final class TestAccountAsset {
+
+        private final Account.AccountAsset accountAsset;
+
+        private TestAccountAsset(Account.AccountAsset accountAsset) {
+            this.accountAsset = accountAsset;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (! (o instanceof TestAccountAsset)) {
+                return false;
+            }
+            Account.AccountAsset other = ((TestAccountAsset)o).accountAsset;
+            return this.accountAsset.getAccountId() == other.getAccountId()
+                    && this.accountAsset.getAssetId() == other.getAssetId()
+                    && this.accountAsset.getQuantityQNT() == other.getQuantityQNT()
+                    //&& this.accountAsset.getUnconfirmedQuantityQNT() == other.getUnconfirmedQuantityQNT()
+                    && this.accountAsset.getHeight() == other.getHeight();
+        }
+
+    }
 }
