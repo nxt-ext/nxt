@@ -1089,7 +1089,7 @@ var NRS = (function(NRS, $, undefined) {
 			var feeNQT = new BigInteger(NRS.convertToNQT(String($("#" + orderType + "_asset_fee").val())));
 			var totalNXT = NRS.formatAmount(NRS.calculateOrderTotalNQT(quantityQNT, priceNQT, NRS.currentAsset.decimals), false, true);
 		} catch (err) {
-			$.growl("Invalid input.", {
+			$.growl($.t("error_invalid_input"), {
 				"type": "danger"
 			});
 			return e.preventDefault();
