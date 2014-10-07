@@ -80,7 +80,6 @@ final class JSONData {
         json.put("asset", Convert.toUnsignedLong(accountAsset.getAssetId()));
         json.put("quantityQNT", String.valueOf(accountAsset.getQuantityQNT()));
         json.put("unconfirmedQuantityQNT", String.valueOf(accountAsset.getUnconfirmedQuantityQNT()));
-        json.put("height", accountAsset.getHeight());
         return json;
     }
 
