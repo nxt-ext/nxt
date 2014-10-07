@@ -40,7 +40,8 @@ final class GetMilestoneBlockIds extends PeerServlet.PeerRequestHandler {
             long blockId;
             int height;
             int jump;
-            int limit;
+            int limit = 10;
+            int blockchainHeight = Nxt.getBlockchain().getHeight();
             String lastMilestoneBlockIdString = (String) request.get("lastMilestoneBlockId");
             if (lastMilestoneBlockIdString != null) {
                 Block lastMilestoneBlock = Nxt.getBlockchain().getBlock(Convert.parseUnsignedLong(lastMilestoneBlockIdString));
@@ -48,13 +49,11 @@ final class GetMilestoneBlockIds extends PeerServlet.PeerRequestHandler {
                     throw new IllegalStateException("Don't have block " + lastMilestoneBlockIdString);
                 }
                 height = lastMilestoneBlock.getHeight();
-                jump = Math.min(1440, Nxt.getBlockchain().getHeight() - height);
+                jump = Math.min(1440, Math.max(blockchainHeight - height, 1));
                 height = Math.max(height - jump, 0);
-                limit = 10;
             } else if (lastBlockIdString != null) {
-                height = Nxt.getBlockchain().getHeight();
+                height = blockchainHeight;
                 jump = 10;
-                limit = 10;
             } else {
                 peer.blacklist();
                 response.put("error", "Old getMilestoneBlockIds protocol not supported, please upgrade");
