@@ -81,6 +81,11 @@ public final class Alias {
             alias.save(con);
         }
 
+        @Override
+        protected String defaultSort() {
+            return " ORDER BY alias_name_lower ";
+        }
+
     };
 
     private static final DbKey.LongKeyFactory<Offer> offerDbKeyFactory = new DbKey.LongKeyFactory<Offer>("id") {

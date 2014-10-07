@@ -209,6 +209,11 @@ public final class Account {
             accountAsset.save(con);
         }
 
+        @Override
+        protected String defaultSort() {
+            return " ORDER BY quantity DESC, account_id, asset_id ";
+        }
+
     };
 
     private static final DerivedDbTable accountGuaranteedBalanceTable = new DerivedDbTable("account_guaranteed_balance") {
@@ -317,7 +322,7 @@ public final class Account {
     };
 
     public static DbIterator<Account> getLeasingAccounts() {
-        return accountTable.getManyBy(leasingAccountsClause, 0, -1, " ORDER BY id ASC ");
+        return accountTable.getManyBy(leasingAccountsClause, 0, -1);
     }
 
     public static DbIterator<AccountAsset> getAssetAccounts(long assetId, int from, int to) {
@@ -520,14 +525,14 @@ public final class Account {
     }
 
     public DbIterator<Account> getLessors() {
-        return accountTable.getManyBy(getLessorsClause(Nxt.getBlockchain().getHeight()), 0, -1, " ORDER BY id ");
+        return accountTable.getManyBy(getLessorsClause(Nxt.getBlockchain().getHeight()), 0, -1);
     }
 
     public DbIterator<Account> getLessors(int height) {
         if (height < 0) {
             return getLessors();
         }
-        return accountTable.getManyBy(getLessorsClause(height), height, 0, -1, " ORDER BY id ");
+        return accountTable.getManyBy(getLessorsClause(height), height, 0, -1);
     }
 
     public long getGuaranteedBalanceNQT(final int numberOfConfirmations) {

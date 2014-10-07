@@ -245,6 +245,11 @@ public final class DigitalGoodsStore {
                 purchase.save(con);
             }
 
+            @Override
+            protected String defaultSort() {
+                return " ORDER BY timestamp DESC, id ASC ";
+            }
+
         };
 
         private static final DbKey.LongKeyFactory<Purchase> feedbackDbKeyFactory = new DbKey.LongKeyFactory<Purchase>("id") {
@@ -571,13 +576,11 @@ public final class DigitalGoodsStore {
     }
 
     public static DbIterator<Purchase> getSellerPurchases(long sellerId, int from, int to) {
-        return Purchase.purchaseTable.getManyBy(new DbClause.LongClause("seller_id", sellerId), from, to,
-                " ORDER BY timestamp DESC, id ASC ");
+        return Purchase.purchaseTable.getManyBy(new DbClause.LongClause("seller_id", sellerId), from, to);
     }
 
     public static DbIterator<Purchase> getBuyerPurchases(long buyerId, int from, int to) {
-        return Purchase.purchaseTable.getManyBy(new DbClause.LongClause("buyer_id", buyerId), from, to,
-                " ORDER BY timestamp DESC, id ASC ");
+        return Purchase.purchaseTable.getManyBy(new DbClause.LongClause("buyer_id", buyerId), from, to);
     }
 
     public static DbIterator<Purchase> getSellerBuyerPurchases(final long sellerId, final long buyerId, int from, int to) {
@@ -589,8 +592,7 @@ public final class DigitalGoodsStore {
                 return index;
             }
         };
-        return Purchase.purchaseTable.getManyBy(dbClause, from, to,
-                " ORDER BY timestamp DESC, id ASC ");
+        return Purchase.purchaseTable.getManyBy(dbClause, from, to);
     }
 
     public static Purchase getPurchase(long purchaseId) {
@@ -605,7 +607,7 @@ public final class DigitalGoodsStore {
                 return index;
             }
         };
-        return Purchase.purchaseTable.getManyBy(dbClause, from, to, " ORDER BY timestamp DESC, id ASC ");
+        return Purchase.purchaseTable.getManyBy(dbClause, from, to);
     }
 
     static Purchase getPendingPurchase(long purchaseId) {
@@ -621,7 +623,7 @@ public final class DigitalGoodsStore {
                 return index;
             }
         };
-        return Purchase.purchaseTable.getManyBy(dbClause, 0, -1, " ORDER BY timestamp DESC, id ASC ");
+        return Purchase.purchaseTable.getManyBy(dbClause, 0, -1);
 	}
 
     private static void addPurchase(Transaction transaction,  Attachment.DigitalGoodsPurchase attachment, long sellerId) {
