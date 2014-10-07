@@ -1433,10 +1433,15 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.pages.trade_history = function() {
 		NRS.sendRequest("getTrades+", {
 			"account": NRS.accountRS,
-			"firstIndex": 0,
-			"lastIndex": 100
+			"firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
+			"lastIndex": NRS.pageNumber * NRS.itemsPerPage
 		}, function(response, input) {
 			if (response.trades && response.trades.length) {
+				if (response.trades.length > NRS.itemsPerPage) {
+					NRS.hasMorePages = true;
+					response.trades.pop();
+				}
+
 				var trades = response.trades;
 
 				var rows = "";

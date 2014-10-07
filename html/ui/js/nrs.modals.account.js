@@ -243,7 +243,8 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.userInfoModal.aliases = function() {
 		NRS.sendRequest("getAliases", {
 			"account": NRS.userInfoModal.user,
-			"timestamp": 0
+			"firstIndex": 0,
+			"lastIndex": 100
 		}, function(response) {
 			var rows = "";
 
