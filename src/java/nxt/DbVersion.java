@@ -416,6 +416,10 @@ final class DbVersion {
             case 123:
                 apply("CREATE INDEX IF NOT EXISTS purchase_timestamp_idx ON purchase (timestamp DESC, id)");
             case 124:
+                apply("CREATE INDEX IF NOT EXISTS ask_order_creation_idx ON ask_order (creation_height DESC)");
+            case 125:
+                apply("CREATE INDEX IF NOT EXISTS bid_order_creation_idx ON bid_order (creation_height DESC)");
+            case 126:
                 return;
             default:
                 throw new RuntimeException("Database inconsistent with code, probably trying to run older code on newer database");

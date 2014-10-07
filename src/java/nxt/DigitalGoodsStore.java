@@ -90,6 +90,11 @@ public final class DigitalGoodsStore {
                 goods.save(con);
             }
 
+            @Override
+            protected String defaultSort() {
+                return " ORDER BY timestamp DESC, id ASC ";
+            }
+
         };
 
         static void init() {}
@@ -557,7 +562,7 @@ public final class DigitalGoodsStore {
                 return index;
             }
         };
-        return Goods.goodsTable.getManyBy(dbClause, from, to, " ORDER BY timestamp DESC ");
+        return Goods.goodsTable.getManyBy(dbClause, from, to);
     }
 
     public static DbIterator<Goods> getSellerGoods(final long sellerId, final boolean inStockOnly, int from, int to) {
@@ -568,7 +573,7 @@ public final class DigitalGoodsStore {
                 return index;
             }
         };
-        return Goods.goodsTable.getManyBy(dbClause, from, to, " ORDER BY name ASC, description ASC, id ASC ");
+        return Goods.goodsTable.getManyBy(dbClause, from, to, " ORDER BY name ASC, timestamp DESC, id ASC ");
     }
 
     public static DbIterator<Purchase> getAllPurchases(int from, int to) {

@@ -173,7 +173,7 @@ public abstract class Order {
 
             @Override
             protected String defaultSort() {
-                return " ORDER BY height DESC ";
+                return " ORDER BY creation_height DESC ";
             }
 
         };
@@ -309,7 +309,7 @@ public abstract class Order {
 
             @Override
             protected String defaultSort() {
-                return " ORDER BY height DESC ";
+                return " ORDER BY creation_height DESC ";
             }
 
         };
