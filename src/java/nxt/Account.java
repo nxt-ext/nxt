@@ -329,14 +329,14 @@ public final class Account {
     }
 
     public static DbIterator<AccountAsset> getAssetAccounts(long assetId, int from, int to) {
-        return accountAssetTable.getManyBy(new DbClause.LongClause("asset_id", assetId), from, to);
+        return accountAssetTable.getManyBy(new DbClause.LongClause("asset_id", assetId), from, to, " ORDER BY quantity DESC, account_id ");
     }
 
     public static DbIterator<AccountAsset> getAssetAccounts(long assetId, int height, int from, int to) {
         if (height < 0) {
             return getAssetAccounts(assetId, from, to);
         }
-        return accountAssetTable.getManyBy(new DbClause.LongClause("asset_id", assetId), height, from, to);
+        return accountAssetTable.getManyBy(new DbClause.LongClause("asset_id", assetId), height, from, to, " ORDER BY quantity DESC, account_id ");
     }
 
     static void init() {}
@@ -528,14 +528,14 @@ public final class Account {
     }
 
     public DbIterator<Account> getLessors() {
-        return accountTable.getManyBy(getLessorsClause(Nxt.getBlockchain().getHeight()), 0, -1, " ORDER BY id, height DESC");
+        return accountTable.getManyBy(getLessorsClause(Nxt.getBlockchain().getHeight()), 0, -1, " ORDER BY id ");
     }
 
     public DbIterator<Account> getLessors(int height) {
         if (height < 0) {
             return getLessors();
         }
-        return accountTable.getManyBy(getLessorsClause(height), height, 0, -1, " ORDER BY id, height DESC");
+        return accountTable.getManyBy(getLessorsClause(height), height, 0, -1, " ORDER BY id ");
     }
 
     public long getGuaranteedBalanceNQT(final int numberOfConfirmations) {
