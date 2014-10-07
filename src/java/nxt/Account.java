@@ -528,14 +528,14 @@ public final class Account {
     }
 
     public DbIterator<Account> getLessors() {
-        return accountTable.getManyBy(getLessorsClause(Nxt.getBlockchain().getHeight()), 0, -1);
+        return accountTable.getManyBy(getLessorsClause(Nxt.getBlockchain().getHeight()), 0, -1, " ORDER BY id, height DESC");
     }
 
     public DbIterator<Account> getLessors(int height) {
         if (height < 0) {
             return getLessors();
         }
-        return accountTable.getManyBy(getLessorsClause(height), height, 0, -1);
+        return accountTable.getManyBy(getLessorsClause(height), height, 0, -1, " ORDER BY id, height DESC");
     }
 
     public long getGuaranteedBalanceNQT(final int numberOfConfirmations) {
