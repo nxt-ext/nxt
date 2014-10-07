@@ -34,7 +34,6 @@ public final class Account {
         private final DbKey dbKey;
         private long quantityQNT;
         private long unconfirmedQuantityQNT;
-        private int height;
 
         private AccountAsset(long accountId, long assetId, long quantityQNT, long unconfirmedQuantityQNT) {
             this.accountId = accountId;
@@ -42,7 +41,6 @@ public final class Account {
             this.dbKey = accountAssetDbKeyFactory.newKey(this.accountId, this.assetId);
             this.quantityQNT = quantityQNT;
             this.unconfirmedQuantityQNT = unconfirmedQuantityQNT;
-            this.height = Nxt.getBlockchain().getHeight();
         }
 
         private AccountAsset(ResultSet rs) throws SQLException {
@@ -51,11 +49,9 @@ public final class Account {
             this.dbKey = accountAssetDbKeyFactory.newKey(this.accountId, this.assetId);
             this.quantityQNT = rs.getLong("quantity");
             this.unconfirmedQuantityQNT = rs.getLong("unconfirmed_quantity");
-            this.height = rs.getInt("height");
         }
 
         private void save(Connection con) throws SQLException {
-            this.height = Nxt.getBlockchain().getHeight();
             try (PreparedStatement pstmt = con.prepareStatement("MERGE INTO account_asset "
                     + "(account_id, asset_id, quantity, unconfirmed_quantity, height, latest) "
                     + "KEY (account_id, asset_id, height) VALUES (?, ?, ?, ?, ?, TRUE)")) {
@@ -64,7 +60,7 @@ public final class Account {
                 pstmt.setLong(++i, this.assetId);
                 pstmt.setLong(++i, this.quantityQNT);
                 pstmt.setLong(++i, this.unconfirmedQuantityQNT);
-                pstmt.setInt(++i, this.height);
+                pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
                 pstmt.executeUpdate();
             }
         }
@@ -85,10 +81,6 @@ public final class Account {
             return unconfirmedQuantityQNT;
         }
 
-        public int getHeight() {
-            return height;
-        }
-
         private void save() {
             if (this.quantityQNT > 0 || this.unconfirmedQuantityQNT > 0) {
                 accountAssetTable.insert(this);
@@ -102,7 +94,7 @@ public final class Account {
         @Override
         public String toString() {
             return "AccountAsset account_id: " + Convert.toUnsignedLong(accountId) + " asset_id: " + Convert.toUnsignedLong(assetId)
-                    + " quantity: " + quantityQNT + " unconfirmedQuantity: " + unconfirmedQuantityQNT + " height: " + height;
+                    + " quantity: " + quantityQNT + " unconfirmedQuantity: " + unconfirmedQuantityQNT;
         }
 
     }

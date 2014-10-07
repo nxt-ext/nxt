@@ -261,9 +261,7 @@ public class BlockchainProcessorTest extends AbstractBlockchainTest {
             Account.AccountAsset other = ((TestAccountAsset)o).accountAsset;
             return this.accountAsset.getAccountId() == other.getAccountId()
                     && this.accountAsset.getAssetId() == other.getAssetId()
-                    && this.accountAsset.getQuantityQNT() == other.getQuantityQNT()
-                    //&& this.accountAsset.getUnconfirmedQuantityQNT() == other.getUnconfirmedQuantityQNT()
-                    && this.accountAsset.getHeight() == other.getHeight();
+                    && this.accountAsset.getQuantityQNT() == other.getQuantityQNT();
         }
 
     }
