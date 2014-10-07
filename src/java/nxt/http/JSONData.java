@@ -156,6 +156,7 @@ final class JSONData {
         putAccount(json, "seller", goods.getSellerId());
         json.put("tags", goods.getTags());
         json.put("delisted", goods.isDelisted());
+        json.put("timestamp", goods.getTimestamp());
         return json;
     }
 
