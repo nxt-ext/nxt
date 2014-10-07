@@ -3950,7 +3950,8 @@
 						<ul class="nav nav-pills nav-justified" style="margin-bottom:10px">
 							<li class="active" id="user_info_transactions" data-tab="transactions"><a href="#" data-i18n="transactions">Transactions</a></li>
 							<li id="user_info_assets" data-tab="assets"><a href="#" data-i18n="assets">Assets</a></li>
-							<li id="user_info_marketplace" data-tab="marketplace"><a href="#" data-i18n="marketplace">Marketplace</a></li>
+							<li id="user_info_trade_history" data-tab="trade_history"><a href="#" data-i18n="trade_history">Trade History</a></li>
+                            <li id="user_info_marketplace" data-tab="marketplace"><a href="#" data-i18n="marketplace">Marketplace</a></li>
 							<li id="user_info_aliases" data-tab="aliases"><a href="#" data-i18n="aliases">Aliases</a></li>
 							<li id="user_info_description" data-tab="description"><a href="#" data-i18n="description">Description</a></li>
 							<li id="user_info_actions" data-tab="actions"><a href="#" data-i18n="actions">Actions</a></li>
@@ -4009,6 +4010,26 @@
 							<div class="data-empty-container" style="padding-top:10px" data-i18n="user_no_assets">This user has no assets.</div>
 						</div>
 						
+                        <div class="data-container data-loading user_info_modal_content" id="user_info_modal_trade_history" style="display:none;max-height:350px;overflow:auto;">
+                            <table class="table table-striped" id="user_info_modal_trade_history_table">
+                                <thead>
+                                <tr>
+                                    <th data-i18n="asset">Asset</th>
+                                    <th data-i18n="date">Date</th>
+                                    <th data-i18n="type">Type</th>
+                                    <th data-i18n="quantity">Quantity</th>
+                                    <th data-i18n="price">Price</th>
+                                    <th data-i18n="total">Total</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+
+                                </tbody>
+                            </table>
+                            <div class="data-loading-container"><img src="img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
+                            <div class="data-empty-container" style="padding-top:10px" data-i18n="user_no_trade_history">This user has no trade history.</div>
+                        </div>
+
 						<div class="data-container data-loading user_info_modal_content" id="user_info_modal_marketplace" style="display:none;max-height:350px;overflow:auto;">
 							<table class="table table-striped" id="user_info_modal_marketplace_table">
 								<thead>
