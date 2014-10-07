@@ -223,7 +223,6 @@ public final class Account {
 
         @Override
         public void trim(int height) {
-            //Logger.logDebugMessage("Trimming account_guaranteed_balance");
             try (Connection con = Db.getConnection();
                  PreparedStatement pstmtDelete = con.prepareStatement("DELETE FROM account_guaranteed_balance "
                          + "WHERE height < ?")) {

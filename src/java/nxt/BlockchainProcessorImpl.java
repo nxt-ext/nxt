@@ -372,9 +372,11 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 @Override
                 public void notify(Block block) {
                     if (block.getHeight() % 1440 == 0) {
-                        lastTrimHeight = block.getHeight() - Constants.MAX_ROLLBACK;
-                        for (DerivedDbTable table : derivedTables) {
-                            table.trim(lastTrimHeight);
+                        lastTrimHeight = Math.max(block.getHeight() - Constants.MAX_ROLLBACK, 0);
+                        if (lastTrimHeight > 0) {
+                            for (DerivedDbTable table : derivedTables) {
+                                table.trim(lastTrimHeight);
+                            }
                         }
                     }
                 }
@@ -453,7 +455,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
 
     @Override
     public int getMinRollbackHeight() {
-        return trimDerivedTables ? (lastTrimHeight > 0 ? lastTrimHeight : blockchain.getHeight() - Constants.MAX_ROLLBACK) : 0;
+        return trimDerivedTables ? (lastTrimHeight > 0 ? lastTrimHeight : Math.max(blockchain.getHeight() - Constants.MAX_ROLLBACK, 0)) : 0;
     }
 
     @Override
