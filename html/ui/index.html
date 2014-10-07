@@ -248,7 +248,8 @@
                             <ul class="treeview-menu" style="display: none;">
                                  <li><a href="#" data-page="asset_exchange"><i class="fa fa-angle-double-right"></i> <span data-i18n="asset_exchange">Asset Exchange</span></a></li>
                                  <li><a href="#" data-page="trade_history"><i class="fa fa-angle-double-right"></i> <span data-i18n="trade_history">Trade History</span></a></li>
-                            	<li><a href="#" data-page="my_assets"><i class="fa fa-angle-double-right"></i> <span data-i18n="my_assets">My Assets</span></a></li>
+                            	<li><a href="#" data-page="transfer_history"><i class="fa fa-angle-double-right"></i> <span data-i18n="transfer_history">Transfer History</span></a></li>
+                                <li><a href="#" data-page="my_assets"><i class="fa fa-angle-double-right"></i> <span data-i18n="my_assets">My Assets</span></a></li>
                                 <li><a href="#" data-page="open_orders"><i class="fa fa-angle-double-right"></i> <span data-i18n="open_orders">Open Orders</span></a></li>
                                 <li><a href="#" data-toggle="modal" data-target="#issue_asset_modal"><i class="fa fa-angle-double-right"></i> <span data-i18n="issue_asset">Issue Asset</span></a></li>
                         	</ul>
@@ -730,6 +731,32 @@
                             </table>
                             <div class="data-loading-container"><img src="img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
                             <div class="data-empty-container"><p data-i18n="no_trade_history">No trade history available.</p></div>
+                        </div>
+                        <div class="data-pagination"></div>
+                    </section>
+                </div>
+
+                <div id="transfer_history_page" class="paginated page">
+                    <section class="content-header"><h1 data-i18n="transfer_history">Transfer History</h1></section>
+                    <section class="content">
+                        <div class="data-container data-loading">
+                            <table class="table table-striped" id="transfer_history_table">
+                                <thead>
+                                <tr>
+                                    <th data-i18n="transaction">Transaction</th>
+                                    <th data-i18n="asset">Asset</th>
+                                    <th data-i18n="date">Date</th>
+                                    <th data-i18n="quantity">Quantity</th>
+                                    <th data-i18n="recipient">Recipient</th>
+                                    <th data-i18n="sender">Sender</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                    
+                                </tbody>
+                            </table>
+                            <div class="data-loading-container"><img src="img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
+                            <div class="data-empty-container"><p data-i18n="no_asset_transfer_history">No asset transfer history available.</p></div>
                         </div>
                         <div class="data-pagination"></div>
                     </section>
