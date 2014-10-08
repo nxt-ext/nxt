@@ -215,10 +215,10 @@ public class BlockchainProcessorTest extends AbstractBlockchainTest {
                 Logger.logMessage("Empty trace file, nothing to compare");
                 return;
             }
-            int startHeight = parseHeight(testLine);
+            int height = parseHeight(testLine);
             String defaultLine;
             while ((defaultLine = defaultReader.readLine()) != null) {
-                if (parseHeight(defaultLine) >= startHeight) {
+                if (parseHeight(defaultLine) >= height) {
                     break;
                 }
             }
@@ -233,7 +233,11 @@ public class BlockchainProcessorTest extends AbstractBlockchainTest {
                     Logger.logMessage("End of default trace file, can't compare further");
                     return;
                 }
+                height = parseHeight(testLine);
                 Assert.assertEquals(defaultLine, testLine);
+            }
+            if ((defaultLine = defaultReader.readLine()) != null) {
+                Assert.assertTrue(parseHeight(defaultLine) > height);
             }
             Logger.logMessage("Comparison with default trace file passed from height " + startHeight + " to " + parseHeight(defaultLine));
         } catch (IOException e) {
