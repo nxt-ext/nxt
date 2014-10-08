@@ -322,7 +322,7 @@ public final class Account {
     };
 
     public static DbIterator<Account> getLeasingAccounts() {
-        return accountTable.getManyBy(leasingAccountsClause, 0, -1, " ORDER BY current_lessee_id ");
+        return accountTable.getManyBy(leasingAccountsClause, 0, -1);
     }
 
     public static DbIterator<AccountAsset> getAssetAccounts(long assetId, int from, int to) {
