@@ -27,10 +27,9 @@ public abstract class DerivedDbTable {
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
         }
-        Db.getCache(table).clear();
     }
 
-    public final void truncate() {
+    public void truncate() {
         if (!Db.isInTransaction()) {
             throw new IllegalStateException("Not in transaction");
         }
@@ -42,7 +41,6 @@ public abstract class DerivedDbTable {
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
         }
-        Db.getCache(table).clear();
     }
 
     public void trim(int height) {

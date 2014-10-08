@@ -104,4 +104,16 @@ public abstract class ValuesDbTable<T,V> extends DerivedDbTable {
         }
     }
 
+    @Override
+    public void rollback(int height) {
+        super.rollback(height);
+        Db.getCache(table).clear();
+    }
+
+    @Override
+    public final void truncate() {
+        super.truncate();
+        Db.getCache(table).clear();
+    }
+
 }
