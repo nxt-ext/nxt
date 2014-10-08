@@ -420,6 +420,12 @@ final class DbVersion {
             case 125:
                 apply("CREATE INDEX IF NOT EXISTS bid_order_creation_idx ON bid_order (creation_height DESC)");
             case 126:
+                apply("ALTER TABLE unconfirmed_transaction DROP COLUMN latest");
+            case 127:
+                apply("DROP INDEX unconfirmed_transaction_id_height_idx");
+            case 128:
+                apply("CREATE UNIQUE INDEX IF NOT EXISTS unconfirmed_transaction_id_idx ON unconfirmed_transaction (id)");
+            case 129:
                 return;
             default:
                 throw new RuntimeException("Database inconsistent with code, probably trying to run older code on newer database");

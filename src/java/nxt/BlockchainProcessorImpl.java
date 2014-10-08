@@ -692,9 +692,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
 
                 block.setPrevious(previousLastBlock);
                 blockListeners.notify(block, Event.BEFORE_BLOCK_ACCEPT);
-                try (DbIterator<TransactionImpl> unconfirmedTransactions = transactionProcessor.getAllUnconfirmedTransactions()) {
-                    transactionProcessor.removeUnconfirmedTransactions(unconfirmedTransactions, true);
-                }
+                transactionProcessor.requeueAllUnconfirmedTransactions();
                 addBlock(block);
                 accept(block);
 
@@ -840,7 +838,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 } catch (NxtException.NotCurrentlyValidException e) {
                     continue;
                 } catch (NxtException.ValidationException e) {
-                    transactionProcessor.removeUnconfirmedTransactions(Collections.singleton(transaction), false);
+                    transactionProcessor.removeUnconfirmedTransaction(transaction);
                     continue;
                 }
 
@@ -903,7 +901,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             Logger.logDebugMessage("Generate block failed: " + e.getMessage());
             Transaction transaction = e.getTransaction();
             Logger.logDebugMessage("Removing invalid transaction: " + transaction.getStringId());
-            transactionProcessor.removeUnconfirmedTransactions(Collections.singleton((TransactionImpl)transaction), false);
+            transactionProcessor.removeUnconfirmedTransaction((TransactionImpl) transaction);
             throw e;
         } catch (BlockNotAcceptedException e) {
             Logger.logDebugMessage("Generate block failed: " + e.getMessage());
@@ -941,9 +939,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             }
             try (Connection con = Db.beginTransaction();
                  PreparedStatement pstmt = con.prepareStatement("SELECT * FROM block WHERE height >= ? ORDER BY db_id ASC")) {
-                try (DbIterator<TransactionImpl> unconfirmedTransactions = transactionProcessor.getAllUnconfirmedTransactions()) {
-                    transactionProcessor.removeUnconfirmedTransactions(unconfirmedTransactions, true);
-                }
+                transactionProcessor.requeueAllUnconfirmedTransactions();
                 for (DerivedDbTable table : derivedTables) {
                     if (height == 0) {
                         table.truncate();
