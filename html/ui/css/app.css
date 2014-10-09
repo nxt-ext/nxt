@@ -72,12 +72,16 @@ body > .header {
 .right-side {
   background-color: #f9f9f9;
   margin-left: 220px;
+  transition: margin .7s;
+  -webkit-transition: margin .7s;
 }
 /*left side - contains sidebar*/
 .left-side {
   position: absolute;
   width: 220px;
   top: 0;
+  transition: margin .7s;
+  -webkit-transition: margin .7s;
 }
 @media screen and (min-width: 992px) {
   .left-side {
@@ -92,7 +96,7 @@ body > .header {
   }
   /* Left side collapse */
   .left-side.collapse-left {
-    left: -220px;
+    margin-left: -220px;
   }
 }
 /*Give content full width on xs screens*/
