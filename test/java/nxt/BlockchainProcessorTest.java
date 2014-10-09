@@ -226,6 +226,7 @@ public class BlockchainProcessorTest extends AbstractBlockchainTest {
                 Logger.logMessage("End of default trace file, can't compare further");
                 return;
             }
+            int endHeight = height;
             Assert.assertEquals(defaultLine, testLine);
             while ((testLine = testReader.readLine()) != null) {
                 defaultLine = defaultReader.readLine();
@@ -233,13 +234,13 @@ public class BlockchainProcessorTest extends AbstractBlockchainTest {
                     Logger.logMessage("End of default trace file, can't compare further");
                     return;
                 }
-                height = parseHeight(testLine);
+                endHeight = parseHeight(testLine);
                 Assert.assertEquals(defaultLine, testLine);
             }
             if ((defaultLine = defaultReader.readLine()) != null) {
-                Assert.assertTrue(parseHeight(defaultLine) > height);
+                Assert.assertTrue(parseHeight(defaultLine) > endHeight);
             }
-            Logger.logMessage("Comparison with default trace file passed from height " + startHeight + " to " + parseHeight(defaultLine));
+            Logger.logMessage("Comparison with default trace file passed from height " + height + " to " + endHeight);
         } catch (IOException e) {
             throw new RuntimeException(e.toString(), e);
         }
@@ -266,6 +267,11 @@ public class BlockchainProcessorTest extends AbstractBlockchainTest {
             return this.accountAsset.getAccountId() == other.getAccountId()
                     && this.accountAsset.getAssetId() == other.getAssetId()
                     && this.accountAsset.getQuantityQNT() == other.getQuantityQNT();
+        }
+
+        @Override
+        public String toString() {
+            return accountAsset.toString();
         }
 
     }
