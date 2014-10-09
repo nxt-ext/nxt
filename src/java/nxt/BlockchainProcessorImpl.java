@@ -185,7 +185,6 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     }
 
                 } catch (NxtException.StopException e) {
-                    getMoreBlocks = false;
                     Logger.logMessage("Blockchain download stopped: " + e.getMessage());
                 } catch (Exception e) {
                     Logger.logDebugMessage("Error in blockchain download thread", e);

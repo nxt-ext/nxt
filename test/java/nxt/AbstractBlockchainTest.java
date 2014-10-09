@@ -65,8 +65,9 @@ public abstract class AbstractBlockchainTest {
                     synchronized (doneLock) {
                         done = true;
                         doneLock.notifyAll();
+                        blockchainProcessor.setGetMoreBlocks(false);
+                        throw new NxtException.StopException("Reached height " + endHeight);
                     }
-                    throw new NxtException.StopException("Reached height " + endHeight);
                 }
             }
         };
