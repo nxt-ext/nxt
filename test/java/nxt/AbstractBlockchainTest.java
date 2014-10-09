@@ -64,8 +64,8 @@ public abstract class AbstractBlockchainTest {
                 if (blockchain.getHeight() == endHeight) {
                     synchronized (doneLock) {
                         done = true;
-                        doneLock.notifyAll();
                         blockchainProcessor.setGetMoreBlocks(false);
+                        doneLock.notifyAll();
                         throw new NxtException.StopException("Reached height " + endHeight);
                     }
                 }
@@ -99,9 +99,9 @@ public abstract class AbstractBlockchainTest {
                 if (blockchain.getHeight() == endHeight) {
                     synchronized (doneLock) {
                         done = true;
+                        Generator.stopForging(secretPhrase);
                         doneLock.notifyAll();
                     }
-                    Generator.stopForging(secretPhrase);
                 }
             }
         };
