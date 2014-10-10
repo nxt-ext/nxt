@@ -445,6 +445,25 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.applySettings = function(key) {
+	    if (!key || key == "themeChoice") {
+			if(NRS.settings["themeChoice"] == "corporate"){
+				var oldlink = document.getElementsByTagName("link").item(3);
+				var newlink = document.createElement("link");
+        		newlink.setAttribute("rel", "stylesheet");
+       			newlink.setAttribute("type", "text/css");
+        		newlink.setAttribute("href", 'css/corporate.css');
+				document.getElementsByTagName("head").item(0).replaceChild(newlink, oldlink);
+			}
+			else {
+				var oldlink = document.getElementsByTagName("link").item(3);
+				var newlink = document.createElement("link");
+        		newlink.setAttribute("rel", "stylesheet");
+       			newlink.setAttribute("type", "text/css");
+        		newlink.setAttribute("href", 'css/app.css');
+				document.getElementsByTagName("head").item(0).replaceChild(newlink, oldlink);
+			}
+		}
+		
 		if (!key || key == "language") {
 			if ($.i18n.lng() != NRS.settings["language"]) {
 				$.i18n.setLng(NRS.settings["language"], null, function() {
