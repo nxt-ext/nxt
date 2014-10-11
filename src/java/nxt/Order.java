@@ -171,6 +171,11 @@ public abstract class Order {
                 ask.save(con, table);
             }
 
+            @Override
+            protected String defaultSort() {
+                return " ORDER BY creation_height DESC ";
+            }
+
         };
 
         public static int getCount() {
@@ -301,6 +306,12 @@ public abstract class Order {
             protected void save(Connection con, Bid bid) throws SQLException {
                 bid.save(con, table);
             }
+
+            @Override
+            protected String defaultSort() {
+                return " ORDER BY creation_height DESC ";
+            }
+
         };
 
         public static int getCount() {

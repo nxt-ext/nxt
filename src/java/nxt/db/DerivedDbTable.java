@@ -30,15 +30,13 @@ public abstract class DerivedDbTable {
         }
     }
 
-    public final void truncate() {
+    public void truncate() {
         if (!Db.isInTransaction()) {
             throw new IllegalStateException("Not in transaction");
         }
         try (Connection con = Db.getConnection();
              Statement stmt = con.createStatement()) {
-            stmt.executeUpdate("SET REFERENTIAL_INTEGRITY FALSE");
             stmt.executeUpdate("TRUNCATE TABLE " + table);
-            stmt.executeUpdate("SET REFERENTIAL_INTEGRITY TRUE");
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
         }

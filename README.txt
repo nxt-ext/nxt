@@ -16,6 +16,7 @@ Warning: It is better to use only latin characters and no spaces in the path
 to the Nxt installation directory, as the use of special characters may result
 in permissions denied error in the browser, which is a known jetty issue.
 
+
 Customization:
 
 There are many configuration parameters that could be changed, but the defaults
@@ -30,6 +31,17 @@ settings in nxt.properties override those in nxt-default.properties. This way,
 when upgrading the software, you can safely overwrite nxt-default.properties
 with the updated file from the new package, while your customizations remain
 safe in the nxt.properties file.
+
+
+How to contribute?
+
+There are many ways to contribute to Nxt. Here are some examples:
+
+ * create pull requests
+ * review pull requests
+ * review existing code
+ * create issues (aka feature ideas, bug reports, documentation etc.)
+ * answer issues
 
 
 Technical details:

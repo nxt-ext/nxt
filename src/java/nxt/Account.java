@@ -35,7 +35,6 @@ public final class Account {
         private final DbKey dbKey;
         private long quantityQNT;
         private long unconfirmedQuantityQNT;
-        private int height;
 
         private AccountAsset(long accountId, long assetId, long quantityQNT, long unconfirmedQuantityQNT) {
             this.accountId = accountId;
@@ -43,7 +42,6 @@ public final class Account {
             this.dbKey = accountAssetDbKeyFactory.newKey(this.accountId, this.assetId);
             this.quantityQNT = quantityQNT;
             this.unconfirmedQuantityQNT = unconfirmedQuantityQNT;
-            this.height = Nxt.getBlockchain().getHeight();
         }
 
         private AccountAsset(ResultSet rs) throws SQLException {
@@ -52,11 +50,9 @@ public final class Account {
             this.dbKey = accountAssetDbKeyFactory.newKey(this.accountId, this.assetId);
             this.quantityQNT = rs.getLong("quantity");
             this.unconfirmedQuantityQNT = rs.getLong("unconfirmed_quantity");
-            this.height = rs.getInt("height");
         }
 
         private void save(Connection con) throws SQLException {
-            this.height = Nxt.getBlockchain().getHeight();
             try (PreparedStatement pstmt = con.prepareStatement("MERGE INTO account_asset "
                     + "(account_id, asset_id, quantity, unconfirmed_quantity, height, latest) "
                     + "KEY (account_id, asset_id, height) VALUES (?, ?, ?, ?, ?, TRUE)")) {
@@ -65,7 +61,7 @@ public final class Account {
                 pstmt.setLong(++i, this.assetId);
                 pstmt.setLong(++i, this.quantityQNT);
                 pstmt.setLong(++i, this.unconfirmedQuantityQNT);
-                pstmt.setInt(++i, this.height);
+                pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
                 pstmt.executeUpdate();
             }
         }
@@ -86,10 +82,6 @@ public final class Account {
             return unconfirmedQuantityQNT;
         }
 
-        public int getHeight() {
-            return height;
-        }
-
         private void save() {
             if (this.quantityQNT > 0 || this.unconfirmedQuantityQNT > 0) {
                 accountAssetTable.insert(this);
@@ -103,24 +95,9 @@ public final class Account {
         @Override
         public String toString() {
             return "AccountAsset account_id: " + Convert.toUnsignedLong(accountId) + " asset_id: " + Convert.toUnsignedLong(assetId)
-                    + " quantity: " + quantityQNT + " unconfirmedQuantity: " + unconfirmedQuantityQNT + " height: " + height;
+                    + " quantity: " + quantityQNT + " unconfirmedQuantity: " + unconfirmedQuantityQNT;
         }
 
-        @Override
-        public boolean equals(Object o) {
-            if (! (o instanceof AccountAsset)) {
-                return false;
-            }
-            AccountAsset other = (AccountAsset)o;
-            return this.accountId == other.accountId && this.assetId == other.assetId && this.quantityQNT == other.quantityQNT
-                    && this.unconfirmedQuantityQNT == other.unconfirmedQuantityQNT && this.height == other.height;
-        }
-
-        @Override
-        public int hashCode() {
-            return (int)(accountId ^ (accountId >>> 32) ^ assetId ^ (assetId >>> 32) ^ quantityQNT ^ (quantityQNT >>> 32)
-                    ^ unconfirmedQuantityQNT ^ (unconfirmedQuantityQNT >>> 32) ^ height);
-        }
     }
 
     @SuppressWarnings("UnusedDeclaration")
@@ -329,6 +306,11 @@ public final class Account {
             accountAsset.save(con);
         }
 
+        @Override
+        protected String defaultSort() {
+            return " ORDER BY quantity DESC, account_id, asset_id ";
+        }
+
     };
 
     private static final DbKey.LinkKeyFactory<AccountCurrency> accountCurrencyDbKeyFactory = new DbKey.LinkKeyFactory<AccountCurrency>("account_id", "currency_id") {
@@ -358,7 +340,6 @@ public final class Account {
 
         @Override
         public void trim(int height) {
-            //Logger.logDebugMessage("Trimming account_guaranteed_balance");
             try (Connection con = Db.getConnection();
                  PreparedStatement pstmtDelete = con.prepareStatement("DELETE FROM account_guaranteed_balance "
                          + "WHERE height < ?")) {
@@ -419,6 +400,19 @@ public final class Account {
         return accountTable.getCount();
     }
 
+    public static int getAssetAccountsCount(long assetId) {
+        try (Connection con = Db.getConnection();
+             PreparedStatement pstmt = con.prepareStatement("SELECT COUNT(*) FROM account_asset WHERE asset_id = ? AND latest = TRUE")) {
+            pstmt.setLong(1, assetId);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                rs.next();
+                return rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e.toString(), e);
+        }
+    }
+
     public static Account getAccount(long id) {
         return id == 0 ? null : accountTable.get(accountDbKeyFactory.newKey(id));
     }
@@ -458,18 +452,18 @@ public final class Account {
     };
 
     public static DbIterator<Account> getLeasingAccounts() {
-        return accountTable.getManyBy(leasingAccountsClause, 0, -1, " ORDER BY id ASC ");
+        return accountTable.getManyBy(leasingAccountsClause, 0, -1);
     }
 
     public static DbIterator<AccountAsset> getAssetAccounts(long assetId, int from, int to) {
-        return accountAssetTable.getManyBy(new DbClause.LongClause("asset_id", assetId), from, to);
+        return accountAssetTable.getManyBy(new DbClause.LongClause("asset_id", assetId), from, to, " ORDER BY quantity DESC, account_id ");
     }
 
     public static DbIterator<AccountAsset> getAssetAccounts(long assetId, int height, int from, int to) {
         if (height < 0) {
             return getAssetAccounts(assetId, from, to);
         }
-        return accountAssetTable.getManyBy(new DbClause.LongClause("asset_id", assetId), height, from, to);
+        return accountAssetTable.getManyBy(new DbClause.LongClause("asset_id", assetId), height, from, to, " ORDER BY quantity DESC, account_id ");
     }
 
     public static DbIterator<AccountCurrency> getCurrencyAccounts(long currencyId, int from, int to) {
