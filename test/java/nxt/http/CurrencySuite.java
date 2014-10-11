@@ -26,7 +26,6 @@ public class CurrencySuite {
     public static void init() {
         Nxt.init();
         Nxt.getBlockchainProcessor().addListener(new Helper.BlockListener(), BlockchainProcessor.Event.BLOCK_GENERATED);
-        Nxt.setIsUnitTest(true);
         String output = Helper.executeQuery("select * from unconfirmed_transaction");
         Assert.assertTrue(output.contains(NO_TRANSACTIONS));
         output = Helper.executeQuery("select * from currency");
