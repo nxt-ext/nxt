@@ -31,7 +31,6 @@ public abstract class BlockchainTest extends AbstractBlockchainTest {
         properties.setProperty("nxt.enableFakeForging", "true");
         properties.setProperty("nxt.timeMultiplier", "1");
         AbstractForgingTest.init(properties);
-        Assert.assertTrue("nxt.fakeForgingAccount must be defined in nxt.properties", Nxt.getStringProperty("nxt.fakeForgingAccount") != null);
         Nxt.setTime(new Time.CounterTime(Nxt.getEpochTime()));
         baseHeight = blockchain.getHeight();
         Logger.logMessage("baseHeight: " + baseHeight);
