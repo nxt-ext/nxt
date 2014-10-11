@@ -1,6 +1,7 @@
 package nxt;
 
 import nxt.crypto.Crypto;
+import nxt.db.DbIterator;
 import nxt.util.Listener;
 import nxt.util.Logger;
 import org.junit.Assert;
@@ -50,7 +51,11 @@ public abstract class AbstractBlockchainTest {
     }
 
     protected static void shutdown() {
-        TransactionProcessorImpl.getInstance().shutdown();
+        TransactionProcessorImpl transactionProcessor = TransactionProcessorImpl.getInstance();
+        DbIterator<TransactionImpl> allUnconfirmedTransactions = transactionProcessor.getAllUnconfirmedTransactions();
+        for (TransactionImpl transaction : allUnconfirmedTransactions) {
+            transactionProcessor.removeUnconfirmedTransaction(transaction);
+        }
     }
 
     protected static void downloadTo(final int endHeight) {
