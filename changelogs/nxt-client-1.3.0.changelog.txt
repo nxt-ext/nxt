@@ -90,6 +90,8 @@ parseTransaction does not just return an error when trying to parse an invalid
 transaction bytes or JSON, but adds a validate=false field, plus the actual error 
 message, in addition to the parsed transaction JSON.
 
+getState no longer includes total effective balance.
+
 
 New API requests:
 
