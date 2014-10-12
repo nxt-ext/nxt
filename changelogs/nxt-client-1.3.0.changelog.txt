@@ -125,6 +125,9 @@ longConvert - an utility API to convert between signed long ids as used in the
 database and unsigned long ids represented as strings. Accepts an id in either
 form and returns both the signed and unsigned versions.
 
+getECBlock - returns the ecBlockId and ecBlockHeight given an optional timestamp,
+current time if not supplied.
+
 
 New debug API requests:
 

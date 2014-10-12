@@ -288,7 +288,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
         TransactionImpl.BuilderImpl builder = new TransactionImpl.BuilderImpl(version, senderPublicKey, amountNQT, feeNQT, timestamp,
                 deadline, (Attachment.AbstractAttachment)attachment);
         if (version > 0) {
-            Block ecBlock = EconomicClustering.getECBlockId(timestamp);
+            Block ecBlock = EconomicClustering.getECBlock(timestamp);
             builder.ecBlockHeight(ecBlock.getHeight());
             builder.ecBlockId(ecBlock.getId());
         }
