@@ -760,9 +760,6 @@ final class TransactionImpl implements Transaction {
                     feeNQT, minimumFeeNQT, Nxt.getBlockchain().getHeight()));
         }
         if (Nxt.getBlockchain().getHeight() >= Constants.PUBLIC_KEY_ANNOUNCEMENT_BLOCK) {
-            if (deadline > 1440) {
-                throw new NxtException.NotCurrentlyValidException("Invalid deadline " + deadline + ", maximum allowed is 1440");
-            }
             if (type.hasRecipient() && recipientId != 0) {
                 Account recipientAccount = Account.getAccount(recipientId);
                 if ((recipientAccount == null || recipientAccount.getPublicKey() == null) && publicKeyAnnouncement == null) {
