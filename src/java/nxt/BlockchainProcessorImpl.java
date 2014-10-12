@@ -385,7 +385,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         blockListeners.addListener(new Listener<Block>() {
             @Override
             public void notify(Block block) {
-                if (block.getHeight() % 1440 == 0) {
+                if (block.getHeight() % 1440 == 1) {
                     try (Connection con = Db.getConnection();
                          Statement stmt = con.createStatement()) {
                         stmt.execute("ANALYZE SAMPLE_SIZE 0");
