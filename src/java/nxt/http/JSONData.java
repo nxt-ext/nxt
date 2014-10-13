@@ -293,6 +293,7 @@ final class JSONData {
         Asset asset = Asset.getAsset(assetTransfer.getAssetId());
         json.put("name", asset.getName());
         json.put("decimals", asset.getDecimals());
+        json.put("timestamp", assetTransfer.getTimestamp());
         return json;
     }
 

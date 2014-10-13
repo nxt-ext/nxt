@@ -380,7 +380,8 @@ final class DbVersion {
                         + "(transaction_height ASC, fee_per_byte DESC, timestamp ASC)");
             case 116:
                 apply("CREATE TABLE IF NOT EXISTS asset_transfer (db_id IDENTITY, id BIGINT NOT NULL, asset_id BIGINT NOT NULL, "
-                        + "sender_id BIGINT NOT NULL, recipient_id BIGINT NOT NULL, quantity BIGINT NOT NULL, height INT NOT NULL)");
+                        + "sender_id BIGINT NOT NULL, recipient_id BIGINT NOT NULL, quantity BIGINT NOT NULL, timestamp INT NOT NULL, "
+                        + "height INT NOT NULL)");
             case 117:
                 apply("CREATE UNIQUE INDEX IF NOT EXISTS asset_transfer_id_idx ON asset_transfer (id)");
             case 118:
