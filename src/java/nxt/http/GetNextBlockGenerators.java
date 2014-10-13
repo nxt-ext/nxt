@@ -48,7 +48,7 @@ public final class GetNextBlockGenerators extends APIServlet.APIRequestHandler {
 
 
         JSONObject response = new JSONObject();
-        response.put("time", Convert.getEpochTime());
+        response.put("time", Nxt.getEpochTime());
         response.put("lastBlock", Convert.toUnsignedLong(curBlock.getId()));
         JSONArray hubs = new JSONArray();
 

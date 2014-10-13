@@ -328,8 +328,8 @@ var NRS = (function(NRS, $, undefined) {
 
 		var params = {
 			"account": NRS.account,
-			"firstIndex": 0,
-			"lastIndex": 100
+			"firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
+			"lastIndex": NRS.pageNumber * NRS.itemsPerPage
 		};
 
 		if (NRS.transactionsPageType) {
@@ -348,6 +348,11 @@ var NRS = (function(NRS, $, undefined) {
 
 		NRS.sendRequest("getAccountTransactions+", params, function(response) {
 			if (response.transactions && response.transactions.length) {
+				if (response.transactions.length > NRS.itemsPerPage) {
+					NRS.hasMorePages = true;
+					response.transactions.pop();
+				}
+
 				for (var i = 0; i < response.transactions.length; i++) {
 					var transaction = response.transactions[i];
 
@@ -518,6 +523,8 @@ var NRS = (function(NRS, $, undefined) {
 		$(this).parents(".btn-group").find(".text").text($(this).text());
 
 		$(".popover").remove();
+
+		NRS.pageNumber = 1;
 
 		NRS.loadPage("transactions");
 	});

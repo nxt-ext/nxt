@@ -1,6 +1,6 @@
 /.idea/
 /nxt.iml
-/nxt_db/
+/nxt_db
 /webapps/
 /classes/
 /*.log
@@ -9,7 +9,7 @@
 /html/**/*.gz
 /keystore
 /nxt.jar
-/nxt_test_db/
+/nxt_test_db
 *.trace
 /nxt-trace.csv
 /README_win.txt
@@ -20,3 +20,4 @@
 /.project
 /.settings/
 /compile.bat
+/nxt-trace-default.csv

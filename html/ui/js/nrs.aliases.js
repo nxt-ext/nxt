@@ -5,9 +5,15 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.pages.aliases = function() {
 		NRS.sendRequest("getAliases+", {
 			"account": NRS.account,
-			"timestamp": 0
+			"firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
+			"lastIndex": NRS.pageNumber * NRS.itemsPerPage
 		}, function(response) {
 			if (response.aliases && response.aliases.length) {
+				if (response.aliases.length > NRS.itemsPerPage) {
+					NRS.hasMorePages = true;
+					response.aliases.pop();
+				}
+
 				var aliases = response.aliases;
 
 				if (NRS.unconfirmedTransactions.length) {

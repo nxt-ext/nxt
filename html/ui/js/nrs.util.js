@@ -282,7 +282,7 @@ var NRS = (function(NRS, $, undefined) {
 
 			if (!/^[0]+$/.test(toRemove)) {
 				//return new Big(price).div(new Big(Math.pow(10, decimals))).round(8, 0);
-				throw "Invalid input.";
+				throw $.t("error_invalid_input");
 			} else {
 				return price.slice(0, -decimals);
 			}
@@ -384,7 +384,7 @@ var NRS = (function(NRS, $, undefined) {
 
 			return parts[0] + "." + fraction;
 		} else {
-			throw "Incorrect input";
+			throw $.t("error_invalid_input");
 		}
 	}
 
@@ -405,7 +405,7 @@ var NRS = (function(NRS, $, undefined) {
 				var fraction = parts[1].substring(0, 8);
 			}
 		} else {
-			throw "Invalid input";
+			throw $.t("error_invalid_input");
 		}
 
 		for (var i = fraction.length; i < 8; i++) {
@@ -416,7 +416,7 @@ var NRS = (function(NRS, $, undefined) {
 
 		//in case there's a comma or something else in there.. at this point there should only be numbers
 		if (!/^\d+$/.test(result)) {
-			throw "Invalid input.";
+			throw $.t("error_invalid_input");
 		}
 
 		//remove leading zeroes
