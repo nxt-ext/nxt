@@ -8,7 +8,6 @@ import nxt.Generator;
 import nxt.Nxt;
 import nxt.Order;
 import nxt.Trade;
-import nxt.db.DbIterator;
 import nxt.peer.Peer;
 import nxt.peer.Peers;
 import org.json.simple.JSONObject;

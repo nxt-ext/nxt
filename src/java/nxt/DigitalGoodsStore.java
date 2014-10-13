@@ -493,7 +493,7 @@ public final class DigitalGoodsStore {
             feedbackNotes.add(feedbackNote);
             this.hasFeedbackNotes = true;
             purchaseTable.insert(this);
-            feedbackTable.insert(this, feedbackNote);
+            feedbackTable.insert(this, feedbackNotes);
 		}
 
         public List<String> getPublicFeedback() {
@@ -511,7 +511,7 @@ public final class DigitalGoodsStore {
             publicFeedbacks.add(publicFeedback);
             this.hasPublicFeedbacks = true;
             purchaseTable.insert(this);
-            publicFeedbackTable.insert(this, publicFeedback);
+            publicFeedbackTable.insert(this, publicFeedbacks);
         }
 
         public long getDiscountNQT() {
