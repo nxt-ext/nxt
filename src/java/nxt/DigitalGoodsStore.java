@@ -482,7 +482,7 @@ public final class DigitalGoodsStore {
             if (!hasFeedbackNotes) {
                 return null;
             }
-            feedbackNotes = feedbackTable.get(feedbackDbKeyFactory.newKey(id));
+            feedbackNotes = feedbackTable.get(feedbackDbKeyFactory.newKey(this));
             return feedbackNotes;
         }
 
@@ -500,7 +500,7 @@ public final class DigitalGoodsStore {
             if (!hasPublicFeedbacks) {
                 return null;
             }
-            publicFeedbacks = publicFeedbackTable.get(publicFeedbackDbKeyFactory.newKey(id));
+            publicFeedbacks = publicFeedbackTable.get(publicFeedbackDbKeyFactory.newKey(this));
             return publicFeedbacks;
         }
 
