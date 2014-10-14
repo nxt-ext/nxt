@@ -366,6 +366,7 @@ final class JSONData {
         putAccount(json, "recipient", transfer.getRecipientId());
         json.put("units", String.valueOf(transfer.getUnits()));
         json.put("height", transfer.getHeight());
+        json.put("timestamp", transfer.getTimestamp());
         return json;
     }
 
