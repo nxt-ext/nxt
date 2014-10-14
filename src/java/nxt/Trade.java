@@ -119,8 +119,8 @@ public final class Trade {
         }
     }
 
-    static Trade addTrade(long assetId, Block block, Order.Ask askOrder, Order.Bid bidOrder, long quantityQNT, long priceNQT) {
-        Trade trade = new Trade(assetId, block, askOrder, bidOrder, quantityQNT, priceNQT);
+    static Trade addTrade(long assetId, Block block, Order.Ask askOrder, Order.Bid bidOrder) {
+        Trade trade = new Trade(assetId, block, askOrder, bidOrder);
         tradeTable.insert(trade);
         listeners.notify(trade, Event.TRADE);
         return trade;
@@ -142,8 +142,9 @@ public final class Trade {
     private final DbKey dbKey;
     private final long quantityQNT;
     private final long priceNQT;
+    private final boolean isBuy;
 
-    private Trade(long assetId, Block block, Order.Ask askOrder, Order.Bid bidOrder, long quantityQNT, long priceNQT) {
+    private Trade(long assetId, Block block, Order.Ask askOrder, Order.Bid bidOrder) {
         this.blockId = block.getId();
         this.height = block.getHeight();
         this.assetId = assetId;
@@ -155,8 +156,9 @@ public final class Trade {
         this.sellerId = askOrder.getAccountId();
         this.buyerId = bidOrder.getAccountId();
         this.dbKey = tradeDbKeyFactory.newKey(this.askOrderId, this.bidOrderId);
-        this.quantityQNT = quantityQNT;
-        this.priceNQT = priceNQT;
+        this.quantityQNT = Math.min(askOrder.getQuantityQNT(), bidOrder.getQuantityQNT());
+        this.isBuy = askOrderHeight < bidOrderHeight || (askOrderHeight == bidOrderHeight && askOrderId < bidOrderId);
+        this.priceNQT = isBuy ? askOrder.getPriceNQT() : bidOrder.getPriceNQT();
     }
 
     private Trade(ResultSet rs) throws SQLException {
@@ -173,6 +175,7 @@ public final class Trade {
         this.priceNQT = rs.getLong("price");
         this.timestamp = rs.getInt("timestamp");
         this.height = rs.getInt("height");
+        this.isBuy = askOrderHeight < bidOrderHeight || (askOrderHeight == bidOrderHeight && askOrderId < bidOrderId);
     }
 
     private void save(Connection con) throws SQLException {
@@ -228,6 +231,10 @@ public final class Trade {
 
     public int getHeight() {
         return height;
+    }
+
+    public boolean isBuy() {
+        return isBuy;
     }
 
     @Override

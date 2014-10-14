@@ -339,6 +339,7 @@ final class JSONData {
         Asset asset = Asset.getAsset(trade.getAssetId());
         json.put("name", asset.getName());
         json.put("decimals", asset.getDecimals());
+        json.put("tradeType", trade.isBuy() ? "buy" : "sell");
         return json;
     }
 
@@ -353,6 +354,7 @@ final class JSONData {
         Asset asset = Asset.getAsset(assetTransfer.getAssetId());
         json.put("name", asset.getName());
         json.put("decimals", asset.getDecimals());
+        json.put("timestamp", assetTransfer.getTimestamp());
         return json;
     }
 

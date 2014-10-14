@@ -12,7 +12,6 @@ import nxt.Currency;
 import nxt.Exchange;
 import nxt.CurrencyTransfer;
 
-import nxt.db.DbIterator;
 import nxt.peer.Peer;
 import nxt.peer.Peers;
 import org.json.simple.JSONObject;
@@ -39,6 +38,7 @@ public final class GetState extends APIServlet.APIRequestHandler {
         response.put("lastBlock", Nxt.getBlockchain().getLastBlock().getStringId());
         response.put("cumulativeDifficulty", Nxt.getBlockchain().getLastBlock().getCumulativeDifficulty().toString());
 
+        /*
         long totalEffectiveBalance = 0;
         try (DbIterator<Account> accounts = Account.getAllAccounts(0, -1)) {
             for (Account account : accounts) {
@@ -49,6 +49,7 @@ public final class GetState extends APIServlet.APIRequestHandler {
             }
         }
         response.put("totalEffectiveBalanceNXT", totalEffectiveBalance);
+        */
 
         response.put("numberOfBlocks", Nxt.getBlockchain().getHeight() + 1);
         response.put("numberOfTransactions", Nxt.getBlockchain().getTransactionCount());

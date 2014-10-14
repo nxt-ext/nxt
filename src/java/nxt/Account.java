@@ -83,12 +83,11 @@ public final class Account {
         }
 
         private void save() {
+            checkBalance(this.accountId, this.quantityQNT, this.unconfirmedQuantityQNT);
             if (this.quantityQNT > 0 || this.unconfirmedQuantityQNT > 0) {
                 accountAssetTable.insert(this);
-            } else if (this.quantityQNT == 0 && this.unconfirmedQuantityQNT == 0) {
+            } else {
                 accountAssetTable.delete(this);
-            } else if (this.quantityQNT < 0 || this.unconfirmedQuantityQNT < 0) {
-                throw new DoubleSpendingException("Negative asset balance for account " + Convert.toUnsignedLong(this.accountId));
             }
         }
 
@@ -962,7 +961,7 @@ public final class Account {
         }
         this.balanceNQT = Convert.safeAdd(this.balanceNQT, amountNQT);
         addToGuaranteedBalanceNQT(amountNQT);
-        checkBalance();
+        checkBalance(this.id, this.balanceNQT, this.unconfirmedBalanceNQT);
         accountTable.insert(this);
         listeners.notify(this, Event.BALANCE);
     }
@@ -972,7 +971,7 @@ public final class Account {
             return;
         }
         this.unconfirmedBalanceNQT = Convert.safeAdd(this.unconfirmedBalanceNQT, amountNQT);
-        checkBalance();
+        checkBalance(this.id, this.balanceNQT, this.unconfirmedBalanceNQT);
         accountTable.insert(this);
         listeners.notify(this, Event.UNCONFIRMED_BALANCE);
     }
@@ -984,7 +983,7 @@ public final class Account {
         this.balanceNQT = Convert.safeAdd(this.balanceNQT, amountNQT);
         this.unconfirmedBalanceNQT = Convert.safeAdd(this.unconfirmedBalanceNQT, amountNQT);
         addToGuaranteedBalanceNQT(amountNQT);
-        checkBalance();
+        checkBalance(this.id, this.balanceNQT, this.unconfirmedBalanceNQT);
         accountTable.insert(this);
         listeners.notify(this, Event.BALANCE);
         listeners.notify(this, Event.UNCONFIRMED_BALANCE);
@@ -998,18 +997,18 @@ public final class Account {
         accountTable.insert(this);
     }
 
-    private void checkBalance() {
-        if (id == Genesis.CREATOR_ID) {
+    private static void checkBalance(long accountId, long confirmed, long unconfirmed) {
+        if (accountId == Genesis.CREATOR_ID) {
             return;
         }
-        if (balanceNQT < 0) {
-            throw new DoubleSpendingException("Negative balance for account " + Convert.toUnsignedLong(id));
+        if (confirmed < 0) {
+            throw new DoubleSpendingException("Negative balance or quantity for account " + Convert.toUnsignedLong(accountId));
         }
-        if (unconfirmedBalanceNQT < 0) {
-            throw new DoubleSpendingException("Negative unconfirmed balance for account " + Convert.toUnsignedLong(id));
+        if (unconfirmed < 0) {
+            throw new DoubleSpendingException("Negative unconfirmed balance or quantity for account " + Convert.toUnsignedLong(accountId));
         }
-        if (unconfirmedBalanceNQT > balanceNQT) {
-            throw new DoubleSpendingException("Unconfirmed balance exceeds balance for account " + Convert.toUnsignedLong(id));
+        if (unconfirmed > confirmed) {
+            throw new DoubleSpendingException("Unconfirmed exceeds confirmed balance or quantity for account " + Convert.toUnsignedLong(accountId));
         }
     }
 

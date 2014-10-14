@@ -7,9 +7,15 @@ import nxt.Constants;
 import nxt.Currency;
 import nxt.DigitalGoodsStore;
 import nxt.Nxt;
+import nxt.NxtException;
+import nxt.Transaction;
 import nxt.crypto.Crypto;
 import nxt.crypto.EncryptedData;
 import nxt.util.Convert;
+import nxt.util.Logger;
+import org.json.simple.JSONObject;
+import org.json.simple.JSONValue;
+import org.json.simple.parser.ParseException;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
@@ -19,7 +25,7 @@ import static nxt.http.JSONResponses.*;
 
 final class ParameterParser {
 
-        static byte getByte(HttpServletRequest req, String name, byte min, byte max) throws ParameterException {
+    static byte getByte(HttpServletRequest req, String name, byte min, byte max) throws ParameterException {
         String paramValue = Convert.emptyToNull(req.getParameter(name));
         if (paramValue == null) {
             return 0;
@@ -506,6 +512,36 @@ final class ParameterParser {
         }
         return -1;
     }
+
+    static Transaction parseTransaction(String transactionBytes, String transactionJSON) throws ParameterException {
+        if (transactionBytes == null && transactionJSON == null) {
+            throw new ParameterException(MISSING_TRANSACTION_BYTES_OR_JSON);
+        }
+        if (transactionBytes != null) {
+            try {
+                byte[] bytes = Convert.parseHexString(transactionBytes);
+                return Nxt.getTransactionProcessor().parseTransaction(bytes);
+            } catch (NxtException.ValidationException|RuntimeException e) {
+                Logger.logDebugMessage(e.getMessage(), e);
+                JSONObject response = new JSONObject();
+                response.put("errorCode", 4);
+                response.put("errorDescription", "Incorrect transactionBytes: " + e.toString());
+                throw new ParameterException(response);
+            }
+        } else {
+            try {
+                JSONObject json = (JSONObject) JSONValue.parseWithException(transactionJSON);
+                return Nxt.getTransactionProcessor().parseTransaction(json);
+            } catch (NxtException.ValidationException | RuntimeException | ParseException e) {
+                Logger.logDebugMessage(e.getMessage(), e);
+                JSONObject response = new JSONObject();
+                response.put("errorCode", 4);
+                response.put("errorDescription", "Incorrect transactionJSON: " + e.toString());
+                throw new ParameterException(response);
+            }
+        }
+    }
+
 
     private ParameterParser() {} // never
 

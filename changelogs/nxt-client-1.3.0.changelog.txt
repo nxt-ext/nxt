@@ -90,6 +90,8 @@ parseTransaction does not just return an error when trying to parse an invalid
 transaction bytes or JSON, but adds a validate=false field, plus the actual error 
 message, in addition to the parsed transaction JSON.
 
+getState no longer includes total effective balance.
+
 
 New API requests:
 
@@ -124,6 +126,9 @@ trimming disabled, or maxRollback set high enough to cover that height.
 longConvert - an utility API to convert between signed long ids as used in the
 database and unsigned long ids represented as strings. Accepts an id in either
 form and returns both the signed and unsigned versions.
+
+getECBlock - returns the ecBlockId and ecBlockHeight given an optional timestamp,
+current time if not supplied.
 
 
 New debug API requests:

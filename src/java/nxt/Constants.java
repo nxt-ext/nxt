@@ -55,7 +55,6 @@ public final class Constants {
     public static final int CURRENCY_CODE_LENGTH = 3;
     public static final int MAX_CURRENCY_DESCRIPTION_LENGTH = 1000;
     public static final long MAX_CURRENCY_TOTAL_SUPPLY = 1000000000L * 100000000L;
-    public static final long MAX_CURRENCY_INITIAL_SUPPLY = 1000000000L * 100000000L;
     public static final int MAX_MINTING_RATIO = 10000; // per mint units not more than 0.01% of total supply
     public static final byte MIN_NUMBER_OF_SHUFFLING_PARTICIPANTS = 3;
     public static final byte MAX_NUMBER_OF_SHUFFLING_PARTICIPANTS = 100;
@@ -85,7 +84,7 @@ public final class Constants {
     public static final int DIGITAL_GOODS_STORE_BLOCK = isTestnet ? 77341 : 213000;
     public static final int PUBLIC_KEY_ANNOUNCEMENT_BLOCK = isTestnet ? 77341 : 215000;
     public static final int MONETARY_SYSTEM_BLOCK = isTestnet ? 77341 : Integer.MAX_VALUE;
-    public static final int LAST_KNOWN_BLOCK = isTestnet ? 80000 : 253000;
+    public static final int LAST_KNOWN_BLOCK = isTestnet ? 80000 : 258000;
 
     static final long UNCONFIRMED_POOL_DEPOSIT_NQT = (isTestnet ? 50 : 100) * ONE_NXT;
 
