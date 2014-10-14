@@ -105,7 +105,7 @@ public final class Currency {
     private final String name;
     private final String code;
     private final String description;
-    private final byte type;
+    private final int type;
     private long totalSupply;
     private final int issuanceHeight;
     private final long minReservePerUnitNQT;
@@ -123,7 +123,7 @@ public final class Currency {
                 attachment.getMinDifficulty(), attachment.getMaxDifficulty(), attachment.getRuleset(), attachment.getAlgorithm());
     }
 
-    private Currency(long currencyId, long accountId, String name, String code, String description, byte type, long totalSupply,
+    private Currency(long currencyId, long accountId, String name, String code, String description, int type, long totalSupply,
                      long currentSupply, int issuanceHeight, long minReservePerUnitNQT, byte minDifficulty, byte maxDifficulty,
                      byte ruleset, byte algorithm) {
         this.currencyId = currencyId;
@@ -151,7 +151,7 @@ public final class Currency {
         this.name = rs.getString("name");
         this.code = rs.getString("code");
         this.description = rs.getString("description");
-        this.type = rs.getByte("type");
+        this.type = rs.getInt("type");
         this.totalSupply = rs.getLong("total_supply");
         this.issuanceHeight = rs.getInt("issuance_height");
         this.minReservePerUnitNQT = rs.getLong("min_reserve_per_unit_nqt");
@@ -174,7 +174,7 @@ public final class Currency {
             pstmt.setString(++i, this.getName());
             pstmt.setString(++i, this.getCode());
             pstmt.setString(++i, this.getDescription());
-            pstmt.setByte(++i, this.getType());
+            pstmt.setInt(++i, this.getType());
             pstmt.setLong(++i, this.getTotalSupply());
             pstmt.setInt(++i, this.getIssuanceHeight());
             pstmt.setLong(++i, this.getMinReservePerUnitNQT());
@@ -209,7 +209,7 @@ public final class Currency {
         return description;
     }
 
-    public byte getType() {
+    public int getType() {
         return type;
     }
 

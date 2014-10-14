@@ -403,7 +403,7 @@ final class DbVersion {
                 apply("CREATE INDEX IF NOT EXISTS bid_order_creation_idx ON bid_order (creation_height DESC)");
             case 126:
                 apply("CREATE TABLE IF NOT EXISTS currency (db_id INT IDENTITY, id BIGINT NOT NULL, account_id BIGINT NOT NULL, "
-                        + "name VARCHAR NOT NULL, code VARCHAR NOT NULL, description VARCHAR, type TINYINT NOT NULL, total_supply BIGINT NOT NULL, "
+                        + "name VARCHAR NOT NULL, code VARCHAR NOT NULL, description VARCHAR, type INT NOT NULL, total_supply BIGINT NOT NULL, "
                         + "issuance_height INT NOT NULL, min_reserve_per_unit_nqt BIGINT NOT NULL, min_difficulty TINYINT NOT NULL, "
                         + "max_difficulty TINYINT NOT NULL, ruleset TINYINT NOT NULL, algorithm TINYINT NOT NULL, current_supply BIGINT NOT NULL, "
                         + "current_reserve_per_unit_nqt BIGINT NOT NULL, "

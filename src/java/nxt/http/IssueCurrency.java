@@ -1,12 +1,14 @@
 package nxt.http;
 
-import nxt.*;
+import nxt.Account;
+import nxt.Attachment;
+import nxt.Constants;
+import nxt.CurrencyType;
+import nxt.NxtException;
 import nxt.util.Convert;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
-
-import static nxt.http.JSONResponses.*;
 
 /**
  * Issue a currency on the NXT blockchain
@@ -80,7 +82,7 @@ public final class IssueCurrency extends CreateTransaction {
                 }
             }
         } else {
-            type = ParameterParser.getByte(req, "type", (byte) 0, Byte.MAX_VALUE);
+            type = ParameterParser.getInt(req, "type", 0, Integer.MAX_VALUE, false);
         }
 
         long totalSupply = ParameterParser.getLong(req, "totalSupply", 1, Constants.MAX_CURRENCY_TOTAL_SUPPLY, false);

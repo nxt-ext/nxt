@@ -13,7 +13,7 @@ public enum CurrencyType {
     /**
      * Can be exchanged from/to NXT<br>
      */
-    EXCHANGEABLE((byte)0x01) {
+    EXCHANGEABLE(0x01) {
 
         @Override
         public void validate(Transaction transaction, Attachment attachment, Set<CurrencyType> validators) throws NxtException.NotValidException {
@@ -41,7 +41,7 @@ public enum CurrencyType {
      * Transfers are only allowed from/to issuer account<br>
      * Only issuer account can publish exchange offer<br>
      */
-    CONTROLLABLE((byte)0x02) {
+    CONTROLLABLE(0x02) {
 
         @Override
         public void validate(Transaction transaction, Attachment attachment, Set<CurrencyType> validators) throws NxtException.NotValidException {
@@ -61,7 +61,7 @@ public enum CurrencyType {
     /**
      * Can be reserved before the currency is active, reserve is distributed to founders once the currency becomes active<br>
      */
-    RESERVABLE((byte)0x04) {
+    RESERVABLE(0x04) {
 
         @Override
         public void validate(Transaction transaction, Attachment attachment, Set<CurrencyType> validators) throws NxtException.NotValidException {
@@ -91,7 +91,7 @@ public enum CurrencyType {
      * Is {@link #RESERVABLE} and can be claimed after currency is active<br>
      * Cannot be {@link #EXCHANGEABLE}
      */
-    CLAIMABLE((byte)0x08) {
+    CLAIMABLE(0x08) {
 
         @Override
         public void validate(Transaction transaction, Attachment attachment, Set<CurrencyType> validators) throws NxtException.NotValidException {
@@ -117,7 +117,7 @@ public enum CurrencyType {
     /**
      * Can be minted using proof of work algorithm<br>
      */
-    MINTABLE((byte)0x10) {
+    MINTABLE(0x10) {
         @Override
         public void validate(Transaction transaction, Attachment attachment, Set<CurrencyType> validators) throws NxtException.NotValidException {
             if (attachment instanceof Attachment.MonetarySystemCurrencyIssuance) {
@@ -155,15 +155,15 @@ public enum CurrencyType {
     /**
      * Support shuffling - not implemented yet<br>
      */
-    SHUFFLEABLE((byte)0x20);
+    SHUFFLEABLE(0x20);
 
-    private final byte code;
+    private final int code;
 
-    CurrencyType(byte code) {
+    CurrencyType(int code) {
         this.code = code;
     }
 
-    public byte getCode() {
+    public int getCode() {
         return code;
     }
 
@@ -171,7 +171,7 @@ public enum CurrencyType {
 
     public void validateMissing(Transaction transaction, Attachment attachment, Set<CurrencyType> validators) throws NxtException.NotValidException {}
 
-    public static void validate(Attachment attachment, byte type, Transaction transaction) throws NxtException.ValidationException {
+    public static void validate(Attachment attachment, int type, Transaction transaction) throws NxtException.ValidationException {
         // sanity checks for all currency types
         if (Nxt.getBlockchain().getLastBlock().getHeight() < Constants.MONETARY_SYSTEM_BLOCK) {
             throw new NxtException.NotYetEnabledException("Monetary System not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
@@ -230,7 +230,7 @@ public enum CurrencyType {
         }
     }
 
-    public static byte getCurrencyType(long currencyId) throws NxtException.NotValidException {
+    public static int getCurrencyType(long currencyId) throws NxtException.NotValidException {
         Currency currency = Currency.getCurrency(currencyId);
         if (currency == null) {
             throw new NxtException.NotValidException("Unknown currency id: " + currencyId);

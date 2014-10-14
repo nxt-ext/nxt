@@ -19,11 +19,11 @@ public class TestCurrencyIssuance extends BlockchainTest {
         return issueCurrencyImpl(CurrencyType.EXCHANGEABLE.getCode(), 0, 0);
     }
 
-    public static String issueCurrencyImpl(byte type, int issuanceHeight, long minReservePerUnitNQT) {
+    public static String issueCurrencyImpl(int type, int issuanceHeight, long minReservePerUnitNQT) {
         return issueCurrencyImpl(type, issuanceHeight, minReservePerUnitNQT, 100000, 100000, (byte)0, (byte)0, (byte)0);
     }
 
-    public static String issueCurrencyImpl(byte type, int issuanceHeight, long minReservePerUnitNQT,
+    public static String issueCurrencyImpl(int type, int issuanceHeight, long minReservePerUnitNQT,
                                            long totalSupply, long initialSupply, byte minDiff, byte maxDiff, byte algorithm) {
         APICall apiCall = new APICall.Builder("issueCurrency").
                 secretPhrase(secretPhrase1).
