@@ -259,26 +259,26 @@ public abstract class MonetarySystem extends TransactionType {
 
     };
 
-    public static final TransactionType EXCHANGE_OFFER_PUBLICATION = new MonetarySystem() {
+    public static final TransactionType PUBLISH_EXCHANGE_OFFER = new MonetarySystem() {
 
         @Override
         public byte getSubtype() {
-            return TransactionType.SUBTYPE_MONETARY_SYSTEM_EXCHANGE_OFFER_PUBLICATION;
+            return TransactionType.SUBTYPE_MONETARY_SYSTEM_PUBLISH_EXCHANGE_OFFER;
         }
 
         @Override
-        Attachment.MonetarySystemExchangeOfferPublication parseAttachment(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
-            return new Attachment.MonetarySystemExchangeOfferPublication(buffer, transactionVersion);
+        Attachment.MonetarySystemPublishExchangeOffer parseAttachment(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
+            return new Attachment.MonetarySystemPublishExchangeOffer(buffer, transactionVersion);
         }
 
         @Override
-        Attachment.MonetarySystemExchangeOfferPublication parseAttachment(JSONObject attachmentData) throws NxtException.NotValidException {
-            return new Attachment.MonetarySystemExchangeOfferPublication(attachmentData);
+        Attachment.MonetarySystemPublishExchangeOffer parseAttachment(JSONObject attachmentData) throws NxtException.NotValidException {
+            return new Attachment.MonetarySystemPublishExchangeOffer(attachmentData);
         }
 
         @Override
         void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
-            Attachment.MonetarySystemExchangeOfferPublication attachment = (Attachment.MonetarySystemExchangeOfferPublication) transaction.getAttachment();
+            Attachment.MonetarySystemPublishExchangeOffer attachment = (Attachment.MonetarySystemPublishExchangeOffer) transaction.getAttachment();
             int type = CurrencyType.getCurrencyType(attachment.getCurrencyId());
             CurrencyType.validate(attachment, type, transaction);
             if (!Currency.isActive(attachment.getCurrencyId())
@@ -289,13 +289,25 @@ public abstract class MonetarySystem extends TransactionType {
                     || attachment.getInitialBuySupply() < 0
                     || attachment.getInitialSellSupply() < 0
                     || attachment.getExpirationHeight() < 0) {
-                throw new NxtException.NotValidException("Invalid exchange offer publication: " + attachment.getJSONObject());
+                throw new NxtException.NotValidException("Invalid exchange offer: " + attachment.getJSONObject());
             }
+            Account account = Account.getAccount(transaction.getSenderId());
+            long requiredBalance = Convert.safeMultiply(attachment.getInitialBuySupply(), attachment.getBuyRateNQT());
+            if (account.getUnconfirmedBalanceNQT() < requiredBalance) {
+                throw new NxtException.NotValidException(String.format("Cannot publish exchange offer, account balance %d lower than offer initial balance %d",
+                        account.getUnconfirmedBalanceNQT(), requiredBalance));
+            }
+            long requiredUnits = account.getUnconfirmedCurrencyUnits(attachment.getCurrencyId());
+            if (requiredUnits < attachment.getInitialSellSupply()) {
+                throw new NxtException.NotValidException(String.format("Cannot publish exchange offer, currency units %d lower than offer initial units %d",
+                        requiredUnits, attachment.getInitialSellSupply()));
+            }
+
         }
 
         @Override
         boolean applyAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
-            Attachment.MonetarySystemExchangeOfferPublication attachment = (Attachment.MonetarySystemExchangeOfferPublication) transaction.getAttachment();
+            Attachment.MonetarySystemPublishExchangeOffer attachment = (Attachment.MonetarySystemPublishExchangeOffer) transaction.getAttachment();
             if (senderAccount.getUnconfirmedBalanceNQT() >= Convert.safeMultiply(attachment.getInitialBuySupply(), attachment.getBuyRateNQT())
                     && senderAccount.getUnconfirmedCurrencyUnits(attachment.getCurrencyId()) >= attachment.getInitialSellSupply()) {
                 senderAccount.addToUnconfirmedBalanceNQT(-Convert.safeMultiply(attachment.getInitialBuySupply(), attachment.getBuyRateNQT()));
@@ -308,14 +320,14 @@ public abstract class MonetarySystem extends TransactionType {
 
         @Override
         void undoAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
-            Attachment.MonetarySystemExchangeOfferPublication attachment = (Attachment.MonetarySystemExchangeOfferPublication) transaction.getAttachment();
+            Attachment.MonetarySystemPublishExchangeOffer attachment = (Attachment.MonetarySystemPublishExchangeOffer) transaction.getAttachment();
             senderAccount.addToUnconfirmedBalanceNQT(Convert.safeMultiply(attachment.getInitialBuySupply(), attachment.getBuyRateNQT()));
             senderAccount.addToUnconfirmedCurrencyUnits(attachment.getCurrencyId(), attachment.getInitialSellSupply());
         }
 
         @Override
         void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
-            Attachment.MonetarySystemExchangeOfferPublication attachment = (Attachment.MonetarySystemExchangeOfferPublication) transaction.getAttachment();
+            Attachment.MonetarySystemPublishExchangeOffer attachment = (Attachment.MonetarySystemPublishExchangeOffer) transaction.getAttachment();
             CurrencyExchange.publishOffer(transaction.getId(), senderAccount, attachment.getCurrencyId(), attachment.getBuyRateNQT(), attachment.getSellRateNQT(), attachment.getTotalBuyLimit(), attachment.getTotalSellLimit(), attachment.getInitialBuySupply(), attachment.getInitialSellSupply(), attachment.getExpirationHeight());
         }
 

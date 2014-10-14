@@ -46,8 +46,8 @@ public final class CurrencySell extends CurrencyOffer {
 
     static void init() {}
 
-    public CurrencySell(long id, long currencyId, long accountId, long rateNQT, long limit, long supply, int expirationHeight, int publicationHeight) {
-        super(id, currencyId, accountId, rateNQT, limit, supply, expirationHeight, publicationHeight);
+    public CurrencySell(long id, long currencyId, long accountId, long rateNQT, long limit, long supply, int expirationHeight, int offerHeight) {
+        super(id, currencyId, accountId, rateNQT, limit, supply, expirationHeight, offerHeight);
         this.dbKey = sellOfferDbKeyFactory.newKey(id);
     }
 

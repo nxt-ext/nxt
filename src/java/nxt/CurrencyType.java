@@ -32,7 +32,7 @@ public enum CurrencyType {
                 }
             }
             if (attachment instanceof Attachment.MonetarySystemExchange ||
-                    attachment instanceof Attachment.MonetarySystemExchangeOfferPublication) {
+                    attachment instanceof Attachment.MonetarySystemPublishExchangeOffer) {
                 throw new NxtException.NotValidException("Currency is not exchangeable");
             }
         }
@@ -51,7 +51,7 @@ public enum CurrencyType {
                     throw new NxtException.NotValidException("Controllable currency can only be transferred to/from issuer account");
                 }
             }
-            if (attachment instanceof Attachment.MonetarySystemExchangeOfferPublication) {
+            if (attachment instanceof Attachment.MonetarySystemPublishExchangeOffer) {
                 if (!Currency.isIssuer(transaction.getSenderId())) {
                     throw new NxtException.NotValidException("Only currency issuer can publish an exchange offer for controllable currency");
                 }

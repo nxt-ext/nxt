@@ -50,7 +50,7 @@ public abstract class TransactionType {
     static final byte SUBTYPE_MONETARY_SYSTEM_RESERVE_INCREASE = 1;
     static final byte SUBTYPE_MONETARY_SYSTEM_RESERVE_CLAIM = 2;
     static final byte SUBTYPE_MONETARY_SYSTEM_CURRENCY_TRANSFER = 3;
-    static final byte SUBTYPE_MONETARY_SYSTEM_EXCHANGE_OFFER_PUBLICATION = 4;
+    static final byte SUBTYPE_MONETARY_SYSTEM_PUBLISH_EXCHANGE_OFFER = 4;
     static final byte SUBTYPE_MONETARY_SYSTEM_EXCHANGE = 5;
     static final byte SUBTYPE_MONETARY_SYSTEM_CURRENCY_MINTING = 6;
     static final byte SUBTYPE_MONETARY_SYSTEM_SHUFFLING_INITIATION = 7;
@@ -154,8 +154,8 @@ public abstract class TransactionType {
                         return MonetarySystem.RESERVE_CLAIM;
                     case SUBTYPE_MONETARY_SYSTEM_CURRENCY_TRANSFER:
                         return MonetarySystem.CURRENCY_TRANSFER;
-                    case SUBTYPE_MONETARY_SYSTEM_EXCHANGE_OFFER_PUBLICATION:
-                        return MonetarySystem.EXCHANGE_OFFER_PUBLICATION;
+                    case SUBTYPE_MONETARY_SYSTEM_PUBLISH_EXCHANGE_OFFER:
+                        return MonetarySystem.PUBLISH_EXCHANGE_OFFER;
                     case SUBTYPE_MONETARY_SYSTEM_EXCHANGE:
                         return MonetarySystem.EXCHANGE;
                     case SUBTYPE_MONETARY_SYSTEM_CURRENCY_MINTING:

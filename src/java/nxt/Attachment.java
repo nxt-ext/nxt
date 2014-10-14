@@ -1860,7 +1860,7 @@ public interface Attachment extends Appendix {
         }
     }
 
-    public final static class MonetarySystemExchangeOfferPublication extends AbstractAttachment {
+    public final static class MonetarySystemPublishExchangeOffer extends AbstractAttachment {
 
         private final long currencyId;
         private final long buyRateNQT;
@@ -1871,7 +1871,7 @@ public interface Attachment extends Appendix {
         private final long initialSellSupply;
         private final int expirationHeight;
 
-        MonetarySystemExchangeOfferPublication(ByteBuffer buffer, byte transactionVersion) {
+        MonetarySystemPublishExchangeOffer(ByteBuffer buffer, byte transactionVersion) {
             super(buffer, transactionVersion);
             this.currencyId = buffer.getLong();
             this.buyRateNQT = buffer.getLong();
@@ -1883,7 +1883,7 @@ public interface Attachment extends Appendix {
             this.expirationHeight = buffer.getInt();
         }
 
-        MonetarySystemExchangeOfferPublication(JSONObject attachmentData) {
+        MonetarySystemPublishExchangeOffer(JSONObject attachmentData) {
             super(attachmentData);
             this.currencyId = (Long)attachmentData.get("currency");
             this.buyRateNQT = (Long)attachmentData.get("buyRateNQT");
@@ -1895,8 +1895,8 @@ public interface Attachment extends Appendix {
             this.expirationHeight = ((Long)attachmentData.get("expirationHeight")).intValue();
         }
 
-        public MonetarySystemExchangeOfferPublication(Long currencyId, long buyRateNQT, long sellRateNQT, long totalBuyLimit,
-                                                      long totalSellLimit, long initialBuySupply, long initialSellSupply, int expirationHeight) {
+        public MonetarySystemPublishExchangeOffer(Long currencyId, long buyRateNQT, long sellRateNQT, long totalBuyLimit,
+                                                  long totalSellLimit, long initialBuySupply, long initialSellSupply, int expirationHeight) {
             this.currencyId = currencyId;
             this.buyRateNQT = buyRateNQT;
             this.sellRateNQT = sellRateNQT;
@@ -1909,7 +1909,7 @@ public interface Attachment extends Appendix {
 
         @Override
         String getAppendixName() {
-            return "ExchangeOfferPublication";
+            return "PublishExchangeOffer";
         }
 
         @Override
@@ -1943,7 +1943,7 @@ public interface Attachment extends Appendix {
 
         @Override
         public TransactionType getTransactionType() {
-            return MonetarySystem.EXCHANGE_OFFER_PUBLICATION;
+            return MonetarySystem.PUBLISH_EXCHANGE_OFFER;
         }
 
         public long getCurrencyId() {

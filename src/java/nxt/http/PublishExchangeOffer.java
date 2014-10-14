@@ -59,15 +59,9 @@ public final class PublishExchangeOffer extends CreateTransaction {
         int expirationHeight = ParameterParser.getInt(req, "expirationHeight", 0, Integer.MAX_VALUE, true);
         Account account = ParameterParser.getSenderAccount(req);
 
-        // TODO understand what to check
-//        if (quantityQNT > account.getUnconfirmedCurrencyBalanceQNT(currency.getId())) {
-//            return NOT_ENOUGH_CURRENCY;
-//        }
-
-        Attachment attachment = new Attachment.MonetarySystemExchangeOfferPublication(currency.getId(), buyRateNQT, sellRateNQT,
+        Attachment attachment = new Attachment.MonetarySystemPublishExchangeOffer(currency.getId(), buyRateNQT, sellRateNQT,
                 totalBuyLimit, totalSellLimit, initialBuySupply, initialSellSupply, expirationHeight);
         return createTransaction(req, account, attachment);
-
     }
 
 }

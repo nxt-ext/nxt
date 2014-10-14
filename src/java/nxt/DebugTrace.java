@@ -498,11 +498,11 @@ public final class DebugTrace {
             } else {
                 map.put("recipient", Convert.toUnsignedLong(transaction.getRecipientId()));
             }
-        } else if (attachment instanceof Attachment.MonetarySystemExchangeOfferPublication) {
+        } else if (attachment instanceof Attachment.MonetarySystemPublishExchangeOffer) {
             if (isRecipient) {
                 return Collections.emptyMap();
             }
-            Attachment.MonetarySystemExchangeOfferPublication publishOffer = (Attachment.MonetarySystemExchangeOfferPublication)attachment;
+            Attachment.MonetarySystemPublishExchangeOffer publishOffer = (Attachment.MonetarySystemPublishExchangeOffer)attachment;
             map.put("currency", Convert.toUnsignedLong(publishOffer.getCurrencyId()));
             map.put("offer", transaction.getStringId());
             map.put("buy rate", String.valueOf(publishOffer.getBuyRateNQT()));
