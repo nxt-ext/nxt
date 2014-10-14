@@ -254,6 +254,11 @@ public final class Currency {
         return currency != null && currency.getIssuanceHeight() <= BlockchainImpl.getInstance().getLastBlock().getHeight();
     }
 
+    public static boolean isIssuer(long accountId) {
+        Currency currency = getCurrency(accountId);
+        return currency != null && currency.getAccountId() == accountId;
+    }
+
     public static void increaseReserve(Account account, long currencyId, long amountNQT) {
         Currency currency = Currency.getCurrency(currencyId);
         account.addToBalanceNQT(-Convert.safeMultiply(currency.getTotalSupply(), amountNQT));
