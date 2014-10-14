@@ -463,7 +463,8 @@ final class DbVersion {
                 apply("CREATE INDEX IF NOT EXISTS exchange_buyer_id_idx ON exchange (buyer_id, height DESC)");
             case 147:
                 apply("CREATE TABLE IF NOT EXISTS currency_transfer (db_id INT IDENTITY, id BIGINT NOT NULL, currency_id BIGINT NOT NULL, "
-                        + "sender_id BIGINT NOT NULL, recipient_id BIGINT NOT NULL, units BIGINT NOT NULL, height INT NOT NULL)");
+                        + "sender_id BIGINT NOT NULL, recipient_id BIGINT NOT NULL, units BIGINT NOT NULL, timestamp INT NOT NULL, "
+                        + "height INT NOT NULL)");
             case 148:
                 apply("CREATE UNIQUE INDEX IF NOT EXISTS transfer_id_idx ON currency_transfer (id)");
             case 149:

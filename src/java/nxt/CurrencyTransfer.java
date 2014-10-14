@@ -130,6 +130,7 @@ public final class CurrencyTransfer {
     private final long senderId;
     private final long recipientId;
     private final long units;
+    private final int timestamp;
 
     private CurrencyTransfer(Transaction transaction, Attachment.MonetarySystemCurrencyTransfer attachment) {
         this.id = transaction.getId();
@@ -139,6 +140,7 @@ public final class CurrencyTransfer {
         this.senderId = transaction.getSenderId();
         this.recipientId = transaction.getRecipientId();
         this.units = attachment.getUnits();
+        this.timestamp = transaction.getBlockTimestamp();
     }
 
     private CurrencyTransfer(ResultSet rs) throws SQLException {
@@ -148,19 +150,21 @@ public final class CurrencyTransfer {
         this.senderId = rs.getLong("sender_id");
         this.recipientId = rs.getLong("recipient_id");
         this.units = rs.getLong("units");
+        this.timestamp = rs.getInt("timestamp");
         this.height = rs.getInt("height");
     }
 
     private void save(Connection con) throws SQLException {
         try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO currency_transfer (id, currency_id, "
-                + "sender_id, recipient_id, units, height) "
-                + "VALUES (?, ?, ?, ?, ?, ?)")) {
+                + "sender_id, recipient_id, units, timestamp, height) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?)")) {
             int i = 0;
             pstmt.setLong(++i, this.getId());
             pstmt.setLong(++i, this.getCurrencyId());
             pstmt.setLong(++i, this.getSenderId());
             pstmt.setLong(++i, this.getRecipientId());
             pstmt.setLong(++i, this.getUnits());
+            pstmt.setInt(++i, this.getTimestamp());
             pstmt.setInt(++i, this.getHeight());
             pstmt.executeUpdate();
         }
@@ -181,6 +185,10 @@ public final class CurrencyTransfer {
     }
 
     public long getUnits() { return units; }
+
+    public int getTimestamp() {
+        return timestamp;
+    }
 
     public int getHeight() {
         return height;
