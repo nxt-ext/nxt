@@ -3847,17 +3847,19 @@ input:invalid {
 }
 
 #forging_indicator i {
-  color:#fff;
+  /*color:#fff;*/
+  color: #a94442;
 }
 
 #forging_indicator.forging i {
-  color:#CB9900;
+  /*color:#CB9900;*/
+  color: #3c763d;
 }
 
 #forging_indicator.forging.animated i {
-  /*-webkit-animation-name: pulse;
+  -webkit-animation-name: pulse;
   -webkit-animation-duration: 2s;
-  -webkit-animation-iteration-count: infinite;*/
+  -webkit-animation-iteration-count: infinite;
 }
 
 @-moz-keyframes pulse {
