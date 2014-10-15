@@ -176,7 +176,15 @@ final class ParameterParser {
     static Currency getCurrency(HttpServletRequest req) throws ParameterException {
         String currencyValue = Convert.emptyToNull(req.getParameter("currency"));
         if (currencyValue == null) {
-            throw new ParameterException(MISSING_CURRENCY);
+            String currencyCode = Convert.emptyToNull(req.getParameter("code"));
+            if (currencyCode == null) {
+                throw new ParameterException(MISSING_CURRENCY);
+            }
+            Currency currency = Currency.getCurrencyByCode(currencyCode);
+            if (currency == null) {
+                throw new ParameterException(UNKNOWN_CURRENCY);
+            }
+            return currency;
         }
         Currency currency;
         try {

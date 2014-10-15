@@ -13,15 +13,23 @@ public class TestCurrencyReserveAndClaim extends BlockchainTest {
 
     @Test
     public void reserveIncrease() {
-        String currencyId = TestCurrencyIssuance.issueCurrencyImpl((byte)(CurrencyType.RESERVABLE.getCode() | CurrencyType.EXCHANGEABLE.getCode()),
-                baseHeight + 5, 0);
+        APICall apiCall = new TestCurrencyIssuance.Builder().
+                type(CurrencyType.RESERVABLE.getCode() | CurrencyType.EXCHANGEABLE.getCode()).
+                issuanceHeight(baseHeight + 5).
+                minReservePerUnitNQT((long) 0).
+                build();
+        String currencyId = TestCurrencyIssuance.issueCurrencyApi(apiCall);
         reserveIncreaseImpl(currencyId);
     }
 
     @Test
     public void cancelCrowdFunding() {
-        String currencyId = TestCurrencyIssuance.issueCurrencyImpl((byte)(CurrencyType.RESERVABLE.getCode() | CurrencyType.EXCHANGEABLE.getCode()),
-                baseHeight + 4, 11);
+        APICall apiCall1 = new TestCurrencyIssuance.Builder().
+                type(CurrencyType.RESERVABLE.getCode() | CurrencyType.EXCHANGEABLE.getCode()).
+                issuanceHeight(baseHeight + 4).
+                minReservePerUnitNQT((long) 11).
+                build();
+        String currencyId = TestCurrencyIssuance.issueCurrencyApi(apiCall1);
         long balanceNQT1 = Account.getAccount(Crypto.getPublicKey(secretPhrase1)).getBalanceNQT();
         long balanceNQT2 = Account.getAccount(Crypto.getPublicKey(secretPhrase2)).getBalanceNQT();
         reserveIncreaseImpl(currencyId);
@@ -42,8 +50,14 @@ public class TestCurrencyReserveAndClaim extends BlockchainTest {
 
     @Test
     public void crowdFundingDistribution() {
-        String currencyId = TestCurrencyIssuance.issueCurrencyImpl((byte)(CurrencyType.RESERVABLE.getCode() | CurrencyType.EXCHANGEABLE.getCode()),
-                baseHeight + 4, 10, 100000, 0, (byte)0, (byte)0, (byte)0);
+        APICall apiCall = new TestCurrencyIssuance.Builder().
+                type(CurrencyType.RESERVABLE.getCode() | CurrencyType.EXCHANGEABLE.getCode()).
+                initialSupply((long)0).
+                issuanceHeight(baseHeight + 4).
+                minReservePerUnitNQT((long) 10).
+                build();
+
+        String currencyId = TestCurrencyIssuance.issueCurrencyApi(apiCall);
         long balanceNQT1 = Account.getAccount(Crypto.getPublicKey(secretPhrase1)).getBalanceNQT();
         long balanceNQT2 = Account.getAccount(Crypto.getPublicKey(secretPhrase2)).getBalanceNQT();
         reserveIncreaseImpl(currencyId);

@@ -27,6 +27,9 @@ public final class GetCurrencies extends APIServlet.APIRequestHandler {
         JSONObject response = new JSONObject();
         JSONArray currenciesJSONArray = new JSONArray();
         response.put("currencies", currenciesJSONArray);
+        if (currencies == null) {
+            return response;
+        }
         for (String currencyIdString : currencies) {
             if (currencyIdString == null || currencyIdString.equals("")) {
                 continue;

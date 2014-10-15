@@ -24,7 +24,7 @@ public class APICall {
 
     public static class Builder {
 
-        private Map<String, String> params = new HashMap<>();
+        protected Map<String, String> params = new HashMap<>();
 
         public Builder(String requestType) {
             params.put("requestType", requestType);

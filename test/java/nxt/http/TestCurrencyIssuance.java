@@ -4,6 +4,7 @@ import nxt.BlockchainTest;
 import nxt.Constants;
 import nxt.CurrencyType;
 import nxt.util.Logger;
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.junit.Assert;
 import org.junit.Test;
@@ -12,36 +13,26 @@ public class TestCurrencyIssuance extends BlockchainTest {
 
     @Test
     public void issueCurrency() {
-        issueCurrencyImpl();
+        APICall apiCall = new Builder().build();
+        issueCurrencyApi(apiCall);
     }
 
-    public static String issueCurrencyImpl() {
-        return issueCurrencyImpl(CurrencyType.EXCHANGEABLE.getCode(), 0, 0);
+    @Test
+    public void issueMultipleCurrencies() {
+        APICall apiCall = new Builder().naming("aaa", "AAA", "Currency A").build();
+        issueCurrencyApi(apiCall);
+        apiCall = new Builder().naming("bbb", "BBB", "Currency B").build();
+        issueCurrencyApi(apiCall);
+        apiCall = new Builder().naming("ccc", "CCC", "Currency C").build();
+        issueCurrencyApi(apiCall);
+        apiCall = new APICall.Builder("getAllCurrencies").build();
+        JSONObject response = apiCall.invoke();
+        Logger.logDebugMessage(response.toJSONString());
+        JSONArray currencies = (JSONArray)response.get("currencies");
+        Assert.assertEquals(3, currencies.size());
     }
 
-    public static String issueCurrencyImpl(int type, int issuanceHeight, long minReservePerUnitNQT) {
-        return issueCurrencyImpl(type, issuanceHeight, minReservePerUnitNQT, 100000, 100000, (byte)0, (byte)0, (byte)0);
-    }
-
-    public static String issueCurrencyImpl(int type, int issuanceHeight, long minReservePerUnitNQT,
-                                           long totalSupply, long initialSupply, byte minDiff, byte maxDiff, byte algorithm) {
-        APICall apiCall = new APICall.Builder("issueCurrency").
-                secretPhrase(secretPhrase1).
-                feeNQT(1000 * Constants.ONE_NXT).
-                param("name", "Test1").
-                param("code", "TSX").
-                param("code", "TSX").
-                param("description", "Test Currency 1").
-                param("type", type).
-                param("totalSupply", totalSupply).
-                param("initialSupply", initialSupply).
-                param("issuanceHeight", issuanceHeight).
-                param("minReservePerUnitNQT", minReservePerUnitNQT).
-                param("minDifficulty", minDiff).
-                param("maxDifficulty", maxDiff).
-                param("algorithm", algorithm).
-                build();
-
+    static String issueCurrencyApi(APICall apiCall) {
         JSONObject issueCurrencyResponse = apiCall.invoke();
         String currencyId = (String) issueCurrencyResponse.get("transaction");
         Logger.logMessage("issueCurrencyResponse: " + issueCurrencyResponse.toJSONString());
@@ -51,7 +42,67 @@ public class TestCurrencyIssuance extends BlockchainTest {
         JSONObject getCurrencyResponse = apiCall.invoke();
         Logger.logMessage("getCurrencyResponse:" + getCurrencyResponse.toJSONString());
         Assert.assertEquals(currencyId, getCurrencyResponse.get("currency"));
-        Assert.assertEquals("TSX", getCurrencyResponse.get("code"));
         return currencyId;
+    }
+
+    public static class Builder extends APICall.Builder {
+
+        public Builder() {
+            super("issueCurrency");
+            secretPhrase(secretPhrase1);
+            feeNQT(1000 * Constants.ONE_NXT);
+            param("name", "Test1");
+            param("code", "TSX");
+            param("description", "Test Currency 1");
+            param("type", CurrencyType.EXCHANGEABLE.getCode());
+            param("totalSupply", 100000);
+            param("initialSupply", 100000);
+            param("issuanceHeight", 0);
+            param("minReservePerUnitNQT", 0);
+            param("minDifficulty", (byte) 0);
+            param("maxDifficulty", (byte) 0);
+            param("algorithm", (byte)0);
+
+        }
+
+        public Builder naming(String name, String code, String description) {
+            param("name", name);
+            param("code", code).
+            param("description", description);
+            return this;
+        }
+
+        public Builder type(int type) {
+            param("type", type);
+            return this;
+        }
+
+        public Builder totalSupply(long totalSupply) {
+            param("totalSupply", totalSupply);
+            return this;
+        }
+
+        public Builder initialSupply(long initialSupply) {
+            param("initialSupply", initialSupply);
+            return this;
+        }
+
+        public Builder issuanceHeight(int issuanceHeight) {
+            param("issuanceHeight", issuanceHeight);
+            return this;
+        }
+
+        public Builder minReservePerUnitNQT(long minReservePerUnitNQT) {
+            param("minReservePerUnitNQT", minReservePerUnitNQT);
+            return this;
+        }
+
+        public Builder minting(byte minDifficulty, byte maxDifficulty, byte algorithm) {
+            param("minDifficulty", minDifficulty);
+            param("maxDifficulty", maxDifficulty);
+            param("algorithm", algorithm);
+            return this;
+        }
+
     }
 }

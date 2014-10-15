@@ -3,6 +3,7 @@ package nxt.http;
 import nxt.AccountCurrencyBalance;
 import nxt.BlockchainTest;
 import nxt.Constants;
+import nxt.CurrencyType;
 import nxt.util.Convert;
 import nxt.util.Logger;
 import org.json.simple.JSONArray;
@@ -14,7 +15,8 @@ public class TestCurrencyExchange extends BlockchainTest {
 
     @Test
     public void buyCurrency() {
-        String currencyId = TestCurrencyIssuance.issueCurrencyImpl();
+        APICall apiCall1 = new TestCurrencyIssuance.Builder().type(CurrencyType.EXCHANGEABLE.getCode()).build();
+        String currencyId = TestCurrencyIssuance.issueCurrencyApi(apiCall1);
         AccountCurrencyBalance initialSellerBalance = new AccountCurrencyBalance(secretPhrase1, currencyId);
         AccountCurrencyBalance initialBuyerBalance = new AccountCurrencyBalance(secretPhrase2, currencyId);
 
@@ -74,7 +76,8 @@ public class TestCurrencyExchange extends BlockchainTest {
 
     @Test
     public void sellCurrency() {
-        String currencyId = TestCurrencyIssuance.issueCurrencyImpl();
+        APICall apiCall1 = new TestCurrencyIssuance.Builder().type(CurrencyType.EXCHANGEABLE.getCode()).build();
+        String currencyId = TestCurrencyIssuance.issueCurrencyApi(apiCall1);
         AccountCurrencyBalance initialBuyerBalance = new AccountCurrencyBalance(secretPhrase1, currencyId);
         AccountCurrencyBalance initialSellerBalance = new AccountCurrencyBalance(secretPhrase2, currencyId);
 
