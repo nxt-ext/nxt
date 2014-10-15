@@ -78,7 +78,7 @@ a:hover { text-decoration: underline; outline: none; color: #636363; } /* Mr. V 
   	-webkit-transition: top 0.8s; /* For Safari 3.1 to 6.0 */
 	transition: top 0.8s;
     /*top: 215px;*/
-    top:89px; /* Mr. V */
+    top:50px; /* Mr. V */
   }
   /*Right side strech mode*/
   .right-side.strech {
@@ -116,13 +116,13 @@ body.fixed .navbar {
   left: 0;
   right: 0;
   /*background-color: #002e43; /*WESLEY */
-  /*background: url(../img/corporate/header.png) repeat left top fixed;*/
+  background: url(../img/corporate/header.png) repeat left top fixed;
 }
 body.fixed .wrapper {
 	-webkit-transition: margin-top 0.8s; /* For Safari 3.1 to 6.0 */
 	transition: margin-top 0.8s;
 	/*margin-top: 215px;*/
-	margin-top: 70px; /* Mr. V */
+	margin-top: 50px; /* Mr. V */
 }
 /* Content */
 .content {
@@ -493,10 +493,9 @@ body > .header .navbar .nav > li > a:hover > .label {
   width: 20px;
 }
 .user-panel {
-  padding: 10px;
-  position: fixed;
+  margin: 10px 5px;
+  position: relative;
   z-index: 1100;
-  top: 0;
 }
 .user-panel:before,
 .user-panel:after {
@@ -564,7 +563,7 @@ body > .header .navbar .nav > li > a:hover > .label {
   }
   body.fixed .sidebar-offcanvas {
     /*margin-top: 215px;*/
-    margin-top: 89px; /* Mr. V */
+    margin-top: 50px; /* Mr. V */
     left: -220px;
     -webkit-transition: margin-top 0.8s; /* For Safari 3.1 to 6.0 */
 	transition: margin-top 0.8s;
@@ -2154,9 +2153,6 @@ body > .header .navbar .nav > li > a:hover > .label {
 .user-panel > .image > img {
   border: 1px solid #dfdfdf;
 }
-.user-panel > .info, .user-panel > .info > a {
-  color: #fff; /* Mr. V Addition */
-}
 .user-panel > .info a { /*opacity:0.9*/ }/* Mr. V Addition */
 .user-panel > .info a:hover { text-decoration: underline; }/* Mr. V Addition */
 .left-side .sidebar > .sidebar-menu { margin-top: 10px; background-color:#fff}/* Mr. V Addition */
@@ -2193,7 +2189,7 @@ body > .header .navbar .nav > li > a:hover > .label {
   /*border-right: 1px solid #eee;*/ /* Mr. V Change */
 }
 .sidebar a {
-  color: #a5a5a5;
+  /*color: #a5a5a5;*/
 }
 .sidebar a:hover {
   text-decoration: none;
@@ -3129,21 +3125,16 @@ a.list-group-item.active h4 span {
 	z-index: auto !important;
 }
 #id_search {   
-    background-color: #002e43;
-    border-color: #002e43;
+    background-color: #e6e6e8;
     float: right;
-    position: relative;
-    right: -310px;
-    top: -55px;
-    width: 300px;
     z-index: 1000;
 }
 #id_search .input-group { opacity:0.53 }
-#id_search .input-group:hover { opacity:1.0 }
-#id_search .form-control::-webkit-input-placeholder { color:#fff; }
-#id_search .form-control:-moz-placeholder { color: #fff; } /* Firefox 18- */
-#id_search .form-control::-moz-placeholder {  color: #fff; } /* Firefox 19+ */
-#id_search .form-control:-ms-input-placeholder {  color: #fff; }
+#id_search .input-group:hover { opacity:0.3 }
+#id_search .form-control::-webkit-input-placeholder { color:#333; }
+#id_search .form-control:-moz-placeholder { color: #333; } /* Firefox 18- */
+#id_search .form-control::-moz-placeholder {  color: #333; } /* Firefox 19+ */
+#id_search .form-control:-ms-input-placeholder {  color: #333; }
 .cost {
 	color:#0088b7;
 	font-weight:bold
@@ -3208,7 +3199,10 @@ a.list-group-item.active h4 span {
 .ion-hammer:before { content: "" };
 
 .small-box .assets { background: url("../img/corporate/header/pie.png") no-repeat; width:65px; right: 10px; background-size: 65px; }
+.ion-pie-graph:before { content: "" };
+
 .small-box .nrsVersion { background: url("../img/corporate/header/version.png") no-repeat; width: 66px; right: 10px; background-size: 66px 57px; }
+.fa-code:before { content: "" };
 
 .aOwned {  }
 .eAliases {  }
@@ -3266,11 +3260,15 @@ a[data-page~='peers'] i:before {content: "";}
 a[data-page~='news'] i { background: #2385b4 url(../img/corporate/nav/clock.png) no-repeat center center; height: 50px; width: 50px;}
 a[data-page~='news'] i:before {content: "";}
 
-.header .navbar-static-top{
-    background: url("../img/corporate/header.png") repeat fixed left top rgba(0, 0, 0, 0);
-    height: 89px;
+.header #logo { 
+	background: url(../img/corporate/footerIcon.png) no-repeat center center;
+	z-index: 1500;
+	display: block;
+	height: 50px;
+	width: 200px;
+	position: absolute;	
 }
-.header #logo { display: none; }
+.header #logo img{ display: none; }
 .right-side > .page > .content-header {
 	position: relative;
 }
@@ -3515,7 +3513,7 @@ body { font-size: 15px }
 #settings_page select {
 	-webkit-appearance: none;  /* Removes default chrome and safari style */
 	-moz-appearance: none;  /* Removes default style Firefox */
-	background: url('../img/dropdownFaded.png') no-repeat;
+	background: url('../img/corporate/dropdownFaded.png') no-repeat;
 	background-image: -moz-linear-gradient(top right, #fff, #fff);
 	background-position: 125px 10px;
 	width: 150px;
@@ -3525,7 +3523,7 @@ body { font-size: 15px }
 	background-color: #fff;
 }
 #settings_page select:hover {
-	background: url('../img/dropdown.png') no-repeat;
+	background: url('../img/corporate/dropdown.png') no-repeat;
 	background-image: -moz-linear-gradient(top right, #fff, #fff);
 	background-position: 125px 10px;
 	background-color: #fff;
@@ -3570,14 +3568,14 @@ body { font-size: 15px }
 #rss_news_container .list-group-item:last-child { border-radius: 0; }
 #rss_news_container .box .box-body { padding: 0 10px 10px; }
 
-#rss_news_container .nxtForum {background: url("../img/news/nxtForumFaded.png") no-repeat 10px top;display: block;height: 81px;}
-#rss_news_container .nxtForum:hover {background: url("../img/news/nxtForum.png") no-repeat 10px top;}
-#rss_news_container .nxtOrg {background: url("../img/news/nxtOrgFaded.png") no-repeat 10px top;display: block;height: 81px;}
-#rss_news_container .nxtOrg:hover {background: url("../img/news/nxtOrg.png") no-repeat 10px top;}
-#rss_news_container .nxter {background: url("../img/news/nxterFaded.png") no-repeat 10px top;display: block;height: 81px;}
-#rss_news_container .nxter:hover {background: url("../img/news/nxter.png") no-repeat 10px top;}
-#rss_news_container .reddit {background: url("../img/news/redditFaded.png") no-repeat 10px top;display: block;height: 81px;}
-#rss_news_container .reddit:hover {background: url("../img/news/reddit.png") no-repeat 10px top;}
+#rss_news_container .nxtForum {background: url("../img/corporate/news/nxtForumFaded.png") no-repeat 10px top;display: block;height: 81px;}
+#rss_news_container .nxtForum:hover {background: url("../img/corporate/news/nxtForum.png") no-repeat 10px top;}
+#rss_news_container .nxtOrg {background: url("../img/corporate/news/nxtOrgFaded.png") no-repeat 10px top;display: block;height: 81px;}
+#rss_news_container .nxtOrg:hover {background: url("../img/corporate/news/nxtOrg.png") no-repeat 10px top;}
+#rss_news_container .nxter {background: url("../img/corporate/news/nxterFaded.png") no-repeat 10px top;display: block;height: 81px;}
+#rss_news_container .nxter:hover {background: url("../img/corporate/news/nxter.png") no-repeat 10px top;}
+#rss_news_container .reddit {background: url("../img/corporate/news/redditFaded.png") no-repeat 10px top;display: block;height: 81px;}
+#rss_news_container .reddit:hover {background: url("../img/corporate/news/reddit.png") no-repeat 10px top;}
 
 /* MrV resolution fixes*/
 @media screen and (max-width: 1510px) {
