@@ -12,7 +12,8 @@ var NRS = (function(NRS, $, undefined) {
 		"asset_transfer_warning": "10000",
 		"24_hour_format": 1,
 		"remember_passphrase": 0,
-		"language": "en"
+		"language": "en",
+		"themeChoice": "default"
 	};
 
 	NRS.defaultColors = {
@@ -454,7 +455,7 @@ var NRS = (function(NRS, $, undefined) {
         		newlink.setAttribute("href", 'css/corporate.css');
 				document.getElementsByTagName("head").item(0).replaceChild(newlink, oldlink);
 			}
-			else {
+			else if(NRS.settings["themeChoice"] == "default"){
 				var oldlink = document.getElementsByTagName("link").item(3);
 				var newlink = document.createElement("link");
         		newlink.setAttribute("rel", "stylesheet");
