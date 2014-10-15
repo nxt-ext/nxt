@@ -76,6 +76,16 @@ var NRS = (function(NRS, $, undefined) {
 		}
 	});
 
+	$(".publish_exchange_currency_code").on("change", function(e) {
+      var spans = $(this).closest("form").find(".currency_code");
+      var currencyCodeArray = $(".publish_exchange_currency_code");
+      var currencyCode = currencyCodeArray[0];
+      $.each(spans, function() {
+         var $2 = $(this);
+         $2[0].innerText = currencyCode.value;
+      });
+	});
+
 	//hide modal when another one is activated.
 	$(".modal").on("show.bs.modal", function(e) {
 		var $inputFields = $(this).find("input[name=recipient], input[name=account_id]").not("[type=hidden]");

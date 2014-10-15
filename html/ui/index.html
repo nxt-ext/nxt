@@ -259,8 +259,9 @@
                             <ul class="treeview-menu" style="display: none;">
                                  <li><a href="#" data-page="monetary_system"><i class="fa fa-angle-double-right"></i> <span data-i18n="monetary_system">Monetary System</span></a></li>
                                  <li><a href="#" data-page="exchange_history"><i class="fa fa-angle-double-right"></i> <span data-i18n="exchange_history">Exchange History</span></a></li>
-                            	<li><a href="#" data-page="my_currencies"><i class="fa fa-angle-double-right"></i> <span data-i18n="my_currencies">My Currencies</span></a></li>
+                            	<li><a href="#" data-page="currencies"><i class="fa fa-angle-double-right"></i> <span data-i18n="my_currencies">All Currencies</span></a></li>
                                 <li><a href="#" data-toggle="modal" data-target="#issue_currency_modal"><i class="fa fa-angle-double-right"></i> <span data-i18n="issue_currency">Issue Currency</span></a></li>
+                                <li><a href="#" data-toggle="modal" data-target="#publish_exchange_offer_modal"><i class="fa fa-angle-double-right"></i> <span data-i18n="issue_currency">Publish Exchange Offer</span></a></li>
                         	</ul>
                         </li>
                         <li class="treeview" id="sidebar_dgs_buyer">
@@ -1073,6 +1074,30 @@
 							</div>
 						</div>
 	                </section>
+                </div>
+
+                <div id="currencies_page" class="paginated page">
+                    <section class="content-header"><h1 data-i18n="currencies">Currencies</h1></section>
+                    <section class="content">
+                        <div class="data-container data-loading">
+                            <table class="table table-striped" id="currencies_table">
+                                <thead>
+                                <tr>
+                                    <th data-i18n="currency">Currency</th>
+                                    <th data-i18n="code">Name</th>
+                                    <th data-i18n="code">Code</th>
+                                    <th data-i18n="code">Type</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+
+                                </tbody>
+                            </table>
+                            <div class="data-loading-container"><img src="img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
+                            <div class="data-empty-container"><p data-i18n="no_currencies">No currencies available.</p></div>
+                        </div>
+                        <div class="data-pagination"></div>
+                    </section>
                 </div>
 
                 <div id="dgs_search_page" class="paginated page">
@@ -2289,6 +2314,108 @@
 				    	<button type="button" class="btn btn-default" data-dismiss="modal" data-i18n="cancel">Cancel</button>
 				        <button type="button" class="btn btn-primary" data-loading-text="Submitting..." data-i18n="issue_currency;[data-loading-text]submitting">Issue Currency</button>
 				    </div>
+				</div>
+			</div>
+		</div>
+
+		<div class="modal fade" id="publish_exchange_offer_modal" tabindex="-1" role="dialog" aria-hidden="true">
+			<div class="modal-dialog">
+		    	<div class="modal-content">
+		      		<div class="modal-header">
+		      			<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+		        		<h4 class="modal-title" data-i18n="publish_exchange_offer">Publish Exchange Offer</h4>
+		      		</div>
+			      	<div class="modal-body">
+                        <form role="form" class="form-horizontal" style="padding: 10px;max-width:350px;margin-left:auto;margin-right:auto;" autocomplete="off">
+                            <div class="callout callout-danger error_message" style="display:none"></div>
+                            <div style="margin-left:-20px">
+                                <div class="form-group">
+                                    <label for="currency_code"><span data-i18n="currency_code">CURRENCY CODE</span> <i class="fa fa-question-circle show_popover" data-content="Enter a 3 letter currency code" data-i18n="[data-content]currency_code_help" data-container="body" style="color:#4CAA6E" ></i></label>
+                                    <input type="text" class="form-control publish_exchange_currency_code" name="code" id="currency_code" placeholder="Currency Code" data-i18n="[placeholder]currency_code" autofocus tabindex="1" />
+                                </div>
+                                <div class="form-group">
+                                    <label for="buy_currency_units_initial" class="col-sm-3 control-label" data-i18n="units">Buy units (Initial)</label>
+                                    <div class="col-sm-9">
+                                        <div class="input-group">
+                                            <input id="buy_currency_units_initial" type="text" name="initialBuySupply" value="0" class="form-control" data-type="buy" />
+                                            <span class="input-group-addon"><span class="currency_code"></span></span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="buy_currency_units_total" class="col-sm-3 control-label" data-i18n="units">Buy units (Total)</label>
+                                    <div class="col-sm-9">
+                                        <div class="input-group">
+                                            <input id="buy_currency_units_total" type="text" name="totalBuyLimit" value="0" class="form-control" data-type="buy" />
+                                            <span class="input-group-addon"><span class="currency_code"></span></span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="buy_currency_rate" class="col-sm-3 control-label" data-i18n="rate">Rate per unit [NQT]</label>
+                                    <div class="col-sm-9">
+                                        <div class="input-group">
+                                            <input id="buy_currency_rate" type="text" value="0" name="buyRateNQT" class="form-control" data-type="buy" />
+                                            <span class="input-group-addon">NXT / <span class="currency_code"></span></span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="sell_currency_units_initial" class="col-sm-3 control-label" data-i18n="units">Sell units (Initial)</label>
+                                    <div class="col-sm-9">
+                                        <div class="input-group">
+                                            <input id="sell_currency_units_initial" type="text" name="initialSellSupply" value="0" class="form-control" data-type="sell" />
+                                            <span class="input-group-addon"><span class="currency_code"></span></span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="sell_currency_units_total" class="col-sm-3 control-label" data-i18n="units">Sell units (Total)</label>
+                                    <div class="col-sm-9">
+                                        <div class="input-group">
+                                            <input id="sell_currency_units_total" type="text" name="totalSellLimit" value="0" class="form-control" data-type="sell" />
+                                            <span class="input-group-addon"><span class="currency_code"></span></span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="sell_currency_rate" class="col-sm-3 control-label" data-i18n="rate">Rate per unit [NQT]</label>
+                                    <div class="col-sm-9">
+                                        <div class="input-group">
+                                            <input id="sell_currency_rate" type="text" value="0" name="sellRateNQT" class="form-control" data-type="sell" />
+                                            <span class="input-group-addon">NXT / <span class="currency_code"></span></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+								<div class="col-xs-12 col-sm-12 col-md-12 advanced_extend" data-normal="12" data-advanced="6">
+									<div class="form-group">
+										<label for="issue_currency_fee"><span data-i18n="fee">FEE</span> <i class="fa fa-exclamation-circle show_popover" data-container="body" style="color:red"></i></label>
+										<div class="input-group">
+											<input type="number" name="feeNXT" id="exchange_offer_currency_fee" class="form-control" placeholder="Fee" step="any" min="1" data-default="1" value="1" tabindex="6">
+											<span class="input-group-addon">NXT</span>
+										</div>
+									</div>
+								</div>
+								<div class="col-xs-6 col-sm-6 col-md-6 advanced">
+									<div class="form-group">
+										<label for="issue_currency_deadline" data-i18n="deadline_hours">DEADLINE (HOURS)</label>
+										<input type="number" name="deadline" id="exchange_offer_deadline" class="form-control" placeholder="Deadline" data-i18n="deadline" min="1" data-default="24" value="24" tabindex="7">
+									</div>
+								</div>
+							</div>
+							<div class="form-group secret_phrase">
+								<label for="issue_currency_password" data-i18n="passphrase">PASSPHRASE</label>
+								<input type="password" name="secretPhrase" id="exchange_offer_password" class="form-control" placeholder="" tabindex="8">
+							</div>
+                            <input type="hidden" name="request_type" value="publishExchangeOffer" />
+                        </form>
+			    	</div>
+                    <div class="modal-footer" style="margin-top:0;">
+                        <button type="button" class="btn btn-default" data-dismiss="modal" data-i18n="cancel">Cancel</button>
+                        <button type="button" class="btn btn-primary" data-loading-text="Submitting..." data-i18n="publish_exchange_offer;[data-loading-text]submitting">Publish Exchange Offer</button>
+                    </div>
 				</div>
 			</div>
 		</div>
@@ -4735,6 +4862,7 @@
         <script src="js/nrs.update.js" type="text/javascript"></script>
         <script src="js/nrs.recipient.js" type="text/javascript"></script>
         <script src="js/nrs.assetexchange.js" type="text/javascript"></script>
+        <script src="js/nrs.monetarysystem.js" type="text/javascript"></script>
         <script src="js/nrs.dgs.js" type="text/javascript"></script>
         <script src="js/nrs.messages.js" type="text/javascript"></script>
         <script src="js/nrs.aliases.js" type="text/javascript"></script>
