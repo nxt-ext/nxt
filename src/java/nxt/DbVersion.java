@@ -391,7 +391,6 @@ final class DbVersion {
             case 120:
                 apply("CREATE INDEX IF NOT EXISTS asset_transfer_recipient_id_idx ON asset_transfer (recipient_id, height DESC)");
             case 121:
-                BlockchainProcessorImpl.getInstance().forceScanAtStart();
                 apply(null);
             case 122:
                 apply("CREATE INDEX IF NOT EXISTS account_asset_quantity_idx ON account_asset (quantity DESC)");
@@ -477,6 +476,10 @@ final class DbVersion {
                 BlockchainProcessorImpl.getInstance().forceScanAtStart();
                 apply(null);
             case 153:
+                BlockchainProcessorImpl.getInstance().validateAtNextScan();
+                BlockchainProcessorImpl.getInstance().forceScanAtStart();
+                apply(null);
+            case 154:
                 return;
             default:
                 throw new RuntimeException("Database inconsistent with code, probably trying to run older code on newer database");

@@ -10,7 +10,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.List;
 
 final class BlockDb {
 
@@ -113,20 +112,10 @@ final class BlockDb {
             byte[] generationSignature = rs.getBytes("generation_signature");
             byte[] blockSignature = rs.getBytes("block_signature");
             byte[] payloadHash = rs.getBytes("payload_hash");
-
             long id = rs.getLong("id");
-            List<TransactionImpl> transactions = TransactionDb.findBlockTransactions(con, id);
-
-            BlockImpl block = new BlockImpl(version, timestamp, previousBlockId, totalAmountNQT, totalFeeNQT, payloadLength, payloadHash,
-                    generatorPublicKey, generationSignature, blockSignature, previousBlockHash, transactions,
+            return new BlockImpl(version, timestamp, previousBlockId, totalAmountNQT, totalFeeNQT, payloadLength, payloadHash,
+                    generatorPublicKey, generationSignature, blockSignature, previousBlockHash,
                     cumulativeDifficulty, baseTarget, nextBlockId, height, id);
-
-            for (TransactionImpl transaction : transactions) {
-                transaction.setBlock(block);
-            }
-
-            return block;
-
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
         }

@@ -5,6 +5,7 @@ import nxt.NxtException;
 import nxt.db.Db;
 import nxt.util.JSON;
 import nxt.util.Logger;
+import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.ServletException;
@@ -209,6 +210,8 @@ public final class APIServlet extends HttpServlet {
 
         try {
 
+            long startTime = System.currentTimeMillis();
+
             if (API.allowedBotHosts != null && ! API.allowedBotHosts.contains(req.getRemoteHost())) {
                 response = ERROR_NOT_ALLOWED;
                 return;
@@ -248,6 +251,10 @@ public final class APIServlet extends HttpServlet {
                 if (apiRequestHandler.startDbTransaction()) {
                     Db.endTransaction();
                 }
+            }
+
+            if (response instanceof JSONObject) {
+                ((JSONObject)response).put("requestProcessingTime", System.currentTimeMillis() - startTime);
             }
 
         } finally {
