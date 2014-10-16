@@ -455,7 +455,7 @@ var NRS = (function(NRS, $, undefined) {
         		newlink.setAttribute("href", 'css/app.css');
 				document.getElementsByTagName("head").item(0).replaceChild(newlink, oldlink);
 			}
-			else {
+			else if (NRS.settings["themeChoice"] != ""){
 				var oldlink = document.getElementsByTagName("link").item(3);
 				var newlink = document.createElement("link");
         		newlink.setAttribute("rel", "stylesheet");
