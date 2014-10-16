@@ -1,0 +1,12 @@
+This is a critical bugfix release, everyone using 1.2.8 or earlier should upgrade.
+
+After installing 1.2.9, set nxt.forceValidate=true in nxt.properties and restart,
+to force a revalidation of blocks already in the database. Set this property back
+to false after the first run.
+
+Fixed a bug in transaction loading which was causing transaction id's and
+signatures for some transactions with invalid ecBlock values to change after
+saving and reloading from the database.
+
+There are no other changes from 1.2.8.
+
