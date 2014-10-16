@@ -1,9 +1,6 @@
 package nxt;
 
-import nxt.db.Db;
-import nxt.db.DbIterator;
-import nxt.db.DbKey;
-import nxt.db.VersionedEntityDbTable;
+import nxt.db.*;
 import nxt.peer.Peer;
 import nxt.peer.Peers;
 import nxt.util.Convert;
@@ -20,12 +17,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -37,13 +29,36 @@ final class TransactionProcessorImpl implements TransactionProcessor {
         return instance;
     }
 
+    static {
+        Nxt.getBlockchainProcessor().addListener(new Listener<Block>() {
+            @Override
+            public void notify(Block block) {
+                int height = block.getHeight();
+                if(height >= Constants.TWO_PHASED_TRANSACTIONS_BLOCK){
+                    DbIterator<Long> txIdsToRefuse =
+                            PhasedTransactionPoll.pendingTransactionsTable.finishing(height);
+                    for(Long txId:txIdsToRefuse){
+                        Transaction tx = TransactionDb.findTransaction(txId);
+                        try {
+                            tx.refuse();
+                        } catch (NxtException.NotValidException e) {
+                            e.printStackTrace();  // todo:  better handling?
+                        }
+                    }
+                }
+            }
+        }, BlockchainProcessor.Event.AFTER_BLOCK_APPLY);     //todo: rescans, popoffs?
+    }
+
+
+
+
     final DbKey.LongKeyFactory<TransactionImpl> unconfirmedTransactionDbKeyFactory = new DbKey.LongKeyFactory<TransactionImpl>("id") {
 
         @Override
         public DbKey newKey(TransactionImpl transaction) {
             return transaction.getDbKey();
         }
-
     };
 
     private final VersionedEntityDbTable<TransactionImpl> unconfirmedTransactionTable = new VersionedEntityDbTable<TransactionImpl>(unconfirmedTransactionDbKeyFactory) {
@@ -104,7 +119,6 @@ final class TransactionProcessorImpl implements TransactionProcessor {
         protected String defaultSort() {
             return " ORDER BY transaction_height ASC, fee_per_byte DESC, timestamp ASC, id ASC ";
         }
-
     };
 
     private final ConcurrentMap<Long, TransactionImpl> nonBroadcastedTransactions = new ConcurrentHashMap<>();

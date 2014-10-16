@@ -2,12 +2,8 @@ package nxt;
 
 import nxt.util.Convert;
 import org.json.simple.JSONObject;
-
 import java.nio.ByteBuffer;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 
 public abstract class TransactionType {
@@ -172,13 +168,16 @@ public abstract class TransactionType {
     abstract boolean applyAttachmentUnconfirmed(Transaction transaction, Account senderAccount);
 
     final void apply(Transaction transaction, Account senderAccount, Account recipientAccount) {
-        senderAccount.addToBalanceNQT(- (Convert.safeAdd(transaction.getAmountNQT(), transaction.getFeeNQT())));
+        long amount = transaction.getAmountNQT();
+
+        senderAccount.addToBalanceNQT(- (Convert.safeAdd(amount, transaction.getFeeNQT())));
+
         if (transaction.getReferencedTransactionFullHash() != null
                 && transaction.getTimestamp() > Constants.REFERENCED_TRANSACTION_FULL_HASH_BLOCK_TIMESTAMP) {
-            senderAccount.addToUnconfirmedBalanceNQT(Constants.UNCONFIRMED_POOL_DEPOSIT_NQT);
+            senderAccount.addToUnconfirmedBalanceNQT(Constants.UNCONFIRMED_POOL_DEPOSIT_NQT); //todo: kushti: ???
         }
-        if (recipientAccount != null) {
-            recipientAccount.addToBalanceAndUnconfirmedBalanceNQT(transaction.getAmountNQT());
+        if(recipientAccount != null && transaction.getTwoPhased()==null){
+            recipientAccount.addToBalanceAndUnconfirmedBalanceNQT(amount);
         }
         applyAttachment(transaction, senderAccount, recipientAccount);
     }
@@ -289,8 +288,8 @@ public abstract class TransactionType {
 
             @Override
             void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
-                if (transaction.getAmountNQT() <= 0 || transaction.getAmountNQT() >= Constants.MAX_BALANCE_NQT) {
-                    throw new NxtException.NotValidException("Invalid payment");
+                if (transaction.getAmountNQT() != 0) {
+                    throw new NxtException.NotValidException("Voting transaction amount <> 0!");
                 }
                 if(!(transaction.getAttachment() instanceof Attachment.PendingPaymentVoteCasting)){
                     throw new NxtException.NotValidException("Wrong kind of attachment");
@@ -298,18 +297,33 @@ public abstract class TransactionType {
 
                 Attachment.PendingPaymentVoteCasting att = (Attachment.PendingPaymentVoteCasting)transaction.getAttachment();
                 long pendingTxId = att.getPendingTransactionId();
-                if(TransactionDb.findTransaction(pendingTxId) == null){
-                    throw new NxtException.NotValidException("Wrong pending transaction");
-                }
+              /*
+                todo:fix
+                try(Connection con = Db.getConnection()) {
+                    if (!PhasedTransactionPoll.exists(con, pendingTxId)) {
+                        throw new NxtException.NotValidException("Wrong pending transaction");
+                    }
+                } catch (SQLException e) {
+                    throw new NxtException.NotValidException("Can't get connection: " ,e);
+                }*/
             }
 
             @Override
             final void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
                 Attachment.PendingPaymentVoteCasting att = (Attachment.PendingPaymentVoteCasting)transaction.getAttachment();
-
+                long pendingTxId = att.getPendingTransactionId();
+                PhasedTransactionPoll poll = PhasedTransactionPoll.byId(pendingTxId);
+                if (poll != null && !poll.isFinished()) { //todo: else
+                    try {
+                        if (poll.addVote(senderAccount)) {
+                            TransactionDb.findTransaction(pendingTxId).release();
+                        }
+                    } catch (NxtException.NotValidException | NxtException.IllegalStateException e) {
+                        e.printStackTrace();  //todo:
+                    }
+                }
             }
         };
-
     }
 
     public static abstract class Messaging extends TransactionType {

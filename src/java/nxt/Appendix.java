@@ -1,11 +1,15 @@
 package nxt;
 
 import nxt.crypto.EncryptedData;
+import nxt.db.Db;
 import nxt.util.Convert;
+import nxt.util.Logger;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 import java.nio.ByteBuffer;
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Collections;
 
@@ -428,17 +432,21 @@ public interface Appendix {
         }
 
         private final int maxHeight;
-        private final long consensusThreshold;
+        private final long quorum;
         private final long voteThreshold;
         private final byte votingModel;
+        private final long assetId;
         private final Long[] possibleVoters;
 
         TwoPhased(ByteBuffer buffer, byte transactionVersion) {
             super(buffer, transactionVersion);
             maxHeight = buffer.getInt();
-            consensusThreshold = buffer.getLong();
+            quorum = buffer.getLong();
             voteThreshold = buffer.getLong();
             votingModel = buffer.get();
+            if(votingModel == CommonPollStructure.VOTING_MODEL_ASSET){
+                assetId = buffer.getLong();
+            } else assetId = 0;
             byte votersCount = buffer.get();
             possibleVoters = new Long[votersCount];
             for (int pvc = 0; pvc < possibleVoters.length; pvc++) {
@@ -449,9 +457,12 @@ public interface Appendix {
         TwoPhased(JSONObject attachmentData) throws NxtException.NotValidException {
             super(attachmentData);
             maxHeight = (Integer) attachmentData.get("maxHeight");
-            consensusThreshold = (Long) attachmentData.get("consensusThreshold");
+            quorum = (Long) attachmentData.get("quorum");
             voteThreshold = (Long) attachmentData.get("voteThreshold");
             votingModel = (Byte) attachmentData.get("votingModel");
+            if(votingModel == CommonPollStructure.VOTING_MODEL_ASSET){
+                assetId = (Long) attachmentData.get("assetId");;
+            } else assetId = 0;
             JSONArray pvArr = (JSONArray) (attachmentData.get("possibleVoters"));
             possibleVoters = new Long[pvArr.size()];
             for (int i = 0; i < possibleVoters.length; i++) {
@@ -460,12 +471,22 @@ public interface Appendix {
         }
 
         //todo: builder?
-        TwoPhased(int maxHeight, byte votingModel, long consensusThreshold, long voteThreshold, Long[] possibleVoters) {
+        TwoPhased(int maxHeight, byte votingModel, long quorum, long voteThreshold, Long[] possibleVoters) {
             this.maxHeight = maxHeight;
             this.votingModel = votingModel;
-            this.consensusThreshold = consensusThreshold;
+            this.quorum = quorum;
             this.voteThreshold = voteThreshold;
             this.possibleVoters = possibleVoters;
+            this.assetId = 0;
+        }
+
+        TwoPhased(int maxHeight, byte votingModel, long assetId, long quorum, long voteThreshold, Long[] possibleVoters) {
+            this.maxHeight = maxHeight;
+            this.votingModel = votingModel;
+            this.quorum = quorum;
+            this.voteThreshold = voteThreshold;
+            this.possibleVoters = possibleVoters;
+            this.assetId = assetId;
         }
 
         @Override
@@ -475,15 +496,18 @@ public interface Appendix {
 
         @Override
         int getMySize() {
-            return 4 + 8 + 8 + 1 + 1 + 8 * possibleVoters.length;
+            return 4 + 8 + 8 + 1 + 1
+                    + (votingModel==CommonPollStructure.VOTING_MODEL_ASSET ? 8 : 0)
+                    + 8 * possibleVoters.length;
         }
 
         @Override
         void putMyBytes(ByteBuffer buffer) {
             buffer.putInt(maxHeight);
-            buffer.putLong(consensusThreshold);
+            buffer.putLong(quorum);
             buffer.putLong(voteThreshold);
             buffer.put(votingModel);
+            if(votingModel==CommonPollStructure.VOTING_MODEL_ASSET) buffer.putLong(assetId);
             buffer.put((byte) possibleVoters.length);
             for (Long pv : possibleVoters) {
                 buffer.putLong(pv);
@@ -493,9 +517,10 @@ public interface Appendix {
         @Override
         void putMyJSON(JSONObject json) {
             json.put("maxHeight", maxHeight);
-            json.put("consensusThreshold", consensusThreshold);
+            json.put("quorum", quorum);
             json.put("voteThreshold", voteThreshold);
             json.put("votingModel", votingModel);
+            if(votingModel==CommonPollStructure.VOTING_MODEL_ASSET) json.put("assetId", assetId);
             JSONArray pv = new JSONArray();
             Collections.addAll(pv, possibleVoters);
             json.put("possibleVoters", pv);
@@ -511,6 +536,33 @@ public interface Appendix {
 
         @Override
         void apply(Transaction transaction, Account senderAccount, Account recipientAccount) {
+            Long id = transaction.getId()  ;
+
+            PhasedTransactionPoll txPoll = new PhasedTransactionPoll(id, maxHeight, votingModel,
+                    quorum, voteThreshold, assetId);
+            try(Connection con = Db.getConnection()) {
+                PhasedTransactionPoll.pendingTransactionsTable.save(con, txPoll);
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+
+        void commit(Transaction transaction, Account senderAccount, Account recipientAccount){
+            if(recipientAccount!=null){
+                long amount = transaction.getAmountNQT();
+                recipientAccount.addToBalanceNQT(amount);
+            }
+
+            Logger.logDebugMessage("Transaction " + transaction.getId() + " has been released");
+            System.out.println("Transaction " + transaction.getId() + " has been released");
+        }
+
+        void rollback(Transaction transaction, Account senderAccount, Account recipientAccount){
+            long amount = transaction.getAmountNQT();
+            senderAccount.addToBalanceNQT(amount);
+
+            Logger.logDebugMessage("Transaction " + transaction.getId() + " has been refused");
+            System.out.println("Transaction " + transaction.getId() + " has been refused");
         }
     }
 

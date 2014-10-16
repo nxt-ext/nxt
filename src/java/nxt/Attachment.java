@@ -108,6 +108,10 @@ public interface Attachment extends Appendix {
             pendingTransactionId = (Long)(attachmentData.get("pendingTxId"));
         }
 
+        PendingPaymentVoteCasting(long pendingTransactionId) {
+            this.pendingTransactionId = pendingTransactionId;
+        }
+
         @Override
         String getAppendixName() {
             return "PendingPaymentVoteCasting";

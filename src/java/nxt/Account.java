@@ -22,7 +22,7 @@ import java.util.Arrays;
 public final class Account {
 
     public static enum Event {
-        BALANCE, UNCONFIRMED_BALANCE, ASSET_BALANCE, UNCONFIRMED_ASSET_BALANCE,
+        BALANCE, UNCONFIRMED_BALANCE, PENDING_BALANCE, ASSET_BALANCE, UNCONFIRMED_ASSET_BALANCE,
         LEASE_SCHEDULED, LEASE_STARTED, LEASE_ENDED
     }
 
@@ -464,12 +464,10 @@ public final class Account {
     }
 
     public long getEffectiveBalanceNXT() {
-
-        /*
         if (Constants.isTestnet && Constants.isOffline) {
             return Constants.MAX_BALANCE_NXT;
         }
-        */
+
 
         Block lastBlock = Nxt.getBlockchain().getLastBlock();
         if (lastBlock.getHeight() >= Constants.TRANSPARENT_FORGING_BLOCK_6
@@ -812,4 +810,8 @@ public final class Account {
         }
     }
 
+    @Override
+    public String toString() {
+        return "Account (account_id: " + Convert.toUnsignedLong(getId())+")";
+    }
 }

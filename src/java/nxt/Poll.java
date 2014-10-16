@@ -8,33 +8,19 @@ import nxt.db.Db;
 import nxt.util.*;
 import org.json.simple.JSONArray;
 import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
 
 import java.sql.*;
 import java.util.*;
 
-public final class Poll {
-    public static final byte VOTING_MODEL_BALANCE = 0;
-    public static final byte VOTING_MODEL_ACCOUNT = 1;
-    public static final byte VOTING_MODEL_ASSET = 2;
-
-    public static final byte OPTION_MODEL_CHOICE = 0;
-    public static final byte OPTION_MODEL_BINARY = 1;
-
-    public static final byte DEFAULT_MIN_BALANCE = 0;
-    public static final byte DEFAULT_MIN_NUMBER_OF_CHOICES = 1;
-
-    public static final byte NO_ASSET_CODE = 0;
-
+public final class Poll extends CommonPollStructure {
     private static final DbKey.LongKeyFactory<Poll> pollDbKeyFactory = new DbKey.LongKeyFactory<Poll>("id") {
-
         @Override
         public DbKey newKey(Poll poll) {
             return poll.dbKey;
         }
-
     };
 
+    //todo: versioned entity?
     private static class PollTable extends EntityDbTable<Poll> {
 
         protected PollTable(DbKey.Factory<Poll> dbKeyFactory) {
@@ -59,13 +45,12 @@ public final class Poll {
         protected void save(Connection con, Poll poll) throws SQLException {
             try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO poll (id, name, description, "
                     + "options, finish, option_model, voting_model, min_balance, asset_id, "
-                    + "min_num_options, max_num_options, active, height) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
+                    + "min_num_options, max_num_options, finished, height) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
                 int i = 0;
                 pstmt.setLong(++i, poll.getId());
                 pstmt.setString(++i, poll.getName());
                 pstmt.setString(++i, poll.getDescription());
                 String optionsJson = JSONArray.toJSONString(Arrays.asList(poll.getOptions()));
-                System.out.println("Options json: "+optionsJson);
                 pstmt.setString(++i, optionsJson);
                 pstmt.setInt(++i, poll.getFinishBlockHeight());
                 pstmt.setByte(++i, poll.getOptionModel());
@@ -78,14 +63,14 @@ public final class Poll {
                 }
                 pstmt.setByte(++i, poll.getMinNumberOfOptions());
                 pstmt.setByte(++i, poll.getMaxNumberOfOptions());
-                pstmt.setBoolean(++i, poll.isActive());
+                pstmt.setBoolean(++i, poll.isFinished());
                 pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
                 pstmt.executeUpdate();
             }
         }
 
         public void updateActive(Boolean active, long id) {
-            String query = "UPDATE poll SET active=" + active.toString() + " WHERE ID=" + id;
+            String query = "UPDATE poll SET finished=" + active.toString() + " WHERE ID=" + id;  //todo: popoffs?
             try (Connection con = Db.getConnection();
                  PreparedStatement pstmt = con.prepareStatement(query)) {
                 pstmt.executeUpdate();
@@ -110,25 +95,19 @@ public final class Poll {
     private final String name;
     private final String description;
     private final String[] options;
-
-    private final int finishBlockHeight;
-    private final byte votingModel;
     private final byte optionModel;
-
-    private long minBalance = DEFAULT_MIN_BALANCE;
-
     private final byte minNumberOfOptions, maxNumberOfOptions;
-    private final long assetId;
-
-    private boolean active;
 
     static {
         Nxt.getBlockchainProcessor().addListener(new Listener<Block>() {
             @Override
             public void notify(Block block) {
-                Poll.checkPolls(block.getHeight());
+                int height = block.getHeight();
+                if(height>=Constants.VOTING_SYSTEM_BLOCK){
+                    Poll.checkPolls(height);
+                }
             }
-        }, BlockchainProcessor.Event.AFTER_BLOCK_APPLY);
+        }, BlockchainProcessor.Event.AFTER_BLOCK_APPLY);     //todo: rescans, popoffs?
     }
 
     static void checkPolls(int height) {
@@ -144,22 +123,21 @@ public final class Poll {
     private Poll(Long id, String name, String description, String[] options, int finishBlockHeight,
                  byte optionModel, byte votingModel, long minBalance,
                  long assetId, byte minNumberOfOptions, byte maxNumberOfOptions) {
+        super(finishBlockHeight, votingModel, assetId, minBalance);
+
         this.id = id;
         this.dbKey = pollDbKeyFactory.newKey(this.id);
         this.name = name;
         this.description = description;
         this.options = options;
-        this.finishBlockHeight = finishBlockHeight;
         this.optionModel = optionModel;
-        this.votingModel = votingModel;
-        this.minBalance = minBalance;
-        this.assetId = assetId;
         this.minNumberOfOptions = minNumberOfOptions;
         this.maxNumberOfOptions = maxNumberOfOptions;
-        this.active = true;
     }
 
     private Poll(ResultSet rs) throws Exception {
+        super(rs);
+
         this.id = rs.getLong("id");
         this.dbKey = pollDbKeyFactory.newKey(this.id);
         this.name = rs.getString("name");
@@ -171,31 +149,22 @@ public final class Poll {
         }
         List<String> optionsList = ((List<String>) (new JSONParser().parse(optionsJson)));
         this.options = optionsList.toArray(new String[optionsList.size()]);
-
-        this.finishBlockHeight = rs.getInt("finish");
         this.optionModel = rs.getByte("option_model");
-        this.votingModel = rs.getByte("voting_model");
-        this.minBalance = rs.getLong("min_balance");
-        this.assetId = rs.getLong("asset_id");
         this.minNumberOfOptions = rs.getByte("min_num_options");
         this.maxNumberOfOptions = rs.getByte("max_num_options");
-        this.active = rs.getBoolean("active");
     }
 
     private Poll(Transaction transaction, Attachment.MessagingPollCreation attachment) {
+        super(attachment.getFinishBlockHeight(), attachment.getVotingModel(), attachment.getAssetId(), attachment.getMinBalance());
+
         this.id = transaction.getId();
         this.dbKey = pollDbKeyFactory.newKey(this.id);
         this.name = attachment.getPollName();
         this.description = attachment.getPollDescription();
         this.options = attachment.getPollOptions();
-        this.finishBlockHeight = attachment.getFinishBlockHeight();
         this.optionModel = attachment.getOptionModel();
-        this.votingModel = attachment.getVotingModel();
-        this.minBalance = attachment.getMinBalance();
-        this.assetId = attachment.getAssetId();
         this.minNumberOfOptions = attachment.getMinNumberOfOptions();
         this.maxNumberOfOptions = attachment.getMaxNumberOfOptions();
-        this.active = true;
     }
 
     static void addPoll(Long id, String name, String description, String[] options,
@@ -224,11 +193,11 @@ public final class Poll {
     }
 
     public static DbIterator<Poll> getActivePolls() {
-        return pollTable.getManyBy("active", true, 0, Integer.MAX_VALUE);
+        return pollTable.getManyBy("finished", true, 0, Integer.MAX_VALUE);
     }
 
     public static DbIterator<Poll> getFinishedPolls() {
-        return pollTable.getManyBy("active", false, 0, Integer.MAX_VALUE);
+        return pollTable.getManyBy("finished", false, 0, Integer.MAX_VALUE);
     }
 
     public static DbIterator<Poll> getAllPolls(int from, int to) {
@@ -239,8 +208,8 @@ public final class Poll {
         return pollTable.getCount();
     }
 
-    public static boolean isActive(long pollId) {
-        return getPoll(pollId).isActive();
+    public static boolean isFinished(long pollId) {
+        return getPoll(pollId).isFinished();
     }
 
     public static void markPollAsFinished(Poll poll) {
@@ -263,6 +232,10 @@ public final class Poll {
         return options;
     }
 
+    public byte getOptionModel() {
+        return optionModel;
+    }
+
     public byte getMinNumberOfOptions() {
         return minNumberOfOptions;
     }
@@ -271,38 +244,9 @@ public final class Poll {
         return maxNumberOfOptions;
     }
 
-    public byte getOptionModel() {
-        return optionModel;
-    }
-
-    public byte getVotingModel() {
-        return votingModel;
-    }
-
-    public int getFinishBlockHeight() {
-        return finishBlockHeight;
-    }
-
-    public long getMinBalance() {
-        return minBalance;
-    }
-
-    public long getAssetId() {
-        return assetId;
-    }
-
     public List<Long> getVoters() {
         return Vote.getVoters(this);
     }
-
-    public boolean isActive() {
-        return active;
-    }
-
-    public void setActive(boolean active) {
-        this.active = active;
-    }
-
 
     void calculateAndSavePollResults() {
         try {
@@ -353,31 +297,13 @@ public final class Poll {
         return pollResults;
     }
 
+
+
     private long[][] countVote(Vote vote) throws NxtException.IllegalStateException {
         final long[][] partialResult = new long[options.length][2];
 
-        final Long voter = vote.getVoterId();
-
-        long weight = 0;
-
-        switch (votingModel) {
-            case VOTING_MODEL_ASSET:
-                long qntBalance = Account.getAccount(voter).getAssetBalanceQNT(assetId);
-                if (qntBalance >= minBalance) {
-                    weight = qntBalance;
-                }
-                break;
-            case VOTING_MODEL_ACCOUNT:
-            case VOTING_MODEL_BALANCE:
-                long nqtBalance = Account.getAccount(voter).getGuaranteedBalanceNQT(Constants.CONFIRMATIONS_RELIABLE_TX);
-                if (nqtBalance >= minBalance) {
-                    long nxtBalance = nqtBalance / Constants.ONE_NXT;
-                    weight = votingModel == VOTING_MODEL_ACCOUNT ? 1 : nxtBalance;
-                }
-                break;
-            default:
-                throw new NxtException.IllegalStateException("Wrong voting model");
-        }
+        final Account voter = Account.getAccount(vote.getVoterId());
+        final long weight = calcWeight(voter);
 
         final byte[] optVals = vote.getVote();
 

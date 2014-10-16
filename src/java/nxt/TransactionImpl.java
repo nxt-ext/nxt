@@ -4,6 +4,7 @@ import nxt.crypto.Crypto;
 import nxt.db.DbKey;
 import nxt.util.Convert;
 import nxt.util.Logger;
+import nxt.util.Pair;
 import org.json.simple.JSONObject;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
@@ -675,11 +676,6 @@ final class TransactionImpl implements Transaction {
     }
 
     @Override
-    public boolean isPending() {
-        return !(twoPhased==null); //todo: fix
-    }
-
-    @Override
     public void sign(String secretPhrase) {
         if (signature != null) {
             throw new IllegalStateException("Transaction already signed");
@@ -785,15 +781,20 @@ final class TransactionImpl implements Transaction {
         return senderAccount != null && type.applyUnconfirmed(this, senderAccount);
     }
 
-    void apply() {
+    private Pair<Account, Account> getSenderAndRecipient(){
         Account senderAccount = Account.getAccount(getSenderId());
         senderAccount.apply(senderPublicKey, this.getHeight());
         Account recipientAccount = Account.getAccount(recipientId);
         if (recipientAccount == null && recipientId != null) {
             recipientAccount = Account.addOrGetAccount(recipientId);
         }
+        return new Pair<>(senderAccount, recipientAccount);
+    }
+
+    void apply() {
+        Pair<Account,Account> sndrRcp = getSenderAndRecipient();
         for (Appendix.AbstractAppendix appendage : appendages) {
-            appendage.apply(this, senderAccount, recipientAccount);
+            appendage.apply(this, sndrRcp.getFirst(), sndrRcp.getSecond());
         }
     }
 
@@ -806,4 +807,22 @@ final class TransactionImpl implements Transaction {
         return type.isDuplicate(this, duplicates);
     }
 
+    //todo: move it up to TransactionType.apply ?
+    @Override
+    public void release() throws NxtException.NotValidException {
+        if(twoPhased==null){
+            throw new NxtException.NotValidException("Can't release non-twophased transaction!");
+        }
+        Pair<Account,Account> sndrRcp = getSenderAndRecipient();
+        twoPhased.commit(this, sndrRcp.getFirst(), sndrRcp.getSecond());
+    }
+
+    @Override
+    public void refuse() throws NxtException.NotValidException {
+        if(twoPhased==null){
+            throw new NxtException.NotValidException("Can't refuse non-twophased transaction!");
+        }
+        Pair<Account,Account> sndrRcp = getSenderAndRecipient();
+        twoPhased.rollback(this, sndrRcp.getFirst(), sndrRcp.getSecond());
+    }
 }

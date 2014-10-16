@@ -327,6 +327,9 @@ final class BlockImpl implements Block {
     }
 
     boolean verifyGenerationSignature() throws BlockchainProcessor.BlockOutOfOrderException {
+        if(Constants.isOffline && Constants.isTestnet){
+            return true;
+        }
 
         //kushti: comment below to have fast block generation with any balance
         try {

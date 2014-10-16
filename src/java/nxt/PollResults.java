@@ -1,7 +1,7 @@
 package nxt;
 
 import nxt.db.DbKey;
-import nxt.db.EntityDbTable;
+import nxt.db.VersionedEntityDbTable;
 import nxt.util.Pair;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -26,7 +26,7 @@ public abstract class PollResults<K, V> {
         }
     };
 
-    private static final EntityDbTable<PollResults> resultsTable = new EntityDbTable<PollResults>(pollResultsDbKeyFactory) {
+    private static final VersionedEntityDbTable<PollResults> resultsTable = new VersionedEntityDbTable<PollResults>(pollResultsDbKeyFactory) {
         public static final String TABLE_NAME = "poll_results";
 
         @Override
@@ -41,7 +41,7 @@ public abstract class PollResults<K, V> {
 
         @Override
         protected void save(Connection con, PollResults pr) throws SQLException {
-            String query = "INSERT INTO "+TABLE_NAME+" (id, results_type, results_json) VALUES (?, ?, ?)";
+            String query = "INSERT INTO "+TABLE_NAME+" (id, results_type, results_json, height) VALUES (?, ?, ?, ?)";
             try (PreparedStatement pstmt = con.prepareStatement(query)) {
                 int i = 0;
                 pstmt.setLong(++i, pr.getPollId());
@@ -56,8 +56,8 @@ public abstract class PollResults<K, V> {
                 }
 
                 pstmt.setByte(++i, resultsType);
-
                 pstmt.setString(++i, pr.encodeResultsAsJson());
+                pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
                 pstmt.executeUpdate();
             }catch(NxtException.ValidationException ve){
                 throw new SQLException(ve);

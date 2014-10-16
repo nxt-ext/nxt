@@ -46,11 +46,17 @@ public abstract class EntityDbTable<T> extends DerivedDbTable {
         }
     }
 
-    public final T getBy(String columnName, String value) {
+    public final T getBy(String columnName, Object value) {
         try (Connection con = Db.getConnection();
              PreparedStatement pstmt = con.prepareStatement("SELECT * FROM " + table()
                      + " WHERE " + columnName + " = ?" + (multiversion ? " AND latest = TRUE LIMIT 1" : ""))) {
-            pstmt.setString(1, value);
+            if(value instanceof Long){
+                pstmt.setLong(1, (Long)value);
+            }else if(value instanceof Boolean){
+                pstmt.setBoolean(1, (Boolean)value);
+            }else if(value instanceof String){
+                pstmt.setString(1, (String)value);
+            }
             return get(con, pstmt);
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
@@ -80,6 +86,10 @@ public abstract class EntityDbTable<T> extends DerivedDbTable {
             }
             return t;
         }
+    }
+
+    public final DbIterator<T> getManyBy(String columnName, Object value) {
+        return getManyBy(columnName, value, 0, -1);
     }
 
     public final DbIterator<T> getManyBy(String columnName, Object value, int from, int to) {
@@ -126,7 +136,7 @@ public abstract class EntityDbTable<T> extends DerivedDbTable {
         });
     }
 
-    //change resulting type to DbIterator?
+    //todo: change resulting type to DbIterator?
     public List<Long> getManyIdsBy(String targetColumnName, String filterColumnName, Long value) {
         try (Connection con = Db.getConnection();
              PreparedStatement pstmt = con.prepareStatement("SELECT " + targetColumnName + " FROM " + table()

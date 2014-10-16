@@ -91,6 +91,6 @@ public interface Transaction {
 
     Long getECBlockId();
 
-    boolean isPending();
-
+    void release() throws NxtException.NotValidException; // release pending transaction (on max height)
+    void refuse() throws NxtException.NotValidException; // refuse pending transaction (on max height)
 }
