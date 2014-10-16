@@ -495,7 +495,6 @@ body > .header .navbar .nav > li > a:hover > .label {
 .user-panel {
   margin: 10px 5px;
   position: relative;
-  z-index: 1100;
 }
 .user-panel:before,
 .user-panel:after {
