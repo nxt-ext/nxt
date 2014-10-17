@@ -344,6 +344,31 @@ final class TransactionProcessorImpl implements TransactionProcessor {
         return TransactionImpl.parseTransaction(transactionData);
     }
 
+    @Override
+    public void clearUnconfirmedTransactions() {
+        synchronized (BlockchainImpl.getInstance()) {
+            List<Transaction> removed = new ArrayList<>();
+            try {
+                Db.beginTransaction();
+                try (DbIterator<TransactionImpl> unconfirmedTransactions = getAllUnconfirmedTransactions()) {
+                    for (TransactionImpl transaction : unconfirmedTransactions) {
+                        transaction.undoUnconfirmed();
+                        removed.add(transaction);
+                    }
+                }
+                unconfirmedTransactionTable.truncate();
+                Db.commitTransaction();
+            } catch (Exception e) {
+                Logger.logErrorMessage(e.toString(), e);
+                Db.rollbackTransaction();
+                throw e;
+            } finally {
+                Db.endTransaction();
+            }
+            transactionListeners.notify(removed, Event.REMOVED_UNCONFIRMED_TRANSACTIONS);
+        }
+    }
+
     void requeueAllUnconfirmedTransactions() {
         List<Transaction> removed = new ArrayList<>();
         try (DbIterator<TransactionImpl> unconfirmedTransactions = getAllUnconfirmedTransactions()) {

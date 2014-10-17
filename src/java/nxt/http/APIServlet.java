@@ -162,6 +162,7 @@ public final class APIServlet extends HttpServlet {
         map.put("transferAsset", TransferAsset.instance);
 
         if (API.enableDebugAPI) {
+            map.put("clearUnconfirmedTransactions", ClearUnconfirmedTransactions.instance);
             map.put("fullReset", FullReset.instance);
             map.put("popOff", PopOff.instance);
             map.put("scan", Scan.instance);
