@@ -1485,7 +1485,6 @@ var NRS = (function(NRS, $, undefined) {
 
 				for (var i = 0; i < transfers.length; i++) {
 					transfers[i].quantityQNT = new BigInteger(transfers[i].quantityQNT);
-					transfers[i].timestamp = 0;
 
 					var type = (transfers[i].recipientRS == NRS.accountRS ? "receive" : "send");
 
