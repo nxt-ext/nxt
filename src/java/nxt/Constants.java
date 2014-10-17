@@ -71,7 +71,7 @@ public final class Constants {
     public static final int VOTING_SYSTEM_BLOCK = Integer.MAX_VALUE;
     public static final int DIGITAL_GOODS_STORE_BLOCK = isTestnet ? 77341 : 213000;
     public static final int PUBLIC_KEY_ANNOUNCEMENT_BLOCK = isTestnet ? 77341 : 215000;
-    public static final int LAST_KNOWN_BLOCK = isTestnet ? 80000 : 258000;
+    public static final int LAST_KNOWN_BLOCK = isTestnet ? 80000 : 261000;
 
     static final long UNCONFIRMED_POOL_DEPOSIT_NQT = (isTestnet ? 50 : 100) * ONE_NXT;
 
