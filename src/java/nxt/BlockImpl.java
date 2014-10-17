@@ -145,6 +145,9 @@ final class BlockImpl implements Block {
     public List<TransactionImpl> getTransactions() {
         if (blockTransactions == null) {
             this.blockTransactions = Collections.unmodifiableList(TransactionDb.findBlockTransactions(getId()));
+            for (TransactionImpl transaction : this.blockTransactions) {
+                transaction.setBlock(this);
+            }
         }
         return blockTransactions;
     }
