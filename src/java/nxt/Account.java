@@ -639,9 +639,11 @@ public final class Account {
     // this.publicKey is already set to an array equal to key
     boolean setOrVerify(byte[] key, int height) {
         if (this.publicKey == null) {
-            this.publicKey = key;
-            this.keyHeight = -1;
-            accountTable.insert(this);
+            if (Db.isInTransaction()) {
+                this.publicKey = key;
+                this.keyHeight = -1;
+                accountTable.insert(this);
+            }
             return true;
         } else if (Arrays.equals(this.publicKey, key)) {
             return true;
@@ -652,11 +654,13 @@ public final class Account {
             return false;
         } else if (this.keyHeight >= height) {
             Logger.logMessage("DUPLICATE KEY!!!");
-            Logger.logMessage("Changing key for account " + Convert.toUnsignedLong(id) + " at height " + height
-                    + ", was previously set to a different one at height " + keyHeight);
-            this.publicKey = key;
-            this.keyHeight = height;
-            accountTable.insert(this);
+            if (Db.isInTransaction()) {
+                Logger.logMessage("Changing key for account " + Convert.toUnsignedLong(id) + " at height " + height
+                        + ", was previously set to a different one at height " + keyHeight);
+                this.publicKey = key;
+                this.keyHeight = height;
+                accountTable.insert(this);
+            }
             return true;
         }
         Logger.logMessage("DUPLICATE KEY!!!");
