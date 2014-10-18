@@ -17,10 +17,11 @@ public final class CurrencyExchange {
     }
 
     private static void removeExpiredOffers(int height) {
-        DbIterator<CurrencyOffer> buyOffers = CurrencyBuy.getAll(0, CurrencyBuy.getCount() - 1);
-        for (CurrencyOffer offer : buyOffers) {
-            if (offer.getExpirationHeight() <= height) {
-                removeOffer(offer.getCurrencyId(), offer);
+        try (DbIterator<CurrencyOffer> buyOffers = CurrencyBuy.getAll(0, CurrencyBuy.getCount() - 1)) {
+            for (CurrencyOffer offer : buyOffers) {
+                if (offer.getExpirationHeight() <= height) {
+                    removeOffer(offer.getCurrencyId(), offer); // TODO: move out of the iterator loop
+                }
             }
         }
     }
@@ -40,8 +41,7 @@ public final class CurrencyExchange {
         long extraAmountNQT = 0;
         long remainingUnits = units;
 
-        DbIterator<CurrencyOffer> currencyBuyOffers = CurrencyBuy.getCurrencyOffers(currencyId);
-        if (currencyBuyOffers != null) {
+        try (DbIterator<CurrencyOffer> currencyBuyOffers = CurrencyBuy.getCurrencyOffers(currencyId)) {
             for (CurrencyOffer offer : currencyBuyOffers) {
                 if (offer.getRateNQT() < rateNQT) {
                     break;
@@ -64,7 +64,7 @@ public final class CurrencyExchange {
                 counterAccount.addToBalanceNQT(-curAmountNQT);
                 counterAccount.addToCurrencyUnits(currencyId, curUnits);
                 Exchange.addExchange(currencyId, Nxt.getBlockchain().getLastBlock(),
-                        offer.getId(), account.getId(), offer.getAccountId(), curUnits, offer.getRateNQT());
+                        offer, account.getId(), offer.getAccountId(), curUnits);
             }
         }
 
@@ -77,8 +77,7 @@ public final class CurrencyExchange {
         long extraUnits = 0;
         long remainingAmountNQT = Convert.safeMultiply(units, rateNQT);
 
-        DbIterator<CurrencyOffer> currencySellOffers = CurrencySell.getCurrencyOffers(currencyId);
-        if (currencySellOffers != null) {
+        try (DbIterator<CurrencyOffer> currencySellOffers = CurrencySell.getCurrencyOffers(currencyId)) {
             for (CurrencyOffer offer : currencySellOffers) {
                 if (offer.getRateNQT() > rateNQT) {
                     break;
@@ -101,7 +100,7 @@ public final class CurrencyExchange {
                 counterAccount.addToBalanceNQT(curAmountNQT);
                 counterAccount.addToCurrencyUnits(currencyId, -curUnits);
                 Exchange.addExchange(currencyId, Nxt.getBlockchain().getLastBlock(),
-                        offer.getId(), offer.getAccountId(), account.getId(), curUnits, offer.getRateNQT());
+                        offer, offer.getAccountId(), account.getId(), curUnits);
             }
         }
 
@@ -122,15 +121,12 @@ public final class CurrencyExchange {
     }
 
     private static void removeOffer(long currencyId, long accountId) {
-        DbIterator<CurrencyOffer> buyOffers = CurrencyBuy.getCurrencyOffers(currencyId);
-        if (buyOffers == null) {
-            return;
-        }
-
-        for (CurrencyOffer offer : buyOffers) {
-            if (offer.getAccountId() == accountId) {
-                removeOffer(currencyId, offer);
-                return;
+        try (DbIterator<CurrencyOffer> buyOffers = CurrencyBuy.getCurrencyOffers(currencyId)) {
+            for (CurrencyOffer offer : buyOffers) {
+                if (offer.getAccountId() == accountId) {
+                    removeOffer(currencyId, offer);
+                    return;
+                }
             }
         }
     }

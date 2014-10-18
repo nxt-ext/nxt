@@ -27,6 +27,7 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 import java.util.Collections;
+import java.util.Map;
 
 final class JSONData {
 
@@ -90,8 +91,8 @@ final class JSONData {
         json.put("totalSupply", String.valueOf(currency.getTotalSupply()));
         json.put("currentSupply", String.valueOf(currency.getCurrentSupply()));
         json.put("issuanceHeight", currency.getIssuanceHeight());
-        json.put("minReservePerUnitNQT", currency.getMinReservePerUnitNQT());
-        json.put("currentReservePerUnitNQT", currency.getCurrentReservePerUnitNQT());
+        json.put("minReservePerUnitNQT", String.valueOf(currency.getMinReservePerUnitNQT()));
+        json.put("currentReservePerUnitNQT", String.valueOf(currency.getCurrentReservePerUnitNQT()));
         json.put("minDifficulty", currency.getMinDifficulty());
         json.put("maxDifficulty", currency.getMaxDifficulty());
         json.put("algorithm", currency.getAlgorithm());
@@ -104,7 +105,7 @@ final class JSONData {
         JSONObject json = new JSONObject();
         json.put("currency", Convert.toUnsignedLong(founder.getCurrencyId()));
         putAccount(json, "account", founder.getAccountId());
-        json.put("value", founder.getValue());
+        json.put("value", String.valueOf(founder.getValue()));
         return json;
     }
 
@@ -123,7 +124,6 @@ final class JSONData {
         json.put("currency", Convert.toUnsignedLong(accountCurrency.getCurrencyId()));
         json.put("units", String.valueOf(accountCurrency.getUnits()));
         json.put("unconfirmedUnits", String.valueOf(accountCurrency.getUnconfirmedUnits()));
-        json.put("height", accountCurrency.getHeight());
         return json;
     }
 
@@ -411,7 +411,11 @@ final class JSONData {
             attachmentJSON.putAll(appendage.getJSONObject());
         }
         if (! attachmentJSON.isEmpty()) {
-            modifyAttachmentJSON(attachmentJSON);
+            for (Map.Entry entry : (Iterable<Map.Entry>) attachmentJSON.entrySet()) {
+                if (entry.getValue() instanceof Long) {
+                    entry.setValue(String.valueOf(entry.getValue()));
+                }
+            }
             json.put("attachment", attachmentJSON);
         }
         putAccount(json, "sender", transaction.getSenderId());
@@ -431,26 +435,6 @@ final class JSONData {
         json.put("confirmations", Nxt.getBlockchain().getHeight() - transaction.getHeight());
         json.put("blockTimestamp", transaction.getBlockTimestamp());
         return json;
-    }
-
-    // ugly, hopefully temporary
-    private static void modifyAttachmentJSON(JSONObject json) {
-        Long quantityQNT = (Long) json.remove("quantityQNT");
-        if (quantityQNT != null) {
-            json.put("quantityQNT", String.valueOf(quantityQNT));
-        }
-        Long priceNQT = (Long) json.remove("priceNQT");
-        if (priceNQT != null) {
-            json.put("priceNQT", String.valueOf(priceNQT));
-        }
-        Long discountNQT = (Long) json.remove("discountNQT");
-        if (discountNQT != null) {
-            json.put("discountNQT", String.valueOf(discountNQT));
-        }
-        Long refundNQT = (Long) json.remove("refundNQT");
-        if (refundNQT != null) {
-            json.put("refundNQT", String.valueOf(refundNQT));
-        }
     }
 
     static void putAccount(JSONObject json, String name, long accountId) {

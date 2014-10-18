@@ -16,7 +16,7 @@ public final class CoinShuffler {
 
     private static class Shuffling {
 
-        private final Long currencyId;
+        private final long currencyId;
         private final long amount;
         private final byte numberOfParticipants;
         private final short maxInitiationDelay;
@@ -30,10 +30,10 @@ public final class CoinShuffler {
         private int lastActionTimestamp;
         private final List<Long> participants;
         private final Map<Long, EncryptedData> encryptedRecipients;
-        private final Map<Long, Long[]> decryptedRecipients;
+        private final Map<Long, long[]> decryptedRecipients;
         private final Map<Long, byte[]> keys;
 
-        Shuffling(Long currencyId, long amount, byte numberOfParticipants, short maxInitiationDelay, short maxContinuationDelay, short maxFinalizationDelay, short maxCancellationDelay) {
+        Shuffling(long currencyId, long amount, byte numberOfParticipants, short maxInitiationDelay, short maxContinuationDelay, short maxFinalizationDelay, short maxCancellationDelay) {
             this.currencyId = currencyId;
             this.amount = amount;
             this.numberOfParticipants = numberOfParticipants;
@@ -42,7 +42,8 @@ public final class CoinShuffler {
             this.maxFinalizationDelay = maxFinalizationDelay;
             this.maxCancellationDelay = maxCancellationDelay;
 
-            hashCode = currencyId.hashCode() ^ Long.valueOf(amount).hashCode() ^ Byte.valueOf(numberOfParticipants).hashCode() ^ Short.valueOf(maxInitiationDelay).hashCode() ^ Short.valueOf(maxContinuationDelay).hashCode() ^ Short.valueOf(maxFinalizationDelay).hashCode() ^ Short.valueOf(maxCancellationDelay).hashCode();
+            hashCode = (int)(currencyId ^ (currencyId >>> 32)) ^ (int)(amount ^ (amount >>> 32)) ^ (int)numberOfParticipants ^
+                    (int)maxInitiationDelay ^ (int)maxContinuationDelay ^ (int)maxFinalizationDelay ^ (int)maxCancellationDelay;
 
             state = State.INITIATED;
             lastActionTimestamp = BlockchainImpl.getInstance().getLastBlock().getTimestamp();
@@ -59,7 +60,7 @@ public final class CoinShuffler {
 
         @Override
         public boolean equals(Object obj) {
-            return this.currencyId.equals(((Shuffling)obj).currencyId)
+            return this.currencyId == ((Shuffling)obj).currencyId
                     && this.amount == ((Shuffling)obj).amount
                     && this.numberOfParticipants == ((Shuffling)obj).numberOfParticipants
                     && this.maxInitiationDelay == ((Shuffling)obj).maxInitiationDelay
@@ -209,9 +210,9 @@ public final class CoinShuffler {
         shuffling.lastActionTimestamp = BlockchainImpl.getInstance().getLastBlock().getTimestamp();
     }
 
-    public static void finalizeShuffling(Account account, Long shufflingId, Long[] recipients) {
+    public static void finalizeShuffling(Account account, Long shufflingId, long[] recipients) {
         Shuffling shuffling = shufflings.get(shufflingId);
-        if (shuffling.decryptedRecipients.size() > 0 && !Arrays.equals(recipients, shuffling.decryptedRecipients.values().toArray(new Long[0][0])[0])) {
+        if (shuffling.decryptedRecipients.size() > 0 && !Arrays.equals(recipients, shuffling.decryptedRecipients.values().toArray(new long[0][0])[0])) {
             shuffling.state = State.CANCELLED;
             shuffling.lastActionTimestamp = BlockchainImpl.getInstance().getLastBlock().getTimestamp();
             return;

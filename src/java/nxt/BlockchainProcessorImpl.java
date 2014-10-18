@@ -783,8 +783,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 : 3;
     }
 
-    @Override
-    public void generateBlock(String secretPhrase, int blockTimestamp) throws BlockNotAcceptedException {
+    void generateBlock(String secretPhrase, int blockTimestamp) throws BlockNotAcceptedException {
 
         TransactionProcessorImpl transactionProcessor = TransactionProcessorImpl.getInstance();
         List<TransactionImpl> sortedTransactions = new ArrayList<>();

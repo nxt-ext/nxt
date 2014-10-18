@@ -1546,10 +1546,10 @@ public interface Attachment extends Appendix {
             this.code = (String)attachmentData.get("code");
             this.description = (String)attachmentData.get("description");
             this.type = ((Long)attachmentData.get("type")).byteValue();
-            this.totalSupply = (Long)attachmentData.get("totalSupply");
-            this.currentSupply = (Long)attachmentData.get("currentSupply");
+            this.totalSupply = Convert.parseLong(attachmentData.get("totalSupply"));
+            this.currentSupply = Convert.parseLong(attachmentData.get("currentSupply"));
             this.issuanceHeight = ((Long)attachmentData.get("issuanceHeight")).intValue();
-            this.minReservePerUnitNQT = (Long)attachmentData.get("minReservePerUnitNQT");
+            this.minReservePerUnitNQT = Convert.parseLong(attachmentData.get("minReservePerUnitNQT"));
             this.minDifficulty = ((Long)attachmentData.get("minDifficulty")).byteValue();
             this.maxDifficulty = ((Long)attachmentData.get("maxDifficulty")).byteValue();
             this.ruleset = ((Long)attachmentData.get("ruleset")).byteValue();
@@ -1614,7 +1614,7 @@ public interface Attachment extends Appendix {
             attachment.put("currentSupply", currentSupply);
             attachment.put("issuanceHeight", issuanceHeight);
             attachment.put("minReservePerUnitNQT", minReservePerUnitNQT);
-            attachment.put("minDifficulty", minDifficulty & 0xFF);
+            attachment.put("minDifficulty", minDifficulty & 0xFF); //TODO why?
             attachment.put("maxDifficulty", maxDifficulty & 0xFF);
             attachment.put("ruleset", ruleset & 0xFF);
             attachment.put("algorithm", algorithm & 0xFF);
@@ -1687,8 +1687,8 @@ public interface Attachment extends Appendix {
 
         MonetarySystemReserveIncrease(JSONObject attachmentData) {
             super(attachmentData);
-            this.currencyId = (Long)attachmentData.get("currency");
-            this.amountNQT = (Long)attachmentData.get("amountNQT");
+            this.currencyId = Convert.parseUnsignedLong((String)attachmentData.get("currency"));
+            this.amountNQT = Convert.parseLong(attachmentData.get("amountNQT"));
         }
 
         public MonetarySystemReserveIncrease(long currencyId, long amountNQT) {
@@ -1746,8 +1746,8 @@ public interface Attachment extends Appendix {
 
         MonetarySystemReserveClaim(JSONObject attachmentData) {
             super(attachmentData);
-            this.currencyId = (Long)attachmentData.get("currency");
-            this.units = (Long)attachmentData.get("units");
+            this.currencyId = Convert.parseUnsignedLong((String)attachmentData.get("currency"));
+            this.units = Convert.parseLong(attachmentData.get("units"));
         }
 
         public MonetarySystemReserveClaim(long currencyId, long units) {
@@ -1807,9 +1807,9 @@ public interface Attachment extends Appendix {
 
         MonetarySystemCurrencyTransfer(JSONObject attachmentData) {
             super(attachmentData);
-            this.recipientId = (Long)attachmentData.get("recipient");
-            this.currencyId = (Long)attachmentData.get("currency");
-            this.units = (Long)attachmentData.get("units");
+            this.recipientId = Convert.parseUnsignedLong((String)attachmentData.get("recipient"));
+            this.currencyId = Convert.parseUnsignedLong((String)attachmentData.get("currency"));
+            this.units = Convert.parseLong(attachmentData.get("units"));
         }
 
         public MonetarySystemCurrencyTransfer(long recipientId, long currencyId, long units) {
@@ -1830,16 +1830,16 @@ public interface Attachment extends Appendix {
 
         @Override
         void putMyBytes(ByteBuffer buffer) {
-            buffer.putLong(getRecipientId());
-            buffer.putLong(getCurrencyId());
-            buffer.putLong(getUnits());
+            buffer.putLong(recipientId);
+            buffer.putLong(currencyId);
+            buffer.putLong(units);
         }
 
         @Override
         void putMyJSON(JSONObject attachment) {
-            attachment.put("recipient", Convert.toUnsignedLong(getRecipientId()));
-            attachment.put("currency", Convert.toUnsignedLong(getCurrencyId()));
-            attachment.put("units", getUnits());
+            attachment.put("recipient", Convert.toUnsignedLong(recipientId));
+            attachment.put("currency", Convert.toUnsignedLong(currencyId));
+            attachment.put("units", units);
         }
 
         @Override
@@ -1885,17 +1885,17 @@ public interface Attachment extends Appendix {
 
         MonetarySystemPublishExchangeOffer(JSONObject attachmentData) {
             super(attachmentData);
-            this.currencyId = (Long)attachmentData.get("currency");
-            this.buyRateNQT = (Long)attachmentData.get("buyRateNQT");
-            this.sellRateNQT = (Long)attachmentData.get("sellRateNQT");
-            this.totalBuyLimit = (Long)attachmentData.get("totalBuyLimit");
-            this.totalSellLimit = (Long)attachmentData.get("totalSellLimit");
-            this.initialBuySupply = (Long)attachmentData.get("initialBuySupply");
-            this.initialSellSupply = (Long)attachmentData.get("initialSellSupply");
+            this.currencyId = Convert.parseUnsignedLong((String)attachmentData.get("currency"));
+            this.buyRateNQT = Convert.parseLong(attachmentData.get("buyRateNQT"));
+            this.sellRateNQT = Convert.parseLong(attachmentData.get("sellRateNQT"));
+            this.totalBuyLimit = Convert.parseLong(attachmentData.get("totalBuyLimit"));
+            this.totalSellLimit = Convert.parseLong(attachmentData.get("totalSellLimit"));
+            this.initialBuySupply = Convert.parseLong(attachmentData.get("initialBuySupply"));
+            this.initialSellSupply = Convert.parseLong(attachmentData.get("initialSellSupply"));
             this.expirationHeight = ((Long)attachmentData.get("expirationHeight")).intValue();
         }
 
-        public MonetarySystemPublishExchangeOffer(Long currencyId, long buyRateNQT, long sellRateNQT, long totalBuyLimit,
+        public MonetarySystemPublishExchangeOffer(long currencyId, long buyRateNQT, long sellRateNQT, long totalBuyLimit,
                                                   long totalSellLimit, long initialBuySupply, long initialSellSupply, int expirationHeight) {
             this.currencyId = currencyId;
             this.buyRateNQT = buyRateNQT;
@@ -1995,9 +1995,9 @@ public interface Attachment extends Appendix {
 
         MonetarySystemExchange(JSONObject attachmentData) {
             super(attachmentData);
-            this.currencyId = (Long)attachmentData.get("currency");
-            this.rateNQT = (Long)attachmentData.get("rateNQT");
-            this.units = (Long)attachmentData.get("units");
+            this.currencyId = Convert.parseUnsignedLong((String)attachmentData.get("currency"));
+            this.rateNQT = Convert.parseLong(attachmentData.get("rateNQT"));
+            this.units = Convert.parseLong(attachmentData.get("units"));
         }
 
         public MonetarySystemExchange(long currencyId, long rateNQT, long units) {
@@ -2070,13 +2070,13 @@ public interface Attachment extends Appendix {
 
         MonetarySystemCurrencyMinting(JSONObject attachmentData) {
             super(attachmentData);
-            this.nonce = (Long)attachmentData.get("nonce");
-            this.currencyId = (Long)attachmentData.get("currency");
-            this.units = (Long)attachmentData.get("units");
-            this.counter = (Long)attachmentData.get("counter");
+            this.nonce = Convert.parseLong(attachmentData.get("nonce"));
+            this.currencyId = Convert.parseUnsignedLong((String)attachmentData.get("currency"));
+            this.units = Convert.parseLong(attachmentData.get("units"));
+            this.counter = Convert.parseLong(attachmentData.get("counter"));
         }
 
-        public MonetarySystemCurrencyMinting(long nonce, Long currencyId, long units, long counter) {
+        public MonetarySystemCurrencyMinting(long nonce, long currencyId, long units, long counter) {
             this.nonce = nonce;
             this.currencyId = currencyId;
             this.units = units;
@@ -2118,7 +2118,7 @@ public interface Attachment extends Appendix {
             return nonce;
         }
 
-        public Long getCurrencyId() {
+        public long getCurrencyId() {
             return currencyId;
         }
 
@@ -2156,7 +2156,7 @@ public interface Attachment extends Appendix {
         MonetarySystemShufflingInitiation(JSONObject attachmentData) {
             super(attachmentData);
             this.currencyId = Convert.parseUnsignedLong((String)attachmentData.get("currency"));
-            this.amount = (Long)attachmentData.get("amount");
+            this.amount = Convert.parseLong(attachmentData.get("amount"));
             this.numberOfParticipants = ((Long)attachmentData.get("numberOfParticipants")).byteValue();
             this.maxInitiationDelay = ((Long)attachmentData.get("maxInitiationDelay")).shortValue();
             this.maxContinuationDelay = ((Long)attachmentData.get("maxContinuationDelay")).shortValue();
@@ -2314,14 +2314,14 @@ public interface Attachment extends Appendix {
 
         private final long currencyId;
         private final long shufflingId;
-        private final Long[] recipients;
+        private final long[] recipients;
 
         MonetarySystemShufflingFinalization(ByteBuffer buffer, byte transactionVersion) {
             super(buffer, transactionVersion);
             this.currencyId = buffer.getLong();
             this.shufflingId = buffer.getLong();
             byte numberOfEntries = buffer.get();
-            this.recipients = new Long[numberOfEntries];
+            this.recipients = new long[numberOfEntries];
             for (int i = 0; i < this.recipients.length; i++) {
                 this.recipients[i] = buffer.getLong();
             }
@@ -2335,14 +2335,14 @@ public interface Attachment extends Appendix {
             JSONArray recipientsData = (JSONArray)attachmentData.get("recipients");
 
             // TODO change this, cannot receive more than one recipient per transaction - dos problem
-            this.recipients = new Long[recipientsData.size()];
+            this.recipients = new long[recipientsData.size()];
             for (int i = 0; i < this.recipients.length; i++) {
                 this.recipients[i] = Convert.parseUnsignedLong((String)recipientsData.get(i));
             }
             Arrays.sort(this.recipients);
         }
 
-        MonetarySystemShufflingFinalization(long currencyId, long shufflingId, Long[] recipients) {
+        MonetarySystemShufflingFinalization(long currencyId, long shufflingId, long[] recipients) {
             this.currencyId = currencyId;
             this.shufflingId = shufflingId;
             this.recipients = recipients;
@@ -2392,9 +2392,10 @@ public interface Attachment extends Appendix {
             return shufflingId;
         }
 
-        public Long[] getRecipients() {
+        public long[] getRecipients() {
             return recipients;
         }
+
     }
 
 

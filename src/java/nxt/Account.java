@@ -107,7 +107,6 @@ public final class Account {
         private final DbKey dbKey;
         private long units;
         private long unconfirmedUnits;
-        private int height;
 
         private AccountCurrency(long accountId, long currencyId, long quantityQNT, long unconfirmedQuantityQNT) {
             this.accountId = accountId;
@@ -115,7 +114,6 @@ public final class Account {
             this.dbKey = accountCurrencyDbKeyFactory.newKey(this.accountId, this.currencyId);
             this.units = quantityQNT;
             this.unconfirmedUnits = unconfirmedQuantityQNT;
-            this.height = Nxt.getBlockchain().getHeight();
         }
 
         private AccountCurrency(ResultSet rs) throws SQLException {
@@ -124,7 +122,6 @@ public final class Account {
             this.dbKey = accountAssetDbKeyFactory.newKey(this.accountId, this.currencyId);
             this.units = rs.getLong("units");
             this.unconfirmedUnits = rs.getLong("unconfirmed_units");
-            this.height = rs.getInt("height");
         }
 
         private void save(Connection con) throws SQLException {
@@ -136,7 +133,7 @@ public final class Account {
                 pstmt.setLong(++i, this.currencyId);
                 pstmt.setLong(++i, this.units);
                 pstmt.setLong(++i, this.unconfirmedUnits);
-                pstmt.setInt(++i, this.height);
+                pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
                 pstmt.executeUpdate();
             }
         }
@@ -157,27 +154,28 @@ public final class Account {
             return unconfirmedUnits;
         }
 
-        public int getHeight() {
-            return height;
-        }
-
         private void save() {
+            checkBalance(this.accountId, this.units, this.unconfirmedUnits);
             if (this.units > 0 || this.unconfirmedUnits > 0) {
                 accountCurrencyTable.insert(this);
             } else if (this.units == 0 && this.unconfirmedUnits == 0) {
                 accountCurrencyTable.delete(this);
+            }
+            /*
             } else if (this.units < 0 || this.unconfirmedUnits < 0) {
                 throw new DoubleSpendingException(String.format("Negative currency balance for account %s currency %s units %d unconfirmedUnits %d",
                         Convert.toUnsignedLong(this.accountId), Convert.toUnsignedLong(this.currencyId), units, unconfirmedUnits));
             }
+            */
         }
 
         @Override
         public String toString() {
             return "AccountCurrency account_id: " + Convert.toUnsignedLong(accountId) + " currency_id: " + Convert.toUnsignedLong(currencyId)
-                    + " quantity: " + units + " unconfirmedQuantity: " + unconfirmedUnits + " height: " + height;
+                    + " quantity: " + units + " unconfirmedQuantity: " + unconfirmedUnits;
         }
 
+        /*
         @Override
         public boolean equals(Object o) {
             if (! (o instanceof AccountCurrency)) {
@@ -193,6 +191,7 @@ public final class Account {
             return (int)(accountId ^ (accountId >>> 32) ^ currencyId ^ (currencyId >>> 32) ^ units ^ (units >>> 32)
                     ^ unconfirmedUnits ^ (unconfirmedUnits >>> 32) ^ height);
         }
+        */
     }
 
     public static class AccountLease {
@@ -331,6 +330,11 @@ public final class Account {
         @Override
         protected void save(Connection con, AccountCurrency accountCurrency) throws SQLException {
             accountCurrency.save(con);
+        }
+
+        @Override
+        protected String defaultSort() {
+            return " ORDER BY units DESC, account_id, currency_id ";
         }
 
     };

@@ -65,6 +65,7 @@ public class APITestServlet extends HttpServlet {
             "            request.send(params);\n" +
             "            var result = JSON.stringify(JSON.parse(request.responseText), null, 4);\n" +
             "            form.getElementsByClassName(\"result\")[0].textContent = result;\n" +
+                    //TODO: isn't this sending the request twice?
             "            $.ajax({\n" +
             "                url: url,\n" +
             "                type: 'POST',\n" +
