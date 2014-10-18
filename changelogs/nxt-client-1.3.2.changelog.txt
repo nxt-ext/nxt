@@ -1,0 +1,16 @@
+Allow re-broadcasting of transactions already in the unconfirmed pool.
+
+Added clearUnconfirmedTransactions debug API to force clearing of the
+unconfirmed transactions pool.
+
+Show correct timestamps in asset transfer history.
+
+Only try to set account public key when inside a database transaction,
+fixes a bug in setting public keys for accounts that never had an
+outgoing transaction.
+
+getAccountLessors API now returns the guaranteed balance of each lessor
+too, as of the height specified in the optional height parameter. The
+format of the returned json has been changed to allow adding this
+guaranteedBalanceNQT property.
+

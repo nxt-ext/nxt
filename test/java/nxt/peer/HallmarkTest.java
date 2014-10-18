@@ -4,7 +4,7 @@ import org.junit.Test;
 
 import java.nio.BufferUnderflowException;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 public class HallmarkTest {
     @Test(expected = StringIndexOutOfBoundsException.class)
@@ -48,7 +48,7 @@ public class HallmarkTest {
         String hallmarkString = Hallmark.generateHallmark("secret", "nxt.org", 100, 19840413);
         Hallmark hallmark = Hallmark.parseHallmark(hallmarkString);
 
-        assertEquals(new Long(-8123967981207937138L), hallmark.getAccountId());
+        assertEquals(-8123967981207937138L, hallmark.getAccountId());
         assertEquals("nxt.org", hallmark.getHost());
         assertEquals(100, hallmark.getWeight());
         assertEquals(19840413, hallmark.getDate());

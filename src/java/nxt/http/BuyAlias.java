@@ -27,7 +27,7 @@ public final class BuyAlias extends CreateTransaction {
         if (Alias.getOffer(alias) == null) {
             return INCORRECT_ALIAS_NOTFORSALE;
         }
-        Long sellerId = alias.getAccountId();
+        long sellerId = alias.getAccountId();
         Attachment attachment = new Attachment.MessagingAliasBuy(alias.getAliasName());
         return createTransaction(req, buyer, sellerId, amountNQT, attachment);
     }

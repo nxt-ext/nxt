@@ -63,7 +63,7 @@
 				}
 				element = row.insertCell(3);
 				element.className = "text";
-				element.innerHTML = (transaction.account ? transaction.account : transaction.block)
+				element.innerHTML = (transaction.account ? transaction.account : transaction.block);
 				element = row.insertCell(4);
 				if (transaction.sentAmountNQT) {
 					element.className = "amount";

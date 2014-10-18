@@ -6,7 +6,6 @@ import nxt.Constants;
 import nxt.Nxt;
 import nxt.Transaction;
 import nxt.db.Db;
-import nxt.util.Convert;
 import nxt.util.JSON;
 import nxt.util.Listener;
 import nxt.util.Listeners;
@@ -341,7 +340,7 @@ public final class Peers {
                         }
                     }
 
-                    int now = Convert.getEpochTime();
+                    int now = Nxt.getEpochTime();
                     for (PeerImpl peer : peers.values()) {
                         if (peer.getState() == Peer.State.CONNECTED && now - peer.getLastUpdated() > 3600) {
                             peer.connect();
@@ -468,7 +467,7 @@ public final class Peers {
             @Override
             public void notify(Account account) {
                 for (PeerImpl peer : Peers.peers.values()) {
-                    if (peer.getHallmark() != null && peer.getHallmark().getAccountId().equals(account.getId())) {
+                    if (peer.getHallmark() != null && peer.getHallmark().getAccountId() == account.getId()) {
                         Peers.listeners.notify(peer, Peers.Event.WEIGHT);
                     }
                 }
@@ -478,10 +477,10 @@ public final class Peers {
 
     static {
         if (! Constants.isOffline) {
-            ThreadPool.scheduleThread(Peers.peerConnectingThread, 5);
-            ThreadPool.scheduleThread(Peers.peerUnBlacklistingThread, 1);
+            ThreadPool.scheduleThread("PeerConnecting", Peers.peerConnectingThread, 5);
+            ThreadPool.scheduleThread("PeerUnBlacklisting", Peers.peerUnBlacklistingThread, 1);
             if (Peers.getMorePeers) {
-                ThreadPool.scheduleThread(Peers.getMorePeersThread, 5);
+                ThreadPool.scheduleThread("GetMorePeers", Peers.getMorePeersThread, 5);
             }
         }
     }
@@ -618,8 +617,8 @@ public final class Peers {
     static void updateAddress(PeerImpl peer) {
         String oldAddress = announcedAddresses.put(peer.getAnnouncedAddress(), peer.getPeerAddress());
         if (oldAddress != null && !peer.getPeerAddress().equals(oldAddress)) {
-            Logger.logDebugMessage("Peer " + peer.getAnnouncedAddress() + " has changed address from " + oldAddress
-                    + " to " + peer.getPeerAddress());
+            //Logger.logDebugMessage("Peer " + peer.getAnnouncedAddress() + " has changed address from " + oldAddress
+            //        + " to " + peer.getPeerAddress());
             Peer oldPeer = peers.remove(oldAddress);
             if (oldPeer != null) {
                 Peers.notifyListeners(oldPeer, Peers.Event.REMOVE);

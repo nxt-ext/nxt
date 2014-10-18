@@ -10,6 +10,7 @@ import nxt.util.ThreadPool;
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -23,33 +24,36 @@ public final class Generator implements Comparable<Generator> {
         GENERATION_DEADLINE, START_FORGING, STOP_FORGING
     }
 
+    private static final byte[] fakeForgingPublicKey = Nxt.getBooleanProperty("nxt.enableFakeForging")
+            ? Account.getAccount(Convert.parseAccountId(Nxt.getStringProperty("nxt.fakeForgingAccount"))).getPublicKey() : null;
+
     private static final Listeners<Generator,Event> listeners = new Listeners<>();
 
     private static final ConcurrentMap<String, Generator> generators = new ConcurrentHashMap<>();
     private static final Collection<Generator> allGenerators = Collections.unmodifiableCollection(generators.values());
     private static volatile List<Generator> sortedForgers;
 
-    private static final Runnable generateBlockThread = new Runnable() {
+    private static final Runnable generateBlocksThread = new Runnable() {
 
         private volatile int lastTimestamp;
-        private volatile Long lastBlockId;
+        private volatile long lastBlockId;
 
         @Override
         public void run() {
 
             try {
                 try {
-                    int timestamp = Convert.getEpochTime();
+                    int timestamp = Nxt.getEpochTime();
                     if (timestamp == lastTimestamp) {
                         return;
                     }
                     lastTimestamp = timestamp;
                     synchronized (Nxt.getBlockchain()) {
                         Block lastBlock = Nxt.getBlockchain().getLastBlock();
-                        if (lastBlock == null || lastBlock.getHeight() < Constants.DIGITAL_GOODS_STORE_BLOCK) {
+                        if (lastBlock == null || lastBlock.getHeight() < Constants.LAST_KNOWN_BLOCK) {
                             return;
                         }
-                        if (!lastBlock.getId().equals(lastBlockId) || sortedForgers == null) {
+                        if (lastBlock.getId() != lastBlockId || sortedForgers == null) {
                             lastBlockId = lastBlock.getId();
                             List<Generator> forgers = new ArrayList<>();
                             for (Generator generator : generators.values()) {
@@ -81,7 +85,7 @@ public final class Generator implements Comparable<Generator> {
     };
 
     static {
-        ThreadPool.scheduleThread(generateBlockThread, 500, TimeUnit.MILLISECONDS);
+        ThreadPool.scheduleThread("GenerateBlocks", generateBlocksThread, 500, TimeUnit.MILLISECONDS);
     }
 
     static void init() {}
@@ -144,7 +148,14 @@ public final class Generator implements Comparable<Generator> {
         return getHitTime(BigInteger.valueOf(account.getEffectiveBalanceNXT()), getHit(account.getPublicKey(), block), block);
     }
 
+    static boolean allowsFakeForging(byte[] publicKey) {
+        return Constants.isTestnet && publicKey != null && Arrays.equals(publicKey, fakeForgingPublicKey);
+    }
+
     private static BigInteger getHit(byte[] publicKey, Block block) {
+        if (allowsFakeForging(publicKey)) {
+            return BigInteger.ZERO;
+        }
         if (block.getHeight() < Constants.TRANSPARENT_FORGING_BLOCK) {
             throw new IllegalArgumentException("Not supported below Transparent Forging Block");
         }
@@ -160,7 +171,7 @@ public final class Generator implements Comparable<Generator> {
     }
 
 
-    private final Long accountId;
+    private final long accountId;
     private final String secretPhrase;
     private final byte[] publicKey;
     private volatile long hitTime;
@@ -171,7 +182,7 @@ public final class Generator implements Comparable<Generator> {
         this.secretPhrase = secretPhrase;
         this.publicKey = Crypto.getPublicKey(secretPhrase);
         this.accountId = Account.getId(publicKey);
-        if (Nxt.getBlockchain().getHeight() > Constants.DIGITAL_GOODS_STORE_BLOCK) {
+        if (Nxt.getBlockchain().getHeight() >= Constants.LAST_KNOWN_BLOCK) {
             setLastBlock(Nxt.getBlockchain().getLastBlock());
         }
         sortedForgers = null;
@@ -181,7 +192,7 @@ public final class Generator implements Comparable<Generator> {
         return publicKey;
     }
 
-    public Long getAccountId() {
+    public long getAccountId() {
         return accountId;
     }
 
@@ -199,7 +210,7 @@ public final class Generator implements Comparable<Generator> {
         if (i != 0) {
             return i;
         }
-        return accountId.compareTo(g.accountId);
+        return Long.compare(accountId, g.accountId);
     }
 
     @Override
@@ -225,7 +236,7 @@ public final class Generator implements Comparable<Generator> {
                     BlockchainProcessorImpl.getInstance().generateBlock(secretPhrase, timestamp);
                     return true;
                 } catch (BlockchainProcessor.TransactionNotAcceptedException e) {
-                    if (Convert.getEpochTime() - timestamp > 10) {
+                    if (Nxt.getEpochTime() - timestamp > 10) {
                         throw e;
                     }
                 }

@@ -22,7 +22,7 @@ public interface BlockchainProcessor extends Observable<Block,BlockchainProcesso
 
     boolean isScanning();
 
-    boolean isDownloading();
+    int getMinRollbackHeight();
 
     void processPeerBlock(JSONObject request) throws NxtException;
 

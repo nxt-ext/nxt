@@ -6,15 +6,34 @@ import java.sql.SQLException;
 
 public interface DbKey {
 
-    public static interface Factory<T> {
+    public static abstract class Factory<T> {
 
-        DbKey newKey(T t);
+        private final String pkClause;
+        private final String pkColumns;
+        private final String selfJoinClause;
 
-        DbKey newKey(ResultSet rs) throws SQLException;
+        protected Factory(String pkClause, String pkColumns, String selfJoinClause) {
+            this.pkClause = pkClause;
+            this.pkColumns = pkColumns;
+            this.selfJoinClause = selfJoinClause;
+        }
 
-        String getPKClause();
+        public abstract DbKey newKey(T t);
 
-        String getPKColumns();
+        public abstract DbKey newKey(ResultSet rs) throws SQLException;
+
+        public final String getPKClause() {
+            return pkClause;
+        }
+
+        public final String getPKColumns() {
+            return pkColumns;
+        }
+
+        // expects tables to be named a and b
+        public final String getSelfJoinClause() {
+            return selfJoinClause;
+        }
 
     }
 
@@ -23,11 +42,14 @@ public interface DbKey {
     int setPK(PreparedStatement pstmt, int index) throws SQLException;
 
 
-    public static abstract class LongKeyFactory<T> implements Factory<T> {
+    public static abstract class LongKeyFactory<T> extends Factory<T> {
 
         private final String idColumn;
 
         public LongKeyFactory(String idColumn) {
+            super(" WHERE " + idColumn + " = ? ",
+                    idColumn,
+                    " a." + idColumn + " = b." + idColumn + " ");
             this.idColumn = idColumn;
         }
 
@@ -40,24 +62,17 @@ public interface DbKey {
             return new LongKey(id);
         }
 
-        @Override
-        public String getPKClause() {
-            return " WHERE " + idColumn + " = ? ";
-        }
-
-        @Override
-        public String getPKColumns() {
-            return idColumn;
-        }
-
     }
 
-    public static abstract class LinkKeyFactory<T> implements Factory<T> {
+    public static abstract class LinkKeyFactory<T> extends Factory<T> {
 
         private final String idColumnA;
         private final String idColumnB;
 
         public LinkKeyFactory(String idColumnA, String idColumnB) {
+            super(" WHERE " + idColumnA + " = ? AND " + idColumnB + " = ? ",
+                    idColumnA + ", " + idColumnB,
+                    " a." + idColumnA + " = b." + idColumnA + " AND a." + idColumnB + " = b." + idColumnB + " ");
             this.idColumnA = idColumnA;
             this.idColumnB = idColumnB;
         }
@@ -71,15 +86,6 @@ public interface DbKey {
             return new LinkKey(idA, idB);
         }
 
-        @Override
-        public String getPKClause() {
-            return " WHERE " + idColumnA + " = ? AND " + idColumnB + " = ? ";
-        }
-
-        @Override
-        public String getPKColumns() {
-            return idColumnA + ", " + idColumnB;
-        }
     }
 
     static final class LongKey implements DbKey {

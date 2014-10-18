@@ -3,6 +3,7 @@ package nxt;
 import nxt.crypto.Crypto;
 import nxt.crypto.EncryptedData;
 import nxt.db.Db;
+import nxt.db.DbClause;
 import nxt.db.DbIterator;
 import nxt.db.DbKey;
 import nxt.db.DbUtils;
@@ -28,13 +29,13 @@ public final class Account {
 
     public static class AccountAsset {
 
-        private final Long accountId;
-        private final Long assetId;
+        private final long accountId;
+        private final long assetId;
         private final DbKey dbKey;
         private long quantityQNT;
         private long unconfirmedQuantityQNT;
 
-        private AccountAsset(Long accountId, Long assetId, long quantityQNT, long unconfirmedQuantityQNT) {
+        private AccountAsset(long accountId, long assetId, long quantityQNT, long unconfirmedQuantityQNT) {
             this.accountId = accountId;
             this.assetId = assetId;
             this.dbKey = accountAssetDbKeyFactory.newKey(this.accountId, this.assetId);
@@ -64,11 +65,11 @@ public final class Account {
             }
         }
 
-        public Long getAccountId() {
+        public long getAccountId() {
             return accountId;
         }
 
-        public Long getAssetId() {
+        public long getAssetId() {
             return assetId;
         }
 
@@ -81,12 +82,11 @@ public final class Account {
         }
 
         private void save() {
+            checkBalance(this.accountId, this.quantityQNT, this.unconfirmedQuantityQNT);
             if (this.quantityQNT > 0 || this.unconfirmedQuantityQNT > 0) {
                 accountAssetTable.insert(this);
-            } else if (this.quantityQNT == 0 && this.unconfirmedQuantityQNT == 0) {
+            } else {
                 accountAssetTable.delete(this);
-            } else if (this.quantityQNT < 0 || this.unconfirmedQuantityQNT < 0) {
-                throw new DoubleSpendingException("Negative asset balance for account " + Convert.toUnsignedLong(this.accountId));
             }
         }
 
@@ -95,16 +95,17 @@ public final class Account {
             return "AccountAsset account_id: " + Convert.toUnsignedLong(accountId) + " asset_id: " + Convert.toUnsignedLong(assetId)
                     + " quantity: " + quantityQNT + " unconfirmedQuantity: " + unconfirmedQuantityQNT;
         }
+
     }
 
     public static class AccountLease {
 
-        public final Long lessorId;
-        public final Long lesseeId;
+        public final long lessorId;
+        public final long lesseeId;
         public final int fromHeight;
         public final int toHeight;
 
-        private AccountLease(Long lessorId, Long lesseeId, int fromHeight, int toHeight) {
+        private AccountLease(long lessorId, long lesseeId, int fromHeight, int toHeight) {
             this.lessorId = lessorId;
             this.lesseeId = lesseeId;
             this.fromHeight = fromHeight;
@@ -140,14 +141,14 @@ public final class Account {
                                     Event.LEASE_ENDED);
                             if (account.nextLeasingHeightFrom == Integer.MAX_VALUE) {
                                 account.currentLeasingHeightFrom = Integer.MAX_VALUE;
-                                account.currentLesseeId = null;
+                                account.currentLesseeId = 0;
                                 accountTable.insert(account);
                             } else {
                                 account.currentLeasingHeightFrom = account.nextLeasingHeightFrom;
                                 account.currentLeasingHeightTo = account.nextLeasingHeightTo;
                                 account.currentLesseeId = account.nextLesseeId;
                                 account.nextLeasingHeightFrom = Integer.MAX_VALUE;
-                                account.nextLesseeId = null;
+                                account.nextLesseeId = 0;
                                 accountTable.insert(account);
                                 if (height == account.currentLeasingHeightFrom) {
                                     leaseListeners.notify(
@@ -172,11 +173,7 @@ public final class Account {
 
     };
 
-    private static final VersionedEntityDbTable<Account> accountTable = new VersionedEntityDbTable<Account>(accountDbKeyFactory) {
-
-        protected String table() {
-            return "account";
-        }
+    private static final VersionedEntityDbTable<Account> accountTable = new VersionedEntityDbTable<Account>("account", accountDbKeyFactory) {
 
         @Override
         protected Account load(Connection con, ResultSet rs) throws SQLException {
@@ -199,12 +196,7 @@ public final class Account {
 
     };
 
-    private static final VersionedEntityDbTable<AccountAsset> accountAssetTable = new VersionedEntityDbTable<AccountAsset>(accountAssetDbKeyFactory) {
-
-        @Override
-        protected String table() {
-            return "account_asset";
-        }
+    private static final VersionedEntityDbTable<AccountAsset> accountAssetTable = new VersionedEntityDbTable<AccountAsset>("account_asset", accountAssetDbKeyFactory) {
 
         @Override
         protected AccountAsset load(Connection con, ResultSet rs) throws SQLException {
@@ -216,18 +208,17 @@ public final class Account {
             accountAsset.save(con);
         }
 
+        @Override
+        protected String defaultSort() {
+            return " ORDER BY quantity DESC, account_id, asset_id ";
+        }
+
     };
 
-    private static final DerivedDbTable accountGuaranteedBalanceTable = new DerivedDbTable() {
-
-        @Override
-        protected String table() {
-            return "account_guaranteed_balance";
-        }
+    private static final DerivedDbTable accountGuaranteedBalanceTable = new DerivedDbTable("account_guaranteed_balance") {
 
         @Override
         public void trim(int height) {
-            //Logger.logDebugMessage("Trimming account_guaranteed_balance");
             try (Connection con = Db.getConnection();
                  PreparedStatement pstmtDelete = con.prepareStatement("DELETE FROM account_guaranteed_balance "
                          + "WHERE height < ?")) {
@@ -278,8 +269,25 @@ public final class Account {
         return accountTable.getCount();
     }
 
-    public static Account getAccount(Long id) {
-        return id == null ? null : accountTable.get(accountDbKeyFactory.newKey(id));
+    public static int getAssetAccountsCount(long assetId) {
+        try (Connection con = Db.getConnection();
+             PreparedStatement pstmt = con.prepareStatement("SELECT COUNT(*) FROM account_asset WHERE asset_id = ? AND latest = TRUE")) {
+            pstmt.setLong(1, assetId);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                rs.next();
+                return rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e.toString(), e);
+        }
+    }
+
+    public static Account getAccount(long id) {
+        return id == 0 ? null : accountTable.get(accountDbKeyFactory.newKey(id));
+    }
+
+    public static Account getAccount(long id, int height) {
+        return id == 0 ? null : accountTable.get(accountDbKeyFactory.newKey(id), height);
     }
 
     public static Account getAccount(byte[] publicKey) {
@@ -294,12 +302,12 @@ public final class Account {
                 + " existing key " + Convert.toHexString(account.getPublicKey()) + " new key " + Convert.toHexString(publicKey));
     }
 
-    public static Long getId(byte[] publicKey) {
+    public static long getId(byte[] publicKey) {
         byte[] publicKeyHash = Crypto.sha256().digest(publicKey);
         return Convert.fullHashToId(publicKeyHash);
     }
 
-    static Account addOrGetAccount(Long id) {
+    static Account addOrGetAccount(long id) {
         Account account = accountTable.get(accountDbKeyFactory.newKey(id));
         if (account == null) {
             account = new Account(id);
@@ -308,28 +316,33 @@ public final class Account {
         return account;
     }
 
-    public static DbIterator<Account> getLeasingAccounts() {
-        Connection con = null;
-        try {
-            con = Db.getConnection();
-            PreparedStatement pstmt = con.prepareStatement("SELECT * FROM account WHERE current_lessee_id >= ? AND latest = TRUE "
-                    + "ORDER BY id ASC");
-            pstmt.setLong(1, Long.MIN_VALUE); // this forces H2 to use the index, unlike WHERE IS NOT NULL which does a table scan
-            return accountTable.getManyBy(con, pstmt, true);
-        } catch (SQLException e) {
-            DbUtils.close(con);
-            throw new RuntimeException(e.toString(), e);
+    private static final DbClause leasingAccountsClause = new DbClause(" current_lessee_id >= ? ") {
+        @Override
+        public int set(PreparedStatement pstmt, int index) throws SQLException {
+            pstmt.setLong(index++, Long.MIN_VALUE);
+            return index;
         }
+    };
+
+    public static DbIterator<Account> getLeasingAccounts() {
+        return accountTable.getManyBy(leasingAccountsClause, 0, -1);
     }
 
-    public static DbIterator<AccountAsset> getAssetAccounts(Long assetId, int from, int to) {
-        return accountAssetTable.getManyBy("asset_id", assetId, from, to);
+    public static DbIterator<AccountAsset> getAssetAccounts(long assetId, int from, int to) {
+        return accountAssetTable.getManyBy(new DbClause.LongClause("asset_id", assetId), from, to, " ORDER BY quantity DESC, account_id ");
+    }
+
+    public static DbIterator<AccountAsset> getAssetAccounts(long assetId, int height, int from, int to) {
+        if (height < 0) {
+            return getAssetAccounts(assetId, from, to);
+        }
+        return accountAssetTable.getManyBy(new DbClause.LongClause("asset_id", assetId), height, from, to, " ORDER BY quantity DESC, account_id ");
     }
 
     static void init() {}
 
 
-    private final Long id;
+    private final long id;
     private final DbKey dbKey;
     private final int creationHeight;
     private byte[] publicKey;
@@ -340,20 +353,20 @@ public final class Account {
 
     private int currentLeasingHeightFrom;
     private int currentLeasingHeightTo;
-    private Long currentLesseeId;
+    private long currentLesseeId;
     private int nextLeasingHeightFrom;
     private int nextLeasingHeightTo;
-    private Long nextLesseeId;
+    private long nextLesseeId;
     private String name;
     private String description;
 
-    private Account(Long id) {
-        if (! id.equals(Crypto.rsDecode(Crypto.rsEncode(id)))) {
+    private Account(long id) {
+        if (id != Crypto.rsDecode(Crypto.rsEncode(id))) {
             Logger.logMessage("CRITICAL ERROR: Reed-Solomon encoding fails for " + id);
         }
         this.id = id;
         this.dbKey = accountDbKeyFactory.newKey(this.id);
-        this.creationHeight = Nxt.getBlockchain().getLastBlock().getHeight();
+        this.creationHeight = Nxt.getBlockchain().getHeight();
         currentLeasingHeightFrom = Integer.MAX_VALUE;
     }
 
@@ -370,10 +383,10 @@ public final class Account {
         this.description = rs.getString("description");
         this.currentLeasingHeightFrom = rs.getInt("current_leasing_height_from");
         this.currentLeasingHeightTo = rs.getInt("current_leasing_height_to");
-        this.currentLesseeId = DbUtils.getLong(rs, "current_lessee_id");
+        this.currentLesseeId = rs.getLong("current_lessee_id");
         this.nextLeasingHeightFrom = rs.getInt("next_leasing_height_from");
         this.nextLeasingHeightTo = rs.getInt("next_leasing_height_to");
-        this.nextLesseeId = DbUtils.getLong(rs, "next_lessee_id");
+        this.nextLesseeId = rs.getLong("next_lessee_id");
     }
 
     private void save(Connection con) throws SQLException {
@@ -393,18 +406,18 @@ public final class Account {
             pstmt.setLong(++i, this.getForgedBalanceNQT());
             DbUtils.setString(pstmt, ++i, this.getName());
             DbUtils.setString(pstmt, ++i, this.getDescription());
-            DbUtils.setInt(pstmt, ++i, Convert.zeroToNull(this.getCurrentLeasingHeightFrom()));
-            DbUtils.setInt(pstmt, ++i, Convert.zeroToNull(this.getCurrentLeasingHeightTo()));
-            DbUtils.setLong(pstmt, ++i, this.getCurrentLesseeId());
-            DbUtils.setInt(pstmt, ++i, Convert.zeroToNull(this.getNextLeasingHeightFrom()));
-            DbUtils.setInt(pstmt, ++i, Convert.zeroToNull(this.getNextLeasingHeightTo()));
-            DbUtils.setLong(pstmt, ++i, this.getNextLesseeId());
+            DbUtils.setIntZeroToNull(pstmt, ++i, this.getCurrentLeasingHeightFrom());
+            DbUtils.setIntZeroToNull(pstmt, ++i, this.getCurrentLeasingHeightTo());
+            DbUtils.setLongZeroToNull(pstmt, ++i, this.getCurrentLesseeId());
+            DbUtils.setIntZeroToNull(pstmt, ++i, this.getNextLeasingHeightFrom());
+            DbUtils.setIntZeroToNull(pstmt, ++i, this.getNextLeasingHeightTo());
+            DbUtils.setLongZeroToNull(pstmt, ++i, this.getNextLesseeId());
             pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
             pstmt.executeUpdate();
         }
     }
 
-    public Long getId() {
+    public long getId() {
         return id;
     }
 
@@ -464,10 +477,6 @@ public final class Account {
     }
 
     public long getEffectiveBalanceNXT() {
-        if (Constants.isTestnet && Constants.isOffline) {
-            return Constants.MAX_BALANCE_NXT;
-        }
-
 
         Block lastBlock = Nxt.getBlockchain().getLastBlock();
         if (lastBlock.getHeight() >= Constants.TRANSPARENT_FORGING_BLOCK_6
@@ -484,7 +493,7 @@ public final class Account {
             }
             long receivedInlastBlock = 0;
             for (Transaction transaction : lastBlock.getTransactions()) {
-                if (id.equals(transaction.getRecipientId())) {
+                if (id == transaction.getRecipientId()) {
                     receivedInlastBlock += transaction.getAmountNQT();
                 }
             }
@@ -506,36 +515,47 @@ public final class Account {
         return lessorsGuaranteedBalanceNQT;
     }
 
+    private DbClause getLessorsClause(final int height) {
+        return new DbClause(" current_lessee_id = ? AND current_leasing_height_from <= ? AND current_leasing_height_to > ? ") {
+            @Override
+            public int set(PreparedStatement pstmt, int index) throws SQLException {
+                pstmt.setLong(index++, getId());
+                pstmt.setInt(index++, height);
+                pstmt.setInt(index++, height);
+                return index;
+            }
+        };
+    }
+
     public DbIterator<Account> getLessors() {
-        Connection con = null;
-        try {
-            con = Db.getConnection();
-            PreparedStatement pstmt = con.prepareStatement("SELECT * FROM account WHERE current_lessee_id = ? "
-                    + "AND current_leasing_height_from <= ? AND current_leasing_height_to > ? AND latest = TRUE ");
-            pstmt.setLong(1, this.id);
-            int height = Nxt.getBlockchain().getHeight();
-            pstmt.setInt(2, height);
-            pstmt.setInt(3, height);
-            return accountTable.getManyBy(con, pstmt, true);
-        } catch (SQLException e) {
-            DbUtils.close(con);
-            throw new RuntimeException(e.toString(), e);
+        return accountTable.getManyBy(getLessorsClause(Nxt.getBlockchain().getHeight()), 0, -1);
+    }
+
+    public DbIterator<Account> getLessors(int height) {
+        if (height < 0) {
+            return getLessors();
         }
+        return accountTable.getManyBy(getLessorsClause(height), height, 0, -1);
     }
 
     public long getGuaranteedBalanceNQT(final int numberOfConfirmations) {
-        if (numberOfConfirmations >= Nxt.getBlockchain().getLastBlock().getHeight()) {
+        return getGuaranteedBalanceNQT(numberOfConfirmations, Nxt.getBlockchain().getHeight());
+    }
+
+    public long getGuaranteedBalanceNQT(final int numberOfConfirmations, final int currentHeight) {
+        if (numberOfConfirmations >= currentHeight) {
             return 0;
         }
         if (numberOfConfirmations > 2880 || numberOfConfirmations < 0) {
             throw new IllegalArgumentException("Number of required confirmations must be between 0 and " + 2880);
         }
-        int height = Nxt.getBlockchain().getHeight() - numberOfConfirmations;
+        int height = currentHeight - numberOfConfirmations;
         try (Connection con = Db.getConnection();
              PreparedStatement pstmt = con.prepareStatement("SELECT SUM (additions) AS additions "
-                     + "FROM account_guaranteed_balance WHERE account_id = ? AND height > ?")) {
+                     + "FROM account_guaranteed_balance WHERE account_id = ? AND height > ? AND height <= ?")) {
             pstmt.setLong(1, this.id);
             pstmt.setInt(2, height);
+            pstmt.setInt(3, currentHeight);
             try (ResultSet rs = pstmt.executeQuery()) {
                 if (!rs.next()) {
                     return balanceNQT;
@@ -548,23 +568,32 @@ public final class Account {
     }
 
     public DbIterator<AccountAsset> getAssets(int from, int to) {
-        return accountAssetTable.getManyBy("account_id", this.id, from, to);
+        return accountAssetTable.getManyBy(new DbClause.LongClause("account_id", this.id), from, to);
     }
 
     public DbIterator<Trade> getTrades(int from, int to) {
         return Trade.getAccountTrades(this.id, from, to);
     }
 
-    public Long getUnconfirmedAssetBalanceQNT(Long assetId) {
+    public DbIterator<AssetTransfer> getAssetTransfers(int from, int to) {
+        return AssetTransfer.getAccountAssetTransfers(this.id, from, to);
+    }
+
+    public long getAssetBalanceQNT(long assetId) {
+        AccountAsset accountAsset = accountAssetTable.get(accountAssetDbKeyFactory.newKey(this.id, assetId));
+        return accountAsset == null ? 0 : accountAsset.quantityQNT;
+    }
+
+    public long getUnconfirmedAssetBalanceQNT(long assetId) {
         AccountAsset accountAsset = accountAssetTable.get(accountAssetDbKeyFactory.newKey(this.id, assetId));
         return accountAsset == null ? 0 : accountAsset.unconfirmedQuantityQNT;
     }
 
-    public Long getCurrentLesseeId() {
+    public long getCurrentLesseeId() {
         return currentLesseeId;
     }
 
-    public Long getNextLesseeId() {
+    public long getNextLesseeId() {
         return nextLesseeId;
     }
 
@@ -584,13 +613,12 @@ public final class Account {
         return nextLeasingHeightTo;
     }
 
-    void leaseEffectiveBalance(Long lesseeId, short period) {
+    void leaseEffectiveBalance(long lesseeId, short period) {
         Account lessee = Account.getAccount(lesseeId);
         if (lessee != null && lessee.getPublicKey() != null) {
-            Block lastBlock = Nxt.getBlockchain().getLastBlock();
+            int height = Nxt.getBlockchain().getHeight();
             if (currentLeasingHeightFrom == Integer.MAX_VALUE) {
-
-                currentLeasingHeightFrom = lastBlock.getHeight() + 1440;
+                currentLeasingHeightFrom = height + 1440;
                 currentLeasingHeightTo = currentLeasingHeightFrom + period;
                 currentLesseeId = lesseeId;
                 nextLeasingHeightFrom = Integer.MAX_VALUE;
@@ -598,10 +626,8 @@ public final class Account {
                 leaseListeners.notify(
                         new AccountLease(this.getId(), lesseeId, currentLeasingHeightFrom, currentLeasingHeightTo),
                         Event.LEASE_SCHEDULED);
-
             } else {
-
-                nextLeasingHeightFrom = lastBlock.getHeight() + 1440;
+                nextLeasingHeightFrom = height + 1440;
                 if (nextLeasingHeightFrom < currentLeasingHeightTo) {
                     nextLeasingHeightFrom = currentLeasingHeightTo;
                 }
@@ -622,9 +648,11 @@ public final class Account {
     // this.publicKey is already set to an array equal to key
     boolean setOrVerify(byte[] key, int height) {
         if (this.publicKey == null) {
-            this.publicKey = key;
-            this.keyHeight = -1;
-            accountTable.insert(this);
+            if (Db.isInTransaction()) {
+                this.publicKey = key;
+                this.keyHeight = -1;
+                accountTable.insert(this);
+            }
             return true;
         } else if (Arrays.equals(this.publicKey, key)) {
             return true;
@@ -635,11 +663,13 @@ public final class Account {
             return false;
         } else if (this.keyHeight >= height) {
             Logger.logMessage("DUPLICATE KEY!!!");
-            Logger.logMessage("Changing key for account " + Convert.toUnsignedLong(id) + " at height " + height
-                    + ", was previously set to a different one at height " + keyHeight);
-            this.publicKey = key;
-            this.keyHeight = height;
-            accountTable.insert(this);
+            if (Db.isInTransaction()) {
+                Logger.logMessage("Changing key for account " + Convert.toUnsignedLong(id) + " at height " + height
+                        + ", was previously set to a different one at height " + keyHeight);
+                this.publicKey = key;
+                this.keyHeight = height;
+                accountTable.insert(this);
+            }
             return true;
         }
         Logger.logMessage("DUPLICATE KEY!!!");
@@ -662,12 +692,7 @@ public final class Account {
         }
     }
 
-    long getAssetBalanceQNT(Long assetId) {
-        AccountAsset accountAsset = accountAssetTable.get(accountAssetDbKeyFactory.newKey(this.id, assetId));
-        return accountAsset == null ? 0 : accountAsset.quantityQNT;
-    }
-
-    void addToAssetBalanceQNT(Long assetId, long quantityQNT) {
+    void addToAssetBalanceQNT(long assetId, long quantityQNT) {
         if (quantityQNT == 0) {
             return;
         }
@@ -685,7 +710,7 @@ public final class Account {
         assetListeners.notify(accountAsset, Event.ASSET_BALANCE);
     }
 
-    void addToUnconfirmedAssetBalanceQNT(Long assetId, long quantityQNT) {
+    void addToUnconfirmedAssetBalanceQNT(long assetId, long quantityQNT) {
         if (quantityQNT == 0) {
             return;
         }
@@ -703,7 +728,7 @@ public final class Account {
         assetListeners.notify(accountAsset, Event.UNCONFIRMED_ASSET_BALANCE);
     }
 
-    void addToAssetAndUnconfirmedAssetBalanceQNT(Long assetId, long quantityQNT) {
+    void addToAssetAndUnconfirmedAssetBalanceQNT(long assetId, long quantityQNT) {
         if (quantityQNT == 0) {
             return;
         }
@@ -732,7 +757,7 @@ public final class Account {
         }
         this.balanceNQT = Convert.safeAdd(this.balanceNQT, amountNQT);
         addToGuaranteedBalanceNQT(amountNQT);
-        checkBalance();
+        checkBalance(this.id, this.balanceNQT, this.unconfirmedBalanceNQT);
         accountTable.insert(this);
         listeners.notify(this, Event.BALANCE);
     }
@@ -742,7 +767,7 @@ public final class Account {
             return;
         }
         this.unconfirmedBalanceNQT = Convert.safeAdd(this.unconfirmedBalanceNQT, amountNQT);
-        checkBalance();
+        checkBalance(this.id, this.balanceNQT, this.unconfirmedBalanceNQT);
         accountTable.insert(this);
         listeners.notify(this, Event.UNCONFIRMED_BALANCE);
     }
@@ -754,7 +779,7 @@ public final class Account {
         this.balanceNQT = Convert.safeAdd(this.balanceNQT, amountNQT);
         this.unconfirmedBalanceNQT = Convert.safeAdd(this.unconfirmedBalanceNQT, amountNQT);
         addToGuaranteedBalanceNQT(amountNQT);
-        checkBalance();
+        checkBalance(this.id, this.balanceNQT, this.unconfirmedBalanceNQT);
         accountTable.insert(this);
         listeners.notify(this, Event.BALANCE);
         listeners.notify(this, Event.UNCONFIRMED_BALANCE);
@@ -768,18 +793,18 @@ public final class Account {
         accountTable.insert(this);
     }
 
-    private void checkBalance() {
-        if (id.equals(Genesis.CREATOR_ID)) {
+    private static void checkBalance(long accountId, long confirmed, long unconfirmed) {
+        if (accountId == Genesis.CREATOR_ID) {
             return;
         }
-        if (balanceNQT < 0) {
-            throw new DoubleSpendingException("Negative balance for account " + Convert.toUnsignedLong(id));
+        if (confirmed < 0) {
+            throw new DoubleSpendingException("Negative balance or quantity for account " + Convert.toUnsignedLong(accountId));
         }
-        if (unconfirmedBalanceNQT < 0) {
-            throw new DoubleSpendingException("Negative unconfirmed balance for account " + Convert.toUnsignedLong(id));
+        if (unconfirmed < 0) {
+            throw new DoubleSpendingException("Negative unconfirmed balance or quantity for account " + Convert.toUnsignedLong(accountId));
         }
-        if (unconfirmedBalanceNQT > balanceNQT) {
-            throw new DoubleSpendingException("Unconfirmed balance exceeds balance for account " + Convert.toUnsignedLong(id));
+        if (unconfirmed > confirmed) {
+            throw new DoubleSpendingException("Unconfirmed exceeds confirmed balance or quantity for account " + Convert.toUnsignedLong(accountId));
         }
     }
 

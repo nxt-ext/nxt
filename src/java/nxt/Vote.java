@@ -1,6 +1,7 @@
 package nxt;
 
-
+import nxt.db.DbClause;
+import nxt.db.DbIterator;
 import nxt.db.DbKey;
 import nxt.db.EntityDbTable;
 
@@ -38,18 +39,19 @@ public final class Vote {
 
     static void init() {}
 
+
+    private final long id;
     private final DbKey dbKey;
-    private final Long id;
-    private final Long pollId;
-    private final Long voterId;
-    private final byte[] vote; //vote[i]==0 means no(or not being chosen), 1 means yes(or an option being chosen)
+    private final long pollId;
+    private final long voterId;
+    private final byte[] voteBytes;
 
     private Vote(Transaction transaction, Attachment.MessagingVoteCasting attachment) {
         this.id = transaction.getId();
         this.dbKey = voteDbKeyFactory.newKey(this.id);
         this.pollId = attachment.getPollId();
         this.voterId = transaction.getSenderId();
-        this.vote = attachment.getPollVote();
+        this.voteBytes = attachment.getPollVote();
     }
 
     private Vote(ResultSet rs) throws SQLException {
@@ -57,7 +59,7 @@ public final class Vote {
         this.dbKey = voteDbKeyFactory.newKey(this.id);
         this.pollId = rs.getLong("poll_id");
         this.voterId = rs.getLong("voter_id");
-        this.vote = rs.getBytes("vote_bytes");
+        this.voteBytes = rs.getBytes("vote_bytes");
     }
 
     static Vote addVote(Transaction transaction, Attachment.MessagingVoteCasting attachment) {
@@ -94,15 +96,16 @@ public final class Vote {
     public static List<Long> getVoteIds(Poll poll) {
         return voteTable.getManyIdsBy("id", "poll_id", poll.getId());
     }
-
-    public Long getId() {
+    
+    public long getId() {
         return id;
     }
 
-    public Long getPollId() { return pollId; }
+    public long getPollId() { return pollId; }
 
-    public Long getVoterId() { return voterId; }
+    public long getVoterId() { return voterId; }
 
-    public byte[] getVote() { return vote; }
+    public byte[] getVote() { return voteBytes; }
+
 }
 

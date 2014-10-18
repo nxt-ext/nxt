@@ -20,7 +20,7 @@ public final class GetDGSGoods extends APIServlet.APIRequestHandler {
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
-        Long sellerId = ParameterParser.getSellerId(req);
+        long sellerId = ParameterParser.getSellerId(req);
         int firstIndex = ParameterParser.getFirstIndex(req);
         int lastIndex = ParameterParser.getLastIndex(req);
         boolean inStockOnly = !"false".equalsIgnoreCase(req.getParameter("inStockOnly"));
@@ -31,7 +31,7 @@ public final class GetDGSGoods extends APIServlet.APIRequestHandler {
 
         DbIterator<DigitalGoodsStore.Goods> goods = null;
         try {
-            if (sellerId == null) {
+            if (sellerId == 0) {
                 if (inStockOnly) {
                     goods = DigitalGoodsStore.getGoodsInStock(firstIndex, lastIndex);
                 } else {

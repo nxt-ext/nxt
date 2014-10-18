@@ -12,11 +12,12 @@ public abstract class ValuesDbTable<T,V> extends DerivedDbTable {
     private final boolean multiversion;
     protected final DbKey.Factory<T> dbKeyFactory;
 
-    protected ValuesDbTable(DbKey.Factory<T> dbKeyFactory) {
-        this(dbKeyFactory, false);
+    protected ValuesDbTable(String table, DbKey.Factory<T> dbKeyFactory) {
+        this(table, dbKeyFactory, false);
     }
 
-    ValuesDbTable(DbKey.Factory<T> dbKeyFactory, boolean multiversion) {
+    ValuesDbTable(String table, DbKey.Factory<T> dbKeyFactory, boolean multiversion) {
+        super(table);
         this.dbKeyFactory = dbKeyFactory;
         this.multiversion = multiversion;
     }
@@ -28,18 +29,18 @@ public abstract class ValuesDbTable<T,V> extends DerivedDbTable {
     public final List<V> get(DbKey dbKey) {
         List<V> values;
         if (Db.isInTransaction()) {
-            values = (List<V>)Db.getCache(table()).get(dbKey);
+            values = (List<V>)Db.getCache(table).get(dbKey);
             if (values != null) {
                 return values;
             }
         }
         try (Connection con = Db.getConnection();
-             PreparedStatement pstmt = con.prepareStatement("SELECT * FROM " + table() + dbKeyFactory.getPKClause()
-             + (multiversion ? " AND latest = TRUE" : ""))) {
+             PreparedStatement pstmt = con.prepareStatement("SELECT * FROM " + table + dbKeyFactory.getPKClause()
+             + (multiversion ? " AND latest = TRUE" : "") + " ORDER BY db_id DESC")) {
             dbKey.setPK(pstmt);
             values = get(con, pstmt);
             if (Db.isInTransaction()) {
-                Db.getCache(table()).put(dbKey, values);
+                Db.getCache(table).put(dbKey, values);
             }
             return values;
         } catch (SQLException e) {
@@ -61,35 +62,15 @@ public abstract class ValuesDbTable<T,V> extends DerivedDbTable {
         }
     }
 
-    public final void insert(T t, V v) {
-        if (!Db.isInTransaction()) {
-            throw new IllegalStateException("Not in transaction");
-        }
-        DbKey dbKey = dbKeyFactory.newKey(t);
-        Db.getCache(table()).remove(dbKey);
-        try (Connection con = Db.getConnection()) {
-            if (multiversion) {
-                try (PreparedStatement pstmt = con.prepareStatement("UPDATE " + table()
-                        + " SET latest = FALSE " + dbKeyFactory.getPKClause() + " AND latest = TRUE LIMIT 1")) {
-                    dbKey.setPK(pstmt);
-                    pstmt.executeUpdate();
-                }
-            }
-            save(con, t, v);
-        } catch (SQLException e) {
-            throw new RuntimeException(e.toString(), e);
-        }
-    }
-
     public final void insert(T t, List<V> values) {
         if (!Db.isInTransaction()) {
             throw new IllegalStateException("Not in transaction");
         }
         DbKey dbKey = dbKeyFactory.newKey(t);
-        Db.getCache(table()).put(dbKey, values);
+        Db.getCache(table).put(dbKey, values);
         try (Connection con = Db.getConnection()) {
             if (multiversion) {
-                try (PreparedStatement pstmt = con.prepareStatement("UPDATE " + table()
+                try (PreparedStatement pstmt = con.prepareStatement("UPDATE " + table
                         + " SET latest = FALSE " + dbKeyFactory.getPKClause() + " AND latest = TRUE")) {
                     dbKey.setPK(pstmt);
                     pstmt.executeUpdate();
@@ -101,6 +82,18 @@ public abstract class ValuesDbTable<T,V> extends DerivedDbTable {
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
         }
+    }
+
+    @Override
+    public void rollback(int height) {
+        super.rollback(height);
+        Db.getCache(table).clear();
+    }
+
+    @Override
+    public final void truncate() {
+        super.truncate();
+        Db.getCache(table).clear();
     }
 
 }

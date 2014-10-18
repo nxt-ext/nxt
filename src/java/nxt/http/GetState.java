@@ -3,16 +3,13 @@ package nxt.http;
 import nxt.Account;
 import nxt.Alias;
 import nxt.Asset;
+import nxt.AssetTransfer;
 import nxt.Generator;
 import nxt.Nxt;
 import nxt.Order;
-import nxt.Poll;
 import nxt.Trade;
-import nxt.Vote;
-import nxt.db.DbIterator;
 import nxt.peer.Peer;
 import nxt.peer.Peers;
-import nxt.util.Convert;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
@@ -33,10 +30,11 @@ public final class GetState extends APIServlet.APIRequestHandler {
 
         response.put("application", Nxt.APPLICATION);
         response.put("version", Nxt.VERSION);
-        response.put("time", Convert.getEpochTime());
+        response.put("time", Nxt.getEpochTime());
         response.put("lastBlock", Nxt.getBlockchain().getLastBlock().getStringId());
         response.put("cumulativeDifficulty", Nxt.getBlockchain().getLastBlock().getCumulativeDifficulty().toString());
 
+        /*
         long totalEffectiveBalance = 0;
         try (DbIterator<Account> accounts = Account.getAllAccounts(0, -1)) {
             for (Account account : accounts) {
@@ -47,6 +45,7 @@ public final class GetState extends APIServlet.APIRequestHandler {
             }
         }
         response.put("totalEffectiveBalanceNXT", totalEffectiveBalance);
+        */
 
         response.put("numberOfBlocks", Nxt.getBlockchain().getHeight() + 1);
         response.put("numberOfTransactions", Nxt.getBlockchain().getTransactionCount());
@@ -54,16 +53,16 @@ public final class GetState extends APIServlet.APIRequestHandler {
         response.put("numberOfAssets", Asset.getCount());
         response.put("numberOfOrders", Order.Ask.getCount() + Order.Bid.getCount());
         response.put("numberOfTrades", Trade.getCount());
+        response.put("numberOfTransfers", AssetTransfer.getCount());
         response.put("numberOfAliases", Alias.getCount());
-        response.put("numberOfPolls", Poll.getCount());
-        response.put("numberOfVotes", Vote.getCount());
+        //response.put("numberOfPolls", Poll.getCount());
+        //response.put("numberOfVotes", Vote.getCount());
         response.put("numberOfPeers", Peers.getAllPeers().size());
         response.put("numberOfUnlockedAccounts", Generator.getAllGenerators().size());
         Peer lastBlockchainFeeder = Nxt.getBlockchainProcessor().getLastBlockchainFeeder();
         response.put("lastBlockchainFeeder", lastBlockchainFeeder == null ? null : lastBlockchainFeeder.getAnnouncedAddress());
         response.put("lastBlockchainFeederHeight", Nxt.getBlockchainProcessor().getLastBlockchainFeederHeight());
         response.put("isScanning", Nxt.getBlockchainProcessor().isScanning());
-        response.put("isDownloading", Nxt.getBlockchainProcessor().isDownloading());
         response.put("availableProcessors", Runtime.getRuntime().availableProcessors());
         response.put("maxMemory", Runtime.getRuntime().maxMemory());
         response.put("totalMemory", Runtime.getRuntime().totalMemory());

@@ -1,6 +1,7 @@
 package nxt;
 
 import nxt.db.Db;
+import nxt.db.DbClause;
 import nxt.db.DbIterator;
 import nxt.db.DbKey;
 import nxt.db.DbUtils;
@@ -31,12 +32,7 @@ public final class Trade {
 
     };
 
-    private static final EntityDbTable<Trade> tradeTable = new EntityDbTable<Trade>(tradeDbKeyFactory) {
-
-        @Override
-        protected String table() {
-            return "trade";
-        }
+    private static final EntityDbTable<Trade> tradeTable = new EntityDbTable<Trade>("trade", tradeDbKeyFactory) {
 
         @Override
         protected Trade load(Connection con, ResultSet rs) throws SQLException {
@@ -66,11 +62,11 @@ public final class Trade {
         return listeners.removeListener(listener, eventType);
     }
 
-    public static DbIterator<Trade> getAssetTrades(Long assetId, int from, int to) {
-        return tradeTable.getManyBy("asset_id", assetId, from, to);
+    public static DbIterator<Trade> getAssetTrades(long assetId, int from, int to) {
+        return tradeTable.getManyBy(new DbClause.LongClause("asset_id", assetId), from, to);
     }
 
-    public static DbIterator<Trade> getAccountTrades(Long accountId, int from, int to) {
+    public static DbIterator<Trade> getAccountTrades(long accountId, int from, int to) {
         Connection con = null;
         try {
             con = Db.getConnection();
@@ -89,7 +85,7 @@ public final class Trade {
         }
     }
 
-    public static DbIterator<Trade> getAccountAssetTrades(Long accountId, Long assetId, int from, int to) {
+    public static DbIterator<Trade> getAccountAssetTrades(long accountId, long assetId, int from, int to) {
         Connection con = null;
         try {
             con = Db.getConnection();
@@ -110,7 +106,7 @@ public final class Trade {
         }
     }
 
-    public static int getTradeCount(Long assetId) {
+    public static int getTradeCount(long assetId) {
         try (Connection con = Db.getConnection();
              PreparedStatement pstmt = con.prepareStatement("SELECT COUNT(*) FROM trade WHERE asset_id = ?")) {
             pstmt.setLong(1, assetId);
@@ -123,8 +119,8 @@ public final class Trade {
         }
     }
 
-    static Trade addTrade(Long assetId, Block block, Order.Ask askOrder, Order.Bid bidOrder, long quantityQNT, long priceNQT) {
-        Trade trade = new Trade(assetId, block, askOrder, bidOrder, quantityQNT, priceNQT);
+    static Trade addTrade(long assetId, Block block, Order.Ask askOrder, Order.Bid bidOrder) {
+        Trade trade = new Trade(assetId, block, askOrder, bidOrder);
         tradeTable.insert(trade);
         listeners.notify(trade, Event.TRADE);
         return trade;
@@ -134,29 +130,35 @@ public final class Trade {
 
 
     private final int timestamp;
-    private final Long assetId;
-    private final Long blockId;
+    private final long assetId;
+    private final long blockId;
     private final int height;
-    private final Long askOrderId;
-    private final Long bidOrderId;
-    private final Long sellerId;
-    private final Long buyerId;
+    private final long askOrderId;
+    private final long bidOrderId;
+    private final int askOrderHeight;
+    private final int bidOrderHeight;
+    private final long sellerId;
+    private final long buyerId;
     private final DbKey dbKey;
     private final long quantityQNT;
     private final long priceNQT;
+    private final boolean isBuy;
 
-    private Trade(Long assetId, Block block, Order.Ask askOrder, Order.Bid bidOrder, long quantityQNT, long priceNQT) {
+    private Trade(long assetId, Block block, Order.Ask askOrder, Order.Bid bidOrder) {
         this.blockId = block.getId();
         this.height = block.getHeight();
         this.assetId = assetId;
         this.timestamp = block.getTimestamp();
         this.askOrderId = askOrder.getId();
         this.bidOrderId = bidOrder.getId();
+        this.askOrderHeight = askOrder.getHeight();
+        this.bidOrderHeight = bidOrder.getHeight();
         this.sellerId = askOrder.getAccountId();
         this.buyerId = bidOrder.getAccountId();
         this.dbKey = tradeDbKeyFactory.newKey(this.askOrderId, this.bidOrderId);
-        this.quantityQNT = quantityQNT;
-        this.priceNQT = priceNQT;
+        this.quantityQNT = Math.min(askOrder.getQuantityQNT(), bidOrder.getQuantityQNT());
+        this.isBuy = askOrderHeight < bidOrderHeight || (askOrderHeight == bidOrderHeight && askOrderId < bidOrderId);
+        this.priceNQT = isBuy ? askOrder.getPriceNQT() : bidOrder.getPriceNQT();
     }
 
     private Trade(ResultSet rs) throws SQLException {
@@ -164,6 +166,8 @@ public final class Trade {
         this.blockId = rs.getLong("block_id");
         this.askOrderId = rs.getLong("ask_order_id");
         this.bidOrderId = rs.getLong("bid_order_id");
+        this.askOrderHeight = rs.getInt("ask_order_height");
+        this.bidOrderHeight = rs.getInt("bid_order_height");
         this.sellerId = rs.getLong("seller_id");
         this.buyerId = rs.getLong("buyer_id");
         this.dbKey = tradeDbKeyFactory.newKey(this.askOrderId, this.bidOrderId);
@@ -171,16 +175,20 @@ public final class Trade {
         this.priceNQT = rs.getLong("price");
         this.timestamp = rs.getInt("timestamp");
         this.height = rs.getInt("height");
+        this.isBuy = askOrderHeight < bidOrderHeight || (askOrderHeight == bidOrderHeight && askOrderId < bidOrderId);
     }
 
     private void save(Connection con) throws SQLException {
         try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO trade (asset_id, block_id, "
-                + "ask_order_id, bid_order_id, seller_id, buyer_id, quantity, price, timestamp, height) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
+                + "ask_order_id, bid_order_id, ask_order_height, bid_order_height, seller_id, buyer_id, quantity, price, timestamp, height) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
             int i = 0;
             pstmt.setLong(++i, this.getAssetId());
             pstmt.setLong(++i, this.getBlockId());
             pstmt.setLong(++i, this.getAskOrderId());
             pstmt.setLong(++i, this.getBidOrderId());
+            pstmt.setInt(++i, this.getAskOrderHeight());
+            pstmt.setInt(++i, this.getBidOrderHeight());
             pstmt.setLong(++i, this.getSellerId());
             pstmt.setLong(++i, this.getBuyerId());
             pstmt.setLong(++i, this.getQuantityQNT());
@@ -191,17 +199,25 @@ public final class Trade {
         }
     }
 
-    public Long getBlockId() { return blockId; }
+    public long getBlockId() { return blockId; }
 
-    public Long getAskOrderId() { return askOrderId; }
+    public long getAskOrderId() { return askOrderId; }
 
-    public Long getBidOrderId() { return bidOrderId; }
+    public long getBidOrderId() { return bidOrderId; }
 
-    public Long getSellerId() {
+    public int getAskOrderHeight() {
+        return askOrderHeight;
+    }
+
+    public int getBidOrderHeight() {
+        return bidOrderHeight;
+    }
+
+    public long getSellerId() {
         return sellerId;
     }
 
-    public Long getBuyerId() {
+    public long getBuyerId() {
         return buyerId;
     }
 
@@ -209,12 +225,16 @@ public final class Trade {
 
     public long getPriceNQT() { return priceNQT; }
     
-    public Long getAssetId() { return assetId; }
+    public long getAssetId() { return assetId; }
     
     public int getTimestamp() { return timestamp; }
 
     public int getHeight() {
         return height;
+    }
+
+    public boolean isBuy() {
+        return isBuy;
     }
 
     @Override

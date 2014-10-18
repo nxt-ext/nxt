@@ -11,13 +11,13 @@ import java.util.List;
 
 public abstract class VersionedEntityDbTable<T> extends EntityDbTable<T> {
 
-    protected VersionedEntityDbTable(DbKey.Factory<T> dbKeyFactory) {
-        super(dbKeyFactory, true);
+    protected VersionedEntityDbTable(String table, DbKey.Factory<T> dbKeyFactory) {
+        super(table, dbKeyFactory, true);
     }
 
     @Override
     public void rollback(int height) {
-        rollback(table(), height, dbKeyFactory);
+        rollback(table, height, dbKeyFactory);
     }
 
     public final boolean delete(T t) {
@@ -29,14 +29,14 @@ public abstract class VersionedEntityDbTable<T> extends EntityDbTable<T> {
         }
         DbKey dbKey = dbKeyFactory.newKey(t);
         try (Connection con = Db.getConnection();
-             PreparedStatement pstmtCount = con.prepareStatement("SELECT COUNT(*) AS count FROM " + table() + dbKeyFactory.getPKClause()
+             PreparedStatement pstmtCount = con.prepareStatement("SELECT COUNT(*) AS count FROM " + table + dbKeyFactory.getPKClause()
                 + " AND height < ?")) {
             int i = dbKey.setPK(pstmtCount);
             pstmtCount.setInt(i, Nxt.getBlockchain().getHeight());
             try (ResultSet rs = pstmtCount.executeQuery()) {
                 rs.next();
                 if (rs.getInt("count") > 0) {
-                    try (PreparedStatement pstmt = con.prepareStatement("UPDATE " + table()
+                    try (PreparedStatement pstmt = con.prepareStatement("UPDATE " + table
                             + " SET latest = FALSE " + dbKeyFactory.getPKClause() + " AND latest = TRUE LIMIT 1")) {
                         dbKey.setPK(pstmt);
                         pstmt.executeUpdate();
@@ -45,7 +45,7 @@ public abstract class VersionedEntityDbTable<T> extends EntityDbTable<T> {
                     }
                     return true;
                 } else {
-                    try (PreparedStatement pstmtDelete = con.prepareStatement("DELETE FROM " + table() + dbKeyFactory.getPKClause())) {
+                    try (PreparedStatement pstmtDelete = con.prepareStatement("DELETE FROM " + table + dbKeyFactory.getPKClause())) {
                         dbKey.setPK(pstmtDelete);
                         return pstmtDelete.executeUpdate() > 0;
                     }
@@ -54,19 +54,16 @@ public abstract class VersionedEntityDbTable<T> extends EntityDbTable<T> {
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
         } finally {
-            Db.getCache(table()).remove(dbKey);
+            Db.getCache(table).remove(dbKey);
         }
     }
 
     @Override
     public final void trim(int height) {
-        //Logger.logDebugMessage("Trimming table " + table());
-        //Logger.logDebugMessage("Initial entity count is " + getCount() + " row count is " + getRowCount());
-        trim(table(), height, dbKeyFactory);
-        //Logger.logDebugMessage("Final entity count is " + getCount() + " row count is " + getRowCount());
+        trim(table, height, dbKeyFactory);
     }
 
-    static void rollback(String table, int height, DbKey.Factory dbKeyFactory) {
+    static void rollback(final String table, final int height, final DbKey.Factory dbKeyFactory) {
         if (!Db.isInTransaction()) {
             throw new IllegalStateException("Not in transaction");
         }
@@ -92,14 +89,15 @@ public abstract class VersionedEntityDbTable<T> extends EntityDbTable<T> {
                 i = dbKey.setPK(pstmtSetLatest, i);
                 i = dbKey.setPK(pstmtSetLatest, i);  //todo: ???
                 pstmtSetLatest.executeUpdate();
-                Db.getCache(table).remove(dbKey);
+                //Db.getCache(table).remove(dbKey);
             }
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
         }
+        Db.getCache(table).clear();
     }
 
-    static void trim(String table, int height, DbKey.Factory dbKeyFactory) {
+    static void trim(final String table, final int height, final DbKey.Factory dbKeyFactory) {
         if (!Db.isInTransaction()) {
             throw new IllegalStateException("Not in transaction");
         }

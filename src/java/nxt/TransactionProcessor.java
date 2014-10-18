@@ -17,7 +17,9 @@ public interface TransactionProcessor extends Observable<List<? extends Transact
 
     DbIterator<? extends Transaction> getAllUnconfirmedTransactions();
 
-    Transaction getUnconfirmedTransaction(Long transactionId);
+    Transaction getUnconfirmedTransaction(long transactionId);
+
+    void clearUnconfirmedTransactions();
 
     void broadcast(Transaction transaction) throws NxtException.ValidationException;
 
@@ -27,7 +29,6 @@ public interface TransactionProcessor extends Observable<List<? extends Transact
 
     Transaction parseTransaction(JSONObject json) throws NxtException.ValidationException;
 
-    Transaction.Builder newTransactionBuilder(byte[] senderPublicKey, long amountNQT, long feeNQT, short deadline, Attachment attachment)
-            throws NxtException.ValidationException;
+    Transaction.Builder newTransactionBuilder(byte[] senderPublicKey, long amountNQT, long feeNQT, short deadline, Attachment attachment);
 
 }

@@ -21,8 +21,8 @@ public final class GetDGSPurchases extends APIServlet.APIRequestHandler {
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
 
-        Long sellerId = ParameterParser.getSellerId(req);
-        Long buyerId = ParameterParser.getBuyerId(req);
+        long sellerId = ParameterParser.getSellerId(req);
+        long buyerId = ParameterParser.getBuyerId(req);
         int firstIndex = ParameterParser.getFirstIndex(req);
         int lastIndex = ParameterParser.getLastIndex(req);
         final boolean completed = "true".equalsIgnoreCase(req.getParameter("completed"));
@@ -32,7 +32,7 @@ public final class GetDGSPurchases extends APIServlet.APIRequestHandler {
         JSONArray purchasesJSON = new JSONArray();
         response.put("purchases", purchasesJSON);
 
-        if (sellerId == null && buyerId == null) {
+        if (sellerId == 0 && buyerId == 0) {
             try (FilteringIterator<DigitalGoodsStore.Purchase> purchaseIterator = new FilteringIterator<>(DigitalGoodsStore.getAllPurchases(0, -1),
                     new FilteringIterator.Filter<DigitalGoodsStore.Purchase>() {
                         @Override
@@ -48,9 +48,9 @@ public final class GetDGSPurchases extends APIServlet.APIRequestHandler {
         }
 
         DbIterator<DigitalGoodsStore.Purchase> purchases;
-        if (sellerId != null && buyerId == null) {
+        if (sellerId != 0 && buyerId == 0) {
             purchases = DigitalGoodsStore.getSellerPurchases(sellerId, 0, -1);
-        } else if (sellerId == null) {
+        } else if (sellerId == 0) {
             purchases = DigitalGoodsStore.getBuyerPurchases(buyerId, 0, -1);
         } else {
             purchases = DigitalGoodsStore.getSellerBuyerPurchases(sellerId, buyerId, 0, -1);

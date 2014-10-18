@@ -86,6 +86,7 @@ public final class Poll extends CommonPollStructure {
 
     private final static PollTable pollTable = new PollTable(pollDbKeyFactory);
 
+    private final long id;
     static void init() {
     }
 
@@ -120,7 +121,7 @@ public final class Poll extends CommonPollStructure {
         }
     }
 
-    private Poll(Long id, String name, String description, String[] options, int finishBlockHeight,
+    private Poll(long id, String name, String description, String[] options, int finishBlockHeight,
                  byte optionModel, byte votingModel, long minBalance,
                  long assetId, byte minNumberOfOptions, byte maxNumberOfOptions) {
         super(finishBlockHeight, votingModel, assetId, minBalance);
@@ -188,7 +189,7 @@ public final class Poll extends CommonPollStructure {
         return getPoll(id) != null;
     }
 
-    public static Poll getPoll(Long id) {
+    public static Poll getPoll(long id) {
         return pollTable.get(pollDbKeyFactory.newKey(id));
     }
 
@@ -216,7 +217,7 @@ public final class Poll extends CommonPollStructure {
         pollTable.updateActive(false, poll.getId());
     }
 
-    public Long getId() {
+    public long getId() {
         return id;
     }
 

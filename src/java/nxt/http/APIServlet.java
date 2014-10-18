@@ -1,10 +1,11 @@
 package nxt.http;
 
-import nxt.Constants;
 import nxt.Nxt;
 import nxt.NxtException;
+import nxt.db.Db;
 import nxt.util.JSON;
 import nxt.util.Logger;
+import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.ServletException;
@@ -51,6 +52,10 @@ public final class APIServlet extends HttpServlet {
             return false;
         }
 
+        boolean startDbTransaction() {
+            return false;
+        }
+
     }
 
     private static final boolean enforcePost = Nxt.getBooleanProperty("nxt.apiServerEnforcePOST");
@@ -65,8 +70,8 @@ public final class APIServlet extends HttpServlet {
         map.put("calculateFullHash", CalculateFullHash.instance);
         map.put("cancelAskOrder", CancelAskOrder.instance);
         map.put("cancelBidOrder", CancelBidOrder.instance);
-        map.put("castVote", CastVote.instance);
-        map.put("createPoll", CreatePoll.instance);
+        //map.put("castVote", CastVote.instance);
+        //map.put("createPoll", CreatePoll.instance);
         map.put("decryptFrom", DecryptFrom.instance);
         map.put("dgsListing", DGSListing.instance);
         map.put("dgsDelisting", DGSDelisting.instance);
@@ -82,10 +87,12 @@ public final class APIServlet extends HttpServlet {
         map.put("generateToken", GenerateToken.instance);
         map.put("getAccount", GetAccount.instance);
         map.put("getAccountBlockIds", GetAccountBlockIds.instance);
+        map.put("getAccountBlocks", GetAccountBlocks.instance);
         map.put("getAccountId", GetAccountId.instance);
         map.put("getAccountPublicKey", GetAccountPublicKey.instance);
         map.put("getAccountTransactionIds", GetAccountTransactionIds.instance);
         map.put("getAccountTransactions", GetAccountTransactions.instance);
+        map.put("getAccountLessors", GetAccountLessors.instance);
         map.put("sellAlias", SellAlias.instance);
         map.put("buyAlias", BuyAlias.instance);
         map.put("getAlias", GetAlias.instance);
@@ -107,10 +114,9 @@ public final class APIServlet extends HttpServlet {
         map.put("getDGSPurchase", GetDGSPurchase.instance);
         map.put("getDGSPendingPurchases", GetDGSPendingPurchases.instance);
         map.put("getGuaranteedBalance", GetGuaranteedBalance.instance);
+        map.put("getECBlock", GetECBlock.instance);
         map.put("getMyInfo", GetMyInfo.instance);
-        if (Constants.isTestnet) {
-            map.put("getNextBlockGenerators", GetNextBlockGenerators.instance);
-        }
+        //map.put("getNextBlockGenerators", GetNextBlockGenerators.instance);
         map.put("getPeer", GetPeer.instance);
         map.put("getPeers", GetPeers.instance);
         map.put("getPoll", GetPoll.instance);
@@ -118,12 +124,15 @@ public final class APIServlet extends HttpServlet {
         map.put("getTime", GetTime.instance);
         map.put("getTrades", GetTrades.instance);
         map.put("getAllTrades", GetAllTrades.instance);
+        map.put("getAssetTransfers", GetAssetTransfers.instance);
         map.put("getTransaction", GetTransaction.instance);
         map.put("getTransactionBytes", GetTransactionBytes.instance);
         map.put("getUnconfirmedTransactionIds", GetUnconfirmedTransactionIds.instance);
         map.put("getUnconfirmedTransactions", GetUnconfirmedTransactions.instance);
         map.put("getAccountCurrentAskOrderIds", GetAccountCurrentAskOrderIds.instance);
         map.put("getAccountCurrentBidOrderIds", GetAccountCurrentBidOrderIds.instance);
+        map.put("getAccountCurrentAskOrders", GetAccountCurrentAskOrders.instance);
+        map.put("getAccountCurrentBidOrders", GetAccountCurrentBidOrders.instance);
         map.put("getAllOpenAskOrders", GetAllOpenAskOrders.instance);
         map.put("getAllOpenBidOrders", GetAllOpenBidOrders.instance);
         map.put("getAskOrder", GetAskOrder.instance);
@@ -152,6 +161,7 @@ public final class APIServlet extends HttpServlet {
         map.put("transferAsset", TransferAsset.instance);
 
         if (API.enableDebugAPI) {
+            map.put("clearUnconfirmedTransactions", ClearUnconfirmedTransactions.instance);
             map.put("fullReset", FullReset.instance);
             map.put("popOff", PopOff.instance);
             map.put("scan", Scan.instance);
@@ -180,6 +190,8 @@ public final class APIServlet extends HttpServlet {
 
         try {
 
+            long startTime = System.currentTimeMillis();
+
             if (API.allowedBotHosts != null && ! API.allowedBotHosts.contains(req.getRemoteHost())) {
                 response = ERROR_NOT_ALLOWED;
                 return;
@@ -203,12 +215,23 @@ public final class APIServlet extends HttpServlet {
             }
 
             try {
+                if (apiRequestHandler.startDbTransaction()) {
+                    Db.beginTransaction();
+                }
                 response = apiRequestHandler.processRequest(req);
             } catch (ParameterException e) {
                 response = e.getErrorResponse();
             } catch (NxtException |RuntimeException e) {
                 Logger.logDebugMessage("Error processing API request", e);
                 response = ERROR_INCORRECT_REQUEST;
+            } finally {
+                if (apiRequestHandler.startDbTransaction()) {
+                    Db.endTransaction();
+                }
+            }
+
+            if (response instanceof JSONObject) {
+                ((JSONObject)response).put("requestProcessingTime", System.currentTimeMillis() - startTime);
             }
 
         } finally {

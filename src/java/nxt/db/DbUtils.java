@@ -1,7 +1,6 @@
 package nxt.db;
 
 import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 
@@ -33,35 +32,33 @@ public final class DbUtils {
         }
     }
 
-    public static void setInt(PreparedStatement pstmt, int index, Integer n) throws SQLException {
-        if (n != null) {
+    public static void setIntZeroToNull(PreparedStatement pstmt, int index, int n) throws SQLException {
+        if (n != 0) {
             pstmt.setInt(index, n);
         } else {
             pstmt.setNull(index, Types.INTEGER);
         }
     }
 
-    public static void setLong(PreparedStatement pstmt, int index, Long l) throws SQLException {
-        if (l != null) {
+    public static void setLongZeroToNull(PreparedStatement pstmt, int index, long l) throws SQLException {
+        if (l != 0) {
             pstmt.setLong(index, l);
         } else {
             pstmt.setNull(index, Types.BIGINT);
         }
     }
 
-    public static Long getLong(ResultSet rs, String columnName) throws SQLException {
-        long l = rs.getLong(columnName);
-        return rs.wasNull() ? null : l;
-    }
-
-    public static Integer getInt(ResultSet rs, String columnName) throws SQLException {
-        int n = rs.getInt(columnName);
-        return rs.wasNull() ? null : n;
-    }
-
     public static String limitsClause(int from, int to) {
         int limit = to >=0 && to >= from && to < Integer.MAX_VALUE ? to - from + 1 : 0;
-        return (limit > 0 ? " LIMIT ? " : "") + (from > 0 ? " OFFSET ? ": "");
+        if (limit > 0 && from > 0) {
+            return " LIMIT ? OFFSET ? ";
+        } else if (limit > 0) {
+            return " LIMIT ? ";
+        } else if (from > 0) {
+            return " OFFSET ? ";
+        } else {
+            return "";
+        }
     }
 
     public static int setLimits(int index, PreparedStatement pstmt, int from, int to) throws SQLException {

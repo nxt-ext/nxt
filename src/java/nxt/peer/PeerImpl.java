@@ -202,11 +202,12 @@ final class PeerImpl implements Peer {
         if (hallmark == null) {
             return 0;
         }
-        Long hallmarkBalance = hallmarkBalances.get(hallmark.getAccountId());
+        long accountId = hallmark.getAccountId();
+        Long hallmarkBalance = hallmarkBalances.get(accountId);
         if (hallmarkBalance == null) {
-            Account account = Account.getAccount(hallmark.getAccountId());
+            Account account = Account.getAccount(accountId);
             hallmarkBalance = account == null ? 0 : account.getBalanceNQT();
-            hallmarkBalances.put(hallmark.getAccountId(), hallmarkBalance);
+            hallmarkBalances.put(accountId, hallmarkBalance);
         }
         return (int)(adjustedWeight * (hallmarkBalance / Constants.ONE_NXT) / Constants.MAX_BALANCE_NXT);
     }
@@ -282,7 +283,14 @@ final class PeerImpl implements Peer {
         try {
 
             String address = announcedAddress != null ? announcedAddress : peerAddress;
-            URL url = new URL("http://" + address + (port <= 0 ? ":" + (Constants.isTestnet ? Peers.TESTNET_PEER_PORT : Peers.DEFAULT_PEER_PORT) : "") + "/nxt");
+            StringBuilder buf = new StringBuilder("http://");
+            buf.append(address);
+            if (port <= 0) {
+                buf.append(':');
+                buf.append(Constants.isTestnet ? Peers.TESTNET_PEER_PORT : Peers.DEFAULT_PEER_PORT);
+            }
+            buf.append("/nxt");
+            URL url = new URL(buf.toString());
 
             if (Peers.communicationLoggingMask != 0) {
                 StringWriter stringWriter = new StringWriter();
@@ -398,7 +406,7 @@ final class PeerImpl implements Peer {
             }
             if (announcedAddress == null) {
                 setAnnouncedAddress(peerAddress);
-                Logger.logDebugMessage("Connected to peer without announced address, setting to " + peerAddress);
+                //Logger.logDebugMessage("Connected to peer without announced address, setting to " + peerAddress);
             }
             if (analyzeHallmark(announcedAddress, (String)response.get("hallmark"))) {
                 setState(State.CONNECTED);
@@ -406,7 +414,7 @@ final class PeerImpl implements Peer {
             } else {
                 blacklist();
             }
-            lastUpdated = Convert.getEpochTime();
+            lastUpdated = Nxt.getEpochTime();
         } else {
             setState(State.NON_CONNECTED);
         }
@@ -438,7 +446,7 @@ final class PeerImpl implements Peer {
                 return false;
             }
             this.hallmark = hallmark;
-            Long accountId = Account.getId(hallmark.getPublicKey());
+            long accountId = Account.getId(hallmark.getPublicKey());
             List<PeerImpl> groupedPeers = new ArrayList<>();
             int mostRecentDate = 0;
             long totalWeight = 0;
@@ -446,7 +454,7 @@ final class PeerImpl implements Peer {
                 if (peer.hallmark == null) {
                     continue;
                 }
-                if (accountId.equals(peer.hallmark.getAccountId())) {
+                if (accountId == peer.hallmark.getAccountId()) {
                     groupedPeers.add(peer);
                     if (peer.hallmark.getDate() > mostRecentDate) {
                         mostRecentDate = peer.hallmark.getDate();
@@ -466,7 +474,7 @@ final class PeerImpl implements Peer {
 
         } catch (UnknownHostException ignore) {
         } catch (URISyntaxException | RuntimeException e) {
-            Logger.logDebugMessage("Failed to analyze hallmark for peer " + address + ", " + e.toString());
+            Logger.logDebugMessage("Failed to analyze hallmark for peer " + address + ", " + e.toString(), e);
         }
         return false;
 

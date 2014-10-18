@@ -85,10 +85,9 @@ var NRS = (function(NRS, $, undefined) {
 			if (callback) {
 				callback({
 					"errorCode": 1,
-					"errorDescription": err + " (Field: " + field + ")"
+					"errorDescription": err + " (" + $.t(field) + ")"
 				});
 			}
-
 			return;
 		}
 
