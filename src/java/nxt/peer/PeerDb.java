@@ -1,6 +1,6 @@
 package nxt.peer;
 
-import nxt.db.Db;
+import nxt.NxtDb;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -13,7 +13,7 @@ import java.util.List;
 final class PeerDb {
 
     static List<String> loadPeers() {
-        try (Connection con = Db.getConnection();
+        try (Connection con = NxtDb.db.getConnection();
              PreparedStatement pstmt = con.prepareStatement("SELECT * FROM peer")) {
             List<String> peers = new ArrayList<>();
             try (ResultSet rs = pstmt.executeQuery()) {
@@ -28,7 +28,7 @@ final class PeerDb {
     }
 
     static void deletePeers(Collection<String> peers) {
-        try (Connection con = Db.getConnection();
+        try (Connection con = NxtDb.db.getConnection();
              PreparedStatement pstmt = con.prepareStatement("DELETE FROM peer WHERE address = ?")) {
             for (String peer : peers) {
                 pstmt.setString(1, peer);
@@ -40,7 +40,7 @@ final class PeerDb {
     }
 
     static void addPeers(Collection<String> peers) {
-        try (Connection con = Db.getConnection();
+        try (Connection con = NxtDb.db.getConnection();
              PreparedStatement pstmt = con.prepareStatement("INSERT INTO peer (address) values (?)")) {
             for (String peer : peers) {
                 pstmt.setString(1, peer);

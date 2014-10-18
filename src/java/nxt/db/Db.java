@@ -1,101 +1,86 @@
 package nxt.db;
 
-import nxt.Constants;
-import nxt.Nxt;
 import nxt.util.Logger;
 import org.h2.jdbcx.JdbcConnectionPool;
 
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.HashMap;
-import java.util.Map;
 
-public final class Db {
+public class Db {
 
-    private static final JdbcConnectionPool cp;
-    private static volatile int maxActiveConnections;
+    public static final class DbProperties {
 
-    private static final ThreadLocal<DbConnection> localConnection = new ThreadLocal<>();
-    private static final ThreadLocal<Map<String,Map<DbKey,Object>>> transactionCaches = new ThreadLocal<>();
+        private long maxCacheSize;
+        private String dbUrl;
+        private int maxConnections;
+        private int loginTimeout;
+        private int defaultLockTimeout;
 
-    private static final class DbConnection extends FilteredConnection {
-
-        private DbConnection(Connection con) {
-            super(con);
+        public DbProperties maxCacheSize(int maxCacheSize) {
+            this.maxCacheSize = maxCacheSize;
+            return this;
         }
 
-        @Override
-        public void setAutoCommit(boolean autoCommit) throws SQLException {
-            throw new UnsupportedOperationException("Use Db.beginTransaction() to start a new transaction");
+        public DbProperties dbUrl(String dbUrl) {
+            this.dbUrl = dbUrl;
+            return this;
         }
 
-        @Override
-        public void commit() throws SQLException {
-            if (localConnection.get() == null) {
-                super.commit();
-            } else if (! this.equals(localConnection.get())) {
-                throw new IllegalStateException("Previous connection not committed");
-            } else {
-                throw new UnsupportedOperationException("Use Db.commitTransaction() to commit the transaction");
-            }
+        public DbProperties maxConnections(int maxConnections) {
+            this.maxConnections = maxConnections;
+            return this;
         }
 
-        private void doCommit() throws SQLException {
-            super.commit();
+        public DbProperties loginTimeout(int loginTimeout) {
+            this.loginTimeout = loginTimeout;
+            return this;
         }
 
-        @Override
-        public void rollback() throws SQLException {
-            if (localConnection.get() == null) {
-                super.rollback();
-            } else if (! this.equals(localConnection.get())) {
-                throw new IllegalStateException("Previous connection not committed");
-            } else {
-                throw new UnsupportedOperationException("Use Db.rollbackTransaction() to rollback the transaction");
-            }
-        }
-
-        private void doRollback() throws SQLException {
-            super.rollback();
-        }
-
-        @Override
-        public void close() throws SQLException {
-            if (localConnection.get() == null) {
-                super.close();
-            } else if (! this.equals(localConnection.get())) {
-                throw new IllegalStateException("Previous connection not committed");
-            }
+        public DbProperties defaultLockTimeout(int defaultLockTimeout) {
+            this.defaultLockTimeout = defaultLockTimeout;
+            return this;
         }
 
     }
 
-    public static void init() {}
+    private JdbcConnectionPool cp;
+    private volatile int maxActiveConnections;
+    private final String dbUrl;
+    private final int maxConnections;
+    private final int loginTimeout;
+    private final int defaultLockTimeout;
 
-    static {
-        long maxCacheSize = Nxt.getIntProperty("nxt.dbCacheKB");
+    public Db(DbProperties dbProperties) {
+        long maxCacheSize = dbProperties.maxCacheSize;
         if (maxCacheSize == 0) {
             maxCacheSize = Runtime.getRuntime().maxMemory() / (1024 * 2);
         }
-        String dbUrl = Constants.isTestnet ? Nxt.getStringProperty("nxt.testDbUrl") : Nxt.getStringProperty("nxt.dbUrl");
-        if (! dbUrl.contains("CACHE_SIZE=")) {
+        String dbUrl = dbProperties.dbUrl;
+        if (!dbUrl.contains("CACHE_SIZE=")) {
             dbUrl += ";CACHE_SIZE=" + maxCacheSize;
         }
+        this.dbUrl = dbUrl;
+        this.maxConnections = dbProperties.maxConnections;
+        this.loginTimeout = dbProperties.loginTimeout;
+        this.defaultLockTimeout = dbProperties.defaultLockTimeout;
+    }
+
+    public void init(String username, String password, DbVersion dbVersion) {
         Logger.logDebugMessage("Database jdbc url set to: " + dbUrl);
-        cp = JdbcConnectionPool.create(dbUrl, "sa", "sa");
-        cp.setMaxConnections(Nxt.getIntProperty("nxt.maxDbConnections"));
-        cp.setLoginTimeout(Nxt.getIntProperty("nxt.dbLoginTimeout"));
-        int defaultLockTimeout = Nxt.getIntProperty("nxt.dbDefaultLockTimeout") * 1000;
+        cp = JdbcConnectionPool.create(dbUrl, username, password);
+        cp.setMaxConnections(maxConnections);
+        cp.setLoginTimeout(loginTimeout);
         try (Connection con = cp.getConnection();
              Statement stmt = con.createStatement()) {
             stmt.executeUpdate("SET DEFAULT_LOCK_TIMEOUT " + defaultLockTimeout);
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
         }
+        dbVersion.init(this);
     }
 
-    public static void shutdown() {
+    public void shutdown() {
         try (Connection con = cp.getConnection();
              Statement stmt = con.createStatement()) {
             stmt.execute("SHUTDOWN COMPACT");
@@ -105,7 +90,13 @@ public final class Db {
         }
     }
 
-    private static Connection getPooledConnection() throws SQLException {
+    public Connection getConnection() throws SQLException {
+        Connection con = getPooledConnection();
+        con.setAutoCommit(true);
+        return con;
+    }
+
+    protected Connection getPooledConnection() throws SQLException {
         Connection con = cp.getConnection();
         int activeConnections = cp.getActiveConnections();
         if (activeConnections > maxActiveConnections) {
@@ -114,85 +105,5 @@ public final class Db {
         }
         return con;
     }
-
-    public static Connection getConnection() throws SQLException {
-        Connection con = localConnection.get();
-        if (con != null) {
-            return con;
-        }
-        con = getPooledConnection();
-        con.setAutoCommit(true);
-        return new DbConnection(con);
-    }
-
-    static Map<DbKey,Object> getCache(String tableName) {
-        if (!isInTransaction()) {
-            throw new IllegalStateException("Not in transaction");
-        }
-        Map<DbKey,Object> cacheMap = transactionCaches.get().get(tableName);
-        if (cacheMap == null) {
-            cacheMap = new HashMap<>();
-            transactionCaches.get().put(tableName, cacheMap);
-        }
-        return cacheMap;
-    }
-
-    public static boolean isInTransaction() {
-        return localConnection.get() != null;
-    }
-
-    public static Connection beginTransaction() {
-        if (localConnection.get() != null) {
-            throw new IllegalStateException("Transaction already in progress");
-        }
-        try {
-            Connection con = getPooledConnection();
-            con.setAutoCommit(false);
-            con = new DbConnection(con);
-            localConnection.set((DbConnection)con);
-            transactionCaches.set(new HashMap<String, Map<DbKey, Object>>());
-            return con;
-        } catch (SQLException e) {
-            throw new RuntimeException(e.toString(), e);
-        }
-    }
-
-    public static void commitTransaction() {
-        DbConnection con = localConnection.get();
-        if (con == null) {
-            throw new IllegalStateException("Not in transaction");
-        }
-        try {
-            con.doCommit();
-        } catch (SQLException e) {
-            throw new RuntimeException(e.toString(), e);
-        }
-    }
-
-    public static void rollbackTransaction() {
-        DbConnection con = localConnection.get();
-        if (con == null) {
-            throw new IllegalStateException("Not in transaction");
-        }
-        try {
-            con.doRollback();
-        } catch (SQLException e) {
-            throw new RuntimeException(e.toString(), e);
-        }
-        transactionCaches.get().clear();
-    }
-
-    public static void endTransaction() {
-        Connection con = localConnection.get();
-        if (con == null) {
-            throw new IllegalStateException("Not in transaction");
-        }
-        localConnection.set(null);
-        transactionCaches.get().clear();
-        transactionCaches.set(null);
-        DbUtils.close(con);
-    }
-
-    private Db() {} // never
 
 }

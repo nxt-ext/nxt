@@ -1,8 +1,8 @@
 package nxt.http;
 
 import nxt.Nxt;
+import nxt.NxtDb;
 import nxt.NxtException;
-import nxt.db.Db;
 import nxt.util.JSON;
 import nxt.util.Logger;
 import org.json.simple.JSONObject;
@@ -217,7 +217,7 @@ public final class APIServlet extends HttpServlet {
 
             try {
                 if (apiRequestHandler.startDbTransaction()) {
-                    Db.beginTransaction();
+                    NxtDb.db.beginTransaction();
                 }
                 response = apiRequestHandler.processRequest(req);
             } catch (ParameterException e) {
@@ -227,7 +227,7 @@ public final class APIServlet extends HttpServlet {
                 response = ERROR_INCORRECT_REQUEST;
             } finally {
                 if (apiRequestHandler.startDbTransaction()) {
-                    Db.endTransaction();
+                    NxtDb.db.endTransaction();
                 }
             }
 

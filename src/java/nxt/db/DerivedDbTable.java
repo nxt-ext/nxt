@@ -1,6 +1,7 @@
 package nxt.db;
 
 import nxt.Nxt;
+import nxt.NxtDb;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -9,18 +10,20 @@ import java.sql.Statement;
 
 public abstract class DerivedDbTable {
 
+    protected final TransactionalDb db;
     protected final String table;
 
     protected DerivedDbTable(String table) {
         this.table = table;
+        this.db = NxtDb.db;
         Nxt.getBlockchainProcessor().registerDerivedTable(this);
     }
 
     public void rollback(int height) {
-        if (!Db.isInTransaction()) {
+        if (!db.isInTransaction()) {
             throw new IllegalStateException("Not in transaction");
         }
-        try (Connection con = Db.getConnection();
+        try (Connection con = db.getConnection();
              PreparedStatement pstmtDelete = con.prepareStatement("DELETE FROM " + table + " WHERE height > ?")) {
             pstmtDelete.setInt(1, height);
             pstmtDelete.executeUpdate();
@@ -30,10 +33,10 @@ public abstract class DerivedDbTable {
     }
 
     public void truncate() {
-        if (!Db.isInTransaction()) {
+        if (!db.isInTransaction()) {
             throw new IllegalStateException("Not in transaction");
         }
-        try (Connection con = Db.getConnection();
+        try (Connection con = db.getConnection();
              Statement stmt = con.createStatement()) {
             stmt.executeUpdate("TRUNCATE TABLE " + table);
         } catch (SQLException e) {

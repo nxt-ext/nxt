@@ -1,6 +1,5 @@
 package nxt;
 
-import nxt.db.Db;
 import nxt.db.DbClause;
 import nxt.db.DbIterator;
 import nxt.db.DbKey;
@@ -82,7 +81,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
         @Override
         public void rollback(int height) {
             List<TransactionImpl> transactions = new ArrayList<>();
-            try (Connection con = Db.getConnection();
+            try (Connection con = NxtDb.db.getConnection();
                  PreparedStatement pstmt = con.prepareStatement("SELECT * FROM unconfirmed_transaction WHERE height > ?")) {
                 pstmt.setInt(1, height);
                 try (ResultSet rs = pstmt.executeQuery()) {
@@ -132,17 +131,17 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                     if (expiredTransactions.size() > 0) {
                         synchronized (BlockchainImpl.getInstance()) {
                             try {
-                                Db.beginTransaction();
+                                NxtDb.db.beginTransaction();
                                 for (TransactionImpl transaction : expiredTransactions) {
                                     removeUnconfirmedTransaction(transaction);
                                 }
-                                Db.commitTransaction();
+                                NxtDb.db.commitTransaction();
                             } catch (Exception e) {
                                 Logger.logErrorMessage(e.toString(), e);
-                                Db.rollbackTransaction();
+                                NxtDb.db.rollbackTransaction();
                                 throw e;
                             } finally {
-                                Db.endTransaction();
+                                NxtDb.db.endTransaction();
                             }
                         } // synchronized
                     }
@@ -349,7 +348,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
         synchronized (BlockchainImpl.getInstance()) {
             List<Transaction> removed = new ArrayList<>();
             try {
-                Db.beginTransaction();
+                NxtDb.db.beginTransaction();
                 try (DbIterator<TransactionImpl> unconfirmedTransactions = getAllUnconfirmedTransactions()) {
                     for (TransactionImpl transaction : unconfirmedTransactions) {
                         transaction.undoUnconfirmed();
@@ -357,13 +356,13 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                     }
                 }
                 unconfirmedTransactionTable.truncate();
-                Db.commitTransaction();
+                NxtDb.db.commitTransaction();
             } catch (Exception e) {
                 Logger.logErrorMessage(e.toString(), e);
-                Db.rollbackTransaction();
+                NxtDb.db.rollbackTransaction();
                 throw e;
             } finally {
-                Db.endTransaction();
+                NxtDb.db.endTransaction();
             }
             transactionListeners.notify(removed, Event.REMOVED_UNCONFIRMED_TRANSACTIONS);
         }
@@ -383,21 +382,21 @@ final class TransactionProcessorImpl implements TransactionProcessor {
     }
 
     void removeUnconfirmedTransaction(TransactionImpl transaction) {
-        if (!Db.isInTransaction()) {
+        if (!NxtDb.db.isInTransaction()) {
             try {
-                Db.beginTransaction();
+                NxtDb.db.beginTransaction();
                 removeUnconfirmedTransaction(transaction);
-                Db.commitTransaction();
+                NxtDb.db.commitTransaction();
             } catch (Exception e) {
                 Logger.logErrorMessage(e.toString(), e);
-                Db.rollbackTransaction();
+                NxtDb.db.rollbackTransaction();
                 throw e;
             } finally {
-                Db.endTransaction();
+                NxtDb.db.endTransaction();
             }
             return;
         }
-        try (Connection con = Db.getConnection();
+        try (Connection con = NxtDb.db.getConnection();
              PreparedStatement pstmt = con.prepareStatement("DELETE FROM unconfirmed_transaction WHERE id = ?")) {
             pstmt.setLong(1, transaction.getId());
             int deleted = pstmt.executeUpdate();
@@ -469,7 +468,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
 
                 synchronized (BlockchainImpl.getInstance()) {
                     try {
-                        Db.beginTransaction();
+                        NxtDb.db.beginTransaction();
                         if (Nxt.getBlockchain().getHeight() < Constants.NQT_BLOCK) {
                             break; // not ready to process transactions
                         }
@@ -500,12 +499,12 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                         } else {
                             addedDoubleSpendingTransactions.add(transaction);
                         }
-                        Db.commitTransaction();
+                        NxtDb.db.commitTransaction();
                     } catch (Exception e) {
-                        Db.rollbackTransaction();
+                        NxtDb.db.rollbackTransaction();
                         throw e;
                     } finally {
-                        Db.endTransaction();
+                        NxtDb.db.endTransaction();
                     }
                 }
             } catch (RuntimeException e) {
