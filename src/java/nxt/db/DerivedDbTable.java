@@ -10,12 +10,12 @@ import java.sql.Statement;
 
 public abstract class DerivedDbTable {
 
-    protected final TransactionalDb db;
+    protected static final TransactionalDb db = NxtDb.db;
+
     protected final String table;
 
     protected DerivedDbTable(String table) {
         this.table = table;
-        this.db = NxtDb.db;
         Nxt.getBlockchainProcessor().registerDerivedTable(this);
     }
 
