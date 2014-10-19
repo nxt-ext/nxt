@@ -5,7 +5,7 @@ import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 
-public class TransactionalDb extends Db {
+public class TransactionalDb extends BasicDb {
 
     private final ThreadLocal<DbConnection> localConnection = new ThreadLocal<>();
     private final ThreadLocal<Map<String,Map<DbKey,Object>>> transactionCaches = new ThreadLocal<>();

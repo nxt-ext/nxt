@@ -218,7 +218,7 @@ public final class Account {
 
         @Override
         public void trim(int height) {
-            try (Connection con = NxtDb.db.getConnection();
+            try (Connection con = Db.db.getConnection();
                  PreparedStatement pstmtDelete = con.prepareStatement("DELETE FROM account_guaranteed_balance "
                          + "WHERE height < ?")) {
                 pstmtDelete.setInt(1, height - 1440);
@@ -269,7 +269,7 @@ public final class Account {
     }
 
     public static int getAssetAccountsCount(long assetId) {
-        try (Connection con = NxtDb.db.getConnection();
+        try (Connection con = Db.db.getConnection();
              PreparedStatement pstmt = con.prepareStatement("SELECT COUNT(*) FROM account_asset WHERE asset_id = ? AND latest = TRUE")) {
             pstmt.setLong(1, assetId);
             try (ResultSet rs = pstmt.executeQuery()) {
@@ -549,7 +549,7 @@ public final class Account {
             throw new IllegalArgumentException("Number of required confirmations must be between 0 and " + 2880);
         }
         int height = currentHeight - numberOfConfirmations;
-        try (Connection con = NxtDb.db.getConnection();
+        try (Connection con = Db.db.getConnection();
              PreparedStatement pstmt = con.prepareStatement("SELECT SUM (additions) AS additions "
                      + "FROM account_guaranteed_balance WHERE account_id = ? AND height > ? AND height <= ?")) {
             pstmt.setLong(1, this.id);
@@ -647,7 +647,7 @@ public final class Account {
     // this.publicKey is already set to an array equal to key
     boolean setOrVerify(byte[] key, int height) {
         if (this.publicKey == null) {
-            if (NxtDb.db.isInTransaction()) {
+            if (Db.db.isInTransaction()) {
                 this.publicKey = key;
                 this.keyHeight = -1;
                 accountTable.insert(this);
@@ -662,7 +662,7 @@ public final class Account {
             return false;
         } else if (this.keyHeight >= height) {
             Logger.logMessage("DUPLICATE KEY!!!");
-            if (NxtDb.db.isInTransaction()) {
+            if (Db.db.isInTransaction()) {
                 Logger.logMessage("Changing key for account " + Convert.toUnsignedLong(id) + " at height " + height
                         + ", was previously set to a different one at height " + keyHeight);
                 this.publicKey = key;
@@ -812,7 +812,7 @@ public final class Account {
             return;
         }
         int blockchainHeight = Nxt.getBlockchain().getHeight();
-        try (Connection con = NxtDb.db.getConnection();
+        try (Connection con = Db.db.getConnection();
              PreparedStatement pstmtSelect = con.prepareStatement("SELECT additions FROM account_guaranteed_balance "
                      + "WHERE account_id = ? and height = ?");
              PreparedStatement pstmtUpdate = con.prepareStatement("MERGE INTO account_guaranteed_balance (account_id, "

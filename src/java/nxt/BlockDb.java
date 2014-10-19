@@ -13,7 +13,7 @@ import java.sql.Statement;
 final class BlockDb {
 
     static BlockImpl findBlock(long blockId) {
-        try (Connection con = NxtDb.db.getConnection();
+        try (Connection con = Db.db.getConnection();
              PreparedStatement pstmt = con.prepareStatement("SELECT * FROM block WHERE id = ?")) {
             pstmt.setLong(1, blockId);
             try (ResultSet rs = pstmt.executeQuery()) {
@@ -31,7 +31,7 @@ final class BlockDb {
     }
 
     static boolean hasBlock(long blockId) {
-        try (Connection con = NxtDb.db.getConnection();
+        try (Connection con = Db.db.getConnection();
              PreparedStatement pstmt = con.prepareStatement("SELECT 1 FROM block WHERE id = ?")) {
             pstmt.setLong(1, blockId);
             try (ResultSet rs = pstmt.executeQuery()) {
@@ -43,7 +43,7 @@ final class BlockDb {
     }
 
     static long findBlockIdAtHeight(int height) {
-        try (Connection con = NxtDb.db.getConnection();
+        try (Connection con = Db.db.getConnection();
              PreparedStatement pstmt = con.prepareStatement("SELECT id FROM block WHERE height = ?")) {
             pstmt.setInt(1, height);
             try (ResultSet rs = pstmt.executeQuery()) {
@@ -58,7 +58,7 @@ final class BlockDb {
     }
 
     static BlockImpl findBlockAtHeight(int height) {
-        try (Connection con = NxtDb.db.getConnection();
+        try (Connection con = Db.db.getConnection();
              PreparedStatement pstmt = con.prepareStatement("SELECT * FROM block WHERE height = ?")) {
             pstmt.setInt(1, height);
             try (ResultSet rs = pstmt.executeQuery()) {
@@ -78,7 +78,7 @@ final class BlockDb {
     }
 
     static BlockImpl findLastBlock() {
-        try (Connection con = NxtDb.db.getConnection();
+        try (Connection con = Db.db.getConnection();
              PreparedStatement pstmt = con.prepareStatement("SELECT * FROM block ORDER BY db_id DESC LIMIT 1")) {
             BlockImpl block = null;
             try (ResultSet rs = pstmt.executeQuery()) {
@@ -160,35 +160,35 @@ final class BlockDb {
 
     // relying on cascade triggers in the database to delete the transactions for all deleted blocks
     static void deleteBlocksFrom(long blockId) {
-        if (!NxtDb.db.isInTransaction()) {
+        if (!Db.db.isInTransaction()) {
             try {
-                NxtDb.db.beginTransaction();
+                Db.db.beginTransaction();
                 deleteBlocksFrom(blockId);
-                NxtDb.db.commitTransaction();
+                Db.db.commitTransaction();
             } catch (Exception e) {
-                NxtDb.db.rollbackTransaction();
+                Db.db.rollbackTransaction();
                 throw e;
             } finally {
-                NxtDb.db.endTransaction();
+                Db.db.endTransaction();
             }
             return;
         }
-        try (Connection con = NxtDb.db.getConnection();
+        try (Connection con = Db.db.getConnection();
              PreparedStatement pstmtSelect = con.prepareStatement("SELECT db_id FROM block WHERE db_id >= "
                      + "(SELECT db_id FROM block WHERE id = ?) ORDER BY db_id DESC");
              PreparedStatement pstmtDelete = con.prepareStatement("DELETE FROM block WHERE db_id = ?")) {
             try {
                 pstmtSelect.setLong(1, blockId);
                 try (ResultSet rs = pstmtSelect.executeQuery()) {
-                    NxtDb.db.commitTransaction();
+                    Db.db.commitTransaction();
                     while (rs.next()) {
         	            pstmtDelete.setInt(1, rs.getInt("db_id"));
             	        pstmtDelete.executeUpdate();
-                        NxtDb.db.commitTransaction();
+                        Db.db.commitTransaction();
                     }
 	            }
             } catch (SQLException e) {
-                NxtDb.db.rollbackTransaction();
+                Db.db.rollbackTransaction();
                 throw e;
             }
         } catch (SQLException e) {
@@ -197,30 +197,30 @@ final class BlockDb {
     }
 
     static void deleteAll() {
-        if (!NxtDb.db.isInTransaction()) {
+        if (!Db.db.isInTransaction()) {
             try {
-                NxtDb.db.beginTransaction();
+                Db.db.beginTransaction();
                 deleteAll();
-                NxtDb.db.commitTransaction();
+                Db.db.commitTransaction();
             } catch (Exception e) {
-                NxtDb.db.rollbackTransaction();
+                Db.db.rollbackTransaction();
                 throw e;
             } finally {
-                NxtDb.db.endTransaction();
+                Db.db.endTransaction();
             }
             return;
         }
         Logger.logMessage("Deleting blockchain...");
-        try (Connection con = NxtDb.db.getConnection();
+        try (Connection con = Db.db.getConnection();
              Statement stmt = con.createStatement()) {
             try {
                 stmt.executeUpdate("SET REFERENTIAL_INTEGRITY FALSE");
                 stmt.executeUpdate("TRUNCATE TABLE transaction");
                 stmt.executeUpdate("TRUNCATE TABLE block");
                 stmt.executeUpdate("SET REFERENTIAL_INTEGRITY TRUE");
-                NxtDb.db.commitTransaction();
+                Db.db.commitTransaction();
             } catch (SQLException e) {
-                NxtDb.db.rollbackTransaction();
+                Db.db.rollbackTransaction();
                 throw e;
             }
         } catch (SQLException e) {

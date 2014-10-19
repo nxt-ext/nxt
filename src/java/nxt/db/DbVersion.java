@@ -9,9 +9,9 @@ import java.sql.Statement;
 
 public abstract class DbVersion {
 
-    private Db db;
+    private BasicDb db;
 
-    void init(Db db) {
+    void init(BasicDb db) {
         this.db = db;
         Connection con = null;
         Statement stmt = null;

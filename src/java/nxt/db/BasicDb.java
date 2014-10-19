@@ -7,7 +7,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-public class Db {
+public class BasicDb {
 
     public static final class DbProperties {
 
@@ -51,7 +51,7 @@ public class Db {
     private final int loginTimeout;
     private final int defaultLockTimeout;
 
-    public Db(DbProperties dbProperties) {
+    public BasicDb(DbProperties dbProperties) {
         long maxCacheSize = dbProperties.maxCacheSize;
         if (maxCacheSize == 0) {
             maxCacheSize = Runtime.getRuntime().maxMemory() / (1024 * 2);

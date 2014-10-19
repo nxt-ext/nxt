@@ -1,6 +1,6 @@
 package nxt.http;
 
-import nxt.NxtDb;
+import nxt.Db;
 import nxt.util.Convert;
 import org.h2.tools.Shell;
 
@@ -94,7 +94,7 @@ public final class DbShellServlet extends HttpServlet {
                 Shell shell = new Shell();
                 shell.setErr(out);
                 shell.setOut(out);
-                shell.runTool(NxtDb.db.getConnection(), "-sql", line);
+                shell.runTool(Db.db.getConnection(), "-sql", line);
             } catch (SQLException e) {
                 out.println(e.toString());
             }

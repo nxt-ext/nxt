@@ -154,7 +154,7 @@ public final class Nxt {
         Users.shutdown();
         Peers.shutdown();
         ThreadPool.shutdown();
-        NxtDb.shutdown();
+        Db.shutdown();
         Logger.logShutdownMessage("Nxt server " + VERSION + " stopped.");
         Logger.shutdown();
     }
@@ -165,7 +165,7 @@ public final class Nxt {
             try {
                 long startTime = System.currentTimeMillis();
                 Logger.init();
-                NxtDb.init();
+                Db.init();
                 TransactionProcessorImpl.getInstance();
                 BlockchainProcessorImpl.getInstance();
                 Account.init();

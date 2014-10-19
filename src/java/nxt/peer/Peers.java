@@ -3,8 +3,8 @@ package nxt.peer;
 import nxt.Account;
 import nxt.Block;
 import nxt.Constants;
+import nxt.Db;
 import nxt.Nxt;
-import nxt.NxtDb;
 import nxt.Transaction;
 import nxt.util.JSON;
 import nxt.util.Listener;
@@ -445,18 +445,18 @@ public final class Peers {
             Set<String> toDelete = new HashSet<>(oldPeers);
             toDelete.removeAll(currentPeers);
             try {
-                NxtDb.db.beginTransaction();
+                Db.db.beginTransaction();
                 PeerDb.deletePeers(toDelete);
 	            //Logger.logDebugMessage("Deleted " + toDelete.size() + " peers from the peers database");
                 currentPeers.removeAll(oldPeers);
                 PeerDb.addPeers(currentPeers);
 	            //Logger.logDebugMessage("Added " + currentPeers.size() + " peers to the peers database");
-                NxtDb.db.commitTransaction();
+                Db.db.commitTransaction();
             } catch (Exception e) {
-                NxtDb.db.rollbackTransaction();
+                Db.db.rollbackTransaction();
                 throw e;
             } finally {
-                NxtDb.db.endTransaction();
+                Db.db.endTransaction();
             }
         }
 

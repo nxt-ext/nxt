@@ -1,11 +1,11 @@
 package nxt;
 
-import nxt.db.Db;
+import nxt.db.BasicDb;
 import nxt.db.TransactionalDb;
 
-public final class NxtDb {
+public final class Db {
 
-    public static final TransactionalDb db = new TransactionalDb(new Db.DbProperties()
+    public static final TransactionalDb db = new TransactionalDb(new BasicDb.DbProperties()
             .maxCacheSize(Nxt.getIntProperty("nxt.dbCacheKB"))
             .dbUrl(Constants.isTestnet ? Nxt.getStringProperty("nxt.testDbUrl") : Nxt.getStringProperty("nxt.dbUrl"))
             .maxConnections(Nxt.getIntProperty("nxt.maxDbConnections"))
@@ -13,7 +13,7 @@ public final class NxtDb {
             .defaultLockTimeout(Nxt.getIntProperty("nxt.dbDefaultLockTimeout") * 1000)
     );
 
-    public static final Db userDb = new Db(new Db.DbProperties()
+    public static final BasicDb userDb = new BasicDb(new BasicDb.DbProperties()
             .maxCacheSize(Nxt.getIntProperty("nxt.userDbCacheKB"))
             .dbUrl(Constants.isTestnet ? Nxt.getStringProperty("nxt.testUserDbUrl") : Nxt.getStringProperty("nxt.userDbUrl"))
             .maxConnections(Nxt.getIntProperty("nxt.maxUserDbConnections"))
@@ -31,6 +31,6 @@ public final class NxtDb {
         db.shutdown();
     }
 
-    private NxtDb() {} // never
+    private Db() {} // never
 
 }

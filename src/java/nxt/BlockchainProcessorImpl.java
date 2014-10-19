@@ -385,7 +385,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             @Override
             public void notify(Block block) {
                 if (block.getHeight() % 1440 == 1) {
-                    try (Connection con = NxtDb.db.getConnection();
+                    try (Connection con = Db.db.getConnection();
                          Statement stmt = con.createStatement()) {
                         stmt.execute("ANALYZE SAMPLE_SIZE 0");
                     } catch (SQLException e) {
@@ -398,7 +398,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         blockListeners.addListener(new Listener<Block>() {
             @Override
             public void notify(Block block) {
-                try (Connection con = NxtDb.db.getConnection();
+                try (Connection con = Db.db.getConnection();
                      Statement stmt = con.createStatement()) {
                     stmt.execute("ANALYZE SAMPLE_SIZE 0");
                 } catch (SQLException e) {
@@ -492,7 +492,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
     }
 
     private void addBlock(BlockImpl block) {
-        try (Connection con = NxtDb.db.getConnection()) {
+        try (Connection con = Db.db.getConnection()) {
             BlockDb.saveBlock(con, block);
             blockchain.setLastBlock(block);
         } catch (SQLException e) {
@@ -538,7 +538,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
 
     private byte[] calculateTransactionsChecksum() {
         MessageDigest digest = Crypto.sha256();
-        try (Connection con = NxtDb.db.getConnection();
+        try (Connection con = Db.db.getConnection();
              PreparedStatement pstmt = con.prepareStatement(
                      "SELECT * FROM transaction ORDER BY id ASC, timestamp ASC");
              DbIterator<TransactionImpl> iterator = blockchain.getTransactions(con, pstmt)) {
@@ -559,7 +559,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             TransactionProcessorImpl transactionProcessor = TransactionProcessorImpl.getInstance();
             BlockImpl previousLastBlock = null;
             try {
-                NxtDb.db.beginTransaction();
+                Db.db.beginTransaction();
                 previousLastBlock = blockchain.getLastBlock();
 
                 if (previousLastBlock.getId() != block.getPreviousBlockId()) {
@@ -694,13 +694,13 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 addBlock(block);
                 accept(block);
 
-                NxtDb.db.commitTransaction();
+                Db.db.commitTransaction();
             } catch (Exception e) {
-                NxtDb.db.rollbackTransaction();
+                Db.db.rollbackTransaction();
                 blockchain.setLastBlock(previousLastBlock);
                 throw e;
             } finally {
-                NxtDb.db.endTransaction();
+                Db.db.endTransaction();
             }
         } // synchronized
 
@@ -739,7 +739,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             }
             List<BlockImpl> poppedOffBlocks = new ArrayList<>();
             try {
-                NxtDb.db.beginTransaction();
+                Db.db.beginTransaction();
                 BlockImpl block = blockchain.getLastBlock();
                 Logger.logDebugMessage("Rollback from " + block.getHeight() + " to " + commonBlock.getHeight());
                 while (block.getId() != commonBlock.getId() && block.getId() != Genesis.GENESIS_BLOCK_ID) {
@@ -749,13 +749,13 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 for (DerivedDbTable table : derivedTables) {
                     table.rollback(commonBlock.getHeight());
                 }
-                NxtDb.db.commitTransaction();
+                Db.db.commitTransaction();
             } catch (RuntimeException e) {
-                NxtDb.db.rollbackTransaction();
+                Db.db.rollbackTransaction();
                 Logger.logDebugMessage("Error popping off to " + commonBlock.getHeight(), e);
                 throw e;
             } finally {
-                NxtDb.db.endTransaction();
+                Db.db.endTransaction();
             }
             return poppedOffBlocks;
         } // synchronized
@@ -935,7 +935,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             if (validateAtScan) {
                 Logger.logDebugMessage("Also verifying signatures and validating transactions...");
             }
-            try (Connection con = NxtDb.db.beginTransaction();
+            try (Connection con = Db.db.beginTransaction();
                  PreparedStatement pstmt = con.prepareStatement("SELECT * FROM block WHERE height >= ? ORDER BY db_id ASC")) {
                 transactionProcessor.requeueAllUnconfirmedTransactions();
                 for (DerivedDbTable table : derivedTables) {
@@ -1008,9 +1008,9 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                             blockchain.setLastBlock(currentBlock);
                             accept(currentBlock);
                             currentBlockId = currentBlock.getNextBlockId();
-                            NxtDb.db.commitTransaction();
+                            Db.db.commitTransaction();
                         } catch (NxtException | RuntimeException e) {
-                            NxtDb.db.rollbackTransaction();
+                            Db.db.rollbackTransaction();
                             Logger.logDebugMessage(e.toString(), e);
                             Logger.logDebugMessage("Applying block " + Convert.toUnsignedLong(currentBlockId) + " at height "
                                     + (currentBlock == null ? 0 : currentBlock.getHeight()) + " failed, deleting from database");
@@ -1029,7 +1029,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                         }
                         blockListeners.notify(currentBlock, Event.BLOCK_SCANNED);
                     }
-                    NxtDb.db.endTransaction();
+                    Db.db.endTransaction();
                     blockListeners.notify(currentBlock, Event.RESCAN_END);
                 }
             } catch (SQLException e) {

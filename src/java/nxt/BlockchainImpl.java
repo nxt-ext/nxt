@@ -62,7 +62,7 @@ final class BlockchainImpl implements Blockchain {
     public DbIterator<BlockImpl> getAllBlocks() {
         Connection con = null;
         try {
-            con = NxtDb.db.getConnection();
+            con = Db.db.getConnection();
             PreparedStatement pstmt = con.prepareStatement("SELECT * FROM block ORDER BY db_id ASC");
             return getBlocks(con, pstmt);
         } catch (SQLException e) {
@@ -80,7 +80,7 @@ final class BlockchainImpl implements Blockchain {
     public DbIterator<BlockImpl> getBlocks(Account account, int timestamp, int from, int to) {
         Connection con = null;
         try {
-            con = NxtDb.db.getConnection();
+            con = Db.db.getConnection();
             PreparedStatement pstmt = con.prepareStatement("SELECT * FROM block WHERE generator_id = ? "
                     + (timestamp > 0 ? " AND timestamp >= ? " : " ") + "ORDER BY db_id DESC"
                     + DbUtils.limitsClause(from, to));
@@ -112,7 +112,7 @@ final class BlockchainImpl implements Blockchain {
         if (limit > 1440) {
             throw new IllegalArgumentException("Can't get more than 1440 blocks at a time");
         }
-        try (Connection con = NxtDb.db.getConnection();
+        try (Connection con = Db.db.getConnection();
              PreparedStatement pstmt = con.prepareStatement("SELECT id FROM block WHERE db_id > (SELECT db_id FROM block WHERE id = ?) ORDER BY db_id ASC LIMIT ?")) {
             List<Long> result = new ArrayList<>();
             pstmt.setLong(1, blockId);
@@ -133,7 +133,7 @@ final class BlockchainImpl implements Blockchain {
         if (limit > 1440) {
             throw new IllegalArgumentException("Can't get more than 1440 blocks at a time");
         }
-        try (Connection con = NxtDb.db.getConnection();
+        try (Connection con = Db.db.getConnection();
              PreparedStatement pstmt = con.prepareStatement("SELECT * FROM block WHERE db_id > (SELECT db_id FROM block WHERE id = ?) ORDER BY db_id ASC LIMIT ?")) {
             List<BlockImpl> result = new ArrayList<>();
             pstmt.setLong(1, blockId);
@@ -178,7 +178,7 @@ final class BlockchainImpl implements Blockchain {
         if (height < 0 || getHeight() - height > 1440) {
             throw new IllegalArgumentException("Can't go back more than 1440 blocks");
         }
-        try (Connection con = NxtDb.db.getConnection();
+        try (Connection con = Db.db.getConnection();
              PreparedStatement pstmt = con.prepareStatement("SELECT * FROM block WHERE height >= ? ORDER BY height ASC")) {
             pstmt.setInt(1, height);
             List<BlockImpl> result = new ArrayList<>();
@@ -215,7 +215,7 @@ final class BlockchainImpl implements Blockchain {
 
     @Override
     public int getTransactionCount() {
-        try (Connection con = NxtDb.db.getConnection(); PreparedStatement pstmt = con.prepareStatement("SELECT COUNT(*) FROM transaction");
+        try (Connection con = Db.db.getConnection(); PreparedStatement pstmt = con.prepareStatement("SELECT COUNT(*) FROM transaction");
              ResultSet rs = pstmt.executeQuery()) {
             rs.next();
             return rs.getInt(1);
@@ -228,7 +228,7 @@ final class BlockchainImpl implements Blockchain {
     public DbIterator<TransactionImpl> getAllTransactions() {
         Connection con = null;
         try {
-            con = NxtDb.db.getConnection();
+            con = Db.db.getConnection();
             PreparedStatement pstmt = con.prepareStatement("SELECT * FROM transaction ORDER BY db_id ASC");
             return getTransactions(con, pstmt);
         } catch (SQLException e) {
@@ -281,7 +281,7 @@ final class BlockchainImpl implements Blockchain {
             }
             buf.append("ORDER BY block_timestamp DESC, id DESC");
             buf.append(DbUtils.limitsClause(from, to));
-            con = NxtDb.db.getConnection();
+            con = Db.db.getConnection();
             PreparedStatement pstmt;
             int i = 0;
             pstmt = con.prepareStatement(buf.toString());

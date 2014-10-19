@@ -1,7 +1,7 @@
 package nxt.db;
 
+import nxt.Db;
 import nxt.Nxt;
-import nxt.NxtDb;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -10,7 +10,7 @@ import java.sql.Statement;
 
 public abstract class DerivedDbTable {
 
-    protected static final TransactionalDb db = NxtDb.db;
+    protected static final TransactionalDb db = Db.db;
 
     protected final String table;
 
