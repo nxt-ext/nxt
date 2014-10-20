@@ -14,3 +14,7 @@ too, as of the height specified in the optional height parameter. The
 format of the returned json has been changed to allow adding this
 guaranteedBalanceNQT property.
 
+getPeers now accepts an optional "state" parameter, to return only peers
+in that state. Possible values: CONNECTED, NON_CONNECTED, DISCONNECTED.
+If present, the active=true parameter takes precedence.
+
