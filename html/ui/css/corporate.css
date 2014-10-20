@@ -2208,14 +2208,14 @@ body > .header .navbar .nav > li > a:hover > .label {
   box-shadow: none;
   background-color: #fafafa;
   border: 1px solid #fafafa;
-  height: 29px;
+  height: 34px;
 }
 .sidebar-form input[type="text"] {
   color: #ccc;
 }
 .sidebar-form input[type="text"]:focus,
 .sidebar-form input[type="text"]:focus + .input-group-btn .btn {
-  background-color: #fff;
+  /*background-color: #fff;*/
   color: #666;
 }
 .sidebar-form input[type="text"]:focus + .input-group-btn .btn {
@@ -3129,7 +3129,7 @@ a.list-group-item.active h4 span {
     z-index: 1000;
 }
 #id_search .input-group { opacity:0.53 }
-#id_search .input-group:hover { opacity:0.3 }
+#id_search .input-group:hover { /*opacity:1.0*/ }
 #id_search .form-control::-webkit-input-placeholder { color:#333; }
 #id_search .form-control:-moz-placeholder { color: #333; } /* Firefox 18- */
 #id_search .form-control::-moz-placeholder {  color: #333; } /* Firefox 19+ */
