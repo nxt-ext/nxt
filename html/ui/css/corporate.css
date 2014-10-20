@@ -3966,3 +3966,8 @@ hr {
 #asset_exchange_page.no_assets .content-splitter-right {
   left: 0 !important;
 }
+
+#sideBalance {
+  display: block;
+  margin-bottom: 5px;
+}
