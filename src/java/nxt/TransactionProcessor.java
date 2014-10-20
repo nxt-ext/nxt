@@ -19,6 +19,8 @@ public interface TransactionProcessor extends Observable<List<? extends Transact
 
     Transaction getUnconfirmedTransaction(long transactionId);
 
+    void clearUnconfirmedTransactions();
+
     void broadcast(Transaction transaction) throws NxtException.ValidationException;
 
     void processPeerTransactions(JSONObject request) throws NxtException.ValidationException;

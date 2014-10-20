@@ -135,6 +135,7 @@ public final class AssetTransfer {
     private final long senderId;
     private final long recipientId;
     private final long quantityQNT;
+    private final int timestamp;
 
     private AssetTransfer(Transaction transaction, Attachment.ColoredCoinsAssetTransfer attachment) {
         this.id = transaction.getId();
@@ -144,6 +145,7 @@ public final class AssetTransfer {
         this.senderId = transaction.getSenderId();
         this.recipientId = transaction.getRecipientId();
         this.quantityQNT = attachment.getQuantityQNT();
+        this.timestamp = transaction.getBlockTimestamp();
     }
 
     private AssetTransfer(ResultSet rs) throws SQLException {
@@ -153,19 +155,21 @@ public final class AssetTransfer {
         this.senderId = rs.getLong("sender_id");
         this.recipientId = rs.getLong("recipient_id");
         this.quantityQNT = rs.getLong("quantity");
+        this.timestamp = rs.getInt("timestamp");
         this.height = rs.getInt("height");
     }
 
     private void save(Connection con) throws SQLException {
         try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO asset_transfer (id, asset_id, "
-                + "sender_id, recipient_id, quantity, height) "
-                + "VALUES (?, ?, ?, ?, ?, ?)")) {
+                + "sender_id, recipient_id, quantity, timestamp, height) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?)")) {
             int i = 0;
             pstmt.setLong(++i, this.getId());
             pstmt.setLong(++i, this.getAssetId());
             pstmt.setLong(++i, this.getSenderId());
             pstmt.setLong(++i, this.getRecipientId());
             pstmt.setLong(++i, this.getQuantityQNT());
+            pstmt.setInt(++i, this.getTimestamp());
             pstmt.setInt(++i, this.getHeight());
             pstmt.executeUpdate();
         }
@@ -186,6 +190,10 @@ public final class AssetTransfer {
     }
 
     public long getQuantityQNT() { return quantityQNT; }
+
+    public int getTimestamp() {
+        return timestamp;
+    }
 
     public int getHeight() {
         return height;

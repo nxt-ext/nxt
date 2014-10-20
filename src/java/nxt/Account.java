@@ -82,12 +82,11 @@ public final class Account {
         }
 
         private void save() {
+            checkBalance(this.accountId, this.quantityQNT, this.unconfirmedQuantityQNT);
             if (this.quantityQNT > 0 || this.unconfirmedQuantityQNT > 0) {
                 accountAssetTable.insert(this);
-            } else if (this.quantityQNT == 0 && this.unconfirmedQuantityQNT == 0) {
+            } else {
                 accountAssetTable.delete(this);
-            } else if (this.quantityQNT < 0 || this.unconfirmedQuantityQNT < 0) {
-                throw new DoubleSpendingException("Negative asset balance for account " + Convert.toUnsignedLong(this.accountId));
             }
         }
 
@@ -285,6 +284,10 @@ public final class Account {
 
     public static Account getAccount(long id) {
         return id == 0 ? null : accountTable.get(accountDbKeyFactory.newKey(id));
+    }
+
+    public static Account getAccount(long id, int height) {
+        return id == 0 ? null : accountTable.get(accountDbKeyFactory.newKey(id), height);
     }
 
     public static Account getAccount(byte[] publicKey) {
@@ -536,18 +539,23 @@ public final class Account {
     }
 
     public long getGuaranteedBalanceNQT(final int numberOfConfirmations) {
-        if (numberOfConfirmations >= Nxt.getBlockchain().getHeight()) {
+        return getGuaranteedBalanceNQT(numberOfConfirmations, Nxt.getBlockchain().getHeight());
+    }
+
+    public long getGuaranteedBalanceNQT(final int numberOfConfirmations, final int currentHeight) {
+        if (numberOfConfirmations >= currentHeight) {
             return 0;
         }
         if (numberOfConfirmations > 2880 || numberOfConfirmations < 0) {
             throw new IllegalArgumentException("Number of required confirmations must be between 0 and " + 2880);
         }
-        int height = Nxt.getBlockchain().getHeight() - numberOfConfirmations;
+        int height = currentHeight - numberOfConfirmations;
         try (Connection con = Db.getConnection();
              PreparedStatement pstmt = con.prepareStatement("SELECT SUM (additions) AS additions "
-                     + "FROM account_guaranteed_balance WHERE account_id = ? AND height > ?")) {
+                     + "FROM account_guaranteed_balance WHERE account_id = ? AND height > ? AND height <= ?")) {
             pstmt.setLong(1, this.id);
             pstmt.setInt(2, height);
+            pstmt.setInt(3, currentHeight);
             try (ResultSet rs = pstmt.executeQuery()) {
                 if (!rs.next()) {
                     return balanceNQT;
@@ -640,9 +648,11 @@ public final class Account {
     // this.publicKey is already set to an array equal to key
     boolean setOrVerify(byte[] key, int height) {
         if (this.publicKey == null) {
-            this.publicKey = key;
-            this.keyHeight = -1;
-            accountTable.insert(this);
+            if (Db.isInTransaction()) {
+                this.publicKey = key;
+                this.keyHeight = -1;
+                accountTable.insert(this);
+            }
             return true;
         } else if (Arrays.equals(this.publicKey, key)) {
             return true;
@@ -653,11 +663,13 @@ public final class Account {
             return false;
         } else if (this.keyHeight >= height) {
             Logger.logMessage("DUPLICATE KEY!!!");
-            Logger.logMessage("Changing key for account " + Convert.toUnsignedLong(id) + " at height " + height
-                    + ", was previously set to a different one at height " + keyHeight);
-            this.publicKey = key;
-            this.keyHeight = height;
-            accountTable.insert(this);
+            if (Db.isInTransaction()) {
+                Logger.logMessage("Changing key for account " + Convert.toUnsignedLong(id) + " at height " + height
+                        + ", was previously set to a different one at height " + keyHeight);
+                this.publicKey = key;
+                this.keyHeight = height;
+                accountTable.insert(this);
+            }
             return true;
         }
         Logger.logMessage("DUPLICATE KEY!!!");
@@ -745,7 +757,7 @@ public final class Account {
         }
         this.balanceNQT = Convert.safeAdd(this.balanceNQT, amountNQT);
         addToGuaranteedBalanceNQT(amountNQT);
-        checkBalance();
+        checkBalance(this.id, this.balanceNQT, this.unconfirmedBalanceNQT);
         accountTable.insert(this);
         listeners.notify(this, Event.BALANCE);
     }
@@ -755,7 +767,7 @@ public final class Account {
             return;
         }
         this.unconfirmedBalanceNQT = Convert.safeAdd(this.unconfirmedBalanceNQT, amountNQT);
-        checkBalance();
+        checkBalance(this.id, this.balanceNQT, this.unconfirmedBalanceNQT);
         accountTable.insert(this);
         listeners.notify(this, Event.UNCONFIRMED_BALANCE);
     }
@@ -767,7 +779,7 @@ public final class Account {
         this.balanceNQT = Convert.safeAdd(this.balanceNQT, amountNQT);
         this.unconfirmedBalanceNQT = Convert.safeAdd(this.unconfirmedBalanceNQT, amountNQT);
         addToGuaranteedBalanceNQT(amountNQT);
-        checkBalance();
+        checkBalance(this.id, this.balanceNQT, this.unconfirmedBalanceNQT);
         accountTable.insert(this);
         listeners.notify(this, Event.BALANCE);
         listeners.notify(this, Event.UNCONFIRMED_BALANCE);
@@ -781,18 +793,18 @@ public final class Account {
         accountTable.insert(this);
     }
 
-    private void checkBalance() {
-        if (id == Genesis.CREATOR_ID) {
+    private static void checkBalance(long accountId, long confirmed, long unconfirmed) {
+        if (accountId == Genesis.CREATOR_ID) {
             return;
         }
-        if (balanceNQT < 0) {
-            throw new DoubleSpendingException("Negative balance for account " + Convert.toUnsignedLong(id));
+        if (confirmed < 0) {
+            throw new DoubleSpendingException("Negative balance or quantity for account " + Convert.toUnsignedLong(accountId));
         }
-        if (unconfirmedBalanceNQT < 0) {
-            throw new DoubleSpendingException("Negative unconfirmed balance for account " + Convert.toUnsignedLong(id));
+        if (unconfirmed < 0) {
+            throw new DoubleSpendingException("Negative unconfirmed balance or quantity for account " + Convert.toUnsignedLong(accountId));
         }
-        if (unconfirmedBalanceNQT > balanceNQT) {
-            throw new DoubleSpendingException("Unconfirmed balance exceeds balance for account " + Convert.toUnsignedLong(id));
+        if (unconfirmed > confirmed) {
+            throw new DoubleSpendingException("Unconfirmed exceeds confirmed balance or quantity for account " + Convert.toUnsignedLong(accountId));
         }
     }
 
