@@ -2154,7 +2154,7 @@ body > .header .navbar .nav > li > a:hover > .label {
 }
 .user-panel > .info a { /*opacity:0.9*/ }/* Mr. V Addition */
 .user-panel > .info a:hover { text-decoration: underline; }/* Mr. V Addition */
-.left-side .sidebar > .sidebar-menu { margin-top: 10px; background-color:#fff}/* Mr. V Addition */
+.left-side .sidebar > .sidebar-menu { margin-top: 15px; background-color:#fff}/* Mr. V Addition */
 
 /* skin-blue sidebar */
 .sidebar-default {
