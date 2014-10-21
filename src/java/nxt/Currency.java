@@ -70,38 +70,6 @@ public final class Currency {
 
     }
 
-    //TODO: pass Transaction and Attachment as parameters instead
-    static void addCurrency(long currencyId, long accountId, String name, String code, String description, byte type, long totalSupply,
-                            long currentSupply, int issuanceHeight, long minReservePerUnitNQT, byte minDifficulty, byte maxDifficulty, byte ruleset,
-                            byte algorithm) {
-        Currency currency = getCurrency(currencyId);
-        //TODO: those are already checked in validate(), and for a second safety check unique indexes in the database can be used
-        if (currency != null) {
-            throw new IllegalStateException("Currency with id " + Convert.toUnsignedLong(currencyId) + " already exists");
-        }
-        currency = getCurrencyByName(name);
-        if (currency != null) {
-            throw new IllegalStateException("Currency with name " + name + " already exists");
-        }
-        currency = getCurrencyByCode(code);
-        if (currency != null) {
-            throw new IllegalStateException("Currency with code " + code + " already exists");
-        }
-        currency = new Currency(currencyId, accountId, name, code, description, type, totalSupply, currentSupply, issuanceHeight, minReservePerUnitNQT,
-                minDifficulty, maxDifficulty, ruleset, algorithm);
-        currencyTable.insert(currency);
-    }
-
-    //TODO: inline?
-    static boolean isNameUsed(String name) {
-        return getCurrencyByName(name) != null;
-    }
-
-    //TODO: inline?
-    static boolean isCodeUsed(String code) {
-        return getCurrencyByCode(code) != null;
-    }
-
     private final long currencyId;
 
     private final DbKey dbKey;
@@ -122,29 +90,21 @@ public final class Currency {
     private long currentReservePerUnitNQT;
 
     public Currency(Transaction transaction, Attachment.MonetarySystemCurrencyIssuance attachment) {
-        this(transaction.getId(), transaction.getSenderId(), attachment.getName(), attachment.getCode(), attachment.getDescription(), attachment.getType(),
-                attachment.getTotalSupply(), attachment.getTotalSupply(), attachment.getIssuanceHeight(), attachment.getMinReservePerUnitNQT(),
-                attachment.getMinDifficulty(), attachment.getMaxDifficulty(), attachment.getRuleset(), attachment.getAlgorithm());
-    }
-
-    private Currency(long currencyId, long accountId, String name, String code, String description, int type, long totalSupply,
-                     long currentSupply, int issuanceHeight, long minReservePerUnitNQT, byte minDifficulty, byte maxDifficulty,
-                     byte ruleset, byte algorithm) {
-        this.currencyId = currencyId;
+        this.currencyId = transaction.getId();
         this.dbKey = currencyDbKeyFactory.newKey(this.currencyId);
-        this.accountId = accountId;
-        this.name = name;
-        this.code = code;
-        this.description = description;
-        this.type = type;
-        this.totalSupply = totalSupply;
-        this.issuanceHeight = issuanceHeight;
-        this.minReservePerUnitNQT = minReservePerUnitNQT;
-        this.minDifficulty = minDifficulty;
-        this.maxDifficulty = maxDifficulty;
-        this.ruleset = ruleset;
-        this.algorithm = algorithm;
-        this.currentSupply = currentSupply;
+        this.accountId = transaction.getSenderId();
+        this.name = attachment.getName();
+        this.code = attachment.getCode();
+        this.description = attachment.getDescription();
+        this.type = attachment.getType();
+        this.totalSupply = attachment.getTotalSupply();
+        this.issuanceHeight = attachment.getIssuanceHeight();
+        this.minReservePerUnitNQT = attachment.getMinReservePerUnitNQT();
+        this.minDifficulty = attachment.getMinDifficulty();
+        this.maxDifficulty = attachment.getMaxDifficulty();
+        this.ruleset = attachment.getRuleset();
+        this.algorithm = attachment.getAlgorithm();
+        this.currentSupply = attachment.getCurrentSupply();
         this.currentReservePerUnitNQT = 0;
     }
 
@@ -255,15 +215,15 @@ public final class Currency {
 
     public static boolean isActive(long currencyId) {
         Currency currency = getCurrency(currencyId);
-        return currency != null && currency.getIssuanceHeight() <= BlockchainImpl.getInstance().getLastBlock().getHeight();
+        return currency != null && currency.getIssuanceHeight() <= BlockchainImpl.getInstance().getHeight();
     }
 
     public static boolean isIssuer(long accountId) {
-        Currency currency = getCurrency(accountId);
+        Currency currency = getCurrency(accountId); //TODO: must be a bug
         return currency != null && currency.getAccountId() == accountId;
     }
 
-    public static void increaseReserve(Account account, long currencyId, long amountNQT) {
+    static void increaseReserve(Account account, long currencyId, long amountNQT) {
         Currency currency = Currency.getCurrency(currencyId);
         account.addToBalanceNQT(-Convert.safeMultiply(currency.getTotalSupply(), amountNQT));
         currency.currentReservePerUnitNQT += amountNQT;
@@ -271,7 +231,7 @@ public final class Currency {
         CurrencyFounder.addOrUpdateFounder(currencyId, account.getId(), Convert.safeMultiply(currency.getTotalSupply(), amountNQT));
     }
 
-    public static void claimReserve(Account account, long currencyId, long units) {
+    static void claimReserve(Account account, long currencyId, long units) {
         account.addToCurrencyUnits(currencyId, -units);
         Currency currency = Currency.getCurrency(currencyId);
         currency.totalSupply -= units;
@@ -279,7 +239,7 @@ public final class Currency {
         account.addToBalanceAndUnconfirmedBalanceNQT(Convert.safeMultiply(units, currency.currentReservePerUnitNQT));
     }
 
-    public static void transferCurrency(Account account, long recipientId, long currencyId, long units) {
+    static void transferCurrency(Account account, long recipientId, long currencyId, long units) {
         account.addToCurrencyUnits(currencyId, -units);
         Account.addOrGetAccount(recipientId).addToCurrencyAndUnconfirmedCurrencyUnits(currencyId, units);
     }
