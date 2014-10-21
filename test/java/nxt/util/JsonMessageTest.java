@@ -60,6 +60,8 @@ public class JsonMessageTest {
                 "  \"percentage\": \"0.18%\",\n" +
                 "  \"shares\": 3000\n" +
                 "}");
+        validate("אבג");
+        validate("“");
     }
 
     private void validate(String message) {
