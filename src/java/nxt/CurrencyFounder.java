@@ -16,7 +16,7 @@ public class CurrencyFounder {
 
     private static final DbKey.LinkKeyFactory<CurrencyFounder> currencyFounderDbKeyFactory = new DbKey.LinkKeyFactory<CurrencyFounder>("currency_id", "account_id") {
 
-            @Override
+        @Override
         public DbKey newKey(CurrencyFounder currencyFounder) {
             return currencyFounder.dbKey;
         }
@@ -100,7 +100,7 @@ public class CurrencyFounder {
 
     public static void remove(long currencyId) {
         for (CurrencyFounder founder : CurrencyFounder.getCurrencyFounders(currencyId, 0, Integer.MAX_VALUE)) {
-            currencyFounderTable.delete(founder);
+            currencyFounderTable.delete(founder); //TODO: may need to move out
         }
     }
 }

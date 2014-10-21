@@ -57,11 +57,11 @@ public final class Exchange {
         return listeners.removeListener(listener, eventType);
     }
 
-    public static DbIterator<Exchange> getCurrencyExchanges(Long currencyId, int from, int to) {
+    public static DbIterator<Exchange> getCurrencyExchanges(long currencyId, int from, int to) {
         return exchangeTable.getManyBy(new DbClause.LongClause("currency_id", currencyId), from, to);
     }
 
-    public static DbIterator<Exchange> getAccountExchanges(Long accountId, int from, int to) {
+    public static DbIterator<Exchange> getAccountExchanges(long accountId, int from, int to) {
         Connection con = null;
         try {
             con = Db.getConnection();
@@ -80,7 +80,7 @@ public final class Exchange {
         }
     }
 
-    public static DbIterator<Exchange> getAccountCurrencyExchanges(Long accountId, Long currencyId, int from, int to) {
+    public static DbIterator<Exchange> getAccountCurrencyExchanges(long accountId, long currencyId, int from, int to) {
         Connection con = null;
         try {
             con = Db.getConnection();
@@ -101,7 +101,7 @@ public final class Exchange {
         }
     }
 
-    public static int getExchangeCount(Long currencyId) {
+    public static int getExchangeCount(long currencyId) {
         try (Connection con = Db.getConnection();
              PreparedStatement pstmt = con.prepareStatement("SELECT COUNT(*) FROM exchange WHERE currency_id = ?")) {
             pstmt.setLong(1, currencyId);
@@ -114,8 +114,8 @@ public final class Exchange {
         }
     }
 
-    static Exchange addExchange(Long currencyId, Block block, long offerId, long sellerId, long buyerId, long units, long rate) {
-        Exchange exchange = new Exchange(currencyId, block, offerId, sellerId, buyerId, units, rate);
+    static Exchange addExchange(long currencyId, Block block, CurrencyOffer offer, long sellerId, long buyerId, long units) {
+        Exchange exchange = new Exchange(currencyId, block, offer, sellerId, buyerId, units);
         exchangeTable.insert(exchange);
         listeners.notify(exchange, Event.EXCHANGE);
         return exchange;
@@ -135,17 +135,17 @@ public final class Exchange {
     private final long units;
     private final long rate;
 
-    private Exchange(Long currencyId, Block block, long offerId, long sellerId, long buyerId, long units, long rate) {
+    private Exchange(long currencyId, Block block, CurrencyOffer offer, long sellerId, long buyerId, long units) {
         this.blockId = block.getId();
         this.height = block.getHeight();
         this.currencyId = currencyId;
         this.timestamp = block.getTimestamp();
-        this.offerId = offerId;
+        this.offerId = offer.getId();
         this.sellerId = sellerId;
         this.buyerId = buyerId;
         this.dbKey = exchangeDbKeyFactory.newKey(this.offerId); // TODO, not unique
         this.units = units;
-        this.rate = rate;
+        this.rate = offer.getRateNQT();
     }
 
     private Exchange(ResultSet rs) throws SQLException {
@@ -178,15 +178,15 @@ public final class Exchange {
         }
     }
 
-    public Long getBlockId() { return blockId; }
+    public long getBlockId() { return blockId; }
 
-    public Long getOfferId() { return offerId; }
+    public long getOfferId() { return offerId; }
 
-    public Long getSellerId() {
+    public long getSellerId() {
         return sellerId;
     }
 
-    public Long getBuyerId() {
+    public long getBuyerId() {
         return buyerId;
     }
 
@@ -194,7 +194,7 @@ public final class Exchange {
 
     public long getRate() { return rate; }
     
-    public Long getCurrencyId() { return currencyId; }
+    public long getCurrencyId() { return currencyId; }
     
     public int getTimestamp() { return timestamp; }
 

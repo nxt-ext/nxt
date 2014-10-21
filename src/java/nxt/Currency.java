@@ -70,10 +70,12 @@ public final class Currency {
 
     }
 
+    //TODO: pass Transaction and Attachment as parameters instead
     static void addCurrency(long currencyId, long accountId, String name, String code, String description, byte type, long totalSupply,
                             long currentSupply, int issuanceHeight, long minReservePerUnitNQT, byte minDifficulty, byte maxDifficulty, byte ruleset,
                             byte algorithm) {
         Currency currency = getCurrency(currencyId);
+        //TODO: those are already checked in validate(), and for a second safety check unique indexes in the database can be used
         if (currency != null) {
             throw new IllegalStateException("Currency with id " + Convert.toUnsignedLong(currencyId) + " already exists");
         }
@@ -90,10 +92,12 @@ public final class Currency {
         currencyTable.insert(currency);
     }
 
+    //TODO: inline?
     static boolean isNameUsed(String name) {
         return getCurrencyByName(name) != null;
     }
 
+    //TODO: inline?
     static boolean isCodeUsed(String code) {
         return getCurrencyByCode(code) != null;
     }

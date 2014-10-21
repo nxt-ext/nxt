@@ -54,14 +54,14 @@ public abstract class MonetarySystem extends TransactionType {
         @Override
         void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
             Attachment.MonetarySystemCurrencyIssuance attachment = (Attachment.MonetarySystemCurrencyIssuance) transaction.getAttachment();
-            CurrencyType.validateCurrencyNaming(attachment);
-            CurrencyType.validate(attachment, attachment.getType(), transaction);
             if (attachment.getTotalSupply() > Constants.MAX_CURRENCY_TOTAL_SUPPLY
                     || attachment.getIssuanceHeight() < 0
                     || attachment.getMinReservePerUnitNQT() < 0 || attachment.getMinReservePerUnitNQT() > Constants.MAX_BALANCE_NQT
-                    || attachment.getRuleset() != 0) {
+                    || attachment.getRuleset() != 0) { //TODO: ruleset always 0?
                 throw new NxtException.NotValidException("Invalid currency issuance: " + attachment.getJSONObject());
             }
+            CurrencyType.validate(attachment, attachment.getType(), transaction);
+            CurrencyType.validateCurrencyNaming(attachment);
         }
 
 
