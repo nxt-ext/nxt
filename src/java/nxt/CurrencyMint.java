@@ -64,6 +64,7 @@ public final class CurrencyMint {
         this.height = rs.getInt("height");
     }
 
+    //TODO: use MERGE?
     private void save(Connection con) throws SQLException {
         try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO currency_mint (currency_id, account_id, counter, height)"
                 + "VALUES (?, ?, ?, ?)")) {
@@ -71,7 +72,7 @@ public final class CurrencyMint {
             pstmt.setLong(++i, this.getCurrencyId());
             pstmt.setLong(++i, this.getAccountId());
             pstmt.setLong(++i, this.getCounter());
-            pstmt.setInt(++i, this.getHeight());
+            pstmt.setInt(++i, this.getHeight()); //TODO: blockchain height?
             pstmt.executeUpdate();
         }
     }
@@ -93,7 +94,7 @@ public final class CurrencyMint {
     }
 
     static void mintCurrency(Account account, long nonce, long currencyId, long units, long counter) {
-        CurrencyMint currencyMint = currencyMintTable.get(currencyMintDbKeyFactory.newKey(currencyId, account.getId()), Nxt.getBlockchain().getHeight());
+        CurrencyMint currencyMint = currencyMintTable.get(currencyMintDbKeyFactory.newKey(currencyId, account.getId()));
         if (currencyMint != null && counter <= currencyMint.getCounter()) {
             return;
         }

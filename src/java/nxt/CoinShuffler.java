@@ -5,6 +5,7 @@ import nxt.util.Listener;
 
 import java.util.*;
 
+//TODO: convert to database
 public final class CoinShuffler {
 
     private static enum State {

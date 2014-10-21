@@ -159,7 +159,7 @@ public abstract class TransactionType {
                     case SUBTYPE_MONETARY_SYSTEM_EXCHANGE:
                         return MonetarySystem.EXCHANGE;
                     case SUBTYPE_MONETARY_SYSTEM_CURRENCY_MINTING:
-                        return MonetarySystem.CURRNECY_MINTING;
+                        return MonetarySystem.CURRENCY_MINTING;
                     case SUBTYPE_MONETARY_SYSTEM_SHUFFLING_INITIATION:
                         return MonetarySystem.SHUFFLING_INITIATION;
                     case SUBTYPE_MONETARY_SYSTEM_SHUFFLING_CONTINUATION:
