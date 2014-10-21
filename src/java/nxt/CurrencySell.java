@@ -46,8 +46,9 @@ public final class CurrencySell extends CurrencyOffer {
 
     static void init() {}
 
-    public CurrencySell(long id, long currencyId, long accountId, long rateNQT, long limit, long supply, int expirationHeight, int offerHeight) {
-        super(id, currencyId, accountId, rateNQT, limit, supply, expirationHeight, offerHeight);
+    CurrencySell(Transaction transaction, Attachment.MonetarySystemPublishExchangeOffer attachment) {
+        super(transaction.getId(), attachment.getCurrencyId(), transaction.getSenderId(), attachment.getSellRateNQT(),
+                attachment.getTotalSellLimit(), attachment.getInitialSellSupply(), attachment.getExpirationHeight(), transaction.getHeight());
         this.dbKey = sellOfferDbKeyFactory.newKey(id);
     }
 
@@ -65,11 +66,11 @@ public final class CurrencySell extends CurrencyOffer {
         return CurrencyBuy.getBuyOffer(id);
     }
 
-    public static void addOffer(CurrencySell sellOffer) {
+    static void addOffer(CurrencySell sellOffer) {
         sellOfferTable.insert(sellOffer);
     }
 
-    public static void remove(CurrencyOffer sellOffer) {
+    static void remove(CurrencyOffer sellOffer) {
         sellOfferTable.delete(sellOffer);
     }
 
@@ -87,12 +88,12 @@ public final class CurrencySell extends CurrencyOffer {
         }
     }
 
-    public void increaseSupply(long delta) {
+    void increaseSupply(long delta) {
         super.increaseSupply(delta);
         sellOfferTable.insert(this);
     }
 
-    public void decreaseLimitAndSupply(long delta) {
+    void decreaseLimitAndSupply(long delta) {
         super.decreaseLimitAndSupply(delta);
         sellOfferTable.insert(this);
     }

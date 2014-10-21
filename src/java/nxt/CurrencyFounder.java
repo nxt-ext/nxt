@@ -56,6 +56,7 @@ public class CurrencyFounder {
         this.value = rs.getLong("value");
     }
 
+    //TODO: if multiple reserve increases from the same founder are allowed in a block, should be merge instead of insert
     private void save(Connection con) throws SQLException {
         try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO currency_founder (currency_id, account_id, value, height)"
                 + "VALUES (?, ?, ?, ?)")) {
@@ -80,7 +81,7 @@ public class CurrencyFounder {
         return value;
     }
 
-    public static void addOrUpdateFounder(long currencyId, long accountId, long value) {
+    static void addOrUpdateFounder(long currencyId, long accountId, long value) {
         CurrencyFounder founder = getFounder(currencyId, accountId);
         if (founder == null) {
             founder = new CurrencyFounder(currencyId, accountId, value);

@@ -26,15 +26,10 @@ public final class CurrencyExchange {
         }
     }
 
-    static void publishOffer(long id, Account account, long currencyId, long buyRateNQT, long sellRateNQT, long totalBuyLimit, long totalSellLimit,
-                             long initialBuySupply, long initialSellSupply, int expirationHeight) {
-        removeOffer(currencyId, account.getId());
-
-        int height = BlockchainImpl.getInstance().getHeight();
-        CurrencyBuy.addOffer(new CurrencyBuy(id, currencyId, account.getId(), buyRateNQT, totalBuyLimit, initialBuySupply,
-                expirationHeight, height));
-        CurrencySell.addOffer(new CurrencySell(id, currencyId, account.getId(), sellRateNQT, totalSellLimit, initialSellSupply,
-                expirationHeight, height));
+    static void publishOffer(Transaction transaction, Attachment.MonetarySystemPublishExchangeOffer attachment) {
+        removeOffer(attachment.getCurrencyId(), transaction.getSenderId());
+        CurrencyBuy.addOffer(new CurrencyBuy(transaction, attachment));
+        CurrencySell.addOffer(new CurrencySell(transaction, attachment));
     }
 
     static void exchangeCurrencyForNXT(Account account, long currencyId, long rateNQT, long units) {

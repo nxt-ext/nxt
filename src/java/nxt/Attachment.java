@@ -1980,6 +1980,7 @@ public interface Attachment extends Appendix {
 
     }
 
+    //TODO: replace with buy and sell
     public final static class MonetarySystemExchange extends AbstractAttachment {
 
         private final long currencyId;

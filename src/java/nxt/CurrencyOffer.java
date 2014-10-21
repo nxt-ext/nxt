@@ -19,7 +19,7 @@ public abstract class CurrencyOffer {
     protected final int expirationHeight;
     protected final int height;
 
-    public CurrencyOffer(long id, long currencyId, long accountId, long rateNQT, long limit, long supply, int expirationHeight, int height) {
+    CurrencyOffer(long id, long currencyId, long accountId, long rateNQT, long limit, long supply, int expirationHeight, int height) {
         this.id = id;
         this.currencyId = currencyId;
         this.accountId = accountId;
@@ -91,11 +91,11 @@ public abstract class CurrencyOffer {
 
     public abstract CurrencyOffer getCounterOffer();
 
-    public void increaseSupply(long delta) {
+    void increaseSupply(long delta) {
         supply += delta;
     }
 
-    public void decreaseLimitAndSupply(long delta) {
+    void decreaseLimitAndSupply(long delta) {
         limit -= delta;
         supply -= delta;
     }
