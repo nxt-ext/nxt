@@ -198,7 +198,7 @@ public interface Appendix {
 
         private AbstractEncryptedMessage(JSONObject attachmentJSON, JSONObject encryptedMessageJSON) {
             super(attachmentJSON);
-            byte[] data = Convert.parseHexString((String)encryptedMessageJSON.get("data"));
+            byte[] data = Convert.parseHexString((String) encryptedMessageJSON.get("data"));
             byte[] nonce = Convert.parseHexString((String)encryptedMessageJSON.get("nonce"));
             this.encryptedData = new EncryptedData(data, nonce);
             this.isText = Boolean.TRUE.equals(encryptedMessageJSON.get("isText"));
@@ -265,7 +265,7 @@ public interface Appendix {
         }
 
         EncryptedMessage(JSONObject attachmentData) throws NxtException.NotValidException {
-            super(attachmentData, (JSONObject)attachmentData.get("encryptedMessage"));
+            super(attachmentData, (JSONObject) attachmentData.get("encryptedMessage"));
         }
 
         public EncryptedMessage(EncryptedData encryptedData, boolean isText) {
@@ -424,6 +424,9 @@ public interface Appendix {
         public static final byte MAX_VOTERS = 16;
 
         static TwoPhased parse(JSONObject attachmentData) throws NxtException.NotValidException {
+            if (attachmentData.get("releaseHeight") == null) {
+                return null;
+            }
             return new TwoPhased(attachmentData);
         }
 
@@ -452,12 +455,12 @@ public interface Appendix {
 
         TwoPhased(JSONObject attachmentData) throws NxtException.NotValidException {
             super(attachmentData);
-            maxHeight = (Integer) attachmentData.get("maxHeight");
+            maxHeight = (Integer) attachmentData.get("releaseHeight");
             quorum = (Long) attachmentData.get("quorum");
             voteThreshold = (Long) attachmentData.get("voteThreshold");
             votingModel = (Byte) attachmentData.get("votingModel");
             if(votingModel == CommonPollStructure.VOTING_MODEL_ASSET){
-                assetId = (Long) attachmentData.get("assetId");;
+                assetId = (Long) attachmentData.get("assetId");
             } else assetId = 0;
             JSONArray pvArr = (JSONArray) (attachmentData.get("possibleVoters"));
             possibleVoters = new Long[pvArr.size()];
@@ -512,7 +515,7 @@ public interface Appendix {
 
         @Override
         void putMyJSON(JSONObject json) {
-            json.put("maxHeight", maxHeight);
+            json.put("releaseHeight", maxHeight);
             json.put("quorum", quorum);
             json.put("voteThreshold", voteThreshold);
             json.put("votingModel", votingModel);

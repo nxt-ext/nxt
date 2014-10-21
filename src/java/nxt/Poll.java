@@ -1,10 +1,7 @@
 package nxt;
 
-import nxt.db.DbIterator;
-import nxt.db.DbKey;
-import nxt.db.EntityDbTable;
+import nxt.db.*;
 
-import nxt.db.Db;
 import nxt.util.*;
 import org.json.simple.JSONArray;
 import org.json.simple.parser.JSONParser;
@@ -24,12 +21,7 @@ public final class Poll extends CommonPollStructure {
     private static class PollTable extends EntityDbTable<Poll> {
 
         protected PollTable(DbKey.Factory<Poll> dbKeyFactory) {
-            super(dbKeyFactory);
-        }
-
-        @Override
-        protected String table() {
-            return "poll";
+            super("poll", dbKeyFactory);
         }
 
         @Override
@@ -79,19 +71,18 @@ public final class Poll extends CommonPollStructure {
             }
         }
 
-        protected Long getId(Poll poll) {
+        protected long getId(Poll poll) {
             return poll.getId();
         }
     }
 
     private final static PollTable pollTable = new PollTable(pollDbKeyFactory);
 
-    private final long id;
     static void init() {
     }
 
 
-    private final Long id;
+    private final long id;
     private final DbKey dbKey;
     private final String name;
     private final String description;
@@ -194,11 +185,11 @@ public final class Poll extends CommonPollStructure {
     }
 
     public static DbIterator<Poll> getActivePolls() {
-        return pollTable.getManyBy("finished", true, 0, Integer.MAX_VALUE);
+        return pollTable.getManyBy(new DbClause.BooleanClause("finished", true), 0, Integer.MAX_VALUE);
     }
 
     public static DbIterator<Poll> getFinishedPolls() {
-        return pollTable.getManyBy("finished", false, 0, Integer.MAX_VALUE);
+        return pollTable.getManyBy(new DbClause.BooleanClause("finished", false), 0, Integer.MAX_VALUE);
     }
 
     public static DbIterator<Poll> getAllPolls(int from, int to) {

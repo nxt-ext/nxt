@@ -34,7 +34,7 @@ final class TransactionImpl implements Transaction {
         private Appendix.EncryptToSelfMessage encryptToSelfMessage;
         private Appendix.PublicKeyAnnouncement publicKeyAnnouncement;
         private Appendix.TwoPhased twoPhased;
-        private Long blockId;
+        private long blockId;
         private int height = Integer.MAX_VALUE;
         private long id;
         private long senderId;

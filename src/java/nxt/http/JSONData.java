@@ -1,17 +1,6 @@
 package nxt.http;
 
-import nxt.Account;
-import nxt.Alias;
-import nxt.Appendix;
-import nxt.Asset;
-import nxt.Block;
-import nxt.DigitalGoodsStore;
-import nxt.Nxt;
-import nxt.Order;
-import nxt.Poll;
-import nxt.Token;
-import nxt.Trade;
-import nxt.Transaction;
+import nxt.*;
 import nxt.crypto.Crypto;
 import nxt.crypto.EncryptedData;
 import nxt.peer.Hallmark;

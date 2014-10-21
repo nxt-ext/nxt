@@ -52,7 +52,7 @@ public final class Asset {
     }
 
     public static DbIterator<Asset> getAssetsWithName(String name, int from, int to){
-        return assetTable.getManyBy("name", name, from, to);
+        return assetTable.getManyBy(new DbClause.StringClause("name", name), from, to);
     }
 
     public static DbIterator<Asset> getAssetsWithName(String name){

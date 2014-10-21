@@ -23,25 +23,19 @@ public class PhasedTransactionPoll extends CommonPollStructure {
 
 
     final static class PendingTransactionsTable extends VersionedEntityDbTable<PhasedTransactionPoll> {
-        private static final String TABLE_NAME = "pending_transactions";
 
         protected PendingTransactionsTable() {
             this(pollDbKeyFactory);
         }
 
         protected PendingTransactionsTable(DbKey.Factory<PhasedTransactionPoll> dbKeyFactory) {
-            super(dbKeyFactory);
-        }
-
-        @Override
-        protected String table() {
-            return TABLE_NAME;
+            super("pending_transactions", dbKeyFactory);
         }
 
         DbIterator<Long> finishing(int height){
             try {
                 Connection con = Db.getConnection();
-                PreparedStatement pstmt = con.prepareStatement("SELECT id FROM " + table()
+                PreparedStatement pstmt = con.prepareStatement("SELECT id FROM " + table
                         + " WHERE finish = ?  AND finished = FALSE AND latest = TRUE" );
                 pstmt.setInt(1, height);
                 return new DbIterator<>(con, pstmt, new DbIterator.ResultSetReader<Long>() {
@@ -54,8 +48,6 @@ public class PhasedTransactionPoll extends CommonPollStructure {
                 throw new RuntimeException(e.toString(), e);
             }
         }
-
-
 
         @Override
         protected PhasedTransactionPoll load(Connection con, ResultSet rs) throws SQLException {
@@ -98,7 +90,7 @@ public class PhasedTransactionPoll extends CommonPollStructure {
     }
 
     public static PhasedTransactionPoll byId(long id) {
-        return pendingTransactionsTable.getBy("id", id);
+        return pendingTransactionsTable.getBy(new DbClause.LongClause("id", id));
     }
 
     public Long getQuorum() {

@@ -3,7 +3,10 @@ package nxt;
 import nxt.util.Convert;
 import org.json.simple.JSONObject;
 import java.nio.ByteBuffer;
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 
 public abstract class TransactionType {
@@ -231,6 +234,10 @@ public abstract class TransactionType {
         }
 
         @Override
+        void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
+        }
+
+        @Override
         final void undoAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
         }
 
@@ -254,10 +261,6 @@ public abstract class TransactionType {
             @Override
             Attachment.EmptyAttachment parseAttachment(JSONObject attachmentData) throws NxtException.NotValidException {
                 return Attachment.ORDINARY_PAYMENT;
-            }
-
-            @Override
-            final void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
             }
 
             @Override
@@ -358,8 +361,8 @@ public abstract class TransactionType {
             }
 
             @Override
-            Attachment.PendingPaymentVoteCasting parseAttachment(JSONObject attachmentData) throws NxtException.NotValidException {
-                return new Attachment.PendingPaymentVoteCasting(attachmentData);
+            Attachment.EmptyAttachment parseAttachment(JSONObject attachmentData) throws NxtException.NotValidException {
+                return Attachment.ARBITRARY_MESSAGE;
             }
 
             @Override
@@ -690,7 +693,7 @@ public abstract class TransactionType {
                         || attachment.getPollOptions().length > Constants.MAX_POLL_OPTION_COUNT) {
                     throw new NxtException.NotValidException("Invalid poll attachment: " + attachment.getJSONObject());
                 }
-                if (transaction.getRecipientId() != null
+                if (transaction.getRecipientId() != 0
                         || transaction.getFeeNQT() < Constants.POLL_FEE_NQT
                         || transaction.getAmountNQT() != 0) {
                     throw new NxtException.NotValidException("Invalid tx params for poll: " + attachment.getJSONObject());
@@ -788,7 +791,7 @@ public abstract class TransactionType {
                     throw new NxtException.NotValidException("Invalid num of choices: " + attachment.getJSONObject());
                 }
 
-                if (transaction.getAmountNQT() != 0 || transaction.getRecipientId() != null) {
+                if (transaction.getAmountNQT() != 0 || transaction.getRecipientId() != 0) {
                     throw new NxtException.NotValidException("Invalid vote casting amount or recipient");
                 }
             }

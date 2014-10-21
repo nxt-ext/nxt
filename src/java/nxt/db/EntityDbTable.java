@@ -6,6 +6,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
 public abstract class EntityDbTable<T> extends DerivedDbTable {
 
@@ -205,7 +207,7 @@ public abstract class EntityDbTable<T> extends DerivedDbTable {
     //todo: change resulting type to DbIterator?
     public List<Long> getManyIdsBy(String targetColumnName, String filterColumnName, Long value) {
         try (Connection con = Db.getConnection();
-             PreparedStatement pstmt = con.prepareStatement("SELECT " + targetColumnName + " FROM " + table()
+             PreparedStatement pstmt = con.prepareStatement("SELECT " + targetColumnName + " FROM " + table
                      + " WHERE " + filterColumnName + " = ? ")) {
             pstmt.setLong(1, value);
             List<Long> result = new ArrayList<>();

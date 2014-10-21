@@ -50,4 +50,20 @@ public abstract class DbClause {
 
     }
 
+    public static final class BooleanClause extends DbClause {
+
+        private final boolean value;
+
+        public BooleanClause(String columnName, boolean value) {
+            super(" " + columnName + " = ? ");
+            this.value = value;
+        }
+
+        protected int set(PreparedStatement pstmt, int index) throws SQLException {
+            pstmt.setBoolean(index, value);
+            return index + 1;
+        }
+
+    }
+
 }

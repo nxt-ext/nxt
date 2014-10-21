@@ -12,7 +12,7 @@ public interface Attachment extends Appendix {
 
     TransactionType getTransactionType();
 
-    abstract static class AbstractAttachment extends AbstractAppendix implements Attachment {
+    abstract static class AbstractAttachment extends Appendix.AbstractAppendix implements Attachment {
 
         private AbstractAttachment(ByteBuffer buffer, byte transactionVersion) {
             super(buffer, transactionVersion);
@@ -632,7 +632,7 @@ public interface Attachment extends Appendix {
         }
 
         @Override
-        public void putMyBytes(ByteBuffer buffer) {
+        void putMyBytes(ByteBuffer buffer) {
             buffer.putLong(this.pollId);
             buffer.put((byte) this.pollVote.length);
             buffer.put(this.pollVote);
@@ -655,7 +655,7 @@ public interface Attachment extends Appendix {
             return TransactionType.Messaging.VOTE_CASTING;
         }
 
-        public Long getPollId() { return pollId; }
+        public long getPollId() { return pollId; }
 
         public byte[] getPollVote() { return pollVote; }
 

@@ -26,13 +26,7 @@ public abstract class PollResults<K, V> {
         }
     };
 
-    private static final VersionedEntityDbTable<PollResults> resultsTable = new VersionedEntityDbTable<PollResults>(pollResultsDbKeyFactory) {
-        public static final String TABLE_NAME = "poll_results";
-
-        @Override
-        protected String table() {
-            return TABLE_NAME;
-        }
+    private static final VersionedEntityDbTable<PollResults> resultsTable = new VersionedEntityDbTable<PollResults>("poll_results", pollResultsDbKeyFactory) {
 
         @Override
         protected PollResults load(Connection con, ResultSet rs) throws SQLException {
@@ -41,7 +35,7 @@ public abstract class PollResults<K, V> {
 
         @Override
         protected void save(Connection con, PollResults pr) throws SQLException {
-            String query = "INSERT INTO "+TABLE_NAME+" (id, results_type, results_json, height) VALUES (?, ?, ?, ?)";
+            String query = "INSERT INTO "+table+" (id, results_type, results_json, height) VALUES (?, ?, ?, ?)";
             try (PreparedStatement pstmt = con.prepareStatement(query)) {
                 int i = 0;
                 pstmt.setLong(++i, pr.getPollId());
