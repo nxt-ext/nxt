@@ -18,3 +18,10 @@ getPeers now accepts an optional "state" parameter, to return only peers
 in that state. Possible values: CONNECTED, NON_CONNECTED, DISCONNECTED.
 If present, the active=true parameter takes precedence.
 
+getBlock now accepts an optional "timestamp" parameter, to return the
+last block as of that timestamp. The parameters to getBlock: "block",
+"height", "timestamp", are processed in that order of precedence, i.e.
+if both height and timestamp are specified, height is used and timestamp
+is ignored. If no parameters, current last block is returned.
+
+
