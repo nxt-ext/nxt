@@ -493,7 +493,7 @@ body > .header .navbar .nav > li > a:hover > .label {
   width: 20px;
 }
 .user-panel {
-  margin: 10px 5px;
+  margin: 5px;
   position: relative;
 }
 .user-panel:before,
@@ -2208,7 +2208,7 @@ body > .header .navbar .nav > li > a:hover > .label {
   box-shadow: none;
   background-color: #fafafa;
   border: 1px solid #fafafa;
-  height: 29px;
+  height: 34px;
 }
 .sidebar-form input[type="text"] {
   color: #ccc;
@@ -3129,7 +3129,7 @@ a.list-group-item.active h4 span {
     z-index: 1000;
 }
 #id_search .input-group { opacity:0.53 }
-#id_search .input-group:hover { opacity:0.3 }
+/*#id_search .input-group:hover { opacity:0.3 }*/
 #id_search .form-control::-webkit-input-placeholder { color:#333; }
 #id_search .form-control:-moz-placeholder { color: #333; } /* Firefox 18- */
 #id_search .form-control::-moz-placeholder {  color: #333; } /* Firefox 19+ */
@@ -3965,4 +3965,9 @@ hr {
 }
 #asset_exchange_page.no_assets .content-splitter-right {
   left: 0 !important;
+}
+
+#sideBalance {
+  display: block;
+  margin-bottom: 5px;
 }
