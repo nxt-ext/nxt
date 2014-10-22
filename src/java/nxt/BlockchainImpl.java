@@ -46,6 +46,15 @@ final class BlockchainImpl implements Blockchain {
     }
 
     @Override
+    public BlockImpl getLastBlock(int timestamp) {
+        BlockImpl block = lastBlock.get();
+        if (timestamp >= block.getTimestamp()) {
+            return block;
+        }
+        return BlockDb.findLastBlock(timestamp);
+    }
+
+    @Override
     public BlockImpl getBlock(long blockId) {
         BlockImpl block = lastBlock.get();
         if (block.getId() == blockId) {
