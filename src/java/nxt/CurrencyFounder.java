@@ -42,14 +42,14 @@ public class CurrencyFounder {
     private final long accountId;
     private long value;
 
-    CurrencyFounder(long currencyId, long accountId, long value) {
+    private CurrencyFounder(long currencyId, long accountId, long value) {
         this.currencyId = currencyId;
         this.dbKey = currencyFounderDbKeyFactory.newKey(currencyId, accountId);
         this.accountId = accountId;
         this.value = value;
     }
 
-    CurrencyFounder(ResultSet rs) throws SQLException {
+    private CurrencyFounder(ResultSet rs) throws SQLException {
         this.currencyId = rs.getLong("currency_id");
         this.accountId = rs.getLong("account_id");
         this.dbKey = currencyFounderDbKeyFactory.newKey(currencyId, accountId);
@@ -99,7 +99,7 @@ public class CurrencyFounder {
         return currencyFounderTable.getManyBy(new DbClause.LongClause("currency_id", currencyId), from, to);
     }
 
-    public static void remove(long currencyId) {
+    static void remove(long currencyId) {
         for (CurrencyFounder founder : CurrencyFounder.getCurrencyFounders(currencyId, 0, Integer.MAX_VALUE)) {
             currencyFounderTable.delete(founder); //TODO: may need to move out
         }
