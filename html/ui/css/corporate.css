@@ -2154,7 +2154,7 @@ body > .header .navbar .nav > li > a:hover > .label {
 }
 .user-panel > .info a { /*opacity:0.9*/ }/* Mr. V Addition */
 .user-panel > .info a:hover { text-decoration: underline; }/* Mr. V Addition */
-.left-side .sidebar > .sidebar-menu { margin-top: 10px; background-color:#fff}/* Mr. V Addition */
+.left-side .sidebar > .sidebar-menu { margin-top: 15px; background-color:#fff}/* Mr. V Addition */
 
 /* skin-blue sidebar */
 .sidebar-default {
@@ -2215,7 +2215,7 @@ body > .header .navbar .nav > li > a:hover > .label {
 }
 .sidebar-form input[type="text"]:focus,
 .sidebar-form input[type="text"]:focus + .input-group-btn .btn {
-  background-color: #fff;
+  /*background-color: #fff;*/
   color: #666;
 }
 .sidebar-form input[type="text"]:focus + .input-group-btn .btn {
@@ -3129,7 +3129,11 @@ a.list-group-item.active h4 span {
     z-index: 1000;
 }
 #id_search .input-group { opacity:0.53 }
+<<<<<<< HEAD
 /*#id_search .input-group:hover { opacity:0.3 }*/
+=======
+#id_search .input-group:hover { /*opacity:1.0*/ }
+>>>>>>> ef33a01da6b3b4e2d0b82923141c1111b168d7bb
 #id_search .form-control::-webkit-input-placeholder { color:#333; }
 #id_search .form-control:-moz-placeholder { color: #333; } /* Firefox 18- */
 #id_search .form-control::-moz-placeholder {  color: #333; } /* Firefox 19+ */
