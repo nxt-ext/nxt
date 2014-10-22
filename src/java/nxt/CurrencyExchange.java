@@ -17,15 +17,17 @@ public final class CurrencyExchange {
     }
 
     private static void removeExpiredOffers(int height) {
+        //TODO: use a custom sql query to get only expired offers
         try (DbIterator<CurrencyOffer> buyOffers = CurrencyBuy.getAll(0, CurrencyBuy.getCount() - 1)) {
             for (CurrencyOffer offer : buyOffers) {
                 if (offer.getExpirationHeight() <= height) {
-                    removeOffer(offer.getCurrencyId(), offer); // TODO: move out of the iterator loop
+                    removeOffer(offer); // TODO: move out of the iterator loop
                 }
             }
         }
     }
 
+    //TODO: also enforce uniqueness of (currency_id, account_id, height) using a unique index
     static void publishOffer(Transaction transaction, Attachment.MonetarySystemPublishExchangeOffer attachment) {
         removeOffer(attachment.getCurrencyId(), transaction.getSenderId());
         CurrencyBuy.addOffer(transaction, attachment);
@@ -104,7 +106,7 @@ public final class CurrencyExchange {
         account.addToUnconfirmedBalanceNQT(remainingAmountNQT);
     }
 
-    private static void removeOffer(long currencyId, CurrencyOffer buyOffer) {
+    private static void removeOffer(CurrencyOffer buyOffer) {
         CurrencyOffer sellOffer = buyOffer.getCounterOffer();
 
         CurrencyBuy.remove(buyOffer);
@@ -112,14 +114,15 @@ public final class CurrencyExchange {
 
         Account account = Account.getAccount(buyOffer.getAccountId());
         account.addToUnconfirmedBalanceNQT(buyOffer.getSupply());
-        account.addToUnconfirmedCurrencyUnits(currencyId, sellOffer.getSupply());
+        account.addToUnconfirmedCurrencyUnits(buyOffer.getCurrencyId(), sellOffer.getSupply());
     }
 
     private static void removeOffer(long currencyId, long accountId) {
+        //TODO: optimize by using both currencyId and accountId in a custom sql query
         try (DbIterator<CurrencyOffer> buyOffers = CurrencyBuy.getCurrencyOffers(currencyId)) {
             for (CurrencyOffer offer : buyOffers) {
                 if (offer.getAccountId() == accountId) {
-                    removeOffer(currencyId, offer);
+                    removeOffer(offer);
                     return;
                 }
             }

@@ -18,6 +18,7 @@ public final class Exchange {
 
     private static final Listeners<Exchange,Event> listeners = new Listeners<>();
 
+    //TODO: shouldn't exchange have buy_offer_id and sell_offer_id instead of just offer_id?
     private static final DbKey.LongKeyFactory<Exchange> exchangeDbKeyFactory = new DbKey.LongKeyFactory<Exchange>("offer_id") {
 
         @Override
