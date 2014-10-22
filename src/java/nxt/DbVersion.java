@@ -401,47 +401,47 @@ final class DbVersion {
             case 125:
                 apply("CREATE INDEX IF NOT EXISTS bid_order_creation_idx ON bid_order (creation_height DESC)");
             case 126:
-                apply("DROP TABLE IF EXISTS poll");
+                apply("CREATE UNIQUE INDEX IF NOT EXISTS block_timestamp_idx ON block (timestamp DESC)");
             case 127:
-                apply("DROP TABLE IF EXISTS vote");
+                apply("DROP TABLE IF EXISTS poll");
             case 128:
+                apply("DROP TABLE IF EXISTS vote");
+            case 129:
                 apply("CREATE TABLE IF NOT EXISTS vote (db_id IDENTITY, id BIGINT NOT NULL, " +
                         "FOREIGN KEY (id) REFERENCES transaction (id), poll_id BIGINT NOT NULL, "
                         + "voter_id BIGINT NOT NULL, vote_bytes VARBINARY NOT NULL, height INT NOT NULL)");
-            case 129:
-                apply("CREATE UNIQUE INDEX IF NOT EXISTS vote_id_idx ON vote (id)");
             case 130:
-                apply("CREATE INDEX IF NOT EXISTS vote_poll_id_idx ON vote (poll_id)");
+                apply("CREATE UNIQUE INDEX IF NOT EXISTS vote_id_idx ON vote (id)");
             case 131:
+                apply("CREATE INDEX IF NOT EXISTS vote_poll_id_idx ON vote (poll_id)");
+            case 132:
                 apply("CREATE TABLE IF NOT EXISTS poll (db_id IDENTITY, id BIGINT NOT NULL, "
                         + "FOREIGN KEY (id) REFERENCES transaction (id), name VARCHAR NOT NULL, "
                         + "description VARCHAR, options ARRAY NOT NULL, min_num_options TINYINT, max_num_options TINYINT, "
                         + "finish INT NOT NULL, option_model TINYINT NOT NULL, voting_model TINYINT NOT NULL, min_balance BIGINT, "
                         + "asset_id BIGINT, finished BOOLEAN, height INT NOT NULL)");
-            case 132:
+            case 133:
                 apply("CREATE UNIQUE INDEX IF NOT EXISTS poll_id_idx ON poll (id)");
                 //todo:fix
-            case 133:
-                apply("ALTER TABLE vote ADD FOREIGN KEY (poll_id) REFERENCES poll (id)");
             case 134:
+                apply("ALTER TABLE vote ADD FOREIGN KEY (poll_id) REFERENCES poll (id)");
+            case 135:
                 apply("CREATE TABLE IF NOT EXISTS poll_results (db_id IDENTITY, id BIGINT NOT NULL, "
                         + "FOREIGN KEY (id) REFERENCES poll (id) ON DELETE CASCADE, "
                         + "results_type TINYINT NOT NULL, results_json VARCHAR NOT NULL, height INT NOT NULL, "
                         + "latest BOOLEAN DEFAULT TRUE NOT NULL)");
-            case 135:
-                apply("ALTER TABLE transaction ADD COLUMN IF NOT EXISTS two_phased BOOLEAN NOT NULL DEFAULT FALSE");
             case 136:
+                apply("ALTER TABLE transaction ADD COLUMN IF NOT EXISTS two_phased BOOLEAN NOT NULL DEFAULT FALSE");
+            case 137:
                 apply("CREATE TABLE IF NOT EXISTS pending_transactions (db_id IDENTITY, id BIGINT NOT NULL, "
                         + "FOREIGN KEY (id) REFERENCES transaction (id) ON DELETE CASCADE, finish INT NOT NULL,  "
                         + "voting_model TINYINT NOT NULL, quorum BIGINT NOT NULL, min_balance BIGINT NOT NULL, "
                         + "asset_id BIGINT NOT NULL, finished BOOLEAN NOT NULL, height INT NOT NULL, latest BOOLEAN DEFAULT TRUE NOT NULL)");
-            case 137:
+            case 138:
                 BlockchainProcessorImpl.getInstance().validateAtNextScan();
                 BlockchainProcessorImpl.getInstance().forceScanAtStart();
                 apply(null);
-            case 127:
-                apply("CREATE UNIQUE INDEX IF NOT EXISTS block_timestamp_idx ON block (timestamp DESC)");
-            case 128:
+            case 139:
                 return;
             default:
                 throw new RuntimeException("Database inconsistent with code, probably trying to run older code on newer database");
