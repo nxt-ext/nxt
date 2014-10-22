@@ -70,6 +70,7 @@ final class JSONData {
         json.put("asset", Convert.toUnsignedLong(asset.getId()));
         json.put("numberOfTrades", Trade.getTradeCount(asset.getId()));
         json.put("numberOfTransfers", AssetTransfer.getTransferCount(asset.getId()));
+        json.put("numberOfAccounts", Account.getAssetAccountsCount(asset.getId()));
         return json;
     }
 
@@ -79,7 +80,6 @@ final class JSONData {
         json.put("asset", Convert.toUnsignedLong(accountAsset.getAssetId()));
         json.put("quantityQNT", String.valueOf(accountAsset.getQuantityQNT()));
         json.put("unconfirmedQuantityQNT", String.valueOf(accountAsset.getUnconfirmedQuantityQNT()));
-        json.put("height", accountAsset.getHeight());
         return json;
     }
 
@@ -156,6 +156,7 @@ final class JSONData {
         putAccount(json, "seller", goods.getSellerId());
         json.put("tags", goods.getTags());
         json.put("delisted", goods.isDelisted());
+        json.put("timestamp", goods.getTimestamp());
         return json;
     }
 
@@ -277,6 +278,7 @@ final class JSONData {
         Asset asset = Asset.getAsset(trade.getAssetId());
         json.put("name", asset.getName());
         json.put("decimals", asset.getDecimals());
+        json.put("tradeType", trade.isBuy() ? "buy" : "sell");
         return json;
     }
 
@@ -291,6 +293,7 @@ final class JSONData {
         Asset asset = Asset.getAsset(assetTransfer.getAssetId());
         json.put("name", asset.getName());
         json.put("decimals", asset.getDecimals());
+        json.put("timestamp", assetTransfer.getTimestamp());
         return json;
     }
 

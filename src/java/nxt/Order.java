@@ -26,24 +26,19 @@ public abstract class Order {
                 break;
             }
 
-            long quantityQNT = Math.min(askOrder.getQuantityQNT(), bidOrder.getQuantityQNT());
-            long priceNQT = askOrder.getHeight() < bidOrder.getHeight()
-                    || (askOrder.getHeight() == bidOrder.getHeight()
-                    && askOrder.getId() < bidOrder.getId())
-                    ? askOrder.getPriceNQT() : bidOrder.getPriceNQT();
 
-            Trade.addTrade(assetId, Nxt.getBlockchain().getLastBlock(), askOrder, bidOrder, quantityQNT, priceNQT);
+            Trade trade = Trade.addTrade(assetId, Nxt.getBlockchain().getLastBlock(), askOrder, bidOrder);
 
-            askOrder.updateQuantityQNT(Convert.safeSubtract(askOrder.getQuantityQNT(), quantityQNT));
+            askOrder.updateQuantityQNT(Convert.safeSubtract(askOrder.getQuantityQNT(), trade.getQuantityQNT()));
             Account askAccount = Account.getAccount(askOrder.getAccountId());
-            askAccount.addToBalanceAndUnconfirmedBalanceNQT(Convert.safeMultiply(quantityQNT, priceNQT));
-            askAccount.addToAssetBalanceQNT(assetId, -quantityQNT);
+            askAccount.addToBalanceAndUnconfirmedBalanceNQT(Convert.safeMultiply(trade.getQuantityQNT(), trade.getPriceNQT()));
+            askAccount.addToAssetBalanceQNT(assetId, -trade.getQuantityQNT());
 
-            bidOrder.updateQuantityQNT(Convert.safeSubtract(bidOrder.getQuantityQNT(), quantityQNT));
+            bidOrder.updateQuantityQNT(Convert.safeSubtract(bidOrder.getQuantityQNT(), trade.getQuantityQNT()));
             Account bidAccount = Account.getAccount(bidOrder.getAccountId());
-            bidAccount.addToAssetAndUnconfirmedAssetBalanceQNT(assetId, quantityQNT);
-            bidAccount.addToBalanceNQT(-Convert.safeMultiply(quantityQNT, priceNQT));
-            bidAccount.addToUnconfirmedBalanceNQT(Convert.safeMultiply(quantityQNT, (bidOrder.getPriceNQT() - priceNQT)));
+            bidAccount.addToAssetAndUnconfirmedAssetBalanceQNT(assetId, trade.getQuantityQNT());
+            bidAccount.addToBalanceNQT(-Convert.safeMultiply(trade.getQuantityQNT(), trade.getPriceNQT()));
+            bidAccount.addToUnconfirmedBalanceNQT(Convert.safeMultiply(trade.getQuantityQNT(), (bidOrder.getPriceNQT() - trade.getPriceNQT())));
 
         }
 
@@ -169,6 +164,11 @@ public abstract class Order {
             @Override
             protected void save(Connection con, Ask ask) throws SQLException {
                 ask.save(con, table);
+            }
+
+            @Override
+            protected String defaultSort() {
+                return " ORDER BY creation_height DESC ";
             }
 
         };
@@ -301,6 +301,12 @@ public abstract class Order {
             protected void save(Connection con, Bid bid) throws SQLException {
                 bid.save(con, table);
             }
+
+            @Override
+            protected String defaultSort() {
+                return " ORDER BY creation_height DESC ";
+            }
+
         };
 
         public static int getCount() {

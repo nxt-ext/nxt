@@ -36,7 +36,7 @@ public abstract class ValuesDbTable<T,V> extends DerivedDbTable {
         }
         try (Connection con = Db.getConnection();
              PreparedStatement pstmt = con.prepareStatement("SELECT * FROM " + table + dbKeyFactory.getPKClause()
-             + (multiversion ? " AND latest = TRUE" : ""))) {
+             + (multiversion ? " AND latest = TRUE" : "") + " ORDER BY db_id DESC")) {
             dbKey.setPK(pstmt);
             values = get(con, pstmt);
             if (Db.isInTransaction()) {
@@ -62,26 +62,6 @@ public abstract class ValuesDbTable<T,V> extends DerivedDbTable {
         }
     }
 
-    public final void insert(T t, V v) {
-        if (!Db.isInTransaction()) {
-            throw new IllegalStateException("Not in transaction");
-        }
-        DbKey dbKey = dbKeyFactory.newKey(t);
-        Db.getCache(table).remove(dbKey);
-        try (Connection con = Db.getConnection()) {
-            if (multiversion) {
-                try (PreparedStatement pstmt = con.prepareStatement("UPDATE " + table
-                        + " SET latest = FALSE " + dbKeyFactory.getPKClause() + " AND latest = TRUE LIMIT 1")) {
-                    dbKey.setPK(pstmt);
-                    pstmt.executeUpdate();
-                }
-            }
-            save(con, t, v);
-        } catch (SQLException e) {
-            throw new RuntimeException(e.toString(), e);
-        }
-    }
-
     public final void insert(T t, List<V> values) {
         if (!Db.isInTransaction()) {
             throw new IllegalStateException("Not in transaction");
@@ -102,6 +82,18 @@ public abstract class ValuesDbTable<T,V> extends DerivedDbTable {
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
         }
+    }
+
+    @Override
+    public void rollback(int height) {
+        super.rollback(height);
+        Db.getCache(table).clear();
+    }
+
+    @Override
+    public final void truncate() {
+        super.truncate();
+        Db.getCache(table).clear();
     }
 
 }

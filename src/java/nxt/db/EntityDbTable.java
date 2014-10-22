@@ -11,6 +11,7 @@ public abstract class EntityDbTable<T> extends DerivedDbTable {
 
     private final boolean multiversion;
     protected final DbKey.Factory<T> dbKeyFactory;
+    private final String defaultSort;
 
     protected EntityDbTable(String table, DbKey.Factory<T> dbKeyFactory) {
         this(table, dbKeyFactory, false);
@@ -20,6 +21,7 @@ public abstract class EntityDbTable<T> extends DerivedDbTable {
         super(table);
         this.dbKeyFactory = dbKeyFactory;
         this.multiversion = multiversion;
+        this.defaultSort = " ORDER BY " + (multiversion ? dbKeyFactory.getPKColumns() : " db_id DESC ");
     }
 
     protected abstract T load(Connection con, ResultSet rs) throws SQLException;
@@ -27,7 +29,7 @@ public abstract class EntityDbTable<T> extends DerivedDbTable {
     protected abstract void save(Connection con, T t) throws SQLException;
 
     protected String defaultSort() {
-        return "ORDER BY height DESC";
+        return defaultSort;
     }
 
     public final void checkAvailable(int height) {
@@ -201,11 +203,15 @@ public abstract class EntityDbTable<T> extends DerivedDbTable {
     }
 
     public final DbIterator<T> getAll(int from, int to) {
+        return getAll(from, to, defaultSort());
+    }
+
+    public final DbIterator<T> getAll(int from, int to, String sort) {
         Connection con = null;
         try {
             con = Db.getConnection();
             PreparedStatement pstmt = con.prepareStatement("SELECT * FROM " + table
-                     + (multiversion ? " WHERE latest = TRUE " : " ") + defaultSort()
+                     + (multiversion ? " WHERE latest = TRUE " : " ") + sort
                     + DbUtils.limitsClause(from, to));
             DbUtils.setLimits(1, pstmt, from, to);
             return getManyBy(con, pstmt, true);
@@ -216,6 +222,10 @@ public abstract class EntityDbTable<T> extends DerivedDbTable {
     }
 
     public final DbIterator<T> getAll(int height, int from, int to) {
+        return getAll(height, from, to, defaultSort());
+    }
+
+    public final DbIterator<T> getAll(int height, int from, int to, String sort) {
         checkAvailable(height);
         Connection con = null;
         try {
@@ -224,7 +234,7 @@ public abstract class EntityDbTable<T> extends DerivedDbTable {
                     + (multiversion ? " AND (latest = TRUE OR (latest = FALSE "
                     + "AND EXISTS (SELECT 1 FROM " + table + " AS b WHERE b.height > ? AND " + dbKeyFactory.getSelfJoinClause()
                     + ") AND NOT EXISTS (SELECT 1 FROM " + table + " AS b WHERE b.height <= ? AND " + dbKeyFactory.getSelfJoinClause()
-                    + " AND b.height > a.height))) " : " ") + defaultSort()
+                    + " AND b.height > a.height))) " : " ") + sort
                     + DbUtils.limitsClause(from, to));
             int i = 0;
             pstmt.setInt(++i, height);
@@ -287,6 +297,18 @@ public abstract class EntityDbTable<T> extends DerivedDbTable {
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
         }
+    }
+
+    @Override
+    public void rollback(int height) {
+        super.rollback(height);
+        Db.getCache(table).clear();
+    }
+
+    @Override
+    public final void truncate() {
+        super.truncate();
+        Db.getCache(table).clear();
     }
 
 }

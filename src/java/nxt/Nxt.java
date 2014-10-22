@@ -18,7 +18,7 @@ import java.util.Properties;
 
 public final class Nxt {
 
-    public static final String VERSION = "1.3.0";
+    public static final String VERSION = "1.3.2";
     public static final String APPLICATION = "NRS";
 
     private static volatile Time time = new Time.EpochTime();
@@ -154,7 +154,6 @@ public final class Nxt {
         API.shutdown();
         Users.shutdown();
         Peers.shutdown();
-        TransactionProcessorImpl.getInstance().shutdown();
         ThreadPool.shutdown();
         Db.shutdown();
         Logger.logShutdownMessage("Nxt server " + VERSION + " stopped.");

@@ -31,7 +31,7 @@ public final class AssetTransfer {
 
     };
 
-    private static final EntityDbTable<AssetTransfer> transferTable = new EntityDbTable<AssetTransfer>("asset_transfer", transferDbKeyFactory) {
+    private static final EntityDbTable<AssetTransfer> assetTransferTable = new EntityDbTable<AssetTransfer>("asset_transfer", transferDbKeyFactory) {
 
         @Override
         protected AssetTransfer load(Connection con, ResultSet rs) throws SQLException {
@@ -46,11 +46,11 @@ public final class AssetTransfer {
     };
 
     public static DbIterator<AssetTransfer> getAllTransfers(int from, int to) {
-        return transferTable.getAll(from, to);
+        return assetTransferTable.getAll(from, to);
     }
 
     public static int getCount() {
-        return transferTable.getCount();
+        return assetTransferTable.getCount();
     }
 
     public static boolean addListener(Listener<AssetTransfer> listener, Event eventType) {
@@ -62,7 +62,7 @@ public final class AssetTransfer {
     }
 
     public static DbIterator<AssetTransfer> getAssetTransfers(long assetId, int from, int to) {
-        return transferTable.getManyBy(new DbClause.LongClause("asset_id", assetId), from, to);
+        return assetTransferTable.getManyBy(new DbClause.LongClause("asset_id", assetId), from, to);
     }
 
     public static DbIterator<AssetTransfer> getAccountAssetTransfers(long accountId, int from, int to) {
@@ -77,7 +77,7 @@ public final class AssetTransfer {
             pstmt.setLong(++i, accountId);
             pstmt.setLong(++i, accountId);
             DbUtils.setLimits(++i, pstmt, from, to);
-            return transferTable.getManyBy(con, pstmt, false);
+            return assetTransferTable.getManyBy(con, pstmt, false);
         } catch (SQLException e) {
             DbUtils.close(con);
             throw new RuntimeException(e.toString(), e);
@@ -98,7 +98,7 @@ public final class AssetTransfer {
             pstmt.setLong(++i, accountId);
             pstmt.setLong(++i, assetId);
             DbUtils.setLimits(++i, pstmt, from, to);
-            return transferTable.getManyBy(con, pstmt, false);
+            return assetTransferTable.getManyBy(con, pstmt, false);
         } catch (SQLException e) {
             DbUtils.close(con);
             throw new RuntimeException(e.toString(), e);
@@ -120,7 +120,7 @@ public final class AssetTransfer {
 
     static AssetTransfer addAssetTransfer(Transaction transaction, Attachment.ColoredCoinsAssetTransfer attachment) {
         AssetTransfer assetTransfer = new AssetTransfer(transaction, attachment);
-        transferTable.insert(assetTransfer);
+        assetTransferTable.insert(assetTransfer);
         listeners.notify(assetTransfer, Event.ASSET_TRANSFER);
         return assetTransfer;
     }
@@ -135,6 +135,7 @@ public final class AssetTransfer {
     private final long senderId;
     private final long recipientId;
     private final long quantityQNT;
+    private final int timestamp;
 
     private AssetTransfer(Transaction transaction, Attachment.ColoredCoinsAssetTransfer attachment) {
         this.id = transaction.getId();
@@ -144,6 +145,7 @@ public final class AssetTransfer {
         this.senderId = transaction.getSenderId();
         this.recipientId = transaction.getRecipientId();
         this.quantityQNT = attachment.getQuantityQNT();
+        this.timestamp = transaction.getBlockTimestamp();
     }
 
     private AssetTransfer(ResultSet rs) throws SQLException {
@@ -153,19 +155,21 @@ public final class AssetTransfer {
         this.senderId = rs.getLong("sender_id");
         this.recipientId = rs.getLong("recipient_id");
         this.quantityQNT = rs.getLong("quantity");
+        this.timestamp = rs.getInt("timestamp");
         this.height = rs.getInt("height");
     }
 
     private void save(Connection con) throws SQLException {
         try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO asset_transfer (id, asset_id, "
-                + "sender_id, recipient_id, quantity, height) "
-                + "VALUES (?, ?, ?, ?, ?, ?)")) {
+                + "sender_id, recipient_id, quantity, timestamp, height) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?)")) {
             int i = 0;
             pstmt.setLong(++i, this.getId());
             pstmt.setLong(++i, this.getAssetId());
             pstmt.setLong(++i, this.getSenderId());
             pstmt.setLong(++i, this.getRecipientId());
             pstmt.setLong(++i, this.getQuantityQNT());
+            pstmt.setInt(++i, this.getTimestamp());
             pstmt.setInt(++i, this.getHeight());
             pstmt.executeUpdate();
         }
@@ -186,6 +190,10 @@ public final class AssetTransfer {
     }
 
     public long getQuantityQNT() { return quantityQNT; }
+
+    public int getTimestamp() {
+        return timestamp;
+    }
 
     public int getHeight() {
         return height;

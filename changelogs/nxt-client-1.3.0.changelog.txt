@@ -83,9 +83,14 @@ The Trade JSON now includes buyer and seller account ids, the height at which
 the trade occurred, the asset name, and the heights at which the ask and bid
 orders were accepted in the blockchain.
 
+The Asset JSON now includes total number of transfers, and number of accounts
+holding the asset.
+
 parseTransaction does not just return an error when trying to parse an invalid
 transaction bytes or JSON, but adds a validate=false field, plus the actual error 
 message, in addition to the parsed transaction JSON.
+
+getState no longer includes total effective balance.
 
 
 New API requests:
@@ -101,10 +106,12 @@ getAllOpenAskOrders and getAllOpenBidOrders now replace getAllOpenOrders, but
 only returning ask or bid orders respectively, and allow firstIndex/lastIndex
 pagination.
 
-getAssetTransfers - retrieves the asset transfers for an asset, account, or both.
+getAssetTransfers - retrieves the asset transfers for an asset, account, or both,
+sorted by height descending.
 
 getAssetAccounts - accepts an asset parameter and returns all accounts holding
-this asset as of the current height, and the asset quantity each one owns.
+this asset as of the current height, and the asset quantity each one owns, sorted
+by asset quantity descending.
 Takes an optional height parameter to allow retrieving asset holders as of a
 previous blockchain height.
 
@@ -119,6 +126,9 @@ trimming disabled, or maxRollback set high enough to cover that height.
 longConvert - an utility API to convert between signed long ids as used in the
 database and unsigned long ids represented as strings. Accepts an id in either
 form and returns both the signed and unsigned versions.
+
+getECBlock - returns the ecBlockId and ecBlockHeight given an optional timestamp,
+current time if not supplied.
 
 
 New debug API requests:

@@ -90,6 +90,11 @@ public final class DigitalGoodsStore {
                 goods.save(con);
             }
 
+            @Override
+            protected String defaultSort() {
+                return " ORDER BY timestamp DESC, id ASC ";
+            }
+
         };
 
         static void init() {}
@@ -243,6 +248,11 @@ public final class DigitalGoodsStore {
             @Override
             protected void save(Connection con, Purchase purchase) throws SQLException {
                 purchase.save(con);
+            }
+
+            @Override
+            protected String defaultSort() {
+                return " ORDER BY timestamp DESC, id ASC ";
             }
 
         };
@@ -472,7 +482,7 @@ public final class DigitalGoodsStore {
             if (!hasFeedbackNotes) {
                 return null;
             }
-            feedbackNotes = feedbackTable.get(feedbackDbKeyFactory.newKey(id));
+            feedbackNotes = feedbackTable.get(feedbackDbKeyFactory.newKey(this));
             return feedbackNotes;
         }
 
@@ -483,14 +493,14 @@ public final class DigitalGoodsStore {
             feedbackNotes.add(feedbackNote);
             this.hasFeedbackNotes = true;
             purchaseTable.insert(this);
-            feedbackTable.insert(this, feedbackNote);
+            feedbackTable.insert(this, feedbackNotes);
 		}
 
         public List<String> getPublicFeedback() {
             if (!hasPublicFeedbacks) {
                 return null;
             }
-            publicFeedbacks = publicFeedbackTable.get(publicFeedbackDbKeyFactory.newKey(id));
+            publicFeedbacks = publicFeedbackTable.get(publicFeedbackDbKeyFactory.newKey(this));
             return publicFeedbacks;
         }
 
@@ -501,7 +511,7 @@ public final class DigitalGoodsStore {
             publicFeedbacks.add(publicFeedback);
             this.hasPublicFeedbacks = true;
             purchaseTable.insert(this);
-            publicFeedbackTable.insert(this, publicFeedback);
+            publicFeedbackTable.insert(this, publicFeedbacks);
         }
 
         public long getDiscountNQT() {
@@ -552,7 +562,7 @@ public final class DigitalGoodsStore {
                 return index;
             }
         };
-        return Goods.goodsTable.getManyBy(dbClause, from, to, " ORDER BY timestamp DESC ");
+        return Goods.goodsTable.getManyBy(dbClause, from, to);
     }
 
     public static DbIterator<Goods> getSellerGoods(final long sellerId, final boolean inStockOnly, int from, int to) {
@@ -563,7 +573,7 @@ public final class DigitalGoodsStore {
                 return index;
             }
         };
-        return Goods.goodsTable.getManyBy(dbClause, from, to, " ORDER BY name ASC, description ASC, id ASC ");
+        return Goods.goodsTable.getManyBy(dbClause, from, to, " ORDER BY name ASC, timestamp DESC, id ASC ");
     }
 
     public static DbIterator<Purchase> getAllPurchases(int from, int to) {
@@ -571,13 +581,11 @@ public final class DigitalGoodsStore {
     }
 
     public static DbIterator<Purchase> getSellerPurchases(long sellerId, int from, int to) {
-        return Purchase.purchaseTable.getManyBy(new DbClause.LongClause("seller_id", sellerId), from, to,
-                " ORDER BY timestamp DESC, id ASC ");
+        return Purchase.purchaseTable.getManyBy(new DbClause.LongClause("seller_id", sellerId), from, to);
     }
 
     public static DbIterator<Purchase> getBuyerPurchases(long buyerId, int from, int to) {
-        return Purchase.purchaseTable.getManyBy(new DbClause.LongClause("buyer_id", buyerId), from, to,
-                " ORDER BY timestamp DESC, id ASC ");
+        return Purchase.purchaseTable.getManyBy(new DbClause.LongClause("buyer_id", buyerId), from, to);
     }
 
     public static DbIterator<Purchase> getSellerBuyerPurchases(final long sellerId, final long buyerId, int from, int to) {
@@ -589,8 +597,7 @@ public final class DigitalGoodsStore {
                 return index;
             }
         };
-        return Purchase.purchaseTable.getManyBy(dbClause, from, to,
-                " ORDER BY timestamp DESC, id ASC ");
+        return Purchase.purchaseTable.getManyBy(dbClause, from, to);
     }
 
     public static Purchase getPurchase(long purchaseId) {
@@ -605,7 +612,7 @@ public final class DigitalGoodsStore {
                 return index;
             }
         };
-        return Purchase.purchaseTable.getManyBy(dbClause, from, to, " ORDER BY timestamp DESC, id ASC ");
+        return Purchase.purchaseTable.getManyBy(dbClause, from, to);
     }
 
     static Purchase getPendingPurchase(long purchaseId) {
@@ -621,7 +628,7 @@ public final class DigitalGoodsStore {
                 return index;
             }
         };
-        return Purchase.purchaseTable.getManyBy(dbClause, 0, -1, " ORDER BY timestamp DESC, id ASC ");
+        return Purchase.purchaseTable.getManyBy(dbClause, 0, -1);
 	}
 
     private static void addPurchase(Transaction transaction,  Attachment.DigitalGoodsPurchase attachment, long sellerId) {

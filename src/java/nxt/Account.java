@@ -34,7 +34,6 @@ public final class Account {
         private final DbKey dbKey;
         private long quantityQNT;
         private long unconfirmedQuantityQNT;
-        private int height;
 
         private AccountAsset(long accountId, long assetId, long quantityQNT, long unconfirmedQuantityQNT) {
             this.accountId = accountId;
@@ -50,7 +49,6 @@ public final class Account {
             this.dbKey = accountAssetDbKeyFactory.newKey(this.accountId, this.assetId);
             this.quantityQNT = rs.getLong("quantity");
             this.unconfirmedQuantityQNT = rs.getLong("unconfirmed_quantity");
-            this.height = rs.getInt("height");
         }
 
         private void save(Connection con) throws SQLException {
@@ -83,17 +81,12 @@ public final class Account {
             return unconfirmedQuantityQNT;
         }
 
-        public int getHeight() {
-            return height;
-        }
-
         private void save() {
+            checkBalance(this.accountId, this.quantityQNT, this.unconfirmedQuantityQNT);
             if (this.quantityQNT > 0 || this.unconfirmedQuantityQNT > 0) {
                 accountAssetTable.insert(this);
-            } else if (this.quantityQNT == 0 && this.unconfirmedQuantityQNT == 0) {
+            } else {
                 accountAssetTable.delete(this);
-            } else if (this.quantityQNT < 0 || this.unconfirmedQuantityQNT < 0) {
-                throw new DoubleSpendingException("Negative asset balance for account " + Convert.toUnsignedLong(this.accountId));
             }
         }
 
@@ -103,21 +96,6 @@ public final class Account {
                     + " quantity: " + quantityQNT + " unconfirmedQuantity: " + unconfirmedQuantityQNT;
         }
 
-        @Override
-        public boolean equals(Object o) {
-            if (! (o instanceof AccountAsset)) {
-                return false;
-            }
-            AccountAsset other = (AccountAsset)o;
-            return this.accountId == other.accountId && this.assetId == other.assetId && this.quantityQNT == other.quantityQNT
-                    && this.unconfirmedQuantityQNT == other.unconfirmedQuantityQNT && this.height == other.height;
-        }
-
-        @Override
-        public int hashCode() {
-            return (int)(accountId ^ (accountId >>> 32) ^ assetId ^ (assetId >>> 32) ^ quantityQNT ^ (quantityQNT >>> 32)
-                    ^ unconfirmedQuantityQNT ^ (unconfirmedQuantityQNT >>> 32) ^ height);
-        }
     }
 
     public static class AccountLease {
@@ -230,13 +208,17 @@ public final class Account {
             accountAsset.save(con);
         }
 
+        @Override
+        protected String defaultSort() {
+            return " ORDER BY quantity DESC, account_id, asset_id ";
+        }
+
     };
 
     private static final DerivedDbTable accountGuaranteedBalanceTable = new DerivedDbTable("account_guaranteed_balance") {
 
         @Override
         public void trim(int height) {
-            //Logger.logDebugMessage("Trimming account_guaranteed_balance");
             try (Connection con = Db.getConnection();
                  PreparedStatement pstmtDelete = con.prepareStatement("DELETE FROM account_guaranteed_balance "
                          + "WHERE height < ?")) {
@@ -287,8 +269,25 @@ public final class Account {
         return accountTable.getCount();
     }
 
+    public static int getAssetAccountsCount(long assetId) {
+        try (Connection con = Db.getConnection();
+             PreparedStatement pstmt = con.prepareStatement("SELECT COUNT(*) FROM account_asset WHERE asset_id = ? AND latest = TRUE")) {
+            pstmt.setLong(1, assetId);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                rs.next();
+                return rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e.toString(), e);
+        }
+    }
+
     public static Account getAccount(long id) {
         return id == 0 ? null : accountTable.get(accountDbKeyFactory.newKey(id));
+    }
+
+    public static Account getAccount(long id, int height) {
+        return id == 0 ? null : accountTable.get(accountDbKeyFactory.newKey(id), height);
     }
 
     public static Account getAccount(byte[] publicKey) {
@@ -326,18 +325,18 @@ public final class Account {
     };
 
     public static DbIterator<Account> getLeasingAccounts() {
-        return accountTable.getManyBy(leasingAccountsClause, 0, -1, " ORDER BY id ASC ");
+        return accountTable.getManyBy(leasingAccountsClause, 0, -1);
     }
 
     public static DbIterator<AccountAsset> getAssetAccounts(long assetId, int from, int to) {
-        return accountAssetTable.getManyBy(new DbClause.LongClause("asset_id", assetId), from, to);
+        return accountAssetTable.getManyBy(new DbClause.LongClause("asset_id", assetId), from, to, " ORDER BY quantity DESC, account_id ");
     }
 
     public static DbIterator<AccountAsset> getAssetAccounts(long assetId, int height, int from, int to) {
         if (height < 0) {
             return getAssetAccounts(assetId, from, to);
         }
-        return accountAssetTable.getManyBy(new DbClause.LongClause("asset_id", assetId), height, from, to);
+        return accountAssetTable.getManyBy(new DbClause.LongClause("asset_id", assetId), height, from, to, " ORDER BY quantity DESC, account_id ");
     }
 
     static void init() {}
@@ -540,18 +539,23 @@ public final class Account {
     }
 
     public long getGuaranteedBalanceNQT(final int numberOfConfirmations) {
-        if (numberOfConfirmations >= Nxt.getBlockchain().getHeight()) {
+        return getGuaranteedBalanceNQT(numberOfConfirmations, Nxt.getBlockchain().getHeight());
+    }
+
+    public long getGuaranteedBalanceNQT(final int numberOfConfirmations, final int currentHeight) {
+        if (numberOfConfirmations >= currentHeight) {
             return 0;
         }
         if (numberOfConfirmations > 2880 || numberOfConfirmations < 0) {
             throw new IllegalArgumentException("Number of required confirmations must be between 0 and " + 2880);
         }
-        int height = Nxt.getBlockchain().getHeight() - numberOfConfirmations;
+        int height = currentHeight - numberOfConfirmations;
         try (Connection con = Db.getConnection();
              PreparedStatement pstmt = con.prepareStatement("SELECT SUM (additions) AS additions "
-                     + "FROM account_guaranteed_balance WHERE account_id = ? AND height > ?")) {
+                     + "FROM account_guaranteed_balance WHERE account_id = ? AND height > ? AND height <= ?")) {
             pstmt.setLong(1, this.id);
             pstmt.setInt(2, height);
+            pstmt.setInt(3, currentHeight);
             try (ResultSet rs = pstmt.executeQuery()) {
                 if (!rs.next()) {
                     return balanceNQT;
@@ -644,9 +648,11 @@ public final class Account {
     // this.publicKey is already set to an array equal to key
     boolean setOrVerify(byte[] key, int height) {
         if (this.publicKey == null) {
-            this.publicKey = key;
-            this.keyHeight = -1;
-            accountTable.insert(this);
+            if (Db.isInTransaction()) {
+                this.publicKey = key;
+                this.keyHeight = -1;
+                accountTable.insert(this);
+            }
             return true;
         } else if (Arrays.equals(this.publicKey, key)) {
             return true;
@@ -657,11 +663,13 @@ public final class Account {
             return false;
         } else if (this.keyHeight >= height) {
             Logger.logMessage("DUPLICATE KEY!!!");
-            Logger.logMessage("Changing key for account " + Convert.toUnsignedLong(id) + " at height " + height
-                    + ", was previously set to a different one at height " + keyHeight);
-            this.publicKey = key;
-            this.keyHeight = height;
-            accountTable.insert(this);
+            if (Db.isInTransaction()) {
+                Logger.logMessage("Changing key for account " + Convert.toUnsignedLong(id) + " at height " + height
+                        + ", was previously set to a different one at height " + keyHeight);
+                this.publicKey = key;
+                this.keyHeight = height;
+                accountTable.insert(this);
+            }
             return true;
         }
         Logger.logMessage("DUPLICATE KEY!!!");
@@ -753,7 +761,7 @@ public final class Account {
         }
         this.balanceNQT = Convert.safeAdd(this.balanceNQT, amountNQT);
         addToGuaranteedBalanceNQT(amountNQT);
-        checkBalance();
+        checkBalance(this.id, this.balanceNQT, this.unconfirmedBalanceNQT);
         accountTable.insert(this);
         listeners.notify(this, Event.BALANCE);
     }
@@ -763,7 +771,7 @@ public final class Account {
             return;
         }
         this.unconfirmedBalanceNQT = Convert.safeAdd(this.unconfirmedBalanceNQT, amountNQT);
-        checkBalance();
+        checkBalance(this.id, this.balanceNQT, this.unconfirmedBalanceNQT);
         accountTable.insert(this);
         listeners.notify(this, Event.UNCONFIRMED_BALANCE);
     }
@@ -775,7 +783,7 @@ public final class Account {
         this.balanceNQT = Convert.safeAdd(this.balanceNQT, amountNQT);
         this.unconfirmedBalanceNQT = Convert.safeAdd(this.unconfirmedBalanceNQT, amountNQT);
         addToGuaranteedBalanceNQT(amountNQT);
-        checkBalance();
+        checkBalance(this.id, this.balanceNQT, this.unconfirmedBalanceNQT);
         accountTable.insert(this);
         listeners.notify(this, Event.BALANCE);
         listeners.notify(this, Event.UNCONFIRMED_BALANCE);
@@ -789,18 +797,18 @@ public final class Account {
         accountTable.insert(this);
     }
 
-    private void checkBalance() {
-        if (id == Genesis.CREATOR_ID) {
+    private static void checkBalance(long accountId, long confirmed, long unconfirmed) {
+        if (accountId == Genesis.CREATOR_ID) {
             return;
         }
-        if (balanceNQT < 0) {
-            throw new DoubleSpendingException("Negative balance for account " + Convert.toUnsignedLong(id));
+        if (confirmed < 0) {
+            throw new DoubleSpendingException("Negative balance or quantity for account " + Convert.toUnsignedLong(accountId));
         }
-        if (unconfirmedBalanceNQT < 0) {
-            throw new DoubleSpendingException("Negative unconfirmed balance for account " + Convert.toUnsignedLong(id));
+        if (unconfirmed < 0) {
+            throw new DoubleSpendingException("Negative unconfirmed balance or quantity for account " + Convert.toUnsignedLong(accountId));
         }
-        if (unconfirmedBalanceNQT > balanceNQT) {
-            throw new DoubleSpendingException("Unconfirmed balance exceeds balance for account " + Convert.toUnsignedLong(id));
+        if (unconfirmed > confirmed) {
+            throw new DoubleSpendingException("Unconfirmed exceeds confirmed balance or quantity for account " + Convert.toUnsignedLong(accountId));
         }
     }
 

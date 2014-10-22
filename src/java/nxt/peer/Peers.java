@@ -538,6 +538,16 @@ public final class Peers {
         return activePeers;
     }
 
+    public static Collection<? extends Peer> getPeers(Peer.State state) {
+        List<PeerImpl> peerList = new ArrayList<>();
+        for (PeerImpl peer : peers.values()) {
+            if (peer.getState() == state) {
+                peerList.add(peer);
+            }
+        }
+        return peerList;
+    }
+
     public static Peer getPeer(String peerAddress) {
         return peers.get(peerAddress);
     }
@@ -617,8 +627,8 @@ public final class Peers {
     static void updateAddress(PeerImpl peer) {
         String oldAddress = announcedAddresses.put(peer.getAnnouncedAddress(), peer.getPeerAddress());
         if (oldAddress != null && !peer.getPeerAddress().equals(oldAddress)) {
-            Logger.logDebugMessage("Peer " + peer.getAnnouncedAddress() + " has changed address from " + oldAddress
-                    + " to " + peer.getPeerAddress());
+            //Logger.logDebugMessage("Peer " + peer.getAnnouncedAddress() + " has changed address from " + oldAddress
+            //        + " to " + peer.getPeerAddress());
             Peer oldPeer = peers.remove(oldAddress);
             if (oldPeer != null) {
                 Peers.notifyListeners(oldPeer, Peers.Event.REMOVE);

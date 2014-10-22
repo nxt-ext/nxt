@@ -220,7 +220,7 @@
                         <div class="pull-left info">
                         	<div class="pull-left info">
                         		<div style="margin-bottom:5px;"><a href="#" id="account_name" data-toggle="modal" data-target="#account_info_modal" data-i18n="no_name_set">No Name Set</a></div>
-	                        	<div id="account_id_dropdown" class="dropdown" style="margin-bottom:10px">
+	                        	<div id="account_id_dropdown" class="dropdown" style="margin-bottom:5px">
 	                        		<span id="account_id" class="dropdown-toggle" data-toggle="dropdown" data-type="account_id" style="font-weight:bold"></span>
 									<ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu1">
 										<li role="presentation" class="copy_link"><a role="menuitem" tabindex="-1" href="#" data-type="account_rs" data-i18n="copy_account_id">Copy Account ID</a></li>
@@ -228,6 +228,7 @@
 										<li role="presentation" class="remote_only copy_link"><a role="menuitem" tabindex="-1" href="#" data-type="send_link" data-i18n="copy_send_nxt_link">Copy "Send NXT" Link</a></li>
 									</ul>
 								</div>
+								<a id="sideBalance" data-target="#account_details_modal" data-toggle="modal" href="#"><span id="account_balance_sidebar" class="loading_dots"><span>.</span><span>.</span><span>.</span></span> NXT</a>
 	                            <a href="#" id="forging_indicator" class="forging" style="display:none;font-size:13px;"><i class="fa fa-circle" style="font-size:12px;"></i> <span data-18n="forging">Forging</span></a>
                         	</div>
                         </div>
@@ -248,7 +249,8 @@
                             <ul class="treeview-menu" style="display: none;">
                                  <li><a href="#" data-page="asset_exchange"><i class="fa fa-angle-double-right"></i> <span data-i18n="asset_exchange">Asset Exchange</span></a></li>
                                  <li><a href="#" data-page="trade_history"><i class="fa fa-angle-double-right"></i> <span data-i18n="trade_history">Trade History</span></a></li>
-                            	<li><a href="#" data-page="my_assets"><i class="fa fa-angle-double-right"></i> <span data-i18n="my_assets">My Assets</span></a></li>
+                            	<li><a href="#" data-page="transfer_history"><i class="fa fa-angle-double-right"></i> <span data-i18n="transfer_history">Transfer History</span></a></li>
+                                <li><a href="#" data-page="my_assets"><i class="fa fa-angle-double-right"></i> <span data-i18n="my_assets">My Assets</span></a></li>
                                 <li><a href="#" data-page="open_orders"><i class="fa fa-angle-double-right"></i> <span data-i18n="open_orders">Open Orders</span></a></li>
                                 <li><a href="#" data-toggle="modal" data-target="#issue_asset_modal"><i class="fa fa-angle-double-right"></i> <span data-i18n="issue_asset">Issue Asset</span></a></li>
                         	</ul>
@@ -385,7 +387,7 @@
 	            	</section>
 				</div>
 				
-				<div id="transactions_page" class="page">
+				<div id="transactions_page" class="paginated page">
 	                <section class="content-header">
 	                	<h1 data-i18n="transactions">Transactions</h1>
 						<div style="position:absolute;top:9px;right:9px;">
@@ -447,6 +449,7 @@
 							<div class="data-loading-container"><img src="img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
 							<div class="data-empty-container"><p data-i18n="no_transactions_found">No transactions found.</p></div>
 						</div>
+                        <div class="data-pagination"></div>
 	                </section>
                 </div>
                                 
@@ -568,7 +571,7 @@
                     </section>
                 </div>
                 
-            	<div id="aliases_page" class="page">
+            	<div id="aliases_page" class="paginated page">
                 	<section class="content-header">
                 		<h1 data-i18n="aliases">Aliases</h1>
                 		<div style="position:absolute;top:9px;right:9px;">
@@ -644,6 +647,7 @@
 							<div class="data-loading-container"><img src="img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
 							<div class="data-empty-container"><p data-i18n="[html]no_aliases_yet">No aliases yet, <a href="#" data-toggle="modal" data-target="#register_alias_modal">register one!</a></p></div>
 						</div>
+                        <div class="data-pagination"></div>
 	                </section>
                 </div>
                                 
@@ -705,7 +709,7 @@
                  	</section>
                 </div>
                              
-                <div id="trade_history_page" class="page">
+                <div id="trade_history_page" class="paginated page">
                     <section class="content-header"><h1 data-i18n="trade_history">Trade History</h1></section>
                     <section class="content">
                         <div class="data-container data-loading">
@@ -729,6 +733,33 @@
                             <div class="data-loading-container"><img src="img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
                             <div class="data-empty-container"><p data-i18n="no_trade_history">No trade history available.</p></div>
                         </div>
+                        <div class="data-pagination"></div>
+                    </section>
+                </div>
+
+                <div id="transfer_history_page" class="paginated page">
+                    <section class="content-header"><h1 data-i18n="transfer_history">Transfer History</h1></section>
+                    <section class="content">
+                        <div class="data-container data-loading">
+                            <table class="table table-striped" id="transfer_history_table">
+                                <thead>
+                                <tr>
+                                    <th data-i18n="transaction">Transaction</th>
+                                    <th data-i18n="asset">Asset</th>
+                                    <th data-i18n="date">Date</th>
+                                    <th data-i18n="quantity">Quantity</th>
+                                    <th data-i18n="recipient">Recipient</th>
+                                    <th data-i18n="sender">Sender</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                    
+                                </tbody>
+                            </table>
+                            <div class="data-loading-container"><img src="img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
+                            <div class="data-empty-container"><p data-i18n="no_asset_transfer_history">No asset transfer history available.</p></div>
+                        </div>
+                        <div class="data-pagination"></div>
                     </section>
                 </div>
 
@@ -1011,6 +1042,7 @@
 						                                	<thead>
 						                                    <tr>
 						                                        <th data-i18n="date">Date</th>
+                                                                <th data-i18n="type">Type</th>
 						                                        <th data-i18n="quantity">Quantity</th>
 						                                        <th data-i18n="price">Price</th>
 						                                        <th data-i18n="total">Total</th>
@@ -3920,7 +3952,8 @@
 						<ul class="nav nav-pills nav-justified" style="margin-bottom:10px">
 							<li class="active" id="user_info_transactions" data-tab="transactions"><a href="#" data-i18n="transactions">Transactions</a></li>
 							<li id="user_info_assets" data-tab="assets"><a href="#" data-i18n="assets">Assets</a></li>
-							<li id="user_info_marketplace" data-tab="marketplace"><a href="#" data-i18n="marketplace">Marketplace</a></li>
+							<li id="user_info_trade_history" data-tab="trade_history"><a href="#" data-i18n="trade_history">Trade History</a></li>
+                            <li id="user_info_marketplace" data-tab="marketplace"><a href="#" data-i18n="marketplace">Marketplace</a></li>
 							<li id="user_info_aliases" data-tab="aliases"><a href="#" data-i18n="aliases">Aliases</a></li>
 							<li id="user_info_description" data-tab="description"><a href="#" data-i18n="description">Description</a></li>
 							<li id="user_info_actions" data-tab="actions"><a href="#" data-i18n="actions">Actions</a></li>
@@ -3979,6 +4012,26 @@
 							<div class="data-empty-container" style="padding-top:10px" data-i18n="user_no_assets">This user has no assets.</div>
 						</div>
 						
+                        <div class="data-container data-loading user_info_modal_content" id="user_info_modal_trade_history" style="display:none;max-height:350px;overflow:auto;">
+                            <table class="table table-striped" id="user_info_modal_trade_history_table">
+                                <thead>
+                                <tr>
+                                    <th data-i18n="asset">Asset</th>
+                                    <th data-i18n="date">Date</th>
+                                    <th data-i18n="type">Type</th>
+                                    <th data-i18n="quantity">Quantity</th>
+                                    <th data-i18n="price">Price</th>
+                                    <th data-i18n="total">Total</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+
+                                </tbody>
+                            </table>
+                            <div class="data-loading-container"><img src="img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
+                            <div class="data-empty-container" style="padding-top:10px" data-i18n="user_no_trade_history">This user has no trade history.</div>
+                        </div>
+
 						<div class="data-container data-loading user_info_modal_content" id="user_info_modal_marketplace" style="display:none;max-height:350px;overflow:auto;">
 							<table class="table table-striped" id="user_info_modal_marketplace_table">
 								<thead>

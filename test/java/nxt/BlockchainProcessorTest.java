@@ -20,6 +20,7 @@ public class BlockchainProcessorTest extends AbstractBlockchainTest {
     private static final String defaultTraceFile = "nxt-trace-default.csv";
     private static final String testTraceFile = "nxt-trace.csv";
     private static final int maxHeight = Constants.LAST_KNOWN_BLOCK;
+    private static final int startHeight = 0;
 
     private static final long[] testLesseeAccounts = new long[]{1460178482, -318308835203526404L, 3312398282095696184L, 6373452498729869295L,
             1088641461782019913L, -7984504957518839920L, 814976497827634325L};
@@ -42,20 +43,24 @@ public class BlockchainProcessorTest extends AbstractBlockchainTest {
     @Before
     public void reset() {
         debugTrace.resetLog();
-        blockchainProcessor.fullReset();
-        Assert.assertEquals(0, blockchain.getHeight());
+        if (blockchain.getHeight() > startHeight) {
+            blockchainProcessor.fullReset();
+            Assert.assertEquals(0, blockchain.getHeight());
+        }
+        Assert.assertTrue(blockchain.getHeight() <= startHeight);
     }
 
     @Test
     public void fullDownloadAndRescanTest() {
-        download(0, maxHeight);
+        download(startHeight, maxHeight);
         rescan(blockchain.getHeight());
     }
 
     @Test
     public void multipleRescanTest() {
-        int start = 0;
+        int start = startHeight;
         int end;
+        downloadTo(start);
         while ((end = start + 2000) <= maxHeight) {
             download(start, end);
             rescan(500);
@@ -71,14 +76,35 @@ public class BlockchainProcessorTest extends AbstractBlockchainTest {
 
     @Test
     public void multiplePopOffTest() {
-        int start = 0;
+        int start = startHeight;
         int end;
+        downloadTo(start);
         while ((end = start + 2000) <= maxHeight) {
             download(start, end);
-            redownload(800);
-            redownload(1440);
-            redownload(720);
-            redownload(1);
+            redownload(800, false);
+            redownload(1440, false);
+            redownload(720, false);
+            redownload(1, false);
+            start = end;
+        }
+    }
+
+    @Test
+    public void reprocessTransactionsTest() {
+        int start = Constants.LAST_KNOWN_BLOCK - 2000;
+        int end;
+        downloadTo(start);
+        while (blockchain.getLastBlock().getTimestamp() < Nxt.getEpochTime() - 7200) {
+            end = start + 100;
+            download(start, end);
+            redownload(100, true);
+            redownload(800, true);
+            redownload(1440, true);
+            redownload(2, true);
+            redownload(1024, true);
+            redownload(10, true);
+            redownload(720, true);
+            redownload(1, true);
             start = end;
         }
     }
@@ -102,12 +128,15 @@ public class BlockchainProcessorTest extends AbstractBlockchainTest {
         debugTrace.resetLog();
     }
 
-    private static void redownload(final int numBlocks) {
+    private static void redownload(final int numBlocks, boolean preserveTransactions) {
         int endHeight = blockchain.getHeight();
         List<List<Long>> allLessorsBefore = new ArrayList<>();
+        List<List<Long>> allLessorBalancesBefore = new ArrayList<>();
         for (long accountId : testLesseeAccounts) {
             List<Long> lessors = new ArrayList<>();
+            List<Long> balances = new ArrayList<>();
             allLessorsBefore.add(lessors);
+            allLessorBalancesBefore.add(balances);
             Account account = Account.getAccount(accountId);
             if (account == null) {
                 continue;
@@ -115,12 +144,13 @@ public class BlockchainProcessorTest extends AbstractBlockchainTest {
             try (DbIterator<Account> iter = account.getLessors(endHeight - numBlocks)) {
                 for (Account lessor : iter) {
                     lessors.add(lessor.getId());
+                    balances.add(lessor.getGuaranteedBalanceNQT(1440, endHeight - numBlocks));
                 }
             }
         }
-        List<List<Account.AccountAsset>> allAccountAssetsBefore = new ArrayList<>();
+        List<List<TestAccountAsset>> allAccountAssetsBefore = new ArrayList<>();
         for (long assetId : testAssets) {
-            List<Account.AccountAsset> accountAssets = new ArrayList<>();
+            List<TestAccountAsset> accountAssets = new ArrayList<>();
             allAccountAssetsBefore.add(accountAssets);
             Asset asset = Asset.getAsset(assetId);
             if (asset == null) {
@@ -128,16 +158,24 @@ public class BlockchainProcessorTest extends AbstractBlockchainTest {
             }
             try (DbIterator<Account.AccountAsset> iter = asset.getAccounts(endHeight - numBlocks, 0, -1)) {
                 for (Account.AccountAsset accountAsset : iter) {
-                    accountAssets.add(accountAsset);
+                    accountAssets.add(new TestAccountAsset(accountAsset));
                 }
             }
         }
-        blockchainProcessor.popOffTo(endHeight - numBlocks);
+        List<BlockImpl> poppedBlocks = blockchainProcessor.popOffTo(endHeight - numBlocks);
+        if (preserveTransactions) {
+            for (BlockImpl block : poppedBlocks) {
+                TransactionProcessorImpl.getInstance().processLater(block.getTransactions());
+            }
+        }
         Assert.assertEquals(endHeight - numBlocks, blockchain.getHeight());
         List<List<Long>> allLessorsAfter = new ArrayList<>();
+        List<List<Long>> allLessorBalancesAfter = new ArrayList<>();
         for (long accountId : testLesseeAccounts) {
             List<Long> lessors = new ArrayList<>();
+            List<Long> balances = new ArrayList<>();
             allLessorsAfter.add(lessors);
+            allLessorBalancesAfter.add(balances);
             Account account = Account.getAccount(accountId);
             if (account == null) {
                 continue;
@@ -145,15 +183,15 @@ public class BlockchainProcessorTest extends AbstractBlockchainTest {
             try (DbIterator<Account> iter = account.getLessors()) {
                 for (Account lessor : iter) {
                     lessors.add(lessor.getId());
+                    balances.add(lessor.getGuaranteedBalanceNQT(1440));
                 }
             }
         }
         Assert.assertEquals(allLessorsBefore, allLessorsAfter);
-        //Logger.logDebugMessage("Before: " + allLessorsBefore);
-        //Logger.logDebugMessage("After: " + allLessorsAfter);
-        List<List<Account.AccountAsset>> allAccountAssetsAfter = new ArrayList<>();
+        Assert.assertEquals(allLessorBalancesBefore, allLessorBalancesAfter);
+        List<List<TestAccountAsset>> allAccountAssetsAfter = new ArrayList<>();
         for (long assetId : testAssets) {
-            List<Account.AccountAsset> accountAssets = new ArrayList<>();
+            List<TestAccountAsset> accountAssets = new ArrayList<>();
             allAccountAssetsAfter.add(accountAssets);
             Asset asset = Asset.getAsset(assetId);
             if (asset == null) {
@@ -161,7 +199,7 @@ public class BlockchainProcessorTest extends AbstractBlockchainTest {
             }
             try (DbIterator<Account.AccountAsset> iter = asset.getAccounts(0, -1)) {
                 for (Account.AccountAsset accountAsset : iter) {
-                    accountAssets.add(accountAsset);
+                    accountAssets.add(new TestAccountAsset(accountAsset));
                 }
             }
         }
@@ -184,18 +222,32 @@ public class BlockchainProcessorTest extends AbstractBlockchainTest {
                 Logger.logMessage("Empty trace file, nothing to compare");
                 return;
             }
-            int startHeight = parseHeight(testLine);
+            int height = parseHeight(testLine);
             String defaultLine;
             while ((defaultLine = defaultReader.readLine()) != null) {
-                if (parseHeight(defaultLine) >= startHeight) {
+                if (parseHeight(defaultLine) >= height) {
                     break;
                 }
             }
+            if (defaultLine == null) {
+                Logger.logMessage("End of default trace file, can't compare further");
+                return;
+            }
+            int endHeight = height;
             Assert.assertEquals(defaultLine, testLine);
             while ((testLine = testReader.readLine()) != null) {
-                Assert.assertEquals(defaultLine = defaultReader.readLine(), testLine);
+                defaultLine = defaultReader.readLine();
+                if (defaultLine == null) {
+                    Logger.logMessage("End of default trace file, can't compare further");
+                    return;
+                }
+                endHeight = parseHeight(testLine);
+                Assert.assertEquals(defaultLine, testLine);
             }
-            Logger.logMessage("Comparison with default trace file passed from height " + startHeight + " to " + parseHeight(defaultLine));
+            if ((defaultLine = defaultReader.readLine()) != null) {
+                Assert.assertTrue(parseHeight(defaultLine) > endHeight);
+            }
+            Logger.logMessage("Comparison with default trace file passed from height " + height + " to " + endHeight);
         } catch (IOException e) {
             throw new RuntimeException(e.toString(), e);
         }
@@ -205,4 +257,29 @@ public class BlockchainProcessorTest extends AbstractBlockchainTest {
         return Integer.parseInt(line.substring(1, line.indexOf(DebugTrace.SEPARATOR) - 1));
     }
 
+    private static final class TestAccountAsset {
+
+        private final Account.AccountAsset accountAsset;
+
+        private TestAccountAsset(Account.AccountAsset accountAsset) {
+            this.accountAsset = accountAsset;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (! (o instanceof TestAccountAsset)) {
+                return false;
+            }
+            Account.AccountAsset other = ((TestAccountAsset)o).accountAsset;
+            return this.accountAsset.getAccountId() == other.getAccountId()
+                    && this.accountAsset.getAssetId() == other.getAssetId()
+                    && this.accountAsset.getQuantityQNT() == other.getQuantityQNT();
+        }
+
+        @Override
+        public String toString() {
+            return accountAsset.toString();
+        }
+
+    }
 }
