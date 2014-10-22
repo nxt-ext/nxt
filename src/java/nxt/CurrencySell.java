@@ -46,7 +46,7 @@ public final class CurrencySell extends CurrencyOffer {
 
     static void init() {}
 
-    CurrencySell(Transaction transaction, Attachment.MonetarySystemPublishExchangeOffer attachment) {
+    private CurrencySell(Transaction transaction, Attachment.MonetarySystemPublishExchangeOffer attachment) {
         super(transaction.getId(), attachment.getCurrencyId(), transaction.getSenderId(), attachment.getSellRateNQT(),
                 attachment.getTotalSellLimit(), attachment.getInitialSellSupply(), attachment.getExpirationHeight(), transaction.getHeight());
         this.dbKey = sellOfferDbKeyFactory.newKey(id);
@@ -66,14 +66,15 @@ public final class CurrencySell extends CurrencyOffer {
         return CurrencyBuy.getBuyOffer(id);
     }
 
-    static void addOffer(CurrencySell sellOffer) {
-        sellOfferTable.insert(sellOffer);
+    static void addOffer(Transaction transaction, Attachment.MonetarySystemPublishExchangeOffer attachment) {
+        sellOfferTable.insert(new CurrencySell(transaction, attachment));
     }
 
     static void remove(CurrencyOffer sellOffer) {
         sellOfferTable.delete(sellOffer);
     }
 
+    //TODO: shouldn't the ordering be rate ASC? add index to the table?
     public static DbIterator<CurrencyOffer> getCurrencyOffers(long currencyId) {
         return sellOfferTable.getManyBy(new DbClause.LongClause("currency_id", currencyId), 0, -1, " ORDER BY rate DESC, height ASC, id ASC ");
     }

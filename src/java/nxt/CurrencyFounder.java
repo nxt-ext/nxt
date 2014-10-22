@@ -23,7 +23,7 @@ public class CurrencyFounder {
 
     };
 
-    public static final VersionedEntityDbTable<CurrencyFounder> currencyFounderTable = new VersionedEntityDbTable<CurrencyFounder>("currency_founder", currencyFounderDbKeyFactory) {
+    private static final VersionedEntityDbTable<CurrencyFounder> currencyFounderTable = new VersionedEntityDbTable<CurrencyFounder>("currency_founder", currencyFounderDbKeyFactory) {
 
         @Override
         protected CurrencyFounder load(Connection con, ResultSet rs) throws SQLException {
@@ -36,6 +36,8 @@ public class CurrencyFounder {
         }
 
     };
+
+    static void init() {}
 
     private final DbKey dbKey;
     private final long currencyId;

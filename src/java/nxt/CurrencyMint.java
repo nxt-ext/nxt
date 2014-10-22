@@ -28,7 +28,8 @@ public final class CurrencyMint {
 
     };
 
-    public static final VersionedEntityDbTable<CurrencyMint> currencyMintTable = new VersionedEntityDbTable<CurrencyMint>("currency_mint", currencyMintDbKeyFactory) {
+    //TODO: does this table need to be versioned? or should height be part of the key?
+    private static final VersionedEntityDbTable<CurrencyMint> currencyMintTable = new VersionedEntityDbTable<CurrencyMint>("currency_mint", currencyMintDbKeyFactory) {
 
         @Override
         protected CurrencyMint load(Connection con, ResultSet rs) throws SQLException {
@@ -42,13 +43,15 @@ public final class CurrencyMint {
 
     };
 
+    static void init() {}
+
     private final DbKey dbKey;
     private final long currencyId;
     private final long accountId;
     private final long counter;
     private final int height;
 
-    CurrencyMint(long currencyId, long accountId, long counter) {
+    private CurrencyMint(long currencyId, long accountId, long counter) {
         this.currencyId = currencyId;
         this.accountId = accountId;
         this.dbKey = currencyMintDbKeyFactory.newKey(currencyId, accountId);
@@ -56,7 +59,7 @@ public final class CurrencyMint {
         this.height = Nxt.getBlockchain().getHeight();
     }
 
-    CurrencyMint(ResultSet rs) throws SQLException {
+    private CurrencyMint(ResultSet rs) throws SQLException {
         this.currencyId = rs.getLong("currency_id");
         this.accountId = rs.getLong("account_id");
         this.dbKey = currencyMintDbKeyFactory.newKey(currencyId, accountId);

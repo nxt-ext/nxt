@@ -28,8 +28,8 @@ public final class CurrencyExchange {
 
     static void publishOffer(Transaction transaction, Attachment.MonetarySystemPublishExchangeOffer attachment) {
         removeOffer(attachment.getCurrencyId(), transaction.getSenderId());
-        CurrencyBuy.addOffer(new CurrencyBuy(transaction, attachment));
-        CurrencySell.addOffer(new CurrencySell(transaction, attachment));
+        CurrencyBuy.addOffer(transaction, attachment);
+        CurrencySell.addOffer(transaction, attachment);
     }
 
     static void exchangeCurrencyForNXT(Account account, long currencyId, long rateNQT, long units) {

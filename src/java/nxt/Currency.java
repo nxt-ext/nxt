@@ -70,6 +70,8 @@ public final class Currency {
         Nxt.getBlockchainProcessor().addListener(new CrowdFundingListener(), BlockchainProcessor.Event.AFTER_BLOCK_APPLY);
     }
 
+    static void init() {}
+
     private final long currencyId;
 
     private final DbKey dbKey;
