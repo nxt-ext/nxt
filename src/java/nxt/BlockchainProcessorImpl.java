@@ -62,6 +62,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
     private volatile boolean isScanning;
     private volatile boolean forceScan = Nxt.getBooleanProperty("nxt.forceScan");
     private volatile boolean validateAtScan = Nxt.getBooleanProperty("nxt.forceValidate");
+    private volatile boolean alreadyInitialized = false;
 
     private final Runnable getMoreBlocksThread = new Runnable() {
 
@@ -411,6 +412,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         ThreadPool.runBeforeStart(new Runnable() {
             @Override
             public void run() {
+                alreadyInitialized = true;
                 addGenesisBlock();
                 if (forceScan) {
                     scan(0);
@@ -434,6 +436,9 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
 
     @Override
     public void registerDerivedTable(DerivedDbTable table) {
+        if (alreadyInitialized) {
+            throw new IllegalStateException("Too late to register table " + table + ", must have done it in Nxt.Init");
+        }
         derivedTables.add(table);
     }
 

@@ -56,6 +56,7 @@ public abstract class MonetarySystem extends TransactionType {
             Attachment.MonetarySystemCurrencyIssuance attachment = (Attachment.MonetarySystemCurrencyIssuance) transaction.getAttachment();
             if (attachment.getTotalSupply() > Constants.MAX_CURRENCY_TOTAL_SUPPLY
                     || attachment.getIssuanceHeight() < 0
+                    //TODO: shouldn't there be a check that issuanceHeight must be > current blockchain height?
                     || attachment.getMinReservePerUnitNQT() < 0 || attachment.getMinReservePerUnitNQT() > Constants.MAX_BALANCE_NQT
                     || attachment.getRuleset() != 0) { //TODO: ruleset always 0?
                 throw new NxtException.NotValidException("Invalid currency issuance: " + attachment.getJSONObject());
@@ -415,7 +416,7 @@ public abstract class MonetarySystem extends TransactionType {
 
     };
 
-    public static final TransactionType CURRNECY_MINTING = new MonetarySystem() {
+    public static final TransactionType CURRENCY_MINTING = new MonetarySystem() {
 
         @Override
         public byte getSubtype() {
@@ -435,12 +436,13 @@ public abstract class MonetarySystem extends TransactionType {
         @Override
         void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
             Attachment.MonetarySystemCurrencyMinting attachment = (Attachment.MonetarySystemCurrencyMinting) transaction.getAttachment();
+            if (attachment.getUnits() <= 0 || attachment.getUnits() > Currency.getCurrency(attachment.getCurrencyId()).getTotalSupply() / Constants.MAX_MINTING_RATIO) {
+                throw new NxtException.NotValidException("Invalid currency minting: " + attachment.getJSONObject());
+            }
             int type = CurrencyType.getCurrencyType(attachment.getCurrencyId());
             CurrencyType.validate(attachment, type, transaction);
-            if (!Currency.isActive(attachment.getCurrencyId()) ||
-                    attachment.getUnits() <= 0 ||
-                    attachment.getUnits() > Currency.getCurrency(attachment.getCurrencyId()).getTotalSupply() / Constants.MAX_MINTING_RATIO) {
-                throw new NxtException.NotValidException("Invalid currency minting: " + attachment.getJSONObject());
+            if (!Currency.isActive(attachment.getCurrencyId())) {
+                throw new NxtException.NotCurrentlyValidException("Currency not currently active " + attachment.getJSONObject());
             }
         }
 
@@ -466,6 +468,7 @@ public abstract class MonetarySystem extends TransactionType {
 
     };
 
+    //TODO: shuffling transactions not yet reviewed
     public static final TransactionType SHUFFLING_INITIATION = new MonetarySystem() {
 
         @Override

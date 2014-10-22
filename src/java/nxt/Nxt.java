@@ -180,6 +180,12 @@ public final class Nxt {
                 Trade.init();
                 AssetTransfer.init();
                 Vote.init();
+                Currency.init();
+                CurrencyBuy.init();
+                CurrencySell.init();
+                CurrencyFounder.init();
+                CurrencyMint.init();
+                CurrencyTransfer.init();
                 Peers.init();
                 Generator.init();
                 API.init();

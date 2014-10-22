@@ -47,12 +47,13 @@ public enum CurrencyType {
         void validate(Transaction transaction, Attachment attachment, Set<CurrencyType> validators) throws NxtException.NotValidException {
             if (attachment instanceof Attachment.MonetarySystemCurrencyTransfer) {
                 Attachment.MonetarySystemCurrencyTransfer transfer = (Attachment.MonetarySystemCurrencyTransfer)attachment;
-                if (!Currency.isIssuer(transaction.getSenderId()) && !Currency.isIssuer(transfer.getRecipientId())) {
+                if (!Currency.isIssuer(transfer.getCurrencyId(), transaction.getSenderId()) && !Currency.isIssuer(transfer.getCurrencyId(), transfer.getRecipientId())) {
                     throw new NxtException.NotValidException("Controllable currency can only be transferred to/from issuer account");
                 }
             }
             if (attachment instanceof Attachment.MonetarySystemPublishExchangeOffer) {
-                if (!Currency.isIssuer(transaction.getSenderId())) {
+                Attachment.MonetarySystemPublishExchangeOffer offer = (Attachment.MonetarySystemPublishExchangeOffer)attachment;
+                if (!Currency.isIssuer(offer.getCurrencyId(), transaction.getSenderId())) {
                     throw new NxtException.NotValidException("Only currency issuer can publish an exchange offer for controllable currency");
                 }
             }

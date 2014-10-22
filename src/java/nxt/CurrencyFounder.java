@@ -23,7 +23,7 @@ public class CurrencyFounder {
 
     };
 
-    public static final VersionedEntityDbTable<CurrencyFounder> currencyFounderTable = new VersionedEntityDbTable<CurrencyFounder>("currency_founder", currencyFounderDbKeyFactory) {
+    private static final VersionedEntityDbTable<CurrencyFounder> currencyFounderTable = new VersionedEntityDbTable<CurrencyFounder>("currency_founder", currencyFounderDbKeyFactory) {
 
         @Override
         protected CurrencyFounder load(Connection con, ResultSet rs) throws SQLException {
@@ -37,19 +37,21 @@ public class CurrencyFounder {
 
     };
 
+    static void init() {}
+
     private final DbKey dbKey;
     private final long currencyId;
     private final long accountId;
     private long value;
 
-    CurrencyFounder(long currencyId, long accountId, long value) {
+    private CurrencyFounder(long currencyId, long accountId, long value) {
         this.currencyId = currencyId;
         this.dbKey = currencyFounderDbKeyFactory.newKey(currencyId, accountId);
         this.accountId = accountId;
         this.value = value;
     }
 
-    CurrencyFounder(ResultSet rs) throws SQLException {
+    private CurrencyFounder(ResultSet rs) throws SQLException {
         this.currencyId = rs.getLong("currency_id");
         this.accountId = rs.getLong("account_id");
         this.dbKey = currencyFounderDbKeyFactory.newKey(currencyId, accountId);
@@ -99,7 +101,7 @@ public class CurrencyFounder {
         return currencyFounderTable.getManyBy(new DbClause.LongClause("currency_id", currencyId), from, to);
     }
 
-    public static void remove(long currencyId) {
+    static void remove(long currencyId) {
         for (CurrencyFounder founder : CurrencyFounder.getCurrencyFounders(currencyId, 0, Integer.MAX_VALUE)) {
             currencyFounderTable.delete(founder); //TODO: may need to move out
         }

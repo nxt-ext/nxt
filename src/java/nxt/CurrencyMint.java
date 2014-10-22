@@ -28,7 +28,8 @@ public final class CurrencyMint {
 
     };
 
-    public static final VersionedEntityDbTable<CurrencyMint> currencyMintTable = new VersionedEntityDbTable<CurrencyMint>("currency_mint", currencyMintDbKeyFactory) {
+    //TODO: does this table need to be versioned? or should height be part of the key?
+    private static final VersionedEntityDbTable<CurrencyMint> currencyMintTable = new VersionedEntityDbTable<CurrencyMint>("currency_mint", currencyMintDbKeyFactory) {
 
         @Override
         protected CurrencyMint load(Connection con, ResultSet rs) throws SQLException {
@@ -42,13 +43,15 @@ public final class CurrencyMint {
 
     };
 
+    static void init() {}
+
     private final DbKey dbKey;
     private final long currencyId;
     private final long accountId;
     private final long counter;
     private final int height;
 
-    CurrencyMint(long currencyId, long accountId, long counter) {
+    private CurrencyMint(long currencyId, long accountId, long counter) {
         this.currencyId = currencyId;
         this.accountId = accountId;
         this.dbKey = currencyMintDbKeyFactory.newKey(currencyId, accountId);
@@ -56,7 +59,7 @@ public final class CurrencyMint {
         this.height = Nxt.getBlockchain().getHeight();
     }
 
-    CurrencyMint(ResultSet rs) throws SQLException {
+    private CurrencyMint(ResultSet rs) throws SQLException {
         this.currencyId = rs.getLong("currency_id");
         this.accountId = rs.getLong("account_id");
         this.dbKey = currencyMintDbKeyFactory.newKey(currencyId, accountId);
@@ -64,6 +67,7 @@ public final class CurrencyMint {
         this.height = rs.getInt("height");
     }
 
+    //TODO: use MERGE?
     private void save(Connection con) throws SQLException {
         try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO currency_mint (currency_id, account_id, counter, height)"
                 + "VALUES (?, ?, ?, ?)")) {
@@ -71,7 +75,7 @@ public final class CurrencyMint {
             pstmt.setLong(++i, this.getCurrencyId());
             pstmt.setLong(++i, this.getAccountId());
             pstmt.setLong(++i, this.getCounter());
-            pstmt.setInt(++i, this.getHeight());
+            pstmt.setInt(++i, this.getHeight()); //TODO: blockchain height?
             pstmt.executeUpdate();
         }
     }
@@ -93,7 +97,7 @@ public final class CurrencyMint {
     }
 
     static void mintCurrency(Account account, long nonce, long currencyId, long units, long counter) {
-        CurrencyMint currencyMint = currencyMintTable.get(currencyMintDbKeyFactory.newKey(currencyId, account.getId()), Nxt.getBlockchain().getHeight());
+        CurrencyMint currencyMint = currencyMintTable.get(currencyMintDbKeyFactory.newKey(currencyId, account.getId()));
         if (currencyMint != null && counter <= currencyMint.getCounter()) {
             return;
         }

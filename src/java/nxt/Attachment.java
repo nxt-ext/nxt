@@ -2112,7 +2112,7 @@ public interface Attachment extends Appendix {
 
         @Override
         public TransactionType getTransactionType() {
-            return MonetarySystem.CURRNECY_MINTING;
+            return MonetarySystem.CURRENCY_MINTING;
         }
 
         public long getNonce() {

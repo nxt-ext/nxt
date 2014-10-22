@@ -19,7 +19,8 @@ public abstract class CurrencyOffer {
     protected final int expirationHeight;
     protected final int height;
 
-    CurrencyOffer(long id, long currencyId, long accountId, long rateNQT, long limit, long supply, int expirationHeight, int height) {
+    //TODO: needs to use creation_height instead of height
+    protected CurrencyOffer(long id, long currencyId, long accountId, long rateNQT, long limit, long supply, int expirationHeight, int height) {
         this.id = id;
         this.currencyId = currencyId;
         this.accountId = accountId;

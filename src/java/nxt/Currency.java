@@ -35,6 +35,7 @@ public final class Currency {
         protected void save(Connection con, Currency currency) throws SQLException {
             currency.save(con);
         }
+
     };
 
     public static DbIterator<Currency> getAllCurrencies(int from, int to) {
@@ -67,8 +68,9 @@ public final class Currency {
 
     static {
         Nxt.getBlockchainProcessor().addListener(new CrowdFundingListener(), BlockchainProcessor.Event.AFTER_BLOCK_APPLY);
-
     }
+
+    static void init() {}
 
     private final long currencyId;
 
@@ -89,7 +91,7 @@ public final class Currency {
 
     private long currentReservePerUnitNQT;
 
-    public Currency(Transaction transaction, Attachment.MonetarySystemCurrencyIssuance attachment) {
+    private Currency(Transaction transaction, Attachment.MonetarySystemCurrencyIssuance attachment) {
         this.currencyId = transaction.getId();
         this.dbKey = currencyDbKeyFactory.newKey(this.currencyId);
         this.accountId = transaction.getSenderId();
@@ -213,16 +215,19 @@ public final class Currency {
         return currentReservePerUnitNQT;
     }
 
+    //TODO: each getCurrency call is a database query, those two methods should be made non-static,
+    // and the Currency object retrieved only once and then passed around through the currency validation calls
     public static boolean isActive(long currencyId) {
         Currency currency = getCurrency(currencyId);
         return currency != null && currency.getIssuanceHeight() <= BlockchainImpl.getInstance().getHeight();
     }
 
-    public static boolean isIssuer(long accountId) {
-        Currency currency = getCurrency(accountId); //TODO: must be a bug
+    public static boolean isIssuer(long currencyId, long accountId) {
+        Currency currency = getCurrency(currencyId);
         return currency != null && currency.getAccountId() == accountId;
     }
 
+    //TODO: claimReserve decreases totalSupply, but increaseReserve doesn't increase totalSupply, is it intentional that totalSupply can go down but never go up?
     static void increaseReserve(Account account, long currencyId, long amountNQT) {
         Currency currency = Currency.getCurrency(currencyId);
         account.addToBalanceNQT(-Convert.safeMultiply(currency.getTotalSupply(), amountNQT));
@@ -244,7 +249,7 @@ public final class Currency {
         Account.addOrGetAccount(recipientId).addToCurrencyAndUnconfirmedCurrencyUnits(currencyId, units);
     }
 
-    public void increaseSupply(long units) {
+    void increaseSupply(long units) {
         currentSupply += units;
         currencyTable.insert(this);
     }
@@ -268,18 +273,22 @@ public final class Currency {
         return CurrencyTransfer.getCurrencyTransfers(this.currencyId, from, to);
     }
 
-    private static class CrowdFundingListener implements Listener<Block> {
+    private static final class CrowdFundingListener implements Listener<Block> {
 
         @Override
         public void notify(Block block) {
-            for (Currency currency : currencyTable.getAll(0, Integer.MAX_VALUE)) {
-                if (currency.getIssuanceHeight() == 0 || currency.getIssuanceHeight() > block.getHeight()) {
-                    continue;
-                }
-                if (currency.getCurrentReservePerUnitNQT() < currency.getMinReservePerUnitNQT()) {
-                    undoCrowdFunding(currency);
-                } else {
-                    distributeCurrency(currency);
+            //TODO: this will do a full table scan and load every single currency in memory
+            //need to re-write to use an sql query that only returns the matching currencies
+            try (DbIterator<Currency> allCurrencies = currencyTable.getAll(0, -1)) {
+                for (Currency currency : allCurrencies) {
+                    if (currency.getIssuanceHeight() == 0 || currency.getIssuanceHeight() > block.getHeight()) {
+                        continue;
+                    }
+                    if (currency.getCurrentReservePerUnitNQT() < currency.getMinReservePerUnitNQT()) {
+                        undoCrowdFunding(currency);
+                    } else {
+                        distributeCurrency(currency);
+                    }
                 }
             }
         }

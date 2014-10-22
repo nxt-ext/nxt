@@ -46,7 +46,7 @@ public final class CurrencySell extends CurrencyOffer {
 
     static void init() {}
 
-    CurrencySell(Transaction transaction, Attachment.MonetarySystemPublishExchangeOffer attachment) {
+    private CurrencySell(Transaction transaction, Attachment.MonetarySystemPublishExchangeOffer attachment) {
         super(transaction.getId(), attachment.getCurrencyId(), transaction.getSenderId(), attachment.getSellRateNQT(),
                 attachment.getTotalSellLimit(), attachment.getInitialSellSupply(), attachment.getExpirationHeight(), transaction.getHeight());
         this.dbKey = sellOfferDbKeyFactory.newKey(id);
@@ -66,26 +66,17 @@ public final class CurrencySell extends CurrencyOffer {
         return CurrencyBuy.getBuyOffer(id);
     }
 
-    static void addOffer(CurrencySell sellOffer) {
-        sellOfferTable.insert(sellOffer);
+    static void addOffer(Transaction transaction, Attachment.MonetarySystemPublishExchangeOffer attachment) {
+        sellOfferTable.insert(new CurrencySell(transaction, attachment));
     }
 
     static void remove(CurrencyOffer sellOffer) {
         sellOfferTable.delete(sellOffer);
     }
 
+    //TODO: shouldn't the ordering be rate ASC? add index to the table?
     public static DbIterator<CurrencyOffer> getCurrencyOffers(long currencyId) {
-        Connection con = null;
-        try {
-            con = Db.getConnection();
-            PreparedStatement pstmt = con.prepareStatement("SELECT * FROM sell_offer WHERE currency_id = ? "
-                    + "AND latest = TRUE ORDER BY rate DESC, height ASC, id ASC");
-            pstmt.setLong(1, currencyId);
-            return sellOfferTable.getManyBy(con, pstmt, true);
-        } catch (SQLException e) {
-            DbUtils.close(con);
-            throw new RuntimeException(e.toString(), e);
-        }
+        return sellOfferTable.getManyBy(new DbClause.LongClause("currency_id", currencyId), 0, -1, " ORDER BY rate DESC, height ASC, id ASC ");
     }
 
     void increaseSupply(long delta) {

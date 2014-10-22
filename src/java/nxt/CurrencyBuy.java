@@ -46,7 +46,7 @@ public final class CurrencyBuy extends CurrencyOffer {
 
     static void init() {}
 
-    CurrencyBuy(Transaction transaction, Attachment.MonetarySystemPublishExchangeOffer attachment) {
+    private CurrencyBuy(Transaction transaction, Attachment.MonetarySystemPublishExchangeOffer attachment) {
         super(transaction.getId(), attachment.getCurrencyId(), transaction.getSenderId(), attachment.getBuyRateNQT(),
                 attachment.getTotalBuyLimit(), attachment.getInitialBuySupply(), attachment.getExpirationHeight(), transaction.getHeight());
         this.dbKey = buyOfferDbKeyFactory.newKey(id);
@@ -66,26 +66,17 @@ public final class CurrencyBuy extends CurrencyOffer {
         return CurrencySell.getSellOffer(id);
     }
 
-    static void addOffer(CurrencyOffer buyOffer) {
-        buyOfferTable.insert(buyOffer);
+    static void addOffer(Transaction transaction, Attachment.MonetarySystemPublishExchangeOffer attachment) {
+        buyOfferTable.insert(new CurrencyBuy(transaction, attachment));
     }
 
     static void remove(CurrencyOffer buyOffer) {
         buyOfferTable.delete(buyOffer);
     }
 
+    //TODO: add index on rate DESC, height ASC, id ASC to buy_offer table?
     public static DbIterator<CurrencyOffer> getCurrencyOffers(long currencyId) {
-        Connection con = null;
-        try {
-            con = Db.getConnection();
-            PreparedStatement pstmt = con.prepareStatement("SELECT * FROM buy_offer WHERE currency_id = ? "
-                    + "AND latest = TRUE ORDER BY rate DESC, height ASC, id ASC");
-            pstmt.setLong(1, currencyId);
-            return buyOfferTable.getManyBy(con, pstmt, true);
-        } catch (SQLException e) {
-            DbUtils.close(con);
-            throw new RuntimeException(e.toString(), e);
-        }
+        return buyOfferTable.getManyBy(new DbClause.LongClause("currency_id", currencyId), 0, -1, " ORDER BY rate DESC, height ASC, id ASC ");
     }
 
     void increaseSupply(long delta) {
