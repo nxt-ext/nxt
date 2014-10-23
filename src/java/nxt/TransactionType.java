@@ -177,7 +177,7 @@ public abstract class TransactionType {
 
         if (transaction.getReferencedTransactionFullHash() != null
                 && transaction.getTimestamp() > Constants.REFERENCED_TRANSACTION_FULL_HASH_BLOCK_TIMESTAMP) {
-            senderAccount.addToUnconfirmedBalanceNQT(Constants.UNCONFIRMED_POOL_DEPOSIT_NQT); //todo: kushti: ???
+            senderAccount.addToUnconfirmedBalanceNQT(Constants.UNCONFIRMED_POOL_DEPOSIT_NQT);
         }
         if(recipientAccount != null && transaction.getTwoPhased()==null){
             recipientAccount.addToBalanceAndUnconfirmedBalanceNQT(amount);

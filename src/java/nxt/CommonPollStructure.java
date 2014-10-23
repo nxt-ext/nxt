@@ -24,15 +24,6 @@ public class CommonPollStructure {
     protected final long minBalance;
     protected boolean finished;
 
-
-    public CommonPollStructure(int finishBlockHeight, byte votingModel, long assetId) {
-        this.finishBlockHeight = finishBlockHeight;
-        this.votingModel = votingModel;
-        this.assetId = assetId;
-        this.minBalance = DEFAULT_MIN_BALANCE;
-        this.finished = false;
-    }
-
     public CommonPollStructure(int finishBlockHeight, byte votingModel, long assetId, long minBalance) {
         this.finishBlockHeight = finishBlockHeight;
         this.votingModel = votingModel;

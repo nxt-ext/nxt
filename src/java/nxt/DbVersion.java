@@ -422,7 +422,6 @@ final class DbVersion {
                         + "asset_id BIGINT, finished BOOLEAN, height INT NOT NULL)");
             case 133:
                 apply("CREATE UNIQUE INDEX IF NOT EXISTS poll_id_idx ON poll (id)");
-                //todo:fix
             case 134:
                 apply("ALTER TABLE vote ADD FOREIGN KEY (poll_id) REFERENCES poll (id)");
             case 135:

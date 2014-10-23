@@ -380,69 +380,61 @@ public interface Attachment extends Appendix {
 
         MessagingPollCreation(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
             super(buffer, transactionVersion);
-            pollName = Convert.readString(buffer, buffer.getShort(), Constants.MAX_POLL_NAME_LENGTH);
-            pollDescription = Convert.readString(buffer, buffer.getShort(), Constants.MAX_POLL_DESCRIPTION_LENGTH);
+            this.pollName = Convert.readString(buffer, buffer.getShort(), Constants.MAX_POLL_NAME_LENGTH);
+            this.pollDescription = Convert.readString(buffer, buffer.getShort(), Constants.MAX_POLL_DESCRIPTION_LENGTH);
 
-            finishBlockHeight = buffer.getInt();
+            this.finishBlockHeight = buffer.getInt();
 
             int numberOfOptions = buffer.get();
             if (numberOfOptions > Constants.MAX_POLL_OPTION_COUNT) {
                 throw new NxtException.NotValidException("Invalid number of poll options: " + numberOfOptions);
             }
 
-            pollOptions = new String[numberOfOptions];
+            this.pollOptions = new String[numberOfOptions];
             for (int i = 0; i < numberOfOptions; i++) {
-                pollOptions[i] = Convert.readString(buffer, buffer.getShort(), Constants.MAX_POLL_OPTION_LENGTH);
+                this.pollOptions[i] = Convert.readString(buffer, buffer.getShort(), Constants.MAX_POLL_OPTION_LENGTH);
             }
 
-            optionModel = buffer.get();
+            this.optionModel = buffer.get();
+            this.votingModel = buffer.get();
 
-            votingModel = buffer.get();
-
-            minBalance = buffer.getLong();
+            this.minBalance = buffer.getLong();
 
             if (optionModel == Poll.OPTION_MODEL_CHOICE) {
-                minNumberOfOptions = buffer.get();
-                maxNumberOfOptions = buffer.get();
+                this.minNumberOfOptions = buffer.get();
+                this.maxNumberOfOptions = buffer.get();
             }
 
-
             if (votingModel == Poll.VOTING_MODEL_ASSET) {
-                assetId = buffer.getLong();
+                this.assetId = buffer.getLong();
             }
         }
 
         MessagingPollCreation(JSONObject attachmentData) throws NxtException.NotValidException {
             super(attachmentData);
 
-            pollName = ((String) attachmentData.get("name")).trim();
-            pollDescription = ((String) attachmentData.get("description")).trim();
-            finishBlockHeight = ((Long) attachmentData.get("finishBlockHeight")).intValue();
+            this.pollName = ((String) attachmentData.get("name")).trim();
+            this.pollDescription = ((String) attachmentData.get("description")).trim();
+            this.finishBlockHeight = ((Long) attachmentData.get("finishBlockHeight")).intValue();
 
             JSONArray options = (JSONArray) attachmentData.get("options");
-            pollOptions = new String[options.size()];
+            this.pollOptions = new String[options.size()];
             for (int i = 0; i < pollOptions.length; i++) {
-                pollOptions[i] = ((String) options.get(i)).trim();
+                this.pollOptions[i] = ((String) options.get(i)).trim();
             }
 
-            minBalance = (Long) attachmentData.get("minBalance");
+            this.minBalance = (Long) attachmentData.get("minBalance");
 
-            optionModel = ((Long) attachmentData.get("optionModel")).byteValue();
-            votingModel = ((Long) attachmentData.get("votingModel")).byteValue();
+            this.optionModel = ((Long) attachmentData.get("optionModel")).byteValue();
+            this.votingModel = ((Long) attachmentData.get("votingModel")).byteValue();
 
-            /*PollBuilder builder = new PollBuilder(pollName, pollDescription, pollOptions,
-                    finishBlockHeight, optionModel, votingModel);
-
-            builder.minBalance(minBalance);*/
-
-            if (optionModel == Poll.OPTION_MODEL_CHOICE) {
-                minNumberOfOptions = ((Long) attachmentData.get("minNumberOfOptions")).byteValue();
-                maxNumberOfOptions = ((Long) attachmentData.get("maxNumberOfOptions")).byteValue();
+            if (this.optionModel == Poll.OPTION_MODEL_CHOICE) {
+                this.minNumberOfOptions = ((Long) attachmentData.get("minNumberOfOptions")).byteValue();
+                this.maxNumberOfOptions = ((Long) attachmentData.get("maxNumberOfOptions")).byteValue();
             }
 
-            if (votingModel == Poll.VOTING_MODEL_ASSET) {
-                assetId = (Long) attachmentData.get("assetId");
-//                builder.assetId(assetId);
+            if (this.votingModel == Poll.VOTING_MODEL_ASSET) {
+                this.assetId = (Long) attachmentData.get("assetId");
             }
         }
 

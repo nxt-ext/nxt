@@ -48,11 +48,7 @@ public final class Poll extends CommonPollStructure {
                 pstmt.setByte(++i, poll.getOptionModel());
                 pstmt.setByte(++i, poll.getVotingModel());
                 pstmt.setLong(++i, poll.getMinBalance());
-                if (poll.getAssetId() == Poll.NO_ASSET_CODE) {
-                    pstmt.setNull(++i, Types.INTEGER);
-                } else {
-                    pstmt.setLong(++i, poll.getAssetId());
-                }
+                pstmt.setLong(++i, poll.getAssetId());
                 pstmt.setByte(++i, poll.getMinNumberOfOptions());
                 pstmt.setByte(++i, poll.getMaxNumberOfOptions());
                 pstmt.setBoolean(++i, poll.isFinished());
@@ -61,7 +57,7 @@ public final class Poll extends CommonPollStructure {
             }
         }
 
-        public void updateActive(Boolean active, long id) {
+        public void updateActive(long id, Boolean active) {
             String query = "UPDATE poll SET finished=" + active.toString() + " WHERE ID=" + id;  //todo: popoffs?
             try (Connection con = Db.getConnection();
                  PreparedStatement pstmt = con.prepareStatement(query)) {
@@ -70,17 +66,12 @@ public final class Poll extends CommonPollStructure {
                 throw new RuntimeException(e.toString(), e);
             }
         }
-
-        protected long getId(Poll poll) {
-            return poll.getId();
-        }
     }
 
     private final static PollTable pollTable = new PollTable(pollDbKeyFactory);
 
     static void init() {
     }
-
 
     private final long id;
     private final DbKey dbKey;
@@ -95,16 +86,16 @@ public final class Poll extends CommonPollStructure {
             @Override
             public void notify(Block block) {
                 int height = block.getHeight();
-                if(height>=Constants.VOTING_SYSTEM_BLOCK){
+                if(height >= Constants.VOTING_SYSTEM_BLOCK){
                     Poll.checkPolls(height);
                 }
             }
-        }, BlockchainProcessor.Event.AFTER_BLOCK_APPLY);     //todo: rescans, popoffs?
+        }, BlockchainProcessor.Event.AFTER_BLOCK_APPLY);
     }
 
-    static void checkPolls(int height) {
+    static void checkPolls(int currentHeight) {
         for (Poll poll : getActivePolls()) {
-            if (poll.finishBlockHeight <= height) {
+            if (poll.finishBlockHeight <= currentHeight) {
                 poll.calculateAndSavePollResults();
                 markPollAsFinished(poll);
                 System.out.println("Poll " + poll.getId() + " has been finished");
@@ -185,11 +176,11 @@ public final class Poll extends CommonPollStructure {
     }
 
     public static DbIterator<Poll> getActivePolls() {
-        return pollTable.getManyBy(new DbClause.BooleanClause("finished", true), 0, Integer.MAX_VALUE);
+        return pollTable.getManyBy(new DbClause.BooleanClause("finished", false), 0, Integer.MAX_VALUE);
     }
 
     public static DbIterator<Poll> getFinishedPolls() {
-        return pollTable.getManyBy(new DbClause.BooleanClause("finished", false), 0, Integer.MAX_VALUE);
+        return pollTable.getManyBy(new DbClause.BooleanClause("finished", true), 0, Integer.MAX_VALUE);
     }
 
     public static DbIterator<Poll> getAllPolls(int from, int to) {
@@ -205,7 +196,7 @@ public final class Poll extends CommonPollStructure {
     }
 
     public static void markPollAsFinished(Poll poll) {
-        pollTable.updateActive(false, poll.getId());
+        pollTable.updateActive(poll.getId(), false);
     }
 
     public long getId() {

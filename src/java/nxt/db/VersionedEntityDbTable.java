@@ -87,7 +87,7 @@ public abstract class VersionedEntityDbTable<T> extends EntityDbTable<T> {
             for (DbKey dbKey : dbKeys) {
                 int i = 1;
                 i = dbKey.setPK(pstmtSetLatest, i);
-                i = dbKey.setPK(pstmtSetLatest, i);  //todo: ???
+                i = dbKey.setPK(pstmtSetLatest, i);
                 pstmtSetLatest.executeUpdate();
                 //Db.getCache(table).remove(dbKey);
             }

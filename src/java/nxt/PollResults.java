@@ -7,6 +7,7 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -35,17 +36,17 @@ public abstract class PollResults<K, V> {
 
         @Override
         protected void save(Connection con, PollResults pr) throws SQLException {
-            String query = "INSERT INTO "+table+" (id, results_type, results_json, height) VALUES (?, ?, ?, ?)";
+            String query = "INSERT INTO " + table + " (id, results_type, results_json, height) VALUES (?, ?, ?, ?)";
             try (PreparedStatement pstmt = con.prepareStatement(query)) {
                 int i = 0;
                 pstmt.setLong(++i, pr.getPollId());
 
                 byte resultsType;
-                if(pr instanceof Binary){
+                if (pr instanceof Binary) {
                     resultsType = BINARY_RESULTS;
-                } else if(pr instanceof Choice){
+                } else if (pr instanceof Choice) {
                     resultsType = CHOICE_RESULTS;
-                }else{
+                } else {
                     throw new NxtException.NotValidException("Wrong kind of results");
                 }
 
@@ -53,19 +54,20 @@ public abstract class PollResults<K, V> {
                 pstmt.setString(++i, pr.encodeResultsAsJson());
                 pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
                 pstmt.executeUpdate();
-            }catch(NxtException.ValidationException ve){
+            } catch (NxtException.ValidationException ve) {
                 throw new SQLException(ve);
             }
         }
     };
 
-    static void init() {}
+    static void init() {
+    }
 
     protected long pollId;
     private final DbKey dbKey;
     protected Map<K, V> results;
 
-    PollResults(long pollId, Map<K,V> results) {
+    PollResults(long pollId, Map<K, V> results) {
         this.pollId = pollId;
         this.dbKey = pollResultsDbKeyFactory.newKey(this.pollId);
         this.results = results;
@@ -87,11 +89,11 @@ public abstract class PollResults<K, V> {
         String resultsAsJson = rs.getString("results_json");
 
         try {
-            if(mode==BINARY_RESULTS){
-                 results = new Binary(pollId, resultsAsJson);
-            }else if(mode==CHOICE_RESULTS){
+            if (mode == BINARY_RESULTS) {
+                results = new Binary(pollId, resultsAsJson);
+            } else if (mode == CHOICE_RESULTS) {
                 results = new Choice(pollId, resultsAsJson);
-            }else{
+            } else {
                 throw new NxtException.NotValidException("wrong kind of results");
             }
         } catch (NxtException.ValidationException e) {
@@ -112,7 +114,7 @@ public abstract class PollResults<K, V> {
         return resultsTable.get(pollResultsDbKeyFactory.newKey(pollId));
     }
 
-    public static void save(PollResults pr){
+    public static void save(PollResults pr) {
         resultsTable.insert(pr);
     }
 
@@ -120,11 +122,11 @@ public abstract class PollResults<K, V> {
         return JSONObject.toJSONString(results);
     }
 
-    protected Map<K,V> decodeResultsFromJson(String json) throws NxtException.ValidationException{
+    protected Map<K, V> decodeResultsFromJson(String json) throws NxtException.ValidationException {
         try {
-            return (Map<K, V>)(new JSONParser().parse(json));
+            return (Map<K, V>) (new JSONParser().parse(json));
         } catch (ParseException e) {
-            throw new NxtException.NotValidException("Illegal contents of pollresults: "+json);
+            throw new NxtException.NotValidException("Illegal contents of pollresults: " + json);
         }
     }
 
@@ -147,20 +149,20 @@ public abstract class PollResults<K, V> {
             super(pollId, resultsAsJson);
         }
 
-        protected Map<String, Pair.YesNoCounts> decodeResultsFromJson(String json) throws NxtException.ValidationException{
+        protected Map<String, Pair.YesNoCounts> decodeResultsFromJson(String json) throws NxtException.ValidationException {
             try {
                 JSONParser parser = new JSONParser();
-                Map<String, JSONArray> temp = (Map<String, JSONArray>)(parser.parse(json));
+                Map<String, JSONArray> temp = (Map<String, JSONArray>) (parser.parse(json));
 
                 Map<String, Pair.YesNoCounts> resulting = new HashMap<>();
-                for(Map.Entry<String, JSONArray> entry:temp.entrySet()){
-                    long yes = (long)entry.getValue().get(0);
-                    long no = (long)entry.getValue().get(1);
+                for (Map.Entry<String, JSONArray> entry : temp.entrySet()) {
+                    long yes = (long) entry.getValue().get(0);
+                    long no = (long) entry.getValue().get(1);
                     resulting.put(entry.getKey(), new Pair.YesNoCounts(yes, no));
                 }
                 return resulting;
             } catch (ParseException e) {
-                throw new NxtException.NotValidException("Illegal contents of pollresults: "+json);
+                throw new NxtException.NotValidException("Illegal contents of poll results: " + json);
             }
         }
     }

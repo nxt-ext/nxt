@@ -1,10 +1,7 @@
 package nxt;
 
-import nxt.db.DbClause;
-import nxt.db.DbIterator;
 import nxt.db.DbKey;
 import nxt.db.EntityDbTable;
-
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;

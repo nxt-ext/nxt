@@ -469,7 +469,6 @@ public interface Appendix {
             }
         }
 
-        //todo: builder?
         TwoPhased(int maxHeight, byte votingModel, long quorum, long voteThreshold, Long[] possibleVoters) {
             this.maxHeight = maxHeight;
             this.votingModel = votingModel;

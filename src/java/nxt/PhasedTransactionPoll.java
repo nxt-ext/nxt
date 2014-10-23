@@ -99,7 +99,7 @@ public class PhasedTransactionPoll extends CommonPollStructure {
 
 
     void save(Connection con) throws SQLException {
-        try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO pending_transactions (id,  "
+        try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO pending_transactions (id, "
                 + "finish,  voting_model, quorum, min_balance, asset_id, "
                 + "finished, height) VALUES (?, ?, ?, ?, ?, ?, ?, ?)")) {
             int i = 0;
