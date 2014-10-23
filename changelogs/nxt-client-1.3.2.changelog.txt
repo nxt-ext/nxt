@@ -24,4 +24,13 @@ last block as of that timestamp. The parameters to getBlock: "block",
 if both height and timestamp are specified, height is used and timestamp
 is ignored. If no parameters, current last block is returned.
 
+getState now accepts an optional "includeCounts" parameter, default true.
+If set to false, database table counts, which are slow to retrieve, are
+not included in the response.
+
+getTrades, getAllTrades, and getAssetTransfers API now accept an optional
+"includeAssetInfo" parameter, default true. If set to false, asset name
+and decimals are not included in the result Trade json, and not having to
+retrieve those speeds up the request processing.
+
 

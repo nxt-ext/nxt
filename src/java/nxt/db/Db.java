@@ -95,6 +95,15 @@ public final class Db {
         }
     }
 
+    public static void analyzeTables() {
+        try (Connection con = cp.getConnection();
+             Statement stmt = con.createStatement()) {
+            stmt.execute("ANALYZE SAMPLE_SIZE 0");
+        } catch (SQLException e) {
+            throw new RuntimeException(e.toString(), e);
+        }
+    }
+
     public static void shutdown() {
         try (Connection con = cp.getConnection();
              Statement stmt = con.createStatement()) {
