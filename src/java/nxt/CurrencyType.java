@@ -225,10 +225,10 @@ public enum CurrencyType {
                 throw new NxtException.NotValidException("Invalid currency code: " + code + " code must be all upper case");
             }
         }
-        if (Currency.getCurrencyByName(normalizedName) != null) {
+        if (Currency.getCurrencyByName(normalizedName) != null || Currency.getCurrencyByCode(name.toUpperCase()) != null) {
             throw new NxtException.NotCurrentlyValidException("Currency name already used: " + normalizedName);
         }
-        if (Currency.getCurrencyByCode(code) != null) {
+        if (Currency.getCurrencyByCode(code) != null || Currency.getCurrencyByName(code.toLowerCase()) != null) {
             throw new NxtException.NotCurrentlyValidException("Currency code already used: " + code);
         }
     }

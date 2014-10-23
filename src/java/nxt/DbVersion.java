@@ -407,7 +407,8 @@ final class DbVersion {
                 apply("CREATE UNIQUE INDEX IF NOT EXISTS block_timestamp_idx ON block (timestamp DESC)");
             case 128:
                 apply("CREATE TABLE IF NOT EXISTS currency (db_id IDENTITY, id BIGINT NOT NULL, account_id BIGINT NOT NULL, "
-                        + "name VARCHAR NOT NULL, code VARCHAR NOT NULL, description VARCHAR, type INT NOT NULL, total_supply BIGINT NOT NULL, "
+                        + "name VARCHAR NOT NULL, name_lower VARCHAR AS LOWER (name) NOT NULL, code VARCHAR NOT NULL, "
+                        + "description VARCHAR, type INT NOT NULL, total_supply BIGINT NOT NULL, "
                         + "issuance_height INT NOT NULL, min_reserve_per_unit_nqt BIGINT NOT NULL, min_difficulty TINYINT NOT NULL, "
                         + "max_difficulty TINYINT NOT NULL, ruleset TINYINT NOT NULL, algorithm TINYINT NOT NULL, current_supply BIGINT NOT NULL, "
                         + "current_reserve_per_unit_nqt BIGINT NOT NULL, "
@@ -480,7 +481,7 @@ final class DbVersion {
             case 154:
                 apply("CREATE INDEX IF NOT EXISTS account_currency_units_idx ON account_currency (units DESC)");
             case 155:
-                apply("CREATE UNIQUE INDEX IF NOT EXISTS currency_name_idx ON currency (name, height DESC)");
+                apply("CREATE UNIQUE INDEX IF NOT EXISTS currency_name_idx ON currency (name_lower, height DESC)");
             case 156:
                 apply("CREATE UNIQUE INDEX IF NOT EXISTS currency_code_idx ON currency (code, height DESC)");
             case 157:
