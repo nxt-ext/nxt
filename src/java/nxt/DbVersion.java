@@ -487,14 +487,12 @@ final class DbVersion {
             case 157:
                 apply("CREATE TABLE IF NOT EXISTS shuffling (db_id INT IDENTITY, id BIGINT NOT NULL, currency_id BIGINT NOT NULL, "
                         + "issuer_id BIGINT NOT NULL, amount BIGINT NOT NULL, participant_count BIGINT NOT NULL, cancellation_height INT NOT NULL, "
-                        + "height INT NOT NULL)");
+                        + "state TINYINT NOT NULL, assignee_account_id BIGINT NOT NULL, "
+                        + "height INT NOT NULL, latest BOOLEAN NOT NULL DEFAULT TRUE)");
             case 158:
                 apply("CREATE TABLE IF NOT EXISTS shuffling_participant (db_id INT IDENTITY, shuffling_id BIGINT NOT NULL, account_id BIGINT NOT NULL, recipient_id BIGINT NOT NULL, "
                         + "height INT NOT NULL, latest BOOLEAN NOT NULL DEFAULT TRUE)");
             case 159:
-                apply("CREATE TABLE IF NOT EXISTS shuffling_assignee (db_id INT IDENTITY, shuffling_id BIGINT NOT NULL, account_id BIGINT NOT NULL"
-                        + "height INT NOT NULL, latest BOOLEAN NOT NULL DEFAULT TRUE)");
-            case 160:
                 return;
             default:
                 throw new RuntimeException("Database inconsistent with code, probably trying to run older code on newer database");

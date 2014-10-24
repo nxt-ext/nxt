@@ -47,6 +47,10 @@ public final class ShufflingParticipant {
         return shufflingParticipantTable.getCount();
     }
 
+    public static int getCount(long shufflingId) {
+        return shufflingParticipantTable.getCount(new DbClause.LongClause("shuffling_id", shufflingId));
+    }
+
     public static boolean addListener(Listener<ShufflingParticipant> listener, Event eventType) {
         return listeners.addListener(listener, eventType);
     }
@@ -89,7 +93,7 @@ public final class ShufflingParticipant {
         this.recipientId = recipientId;
     }
 
-    private ShufflingParticipant(Transaction transaction, Attachment.MonetarySystemShufflingRegistration attachment) {
+    ShufflingParticipant(Transaction transaction, Attachment.MonetarySystemShufflingRegistration attachment) {
         this.shufflingId = attachment.getShufflingId();
         this.accountId = transaction.getSenderId();
         this.dbKey = shufflingParticipantDbKeyFactory.newKey(shufflingId, accountId);

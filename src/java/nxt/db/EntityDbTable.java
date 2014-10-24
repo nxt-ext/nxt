@@ -262,6 +262,18 @@ public abstract class EntityDbTable<T> extends DerivedDbTable {
         }
     }
 
+    public final int getCount(DbClause dbClause) {
+        try (Connection con = Db.getConnection();
+             PreparedStatement pstmt = con.prepareStatement("SELECT COUNT(*) FROM " + table
+                     + (multiversion ? " WHERE " + dbClause.getClause() + " and latest = TRUE" : ""));
+             ResultSet rs = pstmt.executeQuery()) {
+            rs.next();
+            return rs.getInt(1);
+        } catch (SQLException e) {
+            throw new RuntimeException(e.toString(), e);
+        }
+    }
+
     public final int getRowCount() {
         try (Connection con = Db.getConnection();
              PreparedStatement pstmt = con.prepareStatement("SELECT COUNT(*) FROM " + table);
