@@ -34,7 +34,7 @@ public final class CurrencyExchange {
         CurrencySell.addOffer(transaction, attachment);
     }
 
-    static void exchangeCurrencyForNXT(Account account, long currencyId, long rateNQT, long units) {
+    static void exchangeCurrencyForNXT(Transaction transaction, Account account, long currencyId, long rateNQT, long units) {
         long extraAmountNQT = 0;
         long remainingUnits = units;
 
@@ -60,8 +60,7 @@ public final class CurrencyExchange {
                 Account counterAccount = Account.getAccount(offer.getAccountId());
                 counterAccount.addToBalanceNQT(-curAmountNQT);
                 counterAccount.addToCurrencyUnits(currencyId, curUnits);
-                Exchange.addExchange(currencyId, Nxt.getBlockchain().getLastBlock(),
-                        offer, account.getId(), offer.getAccountId(), curUnits);
+                Exchange.addExchange(transaction, currencyId, offer, account.getId(), offer.getAccountId(), curUnits);
             }
         }
 
@@ -70,7 +69,7 @@ public final class CurrencyExchange {
         account.addToUnconfirmedCurrencyUnits(currencyId, remainingUnits);
     }
 
-    static void exchangeNXTForCurrency(Account account, long currencyId, long rateNQT, long units) {
+    static void exchangeNXTForCurrency(Transaction transaction, Account account, long currencyId, long rateNQT, long units) {
         long extraUnits = 0;
         long remainingAmountNQT = Convert.safeMultiply(units, rateNQT);
 
@@ -96,8 +95,7 @@ public final class CurrencyExchange {
                 Account counterAccount = Account.getAccount(offer.getAccountId());
                 counterAccount.addToBalanceNQT(curAmountNQT);
                 counterAccount.addToCurrencyUnits(currencyId, -curUnits);
-                Exchange.addExchange(currencyId, Nxt.getBlockchain().getLastBlock(),
-                        offer, offer.getAccountId(), account.getId(), curUnits);
+                Exchange.addExchange(transaction, currencyId, offer, offer.getAccountId(), account.getId(), curUnits);
             }
         }
 

@@ -18,8 +18,7 @@ public final class Exchange {
 
     private static final Listeners<Exchange,Event> listeners = new Listeners<>();
 
-    //TODO: shouldn't exchange have buy_offer_id and sell_offer_id instead of just offer_id?
-    private static final DbKey.LongKeyFactory<Exchange> exchangeDbKeyFactory = new DbKey.LongKeyFactory<Exchange>("offer_id") {
+    private static final DbKey.LinkKeyFactory<Exchange> exchangeDbKeyFactory = new DbKey.LinkKeyFactory<Exchange>("transaction_id", "offer_id") {
 
         @Override
         public DbKey newKey(Exchange exchange) {
@@ -115,8 +114,8 @@ public final class Exchange {
         }
     }
 
-    static Exchange addExchange(long currencyId, Block block, CurrencyOffer offer, long sellerId, long buyerId, long units) {
-        Exchange exchange = new Exchange(currencyId, block, offer, sellerId, buyerId, units);
+    static Exchange addExchange(Transaction transaction, long currencyId, CurrencyOffer offer, long sellerId, long buyerId, long units) {
+        Exchange exchange = new Exchange(transaction, currencyId, offer, sellerId, buyerId, units);
         exchangeTable.insert(exchange);
         listeners.notify(exchange, Event.EXCHANGE);
         return exchange;
@@ -125,6 +124,7 @@ public final class Exchange {
     static void init() {}
 
 
+    private final long transactionId;
     private final int timestamp;
     private final long currencyId;
     private final long blockId;
@@ -136,26 +136,28 @@ public final class Exchange {
     private final long units;
     private final long rate;
 
-    private Exchange(long currencyId, Block block, CurrencyOffer offer, long sellerId, long buyerId, long units) {
-        this.blockId = block.getId();
-        this.height = block.getHeight();
+    private Exchange(Transaction transaction, long currencyId, CurrencyOffer offer, long sellerId, long buyerId, long units) {
+        this.transactionId = transaction.getId();
+        this.blockId = transaction.getBlockId();
+        this.height = transaction.getHeight();
         this.currencyId = currencyId;
-        this.timestamp = block.getTimestamp();
+        this.timestamp = transaction.getBlockTimestamp();
         this.offerId = offer.getId();
         this.sellerId = sellerId;
         this.buyerId = buyerId;
-        this.dbKey = exchangeDbKeyFactory.newKey(this.offerId); // TODO, not unique
+        this.dbKey = exchangeDbKeyFactory.newKey(this.transactionId, this.offerId);
         this.units = units;
         this.rate = offer.getRateNQT();
     }
 
     private Exchange(ResultSet rs) throws SQLException {
+        this.transactionId = rs.getLong("transaction_id");
         this.currencyId = rs.getLong("currency_id");
         this.blockId = rs.getLong("block_id");
         this.offerId = rs.getLong("offer_id");
         this.sellerId = rs.getLong("seller_id");
         this.buyerId = rs.getLong("buyer_id");
-        this.dbKey = exchangeDbKeyFactory.newKey(this.offerId); // TODO, not unique
+        this.dbKey = exchangeDbKeyFactory.newKey(this.transactionId, this.offerId);
         this.units = rs.getLong("units");
         this.rate = rs.getLong("rate");
         this.timestamp = rs.getInt("timestamp");
@@ -163,9 +165,10 @@ public final class Exchange {
     }
 
     private void save(Connection con) throws SQLException {
-        try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO exchange (currency_id, block_id, "
-                + "offer_id, seller_id, buyer_id, units, rate, timestamp, height) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
+        try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO exchange (transaction_id, currency_id, block_id, "
+                + "offer_id, seller_id, buyer_id, units, rate, timestamp, height) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
             int i = 0;
+            pstmt.setLong(++i, this.getTransactionId());
             pstmt.setLong(++i, this.getCurrencyId());
             pstmt.setLong(++i, this.getBlockId());
             pstmt.setLong(++i, this.getOfferId());
@@ -177,6 +180,10 @@ public final class Exchange {
             pstmt.setInt(++i, this.getHeight());
             pstmt.executeUpdate();
         }
+    }
+
+    public long getTransactionId() {
+        return transactionId;
     }
 
     public long getBlockId() { return blockId; }
@@ -206,7 +213,7 @@ public final class Exchange {
     @Override
     public String toString() {
         return "Exchange currency: " + Convert.toUnsignedLong(currencyId) + " offer: " + Convert.toUnsignedLong(offerId)
-                + " rate: " + rate + " units: " + units + " height: " + height;
+                + " rate: " + rate + " units: " + units + " height: " + height + " transaction: " + Convert.toUnsignedLong(transactionId);
     }
 
 }

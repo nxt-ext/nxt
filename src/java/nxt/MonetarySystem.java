@@ -407,9 +407,9 @@ public abstract class MonetarySystem extends TransactionType {
         void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
             Attachment.MonetarySystemExchange attachment = (Attachment.MonetarySystemExchange) transaction.getAttachment();
             if (attachment.isBuy()) {
-                CurrencyExchange.exchangeNXTForCurrency(senderAccount, attachment.getCurrencyId(), attachment.getRateNQT(), attachment.getUnits());
+                CurrencyExchange.exchangeNXTForCurrency(transaction, senderAccount, attachment.getCurrencyId(), attachment.getRateNQT(), attachment.getUnits());
             } else {
-                CurrencyExchange.exchangeCurrencyForNXT(senderAccount, attachment.getCurrencyId(), attachment.getRateNQT(), -attachment.getUnits());
+                CurrencyExchange.exchangeCurrencyForNXT(transaction, senderAccount, attachment.getCurrencyId(), attachment.getRateNQT(), -attachment.getUnits());
             }
         }
 
