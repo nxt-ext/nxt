@@ -335,7 +335,7 @@ var NRS = (function(NRS, $, undefined) {
 			} else {
 				$("#blocks_transactions_per_hour").html(Math.round(totalTransactions / (time / 60) * 60)).removeClass("loading_dots");
 			}
-			$("#blocks_average_generation_time").html(Math.round(time / 100) + "s").removeClass("loading_dots");
+			$("#blocks_average_generation_time").html(Math.round(time / NRS.itemsPerPage) + "s").removeClass("loading_dots");
 		}
 
 		NRS.dataLoaded(rows);
