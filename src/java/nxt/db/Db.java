@@ -105,8 +105,9 @@ public final class Db {
     }
 
     public static void shutdown() {
-        try (Connection con = cp.getConnection();
-             Statement stmt = con.createStatement()) {
+        try {
+            Connection con = cp.getConnection();
+            Statement stmt = con.createStatement();
             stmt.execute("SHUTDOWN COMPACT");
             Logger.logShutdownMessage("Database shutdown completed");
         } catch (SQLException e) {
