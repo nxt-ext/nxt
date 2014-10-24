@@ -17,10 +17,9 @@ public abstract class CurrencyOffer {
     protected long limit; // limit on the total sum of units for this offer across transactions
     protected long supply; // total units supply for the offer
     protected final int expirationHeight;
-    protected final int height;
+    protected final int creationHeight;
 
-    //TODO: needs to use creation_height instead of height
-    protected CurrencyOffer(long id, long currencyId, long accountId, long rateNQT, long limit, long supply, int expirationHeight, int height) {
+    protected CurrencyOffer(long id, long currencyId, long accountId, long rateNQT, long limit, long supply, int expirationHeight, int creationHeight) {
         this.id = id;
         this.currencyId = currencyId;
         this.accountId = accountId;
@@ -28,7 +27,7 @@ public abstract class CurrencyOffer {
         this.limit = limit;
         this.supply = supply;
         this.expirationHeight = expirationHeight;
-        this.height = height;
+        this.creationHeight = creationHeight;
     }
 
     protected CurrencyOffer(ResultSet rs) throws SQLException {
@@ -39,12 +38,12 @@ public abstract class CurrencyOffer {
         this.limit = rs.getLong("unit_limit");
         this.supply = rs.getLong("supply");
         this.expirationHeight = rs.getInt("expiration_height");
-        this.height = rs.getInt("height");
+        this.creationHeight = rs.getInt("creation_height");
     }
 
     protected void save(Connection con, String table) throws SQLException {
         try (PreparedStatement pstmt = con.prepareStatement("MERGE INTO " + table + " (id, currency_id, account_id, "
-                + "rate, unit_limit, supply, expiration_height, height, latest) KEY (id, height) VALUES (?, ?, ?, ?, ?, ?, ?, ?, TRUE)")) {
+                + "rate, unit_limit, supply, expiration_height, creation_height, height, latest) KEY (id, height) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, TRUE)")) {
             int i = 0;
             pstmt.setLong(++i, this.getId());
             pstmt.setLong(++i, this.getCurrencyId());
@@ -54,6 +53,7 @@ public abstract class CurrencyOffer {
             pstmt.setLong(++i, this.getSupply());
             pstmt.setInt(++i, this.getExpirationHeight());
             pstmt.setInt(++i, this.getHeight());
+            pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
             pstmt.executeUpdate();
         }
     }
@@ -87,7 +87,7 @@ public abstract class CurrencyOffer {
     }
 
     public int getHeight() {
-        return height;
+        return creationHeight;
     }
 
     public abstract CurrencyOffer getCounterOffer();
