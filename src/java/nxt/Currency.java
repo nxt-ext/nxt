@@ -51,7 +51,7 @@ public final class Currency {
     }
 
     public static Currency getCurrencyByName(String name) {
-        return currencyTable.getBy(new DbClause.StringClause("name", name));
+        return currencyTable.getBy(new DbClause.StringClause("name_lower", name.toLowerCase()));
     }
 
     public static Currency getCurrencyByCode(String code) {
