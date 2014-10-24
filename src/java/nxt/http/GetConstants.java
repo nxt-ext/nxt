@@ -186,11 +186,11 @@ public final class GetConstants extends APIServlet.APIRequestHandler {
         subtype.put("description", "Currency minting");
         subtypes.add(subtype);
         subtype = new JSONObject();
-        subtype.put("value", MonetarySystem.SHUFFLING_INITIATION.getSubtype());
+        subtype.put("value", MonetarySystem.SHUFFLING_CREATION.getSubtype());
         subtype.put("description", "Shuffling initiation");
         subtypes.add(subtype);
         subtype = new JSONObject();
-        subtype.put("value", MonetarySystem.SHUFFLING_CONTINUATION.getSubtype());
+        subtype.put("value", MonetarySystem.SHUFFLING_REGISTRATION.getSubtype());
         subtype.put("description", "Shuffling continuation");
         subtypes.add(subtype);
         subtype = new JSONObject();

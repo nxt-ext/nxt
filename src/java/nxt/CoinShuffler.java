@@ -15,129 +15,81 @@ public final class CoinShuffler {
         CANCELLED
     }
 
-    private static class Shuffling {
-
-        private final long currencyId;
-        private final long amount;
-        private final byte numberOfParticipants;
-        private final short maxInitiationDelay;
-        private final short maxContinuationDelay;
-        private final short maxFinalizationDelay;
-        private final short maxCancellationDelay;
-
-        private final int hashCode;
-
-        private State state;
-        private int lastActionTimestamp;
-        private final List<Long> participants;
-        private final Map<Long, EncryptedData> encryptedRecipients;
-        private final Map<Long, long[]> decryptedRecipients;
-        private final Map<Long, byte[]> keys;
-
-        Shuffling(long currencyId, long amount, byte numberOfParticipants, short maxInitiationDelay, short maxContinuationDelay, short maxFinalizationDelay, short maxCancellationDelay) {
-            this.currencyId = currencyId;
-            this.amount = amount;
-            this.numberOfParticipants = numberOfParticipants;
-            this.maxInitiationDelay = maxInitiationDelay;
-            this.maxContinuationDelay = maxContinuationDelay;
-            this.maxFinalizationDelay = maxFinalizationDelay;
-            this.maxCancellationDelay = maxCancellationDelay;
-
-            hashCode = (int)(currencyId ^ (currencyId >>> 32)) ^ (int)(amount ^ (amount >>> 32)) ^ (int)numberOfParticipants ^
-                    (int)maxInitiationDelay ^ (int)maxContinuationDelay ^ (int)maxFinalizationDelay ^ (int)maxCancellationDelay;
-
-            state = State.INITIATED;
-            lastActionTimestamp = BlockchainImpl.getInstance().getLastBlock().getTimestamp();
-            participants = new ArrayList<>(numberOfParticipants);
-            encryptedRecipients = new HashMap<>();
-            decryptedRecipients = new HashMap<>();
-            keys = new HashMap<>();
-        }
-
-        @Override
-        public int hashCode() {
-            return hashCode;
-        }
-
-        @Override
-        public boolean equals(Object obj) {
-            return this.currencyId == ((Shuffling)obj).currencyId
-                    && this.amount == ((Shuffling)obj).amount
-                    && this.numberOfParticipants == ((Shuffling)obj).numberOfParticipants
-                    && this.maxInitiationDelay == ((Shuffling)obj).maxInitiationDelay
-                    && this.maxContinuationDelay == ((Shuffling)obj).maxContinuationDelay
-                    && this.maxFinalizationDelay == ((Shuffling)obj).maxFinalizationDelay
-                    && this.maxCancellationDelay == ((Shuffling)obj).maxCancellationDelay;
-        }
-
-        public void addParticipant(Long accountId) {
-            participants.add(accountId);
-            if (participants.size() == numberOfParticipants) {
-                state = State.CONTINUED;
-            }
-            lastActionTimestamp = BlockchainImpl.getInstance().getLastBlock().getTimestamp();
-        }
-
-    }
+//    private static class Shuffling {
+//
+//        private final long currencyId;
+//        private final long amount;
+//        private final byte numberOfParticipants;
+//        private final short maxInitiationDelay;
+//        private final short maxContinuationDelay;
+//        private final short maxFinalizationDelay;
+//        private final short maxCancellationDelay;
+//
+//        private final int hashCode;
+//
+//        private State state;
+//        private int lastActionTimestamp;
+//        private final List<Long> participants;
+//        private final Map<Long, EncryptedData> encryptedRecipients;
+//        private final Map<Long, long[]> decryptedRecipients;
+//        private final Map<Long, byte[]> keys;
+//
+//        Shuffling(long currencyId, long amount, byte numberOfParticipants, short maxInitiationDelay, short maxContinuationDelay, short maxFinalizationDelay, short maxCancellationDelay) {
+//            this.currencyId = currencyId;
+//            this.amount = amount;
+//            this.numberOfParticipants = numberOfParticipants;
+//            this.maxInitiationDelay = maxInitiationDelay;
+//            this.maxContinuationDelay = maxContinuationDelay;
+//            this.maxFinalizationDelay = maxFinalizationDelay;
+//            this.maxCancellationDelay = maxCancellationDelay;
+//
+//            hashCode = (int)(currencyId ^ (currencyId >>> 32)) ^ (int)(amount ^ (amount >>> 32)) ^ (int)numberOfParticipants ^
+//                    (int)maxInitiationDelay ^ (int)maxContinuationDelay ^ (int)maxFinalizationDelay ^ (int)maxCancellationDelay;
+//
+//            state = State.INITIATED;
+//            lastActionTimestamp = BlockchainImpl.getInstance().getLastBlock().getTimestamp();
+//            participants = new ArrayList<>(numberOfParticipants);
+//            encryptedRecipients = new HashMap<>();
+//            decryptedRecipients = new HashMap<>();
+//            keys = new HashMap<>();
+//        }
+//
+//        @Override
+//        public int hashCode() {
+//            return hashCode;
+//        }
+//
+//        @Override
+//        public boolean equals(Object obj) {
+//            return this.currencyId == ((Shuffling)obj).currencyId
+//                    && this.amount == ((Shuffling)obj).amount
+//                    && this.numberOfParticipants == ((Shuffling)obj).numberOfParticipants
+//                    && this.maxInitiationDelay == ((Shuffling)obj).maxInitiationDelay
+//                    && this.maxContinuationDelay == ((Shuffling)obj).maxContinuationDelay
+//                    && this.maxFinalizationDelay == ((Shuffling)obj).maxFinalizationDelay
+//                    && this.maxCancellationDelay == ((Shuffling)obj).maxCancellationDelay;
+//        }
+//
+//        public void addParticipant(Long accountId) {
+//            participants.add(accountId);
+//            if (participants.size() == numberOfParticipants) {
+//                state = State.CONTINUED;
+//            }
+//            lastActionTimestamp = BlockchainImpl.getInstance().getLastBlock().getTimestamp();
+//        }
+//
+//    }
 
     static {
         Nxt.getBlockchainProcessor().addListener(new Listener<Block>() {
             @Override
             public void notify(Block block) {
-                for (Map.Entry<Long, Shuffling> shufflingEntry : shufflings.entrySet()) {
+                for (Map.Entry<Long, Shuffling> shufflingEntry : Shuffling.getAllShufflings(0, -1)) {
                     Long shufflingId = shufflingEntry.getKey();
                     Shuffling shuffling = shufflingEntry.getValue();
-                    switch (shuffling.state) {
-                        case INITIATED: {
-                            if (block.getTimestamp() - shuffling.lastActionTimestamp > shuffling.maxInitiationDelay) {
-                                for (Long accountId : shuffling.participants) {
-                                    Account.getAccount(accountId).addToCurrencyAndUnconfirmedCurrencyUnits(shuffling.currencyId, shuffling.amount);
-                                }
-                                shufflings.remove(shufflingId);
-                            }
-                        } break;
-
-                        case CONTINUED: {
-                            if (block.getTimestamp() - shuffling.lastActionTimestamp > shuffling.maxContinuationDelay) {
-                                boolean rogueIsPenalised = false;
-                                for (Long accountId : shuffling.participants) {
-                                    if (!rogueIsPenalised && shuffling.encryptedRecipients.get(accountId) == null) {
-                                        rogueIsPenalised = true;
-                                        continue;
-                                    }
-                                    Account.getAccount(accountId).addToCurrencyAndUnconfirmedCurrencyUnits(shuffling.currencyId, shuffling.amount);
-                                }
-                                shufflings.remove(shufflingId);
-                            }
-                        } break;
-
-                        case FINALIZED: {
-                            if (block.getTimestamp() - shuffling.lastActionTimestamp > shuffling.maxFinalizationDelay) {
-                                boolean rogueIsPenalised = false;
-                                for (Long accountId : shuffling.participants) {
-                                    if (!rogueIsPenalised && shuffling.decryptedRecipients.get(accountId) == null) {
-                                        rogueIsPenalised = true;
-                                        continue;
-                                    }
-                                    Account.getAccount(accountId).addToCurrencyAndUnconfirmedCurrencyUnits(shuffling.currencyId, shuffling.amount);
-                                }
-                                shufflings.remove(shufflingId);
-                            }
-                        } break;
-
-                        default: {
-                            if (block.getTimestamp() - shuffling.lastActionTimestamp > shuffling.maxCancellationDelay) {
-                                boolean rogueIsPenalised = false;
-                                for (Long accountId : shuffling.participants) {
-                                    if (!rogueIsPenalised && shuffling.keys.get(accountId) == null) {
-                                        rogueIsPenalised = true;
-                                        continue;
-                                    }
-                                    Account.getAccount(accountId).addToCurrencyAndUnconfirmedCurrencyUnits(shuffling.currencyId, shuffling.amount);
-                                }
-                                shufflings.remove(shufflingId);
-                            }
-                        }
+                    // Cancel the shuffling in case the blockchain reached its cancellation height
+                    if (block.getHeight() > shuffling.getCancellationHeight()) {
+                        shuffling.cancel();
                     }
                 }
             }
@@ -187,7 +139,7 @@ public final class CoinShuffler {
         return shufflings.get(shufflingId).keys.get(accountId) != null;
     }
 
-    public static void initiateShuffling(Long transactionId, Account account, Long currencyId, long amount, byte numberOfParticipants, short maxInitiationDelay, short maxContinuationDelay, short maxFinalizationDelay, short maxCancellationDelay) {
+    public static void createShuffling(Long transactionId, Account account, Long currencyId, long amount, byte numberOfParticipants, short maxInitiationDelay, short maxContinuationDelay, short maxFinalizationDelay, short maxCancellationDelay) {
         account.addToCurrencyUnits(currencyId, -amount);
 
         Shuffling newShuffling = new Shuffling(currencyId, amount, numberOfParticipants, maxInitiationDelay, maxContinuationDelay, maxFinalizationDelay, maxCancellationDelay);

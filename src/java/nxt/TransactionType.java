@@ -161,9 +161,9 @@ public abstract class TransactionType {
                     case SUBTYPE_MONETARY_SYSTEM_CURRENCY_MINTING:
                         return MonetarySystem.CURRENCY_MINTING;
                     case SUBTYPE_MONETARY_SYSTEM_SHUFFLING_INITIATION:
-                        return MonetarySystem.SHUFFLING_INITIATION;
+                        return MonetarySystem.SHUFFLING_CREATION;
                     case SUBTYPE_MONETARY_SYSTEM_SHUFFLING_CONTINUATION:
-                        return MonetarySystem.SHUFFLING_CONTINUATION;
+                        return MonetarySystem.SHUFFLING_REGISTRATION;
                     case SUBTYPE_MONETARY_SYSTEM_SHUFFLING_FINALIZATION:
                         return MonetarySystem.SHUFFLING_FINALIZATION;
                     case SUBTYPE_MONETARY_SYSTEM_SHUFFLING_CANCELLATION:
