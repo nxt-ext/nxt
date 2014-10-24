@@ -33,4 +33,8 @@ getTrades, getAllTrades, and getAssetTransfers API now accept an optional
 and decimals are not included in the result Trade json, and not having to
 retrieve those speeds up the request processing.
 
+Added getBlocks API, returning the blocks ordered by height descending,
+and using firstIndex, lastIndex parameters for pagination. Restricted to
+return up to 100 blocks at a time. If includeTransactions is true, also
+includes the full transaction JSON.
 

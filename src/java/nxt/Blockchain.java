@@ -22,6 +22,8 @@ public interface Blockchain {
 
     DbIterator<? extends Block> getAllBlocks();
 
+    DbIterator<? extends Block> getBlocks(int from, int to);
+
     DbIterator<? extends Block> getBlocks(Account account, int timestamp);
 
     DbIterator<? extends Block> getBlocks(Account account, int timestamp, int from, int to);
@@ -33,8 +35,6 @@ public interface Blockchain {
     List<? extends Block> getBlocksAfter(long blockId, int limit);
 
     long getBlockIdAtHeight(int height);
-
-    List<? extends Block> getBlocksFromHeight(int height);
 
     Transaction getTransaction(long transactionId);
 
