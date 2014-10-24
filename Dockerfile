@@ -24,8 +24,8 @@ RUN apt-get install -y oracle-java7-installer
 RUN mkdir /nxt
 ADD . /nxt
 # repo has
-ADD start.sh /start.sh
-RUN chmod +x /start.sh
+ADD docker_start.sh /docker_start.sh
+RUN chmod +x /docker_start.sh
 
 RUN cd /nxt; ./compile.sh
 # both Nxt ports get exposed
