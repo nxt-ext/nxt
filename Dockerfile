@@ -35,5 +35,6 @@ ADD start.sh /start.sh
 RUN chmod +x /start.sh
 
 RUN cd /nxt; ./compile.sh
-EXPOSE 7876
+EXPOSE 7876 7874
+#EXPOSE 7874
 CMD ["/start.sh"]
