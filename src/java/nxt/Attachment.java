@@ -1980,36 +1980,30 @@ public interface Attachment extends Appendix {
 
     }
 
-    //TODO: replace with buy and sell
-    public final static class MonetarySystemExchange extends AbstractAttachment {
+    abstract static class MonetarySystemExchange extends AbstractAttachment {
 
         private final long currencyId;
         private final long rateNQT;
         private final long units;
 
-        MonetarySystemExchange(ByteBuffer buffer, byte transactionVersion) {
+        private MonetarySystemExchange(ByteBuffer buffer, byte transactionVersion) {
             super(buffer, transactionVersion);
             this.currencyId = buffer.getLong();
             this.rateNQT = buffer.getLong();
             this.units = buffer.getLong();
         }
 
-        MonetarySystemExchange(JSONObject attachmentData) {
+        private MonetarySystemExchange(JSONObject attachmentData) {
             super(attachmentData);
             this.currencyId = Convert.parseUnsignedLong((String)attachmentData.get("currency"));
             this.rateNQT = Convert.parseLong(attachmentData.get("rateNQT"));
             this.units = Convert.parseLong(attachmentData.get("units"));
         }
 
-        public MonetarySystemExchange(long currencyId, long rateNQT, long units) {
+        private MonetarySystemExchange(long currencyId, long rateNQT, long units) {
             this.currencyId = currencyId;
             this.rateNQT = rateNQT;
             this.units = units;
-        }
-
-        @Override
-        String getAppendixName() {
-            return "Exchange";
         }
 
         @Override
@@ -2031,10 +2025,6 @@ public interface Attachment extends Appendix {
             attachment.put("units", units);
         }
 
-        @Override
-        public TransactionType getTransactionType() {
-            return MonetarySystem.EXCHANGE;
-        }
 
         public long getCurrencyId() {
             return currencyId;
@@ -2048,8 +2038,56 @@ public interface Attachment extends Appendix {
             return units;
         }
 
-        public boolean isBuy() {
-            return units > 0;
+    }
+
+    public final static class MonetarySystemExchangeBuy extends MonetarySystemExchange {
+
+        MonetarySystemExchangeBuy(ByteBuffer buffer, byte transactionVersion) {
+            super(buffer, transactionVersion);
+        }
+
+        MonetarySystemExchangeBuy(JSONObject attachmentData) {
+            super(attachmentData);
+        }
+
+        public MonetarySystemExchangeBuy(long currencyId, long rateNQT, long units) {
+            super(currencyId, rateNQT, units);
+        }
+
+        @Override
+        String getAppendixName() {
+            return "ExchangeBuy";
+        }
+
+        @Override
+        public TransactionType getTransactionType() {
+            return MonetarySystem.EXCHANGE_BUY;
+        }
+
+    }
+
+    public final static class MonetarySystemExchangeSell extends MonetarySystemExchange {
+
+        MonetarySystemExchangeSell(ByteBuffer buffer, byte transactionVersion) {
+            super(buffer, transactionVersion);
+        }
+
+        MonetarySystemExchangeSell(JSONObject attachmentData) {
+            super(attachmentData);
+        }
+
+        public MonetarySystemExchangeSell(long currencyId, long rateNQT, long units) {
+            super(currencyId, rateNQT, units);
+        }
+
+        @Override
+        String getAppendixName() {
+            return "ExchangeSell";
+        }
+
+        @Override
+        public TransactionType getTransactionType() {
+            return MonetarySystem.EXCHANGE_SELL;
         }
 
     }

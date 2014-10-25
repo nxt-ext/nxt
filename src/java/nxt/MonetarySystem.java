@@ -345,26 +345,10 @@ public abstract class MonetarySystem extends TransactionType {
 
     };
 
-    //TODO: replace with EXCHANGE_BUY and EXCHANGE_SELL
-    public static final TransactionType EXCHANGE = new MonetarySystem() {
+    abstract static class MonetarySystemExchange extends MonetarySystem {
 
         @Override
-        public byte getSubtype() {
-            return TransactionType.SUBTYPE_MONETARY_SYSTEM_EXCHANGE;
-        }
-
-        @Override
-        Attachment.MonetarySystemExchange parseAttachment(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
-            return new Attachment.MonetarySystemExchange(buffer, transactionVersion);
-        }
-
-        @Override
-        Attachment.MonetarySystemExchange parseAttachment(JSONObject attachmentData) throws NxtException.NotValidException {
-            return new Attachment.MonetarySystemExchange(attachmentData);
-        }
-
-        @Override
-        void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
+        final void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
             Attachment.MonetarySystemExchange attachment = (Attachment.MonetarySystemExchange) transaction.getAttachment();
             if (attachment.getRateNQT() <= 0 || attachment.getUnits() == 0) {
                 throw new NxtException.NotValidException("Invalid exchange: " + attachment.getJSONObject());
@@ -377,45 +361,91 @@ public abstract class MonetarySystem extends TransactionType {
         }
 
         @Override
+        public final boolean hasRecipient() {
+            return false;
+        }
+
+    }
+
+    public static final TransactionType EXCHANGE_BUY = new MonetarySystemExchange() {
+
+        @Override
+        public byte getSubtype() {
+            return TransactionType.SUBTYPE_MONETARY_SYSTEM_EXCHANGE_BUY;
+        }
+
+        @Override
+        Attachment.MonetarySystemExchangeBuy parseAttachment(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
+            return new Attachment.MonetarySystemExchangeBuy(buffer, transactionVersion);
+        }
+
+        @Override
+        Attachment.MonetarySystemExchangeBuy parseAttachment(JSONObject attachmentData) throws NxtException.NotValidException {
+            return new Attachment.MonetarySystemExchangeBuy(attachmentData);
+        }
+
+
+        @Override
         boolean applyAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
-            Attachment.MonetarySystemExchange attachment = (Attachment.MonetarySystemExchange) transaction.getAttachment();
-            if (attachment.isBuy()) {
-                if (senderAccount.getUnconfirmedBalanceNQT() >= Convert.safeMultiply(attachment.getUnits(), attachment.getRateNQT())) {
-                    senderAccount.addToUnconfirmedBalanceNQT(-Convert.safeMultiply(attachment.getUnits(), attachment.getRateNQT()));
-                    return true;
-                }
-            } else {
-                if (senderAccount.getUnconfirmedCurrencyUnits(attachment.getCurrencyId()) >= -attachment.getUnits()) {
-                    senderAccount.addToUnconfirmedCurrencyUnits(attachment.getCurrencyId(), attachment.getUnits());
-                    return true;
-                }
+            Attachment.MonetarySystemExchangeBuy attachment = (Attachment.MonetarySystemExchangeBuy) transaction.getAttachment();
+            if (senderAccount.getUnconfirmedBalanceNQT() >= Convert.safeMultiply(attachment.getUnits(), attachment.getRateNQT())) {
+                senderAccount.addToUnconfirmedBalanceNQT(-Convert.safeMultiply(attachment.getUnits(), attachment.getRateNQT()));
+                return true;
             }
             return false;
         }
 
         @Override
         void undoAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
-            Attachment.MonetarySystemExchange attachment = (Attachment.MonetarySystemExchange) transaction.getAttachment();
-            if (attachment.isBuy()) {
-                senderAccount.addToUnconfirmedBalanceNQT(Convert.safeMultiply(attachment.getUnits(), attachment.getRateNQT()));
-            } else {
-                senderAccount.addToUnconfirmedCurrencyUnits(attachment.getCurrencyId(), -attachment.getUnits());
-            }
+            Attachment.MonetarySystemExchangeBuy attachment = (Attachment.MonetarySystemExchangeBuy) transaction.getAttachment();
+            senderAccount.addToUnconfirmedBalanceNQT(Convert.safeMultiply(attachment.getUnits(), attachment.getRateNQT()));
         }
 
         @Override
         void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
-            Attachment.MonetarySystemExchange attachment = (Attachment.MonetarySystemExchange) transaction.getAttachment();
-            if (attachment.isBuy()) {
-                CurrencyExchange.exchangeNXTForCurrency(transaction, senderAccount, attachment.getCurrencyId(), attachment.getRateNQT(), attachment.getUnits());
-            } else {
-                CurrencyExchange.exchangeCurrencyForNXT(transaction, senderAccount, attachment.getCurrencyId(), attachment.getRateNQT(), -attachment.getUnits());
-            }
+            Attachment.MonetarySystemExchangeBuy attachment = (Attachment.MonetarySystemExchangeBuy) transaction.getAttachment();
+            CurrencyExchange.exchangeNXTForCurrency(transaction, senderAccount, attachment.getCurrencyId(), attachment.getRateNQT(), attachment.getUnits());
+        }
+
+    };
+
+    public static final TransactionType EXCHANGE_SELL = new MonetarySystemExchange() {
+
+        @Override
+        public byte getSubtype() {
+            return TransactionType.SUBTYPE_MONETARY_SYSTEM_EXCHANGE_SELL;
         }
 
         @Override
-        public boolean hasRecipient() {
+        Attachment.MonetarySystemExchangeSell parseAttachment(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
+            return new Attachment.MonetarySystemExchangeSell(buffer, transactionVersion);
+        }
+
+        @Override
+        Attachment.MonetarySystemExchangeSell parseAttachment(JSONObject attachmentData) throws NxtException.NotValidException {
+            return new Attachment.MonetarySystemExchangeSell(attachmentData);
+        }
+
+        @Override
+        boolean applyAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
+            Attachment.MonetarySystemExchangeSell attachment = (Attachment.MonetarySystemExchangeSell) transaction.getAttachment();
+            if (senderAccount.getUnconfirmedCurrencyUnits(attachment.getCurrencyId()) >= attachment.getUnits()) {
+                senderAccount.addToUnconfirmedCurrencyUnits(attachment.getCurrencyId(), -attachment.getUnits());
+                return true;
+            }
             return false;
+        }
+
+        @Override
+        void undoAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
+            Attachment.MonetarySystemExchangeSell attachment = (Attachment.MonetarySystemExchangeSell) transaction.getAttachment();
+            senderAccount.addToUnconfirmedCurrencyUnits(attachment.getCurrencyId(), attachment.getUnits());
+        }
+
+        @Override
+        void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
+            Attachment.MonetarySystemExchangeSell attachment = (Attachment.MonetarySystemExchangeSell) transaction.getAttachment();
+            CurrencyExchange.exchangeCurrencyForNXT(transaction, senderAccount, attachment.getCurrencyId(), attachment.getRateNQT(), attachment.getUnits());
         }
 
     };

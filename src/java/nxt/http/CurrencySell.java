@@ -38,12 +38,10 @@ public final class CurrencySell extends CreateTransaction {
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
         Currency currency = ParameterParser.getCurrency(req);
         long rateNQT = ParameterParser.getLong(req, "rateNQT", 0, Long.MAX_VALUE, true);
-        long units = ParameterParser.getLong(req, "units", Long.MIN_VALUE, Long.MAX_VALUE, true);
-        // selling currency for NXT is like exchanging negative number of units
-        units = -units;
+        long units = ParameterParser.getLong(req, "units", 0, Long.MAX_VALUE, true);
         Account account = ParameterParser.getSenderAccount(req);
 
-        Attachment attachment = new Attachment.MonetarySystemExchange(currency.getId(), rateNQT, units);
+        Attachment attachment = new Attachment.MonetarySystemExchangeSell(currency.getId(), rateNQT, units);
         return createTransaction(req, account, attachment);
     }
 

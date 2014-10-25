@@ -154,6 +154,7 @@ final class JSONData {
         JSONObject json = new JSONObject();
         json.put("offer", Convert.toUnsignedLong(offer.getId()));
         putAccount(json, "account", offer.getAccountId());
+        json.put("height", offer.getHeight());
         json.put("expirationHeight", offer.getExpirationHeight());
         json.put("buyCurrency", Convert.toUnsignedLong(offer.getCurrencyId()));
         json.put("buyRate", String.valueOf(offer.getRateNQT()));
