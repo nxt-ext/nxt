@@ -7,8 +7,9 @@ import nxt.Asset;
 import nxt.AssetTransfer;
 import nxt.Block;
 import nxt.Currency;
-import nxt.CurrencyExchangeOffer;
+import nxt.CurrencyBuyOffer;
 import nxt.CurrencyFounder;
+import nxt.CurrencySellOffer;
 import nxt.CurrencyTransfer;
 import nxt.DigitalGoodsStore;
 import nxt.Exchange;
@@ -150,21 +151,29 @@ final class JSONData {
         return json;
     }
 
-    static JSONObject offer(CurrencyExchangeOffer offer) {
+    static JSONObject offer(CurrencyBuyOffer offer) {
         JSONObject json = new JSONObject();
         json.put("offer", Convert.toUnsignedLong(offer.getId()));
         putAccount(json, "account", offer.getAccountId());
         json.put("height", offer.getHeight());
         json.put("expirationHeight", offer.getExpirationHeight());
-        json.put("buyCurrency", Convert.toUnsignedLong(offer.getCurrencyId()));
-        json.put("buyRate", String.valueOf(offer.getRateNQT()));
-        json.put("buyLimit", String.valueOf(offer.getLimit()));
-        json.put("buySupply", String.valueOf(offer.getSupply()));
-        CurrencyExchangeOffer sellOffer = offer.getCounterOffer();
-        json.put("sellCurrency", Convert.toUnsignedLong(sellOffer.getCurrencyId()));
-        json.put("sellRate", String.valueOf(sellOffer.getRateNQT()));
-        json.put("sellLimit", String.valueOf(sellOffer.getLimit()));
-        json.put("sellSupply", String.valueOf(sellOffer.getSupply()));
+        json.put("currency", Convert.toUnsignedLong(offer.getCurrencyId()));
+        json.put("rateNQT", String.valueOf(offer.getRateNQT()));
+        json.put("limit", String.valueOf(offer.getLimit()));
+        json.put("supply", String.valueOf(offer.getSupply()));
+        return json;
+    }
+
+    static JSONObject offer(CurrencySellOffer offer) {
+        JSONObject json = new JSONObject();
+        json.put("offer", Convert.toUnsignedLong(offer.getId()));
+        putAccount(json, "account", offer.getAccountId());
+        json.put("height", offer.getHeight());
+        json.put("expirationHeight", offer.getExpirationHeight());
+        json.put("currency", Convert.toUnsignedLong(offer.getCurrencyId()));
+        json.put("rateNQT", String.valueOf(offer.getRateNQT()));
+        json.put("limit", String.valueOf(offer.getLimit()));
+        json.put("supply", String.valueOf(offer.getSupply()));
         return json;
     }
 
@@ -373,6 +382,7 @@ final class JSONData {
 
     static JSONObject exchange(Exchange exchange) {
         JSONObject json = new JSONObject();
+        json.put("transaction", exchange.getTransactionId());
         json.put("timestamp", exchange.getTimestamp());
         json.put("units", String.valueOf(exchange.getUnits()));
         json.put("rateNQT", String.valueOf(exchange.getRate()));

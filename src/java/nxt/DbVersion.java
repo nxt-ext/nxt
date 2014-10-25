@@ -485,6 +485,10 @@ final class DbVersion {
             case 156:
                 apply("CREATE UNIQUE INDEX IF NOT EXISTS currency_code_idx ON currency (code, height DESC)");
             case 157:
+                apply("CREATE INDEX IF NOT EXISTS buy_offer_rate_height_idx ON buy_offer (rate DESC, creation_height ASC)");
+            case 158:
+                apply("CREATE INDEX IF NOT EXISTS sell_offer_rate_height_idx ON sell_offer (rate ASC, creation_height ASC)");
+            case 159:
                 return;
             default:
                 throw new RuntimeException("Database inconsistent with code, probably trying to run older code on newer database");
