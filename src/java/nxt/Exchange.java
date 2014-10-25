@@ -119,7 +119,7 @@ public final class Exchange {
         }
     }
 
-    static Exchange addExchange(Transaction transaction, long currencyId, CurrencyOffer offer, long sellerId, long buyerId, long units) {
+    static Exchange addExchange(Transaction transaction, long currencyId, CurrencyExchangeOffer offer, long sellerId, long buyerId, long units) {
         Exchange exchange = new Exchange(transaction, currencyId, offer, sellerId, buyerId, units);
         exchangeTable.insert(exchange);
         listeners.notify(exchange, Event.EXCHANGE);
@@ -141,7 +141,7 @@ public final class Exchange {
     private final long units;
     private final long rate;
 
-    private Exchange(Transaction transaction, long currencyId, CurrencyOffer offer, long sellerId, long buyerId, long units) {
+    private Exchange(Transaction transaction, long currencyId, CurrencyExchangeOffer offer, long sellerId, long buyerId, long units) {
         this.transactionId = transaction.getId();
         this.blockId = transaction.getBlockId();
         this.height = transaction.getHeight();

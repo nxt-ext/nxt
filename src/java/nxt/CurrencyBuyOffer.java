@@ -10,18 +10,18 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-public final class CurrencyBuyOffer extends CurrencyOffer {
+public final class CurrencyBuyOffer extends CurrencyExchangeOffer {
 
-    private static final DbKey.LongKeyFactory<CurrencyOffer> buyOfferDbKeyFactory = new DbKey.LongKeyFactory<CurrencyOffer>("id") {
+    private static final DbKey.LongKeyFactory<CurrencyBuyOffer> buyOfferDbKeyFactory = new DbKey.LongKeyFactory<CurrencyBuyOffer>("id") {
 
         @Override
-        public DbKey newKey(CurrencyOffer offer) {
+        public DbKey newKey(CurrencyBuyOffer offer) {
             return offer.dbKey;
         }
 
     };
 
-    private static final VersionedEntityDbTable<CurrencyOffer> buyOfferTable = new VersionedEntityDbTable<CurrencyOffer>("buy_offer", buyOfferDbKeyFactory) {
+    private static final VersionedEntityDbTable<CurrencyBuyOffer> buyOfferTable = new VersionedEntityDbTable<CurrencyBuyOffer>("buy_offer", buyOfferDbKeyFactory) {
 
         @Override
         protected CurrencyBuyOffer load(Connection con, ResultSet rs) throws SQLException {
@@ -29,7 +29,7 @@ public final class CurrencyBuyOffer extends CurrencyOffer {
         }
 
         @Override
-        protected void save(Connection con, CurrencyOffer buy) throws SQLException {
+        protected void save(Connection con, CurrencyBuyOffer buy) throws SQLException {
             buy.save(con, table);
         }
 
@@ -39,20 +39,20 @@ public final class CurrencyBuyOffer extends CurrencyOffer {
         return buyOfferTable.getCount();
     }
 
-    public static CurrencyOffer getBuyOffer(long offerId) {
+    public static CurrencyExchangeOffer getBuyOffer(long offerId) {
         return buyOfferTable.get(buyOfferDbKeyFactory.newKey(offerId));
     }
 
-    public static DbIterator<CurrencyOffer> getAll(int from, int to) {
+    public static DbIterator<CurrencyBuyOffer> getAll(int from, int to) {
         return buyOfferTable.getAll(from, to);
     }
 
     //TODO: add index on rate DESC, height ASC, id ASC to buy_offer table?
-    public static DbIterator<CurrencyOffer> getCurrencyOffers(long currencyId) {
+    public static DbIterator<CurrencyBuyOffer> getCurrencyOffers(long currencyId) {
         return buyOfferTable.getManyBy(new DbClause.LongClause("currency_id", currencyId), 0, -1, " ORDER BY rate DESC, height ASC, id ASC ");
     }
 
-    public static CurrencyOffer getCurrencyOffer(final long currencyId, final long accountId) {
+    public static CurrencyBuyOffer getCurrencyOffer(final long currencyId, final long accountId) {
         DbClause dbClause = new DbClause(" currency_id = ? AND account_id = ? ") {
             @Override
             protected int set(PreparedStatement pstmt, int index) throws SQLException {
@@ -64,7 +64,7 @@ public final class CurrencyBuyOffer extends CurrencyOffer {
         return buyOfferTable.getBy(dbClause);
     }
 
-    static DbIterator<CurrencyOffer> getOffers(DbClause dbClause, int from, int to) {
+    static DbIterator<CurrencyBuyOffer> getOffers(DbClause dbClause, int from, int to) {
         return buyOfferTable.getManyBy(dbClause, from, to);
     }
 
@@ -72,12 +72,13 @@ public final class CurrencyBuyOffer extends CurrencyOffer {
         buyOfferTable.insert(new CurrencyBuyOffer(transaction, attachment));
     }
 
-    static void remove(CurrencyOffer buyOffer) {
+    static void remove(CurrencyBuyOffer buyOffer) {
         buyOfferTable.delete(buyOffer);
     }
 
     static void init() {}
 
+    protected final DbKey dbKey;
 
     private CurrencyBuyOffer(Transaction transaction, Attachment.MonetarySystemPublishExchangeOffer attachment) {
         super(transaction.getId(), attachment.getCurrencyId(), transaction.getSenderId(), attachment.getBuyRateNQT(),
@@ -95,7 +96,7 @@ public final class CurrencyBuyOffer extends CurrencyOffer {
     }
 
     @Override
-    public CurrencyOffer getCounterOffer() {
+    public CurrencyExchangeOffer getCounterOffer() {
         return CurrencySellOffer.getSellOffer(id);
     }
 
