@@ -3,6 +3,7 @@ package nxt;
 import nxt.db.*;
 
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
@@ -43,7 +44,33 @@ public final class CurrencySellOffer extends CurrencyOffer {
         return sellOfferTable.getAll(from, to);
     }
 
+    //TODO: shouldn't the ordering be rate ASC? add index to the table?
+    public static DbIterator<CurrencyOffer> getCurrencyOffers(long currencyId) {
+        return sellOfferTable.getManyBy(new DbClause.LongClause("currency_id", currencyId), 0, -1, " ORDER BY rate DESC, height ASC, id ASC ");
+    }
+
+    public static CurrencyOffer getCurrencyOffer(final long currencyId, final long accountId) {
+        DbClause dbClause = new DbClause(" currency_id = ? AND account_id = ? ") {
+            @Override
+            protected int set(PreparedStatement pstmt, int index) throws SQLException {
+                pstmt.setLong(index++, currencyId);
+                pstmt.setLong(index++, accountId);
+                return index;
+            }
+        };
+        return sellOfferTable.getBy(dbClause);
+    }
+
+    static void addOffer(Transaction transaction, Attachment.MonetarySystemPublishExchangeOffer attachment) {
+        sellOfferTable.insert(new CurrencySellOffer(transaction, attachment));
+    }
+
+    static void remove(CurrencyOffer sellOffer) {
+        sellOfferTable.delete(sellOffer);
+    }
+
     static void init() {}
+
 
     private CurrencySellOffer(Transaction transaction, Attachment.MonetarySystemPublishExchangeOffer attachment) {
         super(transaction.getId(), attachment.getCurrencyId(), transaction.getSenderId(), attachment.getSellRateNQT(),
@@ -63,19 +90,6 @@ public final class CurrencySellOffer extends CurrencyOffer {
     @Override
     public CurrencyOffer getCounterOffer() {
         return CurrencyBuyOffer.getBuyOffer(id);
-    }
-
-    static void addOffer(Transaction transaction, Attachment.MonetarySystemPublishExchangeOffer attachment) {
-        sellOfferTable.insert(new CurrencySellOffer(transaction, attachment));
-    }
-
-    static void remove(CurrencyOffer sellOffer) {
-        sellOfferTable.delete(sellOffer);
-    }
-
-    //TODO: shouldn't the ordering be rate ASC? add index to the table?
-    public static DbIterator<CurrencyOffer> getCurrencyOffers(long currencyId) {
-        return sellOfferTable.getManyBy(new DbClause.LongClause("currency_id", currencyId), 0, -1, " ORDER BY rate DESC, height ASC, id ASC ");
     }
 
     void increaseSupply(long delta) {

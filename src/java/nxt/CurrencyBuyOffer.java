@@ -3,6 +3,7 @@ package nxt;
 import nxt.db.*;
 
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
@@ -43,7 +44,37 @@ public final class CurrencyBuyOffer extends CurrencyOffer {
         return buyOfferTable.getAll(from, to);
     }
 
+    //TODO: add index on rate DESC, height ASC, id ASC to buy_offer table?
+    public static DbIterator<CurrencyOffer> getCurrencyOffers(long currencyId) {
+        return buyOfferTable.getManyBy(new DbClause.LongClause("currency_id", currencyId), 0, -1, " ORDER BY rate DESC, height ASC, id ASC ");
+    }
+
+    public static CurrencyOffer getCurrencyOffer(final long currencyId, final long accountId) {
+        DbClause dbClause = new DbClause(" currency_id = ? AND account_id = ? ") {
+            @Override
+            protected int set(PreparedStatement pstmt, int index) throws SQLException {
+                pstmt.setLong(index++, currencyId);
+                pstmt.setLong(index++, accountId);
+                return index;
+            }
+        };
+        return buyOfferTable.getBy(dbClause);
+    }
+
+    static DbIterator<CurrencyOffer> getOffers(DbClause dbClause, int from, int to) {
+        return buyOfferTable.getManyBy(dbClause, from, to);
+    }
+
+    static void addOffer(Transaction transaction, Attachment.MonetarySystemPublishExchangeOffer attachment) {
+        buyOfferTable.insert(new CurrencyBuyOffer(transaction, attachment));
+    }
+
+    static void remove(CurrencyOffer buyOffer) {
+        buyOfferTable.delete(buyOffer);
+    }
+
     static void init() {}
+
 
     private CurrencyBuyOffer(Transaction transaction, Attachment.MonetarySystemPublishExchangeOffer attachment) {
         super(transaction.getId(), attachment.getCurrencyId(), transaction.getSenderId(), attachment.getBuyRateNQT(),
@@ -63,19 +94,6 @@ public final class CurrencyBuyOffer extends CurrencyOffer {
     @Override
     public CurrencyOffer getCounterOffer() {
         return CurrencySellOffer.getSellOffer(id);
-    }
-
-    static void addOffer(Transaction transaction, Attachment.MonetarySystemPublishExchangeOffer attachment) {
-        buyOfferTable.insert(new CurrencyBuyOffer(transaction, attachment));
-    }
-
-    static void remove(CurrencyOffer buyOffer) {
-        buyOfferTable.delete(buyOffer);
-    }
-
-    //TODO: add index on rate DESC, height ASC, id ASC to buy_offer table?
-    public static DbIterator<CurrencyOffer> getCurrencyOffers(long currencyId) {
-        return buyOfferTable.getManyBy(new DbClause.LongClause("currency_id", currencyId), 0, -1, " ORDER BY rate DESC, height ASC, id ASC ");
     }
 
     void increaseSupply(long delta) {

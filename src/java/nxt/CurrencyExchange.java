@@ -1,34 +1,42 @@
 package nxt;
 
+import nxt.db.DbClause;
 import nxt.db.DbIterator;
 import nxt.util.Convert;
 import nxt.util.Listener;
 
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+
 public final class CurrencyExchange {
 
     static {
+
         Nxt.getBlockchainProcessor().addListener(new Listener<Block>() {
+
+            final DbClause dbClause = new DbClause(" expiration_height <= ? ") {
+                @Override
+                protected int set(PreparedStatement pstmt, int index) throws SQLException {
+                    pstmt.setInt(index++, Nxt.getBlockchain().getHeight());
+                    return index;
+                }
+            };
+
             @Override
             public void notify(Block block) {
-                removeExpiredOffers(block.getHeight());
+                try (DbIterator<CurrencyOffer> expiredBuyOffers = CurrencyBuyOffer.getOffers(dbClause, 0, -1)) {
+                    for (CurrencyOffer offer : expiredBuyOffers) {
+                        removeOffer(offer); // TODO: move out of the iterator loop
+                    }
+                }
             }
+
         }, BlockchainProcessor.Event.AFTER_BLOCK_APPLY);
 
     }
 
-    private static void removeExpiredOffers(int height) {
-        //TODO: use a custom sql query to get only expired offers
-        try (DbIterator<CurrencyOffer> buyOffers = CurrencyBuyOffer.getAll(0, CurrencyBuyOffer.getCount() - 1)) {
-            for (CurrencyOffer offer : buyOffers) {
-                if (offer.getExpirationHeight() <= height) {
-                    removeOffer(offer); // TODO: move out of the iterator loop
-                }
-            }
-        }
-    }
-
     static void publishOffer(Transaction transaction, Attachment.MonetarySystemPublishExchangeOffer attachment) {
-        removeOffer(attachment.getCurrencyId(), transaction.getSenderId());
+        removeOffer(CurrencyBuyOffer.getCurrencyOffer(attachment.getCurrencyId(), transaction.getSenderId()));
         CurrencyBuyOffer.addOffer(transaction, attachment);
         CurrencySellOffer.addOffer(transaction, attachment);
     }
@@ -116,15 +124,4 @@ public final class CurrencyExchange {
         account.addToUnconfirmedCurrencyUnits(buyOffer.getCurrencyId(), sellOffer.getSupply());
     }
 
-    private static void removeOffer(long currencyId, long accountId) {
-        //TODO: optimize by using both currencyId and accountId in a custom sql query
-        try (DbIterator<CurrencyOffer> buyOffers = CurrencyBuyOffer.getCurrencyOffers(currencyId)) {
-            for (CurrencyOffer offer : buyOffers) {
-                if (offer.getAccountId() == accountId) {
-                    removeOffer(offer);
-                    return;
-                }
-            }
-        }
-    }
 }

@@ -267,15 +267,19 @@ public final class Currency {
 
     private static final class CrowdFundingListener implements Listener<Block> {
 
+        private static final DbClause dbClause = new DbClause(" issuance_height <= ? ") {
+        //TODO: this should be =, not <=, right? no need to distribute or undo funding for currencies with issuance height in the past
+            @Override
+            protected int set(PreparedStatement pstmt, int index) throws SQLException {
+                pstmt.setInt(index++, Nxt.getBlockchain().getHeight());
+                return index;
+            }
+        };
+
         @Override
         public void notify(Block block) {
-            //TODO: this will do a full table scan and load every single currency in memory
-            //need to re-write to use an sql query that only returns the matching currencies
-            try (DbIterator<Currency> allCurrencies = currencyTable.getAll(0, -1)) {
-                for (Currency currency : allCurrencies) {
-                    if (currency.getIssuanceHeight() == 0 || currency.getIssuanceHeight() > block.getHeight()) {
-                        continue;
-                    }
+            try (DbIterator<Currency> issuedCurrencies = currencyTable.getManyBy(dbClause, 0, -1)) {
+                for (Currency currency : issuedCurrencies) {
                     if (currency.getCurrentReservePerUnitNQT() < currency.getMinReservePerUnitNQT()) {
                         undoCrowdFunding(currency);
                     } else {
