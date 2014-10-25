@@ -162,12 +162,10 @@ public enum CurrencyType {
         //TODO: implement
         @Override
         void validate(Currency currency, Transaction transaction, Set<CurrencyType> validators) {
-            throw new RuntimeException("NOT IMPLEMENTED");
         }
 
         @Override
         void validateMissing(Currency currency, Transaction transaction, Set<CurrencyType> validators) {
-            throw new RuntimeException("NOT IMPLEMENTED");
         }
 
     };
