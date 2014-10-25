@@ -44,7 +44,10 @@ public abstract class CurrencyExchangeOffer {
     }
 
     static void publishOffer(Transaction transaction, Attachment.MonetarySystemPublishExchangeOffer attachment) {
-        removeOffer(CurrencyBuyOffer.getOffer(attachment.getCurrencyId(), transaction.getSenderId()));
+        CurrencyBuyOffer previousOffer = CurrencyBuyOffer.getOffer(attachment.getCurrencyId(), transaction.getSenderId());
+        if (previousOffer != null) {
+            removeOffer(previousOffer);
+        }
         CurrencyBuyOffer.addOffer(transaction, attachment);
         CurrencySellOffer.addOffer(transaction, attachment);
     }
@@ -137,7 +140,7 @@ public abstract class CurrencyExchangeOffer {
     }
 
     private static void removeOffer(CurrencyBuyOffer buyOffer) {
-        CurrencySellOffer sellOffer = (CurrencySellOffer)buyOffer.getCounterOffer();
+        CurrencySellOffer sellOffer = buyOffer.getCounterOffer();
 
         CurrencyBuyOffer.remove(buyOffer);
         CurrencySellOffer.remove(sellOffer);
