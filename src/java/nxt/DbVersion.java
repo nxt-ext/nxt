@@ -430,10 +430,10 @@ final class DbVersion {
             case 134:
                 apply("CREATE UNIQUE INDEX IF NOT EXISTS currency_founder_currency_id_idx ON currency_founder (currency_id, account_id, height DESC)");
             case 135:
-                apply("CREATE TABLE IF NOT EXISTS currency_mint (db_id IDENTITY, currency_id BIGINT NOT NULL, "
-                        + "account_id BIGINT NOT NULL, counter BIGINT NOT NULL, height INT NOT NULL, latest BOOLEAN NOT NULL DEFAULT TRUE)");
+                apply("CREATE TABLE IF NOT EXISTS currency_mint (db_id IDENTITY, id BIGINT NOT NULL, currency_id BIGINT NOT NULL, "
+                        + "account_id BIGINT NOT NULL, counter BIGINT NOT NULL, height INT NOT NULL)");
             case 136:
-                apply("CREATE UNIQUE INDEX IF NOT EXISTS currency_mint_currency_id_account_id_height_idx ON currency_mint (currency_id, account_id, height DESC)");
+                apply("CREATE UNIQUE INDEX IF NOT EXISTS currency_mint_currency_id_account_id_counter_idx ON currency_mint (currency_id, account_id, counter)");
             case 137:
                 apply("CREATE TABLE IF NOT EXISTS buy_offer (db_id INT IDENTITY, id BIGINT NOT NULL, currency_id BIGINT NOT NULL, account_id BIGINT NOT NULL,"
                         + "rate BIGINT NOT NULL, unit_limit BIGINT NOT NULL, supply BIGINT NOT NULL, expiration_height INT NOT NULL,"
@@ -489,6 +489,8 @@ final class DbVersion {
             case 158:
                 apply("CREATE INDEX IF NOT EXISTS sell_offer_rate_height_idx ON sell_offer (rate ASC, creation_height ASC)");
             case 159:
+                apply("CREATE UNIQUE INDEX IF NOT EXISTS currency_mind_id_idx ON currency_mint (id)");
+            case 160:
                 return;
             default:
                 throw new RuntimeException("Database inconsistent with code, probably trying to run older code on newer database");

@@ -489,7 +489,7 @@ public abstract class MonetarySystem extends TransactionType {
         @Override
         void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
             Attachment.MonetarySystemCurrencyMinting attachment = (Attachment.MonetarySystemCurrencyMinting) transaction.getAttachment();
-            CurrencyMint.mintCurrency(senderAccount, attachment.getNonce(), attachment.getCurrencyId(), attachment.getUnits(), attachment.getCounter());
+            CurrencyMint.mintCurrency(transaction, senderAccount, attachment);
         }
 
         @Override
