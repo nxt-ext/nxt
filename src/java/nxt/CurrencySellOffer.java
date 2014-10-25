@@ -3,11 +3,10 @@ package nxt;
 import nxt.db.*;
 
 import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-public final class CurrencySell extends CurrencyOffer {
+public final class CurrencySellOffer extends CurrencyOffer {
 
     private static final DbKey.LongKeyFactory<CurrencyOffer> sellOfferDbKeyFactory = new DbKey.LongKeyFactory<CurrencyOffer>("id") {
 
@@ -21,8 +20,8 @@ public final class CurrencySell extends CurrencyOffer {
     private static final VersionedEntityDbTable<CurrencyOffer> sellOfferTable = new VersionedEntityDbTable<CurrencyOffer>("sell_offer", sellOfferDbKeyFactory) {
 
         @Override
-        protected CurrencySell load(Connection con, ResultSet rs) throws SQLException {
-            return new CurrencySell(rs);
+        protected CurrencySellOffer load(Connection con, ResultSet rs) throws SQLException {
+            return new CurrencySellOffer(rs);
         }
 
         @Override
@@ -46,13 +45,13 @@ public final class CurrencySell extends CurrencyOffer {
 
     static void init() {}
 
-    private CurrencySell(Transaction transaction, Attachment.MonetarySystemPublishExchangeOffer attachment) {
+    private CurrencySellOffer(Transaction transaction, Attachment.MonetarySystemPublishExchangeOffer attachment) {
         super(transaction.getId(), attachment.getCurrencyId(), transaction.getSenderId(), attachment.getSellRateNQT(),
                 attachment.getTotalSellLimit(), attachment.getInitialSellSupply(), attachment.getExpirationHeight(), transaction.getHeight());
         this.dbKey = sellOfferDbKeyFactory.newKey(id);
     }
 
-    private CurrencySell(ResultSet rs) throws SQLException {
+    private CurrencySellOffer(ResultSet rs) throws SQLException {
         super(rs);
         this.dbKey = sellOfferDbKeyFactory.newKey(super.id);
     }
@@ -63,11 +62,11 @@ public final class CurrencySell extends CurrencyOffer {
 
     @Override
     public CurrencyOffer getCounterOffer() {
-        return CurrencyBuy.getBuyOffer(id);
+        return CurrencyBuyOffer.getBuyOffer(id);
     }
 
     static void addOffer(Transaction transaction, Attachment.MonetarySystemPublishExchangeOffer attachment) {
-        sellOfferTable.insert(new CurrencySell(transaction, attachment));
+        sellOfferTable.insert(new CurrencySellOffer(transaction, attachment));
     }
 
     static void remove(CurrencyOffer sellOffer) {

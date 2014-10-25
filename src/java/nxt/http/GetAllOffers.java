@@ -1,6 +1,6 @@
 package nxt.http;
 
-import nxt.CurrencyBuy;
+import nxt.CurrencyBuyOffer;
 import nxt.CurrencyOffer;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -25,7 +25,7 @@ public final class GetAllOffers extends APIServlet.APIRequestHandler {
         int firstIndex = ParameterParser.getFirstIndex(req);
         int lastIndex = ParameterParser.getLastIndex(req);
 
-        for (CurrencyOffer buyOffer : CurrencyBuy.getAll(firstIndex, lastIndex)) {
+        for (CurrencyOffer buyOffer : CurrencyBuyOffer.getAll(firstIndex, lastIndex)) {
             offerData.add(JSONData.offer(buyOffer));
         }
 

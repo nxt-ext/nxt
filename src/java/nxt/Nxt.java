@@ -181,8 +181,8 @@ public final class Nxt {
                 AssetTransfer.init();
                 Vote.init();
                 Currency.init();
-                CurrencyBuy.init();
-                CurrencySell.init();
+                CurrencyBuyOffer.init();
+                CurrencySellOffer.init();
                 CurrencyFounder.init();
                 CurrencyMint.init();
                 CurrencyTransfer.init();

@@ -18,7 +18,7 @@ public final class CurrencyExchange {
 
     private static void removeExpiredOffers(int height) {
         //TODO: use a custom sql query to get only expired offers
-        try (DbIterator<CurrencyOffer> buyOffers = CurrencyBuy.getAll(0, CurrencyBuy.getCount() - 1)) {
+        try (DbIterator<CurrencyOffer> buyOffers = CurrencyBuyOffer.getAll(0, CurrencyBuyOffer.getCount() - 1)) {
             for (CurrencyOffer offer : buyOffers) {
                 if (offer.getExpirationHeight() <= height) {
                     removeOffer(offer); // TODO: move out of the iterator loop
@@ -30,15 +30,15 @@ public final class CurrencyExchange {
     //TODO: also enforce uniqueness of (currency_id, account_id, height) using a unique index
     static void publishOffer(Transaction transaction, Attachment.MonetarySystemPublishExchangeOffer attachment) {
         removeOffer(attachment.getCurrencyId(), transaction.getSenderId());
-        CurrencyBuy.addOffer(transaction, attachment);
-        CurrencySell.addOffer(transaction, attachment);
+        CurrencyBuyOffer.addOffer(transaction, attachment);
+        CurrencySellOffer.addOffer(transaction, attachment);
     }
 
     static void exchangeCurrencyForNXT(Transaction transaction, Account account, long currencyId, long rateNQT, long units) {
         long extraAmountNQT = 0;
         long remainingUnits = units;
 
-        try (DbIterator<CurrencyOffer> currencyBuyOffers = CurrencyBuy.getCurrencyOffers(currencyId)) {
+        try (DbIterator<CurrencyOffer> currencyBuyOffers = CurrencyBuyOffer.getCurrencyOffers(currencyId)) {
             for (CurrencyOffer offer : currencyBuyOffers) {
                 if (offer.getRateNQT() < rateNQT) {
                     break;
@@ -73,7 +73,7 @@ public final class CurrencyExchange {
         long extraUnits = 0;
         long remainingAmountNQT = Convert.safeMultiply(units, rateNQT);
 
-        try (DbIterator<CurrencyOffer> currencySellOffers = CurrencySell.getCurrencyOffers(currencyId)) {
+        try (DbIterator<CurrencyOffer> currencySellOffers = CurrencySellOffer.getCurrencyOffers(currencyId)) {
             for (CurrencyOffer offer : currencySellOffers) {
                 if (offer.getRateNQT() > rateNQT) {
                     break;
@@ -107,8 +107,8 @@ public final class CurrencyExchange {
     private static void removeOffer(CurrencyOffer buyOffer) {
         CurrencyOffer sellOffer = buyOffer.getCounterOffer();
 
-        CurrencyBuy.remove(buyOffer);
-        CurrencySell.remove(sellOffer);
+        CurrencyBuyOffer.remove(buyOffer);
+        CurrencySellOffer.remove(sellOffer);
 
         Account account = Account.getAccount(buyOffer.getAccountId());
         account.addToUnconfirmedBalanceNQT(buyOffer.getSupply());
@@ -117,7 +117,7 @@ public final class CurrencyExchange {
 
     private static void removeOffer(long currencyId, long accountId) {
         //TODO: optimize by using both currencyId and accountId in a custom sql query
-        try (DbIterator<CurrencyOffer> buyOffers = CurrencyBuy.getCurrencyOffers(currencyId)) {
+        try (DbIterator<CurrencyOffer> buyOffers = CurrencyBuyOffer.getCurrencyOffers(currencyId)) {
             for (CurrencyOffer offer : buyOffers) {
                 if (offer.getAccountId() == accountId) {
                     removeOffer(offer);
