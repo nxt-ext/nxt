@@ -3,7 +3,11 @@ package nxt;
 import nxt.crypto.EncryptedData;
 import nxt.util.Listener;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 //TODO: convert to database
 public final class CoinShuffler {

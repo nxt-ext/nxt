@@ -10,7 +10,6 @@ import javax.servlet.http.HttpServletRequest;
 import static nxt.http.JSONResponses.INCORRECT_BLOCK;
 import static nxt.http.JSONResponses.INCORRECT_HEIGHT;
 import static nxt.http.JSONResponses.INCORRECT_TIMESTAMP;
-import static nxt.http.JSONResponses.MISSING_BLOCK;
 import static nxt.http.JSONResponses.UNKNOWN_BLOCK;
 
 public final class GetBlock extends APIServlet.APIRequestHandler {

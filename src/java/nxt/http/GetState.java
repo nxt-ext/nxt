@@ -4,15 +4,14 @@ import nxt.Account;
 import nxt.Alias;
 import nxt.Asset;
 import nxt.AssetTransfer;
+import nxt.Currency;
 import nxt.CurrencyBuyOffer;
+import nxt.CurrencyTransfer;
+import nxt.Exchange;
 import nxt.Generator;
 import nxt.Nxt;
 import nxt.Order;
 import nxt.Trade;
-import nxt.Currency;
-import nxt.Exchange;
-import nxt.CurrencyTransfer;
-
 import nxt.peer.Peer;
 import nxt.peer.Peers;
 import org.json.simple.JSONObject;
