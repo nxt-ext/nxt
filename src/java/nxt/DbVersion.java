@@ -489,7 +489,7 @@ final class DbVersion {
             case 158:
                 apply("CREATE INDEX IF NOT EXISTS sell_offer_rate_height_idx ON sell_offer (rate ASC, creation_height ASC)");
             case 159:
-                apply("CREATE UNIQUE INDEX IF NOT EXISTS currency_mind_id_idx ON currency_mint (id)");
+                apply("CREATE UNIQUE INDEX IF NOT EXISTS currency_mint_id_idx ON currency_mint (id)");
             case 160:
                 return;
             default:
