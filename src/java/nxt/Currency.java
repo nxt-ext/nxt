@@ -219,7 +219,6 @@ public final class Currency {
         return issuanceHeight <= BlockchainImpl.getInstance().getHeight();
     }
 
-    //TODO: claimReserve decreases totalSupply, but increaseReserve doesn't increase totalSupply, is it intentional that totalSupply can go down but never go up?
     static void increaseReserve(Account account, long currencyId, long amountNQT) {
         Currency currency = Currency.getCurrency(currencyId);
         account.addToBalanceNQT(-Convert.safeMultiply(currency.getTotalSupply(), amountNQT));
@@ -233,7 +232,7 @@ public final class Currency {
         Currency currency = Currency.getCurrency(currencyId);
         currency.totalSupply -= units;
         currencyTable.insert(currency);
-        account.addToBalanceAndUnconfirmedBalanceNQT(Convert.safeMultiply(units, currency.currentReservePerUnitNQT));
+        account.addToBalanceAndUnconfirmedBalanceNQT(Convert.safeMultiply(units, currency.getCurrentReservePerUnitNQT()));
     }
 
     static void transferCurrency(Account senderAccount, Account recipientAccount, long currencyId, long units) {
