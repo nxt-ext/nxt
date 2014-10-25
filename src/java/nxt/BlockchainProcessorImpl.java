@@ -366,6 +366,16 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             }
         }, Event.BLOCK_SCANNED);
 
+        blockListeners.addListener(new Listener<Block>() {
+            @Override
+            public void notify(Block block) {
+                if (block.getHeight() % 5000 == 0) {
+                    Logger.logMessage("received block " + block.getHeight());
+                    Db.analyzeTables();
+                }
+            }
+        }, Event.BLOCK_PUSHED);
+
         if (trimDerivedTables) {
             blockListeners.addListener(new Listener<Block>() {
                 @Override
@@ -385,26 +395,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         blockListeners.addListener(new Listener<Block>() {
             @Override
             public void notify(Block block) {
-                if (block.getHeight() % 1440 == 1) {
-                    try (Connection con = Db.getConnection();
-                         Statement stmt = con.createStatement()) {
-                        stmt.execute("ANALYZE SAMPLE_SIZE 0");
-                    } catch (SQLException e) {
-                        throw new RuntimeException(e.toString(), e);
-                    }
-                }
-            }
-        }, Event.BLOCK_PUSHED);
-
-        blockListeners.addListener(new Listener<Block>() {
-            @Override
-            public void notify(Block block) {
-                try (Connection con = Db.getConnection();
-                     Statement stmt = con.createStatement()) {
-                    stmt.execute("ANALYZE SAMPLE_SIZE 0");
-                } catch (SQLException e) {
-                    throw new RuntimeException(e.toString(), e);
-                }
+                Db.analyzeTables();
             }
         }, Event.RESCAN_END);
 
