@@ -110,8 +110,6 @@ public abstract class MonetarySystem extends TransactionType {
             return new Attachment.MonetarySystemReserveIncrease(attachmentData);
         }
 
-        //TODO: add isDuplicate check?
-
         @Override
         void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
             Attachment.MonetarySystemReserveIncrease attachment = (Attachment.MonetarySystemReserveIncrease) transaction.getAttachment();
