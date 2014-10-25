@@ -56,7 +56,6 @@ public enum CurrencyType {
             }
         }
 
-        //TODO: no need for validateMissing?
         @Override
         void validateMissing(Currency currency, Transaction transaction, Set<CurrencyType> validators) {}
 

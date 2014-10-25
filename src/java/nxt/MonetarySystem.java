@@ -60,7 +60,6 @@ public abstract class MonetarySystem extends TransactionType {
             Attachment.MonetarySystemCurrencyIssuance attachment = (Attachment.MonetarySystemCurrencyIssuance) transaction.getAttachment();
             if (attachment.getTotalSupply() > Constants.MAX_CURRENCY_TOTAL_SUPPLY
                     || attachment.getIssuanceHeight() < 0
-                    //TODO: shouldn't there be a check that issuanceHeight must be > current blockchain height?
                     || attachment.getMinReservePerUnitNQT() < 0 || attachment.getMinReservePerUnitNQT() > Constants.MAX_BALANCE_NQT
                     || attachment.getRuleset() != 0) {
                 throw new NxtException.NotValidException("Invalid currency issuance: " + attachment.getJSONObject());
