@@ -215,16 +215,8 @@ public final class Currency {
         return currentReservePerUnitNQT;
     }
 
-    //TODO: each getCurrency call is a database query, those two methods should be made non-static,
-    // and the Currency object retrieved only once and then passed around through the currency validation calls
-    public static boolean isActive(long currencyId) {
-        Currency currency = getCurrency(currencyId);
-        return currency != null && currency.getIssuanceHeight() <= BlockchainImpl.getInstance().getHeight();
-    }
-
-    public static boolean isIssuer(long currencyId, long accountId) {
-        Currency currency = getCurrency(currencyId);
-        return currency != null && currency.getAccountId() == accountId;
+    public boolean isActive() {
+        return issuanceHeight <= BlockchainImpl.getInstance().getHeight();
     }
 
     //TODO: claimReserve decreases totalSupply, but increaseReserve doesn't increase totalSupply, is it intentional that totalSupply can go down but never go up?

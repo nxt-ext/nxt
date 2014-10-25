@@ -441,7 +441,7 @@ final class DbVersion {
             case 138:
                 apply("CREATE UNIQUE INDEX IF NOT EXISTS buy_offer_id_idx ON buy_offer (id, height DESC)");
             case 139:
-                apply("CREATE INDEX IF NOT EXISTS buy_offer_currency_id_idx ON buy_offer (currency_id)");
+                apply("CREATE UNIQUE INDEX IF NOT EXISTS buy_offer_currency_id_account_id_idx ON buy_offer (currency_id, account_id, height DESC)");
             case 140:
                 apply("CREATE TABLE IF NOT EXISTS sell_offer (db_id INT IDENTITY, id BIGINT NOT NULL, currency_id BIGINT NOT NULL, account_id BIGINT NOT NULL, "
                         + "rate BIGINT NOT NULL, unit_limit BIGINT NOT NULL, supply BIGINT NOT NULL, expiration_height INT NOT NULL, "
@@ -449,7 +449,7 @@ final class DbVersion {
             case 141:
                 apply("CREATE UNIQUE INDEX IF NOT EXISTS sell_offer_id_idx ON sell_offer (id, height DESC)");
             case 142:
-                apply("CREATE INDEX IF NOT EXISTS sell_offer_currency_id_idx ON sell_offer (currency_id)");
+                apply("CREATE UNIQUE INDEX IF NOT EXISTS sell_offer_currency_id_account_id_idx ON sell_offer (currency_id, account_id, height DESC)");
             case 143:
                 apply("CREATE TABLE IF NOT EXISTS exchange (db_id INT IDENTITY, transaction_id BIGINT NOT NULL, currency_id BIGINT NOT NULL, block_id BIGINT NOT NULL, "
                         + "offer_id BIGINT NOT NULL, seller_id BIGINT NOT NULL, "

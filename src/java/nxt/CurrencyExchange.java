@@ -27,7 +27,6 @@ public final class CurrencyExchange {
         }
     }
 
-    //TODO: also enforce uniqueness of (currency_id, account_id, height) using a unique index
     static void publishOffer(Transaction transaction, Attachment.MonetarySystemPublishExchangeOffer attachment) {
         removeOffer(attachment.getCurrencyId(), transaction.getSenderId());
         CurrencyBuyOffer.addOffer(transaction, attachment);
@@ -38,6 +37,7 @@ public final class CurrencyExchange {
         long extraAmountNQT = 0;
         long remainingUnits = units;
 
+        //TODO: use a custom sql query to filter off offers with 0 limit or 0 supply
         try (DbIterator<CurrencyOffer> currencyBuyOffers = CurrencyBuyOffer.getCurrencyOffers(currencyId)) {
             for (CurrencyOffer offer : currencyBuyOffers) {
                 if (offer.getRateNQT() < rateNQT) {
@@ -73,6 +73,7 @@ public final class CurrencyExchange {
         long extraUnits = 0;
         long remainingAmountNQT = Convert.safeMultiply(units, rateNQT);
 
+        //TODO: use a custom sql query to filter off offers with 0 limit or 0 supply
         try (DbIterator<CurrencyOffer> currencySellOffers = CurrencySellOffer.getCurrencyOffers(currencyId)) {
             for (CurrencyOffer offer : currencySellOffers) {
                 if (offer.getRateNQT() > rateNQT) {
