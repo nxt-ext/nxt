@@ -236,9 +236,9 @@ public final class Currency {
         account.addToBalanceAndUnconfirmedBalanceNQT(Convert.safeMultiply(units, currency.currentReservePerUnitNQT));
     }
 
-    static void transferCurrency(Account account, long recipientId, long currencyId, long units) {
-        account.addToCurrencyUnits(currencyId, -units);
-        Account.addOrGetAccount(recipientId).addToCurrencyAndUnconfirmedCurrencyUnits(currencyId, units);
+    static void transferCurrency(Account senderAccount, Account recipientAccount, long currencyId, long units) {
+        senderAccount.addToCurrencyUnits(currencyId, -units);
+        recipientAccount.addToCurrencyAndUnconfirmedCurrencyUnits(currencyId, units);
     }
 
     void increaseSupply(long units) {

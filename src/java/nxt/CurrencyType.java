@@ -45,8 +45,7 @@ public enum CurrencyType {
         @Override
         void validate(Currency currency, Transaction transaction, Set<CurrencyType> validators) throws NxtException.NotValidException {
             if (transaction.getType() == MonetarySystem.CURRENCY_TRANSFER) {
-                Attachment.MonetarySystemCurrencyTransfer transfer = (Attachment.MonetarySystemCurrencyTransfer)transaction.getAttachment();
-                if (currency == null ||  (currency.getAccountId() != transaction.getSenderId() && currency.getAccountId() != transfer.getRecipientId())) {
+                if (currency == null ||  (currency.getAccountId() != transaction.getSenderId() && currency.getAccountId() != transaction.getRecipientId())) {
                     throw new NxtException.NotValidException("Controllable currency can only be transferred to/from issuer account");
                 }
             }
@@ -206,7 +205,7 @@ public enum CurrencyType {
             throw new NxtException.NotYetEnabledException("Monetary System not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
         }
         if (transaction.getAmountNQT() != 0) {
-            throw new NxtException.NotValidException("Currency issuance NXT amount must be 0");
+            throw new NxtException.NotValidException("Currency transaction NXT amount must be 0");
         }
 
         final EnumSet<CurrencyType> validators = EnumSet.noneOf(CurrencyType.class);

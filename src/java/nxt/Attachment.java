@@ -1794,26 +1794,22 @@ public interface Attachment extends Appendix {
 
     public final static class MonetarySystemCurrencyTransfer extends AbstractAttachment {
 
-        private final long recipientId;
         private final long currencyId;
         private final long units;
 
         MonetarySystemCurrencyTransfer(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
             super(buffer, transactionVersion);
-            this.recipientId = buffer.getLong();
             this.currencyId = buffer.getLong();
             this.units = buffer.getLong();
         }
 
         MonetarySystemCurrencyTransfer(JSONObject attachmentData) {
             super(attachmentData);
-            this.recipientId = Convert.parseUnsignedLong((String)attachmentData.get("recipient"));
             this.currencyId = Convert.parseUnsignedLong((String)attachmentData.get("currency"));
             this.units = Convert.parseLong(attachmentData.get("units"));
         }
 
-        public MonetarySystemCurrencyTransfer(long recipientId, long currencyId, long units) {
-            this.recipientId = recipientId;
+        public MonetarySystemCurrencyTransfer(long currencyId, long units) {
             this.currencyId = currencyId;
             this.units = units;
         }
@@ -1825,19 +1821,17 @@ public interface Attachment extends Appendix {
 
         @Override
         int getMySize() {
-            return 8 + 8 + 8;
+            return 8 + 8;
         }
 
         @Override
         void putMyBytes(ByteBuffer buffer) {
-            buffer.putLong(recipientId);
             buffer.putLong(currencyId);
             buffer.putLong(units);
         }
 
         @Override
         void putMyJSON(JSONObject attachment) {
-            attachment.put("recipient", Convert.toUnsignedLong(recipientId));
             attachment.put("currency", Convert.toUnsignedLong(currencyId));
             attachment.put("units", units);
         }
@@ -1845,10 +1839,6 @@ public interface Attachment extends Appendix {
         @Override
         public TransactionType getTransactionType() {
             return MonetarySystem.CURRENCY_TRANSFER;
-        }
-
-        public long getRecipientId() {
-            return recipientId;
         }
 
         public long getCurrencyId() {

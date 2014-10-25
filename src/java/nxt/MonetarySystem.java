@@ -254,14 +254,13 @@ public abstract class MonetarySystem extends TransactionType {
         @Override
         void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
             Attachment.MonetarySystemCurrencyTransfer attachment = (Attachment.MonetarySystemCurrencyTransfer) transaction.getAttachment();
-            Currency.transferCurrency(senderAccount, attachment.getRecipientId(), attachment.getCurrencyId(), attachment.getUnits());
+            Currency.transferCurrency(senderAccount, recipientAccount, attachment.getCurrencyId(), attachment.getUnits());
             CurrencyTransfer.addTransfer(transaction, attachment);
         }
 
-        //TODO: change CURRENCY_TRANSFER to use transaction recipient as recipient instead of storing it in the attachment
         @Override
         public boolean hasRecipient() {
-            return false;
+            return true;
         }
 
     };
