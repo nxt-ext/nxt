@@ -51,7 +51,7 @@ public final class Currency {
     }
 
     public static Currency getCurrencyByName(String name) {
-        return currencyTable.getBy(new DbClause.StringClause("name", name));
+        return currencyTable.getBy(new DbClause.StringClause("name_lower", name.toLowerCase()));
     }
 
     public static Currency getCurrencyByCode(String code) {
@@ -215,16 +215,8 @@ public final class Currency {
         return currentReservePerUnitNQT;
     }
 
-    //TODO: each getCurrency call is a database query, those two methods should be made non-static,
-    // and the Currency object retrieved only once and then passed around through the currency validation calls
-    public static boolean isActive(long currencyId) {
-        Currency currency = getCurrency(currencyId);
-        return currency != null && currency.getIssuanceHeight() <= BlockchainImpl.getInstance().getHeight();
-    }
-
-    public static boolean isIssuer(long currencyId, long accountId) {
-        Currency currency = getCurrency(currencyId);
-        return currency != null && currency.getAccountId() == accountId;
+    public boolean isActive() {
+        return issuanceHeight <= BlockchainImpl.getInstance().getHeight();
     }
 
     //TODO: claimReserve decreases totalSupply, but increaseReserve doesn't increase totalSupply, is it intentional that totalSupply can go down but never go up?
@@ -244,9 +236,9 @@ public final class Currency {
         account.addToBalanceAndUnconfirmedBalanceNQT(Convert.safeMultiply(units, currency.currentReservePerUnitNQT));
     }
 
-    static void transferCurrency(Account account, long recipientId, long currencyId, long units) {
-        account.addToCurrencyUnits(currencyId, -units);
-        Account.addOrGetAccount(recipientId).addToCurrencyAndUnconfirmedCurrencyUnits(currencyId, units);
+    static void transferCurrency(Account senderAccount, Account recipientAccount, long currencyId, long units) {
+        senderAccount.addToCurrencyUnits(currencyId, -units);
+        recipientAccount.addToCurrencyAndUnconfirmedCurrencyUnits(currencyId, units);
     }
 
     void increaseSupply(long units) {
@@ -275,15 +267,19 @@ public final class Currency {
 
     private static final class CrowdFundingListener implements Listener<Block> {
 
+        private static final DbClause dbClause = new DbClause(" issuance_height <= ? ") {
+        //TODO: this should be =, not <=, right? no need to distribute or undo funding for currencies with issuance height in the past
+            @Override
+            protected int set(PreparedStatement pstmt, int index) throws SQLException {
+                pstmt.setInt(index++, Nxt.getBlockchain().getHeight());
+                return index;
+            }
+        };
+
         @Override
         public void notify(Block block) {
-            //TODO: this will do a full table scan and load every single currency in memory
-            //need to re-write to use an sql query that only returns the matching currencies
-            try (DbIterator<Currency> allCurrencies = currencyTable.getAll(0, -1)) {
-                for (Currency currency : allCurrencies) {
-                    if (currency.getIssuanceHeight() == 0 || currency.getIssuanceHeight() > block.getHeight()) {
-                        continue;
-                    }
+            try (DbIterator<Currency> issuedCurrencies = currencyTable.getManyBy(dbClause, 0, -1)) {
+                for (Currency currency : issuedCurrencies) {
                     if (currency.getCurrentReservePerUnitNQT() < currency.getMinReservePerUnitNQT()) {
                         undoCrowdFunding(currency);
                     } else {

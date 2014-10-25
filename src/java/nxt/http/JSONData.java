@@ -7,8 +7,8 @@ import nxt.Asset;
 import nxt.AssetTransfer;
 import nxt.Block;
 import nxt.Currency;
+import nxt.CurrencyExchangeOffer;
 import nxt.CurrencyFounder;
-import nxt.CurrencyOffer;
 import nxt.CurrencyTransfer;
 import nxt.DigitalGoodsStore;
 import nxt.Exchange;
@@ -150,16 +150,17 @@ final class JSONData {
         return json;
     }
 
-    static JSONObject offer(CurrencyOffer offer) {
+    static JSONObject offer(CurrencyExchangeOffer offer) {
         JSONObject json = new JSONObject();
         json.put("offer", Convert.toUnsignedLong(offer.getId()));
         putAccount(json, "account", offer.getAccountId());
+        json.put("height", offer.getHeight());
         json.put("expirationHeight", offer.getExpirationHeight());
         json.put("buyCurrency", Convert.toUnsignedLong(offer.getCurrencyId()));
         json.put("buyRate", String.valueOf(offer.getRateNQT()));
         json.put("buyLimit", String.valueOf(offer.getLimit()));
         json.put("buySupply", String.valueOf(offer.getSupply()));
-        CurrencyOffer sellOffer = offer.getCounterOffer();
+        CurrencyExchangeOffer sellOffer = offer.getCounterOffer();
         json.put("sellCurrency", Convert.toUnsignedLong(sellOffer.getCurrencyId()));
         json.put("sellRate", String.valueOf(sellOffer.getRateNQT()));
         json.put("sellLimit", String.valueOf(sellOffer.getLimit()));

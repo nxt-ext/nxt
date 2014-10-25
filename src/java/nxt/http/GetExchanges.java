@@ -1,6 +1,9 @@
 package nxt.http;
 
-import nxt.*;
+import nxt.Account;
+import nxt.Currency;
+import nxt.Exchange;
+import nxt.NxtException;
 import nxt.db.DbIterator;
 import nxt.db.DbUtils;
 import nxt.util.Convert;

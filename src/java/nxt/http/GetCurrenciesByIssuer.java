@@ -2,6 +2,7 @@ package nxt.http;
 
 import nxt.Account;
 import nxt.Currency;
+import nxt.db.DbIterator;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
@@ -28,8 +29,10 @@ public final class GetCurrenciesByIssuer extends APIServlet.APIRequestHandler {
         response.put("currencies", accountsJSONArray);
         for (Account account : accounts) {
             JSONArray currenciesJSONArray = new JSONArray();
-            for (Currency currency : Currency.getCurrencyIssuedBy(account.getId(), firstIndex, lastIndex)) {
-                currenciesJSONArray.add(JSONData.currency(currency));
+            try (DbIterator<Currency> currencies = Currency.getCurrencyIssuedBy(account.getId(), firstIndex, lastIndex)) {
+                for (Currency currency : currencies) {
+                    currenciesJSONArray.add(JSONData.currency(currency));
+                }
             }
             accountsJSONArray.add(currenciesJSONArray);
         }

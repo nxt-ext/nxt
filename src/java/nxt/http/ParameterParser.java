@@ -188,7 +188,7 @@ final class ParameterParser {
         }
         Currency currency;
         try {
-            Long currencyId = Convert.parseUnsignedLong(currencyValue);
+            long currencyId = Convert.parseUnsignedLong(currencyValue);
             currency = Currency.getCurrency(currencyId);
         } catch (RuntimeException e) {
             throw new ParameterException(INCORRECT_CURRENCY);

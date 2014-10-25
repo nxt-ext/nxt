@@ -1794,26 +1794,22 @@ public interface Attachment extends Appendix {
 
     public final static class MonetarySystemCurrencyTransfer extends AbstractAttachment {
 
-        private final long recipientId;
         private final long currencyId;
         private final long units;
 
         MonetarySystemCurrencyTransfer(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
             super(buffer, transactionVersion);
-            this.recipientId = buffer.getLong();
             this.currencyId = buffer.getLong();
             this.units = buffer.getLong();
         }
 
         MonetarySystemCurrencyTransfer(JSONObject attachmentData) {
             super(attachmentData);
-            this.recipientId = Convert.parseUnsignedLong((String)attachmentData.get("recipient"));
             this.currencyId = Convert.parseUnsignedLong((String)attachmentData.get("currency"));
             this.units = Convert.parseLong(attachmentData.get("units"));
         }
 
-        public MonetarySystemCurrencyTransfer(long recipientId, long currencyId, long units) {
-            this.recipientId = recipientId;
+        public MonetarySystemCurrencyTransfer(long currencyId, long units) {
             this.currencyId = currencyId;
             this.units = units;
         }
@@ -1825,19 +1821,17 @@ public interface Attachment extends Appendix {
 
         @Override
         int getMySize() {
-            return 8 + 8 + 8;
+            return 8 + 8;
         }
 
         @Override
         void putMyBytes(ByteBuffer buffer) {
-            buffer.putLong(recipientId);
             buffer.putLong(currencyId);
             buffer.putLong(units);
         }
 
         @Override
         void putMyJSON(JSONObject attachment) {
-            attachment.put("recipient", Convert.toUnsignedLong(recipientId));
             attachment.put("currency", Convert.toUnsignedLong(currencyId));
             attachment.put("units", units);
         }
@@ -1845,10 +1839,6 @@ public interface Attachment extends Appendix {
         @Override
         public TransactionType getTransactionType() {
             return MonetarySystem.CURRENCY_TRANSFER;
-        }
-
-        public long getRecipientId() {
-            return recipientId;
         }
 
         public long getCurrencyId() {
@@ -1980,36 +1970,30 @@ public interface Attachment extends Appendix {
 
     }
 
-    //TODO: replace with buy and sell
-    public final static class MonetarySystemExchange extends AbstractAttachment {
+    abstract static class MonetarySystemExchange extends AbstractAttachment {
 
         private final long currencyId;
         private final long rateNQT;
         private final long units;
 
-        MonetarySystemExchange(ByteBuffer buffer, byte transactionVersion) {
+        private MonetarySystemExchange(ByteBuffer buffer, byte transactionVersion) {
             super(buffer, transactionVersion);
             this.currencyId = buffer.getLong();
             this.rateNQT = buffer.getLong();
             this.units = buffer.getLong();
         }
 
-        MonetarySystemExchange(JSONObject attachmentData) {
+        private MonetarySystemExchange(JSONObject attachmentData) {
             super(attachmentData);
             this.currencyId = Convert.parseUnsignedLong((String)attachmentData.get("currency"));
             this.rateNQT = Convert.parseLong(attachmentData.get("rateNQT"));
             this.units = Convert.parseLong(attachmentData.get("units"));
         }
 
-        public MonetarySystemExchange(long currencyId, long rateNQT, long units) {
+        private MonetarySystemExchange(long currencyId, long rateNQT, long units) {
             this.currencyId = currencyId;
             this.rateNQT = rateNQT;
             this.units = units;
-        }
-
-        @Override
-        String getAppendixName() {
-            return "Exchange";
         }
 
         @Override
@@ -2031,10 +2015,6 @@ public interface Attachment extends Appendix {
             attachment.put("units", units);
         }
 
-        @Override
-        public TransactionType getTransactionType() {
-            return MonetarySystem.EXCHANGE;
-        }
 
         public long getCurrencyId() {
             return currencyId;
@@ -2048,8 +2028,56 @@ public interface Attachment extends Appendix {
             return units;
         }
 
-        public boolean isBuy() {
-            return units > 0;
+    }
+
+    public final static class MonetarySystemExchangeBuy extends MonetarySystemExchange {
+
+        MonetarySystemExchangeBuy(ByteBuffer buffer, byte transactionVersion) {
+            super(buffer, transactionVersion);
+        }
+
+        MonetarySystemExchangeBuy(JSONObject attachmentData) {
+            super(attachmentData);
+        }
+
+        public MonetarySystemExchangeBuy(long currencyId, long rateNQT, long units) {
+            super(currencyId, rateNQT, units);
+        }
+
+        @Override
+        String getAppendixName() {
+            return "ExchangeBuy";
+        }
+
+        @Override
+        public TransactionType getTransactionType() {
+            return MonetarySystem.EXCHANGE_BUY;
+        }
+
+    }
+
+    public final static class MonetarySystemExchangeSell extends MonetarySystemExchange {
+
+        MonetarySystemExchangeSell(ByteBuffer buffer, byte transactionVersion) {
+            super(buffer, transactionVersion);
+        }
+
+        MonetarySystemExchangeSell(JSONObject attachmentData) {
+            super(attachmentData);
+        }
+
+        public MonetarySystemExchangeSell(long currencyId, long rateNQT, long units) {
+            super(currencyId, rateNQT, units);
+        }
+
+        @Override
+        String getAppendixName() {
+            return "ExchangeSell";
+        }
+
+        @Override
+        public TransactionType getTransactionType() {
+            return MonetarySystem.EXCHANGE_SELL;
         }
 
     }

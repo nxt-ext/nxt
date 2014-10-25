@@ -1,7 +1,7 @@
 package nxt.http;
 
-import nxt.CurrencyBuy;
-import nxt.CurrencyOffer;
+import nxt.CurrencyBuyOffer;
+import nxt.db.DbIterator;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
@@ -25,10 +25,11 @@ public final class GetAllOffers extends APIServlet.APIRequestHandler {
         int firstIndex = ParameterParser.getFirstIndex(req);
         int lastIndex = ParameterParser.getLastIndex(req);
 
-        for (CurrencyOffer buyOffer : CurrencyBuy.getAll(firstIndex, lastIndex)) {
-            offerData.add(JSONData.offer(buyOffer));
+        try (DbIterator<CurrencyBuyOffer> offers = CurrencyBuyOffer.getAll(firstIndex, lastIndex)) {
+            for (CurrencyBuyOffer buyOffer : offers) {
+                offerData.add(JSONData.offer(buyOffer));
+            }
         }
-
         response.put("openOffers", offerData);
         return response;
     }
