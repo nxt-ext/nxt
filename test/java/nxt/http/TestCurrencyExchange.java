@@ -27,10 +27,10 @@ public class TestCurrencyExchange extends BlockchainTest {
 
         generateBlock();
 
-        APICall apiCall = new APICall.Builder("getAllOffers").build();
+        APICall apiCall = new APICall.Builder("getBuyOffers").param("currency", currencyId).build();
         JSONObject getAllOffersResponse = apiCall.invoke();
         Logger.logDebugMessage("getAllOffersResponse:" + getAllOffersResponse.toJSONString());
-        JSONArray offer = (JSONArray)getAllOffersResponse.get("openOffers");
+        JSONArray offer = (JSONArray)getAllOffersResponse.get("offers");
         Assert.assertEquals(publishExchangeOfferResponse.get("transaction"), ((JSONObject)offer.get(0)).get("offer"));
 
         // The buy offer reduces the unconfirmed balance but does not change the confirmed balance
@@ -88,10 +88,10 @@ public class TestCurrencyExchange extends BlockchainTest {
 
         generateBlock();
 
-        APICall apiCall = new APICall.Builder("getAllOffers").build();
+        APICall apiCall = new APICall.Builder("getSellOffers").param("currency", currencyId).build();
         JSONObject getAllOffersResponse = apiCall.invoke();
         Logger.logDebugMessage("getAllOffersResponse:" + getAllOffersResponse.toJSONString());
-        JSONArray offer = (JSONArray)getAllOffersResponse.get("openOffers");
+        JSONArray offer = (JSONArray)getAllOffersResponse.get("offers");
         Assert.assertEquals(publishExchangeOfferResponse.get("transaction"), ((JSONObject)offer.get(0)).get("offer"));
 
         // The buy offer reduces the unconfirmed balance but does not change the confirmed balance
