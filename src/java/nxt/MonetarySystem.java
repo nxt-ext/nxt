@@ -528,7 +528,8 @@ public abstract class MonetarySystem extends TransactionType {
                 }
             }
             if (attachment.getAmount() <= 0 || attachment.getAmount() > Constants.MAX_CURRENCY_TOTAL_SUPPLY
-                    || attachment.getParticipantCount() < Constants.MIN_NUMBER_OF_SHUFFLING_PARTICIPANTS || attachment.getParticipantCount() > Constants.MAX_NUMBER_OF_SHUFFLING_PARTICIPANTS
+                    || attachment.getParticipantCount() < Constants.MIN_SHUFFLING_PARTICIPANTS
+                    || attachment.getParticipantCount() > Constants.MAX_SHUFFLING_PARTICIPANTS
                     || attachment.getCancellationHeight() <= Nxt.getBlockchain().getHeight()) {
                 throw new NxtException.NotValidException("Invalid shuffling creation: " + attachment.getJSONObject());
             }
@@ -623,7 +624,61 @@ public abstract class MonetarySystem extends TransactionType {
         @Override
         void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
             Attachment.MonetarySystemShufflingRegistration attachment = (Attachment.MonetarySystemShufflingRegistration) transaction.getAttachment();
-            ShufflingParticipant.addParticipant(transaction, attachment);
+            Shuffling.addParticipant(transaction, attachment);
+        }
+
+        @Override
+        void undoAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
+        }
+
+        @Override
+        public boolean hasRecipient() {
+            return false;
+        }
+    };
+
+    public static final TransactionType SHUFFLING_VERIFICATION = new MonetarySystem() {
+
+        @Override
+        public byte getSubtype() {
+            return SUBTYPE_MONETARY_SYSTEM_SHUFFLING_DISTRIBUTION;
+        }
+
+        @Override
+        Attachment.AbstractAttachment parseAttachment(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
+            return new Attachment.MonetarySystemShufflingVerification(buffer, transactionVersion);
+        }
+
+        @Override
+        Attachment.AbstractAttachment parseAttachment(JSONObject attachmentData) throws NxtException.NotValidException {
+            return new Attachment.MonetarySystemShufflingVerification(attachmentData);
+        }
+
+        @Override
+        void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
+            Attachment.MonetarySystemShufflingVerification attachment = (Attachment.MonetarySystemShufflingVerification) transaction.getAttachment();
+            Shuffling shuffling = Shuffling.getShuffling(attachment.getShufflingId());
+            if (shuffling == null) {
+                throw new NxtException.NotValidException("Shuffling not found: " + attachment.getShufflingId());
+            }
+            if (!shuffling.isVerificationEnabled()) {
+                throw new NxtException.NotValidException("Shuffling not ready for verification: " + attachment.getShufflingId());
+            }
+            if (shuffling.isParticipant(transaction.getSenderId())) {
+                throw new NxtException.NotValidException("Only participant can verify: " + attachment.getShufflingId());
+            }
+        }
+
+        @Override
+        boolean applyAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
+            return true;
+        }
+
+        @Override
+        void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
+            Attachment.MonetarySystemShufflingVerification attachment = (Attachment.MonetarySystemShufflingVerification) transaction.getAttachment();
+            Shuffling shuffling = Shuffling.getShuffling(attachment.getShufflingId());
+            shuffling.verify(transaction.getSenderId());
         }
 
         @Override

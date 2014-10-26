@@ -14,6 +14,30 @@ import java.sql.SQLException;
 
 public final class ShufflingParticipant {
 
+    private static enum State {
+        REGISTERED((byte)0),
+        VERIFIED((byte)1);
+
+        private final byte code;
+
+        State(byte code) {
+            this.code = code;
+        }
+
+        public static State get(byte code) {
+            for (State state : State.values()) {
+                if (state.code == code) {
+                    return state;
+                }
+            }
+            throw new IllegalArgumentException("No matching state for " + code);
+        }
+
+        public byte getCode() {
+            return code;
+        }
+    }
+
     public static enum Event {
         PARTICIPANT_ADDED, RECIPIENT_ADDED
     }
@@ -67,17 +91,10 @@ public final class ShufflingParticipant {
         return shufflingParticipantTable.get(shufflingParticipantDbKeyFactory.newKey(shufflingId, accountId));
     }
 
-    static ShufflingParticipant addParticipant(Transaction transaction, Attachment.MonetarySystemShufflingRegistration attachment) {
-        ShufflingParticipant participant = new ShufflingParticipant(transaction, attachment);
+    static ShufflingParticipant addParticipant(long shufflingId, long accountId) {
+        ShufflingParticipant participant = new ShufflingParticipant(shufflingId, accountId);
         shufflingParticipantTable.insert(participant);
-        listeners.notify(participant, Event.PARTICIPANT_ADDED);
-        return participant;
-    }
 
-    static ShufflingParticipant addParticipant(long shufflingId, long accountId, long recipientId) {
-        ShufflingParticipant participant = new ShufflingParticipant(shufflingId, accountId, recipientId);
-        participant.recipientId = recipientId;
-        shufflingParticipantTable.insert(participant);
         listeners.notify(participant, Event.PARTICIPANT_ADDED);
         return participant;
     }
@@ -88,18 +105,14 @@ public final class ShufflingParticipant {
 
     private final DbKey dbKey;
     private final long accountId;
-    private long recipientId;
 
-    public ShufflingParticipant(long shufflingId, long accountId, long recipientId) {
+    private long nextAccountId;
+    private long recipientId;
+    private State state;
+
+    public ShufflingParticipant(long shufflingId, long accountId) {
         this.shufflingId = shufflingId;
         this.accountId = accountId;
-        this.dbKey = shufflingParticipantDbKeyFactory.newKey(shufflingId, accountId);
-        this.recipientId = recipientId;
-    }
-
-    ShufflingParticipant(Transaction transaction, Attachment.MonetarySystemShufflingRegistration attachment) {
-        this.shufflingId = attachment.getShufflingId();
-        this.accountId = transaction.getSenderId();
         this.dbKey = shufflingParticipantDbKeyFactory.newKey(shufflingId, accountId);
     }
 
@@ -107,17 +120,21 @@ public final class ShufflingParticipant {
         this.shufflingId = rs.getLong("shuffling_id");
         this.accountId = rs.getLong("account_id");
         this.dbKey = shufflingParticipantDbKeyFactory.newKey(shufflingId, accountId);
+        this.nextAccountId = rs.getLong("next_account_id");
         this.recipientId = rs.getLong("recipient_id");
+        this.state = State.get(rs.getByte("state"));
     }
 
     private void save(Connection con) throws SQLException {
-        try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO shuffle (shuffle_id, "
-                + "account_id, recipient_id) "
-                + "VALUES (?, ?, ?)")) {
+        try (PreparedStatement pstmt = con.prepareStatement("MERGE INTO shuffling_participant (shuffle_id, "
+                + "account_id, next_account_id, recipient_id, state) "
+                + "VALUES (?, ?, ?, ?, ?)")) {
             int i = 0;
             pstmt.setLong(++i, this.getShufflingId());
             pstmt.setLong(++i, this.getAccountId());
+            pstmt.setLong(++i, this.getNextAccountId());
             pstmt.setLong(++i, this.getRecipientId());
+            pstmt.setByte(++i, this.getState().getCode());
             pstmt.executeUpdate();
         }
     }
@@ -130,7 +147,26 @@ public final class ShufflingParticipant {
         return accountId;
     }
 
+    public long getNextAccountId() {
+        return nextAccountId;
+    }
+
     public long getRecipientId() {
         return recipientId;
     }
+
+    public State getState() {
+        return state;
+    }
+
+    public void setNextAccountId(long nextAccountId) {
+        this.nextAccountId = nextAccountId;
+        shufflingParticipantTable.insert(this);
+    }
+
+    public void verify() {
+        state = State.VERIFIED;
+        shufflingParticipantTable.insert(this);
+    }
+
 }

@@ -1,6 +1,5 @@
 package nxt;
 
-import nxt.db.DbClause;
 import nxt.db.DbIterator;
 import nxt.db.DbKey;
 import nxt.db.VersionedEntityDbTable;
@@ -101,10 +100,10 @@ public final class Shuffling {
         return listeners.removeListener(listener, eventType);
     }
 
-    public static DbIterator<Shuffling> getShuffling(long currencyId, int from, int to) {
-        return shufflingTable.getManyBy(new DbClause.LongClause("currency_id", currencyId), from, to);
-    }
-
+//    public static DbIterator<Shuffling> getShuffling(long currencyId, int from, int to) {
+//        return shufflingTable.getManyBy(new DbClause.LongClause("currency_id", currencyId), from, to);
+//    }
+//
     public static Shuffling getShuffling(long shufflingId) {
         return shufflingTable.get(shufflingDbKeyFactory.newKey(shufflingId));
     }
@@ -112,11 +111,26 @@ public final class Shuffling {
     static Shuffling addShuffling(Transaction transaction, Attachment.MonetarySystemShufflingCreation attachment) {
         Shuffling shuffling = new Shuffling(transaction, attachment);
         shufflingTable.insert(shuffling);
-        ShufflingParticipant.addParticipant(shuffling.getId(), transaction.getSenderId(), attachment.getIssuerId());
+        ShufflingParticipant.addParticipant(shuffling.getId(), transaction.getSenderId());
         ShufflingParticipant.addListener(new ParticipantListener(shuffling), ShufflingParticipant.Event.PARTICIPANT_ADDED);
         listeners.notify(shuffling, Event.SHUFFLING_CREATED);
         return shuffling;
     }
+
+    public static void addParticipant(Transaction transaction, Attachment.MonetarySystemShufflingRegistration attachment) {
+        long shufflingId = attachment.getShufflingId();
+        long participantId = transaction.getSenderId();
+        ShufflingParticipant.addParticipant(shufflingId, participantId);
+
+        // Update the shuffling assignee to the new participant and update the next pointer of the existing participant
+        // to the new participant
+        Shuffling shuffling = Shuffling.getShuffling(shufflingId);
+        ShufflingParticipant participant = ShufflingParticipant.getParticipant(shufflingId, shuffling.getAssigneeAccountId());
+        participant.setNextAccountId(participantId);
+        shuffling.setAssigneeAccountId(participantId);
+    }
+
+
 
     static void init() {}
 
@@ -137,7 +151,7 @@ public final class Shuffling {
         this.dbKey = shufflingDbKeyFactory.newKey(this.id);
         this.isCurrency = attachment.isCurrency();
         this.currencyId = attachment.getCurrencyId();
-        this.issuerId = attachment.getIssuerId();
+        this.issuerId = transaction.getSenderId();
         this.amount = attachment.getAmount();
         this.participantCount = attachment.getParticipantCount();
         this.cancellationHeight = attachment.getCancellationHeight();
@@ -208,8 +222,22 @@ public final class Shuffling {
         return state;
     }
 
+    public void setState(State state) {
+        this.state = state;
+        shufflingTable.insert(this);
+    }
+
     public long getAssigneeAccountId() {
         return assigneeAccountId;
+    }
+
+    public void setAssigneeAccountId(long assigneeAccountId) {
+        this.assigneeAccountId = assigneeAccountId;
+        shufflingTable.insert(this);
+    }
+
+    public void verify(long accountId) {
+        ShufflingParticipant.getParticipant(id, accountId).verify();
     }
 
     public void distribute() {
@@ -224,7 +252,7 @@ public final class Shuffling {
         for (ShufflingParticipant participant : ShufflingParticipant.getParticipants(id)) {
             updateUnconfirmedBalance(participant.getAccountId(), amount);
         }
-        state = State.CANCELLED;
+        setState(State.CANCELLED);
     }
 
     public void updateBalance(long accountId, long amount) {
@@ -233,7 +261,7 @@ public final class Shuffling {
         } else {
             Account.getAccount(accountId).addToCurrencyUnits(currencyId, amount);
         }
-        state = State.DONE;
+        setState(State.DONE);
     }
 
     public void updateUnconfirmedBalance(long accountId, long amount) {
@@ -246,6 +274,9 @@ public final class Shuffling {
 
     public boolean isRegistrationEnabled() {
         return state == State.REGISTRATION;
+    }
+    public boolean isVerificationEnabled() {
+        return state == State.VERIFICATION;
     }
 
     public boolean isDistributionEnabled() {
@@ -272,8 +303,8 @@ public final class Shuffling {
         public void notify(ShufflingParticipant shufflingParticipant) {
             long shufflingId = shufflingParticipant.getShufflingId();
             if (ShufflingParticipant.getCount(shufflingId) == shuffling.participantCount) {
-                shuffling.state = State.SHUFFLING;
-                shufflingTable.insert(shuffling);
+                shuffling.assigneeAccountId = shuffling.issuerId;
+                shuffling.setState(State.SHUFFLING); // update the db
             }
         }
     }

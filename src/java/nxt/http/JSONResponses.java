@@ -16,6 +16,7 @@ public final class JSONResponses {
     public static final JSONStreamAware INCORRECT_ALIAS_NOTFORSALE = incorrect("alias", "(alias is not for sale at the moment)");
     public static final JSONStreamAware INCORRECT_URI_LENGTH = incorrect("uri", "(length must be not longer than " + Constants.MAX_ALIAS_URI_LENGTH + " characters)");
     public static final JSONStreamAware MISSING_SECRET_PHRASE = missing("secretPhrase");
+    public static final JSONStreamAware MISSING_PUBLIC_KEY = missing("publicKey");
     public static final JSONStreamAware INCORRECT_PUBLIC_KEY = incorrect("publicKey");
     public static final JSONStreamAware MISSING_ALIAS_NAME = missing("aliasName");
     public static final JSONStreamAware MISSING_ALIAS_OR_ALIAS_NAME = missing("alias", "aliasName");
@@ -130,6 +131,9 @@ public final class JSONResponses {
     public static final JSONStreamAware MISSING_CURRENCY = missing("currency");
     public static final JSONStreamAware UNKNOWN_CURRENCY = unknown("currency");
     public static final JSONStreamAware INCORRECT_CURRENCY = incorrect("currency");
+    public static final JSONStreamAware MISSING_SHUFFLING = missing("shuffling");
+    public static final JSONStreamAware UNKNOWN_SHUFFLING = unknown("shuffling");
+    public static final JSONStreamAware INCORRECT_SHUFFLING = incorrect("shuffling");
 
     public static final JSONStreamAware NOT_ENOUGH_FUNDS;
     static {

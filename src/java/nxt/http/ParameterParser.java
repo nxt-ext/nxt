@@ -8,6 +8,7 @@ import nxt.Currency;
 import nxt.DigitalGoodsStore;
 import nxt.Nxt;
 import nxt.NxtException;
+import nxt.Shuffling;
 import nxt.Transaction;
 import nxt.crypto.Crypto;
 import nxt.crypto.EncryptedData;
@@ -197,6 +198,24 @@ final class ParameterParser {
             throw new ParameterException(UNKNOWN_CURRENCY);
         }
         return currency;
+    }
+
+    static Shuffling getShuffling(HttpServletRequest req) throws ParameterException {
+        String shufflingValue = Convert.emptyToNull(req.getParameter("shuffling"));
+        if (shufflingValue == null) {
+            throw new ParameterException(MISSING_SHUFFLING);
+        }
+        Shuffling shuffling;
+        try {
+            long shufflingId = Convert.parseUnsignedLong(shufflingValue);
+            shuffling = Shuffling.getShuffling(shufflingId);
+        } catch (RuntimeException e) {
+            throw new ParameterException(INCORRECT_SHUFFLING);
+        }
+        if (shuffling == null) {
+            throw new ParameterException(UNKNOWN_SHUFFLING);
+        }
+        return shuffling;
     }
 
     static long getQuantityQNT(HttpServletRequest req) throws ParameterException {
