@@ -18,8 +18,8 @@ public final class CreatePoll extends CreateTransaction {
     private CreatePoll() {
         super(new APITag[] {APITag.VS, APITag.CREATE_TRANSACTION},
                 "name", "description", "finishHeight", "optionModel", "votingModel",
-                "option1", "option2", "option3"); // hardcoded to 3 options for testing todo: fix ?
-        //todo: minNumberOfOptions, maxNumberOfOptions, minBalance, asstId
+                "minNumberOfOptions", "maxNumberOfOptions", "minBalance", "assetId",
+                "option1","option2","option3"); // hardcoded to 3 options for testing todo: fix ?
     }
 
     @Override
@@ -55,7 +55,7 @@ public final class CreatePoll extends CreateTransaction {
 
         List<String> options = new ArrayList<>(Constants.MAX_POLL_OPTION_COUNT / 20);
         while (options.size() < Constants.MAX_POLL_OPTION_COUNT) {
-            String optionValue = req.getParameter("option" + options.size());
+            String optionValue = req.getParameter("option" + (options.size()+1));
             if (optionValue == null) {
                 break;
             }
@@ -63,6 +63,10 @@ public final class CreatePoll extends CreateTransaction {
                 return INCORRECT_POLL_OPTION_LENGTH;
             }
             options.add(optionValue.trim());
+        }
+
+        if(options.size()==0){
+            return INCORRECT_ZEROOPTIONS;
         }
 
         int finishHeight;
