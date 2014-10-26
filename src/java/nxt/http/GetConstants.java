@@ -198,7 +198,7 @@ public final class GetConstants extends APIServlet.APIRequestHandler {
         subtype.put("description", "Shuffling continuation");
         subtypes.add(subtype);
         subtype = new JSONObject();
-        subtype.put("value", MonetarySystem.SHUFFLING_FINALIZATION.getSubtype());
+        subtype.put("value", MonetarySystem.SHUFFLING_DISTRIBUTION.getSubtype());
         subtype.put("description", "Shuffling finalization");
         subtypes.add(subtype);
         subtype = new JSONObject();

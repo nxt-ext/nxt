@@ -63,6 +63,10 @@ public final class ShufflingParticipant {
         return shufflingParticipantTable.getManyBy(new DbClause.LongClause("shuffling_id", shufflingId), 0, -1);
     }
 
+    public static ShufflingParticipant getParticipant(long shufflingId, long accountId) {
+        return shufflingParticipantTable.get(shufflingParticipantDbKeyFactory.newKey(shufflingId, accountId));
+    }
+
     static ShufflingParticipant addParticipant(Transaction transaction, Attachment.MonetarySystemShufflingRegistration attachment) {
         ShufflingParticipant participant = new ShufflingParticipant(transaction, attachment);
         shufflingParticipantTable.insert(participant);

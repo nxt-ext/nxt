@@ -491,7 +491,8 @@ final class DbVersion {
             case 159:
                 apply("CREATE UNIQUE INDEX IF NOT EXISTS currency_mint_id_idx ON currency_mint (id)");
             case 160:
-                apply("CREATE TABLE IF NOT EXISTS shuffling (db_id INT IDENTITY, id BIGINT NOT NULL, currency_id BIGINT NOT NULL, "
+                apply("CREATE TABLE IF NOT EXISTS shuffling (db_id INT IDENTITY, id BIGINT NOT NULL, "
+                        + "is_currency BOOLEAN NOT NULL DEFAULT FALSE, currency_id BIGINT NOT NULL, "
                         + "issuer_id BIGINT NOT NULL, amount BIGINT NOT NULL, participant_count BIGINT NOT NULL, cancellation_height INT NOT NULL, "
                         + "state TINYINT NOT NULL, assignee_account_id BIGINT NOT NULL, "
                         + "height INT NOT NULL, latest BOOLEAN NOT NULL DEFAULT TRUE)");

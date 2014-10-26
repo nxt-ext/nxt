@@ -504,7 +504,7 @@ public abstract class MonetarySystem extends TransactionType {
 
         @Override
         public byte getSubtype() {
-            return SUBTYPE_MONETARY_SYSTEM_SHUFFLING_INITIATION;
+            return SUBTYPE_MONETARY_SYSTEM_SHUFFLING_CREATION;
         }
 
         @Override
@@ -520,10 +520,14 @@ public abstract class MonetarySystem extends TransactionType {
         @Override
         void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
             Attachment.MonetarySystemShufflingCreation attachment = (Attachment.MonetarySystemShufflingCreation) transaction.getAttachment();
-            Currency currency = Currency.getCurrency(attachment.getCurrencyId());
-            CurrencyType.validate(currency, transaction);
-            if (! currency.isActive()
-                    || attachment.getAmount() <= 0 || attachment.getAmount() > Constants.MAX_CURRENCY_TOTAL_SUPPLY
+            if (attachment.isCurrency()) {
+                Currency currency = Currency.getCurrency(attachment.getCurrencyId());
+                CurrencyType.validate(currency, transaction);
+                if (!currency.isActive()) {
+                    throw new NxtException.NotValidException("Currency is not active: " + currency.getCode());
+                }
+            }
+            if (attachment.getAmount() <= 0 || attachment.getAmount() > Constants.MAX_CURRENCY_TOTAL_SUPPLY
                     || attachment.getParticipantCount() < Constants.MIN_NUMBER_OF_SHUFFLING_PARTICIPANTS || attachment.getParticipantCount() > Constants.MAX_NUMBER_OF_SHUFFLING_PARTICIPANTS
                     || attachment.getCancellationHeight() <= Nxt.getBlockchain().getHeight()) {
                 throw new NxtException.NotValidException("Invalid shuffling creation: " + attachment.getJSONObject());
@@ -533,9 +537,16 @@ public abstract class MonetarySystem extends TransactionType {
         @Override
         boolean applyAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
             Attachment.MonetarySystemShufflingCreation attachment = (Attachment.MonetarySystemShufflingCreation) transaction.getAttachment();
-            if (senderAccount.getUnconfirmedCurrencyUnits(attachment.getCurrencyId()) >= attachment.getAmount()) {
-                senderAccount.addToUnconfirmedCurrencyUnits(attachment.getCurrencyId(), -attachment.getAmount());
-                return true;
+            if (!attachment.isCurrency()) {
+                if (senderAccount.getUnconfirmedBalanceNQT() >= attachment.getAmount()) {
+                    senderAccount.addToUnconfirmedBalanceNQT(-attachment.getAmount());
+                    return true;
+                }
+            } else {
+                if (senderAccount.getUnconfirmedCurrencyUnits(attachment.getCurrencyId()) >= attachment.getAmount()) {
+                    senderAccount.addToUnconfirmedCurrencyUnits(attachment.getCurrencyId(), -attachment.getAmount());
+                    return true;
+                }
             }
             return false;
         }
@@ -579,16 +590,34 @@ public abstract class MonetarySystem extends TransactionType {
         void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
             Attachment.MonetarySystemShufflingRegistration attachment = (Attachment.MonetarySystemShufflingRegistration) transaction.getAttachment();
             Shuffling shuffling = Shuffling.getShuffling(attachment.getShufflingId());
-            if (shuffling.isRegistrationEnabled()
-                    || !shuffling.isParticipant(transaction.getSenderId())
-                    || CoinShuffler.sentEncryptedRecipients(transaction.getSenderId(), attachment.getShufflingId())) {
-                throw new NxtException.NotValidException("Invalid shuffling continuation: " + attachment.getJSONObject());
+            if (shuffling == null) {
+                throw new NxtException.NotValidException("Shuffling not found: " + attachment.getShufflingId());
+            }
+            if (!shuffling.isRegistrationEnabled()) {
+                throw new NxtException.NotValidException("Shuffling registration has ended");
+            }
+            if (shuffling.isParticipant(transaction.getSenderId())) {
+                throw new NxtException.NotValidException(String.format("Account %s is already registered for shuffling %s",
+                        Convert.rsAccount(transaction.getSenderId()), Convert.toUnsignedLong(shuffling.getId())));
             }
         }
 
         @Override
         boolean applyAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
-            return true;
+            Attachment.MonetarySystemShufflingRegistration attachment = (Attachment.MonetarySystemShufflingRegistration) transaction.getAttachment();
+            Shuffling shuffling = Shuffling.getShuffling(attachment.getShufflingId());
+            if (!shuffling.isCurrency()) {
+                if (senderAccount.getUnconfirmedBalanceNQT() >= shuffling.getAmount()) {
+                    senderAccount.addToUnconfirmedBalanceNQT(-shuffling.getAmount());
+                    return true;
+                }
+            } else {
+                if (senderAccount.getUnconfirmedCurrencyUnits(shuffling.getCurrencyId()) >= shuffling.getAmount()) {
+                    senderAccount.addToUnconfirmedCurrencyUnits(shuffling.getCurrencyId(), -shuffling.getAmount());
+                    return true;
+                }
+            }
+            return false;
         }
 
         @Override
@@ -607,32 +636,35 @@ public abstract class MonetarySystem extends TransactionType {
         }
     };
 
-    public static final TransactionType SHUFFLING_FINALIZATION = new MonetarySystem() {
+    public static final TransactionType SHUFFLING_DISTRIBUTION = new MonetarySystem() {
 
         @Override
         public byte getSubtype() {
-            return SUBTYPE_MONETARY_SYSTEM_SHUFFLING_FINALIZATION;
+            return SUBTYPE_MONETARY_SYSTEM_SHUFFLING_DISTRIBUTION;
         }
 
         @Override
         Attachment.AbstractAttachment parseAttachment(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
-            return new Attachment.MonetarySystemShufflingFinalization(buffer, transactionVersion);
+            return new Attachment.MonetarySystemShufflingDistribution(buffer, transactionVersion);
         }
 
         @Override
         Attachment.AbstractAttachment parseAttachment(JSONObject attachmentData) throws NxtException.NotValidException {
-            return new Attachment.MonetarySystemShufflingFinalization(attachmentData);
+            return new Attachment.MonetarySystemShufflingDistribution(attachmentData);
         }
 
         @Override
         void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
-            Attachment.MonetarySystemShufflingFinalization attachment = (Attachment.MonetarySystemShufflingFinalization) transaction.getAttachment();
-            CurrencyType.validate(Currency.getCurrency(attachment.getCurrencyId()), transaction);
-            if (!CoinShuffler.isFinalized(attachment.getShufflingId())
-                    || !CoinShuffler.isParticipant(transaction.getSenderId(), attachment.getShufflingId())
-                    || CoinShuffler.sentDecryptedRecipients(transaction.getSenderId(), attachment.getShufflingId())
-                    || attachment.getRecipients().length != CoinShuffler.getNumberOfParticipants(attachment.getShufflingId())) {
-                throw new NxtException.NotValidException("Invalid shuffling finalization: " + attachment.getJSONObject());
+            Attachment.MonetarySystemShufflingDistribution attachment = (Attachment.MonetarySystemShufflingDistribution) transaction.getAttachment();
+            Shuffling shuffling = Shuffling.getShuffling(attachment.getShufflingId());
+            if (shuffling == null) {
+                throw new NxtException.NotValidException("Shuffling not found: " + attachment.getShufflingId());
+            }
+            if (!shuffling.isDistributionEnabled()) {
+                throw new NxtException.NotValidException("Shuffling not ready for distribution: " + attachment.getShufflingId());
+            }
+            if (shuffling.getIssuerId() != transaction.getSenderId()) {
+                throw new NxtException.NotValidException("Only shuffling issuer can trigger distribution: " + attachment.getShufflingId());
             }
         }
 
@@ -643,8 +675,9 @@ public abstract class MonetarySystem extends TransactionType {
 
         @Override
         void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
-            Attachment.MonetarySystemShufflingFinalization attachment = (Attachment.MonetarySystemShufflingFinalization) transaction.getAttachment();
-            CoinShuffler.finalizeShuffling(senderAccount, attachment.getShufflingId(), attachment.getRecipients());
+            Attachment.MonetarySystemShufflingDistribution attachment = (Attachment.MonetarySystemShufflingDistribution) transaction.getAttachment();
+            Shuffling shuffling = Shuffling.getShuffling(attachment.getShufflingId());
+            shuffling.distribute();
         }
 
         @Override
@@ -677,13 +710,15 @@ public abstract class MonetarySystem extends TransactionType {
         @Override
         void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
             Attachment.MonetarySystemShufflingCancellation attachment = (Attachment.MonetarySystemShufflingCancellation) transaction.getAttachment();
-            CurrencyType.validate(Currency.getCurrency(attachment.getCurrencyId()), transaction);
-            if (!CoinShuffler.isFinalized(attachment.getShufflingId()) && !CoinShuffler.isCancelled(attachment.getShufflingId())
-                    || !CoinShuffler.isParticipant(transaction.getSenderId(), attachment.getShufflingId())
-                    || CoinShuffler.sentDecryptedRecipients(transaction.getSenderId(), attachment.getShufflingId())
-                    || CoinShuffler.sentKeys(transaction.getSenderId(), attachment.getShufflingId())
-                    || attachment.getKeys().length > 32 * (CoinShuffler.getNumberOfParticipants(attachment.getShufflingId()) - 1)) {
-                throw new NxtException.NotValidException("Invalid shuffling cancellation: " + attachment.getJSONObject());
+            Shuffling shuffling = Shuffling.getShuffling(attachment.getShufflingId());
+            if (shuffling == null) {
+                throw new NxtException.NotValidException("Shuffling not found: " + attachment.getShufflingId());
+            }
+            if (!shuffling.isCancelingEnabled()) {
+                throw new NxtException.NotValidException("Shuffling cannot be cancelled: " + attachment.getShufflingId());
+            }
+            if (shuffling.getIssuerId() != transaction.getSenderId()) {
+                throw new NxtException.NotValidException("Only shuffling issuer can cancel shuffling: " + attachment.getShufflingId());
             }
         }
 
@@ -695,7 +730,8 @@ public abstract class MonetarySystem extends TransactionType {
         @Override
         void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
             Attachment.MonetarySystemShufflingCancellation attachment = (Attachment.MonetarySystemShufflingCancellation) transaction.getAttachment();
-            CoinShuffler.cancelShuffling(senderAccount, attachment.getShufflingId(), attachment.getKeys());
+            Shuffling shuffling = Shuffling.getShuffling(attachment.getShufflingId());
+            shuffling.distribute();
         }
 
         @Override

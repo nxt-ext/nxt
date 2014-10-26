@@ -2163,6 +2163,7 @@ public interface Attachment extends Appendix {
 
     public final static class MonetarySystemShufflingCreation extends AbstractAttachment {
 
+        private final boolean isCurrency;
         private final long currencyId;
         private final long issuerId;
         private final long amount;
@@ -2171,6 +2172,7 @@ public interface Attachment extends Appendix {
 
         MonetarySystemShufflingCreation(ByteBuffer buffer, byte transactionVersion) {
             super(buffer, transactionVersion);
+            this.isCurrency = (buffer.get() == 0x01);
             this.currencyId = buffer.getLong();
             this.issuerId = buffer.getLong();
             this.amount = buffer.getLong();
@@ -2180,6 +2182,7 @@ public interface Attachment extends Appendix {
 
         MonetarySystemShufflingCreation(JSONObject attachmentData) {
             super(attachmentData);
+            this.isCurrency = attachmentData.get("isCurrency").equals("1");
             this.currencyId = Convert.parseUnsignedLong((String) attachmentData.get("currency"));
             this.issuerId = Convert.parseUnsignedLong((String) attachmentData.get("issuer"));
             this.amount = Convert.parseLong(attachmentData.get("amount"));
@@ -2187,7 +2190,8 @@ public interface Attachment extends Appendix {
             this.cancellationHeight = ((Long)attachmentData.get("cancellationHeight")).shortValue();
         }
 
-        MonetarySystemShufflingCreation(long currencyId, long issuerId, long amount, byte numberOfParticipants, int cancellationHeight) {
+        MonetarySystemShufflingCreation(boolean isCurrency, long currencyId, long issuerId, long amount, byte numberOfParticipants, int cancellationHeight) {
+            this.isCurrency = isCurrency;
             this.currencyId = currencyId;
             this.issuerId = issuerId;
             this.amount = amount;
@@ -2226,6 +2230,10 @@ public interface Attachment extends Appendix {
         @Override
         public TransactionType getTransactionType() {
             return MonetarySystem.SHUFFLING_CREATION;
+        }
+
+        public boolean isCurrency() {
+            return isCurrency;
         }
 
         public long getCurrencyId() {
@@ -2298,13 +2306,13 @@ public interface Attachment extends Appendix {
         }
     }
 
-    public final static class MonetarySystemShufflingFinalization extends AbstractAttachment {
+    public final static class MonetarySystemShufflingDistribution extends AbstractAttachment {
 
         private final long currencyId;
         private final long shufflingId;
         private final long[] recipients;
 
-        MonetarySystemShufflingFinalization(ByteBuffer buffer, byte transactionVersion) {
+        MonetarySystemShufflingDistribution(ByteBuffer buffer, byte transactionVersion) {
             super(buffer, transactionVersion);
             this.currencyId = buffer.getLong();
             this.shufflingId = buffer.getLong();
@@ -2316,7 +2324,7 @@ public interface Attachment extends Appendix {
             Arrays.sort(this.recipients);
         }
 
-        MonetarySystemShufflingFinalization(JSONObject attachmentData) {
+        MonetarySystemShufflingDistribution(JSONObject attachmentData) {
             super(attachmentData);
             this.currencyId = Convert.parseUnsignedLong((String)attachmentData.get("currency"));
             this.shufflingId = Convert.parseUnsignedLong((String)attachmentData.get("shuffling"));
@@ -2330,7 +2338,7 @@ public interface Attachment extends Appendix {
             Arrays.sort(this.recipients);
         }
 
-        MonetarySystemShufflingFinalization(long currencyId, long shufflingId, long[] recipients) {
+        MonetarySystemShufflingDistribution(long currencyId, long shufflingId, long[] recipients) {
             this.currencyId = currencyId;
             this.shufflingId = shufflingId;
             this.recipients = recipients;
@@ -2369,7 +2377,7 @@ public interface Attachment extends Appendix {
 
         @Override
         public TransactionType getTransactionType() {
-            return MonetarySystem.SHUFFLING_FINALIZATION;
+            return MonetarySystem.SHUFFLING_DISTRIBUTION;
         }
 
         public long getCurrencyId() {
