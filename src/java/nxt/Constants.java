@@ -24,6 +24,9 @@ public final class Constants {
         }
     }
 
+    public static final long POLL_FEE_NQT = 10 * ONE_NXT;
+    public static final long TWOPHASED_FEE_NQT = ONE_NXT;
+
     public static final int MAX_ALIAS_URI_LENGTH = 1000;
     public static final int MAX_ALIAS_LENGTH = 100;
 
@@ -39,7 +42,7 @@ public final class Constants {
     public static final int MAX_ASSET_DESCRIPTION_LENGTH = 1000;
     public static final int MAX_ASSET_TRANSFER_COMMENT_LENGTH = 1000;
 
-    public static final long POLL_FEE_NQT = 10 * ONE_NXT;
+
     public static final int MAX_POLL_NAME_LENGTH = 100;
     public static final int MAX_POLL_DESCRIPTION_LENGTH = 1000;
     public static final int MAX_POLL_OPTION_LENGTH = 100;

@@ -1,15 +1,11 @@
 package nxt;
 
 import nxt.crypto.EncryptedData;
-import nxt.db.Db;
 import nxt.util.Convert;
 import nxt.util.Logger;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
-
 import java.nio.ByteBuffer;
-import java.sql.Connection;
-import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Collections;
 
@@ -538,11 +534,7 @@ public interface Appendix {
 
             PhasedTransactionPoll txPoll = new PhasedTransactionPoll(id, maxHeight, votingModel,
                     quorum, voteThreshold, assetId);
-            try(Connection con = Db.getConnection()) {
-                PhasedTransactionPoll.pendingTransactionsTable.save(con, txPoll);
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
+            PhasedTransactionPoll.pendingTransactionsTable.insert(txPoll);
         }
 
         void commit(Transaction transaction, Account senderAccount, Account recipientAccount){

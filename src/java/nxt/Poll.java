@@ -17,8 +17,8 @@ public final class Poll extends CommonPollStructure {
         }
     };
 
-    //todo: versioned entity?
-    private static class PollTable extends EntityDbTable<Poll> {
+
+    private static class PollTable extends VersionedEntityDbTable<Poll> {
 
         protected PollTable(DbKey.Factory<Poll> dbKeyFactory) {
             super("poll", dbKeyFactory);
@@ -54,16 +54,6 @@ public final class Poll extends CommonPollStructure {
                 pstmt.setBoolean(++i, poll.isFinished());
                 pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
                 pstmt.executeUpdate();
-            }
-        }
-
-        public void updateActive(long id, Boolean active) {
-            String query = "UPDATE poll SET finished=" + active.toString() + " WHERE ID=" + id;  //todo: popoffs?
-            try (Connection con = Db.getConnection();
-                 PreparedStatement pstmt = con.prepareStatement(query)) {
-                pstmt.executeUpdate();
-            } catch (SQLException e) {
-                throw new RuntimeException(e.toString(), e);
             }
         }
     }
@@ -196,7 +186,8 @@ public final class Poll extends CommonPollStructure {
     }
 
     public static void markPollAsFinished(Poll poll) {
-        pollTable.updateActive(poll.getId(), false);
+        poll.setFinished(true);
+        pollTable.insert(poll);
     }
 
     public long getId() {

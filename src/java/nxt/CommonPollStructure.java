@@ -58,6 +58,8 @@ public class CommonPollStructure {
 
     public boolean isFinished() { return finished; }
 
+    public void setFinished(boolean finished) { this.finished = finished; }
+
     protected long calcWeight(Account voter) throws NxtException.IllegalStateException {
         long weight = 0;
 
