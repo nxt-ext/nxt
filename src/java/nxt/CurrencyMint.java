@@ -1,8 +1,9 @@
 package nxt;
 
 import nxt.crypto.HashFunction;
+import nxt.db.DbClause;
 import nxt.db.DbKey;
-import nxt.db.VersionedEntityDbTable;
+import nxt.db.EntityDbTable;
 
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
@@ -19,7 +20,7 @@ import java.util.Arrays;
 public final class CurrencyMint {
 
 
-    private static final DbKey.LinkKeyFactory<CurrencyMint> currencyMintDbKeyFactory = new DbKey.LinkKeyFactory<CurrencyMint>("currency_id", "account_id") {
+    private static final DbKey.LongKeyFactory<CurrencyMint> currencyMintDbKeyFactory = new DbKey.LongKeyFactory<CurrencyMint>("id") {
 
         @Override
         public DbKey newKey(CurrencyMint currencyMint) {
@@ -28,8 +29,7 @@ public final class CurrencyMint {
 
     };
 
-    //TODO: does this table need to be versioned? or should height be part of the key?
-    private static final VersionedEntityDbTable<CurrencyMint> currencyMintTable = new VersionedEntityDbTable<CurrencyMint>("currency_mint", currencyMintDbKeyFactory) {
+    private static final EntityDbTable<CurrencyMint> currencyMintTable = new EntityDbTable<CurrencyMint>("currency_mint", currencyMintDbKeyFactory) {
 
         @Override
         protected CurrencyMint load(Connection con, ResultSet rs) throws SQLException {
@@ -45,39 +45,46 @@ public final class CurrencyMint {
 
     static void init() {}
 
+    private final long id;
     private final DbKey dbKey;
     private final long currencyId;
     private final long accountId;
     private final long counter;
     private final int height;
 
-    private CurrencyMint(long currencyId, long accountId, long counter) {
+    private CurrencyMint(long transactionId, long currencyId, long accountId, long counter) {
+        this.id = transactionId;
+        this.dbKey = currencyMintDbKeyFactory.newKey(this.id);
         this.currencyId = currencyId;
         this.accountId = accountId;
-        this.dbKey = currencyMintDbKeyFactory.newKey(currencyId, accountId);
         this.counter = counter;
         this.height = Nxt.getBlockchain().getHeight();
     }
 
     private CurrencyMint(ResultSet rs) throws SQLException {
+        this.id = rs.getLong("id");
+        this.dbKey = currencyMintDbKeyFactory.newKey(this.id);
         this.currencyId = rs.getLong("currency_id");
         this.accountId = rs.getLong("account_id");
-        this.dbKey = currencyMintDbKeyFactory.newKey(currencyId, accountId);
         this.counter = rs.getLong("counter");
         this.height = rs.getInt("height");
     }
 
-    //TODO: use MERGE?
     private void save(Connection con) throws SQLException {
-        try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO currency_mint (currency_id, account_id, counter, height)"
-                + "VALUES (?, ?, ?, ?)")) {
+        try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO currency_mint (id, currency_id, account_id, counter, height)"
+                + "VALUES (?, ?, ?, ?, ?)")) {
             int i = 0;
+            pstmt.setLong(++i, this.getId());
             pstmt.setLong(++i, this.getCurrencyId());
             pstmt.setLong(++i, this.getAccountId());
             pstmt.setLong(++i, this.getCounter());
-            pstmt.setInt(++i, this.getHeight()); //TODO: blockchain height?
+            pstmt.setInt(++i, this.getHeight());
             pstmt.executeUpdate();
         }
+    }
+
+    public long getId() {
+        return id;
     }
 
     public long getCurrencyId() {
@@ -96,20 +103,31 @@ public final class CurrencyMint {
         return height;
     }
 
-    static void mintCurrency(Account account, long nonce, long currencyId, long units, long counter) {
-        CurrencyMint currencyMint = currencyMintTable.get(currencyMintDbKeyFactory.newKey(currencyId, account.getId()));
-        if (currencyMint != null && counter <= currencyMint.getCounter()) {
+    
+    static void mintCurrency(Transaction transaction, final Account account, final Attachment.MonetarySystemCurrencyMinting attachment) {
+        DbClause mintClause = new DbClause(" currency_id = ? AND account_id = ? AND counter = ? ") {
+            @Override
+            protected int set(PreparedStatement pstmt, int index) throws SQLException {
+                pstmt.setLong(index++, attachment.getCurrencyId());
+                pstmt.setLong(index++, account.getId());
+                pstmt.setLong(index++, attachment.getCounter());
+                return index;
+            }
+        };
+        CurrencyMint currencyMint = currencyMintTable.getBy(mintClause);
+        if (currencyMint != null && attachment.getCounter() <= currencyMint.getCounter()) {
             return;
         }
 
-        Currency currency = Currency.getCurrency(currencyId);
-        byte[] hash = getHash(currency.getAlgorithm(), nonce, currencyId, units, counter, account.getId());
+        Currency currency = Currency.getCurrency(attachment.getCurrencyId());
+        byte[] hash = getHash(currency.getAlgorithm(), attachment.getNonce(), attachment.getCurrencyId(), attachment.getUnits(),
+                attachment.getCounter(), account.getId());
         byte[] target = getTarget(currency.getMinDifficulty(), currency.getMaxDifficulty(),
-                units, currency.getCurrentSupply(), currency.getTotalSupply());
+                attachment.getUnits(), currency.getCurrentSupply(), currency.getTotalSupply());
         if (meetsTarget(hash, target)) {
-            currencyMintTable.insert(new CurrencyMint(currencyId, account.getId(), counter));
-            units = Math.min(units, currency.getTotalSupply() - currency.getCurrentSupply());
-            account.addToCurrencyAndUnconfirmedCurrencyUnits(currencyId, units);
+            currencyMintTable.insert(new CurrencyMint(transaction.getId(), attachment.getCurrencyId(), account.getId(), attachment.getCounter()));
+            long units = Math.min(attachment.getUnits(), currency.getTotalSupply() - currency.getCurrentSupply());
+            account.addToCurrencyAndUnconfirmedCurrencyUnits(attachment.getUnits(), units);
             currency.increaseSupply(units);
         }
     }

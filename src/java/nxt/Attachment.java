@@ -1614,7 +1614,7 @@ public interface Attachment extends Appendix {
             attachment.put("currentSupply", currentSupply);
             attachment.put("issuanceHeight", issuanceHeight);
             attachment.put("minReservePerUnitNQT", minReservePerUnitNQT);
-            attachment.put("minDifficulty", minDifficulty & 0xFF); //TODO why?
+            attachment.put("minDifficulty", minDifficulty & 0xFF);
             attachment.put("maxDifficulty", maxDifficulty & 0xFF);
             attachment.put("ruleset", ruleset & 0xFF);
             attachment.put("algorithm", algorithm & 0xFF);

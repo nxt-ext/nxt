@@ -60,7 +60,6 @@ public abstract class MonetarySystem extends TransactionType {
             Attachment.MonetarySystemCurrencyIssuance attachment = (Attachment.MonetarySystemCurrencyIssuance) transaction.getAttachment();
             if (attachment.getTotalSupply() > Constants.MAX_CURRENCY_TOTAL_SUPPLY
                     || attachment.getIssuanceHeight() < 0
-                    //TODO: shouldn't there be a check that issuanceHeight must be > current blockchain height?
                     || attachment.getMinReservePerUnitNQT() < 0 || attachment.getMinReservePerUnitNQT() > Constants.MAX_BALANCE_NQT
                     || attachment.getRuleset() != 0) {
                 throw new NxtException.NotValidException("Invalid currency issuance: " + attachment.getJSONObject());
@@ -109,8 +108,6 @@ public abstract class MonetarySystem extends TransactionType {
         Attachment.MonetarySystemReserveIncrease parseAttachment(JSONObject attachmentData) throws NxtException.NotValidException {
             return new Attachment.MonetarySystemReserveIncrease(attachmentData);
         }
-
-        //TODO: add isDuplicate check?
 
         @Override
         void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
@@ -492,7 +489,7 @@ public abstract class MonetarySystem extends TransactionType {
         @Override
         void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
             Attachment.MonetarySystemCurrencyMinting attachment = (Attachment.MonetarySystemCurrencyMinting) transaction.getAttachment();
-            CurrencyMint.mintCurrency(senderAccount, attachment.getNonce(), attachment.getCurrencyId(), attachment.getUnits(), attachment.getCounter());
+            CurrencyMint.mintCurrency(transaction, senderAccount, attachment);
         }
 
         @Override

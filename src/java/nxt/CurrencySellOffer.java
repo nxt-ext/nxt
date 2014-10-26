@@ -39,7 +39,7 @@ public final class CurrencySellOffer extends CurrencyExchangeOffer {
         return sellOfferTable.getCount();
     }
 
-    public static CurrencyExchangeOffer getSellOffer(long id) {
+    public static CurrencySellOffer getOffer(long id) {
         return sellOfferTable.get(sellOfferDbKeyFactory.newKey(id));
     }
 
@@ -47,12 +47,19 @@ public final class CurrencySellOffer extends CurrencyExchangeOffer {
         return sellOfferTable.getAll(from, to);
     }
 
-    //TODO: shouldn't the ordering be rate ASC? add index to the table?
-    public static DbIterator<CurrencySellOffer> getCurrencyOffers(long currencyId) {
-        return sellOfferTable.getManyBy(new DbClause.LongClause("currency_id", currencyId), 0, -1, " ORDER BY rate DESC, height ASC, id ASC ");
+    public static DbIterator<CurrencySellOffer> getOffers(Currency currency, int from, int to) {
+        return sellOfferTable.getManyBy(new DbClause.LongClause("currency_id", currency.getId()), from, to, " ORDER BY rate ASC, creation_height ASC, id ASC ");
     }
 
-    public static CurrencySellOffer getCurrencyOffer(final long currencyId, final long accountId) {
+    public static DbIterator<CurrencySellOffer> getOffers(Account account, int from, int to) {
+        return sellOfferTable.getManyBy(new DbClause.LongClause("account_id", account.getId()), from, to, " ORDER BY rate ASC, creation_height ASC, id ASC ");
+    }
+
+    public static CurrencySellOffer getOffer(Currency currency, Account account) {
+        return getOffer(currency.getId(), account.getId());
+    }
+
+    static CurrencySellOffer getOffer(final long currencyId, final long accountId) {
         DbClause dbClause = new DbClause(" currency_id = ? AND account_id = ? ") {
             @Override
             protected int set(PreparedStatement pstmt, int index) throws SQLException {
@@ -62,6 +69,14 @@ public final class CurrencySellOffer extends CurrencyExchangeOffer {
             }
         };
         return sellOfferTable.getBy(dbClause);
+    }
+
+    public static DbIterator<CurrencySellOffer> getOffers(DbClause dbClause, int from, int to) {
+        return sellOfferTable.getManyBy(dbClause, from, to);
+    }
+
+    public static DbIterator<CurrencySellOffer> getOffers(DbClause dbClause, int from, int to, String sort) {
+        return sellOfferTable.getManyBy(dbClause, from, to, sort);
     }
 
     static void addOffer(Transaction transaction, Attachment.MonetarySystemPublishExchangeOffer attachment) {
@@ -92,8 +107,8 @@ public final class CurrencySellOffer extends CurrencyExchangeOffer {
     }
 
     @Override
-    public CurrencyExchangeOffer getCounterOffer() {
-        return CurrencyBuyOffer.getBuyOffer(id);
+    public CurrencyBuyOffer getCounterOffer() {
+        return CurrencyBuyOffer.getOffer(id);
     }
 
     void increaseSupply(long delta) {

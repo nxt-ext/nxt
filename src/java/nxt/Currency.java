@@ -11,6 +11,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
 @SuppressWarnings("UnusedDeclaration")
 public final class Currency {
@@ -219,7 +221,6 @@ public final class Currency {
         return issuanceHeight <= BlockchainImpl.getInstance().getHeight();
     }
 
-    //TODO: claimReserve decreases totalSupply, but increaseReserve doesn't increase totalSupply, is it intentional that totalSupply can go down but never go up?
     static void increaseReserve(Account account, long currencyId, long amountNQT) {
         Currency currency = Currency.getCurrency(currencyId);
         account.addToBalanceNQT(-Convert.safeMultiply(currency.getTotalSupply(), amountNQT));
@@ -233,7 +234,7 @@ public final class Currency {
         Currency currency = Currency.getCurrency(currencyId);
         currency.totalSupply -= units;
         currencyTable.insert(currency);
-        account.addToBalanceAndUnconfirmedBalanceNQT(Convert.safeMultiply(units, currency.currentReservePerUnitNQT));
+        account.addToBalanceAndUnconfirmedBalanceNQT(Convert.safeMultiply(units, currency.getCurrentReservePerUnitNQT()));
     }
 
     static void transferCurrency(Account senderAccount, Account recipientAccount, long currencyId, long units) {
@@ -267,18 +268,9 @@ public final class Currency {
 
     private static final class CrowdFundingListener implements Listener<Block> {
 
-        private static final DbClause dbClause = new DbClause(" issuance_height <= ? ") {
-        //TODO: this should be =, not <=, right? no need to distribute or undo funding for currencies with issuance height in the past
-            @Override
-            protected int set(PreparedStatement pstmt, int index) throws SQLException {
-                pstmt.setInt(index++, Nxt.getBlockchain().getHeight());
-                return index;
-            }
-        };
-
         @Override
         public void notify(Block block) {
-            try (DbIterator<Currency> issuedCurrencies = currencyTable.getManyBy(dbClause, 0, -1)) {
+            try (DbIterator<Currency> issuedCurrencies = currencyTable.getManyBy(new DbClause.IntClause("issuance_height", block.getHeight()), 0, -1)) {
                 for (Currency currency : issuedCurrencies) {
                     if (currency.getCurrentReservePerUnitNQT() < currency.getMinReservePerUnitNQT()) {
                         undoCrowdFunding(currency);
@@ -290,8 +282,10 @@ public final class Currency {
         }
 
         private void undoCrowdFunding(Currency currency) {
-            for (CurrencyFounder founder : CurrencyFounder.getCurrencyFounders(currency.getId(), 0, Integer.MAX_VALUE)) {
-                Account.getAccount(founder.getAccountId()).addToBalanceAndUnconfirmedBalanceNQT(founder.getValue());
+            try (DbIterator<CurrencyFounder> founders = CurrencyFounder.getCurrencyFounders(currency.getId(), 0, Integer.MAX_VALUE)) {
+                for (CurrencyFounder founder : founders) {
+                    Account.getAccount(founder.getAccountId()).addToBalanceAndUnconfirmedBalanceNQT(founder.getValue());
+                }
             }
             currencyTable.delete(currency);
             CurrencyFounder.remove(currency.getId());
@@ -299,10 +293,14 @@ public final class Currency {
 
         private void distributeCurrency(Currency currency) {
             long totalValue = 0;
-            for (CurrencyFounder founder : CurrencyFounder.getCurrencyFounders(currency.getId(), 0, Integer.MAX_VALUE)) {
-                totalValue += founder.getValue();
+            List<CurrencyFounder> currencyFounders = new ArrayList<>();
+            try (DbIterator<CurrencyFounder> founders = CurrencyFounder.getCurrencyFounders(currency.getId(), 0, Integer.MAX_VALUE)) {
+                for (CurrencyFounder founder : founders) {
+                    totalValue += founder.getValue();
+                    currencyFounders.add(founder);
+                }
             }
-            for (CurrencyFounder founder : CurrencyFounder.getCurrencyFounders(currency.getId(), 0, Integer.MAX_VALUE)) {
+            for (CurrencyFounder founder : currencyFounders) {
                 long units = Convert.safeDivide(Convert.safeMultiply(currency.getTotalSupply(), founder.getValue()), totalValue);
                 Account.getAccount(founder.getAccountId()).addToCurrencyAndUnconfirmedCurrencyUnits(currency.getId(), units);
             }

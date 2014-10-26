@@ -56,7 +56,6 @@ public enum CurrencyType {
             }
         }
 
-        //TODO: no need for validateMissing?
         @Override
         void validateMissing(Currency currency, Transaction transaction, Set<CurrencyType> validators) {}
 
@@ -159,15 +158,13 @@ public enum CurrencyType {
      * Support shuffling - not implemented yet<br>
      */
     SHUFFLEABLE(0x20) {
-        //TODO: implement
         @Override
-        void validate(Currency currency, Transaction transaction, Set<CurrencyType> validators) {
-            throw new RuntimeException("NOT IMPLEMENTED");
+        void validate(Currency currency, Transaction transaction, Set<CurrencyType> validators) throws NxtException.ValidationException {
+            throw new NxtException.NotYetEnabledException("Shuffling not yet implemented");
         }
 
         @Override
         void validateMissing(Currency currency, Transaction transaction, Set<CurrencyType> validators) {
-            throw new RuntimeException("NOT IMPLEMENTED");
         }
 
     };
