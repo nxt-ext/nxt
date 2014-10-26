@@ -1,11 +1,16 @@
 package nxt;
 
-import nxt.db.*;
+import nxt.db.DbClause;
+import nxt.db.DbIterator;
+import nxt.db.DbKey;
+import nxt.db.VersionedEntityDbTable;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Each CurrencyFounder instance represents a single founder contribution for a non issued currency
@@ -58,10 +63,9 @@ public class CurrencyFounder {
         this.value = rs.getLong("value");
     }
 
-    //TODO: if multiple reserve increases from the same founder are allowed in a block, should be merge instead of insert
     private void save(Connection con) throws SQLException {
-        try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO currency_founder (currency_id, account_id, value, height)"
-                + "VALUES (?, ?, ?, ?)")) {
+        try (PreparedStatement pstmt = con.prepareStatement("MERGE INTO currency_founder (currency_id, account_id, value, height, latest) "
+                + "KEY (currency_id, account_id, height) VALUES (?, ?, ?, ?, TRUE)")) {
             int i = 0;
             pstmt.setLong(++i, this.getCurrencyId());
             pstmt.setLong(++i, this.getAccountId());
@@ -102,8 +106,14 @@ public class CurrencyFounder {
     }
 
     static void remove(long currencyId) {
-        for (CurrencyFounder founder : CurrencyFounder.getCurrencyFounders(currencyId, 0, Integer.MAX_VALUE)) {
-            currencyFounderTable.delete(founder); //TODO: may need to move out
+        List<CurrencyFounder> founders = new ArrayList<>();
+        try (DbIterator<CurrencyFounder> currencyFounders = CurrencyFounder.getCurrencyFounders(currencyId, 0, Integer.MAX_VALUE)) {
+            for (CurrencyFounder founder : currencyFounders) {
+                founders.add(founder);
+            }
+        }
+        for (CurrencyFounder founder : founders) {
+            currencyFounderTable.delete(founder);
         }
     }
 }

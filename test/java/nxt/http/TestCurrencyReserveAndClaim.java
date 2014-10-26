@@ -111,11 +111,11 @@ public class TestCurrencyReserveAndClaim extends BlockchainTest {
         JSONArray founders = (JSONArray)getFoundersResponse.get("founders");
         JSONObject founder1 = (JSONObject)founders.get(0);
         Assert.assertEquals(Convert.toUnsignedLong(Account.getId(Crypto.getPublicKey(secretPhrase2))), founder1.get("account"));
-        Assert.assertEquals(300000L + 500000L, founder1.get("value"));
+        Assert.assertEquals(String.valueOf(300000L + 500000L), founder1.get("value"));
 
         JSONObject founder2 = (JSONObject)founders.get(1);
         Assert.assertEquals(Convert.toUnsignedLong(Account.getAccount(Crypto.getPublicKey(secretPhrase1)).getId()), founder2.get("account"));
-        Assert.assertEquals(200000L, founder2.get("value"));
+        Assert.assertEquals(String.valueOf(200000L), founder2.get("value"));
     }
 
 }

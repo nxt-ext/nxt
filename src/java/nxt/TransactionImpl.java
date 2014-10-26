@@ -751,17 +751,17 @@ final class TransactionImpl implements Transaction {
 
     @Override
     public void validate() throws NxtException.ValidationException {
+        int blockchainHeight = Nxt.getBlockchain().getHeight();
         for (Appendix.AbstractAppendix appendage : appendages) {
             appendage.validate(this);
         }
-        long minimumFeeNQT = type.minimumFeeNQT(Nxt.getBlockchain().getHeight(), appendagesSize);
+        long minimumFeeNQT = type.minimumFeeNQT(blockchainHeight, appendagesSize);
         if (feeNQT < minimumFeeNQT) {
             throw new NxtException.NotCurrentlyValidException(String.format("Transaction fee %d less than minimum fee %d at height %d",
-                    feeNQT, minimumFeeNQT, Nxt.getBlockchain().getHeight()));
+                    feeNQT, minimumFeeNQT, blockchainHeight));
         }
-        if (Nxt.getBlockchain().getHeight() >= Constants.PUBLIC_KEY_ANNOUNCEMENT_BLOCK) {
-            // TODO: allow at next hard fork
-            if (type.hasRecipient() && recipientId != 0 /* && recipientId != getSenderId() */) {
+        if (blockchainHeight >= Constants.PUBLIC_KEY_ANNOUNCEMENT_BLOCK) {
+            if (type.hasRecipient() && recipientId != 0 && ! (recipientId == getSenderId() && blockchainHeight > Constants.MONETARY_SYSTEM_BLOCK)) {
                 Account recipientAccount = Account.getAccount(recipientId);
                 if ((recipientAccount == null || recipientAccount.getPublicKey() == null) && publicKeyAnnouncement == null) {
                     throw new NxtException.NotCurrentlyValidException("Recipient account does not have a public key, must attach a public key announcement");

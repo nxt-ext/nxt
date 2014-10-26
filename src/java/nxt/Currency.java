@@ -11,6 +11,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
 @SuppressWarnings("UnusedDeclaration")
 public final class Currency {
@@ -215,19 +217,10 @@ public final class Currency {
         return currentReservePerUnitNQT;
     }
 
-    //TODO: each getCurrency call is a database query, those two methods should be made non-static,
-    // and the Currency object retrieved only once and then passed around through the currency validation calls
-    public static boolean isActive(long currencyId) {
-        Currency currency = getCurrency(currencyId);
-        return currency != null && currency.getIssuanceHeight() <= BlockchainImpl.getInstance().getHeight();
+    public boolean isActive() {
+        return issuanceHeight <= BlockchainImpl.getInstance().getHeight();
     }
 
-    public static boolean isIssuer(long currencyId, long accountId) {
-        Currency currency = getCurrency(currencyId);
-        return currency != null && currency.getAccountId() == accountId;
-    }
-
-    //TODO: claimReserve decreases totalSupply, but increaseReserve doesn't increase totalSupply, is it intentional that totalSupply can go down but never go up?
     static void increaseReserve(Account account, long currencyId, long amountNQT) {
         Currency currency = Currency.getCurrency(currencyId);
         account.addToBalanceNQT(-Convert.safeMultiply(currency.getTotalSupply(), amountNQT));
@@ -241,12 +234,12 @@ public final class Currency {
         Currency currency = Currency.getCurrency(currencyId);
         currency.totalSupply -= units;
         currencyTable.insert(currency);
-        account.addToBalanceAndUnconfirmedBalanceNQT(Convert.safeMultiply(units, currency.currentReservePerUnitNQT));
+        account.addToBalanceAndUnconfirmedBalanceNQT(Convert.safeMultiply(units, currency.getCurrentReservePerUnitNQT()));
     }
 
-    static void transferCurrency(Account account, long recipientId, long currencyId, long units) {
-        account.addToCurrencyUnits(currencyId, -units);
-        Account.addOrGetAccount(recipientId).addToCurrencyAndUnconfirmedCurrencyUnits(currencyId, units);
+    static void transferCurrency(Account senderAccount, Account recipientAccount, long currencyId, long units) {
+        senderAccount.addToCurrencyUnits(currencyId, -units);
+        recipientAccount.addToCurrencyAndUnconfirmedCurrencyUnits(currencyId, units);
     }
 
     void increaseSupply(long units) {
@@ -277,13 +270,8 @@ public final class Currency {
 
         @Override
         public void notify(Block block) {
-            //TODO: this will do a full table scan and load every single currency in memory
-            //need to re-write to use an sql query that only returns the matching currencies
-            try (DbIterator<Currency> allCurrencies = currencyTable.getAll(0, -1)) {
-                for (Currency currency : allCurrencies) {
-                    if (currency.getIssuanceHeight() == 0 || currency.getIssuanceHeight() > block.getHeight()) {
-                        continue;
-                    }
+            try (DbIterator<Currency> issuedCurrencies = currencyTable.getManyBy(new DbClause.IntClause("issuance_height", block.getHeight()), 0, -1)) {
+                for (Currency currency : issuedCurrencies) {
                     if (currency.getCurrentReservePerUnitNQT() < currency.getMinReservePerUnitNQT()) {
                         undoCrowdFunding(currency);
                     } else {
@@ -294,8 +282,10 @@ public final class Currency {
         }
 
         private void undoCrowdFunding(Currency currency) {
-            for (CurrencyFounder founder : CurrencyFounder.getCurrencyFounders(currency.getId(), 0, Integer.MAX_VALUE)) {
-                Account.getAccount(founder.getAccountId()).addToBalanceAndUnconfirmedBalanceNQT(founder.getValue());
+            try (DbIterator<CurrencyFounder> founders = CurrencyFounder.getCurrencyFounders(currency.getId(), 0, Integer.MAX_VALUE)) {
+                for (CurrencyFounder founder : founders) {
+                    Account.getAccount(founder.getAccountId()).addToBalanceAndUnconfirmedBalanceNQT(founder.getValue());
+                }
             }
             currencyTable.delete(currency);
             CurrencyFounder.remove(currency.getId());
@@ -303,10 +293,14 @@ public final class Currency {
 
         private void distributeCurrency(Currency currency) {
             long totalValue = 0;
-            for (CurrencyFounder founder : CurrencyFounder.getCurrencyFounders(currency.getId(), 0, Integer.MAX_VALUE)) {
-                totalValue += founder.getValue();
+            List<CurrencyFounder> currencyFounders = new ArrayList<>();
+            try (DbIterator<CurrencyFounder> founders = CurrencyFounder.getCurrencyFounders(currency.getId(), 0, Integer.MAX_VALUE)) {
+                for (CurrencyFounder founder : founders) {
+                    totalValue += founder.getValue();
+                    currencyFounders.add(founder);
+                }
             }
-            for (CurrencyFounder founder : CurrencyFounder.getCurrencyFounders(currency.getId(), 0, Integer.MAX_VALUE)) {
+            for (CurrencyFounder founder : currencyFounders) {
                 long units = Convert.safeDivide(Convert.safeMultiply(currency.getTotalSupply(), founder.getValue()), totalValue);
                 Account.getAccount(founder.getAccountId()).addToCurrencyAndUnconfirmedCurrencyUnits(currency.getId(), units);
             }

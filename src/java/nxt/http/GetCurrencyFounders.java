@@ -29,9 +29,10 @@ public final class GetCurrencyFounders extends APIServlet.APIRequestHandler {
         JSONArray foundersJSONArray = new JSONArray();
         response.put("founders", foundersJSONArray);
 
-        DbIterator<CurrencyFounder> currencyFounders = CurrencyFounder.getCurrencyFounders(currencyId.getId(), firstIndex, lastIndex);
-        for (CurrencyFounder founder : currencyFounders) {
-            foundersJSONArray.add(JSONData.currencyFounder(founder));
+        try (DbIterator<CurrencyFounder> currencyFounders = CurrencyFounder.getCurrencyFounders(currencyId.getId(), firstIndex, lastIndex)) {
+            for (CurrencyFounder founder : currencyFounders) {
+                foundersJSONArray.add(JSONData.currencyFounder(founder));
+            }
         }
         return response;
     }

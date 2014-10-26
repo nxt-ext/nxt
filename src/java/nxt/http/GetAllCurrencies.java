@@ -1,6 +1,7 @@
 package nxt.http;
 
 import nxt.Currency;
+import nxt.db.DbIterator;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
@@ -24,8 +25,10 @@ public final class GetAllCurrencies extends APIServlet.APIRequestHandler {
         JSONObject response = new JSONObject();
         JSONArray currenciesJSONArray = new JSONArray();
         response.put("currencies", currenciesJSONArray);
-        for (Currency currency : Currency.getAllCurrencies(firstIndex, lastIndex)) {
-            currenciesJSONArray.add(JSONData.currency(currency));
+        try (DbIterator<Currency> currencies = Currency.getAllCurrencies(firstIndex, lastIndex)) {
+            for (Currency currency : currencies) {
+                currenciesJSONArray.add(JSONData.currency(currency));
+            }
         }
         return response;
     }

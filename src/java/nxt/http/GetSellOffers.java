@@ -2,8 +2,7 @@ package nxt.http;
 
 import nxt.Account;
 import nxt.Currency;
-import nxt.CurrencyTransfer;
-import nxt.NxtException;
+import nxt.CurrencySellOffer;
 import nxt.db.DbIterator;
 import nxt.db.DbUtils;
 import nxt.util.Convert;
@@ -13,16 +12,16 @@ import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
 
-public final class GetCurrencyTransfers extends APIServlet.APIRequestHandler {
+public final class GetSellOffers extends APIServlet.APIRequestHandler {
 
-    static final GetCurrencyTransfers instance = new GetCurrencyTransfers();
+    static final GetSellOffers instance = new GetSellOffers();
 
-    private GetCurrencyTransfers() {
+    private GetSellOffers() {
         super(new APITag[] {APITag.MS}, "currency", "account", "firstIndex", "lastIndex");
     }
 
     @Override
-    JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
+    JSONStreamAware processRequest(HttpServletRequest req) throws ParameterException {
 
         String currencyId = Convert.emptyToNull(req.getParameter("currency"));
         String accountId = Convert.emptyToNull(req.getParameter("account"));
@@ -31,27 +30,30 @@ public final class GetCurrencyTransfers extends APIServlet.APIRequestHandler {
         int lastIndex = ParameterParser.getLastIndex(req);
 
         JSONObject response = new JSONObject();
-        JSONArray transfersData = new JSONArray();
-        DbIterator<CurrencyTransfer> transfers = null;
+        JSONArray offerData = new JSONArray();
+        response.put("offers", offerData);
+
+        DbIterator<CurrencySellOffer> offers= null;
         try {
             if (accountId == null) {
                 Currency currency = ParameterParser.getCurrency(req);
-                transfers = currency.getTransfers(firstIndex, lastIndex);
+                offers = CurrencySellOffer.getOffers(currency, firstIndex, lastIndex);
             } else if (currencyId == null) {
                 Account account = ParameterParser.getAccount(req);
-                transfers = account.getCurrencyTransfers(firstIndex, lastIndex);
+                offers = CurrencySellOffer.getOffers(account, firstIndex, lastIndex);
             } else {
                 Currency currency = ParameterParser.getCurrency(req);
                 Account account = ParameterParser.getAccount(req);
-                transfers = CurrencyTransfer.getAccountCurrencyTransfers(account.getId(), currency.getId(), firstIndex, lastIndex);
+                CurrencySellOffer offer = CurrencySellOffer.getOffer(currency, account);
+                offerData.add(JSONData.offer(offer));
+                return response;
             }
-            while (transfers.hasNext()) {
-                transfersData.add(JSONData.currencyTransfer(transfers.next()));
+            while (offers.hasNext()) {
+                offerData.add(JSONData.offer(offers.next()));
             }
         } finally {
-            DbUtils.close(transfers);
+            DbUtils.close(offers);
         }
-        response.put("transfers", transfersData);
 
         return response;
     }
