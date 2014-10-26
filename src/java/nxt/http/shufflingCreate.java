@@ -20,7 +20,10 @@ public final class ShufflingCreate extends CreateTransaction {
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
         boolean isCurrency = ParameterParser.getByte(req, "isCurrency", (byte)0, (byte)1) == 1;
-        long currencyId = ParameterParser.getCurrency(req).getId();
+        long currencyId = 0;
+        if (isCurrency) {
+            currencyId = ParameterParser.getCurrency(req).getId();
+        }
         long amountNQT = ParameterParser.getAmountNQT(req);
         byte participantCount = ParameterParser.getByte(req, "participantCount", Constants.MIN_SHUFFLING_PARTICIPANTS, Constants.MAX_SHUFFLING_PARTICIPANTS);
         int cancellationHeight = ParameterParser.getInt(req, "cancellationHeight", 0, Integer.MAX_VALUE, true);

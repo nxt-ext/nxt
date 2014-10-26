@@ -78,8 +78,8 @@ public final class Shuffling {
         }
 
         @Override
-        protected void save(Connection con, Shuffling transfer) throws SQLException {
-            transfer.save(con);
+        protected void save(Connection con, Shuffling shuffling) throws SQLException {
+            shuffling.save(con);
         }
 
     };
@@ -174,7 +174,7 @@ public final class Shuffling {
 
     private void save(Connection con) throws SQLException {
         try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO shuffling (id, is_currency, currency_id, "
-                + "issuer_id, amount_id, participant_count, cancellation_height, state, assignee_account_Id,"
+                + "issuer_id, amount, participant_count, cancellation_height, state, assignee_account_Id,"
                 + "height, latest) "
                 + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, TRUE)")) {
             int i = 0;

@@ -6,7 +6,6 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 import java.nio.ByteBuffer;
-import java.util.Arrays;
 import java.util.Collections;
 
 public interface Attachment extends Appendix {
@@ -2202,11 +2201,12 @@ public interface Attachment extends Appendix {
 
         @Override
         int getMySize() {
-            return 8 + 8 + 1 + 4;
+            return 1 + 8 + 8 + 1 + 4;
         }
 
         @Override
         void putMyBytes(ByteBuffer buffer) {
+            buffer.put(isCurrency ? (byte) 1 : (byte) 0);
             buffer.putLong(currencyId);
             buffer.putLong(amount);
             buffer.put(participantCount);
@@ -2215,6 +2215,7 @@ public interface Attachment extends Appendix {
 
         @Override
         void putMyJSON(JSONObject attachment) {
+            attachment.put("isCurrency", isCurrency ? 1 : 0);
             attachment.put("currency", Convert.toUnsignedLong(currencyId));
             attachment.put("amount", amount);
             attachment.put("participantCount", participantCount);

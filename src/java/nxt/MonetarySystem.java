@@ -561,7 +561,11 @@ public abstract class MonetarySystem extends TransactionType {
         @Override
         void undoAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
             Attachment.MonetarySystemShufflingCreation attachment = (Attachment.MonetarySystemShufflingCreation) transaction.getAttachment();
-            senderAccount.addToUnconfirmedCurrencyUnits(attachment.getCurrencyId(), attachment.getAmount());
+            if (!attachment.isCurrency()) {
+                senderAccount.addToUnconfirmedBalanceNQT(attachment.getAmount());
+            } else {
+                senderAccount.addToUnconfirmedCurrencyUnits(attachment.getCurrencyId(), attachment.getAmount());
+            }
         }
 
         @Override

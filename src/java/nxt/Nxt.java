@@ -187,6 +187,8 @@ public final class Nxt {
                 CurrencyMint.init();
                 CurrencyTransfer.init();
                 Exchange.init();
+                Shuffling.init();
+                ShufflingParticipant.init();
                 Peers.init();
                 Generator.init();
                 API.init();

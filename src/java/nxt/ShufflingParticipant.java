@@ -61,8 +61,8 @@ public final class ShufflingParticipant {
         }
 
         @Override
-        protected void save(Connection con, ShufflingParticipant transfer) throws SQLException {
-            transfer.save(con);
+        protected void save(Connection con, ShufflingParticipant participant) throws SQLException {
+            participant.save(con);
         }
 
     };
@@ -114,6 +114,7 @@ public final class ShufflingParticipant {
         this.shufflingId = shufflingId;
         this.accountId = accountId;
         this.dbKey = shufflingParticipantDbKeyFactory.newKey(shufflingId, accountId);
+        this.state = State.REGISTERED;
     }
 
     private ShufflingParticipant(ResultSet rs) throws SQLException {
@@ -126,15 +127,16 @@ public final class ShufflingParticipant {
     }
 
     private void save(Connection con) throws SQLException {
-        try (PreparedStatement pstmt = con.prepareStatement("MERGE INTO shuffling_participant (shuffle_id, "
-                + "account_id, next_account_id, recipient_id, state) "
-                + "VALUES (?, ?, ?, ?, ?)")) {
+        try (PreparedStatement pstmt = con.prepareStatement("MERGE INTO shuffling_participant (shuffling_id, "
+                + "account_id, next_account_id, recipient_id, state, height, latest) "
+                + "VALUES (?, ?, ?, ?, ?, ?, TRUE)")) {
             int i = 0;
             pstmt.setLong(++i, this.getShufflingId());
             pstmt.setLong(++i, this.getAccountId());
             pstmt.setLong(++i, this.getNextAccountId());
             pstmt.setLong(++i, this.getRecipientId());
             pstmt.setByte(++i, this.getState().getCode());
+            pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
             pstmt.executeUpdate();
         }
     }
