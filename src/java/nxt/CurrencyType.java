@@ -87,6 +87,12 @@ public enum CurrencyType {
             if (transaction.getType() == MonetarySystem.RESERVE_INCREASE) {
                 throw new NxtException.NotValidException("Cannot increase reserve since currency is not reservable");
             }
+            if (transaction.getType() == MonetarySystem.CURRENCY_ISSUANCE) {
+                int issuanceHeight = ((Attachment.MonetarySystemCurrencyIssuance) transaction.getAttachment()).getIssuanceHeight();
+                if (issuanceHeight != 0) {
+                    throw new NxtException.NotValidException("Issuance height for non-reservable currency must be 0");
+                }
+            }
         }
     },
     /**
@@ -98,8 +104,12 @@ public enum CurrencyType {
         @Override
         void validate(Currency currency, Transaction transaction, Set<CurrencyType> validators) throws NxtException.ValidationException {
             if (transaction.getType() == MonetarySystem.CURRENCY_ISSUANCE) {
+                Attachment.MonetarySystemCurrencyIssuance issuanceAttachment = (Attachment.MonetarySystemCurrencyIssuance) transaction.getAttachment();
                 if (!validators.contains(RESERVABLE)) {
                     throw new NxtException.NotValidException("Claimable currency must be reservable");
+                }
+                if (issuanceAttachment.getCurrentSupply() != 0) {
+                    throw new NxtException.NotValidException("Claimable currency should have initial supply 0");
                 }
             }
             if (transaction.getType() == MonetarySystem.RESERVE_CLAIM) {

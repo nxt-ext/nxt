@@ -59,6 +59,9 @@ public abstract class MonetarySystem extends TransactionType {
         void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
             Attachment.MonetarySystemCurrencyIssuance attachment = (Attachment.MonetarySystemCurrencyIssuance) transaction.getAttachment();
             if (attachment.getTotalSupply() > Constants.MAX_CURRENCY_TOTAL_SUPPLY
+                    || attachment.getTotalSupply() <= 0
+                    || attachment.getCurrentSupply() < 0
+                    || attachment.getCurrentSupply() > attachment.getTotalSupply()
                     || attachment.getIssuanceHeight() < 0
                     || attachment.getMinReservePerUnitNQT() < 0 || attachment.getMinReservePerUnitNQT() > Constants.MAX_BALANCE_NQT
                     || attachment.getRuleset() != 0) {

@@ -17,7 +17,7 @@ public class TestCurrencyMint extends BlockchainTest {
                 type(CurrencyType.MINTABLE.getCode() | CurrencyType.EXCHANGEABLE.getCode()).
                 totalSupply((long)10000000).
                 initialSupply((long)0).
-                issuanceHeight(baseHeight).
+                issuanceHeight(0).
                 minting((byte)2, (byte)8, HashFunction.SHA256.getId()).
                 build();
 
