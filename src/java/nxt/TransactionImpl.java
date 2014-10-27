@@ -796,9 +796,9 @@ final class TransactionImpl implements Transaction {
     }
 
     void apply() {
-        Pair<Account,Account> sndrRcp = getSenderAndRecipient();
+        Pair<Account,Account> senderRecipient = getSenderAndRecipient();
         for (Appendix.AbstractAppendix appendage : appendages) {
-            appendage.apply(this, sndrRcp.getFirst(), sndrRcp.getSecond());
+            appendage.apply(this, senderRecipient.getFirst(), senderRecipient.getSecond());
         }
     }
 

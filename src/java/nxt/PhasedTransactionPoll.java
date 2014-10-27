@@ -9,10 +9,9 @@ import java.util.Arrays;
 public class PhasedTransactionPoll extends CommonPollStructure {
     private final Long id;   // tx id
     private final DbKey dbKey;
-    long[] possibleVoters; //todo: serialization , sorting ?
+    long[] possibleVoters;
     long votes;
     long quorum;
-
 
     private static final DbKey.LongKeyFactory<PhasedTransactionPoll> pollDbKeyFactory = new DbKey.LongKeyFactory<PhasedTransactionPoll>("id") {
         @Override
@@ -32,11 +31,11 @@ public class PhasedTransactionPoll extends CommonPollStructure {
             super("pending_transactions", dbKeyFactory);
         }
 
-        DbIterator<Long> finishing(int height){
+        DbIterator<Long> finishing(int height) {
             try {
                 Connection con = Db.getConnection();
                 PreparedStatement pstmt = con.prepareStatement("SELECT id FROM " + table
-                        + " WHERE finish = ?  AND finished = FALSE AND latest = TRUE" );
+                        + " WHERE finish = ?  AND finished = FALSE AND latest = TRUE");
                 pstmt.setInt(1, height);
                 return new DbIterator<>(con, pstmt, new DbIterator.ResultSetReader<Long>() {
                     @Override
@@ -66,16 +65,20 @@ public class PhasedTransactionPoll extends CommonPollStructure {
 
     final static PendingTransactionsTable pendingTransactionsTable = new PendingTransactionsTable();
 
-
-    //todo: reduce boilerplate below
-
-    public PhasedTransactionPoll(Long id, int finishBlockHeight, byte votingModel,
-                                 long quorum, long voteThreshold, long assetId) {
-        super(finishBlockHeight, votingModel, assetId, voteThreshold);
+    public PhasedTransactionPoll(Long id, long accountId, int finishBlockHeight,
+                                 byte votingModel, long quorum, long voteThreshold,
+                                 long assetId, long[] possibleVoters) {
+        super(accountId, finishBlockHeight, votingModel, assetId, voteThreshold);
         this.id = id;
         this.dbKey = pollDbKeyFactory.newKey(this.id);
         this.quorum = quorum;
-        possibleVoters = null;
+        this.possibleVoters = possibleVoters;
+    }
+
+    public PhasedTransactionPoll(Long id, long accountId, int finishBlockHeight,
+                                 byte votingModel, long quorum, long voteThreshold,
+                                 long assetId) {
+        this(id, accountId, finishBlockHeight, votingModel, quorum, voteThreshold, assetId, new long[0]);
     }
 
     public PhasedTransactionPoll(ResultSet rs) throws SQLException {
@@ -83,6 +86,17 @@ public class PhasedTransactionPoll extends CommonPollStructure {
         this.id = rs.getLong("id");
         this.quorum = rs.getLong("quorum");
         this.dbKey = pollDbKeyFactory.newKey(this.id);
+
+        String votersCombined = rs.getString("possible_voters");
+        if(votersCombined.isEmpty()){
+            this.possibleVoters = null;
+        }else {
+            String[] voterStrings = votersCombined.split(",");
+            this.possibleVoters = new long[voterStrings.length];
+            for (int i = 0; i < voterStrings.length; i++) {
+                this.possibleVoters[i] = Long.parseLong(voterStrings[i]);
+            }
+        }
     }
 
     public Long getId() {
@@ -93,18 +107,34 @@ public class PhasedTransactionPoll extends CommonPollStructure {
         return pendingTransactionsTable.getBy(new DbClause.LongClause("id", id));
     }
 
+    public long[] getPossibleVoters() {
+        return possibleVoters;
+    }
+
     public Long getQuorum() {
         return quorum;
     }
 
 
     void save(Connection con) throws SQLException {
-        try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO pending_transactions (id, "
-                + "finish,  voting_model, quorum, min_balance, asset_id, "
-                + "finished, height) VALUES (?, ?, ?, ?, ?, ?, ?, ?)")) {
+        String voters = "";
+        if(getPossibleVoters()!=null) {
+            StringBuilder votersBuilder = new StringBuilder();
+            for (long voter : getPossibleVoters()) {
+                votersBuilder.append(voter);
+                votersBuilder.append(",");
+            }
+            voters = votersBuilder.length() > 0 ? votersBuilder.substring(0, votersBuilder.length() - 1) : "";
+        }
+
+        try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO pending_transactions (id, account_id, "
+                + "finish,  possible_voters, voting_model, quorum, min_balance, asset_id, "
+                + "finished, height) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
             int i = 0;
             pstmt.setLong(++i, getId());
+            pstmt.setLong(++i, getAccountId());
             pstmt.setInt(++i, getFinishBlockHeight());
+            pstmt.setString(++i, voters);
             pstmt.setByte(++i, getVotingModel());
             pstmt.setLong(++i, getQuorum());
             pstmt.setLong(++i, getMinBalance());

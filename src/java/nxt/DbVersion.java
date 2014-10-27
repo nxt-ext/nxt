@@ -416,7 +416,7 @@ final class DbVersion {
                 apply("CREATE INDEX IF NOT EXISTS vote_poll_id_idx ON vote (poll_id)");
             case 132:
                 apply("CREATE TABLE IF NOT EXISTS poll (db_id IDENTITY, id BIGINT NOT NULL, "
-                        + "FOREIGN KEY (id) REFERENCES transaction (id), name VARCHAR NOT NULL, "
+                        + "FOREIGN KEY (id) REFERENCES transaction (id), account_id BIGINT NOT NULL, name VARCHAR NOT NULL, "
                         + "description VARCHAR, options ARRAY NOT NULL, min_num_options TINYINT, max_num_options TINYINT, "
                         + "finish INT NOT NULL, option_model TINYINT NOT NULL, voting_model TINYINT NOT NULL, min_balance BIGINT, "
                         + "asset_id BIGINT, finished BOOLEAN, height INT NOT NULL, latest BOOLEAN DEFAULT TRUE NOT NULL)");
@@ -429,9 +429,12 @@ final class DbVersion {
                 apply("ALTER TABLE transaction ADD COLUMN IF NOT EXISTS two_phased BOOLEAN NOT NULL DEFAULT FALSE");
             case 135:
                 apply("CREATE TABLE IF NOT EXISTS pending_transactions (db_id IDENTITY, id BIGINT NOT NULL, "
-                        + "FOREIGN KEY (id) REFERENCES transaction (id) ON DELETE CASCADE, finish INT NOT NULL,  "
+                        + "FOREIGN KEY (id) REFERENCES transaction (id) ON DELETE CASCADE, account_id BIGINT NOT NULL, "
+                        + "possible_voters VARCHAR NOT NULL, finish INT NOT NULL, "
                         + "voting_model TINYINT NOT NULL, quorum BIGINT NOT NULL, min_balance BIGINT NOT NULL, "
                         + "asset_id BIGINT NOT NULL, finished BOOLEAN NOT NULL, height INT NOT NULL, latest BOOLEAN DEFAULT TRUE NOT NULL)");
+          //  case 136:
+            //    apply(null); //CREATE TABLE IF NOT EXISTS ");
             case 136:
                 BlockchainProcessorImpl.getInstance().validateAtNextScan();
                 BlockchainProcessorImpl.getInstance().forceScanAtStart();

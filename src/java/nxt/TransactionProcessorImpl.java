@@ -53,7 +53,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                     }
                 }
             }
-        }, BlockchainProcessor.Event.AFTER_BLOCK_APPLY);     //todo: rescans, popoffs?
+        }, BlockchainProcessor.Event.AFTER_BLOCK_APPLY);
     }
 
 

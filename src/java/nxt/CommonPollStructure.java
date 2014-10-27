@@ -17,6 +17,7 @@ public class CommonPollStructure {
     public static final byte NO_ASSET_CODE = 0;
 
 
+    protected final long accountId;
     protected final int finishBlockHeight;
     protected final byte votingModel;
 
@@ -24,7 +25,8 @@ public class CommonPollStructure {
     protected final long minBalance;
     protected boolean finished;
 
-    public CommonPollStructure(int finishBlockHeight, byte votingModel, long assetId, long minBalance) {
+    public CommonPollStructure(long accountId, int finishBlockHeight, byte votingModel, long assetId, long minBalance) {
+        this.accountId = accountId;
         this.finishBlockHeight = finishBlockHeight;
         this.votingModel = votingModel;
         this.assetId = assetId;
@@ -33,11 +35,16 @@ public class CommonPollStructure {
     }
 
     public CommonPollStructure(ResultSet rs) throws SQLException {
+        this.accountId = rs.getLong("account_id");
         this.finishBlockHeight = rs.getInt("finish");
         this.votingModel = rs.getByte("voting_model");
         this.assetId = rs.getLong("asset_id");
         this.minBalance = rs.getLong("min_balance");
         this.finished = rs.getBoolean("finished");
+    }
+
+    public long getAccountId() {
+        return accountId;
     }
 
     public byte getVotingModel() {

@@ -530,18 +530,20 @@ public interface Appendix {
 
         @Override
         void apply(Transaction transaction, Account senderAccount, Account recipientAccount) {
-            Long id = transaction.getId()  ;
+            Long id = transaction.getId();
 
-            PhasedTransactionPoll txPoll = new PhasedTransactionPoll(id, maxHeight, votingModel,
-                    quorum, voteThreshold, assetId);
-            PhasedTransactionPoll.pendingTransactionsTable.insert(txPoll);
+            PhasedTransactionPoll poll = new PhasedTransactionPoll(id, senderAccount.getId(), maxHeight,
+                    votingModel, quorum, voteThreshold, assetId);
+            PhasedTransactionPoll.pendingTransactionsTable.insert(poll);
         }
 
         void commit(Transaction transaction, Account senderAccount, Account recipientAccount){
-            if(recipientAccount!=null){
+            if (recipientAccount!=null){
                 long amount = transaction.getAmountNQT();
                 recipientAccount.addToBalanceNQT(amount);
             }
+
+            transaction.getType().applyAttachment(transaction, senderAccount, recipientAccount);
 
             Logger.logDebugMessage("Transaction " + transaction.getId() + " has been released");
             System.out.println("Transaction " + transaction.getId() + " has been released");

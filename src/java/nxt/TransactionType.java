@@ -182,7 +182,9 @@ public abstract class TransactionType {
         if(recipientAccount != null && transaction.getTwoPhased()==null){
             recipientAccount.addToBalanceAndUnconfirmedBalanceNQT(amount);
         }
-        applyAttachment(transaction, senderAccount, recipientAccount);
+        if(transaction.getTwoPhased()==null) {
+            applyAttachment(transaction, senderAccount, recipientAccount);
+        }
     }
 
     abstract void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount);
@@ -592,74 +594,21 @@ public abstract class TransactionType {
                 return new Attachment.MessagingPollCreation(attachmentData);
             }
 
-            /*@Override
-            void doLoadAttachment(TransactionImpl transaction, ByteBuffer buffer) throws NxtException.ValidationException {
-                String pollName = readString(buffer, buffer.getShort(), Constants.MAX_POLL_NAME_LENGTH);
-                String pollDescription = readString(buffer, buffer.getShort(), Constants.MAX_POLL_DESCRIPTION_LENGTH);
-                int numberOfOptions = buffer.get();
-                if (numberOfOptions > Constants.MAX_POLL_OPTION_COUNT) {
-                    throw new NxtException.ValidationException("Invalid number of poll options: " + numberOfOptions);
-                }
-                String[] pollOptions = new String[numberOfOptions];
-                for (int i = 0; i < numberOfOptions; i++) {
-                    pollOptions[i] = readString(buffer, buffer.getShort(), Constants.MAX_POLL_OPTION_LENGTH);
-                }
-                byte minNumberOfOptions = buffer.get();
-                byte maxNumberOfOptions = buffer.get();
-                boolean optionsAreBinary = buffer.get() != 0;
-                transaction.setAttachment(new Attachment.MessagingPollCreation(pollName, pollDescription, pollOptions,
-                        minNumberOfOptions, maxNumberOfOptions, optionsAreBinary));
-            }
-
-            @Override
-            Attachment.MessagingPollCreation parseAttachment(JSONObject attachmentData) throws NxtException.ValidationException {
-                return new Attachment.MessagingPollCreation(attachmentData);
-            void loadAttachment(TransactionImpl transaction, JSONObject attachmentData) throws NxtException.ValidationException {
-                String pollName = ((String) attachmentData.get("name")).trim();
-                String pollDescription = ((String) attachmentData.get("description")).trim();
-                int finishBlockHeight = ((Long) attachmentData.get("finishBlockHeight")).intValue();
-
-                JSONArray options = (JSONArray) attachmentData.get("options");
-                String[] pollOptions = new String[options.size()];
-                for (int i = 0; i < pollOptions.length; i++) {
-                    pollOptions[i] = ((String) options.get(i)).trim();
-                }
-
-                long minBalance = (Long) attachmentData.get("minBalance");
-
-                byte optionModel = ((Long) attachmentData.get("optionModel")).byteValue();
-                byte votingModel = ((Long) attachmentData.get("votingModel")).byteValue();
-
-                PollBuilder builder = new PollBuilder(pollName, pollDescription, pollOptions,
-                        finishBlockHeight, optionModel, votingModel);
-
-                builder.minBalance(minBalance);
-
-                if (optionModel == Poll.OPTION_MODEL_CHOICE) {
-                    byte minNumberOfOptions = ((Long) attachmentData.get("minNumberOfOptions")).byteValue();
-                    byte maxNumberOfOptions = ((Long) attachmentData.get("maxNumberOfOptions")).byteValue();
-                    builder.optionsNumRange(minNumberOfOptions, maxNumberOfOptions);
-                }
-
-                if (votingModel == Poll.VOTING_MODEL_ASSET) {
-                    long assetId = (Long) attachmentData.get("assetId");
-                    builder.assetId(assetId);
-                }
-
-                transaction.setAttachment(builder.buildAttachment());
-            } */
-
             @Override
             void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
                 Attachment.MessagingPollCreation attachment = (Attachment.MessagingPollCreation) transaction.getAttachment();
-                Poll.addPoll(transaction.getId(), attachment.getPollName(), attachment.getPollDescription(),
+                Poll.addPoll(transaction.getId(),
+                        senderAccount.getId(),
+                        attachment.getPollName(),
+                        attachment.getPollDescription(),
                         attachment.getPollOptions(),
                         attachment.getFinishBlockHeight(),
                         attachment.getOptionModel(),
                         attachment.getVotingModel(),
                         attachment.getMinBalance(),
                         attachment.getAssetId(),
-                        attachment.getMinNumberOfOptions(), attachment.getMaxNumberOfOptions());
+                        attachment.getMinNumberOfOptions(),
+                        attachment.getMaxNumberOfOptions());
             }
 
             @Override
@@ -722,41 +671,10 @@ public abstract class TransactionType {
                 return new Attachment.MessagingVoteCasting(attachmentData);
             }
 
-            /*@Override
-            Attachment.MessagingVoteCasting parseAttachment(ByteBuffer buffer, byte transactionVersion) throws NxtException.ValidationException {
-                return new Attachment.MessagingVoteCasting(buffer, transactionVersion);
-            void loadAttachment(TransactionImpl transaction, ByteBuffer buffer) throws NxtException.ValidationException {
-                Long pollId = buffer.getLong();
-                int numberOfOptions = buffer.get();
-                if (numberOfOptions > Constants.MAX_POLL_OPTION_COUNT) {
-                    throw new NxtException.ValidationException("Error parsing vote casting parameters");
-                }
-                byte[] pollVote = new byte[numberOfOptions];
-                buffer.get(pollVote);
-                transaction.setAttachment(new Attachment.MessagingVoteCasting(pollId, pollVote));
-            }
-
-            @Override
-            Attachment.MessagingVoteCasting parseAttachment(JSONObject attachmentData) throws NxtException.ValidationException {
-                return new Attachment.MessagingVoteCasting(attachmentData);
-            void loadAttachment(TransactionImpl transaction, JSONObject attachmentData) throws NxtException.ValidationException {
-                Long pollId = Convert.parseUnsignedLong((String)attachmentData.get("pollId"));
-                JSONArray vote = (JSONArray)attachmentData.get("vote");
-                byte[] pollVote = new byte[vote.size()];
-                for (int i = 0; i < pollVote.length; i++) {
-                    pollVote[i] = ((Long) vote.get(i)).byteValue();
-                }
-                transaction.setAttachment(new Attachment.MessagingVoteCasting(pollId, pollVote));
-            } */
-
             @Override
             void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
                 Attachment.MessagingVoteCasting attachment = (Attachment.MessagingVoteCasting) transaction.getAttachment();
-                //Poll poll = Poll.getPoll(attachment.getPollId());
-                //if (poll != null) {
-                    Vote vote = Vote.addVote(transaction, attachment);
-                    //poll.addVoter(transaction.getSenderId(), vote.getId());
-                //}
+                Vote.addVote(transaction, attachment);
             }
 
             @Override

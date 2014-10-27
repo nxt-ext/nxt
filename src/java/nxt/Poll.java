@@ -93,10 +93,10 @@ public final class Poll extends CommonPollStructure {
         }
     }
 
-    private Poll(long id, String name, String description, String[] options, int finishBlockHeight,
+    private Poll(long id, long accountId, String name, String description, String[] options, int finishBlockHeight,
                  byte optionModel, byte votingModel, long minBalance,
                  long assetId, byte minNumberOfOptions, byte maxNumberOfOptions) {
-        super(finishBlockHeight, votingModel, assetId, minBalance);
+        super(accountId, finishBlockHeight, votingModel, assetId, minBalance);
 
         this.id = id;
         this.dbKey = pollDbKeyFactory.newKey(this.id);
@@ -128,7 +128,8 @@ public final class Poll extends CommonPollStructure {
     }
 
     private Poll(Transaction transaction, Attachment.MessagingPollCreation attachment) {
-        super(attachment.getFinishBlockHeight(), attachment.getVotingModel(), attachment.getAssetId(), attachment.getMinBalance());
+        super(transaction.getSenderId(), attachment.getFinishBlockHeight(), attachment.getVotingModel(),
+                attachment.getAssetId(), attachment.getMinBalance());
 
         this.id = transaction.getId();
         this.dbKey = pollDbKeyFactory.newKey(this.id);
@@ -140,7 +141,7 @@ public final class Poll extends CommonPollStructure {
         this.maxNumberOfOptions = attachment.getMaxNumberOfOptions();
     }
 
-    static void addPoll(Long id, String name, String description, String[] options,
+    static void addPoll(Long id, long accountId, String name, String description, String[] options,
                         int finishBlockHeight, byte optionModel, byte votingModel,
                         long minBalance,
                         long assetId,
@@ -151,7 +152,7 @@ public final class Poll extends CommonPollStructure {
             throw new IllegalStateException("Poll with id " + Convert.toUnsignedLong(id) + " already exists");
         }
 
-        Poll poll = new Poll(id, name, description, options, finishBlockHeight, optionModel, votingModel,
+        Poll poll = new Poll(id, accountId, name, description, options, finishBlockHeight, optionModel, votingModel,
                 minBalance, assetId, minNumberOfOptions, maxNumberOfOptions);
 
         pollTable.insert(poll);
