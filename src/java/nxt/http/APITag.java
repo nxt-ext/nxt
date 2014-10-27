@@ -4,7 +4,7 @@ public enum APITag {
 
     ACCOUNTS("Accounts"), ALIASES("Aliases"), AE("Asset Exchange"), CREATE_TRANSACTION("Create Transaction"),
     BLOCKS("Blocks"), DGS("Digital Goods Store"), FORGING("Forging"), INFO("Server Info"), MESSAGES("Messages"),
-    TRANSACTIONS("Transactions"), TOKENS("Tokens"), VS("Voting System"), MS("Monetary System"), SHUFFLE("Shuffling"),
+    TRANSACTIONS("Transactions"), TOKENS("Tokens"), VS("Voting System"), MS("Monetary System"), SHUFFLING("Shuffling"),
     UTILS("Utils"), DEBUG("Debug");
 
     private final String displayName;

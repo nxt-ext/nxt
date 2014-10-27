@@ -13,7 +13,7 @@ public final class ShufflingDistribute extends CreateTransaction {
     static final ShufflingDistribute instance = new ShufflingDistribute();
 
     private ShufflingDistribute() {
-        super(new APITag[] {APITag.SHUFFLE, APITag.CREATE_TRANSACTION}, "shuffling");
+        super(new APITag[] {APITag.SHUFFLING, APITag.CREATE_TRANSACTION}, "shuffling");
     }
 
     @Override

@@ -21,13 +21,41 @@ public class TestShufflingRegistration extends BlockchainTest {
         JSONObject response = apiCall.invoke();
         Logger.logMessage("shufflingCreateResponse: " + response.toJSONString());
         generateBlock();
+        String shufflingId = (String) response.get("transaction");
         apiCall = new APICall.Builder("shufflingRegister").
-                secretPhrase(secretPhrase1).
+                secretPhrase(secretPhrase2).
                 feeNQT(Constants.ONE_NXT).
-                param("shuffling", "0").
+                param("shuffling", shufflingId).
                 build();
         response = apiCall.invoke();
         Logger.logMessage("shufflingRegisterResponse: " + response.toJSONString());
         generateBlock();
+        apiCall = new APICall.Builder("shufflingRegister").
+                secretPhrase(secretPhrase3).
+                feeNQT(Constants.ONE_NXT).
+                param("shuffling", shufflingId).
+                build();
+        response = apiCall.invoke();
+        Logger.logMessage("shufflingRegisterResponse: " + response.toJSONString());
+        generateBlock();
+        apiCall = new APICall.Builder("shufflingRegister").
+                secretPhrase(secretPhrase4).
+                feeNQT(Constants.ONE_NXT).
+                param("shuffling", shufflingId).
+                build();
+        response = apiCall.invoke();
+        Logger.logMessage("shufflingRegisterResponse: " + response.toJSONString());
+        generateBlock();
+        apiCall = new APICall.Builder("getShuffling").
+                param("shuffling", shufflingId).
+                build();
+        response = apiCall.invoke();
+        Logger.logMessage("getShufflingResponse: " + response.toJSONString());
+
+        apiCall = new APICall.Builder("getShufflingParticipants").
+                param("shuffling", shufflingId).
+                build();
+        response = apiCall.invoke();
+        Logger.logMessage("getShufflingParticipantsResponse: " + response.toJSONString());
     }
 }

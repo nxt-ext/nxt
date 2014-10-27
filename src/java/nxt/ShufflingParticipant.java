@@ -1,5 +1,6 @@
 package nxt;
 
+import nxt.db.Db;
 import nxt.db.DbClause;
 import nxt.db.DbIterator;
 import nxt.db.DbKey;
@@ -14,7 +15,7 @@ import java.sql.SQLException;
 
 public final class ShufflingParticipant {
 
-    private static enum State {
+    public static enum State {
         REGISTERED((byte)0),
         VERIFIED((byte)1);
 
@@ -67,12 +68,17 @@ public final class ShufflingParticipant {
 
     };
 
-    public static int getCount() {
-        return shufflingParticipantTable.getCount();
-    }
-
     public static int getCount(long shufflingId) {
-        return shufflingParticipantTable.getCount(new DbClause.LongClause("shuffling_id", shufflingId));
+        try (Connection con = Db.getConnection();
+             PreparedStatement pstmt = con.prepareStatement("SELECT COUNT(*) FROM Shuffling_participant WHERE shuffling_id = ? AND latest = TRUE")) {
+            pstmt.setLong(1, shufflingId);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                rs.next();
+                return rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e.toString(), e);
+        }
     }
 
     public static boolean addListener(Listener<ShufflingParticipant> listener, Event eventType) {
@@ -129,6 +135,7 @@ public final class ShufflingParticipant {
     private void save(Connection con) throws SQLException {
         try (PreparedStatement pstmt = con.prepareStatement("MERGE INTO shuffling_participant (shuffling_id, "
                 + "account_id, next_account_id, recipient_id, state, height, latest) "
+                + "KEY (shuffling_id, account_id, height)"
                 + "VALUES (?, ?, ?, ?, ?, ?, TRUE)")) {
             int i = 0;
             pstmt.setLong(++i, this.getShufflingId());

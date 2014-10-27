@@ -1,20 +1,15 @@
 package nxt.http;
 
 import nxt.Account;
-import nxt.Attachment;
 import nxt.NxtException;
 import nxt.Shuffling;
 import nxt.ShufflingParticipant;
-import nxt.crypto.Crypto;
-import nxt.crypto.EncryptedData;
-import nxt.db.DbIterator;
 import nxt.util.Convert;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
 
 import java.util.ArrayList;
-import java.util.Collections;
 
 import static nxt.http.JSONResponses.*;
 
@@ -23,7 +18,7 @@ public final class ShufflingProcess extends CreateTransaction {
     static final ShufflingProcess instance = new ShufflingProcess();
 
     private ShufflingProcess() {
-        super(new APITag[] {APITag.SHUFFLE, APITag.CREATE_TRANSACTION},
+        super(new APITag[] {APITag.SHUFFLING, APITag.CREATE_TRANSACTION},
                 "shuffling", "secretPhrase", "recipient", "data");
     }
 

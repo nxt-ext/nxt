@@ -13,7 +13,7 @@ public final class ShufflingRegister extends CreateTransaction {
     static final ShufflingRegister instance = new ShufflingRegister();
 
     private ShufflingRegister() {
-        super(new APITag[] {APITag.SHUFFLE, APITag.CREATE_TRANSACTION}, "shuffling");
+        super(new APITag[] {APITag.SHUFFLING, APITag.CREATE_TRANSACTION}, "shuffling");
     }
 
     @Override

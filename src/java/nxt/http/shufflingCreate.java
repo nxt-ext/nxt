@@ -13,7 +13,7 @@ public final class ShufflingCreate extends CreateTransaction {
     static final ShufflingCreate instance = new ShufflingCreate();
 
     private ShufflingCreate() {
-        super(new APITag[] {APITag.SHUFFLE, APITag.CREATE_TRANSACTION},
+        super(new APITag[] {APITag.SHUFFLING, APITag.CREATE_TRANSACTION},
                 "isCurrency", "currency", "amountNQT", "participantCount", "cancellationHeight");
     }
 

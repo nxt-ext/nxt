@@ -13,7 +13,7 @@ public final class ShufflingVerify extends CreateTransaction {
     static final ShufflingVerify instance = new ShufflingVerify();
 
     private ShufflingVerify() {
-        super(new APITag[] {APITag.SHUFFLE, APITag.CREATE_TRANSACTION}, "shuffling");
+        super(new APITag[] {APITag.SHUFFLING, APITag.CREATE_TRANSACTION}, "shuffling");
     }
 
     @Override

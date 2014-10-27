@@ -17,7 +17,7 @@ public final class Shuffling {
         SHUFFLING_CREATED, SHUFFLING_CANCELLED
     }
 
-    private static enum State {
+    public static enum State {
         REGISTRATION((byte)1),
         SHUFFLING((byte)2),
         VERIFICATION((byte)3),
@@ -169,7 +169,7 @@ public final class Shuffling {
         this.participantCount = rs.getByte("participant_count");
         this.cancellationHeight = rs.getInt("cancellation_height");
         this.state = State.get(rs.getByte("state"));
-        this.assigneeAccountId = rs.getInt("assignee_account_Id");
+        this.assigneeAccountId = rs.getLong("assignee_account_Id");
     }
 
     private void save(Connection con) throws SQLException {
