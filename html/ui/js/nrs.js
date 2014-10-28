@@ -555,9 +555,8 @@ var NRS = (function(NRS, $, undefined) {
 			NRS.accountInfo = response;
 
 			if (response.errorCode) {
-				$("#account_balance, #account_balance_sidebar, #account_forged_balance").html("0");
-				$("#account_nr_assets").html("0");
-
+				$("#account_balance, #account_balance_sidebar, #account_nr_assets, #account_assets_balance, #account_message_count").html("0");
+				
 				if (NRS.accountInfo.errorCode == 5) {
 					if (NRS.downloadingBlockchain) {
 						if (NRS.newlyCreatedAccount) {
@@ -647,17 +646,90 @@ var NRS = (function(NRS, $, undefined) {
 				$("#account_balance, #account_balance_sidebar").html(NRS.formatStyledAmount(response.unconfirmedBalanceNQT));
 				$("#account_forged_balance").html(NRS.formatStyledAmount(response.forgedBalanceNQT));
 
+				/* Need to clean up and optimize code if possible */
 				var nr_assets = 0;
-
+				var assets = [];
+				var assets_LastTrade = [];
 				if (response.assetBalances) {
 					for (var i = 0; i < response.assetBalances.length; i++) {
 						if (response.assetBalances[i].balanceQNT != "0") {
 							nr_assets++;
+							assets.push(response.assetBalances[i].asset);
+							assets.push(response.assetBalances[i].balanceQNT);
 						}
 					}
 				}
+				
+				/* Calculate value of all owned assets based on their last trades */
+				if (response.assetBalances) {
+					var number = 0;
+					for (var i = 0; i < response.assetBalances.length; i++) {
+						NRS.sendRequest("getTrades", {
+							"asset": response.assetBalances[i].asset,
+							"firstIndex": 0,
+							"lastIndex": 0
+						}, function(responseBid) {
+							var asset_balance = 0;
+							if (responseBid.trades[0]){
+								assets_LastTrade.push(responseBid.trades[0].priceNQT/100000000);
+							}
+							else{
+								assets_LastTrade.push(0);
+							}
+							if (number == response.assetBalances.length-1){
+								for (var j = 0; j < assets_LastTrade.length; j++) {
+									asset_balance += assets[(j*2)+1]*assets_LastTrade[j];
+								}
+								$("#account_assets_balance").empty().append(NRS.formatStyledAmount(asset_balance));
+							}
+							else {
+								number++;
+							}
+						});
+					}
+				}
+				else
+					$("#account_assets_balance").html(0);
+				
+				/* Display message count in top and limit to 100 for now because of possible performance issues*/	
+				NRS.sendRequest("getAccountTransactions+", {
+					"account": NRS.account,
+					"type": 1,
+					"subtype": 0,
+					"firstIndex": 0,
+					"lastIndex": 99
+				}, function(response) {
+					if (response.transactions && response.transactions.length) {
+						if (response.transactions.length > 99)
+							$("#account_message_count").empty().append("99+");
+						else
+							$("#account_message_count").empty().append(response.transactions.length);
+					} else {
+						$("#account_message_count").empty().append("0");
+					}
+				});
+				
+				/* Display connected state in Sidebar */
+				/* Don't believe this the correct location for this */
+				NRS.sendRequest("getPeers+", {
+					"active": "true",
+					"state": "CONNECTED"
+				}, function(response) {
+					if (response.peers && response.peers.length) {
+						$("#connected_indicator").addClass("connected");
+						$("#connected_indicator span").html($.t("Connected")).attr("data-i18n", "connected");
+						$("#connected_indicator").show();
+					} else {
+						$("#connected_indicator").removeClass("connected");
+						$("#connected_indicator span").html($.t("Not Connected")).attr("data-i18n", "not_connected");
+						$("#connected_indicator").show();
+					}
+				});
+				
+				/*  ******************   */
 
 				$("#account_nr_assets").html(nr_assets);
+				
 
 				if (NRS.lastBlockHeight) {
 					var isLeased = NRS.lastBlockHeight >= NRS.accountInfo.currentLeasingHeightFrom;
@@ -683,7 +755,7 @@ var NRS = (function(NRS, $, undefined) {
 			}
 
 			if (firstRun) {
-				$("#account_balance, #account_balance_sidebar, #account_forged_balance, #account_nr_assets").removeClass("loading_dots");
+				$("#account_balance, #account_balance_sidebar, #account_assets_balance, #account_nr_assets, #account_message_count").removeClass("loading_dots");
 			}
 
 			if (callback) {

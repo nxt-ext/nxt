@@ -75,6 +75,10 @@ var NRS = (function(NRS, $, undefined) {
 
 				rows += "<tr><td><a href='#' data-block='" + String(block.height).escapeHTML() + "' data-blockid='" + String(block.block).escapeHTML() + "' class='block'" + (block.numberOfTransactions > 0 ? " style='font-weight:bold'" : "") + ">" + String(block.height).escapeHTML() + "</a></td><td data-timestamp='" + String(block.timestamp).escapeHTML() + "'>" + NRS.formatTimestamp(block.timestamp) + "</td><td>" + NRS.formatAmount(block.totalAmountNQT) + " + " + NRS.formatAmount(block.totalFeeNQT) + "</td><td>" + NRS.formatAmount(block.numberOfTransactions) + "</td></tr>";
 			}
+			
+			var block = NRS.blocks[0];			
+			$("#nrs_current_block_time").empty().append(NRS.formatTimestamp(block.timestamp));
+			$("#nrs_current_block").empty().append(String(block.height).escapeHTML());
 
 			$("#dashboard_blocks_table tbody").empty().append(rows);
 			NRS.dataLoadFinished($("#dashboard_blocks_table"));
@@ -204,6 +208,10 @@ var NRS = (function(NRS, $, undefined) {
 			$("#dashboard_blocks_table tbody tr").slice(10 - newBlockCount).remove();
 		}
 
+		var block = NRS.blocks[0];			
+		$("#nrs_current_block_time").empty().append(NRS.formatTimestamp(block.timestamp));
+		$("#nrs_current_block").empty().append(String(block.height).escapeHTML());
+		
 		$("#dashboard_blocks_table tbody").prepend(rows);
 
 		//update number of confirmations... perhaps we should also update it in tne NRS.transactions array

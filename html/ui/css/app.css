@@ -2996,11 +2996,11 @@ input:invalid {
   border: 1px solid red;
 }
 
-#forging_indicator i {
+#forging_indicator i, #connected_indicator i {
   color:#a94442;
 }
 
-#forging_indicator.forging i {
+#forging_indicator.forging i, #connected_indicator.connected i {
   color:#3c763d;
 }
 
