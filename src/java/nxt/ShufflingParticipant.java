@@ -54,7 +54,7 @@ public final class ShufflingParticipant {
 
     };
 
-    private static final VersionedEntityDbTable<ShufflingParticipant> shufflingParticipantTable = new VersionedEntityDbTable<ShufflingParticipant>("Shuffling_participant", shufflingParticipantDbKeyFactory) {
+    private static final VersionedEntityDbTable<ShufflingParticipant> shufflingParticipantTable = new VersionedEntityDbTable<ShufflingParticipant>("shuffling_participant", shufflingParticipantDbKeyFactory) {
 
         @Override
         protected ShufflingParticipant load(Connection con, ResultSet rs) throws SQLException {
@@ -100,8 +100,6 @@ public final class ShufflingParticipant {
     static ShufflingParticipant addParticipant(long shufflingId, long accountId) {
         ShufflingParticipant participant = new ShufflingParticipant(shufflingId, accountId);
         shufflingParticipantTable.insert(participant);
-
-        listeners.notify(participant, Event.PARTICIPANT_ADDED);
         return participant;
     }
 
@@ -115,12 +113,14 @@ public final class ShufflingParticipant {
     private long nextAccountId;
     private long recipientId;
     private State state;
+    private byte[] data;
 
     public ShufflingParticipant(long shufflingId, long accountId) {
         this.shufflingId = shufflingId;
         this.accountId = accountId;
         this.dbKey = shufflingParticipantDbKeyFactory.newKey(shufflingId, accountId);
         this.state = State.REGISTERED;
+        this.data = new byte[] {};
     }
 
     private ShufflingParticipant(ResultSet rs) throws SQLException {
@@ -130,19 +130,21 @@ public final class ShufflingParticipant {
         this.nextAccountId = rs.getLong("next_account_id");
         this.recipientId = rs.getLong("recipient_id");
         this.state = State.get(rs.getByte("state"));
+        this.data = rs.getBytes("data");
     }
 
     private void save(Connection con) throws SQLException {
         try (PreparedStatement pstmt = con.prepareStatement("MERGE INTO shuffling_participant (shuffling_id, "
-                + "account_id, next_account_id, recipient_id, state, height, latest) "
+                + "account_id, next_account_id, recipient_id, state, data, height, latest) "
                 + "KEY (shuffling_id, account_id, height)"
-                + "VALUES (?, ?, ?, ?, ?, ?, TRUE)")) {
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, TRUE)")) {
             int i = 0;
             pstmt.setLong(++i, this.getShufflingId());
             pstmt.setLong(++i, this.getAccountId());
             pstmt.setLong(++i, this.getNextAccountId());
             pstmt.setLong(++i, this.getRecipientId());
             pstmt.setByte(++i, this.getState().getCode());
+            pstmt.setBytes(++i, this.getData());
             pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
             pstmt.executeUpdate();
         }
@@ -166,6 +168,10 @@ public final class ShufflingParticipant {
 
     public State getState() {
         return state;
+    }
+
+    public byte[] getData() {
+        return data;
     }
 
     public void setNextAccountId(long nextAccountId) {

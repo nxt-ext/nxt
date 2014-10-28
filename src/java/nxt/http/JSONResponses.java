@@ -134,6 +134,7 @@ public final class JSONResponses {
     public static final JSONStreamAware MISSING_SHUFFLING = missing("shuffling");
     public static final JSONStreamAware UNKNOWN_SHUFFLING = unknown("shuffling");
     public static final JSONStreamAware INCORRECT_SHUFFLING = incorrect("shuffling");
+    public static final JSONStreamAware INCORRECT_SHUFFLING_STATE = incorrect("shuffling");
 
     public static final JSONStreamAware NOT_ENOUGH_FUNDS;
     static {

@@ -13,13 +13,19 @@ import java.sql.SQLException;
 
 public final class Shuffling {
 
+    private boolean processing;
+
+    public boolean isProcessing() {
+        return state == State.PROCESSING;
+    }
+
     public static enum Event {
         SHUFFLING_CREATED, SHUFFLING_CANCELLED
     }
 
     public static enum State {
         REGISTRATION((byte)1),
-        SHUFFLING((byte)2),
+        PROCESSING((byte)2),
         VERIFICATION((byte)3),
         DISTRIBUTION((byte)4),
         CANCELLED((byte)5),
@@ -70,7 +76,7 @@ public final class Shuffling {
 
     };
 
-    private static final VersionedEntityDbTable<Shuffling> shufflingTable = new VersionedEntityDbTable<Shuffling>("Shuffling", shufflingDbKeyFactory) {
+    private static final VersionedEntityDbTable<Shuffling> shufflingTable = new VersionedEntityDbTable<Shuffling>("shuffling", shufflingDbKeyFactory) {
 
         @Override
         protected Shuffling load(Connection con, ResultSet rs) throws SQLException {
@@ -112,7 +118,6 @@ public final class Shuffling {
         Shuffling shuffling = new Shuffling(transaction, attachment);
         shufflingTable.insert(shuffling);
         ShufflingParticipant.addParticipant(shuffling.getId(), transaction.getSenderId());
-        ShufflingParticipant.addListener(new ParticipantListener(shuffling), ShufflingParticipant.Event.PARTICIPANT_ADDED);
         listeners.notify(shuffling, Event.SHUFFLING_CREATED);
         return shuffling;
     }
@@ -128,6 +133,12 @@ public final class Shuffling {
         ShufflingParticipant participant = ShufflingParticipant.getParticipant(shufflingId, shuffling.getAssigneeAccountId());
         participant.setNextAccountId(participantId);
         shuffling.setAssigneeAccountId(participantId);
+
+        // Check if participant registration is complete and if so update the shuffling
+        if (ShufflingParticipant.getCount(shufflingId) == shuffling.participantCount) {
+            shuffling.assigneeAccountId = shuffling.issuerId;
+            shuffling.setState(State.PROCESSING); // update the db
+        }
     }
 
 
@@ -173,9 +184,10 @@ public final class Shuffling {
     }
 
     private void save(Connection con) throws SQLException {
-        try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO shuffling (id, is_currency, currency_id, "
+        try (PreparedStatement pstmt = con.prepareStatement("MERGE INTO shuffling (id, is_currency, currency_id, "
                 + "issuer_id, amount, participant_count, cancellation_height, state, assignee_account_Id,"
                 + "height, latest) "
+                + "KEY (id, height)"
                 + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, TRUE)")) {
             int i = 0;
             pstmt.setLong(++i, this.getId());
@@ -290,23 +302,4 @@ public final class Shuffling {
     public boolean isParticipant(long senderId) {
         return ShufflingParticipant.getParticipant(id, senderId) != null;
     }
-
-    static class ParticipantListener implements Listener<ShufflingParticipant> {
-
-        private final Shuffling shuffling;
-
-        public ParticipantListener(Shuffling shuffling) {
-            this.shuffling = shuffling;
-        }
-
-        @Override
-        public void notify(ShufflingParticipant shufflingParticipant) {
-            long shufflingId = shufflingParticipant.getShufflingId();
-            if (ShufflingParticipant.getCount(shufflingId) == shuffling.participantCount) {
-                shuffling.assigneeAccountId = shuffling.issuerId;
-                shuffling.setState(State.SHUFFLING); // update the db
-            }
-        }
-    }
-
 }

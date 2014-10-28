@@ -31,6 +31,8 @@ import java.util.concurrent.ConcurrentHashMap;
 final class TransactionProcessorImpl implements TransactionProcessor {
 
     private static final boolean enableTransactionRebroadcasting = Nxt.getBooleanProperty("nxt.enableTransactionRebroadcasting");
+    private static final boolean disableProcessTransactionsThread = Nxt.getBooleanProperty("nxt.disableProcessTransactionsThread");
+    private static final boolean disableRemoveUnconfirmedTransactionsThread = Nxt.getBooleanProperty("nxt.disableRemoveUnconfirmedTransactionsThread");
     private static final boolean testUnconfirmedTransactions = Nxt.getBooleanProperty("nxt.testUnconfirmedTransactions");
 
     private static final TransactionProcessorImpl instance = new TransactionProcessorImpl();
@@ -240,8 +242,12 @@ final class TransactionProcessorImpl implements TransactionProcessor {
     };
 
     private TransactionProcessorImpl() {
-        ThreadPool.scheduleThread("ProcessTransactions", processTransactionsThread, 5);
-        ThreadPool.scheduleThread("RemoveUnconfirmedTransactions", removeUnconfirmedTransactionsThread, 1);
+        if (!disableProcessTransactionsThread || !Constants.isTestnet) {
+            ThreadPool.scheduleThread("ProcessTransactions", processTransactionsThread, 5);
+        }
+        if (!disableRemoveUnconfirmedTransactionsThread || !Constants.isTestnet) {
+            ThreadPool.scheduleThread("RemoveUnconfirmedTransactions", removeUnconfirmedTransactionsThread, 1);
+        }
         if (enableTransactionRebroadcasting) {
             ThreadPool.scheduleThread("RebroadcastTransactions", rebroadcastTransactionsThread, 60);
             ThreadPool.runAfterStart(new Runnable() {

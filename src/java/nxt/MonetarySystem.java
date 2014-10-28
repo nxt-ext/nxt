@@ -530,6 +530,10 @@ public abstract class MonetarySystem extends TransactionType {
                     throw new NxtException.NotValidException("Currency is not active: " + currency.getCode());
                 }
             }
+            if (Account.getAccount(transaction.getSenderId()).getPublicKey() == null) {
+                throw new NxtException.NotValidException(String.format("Account %s without public key cannot create shuffling",
+                        Convert.rsAccount(transaction.getSenderId())));
+            }
             if (attachment.getAmount() <= 0 || attachment.getAmount() > Constants.MAX_CURRENCY_TOTAL_SUPPLY
                     || attachment.getParticipantCount() < Constants.MIN_SHUFFLING_PARTICIPANTS
                     || attachment.getParticipantCount() > Constants.MAX_SHUFFLING_PARTICIPANTS
@@ -603,6 +607,10 @@ public abstract class MonetarySystem extends TransactionType {
             }
             if (!shuffling.isRegistrationEnabled()) {
                 throw new NxtException.NotValidException("Shuffling registration has ended");
+            }
+            if (Account.getAccount(transaction.getSenderId()).getPublicKey() == null) {
+                throw new NxtException.NotValidException(String.format("Account %s without public key cannot register for shuffling",
+                        Convert.rsAccount(transaction.getSenderId())));
             }
             if (shuffling.isParticipant(transaction.getSenderId())) {
                 throw new NxtException.NotValidException(String.format("Account %s is already registered for shuffling %s",

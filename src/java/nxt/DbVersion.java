@@ -500,7 +500,8 @@ final class DbVersion {
                 apply("CREATE UNIQUE INDEX IF NOT EXISTS shuffling_id_idx ON shuffling (id, height DESC)");
             case 162:
                 apply("CREATE TABLE IF NOT EXISTS shuffling_participant (db_id INT IDENTITY, shuffling_id BIGINT NOT NULL, "
-                        + "account_id BIGINT NOT NULL, next_account_id BIGINT NOT NULL, recipient_id BIGINT NOT NULL, state TINYINT NOT NULL, "
+                        + "account_id BIGINT NOT NULL, next_account_id BIGINT NOT NULL, recipient_id BIGINT NOT NULL, "
+                        + "state TINYINT NOT NULL, data VARBINARY, "
                         + "height INT NOT NULL, latest BOOLEAN NOT NULL DEFAULT TRUE)");
             case 163:
                 apply("CREATE UNIQUE INDEX IF NOT EXISTS shuffling_participant_shuffling_id_account_id_idx ON shuffling_participant (shuffling_id, account_id, height DESC)");
