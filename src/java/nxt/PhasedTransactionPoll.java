@@ -3,15 +3,12 @@ package nxt;
 import nxt.db.*;
 import nxt.util.Logger;
 import java.sql.*;
-import java.util.Arrays;
-
 
 public class PhasedTransactionPoll extends CommonPollStructure {
     private final Long id;   // tx id
     private final DbKey dbKey;
-    long[] possibleVoters;
-    long votes;
-    long quorum;
+    private long[] possibleVoters;
+    private long quorum;
 
     private static final DbKey.LongKeyFactory<PhasedTransactionPoll> pollDbKeyFactory = new DbKey.LongKeyFactory<PhasedTransactionPoll>("id") {
         @Override
@@ -65,6 +62,8 @@ public class PhasedTransactionPoll extends CommonPollStructure {
 
     final static PendingTransactionsTable pendingTransactionsTable = new PendingTransactionsTable();
 
+    static void init() {}
+
     public PhasedTransactionPoll(Long id, long accountId, int finishBlockHeight,
                                  byte votingModel, long quorum, long voteThreshold,
                                  long assetId, long[] possibleVoters) {
@@ -73,12 +72,6 @@ public class PhasedTransactionPoll extends CommonPollStructure {
         this.dbKey = pollDbKeyFactory.newKey(this.id);
         this.quorum = quorum;
         this.possibleVoters = possibleVoters;
-    }
-
-    public PhasedTransactionPoll(Long id, long accountId, int finishBlockHeight,
-                                 byte votingModel, long quorum, long voteThreshold,
-                                 long assetId) {
-        this(id, accountId, finishBlockHeight, votingModel, quorum, voteThreshold, assetId, new long[0]);
     }
 
     public PhasedTransactionPoll(ResultSet rs) throws SQLException {
@@ -145,6 +138,11 @@ public class PhasedTransactionPoll extends CommonPollStructure {
         }
     }
 
+    public static void finishPoll(PhasedTransactionPoll poll) {
+        poll.setFinished(true);
+        pendingTransactionsTable.insert(poll);
+    }
+
     static boolean exists(Connection con, long id) {
         try (PreparedStatement pstmt = con.prepareStatement("SELECT COUNT (*) FROM pending_transactions where id=?")) {
             pstmt.setLong(1, id);
@@ -155,21 +153,5 @@ public class PhasedTransactionPoll extends CommonPollStructure {
             Logger.logErrorMessage("PhasedPollTransaction.exists failed: ", e);
             return false;
         }
-    }
-
-    boolean addVote(Account voter) throws NxtException.NotValidException, NxtException.IllegalStateException {
-        long[] voters = this.possibleVoters;
-        if (voters != null && voters.length > 0 && Arrays.binarySearch(voters, voter.getId()) == -1) {
-            throw new NxtException.NotValidException("Voting for tx is prohibited for " + voter);
-        }
-
-        long vote = calcWeight(voter);
-        if (vote >= minBalance) {
-            votes += vote;
-        }
-
-        finished = votes >= quorum;
-        pendingTransactionsTable.insert(this);
-        return finished;
     }
 }

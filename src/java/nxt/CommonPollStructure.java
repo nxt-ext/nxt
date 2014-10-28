@@ -67,26 +67,26 @@ public class CommonPollStructure {
 
     public void setFinished(boolean finished) { this.finished = finished; }
 
-    protected long calcWeight(Account voter) throws NxtException.IllegalStateException {
+    static long calcWeight(CommonPollStructure pollStructure, Account voter) throws NxtException.IllegalStateException {
         long weight = 0;
 
-        switch (votingModel) {
+        switch (pollStructure.votingModel) {
             case VOTING_MODEL_ASSET:
-                long qntBalance = voter.getAssetBalanceQNT(assetId);
-                if (qntBalance >= minBalance) {
+                long qntBalance = voter.getAssetBalanceQNT(pollStructure.assetId);
+                if (qntBalance >= pollStructure.minBalance) {
                     weight = qntBalance;
                 }
                 break;
             case VOTING_MODEL_ACCOUNT:
             case VOTING_MODEL_BALANCE:
                 long nqtBalance = voter.getGuaranteedBalanceNQT(Constants.CONFIRMATIONS_RELIABLE_TX);
-                if (nqtBalance >= minBalance) {
+                if (nqtBalance >= pollStructure.minBalance) {
                     long nxtBalance = nqtBalance / Constants.ONE_NXT;
-                    weight = votingModel == VOTING_MODEL_ACCOUNT ? 1 : nxtBalance;
+                    weight = pollStructure.votingModel == VOTING_MODEL_ACCOUNT ? 1 : nxtBalance;
                 }
                 break;
             default:
-                throw new NxtException.IllegalStateException("Wrong voting model");
+                throw new NxtException.IllegalStateException("Wrong voting model"); //todo: move to validate?
         }
         return weight;
     }

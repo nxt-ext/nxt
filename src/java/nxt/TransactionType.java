@@ -315,13 +315,14 @@ public abstract class TransactionType {
 
             @Override
             final void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
-                Attachment.PendingPaymentVoteCasting att = (Attachment.PendingPaymentVoteCasting)transaction.getAttachment();
-                long pendingTxId = att.getPendingTransactionId();
+                Attachment.PendingPaymentVoteCasting attachment = (Attachment.PendingPaymentVoteCasting)transaction.getAttachment();
+                long pendingTxId = attachment.getPendingTransactionId();
                 PhasedTransactionPoll poll = PhasedTransactionPoll.byId(pendingTxId);
                 if (poll != null && !poll.isFinished()) { //todo: else
                     try {
-                        if (poll.addVote(senderAccount)) {
+                        if (VotePhased.addVote(poll, senderAccount, transaction, attachment)) {
                             TransactionDb.findTransaction(pendingTxId).release();
+                            PhasedTransactionPoll.finishPoll(poll);
                         }
                     } catch (NxtException.NotValidException | NxtException.IllegalStateException e) {
                         e.printStackTrace();  //todo:

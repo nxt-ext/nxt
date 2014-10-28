@@ -431,7 +431,7 @@ public interface Appendix {
         private final long voteThreshold;
         private final byte votingModel;
         private final long assetId;
-        private final Long[] possibleVoters;
+        private final long[] possibleVoters;
 
         TwoPhased(ByteBuffer buffer, byte transactionVersion) {
             super(buffer, transactionVersion);
@@ -443,7 +443,7 @@ public interface Appendix {
                 assetId = buffer.getLong();
             } else assetId = 0;
             byte votersCount = buffer.get();
-            possibleVoters = new Long[votersCount];
+            possibleVoters = new long[votersCount];
             for (int pvc = 0; pvc < possibleVoters.length; pvc++) {
                 possibleVoters[pvc] = buffer.getLong();
             }
@@ -459,13 +459,13 @@ public interface Appendix {
                 assetId = (Long) attachmentData.get("assetId");
             } else assetId = 0;
             JSONArray pvArr = (JSONArray) (attachmentData.get("possibleVoters"));
-            possibleVoters = new Long[pvArr.size()];
+            possibleVoters = new long[pvArr.size()];
             for (int i = 0; i < possibleVoters.length; i++) {
                 possibleVoters[i] = (Long) pvArr.get(i);
             }
         }
 
-        TwoPhased(int maxHeight, byte votingModel, long quorum, long voteThreshold, Long[] possibleVoters) {
+        TwoPhased(int maxHeight, byte votingModel, long quorum, long voteThreshold, long[] possibleVoters) {
             this.maxHeight = maxHeight;
             this.votingModel = votingModel;
             this.quorum = quorum;
@@ -474,7 +474,7 @@ public interface Appendix {
             this.assetId = 0;
         }
 
-        TwoPhased(int maxHeight, byte votingModel, long assetId, long quorum, long voteThreshold, Long[] possibleVoters) {
+        TwoPhased(int maxHeight, byte votingModel, long assetId, long quorum, long voteThreshold, long[] possibleVoters) {
             this.maxHeight = maxHeight;
             this.votingModel = votingModel;
             this.quorum = quorum;
@@ -533,7 +533,7 @@ public interface Appendix {
             Long id = transaction.getId();
 
             PhasedTransactionPoll poll = new PhasedTransactionPoll(id, senderAccount.getId(), maxHeight,
-                    votingModel, quorum, voteThreshold, assetId);
+                    votingModel, quorum, voteThreshold, assetId, possibleVoters);
             PhasedTransactionPoll.pendingTransactionsTable.insert(poll);
         }
 
@@ -549,6 +549,7 @@ public interface Appendix {
             System.out.println("Transaction " + transaction.getId() + " has been released");
         }
 
+        //todo: check votes again for by-asset & by-balance?
         void rollback(Transaction transaction, Account senderAccount, Account recipientAccount){
             long amount = transaction.getAmountNQT();
             senderAccount.addToBalanceNQT(amount);

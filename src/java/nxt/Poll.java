@@ -60,8 +60,7 @@ public final class Poll extends CommonPollStructure {
 
     private final static PollTable pollTable = new PollTable(pollDbKeyFactory);
 
-    static void init() {
-    }
+    static void init() {}
 
     private final long id;
     private final DbKey dbKey;
@@ -87,7 +86,7 @@ public final class Poll extends CommonPollStructure {
         for (Poll poll : getActivePolls()) {
             if (poll.finishBlockHeight <= currentHeight) {
                 poll.calculateAndSavePollResults();
-                markPollAsFinished(poll);
+                finishPoll(poll);
                 System.out.println("Poll " + poll.getId() + " has been finished");
             }
         }
@@ -186,7 +185,7 @@ public final class Poll extends CommonPollStructure {
         return getPoll(pollId).isFinished();
     }
 
-    public static void markPollAsFinished(Poll poll) {
+    public static void finishPoll(Poll poll) {
         poll.setFinished(true);
         pollTable.insert(poll);
     }
@@ -278,7 +277,7 @@ public final class Poll extends CommonPollStructure {
         final long[][] partialResult = new long[options.length][2];
 
         final Account voter = Account.getAccount(vote.getVoterId());
-        final long weight = calcWeight(voter);
+        final long weight = CommonPollStructure.calcWeight(this, voter);
 
         final byte[] optVals = vote.getVote();
 

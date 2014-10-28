@@ -433,13 +433,15 @@ final class DbVersion {
                         + "possible_voters VARCHAR NOT NULL, finish INT NOT NULL, "
                         + "voting_model TINYINT NOT NULL, quorum BIGINT NOT NULL, min_balance BIGINT NOT NULL, "
                         + "asset_id BIGINT NOT NULL, finished BOOLEAN NOT NULL, height INT NOT NULL, latest BOOLEAN DEFAULT TRUE NOT NULL)");
-          //  case 136:
-            //    apply(null); //CREATE TABLE IF NOT EXISTS ");
             case 136:
+                apply("CREATE TABLE IF NOT EXISTS vote_phased (db_id IDENTITY, id BIGINT NOT NULL, "
+                        +"pending_transaction_id BIGINT NOT NULL, voter_id BIGINT NOT NULL, "
+                        +"estimated_total BIGINT NOT NULL, height INT NOT NULL)");
+            case 137:
                 BlockchainProcessorImpl.getInstance().validateAtNextScan();
                 BlockchainProcessorImpl.getInstance().forceScanAtStart();
                 apply(null);
-            case 137:
+            case 138:
                 return;
             default:
                 throw new RuntimeException("Database inconsistent with code, probably trying to run older code on newer database");
