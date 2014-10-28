@@ -179,6 +179,10 @@ public final class Poll extends CommonPollStructure {
         return pollTable.getAll(from, to);
     }
 
+    public static DbIterator<Poll> getPollsByAccount(long accountId, int from, int to) {
+        return pollTable.getManyBy(new DbClause.LongClause("account_id", accountId), from, to);
+    }
+
     public static int getCount() {
         return pollTable.getCount();
     }
@@ -250,7 +254,7 @@ public final class Poll extends CommonPollStructure {
         final PollResults pollResults;
 
         switch (optionModel) {
-            case OPTION_MODEL_CHOICE:
+            case Constants.VOTING_OPTION_MODEL_CHOICE:
                 final Map<String, Long> pr = new HashMap<>();
                 for (int idx = 0; idx < results.length; idx++) {
                     pr.put(options[idx], results[idx][1]);
@@ -258,7 +262,7 @@ public final class Poll extends CommonPollStructure {
                 pollResults = new PollResults.Choice(getId(), pr);
                 break;
 
-            case OPTION_MODEL_BINARY:
+            case Constants.VOTING_OPTION_MODEL_BINARY:
                 final Map<String, Pair.YesNoCounts> pr2 = new HashMap<>();
                 for (int idx = 0; idx < results.length; idx++) {
                     pr2.put(options[idx], new Pair.YesNoCounts(results[idx][1], results[idx][0]));

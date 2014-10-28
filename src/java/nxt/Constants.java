@@ -28,6 +28,15 @@ public final class Constants {
     public static final long TWOPHASED_FEE_NQT = ONE_NXT;
 
     public static final byte MAX_VOTES_PER_VOTING_TRANSACTION = 10;
+    public static final byte VOTING_MODEL_BALANCE = 0;
+    public static final byte VOTING_MODEL_ACCOUNT = 1;
+    public static final byte VOTING_MODEL_ASSET = 2;
+
+    public static final byte VOTING_OPTION_MODEL_CHOICE = 0;
+    public static final byte VOTING_OPTION_MODEL_BINARY = 1;
+
+    public static final byte VOTING_DEFAULT_MIN_BALANCE = 0;
+    public static final byte VOTING_DEFAULT_MIN_NUMBER_OF_CHOICES = 1;
 
     public static final int MAX_ALIAS_URI_LENGTH = 1000;
     public static final int MAX_ALIAS_LENGTH = 100;

@@ -632,11 +632,11 @@ public abstract class TransactionType {
                     throw new NxtException.NotValidException("Invalid asset id for voting: " + attachment.getJSONObject());
                 }
 
-                if (attachment.getOptionModel() == Poll.OPTION_MODEL_CHOICE && attachment.getMinNumberOfOptions() < 1) {
+                if (attachment.getOptionModel() == Constants.VOTING_OPTION_MODEL_CHOICE && attachment.getMinNumberOfOptions() < 1) {
                     throw new NxtException.NotValidException("Invalid min number of options: " + attachment.getJSONObject());
                 }
 
-                if (attachment.getOptionModel() == Poll.OPTION_MODEL_CHOICE &&
+                if (attachment.getOptionModel() == Constants.VOTING_OPTION_MODEL_CHOICE &&
                         (attachment.getMaxNumberOfOptions() < 1 ||
                                 attachment.getMaxNumberOfOptions() > attachment.getPollOptions().length)) {
                     throw new NxtException.NotValidException("Invalid max number of options: " + attachment.getJSONObject());
@@ -709,7 +709,7 @@ public abstract class TransactionType {
                     }
                 }
 
-                if (poll.getOptionModel() == Poll.OPTION_MODEL_CHOICE
+                if (poll.getOptionModel() == Constants.VOTING_OPTION_MODEL_CHOICE
                         && (positiveCount < poll.getMinNumberOfOptions() || positiveCount > poll.getMaxNumberOfOptions())) {
                     throw new NxtException.NotValidException("Invalid num of choices: " + attachment.getJSONObject());
                 }

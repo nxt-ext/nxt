@@ -439,7 +439,7 @@ public interface Appendix {
             quorum = buffer.getLong();
             voteThreshold = buffer.getLong();
             votingModel = buffer.get();
-            if (votingModel == CommonPollStructure.VOTING_MODEL_ASSET) {
+            if (votingModel == Constants.VOTING_MODEL_ASSET) {
                 assetId = buffer.getLong();
             } else assetId = 0;
             byte votersCount = buffer.get();
@@ -455,7 +455,7 @@ public interface Appendix {
             quorum = (Long) attachmentData.get("quorum");
             voteThreshold = (Long) attachmentData.get("voteThreshold");
             votingModel = (Byte) attachmentData.get("votingModel");
-            if (votingModel == CommonPollStructure.VOTING_MODEL_ASSET) {
+            if (votingModel == Constants.VOTING_MODEL_ASSET) {
                 assetId = (Long) attachmentData.get("assetId");
             } else assetId = 0;
             JSONArray pvArr = (JSONArray) (attachmentData.get("possibleVoters"));
@@ -491,7 +491,7 @@ public interface Appendix {
         @Override
         int getMySize() {
             return 4 + 8 + 8 + 1 + 1
-                    + (votingModel == CommonPollStructure.VOTING_MODEL_ASSET ? 8 : 0)
+                    + (votingModel == Constants.VOTING_MODEL_ASSET ? 8 : 0)
                     + 8 * possibleVoters.length;
         }
 
@@ -501,7 +501,7 @@ public interface Appendix {
             buffer.putLong(quorum);
             buffer.putLong(voteThreshold);
             buffer.put(votingModel);
-            if (votingModel == CommonPollStructure.VOTING_MODEL_ASSET) buffer.putLong(assetId);
+            if (votingModel == Constants.VOTING_MODEL_ASSET) buffer.putLong(assetId);
             buffer.put((byte) possibleVoters.length);
             for (Long pv : possibleVoters) {
                 buffer.putLong(pv);
@@ -514,7 +514,7 @@ public interface Appendix {
             json.put("quorum", quorum);
             json.put("voteThreshold", voteThreshold);
             json.put("votingModel", votingModel);
-            if (votingModel == CommonPollStructure.VOTING_MODEL_ASSET) json.put("assetId", assetId);
+            if (votingModel == Constants.VOTING_MODEL_ASSET) json.put("assetId", assetId);
             JSONArray pv = new JSONArray();
             Collections.addAll(pv, possibleVoters);
             json.put("possibleVoters", pv);

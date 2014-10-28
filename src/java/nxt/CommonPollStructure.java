@@ -4,19 +4,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 public class CommonPollStructure {
-    public static final byte VOTING_MODEL_BALANCE = 0;
-    public static final byte VOTING_MODEL_ACCOUNT = 1;
-    public static final byte VOTING_MODEL_ASSET = 2;
-
-    public static final byte OPTION_MODEL_CHOICE = 0;
-    public static final byte OPTION_MODEL_BINARY = 1;
-
-    public static final byte DEFAULT_MIN_BALANCE = 0;
-    public static final byte DEFAULT_MIN_NUMBER_OF_CHOICES = 1;
-
-    public static final byte NO_ASSET_CODE = 0;
-
-
     protected final long accountId;
     protected final int finishBlockHeight;
     protected final byte votingModel;
@@ -71,18 +58,18 @@ public class CommonPollStructure {
         long weight = 0;
 
         switch (pollStructure.votingModel) {
-            case VOTING_MODEL_ASSET:
+            case Constants.VOTING_MODEL_ASSET:
                 long qntBalance = voter.getAssetBalanceQNT(pollStructure.assetId);
                 if (qntBalance >= pollStructure.minBalance) {
                     weight = qntBalance;
                 }
                 break;
-            case VOTING_MODEL_ACCOUNT:
-            case VOTING_MODEL_BALANCE:
+            case Constants.VOTING_MODEL_ACCOUNT:
+            case Constants.VOTING_MODEL_BALANCE:
                 long nqtBalance = voter.getGuaranteedBalanceNQT(Constants.CONFIRMATIONS_RELIABLE_TX);
                 if (nqtBalance >= pollStructure.minBalance) {
                     long nxtBalance = nqtBalance / Constants.ONE_NXT;
-                    weight = pollStructure.votingModel == VOTING_MODEL_ACCOUNT ? 1 : nxtBalance;
+                    weight = pollStructure.votingModel == Constants.VOTING_MODEL_ACCOUNT ? 1 : nxtBalance;
                 }
                 break;
             default:

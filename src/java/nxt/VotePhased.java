@@ -113,7 +113,7 @@ public class VotePhased {
 
         long estimate = voteTable.lastEstimate(poll.getId()) + weight;
 
-        if(estimate >= poll.getQuorum() && poll.getVotingModel() != CommonPollStructure.VOTING_MODEL_ACCOUNT){
+        if(estimate >= poll.getQuorum() && poll.getVotingModel() != Constants.VOTING_MODEL_ACCOUNT){
             DbClause clause = new DbClause.LongClause("pending_transaction_id", poll.getId());
             DbIterator<VotePhased> votesIterator = voteTable.getManyBy(clause, 0, -1);
             estimate = 0;

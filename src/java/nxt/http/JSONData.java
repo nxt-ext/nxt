@@ -200,22 +200,21 @@ final class JSONData {
         json.put("optionModel", poll.getOptionModel());
         json.put("votingModel", poll.getVotingModel());
 
-        if(poll.getOptionModel()==Poll.OPTION_MODEL_CHOICE){
+        if (poll.getOptionModel() == Constants.VOTING_OPTION_MODEL_CHOICE) {
             json.put("minNumberOfOptions", poll.getMinNumberOfOptions());
             json.put("maxNumberOfOptions", poll.getMaxNumberOfOptions());
         }
 
         json.put("minBalance", poll.getMinBalance());
 
-        if(poll.getVotingModel() == Poll.VOTING_MODEL_ASSET){
+        if (poll.getVotingModel() == Constants.VOTING_MODEL_ASSET) {
             json.put("assetId", Convert.toUnsignedLong(poll.getAssetId()));
         }
 
         JSONArray voters = new JSONArray();
-        for (Long voterId : poll.getVoters()) {
-            voters.add(Convert.toUnsignedLong(voterId));
-        }
+        Collections.addAll(voters, poll.getVoters());
         json.put("voters", voters);
+        json.put("finished", poll.isFinished());
         return json;
     }
 

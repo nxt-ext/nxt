@@ -347,8 +347,8 @@ public interface Attachment extends Appendix {
             private final byte optionModel;
             private final byte votingModel;
 
-            private long minBalance = Poll.DEFAULT_MIN_BALANCE;
-            private byte minNumberOfOptions = Poll.DEFAULT_MIN_NUMBER_OF_CHOICES, maxNumberOfOptions;
+            private long minBalance = Constants.VOTING_DEFAULT_MIN_BALANCE;
+            private byte minNumberOfOptions = Constants.VOTING_DEFAULT_MIN_NUMBER_OF_CHOICES, maxNumberOfOptions;
             private long assetId;
 
             public PollBuilder(final String pollName, final String pollDescription, final String[] pollOptions,
@@ -393,7 +393,7 @@ public interface Attachment extends Appendix {
         private final byte votingModel;
 
         private final long minBalance; //for all kinds of voting
-        private byte minNumberOfOptions = Poll.DEFAULT_MIN_NUMBER_OF_CHOICES, maxNumberOfOptions; //only for choice voting
+        private byte minNumberOfOptions = Constants.VOTING_DEFAULT_MIN_NUMBER_OF_CHOICES, maxNumberOfOptions; //only for choice voting
         private long assetId = 0; // only for asset voting
 
 
@@ -403,6 +403,9 @@ public interface Attachment extends Appendix {
             this.pollDescription = Convert.readString(buffer, buffer.getShort(), Constants.MAX_POLL_DESCRIPTION_LENGTH);
 
             this.finishBlockHeight = buffer.getInt();
+            if(finishBlockHeight < Nxt.getBlockchain().getHeight() + 10){
+                throw new NxtException.NotValidException("Invalid finishing height");
+            }
 
             int numberOfOptions = buffer.get();
             if (numberOfOptions > Constants.MAX_POLL_OPTION_COUNT) {
@@ -419,12 +422,12 @@ public interface Attachment extends Appendix {
 
             this.minBalance = buffer.getLong();
 
-            if (optionModel == Poll.OPTION_MODEL_CHOICE) {
+            if (optionModel == Constants.VOTING_OPTION_MODEL_CHOICE) {
                 this.minNumberOfOptions = buffer.get();
                 this.maxNumberOfOptions = buffer.get();
             }
 
-            if (votingModel == Poll.VOTING_MODEL_ASSET) {
+            if (votingModel == Constants.VOTING_MODEL_ASSET) {
                 this.assetId = buffer.getLong();
             }
         }
@@ -447,12 +450,12 @@ public interface Attachment extends Appendix {
             this.optionModel = ((Long) attachmentData.get("optionModel")).byteValue();
             this.votingModel = ((Long) attachmentData.get("votingModel")).byteValue();
 
-            if (this.optionModel == Poll.OPTION_MODEL_CHOICE) {
+            if (this.optionModel == Constants.VOTING_OPTION_MODEL_CHOICE) {
                 this.minNumberOfOptions = ((Long) attachmentData.get("minNumberOfOptions")).byteValue();
                 this.maxNumberOfOptions = ((Long) attachmentData.get("maxNumberOfOptions")).byteValue();
             }
 
-            if (this.votingModel == Poll.VOTING_MODEL_ASSET) {
+            if (this.votingModel == Constants.VOTING_MODEL_ASSET) {
                 this.assetId = (Long) attachmentData.get("assetId");
             }
         }
@@ -486,11 +489,11 @@ public interface Attachment extends Appendix {
 
             size += 4 + 1 + 1;
 
-            if (optionModel == Poll.OPTION_MODEL_CHOICE) {
+            if (optionModel == Constants.VOTING_OPTION_MODEL_CHOICE) {
                 size += 1 + 1;
             }
 
-            if (votingModel == Poll.VOTING_MODEL_ASSET) {
+            if (votingModel == Constants.VOTING_MODEL_ASSET) {
                 size += 8;
             }
 
@@ -522,11 +525,11 @@ public interface Attachment extends Appendix {
             buffer.put(this.votingModel);
             buffer.putLong(minBalance);
 
-            if (optionModel == Poll.OPTION_MODEL_CHOICE) {
+            if (optionModel == Constants.VOTING_OPTION_MODEL_CHOICE) {
                 buffer.put(this.minNumberOfOptions);
                 buffer.put(this.maxNumberOfOptions);
             }
-            if (votingModel == Poll.VOTING_MODEL_ASSET) {
+            if (votingModel == Constants.VOTING_MODEL_ASSET) {
                 buffer.putLong(this.assetId);
             }
         }
@@ -544,14 +547,14 @@ public interface Attachment extends Appendix {
 
             attachment.put("optionModel", this.optionModel);
 
-            if (optionModel == Poll.OPTION_MODEL_CHOICE) {
+            if (optionModel == Constants.VOTING_OPTION_MODEL_CHOICE) {
                 attachment.put("minNumberOfOptions", this.minNumberOfOptions);
                 attachment.put("maxNumberOfOptions", this.maxNumberOfOptions);
             }
 
             attachment.put("votingModel", this.votingModel);
 
-            if (votingModel == Poll.VOTING_MODEL_ASSET) {
+            if (votingModel == Constants.VOTING_MODEL_ASSET) {
                 attachment.put("assetId", this.assetId);
             }
 

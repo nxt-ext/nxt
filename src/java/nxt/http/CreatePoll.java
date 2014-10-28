@@ -82,7 +82,7 @@ public final class CreatePoll extends CreateTransaction {
         byte optionModel;
         try {
             optionModel = Byte.parseByte(optionModelValue);
-            if (optionModel != Poll.OPTION_MODEL_BINARY && optionModel != Poll.OPTION_MODEL_CHOICE) {
+            if (optionModel != Constants.VOTING_OPTION_MODEL_BINARY && optionModel !=Constants.VOTING_OPTION_MODEL_CHOICE) {
                 return INCORRECT_OPTIONMODEL;
             }
         } catch (NumberFormatException e) {
@@ -92,8 +92,8 @@ public final class CreatePoll extends CreateTransaction {
         byte votingModel;
         try {
             votingModel = Byte.parseByte(votingModelValue);
-            if (votingModel != Poll.VOTING_MODEL_ACCOUNT && votingModel != Poll.VOTING_MODEL_ASSET &&
-                    votingModel != Poll.VOTING_MODEL_BALANCE) {
+            if (votingModel != Constants.VOTING_MODEL_ACCOUNT && votingModel != Constants.VOTING_MODEL_ASSET &&
+                    votingModel != Constants.VOTING_MODEL_BALANCE) {
                 return INCORRECT_VOTINGMODEL;
             }
         } catch (NumberFormatException e) {
@@ -101,7 +101,7 @@ public final class CreatePoll extends CreateTransaction {
         }
 
         String minBalanceValue = Convert.emptyToNull(req.getParameter("minBalance"));
-        long minBalance = Poll.DEFAULT_MIN_BALANCE;
+        long minBalance = Constants.VOTING_DEFAULT_MIN_BALANCE;
         if (minBalanceValue != null) {
             try {
                 minBalance = Long.parseLong(minBalanceValue);
@@ -119,7 +119,7 @@ public final class CreatePoll extends CreateTransaction {
         builder.minBalance(minBalance);
 
 
-        if (optionModel == Poll.OPTION_MODEL_CHOICE) {
+        if (optionModel == Constants.VOTING_OPTION_MODEL_CHOICE) {
             String minNumberOfOptionsValue = req.getParameter("minNumberOfOptions");
             String maxNumberOfOptionsValue = req.getParameter("maxNumberOfOptions");
 
@@ -152,7 +152,7 @@ public final class CreatePoll extends CreateTransaction {
             builder.optionsNumRange(minNumberOfOptions, maxNumberOfOptions);
         }
 
-        if (votingModel == Poll.VOTING_MODEL_ASSET) {
+        if (votingModel == Constants.VOTING_MODEL_ASSET) {
             String assetIdValue = Convert.emptyToNull(req.getParameter("assetId"));
 
             try {

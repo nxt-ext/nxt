@@ -1,5 +1,6 @@
 package nxt.http;
 
+import nxt.NxtException;
 import nxt.Poll;
 import nxt.db.DbIterator;
 import nxt.util.Convert;
@@ -14,21 +15,29 @@ public final class GetPollIds extends APIServlet.APIRequestHandler {
     static final GetPollIds instance = new GetPollIds();
 
     private GetPollIds() {
-        super(new APITag[] {APITag.VS}, "firstIndex", "lastIndex");
+        super(new APITag[]{APITag.VS}, "account", "firstIndex", "lastIndex");
     }
 
     @Override
-    JSONStreamAware processRequest(HttpServletRequest req) {
+    JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
+        String accountId = Convert.emptyToNull(req.getParameter("poll"));
 
         int firstIndex = ParameterParser.getFirstIndex(req);
         int lastIndex = ParameterParser.getLastIndex(req);
 
-        JSONArray pollIds = new JSONArray();
-        try (DbIterator<Poll> polls = Poll.getAllPolls(firstIndex, lastIndex)) {
-            while (polls.hasNext()) {
-                pollIds.add(Convert.toUnsignedLong(polls.next().getId()));
-            }
+        DbIterator<Poll> polls;
+
+        if (accountId == null) {
+            polls = Poll.getAllPolls(firstIndex, lastIndex);
+        } else {
+            polls = Poll.getPollsByAccount(Convert.parseUnsignedLong(accountId), firstIndex, lastIndex);
         }
+
+        JSONArray pollIds = new JSONArray();
+        while (polls.hasNext()) {
+            pollIds.add(Convert.toUnsignedLong(polls.next().getId()));
+        }
+
         JSONObject response = new JSONObject();
         response.put("pollIds", pollIds);
         return response;
