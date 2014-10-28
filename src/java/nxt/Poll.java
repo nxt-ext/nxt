@@ -35,11 +35,13 @@ public final class Poll extends CommonPollStructure {
 
         @Override
         protected void save(Connection con, Poll poll) throws SQLException {
-            try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO poll (id, name, description, "
-                    + "options, finish, option_model, voting_model, min_balance, asset_id, "
-                    + "min_num_options, max_num_options, finished, height) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
+            try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO poll (id, account_id, "
+                    + "name, description, options, finish, option_model, voting_model, min_balance, asset_id, "
+                    + "min_num_options, max_num_options, finished, height) "
+                    + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
                 int i = 0;
                 pstmt.setLong(++i, poll.getId());
+                pstmt.setLong(++i, poll.getAccountId());
                 pstmt.setString(++i, poll.getName());
                 pstmt.setString(++i, poll.getDescription());
                 String optionsJson = JSONArray.toJSONString(Arrays.asList(poll.getOptions()));

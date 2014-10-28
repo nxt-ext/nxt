@@ -59,10 +59,10 @@ public class VotePhased {
     private final long voterId;
     private final long estimatedTotal;
 
-    private VotePhased(Transaction transaction, Attachment.PendingPaymentVoteCasting attachment, long estimatedTotal) {
+    private VotePhased(Transaction transaction, long pendingTransactionId, long estimatedTotal) {
         this.id = transaction.getId();
         this.dbKey = voteDbKeyFactory.newKey(this.id);
-        this.pendingTransactionId = attachment.getPendingTransactionId();
+        this.pendingTransactionId = pendingTransactionId;
         this.voterId = transaction.getSenderId();
         this.estimatedTotal = estimatedTotal;
     }
@@ -101,7 +101,7 @@ public class VotePhased {
     }
 
     static boolean addVote(PhasedTransactionPoll poll, Account voter,
-                        Transaction transaction, Attachment.PendingPaymentVoteCasting attachment)
+                        Transaction transaction)
             throws NxtException.IllegalStateException {
 
         long[] voters = poll.getPossibleVoters();
@@ -128,7 +128,7 @@ public class VotePhased {
             }
         }
 
-        VotePhased vote = new VotePhased(transaction, attachment, estimate);
+        VotePhased vote = new VotePhased(transaction, poll.getId(), estimate);
         voteTable.insert(vote);
         return estimate >= poll.getQuorum();
     }

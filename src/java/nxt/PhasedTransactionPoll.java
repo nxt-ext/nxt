@@ -2,6 +2,7 @@ package nxt;
 
 import nxt.db.*;
 import nxt.util.Logger;
+
 import java.sql.*;
 
 public class PhasedTransactionPoll extends CommonPollStructure {
@@ -62,7 +63,8 @@ public class PhasedTransactionPoll extends CommonPollStructure {
 
     final static PendingTransactionsTable pendingTransactionsTable = new PendingTransactionsTable();
 
-    static void init() {}
+    static void init() {
+    }
 
     public PhasedTransactionPoll(Long id, long accountId, int finishBlockHeight,
                                  byte votingModel, long quorum, long voteThreshold,
@@ -81,9 +83,9 @@ public class PhasedTransactionPoll extends CommonPollStructure {
         this.dbKey = pollDbKeyFactory.newKey(this.id);
 
         String votersCombined = rs.getString("possible_voters");
-        if(votersCombined.isEmpty()){
+        if (votersCombined.isEmpty()) {
             this.possibleVoters = null;
-        }else {
+        } else {
             String[] voterStrings = votersCombined.split(",");
             this.possibleVoters = new long[voterStrings.length];
             for (int i = 0; i < voterStrings.length; i++) {
@@ -111,7 +113,7 @@ public class PhasedTransactionPoll extends CommonPollStructure {
 
     void save(Connection con) throws SQLException {
         String voters = "";
-        if(getPossibleVoters()!=null) {
+        if (getPossibleVoters() != null) {
             StringBuilder votersBuilder = new StringBuilder();
             for (long voter : getPossibleVoters()) {
                 votersBuilder.append(voter);
@@ -143,8 +145,9 @@ public class PhasedTransactionPoll extends CommonPollStructure {
         pendingTransactionsTable.insert(poll);
     }
 
-    static boolean exists(Connection con, long id) {
-        try (PreparedStatement pstmt = con.prepareStatement("SELECT COUNT (*) FROM pending_transactions where id=?")) {
+    static boolean exists(long id) {
+        try (Connection con = Db.getConnection();
+             PreparedStatement pstmt = con.prepareStatement("SELECT COUNT (*) FROM pending_transactions where id=?")) {
             pstmt.setLong(1, id);
             ResultSet rs = pstmt.executeQuery();
             int cnt = rs.getInt(1);

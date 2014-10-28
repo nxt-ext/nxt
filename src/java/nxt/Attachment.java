@@ -96,20 +96,32 @@ public interface Attachment extends Appendix {
     };
 
     public final static class PendingPaymentVoteCasting extends AbstractAttachment {
-        private final long pendingTransactionId;
+        private final long[] pendingTransactionsIds;
 
         PendingPaymentVoteCasting(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
             super(buffer, transactionVersion);
-            pendingTransactionId = buffer.getLong();
+            byte length = buffer.get();
+            pendingTransactionsIds = new long[length];
+            for(int i=0; i < length; i++) {
+                pendingTransactionsIds[i] = buffer.getLong();
+            }
         }
 
         PendingPaymentVoteCasting(JSONObject attachmentData) {
             super(attachmentData);
-            pendingTransactionId = (Long)(attachmentData.get("pendingTxId"));
+            JSONArray jsArr = (JSONArray) (attachmentData.get("pendingTransactions"));
+            pendingTransactionsIds = new long[jsArr.size()];
+            for (int i = 0; i < pendingTransactionsIds.length; i++) {
+                pendingTransactionsIds[i] =  (long)jsArr.get(i);
+            }
         }
 
         PendingPaymentVoteCasting(long pendingTransactionId) {
-            this.pendingTransactionId = pendingTransactionId;
+            this.pendingTransactionsIds = new long[]{pendingTransactionId};
+        }
+
+        PendingPaymentVoteCasting(long[] pendingTransactionsIds) {
+            this.pendingTransactionsIds = pendingTransactionsIds;
         }
 
         @Override
@@ -119,17 +131,24 @@ public interface Attachment extends Appendix {
 
         @Override
         int getMySize() {
-            return 8;
+            return 1+8*pendingTransactionsIds.length;
         }
 
         @Override
         void putMyBytes(ByteBuffer buffer) {
-            buffer.putLong(pendingTransactionId);
+            buffer.put((byte)pendingTransactionsIds.length);
+            for(long id:pendingTransactionsIds) {
+                buffer.putLong(id);
+            }
         }
 
         @Override
         void putMyJSON(JSONObject attachment) {
-            attachment.put("pendingTxId", pendingTransactionId);
+            JSONArray ja = new JSONArray();
+            for(long pendingTransactionId: pendingTransactionsIds) {
+                ja.add(pendingTransactionId);
+            }
+            attachment.put("pendingTransactions", ja);
         }
 
         @Override
@@ -137,8 +156,8 @@ public interface Attachment extends Appendix {
             return TransactionType.Payment.PENDING_PAYMENT_VOTE_CASTING;
         }
 
-        public long getPendingTransactionId() {
-            return pendingTransactionId;
+        public long[] getPendingTransactionsIds() {
+            return pendingTransactionsIds;
         }
 
     }

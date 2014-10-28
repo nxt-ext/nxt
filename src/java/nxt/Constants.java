@@ -27,6 +27,8 @@ public final class Constants {
     public static final long POLL_FEE_NQT = 10 * ONE_NXT;
     public static final long TWOPHASED_FEE_NQT = ONE_NXT;
 
+    public static final byte MAX_VOTES_PER_VOTING_TRANSACTION = 10;
+
     public static final int MAX_ALIAS_URI_LENGTH = 1000;
     public static final int MAX_ALIAS_LENGTH = 100;
 

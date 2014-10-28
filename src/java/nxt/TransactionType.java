@@ -301,31 +301,35 @@ public abstract class TransactionType {
                 }
 
                 Attachment.PendingPaymentVoteCasting att = (Attachment.PendingPaymentVoteCasting)transaction.getAttachment();
-                long pendingTxId = att.getPendingTransactionId();
-              /*
-                todo:fix
-                try(Connection con = Db.getConnection()) {
-                    if (!PhasedTransactionPoll.exists(con, pendingTxId)) {
+                long[] pendingIds = att.getPendingTransactionsIds();
+                if(pendingIds.length > Constants.MAX_VOTES_PER_VOTING_TRANSACTION){
+                    throw new NxtException.NotValidException("No more than 10 votes allowed for two-phased multivoting");
+                }
+
+                /*
+                todo: check?
+                for(long pendingId : pendingIds) {
+                    if (!PhasedTransactionPoll.exists(pendingId)) {
                         throw new NxtException.NotValidException("Wrong pending transaction");
                     }
-                } catch (SQLException e) {
-                    throw new NxtException.NotValidException("Can't get connection: " ,e);
-                }*/
+                } */
             }
 
             @Override
             final void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
-                Attachment.PendingPaymentVoteCasting attachment = (Attachment.PendingPaymentVoteCasting)transaction.getAttachment();
-                long pendingTxId = attachment.getPendingTransactionId();
-                PhasedTransactionPoll poll = PhasedTransactionPoll.byId(pendingTxId);
-                if (poll != null && !poll.isFinished()) { //todo: else
-                    try {
-                        if (VotePhased.addVote(poll, senderAccount, transaction, attachment)) {
-                            TransactionDb.findTransaction(pendingTxId).release();
-                            PhasedTransactionPoll.finishPoll(poll);
+                Attachment.PendingPaymentVoteCasting attachment = (Attachment.PendingPaymentVoteCasting) transaction.getAttachment();
+                long[] pendingTransactionsIds = attachment.getPendingTransactionsIds();
+                for (long pendingTransactionId : pendingTransactionsIds) {
+                    PhasedTransactionPoll poll = PhasedTransactionPoll.byId(pendingTransactionId);
+                    if (!poll.isFinished()) { //todo: else
+                        try {
+                            if (VotePhased.addVote(poll, senderAccount, transaction)) {
+                                TransactionDb.findTransaction(pendingTransactionId).release();
+                                PhasedTransactionPoll.finishPoll(poll);
+                            }
+                        } catch (NxtException.NotValidException | NxtException.IllegalStateException e) {
+                            e.printStackTrace();  //todo:
                         }
-                    } catch (NxtException.NotValidException | NxtException.IllegalStateException e) {
-                        e.printStackTrace();  //todo:
                     }
                 }
             }
