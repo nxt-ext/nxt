@@ -403,7 +403,7 @@ public interface Attachment extends Appendix {
             this.pollDescription = Convert.readString(buffer, buffer.getShort(), Constants.MAX_POLL_DESCRIPTION_LENGTH);
 
             this.finishBlockHeight = buffer.getInt();
-            if(finishBlockHeight < Nxt.getBlockchain().getHeight() + 10){
+            if(finishBlockHeight <= Nxt.getBlockchain().getHeight()){
                 throw new NxtException.NotValidException("Invalid finishing height");
             }
 
