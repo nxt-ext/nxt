@@ -108,9 +108,6 @@ public enum CurrencyType {
                 if (!validators.contains(RESERVABLE)) {
                     throw new NxtException.NotValidException("Claimable currency must be reservable");
                 }
-                if (issuanceAttachment.getCurrentSupply() != 0) {
-                    throw new NxtException.NotValidException("Claimable currency should have initial supply 0");
-                }
             }
             if (transaction.getType() == MonetarySystem.RESERVE_CLAIM) {
                 if (currency == null || !currency.isActive()) {
