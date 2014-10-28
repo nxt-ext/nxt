@@ -76,7 +76,7 @@ public final class Db {
     static {
         long maxCacheSize = Nxt.getIntProperty("nxt.dbCacheKB");
         if (maxCacheSize == 0) {
-            maxCacheSize = Runtime.getRuntime().maxMemory() / (1024 * 2);
+            maxCacheSize = Math.min(256, Math.max(16, (Runtime.getRuntime().maxMemory() / (1024 * 1024) - 128)/2)) * 1024;
         }
         String dbUrl = Constants.isTestnet ? Nxt.getStringProperty("nxt.testDbUrl") : Nxt.getStringProperty("nxt.dbUrl");
         if (! dbUrl.contains("CACHE_SIZE=")) {
