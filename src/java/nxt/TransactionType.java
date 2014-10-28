@@ -320,12 +320,12 @@ public abstract class TransactionType {
                 Attachment.PendingPaymentVoteCasting attachment = (Attachment.PendingPaymentVoteCasting) transaction.getAttachment();
                 long[] pendingTransactionsIds = attachment.getPendingTransactionsIds();
                 for (long pendingTransactionId : pendingTransactionsIds) {
-                    PhasedTransactionPoll poll = PhasedTransactionPoll.byId(pendingTransactionId);
+                    PendingTransactionPoll poll = PendingTransactionPoll.byId(pendingTransactionId);
                     if (!poll.isFinished()) { //todo: else
                         try {
                             if (VotePhased.addVote(poll, senderAccount, transaction)) {
                                 TransactionDb.findTransaction(pendingTransactionId).release();
-                                PhasedTransactionPoll.finishPoll(poll);
+                                PendingTransactionPoll.finishPoll(poll);
                             }
                         } catch (NxtException.NotValidException | NxtException.IllegalStateException e) {
                             e.printStackTrace();  //todo:

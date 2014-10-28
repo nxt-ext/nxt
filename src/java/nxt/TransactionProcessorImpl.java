@@ -42,7 +42,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                 int height = block.getHeight();
                 if(height >= Constants.TWO_PHASED_TRANSACTIONS_BLOCK){
                     DbIterator<Long> txIdsToRefuse =
-                            PhasedTransactionPoll.pendingTransactionsTable.finishing(height);
+                            PendingTransactionPoll.pendingTransactionsTable.finishing(height);
                     for(Long txId:txIdsToRefuse){
                         Transaction tx = TransactionDb.findTransaction(txId);
                         try {

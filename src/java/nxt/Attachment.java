@@ -425,6 +425,9 @@ public interface Attachment extends Appendix {
             if (optionModel == Constants.VOTING_OPTION_MODEL_CHOICE) {
                 this.minNumberOfOptions = buffer.get();
                 this.maxNumberOfOptions = buffer.get();
+                if(this.minNumberOfOptions > this.maxNumberOfOptions || this.maxNumberOfOptions == 0){
+                    throw new NxtException.NotValidException("Invalid min or max for a poll");
+                }
             }
 
             if (votingModel == Constants.VOTING_MODEL_ASSET) {

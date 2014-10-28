@@ -2,30 +2,29 @@ package nxt;
 
 import nxt.db.*;
 import nxt.util.Logger;
-
 import java.sql.*;
 
-public class PhasedTransactionPoll extends CommonPollStructure {
-    private final Long id;   // tx id
+public class PendingTransactionPoll extends AbstractPoll {
+    private final Long id;
     private final DbKey dbKey;
     private long[] possibleVoters;
     private long quorum;
 
-    private static final DbKey.LongKeyFactory<PhasedTransactionPoll> pollDbKeyFactory = new DbKey.LongKeyFactory<PhasedTransactionPoll>("id") {
+    private static final DbKey.LongKeyFactory<PendingTransactionPoll> pollDbKeyFactory = new DbKey.LongKeyFactory<PendingTransactionPoll>("id") {
         @Override
-        public DbKey newKey(PhasedTransactionPoll poll) {
+        public DbKey newKey(PendingTransactionPoll poll) {
             return poll.dbKey;
         }
     };
 
 
-    final static class PendingTransactionsTable extends VersionedEntityDbTable<PhasedTransactionPoll> {
+    final static class PendingTransactionsTable extends VersionedEntityDbTable<PendingTransactionPoll> {
 
         protected PendingTransactionsTable() {
             this(pollDbKeyFactory);
         }
 
-        protected PendingTransactionsTable(DbKey.Factory<PhasedTransactionPoll> dbKeyFactory) {
+        protected PendingTransactionsTable(DbKey.Factory<PendingTransactionPoll> dbKeyFactory) {
             super("pending_transactions", dbKeyFactory);
         }
 
@@ -47,16 +46,16 @@ public class PhasedTransactionPoll extends CommonPollStructure {
         }
 
         @Override
-        protected PhasedTransactionPoll load(Connection con, ResultSet rs) throws SQLException {
+        protected PendingTransactionPoll load(Connection con, ResultSet rs) throws SQLException {
             try {
-                return new PhasedTransactionPoll(rs);
+                return new PendingTransactionPoll(rs);
             } catch (Exception e) {
                 throw new SQLException(e);
             }
         }
 
         @Override
-        protected void save(Connection con, PhasedTransactionPoll poll) throws SQLException {
+        protected void save(Connection con, PendingTransactionPoll poll) throws SQLException {
             poll.save(con);
         }
     }
@@ -66,9 +65,9 @@ public class PhasedTransactionPoll extends CommonPollStructure {
     static void init() {
     }
 
-    public PhasedTransactionPoll(Long id, long accountId, int finishBlockHeight,
-                                 byte votingModel, long quorum, long voteThreshold,
-                                 long assetId, long[] possibleVoters) {
+    public PendingTransactionPoll(Long id, long accountId, int finishBlockHeight,
+                                  byte votingModel, long quorum, long voteThreshold,
+                                  long assetId, long[] possibleVoters) {
         super(accountId, finishBlockHeight, votingModel, assetId, voteThreshold);
         this.id = id;
         this.dbKey = pollDbKeyFactory.newKey(this.id);
@@ -76,7 +75,7 @@ public class PhasedTransactionPoll extends CommonPollStructure {
         this.possibleVoters = possibleVoters;
     }
 
-    public PhasedTransactionPoll(ResultSet rs) throws SQLException {
+    public PendingTransactionPoll(ResultSet rs) throws SQLException {
         super(rs);
         this.id = rs.getLong("id");
         this.quorum = rs.getLong("quorum");
@@ -98,7 +97,7 @@ public class PhasedTransactionPoll extends CommonPollStructure {
         return id;
     }
 
-    public static PhasedTransactionPoll byId(long id) {
+    public static PendingTransactionPoll byId(long id) {
         return pendingTransactionsTable.getBy(new DbClause.LongClause("id", id));
     }
 
@@ -140,7 +139,7 @@ public class PhasedTransactionPoll extends CommonPollStructure {
         }
     }
 
-    public static void finishPoll(PhasedTransactionPoll poll) {
+    public static void finishPoll(PendingTransactionPoll poll) {
         poll.setFinished(true);
         pendingTransactionsTable.insert(poll);
     }

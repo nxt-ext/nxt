@@ -19,7 +19,7 @@ public final class CreatePoll extends CreateTransaction {
         super(new APITag[] {APITag.VS, APITag.CREATE_TRANSACTION},
                 "name", "description", "finishHeight", "optionModel", "votingModel",
                 "minNumberOfOptions", "maxNumberOfOptions", "minBalance", "assetId",
-                "option1","option2","option3"); // hardcoded to 3 options for testing todo: fix ?
+                "option1","option2","option3");
     }
 
     @Override

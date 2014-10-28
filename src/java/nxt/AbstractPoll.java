@@ -3,7 +3,11 @@ package nxt;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-public class CommonPollStructure {
+/**
+ * Abstract poll structure, parent for concrete poll implementations e.g. Poll or PendingTransactionPoll
+ */
+
+public class AbstractPoll {
     protected final long accountId;
     protected final int finishBlockHeight;
     protected final byte votingModel;
@@ -12,7 +16,7 @@ public class CommonPollStructure {
     protected final long minBalance;
     protected boolean finished;
 
-    public CommonPollStructure(long accountId, int finishBlockHeight, byte votingModel, long assetId, long minBalance) {
+    public AbstractPoll(long accountId, int finishBlockHeight, byte votingModel, long assetId, long minBalance) {
         this.accountId = accountId;
         this.finishBlockHeight = finishBlockHeight;
         this.votingModel = votingModel;
@@ -21,7 +25,7 @@ public class CommonPollStructure {
         this.finished = false;
     }
 
-    public CommonPollStructure(ResultSet rs) throws SQLException {
+    public AbstractPoll(ResultSet rs) throws SQLException {
         this.accountId = rs.getLong("account_id");
         this.finishBlockHeight = rs.getInt("finish");
         this.votingModel = rs.getByte("voting_model");
@@ -54,7 +58,7 @@ public class CommonPollStructure {
 
     public void setFinished(boolean finished) { this.finished = finished; }
 
-    static long calcWeight(CommonPollStructure pollStructure, Account voter) throws NxtException.IllegalStateException {
+    static long calcWeight(AbstractPoll pollStructure, Account voter) throws NxtException.IllegalStateException {
         long weight = 0;
 
         switch (pollStructure.votingModel) {

@@ -100,7 +100,7 @@ public class VotePhased {
         }
     }
 
-    static boolean addVote(PhasedTransactionPoll poll, Account voter,
+    static boolean addVote(PendingTransactionPoll poll, Account voter,
                         Transaction transaction)
             throws NxtException.IllegalStateException {
 
@@ -109,7 +109,7 @@ public class VotePhased {
             return false; //todo: move to validate only?
         }
 
-        long weight = CommonPollStructure.calcWeight(poll, voter);
+        long weight = AbstractPoll.calcWeight(poll, voter);
 
         long estimate = voteTable.lastEstimate(poll.getId()) + weight;
 
@@ -118,7 +118,7 @@ public class VotePhased {
             DbIterator<VotePhased> votesIterator = voteTable.getManyBy(clause, 0, -1);
             estimate = 0;
             while(votesIterator.hasNext()){
-                long w = CommonPollStructure.calcWeight(poll, Account.getAccount(votesIterator.next().voterId));
+                long w = AbstractPoll.calcWeight(poll, Account.getAccount(votesIterator.next().voterId));
                 if(w >= poll.minBalance) {
                     estimate += w;
                 }

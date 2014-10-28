@@ -1,15 +1,14 @@
 package nxt;
 
 import nxt.db.*;
-
 import nxt.util.*;
 import org.json.simple.JSONArray;
 import org.json.simple.parser.JSONParser;
-
 import java.sql.*;
 import java.util.*;
 
-public final class Poll extends CommonPollStructure {
+
+public final class Poll extends AbstractPoll {
     private static final DbKey.LongKeyFactory<Poll> pollDbKeyFactory = new DbKey.LongKeyFactory<Poll>("id") {
         @Override
         public DbKey newKey(Poll poll) {
@@ -283,7 +282,7 @@ public final class Poll extends CommonPollStructure {
         final long[][] partialResult = new long[options.length][2];
 
         final Account voter = Account.getAccount(vote.getVoterId());
-        final long weight = CommonPollStructure.calcWeight(this, voter);
+        final long weight = AbstractPoll.calcWeight(this, voter);
 
         final byte[] optVals = vote.getVote();
 

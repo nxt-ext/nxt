@@ -532,9 +532,9 @@ public interface Appendix {
         void apply(Transaction transaction, Account senderAccount, Account recipientAccount) {
             Long id = transaction.getId();
 
-            PhasedTransactionPoll poll = new PhasedTransactionPoll(id, senderAccount.getId(), maxHeight,
+            PendingTransactionPoll poll = new PendingTransactionPoll(id, senderAccount.getId(), maxHeight,
                     votingModel, quorum, voteThreshold, assetId, possibleVoters);
-            PhasedTransactionPoll.pendingTransactionsTable.insert(poll);
+            PendingTransactionPoll.pendingTransactionsTable.insert(poll);
         }
 
         void commit(Transaction transaction, Account senderAccount, Account recipientAccount) {
