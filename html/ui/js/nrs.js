@@ -55,7 +55,7 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.currentPage = "dashboard";
 	NRS.currentSubPage = "";
 	NRS.pageNumber = 1;
-	NRS.itemsPerPage = 50;
+	//NRS.itemsPerPage = 50;  /* Now set in nrs.settings.js */
 
 	NRS.pages = {};
 	NRS.incoming = {};

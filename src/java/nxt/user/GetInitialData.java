@@ -15,7 +15,6 @@ import org.json.simple.JSONStreamAware;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.math.BigInteger;
-import java.util.List;
 
 public final class GetInitialData extends UserServlet.UserRequestHandler {
 
