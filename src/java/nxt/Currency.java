@@ -89,6 +89,7 @@ public final class Currency {
     private final byte maxDifficulty;
     private final byte ruleset;
     private final byte algorithm;
+    private final byte decimals;
     private long currentSupply;
 
     private long currentReservePerUnitNQT;
@@ -108,6 +109,7 @@ public final class Currency {
         this.maxDifficulty = attachment.getMaxDifficulty();
         this.ruleset = attachment.getRuleset();
         this.algorithm = attachment.getAlgorithm();
+        this.decimals = attachment.getDecimals();
         this.currentSupply = attachment.getCurrentSupply();
         this.currentReservePerUnitNQT = 0;
     }
@@ -127,6 +129,7 @@ public final class Currency {
         this.maxDifficulty = rs.getByte("max_difficulty");
         this.ruleset = rs.getByte("ruleset");
         this.algorithm = rs.getByte("algorithm");
+        this.decimals = rs.getByte("decimals");
         this.currentSupply = rs.getLong("current_supply");
         this.currentReservePerUnitNQT = rs.getLong("current_reserve_per_unit_nqt");
     }
@@ -134,8 +137,8 @@ public final class Currency {
     private void save(Connection con) throws SQLException {
         try (PreparedStatement pstmt = con.prepareStatement("MERGE INTO currency (id, account_id, name, code, "
                 + "description, type, total_supply, issuance_height, min_reserve_per_unit_nqt, "
-                + "min_difficulty, max_difficulty, ruleset, algorithm, current_supply, current_reserve_per_unit_nqt, height, latest) "
-                + "KEY (id, height) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, TRUE)")) {
+                + "min_difficulty, max_difficulty, ruleset, algorithm, decimals, current_supply, current_reserve_per_unit_nqt, height, latest) "
+                + "KEY (id, height) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, TRUE)")) {
             int i = 0;
             pstmt.setLong(++i, this.getId());
             pstmt.setLong(++i, this.getAccountId());
@@ -150,6 +153,7 @@ public final class Currency {
             pstmt.setByte(++i, this.getMaxDifficulty());
             pstmt.setByte(++i, this.getRuleset());
             pstmt.setByte(++i, this.getAlgorithm());
+            pstmt.setByte(++i, this.getDecimals());
             pstmt.setLong(++i, this.getCurrentSupply());
             pstmt.setLong(++i, this.getCurrentReservePerUnitNQT());
             pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
@@ -207,6 +211,10 @@ public final class Currency {
 
     public byte getAlgorithm() {
         return algorithm;
+    }
+
+    public byte getDecimals() {
+        return decimals;
     }
 
     public long getCurrentSupply() {

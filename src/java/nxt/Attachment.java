@@ -6,7 +6,6 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 import java.nio.ByteBuffer;
-import java.util.Arrays;
 import java.util.Collections;
 
 public interface Attachment extends Appendix {
@@ -1521,6 +1520,7 @@ public interface Attachment extends Appendix {
         private final byte maxDifficulty;
         private final byte ruleset;
         private final byte algorithm;
+        private final byte decimals;
 
         MonetarySystemCurrencyIssuance(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
             super(buffer, transactionVersion);
@@ -1538,6 +1538,7 @@ public interface Attachment extends Appendix {
             this.maxDifficulty = buffer.get();
             this.ruleset = buffer.get();
             this.algorithm = buffer.get();
+            this.decimals = buffer.get();
         }
 
         MonetarySystemCurrencyIssuance(JSONObject attachmentData) throws NxtException.NotValidException {
@@ -1554,11 +1555,12 @@ public interface Attachment extends Appendix {
             this.maxDifficulty = ((Long)attachmentData.get("maxDifficulty")).byteValue();
             this.ruleset = ((Long)attachmentData.get("ruleset")).byteValue();
             this.algorithm = ((Long)attachmentData.get("algorithm")).byteValue();
+            this.decimals = ((Long) attachmentData.get("decimals")).byteValue();
         }
 
         public MonetarySystemCurrencyIssuance(String name, String code, String description, byte type, long totalSupply,
                                               long currentSupply, int issuanceHeight, long minReservePerUnitNQT, byte minDifficulty, byte maxDifficulty,
-                                              byte ruleset, byte algorithm) {
+                                              byte ruleset, byte algorithm, byte decimals) {
             this.name = name;
             this.code = code;
             this.description = description;
@@ -1571,6 +1573,7 @@ public interface Attachment extends Appendix {
             this.maxDifficulty = maxDifficulty;
             this.ruleset = ruleset;
             this.algorithm = algorithm;
+            this.decimals = decimals;
         }
 
         @Override
@@ -1581,7 +1584,7 @@ public interface Attachment extends Appendix {
         @Override
         int getMySize() {
             return 1 + Convert.toBytes(name).length + Constants.CURRENCY_CODE_LENGTH + 2 +
-                    Convert.toBytes(description).length + 1 + 8 + 8 + 4 + 8 + 1 + 1 + 1 + 1;
+                    Convert.toBytes(description).length + 1 + 8 + 8 + 4 + 8 + 1 + 1 + 1 + 1 + 1;
         }
 
         @Override
@@ -1602,6 +1605,7 @@ public interface Attachment extends Appendix {
             buffer.put(maxDifficulty);
             buffer.put(ruleset);
             buffer.put(algorithm);
+            buffer.put(decimals);
         }
 
         @Override
@@ -1618,6 +1622,7 @@ public interface Attachment extends Appendix {
             attachment.put("maxDifficulty", maxDifficulty & 0xFF);
             attachment.put("ruleset", ruleset & 0xFF);
             attachment.put("algorithm", algorithm & 0xFF);
+            attachment.put("decimals", decimals & 0xFF);
         }
 
         @Override
@@ -1671,6 +1676,10 @@ public interface Attachment extends Appendix {
 
         public byte getAlgorithm() {
             return algorithm;
+        }
+
+        public byte getDecimals() {
+            return decimals;
         }
     }
 

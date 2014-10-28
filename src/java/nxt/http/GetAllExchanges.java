@@ -14,7 +14,7 @@ public final class GetAllExchanges extends APIServlet.APIRequestHandler {
     static final GetAllExchanges instance = new GetAllExchanges();
 
     private GetAllExchanges() {
-        super(new APITag[] {APITag.MS}, "timestamp", "firstIndex", "lastIndex");
+        super(new APITag[] {APITag.MS}, "timestamp", "firstIndex", "lastIndex", "includeCurrencyInfo");
     }
     
     @Override
@@ -22,6 +22,7 @@ public final class GetAllExchanges extends APIServlet.APIRequestHandler {
         final int timestamp = ParameterParser.getTimestamp(req);
         int firstIndex = ParameterParser.getFirstIndex(req);
         int lastIndex = ParameterParser.getLastIndex(req);
+        boolean includeCurrencyInfo = !"false".equalsIgnoreCase(req.getParameter("includeCurrencyInfo"));
 
         JSONObject response = new JSONObject();
         JSONArray exchanges = new JSONArray();
@@ -33,7 +34,7 @@ public final class GetAllExchanges extends APIServlet.APIRequestHandler {
                     }
                 }, firstIndex, lastIndex)) {
             while (exchangeIterator.hasNext()) {
-                exchanges.add(JSONData.exchange(exchangeIterator.next()));
+                exchanges.add(JSONData.exchange(exchangeIterator.next(), includeCurrencyInfo));
             }
         }
         response.put("exchanges", exchanges);

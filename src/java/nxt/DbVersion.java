@@ -402,6 +402,7 @@ final class DbVersion {
                 apply("CREATE INDEX IF NOT EXISTS bid_order_creation_idx ON bid_order (creation_height DESC)");
             case 126:
                 BlockchainProcessorImpl.getInstance().validateAtNextScan();
+                BlockchainProcessorImpl.getInstance().forceScanAtStart();
                 apply(null);
             case 127:
                 apply("CREATE UNIQUE INDEX IF NOT EXISTS block_timestamp_idx ON block (timestamp DESC)");
@@ -411,7 +412,7 @@ final class DbVersion {
                         + "description VARCHAR, type INT NOT NULL, total_supply BIGINT NOT NULL, "
                         + "issuance_height INT NOT NULL, min_reserve_per_unit_nqt BIGINT NOT NULL, min_difficulty TINYINT NOT NULL, "
                         + "max_difficulty TINYINT NOT NULL, ruleset TINYINT NOT NULL, algorithm TINYINT NOT NULL, current_supply BIGINT NOT NULL, "
-                        + "current_reserve_per_unit_nqt BIGINT NOT NULL, "
+                        + "current_reserve_per_unit_nqt BIGINT NOT NULL, decimals TINYINT NOT NULL DEFAULT 0,"
                         + "height INT NOT NULL, latest BOOLEAN NOT NULL DEFAULT TRUE)");
             case 129:
                 apply("CREATE UNIQUE INDEX IF NOT EXISTS currency_id_height_idx ON currency (id, height DESC)");
@@ -476,21 +477,18 @@ final class DbVersion {
             case 152:
                 apply("CREATE INDEX IF NOT EXISTS currency_transfer_recipient_id_idx ON currency_transfer (recipient_id, height DESC)");
             case 153:
-                BlockchainProcessorImpl.getInstance().forceScanAtStart();
-                apply(null);
-            case 154:
                 apply("CREATE INDEX IF NOT EXISTS account_currency_units_idx ON account_currency (units DESC)");
-            case 155:
+            case 154:
                 apply("CREATE UNIQUE INDEX IF NOT EXISTS currency_name_idx ON currency (name_lower, height DESC)");
-            case 156:
+            case 155:
                 apply("CREATE UNIQUE INDEX IF NOT EXISTS currency_code_idx ON currency (code, height DESC)");
-            case 157:
+            case 156:
                 apply("CREATE INDEX IF NOT EXISTS buy_offer_rate_height_idx ON buy_offer (rate DESC, creation_height ASC)");
-            case 158:
+            case 157:
                 apply("CREATE INDEX IF NOT EXISTS sell_offer_rate_height_idx ON sell_offer (rate ASC, creation_height ASC)");
-            case 159:
+            case 158:
                 apply("CREATE UNIQUE INDEX IF NOT EXISTS currency_mint_id_idx ON currency_mint (id)");
-            case 160:
+            case 159:
                 return;
             default:
                 throw new RuntimeException("Database inconsistent with code, probably trying to run older code on newer database");
