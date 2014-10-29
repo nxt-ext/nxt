@@ -4,7 +4,6 @@ import nxt.crypto.HashFunction;
 import nxt.db.DbClause;
 import nxt.db.DbIterator;
 import nxt.db.DbKey;
-import nxt.db.EntityDbTable;
 import nxt.db.VersionedEntityDbTable;
 
 import java.math.BigInteger;

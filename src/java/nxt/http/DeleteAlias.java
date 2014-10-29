@@ -1,15 +1,14 @@
 package nxt.http;
 
-import static nxt.http.JSONResponses.INCORRECT_ALIAS_OWNER;
-
-import javax.servlet.http.HttpServletRequest;
-
-import org.json.simple.JSONStreamAware;
-
 import nxt.Account;
 import nxt.Alias;
 import nxt.Attachment;
 import nxt.NxtException;
+import org.json.simple.JSONStreamAware;
+
+import javax.servlet.http.HttpServletRequest;
+
+import static nxt.http.JSONResponses.INCORRECT_ALIAS_OWNER;
 
 
 public final class DeleteAlias extends CreateTransaction {
