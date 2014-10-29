@@ -46,14 +46,18 @@ var NRS = (function(NRS, $, undefined) {
 			}
 		});
 
-		/*if (NRS.inApp) {
+		if (NRS.inApp) {
 			//user uses an old version which does not supply the platform / version
+			if (NRS.appPlatform != "" && NRS.appVersion != "" ) {
+				$("#secondary_dashboard_message").removeClass("alert-success").addClass("alert-danger").html("A new version of the NXT Wallet application is available for download <a href='http://nxt.org/get-started-nxt/download-nxt-software' target='_blank'>here</a>. You must install it manually due to changes in the NRS startup procedure.").show();
+			}
+			/* Old code check
 			var noticeDate = new Date(2014, 9, 28);
 
 			if (new Date() > noticeDate) {
 				$("#secondary_dashboard_message").removeClass("alert-success").addClass("alert-danger").html("A new version of the NXT Wallet application is available for download <a href='http://nxt.org/get-started-nxt/download-nxt-software' target='_blank'>here</a>. You must install it manually due to changes in the NRS startup procedure.").show();
-			}
-		}*/
+			}*/
+		}
 	}
 
 	NRS.checkForNewVersion = function() {
