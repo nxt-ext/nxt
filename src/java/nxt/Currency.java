@@ -65,6 +65,19 @@ public final class Currency {
     }
 
     static void addCurrency(Transaction transaction, Attachment.MonetarySystemCurrencyIssuance attachment) {
+        Currency oldCurrency;
+        if ((oldCurrency = Currency.getCurrencyByCode(attachment.getCode())) != null) {
+            oldCurrency.delete(transaction.getSenderId());
+        }
+        if ((oldCurrency = Currency.getCurrencyByCode(attachment.getName().toUpperCase())) != null) {
+            oldCurrency.delete(transaction.getSenderId());
+        }
+        if ((oldCurrency = Currency.getCurrencyByName(attachment.getName())) != null) {
+            oldCurrency.delete(transaction.getSenderId());
+        }
+        if ((oldCurrency = Currency.getCurrencyByName(attachment.getCode())) != null) {
+            oldCurrency.delete(transaction.getSenderId());
+        }
         currencyTable.insert(new Currency(transaction, attachment));
     }
 
@@ -272,6 +285,34 @@ public final class Currency {
 
     public DbIterator<CurrencyTransfer> getTransfers(int from, int to) {
         return CurrencyTransfer.getCurrencyTransfers(this.currencyId, from, to);
+    }
+
+    boolean isSoleOwner(long ownerAccountId) {
+        try (DbIterator<Account.AccountCurrency> accountCurrencies = Account.getCurrencyAccounts(this.currencyId, 0, -1)) {
+            return accountCurrencies.hasNext() && accountCurrencies.next().getAccountId() == ownerAccountId && ! accountCurrencies.hasNext();
+        }
+    }
+
+    void delete(long ownerAccountId) {
+        if (!isSoleOwner(ownerAccountId)) {
+            // shouldn't happen as ownership has already been checked in validate, but as a safety check
+            throw new IllegalStateException("Currency " + Convert.toUnsignedLong(currencyId) + " not entirely owned by " + Convert.toUnsignedLong(ownerAccountId));
+        }
+        Account ownerAccount = Account.getAccount(ownerAccountId);
+        if ((type & CurrencyType.RESERVABLE.getCode()) != 0) {
+            Currency.claimReserve(ownerAccount, currencyId, ownerAccount.getCurrencyUnits(currencyId));
+            CurrencyFounder.remove(currencyId);
+        }
+        if ((type & CurrencyType.EXCHANGEABLE.getCode()) != 0) {
+            CurrencyBuyOffer buyOffer = CurrencyBuyOffer.getOffer(this, ownerAccount);
+            if (buyOffer != null) {
+                CurrencyExchangeOffer.removeOffer(buyOffer);
+            }
+        }
+        ownerAccount.addToCurrencyUnits(currencyId, -ownerAccount.getCurrencyUnits(currencyId));
+        ownerAccount.addToUnconfirmedCurrencyUnits(currencyId, -ownerAccount.getUnconfirmedCurrencyUnits(currencyId));
+        //TODO: anything else to clean up when deleting a currency?
+        currencyTable.delete(this);
     }
 
     private static final class CrowdFundingListener implements Listener<Block> {

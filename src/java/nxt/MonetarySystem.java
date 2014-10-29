@@ -69,7 +69,7 @@ public abstract class MonetarySystem extends TransactionType {
                 throw new NxtException.NotValidException("Invalid currency issuance: " + attachment.getJSONObject());
             }
             CurrencyType.validate(attachment.getType(), transaction);
-            CurrencyType.validateCurrencyNaming(attachment);
+            CurrencyType.validateCurrencyNaming(transaction.getSenderId(), attachment);
         }
 
 

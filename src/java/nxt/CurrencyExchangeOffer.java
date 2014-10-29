@@ -139,7 +139,7 @@ public abstract class CurrencyExchangeOffer {
         account.addToUnconfirmedBalanceNQT(remainingAmountNQT);
     }
 
-    private static void removeOffer(CurrencyBuyOffer buyOffer) {
+    static void removeOffer(CurrencyBuyOffer buyOffer) {
         CurrencySellOffer sellOffer = buyOffer.getCounterOffer();
 
         CurrencyBuyOffer.remove(buyOffer);

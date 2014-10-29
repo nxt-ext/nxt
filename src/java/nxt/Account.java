@@ -161,12 +161,6 @@ public final class Account {
             } else if (this.units == 0 && this.unconfirmedUnits == 0) {
                 accountCurrencyTable.delete(this);
             }
-            /*
-            } else if (this.units < 0 || this.unconfirmedUnits < 0) {
-                throw new DoubleSpendingException(String.format("Negative currency balance for account %s currency %s units %d unconfirmedUnits %d",
-                        Convert.toUnsignedLong(this.accountId), Convert.toUnsignedLong(this.currencyId), units, unconfirmedUnits));
-            }
-            */
         }
 
         @Override
@@ -175,23 +169,6 @@ public final class Account {
                     + " quantity: " + units + " unconfirmedQuantity: " + unconfirmedUnits;
         }
 
-        /*
-        @Override
-        public boolean equals(Object o) {
-            if (! (o instanceof AccountCurrency)) {
-                return false;
-            }
-            AccountCurrency other = (AccountCurrency)o;
-            return this.accountId == other.accountId && this.currencyId == other.currencyId && this.units == other.units
-                    && this.unconfirmedUnits == other.unconfirmedUnits && this.height == other.height;
-        }
-
-        @Override
-        public int hashCode() {
-            return (int)(accountId ^ (accountId >>> 32) ^ currencyId ^ (currencyId >>> 32) ^ units ^ (units >>> 32)
-                    ^ unconfirmedUnits ^ (unconfirmedUnits >>> 32) ^ height);
-        }
-        */
     }
 
     public static class AccountLease {
