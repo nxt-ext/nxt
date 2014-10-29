@@ -86,9 +86,10 @@ final class BlockchainImpl implements Blockchain {
         Connection con = null;
         try {
             con = Db.getConnection();
-            PreparedStatement pstmt = con.prepareStatement("SELECT * FROM block ORDER BY db_id DESC"
-                    + DbUtils.limitsClause(from, to));
-            DbUtils.setLimits(1, pstmt, from, to);
+            PreparedStatement pstmt = con.prepareStatement("SELECT * FROM block WHERE height <= ? AND height >= ? ORDER BY height DESC");
+            int blockchainHeight = getHeight();
+            pstmt.setInt(1, blockchainHeight - Math.max(from, 0));
+            pstmt.setInt(2, to > 0 ? blockchainHeight - to : 0);
             return getBlocks(con, pstmt);
         } catch (SQLException e) {
             DbUtils.close(con);
