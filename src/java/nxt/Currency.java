@@ -314,6 +314,9 @@ public final class Currency {
                 CurrencyExchangeOffer.removeOffer(offer);
             }
         }
+        if ((type & CurrencyType.MINTABLE.getCode()) != 0) {
+            CurrencyMint.deleteCurrency(this);
+        }
         ownerAccount.addToCurrencyUnits(currencyId, -ownerAccount.getCurrencyUnits(currencyId));
         ownerAccount.addToUnconfirmedCurrencyUnits(currencyId, -ownerAccount.getUnconfirmedCurrencyUnits(currencyId));
         //TODO: anything else to clean up when deleting a currency?
