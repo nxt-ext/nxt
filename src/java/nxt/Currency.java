@@ -289,7 +289,7 @@ public final class Currency {
 
     boolean isSoleOwner(long ownerAccountId) {
         try (DbIterator<Account.AccountCurrency> accountCurrencies = Account.getCurrencyAccounts(this.currencyId, 0, -1)) {
-            return accountCurrencies.hasNext() && accountCurrencies.next().getAccountId() == ownerAccountId && ! accountCurrencies.hasNext();
+            return ! accountCurrencies.hasNext() || accountCurrencies.next().getAccountId() == ownerAccountId && ! accountCurrencies.hasNext();
         }
     }
 
