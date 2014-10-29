@@ -17,11 +17,6 @@ public enum CurrencyType {
 
         @Override
         void validate(Currency currency, Transaction transaction, Set<CurrencyType> validators) throws NxtException.NotValidException {
-            if (transaction.getType() == MonetarySystem.CURRENCY_ISSUANCE) {
-                if (validators.contains(CLAIMABLE)) {
-                    throw new NxtException.NotValidException("Exchangeable currency cannot be claimed");
-                }
-            }
         }
 
         @Override
