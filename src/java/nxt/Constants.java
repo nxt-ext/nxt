@@ -66,7 +66,6 @@ public final class Constants {
     public static final boolean isOffline = Nxt.getBooleanProperty("nxt.isOffline");
 
     public static final int ALIAS_SYSTEM_BLOCK = 22000;
-    public static final int ALIAS_SYSTEM_BLOCK_2 = isTestnet ? 80000 : 280000;
     public static final int TRANSPARENT_FORGING_BLOCK = 30000;
     public static final int ARBITRARY_MESSAGES_BLOCK = 40000;
     public static final int TRANSPARENT_FORGING_BLOCK_2 = 47000;
