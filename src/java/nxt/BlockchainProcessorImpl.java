@@ -30,7 +30,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -607,7 +606,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     throw new BlockNotAcceptedException("Block signature verification failed");
                 }
 
-                Map<TransactionType, Set<String>> duplicates = new HashMap<>();
+                Map<TransactionType, Map<String, Boolean>> duplicates = new HashMap<>();
                 long calculatedTotalAmount = 0;
                 long calculatedTotalFee = 0;
                 MessageDigest digest = Crypto.sha256();
@@ -798,7 +797,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
 
         SortedSet<TransactionImpl> blockTransactions = new TreeSet<>();
 
-        Map<TransactionType, Set<String>> duplicates = new HashMap<>();
+        Map<TransactionType, Map<String, Boolean>> duplicates = new HashMap<>();
 
         long totalAmountNQT = 0;
         long totalFeeNQT = 0;

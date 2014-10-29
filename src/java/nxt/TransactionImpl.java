@@ -15,7 +15,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 final class TransactionImpl implements Transaction {
 
@@ -793,7 +792,7 @@ final class TransactionImpl implements Transaction {
         type.undoUnconfirmed(this, senderAccount);
     }
 
-    boolean isDuplicate(Map<TransactionType, Set<String>> duplicates) {
+    boolean isDuplicate(Map<TransactionType, Map<String, Boolean>> duplicates) {
         return type.isDuplicate(this, duplicates);
     }
 

@@ -1506,6 +1506,12 @@ public interface Attachment extends Appendix {
         }
     }
 
+    public static interface MonetarySystemAttachment {
+
+        long getCurrencyId();
+
+    }
+
     public final static class MonetarySystemCurrencyIssuance extends AbstractAttachment {
 
         private final String name;
@@ -1683,7 +1689,7 @@ public interface Attachment extends Appendix {
         }
     }
 
-    public final static class MonetarySystemReserveIncrease extends AbstractAttachment {
+    public final static class MonetarySystemReserveIncrease extends AbstractAttachment implements MonetarySystemAttachment {
 
         private final long currencyId;
         private final long amountNQT;
@@ -1732,6 +1738,7 @@ public interface Attachment extends Appendix {
             return MonetarySystem.RESERVE_INCREASE;
         }
 
+        @Override
         public long getCurrencyId() {
             return currencyId;
         }
@@ -1742,7 +1749,7 @@ public interface Attachment extends Appendix {
 
     }
 
-    public final static class MonetarySystemReserveClaim extends AbstractAttachment {
+    public final static class MonetarySystemReserveClaim extends AbstractAttachment implements MonetarySystemAttachment {
 
         private final long currencyId;
         private final long units;
@@ -1791,6 +1798,7 @@ public interface Attachment extends Appendix {
             return MonetarySystem.RESERVE_CLAIM;
         }
 
+        @Override
         public long getCurrencyId() {
             return currencyId;
         }
@@ -1801,7 +1809,7 @@ public interface Attachment extends Appendix {
 
     }
 
-    public final static class MonetarySystemCurrencyTransfer extends AbstractAttachment {
+    public final static class MonetarySystemCurrencyTransfer extends AbstractAttachment implements MonetarySystemAttachment {
 
         private final long currencyId;
         private final long units;
@@ -1850,6 +1858,7 @@ public interface Attachment extends Appendix {
             return MonetarySystem.CURRENCY_TRANSFER;
         }
 
+        @Override
         public long getCurrencyId() {
             return currencyId;
         }
@@ -1859,7 +1868,7 @@ public interface Attachment extends Appendix {
         }
     }
 
-    public final static class MonetarySystemPublishExchangeOffer extends AbstractAttachment {
+    public final static class MonetarySystemPublishExchangeOffer extends AbstractAttachment implements MonetarySystemAttachment {
 
         private final long currencyId;
         private final long buyRateNQT;
@@ -1945,6 +1954,7 @@ public interface Attachment extends Appendix {
             return MonetarySystem.PUBLISH_EXCHANGE_OFFER;
         }
 
+        @Override
         public long getCurrencyId() {
             return currencyId;
         }
@@ -1979,7 +1989,7 @@ public interface Attachment extends Appendix {
 
     }
 
-    abstract static class MonetarySystemExchange extends AbstractAttachment {
+    abstract static class MonetarySystemExchange extends AbstractAttachment implements MonetarySystemAttachment {
 
         private final long currencyId;
         private final long rateNQT;
@@ -2024,7 +2034,7 @@ public interface Attachment extends Appendix {
             attachment.put("units", units);
         }
 
-
+        @Override
         public long getCurrencyId() {
             return currencyId;
         }
@@ -2091,7 +2101,7 @@ public interface Attachment extends Appendix {
 
     }
 
-    public final static class MonetarySystemCurrencyMinting extends AbstractAttachment {
+    public final static class MonetarySystemCurrencyMinting extends AbstractAttachment implements MonetarySystemAttachment {
 
         private final long nonce;
         private final long currencyId;
@@ -2156,6 +2166,7 @@ public interface Attachment extends Appendix {
             return nonce;
         }
 
+        @Override
         public long getCurrencyId() {
             return currencyId;
         }
