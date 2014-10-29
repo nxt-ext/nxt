@@ -1,12 +1,13 @@
 package nxt;
 
-import nxt.util.Convert;
-import org.json.simple.JSONObject;
-
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+
+import org.json.simple.JSONObject;
+
+import nxt.util.Convert;
 
 
 public abstract class TransactionType {
@@ -28,6 +29,7 @@ public abstract class TransactionType {
     private static final byte SUBTYPE_MESSAGING_ACCOUNT_INFO = 5;
     private static final byte SUBTYPE_MESSAGING_ALIAS_SELL = 6;
     private static final byte SUBTYPE_MESSAGING_ALIAS_BUY = 7;
+    private static final byte SUBTYPE_MESSAGING_ALIAS_DELETE = 8;
 
     private static final byte SUBTYPE_COLORED_COINS_ASSET_ISSUANCE = 0;
     private static final byte SUBTYPE_COLORED_COINS_ASSET_TRANSFER = 1;
@@ -92,6 +94,8 @@ public abstract class TransactionType {
                         return Messaging.ALIAS_SELL;
                     case SUBTYPE_MESSAGING_ALIAS_BUY:
                         return Messaging.ALIAS_BUY;
+                    case SUBTYPE_MESSAGING_ALIAS_DELETE:
+                        return Messaging.ALIAS_DELETE;
                     default:
                         return null;
                 }
@@ -556,6 +560,63 @@ public abstract class TransactionType {
             @Override
             public boolean hasRecipient() {
                 return true;
+            }
+
+        };
+
+        public static final TransactionType ALIAS_DELETE = new Messaging() {
+
+            @Override
+            public final byte getSubtype() {
+                return TransactionType.SUBTYPE_MESSAGING_ALIAS_DELETE;
+            }
+
+            @Override
+            Attachment.MessagingAliasDelete parseAttachment(final ByteBuffer buffer, final byte transactionVersion) throws NxtException.NotValidException {
+                return new Attachment.MessagingAliasDelete(buffer, transactionVersion);
+            }
+
+            @Override
+            Attachment.MessagingAliasDelete parseAttachment(final JSONObject attachmentData) throws NxtException.NotValidException {
+                return new Attachment.MessagingAliasDelete(attachmentData);
+            }
+
+            @Override
+            void applyAttachment(final Transaction transaction, final Account senderAccount, final Account recipientAccount) {
+                final Attachment.MessagingAliasDelete attachment =
+                        (Attachment.MessagingAliasDelete) transaction.getAttachment();
+                Alias.deleteAlias(attachment.getAliasName());
+            }
+
+            @Override
+            boolean isDuplicate(final Transaction transaction, final Map<TransactionType, Set<String>> duplicates) {
+                Attachment.MessagingAliasDelete attachment = (Attachment.MessagingAliasDelete) transaction.getAttachment();
+                // not a bug, uniqueness is based on Messaging.ALIAS_ASSIGNMENT
+                return isDuplicate(Messaging.ALIAS_ASSIGNMENT, attachment.getAliasName().toLowerCase(), duplicates);
+            }
+
+            @Override
+            void validateAttachment(final Transaction transaction) throws NxtException.ValidationException {
+                if (Nxt.getBlockchain().getLastBlock().getHeight() < Constants.ALIAS_SYSTEM_BLOCK_2) {
+                    throw new NxtException.NotYetEnabledException("Alias delete operation not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
+                }
+                final Attachment.MessagingAliasDelete attachment =
+                        (Attachment.MessagingAliasDelete) transaction.getAttachment();
+                final String aliasName = attachment.getAliasName();
+                if (aliasName == null || aliasName.length() == 0) {
+                    throw new NxtException.NotValidException("Missing alias name");
+                }
+                final Alias alias = Alias.getAlias(aliasName);
+                if (alias == null) {
+                    throw new NxtException.NotCurrentlyValidException("Alias hasn't been registered yet: " + aliasName);
+                } else if (alias.getAccountId() != transaction.getSenderId()) {
+                    throw new NxtException.NotCurrentlyValidException("Alias doesn't belong to sender: " + aliasName);
+                }
+            }
+
+            @Override
+            public boolean hasRecipient() {
+                return false;
             }
 
         };

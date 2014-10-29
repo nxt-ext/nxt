@@ -10,7 +10,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-
 public final class Alias {
 
     public static class Offer {
@@ -129,6 +128,15 @@ public final class Alias {
 
     public static Offer getOffer(Alias alias) {
         return offerTable.get(offerDbKeyFactory.newKey(alias.getId()));
+    }
+
+    static void deleteAlias(final String aliasName) {
+        final Alias alias = getAlias(aliasName);
+        final Offer offer = Alias.getOffer(alias);
+        if (offer != null) {
+            offerTable.delete(offer);
+        }
+        aliasTable.delete(alias);
     }
 
     static void addOrUpdateAlias(Transaction transaction, Attachment.MessagingAliasAssignment attachment) {

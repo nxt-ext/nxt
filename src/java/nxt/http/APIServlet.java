@@ -177,6 +177,7 @@ public final class APIServlet extends HttpServlet {
         map.put("sendMoney", SendMoney.instance);
         map.put("setAccountInfo", SetAccountInfo.instance);
         map.put("setAlias", SetAlias.instance);
+        map.put("deleteAlias", DeleteAlias.instance);
         map.put("signTransaction", SignTransaction.instance);
         map.put("startForging", StartForging.instance);
         map.put("stopForging", StopForging.instance);

@@ -58,6 +58,10 @@ public final class GetConstants extends APIServlet.APIRequestHandler {
         subtype.put("description", "Alias buy");
         subtypes.add(subtype);
         subtype = new JSONObject();
+        subtype.put("value", TransactionType.Messaging.ALIAS_DELETE.getSubtype());
+        subtype.put("description", "Alias delete");
+        subtypes.add(subtype);
+        subtype = new JSONObject();
         subtype.put("value", TransactionType.Messaging.POLL_CREATION.getSubtype());
         subtype.put("description", "Poll creation");
         subtypes.add(subtype);
