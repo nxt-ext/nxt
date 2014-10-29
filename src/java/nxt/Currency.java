@@ -304,9 +304,14 @@ public final class Currency {
             CurrencyFounder.remove(currencyId);
         }
         if ((type & CurrencyType.EXCHANGEABLE.getCode()) != 0) {
-            CurrencyBuyOffer buyOffer = CurrencyBuyOffer.getOffer(this, ownerAccount);
-            if (buyOffer != null) {
-                CurrencyExchangeOffer.removeOffer(buyOffer);
+            List<CurrencyBuyOffer> buyOffers = new ArrayList<>();
+            try (DbIterator<CurrencyBuyOffer> offers = CurrencyBuyOffer.getOffers(this, 0, -1)) {
+                while (offers.hasNext()) {
+                    buyOffers.add(offers.next());
+                }
+            }
+            for (CurrencyBuyOffer offer : buyOffers) {
+                CurrencyExchangeOffer.removeOffer(offer);
             }
         }
         ownerAccount.addToCurrencyUnits(currencyId, -ownerAccount.getCurrencyUnits(currencyId));
