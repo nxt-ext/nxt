@@ -487,6 +487,10 @@ final class DbVersion {
             case 157:
                 apply("CREATE INDEX IF NOT EXISTS sell_offer_rate_height_idx ON sell_offer (rate ASC, creation_height ASC)");
             case 158:
+                apply("ALTER TABLE account ADD COLUMN IF NOT EXISTS message_pattern_regex VARCHAR");
+            case 159:
+                apply("ALTER TABLE account ADD COLUMN IF NOT EXISTS message_pattern_flags INT");
+            case 160:
                 return;
             default:
                 throw new RuntimeException("Database inconsistent with code, probably trying to run older code on newer database");

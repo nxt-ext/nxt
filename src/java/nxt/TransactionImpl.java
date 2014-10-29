@@ -765,6 +765,12 @@ final class TransactionImpl implements Transaction {
                 if ((recipientAccount == null || recipientAccount.getPublicKey() == null) && publicKeyAnnouncement == null) {
                     throw new NxtException.NotCurrentlyValidException("Recipient account does not have a public key, must attach a public key announcement");
                 }
+                if (blockchainHeight >= Constants.MONETARY_SYSTEM_BLOCK && recipientAccount != null) {
+                	if (recipientAccount.getMessagePattern() != null
+                        && (message == null || ! recipientAccount.getMessagePattern().matcher(Convert.toString(message.getMessage())).matches())) {
+                    	throw new NxtException.NotCurrentlyValidException("Recipient account requires a message attachment matching " + recipientAccount.getMessagePattern().pattern());
+                	}
+            	}
             }
         }
     }
