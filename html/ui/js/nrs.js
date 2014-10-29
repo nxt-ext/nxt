@@ -275,6 +275,8 @@ var NRS = (function(NRS, $, undefined) {
 					callback();
 				}
 			}
+			/* Checks if the client is connected to active peers */
+			NRS.checkConnected();
 		});
 	}
 
@@ -545,6 +547,23 @@ var NRS = (function(NRS, $, undefined) {
 			}
 		}
 	}
+	
+	/* Display connected state in Sidebar */
+	NRS.checkConnected = function() {
+		NRS.sendRequest("getPeers+", {
+			"state": "CONNECTED"
+		}, function(response) {
+			if (response.peers && response.peers.length) {
+				$("#connected_indicator").addClass("connected");
+				$("#connected_indicator span").html($.t("Connected")).attr("data-i18n", "connected");
+				$("#connected_indicator").show();
+			} else {
+				$("#connected_indicator").removeClass("connected");
+				$("#connected_indicator span").html($.t("Not Connected")).attr("data-i18n", "not_connected");
+				$("#connected_indicator").show();
+			}
+		});
+	}
 
 	NRS.getAccountInfo = function(firstRun, callback) {
 		NRS.sendRequest("getAccount", {
@@ -707,26 +726,10 @@ var NRS = (function(NRS, $, undefined) {
 					} else {
 						$("#account_message_count").empty().append("0");
 					}
-				});
-				
-				/* Display connected state in Sidebar */
-				/* Don't believe this the correct location for this */
-				NRS.sendRequest("getPeers+", {
-					"active": "true",
-					"state": "CONNECTED"
-				}, function(response) {
-					if (response.peers && response.peers.length) {
-						$("#connected_indicator").addClass("connected");
-						$("#connected_indicator span").html($.t("Connected")).attr("data-i18n", "connected");
-						$("#connected_indicator").show();
-					} else {
-						$("#connected_indicator").removeClass("connected");
-						$("#connected_indicator span").html($.t("Not Connected")).attr("data-i18n", "not_connected");
-						$("#connected_indicator").show();
-					}
-				});
+				});	
 				
 				/*  ******************   */
+				
 
 				$("#account_nr_assets").html(nr_assets);
 				
