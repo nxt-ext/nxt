@@ -130,7 +130,7 @@ public final class Alias {
         return offerTable.get(offerDbKeyFactory.newKey(alias.getId()));
     }
 
-    public static void deleteAlias(final String aliasName) {
+    static void deleteAlias(final String aliasName) {
         final Alias alias = getAlias(aliasName);
         final Offer offer = Alias.getOffer(alias);
         if (offer != null) {
