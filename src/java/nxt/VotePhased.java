@@ -8,12 +8,13 @@ import java.sql.SQLException;
 import java.util.Arrays;
 
 public class VotePhased {
-    private static final DbKey.LongKeyFactory<VotePhased> voteDbKeyFactory = new DbKey.LongKeyFactory<VotePhased>("id") {
-        @Override
-        public DbKey newKey(VotePhased vote) {
-            return vote.dbKey;
-        }
-    };
+    private static final DbKey.LinkKeyFactory<VotePhased> voteDbKeyFactory =
+            new DbKey.LinkKeyFactory<VotePhased>("id", "pending_transaction_id") {
+                @Override
+                public DbKey newKey(VotePhased vote) {
+                    return vote.dbKey;
+                }
+            };
 
     private static final class VotePhasedTable extends EntityDbTable<VotePhased> {
         protected VotePhasedTable() {
@@ -30,16 +31,16 @@ public class VotePhased {
             vote.save(con);
         }
 
-        protected long lastEstimate(long pendingTransactionId){
+        protected long lastEstimate(long pendingTransactionId) {
             try {
                 Connection con = Db.getConnection();
                 PreparedStatement pstmt = con.prepareStatement("SELECT estimated_total FROM " + table
                         + " WHERE pending_transaction_id = ?  ORDER BY db_id DESC LIMIT 1");
                 pstmt.setLong(1, pendingTransactionId);
                 ResultSet rs = pstmt.executeQuery();
-                if(rs.next()){
+                if (rs.next()) {
                     return rs.getLong(1);
-                }else{
+                } else {
                     return 0;
                 }
             } catch (SQLException e) {
@@ -51,7 +52,8 @@ public class VotePhased {
     final static VotePhasedTable voteTable = new VotePhasedTable();
 
 
-    static void init() {}
+    static void init() {
+    }
 
     private final long id;
     private final DbKey dbKey;
@@ -61,18 +63,18 @@ public class VotePhased {
 
     private VotePhased(Transaction transaction, long pendingTransactionId, long estimatedTotal) {
         this.id = transaction.getId();
-        this.dbKey = voteDbKeyFactory.newKey(this.id);
         this.pendingTransactionId = pendingTransactionId;
+        this.dbKey = voteDbKeyFactory.newKey(this.id, this.pendingTransactionId);
         this.voterId = transaction.getSenderId();
         this.estimatedTotal = estimatedTotal;
     }
 
     private VotePhased(ResultSet rs) throws SQLException {
         this.id = rs.getLong("id");
-        this.dbKey = voteDbKeyFactory.newKey(this.id);
         this.pendingTransactionId = rs.getLong("pending_transaction_id");
+        this.dbKey = voteDbKeyFactory.newKey(this.id, this.pendingTransactionId);
         this.voterId = rs.getLong("voter_id");
-        this.estimatedTotal =  rs.getLong("estimated_total");
+        this.estimatedTotal = rs.getLong("estimated_total");
     }
 
     public long getId() {
@@ -101,7 +103,7 @@ public class VotePhased {
     }
 
     static boolean addVote(PendingTransactionPoll poll, Account voter,
-                        Transaction transaction)
+                           Transaction transaction)
             throws NxtException.IllegalStateException {
 
         long[] voters = poll.getPossibleVoters();
@@ -113,17 +115,17 @@ public class VotePhased {
 
         long estimate = voteTable.lastEstimate(poll.getId()) + weight;
 
-        if(estimate >= poll.getQuorum() && poll.getVotingModel() != Constants.VOTING_MODEL_ACCOUNT){
+        if (estimate >= poll.getQuorum() && poll.getVotingModel() != Constants.VOTING_MODEL_ACCOUNT) {
             DbClause clause = new DbClause.LongClause("pending_transaction_id", poll.getId());
             DbIterator<VotePhased> votesIterator = voteTable.getManyBy(clause, 0, -1);
             estimate = 0;
-            while(votesIterator.hasNext()){
+            while (votesIterator.hasNext()) {
                 long w = AbstractPoll.calcWeight(poll, Account.getAccount(votesIterator.next().voterId));
-                if(w >= poll.minBalance) {
+                if (w >= poll.minBalance) {
                     estimate += w;
                 }
             }
-            if(weight >= poll.minBalance){
+            if (weight >= poll.minBalance) {
                 estimate += weight;
             }
         }

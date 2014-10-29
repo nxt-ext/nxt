@@ -3,6 +3,7 @@ package nxt;
 import nxt.db.*;
 import nxt.util.Logger;
 import java.sql.*;
+import java.util.Arrays;
 
 public class PendingTransactionPoll extends AbstractPoll {
     private final Long id;
@@ -73,6 +74,9 @@ public class PendingTransactionPoll extends AbstractPoll {
         this.dbKey = pollDbKeyFactory.newKey(this.id);
         this.quorum = quorum;
         this.possibleVoters = possibleVoters;
+        if (this.possibleVoters != null) {
+            Arrays.sort(this.possibleVoters);
+        }
     }
 
     public PendingTransactionPoll(ResultSet rs) throws SQLException {
@@ -90,6 +94,7 @@ public class PendingTransactionPoll extends AbstractPoll {
             for (int i = 0; i < voterStrings.length; i++) {
                 this.possibleVoters[i] = Long.parseLong(voterStrings[i]);
             }
+            Arrays.sort(this.possibleVoters);
         }
     }
 
