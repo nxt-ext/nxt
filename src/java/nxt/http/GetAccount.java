@@ -35,6 +35,10 @@ public final class GetAccount extends APIServlet.APIRequestHandler {
         if (account.getDescription() != null) {
             response.put("description", account.getDescription());
         }
+        if (account.getMessagePattern() != null) {
+            response.put("messagePatternRegex", account.getMessagePattern().pattern());
+            response.put("messagePatternFlags", account.getMessagePattern().flags());
+        }
         if (account.getCurrentLesseeId() != 0) {
             JSONData.putAccount(response, "currentLessee", account.getCurrentLesseeId());
             response.put("currentLeasingHeightFrom", account.getCurrentLeasingHeightFrom());
