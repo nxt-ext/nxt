@@ -131,9 +131,12 @@ public class BlockchainProcessorTest extends AbstractBlockchainTest {
     private static void redownload(final int numBlocks, boolean preserveTransactions) {
         int endHeight = blockchain.getHeight();
         List<List<Long>> allLessorsBefore = new ArrayList<>();
+        List<List<Long>> allLessorBalancesBefore = new ArrayList<>();
         for (long accountId : testLesseeAccounts) {
             List<Long> lessors = new ArrayList<>();
+            List<Long> balances = new ArrayList<>();
             allLessorsBefore.add(lessors);
+            allLessorBalancesBefore.add(balances);
             Account account = Account.getAccount(accountId);
             if (account == null) {
                 continue;
@@ -141,6 +144,7 @@ public class BlockchainProcessorTest extends AbstractBlockchainTest {
             try (DbIterator<Account> iter = account.getLessors(endHeight - numBlocks)) {
                 for (Account lessor : iter) {
                     lessors.add(lessor.getId());
+                    balances.add(lessor.getGuaranteedBalanceNQT(1440, endHeight - numBlocks));
                 }
             }
         }
@@ -166,9 +170,12 @@ public class BlockchainProcessorTest extends AbstractBlockchainTest {
         }
         Assert.assertEquals(endHeight - numBlocks, blockchain.getHeight());
         List<List<Long>> allLessorsAfter = new ArrayList<>();
+        List<List<Long>> allLessorBalancesAfter = new ArrayList<>();
         for (long accountId : testLesseeAccounts) {
             List<Long> lessors = new ArrayList<>();
+            List<Long> balances = new ArrayList<>();
             allLessorsAfter.add(lessors);
+            allLessorBalancesAfter.add(balances);
             Account account = Account.getAccount(accountId);
             if (account == null) {
                 continue;
@@ -176,12 +183,12 @@ public class BlockchainProcessorTest extends AbstractBlockchainTest {
             try (DbIterator<Account> iter = account.getLessors()) {
                 for (Account lessor : iter) {
                     lessors.add(lessor.getId());
+                    balances.add(lessor.getGuaranteedBalanceNQT(1440));
                 }
             }
         }
         Assert.assertEquals(allLessorsBefore, allLessorsAfter);
-        //Logger.logDebugMessage("Before: " + allLessorsBefore);
-        //Logger.logDebugMessage("After: " + allLessorsAfter);
+        Assert.assertEquals(allLessorBalancesBefore, allLessorBalancesAfter);
         List<List<TestAccountAsset>> allAccountAssetsAfter = new ArrayList<>();
         for (long assetId : testAssets) {
             List<TestAccountAsset> accountAssets = new ArrayList<>();

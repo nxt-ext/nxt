@@ -1230,7 +1230,7 @@ body > .header .logo .icon {
   padding: 0;
 }
 .small-box p {
-  font-size: 15px;
+  font-size: 14px;
 }
 .small-box p > small {
   display: block;
@@ -2996,11 +2996,11 @@ input:invalid {
   border: 1px solid red;
 }
 
-#forging_indicator i {
+#forging_indicator i, #connected_indicator i {
   color:#a94442;
 }
 
-#forging_indicator.forging i {
+#forging_indicator.forging i, #connected_indicator.connected i {
   color:#3c763d;
 }
 
@@ -3250,4 +3250,9 @@ input.masked {
 
 #dgs_view_delivery_output, #dgs_view_purchase_modal_note, #dgs_delivery_modal_note, #dgs_view_refund_output, #transaction_info_output_top, #transaction_info_output_bottom {
   word-wrap:break-word;
+}
+
+#sideBalance {
+  display: block;
+  margin-bottom: 5px;
 }

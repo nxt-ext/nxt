@@ -24,7 +24,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -366,6 +365,16 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             }
         }, Event.BLOCK_SCANNED);
 
+        blockListeners.addListener(new Listener<Block>() {
+            @Override
+            public void notify(Block block) {
+                if (block.getHeight() % 5000 == 0) {
+                    Logger.logMessage("received block " + block.getHeight());
+                    Db.analyzeTables();
+                }
+            }
+        }, Event.BLOCK_PUSHED);
+
         if (trimDerivedTables) {
             blockListeners.addListener(new Listener<Block>() {
                 @Override
@@ -385,26 +394,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         blockListeners.addListener(new Listener<Block>() {
             @Override
             public void notify(Block block) {
-                if (block.getHeight() % 1440 == 1) {
-                    try (Connection con = Db.getConnection();
-                         Statement stmt = con.createStatement()) {
-                        stmt.execute("ANALYZE SAMPLE_SIZE 0");
-                    } catch (SQLException e) {
-                        throw new RuntimeException(e.toString(), e);
-                    }
-                }
-            }
-        }, Event.BLOCK_PUSHED);
-
-        blockListeners.addListener(new Listener<Block>() {
-            @Override
-            public void notify(Block block) {
-                try (Connection con = Db.getConnection();
-                     Statement stmt = con.createStatement()) {
-                    stmt.execute("ANALYZE SAMPLE_SIZE 0");
-                } catch (SQLException e) {
-                    throw new RuntimeException(e.toString(), e);
-                }
+                Db.analyzeTables();
             }
         }, Event.RESCAN_END);
 
@@ -786,7 +776,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
     void generateBlock(String secretPhrase, int blockTimestamp) throws BlockNotAcceptedException {
 
         TransactionProcessorImpl transactionProcessor = TransactionProcessorImpl.getInstance();
-        List<TransactionImpl> sortedTransactions = new ArrayList<>();
+        List<TransactionImpl> orderedUnconfirmedTransactions = new ArrayList<>();
         try (FilteringIterator<TransactionImpl> transactions = new FilteringIterator<>(transactionProcessor.getAllUnconfirmedTransactions(),
                 new FilteringIterator.Filter<TransactionImpl>() {
                     @Override
@@ -795,13 +785,13 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     }
                 })) {
             for (TransactionImpl transaction : transactions) {
-                sortedTransactions.add(transaction);
+                orderedUnconfirmedTransactions.add(transaction);
             }
         }
 
         BlockImpl previousBlock = blockchain.getLastBlock();
 
-        SortedSet<TransactionImpl> newTransactions = new TreeSet<>();
+        SortedSet<TransactionImpl> blockTransactions = new TreeSet<>();
 
         Map<TransactionType, Set<String>> duplicates = new HashMap<>();
 
@@ -809,14 +799,14 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         long totalFeeNQT = 0;
         int payloadLength = 0;
 
-        while (payloadLength <= Constants.MAX_PAYLOAD_LENGTH && newTransactions.size() <= Constants.MAX_NUMBER_OF_TRANSACTIONS) {
+        while (payloadLength <= Constants.MAX_PAYLOAD_LENGTH && blockTransactions.size() <= Constants.MAX_NUMBER_OF_TRANSACTIONS) {
 
-            int prevNumberOfNewTransactions = newTransactions.size();
+            int prevNumberOfNewTransactions = blockTransactions.size();
 
-            for (TransactionImpl transaction : sortedTransactions) {
+            for (TransactionImpl transaction : orderedUnconfirmedTransactions) {
 
                 int transactionLength = transaction.getSize();
-                if (newTransactions.contains(transaction) || payloadLength + transactionLength > Constants.MAX_PAYLOAD_LENGTH) {
+                if (blockTransactions.contains(transaction) || payloadLength + transactionLength > Constants.MAX_PAYLOAD_LENGTH) {
                     continue;
                 }
 
@@ -849,14 +839,14 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 }
                 */
 
-                newTransactions.add(transaction);
+                blockTransactions.add(transaction);
                 payloadLength += transactionLength;
                 totalAmountNQT += transaction.getAmountNQT();
                 totalFeeNQT += transaction.getFeeNQT();
 
             }
 
-            if (newTransactions.size() == prevNumberOfNewTransactions) {
+            if (blockTransactions.size() == prevNumberOfNewTransactions) {
                 break;
             }
         }
@@ -864,7 +854,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         final byte[] publicKey = Crypto.getPublicKey(secretPhrase);
 
         MessageDigest digest = Crypto.sha256();
-        for (Transaction transaction : newTransactions) {
+        for (Transaction transaction : blockTransactions) {
             digest.update(transaction.getBytes());
         }
 
@@ -879,7 +869,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         try {
 
             block = new BlockImpl(getBlockVersion(previousBlock.getHeight()), blockTimestamp, previousBlock.getId(), totalAmountNQT, totalFeeNQT, payloadLength,
-                    payloadHash, publicKey, generationSignature, null, previousBlockHash, new ArrayList<>(newTransactions));
+                    payloadHash, publicKey, generationSignature, null, previousBlockHash, new ArrayList<>(blockTransactions));
 
         } catch (NxtException.ValidationException e) {
             // shouldn't happen because all transactions are already validated
