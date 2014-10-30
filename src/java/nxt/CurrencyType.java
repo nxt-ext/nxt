@@ -248,16 +248,16 @@ public enum CurrencyType {
             throw new NxtException.NotValidException("Currency name already used");
         }
         Currency currency;
-        if ((currency = Currency.getCurrencyByName(normalizedName)) != null && ! currency.isSoleOwner(issuerAccountId)) {
+        if ((currency = Currency.getCurrencyByName(normalizedName)) != null && ! currency.canBeDeletedBy(issuerAccountId)) {
             throw new NxtException.NotCurrentlyValidException("Currency name already used: " + normalizedName);
         }
-        if ((currency = Currency.getCurrencyByCode(name.toUpperCase())) != null && ! currency.isSoleOwner(issuerAccountId)) {
+        if ((currency = Currency.getCurrencyByCode(name.toUpperCase())) != null && ! currency.canBeDeletedBy(issuerAccountId)) {
             throw new NxtException.NotCurrentlyValidException("Currency name already used as code: " + normalizedName);
         }
-        if ((currency = Currency.getCurrencyByCode(code)) != null && ! currency.isSoleOwner(issuerAccountId)) {
+        if ((currency = Currency.getCurrencyByCode(code)) != null && ! currency.canBeDeletedBy(issuerAccountId)) {
             throw new NxtException.NotCurrentlyValidException("Currency code already used: " + code);
         }
-        if ((currency = Currency.getCurrencyByName(code.toLowerCase())) != null && ! currency.isSoleOwner(issuerAccountId)) {
+        if ((currency = Currency.getCurrencyByName(code.toLowerCase())) != null && ! currency.canBeDeletedBy(issuerAccountId)) {
             throw new NxtException.NotCurrentlyValidException("Currency code already used as name: " + code);
         }
     }

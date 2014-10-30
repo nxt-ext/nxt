@@ -287,23 +287,33 @@ public final class Currency {
         return CurrencyTransfer.getCurrencyTransfers(this.currencyId, from, to);
     }
 
-    boolean isSoleOwner(long ownerAccountId) {
+    public boolean is(CurrencyType type) {
+        return (this.type & type.getCode()) != 0;
+    }
+
+    boolean canBeDeletedBy(long ownerAccountId) {
+        if (!isActive()) {
+            return false;
+        }
+        if (is(CurrencyType.MINTABLE) && currentSupply < totalSupply) {
+            return false;
+        }
         try (DbIterator<Account.AccountCurrency> accountCurrencies = Account.getCurrencyAccounts(this.currencyId, 0, -1)) {
             return ! accountCurrencies.hasNext() || accountCurrencies.next().getAccountId() == ownerAccountId && ! accountCurrencies.hasNext();
         }
     }
 
     void delete(long ownerAccountId) {
-        if (!isSoleOwner(ownerAccountId)) {
+        if (!canBeDeletedBy(ownerAccountId)) {
             // shouldn't happen as ownership has already been checked in validate, but as a safety check
             throw new IllegalStateException("Currency " + Convert.toUnsignedLong(currencyId) + " not entirely owned by " + Convert.toUnsignedLong(ownerAccountId));
         }
         Account ownerAccount = Account.getAccount(ownerAccountId);
-        if ((type & CurrencyType.RESERVABLE.getCode()) != 0) {
+        if (is(CurrencyType.RESERVABLE)) {
             Currency.claimReserve(ownerAccount, currencyId, ownerAccount.getCurrencyUnits(currencyId));
             CurrencyFounder.remove(currencyId);
         }
-        if ((type & CurrencyType.EXCHANGEABLE.getCode()) != 0) {
+        if (is(CurrencyType.EXCHANGEABLE)) {
             List<CurrencyBuyOffer> buyOffers = new ArrayList<>();
             try (DbIterator<CurrencyBuyOffer> offers = CurrencyBuyOffer.getOffers(this, 0, -1)) {
                 while (offers.hasNext()) {
@@ -314,7 +324,7 @@ public final class Currency {
                 CurrencyExchangeOffer.removeOffer(offer);
             }
         }
-        if ((type & CurrencyType.MINTABLE.getCode()) != 0) {
+        if (is(CurrencyType.MINTABLE)) {
             CurrencyMint.deleteCurrency(this);
         }
         ownerAccount.addToCurrencyUnits(currencyId, -ownerAccount.getCurrencyUnits(currencyId));
