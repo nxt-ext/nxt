@@ -17,6 +17,9 @@ public abstract class MonetarySystem extends TransactionType {
 
     @Override
     boolean isDuplicate(Transaction transaction, Map<TransactionType, Map<String, Boolean>> duplicates) {
+        if (!(transaction.getAttachment() instanceof Attachment.MonetarySystemAttachment)) {
+            return false;
+        }
         Attachment.MonetarySystemAttachment attachment = (Attachment.MonetarySystemAttachment) transaction.getAttachment();
         Currency currency = Currency.getCurrency(attachment.getCurrencyId());
         String nameLower = currency.getName().toLowerCase();
