@@ -83,5 +83,64 @@ public class TestShufflingRegistration extends BlockchainTest {
         Assert.assertTrue(account4 != null);
         String nullAccount = accountMapping.get(account4);
         Assert.assertTrue(nullAccount == null);
+
+        apiCall = new APICall.Builder("shufflingProcess").
+                param("shuffling", shufflingId).
+                param("secretPhrase", secretPhrase1).
+                param("recipient", "NXT-XK4R-7VJU-6EQG-7R335").
+                feeNQT(Constants.ONE_NXT).
+                build();
+        JSONObject shufflingProcessResponse = apiCall.invoke();
+        Logger.logMessage("shufflingProcessResponse: " + shufflingProcessResponse.toJSONString());
+        generateBlock();
+
+        apiCall = new APICall.Builder("shufflingProcess").
+                param("shuffling", shufflingId).
+                param("secretPhrase", secretPhrase2).
+                param("recipient", "NXT-EVHD-5FLM-3NMQ-G46NR").
+                feeNQT(Constants.ONE_NXT).
+                build();
+        shufflingProcessResponse = apiCall.invoke();
+        Logger.logMessage("shufflingProcessResponse: " + shufflingProcessResponse.toJSONString());
+        generateBlock();
+
+        apiCall = new APICall.Builder("shufflingProcess").
+                param("shuffling", shufflingId).
+                param("secretPhrase", secretPhrase3).
+                param("recipient", "NXT-SZKV-J8TH-GSM9-9LKV6").
+                feeNQT(Constants.ONE_NXT).
+                build();
+        shufflingProcessResponse = apiCall.invoke();
+        Logger.logMessage("shufflingProcessResponse: " + shufflingProcessResponse.toJSONString());
+        generateBlock();
+
+        apiCall = new APICall.Builder("shufflingProcess").
+                param("shuffling", shufflingId).
+                param("secretPhrase", secretPhrase4).
+                param("recipient", "NXT-E93F-7E8Z-BHJ8-A65RG").
+                feeNQT(Constants.ONE_NXT).
+                build();
+        shufflingProcessResponse = apiCall.invoke();
+        Logger.logMessage("shufflingProcessResponse: " + shufflingProcessResponse.toJSONString());
+        generateBlock();
+
+        // Verify that each of the participants is also a recipient (not mandatory just for the test)
+        apiCall = new APICall.Builder("getShufflingParticipants").
+                param("shuffling", shufflingId).
+                build();
+        getParticipantsResponse = apiCall.invoke();
+        Logger.logMessage("getShufflingParticipantsResponse: " + getParticipantsResponse.toJSONString());
+
+        participants = (JSONArray)getParticipantsResponse.get("participants");
+        accountMapping = new HashMap<>();
+        for (Object participant : participants) {
+            String account = (String) ((JSONObject)participant).get("account");
+            String recipient = (String) ((JSONObject)participant).get("recipient");
+            accountMapping.put(account, recipient);
+        }
+        for (Map.Entry<String, String> mapping : accountMapping.entrySet()) {
+            Assert.assertTrue(accountMapping.get(mapping.getValue()) != null);
+        }
     }
+
 }

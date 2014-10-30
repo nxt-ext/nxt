@@ -103,6 +103,12 @@ public final class ShufflingParticipant {
         return participant;
     }
 
+    static ShufflingParticipant update(long shufflingId, long accountId, byte[] data) {
+        ShufflingParticipant participant = ShufflingParticipant.getParticipant(shufflingId, accountId);
+        participant.setData(data);
+        return participant;
+    }
+
     static void init() {}
 
     private final long shufflingId;
@@ -162,20 +168,35 @@ public final class ShufflingParticipant {
         return nextAccountId;
     }
 
+    public void setNextAccountId(long nextAccountId) {
+        this.nextAccountId = nextAccountId;
+        shufflingParticipantTable.insert(this);
+    }
+
     public long getRecipientId() {
         return recipientId;
+    }
+
+    public void setRecipientId(long recipientId) {
+        this.recipientId = recipientId;
+        shufflingParticipantTable.insert(this);
     }
 
     public State getState() {
         return state;
     }
 
+    public void setState(State state) {
+        this.state = state;
+        shufflingParticipantTable.insert(this);
+    }
+
     public byte[] getData() {
         return data;
     }
 
-    public void setNextAccountId(long nextAccountId) {
-        this.nextAccountId = nextAccountId;
+    public void setData(byte[] data) {
+        this.data = data;
         shufflingParticipantTable.insert(this);
     }
 

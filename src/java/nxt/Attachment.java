@@ -2297,6 +2297,67 @@ public interface Attachment extends Appendix {
         }
     }
 
+    public final static class MonetarySystemShufflingProcessing extends AbstractAttachment {
+
+        private final long shufflingId;
+        private final byte[] data;
+
+        public MonetarySystemShufflingProcessing(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
+            super(buffer, transactionVersion);
+            this.shufflingId = buffer.getLong();
+            int size = buffer.getInt();
+            this.data = new byte[size];
+            buffer.get(data);
+        }
+
+        MonetarySystemShufflingProcessing(JSONObject attachmentData) {
+            super(attachmentData);
+            this.shufflingId = Convert.parseUnsignedLong((String)attachmentData.get("shuffling"));
+            this.data = Convert.parseHexString((String)attachmentData.get("data"));
+        }
+
+        public MonetarySystemShufflingProcessing(long shufflingId, byte[] data) {
+            this.shufflingId = shufflingId;
+            this.data = data;
+        }
+
+        @Override
+        String getAppendixName() {
+            return "ShufflingProcessing";
+        }
+
+        @Override
+        int getMySize() {
+            return 8 + 4 + data.length;
+        }
+
+        @Override
+        void putMyBytes(ByteBuffer buffer) {
+            buffer.putLong(shufflingId);
+            buffer.putInt(data.length);
+            buffer.put(data);
+        }
+
+        @Override
+        void putMyJSON(JSONObject attachment) {
+            attachment.put("shuffling", Convert.toUnsignedLong(shufflingId));
+            attachment.put("data", Convert.toHexString(data));
+        }
+
+        @Override
+        public TransactionType getTransactionType() {
+            return MonetarySystem.SHUFFLING_PROCESSING;
+        }
+
+        public long getShufflingId() {
+            return shufflingId;
+        }
+
+        public byte[] getData() {
+            return data;
+        }
+    }
+
     public final static class MonetarySystemShufflingDistribution extends AbstractAttachment {
 
         private final long shufflingId;

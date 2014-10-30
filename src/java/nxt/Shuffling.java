@@ -1,8 +1,10 @@
 package nxt;
 
+import nxt.crypto.EncryptedData;
 import nxt.db.DbIterator;
 import nxt.db.DbKey;
 import nxt.db.VersionedEntityDbTable;
+import nxt.util.Convert;
 import nxt.util.Listener;
 import nxt.util.Listeners;
 
@@ -10,14 +12,11 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayDeque;
+import java.util.Deque;
+import java.util.List;
 
 public final class Shuffling {
-
-    private boolean processing;
-
-    public boolean isProcessing() {
-        return state == State.PROCESSING;
-    }
 
     public static enum Event {
         SHUFFLING_CREATED, SHUFFLING_CANCELLED
@@ -141,7 +140,27 @@ public final class Shuffling {
         }
     }
 
-
+    public static void updateParticipantData(Transaction transaction, Attachment.MonetarySystemShufflingProcessing attachment) {
+        long shufflingId = attachment.getShufflingId();
+        long participantId = transaction.getSenderId();
+        byte[] data = attachment.getData();
+        ShufflingParticipant senderParticipant = ShufflingParticipant.getParticipant(shufflingId, participantId);
+        Shuffling shuffling = Shuffling.getShuffling(shufflingId);
+        long nextParticipantId = senderParticipant.getNextAccountId();
+        if (nextParticipantId != 0) {
+            shuffling.setAssigneeAccountId(nextParticipantId);
+            ShufflingParticipant.update(shufflingId, nextParticipantId, data);
+        } else {
+            // participant processing is complete update the shuffling state
+            shuffling.setState(State.VERIFICATION);
+            List<EncryptedData> unmarshaledDataList = EncryptedData.getUnmarshaledDataList(data);
+            Deque<EncryptedData> stack = new ArrayDeque<>(unmarshaledDataList);
+            for (ShufflingParticipant participant : ShufflingParticipant.getParticipants(shufflingId)) {
+                long recipientId = Convert.parseUnsignedLong(Convert.toString(stack.pop().getData()));
+                participant.setRecipientId(recipientId);
+            }
+        }
+    }
 
     static void init() {}
 
@@ -287,6 +306,10 @@ public final class Shuffling {
     public boolean isRegistrationEnabled() {
         return state == State.REGISTRATION;
     }
+    public boolean isProcessingEnabled() {
+        return state == State.PROCESSING;
+    }
+
     public boolean isVerificationEnabled() {
         return state == State.VERIFICATION;
     }

@@ -4,9 +4,13 @@ import nxt.NxtException;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.security.SecureRandom;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
@@ -32,7 +36,7 @@ public final class EncryptedData {
             gzip.close();
             byte[] compressedPlaintext = bos.toByteArray();
             byte[] nonce = new byte[32];
-            secureRandom.get().nextBytes(nonce);
+                secureRandom.get().nextBytes(nonce);
             byte[] data = Crypto.aesEncrypt(compressedPlaintext, myPrivateKey, theirPublicKey, nonce);
             return new EncryptedData(data, nonce);
         } catch (IOException e) {
@@ -79,6 +83,67 @@ public final class EncryptedData {
     public EncryptedData(byte[] data, long nonce) {
         this.data = data;
         this.nonce = ByteBuffer.allocate(8).putLong(nonce).array();
+    }
+
+    public static byte[] marshalData(EncryptedData encryptedData) {
+        ByteArrayOutputStream bytesStream = new ByteArrayOutputStream();
+        DataOutputStream dataOutputStream = new DataOutputStream(bytesStream);
+        marshalData(dataOutputStream, encryptedData);
+        return bytesStream.toByteArray();
+    }
+
+    public static void marshalData(DataOutputStream dataOutputStream, EncryptedData encryptedData) {
+        try {
+            dataOutputStream.writeInt(encryptedData.getData().length);
+            dataOutputStream.write(encryptedData.getData());
+            dataOutputStream.writeInt(encryptedData.getNonce().length);
+            dataOutputStream.write(encryptedData.getNonce());
+        } catch (IOException e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
+    public static EncryptedData unmarshalData(byte[] data) {
+        return unmarshalData(new DataInputStream(new ByteArrayInputStream(data)));
+    }
+
+    public static EncryptedData unmarshalData(DataInputStream dataInputStream) {
+        try {
+            byte[] data = new byte[dataInputStream.readInt()];
+            int rc = dataInputStream.read(data);
+            if (rc != data.length) {
+                throw new IllegalStateException("Error reading data");
+            }
+            int nonceLen = dataInputStream.readInt();
+            byte[] nonce;
+            if (nonceLen > 0) {
+                nonce = new byte[nonceLen];
+                rc = dataInputStream.read(nonce);
+                if (rc != nonce.length) {
+                    throw new IllegalStateException("Error reading nonce");
+                }
+            } else {
+                // When creating EncryptedData for plain text data we set an empty nonce to signal this
+                nonce = new byte[]{};
+            }
+            return new EncryptedData(data, nonce);
+        } catch (IOException e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
+    public static List<EncryptedData> getUnmarshaledDataList(byte[] dataBytes) {
+        DataInputStream dataInputStream = new DataInputStream(new ByteArrayInputStream(dataBytes));
+        List<EncryptedData> inputDataList = new ArrayList<>();
+        try {
+            while (dataInputStream.available() > 0) {
+                EncryptedData encryptedData = unmarshalData(dataInputStream);
+                inputDataList.add(encryptedData);
+            }
+        } catch (IOException e) {
+            throw new IllegalStateException(e);
+        }
+        return inputDataList;
     }
 
     public byte[] decrypt(byte[] myPrivateKey, byte[] theirPublicKey) {

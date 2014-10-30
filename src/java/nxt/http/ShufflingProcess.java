@@ -1,6 +1,7 @@
 package nxt.http;
 
 import nxt.Account;
+import nxt.Attachment;
 import nxt.NxtException;
 import nxt.Shuffling;
 import nxt.ShufflingParticipant;
@@ -8,15 +9,20 @@ import nxt.crypto.EncryptedData;
 import nxt.db.DbIterator;
 import nxt.util.Convert;
 import nxt.util.JSON;
-import org.json.simple.JSONArray;
+import nxt.util.Logger;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
-import org.json.simple.JSONValue;
 
 import javax.servlet.http.HttpServletRequest;
-import java.nio.ByteBuffer;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static nxt.http.JSONResponses.MISSING_SECRET_PHRASE;
@@ -26,17 +32,17 @@ public final class ShufflingProcess extends CreateTransaction {
     static final ShufflingProcess instance = new ShufflingProcess();
 
     private ShufflingProcess() {
-        super(new APITag[] {APITag.SHUFFLING, APITag.CREATE_TRANSACTION},
-                "shuffling", "secretPhrase", "recipient", "data");
+        super(new APITag[]{APITag.SHUFFLING, APITag.CREATE_TRANSACTION},
+                "shuffling", "secretPhrase", "recipient");
     }
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
         Shuffling shuffling = ParameterParser.getShuffling(req);
-        if (!shuffling.isProcessing()) {
+        if (!shuffling.isProcessingEnabled()) {
             JSONObject response = new JSONObject();
             response.put("errorCode", 11);
-            response.put("errorDescription", "shuffling is not ready for processing, state " + shuffling.getState());
+            response.put("errorDescription", "Shuffling is not ready for processing, state " + shuffling.getState());
             return JSON.prepare(response);
         }
         Account senderAccount = ParameterParser.getSenderAccount(req);
@@ -54,6 +60,7 @@ public final class ShufflingProcess extends CreateTransaction {
         }
         long recipientId = ParameterParser.getRecipientId(req);
 
+        // Read the participant list for the shuffling
         DbIterator<ShufflingParticipant> participants = ShufflingParticipant.getParticipants(shuffling.getId());
         Map<Long, Long> mapping = new HashMap<>();
         Map<Long, Long> reverseMapping = new HashMap<>();
@@ -63,53 +70,93 @@ public final class ShufflingProcess extends CreateTransaction {
             reverseMapping.put(participant.getNextAccountId(), participant.getAccountId());
             participantLookup.put(participant.getAccountId(), participant);
         }
-        byte[] data = participantLookup.get(senderAccount.getId()).getData();
-        JSONObject tokens;
-        JSONArray tokenArray;
-        if (data.length == 0) {
-            tokens = new JSONObject();
-            tokenArray = new JSONArray();
-            tokens.put("tokens", tokenArray);
-        } else {
-            tokens = (JSONObject) JSONValue.parse(Convert.toString(data));
-            tokenArray = (JSONArray) tokens.get("tokens");
+        if (participantLookup.get(senderAccount.getId()) == null) {
+            JSONObject response = new JSONObject();
+            response.put("errorCode", 13);
+            response.put("errorDescription", String.format("Account %s is not a participant of shuffling %d",
+                    Convert.rsAccount(senderAccount.getId()), shuffling.getId()));
+            return JSON.prepare(response);
         }
-        JSONArray shuffledTokensArray = new JSONArray();
-        for (Object token : tokenArray) {
-            String tokenData = (String)token;
-            byte[] tokenBytes = Convert.toBytes(tokenData);
-            EncryptedData encryptedData = EncryptedData.readEncryptedData(ByteBuffer.wrap(tokenBytes), 0, tokenBytes.length);
-            Account previous = Account.getAccount(reverseMapping.get(senderAccount.getId()));
-            data = previous.decryptFrom(encryptedData, secretPhrase);
-            shuffledTokensArray.add(data);
-        }
-        JSONObject shuffledTokens = new JSONObject();
-        shuffledTokens.put("tokens", shuffledTokensArray);
 
-        Long id = senderAccount.getId(); // TODO null vs 0 might be a problem
-        while (mapping.get(id) != null) {
+        // Read the encrypted participant data for the sender account token (the first sender won't have any data)
+        byte[] dataBytes = participantLookup.get(senderAccount.getId()).getData();
+        List<EncryptedData> inputDataList = EncryptedData.getUnmarshaledDataList(dataBytes);
+
+        // decrypt the tokens bundled in the current data
+        List<EncryptedData> outputDataList = new ArrayList<>();
+        for (EncryptedData encryptedData : inputDataList) {
+            // Since we cannot tell which participant public key was used to encrypted which token
+            // we'll have to try them all until one succeed starting with the shuffling issuer which has to be a participant
+            byte[] decryptedBytes = null;
+            long id = shuffling.getIssuerId();
+            while (mapping.get(id) != 0) {
+                Account publicKeyAccount = Account.getAccount(id);
+                Logger.logDebugMessage(String.format("decryptFrom public key of %s sender %s data %s nonce %s",
+                        Convert.rsAccount(publicKeyAccount.getId()), Convert.rsAccount(senderAccount.getId()),
+                        Arrays.toString(encryptedData.getData()), Arrays.toString(encryptedData.getNonce())));
+                try {
+                    decryptedBytes = publicKeyAccount.decryptFrom(encryptedData, secretPhrase);
+                } catch (Exception e) {
+                    // That's fine, this participant did not encrypt the token try the next one
+                    Logger.logDebugMessage("failed " + e.getMessage());
+                    id = mapping.get(id);
+                    continue;
+                }
+                Logger.logDebugMessage(String.format("decryptFrom bytes %s", Arrays.toString(decryptedBytes)));
+                break;
+            }
+            if (decryptedBytes == null) {
+                // This should never happen, as long as the data is intact one of the participants will be able
+                // to decrypt it
+                JSONObject response = new JSONObject();
+                response.put("errorCode", 15);
+                response.put("errorDescription", String.format("Cannot decrypt token %s of shuffling %d",
+                        Convert.rsAccount(senderAccount.getId()), shuffling.getId()));
+                return JSON.prepare(response);
+            }
+            outputDataList.add(EncryptedData.unmarshalData(new DataInputStream(new ByteArrayInputStream(decryptedBytes))));
+        }
+
+        // We always encrypt the recipient using the public key of the last participant
+        // Therefore we need to find the last participant
+        // TODO can we rely on account id 0 never to exist ? If not we'll need to store String accounts
+        long id = senderAccount.getId();
+        while (mapping.get(id) != 0) {
             id = mapping.get(id);
         }
+
+        // Calculate the token for the current sender by encrypting it using the public key of all the participants
+        // which did not perform shuffle processing yet
+        EncryptedData recipientData = new EncryptedData(Convert.toBytes(Convert.toUnsignedLong(recipientId)), new byte[]{});
+        byte[] bytesToEncrypt = EncryptedData.marshalData(recipientData);
+        EncryptedData encryptedData = null;
         if (id == senderAccount.getId()) {
-            // TODO handle last participant everything is decrypted
+            // If we are that last participant to process then we do not encrypt our recipient
+            encryptedData = new EncryptedData(bytesToEncrypt, new byte[]{});
+        } else {
+            while (id != senderAccount.getId() && id != 0) {
+                Account account = Account.getAccount(id);
+                Logger.logDebugMessage(String.format("encryptTo %s by %s secretPhrase %s bytes %s",
+                        Convert.rsAccount(account.getId()), Convert.rsAccount(senderAccount.getId()), secretPhrase, Arrays.toString(bytesToEncrypt)));
+                encryptedData = account.encryptTo(bytesToEncrypt, secretPhrase);
+                Logger.logDebugMessage(String.format("encryptTo data %s nonce %s",
+                        Arrays.toString(encryptedData.getData()), Arrays.toString(encryptedData.getNonce())));
+                id = reverseMapping.get(id);
+                bytesToEncrypt = EncryptedData.marshalData(encryptedData);
+            }
         }
-        EncryptedData encryptedData;
-        JSONObject token = new JSONObject();
-        token.put("recipient", recipientId);
-        while (id != senderAccount.getId()) {
-            encryptedData = Account.getAccount(id).encryptTo(Convert.toBytes(token.toJSONString()), secretPhrase);
-            token = new JSONObject();
-            token.put("recipient", Convert.toHexString(encryptedData.getData()));
-            id = reverseMapping.get(id);
+        outputDataList.add(encryptedData);
+
+        // Shuffle the tokens and save the shuffled tokens as the participant data
+        Collections.shuffle(outputDataList);
+        ByteArrayOutputStream bytesStream = new ByteArrayOutputStream();
+        DataOutputStream dataOutputStream = new DataOutputStream(bytesStream);
+        for (EncryptedData outputData : outputDataList) {
+            EncryptedData.marshalData(dataOutputStream, outputData);
         }
-        shuffledTokensArray.add(token);
-        Collections.shuffle(shuffledTokensArray);
-        byte[] tokenBytes = Convert.toBytes(shuffledTokens.toJSONString());
-
-
-//        Attachment attachment = new Attachment.MonetarySystemShufflingDistribution(shuffling.getId());
-//
-//        return createTransaction(req, senderAccount, attachment);
-        return null;
+        byte[] data = bytesStream.toByteArray();
+        Attachment attachment = new Attachment.MonetarySystemShufflingProcessing(shuffling.getId(), data);
+        return createTransaction(req, senderAccount, attachment);
     }
+
 }

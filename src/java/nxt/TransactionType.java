@@ -56,9 +56,10 @@ public abstract class TransactionType {
     static final byte SUBTYPE_MONETARY_SYSTEM_CURRENCY_MINTING = 7;
     static final byte SUBTYPE_MONETARY_SYSTEM_SHUFFLING_CREATION = 8;
     static final byte SUBTYPE_MONETARY_SYSTEM_SHUFFLING_REGISTRATION = 9;
-    static final byte SUBTYPE_MONETARY_SYSTEM_SHUFFLING_VERIFICATION = 10;
-    static final byte SUBTYPE_MONETARY_SYSTEM_SHUFFLING_DISTRIBUTION = 11;
-    static final byte SUBTYPE_MONETARY_SYSTEM_SHUFFLING_CANCELLATION = 12;
+    static final byte SUBTYPE_MONETARY_SYSTEM_SHUFFLING_PROCESSING = 10;
+    static final byte SUBTYPE_MONETARY_SYSTEM_SHUFFLING_VERIFICATION = 11;
+    static final byte SUBTYPE_MONETARY_SYSTEM_SHUFFLING_DISTRIBUTION = 12;
+    static final byte SUBTYPE_MONETARY_SYSTEM_SHUFFLING_CANCELLATION = 13;
 
     private static final byte SUBTYPE_ACCOUNT_CONTROL_EFFECTIVE_BALANCE_LEASING = 0;
 
@@ -168,6 +169,8 @@ public abstract class TransactionType {
                         return MonetarySystem.SHUFFLING_CREATION;
                     case SUBTYPE_MONETARY_SYSTEM_SHUFFLING_REGISTRATION:
                         return MonetarySystem.SHUFFLING_REGISTRATION;
+                    case SUBTYPE_MONETARY_SYSTEM_SHUFFLING_PROCESSING:
+                        return MonetarySystem.SHUFFLING_PROCESSING;
                     case SUBTYPE_MONETARY_SYSTEM_SHUFFLING_VERIFICATION:
                         return MonetarySystem.SHUFFLING_VERIFICATION;
                     case SUBTYPE_MONETARY_SYSTEM_SHUFFLING_DISTRIBUTION:
