@@ -5,7 +5,6 @@ import org.json.simple.JSONObject;
 
 import java.nio.ByteBuffer;
 import java.util.Map;
-import java.util.Set;
 
 public abstract class MonetarySystem extends TransactionType {
 
@@ -14,6 +13,19 @@ public abstract class MonetarySystem extends TransactionType {
     @Override
     public final byte getType() {
         return TransactionType.TYPE_MONETARY_SYSTEM;
+    }
+
+    @Override
+    boolean isDuplicate(Transaction transaction, Map<TransactionType, Map<String, Boolean>> duplicates) {
+        Attachment.MonetarySystemAttachment attachment = (Attachment.MonetarySystemAttachment) transaction.getAttachment();
+        Currency currency = Currency.getCurrency(attachment.getCurrencyId());
+        String nameLower = currency.getName().toLowerCase();
+        String codeLower = currency.getCode().toLowerCase();
+        boolean isDuplicate = TransactionType.isDuplicate(CURRENCY_ISSUANCE, nameLower, duplicates, false);
+        if (! nameLower.equals(codeLower)) {
+            isDuplicate = isDuplicate || TransactionType.isDuplicate(CURRENCY_ISSUANCE, codeLower, duplicates, false);
+        }
+        return isDuplicate;
     }
 
     public static final TransactionType CURRENCY_ISSUANCE = new MonetarySystem() {
@@ -44,13 +56,13 @@ public abstract class MonetarySystem extends TransactionType {
         }
 
         @Override
-        boolean isDuplicate(Transaction transaction, Map<TransactionType, Set<String>> duplicates) {
+        boolean isDuplicate(Transaction transaction, Map<TransactionType, Map<String, Boolean>> duplicates) {
             Attachment.MonetarySystemCurrencyIssuance attachment = (Attachment.MonetarySystemCurrencyIssuance) transaction.getAttachment();
             String nameLower = attachment.getName().toLowerCase();
             String codeLower = attachment.getCode().toLowerCase();
-            boolean isDuplicate = TransactionType.isDuplicate(CURRENCY_ISSUANCE, nameLower, duplicates);
+            boolean isDuplicate = TransactionType.isDuplicate(CURRENCY_ISSUANCE, nameLower, duplicates, true);
             if (! nameLower.equals(codeLower)) {
-                isDuplicate = isDuplicate || TransactionType.isDuplicate(CURRENCY_ISSUANCE, codeLower, duplicates);
+                isDuplicate = isDuplicate || TransactionType.isDuplicate(CURRENCY_ISSUANCE, codeLower, duplicates, true);
             }
             return isDuplicate;
         }
@@ -64,11 +76,12 @@ public abstract class MonetarySystem extends TransactionType {
                     || attachment.getCurrentSupply() > attachment.getTotalSupply()
                     || attachment.getIssuanceHeight() < 0
                     || attachment.getMinReservePerUnitNQT() < 0 || attachment.getMinReservePerUnitNQT() > Constants.MAX_BALANCE_NQT
+                    || attachment.getDecimals() < 0 || attachment.getDecimals() > 8
                     || attachment.getRuleset() != 0) {
                 throw new NxtException.NotValidException("Invalid currency issuance: " + attachment.getJSONObject());
             }
             CurrencyType.validate(attachment.getType(), transaction);
-            CurrencyType.validateCurrencyNaming(attachment);
+            CurrencyType.validateCurrencyNaming(transaction.getSenderId(), attachment);
         }
 
 
@@ -492,7 +505,7 @@ public abstract class MonetarySystem extends TransactionType {
         @Override
         void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
             Attachment.MonetarySystemCurrencyMinting attachment = (Attachment.MonetarySystemCurrencyMinting) transaction.getAttachment();
-            CurrencyMint.mintCurrency(transaction, senderAccount, attachment);
+            CurrencyMint.mintCurrency(senderAccount, attachment);
         }
 
         @Override

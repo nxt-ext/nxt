@@ -17,11 +17,6 @@ public enum CurrencyType {
 
         @Override
         void validate(Currency currency, Transaction transaction, Set<CurrencyType> validators) throws NxtException.NotValidException {
-            if (transaction.getType() == MonetarySystem.CURRENCY_ISSUANCE) {
-                if (validators.contains(CLAIMABLE)) {
-                    throw new NxtException.NotValidException("Exchangeable currency cannot be claimed");
-                }
-            }
         }
 
         @Override
@@ -104,12 +99,8 @@ public enum CurrencyType {
         @Override
         void validate(Currency currency, Transaction transaction, Set<CurrencyType> validators) throws NxtException.ValidationException {
             if (transaction.getType() == MonetarySystem.CURRENCY_ISSUANCE) {
-                Attachment.MonetarySystemCurrencyIssuance issuanceAttachment = (Attachment.MonetarySystemCurrencyIssuance) transaction.getAttachment();
                 if (!validators.contains(RESERVABLE)) {
                     throw new NxtException.NotValidException("Claimable currency must be reservable");
-                }
-                if (issuanceAttachment.getCurrentSupply() != 0) {
-                    throw new NxtException.NotValidException("Claimable currency should have initial supply 0");
                 }
             }
             if (transaction.getType() == MonetarySystem.RESERVE_CLAIM) {
@@ -233,14 +224,10 @@ public enum CurrencyType {
         }
     }
 
-    static void validateCurrencyNaming(Attachment.MonetarySystemCurrencyIssuance attachment) throws NxtException.ValidationException {
+    static void validateCurrencyNaming(long issuerAccountId, Attachment.MonetarySystemCurrencyIssuance attachment) throws NxtException.ValidationException {
         String name = attachment.getName();
         String code = attachment.getCode();
         String description = attachment.getDescription();
-        validateCurrencyNaming(name, code, description);
-    }
-
-    private static void validateCurrencyNaming(String name, String code, String description) throws NxtException.ValidationException {
         if (name.length() < Constants.MIN_CURRENCY_NAME_LENGTH || name.length() > Constants.MAX_CURRENCY_NAME_LENGTH
                 || code.length() != Constants.CURRENCY_CODE_LENGTH
                 || description.length() > Constants.MAX_CURRENCY_DESCRIPTION_LENGTH) {
@@ -260,11 +247,18 @@ public enum CurrencyType {
         if ("NXT".equals(code) || "nxt".equals(normalizedName)) {
             throw new NxtException.NotValidException("Currency name already used");
         }
-        if (Currency.getCurrencyByName(normalizedName) != null || Currency.getCurrencyByCode(name.toUpperCase()) != null) {
+        Currency currency;
+        if ((currency = Currency.getCurrencyByName(normalizedName)) != null && ! currency.isSoleOwner(issuerAccountId)) {
             throw new NxtException.NotCurrentlyValidException("Currency name already used: " + normalizedName);
         }
-        if (Currency.getCurrencyByCode(code) != null || Currency.getCurrencyByName(code.toLowerCase()) != null) {
+        if ((currency = Currency.getCurrencyByCode(name.toUpperCase())) != null && ! currency.isSoleOwner(issuerAccountId)) {
+            throw new NxtException.NotCurrentlyValidException("Currency name already used as code: " + normalizedName);
+        }
+        if ((currency = Currency.getCurrencyByCode(code)) != null && ! currency.isSoleOwner(issuerAccountId)) {
             throw new NxtException.NotCurrentlyValidException("Currency code already used: " + code);
+        }
+        if ((currency = Currency.getCurrencyByName(code.toLowerCase())) != null && ! currency.isSoleOwner(issuerAccountId)) {
+            throw new NxtException.NotCurrentlyValidException("Currency code already used as name: " + code);
         }
     }
 

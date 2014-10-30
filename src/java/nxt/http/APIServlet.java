@@ -185,6 +185,7 @@ public final class APIServlet extends HttpServlet {
         map.put("shufflingVerify", ShufflingVerify.instance);
         map.put("shufflingDistribute", ShufflingDistribute.instance);
         map.put("shufflingCancel", ShufflingCancel.instance);
+        map.put("deleteAlias", DeleteAlias.instance);
         map.put("signTransaction", SignTransaction.instance);
         map.put("startForging", StartForging.instance);
         map.put("stopForging", StopForging.instance);

@@ -2,8 +2,9 @@ package nxt;
 
 import nxt.crypto.HashFunction;
 import nxt.db.DbClause;
+import nxt.db.DbIterator;
 import nxt.db.DbKey;
-import nxt.db.EntityDbTable;
+import nxt.db.VersionedEntityDbTable;
 
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
@@ -12,7 +13,9 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 /**
  * Manages currency proof of work minting
@@ -20,7 +23,7 @@ import java.util.Arrays;
 public final class CurrencyMint {
 
 
-    private static final DbKey.LongKeyFactory<CurrencyMint> currencyMintDbKeyFactory = new DbKey.LongKeyFactory<CurrencyMint>("id") {
+    private static final DbKey.LinkKeyFactory<CurrencyMint> currencyMintDbKeyFactory = new DbKey.LinkKeyFactory<CurrencyMint>("currency_id", "account_id") {
 
         @Override
         public DbKey newKey(CurrencyMint currencyMint) {
@@ -29,7 +32,7 @@ public final class CurrencyMint {
 
     };
 
-    private static final EntityDbTable<CurrencyMint> currencyMintTable = new EntityDbTable<CurrencyMint>("currency_mint", currencyMintDbKeyFactory) {
+    private static final VersionedEntityDbTable<CurrencyMint> currencyMintTable = new VersionedEntityDbTable<CurrencyMint>("currency_mint", currencyMintDbKeyFactory) {
 
         @Override
         protected CurrencyMint load(Connection con, ResultSet rs) throws SQLException {
@@ -45,46 +48,39 @@ public final class CurrencyMint {
 
     static void init() {}
 
-    private final long id;
     private final DbKey dbKey;
     private final long currencyId;
     private final long accountId;
-    private final long counter;
-    private final int height;
+    private long counter;
+    private final int submission_height;
 
-    private CurrencyMint(long transactionId, long currencyId, long accountId, long counter) {
-        this.id = transactionId;
-        this.dbKey = currencyMintDbKeyFactory.newKey(this.id);
+    private CurrencyMint(long currencyId, long accountId, long counter) {
         this.currencyId = currencyId;
         this.accountId = accountId;
+        this.dbKey = currencyMintDbKeyFactory.newKey(this.currencyId, this.accountId);
         this.counter = counter;
-        this.height = Nxt.getBlockchain().getHeight();
+        this.submission_height = Nxt.getBlockchain().getHeight();
     }
 
     private CurrencyMint(ResultSet rs) throws SQLException {
-        this.id = rs.getLong("id");
-        this.dbKey = currencyMintDbKeyFactory.newKey(this.id);
         this.currencyId = rs.getLong("currency_id");
         this.accountId = rs.getLong("account_id");
+        this.dbKey = currencyMintDbKeyFactory.newKey(this.currencyId, this.accountId);
         this.counter = rs.getLong("counter");
-        this.height = rs.getInt("height");
+        this.submission_height = rs.getInt("submission_height");
     }
 
     private void save(Connection con) throws SQLException {
-        try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO currency_mint (id, currency_id, account_id, counter, height)"
-                + "VALUES (?, ?, ?, ?, ?)")) {
+        try (PreparedStatement pstmt = con.prepareStatement("MERGE INTO currency_mint (currency_id, account_id, counter, submission_height, height, latest) "
+                + "KEY (currency_id, account_id, height) VALUES (?, ?, ?, ?, ?, TRUE)")) {
             int i = 0;
-            pstmt.setLong(++i, this.getId());
             pstmt.setLong(++i, this.getCurrencyId());
             pstmt.setLong(++i, this.getAccountId());
             pstmt.setLong(++i, this.getCounter());
             pstmt.setInt(++i, this.getHeight());
+            pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
             pstmt.executeUpdate();
         }
-    }
-
-    public long getId() {
-        return id;
     }
 
     public long getCurrencyId() {
@@ -100,21 +96,12 @@ public final class CurrencyMint {
     }
 
     public int getHeight() {
-        return height;
+        return submission_height;
     }
 
     
-    static void mintCurrency(Transaction transaction, final Account account, final Attachment.MonetarySystemCurrencyMinting attachment) {
-        DbClause mintClause = new DbClause(" currency_id = ? AND account_id = ? AND counter = ? ") {
-            @Override
-            protected int set(PreparedStatement pstmt, int index) throws SQLException {
-                pstmt.setLong(index++, attachment.getCurrencyId());
-                pstmt.setLong(index++, account.getId());
-                pstmt.setLong(index++, attachment.getCounter());
-                return index;
-            }
-        };
-        CurrencyMint currencyMint = currencyMintTable.getBy(mintClause);
+    static void mintCurrency(final Account account, final Attachment.MonetarySystemCurrencyMinting attachment) {
+        CurrencyMint currencyMint = currencyMintTable.get(currencyMintDbKeyFactory.newKey(attachment.getCurrencyId(), account.getId()));
         if (currencyMint != null && attachment.getCounter() <= currencyMint.getCounter()) {
             return;
         }
@@ -125,10 +112,27 @@ public final class CurrencyMint {
         byte[] target = getTarget(currency.getMinDifficulty(), currency.getMaxDifficulty(),
                 attachment.getUnits(), currency.getCurrentSupply(), currency.getTotalSupply());
         if (meetsTarget(hash, target)) {
-            currencyMintTable.insert(new CurrencyMint(transaction.getId(), attachment.getCurrencyId(), account.getId(), attachment.getCounter()));
+            if (currencyMint == null) {
+                currencyMint = new CurrencyMint(attachment.getCurrencyId(), account.getId(), attachment.getCounter());
+            } else {
+                currencyMint.counter = attachment.getCounter();
+            }
+            currencyMintTable.insert(currencyMint);
             long units = Math.min(attachment.getUnits(), currency.getTotalSupply() - currency.getCurrentSupply());
             account.addToCurrencyAndUnconfirmedCurrencyUnits(attachment.getUnits(), units);
             currency.increaseSupply(units);
+        }
+    }
+
+    static void deleteCurrency(Currency currency) {
+        List<CurrencyMint> currencyMints = new ArrayList<>();
+        try (DbIterator<CurrencyMint> mints = currencyMintTable.getManyBy(new DbClause.LongClause("currency_id", currency.getId()), 0, -1)) {
+            while (mints.hasNext()) {
+                currencyMints.add(mints.next());
+            }
+        }
+        for (CurrencyMint mint : currencyMints) {
+            currencyMintTable.delete(mint);
         }
     }
 

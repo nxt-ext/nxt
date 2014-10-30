@@ -5,9 +5,8 @@ import org.json.simple.JSONObject;
 
 import java.nio.ByteBuffer;
 import java.util.Arrays;
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 
 
 public abstract class TransactionType {
@@ -29,6 +28,7 @@ public abstract class TransactionType {
     private static final byte SUBTYPE_MESSAGING_ACCOUNT_INFO = 5;
     private static final byte SUBTYPE_MESSAGING_ALIAS_SELL = 6;
     private static final byte SUBTYPE_MESSAGING_ALIAS_BUY = 7;
+    private static final byte SUBTYPE_MESSAGING_ALIAS_DELETE = 8;
 
     private static final byte SUBTYPE_COLORED_COINS_ASSET_ISSUANCE = 0;
     private static final byte SUBTYPE_COLORED_COINS_ASSET_TRANSFER = 1;
@@ -99,6 +99,8 @@ public abstract class TransactionType {
                         return Messaging.ALIAS_SELL;
                     case SUBTYPE_MESSAGING_ALIAS_BUY:
                         return Messaging.ALIAS_BUY;
+                    case SUBTYPE_MESSAGING_ALIAS_DELETE:
+                        return Messaging.ALIAS_DELETE;
                     default:
                         return null;
                 }
@@ -241,17 +243,22 @@ public abstract class TransactionType {
 
     abstract void undoAttachmentUnconfirmed(Transaction transaction, Account senderAccount);
 
-    boolean isDuplicate(Transaction transaction, Map<TransactionType, Set<String>> duplicates) {
+    boolean isDuplicate(Transaction transaction, Map<TransactionType, Map<String,Boolean>> duplicates) {
         return false;
     }
 
-    static boolean isDuplicate(TransactionType uniqueType, String key, Map<TransactionType, Set<String>> duplicates) {
-        Set<String> typeDuplicates = duplicates.get(uniqueType);
+    static boolean isDuplicate(TransactionType uniqueType, String key, Map<TransactionType, Map<String, Boolean>> duplicates, boolean exclusive) {
+        Map<String,Boolean> typeDuplicates = duplicates.get(uniqueType);
         if (typeDuplicates == null) {
-            typeDuplicates = new HashSet<>();
+            typeDuplicates = new HashMap<>();
             duplicates.put(uniqueType, typeDuplicates);
         }
-        return ! typeDuplicates.add(key);
+        Boolean hasExclusive = typeDuplicates.get(key);
+        if (hasExclusive == null) {
+            typeDuplicates.put(key, exclusive);
+            return false;
+        }
+        return hasExclusive || exclusive;
     }
 
     public abstract boolean hasRecipient();
@@ -406,9 +413,9 @@ public abstract class TransactionType {
             }
 
             @Override
-            boolean isDuplicate(Transaction transaction, Map<TransactionType, Set<String>> duplicates) {
+            boolean isDuplicate(Transaction transaction, Map<TransactionType, Map<String,Boolean>> duplicates) {
                 Attachment.MessagingAliasAssignment attachment = (Attachment.MessagingAliasAssignment) transaction.getAttachment();
-                return isDuplicate(Messaging.ALIAS_ASSIGNMENT, attachment.getAliasName().toLowerCase(), duplicates);
+                return isDuplicate(Messaging.ALIAS_ASSIGNMENT, attachment.getAliasName().toLowerCase(), duplicates, true);
             }
 
             @Override
@@ -463,10 +470,10 @@ public abstract class TransactionType {
             }
 
             @Override
-            boolean isDuplicate(Transaction transaction, Map<TransactionType, Set<String>> duplicates) {
+            boolean isDuplicate(Transaction transaction, Map<TransactionType, Map<String,Boolean>> duplicates) {
                 Attachment.MessagingAliasSell attachment = (Attachment.MessagingAliasSell) transaction.getAttachment();
                 // not a bug, uniqueness is based on Messaging.ALIAS_ASSIGNMENT
-                return isDuplicate(Messaging.ALIAS_ASSIGNMENT, attachment.getAliasName().toLowerCase(), duplicates);
+                return isDuplicate(Messaging.ALIAS_ASSIGNMENT, attachment.getAliasName().toLowerCase(), duplicates, true);
             }
 
             @Override
@@ -533,10 +540,10 @@ public abstract class TransactionType {
             }
 
             @Override
-            boolean isDuplicate(Transaction transaction, Map<TransactionType, Set<String>> duplicates) {
+            boolean isDuplicate(Transaction transaction, Map<TransactionType, Map<String,Boolean>> duplicates) {
                 Attachment.MessagingAliasBuy attachment = (Attachment.MessagingAliasBuy) transaction.getAttachment();
                 // not a bug, uniqueness is based on Messaging.ALIAS_ASSIGNMENT
-                return isDuplicate(Messaging.ALIAS_ASSIGNMENT, attachment.getAliasName().toLowerCase(), duplicates);
+                return isDuplicate(Messaging.ALIAS_ASSIGNMENT, attachment.getAliasName().toLowerCase(), duplicates, true);
             }
 
             @Override
@@ -570,6 +577,63 @@ public abstract class TransactionType {
             @Override
             public boolean hasRecipient() {
                 return true;
+            }
+
+        };
+
+        public static final TransactionType ALIAS_DELETE = new Messaging() {
+
+            @Override
+            public final byte getSubtype() {
+                return TransactionType.SUBTYPE_MESSAGING_ALIAS_DELETE;
+            }
+
+            @Override
+            Attachment.MessagingAliasDelete parseAttachment(final ByteBuffer buffer, final byte transactionVersion) throws NxtException.NotValidException {
+                return new Attachment.MessagingAliasDelete(buffer, transactionVersion);
+            }
+
+            @Override
+            Attachment.MessagingAliasDelete parseAttachment(final JSONObject attachmentData) throws NxtException.NotValidException {
+                return new Attachment.MessagingAliasDelete(attachmentData);
+            }
+
+            @Override
+            void applyAttachment(final Transaction transaction, final Account senderAccount, final Account recipientAccount) {
+                final Attachment.MessagingAliasDelete attachment =
+                        (Attachment.MessagingAliasDelete) transaction.getAttachment();
+                Alias.deleteAlias(attachment.getAliasName());
+            }
+
+            @Override
+            boolean isDuplicate(final Transaction transaction, final Map<TransactionType, Map<String, Boolean>> duplicates) {
+                Attachment.MessagingAliasDelete attachment = (Attachment.MessagingAliasDelete) transaction.getAttachment();
+                // not a bug, uniqueness is based on Messaging.ALIAS_ASSIGNMENT
+                return isDuplicate(Messaging.ALIAS_ASSIGNMENT, attachment.getAliasName().toLowerCase(), duplicates, true);
+            }
+
+            @Override
+            void validateAttachment(final Transaction transaction) throws NxtException.ValidationException {
+                if (Nxt.getBlockchain().getLastBlock().getHeight() < Constants.MONETARY_SYSTEM_BLOCK) {
+                    throw new NxtException.NotYetEnabledException("Alias delete operation not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
+                }
+                final Attachment.MessagingAliasDelete attachment =
+                        (Attachment.MessagingAliasDelete) transaction.getAttachment();
+                final String aliasName = attachment.getAliasName();
+                if (aliasName == null || aliasName.length() == 0) {
+                    throw new NxtException.NotValidException("Missing alias name");
+                }
+                final Alias alias = Alias.getAlias(aliasName);
+                if (alias == null) {
+                    throw new NxtException.NotCurrentlyValidException("Alias hasn't been registered yet: " + aliasName);
+                } else if (alias.getAccountId() != transaction.getSenderId()) {
+                    throw new NxtException.NotCurrentlyValidException("Alias doesn't belong to sender: " + aliasName);
+                }
+            }
+
+            @Override
+            public boolean hasRecipient() {
+                return false;
             }
 
         };
@@ -738,8 +802,12 @@ public abstract class TransactionType {
             @Override
             void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
                 Attachment.MessagingAccountInfo attachment = (Attachment.MessagingAccountInfo)transaction.getAttachment();
+                if (attachment.getVersion() >= 2 && Nxt.getBlockchain().getHeight() < Constants.MONETARY_SYSTEM_BLOCK) {
+                    throw new NxtException.NotYetEnabledException("Message patterns not yet enabled");
+                }
                 if (attachment.getName().length() > Constants.MAX_ACCOUNT_NAME_LENGTH
                         || attachment.getDescription().length() > Constants.MAX_ACCOUNT_DESCRIPTION_LENGTH
+                        || (attachment.getMessagePattern() != null && attachment.getMessagePattern().pattern().length() > Constants.MAX_ACCOUNT_MESSAGE_PATTERN_LENGTH)
                         ) {
                     throw new NxtException.NotValidException("Invalid account info issuance: " + attachment.getJSONObject());
                 }
@@ -748,7 +816,7 @@ public abstract class TransactionType {
             @Override
             void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
                 Attachment.MessagingAccountInfo attachment = (Attachment.MessagingAccountInfo) transaction.getAttachment();
-                senderAccount.setAccountInfo(attachment.getName(), attachment.getDescription());
+                senderAccount.setAccountInfo(attachment.getName(), attachment.getDescription(), attachment.getMessagePattern());
             }
 
             @Override
@@ -1238,9 +1306,9 @@ public abstract class TransactionType {
             }
 
             @Override
-            boolean isDuplicate(Transaction transaction, Map<TransactionType, Set<String>> duplicates) {
+            boolean isDuplicate(Transaction transaction, Map<TransactionType, Map<String,Boolean>> duplicates) {
                 Attachment.DigitalGoodsDelisting attachment = (Attachment.DigitalGoodsDelisting) transaction.getAttachment();
-                return isDuplicate(DigitalGoods.DELISTING, Convert.toUnsignedLong(attachment.getGoodsId()), duplicates);
+                return isDuplicate(DigitalGoods.DELISTING, Convert.toUnsignedLong(attachment.getGoodsId()), duplicates, true);
             }
 
             @Override
@@ -1288,10 +1356,10 @@ public abstract class TransactionType {
             }
 
             @Override
-            boolean isDuplicate(Transaction transaction, Map<TransactionType, Set<String>> duplicates) {
+            boolean isDuplicate(Transaction transaction, Map<TransactionType, Map<String, Boolean>> duplicates) {
                 Attachment.DigitalGoodsPriceChange attachment = (Attachment.DigitalGoodsPriceChange) transaction.getAttachment();
                 // not a bug, uniqueness is based on DigitalGoods.DELISTING
-                return isDuplicate(DigitalGoods.DELISTING, Convert.toUnsignedLong(attachment.getGoodsId()), duplicates);
+                return isDuplicate(DigitalGoods.DELISTING, Convert.toUnsignedLong(attachment.getGoodsId()), duplicates, true);
             }
 
             @Override
@@ -1340,10 +1408,10 @@ public abstract class TransactionType {
             }
 
             @Override
-            boolean isDuplicate(Transaction transaction, Map<TransactionType, Set<String>> duplicates) {
+            boolean isDuplicate(Transaction transaction, Map<TransactionType, Map<String, Boolean>> duplicates) {
                 Attachment.DigitalGoodsQuantityChange attachment = (Attachment.DigitalGoodsQuantityChange) transaction.getAttachment();
                 // not a bug, uniqueness is based on DigitalGoods.DELISTING
-                return isDuplicate(DigitalGoods.DELISTING, Convert.toUnsignedLong(attachment.getGoodsId()), duplicates);
+                return isDuplicate(DigitalGoods.DELISTING, Convert.toUnsignedLong(attachment.getGoodsId()), duplicates, true);
             }
 
             @Override
@@ -1417,6 +1485,13 @@ public abstract class TransactionType {
             }
 
             @Override
+            boolean isDuplicate(Transaction transaction, Map<TransactionType, Map<String, Boolean>> duplicates) {
+                Attachment.DigitalGoodsPurchase attachment = (Attachment.DigitalGoodsPurchase) transaction.getAttachment();
+                // not a bug, uniqueness is based on DigitalGoods.DELISTING
+                return isDuplicate(DigitalGoods.DELISTING, Convert.toUnsignedLong(attachment.getGoodsId()), duplicates, false);
+            }
+
+            @Override
             public boolean hasRecipient() {
                 return true;
             }
@@ -1467,9 +1542,9 @@ public abstract class TransactionType {
             }
 
             @Override
-            boolean isDuplicate(Transaction transaction, Map<TransactionType, Set<String>> duplicates) {
+            boolean isDuplicate(Transaction transaction, Map<TransactionType, Map<String, Boolean>> duplicates) {
                 Attachment.DigitalGoodsDelivery attachment = (Attachment.DigitalGoodsDelivery) transaction.getAttachment();
-                return isDuplicate(DigitalGoods.DELIVERY, Convert.toUnsignedLong(attachment.getPurchaseId()), duplicates);
+                return isDuplicate(DigitalGoods.DELIVERY, Convert.toUnsignedLong(attachment.getPurchaseId()), duplicates, true);
             }
 
             @Override
@@ -1526,9 +1601,9 @@ public abstract class TransactionType {
             }
 
             @Override
-            boolean isDuplicate(Transaction transaction, Map<TransactionType, Set<String>> duplicates) {
+            boolean isDuplicate(Transaction transaction, Map<TransactionType, Map<String, Boolean>> duplicates) {
                 Attachment.DigitalGoodsFeedback attachment = (Attachment.DigitalGoodsFeedback) transaction.getAttachment();
-                return isDuplicate(DigitalGoods.FEEDBACK, Convert.toUnsignedLong(attachment.getPurchaseId()), duplicates);
+                return isDuplicate(DigitalGoods.FEEDBACK, Convert.toUnsignedLong(attachment.getPurchaseId()), duplicates, true);
             }
 
             @Override
@@ -1597,9 +1672,9 @@ public abstract class TransactionType {
             }
 
             @Override
-            boolean isDuplicate(Transaction transaction, Map<TransactionType, Set<String>> duplicates) {
+            boolean isDuplicate(Transaction transaction, Map<TransactionType, Map<String, Boolean>> duplicates) {
                 Attachment.DigitalGoodsRefund attachment = (Attachment.DigitalGoodsRefund) transaction.getAttachment();
-                return isDuplicate(DigitalGoods.REFUND, Convert.toUnsignedLong(attachment.getPurchaseId()), duplicates);
+                return isDuplicate(DigitalGoods.REFUND, Convert.toUnsignedLong(attachment.getPurchaseId()), duplicates, true);
             }
 
             @Override

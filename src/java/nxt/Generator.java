@@ -24,8 +24,17 @@ public final class Generator implements Comparable<Generator> {
         GENERATION_DEADLINE, START_FORGING, STOP_FORGING
     }
 
-    private static final byte[] fakeForgingPublicKey = Nxt.getBooleanProperty("nxt.enableFakeForging")
-            ? Account.getAccount(Convert.parseAccountId(Nxt.getStringProperty("nxt.fakeForgingAccount"))).getPublicKey() : null;
+    private static final byte[] fakeForgingPublicKey;
+    static {
+        byte[] publicKey = null;
+        if (Nxt.getBooleanProperty("nxt.enableFakeForging")) {
+            Account fakeForgingAccount = Account.getAccount(Convert.parseAccountId(Nxt.getStringProperty("nxt.fakeForgingAccount")));
+            if (fakeForgingAccount != null) {
+                publicKey = fakeForgingAccount.getPublicKey();
+            }
+        }
+        fakeForgingPublicKey = publicKey;
+    }
 
     private static final Listeners<Generator,Event> listeners = new Listeners<>();
 

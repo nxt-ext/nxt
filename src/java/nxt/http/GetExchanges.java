@@ -18,7 +18,7 @@ public final class GetExchanges extends APIServlet.APIRequestHandler {
     static final GetExchanges instance = new GetExchanges();
 
     private GetExchanges() {
-        super(new APITag[] {APITag.MS}, "currency", "account", "firstIndex", "lastIndex");
+        super(new APITag[] {APITag.MS}, "currency", "account", "firstIndex", "lastIndex", "includeCurrencyInfo");
     }
 
     @Override
@@ -26,6 +26,7 @@ public final class GetExchanges extends APIServlet.APIRequestHandler {
 
         String currencyId = Convert.emptyToNull(req.getParameter("currency"));
         String accountId = Convert.emptyToNull(req.getParameter("account"));
+        boolean includeCurrencyInfo = !"false".equalsIgnoreCase(req.getParameter("includeCurrencyInfo"));
 
         int firstIndex = ParameterParser.getFirstIndex(req);
         int lastIndex = ParameterParser.getLastIndex(req);
@@ -46,7 +47,7 @@ public final class GetExchanges extends APIServlet.APIRequestHandler {
                 exchanges = Exchange.getAccountCurrencyExchanges(account.getId(), currency.getId(), firstIndex, lastIndex);
             }
             while (exchanges.hasNext()) {
-                exchangesData.add(JSONData.exchange(exchanges.next()));
+                exchangesData.add(JSONData.exchange(exchanges.next(), includeCurrencyInfo));
             }
         } finally {
             DbUtils.close(exchanges);

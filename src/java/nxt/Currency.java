@@ -65,6 +65,19 @@ public final class Currency {
     }
 
     static void addCurrency(Transaction transaction, Attachment.MonetarySystemCurrencyIssuance attachment) {
+        Currency oldCurrency;
+        if ((oldCurrency = Currency.getCurrencyByCode(attachment.getCode())) != null) {
+            oldCurrency.delete(transaction.getSenderId());
+        }
+        if ((oldCurrency = Currency.getCurrencyByCode(attachment.getName().toUpperCase())) != null) {
+            oldCurrency.delete(transaction.getSenderId());
+        }
+        if ((oldCurrency = Currency.getCurrencyByName(attachment.getName())) != null) {
+            oldCurrency.delete(transaction.getSenderId());
+        }
+        if ((oldCurrency = Currency.getCurrencyByName(attachment.getCode())) != null) {
+            oldCurrency.delete(transaction.getSenderId());
+        }
         currencyTable.insert(new Currency(transaction, attachment));
     }
 
@@ -89,6 +102,7 @@ public final class Currency {
     private final byte maxDifficulty;
     private final byte ruleset;
     private final byte algorithm;
+    private final byte decimals;
     private long currentSupply;
 
     private long currentReservePerUnitNQT;
@@ -108,6 +122,7 @@ public final class Currency {
         this.maxDifficulty = attachment.getMaxDifficulty();
         this.ruleset = attachment.getRuleset();
         this.algorithm = attachment.getAlgorithm();
+        this.decimals = attachment.getDecimals();
         this.currentSupply = attachment.getCurrentSupply();
         this.currentReservePerUnitNQT = 0;
     }
@@ -127,6 +142,7 @@ public final class Currency {
         this.maxDifficulty = rs.getByte("max_difficulty");
         this.ruleset = rs.getByte("ruleset");
         this.algorithm = rs.getByte("algorithm");
+        this.decimals = rs.getByte("decimals");
         this.currentSupply = rs.getLong("current_supply");
         this.currentReservePerUnitNQT = rs.getLong("current_reserve_per_unit_nqt");
     }
@@ -134,8 +150,8 @@ public final class Currency {
     private void save(Connection con) throws SQLException {
         try (PreparedStatement pstmt = con.prepareStatement("MERGE INTO currency (id, account_id, name, code, "
                 + "description, type, total_supply, issuance_height, min_reserve_per_unit_nqt, "
-                + "min_difficulty, max_difficulty, ruleset, algorithm, current_supply, current_reserve_per_unit_nqt, height, latest) "
-                + "KEY (id, height) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, TRUE)")) {
+                + "min_difficulty, max_difficulty, ruleset, algorithm, decimals, current_supply, current_reserve_per_unit_nqt, height, latest) "
+                + "KEY (id, height) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, TRUE)")) {
             int i = 0;
             pstmt.setLong(++i, this.getId());
             pstmt.setLong(++i, this.getAccountId());
@@ -150,6 +166,7 @@ public final class Currency {
             pstmt.setByte(++i, this.getMaxDifficulty());
             pstmt.setByte(++i, this.getRuleset());
             pstmt.setByte(++i, this.getAlgorithm());
+            pstmt.setByte(++i, this.getDecimals());
             pstmt.setLong(++i, this.getCurrentSupply());
             pstmt.setLong(++i, this.getCurrentReservePerUnitNQT());
             pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
@@ -209,6 +226,10 @@ public final class Currency {
         return algorithm;
     }
 
+    public byte getDecimals() {
+        return decimals;
+    }
+
     public long getCurrentSupply() {
         return currentSupply;
     }
@@ -264,6 +285,42 @@ public final class Currency {
 
     public DbIterator<CurrencyTransfer> getTransfers(int from, int to) {
         return CurrencyTransfer.getCurrencyTransfers(this.currencyId, from, to);
+    }
+
+    boolean isSoleOwner(long ownerAccountId) {
+        try (DbIterator<Account.AccountCurrency> accountCurrencies = Account.getCurrencyAccounts(this.currencyId, 0, -1)) {
+            return ! accountCurrencies.hasNext() || accountCurrencies.next().getAccountId() == ownerAccountId && ! accountCurrencies.hasNext();
+        }
+    }
+
+    void delete(long ownerAccountId) {
+        if (!isSoleOwner(ownerAccountId)) {
+            // shouldn't happen as ownership has already been checked in validate, but as a safety check
+            throw new IllegalStateException("Currency " + Convert.toUnsignedLong(currencyId) + " not entirely owned by " + Convert.toUnsignedLong(ownerAccountId));
+        }
+        Account ownerAccount = Account.getAccount(ownerAccountId);
+        if ((type & CurrencyType.RESERVABLE.getCode()) != 0) {
+            Currency.claimReserve(ownerAccount, currencyId, ownerAccount.getCurrencyUnits(currencyId));
+            CurrencyFounder.remove(currencyId);
+        }
+        if ((type & CurrencyType.EXCHANGEABLE.getCode()) != 0) {
+            List<CurrencyBuyOffer> buyOffers = new ArrayList<>();
+            try (DbIterator<CurrencyBuyOffer> offers = CurrencyBuyOffer.getOffers(this, 0, -1)) {
+                while (offers.hasNext()) {
+                    buyOffers.add(offers.next());
+                }
+            }
+            for (CurrencyBuyOffer offer : buyOffers) {
+                CurrencyExchangeOffer.removeOffer(offer);
+            }
+        }
+        if ((type & CurrencyType.MINTABLE.getCode()) != 0) {
+            CurrencyMint.deleteCurrency(this);
+        }
+        ownerAccount.addToCurrencyUnits(currencyId, -ownerAccount.getCurrencyUnits(currencyId));
+        ownerAccount.addToUnconfirmedCurrencyUnits(currencyId, -ownerAccount.getUnconfirmedCurrencyUnits(currencyId));
+        //TODO: anything else to clean up when deleting a currency?
+        currencyTable.delete(this);
     }
 
     private static final class CrowdFundingListener implements Listener<Block> {

@@ -402,6 +402,7 @@ final class DbVersion {
                 apply("CREATE INDEX IF NOT EXISTS bid_order_creation_idx ON bid_order (creation_height DESC)");
             case 126:
                 BlockchainProcessorImpl.getInstance().validateAtNextScan();
+                BlockchainProcessorImpl.getInstance().forceScanAtStart();
                 apply(null);
             case 127:
                 apply("CREATE UNIQUE INDEX IF NOT EXISTS block_timestamp_idx ON block (timestamp DESC)");
@@ -411,7 +412,7 @@ final class DbVersion {
                         + "description VARCHAR, type INT NOT NULL, total_supply BIGINT NOT NULL, "
                         + "issuance_height INT NOT NULL, min_reserve_per_unit_nqt BIGINT NOT NULL, min_difficulty TINYINT NOT NULL, "
                         + "max_difficulty TINYINT NOT NULL, ruleset TINYINT NOT NULL, algorithm TINYINT NOT NULL, current_supply BIGINT NOT NULL, "
-                        + "current_reserve_per_unit_nqt BIGINT NOT NULL, "
+                        + "current_reserve_per_unit_nqt BIGINT NOT NULL, decimals TINYINT NOT NULL DEFAULT 0,"
                         + "height INT NOT NULL, latest BOOLEAN NOT NULL DEFAULT TRUE)");
             case 129:
                 apply("CREATE UNIQUE INDEX IF NOT EXISTS currency_id_height_idx ON currency (id, height DESC)");
@@ -430,10 +431,10 @@ final class DbVersion {
             case 134:
                 apply("CREATE UNIQUE INDEX IF NOT EXISTS currency_founder_currency_id_idx ON currency_founder (currency_id, account_id, height DESC)");
             case 135:
-                apply("CREATE TABLE IF NOT EXISTS currency_mint (db_id IDENTITY, id BIGINT NOT NULL, currency_id BIGINT NOT NULL, "
-                        + "account_id BIGINT NOT NULL, counter BIGINT NOT NULL, height INT NOT NULL)");
+                apply("CREATE TABLE IF NOT EXISTS currency_mint (db_id IDENTITY, currency_id BIGINT NOT NULL, account_id BIGINT NOT NULL, "
+                        + "counter BIGINT NOT NULL, submission_height INT NOT NULL, height INT NOT NULL, latest BOOLEAN NOT NULL DEFAULT TRUE)");
             case 136:
-                apply("CREATE UNIQUE INDEX IF NOT EXISTS currency_mint_currency_id_account_id_counter_idx ON currency_mint (currency_id, account_id, counter)");
+                apply("CREATE UNIQUE INDEX IF NOT EXISTS currency_mint_currency_id_account_id_idx ON currency_mint (currency_id, account_id, height DESC)");
             case 137:
                 apply("CREATE TABLE IF NOT EXISTS buy_offer (db_id INT IDENTITY, id BIGINT NOT NULL, currency_id BIGINT NOT NULL, account_id BIGINT NOT NULL,"
                         + "rate BIGINT NOT NULL, unit_limit BIGINT NOT NULL, supply BIGINT NOT NULL, expiration_height INT NOT NULL,"
@@ -476,20 +477,19 @@ final class DbVersion {
             case 152:
                 apply("CREATE INDEX IF NOT EXISTS currency_transfer_recipient_id_idx ON currency_transfer (recipient_id, height DESC)");
             case 153:
-                BlockchainProcessorImpl.getInstance().forceScanAtStart();
-                apply(null);
-            case 154:
                 apply("CREATE INDEX IF NOT EXISTS account_currency_units_idx ON account_currency (units DESC)");
-            case 155:
+            case 154:
                 apply("CREATE UNIQUE INDEX IF NOT EXISTS currency_name_idx ON currency (name_lower, height DESC)");
-            case 156:
+            case 155:
                 apply("CREATE UNIQUE INDEX IF NOT EXISTS currency_code_idx ON currency (code, height DESC)");
-            case 157:
+            case 156:
                 apply("CREATE INDEX IF NOT EXISTS buy_offer_rate_height_idx ON buy_offer (rate DESC, creation_height ASC)");
-            case 158:
+            case 157:
                 apply("CREATE INDEX IF NOT EXISTS sell_offer_rate_height_idx ON sell_offer (rate ASC, creation_height ASC)");
+            case 158:
+                apply("ALTER TABLE account ADD COLUMN IF NOT EXISTS message_pattern_regex VARCHAR");
             case 159:
-                apply("CREATE UNIQUE INDEX IF NOT EXISTS currency_mint_id_idx ON currency_mint (id)");
+                apply("ALTER TABLE account ADD COLUMN IF NOT EXISTS message_pattern_flags INT");
             case 160:
                 apply("CREATE TABLE IF NOT EXISTS shuffling (db_id INT IDENTITY, id BIGINT NOT NULL, "
                         + "is_currency BOOLEAN NOT NULL DEFAULT FALSE, currency_id BIGINT NOT NULL, "

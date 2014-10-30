@@ -7,6 +7,7 @@ import org.json.simple.JSONObject;
 
 import java.nio.ByteBuffer;
 import java.util.Collections;
+import java.util.regex.Pattern;
 
 public interface Attachment extends Appendix {
 
@@ -259,6 +260,56 @@ public interface Attachment extends Appendix {
 
         @Override
         void putMyJSON(JSONObject attachment) {
+            attachment.put("alias", aliasName);
+        }
+
+        public String getAliasName(){
+            return aliasName;
+        }
+    }
+
+    public final static class MessagingAliasDelete extends AbstractAttachment {
+
+        private final String aliasName;
+
+        MessagingAliasDelete(final ByteBuffer buffer, final byte transactionVersion) throws NxtException.NotValidException {
+            super(buffer, transactionVersion);
+            this.aliasName = Convert.readString(buffer, buffer.get(), Constants.MAX_ALIAS_LENGTH);
+        }
+
+        MessagingAliasDelete(final JSONObject attachmentData) {
+            super(attachmentData);
+            this.aliasName = Convert.nullToEmpty((String) attachmentData.get("alias"));
+        }
+
+        public MessagingAliasDelete(final String aliasName) {
+            this.aliasName = aliasName;
+        }
+
+        @Override
+        String getAppendixName() {
+            return "AliasDelete";
+        }
+
+        @Override
+        public TransactionType getTransactionType() {
+            return TransactionType.Messaging.ALIAS_DELETE;
+        }
+
+        @Override
+        int getMySize() {
+            return 1 + Convert.toBytes(aliasName).length;
+        }
+
+        @Override
+        void putMyBytes(final ByteBuffer buffer) {
+            byte[] aliasBytes = Convert.toBytes(aliasName);
+            buffer.put((byte)aliasBytes.length);
+            buffer.put(aliasBytes);
+        }
+
+        @Override
+        void putMyJSON(final JSONObject attachment) {
             attachment.put("alias", aliasName);
         }
 
@@ -546,22 +597,54 @@ public interface Attachment extends Appendix {
 
         private final String name;
         private final String description;
+        private final Pattern messagePattern;
 
         MessagingAccountInfo(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
             super(buffer, transactionVersion);
             this.name = Convert.readString(buffer, buffer.get(), Constants.MAX_ACCOUNT_NAME_LENGTH);
             this.description = Convert.readString(buffer, buffer.getShort(), Constants.MAX_ACCOUNT_DESCRIPTION_LENGTH);
+            if (getVersion() < 2) {
+                this.messagePattern = null;
+            } else {
+                String regex = Convert.readString(buffer, buffer.getShort(), Constants.MAX_ACCOUNT_MESSAGE_PATTERN_LENGTH);
+                if (regex.length() > 0) {
+                    int flags = buffer.getInt();
+                    this.messagePattern = Pattern.compile(regex, flags);
+                } else {
+                    this.messagePattern = null;
+                }
+            }
         }
 
         MessagingAccountInfo(JSONObject attachmentData) {
             super(attachmentData);
             this.name = Convert.nullToEmpty((String) attachmentData.get("name"));
             this.description = Convert.nullToEmpty((String) attachmentData.get("description"));
+            if (getVersion() < 2) {
+                this.messagePattern = null;
+            } else {
+                String regex = Convert.emptyToNull((String)attachmentData.get("messagePatternRegex"));
+                if (regex != null) {
+                    int flags = ((Long) attachmentData.get("messagePatternFlags")).intValue();
+                    this.messagePattern = Pattern.compile(regex, flags);
+                } else {
+                    this.messagePattern = null;
+                }
+            }
         }
 
         public MessagingAccountInfo(String name, String description) {
+            super(1);
             this.name = name;
             this.description = description;
+            this.messagePattern = null;
+        }
+
+        public MessagingAccountInfo(String name, String description, Pattern messagePattern) {
+            super(messagePattern == null ? 1 : 2);
+            this.name = name;
+            this.description = description;
+            this.messagePattern = messagePattern;
         }
 
         @Override
@@ -571,7 +654,8 @@ public interface Attachment extends Appendix {
 
         @Override
         int getMySize() {
-            return 1 + Convert.toBytes(name).length + 2 + Convert.toBytes(description).length;
+            return 1 + Convert.toBytes(name).length + 2 + Convert.toBytes(description).length +
+                    (getVersion() < 2 ? 0 : 2 + (messagePattern == null ? 0 : Convert.toBytes(messagePattern.pattern()).length + 4));
         }
 
         @Override
@@ -582,12 +666,26 @@ public interface Attachment extends Appendix {
             buffer.put(name);
             buffer.putShort((short) description.length);
             buffer.put(description);
+            if (getVersion() >=2 ) {
+                if (messagePattern == null) {
+                    buffer.putShort((short)0);
+                } else {
+                    byte[] regexBytes = Convert.toBytes(messagePattern.pattern());
+                    buffer.putShort((short) regexBytes.length);
+                    buffer.put(regexBytes);
+                    buffer.putInt(messagePattern.flags());
+                }
+            }
         }
 
         @Override
         void putMyJSON(JSONObject attachment) {
             attachment.put("name", name);
             attachment.put("description", description);
+            if (messagePattern != null) {
+                attachment.put("messagePatternRegex", messagePattern.pattern());
+                attachment.put("messagePatternFlags", messagePattern.flags());
+            }
         }
 
         @Override
@@ -601,6 +699,10 @@ public interface Attachment extends Appendix {
 
         public String getDescription() {
             return description;
+        }
+
+        public Pattern getMessagePattern() {
+            return messagePattern;
         }
 
     }
@@ -1506,6 +1608,12 @@ public interface Attachment extends Appendix {
         }
     }
 
+    public static interface MonetarySystemAttachment {
+
+        long getCurrencyId();
+
+    }
+
     public final static class MonetarySystemCurrencyIssuance extends AbstractAttachment {
 
         private final String name;
@@ -1520,6 +1628,7 @@ public interface Attachment extends Appendix {
         private final byte maxDifficulty;
         private final byte ruleset;
         private final byte algorithm;
+        private final byte decimals;
 
         MonetarySystemCurrencyIssuance(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
             super(buffer, transactionVersion);
@@ -1537,6 +1646,7 @@ public interface Attachment extends Appendix {
             this.maxDifficulty = buffer.get();
             this.ruleset = buffer.get();
             this.algorithm = buffer.get();
+            this.decimals = buffer.get();
         }
 
         MonetarySystemCurrencyIssuance(JSONObject attachmentData) throws NxtException.NotValidException {
@@ -1553,11 +1663,12 @@ public interface Attachment extends Appendix {
             this.maxDifficulty = ((Long)attachmentData.get("maxDifficulty")).byteValue();
             this.ruleset = ((Long)attachmentData.get("ruleset")).byteValue();
             this.algorithm = ((Long)attachmentData.get("algorithm")).byteValue();
+            this.decimals = ((Long) attachmentData.get("decimals")).byteValue();
         }
 
         public MonetarySystemCurrencyIssuance(String name, String code, String description, byte type, long totalSupply,
                                               long currentSupply, int issuanceHeight, long minReservePerUnitNQT, byte minDifficulty, byte maxDifficulty,
-                                              byte ruleset, byte algorithm) {
+                                              byte ruleset, byte algorithm, byte decimals) {
             this.name = name;
             this.code = code;
             this.description = description;
@@ -1570,6 +1681,7 @@ public interface Attachment extends Appendix {
             this.maxDifficulty = maxDifficulty;
             this.ruleset = ruleset;
             this.algorithm = algorithm;
+            this.decimals = decimals;
         }
 
         @Override
@@ -1580,7 +1692,7 @@ public interface Attachment extends Appendix {
         @Override
         int getMySize() {
             return 1 + Convert.toBytes(name).length + Constants.CURRENCY_CODE_LENGTH + 2 +
-                    Convert.toBytes(description).length + 1 + 8 + 8 + 4 + 8 + 1 + 1 + 1 + 1;
+                    Convert.toBytes(description).length + 1 + 8 + 8 + 4 + 8 + 1 + 1 + 1 + 1 + 1;
         }
 
         @Override
@@ -1601,6 +1713,7 @@ public interface Attachment extends Appendix {
             buffer.put(maxDifficulty);
             buffer.put(ruleset);
             buffer.put(algorithm);
+            buffer.put(decimals);
         }
 
         @Override
@@ -1617,6 +1730,7 @@ public interface Attachment extends Appendix {
             attachment.put("maxDifficulty", maxDifficulty & 0xFF);
             attachment.put("ruleset", ruleset & 0xFF);
             attachment.put("algorithm", algorithm & 0xFF);
+            attachment.put("decimals", decimals & 0xFF);
         }
 
         @Override
@@ -1671,9 +1785,13 @@ public interface Attachment extends Appendix {
         public byte getAlgorithm() {
             return algorithm;
         }
+
+        public byte getDecimals() {
+            return decimals;
+        }
     }
 
-    public final static class MonetarySystemReserveIncrease extends AbstractAttachment {
+    public final static class MonetarySystemReserveIncrease extends AbstractAttachment implements MonetarySystemAttachment {
 
         private final long currencyId;
         private final long amountNQT;
@@ -1722,6 +1840,7 @@ public interface Attachment extends Appendix {
             return MonetarySystem.RESERVE_INCREASE;
         }
 
+        @Override
         public long getCurrencyId() {
             return currencyId;
         }
@@ -1732,7 +1851,7 @@ public interface Attachment extends Appendix {
 
     }
 
-    public final static class MonetarySystemReserveClaim extends AbstractAttachment {
+    public final static class MonetarySystemReserveClaim extends AbstractAttachment implements MonetarySystemAttachment {
 
         private final long currencyId;
         private final long units;
@@ -1781,6 +1900,7 @@ public interface Attachment extends Appendix {
             return MonetarySystem.RESERVE_CLAIM;
         }
 
+        @Override
         public long getCurrencyId() {
             return currencyId;
         }
@@ -1791,7 +1911,7 @@ public interface Attachment extends Appendix {
 
     }
 
-    public final static class MonetarySystemCurrencyTransfer extends AbstractAttachment {
+    public final static class MonetarySystemCurrencyTransfer extends AbstractAttachment implements MonetarySystemAttachment {
 
         private final long currencyId;
         private final long units;
@@ -1840,6 +1960,7 @@ public interface Attachment extends Appendix {
             return MonetarySystem.CURRENCY_TRANSFER;
         }
 
+        @Override
         public long getCurrencyId() {
             return currencyId;
         }
@@ -1849,7 +1970,7 @@ public interface Attachment extends Appendix {
         }
     }
 
-    public final static class MonetarySystemPublishExchangeOffer extends AbstractAttachment {
+    public final static class MonetarySystemPublishExchangeOffer extends AbstractAttachment implements MonetarySystemAttachment {
 
         private final long currencyId;
         private final long buyRateNQT;
@@ -1935,6 +2056,7 @@ public interface Attachment extends Appendix {
             return MonetarySystem.PUBLISH_EXCHANGE_OFFER;
         }
 
+        @Override
         public long getCurrencyId() {
             return currencyId;
         }
@@ -1969,7 +2091,7 @@ public interface Attachment extends Appendix {
 
     }
 
-    abstract static class MonetarySystemExchange extends AbstractAttachment {
+    abstract static class MonetarySystemExchange extends AbstractAttachment implements MonetarySystemAttachment {
 
         private final long currencyId;
         private final long rateNQT;
@@ -2014,7 +2136,7 @@ public interface Attachment extends Appendix {
             attachment.put("units", units);
         }
 
-
+        @Override
         public long getCurrencyId() {
             return currencyId;
         }
@@ -2081,7 +2203,7 @@ public interface Attachment extends Appendix {
 
     }
 
-    public final static class MonetarySystemCurrencyMinting extends AbstractAttachment {
+    public final static class MonetarySystemCurrencyMinting extends AbstractAttachment implements MonetarySystemAttachment {
 
         private final long nonce;
         private final long currencyId;
@@ -2146,6 +2268,7 @@ public interface Attachment extends Appendix {
             return nonce;
         }
 
+        @Override
         public long getCurrencyId() {
             return currencyId;
         }

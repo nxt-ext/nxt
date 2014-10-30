@@ -18,7 +18,9 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Types;
 import java.util.Arrays;
+import java.util.regex.Pattern;
 
 @SuppressWarnings({"UnusedDeclaration", "SuspiciousNameCombination"})
 public final class Account {
@@ -161,12 +163,6 @@ public final class Account {
             } else if (this.units == 0 && this.unconfirmedUnits == 0) {
                 accountCurrencyTable.delete(this);
             }
-            /*
-            } else if (this.units < 0 || this.unconfirmedUnits < 0) {
-                throw new DoubleSpendingException(String.format("Negative currency balance for account %s currency %s units %d unconfirmedUnits %d",
-                        Convert.toUnsignedLong(this.accountId), Convert.toUnsignedLong(this.currencyId), units, unconfirmedUnits));
-            }
-            */
         }
 
         @Override
@@ -175,23 +171,6 @@ public final class Account {
                     + " quantity: " + units + " unconfirmedQuantity: " + unconfirmedUnits;
         }
 
-        /*
-        @Override
-        public boolean equals(Object o) {
-            if (! (o instanceof AccountCurrency)) {
-                return false;
-            }
-            AccountCurrency other = (AccountCurrency)o;
-            return this.accountId == other.accountId && this.currencyId == other.currencyId && this.units == other.units
-                    && this.unconfirmedUnits == other.unconfirmedUnits && this.height == other.height;
-        }
-
-        @Override
-        public int hashCode() {
-            return (int)(accountId ^ (accountId >>> 32) ^ currencyId ^ (currencyId >>> 32) ^ units ^ (units >>> 32)
-                    ^ unconfirmedUnits ^ (unconfirmedUnits >>> 32) ^ height);
-        }
-        */
     }
 
     public static class AccountLease {
@@ -504,6 +483,7 @@ public final class Account {
     private long nextLesseeId;
     private String name;
     private String description;
+    private Pattern messagePattern;
 
     private Account(long id) {
         if (id != Crypto.rsDecode(Crypto.rsEncode(id))) {
@@ -532,15 +512,20 @@ public final class Account {
         this.nextLeasingHeightFrom = rs.getInt("next_leasing_height_from");
         this.nextLeasingHeightTo = rs.getInt("next_leasing_height_to");
         this.nextLesseeId = rs.getLong("next_lessee_id");
+        String regex = rs.getString("message_pattern_regex");
+        if (regex != null) {
+            int flags = rs.getInt("message_pattern_flags");
+            this.messagePattern = Pattern.compile(regex, flags);
+        }
     }
 
     private void save(Connection con) throws SQLException {
         try (PreparedStatement pstmt = con.prepareStatement("MERGE INTO account (id, creation_height, public_key, "
                 + "key_height, balance, unconfirmed_balance, forged_balance, name, description, "
                 + "current_leasing_height_from, current_leasing_height_to, current_lessee_id, "
-                + "next_leasing_height_from, next_leasing_height_to, next_lessee_id, "
+                + "next_leasing_height_from, next_leasing_height_to, next_lessee_id, message_pattern_regex, message_pattern_flags, "
                 + "height, latest) "
-                + "KEY (id, height) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, TRUE)")) {
+                + "KEY (id, height) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, TRUE)")) {
             int i = 0;
             pstmt.setLong(++i, this.getId());
             pstmt.setInt(++i, this.getCreationHeight());
@@ -557,6 +542,13 @@ public final class Account {
             DbUtils.setIntZeroToNull(pstmt, ++i, this.getNextLeasingHeightFrom());
             DbUtils.setIntZeroToNull(pstmt, ++i, this.getNextLeasingHeightTo());
             DbUtils.setLongZeroToNull(pstmt, ++i, this.getNextLesseeId());
+            if (messagePattern != null) {
+                pstmt.setString(++i, messagePattern.pattern());
+                pstmt.setInt(++i, messagePattern.flags());
+            } else {
+                pstmt.setNull(++i, Types.VARCHAR);
+                pstmt.setNull(++i, Types.INTEGER);
+            }
             pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
             pstmt.executeUpdate();
         }
@@ -574,9 +566,14 @@ public final class Account {
         return description;
     }
 
-    void setAccountInfo(String name, String description) {
+    public Pattern getMessagePattern() {
+        return messagePattern;
+    }
+
+    void setAccountInfo(String name, String description, Pattern messagePattern) {
         this.name = Convert.emptyToNull(name.trim());
         this.description = Convert.emptyToNull(description.trim());
+        this.messagePattern = messagePattern;
         accountTable.insert(this);
     }
 

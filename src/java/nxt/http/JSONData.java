@@ -79,6 +79,7 @@ final class JSONData {
         json.put("minDifficulty", currency.getMinDifficulty());
         json.put("maxDifficulty", currency.getMaxDifficulty());
         json.put("algorithm", currency.getAlgorithm());
+        json.put("decimals", currency.getDecimals());
         json.put("numberOfExchanges", Exchange.getExchangeCount(currency.getId()));
         json.put("numberOfTransfers", CurrencyTransfer.getTransferCount(currency.getId()));
         return json;
@@ -377,7 +378,7 @@ final class JSONData {
         return json;
     }
 
-    static JSONObject currencyTransfer(CurrencyTransfer transfer) {
+    static JSONObject currencyTransfer(CurrencyTransfer transfer, boolean includeCurrencyInfo) {
         JSONObject json = new JSONObject();
         json.put("transfer", Convert.toUnsignedLong(transfer.getId()));
         json.put("currency", Convert.toUnsignedLong(transfer.getCurrencyId()));
@@ -386,10 +387,16 @@ final class JSONData {
         json.put("units", String.valueOf(transfer.getUnits()));
         json.put("height", transfer.getHeight());
         json.put("timestamp", transfer.getTimestamp());
+        if (includeCurrencyInfo) {
+            Currency currency = Currency.getCurrency(transfer.getCurrencyId());
+            json.put("name", currency.getName());
+            json.put("code", currency.getCode());
+            json.put("decimals", currency.getDecimals());
+        }
         return json;
     }
 
-    static JSONObject exchange(Exchange exchange) {
+    static JSONObject exchange(Exchange exchange, boolean includeCurrencyInfo) {
         JSONObject json = new JSONObject();
         json.put("transaction", exchange.getTransactionId());
         json.put("timestamp", exchange.getTimestamp());
@@ -401,6 +408,12 @@ final class JSONData {
         putAccount(json, "buyer", exchange.getBuyerId());
         json.put("block", Convert.toUnsignedLong(exchange.getBlockId()));
         json.put("height", exchange.getHeight());
+        if (includeCurrencyInfo) {
+            Currency currency = Currency.getCurrency(exchange.getCurrencyId());
+            json.put("name", currency.getName());
+            json.put("code", currency.getCode());
+            json.put("decimals", currency.getDecimals());
+        }
         return json;
     }
 

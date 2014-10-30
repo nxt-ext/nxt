@@ -28,6 +28,7 @@ public final class Constants {
 
     public static final int MAX_ACCOUNT_NAME_LENGTH = 100;
     public static final int MAX_ACCOUNT_DESCRIPTION_LENGTH = 1000;
+    public static final int MAX_ACCOUNT_MESSAGE_PATTERN_LENGTH = 100;
 
     public static final long MAX_ASSET_QUANTITY_QNT = 1000000000L * 100000000L;
     public static final int MIN_ASSET_NAME_LENGTH = 3;
@@ -81,7 +82,7 @@ public final class Constants {
     public static final int DIGITAL_GOODS_STORE_BLOCK = isTestnet ? 77341 : 213000;
     public static final int PUBLIC_KEY_ANNOUNCEMENT_BLOCK = isTestnet ? 77341 : 215000;
     public static final int MONETARY_SYSTEM_BLOCK = isOffline ? 0 : Integer.MAX_VALUE;
-    public static final int LAST_KNOWN_BLOCK = isTestnet ? 80000 : 261000;
+    public static final int LAST_KNOWN_BLOCK = isTestnet ? 80000 : 268000;
 
     static final long UNCONFIRMED_POOL_DEPOSIT_NQT = (isTestnet ? 50 : 100) * ONE_NXT;
 
