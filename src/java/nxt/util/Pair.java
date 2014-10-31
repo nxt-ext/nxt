@@ -40,20 +40,16 @@ public class Pair<F, S> implements JSONAware {
                 && (second == null ? other.second == null : second.equals(other.second));
     }
 
+    @Override
+    public String toString() {
+        return "("+first+":"+second+")";
+    }
+
+    @Override
     public String toJSONString() {
         JSONArray arr = new JSONArray();
         arr.add(first);
         arr.add(second);
         return arr.toString();
-    }
-
-    public static class YesNoCounts extends Pair<Long, Long>{
-        public YesNoCounts(Long yes, Long no) {
-            super(yes, no);
-        }
-
-        public long getYes() { return getFirst(); }
-
-        public long getNo() { return getSecond(); }
     }
 }

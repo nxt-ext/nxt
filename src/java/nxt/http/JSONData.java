@@ -11,6 +11,7 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 final class JSONData {
@@ -197,13 +198,12 @@ final class JSONData {
         json.put("options", options);
         json.put("finishBlockHeight", poll.getFinishBlockHeight());
 
-        json.put("optionModel", poll.getOptionModel());
         json.put("votingModel", poll.getVotingModel());
 
-        if (poll.getOptionModel() == Constants.VOTING_OPTION_MODEL_CHOICE) {
-            json.put("minNumberOfOptions", poll.getMinNumberOfOptions());
-            json.put("maxNumberOfOptions", poll.getMaxNumberOfOptions());
-        }
+        json.put("minNumberOfOptions", poll.getMinNumberOfOptions());
+        json.put("maxNumberOfOptions", poll.getMaxNumberOfOptions());
+        json.put("minRangeValue", poll.getMinRangeValue());
+        json.put("maxRangeValue", poll.getMaxRangeValue());
 
         json.put("minBalance", poll.getMinBalance());
 
@@ -218,27 +218,20 @@ final class JSONData {
         return json;
     }
 
-    static JSONObject pollResults(PollResults pollResults) {
+    static JSONObject pollResults(Poll poll) {
         JSONObject json = new JSONObject();
-        json.put("pollId", Convert.toUnsignedLong(pollResults.getPollId()));
+        json.put("pollId", Convert.toUnsignedLong(poll.getId()));
 
-        JSONObject choices = new JSONObject();
-        if(pollResults instanceof PollResults.Choice){
-            json.put("resultsType","choice");
-            for(Map.Entry<String,Long> entry : ((PollResults.Choice) pollResults).getResults().entrySet()){
-                choices.put(entry.getKey(), entry.getValue());
-            }
-        }else if(pollResults instanceof PollResults.Binary){
-            json.put("resultsType","binary");
-            for(Map.Entry<String,Pair.YesNoCounts> entry : ((PollResults.Binary) pollResults).getResults().entrySet()){
-                JSONObject yesNo = new JSONObject();
-                yesNo.put("yes", entry.getValue().getYes());
-                yesNo.put("no", entry.getValue().getNo());
-                choices.put(entry.getKey(), yesNo);
-            }
+        JSONArray results = new JSONArray();
+
+        List<Pair<String,Long>> pairs = Poll.getResults(poll.getId());
+        for(Pair<String, Long> pair : pairs){
+            JSONObject jsonPair = new JSONObject();
+            jsonPair.put(pair.getFirst(), pair.getSecond().toString());
+            results.add(jsonPair);
         }
 
-        json.put("results", choices);
+        json.put("results", results);
         return json;
     }
 

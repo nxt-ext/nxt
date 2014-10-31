@@ -608,12 +608,13 @@ public abstract class TransactionType {
                         attachment.getPollDescription(),
                         attachment.getPollOptions(),
                         attachment.getFinishBlockHeight(),
-                        attachment.getOptionModel(),
                         attachment.getVotingModel(),
                         attachment.getMinBalance(),
                         attachment.getAssetId(),
                         attachment.getMinNumberOfOptions(),
-                        attachment.getMaxNumberOfOptions());
+                        attachment.getMaxNumberOfOptions(),
+                        attachment.getMinRangeValue(),
+                        attachment.getMaxRangeValue());
             }
 
             @Override
@@ -628,18 +629,32 @@ public abstract class TransactionType {
                     }
                 }
 
+                if(attachment.getVotingModel() != Constants.VOTING_MODEL_ACCOUNT
+                        && attachment.getVotingModel()!=Constants.VOTING_MODEL_BALANCE
+                        && attachment.getVotingModel()!=Constants.VOTING_MODEL_ASSET){
+                    throw new NxtException.NotValidException("Invalid voting model value: " + attachment.getJSONObject());
+                }
+
+                if(attachment.getVotingModel()==Constants.VOTING_MODEL_ASSET && attachment.getAssetId()==0){
+                    throw new NxtException.NotValidException("No asset id provided: " + attachment.getJSONObject());
+                }
+
                 if (attachment.getAssetId() != 0 && Asset.getAsset(attachment.getAssetId()) == null) {
                     throw new NxtException.NotValidException("Invalid asset id for voting: " + attachment.getJSONObject());
                 }
 
-                if (attachment.getOptionModel() == Constants.VOTING_OPTION_MODEL_CHOICE && attachment.getMinNumberOfOptions() < 1) {
+                if (attachment.getMinNumberOfOptions() < 1) {
                     throw new NxtException.NotValidException("Invalid min number of options: " + attachment.getJSONObject());
                 }
 
-                if (attachment.getOptionModel() == Constants.VOTING_OPTION_MODEL_CHOICE &&
-                        (attachment.getMaxNumberOfOptions() < 1 ||
-                                attachment.getMaxNumberOfOptions() > attachment.getPollOptions().length)) {
+                if (attachment.getMaxNumberOfOptions() < 1
+                        || attachment.getMaxNumberOfOptions() < attachment.getMinNumberOfOptions()
+                        || attachment.getMaxNumberOfOptions() > attachment.getPollOptions().length) {
                     throw new NxtException.NotValidException("Invalid max number of options: " + attachment.getJSONObject());
+                }
+
+                if(attachment.getMinRangeValue() < -100 || attachment.getMaxRangeValue() > 100){
+                    throw new NxtException.NotValidException("Invalid range: " + attachment.getJSONObject());
                 }
 
                 if (attachment.getPollName().length() > Constants.MAX_POLL_NAME_LENGTH
@@ -687,6 +702,7 @@ public abstract class TransactionType {
                 if (Nxt.getBlockchain().getLastBlock().getHeight() < Constants.VOTING_SYSTEM_BLOCK) {
                     throw new NxtException.NotYetEnabledException("Voting System not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
                 }
+
                 Attachment.MessagingVoteCasting attachment = (Attachment.MessagingVoteCasting) transaction.getAttachment();
                 if (attachment.getPollId() == 0 || attachment.getPollVote() == null
                         || attachment.getPollVote().length > Constants.MAX_POLL_OPTION_COUNT) {
@@ -701,21 +717,20 @@ public abstract class TransactionType {
                 byte[] votes = attachment.getPollVote();
                 int positiveCount = 0;
                 for (byte vote : votes) {
-                    if (vote < 0 || vote > 1) {
+                    if (vote != Constants.VOTING_NO_VOTE_VALUE && (vote < poll.getMinRangeValue() || vote > poll.getMaxRangeValue())) {
                         throw new NxtException.NotValidException("Invalid vote: " + attachment.getJSONObject());
                     }
-                    if (vote == 1) {
+                    if (vote != Constants.VOTING_NO_VOTE_VALUE) {
                         positiveCount++;
                     }
                 }
 
-                if (poll.getOptionModel() == Constants.VOTING_OPTION_MODEL_CHOICE
-                        && (positiveCount < poll.getMinNumberOfOptions() || positiveCount > poll.getMaxNumberOfOptions())) {
+                if (positiveCount < poll.getMinNumberOfOptions() || positiveCount > poll.getMaxNumberOfOptions()) {
                     throw new NxtException.NotValidException("Invalid num of choices: " + attachment.getJSONObject());
                 }
 
                 if (transaction.getAmountNQT() != 0 || transaction.getRecipientId() != 0) {
-                    throw new NxtException.NotValidException("Invalid vote casting amount or recipient");
+                    throw new NxtException.NotValidException("Vote casting has amount or recipient");
                 }
             }
 

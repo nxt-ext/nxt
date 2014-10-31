@@ -90,8 +90,9 @@ public final class JSONResponses {
     public static final JSONStreamAware INCORRECT_POLL_OPTION_LENGTH = incorrect("option", "(length must be not longer than " + Constants.MAX_POLL_OPTION_LENGTH + " characters)");
     public static final JSONStreamAware INCORRECT_MINNUMBEROFOPTIONS = incorrect("minNumberOfOptions");
     public static final JSONStreamAware INCORRECT_MAXNUMBEROFOPTIONS = incorrect("maxNumberOfOptions");
+    public static final JSONStreamAware INCORRECT_MINRANGEVALUE = incorrect("minRangeValue");
+    public static final JSONStreamAware INCORRECT_MAXRANGEVALUE = incorrect("maxRangeValue");
     public static final JSONStreamAware INCORRECT_ZEROOPTIONS = incorrect("option","no options given");
-    public static final JSONStreamAware INCORRECT_OPTIONMODEL = incorrect("optionModel");
     public static final JSONStreamAware INCORRECT_VOTINGMODEL = incorrect("votingModel");
     public static final JSONStreamAware INCORRECT_FINISHHEIGHT = incorrect("finishHeight");
     public static final JSONStreamAware INCORRECT_MINBALANCE = incorrect("minBalance");

@@ -16,6 +16,13 @@ public final class Poll extends AbstractPoll {
         }
     };
 
+    private static final DbKey.LongKeyFactory<Poll> pollResultsDbKeyFactory = new DbKey.LongKeyFactory<Poll>("poll_id") {
+        @Override
+        public DbKey newKey(Poll poll) {
+            return poll.dbKey;
+        }
+    };
+
 
     private static class PollTable extends VersionedEntityDbTable<Poll> {
 
@@ -35,9 +42,9 @@ public final class Poll extends AbstractPoll {
         @Override
         protected void save(Connection con, Poll poll) throws SQLException {
             try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO poll (id, account_id, "
-                    + "name, description, options, finish, option_model, voting_model, min_balance, asset_id, "
-                    + "min_num_options, max_num_options, finished, height) "
-                    + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
+                    + "name, description, options, finish, voting_model, min_balance, asset_id, "
+                    + "min_num_options, max_num_options, min_range_value, max_range_value, finished, height) "
+                    + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
                 int i = 0;
                 pstmt.setLong(++i, poll.getId());
                 pstmt.setLong(++i, poll.getAccountId());
@@ -46,18 +53,42 @@ public final class Poll extends AbstractPoll {
                 String optionsJson = JSONArray.toJSONString(Arrays.asList(poll.getOptions()));
                 pstmt.setString(++i, optionsJson);
                 pstmt.setInt(++i, poll.getFinishBlockHeight());
-                pstmt.setByte(++i, poll.getOptionModel());
                 pstmt.setByte(++i, poll.getVotingModel());
                 pstmt.setLong(++i, poll.getMinBalance());
                 pstmt.setLong(++i, poll.getAssetId());
                 pstmt.setByte(++i, poll.getMinNumberOfOptions());
                 pstmt.setByte(++i, poll.getMaxNumberOfOptions());
+                pstmt.setByte(++i, poll.getMinRangeValue());
+                pstmt.setByte(++i, poll.getMaxRangeValue());
                 pstmt.setBoolean(++i, poll.isFinished());
                 pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
                 pstmt.executeUpdate();
             }
         }
     }
+
+    private static final ValuesDbTable<Poll, Pair<String, Long>> pollResultsTable = new ValuesDbTable<Poll,Pair<String,Long>>("poll_results", pollResultsDbKeyFactory) {
+
+        @Override
+        protected Pair<String,Long> load(Connection con, ResultSet rs) throws SQLException {
+            return new Pair<>(rs.getString("option"), rs.getLong("result"));
+        }
+
+        @Override
+        protected void save(Connection con, Poll poll, Pair<String, Long> optionResult) throws SQLException {
+            String option = optionResult.getFirst();
+            Long result = optionResult.getSecond();
+            try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO "+table+"(poll_id, "
+                    + "option, result, height) VALUES (?, ?, ?, ?)")) {
+                int i = 0;
+                pstmt.setLong(++i, poll.getId());
+                pstmt.setString(++i, option);
+                pstmt.setLong(++i, result);
+                pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
+                pstmt.executeUpdate();
+            }
+        }
+    };
 
     private final static PollTable pollTable = new PollTable(pollDbKeyFactory);
 
@@ -68,8 +99,8 @@ public final class Poll extends AbstractPoll {
     private final String name;
     private final String description;
     private final String[] options;
-    private final byte optionModel;
     private final byte minNumberOfOptions, maxNumberOfOptions;
+    private final byte minRangeValue, maxRangeValue;
 
     static {
         Nxt.getBlockchainProcessor().addListener(new Listener<Block>() {
@@ -94,8 +125,10 @@ public final class Poll extends AbstractPoll {
     }
 
     private Poll(long id, long accountId, String name, String description, String[] options, int finishBlockHeight,
-                 byte optionModel, byte votingModel, long minBalance,
-                 long assetId, byte minNumberOfOptions, byte maxNumberOfOptions) {
+                 byte votingModel,
+                 byte minNumberOfOptions, byte maxNumberOfOptions,
+                 byte minRangeValue, byte maxRangeValue,
+                 long minBalance, long assetId) {
         super(accountId, finishBlockHeight, votingModel, assetId, minBalance);
 
         this.id = id;
@@ -103,9 +136,11 @@ public final class Poll extends AbstractPoll {
         this.name = name;
         this.description = description;
         this.options = options;
-        this.optionModel = optionModel;
+
         this.minNumberOfOptions = minNumberOfOptions;
         this.maxNumberOfOptions = maxNumberOfOptions;
+        this.minRangeValue = minRangeValue;
+        this.maxRangeValue = maxRangeValue;
     }
 
     private Poll(ResultSet rs) throws Exception {
@@ -122,38 +157,27 @@ public final class Poll extends AbstractPoll {
         }
         List<String> optionsList = ((List<String>) (new JSONParser().parse(optionsJson)));
         this.options = optionsList.toArray(new String[optionsList.size()]);
-        this.optionModel = rs.getByte("option_model");
         this.minNumberOfOptions = rs.getByte("min_num_options");
         this.maxNumberOfOptions = rs.getByte("max_num_options");
-    }
-
-    private Poll(Transaction transaction, Attachment.MessagingPollCreation attachment) {
-        super(transaction.getSenderId(), attachment.getFinishBlockHeight(), attachment.getVotingModel(),
-                attachment.getAssetId(), attachment.getMinBalance());
-
-        this.id = transaction.getId();
-        this.dbKey = pollDbKeyFactory.newKey(this.id);
-        this.name = attachment.getPollName();
-        this.description = attachment.getPollDescription();
-        this.options = attachment.getPollOptions();
-        this.optionModel = attachment.getOptionModel();
-        this.minNumberOfOptions = attachment.getMinNumberOfOptions();
-        this.maxNumberOfOptions = attachment.getMaxNumberOfOptions();
+        this.minRangeValue = rs.getByte("min_range_value");
+        this.maxRangeValue = rs.getByte("max_range_value");
     }
 
     static void addPoll(Long id, long accountId, String name, String description, String[] options,
-                        int finishBlockHeight, byte optionModel, byte votingModel,
+                        int finishBlockHeight, byte votingModel,
                         long minBalance,
                         long assetId,
                         byte minNumberOfOptions,
-                        byte maxNumberOfOptions) {
+                        byte maxNumberOfOptions,
+                        byte minRangeValue,
+                        byte maxRangeValue) {
 
         if (Poll.exists(id)) {
             throw new IllegalStateException("Poll with id " + Convert.toUnsignedLong(id) + " already exists");
         }
 
-        Poll poll = new Poll(id, accountId, name, description, options, finishBlockHeight, optionModel, votingModel,
-                minBalance, assetId, minNumberOfOptions, maxNumberOfOptions);
+        Poll poll = new Poll(id, accountId, name, description, options, finishBlockHeight, votingModel,
+                minNumberOfOptions, maxNumberOfOptions,minRangeValue, maxRangeValue, minBalance, assetId);
 
         pollTable.insert(poll);
     }
@@ -195,6 +219,10 @@ public final class Poll extends AbstractPoll {
         pollTable.insert(poll);
     }
 
+    public static List<Pair<String,Long>> getResults(Long pollId){
+        return pollResultsTable.get(pollResultsDbKeyFactory.newKey(pollId));
+    }
+
     public long getId() {
         return id;
     }
@@ -211,9 +239,6 @@ public final class Poll extends AbstractPoll {
         return options;
     }
 
-    public byte getOptionModel() {
-        return optionModel;
-    }
 
     public byte getMinNumberOfOptions() {
         return minNumberOfOptions;
@@ -223,63 +248,52 @@ public final class Poll extends AbstractPoll {
         return maxNumberOfOptions;
     }
 
+    public byte getMinRangeValue() {
+        return minRangeValue;
+    }
+
+    public byte getMaxRangeValue() {
+        return maxRangeValue;
+    }
+
     public List<Long> getVoters() {
         return Vote.getVoters(this);
     }
 
     void calculateAndSavePollResults() {
         try {
-            PollResults.save(countResults());
+            List<Pair<String, Long>> results = countResults();
+            pollResultsTable.insert(this, results);
         } catch (NxtException.IllegalStateException e) {
             Logger.logDebugMessage("Error while calculating poll results", e);
         }
     }
 
-    private PollResults countResults() throws NxtException.IllegalStateException {
-        final long[][] results = new long[options.length][2];
+    private List<Pair<String,Long>> countResults() throws NxtException.IllegalStateException {
+        final long[] counts = new long[options.length];
 
         for (Long voteId : Vote.getVoteIds(this)) {
             Vote vote = Vote.getVote(voteId);
-            long[][] partialResult = countVote(vote);
+            long[] partialResult = countVote(vote);
 
             if (partialResult != null) {
                 for (int idx = 0; idx < partialResult.length; idx++) {
-                    results[idx][0] += partialResult[idx][0];
-                    results[idx][1] += partialResult[idx][1];
+                    counts[idx] += partialResult[idx];
                 }
             }
         }
 
-        final PollResults pollResults;
-
-        switch (optionModel) {
-            case Constants.VOTING_OPTION_MODEL_CHOICE:
-                final Map<String, Long> pr = new HashMap<>();
-                for (int idx = 0; idx < results.length; idx++) {
-                    pr.put(options[idx], results[idx][1]);
-                }
-                pollResults = new PollResults.Choice(getId(), pr);
-                break;
-
-            case Constants.VOTING_OPTION_MODEL_BINARY:
-                final Map<String, Pair.YesNoCounts> pr2 = new HashMap<>();
-                for (int idx = 0; idx < results.length; idx++) {
-                    pr2.put(options[idx], new Pair.YesNoCounts(results[idx][1], results[idx][0]));
-                }
-                pollResults = new PollResults.Binary(getId(), pr2);
-                break;
-
-            default:
-                throw new NxtException.IllegalStateException("Illegal option model");
+        List<Pair<String, Long>> results = new ArrayList<>(options.length);
+        for(int i=0; i < options.length; i++){
+            results.add(new Pair<>(options[i], counts[i]));
         }
-
-        return pollResults;
+        return results;
     }
 
 
 
-    private long[][] countVote(Vote vote) throws NxtException.IllegalStateException {
-        final long[][] partialResult = new long[options.length][2];
+    private long[] countVote(Vote vote) throws NxtException.IllegalStateException {
+        final long[] partialResult = new long[options.length];
 
         final Account voter = Account.getAccount(vote.getVoterId());
         final long weight = AbstractPoll.calcWeight(this, voter);
@@ -288,15 +302,8 @@ public final class Poll extends AbstractPoll {
 
         if (weight > 0) {
             for (int idx = 0; idx < optVals.length; idx++) {
-                byte option = optVals[idx];
-
-                switch (option) {
-                    case 0:
-                    case 1:
-                        partialResult[idx][option] = weight;
-                        break;
-                    default:
-                        throw new NxtException.IllegalStateException("Wrong option value");
+                if(optVals[idx] != Constants.VOTING_NO_VOTE_VALUE) {
+                    partialResult[idx] = optVals[idx] * weight;
                 }
             }
             return partialResult;

@@ -17,8 +17,10 @@ public final class CreatePoll extends CreateTransaction {
 
     private CreatePoll() {
         super(new APITag[] {APITag.VS, APITag.CREATE_TRANSACTION},
-                "name", "description", "finishHeight", "optionModel", "votingModel",
-                "minNumberOfOptions", "maxNumberOfOptions", "minBalance", "assetId",
+                "name", "description", "finishHeight", "votingModel",
+                "minNumberOfOptions", "maxNumberOfOptions",
+                "minRangeValue", "maxRangeValue",
+                "minBalance", "assetId",
                 "option1","option2","option3");
     }
 
@@ -30,7 +32,7 @@ public final class CreatePoll extends CreateTransaction {
 
         String finishHeightValue = Convert.emptyToNull(req.getParameter("finishHeight"));
 
-        String optionModelValue = Convert.emptyToNull(req.getParameter("optionModel"));
+
         String votingModelValue = Convert.emptyToNull(req.getParameter("votingModel"));
 
         if (nameValue == null) {
@@ -39,8 +41,6 @@ public final class CreatePoll extends CreateTransaction {
             return MISSING_DESCRIPTION;
         } else if (finishHeightValue == null) {
             return MISSING_FINISHHEIGHT;
-        } else if (optionModelValue == null) {
-            return MISSING_OPTIONMODEL;
         } else if (votingModelValue == null) {
             return MISSING_VOTINGMODEL;
         }
@@ -54,7 +54,7 @@ public final class CreatePoll extends CreateTransaction {
         }
 
         List<String> options = new ArrayList<>(Constants.MAX_POLL_OPTION_COUNT / 20);
-        while (options.size() < Constants.MAX_POLL_OPTION_COUNT) {
+        while (options.size() <= Constants.MAX_POLL_OPTION_COUNT) {
             String optionValue = req.getParameter("option" + (options.size()+1));
             if (optionValue == null) {
                 break;
@@ -77,16 +77,6 @@ public final class CreatePoll extends CreateTransaction {
             }
         } catch (NumberFormatException e) {
             return INCORRECT_FINISHHEIGHT;
-        }
-
-        byte optionModel;
-        try {
-            optionModel = Byte.parseByte(optionModelValue);
-            if (optionModel != Constants.VOTING_OPTION_MODEL_BINARY && optionModel !=Constants.VOTING_OPTION_MODEL_CHOICE) {
-                return INCORRECT_OPTIONMODEL;
-            }
-        } catch (NumberFormatException e) {
-            return INCORRECT_OPTIONMODEL;
         }
 
         byte votingModel;
@@ -113,44 +103,69 @@ public final class CreatePoll extends CreateTransaction {
             }
         }
 
-        PollBuilder builder = new PollBuilder(nameValue.trim(), descriptionValue.trim(),
-                options.toArray(new String[options.size()]),
-                finishHeight, optionModel, votingModel);
-        builder.minBalance(minBalance);
+        String minNumberOfOptionsValue = req.getParameter("minNumberOfOptions");
+        String maxNumberOfOptionsValue = req.getParameter("maxNumberOfOptions");
 
+        if (minNumberOfOptionsValue == null) {
+            return MISSING_MINNUMBEROFOPTIONS;
+        } else if (maxNumberOfOptionsValue == null) {
+            return MISSING_MAXNUMBEROFOPTIONS;
+        }
 
-        if (optionModel == Constants.VOTING_OPTION_MODEL_CHOICE) {
-            String minNumberOfOptionsValue = req.getParameter("minNumberOfOptions");
-            String maxNumberOfOptionsValue = req.getParameter("maxNumberOfOptions");
-
-            if (minNumberOfOptionsValue == null) {
-                return MISSING_MINNUMBEROFOPTIONS;
-            } else if (maxNumberOfOptionsValue == null) {
-                return MISSING_MAXNUMBEROFOPTIONS;
-            }
-
-            byte minNumberOfOptions;
-            try {
-                minNumberOfOptions = Byte.parseByte(minNumberOfOptionsValue);
-                if (minNumberOfOptions < 1 || minNumberOfOptions > options.size()) {
-                    return INCORRECT_MINNUMBEROFOPTIONS;
-                }
-            } catch (NumberFormatException e) {
+        byte minNumberOfOptions;
+        try {
+            minNumberOfOptions = Byte.parseByte(minNumberOfOptionsValue);
+            if (minNumberOfOptions < 1 || minNumberOfOptions > options.size()) {
                 return INCORRECT_MINNUMBEROFOPTIONS;
             }
+        } catch (NumberFormatException e) {
+            return INCORRECT_MINNUMBEROFOPTIONS;
+        }
 
-            byte maxNumberOfOptions;
-            try {
-                maxNumberOfOptions = Byte.parseByte(maxNumberOfOptionsValue);
-                if (maxNumberOfOptions < 1 || maxNumberOfOptions > options.size()) {
-                    return INCORRECT_MAXNUMBEROFOPTIONS;
-                }
-            } catch (NumberFormatException e) {
+        byte maxNumberOfOptions;
+        try {
+            maxNumberOfOptions = Byte.parseByte(maxNumberOfOptionsValue);
+            if (maxNumberOfOptions < 1 || maxNumberOfOptions > options.size()) {
                 return INCORRECT_MAXNUMBEROFOPTIONS;
             }
-
-            builder.optionsNumRange(minNumberOfOptions, maxNumberOfOptions);
+        } catch (NumberFormatException e) {
+            return INCORRECT_MAXNUMBEROFOPTIONS;
         }
+
+        String minRangeValueString = req.getParameter("minRangeValue");
+        String maxRangeValueString = req.getParameter("maxRangeValue");
+
+        if (minRangeValueString == null) {
+            return MISSING_MINNUMBEROFOPTIONS;
+        } else if (maxRangeValueString == null) {
+            return MISSING_MAXNUMBEROFOPTIONS;
+        }
+
+        byte minRangeValue;
+        try {
+            minRangeValue = Byte.parseByte(minRangeValueString);
+            if (minRangeValue < Constants.VOTING_MIN_RANGE_VALUE_LIMIT) {
+                return INCORRECT_MINNUMBEROFOPTIONS;
+            }
+        } catch (NumberFormatException e) {
+            return INCORRECT_MINRANGEVALUE;
+        }
+
+        byte maxRangeValue;
+        try {
+            maxRangeValue = Byte.parseByte(maxRangeValueString);
+            if (maxRangeValue > Constants.VOTING_MAX_RANGE_VALUE_LIMIT) {
+                return INCORRECT_MAXNUMBEROFOPTIONS;
+            }
+        } catch (NumberFormatException e) {
+            return INCORRECT_MAXRANGEVALUE;
+        }
+
+        PollBuilder builder = new PollBuilder(nameValue.trim(), descriptionValue.trim(),
+                options.toArray(new String[options.size()]),finishHeight, votingModel,
+                minNumberOfOptions, maxNumberOfOptions, minRangeValue, maxRangeValue);
+        builder.minBalance(minBalance);
+
 
         if (votingModel == Constants.VOTING_MODEL_ASSET) {
             String assetIdValue = Convert.emptyToNull(req.getParameter("assetId"));

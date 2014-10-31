@@ -4,9 +4,9 @@ import nxt.crypto.EncryptedData;
 import nxt.util.Convert;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
-
 import java.nio.ByteBuffer;
 import java.util.Collections;
+
 
 public interface Attachment extends Appendix {
 
@@ -344,22 +344,28 @@ public interface Attachment extends Appendix {
 
             private final int finishBlockHeight;
 
-            private final byte optionModel;
+
             private final byte votingModel;
 
             private long minBalance = Constants.VOTING_DEFAULT_MIN_BALANCE;
             private byte minNumberOfOptions = Constants.VOTING_DEFAULT_MIN_NUMBER_OF_CHOICES, maxNumberOfOptions;
+            private final byte minRangeValue, maxRangeValue;
             private long assetId;
 
             public PollBuilder(final String pollName, final String pollDescription, final String[] pollOptions,
-                               final int finishBlockHeight, final byte optionModel, final byte votingModel) {
+                               final int finishBlockHeight,final byte votingModel,
+                               byte minNumberOfOptions, byte maxNumberOfOptions,
+                               byte minRangeValue, byte maxRangeValue) {
                 this.pollName = pollName;
                 this.pollDescription = pollDescription;
                 this.pollOptions = pollOptions;
 
                 this.finishBlockHeight = finishBlockHeight;
-                this.optionModel = optionModel;
                 this.votingModel = votingModel;
+                this.minNumberOfOptions = minNumberOfOptions;
+                this.maxNumberOfOptions = maxNumberOfOptions;
+                this.minRangeValue = minRangeValue;
+                this.maxRangeValue = maxRangeValue;
             }
 
             public PollBuilder minBalance(long minBalance) {
@@ -367,11 +373,6 @@ public interface Attachment extends Appendix {
                 return this;
             }
 
-            public PollBuilder optionsNumRange(byte minNumberOfOptions, byte maxNumberOfOptions) {
-                this.minNumberOfOptions = minNumberOfOptions;
-                this.maxNumberOfOptions = maxNumberOfOptions;
-                return this;
-            }
 
             public PollBuilder assetId(long assetId) {
                 this.assetId = assetId;
@@ -388,12 +389,11 @@ public interface Attachment extends Appendix {
         private final String[] pollOptions;
 
         private final int finishBlockHeight;
-
-        private final byte optionModel;
         private final byte votingModel;
 
         private final long minBalance; //for all kinds of voting
         private byte minNumberOfOptions = Constants.VOTING_DEFAULT_MIN_NUMBER_OF_CHOICES, maxNumberOfOptions; //only for choice voting
+        private final byte minRangeValue, maxRangeValue;
         private long assetId = 0; // only for asset voting
 
 
@@ -417,22 +417,18 @@ public interface Attachment extends Appendix {
                 this.pollOptions[i] = Convert.readString(buffer, buffer.getShort(), Constants.MAX_POLL_OPTION_LENGTH);
             }
 
-            this.optionModel = buffer.get();
             this.votingModel = buffer.get();
 
             this.minBalance = buffer.getLong();
 
-            if (optionModel == Constants.VOTING_OPTION_MODEL_CHOICE) {
-                this.minNumberOfOptions = buffer.get();
-                this.maxNumberOfOptions = buffer.get();
-                if(this.minNumberOfOptions > this.maxNumberOfOptions || this.maxNumberOfOptions == 0){
-                    throw new NxtException.NotValidException("Invalid min or max for a poll");
-                }
-            }
 
-            if (votingModel == Constants.VOTING_MODEL_ASSET) {
-                this.assetId = buffer.getLong();
-            }
+            this.minNumberOfOptions = buffer.get();
+            this.maxNumberOfOptions = buffer.get();
+
+            this.minRangeValue = buffer.get();
+            this.maxRangeValue = buffer.get();
+
+            this.assetId = buffer.getLong();
         }
 
         MessagingPollCreation(JSONObject attachmentData) throws NxtException.NotValidException {
@@ -450,17 +446,14 @@ public interface Attachment extends Appendix {
 
             this.minBalance = (Long) attachmentData.get("minBalance");
 
-            this.optionModel = ((Long) attachmentData.get("optionModel")).byteValue();
             this.votingModel = ((Long) attachmentData.get("votingModel")).byteValue();
 
-            if (this.optionModel == Constants.VOTING_OPTION_MODEL_CHOICE) {
-                this.minNumberOfOptions = ((Long) attachmentData.get("minNumberOfOptions")).byteValue();
-                this.maxNumberOfOptions = ((Long) attachmentData.get("maxNumberOfOptions")).byteValue();
-            }
+            this.minNumberOfOptions = ((Long) attachmentData.get("minNumberOfOptions")).byteValue();
+            this.maxNumberOfOptions = ((Long) attachmentData.get("maxNumberOfOptions")).byteValue();
+            this.minRangeValue = ((Long) attachmentData.get("minRangeValue")).byteValue();
+            this.maxRangeValue = ((Long) attachmentData.get("maxRangeValue")).byteValue();
 
-            if (this.votingModel == Constants.VOTING_MODEL_ASSET) {
-                this.assetId = (Long) attachmentData.get("assetId");
-            }
+            this.assetId = (Long) attachmentData.get("assetId");
         }
 
         public MessagingPollCreation(PollBuilder builder) {
@@ -469,11 +462,12 @@ public interface Attachment extends Appendix {
             this.pollOptions = builder.pollOptions;
             this.finishBlockHeight = builder.finishBlockHeight;
 
-            this.optionModel = builder.optionModel;
             this.votingModel = builder.votingModel;
 
             this.minNumberOfOptions = builder.minNumberOfOptions;
             this.maxNumberOfOptions = builder.maxNumberOfOptions;
+            this.minRangeValue = builder.minRangeValue;
+            this.maxRangeValue = builder.maxRangeValue;
             this.minBalance = builder.minBalance;
             this.assetId = builder.assetId;
         }
@@ -490,17 +484,7 @@ public interface Attachment extends Appendix {
                 size += 2 + Convert.toBytes(pollOption).length;
             }
 
-            size += 4 + 1 + 1;
-
-            if (optionModel == Constants.VOTING_OPTION_MODEL_CHOICE) {
-                size += 1 + 1;
-            }
-
-            if (votingModel == Constants.VOTING_MODEL_ASSET) {
-                size += 8;
-            }
-
-            size += 8;
+            size += 4 + 1 + 8 + 1 + 1 + 1 + 1 + 8;
 
             return size;
         }
@@ -524,17 +508,15 @@ public interface Attachment extends Appendix {
                 buffer.putShort((short) option.length);
                 buffer.put(option);
             }
-            buffer.put(this.optionModel);
             buffer.put(this.votingModel);
             buffer.putLong(minBalance);
 
-            if (optionModel == Constants.VOTING_OPTION_MODEL_CHOICE) {
-                buffer.put(this.minNumberOfOptions);
-                buffer.put(this.maxNumberOfOptions);
-            }
-            if (votingModel == Constants.VOTING_MODEL_ASSET) {
-                buffer.putLong(this.assetId);
-            }
+            buffer.put(this.minNumberOfOptions);
+            buffer.put(this.maxNumberOfOptions);
+            buffer.put(this.minRangeValue);
+            buffer.put(this.maxRangeValue);
+
+            buffer.putLong(this.assetId);
         }
 
         @Override
@@ -548,20 +530,18 @@ public interface Attachment extends Appendix {
             }
             attachment.put("options", options);
 
-            attachment.put("optionModel", this.optionModel);
 
-            if (optionModel == Constants.VOTING_OPTION_MODEL_CHOICE) {
-                attachment.put("minNumberOfOptions", this.minNumberOfOptions);
-                attachment.put("maxNumberOfOptions", this.maxNumberOfOptions);
-            }
+            attachment.put("minNumberOfOptions", this.minNumberOfOptions);
+            attachment.put("maxNumberOfOptions", this.maxNumberOfOptions);
+
+            attachment.put("minRangeValue", this.minRangeValue);
+            attachment.put("maxRangeValue", this.maxRangeValue);
 
             attachment.put("votingModel", this.votingModel);
 
-            if (votingModel == Constants.VOTING_MODEL_ASSET) {
-                attachment.put("assetId", this.assetId);
-            }
-
             attachment.put("minBalance", this.minBalance);
+
+            attachment.put("assetId", this.assetId);
         }
 
         @Override
@@ -593,9 +573,9 @@ public interface Attachment extends Appendix {
             return maxNumberOfOptions;
         }
 
-        public byte getOptionModel() {
-            return optionModel;
-        }
+        public byte getMinRangeValue() { return minRangeValue; }
+
+        public byte getMaxRangeValue() { return maxRangeValue; }
 
         public byte getVotingModel() {
             return votingModel;
@@ -675,7 +655,6 @@ public interface Attachment extends Appendix {
         public long getPollId() { return pollId; }
 
         public byte[] getPollVote() { return pollVote; }
-
     }
 
     public final static class MessagingHubAnnouncement extends AbstractAttachment {

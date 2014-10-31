@@ -54,9 +54,13 @@ public class AbstractPoll {
         return assetId;
     }
 
-    public boolean isFinished() { return finished; }
+    public boolean isFinished() {
+        return finished;
+    }
 
-    public void setFinished(boolean finished) { this.finished = finished; }
+    public void setFinished(boolean finished) {
+        this.finished = finished;
+    }
 
     static long calcWeight(AbstractPoll pollStructure, Account voter) throws NxtException.IllegalStateException {
         long weight = 0;
@@ -64,20 +68,30 @@ public class AbstractPoll {
         switch (pollStructure.votingModel) {
             case Constants.VOTING_MODEL_ASSET:
                 long qntBalance = voter.getAssetBalanceQNT(pollStructure.assetId);
-                if (qntBalance >= pollStructure.minBalance) {
+                if (qntBalance >= pollStructure.getMinBalance()) {
                     weight = qntBalance;
                 }
                 break;
             case Constants.VOTING_MODEL_ACCOUNT:
+                long assetId = pollStructure.getAssetId();
+                long balance;
+                if (assetId == 0) {
+                    balance = voter.getGuaranteedBalanceNQT(Constants.CONFIRMATIONS_RELIABLE_TX) / Constants.ONE_NXT;
+                } else {
+                    balance = voter.getAssetBalanceQNT(pollStructure.assetId);
+                }
+                if (balance >= pollStructure.getMinBalance()) {
+                    weight = 1;
+                }
+                break;
             case Constants.VOTING_MODEL_BALANCE:
-                long nqtBalance = voter.getGuaranteedBalanceNQT(Constants.CONFIRMATIONS_RELIABLE_TX);
-                if (nqtBalance >= pollStructure.minBalance) {
-                    long nxtBalance = nqtBalance / Constants.ONE_NXT;
-                    weight = pollStructure.votingModel == Constants.VOTING_MODEL_ACCOUNT ? 1 : nxtBalance;
+                long nxtBalance = voter.getGuaranteedBalanceNQT(Constants.CONFIRMATIONS_RELIABLE_TX) / Constants.ONE_NXT;
+                if (nxtBalance >= pollStructure.getMinBalance()) {
+                    weight = nxtBalance;
                 }
                 break;
             default:
-                throw new NxtException.IllegalStateException("Wrong voting model"); //todo: move to validate?
+                throw new NxtException.IllegalStateException("Wrong voting model"); //todo: chack in tx validation only?
         }
         return weight;
     }

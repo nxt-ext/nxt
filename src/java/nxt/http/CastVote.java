@@ -1,9 +1,6 @@
 package nxt.http;
 
-import nxt.Account;
-import nxt.Attachment;
-import nxt.NxtException;
-import nxt.Poll;
+import nxt.*;
 import nxt.util.Convert;
 import org.json.simple.JSONStreamAware;
 import javax.servlet.http.HttpServletRequest;
@@ -43,10 +40,12 @@ public final class CastVote extends CreateTransaction {
         int numberOfOptions = poll.getOptions().length;
         byte[] vote = new byte[numberOfOptions];
         try {
-            for (int i = 0; i < numberOfOptions; i++) {
+            for (int i = 1; i <= numberOfOptions; i++) {
                 String voteValue = req.getParameter("vote" + i);
                 if (voteValue != null) {
-                    vote[i] = Byte.parseByte(voteValue);
+                    vote[i-1] = Byte.parseByte(voteValue);
+                }else{
+                    vote[i-1] = Constants.VOTING_NO_VOTE_VALUE;
                 }
             }
         } catch (NumberFormatException e) {

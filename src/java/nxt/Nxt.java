@@ -182,7 +182,6 @@ public final class Nxt {
                 Order.init();
                 Poll.init();
                 PendingTransactionPoll.init();
-                PollResults.init();
                 Trade.init();
                 AssetTransfer.init();
                 Vote.init();

@@ -418,13 +418,13 @@ final class DbVersion {
                 apply("CREATE TABLE IF NOT EXISTS poll (db_id IDENTITY, id BIGINT NOT NULL, "
                         + "FOREIGN KEY (id) REFERENCES transaction (id), account_id BIGINT NOT NULL, name VARCHAR NOT NULL, "
                         + "description VARCHAR, options ARRAY NOT NULL, min_num_options TINYINT, max_num_options TINYINT, "
-                        + "finish INT NOT NULL, option_model TINYINT NOT NULL, voting_model TINYINT NOT NULL, min_balance BIGINT, "
+                        + "min_range_value TINYINT, max_range_value TINYINT, "
+                        + "finish INT NOT NULL, voting_model TINYINT NOT NULL, min_balance BIGINT, "
                         + "asset_id BIGINT, finished BOOLEAN, height INT NOT NULL, latest BOOLEAN DEFAULT TRUE NOT NULL)");
             case 133:
-                apply("CREATE TABLE IF NOT EXISTS poll_results (db_id IDENTITY, id BIGINT NOT NULL, "
-                        + "FOREIGN KEY (id) REFERENCES poll (id) ON DELETE CASCADE, "
-                        + "results_type TINYINT NOT NULL, results_json VARCHAR NOT NULL, height INT NOT NULL, "
-                        + "latest BOOLEAN DEFAULT TRUE NOT NULL)");
+                apply("CREATE TABLE IF NOT EXISTS poll_results (db_id IDENTITY, poll_id BIGINT NOT NULL, "
+                        + "FOREIGN KEY (poll_id) REFERENCES poll (id) ON DELETE CASCADE, "
+                        + "option VARCHAR NOT NULL, result BIGINT NOT NULL,  height INT NOT NULL)");
             case 134:
                 apply("ALTER TABLE transaction ADD COLUMN IF NOT EXISTS two_phased BOOLEAN NOT NULL DEFAULT FALSE");
             case 135:
