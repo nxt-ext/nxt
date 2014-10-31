@@ -12,8 +12,7 @@ var NRS = (function(NRS, $, undefined) {
 		"asset_transfer_warning": "10000",
 		"24_hour_format": 1,
 		"remember_passphrase": 0,
-		"language": "en",
-		"themeChoice": "default"
+		"language": "en"
 	};
 
 	NRS.defaultColors = {
