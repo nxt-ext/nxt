@@ -38,3 +38,23 @@ and using firstIndex, lastIndex parameters for pagination. Restricted to
 return up to 100 blocks at a time. If includeTransactions is true, also
 includes the full transaction JSON.
 
+Improved default H2 cache size allocation. It nxt.dbCacheKB is not set,
+the H2 cache will vary linearly from 16MB for JVM heap size 160MB, to
+256MB for heap size 640MB or higher. This should allow low end devices
+to run without needing a custom setting for the nxt.dbCacheKB parameter,
+and prevent excessive memory use on machines with plenty of memory too.
+
+Disabled the SSLv3 protocol when using SSL for the API.
+
+
+Client UI improvements:
+
+Added pagination to the Blocks page. The default number of rows per page
+can be changed in settings.
+
+Show account balance in the sidebar on all pages.
+
+Improvements and bugfixes in the asset trade and transfer history pages.
+
+New design of the dashboard, and an improved recent transactions list.
+

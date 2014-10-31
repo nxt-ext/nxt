@@ -1005,11 +1005,13 @@ var NRS = (function(NRS, $, undefined) {
 				value = NRS.formatAmount(new BigInteger(String(value))) + " NXT";
 			} else if (key == "sender" || key == "recipient" || key == "account" || key == "seller" || key == "buyer") {
 				value = "<a href='#' data-user='" + String(value).escapeHTML() + "'>" + NRS.getAccountTitle(value) + "</a>";
+			} else if (key == "request_processing_time") { /* Skip from displaying request processing time */
+				continue;
 			} else {
 				value = String(value).escapeHTML().nl2br();
 			}
 
-			rows += "<tr><td style='font-weight:bold;white-space:nowrap" + (fixed ? ";width:150px" : "") + "'>" + $.t(key).escapeHTML() + (type ? " " + type.escapeHTML() : "") + ":</td><td style='width:90%;word-break:break-all'>" + value + "</td></tr>";
+			rows += "<tr><td style='font-weight:bold" + (fixed ? ";width:150px" : "") + "'>" + $.t(key).escapeHTML() + (type ? " " + type.escapeHTML() : "") + ":</td><td style='width:90%;word-break:break-all'>" + value + "</td></tr>";
 		}
 
 		return rows;
