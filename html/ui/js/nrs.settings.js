@@ -13,7 +13,8 @@ var NRS = (function(NRS, $, undefined) {
 		"24_hour_format": 1,
 		"remember_passphrase": 0,
 		"language": "en",
-		"items_page": 15
+		"items_page": 15,
+		"themeChoice": "default"
 	};
 
 	NRS.defaultColors = {
