@@ -1,5 +1,7 @@
 package nxt;
 
+import nxt.db.DbClause;
+import nxt.db.DbIterator;
 import nxt.db.DbKey;
 import nxt.db.EntityDbTable;
 import java.sql.Connection;
@@ -80,6 +82,10 @@ public final class Vote {
 
     public static Vote getVote(Long id) {
         return voteTable.get(voteDbKeyFactory.newKey(id));
+    }
+
+    public static DbIterator<Vote> getVotes(Long id, int from, int to) {
+        return voteTable.getManyBy(new DbClause.LongClause("poll_id", id), from, to);
     }
 
     public static List<Long> getVoters(Poll poll) {

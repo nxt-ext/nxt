@@ -27,10 +27,10 @@ public class GetPollResults extends APIServlet.APIRequestHandler {
         long pollId = Convert.parseUnsignedLong(pollIdValue);
 
         Poll poll = Poll.getPoll(pollId);
-        if(poll==null) {
+        if (poll == null) {
             return INCORRECT_POLL;
         }
-        if(!poll.isFinished()) {
+        if (!poll.isFinished()) {
             return UNKNOWN_POLL_RESULTS;
         }
 

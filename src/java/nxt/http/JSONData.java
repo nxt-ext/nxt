@@ -235,6 +235,30 @@ final class JSONData {
         return json;
     }
 
+    static JSONObject vote(Poll poll, Vote vote){
+        JSONObject json = new JSONObject();
+        json.put("voter",Convert.toUnsignedLong(vote.getVoterId()));
+        json.put("voterRs",Convert.rsAccount(vote.getVoterId()));
+        String[] options = poll.getOptions();
+
+        JSONArray votesJson = new JSONArray();
+        byte[] votes = vote.getVote();
+        for(int i=0; i<options.length; i++){
+            String key = options[i];
+            String value;
+            if(votes[i] == Constants.VOTING_NO_VOTE_VALUE){
+                value = "skipped";
+            }else{
+                value = Byte.toString(votes[i]);
+            }
+            JSONObject voteJson = new JSONObject();
+            voteJson.put(key, value);
+            votesJson.add(voteJson);
+        }
+        json.put("votes", votesJson);
+        return json;
+    }
+
     static JSONObject purchase(DigitalGoodsStore.Purchase purchase) {
         JSONObject json = new JSONObject();
         json.put("purchase", Convert.toUnsignedLong(purchase.getId()));
