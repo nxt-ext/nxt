@@ -295,7 +295,7 @@ public final class Currency {
         if (!isActive()) {
             return false;
         }
-        if (is(CurrencyType.MINTABLE) && currentSupply < totalSupply) {
+        if (is(CurrencyType.MINTABLE) && currentSupply < totalSupply && ownerAccountId != accountId) {
             return false;
         }
         try (DbIterator<Account.AccountCurrency> accountCurrencies = Account.getCurrencyAccounts(this.currencyId, 0, -1)) {
