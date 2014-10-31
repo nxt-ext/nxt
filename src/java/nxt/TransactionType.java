@@ -54,6 +54,7 @@ public abstract class TransactionType {
     static final byte SUBTYPE_MONETARY_SYSTEM_EXCHANGE_BUY = 5;
     static final byte SUBTYPE_MONETARY_SYSTEM_EXCHANGE_SELL = 6;
     static final byte SUBTYPE_MONETARY_SYSTEM_CURRENCY_MINTING = 7;
+    static final byte SUBTYPE_MONETARY_SYSTEM_CURRENCY_DELETION = 8;
 
     private static final byte SUBTYPE_ACCOUNT_CONTROL_EFFECTIVE_BALANCE_LEASING = 0;
 
@@ -161,6 +162,8 @@ public abstract class TransactionType {
                         return MonetarySystem.EXCHANGE_SELL;
                     case SUBTYPE_MONETARY_SYSTEM_CURRENCY_MINTING:
                         return MonetarySystem.CURRENCY_MINTING;
+                    case SUBTYPE_MONETARY_SYSTEM_CURRENCY_DELETION:
+                        return MonetarySystem.CURRENCY_DELETION;
                 }
             default:
                 return null;

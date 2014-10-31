@@ -291,7 +291,7 @@ public final class Currency {
         return (this.type & type.getCode()) != 0;
     }
 
-    boolean canBeDeletedBy(long ownerAccountId) {
+    public boolean canBeDeletedBy(long ownerAccountId) {
         if (!isActive()) {
             return false;
         }

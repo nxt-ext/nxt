@@ -2283,4 +2283,54 @@ public interface Attachment extends Appendix {
 
     }
 
+    public final static class MonetarySystemCurrencyDeletion extends AbstractAttachment implements MonetarySystemAttachment {
+
+        private final long currencyId;
+
+        MonetarySystemCurrencyDeletion(ByteBuffer buffer, byte transactionVersion) {
+            super(buffer, transactionVersion);
+            this.currencyId = buffer.getLong();
+        }
+
+        MonetarySystemCurrencyDeletion(JSONObject attachmentData) {
+            super(attachmentData);
+            this.currencyId = Convert.parseUnsignedLong((String)attachmentData.get("currency"));
+        }
+
+        public MonetarySystemCurrencyDeletion(long currencyId) {
+            this.currencyId = currencyId;
+        }
+
+        @Override
+        String getAppendixName() {
+            return "CurrencyDeletion";
+        }
+
+        @Override
+        int getMySize() {
+            return 8;
+        }
+
+        @Override
+        void putMyBytes(ByteBuffer buffer) {
+            buffer.putLong(currencyId);
+        }
+
+        @Override
+        void putMyJSON(JSONObject attachment) {
+            attachment.put("currency", Convert.toUnsignedLong(currencyId));
+        }
+
+        @Override
+        public TransactionType getTransactionType() {
+            return MonetarySystem.CURRENCY_DELETION;
+        }
+
+        @Override
+        public long getCurrencyId() {
+            return currencyId;
+        }
+
+    }
+
 }

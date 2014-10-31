@@ -193,6 +193,10 @@ public final class GetConstants extends APIServlet.APIRequestHandler {
         subtype.put("value", MonetarySystem.CURRENCY_MINTING.getSubtype());
         subtype.put("description", "Currency minting");
         subtypes.add(subtype);
+        subtype = new JSONObject();
+        subtype.put("value", MonetarySystem.CURRENCY_DELETION.getSubtype());
+        subtype.put("description", "Currency deletion");
+        subtypes.add(subtype);
         transactionType.put("subtypes", subtypes);
         transactionTypes.add(transactionType);
         response.put("transactionTypes", transactionTypes);

@@ -483,10 +483,10 @@ public abstract class MonetarySystem extends TransactionType {
         @Override
         void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
             Attachment.MonetarySystemCurrencyMinting attachment = (Attachment.MonetarySystemCurrencyMinting) transaction.getAttachment();
-            if (attachment.getUnits() <= 0 || attachment.getUnits() > Currency.getCurrency(attachment.getCurrencyId()).getTotalSupply() / Constants.MAX_MINTING_RATIO) {
+            Currency currency = Currency.getCurrency(attachment.getCurrencyId());
+            if (currency == null || attachment.getUnits() <= 0 || attachment.getUnits() > currency.getTotalSupply() / Constants.MAX_MINTING_RATIO) {
                 throw new NxtException.NotValidException("Invalid currency minting: " + attachment.getJSONObject());
             }
-            Currency currency = Currency.getCurrency(attachment.getCurrencyId());
             CurrencyType.validate(currency, transaction);
             if (! currency.isActive()) {
                 throw new NxtException.NotCurrentlyValidException("Currency not currently active " + attachment.getJSONObject());
@@ -514,6 +514,72 @@ public abstract class MonetarySystem extends TransactionType {
         }
 
     };
+
+    public static final TransactionType CURRENCY_DELETION = new MonetarySystem() {
+
+        @Override
+        public byte getSubtype() {
+            return TransactionType.SUBTYPE_MONETARY_SYSTEM_CURRENCY_DELETION;
+        }
+
+        @Override
+        Attachment.MonetarySystemCurrencyDeletion parseAttachment(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
+            return new Attachment.MonetarySystemCurrencyDeletion(buffer, transactionVersion);
+        }
+
+        @Override
+        Attachment.MonetarySystemCurrencyDeletion parseAttachment(JSONObject attachmentData) throws NxtException.NotValidException {
+            return new Attachment.MonetarySystemCurrencyDeletion(attachmentData);
+        }
+
+        @Override
+        boolean isDuplicate(Transaction transaction, Map<TransactionType, Map<String, Boolean>> duplicates) {
+            Attachment.MonetarySystemAttachment attachment = (Attachment.MonetarySystemAttachment) transaction.getAttachment();
+            Currency currency = Currency.getCurrency(attachment.getCurrencyId());
+            String nameLower = currency.getName().toLowerCase();
+            String codeLower = currency.getCode().toLowerCase();
+            boolean isDuplicate = TransactionType.isDuplicate(CURRENCY_ISSUANCE, nameLower, duplicates, true);
+            if (! nameLower.equals(codeLower)) {
+                isDuplicate = isDuplicate || TransactionType.isDuplicate(CURRENCY_ISSUANCE, codeLower, duplicates, true);
+            }
+            return isDuplicate;
+        }
+
+        @Override
+        void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
+            Attachment.MonetarySystemCurrencyDeletion attachment = (Attachment.MonetarySystemCurrencyDeletion) transaction.getAttachment();
+            Currency currency = Currency.getCurrency(attachment.getCurrencyId());
+            CurrencyType.validate(currency, transaction);
+            if (!currency.canBeDeletedBy(transaction.getSenderId())) {
+                throw new NxtException.NotCurrentlyValidException("Currency " + Convert.toUnsignedLong(currency.getId()) + " cannot be deleted by account " +
+                    Convert.toUnsignedLong(transaction.getSenderId()));
+            }
+        }
+
+
+        @Override
+        boolean applyAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
+            return true;
+        }
+
+        @Override
+        void undoAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
+        }
+
+        @Override
+        void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
+            Attachment.MonetarySystemCurrencyDeletion attachment = (Attachment.MonetarySystemCurrencyDeletion) transaction.getAttachment();
+            Currency currency = Currency.getCurrency(attachment.getCurrencyId());
+            currency.delete(transaction.getSenderId());
+        }
+
+        @Override
+        public boolean hasRecipient() {
+            return false;
+        }
+
+    };
+
 
 }
 

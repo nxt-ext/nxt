@@ -245,6 +245,14 @@ public final class JSONResponses {
         HEIGHT_NOT_AVAILABLE = JSON.prepare(response);
     }
 
+    public static final JSONStreamAware CANNOT_DELETE_CURRENCY;
+    static {
+        JSONObject response = new JSONObject();
+        response.put("errorCode", 8);
+        response.put("errorDescription", "Currency cannot be deleted");
+        CANNOT_DELETE_CURRENCY = JSON.prepare(response);
+    }
+
     static JSONStreamAware missing(String... paramNames) {
         JSONObject response = new JSONObject();
         response.put("errorCode", 3);
