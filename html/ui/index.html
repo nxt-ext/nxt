@@ -229,6 +229,7 @@
 									</ul>
 								</div>
 								<a id="sideBalance" data-target="#account_details_modal" data-toggle="modal" href="#"><span id="account_balance_sidebar" class="loading_dots"><span>.</span><span>.</span><span>.</span></span> NXT</a>
+	                            <a href="#" data-page="peers" id="connected_indicator" class="connected goto-page" style="display:none;font-size:13px;"><i class="fa fa-circle" style="font-size:12px;"></i> <span data-18n="connected">Connected</span></a><br />
 	                            <a href="#" id="forging_indicator" class="forging" style="display:none;font-size:13px;"><i class="fa fa-circle" style="font-size:12px;"></i> <span data-18n="forging">Forging</span></a>
                         	</div>
                         </div>
@@ -283,7 +284,7 @@
             </aside>
             <aside class="right-side">
            		<div id="dashboard_page" class="page" style="display:block">
-	                <section class="content-header"><h1 data-i18n="dashboard">Dashboard</h1></section>
+	                <section class="content-header"><span style="float:right; font-size:115%;"><span id="nrs_version_info" data-i18n="nrs_version">NRS Version</span>: <a href="#" class="small-box-footer" data-toggle="modal" data-target="#nrs_modal"><span id="nrs_version" class="loading_dots"><span>.</span><span>.</span><span>.</span></span></a><span class="label label-danger" id="nrs_update" style="display:none;"></span></span><h1 data-i18n="dashboard">Dashboard</h1></section>
 	                
 	                <section class="content">
 	                	<div class="alert-danger alert alert-no-icon" id="dashboard_message" style="display:none;padding:5px;padding-left:5px;margin-bottom:15px;"></div>
@@ -304,36 +305,36 @@
 	                        <div class="col-lg-3 col-xs-6">
 	                            <div class="small-box bg-green">
 	                                <div class="inner">
-	                                    <h3><span id="account_forged_balance" class="loading_dots"><span>.</span><span>.</span><span>.</span></span></h3>
-	                                    <p data-i18n="forged_balance">Forged Balance</p>
+	                                    <h3><span id="account_assets_balance" class="loading_dots"><span>.</span><span>.</span><span>.</span></span></h3>
+	                                    <p style="display:inline-block">Assets value</p> <p style="display:inline-block">(<span id="account_nr_assets" class="loading_dots"><span></p> <p style="display:inline-block"><span data-i18n="assets_owned">Assets Owned</span>)</p>                        
 	                                </div>
-	                                <div class="icon"><i class="ion ion-hammer"></i></div>
-	                                <a href="#" id="goto_forged_blocks" class="small-box-footer"><span data-i18n="more_info">More info</span> <i class="fa fa-arrow-circle-right"></i></a>
+	                            	<div class="icon"><i class="ion ion-pie-graph"></i></div>
+	                                <a href="#" class="small-box-footer goto-page" data-page="my_assets"><span data-i18n="more_info">More info</span> <i class="fa fa-arrow-circle-right"></i></a>
 	                            </div>
 	                        </div>
 	                        <div class="col-lg-3 col-xs-6">
 	                            <div class="small-box bg-yellow">
 	                                <div class="inner">
-	                                    <h3><span id="account_nr_assets" class="loading_dots"><span>.</span><span>.</span><span>.</span></span></h3>
-	                                    <p data-i18n="assets_owned">Assets Owned</p>
+	                                    <h3><span id="account_message_count" class="loading_dots"><span>.</span><span>.</span><span>.</span></span></h3>
+	                                    <p data-i18n="message_count">Messages</p>
 	                                </div>
-	                                <div class="icon"><i class="ion ion-pie-graph"></i></div>
-	                                <a href="#" class="small-box-footer goto-page" data-page="my_assets"><span data-i18n="more_info">More info</span> <i class="fa fa-arrow-circle-right"></i></a>
+	                                <div class="icon"><i class="fa fa-envelope-o"></i></div>
+	                                <a href="#" class="small-box-footer goto-page" data-page="messages"><span data-i18n="more_info">More info</span> <i class="fa fa-arrow-circle-right"></i></a>
 	                            </div>
 	                        </div>
 	                        <div class="col-lg-3 col-xs-6">
 	                            <div class="small-box bg-red">
 	                                <div class="inner">
-	                                    <h3><span id="nrs_version" class="loading_dots"><span>.</span><span>.</span><span>.</span></span></h3>
-	                                    <p><span id="nrs_version_info" data-i18n="nrs_version">NRS Version</span> <span class="label label-danger" id="nrs_update" style="display:none;"></span></p>
+	                                    <h3><span style="font-size:22px" id="nrs_current_block_time" class="loading_dots"><span>.</span><span>.</span><span>.</span></span></h3>
+	                                    <p><span id="nrs_block" data-i18n="last_updated">Last Updated</span> (Block: <span id="nrs_current_block" class="loading_dots"><span>.</span><span>.</span><span>.</span></span>)</p>
 	                                </div>
 	                                <div class="icon"><i class="fa fa-code"></i></div>
-	                                <a href="#" class="small-box-footer" data-toggle="modal" data-target="#nrs_modal"><span data-i18n="more_info">More info</span> <i class="fa fa-arrow-circle-right"></i></a>
+	                                <a href="#" class="small-box-footer goto-page" data-page="blocks"><span data-i18n="more_info">More info</span> <i class="fa fa-arrow-circle-right"></i></a>
 	                            </div>
 	                        </div>
 	                    </div>
 						<div class="row">
-						    <div class="col-md-6">
+						    <div class="col-md-12">
 						        <div class="box box-primary">
 						            <div class="box-header"><h3 class="box-title" data-i18n="recent_transactions">Recent Transactions</h3></div>
 						            <div class="box-body no-padding">
@@ -343,8 +344,9 @@
 							                    <tr>
 							                        <th data-i18n="date">Date</th>
 							                        <th colspan="2" data-i18n="amount_plus_fee">Amount + Fee</th>
-							                        <th data-i18n="account">Account</th>
-							                        <th data-i18n="confirmations_short" style="width:40px">Conf.</th>
+							                        <th data-i18n="fromAccount">From</th>
+							                        <th data-i18n="toAccount">To</th>
+							                        <th data-i18n="type" style="width:40px">Type</th>
 							                    </tr>
 							                    </thead>
 							                    <tbody>
@@ -358,7 +360,7 @@
 						            <div class="box-footer" id="dashboard_transactions_footer" style="display: none"><button class="btn btn-primary goto-page" data-page="transactions"><i class="fa fa-caret-right"></i> <span data-i18n="view_more">View More</span></button></div>
 						        </div>
 							</div>
-							<div class="col-md-6">
+							<!--<div class="col-md-3">
 							    <div class="box box-primary">
 							        <div class="box-header"><h3 class="box-title" data-i18n="recent_blocks">Recent Blocks</h3></div>
 							        <div class="box-body no-padding">
@@ -383,7 +385,7 @@
 							        <div class="box-footer" id="dashboard_blocks_footer" style="display: none"><button class="btn btn-primary goto-page" data-page="blocks"><i class="fa fa-caret-right"></i> <span data-i18n="view_more">View More</span></button></div>
 							    </div>
 							</div>
-						</div>
+						</div>-->
 	            	</section>
 				</div>
 				
@@ -1278,6 +1280,20 @@
 							                <option value="0" data-i18n="no">No</option>
 							            </select>
 							        </div>
+							        <div class="form-group">
+							            <label for="settings_items_page" data-i18n="items_per_page">Items to show per page</label>
+							            <select name="items_page" id="settings_items_page" class="form-control" style="width:150px">
+							                <option value="10" data-i18n="10">10</option>
+							                <option value="15" data-i18n="15">15</option>
+							                <option value="20" data-i18n="20">20</option>
+							                <option value="25" data-i18n="25">25</option>
+							                <option value="30" data-i18n="30">30</option>
+							                <option value="35" data-i18n="35">35</option>
+							                <option value="40" data-i18n="40">40</option>
+							                <option value="45" data-i18n="45">45</option>
+							                <option value="50" data-i18n="50">50</option>
+							            </select>
+							        </div>
 
 							    </div>
 							</form>
@@ -1492,7 +1508,7 @@
 					</section>
 				</div>
                 
-                <div id="blocks_page" class="page">
+                <div id="blocks_page" class="paginated page">
                		<section class="content-header">
                			<h1 data-i18n="blocks">Blocks</h1>
 						<div style="position:absolute;top:9px;right:9px;">
@@ -1591,6 +1607,7 @@
 							<div class="data-loading-container"><img src="img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
 							<div class="data-empty-container" data-i18n="no_blocks_found">No blocks found.</div>
 						</div>
+						<div class="data-pagination"></div>
 	                </section>
 				</div>
             </aside>
@@ -4263,6 +4280,9 @@
 							    	</tr>
 							    	<tr>
 							    		<td style="font-weight: bold"><span data-i18n="effective_balance">Effective Balance</span>:</td><td><span id="account_balance_effective_balance"></span></td>
+							    	</tr>
+							    	<tr>
+							    		<td style="font-weight: bold"><span data-i18n="forged_balance">Forged Balance</span>:</td><td><span id="account_balance_forged_balance"></span></td>
 							    	</tr>
 							    	<tr>
 							    		<td style="font-weight: bold"><span data-i18n="public_key">Public Key</span>:</td><td><span id="account_balance_public_key" style="word-break:break-all;word-wrap: break-word;"></span></td>

@@ -26,7 +26,7 @@ var NRS = (function(NRS, $, undefined) {
 
 					_messages[otherUser].push(response.transactions[i]);
 				}
-
+				
 				displayMessageSidebar(callback);
 			} else {
 				$("#no_message_selected").hide();

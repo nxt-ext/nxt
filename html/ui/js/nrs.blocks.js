@@ -75,6 +75,10 @@ var NRS = (function(NRS, $, undefined) {
 
 				rows += "<tr><td><a href='#' data-block='" + String(block.height).escapeHTML() + "' data-blockid='" + String(block.block).escapeHTML() + "' class='block'" + (block.numberOfTransactions > 0 ? " style='font-weight:bold'" : "") + ">" + String(block.height).escapeHTML() + "</a></td><td data-timestamp='" + String(block.timestamp).escapeHTML() + "'>" + NRS.formatTimestamp(block.timestamp) + "</td><td>" + NRS.formatAmount(block.totalAmountNQT) + " + " + NRS.formatAmount(block.totalFeeNQT) + "</td><td>" + NRS.formatAmount(block.numberOfTransactions) + "</td></tr>";
 			}
+			
+			var block = NRS.blocks[0];			
+			$("#nrs_current_block_time").empty().append(NRS.formatTimestamp(block.timestamp));
+			$("#nrs_current_block").empty().append(String(block.height).escapeHTML());
 
 			$("#dashboard_blocks_table tbody").empty().append(rows);
 			NRS.dataLoadFinished($("#dashboard_blocks_table"));
@@ -204,6 +208,10 @@ var NRS = (function(NRS, $, undefined) {
 			$("#dashboard_blocks_table tbody tr").slice(10 - newBlockCount).remove();
 		}
 
+		var block = NRS.blocks[0];			
+		$("#nrs_current_block_time").empty().append(NRS.formatTimestamp(block.timestamp));
+		$("#nrs_current_block").empty().append(String(block.height).escapeHTML());
+		
 		$("#dashboard_blocks_table tbody").prepend(rows);
 
 		//update number of confirmations... perhaps we should also update it in tne NRS.transactions array
@@ -242,10 +250,14 @@ var NRS = (function(NRS, $, undefined) {
 
 			NRS.sendRequest("getAccountBlocks+", {
 				"account": NRS.account,
-				"firstIndex": 0,
-				"lastIndex": 100
+				"firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
+				"lastIndex": NRS.pageNumber * NRS.itemsPerPage
 			}, function(response) {
 				if (response.blocks && response.blocks.length) {
+					if (response.blocks.length > NRS.itemsPerPage) {
+						NRS.hasMorePages = true;
+						response.blocks.pop();
+					}
 					NRS.blocksPageLoaded(response.blocks);
 				} else {
 					NRS.blocksPageLoaded([]);
@@ -254,38 +266,26 @@ var NRS = (function(NRS, $, undefined) {
 		} else {
 			$("#forged_fees_total_box, #forged_blocks_total_box").hide();
 			$("#blocks_transactions_per_hour_box, #blocks_generation_time_box").show();
-
-			if (NRS.blocks.length < 100) {
-				if (NRS.downloadingBlockchain) {
-					NRS.blocksPageLoaded(NRS.blocks);
-				} else {
-					if (NRS.blocks && NRS.blocks.length) {
-						var previousBlock = NRS.blocks[NRS.blocks.length - 1].previousBlock;
-						//if previous block is undefined, dont try add it
-						if (typeof previousBlock !== "undefined") {
-							NRS.getBlock(previousBlock, NRS.finish100Blocks, true);
-						}
-					} else {
-						NRS.blocksPageLoaded([]);
+			
+			NRS.sendRequest("getBlocks+", {
+				"firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
+				"lastIndex": NRS.pageNumber * NRS.itemsPerPage
+			}, function(response) {
+				if (response.blocks && response.blocks.length) {
+					if (response.blocks.length > NRS.itemsPerPage) {
+						NRS.hasMorePages = true;
+						response.blocks.pop();
 					}
+					NRS.blocksPageLoaded(response.blocks);
+				} else {
+					NRS.blocksPageLoaded([]);
 				}
-			} else {
-				NRS.blocksPageLoaded(NRS.blocks);
-			}
+			});
 		}
 	}
 
 	NRS.incoming.blocks = function() {
 		NRS.loadPage("blocks");
-	}
-
-	NRS.finish100Blocks = function(response) {
-		NRS.blocks.push(response);
-		if (NRS.blocks.length < 100 && typeof response.previousBlock !== "undefined") {
-			NRS.getBlock(response.previousBlock, NRS.finish100Blocks, true);
-		} else {
-			NRS.blocksPageLoaded(NRS.blocks);
-		}
 	}
 
 	NRS.blocksPageLoaded = function(blocks) {
@@ -343,7 +343,7 @@ var NRS = (function(NRS, $, undefined) {
 			} else {
 				$("#blocks_transactions_per_hour").html(Math.round(totalTransactions / (time / 60) * 60)).removeClass("loading_dots");
 			}
-			$("#blocks_average_generation_time").html(Math.round(time / 100) + "s").removeClass("loading_dots");
+			$("#blocks_average_generation_time").html(Math.round(time / NRS.itemsPerPage) + "s").removeClass("loading_dots");
 		}
 
 		NRS.dataLoaded(rows);

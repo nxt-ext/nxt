@@ -12,7 +12,8 @@ var NRS = (function(NRS, $, undefined) {
 		"asset_transfer_warning": "10000",
 		"24_hour_format": 1,
 		"remember_passphrase": 0,
-		"language": "en"
+		"language": "en",
+		"items_page": 15
 	};
 
 	NRS.defaultColors = {
@@ -508,6 +509,10 @@ var NRS = (function(NRS, $, undefined) {
 			} else if (NRS.settings["news"] == 1) {
 				$("#news_link").show();
 			}
+		}
+		
+		if (!key || key == "items_page") {
+			NRS.itemsPerPage = NRS.settings["items_page"];
 		}
 
 		if (!NRS.inApp && !NRS.downloadingBlockchain) {
