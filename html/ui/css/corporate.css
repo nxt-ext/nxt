@@ -1157,7 +1157,7 @@ body > .header .navbar .nav > li > a:hover > .label {
   top: -20px;
   z-index: 0;
   font-size: 90px;
-  color: rgba(255, 255, 255, 0.5);
+  color: rgba(255, 255, 255, 0.25);
 }
 .small-box .icon-smaller {
 	position: absolute;
@@ -3446,7 +3446,7 @@ a.list-group-item.active h4 span {
 }
 #login_panel #remember_password_container label{ opacity: 0.53; }
 #login_panel #remember_password_container label:hover { opacity: 1.0; }
-#login_panel input[type="checkbox"] + label span {
+#login_panel input[type="checkbox"] + span {
     display:inline-block;
 	height: 6px;
     margin: -2px 10px 0 0;
@@ -3456,7 +3456,7 @@ a.list-group-item.active h4 span {
     cursor:pointer;
 }
 #login_panel input[type="checkbox"] + label { color:rgba(255,255,255,1.0); cursor:pointer; }
-#login_panel input[type="checkbox"]:checked + label span {
+#login_panel input[type="checkbox"]:checked + span {
     background:#cc9900;
 }
 #messages_page .content { background-color: #919191; }
