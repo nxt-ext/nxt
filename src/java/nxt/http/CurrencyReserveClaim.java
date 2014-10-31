@@ -26,7 +26,7 @@ public final class CurrencyReserveClaim extends CreateTransaction {
     static final CurrencyReserveClaim instance = new CurrencyReserveClaim();
 
     private CurrencyReserveClaim() {
-        super(new APITag[] {APITag.MS, APITag.CREATE_TRANSACTION}, "currency", "units");
+        super(new APITag[] {APITag.MS, APITag.CREATE_TRANSACTION}, "currency", "code", "units");
     }
 
     @Override

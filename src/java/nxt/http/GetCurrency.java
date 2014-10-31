@@ -10,7 +10,7 @@ public final class GetCurrency extends APIServlet.APIRequestHandler {
     static final GetCurrency instance = new GetCurrency();
 
     private GetCurrency() {
-        super(new APITag[] {APITag.MS}, "currency");
+        super(new APITag[] {APITag.MS}, "currency", "code");
     }
 
     @Override

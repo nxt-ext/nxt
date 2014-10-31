@@ -23,7 +23,7 @@ public final class GetMintingTarget extends APIServlet.APIRequestHandler {
     static final GetMintingTarget instance = new GetMintingTarget();
 
     private GetMintingTarget() {
-        super(new APITag[] {APITag.MS}, "currency", "units");
+        super(new APITag[] {APITag.MS}, "currency", "code", "units");
     }
 
     @Override

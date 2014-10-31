@@ -15,7 +15,7 @@ public final class GetCurrencyAccounts extends APIServlet.APIRequestHandler {
     static final GetCurrencyAccounts instance = new GetCurrencyAccounts();
 
     private GetCurrencyAccounts() {
-        super(new APITag[] {APITag.MS}, "currency", "height", "firstIndex", "lastIndex");
+        super(new APITag[] {APITag.MS}, "currency", "code", "height", "firstIndex", "lastIndex");
     }
 
     @Override
