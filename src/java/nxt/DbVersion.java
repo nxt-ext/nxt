@@ -405,9 +405,9 @@ final class DbVersion {
             case 128:
                 apply("CREATE TABLE IF NOT EXISTS currency (db_id IDENTITY, id BIGINT NOT NULL, account_id BIGINT NOT NULL, "
                         + "name VARCHAR NOT NULL, name_lower VARCHAR AS LOWER (name) NOT NULL, code VARCHAR NOT NULL, "
-                        + "description VARCHAR, type INT NOT NULL, total_supply BIGINT NOT NULL, "
+                        + "description VARCHAR, type INT NOT NULL, current_supply BIGINT NOT NULL, reserve_supply BIGINT NOT NULL, max_supply BIGINT NOT NULL, "
                         + "issuance_height INT NOT NULL, min_reserve_per_unit_nqt BIGINT NOT NULL, min_difficulty TINYINT NOT NULL, "
-                        + "max_difficulty TINYINT NOT NULL, ruleset TINYINT NOT NULL, algorithm TINYINT NOT NULL, current_supply BIGINT NOT NULL, "
+                        + "max_difficulty TINYINT NOT NULL, ruleset TINYINT NOT NULL, algorithm TINYINT NOT NULL, "
                         + "current_reserve_per_unit_nqt BIGINT NOT NULL, decimals TINYINT NOT NULL DEFAULT 0,"
                         + "height INT NOT NULL, latest BOOLEAN NOT NULL DEFAULT TRUE)");
             case 129:
@@ -422,7 +422,7 @@ final class DbVersion {
                 apply("CREATE UNIQUE INDEX IF NOT EXISTS account_currency_id_height_idx ON account_currency (account_id, currency_id, height DESC)");
             case 133:
                 apply("CREATE TABLE IF NOT EXISTS currency_founder (db_id IDENTITY, currency_id BIGINT NOT NULL, "
-                        + "account_id BIGINT NOT NULL, value BIGINT NOT NULL, "
+                        + "account_id BIGINT NOT NULL, amount BIGINT NOT NULL, "
                         + "height INT NOT NULL, latest BOOLEAN NOT NULL DEFAULT TRUE)");
             case 134:
                 apply("CREATE UNIQUE INDEX IF NOT EXISTS currency_founder_currency_id_idx ON currency_founder (currency_id, account_id, height DESC)");

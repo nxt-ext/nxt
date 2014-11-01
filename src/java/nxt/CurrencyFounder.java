@@ -47,29 +47,29 @@ public class CurrencyFounder {
     private final DbKey dbKey;
     private final long currencyId;
     private final long accountId;
-    private long value;
+    private long amount;
 
-    private CurrencyFounder(long currencyId, long accountId, long value) {
+    private CurrencyFounder(long currencyId, long accountId, long amount) {
         this.currencyId = currencyId;
         this.dbKey = currencyFounderDbKeyFactory.newKey(currencyId, accountId);
         this.accountId = accountId;
-        this.value = value;
+        this.amount = amount;
     }
 
     private CurrencyFounder(ResultSet rs) throws SQLException {
         this.currencyId = rs.getLong("currency_id");
         this.accountId = rs.getLong("account_id");
         this.dbKey = currencyFounderDbKeyFactory.newKey(currencyId, accountId);
-        this.value = rs.getLong("value");
+        this.amount = rs.getLong("amount");
     }
 
     private void save(Connection con) throws SQLException {
-        try (PreparedStatement pstmt = con.prepareStatement("MERGE INTO currency_founder (currency_id, account_id, value, height, latest) "
+        try (PreparedStatement pstmt = con.prepareStatement("MERGE INTO currency_founder (currency_id, account_id, amount, height, latest) "
                 + "KEY (currency_id, account_id, height) VALUES (?, ?, ?, ?, TRUE)")) {
             int i = 0;
             pstmt.setLong(++i, this.getCurrencyId());
             pstmt.setLong(++i, this.getAccountId());
-            pstmt.setLong(++i, this.getValue());
+            pstmt.setLong(++i, this.getAmount());
             pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
             pstmt.executeUpdate();
         }
@@ -83,16 +83,16 @@ public class CurrencyFounder {
         return accountId;
     }
 
-    public long getValue() {
-        return value;
+    public long getAmount() {
+        return amount;
     }
 
-    static void addOrUpdateFounder(long currencyId, long accountId, long value) {
+    static void addOrUpdateFounder(long currencyId, long accountId, long amount) {
         CurrencyFounder founder = getFounder(currencyId, accountId);
         if (founder == null) {
-            founder = new CurrencyFounder(currencyId, accountId, value);
+            founder = new CurrencyFounder(currencyId, accountId, amount);
         } else {
-            founder.value += value;
+            founder.amount += amount;
         }
         currencyFounderTable.insert(founder);
     }

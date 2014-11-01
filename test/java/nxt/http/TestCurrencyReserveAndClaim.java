@@ -16,7 +16,9 @@ public class TestCurrencyReserveAndClaim extends BlockchainTest {
         APICall apiCall = new TestCurrencyIssuance.Builder().
                 type(CurrencyType.RESERVABLE.getCode() | CurrencyType.EXCHANGEABLE.getCode()).
                 issuanceHeight(baseHeight + 5).
-                minReservePerUnitNQT((long) 0).
+                minReservePerUnitNQT((long) 1).
+                initialSupply((long)0).
+                reserveSupply((long)100000).
                 build();
         String currencyId = TestCurrencyIssuance.issueCurrencyApi(apiCall);
         reserveIncreaseImpl(currencyId);
@@ -28,6 +30,8 @@ public class TestCurrencyReserveAndClaim extends BlockchainTest {
                 type(CurrencyType.RESERVABLE.getCode() | CurrencyType.EXCHANGEABLE.getCode()).
                 issuanceHeight(baseHeight + 4).
                 minReservePerUnitNQT((long) 11).
+                initialSupply((long)0).
+                reserveSupply((long)100000).
                 build();
         String currencyId = TestCurrencyIssuance.issueCurrencyApi(apiCall1);
         long balanceNQT1 = Account.getAccount(Crypto.getPublicKey(secretPhrase1)).getBalanceNQT();
@@ -53,6 +57,7 @@ public class TestCurrencyReserveAndClaim extends BlockchainTest {
         APICall apiCall = new TestCurrencyIssuance.Builder().
                 type(CurrencyType.RESERVABLE.getCode() | CurrencyType.EXCHANGEABLE.getCode()).
                 initialSupply((long)0).
+                reserveSupply((long)100000).
                 issuanceHeight(baseHeight + 4).
                 minReservePerUnitNQT((long) 10).
                 build();
@@ -111,11 +116,11 @@ public class TestCurrencyReserveAndClaim extends BlockchainTest {
         JSONArray founders = (JSONArray)getFoundersResponse.get("founders");
         JSONObject founder1 = (JSONObject)founders.get(0);
         Assert.assertEquals(Convert.toUnsignedLong(Account.getId(Crypto.getPublicKey(secretPhrase2))), founder1.get("account"));
-        Assert.assertEquals(String.valueOf(300000L + 500000L), founder1.get("value"));
+        Assert.assertEquals(String.valueOf(3L + 5L), founder1.get("amount"));
 
         JSONObject founder2 = (JSONObject)founders.get(1);
         Assert.assertEquals(Convert.toUnsignedLong(Account.getAccount(Crypto.getPublicKey(secretPhrase1)).getId()), founder2.get("account"));
-        Assert.assertEquals(String.valueOf(200000L), founder2.get("value"));
+        Assert.assertEquals(String.valueOf(2L), founder2.get("amount"));
     }
 
 }

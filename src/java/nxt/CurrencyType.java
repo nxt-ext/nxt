@@ -63,11 +63,21 @@ public enum CurrencyType {
         @Override
         void validate(Currency currency, Transaction transaction, Set<CurrencyType> validators) throws NxtException.ValidationException {
             if (transaction.getType() == MonetarySystem.CURRENCY_ISSUANCE) {
-                int issuanceHeight = ((Attachment.MonetarySystemCurrencyIssuance) transaction.getAttachment()).getIssuanceHeight();
+                Attachment.MonetarySystemCurrencyIssuance attachment = (Attachment.MonetarySystemCurrencyIssuance) transaction.getAttachment();
+                int issuanceHeight = attachment.getIssuanceHeight();
                 if  (issuanceHeight <= Nxt.getBlockchain().getHeight()) {
                     throw new NxtException.NotCurrentlyValidException(
                         String.format("Reservable currency activation height %d not higher than current height %d",
                                 issuanceHeight, Nxt.getBlockchain().getHeight()));
+                }
+                if (attachment.getMinReservePerUnitNQT() <= 0) {
+                    throw new NxtException.NotValidException("Minimum reserve per unit must be > 0");
+                }
+                if (attachment.getReserveSupply() <= attachment.getInitialSupply()) {
+                    throw new NxtException.NotValidException("Reserve supply must exceed initial supply");
+                }
+                if (!validators.contains(MINTABLE) && attachment.getReserveSupply() < attachment.getMaxSupply()) {
+                    throw new NxtException.NotValidException("Max supply must not exceed reserve supply for reservable and non-mintable currency");
                 }
             }
             if (transaction.getType() == MonetarySystem.RESERVE_INCREASE) {
@@ -83,9 +93,15 @@ public enum CurrencyType {
                 throw new NxtException.NotValidException("Cannot increase reserve since currency is not reservable");
             }
             if (transaction.getType() == MonetarySystem.CURRENCY_ISSUANCE) {
-                int issuanceHeight = ((Attachment.MonetarySystemCurrencyIssuance) transaction.getAttachment()).getIssuanceHeight();
-                if (issuanceHeight != 0) {
+                Attachment.MonetarySystemCurrencyIssuance attachment = (Attachment.MonetarySystemCurrencyIssuance) transaction.getAttachment();
+                if (attachment.getIssuanceHeight() != 0) {
                     throw new NxtException.NotValidException("Issuance height for non-reservable currency must be 0");
+                }
+                if (attachment.getReserveSupply() > 0) {
+                    throw new NxtException.NotValidException("Reserve supply for non-reservable currency must be 0");
+                }
+                if (!validators.contains(MINTABLE) && attachment.getInitialSupply() < attachment.getMaxSupply()) {
+                    throw new NxtException.NotValidException("Initial supply for non-reservable and non-mintable currency must be equal to max supply");
                 }
             }
         }
@@ -99,8 +115,15 @@ public enum CurrencyType {
         @Override
         void validate(Currency currency, Transaction transaction, Set<CurrencyType> validators) throws NxtException.ValidationException {
             if (transaction.getType() == MonetarySystem.CURRENCY_ISSUANCE) {
+                Attachment.MonetarySystemCurrencyIssuance attachment = (Attachment.MonetarySystemCurrencyIssuance) transaction.getAttachment();
                 if (!validators.contains(RESERVABLE)) {
                     throw new NxtException.NotValidException("Claimable currency must be reservable");
+                }
+                if (validators.contains(MINTABLE)) {
+                    throw new NxtException.NotValidException("Claimable currency cannot be mintable");
+                }
+                if (attachment.getInitialSupply() > 0) {
+                    throw new NxtException.NotValidException("Claimable currency must have initial supply 0");
                 }
             }
             if (transaction.getType() == MonetarySystem.RESERVE_CLAIM) {
@@ -135,6 +158,9 @@ public enum CurrencyType {
                     throw new NxtException.NotValidException(
                             String.format("Invalid minting difficulties min %d max %d",
                                     issuanceAttachment.getMinDifficulty(), issuanceAttachment.getMaxDifficulty()));
+                }
+                if (issuanceAttachment.getMaxSupply() <= issuanceAttachment.getReserveSupply()) {
+                    throw new NxtException.NotValidException("Max supply for mintable currency must exceed reserve supply");
                 }
             }
         }
@@ -188,7 +214,7 @@ public enum CurrencyType {
 
     static void validate(Currency currency, Transaction transaction) throws NxtException.ValidationException {
         if (currency == null) {
-            throw new NxtException.NotValidException("Unknown currency: " + transaction.getAttachment().getJSONObject());
+            throw new NxtException.NotCurrentlyValidException("Unknown currency: " + transaction.getAttachment().getJSONObject());
         }
         validate(currency, currency.getType(), transaction);
     }

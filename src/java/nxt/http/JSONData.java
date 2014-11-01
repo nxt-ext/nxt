@@ -89,8 +89,9 @@ final class JSONData {
         json.put("code", currency.getCode());
         json.put("description", currency.getDescription());
         json.put("type", currency.getType());
-        json.put("totalSupply", String.valueOf(currency.getTotalSupply()));
         json.put("currentSupply", String.valueOf(currency.getCurrentSupply()));
+        json.put("reserveSupply", String.valueOf(currency.getReserveSupply()));
+        json.put("maxSupply", String.valueOf(currency.getMaxSupply()));
         json.put("issuanceHeight", currency.getIssuanceHeight());
         json.put("minReservePerUnitNQT", String.valueOf(currency.getMinReservePerUnitNQT()));
         json.put("currentReservePerUnitNQT", String.valueOf(currency.getCurrentReservePerUnitNQT()));
@@ -107,7 +108,7 @@ final class JSONData {
         JSONObject json = new JSONObject();
         json.put("currency", Convert.toUnsignedLong(founder.getCurrencyId()));
         putAccount(json, "account", founder.getAccountId());
-        json.put("value", String.valueOf(founder.getValue()));
+        json.put("amount", String.valueOf(founder.getAmount()));
         return json;
     }
 

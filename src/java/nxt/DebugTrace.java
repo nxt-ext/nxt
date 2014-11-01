@@ -522,7 +522,7 @@ public final class DebugTrace {
             }
             Attachment.MonetarySystemCurrencyIssuance currencyIssuance = (Attachment.MonetarySystemCurrencyIssuance)attachment;
             map.put("currency", transaction.getStringId());
-            map.put("currency units", String.valueOf(currencyIssuance.getTotalSupply()));
+            map.put("currency units", String.valueOf(currencyIssuance.getMaxSupply()));
             map.put("event", "currency issuance");
         } else if (attachment instanceof Attachment.MonetarySystemCurrencyTransfer) {
             Attachment.MonetarySystemCurrencyTransfer currencyTransfer = (Attachment.MonetarySystemCurrencyTransfer)attachment;

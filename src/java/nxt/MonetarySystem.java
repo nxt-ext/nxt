@@ -70,10 +70,12 @@ public abstract class MonetarySystem extends TransactionType {
         @Override
         void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
             Attachment.MonetarySystemCurrencyIssuance attachment = (Attachment.MonetarySystemCurrencyIssuance) transaction.getAttachment();
-            if (attachment.getTotalSupply() > Constants.MAX_CURRENCY_TOTAL_SUPPLY
-                    || attachment.getTotalSupply() <= 0
-                    || attachment.getCurrentSupply() < 0
-                    || attachment.getCurrentSupply() > attachment.getTotalSupply()
+            if (attachment.getMaxSupply() > Constants.MAX_CURRENCY_TOTAL_SUPPLY
+                    || attachment.getMaxSupply() <= 0
+                    || attachment.getInitialSupply() < 0
+                    || attachment.getInitialSupply() > attachment.getMaxSupply()
+                    || attachment.getReserveSupply() < 0
+                    || attachment.getReserveSupply() > attachment.getMaxSupply()
                     || attachment.getIssuanceHeight() < 0
                     || attachment.getMinReservePerUnitNQT() < 0 || attachment.getMinReservePerUnitNQT() > Constants.MAX_BALANCE_NQT
                     || attachment.getDecimals() < 0 || attachment.getDecimals() > 8
@@ -98,7 +100,7 @@ public abstract class MonetarySystem extends TransactionType {
         void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
             Attachment.MonetarySystemCurrencyIssuance attachment = (Attachment.MonetarySystemCurrencyIssuance) transaction.getAttachment();
             Currency.addCurrency(transaction, attachment);
-            senderAccount.addToCurrencyAndUnconfirmedCurrencyUnits(transaction.getId(), attachment.getCurrentSupply());
+            senderAccount.addToCurrencyAndUnconfirmedCurrencyUnits(transaction.getId(), attachment.getInitialSupply());
         }
 
         @Override
@@ -137,8 +139,8 @@ public abstract class MonetarySystem extends TransactionType {
         @Override
         boolean applyAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
             Attachment.MonetarySystemReserveIncrease attachment = (Attachment.MonetarySystemReserveIncrease) transaction.getAttachment();
-            if (senderAccount.getUnconfirmedBalanceNQT() >= Convert.safeMultiply(Currency.getCurrency(attachment.getCurrencyId()).getTotalSupply(), attachment.getAmountNQT())) {
-                senderAccount.addToUnconfirmedBalanceNQT(-Convert.safeMultiply(Currency.getCurrency(attachment.getCurrencyId()).getTotalSupply(), attachment.getAmountNQT()));
+            if (senderAccount.getUnconfirmedBalanceNQT() >= Convert.safeMultiply(Currency.getCurrency(attachment.getCurrencyId()).getReserveSupply(), attachment.getAmountNQT())) {
+                senderAccount.addToUnconfirmedBalanceNQT(-Convert.safeMultiply(Currency.getCurrency(attachment.getCurrencyId()).getReserveSupply(), attachment.getAmountNQT()));
                 return true;
             }
             return false;
@@ -147,7 +149,7 @@ public abstract class MonetarySystem extends TransactionType {
         @Override
         void undoAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
             Attachment.MonetarySystemReserveIncrease attachment = (Attachment.MonetarySystemReserveIncrease) transaction.getAttachment();
-            senderAccount.addToUnconfirmedBalanceNQT(Convert.safeMultiply(Currency.getCurrency(attachment.getCurrencyId()).getTotalSupply(), attachment.getAmountNQT()));
+            senderAccount.addToUnconfirmedBalanceNQT(Convert.safeMultiply(Currency.getCurrency(attachment.getCurrencyId()).getReserveSupply(), attachment.getAmountNQT()));
         }
 
         @Override
@@ -484,10 +486,11 @@ public abstract class MonetarySystem extends TransactionType {
         void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
             Attachment.MonetarySystemCurrencyMinting attachment = (Attachment.MonetarySystemCurrencyMinting) transaction.getAttachment();
             Currency currency = Currency.getCurrency(attachment.getCurrencyId());
-            if (currency == null || attachment.getUnits() <= 0 || attachment.getUnits() > currency.getTotalSupply() / Constants.MAX_MINTING_RATIO) {
+            CurrencyType.validate(currency, transaction);
+            if (attachment.getUnits() <= 0
+                    || attachment.getUnits() > (currency.getMaxSupply() - currency.getReserveSupply()) / Constants.MAX_MINTING_RATIO) {
                 throw new NxtException.NotValidException("Invalid currency minting: " + attachment.getJSONObject());
             }
-            CurrencyType.validate(currency, transaction);
             if (! currency.isActive()) {
                 throw new NxtException.NotCurrentlyValidException("Currency not currently active " + attachment.getJSONObject());
             }
