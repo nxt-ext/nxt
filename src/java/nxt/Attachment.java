@@ -353,7 +353,7 @@ public interface Attachment extends Appendix {
             private long assetId;
 
             public PollBuilder(final String pollName, final String pollDescription, final String[] pollOptions,
-                               final int finishBlockHeight,final byte votingModel,
+                               final int finishBlockHeight, final byte votingModel,
                                byte minNumberOfOptions, byte maxNumberOfOptions,
                                byte minRangeValue, byte maxRangeValue) {
                 this.pollName = pollName;
@@ -372,7 +372,6 @@ public interface Attachment extends Appendix {
                 this.minBalance = minBalance;
                 return this;
             }
-
 
             public PollBuilder assetId(long assetId) {
                 this.assetId = assetId;
@@ -396,14 +395,13 @@ public interface Attachment extends Appendix {
         private final byte minRangeValue, maxRangeValue;
         private long assetId = 0; // only for asset voting
 
-
         MessagingPollCreation(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
             super(buffer, transactionVersion);
             this.pollName = Convert.readString(buffer, buffer.getShort(), Constants.MAX_POLL_NAME_LENGTH);
             this.pollDescription = Convert.readString(buffer, buffer.getShort(), Constants.MAX_POLL_DESCRIPTION_LENGTH);
 
             this.finishBlockHeight = buffer.getInt();
-            if(finishBlockHeight <= Nxt.getBlockchain().getHeight()){
+            if (finishBlockHeight <= Nxt.getBlockchain().getHeight() + Constants.VOTING_MIN_VOTE_DURATION) {
                 throw new NxtException.NotValidException("Invalid finishing height");
             }
 
@@ -420,7 +418,6 @@ public interface Attachment extends Appendix {
             this.votingModel = buffer.get();
 
             this.minBalance = buffer.getLong();
-
 
             this.minNumberOfOptions = buffer.get();
             this.maxNumberOfOptions = buffer.get();
@@ -595,7 +592,7 @@ public interface Attachment extends Appendix {
         private final long pollId;
         private final byte[] pollVote;
 
-        public MessagingVoteCasting(ByteBuffer buffer, byte transactionVersion){
+        public MessagingVoteCasting(ByteBuffer buffer, byte transactionVersion) {
             super(buffer, transactionVersion);
             pollId = buffer.getLong();
             int numberOfOptions = buffer.get();
@@ -603,10 +600,10 @@ public interface Attachment extends Appendix {
             buffer.get(pollVote);
         }
 
-        public MessagingVoteCasting(JSONObject attachmentData){
+        public MessagingVoteCasting(JSONObject attachmentData) {
             super(attachmentData);
-            pollId = Convert.parseUnsignedLong((String)attachmentData.get("pollId"));
-            JSONArray vote = (JSONArray)attachmentData.get("vote");
+            pollId = Convert.parseUnsignedLong((String) attachmentData.get("pollId"));
+            JSONArray vote = (JSONArray) attachmentData.get("vote");
             pollVote = new byte[vote.size()];
             for (int i = 0; i < pollVote.length; i++) {
                 pollVote[i] = ((Long) vote.get(i)).byteValue();
@@ -739,7 +736,6 @@ public interface Attachment extends Appendix {
         public String[] getUris() {
             return uris;
         }
-
     }
 
     public final static class MessagingAccountInfo extends AbstractAttachment {

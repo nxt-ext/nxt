@@ -426,7 +426,7 @@ final class DbVersion {
             case 135:
                 apply("CREATE TABLE IF NOT EXISTS pending_transactions (db_id IDENTITY, id BIGINT NOT NULL, "
                         + "FOREIGN KEY (id) REFERENCES transaction (id) ON DELETE CASCADE, account_id BIGINT NOT NULL, "
-                        + "possible_voters VARCHAR NOT NULL, finish INT NOT NULL, "
+                        + "whitelist VARCHAR NOT NULL, blacklist VARCHAR NOT NULL, finish INT NOT NULL, "
                         + "voting_model TINYINT NOT NULL, quorum BIGINT NOT NULL, min_balance BIGINT NOT NULL, "
                         + "asset_id BIGINT NOT NULL, finished BOOLEAN NOT NULL, height INT NOT NULL, latest BOOLEAN DEFAULT TRUE NOT NULL)");
             case 136:

@@ -296,6 +296,7 @@ public abstract class TransactionType {
                 if (transaction.getAmountNQT() != 0) {
                     throw new NxtException.NotValidException("Voting transaction amount <> 0!");
                 }
+
                 if(!(transaction.getAttachment() instanceof Attachment.PendingPaymentVoteCasting)){
                     throw new NxtException.NotValidException("Wrong kind of attachment");
                 }
@@ -306,13 +307,12 @@ public abstract class TransactionType {
                     throw new NxtException.NotValidException("No more than 10 votes allowed for two-phased multivoting");
                 }
 
-                /*
-                todo: check?
                 for(long pendingId : pendingIds) {
-                    if (!PhasedTransactionPoll.exists(pendingId)) {
+                    if (PendingTransactionPoll.byId(pendingId) == null) {
+                        System.out.println("Wrong pending transaction: "+pendingId);
                         throw new NxtException.NotValidException("Wrong pending transaction");
                     }
-                } */
+                }
             }
 
             @Override

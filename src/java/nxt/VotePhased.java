@@ -106,8 +106,13 @@ public class VotePhased {
                            Transaction transaction)
             throws NxtException.IllegalStateException {
 
-        long[] voters = poll.getPossibleVoters();
-        if (voters != null && voters.length > 0 && Arrays.binarySearch(voters, voter.getId()) == -1) {
+        long[] whitelist = poll.getWhitelist();
+        if (whitelist != null && whitelist.length > 0 && Arrays.binarySearch(whitelist, voter.getId()) == -1) {
+            return false; //todo: move to validate only?
+        }
+
+        long[] blacklist = poll.getBlacklist();
+        if (blacklist != null && blacklist.length > 0 && Arrays.binarySearch(blacklist, voter.getId()) != -1) {
             return false; //todo: move to validate only?
         }
 

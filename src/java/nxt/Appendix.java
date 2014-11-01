@@ -417,7 +417,8 @@ public interface Appendix {
     }
 
     public static class TwoPhased extends AbstractAppendix {
-        public static final byte MAX_VOTERS = 16;
+        public static final byte MAX_WHITELIST_SIZE = 10;
+        public static final byte MAX_BLACKLIST_SIZE = 5;
 
         static TwoPhased parse(JSONObject attachmentData) throws NxtException.NotValidException {
             if (attachmentData.get("releaseHeight") == null) {
@@ -431,22 +432,29 @@ public interface Appendix {
         private final long voteThreshold;
         private final byte votingModel;
         private final long assetId;
-        private final long[] possibleVoters;
+        private final long[] whitelist;
+        private final long[] blacklist;
 
         TwoPhased(ByteBuffer buffer, byte transactionVersion) {
             super(buffer, transactionVersion);
             maxHeight = buffer.getInt();
+            votingModel = buffer.get();
             quorum = buffer.getLong();
             voteThreshold = buffer.getLong();
-            votingModel = buffer.get();
-            if (votingModel == Constants.VOTING_MODEL_ASSET) {
-                assetId = buffer.getLong();
-            } else assetId = 0;
-            byte votersCount = buffer.get();
-            possibleVoters = new long[votersCount];
-            for (int pvc = 0; pvc < possibleVoters.length; pvc++) {
-                possibleVoters[pvc] = buffer.getLong();
+
+            byte whitelistSize = buffer.get();
+            whitelist = new long[whitelistSize];
+            for (int pvc = 0; pvc < whitelist.length; pvc++) {
+                whitelist[pvc] = buffer.getLong();
             }
+
+            byte blacklistSize = buffer.get();
+            blacklist = new long[blacklistSize];
+            for (int pvc = 0; pvc < blacklist.length; pvc++) {
+                blacklist[pvc] = buffer.getLong();
+            }
+
+            assetId = buffer.getLong();
         }
 
         TwoPhased(JSONObject attachmentData) throws NxtException.NotValidException {
@@ -458,28 +466,44 @@ public interface Appendix {
             if (votingModel == Constants.VOTING_MODEL_ASSET) {
                 assetId = (Long) attachmentData.get("assetId");
             } else assetId = 0;
-            JSONArray pvArr = (JSONArray) (attachmentData.get("possibleVoters"));
-            possibleVoters = new long[pvArr.size()];
-            for (int i = 0; i < possibleVoters.length; i++) {
-                possibleVoters[i] = (Long) pvArr.get(i);
+
+            JSONArray whitelistJson = (JSONArray) (attachmentData.get("whitelist"));
+            whitelist = new long[whitelistJson.size()];
+            for (int i = 0; i < whitelist.length; i++) {
+                whitelist[i] = (Long) whitelistJson.get(i);
+            }
+
+            JSONArray blacklistJson = (JSONArray) (attachmentData.get("blacklist"));
+            blacklist = new long[blacklistJson.size()];
+            for (int i = 0; i < blacklist.length; i++) {
+                blacklist[i] = (Long) blacklistJson.get(i);
             }
         }
 
-        TwoPhased(int maxHeight, byte votingModel, long quorum, long voteThreshold, long[] possibleVoters) {
-            this.maxHeight = maxHeight;
-            this.votingModel = votingModel;
-            this.quorum = quorum;
-            this.voteThreshold = voteThreshold;
-            this.possibleVoters = possibleVoters;
-            this.assetId = 0;
+        TwoPhased(int maxHeight, byte votingModel, long quorum, long voteThreshold,
+                  long[] whitelist, long[] blacklist) {
+            this(maxHeight, votingModel, 0, quorum, voteThreshold, whitelist, blacklist);
         }
 
-        TwoPhased(int maxHeight, byte votingModel, long assetId, long quorum, long voteThreshold, long[] possibleVoters) {
+        TwoPhased(int maxHeight, byte votingModel, long assetId, long quorum,
+                  long voteThreshold, long[] whitelist, long[] blacklist) {
             this.maxHeight = maxHeight;
             this.votingModel = votingModel;
             this.quorum = quorum;
             this.voteThreshold = voteThreshold;
-            this.possibleVoters = possibleVoters;
+
+            if(whitelist==null){
+                this.whitelist = new long[0];
+            }else {
+                this.whitelist = whitelist;
+            }
+
+            if(blacklist==null){
+                this.blacklist = new long[0];
+            }else {
+                this.blacklist = blacklist;
+            }
+
             this.assetId = assetId;
         }
 
@@ -490,22 +514,27 @@ public interface Appendix {
 
         @Override
         int getMySize() {
-            return 4 + 8 + 8 + 1 + 1
-                    + (votingModel == Constants.VOTING_MODEL_ASSET ? 8 : 0)
-                    + 8 * possibleVoters.length;
+            return 4 + 1 + 8 + 8 + 1 + 8 * whitelist.length + 1 + 8 * blacklist.length + 8 ;
         }
 
         @Override
         void putMyBytes(ByteBuffer buffer) {
             buffer.putInt(maxHeight);
+            buffer.put(votingModel);
             buffer.putLong(quorum);
             buffer.putLong(voteThreshold);
-            buffer.put(votingModel);
-            if (votingModel == Constants.VOTING_MODEL_ASSET) buffer.putLong(assetId);
-            buffer.put((byte) possibleVoters.length);
-            for (Long pv : possibleVoters) {
-                buffer.putLong(pv);
+
+            buffer.put((byte) whitelist.length);
+            for (Long account : whitelist) {
+                buffer.putLong(account);
             }
+
+            buffer.put((byte) blacklist.length);
+            for (Long account : blacklist) {
+                buffer.putLong(account);
+            }
+
+            buffer.putLong(assetId);
         }
 
         @Override
@@ -514,17 +543,45 @@ public interface Appendix {
             json.put("quorum", quorum);
             json.put("voteThreshold", voteThreshold);
             json.put("votingModel", votingModel);
-            if (votingModel == Constants.VOTING_MODEL_ASSET) json.put("assetId", assetId);
-            JSONArray pv = new JSONArray();
-            Collections.addAll(pv, possibleVoters);
-            json.put("possibleVoters", pv);
+            json.put("assetId", assetId);
+
+            JSONArray whitelistJson = new JSONArray();
+            Collections.addAll(whitelistJson, whitelist);
+            json.put("whitelist", whitelistJson);
+
+            JSONArray blacklistJson = new JSONArray();
+            Collections.addAll(blacklistJson, blacklist);
+            json.put("blacklist", blacklistJson);
         }
 
         //todo: finish
         @Override
         void validate(Transaction transaction) throws NxtException.ValidationException {
-            if (possibleVoters.length > MAX_VOTERS) {
+            if (whitelist.length > MAX_WHITELIST_SIZE) {
                 throw new NxtException.NotValidException("Possible voters list is too big");
+            }
+
+            if (blacklist.length > MAX_BLACKLIST_SIZE) {
+                throw new NxtException.NotValidException("Possible voters list is too big");
+            }
+
+            if (votingModel == Constants.VOTING_MODEL_ASSET && assetId == 0) {
+                throw new NxtException.NotValidException("Invalid assetId");
+            }
+
+            if (votingModel != Constants.VOTING_MODEL_ACCOUNT
+                    && votingModel != Constants.VOTING_MODEL_ASSET
+                    && votingModel != Constants.VOTING_MODEL_BALANCE) {
+                throw new NxtException.NotValidException("Invalid voting model");
+            }
+
+            if (votingModel == Constants.VOTING_MODEL_ACCOUNT
+                    && (whitelist.length == 0 || blacklist.length != 0)) {
+                throw new NxtException.NotValidException("By-account voting with empty whitelist or non-empty blacklist");
+            }
+
+            if (maxHeight <= Nxt.getBlockchain().getHeight() + Constants.VOTING_MIN_VOTE_DURATION) {
+                throw new NxtException.NotValidException("Invalid max height");
             }
         }
 
@@ -533,7 +590,7 @@ public interface Appendix {
             Long id = transaction.getId();
 
             PendingTransactionPoll poll = new PendingTransactionPoll(id, senderAccount.getId(), maxHeight,
-                    votingModel, quorum, voteThreshold, assetId, possibleVoters);
+                    votingModel, quorum, voteThreshold, assetId, whitelist, blacklist);
             PendingTransactionPoll.pendingTransactionsTable.insert(poll);
         }
 

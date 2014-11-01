@@ -36,6 +36,7 @@ public final class Constants {
     public static final byte VOTING_MIN_RANGE_VALUE_LIMIT = -100;
     public static final byte VOTING_MAX_RANGE_VALUE_LIMIT = 100;
     public static final byte VOTING_NO_VOTE_VALUE = Byte.MIN_VALUE;
+    public static final byte VOTING_MIN_VOTE_DURATION = 10;
 
 
     public static final int MAX_ALIAS_URI_LENGTH = 1000;
