@@ -261,8 +261,7 @@ public final class Currency {
     static void claimReserve(Account account, long currencyId, long units) {
         account.addToCurrencyUnits(currencyId, -units);
         Currency currency = Currency.getCurrency(currencyId);
-        currency.currentSupply -= units;
-        currencyTable.insert(currency);
+        currency.increaseSupply(- units);
         account.addToBalanceAndUnconfirmedBalanceNQT(Convert.safeMultiply(units, currency.getCurrentReservePerUnitNQT()));
     }
 
@@ -273,6 +272,9 @@ public final class Currency {
 
     void increaseSupply(long units) {
         currentSupply += units;
+        if (currentSupply > maxSupply || currentSupply < 0) {
+            throw new IllegalArgumentException("Cannot add " + units + " to current supply of " + currentSupply);
+        }
         currencyTable.insert(this);
     }
 
