@@ -26,13 +26,13 @@ public final class CurrencyReserveClaim extends CreateTransaction {
     static final CurrencyReserveClaim instance = new CurrencyReserveClaim();
 
     private CurrencyReserveClaim() {
-        super(new APITag[] {APITag.MS, APITag.CREATE_TRANSACTION}, "currency", "units");
+        super(new APITag[] {APITag.MS, APITag.CREATE_TRANSACTION}, "currency", "code", "units");
     }
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
         Currency currency = ParameterParser.getCurrency(req);
-        long units = ParameterParser.getLong(req, "units", 0, currency.getTotalSupply(), false);
+        long units = ParameterParser.getLong(req, "units", 0, currency.getReserveSupply(), false);
         Account account = ParameterParser.getSenderAccount(req);
         Attachment attachment = new Attachment.MonetarySystemReserveClaim(currency.getId(), units);
         return createTransaction(req, account, attachment);

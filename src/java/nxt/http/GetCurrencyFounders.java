@@ -15,7 +15,7 @@ public final class GetCurrencyFounders extends APIServlet.APIRequestHandler {
     static final GetCurrencyFounders instance = new GetCurrencyFounders();
 
     private GetCurrencyFounders() {
-        super(new APITag[] {APITag.MS}, "currency");
+        super(new APITag[] {APITag.MS}, "currency", "code");
     }
 
     @Override

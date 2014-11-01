@@ -192,6 +192,7 @@ public final class APIServlet extends HttpServlet {
         map.put("getForging", GetForging.instance);
         map.put("transferAsset", TransferAsset.instance);
         map.put("transferCurrency", TransferCurrency.instance);
+        map.put("deleteCurrency", DeleteCurrency.instance);
 
         if (API.enableDebugAPI) {
             map.put("clearUnconfirmedTransactions", ClearUnconfirmedTransactions.instance);

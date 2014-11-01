@@ -32,7 +32,7 @@ public final class CurrencyMint extends CreateTransaction {
     static final CurrencyMint instance = new CurrencyMint();
 
     private CurrencyMint() {
-        super(new APITag[] {APITag.MS, APITag.CREATE_TRANSACTION}, "currency", "nonce", "units", "counter");
+        super(new APITag[] {APITag.MS, APITag.CREATE_TRANSACTION}, "currency", "code", "nonce", "units", "counter");
     }
 
     @Override

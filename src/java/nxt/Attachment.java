@@ -1620,8 +1620,9 @@ public interface Attachment extends Appendix {
         private final String code;
         private final String description;
         private final byte type;
-        private final long totalSupply;
-        private final long currentSupply;
+        private final long initialSupply;
+        private final long reserveSupply;
+        private final long maxSupply;
         private final int issuanceHeight;
         private final long minReservePerUnitNQT;
         private final byte minDifficulty;
@@ -1638,8 +1639,9 @@ public interface Attachment extends Appendix {
             this.code = Convert.toString(codeBytes);
             this.description = Convert.readString(buffer, buffer.getShort(), Constants.MAX_CURRENCY_DESCRIPTION_LENGTH);
             this.type = buffer.get();
-            this.totalSupply = buffer.getLong();
-            this.currentSupply = buffer.getLong();
+            this.initialSupply = buffer.getLong();
+            this.reserveSupply = buffer.getLong();
+            this.maxSupply = buffer.getLong();
             this.issuanceHeight = buffer.getInt();
             this.minReservePerUnitNQT = buffer.getLong();
             this.minDifficulty = buffer.get();
@@ -1655,8 +1657,9 @@ public interface Attachment extends Appendix {
             this.code = (String)attachmentData.get("code");
             this.description = (String)attachmentData.get("description");
             this.type = ((Long)attachmentData.get("type")).byteValue();
-            this.totalSupply = Convert.parseLong(attachmentData.get("totalSupply"));
-            this.currentSupply = Convert.parseLong(attachmentData.get("currentSupply"));
+            this.initialSupply = Convert.parseLong(attachmentData.get("initialSupply"));
+            this.reserveSupply = Convert.parseLong(attachmentData.get("reserveSupply"));
+            this.maxSupply = Convert.parseLong(attachmentData.get("maxSupply"));
             this.issuanceHeight = ((Long)attachmentData.get("issuanceHeight")).intValue();
             this.minReservePerUnitNQT = Convert.parseLong(attachmentData.get("minReservePerUnitNQT"));
             this.minDifficulty = ((Long)attachmentData.get("minDifficulty")).byteValue();
@@ -1666,15 +1669,16 @@ public interface Attachment extends Appendix {
             this.decimals = ((Long) attachmentData.get("decimals")).byteValue();
         }
 
-        public MonetarySystemCurrencyIssuance(String name, String code, String description, byte type, long totalSupply,
-                                              long currentSupply, int issuanceHeight, long minReservePerUnitNQT, byte minDifficulty, byte maxDifficulty,
+        public MonetarySystemCurrencyIssuance(String name, String code, String description, byte type, long initalSupply, long reserveSupply,
+                                              long maxSupply, int issuanceHeight, long minReservePerUnitNQT, byte minDifficulty, byte maxDifficulty,
                                               byte ruleset, byte algorithm, byte decimals) {
             this.name = name;
             this.code = code;
             this.description = description;
             this.type = type;
-            this.totalSupply = totalSupply;
-            this.currentSupply = currentSupply;
+            this.initialSupply = initalSupply;
+            this.reserveSupply = reserveSupply;
+            this.maxSupply = maxSupply;
             this.issuanceHeight = issuanceHeight;
             this.minReservePerUnitNQT = minReservePerUnitNQT;
             this.minDifficulty = minDifficulty;
@@ -1692,7 +1696,7 @@ public interface Attachment extends Appendix {
         @Override
         int getMySize() {
             return 1 + Convert.toBytes(name).length + Constants.CURRENCY_CODE_LENGTH + 2 +
-                    Convert.toBytes(description).length + 1 + 8 + 8 + 4 + 8 + 1 + 1 + 1 + 1 + 1;
+                    Convert.toBytes(description).length + 1 + 8 + 8 + 8 + 4 + 8 + 1 + 1 + 1 + 1 + 1;
         }
 
         @Override
@@ -1705,8 +1709,9 @@ public interface Attachment extends Appendix {
             buffer.putShort((short) description.length);
             buffer.put(description);
             buffer.put(type);
-            buffer.putLong(totalSupply);
-            buffer.putLong(currentSupply);
+            buffer.putLong(initialSupply);
+            buffer.putLong(reserveSupply);
+            buffer.putLong(maxSupply);
             buffer.putInt(issuanceHeight);
             buffer.putLong(minReservePerUnitNQT);
             buffer.put(minDifficulty);
@@ -1722,8 +1727,9 @@ public interface Attachment extends Appendix {
             attachment.put("code", code);
             attachment.put("description", description);
             attachment.put("type", type);
-            attachment.put("totalSupply", totalSupply);
-            attachment.put("currentSupply", currentSupply);
+            attachment.put("initialSupply", initialSupply);
+            attachment.put("reserveSupply", reserveSupply);
+            attachment.put("maxSupply", maxSupply);
             attachment.put("issuanceHeight", issuanceHeight);
             attachment.put("minReservePerUnitNQT", minReservePerUnitNQT);
             attachment.put("minDifficulty", minDifficulty & 0xFF);
@@ -1754,12 +1760,16 @@ public interface Attachment extends Appendix {
             return type;
         }
 
-        public long getTotalSupply() {
-            return totalSupply;
+        public long getInitialSupply() {
+            return initialSupply;
         }
 
-        public long getCurrentSupply() {
-            return currentSupply;
+        public long getReserveSupply() {
+            return reserveSupply;
+        }
+
+        public long getMaxSupply() {
+            return maxSupply;
         }
 
         public int getIssuanceHeight() {
@@ -2281,6 +2291,55 @@ public interface Attachment extends Appendix {
             return counter;
         }
 
+    }
+
+    public final static class MonetarySystemCurrencyDeletion extends AbstractAttachment implements MonetarySystemAttachment {
+
+        private final long currencyId;
+
+        MonetarySystemCurrencyDeletion(ByteBuffer buffer, byte transactionVersion) {
+            super(buffer, transactionVersion);
+            this.currencyId = buffer.getLong();
+        }
+
+        MonetarySystemCurrencyDeletion(JSONObject attachmentData) {
+            super(attachmentData);
+            this.currencyId = Convert.parseUnsignedLong((String)attachmentData.get("currency"));
+        }
+
+        public MonetarySystemCurrencyDeletion(long currencyId) {
+            this.currencyId = currencyId;
+        }
+
+        @Override
+        String getAppendixName() {
+            return "CurrencyDeletion";
+        }
+
+        @Override
+        int getMySize() {
+            return 8;
+        }
+
+        @Override
+        void putMyBytes(ByteBuffer buffer) {
+            buffer.putLong(currencyId);
+        }
+
+        @Override
+        void putMyJSON(JSONObject attachment) {
+            attachment.put("currency", Convert.toUnsignedLong(currencyId));
+        }
+
+        @Override
+        public TransactionType getTransactionType() {
+            return MonetarySystem.CURRENCY_DELETION;
+        }
+
+        @Override
+        public long getCurrencyId() {
+            return currencyId;
+        }
     }
 
     public final static class MonetarySystemShufflingCreation extends AbstractAttachment {

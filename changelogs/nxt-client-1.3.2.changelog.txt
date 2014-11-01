@@ -56,4 +56,5 @@ Show account balance in the sidebar on all pages.
 
 Improvements and bugfixes in the asset trade and transfer history pages.
 
+New design of the dashboard, and an improved recent transactions list.
 

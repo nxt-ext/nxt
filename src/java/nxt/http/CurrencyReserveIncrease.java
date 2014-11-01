@@ -31,7 +31,7 @@ public final class CurrencyReserveIncrease extends CreateTransaction {
     static final CurrencyReserveIncrease instance = new CurrencyReserveIncrease();
 
     private CurrencyReserveIncrease() {
-        super(new APITag[] {APITag.MS, APITag.CREATE_TRANSACTION}, "currency", "amountNQT");
+        super(new APITag[] {APITag.MS, APITag.CREATE_TRANSACTION}, "currency", "code", "amountNQT");
     }
 
     @Override

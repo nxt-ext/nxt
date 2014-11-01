@@ -18,7 +18,7 @@ public final class GetExchanges extends APIServlet.APIRequestHandler {
     static final GetExchanges instance = new GetExchanges();
 
     private GetExchanges() {
-        super(new APITag[] {APITag.MS}, "currency", "account", "firstIndex", "lastIndex", "includeCurrencyInfo");
+        super(new APITag[] {APITag.MS}, "currency", "code", "account", "firstIndex", "lastIndex", "includeCurrencyInfo");
     }
 
     @Override

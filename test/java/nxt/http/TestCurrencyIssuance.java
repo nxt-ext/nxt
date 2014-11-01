@@ -3,6 +3,7 @@ package nxt.http;
 import nxt.BlockchainTest;
 import nxt.Constants;
 import nxt.CurrencyType;
+import nxt.Nxt;
 import nxt.util.Logger;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -55,10 +56,10 @@ public class TestCurrencyIssuance extends BlockchainTest {
             param("code", "TSX");
             param("description", "Test Currency 1");
             param("type", CurrencyType.EXCHANGEABLE.getCode());
-            param("totalSupply", 100000);
+            param("maxSupply", 100000);
             param("initialSupply", 100000);
             param("issuanceHeight", 0);
-            param("minReservePerUnitNQT", 0);
+            param("minReservePerUnitNQT", 1);
             param("minDifficulty", (byte) 0);
             param("maxDifficulty", (byte) 0);
             param("algorithm", (byte)0);
@@ -77,8 +78,13 @@ public class TestCurrencyIssuance extends BlockchainTest {
             return this;
         }
 
-        public Builder totalSupply(long totalSupply) {
-            param("totalSupply", totalSupply);
+        public Builder maxSupply(long maxSupply) {
+            param("maxSupply", maxSupply);
+            return this;
+        }
+
+        public Builder reserveSupply(long reserveSupply) {
+            param("reserveSupply", reserveSupply);
             return this;
         }
 

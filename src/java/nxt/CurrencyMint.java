@@ -110,7 +110,7 @@ public final class CurrencyMint {
         byte[] hash = getHash(currency.getAlgorithm(), attachment.getNonce(), attachment.getCurrencyId(), attachment.getUnits(),
                 attachment.getCounter(), account.getId());
         byte[] target = getTarget(currency.getMinDifficulty(), currency.getMaxDifficulty(),
-                attachment.getUnits(), currency.getCurrentSupply(), currency.getTotalSupply());
+                attachment.getUnits(), currency.getCurrentSupply() - currency.getReserveSupply(), currency.getMaxSupply() - currency.getReserveSupply());
         if (meetsTarget(hash, target)) {
             if (currencyMint == null) {
                 currencyMint = new CurrencyMint(attachment.getCurrencyId(), account.getId(), attachment.getCounter());
@@ -118,7 +118,7 @@ public final class CurrencyMint {
                 currencyMint.counter = attachment.getCounter();
             }
             currencyMintTable.insert(currencyMint);
-            long units = Math.min(attachment.getUnits(), currency.getTotalSupply() - currency.getCurrentSupply());
+            long units = Math.min(attachment.getUnits(), currency.getMaxSupply() - currency.getCurrentSupply());
             account.addToCurrencyAndUnconfirmedCurrencyUnits(attachment.getUnits(), units);
             currency.increaseSupply(units);
         }

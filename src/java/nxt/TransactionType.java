@@ -54,12 +54,13 @@ public abstract class TransactionType {
     static final byte SUBTYPE_MONETARY_SYSTEM_EXCHANGE_BUY = 5;
     static final byte SUBTYPE_MONETARY_SYSTEM_EXCHANGE_SELL = 6;
     static final byte SUBTYPE_MONETARY_SYSTEM_CURRENCY_MINTING = 7;
-    static final byte SUBTYPE_MONETARY_SYSTEM_SHUFFLING_CREATION = 8;
-    static final byte SUBTYPE_MONETARY_SYSTEM_SHUFFLING_REGISTRATION = 9;
-    static final byte SUBTYPE_MONETARY_SYSTEM_SHUFFLING_PROCESSING = 10;
-    static final byte SUBTYPE_MONETARY_SYSTEM_SHUFFLING_VERIFICATION = 11;
-    static final byte SUBTYPE_MONETARY_SYSTEM_SHUFFLING_DISTRIBUTION = 12;
-    static final byte SUBTYPE_MONETARY_SYSTEM_SHUFFLING_CANCELLATION = 13;
+    static final byte SUBTYPE_MONETARY_SYSTEM_CURRENCY_DELETION = 8;
+    static final byte SUBTYPE_MONETARY_SYSTEM_SHUFFLING_CREATION = 9;
+    static final byte SUBTYPE_MONETARY_SYSTEM_SHUFFLING_REGISTRATION = 10;
+    static final byte SUBTYPE_MONETARY_SYSTEM_SHUFFLING_PROCESSING = 11;
+    static final byte SUBTYPE_MONETARY_SYSTEM_SHUFFLING_VERIFICATION = 12;
+    static final byte SUBTYPE_MONETARY_SYSTEM_SHUFFLING_DISTRIBUTION = 13;
+    static final byte SUBTYPE_MONETARY_SYSTEM_SHUFFLING_CANCELLATION = 14;
 
     private static final byte SUBTYPE_ACCOUNT_CONTROL_EFFECTIVE_BALANCE_LEASING = 0;
 
@@ -167,6 +168,8 @@ public abstract class TransactionType {
                         return MonetarySystem.EXCHANGE_SELL;
                     case SUBTYPE_MONETARY_SYSTEM_CURRENCY_MINTING:
                         return MonetarySystem.CURRENCY_MINTING;
+                    case SUBTYPE_MONETARY_SYSTEM_CURRENCY_DELETION:
+                        return MonetarySystem.CURRENCY_DELETION;
                     case SUBTYPE_MONETARY_SYSTEM_SHUFFLING_CREATION:
                         return MonetarySystem.SHUFFLING_CREATION;
                     case SUBTYPE_MONETARY_SYSTEM_SHUFFLING_REGISTRATION:
