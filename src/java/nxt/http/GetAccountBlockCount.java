@@ -21,7 +21,7 @@ public final class GetAccountBlockCount extends APIServlet.APIRequestHandler {
 
         Account account = ParameterParser.getAccount(req);
         JSONObject response = new JSONObject();
-        response.put("blockCount", Nxt.getBlockchain().getBlockCount(account));
+        response.put("numberOfBlocks", Nxt.getBlockchain().getBlockCount(account));
 
         return response;
     }
