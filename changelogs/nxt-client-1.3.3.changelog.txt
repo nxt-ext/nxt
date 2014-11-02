@@ -1,0 +1,9 @@
+Fixed incorrect guaranteed balance bug in getAccountLessors API.
+
+Added getAccountBlockCount API returning number of forged blocks for an account.
+
+Added includeCounts parameter to the getAssets API, to avoid getting trades,
+accounts, and transfers counts, if not needed.
+
+Cache hallmarked peer account balances to reduce number of database calls.
+
