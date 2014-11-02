@@ -3,7 +3,6 @@ package nxt.http;
 import nxt.BlockchainTest;
 import nxt.Constants;
 import nxt.CurrencyType;
-import nxt.Nxt;
 import nxt.util.Logger;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;

@@ -185,6 +185,11 @@ public final class Logger {
             System.out.println(e.toString());
         }
     }
+
+    public static boolean isErrorEnabled() {
+        return log.isErrorEnabled();
+    }
+
     /**
      * Log an ERROR message
      *
@@ -202,6 +207,10 @@ public final class Logger {
      */
     public static void logErrorMessage(String message, Exception exc) {
         doLog(Level.ERROR, message, exc);
+    }
+
+    public static boolean isWarningEnabled() {
+        return log.isWarnEnabled();
     }
 
     /**
@@ -223,6 +232,10 @@ public final class Logger {
         doLog(Level.WARN, message, exc);
     }
 
+    public static boolean isInfoEnabled() {
+        return log.isInfoEnabled();
+    }
+
     /**
      * Log an INFO message
      *
@@ -240,6 +253,10 @@ public final class Logger {
      */
     public static void logInfoMessage(String message, Exception exc) {
         doLog(Level.INFO, message, exc);
+    }
+
+    public static boolean isDebugEnabled() {
+        return log.isDebugEnabled();
     }
 
     /**
