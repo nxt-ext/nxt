@@ -90,6 +90,23 @@ var NRS = (function(NRS, $, undefined) {
 		$clone.appendTo("#create_poll_answers");
 	});
 
+	$("#create_poll_type").change(function() {
+		// poll type changed, lets see if we have to include/remove the asset id
+		if($("#create_poll_type").val() == "votePerAsset") {
+			$("#create_poll_asset_id_group").css("display", "inline");
+			$("#create_poll_type_group").removeClass("col-xs-12").addClass("col-xs-6");
+			$("#create_poll_type_group").removeClass("col-sm-12").addClass("col-sm-6");
+			$("#create_poll_type_group").removeClass("col-md-12").addClass("col-md-6");
+		}
+		else {
+			$("#create_poll_asset_id_group").css("display", "none");
+			$("#create_poll_type_group").removeClass("col-xs-6").addClass("col-xs-12");
+			$("#create_poll_type_group").removeClass("col-sm-6").addClass("col-sm-12");
+			$("#create_poll_type_group").removeClass("col-md-6").addClass("col-md-12");
+		}
+
+	});
+
 	NRS.forms.createPoll = function($modal) {
 		var options = new Array();
 
@@ -104,6 +121,8 @@ var NRS = (function(NRS, $, undefined) {
 		if (!options.length) {
 			//...
 		}
+
+		$("#create_poll_")
 
 		var data = {
 			"name": $("#create_poll_name").val(),
