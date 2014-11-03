@@ -466,6 +466,7 @@ var NRS = (function(NRS, $, undefined) {
 				$("#settings_box .box-success form .box-body .form-group").css("display", "none");
 				$("#settings_box .box-success form .box-body .form-group:first-child").css("display", "block");
 			}
+			$("#change_theme").val(NRS.settings["themeChoice"]);
 		}
 		
 		if (!key || key == "language") {
