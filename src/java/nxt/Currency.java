@@ -347,8 +347,8 @@ public final class Currency {
         if (is(CurrencyType.MINTABLE)) {
             CurrencyMint.deleteCurrency(this);
         }
-        ownerAccount.addToCurrencyUnits(currencyId, -ownerAccount.getCurrencyUnits(currencyId));
         ownerAccount.addToUnconfirmedCurrencyUnits(currencyId, -ownerAccount.getUnconfirmedCurrencyUnits(currencyId));
+        ownerAccount.addToCurrencyUnits(currencyId, -ownerAccount.getCurrencyUnits(currencyId));
         currencyTable.delete(this);
     }
 
