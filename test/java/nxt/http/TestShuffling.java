@@ -12,10 +12,10 @@ import org.junit.Test;
 import java.util.HashMap;
 import java.util.Map;
 
-public class TestShufflingRegistration extends BlockchainTest {
+public class TestShuffling extends BlockchainTest {
 
     @Test
-    public void addParticipants() {
+    public void shufflingProcess() {
         APICall apiCall = new APICall.Builder("shufflingCreate").
                 secretPhrase(secretPhrase1).
                 feeNQT(Constants.ONE_NXT).
@@ -141,6 +141,74 @@ public class TestShufflingRegistration extends BlockchainTest {
         for (Map.Entry<String, String> mapping : accountMapping.entrySet()) {
             Assert.assertTrue(accountMapping.get(mapping.getValue()) != null);
         }
+
+        // Verify shuffling
+        apiCall = new APICall.Builder("shufflingVerify").
+                param("shuffling", shufflingId).
+                param("secretPhrase", secretPhrase1).
+                feeNQT(Constants.ONE_NXT).
+                build();
+        apiCall.invoke();
+        apiCall = new APICall.Builder("shufflingVerify").
+                param("shuffling", shufflingId).
+                param("secretPhrase", secretPhrase2).
+                feeNQT(Constants.ONE_NXT).
+                build();
+        apiCall.invoke();
+        apiCall = new APICall.Builder("shufflingVerify").
+                param("shuffling", shufflingId).
+                param("secretPhrase", secretPhrase3).
+                feeNQT(Constants.ONE_NXT).
+                build();
+        apiCall.invoke();
+        apiCall = new APICall.Builder("shufflingVerify").
+                param("shuffling", shufflingId).
+                param("secretPhrase", secretPhrase4).
+                feeNQT(Constants.ONE_NXT).
+                build();
+        response = apiCall.invoke();
+        Logger.logDebugMessage("shufflingVerifyResponse:" + response);
+        apiCall = new APICall.Builder("shufflingDistribute").
+                param("shuffling", shufflingId).
+                param("secretPhrase", secretPhrase1).
+                feeNQT(Constants.ONE_NXT).
+                build();
+        Logger.logDebugMessage("shufflingDistributeResponse:" + response);
+        response = apiCall.invoke();
+        Assert.assertTrue(((String)response.get("error")).contains("Shuffling not ready for distribution"));
+        generateBlock();
+        apiCall = new APICall.Builder("shufflingDistribute").
+                param("shuffling", shufflingId).
+                param("secretPhrase", secretPhrase4).
+                feeNQT(Constants.ONE_NXT).
+                build();
+        response = apiCall.invoke();
+        Logger.logDebugMessage("shufflingDistributeResponse:" + response);
+        Assert.assertTrue(((String)response.get("error")).contains("Only shuffling issuer can trigger distribution"));
+        apiCall = new APICall.Builder("shufflingDistribute").
+                param("shuffling", shufflingId).
+                param("secretPhrase", secretPhrase1).
+                feeNQT(Constants.ONE_NXT).
+                build();
+        response = apiCall.invoke();
+        Logger.logDebugMessage("shufflingDistributeResponse:" + response);
+        generateBlock();
+
+        apiCall = new APICall.Builder("getShuffling").
+                param("shuffling", shufflingId).
+                build();
+        getShufflingResponse = apiCall.invoke();
+        Logger.logMessage("getShufflingResponse: " + getShufflingResponse.toJSONString());
+        Assert.assertEquals((long)Shuffling.State.DONE.getCode(), getShufflingResponse.get("state"));
+
+        apiCall = new APICall.Builder("shufflingCancel").
+                param("shuffling", shufflingId).
+                param("secretPhrase", secretPhrase1).
+                feeNQT(Constants.ONE_NXT).
+                build();
+        response = apiCall.invoke();
+        Logger.logDebugMessage("shufflingCancelResponse:" + response);
+        Assert.assertTrue(((String)response.get("error")).contains("cannot be cancelled"));
     }
 
 }

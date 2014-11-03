@@ -273,10 +273,11 @@ public final class Shuffling {
 
     public void distribute() {
         for (ShufflingParticipant participant : ShufflingParticipant.getParticipants(id)) {
-            updateUnconfirmedBalance(participant.getRecipientId(), amount);
             updateBalance(participant.getRecipientId(), amount);
+            updateUnconfirmedBalance(participant.getRecipientId(), amount);
             updateBalance(participant.getAccountId(), -amount);
         }
+        setState(State.DONE);
     }
 
     public void cancel() {
@@ -286,16 +287,15 @@ public final class Shuffling {
         setState(State.CANCELLED);
     }
 
-    public void updateBalance(long accountId, long amount) {
+    private void updateBalance(long accountId, long amount) {
         if (!isCurrency) {
             Account.getAccount(accountId).addToBalanceNQT(amount);
         } else {
             Account.getAccount(accountId).addToCurrencyUnits(currencyId, amount);
         }
-        setState(State.DONE);
     }
 
-    public void updateUnconfirmedBalance(long accountId, long amount) {
+    private void updateUnconfirmedBalance(long accountId, long amount) {
         if (!isCurrency) {
             Account.getAccount(accountId).addToUnconfirmedBalanceNQT(amount);
         } else {
@@ -306,6 +306,7 @@ public final class Shuffling {
     public boolean isRegistrationEnabled() {
         return state == State.REGISTRATION;
     }
+
     public boolean isProcessingEnabled() {
         return state == State.PROCESSING;
     }
@@ -315,14 +316,27 @@ public final class Shuffling {
     }
 
     public boolean isDistributionEnabled() {
-        return state == State.DISTRIBUTION;
+        for (ShufflingParticipant participant : ShufflingParticipant.getParticipants(id)) {
+            if (!participant.isVerified()) {
+                return false;
+            }
+        }
+        return true;
     }
 
-    public boolean isCancelingEnabled() {
-        return state != State.CANCELLED && state != State.DONE;
+    public boolean isCancellationEnabled(long senderId) {
+        if (senderId == issuerId) {
+            return state != State.CANCELLED && state != State.DONE;
+        } else {
+            return state == State.VERIFICATION;
+        }
     }
 
     public boolean isParticipant(long senderId) {
         return ShufflingParticipant.getParticipant(id, senderId) != null;
+    }
+
+    public boolean isParticipantVerified(long senderId) {
+        return ShufflingParticipant.getParticipant(id, senderId).isVerified();
     }
 }

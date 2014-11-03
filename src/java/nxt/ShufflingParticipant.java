@@ -205,4 +205,8 @@ public final class ShufflingParticipant {
         shufflingParticipantTable.insert(this);
     }
 
+    public boolean isVerified() {
+        return state == State.VERIFIED;
+    }
+
 }

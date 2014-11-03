@@ -794,7 +794,7 @@ public abstract class MonetarySystem extends TransactionType {
 
         @Override
         public byte getSubtype() {
-            return SUBTYPE_MONETARY_SYSTEM_SHUFFLING_DISTRIBUTION;
+            return SUBTYPE_MONETARY_SYSTEM_SHUFFLING_VERIFICATION;
         }
 
         @Override
@@ -817,8 +817,11 @@ public abstract class MonetarySystem extends TransactionType {
             if (!shuffling.isVerificationEnabled()) {
                 throw new NxtException.NotValidException("Shuffling not ready for verification: " + attachment.getShufflingId());
             }
-            if (shuffling.isParticipant(transaction.getSenderId())) {
-                throw new NxtException.NotValidException("Only participant can verify: " + attachment.getShufflingId());
+            if (shuffling.isParticipantVerified(transaction.getSenderId())) {
+                throw new NxtException.NotValidException("Shuffling participant already verified: " + attachment.getShufflingId());
+            }
+            if (!shuffling.isParticipant(transaction.getSenderId())) {
+                throw new NxtException.NotValidException("Only shuffling participant can verify: " + attachment.getShufflingId());
             }
         }
 
@@ -868,11 +871,11 @@ public abstract class MonetarySystem extends TransactionType {
             if (shuffling == null) {
                 throw new NxtException.NotValidException("Shuffling not found: " + attachment.getShufflingId());
             }
-            if (!shuffling.isDistributionEnabled()) {
-                throw new NxtException.NotValidException("Shuffling not ready for distribution: " + attachment.getShufflingId());
-            }
             if (shuffling.getIssuerId() != transaction.getSenderId()) {
                 throw new NxtException.NotValidException("Only shuffling issuer can trigger distribution: " + attachment.getShufflingId());
+            }
+            if (!shuffling.isDistributionEnabled()) {
+                throw new NxtException.NotValidException("Shuffling not ready for distribution: " + attachment.getShufflingId());
             }
         }
 
@@ -922,11 +925,9 @@ public abstract class MonetarySystem extends TransactionType {
             if (shuffling == null) {
                 throw new NxtException.NotValidException("Shuffling not found: " + attachment.getShufflingId());
             }
-            if (!shuffling.isCancelingEnabled()) {
-                throw new NxtException.NotValidException("Shuffling cannot be cancelled: " + attachment.getShufflingId());
-            }
-            if (shuffling.getIssuerId() != transaction.getSenderId()) {
-                throw new NxtException.NotValidException("Only shuffling issuer can cancel shuffling: " + attachment.getShufflingId());
+            if (!shuffling.isCancellationEnabled(transaction.getSenderId())) {
+                throw new NxtException.NotValidException(String.format("Shuffling in state %s cannot be cancelled by account %s",
+                       shuffling.getState(), Convert.rsAccount(transaction.getSenderId())));
             }
         }
 
