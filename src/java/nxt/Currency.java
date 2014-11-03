@@ -273,6 +273,7 @@ public final class Currency {
     void increaseSupply(long units) {
         currentSupply += units;
         if (currentSupply > maxSupply || currentSupply < 0) {
+            currentSupply -= units;
             throw new IllegalArgumentException("Cannot add " + units + " to current supply of " + currentSupply);
         }
         currencyTable.insert(this);
