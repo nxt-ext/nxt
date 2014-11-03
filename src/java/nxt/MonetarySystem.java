@@ -243,6 +243,9 @@ public abstract class MonetarySystem extends TransactionType {
             if (attachment.getUnits() <= 0) {
                 throw new NxtException.NotValidException("Invalid currency transfer: " + attachment.getJSONObject());
             }
+            if (transaction.getRecipientId() == Genesis.CREATOR_ID) {
+                throw new NxtException.NotValidException("Currency transfer to genesis account not allowed");
+            }
             Currency currency = Currency.getCurrency(attachment.getCurrencyId());
             CurrencyType.validate(currency, transaction);
             if (! currency.isActive()) {
