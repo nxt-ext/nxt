@@ -1644,7 +1644,7 @@ body > .header .navbar .nav > li > a:hover > .label {
 }
 .box > .loading-img {
   z-index: 1020;
-  background: transparent url('../img/ajax-loader.gif') 50% 50% no-repeat;
+  background: transparent url('../img/corporate/ajax-loader.gif') 50% 50% no-repeat;
 }
 /*
     Component: Buttons
@@ -3096,8 +3096,20 @@ a.list-group-item.active h4 span {
 .show_logout {
 	display:none;
 }
+
 .data-pagination {
     text-align: center;
+}
+
+.advanced_info {
+  float:left;
+  color:#737373;
+  font-style:italic;
+  line-height:34px;
+}
+
+.advanced {
+  display:none;
 }
 
 /* Mr. V's additions */
@@ -3233,15 +3245,15 @@ a.list-group-item.active h4 span {
 .sidebar-menu #sidebar_asset_exchange > a[data-page~='asset_exchange'] i:first-child:before {content: "";}
 .sidebar-menu #sidebar_asset_exchange > a[data-page~='asset_exchange'] .pull-right {margin:15px 10px 0 0}
 
-.sidebar-menu #sidebar_dgs_buyer > a[data-page~='dgs_search'] i:first-child { background: #003b55 url(../img/corporate/nav/ae.svg) no-repeat center center; background-size: 16px; height: 50px; width: 50px;}
+.sidebar-menu #sidebar_dgs_buyer > a[data-page~='dgs_search'] i:first-child { background: #003b55 url(../img/corporate/nav/market.svg) no-repeat center center; background-size: 22px; height: 50px; width: 50px;}
 .sidebar-menu #sidebar_dgs_buyer > a[data-page~='dgs_search'] i:first-child:before {content: "";}
 .sidebar-menu #sidebar_dgs_buyer > a[data-page~='dgs_search'] .pull-right {margin:15px 10px 0 0}
 
-.sidebar-menu #sidebar_dgs_seller > a[data-page~='my_dgs_listings'] i:first-child { background: #003b55 url(../img/corporate/nav/ae.svg) no-repeat center center; background-size: 16px; height: 50px; width: 50px;}
+.sidebar-menu #sidebar_dgs_seller > a[data-page~='my_dgs_listings'] i:first-child { background: #003b55 url(../img/corporate/nav/market.svg) no-repeat center center; background-size: 22px; height: 50px; width: 50px;}
 .sidebar-menu #sidebar_dgs_seller > a[data-page~='my_dgs_listings'] i:first-child:before {content: "";}
 .sidebar-menu #sidebar_dgs_seller > a[data-page~='my_dgs_listings'] .pull-right {margin:15px 10px 0 0}
 
-.sidebar-menu .treeview > a[data-page~='freemarket'] i:first-child { background: #003b55 url(../img/corporate/nav/ae.svg) no-repeat center center; background-size: 16px; height: 50px; width: 50px;}
+.sidebar-menu .treeview > a[data-page~='freemarket'] i:first-child { background: #003b55 url(../img/corporate/nav/market.svg) no-repeat center center; background-size: 22px; height: 50px; width: 50px;}
 .sidebar-menu .treeview > a[data-page~='freemarket'] i:first-child:before {content: "";}
 .sidebar-menu .treeview > a[data-page~='freemarket'] .pull-right {margin:15px 10px 0 0}
 
