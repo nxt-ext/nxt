@@ -1,11 +1,6 @@
 package nxt.http;
 
-import nxt.Account;
-import nxt.Appendix;
-import nxt.Attachment;
-import nxt.Nxt;
-import nxt.NxtException;
-import nxt.Transaction;
+import nxt.*;
 import nxt.crypto.Crypto;
 import nxt.crypto.EncryptedData;
 import nxt.util.Convert;
@@ -15,13 +10,8 @@ import org.json.simple.JSONStreamAware;
 import javax.servlet.http.HttpServletRequest;
 import java.util.Arrays;
 
-import static nxt.http.JSONResponses.FEATURE_NOT_AVAILABLE;
-import static nxt.http.JSONResponses.INCORRECT_ARBITRARY_MESSAGE;
-import static nxt.http.JSONResponses.INCORRECT_DEADLINE;
-import static nxt.http.JSONResponses.INCORRECT_REFERENCED_TRANSACTION;
-import static nxt.http.JSONResponses.MISSING_DEADLINE;
-import static nxt.http.JSONResponses.MISSING_SECRET_PHRASE;
-import static nxt.http.JSONResponses.NOT_ENOUGH_FUNDS;
+import static nxt.http.JSONResponses.*;
+
 
 abstract class CreateTransaction extends APIServlet.APIRequestHandler {
 
@@ -30,6 +20,9 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
             "message", "messageIsText",
             "messageToEncrypt", "messageToEncryptIsText", "encryptedMessageData", "encryptedMessageNonce",
             "messageToEncryptToSelf", "messageToEncryptToSelfIsText", "encryptToSelfMessageData", "encryptToSelfMessageNonce",
+            "isPending", "heightToRelease", "votingModelForPending", "quorum", "voteThreshold", "assetId",
+            "whitelisted", "whitelisted", "whitelisted",
+            "blacklisted", "blacklisted", "blacklisted",
             "recipientPublicKey"};
 
     private static String[] addCommonParameters(String[] parameters) {
@@ -89,6 +82,119 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
             publicKeyAnnouncement = new Appendix.PublicKeyAnnouncement(Convert.parseHexString(recipientPublicKey));
         }
 
+        Appendix.TwoPhased twoPhased = null;
+        String isPending = Convert.emptyToNull(req.getParameter("isPending"));
+        if (isPending != null && !isPending.equals("false")) {
+
+            String votingModelValue = Convert.emptyToNull(req.getParameter("pendingTxVotingModel"));
+            if (votingModelValue == null) {
+                return MISSING_VOTINGMODEL;
+            }
+
+            byte votingModel;
+            try {
+                votingModel = Byte.parseByte(votingModelValue);
+                if (votingModel != Constants.VOTING_MODEL_ACCOUNT
+                        && votingModel != Constants.VOTING_MODEL_ASSET
+                        && votingModel != Constants.VOTING_MODEL_BALANCE) {
+                    return INCORRECT_VOTINGMODEL;
+                }
+            } catch (NumberFormatException e) {
+                return INCORRECT_VOTINGMODEL;
+            }
+
+            String heightToReleaseValue = Convert.emptyToNull(req.getParameter("heightToRelease"));
+            if (heightToReleaseValue == null) {
+                return MISSING_HEIGHT_TO_RELEASE;
+            }
+
+            int heightToRelease;
+            try {
+                heightToRelease = Integer.parseInt(req.getParameter("heightToRelease"));
+                if (heightToRelease <= Nxt.getBlockchain().getHeight() + Constants.VOTING_MIN_VOTE_DURATION) {
+                    return INCORRECT_HEIGHT_TO_RELEASE;
+                }
+            } catch (NumberFormatException e) {
+                return INCORRECT_HEIGHT_TO_RELEASE;
+            }
+
+
+            String quorumValue = Convert.emptyToNull(req.getParameter("quorum"));
+            if (quorumValue == null) {
+                return MISSING_QUORUM;
+            }
+            long quorum;
+            try {
+                quorum = Long.parseLong(quorumValue);
+                if (quorum <= 0) {
+                    return INCORRECT_QUORUM;
+                }
+            } catch (NumberFormatException e) {
+                return INCORRECT_QUORUM;
+            }
+
+            String voteThresholdValue = Convert.emptyToNull(req.getParameter("voteThreshold"));
+            long voteThreshold = 0;
+            if (voteThresholdValue != null) {
+                try {
+                    voteThreshold = Long.parseLong(voteThresholdValue);
+                    if (voteThreshold < 0) {
+                        return INCORRECT_VOTE_THRESHOLD;
+                    }
+                } catch (NumberFormatException e) {
+                    return INCORRECT_VOTE_THRESHOLD;
+                }
+            }
+
+            String assetIdValue = Convert.emptyToNull(req.getParameter("pendingTxAssetId"));
+            long assetId = 0;
+            if (assetIdValue == null) {
+                if (votingModel == Constants.VOTING_MODEL_ASSET) {
+                    return MISSING_PENDING_TX_ASSET_ID;
+                }
+            } else {
+                try {
+                    assetId = Long.parseLong(voteThresholdValue);
+                } catch (NumberFormatException e) {
+                    return INCORRECT_VOTE_THRESHOLD;
+                }
+            }
+
+            long[] whitelist = new long[0];
+
+            String[] whitelistValues = Convert.emptyToNull(req.getParameterValues("whitelisted"));
+            if (whitelistValues != null) {
+                whitelist = new long[whitelistValues.length];
+                for (int i = 0; i < whitelist.length; i++) {
+                    whitelist[i] = Convert.parseAccountId(whitelistValues[i]);
+                }
+            }
+
+            if (votingModel == Constants.VOTING_MODEL_ACCOUNT
+                    && whitelist.length == 0) {
+                return INCORRECT_WHITELIST;
+            }
+
+
+            long[] blacklist = new long[0];
+            String[] blacklistValues = Convert.emptyToNull(req.getParameterValues("blacklisted"));
+
+            if (blacklistValues != null) {
+                blacklist = new long[blacklistValues.length];
+                for (int i = 0; i < blacklist.length; i++) {
+                    blacklist[i] = Convert.parseAccountId(blacklistValues[i]);
+                }
+            }
+
+            if (votingModel == Constants.VOTING_MODEL_ACCOUNT
+                    && blacklist.length != 0) {
+                return INCORRECT_BLACKLIST;
+            }
+
+            twoPhased = new Appendix.TwoPhased(heightToRelease, votingModel, assetId, quorum,
+                    voteThreshold, whitelist, blacklist);
+        }
+
         if (secretPhrase == null && publicKeyValue == null) {
             return MISSING_SECRET_PHRASE;
         } else if (deadlineValue == null) {
@@ -132,6 +238,9 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
             }
             if (encryptToSelfMessage != null) {
                 builder.encryptToSelfMessage(encryptToSelfMessage);
+            }
+            if(twoPhased!=null){
+                builder.twoPhased(twoPhased);
             }
             Transaction transaction = builder.build();
             transaction.validate();

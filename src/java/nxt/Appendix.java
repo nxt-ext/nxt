@@ -480,12 +480,16 @@ public interface Appendix {
             }
         }
 
-        TwoPhased(int maxHeight, byte votingModel, long quorum, long voteThreshold,
+        public TwoPhased(int maxHeight, long quorum, long[] whitelist){
+            this(maxHeight, Constants.VOTING_MODEL_ACCOUNT, quorum, 0, whitelist, null);
+        }
+
+        public TwoPhased(int maxHeight, byte votingModel, long quorum, long voteThreshold,
                   long[] whitelist, long[] blacklist) {
             this(maxHeight, votingModel, 0, quorum, voteThreshold, whitelist, blacklist);
         }
 
-        TwoPhased(int maxHeight, byte votingModel, long assetId, long quorum,
+        public TwoPhased(int maxHeight, byte votingModel, long assetId, long quorum,
                   long voteThreshold, long[] whitelist, long[] blacklist) {
             this.maxHeight = maxHeight;
             this.votingModel = votingModel;

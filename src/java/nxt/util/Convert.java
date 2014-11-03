@@ -119,6 +119,10 @@ public final class Convert {
         return s == null || s.length() == 0 ? null : s;
     }
 
+    public static String[] emptyToNull(String[] s) {
+        return s == null || s.length == 0 ? null : s;
+    }
+
     public static String nullToEmpty(String s) {
         return s == null ? "" : s;
     }
