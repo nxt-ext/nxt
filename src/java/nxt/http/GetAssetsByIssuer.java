@@ -15,7 +15,7 @@ public final class GetAssetsByIssuer extends APIServlet.APIRequestHandler {
     static final GetAssetsByIssuer instance = new GetAssetsByIssuer();
 
     private GetAssetsByIssuer() {
-        super(new APITag[] {APITag.AE, APITag.ACCOUNTS}, "account", "account", "account", "firstIndex", "lastIndex");
+        super(new APITag[] {APITag.AE, APITag.ACCOUNTS}, "account", "account", "account", "firstIndex", "lastIndex", "includeCounts");
     }
 
     @Override
@@ -23,6 +23,7 @@ public final class GetAssetsByIssuer extends APIServlet.APIRequestHandler {
         List<Account> accounts = ParameterParser.getAccounts(req);
         int firstIndex = ParameterParser.getFirstIndex(req);
         int lastIndex = ParameterParser.getLastIndex(req);
+        boolean includeCounts = !"false".equalsIgnoreCase(req.getParameter("includeCounts"));
 
         JSONObject response = new JSONObject();
         JSONArray accountsJSONArray = new JSONArray();
@@ -31,7 +32,7 @@ public final class GetAssetsByIssuer extends APIServlet.APIRequestHandler {
             JSONArray assetsJSONArray = new JSONArray();
             try (DbIterator<Asset> assets = Asset.getAssetsIssuedBy(account.getId(), firstIndex, lastIndex)) {
                 while (assets.hasNext()) {
-                    assetsJSONArray.add(JSONData.asset(assets.next()));
+                    assetsJSONArray.add(JSONData.asset(assets.next(), includeCounts));
                 }
             }
             accountsJSONArray.add(assetsJSONArray);

@@ -1,7 +1,6 @@
 package nxt.peer;
 
 import nxt.Account;
-import nxt.Block;
 import nxt.BlockchainProcessor;
 import nxt.Constants;
 import nxt.Nxt;
@@ -9,7 +8,6 @@ import nxt.NxtException;
 import nxt.util.Convert;
 import nxt.util.CountingInputStream;
 import nxt.util.CountingOutputStream;
-import nxt.util.Listener;
 import nxt.util.Logger;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
@@ -36,22 +34,9 @@ import java.net.URL;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 import java.util.zip.GZIPInputStream;
 
 final class PeerImpl implements Peer {
-
-    private static final ConcurrentMap<Long, Long> hallmarkBalances = new ConcurrentHashMap<>();
-
-    static {
-        Nxt.getBlockchainProcessor().addListener(new Listener<Block>() {
-            @Override
-            public void notify(Block block) {
-                hallmarkBalances.clear();
-            }
-        }, BlockchainProcessor.Event.AFTER_BLOCK_APPLY);
-    }
 
     private final String peerAddress;
     private volatile String announcedAddress;
@@ -67,6 +52,8 @@ final class PeerImpl implements Peer {
     private volatile long downloadedVolume;
     private volatile long uploadedVolume;
     private volatile int lastUpdated;
+    private volatile long hallmarkBalance = -1;
+    private volatile int hallmarkBalanceHeight;
 
     PeerImpl(String peerAddress, String announcedAddress) {
         this.peerAddress = peerAddress;
@@ -202,12 +189,11 @@ final class PeerImpl implements Peer {
         if (hallmark == null) {
             return 0;
         }
-        long accountId = hallmark.getAccountId();
-        Long hallmarkBalance = hallmarkBalances.get(accountId);
-        if (hallmarkBalance == null) {
+        if (hallmarkBalance == -1 || hallmarkBalanceHeight < Nxt.getBlockchain().getHeight() - 60) {
+            long accountId = hallmark.getAccountId();
             Account account = Account.getAccount(accountId);
             hallmarkBalance = account == null ? 0 : account.getBalanceNQT();
-            hallmarkBalances.put(accountId, hallmarkBalance);
+            hallmarkBalanceHeight = Nxt.getBlockchain().getHeight();
         }
         return (int)(adjustedWeight * (hallmarkBalance / Constants.ONE_NXT) / Constants.MAX_BALANCE_NXT);
     }

@@ -434,7 +434,6 @@ final class DbVersion {
                         +"pending_transaction_id BIGINT NOT NULL, voter_id BIGINT NOT NULL, "
                         +"estimated_total BIGINT NOT NULL, height INT NOT NULL)");
             case 137:
-                BlockchainProcessorImpl.getInstance().validateAtNextScan();
                 BlockchainProcessorImpl.getInstance().forceScanAtStart();
                 apply(null);
             case 138:

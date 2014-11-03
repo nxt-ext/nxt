@@ -51,7 +51,7 @@ final class JSONData {
         return json;
     }
 
-    static JSONObject asset(Asset asset) {
+    static JSONObject asset(Asset asset, boolean includeCounts) {
         JSONObject json = new JSONObject();
         putAccount(json, "account", asset.getAccountId());
         json.put("name", asset.getName());
@@ -59,9 +59,11 @@ final class JSONData {
         json.put("decimals", asset.getDecimals());
         json.put("quantityQNT", String.valueOf(asset.getQuantityQNT()));
         json.put("asset", Convert.toUnsignedLong(asset.getId()));
-        json.put("numberOfTrades", Trade.getTradeCount(asset.getId()));
-        json.put("numberOfTransfers", AssetTransfer.getTransferCount(asset.getId()));
-        json.put("numberOfAccounts", Account.getAssetAccountsCount(asset.getId()));
+        if (includeCounts) {
+            json.put("numberOfTrades", Trade.getTradeCount(asset.getId()));
+            json.put("numberOfTransfers", AssetTransfer.getTransferCount(asset.getId()));
+            json.put("numberOfAccounts", Account.getAssetAccountsCount(asset.getId()));
+        }
         return json;
     }
 

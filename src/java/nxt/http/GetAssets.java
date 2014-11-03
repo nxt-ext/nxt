@@ -16,13 +16,14 @@ public final class GetAssets extends APIServlet.APIRequestHandler {
     static final GetAssets instance = new GetAssets();
 
     private GetAssets() {
-        super(new APITag[] {APITag.AE}, "assets", "assets", "assets"); // limit to 3 for testing
+        super(new APITag[] {APITag.AE}, "assets", "assets", "assets", "includeCounts"); // limit to 3 for testing
     }
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) {
 
         String[] assets = req.getParameterValues("assets");
+        boolean includeCounts = !"false".equalsIgnoreCase(req.getParameter("includeCounts"));
 
         JSONObject response = new JSONObject();
         JSONArray assetsJSONArray = new JSONArray();
@@ -36,7 +37,7 @@ public final class GetAssets extends APIServlet.APIRequestHandler {
                 if (asset == null) {
                     return UNKNOWN_ASSET;
                 }
-                assetsJSONArray.add(JSONData.asset(asset));
+                assetsJSONArray.add(JSONData.asset(asset, includeCounts));
             } catch (RuntimeException e) {
                 return INCORRECT_ASSET;
             }
