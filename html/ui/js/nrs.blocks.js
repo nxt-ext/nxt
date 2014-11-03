@@ -329,13 +329,15 @@ var NRS = (function(NRS, $, undefined) {
 		$("#blocks_average_amount").html(NRS.formatStyledAmount(averageAmount)).removeClass("loading_dots");
 
 		if (NRS.blocksPageType == "forged_blocks") {
-			if (blocks.length == 100) {
-				var blockCount = blocks.length + "+";
-			} else {
-				var blockCount = blocks.length;
-			}
-
-			$("#forged_blocks_total").html(blockCount).removeClass("loading_dots");
+			NRS.sendRequest("getAccountBlockCount+", {
+				"account": NRS.account
+			}, function(response) {
+				if (response.numberOfBlocks) {
+					$("#forged_blocks_total").html(response.numberOfBlocks).removeClass("loading_dots");
+				} else {
+					$("#forged_blocks_total").html(0).removeClass("loading_dots");
+				}
+			});
 			$("#forged_fees_total").html(NRS.formatStyledAmount(NRS.accountInfo.forgedBalanceNQT)).removeClass("loading_dots");
 		} else {
 			if (time == 0) {

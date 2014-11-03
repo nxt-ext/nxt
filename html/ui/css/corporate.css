@@ -3096,19 +3096,22 @@ a.list-group-item.active h4 span {
 .show_logout {
 	display:none;
 }
+.data-pagination {
+    text-align: center;
+}
 
 /* Mr. V's additions */
 @font-face {
   font-family: 'Open Sans';
   font-style: normal;
   font-weight: 300;
-  src: local('Open Sans Light'), url('../fonts/OpenSans-Light.ttf') format('truetype'), url(http://themes.googleusercontent.com/static/fonts/opensans/v8/DXI1ORHCpsQm3Vp6mXoaTaRDOzjiPcYnFooOUGCOsRk.woff) format('woff');
+  src: local('Open Sans Light'), url('../fonts/corporate/OpenSans-Light.ttf') format('truetype');
 }
 @font-face {
   font-family: 'Segoe UI Light';
   font-style: normal;
   font-weight: 300;
-  src: local('Segoe UI Light'), url('../fonts/segoe_ui_light.ttf') format('truetype');
+  src: local('Segoe UI Light'), url('../fonts/corporate/segoe_ui_light.ttf') format('truetype');
 }
 .box-title, .small-box h3 { 
 	font-family: 'Segoe UI Light','Open Sans',sans-serif; 
