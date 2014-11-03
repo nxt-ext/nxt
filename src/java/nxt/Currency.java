@@ -393,8 +393,9 @@ public final class Currency {
                 currency.currentSupply += units;
                 Account.getAccount(founder.getAccountId()).addToCurrencyAndUnconfirmedCurrencyUnits(currency.getId(), units);
             }
-            currencyTable.insert(currency);
             Account.getAccount(currency.getAccountId()).addToCurrencyAndUnconfirmedCurrencyUnits(currency.getId(), currency.getReserveSupply() - currency.getCurrentSupply());
+            currency.currentSupply = currency.getReserveSupply();
+            currencyTable.insert(currency);
         }
     }
 }
