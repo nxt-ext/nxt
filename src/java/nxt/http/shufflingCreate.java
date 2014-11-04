@@ -24,6 +24,7 @@ public final class ShufflingCreate extends CreateTransaction {
         if (isCurrency) {
             currencyId = ParameterParser.getCurrency(req).getId();
         }
+        // TODO The amount/units is a weakness, in NXT its specified in NQT but for currency its specified in units
         long amountNQT = ParameterParser.getAmountNQT(req);
         byte participantCount = ParameterParser.getByte(req, "participantCount", Constants.MIN_SHUFFLING_PARTICIPANTS, Constants.MAX_SHUFFLING_PARTICIPANTS);
         int cancellationHeight = ParameterParser.getInt(req, "cancellationHeight", 0, Integer.MAX_VALUE, true);

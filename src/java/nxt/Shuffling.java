@@ -26,9 +26,16 @@ public final class Shuffling {
         REGISTRATION((byte)1),
         PROCESSING((byte)2),
         VERIFICATION((byte)3),
-        DISTRIBUTION((byte)4),
-        CANCELLED((byte)5),
-        DONE((byte)6);
+        CANCELLED((byte)4) {
+            public boolean isCancellationAllowed() {
+                return false;
+            }
+        },
+        DONE((byte)5) {
+            public boolean isCancellationAllowed() {
+                return false;
+            }
+        };
 
         private final byte code;
 
@@ -36,7 +43,7 @@ public final class Shuffling {
             this.code = code;
         }
 
-        public static State get(byte code) {
+        private static State get(byte code) {
             for (State state : State.values()) {
                 if (state.code == code) {
                     return state;
@@ -48,15 +55,20 @@ public final class Shuffling {
         public byte getCode() {
             return code;
         }
+
+        public boolean isCancellationAllowed() {
+            return true;
+        }
     }
 
     static {
         Nxt.getBlockchainProcessor().addListener(new Listener<Block>() {
             @Override
             public void notify(Block block) {
-                for (Shuffling shuffling : Shuffling.getAllShufflings(0, -1)) {
+                // TODO inefficient - we only to read shuffling which are not done yet
+                for (Shuffling shuffling : Shuffling.getAll(0, -1)) {
                     // Cancel the shuffling in case the blockchain reached its cancellation height
-                    if (block.getHeight() > shuffling.getCancellationHeight()) {
+                    if (block.getHeight() > shuffling.getCancellationHeight() && shuffling.getState().isCancellationAllowed()) {
                         shuffling.cancel();
                     }
                 }
@@ -89,7 +101,7 @@ public final class Shuffling {
 
     };
 
-    public static DbIterator<Shuffling> getAllShufflings(int from, int to) {
+    public static DbIterator<Shuffling> getAll(int from, int to) {
         return shufflingTable.getAll(from, to);
     }
 
@@ -105,20 +117,15 @@ public final class Shuffling {
         return listeners.removeListener(listener, eventType);
     }
 
-//    public static DbIterator<Shuffling> getShuffling(long currencyId, int from, int to) {
-//        return shufflingTable.getManyBy(new DbClause.LongClause("currency_id", currencyId), from, to);
-//    }
-//
     public static Shuffling getShuffling(long shufflingId) {
         return shufflingTable.get(shufflingDbKeyFactory.newKey(shufflingId));
     }
 
-    static Shuffling addShuffling(Transaction transaction, Attachment.MonetarySystemShufflingCreation attachment) {
+    static void addShuffling(Transaction transaction, Attachment.MonetarySystemShufflingCreation attachment) {
         Shuffling shuffling = new Shuffling(transaction, attachment);
         shufflingTable.insert(shuffling);
         ShufflingParticipant.addParticipant(shuffling.getId(), transaction.getSenderId());
         listeners.notify(shuffling, Event.SHUFFLING_CREATED);
-        return shuffling;
     }
 
     public static void addParticipant(Transaction transaction, Attachment.MonetarySystemShufflingRegistration attachment) {
@@ -126,7 +133,7 @@ public final class Shuffling {
         long participantId = transaction.getSenderId();
         ShufflingParticipant.addParticipant(shufflingId, participantId);
 
-        // Update the shuffling assignee to the new participant and update the next pointer of the existing participant
+        // Update the shuffling assignee to point to the new participant and update the next pointer of the existing participant
         // to the new participant
         Shuffling shuffling = Shuffling.getShuffling(shufflingId);
         ShufflingParticipant participant = ShufflingParticipant.getParticipant(shufflingId, shuffling.getAssigneeAccountId());
@@ -147,9 +154,11 @@ public final class Shuffling {
         ShufflingParticipant senderParticipant = ShufflingParticipant.getParticipant(shufflingId, participantId);
         Shuffling shuffling = Shuffling.getShuffling(shufflingId);
         long nextParticipantId = senderParticipant.getNextAccountId();
+        // TODO we cannot rely on 0 to represent non existing account, perhaps save the account String instead of number ?
         if (nextParticipantId != 0) {
             shuffling.setAssigneeAccountId(nextParticipantId);
-            ShufflingParticipant.update(shufflingId, nextParticipantId, data);
+            ShufflingParticipant.updateData(shufflingId, nextParticipantId, data);
+            senderParticipant.setProcessingComplete();
         } else {
             // participant processing is complete update the shuffling state
             shuffling.setState(State.VERIFICATION);
@@ -267,11 +276,11 @@ public final class Shuffling {
         shufflingTable.insert(this);
     }
 
-    public void verify(long accountId) {
+    void verify(long accountId) {
         ShufflingParticipant.getParticipant(id, accountId).verify();
     }
 
-    public void distribute() {
+    void distribute() {
         for (ShufflingParticipant participant : ShufflingParticipant.getParticipants(id)) {
             updateBalance(participant.getRecipientId(), amount);
             updateUnconfirmedBalance(participant.getRecipientId(), amount);
@@ -280,13 +289,15 @@ public final class Shuffling {
         setState(State.DONE);
     }
 
-    public void cancel() {
+    void cancel() {
         for (ShufflingParticipant participant : ShufflingParticipant.getParticipants(id)) {
             updateUnconfirmedBalance(participant.getAccountId(), amount);
         }
         setState(State.CANCELLED);
+        listeners.notify(this, Event.SHUFFLING_CANCELLED);
     }
 
+    // TODO check balances in unit test
     private void updateBalance(long accountId, long amount) {
         if (!isCurrency) {
             Account.getAccount(accountId).addToBalanceNQT(amount);
@@ -303,19 +314,22 @@ public final class Shuffling {
         }
     }
 
-    public boolean isRegistrationEnabled() {
+    public boolean isRegistrationAllowed() {
         return state == State.REGISTRATION;
     }
 
-    public boolean isProcessingEnabled() {
+    public boolean isProcessingAllowed() {
         return state == State.PROCESSING;
     }
 
-    public boolean isVerificationEnabled() {
+    public boolean isVerificationAllowed() {
         return state == State.VERIFICATION;
     }
 
-    public boolean isDistributionEnabled() {
+    public boolean isDistributionAllowed() {
+        if (!isVerificationAllowed()) {
+            return false;
+        }
         for (ShufflingParticipant participant : ShufflingParticipant.getParticipants(id)) {
             if (!participant.isVerified()) {
                 return false;
@@ -324,9 +338,9 @@ public final class Shuffling {
         return true;
     }
 
-    public boolean isCancellationEnabled(long senderId) {
+    public boolean isCancellationAllowed(long senderId) {
         if (senderId == issuerId) {
-            return state != State.CANCELLED && state != State.DONE;
+            return state.isCancellationAllowed();
         } else {
             return state == State.VERIFICATION;
         }
@@ -338,5 +352,9 @@ public final class Shuffling {
 
     public boolean isParticipantVerified(long senderId) {
         return ShufflingParticipant.getParticipant(id, senderId).isVerified();
+    }
+
+    public boolean isParticipantProcessingComplete(long senderId) {
+        return ShufflingParticipant.getParticipant(id, senderId).isProcessingComplete();
     }
 }

@@ -11,6 +11,7 @@ import java.nio.ByteBuffer;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
@@ -85,6 +86,26 @@ public final class EncryptedData {
         this.nonce = ByteBuffer.allocate(8).putLong(nonce).array();
     }
 
+    public byte[] decrypt(byte[] myPrivateKey, byte[] theirPublicKey) {
+        if (data.length == 0) {
+            return data;
+        }
+        byte[] compressedPlaintext = Crypto.aesDecrypt(data, myPrivateKey, theirPublicKey, nonce);
+        try (ByteArrayInputStream bis = new ByteArrayInputStream(compressedPlaintext);
+             GZIPInputStream gzip = new GZIPInputStream(bis);
+             ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
+            byte[] buffer = new byte[1024];
+            int nRead;
+            while ((nRead = gzip.read(buffer, 0, buffer.length)) > 0) {
+                bos.write(buffer, 0, nRead);
+            }
+            bos.flush();
+            return bos.toByteArray();
+        } catch (IOException e) {
+            throw new RuntimeException(e.getMessage(), e);
+        }
+    }
+
     public static byte[] marshalData(EncryptedData encryptedData) {
         ByteArrayOutputStream bytesStream = new ByteArrayOutputStream();
         DataOutputStream dataOutputStream = new DataOutputStream(bytesStream);
@@ -146,26 +167,6 @@ public final class EncryptedData {
         return inputDataList;
     }
 
-    public byte[] decrypt(byte[] myPrivateKey, byte[] theirPublicKey) {
-        if (data.length == 0) {
-            return data;
-        }
-        byte[] compressedPlaintext = Crypto.aesDecrypt(data, myPrivateKey, theirPublicKey, nonce);
-        try (ByteArrayInputStream bis = new ByteArrayInputStream(compressedPlaintext);
-             GZIPInputStream gzip = new GZIPInputStream(bis);
-             ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
-            byte[] buffer = new byte[1024];
-            int nRead;
-            while ((nRead = gzip.read(buffer, 0, buffer.length)) > 0) {
-                bos.write(buffer, 0, nRead);
-            }
-            bos.flush();
-            return bos.toByteArray();
-        } catch (IOException e) {
-            throw new RuntimeException(e.getMessage(), e);
-        }
-    }
-
     public byte[] getData() {
         return data;
     }
@@ -178,4 +179,7 @@ public final class EncryptedData {
         return data.length + nonce.length;
     }
 
+    public static Random getSecureRandom() {
+        return secureRandom.get();
+    }
 }

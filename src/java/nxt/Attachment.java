@@ -2362,7 +2362,7 @@ public interface Attachment extends Appendix {
         MonetarySystemShufflingCreation(JSONObject attachmentData) {
             super(attachmentData);
             this.isCurrency = attachmentData.get("isCurrency").equals("1");
-            this.currencyId = Convert.parseUnsignedLong((String) attachmentData.get("currency"));
+            this.currencyId = Convert.parseUnsignedLong((String)attachmentData.get("currency"));
             this.amount = Convert.parseLong(attachmentData.get("amount"));
             this.participantCount = ((Long)attachmentData.get("participantCount")).byteValue();
             this.cancellationHeight = ((Long)attachmentData.get("cancellationHeight")).shortValue();
@@ -2466,7 +2466,6 @@ public interface Attachment extends Appendix {
         @Override
         void putMyJSON(JSONObject attachment) {
             attachment.put("shuffling", Convert.toUnsignedLong(shufflingId));
-
         }
 
         @Override
@@ -2560,7 +2559,7 @@ public interface Attachment extends Appendix {
 
         @Override
         String getAppendixName() {
-            return "ShufflingFinalization";
+            return "ShufflingDistribution";
         }
 
         @Override

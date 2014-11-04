@@ -58,7 +58,7 @@ public final class Constants {
     public static final long MAX_CURRENCY_TOTAL_SUPPLY = 1000000000L * 100000000L;
     public static final int MAX_MINTING_RATIO = 10000; // per mint units not more than 0.01% of total supply
     public static final byte MIN_SHUFFLING_PARTICIPANTS = 3;
-    public static final byte MAX_SHUFFLING_PARTICIPANTS = 100;
+    public static final byte MAX_SHUFFLING_PARTICIPANTS = 16;
 
     public static final boolean isTestnet = Nxt.getBooleanProperty("nxt.isTestnet");
     public static final boolean isOffline = Nxt.getBooleanProperty("nxt.isOffline");

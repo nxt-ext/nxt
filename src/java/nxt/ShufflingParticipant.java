@@ -1,3 +1,6 @@
+/**
+ * Represents a single shuffling participant
+ */
 package nxt;
 
 import nxt.db.Db;
@@ -17,7 +20,8 @@ public final class ShufflingParticipant {
 
     public static enum State {
         REGISTERED((byte)0),
-        VERIFIED((byte)1);
+        PROCESSED((byte)1),
+        VERIFIED((byte)2);
 
         private final byte code;
 
@@ -25,7 +29,7 @@ public final class ShufflingParticipant {
             this.code = code;
         }
 
-        public static State get(byte code) {
+        static State get(byte code) {
             for (State state : State.values()) {
                 if (state.code == code) {
                     return state;
@@ -42,6 +46,7 @@ public final class ShufflingParticipant {
     public static enum Event {
         PARTICIPANT_ADDED, RECIPIENT_ADDED
     }
+
     private static final Listeners<ShufflingParticipant, Event> listeners = new Listeners<>();
 
     private static final DbKey.LinkKeyFactory<ShufflingParticipant> shufflingParticipantDbKeyFactory =
@@ -68,7 +73,7 @@ public final class ShufflingParticipant {
 
     };
 
-    public static int getCount(long shufflingId) {
+    static int getCount(long shufflingId) {
         try (Connection con = Db.getConnection();
              PreparedStatement pstmt = con.prepareStatement("SELECT COUNT(*) FROM Shuffling_participant WHERE shuffling_id = ? AND latest = TRUE")) {
             pstmt.setLong(1, shufflingId);
@@ -81,11 +86,11 @@ public final class ShufflingParticipant {
         }
     }
 
-    public static boolean addListener(Listener<ShufflingParticipant> listener, Event eventType) {
+    static boolean addListener(Listener<ShufflingParticipant> listener, Event eventType) {
         return listeners.addListener(listener, eventType);
     }
 
-    public static boolean removeListener(Listener<ShufflingParticipant> listener, Event eventType) {
+    static boolean removeListener(Listener<ShufflingParticipant> listener, Event eventType) {
         return listeners.removeListener(listener, eventType);
     }
 
@@ -93,33 +98,31 @@ public final class ShufflingParticipant {
         return shufflingParticipantTable.getManyBy(new DbClause.LongClause("shuffling_id", shufflingId), 0, -1);
     }
 
-    public static ShufflingParticipant getParticipant(long shufflingId, long accountId) {
+    static ShufflingParticipant getParticipant(long shufflingId, long accountId) {
         return shufflingParticipantTable.get(shufflingParticipantDbKeyFactory.newKey(shufflingId, accountId));
     }
 
-    static ShufflingParticipant addParticipant(long shufflingId, long accountId) {
+    static void addParticipant(long shufflingId, long accountId) {
         ShufflingParticipant participant = new ShufflingParticipant(shufflingId, accountId);
         shufflingParticipantTable.insert(participant);
-        return participant;
+        listeners.notify(participant, Event.PARTICIPANT_ADDED);
     }
 
-    static ShufflingParticipant update(long shufflingId, long accountId, byte[] data) {
+    static void updateData(long shufflingId, long accountId, byte[] data) {
         ShufflingParticipant participant = ShufflingParticipant.getParticipant(shufflingId, accountId);
         participant.setData(data);
-        return participant;
     }
 
     static void init() {}
 
     private final long shufflingId;
-
+    private final long accountId; // sender account
     private final DbKey dbKey;
-    private final long accountId;
 
-    private long nextAccountId;
-    private long recipientId;
-    private State state;
-    private byte[] data;
+    private long nextAccountId; // pointer to the next shuffling participant updated during registration
+    private long recipientId; // decrypted account id updated after the shuffling process is complete
+    private State state; // tracks the verification state of the participant
+    private byte[] data; // encrypted data saved as intermediate result in the shuffling process
 
     public ShufflingParticipant(long shufflingId, long accountId) {
         this.shufflingId = shufflingId;
@@ -168,7 +171,7 @@ public final class ShufflingParticipant {
         return nextAccountId;
     }
 
-    public void setNextAccountId(long nextAccountId) {
+    void setNextAccountId(long nextAccountId) {
         this.nextAccountId = nextAccountId;
         shufflingParticipantTable.insert(this);
     }
@@ -177,16 +180,17 @@ public final class ShufflingParticipant {
         return recipientId;
     }
 
-    public void setRecipientId(long recipientId) {
+    void setRecipientId(long recipientId) {
         this.recipientId = recipientId;
         shufflingParticipantTable.insert(this);
+        listeners.notify(this, Event.RECIPIENT_ADDED);
     }
 
     public State getState() {
         return state;
     }
 
-    public void setState(State state) {
+    void setState(State state) {
         this.state = state;
         shufflingParticipantTable.insert(this);
     }
@@ -195,18 +199,26 @@ public final class ShufflingParticipant {
         return data;
     }
 
-    public void setData(byte[] data) {
+    void setData(byte[] data) {
         this.data = data;
-        shufflingParticipantTable.insert(this);
-    }
-
-    public void verify() {
-        state = State.VERIFIED;
         shufflingParticipantTable.insert(this);
     }
 
     public boolean isVerified() {
         return state == State.VERIFIED;
+    }
+
+    void verify() {
+        state = State.VERIFIED;
+        shufflingParticipantTable.insert(this);
+    }
+
+    public boolean isProcessingComplete() {
+        return state == State.PROCESSED;
+    }
+
+    public void setProcessingComplete() {
+        state = State.PROCESSED;
     }
 
 }

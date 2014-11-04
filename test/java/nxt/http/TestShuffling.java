@@ -184,7 +184,7 @@ public class TestShuffling extends BlockchainTest {
                 build();
         response = apiCall.invoke();
         Logger.logDebugMessage("shufflingDistributeResponse:" + response);
-        Assert.assertTrue(((String)response.get("error")).contains("Only shuffling issuer can trigger distribution"));
+        Assert.assertTrue(((String)response.get("error")).contains("Only shuffling issuer"));
         apiCall = new APICall.Builder("shufflingDistribute").
                 param("shuffling", shufflingId).
                 param("secretPhrase", secretPhrase1).
