@@ -977,9 +977,9 @@ public interface Attachment extends Appendix {
 
         ColoredCoinsDividendPayment(JSONObject attachmentData) {
             super(attachmentData);
-            this.assetId = (Long)attachmentData.get("asset");
+            this.assetId = Convert.parseUnsignedLong((String)attachmentData.get("asset"));
             this.height = ((Long)attachmentData.get("height")).intValue();
-            this.amountNQTPerQNT = (Long)attachmentData.get("amountNQTPerQNT");
+            this.amountNQTPerQNT = Convert.parseLong(attachmentData.get("amountNQTPerQNT"));
         }
 
         public ColoredCoinsDividendPayment(long assetId, int height, long amountNQTPerQNT) {
