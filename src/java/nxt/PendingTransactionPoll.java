@@ -122,6 +122,21 @@ public class PendingTransactionPoll extends AbstractPoll {
         return pendingTransactionsTable.getBy(new DbClause.LongClause("id", id));
     }
 
+    public static DbIterator<PendingTransactionPoll> getByAccountId(long accountId, int firstIndex, int lastIndex){
+        DbClause clause = new DbClause.LongClause("account_id", accountId);
+        return pendingTransactionsTable.getManyBy(clause, firstIndex, lastIndex);
+    }
+
+    public static DbIterator<PendingTransactionPoll> getActiveByAccountId(long accountId, int firstIndex, int lastIndex){
+        DbClause clause = new DbClause.LongBooleanClause("account_id", accountId, "finished", false);
+        return pendingTransactionsTable.getManyBy(clause, firstIndex, lastIndex);
+    }
+
+    public static DbIterator<PendingTransactionPoll> getFinishedByAccountId(long accountId, int firstIndex, int lastIndex){
+        DbClause clause = new DbClause.LongBooleanClause("account_id", accountId, "finished", true);
+        return pendingTransactionsTable.getManyBy(clause, firstIndex, lastIndex);
+    }
+
     public long[] getWhitelist() { return whitelist; }
 
     public long[] getBlacklist() { return blacklist; }

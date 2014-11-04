@@ -47,7 +47,6 @@ public abstract class DbClause {
             pstmt.setLong(index, value);
             return index + 1;
         }
-
     }
 
     public static final class BooleanClause extends DbClause {
@@ -63,7 +62,23 @@ public abstract class DbClause {
             pstmt.setBoolean(index, value);
             return index + 1;
         }
-
     }
 
+    public static final class LongBooleanClause extends DbClause {
+
+        private final long value1;
+        private final boolean value2;
+
+        public LongBooleanClause(String column1Name, long value1, String column2Name, boolean value2) {
+            super(" " + column1Name + " = ? AND " + column2Name + " = ? ");
+            this.value1 = value1;
+            this.value2 = value2;
+        }
+
+        protected int set(PreparedStatement pstmt, int index) throws SQLException {
+            pstmt.setLong(index, value1);
+            pstmt.setBoolean(index+1, value2);
+            return index + 2;
+        }
+    }
 }

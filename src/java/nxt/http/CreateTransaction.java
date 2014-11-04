@@ -191,8 +191,7 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
                 return INCORRECT_BLACKLIST;
             }
 
-            twoPhased = new Appendix.TwoPhased(heightToRelease, votingModel, assetId, quorum,
-                    voteThreshold, whitelist, blacklist);
+            twoPhased = new Appendix.TwoPhased(heightToRelease, votingModel, assetId, quorum, voteThreshold, whitelist, blacklist);
         }
 
         if (secretPhrase == null && publicKeyValue == null) {
