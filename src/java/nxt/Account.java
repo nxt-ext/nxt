@@ -846,17 +846,17 @@ public final class Account {
         }
     }
 
-    void payDividends(final Long assetId, final int height, final long amountNQTPerQNT) {
+    void payDividends(final long assetId, final int height, final long amountNQTPerQNT) {
         final Asset asset = Asset.getAsset(assetId);
-        final long quantityQNT = asset.getQuantityQNT()
-                - this.getAssetBalanceQNT(assetId, height)
-                - Account.getAssetBalanceQNT(Genesis.CREATOR_ID, assetId, height);
-        this.addToBalanceNQT(-Convert.safeMultiply(amountNQTPerQNT, quantityQNT));
-        for (final AccountAsset accountAsset: getAssetAccounts(asset.getId(), height, 0, -1)) {
+        long totalDividend = 0;
+        for (final AccountAsset accountAsset : getAssetAccounts(asset.getId(), height, 0, -1)) {
             if (accountAsset.getAccountId() != asset.getAccountId() && accountAsset.getAccountId() != Genesis.CREATOR_ID) {
-                Account.getAccount(accountAsset.getAccountId()).addToBalanceAndUnconfirmedBalanceNQT(Convert.safeMultiply(accountAsset.getQuantityQNT(), amountNQTPerQNT));
+                long dividend = Convert.safeMultiply(accountAsset.getQuantityQNT(), amountNQTPerQNT);
+                Account.getAccount(accountAsset.getAccountId()).addToBalanceAndUnconfirmedBalanceNQT(dividend);
+                totalDividend += dividend;
             }
         }
+        this.addToBalanceNQT(-totalDividend);
     }
 
 }

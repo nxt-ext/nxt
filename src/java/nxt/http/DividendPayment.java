@@ -1,18 +1,14 @@
 package nxt.http;
 
-import static nxt.http.JSONResponses.INCORRECT_PRICE;
-import static nxt.http.JSONResponses.MISSING_PRICE;
-
-import javax.servlet.http.HttpServletRequest;
-
-import nxt.Constants;
-import org.json.simple.JSONStreamAware;
-
 import nxt.Account;
 import nxt.Asset;
 import nxt.Attachment;
+import nxt.Constants;
 import nxt.Nxt;
 import nxt.NxtException;
+import org.json.simple.JSONStreamAware;
+
+import javax.servlet.http.HttpServletRequest;
 
 public class DividendPayment extends CreateTransaction {
 

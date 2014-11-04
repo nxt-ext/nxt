@@ -964,7 +964,7 @@ public interface Attachment extends Appendix {
 
     public final static class ColoredCoinsDividendPayment extends AbstractAttachment {
 
-        private final Long assetId;
+        private final long assetId;
         private final int height;
         private final long amountNQTPerQNT;
 
@@ -982,7 +982,7 @@ public interface Attachment extends Appendix {
             this.amountNQTPerQNT = (Long)attachmentData.get("amountNQTPerQNT");
         }
 
-        public ColoredCoinsDividendPayment(Long assetId, int height, long amountNQTPerQNT) {
+        public ColoredCoinsDividendPayment(long assetId, int height, long amountNQTPerQNT) {
             this.assetId = assetId;
             this.height = height;
             this.amountNQTPerQNT = amountNQTPerQNT;
@@ -1017,7 +1017,7 @@ public interface Attachment extends Appendix {
             return TransactionType.ColoredCoins.DIVIDEND_PAYMENT;
         }
 
-        public Long getAssetId() {
+        public long getAssetId() {
             return assetId;
         }
 
