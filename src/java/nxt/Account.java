@@ -339,6 +339,12 @@ public final class Account {
         return accountAssetTable.getManyBy(new DbClause.LongClause("asset_id", assetId), height, from, to, " ORDER BY quantity DESC, account_id ");
     }
 
+    public static long getAssetBalanceQNT(final long accountId, final long assetId, final int height)
+    {
+        final AccountAsset accountAsset = accountAssetTable.get(accountAssetDbKeyFactory.newKey(accountId, assetId), height);
+        return accountAsset == null ? 0 : accountAsset.quantityQNT;
+    }
+
     static void init() {}
 
 
@@ -584,6 +590,11 @@ public final class Account {
         return accountAsset == null ? 0 : accountAsset.quantityQNT;
     }
 
+    public long getAssetBalanceQNT(long assetId, int height) {
+        AccountAsset accountAsset = accountAssetTable.get(accountAssetDbKeyFactory.newKey(this.id, assetId), height);
+        return accountAsset == null ? 0 : accountAsset.quantityQNT;
+    }
+
     public long getUnconfirmedAssetBalanceQNT(long assetId) {
         AccountAsset accountAsset = accountAssetTable.get(accountAssetDbKeyFactory.newKey(this.id, assetId));
         return accountAsset == null ? 0 : accountAsset.unconfirmedQuantityQNT;
@@ -690,10 +701,6 @@ public final class Account {
             this.keyHeight = height;
             accountTable.insert(this);
         }
-    }
-
-    long getAssetBalanceQNTIncludingOrders(long assetId, int height) {
-        return 0; // TODO: Implement after JLP completes the DB stuff
     }
 
     void addToAssetBalanceQNT(long assetId, long quantityQNT) {
@@ -839,12 +846,16 @@ public final class Account {
         }
     }
 
-    void payDividends(Long assetId, int height, boolean issuerIncluded, long amountNQTPerQNT) {
-        Asset asset = Asset.getAsset(assetId);
-        long quantityQNT = asset.getQuantityQNT() - (issuerIncluded ? 0 : getAssetBalanceQNTIncludingOrders(assetId, height));
-        addToBalanceNQT(-Convert.safeMultiply(amountNQTPerQNT, quantityQNT));
-        for (Asset.Owner owner : asset.getOwners(height)) {
-            Account.getAccount(owner.getAccountId()).addToBalanceAndUnconfirmedBalanceNQT(owner.getQuantityQNT() * amountNQTPerQNT);
+    void payDividends(final Long assetId, final int height, final long amountNQTPerQNT) {
+        final Asset asset = Asset.getAsset(assetId);
+        final long quantityQNT = asset.getQuantityQNT()
+                - this.getAssetBalanceQNT(assetId, height)
+                - Account.getAssetBalanceQNT(Genesis.CREATOR_ID, assetId, height);
+        this.addToBalanceNQT(-Convert.safeMultiply(amountNQTPerQNT, quantityQNT));
+        for (final AccountAsset accountAsset: getAssetAccounts(asset.getId(), height, 0, -1)) {
+            if (accountAsset.getAccountId() != asset.getAccountId() && accountAsset.getAccountId() != Genesis.CREATOR_ID) {
+                Account.getAccount(accountAsset.getAccountId()).addToBalanceAndUnconfirmedBalanceNQT(Convert.safeMultiply(accountAsset.getQuantityQNT(), amountNQTPerQNT));
+            }
         }
     }
 

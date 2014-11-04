@@ -1102,11 +1102,13 @@ public abstract class TransactionType {
             @Override
             boolean applyAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
                 Attachment.ColoredCoinsDividendPayment attachment = (Attachment.ColoredCoinsDividendPayment)transaction.getAttachment();
-                long quantityQNT = Asset.getAsset(attachment.getAssetId()).getQuantityQNT() -
-                        (attachment.isIssuerIncluded() ?
-                                0 : senderAccount.getAssetBalanceQNTIncludingOrders(attachment.getAssetId(), attachment.getHeight()));
-                if (senderAccount.getUnconfirmedBalanceNQT() >= Convert.safeMultiply(attachment.getAmountNQTPerQNT(), quantityQNT)) {
-                    senderAccount.addToUnconfirmedBalanceNQT(-Convert.safeMultiply(attachment.getAmountNQTPerQNT(), quantityQNT));
+                Asset asset = Asset.getAsset(attachment.getAssetId());
+                long quantityQNT = asset.getQuantityQNT()
+                        - senderAccount.getAssetBalanceQNT(attachment.getAssetId(), attachment.getHeight())
+                        - Account.getAssetBalanceQNT(Genesis.CREATOR_ID, attachment.getAssetId(), attachment.getHeight());
+                long totalDividendPayment = Convert.safeMultiply(attachment.getAmountNQTPerQNT(), quantityQNT);
+                if (senderAccount.getUnconfirmedBalanceNQT() >= totalDividendPayment) {
+                    senderAccount.addToUnconfirmedBalanceNQT(-totalDividendPayment);
                     return true;
                 }
                 return false;
@@ -1115,13 +1117,15 @@ public abstract class TransactionType {
             @Override
             void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
                 Attachment.ColoredCoinsDividendPayment attachment = (Attachment.ColoredCoinsDividendPayment)transaction.getAttachment();
-                senderAccount.payDividends(attachment.getAssetId(), attachment.getHeight(), attachment.isIssuerIncluded(), attachment.getAmountNQTPerQNT());
+                senderAccount.payDividends(attachment.getAssetId(), attachment.getHeight(), attachment.getAmountNQTPerQNT());
             }
 
             @Override
             void undoAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
                 Attachment.ColoredCoinsDividendPayment attachment = (Attachment.ColoredCoinsDividendPayment)transaction.getAttachment();
-                long quantityQNT = Asset.getAsset(attachment.getAssetId()).getQuantityQNT() - (attachment.isIssuerIncluded() ? 0 : senderAccount.getAssetBalanceQNTIncludingOrders(attachment.getAssetId(), attachment.getHeight()));
+                long quantityQNT = Asset.getAsset(attachment.getAssetId()).getQuantityQNT()
+                        - senderAccount.getAssetBalanceQNT(attachment.getAssetId(), attachment.getHeight())
+                        - Account.getAssetBalanceQNT(Genesis.CREATOR_ID, attachment.getAssetId(), attachment.getHeight());
                 senderAccount.addToUnconfirmedBalanceNQT(Convert.safeMultiply(attachment.getAmountNQTPerQNT(), quantityQNT));
             }
 
@@ -1132,14 +1136,14 @@ public abstract class TransactionType {
                 }
                 Attachment.ColoredCoinsDividendPayment attachment = (Attachment.ColoredCoinsDividendPayment)transaction.getAttachment();
                 Asset asset = Asset.getAsset(attachment.getAssetId());
-                if (asset != null && asset.getAccountId() != transaction.getSenderId() || attachment.getAmountNQTPerQNT() <= 0) {
-                    throw new NxtException.NotValidException("Invalid divident payment sender or amount " + attachment.getJSONObject());
-                }
                 if (asset == null) {
                     throw new NxtException.NotCurrentlyValidException("Asset " + Convert.toUnsignedLong(attachment.getAssetId())
                             + "for dividend payment doesn't exist yet");
                 }
-                if (attachment.getHeight() >= BlockchainImpl.getInstance().getLastBlock().getHeight()) {
+                if (asset.getAccountId() != transaction.getSenderId() || attachment.getAmountNQTPerQNT() <= 0) {
+                    throw new NxtException.NotValidException("Invalid divident payment sender or amount " + attachment.getJSONObject());
+                }
+                if (attachment.getHeight() > Nxt.getBlockchain().getHeight()) {
                     throw new NxtException.NotCurrentlyValidException("Invalid dividend payment height: " + attachment.getHeight());
                 }
             }

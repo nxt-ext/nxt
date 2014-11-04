@@ -9,29 +9,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.List;
 
 public final class Asset {
-
-    public static final class Owner {
-
-        private Long accountId;
-        private long quantityQNT;
-
-        public Owner(Long accountId, long quantityQNT) {
-            this.accountId = accountId;
-            this.quantityQNT = quantityQNT;
-        }
-
-        public Long getAccountId() {
-            return accountId;
-        }
-
-        public long getQuantityQNT() {
-            return quantityQNT;
-        }
-
-    }
 
     private static final DbKey.LongKeyFactory<Asset> assetDbKeyFactory = new DbKey.LongKeyFactory<Asset>("id") {
 
@@ -163,10 +142,6 @@ public final class Asset {
 
     public DbIterator<AssetTransfer> getAssetTransfers(int from, int to) {
         return AssetTransfer.getAssetTransfers(this.assetId, from, to);
-    }
-
-    public List<Owner> getOwners(int height) {
-        return null; // TODO: Implement after JLP completes the DB stuff
     }
 
 }

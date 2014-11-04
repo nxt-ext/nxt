@@ -132,6 +132,23 @@ final class ParameterParser {
         return quantityQNT;
     }
 
+    static long getAmountNQTPerQNT(HttpServletRequest req) throws ParameterException {
+        String priceValueNQT = Convert.emptyToNull(req.getParameter("amountNQTPerQNT"));
+        if (priceValueNQT == null) {
+            throw new ParameterException(MISSING_AMOUNT_NQT_PER_QNT);
+        }
+        long priceNQT;
+        try {
+            priceNQT = Long.parseLong(priceValueNQT);
+        } catch (RuntimeException e) {
+            throw new ParameterException(INCORRECT_AMOUNT_NQT_PER_QNT);
+        }
+        if (priceNQT <= 0 || priceNQT > Constants.MAX_BALANCE_NQT) {
+            throw new ParameterException(INCORRECT_AMOUNT_NQT_PER_QNT);
+        }
+        return priceNQT;
+    }
+
     static long getOrderId(HttpServletRequest req) throws ParameterException {
         String orderValue = Convert.emptyToNull(req.getParameter("order"));
         if (orderValue == null) {

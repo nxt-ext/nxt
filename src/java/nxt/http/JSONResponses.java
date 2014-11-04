@@ -71,6 +71,8 @@ public final class JSONResponses {
     public static final JSONStreamAware INCORRECT_DATE = incorrect("date");
     public static final JSONStreamAware MISSING_PRICE = missing("priceNQT");
     public static final JSONStreamAware INCORRECT_PRICE = incorrect("price");
+    public static final JSONStreamAware MISSING_AMOUNT_NQT_PER_QNT = missing("amountNQTPerQNT");
+    public static final JSONStreamAware INCORRECT_AMOUNT_NQT_PER_QNT = incorrect("amountNQTPerQNT");
     public static final JSONStreamAware INCORRECT_REFERENCED_TRANSACTION = incorrect("referencedTransactionFullHash");
     public static final JSONStreamAware MISSING_MESSAGE = missing("message");
     public static final JSONStreamAware MISSING_RECIPIENT = missing("recipient");
