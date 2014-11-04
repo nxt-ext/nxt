@@ -7,6 +7,7 @@ import nxt.db.Db;
 import nxt.db.DbClause;
 import nxt.db.DbIterator;
 import nxt.db.DbKey;
+import nxt.db.DbUtils;
 import nxt.db.VersionedEntityDbTable;
 import nxt.util.Listener;
 import nxt.util.Listeners;
@@ -150,7 +151,7 @@ public final class ShufflingParticipant {
             int i = 0;
             pstmt.setLong(++i, this.getShufflingId());
             pstmt.setLong(++i, this.getAccountId());
-            pstmt.setLong(++i, this.getNextAccountId());
+            DbUtils.setLongZeroToNull(pstmt, ++i, this.getNextAccountId());
             pstmt.setLong(++i, this.getRecipientId());
             pstmt.setByte(++i, this.getState().getCode());
             pstmt.setBytes(++i, this.getData());

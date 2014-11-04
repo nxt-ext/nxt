@@ -67,7 +67,7 @@ public final class ShufflingProcess extends CreateTransaction {
         Map<Long, ShufflingParticipant> participantLookup = new HashMap<>();
         for (ShufflingParticipant participant : participants) {
             mapping.put(participant.getAccountId(), participant.getNextAccountId());
-            reverseMapping.put(participant.getNextAccountId(), participant.getAccountId()); // TODO problem if we change 0 to null
+            reverseMapping.put(participant.getNextAccountId(), participant.getAccountId());
             participantLookup.put(participant.getAccountId(), participant);
         }
         if (participantLookup.get(senderAccount.getId()) == null) {
@@ -89,7 +89,7 @@ public final class ShufflingProcess extends CreateTransaction {
             // we'll have to try them all until one succeed starting with the shuffling issuer which has to be a participant
             byte[] decryptedBytes = null;
             long id = shuffling.getIssuerId();
-            while (mapping.get(id) != 0) { // TODO 0 used as null
+            while (mapping.get(id) != 0) {
                 Account publicKeyAccount = Account.getAccount(id);
                 if (Logger.isDebugEnabled()) {
                     Logger.logDebugMessage(String.format("decryptFrom using public key of %s sender %s data %s nonce %s",
@@ -123,7 +123,6 @@ public final class ShufflingProcess extends CreateTransaction {
 
         // We always encrypt the recipient using the public key of the last participant
         // Therefore we need to find the last participant
-        // TODO can we rely on account id 0 never to exist ? If not we'll need to store String accounts
         long id = senderAccount.getId();
         while (mapping.get(id) != 0) {
             id = mapping.get(id);
@@ -138,7 +137,7 @@ public final class ShufflingProcess extends CreateTransaction {
             // If we are that last participant to process then we do not encrypt our recipient
             encryptedData = new EncryptedData(bytesToEncrypt, new byte[]{}); // TODO can we reuse recipientData ?
         } else {
-            while (id != senderAccount.getId() && id != 0) { // TODO rely on 0 as null
+            while (id != senderAccount.getId() && id != 0) {
                 Account account = Account.getAccount(id);
                 if (Logger.isDebugEnabled()) {
                     Logger.logDebugMessage(String.format("encryptTo %s by %s bytes %s",

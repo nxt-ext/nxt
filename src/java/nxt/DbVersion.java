@@ -487,8 +487,7 @@ final class DbVersion {
             case 159:
                 apply("ALTER TABLE account ADD COLUMN IF NOT EXISTS message_pattern_flags INT");
             case 160:
-                apply("CREATE TABLE IF NOT EXISTS shuffling (db_id INT IDENTITY, id BIGINT NOT NULL, "
-                        + "is_currency BOOLEAN NOT NULL DEFAULT FALSE, currency_id BIGINT NOT NULL, "
+                apply("CREATE TABLE IF NOT EXISTS shuffling (db_id INT IDENTITY, id BIGINT NOT NULL, currency_id BIGINT NULL, "
                         + "issuer_id BIGINT NOT NULL, amount BIGINT NOT NULL, participant_count BIGINT NOT NULL, cancellation_height INT NOT NULL, "
                         + "state TINYINT NOT NULL, assignee_account_id BIGINT NOT NULL, "
                         + "height INT NOT NULL, latest BOOLEAN NOT NULL DEFAULT TRUE)");
@@ -496,7 +495,7 @@ final class DbVersion {
                 apply("CREATE UNIQUE INDEX IF NOT EXISTS shuffling_id_idx ON shuffling (id, height DESC)");
             case 162:
                 apply("CREATE TABLE IF NOT EXISTS shuffling_participant (db_id INT IDENTITY, shuffling_id BIGINT NOT NULL, "
-                        + "account_id BIGINT NOT NULL, next_account_id BIGINT NOT NULL, recipient_id BIGINT NOT NULL, "
+                        + "account_id BIGINT NOT NULL, next_account_id BIGINT NULL, recipient_id BIGINT NOT NULL, "
                         + "state TINYINT NOT NULL, data VARBINARY, "
                         + "height INT NOT NULL, latest BOOLEAN NOT NULL DEFAULT TRUE)");
             case 163:

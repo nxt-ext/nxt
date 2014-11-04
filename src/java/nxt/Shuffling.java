@@ -3,6 +3,7 @@ package nxt;
 import nxt.crypto.EncryptedData;
 import nxt.db.DbIterator;
 import nxt.db.DbKey;
+import nxt.db.DbUtils;
 import nxt.db.VersionedEntityDbTable;
 import nxt.util.Convert;
 import nxt.util.Listener;
@@ -154,7 +155,6 @@ public final class Shuffling {
         ShufflingParticipant senderParticipant = ShufflingParticipant.getParticipant(shufflingId, participantId);
         Shuffling shuffling = Shuffling.getShuffling(shufflingId);
         long nextParticipantId = senderParticipant.getNextAccountId();
-        // TODO we cannot rely on 0 to represent non existing account, perhaps save the account String instead of number ?
         if (nextParticipantId != 0) {
             shuffling.setAssigneeAccountId(nextParticipantId);
             ShufflingParticipant.updateData(shufflingId, nextParticipantId, data);
@@ -175,7 +175,6 @@ public final class Shuffling {
 
     private final long id;
     private final DbKey dbKey;
-    private final boolean isCurrency;
     private final long currencyId;
     private final long issuerId;
     private final long amount;
@@ -188,7 +187,6 @@ public final class Shuffling {
     private Shuffling(Transaction transaction, Attachment.MonetarySystemShufflingCreation attachment) {
         this.id = transaction.getId();
         this.dbKey = shufflingDbKeyFactory.newKey(this.id);
-        this.isCurrency = attachment.isCurrency();
         this.currencyId = attachment.getCurrencyId();
         this.issuerId = transaction.getSenderId();
         this.amount = attachment.getAmount();
@@ -201,7 +199,6 @@ public final class Shuffling {
     private Shuffling(ResultSet rs) throws SQLException {
         this.id = rs.getLong("id");
         this.dbKey = shufflingDbKeyFactory.newKey(this.id);
-        this.isCurrency = rs.getBoolean("is_currency");
         this.currencyId = rs.getLong("currency_id");
         this.issuerId = rs.getLong("issuer_id");
         this.amount = rs.getLong("amount");
@@ -212,15 +209,14 @@ public final class Shuffling {
     }
 
     private void save(Connection con) throws SQLException {
-        try (PreparedStatement pstmt = con.prepareStatement("MERGE INTO shuffling (id, is_currency, currency_id, "
+        try (PreparedStatement pstmt = con.prepareStatement("MERGE INTO shuffling (id, currency_id, "
                 + "issuer_id, amount, participant_count, cancellation_height, state, assignee_account_Id,"
                 + "height, latest) "
                 + "KEY (id, height)"
-                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, TRUE)")) {
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, TRUE)")) {
             int i = 0;
             pstmt.setLong(++i, this.getId());
-            pstmt.setBoolean(++i, this.isCurrency());
-            pstmt.setLong(++i, this.getCurrencyId());
+            DbUtils.setLongZeroToNull(pstmt, ++i, this.getCurrencyId());
             pstmt.setLong(++i, this.getIssuerId());
             pstmt.setLong(++i, this.getAmount());
             pstmt.setLong(++i, this.getParticipantCount());
@@ -237,7 +233,7 @@ public final class Shuffling {
     }
 
     public boolean isCurrency() {
-        return isCurrency;
+        return currencyId != 0;
     }
 
     public long getCurrencyId() { return currencyId; }
@@ -299,18 +295,18 @@ public final class Shuffling {
 
     // TODO check balances in unit test
     private void updateBalance(long accountId, long amount) {
-        if (!isCurrency) {
-            Account.getAccount(accountId).addToBalanceNQT(amount);
-        } else {
+        if (isCurrency()) {
             Account.getAccount(accountId).addToCurrencyUnits(currencyId, amount);
+        } else {
+            Account.getAccount(accountId).addToBalanceNQT(amount);
         }
     }
 
     private void updateUnconfirmedBalance(long accountId, long amount) {
-        if (!isCurrency) {
-            Account.getAccount(accountId).addToUnconfirmedBalanceNQT(amount);
-        } else {
+        if (isCurrency()) {
             Account.getAccount(accountId).addToUnconfirmedCurrencyUnits(currencyId, amount);
+        } else {
+            Account.getAccount(accountId).addToUnconfirmedBalanceNQT(amount);
         }
     }
 

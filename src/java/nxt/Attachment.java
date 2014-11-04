@@ -2344,7 +2344,6 @@ public interface Attachment extends Appendix {
 
     public final static class MonetarySystemShufflingCreation extends AbstractAttachment {
 
-        private final boolean isCurrency;
         private final long currencyId;
         private final long amount;
         private final byte participantCount;
@@ -2352,7 +2351,6 @@ public interface Attachment extends Appendix {
 
         MonetarySystemShufflingCreation(ByteBuffer buffer, byte transactionVersion) {
             super(buffer, transactionVersion);
-            this.isCurrency = (buffer.get() == 0x01);
             this.currencyId = buffer.getLong();
             this.amount = buffer.getLong();
             this.participantCount = buffer.get();
@@ -2361,7 +2359,6 @@ public interface Attachment extends Appendix {
 
         MonetarySystemShufflingCreation(JSONObject attachmentData) {
             super(attachmentData);
-            this.isCurrency = attachmentData.get("isCurrency").equals("1");
             this.currencyId = Convert.parseUnsignedLong((String)attachmentData.get("currency"));
             this.amount = Convert.parseLong(attachmentData.get("amount"));
             this.participantCount = ((Long)attachmentData.get("participantCount")).byteValue();
@@ -2369,7 +2366,6 @@ public interface Attachment extends Appendix {
         }
 
         public MonetarySystemShufflingCreation(boolean isCurrency, long currencyId, long amount, byte participantCount, int cancellationHeight) {
-            this.isCurrency = isCurrency;
             this.currencyId = currencyId;
             this.amount = amount;
             this.participantCount = participantCount;
@@ -2383,12 +2379,11 @@ public interface Attachment extends Appendix {
 
         @Override
         int getMySize() {
-            return 1 + 8 + 8 + 1 + 4;
+            return 8 + 8 + 1 + 4;
         }
 
         @Override
         void putMyBytes(ByteBuffer buffer) {
-            buffer.put(isCurrency ? (byte) 1 : (byte) 0);
             buffer.putLong(currencyId);
             buffer.putLong(amount);
             buffer.put(participantCount);
@@ -2397,7 +2392,6 @@ public interface Attachment extends Appendix {
 
         @Override
         void putMyJSON(JSONObject attachment) {
-            attachment.put("isCurrency", isCurrency ? 1 : 0);
             attachment.put("currency", Convert.toUnsignedLong(currencyId));
             attachment.put("amount", amount);
             attachment.put("participantCount", participantCount);
@@ -2410,7 +2404,7 @@ public interface Attachment extends Appendix {
         }
 
         public boolean isCurrency() {
-            return isCurrency;
+            return currencyId != 0;
         }
 
         public long getCurrencyId() {
