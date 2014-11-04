@@ -325,20 +325,23 @@ var NRS = (function(NRS, $, undefined) {
 		averageFee = NRS.convertToNQT(averageFee);
 		averageAmount = NRS.convertToNQT(averageAmount);
 
-		$("#blocks_average_fee").html(NRS.formatStyledAmount(averageFee)).removeClass("loading_dots");
-		$("#blocks_average_amount").html(NRS.formatStyledAmount(averageAmount)).removeClass("loading_dots");
-
 		if (NRS.blocksPageType == "forged_blocks") {
 			NRS.sendRequest("getAccountBlockCount+", {
 				"account": NRS.account
 			}, function(response) {
 				if (response.numberOfBlocks) {
 					$("#forged_blocks_total").html(response.numberOfBlocks).removeClass("loading_dots");
+					var avgFee = $("#forged_fees_total").html()/$("#forged_blocks_total").html();
+					$("#blocks_average_fee").html(NRS.formatStyledAmount(avgFee)).removeClass("loading_dots");
 				} else {
 					$("#forged_blocks_total").html(0).removeClass("loading_dots");
+					$("#blocks_average_fee").html(0).removeClass("loading_dots");
 				}
 			});
 			$("#forged_fees_total").html(NRS.formatStyledAmount(NRS.accountInfo.forgedBalanceNQT)).removeClass("loading_dots");
+			$("#blocks_average_amount").removeClass("loading_dots");
+			$("#blocks_average_amount").parent().parent().css('visibility', 'hidden');
+			$("#blocks_page .ion-stats-bars").parent().css('visibility', 'hidden');
 		} else {
 			if (time == 0) {
 				$("#blocks_transactions_per_hour").html("0").removeClass("loading_dots");
@@ -346,6 +349,10 @@ var NRS = (function(NRS, $, undefined) {
 				$("#blocks_transactions_per_hour").html(Math.round(totalTransactions / (time / 60) * 60)).removeClass("loading_dots");
 			}
 			$("#blocks_average_generation_time").html(Math.round(time / NRS.itemsPerPage) + "s").removeClass("loading_dots");
+			$("#blocks_average_fee").html(NRS.formatStyledAmount(averageFee)).removeClass("loading_dots");
+			$("#blocks_average_amount").parent().parent().css('visibility', 'visible');
+			$("#blocks_page .ion-stats-bars").parent().css('visibility', 'visible');
+			$("#blocks_average_amount").html(NRS.formatStyledAmount(averageAmount)).removeClass("loading_dots");
 		}
 
 		NRS.dataLoaded(rows);
