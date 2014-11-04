@@ -306,25 +306,6 @@ var NRS = (function(NRS, $, undefined) {
 			rows += "<tr><td><a href='#' data-block='" + String(block.height).escapeHTML() + "' data-blockid='" + String(block.block).escapeHTML() + "' class='block'" + (block.numberOfTransactions > 0 ? " style='font-weight:bold'" : "") + ">" + String(block.height).escapeHTML() + "</a></td><td>" + NRS.formatTimestamp(block.timestamp) + "</td><td>" + NRS.formatAmount(block.totalAmountNQT) + "</td><td>" + NRS.formatAmount(block.totalFeeNQT) + "</td><td>" + NRS.formatAmount(block.numberOfTransactions) + "</td><td>" + (block.generator != NRS.genesis ? "<a href='#' data-user='" + NRS.getAccountFormatted(block, "generator") + "' class='user_info'>" + NRS.getAccountTitle(block, "generator") + "</a>" : $.t("genesis")) + "</td><td>" + NRS.formatVolume(block.payloadLength) + "</td><td>" + Math.round(block.baseTarget / 153722867 * 100).pad(4) + " %</td></tr>";
 		}
 
-		if (blocks.length) {
-			var startingTime = blocks[blocks.length - 1].timestamp;
-			var endingTime = blocks[0].timestamp;
-			var time = endingTime - startingTime;
-		} else {
-			var startingTime = endingTime = time = 0;
-		}
-
-		if (blocks.length) {
-			var averageFee = new Big(totalFees.toString()).div(new Big("100000000")).div(new Big(String(blocks.length))).toFixed(2);
-			var averageAmount = new Big(totalAmount.toString()).div(new Big("100000000")).div(new Big(String(blocks.length))).toFixed(2);
-		} else {
-			var averageFee = 0;
-			var averageAmount = 0;
-		}
-
-		averageFee = NRS.convertToNQT(averageFee);
-		averageAmount = NRS.convertToNQT(averageAmount);
-
 		if (NRS.blocksPageType == "forged_blocks") {
 			NRS.sendRequest("getAccountBlockCount+", {
 				"account": NRS.account
@@ -343,6 +324,25 @@ var NRS = (function(NRS, $, undefined) {
 			$("#blocks_average_amount").parent().parent().css('visibility', 'hidden');
 			$("#blocks_page .ion-stats-bars").parent().css('visibility', 'hidden');
 		} else {
+			if (blocks.length) {
+				var startingTime = blocks[blocks.length - 1].timestamp;
+				var endingTime = blocks[0].timestamp;
+				var time = endingTime - startingTime;
+			} else {
+				var startingTime = endingTime = time = 0;
+			}
+
+			if (blocks.length) {
+				var averageFee = new Big(totalFees.toString()).div(new Big("100000000")).div(new Big(String(blocks.length))).toFixed(2);
+				var averageAmount = new Big(totalAmount.toString()).div(new Big("100000000")).div(new Big(String(blocks.length))).toFixed(2);
+			} else {
+				var averageFee = 0;
+				var averageAmount = 0;
+			}
+
+			averageFee = NRS.convertToNQT(averageFee);
+			averageAmount = NRS.convertToNQT(averageAmount);
+			
 			if (time == 0) {
 				$("#blocks_transactions_per_hour").html("0").removeClass("loading_dots");
 			} else {
