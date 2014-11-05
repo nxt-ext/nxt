@@ -130,27 +130,22 @@ public final class ShufflingProcess extends CreateTransaction {
 
         // Calculate the token for the current sender by iteratively encrypting it using the public key of all the participants
         // which did not perform shuffle processing yet
-        EncryptedData recipientData = new EncryptedData(Convert.toBytes(Convert.toUnsignedLong(recipientId)), new byte[]{});
-        byte[] bytesToEncrypt = EncryptedData.marshalData(recipientData);
-        EncryptedData encryptedData = null;
-        if (id == senderAccount.getId()) {
-            // If we are that last participant to process then we do not encrypt our recipient
-            encryptedData = new EncryptedData(bytesToEncrypt, new byte[]{}); // TODO can we reuse recipientData ?
-        } else {
-            while (id != senderAccount.getId() && id != 0) {
-                Account account = Account.getAccount(id);
-                if (Logger.isDebugEnabled()) {
-                    Logger.logDebugMessage(String.format("encryptTo %s by %s bytes %s",
-                            Convert.rsAccount(account.getId()), Convert.rsAccount(senderAccount.getId()), Arrays.toString(bytesToEncrypt)));
-                }
-                encryptedData = account.encryptTo(bytesToEncrypt, secretPhrase);
-                if (Logger.isDebugEnabled()) {
-                    Logger.logDebugMessage(String.format("encryptTo data %s nonce %s",
-                            Arrays.toString(encryptedData.getData()), Arrays.toString(encryptedData.getNonce())));
-                }
-                id = reverseMapping.get(id);
-                bytesToEncrypt = EncryptedData.marshalData(encryptedData);
+        EncryptedData encryptedData = new EncryptedData(Convert.toBytes(Convert.toUnsignedLong(recipientId)), new byte[]{});
+        byte[] bytesToEncrypt = EncryptedData.marshalData(encryptedData);
+        // If we are that last participant to process then we do not encrypt our recipient
+        while (id != senderAccount.getId() && id != 0) {
+            Account account = Account.getAccount(id);
+            if (Logger.isDebugEnabled()) {
+                Logger.logDebugMessage(String.format("encryptTo %s by %s bytes %s",
+                        Convert.rsAccount(account.getId()), Convert.rsAccount(senderAccount.getId()), Arrays.toString(bytesToEncrypt)));
             }
+            encryptedData = account.encryptTo(bytesToEncrypt, secretPhrase);
+            bytesToEncrypt = EncryptedData.marshalData(encryptedData);
+            if (Logger.isDebugEnabled()) {
+                Logger.logDebugMessage(String.format("encryptTo data %s nonce %s",
+                        Arrays.toString(encryptedData.getData()), Arrays.toString(encryptedData.getNonce())));
+            }
+            id = reverseMapping.get(id);
         }
         outputDataList.add(encryptedData);
 

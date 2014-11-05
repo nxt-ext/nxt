@@ -18,7 +18,7 @@ import org.junit.runners.Suite;
         nxt.TestMintCalculations.class,
         TestShuffling.class,
         DeleteCurrencyTest.class,
-        MessageEncryptionTest.class,
+        MessageEncryptionTest.class
 })
 
 public class CurrencySuite {
