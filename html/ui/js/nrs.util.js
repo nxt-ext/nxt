@@ -1190,6 +1190,11 @@ var NRS = (function(NRS, $, undefined) {
 			$('.left-side').toggleClass("collapse-left");
 			$(".right-side").toggleClass("strech");
 		}
+		
+		$(".left-side").one($.support.transition.end,
+		function() {
+			$(".content.content-stretch:visible").width($(".page:visible").width());
+		});
 	});
 
 	$.fn.tree = function() {

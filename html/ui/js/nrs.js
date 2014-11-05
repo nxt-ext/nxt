@@ -700,6 +700,9 @@ var NRS = (function(NRS, $, undefined) {
 						}
 					}
 				}
+				else {
+					$("#account_assets_balance").html(0);
+				}
 								
 				$("#account_nr_assets").html(nr_assets);
 
