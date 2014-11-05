@@ -182,18 +182,19 @@ public enum CurrencyType {
 
     },
     /**
-     * Support shuffling - not implemented yet<br>
+     * Several accounts can shuffle their currency units and then distributed to recipients<br>
      */
     SHUFFLEABLE(0x20) {
         @Override
         void validate(Currency currency, Transaction transaction, Set<CurrencyType> validators) throws NxtException.ValidationException {
-            throw new NxtException.NotYetEnabledException("Shuffling not yet implemented");
         }
 
         @Override
-        void validateMissing(Currency currency, Transaction transaction, Set<CurrencyType> validators) {
+        void validateMissing(Currency currency, Transaction transaction, Set<CurrencyType> validators) throws NxtException.ValidationException {
+            if (transaction.getType() == MonetarySystem.SHUFFLING_CREATION) {
+                throw new NxtException.NotValidException("Shuffling is not allowed for this currency");
+            }
         }
-
     };
 
     

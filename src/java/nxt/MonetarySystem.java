@@ -615,7 +615,6 @@ public abstract class MonetarySystem extends TransactionType {
         void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
             Attachment.MonetarySystemShufflingCreation attachment = (Attachment.MonetarySystemShufflingCreation) transaction.getAttachment();
             if (attachment.isCurrency()) {
-                // TODO check shuffleable
                 Currency currency = Currency.getCurrency(attachment.getCurrencyId());
                 CurrencyType.validate(currency, transaction);
                 if (!currency.isActive()) {
@@ -879,7 +878,6 @@ public abstract class MonetarySystem extends TransactionType {
 
     public static final TransactionType SHUFFLING_DISTRIBUTION = new MonetarySystem() {
 
-        // TODO implement isDuplicate
         @Override
         public byte getSubtype() {
             return SUBTYPE_MONETARY_SYSTEM_SHUFFLING_DISTRIBUTION;
@@ -893,6 +891,16 @@ public abstract class MonetarySystem extends TransactionType {
         @Override
         Attachment.AbstractAttachment parseAttachment(JSONObject attachmentData) throws NxtException.NotValidException {
             return new Attachment.MonetarySystemShufflingDistribution(attachmentData);
+        }
+
+        @Override
+        boolean isDuplicate(Transaction transaction, Map<TransactionType, Map<String, Boolean>> duplicates) {
+            if (super.isDuplicate(transaction, duplicates)) {
+                return true;
+            }
+            Attachment.MonetarySystemShufflingDistribution attachment = (Attachment.MonetarySystemShufflingDistribution) transaction.getAttachment();
+            String key = Convert.toUnsignedLong(attachment.getShufflingId()) + "." + Convert.toUnsignedLong(transaction.getSenderId());
+            return TransactionType.isDuplicate(SHUFFLING_DISTRIBUTION, key, duplicates, true);
         }
 
         @Override
@@ -935,7 +943,6 @@ public abstract class MonetarySystem extends TransactionType {
 
     public static final TransactionType SHUFFLING_CANCELLATION = new MonetarySystem() {
 
-        // TODO implement isDuplicate
         @Override
         public byte getSubtype() {
             return SUBTYPE_MONETARY_SYSTEM_SHUFFLING_CANCELLATION;
@@ -949,6 +956,16 @@ public abstract class MonetarySystem extends TransactionType {
         @Override
         Attachment.AbstractAttachment parseAttachment(JSONObject attachmentData) throws NxtException.NotValidException {
             return new Attachment.MonetarySystemShufflingCancellation(attachmentData);
+        }
+
+        @Override
+        boolean isDuplicate(Transaction transaction, Map<TransactionType, Map<String, Boolean>> duplicates) {
+            if (super.isDuplicate(transaction, duplicates)) {
+                return true;
+            }
+            Attachment.MonetarySystemShufflingDistribution attachment = (Attachment.MonetarySystemShufflingDistribution) transaction.getAttachment();
+            String key = Convert.toUnsignedLong(attachment.getShufflingId()) + "." + Convert.toUnsignedLong(transaction.getSenderId());
+            return TransactionType.isDuplicate(SHUFFLING_CANCELLATION, key, duplicates, true);
         }
 
         @Override
