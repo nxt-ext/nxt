@@ -20,7 +20,7 @@ import java.util.List;
 public final class Shuffling {
 
     public static enum Event {
-        SHUFFLING_CREATED, SHUFFLING_CANCELLED
+        SHUFFLING_CREATED, SHUFFLING_CANCELLED, SHUFFLING_DONE
     }
 
     public static enum State {
@@ -283,6 +283,7 @@ public final class Shuffling {
             updateBalance(participant.getAccountId(), -amount);
         }
         setState(State.DONE);
+        listeners.notify(this, Event.SHUFFLING_DONE);
     }
 
     void cancel() {

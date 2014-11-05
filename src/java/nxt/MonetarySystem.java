@@ -21,6 +21,10 @@ public abstract class MonetarySystem extends TransactionType {
             return false;
         }
         Attachment.MonetarySystemAttachment attachment = (Attachment.MonetarySystemAttachment) transaction.getAttachment();
+        if (attachment.getCurrencyId() == 0) {
+            // Shuffling transactions for NXT cannot duplicate a currency related transaction
+            return false;
+        }
         Currency currency = Currency.getCurrency(attachment.getCurrencyId());
         String nameLower = currency.getName().toLowerCase();
         String codeLower = currency.getCode().toLowerCase();
@@ -611,6 +615,7 @@ public abstract class MonetarySystem extends TransactionType {
         void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
             Attachment.MonetarySystemShufflingCreation attachment = (Attachment.MonetarySystemShufflingCreation) transaction.getAttachment();
             if (attachment.isCurrency()) {
+                // TODO check shuffleable
                 Currency currency = Currency.getCurrency(attachment.getCurrencyId());
                 CurrencyType.validate(currency, transaction);
                 if (!currency.isActive()) {
@@ -874,6 +879,7 @@ public abstract class MonetarySystem extends TransactionType {
 
     public static final TransactionType SHUFFLING_DISTRIBUTION = new MonetarySystem() {
 
+        // TODO implement isDuplicate
         @Override
         public byte getSubtype() {
             return SUBTYPE_MONETARY_SYSTEM_SHUFFLING_DISTRIBUTION;
@@ -929,6 +935,7 @@ public abstract class MonetarySystem extends TransactionType {
 
     public static final TransactionType SHUFFLING_CANCELLATION = new MonetarySystem() {
 
+        // TODO implement isDuplicate
         @Override
         public byte getSubtype() {
             return SUBTYPE_MONETARY_SYSTEM_SHUFFLING_CANCELLATION;

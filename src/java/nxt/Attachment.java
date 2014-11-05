@@ -2342,7 +2342,7 @@ public interface Attachment extends Appendix {
         }
     }
 
-    public final static class MonetarySystemShufflingCreation extends AbstractAttachment {
+    public final static class MonetarySystemShufflingCreation extends AbstractAttachment implements MonetarySystemAttachment {
 
         private final long currencyId;
         private final long amount;
@@ -2365,7 +2365,7 @@ public interface Attachment extends Appendix {
             this.cancellationHeight = ((Long)attachmentData.get("cancellationHeight")).shortValue();
         }
 
-        public MonetarySystemShufflingCreation(boolean isCurrency, long currencyId, long amount, byte participantCount, int cancellationHeight) {
+        public MonetarySystemShufflingCreation(long currencyId, long amount, byte participantCount, int cancellationHeight) {
             this.currencyId = currencyId;
             this.amount = amount;
             this.participantCount = participantCount;
@@ -2424,7 +2424,7 @@ public interface Attachment extends Appendix {
         }
     }
 
-    public final static class MonetarySystemShufflingRegistration extends AbstractAttachment {
+    public final static class MonetarySystemShufflingRegistration extends AbstractAttachment implements MonetarySystemAttachment {
 
         private final long shufflingId;
 
@@ -2470,9 +2470,14 @@ public interface Attachment extends Appendix {
         public long getShufflingId() {
             return shufflingId;
         }
+
+        @Override
+        public long getCurrencyId() {
+            return Shuffling.getShuffling(shufflingId).getCurrencyId();
+        }
     }
 
-    public final static class MonetarySystemShufflingProcessing extends AbstractAttachment {
+    public final static class MonetarySystemShufflingProcessing extends AbstractAttachment implements MonetarySystemAttachment {
 
         private final long shufflingId;
         private final byte[] data;
@@ -2531,9 +2536,14 @@ public interface Attachment extends Appendix {
         public byte[] getData() {
             return data;
         }
+
+        @Override
+        public long getCurrencyId() {
+            return Shuffling.getShuffling(shufflingId).getCurrencyId();
+        }
     }
 
-    public final static class MonetarySystemShufflingDistribution extends AbstractAttachment {
+    public final static class MonetarySystemShufflingDistribution extends AbstractAttachment implements MonetarySystemAttachment {
 
         private final long shufflingId;
 
@@ -2579,9 +2589,14 @@ public interface Attachment extends Appendix {
         public long getShufflingId() {
             return shufflingId;
         }
+
+        @Override
+        public long getCurrencyId() {
+            return Shuffling.getShuffling(shufflingId).getCurrencyId();
+        }
     }
 
-    public final static class MonetarySystemShufflingVerification extends AbstractAttachment {
+    public final static class MonetarySystemShufflingVerification extends AbstractAttachment implements MonetarySystemAttachment {
 
         private final long shufflingId;
 
@@ -2627,10 +2642,15 @@ public interface Attachment extends Appendix {
         public long getShufflingId() {
             return shufflingId;
         }
+
+        @Override
+        public long getCurrencyId() {
+            return Shuffling.getShuffling(shufflingId).getCurrencyId();
+        }
     }
 
 
-    public final static class MonetarySystemShufflingCancellation extends AbstractAttachment {
+    public final static class MonetarySystemShufflingCancellation extends AbstractAttachment implements MonetarySystemAttachment {
 
         private final long shufflingId;
 
@@ -2675,6 +2695,11 @@ public interface Attachment extends Appendix {
 
         public long getShufflingId() {
             return shufflingId;
+        }
+
+        @Override
+        public long getCurrencyId() {
+            return Shuffling.getShuffling(shufflingId).getCurrencyId();
         }
     }
 

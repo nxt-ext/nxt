@@ -349,6 +349,7 @@ public final class Currency {
         }
         ownerAccount.addToUnconfirmedCurrencyUnits(currencyId, -ownerAccount.getUnconfirmedCurrencyUnits(currencyId));
         ownerAccount.addToCurrencyUnits(currencyId, -ownerAccount.getCurrencyUnits(currencyId));
+        // TODO cancel shuffling for this currency
         currencyTable.delete(this);
     }
 
