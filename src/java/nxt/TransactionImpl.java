@@ -232,14 +232,9 @@ final class TransactionImpl implements Transaction {
             appendagesSize += appendage.getSize();
         }
         this.appendagesSize = appendagesSize;
-        int effectiveHeight = (height < Integer.MAX_VALUE ? height : Nxt.getBlockchain().getHeight());
-        long minimumFeeNQT = type.minimumFeeNQT(this, effectiveHeight, appendagesSize);
-        if (builder.feeNQT > 0 && builder.feeNQT < minimumFeeNQT) {
-            throw new NxtException.NotValidException(String.format("Requested fee %d less than the minimum fee %d",
-                    builder.feeNQT, minimumFeeNQT));
-        }
         if (builder.feeNQT <= 0) {
-            feeNQT = minimumFeeNQT;
+            int effectiveHeight = (height < Integer.MAX_VALUE ? height : Nxt.getBlockchain().getHeight());
+            feeNQT = type.minimumFeeNQT(this, effectiveHeight, appendagesSize);
         } else {
             feeNQT = builder.feeNQT;
         }
