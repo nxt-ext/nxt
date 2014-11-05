@@ -347,7 +347,7 @@ public final class Currency {
         if (is(CurrencyType.MINTABLE)) {
             CurrencyMint.deleteCurrency(this);
         }
-        if (is(CurrencyType.SHUFFLEABLE)) {
+        if (is(CurrencyType.NON_SHUFFLEABLE)) {
             Shuffling.cancelShuffling(currencyId);
         }
         ownerAccount.addToUnconfirmedCurrencyUnits(currencyId, -ownerAccount.getUnconfirmedCurrencyUnits(currencyId));
