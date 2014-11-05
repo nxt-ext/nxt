@@ -103,8 +103,7 @@ public class VotePhased {
     }
 
     static boolean addVote(PendingTransactionPoll poll, Account voter,
-                           Transaction transaction)
-            throws NxtException.IllegalStateException {
+                           Transaction transaction) {
 
         long[] whitelist = poll.getWhitelist();
         if (whitelist != null && whitelist.length > 0 && Arrays.binarySearch(whitelist, voter.getId()) == -1) {

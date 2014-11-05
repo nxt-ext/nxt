@@ -62,7 +62,7 @@ public class AbstractPoll {
         this.finished = finished;
     }
 
-    static long calcWeight(AbstractPoll pollStructure, Account voter) throws NxtException.IllegalStateException {
+    static long calcWeight(AbstractPoll pollStructure, Account voter) {
         long weight = 0;
 
         switch (pollStructure.votingModel) {
@@ -89,9 +89,6 @@ public class AbstractPoll {
                 if (nxtBalance >= pollStructure.getMinBalance()) {
                     weight = nxtBalance;
                 }
-                break;
-            default:
-                throw new NxtException.IllegalStateException("Wrong voting model"); //todo: chack in tx validation only?
         }
         return weight;
     }

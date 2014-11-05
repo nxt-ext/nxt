@@ -813,13 +813,13 @@ final class TransactionImpl implements Transaction {
 
     //todo: move it up to TransactionType.apply ?
     @Override
-    public void release() throws NxtException.NotValidException {
+    public void release() {
         Pair<Account,Account> sndrRcp = getSenderAndRecipient();
         twoPhased.commit(this, sndrRcp.getFirst(), sndrRcp.getSecond());
     }
 
     @Override
-    public void refuse() throws NxtException.NotValidException {
+    public void refuse() {
         Pair<Account,Account> sndrRcp = getSenderAndRecipient();
         twoPhased.rollback(this, sndrRcp.getFirst(), sndrRcp.getSecond());
     }

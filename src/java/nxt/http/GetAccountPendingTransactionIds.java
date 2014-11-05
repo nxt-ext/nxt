@@ -9,6 +9,7 @@ import nxt.util.Convert;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
+
 import javax.servlet.http.HttpServletRequest;
 
 
@@ -17,7 +18,7 @@ public class GetAccountPendingTransactionIds extends APIServlet.APIRequestHandle
     static final GetAccountPendingTransactionIds instance = new GetAccountPendingTransactionIds();
 
     private GetAccountPendingTransactionIds() {
-        super(new APITag[] {APITag.ACCOUNTS}, "account", "finished", "firstIndex", "lastIndex");
+        super(new APITag[]{APITag.ACCOUNTS}, "account", "finished", "firstIndex", "lastIndex");
     }
 
     @Override
@@ -30,11 +31,11 @@ public class GetAccountPendingTransactionIds extends APIServlet.APIRequestHandle
         long accountId = account.getId();
         String finished = Convert.nullToEmpty(req.getParameter("finished")).toLowerCase();
         DbIterator<PendingTransactionPoll> iterator;
-        if(finished.equals("true")){
+        if (finished.equals("true")) {
             iterator = PendingTransactionPoll.getFinishedByAccountId(accountId, firstIndex, lastIndex);
-        }else if(finished.equals("false")){
+        } else if (finished.equals("false")) {
             iterator = PendingTransactionPoll.getActiveByAccountId(accountId, firstIndex, lastIndex);
-        }else {
+        } else {
             iterator = PendingTransactionPoll.getByAccountId(accountId, firstIndex, lastIndex);
         }
 

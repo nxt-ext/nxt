@@ -40,16 +40,12 @@ final class TransactionProcessorImpl implements TransactionProcessor {
             @Override
             public void notify(Block block) {
                 int height = block.getHeight();
-                if(height >= Constants.TWO_PHASED_TRANSACTIONS_BLOCK){
+                if (height >= Constants.TWO_PHASED_TRANSACTIONS_BLOCK) {
                     DbIterator<Long> txIdsToRefuse =
                             PendingTransactionPoll.pendingTransactionsTable.finishing(height);
-                    for(Long txId:txIdsToRefuse){
+                    for (Long txId : txIdsToRefuse) {
                         Transaction tx = TransactionDb.findTransaction(txId);
-                        try {
-                            tx.refuse();
-                        } catch (NxtException.NotValidException e) {
-                            e.printStackTrace();  // todo:  better handling?
-                        }
+                        tx.refuse();
                     }
                 }
             }

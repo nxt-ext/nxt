@@ -222,8 +222,7 @@ public abstract class TransactionType {
 
     public static abstract class Payment extends TransactionType {
 
-        private Payment() {
-        }
+        private Payment() { }
 
         @Override
         public final byte getType() {
@@ -236,12 +235,10 @@ public abstract class TransactionType {
         }
 
         @Override
-        void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
-        }
+        void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) { }
 
         @Override
-        final void undoAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
-        }
+        final void undoAttachmentUnconfirmed(Transaction transaction, Account senderAccount) { }
 
         @Override
         final public boolean hasRecipient() {
@@ -297,19 +294,19 @@ public abstract class TransactionType {
                     throw new NxtException.NotValidException("Voting transaction amount <> 0!");
                 }
 
-                if(!(transaction.getAttachment() instanceof Attachment.PendingPaymentVoteCasting)){
+                if (!(transaction.getAttachment() instanceof Attachment.PendingPaymentVoteCasting)) {
                     throw new NxtException.NotValidException("Wrong kind of attachment");
                 }
 
-                Attachment.PendingPaymentVoteCasting att = (Attachment.PendingPaymentVoteCasting)transaction.getAttachment();
+                Attachment.PendingPaymentVoteCasting att = (Attachment.PendingPaymentVoteCasting) transaction.getAttachment();
                 long[] pendingIds = att.getPendingTransactionsIds();
-                if(pendingIds.length > Constants.MAX_VOTES_PER_VOTING_TRANSACTION){
+                if (pendingIds.length > Constants.MAX_VOTES_PER_VOTING_TRANSACTION) {
                     throw new NxtException.NotValidException("No more than 10 votes allowed for two-phased multivoting");
                 }
 
-                for(long pendingId : pendingIds) {
+                for (long pendingId : pendingIds) {
                     if (PendingTransactionPoll.byId(pendingId) == null) {
-                        System.out.println("Wrong pending transaction: "+pendingId);
+                        System.out.println("Wrong pending transaction: " + pendingId);
                         throw new NxtException.NotValidException("Wrong pending transaction");
                     }
                 }
@@ -321,14 +318,10 @@ public abstract class TransactionType {
                 long[] pendingTransactionsIds = attachment.getPendingTransactionsIds();
                 for (long pendingTransactionId : pendingTransactionsIds) {
                     PendingTransactionPoll poll = PendingTransactionPoll.byId(pendingTransactionId);
-                    if (!poll.isFinished()) { //todo: else
-                        try {
-                            if (VotePhased.addVote(poll, senderAccount, transaction)) {
-                                TransactionDb.findTransaction(pendingTransactionId).release();
-                                PendingTransactionPoll.finishPoll(poll);
-                            }
-                        } catch (NxtException.NotValidException | NxtException.IllegalStateException e) {
-                            e.printStackTrace();  //todo:
+                    if (!poll.isFinished()) { //todo: else?
+                        if (VotePhased.addVote(poll, senderAccount, transaction)) {
+                            TransactionDb.findTransaction(pendingTransactionId).release();
+                            PendingTransactionPoll.finishPoll(poll);
                         }
                     }
                 }

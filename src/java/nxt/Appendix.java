@@ -558,9 +558,23 @@ public interface Appendix {
             json.put("blacklist", blacklistJson);
         }
 
-        //todo: finish
+        //todo: some more checks?
         @Override
         void validate(Transaction transaction) throws NxtException.ValidationException {
+            if (votingModel != Constants.VOTING_MODEL_ACCOUNT
+                    && votingModel != Constants.VOTING_MODEL_ASSET
+                    && votingModel != Constants.VOTING_MODEL_BALANCE) {
+                throw new NxtException.NotValidException("Invalid voting model");
+            }
+
+            if (votingModel == Constants.VOTING_MODEL_ACCOUNT && whitelist.length == 0 ) {
+                throw new NxtException.NotValidException("By-account voting with empty whitelist");
+            }
+
+            if (votingModel == Constants.VOTING_MODEL_ACCOUNT && blacklist.length != 0 ) {
+                throw new NxtException.NotValidException("By-account voting with non-empty blacklist");
+            }
+
             if (whitelist.length > MAX_WHITELIST_SIZE) {
                 throw new NxtException.NotValidException("Possible voters list is too big");
             }
@@ -573,15 +587,8 @@ public interface Appendix {
                 throw new NxtException.NotValidException("Invalid assetId");
             }
 
-            if (votingModel != Constants.VOTING_MODEL_ACCOUNT
-                    && votingModel != Constants.VOTING_MODEL_ASSET
-                    && votingModel != Constants.VOTING_MODEL_BALANCE) {
-                throw new NxtException.NotValidException("Invalid voting model");
-            }
-
-            if (votingModel == Constants.VOTING_MODEL_ACCOUNT
-                    && (whitelist.length == 0 || blacklist.length != 0)) {
-                throw new NxtException.NotValidException("By-account voting with empty whitelist or non-empty blacklist");
+            if (votingModel == Constants.VOTING_MODEL_BALANCE && assetId != 0) {
+                throw new NxtException.NotValidException("assetId shouldn't be used in by-balance voting");
             }
 
             if (maxHeight <= Nxt.getBlockchain().getHeight() + Constants.VOTING_MIN_VOTE_DURATION) {

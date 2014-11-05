@@ -91,6 +91,6 @@ public interface Transaction extends Comparable<Transaction> {
 
     long getECBlockId();
 
-    void release() throws NxtException.NotValidException; // release pending transaction (on max height)
-    void refuse() throws NxtException.NotValidException; // refuse pending transaction (on max height)
+    void release(); // release pending transaction (on max height)
+    void refuse(); // refuse pending transaction (on max height)
 }
