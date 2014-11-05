@@ -255,7 +255,7 @@ public enum CurrencyType {
         String code = attachment.getCode();
         String description = attachment.getDescription();
         if (name.length() < Constants.MIN_CURRENCY_NAME_LENGTH || name.length() > Constants.MAX_CURRENCY_NAME_LENGTH
-                || code.length() != Constants.CURRENCY_CODE_LENGTH
+                || code.length() < Constants.MIN_CURRENCY_CODE_LENGTH || code.length() > Constants.MAX_CURRENCY_CODE_LENGTH
                 || description.length() > Constants.MAX_CURRENCY_DESCRIPTION_LENGTH) {
             throw new NxtException.NotValidException(String.format("Invalid currency name %s code %s or description %s", name, code, description));
         }
@@ -270,7 +270,7 @@ public enum CurrencyType {
                 throw new NxtException.NotValidException("Invalid currency code: " + code + " code must be all upper case");
             }
         }
-        if ("NXT".equals(code) || "nxt".equals(normalizedName)) {
+        if (code.contains("NXT") || code.contains("NEXT") || "nxt".equals(normalizedName) || "next".equals(normalizedName)) {
             throw new NxtException.NotValidException("Currency name already used");
         }
         Currency currency;
@@ -283,7 +283,7 @@ public enum CurrencyType {
         if ((currency = Currency.getCurrencyByCode(code)) != null && ! currency.canBeDeletedBy(issuerAccountId)) {
             throw new NxtException.NotCurrentlyValidException("Currency code already used: " + code);
         }
-        if ((currency = Currency.getCurrencyByName(code.toLowerCase())) != null && ! currency.canBeDeletedBy(issuerAccountId)) {
+        if ((currency = Currency.getCurrencyByName(code)) != null && ! currency.canBeDeletedBy(issuerAccountId)) {
             throw new NxtException.NotCurrentlyValidException("Currency code already used as name: " + code);
         }
     }

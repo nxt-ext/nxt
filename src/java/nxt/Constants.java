@@ -53,7 +53,8 @@ public final class Constants {
 
     public static final int MIN_CURRENCY_NAME_LENGTH = 3;
     public static final int MAX_CURRENCY_NAME_LENGTH = 10;
-    public static final int CURRENCY_CODE_LENGTH = 3;
+    public static final int MIN_CURRENCY_CODE_LENGTH = 3;
+    public static final int MAX_CURRENCY_CODE_LENGTH = 5;
     public static final int MAX_CURRENCY_DESCRIPTION_LENGTH = 1000;
     public static final long MAX_CURRENCY_TOTAL_SUPPLY = 1000000000L * 100000000L;
     public static final int MAX_MINTING_RATIO = 10000; // per mint units not more than 0.01% of total supply

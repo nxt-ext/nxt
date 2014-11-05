@@ -58,14 +58,6 @@ public class APITestServlet extends HttpServlet {
             "                    params[form.elements[i].name] = form.elements[i].value;\n" +
             "                }\n" +
             "            }\n" +
-            "            if (window.console) { console.log('Request params: ' + params); }\n" +
-            "            var request = new XMLHttpRequest();\n" +
-            "            request.open(\"POST\", url, false);\n" +
-            "            request.setRequestHeader(\"Content-type\", \"application/x-www-form-urlencoded\");\n" +
-            "            request.send(params);\n" +
-            "            var result = JSON.stringify(JSON.parse(request.responseText), null, 4);\n" +
-            "            form.getElementsByClassName(\"result\")[0].textContent = result;\n" +
-                    //TODO: isn't this sending the request twice?
             "            $.ajax({\n" +
             "                url: url,\n" +
             "                type: 'POST',\n" +

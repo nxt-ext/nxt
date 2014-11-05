@@ -21,9 +21,9 @@ public class TestCurrencyIssuance extends BlockchainTest {
     public void issueMultipleCurrencies() {
         APICall apiCall = new Builder().naming("aaa", "AAA", "Currency A").build();
         issueCurrencyApi(apiCall);
-        apiCall = new Builder().naming("bbb", "BBB", "Currency B").build();
+        apiCall = new Builder().naming("bbbb", "BBBB", "Currency B").feeNQT(1000 * Constants.ONE_NXT).build();
         issueCurrencyApi(apiCall);
-        apiCall = new Builder().naming("ccc", "CCC", "Currency C").build();
+        apiCall = new Builder().naming("ccccc", "CCCCC", "Currency C").feeNQT(40 * Constants.ONE_NXT).build();
         issueCurrencyApi(apiCall);
         apiCall = new APICall.Builder("getAllCurrencies").build();
         JSONObject response = apiCall.invoke();
@@ -50,7 +50,8 @@ public class TestCurrencyIssuance extends BlockchainTest {
         public Builder() {
             super("issueCurrency");
             secretPhrase(secretPhrase1);
-            feeNQT(1000 * Constants.ONE_NXT);
+            feeNQT(0l);
+            //feeNQT(25000 * Constants.ONE_NXT);
             param("name", "Test1");
             param("code", "TSX");
             param("description", "Test Currency 1");

@@ -73,6 +73,27 @@ public final class IssueCurrency extends CreateTransaction {
         String code = Convert.nullToEmpty(req.getParameter("code"));
         String description = Convert.nullToEmpty(req.getParameter("description"));
 
+        if (name.length() < Constants.MIN_CURRENCY_NAME_LENGTH || name.length() > Constants.MAX_CURRENCY_NAME_LENGTH) {
+            return JSONResponses.INCORRECT_CURRENCY_NAME_LENGTH;
+        }
+        if (code.length() < Constants.MIN_CURRENCY_CODE_LENGTH || code.length() > Constants.MAX_CURRENCY_CODE_LENGTH) {
+            return JSONResponses.INCORRECT_CURRENCY_CODE_LENGTH;
+        }
+        if (description.length() > Constants.MAX_CURRENCY_DESCRIPTION_LENGTH) {
+            return JSONResponses.INCORRECT_CURRENCY_DESCRIPTION_LENGTH;
+        }
+        String normalizedName = name.toLowerCase();
+        for (int i = 0; i < normalizedName.length(); i++) {
+            if (Constants.ALPHABET.indexOf(normalizedName.charAt(i)) < 0) {
+                return JSONResponses.INCORRECT_CURRENCY_NAME;
+            }
+        }
+        for (int i = 0; i < code.length(); i++) {
+            if (Constants.ALLOWED_CURRENCY_CODE_LETTERS.indexOf(code.charAt(i)) < 0) {
+                return JSONResponses.INCORRECT_CURRENCY_CODE;
+            }
+        }
+
         int type = 0;
         if (Convert.emptyToNull(req.getParameter("type")) == null) {
             for (CurrencyType currencyType : CurrencyType.values()) {
