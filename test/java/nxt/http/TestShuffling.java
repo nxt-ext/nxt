@@ -210,6 +210,15 @@ public class TestShuffling extends BlockchainTest {
                 build();
         response = apiCall.invoke();
         Logger.logDebugMessage("shufflingDistributeResponse:" + response);
+
+        // Duplicate transaction in the same block
+        apiCall = new APICall.Builder("shufflingDistribute").
+                param("shuffling", shufflingId).
+                param("secretPhrase", secretPhrase1).
+                feeNQT(Constants.ONE_NXT).
+                build();
+        response = apiCall.invoke();
+        Logger.logDebugMessage("shufflingDistributeResponse:" + response);
         generateBlock();
 
         apiCall = new APICall.Builder("getShuffling").

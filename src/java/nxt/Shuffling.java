@@ -354,4 +354,8 @@ public final class Shuffling {
     public boolean isParticipantProcessingComplete(long senderId) {
         return ShufflingParticipant.getParticipant(id, senderId).isProcessingComplete();
     }
+
+    public static void cancelShuffling(long currencyId) {
+        // TODO implement
+    }
 }
