@@ -20,10 +20,8 @@ public final class JSONResponses {
     public static final JSONStreamAware INCORRECT_PUBLIC_KEY = incorrect("publicKey");
     public static final JSONStreamAware MISSING_ALIAS_NAME = missing("aliasName");
     public static final JSONStreamAware MISSING_ALIAS_OR_ALIAS_NAME = missing("alias", "aliasName");
-    public static final JSONStreamAware MISSING_FEE = missing("feeNQT");
     public static final JSONStreamAware MISSING_DEADLINE = missing("deadline");
     public static final JSONStreamAware INCORRECT_DEADLINE = incorrect("deadline");
-    public static final JSONStreamAware INCORRECT_FEE = incorrect("fee");
     public static final JSONStreamAware MISSING_TRANSACTION_BYTES_OR_JSON = missing("transactionBytes", "transactionJSON");
     public static final JSONStreamAware INCORRECT_TRANSACTION_BYTES_OR_JSON = incorrect("transactionBytes or transactionJSON");
     public static final JSONStreamAware MISSING_ORDER = missing("order");
@@ -37,7 +35,6 @@ public final class JSONResponses {
     public static final JSONStreamAware INCORRECT_TOKEN = incorrect("token");
     public static final JSONStreamAware MISSING_ACCOUNT = missing("account");
     public static final JSONStreamAware INCORRECT_ACCOUNT = incorrect("account");
-    public static final JSONStreamAware MISSING_TIMESTAMP = missing("timestamp");
     public static final JSONStreamAware INCORRECT_TIMESTAMP = incorrect("timestamp");
     public static final JSONStreamAware UNKNOWN_ACCOUNT = unknown("account");
     public static final JSONStreamAware UNKNOWN_ALIAS = unknown("alias");
@@ -48,8 +45,6 @@ public final class JSONResponses {
     public static final JSONStreamAware MISSING_BLOCK = missing("block");
     public static final JSONStreamAware UNKNOWN_BLOCK = unknown("block");
     public static final JSONStreamAware INCORRECT_BLOCK = incorrect("block");
-    public static final JSONStreamAware MISSING_NUMBER_OF_CONFIRMATIONS = missing("numberOfConfirmations");
-    public static final JSONStreamAware INCORRECT_NUMBER_OF_CONFIRMATIONS = incorrect("numberOfConfirmations");
     public static final JSONStreamAware MISSING_PEER = missing("peer");
     public static final JSONStreamAware UNKNOWN_PEER = unknown("peer");
     public static final JSONStreamAware MISSING_TRANSACTION = missing("transaction");
@@ -60,9 +55,6 @@ public final class JSONResponses {
     public static final JSONStreamAware INCORRECT_ASSET_NAME_LENGTH = incorrect("name", "(length must be in [" + Constants.MIN_ASSET_NAME_LENGTH + ".." + Constants.MAX_ASSET_NAME_LENGTH + "] range)");
     public static final JSONStreamAware INCORRECT_ASSET_TRANSFER_COMMENT = incorrect("comment", "(length must not exceed " + Constants.MAX_ASSET_TRANSFER_COMMENT_LENGTH + " characters)");
     public static final JSONStreamAware MISSING_NAME = missing("name");
-    public static final JSONStreamAware MISSING_QUANTITY = missing("quantityQNT");
-    public static final JSONStreamAware INCORRECT_QUANTITY = incorrect("quantity");
-    public static final JSONStreamAware INCORRECT_ASSET_QUANTITY = incorrect("quantity", "(must be in [1.." + Constants.MAX_ASSET_QUANTITY_QNT + "] range)");
     public static final JSONStreamAware INCORRECT_DECIMALS = incorrect("decimals");
     public static final JSONStreamAware MISSING_HOST = missing("host");
     public static final JSONStreamAware MISSING_DATE = missing("date");
@@ -70,15 +62,11 @@ public final class JSONResponses {
     public static final JSONStreamAware INCORRECT_HOST = incorrect("host", "(the length exceeds 100 chars limit)");
     public static final JSONStreamAware INCORRECT_WEIGHT = incorrect("weight");
     public static final JSONStreamAware INCORRECT_DATE = incorrect("date");
-    public static final JSONStreamAware MISSING_PRICE = missing("priceNQT");
-    public static final JSONStreamAware INCORRECT_PRICE = incorrect("price");
     public static final JSONStreamAware INCORRECT_REFERENCED_TRANSACTION = incorrect("referencedTransactionFullHash");
     public static final JSONStreamAware MISSING_MESSAGE = missing("message");
     public static final JSONStreamAware MISSING_RECIPIENT = missing("recipient");
     public static final JSONStreamAware INCORRECT_RECIPIENT = incorrect("recipient");
     public static final JSONStreamAware INCORRECT_ARBITRARY_MESSAGE = incorrect("message");
-    public static final JSONStreamAware MISSING_AMOUNT = missing("amountNQT");
-    public static final JSONStreamAware INCORRECT_AMOUNT = incorrect("amount");
     public static final JSONStreamAware MISSING_DESCRIPTION = missing("description");
     public static final JSONStreamAware MISSING_MINNUMBEROFOPTIONS = missing("minNumberOfOptions");
     public static final JSONStreamAware MISSING_MAXNUMBEROFOPTIONS = missing("maxNumberOfOptions");
@@ -95,8 +83,6 @@ public final class JSONResponses {
     public static final JSONStreamAware UNKNOWN_POLL = unknown("poll");
     public static final JSONStreamAware INCORRECT_ACCOUNT_NAME_LENGTH = incorrect("name", "(length must be less than " + Constants.MAX_ACCOUNT_NAME_LENGTH + " characters)");
     public static final JSONStreamAware INCORRECT_ACCOUNT_DESCRIPTION_LENGTH = incorrect("description", "(length must be less than " + Constants.MAX_ACCOUNT_DESCRIPTION_LENGTH + " characters)");
-    public static final JSONStreamAware MISSING_PERIOD = missing("period");
-    public static final JSONStreamAware INCORRECT_PERIOD = incorrect("period", "(period must be at least 1440 blocks)");
     public static final JSONStreamAware INCORRECT_UNSIGNED_BYTES = incorrect("unsignedTransactionBytes");
     public static final JSONStreamAware MISSING_UNSIGNED_BYTES = missing("unsignedTransactionBytes");
     public static final JSONStreamAware MISSING_SIGNATURE_HASH = missing("signatureHash");
@@ -125,9 +111,10 @@ public final class JSONResponses {
     public static final JSONStreamAware MISSING_HEIGHT = missing("height");
     public static final JSONStreamAware INCORRECT_PLAIN_MESSAGE = incorrect("messageToEncrypt");
     public static final JSONStreamAware INCORRECT_CURRENCY_NAME_LENGTH = incorrect("name", "(length must be in [" + Constants.MIN_CURRENCY_NAME_LENGTH + ".." + Constants.MAX_CURRENCY_NAME_LENGTH + "] range)");
-    public static final JSONStreamAware INCORRECT_CURRENCY_CODE_LENGTH = incorrect("code", "(length must be [" + Constants.CURRENCY_CODE_LENGTH + "])");
+    public static final JSONStreamAware INCORRECT_CURRENCY_CODE_LENGTH = incorrect("code", "(length must be in [" + Constants.MIN_CURRENCY_CODE_LENGTH + ".." + Constants.MAX_CURRENCY_CODE_LENGTH + "] range)");
     public static final JSONStreamAware INCORRECT_CURRENCY_NAME = incorrect("name", "(must contain only digits and latin letters)");
-    public static final JSONStreamAware INCORRECT_CURRENCY_DESCRIPTION = incorrect("description", "(length must not exceed " + Constants.MAX_CURRENCY_DESCRIPTION_LENGTH + " characters)");
+    public static final JSONStreamAware INCORRECT_CURRENCY_CODE = incorrect("code", "(must contain only uppercase latin letters)");
+    public static final JSONStreamAware INCORRECT_CURRENCY_DESCRIPTION_LENGTH = incorrect("description", "(length must not exceed " + Constants.MAX_CURRENCY_DESCRIPTION_LENGTH + " characters)");
     public static final JSONStreamAware MISSING_CURRENCY = missing("currency");
     public static final JSONStreamAware UNKNOWN_CURRENCY = unknown("currency");
     public static final JSONStreamAware INCORRECT_CURRENCY = incorrect("currency");

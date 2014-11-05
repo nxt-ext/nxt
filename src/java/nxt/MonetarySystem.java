@@ -43,13 +43,41 @@ public abstract class MonetarySystem extends TransactionType {
         }
 
         @Override
-        public Fee getBaselineFee() {
-            return BASELINE_CURRENCY_ISSUANCE_FEE;
+        public Fee getBaselineFee(TransactionImpl transaction) throws NxtException.NotValidException {
+            Attachment.MonetarySystemCurrencyIssuance attachment = (Attachment.MonetarySystemCurrencyIssuance) transaction.getAttachment();
+            if (Currency.getCurrencyByCode(attachment.getCode()) != null || Currency.getCurrencyByCode(attachment.getName().toUpperCase()) != null
+                    || Currency.getCurrencyByName(attachment.getName()) != null || Currency.getCurrencyByName(attachment.getCode()) != null) {
+                return BASELINE_5LETTER_CURRENCY_ISSUANCE_FEE;
+            }
+            switch (Math.min(attachment.getCode().length(), attachment.getName().length())) {
+                case 3:
+                    return BASELINE_3LETTER_CURRENCY_ISSUANCE_FEE;
+                case 4:
+                    return BASELINE_4LETTER_CURRENCY_ISSUANCE_FEE;
+                case 5:
+                    return BASELINE_5LETTER_CURRENCY_ISSUANCE_FEE;
+                default:
+                    throw new NxtException.NotValidException("Invalid currency code length");
+            }
         }
 
         @Override
-        public Fee getNextFee() {
-            return NEXT_CURRENCY_ISSUANCE_FEE;
+        public Fee getNextFee(TransactionImpl transaction) throws NxtException.NotValidException {
+            Attachment.MonetarySystemCurrencyIssuance attachment = (Attachment.MonetarySystemCurrencyIssuance) transaction.getAttachment();
+            if (Currency.getCurrencyByCode(attachment.getCode()) != null || Currency.getCurrencyByCode(attachment.getName().toUpperCase()) != null
+                    || Currency.getCurrencyByName(attachment.getName()) != null || Currency.getCurrencyByName(attachment.getCode()) != null) {
+                return NEXT_5LETTER_CURRENCY_ISSUANCE_FEE;
+            }
+            switch (Math.min(attachment.getCode().length(), attachment.getName().length())) {
+                case 3:
+                    return NEXT_3LETTER_CURRENCY_ISSUANCE_FEE;
+                case 4:
+                    return NEXT_4LETTER_CURRENCY_ISSUANCE_FEE;
+                case 5:
+                    return NEXT_5LETTER_CURRENCY_ISSUANCE_FEE;
+                default:
+                    throw new NxtException.NotValidException("Invalid currency code length");
+            }
         }
 
         @Override

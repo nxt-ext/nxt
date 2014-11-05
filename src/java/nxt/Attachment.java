@@ -1634,9 +1634,7 @@ public interface Attachment extends Appendix {
         MonetarySystemCurrencyIssuance(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
             super(buffer, transactionVersion);
             this.name = Convert.readString(buffer, buffer.get(), Constants.MAX_CURRENCY_NAME_LENGTH);
-            byte[] codeBytes = new byte[Constants.CURRENCY_CODE_LENGTH];
-            buffer.get(codeBytes);
-            this.code = Convert.toString(codeBytes);
+            this.code = Convert.readString(buffer, buffer.get(), Constants.MAX_CURRENCY_CODE_LENGTH);
             this.description = Convert.readString(buffer, buffer.getShort(), Constants.MAX_CURRENCY_DESCRIPTION_LENGTH);
             this.type = buffer.get();
             this.initialSupply = buffer.getLong();
@@ -1695,17 +1693,19 @@ public interface Attachment extends Appendix {
 
         @Override
         int getMySize() {
-            return 1 + Convert.toBytes(name).length + Constants.CURRENCY_CODE_LENGTH + 2 +
+            return 1 + Convert.toBytes(name).length + 1 + Convert.toBytes(code).length + 2 +
                     Convert.toBytes(description).length + 1 + 8 + 8 + 8 + 4 + 8 + 1 + 1 + 1 + 1 + 1;
         }
 
         @Override
         void putMyBytes(ByteBuffer buffer) {
             byte[] name = Convert.toBytes(this.name);
+            byte[] code = Convert.toBytes(this.code);
             byte[] description = Convert.toBytes(this.description);
             buffer.put((byte)name.length);
             buffer.put(name);
-            buffer.put(Convert.toBytes(code));
+            buffer.put((byte)code.length);
+            buffer.put(code);
             buffer.putShort((short) description.length);
             buffer.put(description);
             buffer.put(type);
