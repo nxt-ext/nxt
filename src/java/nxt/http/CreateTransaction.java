@@ -20,9 +20,9 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
             "message", "messageIsText",
             "messageToEncrypt", "messageToEncryptIsText", "encryptedMessageData", "encryptedMessageNonce",
             "messageToEncryptToSelf", "messageToEncryptToSelfIsText", "encryptToSelfMessageData", "encryptToSelfMessageNonce",
-            "isPending", "heightToRelease", "votingModelForPending", "quorum", "voteThreshold", "assetId",
-            "whitelisted", "whitelisted", "whitelisted",
-            "blacklisted", "blacklisted", "blacklisted",
+            "isPending", "pendingMaxHeight", "pendingVotingModel", "pendingQuorum", "pendingMinBalance", "pendingAssetId",
+            "pendingWhitelisted", "pendingWhitelisted", "pendingWhitelisted",
+            "pendingBlacklisted", "pendingBlacklisted", "pendingBlacklisted",
             "recipientPublicKey"};
 
     private static String[] addCommonParameters(String[] parameters) {
@@ -86,9 +86,9 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
         String isPending = Convert.emptyToNull(req.getParameter("isPending"));
         if (isPending != null && !isPending.equals("false")) {
 
-            String votingModelValue = Convert.emptyToNull(req.getParameter("pendingTxVotingModel"));
+            String votingModelValue = Convert.emptyToNull(req.getParameter("pendingVotingModel"));
             if (votingModelValue == null) {
-                return MISSING_VOTINGMODEL;
+                return MISSING_PENDING_VOTING_MODEL;
             }
 
             byte votingModel;
@@ -97,72 +97,72 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
                 if (votingModel != Constants.VOTING_MODEL_ACCOUNT
                         && votingModel != Constants.VOTING_MODEL_ASSET
                         && votingModel != Constants.VOTING_MODEL_BALANCE) {
-                    return INCORRECT_VOTINGMODEL;
+                    return INCORRECT_PENDING_VOTING_MODEL;
                 }
             } catch (NumberFormatException e) {
-                return INCORRECT_VOTINGMODEL;
+                return INCORRECT_PENDING_VOTING_MODEL;
             }
 
-            String heightToReleaseValue = Convert.emptyToNull(req.getParameter("heightToRelease"));
-            if (heightToReleaseValue == null) {
-                return MISSING_HEIGHT_TO_RELEASE;
+            String maxHeightValue = Convert.emptyToNull(req.getParameter("pendingMaxHeight"));
+            if (maxHeightValue == null) {
+                return MISSING_PENDING_MAX_HEIGHT;
             }
 
-            int heightToRelease;
+            int maxHeight;
             try {
-                heightToRelease = Integer.parseInt(req.getParameter("heightToRelease"));
-                if (heightToRelease <= Nxt.getBlockchain().getHeight() + Constants.VOTING_MIN_VOTE_DURATION) {
-                    return INCORRECT_HEIGHT_TO_RELEASE;
+                maxHeight = Integer.parseInt(req.getParameter("pendingMaxHeight"));
+                if (maxHeight <= Nxt.getBlockchain().getHeight() + Constants.VOTING_MIN_VOTE_DURATION) {
+                    return INCORRECT_PENDING_MAX_HEIGHT;
                 }
             } catch (NumberFormatException e) {
-                return INCORRECT_HEIGHT_TO_RELEASE;
+                return INCORRECT_PENDING_MAX_HEIGHT;
             }
 
 
-            String quorumValue = Convert.emptyToNull(req.getParameter("quorum"));
+            String quorumValue = Convert.emptyToNull(req.getParameter("pendingQuorum"));
             if (quorumValue == null) {
-                return MISSING_QUORUM;
+                return MISSING_PENDING_QUORUM;
             }
             long quorum;
             try {
                 quorum = Long.parseLong(quorumValue);
                 if (quorum <= 0) {
-                    return INCORRECT_QUORUM;
+                    return INCORRECT_PENDING_QUORUM;
                 }
             } catch (NumberFormatException e) {
-                return INCORRECT_QUORUM;
+                return INCORRECT_PENDING_QUORUM;
             }
 
-            String voteThresholdValue = Convert.emptyToNull(req.getParameter("voteThreshold"));
-            long voteThreshold = 0;
-            if (voteThresholdValue != null) {
+            String minBalanceValue = Convert.emptyToNull(req.getParameter("pendingMinBalance"));
+            long minBalance = 0;
+            if (minBalanceValue != null) {
                 try {
-                    voteThreshold = Long.parseLong(voteThresholdValue);
-                    if (voteThreshold < 0) {
-                        return INCORRECT_VOTE_THRESHOLD;
+                    minBalance = Long.parseLong(minBalanceValue);
+                    if (minBalance < 0) {
+                        return INCORRECT_PENDING_MIN_BALANCE;
                     }
                 } catch (NumberFormatException e) {
-                    return INCORRECT_VOTE_THRESHOLD;
+                    return INCORRECT_PENDING_MIN_BALANCE;
                 }
             }
 
-            String assetIdValue = Convert.emptyToNull(req.getParameter("pendingTxAssetId"));
+            String assetIdValue = Convert.emptyToNull(req.getParameter("pendingAssetId"));
             long assetId = 0;
             if (assetIdValue == null) {
                 if (votingModel == Constants.VOTING_MODEL_ASSET) {
-                    return MISSING_PENDING_TX_ASSET_ID;
+                    return MISSING_PENDING_ASSET_ID;
                 }
             } else {
                 try {
-                    assetId = Long.parseLong(voteThresholdValue);
+                    assetId = Long.parseLong(minBalanceValue);
                 } catch (NumberFormatException e) {
-                    return INCORRECT_VOTE_THRESHOLD;
+                    return INCORRECT_PENDING_MIN_BALANCE;
                 }
             }
 
             long[] whitelist = new long[0];
 
-            String[] whitelistValues = Convert.emptyToNull(req.getParameterValues("whitelisted"));
+            String[] whitelistValues = Convert.emptyToNull(req.getParameterValues("pendingWhitelisted"));
             if (whitelistValues != null) {
                 whitelist = new long[whitelistValues.length];
                 for (int i = 0; i < whitelist.length; i++) {
@@ -172,12 +172,12 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
 
             if (votingModel == Constants.VOTING_MODEL_ACCOUNT
                     && whitelist.length == 0) {
-                return INCORRECT_WHITELIST;
+                return INCORRECT_PENDING_WHITELIST;
             }
 
 
             long[] blacklist = new long[0];
-            String[] blacklistValues = Convert.emptyToNull(req.getParameterValues("blacklisted"));
+            String[] blacklistValues = Convert.emptyToNull(req.getParameterValues("pendingBlacklisted"));
 
             if (blacklistValues != null) {
                 blacklist = new long[blacklistValues.length];
@@ -188,10 +188,10 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
 
             if (votingModel == Constants.VOTING_MODEL_ACCOUNT
                     && blacklist.length != 0) {
-                return INCORRECT_BLACKLIST;
+                return INCORRECT_PENDING_BLACKLISTED;
             }
 
-            twoPhased = new Appendix.TwoPhased(heightToRelease, votingModel, assetId, quorum, voteThreshold, whitelist, blacklist);
+            twoPhased = new Appendix.TwoPhased(maxHeight, votingModel, assetId, quorum, minBalance, whitelist, blacklist);
         }
 
         if (secretPhrase == null && publicKeyValue == null) {
