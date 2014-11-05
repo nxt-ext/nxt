@@ -184,10 +184,9 @@ public enum CurrencyType {
     /**
      * Support shuffling - not implemented yet<br>
      */
-    SHUFFLEABLE(0x20) {
+    NON_SHUFFLEABLE(0x20) {
         @Override
         void validate(Currency currency, Transaction transaction, Set<CurrencyType> validators) throws NxtException.ValidationException {
-            throw new NxtException.NotYetEnabledException("Shuffling not yet implemented");
         }
 
         @Override
