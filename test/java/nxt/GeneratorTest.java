@@ -1,6 +1,5 @@
 package nxt;
 
-import nxt.crypto.Crypto;
 import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -15,7 +14,7 @@ public class GeneratorTest extends BlockchainTest {
     @Ignore
     @Test
     public void forge() {
-        byte[] publicKey = Crypto.getPublicKey(secretPhrase1);
+        byte[] publicKey = testers.get(1).getPublicKey();
         BlockImpl lastBlock = blockchain.getLastBlock();
         BigInteger hit = Generator.getHit(publicKey, lastBlock);
         Account account = Account.getAccount(publicKey);

@@ -19,7 +19,9 @@ public class TestCurrencyIssuance extends BlockchainTest {
 
     @Test
     public void issueMultipleCurrencies() {
-        APICall apiCall = new Builder().naming("aaa", "AAA", "Currency A").build();
+        // Temporary 4 letters code until test account receives enough funds to issue a
+        // 3 letter currency.
+        APICall apiCall = new Builder().naming("aaaa", "AAAA", "Currency A").build();
         issueCurrencyApi(apiCall);
         apiCall = new Builder().naming("bbbb", "BBBB", "Currency B").feeNQT(1000 * Constants.ONE_NXT).build();
         issueCurrencyApi(apiCall);
@@ -53,7 +55,7 @@ public class TestCurrencyIssuance extends BlockchainTest {
             feeNQT(0l);
             //feeNQT(25000 * Constants.ONE_NXT);
             param("name", "Test1");
-            param("code", "TSX");
+            param("code", "TSXYZ");
             param("description", "Test Currency 1");
             param("type", CurrencyType.EXCHANGEABLE.getCode());
             param("maxSupply", 100000);
