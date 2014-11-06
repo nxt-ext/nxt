@@ -618,10 +618,6 @@ public interface Appendix {
         }
 
         void rollback(Transaction transaction, Account senderAccount, Account recipientAccount) {
-
-            long amount = transaction.getAmountNQT();
-            senderAccount.addToBalanceNQT(amount);
-
             long transactionId = transaction.getId();
 
             PendingTransactionPoll poll = PendingTransactionPoll.byId(transactionId);
@@ -635,6 +631,9 @@ public interface Appendix {
                 }
             }
 
+
+            long amount = transaction.getAmountNQT();
+            senderAccount.addToBalanceNQT(amount);
             Logger.logDebugMessage("Transaction " + transactionId + " has been refused");
             System.out.println("Transaction " + transactionId + " has been refused");
         }
