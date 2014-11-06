@@ -1,6 +1,7 @@
 package nxt;
 
 import nxt.crypto.EncryptedData;
+import nxt.db.Db;
 import nxt.db.DbIterator;
 import nxt.db.DbKey;
 import nxt.db.DbUtils;
@@ -66,12 +67,23 @@ public final class Shuffling {
         Nxt.getBlockchainProcessor().addListener(new Listener<Block>() {
             @Override
             public void notify(Block block) {
-                // TODO inefficient - we only to read shuffling which are not done yet
-                for (Shuffling shuffling : Shuffling.getAll(0, -1)) {
-                    // Cancel the shuffling in case the blockchain reached its cancellation height
-                    if (block.getHeight() > shuffling.getCancellationHeight() && shuffling.getState().isCancellationAllowed()) {
-                        shuffling.cancel();
+                Connection con = null;
+                try {
+                    con = Db.getConnection();
+                    PreparedStatement pstmt = con.prepareStatement("SELECT * FROM shuffling WHERE state <> ? and state <> ?");
+                    int i = 0;
+                    pstmt.setByte(++i, State.CANCELLED.getCode());
+                    pstmt.setByte(++i, State.DONE.getCode());
+                    DbIterator<Shuffling> shufflings = shufflingTable.getManyBy(con, pstmt, false);
+                    for (Shuffling shuffling : shufflings) {
+                        // Cancel the shuffling in case the blockchain reached its cancellation height
+                        if (block.getHeight() > shuffling.getCancellationHeight() && shuffling.getState().isCancellationAllowed()) {
+                            shuffling.cancel();
+                        }
                     }
+                } catch (SQLException e) {
+                    DbUtils.close(con);
+                    throw new RuntimeException(e.toString(), e);
                 }
             }
         }, BlockchainProcessor.Event.AFTER_BLOCK_APPLY);
@@ -356,6 +368,21 @@ public final class Shuffling {
     }
 
     public static void cancelShuffling(long currencyId) {
-        // TODO implement
+        Connection con = null;
+        try {
+            con = Db.getConnection();
+            PreparedStatement pstmt = con.prepareStatement("SELECT * FROM shuffling WHERE currency_id = ?");
+            int i = 0;
+            pstmt.setLong(++i, currencyId);
+            DbIterator<Shuffling> shufflings = shufflingTable.getManyBy(con, pstmt, false);
+            for (Shuffling shuffling : shufflings) {
+                if (shuffling.getState().isCancellationAllowed()) {
+                    shuffling.cancel();
+                }
+            }
+        } catch (SQLException e) {
+            DbUtils.close(con);
+            throw new RuntimeException(e.toString(), e);
+        }
     }
 }
