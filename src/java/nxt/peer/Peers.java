@@ -763,7 +763,7 @@ public final class Peers {
         int numberOfConnectedPeers = 0;
         for (Peer peer : peers.values()) {
             if (peer.getState() == Peer.State.CONNECTED && peer.getAnnouncedAddress() != null
-                    && (peer.getWeight() > 0 || ! Peers.enableHallmarkProtection)) {
+                    && (! Peers.enableHallmarkProtection || peer.getWeight() > 0)) {
                 numberOfConnectedPeers++;
             }
         }

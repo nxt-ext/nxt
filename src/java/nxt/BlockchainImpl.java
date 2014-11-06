@@ -107,7 +107,7 @@ final class BlockchainImpl implements Blockchain {
         try {
             con = Db.db.getConnection();
             PreparedStatement pstmt = con.prepareStatement("SELECT * FROM block WHERE generator_id = ? "
-                    + (timestamp > 0 ? " AND timestamp >= ? " : " ") + "ORDER BY db_id DESC"
+                    + (timestamp > 0 ? " AND timestamp >= ? " : " ") + "ORDER BY height DESC"
                     + DbUtils.limitsClause(from, to));
             int i = 0;
             pstmt.setLong(++i, account.getId());
@@ -118,6 +118,20 @@ final class BlockchainImpl implements Blockchain {
             return getBlocks(con, pstmt);
         } catch (SQLException e) {
             DbUtils.close(con);
+            throw new RuntimeException(e.toString(), e);
+        }
+    }
+
+    @Override
+    public int getBlockCount(Account account) {
+        try (Connection con = Db.getConnection();
+            PreparedStatement pstmt = con.prepareStatement("SELECT COUNT(*) FROM block WHERE generator_id = ?")) {
+            pstmt.setLong(1, account.getId());
+            try (ResultSet rs = pstmt.executeQuery()) {
+                rs.next();
+                return rs.getInt(1);
+            }
+        } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
         }
     }

@@ -343,7 +343,6 @@ class NxtDbVersion extends DbVersion {
             case 125:
                 apply("CREATE INDEX IF NOT EXISTS bid_order_creation_idx ON bid_order (creation_height DESC)");
             case 126:
-                BlockchainProcessorImpl.getInstance().validateAtNextScan();
                 BlockchainProcessorImpl.getInstance().forceScanAtStart();
                 apply(null);
             case 127:

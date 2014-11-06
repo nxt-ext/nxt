@@ -10,12 +10,13 @@ public final class GetAsset extends APIServlet.APIRequestHandler {
     static final GetAsset instance = new GetAsset();
 
     private GetAsset() {
-        super(new APITag[] {APITag.AE}, "asset");
+        super(new APITag[] {APITag.AE}, "asset", "includeCounts");
     }
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
-        return JSONData.asset(ParameterParser.getAsset(req));
+        boolean includeCounts = !"false".equalsIgnoreCase(req.getParameter("includeCounts"));
+        return JSONData.asset(ParameterParser.getAsset(req), includeCounts);
     }
 
 }
