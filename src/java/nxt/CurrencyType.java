@@ -254,6 +254,7 @@ public enum CurrencyType {
         String code = attachment.getCode();
         String description = attachment.getDescription();
         if (name.length() < Constants.MIN_CURRENCY_NAME_LENGTH || name.length() > Constants.MAX_CURRENCY_NAME_LENGTH
+                || name.length() < code.length()
                 || code.length() < Constants.MIN_CURRENCY_CODE_LENGTH || code.length() > Constants.MAX_CURRENCY_CODE_LENGTH
                 || description.length() > Constants.MAX_CURRENCY_DESCRIPTION_LENGTH) {
             throw new NxtException.NotValidException(String.format("Invalid currency name %s code %s or description %s", name, code, description));
