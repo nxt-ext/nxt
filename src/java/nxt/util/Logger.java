@@ -269,6 +269,16 @@ public final class Logger {
     }
 
     /**
+     * Log a debug message
+     *
+     * @param       format             Message format
+     * @param       args               Message args
+     */
+    public static void logDebugMessage(String format, Object ... args) {
+        doLog(Level.DEBUG, String.format(format, args), null);
+    }
+
+    /**
      * Log a debug exception
      *
      * @param       message             Message

@@ -713,6 +713,10 @@ public final class Account {
         return accountAssetTable.getManyBy(new DbClause.LongClause("account_id", this.id), from, to);
     }
 
+    public DbIterator<AccountCurrency> getCurrencies(int from, int to) {
+        return accountCurrencyTable.getManyBy(new DbClause.LongClause("account_id", this.id), from, to);
+    }
+
     public DbIterator<Trade> getTrades(int from, int to) {
         return Trade.getAccountTrades(this.id, from, to);
     }

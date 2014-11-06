@@ -101,7 +101,7 @@ public class TestShuffling extends BlockchainTest {
         APICall apiCall = new APICall.Builder("shufflingProcess").
                 param("shuffling", shufflingId).
                 param("secretPhrase", secretPhrase1).
-                param("recipient", "NXT-XK4R-7VJU-6EQG-7R335").
+                param("recipient", testers.get(1).getStrId()).
                 feeNQT(Constants.ONE_NXT).
                 build();
         JSONObject shufflingProcessResponse = apiCall.invoke();
@@ -111,7 +111,7 @@ public class TestShuffling extends BlockchainTest {
         apiCall = new APICall.Builder("shufflingProcess").
                 param("shuffling", shufflingId).
                 param("secretPhrase", secretPhrase2).
-                param("recipient", "NXT-EVHD-5FLM-3NMQ-G46NR").
+                param("recipient", testers.get(2).getStrId()).
                 feeNQT(Constants.ONE_NXT).
                 build();
         shufflingProcessResponse = apiCall.invoke();
@@ -121,7 +121,7 @@ public class TestShuffling extends BlockchainTest {
         apiCall = new APICall.Builder("shufflingProcess").
                 param("shuffling", shufflingId).
                 param("secretPhrase", secretPhrase3).
-                param("recipient", "NXT-SZKV-J8TH-GSM9-9LKV6").
+                param("recipient", testers.get(3).getStrId()).
                 feeNQT(Constants.ONE_NXT).
                 build();
         shufflingProcessResponse = apiCall.invoke();
@@ -131,7 +131,7 @@ public class TestShuffling extends BlockchainTest {
         apiCall = new APICall.Builder("shufflingProcess").
                 param("shuffling", shufflingId).
                 param("secretPhrase", secretPhrase4).
-                param("recipient", "NXT-E93F-7E8Z-BHJ8-A65RG").
+                param("recipient", testers.get(4).getStrId()).
                 feeNQT(Constants.ONE_NXT).
                 build();
         shufflingProcessResponse = apiCall.invoke();

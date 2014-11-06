@@ -15,7 +15,7 @@ public class DeleteCurrencyTest extends BlockchainTest {
 
     @Test
     public void deleteByIssuer() {
-        APICall apiCall = new TestCurrencyIssuance.Builder().build();
+        APICall apiCall = new TestCurrencyIssuance.Builder().naming("abcde", "ABCDE", "test1").build();
         TestCurrencyIssuance.issueCurrencyApi(apiCall);
         generateBlock();
         apiCall = new APICall.Builder("getAllCurrencies").build();
@@ -38,7 +38,7 @@ public class DeleteCurrencyTest extends BlockchainTest {
         Assert.assertEquals("Unknown currency", response.get("errorDescription"));
 
         // Issue the same currency code again
-        apiCall = new TestCurrencyIssuance.Builder().build();
+        apiCall = new TestCurrencyIssuance.Builder().naming("abcde", "ABCDE", "test1").build();
         TestCurrencyIssuance.issueCurrencyApi(apiCall);
         generateBlock();
         apiCall = new APICall.Builder("getAllCurrencies").build();
@@ -52,7 +52,7 @@ public class DeleteCurrencyTest extends BlockchainTest {
 
     @Test
     public void deleteByNonOwnerNotAllowed() {
-        APICall apiCall = new TestCurrencyIssuance.Builder().build();
+        APICall apiCall = new TestCurrencyIssuance.Builder().naming("abcde", "ABCDE", "test1").build();
         TestCurrencyIssuance.issueCurrencyApi(apiCall);
         generateBlock();
         apiCall = new APICall.Builder("getAllCurrencies").build();
@@ -78,7 +78,7 @@ public class DeleteCurrencyTest extends BlockchainTest {
 
     @Test
     public void deleteByOwnerNonIssuer() {
-        APICall apiCall = new TestCurrencyIssuance.Builder().build();
+        APICall apiCall = new TestCurrencyIssuance.Builder().naming("abcde", "ABCDE", "test1").build();
         TestCurrencyIssuance.issueCurrencyApi(apiCall);
         generateBlock();
 
@@ -115,7 +115,7 @@ public class DeleteCurrencyTest extends BlockchainTest {
         Assert.assertEquals("Unknown currency", response.get("errorDescription"));
 
         // Issue the same currency code again by the original issuer
-        apiCall = new TestCurrencyIssuance.Builder().build();
+        apiCall = new TestCurrencyIssuance.Builder().naming("abcde", "ABCDE", "test1").build();
         TestCurrencyIssuance.issueCurrencyApi(apiCall);
         generateBlock();
         apiCall = new APICall.Builder("getAllCurrencies").build();
