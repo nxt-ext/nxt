@@ -59,8 +59,12 @@ var NRS = (function(NRS, $, undefined) {
 
 	NRS.pages = {};
 	NRS.incoming = {};
-
-	NRS.hasLocalStorage = true;
+	
+	if(!_checkDOMenabled())
+		NRS.hasLocalStorage = false;
+	else
+		NRS.hasLocalStorage = true;
+	
 	NRS.inApp = false;
 	NRS.appVersion = "";
 	NRS.appPlatform = "";
@@ -1076,4 +1080,18 @@ function receiveMessage(event) {
 		return;
 	}
 	//parent.postMessage("from iframe", "file://");
+}
+
+function _checkDOMenabled() {
+	var storage;
+	var fail;
+	var uid;
+	try {
+	  uid = new Date;
+	  (storage = window.localStorage).setItem(uid, uid);
+	  fail = storage.getItem(uid) != uid;
+	  storage.removeItem(uid);
+	  fail && (storage = false);
+	} catch (exception) {}
+	return storage;
 }

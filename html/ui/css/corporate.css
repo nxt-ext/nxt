@@ -66,17 +66,19 @@ a:hover { text-decoration: underline; outline: none; color: #636363; } /* Mr. V 
 .right-side {
   background-color: #fff;
   margin-left: 200px;
+  transition: margin .7s;
+  -webkit-transition: margin .7s;
 }
 /*left side - contains sidebar*/
 .left-side {
   position: absolute;
   width: 200px;
   top: 0;
+  transition: margin .7s;
+  -webkit-transition: margin .7s;
 }
 @media screen and (min-width: 992px) {
   .left-side {
-  	-webkit-transition: top 0.8s; /* For Safari 3.1 to 6.0 */
-	transition: top 0.8s;
     /*top: 215px;*/
     top:50px; /* Mr. V */
   }
@@ -89,7 +91,7 @@ a:hover { text-decoration: underline; outline: none; color: #636363; } /* Mr. V 
   }
   /* Left side collapse */
   .left-side.collapse-left {
-    left: -220px;
+     margin-left: -220px;
   }
 }
 /*Give content full width on xs screens*/
