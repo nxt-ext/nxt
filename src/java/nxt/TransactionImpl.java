@@ -260,7 +260,7 @@ final class TransactionImpl implements Transaction {
             throw new NxtException.NotValidException("Invalid attachment " + attachment + " for transaction of type " + type);
         }
 
-        if (! type.hasRecipient()) {
+        if (! type.canHaveRecipient()) {
             if (recipientId != 0 || getAmountNQT() != 0) {
                 throw new NxtException.NotValidException("Transactions of this type must have recipient == 0, amount == 0");
             }
@@ -475,7 +475,7 @@ final class TransactionImpl implements Transaction {
             buffer.putInt(timestamp);
             buffer.putShort(deadline);
             buffer.put(senderPublicKey);
-            buffer.putLong(type.hasRecipient() ? recipientId : Genesis.CREATOR_ID);
+            buffer.putLong(type.canHaveRecipient() ? recipientId : Genesis.CREATOR_ID);
             if (useNQT()) {
                 buffer.putLong(amountNQT);
                 buffer.putLong(feeNQT);
@@ -548,7 +548,7 @@ final class TransactionImpl implements Transaction {
                     .signature(signature)
                     .ecBlockHeight(ecBlockHeight)
                     .ecBlockId(ecBlockId);
-            if (transactionType.hasRecipient()) {
+            if (transactionType.canHaveRecipient()) {
                 builder.recipientId(recipientId);
             }
             int position = 1;
@@ -599,7 +599,7 @@ final class TransactionImpl implements Transaction {
         json.put("timestamp", timestamp);
         json.put("deadline", deadline);
         json.put("senderPublicKey", Convert.toHexString(senderPublicKey));
-        if (type.hasRecipient()) {
+        if (type.canHaveRecipient()) {
             json.put("recipient", Convert.toUnsignedLong(recipientId));
         }
         json.put("amountNQT", amountNQT);
@@ -645,7 +645,7 @@ final class TransactionImpl implements Transaction {
                     transactionType.parseAttachment(attachmentData))
                     .referencedTransactionFullHash(referencedTransactionFullHash)
                     .signature(signature);
-            if (transactionType.hasRecipient()) {
+            if (transactionType.canHaveRecipient()) {
                 long recipientId = Convert.parseUnsignedLong((String) transactionData.get("recipient"));
                 builder.recipientId(recipientId);
             }
@@ -767,7 +767,7 @@ final class TransactionImpl implements Transaction {
         }
         if (Nxt.getBlockchain().getHeight() >= Constants.PUBLIC_KEY_ANNOUNCEMENT_BLOCK) {
             // TODO: allow at next hard fork
-            if (type.hasRecipient() && recipientId != 0 /* && recipientId != getSenderId() */) {
+            if (recipientId != 0 /* && recipientId != getSenderId() */) {
                 Account recipientAccount = Account.getAccount(recipientId);
                 if ((recipientAccount == null || recipientAccount.getPublicKey() == null) && publicKeyAnnouncement == null) {
                     throw new NxtException.NotCurrentlyValidException("Recipient account does not have a public key, must attach a public key announcement");
