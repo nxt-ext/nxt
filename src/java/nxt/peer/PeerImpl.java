@@ -32,6 +32,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.UnknownHostException;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.zip.GZIPInputStream;
@@ -205,8 +206,9 @@ final class PeerImpl implements Peer {
 
     @Override
     public void blacklist(Exception cause) {
-        if (cause instanceof NxtException.NotCurrentlyValidException || cause instanceof BlockchainProcessor.BlockOutOfOrderException) {
-            // don't blacklist peers just because a feature is not yet enabled
+        if (cause instanceof NxtException.NotCurrentlyValidException || cause instanceof BlockchainProcessor.BlockOutOfOrderException
+                || cause instanceof SQLException || cause.getCause() instanceof SQLException) {
+            // don't blacklist peers just because a feature is not yet enabled, or because of database timeouts
             // prevents erroneous blacklisting during loading of blockchain from scratch
             return;
         }
