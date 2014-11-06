@@ -124,7 +124,7 @@ final class BlockchainImpl implements Blockchain {
 
     @Override
     public int getBlockCount(Account account) {
-        try (Connection con = Db.getConnection();
+        try (Connection con = Db.db.getConnection();
             PreparedStatement pstmt = con.prepareStatement("SELECT COUNT(*) FROM block WHERE generator_id = ?")) {
             pstmt.setLong(1, account.getId());
             try (ResultSet rs = pstmt.executeQuery()) {

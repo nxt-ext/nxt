@@ -78,7 +78,7 @@ final class BlockDb {
     }
 
     static BlockImpl findLastBlock() {
-        try (Connection con = Dd.db.getConnection();
+        try (Connection con = Db.db.getConnection();
              PreparedStatement pstmt = con.prepareStatement("SELECT * FROM block ORDER BY height DESC LIMIT 1")) {
             BlockImpl block = null;
             try (ResultSet rs = pstmt.executeQuery()) {
