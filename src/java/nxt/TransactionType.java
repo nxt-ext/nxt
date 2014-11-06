@@ -208,6 +208,10 @@ public abstract class TransactionType {
 
     public abstract boolean hasRecipient();
 
+    public boolean mustHaveRecipient() {
+        return hasRecipient();
+    }
+
     @Override
     public final String toString() {
         return "type: " + getType() + ", subtype: " + getSubtype();
@@ -330,6 +334,11 @@ public abstract class TransactionType {
             @Override
             public boolean hasRecipient() {
                 return true;
+            }
+
+            @Override
+            public boolean mustHaveRecipient() {
+                return false;
             }
 
         };
@@ -455,6 +464,11 @@ public abstract class TransactionType {
             @Override
             public boolean hasRecipient() {
                 return true;
+            }
+
+            @Override
+            public boolean mustHaveRecipient() {
+                return false;
             }
 
         };

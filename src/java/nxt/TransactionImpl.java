@@ -262,7 +262,13 @@ final class TransactionImpl implements Transaction {
 
         if (! type.hasRecipient()) {
             if (recipientId != 0 || getAmountNQT() != 0) {
-                throw new NxtException.NotValidException("Transactions of this type must have recipient == Genesis, amount == 0");
+                throw new NxtException.NotValidException("Transactions of this type must have recipient == 0, amount == 0");
+            }
+        }
+
+        if (type.mustHaveRecipient() && version > 0) {
+            if (recipientId == 0) {
+                throw new NxtException.NotValidException("Transactions of this type must have a valid recipient");
             }
         }
 
