@@ -115,7 +115,7 @@ final class TransactionDb {
                     .senderId(senderId)
                     .blockTimestamp(blockTimestamp)
                     .fullHash(fullHash);
-            if (transactionType.hasRecipient()) {
+            if (transactionType.canHaveRecipient()) {
                 long recipientId = rs.getLong("recipient_id");
                 if (! rs.wasNull()) {
                     builder.recipientId(recipientId);
