@@ -62,7 +62,7 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
         String publicKeyValue = Convert.emptyToNull(req.getParameter("publicKey"));
         boolean broadcast = !"false".equalsIgnoreCase(req.getParameter("broadcast"));
         Appendix.EncryptedMessage encryptedMessage = null;
-        if (attachment.getTransactionType().hasRecipient()) {
+        if (attachment.getTransactionType().canHaveRecipient()) {
             EncryptedData encryptedData = ParameterParser.getEncryptedMessage(req, Account.getAccount(recipientId));
             if (encryptedData != null) {
                 encryptedMessage = new Appendix.EncryptedMessage(encryptedData, !"false".equalsIgnoreCase(req.getParameter("messageToEncryptIsText")));
@@ -118,7 +118,7 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
         try {
             Transaction.Builder builder = Nxt.getTransactionProcessor().newTransactionBuilder(publicKey, amountNQT, feeNQT,
                     deadline, attachment).referencedTransactionFullHash(referencedTransactionFullHash);
-            if (attachment.getTransactionType().hasRecipient()) {
+            if (attachment.getTransactionType().canHaveRecipient()) {
                 builder.recipientId(recipientId);
             }
             if (encryptedMessage != null) {

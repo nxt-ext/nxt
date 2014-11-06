@@ -308,6 +308,9 @@ public final class Account {
     }
 
     static Account addOrGetAccount(long id) {
+        if (id == 0) {
+            throw new IllegalArgumentException("Invalid accountId 0");
+        }
         Account account = accountTable.get(accountDbKeyFactory.newKey(id));
         if (account == null) {
             account = new Account(id);
