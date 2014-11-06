@@ -1163,7 +1163,7 @@ public abstract class TransactionType {
             }
 
             @Override
-            public boolean hasRecipient() {
+            public boolean canHaveRecipient() {
                 return false;
             }
 
