@@ -102,6 +102,21 @@ public class VotePhased {
         }
     }
 
+    static long allVotesFromDb(PendingTransactionPoll poll){
+        long result = 0;
+        DbClause clause = new DbClause.LongClause("pending_transaction_id", poll.getId());
+        DbIterator<VotePhased> votesIterator = voteTable.getManyBy(clause, 0, -1);
+
+        while (votesIterator.hasNext()) {
+            long w = AbstractPoll.calcWeight(poll, Account.getAccount(votesIterator.next().voterId));
+            if (w >= poll.minBalance) {
+                result += w;
+            }
+        }
+
+        return result;
+    }
+
     static boolean addVote(PendingTransactionPoll poll, Account voter,
                            Transaction transaction) {
 
@@ -117,18 +132,14 @@ public class VotePhased {
 
         long weight = AbstractPoll.calcWeight(poll, voter);
 
-        long estimate = voteTable.lastEstimate(poll.getId()) + weight;
+        long estimate = voteTable.lastEstimate(poll.getId());
+
+        if (weight >= poll.minBalance) {
+            estimate += weight;
+        }
 
         if (estimate >= poll.getQuorum() && poll.getVotingModel() != Constants.VOTING_MODEL_ACCOUNT) {
-            DbClause clause = new DbClause.LongClause("pending_transaction_id", poll.getId());
-            DbIterator<VotePhased> votesIterator = voteTable.getManyBy(clause, 0, -1);
-            estimate = 0;
-            while (votesIterator.hasNext()) {
-                long w = AbstractPoll.calcWeight(poll, Account.getAccount(votesIterator.next().voterId));
-                if (w >= poll.minBalance) {
-                    estimate += w;
-                }
-            }
+            estimate = allVotesFromDb(poll);
             if (weight >= poll.minBalance) {
                 estimate += weight;
             }

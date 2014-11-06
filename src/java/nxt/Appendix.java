@@ -617,13 +617,26 @@ public interface Appendix {
             System.out.println("Transaction " + transaction.getId() + " has been released");
         }
 
-        //todo: check votes again for by-asset & by-balance?
         void rollback(Transaction transaction, Account senderAccount, Account recipientAccount) {
+
             long amount = transaction.getAmountNQT();
             senderAccount.addToBalanceNQT(amount);
 
-            Logger.logDebugMessage("Transaction " + transaction.getId() + " has been refused");
-            System.out.println("Transaction " + transaction.getId() + " has been refused");
+            long transactionId = transaction.getId();
+
+            PendingTransactionPoll poll = PendingTransactionPoll.byId(transactionId);
+
+            //todo : move this check up?
+            if(poll.getVotingModel()!=Constants.VOTING_MODEL_ACCOUNT){
+                long votingResult = VotePhased.allVotesFromDb(poll);
+                if(votingResult >= poll.getQuorum()){
+                    commit(transaction, senderAccount, recipientAccount);
+                    return;
+                }
+            }
+
+            Logger.logDebugMessage("Transaction " + transactionId + " has been refused");
+            System.out.println("Transaction " + transactionId + " has been refused");
         }
     }
 }
