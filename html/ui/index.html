@@ -568,6 +568,7 @@
                 			        <th data-i18n="description">Description</th>
                 			        <th data-i18n="sender">Sender</th>
                 			        <th data-i18n="start_date">Start Date</th>
+                                    <th data-i18n="blocks_left">Blocks Left</th>
                 			        <th data-i18n="vote">Vote</th>
                 			    </tr>
                 			    </thead>
@@ -578,6 +579,37 @@
                 			<div class="data-loading-container"><img src="img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
                 			<div class="data-empty-container"><p data-i18n="no_polls_found">No polls found.</p></div>
                 		</div>
+                    </section>
+                </div>
+
+                <div id="my_polls_page" class="page">
+                    <section class="content-header">
+                        <h1 data-i18n="polls">My Polls</h1>
+                        <div style="position:absolute;top:9px;right:9px;">
+                            <button type="button" class="btn btn-default" data-toggle="modal" data-target="#create_poll_modal" data-i18n="create_poll">Create Poll</button>
+                        </div>
+                    </section>
+                    
+                    <section class="content">
+                        <div class="data-container data-loading">
+                            <table class="table table-striped" id="my_polls_table">
+                                <thead>
+                                <tr>
+                                    <th data-i18n="title">Title</th>
+                                    <th data-i18n="description">Description</th>
+                                    <th data-i18n="sender">Sender</th>
+                                    <th data-i18n="start_date">Start Date</th>
+                                    <th data-i18n="blocks_left">Blocks Left</th>
+                                    <th data-i18n="vote">Vote</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                
+                                </tbody>
+                            </table>
+                            <div class="data-loading-container"><img src="img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
+                            <div class="data-empty-container"><p data-i18n="no_my_polls_found">No polls found.</p></div>
+                        </div>
                     </section>
                 </div>
                 
@@ -2950,10 +2982,10 @@
                                 <div class="col-xs-12 col-sm-12 col-md-12" id="create_poll_type_group">
                                     <div class="form-group">
                                         <label for="create_poll_type" data-i18n="poll_by">POLL BY</label>
-                                        <select name="pollType" id="create_poll_type" class="form-control" data-default="1" value="1" tabindex="3">
-                                            <option value="votePerNXT">Vote By NXT Balance</option>
-                                            <option value="votePerAccount">One Vote Per Account</option>
-                                            <option value="votePerAsset">Vote By Asset</option>
+                                        <select name="votingModel" id="create_poll_type" class="form-control" data-default="0" value="0" tabindex="3">
+                                            <option selected value="0">Vote By NXT Balance</option>
+                                            <option value="1">One Vote Per Account</option>
+                                            <option value="2">Vote By Asset</option>
                                         </select>
                                     </div>
                                 </div>
