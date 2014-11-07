@@ -103,7 +103,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
 
     };
 
-    private final Set<TransactionImpl> nonBroadcastedTransactions = Collections.newSetFromMap(new ConcurrentHashMap<TransactionImpl,Boolean>());
+    private final Set<TransactionImpl> broadcastedTransactions = Collections.newSetFromMap(new ConcurrentHashMap<TransactionImpl,Boolean>());
     private final Listeners<List<? extends Transaction>,Event> transactionListeners = new Listeners<>();
     private final Set<TransactionImpl> lostTransactions = new HashSet<>();
 
@@ -167,9 +167,9 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                 try {
                     List<Transaction> transactionList = new ArrayList<>();
                     int curTime = Nxt.getEpochTime();
-                    for (TransactionImpl transaction : nonBroadcastedTransactions) {
+                    for (TransactionImpl transaction : broadcastedTransactions) {
                         if (TransactionDb.hasTransaction(transaction.getId()) || transaction.getExpiration() < curTime) {
-                            nonBroadcastedTransactions.remove(transaction);
+                            broadcastedTransactions.remove(transaction);
                         } else if (transaction.getTimestamp() < curTime - 30) {
                             transactionList.add(transaction);
                         }
@@ -248,7 +248,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                 public void run() {
                     try (DbIterator<TransactionImpl> oldNonBroadcastedTransactions = getAllUnconfirmedTransactions()) {
                         for (TransactionImpl transaction : oldNonBroadcastedTransactions) {
-                            nonBroadcastedTransactions.add(transaction);
+                            broadcastedTransactions.add(transaction);
                         }
                     }
                 }
@@ -307,7 +307,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
             }
             if (unconfirmedTransactionTable.get(((TransactionImpl) transaction).getDbKey()) != null) {
                 if (enableTransactionRebroadcasting) {
-                    nonBroadcastedTransactions.add((TransactionImpl) transaction);
+                    broadcastedTransactions.add((TransactionImpl) transaction);
                     Logger.logMessage("Transaction " + transaction.getStringId() + " already in unconfirmed pool, will re-broadcast");
                 } else {
                     Logger.logMessage("Transaction " + transaction.getStringId() + " already in unconfirmed pool, will not broadcast again");
@@ -318,7 +318,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
         }
         if (processedTransactions.contains(transaction)) {
             if (enableTransactionRebroadcasting) {
-                nonBroadcastedTransactions.add((TransactionImpl) transaction);
+                broadcastedTransactions.add((TransactionImpl) transaction);
             }
             Logger.logDebugMessage("Accepted new transaction " + transaction.getStringId());
         } else {
@@ -442,7 +442,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
             }
         }
         processTransactions(transactions, true);
-        nonBroadcastedTransactions.removeAll(transactions);
+        broadcastedTransactions.removeAll(transactions);
     }
 
     List<Transaction> processTransactions(Collection<TransactionImpl> transactions, final boolean sendToPeers) {
@@ -486,10 +486,10 @@ final class TransactionProcessorImpl implements TransactionProcessor {
 
                         if (transaction.applyUnconfirmed()) {
                             if (sendToPeers) {
-                                if (nonBroadcastedTransactions.contains(transaction)) {
+                                if (broadcastedTransactions.contains(transaction)) {
                                     Logger.logDebugMessage("Received back transaction " + transaction.getStringId()
                                             + " that we generated, will not forward to peers");
-                                    nonBroadcastedTransactions.remove(transaction);
+                                    broadcastedTransactions.remove(transaction);
                                 } else {
                                     sendToPeersTransactions.add(transaction);
                                 }
