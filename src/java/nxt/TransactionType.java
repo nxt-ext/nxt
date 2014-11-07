@@ -36,6 +36,7 @@ public abstract class TransactionType {
     private static final byte SUBTYPE_COLORED_COINS_BID_ORDER_PLACEMENT = 3;
     private static final byte SUBTYPE_COLORED_COINS_ASK_ORDER_CANCELLATION = 4;
     private static final byte SUBTYPE_COLORED_COINS_BID_ORDER_CANCELLATION = 5;
+    private static final byte SUBTYPE_COLORED_COINS_DIVIDEND_PAYMENT = 6;
 
     private static final byte SUBTYPE_DIGITAL_GOODS_LISTING = 0;
     private static final byte SUBTYPE_DIGITAL_GOODS_DELISTING = 1;
@@ -117,6 +118,8 @@ public abstract class TransactionType {
                         return ColoredCoins.ASK_ORDER_CANCELLATION;
                     case SUBTYPE_COLORED_COINS_BID_ORDER_CANCELLATION:
                         return ColoredCoins.BID_ORDER_CANCELLATION;
+                    case SUBTYPE_COLORED_COINS_DIVIDEND_PAYMENT:
+                        return ColoredCoins.DIVIDEND_PAYMENT;
                     default:
                         return null;
                 }
@@ -1197,6 +1200,80 @@ public abstract class TransactionType {
             }
 
         };
+
+        public static final TransactionType DIVIDEND_PAYMENT = new ColoredCoins() {
+
+            @Override
+            public final byte getSubtype() {
+                return TransactionType.SUBTYPE_COLORED_COINS_DIVIDEND_PAYMENT;
+            }
+
+            @Override
+            Attachment.ColoredCoinsDividendPayment parseAttachment(ByteBuffer buffer, byte transactionVersion) {
+                return new Attachment.ColoredCoinsDividendPayment(buffer, transactionVersion);
+            }
+
+            @Override
+            Attachment.ColoredCoinsDividendPayment parseAttachment(JSONObject attachmentData) {
+                return new Attachment.ColoredCoinsDividendPayment(attachmentData);
+            }
+
+            @Override
+            boolean applyAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
+                Attachment.ColoredCoinsDividendPayment attachment = (Attachment.ColoredCoinsDividendPayment)transaction.getAttachment();
+                Asset asset = Asset.getAsset(attachment.getAssetId());
+                long quantityQNT = asset.getQuantityQNT()
+                        - senderAccount.getAssetBalanceQNT(attachment.getAssetId(), attachment.getHeight())
+                        - Account.getAssetBalanceQNT(Genesis.CREATOR_ID, attachment.getAssetId(), attachment.getHeight());
+                long totalDividendPayment = Convert.safeMultiply(attachment.getAmountNQTPerQNT(), quantityQNT);
+                if (senderAccount.getUnconfirmedBalanceNQT() >= totalDividendPayment) {
+                    senderAccount.addToUnconfirmedBalanceNQT(-totalDividendPayment);
+                    return true;
+                }
+                return false;
+            }
+
+            @Override
+            void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
+                Attachment.ColoredCoinsDividendPayment attachment = (Attachment.ColoredCoinsDividendPayment)transaction.getAttachment();
+                senderAccount.payDividends(attachment.getAssetId(), attachment.getHeight(), attachment.getAmountNQTPerQNT());
+            }
+
+            @Override
+            void undoAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
+                Attachment.ColoredCoinsDividendPayment attachment = (Attachment.ColoredCoinsDividendPayment)transaction.getAttachment();
+                long quantityQNT = Asset.getAsset(attachment.getAssetId()).getQuantityQNT()
+                        - senderAccount.getAssetBalanceQNT(attachment.getAssetId(), attachment.getHeight())
+                        - Account.getAssetBalanceQNT(Genesis.CREATOR_ID, attachment.getAssetId(), attachment.getHeight());
+                senderAccount.addToUnconfirmedBalanceNQT(Convert.safeMultiply(attachment.getAmountNQTPerQNT(), quantityQNT));
+            }
+
+            @Override
+            void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
+                if (Nxt.getBlockchain().getLastBlock().getHeight() < Constants.ASSET_EXCHANGE_BLOCK_2) {
+                    throw new NxtException.NotYetEnabledException("Dividend payment not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
+                }
+                Attachment.ColoredCoinsDividendPayment attachment = (Attachment.ColoredCoinsDividendPayment)transaction.getAttachment();
+                Asset asset = Asset.getAsset(attachment.getAssetId());
+                if (asset == null) {
+                    throw new NxtException.NotCurrentlyValidException("Asset " + Convert.toUnsignedLong(attachment.getAssetId())
+                            + "for dividend payment doesn't exist yet");
+                }
+                if (asset.getAccountId() != transaction.getSenderId() || attachment.getAmountNQTPerQNT() <= 0) {
+                    throw new NxtException.NotValidException("Invalid divident payment sender or amount " + attachment.getJSONObject());
+                }
+                if (attachment.getHeight() > Nxt.getBlockchain().getHeight() || attachment.getHeight() < Nxt.getBlockchain().getHeight() - Constants.MAX_ROLLBACK) {
+                    throw new NxtException.NotCurrentlyValidException("Invalid dividend payment height: " + attachment.getHeight());
+                }
+            }
+
+            @Override
+            public boolean canHaveRecipient() {
+                return false;
+            }
+
+        };
+
     }
 
     public static abstract class DigitalGoods extends TransactionType {

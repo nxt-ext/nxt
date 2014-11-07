@@ -466,6 +466,11 @@ public final class Account {
         return accountCurrencyTable.getManyBy(new DbClause.LongClause("currency_id", currencyId), height, from, to);
     }
 
+    public static long getAssetBalanceQNT(final long accountId, final long assetId, final int height) {
+        final AccountAsset accountAsset = accountAssetTable.get(accountAssetDbKeyFactory.newKey(accountId, assetId), height);
+        return accountAsset == null ? 0 : accountAsset.quantityQNT;
+    }
+
     static void init() {}
 
 
@@ -734,6 +739,11 @@ public final class Account {
 
     public long getAssetBalanceQNT(long assetId) {
         AccountAsset accountAsset = accountAssetTable.get(accountAssetDbKeyFactory.newKey(this.id, assetId));
+        return accountAsset == null ? 0 : accountAsset.quantityQNT;
+    }
+
+    public long getAssetBalanceQNT(long assetId, int height) {
+        AccountAsset accountAsset = accountAssetTable.get(accountAssetDbKeyFactory.newKey(this.id, assetId), height);
         return accountAsset == null ? 0 : accountAsset.quantityQNT;
     }
 
@@ -1054,6 +1064,19 @@ public final class Account {
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
         }
+    }
+
+    void payDividends(final long assetId, final int height, final long amountNQTPerQNT) {
+        final Asset asset = Asset.getAsset(assetId);
+        long totalDividend = 0;
+        for (final AccountAsset accountAsset : getAssetAccounts(asset.getId(), height, 0, -1)) {
+            if (accountAsset.getAccountId() != asset.getAccountId() && accountAsset.getAccountId() != Genesis.CREATOR_ID) {
+                long dividend = Convert.safeMultiply(accountAsset.getQuantityQNT(), amountNQTPerQNT);
+                Account.getAccount(accountAsset.getAccountId()).addToBalanceAndUnconfirmedBalanceNQT(dividend);
+                totalDividend += dividend;
+            }
+        }
+        this.addToBalanceNQT(-totalDividend);
     }
 
 }
