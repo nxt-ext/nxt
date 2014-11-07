@@ -241,7 +241,7 @@ var NRS = (function(NRS, $, undefined) {
 			"seller": NRS.account,
 			"firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
 			"lastIndex": NRS.pageNumber * NRS.itemsPerPage,
-			"inStockOnly": "false"
+			"inStockOnly": "true"
 		}, function(response) {
 			if (response.goods && response.goods.length) {
 				if (response.goods.length > NRS.itemsPerPage) {
