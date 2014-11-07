@@ -397,11 +397,13 @@ final class DbVersion {
             case 125:
                 apply("CREATE INDEX IF NOT EXISTS bid_order_creation_idx ON bid_order (creation_height DESC)");
             case 126:
-                BlockchainProcessorImpl.getInstance().forceScanAtStart();
                 apply(null);
             case 127:
                 apply("CREATE UNIQUE INDEX IF NOT EXISTS block_timestamp_idx ON block (timestamp DESC)");
             case 128:
+                BlockchainProcessorImpl.getInstance().forceScanAtStart();
+                apply(null);
+            case 129:
                 return;
             default:
                 throw new RuntimeException("Database inconsistent with code, probably trying to run older code on newer database");
