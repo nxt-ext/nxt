@@ -167,7 +167,10 @@ final class DbVersion {
                             "('178.162.198.109'), ('108.170.40.4'), ('84.128.162.237'), ('54.200.116.75'), ('miasik.no-ip.org'), " +
                             "('nxt.cybermailing.com'), ('23.88.246.117'), ('54.213.222.141'), ('185.21.192.9'), " +
                             "('dorcsforge.cloudapp.net'), ('188.226.245.226'), ('167.206.61.3'), ('107.170.75.92'), ('211.149.213.86'), " +
-                            "('5.150.195.208'), ('96.240.128.221')");
+                            "('5.150.195.208'), ('96.240.128.221'), ('85.25.198.120'), ('80.86.92.139'), ('106.187.95.232'), " +
+                            "('89.212.19.49'), ('91.98.139.194'), ('87.98.163.78'), ('54.214.232.96'), ('nxt.shscrypto.net'), " +
+                            "('92.222.0.105'), ('54.191.19.147'), ('198.27.64.207'), ('178.62.240.203'), ('54.68.87.225'), " +
+                            "('54.200.180.57'), ('37.59.121.207'), ('198.57.198.33'), ('90.153.106.133')");
                 } else {
                     apply("INSERT INTO peer (address) VALUES " +
                             "('nxt.scryptmh.eu'), ('54.186.98.117'), ('178.150.207.53'), ('192.241.223.132'), ('node9.mynxtcoin.org'), " +
@@ -397,11 +400,13 @@ final class DbVersion {
             case 125:
                 apply("CREATE INDEX IF NOT EXISTS bid_order_creation_idx ON bid_order (creation_height DESC)");
             case 126:
-                BlockchainProcessorImpl.getInstance().forceScanAtStart();
                 apply(null);
             case 127:
                 apply("CREATE UNIQUE INDEX IF NOT EXISTS block_timestamp_idx ON block (timestamp DESC)");
             case 128:
+                BlockchainProcessorImpl.getInstance().forceScanAtStart();
+                apply(null);
+            case 129:
                 return;
             default:
                 throw new RuntimeException("Database inconsistent with code, probably trying to run older code on newer database");

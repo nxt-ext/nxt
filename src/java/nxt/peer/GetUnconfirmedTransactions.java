@@ -20,9 +20,9 @@ final class GetUnconfirmedTransactions extends PeerServlet.PeerRequestHandler {
         JSONObject response = new JSONObject();
 
         JSONArray transactionsData = new JSONArray();
-        try (DbIterator<? extends Transaction> transacitons = Nxt.getTransactionProcessor().getAllUnconfirmedTransactions()) {
-            while (transacitons.hasNext()) {
-                Transaction transaction = transacitons.next();
+        try (DbIterator<? extends Transaction> transactions = Nxt.getTransactionProcessor().getAllUnconfirmedTransactions()) {
+            while (transactions.hasNext()) {
+                Transaction transaction = transactions.next();
                 transactionsData.add(transaction.getJSONObject());
             }
         }
