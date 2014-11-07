@@ -3332,7 +3332,7 @@ a.list-group-item.active h4 span {
 	border: 0;
 	border-radius: 0;
 }
-.nav-pills > li > a { border-radius: 0px; }
+.nav-pills > li > a { border-radius: 0px; padding:10px; }
 .nav-pills > li.active > a, .nav-pills > li.active > a:hover, .nav-pills > li.active > a:focus { background-color: #0088B7;	}
 .small-box a {
   color: rgba(255,255,255,1.0);
