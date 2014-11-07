@@ -7,3 +7,7 @@ accounts, and transfers counts, if not needed.
 
 Cache hallmarked peer account balances to reduce number of database calls.
 
+Fixed decryption of purchased DGS goods. Fixed missing DGS purchase feedbacks.
+
+UI bugfixes and improvements.
+
