@@ -399,8 +399,8 @@ public final class DigitalGoodsStore {
                 ++i;
                 setEncryptedData(pstmt, this.getRefundNote(), ++i);
                 ++i;
-                pstmt.setBoolean(++i, this.getFeedbackNotes() != null && this.getFeedbackNotes().size() > 0);
-                pstmt.setBoolean(++i, this.getPublicFeedback() != null && this.getPublicFeedback().size() > 0);
+                pstmt.setBoolean(++i, this.hasFeedbackNotes);
+                pstmt.setBoolean(++i, this.hasPublicFeedbacks);
                 pstmt.setLong(++i, this.getDiscountNQT());
                 pstmt.setLong(++i, this.getRefundNQT());
                 pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
@@ -487,7 +487,7 @@ public final class DigitalGoodsStore {
         }
 
         private void addFeedbackNote(EncryptedData feedbackNote) {
-            if (feedbackNotes == null) {
+            if (getFeedbackNotes() == null) {
                 feedbackNotes = new ArrayList<>();
             }
             feedbackNotes.add(feedbackNote);
@@ -505,7 +505,7 @@ public final class DigitalGoodsStore {
         }
 
         private void addPublicFeedback(String publicFeedback) {
-            if (publicFeedbacks == null) {
+            if (getPublicFeedback() == null) {
                 publicFeedbacks = new ArrayList<>();
             }
             publicFeedbacks.add(publicFeedback);
