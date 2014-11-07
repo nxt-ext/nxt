@@ -525,10 +525,8 @@ var NRS = (function(NRS, $, undefined) {
 			var nonceField = (typeof title != "string" ? title.nonce : key + "Nonce");
 
 			if (key == "encryptedMessage" || key == "encryptToSelfMessage") {
-			    if (key == "encryptedMessage") {
-					accountToDecrypt=otherAccount;
-				} else {
-					accountToDecrypt=accountId;
+			    if (key == "encryptToSelfMessage") {
+					otherAccount=accountId;
 				}
 				encrypted = _encryptedNote.transaction.attachment[key].data;
 				nonce = _encryptedNote.transaction.attachment[key].nonce;
@@ -553,7 +551,7 @@ var NRS = (function(NRS, $, undefined) {
 				try {
 					data = NRS.decryptNote(encrypted, {
 						"nonce": nonce,
-						"account": accountToDecrypt
+						"account": otherAccount
 					}, password);
 
 					decryptedFields[key] = data;
