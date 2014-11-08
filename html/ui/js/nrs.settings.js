@@ -444,7 +444,7 @@ var NRS = (function(NRS, $, undefined) {
 			}
 			NRS.applySettings();
 		}
-	}
+	};
 	NRS.applySettings = function(key) {
 	    if (!key || key == "themeChoice") {
 			if(NRS.settings["themeChoice"] == "default"){

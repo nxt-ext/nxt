@@ -159,7 +159,7 @@ h6,
 }
 /* All images should be responsive */
 img {
-  max-width: 100%important;
+  max-width: 100% !important;
 }
 .sort-highlight {
   background: #f4f4f4;
@@ -1240,7 +1240,7 @@ body > .header .logo .icon {
 }
 .small-box h3,
 .small-box p {
-  z-index: 5px;
+  z-index: 5;
 }
 .small-box .icon {
   position: absolute;
@@ -2936,7 +2936,7 @@ a.list-group-item.active, a.list-group-item.active:hover, a.list-group-item.acti
 	z-index:auto;
 }
 .sidebar.dropdown-menu>li>a {
-	color:333 !important;
+	color:#333 !important;
 }
 .left-side .user-panel .dropdown-menu>li>a { color:#333; }
 .left-side .user-panel .dropdown-menu>li>a.zeroclipboard-is-hover, .left-side .user-panel .dropdown-menu>li>a:hover {

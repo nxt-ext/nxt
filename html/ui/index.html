@@ -306,7 +306,7 @@
 	                            <div class="small-box bg-green">
 	                                <div class="inner">
 	                                    <h3><span id="account_assets_balance" class="loading_dots"><span>.</span><span>.</span><span>.</span></span></h3>
-	                                    <p style="display:inline-block">Assets value</p> <p style="display:inline-block">(<span id="account_nr_assets" class="loading_dots"><span></p> <p style="display:inline-block"><span data-i18n="assets_owned">Assets Owned</span>)</p>                        
+	                                    <p style="display:inline-block">Assets value</p> <p style="display:inline-block">(<span id="account_nr_assets" class="loading_dots"></span></p> <p style="display:inline-block"><span data-i18n="assets_owned">Assets Owned</span>)</p>
 	                                </div>
 	                            	<div class="icon"><i class="ion ion-pie-graph"></i></div>
 	                                <a href="#" class="small-box-footer goto-page" data-page="my_assets"><span data-i18n="more_info">More info</span> <i class="fa fa-arrow-circle-right"></i></a>
@@ -384,8 +384,8 @@
 							        </div>
 							        <div class="box-footer" id="dashboard_blocks_footer" style="display: none"><button class="btn btn-primary goto-page" data-page="blocks"><i class="fa fa-caret-right"></i> <span data-i18n="view_more">View More</span></button></div>
 							    </div>
-							</div>
-						</div>-->
+							</div-->
+						</div>
 	            	</section>
 				</div>
 				
@@ -1156,7 +1156,7 @@
                 			<div class="data-loading-container"><img src="img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
                 			<div class="data-empty-container"><p data-i18n="[html]no_products_listed_yet">You haven't listed any products for sale yet, <a href="#" data-toggle="modal" data-target="#dgs_listing_modal">add one.</a></p></div>
                 		</div>
-                		<div class="data-pagination">
+                		<div class="data-pagination"></div>
                     </section>
                 </div>
 
@@ -1624,7 +1624,7 @@
 		      		</div>
 					<div class="modal-body">			
 						<form role="form" autocomplete="off">
-							<div class="callout callout-danger never_hide" id="lease_balance_message" data-i18n="[html]lease_balance_warning"><strong>Remember</strong>: Once submitted the lease cannot be cancelled.</div>
+							<div class="callout callout-danger never_hide" id="lease_balance_warning" data-i18n="[html]lease_balance_warning"><strong>Remember</strong>: Once submitted the lease cannot be cancelled.</div>
 							<div class="callout callout-danger error_message" style="display:none"></div>
 							<div class="form-group">
 								<label for="lease_balance_recipient" data-i18n="recipient">RECIPIENT</label>
@@ -2733,7 +2733,7 @@
 			      	<div class="modal-body">			
 						<form role="form" autocomplete="off">
 							<div class="callout callout-danger error_message" style="display:none"></div>
-							<div class="row" style="margin-bottom:none">
+							<div class="row" style="margin-bottom:0">
 								<div class="purchase_info" style="margin-bottom:0;" data-i18n="loading">Loading...</div>
 							</div>
 						</form>
@@ -4239,7 +4239,7 @@
 						</div>
 					</div>
 					<div class="modal-footer" style="margin-top:0;">
-			        	<button type="button" class="btn btn-primary" data-dismiss="modal"<span data-i18n="close">Close</button>
+			        	<button type="button" class="btn btn-primary" data-dismiss="modal" data-i18n="close">Close</button>
 			      	</div>
 				</div>
 			</div>
@@ -4400,11 +4400,11 @@
 								<div class="callout callout-danger error_message" style="display:none"></div>
 								<div class="form-group">
 									<label for="calculate_full_hash_unsigned_transaction_bytes" data-i18n="unsigned_transaction_bytes">UNSIGNED TRANSACTION BYTES</label>
-									<textarea class="form-control" name="unsignedTransactionBytes" id="calculate_full_hash-unsigned_transaction_bytes" rows="4" placeholder="Unsigned Transaction Bytes" data-i18n="[placeholder]unsigned_transaction_bytes"></textarea>
+									<textarea class="form-control" name="unsignedTransactionBytes" id="calculate_full_hash_unsigned_transaction_bytes" rows="4" placeholder="Unsigned Transaction Bytes" data-i18n="[placeholder]unsigned_transaction_bytes"></textarea>
 								</div>
 								<div class="form-group">
 									<label for="calculate_full_hash_signature_hash" data-i18n="signature_hash">SIGNATURE HASH</label>
-									<textarea class="form-control" name="signatureHash" id="calculate_full_hash-unsigned_transaction_bytes" rows="1" placeholder="Signature Hash" data-i18n="[placeholder]signature_hash"></textarea>
+									<textarea class="form-control" name="signatureHash" id="calculate_full_hash_signature_hash" rows="1" placeholder="Signature Hash" data-i18n="[placeholder]signature_hash"></textarea>
 								</div>
 								<input type="hidden" name="request_type" value="calculateFullHash" />
 								<div id="calculate_full_hash_output" class="output" style="max-height:350px;overflow:auto">
