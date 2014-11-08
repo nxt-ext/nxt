@@ -1,6 +1,5 @@
 package nxt;
 
-import nxt.db.Db;
 import nxt.db.DbClause;
 import nxt.db.DbIterator;
 import nxt.db.DbKey;
@@ -69,7 +68,7 @@ public final class Exchange {
     public static DbIterator<Exchange> getAccountExchanges(long accountId, int from, int to) {
         Connection con = null;
         try {
-            con = Db.getConnection();
+            con = Db.db.getConnection();
             PreparedStatement pstmt = con.prepareStatement("SELECT * FROM exchange WHERE seller_id = ?"
                     + " UNION ALL SELECT * FROM exchange WHERE buyer_id = ? AND seller_id <> ? ORDER BY height DESC"
                     + DbUtils.limitsClause(from, to));
@@ -88,7 +87,7 @@ public final class Exchange {
     public static DbIterator<Exchange> getAccountCurrencyExchanges(long accountId, long currencyId, int from, int to) {
         Connection con = null;
         try {
-            con = Db.getConnection();
+            con = Db.db.getConnection();
             PreparedStatement pstmt = con.prepareStatement("SELECT * FROM exchange WHERE seller_id = ? AND currency_id = ?"
                     + " UNION ALL SELECT * FROM exchange WHERE buyer_id = ? AND seller_id <> ? AND currency_id = ? ORDER BY height DESC"
                     + DbUtils.limitsClause(from, to));
@@ -107,7 +106,7 @@ public final class Exchange {
     }
 
     public static int getExchangeCount(long currencyId) {
-        try (Connection con = Db.getConnection();
+        try (Connection con = Db.db.getConnection();
              PreparedStatement pstmt = con.prepareStatement("SELECT COUNT(*) FROM exchange WHERE currency_id = ?")) {
             pstmt.setLong(1, currencyId);
             try (ResultSet rs = pstmt.executeQuery()) {
