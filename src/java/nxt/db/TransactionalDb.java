@@ -106,7 +106,7 @@ public class TransactionalDb extends BasicDb {
         public void commit() throws SQLException {
             if (localConnection.get() == null) {
                 super.commit();
-            } else if (! this.equals(localConnection.get())) {
+            } else if (this != localConnection.get()) {
                 throw new IllegalStateException("Previous connection not committed");
             } else {
                 commitTransaction();
@@ -121,7 +121,7 @@ public class TransactionalDb extends BasicDb {
         public void rollback() throws SQLException {
             if (localConnection.get() == null) {
                 super.rollback();
-            } else if (! this.equals(localConnection.get())) {
+            } else if (this != localConnection.get()) {
                 throw new IllegalStateException("Previous connection not committed");
             } else {
                 rollbackTransaction();
@@ -136,7 +136,7 @@ public class TransactionalDb extends BasicDb {
         public void close() throws SQLException {
             if (localConnection.get() == null) {
                 super.close();
-            } else if (! this.equals(localConnection.get())) {
+            } else if (this != localConnection.get()) {
                 throw new IllegalStateException("Previous connection not committed");
             }
         }
