@@ -1,6 +1,5 @@
 package nxt;
 
-import nxt.db.Db;
 import nxt.db.DbClause;
 import nxt.db.DbIterator;
 import nxt.db.DbKey;
@@ -211,7 +210,7 @@ public abstract class Order {
         }
 
         private static Ask getNextOrder(long assetId) {
-            try (Connection con = Db.getConnection();
+            try (Connection con = Db.db.getConnection();
                  PreparedStatement pstmt = con.prepareStatement("SELECT * FROM ask_order WHERE asset_id = ? "
                          + "AND latest = TRUE ORDER BY price ASC, creation_height ASC, id ASC LIMIT 1")) {
                 pstmt.setLong(1, assetId);
@@ -347,7 +346,7 @@ public abstract class Order {
         }
 
         private static Bid getNextOrder(long assetId) {
-            try (Connection con = Db.getConnection();
+            try (Connection con = Db.db.getConnection();
                  PreparedStatement pstmt = con.prepareStatement("SELECT * FROM bid_order WHERE asset_id = ? "
                          + "AND latest = TRUE ORDER BY price DESC, creation_height ASC, id ASC LIMIT 1")) {
                 pstmt.setLong(1, assetId);
