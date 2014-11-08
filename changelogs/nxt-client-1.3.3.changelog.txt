@@ -9,5 +9,5 @@ Cache hallmarked peer account balances to reduce number of database calls.
 
 Fixed decryption of purchased DGS goods. Fixed missing DGS purchase feedbacks.
 
-UI bugfixes and improvements.
+UI bugfixes and improvements. Added themes settings and a corporate theme.
 
