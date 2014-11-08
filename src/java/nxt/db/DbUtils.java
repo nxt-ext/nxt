@@ -55,7 +55,7 @@ public final class DbUtils {
         } else if (limit > 0) {
             return " LIMIT ? ";
         } else if (from > 0) {
-            return " OFFSET ? ";
+            return " LIMIT NULL OFFSET ? ";
         } else {
             return "";
         }
