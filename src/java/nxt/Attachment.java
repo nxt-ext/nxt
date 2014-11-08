@@ -98,7 +98,7 @@ public interface Attachment extends Appendix {
     public final static class PendingPaymentVoteCasting extends AbstractAttachment {
         private final long[] pendingTransactionsIds;
 
-        PendingPaymentVoteCasting(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
+        PendingPaymentVoteCasting(ByteBuffer buffer, byte transactionVersion) {
             super(buffer, transactionVersion);
             byte length = buffer.get();
             pendingTransactionsIds = new long[length];
@@ -428,7 +428,7 @@ public interface Attachment extends Appendix {
             this.assetId = buffer.getLong();
         }
 
-        MessagingPollCreation(JSONObject attachmentData) throws NxtException.NotValidException {
+        MessagingPollCreation(JSONObject attachmentData) {
             super(attachmentData);
 
             this.pollName = ((String) attachmentData.get("name")).trim();

@@ -457,7 +457,7 @@ public interface Appendix {
             assetId = buffer.getLong();
         }
 
-        TwoPhased(JSONObject attachmentData) throws NxtException.NotValidException {
+        TwoPhased(JSONObject attachmentData){
             super(attachmentData);
             maxHeight = (Integer) attachmentData.get("releaseHeight");
             quorum = (Long) attachmentData.get("quorum");
@@ -550,11 +550,15 @@ public interface Appendix {
             json.put("assetId", assetId);
 
             JSONArray whitelistJson = new JSONArray();
-            Collections.addAll(whitelistJson, whitelist);
+            for (long accountId : whitelist) {
+                whitelistJson.add(accountId);
+            }
             json.put("whitelist", whitelistJson);
 
             JSONArray blacklistJson = new JSONArray();
-            Collections.addAll(blacklistJson, blacklist);
+            for (long accountId : blacklist) {
+                blacklistJson.add(accountId);
+            }
             json.put("blacklist", blacklistJson);
         }
 

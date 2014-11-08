@@ -292,7 +292,7 @@ public final class Poll extends AbstractPoll {
 
 
 
-    private long[] countVote(Vote vote) throws NxtException.IllegalStateException {
+    private long[] countVote(Vote vote) {
         final long[] partialResult = new long[options.length];
 
         final Account voter = Account.getAccount(vote.getVoterId());
