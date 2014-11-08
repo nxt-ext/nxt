@@ -159,6 +159,7 @@ var NRS = (function(NRS, $, undefined) {
 
 					break;
 				case 2:
+					NRS.forms.createPoll().data;
 					var data = {
 						"type": $.t("poll_creation"),
 						"name": transaction.attachment.name,
