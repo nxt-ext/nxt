@@ -28,19 +28,19 @@ public abstract class ValuesDbTable<T,V> extends DerivedDbTable {
 
     public final List<V> get(DbKey dbKey) {
         List<V> values;
-        if (Db.isInTransaction()) {
-            values = (List<V>)Db.getCache(table).get(dbKey);
+        if (db.isInTransaction()) {
+            values = (List<V>) db.getCache(table).get(dbKey);
             if (values != null) {
                 return values;
             }
         }
-        try (Connection con = Db.getConnection();
+        try (Connection con = db.getConnection();
              PreparedStatement pstmt = con.prepareStatement("SELECT * FROM " + table + dbKeyFactory.getPKClause()
              + (multiversion ? " AND latest = TRUE" : "") + " ORDER BY db_id DESC")) {
             dbKey.setPK(pstmt);
             values = get(con, pstmt);
-            if (Db.isInTransaction()) {
-                Db.getCache(table).put(dbKey, values);
+            if (db.isInTransaction()) {
+                db.getCache(table).put(dbKey, values);
             }
             return values;
         } catch (SQLException e) {
@@ -63,12 +63,12 @@ public abstract class ValuesDbTable<T,V> extends DerivedDbTable {
     }
 
     public final void insert(T t, List<V> values) {
-        if (!Db.isInTransaction()) {
+        if (!db.isInTransaction()) {
             throw new IllegalStateException("Not in transaction");
         }
         DbKey dbKey = dbKeyFactory.newKey(t);
-        Db.getCache(table).put(dbKey, values);
-        try (Connection con = Db.getConnection()) {
+        db.getCache(table).put(dbKey, values);
+        try (Connection con = db.getConnection()) {
             if (multiversion) {
                 try (PreparedStatement pstmt = con.prepareStatement("UPDATE " + table
                         + " SET latest = FALSE " + dbKeyFactory.getPKClause() + " AND latest = TRUE")) {
@@ -87,13 +87,13 @@ public abstract class ValuesDbTable<T,V> extends DerivedDbTable {
     @Override
     public void rollback(int height) {
         super.rollback(height);
-        Db.getCache(table).clear();
+        db.getCache(table).clear();
     }
 
     @Override
     public final void truncate() {
         super.truncate();
-        Db.getCache(table).clear();
+        db.getCache(table).clear();
     }
 
 }

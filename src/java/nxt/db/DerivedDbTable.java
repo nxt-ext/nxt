@@ -1,5 +1,6 @@
 package nxt.db;
 
+import nxt.Db;
 import nxt.Nxt;
 
 import java.sql.Connection;
@@ -9,6 +10,8 @@ import java.sql.Statement;
 
 public abstract class DerivedDbTable {
 
+    protected static final TransactionalDb db = Db.db;
+
     protected final String table;
 
     protected DerivedDbTable(String table) {
@@ -17,10 +20,10 @@ public abstract class DerivedDbTable {
     }
 
     public void rollback(int height) {
-        if (!Db.isInTransaction()) {
+        if (!db.isInTransaction()) {
             throw new IllegalStateException("Not in transaction");
         }
-        try (Connection con = Db.getConnection();
+        try (Connection con = db.getConnection();
              PreparedStatement pstmtDelete = con.prepareStatement("DELETE FROM " + table + " WHERE height > ?")) {
             pstmtDelete.setInt(1, height);
             pstmtDelete.executeUpdate();
@@ -30,10 +33,10 @@ public abstract class DerivedDbTable {
     }
 
     public void truncate() {
-        if (!Db.isInTransaction()) {
+        if (!db.isInTransaction()) {
             throw new IllegalStateException("Not in transaction");
         }
-        try (Connection con = Db.getConnection();
+        try (Connection con = db.getConnection();
              Statement stmt = con.createStatement()) {
             stmt.executeUpdate("TRUNCATE TABLE " + table);
         } catch (SQLException e) {
