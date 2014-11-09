@@ -417,8 +417,6 @@ public interface Appendix {
     }
 
     public static class TwoPhased extends AbstractAppendix {
-        public static final byte MAX_WHITELIST_SIZE = 10;
-        public static final byte MAX_BLACKLIST_SIZE = 5;
 
         static TwoPhased parse(JSONObject attachmentData) throws NxtException.NotValidException {
             if (attachmentData.get("releaseHeight") == null) {
@@ -579,11 +577,11 @@ public interface Appendix {
                 throw new NxtException.NotValidException("By-account voting with non-empty blacklist");
             }
 
-            if (whitelist.length > MAX_WHITELIST_SIZE) {
+            if (whitelist.length > Constants.PENDING_TRANSACTIONS_MAX_WHITELIST_SIZE) {
                 throw new NxtException.NotValidException("Possible voters list is too big");
             }
 
-            if (blacklist.length > MAX_BLACKLIST_SIZE) {
+            if (blacklist.length > Constants.PENDING_TRANSACTIONS_MAX_BLACKLIST_SIZE) {
                 throw new NxtException.NotValidException("Possible voters list is too big");
             }
 
