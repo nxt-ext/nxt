@@ -482,6 +482,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         validateAtScan = true;
     }
 
+    @Override
     public void setGetMoreBlocks(boolean getMoreBlocks) {
         this.getMoreBlocks = getMoreBlocks;
     }
