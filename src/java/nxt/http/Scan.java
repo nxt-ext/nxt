@@ -30,13 +30,19 @@ public final class Scan extends APIServlet.APIRequestHandler {
                 height = Integer.parseInt(req.getParameter("height"));
             } catch (NumberFormatException ignore) {}
             long start = System.currentTimeMillis();
-            if (numBlocks > 0) {
-                Nxt.getBlockchainProcessor().scan(Nxt.getBlockchain().getHeight() - numBlocks + 1);
-            } else if (height >= 0) {
-                Nxt.getBlockchainProcessor().scan(height);
-            } else {
-                response.put("error", "invalid numBlocks or height");
-                return response;
+            try {
+                if (numBlocks > 0) {
+                    Nxt.getBlockchainProcessor().setGetMoreBlocks(false);
+                    Nxt.getBlockchainProcessor().scan(Nxt.getBlockchain().getHeight() - numBlocks + 1);
+                } else if (height >= 0) {
+                    Nxt.getBlockchainProcessor().setGetMoreBlocks(false);
+                    Nxt.getBlockchainProcessor().scan(height);
+                } else {
+                    response.put("error", "invalid numBlocks or height");
+                    return response;
+                }
+            } finally {
+                Nxt.getBlockchainProcessor().setGetMoreBlocks(true);
             }
             long end = System.currentTimeMillis();
             response.put("done", true);
