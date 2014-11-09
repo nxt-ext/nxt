@@ -963,13 +963,14 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             if (height < 0) {
                 height = 0;
             }
-            isScanning = true;
             Logger.logMessage("Scanning blockchain starting from height " + height + "...");
             if (validateAtScan) {
                 Logger.logDebugMessage("Also verifying signatures and validating transactions...");
             }
             try (Connection con = Db.db.beginTransaction();
                  PreparedStatement pstmt = con.prepareStatement("SELECT * FROM block WHERE height >= ? ORDER BY db_id ASC")) {
+                isScanning = true;
+                setGetMoreBlocks(false);
                 transactionProcessor.requeueAllUnconfirmedTransactions();
                 for (DerivedDbTable table : derivedTables) {
                     if (height == 0) {
@@ -1065,12 +1066,14 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     Db.db.endTransaction();
                     blockListeners.notify(currentBlock, Event.RESCAN_END);
                 }
+                validateAtScan = false;
+                Logger.logMessage("...done at height " + Nxt.getBlockchain().getHeight());
             } catch (SQLException e) {
                 throw new RuntimeException(e.toString(), e);
+            } finally {
+                isScanning = false;
+                setGetMoreBlocks(true);
             }
-            validateAtScan = false;
-            Logger.logMessage("...done at height " + Nxt.getBlockchain().getHeight());
-            isScanning = false;
         } // synchronized
     }
 
