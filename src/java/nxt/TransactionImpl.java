@@ -375,9 +375,6 @@ final class TransactionImpl implements Transaction {
     }
 
     void setIndex(int index) {
-        if (this.index != -1) {
-            throw new IllegalStateException("Transaction index has already been set");
-        }
         this.index = (short)index;
     }
 
