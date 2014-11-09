@@ -79,7 +79,7 @@ public abstract class CurrencyExchangeOffer {
 
         List<CurrencyBuyOffer> currencyBuyOffers = new ArrayList<>();
         try (DbIterator<CurrencyBuyOffer> offers = CurrencyBuyOffer.getOffers(new ValidOffersDbClause(currencyId, rateNQT, true), 0, -1,
-                " ORDER BY rate DESC, creation_height ASC, id ASC ")) {
+                " ORDER BY rate DESC, creation_height ASC, transaction_index ASC ")) {
             for (CurrencyBuyOffer offer : offers) {
                 currencyBuyOffers.add(offer);
             }
@@ -112,7 +112,7 @@ public abstract class CurrencyExchangeOffer {
 
         List<CurrencySellOffer> currencySellOffers = new ArrayList<>();
         try (DbIterator<CurrencySellOffer> offers = CurrencySellOffer.getOffers(new ValidOffersDbClause(currencyId, rateNQT, false), 0, -1,
-                " ORDER BY rate ASC, creation_height ASC, id ASC ")) {
+                " ORDER BY rate ASC, creation_height ASC, transaction_index ASC ")) {
             for (CurrencySellOffer offer : offers) {
                 currencySellOffers.add(offer);
             }
@@ -159,8 +159,10 @@ public abstract class CurrencyExchangeOffer {
     protected long supply; // total units supply for the offer
     protected final int expirationHeight;
     protected final int creationHeight;
+    protected final short transactionIndex;
 
-    protected CurrencyExchangeOffer(long id, long currencyId, long accountId, long rateNQT, long limit, long supply, int expirationHeight, int creationHeight) {
+    protected CurrencyExchangeOffer(long id, long currencyId, long accountId, long rateNQT, long limit, long supply,
+                                    int expirationHeight, int creationHeight, short transactionIndex) {
         this.id = id;
         this.currencyId = currencyId;
         this.accountId = accountId;
@@ -169,6 +171,7 @@ public abstract class CurrencyExchangeOffer {
         this.supply = supply;
         this.expirationHeight = expirationHeight;
         this.creationHeight = creationHeight;
+        this.transactionIndex = transactionIndex;
     }
 
     protected CurrencyExchangeOffer(ResultSet rs) throws SQLException {
@@ -180,11 +183,13 @@ public abstract class CurrencyExchangeOffer {
         this.supply = rs.getLong("supply");
         this.expirationHeight = rs.getInt("expiration_height");
         this.creationHeight = rs.getInt("creation_height");
+        this.transactionIndex = rs.getShort("transaction_index");
     }
 
     protected void save(Connection con, String table) throws SQLException {
         try (PreparedStatement pstmt = con.prepareStatement("MERGE INTO " + table + " (id, currency_id, account_id, "
-                + "rate, unit_limit, supply, expiration_height, creation_height, height, latest) KEY (id, height) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, TRUE)")) {
+                + "rate, unit_limit, supply, expiration_height, creation_height, transaction_index, height, latest) "
+                + "KEY (id, height) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, TRUE)")) {
             int i = 0;
             pstmt.setLong(++i, this.getId());
             pstmt.setLong(++i, this.getCurrencyId());
@@ -194,6 +199,7 @@ public abstract class CurrencyExchangeOffer {
             pstmt.setLong(++i, this.getSupply());
             pstmt.setInt(++i, this.getExpirationHeight());
             pstmt.setInt(++i, this.getHeight());
+            pstmt.setShort(++i, this.transactionIndex);
             pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
             pstmt.executeUpdate();
         }

@@ -21,24 +21,18 @@ import org.junit.runners.Suite;
 
 public class CurrencySuite {
 
-    private static String NO_TRANSACTIONS = "0 rows";
-
     @BeforeClass
     public static void init() {
         Nxt.init();
         Nxt.getBlockchainProcessor().addListener(new Helper.BlockListener(), BlockchainProcessor.Event.BLOCK_GENERATED);
-        String output = Helper.executeQuery("select * from unconfirmed_transaction");
-        Assert.assertTrue(output.contains(NO_TRANSACTIONS));
-        output = Helper.executeQuery("select * from currency");
-        Assert.assertTrue(output.contains(NO_TRANSACTIONS));
+        Assert.assertEquals(0, Helper.getCount("unconfirmed_transaction"));
+        Assert.assertEquals(0, Helper.getCount("currency"));
     }
 
     @AfterClass
     public static void shutdown() {
-        String output = Helper.executeQuery("select * from currency");
-        Assert.assertTrue(output.contains(NO_TRANSACTIONS));
-        output = Helper.executeQuery("select * from unconfirmed_transaction");
-        Assert.assertTrue(output.contains(NO_TRANSACTIONS));
+        Assert.assertEquals(0, Helper.getCount("unconfirmed_transaction"));
+        Assert.assertEquals(0, Helper.getCount("currency"));
         Nxt.shutdown();
     }
 

@@ -1,7 +1,9 @@
 package nxt.http;
 
-import nxt.*;
+import nxt.BlockchainTest;
+import nxt.Constants;
 import nxt.CurrencyMint;
+import nxt.CurrencyType;
 import nxt.crypto.HashFunction;
 import nxt.util.Convert;
 import nxt.util.Logger;

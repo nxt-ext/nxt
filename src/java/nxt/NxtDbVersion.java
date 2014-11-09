@@ -1,10 +1,16 @@
 package nxt;
 
 import nxt.db.DbVersion;
+import nxt.util.Logger;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 
 class NxtDbVersion extends DbVersion {
 
-    protected void update(int nextUpdate) {
+    protected void update(int nextUpdate) throws SQLException {
         switch (nextUpdate) {
             case 1:
                 apply("CREATE TABLE IF NOT EXISTS block (db_id IDENTITY, id BIGINT NOT NULL, version INT NOT NULL, "
@@ -383,7 +389,7 @@ class NxtDbVersion extends DbVersion {
             case 138:
                 apply("CREATE TABLE IF NOT EXISTS buy_offer (db_id INT IDENTITY, id BIGINT NOT NULL, currency_id BIGINT NOT NULL, account_id BIGINT NOT NULL,"
                         + "rate BIGINT NOT NULL, unit_limit BIGINT NOT NULL, supply BIGINT NOT NULL, expiration_height INT NOT NULL,"
-                        + "creation_height INT NOT NULL, height INT NOT NULL, latest BOOLEAN NOT NULL DEFAULT TRUE)");
+                        + "creation_height INT NOT NULL, transaction_index SMALLINT NOT NULL, height INT NOT NULL, latest BOOLEAN NOT NULL DEFAULT TRUE)");
             case 139:
                 apply("CREATE UNIQUE INDEX IF NOT EXISTS buy_offer_id_idx ON buy_offer (id, height DESC)");
             case 140:
@@ -391,7 +397,7 @@ class NxtDbVersion extends DbVersion {
             case 141:
                 apply("CREATE TABLE IF NOT EXISTS sell_offer (db_id INT IDENTITY, id BIGINT NOT NULL, currency_id BIGINT NOT NULL, account_id BIGINT NOT NULL, "
                         + "rate BIGINT NOT NULL, unit_limit BIGINT NOT NULL, supply BIGINT NOT NULL, expiration_height INT NOT NULL, "
-                        + "creation_height INT NOT NULL, height INT NOT NULL, latest BOOLEAN NOT NULL DEFAULT TRUE)");
+                        + "creation_height INT NOT NULL, transaction_index SMALLINT NOT NULL, height INT NOT NULL, latest BOOLEAN NOT NULL DEFAULT TRUE)");
             case 142:
                 apply("CREATE UNIQUE INDEX IF NOT EXISTS sell_offer_id_idx ON sell_offer (id, height DESC)");
             case 143:
@@ -436,6 +442,54 @@ class NxtDbVersion extends DbVersion {
             case 160:
                 apply("ALTER TABLE account ADD COLUMN IF NOT EXISTS message_pattern_flags INT");
             case 161:
+                apply("DROP INDEX IF EXISTS unconfirmed_transaction_height_fee_timestamp_idx");
+            case 162:
+                apply("ALTER TABLE unconfirmed_transaction DROP COLUMN IF EXISTS timestamp");
+            case 163:
+                apply("ALTER TABLE unconfirmed_transaction ADD COLUMN IF NOT EXISTS arrival_timestamp BIGINT NOT NULL DEFAULT 0");
+            case 164:
+                apply("CREATE INDEX IF NOT EXISTS unconfirmed_transaction_height_fee_timestamp_idx ON unconfirmed_transaction "
+                        + "(transaction_height ASC, fee_per_byte DESC, arrival_timestamp ASC)");
+            case 165:
+                apply("ALTER TABLE transaction ADD COLUMN IF NOT EXISTS transaction_index SMALLINT");
+            case 166:
+                Logger.logMessage("Will update transaction_index column...");
+                try (Connection con = Db.db.getConnection();
+                     PreparedStatement pstmt = con.prepareStatement("SELECT * FROM transaction ORDER BY height, id FOR UPDATE",
+                             ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_UPDATABLE)) {
+                    try (ResultSet rs = pstmt.executeQuery()) {
+                        int height = 0;
+                        short index = 0;
+                        while (rs.next()) {
+                            int nextHeight = rs.getInt("height");
+                            if (nextHeight != height) {
+                                index = 0;
+                                if (height / 5000 != nextHeight / 5000) {
+                                    Logger.logMessage("Processed " + (nextHeight / 5000) * 5000 + " blocks");
+                                }
+                                height = nextHeight;
+                            }
+                            rs.updateShort("transaction_index", index++);
+                            rs.updateRow();
+                        }
+                    }
+                }
+                apply(null);
+            case 167:
+                apply("ALTER TABLE transaction ALTER COLUMN transaction_index SET NOT NULL");
+            case 168:
+                apply("ALTER TABLE ask_order ADD COLUMN IF NOT EXISTS transaction_index SMALLINT");
+            case 169:
+                apply("UPDATE ask_order SET transaction_index = (SELECT transaction_index FROM transaction WHERE transaction.id = ask_order.id)");
+            case 170:
+                apply("ALTER TABLE ask_order ALTER COLUMN transaction_index SET NOT NULL");
+            case 171:
+                apply("ALTER TABLE bid_order ADD COLUMN IF NOT EXISTS transaction_index SMALLINT");
+            case 172:
+                apply("UPDATE bid_order SET transaction_index = (SELECT transaction_index FROM transaction WHERE transaction.id = bid_order.id)");
+            case 173:
+                apply("ALTER TABLE bid_order ALTER COLUMN transaction_index SET NOT NULL");
+            case 174:
                 return;
             default:
                 throw new RuntimeException("Blockchain database inconsistent with code, probably trying to run older code on newer database");

@@ -44,6 +44,7 @@ final class TransactionImpl implements Transaction {
         private String fullHash;
         private int ecBlockHeight;
         private long ecBlockId;
+        private short index = -1;
 
         BuilderImpl(byte version, byte[] senderPublicKey, long amountNQT, long feeNQT, int timestamp, short deadline,
                     Attachment.AbstractAttachment attachment) {
@@ -157,6 +158,11 @@ final class TransactionImpl implements Transaction {
             return this;
         }
 
+        BuilderImpl index(short index) {
+            this.index = index;
+            return this;
+        }
+
     }
 
     private final short deadline;
@@ -184,6 +190,7 @@ final class TransactionImpl implements Transaction {
     private volatile Block block;
     private volatile byte[] signature;
     private volatile int blockTimestamp = -1;
+    private volatile short index = -1;
     private volatile long id;
     private volatile String stringId;
     private volatile long senderId;
@@ -203,6 +210,7 @@ final class TransactionImpl implements Transaction {
         this.version = builder.version;
         this.blockId = builder.blockId;
         this.height = builder.height;
+        this.index = builder.index;
         this.id = builder.id;
         this.senderId = builder.senderId;
         this.blockTimestamp = builder.blockTimestamp;
@@ -353,8 +361,24 @@ final class TransactionImpl implements Transaction {
         this.block = null;
         this.blockId = 0;
         this.blockTimestamp = -1;
+        this.index = -1;
         // must keep the height set, as transactions already having been included in a popped-off block before
         // get priority when sorted for inclusion in a new block
+    }
+
+    @Override
+    public short getIndex() {
+        if (index == -1) {
+            throw new IllegalStateException("Transaction index has not been set");
+        }
+        return index;
+    }
+
+    void setIndex(int index) {
+        if (this.index != -1) {
+            throw new IllegalStateException("Transaction index has already been set");
+        }
+        this.index = (short)index;
     }
 
     @Override
@@ -687,11 +711,6 @@ final class TransactionImpl implements Transaction {
     @Override
     public int hashCode() {
         return (int)(getId() ^ (getId() >>> 32));
-    }
-
-    @Override
-    public int compareTo(Transaction other) {
-        return Long.compare(this.getId(), other.getId());
     }
 
     public boolean verifySignature() {
