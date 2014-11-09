@@ -213,7 +213,11 @@ public abstract class TransactionType {
         return ! typeDuplicates.add(key);
     }
 
-    public abstract boolean hasRecipient();
+    public abstract boolean canHaveRecipient();
+
+    public boolean mustHaveRecipient() {
+        return canHaveRecipient();
+    }
 
     @Override
     public final String toString() {
@@ -241,7 +245,7 @@ public abstract class TransactionType {
         final void undoAttachmentUnconfirmed(Transaction transaction, Account senderAccount) { }
 
         @Override
-        final public boolean hasRecipient() {
+        final public boolean canHaveRecipient() {
             return true;
         }
 
@@ -378,8 +382,13 @@ public abstract class TransactionType {
             }
 
             @Override
-            public boolean hasRecipient() {
+            public boolean canHaveRecipient() {
                 return true;
+            }
+
+            @Override
+            public boolean mustHaveRecipient() {
+                return false;
             }
 
         };
@@ -434,7 +443,7 @@ public abstract class TransactionType {
             }
 
             @Override
-            public boolean hasRecipient() {
+            public boolean canHaveRecipient() {
                 return false;
             }
 
@@ -503,8 +512,13 @@ public abstract class TransactionType {
             }
 
             @Override
-            public boolean hasRecipient() {
+            public boolean canHaveRecipient() {
                 return true;
+            }
+
+            @Override
+            public boolean mustHaveRecipient() {
+                return false;
             }
 
         };
@@ -570,7 +584,7 @@ public abstract class TransactionType {
             }
 
             @Override
-            public boolean hasRecipient() {
+            public boolean canHaveRecipient() {
                 return true;
             }
 
@@ -663,7 +677,7 @@ public abstract class TransactionType {
             }
 
             @Override
-            public boolean hasRecipient() {
+            public boolean canHaveRecipient() {
                 return false;
             }
         };
@@ -728,7 +742,7 @@ public abstract class TransactionType {
             }
 
             @Override
-            public boolean hasRecipient() {
+            public boolean canHaveRecipient() {
                 return false;
             }
         };
@@ -776,7 +790,7 @@ public abstract class TransactionType {
             }
 
             @Override
-            public boolean hasRecipient() {
+            public boolean canHaveRecipient() {
                 return false;
             }
 
@@ -816,7 +830,7 @@ public abstract class TransactionType {
             }
 
             @Override
-            public boolean hasRecipient() {
+            public boolean canHaveRecipient() {
                 return false;
             }
 
@@ -897,7 +911,7 @@ public abstract class TransactionType {
             }
 
             @Override
-            public boolean hasRecipient() {
+            public boolean canHaveRecipient() {
                 return false;
             }
 
@@ -968,7 +982,7 @@ public abstract class TransactionType {
             }
 
             @Override
-            public boolean hasRecipient() {
+            public boolean canHaveRecipient() {
                 return true;
             }
 
@@ -994,7 +1008,7 @@ public abstract class TransactionType {
             }
 
             @Override
-            final public boolean hasRecipient() {
+            final public boolean canHaveRecipient() {
                 return false;
             }
 
@@ -1110,7 +1124,7 @@ public abstract class TransactionType {
             }
 
             @Override
-            public boolean hasRecipient() {
+            public boolean canHaveRecipient() {
                 return false;
             }
 
@@ -1258,7 +1272,7 @@ public abstract class TransactionType {
             }
 
             @Override
-            public boolean hasRecipient() {
+            public boolean canHaveRecipient() {
                 return false;
             }
 
@@ -1307,7 +1321,7 @@ public abstract class TransactionType {
             }
 
             @Override
-            public boolean hasRecipient() {
+            public boolean canHaveRecipient() {
                 return false;
             }
 
@@ -1358,7 +1372,7 @@ public abstract class TransactionType {
             }
 
             @Override
-            public boolean hasRecipient() {
+            public boolean canHaveRecipient() {
                 return false;
             }
 
@@ -1410,7 +1424,7 @@ public abstract class TransactionType {
             }
 
             @Override
-            public boolean hasRecipient() {
+            public boolean canHaveRecipient() {
                 return false;
             }
 
@@ -1480,7 +1494,7 @@ public abstract class TransactionType {
             }
 
             @Override
-            public boolean hasRecipient() {
+            public boolean canHaveRecipient() {
                 return true;
             }
 
@@ -1536,7 +1550,7 @@ public abstract class TransactionType {
             }
 
             @Override
-            public boolean hasRecipient() {
+            public boolean canHaveRecipient() {
                 return true;
             }
 
@@ -1589,13 +1603,7 @@ public abstract class TransactionType {
             }
 
             @Override
-            boolean isDuplicate(Transaction transaction, Map<TransactionType, Set<String>> duplicates) {
-                Attachment.DigitalGoodsFeedback attachment = (Attachment.DigitalGoodsFeedback) transaction.getAttachment();
-                return isDuplicate(DigitalGoods.FEEDBACK, Convert.toUnsignedLong(attachment.getPurchaseId()), duplicates);
-            }
-
-            @Override
-            public boolean hasRecipient() {
+            public boolean canHaveRecipient() {
                 return true;
             }
 
@@ -1666,7 +1674,7 @@ public abstract class TransactionType {
             }
 
             @Override
-            public boolean hasRecipient() {
+            public boolean canHaveRecipient() {
                 return true;
             }
 
@@ -1734,7 +1742,7 @@ public abstract class TransactionType {
             }
 
             @Override
-            public boolean hasRecipient() {
+            public boolean canHaveRecipient() {
                 return true;
             }
 

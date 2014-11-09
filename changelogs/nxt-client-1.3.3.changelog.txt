@@ -7,3 +7,15 @@ accounts, and transfers counts, if not needed.
 
 Cache hallmarked peer account balances to reduce number of database calls.
 
+Fixed decryption of purchased DGS goods. Fixed missing DGS purchase feedbacks.
+
+Added a hideDelisted parameter to the getDGSGoods API, default false. If true,
+delisted goods are not included in the results. This parameter has effect only
+if inStockOnly=false, as delisted goods are considered not to be in stock.
+
+UI bugfixes and improvements. Added themes settings and a corporate theme.
+Hide fee input when sending NXT in basic mode, and set to the minimum fee.
+
+Improved the http://localhost:7876/test page interface, allow custom API call
+selection, syntax highlighting of the response JSON.
+

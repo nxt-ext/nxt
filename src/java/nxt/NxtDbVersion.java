@@ -1,64 +1,10 @@
 package nxt;
 
-import nxt.db.Db;
-import nxt.util.Logger;
+import nxt.db.DbVersion;
 
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+class NxtDbVersion extends DbVersion {
 
-final class DbVersion {
-
-    static void init() {
-        try (Connection con = Db.beginTransaction(); Statement stmt = con.createStatement()) {
-            int nextUpdate = 1;
-            try {
-                ResultSet rs = stmt.executeQuery("SELECT next_update FROM version");
-                if (! rs.next()) {
-                    throw new RuntimeException("Invalid version table");
-                }
-                nextUpdate = rs.getInt("next_update");
-                if (! rs.isLast()) {
-                    throw new RuntimeException("Invalid version table");
-                }
-                rs.close();
-                Logger.logMessage("Database update may take a while if needed, current db version " + (nextUpdate - 1) + "...");
-            } catch (SQLException e) {
-                Logger.logMessage("Initializing an empty database");
-                stmt.executeUpdate("CREATE TABLE version (next_update INT NOT NULL)");
-                stmt.executeUpdate("INSERT INTO version VALUES (1)");
-                Db.commitTransaction();
-            }
-            update(nextUpdate);
-        } catch (SQLException e) {
-            Db.rollbackTransaction();
-            throw new RuntimeException(e.toString(), e);
-        } finally {
-            Db.endTransaction();
-        }
-
-    }
-
-    private static void apply(String sql) {
-        try (Connection con = Db.getConnection(); Statement stmt = con.createStatement()) {
-            try {
-                if (sql != null) {
-                    Logger.logDebugMessage("Will apply sql:\n" + sql);
-                    stmt.executeUpdate(sql);
-                }
-                stmt.executeUpdate("UPDATE version SET next_update = next_update + 1");
-                Db.commitTransaction();
-            } catch (Exception e) {
-                Db.rollbackTransaction();
-                throw e;
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException("Database error executing " + sql, e);
-        }
-    }
-
-    private static void update(int nextUpdate) {
+    protected void update(int nextUpdate) {
         switch (nextUpdate) {
             case 1:
                 apply("CREATE TABLE IF NOT EXISTS block (db_id IDENTITY, id BIGINT NOT NULL, version INT NOT NULL, "
@@ -167,7 +113,10 @@ final class DbVersion {
                             "('178.162.198.109'), ('108.170.40.4'), ('84.128.162.237'), ('54.200.116.75'), ('miasik.no-ip.org'), " +
                             "('nxt.cybermailing.com'), ('23.88.246.117'), ('54.213.222.141'), ('185.21.192.9'), " +
                             "('dorcsforge.cloudapp.net'), ('188.226.245.226'), ('167.206.61.3'), ('107.170.75.92'), ('211.149.213.86'), " +
-                            "('5.150.195.208'), ('96.240.128.221')");
+                            "('5.150.195.208'), ('96.240.128.221'), ('85.25.198.120'), ('80.86.92.139'), ('106.187.95.232'), " +
+                            "('89.212.19.49'), ('91.98.139.194'), ('87.98.163.78'), ('54.214.232.96'), ('nxt.shscrypto.net'), " +
+                            "('92.222.0.105'), ('54.191.19.147'), ('198.27.64.207'), ('178.62.240.203'), ('54.68.87.225'), " +
+                            "('54.200.180.57'), ('37.59.121.207'), ('198.57.198.33'), ('90.153.106.133')");
                 } else {
                     apply("INSERT INTO peer (address) VALUES " +
                             "('nxt.scryptmh.eu'), ('54.186.98.117'), ('178.150.207.53'), ('192.241.223.132'), ('node9.mynxtcoin.org'), " +
@@ -443,5 +392,4 @@ final class DbVersion {
         }
     }
 
-    private DbVersion() {} //never
 }

@@ -1,6 +1,5 @@
 package nxt;
 
-import nxt.db.Db;
 import nxt.http.API;
 import nxt.peer.Peers;
 import nxt.user.Users;
@@ -173,7 +172,6 @@ public final class Nxt {
                 Db.init();
                 TransactionProcessorImpl.getInstance();
                 BlockchainProcessorImpl.getInstance();
-                DbVersion.init();
                 Account.init();
                 Alias.init();
                 Asset.init();

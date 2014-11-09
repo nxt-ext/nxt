@@ -283,7 +283,7 @@ public interface Appendix {
         @Override
         void validate(Transaction transaction) throws NxtException.ValidationException {
             super.validate(transaction);
-            if (! transaction.getType().hasRecipient()) {
+            if (transaction.getRecipientId() == 0) {
                 throw new NxtException.NotValidException("Encrypted messages cannot be attached to transactions with no recipient");
             }
             if (transaction.getVersion() == 0) {
@@ -384,7 +384,7 @@ public interface Appendix {
 
         @Override
         void validate(Transaction transaction) throws NxtException.ValidationException {
-            if (! transaction.getType().hasRecipient()) {
+            if (transaction.getRecipientId() == 0) {
                 throw new NxtException.NotValidException("PublicKeyAnnouncement cannot be attached to transactions with no recipient");
             }
             if (publicKey.length != 32) {

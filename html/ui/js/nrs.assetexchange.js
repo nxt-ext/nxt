@@ -892,7 +892,7 @@ var NRS = (function(NRS, $, undefined) {
 			return;
 		}
 
-		if (type == "sell") {
+		if (type == "buy") {
 			try {
 				var balanceNQT = new BigInteger(NRS.accountInfo.unconfirmedBalanceNQT);
 			} catch (err) {
@@ -951,7 +951,7 @@ var NRS = (function(NRS, $, undefined) {
 
 			if (type == "sell") {
 				var maxUserQuantity = new Big(NRS.convertToQNTf(balance, NRS.currentAsset.decimals));
-				if (quantity.cmp(maxUserQuantity) == 1) {
+				if (quantity.cmp(maxUserQuantity) == -1) {
 					quantity = maxUserQuantity;
 					total = quantity.times(price);
 				}

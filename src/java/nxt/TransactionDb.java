@@ -1,6 +1,5 @@
 package nxt;
 
-import nxt.db.Db;
 import nxt.db.DbUtils;
 import nxt.util.Convert;
 
@@ -17,7 +16,7 @@ import java.util.List;
 final class TransactionDb {
 
     static Transaction findTransaction(long transactionId) {
-        try (Connection con = Db.getConnection();
+        try (Connection con = Db.db.getConnection();
              PreparedStatement pstmt = con.prepareStatement("SELECT * FROM transaction WHERE id = ?")) {
             pstmt.setLong(1, transactionId);
             try (ResultSet rs = pstmt.executeQuery()) {
@@ -34,7 +33,7 @@ final class TransactionDb {
     }
 
     static Transaction findTransactionByFullHash(String fullHash) {
-        try (Connection con = Db.getConnection();
+        try (Connection con = Db.db.getConnection();
              PreparedStatement pstmt = con.prepareStatement("SELECT * FROM transaction WHERE full_hash = ?")) {
             pstmt.setBytes(1, Convert.parseHexString(fullHash));
             try (ResultSet rs = pstmt.executeQuery()) {
@@ -51,7 +50,7 @@ final class TransactionDb {
     }
 
     static boolean hasTransaction(long transactionId) {
-        try (Connection con = Db.getConnection();
+        try (Connection con = Db.db.getConnection();
              PreparedStatement pstmt = con.prepareStatement("SELECT 1 FROM transaction WHERE id = ?")) {
             pstmt.setLong(1, transactionId);
             try (ResultSet rs = pstmt.executeQuery()) {
@@ -63,7 +62,7 @@ final class TransactionDb {
     }
 
     static boolean hasTransactionByFullHash(String fullHash) {
-        try (Connection con = Db.getConnection();
+        try (Connection con = Db.db.getConnection();
              PreparedStatement pstmt = con.prepareStatement("SELECT 1 FROM transaction WHERE full_hash = ?")) {
             pstmt.setBytes(1, Convert.parseHexString(fullHash));
             try (ResultSet rs = pstmt.executeQuery()) {
@@ -115,7 +114,7 @@ final class TransactionDb {
                     .senderId(senderId)
                     .blockTimestamp(blockTimestamp)
                     .fullHash(fullHash);
-            if (transactionType.hasRecipient()) {
+            if (transactionType.canHaveRecipient()) {
                 long recipientId = rs.getLong("recipient_id");
                 if (! rs.wasNull()) {
                     builder.recipientId(recipientId);
@@ -149,7 +148,7 @@ final class TransactionDb {
     }
 
     static List<TransactionImpl> findBlockTransactions(long blockId) {
-        try (Connection con = Db.getConnection();
+        try (Connection con = Db.db.getConnection();
              PreparedStatement pstmt = con.prepareStatement("SELECT * FROM transaction WHERE block_id = ? ORDER BY id")) {
             pstmt.setLong(1, blockId);
             try (ResultSet rs = pstmt.executeQuery()) {

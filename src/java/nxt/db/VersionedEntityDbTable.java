@@ -1,5 +1,6 @@
 package nxt.db;
 
+
 import nxt.Nxt;
 
 import java.sql.Connection;
@@ -17,18 +18,18 @@ public abstract class VersionedEntityDbTable<T> extends EntityDbTable<T> {
 
     @Override
     public void rollback(int height) {
-        rollback(table, height, dbKeyFactory);
+        rollback(db, table, height, dbKeyFactory);
     }
 
     public final boolean delete(T t) {
         if (t == null) {
             return false;
         }
-        if (!Db.isInTransaction()) {
+        if (!db.isInTransaction()) {
             throw new IllegalStateException("Not in transaction");
         }
         DbKey dbKey = dbKeyFactory.newKey(t);
-        try (Connection con = Db.getConnection();
+        try (Connection con = db.getConnection();
              PreparedStatement pstmtCount = con.prepareStatement("SELECT COUNT(*) AS count FROM " + table + dbKeyFactory.getPKClause()
                 + " AND height < ?")) {
             int i = dbKey.setPK(pstmtCount);
@@ -54,20 +55,20 @@ public abstract class VersionedEntityDbTable<T> extends EntityDbTable<T> {
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
         } finally {
-            Db.getCache(table).remove(dbKey);
+            db.getCache(table).remove(dbKey);
         }
     }
 
     @Override
     public final void trim(int height) {
-        trim(table, height, dbKeyFactory);
+        trim(db, table, height, dbKeyFactory);
     }
 
-    static void rollback(final String table, final int height, final DbKey.Factory dbKeyFactory) {
-        if (!Db.isInTransaction()) {
+    static void rollback(final TransactionalDb db, final String table, final int height, final DbKey.Factory dbKeyFactory) {
+        if (!db.isInTransaction()) {
             throw new IllegalStateException("Not in transaction");
         }
-        try (Connection con = Db.getConnection();
+        try (Connection con = db.getConnection();
              PreparedStatement pstmtSelectToDelete = con.prepareStatement("SELECT DISTINCT " + dbKeyFactory.getPKColumns()
                      + " FROM " + table + " WHERE height > ?");
              PreparedStatement pstmtDelete = con.prepareStatement("DELETE FROM " + table
@@ -94,14 +95,14 @@ public abstract class VersionedEntityDbTable<T> extends EntityDbTable<T> {
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
         }
-        Db.getCache(table).clear();
+        db.getCache(table).clear();
     }
 
-    static void trim(final String table, final int height, final DbKey.Factory dbKeyFactory) {
-        if (!Db.isInTransaction()) {
+    static void trim(final TransactionalDb db, final String table, final int height, final DbKey.Factory dbKeyFactory) {
+        if (!db.isInTransaction()) {
             throw new IllegalStateException("Not in transaction");
         }
-        try (Connection con = Db.getConnection();
+        try (Connection con = db.getConnection();
              PreparedStatement pstmtSelect = con.prepareStatement("SELECT " + dbKeyFactory.getPKColumns() + ", MAX(height) AS max_height"
                      + " FROM " + table + " WHERE height < ? GROUP BY " + dbKeyFactory.getPKColumns() + " HAVING COUNT(DISTINCT height) > 1");
              PreparedStatement pstmtDelete = con.prepareStatement("DELETE FROM " + table + dbKeyFactory.getPKClause()

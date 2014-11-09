@@ -1,6 +1,5 @@
 package nxt;
 
-import nxt.db.Db;
 import nxt.db.DbClause;
 import nxt.db.DbIterator;
 import nxt.db.DbKey;
@@ -69,7 +68,7 @@ public final class Trade {
     public static DbIterator<Trade> getAccountTrades(long accountId, int from, int to) {
         Connection con = null;
         try {
-            con = Db.getConnection();
+            con = Db.db.getConnection();
             PreparedStatement pstmt = con.prepareStatement("SELECT * FROM trade WHERE seller_id = ?"
                     + " UNION ALL SELECT * FROM trade WHERE buyer_id = ? AND seller_id <> ? ORDER BY height DESC"
                     + DbUtils.limitsClause(from, to));
@@ -88,7 +87,7 @@ public final class Trade {
     public static DbIterator<Trade> getAccountAssetTrades(long accountId, long assetId, int from, int to) {
         Connection con = null;
         try {
-            con = Db.getConnection();
+            con = Db.db.getConnection();
             PreparedStatement pstmt = con.prepareStatement("SELECT * FROM trade WHERE seller_id = ? AND asset_id = ?"
                     + " UNION ALL SELECT * FROM trade WHERE buyer_id = ? AND seller_id <> ? AND asset_id = ? ORDER BY height DESC"
                     + DbUtils.limitsClause(from, to));
@@ -107,7 +106,7 @@ public final class Trade {
     }
 
     public static int getTradeCount(long assetId) {
-        try (Connection con = Db.getConnection();
+        try (Connection con = Db.db.getConnection();
              PreparedStatement pstmt = con.prepareStatement("SELECT COUNT(*) FROM trade WHERE asset_id = ?")) {
             pstmt.setLong(1, assetId);
             try (ResultSet rs = pstmt.executeQuery()) {
