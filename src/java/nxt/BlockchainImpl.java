@@ -298,7 +298,7 @@ final class BlockchainImpl implements Blockchain {
             if (height < Integer.MAX_VALUE) {
                 buf.append("AND height <= ? ");
             }
-            buf.append("ORDER BY block_timestamp DESC, id DESC");
+            buf.append("ORDER BY block_timestamp DESC, transaction_index DESC");
             buf.append(DbUtils.limitsClause(from, to));
             con = Db.db.getConnection();
             PreparedStatement pstmt;
