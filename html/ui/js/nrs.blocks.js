@@ -310,7 +310,7 @@ var NRS = (function(NRS, $, undefined) {
 			NRS.sendRequest("getAccountBlockCount+", {
 				"account": NRS.account
 			}, function(response) {
-				if (response.numberOfBlocks) {
+				if (response.numberOfBlocks && response.numberOfBlocks > 0) {
 					$("#forged_blocks_total").html(response.numberOfBlocks).removeClass("loading_dots");
 					var avgFee = $("#forged_fees_total").html()/$("#forged_blocks_total").html();
 					$("#blocks_average_fee").html(NRS.formatStyledAmount(avgFee)).removeClass("loading_dots");
