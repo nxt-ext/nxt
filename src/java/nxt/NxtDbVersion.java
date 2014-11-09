@@ -356,6 +356,7 @@ class NxtDbVersion extends DbVersion {
             case 127:
                 apply("CREATE UNIQUE INDEX IF NOT EXISTS block_timestamp_idx ON block (timestamp DESC)");
             case 128:
+                BlockchainProcessorImpl.getInstance().forceScanAtStart();
                 apply(null);
             case 129:
                 apply("CREATE TABLE IF NOT EXISTS currency (db_id IDENTITY, id BIGINT NOT NULL, account_id BIGINT NOT NULL, "
