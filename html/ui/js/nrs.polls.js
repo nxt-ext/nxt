@@ -54,7 +54,7 @@ var NRS = (function(NRS, $, undefined) {
 								if (pollDescription.length > 100) {
 									pollDescription = pollDescription.substring(0, 100) + "...";
 								}
-								rows += "<tr><td>" + String(poll.attachment.name).escapeHTML() + "</td><td>" + pollDescription.escapeHTML() + "</td><td>" + (poll.sender != NRS.genesis ? "<a href='#' data-user='" + NRS.getAccountFormatted(poll, "sender") + "' class='user_info'>" + NRS.getAccountTitle(poll, "sender") + "</a>" : "Genesis") + "</td><td>" + NRS.formatTimestamp(poll.timestamp) + "</td><td>" + String(poll.attachment.finishBlockHeight - NRS.lastBlockHeight) + "</td><td><a href='#' data-toggle='modal' data-target='#cast_vote_modal'>Vote </td></tr>";
+								rows += "<tr><td><a href='#' data-transaction='"+poll.transaction+"'>" + String(poll.attachment.name).escapeHTML() + "</a></td><td>" + pollDescription.escapeHTML() + "</td><td>" + (poll.sender != NRS.genesis ? "<a href='#' data-user='" + NRS.getAccountFormatted(poll, "sender") + "' class='user_info'>" + NRS.getAccountTitle(poll, "sender") + "</a>" : "Genesis") + "</td><td>" + NRS.formatTimestamp(poll.timestamp) + "</td><td>" + String(poll.attachment.finishBlockHeight - NRS.lastBlockHeight) + "</td><td><a href='#' data-toggle='modal' data-target='#cast_vote_modal'>Vote </td></tr>";
 							}
 
 							NRS.dataLoaded(rows);
@@ -122,28 +122,30 @@ var NRS = (function(NRS, $, undefined) {
 		}
 
 		$("#create_poll_")
-
 		var data = {
 			"name": $("#create_poll_name").val(),
 			"description": $("#create_poll_description").val(),
-			"finishHeight": (NRS.lastBlockHeight + $("#create_poll_duration").val()),
+			"finishHeight": (parseInt(NRS.lastBlockHeight) + parseInt($("#create_poll_duration").val())),
 			"minNumberOfOptions": $("#create_poll_min_options").val(),
 			"maxNumberOfOptions": $("#create_poll_max_options").val(),
+			"minRangeValue": $("#create_poll_min_options").val(),
+			"maxRangeValue": $("#create_poll_max_options").val(),
 			"minBalance": $("#create_poll_min_balance").val(),
-			"feeNXT": "1",
+			"feeNQT": (parseInt($("#create_poll_fee").val()) * 100000000),
 			"deadline": "24",
 			"secretPhrase": $("#create_poll_password").val()
 		};
 
-		if($("create_poll_type").val() == "votePerNXT")
+		if($("#create_poll_type").val() == "0")
 		{
 			data["votingModel"] = 0;
+
 		}
-		if($("create_poll_type").val() == "votePerAccount")
+		if($("#create_poll_type").val() == "1")
 		{
 			data["votingModel"] = 1;
 		}
-		if($("create_poll_type").val() == "votePerAsset")
+		if($("#create_poll_type").val() == "2")
 		{
 			data["votingModel"] = 2;
 			data["assetId"] = $("#create_poll_asset_id").val();
@@ -185,3 +187,4 @@ var NRS = (function(NRS, $, undefined) {
 
 	return NRS;
 }(NRS || {}, jQuery));
+

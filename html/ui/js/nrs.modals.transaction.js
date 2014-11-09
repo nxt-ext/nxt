@@ -3,7 +3,7 @@
  * @depends {nrs.modals.js}
  */
 var NRS = (function(NRS, $, undefined) {
-	$("#transactions_table, #dashboard_transactions_table, #transfer_history_table").on("click", "a[data-transaction]", function(e) {
+	$("#transactions_table, #dashboard_transactions_table, #transfer_history_table, #polls_table").on("click", "a[data-transaction]", function(e) {
 		e.preventDefault();
 
 		var transactionId = $(this).data("transaction");
@@ -159,12 +159,37 @@ var NRS = (function(NRS, $, undefined) {
 
 					break;
 				case 2:
-					NRS.forms.createPoll().data;
 					var data = {
 						"type": $.t("poll_creation"),
 						"name": transaction.attachment.name,
-						"description": transaction.attachment.description
+						"description": transaction.attachment.description,
+						"finish_height": transaction.attachment.finishHeight,
+						"min_number_of_options": transaction.attachment.minNumberOfOptions,
+						"max_number_of_options": transaction.attachment.maxNumberOfOptions,
+						"min_range_value": transaction.attachment.minRangeValue,
+						"max_range_value": transaction.attachment.maxRangeValue,
+						"min_balance": transaction.attachment.minBalance
 					};
+
+					if(transaction.attachment.votingModel == "0")
+					{
+						data["voting_model"] = "Vote by NXT balance";
+
+					}
+					if(transaction.attachment.votingModel == "1")
+					{
+						data["voting_model"] = "Vote by Account";
+					}
+					if(transaction.attachment.votingModel == "2")
+					{
+						data["voting_model"] = "Vote by asset";
+						data["asset_id"] = transaction.attachment.assetId;
+					}
+
+					
+					for (var i = 0; i < transaction.attachment.options.length; i++) {
+						data["option_" + i] = transaction.attachment.options[i];
+					}
 
 					if (transaction.sender != NRS.account) {
 						data["sender"] = NRS.getAccountTitle(transaction, "sender");

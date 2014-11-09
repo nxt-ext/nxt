@@ -3001,13 +3001,13 @@
                                 <div class="col-xs-6 col-sm-6 col-md-6">
                                     <div class="form-group">
                                         <label for="create_poll_min_balance" data-i18n="min_voting_balance">MIN VOTING BALANCE</label>
-                                        <input type="number" name="minBalance" id="create_poll_min_balance" min="1" class="form-control" placeholder="" data-default="1" value="1" tabindex="5">
+                                        <input type="number" name="minBalance" id="create_poll_min_balance" min="0" class="form-control" placeholder="" data-default="0" value="0" tabindex="5">
                                     </div> 
                                 </div>
                                 <div class="col-xs-6 col-sm-6 col-md-6">
                                     <div class="form-group">
                                         <label for="create_poll_duration" data-i18n="poll_duration_nr_blocks">POLL DURATION (NR BLOCKS)</label>
-                                        <input type="number" name="pollDuration" id="create_poll_duration" min="1" class="form-control" placeholder="" data-default="1" value="1" tabindex="4">
+                                        <input type="number" name="pollDuration" id="create_poll_duration" min="10" class="form-control" placeholder="" data-default="10" value="10" tabindex="4">
                                     </div>
                                 </div>
                             </div>
@@ -3048,12 +3048,27 @@
 								</div>
 							</div>
 
+                            <div class="row">
+                                <div class="col-xs-6 col-sm-6 col-md-6">
+                                    <div class="form-group">
+                                        <label for="create_poll_min_options" data-i18n="minimum_range_value">MINIMUM RANGE VALUE</label>
+                                        <input type="number" name="minNumberOfOptions" id="create_poll_min_options" min="0" class="form-control" placeholder="" data-default="0" value="0" tabindex="8">
+                                    </div>
+                                </div>
+                                <div class="col-xs-6 col-sm-6 col-md-6">
+                                    <div class="form-group">
+                                        <label for="create_poll_max_options" data-i18n="maximum_range_value">MAXIMUM RANGE VALUE</label>
+                                        <input type="number" name="maxNumberOfOptions" id="create_poll_max_options" min="1" class="form-control" placeholder="" data-default="1" value="1" tabindex="9">
+                                    </div>
+                                </div>
+                            </div>
+
 							<div class="row advanced">
 								<div class="col-xs-6 col-sm-6 col-md-6">
 									<div class="form-group">
 										<label for="create_poll_fee" data-i18n="fee">FEE</label>
 										<div class="input-group">
-											<input type="number" name="feeNXT" id="create_poll_fee" class="form-control" step="any" min="1" placeholder="Fee" data-i18n="[placeholder]fee" data-default="1" value="1" tabindex="3">
+											<input type="number" name="feeNXT" id="create_poll_fee" class="form-control" step="any" min="10" placeholder="Fee" data-i18n="[placeholder]fee" data-default="10" value="10" tabindex="3">
 											<span class="input-group-addon">NXT</span>
 										</div>
 									</div>
@@ -3080,7 +3095,7 @@
 						</form>
 			    	</div>
 					<div class="modal-footer" style="margin-top:0;">
-						<div class="advanced_info"><strong data-i18n="fee">Fee</strong>: <span class="advanced_fee">1 NXT</span> - <a href="#" data-i18n="advanced">advanced</a></div>
+						<div class="advanced_info"><strong data-i18n="fee">Fee</strong>: <span class="advanced_fee">10 NXT</span> - <a href="#" data-i18n="advanced">advanced</a></div>
 
 						<button type="button" class="btn btn-default" data-dismiss="modal" data-i18n="cancel">Cancel</button>
 						&nbsp;&nbsp;
