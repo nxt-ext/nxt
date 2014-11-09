@@ -49,6 +49,7 @@ var NRS = (function(NRS, $, undefined) {
 		}
 	});
 
+    /* Removed variable fee, keeping fees at their minimal
 	$("#send_money_amount").on("input", function(e) {
 		var amount = parseInt($(this).val(), 10);
 		var fee = isNaN(amount) ? 1 : (amount < 500 ? 1 : Math.round(amount / 1000));
@@ -57,6 +58,7 @@ var NRS = (function(NRS, $, undefined) {
 
 		$(this).closest(".modal").find(".advanced_fee").html(NRS.formatAmount(NRS.convertToNQT(fee)) + " NXT");
 	});
+	*/
 
 	//todo later: http://twitter.github.io/typeahead.js/
 	$("span.recipient_selector button").on("click", function(e) {
