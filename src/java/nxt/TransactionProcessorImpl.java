@@ -6,6 +6,7 @@ import nxt.db.DbKey;
 import nxt.db.EntityDbTable;
 import nxt.peer.Peer;
 import nxt.peer.Peers;
+import nxt.util.Convert;
 import nxt.util.JSON;
 import nxt.util.Listener;
 import nxt.util.Listeners;
@@ -395,9 +396,10 @@ final class TransactionProcessorImpl implements TransactionProcessor {
     }
 
     void processLater(Collection<TransactionImpl> transactions) {
+        long currentTime = System.currentTimeMillis();
         synchronized (BlockchainImpl.getInstance()) {
             for (TransactionImpl transaction : transactions) {
-                lostTransactions.add(new UnconfirmedTransaction(transaction, 0));
+                lostTransactions.add(new UnconfirmedTransaction(transaction, Math.min(currentTime, Convert.fromEpochTime(transaction.getTimestamp()))));
             }
         }
     }
