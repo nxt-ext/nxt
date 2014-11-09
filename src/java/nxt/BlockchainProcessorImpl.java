@@ -468,7 +468,12 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             //BlockDb.deleteBlock(Genesis.GENESIS_BLOCK_ID); // fails with stack overflow in H2
             BlockDb.deleteAll();
             addGenesisBlock();
-            scan(0);
+            try {
+                setGetMoreBlocks(false);
+                scan(0);
+            } finally {
+                setGetMoreBlocks(true);
+            }
         }
     }
 
@@ -482,7 +487,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         validateAtScan = true;
     }
 
-    void setGetMoreBlocks(boolean getMoreBlocks) {
+    public void setGetMoreBlocks(boolean getMoreBlocks) {
         this.getMoreBlocks = getMoreBlocks;
     }
 
@@ -970,7 +975,6 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             try (Connection con = Db.db.beginTransaction();
                  PreparedStatement pstmt = con.prepareStatement("SELECT * FROM block WHERE height >= ? ORDER BY db_id ASC")) {
                 isScanning = true;
-                setGetMoreBlocks(false);
                 transactionProcessor.requeueAllUnconfirmedTransactions();
                 for (DerivedDbTable table : derivedTables) {
                     if (height == 0) {
@@ -1072,7 +1076,6 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 throw new RuntimeException(e.toString(), e);
             } finally {
                 isScanning = false;
-                setGetMoreBlocks(true);
             }
         } // synchronized
     }

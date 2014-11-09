@@ -8,6 +8,7 @@ import nxt.Currency;
 import nxt.CurrencyBuyOffer;
 import nxt.CurrencyTransfer;
 import nxt.Exchange;
+import nxt.Block;
 import nxt.Generator;
 import nxt.Nxt;
 import nxt.Order;
@@ -35,8 +36,10 @@ public final class GetState extends APIServlet.APIRequestHandler {
         response.put("application", Nxt.APPLICATION);
         response.put("version", Nxt.VERSION);
         response.put("time", Nxt.getEpochTime());
-        response.put("lastBlock", Nxt.getBlockchain().getLastBlock().getStringId());
-        response.put("cumulativeDifficulty", Nxt.getBlockchain().getLastBlock().getCumulativeDifficulty().toString());
+        Block lastBlock = Nxt.getBlockchain().getLastBlock();
+        response.put("lastBlock", lastBlock.getStringId());
+        response.put("cumulativeDifficulty", lastBlock.getCumulativeDifficulty().toString());
+        response.put("numberOfBlocks", lastBlock.getHeight() + 1);
 
         /*
         long totalEffectiveBalance = 0;
@@ -52,7 +55,6 @@ public final class GetState extends APIServlet.APIRequestHandler {
         */
 
         if (!"false".equalsIgnoreCase(req.getParameter("includeCounts"))) {
-            response.put("numberOfBlocks", Nxt.getBlockchain().getHeight() + 1);
             response.put("numberOfTransactions", Nxt.getBlockchain().getTransactionCount());
             response.put("numberOfAccounts", Account.getCount());
             response.put("numberOfAssets", Asset.getCount());
