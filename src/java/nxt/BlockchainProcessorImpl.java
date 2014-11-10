@@ -927,8 +927,6 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
 
         block.sign(secretPhrase);
 
-        block.setPrevious(previousBlock);
-
         try {
             pushBlock(block);
             blockListeners.notify(block, Event.BLOCK_GENERATED);
