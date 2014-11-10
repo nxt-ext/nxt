@@ -106,16 +106,7 @@ public final class Trade {
     }
 
     public static int getTradeCount(long assetId) {
-        try (Connection con = Db.db.getConnection();
-             PreparedStatement pstmt = con.prepareStatement("SELECT COUNT(*) FROM trade WHERE asset_id = ?")) {
-            pstmt.setLong(1, assetId);
-            try (ResultSet rs = pstmt.executeQuery()) {
-                rs.next();
-                return rs.getInt(1);
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException(e.toString(), e);
-        }
+        return tradeTable.getCount(new DbClause.LongClause("asset_id", assetId));
     }
 
     static Trade addTrade(long assetId, Block block, Order.Ask askOrder, Order.Bid bidOrder) {
