@@ -245,7 +245,7 @@ public abstract class TransactionType {
         final void undoAttachmentUnconfirmed(Transaction transaction, Account senderAccount) { }
 
         @Override
-        final public boolean canHaveRecipient() {
+        public boolean canHaveRecipient() {
             return true;
         }
 
@@ -290,6 +290,11 @@ public abstract class TransactionType {
             @Override
             Attachment.PendingPaymentVoteCasting parseAttachment(JSONObject attachmentData) throws NxtException.NotValidException {
                 return new Attachment.PendingPaymentVoteCasting(attachmentData);
+            }
+
+            @Override
+            public boolean canHaveRecipient() {
+                return false;
             }
 
             @Override

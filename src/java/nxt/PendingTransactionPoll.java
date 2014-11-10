@@ -33,7 +33,7 @@ public class PendingTransactionPoll extends AbstractPoll {
 
         DbIterator<Long> finishing(int height) {
             try {
-                Connection con = Db.getConnection();
+                Connection con = db.getConnection();
                 PreparedStatement pstmt = con.prepareStatement("SELECT id FROM " + table
                         + " WHERE finish = ?  AND finished = FALSE AND latest = TRUE");
                 pstmt.setInt(1, height);
@@ -76,14 +76,19 @@ public class PendingTransactionPoll extends AbstractPoll {
         this.dbKey = pollDbKeyFactory.newKey(this.id);
         this.quorum = quorum;
 
-        this.whitelist = whitelist;
-        if (this.whitelist != null) {
+        if (whitelist != null) {
+            this.whitelist = whitelist;
             Arrays.sort(this.whitelist);
+        }else{
+            this.whitelist = new long[0];
         }
 
-        this.blacklist = blacklist;
-        if (this.blacklist != null) {
+
+        if (blacklist != null) {
+            this.blacklist = blacklist;
             Arrays.sort(this.blacklist);
+        }else{
+            this.blacklist = new long[0];
         }
     }
 

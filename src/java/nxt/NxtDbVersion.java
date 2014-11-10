@@ -380,12 +380,17 @@ class NxtDbVersion extends DbVersion {
                         + "asset_id BIGINT NOT NULL, finished BOOLEAN NOT NULL, height INT NOT NULL, latest BOOLEAN DEFAULT TRUE NOT NULL)");
             case 136:
                 apply("CREATE TABLE IF NOT EXISTS vote_phased (db_id IDENTITY, id BIGINT NOT NULL, "
-                        +"pending_transaction_id BIGINT NOT NULL, voter_id BIGINT NOT NULL, "
-                        +"estimated_total BIGINT NOT NULL, height INT NOT NULL)");
+                        + "pending_transaction_id BIGINT NOT NULL, voter_id BIGINT NOT NULL, "
+                        + "estimated_total BIGINT NOT NULL, height INT NOT NULL)");
             case 137:
+                apply(null);
+                /*apply("CREATE TABLE IF NOT EXISTS pending_transactions_permissions(db_id IDENTITY, "
+                        + "poll_id BIGINT NOT NULL, account_id BIGINT NOT NULL, "
+                        + "blacklist BOOLEAN NOT NULL DEFAULT FALSE, , height INT NOT NULL)");*/
+            case 138:
                 BlockchainProcessorImpl.getInstance().forceScanAtStart();
                 apply(null);
-            case 138:
+            case 139:
                 return;
             default:
                 throw new RuntimeException("Database inconsistent with code, probably trying to run older code on newer database");

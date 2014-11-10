@@ -206,7 +206,7 @@ public abstract class EntityDbTable<T> extends DerivedDbTable {
 
     //todo: change resulting type to DbIterator?
     public List<Long> getManyIdsBy(String targetColumnName, String filterColumnName, Long value) {
-        try (Connection con = Db.getConnection();
+        try (Connection con = db.getConnection();
              PreparedStatement pstmt = con.prepareStatement("SELECT " + targetColumnName + " FROM " + table
                      + " WHERE " + filterColumnName + " = ? ")) {
             pstmt.setLong(1, value);

@@ -33,7 +33,7 @@ public class VotePhased {
 
         protected long lastEstimate(long pendingTransactionId) {
             try {
-                Connection con = Db.getConnection();
+                Connection con = db.getConnection();
                 PreparedStatement pstmt = con.prepareStatement("SELECT estimated_total FROM " + table
                         + " WHERE pending_transaction_id = ?  ORDER BY db_id DESC LIMIT 1");
                 pstmt.setLong(1, pendingTransactionId);
