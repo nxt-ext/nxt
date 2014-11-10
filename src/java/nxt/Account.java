@@ -18,7 +18,9 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.regex.Pattern;
 
 @SuppressWarnings({"UnusedDeclaration", "SuspiciousNameCombination"})
@@ -1066,10 +1068,15 @@ public final class Account {
     }
 
     void payDividends(final long assetId, final int height, final long amountNQTPerQNT) {
-        final Asset asset = Asset.getAsset(assetId);
         long totalDividend = 0;
-        for (final AccountAsset accountAsset : getAssetAccounts(asset.getId(), height, 0, -1)) {
-            if (accountAsset.getAccountId() != asset.getAccountId() && accountAsset.getAccountId() != Genesis.CREATOR_ID) {
+        List<AccountAsset> accountAssets = new ArrayList<>();
+        try (DbIterator<AccountAsset> iterator = getAssetAccounts(assetId, height, 0, -1)) {
+            while (iterator.hasNext()) {
+                accountAssets.add(iterator.next());
+            }
+        }
+        for (final AccountAsset accountAsset : accountAssets) {
+            if (accountAsset.getAccountId() != this.id && accountAsset.getAccountId() != Genesis.CREATOR_ID) {
                 long dividend = Convert.safeMultiply(accountAsset.getQuantityQNT(), amountNQTPerQNT);
                 Account.getAccount(accountAsset.getAccountId()).addToBalanceAndUnconfirmedBalanceNQT(dividend);
                 totalDividend += dividend;
