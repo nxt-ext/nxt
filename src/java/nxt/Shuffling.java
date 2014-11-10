@@ -1,7 +1,6 @@
 package nxt;
 
 import nxt.crypto.EncryptedData;
-import nxt.db.Db;
 import nxt.db.DbIterator;
 import nxt.db.DbKey;
 import nxt.db.DbUtils;
@@ -69,7 +68,7 @@ public final class Shuffling {
             public void notify(Block block) {
                 Connection con = null;
                 try {
-                    con = Db.getConnection();
+                    con = Db.db.getConnection();
                     PreparedStatement pstmt = con.prepareStatement("SELECT * FROM shuffling WHERE state <> ? and state <> ?");
                     int i = 0;
                     pstmt.setByte(++i, State.CANCELLED.getCode());
@@ -370,7 +369,7 @@ public final class Shuffling {
     public static void cancelShuffling(long currencyId) {
         Connection con = null;
         try {
-            con = Db.getConnection();
+            con = Db.db.getConnection();
             PreparedStatement pstmt = con.prepareStatement("SELECT * FROM shuffling WHERE currency_id = ?");
             int i = 0;
             pstmt.setLong(++i, currencyId);

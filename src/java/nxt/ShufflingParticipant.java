@@ -3,7 +3,6 @@
  */
 package nxt;
 
-import nxt.db.Db;
 import nxt.db.DbClause;
 import nxt.db.DbIterator;
 import nxt.db.DbKey;
@@ -75,7 +74,7 @@ public final class ShufflingParticipant {
     };
 
     static int getCount(long shufflingId) {
-        try (Connection con = Db.getConnection();
+        try (Connection con = Db.db.getConnection();
              PreparedStatement pstmt = con.prepareStatement("SELECT COUNT(*) FROM Shuffling_participant WHERE shuffling_id = ? AND latest = TRUE")) {
             pstmt.setLong(1, shufflingId);
             try (ResultSet rs = pstmt.executeQuery()) {

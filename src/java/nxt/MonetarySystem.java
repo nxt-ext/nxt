@@ -705,7 +705,7 @@ public abstract class MonetarySystem extends TransactionType {
         }
 
         @Override
-        public boolean hasRecipient() {
+        public boolean canHaveRecipient() {
             return false;
         }
     };
@@ -783,7 +783,7 @@ public abstract class MonetarySystem extends TransactionType {
         }
 
         @Override
-        public boolean hasRecipient() {
+        public boolean canHaveRecipient() {
             return false;
         }
     };
@@ -841,7 +841,7 @@ public abstract class MonetarySystem extends TransactionType {
         }
 
         @Override
-        public boolean hasRecipient() {
+        public boolean canHaveRecipient() {
             return false;
         }
     };
@@ -899,7 +899,7 @@ public abstract class MonetarySystem extends TransactionType {
         }
 
         @Override
-        public boolean hasRecipient() {
+        public boolean canHaveRecipient() {
             return false;
         }
     };
@@ -964,7 +964,7 @@ public abstract class MonetarySystem extends TransactionType {
         }
 
         @Override
-        public boolean hasRecipient() {
+        public boolean canHaveRecipient() {
             return false;
         }
     };
@@ -1026,7 +1026,7 @@ public abstract class MonetarySystem extends TransactionType {
         }
 
         @Override
-        public boolean hasRecipient() {
+        public boolean canHaveRecipient() {
             return false;
         }
     };
