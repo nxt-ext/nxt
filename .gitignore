@@ -10,8 +10,6 @@
 /keystore
 /nxt.jar
 /nxt_test_db
-*.trace
-/nxt-trace.csv
 /README_win.txt
 /package.sh
 /nxt.log.lck
@@ -22,4 +20,4 @@
 /compile.bat
 /json_simple-1.1-all/
 /test/classes/
-/nxt-trace-default.csv
+*.csv
