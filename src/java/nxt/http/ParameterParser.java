@@ -191,6 +191,10 @@ final class ParameterParser {
         return getLong(req, "quantityQNT", 1L, Constants.MAX_ASSET_QUANTITY_QNT, true);
     }
 
+    static long getAmountNQTPerQNT(HttpServletRequest req) throws ParameterException {
+        return getLong(req, "amountNQTPerNQT", 1L, Constants.MAX_BALANCE_NQT, true);
+    }
+
     static long getOrderId(HttpServletRequest req) throws ParameterException {
         String orderValue = Convert.emptyToNull(req.getParameter("order"));
         if (orderValue == null) {

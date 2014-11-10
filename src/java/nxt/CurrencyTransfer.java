@@ -1,6 +1,5 @@
 package nxt;
 
-import nxt.db.Db;
 import nxt.db.DbClause;
 import nxt.db.DbIterator;
 import nxt.db.DbKey;
@@ -68,7 +67,7 @@ public final class CurrencyTransfer {
     public static DbIterator<CurrencyTransfer> getAccountCurrencyTransfers(long accountId, int from, int to) {
         Connection con = null;
         try {
-            con = Db.getConnection();
+            con = Db.db.getConnection();
             PreparedStatement pstmt = con.prepareStatement("SELECT * FROM currency_transfer WHERE sender_id = ?"
                     + " UNION ALL SELECT * FROM currency_transfer WHERE recipient_id = ? AND sender_id <> ? ORDER BY height DESC"
                     + DbUtils.limitsClause(from, to));
@@ -87,7 +86,7 @@ public final class CurrencyTransfer {
     public static DbIterator<CurrencyTransfer> getAccountCurrencyTransfers(long accountId, long currencyId, int from, int to) {
         Connection con = null;
         try {
-            con = Db.getConnection();
+            con = Db.db.getConnection();
             PreparedStatement pstmt = con.prepareStatement("SELECT * FROM currency_transfer WHERE sender_id = ? AND currency_id = ?"
                     + " UNION ALL SELECT * FROM currency_transfer WHERE recipient_id = ? AND sender_id <> ? AND currency_id = ? ORDER BY height DESC"
                     + DbUtils.limitsClause(from, to));
@@ -106,16 +105,7 @@ public final class CurrencyTransfer {
     }
 
     public static int getTransferCount(long currencyId) {
-        try (Connection con = Db.getConnection();
-             PreparedStatement pstmt = con.prepareStatement("SELECT COUNT(*) FROM currency_transfer WHERE currency_id = ?")) {
-            pstmt.setLong(1, currencyId);
-            try (ResultSet rs = pstmt.executeQuery()) {
-                rs.next();
-                return rs.getInt(1);
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException(e.toString(), e);
-        }
+        return currencyTransferTable.getCount(new DbClause.LongClause("currency_id", currencyId));
     }
 
     static CurrencyTransfer addTransfer(Transaction transaction, Attachment.MonetarySystemCurrencyTransfer attachment) {

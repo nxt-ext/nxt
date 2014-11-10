@@ -1064,6 +1064,75 @@ public interface Attachment extends Appendix {
 
     }
 
+    public final static class ColoredCoinsDividendPayment extends AbstractAttachment {
+
+        private final long assetId;
+        private final int height;
+        private final long amountNQTPerQNT;
+
+        ColoredCoinsDividendPayment(ByteBuffer buffer, byte transactionVersiont) {
+            super(buffer, transactionVersiont);
+            this.assetId = buffer.getLong();
+            this.height = buffer.getInt();
+            this.amountNQTPerQNT = buffer.getLong();
+        }
+
+        ColoredCoinsDividendPayment(JSONObject attachmentData) {
+            super(attachmentData);
+            this.assetId = Convert.parseUnsignedLong((String)attachmentData.get("asset"));
+            this.height = ((Long)attachmentData.get("height")).intValue();
+            this.amountNQTPerQNT = Convert.parseLong(attachmentData.get("amountNQTPerQNT"));
+        }
+
+        public ColoredCoinsDividendPayment(long assetId, int height, long amountNQTPerQNT) {
+            this.assetId = assetId;
+            this.height = height;
+            this.amountNQTPerQNT = amountNQTPerQNT;
+        }
+
+        @Override
+        String getAppendixName() {
+            return "DividendPayment";
+        }
+
+        @Override
+        int getMySize() {
+            return 8 + 4 + 8;
+        }
+
+        @Override
+        void putMyBytes(ByteBuffer buffer) {
+            buffer.putLong(assetId);
+            buffer.putInt(height);
+            buffer.putLong(amountNQTPerQNT);
+        }
+
+        @Override
+        void putMyJSON(JSONObject attachment) {
+            attachment.put("asset", Convert.toUnsignedLong(assetId));
+            attachment.put("height", height);
+            attachment.put("amountNQTPerQNT", amountNQTPerQNT);
+        }
+
+        @Override
+        public TransactionType getTransactionType() {
+            return TransactionType.ColoredCoins.DIVIDEND_PAYMENT;
+        }
+
+        public long getAssetId() {
+            return assetId;
+        }
+
+        public int getHeight() {
+            return height;
+        }
+
+        public long getAmountNQTPerQNT() {
+            return amountNQTPerQNT;
+        }
+
+    }
+
     public final static class DigitalGoodsListing extends AbstractAttachment {
 
         private final String name;

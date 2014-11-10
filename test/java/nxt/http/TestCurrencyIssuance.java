@@ -55,7 +55,7 @@ public class TestCurrencyIssuance extends BlockchainTest {
             feeNQT(0l);
             //feeNQT(25000 * Constants.ONE_NXT);
             param("name", "Test1");
-            param("code", "TSXYZ");
+            param("code", "TSXXX");
             param("description", "Test Currency 1");
             param("type", CurrencyType.EXCHANGEABLE.getCode());
             param("maxSupply", 100000);

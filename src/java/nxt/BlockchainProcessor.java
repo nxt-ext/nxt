@@ -34,6 +34,8 @@ public interface BlockchainProcessor extends Observable<Block,BlockchainProcesso
 
     void validateAtNextScan();
 
+    void setGetMoreBlocks(boolean getMoreBlocks);
+
     List<? extends Block> popOffTo(int height);
 
     void registerDerivedTable(DerivedDbTable table);

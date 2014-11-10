@@ -470,6 +470,7 @@ final class JSONData {
         json.put("block", Convert.toUnsignedLong(transaction.getBlockId()));
         json.put("confirmations", Nxt.getBlockchain().getHeight() - transaction.getHeight());
         json.put("blockTimestamp", transaction.getBlockTimestamp());
+        json.put("transactionIndex", transaction.getIndex());
         return json;
     }
 

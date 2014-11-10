@@ -48,11 +48,11 @@ public final class CurrencySellOffer extends CurrencyExchangeOffer {
     }
 
     public static DbIterator<CurrencySellOffer> getOffers(Currency currency, int from, int to) {
-        return sellOfferTable.getManyBy(new DbClause.LongClause("currency_id", currency.getId()), from, to, " ORDER BY rate ASC, creation_height ASC, id ASC ");
+        return sellOfferTable.getManyBy(new DbClause.LongClause("currency_id", currency.getId()), from, to, " ORDER BY rate ASC, creation_height ASC, transaction_index ASC ");
     }
 
     public static DbIterator<CurrencySellOffer> getOffers(Account account, int from, int to) {
-        return sellOfferTable.getManyBy(new DbClause.LongClause("account_id", account.getId()), from, to, " ORDER BY rate ASC, creation_height ASC, id ASC ");
+        return sellOfferTable.getManyBy(new DbClause.LongClause("account_id", account.getId()), from, to, " ORDER BY rate ASC, creation_height ASC, transaction_index ASC ");
     }
 
     public static CurrencySellOffer getOffer(Currency currency, Account account) {
@@ -93,7 +93,8 @@ public final class CurrencySellOffer extends CurrencyExchangeOffer {
 
     private CurrencySellOffer(Transaction transaction, Attachment.MonetarySystemPublishExchangeOffer attachment) {
         super(transaction.getId(), attachment.getCurrencyId(), transaction.getSenderId(), attachment.getSellRateNQT(),
-                attachment.getTotalSellLimit(), attachment.getInitialSellSupply(), attachment.getExpirationHeight(), transaction.getHeight());
+                attachment.getTotalSellLimit(), attachment.getInitialSellSupply(), attachment.getExpirationHeight(), transaction.getHeight(),
+                transaction.getIndex());
         this.dbKey = sellOfferDbKeyFactory.newKey(id);
     }
 

@@ -52,9 +52,9 @@ public abstract class AbstractBlockchainTest {
 
     protected static void shutdown() {
         TransactionProcessorImpl transactionProcessor = TransactionProcessorImpl.getInstance();
-        DbIterator<TransactionImpl> allUnconfirmedTransactions = transactionProcessor.getAllUnconfirmedTransactions();
-        for (TransactionImpl transaction : allUnconfirmedTransactions) {
-            transactionProcessor.removeUnconfirmedTransaction(transaction);
+        DbIterator<UnconfirmedTransaction> allUnconfirmedTransactions = transactionProcessor.getAllUnconfirmedTransactions();
+        for (UnconfirmedTransaction unconfirmedTransaction : allUnconfirmedTransactions) {
+            transactionProcessor.removeUnconfirmedTransaction(unconfirmedTransaction.getTransaction());
         }
     }
 

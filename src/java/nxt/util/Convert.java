@@ -112,8 +112,8 @@ public final class Convert {
         return fullHashToId(Convert.parseHexString(hash));
     }
 
-    public static Date fromEpochTime(int epochTime) {
-        return new Date(epochTime * 1000L + Constants.EPOCH_BEGINNING - 500L);
+    public static long fromEpochTime(int epochTime) {
+        return epochTime * 1000L + Constants.EPOCH_BEGINNING - 500L;
     }
 
     public static String emptyToNull(String s) {
