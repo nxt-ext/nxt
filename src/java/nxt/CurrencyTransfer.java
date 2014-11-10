@@ -105,16 +105,7 @@ public final class CurrencyTransfer {
     }
 
     public static int getTransferCount(long currencyId) {
-        try (Connection con = Db.db.getConnection();
-             PreparedStatement pstmt = con.prepareStatement("SELECT COUNT(*) FROM currency_transfer WHERE currency_id = ?")) {
-            pstmt.setLong(1, currencyId);
-            try (ResultSet rs = pstmt.executeQuery()) {
-                rs.next();
-                return rs.getInt(1);
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException(e.toString(), e);
-        }
+        return currencyTransferTable.getCount(new DbClause.LongClause("currency_id", currencyId));
     }
 
     static CurrencyTransfer addTransfer(Transaction transaction, Attachment.MonetarySystemCurrencyTransfer attachment) {
