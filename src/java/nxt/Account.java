@@ -383,8 +383,15 @@ public final class Account {
         return accountTable.getCount();
     }
 
-    public static int getAssetAccountsCount(long assetId) {
+    public static int getAssetAccountCount(long assetId) {
         return accountAssetTable.getCount(new DbClause.LongClause("asset_id", assetId));
+    }
+
+    public static int getAssetAccountCount(long assetId, int height) {
+        if (height < 0) {
+            return getAssetAccountCount(assetId);
+        }
+        return accountAssetTable.getCount(new DbClause.LongClause("asset_id", assetId), height);
     }
 
     public static Account getAccount(long id) {
@@ -713,6 +720,13 @@ public final class Account {
         return accountAssetTable.getManyBy(new DbClause.LongClause("account_id", this.id), from, to);
     }
 
+    public DbIterator<AccountAsset> getAssets(int height, int from, int to) {
+        if (height < 0) {
+            return getAssets(from, to);
+        }
+        return accountAssetTable.getManyBy(new DbClause.LongClause("account_id", this.id), height, from, to);
+    }
+
     public DbIterator<Trade> getTrades(int from, int to) {
         return Trade.getAccountTrades(this.id, from, to);
     }
@@ -727,6 +741,17 @@ public final class Account {
 
     public DbIterator<Exchange> getExchanges(int from, int to) {
         return Exchange.getAccountExchanges(this.id, from, to);
+    }
+
+    public AccountAsset getAsset(long assetId) {
+        return accountAssetTable.get(accountAssetDbKeyFactory.newKey(this.id, assetId));
+    }
+
+    public AccountAsset getAsset(long assetId, int height) {
+        if (height < 0) {
+            return getAsset(assetId);
+        }
+        return accountAssetTable.get(accountAssetDbKeyFactory.newKey(this.id, assetId), height);
     }
 
     public long getAssetBalanceQNT(long assetId) {

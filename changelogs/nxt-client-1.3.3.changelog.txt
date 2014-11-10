@@ -19,3 +19,11 @@ Hide fee input when sending NXT in basic mode, and set to the minimum fee.
 Improved the http://localhost:7876/test page interface, allow custom API call
 selection, syntax highlighting of the response JSON.
 
+Added getAccountAssets API request, returning account asset balances for the
+specified account. If an asset parameter is also specified, only return balance
+for that asset. Unlike the getAccount API, this request can also take a height
+parameter, to return asset balance as of that height.
+
+Added getAssetAccountCount API request, returning number of accounts holding
+the specified asset, again with optional height parameter.
+
