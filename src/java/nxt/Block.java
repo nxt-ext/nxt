@@ -23,6 +23,8 @@ public interface Block {
 
     long getPreviousBlockId();
 
+    Block getPreviousBlock();
+
     byte[] getPreviousBlockHash();
 
     long getNextBlockId();

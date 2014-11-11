@@ -33,7 +33,7 @@ public final class DigitalGoodsStore {
                     return;
                 }
                 List<Purchase> expiredPurchases = new ArrayList<>();
-                try (DbIterator<Purchase> iterator = getExpiredPendingPurchases(block.getTimestamp())) {
+                try (DbIterator<Purchase> iterator = getExpiredPendingPurchases(block)) {
                     while (iterator.hasNext()) {
                         expiredPurchases.add(iterator.next());
                     }
@@ -626,16 +626,19 @@ public final class DigitalGoodsStore {
         return purchase == null || ! purchase.isPending() ? null : purchase;
     }
 
-    private static DbIterator<Purchase> getExpiredPendingPurchases(final int timestamp) {
-        DbClause dbClause = new DbClause(" deadline < ? AND pending = TRUE ") {
+    private static DbIterator<Purchase> getExpiredPendingPurchases(Block block) {
+        final int timestamp = block.getTimestamp();
+        final int previousTimestamp = block.getPreviousBlock().getTimestamp();
+        DbClause dbClause = new DbClause(" deadline < ? AND deadline >= ? AND pending = TRUE ") {
             @Override
             public int set(PreparedStatement pstmt, int index) throws SQLException {
                 pstmt.setLong(index++, timestamp);
+                pstmt.setLong(index++, previousTimestamp);
                 return index;
             }
         };
         return Purchase.purchaseTable.getManyBy(dbClause, 0, -1);
-	}
+    }
 
     private static void addPurchase(Transaction transaction,  Attachment.DigitalGoodsPurchase attachment, long sellerId) {
         Purchase purchase = new Purchase(transaction, attachment, sellerId);

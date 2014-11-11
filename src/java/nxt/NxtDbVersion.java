@@ -353,10 +353,6 @@ class NxtDbVersion extends DbVersion {
                 BlockchainProcessorImpl.getInstance().forceScanAtStart();
                 apply(null);
             case 129:
-                apply("DROP INDEX purchase_deadline_idx");
-            case 130:
-                apply("CREATE INDEX IF NOT EXISTS purchase_deadline_idx ON purchase (pending DESC, deadline DESC)");
-            case 131:
                 return;
             default:
                 throw new RuntimeException("Blockchain database inconsistent with code, probably trying to run older code on newer database");
