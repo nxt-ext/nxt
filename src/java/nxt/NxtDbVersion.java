@@ -375,18 +375,17 @@ class NxtDbVersion extends DbVersion {
             case 135:
                 apply("CREATE TABLE IF NOT EXISTS pending_transactions (db_id IDENTITY, id BIGINT NOT NULL, "
                         + "FOREIGN KEY (id) REFERENCES transaction (id) ON DELETE CASCADE, account_id BIGINT NOT NULL, "
-                        + "whitelist VARCHAR NOT NULL, blacklist VARCHAR NOT NULL, finish INT NOT NULL, "
-                        + "voting_model TINYINT NOT NULL, quorum BIGINT NOT NULL, min_balance BIGINT NOT NULL, "
-                        + "asset_id BIGINT NOT NULL, finished BOOLEAN NOT NULL, height INT NOT NULL, latest BOOLEAN DEFAULT TRUE NOT NULL)");
+                        + "signersCount TINYINT NOT NULL DEFAULT 0, blacklist BOOLEAN DEFAULT FALSE, "
+                        + "finish INT NOT NULL, voting_model TINYINT NOT NULL, quorum BIGINT NOT NULL, "
+                        + "min_balance BIGINT NOT NULL, asset_id BIGINT NOT NULL, finished BOOLEAN NOT NULL, "
+                        + "height INT NOT NULL, latest BOOLEAN DEFAULT TRUE NOT NULL)");
             case 136:
                 apply("CREATE TABLE IF NOT EXISTS vote_phased (db_id IDENTITY, id BIGINT NOT NULL, "
                         + "pending_transaction_id BIGINT NOT NULL, voter_id BIGINT NOT NULL, "
                         + "estimated_total BIGINT NOT NULL, height INT NOT NULL)");
             case 137:
-                apply(null);
-                /*apply("CREATE TABLE IF NOT EXISTS pending_transactions_permissions(db_id IDENTITY, "
-                        + "poll_id BIGINT NOT NULL, account_id BIGINT NOT NULL, "
-                        + "blacklist BOOLEAN NOT NULL DEFAULT FALSE, , height INT NOT NULL)");*/
+                apply("CREATE TABLE IF NOT EXISTS pending_transactions_signers (db_id IDENTITY, "
+                        + "poll_id BIGINT NOT NULL, account_id BIGINT NOT NULL, height INT NOT NULL)");
             case 138:
                 BlockchainProcessorImpl.getInstance().forceScanAtStart();
                 apply(null);

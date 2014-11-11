@@ -569,12 +569,16 @@ public interface Appendix {
                 throw new NxtException.NotValidException("Invalid voting model");
             }
 
+            if (whitelist.length * (-blacklist.length) < 0){
+                throw new NxtException.NotValidException("Both whitelist & blacklist are non-empty");
+            }
+
             if (votingModel == Constants.VOTING_MODEL_ACCOUNT && whitelist.length == 0 ) {
                 throw new NxtException.NotValidException("By-account voting with empty whitelist");
             }
 
-            if (votingModel == Constants.VOTING_MODEL_ACCOUNT && blacklist.length != 0 ) {
-                throw new NxtException.NotValidException("By-account voting with non-empty blacklist");
+            if (votingModel == Constants.VOTING_MODEL_ACCOUNT && voteThreshold !=0) {
+                throw new NxtException.NotValidException("minBalance has tobe zero when by-account voting on pending transaction");
             }
 
             if (whitelist.length > Constants.PENDING_TRANSACTIONS_MAX_WHITELIST_SIZE) {

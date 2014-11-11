@@ -2,9 +2,9 @@ package nxt;
 
 import nxt.db.*;
 import nxt.util.Convert;
-import nxt.util.Logger;
 import java.sql.*;
 import java.util.Arrays;
+import java.util.List;
 
 public class PendingTransactionPoll extends AbstractPoll {
     private final Long id;
@@ -17,6 +17,33 @@ public class PendingTransactionPoll extends AbstractPoll {
         @Override
         public DbKey newKey(PendingTransactionPoll poll) {
             return poll.dbKey;
+        }
+    };
+
+    private static final DbKey.LongKeyFactory<PendingTransactionPoll> signersDbKeyFactory = new DbKey.LongKeyFactory<PendingTransactionPoll>("poll_id") {
+        @Override
+        public DbKey newKey(PendingTransactionPoll poll) {
+            return poll.dbKey;
+        }
+    };
+
+    final static ValuesDbTable<PendingTransactionPoll, Long> signersTable = new ValuesDbTable<PendingTransactionPoll, Long>("pending_transactions_signers", signersDbKeyFactory) {
+
+        @Override
+        protected Long load(Connection con, ResultSet rs) throws SQLException {
+            return rs.getLong("account_id");
+        }
+
+        @Override
+        protected void save(Connection con, PendingTransactionPoll poll, Long accountId) throws SQLException {
+            try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO " + table + "(poll_id, "
+                    + "account_id, height) VALUES (?, ?, ?)")) {
+                int i = 0;
+                pstmt.setLong(++i, poll.getId());
+                pstmt.setLong(++i, accountId);
+                pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
+                pstmt.executeUpdate();
+            }
         }
     };
 
@@ -79,7 +106,7 @@ public class PendingTransactionPoll extends AbstractPoll {
         if (whitelist != null) {
             this.whitelist = whitelist;
             Arrays.sort(this.whitelist);
-        }else{
+        } else {
             this.whitelist = new long[0];
         }
 
@@ -87,22 +114,8 @@ public class PendingTransactionPoll extends AbstractPoll {
         if (blacklist != null) {
             this.blacklist = blacklist;
             Arrays.sort(this.blacklist);
-        }else{
+        } else {
             this.blacklist = new long[0];
-        }
-    }
-
-    private long[] restoreAccounts(String commaSeparatedAccounts){
-        if(commaSeparatedAccounts==null) {
-            return new long[0];
-        }else{
-            String[] accountStrings = commaSeparatedAccounts.split(",");
-            long[] result = new long[accountStrings.length];
-            for (int i = 0; i < accountStrings.length; i++) {
-                result[i] = Long.parseLong(accountStrings[i]);
-            }
-            Arrays.sort(result);
-            return result;
         }
     }
 
@@ -112,11 +125,21 @@ public class PendingTransactionPoll extends AbstractPoll {
         this.quorum = rs.getLong("quorum");
         this.dbKey = pollDbKeyFactory.newKey(this.id);
 
-        String whitelistAsString = Convert.emptyToNull(rs.getString("whitelist"));
-        this.whitelist = restoreAccounts(whitelistAsString);
-
-        String blacklistAsString = Convert.emptyToNull(rs.getString("blacklist"));
-        this.blacklist = restoreAccounts(blacklistAsString);
+        byte signersCount = rs.getByte("signersCount");
+        if (signersCount == 0) {
+            this.whitelist = new long[0];
+            this.blacklist = new long[0];
+        } else {
+            List<Long> signers = signersTable.get(signersDbKeyFactory.newKey(this));
+            boolean isBlacklist = rs.getBoolean("blacklist");
+            if (isBlacklist) {
+                this.whitelist = new long[0];
+                this.blacklist = Convert.reversedListOfLongsToArray(signers);
+            } else {
+                this.whitelist = Convert.reversedListOfLongsToArray(signers);
+                this.blacklist = new long[0];
+            }
+        }
     }
 
     public Long getId() {
@@ -127,52 +150,69 @@ public class PendingTransactionPoll extends AbstractPoll {
         return pendingTransactionsTable.getBy(new DbClause.LongClause("id", id));
     }
 
-    public static DbIterator<PendingTransactionPoll> getByAccountId(long accountId, int firstIndex, int lastIndex){
+    public static DbIterator<PendingTransactionPoll> getByAccountId(long accountId, int firstIndex, int lastIndex) {
         DbClause clause = new DbClause.LongClause("account_id", accountId);
         return pendingTransactionsTable.getManyBy(clause, firstIndex, lastIndex);
     }
 
-    public static DbIterator<PendingTransactionPoll> getActiveByAccountId(long accountId, int firstIndex, int lastIndex){
+    public static DbIterator<PendingTransactionPoll> getActiveByAccountId(long accountId, int firstIndex, int lastIndex) {
         DbClause clause = new DbClause.LongBooleanClause("account_id", accountId, "finished", false);
         return pendingTransactionsTable.getManyBy(clause, firstIndex, lastIndex);
     }
 
-    public static DbIterator<PendingTransactionPoll> getFinishedByAccountId(long accountId, int firstIndex, int lastIndex){
+    public static DbIterator<PendingTransactionPoll> getFinishedByAssetId(long assetId, int firstIndex, int lastIndex) {
+        DbClause clause = new DbClause.LongBooleanClause("asset_id", assetId, "finished", true);
+        return pendingTransactionsTable.getManyBy(clause, firstIndex, lastIndex);
+    }
+
+    public static DbIterator<PendingTransactionPoll> getByAssetId(long assetId, int firstIndex, int lastIndex) {
+        DbClause clause = new DbClause.LongClause("asset_id", assetId);
+        return pendingTransactionsTable.getManyBy(clause, firstIndex, lastIndex);
+    }
+
+    public static DbIterator<PendingTransactionPoll> getActiveByAssetId(long assetId, int firstIndex, int lastIndex) {
+        DbClause clause = new DbClause.LongBooleanClause("asset_id", assetId, "finished", false);
+        return pendingTransactionsTable.getManyBy(clause, firstIndex, lastIndex);
+    }
+
+    public static DbIterator<PendingTransactionPoll> getFinishedByAccountId(long accountId, int firstIndex, int lastIndex) {
         DbClause clause = new DbClause.LongBooleanClause("account_id", accountId, "finished", true);
         return pendingTransactionsTable.getManyBy(clause, firstIndex, lastIndex);
     }
 
-    public long[] getWhitelist() { return whitelist; }
+    public long[] getWhitelist() {
+        return whitelist;
+    }
 
-    public long[] getBlacklist() { return blacklist; }
+    public long[] getBlacklist() {
+        return blacklist;
+    }
 
     public Long getQuorum() {
         return quorum;
     }
 
-    private String accountsToString(long[] accounts){
-        if (accounts != null) {
-            StringBuilder resultBuilder = new StringBuilder();
-            for (long account : accounts) {
-                resultBuilder.append(account);
-                resultBuilder.append(",");
-            }
-            return resultBuilder.length() > 0 ? resultBuilder.substring(0, resultBuilder.length() - 1) : "";
-        }else{
-            return "";
-        }
-    }
-
     void save(Connection con) throws SQLException {
+        boolean isBlacklist;
+        long[] signers;
+
+        if (blacklist.length > 0) {
+            isBlacklist = true;
+            signers = blacklist;
+        } else {
+            isBlacklist = false;
+            signers = whitelist;
+        }
+
         try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO pending_transactions (id, account_id, "
-                + "finish,  whitelist, blacklist, voting_model, quorum, min_balance, asset_id, "
+                + "finish, signersCount, blacklist, voting_model, quorum, min_balance, asset_id, "
                 + "finished, height) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
             int i = 0;
             pstmt.setLong(++i, getId());
             pstmt.setLong(++i, getAccountId());
             pstmt.setInt(++i, getFinishBlockHeight());
-            pstmt.setString(++i, accountsToString(whitelist));
-            pstmt.setString(++i, accountsToString(blacklist));
+            pstmt.setByte(++i, (byte) signers.length);
+            pstmt.setBoolean(++i, isBlacklist);
             pstmt.setByte(++i, getVotingModel());
             pstmt.setLong(++i, getQuorum());
             pstmt.setLong(++i, getMinBalance());
@@ -180,6 +220,10 @@ public class PendingTransactionPoll extends AbstractPoll {
             pstmt.setBoolean(++i, isFinished());
             pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
             pstmt.executeUpdate();
+
+            if (signers.length > 0) {
+                signersTable.insert(this, Convert.arrayOfLongsToList(signers));
+            }
         }
     }
 

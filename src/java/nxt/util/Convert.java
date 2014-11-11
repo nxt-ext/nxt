@@ -7,8 +7,10 @@ import nxt.crypto.Crypto;
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
 
 public final class Convert {
 
@@ -248,4 +250,21 @@ public final class Convert {
         return Math.abs(a);
     }
 
+    public static long[] reversedListOfLongsToArray(List<Long> list) {
+        int size = list.size();
+        long[] result = new long[size];
+        for (int i = size; i > 0; i--) {
+            result[size-i] = list.get(i-1);
+        }
+        return result;
+    }
+
+    public static List<Long> arrayOfLongsToList(long[] array) {
+        int length = array.length;
+        List<Long> result = new ArrayList<>(length);
+        for (long elem : array) {
+            result.add(elem);
+        }
+        return result;
+    }
 }
