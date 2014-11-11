@@ -17,7 +17,9 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 public final class Account {
 
@@ -127,33 +129,39 @@ public final class Account {
             @Override
             public void notify(Block block) {
                 int height = block.getHeight();
-                try (DbIterator<Account> leasingAccounts = getLeasingAccounts()) {
-                    while (leasingAccounts.hasNext()) {
-                        Account account = leasingAccounts.next();
-                        if (height == account.currentLeasingHeightFrom) {
-                            leaseListeners.notify(
-                                    new AccountLease(account.getId(), account.currentLesseeId, height, account.currentLeasingHeightTo),
-                                    Event.LEASE_STARTED);
-                        } else if (height == account.currentLeasingHeightTo) {
-                            leaseListeners.notify(
-                                    new AccountLease(account.getId(), account.currentLesseeId, account.currentLeasingHeightFrom, height),
-                                    Event.LEASE_ENDED);
-                            if (account.nextLeasingHeightFrom == Integer.MAX_VALUE) {
-                                account.currentLeasingHeightFrom = Integer.MAX_VALUE;
-                                account.currentLesseeId = 0;
-                                accountTable.insert(account);
-                            } else {
-                                account.currentLeasingHeightFrom = account.nextLeasingHeightFrom;
-                                account.currentLeasingHeightTo = account.nextLeasingHeightTo;
-                                account.currentLesseeId = account.nextLesseeId;
-                                account.nextLeasingHeightFrom = Integer.MAX_VALUE;
-                                account.nextLesseeId = 0;
-                                accountTable.insert(account);
-                                if (height == account.currentLeasingHeightFrom) {
-                                    leaseListeners.notify(
-                                            new AccountLease(account.getId(), account.currentLesseeId, height, account.currentLeasingHeightTo),
-                                            Event.LEASE_STARTED);
-                                }
+                if (height < Constants.TRANSPARENT_FORGING_BLOCK_6) {
+                    return;
+                }
+                List<Account> leasingAccounts = new ArrayList<>();
+                try (DbIterator<Account> accounts = getLeasingAccounts()) {
+                    while (accounts.hasNext()) {
+                        leasingAccounts.add(accounts.next());
+                    }
+                }
+                for (Account account : leasingAccounts) {
+                    if (height == account.currentLeasingHeightFrom) {
+                        leaseListeners.notify(
+                                new AccountLease(account.getId(), account.currentLesseeId, height, account.currentLeasingHeightTo),
+                                Event.LEASE_STARTED);
+                    } else if (height == account.currentLeasingHeightTo) {
+                        leaseListeners.notify(
+                                new AccountLease(account.getId(), account.currentLesseeId, account.currentLeasingHeightFrom, height),
+                                Event.LEASE_ENDED);
+                        if (account.nextLeasingHeightFrom == Integer.MAX_VALUE) {
+                            account.currentLeasingHeightFrom = Integer.MAX_VALUE;
+                            account.currentLesseeId = 0;
+                            accountTable.insert(account);
+                        } else {
+                            account.currentLeasingHeightFrom = account.nextLeasingHeightFrom;
+                            account.currentLeasingHeightTo = account.nextLeasingHeightTo;
+                            account.currentLesseeId = account.nextLesseeId;
+                            account.nextLeasingHeightFrom = Integer.MAX_VALUE;
+                            account.nextLesseeId = 0;
+                            accountTable.insert(account);
+                            if (height == account.currentLeasingHeightFrom) {
+                                leaseListeners.notify(
+                                        new AccountLease(account.getId(), account.currentLesseeId, height, account.currentLeasingHeightTo),
+                                        Event.LEASE_STARTED);
                             }
                         }
                     }

@@ -29,14 +29,20 @@ public final class DigitalGoodsStore {
         Nxt.getBlockchainProcessor().addListener(new Listener<Block>() {
             @Override
             public void notify(Block block) {
-                try (DbIterator<Purchase> purchases = getExpiredPendingPurchases(block.getTimestamp())) {
-                    while (purchases.hasNext()) {
-                        Purchase purchase = purchases.next();
-                        Account buyer = Account.getAccount(purchase.getBuyerId());
-                        buyer.addToUnconfirmedBalanceNQT(Convert.safeMultiply(purchase.getQuantity(), purchase.getPriceNQT()));
-                        getGoods(purchase.getGoodsId()).changeQuantity(purchase.getQuantity());
-                        purchase.setPending(false);
+                if (block.getHeight() < Constants.DIGITAL_GOODS_STORE_BLOCK) {
+                    return;
+                }
+                List<Purchase> expiredPurchases = new ArrayList<>();
+                try (DbIterator<Purchase> iterator = getExpiredPendingPurchases(block.getTimestamp())) {
+                    while (iterator.hasNext()) {
+                        expiredPurchases.add(iterator.next());
                     }
+                }
+                for (Purchase purchase : expiredPurchases) {
+                    Account buyer = Account.getAccount(purchase.getBuyerId());
+                    buyer.addToUnconfirmedBalanceNQT(Convert.safeMultiply(purchase.getQuantity(), purchase.getPriceNQT()));
+                    getGoods(purchase.getGoodsId()).changeQuantity(purchase.getQuantity());
+                    purchase.setPending(false);
                 }
             }
         }, BlockchainProcessor.Event.AFTER_BLOCK_APPLY);
