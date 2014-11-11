@@ -628,7 +628,7 @@ public final class DigitalGoodsStore {
 
     private static DbIterator<Purchase> getExpiredPendingPurchases(Block block) {
         final int timestamp = block.getTimestamp();
-        final int previousTimestamp = block.getPreviousBlock().getTimestamp();
+        final int previousTimestamp = Nxt.getBlockchain().getBlock(block.getPreviousBlockId()).getTimestamp();
         DbClause dbClause = new DbClause(" deadline < ? AND deadline >= ? AND pending = TRUE ") {
             @Override
             public int set(PreparedStatement pstmt, int index) throws SQLException {
