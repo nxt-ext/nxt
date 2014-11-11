@@ -1,9 +1,7 @@
 package nxt.http;
 
-import nxt.BlockchainProcessor;
 import nxt.BlockchainTest;
 import nxt.Constants;
-import nxt.Helper;
 import nxt.Nxt;
 import nxt.util.Logger;
 import org.json.simple.JSONObject;
@@ -96,15 +94,10 @@ public class SendMoneyTest extends BlockchainTest {
     @BeforeClass
     public static void beforeClass() {
         Nxt.init();
-        Nxt.getBlockchainProcessor().addListener(new Helper.BlockListener(), BlockchainProcessor.Event.BLOCK_GENERATED);
-        Assert.assertEquals(0, Helper.getCount("unconfirmed_transaction"));
-        Assert.assertEquals(0, Helper.getCount("currency"));
     }
 
     @AfterClass
     public static void afterClass() {
-        Assert.assertEquals(0, Helper.getCount("unconfirmed_transaction"));
-        Assert.assertEquals(0, Helper.getCount("currency"));
         Nxt.shutdown();
     }
 
