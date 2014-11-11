@@ -8,7 +8,6 @@ import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
-import java.util.Date;
 
 public final class Convert {
 

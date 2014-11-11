@@ -576,28 +576,12 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     throw new BlockNotAcceptedException("Invalid version " + block.getVersion());
                 }
 
-                if (previousLastBlock.getHeight() == Constants.TRANSPARENT_FORGING_BLOCK) {
-                    byte[] checksum = calculateTransactionsChecksum();
-                    if (CHECKSUM_TRANSPARENT_FORGING == null) {
-                        Logger.logMessage("Checksum calculated:\n" + Arrays.toString(checksum));
-                    } else if (!Arrays.equals(checksum, CHECKSUM_TRANSPARENT_FORGING)) {
-                        Logger.logMessage("Checksum failed at block " + Constants.TRANSPARENT_FORGING_BLOCK);
-                        throw new BlockNotAcceptedException("Checksum failed");
-                    } else {
-                        Logger.logMessage("Checksum passed at block " + Constants.TRANSPARENT_FORGING_BLOCK);
-                    }
+                if (previousLastBlock.getHeight() == Constants.TRANSPARENT_FORGING_BLOCK && ! verifyChecksum(CHECKSUM_TRANSPARENT_FORGING)) {
+                    throw new BlockNotAcceptedException("Checksum failed");
                 }
 
-                if (previousLastBlock.getHeight() == Constants.NQT_BLOCK) {
-                    byte[] checksum = calculateTransactionsChecksum();
-                    if (CHECKSUM_NQT_BLOCK == null) {
-                        Logger.logMessage("Checksum calculated:\n" + Arrays.toString(checksum));
-                    } else if (!Arrays.equals(checksum, CHECKSUM_NQT_BLOCK)) {
-                        Logger.logMessage("Checksum failed at block " + Constants.NQT_BLOCK);
-                        throw new BlockNotAcceptedException("Checksum failed");
-                    } else {
-                        Logger.logMessage("Checksum passed at block " + Constants.NQT_BLOCK);
-                    }
+                if (previousLastBlock.getHeight() == Constants.NQT_BLOCK && ! verifyChecksum(CHECKSUM_NQT_BLOCK)) {
+                    throw new BlockNotAcceptedException("Checksum failed");
                 }
 
                 if (block.getVersion() != 1 && !Arrays.equals(Crypto.sha256().digest(previousLastBlock.getBytes()), block.getPreviousBlockHash())) {
@@ -780,7 +764,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         if (block.getId() == Genesis.GENESIS_BLOCK_ID) {
             throw new RuntimeException("Cannot pop off genesis block");
         }
-        BlockImpl previousBlock = BlockDb.findBlock(block.getPreviousBlockId());
+        BlockImpl previousBlock = block.getPreviousBlock();
         blockchain.setLastBlock(block, previousBlock);
         for (TransactionImpl transaction : block.getTransactions()) {
             transaction.unsetBlock();
@@ -794,6 +778,20 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         return previousBlockHeight < Constants.TRANSPARENT_FORGING_BLOCK ? 1
                 : previousBlockHeight < Constants.NQT_BLOCK ? 2
                 : 3;
+    }
+
+    private boolean verifyChecksum(byte[] validChecksum) {
+        byte[] checksum = calculateTransactionsChecksum();
+        if (validChecksum == null) {
+            Logger.logMessage("Checksum calculated:\n" + Arrays.toString(checksum));
+            return true;
+        } else if (!Arrays.equals(checksum, validChecksum)) {
+            Logger.logMessage("Checksum failed at block " + blockchain.getHeight() + ": " + Arrays.toString(checksum));
+            return false;
+        } else {
+            Logger.logMessage("Checksum passed at block " + blockchain.getHeight());
+            return true;
+        }
     }
 
     private static final Comparator<UnconfirmedTransaction> transactionIdComparator = new Comparator<UnconfirmedTransaction>() {
@@ -926,6 +924,8 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         }
 
         block.sign(secretPhrase);
+
+        block.setPrevious(previousBlock);
 
         try {
             pushBlock(block);
