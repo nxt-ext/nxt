@@ -72,7 +72,7 @@ public class TestCurrencyReserveAndClaim extends BlockchainTest {
         generateBlock(); // distribution of currency to founders
         Assert.assertEquals(20000, Account.getAccount(Crypto.getPublicKey(secretPhrase1)).getCurrencyUnits(Convert.parseAccountId(currencyId)));
         Assert.assertEquals(80000, Account.getAccount(Crypto.getPublicKey(secretPhrase2)).getCurrencyUnits(Convert.parseAccountId(currencyId)));
-        Assert.assertEquals(balanceNQT1 - Constants.ONE_NXT - 200000, Account.getAccount(Crypto.getPublicKey(secretPhrase1)).getBalanceNQT());
+        Assert.assertEquals(balanceNQT1 - Constants.ONE_NXT - 200000 + (100000*10), Account.getAccount(Crypto.getPublicKey(secretPhrase1)).getBalanceNQT());
         Assert.assertEquals(balanceNQT2 - 2*Constants.ONE_NXT - 800000, Account.getAccount(Crypto.getPublicKey(secretPhrase2)).getBalanceNQT());
     }
 
@@ -100,7 +100,7 @@ public class TestCurrencyReserveAndClaim extends BlockchainTest {
         Assert.assertEquals(4, Account.getAccount(Crypto.getPublicKey(secretPhrase2)).getCurrencyUnits(Convert.parseAccountId(currencyId)));
         Assert.assertEquals(19, Account.getAccount(Crypto.getPublicKey(secretPhrase3)).getCurrencyUnits(Convert.parseAccountId(currencyId)));
         Assert.assertEquals(1, Account.getAccount(Crypto.getPublicKey(secretPhrase1)).getCurrencyUnits(Convert.parseAccountId(currencyId)));
-        Assert.assertEquals(balanceNQT1, Account.getAccount(Crypto.getPublicKey(secretPhrase1)).getBalanceNQT());
+        Assert.assertEquals(balanceNQT1 + 24 * 10, Account.getAccount(Crypto.getPublicKey(secretPhrase1)).getBalanceNQT());
         Assert.assertEquals(balanceNQT2 - Constants.ONE_NXT - 24 * 2, Account.getAccount(Crypto.getPublicKey(secretPhrase2)).getBalanceNQT());
         Assert.assertEquals(balanceNQT3 - 2 * Constants.ONE_NXT - 24 * 8, Account.getAccount(Crypto.getPublicKey(secretPhrase3)).getBalanceNQT());
 
@@ -116,7 +116,7 @@ public class TestCurrencyReserveAndClaim extends BlockchainTest {
                 secretPhrase(secret1).
                 feeNQT(Constants.ONE_NXT).
                 param("currency", currencyId).
-                param("amountNQT", "" + 2).
+                param("amountPerUnitNQT", "" + 2).
                 build();
         JSONObject reserveIncreaseResponse = apiCall.invoke();
         Logger.logMessage("reserveIncreaseResponse: " + reserveIncreaseResponse);
@@ -127,7 +127,7 @@ public class TestCurrencyReserveAndClaim extends BlockchainTest {
                 secretPhrase(secret2).
                 feeNQT(Constants.ONE_NXT).
                 param("currency", currencyId).
-                param("amountNQT", "" + 3).
+                param("amountPerUnitNQT", "" + 3).
                 build();
         reserveIncreaseResponse = apiCall.invoke();
         Logger.logMessage("reserveIncreaseResponse: " + reserveIncreaseResponse);
@@ -136,7 +136,7 @@ public class TestCurrencyReserveAndClaim extends BlockchainTest {
                 secretPhrase(secret2).
                 feeNQT(Constants.ONE_NXT).
                 param("currency", currencyId).
-                param("amountNQT", "" + 5).
+                param("amountPerUnitNQT", "" + 5).
                 build();
         reserveIncreaseResponse = apiCall.invoke();
         Logger.logMessage("reserveIncreaseResponse: " + reserveIncreaseResponse);
@@ -154,12 +154,12 @@ public class TestCurrencyReserveAndClaim extends BlockchainTest {
         JSONObject founder1 = (JSONObject)founders.get(0);
         Assert.assertTrue(Convert.toUnsignedLong(Account.getId(Crypto.getPublicKey(secret1))).equals(founder1.get("account")) ||
                 Convert.toUnsignedLong(Account.getId(Crypto.getPublicKey(secret2))).equals(founder1.get("account")));
-        Assert.assertTrue(String.valueOf(3L + 5L).equals(founder1.get("amount")) || String.valueOf(2L).equals(founder1.get("amount")));
+        Assert.assertTrue(String.valueOf(3L + 5L).equals(founder1.get("amountPerUnitNQT")) || String.valueOf(2L).equals(founder1.get("amountPerUnitNQT")));
 
         JSONObject founder2 = (JSONObject)founders.get(1);
         Assert.assertTrue(Convert.toUnsignedLong(Account.getId(Crypto.getPublicKey(secret1))).equals(founder2.get("account")) ||
                 Convert.toUnsignedLong(Account.getId(Crypto.getPublicKey(secret2))).equals(founder2.get("account")));
-        Assert.assertTrue(String.valueOf(3L + 5L).equals(founder2.get("amount")) || String.valueOf(2L).equals(founder2.get("amount")));
+        Assert.assertTrue(String.valueOf(3L + 5L).equals(founder2.get("amountPerUnitNQT")) || String.valueOf(2L).equals(founder2.get("amountPerUnitNQT")));
     }
 
 }

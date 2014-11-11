@@ -47,20 +47,20 @@ public class CurrencyFounder {
     private final DbKey dbKey;
     private final long currencyId;
     private final long accountId;
-    private long amount;
+    private long amountPerUnitNQT;
 
-    private CurrencyFounder(long currencyId, long accountId, long amount) {
+    private CurrencyFounder(long currencyId, long accountId, long amountPerUnitNQT) {
         this.currencyId = currencyId;
         this.dbKey = currencyFounderDbKeyFactory.newKey(currencyId, accountId);
         this.accountId = accountId;
-        this.amount = amount;
+        this.amountPerUnitNQT = amountPerUnitNQT;
     }
 
     private CurrencyFounder(ResultSet rs) throws SQLException {
         this.currencyId = rs.getLong("currency_id");
         this.accountId = rs.getLong("account_id");
         this.dbKey = currencyFounderDbKeyFactory.newKey(currencyId, accountId);
-        this.amount = rs.getLong("amount");
+        this.amountPerUnitNQT = rs.getLong("amount");
     }
 
     private void save(Connection con) throws SQLException {
@@ -69,7 +69,7 @@ public class CurrencyFounder {
             int i = 0;
             pstmt.setLong(++i, this.getCurrencyId());
             pstmt.setLong(++i, this.getAccountId());
-            pstmt.setLong(++i, this.getAmount());
+            pstmt.setLong(++i, this.getAmountPerUnitNQT());
             pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
             pstmt.executeUpdate();
         }
@@ -83,8 +83,8 @@ public class CurrencyFounder {
         return accountId;
     }
 
-    public long getAmount() {
-        return amount;
+    public long getAmountPerUnitNQT() {
+        return amountPerUnitNQT;
     }
 
     static void addOrUpdateFounder(long currencyId, long accountId, long amount) {
@@ -92,7 +92,7 @@ public class CurrencyFounder {
         if (founder == null) {
             founder = new CurrencyFounder(currencyId, accountId, amount);
         } else {
-            founder.amount += amount;
+            founder.amountPerUnitNQT += amount;
         }
         currencyFounderTable.insert(founder);
     }

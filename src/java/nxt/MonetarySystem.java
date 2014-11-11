@@ -158,8 +158,8 @@ public abstract class MonetarySystem extends TransactionType {
         @Override
         void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
             Attachment.MonetarySystemReserveIncrease attachment = (Attachment.MonetarySystemReserveIncrease) transaction.getAttachment();
-            if (attachment.getAmountNQT() <= 0) {
-                throw new NxtException.NotValidException("Reserve increase NXT amount must be positive: " + attachment.getAmountNQT());
+            if (attachment.getAmountPerUnitNQT() <= 0) {
+                throw new NxtException.NotValidException("Reserve increase NXT amount must be positive: " + attachment.getAmountPerUnitNQT());
             }
             CurrencyType.validate(Currency.getCurrency(attachment.getCurrencyId()), transaction);
         }
@@ -167,8 +167,9 @@ public abstract class MonetarySystem extends TransactionType {
         @Override
         boolean applyAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
             Attachment.MonetarySystemReserveIncrease attachment = (Attachment.MonetarySystemReserveIncrease) transaction.getAttachment();
-            if (senderAccount.getUnconfirmedBalanceNQT() >= Convert.safeMultiply(Currency.getCurrency(attachment.getCurrencyId()).getReserveSupply(), attachment.getAmountNQT())) {
-                senderAccount.addToUnconfirmedBalanceNQT(-Convert.safeMultiply(Currency.getCurrency(attachment.getCurrencyId()).getReserveSupply(), attachment.getAmountNQT()));
+            Currency currency = Currency.getCurrency(attachment.getCurrencyId());
+            if (senderAccount.getUnconfirmedBalanceNQT() >= Convert.safeMultiply(currency.getReserveSupply(), attachment.getAmountPerUnitNQT())) {
+                senderAccount.addToUnconfirmedBalanceNQT(-Convert.safeMultiply(currency.getReserveSupply(), attachment.getAmountPerUnitNQT()));
                 return true;
             }
             return false;
@@ -177,13 +178,13 @@ public abstract class MonetarySystem extends TransactionType {
         @Override
         void undoAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
             Attachment.MonetarySystemReserveIncrease attachment = (Attachment.MonetarySystemReserveIncrease) transaction.getAttachment();
-            senderAccount.addToUnconfirmedBalanceNQT(Convert.safeMultiply(Currency.getCurrency(attachment.getCurrencyId()).getReserveSupply(), attachment.getAmountNQT()));
+            senderAccount.addToUnconfirmedBalanceNQT(Convert.safeMultiply(Currency.getCurrency(attachment.getCurrencyId()).getReserveSupply(), attachment.getAmountPerUnitNQT()));
         }
 
         @Override
         void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
             Attachment.MonetarySystemReserveIncrease attachment = (Attachment.MonetarySystemReserveIncrease) transaction.getAttachment();
-            Currency.increaseReserve(senderAccount, attachment.getCurrencyId(), attachment.getAmountNQT());
+            Currency.increaseReserve(senderAccount, attachment.getCurrencyId(), attachment.getAmountPerUnitNQT());
         }
 
         @Override
