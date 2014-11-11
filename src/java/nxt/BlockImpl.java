@@ -37,7 +37,6 @@ final class BlockImpl implements Block {
     private volatile long id;
     private volatile String stringId = null;
     private volatile long generatorId;
-    private volatile BlockImpl previousBlock;
 
 
     BlockImpl(int version, int timestamp, long previousBlockId, long totalAmountNQT, long totalFeeNQT, int payloadLength, byte[] payloadHash,
@@ -100,14 +99,6 @@ final class BlockImpl implements Block {
     @Override
     public long getPreviousBlockId() {
         return previousBlockId;
-    }
-
-    @Override
-    public BlockImpl getPreviousBlock() {
-        if (previousBlock == null) {
-            previousBlock = BlockDb.findBlock(previousBlockId);
-        }
-        return previousBlock;
     }
 
     @Override
@@ -331,7 +322,7 @@ final class BlockImpl implements Block {
 
         try {
 
-            BlockImpl previousBlock = getPreviousBlock();
+            BlockImpl previousBlock = BlockchainImpl.getInstance().getBlock(getPreviousBlockId());
             if (previousBlock == null) {
                 throw new BlockchainProcessor.BlockOutOfOrderException("Can't verify signature because previous block is missing");
             }
@@ -390,14 +381,6 @@ final class BlockImpl implements Block {
     }
 
     void setPrevious(BlockImpl block) {
-        if (previousBlock != null) {
-            if (!previousBlock.equals(block)) {
-                throw new IllegalStateException("Previous block already set to a different block");
-            }
-            if (cumulativeDifficulty != BigInteger.ZERO) {
-                return;
-            }
-        }
         if (block != null) {
             if (block.getId() != getPreviousBlockId()) {
                 // shouldn't happen as previous id is already verified, but just in case
@@ -411,7 +394,6 @@ final class BlockImpl implements Block {
         for (TransactionImpl transaction : getTransactions()) {
             transaction.setBlock(this);
         }
-        this.previousBlock = block;
     }
 
     private void calculateBaseTarget(BlockImpl previousBlock) {
