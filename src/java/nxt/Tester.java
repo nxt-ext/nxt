@@ -7,7 +7,7 @@ import nxt.util.Convert;
 import java.util.HashMap;
 import java.util.Map;
 
-public class Tester {
+public class    Tester {
     private final String secretPhrase;
     private final byte[] privateKey;
     private final byte[] publicKey;
@@ -81,6 +81,14 @@ public class Tester {
 
     public String getRsAccount() {
         return rsAccount;
+    }
+
+    public long getBalanceDiff() {
+        return Account.getAccount(id).getBalanceNQT() - initialBalance;
+    }
+
+    public long getUnconfirmedBalanceDiff() {
+        return Account.getAccount(id).getUnconfirmedBalanceNQT() - initialUnconfirmedBalance;
     }
 
     public long getInitialBalance() {

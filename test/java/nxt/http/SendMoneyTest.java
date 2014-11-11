@@ -1,0 +1,112 @@
+package nxt.http;
+
+import nxt.BlockchainProcessor;
+import nxt.BlockchainTest;
+import nxt.Constants;
+import nxt.Helper;
+import nxt.Nxt;
+import nxt.util.Logger;
+import org.json.simple.JSONObject;
+import org.junit.AfterClass;
+import org.junit.Assert;
+import org.junit.BeforeClass;
+import org.junit.Test;
+
+public class SendMoneyTest extends BlockchainTest {
+
+    @Test
+    public void sendMoney() {
+        JSONObject response = new APICall.Builder("sendMoney").
+                param("secretPhrase", testers.get(1).getSecretPhrase()).
+                param("recipient", testers.get(2).getStrId()).
+                param("amountNQT", 100 * Constants.ONE_NXT).
+                param("feeNQT", Constants.ONE_NXT).
+                build().invoke();
+        Logger.logDebugMessage("sendMoney: " + response);
+        // Forger
+        Assert.assertEquals(0, testers.get(0).getBalanceDiff());
+        Assert.assertEquals(0, testers.get(0).getUnconfirmedBalanceDiff());
+        // Sender
+        Assert.assertEquals(0, testers.get(1).getBalanceDiff());
+        Assert.assertEquals(-100 * Constants.ONE_NXT - Constants.ONE_NXT, testers.get(1).getUnconfirmedBalanceDiff());
+        // Recipient
+        Assert.assertEquals(0, testers.get(2).getBalanceDiff());
+        Assert.assertEquals(0, testers.get(2).getUnconfirmedBalanceDiff());
+        generateBlock();
+        // Forger
+        Assert.assertEquals(Constants.ONE_NXT, testers.get(0).getBalanceDiff());
+        Assert.assertEquals(Constants.ONE_NXT, testers.get(0).getUnconfirmedBalanceDiff());
+        // Sender
+        Assert.assertEquals(-100 * Constants.ONE_NXT - Constants.ONE_NXT, testers.get(1).getBalanceDiff());
+        Assert.assertEquals(-100 * Constants.ONE_NXT - Constants.ONE_NXT, testers.get(1).getUnconfirmedBalanceDiff());
+        // Recipient
+        Assert.assertEquals(100 * Constants.ONE_NXT, testers.get(2).getBalanceDiff());
+        Assert.assertEquals(100 * Constants.ONE_NXT, testers.get(2).getUnconfirmedBalanceDiff());
+    }
+
+    @Test
+    public void sendTooMuchMoney() {
+        JSONObject response = new APICall.Builder("sendMoney").
+                param("secretPhrase", testers.get(1).getSecretPhrase()).
+                param("recipient", testers.get(2).getStrId()).
+                param("amountNQT", testers.get(1).getInitialBalance()).
+                param("feeNQT", Constants.ONE_NXT).
+                build().invoke();
+        Logger.logDebugMessage("sendMoney: " + response);
+        Assert.assertEquals((long)6, response.get("errorCode"));
+    }
+
+    @Test
+    public void sendAndReturn() {
+        JSONObject response = new APICall.Builder("sendMoney").
+                param("secretPhrase", testers.get(1).getSecretPhrase()).
+                param("recipient", testers.get(2).getStrId()).
+                param("amountNQT", 100 * Constants.ONE_NXT).
+                param("feeNQT", Constants.ONE_NXT).
+                build().invoke();
+        Logger.logDebugMessage("sendMoney1: " + response);
+        response = new APICall.Builder("sendMoney").
+                param("secretPhrase", testers.get(2).getSecretPhrase()).
+                param("recipient", testers.get(1).getStrId()).
+                param("amountNQT", 100 * Constants.ONE_NXT).
+                param("feeNQT", Constants.ONE_NXT).
+                build().invoke();
+        Logger.logDebugMessage("sendMoney2: " + response);
+        // Forger
+        Assert.assertEquals(0, testers.get(0).getBalanceDiff());
+        Assert.assertEquals(0, testers.get(0).getUnconfirmedBalanceDiff());
+        // Sender
+        Assert.assertEquals(0, testers.get(1).getBalanceDiff());
+        Assert.assertEquals(-100 * Constants.ONE_NXT - Constants.ONE_NXT, testers.get(1).getUnconfirmedBalanceDiff());
+        // Recipient
+        Assert.assertEquals(0, testers.get(2).getBalanceDiff());
+        Assert.assertEquals(-100 * Constants.ONE_NXT - Constants.ONE_NXT, testers.get(2).getUnconfirmedBalanceDiff());
+        generateBlock();
+        // Forger
+        Assert.assertEquals(2*Constants.ONE_NXT, testers.get(0).getBalanceDiff());
+        Assert.assertEquals(2*Constants.ONE_NXT, testers.get(0).getUnconfirmedBalanceDiff());
+        // Sender
+        Assert.assertEquals(-Constants.ONE_NXT, testers.get(1).getBalanceDiff());
+        Assert.assertEquals(-Constants.ONE_NXT, testers.get(1).getUnconfirmedBalanceDiff());
+        // Recipient
+        Assert.assertEquals(-Constants.ONE_NXT, testers.get(2).getBalanceDiff());
+        Assert.assertEquals(-Constants.ONE_NXT, testers.get(2).getUnconfirmedBalanceDiff());
+    }
+
+    @BeforeClass
+    public static void beforeClass() {
+        Nxt.init();
+        Nxt.getBlockchainProcessor().addListener(new Helper.BlockListener(), BlockchainProcessor.Event.BLOCK_GENERATED);
+        Assert.assertEquals(0, Helper.getCount("unconfirmed_transaction"));
+        Assert.assertEquals(0, Helper.getCount("currency"));
+    }
+
+    @AfterClass
+    public static void afterClass() {
+        Assert.assertEquals(0, Helper.getCount("unconfirmed_transaction"));
+        Assert.assertEquals(0, Helper.getCount("currency"));
+        Nxt.shutdown();
+    }
+
+
+}
