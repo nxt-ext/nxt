@@ -312,8 +312,8 @@ var NRS = (function(NRS, $, undefined) {
 			}, function(response) {
 				if (response.numberOfBlocks && response.numberOfBlocks > 0) {
 					$("#forged_blocks_total").html(response.numberOfBlocks).removeClass("loading_dots");
-					var avgFee = $("#forged_fees_total").html()/$("#forged_blocks_total").html();
-					$("#blocks_average_fee").html(NRS.formatStyledAmount(avgFee)).removeClass("loading_dots");
+                    var avgFee = new Big(NRS.accountInfo.forgedBalanceNQT).div(response.numberOfBlocks).div(new Big("100000000")).toFixed(2);
+                    $("#blocks_average_fee").html(NRS.formatStyledAmount(NRS.convertToNQT(avgFee))).removeClass("loading_dots");
 				} else {
 					$("#forged_blocks_total").html(0).removeClass("loading_dots");
 					$("#blocks_average_fee").html(0).removeClass("loading_dots");

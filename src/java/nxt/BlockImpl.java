@@ -326,7 +326,7 @@ final class BlockImpl implements Block {
         //kushti: comment below to have fast block generation with any balance
         try {
 
-            BlockImpl previousBlock = (BlockImpl) Nxt.getBlockchain().getBlock(this.previousBlockId);
+            BlockImpl previousBlock = BlockchainImpl.getInstance().getBlock(getPreviousBlockId());
             if (previousBlock == null) {
                 throw new BlockchainProcessor.BlockOutOfOrderException("Can't verify signature because previous block is missing");
             }
@@ -382,14 +382,14 @@ final class BlockImpl implements Block {
         }
     }
 
-    void setPrevious(BlockImpl previousBlock) {
-        if (previousBlock != null) {
-            if (previousBlock.getId() != getPreviousBlockId()) {
+    void setPrevious(BlockImpl block) {
+        if (block != null) {
+            if (block.getId() != getPreviousBlockId()) {
                 // shouldn't happen as previous id is already verified, but just in case
                 throw new IllegalStateException("Previous block id doesn't match");
             }
-            this.height = previousBlock.getHeight() + 1;
-            this.calculateBaseTarget(previousBlock);
+            this.height = block.getHeight() + 1;
+            this.calculateBaseTarget(block);
         } else {
             this.height = 0;
         }
@@ -400,10 +400,7 @@ final class BlockImpl implements Block {
 
     private void calculateBaseTarget(BlockImpl previousBlock) {
 
-        if (this.getId() == Genesis.GENESIS_BLOCK_ID && previousBlockId == 0) {
-            baseTarget = Constants.INITIAL_BASE_TARGET;
-            cumulativeDifficulty = BigInteger.ZERO;
-        } else {
+        if (this.getId() != Genesis.GENESIS_BLOCK_ID || previousBlockId != 0) {
             long curBaseTarget = previousBlock.baseTarget;
             long newBaseTarget = BigInteger.valueOf(curBaseTarget)
                     .multiply(BigInteger.valueOf(this.timestamp - previousBlock.timestamp))

@@ -105,16 +105,7 @@ public final class AssetTransfer {
     }
 
     public static int getTransferCount(long assetId) {
-        try (Connection con = Db.db.getConnection();
-             PreparedStatement pstmt = con.prepareStatement("SELECT COUNT(*) FROM asset_transfer WHERE asset_id = ?")) {
-            pstmt.setLong(1, assetId);
-            try (ResultSet rs = pstmt.executeQuery()) {
-                rs.next();
-                return rs.getInt(1);
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException(e.toString(), e);
-        }
+        return assetTransferTable.getCount(new DbClause.LongClause("asset_id", assetId));
     }
 
     static AssetTransfer addAssetTransfer(Transaction transaction, Attachment.ColoredCoinsAssetTransfer attachment) {
