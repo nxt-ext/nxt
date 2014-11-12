@@ -6,6 +6,7 @@ Added includeCounts parameter to the getAssets API, to avoid getting trades,
 accounts, and transfers counts, if not needed.
 
 Cache hallmarked peer account balances to reduce number of database calls.
+Other minor performance improvements and bugfixes.
 
 Fixed decryption of purchased DGS goods. Fixed missing DGS purchase feedbacks.
 
@@ -26,4 +27,7 @@ parameter, to return asset balance as of that height.
 
 Added getAssetAccountCount API request, returning number of accounts holding
 the specified asset, again with optional height parameter.
+
+Updated jetty to version 9.2.4. If unpacking on top of a previous installation,
+delete your lib directory first to remove the old jetty libraries.
 
