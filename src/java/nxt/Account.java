@@ -829,7 +829,7 @@ public final class Account {
         if (lessee != null && lessee.getPublicKey() != null) {
             int height = Nxt.getBlockchain().getHeight();
             if (currentLeasingHeightFrom == Integer.MAX_VALUE) {
-                currentLeasingHeightFrom = height + 1440;
+                currentLeasingHeightFrom = height + Constants.MIN_LEASING_WAITING_PERIOD;
                 currentLeasingHeightTo = currentLeasingHeightFrom + period;
                 currentLesseeId = lesseeId;
                 nextLeasingHeightFrom = Integer.MAX_VALUE;
@@ -838,7 +838,7 @@ public final class Account {
                         new AccountLease(this.getId(), lesseeId, currentLeasingHeightFrom, currentLeasingHeightTo),
                         Event.LEASE_SCHEDULED);
             } else {
-                nextLeasingHeightFrom = height + 1440;
+                nextLeasingHeightFrom = height + Constants.MIN_LEASING_WAITING_PERIOD;
                 if (nextLeasingHeightFrom < currentLeasingHeightTo) {
                     nextLeasingHeightFrom = currentLeasingHeightTo;
                 }

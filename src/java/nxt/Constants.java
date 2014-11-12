@@ -85,6 +85,7 @@ public final class Constants {
     public static final int PUBLIC_KEY_ANNOUNCEMENT_BLOCK = isTestnet ? 77341 : 215000;
     public static final int MONETARY_SYSTEM_BLOCK = isOffline ? 0 : Integer.MAX_VALUE;
     public static final int LAST_KNOWN_BLOCK = isTestnet ? 80000 : 280000;
+    public static final int MIN_LEASING_WAITING_PERIOD = isTestnet ? 1 : 1440;
 
     static final long UNCONFIRMED_POOL_DEPOSIT_NQT = (isTestnet ? 50 : 100) * ONE_NXT;
 

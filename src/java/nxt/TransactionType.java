@@ -1829,7 +1829,7 @@ public abstract class TransactionType {
                 Account recipientAccount = Account.getAccount(transaction.getRecipientId());
                 if (transaction.getSenderId() == transaction.getRecipientId()
                         || transaction.getAmountNQT() != 0
-                        || attachment.getPeriod() < 1440) {
+                        || attachment.getPeriod() < Constants.MIN_LEASING_WAITING_PERIOD) {
                     throw new NxtException.NotValidException("Invalid effective balance leasing: "
                             + transaction.getJSONObject() + " transaction " + transaction.getStringId());
                 }
