@@ -1,8 +1,10 @@
 package nxt.http;
 
+import nxt.Account;
 import nxt.BlockchainTest;
 import nxt.Constants;
 import nxt.Nxt;
+import nxt.crypto.Crypto;
 import nxt.crypto.EncryptedData;
 import nxt.util.Convert;
 import nxt.util.Logger;
@@ -129,6 +131,35 @@ public class SendMessageTest extends BlockchainTest {
                 build().invoke();
         Logger.logDebugMessage("readMessage: " + response);
         Assert.assertEquals("hello world", response.get("decryptedMessageToSelf"));
+    }
+
+    @Test
+    public void publicKeyAnnouncement() {
+        byte[] publicKey = Crypto.getPublicKey("NonExistentAccount.jkgdkjgdjkfgfkjgfjkdfgkjjdk");
+        String publicKeyStr = Convert.toHexString(publicKey);
+        long id = Account.getId(publicKey);
+        String rsAccount = Convert.rsAccount(id);
+
+        JSONObject response = new APICall.Builder("getAccount").
+                param("account", rsAccount).
+                build().invoke();
+        Logger.logDebugMessage("getAccount: " + response);
+        Assert.assertEquals((long)5, response.get("errorCode"));
+
+        response = new APICall.Builder("sendMessage").
+                param("secretPhrase", testers.get(1).getSecretPhrase()).
+                param("recipient", rsAccount).
+                param("recipientPublicKey", publicKeyStr).
+                param("feeNQT", Constants.ONE_NXT).
+                build().invoke();
+        Logger.logDebugMessage("sendMessage: " + response);
+        generateBlock();
+
+        response = new APICall.Builder("getAccount").
+                param("account", rsAccount).
+                build().invoke();
+        Logger.logDebugMessage("getAccount: " + response);
+        Assert.assertEquals(publicKeyStr, response.get("publicKey"));
     }
 
     @BeforeClass
