@@ -81,4 +81,22 @@ public abstract class DbClause {
             return index + 2;
         }
     }
+
+    public static final class LongLongClause extends DbClause {
+
+        private final long value1;
+        private final long value2;
+
+        public LongLongClause(String column1Name, long value1, String column2Name, long value2) {
+            super(" " + column1Name + " = ? AND " + column2Name + " = ? ");
+            this.value1 = value1;
+            this.value2 = value2;
+        }
+
+        protected int set(PreparedStatement pstmt, int index) throws SQLException {
+            pstmt.setLong(index, value1);
+            pstmt.setLong(index+1, value2);
+            return index + 2;
+        }
+    }
 }

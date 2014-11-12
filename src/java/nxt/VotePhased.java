@@ -120,33 +120,44 @@ public class VotePhased {
     static boolean addVote(PendingTransactionPoll poll, Account voter,
                            Transaction transaction) {
 
-        long[] whitelist = poll.getWhitelist();
-        if (whitelist != null && whitelist.length > 0 && Arrays.binarySearch(whitelist, voter.getId()) == -1) {
-            return false; //todo: move to validate only?
-        }
+        if(!isVoteGiven(poll.getId(), voter.getId())) {
 
-        long[] blacklist = poll.getBlacklist();
-        if (blacklist != null && blacklist.length > 0 && Arrays.binarySearch(blacklist, voter.getId()) != -1) {
-            return false; //todo: move to validate only?
-        }
+            long[] whitelist = poll.getWhitelist();
+            if (whitelist != null && whitelist.length > 0 && Arrays.binarySearch(whitelist, voter.getId()) == -1) {
+                return false; //todo: move to validate only?
+            }
 
-        long weight = AbstractPoll.calcWeight(poll, voter);
+            long[] blacklist = poll.getBlacklist();
+            if (blacklist != null && blacklist.length > 0 && Arrays.binarySearch(blacklist, voter.getId()) != -1) {
+                return false; //todo: move to validate only?
+            }
 
-        long estimate = voteTable.lastEstimate(poll.getId());
+            long weight = AbstractPoll.calcWeight(poll, voter);
 
-        if (weight >= poll.minBalance) {
-            estimate += weight;
-        }
+            long estimate = voteTable.lastEstimate(poll.getId());
 
-        if (estimate >= poll.getQuorum() && poll.getVotingModel() != Constants.VOTING_MODEL_ACCOUNT) {
-            estimate = allVotesFromDb(poll);
             if (weight >= poll.minBalance) {
                 estimate += weight;
             }
-        }
 
-        VotePhased vote = new VotePhased(transaction, poll.getId(), estimate);
-        voteTable.insert(vote);
-        return estimate >= poll.getQuorum();
+            if (estimate >= poll.getQuorum() && poll.getVotingModel() != Constants.VOTING_MODEL_ACCOUNT) {
+                estimate = allVotesFromDb(poll);
+                if (weight >= poll.minBalance) {
+                    estimate += weight;
+                }
+            }
+
+            VotePhased vote = new VotePhased(transaction, poll.getId(), estimate);
+            voteTable.insert(vote);
+            return estimate >= poll.getQuorum();
+        }else{
+            return false;
+        }
+    }
+
+    static boolean isVoteGiven(long pendingTransactionId, long voterId){
+        DbClause clause = new DbClause.LongLongClause("pending_transaction_id", pendingTransactionId,
+                                                        "voter_id", voterId);
+        return voteTable.getCount(clause) > 0;
     }
 }

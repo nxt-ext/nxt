@@ -318,6 +318,9 @@ public abstract class TransactionType {
                         System.out.println("Wrong pending transaction: " + pendingId);
                         throw new NxtException.NotValidException("Wrong pending transaction");
                     }
+                    if(VotePhased.isVoteGiven(pendingId, transaction.getSenderId())){
+                        throw new NxtException.NotValidException("Double voting attempt");
+                    }
                 }
             }
 
@@ -706,7 +709,9 @@ public abstract class TransactionType {
             @Override
             void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
                 Attachment.MessagingVoteCasting attachment = (Attachment.MessagingVoteCasting) transaction.getAttachment();
-                Vote.addVote(transaction, attachment);
+                if(!Vote.isVoteGiven(attachment.getPollId(), senderAccount.getId())) {
+                    Vote.addVote(transaction, attachment);
+                }
             }
 
             @Override
@@ -721,9 +726,15 @@ public abstract class TransactionType {
                     throw new NxtException.NotValidException("Invalid vote casting attachment: " + attachment.getJSONObject());
                 }
 
-                Poll poll = Poll.getPoll(attachment.getPollId());
+                long pollId = attachment.getPollId();
+
+                Poll poll = Poll.getPoll(pollId);
                 if (poll == null) {
                     throw new NxtException.NotValidException("Invalid poll: " + Convert.toUnsignedLong(attachment.getPollId()));
+                }
+
+                if(Vote.isVoteGiven(pollId, transaction.getSenderId())){
+                    throw new NxtException.NotValidException("Double voting attempt");
                 }
 
                 byte[] votes = attachment.getPollVote();

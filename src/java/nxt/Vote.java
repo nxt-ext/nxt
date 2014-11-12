@@ -88,6 +88,12 @@ public final class Vote {
         return voteTable.getManyBy(new DbClause.LongClause("poll_id", id), from, to);
     }
 
+    public static boolean isVoteGiven(long pollId, long voterId){
+        DbClause clause = new DbClause.LongLongClause("poll_id", pollId, "voter_id", voterId);
+        boolean result = voteTable.getCount(clause) > 0;
+        return result;
+    }
+
     public static List<Long> getVoters(Poll poll) {
         return voteTable.getManyIdsBy("voter_id", "poll_id", poll.getId());
     }
