@@ -1,6 +1,5 @@
 package nxt;
 
-import nxt.db.Db;
 import nxt.db.DbClause;
 import nxt.db.DbIterator;
 import nxt.db.DbKey;
@@ -82,7 +81,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
         @Override
         public void rollback(int height) {
             List<TransactionImpl> transactions = new ArrayList<>();
-            try (Connection con = Db.getConnection();
+            try (Connection con = Db.db.getConnection();
                  PreparedStatement pstmt = con.prepareStatement("SELECT * FROM unconfirmed_transaction WHERE height > ?")) {
                 pstmt.setInt(1, height);
                 try (ResultSet rs = pstmt.executeQuery()) {
@@ -104,7 +103,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
 
     };
 
-    private final Set<TransactionImpl> nonBroadcastedTransactions = Collections.newSetFromMap(new ConcurrentHashMap<TransactionImpl,Boolean>());
+    private final Set<TransactionImpl> broadcastedTransactions = Collections.newSetFromMap(new ConcurrentHashMap<TransactionImpl,Boolean>());
     private final Listeners<List<? extends Transaction>,Event> transactionListeners = new Listeners<>();
     private final Set<TransactionImpl> lostTransactions = new HashSet<>();
 
@@ -132,17 +131,17 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                     if (expiredTransactions.size() > 0) {
                         synchronized (BlockchainImpl.getInstance()) {
                             try {
-                                Db.beginTransaction();
+                                Db.db.beginTransaction();
                                 for (TransactionImpl transaction : expiredTransactions) {
                                     removeUnconfirmedTransaction(transaction);
                                 }
-                                Db.commitTransaction();
+                                Db.db.commitTransaction();
                             } catch (Exception e) {
                                 Logger.logErrorMessage(e.toString(), e);
-                                Db.rollbackTransaction();
+                                Db.db.rollbackTransaction();
                                 throw e;
                             } finally {
-                                Db.endTransaction();
+                                Db.db.endTransaction();
                             }
                         } // synchronized
                     }
@@ -168,9 +167,9 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                 try {
                     List<Transaction> transactionList = new ArrayList<>();
                     int curTime = Nxt.getEpochTime();
-                    for (TransactionImpl transaction : nonBroadcastedTransactions) {
+                    for (TransactionImpl transaction : broadcastedTransactions) {
                         if (TransactionDb.hasTransaction(transaction.getId()) || transaction.getExpiration() < curTime) {
-                            nonBroadcastedTransactions.remove(transaction);
+                            broadcastedTransactions.remove(transaction);
                         } else if (transaction.getTimestamp() < curTime - 30) {
                             transactionList.add(transaction);
                         }
@@ -249,7 +248,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                 public void run() {
                     try (DbIterator<TransactionImpl> oldNonBroadcastedTransactions = getAllUnconfirmedTransactions()) {
                         for (TransactionImpl transaction : oldNonBroadcastedTransactions) {
-                            nonBroadcastedTransactions.add(transaction);
+                            broadcastedTransactions.add(transaction);
                         }
                     }
                 }
@@ -308,7 +307,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
             }
             if (unconfirmedTransactionTable.get(((TransactionImpl) transaction).getDbKey()) != null) {
                 if (enableTransactionRebroadcasting) {
-                    nonBroadcastedTransactions.add((TransactionImpl) transaction);
+                    broadcastedTransactions.add((TransactionImpl) transaction);
                     Logger.logMessage("Transaction " + transaction.getStringId() + " already in unconfirmed pool, will re-broadcast");
                 } else {
                     Logger.logMessage("Transaction " + transaction.getStringId() + " already in unconfirmed pool, will not broadcast again");
@@ -319,7 +318,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
         }
         if (processedTransactions.contains(transaction)) {
             if (enableTransactionRebroadcasting) {
-                nonBroadcastedTransactions.add((TransactionImpl) transaction);
+                broadcastedTransactions.add((TransactionImpl) transaction);
             }
             Logger.logDebugMessage("Accepted new transaction " + transaction.getStringId());
         } else {
@@ -349,7 +348,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
         synchronized (BlockchainImpl.getInstance()) {
             List<Transaction> removed = new ArrayList<>();
             try {
-                Db.beginTransaction();
+                Db.db.beginTransaction();
                 try (DbIterator<TransactionImpl> unconfirmedTransactions = getAllUnconfirmedTransactions()) {
                     for (TransactionImpl transaction : unconfirmedTransactions) {
                         transaction.undoUnconfirmed();
@@ -357,13 +356,13 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                     }
                 }
                 unconfirmedTransactionTable.truncate();
-                Db.commitTransaction();
+                Db.db.commitTransaction();
             } catch (Exception e) {
                 Logger.logErrorMessage(e.toString(), e);
-                Db.rollbackTransaction();
+                Db.db.rollbackTransaction();
                 throw e;
             } finally {
-                Db.endTransaction();
+                Db.db.endTransaction();
             }
             transactionListeners.notify(removed, Event.REMOVED_UNCONFIRMED_TRANSACTIONS);
         }
@@ -383,21 +382,21 @@ final class TransactionProcessorImpl implements TransactionProcessor {
     }
 
     void removeUnconfirmedTransaction(TransactionImpl transaction) {
-        if (!Db.isInTransaction()) {
+        if (!Db.db.isInTransaction()) {
             try {
-                Db.beginTransaction();
+                Db.db.beginTransaction();
                 removeUnconfirmedTransaction(transaction);
-                Db.commitTransaction();
+                Db.db.commitTransaction();
             } catch (Exception e) {
                 Logger.logErrorMessage(e.toString(), e);
-                Db.rollbackTransaction();
+                Db.db.rollbackTransaction();
                 throw e;
             } finally {
-                Db.endTransaction();
+                Db.db.endTransaction();
             }
             return;
         }
-        try (Connection con = Db.getConnection();
+        try (Connection con = Db.db.getConnection();
              PreparedStatement pstmt = con.prepareStatement("DELETE FROM unconfirmed_transaction WHERE id = ?")) {
             pstmt.setLong(1, transaction.getId());
             int deleted = pstmt.executeUpdate();
@@ -443,7 +442,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
             }
         }
         processTransactions(transactions, true);
-        nonBroadcastedTransactions.removeAll(transactions);
+        broadcastedTransactions.removeAll(transactions);
     }
 
     List<Transaction> processTransactions(Collection<TransactionImpl> transactions, final boolean sendToPeers) {
@@ -469,7 +468,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
 
                 synchronized (BlockchainImpl.getInstance()) {
                     try {
-                        Db.beginTransaction();
+                        Db.db.beginTransaction();
                         if (Nxt.getBlockchain().getHeight() < Constants.NQT_BLOCK) {
                             break; // not ready to process transactions
                         }
@@ -487,10 +486,10 @@ final class TransactionProcessorImpl implements TransactionProcessor {
 
                         if (transaction.applyUnconfirmed()) {
                             if (sendToPeers) {
-                                if (nonBroadcastedTransactions.contains(transaction)) {
+                                if (broadcastedTransactions.contains(transaction)) {
                                     Logger.logDebugMessage("Received back transaction " + transaction.getStringId()
                                             + " that we generated, will not forward to peers");
-                                    nonBroadcastedTransactions.remove(transaction);
+                                    broadcastedTransactions.remove(transaction);
                                 } else {
                                     sendToPeersTransactions.add(transaction);
                                 }
@@ -500,12 +499,12 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                         } else {
                             addedDoubleSpendingTransactions.add(transaction);
                         }
-                        Db.commitTransaction();
+                        Db.db.commitTransaction();
                     } catch (Exception e) {
-                        Db.rollbackTransaction();
+                        Db.db.rollbackTransaction();
                         throw e;
                     } finally {
-                        Db.endTransaction();
+                        Db.db.endTransaction();
                     }
                 }
             } catch (RuntimeException e) {

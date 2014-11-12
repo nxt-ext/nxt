@@ -29,14 +29,20 @@ public final class DigitalGoodsStore {
         Nxt.getBlockchainProcessor().addListener(new Listener<Block>() {
             @Override
             public void notify(Block block) {
-                try (DbIterator<Purchase> purchases = getExpiredPendingPurchases(block.getTimestamp())) {
-                    while (purchases.hasNext()) {
-                        Purchase purchase = purchases.next();
-                        Account buyer = Account.getAccount(purchase.getBuyerId());
-                        buyer.addToUnconfirmedBalanceNQT(Convert.safeMultiply(purchase.getQuantity(), purchase.getPriceNQT()));
-                        getGoods(purchase.getGoodsId()).changeQuantity(purchase.getQuantity());
-                        purchase.setPending(false);
+                if (block.getHeight() < Constants.DIGITAL_GOODS_STORE_BLOCK) {
+                    return;
+                }
+                List<Purchase> expiredPurchases = new ArrayList<>();
+                try (DbIterator<Purchase> iterator = getExpiredPendingPurchases(block)) {
+                    while (iterator.hasNext()) {
+                        expiredPurchases.add(iterator.next());
                     }
+                }
+                for (Purchase purchase : expiredPurchases) {
+                    Account buyer = Account.getAccount(purchase.getBuyerId());
+                    buyer.addToUnconfirmedBalanceNQT(Convert.safeMultiply(purchase.getQuantity(), purchase.getPriceNQT()));
+                    getGoods(purchase.getGoodsId()).changeQuantity(purchase.getQuantity());
+                    purchase.setPending(false);
                 }
             }
         }, BlockchainProcessor.Event.AFTER_BLOCK_APPLY);
@@ -399,8 +405,8 @@ public final class DigitalGoodsStore {
                 ++i;
                 setEncryptedData(pstmt, this.getRefundNote(), ++i);
                 ++i;
-                pstmt.setBoolean(++i, this.getFeedbackNotes() != null && this.getFeedbackNotes().size() > 0);
-                pstmt.setBoolean(++i, this.getPublicFeedback() != null && this.getPublicFeedback().size() > 0);
+                pstmt.setBoolean(++i, this.hasFeedbackNotes);
+                pstmt.setBoolean(++i, this.hasPublicFeedbacks);
                 pstmt.setLong(++i, this.getDiscountNQT());
                 pstmt.setLong(++i, this.getRefundNQT());
                 pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
@@ -487,7 +493,7 @@ public final class DigitalGoodsStore {
         }
 
         private void addFeedbackNote(EncryptedData feedbackNote) {
-            if (feedbackNotes == null) {
+            if (getFeedbackNotes() == null) {
                 feedbackNotes = new ArrayList<>();
             }
             feedbackNotes.add(feedbackNote);
@@ -505,7 +511,7 @@ public final class DigitalGoodsStore {
         }
 
         private void addPublicFeedback(String publicFeedback) {
-            if (publicFeedbacks == null) {
+            if (getPublicFeedback() == null) {
                 publicFeedbacks = new ArrayList<>();
             }
             publicFeedbacks.add(publicFeedback);
@@ -620,16 +626,19 @@ public final class DigitalGoodsStore {
         return purchase == null || ! purchase.isPending() ? null : purchase;
     }
 
-    private static DbIterator<Purchase> getExpiredPendingPurchases(final int timestamp) {
-        DbClause dbClause = new DbClause(" deadline < ? AND pending = TRUE ") {
+    private static DbIterator<Purchase> getExpiredPendingPurchases(Block block) {
+        final int timestamp = block.getTimestamp();
+        final int previousTimestamp = Nxt.getBlockchain().getBlock(block.getPreviousBlockId()).getTimestamp();
+        DbClause dbClause = new DbClause(" deadline < ? AND deadline >= ? AND pending = TRUE ") {
             @Override
             public int set(PreparedStatement pstmt, int index) throws SQLException {
                 pstmt.setLong(index++, timestamp);
+                pstmt.setLong(index++, previousTimestamp);
                 return index;
             }
         };
         return Purchase.purchaseTable.getManyBy(dbClause, 0, -1);
-	}
+    }
 
     private static void addPurchase(Transaction transaction,  Attachment.DigitalGoodsPurchase attachment, long sellerId) {
         Purchase purchase = new Purchase(transaction, attachment, sellerId);

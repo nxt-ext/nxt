@@ -9,6 +9,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -29,55 +30,13 @@ public class APITestServlet extends HttpServlet {
             "    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">" + 
             "    <title>Nxt http API</title>\n" +
             "    <link href=\"css/bootstrap.min.css\" rel=\"stylesheet\" type=\"text/css\" />" +
+            "    <link href=\"css/font-awesome.min.css\" rel=\"stylesheet\" type=\"text/css\" />" +
+            "    <link href=\"css/highlight.style.css\" rel=\"stylesheet\" type=\"text/css\" />" +
             "    <style type=\"text/css\">\n" +
             "        table {border-collapse: collapse;}\n" +
             "        td {padding: 10px;}\n" +
             "        .result {white-space: pre; font-family: monospace; overflow: auto;}\n" +
             "    </style>\n" +
-            "    <script type=\"text/javascript\">\n" +
-            "        var apiCalls;\n" +
-            "        function performSearch(searchStr) {\n" +
-            "            if (searchStr == '') {\n" +
-            "              $('.api-call-All').show();\n" +
-            "            } else {\n" +
-            "              $('.api-call-All').hide();\n" +
-            "              $('.topic-link').css('font-weight', 'normal');\n" +
-            "              for(var i=0; i<apiCalls.length; i++) {\n" +
-            "                var apiCall = apiCalls[i];\n" +
-            "                if (new RegExp(searchStr.toLowerCase()).test(apiCall.toLowerCase())) {\n" +
-            "                  $('#api-call-' + apiCall).show();\n" +
-            "                }\n" +
-            "              }\n" +
-            "            }\n" +
-            "        }\n" +
-            "        function submitForm(form) {\n" +
-            "            var url = '/nxt';\n" +
-            "            var params = {};\n" +
-            "            for (i = 0; i < form.elements.length; i++) {\n" +
-            "                if (form.elements[i].type != 'button' && form.elements[i].value && form.elements[i].value != 'submit') {\n" +
-            "                    params[form.elements[i].name] = form.elements[i].value;\n" +
-            "                }\n" +
-            "            }\n" +
-            "            $.ajax({\n" +
-            "                url: url,\n" +
-            "                type: 'POST',\n" +
-            "                data: params\n" +
-            "            })\n" +
-            "            .done(function(result) {\n" +
-            "                var resultStr = JSON.stringify(JSON.parse(result), null, 4);\n" +
-            "                form.getElementsByClassName(\"result\")[0].textContent = resultStr;\n" +
-            "            })\n" +
-            "            .error(function() {\n" +
-            "                alert('API not available, check if Nxt Server is running!');\n" +
-            "            });\n" +
-            "            if ($(form).has('.uri-link').length > 0) {\n" + 
-            "                  var uri = '/nxt?' + jQuery.param(params);\n" +
-            "                  var html = '<a href=\"' + uri + '\" target=\"_blank\" style=\"font-size:12px;font-weight:normal;\">Open GET URL</a>';" +
-            "                  form.getElementsByClassName(\"uri-link\")[0].innerHTML = html;\n" +
-            "            }" +
-            "            return false;\n" +
-            "        }\n" +
-            "    </script>\n" +
             "</head>\n" +
             "<body>\n" +
             "<div class=\"navbar navbar-default\" role=\"navigation\">" +
@@ -97,10 +56,23 @@ public class APITestServlet extends HttpServlet {
             "<div class=\"container\" style=\"min-width: 90%;\">" +
             "<div class=\"row\">" + 
             "  <div class=\"col-xs-12\" style=\"margin-bottom:15px;\">" +
-            "    <div class=\"pull-right\">" +
+            "    <div class=\"pull-right\" style=\"padding-top:7px;\">" +
             "      <a href=\"#\" id=\"navi-show-open\">Show Open</a>" +
             "       | " +
             "      <a href=\"#\" id=\"navi-show-all\" style=\"font-weight:bold;\">Show All</a>" +
+            "    </div>" +
+            "    <div class=\"pull-right\" style=\"margin-right: 15px;\">" +
+            "      <div class=\"btn-group\">" +
+            "        <button type=\"button\" class=\"btn btn-default dropdown-toggle\" data-toggle=\"dropdown\">" +
+            "          <i class=\"fa fa-check-circle-o\"></i> <i class=\"fa fa-circle-o\"></i>" +
+            "        </button>" +
+            "        <ul class=\"dropdown-menu\" role=\"menu\">" +
+            "          <li><a href=\"#\" id=\"navi-select-all-d-add-btn\">Select All Displayed (Add)</a></li>" +
+            "          <li><a href=\"#\" id=\"navi-select-all-d-replace-btn\">Select All Displayed (Replace)</a></li>" +
+            "          <li><a href=\"#\" id=\"navi-deselect-all-d-btn\">Deselect All Displayed</a></li>" +
+            "          <li><a href=\"#\" id=\"navi-deselect-all-btn\">Deselect All</a></li>" +
+            "        </ul>" +
+            "      </div>" +
             "    </div>" +
             "  </div>" +
             "</div>" +
@@ -120,37 +92,13 @@ public class APITestServlet extends HttpServlet {
             "</div> <!-- container -->" +
             "<script src=\"js/3rdparty/jquery.js\"></script>" +
             "<script src=\"js/3rdparty/bootstrap.js\" type=\"text/javascript\"></script>" +
+            "<script src=\"js/3rdparty/highlight.pack.js\" type=\"text/javascript\"></script>" +
+            "<script src=\"js/ats.js\" type=\"text/javascript\"></script>" +
+            "<script src=\"js/ats.util.js\" type=\"text/javascript\"></script>" +
             "<script>" + 
-            "  $(document).ready(function() {" +
-            "    apiCalls = [];\n";
+            "  $(document).ready(function() {";
 
     private static final String footer2 =
-            "    $(\".collapse-link\").click(function(event) {" +
-            "       event.preventDefault();" +    
-            "    });" +
-            "    $('#search').keyup(function(e) {\n" +
-            "      if (e.keyCode == 13) {\n" +
-            "        performSearch($(this).val());\n" +
-            "      }\n" +
-            "    });\n" +
-            "    $('#navi-show-open').click(function(e) {" +
-            "      $('.api-call-All').each(function() {" +
-            "        if($(this).find('.panel-collapse.in').length != 0) {" +
-            "          $(this).show();" +
-            "        } else {" +
-            "          $(this).hide();" +
-            "        }" +
-            "      });" +
-            "      $('#navi-show-all').css('font-weight', 'normal');" +
-            "      $(this).css('font-weight', 'bold');" +
-            "      e.preventDefault();" +
-            "    });" +
-            "    $('#navi-show-all').click(function(e) {" +
-            "      $('.api-call-All').show();" +
-            "      $('#navi-show-open').css('font-weight', 'normal');" +
-            "      $(this).css('font-weight', 'bold');" +
-            "      e.preventDefault();" +
-            "    });" +
             "  });" + 
             "</script>" +
             "</body>\n" +
@@ -181,18 +129,25 @@ public class APITestServlet extends HttpServlet {
         StringBuilder buf = new StringBuilder();
         String requestTag = Convert.nullToEmpty(req.getParameter("requestTag"));
         buf.append("<li");
-        if (requestTag.equals("")) {
+        if (requestTag.equals("") 
+                & !req.getParameterMap().containsKey("requestType")
+                & !req.getParameterMap().containsKey("requestTypes")) {
             buf.append(" class=\"active\"");
         }
-        buf.append("><a href=\"/test\">All</a></li>");
+        buf.append("><a href=\"/test\">ALL</a></li>");
+        buf.append("<li");
+        if (req.getParameterMap().containsKey("requestTypes")) {
+            buf.append(" class=\"active\"");
+        }
+        buf.append("><a href=\"/test?requestTypes=\" id=\"navi-selected\">SELECTED</a></li>");
         for (APITag apiTag : APITag.values()) {
             if (requestTags.get(apiTag.name()) != null) {
-            	buf.append("<li");
-	            if (requestTag.equals(apiTag.name())) {
-    	            buf.append(" class=\"active\"");
-        	    }
-            	buf.append("><a href=\"/test?requestTag=").append(apiTag.name()).append("\">");
-            	buf.append(apiTag.getDisplayName()).append("</a></li>").append(" ");
+                buf.append("<li");
+                if (requestTag.equals(apiTag.name())) {
+                    buf.append(" class=\"active\"");
+                }
+                buf.append("><a href=\"/test?requestTag=").append(apiTag.name()).append("\">");
+                buf.append(apiTag.getDisplayName()).append("</a></li>").append(" ");
             }
         }
         return buf.toString();
@@ -219,15 +174,28 @@ public class APITestServlet extends HttpServlet {
             StringBuilder bufJSCalls = new StringBuilder();
             if (requestHandler != null) {
                 writer.print(form(requestType, true, requestHandler.getClass().getName(), requestHandler.getParameters(), requestHandler.requirePost()));
-                bufJSCalls.append("apiCalls.push(\"").append(requestType).append("\");\n");
-            } else {
+                bufJSCalls.append("ATS.apiCalls.push(\"").append(requestType).append("\");\n");
+            } else if (!req.getParameterMap().containsKey("requestTypes")) {
                 String requestTag = Convert.nullToEmpty(req.getParameter("requestTag"));
                 Set<String> taggedTypes = requestTags.get(requestTag);
                 for (String type : (taggedTypes != null ? taggedTypes : allRequestTypes)) {
                     requestHandler = APIServlet.apiRequestHandlers.get(type);
                     writer.print(form(type, false, requestHandler.getClass().getName(), APIServlet.apiRequestHandlers.get(type).getParameters(), 
                                       APIServlet.apiRequestHandlers.get(type).requirePost()));
-                    bufJSCalls.append("apiCalls.push(\"").append(type).append("\");\n");
+                    bufJSCalls.append("ATS.apiCalls.push(\"").append(type).append("\");\n");
+                }
+            } else {
+                String requestTypes = Convert.nullToEmpty(req.getParameter("requestTypes"));
+                if (!requestTypes.equals("")) {
+                    Set<String> selectedRequestTypes = new TreeSet<>(Arrays.asList(requestTypes.split("_")));
+                    for (String type: selectedRequestTypes) {
+                        requestHandler = APIServlet.apiRequestHandlers.get(type);
+                        writer.print(form(type, false, requestHandler.getClass().getName(), APIServlet.apiRequestHandlers.get(type).getParameters(), 
+                                          APIServlet.apiRequestHandlers.get(type).requirePost()));
+                        bufJSCalls.append("ATS.apiCalls.push(\"").append(type).append("\");\n");
+                    }
+                } else {
+                    writer.print(fullTextMessage("No API calls selected.", "info"));
                 }
             }
             writer.print(footer1);
@@ -235,6 +203,12 @@ public class APITestServlet extends HttpServlet {
             writer.print(footer2);
         }
 
+    }
+
+    private static String fullTextMessage(String msg, String msgType) {
+        StringBuilder buf = new StringBuilder();
+        buf.append("<div class=\"alert alert-").append(msgType).append("\" role=\"alert\">").append(msg).append("</div>");
+        return buf.toString();
     }
 
     private static String form(String requestType, boolean singleView, String className, List<String> parameters, boolean requirePost) {
@@ -253,7 +227,9 @@ public class APITestServlet extends HttpServlet {
             buf.append(" &nbsp;&nbsp;");
         }
         buf.append("<a style=\"font-weight:normal;font-size:14px;color:#777;\" href=\"/doc/");
-        buf.append(className.replace('.','/')).append(".html\" target=\"_blank\">javadoc</a>");
+        buf.append(className.replace('.','/')).append(".html\" target=\"_blank\">javadoc</a>&nbsp;&nbsp;");
+        buf.append("&nbsp;&nbsp;&nbsp;<input type=\"checkbox\" class=\"api-call-sel-ALL\" ");
+        buf.append("id=\"api-call-sel-").append(requestType).append("\">");
         buf.append("</span>");
         buf.append("</h4>");
         buf.append("</div> <!-- panel-heading -->");
@@ -263,9 +239,9 @@ public class APITestServlet extends HttpServlet {
         }
         buf.append("\">");
         buf.append("<div class=\"panel-body\">");
-        buf.append("<form action=\"/nxt\" method=\"POST\" onsubmit=\"return submitForm(this);\">");
+        buf.append("<form action=\"/nxt\" method=\"POST\" onsubmit=\"return ATS.submitForm(this);\">");
         buf.append("<input type=\"hidden\" name=\"requestType\" value=\"").append(requestType).append("\"/>");
-        buf.append("<div class=\"col-xs-12 col-lg-6\" style=\"width: 40%;\">");
+        buf.append("<div class=\"col-xs-12 col-lg-6\" style=\"min-width: 40%;\">");
         buf.append("<table class=\"table\">");
         for (String parameter : parameters) {
             buf.append("<tr>");
@@ -280,7 +256,7 @@ public class APITestServlet extends HttpServlet {
         buf.append("</tr>");
         buf.append("</table>");
         buf.append("</div>");
-        buf.append("<div class=\"col-xs-12 col-lg-6\" style=\"min-width: 60%;\">");
+        buf.append("<div class=\"col-xs-12 col-lg-6\" style=\"min-width: 50%;\">");
         buf.append("<h5 style=\"margin-top:0px;\">");
         if (!requirePost) {
             buf.append("<span style=\"float:right;\" class=\"uri-link\">");
@@ -289,7 +265,7 @@ public class APITestServlet extends HttpServlet {
             buf.append("<span style=\"float:right;font-size:12px;font-weight:normal;\">POST only</span>");
         }
         buf.append("Response</h5>");
-        buf.append("<pre class=\"result\">JSON response</pre>");
+        buf.append("<pre class=\"hljs json\"><code class=\"result\">JSON response</code></pre>");
         buf.append("</div>");
         buf.append("</form>");
         buf.append("</div> <!-- panel-body -->");

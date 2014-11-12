@@ -3,9 +3,9 @@ package nxt.peer;
 import nxt.Account;
 import nxt.Block;
 import nxt.Constants;
+import nxt.Db;
 import nxt.Nxt;
 import nxt.Transaction;
-import nxt.db.Db;
 import nxt.util.JSON;
 import nxt.util.Listener;
 import nxt.util.Listeners;
@@ -445,18 +445,18 @@ public final class Peers {
             Set<String> toDelete = new HashSet<>(oldPeers);
             toDelete.removeAll(currentPeers);
             try {
-                Db.beginTransaction();
+                Db.db.beginTransaction();
                 PeerDb.deletePeers(toDelete);
 	            //Logger.logDebugMessage("Deleted " + toDelete.size() + " peers from the peers database");
                 currentPeers.removeAll(oldPeers);
                 PeerDb.addPeers(currentPeers);
 	            //Logger.logDebugMessage("Added " + currentPeers.size() + " peers to the peers database");
-                Db.commitTransaction();
+                Db.db.commitTransaction();
             } catch (Exception e) {
-                Db.rollbackTransaction();
+                Db.db.rollbackTransaction();
                 throw e;
             } finally {
-                Db.endTransaction();
+                Db.db.endTransaction();
             }
         }
 
@@ -763,7 +763,7 @@ public final class Peers {
         int numberOfConnectedPeers = 0;
         for (Peer peer : peers.values()) {
             if (peer.getState() == Peer.State.CONNECTED && peer.getAnnouncedAddress() != null
-                    && (peer.getWeight() > 0 || ! Peers.enableHallmarkProtection)) {
+                    && (! Peers.enableHallmarkProtection || peer.getWeight() > 0)) {
                 numberOfConnectedPeers++;
             }
         }
