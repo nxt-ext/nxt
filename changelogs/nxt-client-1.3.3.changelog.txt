@@ -9,6 +9,8 @@ Cache hallmarked peer account balances to reduce number of database calls.
 Other minor performance improvements and bugfixes.
 
 Fixed decryption of purchased DGS goods. Fixed missing DGS purchase feedbacks.
+To repopulate the feedbacks table, this release will perform a blockchain
+rescan at first start.
 
 Added a hideDelisted parameter to the getDGSGoods API, default false. If true,
 delisted goods are not included in the results. This parameter has effect only
