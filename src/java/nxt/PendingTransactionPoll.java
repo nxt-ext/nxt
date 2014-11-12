@@ -2,7 +2,9 @@ package nxt;
 
 import nxt.db.*;
 import nxt.util.Convert;
+
 import java.sql.*;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -179,6 +181,44 @@ public class PendingTransactionPoll extends AbstractPoll {
         DbClause clause = new DbClause.LongBooleanClause("account_id", accountId, "finished", true);
         return pendingTransactionsTable.getManyBy(clause, firstIndex, lastIndex);
     }
+
+    public static List<Long> getIdsByWhitelistedSigner(Account signer, Boolean finished, int from, int to) {
+        String finishedClause = "";
+        if (finished != null) {
+            if (finished) {
+                finishedClause = " pending_transactions.finished = true AND ";
+            } else {
+                finishedClause = " pending_transactions.finished = false AND ";
+            }
+        }
+
+        try (Connection con = Db.db.getConnection();
+             PreparedStatement pstmt = con.prepareStatement("SELECT DISTINCT pending_transactions.id "
+                     + "from pending_transactions, pending_transactions_signers "
+                     + "WHERE pending_transactions.latest = TRUE AND "
+                     + "pending_transactions.blacklist = false AND " + finishedClause
+                     + "pending_transactions.id = pending_transactions_signers.poll_id "
+                     + "AND pending_transactions_signers.account_id = ? "
+                     + DbUtils.limitsClause(from, to))) {
+            pstmt.setLong(1, signer.getId());
+            DbUtils.setLimits(2, pstmt, from, to);
+
+            DbIterator<Long> iterator = new DbIterator<>(con, pstmt, new DbIterator.ResultSetReader<Long>() {
+                @Override
+                public Long get(Connection con, ResultSet rs) throws Exception {
+                    return rs.getLong(1);
+                }
+            });
+            List<Long> result = new ArrayList<>();
+            while (iterator.hasNext()) {
+                result.add(iterator.next());
+            }
+            return result;
+        } catch (SQLException e) {
+            throw new NxtException.StopException(e.toString(), e);
+        }
+    }
+
 
     public long[] getWhitelist() {
         return whitelist;
