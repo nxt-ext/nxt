@@ -327,7 +327,7 @@ public final class Currency {
             if (!isActive()) {
                 try (DbIterator<CurrencyFounder> founders = CurrencyFounder.getCurrencyFounders(currencyId, 0, Integer.MAX_VALUE)) {
                     for (CurrencyFounder founder : founders) {
-                        Account.getAccount(founder.getAccountId()).addToBalanceAndUnconfirmedBalanceNQT(Convert.safeMultiply(reserveSupply, founder.getAmount()));
+                        Account.getAccount(founder.getAccountId()).addToBalanceAndUnconfirmedBalanceNQT(Convert.safeMultiply(reserveSupply, founder.getAmountPerUnitNQT()));
                     }
                 }
             }
@@ -373,7 +373,7 @@ public final class Currency {
         private void undoCrowdFunding(Currency currency) {
             try (DbIterator<CurrencyFounder> founders = CurrencyFounder.getCurrencyFounders(currency.getId(), 0, Integer.MAX_VALUE)) {
                 for (CurrencyFounder founder : founders) {
-                    Account.getAccount(founder.getAccountId()).addToBalanceAndUnconfirmedBalanceNQT(Convert.safeMultiply(currency.getReserveSupply(), founder.getAmount()));
+                    Account.getAccount(founder.getAccountId()).addToBalanceAndUnconfirmedBalanceNQT(Convert.safeMultiply(currency.getReserveSupply(), founder.getAmountPerUnitNQT()));
                 }
             }
             Account.getAccount(currency.getAccountId()).addToCurrencyAndUnconfirmedCurrencyUnits(currency.getId(), - currency.getCurrentSupply());
@@ -382,21 +382,25 @@ public final class Currency {
         }
 
         private void distributeCurrency(Currency currency) {
-            long totalAmount = 0;
+            long totalAmountPerUnit = 0;
             final long remainingSupply = currency.getReserveSupply() - currency.getCurrentSupply();
             List<CurrencyFounder> currencyFounders = new ArrayList<>();
             try (DbIterator<CurrencyFounder> founders = CurrencyFounder.getCurrencyFounders(currency.getId(), 0, Integer.MAX_VALUE)) {
                 for (CurrencyFounder founder : founders) {
-                    totalAmount += founder.getAmount();
+                    totalAmountPerUnit += founder.getAmountPerUnitNQT();
                     currencyFounders.add(founder);
                 }
             }
             for (CurrencyFounder founder : currencyFounders) {
-                long units = Convert.safeDivide(Convert.safeMultiply(remainingSupply, founder.getAmount()), totalAmount);
+                long units = Convert.safeDivide(Convert.safeMultiply(remainingSupply, founder.getAmountPerUnitNQT()), totalAmountPerUnit);
                 currency.currentSupply += units;
                 Account.getAccount(founder.getAccountId()).addToCurrencyAndUnconfirmedCurrencyUnits(currency.getId(), units);
             }
-            Account.getAccount(currency.getAccountId()).addToCurrencyAndUnconfirmedCurrencyUnits(currency.getId(), currency.getReserveSupply() - currency.getCurrentSupply());
+            Account issuerAccount = Account.getAccount(currency.getAccountId());
+            issuerAccount.addToCurrencyAndUnconfirmedCurrencyUnits(currency.getId(), currency.getReserveSupply() - currency.getCurrentSupply());
+            if (!currency.is(CurrencyType.CLAIMABLE)) {
+                issuerAccount.addToBalanceAndUnconfirmedBalanceNQT(Convert.safeMultiply(totalAmountPerUnit, currency.getReserveSupply()));
+            }
             currency.currentSupply = currency.getReserveSupply();
             currencyTable.insert(currency);
         }

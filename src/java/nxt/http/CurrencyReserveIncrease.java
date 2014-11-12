@@ -2,6 +2,7 @@ package nxt.http;
 
 import nxt.Account;
 import nxt.Attachment;
+import nxt.Constants;
 import nxt.Currency;
 import nxt.NxtException;
 import org.json.simple.JSONStreamAware;
@@ -14,7 +15,7 @@ import javax.servlet.http.HttpServletRequest;
  * Parameters
  * <ul>
  * <li>currency - currency id
- * <li>amountNQT - the NXT amount invested into increasing the value of a single currency unit.<br>
+ * <li>amountPerUnitNQT - the NXT amount invested into increasing the value of a single currency unit.<br>
  * This value is multiplied by the currency total supply and the result is deducted from the sender's account balance.
  * </ul>
  * </p>
@@ -31,15 +32,15 @@ public final class CurrencyReserveIncrease extends CreateTransaction {
     static final CurrencyReserveIncrease instance = new CurrencyReserveIncrease();
 
     private CurrencyReserveIncrease() {
-        super(new APITag[] {APITag.MS, APITag.CREATE_TRANSACTION}, "currency", "code", "amountNQT");
+        super(new APITag[] {APITag.MS, APITag.CREATE_TRANSACTION}, "currency", "code", "amountPerUnitNQT");
     }
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
         Currency currency = ParameterParser.getCurrency(req);
-        long amountNQT = ParameterParser.getAmountNQT(req);
+        long amountPerUnitNQT = ParameterParser.getLong(req, "amountPerUnitNQT", 1L, Constants.MAX_BALANCE_NQT, true);
         Account account = ParameterParser.getSenderAccount(req);
-        Attachment attachment = new Attachment.MonetarySystemReserveIncrease(currency.getId(), amountNQT);
+        Attachment attachment = new Attachment.MonetarySystemReserveIncrease(currency.getId(), amountPerUnitNQT);
         return createTransaction(req, account, attachment);
 
     }

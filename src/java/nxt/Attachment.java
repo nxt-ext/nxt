@@ -1873,23 +1873,23 @@ public interface Attachment extends Appendix {
     public final static class MonetarySystemReserveIncrease extends AbstractAttachment implements MonetarySystemAttachment {
 
         private final long currencyId;
-        private final long amountNQT;
+        private final long amountPerUnitNQT;
 
         MonetarySystemReserveIncrease(ByteBuffer buffer, byte transactionVersion) {
             super(buffer, transactionVersion);
             this.currencyId = buffer.getLong();
-            this.amountNQT = buffer.getLong();
+            this.amountPerUnitNQT = buffer.getLong();
         }
 
         MonetarySystemReserveIncrease(JSONObject attachmentData) {
             super(attachmentData);
             this.currencyId = Convert.parseUnsignedLong((String)attachmentData.get("currency"));
-            this.amountNQT = Convert.parseLong(attachmentData.get("amountNQT"));
+            this.amountPerUnitNQT = Convert.parseLong(attachmentData.get("amountPerUnitNQT"));
         }
 
-        public MonetarySystemReserveIncrease(long currencyId, long amountNQT) {
+        public MonetarySystemReserveIncrease(long currencyId, long amountPerUnitNQT) {
             this.currencyId = currencyId;
-            this.amountNQT = amountNQT;
+            this.amountPerUnitNQT = amountPerUnitNQT;
         }
 
         @Override
@@ -1905,13 +1905,13 @@ public interface Attachment extends Appendix {
         @Override
         void putMyBytes(ByteBuffer buffer) {
             buffer.putLong(currencyId);
-            buffer.putLong(amountNQT);
+            buffer.putLong(amountPerUnitNQT);
         }
 
         @Override
         void putMyJSON(JSONObject attachment) {
             attachment.put("currency", Convert.toUnsignedLong(currencyId));
-            attachment.put("amountNQT", amountNQT);
+            attachment.put("amountPerUnitNQT", amountPerUnitNQT);
         }
 
         @Override
@@ -1924,8 +1924,8 @@ public interface Attachment extends Appendix {
             return currencyId;
         }
 
-        public long getAmountNQT() {
-            return amountNQT;
+        public long getAmountPerUnitNQT() {
+            return amountPerUnitNQT;
         }
 
     }

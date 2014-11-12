@@ -92,7 +92,7 @@ final class JSONData {
         JSONObject json = new JSONObject();
         json.put("currency", Convert.toUnsignedLong(founder.getCurrencyId()));
         putAccount(json, "account", founder.getAccountId());
-        json.put("amount", String.valueOf(founder.getAmount()));
+        json.put("amountPerUnitNQT", String.valueOf(founder.getAmountPerUnitNQT()));
         return json;
     }
 
