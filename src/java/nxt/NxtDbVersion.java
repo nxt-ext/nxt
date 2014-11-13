@@ -364,6 +364,14 @@ class NxtDbVersion extends DbVersion {
                 BlockchainProcessorImpl.getInstance().forceScanAtStart();
                 apply(null);
             case 129:
+                apply("CREATE ALIAS IF NOT EXISTS FTL_INIT FOR \"org.h2.fulltext.FullTextLucene.init\"");
+            case 130:
+                apply("CALL FTL_INIT()");
+            case 131:
+                apply("CALL FTL_CREATE_INDEX('PUBLIC', 'GOODS', 'NAME,DESCRIPTION,TAGS')");
+            case 132:
+                apply("CALL FTL_CREATE_INDEX('PUBLIC', 'ASSET', 'NAME,DESCRIPTION')");
+            case 133:
                 return;
             default:
                 throw new RuntimeException("Blockchain database inconsistent with code, probably trying to run older code on newer database");

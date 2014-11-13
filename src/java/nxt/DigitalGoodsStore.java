@@ -561,25 +561,46 @@ public final class DigitalGoodsStore {
         return Goods.goodsTable.getAll(from, to);
     }
 
+    private static final DbClause inStockClause = new DbClause(" goods.delisted = FALSE AND goods.quantity > 0 ") {
+
+        @Override
+        public int set(PreparedStatement pstmt, int index) throws SQLException {
+            return index;
+        }
+
+    };
+
+    private static final class SellerDbClause extends DbClause {
+
+        private final long sellerId;
+
+        private SellerDbClause(long sellerId, boolean inStockOnly) {
+            super(" seller_id = ? " + (inStockOnly ? "AND delisted = FALSE AND quantity > 0" : ""));
+            this.sellerId = sellerId;
+        }
+
+        @Override
+        public int set(PreparedStatement pstmt, int index) throws SQLException {
+            pstmt.setLong(index++, sellerId);
+            return index;
+        }
+
+    }
+
     public static DbIterator<Goods> getGoodsInStock(int from, int to) {
-        DbClause dbClause = new DbClause(" delisted = FALSE AND quantity > 0 ") {
-            @Override
-            public int set(PreparedStatement pstmt, int index) throws SQLException {
-                return index;
-            }
-        };
-        return Goods.goodsTable.getManyBy(dbClause, from, to);
+        return Goods.goodsTable.getManyBy(inStockClause, from, to);
     }
 
     public static DbIterator<Goods> getSellerGoods(final long sellerId, final boolean inStockOnly, int from, int to) {
-        DbClause dbClause = new DbClause(" seller_id = ? " + (inStockOnly ? "AND delisted = FALSE AND quantity > 0" : "")) {
-            @Override
-            public int set(PreparedStatement pstmt, int index) throws SQLException {
-                pstmt.setLong(index++, sellerId);
-                return index;
-            }
-        };
-        return Goods.goodsTable.getManyBy(dbClause, from, to, " ORDER BY name ASC, timestamp DESC, id ASC ");
+        return Goods.goodsTable.getManyBy(new SellerDbClause(sellerId, inStockOnly), from, to, " ORDER BY name ASC, timestamp DESC, id ASC ");
+    }
+
+    public static DbIterator<Goods> searchGoods(String query, boolean inStockOnly, int from, int to) {
+        return Goods.goodsTable.search(query, inStockOnly ? inStockClause : DbClause.EMPTY_CLAUSE, from, to);
+    }
+
+    public static DbIterator<Goods> searchSellerGoods(String query, long sellerId, boolean inStockOnly, int from, int to) {
+        return Goods.goodsTable.search(query, new SellerDbClause(sellerId, inStockOnly), from, to);
     }
 
     public static DbIterator<Purchase> getAllPurchases(int from, int to) {

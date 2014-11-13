@@ -164,6 +164,8 @@ public final class APIServlet extends HttpServlet {
         map.put("stopForging", StopForging.instance);
         map.put("getForging", GetForging.instance);
         map.put("transferAsset", TransferAsset.instance);
+        map.put("searchDGSGoods", SearchDGSGoods.instance);
+        map.put("searchAssets", SearchAssets.instance);
 
         if (API.enableDebugAPI) {
             map.put("clearUnconfirmedTransactions", ClearUnconfirmedTransactions.instance);
