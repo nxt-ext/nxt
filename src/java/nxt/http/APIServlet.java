@@ -189,6 +189,8 @@ public final class APIServlet extends HttpServlet {
         map.put("transferCurrency", TransferCurrency.instance);
         map.put("deleteCurrency", DeleteCurrency.instance);
         map.put("dividendPayment", DividendPayment.instance);
+        map.put("searchDGSGoods", SearchDGSGoods.instance);
+        map.put("searchAssets", SearchAssets.instance);
 
         if (API.enableDebugAPI) {
             map.put("clearUnconfirmedTransactions", ClearUnconfirmedTransactions.instance);
