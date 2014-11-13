@@ -17,7 +17,7 @@ public final class SearchDGSGoods extends APIServlet.APIRequestHandler {
     static final SearchDGSGoods instance = new SearchDGSGoods();
 
     private SearchDGSGoods() {
-        super(new APITag[] {APITag.DGS, APITag.SEARCH}, "query", "tag", "seller", "firstIndex", "lastIndex", "inStockOnly", "hideDelisted");
+        super(new APITag[] {APITag.DGS, APITag.SEARCH}, "query", "tag", "seller", "firstIndex", "lastIndex", "inStockOnly", "hideDelisted", "includeCounts");
     }
 
     @Override
@@ -32,6 +32,7 @@ public final class SearchDGSGoods extends APIServlet.APIRequestHandler {
         int lastIndex = ParameterParser.getLastIndex(req);
         boolean inStockOnly = !"false".equalsIgnoreCase(req.getParameter("inStockOnly"));
         boolean hideDelisted = "true".equalsIgnoreCase(req.getParameter("hideDelisted"));
+        boolean includeCounts = !"false".equalsIgnoreCase(req.getParameter("includeCounts"));
 
         JSONObject response = new JSONObject();
         JSONArray goodsJSON = new JSONArray();
@@ -62,7 +63,7 @@ public final class SearchDGSGoods extends APIServlet.APIRequestHandler {
             iterator = new FilteringIterator<>(goods, filter, firstIndex, lastIndex);
             while (iterator.hasNext()) {
                 DigitalGoodsStore.Goods good = iterator.next();
-                goodsJSON.add(JSONData.goods(good));
+                goodsJSON.add(JSONData.goods(good, includeCounts));
             }
         } finally {
             DbUtils.close(iterator);

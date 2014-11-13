@@ -765,6 +765,31 @@ public final class DigitalGoodsStore {
         return Purchase.purchaseTable.getManyBy(dbClause, from, to);
     }
 
+    private static final class GoodsPurchasesClause extends DbClause {
+
+        private final long goodsId;
+
+        private GoodsPurchasesClause(long goodsId, boolean withPublicFeedbacksOnly) {
+            super(" goods_id = ? AND pending = FALSE " + (withPublicFeedbacksOnly ? " AND has_public_feedbacks = TRUE " : ""));
+            this.goodsId = goodsId;
+        }
+
+        @Override
+        protected int set(PreparedStatement pstmt, int index) throws SQLException {
+            pstmt.setLong(index++, goodsId);
+            return index;
+        }
+
+    }
+
+    public static DbIterator<Purchase> getGoodsPurchases(long goodsId, boolean withPublicFeedbacksOnly, int from, int to) {
+        return Purchase.purchaseTable.getManyBy(new GoodsPurchasesClause(goodsId, withPublicFeedbacksOnly), from, to);
+    }
+
+    public static int getGoodsPurchaseCount(final long goodsId, boolean withPublicFeedbacksOnly) {
+        return Purchase.purchaseTable.getCount(new GoodsPurchasesClause(goodsId, withPublicFeedbacksOnly));
+    }
+
     public static Purchase getPurchase(long purchaseId) {
         return Purchase.purchaseTable.get(Purchase.purchaseDbKeyFactory.newKey(purchaseId));
     }
