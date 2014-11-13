@@ -253,23 +253,62 @@ public abstract class EntityDbTable<T> extends DerivedDbTable {
     public final int getCount() {
         try (Connection con = db.getConnection();
              PreparedStatement pstmt = con.prepareStatement("SELECT COUNT(*) FROM " + table
-                     + (multiversion ? " WHERE latest = TRUE" : ""));
-             ResultSet rs = pstmt.executeQuery()) {
-            rs.next();
-            return rs.getInt(1);
+                     + (multiversion ? " WHERE latest = TRUE" : ""))) {
+            return getCount(pstmt);
         } catch (SQLException e) {
+            throw new RuntimeException(e.toString(), e);
+        }
+    }
+
+    public final int getCount(DbClause dbClause) {
+        try (Connection con = db.getConnection();
+             PreparedStatement pstmt = con.prepareStatement("SELECT COUNT(*) FROM " + table
+                     + " WHERE " + dbClause.getClause() + (multiversion ? " AND latest = TRUE" : ""))) {
+            dbClause.set(pstmt, 1);
+            return getCount(pstmt);
+        } catch (SQLException e) {
+            throw new RuntimeException(e.toString(), e);
+        }
+    }
+
+    public final int getCount(DbClause dbClause, int height) {
+        checkAvailable(height);
+        Connection con = null;
+        try {
+            con = db.getConnection();
+            PreparedStatement pstmt = con.prepareStatement("SELECT COUNT(*) FROM " + table + " AS a WHERE " + dbClause.getClause()
+                    + "AND a.height <= ?" + (multiversion ? " AND (a.latest = TRUE OR (a.latest = FALSE "
+                    + "AND EXISTS (SELECT 1 FROM " + table + " AS b WHERE " + dbKeyFactory.getSelfJoinClause() + " AND b.height > ?) "
+                    + "AND NOT EXISTS (SELECT 1 FROM " + table + " AS b WHERE " + dbKeyFactory.getSelfJoinClause()
+                    + " AND b.height <= ? AND b.height > a.height))) "
+                    : " "));
+            int i = 0;
+            i = dbClause.set(pstmt, ++i);
+            pstmt.setInt(i, height);
+            if (multiversion) {
+                pstmt.setInt(++i, height);
+                pstmt.setInt(++i, height);
+            }
+            return getCount(pstmt);
+        } catch (SQLException e) {
+            DbUtils.close(con);
             throw new RuntimeException(e.toString(), e);
         }
     }
 
     public final int getRowCount() {
         try (Connection con = db.getConnection();
-             PreparedStatement pstmt = con.prepareStatement("SELECT COUNT(*) FROM " + table);
-             ResultSet rs = pstmt.executeQuery()) {
-            rs.next();
-            return rs.getInt(1);
+             PreparedStatement pstmt = con.prepareStatement("SELECT COUNT(*) FROM " + table)) {
+            return getCount(pstmt);
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
+        }
+    }
+
+    private int getCount(PreparedStatement pstmt) throws SQLException {
+        try (ResultSet rs = pstmt.executeQuery()) {
+            rs.next();
+            return rs.getInt(1);
         }
     }
 

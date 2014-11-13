@@ -463,7 +463,12 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             //BlockDb.deleteBlock(Genesis.GENESIS_BLOCK_ID); // fails with stack overflow in H2
             BlockDb.deleteAll();
             addGenesisBlock();
-            scan(0);
+            try {
+                setGetMoreBlocks(false);
+                scan(0);
+            } finally {
+                setGetMoreBlocks(true);
+            }
         }
     }
 
@@ -477,7 +482,8 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         validateAtScan = true;
     }
 
-    void setGetMoreBlocks(boolean getMoreBlocks) {
+    @Override
+    public void setGetMoreBlocks(boolean getMoreBlocks) {
         this.getMoreBlocks = getMoreBlocks;
     }
 
@@ -560,28 +566,12 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     throw new BlockNotAcceptedException("Invalid version " + block.getVersion());
                 }
 
-                if (previousLastBlock.getHeight() == Constants.TRANSPARENT_FORGING_BLOCK) {
-                    byte[] checksum = calculateTransactionsChecksum();
-                    if (CHECKSUM_TRANSPARENT_FORGING == null) {
-                        Logger.logMessage("Checksum calculated:\n" + Arrays.toString(checksum));
-                    } else if (!Arrays.equals(checksum, CHECKSUM_TRANSPARENT_FORGING)) {
-                        Logger.logMessage("Checksum failed at block " + Constants.TRANSPARENT_FORGING_BLOCK);
-                        throw new BlockNotAcceptedException("Checksum failed");
-                    } else {
-                        Logger.logMessage("Checksum passed at block " + Constants.TRANSPARENT_FORGING_BLOCK);
-                    }
+                if (previousLastBlock.getHeight() == Constants.TRANSPARENT_FORGING_BLOCK && ! verifyChecksum(CHECKSUM_TRANSPARENT_FORGING)) {
+                    throw new BlockNotAcceptedException("Checksum failed");
                 }
 
-                if (previousLastBlock.getHeight() == Constants.NQT_BLOCK) {
-                    byte[] checksum = calculateTransactionsChecksum();
-                    if (CHECKSUM_NQT_BLOCK == null) {
-                        Logger.logMessage("Checksum calculated:\n" + Arrays.toString(checksum));
-                    } else if (!Arrays.equals(checksum, CHECKSUM_NQT_BLOCK)) {
-                        Logger.logMessage("Checksum failed at block " + Constants.NQT_BLOCK);
-                        throw new BlockNotAcceptedException("Checksum failed");
-                    } else {
-                        Logger.logMessage("Checksum passed at block " + Constants.NQT_BLOCK);
-                    }
+                if (previousLastBlock.getHeight() == Constants.NQT_BLOCK && ! verifyChecksum(CHECKSUM_NQT_BLOCK)) {
+                    throw new BlockNotAcceptedException("Checksum failed");
                 }
 
                 if (block.getVersion() != 1 && !Arrays.equals(Crypto.sha256().digest(previousLastBlock.getBytes()), block.getPreviousBlockHash())) {
@@ -756,7 +746,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         if (block.getId() == Genesis.GENESIS_BLOCK_ID) {
             throw new RuntimeException("Cannot pop off genesis block");
         }
-        BlockImpl previousBlock = BlockDb.findBlock(block.getPreviousBlockId());
+        BlockImpl previousBlock = blockchain.getBlock(block.getPreviousBlockId());
         blockchain.setLastBlock(block, previousBlock);
         for (TransactionImpl transaction : block.getTransactions()) {
             transaction.unsetBlock();
@@ -770,6 +760,20 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         return previousBlockHeight < Constants.TRANSPARENT_FORGING_BLOCK ? 1
                 : previousBlockHeight < Constants.NQT_BLOCK ? 2
                 : 3;
+    }
+
+    private boolean verifyChecksum(byte[] validChecksum) {
+        byte[] checksum = calculateTransactionsChecksum();
+        if (validChecksum == null) {
+            Logger.logMessage("Checksum calculated:\n" + Arrays.toString(checksum));
+            return true;
+        } else if (!Arrays.equals(checksum, validChecksum)) {
+            Logger.logMessage("Checksum failed at block " + blockchain.getHeight() + ": " + Arrays.toString(checksum));
+            return false;
+        } else {
+            Logger.logMessage("Checksum passed at block " + blockchain.getHeight());
+            return true;
+        }
     }
 
     void generateBlock(String secretPhrase, int blockTimestamp) throws BlockNotAcceptedException {
@@ -878,8 +882,6 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
 
         block.sign(secretPhrase);
 
-        block.setPrevious(previousBlock);
-
         try {
             pushBlock(block);
             blockListeners.notify(block, Event.BLOCK_GENERATED);
@@ -920,13 +922,13 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             if (height < 0) {
                 height = 0;
             }
-            isScanning = true;
             Logger.logMessage("Scanning blockchain starting from height " + height + "...");
             if (validateAtScan) {
                 Logger.logDebugMessage("Also verifying signatures and validating transactions...");
             }
             try (Connection con = Db.db.beginTransaction();
                  PreparedStatement pstmt = con.prepareStatement("SELECT * FROM block WHERE height >= ? ORDER BY db_id ASC")) {
+                isScanning = true;
                 transactionProcessor.requeueAllUnconfirmedTransactions();
                 for (DerivedDbTable table : derivedTables) {
                     if (height == 0) {
@@ -1022,12 +1024,13 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     Db.db.endTransaction();
                     blockListeners.notify(currentBlock, Event.RESCAN_END);
                 }
+                validateAtScan = false;
+                Logger.logMessage("...done at height " + Nxt.getBlockchain().getHeight());
             } catch (SQLException e) {
                 throw new RuntimeException(e.toString(), e);
+            } finally {
+                isScanning = false;
             }
-            validateAtScan = false;
-            Logger.logMessage("...done at height " + Nxt.getBlockchain().getHeight());
-            isScanning = false;
         } // synchronized
     }
 
