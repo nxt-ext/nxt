@@ -332,9 +332,9 @@ final class JSONData {
             }
             json.put("feedbackNotes", feedbacks);
         }
-        if (purchase.getPublicFeedback() != null) {
+        if (purchase.getPublicFeedbacks() != null) {
             JSONArray publicFeedbacks = new JSONArray();
-            for (String publicFeedback : purchase.getPublicFeedback()) {
+            for (String publicFeedback : purchase.getPublicFeedbacks()) {
                 publicFeedbacks.add(publicFeedback);
             }
             json.put("publicFeedbacks", publicFeedbacks);

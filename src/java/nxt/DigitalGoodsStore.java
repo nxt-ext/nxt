@@ -618,6 +618,10 @@ public final class DigitalGoodsStore {
             purchaseTable.insert(this);
         }
 
+        public boolean hasFeedbackNotes() {
+            return hasFeedbackNotes;
+        }
+
         public List<EncryptedData> getFeedbackNotes() {
             if (!hasFeedbackNotes) {
                 return null;
@@ -636,7 +640,11 @@ public final class DigitalGoodsStore {
             feedbackTable.insert(this, feedbackNotes);
 		}
 
-        public List<String> getPublicFeedback() {
+        public boolean hasPublicFeedbacks() {
+            return hasPublicFeedbacks;
+        }
+
+        public List<String> getPublicFeedbacks() {
             if (!hasPublicFeedbacks) {
                 return null;
             }
@@ -645,7 +653,7 @@ public final class DigitalGoodsStore {
         }
 
         private void addPublicFeedback(String publicFeedback) {
-            if (getPublicFeedback() == null) {
+            if (getPublicFeedbacks() == null) {
                 publicFeedbacks = new ArrayList<>();
             }
             publicFeedbacks.add(publicFeedback);
