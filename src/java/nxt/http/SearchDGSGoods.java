@@ -17,17 +17,22 @@ public final class SearchDGSGoods extends APIServlet.APIRequestHandler {
     static final SearchDGSGoods instance = new SearchDGSGoods();
 
     private SearchDGSGoods() {
-        super(new APITag[] {APITag.DGS, APITag.SEARCH}, "query", "seller", "firstIndex", "lastIndex", "inStockOnly", "hideDelisted");
+        super(new APITag[] {APITag.DGS, APITag.SEARCH}, "query", "tag", "seller", "firstIndex", "lastIndex", "inStockOnly", "hideDelisted", "includeCounts");
     }
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
         long sellerId = ParameterParser.getSellerId(req);
-        String query = Convert.nullToEmpty(req.getParameter("query"));
+        String query = Convert.nullToEmpty(req.getParameter("query")).trim();
+        String tag = Convert.emptyToNull(req.getParameter("tag"));
+        if (tag != null) {
+            query = "TAGS:" + tag + (query.equals("") ? "" : (" AND (" + query + ")"));
+        }
         int firstIndex = ParameterParser.getFirstIndex(req);
         int lastIndex = ParameterParser.getLastIndex(req);
         boolean inStockOnly = !"false".equalsIgnoreCase(req.getParameter("inStockOnly"));
         boolean hideDelisted = "true".equalsIgnoreCase(req.getParameter("hideDelisted"));
+        boolean includeCounts = !"false".equalsIgnoreCase(req.getParameter("includeCounts"));
 
         JSONObject response = new JSONObject();
         JSONArray goodsJSON = new JSONArray();
@@ -58,7 +63,7 @@ public final class SearchDGSGoods extends APIServlet.APIRequestHandler {
             iterator = new FilteringIterator<>(goods, filter, firstIndex, lastIndex);
             while (iterator.hasNext()) {
                 DigitalGoodsStore.Goods good = iterator.next();
-                goodsJSON.add(JSONData.goods(good));
+                goodsJSON.add(JSONData.goods(good, includeCounts));
             }
         } finally {
             DbUtils.close(iterator);

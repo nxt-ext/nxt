@@ -225,7 +225,7 @@ final class JSONData {
         return json;
     }
 
-    static JSONObject goods(DigitalGoodsStore.Goods goods) {
+    static JSONObject goods(DigitalGoodsStore.Goods goods, boolean includeCounts) {
         JSONObject json = new JSONObject();
         json.put("goods", Convert.toUnsignedLong(goods.getId()));
         json.put("name", goods.getName());
@@ -236,6 +236,17 @@ final class JSONData {
         json.put("tags", goods.getTags());
         json.put("delisted", goods.isDelisted());
         json.put("timestamp", goods.getTimestamp());
+        if (includeCounts) {
+            json.put("numberOfPurchases", DigitalGoodsStore.getGoodsPurchaseCount(goods.getId(), false));
+        }
+        return json;
+    }
+
+    static JSONObject tag(DigitalGoodsStore.Tag tag) {
+        JSONObject json = new JSONObject();
+        json.put("tag", tag.getTag());
+        json.put("inStockCount", tag.getInStockCount());
+        json.put("totalCount", tag.getTotalCount());
         return json;
     }
 
