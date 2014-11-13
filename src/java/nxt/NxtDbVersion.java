@@ -510,6 +510,8 @@ class NxtDbVersion extends DbVersion {
             case 177:
                 apply("ALTER TABLE bid_order ALTER COLUMN transaction_index SET NOT NULL");
             case 178:
+                apply("CALL FTL_CREATE_INDEX('PUBLIC', 'CURRENCY', 'CODE,NAME,DESCRIPTION')");
+            case 179:
                 return;
             default:
                 throw new RuntimeException("Blockchain database inconsistent with code, probably trying to run older code on newer database");

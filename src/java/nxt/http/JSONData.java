@@ -83,7 +83,7 @@ final class JSONData {
         return json;
     }
 
-    static JSONObject currency(Currency currency) {
+    static JSONObject currency(Currency currency, boolean includeCounts) {
         JSONObject json = new JSONObject();
         json.put("currency", Convert.toUnsignedLong(currency.getId()));
         putAccount(json, "account", currency.getAccountId());
@@ -101,8 +101,10 @@ final class JSONData {
         json.put("maxDifficulty", currency.getMaxDifficulty());
         json.put("algorithm", currency.getAlgorithm());
         json.put("decimals", currency.getDecimals());
-        json.put("numberOfExchanges", Exchange.getExchangeCount(currency.getId()));
-        json.put("numberOfTransfers", CurrencyTransfer.getTransferCount(currency.getId()));
+        if (includeCounts) {
+            json.put("numberOfExchanges", Exchange.getExchangeCount(currency.getId()));
+            json.put("numberOfTransfers", CurrencyTransfer.getTransferCount(currency.getId()));
+        }
         return json;
     }
 

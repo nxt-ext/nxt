@@ -64,6 +64,10 @@ public final class Currency {
         return currencyTable.getManyBy(new DbClause.LongClause("account_id", accountId), from, to);
     }
 
+    public static DbIterator<Currency> searchCurrencies(String query, int from, int to) {
+        return currencyTable.search(query, DbClause.EMPTY_CLAUSE, from, to);
+    }
+
     static void addCurrency(Transaction transaction, Attachment.MonetarySystemCurrencyIssuance attachment) {
         Currency oldCurrency;
         if ((oldCurrency = Currency.getCurrencyByCode(attachment.getCode())) != null) {
