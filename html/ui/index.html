@@ -1102,6 +1102,30 @@
                         <div class="data-pagination"></div>
                     </section>
                 </div>
+                
+                <div id="exchange_history_page" class="paginated page">
+                    <section class="content-header"><h1 data-i18n="currencies">Exchange History</h1></section>
+                    <section class="content">
+                        <div class="data-container data-loading">
+                            <table class="table table-striped" id="exchange_history_table">
+                                <thead>
+                                <tr>
+                                    <th data-i18n="exchange">Exchange</th>
+                                    <th data-i18n="code">Name</th>
+                                    <th data-i18n="code">Code</th>
+                                    <th data-i18n="code">Type</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+
+                                </tbody>
+                            </table>
+                            <div class="data-loading-container"><img src="img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
+                            <div class="data-empty-container"><p data-i18n="no_exchange_history">No Exchanges available.</p></div>
+                        </div>
+                        <div class="data-pagination"></div>
+                    </section>
+                </div>
 
                 <div id="dgs_search_page" class="paginated page">
                     <section class="content-header">
@@ -2225,19 +2249,19 @@
 		      		</div>
 			      	<div class="modal-body">
 						<form role="form" autocomplete="off">
-							<div class="callout callout-danger never_hide" data-i18n="[html]issue_currency_warning"><strong>Warning</strong>: Once submitted, you will not be able to change this information again, ever. Make sure it is correct.</div>
+							<div class="callout callout-danger never_hide" data-i18n="[html]issue_currency_warning"><strong>Warning</strong>: Once submitted, you will not be able to change this information again.</div>
 							<div class="callout callout-danger error_message" style="display:none"></div>
 							<div class="form-group">
 								<label for="issue_currency_name"><span data-i18n="currency_name">CURRENCY NAME</span> <i class="fa fa-question-circle show_popover" data-content="The currency name is unique. Should be between 3 and 10 characters long." data-i18n="[data-content]currency_name_help" data-container="body" style="color:#4CAA6E" ></i></label>
-								<input type="text" class="form-control" name="name" id="issue_currency_name" placeholder="Currency Name" data-i18n="[placeholder]currency_name" autofocus tabindex="1" />
+								<input type="text" maxlength="10" class="form-control" name="name" id="issue_currency_name" placeholder="Currency Name" data-i18n="[placeholder]currency_name" autofocus tabindex="1" />
 							</div>
 							<div class="form-group">
 								<label for="issue_currency_code"><span data-i18n="currency_code">CURRENCY CODE</span> <i class="fa fa-question-circle show_popover" data-content="The currency code is unique. Its composed of 3 upper case letters." data-i18n="[data-content]currency_code_help" data-container="body" style="color:#4CAA6E" ></i></label>
-								<input type="text" class="form-control" name="code" id="issue_currency_code" placeholder="Currency Code" data-i18n="[placeholder]currency_code" autofocus tabindex="2" />
+								<input type="text" maxlength="5" class="form-control" name="code" id="issue_currency_code" placeholder="Currency Code" data-i18n="[placeholder]currency_code" autofocus tabindex="2" />
 							</div>
 							<div class="form-group">
 								<label for="issue_currency_description" data-i18n="description">DESCRIPTION</label>
-								<textarea class="form-control" id="issue_currency_description" name="description" rows="3" tabindex="3"></textarea>
+								<textarea class="form-control" maxlength="1000" id="issue_currency_description" name="description" rows="3" tabindex="3"></textarea>
 							</div>
 							<div class="form-group">
 								<label data-i18n="type">TYPE</label>
@@ -2246,11 +2270,11 @@
                                     <label for="issue_currency_exchangeable" style="font-weight:normal;" tabindex="7" data-i18n="exchangeable">Exchangeable</label>
                                 </div>
                                 <div class="input-group">
-                                    <input type="checkbox" name="controllable" id="issue_currency_controllable" value="1" />
+                                    <input type="checkbox" name="controllable" id="issue_currency_controllable" value="2" />
                                     <label for="issue_currency_controllable" style="font-weight:normal;" tabindex="7" data-i18n="controllable">Controllable</label>
                                 </div>
                                 <div class="input-group">
-                                    <input type="checkbox" name="reservable" id="issue_currency_reservable" class="issue_currency_reservable" value="1" />
+                                    <input type="checkbox" name="reservable" id="issue_currency_reservable" class="issue_currency_reservable" value="4" />
                                     <label for="issue_currency_reservable" style="font-weight:normal;" tabindex="7" data-i18n="reservable">Reservable</label>
                                 </div>
                                 <div class="form-group advanced optional_reserve">
@@ -2258,11 +2282,11 @@
                                     <input type="number" name="minReservePerUnitNQT" id="issue_currency_min_reserve" class="form-control" min="1" placeholder="Minimum Reserve" data-i18n="minimum_reserve" tabindex="8">
                                 </div>
                                 <div class="input-group">
-                                    <input type="checkbox" name="claimable" id="issue_currency_claimable" value="1" />
+                                    <input type="checkbox" name="claimable" id="issue_currency_claimable" value="8" />
                                     <label for="issue_currency_claimable" style="font-weight:normal;" tabindex="7" data-i18n="claimable">Claimable</label>
                                 </div>
                                 <div class="input-group">
-                                    <input type="checkbox" name="mintable" id="issue_currency_mintable"  class="issue_currency_mintable" value="1" />
+                                    <input type="checkbox" name="mintable" id="issue_currency_mintable"  class="issue_currency_mintable" value="10" />
                                     <label for="issue_currency_mintable" style="font-weight:normal;" tabindex="7" data-i18n="mintable">Mintable</label>
                                 </div>
                                 <div class="form-group advanced optional_mint">
@@ -2282,7 +2306,7 @@
                                     <input type="number" name="algorithm" id="issue_currency_algorithm" class="form-control" min="1" placeholder="Algorithm" data-i18n="algorithm" tabindex="11">
                                 </div>
                                 <div class="input-group">
-                                    <input type="checkbox" name="shuffleable" id="issue_currency_shuffleable" value="1" />
+                                    <input type="checkbox" name="shuffleable" id="issue_currency_shuffleable" value="20" />
                                     <label for="issue_currency_shuffleable" style="font-weight:normal;" tabindex="7" data-i18n="shuffleable">Shuffleable</label>
                                 </div>
                             </div>
@@ -2291,15 +2315,15 @@
                                 <input type="number" name="totalSupply" id="issue_currency_total_supply" class="form-control" min="1" placeholder="Total Supply" data-i18n="total_supply" tabindex="5">
                             </div>
                             <div class="form-group">
-                                <label for="issue_currency_issuance_height" data-i18n="issuance_height">ISSUANCE_HEIGHT</label>
-                                <input type="number" name="issuanceHeight" id="issue_currency_issuance_height" class="form-control" min="1" placeholder="Issuance Height" data-i18n="issuance_height" tabindex="7">
+                                <label for="issue_currency_issuance_height" data-i18n="issuance_height">ISSUANCE HEIGHT</label>
+                                <input type="number" name="issuanceHeight" id="issue_currency_issuance_height" class="form-control" min="0" placeholder="Issuance Height" data-i18n="issuance_height" tabindex="7">
                             </div>
                             <div class="row">
-								<div class="col-xs-12 col-sm-12 col-md-12 advanced_extend" data-normal="12" data-advanced="6">
+								<div class="col-xs-6 col-sm-6 col-md-6 advanced" data-advanced="6">
 									<div class="form-group">
-										<label for="issue_currency_fee"><span data-i18n="fee">FEE</span> <i class="fa fa-exclamation-circle show_popover" data-content="The minimum fee to issue a currency is 1,000 Nxt." data-i18n="[data-content]currency_minimum_fee_help" data-container="body" style="color:red"></i></label>
+										<label for="issue_currency_fee"><span data-i18n="fee">FEE</span> <i class="fa fa-exclamation-circle show_popover" data-content="The fees are the following: 3 Letters - 25000 NXT, 4 Letters - 1000 NXT, 5 Letters - 40 NXT" data-i18n="[data-content]currency_minimum_fee_help" data-container="body" style="color:red"></i></label>
 										<div class="input-group">
-											<input type="number" name="feeNXT" id="issue_currency_fee" class="form-control" placeholder="Fee" step="any" min="1000" data-default="1000" value="1000" tabindex="6">
+											<input type="text" name="feeNXT" id="issue_currency_fee" class="form-control" placeholder="Fee" min="40" data-default="25000" value="25000" tabindex="6">
 											<span class="input-group-addon">NXT</span>
 										</div>
 									</div>
@@ -2336,7 +2360,7 @@
 						</form>
 			    	</div>
 					<div class="modal-footer" style="margin-top:0;">
-						<div class="advanced_info"><strong data-i18n="fee">Fee</strong>: <span class="advanced_fee">1'000 NXT</span> - <a href="#" data-i18n="advanced">advanced</a></div>
+						<div class="advanced_info"><strong data-i18n="fee">Fee</strong>: <span class="advanced_fee">25'000 NXT</span> - <a href="#" data-i18n="advanced">advanced</a></div>
 
 				    	<button type="button" class="btn btn-default" data-dismiss="modal" data-i18n="cancel">Cancel</button>
 				        <button type="button" class="btn btn-primary" data-loading-text="Submitting..." data-i18n="issue_currency;[data-loading-text]submitting">Issue Currency</button>
