@@ -17,12 +17,25 @@ var NRS = (function(NRS, $, undefined) {
 				}
 				var rows = "";
 				for (var i = 0; i < response.currencies.length; i++) {
-               var currency = response.currencies[i];
+               		var currency = response.currencies[i];
+               		if (currency.type == 1)
+               			currency.type = "Exchangeable";
+               		else if (currency.type == 2)
+               			currency.type = "Controllable";
+               		else if (currency.type == 4)
+               			currency.type = "Reservable";
+               		else if (currency.type == 8)
+               			currency.type = "Claimable";
+               		else if (currency.type == 10)
+               			currency.type = "Mintable";
+               		else if (currency.type == 20)
+               			currency.type = "Shuffleable";
 					rows += "<tr><td><a href='#' data-transaction='" + String(currency.currency).escapeHTML() + "'>" + String(currency.currency).escapeHTML() + "</a></td>" +
-                  "<td>" + currency.name + "</td>" +
-                  "<td>" + currency.code + "</td>" +
-                  "<td>" + currency.type + "</td>" +
-                  "</tr>";
+                  		"<td>" + currency.name + "</td>" +
+                  		"<td>" + currency.code + "</td>" +
+                  		"<td>" + currency.type + "</td>" +
+                  		"<td>" + currency.currentSupply + "</td>" +
+                  		"</tr>";
 				}
 				NRS.dataLoaded(rows);
 			} else {
@@ -33,7 +46,8 @@ var NRS = (function(NRS, $, undefined) {
 	
 	/* EXCHANGE HISTORY PAGE */
 	NRS.pages.exchange_history = function() {
-		NRS.sendRequest("getAllExchanges+", {
+		NRS.sendRequest("getExchanges+", {
+			"account": NRS.accountRS,
 			"firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
 			"lastIndex": NRS.pageNumber * NRS.itemsPerPage
 		}, function(response, input) {
@@ -90,6 +104,14 @@ var NRS = (function(NRS, $, undefined) {
 		this.value = this.value.toLocaleUpperCase();
 	});
 	
+	/* Set initial supply to max supply (todo: this is not true for all the types) */
+	$("#issue_currency_max_supply").keyup(function(e) {
+		$("#issue_currency_initial_supply").val($("#issue_currency_max_supply").val());
+	});
+	$("#issue_currency_max_supply").blur(function(e) {
+		$("#issue_currency_initial_supply").val($("#issue_currency_max_supply").val());
+	});
+	
 	NRS.forms.issueCurrency = function($modal) {
 		var data = NRS.getFormData($modal.find("form:first"));
 
@@ -107,7 +129,7 @@ var NRS = (function(NRS, $, undefined) {
 			return {
 				"error": $.t("error_code_required")
 			};
-		} else if (!data.totalSupply || data.totalSupply < 1) {
+		} else if (!data.maxSupply || data.maxSupply < 1) {
 			return {
 				"error": $.t("error_type_supply")
 			};
@@ -118,6 +140,24 @@ var NRS = (function(NRS, $, undefined) {
 		}
 	}
 	
+	$('#issue_currency_exchangeable').change(function() {
+        if($(this).is(":checked")){
+            $("#issue_currency_claimable").prop("disabled", true);
+            $("#issue_currency_issuance_height").val(0)
+            $("#issue_currency_issuance_height").prop("disabled", true);
+        }
+		else{
+			$("#issue_currency_claimable").prop("disabled", false);
+			$("#issue_currency_issuance_height").val("")
+			$("#issue_currency_issuance_height").prop("disabled", false);
+		}
+    });
+    $('#issue_currency_claimable').change(function() {
+        if($(this).is(":checked"))
+            $( "#issue_currency_exchangeable" ).prop("disabled", true);
+		else
+			$( "#issue_currency_exchangeable" ).prop("disabled", false);
+    });
 	$('#issue_currency_reservable').change(function() {
         if($(this).is(":checked"))
             $( ".optional_reserve" ).show();
