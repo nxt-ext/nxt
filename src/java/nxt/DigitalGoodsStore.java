@@ -24,9 +24,7 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 public final class DigitalGoodsStore {
 
@@ -358,17 +356,19 @@ public final class DigitalGoodsStore {
             if (tags.trim().length() == 0) {
                 return emptyTags;
             }
-            Set<String> set = new HashSet<>();
+            List<String> list = new ArrayList<>();
             try (TokenStream stream = analyzer.tokenStream(null, new StringReader(tags))) {
                 CharTermAttribute attribute = stream.addAttribute(CharTermAttribute.class);
                 String tag;
-                while (stream.incrementToken() && set.size() < 3 && (tag = attribute.toString()).length() <= 20 && tag.length() >= 3) {
-                    set.add(tag);
+                while (stream.incrementToken() && list.size() < 3 && (tag = attribute.toString()).length() <= 20 && tag.length() >= 3) {
+                    if (!list.contains(tag)) {
+                        list.add(tag);
+                    }
                 }
             } catch (IOException e) {
                 throw new RuntimeException(e.toString(), e);
             }
-            return set.toArray(new String[set.size()]);
+            return list.toArray(new String[list.size()]);
         }
 
     }
