@@ -1072,22 +1072,14 @@
                 <div id="dgs_search_page" class="paginated page">
                     <section class="content-header">
                     	<h1 data-i18n="search_marketplace">Search Marketplace</h1>
-                        <div style="position:absolute;top:9px;right:9px;display:none;" id="dgs_search_top">
-                            <form action="#" method="get" class="sidebar-form dgs_search" style="width:280px;margin:0;display:inline-block;vertical-align:middle;" autocomplete="off">
-                                <div class="input-group">
-                                    <input type="text" name="q" class="form-control" placeholder="Search By Seller..." data-i18n="[placeholder]search_by_seller" id="dgs_search_account_top">
-                                    <span class="input-group-btn">
-                                        <button type="submit" name="seach" class="btn btn-flat"><i class="fa fa-search"></i></button>
-                                    </span>
-                                </div>
-                            </form>  
+                        <div style="position:absolute;top:9px;right:9px;display:none;" id="dgs_search_top">  
                             <button id="dgs_clear_results" type="button" class="btn btn-default" data-i18n="clear_results">Clear Results</button>
                         </div>
                 	</section>
 
 					<section class="content">
                         <div style="text-align:center" id="dgs_search_center">
-                            <div style="margin:0 auto;width:auto;margin-top:150px;display:inline-block;border-top:2px solid rgba(0, 0, 0, 0.1);padding:12px" class="box">
+                            <div style="margin:0 auto;width:420px;margin-top:40px;display:inline-block;border-top:2px solid rgba(0, 0, 0, 0.1);padding:12px" class="box">
                                 <div class="box-body">
                                     <p style="text-align:center;" data-i18n="dgs_search_description">Enter the seller's Account ID below to view their store.</p>
                                     <form action="#" method="get" class="dgs_search sidebar-form" style="width:300px;margin:0;margin:0 auto;" autocomplete="off">
@@ -1098,6 +1090,23 @@
                                             </span>
                                         </div>
                                     </form>
+                                </div>
+                                <div class="box-body" style="margin-top:10px;">
+                                    <p style="text-align:center;" data-i18n="dgs_fulltext_search_description">Search for a product.</p>
+                                    <form action="#" method="get" class="dgs_fulltext_search sidebar-form" style="width:300px;margin:0;margin:0 auto;" autocomplete="off">
+                                        <div class="input-group">
+                                            <input type="text" name="fs_q" class="form-control" placeholder="Title, Description or Tag" data-i18n="[placeholder]title_description_tag" style="height:auto;" id="dgs_fulltext_search_center" />
+                                            <span class="input-group-btn">
+                                                <button type="submit" name="fulltext_seach" class="btn btn-flat"><i class="fa fa-search"></i></button>
+                                            </span>
+                                        </div>
+                                    </form>
+                                </div>
+                                <div class="box-body" style="margin-top:10px;">
+                                    <p style="text-align:center;" data-i18n="dgs_tag_list_description">Popular Tags:</p>
+                                    <p id="dgs_tag_list">
+                                        <a href="#">books [37]</a>&nbsp;&nbsp; <a href="#">marketing [36]</a>&nbsp;&nbsp; <a href="#">coupons [27]</a>&nbsp;&nbsp;
+                                    </p>
                                 </div>
                             </div>
                         </div>
