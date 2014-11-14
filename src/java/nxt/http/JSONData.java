@@ -234,6 +234,9 @@ final class JSONData {
         json.put("priceNQT", String.valueOf(goods.getPriceNQT()));
         putAccount(json, "seller", goods.getSellerId());
         json.put("tags", goods.getTags());
+        JSONArray tagsJSON = new JSONArray();
+        Collections.addAll(tagsJSON, goods.getParsedTags());
+        json.put("parsedTags", tagsJSON);
         json.put("delisted", goods.isDelisted());
         json.put("timestamp", goods.getTimestamp());
         if (includeCounts) {

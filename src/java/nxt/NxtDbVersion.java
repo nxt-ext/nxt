@@ -369,24 +369,26 @@ class NxtDbVersion extends DbVersion {
             case 128:
                 apply(null);
             case 129:
-                apply("CREATE ALIAS IF NOT EXISTS FTL_INIT FOR \"org.h2.fulltext.FullTextLucene.init\"");
+                apply("ALTER TABLE goods ADD COLUMN IF NOT EXISTS parsed_tags ARRAY");
             case 130:
-                apply("CALL FTL_INIT()");
+                apply("CREATE ALIAS IF NOT EXISTS FTL_INIT FOR \"org.h2.fulltext.FullTextLucene.init\"");
             case 131:
-                apply("CALL FTL_CREATE_INDEX('PUBLIC', 'GOODS', 'NAME,DESCRIPTION,TAGS')");
+                apply("CALL FTL_INIT()");
             case 132:
-                apply("CALL FTL_CREATE_INDEX('PUBLIC', 'ASSET', 'NAME,DESCRIPTION')");
+                apply("CALL FTL_CREATE_INDEX('PUBLIC', 'GOODS', 'NAME,DESCRIPTION,TAGS')");
             case 133:
+                apply("CALL FTL_CREATE_INDEX('PUBLIC', 'ASSET', 'NAME,DESCRIPTION')");
+            case 134:
                 apply("CREATE TABLE IF NOT EXISTS tag (db_id BIGINT IDENTITY, tag VARCHAR NOT NULL, in_stock_count INT NOT NULL, "
                         + "total_count INT NOT NULL, height INT NOT NULL, latest BOOLEAN NOT NULL DEFAULT TRUE)");
-            case 134:
-                apply("CREATE UNIQUE INDEX IF NOT EXISTS tag_tag_idx ON tag (tag, height DESC)");
             case 135:
-                apply("CREATE INDEX IF NOT EXISTS tag_in_stock_count_idx ON tag (in_stock_count DESC, height DESC)");
+                apply("CREATE UNIQUE INDEX IF NOT EXISTS tag_tag_idx ON tag (tag, height DESC)");
             case 136:
+                apply("CREATE INDEX IF NOT EXISTS tag_in_stock_count_idx ON tag (in_stock_count DESC, height DESC)");
+            case 137:
                 BlockchainProcessorImpl.getInstance().forceScanAtStart();
                 apply(null);
-            case 137:
+            case 138:
                 apply("CREATE TABLE IF NOT EXISTS currency (db_id IDENTITY, id BIGINT NOT NULL, account_id BIGINT NOT NULL, "
                         + "name VARCHAR NOT NULL, name_lower VARCHAR AS LOWER (name) NOT NULL, code VARCHAR NOT NULL, "
                         + "description VARCHAR, type INT NOT NULL, current_supply BIGINT NOT NULL, reserve_supply BIGINT NOT NULL, max_supply BIGINT NOT NULL, "
@@ -394,94 +396,94 @@ class NxtDbVersion extends DbVersion {
                         + "max_difficulty TINYINT NOT NULL, ruleset TINYINT NOT NULL, algorithm TINYINT NOT NULL, "
                         + "current_reserve_per_unit_nqt BIGINT NOT NULL, decimals TINYINT NOT NULL DEFAULT 0,"
                         + "height INT NOT NULL, latest BOOLEAN NOT NULL DEFAULT TRUE)");
-            case 138:
-                apply("CREATE UNIQUE INDEX IF NOT EXISTS currency_id_height_idx ON currency (id, height DESC)");
             case 139:
-                apply("CREATE INDEX IF NOT EXISTS currency_account_id_idx ON currency (account_id)");
+                apply("CREATE UNIQUE INDEX IF NOT EXISTS currency_id_height_idx ON currency (id, height DESC)");
             case 140:
+                apply("CREATE INDEX IF NOT EXISTS currency_account_id_idx ON currency (account_id)");
+            case 141:
                 apply("CREATE TABLE IF NOT EXISTS account_currency (db_id IDENTITY, account_id BIGINT NOT NULL, "
                         + "currency_id BIGINT NOT NULL, units BIGINT NOT NULL, unconfirmed_units BIGINT NOT NULL, height INT NOT NULL, "
                         + "latest BOOLEAN NOT NULL DEFAULT TRUE)");
-            case 141:
-                apply("CREATE UNIQUE INDEX IF NOT EXISTS account_currency_id_height_idx ON account_currency (account_id, currency_id, height DESC)");
             case 142:
+                apply("CREATE UNIQUE INDEX IF NOT EXISTS account_currency_id_height_idx ON account_currency (account_id, currency_id, height DESC)");
+            case 143:
                 apply("CREATE TABLE IF NOT EXISTS currency_founder (db_id IDENTITY, currency_id BIGINT NOT NULL, "
                         + "account_id BIGINT NOT NULL, amount BIGINT NOT NULL, "
                         + "height INT NOT NULL, latest BOOLEAN NOT NULL DEFAULT TRUE)");
-            case 143:
-                apply("CREATE UNIQUE INDEX IF NOT EXISTS currency_founder_currency_id_idx ON currency_founder (currency_id, account_id, height DESC)");
             case 144:
+                apply("CREATE UNIQUE INDEX IF NOT EXISTS currency_founder_currency_id_idx ON currency_founder (currency_id, account_id, height DESC)");
+            case 145:
                 apply("CREATE TABLE IF NOT EXISTS currency_mint (db_id IDENTITY, currency_id BIGINT NOT NULL, account_id BIGINT NOT NULL, "
                         + "counter BIGINT NOT NULL, submission_height INT NOT NULL, height INT NOT NULL, latest BOOLEAN NOT NULL DEFAULT TRUE)");
-            case 145:
-                apply("CREATE UNIQUE INDEX IF NOT EXISTS currency_mint_currency_id_account_id_idx ON currency_mint (currency_id, account_id, height DESC)");
             case 146:
+                apply("CREATE UNIQUE INDEX IF NOT EXISTS currency_mint_currency_id_account_id_idx ON currency_mint (currency_id, account_id, height DESC)");
+            case 147:
                 apply("CREATE TABLE IF NOT EXISTS buy_offer (db_id INT IDENTITY, id BIGINT NOT NULL, currency_id BIGINT NOT NULL, account_id BIGINT NOT NULL,"
                         + "rate BIGINT NOT NULL, unit_limit BIGINT NOT NULL, supply BIGINT NOT NULL, expiration_height INT NOT NULL,"
                         + "creation_height INT NOT NULL, transaction_index SMALLINT NOT NULL, height INT NOT NULL, latest BOOLEAN NOT NULL DEFAULT TRUE)");
-            case 147:
-                apply("CREATE UNIQUE INDEX IF NOT EXISTS buy_offer_id_idx ON buy_offer (id, height DESC)");
             case 148:
-                apply("CREATE UNIQUE INDEX IF NOT EXISTS buy_offer_currency_id_account_id_idx ON buy_offer (currency_id, account_id, height DESC)");
+                apply("CREATE UNIQUE INDEX IF NOT EXISTS buy_offer_id_idx ON buy_offer (id, height DESC)");
             case 149:
+                apply("CREATE UNIQUE INDEX IF NOT EXISTS buy_offer_currency_id_account_id_idx ON buy_offer (currency_id, account_id, height DESC)");
+            case 150:
                 apply("CREATE TABLE IF NOT EXISTS sell_offer (db_id INT IDENTITY, id BIGINT NOT NULL, currency_id BIGINT NOT NULL, account_id BIGINT NOT NULL, "
                         + "rate BIGINT NOT NULL, unit_limit BIGINT NOT NULL, supply BIGINT NOT NULL, expiration_height INT NOT NULL, "
                         + "creation_height INT NOT NULL, transaction_index SMALLINT NOT NULL, height INT NOT NULL, latest BOOLEAN NOT NULL DEFAULT TRUE)");
-            case 150:
-                apply("CREATE UNIQUE INDEX IF NOT EXISTS sell_offer_id_idx ON sell_offer (id, height DESC)");
             case 151:
-                apply("CREATE UNIQUE INDEX IF NOT EXISTS sell_offer_currency_id_account_id_idx ON sell_offer (currency_id, account_id, height DESC)");
+                apply("CREATE UNIQUE INDEX IF NOT EXISTS sell_offer_id_idx ON sell_offer (id, height DESC)");
             case 152:
+                apply("CREATE UNIQUE INDEX IF NOT EXISTS sell_offer_currency_id_account_id_idx ON sell_offer (currency_id, account_id, height DESC)");
+            case 153:
                 apply("CREATE TABLE IF NOT EXISTS exchange (db_id INT IDENTITY, transaction_id BIGINT NOT NULL, currency_id BIGINT NOT NULL, block_id BIGINT NOT NULL, "
                         + "offer_id BIGINT NOT NULL, seller_id BIGINT NOT NULL, "
                         + "buyer_id BIGINT NOT NULL, units BIGINT NOT NULL, "
                         + "rate BIGINT NOT NULL, timestamp INT NOT NULL, height INT NOT NULL)");
-            case 153:
-                apply("CREATE UNIQUE INDEX IF NOT EXISTS exchange_offer_idx ON exchange (transaction_id, offer_id)");
             case 154:
-                apply("CREATE INDEX IF NOT EXISTS exchange_currency_id_idx ON exchange (currency_id, height DESC)");
+                apply("CREATE UNIQUE INDEX IF NOT EXISTS exchange_offer_idx ON exchange (transaction_id, offer_id)");
             case 155:
-                apply("CREATE INDEX IF NOT EXISTS exchange_seller_id_idx ON exchange (seller_id, height DESC)");
+                apply("CREATE INDEX IF NOT EXISTS exchange_currency_id_idx ON exchange (currency_id, height DESC)");
             case 156:
-                apply("CREATE INDEX IF NOT EXISTS exchange_buyer_id_idx ON exchange (buyer_id, height DESC)");
+                apply("CREATE INDEX IF NOT EXISTS exchange_seller_id_idx ON exchange (seller_id, height DESC)");
             case 157:
+                apply("CREATE INDEX IF NOT EXISTS exchange_buyer_id_idx ON exchange (buyer_id, height DESC)");
+            case 158:
                 apply("CREATE TABLE IF NOT EXISTS currency_transfer (db_id INT IDENTITY, id BIGINT NOT NULL, currency_id BIGINT NOT NULL, "
                         + "sender_id BIGINT NOT NULL, recipient_id BIGINT NOT NULL, units BIGINT NOT NULL, timestamp INT NOT NULL, "
                         + "height INT NOT NULL)");
-            case 158:
-                apply("CREATE UNIQUE INDEX IF NOT EXISTS currency_transfer_id_idx ON currency_transfer (id)");
             case 159:
-                apply("CREATE INDEX IF NOT EXISTS currency_transfer_currency_id_idx ON currency_transfer (currency_id, height DESC)");
+                apply("CREATE UNIQUE INDEX IF NOT EXISTS currency_transfer_id_idx ON currency_transfer (id)");
             case 160:
-                apply("CREATE INDEX IF NOT EXISTS currency_transfer_sender_id_idx ON currency_transfer (sender_id, height DESC)");
+                apply("CREATE INDEX IF NOT EXISTS currency_transfer_currency_id_idx ON currency_transfer (currency_id, height DESC)");
             case 161:
-                apply("CREATE INDEX IF NOT EXISTS currency_transfer_recipient_id_idx ON currency_transfer (recipient_id, height DESC)");
+                apply("CREATE INDEX IF NOT EXISTS currency_transfer_sender_id_idx ON currency_transfer (sender_id, height DESC)");
             case 162:
-                apply("CREATE INDEX IF NOT EXISTS account_currency_units_idx ON account_currency (units DESC)");
+                apply("CREATE INDEX IF NOT EXISTS currency_transfer_recipient_id_idx ON currency_transfer (recipient_id, height DESC)");
             case 163:
-                apply("CREATE INDEX IF NOT EXISTS currency_name_idx ON currency (name_lower, height DESC)");
+                apply("CREATE INDEX IF NOT EXISTS account_currency_units_idx ON account_currency (units DESC)");
             case 164:
-                apply("CREATE INDEX IF NOT EXISTS currency_code_idx ON currency (code, height DESC)");
+                apply("CREATE INDEX IF NOT EXISTS currency_name_idx ON currency (name_lower, height DESC)");
             case 165:
-                apply("CREATE INDEX IF NOT EXISTS buy_offer_rate_height_idx ON buy_offer (rate DESC, creation_height ASC)");
+                apply("CREATE INDEX IF NOT EXISTS currency_code_idx ON currency (code, height DESC)");
             case 166:
-                apply("CREATE INDEX IF NOT EXISTS sell_offer_rate_height_idx ON sell_offer (rate ASC, creation_height ASC)");
+                apply("CREATE INDEX IF NOT EXISTS buy_offer_rate_height_idx ON buy_offer (rate DESC, creation_height ASC)");
             case 167:
-                apply("ALTER TABLE account ADD COLUMN IF NOT EXISTS message_pattern_regex VARCHAR");
+                apply("CREATE INDEX IF NOT EXISTS sell_offer_rate_height_idx ON sell_offer (rate ASC, creation_height ASC)");
             case 168:
-                apply("ALTER TABLE account ADD COLUMN IF NOT EXISTS message_pattern_flags INT");
+                apply("ALTER TABLE account ADD COLUMN IF NOT EXISTS message_pattern_regex VARCHAR");
             case 169:
-                apply("DROP INDEX IF EXISTS unconfirmed_transaction_height_fee_timestamp_idx");
+                apply("ALTER TABLE account ADD COLUMN IF NOT EXISTS message_pattern_flags INT");
             case 170:
-                apply("ALTER TABLE unconfirmed_transaction DROP COLUMN IF EXISTS timestamp");
+                apply("DROP INDEX IF EXISTS unconfirmed_transaction_height_fee_timestamp_idx");
             case 171:
-                apply("ALTER TABLE unconfirmed_transaction ADD COLUMN IF NOT EXISTS arrival_timestamp BIGINT NOT NULL DEFAULT 0");
+                apply("ALTER TABLE unconfirmed_transaction DROP COLUMN IF EXISTS timestamp");
             case 172:
+                apply("ALTER TABLE unconfirmed_transaction ADD COLUMN IF NOT EXISTS arrival_timestamp BIGINT NOT NULL DEFAULT 0");
+            case 173:
                 apply("CREATE INDEX IF NOT EXISTS unconfirmed_transaction_height_fee_timestamp_idx ON unconfirmed_transaction "
                         + "(transaction_height ASC, fee_per_byte DESC, arrival_timestamp ASC)");
-            case 173:
-                apply("ALTER TABLE transaction ADD COLUMN IF NOT EXISTS transaction_index SMALLINT");
             case 174:
+                apply("ALTER TABLE transaction ADD COLUMN IF NOT EXISTS transaction_index SMALLINT");
+            case 175:
                 Logger.logMessage("Will update transaction_index column...");
                 try (Connection con = Db.db.getConnection();
                      PreparedStatement pstmt = con.prepareStatement("SELECT * FROM transaction ORDER BY height, id FOR UPDATE",
@@ -504,23 +506,23 @@ class NxtDbVersion extends DbVersion {
                     }
                 }
                 apply(null);
-            case 175:
-                apply("ALTER TABLE transaction ALTER COLUMN transaction_index SET NOT NULL");
             case 176:
-                apply("ALTER TABLE ask_order ADD COLUMN IF NOT EXISTS transaction_index SMALLINT");
+                apply("ALTER TABLE transaction ALTER COLUMN transaction_index SET NOT NULL");
             case 177:
-                apply("UPDATE ask_order SET transaction_index = (SELECT transaction_index FROM transaction WHERE transaction.id = ask_order.id)");
+                apply("ALTER TABLE ask_order ADD COLUMN IF NOT EXISTS transaction_index SMALLINT");
             case 178:
-                apply("ALTER TABLE ask_order ALTER COLUMN transaction_index SET NOT NULL");
+                apply("UPDATE ask_order SET transaction_index = (SELECT transaction_index FROM transaction WHERE transaction.id = ask_order.id)");
             case 179:
-                apply("ALTER TABLE bid_order ADD COLUMN IF NOT EXISTS transaction_index SMALLINT");
+                apply("ALTER TABLE ask_order ALTER COLUMN transaction_index SET NOT NULL");
             case 180:
-                apply("UPDATE bid_order SET transaction_index = (SELECT transaction_index FROM transaction WHERE transaction.id = bid_order.id)");
+                apply("ALTER TABLE bid_order ADD COLUMN IF NOT EXISTS transaction_index SMALLINT");
             case 181:
-                apply("ALTER TABLE bid_order ALTER COLUMN transaction_index SET NOT NULL");
+                apply("UPDATE bid_order SET transaction_index = (SELECT transaction_index FROM transaction WHERE transaction.id = bid_order.id)");
             case 182:
-                apply("CALL FTL_CREATE_INDEX('PUBLIC', 'CURRENCY', 'CODE,NAME,DESCRIPTION')");
+                apply("ALTER TABLE bid_order ALTER COLUMN transaction_index SET NOT NULL");
             case 183:
+                apply("CALL FTL_CREATE_INDEX('PUBLIC', 'CURRENCY', 'CODE,NAME,DESCRIPTION')");
+            case 184:
                 return;
             default:
                 throw new RuntimeException("Blockchain database inconsistent with code, probably trying to run older code on newer database");

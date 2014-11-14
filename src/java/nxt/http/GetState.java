@@ -9,6 +9,7 @@ import nxt.Currency;
 import nxt.CurrencyBuyOffer;
 import nxt.CurrencyTransfer;
 import nxt.Exchange;
+import nxt.DigitalGoodsStore;
 import nxt.Generator;
 import nxt.Nxt;
 import nxt.Order;
@@ -70,6 +71,9 @@ public final class GetState extends APIServlet.APIRequestHandler {
         	response.put("numberOfExchanges", Exchange.getCount());
         	response.put("numberOfCurrencyTransfers", CurrencyTransfer.getCount());
             response.put("numberOfAliases", Alias.getCount());
+            response.put("numberOfGoods", DigitalGoodsStore.Goods.getCount());
+            response.put("numberOfPurchases", DigitalGoodsStore.Purchase.getCount());
+            response.put("numberOfTags", DigitalGoodsStore.Tag.getCount());
             //response.put("numberOfPolls", Poll.getCount());
             //response.put("numberOfVotes", Vote.getCount());
         }

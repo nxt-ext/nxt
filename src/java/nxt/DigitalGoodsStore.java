@@ -23,10 +23,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
+import java.util.Arrays;
 import java.util.List;
-import java.util.Set;
 
 public final class DigitalGoodsStore {
 
@@ -107,15 +105,19 @@ public final class DigitalGoodsStore {
 
             @Override
             public String defaultSort() {
-                return " ORDER BY in_stock_count DESC, total_count DESC ";
+                return " ORDER BY in_stock_count DESC, total_count DESC, tag ASC ";
             }
 
         };
 
+        public static int getCount() {
+            return tagTable.getCount();
+        }
+
         private static void init() {}
 
-        private static void addTags(String tags) {
-            for (String tagValue : parseTags(tags)) {
+        private static void add(Goods goods) {
+            for (String tagValue : goods.getParsedTags()) {
                 Tag tag = tagTable.get(tagDbKeyFactory.newKey(tagValue));
                 if (tag == null) {
                     tag = new Tag(tagValue);
@@ -126,32 +128,14 @@ public final class DigitalGoodsStore {
             }
         }
 
-        private static void delistTags(String tags) {
-            for (String tagValue : parseTags(tags)) {
+        private static void delist(Goods goods) {
+            for (String tagValue : goods.getParsedTags()) {
                 Tag tag = tagTable.get(tagDbKeyFactory.newKey(tagValue));
                 if (tag == null) {
                     throw new IllegalStateException("Unknown tag " + tagValue);
                 }
                 tag.inStockCount -= 1;
                 tagTable.insert(tag);
-            }
-        }
-
-        private static final Analyzer analyzer = new StandardAnalyzer(Version.LUCENE_30);
-
-        private static Set<String> parseTags(String tags) {
-            if (tags.trim().length() == 0) {
-                return Collections.emptySet();
-            }
-            try (TokenStream stream = analyzer.tokenStream(null, new StringReader(tags))) {
-                CharTermAttribute attribute = stream.addAttribute(CharTermAttribute.class);
-                Set<String> parsedTags = new HashSet<>();
-                while (stream.incrementToken()) {
-                    parsedTags.add(attribute.toString());
-                }
-                return parsedTags;
-            } catch (IOException e) {
-                throw new RuntimeException(e.toString(), e);
             }
         }
 
@@ -228,6 +212,10 @@ public final class DigitalGoodsStore {
 
         };
 
+        public static int getCount() {
+            return goodsTable.getCount();
+        }
+
         private static void init() {}
 
 
@@ -237,6 +225,7 @@ public final class DigitalGoodsStore {
         private final String name;
         private final String description;
         private final String tags;
+        private final String[] parsedTags;
         private final int timestamp;
         private int quantity;
         private long priceNQT;
@@ -249,6 +238,7 @@ public final class DigitalGoodsStore {
             this.name = attachment.getName();
             this.description = attachment.getDescription();
             this.tags = attachment.getTags();
+            this.parsedTags = parseTags(this.tags);
             this.quantity = attachment.getQuantity();
             this.priceNQT = attachment.getPriceNQT();
             this.delisted = false;
@@ -262,6 +252,8 @@ public final class DigitalGoodsStore {
             this.name = rs.getString("name");
             this.description = rs.getString("description");
             this.tags = rs.getString("tags");
+            Object[] array = (Object[])rs.getArray("parsed_tags").getArray();
+            this.parsedTags = Arrays.copyOf(array, array.length, String[].class);
             this.quantity = rs.getInt("quantity");
             this.priceNQT = rs.getLong("price");
             this.delisted = rs.getBoolean("delisted");
@@ -270,14 +262,15 @@ public final class DigitalGoodsStore {
 
         private void save(Connection con) throws SQLException {
             try (PreparedStatement pstmt = con.prepareStatement("MERGE INTO goods (id, seller_id, name, "
-                    + "description, tags, timestamp, quantity, price, delisted, height, latest) KEY (id, height) "
-                    + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, TRUE)")) {
+                    + "description, tags, parsed_tags, timestamp, quantity, price, delisted, height, latest) KEY (id, height) "
+                    + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, TRUE)")) {
                 int i = 0;
                 pstmt.setLong(++i, this.getId());
                 pstmt.setLong(++i, this.getSellerId());
                 pstmt.setString(++i, this.getName());
                 pstmt.setString(++i, this.getDescription());
                 pstmt.setString(++i, this.getTags());
+                pstmt.setObject(++i, this.getParsedTags());
                 pstmt.setInt(++i, this.getTimestamp());
                 pstmt.setInt(++i, this.getQuantity());
                 pstmt.setLong(++i, this.getPriceNQT());
@@ -317,7 +310,7 @@ public final class DigitalGoodsStore {
 
         private void changeQuantity(int deltaQuantity) {
             if (quantity == 0 && deltaQuantity > 0) {
-                Tag.addTags(this.tags);
+                Tag.add(this);
             }
             quantity += deltaQuantity;
             if (quantity < 0) {
@@ -326,7 +319,7 @@ public final class DigitalGoodsStore {
                 quantity = Constants.MAX_DGS_LISTING_QUANTITY;
             }
             if (quantity == 0) {
-                Tag.delistTags(this.tags);
+                Tag.delist(this);
             }
             goodsTable.insert(this);
         }
@@ -347,23 +340,36 @@ public final class DigitalGoodsStore {
         private void setDelisted(boolean delisted) {
             this.delisted = delisted;
             if (this.quantity > 0) {
-                Tag.delistTags(this.tags);
+                Tag.delist(this);
             }
             goodsTable.insert(this);
         }
 
-        /*
-        @Override
-        public int compareTo(Goods other) {
-            if (!name.equals(other.name)) {
-                return name.compareTo(other.name);
-            }
-            if (!description.equals(other.description)) {
-                return description.compareTo(other.description);
-            }
-            return Long.compare(id, other.id);
+        public String[] getParsedTags() {
+            return parsedTags;
         }
-        */
+
+        private static final Analyzer analyzer = new StandardAnalyzer(Version.LUCENE_30);
+        private static final String[] emptyTags = new String[0];
+
+        private static String[] parseTags(String tags) {
+            if (tags.trim().length() == 0) {
+                return emptyTags;
+            }
+            List<String> list = new ArrayList<>();
+            try (TokenStream stream = analyzer.tokenStream(null, new StringReader(tags))) {
+                CharTermAttribute attribute = stream.addAttribute(CharTermAttribute.class);
+                String tag;
+                while (stream.incrementToken() && list.size() < 3 && (tag = attribute.toString()).length() <= 20 && tag.length() >= 3) {
+                    if (!list.contains(tag)) {
+                        list.add(tag);
+                    }
+                }
+            } catch (IOException e) {
+                throw new RuntimeException(e.toString(), e);
+            }
+            return list.toArray(new String[list.size()]);
+        }
 
     }
 
@@ -459,6 +465,10 @@ public final class DigitalGoodsStore {
             }
 
         };
+
+        public static int getCount() {
+            return purchaseTable.getCount();
+        }
 
         private static void init() {}
 
@@ -680,19 +690,6 @@ public final class DigitalGoodsStore {
             purchaseTable.insert(this);
         }
 
-        /*
-        @Override
-        public int compareTo(Purchase other) {
-            if (this.timestamp < other.timestamp) {
-                return 1;
-            }
-            if (this.timestamp > other.timestamp) {
-                return -1;
-            }
-            return Long.compare(this.id, other.id);
-        }
-        */
-
     }
 
     public static DbIterator<Tag> getAllTags(int from, int to) {
@@ -840,7 +837,7 @@ public final class DigitalGoodsStore {
 
     static void listGoods(Transaction transaction, Attachment.DigitalGoodsListing attachment) {
         Goods goods = new Goods(transaction, attachment);
-        Tag.addTags(goods.getTags());
+        Tag.add(goods);
         Goods.goodsTable.insert(goods);
         goodsListeners.notify(goods, Event.GOODS_LISTED);
     }
