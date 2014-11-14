@@ -164,6 +164,14 @@ final class JSONData {
         return json;
     }
 
+    static JSONObject tag(DigitalGoodsStore.Tag tag) {
+        JSONObject json = new JSONObject();
+        json.put("tag", tag.getTag());
+        json.put("inStockCount", tag.getInStockCount());
+        json.put("totalCount", tag.getTotalCount());
+        return json;
+    }
+
     static JSONObject hallmark(Hallmark hallmark) {
         JSONObject json = new JSONObject();
         putAccount(json, "account", Account.getId(hallmark.getPublicKey()));

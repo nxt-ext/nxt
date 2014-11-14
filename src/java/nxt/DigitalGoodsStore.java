@@ -9,14 +9,24 @@ import nxt.db.VersionedValuesDbTable;
 import nxt.util.Convert;
 import nxt.util.Listener;
 import nxt.util.Listeners;
+import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.analysis.TokenStream;
+import org.apache.lucene.analysis.standard.StandardAnalyzer;
+import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
+import org.apache.lucene.util.Version;
 
+import java.io.IOException;
+import java.io.StringReader;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public final class DigitalGoodsStore {
 
@@ -69,8 +79,123 @@ public final class DigitalGoodsStore {
     }
 
     static void init() {
+        Tag.init();
         Goods.init();
         Purchase.init();
+    }
+
+    public static final class Tag {
+
+        private static final DbKey.StringKeyFactory<Tag> tagDbKeyFactory = new DbKey.StringKeyFactory<Tag>("tag") {
+            @Override
+            public DbKey newKey(Tag tag) {
+                return tag.dbKey;
+            }
+        };
+
+        private static final VersionedEntityDbTable<Tag> tagTable = new VersionedEntityDbTable<Tag>("tag", tagDbKeyFactory) {
+
+            @Override
+            protected Tag load(Connection con, ResultSet rs) throws SQLException {
+                return new Tag(rs);
+            }
+
+            @Override
+            protected void save(Connection con, Tag tag) throws SQLException {
+                tag.save(con);
+            }
+
+            @Override
+            public String defaultSort() {
+                return " ORDER BY in_stock_count DESC, total_count DESC ";
+            }
+
+        };
+
+        private static void init() {}
+
+        private static void addTags(String tags) {
+            for (String tagValue : parseTags(tags)) {
+                Tag tag = tagTable.get(tagDbKeyFactory.newKey(tagValue));
+                if (tag == null) {
+                    tag = new Tag(tagValue);
+                }
+                tag.inStockCount += 1;
+                tag.totalCount += 1;
+                tagTable.insert(tag);
+            }
+        }
+
+        private static void delistTags(String tags) {
+            for (String tagValue : parseTags(tags)) {
+                Tag tag = tagTable.get(tagDbKeyFactory.newKey(tagValue));
+                if (tag == null) {
+                    throw new IllegalStateException("Unknown tag " + tagValue);
+                }
+                tag.inStockCount -= 1;
+                tagTable.insert(tag);
+            }
+        }
+
+        private static final Analyzer analyzer = new StandardAnalyzer(Version.LUCENE_30);
+
+        private static Set<String> parseTags(String tags) {
+            if (tags.trim().length() == 0) {
+                return Collections.emptySet();
+            }
+            try (TokenStream stream = analyzer.tokenStream(null, new StringReader(tags))) {
+                CharTermAttribute attribute = stream.addAttribute(CharTermAttribute.class);
+                Set<String> parsedTags = new HashSet<>();
+                while (stream.incrementToken()) {
+                    parsedTags.add(attribute.toString());
+                }
+                return parsedTags;
+            } catch (IOException e) {
+                throw new RuntimeException(e.toString(), e);
+            }
+        }
+
+        private final String tag;
+        private final DbKey dbKey;
+        private int inStockCount;
+        private int totalCount;
+
+        private Tag(String tag) {
+            this.tag = tag;
+            this.dbKey = tagDbKeyFactory.newKey(this.tag);
+        }
+
+        private Tag(ResultSet rs) throws SQLException {
+            this.tag = rs.getString("tag");
+            this.dbKey = tagDbKeyFactory.newKey(this.tag);
+            this.inStockCount = rs.getInt("in_stock_count");
+            this.totalCount = rs.getInt("total_count");
+        }
+
+        private void save(Connection con) throws SQLException {
+            try (PreparedStatement pstmt = con.prepareStatement("MERGE INTO tag (tag, in_stock_count, total_count, height, latest) "
+                    + "KEY (tag, height) VALUES (?, ?, ?, ?, TRUE)")) {
+                int i = 0;
+                pstmt.setString(++i, this.tag);
+                pstmt.setInt(++i, this.inStockCount);
+                pstmt.setInt(++i, this.totalCount);
+                pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
+                pstmt.executeUpdate();
+            }
+        }
+
+        public String getTag() {
+            return tag;
+        }
+
+        public int getInStockCount() {
+            return inStockCount;
+        }
+
+        public int getTotalCount() {
+            return totalCount;
+        }
+
     }
 
     public static final class Goods {
@@ -103,7 +228,7 @@ public final class DigitalGoodsStore {
 
         };
 
-        static void init() {}
+        private static void init() {}
 
 
         private final long id;
@@ -191,11 +316,17 @@ public final class DigitalGoodsStore {
         }
 
         private void changeQuantity(int deltaQuantity) {
+            if (quantity == 0 && deltaQuantity > 0) {
+                Tag.addTags(this.tags);
+            }
             quantity += deltaQuantity;
             if (quantity < 0) {
                 quantity = 0;
             } else if (quantity > Constants.MAX_DGS_LISTING_QUANTITY) {
                 quantity = Constants.MAX_DGS_LISTING_QUANTITY;
+            }
+            if (quantity == 0) {
+                Tag.delistTags(this.tags);
             }
             goodsTable.insert(this);
         }
@@ -215,6 +346,9 @@ public final class DigitalGoodsStore {
 
         private void setDelisted(boolean delisted) {
             this.delisted = delisted;
+            if (this.quantity > 0) {
+                Tag.delistTags(this.tags);
+            }
             goodsTable.insert(this);
         }
 
@@ -326,7 +460,7 @@ public final class DigitalGoodsStore {
 
         };
 
-        static void init() {}
+        private static void init() {}
 
 
         private final long id;
@@ -553,6 +687,10 @@ public final class DigitalGoodsStore {
 
     }
 
+    public static DbIterator<Tag> getAllTags(int from, int to) {
+        return Tag.tagTable.getAll(from, to);
+    }
+
     public static Goods getGoods(long goodsId) {
         return Goods.goodsTable.get(Goods.goodsDbKeyFactory.newKey(goodsId));
     }
@@ -561,25 +699,46 @@ public final class DigitalGoodsStore {
         return Goods.goodsTable.getAll(from, to);
     }
 
+    private static final DbClause inStockClause = new DbClause(" goods.delisted = FALSE AND goods.quantity > 0 ") {
+
+        @Override
+        public int set(PreparedStatement pstmt, int index) throws SQLException {
+            return index;
+        }
+
+    };
+
+    private static final class SellerDbClause extends DbClause {
+
+        private final long sellerId;
+
+        private SellerDbClause(long sellerId, boolean inStockOnly) {
+            super(" seller_id = ? " + (inStockOnly ? "AND delisted = FALSE AND quantity > 0" : ""));
+            this.sellerId = sellerId;
+        }
+
+        @Override
+        public int set(PreparedStatement pstmt, int index) throws SQLException {
+            pstmt.setLong(index++, sellerId);
+            return index;
+        }
+
+    }
+
     public static DbIterator<Goods> getGoodsInStock(int from, int to) {
-        DbClause dbClause = new DbClause(" delisted = FALSE AND quantity > 0 ") {
-            @Override
-            public int set(PreparedStatement pstmt, int index) throws SQLException {
-                return index;
-            }
-        };
-        return Goods.goodsTable.getManyBy(dbClause, from, to);
+        return Goods.goodsTable.getManyBy(inStockClause, from, to);
     }
 
     public static DbIterator<Goods> getSellerGoods(final long sellerId, final boolean inStockOnly, int from, int to) {
-        DbClause dbClause = new DbClause(" seller_id = ? " + (inStockOnly ? "AND delisted = FALSE AND quantity > 0" : "")) {
-            @Override
-            public int set(PreparedStatement pstmt, int index) throws SQLException {
-                pstmt.setLong(index++, sellerId);
-                return index;
-            }
-        };
-        return Goods.goodsTable.getManyBy(dbClause, from, to, " ORDER BY name ASC, timestamp DESC, id ASC ");
+        return Goods.goodsTable.getManyBy(new SellerDbClause(sellerId, inStockOnly), from, to, " ORDER BY name ASC, timestamp DESC, id ASC ");
+    }
+
+    public static DbIterator<Goods> searchGoods(String query, boolean inStockOnly, int from, int to) {
+        return Goods.goodsTable.search(query, inStockOnly ? inStockClause : DbClause.EMPTY_CLAUSE, from, to);
+    }
+
+    public static DbIterator<Goods> searchSellerGoods(String query, long sellerId, boolean inStockOnly, int from, int to) {
+        return Goods.goodsTable.search(query, new SellerDbClause(sellerId, inStockOnly), from, to);
     }
 
     public static DbIterator<Purchase> getAllPurchases(int from, int to) {
@@ -648,6 +807,7 @@ public final class DigitalGoodsStore {
 
     static void listGoods(Transaction transaction, Attachment.DigitalGoodsListing attachment) {
         Goods goods = new Goods(transaction, attachment);
+        Tag.addTags(goods.getTags());
         Goods.goodsTable.insert(goods);
         goodsListeners.notify(goods, Event.GOODS_LISTED);
     }
