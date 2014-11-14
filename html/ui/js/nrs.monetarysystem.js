@@ -142,21 +142,21 @@ var NRS = (function(NRS, $, undefined) {
 	
 	$('#issue_currency_exchangeable').change(function() {
         if($(this).is(":checked")){
-            $("#issue_currency_claimable").prop("disabled", true);
+            //$("#issue_currency_claimable").prop("disabled", true);
             $("#issue_currency_issuance_height").val(0)
             $("#issue_currency_issuance_height").prop("disabled", true);
         }
 		else{
-			$("#issue_currency_claimable").prop("disabled", false);
+			//$("#issue_currency_claimable").prop("disabled", false);
 			$("#issue_currency_issuance_height").val("")
 			$("#issue_currency_issuance_height").prop("disabled", false);
 		}
     });
     $('#issue_currency_claimable').change(function() {
         if($(this).is(":checked"))
-            $( "#issue_currency_exchangeable" ).prop("disabled", true);
+            //$( "#issue_currency_exchangeable" ).prop("disabled", true);
 		else
-			$( "#issue_currency_exchangeable" ).prop("disabled", false);
+			//$( "#issue_currency_exchangeable" ).prop("disabled", false);
     });
 	$('#issue_currency_reservable').change(function() {
         if($(this).is(":checked"))
