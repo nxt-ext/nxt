@@ -112,6 +112,10 @@ public final class DigitalGoodsStore {
 
         };
 
+        public static int getCount() {
+            return tagTable.getCount();
+        }
+
         private static void init() {}
 
         private static void addTags(String tags) {
@@ -228,6 +232,10 @@ public final class DigitalGoodsStore {
             }
 
         };
+
+        public static int getCount() {
+            return goodsTable.getCount();
+        }
 
         private static void init() {}
 
@@ -460,6 +468,10 @@ public final class DigitalGoodsStore {
             }
 
         };
+
+        public static int getCount() {
+            return purchaseTable.getCount();
+        }
 
         private static void init() {}
 
