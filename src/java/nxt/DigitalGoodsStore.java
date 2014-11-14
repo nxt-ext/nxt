@@ -107,7 +107,7 @@ public final class DigitalGoodsStore {
 
             @Override
             public String defaultSort() {
-                return " ORDER BY in_stock_count DESC, total_count DESC ";
+                return " ORDER BY in_stock_count DESC, total_count DESC, tag ASC ";
             }
 
         };
@@ -146,8 +146,9 @@ public final class DigitalGoodsStore {
             try (TokenStream stream = analyzer.tokenStream(null, new StringReader(tags))) {
                 CharTermAttribute attribute = stream.addAttribute(CharTermAttribute.class);
                 Set<String> parsedTags = new HashSet<>();
-                while (stream.incrementToken()) {
-                    parsedTags.add(attribute.toString());
+                String tag;
+                while (stream.incrementToken() && parsedTags.size() < 3 && (tag = attribute.toString()).length() <= 20 && tag.length() >= 3) {
+                    parsedTags.add(tag);
                 }
                 return parsedTags;
             } catch (IOException e) {
