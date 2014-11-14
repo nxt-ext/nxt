@@ -75,6 +75,30 @@ var NRS = (function(NRS, $, undefined) {
 			"</div><hr />";
 	}
 
+	NRS.pages.dgs_show_results = function(response) {
+		$("#dgs_search_contents").empty();
+
+		$("#dgs_search_results").show();
+		$("#dgs_search_center").hide();
+		$("#dgs_search_top").show();
+
+		if (response.goods && response.goods.length) {
+			if (response.goods.length > NRS.itemsPerPage) {
+				NRS.hasMorePages = true;
+				response.goods.pop();
+			}
+
+			var content = "";
+
+			for (var i = 0; i < response.goods.length; i++) {
+				content += NRS.getMarketplaceItemHTML(response.goods[i]);
+			}
+		}
+
+		NRS.dataLoaded(content);
+		NRS.showMore();
+	}
+
 	NRS.pages.dgs_search = function(callback) {
 		var content = "";
 
@@ -86,32 +110,12 @@ var NRS = (function(NRS, $, undefined) {
 				_currentSeller = seller;
 			}
 
-			$("#dgs_search_results").show();
-			$("#dgs_search_center").hide();
-			$("#dgs_search_top").show();
-
 			NRS.sendRequest("getDGSGoods+", {
 				"seller": seller,
 				"firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
 				"lastIndex": NRS.pageNumber * NRS.itemsPerPage
 			}, function(response) {
-				$("#dgs_search_contents").empty();
-
-				if (response.goods && response.goods.length) {
-					if (response.goods.length > NRS.itemsPerPage) {
-						NRS.hasMorePages = true;
-						response.goods.pop();
-					}
-
-					var content = "";
-
-					for (var i = 0; i < response.goods.length; i++) {
-						content += NRS.getMarketplaceItemHTML(response.goods[i]);
-					}
-				}
-
-				NRS.dataLoaded(content);
-				NRS.showMore();
+				NRS.pages.dgs_show_results(response);
 
 				if (callback) {
 					callback();
@@ -125,6 +129,22 @@ var NRS = (function(NRS, $, undefined) {
 			NRS.pageLoaded();
 		}
 	}
+
+	NRS.pages.dgs_fulltext_search = function(query) {
+		$("#dgs_search_contents").empty();
+		$("#dgs_search_results").show();
+		$("#dgs_search_center").show();
+		$("#dgs_search_top").hide();
+
+		NRS.sendRequest("searchDGSGoods+", {
+			"query": query,
+			"firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
+			"lastIndex": NRS.pageNumber * NRS.itemsPerPage
+		}, function(response) {
+			NRS.pages.dgs_show_results(response);
+		});
+	}
+
 
 	NRS.pages.purchased_dgs = function() {
 		var content = "";
@@ -865,6 +885,16 @@ var NRS = (function(NRS, $, undefined) {
 			$.growl($.t("error_invalid_seller"), {
 				"type": "danger"
 			});
+		}
+	});
+
+	$(".dgs_fulltext_search").on("submit", function(e) {
+		e.preventDefault();
+		
+		var query = $.trim($(this).find("input[name=fs_q]").val());
+
+		if (query != "") {
+			NRS.pages.dgs_fulltext_search(query);
 		}
 	});
 
