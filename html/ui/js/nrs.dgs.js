@@ -75,7 +75,9 @@ var NRS = (function(NRS, $, undefined) {
 			"</div><hr />";
 	}
 
-	NRS.pages.dgs_show_results = function(response) {
+	NRS.dgs_show_results = function(response) {
+		var content = "";
+
 		$("#dgs_search_contents").empty();
 
 		$("#dgs_search_results").show();
@@ -99,9 +101,22 @@ var NRS = (function(NRS, $, undefined) {
 		NRS.showMore();
 	}
 
-	NRS.pages.dgs_search = function(callback) {
-		var content = "";
+	NRS.dgs_perform_fulltext_search = function(query) {
+		$("#dgs_search_contents").empty();
+		$("#dgs_search_results").show();
+		$("#dgs_search_center").show();
+		$("#dgs_search_top").hide();
 
+		NRS.sendRequest("searchDGSGoods+", {
+			"query": query,
+			"firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
+			"lastIndex": NRS.pageNumber * NRS.itemsPerPage
+		}, function(response) {
+			NRS.dgs_show_results(response);
+		});
+	}
+
+	NRS.dgs_perform_seller_search = function(callback) {
 		var seller = $.trim($(".dgs_search input[name=q]").val());
 
 		if (seller) {
@@ -115,36 +130,27 @@ var NRS = (function(NRS, $, undefined) {
 				"firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
 				"lastIndex": NRS.pageNumber * NRS.itemsPerPage
 			}, function(response) {
-				NRS.pages.dgs_show_results(response);
+				NRS.dgs_show_results(response);
 
 				if (callback) {
 					callback();
 				}
 			});
-		} else {
-			$("#dgs_search_center").show();
-			$("#dgs_search_top").hide();
-			$("#dgs_search_results").hide();
-			$("#dgs_search_contents").empty();
-			NRS.pageLoaded();
 		}
 	}
 
-	NRS.pages.dgs_fulltext_search = function(query) {
-		$("#dgs_search_contents").empty();
-		$("#dgs_search_results").show();
+	NRS.pages.dgs_search = function(callback) {
+		$(".dgs_search input[name=q]").val("").trigger("unmask").mask("NXT-****-****-****-*****", {
+			"unmask": false
+		});
+		$(".dgs_fulltext_search input[name=fs_q]").val("");
+
 		$("#dgs_search_center").show();
 		$("#dgs_search_top").hide();
-
-		NRS.sendRequest("searchDGSGoods+", {
-			"query": query,
-			"firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
-			"lastIndex": NRS.pageNumber * NRS.itemsPerPage
-		}, function(response) {
-			NRS.pages.dgs_show_results(response);
-		});
+		$("#dgs_search_results").hide();
+		$("#dgs_search_contents").empty();
+		NRS.pageLoaded();
 	}
-
 
 	NRS.pages.purchased_dgs = function() {
 		var content = "";
@@ -879,7 +885,7 @@ var NRS = (function(NRS, $, undefined) {
 					"type": "danger"
 				});
 			} else {
-				NRS.pages.dgs_search();
+				NRS.dgs_perform_seller_search();
 			}
 		} else {
 			$.growl($.t("error_invalid_seller"), {
@@ -894,17 +900,12 @@ var NRS = (function(NRS, $, undefined) {
 		var query = $.trim($(this).find("input[name=fs_q]").val());
 
 		if (query != "") {
-			NRS.pages.dgs_fulltext_search(query);
+			NRS.dgs_perform_fulltext_search(query);
 		}
 	});
 
 	$("#dgs_clear_results").on("click", function(e) {
 		e.preventDefault();
-
-		$(".dgs_search input[name=q]").val("").trigger("unmask").mask("NXT-****-****-****-*****", {
-			"unmask": false
-		});
-
 		NRS.pages.dgs_search();
 	});
 
