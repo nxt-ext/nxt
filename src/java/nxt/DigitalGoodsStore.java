@@ -696,6 +696,15 @@ public final class DigitalGoodsStore {
         return Tag.tagTable.getAll(from, to);
     }
 
+    public static DbIterator<Tag> getInStockTags(int from, int to) {
+        return Tag.tagTable.getManyBy(new DbClause(" in_stock_count > 0 ") {
+            @Override
+            protected int set(PreparedStatement pstmt, int index) throws SQLException {
+                return index;
+            }
+        }, from, to);
+    }
+
     public static Goods getGoods(long goodsId) {
         return Goods.goodsTable.get(Goods.goodsDbKeyFactory.newKey(goodsId));
     }
