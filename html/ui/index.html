@@ -259,7 +259,7 @@
                         <li class="treeview" id="sidebar_dgs_buyer">
                         	<a href="#" data-page="dgs_search"><i class="fa fa-shopping-cart"></i><span data-i18n="marketplace">Marketplace</span><i class="fa pull-right fa-angle-right" style="padding-top:3px"></i></a>
                             <ul class="treeview-menu" style="display: none;">
-                            	 <li><a href="#" data-page="dgs_search"><i class="fa fa-angle-double-right"></i> <span data-i18n="search_marketplace">Search Marketplace</span></a></li>
+                            	 <li><a href="#" data-page="dgs_search"><i class="fa fa-angle-double-right"></i> <span data-i18n="marketplace">Marketplace</span></a></li>
                             	<li><a href="#" data-page="purchased_dgs"><i class="fa fa-angle-double-right"></i> <span data-i18n="purchased_products">Purchased Products</span></a></li>
                         	</ul>
                         </li>
@@ -1071,7 +1071,18 @@
 
                 <div id="dgs_search_page" class="paginated page">
                     <section class="content-header">
-                    	<h1 data-i18n="search_marketplace">Search Marketplace</h1>
+                    	<h1>
+                            <span data-i18n="marketplace">Marketplace</span>
+                            <span class="dgs_search_pageheader_addon dgs_search_pageheader_addon_seller">
+                                | <span data-i18n="seller">Seller</span> <span class="dgs_search_pageheader_addon_seller_text"></span>
+                            </span>
+                            <span class="dgs_search_pageheader_addon dgs_search_pageheader_addon_fulltext">
+                                | <span data-i18n="search">Search</span> <span class="dgs_search_pageheader_addon_fulltext_text"></span>
+                            </span>
+                            <span class="dgs_search_pageheader_addon dgs_search_pageheader_addon_tag">
+                                | <span data-i18n="tag">Tag</span> <span class="dgs_search_pageheader_addon_tag_text"></span>
+                            </span>
+                        </h1>
                         <div style="position:absolute;top:9px;right:9px;display:none;" id="dgs_search_top">  
                             <button id="dgs_clear_results" type="button" class="btn btn-default" data-i18n="clear_results">Clear Results</button>
                         </div>
