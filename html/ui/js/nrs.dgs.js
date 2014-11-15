@@ -3,7 +3,10 @@
  */
 var NRS = (function(NRS, $, undefined) {
 	var _goodsToShow;
-	var _currentSeller;
+	var _currentSearch = {
+		"page": "main",
+		"searchStr": ""
+	};
 
 	NRS.getMarketplaceItemHTML = function(good) {
 		var html = "";
@@ -23,7 +26,7 @@ var NRS = (function(NRS, $, undefined) {
 			if (i > 0) {
 				html += ' | ';
 			}
-			html += '<a href="#" onclick="event.preventDefault(); NRS.dgs_perform_tag_search(\'' + String(tags[i]).escapeHTML() + '\');">';
+			html += '<a href="#" onclick="event.preventDefault(); NRS.dgs_search_tag(\'' + String(tags[i]).escapeHTML() + '\');">';
 			html += String(tags[i]).escapeHTML() + '</a>';
 		}
 
@@ -126,7 +129,7 @@ var NRS = (function(NRS, $, undefined) {
 				var content = "";
 				if (response.tags && response.tags.length) {
 					for (var i=0; i<response.tags.length; i++) {
-						content += '<a href="#" onclick="event.preventDefault(); NRS.dgs_perform_tag_search(\'' +response.tags[i].tag + '\');">';
+						content += '<a href="#" onclick="event.preventDefault(); NRS.dgs_search_tag(\'' +response.tags[i].tag + '\');">';
 						content += response.tags[i].tag.escapeHTML() + ' [' + response.tags[i].inStockCount + ']</a>&nbsp;&nbsp; ';
 					}
 				}
@@ -134,26 +137,33 @@ var NRS = (function(NRS, $, undefined) {
 			});
 	}
 
-	NRS.dgs_perform_seller_search = function() {
-		var seller = $.trim($(".dgs_search input[name=q]").val());
-
-		if (seller) {
-			if (seller != _currentSeller) {
-				$("#dgs_search_contents").empty();
-				_currentSeller = seller;
-			}
-
-			NRS.sendRequest("getDGSGoods+", {
-				"seller": seller,
-				"firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
-				"lastIndex": NRS.pageNumber * NRS.itemsPerPage
-			}, function(response) {
-				NRS.dgs_show_results(response);
-			});
+	NRS.dgs_search_seller = function(seller) {
+		if (seller == null) {
+			seller = _currentSearch["searchStr"];
+		} else {
+			_currentSearch = {
+				"page": "seller",
+				"searchStr": seller
+			};
 		}
+		NRS.sendRequest("getDGSGoods+", {
+			"seller": seller,
+			"firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
+			"lastIndex": NRS.pageNumber * NRS.itemsPerPage
+		}, function(response) {
+			NRS.dgs_show_results(response);
+		});
 	}
 
-	NRS.dgs_perform_fulltext_search = function(query) {
+	NRS.dgs_search_fulltext = function(query) {
+		if (query == null) {
+			query = _currentSearch["searchStr"];
+		} else {
+			_currentSearch = {
+				"page": "fulltext",
+				"searchStr": query
+			};
+		}
 		NRS.sendRequest("searchDGSGoods+", {
 			"query": query,
 			"firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
@@ -163,7 +173,15 @@ var NRS = (function(NRS, $, undefined) {
 		});
 	}
 
-	NRS.dgs_perform_tag_search = function(tag) {
+	NRS.dgs_search_tag = function(tag) {
+		if (tag == null) {
+			tag = _currentSearch["searchStr"];
+		} else {
+			_currentSearch = {
+				"page": "tag",
+				"searchStr": tag
+			};
+		}
 		NRS.sendRequest("searchDGSGoods+", {
 			"tag": tag,
 			"firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
@@ -173,7 +191,13 @@ var NRS = (function(NRS, $, undefined) {
 		});
 	}
 
-	NRS.pages.dgs_search = function(callback) {
+	NRS.dgs_search_main = function(callback) {
+		_currentSearch = {
+			"page": "main",
+			"searchStr": ""
+		};
+		NRS.pageNumber = 1;
+		NRS.hasMorePages = false;
 		$(".dgs_search input[name=q]").val("").trigger("unmask").mask("NXT-****-****-****-*****", {
 			"unmask": false
 		});
@@ -189,6 +213,19 @@ var NRS = (function(NRS, $, undefined) {
 			callback();
 		}
 		NRS.pageLoaded();
+	}
+
+
+	NRS.pages.dgs_search = function(callback) {
+		if (_currentSearch["page"] == "seller") {
+			NRS.dgs_search_seller();
+		} else if (_currentSearch["page"] == "fulltext") {
+			NRS.dgs_search_fulltext();
+		} else if (_currentSearch["page"] == "tag") {
+			NRS.dgs_search_tag();
+		} else {
+			NRS.dgs_search_main(callback);
+		}
 	}
 
 	NRS.pages.purchased_dgs = function() {
@@ -924,7 +961,7 @@ var NRS = (function(NRS, $, undefined) {
 					"type": "danger"
 				});
 			} else {
-				NRS.dgs_perform_seller_search();
+				NRS.dgs_search_seller(seller);
 			}
 		} else {
 			$.growl($.t("error_invalid_seller"), {
@@ -939,13 +976,13 @@ var NRS = (function(NRS, $, undefined) {
 		var query = $.trim($(this).find("input[name=fs_q]").val());
 
 		if (query != "") {
-			NRS.dgs_perform_fulltext_search(query);
+			NRS.dgs_search_fulltext(query);
 		}
 	});
 
 	$("#dgs_clear_results").on("click", function(e) {
 		e.preventDefault();
-		NRS.pages.dgs_search();
+		NRS.dgs_search_main();
 	});
 
 	$("#user_info_modal").on("click", "a[data-goto-goods]", function(e) {
