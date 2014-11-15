@@ -7,7 +7,7 @@ var NRS = (function(NRS, $, undefined) {
     NRS.forms.dividendPayment = function($modal) {
         var data = NRS.getFormData($modal.find("form:first"));
 
-        data.asset = currentAssetID;
+        data.asset = NRS.currentAsset.asset;
 
         if (!data.amountNXTPerAsset) {
             return {
@@ -15,7 +15,9 @@ var NRS = (function(NRS, $, undefined) {
             }
         }
         else {
-            data.amountNQTPerQNT = NRS.convertToNQT(data.amountNXTPerAsset);
+            data.amountNQTPerQNT = NRS.calculatePricePerWholeQNT(
+                NRS.convertToNQT(data.amountNXTPerAsset),
+                NRS.currentAsset.decimals);
         }
 
         if (!/^\d+$/.test(data.height)) {
