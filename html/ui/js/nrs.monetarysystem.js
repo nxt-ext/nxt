@@ -20,7 +20,7 @@ var NRS = (function(NRS, $, undefined) {
 				var rows = "";
 				for (var i = 0; i < response.offers.length; i++) {
                 var sellOffers = response.offers[i];
-					rows += "<tr><td><a href='#' data-transaction='" + String(sellOffers.accountRS).escapeHTML() + "'>" + String(sellOffers.accountRS).escapeHTML() + "</a></td>" +
+					rows += "<tr><td><a href='#' class='user-info' data-user='" + String(sellOffers.accountRS).escapeHTML() + "'>" + String(sellOffers.accountRS).escapeHTML() + "</a></td>" +
                   "<td>" + sellOffers.supply + "</td>" +
                   "<td>" + sellOffers.limit + "</td>" +
                   "<td>" + NRS.formatAmount(sellOffers.rateNQT) + "</td>" +
@@ -45,7 +45,7 @@ var NRS = (function(NRS, $, undefined) {
 				var rows = "";
 				for (var i = 0; i < response.offers.length; i++) {
                 var buyOffers = response.offers[i];
-					rows += "<tr><td><a href='#' data-transaction='" + String(buyOffers.accountRS).escapeHTML() + "'>" + String(buyOffers.accountRS).escapeHTML() + "</a></td>" +
+					rows += "<tr><td><a href='#' class='user-info' data-user='" + String(buyOffers.accountRS).escapeHTML() + "'>" + String(buyOffers.accountRS).escapeHTML() + "</a></td>" +
                   "<td>" + buyOffers.supply + "</td>" +
                   "<td>" + buyOffers.limit + "</td>" +
                   "<td>" + NRS.formatAmount(buyOffers.rateNQT) + "</td>" +
