@@ -20,10 +20,10 @@ var NRS = (function(NRS, $, undefined) {
 				var rows = "";
 				for (var i = 0; i < response.offers.length; i++) {
                 var sellOffers = response.offers[i];
-					rows += "<tr><td><a href='#' data-transaction='" + String(sellOffers.accountRS).escapeHTML() + "'>" + String(sellOffers.accountRS).escapeHTML() + "</a></td>" +
+					rows += "<tr><td><a href='#' class='user-info' data-user='" + String(sellOffers.accountRS).escapeHTML() + "'>" + String(sellOffers.accountRS).escapeHTML() + "</a></td>" +
                   "<td>" + sellOffers.supply + "</td>" +
                   "<td>" + sellOffers.limit + "</td>" +
-                  "<td>" + sellOffers.rateNQT + "</td>" +
+                  "<td>" + NRS.formatAmount(sellOffers.rateNQT) + "</td>" +
                   "</tr>";
 				}
 				$("#ms_open_sell_orders_table tbody").empty().append(rows);
@@ -31,7 +31,6 @@ var NRS = (function(NRS, $, undefined) {
 				$("#ms_open_sell_orders_table tbody").empty();
 			}
 			NRS.dataLoadFinished($("#ms_open_sell_orders_table"), true);
-			NRS.pageLoaded();
 		});
 		NRS.sendRequest("getBuyOffers+", {
 			"code": currencyCode,
@@ -46,10 +45,10 @@ var NRS = (function(NRS, $, undefined) {
 				var rows = "";
 				for (var i = 0; i < response.offers.length; i++) {
                 var buyOffers = response.offers[i];
-					rows += "<tr><td><a href='#' data-transaction='" + String(buyOffers.accountRS).escapeHTML() + "'>" + String(buyOffers.accountRS).escapeHTML() + "</a></td>" +
+					rows += "<tr><td><a href='#' class='user-info' data-user='" + String(buyOffers.accountRS).escapeHTML() + "'>" + String(buyOffers.accountRS).escapeHTML() + "</a></td>" +
                   "<td>" + buyOffers.supply + "</td>" +
                   "<td>" + buyOffers.limit + "</td>" +
-                  "<td>" + buyOffers.rateNQT + "</td>" +
+                  "<td>" + NRS.formatAmount(buyOffers.rateNQT) + "</td>" +
                   "</tr>";
 				}
 				$("#ms_open_buy_orders_table tbody").empty().append(rows);
@@ -57,8 +56,29 @@ var NRS = (function(NRS, $, undefined) {
 				$("#ms_open_buy_orders_table tbody").empty();
 			}
 			NRS.dataLoadFinished($("#ms_open_buy_orders_table"), true);
-			NRS.pageLoaded();
 		});
+		NRS.sendRequest("getExchanges+", {
+			"code": currencyCode,
+			"firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
+			"lastIndex": NRS.pageNumber * NRS.itemsPerPage
+		}, function(response, input) {
+			if (response.exchanges && response.exchanges.length) {
+				if (response.exchanges.length > NRS.itemsPerPage) {
+					NRS.hasMorePages = true;
+					response.exchanges.pop();
+				}
+				var rows = "";
+				for (var i = 0; i < response.exchanges.length; i++) {
+                var exchanges = response.exchanges[i];
+					rows += "";
+				}
+				$("#ms_exchanges_history_table tbody").empty().append(rows);
+			} else {
+				$("#ms_exchanges_history_table tbody").empty();
+			}
+			NRS.dataLoadFinished($("#ms_exchanges_history_table"), true);
+		});
+		NRS.pageLoaded();
 	});
 	
 	/* Monetary System Page Search capitalization */
@@ -96,7 +116,7 @@ var NRS = (function(NRS, $, undefined) {
                			currency.type = "Mintable";
                		else if (currency.type == 20)
                			currency.type = "Shuffleable";
-					rows += "<tr><td><a href='#' data-transaction='" + String(currency.currency).escapeHTML() + "'>" + String(currency.currency).escapeHTML() + "</a></td>" +
+					rows += "<tr><td><a href='#' onClick='NRS.goToCurrency(&quot;" + String(currency.code) + "&quot;)' >" + String(currency.currency).escapeHTML() + "</a></td>" +
                   		"<td>" + currency.name + "</td>" +
                   		"<td>" + currency.code + "</td>" +
                   		"<td>" + currency.type + "</td>" +
@@ -109,6 +129,12 @@ var NRS = (function(NRS, $, undefined) {
 			}
 		});
 	};
+	
+	NRS.goToCurrency = function(currency) {
+		$("#currency_search input[name=q]").val(currency);
+		$("#currency_search").submit();
+		$("ul.sidebar-menu a[data-page=monetary_system]").last().trigger("click");
+	}
 	
 	/* EXCHANGE HISTORY PAGE */
 	NRS.pages.exchange_history = function() {

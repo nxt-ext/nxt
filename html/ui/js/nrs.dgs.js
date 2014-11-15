@@ -2,14 +2,19 @@
  * @depends {nrs.js}
  */
 var NRS = (function(NRS, $, undefined) {
+	var _tagsPerPage = 50;
 	var _goodsToShow;
-	var _currentSeller;
+	var _currentSearch = {
+		"page": "",
+		"searchStr": ""
+	};
 
 	NRS.getMarketplaceItemHTML = function(good) {
 		var html = "";
 
 		html += "<div style='float:right;color: #999999;background:white;padding:5px;border:1px solid #ccc;border-radius:3px'>" +
-			"<strong>" + $.t("seller") + "</strong>: <span><a href='#' data-user='" + NRS.getAccountFormatted(good, "seller") + "' class='user_info'>" + NRS.getAccountTitle(good, "seller") + "</a></span><br>" +
+			"<strong>" + $.t("seller") + '</strong>: <span><a href="#" onclick="event.preventDefault();NRS.dgs_search_seller(\'' + NRS.getAccountFormatted(good, "seller") + '\')">' + NRS.getAccountTitle(good, "seller") + "</a></span> " +
+			"(<a href='#' data-user='" + NRS.getAccountFormatted(good, "seller") + "' class='user_info'>" + $.t('info') + "</a>)<br>" +
 			"<strong>" + $.t("product_id") + "</strong>: &nbsp;<a href='#'' data-toggle='modal' data-target='#dgs_product_modal' data-goods='" + String(good.goods).escapeHTML() + "'>" + String(good.goods).escapeHTML() + "</a>" +
 			"</div>" +
 			"<h3 class='title'><a href='#' data-goods='" + String(good.goods).escapeHTML() + "' data-toggle='modal' data-target='#dgs_purchase_modal'>" + String(good.name).escapeHTML() + "</a></h3>" +
@@ -23,7 +28,7 @@ var NRS = (function(NRS, $, undefined) {
 			if (i > 0) {
 				html += ' | ';
 			}
-			html += '<a href="#" onclick="event.preventDefault(); NRS.dgs_perform_tag_search(\'' + String(tags[i]).escapeHTML() + '\');">';
+			html += '<a href="#" onclick="event.preventDefault(); NRS.dgs_search_tag(\'' + String(tags[i]).escapeHTML() + '\');">';
 			html += String(tags[i]).escapeHTML() + '</a>';
 		}
 
@@ -104,6 +109,8 @@ var NRS = (function(NRS, $, undefined) {
 			if (response.goods.length > NRS.itemsPerPage) {
 				NRS.hasMorePages = true;
 				response.goods.pop();
+			} else {
+				NRS.hasMorePages = false;
 			}
 
 			var content = "";
@@ -120,40 +127,65 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.dgs_load_tags = function() {
 		$('#dgs_tag_list').empty();
 		NRS.sendRequest("getDGSTags+", {
-				"firstIndex": 0,
-				"lastIndex": 20
+				"firstIndex": NRS.pageNumber * _tagsPerPage - _tagsPerPage,
+				"lastIndex": NRS.pageNumber * _tagsPerPage
 			}, function(response) {
 				var content = "";
 				if (response.tags && response.tags.length) {
+					if (response.tags.length > _tagsPerPage) {
+						NRS.hasMorePages = true;
+					} else {
+						NRS.hasMorePages = false;
+					}
 					for (var i=0; i<response.tags.length; i++) {
-						content += '<a href="#" onclick="event.preventDefault(); NRS.dgs_perform_tag_search(\'' +response.tags[i].tag + '\');">';
+						content += '<a href="#" onclick="event.preventDefault(); NRS.dgs_search_tag(\'' +response.tags[i].tag + '\');">';
 						content += response.tags[i].tag.escapeHTML() + ' [' + response.tags[i].inStockCount + ']</a>&nbsp;&nbsp; ';
 					}
 				}
 				$('#dgs_tag_list').html(content);
+				NRS.pageLoaded();
 			});
 	}
 
-	NRS.dgs_perform_seller_search = function() {
-		var seller = $.trim($(".dgs_search input[name=q]").val());
-
-		if (seller) {
-			if (seller != _currentSeller) {
-				$("#dgs_search_contents").empty();
-				_currentSeller = seller;
-			}
-
-			NRS.sendRequest("getDGSGoods+", {
-				"seller": seller,
-				"firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
-				"lastIndex": NRS.pageNumber * NRS.itemsPerPage
-			}, function(response) {
-				NRS.dgs_show_results(response);
-			});
+	NRS.dgs_search_seller = function(seller) {
+		if (_currentSearch["page"] != "seller") {
+			NRS.pageNumber = 1;
 		}
+		if (seller == null) {
+			seller = _currentSearch["searchStr"];
+		} else {
+			_currentSearch = {
+				"page": "seller",
+				"searchStr": seller
+			};
+		}
+		$(".dgs_search_pageheader_addon").hide();
+		$(".dgs_search_pageheader_addon_seller_text").text(seller);
+		$(".dgs_search_pageheader_addon_seller").show();
+		NRS.sendRequest("getDGSGoods+", {
+			"seller": seller,
+			"firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
+			"lastIndex": NRS.pageNumber * NRS.itemsPerPage
+		}, function(response) {
+			NRS.dgs_show_results(response);
+		});
 	}
 
-	NRS.dgs_perform_fulltext_search = function(query) {
+	NRS.dgs_search_fulltext = function(query) {
+		if (_currentSearch["page"] != "fulltext") {
+			NRS.pageNumber = 1;
+		}
+		if (query == null) {
+			query = _currentSearch["searchStr"];
+		} else {
+			_currentSearch = {
+				"page": "fulltext",
+				"searchStr": query
+			};
+		}
+		$(".dgs_search_pageheader_addon").hide();
+		$(".dgs_search_pageheader_addon_fulltext_text").text('"' + query + '"');
+		$(".dgs_search_pageheader_addon_fulltext").show();
 		NRS.sendRequest("searchDGSGoods+", {
 			"query": query,
 			"firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
@@ -163,7 +195,21 @@ var NRS = (function(NRS, $, undefined) {
 		});
 	}
 
-	NRS.dgs_perform_tag_search = function(tag) {
+	NRS.dgs_search_tag = function(tag) {
+		if (_currentSearch["page"] != "tag") {
+			NRS.pageNumber = 1;
+		}
+		if (tag == null) {
+			tag = _currentSearch["searchStr"];
+		} else {
+			_currentSearch = {
+				"page": "tag",
+				"searchStr": tag
+			};
+		}
+		$(".dgs_search_pageheader_addon").hide();
+		$(".dgs_search_pageheader_addon_tag_text").text('"' + tag + '"');
+		$(".dgs_search_pageheader_addon_tag").show();
 		NRS.sendRequest("searchDGSGoods+", {
 			"tag": tag,
 			"firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
@@ -173,11 +219,19 @@ var NRS = (function(NRS, $, undefined) {
 		});
 	}
 
-	NRS.pages.dgs_search = function(callback) {
+	NRS.dgs_search_main = function(callback) {
+		if (_currentSearch["page"] != "main") {
+			NRS.pageNumber = 1;
+		}
+		_currentSearch = {
+			"page": "main",
+			"searchStr": ""
+		};
 		$(".dgs_search input[name=q]").val("").trigger("unmask").mask("NXT-****-****-****-*****", {
 			"unmask": false
 		});
 		$(".dgs_fulltext_search input[name=fs_q]").val("");
+		$(".dgs_search_pageheader_addon").hide();
 		$("#dgs_search_contents").empty();
 		NRS.dgs_load_tags();
 
@@ -188,7 +242,19 @@ var NRS = (function(NRS, $, undefined) {
 		if (callback) {
 			callback();
 		}
-		NRS.pageLoaded();
+	}
+
+
+	NRS.pages.dgs_search = function(callback) {
+		if (_currentSearch["page"] == "seller") {
+			NRS.dgs_search_seller();
+		} else if (_currentSearch["page"] == "fulltext") {
+			NRS.dgs_search_fulltext();
+		} else if (_currentSearch["page"] == "tag") {
+			NRS.dgs_search_tag();
+		} else {
+			NRS.dgs_search_main(callback);
+		}
 	}
 
 	NRS.pages.purchased_dgs = function() {
@@ -924,7 +990,7 @@ var NRS = (function(NRS, $, undefined) {
 					"type": "danger"
 				});
 			} else {
-				NRS.dgs_perform_seller_search();
+				NRS.dgs_search_seller(seller);
 			}
 		} else {
 			$.growl($.t("error_invalid_seller"), {
@@ -939,13 +1005,13 @@ var NRS = (function(NRS, $, undefined) {
 		var query = $.trim($(this).find("input[name=fs_q]").val());
 
 		if (query != "") {
-			NRS.dgs_perform_fulltext_search(query);
+			NRS.dgs_search_fulltext(query);
 		}
 	});
 
 	$("#dgs_clear_results").on("click", function(e) {
 		e.preventDefault();
-		NRS.pages.dgs_search();
+		NRS.dgs_search_main();
 	});
 
 	$("#user_info_modal").on("click", "a[data-goto-goods]", function(e) {
