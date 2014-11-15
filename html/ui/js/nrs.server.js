@@ -796,6 +796,41 @@ var NRS = (function(NRS, $, undefined) {
 				}
 
 				break;
+            case "dividendPayment":
+                if (transaction.type !== 2 || transaction.subtype !== 6) {
+
+                    return false;
+                }
+
+                var nameLength = byteArray[pos];
+
+                pos++;
+
+                transaction.name = converters.byteArrayToString(byteArray, pos, nameLength);
+
+                pos += nameLength;
+
+                var descriptionLength = converters.byteArrayToSignedShort(byteArray, pos);
+
+                pos += 2;
+
+                transaction.description = converters.byteArrayToString(byteArray, pos, descriptionLength);
+
+                pos += descriptionLength;
+
+                transaction.quantityQNT = String(converters.byteArrayToBigInteger(byteArray, pos));
+
+                pos += 8;
+
+                transaction.decimals = String(byteArray[pos]);
+
+                pos++;
+
+                if (transaction.name !== data.name || transaction.description !== data.description || transaction.quantityQNT !== data.quantityQNT || transaction.decimals !== data.decimals) {
+                    return false;
+                }
+
+                break;
 			case "dgsListing":
 				if (transaction.type !== 3 && transaction.subtype != 0) {
 					return false;
