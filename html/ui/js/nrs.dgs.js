@@ -2,9 +2,10 @@
  * @depends {nrs.js}
  */
 var NRS = (function(NRS, $, undefined) {
+	var _tagsPerPage = 50;
 	var _goodsToShow;
 	var _currentSearch = {
-		"page": "main",
+		"page": "",
 		"searchStr": ""
 	};
 
@@ -108,6 +109,8 @@ var NRS = (function(NRS, $, undefined) {
 			if (response.goods.length > NRS.itemsPerPage) {
 				NRS.hasMorePages = true;
 				response.goods.pop();
+			} else {
+				NRS.hasMorePages = false;
 			}
 
 			var content = "";
@@ -124,21 +127,30 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.dgs_load_tags = function() {
 		$('#dgs_tag_list').empty();
 		NRS.sendRequest("getDGSTags+", {
-				"firstIndex": 0,
-				"lastIndex": 20
+				"firstIndex": NRS.pageNumber * _tagsPerPage - _tagsPerPage,
+				"lastIndex": NRS.pageNumber * _tagsPerPage
 			}, function(response) {
 				var content = "";
 				if (response.tags && response.tags.length) {
+					if (response.tags.length > _tagsPerPage) {
+						NRS.hasMorePages = true;
+					} else {
+						NRS.hasMorePages = false;
+					}
 					for (var i=0; i<response.tags.length; i++) {
 						content += '<a href="#" onclick="event.preventDefault(); NRS.dgs_search_tag(\'' +response.tags[i].tag + '\');">';
 						content += response.tags[i].tag.escapeHTML() + ' [' + response.tags[i].inStockCount + ']</a>&nbsp;&nbsp; ';
 					}
 				}
 				$('#dgs_tag_list').html(content);
+				NRS.pageLoaded();
 			});
 	}
 
 	NRS.dgs_search_seller = function(seller) {
+		if (_currentSearch["page"] != "seller") {
+			NRS.pageNumber = 1;
+		}
 		if (seller == null) {
 			seller = _currentSearch["searchStr"];
 		} else {
@@ -160,6 +172,9 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.dgs_search_fulltext = function(query) {
+		if (_currentSearch["page"] != "fulltext") {
+			NRS.pageNumber = 1;
+		}
 		if (query == null) {
 			query = _currentSearch["searchStr"];
 		} else {
@@ -181,6 +196,9 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.dgs_search_tag = function(tag) {
+		if (_currentSearch["page"] != "tag") {
+			NRS.pageNumber = 1;
+		}
 		if (tag == null) {
 			tag = _currentSearch["searchStr"];
 		} else {
@@ -202,12 +220,13 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.dgs_search_main = function(callback) {
+		if (_currentSearch["page"] != "main") {
+			NRS.pageNumber = 1;
+		}
 		_currentSearch = {
 			"page": "main",
 			"searchStr": ""
 		};
-		NRS.pageNumber = 1;
-		NRS.hasMorePages = false;
 		$(".dgs_search input[name=q]").val("").trigger("unmask").mask("NXT-****-****-****-*****", {
 			"unmask": false
 		});
@@ -223,7 +242,6 @@ var NRS = (function(NRS, $, undefined) {
 		if (callback) {
 			callback();
 		}
-		NRS.pageLoaded();
 	}
 
 
