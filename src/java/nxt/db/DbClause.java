@@ -17,6 +17,14 @@ public abstract class DbClause {
 
     protected abstract int set(PreparedStatement pstmt, int index) throws SQLException;
 
+    public static final DbClause EMPTY_CLAUSE = new DbClause(" TRUE ") {
+
+        @Override
+        protected int set(PreparedStatement pstmt, int index) throws SQLException {
+            return index;
+        }
+
+    };
 
     public static final class StringClause extends DbClause {
 

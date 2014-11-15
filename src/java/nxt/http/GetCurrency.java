@@ -10,12 +10,13 @@ public final class GetCurrency extends APIServlet.APIRequestHandler {
     static final GetCurrency instance = new GetCurrency();
 
     private GetCurrency() {
-        super(new APITag[] {APITag.MS}, "currency", "code");
+        super(new APITag[] {APITag.MS}, "currency", "code", "includeCounts");
     }
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
-        return JSONData.currency(ParameterParser.getCurrency(req));
+        boolean includeCounts = !"false".equalsIgnoreCase(req.getParameter("includeCounts"));
+        return JSONData.currency(ParameterParser.getCurrency(req), includeCounts);
     }
 
 }

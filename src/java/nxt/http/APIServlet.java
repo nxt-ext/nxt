@@ -126,9 +126,11 @@ public final class APIServlet extends HttpServlet {
         map.put("getCurrencyAccounts", GetCurrencyAccounts.instance);
         map.put("getDGSGoods", GetDGSGoods.instance);
         map.put("getDGSGood", GetDGSGood.instance);
+        map.put("getDGSGoodsPurchases", GetDGSGoodsPurchases.instance);
         map.put("getDGSPurchases", GetDGSPurchases.instance);
         map.put("getDGSPurchase", GetDGSPurchase.instance);
         map.put("getDGSPendingPurchases", GetDGSPendingPurchases.instance);
+        map.put("getDGSTags", GetDGSTags.instance);
         map.put("getGuaranteedBalance", GetGuaranteedBalance.instance);
         map.put("getECBlock", GetECBlock.instance);
         map.put("getMyInfo", GetMyInfo.instance);
@@ -197,12 +199,16 @@ public final class APIServlet extends HttpServlet {
         map.put("transferCurrency", TransferCurrency.instance);
         map.put("deleteCurrency", DeleteCurrency.instance);
         map.put("dividendPayment", DividendPayment.instance);
+        map.put("searchDGSGoods", SearchDGSGoods.instance);
+        map.put("searchAssets", SearchAssets.instance);
+        map.put("searchCurrencies", SearchCurrencies.instance);
 
         if (API.enableDebugAPI) {
             map.put("clearUnconfirmedTransactions", ClearUnconfirmedTransactions.instance);
             map.put("fullReset", FullReset.instance);
             map.put("popOff", PopOff.instance);
             map.put("scan", Scan.instance);
+            map.put("luceneReindex", LuceneReindex.instance);
         }
 
         apiRequestHandlers = Collections.unmodifiableMap(map);

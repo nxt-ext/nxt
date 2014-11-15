@@ -16,13 +16,14 @@ public final class GetCurrencies extends APIServlet.APIRequestHandler {
     static final GetCurrencies instance = new GetCurrencies();
 
     private GetCurrencies() {
-        super(new APITag[] {APITag.MS}, "currencies", "currencies", "currencies"); // limit to 3 for testing
+        super(new APITag[] {APITag.MS}, "currencies", "currencies", "currencies", "includeCounts"); // limit to 3 for testing
     }
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) {
 
         String[] currencies = req.getParameterValues("currencies");
+        boolean includeCounts = !"false".equalsIgnoreCase(req.getParameter("includeCounts"));
 
         JSONObject response = new JSONObject();
         JSONArray currenciesJSONArray = new JSONArray();
@@ -39,7 +40,7 @@ public final class GetCurrencies extends APIServlet.APIRequestHandler {
                 if (currency == null) {
                     return UNKNOWN_CURRENCY;
                 }
-                currenciesJSONArray.add(JSONData.currency(currency));
+                currenciesJSONArray.add(JSONData.currency(currency, includeCounts));
             } catch (RuntimeException e) {
                 return INCORRECT_CURRENCY;
             }
