@@ -361,6 +361,7 @@
     "number_of_trades": "Number of Trades",
     "address": "Address",
     "height": "Height",
+    "error_invalid_height": "Invalid height value.",
     "header": "Header",
     "sell_alias": "Sell Alias",
     "error_passphrase_length_secure": "Your passphrase is less than 35 characters long. This is not secure.",
@@ -914,5 +915,10 @@
     "status_account_id": "Your account ID is: <strong>__account_id__<\/strong>",
     "error_send_message": "An unknown error occured! Message may or may not be sent.",
     "seller_account_id": "Seller's Account ID",
-    "status_new_account_old": "Welcome to your new NXT account. Your account ID is <strong>__account_id__<\/strong>. You should fund it with some coins."
+    "status_new_account_old": "Welcome to your new NXT account. Your account ID is <strong>__account_id__<\/strong>. You should fund it with some coins.",
+    "pay_dividends": "Pay Dividends",
+    "amount_per_asset": "Amount Per Asset",
+    "error_amount_per_asset_required": "Amount Per Asset is a required field.",
+    "dividend_payment_info_preview_success": "A total of __amountNXT__ NXT will be distributed among __totalQuantity__ assets.",
+    "dividend_payment_info_preview_error": "Could not display preview information of the dividend payment due to an unexpected error. code: __errorCode__."
 }
