@@ -1104,8 +1104,76 @@
                     </section>
                 </div>
                 
+                <div id="monetary_system_page" class="paginated page">
+                    <section class="content-header">
+                    	<h1 data-i18n="monetary_system">Monetary System</h1>
+                    	<div style="position:absolute;top:9px;right:9px;">
+							<form class="sidebar-form" id="currency_search" style="width:180px;margin:0;display:inline-block;vertical-align:middle;" autocomplete="off">
+								<div class="input-group">
+									<input type="text" name="q" class="form-control" placeholder="Currency Code..." data-i18n="[placeholder]search_currency">
+									<span class="input-group-btn">
+										<button name="seach" class="btn btn-flat"><i class="fa fa-search"></i></button>
+									</span>
+								</div>
+							</form>             
+						</div>
+                    </section>
+                    <section class="content">
+	                 	<div class="row">
+	                 	    <div class="col-md-6">
+	                 	        <div class="box box-primary">
+	                 	            <div class="box-header"><h3 class="box-title" data-i18n="sell_orders">Sell Orders</h3></div>
+	                 	            <div class="box-body no-padding">
+                	   					<div class="data-container data-loading" data-no-padding="true">
+		                 	                <table class="table table-striped" id="ms_open_sell_orders_table">
+												<thead>
+												<tr>
+												    <th data-i18n="account">Account</th>
+												    <th data-i18n="quantity">Quantity</th>
+												    <th data-i18n="limit">Limit</th>
+												    <th data-i18n="price">Price</th>
+												</tr>
+												</thead>
+		                 	                    <tbody>
+		                 	                    
+		                 	                    </tbody>
+		                 	                </table>
+		                 	                <div class="data-loading-container"><img src="img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
+		                 	                <div class="data-empty-container"><p data-i18n="no_open_sell_orders">No open sell orders.</p></div>
+	                 	                </div>
+	                 	            </div>
+	                 	        </div>
+	                 		</div>				                        	
+	                 		<div class="col-md-6">
+	                 		    <div class="box box-primary">
+	                 		        <div class="box-header"><h3 class="box-title" data-i18n="buy_orders">Buy Orders</h3></div>
+	                 		        <div class="box-body no-padding">
+	                 		            <div class="data-container data-loading" data-no-padding="true">
+		                 		            <table class="table table-striped" id="ms_open_buy_orders_table">
+												<thead>
+												<tr>
+												    <th data-i18n="account">Account</th>
+												    <th data-i18n="quantity">Quantity</th>
+												    <th data-i18n="limit">Limit</th>
+												    <th data-i18n="price">Price</th>
+												</tr>
+												</thead>
+		                 		                <tbody>
+		                 		                
+		                 		                </tbody>
+		                 		            </table>
+		                 		            <div class="data-loading-container"><img src="img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
+		                 		            <div class="data-empty-container"><p data-i18n="no_open_buy_orders">No open buy orders.</p></div>
+		                 		    	</div>
+	                 		        </div>
+	                 		    </div>
+	                 		</div>
+	                 	</div>
+                 	</section>
+                </div>
+                
                 <div id="exchange_history_page" class="paginated page">
-                    <section class="content-header"><h1 data-i18n="currencies">Exchange History</h1></section>
+                    <section class="content-header"><h1 data-i18n="exchange_history">Exchange History</h1></section>
                     <section class="content">
                         <div class="data-container data-loading">
                             <table class="table table-striped" id="exchange_history_table">
@@ -2391,7 +2459,7 @@
                             <div class="callout callout-danger error_message" style="display:none"></div>
                             <div style="margin-left:-20px">
                                 <div class="form-group">
-                                    <label for="currency_code"><span data-i18n="currency_code">CURRENCY CODE</span> <i class="fa fa-question-circle show_popover" data-content="Enter a 3 letter currency code" data-i18n="[data-content]currency_code_help" data-container="body" style="color:#4CAA6E" ></i></label>
+                                    <label for="currency_code"><span data-i18n="currency_code">CURRENCY CODE</span> <i class="fa fa-question-circle show_popover" data-content="Enter a 3-5 letter currency code" data-i18n="[data-content]currency_code_help" data-container="body" style="color:#4CAA6E" ></i></label>
                                     <input type="text" class="form-control publish_exchange_currency_code" name="code" id="currency_code" placeholder="Currency Code" data-i18n="[placeholder]currency_code" autofocus tabindex="1" />
                                 </div>
                                 <div class="form-group">
@@ -2450,7 +2518,7 @@
                                 </div>
                             </div>
                             <div class="row">
-								<div class="col-xs-12 col-sm-12 col-md-12 advanced_extend" data-normal="12" data-advanced="6">
+								<div class="col-xs-6 col-sm-6 col-md-6 advanced">
 									<div class="form-group">
 										<label for="issue_currency_fee"><span data-i18n="fee">FEE</span> <i class="fa fa-exclamation-circle show_popover" data-container="body" style="color:red"></i></label>
 										<div class="input-group">
@@ -2474,6 +2542,7 @@
                         </form>
 			    	</div>
                     <div class="modal-footer" style="margin-top:0;">
+                    	<div class="advanced_info"><strong data-i18n="fee">Fee</strong>: <span class="advanced_fee">1 NXT</span> - <a href="#" data-i18n="advanced">advanced</a></div>
                         <button type="button" class="btn btn-default" data-dismiss="modal" data-i18n="cancel">Cancel</button>
                         <button type="button" class="btn btn-primary" data-loading-text="Submitting..." data-i18n="publish_exchange_offer;[data-loading-text]submitting">Publish Exchange Offer</button>
                     </div>

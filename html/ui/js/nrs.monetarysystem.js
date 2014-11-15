@@ -3,6 +3,72 @@
  */
 var NRS = (function(NRS, $, undefined) {
 
+	/* MONETARY SYSTEM PAGE */
+	$("#currency_search").on("submit", function(e) {
+		e.preventDefault();
+		var currencyCode = $.trim($("#currency_search input[name=q]").val());
+		NRS.sendRequest("getSellOffers+", {
+			"code": currencyCode,
+			"firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
+			"lastIndex": NRS.pageNumber * NRS.itemsPerPage
+		}, function(response, input) {
+			if (response.offers && response.offers.length) {
+				if (response.offers.length > NRS.itemsPerPage) {
+					NRS.hasMorePages = true;
+					response.offers.pop();
+				}
+				var rows = "";
+				for (var i = 0; i < response.offers.length; i++) {
+                var sellOffers = response.offers[i];
+					rows += "<tr><td><a href='#' data-transaction='" + String(sellOffers.accountRS).escapeHTML() + "'>" + String(sellOffers.accountRS).escapeHTML() + "</a></td>" +
+                  "<td>" + sellOffers.supply + "</td>" +
+                  "<td>" + sellOffers.limit + "</td>" +
+                  "<td>" + sellOffers.rateNQT + "</td>" +
+                  "</tr>";
+				}
+				$("#ms_open_sell_orders_table tbody").empty().append(rows);
+			} else {
+				$("#ms_open_sell_orders_table tbody").empty();
+			}
+			NRS.dataLoadFinished($("#ms_open_sell_orders_table"), true);
+			NRS.pageLoaded();
+		});
+		NRS.sendRequest("getBuyOffers+", {
+			"code": currencyCode,
+			"firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
+			"lastIndex": NRS.pageNumber * NRS.itemsPerPage
+		}, function(response, input) {
+			if (response.offers && response.offers.length) {
+				if (response.offers.length > NRS.itemsPerPage) {
+					NRS.hasMorePages = true;
+					response.offers.pop();
+				}
+				var rows = "";
+				for (var i = 0; i < response.offers.length; i++) {
+                var buyOffers = response.offers[i];
+					rows += "<tr><td><a href='#' data-transaction='" + String(buyOffers.accountRS).escapeHTML() + "'>" + String(buyOffers.accountRS).escapeHTML() + "</a></td>" +
+                  "<td>" + buyOffers.supply + "</td>" +
+                  "<td>" + buyOffers.limit + "</td>" +
+                  "<td>" + buyOffers.rateNQT + "</td>" +
+                  "</tr>";
+				}
+				$("#ms_open_buy_orders_table tbody").empty().append(rows);
+			} else {
+				$("#ms_open_buy_orders_table tbody").empty();
+			}
+			NRS.dataLoadFinished($("#ms_open_buy_orders_table"), true);
+			NRS.pageLoaded();
+		});
+	});
+	
+	/* Monetary System Page Search capitalization */
+    $("#currency_search input[name=q]").blur(function(e) {
+		this.value = this.value.toLocaleUpperCase();
+	});
+	$("#currency_search input[name=q]").keyup(function(e) {
+		this.value = this.value.toLocaleUpperCase();
+	});
+
 	/* CURRENCIES PAGE */
 	NRS.pages.currencies = function() {
 		NRS.sendRequest("getAllCurrencies+", {
@@ -153,9 +219,9 @@ var NRS = (function(NRS, $, undefined) {
 		}
     });
     $('#issue_currency_claimable').change(function() {
-        if($(this).is(":checked"))
+        //if($(this).is(":checked"))
             //$( "#issue_currency_exchangeable" ).prop("disabled", true);
-		else
+		//else
 			//$( "#issue_currency_exchangeable" ).prop("disabled", false);
     });
 	$('#issue_currency_reservable').change(function() {
@@ -170,6 +236,15 @@ var NRS = (function(NRS, $, undefined) {
 		else
 			$( ".optional_mint" ).hide();
     });
+    
+    /* Publish Exchange Offer Model Code */
+    $("#currency_code").blur(function(e) {
+		this.value = this.value.toLocaleUpperCase();
+	});
+	$("#currency_code").keyup(function(e) {
+		this.value = this.value.toLocaleUpperCase();
+	});
+    
 
    return NRS;
 }(NRS || {}, jQuery));
