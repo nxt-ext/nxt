@@ -78,6 +78,28 @@ var NRS = (function(NRS, $, undefined) {
 			}
 			NRS.dataLoadFinished($("#ms_exchanges_history_table"), true);
 		});
+		NRS.sendRequest("getExchanges+", {
+			"code": currencyCode,
+			"account": NRS.accountRS,
+			"firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
+			"lastIndex": NRS.pageNumber * NRS.itemsPerPage
+		}, function(response, input) {
+			if (response.exchanges && response.exchanges.length) {
+				if (response.exchanges.length > NRS.itemsPerPage) {
+					NRS.hasMorePages = true;
+					response.exchanges.pop();
+				}
+				var rows = "";
+				for (var i = 0; i < response.exchanges.length; i++) {
+                var exchanges = response.exchanges[i];
+					rows += "";
+				}
+				$("#ms_my_exchanges_history_table tbody").empty().append(rows);
+			} else {
+				$("#ms_my_exchanges_history_table tbody").empty();
+			}
+			NRS.dataLoadFinished($("#ms_my_exchanges_history_table"), true);
+		});
 		NRS.pageLoaded();
 	});
 	
