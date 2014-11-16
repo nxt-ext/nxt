@@ -85,7 +85,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     if (!getMoreBlocks) {
                         return;
                     }
-                    if (Peers.getNumberOfConnectedPublicPeers() < numberOfForkConfirmations) {
+                    if (!Peers.hasEnoughConnectedPublicPeers(numberOfForkConfirmations)) {
                         return;
                     }
                     peerHasMore = true;
