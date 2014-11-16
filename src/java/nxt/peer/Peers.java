@@ -759,7 +759,7 @@ public final class Peers {
         }
     }
 
-    private static int getNumberOfConnectedPublicPeers() {
+    public static int getNumberOfConnectedPublicPeers() {
         int numberOfConnectedPeers = 0;
         for (Peer peer : peers.values()) {
             if (peer.getState() == Peer.State.CONNECTED && peer.getAnnouncedAddress() != null
