@@ -140,7 +140,6 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     }
 
                     Collection<? extends Peer> otherPeers = Peers.getPeers(Peer.State.CONNECTED);
-                    Logger.logDebugMessage("Confirming with " + otherPeers.size() + " other peers");
                     int confirmations = 0;
                     for (Peer otherPeer : otherPeers) {
                         if (confirmations >= numberOfForkConfirmations) {
