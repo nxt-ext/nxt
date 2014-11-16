@@ -143,6 +143,7 @@ var NRS = (function(NRS, $, undefined) {
                   		"<td>" + currency.code + "</td>" +
                   		"<td>" + currency.type + "</td>" +
                   		"<td>" + currency.currentSupply + "</td>" +
+                  		"<td><a href='#' data-toggle='modal' data-target='#transfer_currency_modal' data-currency='" + String(currency.code).escapeHTML() + "' data-name='" + String(currency.name).escapeHTML() + "' data-decimals='" + String(currency.decimals).escapeHTML() + "'>" + $.t("transfer") + "</a></td>" +
                   		"</tr>";
 				}
 				NRS.dataLoaded(rows);
@@ -156,7 +157,45 @@ var NRS = (function(NRS, $, undefined) {
 		$("#currency_search input[name=q]").val(currency);
 		$("#currency_search").submit();
 		$("ul.sidebar-menu a[data-page=monetary_system]").last().trigger("click");
-	}
+	};
+	
+	$("#transfer_currency_modal").on("show.bs.modal", function(e) {
+		var $invoker = $(e.relatedTarget);
+
+		var currencyCode = $invoker.data("currency");
+		var currencyName = $invoker.data("name");
+		var decimals = $invoker.data("decimals");
+
+		$("#transfer_currency_currency").val(currencyCode);
+		$("#transfer_currency_decimals").val(decimals);
+		$("#transfer_currency_name, #transfer_currency_quantity_name").html(String(currencyName).escapeHTML());
+		$("#transfer_currency_available").html("");
+		
+		NRS.sendRequest("getCurrencyAccounts+", {
+			"code": currencyCode,
+			"firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
+			"lastIndex": NRS.pageNumber * NRS.itemsPerPage
+		}, function(response, input) {
+			availablecurrencysMessage = " - None Available for Transfer";
+			if (response.accountCurrencies && response.accountCurrencies.length) {
+				if (response.accountCurrencies && response.accountCurrencies.length) {
+					if (response.accountCurrencies.length > NRS.itemsPerPage) {
+						NRS.hasMorePages = true;
+						response.accountCurrencies.pop();
+					}
+					for (var i = 0; i < response.accountCurrencies.length; i++) {
+						if (response.accountCurrencies[i].accountRS == NRS.accountRS){
+							availablecurrencysMessage = " - " + $.t("available_for_transfer", {
+								"qty": NRS.formatQuantity(response.accountCurrencies[i].units, decimals)
+							});
+							break;
+						}
+					}
+				}
+			}
+			$("#transfer_currency_available").html(availablecurrencysMessage);
+		});
+	});
 	
 	/* EXCHANGE HISTORY PAGE */
 	NRS.pages.exchange_history = function() {
