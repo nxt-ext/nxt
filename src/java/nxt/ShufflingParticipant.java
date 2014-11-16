@@ -121,7 +121,7 @@ public final class ShufflingParticipant {
 
     private long nextAccountId; // pointer to the next shuffling participant updated during registration
     private long recipientId; // decrypted account id updated after the shuffling process is complete
-    private State state; // tracks the verification state of the participant
+    private State state; // tracks the state of the participant in the process
     private byte[] data; // encrypted data saved as intermediate result in the shuffling process
 
     public ShufflingParticipant(long shufflingId, long accountId) {

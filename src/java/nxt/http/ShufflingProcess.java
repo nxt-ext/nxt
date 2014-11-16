@@ -10,6 +10,7 @@ import nxt.db.DbIterator;
 import nxt.util.Convert;
 import nxt.util.JSON;
 import nxt.util.Logger;
+import org.bouncycastle.crypto.InvalidCipherTextException;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
@@ -42,7 +43,7 @@ public final class ShufflingProcess extends CreateTransaction {
         if (!shuffling.isProcessingAllowed()) {
             JSONObject response = new JSONObject();
             response.put("errorCode", 11);
-            response.put("errorDescription", "Shuffling is not ready for processing, state " + shuffling.getState());
+            response.put("errorDescription", "Shuffling is not ready for processing, stage " + shuffling.getStage());
             return JSON.prepare(response);
         }
         Account senderAccount = ParameterParser.getSenderAccount(req);
@@ -99,11 +100,15 @@ public final class ShufflingProcess extends CreateTransaction {
                 try {
                     decryptedBytes = publicKeyAccount.decryptFrom(encryptedData, secretPhrase);
                 } catch (Exception e) {
-                    // TODO can we rely on decryption to always throw exception in case of incorrect public key ?
-                    // That's fine, this participant did not encrypt the token try the next one
-                    Logger.logDebugMessage("failed " + e.getMessage());
-                    id = mapping.get(id);
-                    continue;
+                    Throwable cause = e.getCause();
+                    if (cause instanceof InvalidCipherTextException) {
+                        // That's fine, this participant did not encrypt the token try the next one
+                        Logger.logDebugMessage("failed " + e.getMessage());
+                        id = mapping.get(id);
+                        continue;
+                    } else {
+                        throw e;
+                    }
                 }
                 if (Logger.isDebugEnabled()) {
                     Logger.logDebugMessage(String.format("decryptFrom bytes %s", Arrays.toString(decryptedBytes)));

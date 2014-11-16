@@ -650,11 +650,11 @@ public abstract class MonetarySystem extends TransactionType {
                     throw new NxtException.NotValidException("Currency is not active: " + currency.getCode());
                 }
                 if (attachment.getAmount() <= 0 || attachment.getAmount() > Constants.MAX_CURRENCY_TOTAL_SUPPLY) {
-                    throw new NxtException.NotValidException("Currency amount too large " + attachment.getAmount());
+                    throw new NxtException.NotValidException("Invalid currency amount " + attachment.getAmount());
                 }
             } else {
                 if (attachment.getAmount() <= 0 || attachment.getAmount() > Constants.MAX_BALANCE_NQT) {
-                    throw new NxtException.NotValidException("NQT amount too large " + attachment.getAmount());
+                    throw new NxtException.NotValidException("Invalid NQT amount " + attachment.getAmount());
                 }
             }
             if (Account.getAccount(transaction.getSenderId()).getPublicKey() == null) {
@@ -663,8 +663,8 @@ public abstract class MonetarySystem extends TransactionType {
             }
             if (attachment.getParticipantCount() < Constants.MIN_SHUFFLING_PARTICIPANTS
                     || attachment.getParticipantCount() > Constants.MAX_SHUFFLING_PARTICIPANTS) {
-                throw new NxtException.NotValidException(String.format("Number of participants must be between %d and %d",
-                        Constants.MIN_SHUFFLING_PARTICIPANTS, Constants.MAX_SHUFFLING_PARTICIPANTS));
+                throw new NxtException.NotValidException(String.format("Number of participants %d is not between %d and %d",
+                        attachment.getParticipantCount(), Constants.MIN_SHUFFLING_PARTICIPANTS, Constants.MAX_SHUFFLING_PARTICIPANTS));
             }
             if (attachment.getCancellationHeight() <= Nxt.getBlockchain().getHeight()) {
                 throw new NxtException.NotValidException(String.format("Cancellation height %d is smaller than current height %d",
@@ -838,8 +838,7 @@ public abstract class MonetarySystem extends TransactionType {
         }
 
         @Override
-        void undoAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
-        }
+        void undoAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {}
 
         @Override
         public boolean canHaveRecipient() {
@@ -992,7 +991,7 @@ public abstract class MonetarySystem extends TransactionType {
             if (super.isDuplicate(transaction, duplicates)) {
                 return true;
             }
-            Attachment.MonetarySystemShufflingDistribution attachment = (Attachment.MonetarySystemShufflingDistribution) transaction.getAttachment();
+            Attachment.MonetarySystemShufflingCancellation attachment = (Attachment.MonetarySystemShufflingCancellation) transaction.getAttachment();
             String key = Convert.toUnsignedLong(attachment.getShufflingId()) + "." + Convert.toUnsignedLong(transaction.getSenderId());
             return TransactionType.isDuplicate(SHUFFLING_CANCELLATION, key, duplicates, true);
         }
@@ -1006,7 +1005,7 @@ public abstract class MonetarySystem extends TransactionType {
             }
             if (!shuffling.isCancellationAllowed(transaction.getSenderId())) {
                 throw new NxtException.NotValidException(String.format("Shuffling in state %s cannot be cancelled by account %s",
-                       shuffling.getState(), Convert.rsAccount(transaction.getSenderId())));
+                       shuffling.getStage(), Convert.rsAccount(transaction.getSenderId())));
             }
         }
 
@@ -1023,8 +1022,7 @@ public abstract class MonetarySystem extends TransactionType {
         }
 
         @Override
-        void undoAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
-        }
+        void undoAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {}
 
         @Override
         public boolean canHaveRecipient() {

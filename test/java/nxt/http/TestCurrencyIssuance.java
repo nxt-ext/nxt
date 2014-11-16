@@ -19,19 +19,25 @@ public class TestCurrencyIssuance extends BlockchainTest {
 
     @Test
     public void issueMultipleCurrencies() {
+        APICall apiCall = new APICall.Builder("getAllCurrencies").build();
+        JSONObject response = apiCall.invoke();
+        Logger.logDebugMessage(response.toJSONString());
+        JSONArray currencies = (JSONArray)response.get("currencies");
+        int currencyCount = currencies.size();
+
         // Temporary 4 letters code until test account receives enough funds to issue a
         // 3 letter currency.
-        APICall apiCall = new Builder().naming("aaaa", "AAAA", "Currency A").build();
+        apiCall = new Builder().naming("aaa", "AAA", "Currency A").build();
         issueCurrencyApi(apiCall);
         apiCall = new Builder().naming("bbbb", "BBBB", "Currency B").feeNQT(1000 * Constants.ONE_NXT).build();
         issueCurrencyApi(apiCall);
         apiCall = new Builder().naming("ccccc", "CCCCC", "Currency C").feeNQT(40 * Constants.ONE_NXT).build();
         issueCurrencyApi(apiCall);
         apiCall = new APICall.Builder("getAllCurrencies").build();
-        JSONObject response = apiCall.invoke();
+        response = apiCall.invoke();
         Logger.logDebugMessage(response.toJSONString());
-        JSONArray currencies = (JSONArray)response.get("currencies");
-        Assert.assertEquals(3, currencies.size());
+        currencies = (JSONArray)response.get("currencies");
+        Assert.assertEquals(currencyCount + 3, currencies.size());
     }
 
     static String issueCurrencyApi(APICall apiCall) {

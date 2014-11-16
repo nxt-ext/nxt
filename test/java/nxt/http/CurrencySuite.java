@@ -28,13 +28,11 @@ public class CurrencySuite {
         Nxt.init();
         Nxt.getBlockchainProcessor().addListener(new Helper.BlockListener(), BlockchainProcessor.Event.BLOCK_GENERATED);
         Assert.assertEquals(0, Helper.getCount("unconfirmed_transaction"));
-        Assert.assertEquals(0, Helper.getCount("currency"));
     }
 
     @AfterClass
     public static void shutdown() {
         Assert.assertEquals(0, Helper.getCount("unconfirmed_transaction"));
-        Assert.assertEquals(0, Helper.getCount("currency"));
         Nxt.shutdown();
     }
 

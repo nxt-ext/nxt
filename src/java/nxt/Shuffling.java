@@ -23,16 +23,18 @@ public final class Shuffling {
         SHUFFLING_CREATED, SHUFFLING_CANCELLED, SHUFFLING_DONE
     }
 
-    public static enum State {
+    public static enum Stage {
         REGISTRATION((byte)1),
         PROCESSING((byte)2),
         VERIFICATION((byte)3),
         CANCELLED((byte)4) {
+            @Override
             public boolean isCancellationAllowed() {
                 return false;
             }
         },
         DONE((byte)5) {
+            @Override
             public boolean isCancellationAllowed() {
                 return false;
             }
@@ -40,17 +42,17 @@ public final class Shuffling {
 
         private final byte code;
 
-        State(byte code) {
+        Stage(byte code) {
             this.code = code;
         }
 
-        private static State get(byte code) {
-            for (State state : State.values()) {
-                if (state.code == code) {
-                    return state;
+        private static Stage get(byte code) {
+            for (Stage stage : Stage.values()) {
+                if (stage.code == code) {
+                    return stage;
                 }
             }
-            throw new IllegalArgumentException("No matching state for " + code);
+            throw new IllegalArgumentException("No matching stage for " + code);
         }
 
         public byte getCode() {
@@ -69,14 +71,14 @@ public final class Shuffling {
                 Connection con = null;
                 try {
                     con = Db.db.getConnection();
-                    PreparedStatement pstmt = con.prepareStatement("SELECT * FROM shuffling WHERE state <> ? and state <> ?");
+                    PreparedStatement pstmt = con.prepareStatement("SELECT * FROM shuffling WHERE stage <> ? and stage <> ? AND latest = TRUE");
                     int i = 0;
-                    pstmt.setByte(++i, State.CANCELLED.getCode());
-                    pstmt.setByte(++i, State.DONE.getCode());
+                    pstmt.setByte(++i, Stage.CANCELLED.getCode());
+                    pstmt.setByte(++i, Stage.DONE.getCode());
                     DbIterator<Shuffling> shufflings = shufflingTable.getManyBy(con, pstmt, false);
                     for (Shuffling shuffling : shufflings) {
                         // Cancel the shuffling in case the blockchain reached its cancellation height
-                        if (block.getHeight() > shuffling.getCancellationHeight() && shuffling.getState().isCancellationAllowed()) {
+                        if (block.getHeight() > shuffling.getCancellationHeight() && shuffling.getStage().isCancellationAllowed()) {
                             shuffling.cancel();
                         }
                     }
@@ -140,7 +142,7 @@ public final class Shuffling {
         listeners.notify(shuffling, Event.SHUFFLING_CREATED);
     }
 
-    public static void addParticipant(Transaction transaction, Attachment.MonetarySystemShufflingRegistration attachment) {
+    static void addParticipant(Transaction transaction, Attachment.MonetarySystemShufflingRegistration attachment) {
         long shufflingId = attachment.getShufflingId();
         long participantId = transaction.getSenderId();
         ShufflingParticipant.addParticipant(shufflingId, participantId);
@@ -155,7 +157,7 @@ public final class Shuffling {
         // Check if participant registration is complete and if so update the shuffling
         if (ShufflingParticipant.getCount(shufflingId) == shuffling.participantCount) {
             shuffling.assigneeAccountId = shuffling.issuerId;
-            shuffling.setState(State.PROCESSING); // update the db
+            shuffling.setStage(Stage.PROCESSING); // update the db
         }
     }
 
@@ -171,8 +173,8 @@ public final class Shuffling {
             ShufflingParticipant.updateData(shufflingId, nextParticipantId, data);
             senderParticipant.setProcessingComplete();
         } else {
-            // participant processing is complete update the shuffling state
-            shuffling.setState(State.VERIFICATION);
+            // participant processing is complete update the shuffling stage
+            shuffling.setStage(Stage.VERIFICATION);
             List<EncryptedData> unmarshaledDataList = EncryptedData.getUnmarshaledDataList(data);
             Deque<EncryptedData> stack = new ArrayDeque<>(unmarshaledDataList);
             for (ShufflingParticipant participant : ShufflingParticipant.getParticipants(shufflingId)) {
@@ -192,7 +194,7 @@ public final class Shuffling {
     private final byte participantCount;
     private final int cancellationHeight;
 
-    private State state;
+    private Stage stage;
     private long assigneeAccountId;
 
     private Shuffling(Transaction transaction, Attachment.MonetarySystemShufflingCreation attachment) {
@@ -203,7 +205,7 @@ public final class Shuffling {
         this.amount = attachment.getAmount();
         this.participantCount = attachment.getParticipantCount();
         this.cancellationHeight = attachment.getCancellationHeight();
-        this.state = State.REGISTRATION;
+        this.stage = Stage.REGISTRATION;
         this.assigneeAccountId = issuerId;
     }
 
@@ -215,13 +217,13 @@ public final class Shuffling {
         this.amount = rs.getLong("amount");
         this.participantCount = rs.getByte("participant_count");
         this.cancellationHeight = rs.getInt("cancellation_height");
-        this.state = State.get(rs.getByte("state"));
+        this.stage = Stage.get(rs.getByte("stage"));
         this.assigneeAccountId = rs.getLong("assignee_account_Id");
     }
 
     private void save(Connection con) throws SQLException {
         try (PreparedStatement pstmt = con.prepareStatement("MERGE INTO shuffling (id, currency_id, "
-                + "issuer_id, amount, participant_count, cancellation_height, state, assignee_account_Id,"
+                + "issuer_id, amount, participant_count, cancellation_height, stage, assignee_account_Id,"
                 + "height, latest) "
                 + "KEY (id, height)"
                 + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, TRUE)")) {
@@ -232,7 +234,7 @@ public final class Shuffling {
             pstmt.setLong(++i, this.getAmount());
             pstmt.setLong(++i, this.getParticipantCount());
             pstmt.setInt(++i, this.getCancellationHeight());
-            pstmt.setByte(++i, this.getState().getCode());
+            pstmt.setByte(++i, this.getStage().getCode());
             pstmt.setLong(++i, this.getAssigneeAccountId());
             pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
             pstmt.executeUpdate();
@@ -265,12 +267,12 @@ public final class Shuffling {
         return cancellationHeight;
     }
 
-    public State getState() {
-        return state;
+    public Stage getStage() {
+        return stage;
     }
 
-    public void setState(State state) {
-        this.state = state;
+    public void setStage(Stage stage) {
+        this.stage = stage;
         shufflingTable.insert(this);
     }
 
@@ -293,7 +295,7 @@ public final class Shuffling {
             updateUnconfirmedBalance(participant.getRecipientId(), amount);
             updateBalance(participant.getAccountId(), -amount);
         }
-        setState(State.DONE);
+        setStage(Stage.DONE);
         listeners.notify(this, Event.SHUFFLING_DONE);
     }
 
@@ -301,7 +303,7 @@ public final class Shuffling {
         for (ShufflingParticipant participant : ShufflingParticipant.getParticipants(id)) {
             updateUnconfirmedBalance(participant.getAccountId(), amount);
         }
-        setState(State.CANCELLED);
+        setStage(Stage.CANCELLED);
         listeners.notify(this, Event.SHUFFLING_CANCELLED);
     }
 
@@ -322,19 +324,23 @@ public final class Shuffling {
         }
     }
 
-    public boolean isRegistrationAllowed() {
-        return state == State.REGISTRATION;
+    boolean isRegistrationAllowed() {
+        return stage == Stage.REGISTRATION;
     }
 
     public boolean isProcessingAllowed() {
-        return state == State.PROCESSING;
+        return stage == Stage.PROCESSING;
     }
 
-    public boolean isVerificationAllowed() {
-        return state == State.VERIFICATION;
+    boolean isVerificationAllowed() {
+        return stage == Stage.VERIFICATION;
     }
 
-    public boolean isDistributionAllowed() {
+    /**
+     * Distribution is allowed only if the shuffling is in verification stage and all participants verified their recipient account
+     * @return is distribution allowed
+     */
+    boolean isDistributionAllowed() {
         if (!isVerificationAllowed()) {
             return false;
         }
@@ -346,19 +352,25 @@ public final class Shuffling {
         return true;
     }
 
-    public boolean isCancellationAllowed(long senderId) {
+    /**
+     * Shuffling issuer can cancel the shuffling at any time but participants can only cancel during the verification stage
+     *
+     * @param senderId the sender of the transaction
+     * @return is cancellation allowed
+     */
+    boolean isCancellationAllowed(long senderId) {
         if (senderId == issuerId) {
-            return state.isCancellationAllowed();
+            return stage.isCancellationAllowed();
         } else {
-            return state == State.VERIFICATION;
+            return stage == Stage.VERIFICATION;
         }
     }
 
-    public boolean isParticipant(long senderId) {
+    boolean isParticipant(long senderId) {
         return ShufflingParticipant.getParticipant(id, senderId) != null;
     }
 
-    public boolean isParticipantVerified(long senderId) {
+    boolean isParticipantVerified(long senderId) {
         return ShufflingParticipant.getParticipant(id, senderId).isVerified();
     }
 
@@ -370,12 +382,12 @@ public final class Shuffling {
         Connection con = null;
         try {
             con = Db.db.getConnection();
-            PreparedStatement pstmt = con.prepareStatement("SELECT * FROM shuffling WHERE currency_id = ?");
+            PreparedStatement pstmt = con.prepareStatement("SELECT * FROM shuffling WHERE currency_id = ? AND latest = TRUE");
             int i = 0;
             pstmt.setLong(++i, currencyId);
             DbIterator<Shuffling> shufflings = shufflingTable.getManyBy(con, pstmt, false);
             for (Shuffling shuffling : shufflings) {
-                if (shuffling.getState().isCancellationAllowed()) {
+                if (shuffling.getStage().isCancellationAllowed()) {
                     shuffling.cancel();
                 }
             }

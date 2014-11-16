@@ -15,14 +15,13 @@ public class DeleteCurrencyTest extends BlockchainTest {
 
     @Test
     public void deleteByIssuer() {
-        APICall apiCall = new TestCurrencyIssuance.Builder().naming("abcde", "ABCDE", "test1").build();
+        APICall apiCall = new TestCurrencyIssuance.Builder().naming("yjwcv", "YJWCV", "test1").build();
         TestCurrencyIssuance.issueCurrencyApi(apiCall);
         generateBlock();
-        apiCall = new APICall.Builder("getAllCurrencies").build();
+        apiCall = new APICall.Builder("getCurrency").param("code", "YJWCV").build();
         JSONObject response = apiCall.invoke();
-        JSONArray currencies = (JSONArray) response.get("currencies");
-        String currencyId = (String)((JSONObject)currencies.get(0)).get("currency");
-        String code = (String)((JSONObject)currencies.get(0)).get("code");
+        String currencyId = (String)response.get("currency");
+        String code = (String)response.get("code");
 
         // Delete the currency
         apiCall = new APICall.Builder("deleteCurrency").
@@ -38,21 +37,20 @@ public class DeleteCurrencyTest extends BlockchainTest {
         Assert.assertEquals("Unknown currency", response.get("errorDescription"));
 
         // Issue the same currency code again
-        apiCall = new TestCurrencyIssuance.Builder().naming("abcde", "ABCDE", "test1").build();
+        apiCall = new TestCurrencyIssuance.Builder().naming("yjwcv", "YJWCV", "test1").build();
         TestCurrencyIssuance.issueCurrencyApi(apiCall);
         generateBlock();
-        apiCall = new APICall.Builder("getAllCurrencies").build();
+        apiCall = new APICall.Builder("getCurrency").param("code", "YJWCV").build();
         response = apiCall.invoke();
-        currencies = (JSONArray) response.get("currencies");
-        String newCurrencyId = (String)((JSONObject)currencies.get(0)).get("currency");
-        String newCode = (String)((JSONObject)currencies.get(0)).get("code");
+        String newCurrencyId = (String)response.get("currency");
+        String newCode = (String)response.get("code");
         Assert.assertNotEquals(currencyId, newCurrencyId); // this check may fail once in 2^64 tests
         Assert.assertEquals(code, newCode);
     }
 
     @Test
     public void deleteByNonOwnerNotAllowed() {
-        APICall apiCall = new TestCurrencyIssuance.Builder().naming("abcde", "ABCDE", "test1").build();
+        APICall apiCall = new TestCurrencyIssuance.Builder().naming("yjwcv", "YJWCV", "test1").build();
         TestCurrencyIssuance.issueCurrencyApi(apiCall);
         generateBlock();
         apiCall = new APICall.Builder("getAllCurrencies").build();
@@ -78,16 +76,14 @@ public class DeleteCurrencyTest extends BlockchainTest {
 
     @Test
     public void deleteByOwnerNonIssuer() {
-        APICall apiCall = new TestCurrencyIssuance.Builder().naming("abcde", "ABCDE", "test1").build();
+        APICall apiCall = new TestCurrencyIssuance.Builder().naming("yjwcv", "YJWCV", "test1").build();
         TestCurrencyIssuance.issueCurrencyApi(apiCall);
         generateBlock();
 
-        apiCall = new APICall.Builder("getAllCurrencies").build();
+        apiCall = new APICall.Builder("getCurrency").param("code", "YJWCV").build();
         JSONObject response = apiCall.invoke();
-        JSONArray currencies = (JSONArray) response.get("currencies");
-        JSONObject currency = (JSONObject) currencies.get(0);
-        String currencyId = (String) currency.get("currency");
-        String code = (String) currency.get("code");
+        String currencyId = (String)response.get("currency");
+        String code = (String)response.get("code");
 
         // Transfer all units
         apiCall = new APICall.Builder("transferCurrency").
@@ -95,7 +91,7 @@ public class DeleteCurrencyTest extends BlockchainTest {
                 param("recipient", Convert.toUnsignedLong(Account.getAccount(Crypto.getPublicKey(secretPhrase2)).getId())).
                 param("currency", currencyId).
                 param("code", code).
-                param("units", (String) currency.get("maxSupply")).
+                param("units", (String)response.get("maxSupply")).
                 build();
         response = apiCall.invoke();
         Logger.logDebugMessage("transferCurrencyResponse:" + response);
@@ -115,14 +111,13 @@ public class DeleteCurrencyTest extends BlockchainTest {
         Assert.assertEquals("Unknown currency", response.get("errorDescription"));
 
         // Issue the same currency code again by the original issuer
-        apiCall = new TestCurrencyIssuance.Builder().naming("abcde", "ABCDE", "test1").build();
+        apiCall = new TestCurrencyIssuance.Builder().naming("yjwcv", "YJWCV", "test1").build();
         TestCurrencyIssuance.issueCurrencyApi(apiCall);
         generateBlock();
-        apiCall = new APICall.Builder("getAllCurrencies").build();
+        apiCall = new APICall.Builder("getCurrency").param("code", "YJWCV").build();
         response = apiCall.invoke();
-        currencies = (JSONArray) response.get("currencies");
-        String newCurrencyId = (String)((JSONObject)currencies.get(0)).get("currency");
-        String newCode = (String)((JSONObject)currencies.get(0)).get("code");
+        String newCurrencyId = (String)response.get("currency");
+        String newCode = (String)response.get("code");
         Assert.assertNotEquals(currencyId, newCurrencyId); // this check may fail once in 2^64 tests
         Assert.assertEquals(code, newCode);
     }

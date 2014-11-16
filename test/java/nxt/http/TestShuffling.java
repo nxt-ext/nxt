@@ -75,7 +75,7 @@ public class TestShuffling extends BlockchainTest {
         JSONObject getParticipantsResponse = apiCall.invoke();
         Logger.logMessage("getShufflingParticipantsResponse: " + getParticipantsResponse.toJSONString());
 
-        Assert.assertEquals((long) Shuffling.State.PROCESSING.getCode(), getShufflingResponse.get("state"));
+        Assert.assertEquals((long) Shuffling.Stage.PROCESSING.getCode(), getShufflingResponse.get("stage"));
         String shufflingAssignee = (String) getShufflingResponse.get("assignee");
         JSONArray participants = (JSONArray)getParticipantsResponse.get("participants");
         Map<String, String> accountMapping = new HashMap<>();
@@ -226,7 +226,7 @@ public class TestShuffling extends BlockchainTest {
                 build();
         JSONObject getShufflingResponse = apiCall.invoke();
         Logger.logMessage("getShufflingResponse: " + getShufflingResponse.toJSONString());
-        Assert.assertEquals((long) Shuffling.State.DONE.getCode(), getShufflingResponse.get("state"));
+        Assert.assertEquals((long) Shuffling.Stage.DONE.getCode(), getShufflingResponse.get("stage"));
 
         apiCall = new APICall.Builder("shufflingDistribute").
                 param("shuffling", shufflingId).

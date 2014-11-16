@@ -176,7 +176,7 @@ final class JSONData {
         json.put("amount", shuffling.getAmount());
         json.put("cancellationHeight", shuffling.getCancellationHeight());
         json.put("participantCount", shuffling.getParticipantCount());
-        json.put("state", shuffling.getState().getCode());
+        json.put("stage", shuffling.getStage().getCode());
         return json;
     }
 
