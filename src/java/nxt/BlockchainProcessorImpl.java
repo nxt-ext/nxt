@@ -127,15 +127,14 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                         return;
                     }
 
-                    List<BlockImpl> forkBlocks = new ArrayList<>();
-
-                    boolean processedAll = true;
                     JSONArray nextBlocks = getNextBlocks(peer, commonBlockId);
                     if (nextBlocks == null || nextBlocks.size() == 0) {
                         return;
                     }
 
                     synchronized (blockchain) {
+
+                        List<BlockImpl> forkBlocks = new ArrayList<>();
 
                         for (Object o : nextBlocks) {
                             JSONObject blockData = (JSONObject) o;
@@ -145,7 +144,6 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                             } catch (NxtException.NotCurrentlyValidException e) {
                                 Logger.logDebugMessage("Cannot validate block: " + e.toString()
                                         + ", will try again later", e);
-                                processedAll = false;
                                 break;
                             } catch (RuntimeException | NxtException.ValidationException e) {
                                 Logger.logDebugMessage("Failed to parse block: " + e.toString(), e);
@@ -172,15 +170,11 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
 
                         }
 
+                        if (forkBlocks.size() > 0 && blockchain.getHeight() - commonBlock.getHeight() < 720) {
+                            processFork(peer, forkBlocks, commonBlock);
+                        }
+
                     } //synchronized
-
-                    if (forkBlocks.size() > 0) {
-                        processedAll = false;
-                    }
-
-                    if (!processedAll && blockchain.getHeight() - commonBlock.getHeight() < 720) {
-                        processFork(peer, forkBlocks, commonBlock);
-                    }
 
                 } catch (NxtException.StopException e) {
                     Logger.logMessage("Blockchain download stopped: " + e.getMessage());
@@ -301,53 +295,50 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
 
         private void processFork(Peer peer, final List<BlockImpl> forkBlocks, final Block commonBlock) {
 
-            synchronized (blockchain) {
-                BigInteger curCumulativeDifficulty = blockchain.getLastBlock().getCumulativeDifficulty();
+            BigInteger curCumulativeDifficulty = blockchain.getLastBlock().getCumulativeDifficulty();
 
-                List<BlockImpl> myPoppedOffBlocks = popOffTo(commonBlock);
+            List<BlockImpl> myPoppedOffBlocks = popOffTo(commonBlock);
 
-                int pushedForkBlocks = 0;
-                if (blockchain.getLastBlock().getId() == commonBlock.getId()) {
-                    for (BlockImpl block : forkBlocks) {
-                        if (blockchain.getLastBlock().getId() == block.getPreviousBlockId()) {
-                            try {
-                                pushBlock(block);
-                                pushedForkBlocks += 1;
-                            } catch (BlockNotAcceptedException e) {
-                                peer.blacklist(e);
-                                break;
-                            }
-                        }
-                    }
-                }
-
-                if (pushedForkBlocks > 0 && blockchain.getLastBlock().getCumulativeDifficulty().compareTo(curCumulativeDifficulty) < 0) {
-                    Logger.logDebugMessage("Pop off caused by peer " + peer.getPeerAddress() + ", blacklisting");
-                    peer.blacklist();
-                    List<BlockImpl> peerPoppedOffBlocks = popOffTo(commonBlock);
-                    pushedForkBlocks = 0;
-                    for (BlockImpl block : peerPoppedOffBlocks) {
-                        TransactionProcessorImpl.getInstance().processLater(block.getTransactions());
-                    }
-                }
-
-                if (pushedForkBlocks == 0) {
-                    for (int i = myPoppedOffBlocks.size() - 1; i >= 0; i--) {
-                        BlockImpl block = myPoppedOffBlocks.remove(i);
+            int pushedForkBlocks = 0;
+            if (blockchain.getLastBlock().getId() == commonBlock.getId()) {
+                for (BlockImpl block : forkBlocks) {
+                    if (blockchain.getLastBlock().getId() == block.getPreviousBlockId()) {
                         try {
                             pushBlock(block);
+                            pushedForkBlocks += 1;
                         } catch (BlockNotAcceptedException e) {
-                            Logger.logErrorMessage("Popped off block no longer acceptable: " + block.getJSONObject().toJSONString(), e);
+                            peer.blacklist(e);
                             break;
                         }
                     }
-                } else {
-                    for (BlockImpl block : myPoppedOffBlocks) {
-                        TransactionProcessorImpl.getInstance().processLater(block.getTransactions());
+                }
+            }
+
+            if (pushedForkBlocks > 0 && blockchain.getLastBlock().getCumulativeDifficulty().compareTo(curCumulativeDifficulty) < 0) {
+                Logger.logDebugMessage("Pop off caused by peer " + peer.getPeerAddress() + ", blacklisting");
+                peer.blacklist();
+                List<BlockImpl> peerPoppedOffBlocks = popOffTo(commonBlock);
+                pushedForkBlocks = 0;
+                for (BlockImpl block : peerPoppedOffBlocks) {
+                    TransactionProcessorImpl.getInstance().processLater(block.getTransactions());
+                }
+            }
+
+            if (pushedForkBlocks == 0) {
+                for (int i = myPoppedOffBlocks.size() - 1; i >= 0; i--) {
+                    BlockImpl block = myPoppedOffBlocks.remove(i);
+                    try {
+                        pushBlock(block);
+                    } catch (BlockNotAcceptedException e) {
+                        Logger.logErrorMessage("Popped off block no longer acceptable: " + block.getJSONObject().toJSONString(), e);
+                        break;
                     }
                 }
-
-            } // synchronized
+            } else {
+                for (BlockImpl block : myPoppedOffBlocks) {
+                    TransactionProcessorImpl.getInstance().processLater(block.getTransactions());
+                }
+            }
 
         }
 
