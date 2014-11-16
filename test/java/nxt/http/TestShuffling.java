@@ -22,6 +22,16 @@ public class TestShuffling extends BlockchainTest {
         verify(shufflingId);
         distribute(shufflingId);
         tryCancel(shufflingId);
+
+        // Verify that only fees were reduced
+        Assert.assertEquals(-4 * Constants.ONE_NXT, testers.get(1).getBalanceDiff());
+        Assert.assertEquals(-4 * Constants.ONE_NXT, testers.get(1).getUnconfirmedBalanceDiff());
+        Assert.assertEquals(-3 * Constants.ONE_NXT, testers.get(2).getBalanceDiff());
+        Assert.assertEquals(-3 * Constants.ONE_NXT, testers.get(2).getUnconfirmedBalanceDiff());
+        Assert.assertEquals(-3 * Constants.ONE_NXT, testers.get(3).getBalanceDiff());
+        Assert.assertEquals(-3 * Constants.ONE_NXT, testers.get(3).getUnconfirmedBalanceDiff());
+        Assert.assertEquals(-3 * Constants.ONE_NXT, testers.get(4).getBalanceDiff());
+        Assert.assertEquals(-3 * Constants.ONE_NXT, testers.get(4).getUnconfirmedBalanceDiff());
     }
 
     private String create() {

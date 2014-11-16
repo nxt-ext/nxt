@@ -307,7 +307,6 @@ public final class Shuffling {
         listeners.notify(this, Event.SHUFFLING_CANCELLED);
     }
 
-    // TODO check balances in unit test
     private void updateBalance(long accountId, long amount) {
         if (isCurrency()) {
             Account.getAccount(accountId).addToCurrencyUnits(currencyId, amount);
