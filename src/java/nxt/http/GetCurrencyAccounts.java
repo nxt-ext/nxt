@@ -30,7 +30,7 @@ public final class GetCurrencyAccounts extends APIServlet.APIRequestHandler {
         try (DbIterator<Account.AccountCurrency> iterator = currency.getAccounts(height, firstIndex, lastIndex)) {
             while (iterator.hasNext()) {
                 Account.AccountCurrency accountCurrency = iterator.next();
-                accountCurrencies.add(JSONData.accountCurrency(accountCurrency));
+                accountCurrencies.add(JSONData.accountCurrency(accountCurrency, true));
             }
         }
 

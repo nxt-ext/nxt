@@ -100,6 +100,7 @@ public final class APIServlet extends HttpServlet {
         map.put("getAccountTransactions", GetAccountTransactions.instance);
         map.put("getAccountLessors", GetAccountLessors.instance);
         map.put("getAccountAssets", GetAccountAssets.instance);
+        map.put("getAccountCurrencies", GetAccountCurrencies.instance);
         map.put("sellAlias", SellAlias.instance);
         map.put("buyAlias", BuyAlias.instance);
         map.put("getAlias", GetAlias.instance);
