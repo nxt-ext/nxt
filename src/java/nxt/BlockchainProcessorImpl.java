@@ -127,53 +127,52 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                         return;
                     }
 
-                    long currentBlockId = commonBlockId;
                     List<BlockImpl> forkBlocks = new ArrayList<>();
 
                     boolean processedAll = true;
-                    int requestCount = 0;
-                    outer:
-                    while (forkBlocks.size() < 1440 && requestCount++ < 10) {
-                        JSONArray nextBlocks = getNextBlocks(peer, currentBlockId);
-                        if (nextBlocks == null || nextBlocks.size() == 0) {
-                            break;
-                        }
+                    JSONArray nextBlocks = getNextBlocks(peer, commonBlockId);
+                    if (nextBlocks == null || nextBlocks.size() == 0) {
+                        return;
+                    }
 
-                        synchronized (blockchain) {
+                    synchronized (blockchain) {
 
-                            for (Object o : nextBlocks) {
-                                JSONObject blockData = (JSONObject) o;
-                                BlockImpl block;
+                        for (Object o : nextBlocks) {
+                            JSONObject blockData = (JSONObject) o;
+                            BlockImpl block;
+                            try {
+                                block = BlockImpl.parseBlock(blockData);
+                            } catch (NxtException.NotCurrentlyValidException e) {
+                                Logger.logDebugMessage("Cannot validate block: " + e.toString()
+                                        + ", will try again later", e);
+                                processedAll = false;
+                                break;
+                            } catch (RuntimeException | NxtException.ValidationException e) {
+                                Logger.logDebugMessage("Failed to parse block: " + e.toString(), e);
+                                peer.blacklist(e);
+                                return;
+                            }
+
+                            if (blockchain.getLastBlock().getId() == block.getPreviousBlockId()) {
                                 try {
-                                    block = BlockImpl.parseBlock(blockData);
-                                } catch (NxtException.NotCurrentlyValidException e) {
-                                    Logger.logDebugMessage("Cannot validate block: " + e.toString()
-                                            + ", will try again later", e);
-                                    processedAll = false;
-                                    break outer;
-                                } catch (RuntimeException | NxtException.ValidationException e) {
-                                    Logger.logDebugMessage("Failed to parse block: " + e.toString(), e);
+                                    pushBlock(block);
+                                    if (blockchain.getHeight() - commonBlock.getHeight() == 720 - 1) {
+                                        break;
+                                    }
+                                } catch (BlockNotAcceptedException e) {
                                     peer.blacklist(e);
                                     return;
                                 }
-                                currentBlockId = block.getId();
-
-                                if (blockchain.getLastBlock().getId() == block.getPreviousBlockId()) {
-                                    try {
-                                        pushBlock(block);
-                                    } catch (BlockNotAcceptedException e) {
-                                        peer.blacklist(e);
-                                        return;
-                                    }
-                                } else if (!BlockDb.hasBlock(block.getId())) {
-                                    forkBlocks.add(block);
+                            } else if (!BlockDb.hasBlock(block.getId())) {
+                                forkBlocks.add(block);
+                                if (forkBlocks.size() == 720 - 1) {
+                                    break;
                                 }
-
                             }
 
-                        } //synchronized
+                        }
 
-                    }
+                    } //synchronized
 
                     if (forkBlocks.size() > 0) {
                         processedAll = false;
