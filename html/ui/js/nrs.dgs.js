@@ -23,7 +23,7 @@ var NRS = (function(NRS, $, undefined) {
 			"<span class='quantity'><strong>" + $.t("quantity") + "</strong>: " + NRS.format(good.quantity) + "</span>&nbsp; " +
 			"<span class='tags'><strong>" + $.t("tags") + "</strong>: ";
 
-		var tags = good.tags.split(',');
+		var tags = good.parsedTags;
 		for (var i=0; i<tags.length; i++) {
 			if (i > 0) {
 				html += ' | ';
