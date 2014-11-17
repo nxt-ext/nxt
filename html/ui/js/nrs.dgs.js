@@ -20,7 +20,7 @@ var NRS = (function(NRS, $, undefined) {
 			"</div>" +
 			"<h3 class='title'><a href='#' data-goods='" + String(good.goods).escapeHTML() + "' data-toggle='modal' data-target='#dgs_purchase_modal'>" + String(good.name).escapeHTML() + "</a></h3>" +
 			"<div class='price'><strong>" + NRS.formatAmount(good.priceNQT) + " NXT</strong></div>" +
-			"<div class='showmore'><div class='moreblock description'>" + String(good.description).escapeHTML().nl2br() + "</div></div>" +
+			"<div class='showmore'><div class='moreblock description'>" + String(good.description).autoLink().nl2br() + "</div></div>" +
 			"<div>" +
 			"<div style='float:right;'><a href='#' class='feedback' data-goods='" + String(good.goods).escapeHTML() + "' data-toggle='modal' data-target='#dgs_show_feedback_modal'></a></div>" +
 			"<span class='quantity'><strong>" + $.t("quantity") + "</strong>: " + NRS.format(good.quantity) + "</span>&nbsp;&nbsp; " +
