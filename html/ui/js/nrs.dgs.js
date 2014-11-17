@@ -11,7 +11,8 @@ var NRS = (function(NRS, $, undefined) {
 
 	NRS.getMarketplaceItemHTML = function(good) {
 		var html = "";
-
+		var id = 'good_'+ String(good.goods).escapeHTML();
+		html += '<div id="' + id +'" style="border:1px solid #ccc;padding:12px;margin-top:12px;margin-bottom:12px;">';
 		html += "<div style='float:right;color: #999999;background:white;padding:5px;border:1px solid #ccc;border-radius:3px'>" +
 			"<strong>" + $.t("seller") + '</strong>: <span><a href="#" onclick="event.preventDefault();NRS.dgs_search_seller(\'' + NRS.getAccountFormatted(good, "seller") + '\')">' + NRS.getAccountTitle(good, "seller") + "</a></span> " +
 			"(<a href='#' data-user='" + NRS.getAccountFormatted(good, "seller") + "' class='user_info'>" + $.t('info') + "</a>)<br>" +
@@ -20,19 +21,32 @@ var NRS = (function(NRS, $, undefined) {
 			"<h3 class='title'><a href='#' data-goods='" + String(good.goods).escapeHTML() + "' data-toggle='modal' data-target='#dgs_purchase_modal'>" + String(good.name).escapeHTML() + "</a></h3>" +
 			"<div class='price'><strong>" + NRS.formatAmount(good.priceNQT) + " NXT</strong></div>" +
 			"<div class='showmore'><div class='moreblock description'>" + String(good.description).escapeHTML().nl2br() + "</div></div>" +
+			"<div>" +
+			"<div style='float:right;'><a href='#' class='feedback' data-goods='" + String(good.goods).escapeHTML() + "' data-toggle='modal' data-target='#dgs_show_feedback_modal'></a></div>" +
 			"<span class='quantity'><strong>" + $.t("quantity") + "</strong>: " + NRS.format(good.quantity) + "</span>&nbsp;&nbsp; " +
 			"<span class='purchases'><strong>" + $.t("purchases") + "</strong>: " + NRS.format(good.numberOfPurchases) + "</span>&nbsp;&nbsp; " +
-			"<span class='tags'><strong>" + $.t("tags") + "</strong>: ";
+			"<span class='tags' style='display:inline-block;'><strong>" + $.t("tags") + "</strong>: ";
 
 		var tags = good.parsedTags;
 		for (var i=0; i<tags.length; i++) {
-			html += '<div style="display:inline-block;background-color:#fff;padding:2px 5px 2px 5px;border:1px solid #f2f2f2;">';
-			html += '<a href="#" onclick="event.preventDefault(); NRS.dgs_search_tag(\'' + String(tags[i]).escapeHTML() + '\');">';
+			html += '<span style="display:inline-block;background-color:#fff;padding:2px 5px 2px 5px;border:1px solid #f2f2f2;">';
+			html += '<a href="#" class="tags" onclick="event.preventDefault(); NRS.dgs_search_tag(\'' + String(tags[i]).escapeHTML() + '\');">';
 			html += String(tags[i]).escapeHTML() + '</a>';
-			html += '</div>';
+			html += '</span>';
 		}
+		html += "</span>";
+		html += "</div>"
+		html += '</div>';
 
-		html += "</span><hr />";
+
+		NRS.sendRequest("getDGSGoodsPurchases+", {
+			"goods": String(good.goods),
+			"withPublicFeedbacksOnly": true,
+		}, function(response) {
+			if (response.purchases.length && response.purchases.length > 0) {
+				$('#' + id + ' a.feedback').text($.t('show_feedback'));
+			}
+		});
 
 		return html;
 	}
@@ -994,6 +1008,27 @@ var NRS = (function(NRS, $, undefined) {
 
 		$(this).find(".goods_info").html($.t("loading"));
 		$("#dgs_quantity_change_current_quantity, #dgs_price_change_current_price, #dgs_quantity_change_quantity, #dgs_price_change_price").val("0");
+	});
+
+	$("#dgs_show_feedback_modal").on("show.bs.modal", function(e) {
+		var $modal = $(this);
+		var $invoker = $(e.relatedTarget);
+		var goods = $invoker.data("goods");
+		$modal.find(".modal_content table").empty();
+		NRS.sendRequest("getDGSGoodsPurchases+", {
+			"goods": goods,
+			"withPublicFeedbacksOnly": true,
+		}, function(response) {
+			if (response.purchases.length && response.purchases.length > 0) {
+				console.log(JSON.stringify(response));
+				for (var i=0; i<response.purchases.length; i++) {
+					var purchase = response.purchases[i];
+					if (purchase.publicFeedbacks.length && purchase.publicFeedbacks.length > 0) {
+						$modal.find(".modal_content table").append('<tr><td>' + String(purchase.publicFeedbacks[0]).escapeHTML() + '</td></tr>');
+					}
+				}
+			}
+		});
 	});
 
 	$(".dgs_my_purchases_link").click(function(e) {
