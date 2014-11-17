@@ -2518,15 +2518,15 @@
 							<div class="form-group">
 								<label data-i18n="type">TYPE</label>
                                 <div class="input-group">
-                                    <input type="checkbox" name="exchangeable" id="issue_currency_exchangeable" value="1" />
+                                    <input type="checkbox" name="type" id="issue_currency_exchangeable" value="1" />
                                     <label for="issue_currency_exchangeable" style="font-weight:normal;" tabindex="7" data-i18n="exchangeable">Exchangeable</label>
                                 </div>
                                 <div class="input-group">
-                                    <input type="checkbox" name="controllable" id="issue_currency_controllable" value="2" />
+                                    <input type="checkbox" name="type" id="issue_currency_controllable" value="2" />
                                     <label for="issue_currency_controllable" style="font-weight:normal;" tabindex="7" data-i18n="controllable">Controllable</label>
                                 </div>
                                 <div class="input-group">
-                                    <input type="checkbox" name="reservable" id="issue_currency_reservable" class="issue_currency_reservable" value="4" />
+                                    <input type="checkbox" name="type" id="issue_currency_reservable" class="issue_currency_reservable" value="4" />
                                     <label for="issue_currency_reservable" style="font-weight:normal;" tabindex="7" data-i18n="reservable">Reservable</label>
                                 </div>
                                 <div class="form-group advanced optional_reserve">
@@ -2534,11 +2534,11 @@
                                     <input type="number" name="minReservePerUnitNQT" id="issue_currency_min_reserve" class="form-control" min="1" placeholder="Minimum Reserve" data-i18n="minimum_reserve" tabindex="8">
                                 </div>
                                 <div class="input-group">
-                                    <input type="checkbox" name="claimable" id="issue_currency_claimable" value="8" />
+                                    <input type="checkbox" name="type" id="issue_currency_claimable" value="8" />
                                     <label for="issue_currency_claimable" style="font-weight:normal;" tabindex="7" data-i18n="claimable">Claimable</label>
                                 </div>
                                 <div class="input-group">
-                                    <input type="checkbox" name="mintable" id="issue_currency_mintable"  class="issue_currency_mintable" value="10" />
+                                    <input type="checkbox" name="type" id="issue_currency_mintable"  class="issue_currency_mintable" value="10" />
                                     <label for="issue_currency_mintable" style="font-weight:normal;" tabindex="7" data-i18n="mintable">Mintable</label>
                                 </div>
                                 <div class="form-group advanced optional_mint">
@@ -2578,7 +2578,7 @@
 							</div>
                             <div class="form-group">
                                 <label for="issue_currency_issuance_height" data-i18n="issuance_height">ISSUANCE HEIGHT</label>
-                                <input type="number" name="issuanceHeight" id="issue_currency_issuance_height" class="form-control" min="0" placeholder="Issuance Height" data-i18n="issuance_height" tabindex="7">
+                                <input type="number" name="issuanceHeight" id="issue_currency_issuance_height" class="form-control" min="0" placeholder="Issuance Height" data-i18n="issuance_height" tabindex="7" value="0" disabled>
                             </div>
                             <div class="row">
 								<div class="col-xs-6 col-sm-6 col-md-6 advanced" data-advanced="6">
