@@ -305,6 +305,11 @@ var NRS = (function(NRS, $, undefined) {
 		var data = NRS.getFormData($modal.find("form:first"));
 
 		data.description = $.trim(data.description);
+		
+		data.type = 0;
+		$("[name='type']:checked").each(function() {
+        	data.type += parseInt($(this).val(), 10);
+    	});
 
 		if (!data.description) {
 			return {
@@ -329,16 +334,17 @@ var NRS = (function(NRS, $, undefined) {
 		}
 	}
 	
-	$('#issue_currency_exchangeable').change(function() {
+	$('#issue_currency_reservable').change(function() {
         if($(this).is(":checked")){
-            //$("#issue_currency_claimable").prop("disabled", true);
-            $("#issue_currency_issuance_height").val(0)
-            $("#issue_currency_issuance_height").prop("disabled", true);
-        }
-		else{
-			//$("#issue_currency_claimable").prop("disabled", false);
+        	//$("#issue_currency_claimable").prop("disabled", false);
 			$("#issue_currency_issuance_height").val("")
 			$("#issue_currency_issuance_height").prop("disabled", false);
+            
+        }
+		else{
+			//$("#issue_currency_claimable").prop("disabled", true);
+            $("#issue_currency_issuance_height").val(0)
+            $("#issue_currency_issuance_height").prop("disabled", true);
 		}
     });
     $('#issue_currency_claimable').change(function() {
