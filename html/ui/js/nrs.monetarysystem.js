@@ -114,37 +114,21 @@ var NRS = (function(NRS, $, undefined) {
 	/* CURRENCIES PAGE */
 	NRS.pages.currencies = function() {
 		if (NRS.currenciesPageType == "my_currencies") {
-			NRS.sendRequest("getAllCurrencies+", {
+			NRS.sendRequest("getAccountCurrencies+", {
 				"account": NRS.accountRS,
 				"firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
 				"lastIndex": NRS.pageNumber * NRS.itemsPerPage
 			}, function(response, input) {
-				if (response.currencies && response.currencies.length) {
-					if (response.currencies.length > NRS.itemsPerPage) {
+				if (response.accountCurrencies && response.accountCurrencies.length) {
+					if (response.accountCurrencies.length > NRS.itemsPerPage) {
 						NRS.hasMorePages = true;
-						response.currencies.pop();
+						response.accountCurrencies.pop();
 					}
 					var rows = "";
-					for (var i = 0; i < response.currencies.length; i++) {
-						var currency = response.currencies[i];
-						/*if (currency.type == 1)
-							currency.type = "Exchangeable";
-						else if (currency.type == 2)
-							currency.type = "Controllable";
-						else if (currency.type == 4)
-							currency.type = "Reservable";
-						else if (currency.type == 8)
-							currency.type = "Claimable";
-						else if (currency.type == 10)
-							currency.type = "Mintable";
-						else if (currency.type == 20)
-							currency.type = "Shuffleable";*/
-						rows += "<tr><td><a href='#' onClick='NRS.goToCurrency(&quot;" + String(currency.code) + "&quot;)' >" + String(currency.currency).escapeHTML() + "</a></td>" +
-							"<td>" + currency.name + "</td>" +
-							"<td>" + currency.code + "</td>" +
-							"<td>" + currency.type + "</td>" +
-							"<td>" + currency.currentSupply + "</td>" +
-							"<td><a href='#' data-toggle='modal' data-target='#transfer_currency_modal' data-currency='" + String(currency.currency).escapeHTML() + "' data-name='" + String(currency.name).escapeHTML() + "' data-decimals='" + String(currency.decimals).escapeHTML() + "'>" + $.t("transfer") + "</a></td>" +
+					for (var i = 0; i < response.accountCurrencies.length; i++) {
+						var currency = response.accountCurrencies[i];
+						rows += "<tr><td>" + String(currency.currency).escapeHTML() + "</td>" +
+							"<td>" + currency.units + "</td>" +
 							"</tr>";
 					}
 					NRS.dataLoaded(rows);
