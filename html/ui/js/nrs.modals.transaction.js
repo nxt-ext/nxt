@@ -453,6 +453,38 @@ var NRS = (function(NRS, $, undefined) {
 					});
 
 					break;
+                case 6:
+                    async = true;
+
+                    NRS.sendRequest("getTransaction", {
+                        "transaction": transaction.transaction
+                    }, function(transaction) {
+                        if (transaction.attachment.asset) {
+                            NRS.sendRequest("getAsset", {
+                                "asset": transaction.attachment.asset
+                            }, function(asset) {
+                                var data = {
+                                    "type": $.t("dividend_payment"),
+                                    "asset_name": asset.name,
+                                    "amount_per_asset": NRS.formatOrderPricePerWholeQNT(transaction.attachment.amountNQTPerQNT, asset.decimals) + " NXT",
+                                    "height": transaction.attachment.height
+                                };
+
+                                if (transaction.sender != NRS.account) {
+                                    data["sender"] = NRS.getAccountTitle(transaction, "sender");
+                                }
+
+                                $("#transaction_info_table tbody").append(NRS.createInfoTable(data));
+                                $("#transaction_info_table").show();
+
+                                $("#transaction_info_modal").modal("show");
+                                NRS.fetchingModalData = false;
+                            });
+                        } else {
+                            NRS.fetchingModalData = false;
+                        }
+                    });
+                    break;
 				default:
 					incorrect = true;
 					break;
