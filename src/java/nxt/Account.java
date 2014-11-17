@@ -737,10 +737,6 @@ public final class Account {
         return accountAssetTable.getManyBy(new DbClause.LongClause("account_id", this.id), from, to);
     }
 
-    public DbIterator<AccountCurrency> getCurrencies(int from, int to) {
-        return accountCurrencyTable.getManyBy(new DbClause.LongClause("account_id", this.id), from, to);
-    }
-
     public DbIterator<AccountAsset> getAssets(int height, int from, int to) {
         if (height < 0) {
             return getAssets(from, to);
