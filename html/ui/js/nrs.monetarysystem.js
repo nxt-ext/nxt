@@ -113,45 +113,96 @@ var NRS = (function(NRS, $, undefined) {
 
 	/* CURRENCIES PAGE */
 	NRS.pages.currencies = function() {
-		NRS.sendRequest("getAllCurrencies+", {
-			"account": NRS.accountRS,
-			"firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
-			"lastIndex": NRS.pageNumber * NRS.itemsPerPage
-		}, function(response, input) {
-			if (response.currencies && response.currencies.length) {
-				if (response.currencies.length > NRS.itemsPerPage) {
-					NRS.hasMorePages = true;
-					response.currencies.pop();
+		if (NRS.currenciesPageType == "my_currencies") {
+			NRS.sendRequest("getAllCurrencies+", {
+				"account": NRS.accountRS,
+				"firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
+				"lastIndex": NRS.pageNumber * NRS.itemsPerPage
+			}, function(response, input) {
+				if (response.currencies && response.currencies.length) {
+					if (response.currencies.length > NRS.itemsPerPage) {
+						NRS.hasMorePages = true;
+						response.currencies.pop();
+					}
+					var rows = "";
+					for (var i = 0; i < response.currencies.length; i++) {
+						var currency = response.currencies[i];
+						/*if (currency.type == 1)
+							currency.type = "Exchangeable";
+						else if (currency.type == 2)
+							currency.type = "Controllable";
+						else if (currency.type == 4)
+							currency.type = "Reservable";
+						else if (currency.type == 8)
+							currency.type = "Claimable";
+						else if (currency.type == 10)
+							currency.type = "Mintable";
+						else if (currency.type == 20)
+							currency.type = "Shuffleable";*/
+						rows += "<tr><td><a href='#' onClick='NRS.goToCurrency(&quot;" + String(currency.code) + "&quot;)' >" + String(currency.currency).escapeHTML() + "</a></td>" +
+							"<td>" + currency.name + "</td>" +
+							"<td>" + currency.code + "</td>" +
+							"<td>" + currency.type + "</td>" +
+							"<td>" + currency.currentSupply + "</td>" +
+							"<td><a href='#' data-toggle='modal' data-target='#transfer_currency_modal' data-currency='" + String(currency.currency).escapeHTML() + "' data-name='" + String(currency.name).escapeHTML() + "' data-decimals='" + String(currency.decimals).escapeHTML() + "'>" + $.t("transfer") + "</a></td>" +
+							"</tr>";
+					}
+					NRS.dataLoaded(rows);
+				} else {
+					NRS.dataLoaded();
 				}
-				var rows = "";
-				for (var i = 0; i < response.currencies.length; i++) {
-               		var currency = response.currencies[i];
-               		if (currency.type == 1)
-               			currency.type = "Exchangeable";
-               		else if (currency.type == 2)
-               			currency.type = "Controllable";
-               		else if (currency.type == 4)
-               			currency.type = "Reservable";
-               		else if (currency.type == 8)
-               			currency.type = "Claimable";
-               		else if (currency.type == 10)
-               			currency.type = "Mintable";
-               		else if (currency.type == 20)
-               			currency.type = "Shuffleable";
-					rows += "<tr><td><a href='#' onClick='NRS.goToCurrency(&quot;" + String(currency.code) + "&quot;)' >" + String(currency.currency).escapeHTML() + "</a></td>" +
-                  		"<td>" + currency.name + "</td>" +
-                  		"<td>" + currency.code + "</td>" +
-                  		"<td>" + currency.type + "</td>" +
-                  		"<td>" + currency.currentSupply + "</td>" +
-                  		"<td><a href='#' data-toggle='modal' data-target='#transfer_currency_modal' data-currency='" + String(currency.code).escapeHTML() + "' data-name='" + String(currency.name).escapeHTML() + "' data-decimals='" + String(currency.decimals).escapeHTML() + "'>" + $.t("transfer") + "</a></td>" +
-                  		"</tr>";
+			});
+		} else {
+			NRS.sendRequest("getAllCurrencies+", {
+				"firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
+				"lastIndex": NRS.pageNumber * NRS.itemsPerPage
+			}, function(response, input) {
+				if (response.currencies && response.currencies.length) {
+					if (response.currencies.length > NRS.itemsPerPage) {
+						NRS.hasMorePages = true;
+						response.currencies.pop();
+					}
+					var rows = "";
+					for (var i = 0; i < response.currencies.length; i++) {
+						var currency = response.currencies[i];
+						/*if (currency.type == 1)
+							currency.type = "Exchangeable";
+						else if (currency.type == 2)
+							currency.type = "Controllable";
+						else if (currency.type == 4)
+							currency.type = "Reservable";
+						else if (currency.type == 8)
+							currency.type = "Claimable";
+						else if (currency.type == 10)
+							currency.type = "Mintable";
+						else if (currency.type == 20)
+							currency.type = "Shuffleable";*/
+						rows += "<tr><td><a href='#' onClick='NRS.goToCurrency(&quot;" + String(currency.code) + "&quot;)' >" + String(currency.currency).escapeHTML() + "</a></td>" +
+							"<td>" + currency.name + "</td>" +
+							"<td>" + currency.code + "</td>" +
+							"<td>" + currency.type + "</td>" +
+							"<td>" + currency.currentSupply + "</td>" +
+							"<td><a href='#' data-toggle='modal' data-target='#transfer_currency_modal' data-currency='" + String(currency.currency).escapeHTML() + "' data-name='" + String(currency.name).escapeHTML() + "' data-decimals='" + String(currency.decimals).escapeHTML() + "'>" + $.t("transfer") + "</a></td>" +
+							"</tr>";
+					}
+					NRS.dataLoaded(rows);
+				} else {
+					NRS.dataLoaded();
 				}
-				NRS.dataLoaded(rows);
-			} else {
-				NRS.dataLoaded();
-			}
-		});
+			});
+		}
 	};
+	
+	$("#currencies_page_type .btn").click(function(e) {
+		e.preventDefault();
+
+		NRS.currenciesPageType = $(this).data("type");
+
+		$("#currencies_table tbody").empty();
+		$("#currencies_table").parent().addClass("data-loading").removeClass("data-empty");
+
+		NRS.loadPage("currencies");
+	});
 	
 	NRS.goToCurrency = function(currency) {
 		$("#currency_search input[name=q]").val(currency);
@@ -159,20 +210,21 @@ var NRS = (function(NRS, $, undefined) {
 		$("ul.sidebar-menu a[data-page=monetary_system]").last().trigger("click");
 	};
 	
+	/* Transfer Currency Model */
 	$("#transfer_currency_modal").on("show.bs.modal", function(e) {
 		var $invoker = $(e.relatedTarget);
 
-		var currencyCode = $invoker.data("currency");
+		var currency = $invoker.data("currency");
 		var currencyName = $invoker.data("name");
 		var decimals = $invoker.data("decimals");
 
-		$("#transfer_currency_currency").val(currencyCode);
+		$("#transfer_currency_currency").val(currency);
 		$("#transfer_currency_decimals").val(decimals);
 		$("#transfer_currency_name, #transfer_currency_quantity_name").html(String(currencyName).escapeHTML());
 		$("#transfer_currency_available").html("");
 		
 		NRS.sendRequest("getCurrencyAccounts+", {
-			"code": currencyCode,
+			"currency": currency,
 			"firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
 			"lastIndex": NRS.pageNumber * NRS.itemsPerPage
 		}, function(response, input) {

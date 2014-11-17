@@ -153,7 +153,13 @@ var NRS = (function(NRS, $, undefined) {
 				} else if (transaction.type == 4) {
 					switch (transaction.subtype) {
 						case 0:
-							rows += '<i title="' + $.t("balance_leasing") + '" class="fa fa-bank"></i>';
+							rows += '<i title="' + $.t("balance_leasing") + '" class="fa fa-money"></i> <i class="fa fa-arrow-circle-o-right">';
+							break;
+					}
+				} else if (transaction.type == 5) {
+					switch (transaction.subtype) {
+						case 0:
+							rows += '<i title="' + $.t("issue_currency") + '" class="fa fa-bank"></i>';
 							break;
 					}
 				}
@@ -428,7 +434,13 @@ var NRS = (function(NRS, $, undefined) {
 				} else if (transaction.type == 4) {
 					switch (transaction.subtype) {
 						case 0:
-							rows += '<i title="' + $.t("balance_leasing") + '" class="fa fa-bank"></i>';
+							rows += '<i title="' + $.t("balance_leasing") + '" class="fa fa-money"></i> <i class="fa fa-arrow-circle-o-right">';
+							break;
+					}
+				} else if (transaction.type == 5) {
+					switch (transaction.subtype) {
+						case 0:
+							rows += '<i title="' + $.t("issue_currency") + '" class="fa fa-bank"></i>';
 							break;
 					}
 				}

@@ -257,11 +257,11 @@
                         	</ul>
                         </li>
                         <li class="treeview" id="sidebar_monetary_system">
-                        	<a href="#" data-page="monetary_system"><i class="fa fa-signal"></i><span data-i18n="monetary_system">Monetary System</span><i class="fa pull-right fa-angle-right" style="padding-top:3px"></i></a>
+                        	<a href="#" data-page="monetary_system"><i class="fa fa-bank"></i><span data-i18n="monetary_system">Monetary System</span><i class="fa pull-right fa-angle-right" style="padding-top:3px"></i></a>
                             <ul class="treeview-menu" style="display: none;">
                                  <li><a href="#" data-page="monetary_system"><i class="fa fa-angle-double-right"></i> <span data-i18n="monetary_system">Monetary System</span></a></li>
                                  <li><a href="#" data-page="exchange_history"><i class="fa fa-angle-double-right"></i> <span data-i18n="my_exchange_history">My Exchange History</span></a></li>
-                            	<li><a href="#" data-page="currencies"><i class="fa fa-angle-double-right"></i> <span data-i18n="my_currencies">My Currencies</span></a></li>
+                            	<li><a href="#" data-page="currencies"><i class="fa fa-angle-double-right"></i> <span data-i18n="currencies">Currencies</span></a></li>
                                 <li><a href="#" data-toggle="modal" data-target="#issue_currency_modal"><i class="fa fa-angle-double-right"></i> <span data-i18n="issue_currency">Issue Currency</span></a></li>
                                 <li><a href="#" data-toggle="modal" data-target="#publish_exchange_offer_modal"><i class="fa fa-angle-double-right"></i> <span data-i18n="issue_currency">Publish Exchange Offer</span></a></li>
                         	</ul>
@@ -1081,7 +1081,19 @@
                 </div>
 
                 <div id="currencies_page" class="paginated page">
-                    <section class="content-header"><h1 data-i18n="currencies">Currencies</h1></section>
+                    <section class="content-header">
+                    	<h1 data-i18n="currencies">Currencies</h1>
+                    	<div style="position:absolute;top:9px;right:9px;">
+							<div class="btn-group" data-toggle="buttons" id="currencies_page_type">
+								<label class="btn btn-default active" data-type="all">
+									<input type="radio" name="currencies_page_type"> <span data-i18n="all_currencies">All Currencies</span>
+								</label>
+								<label class="btn btn-default" data-type="my_currencies">
+									<input type="radio" name="currencies_page_type"> <span data-i18n="my_currencies">My Currencies</span>
+								</label>
+							</div>
+	                	</div>
+                    </section>
                     <section class="content">
                         <div class="data-container data-loading">
                             <table class="table table-striped" id="currencies_table">
@@ -2490,7 +2502,6 @@
 		      		</div>
 			      	<div class="modal-body">
 						<form role="form" autocomplete="off">
-							<div class="callout callout-danger never_hide" data-i18n="[html]issue_currency_warning"><strong>Warning</strong>: Once submitted, you will not be able to change this information again.</div>
 							<div class="callout callout-danger error_message" style="display:none"></div>
 							<div class="form-group">
 								<label for="issue_currency_name"><span data-i18n="currency_name">CURRENCY NAME</span> <i class="fa fa-question-circle show_popover" data-content="The currency name is unique. Should be between 3 and 10 characters long." data-i18n="[data-content]currency_name_help" data-container="body" style="color:#4CAA6E" ></i></label>
