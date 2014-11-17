@@ -6,9 +6,11 @@ var NRS = (function(NRS, $, undefined) {
 	/* MONETARY SYSTEM PAGE */
 	$("#currency_search").on("submit", function(e) {
 		e.preventDefault();
-		$( "#MSnoCode" ).hide();
-		$( "#MScode" ).show();
+		$("#MSnoCode").hide();
+		$("#MScode").show();
 		var currencyCode = $.trim($("#currency_search input[name=q]").val());
+		$("#buy_currency_with_nxt").html("Buy " + currencyCode + " with NXT");
+		$(".currency_name").html(String(currencyCode).escapeHTML());
 		NRS.sendRequest("getSellOffers+", {
 			"code": currencyCode,
 			"firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
@@ -111,6 +113,24 @@ var NRS = (function(NRS, $, undefined) {
 	});
 	$("#currency_search input[name=q]").keyup(function(e) {
 		this.value = this.value.toLocaleUpperCase();
+	});
+	
+	/* Monetary System Buy/Sell boxes */
+	$("#buy_currency_box .box-header, #sell_currency_box .box-header").click(function(e) {
+		e.preventDefault();
+		//Find the box parent        
+		var box = $(this).parents(".box").first();
+		//Find the body and the footer
+		var bf = box.find(".box-body, .box-footer");
+		if (!box.hasClass("collapsed-box")) {
+			box.addClass("collapsed-box");
+			$(this).find(".btn i.fa").removeClass("fa-minus").addClass("fa-plus");
+			bf.slideUp();
+		} else {
+			box.removeClass("collapsed-box");
+			bf.slideDown();
+			$(this).find(".btn i.fa").removeClass("fa-plus").addClass("fa-minus");
+		}
 	});
 
 	/* CURRENCIES PAGE */

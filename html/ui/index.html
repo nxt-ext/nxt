@@ -1138,6 +1138,64 @@
                     <section class="content" id="MScode" style="display:none">
 	                 	<div class="row">
 	                 	    <div class="col-md-6">
+	                 	    	<div class="box box-solid box-info collapsed-box" id="buy_currency_box">
+									<div class="box-header" style="background-color:#DFF0D9;color: #48AB6C;">
+									<h3 class="box-title" id="buy_currency_with_nxt"></h3>
+									   <div class="box-tools pull-right">
+										<button class="btn btn-info btn-sm" style="background-color: #48AB6C"><i class="fa fa-plus"></i></button>
+										</div>
+									</div>
+									<div class="box-body no-padding" style="display:none">
+										<div style="background-color:#DFF0D9;color: #666;padding-left:10px;padding-right: 10px;padding-top: 0px;padding-bottom:3px;" id="buy_automatic_price"><strong data-i18n="balance">Balance</strong>: <span id="your_nxt_balance"></span> NXT</div>
+								
+										<form role="form" class="form-horizontal" style="padding: 10px;;max-width:350px;margin-left:auto;margin-right:auto;" autocomplete="off">
+											<div style="margin-left:-20px">
+												<div class="form-group">
+													<label for="buy_currency_quantity" class="col-sm-3 control-label" data-i18n="quantity">Quantity</label>
+													<div class="col-sm-9">
+														<div class="input-group">
+															<input id="buy_currency_quantity" type="text" name="buy_currency_quantity" value="0" class="form-control" data-type="buy" />
+															<span class="input-group-addon"><span class="currency_name"></span></span>
+														</div>
+													</div>
+												</div>
+												<div class="form-group">
+													<label for="buy_currency_price" class="col-sm-3 control-label" data-i18n="price">Price</label>
+													<div class="col-sm-9">
+														<div class="input-group">
+															<input id="buy_currency_price" type="text" value="0" name="buy_currency_price" class="form-control" data-type="buy" />
+															<span class="input-group-addon">NXT / <span class="currency_name"></span></span>
+														</div>
+													</div>
+												</div>
+												<div class="form-group">
+													<label for="buy_currency_total" class="col-sm-3 control-label" data-i18n="total">Total</label>
+													<div class="col-sm-9">
+														<div class="input-group">
+															<input type="text" name="buy_currency_total" id="buy_currency_total" readonly value="0" class="form-control disabled" />
+															<span class="input-group-addon">NXT</span>
+														</div>
+													</div>
+												</div>
+												<div class="form-group">
+													<label for="buy_currency_fee" class="col-sm-3 control-label" data-i18n="fee">Fee</label>
+													<div class="col-sm-9">
+														<div class="input-group">
+															<input type="text" id="buy_currency_fee" name="buy_currency_fee" value="1" class="form-control" />
+															<span class="input-group-addon">NXT</span>
+														</div>
+													</div>
+												</div>
+												<div class="form-group form-group-last">
+													<div class="col-sm-3"></div>
+													<div class="col-sm-9">
+														<button type="button" class="btn btn-primary btn-lg btn-block" id="buy_currency_button" data-toggle="modal" data-target="#currency_order_modal" data-asset="" data-type="Buy"><span data-i18n="buy">Buy</span> (NXT → <span class="currency_name"></span>)</button>
+													</div>
+												</div>
+											</div>
+										</form>
+									</div>
+								</div>
 	                 	        <div class="box box-primary">
 	                 	            <div class="box-header"><h3 class="box-title" data-i18n="sell_orders">Sell Orders</h3></div>
 	                 	            <div class="box-body no-padding">
