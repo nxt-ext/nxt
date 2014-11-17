@@ -109,9 +109,11 @@ final class JSONData {
         return json;
     }
 
-    static JSONObject accountCurrency(Account.AccountCurrency accountCurrency) {
+    static JSONObject accountCurrency(Account.AccountCurrency accountCurrency, boolean includeAccount) {
         JSONObject json = new JSONObject();
-        putAccount(json, "account", accountCurrency.getAccountId());
+        if (includeAccount) {
+            putAccount(json, "account", accountCurrency.getAccountId());
+        }
         json.put("currency", Convert.toUnsignedLong(accountCurrency.getCurrencyId()));
         json.put("units", String.valueOf(accountCurrency.getUnits()));
         json.put("unconfirmedUnits", String.valueOf(accountCurrency.getUnconfirmedUnits()));

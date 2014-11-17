@@ -916,6 +916,7 @@
     "error_send_message": "An unknown error occured! Message may or may not be sent.",
     "seller_account_id": "Seller's Account ID",
     "status_new_account_old": "Welcome to your new NXT account. Your account ID is <strong>__account_id__<\/strong>. You should fund it with some coins.",
+    "dividend_payment": "Dividend Payment",
     "pay_dividends": "Pay Dividends",
     "amount_per_asset": "Amount Per Asset",
     "error_amount_per_asset_required": "Amount Per Asset is a required field.",

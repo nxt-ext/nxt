@@ -31,6 +31,7 @@ public abstract class AbstractBlockchainTest {
         testProperties.setProperty("nxt.debugTraceAccounts", "");
         testProperties.setProperty("nxt.debugLogUnconfirmed", "false");
         testProperties.setProperty("nxt.debugTraceQuote", "\"");
+        testProperties.setProperty("nxt.numberOfForkConfirmations", "0");
         return testProperties;
     }
 

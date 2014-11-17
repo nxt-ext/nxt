@@ -790,6 +790,28 @@ public final class Account {
         return accountAsset == null ? 0 : accountAsset.unconfirmedQuantityQNT;
     }
 
+    public AccountCurrency getCurrency(long currencyId) {
+        return accountCurrencyTable.get(accountCurrencyDbKeyFactory.newKey(this.id, currencyId));
+    }
+
+    public AccountCurrency getCurrency(long currencyId, int height) {
+        if (height < 0) {
+            return getCurrency(currencyId);
+        }
+        return accountCurrencyTable.get(accountCurrencyDbKeyFactory.newKey(this.id, currencyId), height);
+    }
+
+    public DbIterator<AccountCurrency> getCurrencies(int from, int to) {
+        return accountCurrencyTable.getManyBy(new DbClause.LongClause("account_id", this.id), from, to);
+    }
+
+    public DbIterator<AccountCurrency> getCurrencies(int height, int from, int to) {
+        if (height < 0) {
+            return getCurrencies(from, to);
+        }
+        return accountCurrencyTable.getManyBy(new DbClause.LongClause("account_id", this.id), height, from, to);
+    }
+
     public long getCurrencyUnits(long currencyId) {
         AccountCurrency accountCurrency = accountCurrencyTable.get(accountCurrencyDbKeyFactory.newKey(this.id, currencyId));
         return accountCurrency == null ? 0 : accountCurrency.units;
