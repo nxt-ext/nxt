@@ -235,6 +235,26 @@ var NRS = (function(NRS, $, undefined) {
 		$("#dgs_search_contents").empty();
 		NRS.dgs_load_tags();
 
+		NRS.sendRequest("getDGSPurchases+", {
+			"buyer": NRS.account
+		}, function(response) {
+			if (response.purchases && response.purchases.length != null) {
+				$("#dgs_user_purchase_count").html(response.purchases.length).removeClass("loading_dots");
+			}
+		});
+		NRS.sendRequest("getState+", {
+		}, function(response) {
+			if (response.numberOfGoods) {
+				$("#dgs_product_count").html(response.numberOfGoods).removeClass("loading_dots");
+			}
+			if (response.numberOfPurchases) {
+				$("#dgs_total_purchase_count").html(response.numberOfPurchases).removeClass("loading_dots");
+			}
+			if (response.numberOfTags) {
+				$("#dgs_tag_count").html(response.numberOfTags).removeClass("loading_dots");
+			}
+		});
+
 		$("#dgs_search_center").show();
 		$("#dgs_search_top").hide();
 		$("#dgs_search_results").hide();
@@ -971,6 +991,11 @@ var NRS = (function(NRS, $, undefined) {
 
 		$(this).find(".goods_info").html($.t("loading"));
 		$("#dgs_quantity_change_current_quantity, #dgs_price_change_current_price, #dgs_quantity_change_quantity, #dgs_price_change_price").val("0");
+	});
+
+	$(".dgs_my_purchases_link").click(function(e) {
+		e.preventDefault();
+		$("#sidebar_dgs_buyer a[data-page=purchased_dgs]").addClass("active").trigger("click");
 	});
 
 	$(".dgs_search").on("submit", function(e) {
