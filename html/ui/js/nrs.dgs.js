@@ -20,16 +20,16 @@ var NRS = (function(NRS, $, undefined) {
 			"<h3 class='title'><a href='#' data-goods='" + String(good.goods).escapeHTML() + "' data-toggle='modal' data-target='#dgs_purchase_modal'>" + String(good.name).escapeHTML() + "</a></h3>" +
 			"<div class='price'><strong>" + NRS.formatAmount(good.priceNQT) + " NXT</strong></div>" +
 			"<div class='showmore'><div class='moreblock description'>" + String(good.description).escapeHTML().nl2br() + "</div></div>" +
-			"<span class='quantity'><strong>" + $.t("quantity") + "</strong>: " + NRS.format(good.quantity) + "</span>&nbsp; " +
+			"<span class='quantity'><strong>" + $.t("quantity") + "</strong>: " + NRS.format(good.quantity) + "</span>&nbsp;&nbsp; " +
+			"<span class='purchases'><strong>" + $.t("purchases") + "</strong>: " + NRS.format(good.numberOfPurchases) + "</span>&nbsp;&nbsp; " +
 			"<span class='tags'><strong>" + $.t("tags") + "</strong>: ";
 
 		var tags = good.parsedTags;
 		for (var i=0; i<tags.length; i++) {
-			if (i > 0) {
-				html += ' | ';
-			}
+			html += '<div style="display:inline-block;background-color:#fff;padding:2px 5px 2px 5px;border:1px solid #f2f2f2;">';
 			html += '<a href="#" onclick="event.preventDefault(); NRS.dgs_search_tag(\'' + String(tags[i]).escapeHTML() + '\');">';
 			html += String(tags[i]).escapeHTML() + '</a>';
+			html += '</div>';
 		}
 
 		html += "</span><hr />";
