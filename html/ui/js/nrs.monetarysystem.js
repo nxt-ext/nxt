@@ -295,10 +295,12 @@ var NRS = (function(NRS, $, undefined) {
 	
 	/* Set initial supply to max supply (todo: this is not true for all the types) */
 	$("#issue_currency_max_supply").keyup(function(e) {
-		$("#issue_currency_initial_supply").val($("#issue_currency_max_supply").val());
+		if (!$('#issue_currency_claimable').prop('checked'))
+			$("#issue_currency_initial_supply").val($("#issue_currency_max_supply").val());
 	});
 	$("#issue_currency_max_supply").blur(function(e) {
-		$("#issue_currency_initial_supply").val($("#issue_currency_max_supply").val());
+		if (!$('#issue_currency_claimable').prop('checked'))
+			$("#issue_currency_initial_supply").val($("#issue_currency_max_supply").val());
 	});
 	
 	NRS.forms.issueCurrency = function($modal) {
@@ -348,10 +350,14 @@ var NRS = (function(NRS, $, undefined) {
 		}
     });
     $('#issue_currency_claimable').change(function() {
-        //if($(this).is(":checked"))
-            //$( "#issue_currency_exchangeable" ).prop("disabled", true);
-		//else
-			//$( "#issue_currency_exchangeable" ).prop("disabled", false);
+        if($(this).is(":checked")){
+        	$("#issue_currency_initial_supply").val(0);
+        	$("#issue_currency_initial_supply").prop("disabled", true);
+        }
+		else{
+			$("#issue_currency_initial_supply").val($("#issue_currency_max_supply").val());
+			$("#issue_currency_initial_supply").prop("disabled", false);
+		}
     });
 	$('#issue_currency_reservable').change(function() {
         if($(this).is(":checked"))
