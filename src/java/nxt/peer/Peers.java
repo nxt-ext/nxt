@@ -333,7 +333,7 @@ public final class Peers {
             try {
                 try {
 
-                    if (getNumberOfConnectedPublicPeers() < Peers.maxNumberOfConnectedPublicPeers) {
+                    if (!hasEnoughConnectedPublicPeers(Peers.maxNumberOfConnectedPublicPeers)) {
                         PeerImpl peer = (PeerImpl)getAnyPeer(ThreadLocalRandom.current().nextInt(2) == 0 ? Peer.State.NON_CONNECTED : Peer.State.DISCONNECTED, false);
                         if (peer != null) {
                             peer.connect();
@@ -759,15 +759,17 @@ public final class Peers {
         }
     }
 
-    private static int getNumberOfConnectedPublicPeers() {
+    public static boolean hasEnoughConnectedPublicPeers(int limit) {
         int numberOfConnectedPeers = 0;
         for (Peer peer : peers.values()) {
             if (peer.getState() == Peer.State.CONNECTED && peer.getAnnouncedAddress() != null
                     && (! Peers.enableHallmarkProtection || peer.getWeight() > 0)) {
-                numberOfConnectedPeers++;
+                if (++numberOfConnectedPeers > limit) {
+                    return true;
+                }
             }
         }
-        return numberOfConnectedPeers;
+        return false;
     }
 
     private Peers() {} // never
