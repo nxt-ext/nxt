@@ -2,7 +2,7 @@
  * @depends {nrs.js}
  */
 var NRS = (function(NRS, $, undefined) {
-	var _tagsPerPage = 35;
+	var _tagsPerPage = 34;
 	var _goodsToShow;
 	var _currentSearch = {
 		"page": "",
@@ -139,7 +139,7 @@ var NRS = (function(NRS, $, undefined) {
 					}
 					for (var i=0; i<response.tags.length; i++) {
 						content += '<div style="padding:5px 24px 5px 24px;text-align:center;background-color:#fff;font-size:16px;';
-						content += 'width:175px;display:inline-block;margin:2px;border:1px solid #f2f2f2;">';
+						content += 'width:220px;display:inline-block;margin:2px;border:1px solid #f2f2f2;">';
 						content += '<a href="#" onclick="event.preventDefault(); NRS.dgs_search_tag(\'' +response.tags[i].tag + '\');">';
 						content += response.tags[i].tag.escapeHTML() + ' [' + response.tags[i].inStockCount + ']</a>';
 						content += '</div>';
