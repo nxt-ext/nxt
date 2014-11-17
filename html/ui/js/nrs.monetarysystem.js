@@ -6,6 +6,8 @@ var NRS = (function(NRS, $, undefined) {
 	/* MONETARY SYSTEM PAGE */
 	$("#currency_search").on("submit", function(e) {
 		e.preventDefault();
+		$( "#MSnoCode" ).hide();
+		$( "#MScode" ).show();
 		var currencyCode = $.trim($("#currency_search input[name=q]").val());
 		NRS.sendRequest("getSellOffers+", {
 			"code": currencyCode,

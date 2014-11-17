@@ -356,7 +356,7 @@
 							                        <th colspan="2" data-i18n="amount_plus_fee">Amount + Fee</th>
 							                        <th data-i18n="fromAccount">From</th>
 							                        <th data-i18n="toAccount">To</th>
-							                        <th data-i18n="type" style="width:40px">Type</th>
+							                        <th data-i18n="type" style="width:50px">Type</th>
 							                    </tr>
 							                    </thead>
 							                    <tbody>
@@ -1132,7 +1132,10 @@
 							</form>             
 						</div>
                     </section>
-                    <section class="content">
+                    <section class="content" id="MSnoCode">
+                    		<p>Please type in your currency code in the top right.</p>
+                    </section>
+                    <section class="content" id="MScode" style="display:none">
 	                 	<div class="row">
 	                 	    <div class="col-md-6">
 	                 	        <div class="box box-primary">
@@ -2648,7 +2651,7 @@
                             <div style="margin-left:-20px">
                                 <div class="form-group">
                                     <label for="currency_code"><span data-i18n="currency_code">CURRENCY CODE</span> <i class="fa fa-question-circle show_popover" data-content="Enter a 3-5 letter currency code" data-i18n="[data-content]currency_code_help" data-container="body" style="color:#4CAA6E" ></i></label>
-                                    <input type="text" class="form-control publish_exchange_currency_code" name="code" id="currency_code" placeholder="Currency Code" data-i18n="[placeholder]currency_code" autofocus tabindex="1" />
+                                    <input type="text" maxlength="5" class="form-control publish_exchange_currency_code" name="code" id="currency_code" placeholder="Currency Code" data-i18n="[placeholder]currency_code" autofocus tabindex="1" />
                                 </div>
                                 <div class="form-group">
                                     <label for="buy_currency_units_initial" class="col-sm-3 control-label" data-i18n="units">Buy units (Initial)</label>
