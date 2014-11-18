@@ -24,11 +24,11 @@ var NRS = (function(NRS, $, undefined) {
 			"<div>";
 		if (good.numberOfPublicFeedbacks > 0) {
 			html += "<div style='float:right;'><a href='#' class='feedback' data-goods='" + String(good.goods).escapeHTML() + "' ";
-			html += "data-toggle='modal' data-target='#dgs_show_feedback_modal'>" + $.t('show_feedback') + "</a></div>";
+			html += "data-toggle='modal' data-target='#dgs_show_feedback_modal'>" + $.t('show_feedback', 'Show Feedback') + "</a></div>";
 		}
 
 		html += "<span class='quantity'><strong>" + $.t("quantity") + "</strong>: " + NRS.format(good.quantity) + "</span>&nbsp;&nbsp; " +
-			"<span class='purchases'><strong>" + $.t("purchases") + "</strong>: " + NRS.format(good.numberOfPurchases) + "</span>&nbsp;&nbsp; " +
+			"<span class='purchases'><strong>" + $.t("purchases", "Purchases") + "</strong>: " + NRS.format(good.numberOfPurchases) + "</span>&nbsp;&nbsp; " +
 			"<span class='tags' style='display:inline-block;'><strong>" + $.t("tags") + "</strong>: ";
 
 		var tags = good.parsedTags;
@@ -1014,7 +1014,6 @@ var NRS = (function(NRS, $, undefined) {
 			"withPublicFeedbacksOnly": true,
 		}, function(response) {
 			if (response.purchases.length && response.purchases.length > 0) {
-				console.log(JSON.stringify(response));
 				for (var i=0; i<response.purchases.length; i++) {
 					var purchase = response.purchases[i];
 					if (purchase.publicFeedbacks.length && purchase.publicFeedbacks.length > 0) {
