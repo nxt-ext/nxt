@@ -213,7 +213,22 @@ var NRS = (function(NRS, $, undefined) {
 								transactionType = $.t("balance_leasing");
 								break;
 						}
+					} else if (transaction.type == 5) {
+					switch (transaction.subtype) {
+						case 0:
+							transactionType = $.t("issue_currency");
+							break;
+						case 1:
+							break;
+						case 2:
+							break;
+						case 3:
+							break;
+						case 4:
+							transactionType = $.t("publish_exchange_offer");
+							break;
 					}
+				}
 
 					if (/^NXT\-/i.test(NRS.userInfoModal.user)) {
 						var receiving = (transaction.recipientRS == NRS.userInfoModal.user);

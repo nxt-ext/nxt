@@ -27,6 +27,15 @@ var NRS = (function(NRS, $, undefined) {
 			}
 		});
 		
+		NRS.sendRequest("getAccountCurrencies+", {
+			"account": NRS.accountRS,
+			"code": currencyCode
+		}, function(response, input) {
+			if (response) {
+				$("#your_currency_balance").html(String(response.units));
+			}
+		});
+		
 		NRS.sendRequest("getSellOffers+", {
 			"code": currencyCode,
 			"firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
