@@ -25,15 +25,17 @@ optionally those with public feedbacks only.
 Added getDGSTags API returning all DGS Goods tags, sorted by number of goods
 in stock with that tag and total number of goods with that tag. Takes an optional
 inStockOnly parameter, default true, to retrieve tags for goods in stock only.
-To populate the tags table in the database, a blockchain rescan will be done.
 At most three tags per goods are used, tags longer than 20 characters or shorter
 than 3 are ignored, and the parsing of tags is done using the Lucene
 StandardAnalyzer.
 
-Show purchase counts in all API responses returning Goods JSON, unless
-includeCounts parameter is false.
+Show purchase counts and public feedback counts in all API responses returning
+Goods JSON, unless includeCounts parameter is false.
 
 Include total numbers of Goods, Purchases, and Tags in the getState API.
+
+To populate the tags table in the database, a blockchain rescan will be done at
+first start.
 
 Updated jetty to version 9.2.5. If unpacking on top of a previous installation,
 delete your lib directory first to remove the old jetty libraries.
