@@ -44,7 +44,7 @@
                             <div class="lockscreen-credentials">   
                                 <div class="input-group">
                                     <input type="password" class="form-control" id="login_password" name="login_password" placeholder="Your Passphrase" data-i18n="[placeholder]your_passphrase" autofocus />
-                                    <div class="input-group-btn">
+                                    <div class="input-group-btn" style="border:1px solid #fff;">
                                         <button class="btn btn-flat" onclick="NRS.login($('#login_password').val())"><i class="fa fa-arrow-right text-muted"></i></button>
                                     </div>
                                     <input type="hidden" name="check_password_length" id="login_check_password_length" value="1" />
@@ -259,7 +259,7 @@
                         <li class="treeview" id="sidebar_dgs_buyer">
                         	<a href="#" data-page="dgs_search"><i class="fa fa-shopping-cart"></i><span data-i18n="marketplace">Marketplace</span><i class="fa pull-right fa-angle-right" style="padding-top:3px"></i></a>
                             <ul class="treeview-menu" style="display: none;">
-                            	 <li><a href="#" data-page="dgs_search"><i class="fa fa-angle-double-right"></i> <span data-i18n="search_marketplace">Search Marketplace</span></a></li>
+                            	 <li><a href="#" data-page="dgs_search"><i class="fa fa-angle-double-right"></i> <span data-i18n="marketplace">Marketplace</span></a></li>
                             	<li><a href="#" data-page="purchased_dgs"><i class="fa fa-angle-double-right"></i> <span data-i18n="purchased_products">Purchased Products</span></a></li>
                         	</ul>
                         </li>
@@ -1071,33 +1071,102 @@
 
                 <div id="dgs_search_page" class="paginated page">
                     <section class="content-header">
-                    	<h1 data-i18n="search_marketplace">Search Marketplace</h1>
-                        <div style="position:absolute;top:9px;right:9px;display:none;" id="dgs_search_top">
-                            <form action="#" method="get" class="sidebar-form dgs_search" style="width:280px;margin:0;display:inline-block;vertical-align:middle;" autocomplete="off">
-                                <div class="input-group">
-                                    <input type="text" name="q" class="form-control" placeholder="Search By Seller..." data-i18n="[placeholder]search_by_seller" id="dgs_search_account_top">
-                                    <span class="input-group-btn">
-                                        <button type="submit" name="seach" class="btn btn-flat"><i class="fa fa-search"></i></button>
-                                    </span>
-                                </div>
-                            </form>  
+                    	<h1>
+                            <span data-i18n="marketplace">Marketplace</span>
+                            <span class="dgs_search_pageheader_addon dgs_search_pageheader_addon_seller">
+                                | <span data-i18n="seller">Seller</span> <span class="dgs_search_pageheader_addon_seller_text"></span>
+                            </span>
+                            <span class="dgs_search_pageheader_addon dgs_search_pageheader_addon_fulltext">
+                                | <span data-i18n="search">Search</span> <span class="dgs_search_pageheader_addon_fulltext_text"></span>
+                            </span>
+                            <span class="dgs_search_pageheader_addon dgs_search_pageheader_addon_tag">
+                                | <span data-i18n="tag">Tag</span> <span class="dgs_search_pageheader_addon_tag_text"></span>
+                            </span>
+                        </h1>
+                        <div style="position:absolute;top:9px;right:9px;display:none;" id="dgs_search_top">  
                             <button id="dgs_clear_results" type="button" class="btn btn-default" data-i18n="clear_results">Clear Results</button>
                         </div>
                 	</section>
 
 					<section class="content">
-                        <div style="text-align:center" id="dgs_search_center">
-                            <div style="margin:0 auto;width:auto;margin-top:150px;display:inline-block;border-top:2px solid rgba(0, 0, 0, 0.1);padding:12px" class="box">
-                                <div class="box-body">
-                                    <p style="text-align:center;" data-i18n="dgs_search_description">Enter the seller's Account ID below to view their store.</p>
-                                    <form action="#" method="get" class="dgs_search sidebar-form" style="width:300px;margin:0;margin:0 auto;" autocomplete="off">
-                                        <div class="input-group">
-                                            <input type="text" name="q" class="form-control" placeholder="Seller's Account ID" data-i18n="[placeholder]seller_account_id" style="height:auto;" id="dgs_search_account_center" />
-                                            <span class="input-group-btn">
-                                                <button type="submit" name="seach" class="btn btn-flat"><i class="fa fa-search"></i></button>
-                                            </span>
+                        <div  id="dgs_search_center" class="row">
+                            <div class="row">
+                                <div class="col-lg-3 col-xs-6">
+                                    <div class="small-box bg-aqua">
+                                        <div class="inner">
+                                            <h3><span id="dgs_user_purchase_count" class="loading_dots"><span>.</span><span>.</span><span>.</span></span></h3>
+                                            <p><span data-i18n="purchased_products">Purchased Products</span></p>
                                         </div>
-                                    </form>
+                                        <div class="icon"><i class="ion ion-images"></i></div>
+                                        <a href="#" class="small-box-footer dgs_my_purchases_link"><span data-i18n="my_purchases">My Purchases</span> <i class="fa fa-arrow-circle-right"></i></a>
+                                    </div>
+                                </div>
+                                <div class="col-lg-3 col-xs-6">
+                                    <div class="small-box bg-green">
+                                        <div class="inner">
+                                            <h3><span id="dgs_product_count" class="loading_dots"><span>.</span><span>.</span><span>.</span></span></h3>
+                                            <p><span data-i18n="products_available">Products available</span></p>
+                                        </div>
+                                        <div class="icon"><i class="fa fa-cubes"></i></div>
+                                        <span class="small-box-footer">&nbsp;</span> 
+                                    </div>
+                                </div>
+                                <div class="col-lg-3 col-xs-6">
+                                    <div class="small-box bg-yellow">
+                                        <div class="inner">
+                                            <h3><span id="dgs_total_purchase_count" class="loading_dots"><span>.</span><span>.</span><span>.</span></span></h3>
+                                            <p data-i18n="total_purchases">Total Purchases</p>
+                                        </div>
+                                        <div class="icon"><i class="fa fa-truck"></i></div>
+                                        <span class="small-box-footer">&nbsp;</span>
+                                    </div>
+                                </div>
+                                <div class="col-lg-3 col-xs-6">
+                                    <div class="small-box bg-yellow">
+                                        <div class="inner">
+                                            <h3><span id="dgs_tag_count" class="loading_dots"><span>.</span><span>.</span><span>.</span></span></h3>
+                                            <p data-i18n="message_count">Total Tags</p>
+                                        </div>
+                                        <div class="icon"><i class="fa fa-tags"></i></div>
+                                        <span class="small-box-footer">&nbsp;</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row" style="text-align:center">
+                                <div class="col-xs-12 col-sm-6">
+                                    <div style=";padding:12px;background-color:#fff;border:1px solid #f2f2f2;">
+                                        <p style="text-align:center;font-size:16px;" data-i18n="dgs_search_description">Enter the seller's Account ID below to view their store.</p>
+                                        <form action="#" method="get" class="dgs_search sidebar-form" style="width:300px;margin:0;margin:0 auto;" autocomplete="off">
+                                            <div class="input-group">
+                                                <input type="text" name="q" class="form-control" placeholder="Seller's Account ID" data-i18n="[placeholder]seller_account_id" style="height:auto;" id="dgs_search_account_center" />
+                                                <span class="input-group-btn">
+                                                    <button type="submit" name="seach" class="btn btn-flat"><i class="fa fa-search"></i></button>
+                                                </span>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                                <div class="col-xs-12 col-sm-6">
+                                    <div style="padding:12px;background-color:#fff;border:1px solid #f2f2f2;">
+                                        <p style="text-align:center;font-size:16px;" data-i18n="dgs_fulltext_search_description">Search for a product.</p>
+                                        <form action="#" method="get" class="dgs_fulltext_search sidebar-form" style="width:300px;margin:0;margin:0 auto;" autocomplete="off">
+                                            <div class="input-group">
+                                                <input type="text" name="fs_q" class="form-control" placeholder="Title, Description or Tag" data-i18n="[placeholder]title_description_tag" style="height:auto;" id="dgs_fulltext_search_center" />
+                                                <span class="input-group-btn">
+                                                    <button type="submit" name="fulltext_seach" class="btn btn-flat"><i class="fa fa-search"></i></button>
+                                                </span>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row" style="margin-top:25px;margin-bottom:30px;">
+                                <div class="col-xs-12">
+                                    <div id="dgs_tag_list" style="text-align:center;">
+                                        &nbsp;
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -2520,6 +2589,27 @@
 				</div>
 			</div>
 		</div>
+
+        <div class="modal fade" id="dgs_show_feedback_modal" tabindex="-1" role="dialog" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                        <h4 class="modal-title" data-i18n="product_feedback">Product Feedback</h4>
+                    </div>
+                    <div class="modal-body">            
+                        <div class="data-container modal_content" style="max-height: 350px; overflow: auto; display: block;">
+                            <table class="table">
+                            </table>
+                        </div>
+                    </div>
+                    <div class="modal-footer" style="margin-top:0;">
+                        <button type="button" class="btn btn-default" data-dismiss="modal" data-i18n="close">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
 
 		<div class="modal fade" id="dgs_purchase_modal" tabindex="-1" role="dialog" aria-hidden="true">
 			<div class="modal-dialog">
