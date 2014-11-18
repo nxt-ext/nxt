@@ -10,7 +10,23 @@ var NRS = (function(NRS, $, undefined) {
 		$("#MScode").show();
 		var currencyCode = $.trim($("#currency_search input[name=q]").val());
 		$("#buy_currency_with_nxt").html("Buy " + currencyCode + " with NXT");
-		$(".currency_name").html(String(currencyCode).escapeHTML());
+		$("#sell_currency_with_nxt").html("Sell " + currencyCode + " for NXT");
+		$(".currency_code").html(String(currencyCode).escapeHTML());
+		
+		NRS.sendRequest("getCurrency+", {
+			"code": currencyCode
+		}, function(response, input) {
+			if (response) {
+				$("#currency_account").html(String(response.accountRS).escapeHTML());
+				$("#currency_id").html(String(response.currency).escapeHTML());
+				$(".currency_name").html(String(response.name).escapeHTML());
+				$("#currency_current_supply").html(String(response.currentSupply).escapeHTML());
+				$("#currency_max_supply").html(String(response.maxSupply).escapeHTML());
+				$("#currency_decimals").html(String(response.decimals).escapeHTML());
+				$("#currency_description").html(String(response.description).escapeHTML());
+			}
+		});
+		
 		NRS.sendRequest("getSellOffers+", {
 			"code": currencyCode,
 			"firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
@@ -104,6 +120,13 @@ var NRS = (function(NRS, $, undefined) {
 			}
 			NRS.dataLoadFinished($("#ms_my_exchanges_history_table"), true);
 		});
+		if (NRS.accountInfo.unconfirmedBalanceNQT == "0") {
+			$("#ms_your_nxt_balance").html("0");
+			$("#buy_automatic_price").addClass("zero").removeClass("nonzero");
+		} else {
+			$("#ms_your_nxt_balance").html(NRS.formatAmount(NRS.accountInfo.unconfirmedBalanceNQT));
+			$("#buy_automatic_price").addClass("nonzero").removeClass("zero");
+		}
 		NRS.pageLoaded();
 	});
 	

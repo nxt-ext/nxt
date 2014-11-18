@@ -161,6 +161,15 @@ var NRS = (function(NRS, $, undefined) {
 						case 0:
 							rows += '<i title="' + $.t("issue_currency") + '" class="fa fa-bank"></i>';
 							break;
+						case 1:
+							break;
+						case 2:
+							break;
+						case 3:
+							break;
+						case 4:
+							rows += '<i title="' + $.t("publish_exchange_offer") + '" class="fa fa-bank"></i> <i class="fa fa-list-alt "></i>';
+							break;
 					}
 				}
 				 
