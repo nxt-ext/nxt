@@ -105,13 +105,20 @@ var ATS = (function(ATS, $, undefined) {
         var params = {};
         for (i = 0; i < form.elements.length; i++) {
             if (form.elements[i].type != 'button' && form.elements[i].value && form.elements[i].value != 'submit') {
-                params[form.elements[i].name] = form.elements[i].value;
+                var key = form.elements[i].name;
+                var value = form.elements[i].value;
+                if(key in params) { // duplicate key; add to existing array or create new array
+                    if(params[key].constructor.toString().indexOf("Array") > -1) params[key][params[key].length] = value;
+                    else params[key] = [params[key], value];
+                }
+                else params[key] = value;
             }
         }
         $.ajax({
             url: url,
             type: 'POST',
-            data: params
+            data: params,
+            traditional: true // "true" needed for duplicate params
         })
         .done(function(result) {
             var resultStr = JSON.stringify(JSON.parse(result), null, 4);
