@@ -1,0 +1,3 @@
+Updated jetty to version 9.2.5. If unpacking on top of a previous installation,
+delete your lib directory first to remove the old jetty libraries.
+
