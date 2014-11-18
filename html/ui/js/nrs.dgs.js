@@ -21,9 +21,13 @@ var NRS = (function(NRS, $, undefined) {
 			"<h3 class='title'><a href='#' data-goods='" + String(good.goods).escapeHTML() + "' data-toggle='modal' data-target='#dgs_purchase_modal'>" + String(good.name).escapeHTML() + "</a></h3>" +
 			"<div class='price'><strong>" + NRS.formatAmount(good.priceNQT) + " NXT</strong></div>" +
 			"<div class='showmore'><div class='moreblock description'>" + String(good.description).autoLink().nl2br() + "</div></div>" +
-			"<div>" +
-			"<div style='float:right;'><a href='#' class='feedback' data-goods='" + String(good.goods).escapeHTML() + "' data-toggle='modal' data-target='#dgs_show_feedback_modal'></a></div>" +
-			"<span class='quantity'><strong>" + $.t("quantity") + "</strong>: " + NRS.format(good.quantity) + "</span>&nbsp;&nbsp; " +
+			"<div>";
+		if (good.numberOfPublicFeedbacks > 0) {
+			html += "<div style='float:right;'><a href='#' class='feedback' data-goods='" + String(good.goods).escapeHTML() + "' ";
+			html += "data-toggle='modal' data-target='#dgs_show_feedback_modal'>" + $.t('show_feedback') + "</a></div>";
+		}
+
+		html += "<span class='quantity'><strong>" + $.t("quantity") + "</strong>: " + NRS.format(good.quantity) + "</span>&nbsp;&nbsp; " +
 			"<span class='purchases'><strong>" + $.t("purchases") + "</strong>: " + NRS.format(good.numberOfPurchases) + "</span>&nbsp;&nbsp; " +
 			"<span class='tags' style='display:inline-block;'><strong>" + $.t("tags") + "</strong>: ";
 
@@ -37,16 +41,6 @@ var NRS = (function(NRS, $, undefined) {
 		html += "</span>";
 		html += "</div>"
 		html += '</div>';
-
-
-		NRS.sendRequest("getDGSGoodsPurchases+", {
-			"goods": String(good.goods),
-			"withPublicFeedbacksOnly": true,
-		}, function(response) {
-			if (response.purchases.length && response.purchases.length > 0) {
-				$('#' + id + ' a.feedback').text($.t('show_feedback'));
-			}
-		});
 
 		return html;
 	}
