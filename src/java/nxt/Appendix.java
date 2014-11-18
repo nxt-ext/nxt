@@ -563,9 +563,11 @@ public interface Appendix {
         //todo: some more checks?
         @Override
         void validate(Transaction transaction) throws NxtException.ValidationException {
-            if (votingModel != Constants.VOTING_MODEL_ACCOUNT
-                    && votingModel != Constants.VOTING_MODEL_ASSET
-                    && votingModel != Constants.VOTING_MODEL_BALANCE) {
+            if(votingModel == Constants.VOTING_MODEL_BALANCE){
+                throw new NxtException.NotValidException("Pending transaction with by-balance voting is prohibited");
+            }
+
+            if (votingModel != Constants.VOTING_MODEL_ACCOUNT && votingModel != Constants.VOTING_MODEL_ASSET) {
                 throw new NxtException.NotValidException("Invalid voting model");
             }
 
@@ -591,10 +593,6 @@ public interface Appendix {
 
             if (votingModel == Constants.VOTING_MODEL_ASSET && assetId == 0) {
                 throw new NxtException.NotValidException("Invalid assetId");
-            }
-
-            if (votingModel == Constants.VOTING_MODEL_BALANCE && assetId != 0) {
-                throw new NxtException.NotValidException("assetId shouldn't be used in by-balance voting");
             }
 
             if (maxHeight <= Nxt.getBlockchain().getHeight() + Constants.VOTING_MIN_VOTE_DURATION) {
@@ -636,7 +634,6 @@ public interface Appendix {
                     return;
                 }
             }
-
 
             long amount = transaction.getAmountNQT();
             senderAccount.addToBalanceNQT(amount);
