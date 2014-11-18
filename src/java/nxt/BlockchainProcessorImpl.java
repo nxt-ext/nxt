@@ -7,6 +7,7 @@ import nxt.db.FilteringIterator;
 import nxt.peer.Peer;
 import nxt.peer.Peers;
 import nxt.util.Convert;
+import nxt.util.Filter;
 import nxt.util.JSON;
 import nxt.util.Listener;
 import nxt.util.Listeners;
@@ -25,7 +26,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -85,11 +85,12 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     if (!getMoreBlocks) {
                         return;
                     }
-                    if (!Peers.hasEnoughConnectedPublicPeers(numberOfForkConfirmations)) {
+                    List<Peer> connectedPublicPeers = Peers.getPublicPeers(Peer.State.CONNECTED, true);
+                    if (connectedPublicPeers.size() < numberOfForkConfirmations) {
                         return;
                     }
                     peerHasMore = true;
-                    final Peer peer = Peers.getAnyPeer(Peer.State.CONNECTED, true);
+                    final Peer peer = Peers.getWeightedPeer(connectedPublicPeers);
                     if (peer == null) {
                         return;
                     }
@@ -139,13 +140,12 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                         return;
                     }
 
-                    Collection<? extends Peer> otherPeers = Peers.getPeers(Peer.State.CONNECTED);
                     int confirmations = 0;
-                    for (Peer otherPeer : otherPeers) {
+                    for (Peer otherPeer : connectedPublicPeers) {
                         if (confirmations >= numberOfForkConfirmations) {
                             break;
                         }
-                        if (peer.equals(otherPeer)) {
+                        if (peer.getPeerAddress().equals(otherPeer.getPeerAddress())) {
                             continue;
                         }
                         long otherPeerCommonBlockId = getCommonBlockId(otherPeer, commonBlockId);
@@ -864,7 +864,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         TransactionProcessorImpl transactionProcessor = TransactionProcessorImpl.getInstance();
         List<UnconfirmedTransaction> orderedUnconfirmedTransactions = new ArrayList<>();
         try (FilteringIterator<UnconfirmedTransaction> unconfirmedTransactions = new FilteringIterator<>(transactionProcessor.getAllUnconfirmedTransactions(),
-                new FilteringIterator.Filter<UnconfirmedTransaction>() {
+                new Filter<UnconfirmedTransaction>() {
                     @Override
                     public boolean ok(UnconfirmedTransaction transaction) {
                         return hasAllReferencedTransactions(transaction, transaction.getTimestamp(), 0);

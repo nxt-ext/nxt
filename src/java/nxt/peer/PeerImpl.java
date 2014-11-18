@@ -375,7 +375,7 @@ final class PeerImpl implements Peer {
         } else if (getWeight() < o.getWeight()) {
             return 1;
         }
-        return 0;
+        return getPeerAddress().compareTo(o.getPeerAddress());
     }
 
     void connect() {
