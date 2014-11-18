@@ -668,7 +668,8 @@ public abstract class TransactionType {
                     throw new NxtException.NotValidException("Invalid max number of options: " + attachment.getJSONObject());
                 }
 
-                if(attachment.getMinRangeValue() < -100 || attachment.getMaxRangeValue() > 100){
+                if(attachment.getMinRangeValue() < Constants.VOTING_MIN_RANGE_VALUE_LIMIT
+                        || attachment.getMaxRangeValue() > Constants.VOTING_MAX_RANGE_VALUE_LIMIT ){
                     throw new NxtException.NotValidException("Invalid range: " + attachment.getJSONObject());
                 }
 
@@ -677,6 +678,7 @@ public abstract class TransactionType {
                         || attachment.getPollOptions().length > Constants.MAX_POLL_OPTION_COUNT) {
                     throw new NxtException.NotValidException("Invalid poll attachment: " + attachment.getJSONObject());
                 }
+
                 if (transaction.getRecipientId() != 0
                         || transaction.getFeeNQT() < Constants.POLL_FEE_NQT
                         || transaction.getAmountNQT() != 0) {
