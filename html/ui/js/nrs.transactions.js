@@ -153,7 +153,22 @@ var NRS = (function(NRS, $, undefined) {
 				} else if (transaction.type == 4) {
 					switch (transaction.subtype) {
 						case 0:
-							rows += '<i title="' + $.t("balance_leasing") + '" class="fa fa-bank"></i>';
+							rows += '<i title="' + $.t("balance_leasing") + '" class="fa fa-money"></i> <i class="fa fa-arrow-circle-o-right">';
+							break;
+					}
+				} else if (transaction.type == 5) {
+					switch (transaction.subtype) {
+						case 0:
+							rows += '<i title="' + $.t("issue_currency") + '" class="fa fa-bank"></i>';
+							break;
+						case 1:
+							break;
+						case 2:
+							break;
+						case 3:
+							break;
+						case 4:
+							rows += '<i title="' + $.t("publish_exchange_offer") + '" class="fa fa-bank"></i> <i class="fa fa-list-alt "></i>';
 							break;
 					}
 				}
@@ -428,7 +443,22 @@ var NRS = (function(NRS, $, undefined) {
 				} else if (transaction.type == 4) {
 					switch (transaction.subtype) {
 						case 0:
-							rows += '<i title="' + $.t("balance_leasing") + '" class="fa fa-bank"></i>';
+							rows += '<i title="' + $.t("balance_leasing") + '" class="fa fa-money"></i> <i class="fa fa-arrow-circle-o-right">';
+							break;
+					}
+				} else if (transaction.type == 5) {
+					switch (transaction.subtype) {
+						case 0:
+							rows += '<i title="' + $.t("issue_currency") + '" class="fa fa-bank"></i>';
+							break;
+						case 1:
+							break;
+						case 2:
+							break;
+						case 3:
+							break;
+						case 4:
+							rows += '<i title="' + $.t("publish_exchange_offer") + '" class="fa fa-bank"></i> <i class="fa fa-list-alt "></i>';
 							break;
 					}
 				}

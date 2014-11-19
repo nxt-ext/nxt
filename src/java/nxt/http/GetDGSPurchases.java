@@ -4,6 +4,7 @@ import nxt.DigitalGoodsStore;
 import nxt.NxtException;
 import nxt.db.DbIterator;
 import nxt.db.FilteringIterator;
+import nxt.util.Filter;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
@@ -35,7 +36,7 @@ public final class GetDGSPurchases extends APIServlet.APIRequestHandler {
 
         if (sellerId == 0 && buyerId == 0) {
             try (FilteringIterator<DigitalGoodsStore.Purchase> purchaseIterator = new FilteringIterator<>(DigitalGoodsStore.getAllPurchases(0, -1),
-                    new FilteringIterator.Filter<DigitalGoodsStore.Purchase>() {
+                    new Filter<DigitalGoodsStore.Purchase>() {
                         @Override
                         public boolean ok(DigitalGoodsStore.Purchase purchase) {
                             return ! (completed && purchase.isPending()) && (! withPublicFeedbacksOnly || purchase.hasPublicFeedbacks());
@@ -57,7 +58,7 @@ public final class GetDGSPurchases extends APIServlet.APIRequestHandler {
             purchases = DigitalGoodsStore.getSellerBuyerPurchases(sellerId, buyerId, 0, -1);
         }
         try (FilteringIterator<DigitalGoodsStore.Purchase> purchaseIterator = new FilteringIterator<>(purchases,
-                new FilteringIterator.Filter<DigitalGoodsStore.Purchase>() {
+                new Filter<DigitalGoodsStore.Purchase>() {
                     @Override
                     public boolean ok(DigitalGoodsStore.Purchase purchase) {
                         return ! (completed && purchase.isPending()) && (! withPublicFeedbacksOnly || purchase.hasPublicFeedbacks());
