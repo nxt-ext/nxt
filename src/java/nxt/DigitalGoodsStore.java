@@ -747,6 +747,10 @@ public final class DigitalGoodsStore {
         return Goods.goodsTable.getManyBy(new SellerDbClause(sellerId, inStockOnly), from, to, " ORDER BY name ASC, timestamp DESC, id ASC ");
     }
 
+    public static int getSellerGoodsCount(long sellerId, boolean inStockOnly) {
+        return Goods.goodsTable.getCount(new SellerDbClause(sellerId, inStockOnly));
+    }
+
     public static DbIterator<Goods> searchGoods(String query, boolean inStockOnly, int from, int to) {
         return Goods.goodsTable.search(query, inStockOnly ? inStockClause : DbClause.EMPTY_CLAUSE, from, to);
     }
@@ -763,8 +767,16 @@ public final class DigitalGoodsStore {
         return Purchase.purchaseTable.getManyBy(new DbClause.LongClause("seller_id", sellerId), from, to);
     }
 
+    public static int getSellerPurchaseCount(long sellerId) {
+        return Purchase.purchaseTable.getCount(new DbClause.LongClause("seller_id", sellerId));
+    }
+
     public static DbIterator<Purchase> getBuyerPurchases(long buyerId, int from, int to) {
         return Purchase.purchaseTable.getManyBy(new DbClause.LongClause("buyer_id", buyerId), from, to);
+    }
+
+    public static int getBuyerPurchaseCount(long buyerId) {
+        return Purchase.purchaseTable.getCount(new DbClause.LongClause("buyer_id", buyerId));
     }
 
     public static DbIterator<Purchase> getSellerBuyerPurchases(final long sellerId, final long buyerId, int from, int to) {

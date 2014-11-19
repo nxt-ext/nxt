@@ -34,6 +34,10 @@ Goods JSON, unless includeCounts parameter is false.
 
 Include total numbers of Goods, Purchases, and Tags in the getState API.
 
+Added getAccountAssetCount, getAliasCount, getDGSGoodsCount,
+getDGSGoodsPurchaseCount, getDGSPurchaseCount APIs, to be able to retrieve the
+corresponding total counts directly.
+
 To populate the tags table in the database, a blockchain rescan will be done at
 first start.
 
