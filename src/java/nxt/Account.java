@@ -411,6 +411,28 @@ public final class Account {
         return accountAssetTable.getCount(new DbClause.LongClause("account_id", accountId), height);
     }
 
+    public static int getCurrencyAccountCount(long currencyId) {
+        return accountCurrencyTable.getCount(new DbClause.LongClause("currency_id", currencyId));
+    }
+
+    public static int getCurrencyAccountCount(long currencyId, int height) {
+        if (height < 0) {
+            return getCurrencyAccountCount(currencyId);
+        }
+        return accountCurrencyTable.getCount(new DbClause.LongClause("currency_id", currencyId), height);
+    }
+
+    public static int getAccountCurrencyCount(long accountId) {
+        return accountCurrencyTable.getCount(new DbClause.LongClause("account_id", accountId));
+    }
+
+    public static int getAccountCurrencyCount(long accountId, int height) {
+        if (height < 0) {
+            return getAccountCurrencyCount(accountId);
+        }
+        return accountCurrencyTable.getCount(new DbClause.LongClause("account_id", accountId), height);
+    }
+
     public static Account getAccount(long id) {
         return id == 0 ? null : accountTable.get(accountDbKeyFactory.newKey(id));
     }
