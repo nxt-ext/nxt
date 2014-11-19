@@ -1141,7 +1141,7 @@
 							<strong data-i18n="currency_id">Currency Id</strong>: <span id="currency_id"></span><br />
 						</div>
 						
-                    	<h3 style="margin-top:0" class="currency_name"></h3>
+                    	<h3 style="margin-top:0" id="currency_name"></h3>
 
 						<div style="color:#838383;margin-bottom:5px">
 							<strong data-i18n="current_supply">Current Supply</strong>: <span id="currency_current_supply"></span> | 
@@ -1204,7 +1204,7 @@
 												<div class="form-group form-group-last">
 													<div class="col-sm-3"></div>
 													<div class="col-sm-9">
-														<button type="button" class="btn btn-primary btn-lg btn-block" id="buy_currency_button" data-toggle="modal" data-target="#currency_order_modal" data-asset="" data-type="Buy"><span data-i18n="buy">Buy</span> (NXT → <span class="currency_code"></span>)</button>
+														<button type="button" class="btn btn-primary btn-lg btn-block" id="buy_currency_button" data-toggle="modal" data-target="#currency_order_modal" data-currency="" data-decimals="" data-type="Buy"><span data-i18n="buy">Buy</span> (NXT → <span class="currency_code"></span>)</button>
 													</div>
 												</div>
 											</div>
@@ -1236,14 +1236,14 @@
 	                 		</div>				                        	
 	                 		<div class="col-md-6">
 	                 			<div class="box box-solid box-info collapsed-box" id="sell_currency_box">
-									<div class="box-header" style="background-color:#DFF0D9;color: #48AB6C;">
+									<div class="box-header" style="background:#F2DEDE;color:#ED4348;">
 									<h3 class="box-title" id="sell_currency_with_nxt"></h3>
 									   <div class="box-tools pull-right">
-										<button class="btn btn-info btn-sm" style="background-color: #48AB6C"><i class="fa fa-plus"></i></button>
+										<button class="btn btn-info btn-sm" style="background-color: #ED4348"><i class="fa fa-plus"></i></button>
 										</div>
 									</div>
 									<div class="box-body no-padding" style="display:none">
-										<div style="background-color:#DFF0D9;color: #666;padding-left:10px;padding-right: 10px;padding-top: 0px;padding-bottom:3px;" id="sell_automatic_price"><strong data-i18n="balance">Balance</strong>: <span id="your_currency_balance"></span> <span class="currency_code"></div>
+										<div style="background-color:#F2DEDE;color: #666;padding-left:10px;padding-right: 10px;padding-top: 0px;padding-bottom:3px;" id="sell_automatic_price"><strong data-i18n="balance">Balance</strong>: <span id="your_currency_balance"></span> <span class="currency_code"></div>
 								
 										<form role="form" class="form-horizontal" style="padding: 10px;;max-width:350px;margin-left:auto;margin-right:auto;" autocomplete="off">
 											<div style="margin-left:-20px">
@@ -1286,7 +1286,7 @@
 												<div class="form-group form-group-last">
 													<div class="col-sm-3"></div>
 													<div class="col-sm-9">
-														<button type="button" class="btn btn-primary btn-lg btn-block" id="sell_currency_button" data-toggle="modal" data-target="#currency_order_modal" data-asset="" data-type="sell"><span data-i18n="sell">sell</span> (<span class="currency_code"></span> → NXT)</button>
+														<button type="button" class="btn btn-primary btn-lg btn-block" id="sell_currency_button" data-toggle="modal" data-target="#currency_order_modal" data-currency="" data-type="sell"><span data-i18n="sell">sell</span> (<span class="currency_code"></span> → NXT)</button>
 													</div>
 												</div>
 											</div>
@@ -2627,6 +2627,50 @@
 			</div>
 		</div>
 		
+		<div class="modal fade" id="currency_order_modal" tabindex="-1" role="dialog" aria-hidden="true">
+			<div class="modal-dialog">
+		    	<div class="modal-content">
+		      		<div class="modal-header">
+		      			<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+		      			<!-- todo -->
+		        		<h4 class="modal-title" data-i18n="confirm__order">Confirm <span class="currency_order_modal_type"></span> Order</h4>
+		      		</div>
+		      		<div class="modal-body">			
+						<form role="form" autocomplete="off">
+							<div class="callout callout-danger error_message" style="display:none"></div>
+							<div class="form-group">
+								<label data-i18n="order_description">ORDER DESCRIPTION</label>
+								<p id="currency_order_description"></p>
+								<input type="hidden" name="currency" id="currency_order_currency" value="" />
+								<input type="hidden" name="quantityQNT" id="currency_order_quantity" value="" />
+								<input type="hidden" name="priceNQT" id="currency_order_price" value="" />
+								<input type="hidden" name="feeNQT" id="currency_order_fee" value="" />
+								<input type="hidden" name="deadline" id="currency_order_deadline" data-default="24" value="24" />
+							</div>
+							<div class="form-group">
+								<label><span data-i18n="total">TOTAL</span> <i id="currency_order_total_tooltip" class="fa fa-question-circle" style="color:#4CAA6E" data-toggle="popover" data-placement="right" data-content=""></i></label>
+								<p id="currency_order_total"></p>
+							</div>
+							<div class="form-group">
+								<label data-i18n="fee">FEE</label>
+								<p id="currency_order_fee_paid"></p>
+							</div>
+							<div class="form-group secret_phrase">
+								<label for="currency_order_password" data-i18n="passphrase">PASSPHRASE</label>
+								<input type="password" name="secretPhrase" id="currency_order_password" class="form-control" placeholder="" tabindex="1">
+							</div>
+							<input type="hidden" name="currency_order_type"  id="currency_order_type" />
+				      		<input type="hidden" name="request_type" value="orderCurrency" />
+						</form>
+		      		</div>
+			      	<div class="modal-footer" style="margin-top:0;">
+				        <button type="button" class="btn btn-default" data-dismiss="modal" data-i18n="cancel">Cancel</button>
+				        <button type="button" class="btn btn-primary" data-loading-text="Submitting..." id="currency_order_modal_button" data-i18n="[data-loading-text]submitting"></button>
+			      	</div>
+		    	</div>
+			</div>
+		</div>
+		
 		<div class="modal fade" id="issue_currency_modal" tabindex="-1" role="dialog" aria-hidden="true">
 			<div class="modal-dialog">
 		    	<div class="modal-content">
@@ -2680,10 +2724,6 @@
                                     <label for="issue_currency_mintable" style="font-weight:normal;" tabindex="7" data-i18n="mintable">Mintable</label>
                                 </div>
                                 <div class="form-group advanced optional_mint">
-                                    <label for="issue_currency_initial_supply" data-i18n="initial_supply">INITIAL SUPPLY</label>
-                                    <input type="number" name="initialSupply" id="issue_currency_initial_supply" class="form-control" min="1" placeholder="Initial Supply" data-i18n="Initial_supply" tabindex="6">
-                                </div>
-                                <div class="form-group advanced optional_mint">
                                     <label for="issue_currency_min_difficulty" data-i18n="min_difficulty">MINIMUM DIFFICULTY</label>
                                     <input type="number" name="minDifficulty" id="issue_currency_min_difficulty" class="form-control" min="1" placeholder="Minimum Difficulty" data-i18n="minimum_difficulty" tabindex="9">
                                 </div>
@@ -2701,13 +2741,17 @@
                                 </div>
                             </div>
                             <div class="row">
-								<div class="col-xs-6 col-sm-6 col-md-6">
+                            	<div class="col-xs-4 col-sm-4 col-md-4">
+                                    <label for="issue_currency_initial_supply" data-i18n="initial_supply">INITIAL SUPPLY</label>
+                                    <input type="number" name="initialSupply" id="issue_currency_initial_supply" class="form-control" min="0" placeholder="Initial Supply" data-i18n="Initial_supply" tabindex="5">
+                                </div>
+								<div class="col-xs-4 col-sm-4 col-md-4">
 									<div class="form-group">
 									<label for="issue_currency_max_supply" data-i18n="total_supply">TOTAL SUPPLY</label>
-									<input type="number" name="maxSupply" id="issue_currency_max_supply" class="form-control" min="1" placeholder="Total Supply" data-i18n="total_supply" tabindex="5">
+									<input type="number" name="maxSupply" id="issue_currency_max_supply" class="form-control" min="1" placeholder="Total Supply" data-i18n="total_supply" tabindex="6">
 								</div>
 								</div>
-								<div class="col-xs-6 col-sm-6 col-md-6">
+								<div class="col-xs-4 col-sm-4 col-md-4">
 									<div class="form-group">
 										<label for="issue_currency_decimals"><span data-i18n="decimals">DECIMALS</span> <i class="fa fa-question-circle show_popover" data-content="The maximum allowed number of digits after the currency quantity decimal point." data-i18n="[data-content]currency_decimals_help" data-container="body" style="color:#4CAA6E" ></i></label>
 						                <input type="number" name="decimals" id="issue_currency_decimals" class="form-control" min="0" max="8" placeholder="Decimals" data-i18n="decimals" data-default="0" value="0" tabindex="5">

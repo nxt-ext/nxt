@@ -12,6 +12,8 @@ var NRS = (function(NRS, $, undefined) {
 		$("#buy_currency_with_nxt").html("Buy " + currencyCode + " with NXT");
 		$("#sell_currency_with_nxt").html("Sell " + currencyCode + " for NXT");
 		$(".currency_code").html(String(currencyCode).escapeHTML());
+		$("#sell_currency_button").data("currency", currencyCode);
+		$("#buy_currency_button").data("currency", currencyCode);
 		
 		NRS.sendRequest("getCurrency+", {
 			"code": currencyCode
@@ -24,6 +26,7 @@ var NRS = (function(NRS, $, undefined) {
 				$("#currency_max_supply").html(String(response.maxSupply).escapeHTML());
 				$("#currency_decimals").html(String(response.decimals).escapeHTML());
 				$("#currency_description").html(String(response.description).escapeHTML());
+				$("#buy_currency_button").data("decimals", response.decimals);
 			}
 		});
 		
@@ -162,6 +165,110 @@ var NRS = (function(NRS, $, undefined) {
 			box.removeClass("collapsed-box");
 			bf.slideDown();
 			$(this).find(".btn i.fa").removeClass("fa-plus").addClass("fa-minus");
+		}
+	});
+	
+	/* Currency Order Model */
+	$("#currency_order_modal").on("show.bs.modal", function(e) {
+		var $invoker = $(e.relatedTarget);
+
+		var orderType = $invoker.data("type");
+		var currencyId = $invoker.data("currency");
+		var currencyDecimals = $invoker.data("decimals");
+
+		$("#currency_order_modal_button").html(orderType + " currency").data("resetText", orderType + " currency");
+
+		orderType = orderType.toLowerCase();
+
+		try {
+			//TODO
+			var quantity = String($("#" + orderType + "_currency_quantity").val());
+			var quantityQNT = new BigInteger(NRS.convertToQNT(quantity, currencyDecimals));
+			var priceNQT = new BigInteger(NRS.calculatePricePerWholeQNT(NRS.convertToNQT(String($("#" + orderType + "_currency_price").val())), currencyDecimals));
+			var feeNQT = new BigInteger(NRS.convertToNQT(String($("#" + orderType + "_currency_fee").val())));
+			var totalNXT = NRS.formatAmount(NRS.calculateOrderTotalNQT(quantityQNT, priceNQT, currencyDecimals), false, true);
+		} catch (err) {
+			$.growl($.t("error_invalid_input"), {
+				"type": "danger"
+			});
+			return e.preventDefault();
+		}
+
+		if (priceNQT.toString() == "0" || quantityQNT.toString() == "0") {
+			$.growl($.t("error_amount_price_required"), {
+				"type": "danger"
+			});
+			return e.preventDefault();
+		}
+
+		if (feeNQT.toString() == "0") {
+			feeNQT = new BigInteger("100000000");
+		}
+
+		var priceNQTPerWholeQNT = priceNQT.multiply(new BigInteger("" + Math.pow(10, currencyDecimals)));
+
+		if (orderType == "buy") {
+			var description = $.t("buy_currency_description", {
+				"quantity": NRS.formatQuantity(quantityQNT, currencyDecimals, true),
+				"currency_name": $("#currency_name").html().escapeHTML(),
+				"nxt": NRS.formatAmount(priceNQTPerWholeQNT)
+			});
+			var tooltipTitle = $.t("buy_order_description_help", {
+				"nxt": NRS.formatAmount(priceNQTPerWholeQNT, false, true),
+				"total_nxt": totalNXT
+			});
+		} else {
+			var description = $.t("sell_currency_description", {
+				"quantity": NRS.formatQuantity(quantityQNT, currencyDecimals, true),
+				"currency_name": $("#currency_name").html().escapeHTML(),
+				"nxt": NRS.formatAmount(priceNQTPerWholeQNT)
+			});
+			var tooltipTitle = $.t("sell_order_description_help", {
+				"nxt": NRS.formatAmount(priceNQTPerWholeQNT, false, true),
+				"total_nxt": totalNXT
+			});
+		}
+
+		$("#currency_order_description").html(description);
+		$("#currency_order_total").html(totalNXT + " NXT");
+		$("#currency_order_fee_paid").html(NRS.formatAmount(feeNQT) + " NXT");
+
+		if (quantity != "1") {
+			$("#currency_order_total_tooltip").show();
+			$("#currency_order_total_tooltip").popover("destroy");
+			$("#currency_order_total_tooltip").data("content", tooltipTitle);
+			$("#currency_order_total_tooltip").popover({
+				"content": tooltipTitle,
+				"trigger": "hover"
+			});
+		} else {
+			$("#currency_order_total_tooltip").hide();
+		}
+
+		$("#currency_order_type").val((orderType == "buy" ? "currencyBuy" : "currencySell"));
+		$("#currency_order_currency").val(currencyId);
+		$("#currency_order_quantity").val(quantityQNT.toString());
+		$("#currency_order_price").val(priceNQT.toString());
+		$("#currency_order_fee").val(feeNQT.toString());
+	});
+	
+	//calculate preview price (calculated on every keypress)
+	$("#sell_currency_quantity, #sell_currency_price, #buy_currency_quantity, #buy_currency_price").keyup(function(e) {
+		var currencyDecimals = $('#currency_decimals').val();
+		var orderType = $(this).data("type").toLowerCase();
+
+		try {
+			var quantityQNT = new BigInteger(NRS.convertToQNT(String($("#" + orderType + "_currency_quantity").val()), currencyDecimals));
+			var priceNQT = new BigInteger(NRS.calculatePricePerWholeQNT(NRS.convertToNQT(String($("#" + orderType + "_currency_price").val())), currencyDecimals));
+
+			if (priceNQT.toString() == "0" || quantityQNT.toString() == "0") {
+				$("#" + orderType + "_currency_total").val("0");
+			} else {
+				var total = NRS.calculateOrderTotal(quantityQNT, priceNQT, currencyDecimals);
+				$("#" + orderType + "_currency_total").val(total.toString());
+			}
+		} catch (err) {
+			$("#" + orderType + "_currency_total").val("0");
 		}
 	});
 
@@ -406,11 +513,14 @@ var NRS = (function(NRS, $, undefined) {
     $('#issue_currency_claimable').change(function() {
         if($(this).is(":checked")){
         	$("#issue_currency_initial_supply").val(0);
-        	$("#issue_currency_initial_supply").prop("disabled", true);
+        	//$("#issue_currency_initial_supply").prop("disabled", true);
+        	//$('#issue_currency_reservable').prop('checked', true);
+        	$( ".optional_reserve" ).show();
         }
 		else{
 			$("#issue_currency_initial_supply").val($("#issue_currency_max_supply").val());
-			$("#issue_currency_initial_supply").prop("disabled", false);
+			//$("#issue_currency_initial_supply").prop("disabled", false);
+			//$('#issue_currency_reservable').prop('checked', true);
 		}
     });
 	$('#issue_currency_reservable').change(function() {
