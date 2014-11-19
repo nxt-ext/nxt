@@ -107,11 +107,12 @@ var ATS = (function(ATS, $, undefined) {
             if (form.elements[i].type != 'button' && form.elements[i].value && form.elements[i].value != 'submit') {
                 var key = form.elements[i].name;
                 var value = form.elements[i].value;
-                if(key in params) { // duplicate key; add to existing array or create new array
-                    if(params[key].constructor.toString().indexOf("Array") > -1) params[key][params[key].length] = value;
-                    else params[key] = [params[key], value];
+                if(key in params) {
+                    var index = params[key].length;
+                    params[key][index] = value;
+                } else {
+                    params[key] = [value];
                 }
-                else params[key] = value;
             }
         }
         $.ajax({
@@ -130,7 +131,7 @@ var ATS = (function(ATS, $, undefined) {
             alert('API not available, check if Nxt Server is running!');
         });
         if ($(form).has('.uri-link').length > 0) { 
-            var uri = '/nxt?' + jQuery.param(params).replace(/%5B%5D/g, "");
+            var uri = '/nxt?' + jQuery.param(params, true);
             var html = '<a href="' + uri + '" target="_blank" style="font-size:12px;font-weight:normal;">Open GET URL</a>';
             form.getElementsByClassName("uri-link")[0].innerHTML = html;
         }
