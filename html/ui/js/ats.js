@@ -130,7 +130,7 @@ var ATS = (function(ATS, $, undefined) {
             alert('API not available, check if Nxt Server is running!');
         });
         if ($(form).has('.uri-link').length > 0) { 
-            var uri = '/nxt?' + jQuery.param(params);
+            var uri = '/nxt?' + jQuery.param(params).replace(/%5B%5D/g, "");
             var html = '<a href="' + uri + '" target="_blank" style="font-size:12px;font-weight:normal;">Open GET URL</a>';
             form.getElementsByClassName("uri-link")[0].innerHTML = html;
         }
@@ -142,7 +142,6 @@ var ATS = (function(ATS, $, undefined) {
         $('#navi-selected').attr('href', newUrl);
         $('#navi-selected').text('SELECTED (' + ATS.selectedApiCalls.length + ')');
         ATS.setCookie('selected_api_calls', ATS.selectedApiCalls.join('_'), 30);
-        console.log(ATS.selectedApiCalls);
     }
 
     ATS.setSelectedApiCalls = function() {
