@@ -796,7 +796,7 @@ public final class DigitalGoodsStore {
         private final long goodsId;
 
         private GoodsPurchasesClause(long goodsId, boolean withPublicFeedbacksOnly) {
-            super(" goods_id = ? AND pending = FALSE " + (withPublicFeedbacksOnly ? " AND has_public_feedbacks = TRUE " : ""));
+            super(" goods_id = ? AND goods IS NOT NULL " + (withPublicFeedbacksOnly ? " AND has_public_feedbacks = TRUE " : ""));
             this.goodsId = goodsId;
         }
 
