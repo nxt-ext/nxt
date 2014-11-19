@@ -400,6 +400,17 @@ public final class Account {
         return accountAssetTable.getCount(new DbClause.LongClause("asset_id", assetId), height);
     }
 
+    public static int getAccountAssetCount(long accountId) {
+        return accountAssetTable.getCount(new DbClause.LongClause("account_id", accountId));
+    }
+
+    public static int getAccountAssetCount(long accountId, int height) {
+        if (height < 0) {
+            return getAccountAssetCount(accountId);
+        }
+        return accountAssetTable.getCount(new DbClause.LongClause("account_id", accountId), height);
+    }
+
     public static Account getAccount(long id) {
         return id == 0 ? null : accountTable.get(accountDbKeyFactory.newKey(id));
     }

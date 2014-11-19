@@ -243,6 +243,7 @@ final class JSONData {
         json.put("timestamp", goods.getTimestamp());
         if (includeCounts) {
             json.put("numberOfPurchases", DigitalGoodsStore.getGoodsPurchaseCount(goods.getId(), false));
+            json.put("numberOfPublicFeedbacks", DigitalGoodsStore.getGoodsPurchaseCount(goods.getId(), true));
         }
         return json;
     }

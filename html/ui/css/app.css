@@ -3170,7 +3170,7 @@ hr {
   font-weight:bold;
 }
 
-.dgs_page_contents span.tags, .dgs_page_contents span.quantity {
+.dgs_page_contents span.tags, .dgs_page_contents span.quantity, .dgs_page_contents span.purchases  {
   color:#999999;
 }
 

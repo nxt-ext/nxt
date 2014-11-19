@@ -101,9 +101,11 @@ public final class APIServlet extends HttpServlet {
         map.put("getAccountLessors", GetAccountLessors.instance);
         map.put("getAccountAssets", GetAccountAssets.instance);
         map.put("getAccountCurrencies", GetAccountCurrencies.instance);
+        map.put("getAccountAssetCount", GetAccountAssetCount.instance);
         map.put("sellAlias", SellAlias.instance);
         map.put("buyAlias", BuyAlias.instance);
         map.put("getAlias", GetAlias.instance);
+        map.put("getAliasCount", GetAliasCount.instance);
         map.put("getAliases", GetAliases.instance);
         map.put("getAllAssets", GetAllAssets.instance);
         map.put("getAllCurrencies", GetAllCurrencies.instance);
@@ -126,10 +128,13 @@ public final class APIServlet extends HttpServlet {
         map.put("getCurrenciesByIssuer", GetCurrenciesByIssuer.instance);
         map.put("getCurrencyAccounts", GetCurrencyAccounts.instance);
         map.put("getDGSGoods", GetDGSGoods.instance);
+        map.put("getDGSGoodsCount", GetDGSGoodsCount.instance);
         map.put("getDGSGood", GetDGSGood.instance);
         map.put("getDGSGoodsPurchases", GetDGSGoodsPurchases.instance);
+        map.put("getDGSGoodsPurchaseCount", GetDGSGoodsPurchaseCount.instance);
         map.put("getDGSPurchases", GetDGSPurchases.instance);
         map.put("getDGSPurchase", GetDGSPurchase.instance);
+        map.put("getDGSPurchaseCount", GetDGSPurchaseCount.instance);
         map.put("getDGSPendingPurchases", GetDGSPendingPurchases.instance);
         map.put("getDGSTags", GetDGSTags.instance);
         map.put("getGuaranteedBalance", GetGuaranteedBalance.instance);
