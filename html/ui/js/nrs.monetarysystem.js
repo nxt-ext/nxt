@@ -102,7 +102,11 @@ var NRS = (function(NRS, $, undefined) {
 				var rows = "";
 				for (var i = 0; i < response.exchanges.length; i++) {
                 var exchanges = response.exchanges[i];
-					rows += "";
+					rows += "<tr><td><a href='#' class='user-info' data-user='" + String(exchanges.sellerRS).escapeHTML() + "'>" + String(exchanges.sellerRS).escapeHTML() + "</a></td>" +
+                  "<td><a href='#' class='user-info' data-user='" + String(exchanges.buyerRS).escapeHTML() + "'>" + String(exchanges.buyerRS).escapeHTML() + "</a></td>" +
+                  "<td>" + exchanges.units + "</td>" +
+                  "<td>" + NRS.formatAmount(exchanges.rateNQT) + "</td>" +
+                  "</tr>";
 				}
 				$("#ms_exchanges_history_table tbody").empty().append(rows);
 			} else {
@@ -124,7 +128,11 @@ var NRS = (function(NRS, $, undefined) {
 				var rows = "";
 				for (var i = 0; i < response.exchanges.length; i++) {
                 var exchanges = response.exchanges[i];
-					rows += "";
+					rows += "<tr><td><a href='#' class='user-info' data-user='" + String(exchanges.sellerRS).escapeHTML() + "'>" + String(exchanges.sellerRS).escapeHTML() + "</a></td>" +
+                  "<td><a href='#' class='user-info' data-user='" + String(exchanges.buyerRS).escapeHTML() + "'>" + String(exchanges.buyerRS).escapeHTML() + "</a></td>" +
+                  "<td>" + exchanges.units + "</td>" +
+                  "<td>" + NRS.formatAmount(exchanges.rateNQT) + "</td>" +
+                  "</tr>";
 				}
 				$("#ms_my_exchanges_history_table tbody").empty().append(rows);
 			} else {
@@ -246,11 +254,21 @@ var NRS = (function(NRS, $, undefined) {
 		}
 
 		$("#currency_order_type").val((orderType == "buy" ? "currencyBuy" : "currencySell"));
-		$("#currency_order_currency").val(currencyId);
+		$("#currency_order_code").val(currencyId);
 		$("#currency_order_quantity").val(quantityQNT.toString());
 		$("#currency_order_price").val(priceNQT.toString());
 		$("#currency_order_fee").val(feeNQT.toString());
 	});
+	
+	NRS.forms.orderCurrency = function($modal) {
+		var orderType = $("#currency_order_type").val();
+
+		return {
+			"requestType": orderType,
+			"successMessage": (orderType == "currencyBuy" ? $.t("success_buy_order_currency") : $.t("success_sell_order_currency")),
+			"errorMessage": $.t("error_order_currency")
+		};
+	}
 	
 	//calculate preview price (calculated on every keypress)
 	$("#sell_currency_quantity, #sell_currency_price, #buy_currency_quantity, #buy_currency_price").keyup(function(e) {
