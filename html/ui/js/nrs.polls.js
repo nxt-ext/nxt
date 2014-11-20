@@ -251,13 +251,23 @@ var NRS = (function(NRS, $, undefined) {
 			}, function(response, input) {
 				$("#cast_vote_poll_name").text(response.name);
 				$("#cast_vote_poll_description").text(response.description);
+				$("#cast_vote_answers_entry").text("");
+				for(var b=0; b<response.options.length; b++)
+				{
+					$("#cast_vote_answers_entry").append("<div class='answer_slider'><label name='cast_vote_answer_"+b+"'>"+response.options[b]+"</label> &nbsp;&nbsp;<span class='badge'>"+response.minRangeValue+"</span><br/><input class='form-control' step='1' value='"+response.minRangeValue+"' max='"+response.maxRangeValue+"' min='"+response.minRangeValue+"' type='range'/></div>");
+
+				}
 				$("#cast_vote_modal").modal();
+				$("input[type='range']").on("change mousemove", function() {
+					$(this).parent().children(".badge").text($(this).val());
+
+				});
 			});
 
 			
 		});	
 
-
+		
 
 	NRS.forms.createPoll = function($modal) {
 		var options = new Array();
@@ -281,11 +291,11 @@ var NRS = (function(NRS, $, undefined) {
 			"finishHeight": (parseInt(NRS.lastBlockHeight) + parseInt($("#create_poll_duration").val())),
 			"minNumberOfOptions": $("#create_poll_min_options").val(),
 			"maxNumberOfOptions": $("#create_poll_max_options").val(),
-			"minRangeValue": $("#create_poll_min_options").val(),
-			"maxRangeValue": $("#create_poll_max_options").val(),
+			"minRangeValue": $("#create_poll_min_range_value").val(),
+			"maxRangeValue": $("#create_poll_max_range_value").val(),
 			"minBalance": $("#create_poll_min_balance").val(),
 			"feeNQT": (parseInt($("#create_poll_fee").val()) * 100000000),
-			"deadline": "24",
+			"deadline": $("#create_poll_deadline").val(),
 			"secretPhrase": $("#create_poll_password").val()
 		};
 

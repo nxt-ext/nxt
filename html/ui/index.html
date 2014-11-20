@@ -3078,14 +3078,14 @@
                             <div class="row">
                                 <div class="col-xs-6 col-sm-6 col-md-6">
                                     <div class="form-group">
-                                        <label for="create_poll_min_options" data-i18n="minimum_range_value">MINIMUM RANGE VALUE</label>
-                                        <input type="number" name="minNumberOfOptions" id="create_poll_min_options" min="0" class="form-control" placeholder="" data-default="0" value="0" tabindex="8">
+                                        <label for="create_poll_range_value" data-i18n="minimum_range_value">MINIMUM RANGE VALUE</label>
+                                        <input type="number" name="minRangeValue" id="create_poll_min_range_value" min="0" class="form-control" placeholder="" data-default="0" value="0" tabindex="8">
                                     </div>
                                 </div>
                                 <div class="col-xs-6 col-sm-6 col-md-6">
                                     <div class="form-group">
-                                        <label for="create_poll_max_options" data-i18n="maximum_range_value">MAXIMUM RANGE VALUE</label>
-                                        <input type="number" name="maxNumberOfOptions" id="create_poll_max_options" min="1" class="form-control" placeholder="" data-default="1" value="1" tabindex="9">
+                                        <label for="create_poll_max_range_value" data-i18n="maximum_range_value">MAXIMUM RANGE VALUE</label>
+                                        <input type="number" name="maxRangeValue" id="create_poll_max_range_value" min="1" class="form-control" placeholder="" data-default="1" value="1" tabindex="9">
                                     </div>
                                 </div>
                             </div>
@@ -3153,23 +3153,7 @@
 								<span id="cast_vote_poll_description"></span>
 							</div>
 							<div class="form-group" id="cast_vote_answers">
-								<label data-i18n="answers">ANSWERS</label>
-								 <div class="form-group">
-									<div class="input-group">
-										<input type="text" class="form-control cast_vote_answers" name="cast_vote_answers[]" placeholder="Answer" data-i18n="[placeholder]answer" tabindex="3" />
-										<span class="input-group-btn">
-											<button class="btn remove_answer" type="button"><i class="fa fa-minus" style="color:white"></i></button>
-										</span>
-									</div>
-								</div>
-								 <div class="form-group">
-									<div class="input-group">
-										<input type="text" class="form-control cast_vote_answers" name="cast_vote_answers[]" placeholder="Answer" data-i18n="[placeholder]answer" tabindex="3" />
-										<span class="input-group-btn">
-											<button class="btn remove_answer" type="button"><i class="fa fa-minus" style="color:white"></i></button>
-										</span>
-									</div>
-								</div>
+								<div id="cast_vote_answers_entry"></div>
 							</div>
 							<div class="form-group secret_phrase">
 								<label for="cast_vote_password" data-i18n="passphrase">PASSPHRASE</label>
