@@ -1,4 +1,4 @@
 del nxt.jar 
-jar cf nxt.jar -C classes .
+jar cfm nxt.jar src/META-INF/MANIFEST.MF -C classes .
 
 echo "nxt.jar generated successfully"

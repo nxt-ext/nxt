@@ -84,6 +84,7 @@ def create_exe(settings):
         os.remove('installer.7z')
     files = '" "'.join(settings.file)
     p7zcmd = '"%s" a -mmt -t7z -mx=9 installer.7z "%s"' % (p7z, files)
+    print(p7zcmd)
     subprocess.call(p7zcmd, shell=use_shell)
     
     config = open('config.txt', 'w')
@@ -126,8 +127,8 @@ def create_exe(settings):
         upx = '"%s" --ultra-brute "%s"' % (upx, settings.output)
         subprocess.call(upx, shell=use_shell)
     
-    os.remove('config.txt')
-    os.remove('installer.7z')
+#    os.remove('config.txt')
+#    os.remove('installer.7z')
 
 def main():
     create_exe(parse_options())

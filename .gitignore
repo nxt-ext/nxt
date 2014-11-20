@@ -20,3 +20,5 @@
 /compile.bat
 /test/classes/
 *.csv
+/jre
+/dist
