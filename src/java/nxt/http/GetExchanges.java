@@ -57,4 +57,9 @@ public final class GetExchanges extends APIServlet.APIRequestHandler {
         return response;
     }
 
+    @Override
+    boolean startDbTransaction() {
+        return true;
+    }
+
 }

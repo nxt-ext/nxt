@@ -1,3 +1,6 @@
+This release is focused on improving the Nxt Marketplace (Digital Goods
+Store) by adding search and browse capabilities.
+
 Implemented full text search using the Lucene library, as supported by H2.
 Table columns currently indexed are asset.name, asset.description,
 goods.name, goods.tags, goods.description. A rebuild of the search index
@@ -25,16 +28,33 @@ optionally those with public feedbacks only.
 Added getDGSTags API returning all DGS Goods tags, sorted by number of goods
 in stock with that tag and total number of goods with that tag. Takes an optional
 inStockOnly parameter, default true, to retrieve tags for goods in stock only.
-To populate the tags table in the database, a blockchain rescan will be done.
 At most three tags per goods are used, tags longer than 20 characters or shorter
 than 3 are ignored, and the parsing of tags is done using the Lucene
 StandardAnalyzer.
 
-Show purchase counts in all API responses returning Goods JSON, unless
-includeCounts parameter is false.
+Show purchase counts and public feedback counts in all API responses returning
+Goods JSON, unless includeCounts parameter is false.
 
 Include total numbers of Goods, Purchases, and Tags in the getState API.
 
+Added getAccountAssetCount, getAliasCount, getDGSGoodsCount,
+getDGSGoodsPurchaseCount, getDGSPurchaseCount APIs, to be able to retrieve the
+corresponding total counts directly.
+
+To populate the tags table in the database, a blockchain rescan will be done at
+first start.
+
 Updated jetty to version 9.2.5. If unpacking on top of a previous installation,
 delete your lib directory first to remove the old jetty libraries.
+
+
+UI changes:
+
+The Marketplace page now shows a listing of tag keywords, ordered by number of
+goods in stock with that tag. Clicking on each tag brings the list of goods
+having that tag. Searching for goods is now possible using keywords from the
+goods name, description, or tags. The list of goods also display the number of
+completed purchases, and for goods with a public feedback available, a link to
+display that feedback.
+
 
