@@ -159,9 +159,6 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.dgs_search_seller = function(seller) {
-		if (_currentSearch["page"] != "seller") {
-			NRS.pageNumber = 1;
-		}
 		if (seller == null) {
 			seller = _currentSearch["searchStr"];
 		} else {
@@ -169,6 +166,8 @@ var NRS = (function(NRS, $, undefined) {
 				"page": "seller",
 				"searchStr": seller
 			};
+			NRS.pageNumber = 1;
+			NRS.hasMorePages = false;
 		}
 		$(".dgs_search_pageheader_addon").hide();
 		$(".dgs_search_pageheader_addon_seller_text").text(seller);
@@ -183,9 +182,6 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.dgs_search_fulltext = function(query) {
-		if (_currentSearch["page"] != "fulltext") {
-			NRS.pageNumber = 1;
-		}
 		if (query == null) {
 			query = _currentSearch["searchStr"];
 		} else {
@@ -193,6 +189,8 @@ var NRS = (function(NRS, $, undefined) {
 				"page": "fulltext",
 				"searchStr": query
 			};
+			NRS.pageNumber = 1;
+			NRS.hasMorePages = false;
 		}
 		$(".dgs_search_pageheader_addon").hide();
 		$(".dgs_search_pageheader_addon_fulltext_text").text('"' + query + '"');
@@ -207,9 +205,6 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.dgs_search_tag = function(tag) {
-		if (_currentSearch["page"] != "tag") {
-			NRS.pageNumber = 1;
-		}
 		if (tag == null) {
 			tag = _currentSearch["searchStr"];
 		} else {
@@ -217,6 +212,8 @@ var NRS = (function(NRS, $, undefined) {
 				"page": "tag",
 				"searchStr": tag
 			};
+			NRS.pageNumber = 1;
+			NRS.hasMorePages = false;
 		}
 		$(".dgs_search_pageheader_addon").hide();
 		$(".dgs_search_pageheader_addon_tag_text").text('"' + tag + '"');
@@ -233,6 +230,7 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.dgs_search_main = function(callback) {
 		if (_currentSearch["page"] != "main") {
 			NRS.pageNumber = 1;
+			NRS.hasMorePages = false;
 		}
 		_currentSearch = {
 			"page": "main",
