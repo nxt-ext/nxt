@@ -5,6 +5,7 @@ import nxt.Alias;
 import nxt.Asset;
 import nxt.AssetTransfer;
 import nxt.Block;
+import nxt.DigitalGoodsStore;
 import nxt.Generator;
 import nxt.Nxt;
 import nxt.Order;
@@ -62,6 +63,9 @@ public final class GetState extends APIServlet.APIRequestHandler {
             response.put("numberOfTrades", Trade.getCount());
             response.put("numberOfTransfers", AssetTransfer.getCount());
             response.put("numberOfAliases", Alias.getCount());
+            response.put("numberOfGoods", DigitalGoodsStore.Goods.getCount());
+            response.put("numberOfPurchases", DigitalGoodsStore.Purchase.getCount());
+            response.put("numberOfTags", DigitalGoodsStore.Tag.getCount());
             //response.put("numberOfPolls", Poll.getCount());
             //response.put("numberOfVotes", Vote.getCount());
         }
