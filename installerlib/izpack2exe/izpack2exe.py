@@ -127,8 +127,8 @@ def create_exe(settings):
         upx = '"%s" --ultra-brute "%s"' % (upx, settings.output)
         subprocess.call(upx, shell=use_shell)
     
-#    os.remove('config.txt')
-#    os.remove('installer.7z')
+    os.remove('config.txt')
+    os.remove('installer.7z')
 
 def main():
     create_exe(parse_options())
