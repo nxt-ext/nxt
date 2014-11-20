@@ -102,8 +102,8 @@ var NRS = (function(NRS, $, undefined) {
 				var rows = "";
 				for (var i = 0; i < response.exchanges.length; i++) {
                 var exchanges = response.exchanges[i];
-					rows += "<tr><td><a href='#' class='user-info' data-user='" + String(exchanges.sellerRS).escapeHTML() + "'>" + String(exchanges.sellerRS).escapeHTML() + "</a></td>" +
-                  "<td><a href='#' class='user-info' data-user='" + String(exchanges.buyerRS).escapeHTML() + "'>" + String(exchanges.buyerRS).escapeHTML() + "</a></td>" +
+					rows += "<tr><td><a href='#' class='user-info' data-user='" + (exchanges.sellerRS == NRS.accountRS ? "You" : exchanges.sellerRS) + "'>" + (exchanges.sellerRS == NRS.accountRS ? "You" : exchanges.sellerRS) + "</a></td>" +
+                  "<td><a href='#' class='user-info' data-user='" + (exchanges.buyerRS == NRS.accountRS ? "You" : exchanges.buyerRS) + "'>" + (exchanges.buyerRS == NRS.accountRS ? "You" : exchanges.buyerRS) + "</a></td>" +
                   "<td>" + exchanges.units + "</td>" +
                   "<td>" + NRS.formatAmount(exchanges.rateNQT) + "</td>" +
                   "</tr>";
@@ -128,8 +128,8 @@ var NRS = (function(NRS, $, undefined) {
 				var rows = "";
 				for (var i = 0; i < response.exchanges.length; i++) {
                 var exchanges = response.exchanges[i];
-					rows += "<tr><td><a href='#' class='user-info' data-user='" + String(exchanges.sellerRS).escapeHTML() + "'>" + String(exchanges.sellerRS).escapeHTML() + "</a></td>" +
-                  "<td><a href='#' class='user-info' data-user='" + String(exchanges.buyerRS).escapeHTML() + "'>" + String(exchanges.buyerRS).escapeHTML() + "</a></td>" +
+					rows += "<tr><td><a href='#' class='user-info' data-user='" + (exchanges.sellerRS == NRS.accountRS ? "You" : exchanges.sellerRS) + "'>" + (exchanges.sellerRS == NRS.accountRS ? "You" : exchanges.sellerRS) + "</a></td>" +
+                  "<td><a href='#' class='user-info' data-user='" + (exchanges.buyerRS == NRS.accountRS ? "You" : exchanges.buyerRS) + "'>" + (exchanges.buyerRS == NRS.accountRS ? "You" : exchanges.buyerRS) + "</a></td>" +
                   "<td>" + exchanges.units + "</td>" +
                   "<td>" + NRS.formatAmount(exchanges.rateNQT) + "</td>" +
                   "</tr>";
@@ -305,9 +305,12 @@ var NRS = (function(NRS, $, undefined) {
 					}
 					var rows = "";
 					for (var i = 0; i < response.accountCurrencies.length; i++) {
-						var currency = response.accountCurrencies[i];
-						rows += "<tr><td>" + String(currency.currency).escapeHTML() + "</td>" +
+						var currency = response.accountCurrencies[i];						
+						rows += "<tr><td><a href='#' onClick='NRS.goToCurrency(&quot;" + String(currency.code) + "&quot;)' >" + String(currency.currency).escapeHTML() + "</a></td>" +
+							"<td>" + currency.name + "</td>" +
+							"<td>" + currency.code + "</td>" +
 							"<td>" + currency.units + "</td>" +
+							"<td><a href='#' data-toggle='modal' data-target='#transfer_currency_modal' data-currency='" + String(currency.currency).escapeHTML() + "' data-name='" + String(currency.name).escapeHTML() + "' data-decimals='" + String(currency.decimals).escapeHTML() + "'>" + $.t("transfer") + "</a></td>" +
 							"</tr>";
 					}
 					NRS.dataLoaded(rows);
@@ -345,7 +348,6 @@ var NRS = (function(NRS, $, undefined) {
 							"<td>" + currency.code + "</td>" +
 							"<td>" + currency.type + "</td>" +
 							"<td>" + currency.currentSupply + "</td>" +
-							"<td><a href='#' data-toggle='modal' data-target='#transfer_currency_modal' data-currency='" + String(currency.currency).escapeHTML() + "' data-name='" + String(currency.name).escapeHTML() + "' data-decimals='" + String(currency.decimals).escapeHTML() + "'>" + $.t("transfer") + "</a></td>" +
 							"</tr>";
 					}
 					NRS.dataLoaded(rows);
@@ -427,11 +429,14 @@ var NRS = (function(NRS, $, undefined) {
 				var rows = "";
 				for (var i = 0; i < response.exchanges.length; i++) {
                 var exchange = response.exchanges[i];
-					rows += "<tr><td><a href='#' data-transaction='" + String(exchange.exchange).escapeHTML() + "'>" + String(exchange.exchange).escapeHTML() + "</a></td>" +
-                  "<td>" + exchange.name + "</td>" +
-                  "<td>" + exchange.code + "</td>" +
-                  "<td>" + exchange.type + "</td>" +
-                  "</tr>";
+					rows += "<tr><td><a href='#' data-transaction='" + String(exchange.transaction).escapeHTML() + "'>" + String(exchange.transaction).escapeHTML() + "</a></td>" +
+					"<td>" + (exchange.sellerRS == NRS.accountRS ? "You" : exchange.sellerRS) + "</td>" +
+					"<td>" + (exchange.buyerRS == NRS.accountRS ? "You" : exchange.buyerRS) + "</td>" +
+                  	"<td>" + exchange.name + "</td>" +
+                  	"<td>" + exchange.code + "</td>" +
+                  	"<td>" + NRS.formatQuantity(exchange.units, exchange.decimals) + "</td>" +
+                  	"<td>" + NRS.formatAmount(exchange.rateNQT) + "</td>" +
+                  	"</tr>";
 				}
 				NRS.dataLoaded(rows);
 			} else {

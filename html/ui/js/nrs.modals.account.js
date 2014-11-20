@@ -7,7 +7,7 @@ var NRS = (function(NRS, $, undefined) {
 		"user": 0
 	};
 
-	$("#blocks_table, #polls_table, #contacts_table, #transactions_table, #dashboard_transactions_table, #asset_account, #asset_exchange_ask_orders_table, #transfer_history_table, #asset_exchange_bid_orders_table, #alias_info_table, .dgs_page_contents, .modal-content, #register_alias_modal, #asset_exchange_trade_history_table, #trade_history_table, #ms_open_sell_orders_table, #ms_open_buy_orders_table").on("click", "a[data-user]", function(e) {
+	$("#blocks_table, #polls_table, #contacts_table, #transactions_table, #dashboard_transactions_table, #asset_account, #asset_exchange_ask_orders_table, #transfer_history_table, #asset_exchange_bid_orders_table, #alias_info_table, .dgs_page_contents, .modal-content, #register_alias_modal, #asset_exchange_trade_history_table, #trade_history_table, #ms_open_sell_orders_table, #ms_open_buy_orders_table, #ms_exchanges_history_table").on("click", "a[data-user]", function(e) {
 		e.preventDefault();
 
 		var account = $(this).data("user");
