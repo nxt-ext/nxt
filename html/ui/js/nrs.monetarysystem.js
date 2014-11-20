@@ -35,7 +35,7 @@ var NRS = (function(NRS, $, undefined) {
 			"code": currencyCode
 		}, function(response, input) {
 			if (response) {
-				$("#your_currency_balance").html(NRS.formatQuantity(response.accountCurrencies.units, response.accountCurrencies.decimals));
+				$("#your_currency_balance").html(NRS.formatQuantity(response.units, response.decimals));
 			}
 		});
 		
