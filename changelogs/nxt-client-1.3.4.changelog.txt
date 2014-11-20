@@ -1,3 +1,6 @@
+This release is focused on improving the Nxt Marketplace (Digital Goods
+Store) by adding search and browse capabilities.
+
 Implemented full text search using the Lucene library, as supported by H2.
 Table columns currently indexed are asset.name, asset.description,
 goods.name, goods.tags, goods.description. A rebuild of the search index
@@ -43,4 +46,15 @@ first start.
 
 Updated jetty to version 9.2.5. If unpacking on top of a previous installation,
 delete your lib directory first to remove the old jetty libraries.
+
+
+UI changes:
+
+The Marketplace page now shows a listing of tag keywords, ordered by number of
+goods in stock with that tag. Clicking on each tag brings the list of goods
+having that tag. Searching for goods is now possible using keywords from the
+goods name, description, or tags. The list of goods also display the number of
+completed purchases, and for goods with a public feedback available, a link to
+display that feedback.
+
 
