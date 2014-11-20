@@ -89,57 +89,7 @@ var NRS = (function(NRS, $, undefined) {
 			}
 			NRS.dataLoadFinished($("#ms_open_buy_orders_table"), true);
 		});
-		NRS.sendRequest("getExchanges+", {
-			"code": currencyCode,
-			"firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
-			"lastIndex": NRS.pageNumber * NRS.itemsPerPage
-		}, function(response, input) {
-			if (response.exchanges && response.exchanges.length) {
-				if (response.exchanges.length > NRS.itemsPerPage) {
-					NRS.hasMorePages = true;
-					response.exchanges.pop();
-				}
-				var rows = "";
-				for (var i = 0; i < response.exchanges.length; i++) {
-                var exchanges = response.exchanges[i];
-					rows += "<tr><td><a href='#' class='user-info' data-user='" + (exchanges.sellerRS == NRS.accountRS ? "You" : exchanges.sellerRS) + "'>" + (exchanges.sellerRS == NRS.accountRS ? "You" : exchanges.sellerRS) + "</a></td>" +
-                  "<td><a href='#' class='user-info' data-user='" + (exchanges.buyerRS == NRS.accountRS ? "You" : exchanges.buyerRS) + "'>" + (exchanges.buyerRS == NRS.accountRS ? "You" : exchanges.buyerRS) + "</a></td>" +
-                  "<td>" + exchanges.units + "</td>" +
-                  "<td>" + NRS.formatAmount(exchanges.rateNQT) + "</td>" +
-                  "</tr>";
-				}
-				$("#ms_exchanges_history_table tbody").empty().append(rows);
-			} else {
-				$("#ms_exchanges_history_table tbody").empty();
-			}
-			NRS.dataLoadFinished($("#ms_exchanges_history_table"), true);
-		});
-		NRS.sendRequest("getExchanges+", {
-			"code": currencyCode,
-			"account": NRS.accountRS,
-			"firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
-			"lastIndex": NRS.pageNumber * NRS.itemsPerPage
-		}, function(response, input) {
-			if (response.exchanges && response.exchanges.length) {
-				if (response.exchanges.length > NRS.itemsPerPage) {
-					NRS.hasMorePages = true;
-					response.exchanges.pop();
-				}
-				var rows = "";
-				for (var i = 0; i < response.exchanges.length; i++) {
-                var exchanges = response.exchanges[i];
-					rows += "<tr><td><a href='#' class='user-info' data-user='" + (exchanges.sellerRS == NRS.accountRS ? "You" : exchanges.sellerRS) + "'>" + (exchanges.sellerRS == NRS.accountRS ? "You" : exchanges.sellerRS) + "</a></td>" +
-                  "<td><a href='#' class='user-info' data-user='" + (exchanges.buyerRS == NRS.accountRS ? "You" : exchanges.buyerRS) + "'>" + (exchanges.buyerRS == NRS.accountRS ? "You" : exchanges.buyerRS) + "</a></td>" +
-                  "<td>" + exchanges.units + "</td>" +
-                  "<td>" + NRS.formatAmount(exchanges.rateNQT) + "</td>" +
-                  "</tr>";
-				}
-				$("#ms_my_exchanges_history_table tbody").empty().append(rows);
-			} else {
-				$("#ms_my_exchanges_history_table tbody").empty();
-			}
-			NRS.dataLoadFinished($("#ms_my_exchanges_history_table"), true);
-		});
+		NRS.getExchangeHistory(currencyCode);
 		if (NRS.accountInfo.unconfirmedBalanceNQT == "0") {
 			$("#ms_your_nxt_balance").html("0");
 			$("#buy_automatic_price").addClass("zero").removeClass("nonzero");
@@ -149,6 +99,65 @@ var NRS = (function(NRS, $, undefined) {
 		}
 		NRS.pageLoaded();
 	});
+	
+	NRS.getExchangeHistory = function(currencyCode) {
+		if (NRS.currenciesTradeHistoryType == "my_exchanges") {
+			NRS.sendRequest("getExchanges+", {
+				"code": currencyCode,
+				"account": NRS.accountRS,
+				"firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
+				"lastIndex": NRS.pageNumber * NRS.itemsPerPage
+			}, function(response, input) {
+				if (response.exchanges && response.exchanges.length) {
+					if (response.exchanges.length > NRS.itemsPerPage) {
+						NRS.hasMorePages = true;
+						response.exchanges.pop();
+					}
+					var rows = "";
+					for (var i = 0; i < response.exchanges.length; i++) {
+					var exchanges = response.exchanges[i];
+						rows += "<tr><td>" + NRS.formatTimestamp(exchanges.timestamp) + "</td>" +
+						"<td><a href='#' class='user-info' data-user='" + (exchanges.sellerRS == NRS.accountRS ? "You" : exchanges.sellerRS) + "'>" + (exchanges.sellerRS == NRS.accountRS ? "You" : exchanges.sellerRS) + "</a></td>" +
+					  "<td><a href='#' class='user-info' data-user='" + (exchanges.buyerRS == NRS.accountRS ? "You" : exchanges.buyerRS) + "'>" + (exchanges.buyerRS == NRS.accountRS ? "You" : exchanges.buyerRS) + "</a></td>" +
+					  "<td>" + exchanges.units + "</td>" +
+					  "<td>" + NRS.formatAmount(exchanges.rateNQT) + "</td>" +
+					  "</tr>";
+					}
+					$("#ms_my_exchanges_history_table tbody").empty().append(rows);
+				} else {
+					$("#ms_my_exchanges_history_table tbody").empty();
+				}
+				NRS.dataLoadFinished($("#ms_exchanges_history_table"), true);
+			});
+		} else {
+			NRS.sendRequest("getExchanges+", {
+				"code": currencyCode,
+				"firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
+				"lastIndex": NRS.pageNumber * NRS.itemsPerPage
+			}, function(response, input) {
+				if (response.exchanges && response.exchanges.length) {
+					if (response.exchanges.length > NRS.itemsPerPage) {
+						NRS.hasMorePages = true;
+						response.exchanges.pop();
+					}
+					var rows = "";
+					for (var i = 0; i < response.exchanges.length; i++) {
+					var exchanges = response.exchanges[i];
+						rows += "<tr><td>" + NRS.formatTimestamp(exchanges.timestamp) + "</td>" +
+						"<td><a href='#' class='user-info' data-user='" + (exchanges.sellerRS == NRS.accountRS ? "You" : exchanges.sellerRS) + "'>" + (exchanges.sellerRS == NRS.accountRS ? "You" : exchanges.sellerRS) + "</a></td>" +
+					  "<td><a href='#' class='user-info' data-user='" + (exchanges.buyerRS == NRS.accountRS ? "You" : exchanges.buyerRS) + "'>" + (exchanges.buyerRS == NRS.accountRS ? "You" : exchanges.buyerRS) + "</a></td>" +
+					  "<td>" + exchanges.units + "</td>" +
+					  "<td>" + NRS.formatAmount(exchanges.rateNQT) + "</td>" +
+					  "</tr>";
+					}
+					$("#ms_exchanges_history_table tbody").empty().append(rows);
+				} else {
+					$("#ms_exchanges_history_table tbody").empty();
+				}
+				NRS.dataLoadFinished($("#ms_exchanges_history_table"), true);
+			});
+		}
+	}
 	
 	/* Monetary System Page Search capitalization */
     $("#currency_search input[name=q]").blur(function(e) {
@@ -288,6 +297,15 @@ var NRS = (function(NRS, $, undefined) {
 		} catch (err) {
 			$("#" + orderType + "_currency_total").val("0");
 		}
+	});
+	
+	
+	$("#ms_exchange_history_type .btn").click(function(e) {
+		e.preventDefault();
+
+		NRS.currenciesTradeHistoryType = $(this).data("type");
+
+		NRS.getExchangeHistory($.trim($("#currency_search input[name=q]").val()));
 	});
 
 	/* CURRENCIES PAGE */
