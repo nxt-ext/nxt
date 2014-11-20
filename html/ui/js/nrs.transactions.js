@@ -170,6 +170,9 @@ var NRS = (function(NRS, $, undefined) {
 						case 4:
 							rows += '<i title="' + $.t("publish_exchange_offer") + '" class="fa fa-bank"></i> <i class="fa fa-list-alt "></i>';
 							break;
+						case 5:
+							rows += '<i title="' + $.t("buy_currency") + '" class="fa fa-bank"></i> <i class="ion-arrow-graph-up-right"></i>';
+							break;
 					}
 				}
 				 
@@ -459,6 +462,9 @@ var NRS = (function(NRS, $, undefined) {
 							break;
 						case 4:
 							rows += '<i title="' + $.t("publish_exchange_offer") + '" class="fa fa-bank"></i> <i class="fa fa-list-alt "></i>';
+							break;
+						case 5:
+							rows += '<i title="' + $.t("buy_currency") + '" class="fa fa-bank"></i> <i class="ion-arrow-graph-up-right"></i>';
 							break;
 					}
 				}

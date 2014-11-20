@@ -97,7 +97,7 @@ public final class GetAccount extends APIServlet.APIRequestHandler {
             try (DbIterator<Account.AccountCurrency> accountCurrencies = account.getCurrencies(0, -1)) {
                 JSONArray currencyJSON = new JSONArray();
                 while (accountCurrencies.hasNext()) {
-                    currencyJSON.add(JSONData.accountCurrency(accountCurrencies.next(), false));
+                    currencyJSON.add(JSONData.accountCurrency(accountCurrencies.next(), false, true));
                 }
                 if (currencyJSON.size() > 0) {
                     response.put("accountCurrencies", currencyJSON);

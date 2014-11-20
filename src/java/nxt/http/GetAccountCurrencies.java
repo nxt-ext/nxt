@@ -33,7 +33,7 @@ public final class GetAccountCurrencies extends APIServlet.APIRequestHandler {
             try (DbIterator<Account.AccountCurrency> accountCurrencies = account.getCurrencies(height, 0, -1)) {
                 JSONArray currencyJSON = new JSONArray();
                 while (accountCurrencies.hasNext()) {
-                    currencyJSON.add(JSONData.accountCurrency(accountCurrencies.next(), false));
+                    currencyJSON.add(JSONData.accountCurrency(accountCurrencies.next(), false, true));
                 }
                 response.put("accountCurrencies", currencyJSON);
                 return response;
@@ -42,7 +42,7 @@ public final class GetAccountCurrencies extends APIServlet.APIRequestHandler {
             Currency currency = ParameterParser.getCurrency(req);
             Account.AccountCurrency accountCurrency = account.getCurrency(currency.getId(), height);
             if (accountCurrency != null) {
-                return JSONData.accountCurrency(accountCurrency, false);
+                return JSONData.accountCurrency(accountCurrency, false, true);
             }
             return JSON.emptyJSON;
         }

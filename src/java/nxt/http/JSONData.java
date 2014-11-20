@@ -116,7 +116,7 @@ final class JSONData {
         return json;
     }
 
-    static JSONObject accountAsset(Account.AccountAsset accountAsset, boolean includeAccount) {
+    static JSONObject accountAsset(Account.AccountAsset accountAsset, boolean includeAccount, boolean includeAssetInfo) {
         JSONObject json = new JSONObject();
         if (includeAccount) {
             putAccount(json, "account", accountAsset.getAccountId());
@@ -124,10 +124,15 @@ final class JSONData {
         json.put("asset", Convert.toUnsignedLong(accountAsset.getAssetId()));
         json.put("quantityQNT", String.valueOf(accountAsset.getQuantityQNT()));
         json.put("unconfirmedQuantityQNT", String.valueOf(accountAsset.getUnconfirmedQuantityQNT()));
+        if (includeAssetInfo) {
+            Asset asset = Asset.getAsset(accountAsset.getAssetId());
+            json.put("name", asset.getName());
+            json.put("decimals", asset.getDecimals());
+        }
         return json;
     }
 
-    static JSONObject accountCurrency(Account.AccountCurrency accountCurrency, boolean includeAccount) {
+    static JSONObject accountCurrency(Account.AccountCurrency accountCurrency, boolean includeAccount, boolean includeCurrencyInfo) {
         JSONObject json = new JSONObject();
         if (includeAccount) {
             putAccount(json, "account", accountCurrency.getAccountId());
@@ -135,6 +140,12 @@ final class JSONData {
         json.put("currency", Convert.toUnsignedLong(accountCurrency.getCurrencyId()));
         json.put("units", String.valueOf(accountCurrency.getUnits()));
         json.put("unconfirmedUnits", String.valueOf(accountCurrency.getUnconfirmedUnits()));
+        if (includeCurrencyInfo) {
+            Currency currency = Currency.getCurrency(accountCurrency.getCurrencyId());
+            json.put("name", currency.getName());
+            json.put("code", currency.getCode());
+            json.put("decimals", currency.getDecimals());
+        }
         return json;
     }
 
@@ -243,6 +254,7 @@ final class JSONData {
         json.put("timestamp", goods.getTimestamp());
         if (includeCounts) {
             json.put("numberOfPurchases", DigitalGoodsStore.getGoodsPurchaseCount(goods.getId(), false));
+            json.put("numberOfPublicFeedbacks", DigitalGoodsStore.getGoodsPurchaseCount(goods.getId(), true));
         }
         return json;
     }
