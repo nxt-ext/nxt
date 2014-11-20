@@ -1,0 +1,19 @@
+<shortcuts>
+	<skipIfNotSupported/>
+	<programGroup defaultName="NXT" location="startMenu"/>
+	<shortcut
+		name="Nxt"
+		target="$INSTALL_PATH\run.bat"
+		commandLine=""
+		workingDirectory="$INSTALL_PATH"
+        description="Start NXT"
+		iconFile="$INSTALL_PATH\html\ui\favicon.ico"
+        iconIndex="0"
+        initialState="normal"
+        programGroup="yes"
+		desktop="yes"
+        applications="no"
+        startMenu="no"
+		startup="no">
+	</shortcut>	
+</shortcuts>

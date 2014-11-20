@@ -1,0 +1,1 @@
+installerlib\izpack2exe\izpack2exe.py --file dist\setup.jar --output dist\setup.exe --with-7z=installerlib\izpack2exe\7za.exe --no-upx --with-jdk=jre
