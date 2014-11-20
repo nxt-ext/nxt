@@ -2764,16 +2764,20 @@
                                     <label for="issue_currency_mintable" style="font-weight:normal;" tabindex="7" data-i18n="mintable">Mintable</label>
                                 </div>
                                 <div class="form-group advanced optional_mint">
-                                    <label for="issue_currency_min_difficulty" data-i18n="min_difficulty">MINIMUM DIFFICULTY</label>
+                                    <label for="issue_currency_min_difficulty"><span data-i18n="min_difficulty">MINIMUM DIFFICULTY</span> <i class="fa fa-question-circle show_popover" data-content="The exponent of the initial difficulty." data-i18n="[data-content]currency_decimals_help" data-container="body" style="color:#4CAA6E" ></i></label>
                                     <input type="number" name="minDifficulty" id="issue_currency_min_difficulty" class="form-control" min="1" placeholder="Minimum Difficulty" data-i18n="minimum_difficulty" tabindex="9">
                                 </div>
                                 <div class="form-group advanced optional_mint">
-                                    <label for="issue_currency_max_difficulty" data-i18n="max_difficulty">MAXIMUM DIFFICULTY</label>
+                                    <label for="issue_currency_max_difficulty"><span data-i18n="max_difficulty">MAXIMUM DIFFICULTY</span> <i class="fa fa-question-circle show_popover" data-content="The exponent of the final difficulty." data-i18n="[data-content]currency_decimals_help" data-container="body" style="color:#4CAA6E" ></i></label>
                                     <input type="number" name="maxDifficulty" id="issue_currency_max_difficulty" class="form-control" min="1" placeholder="Maximum Difficulty" data-i18n="maximum_difficulty" tabindex="10">
                                 </div>
                                 <div class="form-group advanced optional_mint">
-                                    <label for="issue_currency_algorithm" data-i18n="max_algorithm">ALGORITHM</label>
-                                    <input type="number" name="algorithm" id="issue_currency_algorithm" class="form-control" min="1" placeholder="Algorithm" data-i18n="algorithm" tabindex="11">
+                                    <label for="issue_currency_algorithm" data-i18n="algorithm">ALGORITHM</label>
+                                    <select name="algorithm" id="issue_currency_algorithm" class="form-control">
+									  <option value="2">SHA256</option>
+									  <option value="3">SHA3</option>
+									  <option value="25">Keccak25</option>
+									</select>
                                 </div>
                                 <div class="input-group">
                                     <input type="checkbox" name="type" id="issue_currency_shuffleable" value="32" />
