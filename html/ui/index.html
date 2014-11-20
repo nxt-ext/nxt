@@ -1169,7 +1169,7 @@
 													<div class="col-sm-9">
 														<div class="input-group">
 															<input id="buy_currency_quantity" type="text" name="buy_currency_quantity" value="0" class="form-control" data-type="buy" />
-															<span class="input-group-addon"><span class="currency_name"></span></span>
+															<span class="input-group-addon"><span class="currency_code"></span></span>
 														</div>
 													</div>
 												</div>
@@ -1178,7 +1178,7 @@
 													<div class="col-sm-9">
 														<div class="input-group">
 															<input id="buy_currency_price" type="text" value="0" name="buy_currency_price" class="form-control" data-type="buy" />
-															<span class="input-group-addon">NXT / <span class="currency_name"></span></span>
+															<span class="input-group-addon">NXT / <span class="currency_code"></span></span>
 														</div>
 													</div>
 												</div>
@@ -1251,7 +1251,7 @@
 													<div class="col-sm-9">
 														<div class="input-group">
 															<input id="sell_currency_quantity" type="text" name="sell_currency_quantity" value="0" class="form-control" data-type="sell" />
-															<span class="input-group-addon"><span class="currency_name"></span></span>
+															<span class="input-group-addon"><span class="currency_code"></span></span>
 														</div>
 													</div>
 												</div>
@@ -1260,7 +1260,7 @@
 													<div class="col-sm-9">
 														<div class="input-group">
 															<input id="sell_currency_price" type="text" value="0" name="sell_currency_price" class="form-control" data-type="sell" />
-															<span class="input-group-addon">NXT / <span class="currency_name"></span></span>
+															<span class="input-group-addon">NXT / <span class="currency_code"></span></span>
 														</div>
 													</div>
 												</div>
@@ -2737,15 +2737,15 @@
 								<label data-i18n="type">TYPE</label>
                                 <div class="input-group">
                                     <input type="checkbox" name="type" id="issue_currency_exchangeable" value="1" />
-                                    <label for="issue_currency_exchangeable" style="font-weight:normal;" tabindex="7" data-i18n="exchangeable">Exchangeable</label>
+                                    <label for="issue_currency_exchangeable" style="font-weight:normal;" tabindex="4" data-i18n="exchangeable">Exchangeable</label>
                                 </div>
                                 <div class="input-group">
                                     <input type="checkbox" name="type" id="issue_currency_controllable" value="2" />
-                                    <label for="issue_currency_controllable" style="font-weight:normal;" tabindex="7" data-i18n="controllable">Controllable</label>
+                                    <label for="issue_currency_controllable" style="font-weight:normal;" tabindex="5" data-i18n="controllable">Controllable</label>
                                 </div>
                                 <div class="input-group">
                                     <input type="checkbox" name="type" id="issue_currency_reservable" class="issue_currency_reservable" value="4" />
-                                    <label for="issue_currency_reservable" style="font-weight:normal;" tabindex="7" data-i18n="reservable">Reservable</label>
+                                    <label for="issue_currency_reservable" style="font-weight:normal;" tabindex="6" data-i18n="reservable">Reservable</label>
                                 </div>
                                 <div class="form-group advanced optional_reserve">
                                     <label for="issue_currency_min_reserve" data-i18n="min_reserve">MINIMUM RESERVE PER UNIT</label>
@@ -2761,7 +2761,7 @@
                                 </div>
                                 <div class="input-group">
                                     <input type="checkbox" name="type" id="issue_currency_mintable"  class="issue_currency_mintable" value="16" />
-                                    <label for="issue_currency_mintable" style="font-weight:normal;" tabindex="7" data-i18n="mintable">Mintable</label>
+                                    <label for="issue_currency_mintable" style="font-weight:normal;" tabindex="8" data-i18n="mintable">Mintable</label>
                                 </div>
                                 <div class="form-group advanced optional_mint">
                                     <label for="issue_currency_min_difficulty"><span data-i18n="min_difficulty">MINIMUM DIFFICULTY</span> <i class="fa fa-question-circle show_popover" data-content="The exponent of the initial difficulty." data-i18n="[data-content]currency_decimals_help" data-container="body" style="color:#4CAA6E" ></i></label>
@@ -2774,6 +2774,7 @@
                                 <div class="form-group advanced optional_mint">
                                     <label for="issue_currency_algorithm" data-i18n="algorithm">ALGORITHM</label>
                                     <select name="algorithm" id="issue_currency_algorithm" class="form-control">
+									  <option value="">Pick an algorithm</option>
 									  <option value="2">SHA256</option>
 									  <option value="3">SHA3</option>
 									  <option value="25">Keccak25</option>
@@ -2781,30 +2782,30 @@
                                 </div>
                                 <div class="input-group">
                                     <input type="checkbox" name="type" id="issue_currency_shuffleable" value="32" />
-                                    <label for="issue_currency_shuffleable" style="font-weight:normal;" tabindex="7" data-i18n="nonshuffleable"> Non-Shuffleable</label>
+                                    <label for="issue_currency_shuffleable" style="font-weight:normal;" tabindex="9" data-i18n="nonshuffleable"> Non-Shuffleable</label>
                                 </div>
                             </div>
                             <div class="row">
                             	<div class="col-xs-4 col-sm-4 col-md-4">
                                     <label for="issue_currency_initial_supply" data-i18n="initial_supply">INITIAL SUPPLY</label>
-                                    <input type="number" name="initialSupply" id="issue_currency_initial_supply" class="form-control" min="0" placeholder="Initial Supply" data-i18n="Initial_supply" tabindex="5">
+                                    <input type="number" name="initialSupply" id="issue_currency_initial_supply" class="form-control" min="0" placeholder="Initial Supply" data-i18n="Initial_supply" tabindex="10">
                                 </div>
 								<div class="col-xs-4 col-sm-4 col-md-4">
 									<div class="form-group">
 									<label for="issue_currency_max_supply" data-i18n="total_supply">TOTAL SUPPLY</label>
-									<input type="number" name="maxSupply" id="issue_currency_max_supply" class="form-control" min="1" placeholder="Total Supply" data-i18n="total_supply" tabindex="6">
+									<input type="number" name="maxSupply" id="issue_currency_max_supply" class="form-control" min="1" placeholder="Total Supply" data-i18n="total_supply" tabindex="11">
 								</div>
 								</div>
 								<div class="col-xs-4 col-sm-4 col-md-4">
 									<div class="form-group">
 										<label for="issue_currency_decimals"><span data-i18n="decimals">DECIMALS</span> <i class="fa fa-question-circle show_popover" data-content="The maximum allowed number of digits after the currency quantity decimal point." data-i18n="[data-content]currency_decimals_help" data-container="body" style="color:#4CAA6E" ></i></label>
-						                <input type="number" name="decimals" id="issue_currency_decimals" class="form-control" min="0" max="8" placeholder="Decimals" data-i18n="decimals" data-default="0" value="0" tabindex="5">
+						                <input type="number" name="decimals" id="issue_currency_decimals" class="form-control" min="0" max="8" placeholder="Decimals" data-i18n="decimals" data-default="0" value="0" tabindex="12">
 									</div>
 								</div>
 							</div>
                             <div class="form-group">
                                 <label for="issue_currency_issuance_height" data-i18n="issuance_height">ISSUANCE HEIGHT</label>
-                                <input type="number" name="issuanceHeight" id="issue_currency_issuance_height" class="form-control" min="0" placeholder="Issuance Height" data-i18n="issuance_height" tabindex="7" value="0" disabled>
+                                <input type="number" name="issuanceHeight" id="issue_currency_issuance_height" class="form-control" min="0" placeholder="Issuance Height" data-i18n="issuance_height" tabindex="13" value="0" disabled>
                             </div>
                             <div class="row">
 								<div class="col-xs-6 col-sm-6 col-md-6 advanced" data-advanced="6">
@@ -2825,7 +2826,7 @@
 							</div>
 							<div class="form-group secret_phrase">
 								<label for="issue_currency_password" data-i18n="passphrase">PASSPHRASE</label>
-								<input type="password" name="secretPhrase" id="issue_currency_password" class="form-control" placeholder="" tabindex="8">
+								<input type="password" name="secretPhrase" id="issue_currency_password" class="form-control" placeholder="" tabindex="14">
 							</div>
 							<div class="form-group advanced">
 								<label for="issue_currency_referenced_transaction" data-i18n="referenced_transaction_hash">REFERENCED TRANSACTION HASH</label>
