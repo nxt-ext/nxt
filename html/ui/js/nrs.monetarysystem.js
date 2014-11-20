@@ -578,11 +578,13 @@ var NRS = (function(NRS, $, undefined) {
     });
     
     /* Publish Exchange Offer Model Code */
-    $("#currency_code").blur(function(e) {
+    $("#publish_exchange_offer_modal #currency_code").blur(function(e) {
 		this.value = this.value.toLocaleUpperCase();
+		$('#publish_exchange_offer_modal .currency_code').html(this.value);
 	});
-	$("#currency_code").keyup(function(e) {
+	$("#publish_exchange_offer_modal #currency_code").keyup(function(e) {
 		this.value = this.value.toLocaleUpperCase();
+		$('#publish_exchange_offer_modal .currency_code').html(this.value);
 	});
     
 

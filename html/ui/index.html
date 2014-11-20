@@ -2877,7 +2877,7 @@
                                     <label for="buy_currency_units_initial" class="col-sm-3 control-label" data-i18n="units">Buy units (Initial)</label>
                                     <div class="col-sm-9">
                                         <div class="input-group">
-                                            <input id="buy_currency_units_initial" type="text" name="initialBuySupply" value="0" class="form-control" data-type="buy" />
+                                            <input id="buy_currency_units_initial" type="text" name="initialBuySupply" value="0" class="form-control" data-type="buy" tabindex="2" />
                                             <span class="input-group-addon"><span class="currency_code"></span></span>
                                         </div>
                                     </div>
@@ -2886,7 +2886,7 @@
                                     <label for="buy_currency_units_total" class="col-sm-3 control-label" data-i18n="units">Buy units (Total)</label>
                                     <div class="col-sm-9">
                                         <div class="input-group">
-                                            <input id="buy_currency_units_total" type="text" name="totalBuyLimit" value="0" class="form-control" data-type="buy" />
+                                            <input id="buy_currency_units_total" type="text" name="totalBuyLimit" value="0" class="form-control" data-type="buy" tabindex="3" />
                                             <span class="input-group-addon"><span class="currency_code"></span></span>
                                         </div>
                                     </div>
@@ -2895,7 +2895,7 @@
                                     <label for="buy_currency_rate" class="col-sm-3 control-label" data-i18n="rate">Rate per unit [NQT]</label>
                                     <div class="col-sm-9">
                                         <div class="input-group">
-                                            <input id="buy_currency_rate" type="text" value="0" name="buyRateNQT" class="form-control" data-type="buy" />
+                                            <input id="buy_currency_rate" type="text" value="0" name="buyRateNQT" class="form-control" data-type="buy" tabindex="4" />
                                             <span class="input-group-addon">NXT / <span class="currency_code"></span></span>
                                         </div>
                                     </div>
@@ -2904,7 +2904,7 @@
                                     <label for="sell_currency_units_initial" class="col-sm-3 control-label" data-i18n="units">Sell units (Initial)</label>
                                     <div class="col-sm-9">
                                         <div class="input-group">
-                                            <input id="sell_currency_units_initial" type="text" name="initialSellSupply" value="0" class="form-control" data-type="sell" />
+                                            <input id="sell_currency_units_initial" type="text" name="initialSellSupply" value="0" class="form-control" data-type="sell" tabindex="5" />
                                             <span class="input-group-addon"><span class="currency_code"></span></span>
                                         </div>
                                     </div>
@@ -2913,7 +2913,7 @@
                                     <label for="sell_currency_units_total" class="col-sm-3 control-label" data-i18n="units">Sell units (Total)</label>
                                     <div class="col-sm-9">
                                         <div class="input-group">
-                                            <input id="sell_currency_units_total" type="text" name="totalSellLimit" value="0" class="form-control" data-type="sell" />
+                                            <input id="sell_currency_units_total" type="text" name="totalSellLimit" value="0" class="form-control" data-type="sell" tabindex="6" />
                                             <span class="input-group-addon"><span class="currency_code"></span></span>
                                         </div>
                                     </div>
@@ -2922,7 +2922,7 @@
                                     <label for="sell_currency_rate" class="col-sm-3 control-label" data-i18n="rate">Rate per unit [NQT]</label>
                                     <div class="col-sm-9">
                                         <div class="input-group">
-                                            <input id="sell_currency_rate" type="text" value="0" name="sellRateNQT" class="form-control" data-type="sell" />
+                                            <input id="sell_currency_rate" type="text" value="0" name="sellRateNQT" class="form-control" data-type="sell" tabindex="7" />
                                             <span class="input-group-addon">NXT / <span class="currency_code"></span></span>
                                         </div>
                                     </div>
@@ -2931,7 +2931,7 @@
                                     <label for="expiration_Height" class="col-sm-3 control-label" data-i18n="rate">Expiration</label>
                                     <div class="col-sm-9">
                                         <div class="input-group">
-                                            <input id="expiration_Height" type="number" value="0" name="expirationHeight" class="form-control" />
+                                            <input id="expiration_Height" type="number" value="0" name="expirationHeight" class="form-control" tabindex="8" />
                                         </div>
                                     </div>
                                 </div>
@@ -2941,7 +2941,7 @@
 									<div class="form-group">
 										<label for="issue_currency_fee"><span data-i18n="fee">FEE</span> <i class="fa fa-exclamation-circle show_popover" data-container="body" style="color:red"></i></label>
 										<div class="input-group">
-											<input type="number" name="feeNXT" id="exchange_offer_currency_fee" class="form-control" placeholder="Fee" step="any" min="1" data-default="1" value="1" tabindex="6">
+											<input type="number" name="feeNXT" id="exchange_offer_currency_fee" class="form-control" placeholder="Fee" step="any" min="1" data-default="1" value="1" tabindex="9">
 											<span class="input-group-addon">NXT</span>
 										</div>
 									</div>
@@ -2949,13 +2949,13 @@
 								<div class="col-xs-6 col-sm-6 col-md-6 advanced">
 									<div class="form-group">
 										<label for="issue_currency_deadline" data-i18n="deadline_hours">DEADLINE (HOURS)</label>
-										<input type="number" name="deadline" id="exchange_offer_deadline" class="form-control" placeholder="Deadline" data-i18n="deadline" min="1" data-default="24" value="24" tabindex="7">
+										<input type="number" name="deadline" id="exchange_offer_deadline" class="form-control" placeholder="Deadline" data-i18n="deadline" min="1" data-default="24" value="24" tabindex="10">
 									</div>
 								</div>
 							</div>
 							<div class="form-group secret_phrase">
 								<label for="issue_currency_password" data-i18n="passphrase">PASSPHRASE</label>
-								<input type="password" name="secretPhrase" id="exchange_offer_password" class="form-control" placeholder="" tabindex="8">
+								<input type="password" name="secretPhrase" id="exchange_offer_password" class="form-control" placeholder="" tabindex="11">
 							</div>
                             <input type="hidden" name="request_type" value="publishExchangeOffer" />
                         </form>
