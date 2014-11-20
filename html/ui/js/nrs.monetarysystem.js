@@ -35,7 +35,7 @@ var NRS = (function(NRS, $, undefined) {
 			"code": currencyCode
 		}, function(response, input) {
 			if (response) {
-				$("#your_currency_balance").html(String(response.units));
+				$("#your_currency_balance").html(NRS.formatQuantity(response.accountCurrencies.units, response.accountCurrencies.decimals));
 			}
 		});
 		
@@ -119,7 +119,7 @@ var NRS = (function(NRS, $, undefined) {
 						rows += "<tr><td>" + NRS.formatTimestamp(exchanges.timestamp) + "</td>" +
 						"<td><a href='#' class='user-info' data-user='" + (exchanges.sellerRS == NRS.accountRS ? "You" : exchanges.sellerRS) + "'>" + (exchanges.sellerRS == NRS.accountRS ? "You" : exchanges.sellerRS) + "</a></td>" +
 					  "<td><a href='#' class='user-info' data-user='" + (exchanges.buyerRS == NRS.accountRS ? "You" : exchanges.buyerRS) + "'>" + (exchanges.buyerRS == NRS.accountRS ? "You" : exchanges.buyerRS) + "</a></td>" +
-					  "<td>" + exchanges.units + "</td>" +
+					  "<td>" + NRS.formatQuantity(exchanges.units, exchanges.decimals) + "</td>" +
 					  "<td>" + NRS.formatAmount(exchanges.rateNQT) + "</td>" +
 					  "</tr>";
 					}
@@ -146,7 +146,7 @@ var NRS = (function(NRS, $, undefined) {
 						rows += "<tr><td>" + NRS.formatTimestamp(exchanges.timestamp) + "</td>" +
 						"<td><a href='#' class='user-info' data-user='" + (exchanges.sellerRS == NRS.accountRS ? "You" : exchanges.sellerRS) + "'>" + (exchanges.sellerRS == NRS.accountRS ? "You" : exchanges.sellerRS) + "</a></td>" +
 					  "<td><a href='#' class='user-info' data-user='" + (exchanges.buyerRS == NRS.accountRS ? "You" : exchanges.buyerRS) + "'>" + (exchanges.buyerRS == NRS.accountRS ? "You" : exchanges.buyerRS) + "</a></td>" +
-					  "<td>" + exchanges.units + "</td>" +
+					  "<td>" + NRS.formatQuantity(exchanges.units, exchanges.decimals) + "</td>" +
 					  "<td>" + NRS.formatAmount(exchanges.rateNQT) + "</td>" +
 					  "</tr>";
 					}
@@ -327,7 +327,7 @@ var NRS = (function(NRS, $, undefined) {
 						rows += "<tr><td><a href='#' onClick='NRS.goToCurrency(&quot;" + String(currency.code) + "&quot;)' >" + String(currency.currency).escapeHTML() + "</a></td>" +
 							"<td>" + currency.name + "</td>" +
 							"<td>" + currency.code + "</td>" +
-							"<td>" + currency.units + "</td>" +
+							"<td>" + NRS.formatQuantity(currency.units, currency.decimals) + "</td>" +
 							"<td><a href='#' data-toggle='modal' data-target='#transfer_currency_modal' data-currency='" + String(currency.currency).escapeHTML() + "' data-name='" + String(currency.name).escapeHTML() + "' data-decimals='" + String(currency.decimals).escapeHTML() + "'>" + $.t("transfer") + "</a></td>" +
 							"</tr>";
 					}
