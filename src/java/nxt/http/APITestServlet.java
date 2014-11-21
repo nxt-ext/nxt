@@ -56,12 +56,7 @@ public class APITestServlet extends HttpServlet {
             "<div class=\"container\" style=\"min-width: 90%;\">" +
             "<div class=\"row\">" + 
             "  <div class=\"col-xs-12\" style=\"margin-bottom:15px;\">" +
-            "    <div class=\"pull-right\" style=\"padding-top:7px;\">" +
-            "      <a href=\"#\" id=\"navi-show-open\">Show Open</a>" +
-            "       | " +
-            "      <a href=\"#\" id=\"navi-show-all\" style=\"font-weight:bold;\">Show All</a>" +
-            "    </div>" +
-            "    <div class=\"pull-right\" style=\"margin-right: 15px;\">" +
+            "    <div class=\"pull-right\">" +
             "      <div class=\"btn-group\">" +
             "        <button type=\"button\" class=\"btn btn-default dropdown-toggle\" data-toggle=\"dropdown\">" +
             "          <i class=\"fa fa-check-circle-o\"></i> <i class=\"fa fa-circle-o\"></i>" +
@@ -73,6 +68,7 @@ public class APITestServlet extends HttpServlet {
             "          <li><a href=\"#\" id=\"navi-deselect-all-btn\">Deselect All</a></li>" +
             "        </ul>" +
             "      </div>" +
+            "      <button type=\"button\" id=\"navi-show\" data-navi-val=\"OPEN\" class=\"btn btn-default\" style=\"width:145px;\">Show Open Tabs</button>" +
             "    </div>" +
             "  </div>" +
             "</div>" +

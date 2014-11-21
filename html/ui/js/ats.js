@@ -26,26 +26,25 @@ var ATS = (function(ATS, $, undefined) {
             event.preventDefault();    
         });
         
-        $('#navi-show-open').click(function(e) {
-            $('.api-call-All').each(function() {
-                if($(this).find('.panel-collapse.in').length != 0) {
-                    $(this).show();
-                } else {
-                    $(this).hide();
-                }
-            });
-            $('#navi-show-all').css('font-weight', 'normal');
-            $(this).css('font-weight', 'bold');
+        $("#navi-show").click(function(e) {
+            if ($(this).attr("data-navi-val") == "OPEN") {
+                $('.api-call-All').each(function() {
+                    if($(this).find('.panel-collapse.in').length != 0) {
+                        $(this).show();
+                    } else {
+                        $(this).hide();
+                    }
+                });
+                $(this).attr("data-navi-val", "ALL");
+                $(this).text("Show All Tabs");
+            } else {
+                $('.api-call-All').show();
+                $(this).attr("data-navi-val", "OPEN");
+                $(this).text("Show Open Tabs");
+            }
             e.preventDefault();
         });
-
-        $('#navi-show-all').click(function(e) {
-            $('.api-call-All').show();
-            $('#navi-show-open').css('font-weight', 'normal');
-            $(this).css('font-weight', 'bold');
-            e.preventDefault();
-        });
-
+        
         $('.api-call-sel-ALL').change(function() {
             if($(this).is(":checked")) {
                 ATS.addToSelected($(this));
