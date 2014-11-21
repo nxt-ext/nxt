@@ -229,16 +229,16 @@ public final class DigitalGoodsStore {
             return goodsTable.getCount();
         }
 
+        public static int getCountInStock() {
+            return goodsTable.getCount(inStockClause);
+        }
+
         public static Goods getGoods(long goodsId) {
             return goodsTable.get(goodsDbKeyFactory.newKey(goodsId));
         }
 
         public static DbIterator<Goods> getAllGoods(int from, int to) {
             return goodsTable.getAll(from, to);
-        }
-
-        public static int getGoodsCount(boolean inStockOnly) {
-            return inStockOnly ? goodsTable.getCount(inStockClause) : goodsTable.getCount();
         }
 
         public static DbIterator<Goods> getGoodsInStock(int from, int to) {

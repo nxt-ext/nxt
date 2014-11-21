@@ -24,7 +24,8 @@ public final class GetDGSGoodsCount extends APIServlet.APIRequestHandler {
 
         JSONObject response = new JSONObject();
         response.put("numberOfGoods", sellerId != 0
-                ? DigitalGoodsStore.Goods.getSellerGoodsCount(sellerId, inStockOnly) : DigitalGoodsStore.Goods.getGoodsCount(inStockOnly));
+                ? DigitalGoodsStore.Goods.getSellerGoodsCount(sellerId, inStockOnly)
+                : inStockOnly ? DigitalGoodsStore.Goods.getCountInStock() : DigitalGoodsStore.Goods.getCount());
         return response;
     }
 
