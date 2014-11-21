@@ -173,6 +173,13 @@ var NRS = (function(NRS, $, undefined) {
 						case 5:
 							rows += '<i title="' + $.t("buy_currency") + '" class="fa fa-bank"></i> <i class="ion-arrow-graph-up-right"></i>';
 							break;
+						case 6:
+							break;
+						case 7:
+							break;
+						case 8:
+							rows += '<i title="' + $.t("delete_currency") + '" class="fa fa-bank"></i> <i class="fa fa-times"></i>';
+							break;
 					}
 				}
 				 
@@ -465,6 +472,13 @@ var NRS = (function(NRS, $, undefined) {
 							break;
 						case 5:
 							rows += '<i title="' + $.t("buy_currency") + '" class="fa fa-bank"></i> <i class="ion-arrow-graph-up-right"></i>';
+							break;
+						case 6:
+							break;
+						case 7:
+							break;
+						case 8:
+							rows += '<i title="' + $.t("delete_currency") + '" class="fa fa-bank"></i> <i class="fa fa-times"></i>';
 							break;
 					}
 				}

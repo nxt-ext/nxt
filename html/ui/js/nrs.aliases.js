@@ -245,14 +245,14 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.forms.deleteAlias = function($modal) {
 		var data = NRS.getFormData($modal.find("form:first"));
 
-		var successMessage = "";
-		var errorMessage = "";
+		//var successMessage = "";
+		//var errorMessage = "";
 
 			successMessage = $.t("success_delete_alias");
 			errorMessage = $.t("error_delete_alias");
 
-			}
-		}
+		//	}
+		//}
 
 		delete data.modal;
 

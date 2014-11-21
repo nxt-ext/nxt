@@ -227,6 +227,16 @@ var NRS = (function(NRS, $, undefined) {
 						case 4:
 							transactionType = $.t("publish_exchange_offer");
 							break;
+						case 5:
+							transactionType = $.t("buy_currency");
+							break;
+						case 6:
+							break;
+						case 7:
+							break;
+						case 8:
+							transactionType = $.t("delete_currency");
+							break;	
 					}
 				}
 
