@@ -124,6 +124,15 @@ public final class CurrencyMint {
         }
     }
 
+    public static long getCounter(long currencyId, long accountId) {
+        CurrencyMint currencyMint = currencyMintTable.get(currencyMintDbKeyFactory.newKey(currencyId, accountId));
+        if (currencyMint != null) {
+            return currencyMint.getCounter();
+        } else {
+            return 0;
+        }
+    }
+
     static void deleteCurrency(Currency currency) {
         List<CurrencyMint> currencyMints = new ArrayList<>();
         try (DbIterator<CurrencyMint> mints = currencyMintTable.getManyBy(new DbClause.LongClause("currency_id", currency.getId()), 0, -1)) {

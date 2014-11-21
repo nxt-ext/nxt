@@ -23,7 +23,7 @@ public final class GetMintingTarget extends APIServlet.APIRequestHandler {
     static final GetMintingTarget instance = new GetMintingTarget();
 
     private GetMintingTarget() {
-        super(new APITag[] {APITag.MS}, "currency", "code", "units");
+        super(new APITag[] {APITag.MS}, "currency", "code", "account", "units");
     }
 
     @Override
@@ -37,6 +37,7 @@ public final class GetMintingTarget extends APIServlet.APIRequestHandler {
         json.put("difficulty", BigInteger.valueOf(2).pow(256).divide(target));
         json.put("targetBytes", Convert.toHexString(nxt.CurrencyMint.getTarget(currency.getMinDifficulty(), currency.getMaxDifficulty(), units,
                 currency.getCurrentSupply() - currency.getReserveSupply(), currency.getMaxSupply() - currency.getReserveSupply())));
+        json.put("counter", nxt.CurrencyMint.getCounter(currency.getId(), ParameterParser.getAccount(req).getId()));
         return json;
     }
 
