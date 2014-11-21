@@ -51,7 +51,9 @@ var NRS = (function(NRS, $, undefined) {
 				}
 				var rows = "";
 				for (var i = 0; i < response.offers.length; i++) {
-                var sellOffers = response.offers[i];
+                	var sellOffers = response.offers[i];
+					if (i == 0)
+						$("#buy_currency_price").val(NRS.calculateOrderPricePerWholeQNT(sellOffers.rateNQT,$("#currency_decimals").html()));
 					rows += "<tr><td><a href='#' class='user-info' data-user='" + String(sellOffers.accountRS).escapeHTML() + "'>" + String(sellOffers.accountRS).escapeHTML() + "</a></td>" +
                   "<td>" + sellOffers.supply + "</td>" +
                   "<td>" + sellOffers.limit + "</td>" +
@@ -76,7 +78,9 @@ var NRS = (function(NRS, $, undefined) {
 				}
 				var rows = "";
 				for (var i = 0; i < response.offers.length; i++) {
-                var buyOffers = response.offers[i];
+                	var buyOffers = response.offers[i];
+                	if (i == 0)
+						$("#sell_currency_price").val(NRS.calculateOrderPricePerWholeQNT(buyOffers.rateNQT,$("#currency_decimals").html()));
 					rows += "<tr><td><a href='#' class='user-info' data-user='" + String(buyOffers.accountRS).escapeHTML() + "'>" + String(buyOffers.accountRS).escapeHTML() + "</a></td>" +
                   "<td>" + buyOffers.supply + "</td>" +
                   "<td>" + buyOffers.limit + "</td>" +
@@ -158,6 +162,55 @@ var NRS = (function(NRS, $, undefined) {
 			});
 		}
 	}
+	
+	/* Monetary System Auto Quantity TODO */
+	$("#sell_automatic_currency_price, #buy_automatic_currency_price").on("click", function(e) {
+		/*try {
+			
+			var type = ($(this).attr("id") == "sell_automatic_price" ? "sell" : "buy");
+
+			var price = new Big(NRS.convertToNQT(String($("#" + type + "_currency_price").val())));
+			var balance = new Big(type == "buy" ? NRS.accountInfo.unconfirmedBalanceNQT : $("#your_currency_balance").html());
+			var balanceNQT = new Big(NRS.accountInfo.unconfirmedBalanceNQT);
+			var maxQuantity = new Big(NRS.convertToQNTf($("#your_currency_balance").html(), $("#currency_decimals").html()));
+
+			if (balance.cmp(new Big("0")) <= 0) {
+				return;
+			}
+
+			if (price.cmp(new Big("0")) <= 0) {
+				//get minimum price if no offers exist, based on currency decimals..
+				price = new Big("" + Math.pow(10, $("#currency_decimals").html()));
+				$("#" + type + "_currency_price").val(NRS.convertToNXT(price.toString()));
+			}
+
+			var quantity = new Big(NRS.amountToPrecision((type == "sell" ? balanceNQT : balance).div(price).toString(), $("#currency_decimals").html()));
+
+			var total = quantity.times(price);
+
+			//proposed quantity is bigger than available quantity
+			if (quantity.cmp(maxQuantity) == 1) {
+				quantity = maxQuantity;
+				total = quantity.times(price);
+			}
+
+			if (type == "sell") {
+				var maxUserQuantity = new Big(NRS.convertToQNTf(balance, $("#currency_decimals").html()));
+				if (quantity.cmp(maxUserQuantity) == -1) {
+					quantity = maxUserQuantity;
+					total = quantity.times(price);
+				}
+			}
+
+			$("#" + type + "_currency_quantity").val(quantity.toString());
+			$("#" + type + "_currency_total").val(NRS.convertToNXT(total.toString()));
+
+			$("#" + type + "_currency_total").css({
+				"background": "",
+				"color": ""
+			});
+		} catch (err) {}*/
+	});
 	
 	/* Monetary System Page Search capitalization */
     $("#currency_search input[name=q]").blur(function(e) {
@@ -595,7 +648,7 @@ var NRS = (function(NRS, $, undefined) {
 
 		data.buyRateNQT = NRS.convertToNQT(data.buyRateNQT);
 		data.sellRateNQT = NRS.convertToNQT(data.sellRateNQT);
-		
+		data.expirationHeight = (parseInt(data.expirationHeight,10) * 60) + parseInt($("#nrs_current_block").html(),10);
 		return {
 			"data": data
 		};

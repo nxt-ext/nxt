@@ -1163,7 +1163,7 @@
 										</div>
 									</div>
 									<div class="box-body no-padding" style="display:none">
-										<div style="background-color:#DFF0D9;color: #666;padding-left:10px;padding-right: 10px;padding-top: 0px;padding-bottom:3px;" id="buy_automatic_price"><strong data-i18n="balance">Balance</strong>: <span id="ms_your_nxt_balance"></span> NXT</div>
+										<div style="background-color:#DFF0D9;color: #666;padding-left:10px;padding-right: 10px;padding-top: 0px;padding-bottom:3px;" id="buy_automatic_currency_price"><strong data-i18n="balance">Balance</strong>: <span id="ms_your_nxt_balance"></span> NXT</div>
 								
 										<form role="form" class="form-horizontal" style="padding: 10px;;max-width:350px;margin-left:auto;margin-right:auto;" autocomplete="off">
 											<div style="margin-left:-20px">
@@ -1245,7 +1245,7 @@
 										</div>
 									</div>
 									<div class="box-body no-padding" style="display:none">
-										<div style="background-color:#F2DEDE;color: #666;padding-left:10px;padding-right: 10px;padding-top: 0px;padding-bottom:3px;" id="sell_automatic_price"><strong data-i18n="balance">Balance</strong>: <span id="your_currency_balance"></span> <span class="currency_code"></div>
+										<div style="background-color:#F2DEDE;color: #666;padding-left:10px;padding-right: 10px;padding-top: 0px;padding-bottom:3px;" id="sell_automatic_currency_price"><strong data-i18n="balance">Balance</strong>: <span id="your_currency_balance"></span> <span class="currency_code"></div>
 								
 										<form role="form" class="form-horizontal" style="padding: 10px;;max-width:350px;margin-left:auto;margin-right:auto;" autocomplete="off">
 											<div style="margin-left:-20px">
@@ -2931,10 +2931,10 @@
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <label for="expiration_Height" class="col-sm-3 control-label" data-i18n="rate">Expiration</label>
+                                    <label for="expiration_Height" class="col-sm-3 control-label" data-i18n="xxpiration">Expiration (Hours)</label>
                                     <div class="col-sm-9">
                                         <div class="input-group">
-                                            <input id="expiration_Height" type="number" value="0" name="expirationHeight" class="form-control" tabindex="8" />
+                                            <input id="expiration_Height" type="number" data-default="24" value="24" name="expirationHeight" class="form-control" tabindex="8" />
                                         </div>
                                     </div>
                                 </div>
