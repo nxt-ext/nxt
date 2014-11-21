@@ -376,6 +376,9 @@ public abstract class TransactionType {
                 if (transaction.getAmountNQT() != 0) {
                     throw new NxtException.NotValidException("Invalid arbitrary message: " + attachment.getJSONObject());
                 }
+                if (transaction.getRecipientId() == Genesis.CREATOR_ID && Nxt.getBlockchain().getHeight() > Constants.MONETARY_SYSTEM_BLOCK) {
+                    throw new NxtException.NotCurrentlyValidException("Sending messages to Genesis not allowed.");
+                }
             }
 
             @Override
@@ -505,6 +508,9 @@ public abstract class TransactionType {
                     throw new NxtException.NotCurrentlyValidException("Alias hasn't been registered yet: " + aliasName);
                 } else if (alias.getAccountId() != transaction.getSenderId()) {
                     throw new NxtException.NotCurrentlyValidException("Alias doesn't belong to sender: " + aliasName);
+                }
+                if (transaction.getRecipientId() == Genesis.CREATOR_ID && Nxt.getBlockchain().getHeight() > Constants.MONETARY_SYSTEM_BLOCK) {
+                    throw new NxtException.NotCurrentlyValidException("Selling alias to Genesis not allowed");
                 }
             }
 
@@ -1819,6 +1825,9 @@ public abstract class TransactionType {
                         || (recipientAccount.getPublicKey() == null && ! transaction.getStringId().equals("5081403377391821646"))) {
                     throw new NxtException.NotCurrentlyValidException("Invalid effective balance leasing: "
                             + " recipient account " + transaction.getRecipientId() + " not found or no public key published");
+                }
+                if (transaction.getRecipientId() == Genesis.CREATOR_ID && Nxt.getBlockchain().getHeight() > Constants.MONETARY_SYSTEM_BLOCK) {
+                    throw new NxtException.NotCurrentlyValidException("Leasing to Genesis account not allowed");
                 }
             }
 
