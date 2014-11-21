@@ -26,8 +26,27 @@ var ATS = (function(ATS, $, undefined) {
             event.preventDefault();    
         });
         
-        $("#navi-show").click(function(e) {
-            if ($(this).attr("data-navi-val") == "OPEN") {
+        $("#navi-show-fields").click(function(e) {
+            if ($(this).attr("data-navi-val") == "ALL") {
+                $('.api-call-input-tr').each(function() {
+                    if($(this).find("input").val() != "") {
+                        $(this).show();
+                    } else {
+                        $(this).hide();
+                    }
+                });
+                $(this).attr("data-navi-val", "NONEMPTY");
+                $(this).text("Show All Fields");
+            } else {
+                $('.api-call-input-tr').show();
+                $(this).attr("data-navi-val", "ALL");
+                $(this).text("Show Non-Empty Fields");
+            }
+            e.preventDefault();
+        });
+
+        $("#navi-show-tabs").click(function(e) {
+            if ($(this).attr("data-navi-val") == "ALL") {
                 $('.api-call-All').each(function() {
                     if($(this).find('.panel-collapse.in').length != 0) {
                         $(this).show();
@@ -35,16 +54,16 @@ var ATS = (function(ATS, $, undefined) {
                         $(this).hide();
                     }
                 });
-                $(this).attr("data-navi-val", "ALL");
+                $(this).attr("data-navi-val", "OPEN");
                 $(this).text("Show All Tabs");
             } else {
                 $('.api-call-All').show();
-                $(this).attr("data-navi-val", "OPEN");
+                $(this).attr("data-navi-val", "ALL");
                 $(this).text("Show Open Tabs");
             }
             e.preventDefault();
         });
-        
+
         $('.api-call-sel-ALL').change(function() {
             if($(this).is(":checked")) {
                 ATS.addToSelected($(this));
