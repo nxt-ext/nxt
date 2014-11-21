@@ -253,8 +253,8 @@ final class JSONData {
         json.put("delisted", goods.isDelisted());
         json.put("timestamp", goods.getTimestamp());
         if (includeCounts) {
-            json.put("numberOfPurchases", DigitalGoodsStore.getGoodsPurchaseCount(goods.getId(), false));
-            json.put("numberOfPublicFeedbacks", DigitalGoodsStore.getGoodsPurchaseCount(goods.getId(), true));
+            json.put("numberOfPurchases", DigitalGoodsStore.Purchase.getGoodsPurchaseCount(goods.getId(), false));
+            json.put("numberOfPublicFeedbacks", DigitalGoodsStore.Purchase.getGoodsPurchaseCount(goods.getId(), true));
         }
         return json;
     }

@@ -23,9 +23,11 @@ public final class GetDGSPurchaseCount extends APIServlet.APIRequestHandler {
 
         JSONObject response = new JSONObject();
         if (sellerId != 0 && buyerId == 0) {
-            response.put("numberOfPurchases", DigitalGoodsStore.getSellerPurchaseCount(sellerId));
+            response.put("numberOfPurchases", DigitalGoodsStore.Purchase.getSellerPurchaseCount(sellerId));
         } else if (sellerId == 0 && buyerId != 0) {
-            response.put("numberOfPurchases", DigitalGoodsStore.getBuyerPurchaseCount(buyerId));
+            response.put("numberOfPurchases", DigitalGoodsStore.Purchase.getBuyerPurchaseCount(buyerId));
+        } else if (sellerId == 0 && buyerId == 0) {
+            response.put("numberOfPurchases", DigitalGoodsStore.Purchase.getCount());
         } else {
             response.put("errorDescription", "Either seller or buyer must be specified, but not both");
             response.put("errorCode", 3);
