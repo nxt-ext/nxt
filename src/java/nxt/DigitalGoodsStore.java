@@ -113,6 +113,9 @@ public final class DigitalGoodsStore {
         public static int getCount() {
             return tagTable.getCount();
         }
+        public static int getCountInStock() {
+            return tagTable.getCount(new DbClause.FixedClause(" in_stock_count > 0 "));
+        }
 
         private static void init() {}
 
@@ -697,12 +700,7 @@ public final class DigitalGoodsStore {
     }
 
     public static DbIterator<Tag> getInStockTags(int from, int to) {
-        return Tag.tagTable.getManyBy(new DbClause(" in_stock_count > 0 ") {
-            @Override
-            protected int set(PreparedStatement pstmt, int index) throws SQLException {
-                return index;
-            }
-        }, from, to);
+        return Tag.tagTable.getManyBy(new DbClause.FixedClause(" in_stock_count > 0 "), from, to);
     }
 
     public static Goods getGoods(long goodsId) {
@@ -713,14 +711,7 @@ public final class DigitalGoodsStore {
         return Goods.goodsTable.getAll(from, to);
     }
 
-    private static final DbClause inStockClause = new DbClause(" goods.delisted = FALSE AND goods.quantity > 0 ") {
-
-        @Override
-        public int set(PreparedStatement pstmt, int index) throws SQLException {
-            return index;
-        }
-
-    };
+    private static final DbClause inStockClause = new DbClause.FixedClause(" goods.delisted = FALSE AND goods.quantity > 0 ");
 
     private static final class SellerDbClause extends DbClause {
 
@@ -737,6 +728,10 @@ public final class DigitalGoodsStore {
             return index;
         }
 
+    }
+
+    public static int getGoodsCount(boolean inStockOnly) {
+        return inStockOnly ? Goods.goodsTable.getCount(inStockClause) : Goods.goodsTable.getCount();
     }
 
     public static DbIterator<Goods> getGoodsInStock(int from, int to) {
