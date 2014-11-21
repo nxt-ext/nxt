@@ -516,6 +516,7 @@ var NRS = (function(NRS, $, undefined) {
 			$("#issue_currency_initial_supply").val($("#issue_currency_max_supply").val());
 	});
 	
+	/* ISSUE CURRENCY FORM */
 	NRS.forms.issueCurrency = function($modal) {
 		var data = NRS.getFormData($modal.find("form:first"));
 
@@ -588,7 +589,19 @@ var NRS = (function(NRS, $, undefined) {
 			$( ".optional_mint" ).hide();
     });
     
-    /* Publish Exchange Offer Model Code */
+    /* PUBLISH EXCHANGE OFFER MODEL */
+    NRS.forms.publishExchangeOffer = function($modal) {
+		var data = NRS.getFormData($modal.find("form:first"));
+
+		data.buyRateNQT = NRS.convertToNQT(data.buyRateNQT);
+		data.sellRateNQT = NRS.convertToNQT(data.sellRateNQT);
+		
+		return {
+			"data": data
+		};
+	}
+    
+    /* Capitalize Publish Exchange Offer Model Currency Code */
     $("#publish_exchange_offer_modal #currency_code").blur(function(e) {
 		this.value = this.value.toLocaleUpperCase();
 		$('#publish_exchange_offer_modal .currency_code').html(this.value);
