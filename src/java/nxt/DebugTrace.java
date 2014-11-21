@@ -179,13 +179,13 @@ public final class DebugTrace {
 
     private boolean include(Attachment attachment) {
         if (attachment instanceof Attachment.DigitalGoodsPurchase) {
-            long sellerId = DigitalGoodsStore.getGoods(((Attachment.DigitalGoodsPurchase)attachment).getGoodsId()).getSellerId();
+            long sellerId = DigitalGoodsStore.Goods.getGoods(((Attachment.DigitalGoodsPurchase) attachment).getGoodsId()).getSellerId();
             return include(sellerId);
         } else if (attachment instanceof Attachment.DigitalGoodsDelivery) {
-            long buyerId = DigitalGoodsStore.getPurchase(((Attachment.DigitalGoodsDelivery)attachment).getPurchaseId()).getBuyerId();
+            long buyerId = DigitalGoodsStore.Purchase.getPurchase(((Attachment.DigitalGoodsDelivery) attachment).getPurchaseId()).getBuyerId();
             return include(buyerId);
         } else if (attachment instanceof Attachment.DigitalGoodsRefund) {
-            long buyerId = DigitalGoodsStore.getPurchase(((Attachment.DigitalGoodsRefund)attachment).getPurchaseId()).getBuyerId();
+            long buyerId = DigitalGoodsStore.Purchase.getPurchase(((Attachment.DigitalGoodsRefund) attachment).getPurchaseId()).getBuyerId();
             return include(buyerId);
         }
         return false;
@@ -451,13 +451,13 @@ public final class DebugTrace {
         } else if (attachment instanceof Attachment.DigitalGoodsPurchase) {
             Attachment.DigitalGoodsPurchase purchase = (Attachment.DigitalGoodsPurchase)transaction.getAttachment();
             if (isRecipient) {
-                map = getValues(DigitalGoodsStore.getGoods(purchase.getGoodsId()).getSellerId(), false);
+                map = getValues(DigitalGoodsStore.Goods.getGoods(purchase.getGoodsId()).getSellerId(), false);
             }
             map.put("event", "purchase");
             map.put("purchase", transaction.getStringId());
         } else if (attachment instanceof Attachment.DigitalGoodsDelivery) {
             Attachment.DigitalGoodsDelivery delivery = (Attachment.DigitalGoodsDelivery)transaction.getAttachment();
-            DigitalGoodsStore.Purchase purchase = DigitalGoodsStore.getPurchase(delivery.getPurchaseId());
+            DigitalGoodsStore.Purchase purchase = DigitalGoodsStore.Purchase.getPurchase(delivery.getPurchaseId());
             if (isRecipient) {
                 map = getValues(purchase.getBuyerId(), false);
             }
@@ -478,7 +478,7 @@ public final class DebugTrace {
         } else if (attachment instanceof Attachment.DigitalGoodsRefund) {
             Attachment.DigitalGoodsRefund refund = (Attachment.DigitalGoodsRefund)transaction.getAttachment();
             if (isRecipient) {
-                map = getValues(DigitalGoodsStore.getPurchase(refund.getPurchaseId()).getBuyerId(), false);
+                map = getValues(DigitalGoodsStore.Purchase.getPurchase(refund.getPurchaseId()).getBuyerId(), false);
             }
             map.put("event", "refund");
             map.put("purchase", Convert.toUnsignedLong(refund.getPurchaseId()));

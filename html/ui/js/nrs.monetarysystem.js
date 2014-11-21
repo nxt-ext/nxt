@@ -21,7 +21,7 @@ var NRS = (function(NRS, $, undefined) {
 			if (response) {
 				$("#currency_account").html(String(response.accountRS).escapeHTML());
 				$("#currency_id").html(String(response.currency).escapeHTML());
-				$(".currency_name").html(String(response.name).escapeHTML());
+				$("#currency_name").html(String(response.name).escapeHTML());
 				$("#currency_current_supply").html(String(response.currentSupply).escapeHTML());
 				$("#currency_max_supply").html(String(response.maxSupply).escapeHTML());
 				$("#currency_decimals").html(String(response.decimals).escapeHTML());
@@ -35,7 +35,7 @@ var NRS = (function(NRS, $, undefined) {
 			"code": currencyCode
 		}, function(response, input) {
 			if (response) {
-				$("#your_currency_balance").html(NRS.formatQuantity(response.accountCurrencies.units, response.accountCurrencies.decimals));
+				$("#your_currency_balance").html(NRS.formatQuantity(response.units, response.decimals));
 			}
 		});
 		
@@ -331,6 +331,11 @@ var NRS = (function(NRS, $, undefined) {
 							"<td><a href='#' data-toggle='modal' data-target='#transfer_currency_modal' data-currency='" + String(currency.currency).escapeHTML() + "' data-name='" + String(currency.name).escapeHTML() + "' data-decimals='" + String(currency.decimals).escapeHTML() + "'>" + $.t("transfer") + "</a></td>" +
 							"</tr>";
 					}
+					$('#currencies_table [data-i18n="type"]').hide();
+					$('#currencies_table [data-i18n="max_supply"]').hide();
+					$('#currencies_table [data-i18n="supply"]').hide();
+					$('#currencies_table [data-i18n="transfer"]').show();
+					$('#currencies_table [data-i18n="units"]').show();
 					NRS.dataLoaded(rows);
 				} else {
 					NRS.dataLoaded();
@@ -365,9 +370,15 @@ var NRS = (function(NRS, $, undefined) {
 							"<td>" + currency.name + "</td>" +
 							"<td>" + currency.code + "</td>" +
 							"<td>" + currency.type + "</td>" +
-							"<td>" + currency.currentSupply + "</td>" +
+							"<td>" + NRS.formatQuantity(currency.currentSupply, currency.decimals) + "</td>" +
+							"<td>" + NRS.formatQuantity(currency.maxSupply, currency.decimals) + "</td>" +
 							"</tr>";
 					}
+					$('#currencies_table [data-i18n="type"]').show();
+					$('#currencies_table [data-i18n="max_supply"]').show();
+					$('#currencies_table [data-i18n="supply"]').show();
+					$('#currencies_table [data-i18n="transfer"]').hide();
+					$('#currencies_table [data-i18n="units"]').hide();
 					NRS.dataLoaded(rows);
 				} else {
 					NRS.dataLoaded();
@@ -578,11 +589,13 @@ var NRS = (function(NRS, $, undefined) {
     });
     
     /* Publish Exchange Offer Model Code */
-    $("#currency_code").blur(function(e) {
+    $("#publish_exchange_offer_modal #currency_code").blur(function(e) {
 		this.value = this.value.toLocaleUpperCase();
+		$('#publish_exchange_offer_modal .currency_code').html(this.value);
 	});
-	$("#currency_code").keyup(function(e) {
+	$("#publish_exchange_offer_modal #currency_code").keyup(function(e) {
 		this.value = this.value.toLocaleUpperCase();
+		$('#publish_exchange_offer_modal .currency_code').html(this.value);
 	});
     
 

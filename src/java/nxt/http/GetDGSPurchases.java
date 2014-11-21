@@ -35,7 +35,7 @@ public final class GetDGSPurchases extends APIServlet.APIRequestHandler {
         response.put("purchases", purchasesJSON);
 
         if (sellerId == 0 && buyerId == 0) {
-            try (FilteringIterator<DigitalGoodsStore.Purchase> purchaseIterator = new FilteringIterator<>(DigitalGoodsStore.getAllPurchases(0, -1),
+            try (FilteringIterator<DigitalGoodsStore.Purchase> purchaseIterator = new FilteringIterator<>(DigitalGoodsStore.Purchase.getAllPurchases(0, -1),
                     new Filter<DigitalGoodsStore.Purchase>() {
                         @Override
                         public boolean ok(DigitalGoodsStore.Purchase purchase) {
@@ -51,11 +51,11 @@ public final class GetDGSPurchases extends APIServlet.APIRequestHandler {
 
         DbIterator<DigitalGoodsStore.Purchase> purchases;
         if (sellerId != 0 && buyerId == 0) {
-            purchases = DigitalGoodsStore.getSellerPurchases(sellerId, 0, -1);
+            purchases = DigitalGoodsStore.Purchase.getSellerPurchases(sellerId, 0, -1);
         } else if (sellerId == 0) {
-            purchases = DigitalGoodsStore.getBuyerPurchases(buyerId, 0, -1);
+            purchases = DigitalGoodsStore.Purchase.getBuyerPurchases(buyerId, 0, -1);
         } else {
-            purchases = DigitalGoodsStore.getSellerBuyerPurchases(sellerId, buyerId, 0, -1);
+            purchases = DigitalGoodsStore.Purchase.getSellerBuyerPurchases(sellerId, buyerId, 0, -1);
         }
         try (FilteringIterator<DigitalGoodsStore.Purchase> purchaseIterator = new FilteringIterator<>(purchases,
                 new Filter<DigitalGoodsStore.Purchase>() {

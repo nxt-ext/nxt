@@ -30,7 +30,7 @@ public final class GetDGSGoodsPurchases extends APIServlet.APIRequestHandler {
         JSONArray purchasesJSON = new JSONArray();
         response.put("purchases", purchasesJSON);
 
-        try (DbIterator<DigitalGoodsStore.Purchase> iterator = DigitalGoodsStore.getGoodsPurchases(goods.getId(), withPublicFeedbacksOnly, firstIndex, lastIndex)) {
+        try (DbIterator<DigitalGoodsStore.Purchase> iterator = DigitalGoodsStore.Purchase.getGoodsPurchases(goods.getId(), withPublicFeedbacksOnly, firstIndex, lastIndex)) {
             while(iterator.hasNext()) {
                 purchasesJSON.add(JSONData.purchase(iterator.next()));
             }
