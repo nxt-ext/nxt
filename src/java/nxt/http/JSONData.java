@@ -428,7 +428,7 @@ final class JSONData {
 
     static JSONObject exchange(Exchange exchange, boolean includeCurrencyInfo) {
         JSONObject json = new JSONObject();
-        json.put("transaction", exchange.getTransactionId());
+        json.put("transaction", Convert.toUnsignedLong(exchange.getTransactionId()));
         json.put("timestamp", exchange.getTimestamp());
         json.put("units", String.valueOf(exchange.getUnits()));
         json.put("rateNQT", String.valueOf(exchange.getRate()));
