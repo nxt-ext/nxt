@@ -22,7 +22,7 @@ public final class GetDGSGoodsPurchaseCount extends APIServlet.APIRequestHandler
         final boolean withPublicFeedbacksOnly = "true".equalsIgnoreCase(req.getParameter("withPublicFeedbacksOnly"));
 
         JSONObject response = new JSONObject();
-        response.put("numberOfPurchases", DigitalGoodsStore.getGoodsPurchaseCount(goods.getId(), withPublicFeedbacksOnly));
+        response.put("numberOfPurchases", DigitalGoodsStore.Purchase.getGoodsPurchaseCount(goods.getId(), withPublicFeedbacksOnly));
         return response;
 
     }

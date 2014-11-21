@@ -51,12 +51,12 @@ public final class GetDGSGoods extends APIServlet.APIRequestHandler {
             DbIterator<DigitalGoodsStore.Goods> goods;
             if (sellerId == 0) {
                 if (inStockOnly) {
-                    goods = DigitalGoodsStore.getGoodsInStock(0, -1);
+                    goods = DigitalGoodsStore.Goods.getGoodsInStock(0, -1);
                 } else {
-                    goods = DigitalGoodsStore.getAllGoods(0, -1);
+                    goods = DigitalGoodsStore.Goods.getAllGoods(0, -1);
                 }
             } else {
-                goods = DigitalGoodsStore.getSellerGoods(sellerId, inStockOnly, 0, -1);
+                goods = DigitalGoodsStore.Goods.getSellerGoods(sellerId, inStockOnly, 0, -1);
             }
             iterator = new FilteringIterator<>(goods, filter, firstIndex, lastIndex);
             while (iterator.hasNext()) {
