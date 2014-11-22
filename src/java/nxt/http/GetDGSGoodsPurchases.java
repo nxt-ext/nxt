@@ -14,7 +14,7 @@ public final class GetDGSGoodsPurchases extends APIServlet.APIRequestHandler {
     static final GetDGSGoodsPurchases instance = new GetDGSGoodsPurchases();
 
     private GetDGSGoodsPurchases() {
-        super(new APITag[] {APITag.DGS}, "goods", "firstIndex", "lastIndex", "withPublicFeedbacksOnly");
+        super(new APITag[] {APITag.DGS}, "goods", "firstIndex", "lastIndex", "withPublicFeedbacksOnly", "completed");
     }
 
     @Override
@@ -24,13 +24,15 @@ public final class GetDGSGoodsPurchases extends APIServlet.APIRequestHandler {
         int firstIndex = ParameterParser.getFirstIndex(req);
         int lastIndex = ParameterParser.getLastIndex(req);
         final boolean withPublicFeedbacksOnly = "true".equalsIgnoreCase(req.getParameter("withPublicFeedbacksOnly"));
+        final boolean completed = "true".equalsIgnoreCase(req.getParameter("completed"));
 
 
         JSONObject response = new JSONObject();
         JSONArray purchasesJSON = new JSONArray();
         response.put("purchases", purchasesJSON);
 
-        try (DbIterator<DigitalGoodsStore.Purchase> iterator = DigitalGoodsStore.Purchase.getGoodsPurchases(goods.getId(), withPublicFeedbacksOnly, firstIndex, lastIndex)) {
+        try (DbIterator<DigitalGoodsStore.Purchase> iterator = DigitalGoodsStore.Purchase.getGoodsPurchases(goods.getId(),
+                withPublicFeedbacksOnly, completed, firstIndex, lastIndex)) {
             while(iterator.hasNext()) {
                 purchasesJSON.add(JSONData.purchase(iterator.next()));
             }
