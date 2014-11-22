@@ -185,7 +185,7 @@ public final class CurrencyMint {
         return (BigInteger.valueOf(2).pow(exp)).divide(BigInteger.valueOf(units));
     }
 
-    static byte[] reverse(byte[] b) {
+    private static byte[] reverse(byte[] b) {
         for(int i=0; i < b.length/2; i++) {
             byte temp = b[i];
             b[i] = b[b.length - i - 1];

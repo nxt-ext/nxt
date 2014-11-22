@@ -1718,7 +1718,7 @@ public interface Attachment extends Appendix {
             this.decimals = buffer.get();
         }
 
-        MonetarySystemCurrencyIssuance(JSONObject attachmentData) throws NxtException.NotValidException {
+        MonetarySystemCurrencyIssuance(JSONObject attachmentData) {
             super(attachmentData);
             this.name = (String)attachmentData.get("name");
             this.code = (String)attachmentData.get("code");
@@ -1995,7 +1995,7 @@ public interface Attachment extends Appendix {
         private final long currencyId;
         private final long units;
 
-        MonetarySystemCurrencyTransfer(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
+        MonetarySystemCurrencyTransfer(ByteBuffer buffer, byte transactionVersion) {
             super(buffer, transactionVersion);
             this.currencyId = buffer.getLong();
             this.units = buffer.getLong();
