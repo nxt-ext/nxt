@@ -203,9 +203,7 @@ public class APITestServlet extends HttpServlet {
     }
 
     private static String fullTextMessage(String msg, String msgType) {
-        StringBuilder buf = new StringBuilder();
-        buf.append("<div class=\"alert alert-").append(msgType).append("\" role=\"alert\">").append(msg).append("</div>");
-        return buf.toString();
+        return "<div class=\"alert alert-" + msgType + "\" role=\"alert\">" + msg + "</div>";
     }
 
     private static String form(String requestType, boolean singleView, String className, List<String> parameters, boolean requirePost) {

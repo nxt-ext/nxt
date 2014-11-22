@@ -87,7 +87,7 @@ public interface Appendix {
 
     public static class Message extends AbstractAppendix {
 
-        static Message parse(JSONObject attachmentData) throws NxtException.NotValidException {
+        static Message parse(JSONObject attachmentData) {
             if (attachmentData.get("message") == null) {
                 return null;
             }
@@ -258,7 +258,7 @@ public interface Appendix {
             super(buffer, transactionVersion);
         }
 
-        EncryptedMessage(JSONObject attachmentData) throws NxtException.NotValidException {
+        EncryptedMessage(JSONObject attachmentData) {
             super(attachmentData, (JSONObject)attachmentData.get("encryptedMessage"));
         }
 
@@ -304,7 +304,7 @@ public interface Appendix {
             super(buffer, transactionVersion);
         }
 
-        EncryptToSelfMessage(JSONObject attachmentData) throws NxtException.NotValidException {
+        EncryptToSelfMessage(JSONObject attachmentData) {
             super(attachmentData, (JSONObject)attachmentData.get("encryptToSelfMessage"));
         }
 
@@ -336,7 +336,7 @@ public interface Appendix {
 
     public static class PublicKeyAnnouncement extends AbstractAppendix {
 
-        static PublicKeyAnnouncement parse(JSONObject attachmentData) throws NxtException.NotValidException {
+        static PublicKeyAnnouncement parse(JSONObject attachmentData) {
             if (attachmentData.get("recipientPublicKey") == null) {
                 return null;
             }
