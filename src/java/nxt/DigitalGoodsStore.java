@@ -254,11 +254,13 @@ public final class DigitalGoodsStore {
         }
 
         public static DbIterator<Goods> searchGoods(String query, boolean inStockOnly, int from, int to) {
-            return goodsTable.search(query, inStockOnly ? inStockClause : DbClause.EMPTY_CLAUSE, from, to);
+            return goodsTable.search(query, inStockOnly ? inStockClause : DbClause.EMPTY_CLAUSE, from, to,
+                    " ORDER BY ft.score DESC, goods.timestamp DESC ");
         }
 
         public static DbIterator<Goods> searchSellerGoods(String query, long sellerId, boolean inStockOnly, int from, int to) {
-            return goodsTable.search(query, new SellerDbClause(sellerId, inStockOnly), from, to);
+            return goodsTable.search(query, new SellerDbClause(sellerId, inStockOnly), from, to,
+                    " ORDER BY ft.score DESC, goods.name ASC, goods.timestamp DESC ");
         }
 
         private static void init() {}
