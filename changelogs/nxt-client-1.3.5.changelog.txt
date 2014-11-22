@@ -1,6 +1,10 @@
 Added getDGSTagCount API, allow getDGSGoodsCount and getDGSPurchaseCount to be
 used also to get total goods or purchase counts.
 
+Added completed parameter to getDGSGoodsPurchases, getDGSGoodsPurchaseCount,
+getDGSPurchaseCount, getDGSPurchases, to allow querying for completed purchases
+only. Added withPublicFeedbacksOnly parameter to getDGSPurchaseCount.
+
 Secondary sort of search results after sorting by relevance, by timestamp if
 for any seller, or by name and then by timestamp if for a single seller.
 
