@@ -513,18 +513,52 @@ public final class DigitalGoodsStore {
 
         };
 
-        private static final class GoodsPurchasesClause extends DbClause {
+        private static class PurchasesClause extends DbClause {
 
-            private final long goodsId;
-
-            private GoodsPurchasesClause(long goodsId, boolean withPublicFeedbacksOnly) {
-                super(" goods_id = ? AND goods IS NOT NULL " + (withPublicFeedbacksOnly ? " AND has_public_feedbacks = TRUE " : ""));
-                this.goodsId = goodsId;
+            private PurchasesClause(String clause, boolean withPublicFeedbacksOnly, boolean completedOnly) {
+                super(clause + (completedOnly ? " AND goods IS NOT NULL " : " ")
+                        + (withPublicFeedbacksOnly ? " AND has_public_feedbacks = TRUE " : " "));
             }
 
             @Override
             protected int set(PreparedStatement pstmt, int index) throws SQLException {
-                pstmt.setLong(index++, goodsId);
+                return index;
+            }
+
+        }
+
+        private static final class LongPurchasesClause extends PurchasesClause {
+
+            private final long value;
+
+            private LongPurchasesClause(String columnName, long value, boolean withPublicFeedbacksOnly, boolean completedOnly) {
+                super(columnName + " = ? ", withPublicFeedbacksOnly, completedOnly);
+                this.value = value;
+            }
+
+            @Override
+            protected int set(PreparedStatement pstmt, int index) throws SQLException {
+                pstmt.setLong(index++, value);
+                return index;
+            }
+
+        }
+
+        private static final class SellerBuyerPurchasesClause extends PurchasesClause {
+
+            private final long sellerId;
+            private final long buyerId;
+
+            private SellerBuyerPurchasesClause(long sellerId, long buyerId, boolean withPublicFeedbacksOnly, boolean completedOnly) {
+                super(" seller_id = ? AND buyer_id = ? ", withPublicFeedbacksOnly, completedOnly);
+                this.sellerId = sellerId;
+                this.buyerId = buyerId;
+            }
+
+            @Override
+            protected int set(PreparedStatement pstmt, int index) throws SQLException {
+                pstmt.setLong(index++, sellerId);
+                pstmt.setLong(index++, buyerId);
                 return index;
             }
 
@@ -534,44 +568,50 @@ public final class DigitalGoodsStore {
             return purchaseTable.getCount();
         }
 
+        public static int getCount(boolean withPublicFeedbacksOnly, boolean completedOnly) {
+            return purchaseTable.getCount(new PurchasesClause(" TRUE ", withPublicFeedbacksOnly, completedOnly));
+        }
+
         public static DbIterator<Purchase> getAllPurchases(int from, int to) {
             return purchaseTable.getAll(from, to);
         }
 
-        public static DbIterator<Purchase> getSellerPurchases(long sellerId, int from, int to) {
-            return purchaseTable.getManyBy(new DbClause.LongClause("seller_id", sellerId), from, to);
+        public static DbIterator<Purchase> getPurchases(boolean withPublicFeedbacksOnly, boolean completedOnly, int from, int to) {
+            return purchaseTable.getManyBy(new PurchasesClause(" TRUE ", withPublicFeedbacksOnly, completedOnly), from, to);
         }
 
-        public static int getSellerPurchaseCount(long sellerId) {
-            return purchaseTable.getCount(new DbClause.LongClause("seller_id", sellerId));
+        public static DbIterator<Purchase> getSellerPurchases(long sellerId, boolean withPublicFeedbacksOnly, boolean completedOnly, int from, int to) {
+            return purchaseTable.getManyBy(new LongPurchasesClause("seller_id", sellerId, withPublicFeedbacksOnly, completedOnly), from, to);
         }
 
-        public static DbIterator<Purchase> getBuyerPurchases(long buyerId, int from, int to) {
-            return purchaseTable.getManyBy(new DbClause.LongClause("buyer_id", buyerId), from, to);
+        public static int getSellerPurchaseCount(long sellerId, boolean withPublicFeedbacksOnly, boolean completedOnly) {
+            return purchaseTable.getCount(new LongPurchasesClause("seller_id", sellerId, withPublicFeedbacksOnly, completedOnly));
         }
 
-        public static int getBuyerPurchaseCount(long buyerId) {
-            return purchaseTable.getCount(new DbClause.LongClause("buyer_id", buyerId));
+        public static DbIterator<Purchase> getBuyerPurchases(long buyerId, boolean withPublicFeedbacksOnly, boolean completedOnly, int from, int to) {
+            return purchaseTable.getManyBy(new LongPurchasesClause("buyer_id", buyerId, withPublicFeedbacksOnly, completedOnly), from, to);
         }
 
-        public static DbIterator<Purchase> getSellerBuyerPurchases(final long sellerId, final long buyerId, int from, int to) {
-            DbClause dbClause = new DbClause(" seller_id = ? AND buyer_id = ? ") {
-                @Override
-                public int set(PreparedStatement pstmt, int index) throws SQLException {
-                    pstmt.setLong(index++, sellerId);
-                    pstmt.setLong(index++, buyerId);
-                    return index;
-                }
-            };
-            return purchaseTable.getManyBy(dbClause, from, to);
+        public static int getBuyerPurchaseCount(long buyerId, boolean withPublicFeedbacksOnly, boolean completedOnly) {
+            return purchaseTable.getCount(new LongPurchasesClause("buyer_id", buyerId, withPublicFeedbacksOnly, completedOnly));
         }
 
-        public static DbIterator<Purchase> getGoodsPurchases(long goodsId, boolean withPublicFeedbacksOnly, int from, int to) {
-            return purchaseTable.getManyBy(new GoodsPurchasesClause(goodsId, withPublicFeedbacksOnly), from, to);
+        public static DbIterator<Purchase> getSellerBuyerPurchases(final long sellerId, final long buyerId,
+                                                                   boolean withPublicFeedbacksOnly, boolean completedOnly, int from, int to) {
+            return purchaseTable.getManyBy(new SellerBuyerPurchasesClause(sellerId, buyerId, withPublicFeedbacksOnly, completedOnly), from, to);
         }
 
-        public static int getGoodsPurchaseCount(final long goodsId, boolean withPublicFeedbacksOnly) {
-            return purchaseTable.getCount(new GoodsPurchasesClause(goodsId, withPublicFeedbacksOnly));
+        public static int getSellerBuyerPurchaseCount(final long sellerId, final long buyerId,
+                                                                   boolean withPublicFeedbacksOnly, boolean completedOnly) {
+            return purchaseTable.getCount(new SellerBuyerPurchasesClause(sellerId, buyerId, withPublicFeedbacksOnly, completedOnly));
+        }
+
+        public static DbIterator<Purchase> getGoodsPurchases(long goodsId, boolean withPublicFeedbacksOnly, boolean completedOnly, int from, int to) {
+            return purchaseTable.getManyBy(new LongPurchasesClause("goods_id", goodsId, withPublicFeedbacksOnly, completedOnly), from, to);
+        }
+
+        public static int getGoodsPurchaseCount(final long goodsId, boolean withPublicFeedbacksOnly, boolean completedOnly) {
+            return purchaseTable.getCount(new LongPurchasesClause("goods_id", goodsId, withPublicFeedbacksOnly, completedOnly));
         }
 
         public static Purchase getPurchase(long purchaseId) {
