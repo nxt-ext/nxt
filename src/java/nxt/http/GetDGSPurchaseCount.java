@@ -12,7 +12,7 @@ public final class GetDGSPurchaseCount extends APIServlet.APIRequestHandler {
     static final GetDGSPurchaseCount instance = new GetDGSPurchaseCount();
 
     private GetDGSPurchaseCount() {
-        super(new APITag[] {APITag.DGS}, "seller", "buyer");
+        super(new APITag[] {APITag.DGS}, "seller", "buyer", "withPublicFeedbacksOnly", "completed");
     }
 
     @Override
@@ -20,16 +20,21 @@ public final class GetDGSPurchaseCount extends APIServlet.APIRequestHandler {
 
         long sellerId = ParameterParser.getSellerId(req);
         long buyerId = ParameterParser.getBuyerId(req);
+        final boolean completed = "true".equalsIgnoreCase(req.getParameter("completed"));
+        final boolean withPublicFeedbacksOnly = "true".equalsIgnoreCase(req.getParameter("withPublicFeedbacksOnly"));
 
         JSONObject response = new JSONObject();
+        int count;
         if (sellerId != 0 && buyerId == 0) {
-            response.put("numberOfPurchases", DigitalGoodsStore.getSellerPurchaseCount(sellerId));
+            count = DigitalGoodsStore.Purchase.getSellerPurchaseCount(sellerId, withPublicFeedbacksOnly, completed);
         } else if (sellerId == 0 && buyerId != 0) {
-            response.put("numberOfPurchases", DigitalGoodsStore.getBuyerPurchaseCount(buyerId));
+            count = DigitalGoodsStore.Purchase.getBuyerPurchaseCount(buyerId, withPublicFeedbacksOnly, completed);
+        } else if (sellerId == 0 && buyerId == 0) {
+            count = DigitalGoodsStore.Purchase.getCount(withPublicFeedbacksOnly, completed);
         } else {
-            response.put("errorDescription", "Either seller or buyer must be specified, but not both");
-            response.put("errorCode", 3);
+            count = DigitalGoodsStore.Purchase.getSellerBuyerPurchaseCount(sellerId, buyerId, withPublicFeedbacksOnly, completed);
         }
+        response.put("numberOfPurchases", count);
         return response;
     }
 

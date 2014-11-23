@@ -5,6 +5,7 @@ import nxt.util.Convert;
 import nxt.util.Logger;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
+
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.Collections;
@@ -89,7 +90,7 @@ public interface Appendix {
 
     public static class Message extends AbstractAppendix {
 
-        static Message parse(JSONObject attachmentData) throws NxtException.NotValidException {
+        static Message parse(JSONObject attachmentData) {
             if (attachmentData.get("message") == null) {
                 return null;
             }
@@ -194,7 +195,7 @@ public interface Appendix {
 
         private AbstractEncryptedMessage(JSONObject attachmentJSON, JSONObject encryptedMessageJSON) {
             super(attachmentJSON);
-            byte[] data = Convert.parseHexString((String) encryptedMessageJSON.get("data"));
+            byte[] data = Convert.parseHexString((String)encryptedMessageJSON.get("data"));
             byte[] nonce = Convert.parseHexString((String)encryptedMessageJSON.get("nonce"));
             this.encryptedData = new EncryptedData(data, nonce);
             this.isText = Boolean.TRUE.equals(encryptedMessageJSON.get("isText"));
@@ -261,7 +262,7 @@ public interface Appendix {
         }
 
         EncryptedMessage(JSONObject attachmentData) throws NxtException.NotValidException {
-            super(attachmentData, (JSONObject) attachmentData.get("encryptedMessage"));
+            super(attachmentData, (JSONObject)attachmentData.get("encryptedMessage"));
         }
 
         public EncryptedMessage(EncryptedData encryptedData, boolean isText) {
@@ -306,7 +307,7 @@ public interface Appendix {
             super(buffer, transactionVersion);
         }
 
-        EncryptToSelfMessage(JSONObject attachmentData) throws NxtException.NotValidException {
+        EncryptToSelfMessage(JSONObject attachmentData) {
             super(attachmentData, (JSONObject)attachmentData.get("encryptToSelfMessage"));
         }
 
@@ -338,7 +339,7 @@ public interface Appendix {
 
     public static class PublicKeyAnnouncement extends AbstractAppendix {
 
-        static PublicKeyAnnouncement parse(JSONObject attachmentData) throws NxtException.NotValidException {
+        static PublicKeyAnnouncement parse(JSONObject attachmentData) {
             if (attachmentData.get("recipientPublicKey") == null) {
                 return null;
             }
@@ -418,7 +419,7 @@ public interface Appendix {
 
     public static class TwoPhased extends AbstractAppendix {
 
-        static TwoPhased parse(JSONObject attachmentData) throws NxtException.NotValidException {
+        static TwoPhased parse(JSONObject attachmentData) {
             if (attachmentData.get("releaseHeight") == null) {
                 return null;
             }

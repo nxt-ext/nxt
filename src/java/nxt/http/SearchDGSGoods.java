@@ -56,9 +56,9 @@ public final class SearchDGSGoods extends APIServlet.APIRequestHandler {
         try {
             DbIterator<DigitalGoodsStore.Goods> goods;
             if (sellerId == 0) {
-                goods = DigitalGoodsStore.searchGoods(query, inStockOnly, 0, -1);
+                goods = DigitalGoodsStore.Goods.searchGoods(query, inStockOnly, 0, -1);
             } else {
-                goods = DigitalGoodsStore.searchSellerGoods(query, sellerId, inStockOnly, 0, -1);
+                goods = DigitalGoodsStore.Goods.searchSellerGoods(query, sellerId, inStockOnly, 0, -1);
             }
             iterator = new FilteringIterator<>(goods, filter, firstIndex, lastIndex);
             while (iterator.hasNext()) {

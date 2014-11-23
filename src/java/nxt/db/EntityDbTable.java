@@ -223,12 +223,16 @@ public abstract class EntityDbTable<T> extends DerivedDbTable {
     }
 
     public final DbIterator<T> search(String query, DbClause dbClause, int from, int to) {
+        return search(query, dbClause, from, to, " ORDER BY ft.score DESC ");
+    }
+
+    public final DbIterator<T> search(String query, DbClause dbClause, int from, int to, String sort) {
         Connection con = null;
         try {
             con = db.getConnection();
             PreparedStatement pstmt = con.prepareStatement("SELECT " + table + ".*, ft.score FROM " + table + ", ftl_search_data(?, 0, 0) ft "
                     + " WHERE " + table + ".db_id = ft.keys[0] AND ft.table = ? " + (multiversion ? " AND " + table + ".latest = TRUE " : " ")
-                    + " AND " + dbClause.getClause() + " ORDER BY ft.score DESC "
+                    + " AND " + dbClause.getClause() + sort
                     + DbUtils.limitsClause(from, to));
             int i = 0;
             pstmt.setString(++i, query);
