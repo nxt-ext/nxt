@@ -592,7 +592,7 @@
                     
                     <section class="content">
                         <div class="data-container data-loading">
-                            <div class="page-header"><h4>Polls I started</h3></div>
+                            <div class="page-header"><h4>Polls I started</h4></div>
                             <table class="table table-striped" id="started_polls_table">
                                 <thead>
                                 <tr>
@@ -609,7 +609,7 @@
                                 </tbody>
                             </table>
 
-                            <div class="page-header"><h4>Closed Polls I've Voted In</h3></div>
+                            <div class="page-header"><h4>Closed Polls I've Voted In</h4></div>
                             <table class="table table-striped" id="voted_polls_table">
                                 <thead>
                                 <tr>
@@ -3146,6 +3146,7 @@
 							<div class="callout callout-danger error_message" style="display:none"></div>
 							<div class="form-group">
 								<label for="cast_vote_poll_name" data-i18n="poll_name">Poll Name: </label><br/>
+                                <input type="hidden" id="cast_vote_poll" name="poll" value=""/>
 								<span id="cast_vote_poll_name" data-i18n="[placeholder]poll_name"></strong>
 							</div>
 							<div class="form-group">
@@ -3155,17 +3156,34 @@
 							<div class="form-group" id="cast_vote_answers">
 								<div id="cast_vote_answers_entry"></div>
 							</div>
-							<div class="form-group secret_phrase">
-								<label for="cast_vote_password" data-i18n="passphrase">PASSPHRASE</label>
-								<input type="password" name="secretPhrase" id="cast_vote_password" class="form-control" placeholder="" tabindex="8">
-							</div>
-							<div class="form-group advanced">
-								<label for="cast_vote_referenced_transaction" data-i18n="referenced_transaction_hash">REFERENCED TRANSACTION HASH</label>
-								<input type="text" class="form-control" name="referencedTransactionFullHash" id="cast_vote_referenced_transaction" placeholder="Referenced Transaction Full Hash" data-i18n="[placeholder]referenced_transaction_full_hash" tabindex="6" spellcheck="false" />
-							</div>
-							<div class="form-group advanced" style="margin-bottom:0;">
-								<input type="checkbox" name="doNotBroadcast" id="cast_vote_do_not_broadcast" value="1" /> <label for="cast_vote_do_not_broadcast" style="font-weight:normal;" tabindex="7"> <span data-i18n="do_not_broadcast">Do Not Broadcast</span></label>
-							</div>
+							<div class="row advanced">
+                                <div class="col-xs-6 col-sm-6 col-md-6">
+                                    <div class="form-group">
+                                        <label for="cast_vote_fee" data-i18n="fee">FEE</label>
+                                        <div class="input-group">
+                                            <input type="number" name="feeNXT" id="cast_vote_fee" class="form-control" step="any" min="1" placeholder="Fee" data-i18n="[placeholder]fee" data-default="1" value="1" tabindex="3">
+                                            <span class="input-group-addon">NXT</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-xs-6 col-sm-6 col-md-6">
+                                    <div class="form-group">
+                                        <label for="cast_vote_deadline" data-i18n="deadline_hours">DEADLINE (HOURS)</label>
+                                        <input type="number" name="deadline" id="cast_vote_deadline" class="form-control" placeholder="Deadline" data-i18n="[placeholder]deadline" min="1" data-default="24" value="24" tabindex="4">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group secret_phrase">
+                                <label for="cast_vote_password" data-i18n="passphrase">PASSPHRASE</label>
+                                <input type="password" name="secretPhrase" id="cast_vote_password" class="form-control" placeholder="" tabindex="8">
+                            </div>
+                            <div class="form-group advanced">
+                                <label for="cast_vote_referenced_transaction" data-i18n="referenced_transaction_hash">REFERENCED TRANSACTION HASH</label>
+                                <input type="text" class="form-control" name="referencedTransactionFullHash" id="cast_vote_referenced_transaction" placeholder="Referenced Transaction Full Hash" data-i18n="referenced_transaction_full_hash" tabindex="6" spellcheck="false" />
+                            </div>
+                            <div class="form-group advanced" style="margin-bottom:0;">
+                                <input type="checkbox" name="doNotBroadcast" id="cast_vote_do_not_broadcast" value="1" /> <label for="cast_vote_do_not_broadcast" style="font-weight:normal;" tabindex="7" data-i18n="do_not_broadcast">Do Not Broadcast</label>
+                            </div>
 							<input type="hidden" name="request_type" value="castVote" />
 						</form>
 			    	</div>
