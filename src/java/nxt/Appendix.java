@@ -595,7 +595,7 @@ public interface Appendix {
                 throw new NxtException.NotValidException("Invalid assetId");
             }
 
-            if (maxHeight <= Nxt.getBlockchain().getHeight() + Constants.VOTING_MIN_VOTE_DURATION) {
+            if (maxHeight > Nxt.getBlockchain().getHeight() + Constants.VOTING_MIN_VOTE_DURATION) {
                 throw new NxtException.NotValidException("Invalid max height");
             }
         }
