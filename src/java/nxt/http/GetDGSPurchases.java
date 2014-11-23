@@ -15,7 +15,7 @@ public final class GetDGSPurchases extends APIServlet.APIRequestHandler {
     static final GetDGSPurchases instance = new GetDGSPurchases();
 
     private GetDGSPurchases() {
-        super(new APITag[] {APITag.DGS}, "seller", "buyer", "firstIndex", "lastIndex", "completed");
+        super(new APITag[] {APITag.DGS}, "seller", "buyer", "firstIndex", "lastIndex", "completed", "withPublicFeedbacksOnly");
     }
 
     @Override
@@ -26,6 +26,7 @@ public final class GetDGSPurchases extends APIServlet.APIRequestHandler {
         int firstIndex = ParameterParser.getFirstIndex(req);
         int lastIndex = ParameterParser.getLastIndex(req);
         final boolean completed = "true".equalsIgnoreCase(req.getParameter("completed"));
+        final boolean withPublicFeedbacksOnly = "true".equalsIgnoreCase(req.getParameter("withPublicFeedbacksOnly"));
 
 
         JSONObject response = new JSONObject();
@@ -37,7 +38,7 @@ public final class GetDGSPurchases extends APIServlet.APIRequestHandler {
                     new FilteringIterator.Filter<DigitalGoodsStore.Purchase>() {
                         @Override
                         public boolean ok(DigitalGoodsStore.Purchase purchase) {
-                            return ! (completed && purchase.isPending());
+                            return ! (completed && purchase.isPending()) && (! withPublicFeedbacksOnly || purchase.hasPublicFeedbacks());
                         }
                     }, firstIndex, lastIndex)) {
                 while (purchaseIterator.hasNext()) {
@@ -59,7 +60,7 @@ public final class GetDGSPurchases extends APIServlet.APIRequestHandler {
                 new FilteringIterator.Filter<DigitalGoodsStore.Purchase>() {
                     @Override
                     public boolean ok(DigitalGoodsStore.Purchase purchase) {
-                        return ! (completed && purchase.isPending());
+                        return ! (completed && purchase.isPending()) && (! withPublicFeedbacksOnly || purchase.hasPublicFeedbacks());
                     }
                 }, firstIndex, lastIndex)) {
             while (purchaseIterator.hasNext()) {
