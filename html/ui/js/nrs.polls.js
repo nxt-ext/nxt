@@ -54,7 +54,7 @@ var NRS = (function(NRS, $, undefined) {
 								if (pollDescription.length > 100) {
 									pollDescription = pollDescription.substring(0, 100) + "...";
 								}
-								rows += "<tr><td><a href='#' data-transaction='"+poll.transaction+"'>" + String(poll.attachment.name).escapeHTML() + "</a></td><td>" + pollDescription.escapeHTML() + "</td><td>" + (poll.sender != NRS.genesis ? "<a href='#' data-user='" + NRS.getAccountFormatted(poll, "sender") + "' class='user_info'>" + NRS.getAccountTitle(poll, "sender") + "</a>" : "Genesis") + "</td><td>" + NRS.formatTimestamp(poll.timestamp) + "</td><td>" + String(poll.attachment.finishBlockHeight - NRS.lastBlockHeight) + "</td><td><a href='#' data-toggle='modal' data-target='#cast_vote_modal'>Vote </td></tr>";
+								rows += "<tr><td><a class='poll_list_title' href='#' data-transaction='"+poll.transaction+"'>" + String(poll.attachment.name).escapeHTML() + "</a></td><td>" + pollDescription.escapeHTML() + "</td><td>" + (poll.sender != NRS.genesis ? "<a href='#' data-user='" + NRS.getAccountFormatted(poll, "sender") + "' class='user_info'>" + NRS.getAccountTitle(poll, "sender") + "</a>" : "Genesis") + "</td><td>" + NRS.formatTimestamp(poll.timestamp) + "</td><td>" + String(poll.attachment.finishBlockHeight - NRS.lastBlockHeight) + "</td><td><a href='#' class='vote_button' data-poll='" + poll.transaction +"'>Vote </td></tr>";
 							}
 
 							NRS.dataLoaded(rows);
@@ -70,6 +70,141 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.incoming.polls = function() {
 		NRS.loadPage("polls");
 	}
+
+	NRS.pages.my_polls = function() {
+		NRS.sendRequest("getAccountPolls+",{"account": NRS.accountRS}, function(response) {
+			if (response.pollIds && response.pollIds.length) {
+				var polls = {};
+				var nrPolls = 0;
+
+				for (var i = 0; i < response.pollIds.length; i++) {
+					NRS.sendRequest("getTransaction+", {
+						"transaction": response.pollIds[i]
+					}, function(poll, input) {
+						if (NRS.currentPage != "my_polls") {
+							polls = {};
+							return;
+						}
+
+						if (!poll.errorCode) {
+							polls[input.transaction] = poll;
+						}
+
+						nrPolls++;
+
+						if (nrPolls == response.pollIds.length) {
+							var rows = "";
+
+							if (NRS.unconfirmedTransactions.length) {
+								for (var i = 0; i < NRS.unconfirmedTransactions.length; i++) {
+									var unconfirmedTransaction = NRS.unconfirmedTransactions[i];
+
+									if (unconfirmedTransaction.type == 1 && unconfirmedTransaction.subType == 2) {
+										var pollDescription = String(unconfirmedTransaction.attachment.description);
+
+										if (pollDescription.length > 100) {
+											pollDescription = pollDescription.substring(0, 100) + "...";
+										}
+
+										rows += "<tr class='tentative'><td>" + String(unconfirmedTransaction.attachment.name).escapeHTML() + "</td><td>" + pollDescription.escapeHTML() + "</td><td>" + (unconfirmedTransaction.sender != NRS.genesis ? "<a href='#' data-user='" + NRS.getAccountFormatted(unconfirmedTransaction, "sender") + "' class='user_info'>" + NRS.getAccountTitle(unconfirmedTransaction, "sender") + "</a>" : "Genesis") + "</td><td>" + NRS.formatTimestamp(unconfirmedTransaction.timestamp) + "</td><td>" + String(unconfirmedTransaction.attachment.finishBlockHeight - NRS.lastBlockHeight)  + "</td><td><a href='#'>Vote (todo)</td></tr>";
+									}
+								}
+							}
+
+							for (var i = 0; i < nrPolls; i++) {
+								var poll = polls[response.pollIds[i]];
+
+								if (!poll) {
+									continue;
+								}
+
+								var pollDescription = String(poll.attachment.description);
+
+								if (pollDescription.length > 100) {
+									pollDescription = pollDescription.substring(0, 100) + "...";
+								}
+								rows += "<tr><td><a href='#' data-transaction='"+poll.transaction+"'>" + String(poll.attachment.name).escapeHTML() + "</a></td><td>" + pollDescription.escapeHTML() + "</td><td>" + (poll.sender != NRS.genesis ? "<a href='#' data-user='" + NRS.getAccountFormatted(poll, "sender") + "' class='user_info'>" + NRS.getAccountTitle(poll, "sender") + "</a>" : "Genesis") + "</td><td>" + NRS.formatTimestamp(poll.timestamp) + "</td><td>" + String(poll.attachment.finishBlockHeight - NRS.lastBlockHeight) + "</td><td><a href='#' data-toggle='modal' data-target='#cast_vote_modal'>Vote </td></tr>";
+							}
+
+							NRS.dataLoaded(rows);
+						}
+					});
+				}
+			} else {
+				NRS.dataLoaded();
+			}
+		});
+
+		NRS.sendRequest("getPollResults+",{"account": NRS.accountRS}, function(response) {
+			if (response.pollIds && response.pollIds.length) {
+				var polls = {};
+				var nrPolls = 0;
+
+				for (var i = 0; i < response.pollIds.length; i++) {
+					NRS.sendRequest("getTransaction+", {
+						"transaction": response.pollIds[i]
+					}, function(poll, input) {
+						if (NRS.currentPage != "my_polls") {
+							polls = {};
+							return;
+						}
+
+						if (!poll.errorCode) {
+							polls[input.transaction] = poll;
+						}
+
+						nrPolls++;
+
+						if (nrPolls == response.pollIds.length) {
+							var rows = "";
+
+							if (NRS.unconfirmedTransactions.length) {
+								for (var i = 0; i < NRS.unconfirmedTransactions.length; i++) {
+									var unconfirmedTransaction = NRS.unconfirmedTransactions[i];
+
+									if (unconfirmedTransaction.type == 1 && unconfirmedTransaction.subType == 2) {
+										var pollDescription = String(unconfirmedTransaction.attachment.description);
+
+										if (pollDescription.length > 100) {
+											pollDescription = pollDescription.substring(0, 100) + "...";
+										}
+
+										rows += "<tr class='tentative'><td>" + String(unconfirmedTransaction.attachment.name).escapeHTML() + "</td><td>" + pollDescription.escapeHTML() + "</td><td>" + (unconfirmedTransaction.sender != NRS.genesis ? "<a href='#' data-user='" + NRS.getAccountFormatted(unconfirmedTransaction, "sender") + "' class='user_info'>" + NRS.getAccountTitle(unconfirmedTransaction, "sender") + "</a>" : "Genesis") + "</td><td>" + NRS.formatTimestamp(unconfirmedTransaction.timestamp) + "</td><td>" + String(unconfirmedTransaction.attachment.finishBlockHeight - NRS.lastBlockHeight)  + "</td><td><a href='#'>Vote (todo)</td></tr>";
+									}
+								}
+							}
+
+							for (var i = 0; i < nrPolls; i++) {
+								var poll = polls[response.pollIds[i]];
+
+								if (!poll) {
+									continue;
+								}
+
+								var pollDescription = String(poll.attachment.description);
+
+								if (pollDescription.length > 100) {
+									pollDescription = pollDescription.substring(0, 100) + "...";
+								}
+								rows += "<tr><td><a href='#' data-transaction='"+poll.transaction+"'>" + String(poll.attachment.name).escapeHTML() + "</a></td><td>" + pollDescription.escapeHTML() + "</td><td>" + (poll.sender != NRS.genesis ? "<a href='#' data-user='" + NRS.getAccountFormatted(poll, "sender") + "' class='user_info'>" + NRS.getAccountTitle(poll, "sender") + "</a>" : "Genesis") + "</td><td>" + NRS.formatTimestamp(poll.timestamp) + "</td><td>" + String(poll.attachment.finishBlockHeight - NRS.lastBlockHeight) + "</td><td><a href='#' data-toggle='modal' data-target='#cast_vote_modal'>Vote </td></tr>";
+							}
+
+							NRS.dataLoaded(rows);
+						}
+					});
+				}
+			} else {
+				NRS.dataLoaded();
+			}
+		});
+	}
+
+	NRS.incoming.my_polls = function() {
+		NRS.loadPage("my_polls");
+	}
+
+
+
 
 	$("#create_poll_answers").on("click", "button.btn.remove_answer", function(e) {
 		e.preventDefault();
@@ -106,12 +241,39 @@ var NRS = (function(NRS, $, undefined) {
 
 	});
 
+
+		$("#polls_table, #my_polls_table").on("click", "a[data-poll]", function(e) {
+			e.preventDefault();
+			var transactionId = $(this).data("poll");
+
+			NRS.sendRequest("getPoll", {
+				"poll": transactionId
+			}, function(response, input) {
+				$("#cast_vote_poll_name").text(response.name);
+				$("#cast_vote_poll_description").text(response.description);
+				$("#cast_vote_answers_entry").text("");
+				for(var b=0; b<response.options.length; b++)
+				{
+					$("#cast_vote_answers_entry").append("<div class='answer_slider'><label name='cast_vote_answer_"+b+"'>"+response.options[b]+"</label> &nbsp;&nbsp;<span class='badge'>"+response.minRangeValue+"</span><br/><input class='form-control' step='1' value='"+response.minRangeValue+"' max='"+response.maxRangeValue+"' min='"+response.minRangeValue+"' type='range'/></div>");
+
+				}
+				$("#cast_vote_modal").modal();
+				$("input[type='range']").on("change mousemove", function() {
+					$(this).parent().children(".badge").text($(this).val());
+
+				});
+			});
+
+			
+		});	
+
+		
+
 	NRS.forms.createPoll = function($modal) {
 		var options = new Array();
 
 		$("#create_poll_answers input.create_poll_answers").each(function() {
 			var option = $.trim($(this).val());
-
 			if (option) {
 				options.push(option);
 			}
@@ -121,18 +283,19 @@ var NRS = (function(NRS, $, undefined) {
 			//...
 		}
 
-		$("#create_poll_")
+		$("#create_poll_") //  idk why this is here, made by wesley.. -Jones
+
 		var data = {
 			"name": $("#create_poll_name").val(),
 			"description": $("#create_poll_description").val(),
 			"finishHeight": (parseInt(NRS.lastBlockHeight) + parseInt($("#create_poll_duration").val())),
 			"minNumberOfOptions": $("#create_poll_min_options").val(),
 			"maxNumberOfOptions": $("#create_poll_max_options").val(),
-			"minRangeValue": $("#create_poll_min_options").val(),
-			"maxRangeValue": $("#create_poll_max_options").val(),
+			"minRangeValue": $("#create_poll_min_range_value").val(),
+			"maxRangeValue": $("#create_poll_max_range_value").val(),
 			"minBalance": $("#create_poll_min_balance").val(),
 			"feeNQT": (parseInt($("#create_poll_fee").val()) * 100000000),
-			"deadline": "24",
+			"deadline": $("#create_poll_deadline").val(),
 			"secretPhrase": $("#create_poll_password").val()
 		};
 
@@ -152,7 +315,7 @@ var NRS = (function(NRS, $, undefined) {
 		}
 
 		for (var i = 0; i < options.length; i++) {
-			data["option" + i] = options[i];
+			data["option" + (i+1)] = options[i];
 		}
 
 
