@@ -635,8 +635,9 @@ var NRS = (function(NRS, $, undefined) {
         if($(this).is(":checked")){
         	$("#issue_currency_initial_supply").val(0);
         	//$("#issue_currency_initial_supply").prop("disabled", true);
-        	//$('#issue_currency_reservable').prop('checked', true);
-        	$( ".optional_reserve" ).show();
+        	$("#issue_currency_issuance_height").prop("disabled", false);
+        	$(".optional_reserve").show();
+        	$('#issue_currency_reservable').prop('checked', true);
         }
 		else{
 			$("#issue_currency_initial_supply").val($("#issue_currency_max_supply").val());
@@ -712,6 +713,18 @@ var NRS = (function(NRS, $, undefined) {
 			"data": data
 		};
 	}
+	
+	/* CLAIM CURRENCY MODEL */
+    $("#claim_currency_modal").on("show.bs.modal", function(e) {
+		var $invoker = $(e.relatedTarget);
+
+		var currency = $invoker.data("currency");
+		var currencyName = $invoker.data("name");
+
+		$("#claim_currency_currency").val(currency);
+		$("#claim_currency_name").html(String(currencyName).escapeHTML());
+		
+	});
 
    return NRS;
 }(NRS || {}, jQuery));

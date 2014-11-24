@@ -4230,6 +4230,76 @@
 		</div>
 		
 		
+		<div class="modal fade" id="claim_currency_modal" tabindex="-1" role="dialog" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                        <h4 class="modal-title"><span data-i18n="claim_currency">Claim currency</span> - <span id="claim_currency_name"></span></h4>
+                    </div>
+                    <div class="modal-body">            
+                        <form role="form" autocomplete="off">
+                            <div class="callout callout-danger error_message" style="display:none"></div>
+                            <div class="form-group">
+                                <label for="claim_currency_currency" data-i18n="currency">Currency</label>
+                                <input type="text" class="form-control" name="currency" id="claim_currency_currency" placeholder="Currency" data-i18n="[placeholder]currency" tabindex="1" />
+                            </div>
+                            <div class="form-group">
+                                <label for="claim_currency_amount" data-i18n="currency">Number of units to claim</label>
+                                <input type="text" class="form-control" name="units" id="claim_currency_amount" placeholder="Number of units" data-i18n="units" tabindex="1" />
+                            </div>
+                            
+                            <div class="row advanced">
+                                <div class="col-xs-6 col-sm-6 col-md-6">
+                                    <div class="form-group">
+                                        <label for="claim_currency_fee" data-i18n="fee">FEE</label>
+                                        <div class="input-group">
+                                            <input type="number" name="feeNXT" id="claim_currency_fee" class="form-control" step="any" min="1" placeholder="Fee" data-i18n="[placeholder]fee" data-default="1" value="1" tabindex="3">
+                                            <span class="input-group-addon">NXT</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-xs-6 col-sm-6 col-md-6">
+                                    <div class="form-group">
+                                        <label for="claim_currency_deadline" data-i18n="deadline_hours">DEADLINE (HOURS)</label>
+                                        <input type="number" name="deadline" id="claim_currency_deadline" class="form-control" placeholder="Deadline" data-i18n="[placeholder]deadline" min="1" data-default="24" value="24" tabindex="4">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group secret_phrase">
+                                <label for="claim_currency_password" data-i18n="passphrase">PASSPHRASE</label>
+                                <input type="password" name="secretPhrase" id="claim_currency_password" class="form-control" placeholder="" tabindex="5">
+                            </div>
+                            <div class="form-group advanced">
+                                <label for="claim_currency_referenced_transaction" data-i18n="referenced_transaction_hash">REFERENCED TRANSACTION HASH</label>
+                                <input type="text" class="form-control" name="referencedTransactionFullHash" id="claim_currency_referenced_transaction" placeholder="Referenced Transaction Full Hash" data-i18n="[placeholder]referenced_transaction_full_hash" tabindex="6" spellcheck="false" />
+                            </div>
+                            <div class="form-group advanced" style="margin-bottom:0;">
+                                <input type="checkbox" name="doNotBroadcast" id="register_currency_do_not_broadcast" value="1" /> <label for="register_currency_do_not_broadcast" style="font-weight:normal;" tabindex="7" data-i18n="do_not_broadcast">Do Not Broadcast</label>
+                            </div>
+                            <div class="form-group advanced">
+                                <input type="checkbox" name="add_note_to_self" id="claim_currency_add_note_to_self" class="add_note_to_self" tabindex="8" /> <label for="claim_currency_add_note_to_self" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_note_to_self">Add Note to Self?</span></label>
+                            </div>
+                            <div class="form-group advanced optional_note">
+                                <label for="claim_currency_note_to_self" data-i18n="note_to_self">Note to Self</label>
+                                <textarea class="form-control" id="claim_currency_note_to_self" name="note_to_self" rows="4" tabindex="9"></textarea>
+                                <div style="margin-top:3px;">
+                                    <label style="font-weight:normal;color:#666" data-i18n="note_is_encrypted">This note is encrypted.</span></label>
+                                </div>
+                            </div>
+                            <input type="hidden" name="request_type" value="currencyReserveClaim" />
+                        </form>
+                    </div>
+                    <div class="modal-footer" style="margin-top:0;">
+                        <div class="advanced_info"><strong data-i18n="fee">Fee</strong>: <span class="advanced_fee">1 NXT</span> - <a href="#" data-i18n="advanced">advanced</a></div>
+
+                        <button type="button" class="btn btn-default" data-dismiss="modal" data-i18n="cancel">Cancel</button>
+                        <button type="button" class="btn btn-primary" id="claim_currency_button" data-loading-text="Submitting..." data-i18n="claim;[data-loading-text]submitting">Claim currency</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+		
 		<div class="modal fade" id="reserve_currency_modal" tabindex="-1" role="dialog" aria-hidden="true">
             <div class="modal-dialog">
                 <div class="modal-content">
