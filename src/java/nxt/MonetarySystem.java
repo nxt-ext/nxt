@@ -525,13 +525,17 @@ public abstract class MonetarySystem extends TransactionType {
         void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
             Attachment.MonetarySystemCurrencyMinting attachment = (Attachment.MonetarySystemCurrencyMinting) transaction.getAttachment();
             Currency currency = Currency.getCurrency(attachment.getCurrencyId());
+            if (!currency.isActive()) {
+                throw new NxtException.NotCurrentlyValidException("Currency not currently active " + attachment.getJSONObject());
+            }
             CurrencyType.validate(currency, transaction);
             if (attachment.getUnits() <= 0
                     || attachment.getUnits() > (currency.getMaxSupply() - currency.getReserveSupply()) / Constants.MAX_MINTING_RATIO) {
-                throw new NxtException.NotValidException("Invalid currency minting: " + attachment.getJSONObject());
+                throw new NxtException.NotValidException("Invalid number of units: " + attachment.getUnits());
             }
-            if (! currency.isActive()) {
-                throw new NxtException.NotCurrentlyValidException("Currency not currently active " + attachment.getJSONObject());
+            long counter = CurrencyMint.getCounter(attachment.getCurrencyId(), transaction.getSenderId());
+            if (attachment.getCounter() <= counter) {
+                throw new NxtException.NotValidException(String.format("Counter %d has to be bigger than %d", attachment.getCounter(), counter));
             }
         }
 
