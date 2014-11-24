@@ -589,6 +589,7 @@ var NRS = (function(NRS, $, undefined) {
 		var data = NRS.getFormData($modal.find("form:first"));
 
 		data.description = $.trim(data.description);
+		data.minReservePerUnitNQT = NRS.convertToNQT(data.minReservePerUnitNQT);
 		
 		data.type = 0;
 		$("[name='type']:checked").each(function() {
