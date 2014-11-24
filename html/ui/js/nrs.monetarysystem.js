@@ -412,8 +412,8 @@ var NRS = (function(NRS, $, undefined) {
 					$('#currencies_table [data-i18n="delete"]').hide();
 					$('#currencies_table [data-i18n="reserve"]').hide();
 					$('#currencies_table [data-i18n="claim"]').hide();
-					var currency_type = "";
 					for (var i = 0; i < response.currencies.length; i++) {
+						var currency_type = "";
 						var currency = response.currencies[i];
 						if (currency.type & 0x1)
 							currency_type += "Exchangeable<br />";
