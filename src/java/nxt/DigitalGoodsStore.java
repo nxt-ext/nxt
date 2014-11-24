@@ -9,13 +9,21 @@ import nxt.db.VersionedValuesDbTable;
 import nxt.util.Convert;
 import nxt.util.Listener;
 import nxt.util.Listeners;
+import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.analysis.TokenStream;
+import org.apache.lucene.analysis.standard.StandardAnalyzer;
+import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
+import org.apache.lucene.util.Version;
 
+import java.io.IOException;
+import java.io.StringReader;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public final class DigitalGoodsStore {
@@ -33,7 +41,7 @@ public final class DigitalGoodsStore {
                     return;
                 }
                 List<Purchase> expiredPurchases = new ArrayList<>();
-                try (DbIterator<Purchase> iterator = getExpiredPendingPurchases(block)) {
+                try (DbIterator<Purchase> iterator = Purchase.getExpiredPendingPurchases(block)) {
                     while (iterator.hasNext()) {
                         expiredPurchases.add(iterator.next());
                     }
@@ -41,7 +49,7 @@ public final class DigitalGoodsStore {
                 for (Purchase purchase : expiredPurchases) {
                     Account buyer = Account.getAccount(purchase.getBuyerId());
                     buyer.addToUnconfirmedBalanceNQT(Convert.safeMultiply(purchase.getQuantity(), purchase.getPriceNQT()));
-                    getGoods(purchase.getGoodsId()).changeQuantity(purchase.getQuantity());
+                    Goods.getGoods(purchase.getGoodsId()).changeQuantity(purchase.getQuantity());
                     purchase.setPending(false);
                 }
             }
@@ -69,8 +77,120 @@ public final class DigitalGoodsStore {
     }
 
     static void init() {
+        Tag.init();
         Goods.init();
         Purchase.init();
+    }
+
+    public static final class Tag {
+
+        private static final DbKey.StringKeyFactory<Tag> tagDbKeyFactory = new DbKey.StringKeyFactory<Tag>("tag") {
+            @Override
+            public DbKey newKey(Tag tag) {
+                return tag.dbKey;
+            }
+        };
+
+        private static final VersionedEntityDbTable<Tag> tagTable = new VersionedEntityDbTable<Tag>("tag", tagDbKeyFactory) {
+
+            @Override
+            protected Tag load(Connection con, ResultSet rs) throws SQLException {
+                return new Tag(rs);
+            }
+
+            @Override
+            protected void save(Connection con, Tag tag) throws SQLException {
+                tag.save(con);
+            }
+
+            @Override
+            public String defaultSort() {
+                return " ORDER BY in_stock_count DESC, total_count DESC, tag ASC ";
+            }
+
+        };
+
+        public static int getCount() {
+            return tagTable.getCount();
+        }
+        public static int getCountInStock() {
+            return tagTable.getCount(new DbClause.FixedClause(" in_stock_count > 0 "));
+        }
+
+        public static DbIterator<Tag> getAllTags(int from, int to) {
+            return tagTable.getAll(from, to);
+        }
+
+        public static DbIterator<Tag> getInStockTags(int from, int to) {
+            return tagTable.getManyBy(new DbClause.FixedClause(" in_stock_count > 0 "), from, to);
+        }
+
+        private static void init() {}
+
+        private static void add(Goods goods) {
+            for (String tagValue : goods.getParsedTags()) {
+                Tag tag = tagTable.get(tagDbKeyFactory.newKey(tagValue));
+                if (tag == null) {
+                    tag = new Tag(tagValue);
+                }
+                tag.inStockCount += 1;
+                tag.totalCount += 1;
+                tagTable.insert(tag);
+            }
+        }
+
+        private static void delist(Goods goods) {
+            for (String tagValue : goods.getParsedTags()) {
+                Tag tag = tagTable.get(tagDbKeyFactory.newKey(tagValue));
+                if (tag == null) {
+                    throw new IllegalStateException("Unknown tag " + tagValue);
+                }
+                tag.inStockCount -= 1;
+                tagTable.insert(tag);
+            }
+        }
+
+        private final String tag;
+        private final DbKey dbKey;
+        private int inStockCount;
+        private int totalCount;
+
+        private Tag(String tag) {
+            this.tag = tag;
+            this.dbKey = tagDbKeyFactory.newKey(this.tag);
+        }
+
+        private Tag(ResultSet rs) throws SQLException {
+            this.tag = rs.getString("tag");
+            this.dbKey = tagDbKeyFactory.newKey(this.tag);
+            this.inStockCount = rs.getInt("in_stock_count");
+            this.totalCount = rs.getInt("total_count");
+        }
+
+        private void save(Connection con) throws SQLException {
+            try (PreparedStatement pstmt = con.prepareStatement("MERGE INTO tag (tag, in_stock_count, total_count, height, latest) "
+                    + "KEY (tag, height) VALUES (?, ?, ?, ?, TRUE)")) {
+                int i = 0;
+                pstmt.setString(++i, this.tag);
+                pstmt.setInt(++i, this.inStockCount);
+                pstmt.setInt(++i, this.totalCount);
+                pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
+                pstmt.executeUpdate();
+            }
+        }
+
+        public String getTag() {
+            return tag;
+        }
+
+        public int getInStockCount() {
+            return inStockCount;
+        }
+
+        public int getTotalCount() {
+            return totalCount;
+        }
+
     }
 
     public static final class Goods {
@@ -103,7 +223,47 @@ public final class DigitalGoodsStore {
 
         };
 
-        static void init() {}
+        private static final DbClause inStockClause = new DbClause.FixedClause(" goods.delisted = FALSE AND goods.quantity > 0 ");
+
+        public static int getCount() {
+            return goodsTable.getCount();
+        }
+
+        public static int getCountInStock() {
+            return goodsTable.getCount(inStockClause);
+        }
+
+        public static Goods getGoods(long goodsId) {
+            return goodsTable.get(goodsDbKeyFactory.newKey(goodsId));
+        }
+
+        public static DbIterator<Goods> getAllGoods(int from, int to) {
+            return goodsTable.getAll(from, to);
+        }
+
+        public static DbIterator<Goods> getGoodsInStock(int from, int to) {
+            return goodsTable.getManyBy(inStockClause, from, to);
+        }
+
+        public static DbIterator<Goods> getSellerGoods(final long sellerId, final boolean inStockOnly, int from, int to) {
+            return goodsTable.getManyBy(new SellerDbClause(sellerId, inStockOnly), from, to, " ORDER BY name ASC, timestamp DESC, id ASC ");
+        }
+
+        public static int getSellerGoodsCount(long sellerId, boolean inStockOnly) {
+            return goodsTable.getCount(new SellerDbClause(sellerId, inStockOnly));
+        }
+
+        public static DbIterator<Goods> searchGoods(String query, boolean inStockOnly, int from, int to) {
+            return goodsTable.search(query, inStockOnly ? inStockClause : DbClause.EMPTY_CLAUSE, from, to,
+                    " ORDER BY ft.score DESC, goods.timestamp DESC ");
+        }
+
+        public static DbIterator<Goods> searchSellerGoods(String query, long sellerId, boolean inStockOnly, int from, int to) {
+            return goodsTable.search(query, new SellerDbClause(sellerId, inStockOnly), from, to,
+                    " ORDER BY ft.score DESC, goods.name ASC, goods.timestamp DESC ");
+        }
+
+        private static void init() {}
 
 
         private final long id;
@@ -112,6 +272,7 @@ public final class DigitalGoodsStore {
         private final String name;
         private final String description;
         private final String tags;
+        private final String[] parsedTags;
         private final int timestamp;
         private int quantity;
         private long priceNQT;
@@ -124,6 +285,7 @@ public final class DigitalGoodsStore {
             this.name = attachment.getName();
             this.description = attachment.getDescription();
             this.tags = attachment.getTags();
+            this.parsedTags = parseTags(this.tags);
             this.quantity = attachment.getQuantity();
             this.priceNQT = attachment.getPriceNQT();
             this.delisted = false;
@@ -137,6 +299,8 @@ public final class DigitalGoodsStore {
             this.name = rs.getString("name");
             this.description = rs.getString("description");
             this.tags = rs.getString("tags");
+            Object[] array = (Object[])rs.getArray("parsed_tags").getArray();
+            this.parsedTags = Arrays.copyOf(array, array.length, String[].class);
             this.quantity = rs.getInt("quantity");
             this.priceNQT = rs.getLong("price");
             this.delisted = rs.getBoolean("delisted");
@@ -145,14 +309,15 @@ public final class DigitalGoodsStore {
 
         private void save(Connection con) throws SQLException {
             try (PreparedStatement pstmt = con.prepareStatement("MERGE INTO goods (id, seller_id, name, "
-                    + "description, tags, timestamp, quantity, price, delisted, height, latest) KEY (id, height) "
-                    + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, TRUE)")) {
+                    + "description, tags, parsed_tags, timestamp, quantity, price, delisted, height, latest) KEY (id, height) "
+                    + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, TRUE)")) {
                 int i = 0;
                 pstmt.setLong(++i, this.getId());
                 pstmt.setLong(++i, this.getSellerId());
                 pstmt.setString(++i, this.getName());
                 pstmt.setString(++i, this.getDescription());
                 pstmt.setString(++i, this.getTags());
+                pstmt.setObject(++i, this.getParsedTags());
                 pstmt.setInt(++i, this.getTimestamp());
                 pstmt.setInt(++i, this.getQuantity());
                 pstmt.setLong(++i, this.getPriceNQT());
@@ -191,11 +356,17 @@ public final class DigitalGoodsStore {
         }
 
         private void changeQuantity(int deltaQuantity) {
+            if (quantity == 0 && deltaQuantity > 0) {
+                Tag.add(this);
+            }
             quantity += deltaQuantity;
             if (quantity < 0) {
                 quantity = 0;
             } else if (quantity > Constants.MAX_DGS_LISTING_QUANTITY) {
                 quantity = Constants.MAX_DGS_LISTING_QUANTITY;
+            }
+            if (quantity == 0) {
+                Tag.delist(this);
             }
             goodsTable.insert(this);
         }
@@ -215,21 +386,37 @@ public final class DigitalGoodsStore {
 
         private void setDelisted(boolean delisted) {
             this.delisted = delisted;
+            if (this.quantity > 0) {
+                Tag.delist(this);
+            }
             goodsTable.insert(this);
         }
 
-        /*
-        @Override
-        public int compareTo(Goods other) {
-            if (!name.equals(other.name)) {
-                return name.compareTo(other.name);
-            }
-            if (!description.equals(other.description)) {
-                return description.compareTo(other.description);
-            }
-            return Long.compare(id, other.id);
+        public String[] getParsedTags() {
+            return parsedTags;
         }
-        */
+
+        private static final Analyzer analyzer = new StandardAnalyzer(Version.LUCENE_30);
+        private static final String[] emptyTags = new String[0];
+
+        private static String[] parseTags(String tags) {
+            if (tags.trim().length() == 0) {
+                return emptyTags;
+            }
+            List<String> list = new ArrayList<>();
+            try (TokenStream stream = analyzer.tokenStream(null, new StringReader(tags))) {
+                CharTermAttribute attribute = stream.addAttribute(CharTermAttribute.class);
+                String tag;
+                while (stream.incrementToken() && list.size() < 3 && (tag = attribute.toString()).length() <= 20 && tag.length() >= 3) {
+                    if (!list.contains(tag)) {
+                        list.add(tag);
+                    }
+                }
+            } catch (IOException e) {
+                throw new RuntimeException(e.toString(), e);
+            }
+            return list.toArray(new String[list.size()]);
+        }
 
     }
 
@@ -326,7 +513,142 @@ public final class DigitalGoodsStore {
 
         };
 
-        static void init() {}
+        private static class PurchasesClause extends DbClause {
+
+            private PurchasesClause(String clause, boolean withPublicFeedbacksOnly, boolean completedOnly) {
+                super(clause + (completedOnly ? " AND goods IS NOT NULL " : " ")
+                        + (withPublicFeedbacksOnly ? " AND has_public_feedbacks = TRUE " : " "));
+            }
+
+            @Override
+            protected int set(PreparedStatement pstmt, int index) throws SQLException {
+                return index;
+            }
+
+        }
+
+        private static final class LongPurchasesClause extends PurchasesClause {
+
+            private final long value;
+
+            private LongPurchasesClause(String columnName, long value, boolean withPublicFeedbacksOnly, boolean completedOnly) {
+                super(columnName + " = ? ", withPublicFeedbacksOnly, completedOnly);
+                this.value = value;
+            }
+
+            @Override
+            protected int set(PreparedStatement pstmt, int index) throws SQLException {
+                pstmt.setLong(index++, value);
+                return index;
+            }
+
+        }
+
+        private static final class SellerBuyerPurchasesClause extends PurchasesClause {
+
+            private final long sellerId;
+            private final long buyerId;
+
+            private SellerBuyerPurchasesClause(long sellerId, long buyerId, boolean withPublicFeedbacksOnly, boolean completedOnly) {
+                super(" seller_id = ? AND buyer_id = ? ", withPublicFeedbacksOnly, completedOnly);
+                this.sellerId = sellerId;
+                this.buyerId = buyerId;
+            }
+
+            @Override
+            protected int set(PreparedStatement pstmt, int index) throws SQLException {
+                pstmt.setLong(index++, sellerId);
+                pstmt.setLong(index++, buyerId);
+                return index;
+            }
+
+        }
+
+        public static int getCount() {
+            return purchaseTable.getCount();
+        }
+
+        public static int getCount(boolean withPublicFeedbacksOnly, boolean completedOnly) {
+            return purchaseTable.getCount(new PurchasesClause(" TRUE ", withPublicFeedbacksOnly, completedOnly));
+        }
+
+        public static DbIterator<Purchase> getAllPurchases(int from, int to) {
+            return purchaseTable.getAll(from, to);
+        }
+
+        public static DbIterator<Purchase> getPurchases(boolean withPublicFeedbacksOnly, boolean completedOnly, int from, int to) {
+            return purchaseTable.getManyBy(new PurchasesClause(" TRUE ", withPublicFeedbacksOnly, completedOnly), from, to);
+        }
+
+        public static DbIterator<Purchase> getSellerPurchases(long sellerId, boolean withPublicFeedbacksOnly, boolean completedOnly, int from, int to) {
+            return purchaseTable.getManyBy(new LongPurchasesClause("seller_id", sellerId, withPublicFeedbacksOnly, completedOnly), from, to);
+        }
+
+        public static int getSellerPurchaseCount(long sellerId, boolean withPublicFeedbacksOnly, boolean completedOnly) {
+            return purchaseTable.getCount(new LongPurchasesClause("seller_id", sellerId, withPublicFeedbacksOnly, completedOnly));
+        }
+
+        public static DbIterator<Purchase> getBuyerPurchases(long buyerId, boolean withPublicFeedbacksOnly, boolean completedOnly, int from, int to) {
+            return purchaseTable.getManyBy(new LongPurchasesClause("buyer_id", buyerId, withPublicFeedbacksOnly, completedOnly), from, to);
+        }
+
+        public static int getBuyerPurchaseCount(long buyerId, boolean withPublicFeedbacksOnly, boolean completedOnly) {
+            return purchaseTable.getCount(new LongPurchasesClause("buyer_id", buyerId, withPublicFeedbacksOnly, completedOnly));
+        }
+
+        public static DbIterator<Purchase> getSellerBuyerPurchases(final long sellerId, final long buyerId,
+                                                                   boolean withPublicFeedbacksOnly, boolean completedOnly, int from, int to) {
+            return purchaseTable.getManyBy(new SellerBuyerPurchasesClause(sellerId, buyerId, withPublicFeedbacksOnly, completedOnly), from, to);
+        }
+
+        public static int getSellerBuyerPurchaseCount(final long sellerId, final long buyerId,
+                                                                   boolean withPublicFeedbacksOnly, boolean completedOnly) {
+            return purchaseTable.getCount(new SellerBuyerPurchasesClause(sellerId, buyerId, withPublicFeedbacksOnly, completedOnly));
+        }
+
+        public static DbIterator<Purchase> getGoodsPurchases(long goodsId, boolean withPublicFeedbacksOnly, boolean completedOnly, int from, int to) {
+            return purchaseTable.getManyBy(new LongPurchasesClause("goods_id", goodsId, withPublicFeedbacksOnly, completedOnly), from, to);
+        }
+
+        public static int getGoodsPurchaseCount(final long goodsId, boolean withPublicFeedbacksOnly, boolean completedOnly) {
+            return purchaseTable.getCount(new LongPurchasesClause("goods_id", goodsId, withPublicFeedbacksOnly, completedOnly));
+        }
+
+        public static Purchase getPurchase(long purchaseId) {
+            return purchaseTable.get(purchaseDbKeyFactory.newKey(purchaseId));
+        }
+
+        public static DbIterator<Purchase> getPendingSellerPurchases(final long sellerId, int from, int to) {
+            DbClause dbClause = new DbClause(" seller_id = ? AND pending = TRUE ") {
+                @Override
+                public int set(PreparedStatement pstmt, int index) throws SQLException {
+                    pstmt.setLong(index++, sellerId);
+                    return index;
+                }
+            };
+            return purchaseTable.getManyBy(dbClause, from, to);
+        }
+
+        static Purchase getPendingPurchase(long purchaseId) {
+            Purchase purchase = getPurchase(purchaseId);
+            return purchase == null || ! purchase.isPending() ? null : purchase;
+        }
+
+        private static DbIterator<Purchase> getExpiredPendingPurchases(Block block) {
+            final int timestamp = block.getTimestamp();
+            final int previousTimestamp = Nxt.getBlockchain().getBlock(block.getPreviousBlockId()).getTimestamp();
+            DbClause dbClause = new DbClause(" deadline < ? AND deadline >= ? AND pending = TRUE ") {
+                @Override
+                public int set(PreparedStatement pstmt, int index) throws SQLException {
+                    pstmt.setLong(index++, timestamp);
+                    pstmt.setLong(index++, previousTimestamp);
+                    return index;
+                }
+            };
+            return purchaseTable.getManyBy(dbClause, 0, -1);
+        }
+
+        private static void init() {}
 
 
         private final long id;
@@ -458,7 +780,7 @@ public final class DigitalGoodsStore {
         }
 
         public String getName() {
-            return getGoods(goodsId).getName();
+            return Goods.getGoods(goodsId).getName();
         }
 
         public EncryptedData getEncryptedGoods() {
@@ -484,6 +806,10 @@ public final class DigitalGoodsStore {
             purchaseTable.insert(this);
         }
 
+        public boolean hasFeedbackNotes() {
+            return hasFeedbackNotes;
+        }
+
         public List<EncryptedData> getFeedbackNotes() {
             if (!hasFeedbackNotes) {
                 return null;
@@ -502,7 +828,11 @@ public final class DigitalGoodsStore {
             feedbackTable.insert(this, feedbackNotes);
 		}
 
-        public List<String> getPublicFeedback() {
+        public boolean hasPublicFeedbacks() {
+            return hasPublicFeedbacks;
+        }
+
+        public List<String> getPublicFeedbacks() {
             if (!hasPublicFeedbacks) {
                 return null;
             }
@@ -511,7 +841,7 @@ public final class DigitalGoodsStore {
         }
 
         private void addPublicFeedback(String publicFeedback) {
-            if (getPublicFeedback() == null) {
+            if (getPublicFeedbacks() == null) {
                 publicFeedbacks = new ArrayList<>();
             }
             publicFeedbacks.add(publicFeedback);
@@ -538,116 +868,28 @@ public final class DigitalGoodsStore {
             purchaseTable.insert(this);
         }
 
-        /*
-        @Override
-        public int compareTo(Purchase other) {
-            if (this.timestamp < other.timestamp) {
-                return 1;
-            }
-            if (this.timestamp > other.timestamp) {
-                return -1;
-            }
-            return Long.compare(this.id, other.id);
+    }
+
+    private static final class SellerDbClause extends DbClause {
+
+        private final long sellerId;
+
+        private SellerDbClause(long sellerId, boolean inStockOnly) {
+            super(" seller_id = ? " + (inStockOnly ? "AND delisted = FALSE AND quantity > 0" : ""));
+            this.sellerId = sellerId;
         }
-        */
 
-    }
+        @Override
+        public int set(PreparedStatement pstmt, int index) throws SQLException {
+            pstmt.setLong(index++, sellerId);
+            return index;
+        }
 
-    public static Goods getGoods(long goodsId) {
-        return Goods.goodsTable.get(Goods.goodsDbKeyFactory.newKey(goodsId));
-    }
-
-    public static DbIterator<Goods> getAllGoods(int from, int to) {
-        return Goods.goodsTable.getAll(from, to);
-    }
-
-    public static DbIterator<Goods> getGoodsInStock(int from, int to) {
-        DbClause dbClause = new DbClause(" delisted = FALSE AND quantity > 0 ") {
-            @Override
-            public int set(PreparedStatement pstmt, int index) throws SQLException {
-                return index;
-            }
-        };
-        return Goods.goodsTable.getManyBy(dbClause, from, to);
-    }
-
-    public static DbIterator<Goods> getSellerGoods(final long sellerId, final boolean inStockOnly, int from, int to) {
-        DbClause dbClause = new DbClause(" seller_id = ? " + (inStockOnly ? "AND delisted = FALSE AND quantity > 0" : "")) {
-            @Override
-            public int set(PreparedStatement pstmt, int index) throws SQLException {
-                pstmt.setLong(index++, sellerId);
-                return index;
-            }
-        };
-        return Goods.goodsTable.getManyBy(dbClause, from, to, " ORDER BY name ASC, timestamp DESC, id ASC ");
-    }
-
-    public static DbIterator<Purchase> getAllPurchases(int from, int to) {
-        return Purchase.purchaseTable.getAll(from, to);
-    }
-
-    public static DbIterator<Purchase> getSellerPurchases(long sellerId, int from, int to) {
-        return Purchase.purchaseTable.getManyBy(new DbClause.LongClause("seller_id", sellerId), from, to);
-    }
-
-    public static DbIterator<Purchase> getBuyerPurchases(long buyerId, int from, int to) {
-        return Purchase.purchaseTable.getManyBy(new DbClause.LongClause("buyer_id", buyerId), from, to);
-    }
-
-    public static DbIterator<Purchase> getSellerBuyerPurchases(final long sellerId, final long buyerId, int from, int to) {
-        DbClause dbClause = new DbClause(" seller_id = ? AND buyer_id = ? ") {
-            @Override
-            public int set(PreparedStatement pstmt, int index) throws SQLException {
-                pstmt.setLong(index++, sellerId);
-                pstmt.setLong(index++, buyerId);
-                return index;
-            }
-        };
-        return Purchase.purchaseTable.getManyBy(dbClause, from, to);
-    }
-
-    public static Purchase getPurchase(long purchaseId) {
-        return Purchase.purchaseTable.get(Purchase.purchaseDbKeyFactory.newKey(purchaseId));
-    }
-
-    public static DbIterator<Purchase> getPendingSellerPurchases(final long sellerId, int from, int to) {
-        DbClause dbClause = new DbClause(" seller_id = ? AND pending = TRUE ") {
-            @Override
-            public int set(PreparedStatement pstmt, int index) throws SQLException {
-                pstmt.setLong(index++, sellerId);
-                return index;
-            }
-        };
-        return Purchase.purchaseTable.getManyBy(dbClause, from, to);
-    }
-
-    static Purchase getPendingPurchase(long purchaseId) {
-        Purchase purchase = getPurchase(purchaseId);
-        return purchase == null || ! purchase.isPending() ? null : purchase;
-    }
-
-    private static DbIterator<Purchase> getExpiredPendingPurchases(Block block) {
-        final int timestamp = block.getTimestamp();
-        final int previousTimestamp = Nxt.getBlockchain().getBlock(block.getPreviousBlockId()).getTimestamp();
-        DbClause dbClause = new DbClause(" deadline < ? AND deadline >= ? AND pending = TRUE ") {
-            @Override
-            public int set(PreparedStatement pstmt, int index) throws SQLException {
-                pstmt.setLong(index++, timestamp);
-                pstmt.setLong(index++, previousTimestamp);
-                return index;
-            }
-        };
-        return Purchase.purchaseTable.getManyBy(dbClause, 0, -1);
-    }
-
-    private static void addPurchase(Transaction transaction,  Attachment.DigitalGoodsPurchase attachment, long sellerId) {
-        Purchase purchase = new Purchase(transaction, attachment, sellerId);
-        Purchase.purchaseTable.insert(purchase);
-        purchaseListeners.notify(purchase, Event.PURCHASE);
     }
 
     static void listGoods(Transaction transaction, Attachment.DigitalGoodsListing attachment) {
         Goods goods = new Goods(transaction, attachment);
+        Tag.add(goods);
         Goods.goodsTable.insert(goods);
         goodsListeners.notify(goods, Event.GOODS_LISTED);
     }
@@ -687,7 +929,9 @@ public final class DigitalGoodsStore {
         if (! goods.isDelisted() && attachment.getQuantity() <= goods.getQuantity() && attachment.getPriceNQT() == goods.getPriceNQT()
                 && attachment.getDeliveryDeadlineTimestamp() > Nxt.getBlockchain().getLastBlock().getTimestamp()) {
             goods.changeQuantity(-attachment.getQuantity());
-            addPurchase(transaction, attachment, goods.getSellerId());
+            Purchase purchase = new Purchase(transaction, attachment, goods.getSellerId());
+            Purchase.purchaseTable.insert(purchase);
+            purchaseListeners.notify(purchase, Event.PURCHASE);
         } else {
             Account buyer = Account.getAccount(transaction.getSenderId());
             buyer.addToUnconfirmedBalanceNQT(Convert.safeMultiply(attachment.getQuantity(), attachment.getPriceNQT()));
@@ -696,7 +940,7 @@ public final class DigitalGoodsStore {
     }
 
     static void deliver(Transaction transaction, Attachment.DigitalGoodsDelivery attachment) {
-        Purchase purchase = getPendingPurchase(attachment.getPurchaseId());
+        Purchase purchase = Purchase.getPendingPurchase(attachment.getPurchaseId());
         purchase.setPending(false);
         long totalWithoutDiscount = Convert.safeMultiply(purchase.getQuantity(), purchase.getPriceNQT());
         Account buyer = Account.getAccount(purchase.getBuyerId());

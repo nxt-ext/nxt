@@ -115,6 +115,10 @@ public final class Alias {
         return aliasTable.getCount();
     }
 
+    public static int getAccountAliasCount(long accountId) {
+        return aliasTable.getCount(new DbClause.LongClause("account_id", accountId));
+    }
+
     public static DbIterator<Alias> getAliasesByOwner(long accountId, int from, int to) {
         return aliasTable.getManyBy(new DbClause.LongClause("account_id", accountId), from, to);
     }

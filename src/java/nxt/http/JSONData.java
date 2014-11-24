@@ -141,7 +141,7 @@ final class JSONData {
         return json;
     }
 
-    static JSONObject goods(DigitalGoodsStore.Goods goods) {
+    static JSONObject goods(DigitalGoodsStore.Goods goods, boolean includeCounts) {
         JSONObject json = new JSONObject();
         json.put("goods", Convert.toUnsignedLong(goods.getId()));
         json.put("name", goods.getName());
@@ -150,8 +150,23 @@ final class JSONData {
         json.put("priceNQT", String.valueOf(goods.getPriceNQT()));
         putAccount(json, "seller", goods.getSellerId());
         json.put("tags", goods.getTags());
+        JSONArray tagsJSON = new JSONArray();
+        Collections.addAll(tagsJSON, goods.getParsedTags());
+        json.put("parsedTags", tagsJSON);
         json.put("delisted", goods.isDelisted());
         json.put("timestamp", goods.getTimestamp());
+        if (includeCounts) {
+            json.put("numberOfPurchases", DigitalGoodsStore.Purchase.getGoodsPurchaseCount(goods.getId(), false, true));
+            json.put("numberOfPublicFeedbacks", DigitalGoodsStore.Purchase.getGoodsPurchaseCount(goods.getId(), true, true));
+        }
+        return json;
+    }
+
+    static JSONObject tag(DigitalGoodsStore.Tag tag) {
+        JSONObject json = new JSONObject();
+        json.put("tag", tag.getTag());
+        json.put("inStockCount", tag.getInStockCount());
+        json.put("totalCount", tag.getTotalCount());
         return json;
     }
 
@@ -289,9 +304,9 @@ final class JSONData {
             }
             json.put("feedbackNotes", feedbacks);
         }
-        if (purchase.getPublicFeedback() != null) {
+        if (purchase.getPublicFeedbacks() != null) {
             JSONArray publicFeedbacks = new JSONArray();
-            for (String publicFeedback : purchase.getPublicFeedback()) {
+            for (String publicFeedback : purchase.getPublicFeedbacks()) {
                 publicFeedbacks.add(publicFeedback);
             }
             json.put("publicFeedbacks", publicFeedbacks);

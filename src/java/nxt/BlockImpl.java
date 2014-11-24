@@ -323,9 +323,7 @@ final class BlockImpl implements Block {
             return true;
         }
 
-        //kushti: comment below to have fast block generation with any balance
         try {
-
             BlockImpl previousBlock = BlockchainImpl.getInstance().getBlock(getPreviousBlockId());
             if (previousBlock == null) {
                 throw new BlockchainProcessor.BlockOutOfOrderException("Can't verify signature because previous block is missing");

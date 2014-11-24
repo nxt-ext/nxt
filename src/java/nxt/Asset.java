@@ -51,6 +51,10 @@ public final class Asset {
         return assetTable.getManyBy(new DbClause.LongClause("account_id", accountId), from, to);
     }
 
+    public static DbIterator<Asset> searchAssets(String query, int from, int to) {
+        return assetTable.search(query, DbClause.EMPTY_CLAUSE, from, to, " ORDER BY ft.score DESC, asset.height DESC ");
+    }
+
     public static DbIterator<Asset> getAssetsWithName(String name, int from, int to){
         return assetTable.getManyBy(new DbClause.StringClause("name", name), from, to);
     }

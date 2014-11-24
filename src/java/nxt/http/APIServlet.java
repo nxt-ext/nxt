@@ -98,9 +98,11 @@ public final class APIServlet extends HttpServlet {
         map.put("getAccountTransactions", GetAccountTransactions.instance);
         map.put("getAccountLessors", GetAccountLessors.instance);
         map.put("getAccountAssets", GetAccountAssets.instance);
+        map.put("getAccountAssetCount", GetAccountAssetCount.instance);
         map.put("sellAlias", SellAlias.instance);
         map.put("buyAlias", BuyAlias.instance);
         map.put("getAlias", GetAlias.instance);
+        map.put("getAliasCount", GetAliasCount.instance);
         map.put("getAliases", GetAliases.instance);
         map.put("getAllAssets", GetAllAssets.instance);
         map.put("getAsset", GetAsset.instance);
@@ -117,10 +119,16 @@ public final class APIServlet extends HttpServlet {
         map.put("getBlockchainStatus", GetBlockchainStatus.instance);
         map.put("getConstants", GetConstants.instance);
         map.put("getDGSGoods", GetDGSGoods.instance);
+        map.put("getDGSGoodsCount", GetDGSGoodsCount.instance);
         map.put("getDGSGood", GetDGSGood.instance);
+        map.put("getDGSGoodsPurchases", GetDGSGoodsPurchases.instance);
+        map.put("getDGSGoodsPurchaseCount", GetDGSGoodsPurchaseCount.instance);
         map.put("getDGSPurchases", GetDGSPurchases.instance);
         map.put("getDGSPurchase", GetDGSPurchase.instance);
+        map.put("getDGSPurchaseCount", GetDGSPurchaseCount.instance);
         map.put("getDGSPendingPurchases", GetDGSPendingPurchases.instance);
+        map.put("getDGSTags", GetDGSTags.instance);
+        map.put("getDGSTagCount", GetDGSTagCount.instance);
         map.put("getGuaranteedBalance", GetGuaranteedBalance.instance);
         map.put("getECBlock", GetECBlock.instance);
         map.put("getMyInfo", GetMyInfo.instance);
@@ -170,12 +178,15 @@ public final class APIServlet extends HttpServlet {
         map.put("stopForging", StopForging.instance);
         map.put("getForging", GetForging.instance);
         map.put("transferAsset", TransferAsset.instance);
+        map.put("searchDGSGoods", SearchDGSGoods.instance);
+        map.put("searchAssets", SearchAssets.instance);
 
         if (API.enableDebugAPI) {
             map.put("clearUnconfirmedTransactions", ClearUnconfirmedTransactions.instance);
             map.put("fullReset", FullReset.instance);
             map.put("popOff", PopOff.instance);
             map.put("scan", Scan.instance);
+            map.put("luceneReindex", LuceneReindex.instance);
         }
 
         apiRequestHandlers = Collections.unmodifiableMap(map);

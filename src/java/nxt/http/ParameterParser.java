@@ -152,7 +152,7 @@ final class ParameterParser {
         DigitalGoodsStore.Goods goods;
         try {
             long goodsId = Convert.parseUnsignedLong(goodsValue);
-            goods = DigitalGoodsStore.getGoods(goodsId);
+            goods = DigitalGoodsStore.Goods.getGoods(goodsId);
             if (goods == null) {
                 throw new ParameterException(UNKNOWN_GOODS);
             }
@@ -246,7 +246,7 @@ final class ParameterParser {
             throw new ParameterException(MISSING_PURCHASE);
         }
         try {
-            DigitalGoodsStore.Purchase purchase = DigitalGoodsStore.getPurchase(Convert.parseUnsignedLong(purchaseIdString));
+            DigitalGoodsStore.Purchase purchase = DigitalGoodsStore.Purchase.getPurchase(Convert.parseUnsignedLong(purchaseIdString));
             if (purchase == null) {
                 throw new ParameterException(INCORRECT_PURCHASE);
             }

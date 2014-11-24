@@ -759,7 +759,7 @@ public final class Peers {
         }
     }
 
-    public static boolean hasEnoughConnectedPublicPeers(int limit) {
+    private static boolean hasEnoughConnectedPublicPeers(int limit) {
         int numberOfConnectedPeers = 0;
         for (Peer peer : peers.values()) {
             if (peer.getState() == Peer.State.CONNECTED && peer.getAnnouncedAddress() != null
