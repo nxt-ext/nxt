@@ -9,7 +9,7 @@ import java.util.Arrays;
 import java.util.List;
 
 public class PendingTransactionPoll extends AbstractPoll {
-    private final Long id;
+    private final long id;
     private final DbKey dbKey;
     private final long[] whitelist;
     private final long[] blacklist;
@@ -49,7 +49,7 @@ public class PendingTransactionPoll extends AbstractPoll {
         }
     };
 
-
+    //TODO: after removing the finishing() method, this class can become anonymous
     final static class PendingTransactionsTable extends VersionedEntityDbTable<PendingTransactionPoll> {
 
         protected PendingTransactionsTable() {
@@ -60,10 +60,12 @@ public class PendingTransactionPoll extends AbstractPoll {
             super("pending_transactions", dbKeyFactory);
         }
 
+        //TODO: this method can be removed once getting the pending transactions is optimized, see the comment in TransactionProcessorImpl
         DbIterator<Long> finishing(int height) {
             try {
                 Connection con = db.getConnection();
                 PreparedStatement pstmt = con.prepareStatement("SELECT id FROM " + table
+                        //TODO: rename finish to finish_height
                         + " WHERE finish = ?  AND finished = FALSE AND latest = TRUE");
                 pstmt.setInt(1, height);
                 return new DbIterator<>(con, pstmt, new DbIterator.ResultSetReader<Long>() {
@@ -82,7 +84,7 @@ public class PendingTransactionPoll extends AbstractPoll {
             try {
                 return new PendingTransactionPoll(rs);
             } catch (Exception e) {
-                throw new SQLException(e);
+                throw new SQLException(e); //TODO: should not create new SQLExceptions unless you are writing a JDBC driver
             }
         }
 
@@ -97,7 +99,7 @@ public class PendingTransactionPoll extends AbstractPoll {
     static void init() {
     }
 
-    public PendingTransactionPoll(Long id, long accountId, int finishBlockHeight,
+    PendingTransactionPoll(long id, long accountId, int finishBlockHeight,
                                   byte votingModel, long quorum, long voteThreshold,
                                   long assetId, long[] whitelist, long[] blacklist) {
         super(accountId, finishBlockHeight, votingModel, assetId, voteThreshold);
@@ -121,7 +123,7 @@ public class PendingTransactionPoll extends AbstractPoll {
         }
     }
 
-    public PendingTransactionPoll(ResultSet rs) throws SQLException {
+    private PendingTransactionPoll(ResultSet rs) throws SQLException {
         super(rs);
         this.id = rs.getLong("id");
         this.quorum = rs.getLong("quorum");
@@ -144,11 +146,11 @@ public class PendingTransactionPoll extends AbstractPoll {
         }
     }
 
-    public Long getId() {
+    public long getId() {
         return id;
     }
 
-    public static PendingTransactionPoll byId(long id) {
+    public static PendingTransactionPoll byId(long id) { //TODO: rename to getPoll
         return pendingTransactionsTable.getBy(new DbClause.LongClause("id", id));
     }
 
@@ -203,6 +205,7 @@ public class PendingTransactionPoll extends AbstractPoll {
             pstmt.setLong(1, signer.getId());
             DbUtils.setLimits(2, pstmt, from, to);
 
+            //TODO: DbIterators must be closed
             DbIterator<Long> iterator = new DbIterator<>(con, pstmt, new DbIterator.ResultSetReader<Long>() {
                 @Override
                 public Long get(Connection con, ResultSet rs) throws Exception {
@@ -232,7 +235,7 @@ public class PendingTransactionPoll extends AbstractPoll {
         return quorum;
     }
 
-    void save(Connection con) throws SQLException {
+    private void save(Connection con) throws SQLException {
         boolean isBlacklist;
         long[] signers;
 
@@ -245,7 +248,7 @@ public class PendingTransactionPoll extends AbstractPoll {
         }
 
         try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO pending_transactions (id, account_id, "
-                + "finish, signersCount, blacklist, voting_model, quorum, min_balance, asset_id, "
+                + "finish, signersCount, blacklist, voting_model, quorum, min_balance, asset_id, " //TODO: rename signersCount to signers_count
                 + "finished, height) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
             int i = 0;
             pstmt.setLong(++i, getId());
@@ -261,13 +264,25 @@ public class PendingTransactionPoll extends AbstractPoll {
             pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
             pstmt.executeUpdate();
 
+            //TODO: this is wrong, because pending_transaction is a versioned table, while pending_transaction_signers is not
+            // pendingTransactionTable.insert is called twice, at different heights, which will result in two inserts into
+            // signersTable at different height, which should never be done for non-versioned tables
+            // Either modify the signers table only once, outside of this method, or make signers table versioned
             if (signers.length > 0) {
                 signersTable.insert(this, Convert.arrayOfLongsToList(signers));
             }
         }
     }
 
-    public static void finishPoll(PendingTransactionPoll poll) {
+    //TODO: Is the pending poll entry needed after the block in which it is set to finished? It would be best if the pending_transaction
+    // record is set to deleted, i.e. call pendingTransactionsTable.delete(poll), because this will keep the table small, otherwise
+    // it will grow without limits. Deleted records are permanently deleted 1440 blocks after their deletion.
+    // If you do delete, signers table needs to be versioned and also deleted from.
+    //
+    // If keeping historical results is important, consider adding those to a separate table that is kept for the record, but
+    // never queried for currently pending transactions, e.g. similar to how asset exchange orders are deleted after being filled,
+    // but a record is kept in the trade table.
+    static void finishPoll(PendingTransactionPoll poll) {
         poll.setFinished(true);
         pendingTransactionsTable.insert(poll);
     }

@@ -179,10 +179,13 @@ public abstract class TransactionType {
                 && transaction.getTimestamp() > Constants.REFERENCED_TRANSACTION_FULL_HASH_BLOCK_TIMESTAMP) {
             senderAccount.addToUnconfirmedBalanceNQT(Constants.UNCONFIRMED_POOL_DEPOSIT_NQT);
         }
-        if(recipientAccount != null && transaction.getTwoPhased()==null){
+        //TODO: changing the senderAccount confirmed balance (except for the fee, which should always be charged here and not later)
+        // should also not be done in case of a two-phased transaction, in order to handle consistently assets, currencies
+        // and everything else that gets done in applyAttachment, and does not get done here in case of two-phased
+        if (recipientAccount != null && transaction.getTwoPhased() == null) {
             recipientAccount.addToBalanceAndUnconfirmedBalanceNQT(amount);
         }
-        if(transaction.getTwoPhased()==null) {
+        if (transaction.getTwoPhased() == null) {
             applyAttachment(transaction, senderAccount, recipientAccount);
         }
     }
@@ -275,6 +278,7 @@ public abstract class TransactionType {
         };
 
 
+        //TODO: why is this a Payment? shouldn't it be Messaging? and does voting apply to ordinary payment transactions only?
         public static final TransactionType PENDING_PAYMENT_VOTE_CASTING = new Payment() {
 
             @Override
@@ -303,7 +307,7 @@ public abstract class TransactionType {
                     throw new NxtException.NotValidException("Voting transaction amount <> 0!");
                 }
 
-                if (!(transaction.getAttachment() instanceof Attachment.PendingPaymentVoteCasting)) {
+                if (!(transaction.getAttachment() instanceof Attachment.PendingPaymentVoteCasting)) { //TODO: how can that ever happen?
                     throw new NxtException.NotValidException("Wrong kind of attachment");
                 }
 
@@ -315,10 +319,12 @@ public abstract class TransactionType {
 
                 for (long pendingId : pendingIds) {
                     if (PendingTransactionPoll.byId(pendingId) == null) {
-                        System.out.println("Wrong pending transaction: " + pendingId);
+                        System.out.println("Wrong pending transaction: " + pendingId); //TODO: Logger
                         throw new NxtException.NotValidException("Wrong pending transaction");
                     }
-                    if(VotePhased.isVoteGiven(pendingId, transaction.getSenderId())){
+                    if (VotePhased.isVoteGiven(pendingId, transaction.getSenderId())) {
+                        //TODO: this is not enough to catch double voting, need to use isDuplicate too, to check for transactions in the same block.
+                        // Is the pendingIds array itself also checked for duplicate ids somewhere?
                         throw new NxtException.NotValidException("Double voting attempt");
                     }
                 }
@@ -335,7 +341,8 @@ public abstract class TransactionType {
                             TransactionDb.findTransaction(pendingTransactionId).release();
                             PendingTransactionPoll.finishPoll(poll);
                         }
-                    }
+                    } //TODO: else should be an error, but it must be checked in validateAttachment that indeed all
+                    // of the pendingIds correspond to polls that are not yet finished, and then this isFinished check should not be needed here at all
                 }
             }
         };
@@ -617,6 +624,7 @@ public abstract class TransactionType {
             @Override
             void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
                 Attachment.MessagingPollCreation attachment = (Attachment.MessagingPollCreation) transaction.getAttachment();
+                //TODO: change addPoll to take the attachment as parameter instead
                 Poll.addPoll(transaction.getId(),
                         senderAccount.getId(),
                         attachment.getPollName(),
@@ -644,18 +652,14 @@ public abstract class TransactionType {
                     }
                 }
 
-                if(attachment.getVotingModel() != Constants.VOTING_MODEL_ACCOUNT
-                        && attachment.getVotingModel()!=Constants.VOTING_MODEL_BALANCE
-                        && attachment.getVotingModel()!=Constants.VOTING_MODEL_ASSET){
+                if (attachment.getVotingModel() != Constants.VOTING_MODEL_ACCOUNT
+                        && attachment.getVotingModel() != Constants.VOTING_MODEL_BALANCE
+                        && attachment.getVotingModel() != Constants.VOTING_MODEL_ASSET) {
                     throw new NxtException.NotValidException("Invalid voting model value: " + attachment.getJSONObject());
                 }
 
-                if(attachment.getVotingModel()==Constants.VOTING_MODEL_ASSET && attachment.getAssetId()==0){
+                if (attachment.getVotingModel() == Constants.VOTING_MODEL_ASSET && attachment.getAssetId() == 0) {
                     throw new NxtException.NotValidException("No asset id provided: " + attachment.getJSONObject());
-                }
-
-                if (attachment.getAssetId() != 0 && Asset.getAsset(attachment.getAssetId()) == null) {
-                    throw new NxtException.NotValidException("Invalid asset id for voting: " + attachment.getJSONObject());
                 }
 
                 if (attachment.getMinNumberOfOptions() < 1) {
@@ -680,16 +684,24 @@ public abstract class TransactionType {
                 }
 
                 if (transaction.getRecipientId() != 0
+                 //TODO: not needed, recipientId == 0 and amountNQT == 0 for transactions with no recipient are already enforced in TransactionImpl()
                         || transaction.getFeeNQT() < Constants.POLL_FEE_NQT
+                        //TODO: don't use a POLL_FEE_NQT constant, use the new variable fee framework instead
                         || transaction.getAmountNQT() != 0) {
                     throw new NxtException.NotValidException("Invalid tx params for poll: " + attachment.getJSONObject());
                 }
+
+                if (attachment.getAssetId() != 0 && Asset.getAsset(attachment.getAssetId()) == null) {
+                    throw new NxtException.NotCurrentlyValidException("Invalid asset id for voting: " + attachment.getJSONObject());
+                }
+
             }
 
             @Override
             public boolean canHaveRecipient() {
                 return false;
             }
+
         };
 
         public final static TransactionType VOTE_CASTING = new Messaging() {
@@ -711,7 +723,8 @@ public abstract class TransactionType {
             @Override
             void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
                 Attachment.MessagingVoteCasting attachment = (Attachment.MessagingVoteCasting) transaction.getAttachment();
-                if(!Vote.isVoteGiven(attachment.getPollId(), senderAccount.getId())) {
+                //TODO: this check is already done in validateAttachment(), use isDuplicate() to prevent multiple voting in the same block instead
+                if (!Vote.isVoteGiven(attachment.getPollId(), senderAccount.getId())) {
                     Vote.addVote(transaction, attachment);
                 }
             }
@@ -732,11 +745,13 @@ public abstract class TransactionType {
 
                 Poll poll = Poll.getPoll(pollId);
                 if (poll == null) {
-                    throw new NxtException.NotValidException("Invalid poll: " + Convert.toUnsignedLong(attachment.getPollId()));
+                //TODO: I changed this, and some other exceptions, to NotCurrentlyValid instead of NotValid.
+                // Make sure you use NotCurrentlyValid for checks whose validity depends on the blockchain state or height
+                    throw new NxtException.NotCurrentlyValidException("Invalid poll: " + Convert.toUnsignedLong(attachment.getPollId()));
                 }
 
-                if(Vote.isVoteGiven(pollId, transaction.getSenderId())){
-                    throw new NxtException.NotValidException("Double voting attempt");
+                if (Vote.isVoteGiven(pollId, transaction.getSenderId())) {
+                    throw new NxtException.NotCurrentlyValidException("Double voting attempt");
                 }
 
                 byte[] votes = attachment.getPollVote();
@@ -754,15 +769,19 @@ public abstract class TransactionType {
                     throw new NxtException.NotValidException("Invalid num of choices: " + attachment.getJSONObject());
                 }
 
+                //TODO: not needed, this check is now done in the TransactionImpl constructor for all transactions that can't have a recipient
                 if (transaction.getAmountNQT() != 0 || transaction.getRecipientId() != 0) {
                     throw new NxtException.NotValidException("Vote casting has amount or recipient");
                 }
             }
 
+            //TODO: need to implement isDuplicate()
+
             @Override
             public boolean canHaveRecipient() {
                 return false;
             }
+
         };
 
         public static final TransactionType HUB_ANNOUNCEMENT = new Messaging() {

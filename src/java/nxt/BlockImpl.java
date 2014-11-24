@@ -319,7 +319,8 @@ final class BlockImpl implements Block {
     }
 
     boolean verifyGenerationSignature() throws BlockchainProcessor.BlockOutOfOrderException {
-        if(Constants.isOffline && Constants.isTestnet){
+        //TODO: use the fake forging methods instead of hardcoding this
+        if (Constants.isOffline && Constants.isTestnet) {
             return true;
         }
 

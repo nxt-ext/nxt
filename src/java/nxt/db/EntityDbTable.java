@@ -204,8 +204,9 @@ public abstract class EntityDbTable<T> extends DerivedDbTable {
         });
     }
 
+    //TODO: this is broken in case of versioned tables, also should use DbClause instead of assuming long value
     //todo: change resulting type to DbIterator?
-    public List<Long> getManyIdsBy(String targetColumnName, String filterColumnName, Long value) {
+    public List<Long> getManyIdsBy(String targetColumnName, String filterColumnName, long value) {
         try (Connection con = db.getConnection();
              PreparedStatement pstmt = con.prepareStatement("SELECT " + targetColumnName + " FROM " + table
                      + " WHERE " + filterColumnName + " = ? ")) {

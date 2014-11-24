@@ -121,6 +121,7 @@ public final class Convert {
         return s == null || s.length() == 0 ? null : s;
     }
 
+    //TODO: this method is not needed, and is also not consistent with what emptyToNull(byte[]) does
     public static String[] emptyToNull(String[] s) {
         return s == null || s.length == 0 ? null : s;
     }

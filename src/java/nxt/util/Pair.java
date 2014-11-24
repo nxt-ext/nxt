@@ -4,9 +4,9 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONAware;
 
 public class Pair<F, S> implements JSONAware {
-    private F first;
-    private S second;
-    private transient final int hash;
+    private final F first;
+    private final S second;
+    private transient final int hash; //TODO: why transient?
 
     public Pair(F first, S second) {
         this.first = first;
@@ -32,6 +32,7 @@ public class Pair<F, S> implements JSONAware {
         if (this == oth) {
             return true;
         }
+        //TODO: why is the dynamic isInstance needed instead of instanceof?
         if (oth == null || !(getClass().isInstance(oth))) {
             return false;
         }
