@@ -158,6 +158,11 @@ public final class CurrencyMint {
     }
 
     public static byte[] getHash(byte algorithm, long nonce, long currencyId, long units, long counter, long accountId) {
+        HashFunction hashFunction = HashFunction.getHashFunction(algorithm);
+        return getHash(hashFunction, nonce, currencyId, units, counter, accountId);
+    }
+
+    public static byte[] getHash(HashFunction hashFunction, long nonce, long currencyId, long units, long counter, long accountId) {
         ByteBuffer buffer = ByteBuffer.allocate(8 + 8 + 8 + 8 + 8);
         buffer.order(ByteOrder.LITTLE_ENDIAN);
         buffer.putLong(nonce);
@@ -165,7 +170,7 @@ public final class CurrencyMint {
         buffer.putLong(units);
         buffer.putLong(counter);
         buffer.putLong(accountId);
-        return HashFunction.getHashFunction(algorithm).hash(buffer.array());
+        return hashFunction.hash(buffer.array());
     }
 
     public static byte[] getTarget(byte min, byte max, long units, long currentSupply, long totalSupply) {
