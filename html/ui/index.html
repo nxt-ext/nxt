@@ -4706,7 +4706,10 @@
             <div role="tabpanel">
                 <!-- Nav tabs -->
                 <ul class="nav nav-tabs" role="tablist">
-                    <li role="presentation" class="active"><a href="#approve-tab-no-app" aria-controls="approve-tab-no-app" role="tab" data-toggle="tab" data-i18n="no_approval">No Approval</a></li>
+                    <li role="presentation" class="active">
+                        <a href="#approve-tab-no-app" aria-controls="approve-tab-no-app" role="tab" data-toggle="tab"><span data-i18n="no_approval">No Approval</span> 
+                        <i class="fa fa-question-circle show_popover" style="color:#4CAA6E" data-content="Find the ID on the issuer's website or announcement page." data-container="body" data-i18n="[data-content]find_asset_id_help" data-original-title="" title=""></i></a>
+                    </li>
                     <li role="presentation"><a href="#approve-tab-accounts" aria-controls="approve-tab-accounts" role="tab" data-toggle="tab" data-i18n="accounts">Accounts</a></li>
                     <li role="presentation"><a href="#approve-tab-everyone" aria-controls="approve-tab-everyone" role="tab" data-toggle="tab" data-i18n="everyone">Everyone</a></li>
                     <li role="presentation"><a href="#approve-tab-ahs" aria-controls="approve-tab-ahs" role="tab" data-toggle="tab" data-i18n="asset_holders">Asset Holders</a></li>
@@ -4715,20 +4718,23 @@
                 <!-- Tab panes -->
                 <div class="tab-content">
                     <div role="tabpanel" class="tab-pane tab-pane-approve active" id="approve-tab-no-app">
-                        <span style="font-weight:bold;">Processed without approval.</span>
+                        <span style="font-weight:bold;">Process without approval.</span>
                         <input type="hidden" name="isPending" value="false" />
                     </div>
                     <div role="tabpanel" class="tab-pane tab-pane-approve" id="approve-tab-accounts">
                         <div class="row">
                             <div class="col-xs-12">
                                 <div class="form-group">
-                                    <label for="send_money_recipient" data-i18n="requested_to_approve">Requested For Approval</label>
+                                    <label for="send_money_recipient" data-i18n="requested_to_approve">Request For Approval</label>
                                     <div class="input-group">
                                         <input type="text" class="form-control" name="pendingWhitelisted" placeholder="Account" data-i18n="[placeholder]account" />
-                                        <span class="input-group-btn btn-group">
-                                            <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown"><span class="glyphicon glyphicon-user"></span></button>    <ul class="dropdown-menu scrollable-menu" role="menu" style="right:0;left:auto;"></ul>
+                                        <span class="input-group-btn">
+                                            <button class="btn remove_answer" type="button"><i class="fa fa-minus" style="color:white"></i></button>
                                         </span>
                                     </div>
+                                </div>
+                                <div class="form-group">
+                                    <a href="#" class="btn btn-primary" id="create_poll_answers_add"><i class="fa fa-plus"></i> <span data-i18n="add_account">Add Account</span></a>
                                 </div>
                             </div>
                         </div>
