@@ -431,7 +431,9 @@ final class TransactionProcessorImpl implements TransactionProcessor {
             }
         }
         processTransactions(transactions, true);
-        broadcastedTransactions.removeAll(transactions);
+        for (UnconfirmedTransaction unconfirmedTransaction : transactions) {
+            broadcastedTransactions.remove(unconfirmedTransaction.getTransaction());
+        }
     }
 
     List<Transaction> processTransactions(Collection<UnconfirmedTransaction> transactions, final boolean sendToPeers) {

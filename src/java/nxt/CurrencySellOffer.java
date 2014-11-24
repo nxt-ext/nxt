@@ -89,7 +89,7 @@ public final class CurrencySellOffer extends CurrencyExchangeOffer {
 
     static void init() {}
 
-    protected final DbKey dbKey;
+    private final DbKey dbKey;
 
     private CurrencySellOffer(Transaction transaction, Attachment.MonetarySystemPublishExchangeOffer attachment) {
         super(transaction.getId(), attachment.getCurrencyId(), transaction.getSenderId(), attachment.getSellRateNQT(),

@@ -258,8 +258,8 @@ final class JSONData {
         json.put("delisted", goods.isDelisted());
         json.put("timestamp", goods.getTimestamp());
         if (includeCounts) {
-            json.put("numberOfPurchases", DigitalGoodsStore.Purchase.getGoodsPurchaseCount(goods.getId(), false));
-            json.put("numberOfPublicFeedbacks", DigitalGoodsStore.Purchase.getGoodsPurchaseCount(goods.getId(), true));
+            json.put("numberOfPurchases", DigitalGoodsStore.Purchase.getGoodsPurchaseCount(goods.getId(), false, true));
+            json.put("numberOfPublicFeedbacks", DigitalGoodsStore.Purchase.getGoodsPurchaseCount(goods.getId(), true, true));
         }
         return json;
     }
@@ -433,7 +433,7 @@ final class JSONData {
 
     static JSONObject exchange(Exchange exchange, boolean includeCurrencyInfo) {
         JSONObject json = new JSONObject();
-        json.put("transaction", exchange.getTransactionId());
+        json.put("transaction", Convert.toUnsignedLong(exchange.getTransactionId()));
         json.put("timestamp", exchange.getTimestamp());
         json.put("units", String.valueOf(exchange.getUnits()));
         json.put("rateNQT", String.valueOf(exchange.getRate()));
