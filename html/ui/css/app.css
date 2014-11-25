@@ -3196,7 +3196,7 @@ table.purchase td {
   text-align:center;
 }
 
-.advanced_info, .tx-modal-approve-link {
+.advanced_info{
   float:left;
   color:#737373;
   font-style:italic;
@@ -3209,12 +3209,12 @@ table.purchase td {
 
 .tx-modal-approve, #tx-modal-approve-template {
   display: none;
+  margin-bottom: 22px;
 }
 
 .tab-pane-approve {
   border-bottom: 1px solid #ddd;
   padding: 16px 0px 16px 0px;
-  margin-bottom: 14px;
 }
 
 .callout-bottom {

@@ -213,6 +213,10 @@ var NRS = (function(NRS, $, undefined) {
 			$modal.find(".advanced").hide();
 		}
 
+		if ($modal.find(".tx-modal-approve").is(':empty')) {
+			NRS.initApproveDialog($modal);
+		}
+
 		$modal.find(".advanced_extend").each(function(index, obj) {
 			var normalSize = $(obj).data("normal");
 			var advancedSize = $(obj).data("advanced");
@@ -229,16 +233,6 @@ var NRS = (function(NRS, $, undefined) {
 		} else {
 			$(this).text($.t("advanced"));
 		}
-	});
-	
-	$(".tx-modal-approve-link a").click(function(e) {
-		e.preventDefault();
-
-		var $modal = $(this).closest(".modal");
-		if ($modal.find(".tx-modal-approve").is(':empty')) {
-			NRS.initApproveDialog($modal);
-		}
-		$modal.find(".tx-modal-approve").toggle();
 	});
 
 
