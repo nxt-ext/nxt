@@ -10,6 +10,11 @@ import java.util.Arrays;
 public class VotePhased {
     //TODO: why does pending_transaction_id need to be part of the key?
     // id is the id of the vote, and it is already unique as it is a transaction id
+    //
+    //edit: I didn't realize you allow voting for multiple pending transactions with a single transaction.
+    // But I don't like this either, first it leads to code complication,
+    // second it couples unrelated pending transactions and will lead to special cases that need to be considered
+    // I would remove this vanity feature and have one vote per transaction only.
     private static final DbKey.LinkKeyFactory<VotePhased> voteDbKeyFactory =
             new DbKey.LinkKeyFactory<VotePhased>("id", "pending_transaction_id") {
                 @Override
@@ -148,6 +153,12 @@ public class VotePhased {
                 estimate += weight;
             }
 
+            //TODO: The complexity and performance hit of this counting can be avoided if counting is done only once,
+            // at finish height. I think this is what we should do, and get rid of the estimated count column.
+            // There are other problems with counting after each vote, a voter doesn't know in advance at what height
+            // his voting balance will be considered, so he has to keep the funds or assets in his account, frozen,
+            // until the vote is over. If counting is done at finish height only, he knows when the assets need to be
+            // in his account, doesn't need to have them there before that.
             if (estimate >= poll.getQuorum() && poll.getVotingModel() != Constants.VOTING_MODEL_ACCOUNT) {
                 estimate = allVotesFromDb(poll);
                 if (weight >= poll.minBalance) {
