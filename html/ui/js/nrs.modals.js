@@ -149,6 +149,8 @@ var NRS = (function(NRS, $, undefined) {
 			$(obj).removeClass("col-xs-" + advancedSize + " col-sm-" + advancedSize + " col-md-" + advancedSize).addClass("col-xs-" + normalSize + " col-sm-" + normalSize + " col-md-" + normalSize);
 		});
 
+		$(this).find(".tx-modal-approve").empty();
+
 		var $feeInput = $(this).find("input[name=feeNXT]");
 
 		if ($feeInput.length) {
@@ -228,6 +230,17 @@ var NRS = (function(NRS, $, undefined) {
 			$(this).text($.t("advanced"));
 		}
 	});
+	
+	$(".tx-modal-approve-link a").click(function(e) {
+		e.preventDefault();
+
+		var $modal = $(this).closest(".modal");
+		if ($modal.find(".tx-modal-approve").is(':empty')) {
+			NRS.initApproveDialog($modal);
+		}
+		$modal.find(".tx-modal-approve").toggle();
+	});
+
 
 	return NRS;
 }(NRS || {}, jQuery));

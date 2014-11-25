@@ -3332,6 +3332,7 @@
 								<label for="send_money_password" data-i18n="passphrase">PASSPHRASE</label>
 								<input type="password" name="secretPhrase" id="send_money_password" class="form-control" placeholder="" tabindex="8">
 							</div>
+                            <div class="tx-modal-approve"></div>
 							<div class="form-group advanced">
 								<label for="send_money_referenced_transaction" data-i18n="referenced_transaction_hash">REFERENCED TRANSACTION HASH</label>
 								<input type="text" class="form-control" name="referencedTransactionFullHash" id="send_money_referenced_transaction" placeholder="Referenced Transaction Full Hash" data-i18n="[placeholder]referenced_transaction_full_hash" tabindex="9" spellcheck="false" />
@@ -3357,6 +3358,7 @@
 					</div>
 		      		<div class="modal-footer" style="margin-top:0;">
 		      			<div class="advanced_info"><strong data-i18n="fee">Fee</strong>: <span class="advanced_fee">1 NXT</span> - <a href="#" data-i18n="advanced">advanced</a></div>
+                        <div class="tx-modal-approve-link">&nbsp;&nbsp;&nbsp; <a href="#" data-i18n="approve_by">Approve by...</a></div>
 
 				        <button type="button" class="btn btn-default" data-dismiss="modal" data-i18n="cancel">Cancel</button>
 				        <button type="button" class="btn btn-primary" data-loading-text="Submitting..." data-i18n="send_nxt;[data-loading-text]submitting">Send NXT</button>
@@ -4700,6 +4702,72 @@
 		    </div>
 		</div>
 
+        <div id="tx-modal-approve-template">
+            <div role="tabpanel">
+                <!-- Nav tabs -->
+                <ul class="nav nav-tabs" role="tablist">
+                    <li role="presentation" class="active">
+                        <a href="#approve-tab-no-app" aria-controls="approve-tab-no-app" role="tab" data-toggle="tab"><span data-i18n="no_approval">No Approval</span> 
+                        <i class="fa fa-question-circle show_popover" style="color:#4CAA6E" data-content="Find the ID on the issuer's website or announcement page." data-container="body" data-i18n="[data-content]find_asset_id_help" data-original-title="" title=""></i></a>
+                    </li>
+                    <li role="presentation"><a href="#approve-tab-accounts" aria-controls="approve-tab-accounts" role="tab" data-toggle="tab" data-i18n="accounts">Accounts</a></li>
+                    <li role="presentation"><a href="#approve-tab-everyone" aria-controls="approve-tab-everyone" role="tab" data-toggle="tab" data-i18n="everyone">Everyone</a></li>
+                    <li role="presentation"><a href="#approve-tab-ahs" aria-controls="approve-tab-ahs" role="tab" data-toggle="tab" data-i18n="asset_holders">Asset Holders</a></li>
+                </ul>
+
+                <!-- Tab panes -->
+                <div class="tab-content">
+                    <div role="tabpanel" class="tab-pane tab-pane-approve active" id="approve-tab-no-app">
+                        <span style="font-weight:bold;">Process without approval.</span>
+                        <input type="hidden" name="isPending" value="false" />
+                    </div>
+                    <div role="tabpanel" class="tab-pane tab-pane-approve" id="approve-tab-accounts">
+                        <div class="row">
+                            <div class="col-xs-12">
+                                <div class="form-group">
+                                    <label for="send_money_recipient" data-i18n="requested_to_approve">Request For Approval</label>
+                                    <div class="input-group">
+                                        <input type="text" class="form-control" name="pendingWhitelisted" placeholder="Account" data-i18n="[placeholder]account" />
+                                        <span class="input-group-btn">
+                                            <button class="btn remove_answer" type="button"><i class="fa fa-minus" style="color:white"></i></button>
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <a href="#" class="btn btn-primary" id="create_poll_answers_add"><i class="fa fa-plus"></i> <span data-i18n="add_account">Add Account</span></a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-xs-6">
+                                <div class="form-group">
+                                    <label for="send_money_fee" data-i18n="nr_of_approvals">Nr Of Necessary Approvals</label>
+                                    <input type="number" name="pendingQuorum" class="form-control" min="1" placeholder="nr_of_approvals" data-i18n="[placeholder]nr_of_approvals" data-default="1" value="1">
+                                </div>
+                            </div>
+                            <div class="col-xs-6">
+                                <div class="form-group">
+                                    <label for="send_money_deadline" data-i18n="finish_at_block">Finish At Block</label>
+                                    <input type="number" name="pendingMaxHeight" class="form-control" placeholder="Finish At Block" data-i18n="finish_at_block">
+                                </div>
+                            </div>
+                        </div>
+
+                        <input type="hidden" name="isPending" value="true" disabled />
+                        <input type="hidden" name="pendingVotingModel" value="1" disabled />
+                    </div>
+                    <div role="tabpanel" class="tab-pane tab-pane-approve" id="approve-tab-everyone">
+                        <input type="hidden" name="isPending" value="true" disabled />
+                        <input type="hidden" name="pendingVotingModel" value="1" disabled />
+                    </div>
+                    <div role="tabpanel" class="tab-pane tab-pane-approve" id="approve-tab-ahs">
+                        <input type="hidden" name="isPending" value="true" disabled />
+                        <input type="hidden" name="pendingVotingModel" value="2" disabled />
+                    </div>
+                </div>
+            </div>
+        </div>
+
 		<div id="decrypt_note_form_container" style="display:none;">
 			<form role="form" style="background:#f6f6f6;margin-bottom:10px;padding:10px;border:1px solid #999;border-radius:5px;" autocomplete="off">
 				<div class="callout callout-danger error_message" style="background:#fbe7e7" data-i18n="passphrase_required_to_decrypt_data">Your passphrase is required to decrypt this data.</div>
@@ -4832,6 +4900,7 @@
         <script src="js/nrs.modals.accountinfo.js" type="text/javascript"></script>
         <script src="js/nrs.modals.balanceleasing.js" type="text/javascript"></script>
         <script src="js/nrs.modals.advanced.js" type="text/javascript"></script>
+        <script src="js/nrs.modals.approve.js" type="text/javascript"></script>
         <script src="js/nrs.console.js" type="text/javascript"></script>
         <script src="js/nrs.util.js" type="text/javascript"></script>
     </body>
