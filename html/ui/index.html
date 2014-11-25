@@ -4706,8 +4706,7 @@
                 <!-- Nav tabs -->
                 <ul class="nav nav-tabs" role="tablist">
                     <li role="presentation" class="active">
-                        <a href="#approve-tab-no-app" aria-controls="approve-tab-no-app" role="tab" data-toggle="tab"><span data-i18n="no_approval">No Approval</span></a>
-                    </li>
+                        <a href="#approve-tab-no-app" aria-controls="approve-tab-no-app" role="tab" data-toggle="tab"><span data-i18n="no_approval">No Approval</span></a></li>
                     <li role="presentation"><a href="#approve-tab-accounts" aria-controls="approve-tab-accounts" role="tab" data-toggle="tab" data-i18n="accounts">Accounts</a></li>
                     <li role="presentation"><a href="#approve-tab-everyone" aria-controls="approve-tab-everyone" role="tab" data-toggle="tab" data-i18n="everyone">Everyone</a></li>
                     <li role="presentation"><a href="#approve-tab-ahs" aria-controls="approve-tab-ahs" role="tab" data-toggle="tab" data-i18n="asset_holders">Asset Holders</a></li>
@@ -4716,32 +4715,39 @@
                 <!-- Tab panes -->
                 <div class="tab-content">
                     <div role="tabpanel" class="tab-pane tab-pane-approve active" id="approve-tab-no-app">
-                        <span>Process without approval.</span>
+                        <span data-i18n="process_without_approval">Process without approval.</span>
                         <input type="hidden" name="isPending" value="false" />
                     </div>
                     <div role="tabpanel" class="tab-pane tab-pane-approve" id="approve-tab-accounts">
                         <div class="row">
-                            <div class="col-xs-12">
-                                <div class="form-group">
-                                    <label for="send_money_recipient" data-i18n="requested_to_approve">Request For Approval</label>
-                                    <i class="fa fa-question-circle modal-context-help" data-content="Find the ID on the issuer's website or announcement page." data-toggle="popover" data-trigger="hover" data-i18n="[data-content]find_asset_id_help"></i>
+                            <div class="col-xs-12 approve-accounts-box">
+                                <label data-i18n="requested_for_approval">Request For Approval</label>
+                                <i class="fa fa-question-circle modal-context-help" data-content="The following accounts will be requested to approve the transaction." data-toggle="popover" data-trigger="hover" data-container="body" data-i18n="[data-content]approve_tx_accounts_requested_help"></i>
+                                <div class="form-group form-group-accounts">
                                     <div class="input-group">
                                         <input type="text" class="form-control" name="pendingWhitelisted" placeholder="Account" data-i18n="[placeholder]account" />
                                         <span class="input-group-btn">
-                                            <button class="btn remove_answer" type="button"><i class="fa fa-minus" style="color:white"></i></button>
+                                            <button class="btn remove_account" type="button"><i class="fa fa-minus" style="color:white"></i></button>
                                         </span>
                                     </div>
                                 </div>
-                                <div class="form-group">
-                                    <a href="#" class="btn btn-primary" id="create_poll_answers_add"><i class="fa fa-plus"></i> <span data-i18n="add_account">Add Account</span></a>
-                                </div>
+                            </div>
+                        </div>
+                        <div class="row form-group">
+                            <div class="col-xs-12">
+                                <a href="#" class="btn btn-primary" id="approve-add-account"><i class="fa fa-plus"></i> <span data-i18n="add_account">Add Account</span></a>
                             </div>
                         </div>
                         <div class="row">
-                            <div class="col-xs-6">
+                            <div class="col-xs-6 approve-amount-box">
                                 <div class="form-group">
-                                    <label for="send_money_fee" data-i18n="nr_of_approvals">Nr Of Necessary Approvals</label>
-                                    <input type="number" name="pendingQuorum" class="form-control" min="1" placeholder="nr_of_approvals" data-i18n="[placeholder]nr_of_approvals" data-default="1" value="1">
+                                    <label data-i18n="necessary_amount_accounts_nxt">Necessary Amount of Accounts | NXT</label>
+                                    <i class="fa fa-question-circle modal-context-help" data-content="Transaction becomes valid when a certain amount of accounts have approved the transaction or the approving accounts represent a certain amount of NXT." data-toggle="popover" data-trigger="hover" data-container="body" data-i18n="[data-content]approve_tx_necessary_amount_help"></i>
+                                    <input name="pendingQuorum" class="form-control" placeholder="Necessary Amount" data-i18n="[placeholder]necessary_amount" style="width:65%;display:inline-block;vertical-align:middle;">
+                                    <div class="btn-group" role="group">
+                                        <button type="button" class="btn btn-default approve-amount-accounts-btn"><i class="fa fa-group"></i></button>
+                                        <button type="button" class="btn btn-default approve-amount-nxt-btn">NXT</button>
+                                    </div>
                                 </div>
                             </div>
                             <div class="col-xs-6">
@@ -4751,13 +4757,12 @@
                                 </div>
                             </div>
                         </div>
-
                         <input type="hidden" name="isPending" value="true" disabled />
-                        <input type="hidden" name="pendingVotingModel" value="1" disabled />
+                        <input type="hidden" name="pendingVotingModel" disabled />
                     </div>
                     <div role="tabpanel" class="tab-pane tab-pane-approve" id="approve-tab-everyone">
                         <input type="hidden" name="isPending" value="true" disabled />
-                        <input type="hidden" name="pendingVotingModel" value="1" disabled />
+                        <input type="hidden" name="pendingVotingModel" disabled />
                     </div>
                     <div role="tabpanel" class="tab-pane tab-pane-approve" id="approve-tab-ahs">
                         <input type="hidden" name="isPending" value="true" disabled />
