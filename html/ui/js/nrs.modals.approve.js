@@ -25,7 +25,9 @@ var NRS = (function(NRS, $, undefined) {
                     $(this).mask("NXT-****-****-****-*****");
                 }
             });
-
+        $(function () { 
+            $("[data-toggle='popover']").popover(); 
+        });
         });
     }
 

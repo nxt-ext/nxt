@@ -3258,6 +3258,10 @@ input.masked {
   padding-bottom:8px;
 } 
 
+.modal-context-help {
+  color: #4CAA6E;
+}
+
 #dgs_view_delivery_output, #dgs_view_purchase_modal_note, #dgs_delivery_modal_note, #dgs_view_refund_output, #transaction_info_output_top, #transaction_info_output_bottom {
   word-wrap:break-word;
 }
