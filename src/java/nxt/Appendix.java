@@ -596,7 +596,7 @@ public interface Appendix {
                 throw new NxtException.NotValidException("Invalid assetId");
             }
 
-            if (maxHeight > Nxt.getBlockchain().getHeight() + Constants.VOTING_MIN_VOTE_DURATION) {
+            if (maxHeight < Nxt.getBlockchain().getHeight() + Constants.VOTING_MIN_VOTE_DURATION) {
                 throw new NxtException.NotValidException("Invalid max height");
             }
         }
@@ -640,6 +640,34 @@ public interface Appendix {
             senderAccount.addToBalanceNQT(amount);
             Logger.logDebugMessage("Transaction " + transactionId + " has been refused");
             System.out.println("Transaction " + transactionId + " has been refused");
+        }
+
+        public int getMaxHeight() {
+            return maxHeight;
+        }
+
+        public long getQuorum() {
+            return quorum;
+        }
+
+        public long getVoteThreshold() {
+            return voteThreshold;
+        }
+
+        public byte getVotingModel() {
+            return votingModel;
+        }
+
+        public long getAssetId() {
+            return assetId;
+        }
+
+        public long[] getWhitelist() {
+            return whitelist;
+        }
+
+        public long[] getBlacklist() {
+            return blacklist;
         }
     }
 }

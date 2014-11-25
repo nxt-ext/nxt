@@ -71,6 +71,7 @@ public final class APIServlet extends HttpServlet {
         map.put("cancelAskOrder", CancelAskOrder.instance);
         map.put("cancelBidOrder", CancelBidOrder.instance);
         map.put("castVote", CastVote.instance);
+        map.put("castVotePhased", CastVotePhased.instance);
         map.put("createPoll", CreatePoll.instance);
         map.put("decryptFrom", DecryptFrom.instance);
         map.put("dgsListing", DGSListing.instance);

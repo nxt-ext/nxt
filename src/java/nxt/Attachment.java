@@ -116,11 +116,11 @@ public interface Attachment extends Appendix {
             }
         }
 
-        PendingPaymentVoteCasting(long pendingTransactionId) {
+        public PendingPaymentVoteCasting(long pendingTransactionId) {
             this.pendingTransactionsIds = new long[]{pendingTransactionId};
         }
 
-        PendingPaymentVoteCasting(long[] pendingTransactionsIds) {
+        public PendingPaymentVoteCasting(long[] pendingTransactionsIds) {
             this.pendingTransactionsIds = pendingTransactionsIds;
         }
 
