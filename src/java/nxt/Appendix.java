@@ -633,6 +633,8 @@ public interface Appendix {
             System.out.println("Transaction " + transaction.getId() + " has been released"); //TODO: Logger
         }
 
+        //TODO: But what about changes to unconfirmed balances, everything that happens in applyUnconfirmed,
+        //  and applyAttachmentUnconfirmed? When is this going to be rolled back too?
         //TODO: need a better name, rollback is already used for derived tables rollback
         void rollback(Transaction transaction, Account senderAccount, Account recipientAccount) {
             long transactionId = transaction.getId();
