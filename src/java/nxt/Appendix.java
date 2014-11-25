@@ -458,18 +458,27 @@ public interface Appendix {
 
         TwoPhased(JSONObject attachmentData){
             super(attachmentData);
+            //TODO: The json-simple library returns numbers always as Longs when the json has been parsed from a string,
+            // therefore most of the code below will fail. You have to use e.g.:
+            // maxHeight = ((Long)attachmentData.get("releaseHeight)).intValue();
+            // votingModel = ((Long)attachmentData.get("votingModel")).byteValue();
+            // and for longs, always use Convert.parseLong(...), so that to be able to handle either Long, or String
             maxHeight = (Integer) attachmentData.get("releaseHeight");
             quorum = (Long) attachmentData.get("quorum");
             voteThreshold = (Long) attachmentData.get("voteThreshold");
             votingModel = (Byte) attachmentData.get("votingModel");
             if (votingModel == Constants.VOTING_MODEL_ASSET) {
-                assetId = (Long) attachmentData.get("assetId");
-            } else assetId = 0;
+                // TODO: this is also wrong, for IDs which are stored as unsigned longs in json
+                // need to use Convert.parseUnsignedLong(...)
+                assetId = (Long) attachmentData.get("assetId"); //TODO: rename to "asset", not "assetId", to be consistent with all other code
+            } else {
+                assetId = 0;
+            }
 
             JSONArray whitelistJson = (JSONArray) (attachmentData.get("whitelist"));
             whitelist = new long[whitelistJson.size()];
             for (int i = 0; i < whitelist.length; i++) {
-                whitelist[i] = (Long) whitelistJson.get(i);
+                whitelist[i] = (Long) whitelistJson.get(i); //TODO: use Convert.parseUnsignedLong when parsing long IDs
             }
 
             JSONArray blacklistJson = (JSONArray) (attachmentData.get("blacklist"));
@@ -495,15 +504,15 @@ public interface Appendix {
             this.quorum = quorum;
             this.voteThreshold = voteThreshold;
 
-            if(whitelist==null){
+            if (whitelist == null) {
                 this.whitelist = new long[0];
-            }else {
+            } else {
                 this.whitelist = whitelist;
             }
 
-            if(blacklist==null){
+            if (blacklist == null) {
                 this.blacklist = new long[0];
-            }else {
+            } else {
                 this.blacklist = blacklist;
             }
 
@@ -528,12 +537,12 @@ public interface Appendix {
             buffer.putLong(voteThreshold);
 
             buffer.put((byte) whitelist.length);
-            for (Long account : whitelist) {
+            for (long account : whitelist) {
                 buffer.putLong(account);
             }
 
             buffer.put((byte) blacklist.length);
-            for (Long account : blacklist) {
+            for (long account : blacklist) {
                 buffer.putLong(account);
             }
 
@@ -546,17 +555,17 @@ public interface Appendix {
             json.put("quorum", quorum);
             json.put("voteThreshold", voteThreshold);
             json.put("votingModel", votingModel);
-            json.put("assetId", assetId);
+            json.put("assetId", assetId); //TODO: rename to "asset" and use Convert.toUnsignedLong() instead
 
             JSONArray whitelistJson = new JSONArray();
             for (long accountId : whitelist) {
-                whitelistJson.add(accountId);
+                whitelistJson.add(accountId); //TODO: use Convert.toUnsignedLong()
             }
             json.put("whitelist", whitelistJson);
 
             JSONArray blacklistJson = new JSONArray();
             for (long accountId : blacklist) {
-                blacklistJson.add(accountId);
+                blacklistJson.add(accountId); //TODO: Convert.toUnsignedLong()
             }
             json.put("blacklist", blacklistJson);
         }
@@ -580,8 +589,8 @@ public interface Appendix {
                 throw new NxtException.NotValidException("By-account voting with empty whitelist");
             }
 
-            if (votingModel == Constants.VOTING_MODEL_ACCOUNT && voteThreshold !=0) {
-                throw new NxtException.NotValidException("minBalance has tobe zero when by-account voting on pending transaction");
+            if (votingModel == Constants.VOTING_MODEL_ACCOUNT && voteThreshold != 0) {
+                throw new NxtException.NotValidException("minBalance has to be zero when by-account voting on pending transaction");
             }
 
             if (whitelist.length > Constants.PENDING_TRANSACTIONS_MAX_WHITELIST_SIZE) {
@@ -603,14 +612,16 @@ public interface Appendix {
 
         @Override
         void apply(Transaction transaction, Account senderAccount, Account recipientAccount) {
-            Long id = transaction.getId();
+            long id = transaction.getId();
 
+            //TODO: move this logic to PendingTransactionPoll.addPoll(), and make pendingTransactionsTable private
             PendingTransactionPoll poll = new PendingTransactionPoll(id, senderAccount.getId(), maxHeight,
                     votingModel, quorum, voteThreshold, assetId, whitelist, blacklist);
             PendingTransactionPoll.pendingTransactionsTable.insert(poll);
         }
 
         void commit(Transaction transaction, Account senderAccount, Account recipientAccount) {
+            //TODO: I believe changing the senderAccount confirmed balance should also happen here
             if (recipientAccount != null) {
                 long amount = transaction.getAmountNQT();
                 recipientAccount.addToBalanceNQT(amount);
@@ -619,18 +630,20 @@ public interface Appendix {
             transaction.getType().applyAttachment(transaction, senderAccount, recipientAccount);
 
             Logger.logDebugMessage("Transaction " + transaction.getId() + " has been released");
-            System.out.println("Transaction " + transaction.getId() + " has been released");
+            System.out.println("Transaction " + transaction.getId() + " has been released"); //TODO: Logger
         }
 
+        //TODO: need a better name, rollback is already used for derived tables rollback
         void rollback(Transaction transaction, Account senderAccount, Account recipientAccount) {
             long transactionId = transaction.getId();
 
             PendingTransactionPoll poll = PendingTransactionPoll.byId(transactionId);
 
-            //todo : move this check up?
-            if(poll.getVotingModel()!=Constants.VOTING_MODEL_ACCOUNT){
+            //todo : move this check up? - yeah, looks like this must be done in that listener in TransactionProcessorImpl instead
+            if (poll.getVotingModel() != Constants.VOTING_MODEL_ACCOUNT) {
                 long votingResult = VotePhased.allVotesFromDb(poll);
-                if(votingResult >= poll.getQuorum()){
+                if (votingResult >= poll.getQuorum()) {
+                    //TODO: why does rollback do a commit? looks like a workaround for a bug elsewhere, not finding out in time that a commit should have been done?
                     commit(transaction, senderAccount, recipientAccount);
                     return;
                 }
@@ -638,7 +651,15 @@ public interface Appendix {
 
             long amount = transaction.getAmountNQT();
             senderAccount.addToBalanceNQT(amount);
+            //TODO:
+            // Changes to sender's account balance should be handled the same way as the rest of the changes
+            // that the transaction causes, i.e. the changes done in applyAttachment()
+            // If you don't call applyAttachment() for a pending transaction until commit, then you should also
+            // not change the sender balance (but only his unconfirmed balance, which is already done in
+            // applyUnconfirmed()) until commit, and if you do that you shouldn't need to roll that back
+            // by calling sender.addToBalanceNQT() here either
             Logger.logDebugMessage("Transaction " + transactionId + " has been refused");
+            System.out.println("Transaction " + transactionId + " has been refused"); //TODO: Logger
             System.out.println("Transaction " + transactionId + " has been refused");
         }
 

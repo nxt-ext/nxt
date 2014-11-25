@@ -13,10 +13,11 @@ public class AbstractPoll {
     protected final byte votingModel;
 
     protected final long assetId;
+    //TODO: minBalance is defined in whole NXT for accounts, but in QNT for assets, why not be consistent and use NQT and QNT?
     protected final long minBalance;
     protected boolean finished;
 
-    public AbstractPoll(long accountId, int finishBlockHeight, byte votingModel, long assetId, long minBalance) {
+    AbstractPoll(long accountId, int finishBlockHeight, byte votingModel, long assetId, long minBalance) {
         this.accountId = accountId;
         this.finishBlockHeight = finishBlockHeight;
         this.votingModel = votingModel;
@@ -25,7 +26,7 @@ public class AbstractPoll {
         this.finished = false;
     }
 
-    public AbstractPoll(ResultSet rs) throws SQLException {
+    AbstractPoll(ResultSet rs) throws SQLException {
         this.accountId = rs.getLong("account_id");
         this.finishBlockHeight = rs.getInt("finish");
         this.votingModel = rs.getByte("voting_model");
@@ -58,10 +59,11 @@ public class AbstractPoll {
         return finished;
     }
 
-    public void setFinished(boolean finished) {
+    protected void setFinished(boolean finished) {
         this.finished = finished;
     }
 
+    //TODO: no need to be static
     static long calcWeight(AbstractPoll pollStructure, Account voter) {
         long weight = 0;
 
@@ -76,6 +78,7 @@ public class AbstractPoll {
                 long assetId = pollStructure.getAssetId();
                 long balance;
                 if (assetId == 0) {
+                    //TODO: why is it needed to use guaranteed balance instead of balance? this seems seriously wrong
                     balance = voter.getGuaranteedBalanceNQT(Constants.CONFIRMATIONS_RELIABLE_TX) / Constants.ONE_NXT;
                 } else {
                     balance = voter.getAssetBalanceQNT(pollStructure.assetId);
@@ -85,6 +88,7 @@ public class AbstractPoll {
                 }
                 break;
             case Constants.VOTING_MODEL_BALANCE:
+                //TODO: use balance, not guaranteed balance
                 long nxtBalance = voter.getGuaranteedBalanceNQT(Constants.CONFIRMATIONS_RELIABLE_TX) / Constants.ONE_NXT;
                 if (nxtBalance >= pollStructure.getMinBalance()) {
                     weight = nxtBalance;

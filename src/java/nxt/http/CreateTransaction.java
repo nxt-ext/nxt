@@ -20,7 +20,7 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
             "message", "messageIsText",
             "messageToEncrypt", "messageToEncryptIsText", "encryptedMessageData", "encryptedMessageNonce",
             "messageToEncryptToSelf", "messageToEncryptToSelfIsText", "encryptToSelfMessageData", "encryptToSelfMessageNonce",
-            "isPending", "pendingMaxHeight", "pendingVotingModel", "pendingQuorum", "pendingMinBalance", "pendingAssetId",
+            "isPending", "pendingMaxHeight", "pendingVotingModel", "pendingQuorum", "pendingMinBalance", "pendingAssetId", //TODO: rename to pendingAsset
             "pendingWhitelisted", "pendingWhitelisted", "pendingWhitelisted",
             "pendingBlacklisted", "pendingBlacklisted", "pendingBlacklisted",
             "recipientPublicKey"};
@@ -85,6 +85,7 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
         Appendix.TwoPhased twoPhased = null;
         String isPending = Convert.emptyToNull(req.getParameter("isPending"));
         if (isPending != null && !isPending.equals("false")) {
+        //TODO: this should be if ("true".equalsIgnoreCase(req.getParameter("isPending")), right?
 
             String votingModelValue = Convert.emptyToNull(req.getParameter("pendingVotingModel"));
             if (votingModelValue == null) {
@@ -103,6 +104,7 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
                 return INCORRECT_PENDING_VOTING_MODEL;
             }
 
+            //TODO: use ParameterParser.getLong, getInt, etc, from the feature/ms branch after it gets merged to develop
             String maxHeightValue = Convert.emptyToNull(req.getParameter("pendingMaxHeight"));
             if (maxHeightValue == null) {
                 return MISSING_PENDING_MAX_HEIGHT;
@@ -154,7 +156,7 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
                 }
             } else {
                 try {
-                    assetId = Long.parseLong(minBalanceValue);
+                    assetId = Long.parseLong(assetIdValue);
                 } catch (NumberFormatException e) {
                     return INCORRECT_PENDING_MIN_BALANCE;
                 }
@@ -192,7 +194,7 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
             }
 
             twoPhased = new Appendix.TwoPhased(maxHeight, votingModel, assetId, quorum, minBalance, whitelist, blacklist);
-        }
+        } //TODO: this was a very long if, better move to a separate method
 
         if (secretPhrase == null && publicKeyValue == null) {
             return MISSING_SECRET_PHRASE;
@@ -238,7 +240,7 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
             if (encryptToSelfMessage != null) {
                 builder.encryptToSelfMessage(encryptToSelfMessage);
             }
-            if(twoPhased!=null){
+            if (twoPhased!=null) {
                 builder.twoPhased(twoPhased);
             }
             Transaction transaction = builder.build();

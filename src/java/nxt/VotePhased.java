@@ -8,6 +8,8 @@ import java.sql.SQLException;
 import java.util.Arrays;
 
 public class VotePhased {
+    //TODO: why does pending_transaction_id need to be part of the key?
+    // id is the id of the vote, and it is already unique as it is a transaction id
     private static final DbKey.LinkKeyFactory<VotePhased> voteDbKeyFactory =
             new DbKey.LinkKeyFactory<VotePhased>("id", "pending_transaction_id") {
                 @Override
@@ -43,6 +45,7 @@ public class VotePhased {
                 } else {
                     return 0;
                 }
+                //TODO: con, pstmt and rs must be closed
             } catch (SQLException e) {
                 throw new RuntimeException(e.toString(), e);
             }
@@ -102,12 +105,16 @@ public class VotePhased {
         }
     }
 
-    static long allVotesFromDb(PendingTransactionPoll poll){
+    //TODO: this method needs a better name, why is it not called simply countVotes?
+    static long allVotesFromDb(PendingTransactionPoll poll) {
         long result = 0;
         DbClause clause = new DbClause.LongClause("pending_transaction_id", poll.getId());
+        //TODO: DbIterators must be closed
         DbIterator<VotePhased> votesIterator = voteTable.getManyBy(clause, 0, -1);
 
         while (votesIterator.hasNext()) {
+            //TODO: when you change calcWeight to take accountId instead of Account, you can skip the getAccount call here
+            // and only get the Account if needed in calcWeight
             long w = AbstractPoll.calcWeight(poll, Account.getAccount(votesIterator.next().voterId));
             if (w >= poll.minBalance) {
                 result += w;
@@ -120,16 +127,17 @@ public class VotePhased {
     static boolean addVote(PendingTransactionPoll poll, Account voter,
                            Transaction transaction) {
 
-        if(!isVoteGiven(poll.getId(), voter.getId())) {
+        //TODO: why that duplicate isVoteGiven check here again? this should have been checked in validateAttachment
+        if (!isVoteGiven(poll.getId(), voter.getId())) {
 
             long[] whitelist = poll.getWhitelist();
             if (whitelist != null && whitelist.length > 0 && Arrays.binarySearch(whitelist, voter.getId()) == -1) {
-                return false; //todo: move to validate only?
+                return false; //todo: move to validate only? - yes
             }
 
             long[] blacklist = poll.getBlacklist();
             if (blacklist != null && blacklist.length > 0 && Arrays.binarySearch(blacklist, voter.getId()) != -1) {
-                return false; //todo: move to validate only?
+                return false; //todo: move to validate only? - yes
             }
 
             long weight = AbstractPoll.calcWeight(poll, voter);
@@ -150,7 +158,7 @@ public class VotePhased {
             VotePhased vote = new VotePhased(transaction, poll.getId(), estimate);
             voteTable.insert(vote);
             return estimate >= poll.getQuorum();
-        }else{
+        } else {
             return false;
         }
     }

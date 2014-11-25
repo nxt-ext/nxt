@@ -38,6 +38,9 @@ public abstract class DerivedDbTable {
         }
         try (Connection con = db.getConnection();
              Statement stmt = con.createStatement()) {
+            //TODO: don't disable referential integrity and don't rely on foreign keys for all derived tables
+            // The problem with foreign keys is that H2 does not support deferred integrity checking, and
+            // rollbacks may cause constraint violation errors depending on what order tables are rolled back.
             stmt.addBatch("SET REFERENTIAL_INTEGRITY FALSE");
             stmt.addBatch("TRUNCATE TABLE " + table);
             stmt.addBatch("SET REFERENTIAL_INTEGRITY TRUE");

@@ -91,7 +91,7 @@ public abstract class DbClause {
 
         protected int set(PreparedStatement pstmt, int index) throws SQLException {
             pstmt.setLong(index, value1);
-            pstmt.setBoolean(index+1, value2);
+            pstmt.setBoolean(index + 1, value2);
             return index + 2;
         }
     }
@@ -109,7 +109,7 @@ public abstract class DbClause {
 
         protected int set(PreparedStatement pstmt, int index) throws SQLException {
             pstmt.setLong(index, value1);
-            pstmt.setLong(index+1, value2);
+            pstmt.setLong(index + 1, value2);
             return index + 2;
         }
     }

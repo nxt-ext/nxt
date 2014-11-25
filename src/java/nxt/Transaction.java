@@ -91,6 +91,7 @@ public interface Transaction extends Comparable<Transaction> {
 
     long getECBlockId();
 
+    //TODO: these two methods should not be exposed in the Transaction interface, they should not even be public
     void release(); // release pending transaction (on max height)
     void refuse(); // refuse pending transaction (on max height)
 }

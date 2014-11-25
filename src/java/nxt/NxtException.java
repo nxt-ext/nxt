@@ -65,6 +65,7 @@ public abstract class NxtException extends Exception {
         }
     }
 
+    //TODO: IllegalStateException is expected to be a RuntimeException, not a checked exception
     public static class IllegalStateException extends NxtException {
 
         IllegalStateException(String message) {

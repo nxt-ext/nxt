@@ -791,7 +791,11 @@ final class TransactionImpl implements Transaction {
         return senderAccount != null && type.applyUnconfirmed(this, senderAccount);
     }
 
-    private Pair<Account, Account> getSenderAndRecipient(){
+    //TODO: this is not a good design
+    // first, sender and recipient do not form a Pair, this is a hack only done in order to return them both from the same method
+    // more importantly, a getter method should not have side effects, but this one does, it calls account.apply() which sets the account public key,
+    // whether it is harmless now or not, having side effects may lead to subtle bugs in the future and should be avoided
+    private Pair<Account, Account> getSenderAndRecipient() {
         Account senderAccount = Account.getAccount(getSenderId());
         senderAccount.apply(senderPublicKey, this.getHeight());
         Account recipientAccount = Account.getAccount(recipientId);
@@ -817,7 +821,10 @@ final class TransactionImpl implements Transaction {
         return type.isDuplicate(this, duplicates);
     }
 
-    //todo: move it up to TransactionType.apply ?
+    //TODO: those two methods should not be public, and should not be in the Transaction interface, as no outside code is supposed to be calling them
+    //todo: move it up to TransactionType.apply ? - not sure yet, but this does need some refactoring, maybe call transaction.getTwoPhased().commit(transaction)
+    // and transaction.getTwoPhased().rollback(transaction), as those should only ever be called on transactions that do have twoPhased,
+    // and get the accounts from within the TwoPhased methods
     @Override
     public void release() {
         Pair<Account,Account> sndrRcp = getSenderAndRecipient();

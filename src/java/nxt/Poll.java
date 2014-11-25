@@ -7,8 +7,8 @@ import org.json.simple.parser.JSONParser;
 import java.sql.*;
 import java.util.*;
 
-
 public final class Poll extends AbstractPoll {
+
     private static final DbKey.LongKeyFactory<Poll> pollDbKeyFactory = new DbKey.LongKeyFactory<Poll>("id") {
         @Override
         public DbKey newKey(Poll poll) {
@@ -24,7 +24,8 @@ public final class Poll extends AbstractPoll {
     };
 
 
-    private static class PollTable extends VersionedEntityDbTable<Poll> {
+    //TODO: could have just used an anonymous class here
+    private static final class PollTable extends VersionedEntityDbTable<Poll> {
 
         protected PollTable(DbKey.Factory<Poll> dbKeyFactory) {
             super("poll", dbKeyFactory);
@@ -35,14 +36,14 @@ public final class Poll extends AbstractPoll {
             try {
                 return new Poll(rs);
             } catch (Exception e) {
-                throw new SQLException(e);
+                throw new SQLException(e); //TODO: should not create new SQLExceptions
             }
         }
 
         @Override
         protected void save(Connection con, Poll poll) throws SQLException {
             try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO poll (id, account_id, "
-                    + "name, description, options, finish, voting_model, min_balance, asset_id, "
+                    + "name, description, options, finish, voting_model, min_balance, asset_id, " //TODO: finish -> finish_height
                     + "min_num_options, max_num_options, min_range_value, max_range_value, finished, height) "
                     + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
                 int i = 0;
@@ -51,6 +52,8 @@ public final class Poll extends AbstractPoll {
                 pstmt.setString(++i, poll.getName());
                 pstmt.setString(++i, poll.getDescription());
                 String optionsJson = JSONArray.toJSONString(Arrays.asList(poll.getOptions()));
+                //TODO: JSON reading and writing is expensive, should not be used in the database
+                // Use ARRAY type, and see the code in DigitalGoodsStore.Goods for an example of how to read and write arrays to the database
                 pstmt.setString(++i, optionsJson);
                 pstmt.setInt(++i, poll.getFinishBlockHeight());
                 pstmt.setByte(++i, poll.getVotingModel());
@@ -67,6 +70,7 @@ public final class Poll extends AbstractPoll {
         }
     }
 
+    //TODO: replace Pair with a PollResult class, and name tables in singular, poll_result
     private static final ValuesDbTable<Poll, Pair<String, Long>> pollResultsTable = new ValuesDbTable<Poll,Pair<String,Long>>("poll_results", pollResultsDbKeyFactory) {
 
         @Override
@@ -78,7 +82,7 @@ public final class Poll extends AbstractPoll {
         protected void save(Connection con, Poll poll, Pair<String, Long> optionResult) throws SQLException {
             String option = optionResult.getFirst();
             Long result = optionResult.getSecond();
-            try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO "+table+"(poll_id, "
+            try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO poll_results (poll_id, "
                     + "option, result, height) VALUES (?, ?, ?, ?)")) {
                 int i = 0;
                 pstmt.setLong(++i, poll.getId());
@@ -107,19 +111,21 @@ public final class Poll extends AbstractPoll {
             @Override
             public void notify(Block block) {
                 int height = block.getHeight();
-                if(height >= Constants.VOTING_SYSTEM_BLOCK){
+                if (height >= Constants.VOTING_SYSTEM_BLOCK) {
                     Poll.checkPolls(height);
                 }
             }
         }, BlockchainProcessor.Event.AFTER_BLOCK_APPLY);
     }
 
-    static void checkPolls(int currentHeight) {
+    private static void checkPolls(int currentHeight) {
         for (Poll poll : getActivePolls()) {
-            if (poll.finishBlockHeight <= currentHeight) {
+        //TODO: it is expensive to go through all active polls, need to use a custom sql query to get only those that finish at the current height
+            if (poll.finishBlockHeight <= currentHeight) { //TODO: should be == instead of <= ?
+                //TODO: the below two methods are only ever used here, may just inline them
                 poll.calculateAndSavePollResults();
                 finishPoll(poll);
-                System.out.println("Poll " + poll.getId() + " has been finished");
+                System.out.println("Poll " + poll.getId() + " has been finished"); //TODO: Logger
             }
         }
     }
@@ -151,6 +157,8 @@ public final class Poll extends AbstractPoll {
         this.name = rs.getString("name");
         this.description = rs.getString("description");
 
+        //TODO: JSON reading and writing is expensive, should not be used in the database
+        // Use ARRAY type, and see the code in DigitalGoodsStore.Goods for an example of how to read and write arrays to the database
         String optionsJson = rs.getString("options");
         if(optionsJson.startsWith("(")){  //kushti: possible quoting bug in JDBC driver
             optionsJson = optionsJson.substring(1,optionsJson.length()-1);
@@ -163,7 +171,8 @@ public final class Poll extends AbstractPoll {
         this.maxRangeValue = rs.getByte("max_range_value");
     }
 
-    static void addPoll(Long id, long accountId, String name, String description, String[] options,
+    //TODO: refactor to take the Attachment.MessagingPollCreation as parameter instead of all those
+    static void addPoll(long id, long accountId, String name, String description, String[] options,
                         int finishBlockHeight, byte votingModel,
                         long minBalance,
                         long assetId,
@@ -172,7 +181,7 @@ public final class Poll extends AbstractPoll {
                         byte minRangeValue,
                         byte maxRangeValue) {
 
-        if (Poll.exists(id)) {
+        if (Poll.exists(id)) { //TODO: this check is not needed because transaction id has already been checked for uniqueness before accepting the transaction
             throw new IllegalStateException("Poll with id " + Convert.toUnsignedLong(id) + " already exists");
         }
 
@@ -182,7 +191,8 @@ public final class Poll extends AbstractPoll {
         pollTable.insert(poll);
     }
 
-    static boolean exists(long id) {
+    //TODO: this method is not needed, remove
+    static boolean exists(long id) { //TODO: remove
         return getPoll(id) != null;
     }
 
@@ -210,16 +220,18 @@ public final class Poll extends AbstractPoll {
         return pollTable.getCount();
     }
 
+    //TODO: this method is not needed, remove
     public static boolean isFinished(long pollId) {
         return getPoll(pollId).isFinished();
     }
 
-    public static void finishPoll(Poll poll) {
+    private static void finishPoll(Poll poll) {
         poll.setFinished(true);
         pollTable.insert(poll);
     }
 
-    public static List<Pair<String,Long>> getResults(Long pollId){
+    //TODO: use PollResult instead of Pair
+    public static List<Pair<String,Long>> getResults(long pollId){
         return pollResultsTable.get(pollResultsDbKeyFactory.newKey(pollId));
     }
 
@@ -260,19 +272,21 @@ public final class Poll extends AbstractPoll {
         return Vote.getVoters(this);
     }
 
-    void calculateAndSavePollResults() {
+    private void calculateAndSavePollResults() {
         try {
             List<Pair<String, Long>> results = countResults();
             pollResultsTable.insert(this, results);
         } catch (NxtException.IllegalStateException e) {
             Logger.logDebugMessage("Error while calculating poll results", e);
+            //TODO: why is this exception ignored? rethrow it?
         }
     }
 
+    //TODO: when is this IllegalStateException thrown?
     private List<Pair<String,Long>> countResults() throws NxtException.IllegalStateException {
         final long[] counts = new long[options.length];
 
-        for (Long voteId : Vote.getVoteIds(this)) {
+        for (long voteId : Vote.getVoteIds(this)) {
             Vote vote = Vote.getVote(voteId);
             long[] partialResult = countVote(vote);
 
@@ -284,14 +298,15 @@ public final class Poll extends AbstractPoll {
         }
 
         List<Pair<String, Long>> results = new ArrayList<>(options.length);
-        for(int i=0; i < options.length; i++){
+        for (int i = 0; i < options.length; i++) {
             results.add(new Pair<>(options[i], counts[i]));
         }
         return results;
     }
 
 
-
+    //TODO: pass accountId instead of Account to calcWeight, then when voting by asset balance there is no need to ever get
+    // the actual Account object, this will help performance
     private long[] countVote(Vote vote) {
         final long[] partialResult = new long[options.length];
 
@@ -302,7 +317,7 @@ public final class Poll extends AbstractPoll {
 
         if (weight > 0) {
             for (int idx = 0; idx < optVals.length; idx++) {
-                if(optVals[idx] != Constants.VOTING_NO_VOTE_VALUE) {
+                if (optVals[idx] != Constants.VOTING_NO_VOTE_VALUE) {
                     partialResult[idx] = optVals[idx] * weight;
                 }
             }

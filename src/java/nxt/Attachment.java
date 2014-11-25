@@ -102,7 +102,7 @@ public interface Attachment extends Appendix {
             super(buffer, transactionVersion);
             byte length = buffer.get();
             pendingTransactionsIds = new long[length];
-            for(int i=0; i < length; i++) {
+            for (int i = 0; i < length; i++) {
                 pendingTransactionsIds[i] = buffer.getLong();
             }
         }
@@ -112,7 +112,7 @@ public interface Attachment extends Appendix {
             JSONArray jsArr = (JSONArray) (attachmentData.get("pendingTransactions"));
             pendingTransactionsIds = new long[jsArr.size()];
             for (int i = 0; i < pendingTransactionsIds.length; i++) {
-                pendingTransactionsIds[i] =  (long)jsArr.get(i);
+                pendingTransactionsIds[i] =  (long)jsArr.get(i); //TODO: use unsigned longs and Convert.parseUnsignedLong()
             }
         }
 
@@ -131,13 +131,13 @@ public interface Attachment extends Appendix {
 
         @Override
         int getMySize() {
-            return 1+8*pendingTransactionsIds.length;
+            return 1 + 8 * pendingTransactionsIds.length;
         }
 
         @Override
         void putMyBytes(ByteBuffer buffer) {
             buffer.put((byte)pendingTransactionsIds.length);
-            for(long id:pendingTransactionsIds) {
+            for (long id : pendingTransactionsIds) {
                 buffer.putLong(id);
             }
         }
@@ -145,8 +145,8 @@ public interface Attachment extends Appendix {
         @Override
         void putMyJSON(JSONObject attachment) {
             JSONArray ja = new JSONArray();
-            for(long pendingTransactionId: pendingTransactionsIds) {
-                ja.add(pendingTransactionId);
+            for (long pendingTransactionId : pendingTransactionsIds) {
+                ja.add(pendingTransactionId); //TODO: use unsigned longs and Convert.toUnsignedLong()
             }
             attachment.put("pendingTransactions", ja);
         }
@@ -348,8 +348,10 @@ public interface Attachment extends Appendix {
             private final byte votingModel;
 
             private long minBalance = Constants.VOTING_DEFAULT_MIN_BALANCE;
-            private byte minNumberOfOptions = Constants.VOTING_DEFAULT_MIN_NUMBER_OF_CHOICES, maxNumberOfOptions;
-            private final byte minRangeValue, maxRangeValue;
+            private byte minNumberOfOptions = Constants.VOTING_DEFAULT_MIN_NUMBER_OF_CHOICES;
+            private byte maxNumberOfOptions;
+            private final byte minRangeValue;
+            private final byte maxRangeValue;
             private long assetId;
 
             public PollBuilder(final String pollName, final String pollDescription, final String[] pollOptions,
@@ -401,9 +403,12 @@ public interface Attachment extends Appendix {
             this.pollDescription = Convert.readString(buffer, buffer.getShort(), Constants.MAX_POLL_DESCRIPTION_LENGTH);
 
             this.finishBlockHeight = buffer.getInt();
+            //TODO: validation that depends on current blockchain height must be done in TransactionType.validateAttachment(), not here
+            /*
             if (finishBlockHeight <= Nxt.getBlockchain().getHeight() + Constants.VOTING_MIN_VOTE_DURATION) {
-                throw new NxtException.NotValidException("Invalid finishing height");
+                throw new NxtException.NotCurrentlyValidException("Invalid finishing height");
             }
+            */
 
             int numberOfOptions = buffer.get();
             if (numberOfOptions > Constants.MAX_POLL_OPTION_COUNT) {
@@ -441,7 +446,7 @@ public interface Attachment extends Appendix {
                 this.pollOptions[i] = ((String) options.get(i)).trim();
             }
 
-            this.minBalance = (Long) attachmentData.get("minBalance");
+            this.minBalance = (Long) attachmentData.get("minBalance"); //TODO: replace with Convert.parseLong()
 
             this.votingModel = ((Long) attachmentData.get("votingModel")).byteValue();
 
@@ -450,7 +455,7 @@ public interface Attachment extends Appendix {
             this.minRangeValue = ((Long) attachmentData.get("minRangeValue")).byteValue();
             this.maxRangeValue = ((Long) attachmentData.get("maxRangeValue")).byteValue();
 
-            this.assetId = (Long) attachmentData.get("assetId");
+            this.assetId = (Long) attachmentData.get("assetId"); //TODO: use Convert.parseUnsignedLong(), and rename to "asset"
         }
 
         public MessagingPollCreation(PollBuilder builder) {
@@ -538,7 +543,7 @@ public interface Attachment extends Appendix {
 
             attachment.put("minBalance", this.minBalance);
 
-            attachment.put("assetId", this.assetId);
+            attachment.put("assetId", this.assetId); //TODO: "asset", Convert.toUnsignedLong()
         }
 
         @Override
@@ -596,13 +601,14 @@ public interface Attachment extends Appendix {
             super(buffer, transactionVersion);
             pollId = buffer.getLong();
             int numberOfOptions = buffer.get();
+            //TODO: check numberOfOptions to be less than the allowed max, to prevent out of memory attacks
             pollVote = new byte[numberOfOptions];
             buffer.get(pollVote);
         }
 
         public MessagingVoteCasting(JSONObject attachmentData) {
             super(attachmentData);
-            pollId = Convert.parseUnsignedLong((String) attachmentData.get("pollId"));
+            pollId = Convert.parseUnsignedLong((String) attachmentData.get("pollId")); //TODO: "poll"
             JSONArray vote = (JSONArray) attachmentData.get("vote");
             pollVote = new byte[vote.size()];
             for (int i = 0; i < pollVote.length; i++) {
@@ -634,7 +640,7 @@ public interface Attachment extends Appendix {
 
         @Override
         void putMyJSON(JSONObject attachment) {
-            attachment.put("pollId", Convert.toUnsignedLong(this.pollId));
+            attachment.put("pollId", Convert.toUnsignedLong(this.pollId)); //TODO: "poll"
             JSONArray vote = new JSONArray();
             if (this.pollVote != null) {
                 for (byte aPollVote : this.pollVote) {
