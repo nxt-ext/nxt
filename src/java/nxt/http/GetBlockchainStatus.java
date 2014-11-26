@@ -5,7 +5,6 @@ import nxt.BlockchainProcessor;
 import nxt.Nxt;
 import nxt.peer.Peer;
 import org.json.simple.JSONObject;
-import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
 

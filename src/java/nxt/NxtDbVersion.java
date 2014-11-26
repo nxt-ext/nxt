@@ -386,7 +386,6 @@ class NxtDbVersion extends DbVersion {
             case 136:
                 apply("CREATE INDEX IF NOT EXISTS tag_in_stock_count_idx ON tag (in_stock_count DESC, height DESC)");
             case 137:
-                BlockchainProcessorImpl.getInstance().forceScanAtStart();
                 apply(null);
             case 138:
                 apply("CREATE TABLE IF NOT EXISTS currency (db_id IDENTITY, id BIGINT NOT NULL, account_id BIGINT NOT NULL, "
@@ -523,6 +522,14 @@ class NxtDbVersion extends DbVersion {
             case 183:
                 apply("CALL FTL_CREATE_INDEX('PUBLIC', 'CURRENCY', 'CODE,NAME,DESCRIPTION')");
             case 184:
+                apply("CREATE TABLE IF NOT EXISTS scan (rescan BOOLEAN NOT NULL DEFAULT FALSE, height INT NOT NULL DEFAULT 0, "
+                        + "validate BOOLEAN NOT NULL DEFAULT FALSE)");
+            case 185:
+                apply("INSERT INTO scan (rescan, height, validate) VALUES (false, 0, false)");
+            case 186:
+                BlockchainProcessorImpl.getInstance().scheduleScan(0, false);
+                apply(null);
+            case 187:
                 return;
             default:
                 throw new RuntimeException("Blockchain database inconsistent with code, probably trying to run older code on newer database");
