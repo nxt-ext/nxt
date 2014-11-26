@@ -497,6 +497,8 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                             unconfirmedTransactionTable.insert(transaction);
                             addedUnconfirmedTransactions.add(transaction);
                         } else {
+                            Logger.logDebugMessage("Transaction " + transaction.getStringId()
+                                    + " failed to applyUnconfirmed(), probably double spending or insufficient balance");
                             addedDoubleSpendingTransactions.add(transaction);
                         }
                         Db.db.commitTransaction();
