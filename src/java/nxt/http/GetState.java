@@ -5,6 +5,7 @@ import nxt.Alias;
 import nxt.Asset;
 import nxt.AssetTransfer;
 import nxt.Block;
+import nxt.Constants;
 import nxt.DigitalGoodsStore;
 import nxt.Generator;
 import nxt.Nxt;
@@ -68,6 +69,7 @@ public final class GetState extends APIServlet.APIRequestHandler {
         response.put("maxMemory", Runtime.getRuntime().maxMemory());
         response.put("totalMemory", Runtime.getRuntime().totalMemory());
         response.put("freeMemory", Runtime.getRuntime().freeMemory());
+        response.put("peerPort", Peers.getDefaultPeerPort());
 
         return response;
     }
