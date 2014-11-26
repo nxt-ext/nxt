@@ -378,20 +378,20 @@ var NRS = (function(NRS, $, undefined) {
 					var rows = "";
 					for (var i = 0; i < response.accountCurrencies.length; i++) {
 						var currency = response.accountCurrencies[i];						
-						rows += "<tr><td><a href='#' onClick='NRS.goToCurrency(&quot;" + String(currency.code) + "&quot;)' >" + String(currency.currency).escapeHTML() + "</a></td>" +
+						rows += "<tr><td><a href='#' onClick='NRS.goToCurrency(&quot;" + String(currency.code) + "&quot;)' >" + String(currency.code).escapeHTML() + "</a></td>" +
 							"<td>" + currency.name + "</td>" +
-							"<td>" + currency.code + "</td>" +
 							"<td>" + NRS.formatQuantity(currency.units, currency.decimals) + "</td>" +
 							"<td><a href='#' data-toggle='modal' data-target='#transfer_currency_modal' data-currency='" + String(currency.currency).escapeHTML() + "' data-name='" + String(currency.name).escapeHTML() + "' data-decimals='" + String(currency.decimals).escapeHTML() + "'>" + $.t("transfer") + "</a></td>" +
 							"</tr>";
 					}
 					$('#currencies_table [data-i18n="type"]').hide();
+					$('#currencies_table [data-i18n="issuance_height"]').hide();
 					$('#currencies_table [data-i18n="max_supply"]').hide();
 					$('#currencies_table [data-i18n="supply"]').hide();
 					$('#currencies_table [data-i18n="delete"]').hide();
 					$('#currencies_table [data-i18n="reserve"]').hide();
 					$('#currencies_table [data-i18n="claim"]').hide();
-					$('#currencies_table [data-i18n="mine"]').hide();
+					$('#currencies_table [data-i18n="mint"]').hide();
 					$('#currencies_table [data-i18n="transfer"]').show();
 					$('#currencies_table [data-i18n="units"]').show();
 					NRS.dataLoaded(rows);
@@ -413,7 +413,7 @@ var NRS = (function(NRS, $, undefined) {
 					$('#currencies_table [data-i18n="delete"]').hide();
 					$('#currencies_table [data-i18n="reserve"]').hide();
 					$('#currencies_table [data-i18n="claim"]').hide();
-					$('#currencies_table [data-i18n="mine"]').hide();
+					$('#currencies_table [data-i18n="mint"]').hide();
 					for (var i = 0; i < response.currencies.length; i++) {
 						var currency_type = "";
 						var currency = response.currencies[i];
@@ -429,10 +429,10 @@ var NRS = (function(NRS, $, undefined) {
 							currency_type += "Mintable<br />";
 						if (currency.type & 0x20)
 							currency_type += "Shuffleable";
-						rows += "<tr><td><a href='#' onClick='NRS.goToCurrency(&quot;" + String(currency.code) + "&quot;)' >" + String(currency.currency).escapeHTML() + "</a></td>" +
+						rows += "<tr><td><a href='#' onClick='NRS.goToCurrency(&quot;" + String(currency.code) + "&quot;)' >" + String(currency.code).escapeHTML() + "</a></td>" +
 						"<td>" + currency.name + "</td>" +
-						"<td>" + currency.code + "</td>" +
 						"<td>" + currency_type + "</td>" +
+						"<td>" + currency.issuanceHeight + "</td>" +
 						"<td>" + NRS.formatQuantity(currency.currentSupply, currency.decimals) + "</td>" +
 						"<td>" + NRS.formatQuantity(currency.maxSupply, currency.decimals) + "</td>";
 						if (currency.accountRS==NRS.accountRS){
@@ -457,6 +457,7 @@ var NRS = (function(NRS, $, undefined) {
 					$('#currencies_table [data-i18n="type"]').show();
 					$('#currencies_table [data-i18n="max_supply"]').show();
 					$('#currencies_table [data-i18n="supply"]').show();
+					$('#currencies_table [data-i18n="issuance_height"]').show();
 					$('#currencies_table [data-i18n="transfer"]').hide();
 					$('#currencies_table [data-i18n="units"]').hide();
 					NRS.dataLoaded(rows);
