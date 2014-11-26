@@ -20,7 +20,7 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
             "message", "messageIsText",
             "messageToEncrypt", "messageToEncryptIsText", "encryptedMessageData", "encryptedMessageNonce",
             "messageToEncryptToSelf", "messageToEncryptToSelfIsText", "encryptToSelfMessageData", "encryptToSelfMessageNonce",
-            "isPending", "pendingMaxHeight", "pendingVotingModel", "pendingQuorum", "pendingMinBalance", "pendingAssetId", //TODO: rename to pendingAsset
+            "isPending", "pendingMaxHeight", "pendingVotingModel", "pendingQuorum", "pendingMinBalance", "pendingAsset",
             "pendingWhitelisted", "pendingWhitelisted", "pendingWhitelisted",
             "pendingBlacklisted", "pendingBlacklisted", "pendingBlacklisted",
             "recipientPublicKey"};
@@ -84,9 +84,7 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
 
         Appendix.TwoPhased twoPhased = null;
         String isPending = Convert.emptyToNull(req.getParameter("isPending"));
-        if (isPending != null && !isPending.equals("false")) {
-        //TODO: this should be if ("true".equalsIgnoreCase(req.getParameter("isPending")), right?
-
+        if ("true".equalsIgnoreCase(isPending)){
             String votingModelValue = Convert.emptyToNull(req.getParameter("pendingVotingModel"));
             if (votingModelValue == null) {
                 return MISSING_PENDING_VOTING_MODEL;
@@ -148,7 +146,7 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
                 }
             }
 
-            String assetIdValue = Convert.emptyToNull(req.getParameter("pendingAssetId"));
+            String assetIdValue = Convert.emptyToNull(req.getParameter("pendingAsset"));
             long assetId = 0;
             if (assetIdValue == null) {
                 if (votingModel == Constants.VOTING_MODEL_ASSET) {

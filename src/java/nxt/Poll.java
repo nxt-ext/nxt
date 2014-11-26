@@ -273,17 +273,11 @@ public final class Poll extends AbstractPoll {
     }
 
     private void calculateAndSavePollResults() {
-        try {
-            List<Pair<String, Long>> results = countResults();
-            pollResultsTable.insert(this, results);
-        } catch (NxtException.IllegalStateException e) {
-            Logger.logDebugMessage("Error while calculating poll results", e);
-            //TODO: why is this exception ignored? rethrow it?
-        }
+        List<Pair<String, Long>> results = countResults();
+        pollResultsTable.insert(this, results);
     }
 
-    //TODO: when is this IllegalStateException thrown?
-    private List<Pair<String,Long>> countResults() throws NxtException.IllegalStateException {
+    private List<Pair<String,Long>> countResults() {
         final long[] counts = new long[options.length];
 
         for (long voteId : Vote.getVoteIds(this)) {
@@ -311,7 +305,7 @@ public final class Poll extends AbstractPoll {
         final long[] partialResult = new long[options.length];
 
         final Account voter = Account.getAccount(vote.getVoterId());
-        final long weight = AbstractPoll.calcWeight(this, voter);
+        final long weight = calcWeight(voter);
 
         final byte[] optVals = vote.getVote();
 

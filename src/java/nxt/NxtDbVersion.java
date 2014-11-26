@@ -384,10 +384,9 @@ class NxtDbVersion extends DbVersion {
                 apply("DROP TABLE IF EXISTS poll");
             case 138:
                 apply("DROP TABLE IF EXISTS vote");
-            case 139: //TODO: better not to use foreign keys in the derived tables
+            case 139:
                 apply("CREATE TABLE IF NOT EXISTS vote (db_id IDENTITY, id BIGINT NOT NULL, " +
-                        "FOREIGN KEY (id) REFERENCES transaction (id), poll_id BIGINT NOT NULL, "
-                        + "voter_id BIGINT NOT NULL, vote_bytes VARBINARY NOT NULL, height INT NOT NULL)");
+                        "poll_id BIGINT NOT NULL, voter_id BIGINT NOT NULL, vote_bytes VARBINARY NOT NULL, height INT NOT NULL)");
             case 140:
                 apply("CREATE UNIQUE INDEX IF NOT EXISTS vote_id_idx ON vote (id)");
             case 141:
@@ -403,7 +402,6 @@ class NxtDbVersion extends DbVersion {
                         + "asset_id BIGINT, finished BOOLEAN, height INT NOT NULL, latest BOOLEAN DEFAULT TRUE NOT NULL)");
             case 143:
                 apply("CREATE TABLE IF NOT EXISTS poll_results (db_id IDENTITY, poll_id BIGINT NOT NULL, "
-                        + "FOREIGN KEY (poll_id) REFERENCES poll (id) ON DELETE CASCADE, " //TODO: don't rely on foreign keys between derived tables
                         + "option VARCHAR NOT NULL, result BIGINT NOT NULL,  height INT NOT NULL)");
             case 144:
                 apply("ALTER TABLE transaction ADD COLUMN IF NOT EXISTS two_phased BOOLEAN NOT NULL DEFAULT FALSE");

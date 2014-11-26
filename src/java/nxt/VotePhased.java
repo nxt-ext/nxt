@@ -120,7 +120,7 @@ public class VotePhased {
         while (votesIterator.hasNext()) {
             //TODO: when you change calcWeight to take accountId instead of Account, you can skip the getAccount call here
             // and only get the Account if needed in calcWeight
-            long w = AbstractPoll.calcWeight(poll, Account.getAccount(votesIterator.next().voterId));
+            long w = poll.calcWeight(Account.getAccount(votesIterator.next().voterId));
             if (w >= poll.minBalance) {
                 result += w;
             }
@@ -145,7 +145,7 @@ public class VotePhased {
                 return false; //todo: move to validate only? - yes
             }
 
-            long weight = AbstractPoll.calcWeight(poll, voter);
+            final long weight = poll.calcWeight(voter);
 
             long estimate = voteTable.lastEstimate(poll.getId());
 
@@ -175,8 +175,7 @@ public class VotePhased {
     }
 
     static boolean isVoteGiven(long pendingTransactionId, long voterId){
-        DbClause clause = new DbClause.LongLongClause("pending_transaction_id", pendingTransactionId,
-                                                        "voter_id", voterId);
+        DbClause clause = new DbClause.LongLongClause("pending_transaction_id", pendingTransactionId, "voter_id", voterId);
         return voteTable.getCount(clause) > 0;
     }
 }

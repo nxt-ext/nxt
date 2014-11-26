@@ -4,11 +4,6 @@ import java.util.Calendar;
 import java.util.TimeZone;
 
 public final class Constants {
-    //kushti: according to http://wiki.nxtcrypto.org/wiki/Whitepaper:Nxt -> Transaction Confirmations
-    //TODO: these should not be needed
-    public static final int CONFIRMATIONS_RELIABLE_TX = 10;
-    public static final int CONFIRMATIONS_IRREVERSIBLE_TX = 721;
-    public static final int CONFIRMATIONS_PERMANENT_TX = 1440;
 
     public static final int BLOCK_HEADER_LENGTH = 232;
     public static final int MAX_NUMBER_OF_TRANSACTIONS = 255;

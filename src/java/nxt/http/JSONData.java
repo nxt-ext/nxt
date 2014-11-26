@@ -240,8 +240,7 @@ final class JSONData {
         json.put("minBalance", poll.getMinBalance());
 
         if (poll.getVotingModel() == Constants.VOTING_MODEL_ASSET) {
-            //TODO: rename to "asset"
-            json.put("assetId", Convert.toUnsignedLong(poll.getAssetId()));
+            json.put("asset", Convert.toUnsignedLong(poll.getAssetId()));
         }
 
         //TODO: call poll.getVoters() only if needed, add a boolean includeVoters parameter to control that
@@ -256,8 +255,7 @@ final class JSONData {
 
     static JSONObject pollResults(Poll poll) {
         JSONObject json = new JSONObject();
-        //TODO: rename to "poll"
-        json.put("pollId", Convert.toUnsignedLong(poll.getId()));
+        json.put("poll", Convert.toUnsignedLong(poll.getId()));
 
         JSONArray results = new JSONArray();
 

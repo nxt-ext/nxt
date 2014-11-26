@@ -63,34 +63,31 @@ public class AbstractPoll {
         this.finished = finished;
     }
 
-    //TODO: no need to be static
-    static long calcWeight(AbstractPoll pollStructure, Account voter) {
+    long calcWeight(Account voter) {
         long weight = 0;
 
-        switch (pollStructure.votingModel) {
+        switch (votingModel) {
             case Constants.VOTING_MODEL_ASSET:
-                long qntBalance = voter.getAssetBalanceQNT(pollStructure.assetId);
-                if (qntBalance >= pollStructure.getMinBalance()) {
+                long qntBalance = voter.getAssetBalanceQNT(assetId);
+                if (qntBalance >= getMinBalance()) {
                     weight = qntBalance;
                 }
                 break;
             case Constants.VOTING_MODEL_ACCOUNT:
-                long assetId = pollStructure.getAssetId();
+                long assetId = getAssetId();
                 long balance;
                 if (assetId == 0) {
-                    //TODO: why is it needed to use guaranteed balance instead of balance? this seems seriously wrong
-                    balance = voter.getGuaranteedBalanceNQT(Constants.CONFIRMATIONS_RELIABLE_TX) / Constants.ONE_NXT;
+                    balance = voter.getBalanceNQT() / Constants.ONE_NXT;
                 } else {
-                    balance = voter.getAssetBalanceQNT(pollStructure.assetId);
+                    balance = voter.getAssetBalanceQNT(assetId);
                 }
-                if (balance >= pollStructure.getMinBalance()) {
+                if (balance >= getMinBalance()) {
                     weight = 1;
                 }
                 break;
             case Constants.VOTING_MODEL_BALANCE:
-                //TODO: use balance, not guaranteed balance
-                long nxtBalance = voter.getGuaranteedBalanceNQT(Constants.CONFIRMATIONS_RELIABLE_TX) / Constants.ONE_NXT;
-                if (nxtBalance >= pollStructure.getMinBalance()) {
+                long nxtBalance = voter.getBalanceNQT() / Constants.ONE_NXT;
+                if (nxtBalance >= getMinBalance()) {
                     weight = nxtBalance;
                 }
         }

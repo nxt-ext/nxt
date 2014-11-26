@@ -470,7 +470,7 @@ public interface Appendix {
             if (votingModel == Constants.VOTING_MODEL_ASSET) {
                 // TODO: this is also wrong, for IDs which are stored as unsigned longs in json
                 // need to use Convert.parseUnsignedLong(...)
-                assetId = (Long) attachmentData.get("assetId"); //TODO: rename to "asset", not "assetId", to be consistent with all other code
+                assetId = (Long) attachmentData.get("asset");
             } else {
                 assetId = 0;
             }
@@ -555,7 +555,7 @@ public interface Appendix {
             json.put("quorum", quorum);
             json.put("voteThreshold", voteThreshold);
             json.put("votingModel", votingModel);
-            json.put("assetId", assetId); //TODO: rename to "asset" and use Convert.toUnsignedLong() instead
+            json.put("asset", assetId); //TODO: rename to "asset" and use Convert.toUnsignedLong() instead
 
             JSONArray whitelistJson = new JSONArray();
             for (long accountId : whitelist) {
@@ -661,8 +661,7 @@ public interface Appendix {
             // applyUnconfirmed()) until commit, and if you do that you shouldn't need to roll that back
             // by calling sender.addToBalanceNQT() here either
             Logger.logDebugMessage("Transaction " + transactionId + " has been refused");
-            System.out.println("Transaction " + transactionId + " has been refused"); //TODO: Logger
-            System.out.println("Transaction " + transactionId + " has been refused");
+            System.out.println("Transaction " + transactionId + " has been refused"); //TODO: remove
         }
 
         public int getMaxHeight() {

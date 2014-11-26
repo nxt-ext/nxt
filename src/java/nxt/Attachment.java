@@ -608,7 +608,7 @@ public interface Attachment extends Appendix {
 
         public MessagingVoteCasting(JSONObject attachmentData) {
             super(attachmentData);
-            pollId = Convert.parseUnsignedLong((String) attachmentData.get("pollId")); //TODO: "poll"
+            pollId = Convert.parseUnsignedLong((String) attachmentData.get("poll"));
             JSONArray vote = (JSONArray) attachmentData.get("vote");
             pollVote = new byte[vote.size()];
             for (int i = 0; i < pollVote.length; i++) {
@@ -640,7 +640,7 @@ public interface Attachment extends Appendix {
 
         @Override
         void putMyJSON(JSONObject attachment) {
-            attachment.put("pollId", Convert.toUnsignedLong(this.pollId)); //TODO: "poll"
+            attachment.put("poll", Convert.toUnsignedLong(this.pollId));
             JSONArray vote = new JSONArray();
             if (this.pollVote != null) {
                 for (byte aPollVote : this.pollVote) {
