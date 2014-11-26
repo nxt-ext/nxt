@@ -568,6 +568,9 @@ public final class Peers {
         try {
             URI uri = new URI("http://" + announcedAddress);
             String host = uri.getHost();
+            if (host == null) {
+                return null;
+            }
             if ((peer = peers.get(host)) != null) {
                 return peer;
             }
