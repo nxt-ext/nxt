@@ -392,6 +392,8 @@ var NRS = (function(NRS, $, undefined) {
 					$('#currencies_table [data-i18n="reserve"]').hide();
 					$('#currencies_table [data-i18n="claim"]').hide();
 					$('#currencies_table [data-i18n="mint"]').hide();
+					$('#currencies_table [data-i18n="init_supply"]').hide();
+					$('#currencies_table [data-i18n="reserve_supply"]').hide();
 					$('#currencies_table [data-i18n="transfer"]').show();
 					$('#currencies_table [data-i18n="units"]').show();
 					NRS.dataLoaded(rows);
@@ -432,7 +434,12 @@ var NRS = (function(NRS, $, undefined) {
 						rows += "<tr><td><a href='#' onClick='NRS.goToCurrency(&quot;" + String(currency.code) + "&quot;)' >" + String(currency.code).escapeHTML() + "</a></td>" +
 						"<td>" + currency.name + "</td>" +
 						"<td>" + currency_type + "</td>" +
-						"<td>" + currency.issuanceHeight + "</td>" +
+						"<td>" + currency.issuanceHeight + "</td>";
+						if (currency.initialSupply)
+							rows += "<td>" + NRS.formatQuantity(currency.initialSupply, currency.decimals) + "</td>";
+						else
+							rows += "<td>Unavailable</td>";
+						rows += "<td>" + NRS.formatQuantity(currency.reserveSupply, currency.decimals) + "</td>" +
 						"<td>" + NRS.formatQuantity(currency.currentSupply, currency.decimals) + "</td>" +
 						"<td>" + NRS.formatQuantity(currency.maxSupply, currency.decimals) + "</td>";
 						if (currency.accountRS==NRS.accountRS){
@@ -458,6 +465,8 @@ var NRS = (function(NRS, $, undefined) {
 					$('#currencies_table [data-i18n="max_supply"]').show();
 					$('#currencies_table [data-i18n="supply"]').show();
 					$('#currencies_table [data-i18n="issuance_height"]').show();
+					$('#currencies_table [data-i18n="init_supply"]').show();
+					$('#currencies_table [data-i18n="reserve_supply"]').show();
 					$('#currencies_table [data-i18n="transfer"]').hide();
 					$('#currencies_table [data-i18n="units"]').hide();
 					NRS.dataLoaded(rows);
@@ -731,6 +740,18 @@ var NRS = (function(NRS, $, undefined) {
 
 		$("#claim_currency_currency").val(currency);
 		$("#claim_currency_name").html(String(currencyName).escapeHTML());
+		
+	});
+	
+	/* MINT CURRENCY MODEL */
+    $("#mine_currency_modal").on("show.bs.modal", function(e) {
+		var $invoker = $(e.relatedTarget);
+
+		var currency = $invoker.data("currency");
+		var currencyName = $invoker.data("name");
+
+		$("#mine_currency_currency").val(currency);
+		$("#mine_currency_name").html(String(currencyName).escapeHTML());
 		
 	});
 
