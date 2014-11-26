@@ -68,8 +68,8 @@ public final class Peers {
     static final int blacklistingPeriod;
     static final boolean getMorePeers;
 
-    static final int DEFAULT_PEER_PORT = 7874;
-    static final int TESTNET_PEER_PORT = 6874;
+    private static final int DEFAULT_PEER_PORT = 7874;
+    private static final int TESTNET_PEER_PORT = 6874;
     private static final String myPlatform;
     private static final String myAddress;
     private static final int myPeerServerPort;
@@ -523,6 +523,10 @@ public final class Peers {
 
     static void notifyListeners(Peer peer, Event eventType) {
         Peers.listeners.notify(peer, eventType);
+    }
+
+    public static int getDefaultPeerPort() {
+        return Constants.isTestnet ? TESTNET_PEER_PORT : DEFAULT_PEER_PORT;
     }
 
     public static Collection<? extends Peer> getAllPeers() {
