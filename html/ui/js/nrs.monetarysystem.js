@@ -391,6 +391,7 @@ var NRS = (function(NRS, $, undefined) {
 					$('#currencies_table [data-i18n="delete"]').hide();
 					$('#currencies_table [data-i18n="reserve"]').hide();
 					$('#currencies_table [data-i18n="claim"]').hide();
+					$('#currencies_table [data-i18n="mine"]').hide();
 					$('#currencies_table [data-i18n="transfer"]').show();
 					$('#currencies_table [data-i18n="units"]').show();
 					NRS.dataLoaded(rows);
@@ -412,6 +413,7 @@ var NRS = (function(NRS, $, undefined) {
 					$('#currencies_table [data-i18n="delete"]').hide();
 					$('#currencies_table [data-i18n="reserve"]').hide();
 					$('#currencies_table [data-i18n="claim"]').hide();
+					$('#currencies_table [data-i18n="mine"]').hide();
 					for (var i = 0; i < response.currencies.length; i++) {
 						var currency_type = "";
 						var currency = response.currencies[i];
@@ -444,6 +446,10 @@ var NRS = (function(NRS, $, undefined) {
 						if (currency.issuanceHeight <= NRS.lastBlockHeight && (currency.type & 0x8)){
 							rows += "<td><a href='#' data-toggle='modal' data-target='#claim_currency_modal' data-currency='" + String(currency.currency).escapeHTML() + "' data-name='" + String(currency.name).escapeHTML() + "' >" + $.t("claim") + "</a></td>";
 							$('#currencies_table [data-i18n="claim"]').show();
+						}
+						if (currency.type & 0x10){
+							rows += "<td><a href='#' data-toggle='modal' data-target='#mine_currency_modal' data-currency='" + String(currency.currency).escapeHTML() + "' data-name='" + String(currency.name).escapeHTML() + "' >" + $.t("mine") + "</a></td>";
+							$('#currencies_table [data-i18n="mine"]').show();
 						}
 							
 						rows += "</tr>";
