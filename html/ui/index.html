@@ -1109,11 +1109,7 @@
                                     <th data-i18n="reserve_supply">Reserve Supply</th>
                                     <th data-i18n="supply">Curr. Supply</th>
                                     <th data-i18n="max_supply">Max Supply</th>
-                                    <th data-i18n="transfer">Transfer</th>
-                                    <th data-i18n="delete">Delete</th>
-                                    <th data-i18n="reserve">Reserve</th>
-                                    <th data-i18n="claim">Claim</th>
-                                    <th data-i18n="mint">Mint</th>
+                                    <th data-i18n="actions">Actions</th>
                                 </tr>
                                 </thead>
                                 <tbody>
@@ -2759,11 +2755,11 @@
                                 </div>
                                 <div class="form-group advanced optional_reserve">
                                     <label for="issue_currency_min_reserve" data-i18n="min_reserve">MINIMUM AMOUNT OF NXT TO ACTIVATE RESERVE</label>
-                                    <input type="number" name="minReservePerUnitNQT" id="issue_currency_min_reserve" class="form-control" min="1" placeholder="Minimum Reserve" data-i18n="minimum_reserve" tabindex="8">
+                                    <input type="number" name="minReservePerUnitNQT" id="issue_currency_min_reserve" class="form-control" min="1" placeholder="Minimum Reserve" data-i18n="minimum_reserve" tabindex="8" disabled>
                                 </div>
                                 <div class="form-group advanced optional_reserve">
                                     <label for="issue_currency_min_reserve" data-i18n="min_reserve">RESERVE SUPPLY</label>
-                                    <input type="number" name="reserveSupply" id="issue_currency_min_reserve" class="form-control" min="1" placeholder="Minimum Reserve" data-i18n="minimum_reserve" tabindex="8">
+                                    <input type="number" name="reserveSupply" id="issue_currency_min_reserve_supply" class="form-control" min="1" placeholder="Minimum Reserve" data-i18n="minimum_reserve" tabindex="8" disabled>
                                 </div>
                                 <div class="input-group">
                                     <input type="checkbox" name="type" id="issue_currency_claimable" value="8" />

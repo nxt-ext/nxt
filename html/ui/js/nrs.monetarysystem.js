@@ -388,13 +388,8 @@ var NRS = (function(NRS, $, undefined) {
 					$('#currencies_table [data-i18n="issuance_height"]').hide();
 					$('#currencies_table [data-i18n="max_supply"]').hide();
 					$('#currencies_table [data-i18n="supply"]').hide();
-					$('#currencies_table [data-i18n="delete"]').hide();
-					$('#currencies_table [data-i18n="reserve"]').hide();
-					$('#currencies_table [data-i18n="claim"]').hide();
-					$('#currencies_table [data-i18n="mint"]').hide();
 					$('#currencies_table [data-i18n="init_supply"]').hide();
 					$('#currencies_table [data-i18n="reserve_supply"]').hide();
-					$('#currencies_table [data-i18n="transfer"]').show();
 					$('#currencies_table [data-i18n="units"]').show();
 					NRS.dataLoaded(rows);
 				} else {
@@ -412,10 +407,6 @@ var NRS = (function(NRS, $, undefined) {
 						response.currencies.pop();
 					}
 					var rows = "";
-					$('#currencies_table [data-i18n="delete"]').hide();
-					$('#currencies_table [data-i18n="reserve"]').hide();
-					$('#currencies_table [data-i18n="claim"]').hide();
-					$('#currencies_table [data-i18n="mint"]').hide();
 					for (var i = 0; i < response.currencies.length; i++) {
 						var currency_type = "";
 						var currency = response.currencies[i];
@@ -441,25 +432,21 @@ var NRS = (function(NRS, $, undefined) {
 							rows += "<td>Unavailable</td>";
 						rows += "<td>" + NRS.formatQuantity(currency.reserveSupply, currency.decimals) + "</td>" +
 						"<td>" + NRS.formatQuantity(currency.currentSupply, currency.decimals) + "</td>" +
-						"<td>" + NRS.formatQuantity(currency.maxSupply, currency.decimals) + "</td>";
+						"<td>" + NRS.formatQuantity(currency.maxSupply, currency.decimals) + "</td><td>";
 						if (currency.accountRS==NRS.accountRS){
-							rows += "<td><a href='#' data-toggle='modal' data-target='#delete_currency_modal' data-currency='" + String(currency.currency).escapeHTML() + "' data-name='" + String(currency.name).escapeHTML() + "' >" + $.t("delete") + "</a></td>";
-							$('#currencies_table [data-i18n="delete"]').show();
+							rows += "<a href='#' data-toggle='modal' data-target='#delete_currency_modal' data-currency='" + String(currency.currency).escapeHTML() + "' data-name='" + String(currency.name).escapeHTML() + "' >" + $.t("delete") + "</a> ";
 						}
 						if (currency.issuanceHeight > NRS.lastBlockHeight && (currency.type & 0x4)){
-							rows += "<td><a href='#' data-toggle='modal' data-target='#reserve_currency_modal' data-currency='" + String(currency.currency).escapeHTML() + "' data-name='" + String(currency.name).escapeHTML() + "' >" + $.t("reserve") + "</a></td>";
-							$('#currencies_table [data-i18n="reserve"]').show();
+							rows += "<a href='#' data-toggle='modal' data-target='#reserve_currency_modal' data-currency='" + String(currency.currency).escapeHTML() + "' data-name='" + String(currency.name).escapeHTML() + "' >" + $.t("reserve") + "</a> ";
 						}
 						if (currency.issuanceHeight <= NRS.lastBlockHeight && (currency.type & 0x8)){
-							rows += "<td><a href='#' data-toggle='modal' data-target='#claim_currency_modal' data-currency='" + String(currency.currency).escapeHTML() + "' data-name='" + String(currency.name).escapeHTML() + "' >" + $.t("claim") + "</a></td>";
-							$('#currencies_table [data-i18n="claim"]').show();
+							rows += "<a href='#' data-toggle='modal' data-target='#claim_currency_modal' data-currency='" + String(currency.currency).escapeHTML() + "' data-name='" + String(currency.name).escapeHTML() + "' >" + $.t("claim") + "</a> ";
 						}
 						if (currency.type & 0x10){
-							rows += "<td><a href='#' data-toggle='modal' data-target='#mine_currency_modal' data-currency='" + String(currency.currency).escapeHTML() + "' data-name='" + String(currency.name).escapeHTML() + "' >" + $.t("mine") + "</a></td>";
-							$('#currencies_table [data-i18n="mine"]').show();
+							rows += "<a href='#' data-toggle='modal' data-target='#mine_currency_modal' data-currency='" + String(currency.currency).escapeHTML() + "' data-name='" + String(currency.name).escapeHTML() + "' >" + $.t("mint") + "</a>";
 						}
 							
-						rows += "</tr>";
+						rows += "</td></tr>";
 					}
 					$('#currencies_table [data-i18n="type"]').show();
 					$('#currencies_table [data-i18n="max_supply"]').show();
@@ -467,7 +454,6 @@ var NRS = (function(NRS, $, undefined) {
 					$('#currencies_table [data-i18n="issuance_height"]').show();
 					$('#currencies_table [data-i18n="init_supply"]').show();
 					$('#currencies_table [data-i18n="reserve_supply"]').show();
-					$('#currencies_table [data-i18n="transfer"]').hide();
 					$('#currencies_table [data-i18n="units"]').hide();
 					NRS.dataLoaded(rows);
 				} else {
@@ -605,7 +591,8 @@ var NRS = (function(NRS, $, undefined) {
 		var data = NRS.getFormData($modal.find("form:first"));
 
 		data.description = $.trim(data.description);
-		data.minReservePerUnitNQT = NRS.convertToNQT(data.minReservePerUnitNQT);
+		if (data.minReservePerUnitNQT)
+			data.minReservePerUnitNQT = NRS.convertToNQT(data.minReservePerUnitNQT);
 		
 		data.type = 0;
 		$("[name='type']:checked").each(function() {
@@ -640,12 +627,15 @@ var NRS = (function(NRS, $, undefined) {
         	//$("#issue_currency_claimable").prop("disabled", false);
 			$("#issue_currency_issuance_height").val("")
 			$("#issue_currency_issuance_height").prop("disabled", false);
-            
+			$("#issue_currency_min_reserve").prop("disabled", false);
+            $("#issue_currency_min_reserve_supply").prop("disabled", false);
         }
 		else{
 			//$("#issue_currency_claimable").prop("disabled", true);
             $("#issue_currency_issuance_height").val(0)
             $("#issue_currency_issuance_height").prop("disabled", true);
+            $("#issue_currency_min_reserve").prop("disabled", true);
+            $("#issue_currency_min_reserve_supply").prop("disabled", true);
 		}
     });
     $('#issue_currency_claimable').change(function() {
