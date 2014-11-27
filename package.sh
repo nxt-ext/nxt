@@ -17,6 +17,6 @@ for f in `find nxt/html -name *.html -o -name *.js -o -name *.css -o -name *.jso
 do
 	gzip -9vc "$f" > "$f".gz
 done
-zip -X -r ${PACKAGE} nxt -x \*/.idea/\* \*/.gitignore \*/.git/\* \*.iml nxt/nxt_db/\* nxt/nxt_test_db/\* nxt/nxt.log nxt/conf/nxt.properties nxt/conf/logging.properties
+zip -X -r ${PACKAGE} nxt -x \*/.idea/\* \*/.gitignore \*/.git/\* \*.iml nxt/conf/nxt.properties nxt/conf/logging.properties
 rm -rf nxt
 
