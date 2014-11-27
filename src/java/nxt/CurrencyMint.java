@@ -119,7 +119,7 @@ public final class CurrencyMint {
             }
             currencyMintTable.insert(currencyMint);
             long units = Math.min(attachment.getUnits(), currency.getMaxSupply() - currency.getCurrentSupply());
-            account.addToCurrencyAndUnconfirmedCurrencyUnits(attachment.getUnits(), units);
+            account.addToCurrencyAndUnconfirmedCurrencyUnits(currency.getId(), units);
             currency.increaseSupply(units);
         }
     }
