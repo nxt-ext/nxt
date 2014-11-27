@@ -47,7 +47,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public final class Users {
 
-    private static final int TESTNET_UI_PORT=6875;
+    private static final int TESTNET_UI_PORT=2875;
 
     private static final ConcurrentMap<String, User> users = new ConcurrentHashMap<>();
     private static final Collection<User> allUsers = Collections.unmodifiableCollection(users.values());

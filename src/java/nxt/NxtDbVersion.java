@@ -136,10 +136,7 @@ class NxtDbVersion extends DbVersion {
                             "('192.157.226.151'), ('node4.mynxtcoin.org'), ('node0.forgenxt.com'), ('63.165.243.112'), ('23.88.104.225')");
                 } else {
                     apply("INSERT INTO peer (address) VALUES " +
-                            "('nxt.scryptmh.eu'), ('54.186.98.117'), ('178.150.207.53'), ('192.241.223.132'), ('node9.mynxtcoin.org'), " +
-                            "('node10.mynxtcoin.org'), ('node3.mynxtcoin.org'), ('109.87.169.253'), ('nxtnet.fr'), ('50.112.241.97'), " +
-                            "('2.84.142.149'), ('bug.airdns.org'), ('83.212.103.14'), ('62.210.131.30'), ('104.131.254.22'), " +
-                            "('46.28.111.249'), ('94.79.54.205')");
+                            "('bug.airdns.org'), ('107.170.3.62')");
                 }
             case 38:
                 apply("ALTER TABLE transaction ADD COLUMN IF NOT EXISTS full_hash BINARY(32)");
