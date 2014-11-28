@@ -6,9 +6,8 @@ var NRS = (function(NRS, $, undefined) {
 	/* MONETARY SYSTEM PAGE */
 	$("#currency_search").on("submit", function(e) {
 		e.preventDefault();
-		$("#MSnoCode").hide();
-		$("#MScode").show();
 		var currencyCode = $.trim($("#currency_search input[name=q]").val());
+		
 		$("#buy_currency_with_nxt").html("Buy " + currencyCode + " with NXT");
 		$("#sell_currency_with_nxt").html("Sell " + currencyCode + " for NXT");
 		$(".currency_code").html(String(currencyCode).escapeHTML());
@@ -18,7 +17,9 @@ var NRS = (function(NRS, $, undefined) {
 		NRS.sendRequest("getCurrency+", {
 			"code": currencyCode
 		}, function(response, input) {
-			if (response) {
+			if (response && !response.errorDescription) {
+				$("#MSnoCode").hide();
+				$("#MScode").show();
 				$("#currency_account").html(String(response.accountRS).escapeHTML());
 				$("#currency_id").html(String(response.currency).escapeHTML());
 				$("#currency_name").html(String(response.name).escapeHTML());
@@ -27,6 +28,11 @@ var NRS = (function(NRS, $, undefined) {
 				$("#currency_decimals").html(String(response.decimals).escapeHTML());
 				$("#currency_description").html(String(response.description).escapeHTML());
 				$("#buy_currency_button").data("decimals", response.decimals);
+			}
+			else{
+				$("#MSnoCode").show();
+				$("#MScode").hide();
+				alert(response.errorDescription);
 			}
 		});
 		
@@ -577,14 +583,14 @@ var NRS = (function(NRS, $, undefined) {
 	});
 	
 	/* Set initial supply to max supply (todo: this is not true for all the types) */
-	$("#issue_currency_max_supply").keyup(function(e) {
-		if (!$('#issue_currency_claimable').prop('checked'))
-			$("#issue_currency_initial_supply").val($("#issue_currency_max_supply").val());
-	});
-	$("#issue_currency_max_supply").blur(function(e) {
-		if (!$('#issue_currency_claimable').prop('checked'))
-			$("#issue_currency_initial_supply").val($("#issue_currency_max_supply").val());
-	});
+	//$("#issue_currency_max_supply").keyup(function(e) {
+	//	if (!$('#issue_currency_claimable').prop('checked') && !$("#issue_currency_initial_supply").val())
+	//		$("#issue_currency_initial_supply").val($("#issue_currency_max_supply").val());
+	//});
+	//$("#issue_currency_max_supply").blur(function(e) {
+	//	if (!$('#issue_currency_claimable').prop('checked') && !$("#issue_currency_initial_supply").val())
+	//		$("#issue_currency_initial_supply").val($("#issue_currency_max_supply").val());
+	//});
 	
 	/* ISSUE CURRENCY FORM */
 	NRS.forms.issueCurrency = function($modal) {

@@ -336,7 +336,7 @@
 	                            <div class="small-box bg-red">
 	                                <div class="inner">
 	                                    <h3><span style="font-size:22px" id="nrs_current_block_time" class="loading_dots"><span>.</span><span>.</span><span>.</span></span></h3>
-	                                    <p><span id="nrs_block" data-i18n="last_updated">Last Updated</span> (Block: <span id="nrs_current_block" class="loading_dots"><span>.</span><span>.</span><span>.</span></span>)</p>
+	                                    <p><span id="nrs_block" data-i18n="last_updated">Last Updated</span> (Block: <span class="nrs_current_block loading_dots"><span>.</span><span>.</span><span>.</span></span>)</p>
 	                                </div>
 	                                <div class="icon"><i class="fa fa-code"></i></div>
 	                                <a href="#" class="small-box-footer goto-page" data-page="blocks"><span data-i18n="more_info">More info</span> <i class="fa fa-arrow-circle-right"></i></a>
@@ -433,6 +433,15 @@
 					           		<li><a href="#" data-type="3:6" data-i18n="marketplace_feedback">Marketplace Feedback</a></li>
 					           		<li><a href="#" data-type="3:7" data-i18n="marketplace_refund">Marketplace Refund</a></li>
 					           		<li><a href="#" data-type="4:0" data-i18n="balance_leasing">Balance Leasing</a></li>
+					           		<li><a href="#" data-type="5:0" data-i18n="issue_currency">Issue Currency</a></li>
+					           		<li><a href="#" data-type="5:1" data-i18n="reserve_increase">Reserve Increase</a></li>
+					           		<li><a href="#" data-type="5:2" data-i18n="reserve_claim">Reserve Claim</a></li>
+					           		<li><a href="#" data-type="5:3" data-i18n="currency_transfer">Currency Transfer</a></li>
+					           		<li><a href="#" data-type="5:4" data-i18n="publish_exchange_offer">Publish Exchange Offer</a></li>
+					           		<li><a href="#" data-type="5:5" data-i18n="currency_buy">Buy Currency</a></li>
+					           		<li><a href="#" data-type="5:6" data-i18n="currency_sell">Sell Currency</a></li>
+					           		<li><a href="#" data-type="5:7" data-i18n="mint_currency">Mint Currency</a></li>
+					           		<li><a href="#" data-type="5:8" data-i18n="delete_currency">Delete Currency</a></li>
 					           		<li><a href="#" data-type="unconfirmed" data-i18n="unconfirmed_transactions">Unconfirmed Transactions</a></li>
 					          	</ul>
 							</div>
@@ -2755,7 +2764,7 @@
                                 </div>
                                 <div class="form-group advanced optional_reserve">
                                     <label for="issue_currency_min_reserve" data-i18n="min_reserve">MINIMUM AMOUNT OF NXT TO ACTIVATE RESERVE</label>
-                                    <input type="number" name="minReservePerUnitNQT" id="issue_currency_min_reserve" class="form-control" min="1" placeholder="Minimum Reserve" data-i18n="minimum_reserve" tabindex="8" disabled>
+                                    <input type="number" name="minReservePerUnitNQT" id="issue_currency_min_reserve" class="form-control" min="1" placeholder="Minimum Amount" data-i18n="minimum_reserve" tabindex="8" disabled>
                                 </div>
                                 <div class="form-group advanced optional_reserve">
                                     <label for="issue_currency_min_reserve" data-i18n="min_reserve">RESERVE SUPPLY</label>
@@ -2810,7 +2819,7 @@
 								</div>
 							</div>
                             <div class="form-group">
-                                <label for="issue_currency_issuance_height" data-i18n="issuance_height">ISSUANCE HEIGHT</label>
+                                <label for="issue_currency_issuance_height" data-i18n="issuance_height">ISSUANCE HEIGHT</label> <i>Current Height: <span class="nrs_current_block"></span></i>
                                 <input type="number" name="issuanceHeight" id="issue_currency_issuance_height" class="form-control" min="0" placeholder="Issuance Height" data-i18n="issuance_height" tabindex="13" value="0" disabled>
                             </div>
                             <div class="row">

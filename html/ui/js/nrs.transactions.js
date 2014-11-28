@@ -162,27 +162,32 @@ var NRS = (function(NRS, $, undefined) {
 							rows += '<i title="' + $.t("issue_currency") + '" class="fa fa-bank"></i>';
 							break;
 						case 1:
+							rows += '<i title="' + $.t("reserve_increase") + '" class="fa fa-bank"></i>';
 							break;
 						case 2:
+							rows += '<i title="' + $.t("reserve_claim") + '" class="fa fa-bank"></i>';
 							break;
 						case 3:
+							rows += '<i title="' + $.t("currency_transfer") + '" class="fa fa-bank"></i> <i class="ion-arrow-swap"></i>';
 							break;
 						case 4:
 							rows += '<i title="' + $.t("publish_exchange_offer") + '" class="fa fa-bank"></i> <i class="fa fa-list-alt "></i>';
 							break;
 						case 5:
-							rows += '<i title="' + $.t("buy_currency") + '" class="fa fa-bank"></i> <i class="ion-arrow-graph-up-right"></i>';
+							rows += '<i title="' + $.t("currency_buy") + '" class="fa fa-bank"></i> <i class="ion-arrow-graph-up-right"></i>';
 							break;
 						case 6:
+							rows += '<i title="' + $.t("currency_sell") + '" class="fa fa-bank"></i> <i class="ion-arrow-graph-down-right"></i>';
 							break;
 						case 7:
+							rows += '<i title="' + $.t("mint_currency") + '" class="fa fa-bank"></i> <i class="fa fa-money"></i>';
 							break;
 						case 8:
 							rows += '<i title="' + $.t("delete_currency") + '" class="fa fa-bank"></i> <i class="fa fa-times"></i>';
 							break;
 					}
 				}
-				 
+
 				 rows += "</td></tr>";
 			}
 
@@ -462,20 +467,25 @@ var NRS = (function(NRS, $, undefined) {
 							rows += '<i title="' + $.t("issue_currency") + '" class="fa fa-bank"></i>';
 							break;
 						case 1:
+							rows += '<i title="' + $.t("reserve_increase") + '" class="fa fa-bank"></i>';
 							break;
 						case 2:
+							rows += '<i title="' + $.t("reserve_claim") + '" class="fa fa-bank"></i>';
 							break;
 						case 3:
+							rows += '<i title="' + $.t("currency_transfer") + '" class="fa fa-bank"></i> <i class="ion-arrow-swap"></i>';
 							break;
 						case 4:
 							rows += '<i title="' + $.t("publish_exchange_offer") + '" class="fa fa-bank"></i> <i class="fa fa-list-alt "></i>';
 							break;
 						case 5:
-							rows += '<i title="' + $.t("buy_currency") + '" class="fa fa-bank"></i> <i class="ion-arrow-graph-up-right"></i>';
+							rows += '<i title="' + $.t("currency_buy") + '" class="fa fa-bank"></i> <i class="ion-arrow-graph-up-right"></i>';
 							break;
 						case 6:
+							rows += '<i title="' + $.t("currency_sell") + '" class="fa fa-bank"></i> <i class="ion-arrow-graph-down-right"></i>';
 							break;
 						case 7:
+							rows += '<i title="' + $.t("mint_currency") + '" class="fa fa-bank"></i> <i class="fa fa-money"></i>';
 							break;
 						case 8:
 							rows += '<i title="' + $.t("delete_currency") + '" class="fa fa-bank"></i> <i class="fa fa-times"></i>';
@@ -720,6 +730,36 @@ var NRS = (function(NRS, $, undefined) {
 				case 0:
 					transactionType = $.t("balance_leasing");
 					break;
+			}
+		} else if (transaction.type == 5) {
+			switch (transaction.subtype) {
+				case 0:
+					transactionType = $.t("issue_currency");
+					break;
+				case 1:
+					transactionType = $.t("reserve_increase");
+					break;
+				case 2:
+					transactionType = $.t("reserve_claim");
+					break;
+				case 3:
+					transactionType = $.t("currency_transfer");
+					break;
+				case 4:
+					transactionType = $.t("publish_exchange_offer");
+					break;
+				case 5:
+					transactionType = $.t("buy_currency");
+					break;
+				case 6:
+					transactionType = $.t("sell_currency");
+					break;
+				case 7:
+					transactionType = $.t("mint_currency");
+					break;
+				case 8:
+					transactionType = $.t("delete_currency");
+					break;	
 			}
 		}
 

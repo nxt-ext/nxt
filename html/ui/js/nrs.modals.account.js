@@ -214,31 +214,36 @@ var NRS = (function(NRS, $, undefined) {
 								break;
 						}
 					} else if (transaction.type == 5) {
-					switch (transaction.subtype) {
-						case 0:
-							transactionType = $.t("issue_currency");
-							break;
-						case 1:
-							break;
-						case 2:
-							break;
-						case 3:
-							break;
-						case 4:
-							transactionType = $.t("publish_exchange_offer");
-							break;
-						case 5:
-							transactionType = $.t("buy_currency");
-							break;
-						case 6:
-							break;
-						case 7:
-							break;
-						case 8:
-							transactionType = $.t("delete_currency");
-							break;	
+						switch (transaction.subtype) {
+							case 0:
+								transactionType = $.t("issue_currency");
+								break;
+							case 1:
+								transactionType = $.t("reserve_increase");
+								break;
+							case 2:
+								transactionType = $.t("reserve_claim");
+								break;
+							case 3:
+								transactionType = $.t("currency_transfer");
+								break;
+							case 4:
+								transactionType = $.t("publish_exchange_offer");
+								break;
+							case 5:
+								transactionType = $.t("buy_currency");
+								break;
+							case 6:
+								transactionType = $.t("sell_currency");
+								break;
+							case 7:
+								transactionType = $.t("mint_currency");
+								break;
+							case 8:
+								transactionType = $.t("delete_currency");
+								break;	
+						}
 					}
-				}
 
 					if (/^NXT\-/i.test(NRS.userInfoModal.user)) {
 						var receiving = (transaction.recipientRS == NRS.userInfoModal.user);
