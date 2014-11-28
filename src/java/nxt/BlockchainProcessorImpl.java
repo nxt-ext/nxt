@@ -85,7 +85,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                         return;
                     }
                     List<Peer> connectedPublicPeers = Peers.getPublicPeers(Peer.State.CONNECTED, true);
-                    if (connectedPublicPeers.size() < numberOfForkConfirmations) {
+                    if (connectedPublicPeers.size() <= numberOfForkConfirmations) {
                         return;
                     }
                     peerHasMore = true;
