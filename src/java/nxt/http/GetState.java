@@ -4,6 +4,7 @@ import nxt.Account;
 import nxt.Alias;
 import nxt.Asset;
 import nxt.AssetTransfer;
+import nxt.Constants;
 import nxt.Currency;
 import nxt.CurrencyBuyOffer;
 import nxt.CurrencyTransfer;
@@ -74,7 +75,8 @@ public final class GetState extends APIServlet.APIRequestHandler {
         response.put("totalMemory", Runtime.getRuntime().totalMemory());
         response.put("freeMemory", Runtime.getRuntime().freeMemory());
         response.put("peerPort", Peers.getDefaultPeerPort());
-
+        response.put("isTestnet", Constants.isTestnet);
+        response.put("isOffline", Constants.isOffline);
         return response;
     }
 
