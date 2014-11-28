@@ -75,12 +75,33 @@ var NRS = (function(NRS, $, undefined) {
 	var isScanning = false;
 
 	NRS.init = function() {
-		if (window.location.port && window.location.port != "6876") {
-			$(".testnet_only").hide();
-		} else {
-			NRS.isTestNet = true;
-			$(".testnet_only, #testnet_login, #testnet_warning").show();
-		}
+		NRS.sendRequest("getState", {
+			"includeCounts": "false"
+		}, function (response) {
+			var isTestnet = false;
+			var isOffline = false;
+			var peerPort = 0;
+			for (var key in response) {
+				if (key == "isTestnet") {
+					isTestnet = response[key];
+				}
+				if (key == "isOffline") {
+					isOffline = response[key];
+				}
+				if (key == "peerPort") {
+					peerPort = response[key];
+				}
+			}
+			if (!isTestnet) {
+				$(".testnet_only").hide();
+			} else {
+				NRS.isTestNet = true;
+				var testnetWarningDiv = $("#testnet_warning");
+            var warningText = testnetWarningDiv.text() + " The testnet peer port is " + peerPort + (isOffline ? ", the peer is working offline." : ".");
+				testnetWarningDiv.text(warningText);
+				$(".testnet_only, #testnet_login, #testnet_warning").show();
+			}
+		});
 
 		if (!NRS.server) {
 			var hostName = window.location.hostname.toLowerCase();
