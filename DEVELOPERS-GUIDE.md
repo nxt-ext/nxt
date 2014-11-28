@@ -67,3 +67,27 @@
   - API calls should be documented first (because if you don't, you never will)
 
 ----
+## UI Developers ##
+
+
+### Where to Look ###
+
+  - index.html: all of the html markup for pages and modals 
+  - js/nrs.*.js: corresponding js files for each task the file name displays, one roughly for each page
+  - js/nrs.modals.*.js: The modal js (popups) for each set of popups, one for each set of modals
+  - any CSS: Bootstrap is used for the design, so changes to CSS rules should be generally avoided
+  
+### Programming Style ###
+
+  - HTML style
+    - Make sure to use the i18n for any text data, internationalization
+    - Follow everything else as already set up by Wesley
+  - JS style
+    - Same as above, just make the code fit into every other part
+  - Adding a page
+    - Create a new html page markup in index.html, refer to other pages, starts with <div id="NAME-page" class="page">
+    - Reference the page with a new link in the menu fixed to the left side of the page, from line 245 to 290 at time of writing
+    - Create a corresponding js file in /js directory that handles all page specific scripting.
+  - Adding a modal
+    - Create a new html modal also in index.html, the modals start around line 1750 at time of writing
+    - It is fairly easy to make a modal based upon the information from other modals already created.
