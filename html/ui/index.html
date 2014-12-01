@@ -1159,7 +1159,8 @@
 						<div style="color:#838383;margin-bottom:5px">
 							<strong data-i18n="current_supply">Current Supply</strong>: <span id="currency_current_supply"></span> | 
 							<strong data-i18n="max_supply">Max Supply</strong>: <span id="currency_max_supply"></span> | 
-							<strong data-i18n="currency_decimals">Currency Decimals</strong>: <span id="currency_decimals"></span>
+							<strong data-i18n="currency_decimals">Currency Decimals</strong>: <span id="currency_decimals"></span> |
+							<span id="currency_founders_link"><strong data-i18n="founders">Founders</strong>: <a href="#" data-toggle="modal" data-target="#currency_founders_modal" data-i18n="view_currency_founders" data-currency="" id="view_currency_founders_link">View Currency Founders</a></span>
 						</div>
 
 						<div id="currency_description"></div>
@@ -5336,6 +5337,38 @@
 
                         <button type="button" class="btn btn-default" data-dismiss="modal" data-i18n="cancel">Cancel</button>
                         <button type="button" class="btn btn-primary" data-loading-text="Submitting..." data-i18n="pay_dividends;[data-loading-text]submitting">Pay Dividends</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="modal fade" id="currency_founders_modal" tabindex="-1" role="dialog" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-wider">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                        <h4 class="modal-title" data-i18n="currency_founders">Currency Founders</h4>
+                    </div>
+                    <div class="modal-body">                            
+                        <div class="data-container data-loading" style="max-height:350px;overflow:auto">
+                            <table class="table table-striped" id="currency_founders_table">
+                                <thead>
+                                <tr>
+                                    <th data-i18n="account">Account</th>
+                                    <th data-i18n="quantity">Quantity</th>
+                                    <th data-i18n=""></th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                
+                                </tbody>
+                            </table>
+                            <div class="data-loading-container"><img src="img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
+                            <div class="data-empty-container"><p data-i18n="error">Error</p></div>
+                        </div>
+                    </div>
+                    <div class="modal-footer" style="margin-top:0;">
+                        <button type="button" class="btn btn-primary" data-dismiss="modal" data-i18n="close">Close</button>
                     </div>
                 </div>
             </div>
