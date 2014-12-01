@@ -248,8 +248,8 @@
                         <li class="treeview" id="sidebar_asset_exchange">
                         	<a href="#" data-page="asset_exchange"><i class="fa fa-signal"></i><span data-i18n="asset_exchange">Asset Exchange</span><i class="fa pull-right fa-angle-right" style="padding-top:3px"></i></a>
                             <ul class="treeview-menu" style="display: none;">
-                                 <li><a href="#" data-page="asset_exchange"><i class="fa fa-angle-double-right"></i> <span data-i18n="asset_exchange">Asset Exchange</span></a></li>
-                                 <li><a href="#" data-page="trade_history"><i class="fa fa-angle-double-right"></i> <span data-i18n="trade_history">Trade History</span></a></li>
+                                <li><a href="#" data-page="asset_exchange"><i class="fa fa-angle-double-right"></i> <span data-i18n="asset_exchange">Asset Exchange</span></a></li>
+                                <li><a href="#" data-page="trade_history"><i class="fa fa-angle-double-right"></i> <span data-i18n="trade_history">Trade History</span></a></li>
                             	<li><a href="#" data-page="transfer_history"><i class="fa fa-angle-double-right"></i> <span data-i18n="transfer_history">Transfer History</span></a></li>
                                 <li><a href="#" data-page="my_assets"><i class="fa fa-angle-double-right"></i> <span data-i18n="my_assets">My Assets</span></a></li>
                                 <li><a href="#" data-page="open_orders"><i class="fa fa-angle-double-right"></i> <span data-i18n="open_orders">Open Orders</span></a></li>
@@ -259,17 +259,16 @@
                         <li class="treeview" id="sidebar_monetary_system">
                         	<a href="#" data-page="monetary_system"><i class="fa fa-bank"></i><span data-i18n="monetary_system">Monetary System</span><i class="fa pull-right fa-angle-right" style="padding-top:3px"></i></a>
                             <ul class="treeview-menu" style="display: none;">
-                                 <li><a href="#" data-page="monetary_system"><i class="fa fa-angle-double-right"></i> <span data-i18n="monetary_system">Monetary System</span></a></li>
-                                 <li><a href="#" data-page="exchange_history"><i class="fa fa-angle-double-right"></i> <span data-i18n="my_exchange_history">My Exchange History</span></a></li>
+                                <li><a href="#" data-page="monetary_system"><i class="fa fa-angle-double-right"></i> <span data-i18n="monetary_system">Monetary System</span></a></li>
+                                <li><a href="#" data-page="exchange_history"><i class="fa fa-angle-double-right"></i> <span data-i18n="my_exchange_history">My Exchange History</span></a></li>
                             	<li><a href="#" data-page="currencies"><i class="fa fa-angle-double-right"></i> <span data-i18n="currencies">Currencies</span></a></li>
                                 <li><a href="#" data-toggle="modal" data-target="#issue_currency_modal"><i class="fa fa-angle-double-right"></i> <span data-i18n="issue_currency">Issue Currency</span></a></li>
-                                <li><a href="#" data-toggle="modal" data-target="#publish_exchange_offer_modal"><i class="fa fa-angle-double-right"></i> <span data-i18n="issue_currency">Publish Exchange Offer</span></a></li>
                         	</ul>
                         </li>
                         <li class="treeview" id="sidebar_dgs_buyer">
                         	<a href="#" data-page="dgs_search"><i class="fa fa-shopping-cart"></i><span data-i18n="marketplace">Marketplace</span><i class="fa pull-right fa-angle-right" style="padding-top:3px"></i></a>
                             <ul class="treeview-menu" style="display: none;">
-                            	 <li><a href="#" data-page="dgs_search"><i class="fa fa-angle-double-right"></i> <span data-i18n="marketplace">Marketplace</span></a></li>
+                                <li><a href="#" data-page="dgs_search"><i class="fa fa-angle-double-right"></i> <span data-i18n="marketplace">Marketplace</span></a></li>
                             	<li><a href="#" data-page="purchased_dgs"><i class="fa fa-angle-double-right"></i> <span data-i18n="purchased_products">Purchased Products</span></a></li>
                         	</ul>
                         </li>
@@ -2892,8 +2891,10 @@
                             <div class="callout callout-danger error_message" style="display:none"></div>
                             <div style="margin-left:-20px">
                                 <div class="form-group">
-                                    <label for="currency_code"><span data-i18n="currency_code">CURRENCY CODE</span> <i class="fa fa-question-circle show_popover" data-content="Enter a 3-5 letter currency code" data-i18n="[data-content]currency_code_help" data-container="body" style="color:#4CAA6E" ></i></label>
-                                    <input type="text" maxlength="5" class="form-control publish_exchange_currency_code" name="code" id="currency_code" placeholder="Currency Code" data-i18n="[placeholder]currency_code" autofocus tabindex="1" />
+                                    <label data-i18n="currency">CURRENCY</label>
+                                    <p><span class="currency_code"></span><span id="publish_exchange_available" style="font-style:italic"></span></p>
+                                    <input type="hidden" name="currency" id="publish_exchange_offer_currency" value="" />
+                                    <input type="hidden" name="decimals" id="publish_exchange_offer_decimals" value="" />
                                 </div>
                                 <div class="form-group">
                                     <label for="buy_currency_units_initial" class="col-sm-3 control-label" data-i18n="units">Buy units (Initial)</label>
@@ -2950,10 +2951,10 @@
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <label for="expiration_Height" class="col-sm-3 control-label" data-i18n="xxpiration">Expiration (Hours)</label>
+                                    <label for="expiration_Height" class="col-sm-3 control-label" data-i18n="expiration_height">Expiration Height</label><i>Current Height: <span class="nrs_current_block"></span></i>
                                     <div class="col-sm-9">
                                         <div class="input-group">
-                                            <input id="expiration_Height" type="number" data-default="24" value="24" name="expirationHeight" class="form-control" tabindex="8" />
+                                            <input id="expiration_height" type="number" name="expirationHeight" class="form-control" tabindex="8" />
                                         </div>
                                     </div>
                                 </div>

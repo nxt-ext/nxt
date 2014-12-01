@@ -925,9 +925,10 @@
     "dividend_payment_info_preview_success": "A total of __amountNXT__ NXT will be distributed among __totalQuantity__ assets.",
     "dividend_payment_info_preview_error": "Could not display preview information of the dividend payment due to an unexpected error. code: __errorCode__.",
     "error_whole_units": "Unit supply value must be a whole number",
-    "available_for_transfer": "Currency units available",
+    "available_units": "Currency units available",
     "error_incorrect_units_plus": "Incorrect units: __err__",
     "error_max_currency_transfer_warning": "Number of units specified is higher than __qty__. Are you sure you want to continue? Click the submit button again to confirm.",
     "units": "Units",
+    "exchange": "Exchange",
     "": ""
 }

@@ -388,6 +388,7 @@ var NRS = (function(NRS, $, undefined) {
 							"<td>" + currency.name + "</td>" +
 							"<td>" + NRS.formatQuantity(currency.unconfirmedUnits, currency.decimals) + "</td>" +
 							"<td><a href='#' data-toggle='modal' data-target='#transfer_currency_modal' data-currency='" + String(currency.currency).escapeHTML() + "' data-code='" + String(currency.code).escapeHTML() + "' data-decimals='" + String(currency.decimals).escapeHTML() + "'>" + $.t("transfer") + "</a></td>" +
+							"<td><a href='#' data-toggle='modal' data-target='#publish_exchange_offer_modal' data-currency='" + String(currency.currency).escapeHTML() + "' data-code='" + String(currency.code).escapeHTML() + "' data-decimals='" + String(currency.decimals).escapeHTML() + "'>" + $.t("exchange") + "</a></td>" +
 							"</tr>";
 					}
 					$('#currencies_table [data-i18n="type"]').hide();
@@ -499,24 +500,39 @@ var NRS = (function(NRS, $, undefined) {
 		$("#transfer_currency_code, #transfer_currency_units_code").html(String(currencyCode).escapeHTML());
 		$("#transfer_currency_available").html("");
 		
-		NRS.sendRequest("getCurrencyAccounts+", {
-			"currency": currency
+		NRS.sendRequest("getAccountCurrencies", {
+			"currency": currency,
+			"account": NRS.accountRS
 		}, function(response, input) {
 			availablecurrencysMessage = " - None Available for Transfer";
-			if (response.accountCurrencies && response.accountCurrencies.length) {
-				if (response.accountCurrencies && response.accountCurrencies.length) {
-					for (var i = 0; i < response.accountCurrencies.length; i++) {
-						if (response.accountCurrencies[i].accountRS == NRS.accountRS){
-							availablecurrencysMessage = " - " + $.t("available_for_transfer") + " " + NRS.formatQuantity(response.accountCurrencies[i].units, decimals);
-							break;
-						}
-					}
-				}
+			if (response.unconfirmedUnits && response.unconfirmedUnits != "0") {
+				availablecurrencysMessage = " - " + $.t("available_units") + " " + NRS.formatQuantity(response.unconfirmedUnits, response.decimals);
 			}
 			$("#transfer_currency_available").html(availablecurrencysMessage);
-		});
+		})
 	});
 	
+	/* Publish Exchange Offer Model */
+	$("#publish_exchange_offer_modal").on("show.bs.modal", function(e) {
+		var $invoker = $(e.relatedTarget);
+
+		$("#publish_exchange_offer_currency").val($invoker.data("currency"));
+		$("#publish_exchange_offer_decimals").val($invoker.data("decimals"));
+		$(".currency_code").html(String($invoker.data("code")).escapeHTML());
+
+		NRS.sendRequest("getAccountCurrencies", {
+			"currency": $invoker.data("currency"),
+			"account": NRS.accountRS
+		}, function(response, input) {
+			availablecurrencysMessage = " - None Available";
+			if (response.unconfirmedUnits && response.unconfirmedUnits != "0") {
+				availablecurrencysMessage = " - " + $.t("available_units") + " " + NRS.formatQuantity(response.unconfirmedUnits, response.decimals);
+			}
+			$("#publish_exchange_available").html(availablecurrencysMessage);
+		})
+
+	});
+
 	/* EXCHANGE HISTORY PAGE */
 	NRS.pages.exchange_history = function() {
 		NRS.sendRequest("getExchanges+", {
@@ -735,18 +751,20 @@ var NRS = (function(NRS, $, undefined) {
 		else
 			$( ".optional_mint" ).hide();
     });
-    
-    /* PUBLISH EXCHANGE OFFER MODEL */
-    NRS.forms.publishExchangeOffer = function($modal) {
-		var data = NRS.getFormData($modal.find("form:first"));
 
+	/* PUBLISH EXCHANGE OFFER MODEL */
+	NRS.forms.publishExchangeOffer = function ($modal) {
+		var data = NRS.getFormData($modal.find("form:first"));
+		data.initialBuySupply = NRS.convertToQNT(data.initialBuySupply, data.decimals);
+		data.totalBuyLimit = NRS.convertToQNT(data.totalBuyLimit, data.decimals);
 		data.buyRateNQT = NRS.convertToNQT(data.buyRateNQT);
+		data.initialSellSupply = NRS.convertToQNT(data.initialSellSupply, data.decimals);
+		data.totalSellLimit = NRS.convertToQNT(data.totalSellLimit, data.decimals);
 		data.sellRateNQT = NRS.convertToNQT(data.sellRateNQT);
-		data.expirationHeight = (parseInt(data.expirationHeight,10) * 60) + parseInt($("#nrs_current_block").html(),10);
 		return {
 			"data": data
 		};
-	}
+	};
     
     /* Capitalize Publish Exchange Offer Model Currency Code */
     $("#publish_exchange_offer_modal #currency_code").blur(function(e) {
