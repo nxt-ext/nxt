@@ -138,7 +138,7 @@ var NRS = (function(NRS, $, undefined) {
 				for (var i = 0; i < response.founders.length; i++) {
 					var account = response.founders[i].accountRS;
 
-					rows += "<tr><td><a href='#' data-user='" + NRS.getAccountFormatted(account, "account") + "' class='user_info'>" + NRS.getAccountTitle(account, "account") + "</a></td><td>" + "Quantity" + "</td><td></td></tr>";
+					rows += "<tr><td><a href='#' data-user='" + NRS.getAccountFormatted(account, "account") + "' class='user_info'>" + NRS.getAccountTitle(account, "account") + "</a></td><td>" + NRS.convertToNXT(response.founders[i].amountPerUnitNQT) + "</td><td></td></tr>";
 				}
 			}
 			else {
