@@ -307,10 +307,6 @@ public abstract class TransactionType {
                     throw new NxtException.NotValidException("Voting transaction amount <> 0!");
                 }
 
-                if (!(transaction.getAttachment() instanceof Attachment.PendingPaymentVoteCasting)) { //TODO: how can that ever happen?
-                    throw new NxtException.NotValidException("Wrong kind of attachment");
-                }
-
                 Attachment.PendingPaymentVoteCasting att = (Attachment.PendingPaymentVoteCasting) transaction.getAttachment();
                 long[] pendingIds = att.getPendingTransactionsIds();
                 if (pendingIds.length > Constants.MAX_VOTES_PER_VOTING_TRANSACTION) {
@@ -318,16 +314,29 @@ public abstract class TransactionType {
                 }
 
                 for (long pendingId : pendingIds) {
-                    if (PendingTransactionPoll.byId(pendingId) == null) {
+                    if (PendingTransactionPoll.getPoll(pendingId) == null) {
                         System.out.println("Wrong pending transaction: " + pendingId); //TODO: Logger
                         throw new NxtException.NotValidException("Wrong pending transaction");
                     }
                     if (VotePhased.isVoteGiven(pendingId, transaction.getSenderId())) {
-                        //TODO: this is not enough to catch double voting, need to use isDuplicate too, to check for transactions in the same block.
-                        // Is the pendingIds array itself also checked for duplicate ids somewhere?
+                        // TODO: Is the pendingIds array itself also checked for duplicate ids somewhere? isDuplicate enough?
                         throw new NxtException.NotValidException("Double voting attempt");
                     }
                 }
+            }
+
+            @Override
+            boolean isDuplicate(Transaction transaction, Map<TransactionType, Set<String>> duplicates) {
+                Attachment.PendingPaymentVoteCasting attachment = (Attachment.PendingPaymentVoteCasting) transaction.getAttachment();
+                String voter = Convert.toUnsignedLong(transaction.getSenderId());
+                long[] pendingTransactionIds = attachment.getPendingTransactionsIds();
+                for(long pendingTransactionId : pendingTransactionIds){
+                    String compositeKey = voter + Convert.toUnsignedLong(pendingTransactionId);
+                    if(isDuplicate(Payment.PENDING_PAYMENT_VOTE_CASTING, compositeKey, duplicates)){
+                        return true;
+                    }
+                }
+                return false;
             }
 
             @Override
@@ -335,7 +344,7 @@ public abstract class TransactionType {
                 Attachment.PendingPaymentVoteCasting attachment = (Attachment.PendingPaymentVoteCasting) transaction.getAttachment();
                 long[] pendingTransactionsIds = attachment.getPendingTransactionsIds();
                 for (long pendingTransactionId : pendingTransactionsIds) {
-                    PendingTransactionPoll poll = PendingTransactionPoll.byId(pendingTransactionId);
+                    PendingTransactionPoll poll = PendingTransactionPoll.getPoll(pendingTransactionId);
                     if (!poll.isFinished()) { //todo: else?
                         if (VotePhased.addVote(poll, senderAccount, transaction)) {
                             TransactionDb.findTransaction(pendingTransactionId).release();
@@ -723,10 +732,7 @@ public abstract class TransactionType {
             @Override
             void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
                 Attachment.MessagingVoteCasting attachment = (Attachment.MessagingVoteCasting) transaction.getAttachment();
-                //TODO: this check is already done in validateAttachment(), use isDuplicate() to prevent multiple voting in the same block instead
-                if (!Vote.isVoteGiven(attachment.getPollId(), senderAccount.getId())) {
-                    Vote.addVote(transaction, attachment);
-                }
+                Vote.addVote(transaction, attachment);
             }
 
             @Override

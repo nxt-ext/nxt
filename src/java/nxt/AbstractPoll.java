@@ -55,9 +55,8 @@ public class AbstractPoll {
         return assetId;
     }
 
-    public boolean isFinished() {
-        return finished;
-    }
+    //todo: rename to isReleased?
+    public boolean isFinished() { return finished; }
 
     protected void setFinished(boolean finished) {
         this.finished = finished;

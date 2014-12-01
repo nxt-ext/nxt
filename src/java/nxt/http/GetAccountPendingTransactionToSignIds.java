@@ -16,34 +16,16 @@ public class GetAccountPendingTransactionToSignIds extends APIServlet.APIRequest
     static final GetAccountPendingTransactionToSignIds instance = new GetAccountPendingTransactionToSignIds();
 
     private GetAccountPendingTransactionToSignIds() {
-        super(new APITag[]{APITag.ACCOUNTS}, "account", "finished", "firstIndex", "lastIndex");
+        super(new APITag[]{APITag.ACCOUNTS, APITag.PENDING_TRANSACTIONS}, "account", "firstIndex", "lastIndex");
     }
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
         Account account = ParameterParser.getAccount(req);
-        String finishedValue = Convert.nullToEmpty(req.getParameter("finished")).toLowerCase();
         int firstIndex = ParameterParser.getFirstIndex(req);
         int lastIndex = ParameterParser.getLastIndex(req);
-        //TODO: trying to use a boolean parameter to carry three possible values is not a good design,
-        // better use a state parameter that can have multiple values, e.g. state=finished, state=pending
-        // Then if in the future another state value needs to be added, e.g. state=rejected,
-        // you can keep backwards compatibility, which would not be possible if the parameter were a boolean to begin with.
-        // Anyway, why is it needed to be able to request finished pending transactions? I would rather not have
-        // that ability, which will make it possible to delete entries in the pending_transaction table once finished and keep it small.
-        Boolean finished = null;
-        switch (finishedValue) {
-            case "true":
-                finished = true;
-                break;
-            case "false":
-                finished = false;
-                break;
-            default:
-                break;
-        }
 
-        List<Long> transactionIds = PendingTransactionPoll.getIdsByWhitelistedSigner(account, finished, firstIndex, lastIndex);
+        List<Long> transactionIds = PendingTransactionPoll.getIdsByWhitelistedSigner(account, firstIndex, lastIndex);
 
 
         JSONArray transactionIdsJson = new JSONArray();

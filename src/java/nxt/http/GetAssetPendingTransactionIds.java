@@ -15,7 +15,7 @@ public class GetAssetPendingTransactionIds extends APIServlet.APIRequestHandler 
     static final GetAssetPendingTransactionIds instance = new GetAssetPendingTransactionIds();
 
     private GetAssetPendingTransactionIds() {
-        super(new APITag[]{APITag.ACCOUNTS}, "asset", "finished", "firstIndex", "lastIndex");
+        super(new APITag[]{APITag.AE, APITag.PENDING_TRANSACTIONS}, "asset", "finished", "firstIndex", "lastIndex");
     }
 
     @Override

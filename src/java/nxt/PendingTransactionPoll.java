@@ -150,7 +150,7 @@ public class PendingTransactionPoll extends AbstractPoll {
         return id;
     }
 
-    public static PendingTransactionPoll byId(long id) { //TODO: rename to getPoll
+    public static PendingTransactionPoll getPoll(long id) {
         return pendingTransactionsTable.getBy(new DbClause.LongClause("id", id));
     }
 
@@ -184,21 +184,12 @@ public class PendingTransactionPoll extends AbstractPoll {
         return pendingTransactionsTable.getManyBy(clause, firstIndex, lastIndex);
     }
 
-    public static List<Long> getIdsByWhitelistedSigner(Account signer, Boolean finished, int from, int to) {
-        String finishedClause = "";
-        if (finished != null) {
-            if (finished) {
-                finishedClause = " pending_transactions.finished = true AND ";
-            } else {
-                finishedClause = " pending_transactions.finished = false AND ";
-            }
-        }
-
+    public static List<Long> getIdsByWhitelistedSigner(Account signer,  int from, int to) {
         try (Connection con = Db.db.getConnection();
              PreparedStatement pstmt = con.prepareStatement("SELECT DISTINCT pending_transactions.id "
                      + "from pending_transactions, pending_transactions_signers "
-                     + "WHERE pending_transactions.latest = TRUE AND "
-                     + "pending_transactions.blacklist = false AND " + finishedClause
+                     + "WHERE pending_transactions.latest = TRUE AND pending_transactions.finished = false AND "
+                     + "pending_transactions.blacklist = false AND "
                      + "pending_transactions.id = pending_transactions_signers.poll_id "
                      + "AND pending_transactions_signers.account_id = ? "
                      + DbUtils.limitsClause(from, to))) {
@@ -231,9 +222,7 @@ public class PendingTransactionPoll extends AbstractPoll {
         return blacklist;
     }
 
-    public Long getQuorum() {
-        return quorum;
-    }
+    public long getQuorum() { return quorum; }
 
     private void save(Connection con) throws SQLException {
         boolean isBlacklist;

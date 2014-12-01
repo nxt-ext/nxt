@@ -8,7 +8,6 @@ import org.json.simple.JSONObject;
 
 import java.nio.ByteBuffer;
 import java.util.Arrays;
-import java.util.Collections;
 
 public interface Appendix {
 
@@ -468,9 +467,7 @@ public interface Appendix {
             voteThreshold = (Long) attachmentData.get("voteThreshold");
             votingModel = (Byte) attachmentData.get("votingModel");
             if (votingModel == Constants.VOTING_MODEL_ASSET) {
-                // TODO: this is also wrong, for IDs which are stored as unsigned longs in json
-                // need to use Convert.parseUnsignedLong(...)
-                assetId = (Long) attachmentData.get("asset");
+                assetId = Convert.parseUnsignedLong((String)attachmentData.get("asset"));
             } else {
                 assetId = 0;
             }
@@ -478,13 +475,13 @@ public interface Appendix {
             JSONArray whitelistJson = (JSONArray) (attachmentData.get("whitelist"));
             whitelist = new long[whitelistJson.size()];
             for (int i = 0; i < whitelist.length; i++) {
-                whitelist[i] = (Long) whitelistJson.get(i); //TODO: use Convert.parseUnsignedLong when parsing long IDs
+                whitelist[i] = Convert.parseUnsignedLong((String)whitelistJson.get(i));
             }
 
             JSONArray blacklistJson = (JSONArray) (attachmentData.get("blacklist"));
             blacklist = new long[blacklistJson.size()];
             for (int i = 0; i < blacklist.length; i++) {
-                blacklist[i] = (Long) blacklistJson.get(i);
+                blacklist[i] = Convert.parseUnsignedLong((String) blacklistJson.get(i));
             }
         }
 
@@ -555,17 +552,17 @@ public interface Appendix {
             json.put("quorum", quorum);
             json.put("voteThreshold", voteThreshold);
             json.put("votingModel", votingModel);
-            json.put("asset", assetId); //TODO: rename to "asset" and use Convert.toUnsignedLong() instead
+            json.put("asset", Convert.toUnsignedLong(assetId));
 
             JSONArray whitelistJson = new JSONArray();
             for (long accountId : whitelist) {
-                whitelistJson.add(accountId); //TODO: use Convert.toUnsignedLong()
+                whitelistJson.add(Convert.toUnsignedLong(accountId));
             }
             json.put("whitelist", whitelistJson);
 
             JSONArray blacklistJson = new JSONArray();
             for (long accountId : blacklist) {
-                blacklistJson.add(accountId); //TODO: Convert.toUnsignedLong()
+                blacklistJson.add(Convert.toUnsignedLong(accountId));
             }
             json.put("blacklist", blacklistJson);
         }
@@ -639,7 +636,7 @@ public interface Appendix {
         void rollback(Transaction transaction, Account senderAccount, Account recipientAccount) {
             long transactionId = transaction.getId();
 
-            PendingTransactionPoll poll = PendingTransactionPoll.byId(transactionId);
+            PendingTransactionPoll poll = PendingTransactionPoll.getPoll(transactionId);
 
             //todo : move this check up? - yeah, looks like this must be done in that listener in TransactionProcessorImpl instead
             if (poll.getVotingModel() != Constants.VOTING_MODEL_ACCOUNT) {

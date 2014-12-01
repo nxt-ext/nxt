@@ -33,11 +33,7 @@ public final class Poll extends AbstractPoll {
 
         @Override
         protected Poll load(Connection con, ResultSet rs) throws SQLException {
-            try {
-                return new Poll(rs);
-            } catch (Exception e) {
-                throw new SQLException(e); //TODO: should not create new SQLExceptions
-            }
+            return new Poll(rs);
         }
 
         @Override
@@ -51,10 +47,7 @@ public final class Poll extends AbstractPoll {
                 pstmt.setLong(++i, poll.getAccountId());
                 pstmt.setString(++i, poll.getName());
                 pstmt.setString(++i, poll.getDescription());
-                String optionsJson = JSONArray.toJSONString(Arrays.asList(poll.getOptions()));
-                //TODO: JSON reading and writing is expensive, should not be used in the database
-                // Use ARRAY type, and see the code in DigitalGoodsStore.Goods for an example of how to read and write arrays to the database
-                pstmt.setString(++i, optionsJson);
+                pstmt.setObject(++i, poll.getOptions());
                 pstmt.setInt(++i, poll.getFinishBlockHeight());
                 pstmt.setByte(++i, poll.getVotingModel());
                 pstmt.setLong(++i, poll.getMinBalance());
@@ -121,7 +114,7 @@ public final class Poll extends AbstractPoll {
     private static void checkPolls(int currentHeight) {
         for (Poll poll : getActivePolls()) {
         //TODO: it is expensive to go through all active polls, need to use a custom sql query to get only those that finish at the current height
-            if (poll.finishBlockHeight <= currentHeight) { //TODO: should be == instead of <= ?
+            if (poll.finishBlockHeight == currentHeight) {
                 //TODO: the below two methods are only ever used here, may just inline them
                 poll.calculateAndSavePollResults();
                 finishPoll(poll);
@@ -149,7 +142,7 @@ public final class Poll extends AbstractPoll {
         this.maxRangeValue = maxRangeValue;
     }
 
-    private Poll(ResultSet rs) throws Exception {
+    private Poll(ResultSet rs) throws SQLException {
         super(rs);
 
         this.id = rs.getLong("id");
@@ -157,14 +150,8 @@ public final class Poll extends AbstractPoll {
         this.name = rs.getString("name");
         this.description = rs.getString("description");
 
-        //TODO: JSON reading and writing is expensive, should not be used in the database
-        // Use ARRAY type, and see the code in DigitalGoodsStore.Goods for an example of how to read and write arrays to the database
-        String optionsJson = rs.getString("options");
-        if(optionsJson.startsWith("(")){  //kushti: possible quoting bug in JDBC driver
-            optionsJson = optionsJson.substring(1,optionsJson.length()-1);
-        }
-        List<String> optionsList = ((List<String>) (new JSONParser().parse(optionsJson)));
-        this.options = optionsList.toArray(new String[optionsList.size()]);
+        Object[] array = (Object[])rs.getArray("options").getArray();
+        this.options = Arrays.copyOf(array, array.length, String[].class);
         this.minNumberOfOptions = rs.getByte("min_num_options");
         this.maxNumberOfOptions = rs.getByte("max_num_options");
         this.minRangeValue = rs.getByte("min_range_value");
@@ -180,10 +167,6 @@ public final class Poll extends AbstractPoll {
                         byte maxNumberOfOptions,
                         byte minRangeValue,
                         byte maxRangeValue) {
-
-        if (Poll.exists(id)) { //TODO: this check is not needed because transaction id has already been checked for uniqueness before accepting the transaction
-            throw new IllegalStateException("Poll with id " + Convert.toUnsignedLong(id) + " already exists");
-        }
 
         Poll poll = new Poll(id, accountId, name, description, options, finishBlockHeight, votingModel,
                 minNumberOfOptions, maxNumberOfOptions,minRangeValue, maxRangeValue, minBalance, assetId);

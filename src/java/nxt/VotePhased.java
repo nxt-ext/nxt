@@ -1,6 +1,7 @@
 package nxt;
 
 import nxt.db.*;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -110,6 +111,14 @@ public class VotePhased {
         }
     }
 
+    public static DbIterator<VotePhased> getByTransaction(long pendingTransactionId, int from, int to){
+        return voteTable.getManyBy(new DbClause.LongClause("pending_transaction_id",pendingTransactionId), from, to);
+    }
+
+    public static int getCount(long pendingTransactionId){
+        return voteTable.getCount(new DbClause.LongClause("pending_transaction_id",pendingTransactionId));
+    }
+
     //TODO: this method needs a better name, why is it not called simply countVotes?
     static long allVotesFromDb(PendingTransactionPoll poll) {
         long result = 0;
@@ -132,49 +141,44 @@ public class VotePhased {
     static boolean addVote(PendingTransactionPoll poll, Account voter,
                            Transaction transaction) {
 
-        //TODO: why that duplicate isVoteGiven check here again? this should have been checked in validateAttachment
-        if (!isVoteGiven(poll.getId(), voter.getId())) {
 
-            long[] whitelist = poll.getWhitelist();
-            if (whitelist != null && whitelist.length > 0 && Arrays.binarySearch(whitelist, voter.getId()) == -1) {
-                return false; //todo: move to validate only? - yes
-            }
+        long[] whitelist = poll.getWhitelist();
+        if (whitelist != null && whitelist.length > 0 && Arrays.binarySearch(whitelist, voter.getId()) == -1) {
+            return false; //todo: move to validate only? - yes
+        }
 
-            long[] blacklist = poll.getBlacklist();
-            if (blacklist != null && blacklist.length > 0 && Arrays.binarySearch(blacklist, voter.getId()) != -1) {
-                return false; //todo: move to validate only? - yes
-            }
+        long[] blacklist = poll.getBlacklist();
+        if (blacklist != null && blacklist.length > 0 && Arrays.binarySearch(blacklist, voter.getId()) != -1) {
+            return false; //todo: move to validate only? - yes
+        }
 
-            final long weight = poll.calcWeight(voter);
+        final long weight = poll.calcWeight(voter);
 
-            long estimate = voteTable.lastEstimate(poll.getId());
+        long estimate = voteTable.lastEstimate(poll.getId());
 
+        if (weight >= poll.minBalance) {
+            estimate += weight;
+        }
+
+        //TODO: The complexity and performance hit of this counting can be avoided if counting is done only once,
+        // at finish height. I think this is what we should do, and get rid of the estimated count column.
+        // There are other problems with counting after each vote, a voter doesn't know in advance at what height
+        // his voting balance will be considered, so he has to keep the funds or assets in his account, frozen,
+        // until the vote is over. If counting is done at finish height only, he knows when the assets need to be
+        // in his account, doesn't need to have them there before that.
+        if (estimate >= poll.getQuorum() && poll.getVotingModel() != Constants.VOTING_MODEL_ACCOUNT) {
+            estimate = allVotesFromDb(poll);
             if (weight >= poll.minBalance) {
                 estimate += weight;
             }
-
-            //TODO: The complexity and performance hit of this counting can be avoided if counting is done only once,
-            // at finish height. I think this is what we should do, and get rid of the estimated count column.
-            // There are other problems with counting after each vote, a voter doesn't know in advance at what height
-            // his voting balance will be considered, so he has to keep the funds or assets in his account, frozen,
-            // until the vote is over. If counting is done at finish height only, he knows when the assets need to be
-            // in his account, doesn't need to have them there before that.
-            if (estimate >= poll.getQuorum() && poll.getVotingModel() != Constants.VOTING_MODEL_ACCOUNT) {
-                estimate = allVotesFromDb(poll);
-                if (weight >= poll.minBalance) {
-                    estimate += weight;
-                }
-            }
-
-            VotePhased vote = new VotePhased(transaction, poll.getId(), estimate);
-            voteTable.insert(vote);
-            return estimate >= poll.getQuorum();
-        } else {
-            return false;
         }
+
+        VotePhased vote = new VotePhased(transaction, poll.getId(), estimate);
+        voteTable.insert(vote);
+        return estimate >= poll.getQuorum();
     }
 
-    static boolean isVoteGiven(long pendingTransactionId, long voterId){
+    static boolean isVoteGiven(long pendingTransactionId, long voterId) {
         DbClause clause = new DbClause.LongLongClause("pending_transaction_id", pendingTransactionId, "voter_id", voterId);
         return voteTable.getCount(clause) > 0;
     }

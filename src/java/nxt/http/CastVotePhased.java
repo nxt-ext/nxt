@@ -11,13 +11,14 @@ import static nxt.http.JSONResponses.INCORRECT_PENDING_TRANSACTION;
 public class CastVotePhased extends CreateTransaction {
     static final CastVotePhased instance = new CastVotePhased();
 
-    private CastVotePhased() { super(new APITag[]{APITag.VS, APITag.CREATE_TRANSACTION},"pendingTransaction"); }
+    private CastVotePhased() { super(new APITag[]{APITag.CREATE_TRANSACTION,
+                                                    APITag.PENDING_TRANSACTIONS},"pendingTransaction"); }
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
-        String[] pendingTransactionValues = Convert.emptyToNull(req.getParameterValues("pendingTransaction"));
+        String[] pendingTransactionValues = req.getParameterValues("pendingTransaction");
 
-        if(pendingTransactionValues==null){
+        if(pendingTransactionValues.length == 0){
             return MISSING_PENDING_TRANSACTION;
         }
 
