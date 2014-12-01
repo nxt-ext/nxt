@@ -778,6 +778,9 @@ var NRS = (function(NRS, $, undefined) {
         	$("#issue_currency_issuance_height").prop("disabled", false);
         	$(".optional_reserve").show();
         	$('#issue_currency_reservable').prop('checked', true);
+        	$("#issue_currency_issuance_height").prop("disabled", false);
+			$("#issue_currency_min_reserve").prop("disabled", false);
+            $("#issue_currency_min_reserve_supply").prop("disabled", false);
         }
 		else{
 			$("#issue_currency_initial_supply").val($("#issue_currency_max_supply").val());
