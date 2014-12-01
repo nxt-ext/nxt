@@ -458,17 +458,17 @@ var NRS = (function(NRS, $, undefined) {
 						var currency_type = "";
 						var currency = response.currencies[i];
 						if (currency.type & 0x1)
-							currency_type += "Exchangeable<br />";
+							currency_type += "<i title='" + $.t('exchangeable') + "' class='fa fa-exchange'></i> ";
 						if (currency.type & 0x2)
-							currency_type += "Controllable<br />";
+							currency_type += "<i title='" + $.t('controllable') + "' class='ion-ios7-toggle'></i> ";
 						if (currency.type & 0x4)
-							currency_type += "Reservable<br />";
+							currency_type += "<i title='" + $.t('reservable') + "' class='fa fa-university'></i> ";
 						if (currency.type & 0x8)
-							currency_type += "Claimable<br />";
+							currency_type += "<i title='" + $.t('claimable') + "' class='ion-android-archive'></i> ";
 						if (currency.type & 0x10)
-							currency_type += "Mintable<br />";
+							currency_type += "<i title='" + $.t('mintable') + "' class='ion-cash'></i> ";
 						if (currency.type & 0x20)
-							currency_type += "Shuffleable";
+							currency_type += "<i title='" + $.t('shuffleable') + "' class='fa fa-random'></i>";
 						rows += "<tr><td><a href='#' onClick='NRS.goToCurrency(&quot;" + String(currency.code) + "&quot;)' >" + String(currency.code).escapeHTML() + "</a></td>" +
 						"<td>" + currency.name + "</td>" +
 						"<td>" + currency_type + "</td>" +
