@@ -8,6 +8,7 @@ var NRS = (function(NRS, $, undefined) {
 		e.preventDefault();
 		var currencyCode = $.trim($("#currency_search input[name=q]").val());
 		
+		$('#currency_founders_link').hide();
 		$("#buy_currency_with_nxt").html("Buy " + currencyCode + " with NXT");
 		$("#sell_currency_with_nxt").html("Sell " + currencyCode + " for NXT");
 		$(".currency_code").html(String(currencyCode).escapeHTML());
@@ -28,11 +29,17 @@ var NRS = (function(NRS, $, undefined) {
 				$("#currency_decimals").html(String(response.decimals).escapeHTML());
 				$("#currency_description").html(String(response.description).escapeHTML());
 				$("#buy_currency_button").data("decimals", response.decimals);
+				if (response.type & 0x4){
+					$("#view_currency_founders_link").data("currency", response.currency);
+					$('#currency_founders_link').show();
+				}
 			}
 			else{
 				$("#MSnoCode").show();
 				$("#MScode").hide();
-				alert(response.errorDescription);
+				$.growl(response.errorDescription, {
+					"type": "danger"
+				});
 			}
 		});
 		
@@ -109,6 +116,40 @@ var NRS = (function(NRS, $, undefined) {
 		}
 		NRS.pageLoaded();
 	});
+	
+	/* CURRENCY FOUNDERS MODEL */
+	$("#currency_founders_modal").on("show.bs.modal", function(e) {
+		var $invoker = $(e.relatedTarget);
+
+		var currencyId = $invoker.data("currency");
+		
+		NRS.sendRequest("getCurrencyFounders", {
+			"currency": currencyId
+		}, function(response) {
+			var rows = "";
+
+			if (response.founders && response.founders.length) {
+				
+				for (var i = 0; i < response.founders.length; i++) {
+					var account = response.founders[i].accountRS;
+
+					rows += "<tr><td><a href='#' data-user='" + NRS.getAccountFormatted(account, "account") + "' class='user_info'>" + NRS.getAccountTitle(account, "account") + "</a></td><td>" + "Quantity" + "</td><td></td></tr>";
+				}
+			}
+			else {
+				rows = "<tr><td colspan='3'>None</td></tr>";
+			}
+
+			$("#currency_founders_table tbody").empty().append(rows);
+			NRS.dataLoadFinished($("#currency_founders_table"));
+		});
+	});
+
+	$("#currency_founders_modal").on("hidden.bs.modal", function(e) {
+		$("#currency_founders_table tbody").empty();
+		$("#currency_founders_table").parent().addClass("data-loading");
+	});
+	
 	
 	NRS.getExchangeHistory = function(currencyCode) {
 		if (NRS.currenciesTradeHistoryType == "my_exchanges") {
