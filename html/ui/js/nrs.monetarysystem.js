@@ -433,8 +433,8 @@ var NRS = (function(NRS, $, undefined) {
 						rows += "<tr><td><a href='#' onClick='NRS.goToCurrency(&quot;" + String(currency.code) + "&quot;)' >" + String(currency.code).escapeHTML() + "</a></td>" +
 							"<td>" + currency.name + "</td>" +
 							"<td>" + NRS.formatQuantity(currency.unconfirmedUnits, currency.decimals) + "</td>" +
-							"<td><a href='#' data-toggle='modal' data-target='#transfer_currency_modal' data-currency='" + String(currency.currency).escapeHTML() + "' data-code='" + String(currency.code).escapeHTML() + "' data-decimals='" + String(currency.decimals).escapeHTML() + "'>" + $.t("transfer") + "</a></td>" +
-							"<td><a href='#' data-toggle='modal' data-target='#publish_exchange_offer_modal' data-currency='" + String(currency.currency).escapeHTML() + "' data-code='" + String(currency.code).escapeHTML() + "' data-decimals='" + String(currency.decimals).escapeHTML() + "'>" + $.t("exchange") + "</a></td>" +
+							"<td><a href='#' class='btn btn-xs btn-default' data-toggle='modal' data-target='#transfer_currency_modal' data-currency='" + String(currency.currency).escapeHTML() + "' data-code='" + String(currency.code).escapeHTML() + "' data-decimals='" + String(currency.decimals).escapeHTML() + "'>" + $.t("transfer") + "</a> " +
+							"<a href='#' class='btn btn-xs btn-default' data-toggle='modal' data-target='#publish_exchange_offer_modal' data-currency='" + String(currency.currency).escapeHTML() + "' data-code='" + String(currency.code).escapeHTML() + "' data-decimals='" + String(currency.decimals).escapeHTML() + "'>" + $.t("exchange") + "</a></td>" +
 							"</tr>";
 					}
 					$('#currencies_table [data-i18n="type"]').hide();
@@ -472,7 +472,7 @@ var NRS = (function(NRS, $, undefined) {
 						if (currency.type & 0x8)
 							currency_type += "<i title='" + $.t('claimable') + "' class='ion-android-archive'></i> ";
 						if (currency.type & 0x10)
-							currency_type += "<i title='" + $.t('mintable') + "' class='ion-cash'></i> ";
+							currency_type += "<i title='" + $.t('mintable') + "' class='fa fa-money'></i> ";
 						if (currency.type & 0x20)
 							currency_type += "<i title='" + $.t('shuffleable') + "' class='fa fa-random'></i>";
 						rows += "<tr><td><a href='#' onClick='NRS.goToCurrency(&quot;" + String(currency.code) + "&quot;)' >" + String(currency.code).escapeHTML() + "</a></td>" +
@@ -487,16 +487,16 @@ var NRS = (function(NRS, $, undefined) {
 						"<td>" + NRS.formatQuantity(currency.currentSupply, currency.decimals) + "</td>" +
 						"<td>" + NRS.formatQuantity(currency.maxSupply, currency.decimals) + "</td><td>";
 						if (currency.accountRS==NRS.accountRS){
-							rows += "<a href='#' data-toggle='modal' data-target='#delete_currency_modal' data-currency='" + String(currency.currency).escapeHTML() + "' data-name='" + String(currency.name).escapeHTML() + "' >" + $.t("delete") + "</a> ";
+							rows += "<a href='#' class='btn btn-xs btn-default' data-toggle='modal' data-target='#delete_currency_modal' data-currency='" + String(currency.currency).escapeHTML() + "' data-name='" + String(currency.name).escapeHTML() + "' >" + $.t("delete") + "</a> ";
 						}
 						if (currency.issuanceHeight > NRS.lastBlockHeight && (currency.type & 0x4)){
-							rows += "<a href='#' data-toggle='modal' data-target='#reserve_currency_modal' data-currency='" + String(currency.currency).escapeHTML() + "' data-name='" + String(currency.name).escapeHTML() + "' >" + $.t("reserve") + "</a> ";
+							rows += "<a href='#' class='btn btn-xs btn-default' data-toggle='modal' data-target='#reserve_currency_modal' data-currency='" + String(currency.currency).escapeHTML() + "' data-name='" + String(currency.name).escapeHTML() + "' >" + $.t("reserve") + "</a> ";
 						}
 						if (currency.issuanceHeight <= NRS.lastBlockHeight && (currency.type & 0x8)){
-							rows += "<a href='#' data-toggle='modal' data-target='#claim_currency_modal' data-currency='" + String(currency.currency).escapeHTML() + "' data-name='" + String(currency.name).escapeHTML() + "' >" + $.t("claim") + "</a> ";
+							rows += "<a href='#' class='btn btn-xs btn-default' data-toggle='modal' data-target='#claim_currency_modal' data-currency='" + String(currency.currency).escapeHTML() + "' data-name='" + String(currency.name).escapeHTML() + "' >" + $.t("claim") + "</a> ";
 						}
 						if (currency.type & 0x10){
-							rows += "<a href='#' data-toggle='modal' data-target='#mine_currency_modal' data-currency='" + String(currency.currency).escapeHTML() + "' data-name='" + String(currency.name).escapeHTML() + "' >" + $.t("mint") + "</a>";
+							rows += "<a href='#' class='btn btn-xs btn-default' data-toggle='modal' data-target='#mine_currency_modal' data-currency='" + String(currency.currency).escapeHTML() + "' data-name='" + String(currency.name).escapeHTML() + "' >" + $.t("mint") + "</a>";
 						}
 							
 						rows += "</td></tr>";

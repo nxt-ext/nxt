@@ -930,5 +930,9 @@
     "error_max_currency_transfer_warning": "Number of units specified is higher than __qty__. Are you sure you want to continue? Click the submit button again to confirm.",
     "units": "Units",
     "exchange": "Exchange",
+    "mintable": "Mintable",
+    "transfer": "Transfer",
+    "mint": "Mint",
+    "reserve": "Reserve",
     "": ""
 }
