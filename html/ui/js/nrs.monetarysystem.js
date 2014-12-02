@@ -24,11 +24,13 @@ var NRS = (function(NRS, $, undefined) {
 				$("#currency_account").html(String(response.accountRS).escapeHTML());
 				$("#currency_id").html(String(response.currency).escapeHTML());
 				$("#currency_name").html(String(response.name).escapeHTML());
+				$("#currency_code").html(String(response.code).escapeHTML());
 				$("#currency_current_supply").html(NRS.convertToQNTf(response.currentSupply, response.decimals).escapeHTML());
 				$("#currency_max_supply").html(NRS.convertToQNTf(response.maxSupply, response.decimals).escapeHTML());
 				$("#currency_decimals").html(String(response.decimals).escapeHTML());
 				$("#currency_description").html(String(response.description).escapeHTML());
 				$("#buy_currency_button").data("decimals", response.decimals);
+				$("#sell_currency_button").data("decimals", response.decimals);
 				if (response.type & 0x4){
 					$("#view_currency_founders_link").data("currency", response.currency);
 					$('#currency_founders_link').show();
@@ -66,16 +68,16 @@ var NRS = (function(NRS, $, undefined) {
 				}
 				var rows = "";
 				for (var i = 0; i < response.offers.length; i++) {
-					var sellOffers = response.offers[i];
+					var sellOffer = response.offers[i];
 					var decimals = $("#currency_decimals").text();
 					if (i == 0) {
-						$("#buy_currency_price").val(NRS.convertToNXT(sellOffers.rateNQT));
+						$("#buy_currency_price").val(NRS.convertToNXT(sellOffer.rateNQT));
 					}
 
-					rows += "<tr><td><a href='#' class='user-info' data-user='" + String(sellOffers.accountRS).escapeHTML() + "'>" + String(sellOffers.accountRS).escapeHTML() + "</a></td>" +
-                  "<td>" + NRS.convertToQNTf(sellOffers.supply, decimals) + "</td>" +
-                  "<td>" + NRS.convertToQNTf(sellOffers.limit, decimals) + "</td>" +
-                  "<td>" + NRS.formatAmount(sellOffers.rateNQT) + "</td>" +
+					rows += "<tr><td><a href='#' class='user-info' data-user='" + String(sellOffer.accountRS).escapeHTML() + "'>" + String(sellOffer.accountRS).escapeHTML() + "</a></td>" +
+                  "<td>" + NRS.convertToQNTf(sellOffer.supply, decimals) + "</td>" +
+                  "<td>" + NRS.convertToQNTf(sellOffer.limit, decimals) + "</td>" +
+                  "<td>" + NRS.formatAmount(sellOffer.rateNQT) + "</td>" +
                   "</tr>";
 				}
 				$("#ms_open_sell_orders_table tbody").empty().append(rows);
@@ -97,14 +99,14 @@ var NRS = (function(NRS, $, undefined) {
 				var rows = "";
 				for (var i = 0; i < response.offers.length; i++) {
 					var decimals = $("#currency_decimals").text();
-					var buyOffers = response.offers[i];
+					var buyOffer = response.offers[i];
 					if (i == 0) {
-						$("#sell_currency_price").val(NRS.calculateOrderPricePerWholeQNT(buyOffers.rateNQT, decimals));
+						$("#sell_currency_price").val(NRS.convertToNXT(buyOffer.rateNQT));
 					}
-					rows += "<tr><td><a href='#' class='user-info' data-user='" + String(buyOffers.accountRS).escapeHTML() + "'>" + String(buyOffers.accountRS).escapeHTML() + "</a></td>" +
-                  "<td>" + NRS.convertToQNTf(buyOffers.supply, decimals) + "</td>" +
-                  "<td>" + NRS.convertToQNTf(buyOffers.limit, decimals) + "</td>" +
-                  "<td>" + NRS.formatAmount(buyOffers.rateNQT) + "</td>" +
+					rows += "<tr><td><a href='#' class='user-info' data-user='" + String(buyOffer.accountRS).escapeHTML() + "'>" + String(buyOffer.accountRS).escapeHTML() + "</a></td>" +
+                  "<td>" + NRS.convertToQNTf(buyOffer.supply, decimals) + "</td>" +
+                  "<td>" + NRS.convertToQNTf(buyOffer.limit, decimals) + "</td>" +
+                  "<td>" + NRS.formatAmount(buyOffer.rateNQT) + "</td>" +
                   "</tr>";
 				}
 				$("#ms_open_buy_orders_table tbody").empty().append(rows);
@@ -303,10 +305,7 @@ var NRS = (function(NRS, $, undefined) {
 
 		$("#currency_order_modal_button").html(orderType + " currency").data("resetText", orderType + " currency");
 
-		orderType = orderType.toLowerCase();
-
 		try {
-			//TODO
 			var units = String($("#" + orderType + "_currency_units").val());
 			var unitsQNT = new BigInteger(NRS.convertToQNT(units, currencyDecimals));
 			var priceNQT = new BigInteger(NRS.calculatePricePerWholeQNT(NRS.convertToNQT(String($("#" + orderType + "_currency_price").val())), currencyDecimals));
@@ -331,24 +330,25 @@ var NRS = (function(NRS, $, undefined) {
 		}
 
 		var priceNQTPerWholeQNT = priceNQT.multiply(new BigInteger("" + Math.pow(10, currencyDecimals)));
-
+		var description;
+		var tooltipTitle;
 		if (orderType == "buy") {
-			var description = $.t("buy_currency_description", {
+			description = $.t("buy_currency_description", {
 				"quantity": NRS.formatQuantity(unitsQNT, currencyDecimals, true),
-				"currency_name": $("#currency_name").html().escapeHTML(),
+				"currency_code": $("#currency_code").html().escapeHTML(),
 				"nxt": NRS.formatAmount(priceNQTPerWholeQNT)
 			});
-			var tooltipTitle = $.t("buy_order_description_help", {
+			tooltipTitle = $.t("buy_order_description_help", {
 				"nxt": NRS.formatAmount(priceNQTPerWholeQNT, false, true),
 				"total_nxt": totalNXT
 			});
 		} else {
-			var description = $.t("sell_currency_description", {
+			description = $.t("sell_currency_description", {
 				"quantity": NRS.formatQuantity(unitsQNT, currencyDecimals, true),
-				"currency_name": $("#currency_name").html().escapeHTML(),
+				"currency_code": $("#currency_code").html().escapeHTML(),
 				"nxt": NRS.formatAmount(priceNQTPerWholeQNT)
 			});
-			var tooltipTitle = $.t("sell_order_description_help", {
+			tooltipTitle = $.t("sell_order_description_help", {
 				"nxt": NRS.formatAmount(priceNQTPerWholeQNT, false, true),
 				"total_nxt": totalNXT
 			});
@@ -358,16 +358,17 @@ var NRS = (function(NRS, $, undefined) {
 		$("#currency_order_total").html(totalNXT + " NXT");
 		$("#currency_order_fee_paid").html(NRS.formatAmount(feeNQT) + " NXT");
 
-		if (units != "1") {
-			$("#currency_order_total_tooltip").show();
-			$("#currency_order_total_tooltip").popover("destroy");
-			$("#currency_order_total_tooltip").data("content", tooltipTitle);
-			$("#currency_order_total_tooltip").popover({
+		var totalTooltip = $("#currency_order_total_tooltip");
+      if (units != "1") {
+			totalTooltip.show();
+			totalTooltip.popover("destroy");
+			totalTooltip.data("content", tooltipTitle);
+			totalTooltip.popover({
 				"content": tooltipTitle,
 				"trigger": "hover"
 			});
 		} else {
-			$("#currency_order_total_tooltip").hide();
+			totalTooltip.hide();
 		}
 
 		$("#currency_order_type").val((orderType == "buy" ? "currencyBuy" : "currencySell"));
