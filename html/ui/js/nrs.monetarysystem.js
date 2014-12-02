@@ -47,9 +47,11 @@ var NRS = (function(NRS, $, undefined) {
 			"account": NRS.accountRS,
 			"code": currencyCode
 		}, function(response, input) {
-			if (response) {
+			if (response.accountCurrencies && response.accountCurrencies.length) {
 				$("#your_currency_balance").html(NRS.formatQuantity(response.units, response.decimals));
 			}
+			else
+				$("#your_currency_balance").html(0);
 		});
 		
 		NRS.sendRequest("getSellOffers+", {

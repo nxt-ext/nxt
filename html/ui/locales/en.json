@@ -935,5 +935,12 @@
     "mint": "Mint",
     "reserve": "Reserve",
     "claim": "Claim",
+    "buy_currency": "Buy Currency",
+    "sell_currency": "Sell Currency",
+    "publish_exchange_offer": "Publish Exchange Offer",
+    "reserve_increase": "Reserve Increase",
+    "currency_transfer": "Currency Transfer",
+    "issue_currency": "Issue Currency",
+    "delete_currency": "Delete Currency",
     "": ""
 }
