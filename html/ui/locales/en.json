@@ -939,6 +939,7 @@
     "sell_currency": "Sell Currency",
     "publish_exchange_offer": "Publish Exchange Offer",
     "reserve_increase": "Reserve Increase",
+    "reserve_claim": "Reserve Claim",
     "currency_transfer": "Currency Transfer",
     "issue_currency": "Issue Currency",
     "delete_currency": "Delete Currency",
