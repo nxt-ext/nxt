@@ -181,9 +181,9 @@ var NRS = (function(NRS, $, undefined) {
 					  "<td>" + NRS.formatAmount(exchanges.rateNQT) + "</td>" +
 					  "</tr>";
 					}
-					$("#ms_my_exchanges_history_table tbody").empty().append(rows);
+					$("#ms_exchanges_history_table tbody").empty().append(rows);
 				} else {
-					$("#ms_my_exchanges_history_table tbody").empty();
+					$("#ms_exchanges_history_table tbody").empty();
 				}
 				NRS.dataLoadFinished($("#ms_exchanges_history_table"), true);
 			});
