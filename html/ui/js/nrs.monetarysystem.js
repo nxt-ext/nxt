@@ -69,7 +69,7 @@ var NRS = (function(NRS, $, undefined) {
 					var sellOffers = response.offers[i];
 					var decimals = $("#currency_decimals").text();
 					if (i == 0) {
-						$("#buy_currency_price").val(NRS.calculateOrderPricePerWholeQNT(sellOffers.rateNQT, decimals));
+						$("#buy_currency_price").val(NRS.convertToNXT(sellOffers.rateNQT));
 					}
 
 					rows += "<tr><td><a href='#' class='user-info' data-user='" + String(sellOffers.accountRS).escapeHTML() + "'>" + String(sellOffers.accountRS).escapeHTML() + "</a></td>" +
@@ -307,11 +307,11 @@ var NRS = (function(NRS, $, undefined) {
 
 		try {
 			//TODO
-			var quantity = String($("#" + orderType + "_currency_quantity").val());
-			var quantityQNT = new BigInteger(NRS.convertToQNT(quantity, currencyDecimals));
+			var units = String($("#" + orderType + "_currency_units").val());
+			var unitsQNT = new BigInteger(NRS.convertToQNT(units, currencyDecimals));
 			var priceNQT = new BigInteger(NRS.calculatePricePerWholeQNT(NRS.convertToNQT(String($("#" + orderType + "_currency_price").val())), currencyDecimals));
 			var feeNQT = new BigInteger(NRS.convertToNQT(String($("#" + orderType + "_currency_fee").val())));
-			var totalNXT = NRS.formatAmount(NRS.calculateOrderTotalNQT(quantityQNT, priceNQT, currencyDecimals), false, true);
+			var totalNXT = NRS.formatAmount(NRS.calculateOrderTotalNQT(unitsQNT, priceNQT, currencyDecimals), false, true);
 		} catch (err) {
 			$.growl($.t("error_invalid_input"), {
 				"type": "danger"
@@ -319,7 +319,7 @@ var NRS = (function(NRS, $, undefined) {
 			return e.preventDefault();
 		}
 
-		if (priceNQT.toString() == "0" || quantityQNT.toString() == "0") {
+		if (priceNQT.toString() == "0" || unitsQNT.toString() == "0") {
 			$.growl($.t("error_amount_price_required"), {
 				"type": "danger"
 			});
@@ -334,7 +334,7 @@ var NRS = (function(NRS, $, undefined) {
 
 		if (orderType == "buy") {
 			var description = $.t("buy_currency_description", {
-				"quantity": NRS.formatQuantity(quantityQNT, currencyDecimals, true),
+				"quantity": NRS.formatQuantity(unitsQNT, currencyDecimals, true),
 				"currency_name": $("#currency_name").html().escapeHTML(),
 				"nxt": NRS.formatAmount(priceNQTPerWholeQNT)
 			});
@@ -344,7 +344,7 @@ var NRS = (function(NRS, $, undefined) {
 			});
 		} else {
 			var description = $.t("sell_currency_description", {
-				"quantity": NRS.formatQuantity(quantityQNT, currencyDecimals, true),
+				"quantity": NRS.formatQuantity(unitsQNT, currencyDecimals, true),
 				"currency_name": $("#currency_name").html().escapeHTML(),
 				"nxt": NRS.formatAmount(priceNQTPerWholeQNT)
 			});
@@ -358,7 +358,7 @@ var NRS = (function(NRS, $, undefined) {
 		$("#currency_order_total").html(totalNXT + " NXT");
 		$("#currency_order_fee_paid").html(NRS.formatAmount(feeNQT) + " NXT");
 
-		if (quantity != "1") {
+		if (units != "1") {
 			$("#currency_order_total_tooltip").show();
 			$("#currency_order_total_tooltip").popover("destroy");
 			$("#currency_order_total_tooltip").data("content", tooltipTitle);
@@ -372,8 +372,8 @@ var NRS = (function(NRS, $, undefined) {
 
 		$("#currency_order_type").val((orderType == "buy" ? "currencyBuy" : "currencySell"));
 		$("#currency_order_code").val(currencyId);
-		$("#currency_order_quantity").val(quantityQNT.toString());
-		$("#currency_order_price").val(priceNQT.toString());
+		$("#currency_order_quantity").val(unitsQNT.toString());
+		$("#currency_order_price").val(priceNQTPerWholeQNT.toString());
 		$("#currency_order_fee").val(feeNQT.toString());
 	});
 	
@@ -388,18 +388,18 @@ var NRS = (function(NRS, $, undefined) {
 	}
 	
 	//calculate preview price (calculated on every keypress)
-	$("#sell_currency_quantity, #sell_currency_price, #buy_currency_quantity, #buy_currency_price").keyup(function(e) {
-		var currencyDecimals = $('#currency_decimals').val();
+	$("#sell_currency_units, #sell_currency_price, #buy_currency_units, #buy_currency_price").keyup(function(e) {
+		var currencyDecimals = $("#currency_decimals").text();
 		var orderType = $(this).data("type").toLowerCase();
 
 		try {
-			var quantityQNT = new BigInteger(NRS.convertToQNT(String($("#" + orderType + "_currency_quantity").val()), currencyDecimals));
+			var units = new BigInteger(NRS.convertToQNT(String($("#" + orderType + "_currency_units").val()), currencyDecimals));
 			var priceNQT = new BigInteger(NRS.calculatePricePerWholeQNT(NRS.convertToNQT(String($("#" + orderType + "_currency_price").val())), currencyDecimals));
 
-			if (priceNQT.toString() == "0" || quantityQNT.toString() == "0") {
+			if (priceNQT.toString() == "0" || units.toString() == "0") {
 				$("#" + orderType + "_currency_total").val("0");
 			} else {
-				var total = NRS.calculateOrderTotal(quantityQNT, priceNQT, currencyDecimals);
+				var total = NRS.calculateOrderTotal(units, priceNQT, currencyDecimals);
 				$("#" + orderType + "_currency_total").val(total.toString());
 			}
 		} catch (err) {

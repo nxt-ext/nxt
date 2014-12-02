@@ -1180,10 +1180,10 @@
 										<form role="form" class="form-horizontal" style="padding: 10px;;max-width:350px;margin-left:auto;margin-right:auto;" autocomplete="off">
 											<div style="margin-left:-20px">
 												<div class="form-group">
-													<label for="buy_currency_quantity" class="col-sm-3 control-label" data-i18n="quantity">Quantity</label>
+													<label for="buy_currency_units" class="col-sm-3 control-label" data-i18n="units">Units</label>
 													<div class="col-sm-9">
 														<div class="input-group">
-															<input id="buy_currency_quantity" type="text" name="buy_currency_quantity" value="0" class="form-control" data-type="buy" />
+															<input id="buy_currency_units" type="text" name="buy_currency_units" value="0" class="form-control" data-type="buy" />
 															<span class="input-group-addon"><span class="currency_code"></span></span>
 														</div>
 													</div>
@@ -1262,10 +1262,10 @@
 										<form role="form" class="form-horizontal" style="padding: 10px;;max-width:350px;margin-left:auto;margin-right:auto;" autocomplete="off">
 											<div style="margin-left:-20px">
 												<div class="form-group">
-													<label for="sell_currency_quantity" class="col-sm-3 control-label" data-i18n="quantity">Quantity</label>
+													<label for="sell_currency_units" class="col-sm-3 control-label" data-i18n="units">Units</label>
 													<div class="col-sm-9">
 														<div class="input-group">
-															<input id="sell_currency_quantity" type="text" name="sell_currency_quantity" value="0" class="form-control" data-type="sell" />
+															<input id="sell_currency_units" type="text" name="sell_currency_units" value="0" class="form-control" data-type="sell" />
 															<span class="input-group-addon"><span class="currency_code"></span></span>
 														</div>
 													</div>
@@ -2898,7 +2898,7 @@
                                     <input type="hidden" name="decimals" id="publish_exchange_offer_decimals" value="" />
                                 </div>
                                 <div class="form-group">
-                                    <label for="buy_currency_units_initial" class="col-sm-3 control-label" data-i18n="units">Buy units (Initial)</label>
+                                    <label for="buy_currency_units_initial" class="col-sm-3 control-label" data-i18n="buy_units_initial">Buy units (Initial)</label>
                                     <div class="col-sm-9">
                                         <div class="input-group">
                                             <input id="buy_currency_units_initial" type="text" name="initialBuySupply" value="0" class="form-control" data-type="buy" tabindex="2" />
@@ -2907,7 +2907,7 @@
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <label for="buy_currency_units_total" class="col-sm-3 control-label" data-i18n="units">Buy units (Total)</label>
+                                    <label for="buy_currency_units_total" class="col-sm-3 control-label" data-i18n="buy_units_limit">Buy units (Limit)</label>
                                     <div class="col-sm-9">
                                         <div class="input-group">
                                             <input id="buy_currency_units_total" type="text" name="totalBuyLimit" value="0" class="form-control" data-type="buy" tabindex="3" />
@@ -2916,7 +2916,7 @@
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <label for="buy_currency_rate" class="col-sm-3 control-label" data-i18n="rate">Buy Rate per unit</label>
+                                    <label for="buy_currency_rate" class="col-sm-3 control-label" data-i18n="buy_rate_per_unit">Buy Rate per unit</label>
                                     <div class="col-sm-9">
                                         <div class="input-group">
                                             <input id="buy_currency_rate" type="text" value="0" name="buyRateNQT" class="form-control" data-type="buy" tabindex="4" />
@@ -2925,7 +2925,7 @@
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <label for="sell_currency_units_initial" class="col-sm-3 control-label" data-i18n="units">Sell units (Initial)</label>
+                                    <label for="sell_currency_units_initial" class="col-sm-3 control-label" data-i18n="sell_units_initial">Sell units (Initial)</label>
                                     <div class="col-sm-9">
                                         <div class="input-group">
                                             <input id="sell_currency_units_initial" type="text" name="initialSellSupply" value="0" class="form-control" data-type="sell" tabindex="5" />
@@ -2934,7 +2934,7 @@
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <label for="sell_currency_units_total" class="col-sm-3 control-label" data-i18n="units">Sell units (Total)</label>
+                                    <label for="sell_currency_units_total" class="col-sm-3 control-label" data-i18n="sell_units_limit">Sell units (Limit)</label>
                                     <div class="col-sm-9">
                                         <div class="input-group">
                                             <input id="sell_currency_units_total" type="text" name="totalSellLimit" value="0" class="form-control" data-type="sell" tabindex="6" />
@@ -2943,7 +2943,7 @@
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <label for="sell_currency_rate" class="col-sm-3 control-label" data-i18n="rate">Sell Rate per unit</label>
+                                    <label for="sell_currency_rate" class="col-sm-3 control-label" data-i18n="sell_rate_per_unit">Sell Rate per unit</label>
                                     <div class="col-sm-9">
                                         <div class="input-group">
                                             <input id="sell_currency_rate" type="text" value="0" name="sellRateNQT" class="form-control" data-type="sell" tabindex="7" />
