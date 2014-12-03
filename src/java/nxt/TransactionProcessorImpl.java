@@ -399,6 +399,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
         long currentTime = System.currentTimeMillis();
         synchronized (BlockchainImpl.getInstance()) {
             for (TransactionImpl transaction : transactions) {
+                transaction.unsetBlock();
                 lostTransactions.add(new UnconfirmedTransaction(transaction, Math.min(currentTime, Convert.fromEpochTime(transaction.getTimestamp()))));
             }
         }

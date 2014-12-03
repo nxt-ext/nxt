@@ -777,7 +777,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
     private List<BlockImpl> popOffTo(Block commonBlock) {
         synchronized (blockchain) {
             if (commonBlock.getHeight() < getMinRollbackHeight()) {
-                throw new IllegalArgumentException("Rollback to height " + commonBlock.getHeight() + " not suppported, "
+                throw new IllegalArgumentException("Rollback to height " + commonBlock.getHeight() + " not supported, "
                         + "current height " + Nxt.getBlockchain().getHeight());
             }
             if (! blockchain.hasBlock(commonBlock.getId())) {
@@ -815,9 +815,6 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         }
         BlockImpl previousBlock = blockchain.getBlock(block.getPreviousBlockId());
         blockchain.setLastBlock(block, previousBlock);
-        for (TransactionImpl transaction : block.getTransactions()) {
-            transaction.unsetBlock();
-        }
         BlockDb.deleteBlocksFrom(block.getId());
         blockListeners.notify(block, Event.BLOCK_POPPED);
         return previousBlock;
