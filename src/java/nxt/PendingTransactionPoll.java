@@ -29,7 +29,7 @@ public class PendingTransactionPoll extends AbstractPoll {
         }
     };
 
-    final static ValuesDbTable<PendingTransactionPoll, Long> signersTable = new ValuesDbTable<PendingTransactionPoll, Long>("pending_transactions_signers", signersDbKeyFactory) {
+    final static ValuesDbTable<PendingTransactionPoll, Long> signersTable = new ValuesDbTable<PendingTransactionPoll, Long>("pending_transaction_signer", signersDbKeyFactory) {
 
         @Override
         protected Long load(Connection con, ResultSet rs) throws SQLException {
