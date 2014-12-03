@@ -820,20 +820,4 @@ final class TransactionImpl implements Transaction {
     boolean isDuplicate(Map<TransactionType, Set<String>> duplicates) {
         return type.isDuplicate(this, duplicates);
     }
-
-    //TODO: those two methods should not be public, and should not be in the Transaction interface, as no outside code is supposed to be calling them
-    //todo: move it up to TransactionType.apply ? - not sure yet, but this does need some refactoring, maybe call transaction.getTwoPhased().commit(transaction)
-    // and transaction.getTwoPhased().rollback(transaction), as those should only ever be called on transactions that do have twoPhased,
-    // and get the accounts from within the TwoPhased methods
-    @Override
-    public void release() {
-        Pair<Account,Account> sndrRcp = getSenderAndRecipient();
-        twoPhased.commit(this, sndrRcp.getFirst(), sndrRcp.getSecond());
-    }
-
-    @Override
-    public void refuse() {
-        Pair<Account,Account> sndrRcp = getSenderAndRecipient();
-        twoPhased.rollback(this, sndrRcp.getFirst(), sndrRcp.getSecond());
-    }
 }

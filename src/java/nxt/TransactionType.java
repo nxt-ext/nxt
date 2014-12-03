@@ -347,7 +347,7 @@ public abstract class TransactionType {
                     PendingTransactionPoll poll = PendingTransactionPoll.getPoll(pendingTransactionId);
                     if (!poll.isFinished()) { //todo: else?
                         if (VotePhased.addVote(poll, senderAccount, transaction)) {
-                            TransactionDb.findTransaction(pendingTransactionId).release();
+                            TransactionDb.findTransaction(pendingTransactionId).getTwoPhased().commit(transaction,senderAccount,recipientAccount);
                             PendingTransactionPoll.finishPoll(poll);
                         }
                     } //TODO: else should be an error, but it must be checked in validateAttachment that indeed all

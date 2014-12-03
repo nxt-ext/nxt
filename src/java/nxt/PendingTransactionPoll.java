@@ -80,11 +80,7 @@ public class PendingTransactionPoll extends AbstractPoll {
 
         @Override
         protected PendingTransactionPoll load(Connection con, ResultSet rs) throws SQLException {
-            try {
-                return new PendingTransactionPoll(rs);
-            } catch (Exception e) {
-                throw new SQLException(e); //TODO: should not create new SQLExceptions unless you are writing a JDBC driver
-            }
+            return new PendingTransactionPoll(rs);
         }
 
         @Override
