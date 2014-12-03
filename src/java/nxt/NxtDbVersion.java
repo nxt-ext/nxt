@@ -380,51 +380,49 @@ class NxtDbVersion extends DbVersion {
             case 136:
                 apply("CREATE INDEX IF NOT EXISTS tag_in_stock_count_idx ON tag (in_stock_count DESC, height DESC)");
             case 137:
-                //TODO: case 137: must be apply(null), as it is in already in develop branch, and increment the following case numbers
-                apply("DROP TABLE IF EXISTS poll");
+                apply(null);
             case 138:
-                apply("DROP TABLE IF EXISTS vote");
+                apply("DROP TABLE IF EXISTS poll");
             case 139:
+                apply("DROP TABLE IF EXISTS vote");
+            case 140:
                 apply("CREATE TABLE IF NOT EXISTS vote (db_id IDENTITY, id BIGINT NOT NULL, " +
                         "poll_id BIGINT NOT NULL, voter_id BIGINT NOT NULL, vote_bytes VARBINARY NOT NULL, height INT NOT NULL)");
-            case 140:
-                apply("CREATE UNIQUE INDEX IF NOT EXISTS vote_id_idx ON vote (id)");
             case 141:
-                apply("CREATE INDEX IF NOT EXISTS vote_poll_id_idx ON vote (poll_id)");
-                //TODO: if multiple voting from the same voter on the same poll is not allowed, this should also be enforced
-                // by a unique index on (poll_id, voter_id), just add voter_id to the above index and make it unique
+                apply("CREATE UNIQUE INDEX IF NOT EXISTS vote_id_idx ON vote (id)");
             case 142:
+                apply("CREATE UNIQUE INDEX IF NOT EXISTS vote_poll_id_idx ON vote (poll_id, voter_id)");
+            case 143:
                 apply("CREATE TABLE IF NOT EXISTS poll (db_id IDENTITY, id BIGINT NOT NULL, "
                         + "FOREIGN KEY (id) REFERENCES transaction (id), account_id BIGINT NOT NULL, name VARCHAR NOT NULL, "
                         + "description VARCHAR, options ARRAY NOT NULL, min_num_options TINYINT, max_num_options TINYINT, "
-                        + "min_range_value TINYINT, max_range_value TINYINT, " //TODO: rename finish to finish_height
-                        + "finish INT NOT NULL, voting_model TINYINT NOT NULL, min_balance BIGINT, "
+                        + "min_range_value TINYINT, max_range_value TINYINT, "
+                        + "finish_height INT NOT NULL, voting_model TINYINT NOT NULL, min_balance BIGINT, "
                         + "asset_id BIGINT, finished BOOLEAN, height INT NOT NULL, latest BOOLEAN DEFAULT TRUE NOT NULL)");
-            case 143:
+            case 144:
                 apply("CREATE TABLE IF NOT EXISTS poll_results (db_id IDENTITY, poll_id BIGINT NOT NULL, "
                         + "option VARCHAR NOT NULL, result BIGINT NOT NULL,  height INT NOT NULL)");
-            case 144:
-                apply("ALTER TABLE transaction ADD COLUMN IF NOT EXISTS two_phased BOOLEAN NOT NULL DEFAULT FALSE");
             case 145:
-                //TODO: use singular everywhere for table names, i.e. pending_transaction instead of pending_transactions
-                apply("CREATE TABLE IF NOT EXISTS pending_transactions (db_id IDENTITY, id BIGINT NOT NULL, "
+                apply("ALTER TABLE transaction ADD COLUMN IF NOT EXISTS two_phased BOOLEAN NOT NULL DEFAULT FALSE");
+            case 146:
+                apply("CREATE TABLE IF NOT EXISTS pending_transaction (db_id IDENTITY, id BIGINT NOT NULL, "
                         + "FOREIGN KEY (id) REFERENCES transaction (id) ON DELETE CASCADE, account_id BIGINT NOT NULL, "
-                        + "signersCount TINYINT NOT NULL DEFAULT 0, blacklist BOOLEAN DEFAULT FALSE, " //TODO: rename signersCount to signers_count
-                        + "finish INT NOT NULL, voting_model TINYINT NOT NULL, quorum BIGINT NOT NULL, " // and finish to finish_height
+                        + "signers_count TINYINT NOT NULL DEFAULT 0, blacklist BOOLEAN DEFAULT FALSE, "
+                        + "finish_height INT NOT NULL, voting_model TINYINT NOT NULL, quorum BIGINT NOT NULL, "
                         + "min_balance BIGINT NOT NULL, asset_id BIGINT NOT NULL, finished BOOLEAN NOT NULL, "
                         + "height INT NOT NULL, latest BOOLEAN DEFAULT TRUE NOT NULL)");
-            case 146:
+            case 147:
                 apply("CREATE TABLE IF NOT EXISTS vote_phased (db_id IDENTITY, id BIGINT NOT NULL, "
                         + "pending_transaction_id BIGINT NOT NULL, voter_id BIGINT NOT NULL, "
                         + "estimated_total BIGINT NOT NULL, height INT NOT NULL)");
-            case 147:
+            case 148:
                 apply("CREATE TABLE IF NOT EXISTS pending_transactions_signers (db_id IDENTITY, "
                         + "poll_id BIGINT NOT NULL, account_id BIGINT NOT NULL, height INT NOT NULL)");
                 
-            case 148:
+            case 149:
                 BlockchainProcessorImpl.getInstance().forceScanAtStart();
                 apply(null);
-            case 149:
+            case 150:
                 //TODO: indexes on poll, poll_results, pending_transactions, vote_phased, pending_transactions_signers
                 return;
             default:

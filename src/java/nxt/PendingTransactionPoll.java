@@ -57,7 +57,7 @@ public class PendingTransactionPoll extends AbstractPoll {
         }
 
         protected PendingTransactionsTable(DbKey.Factory<PendingTransactionPoll> dbKeyFactory) {
-            super("pending_transactions", dbKeyFactory);
+            super("pending_transaction", dbKeyFactory);
         }
 
         //TODO: this method can be removed once getting the pending transactions is optimized, see the comment in TransactionProcessorImpl
@@ -65,8 +65,7 @@ public class PendingTransactionPoll extends AbstractPoll {
             try {
                 Connection con = db.getConnection();
                 PreparedStatement pstmt = con.prepareStatement("SELECT id FROM " + table
-                        //TODO: rename finish to finish_height
-                        + " WHERE finish = ?  AND finished = FALSE AND latest = TRUE");
+                        + " WHERE finish_height = ?  AND finished = FALSE AND latest = TRUE");
                 pstmt.setInt(1, height);
                 return new DbIterator<>(con, pstmt, new DbIterator.ResultSetReader<Long>() {
                     @Override
@@ -129,7 +128,7 @@ public class PendingTransactionPoll extends AbstractPoll {
         this.quorum = rs.getLong("quorum");
         this.dbKey = pollDbKeyFactory.newKey(this.id);
 
-        byte signersCount = rs.getByte("signersCount");
+        byte signersCount = rs.getByte("signers_count");
         if (signersCount == 0) {
             this.whitelist = new long[0];
             this.blacklist = new long[0];
@@ -186,12 +185,12 @@ public class PendingTransactionPoll extends AbstractPoll {
 
     public static List<Long> getIdsByWhitelistedSigner(Account signer,  int from, int to) {
         try (Connection con = Db.db.getConnection();
-             PreparedStatement pstmt = con.prepareStatement("SELECT DISTINCT pending_transactions.id "
-                     + "from pending_transactions, pending_transactions_signers "
-                     + "WHERE pending_transactions.latest = TRUE AND pending_transactions.finished = false AND "
-                     + "pending_transactions.blacklist = false AND "
-                     + "pending_transactions.id = pending_transactions_signers.poll_id "
-                     + "AND pending_transactions_signers.account_id = ? "
+             PreparedStatement pstmt = con.prepareStatement("SELECT DISTINCT pending_transaction.id "
+                     + "from pending_transaction, pending_transactions_signers "
+                     + "WHERE pending_transaction.latest = TRUE AND pending_transaction.finished = false AND "
+                     + "pending_transaction.blacklist = false AND "
+                     + "pending_transaction.id = pending_transactions_signers.poll_id "
+                     + "AND pending_transaction_signers.account_id = ? "
                      + DbUtils.limitsClause(from, to))) {
             pstmt.setLong(1, signer.getId());
             DbUtils.setLimits(2, pstmt, from, to);
@@ -236,8 +235,8 @@ public class PendingTransactionPoll extends AbstractPoll {
             signers = whitelist;
         }
 
-        try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO pending_transactions (id, account_id, "
-                + "finish, signersCount, blacklist, voting_model, quorum, min_balance, asset_id, " //TODO: rename signersCount to signers_count
+        try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO pending_transaction (id, account_id, "
+                + "finish_height, signers_count, blacklist, voting_model, quorum, min_balance, asset_id, "
                 + "finished, height) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
             int i = 0;
             pstmt.setLong(++i, getId());

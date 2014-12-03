@@ -28,7 +28,7 @@ public class AbstractPoll {
 
     AbstractPoll(ResultSet rs) throws SQLException {
         this.accountId = rs.getLong("account_id");
-        this.finishBlockHeight = rs.getInt("finish");
+        this.finishBlockHeight = rs.getInt("finish_height");
         this.votingModel = rs.getByte("voting_model");
         this.assetId = rs.getLong("asset_id");
         this.minBalance = rs.getLong("min_balance");
