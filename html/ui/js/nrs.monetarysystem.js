@@ -494,7 +494,7 @@ var NRS = (function(NRS, $, undefined) {
 						if (NRS.isClaimable(currency.type)) {
 							currency_type += "<i title='" + $.t('claimable') + "' class='ion-android-archive'></i> ";
 						}
-						if (NRS.isClaimable(currency.type)) {
+						if (NRS.isMintable(currency.type)) {
 							currency_type += "<i title='" + $.t('mintable') + "' class='fa fa-money'></i> ";
 						}
 						rows += "<tr>" +
