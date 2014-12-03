@@ -797,54 +797,259 @@ var NRS = (function(NRS, $, undefined) {
 					incorrect = true;
 					break;
 			}
-		}
+		} else if (transaction.type == 5) {
+			switch (transaction.subtype) {
+				case 0:
+					var data = {
+						"type": $.t("currency_issuance"),
+						"name": transaction.attachment.name,
+						"currency_code": transaction.attachment.code,
+						"description": transaction.attachment.description,
+						"initialSupply": transaction.attachment.initialSupply,
+						"reserveSupply": transaction.attachment.reserveSupply,
+						"maxSupply": transaction.attachment.maxSupply,
+						"decimals": transaction.attachment.decimals,
+						"issuanceHeight": transaction.attachment.issuanceHeight,
+						"minReservePerUnitNQT": transaction.attachment.minReservePerUnitNQT,
+						"minDifficulty": transaction.attachment.minDifficulty,
+						"maxDifficulty": transaction.attachment.maxDifficulty,
+						"algorithm": transaction.attachment.algorithm
+					};
 
-		if (!(transaction.type == 1 && transaction.subtype == 0)) {
-			if (transaction.attachment) {
-				if (transaction.attachment.message) {
-					if (!transaction.attachment["version.Message"]) {
-						try {
-							message = converters.hexStringToString(transaction.attachment.message);
-						} catch (err) {
-							//legacy
-							if (transaction.attachment.message.indexOf("feff") === 0) {
-								message = NRS.convertFromHex16(transaction.attachment.message);
-							} else {
-								message = NRS.convertFromHex8(transaction.attachment.message);
-							}
-						}
-					} else {
-						message = String(transaction.attachment.message);
+					if (transaction.sender != NRS.account) {
+						data["sender"] = NRS.getAccountTitle(transaction, "sender");
 					}
 
-					$("#transaction_info_output_bottom").append("<div style='padding-left:5px;'><label><i class='fa fa-unlock'></i> " + $.t("public_message") + "</label><div>" + String(message).escapeHTML().nl2br() + "</div></div>");
-				}
+					$("#transaction_info_callout").html("<a href='#' data-goto-currency='" + String(transaction.transaction).escapeHTML() + "'>Click here</a> to view this currency in the Monetary System.").show();
 
-				if (transaction.attachment.encryptedMessage || (transaction.attachment.encryptToSelfMessage && NRS.account == transaction.sender)) {
+					$("#transaction_info_table tbody").append(NRS.createInfoTable(data));
+					$("#transaction_info_table").show();
+
+					break;
+				case 1:
+					async = true;
+
+					NRS.sendRequest("getCurrency", {
+						"currency": transaction.attachment.currency
+					}, function(currency, input) {
+						var data = {
+							"type": $.t("reserve_increase"),
+							"currency_code": currency.code,
+							"amountPerUnitNQT": transaction.attachment.amountPerUnitNQT
+						};
+
+						data["sender"] = NRS.getAccountTitle(transaction, "sender");
+
+						$("#transaction_info_table tbody").append(NRS.createInfoTable(data));
+						$("#transaction_info_table").show();
+
+						$("#transaction_info_modal").modal("show");
+						NRS.fetchingModalData = false;
+					});
+
+					break;
+				case 2:
+					async = true;
+
+					NRS.sendRequest("getCurrency", {
+						"currency": transaction.attachment.currency
+					}, function(currency, input) {
+						var data = {
+							"type": $.t("reserve_claim"),
+							"currency_code": currency.code,
+							"units": [transaction.attachment.quantityQNT, currency.decimals],
+						};
+
+						if (transaction.sender != NRS.account) {
+							data["sender"] = NRS.getAccountTitle(transaction, "sender");
+						}
+
+						$("#transaction_info_table tbody").append(NRS.createInfoTable(data));
+						$("#transaction_info_table").show();
+
+						$("#transaction_info_modal").modal("show");
+						NRS.fetchingModalData = false;
+					});
+
+					break;
+				case 3:
+					async = true;
+
+					NRS.sendRequest("getAsset", {
+						"asset": transaction.attachment.asset
+					}, function(asset, input) {
+						var data = {
+							"type": $.t("bid_order_placement"),
+							"asset_name": asset.name,
+							"quantity": [transaction.attachment.quantityQNT, asset.decimals],
+							"price_formatted_html": NRS.formatOrderPricePerWholeQNT(transaction.attachment.priceNQT, asset.decimals) + " NXT",
+							"total_formatted_html": NRS.formatAmount(NRS.calculateOrderTotalNQT(transaction.attachment.quantityQNT, transaction.attachment.priceNQT)) + " NXT"
+						};
+
+						if (transaction.sender != NRS.account) {
+							data["sender"] = NRS.getAccountTitle(transaction, "sender");
+						}
+
+						$("#transaction_info_table tbody").append(NRS.createInfoTable(data));
+						$("#transaction_info_table").show();
+
+						$("#transaction_info_modal").modal("show");
+						NRS.fetchingModalData = false;
+					});
+
+					break;
+				case 4:
+					async = true;
+
+					NRS.sendRequest("getTransaction", {
+						"transaction": transaction.attachment.order
+					}, function(transaction, input) {
+						if (transaction.attachment.asset) {
+							NRS.sendRequest("getAsset", {
+								"asset": transaction.attachment.asset
+							}, function(asset) {
+								var data = {
+									"type": $.t("ask_order_cancellation"),
+									"asset_name": asset.name,
+									"quantity": [transaction.attachment.quantityQNT, asset.decimals],
+									"price_formatted_html": NRS.formatOrderPricePerWholeQNT(transaction.attachment.priceNQT, asset.decimals) + " NXT",
+									"total_formatted_html": NRS.formatAmount(NRS.calculateOrderTotalNQT(transaction.attachment.quantityQNT, transaction.attachment.priceNQT)) + " NXT"
+								};
+
+								if (transaction.sender != NRS.account) {
+									data["sender"] = NRS.getAccountTitle(transaction, "sender");
+								}
+
+								$("#transaction_info_table tbody").append(NRS.createInfoTable(data));
+								$("#transaction_info_table").show();
+
+								$("#transaction_info_modal").modal("show");
+								NRS.fetchingModalData = false;
+							});
+						} else {
+							NRS.fetchingModalData = false;
+						}
+					});
+
+					break;
+				case 5:
+					async = true;
+
+					NRS.sendRequest("getTransaction", {
+						"transaction": transaction.attachment.order
+					}, function(transaction) {
+						if (transaction.attachment.asset) {
+							NRS.sendRequest("getAsset", {
+								"asset": transaction.attachment.asset
+							}, function(asset) {
+								var data = {
+									"type": $.t("bid_order_cancellation"),
+									"asset_name": asset.name,
+									"quantity": [transaction.attachment.quantityQNT, asset.decimals],
+									"price_formatted_html": NRS.formatOrderPricePerWholeQNT(transaction.attachment.priceNQT, asset.decimals) + " NXT",
+									"total_formatted_html": NRS.formatAmount(NRS.calculateOrderTotalNQT(transaction.attachment.quantityQNT, transaction.attachment.priceNQT)) + " NXT"
+								};
+
+								if (transaction.sender != NRS.account) {
+									data["sender"] = NRS.getAccountTitle(transaction, "sender");
+								}
+
+								$("#transaction_info_table tbody").append(NRS.createInfoTable(data));
+								$("#transaction_info_table").show();
+
+								$("#transaction_info_modal").modal("show");
+								NRS.fetchingModalData = false;
+							});
+						} else {
+							NRS.fetchingModalData = false;
+						}
+					});
+
+					break;
+						case 6:
+							 async = true;
+
+							 NRS.sendRequest("getTransaction", {
+								  "transaction": transaction.transaction
+							 }, function(transaction) {
+								  if (transaction.attachment.asset) {
+										NRS.sendRequest("getAsset", {
+											 "asset": transaction.attachment.asset
+										}, function(asset) {
+											 var data = {
+												  "type": $.t("dividend_payment"),
+												  "asset_name": asset.name,
+												  "amount_per_asset": NRS.formatOrderPricePerWholeQNT(transaction.attachment.amountNQTPerQNT, asset.decimals) + " NXT",
+												  "height": transaction.attachment.height
+											 };
+
+											 if (transaction.sender != NRS.account) {
+												  data["sender"] = NRS.getAccountTitle(transaction, "sender");
+											 }
+
+											 $("#transaction_info_table tbody").append(NRS.createInfoTable(data));
+											 $("#transaction_info_table").show();
+
+											 $("#transaction_info_modal").modal("show");
+											 NRS.fetchingModalData = false;
+										});
+								  } else {
+										NRS.fetchingModalData = false;
+								  }
+							 });
+							 break;
+				default:
+					incorrect = true;
+					break;
+			}
+
+			if (!(transaction.type == 1 && transaction.subtype == 0)) {
+				if (transaction.attachment) {
 					if (transaction.attachment.message) {
-						$("#transaction_info_output_bottom").append("<div style='height:5px'></div>");
+						if (!transaction.attachment["version.Message"]) {
+							try {
+								message = converters.hexStringToString(transaction.attachment.message);
+							} catch (err) {
+								//legacy
+								if (transaction.attachment.message.indexOf("feff") === 0) {
+									message = NRS.convertFromHex16(transaction.attachment.message);
+								} else {
+									message = NRS.convertFromHex8(transaction.attachment.message);
+								}
+							}
+						} else {
+							message = String(transaction.attachment.message);
+						}
+
+						$("#transaction_info_output_bottom").append("<div style='padding-left:5px;'><label><i class='fa fa-unlock'></i> " + $.t("public_message") + "</label><div>" + String(message).escapeHTML().nl2br() + "</div></div>");
 					}
 
-					if (NRS.account == transaction.sender || NRS.account == transaction.recipient) {
-						var fieldsToDecrypt = {};
-
-						if (transaction.attachment.encryptedMessage) {
-							fieldsToDecrypt.encryptedMessage = $.t("encrypted_message");
-						}
-						if (transaction.attachment.encryptToSelfMessage && NRS.account == transaction.sender) {
-							fieldsToDecrypt.encryptToSelfMessage = $.t("note_to_self");
+					if (transaction.attachment.encryptedMessage || (transaction.attachment.encryptToSelfMessage && NRS.account == transaction.sender)) {
+						if (transaction.attachment.message) {
+							$("#transaction_info_output_bottom").append("<div style='height:5px'></div>");
 						}
 
-						NRS.tryToDecrypt(transaction, fieldsToDecrypt, (transaction.recipient == NRS.account ? transaction.sender : transaction.recipient), {
-							"formEl": "#transaction_info_output_bottom",
-							"outputEl": "#transaction_info_output_bottom"
-						});
-					} else {
-						$("#transaction_info_output_bottom").append("<div style='padding-left:5px;'><label><i class='fa fa-lock'></i> " + $.t("encrypted_message") + "</label><div>" + $.t("encrypted_message_no_permission") + "</div></div>");
+						if (NRS.account == transaction.sender || NRS.account == transaction.recipient) {
+							var fieldsToDecrypt = {};
+
+							if (transaction.attachment.encryptedMessage) {
+								fieldsToDecrypt.encryptedMessage = $.t("encrypted_message");
+							}
+							if (transaction.attachment.encryptToSelfMessage && NRS.account == transaction.sender) {
+								fieldsToDecrypt.encryptToSelfMessage = $.t("note_to_self");
+							}
+
+							NRS.tryToDecrypt(transaction, fieldsToDecrypt, (transaction.recipient == NRS.account ? transaction.sender : transaction.recipient), {
+								"formEl": "#transaction_info_output_bottom",
+								"outputEl": "#transaction_info_output_bottom"
+							});
+						} else {
+							$("#transaction_info_output_bottom").append("<div style='padding-left:5px;'><label><i class='fa fa-lock'></i> " + $.t("encrypted_message") + "</label><div>" + $.t("encrypted_message_no_permission") + "</div></div>");
+						}
 					}
+
+					$("#transaction_info_output_bottom").show();
 				}
-
-				$("#transaction_info_output_bottom").show();
 			}
 		}
 

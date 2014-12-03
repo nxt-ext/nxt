@@ -56,7 +56,9 @@ var NRS = (function(NRS, $, undefined) {
 		$(".currency_code").html(String(currencyCode).escapeHTML());
 		$("#sell_currency_button").data("currency", currencyCode);
 		$("#buy_currency_button").data("currency", currencyCode);
-		
+
+		var currencyId;
+		var refresh = true; // TODO set this value like in AE
 		NRS.sendRequest("getCurrency+", {
 			"code": currencyCode
 		}, function(response) {
@@ -64,7 +66,8 @@ var NRS = (function(NRS, $, undefined) {
 				$("#MSnoCode").hide();
 				$("#MScode").show();
 				$("#currency_account").html(String(response.accountRS).escapeHTML());
-				$("#currency_id").html(String(response.currency).escapeHTML());
+				currencyId = response.currency;
+				$("#currency_id").html(String(currencyId).escapeHTML());
 				$("#currency_name").html(String(response.name).escapeHTML());
 				$("#currency_code").html(String(response.code).escapeHTML());
 				$("#currency_current_supply").html(NRS.convertToQNTf(response.currentSupply, response.decimals).escapeHTML());
@@ -84,11 +87,11 @@ var NRS = (function(NRS, $, undefined) {
 					"type": "danger"
 				});
 			}
-		});
+		}, false);
 		
 		NRS.sendRequest("getAccountCurrencies+", {
 			"account": NRS.accountRS,
-			"code": currencyCode
+			"currency": currencyId
 		}, function(response) {
 			if (response.accountCurrencies && response.accountCurrencies.length) {
 				$("#your_currency_balance").html(NRS.formatQuantity(response.units, response.decimals));
@@ -97,77 +100,8 @@ var NRS = (function(NRS, $, undefined) {
 			}
 		});
 		
-		NRS.sendRequest("getSellOffers+", {
-			"code": currencyCode,
-			"firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
-			"lastIndex": NRS.pageNumber * NRS.itemsPerPage
-		}, function(response) {
-			var sellOrdersTable = $("#ms_open_sell_orders_table");
-         if (response.offers && response.offers.length) {
-				if (response.offers.length > NRS.itemsPerPage) {
-					NRS.hasMorePages = true;
-					response.offers.pop();
-				}
-				var rows = "";
-				var decimals = $("#currency_decimals").text();
-				for (var i = 0; i < response.offers.length; i++) {
-					var sellOffer = response.offers[i];
-					if (i == 0) {
-						$("#buy_currency_price").val(NRS.convertToNXT(sellOffer.rateNQT));
-					}
-
-					var accountRS = String(sellOffer.accountRS).escapeHTML();
-               rows += "<tr>" +
-						"<td>" +
-							"<a href='#' class='user-info' data-user='" + accountRS + "'>" + accountRS + "</a>" +
-						"</td>" +
-						"<td>" + NRS.convertToQNTf(sellOffer.supply, decimals) + "</td>" +
-						"<td>" + NRS.convertToQNTf(sellOffer.limit, decimals) + "</td>" +
-						"<td>" + NRS.formatAmount(sellOffer.rateNQT) + "</td>" +
-					"</tr>";
-				}
-				sellOrdersTable.find("tbody").empty().append(rows);
-			} else {
-				sellOrdersTable.find("tbody").empty();
-			}
-			NRS.dataLoadFinished(sellOrdersTable, true);
-		});
-
-		NRS.sendRequest("getBuyOffers+", {
-			"code": currencyCode,
-			"firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
-			"lastIndex": NRS.pageNumber * NRS.itemsPerPage
-		}, function(response) {
-			var buyOrdersTable = $("#ms_open_buy_orders_table");
-         if (response.offers && response.offers.length) {
-				if (response.offers.length > NRS.itemsPerPage) {
-					NRS.hasMorePages = true;
-					response.offers.pop();
-				}
-				var rows = "";
-				for (var i = 0; i < response.offers.length; i++) {
-					var decimals = $("#currency_decimals").text();
-					var buyOffer = response.offers[i];
-					if (i == 0) {
-						$("#sell_currency_price").val(NRS.convertToNXT(buyOffer.rateNQT));
-					}
-					var accountRS = String(buyOffer.accountRS).escapeHTML();
-               rows += "<tr>" +
-						"<td>" +
-							"<a href='#' class='user-info' data-user='" + accountRS + "'>" + accountRS + "</a>" +
-						"</td>" +
-						"<td>" + NRS.convertToQNTf(buyOffer.supply, decimals) + "</td>" +
-						"<td>" + NRS.convertToQNTf(buyOffer.limit, decimals) + "</td>" +
-						"<td>" + NRS.formatAmount(buyOffer.rateNQT) + "</td>" +
-					"</tr>";
-				}
-				buyOrdersTable.find("tbody").empty().append(rows);
-			} else {
-				buyOrdersTable.find("tbody").empty();
-			}
-			NRS.dataLoadFinished(buyOrdersTable, true);
-		});
-
+		NRS.loadCurrencyOffers("buy", currencyId, refresh);
+		NRS.loadCurrencyOffers("sell", currencyId, refresh);
 		NRS.getExchangeHistory(currencyCode);
 		if (NRS.accountInfo.unconfirmedBalanceNQT == "0") {
 			$("#ms_your_nxt_balance").html("0");
@@ -178,6 +112,72 @@ var NRS = (function(NRS, $, undefined) {
 		}
 		NRS.pageLoaded();
 	});
+
+	NRS.loadCurrencyOffers = function(type, currencyId, refresh) {
+		NRS.sendRequest("get" + type.capitalize() + "Offers+", {
+			"currency": currencyId,
+			"firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
+			"lastIndex": NRS.pageNumber * NRS.itemsPerPage
+		}, function(response) {
+			if (response.offers.length > NRS.itemsPerPage) {
+				NRS.hasMorePages = true;
+				response.offers.pop();
+			}
+			var offersTable = $("#ms_open_" + type + "_orders_table");
+			var offers = response.offers;
+			if (!offers) {
+				offers = [];
+			}
+			if (NRS.unconfirmedTransactions.length) {
+				var added = false;
+				for (var i = 0; i < NRS.unconfirmedTransactions.length; i++) {
+					var unconfirmedTransaction = NRS.unconfirmedTransactions[i];
+					unconfirmedTransaction.offer = unconfirmedTransaction.transaction;
+
+					if (unconfirmedTransaction.type == 5 && unconfirmedTransaction.subtype == 4 && unconfirmedTransaction.asset == assetId) {
+						offers.push($.extend(true, {}, unconfirmedTransaction)); //make sure it's a deep copy
+						added = true;
+					}
+				}
+
+				if (added) {
+					offers.sort(function (a, b) {
+						if (type == "sell") {
+							//lowest price at the top
+							return new BigInteger(a.sellRateNQT).compareTo(new BigInteger(b.sellRateNQT));
+						} else {
+							//highest price at the top
+							return new BigInteger(b.buyRateNQT).compareTo(new BigInteger(a.buyRateNQT));
+						}
+					});
+				}
+			}
+         if (response.offers && response.offers.length) {
+				var rows = "";
+				var decimals = $("#currency_decimals").text();
+				for (var i = 0; i < response.offers.length; i++) {
+					var offer = response.offers[i];
+					if (i == 0) {
+						$("#" + type + "_currency_price").val(NRS.convertToNXT(offer.rateNQT));
+					}
+
+					var accountRS = String(offer.accountRS).escapeHTML();
+               rows += "<tr>" +
+						"<td>" +
+							"<a href='#' class='user-info' data-user='" + accountRS + "'>" + accountRS + "</a>" +
+						"</td>" +
+						"<td>" + NRS.convertToQNTf(offer.supply, decimals) + "</td>" +
+						"<td>" + NRS.convertToQNTf(offer.limit, decimals) + "</td>" +
+						"<td>" + NRS.formatAmount(offer.rateNQT) + "</td>" +
+					"</tr>";
+				}
+				offersTable.find("tbody").empty().append(rows);
+			} else {
+				offersTable.find("tbody").empty();
+			}
+			NRS.dataLoadFinished(offersTable, true);
+		});
+	};
 	
 	/* CURRENCY FOUNDERS MODEL */
 	var foundersModal = $("#currency_founders_modal");
@@ -560,6 +560,18 @@ var NRS = (function(NRS, $, undefined) {
 		NRS.loadPage("currencies");
 	});
 	
+	$("body").on("click", "a[data-goto-currency]", function(e) {
+		e.preventDefault();
+
+		var $visible_modal = $(".modal.in");
+
+		if ($visible_modal.length) {
+			$visible_modal.modal("hide");
+		}
+
+		NRS.goToCurrency($(this).data("goto-currency"));
+	});
+
 	NRS.goToCurrency = function(currency) {
 		var currencySearch = $("#currency_search");
 		currencySearch.find("input[name=q]").val(currency);
