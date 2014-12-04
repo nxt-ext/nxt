@@ -141,20 +141,9 @@ public class VotePhased {
     static boolean addVote(PendingTransactionPoll poll, Account voter,
                            Transaction transaction) {
 
-
-        long[] whitelist = poll.getWhitelist();
-        if (whitelist != null && whitelist.length > 0 && Arrays.binarySearch(whitelist, voter.getId()) == -1) {
-            return false; //todo: move to validate only? - yes
-        }
-
-        long[] blacklist = poll.getBlacklist();
-        if (blacklist != null && blacklist.length > 0 && Arrays.binarySearch(blacklist, voter.getId()) != -1) {
-            return false; //todo: move to validate only? - yes
-        }
-
         final long weight = poll.calcWeight(voter);
 
-        long estimate = voteTable.lastEstimate(poll.getId());
+        long estimate = 0;//voteTable.lastEstimate(poll.getId());
 
         if (weight >= poll.minBalance) {
             estimate += weight;
@@ -167,7 +156,7 @@ public class VotePhased {
         // until the vote is over. If counting is done at finish height only, he knows when the assets need to be
         // in his account, doesn't need to have them there before that.
         if (estimate >= poll.getQuorum() && poll.getVotingModel() != Constants.VOTING_MODEL_ACCOUNT) {
-            estimate = allVotesFromDb(poll);
+            estimate = 0;//allVotesFromDb(poll);
             if (weight >= poll.minBalance) {
                 estimate += weight;
             }

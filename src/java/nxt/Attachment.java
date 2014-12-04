@@ -112,7 +112,7 @@ public interface Attachment extends Appendix {
             JSONArray jsArr = (JSONArray) (attachmentData.get("pendingTransactions"));
             pendingTransactionsIds = new long[jsArr.size()];
             for (int i = 0; i < pendingTransactionsIds.length; i++) {
-                pendingTransactionsIds[i] =  (long)jsArr.get(i); //TODO: use unsigned longs and Convert.parseUnsignedLong()
+                pendingTransactionsIds[i] =  Convert.parseUnsignedLong((String)jsArr.get(i));
             }
         }
 
@@ -146,7 +146,7 @@ public interface Attachment extends Appendix {
         void putMyJSON(JSONObject attachment) {
             JSONArray ja = new JSONArray();
             for (long pendingTransactionId : pendingTransactionsIds) {
-                ja.add(pendingTransactionId); //TODO: use unsigned longs and Convert.toUnsignedLong()
+                ja.add(Convert.toUnsignedLong(pendingTransactionId));
             }
             attachment.put("pendingTransactions", ja);
         }
@@ -446,7 +446,7 @@ public interface Attachment extends Appendix {
                 this.pollOptions[i] = ((String) options.get(i)).trim();
             }
 
-            this.minBalance = (Long) attachmentData.get("minBalance"); //TODO: replace with Convert.parseLong()
+            this.minBalance = Convert.parseLong(attachmentData.get("minBalance"));
 
             this.votingModel = ((Long) attachmentData.get("votingModel")).byteValue();
 
@@ -455,7 +455,7 @@ public interface Attachment extends Appendix {
             this.minRangeValue = ((Long) attachmentData.get("minRangeValue")).byteValue();
             this.maxRangeValue = ((Long) attachmentData.get("maxRangeValue")).byteValue();
 
-            this.assetId = (Long) attachmentData.get("assetId"); //TODO: use Convert.parseUnsignedLong(), and rename to "asset"
+            this.assetId = Convert.parseUnsignedLong((String)attachmentData.get("asset"));
         }
 
         public MessagingPollCreation(PollBuilder builder) {
@@ -543,7 +543,7 @@ public interface Attachment extends Appendix {
 
             attachment.put("minBalance", this.minBalance);
 
-            attachment.put("assetId", this.assetId); //TODO: "asset", Convert.toUnsignedLong()
+            attachment.put("asset", Convert.toUnsignedLong(this.assetId));
         }
 
         @Override

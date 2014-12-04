@@ -23,13 +23,7 @@ public final class Poll extends AbstractPoll {
         }
     };
 
-
-    //TODO: could have just used an anonymous class here
-    private static final class PollTable extends VersionedEntityDbTable<Poll> {
-
-        protected PollTable(DbKey.Factory<Poll> dbKeyFactory) {
-            super("poll", dbKeyFactory);
-        }
+    private final static VersionedEntityDbTable<Poll> pollTable = new VersionedEntityDbTable<Poll>("poll", pollDbKeyFactory) {
 
         @Override
         protected Poll load(Connection con, ResultSet rs) throws SQLException {
@@ -61,10 +55,10 @@ public final class Poll extends AbstractPoll {
                 pstmt.executeUpdate();
             }
         }
-    }
+    };
 
-    //TODO: replace Pair with a PollResult class, and name tables in singular, poll_result
-    private static final ValuesDbTable<Poll, Pair<String, Long>> pollResultsTable = new ValuesDbTable<Poll,Pair<String,Long>>("poll_results", pollResultsDbKeyFactory) {
+    //TODO: replace Pair with a PollResult class
+    private static final ValuesDbTable<Poll, Pair<String, Long>> pollResultsTable = new ValuesDbTable<Poll,Pair<String,Long>>("poll_result", pollResultsDbKeyFactory) {
 
         @Override
         protected Pair<String,Long> load(Connection con, ResultSet rs) throws SQLException {
@@ -75,7 +69,7 @@ public final class Poll extends AbstractPoll {
         protected void save(Connection con, Poll poll, Pair<String, Long> optionResult) throws SQLException {
             String option = optionResult.getFirst();
             Long result = optionResult.getSecond();
-            try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO poll_results (poll_id, "
+            try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO poll_result (poll_id, "
                     + "option, result, height) VALUES (?, ?, ?, ?)")) {
                 int i = 0;
                 pstmt.setLong(++i, poll.getId());
@@ -86,8 +80,6 @@ public final class Poll extends AbstractPoll {
             }
         }
     };
-
-    private final static PollTable pollTable = new PollTable(pollDbKeyFactory);
 
     static void init() {}
 

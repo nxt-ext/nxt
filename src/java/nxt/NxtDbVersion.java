@@ -400,7 +400,7 @@ class NxtDbVersion extends DbVersion {
                         + "finish_height INT NOT NULL, voting_model TINYINT NOT NULL, min_balance BIGINT, "
                         + "asset_id BIGINT, finished BOOLEAN, height INT NOT NULL, latest BOOLEAN DEFAULT TRUE NOT NULL)");
             case 144:
-                apply("CREATE TABLE IF NOT EXISTS poll_results (db_id IDENTITY, poll_id BIGINT NOT NULL, "
+                apply("CREATE TABLE IF NOT EXISTS poll_result (db_id IDENTITY, poll_id BIGINT NOT NULL, "
                         + "option VARCHAR NOT NULL, result BIGINT NOT NULL,  height INT NOT NULL)");
             case 145:
                 apply("ALTER TABLE transaction ADD COLUMN IF NOT EXISTS two_phased BOOLEAN NOT NULL DEFAULT FALSE");
@@ -423,7 +423,7 @@ class NxtDbVersion extends DbVersion {
                 BlockchainProcessorImpl.getInstance().forceScanAtStart();
                 apply(null);
             case 150:
-                //TODO: indexes on poll, poll_results, pending_transaction, vote_phased, pending_transaction_signer
+                //TODO: indexes on poll, poll_result, pending_transaction, vote_phased, pending_transaction_signer
                 return;
             default:
                 throw new RuntimeException("Blockchain database inconsistent with code, probably trying to run older code on newer database");

@@ -310,14 +310,32 @@ public abstract class TransactionType {
                 Attachment.PendingPaymentVoteCasting att = (Attachment.PendingPaymentVoteCasting) transaction.getAttachment();
                 long[] pendingIds = att.getPendingTransactionsIds();
                 if (pendingIds.length > Constants.MAX_VOTES_PER_VOTING_TRANSACTION) {
-                    throw new NxtException.NotValidException("No more than 10 votes allowed for two-phased multivoting");
+                    throw new NxtException.NotValidException("No more than "+Constants.MAX_VOTES_PER_VOTING_TRANSACTION
+                                                                +" votes allowed for two-phased multivoting");
                 }
 
+                long voterId = transaction.getSenderId();
                 for (long pendingId : pendingIds) {
-                    if (PendingTransactionPoll.getPoll(pendingId) == null) {
+                    PendingTransactionPoll poll = PendingTransactionPoll.getPoll(pendingId);
+                    if (poll == null) {
                         System.out.println("Wrong pending transaction: " + pendingId); //TODO: Logger
                         throw new NxtException.NotValidException("Wrong pending transaction");
                     }
+
+                    if(poll.isFinished()){
+                        throw new NxtException.NotValidException("Attempt to vote on finished pending transaction");
+                    }
+
+                    long[] whitelist = poll.getWhitelist();
+                    if (whitelist != null && whitelist.length > 0 && Arrays.binarySearch(whitelist, voterId) == -1) {
+                        throw new NxtException.NotValidException("Voter is not in the pending transaction whitelist");
+                    }
+
+                    long[] blacklist = poll.getBlacklist();
+                    if (blacklist != null && blacklist.length > 0 && Arrays.binarySearch(blacklist, voterId) != -1) {
+                        throw new NxtException.NotValidException("Voter is in the pending transaction whitelist");
+                    }
+
                     if (VotePhased.isVoteGiven(pendingId, transaction.getSenderId())) {
                         // TODO: Is the pendingIds array itself also checked for duplicate ids somewhere? isDuplicate enough?
                         throw new NxtException.NotValidException("Double voting attempt");
@@ -345,13 +363,12 @@ public abstract class TransactionType {
                 long[] pendingTransactionsIds = attachment.getPendingTransactionsIds();
                 for (long pendingTransactionId : pendingTransactionsIds) {
                     PendingTransactionPoll poll = PendingTransactionPoll.getPoll(pendingTransactionId);
-                    if (!poll.isFinished()) { //todo: else?
-                        if (VotePhased.addVote(poll, senderAccount, transaction)) {
-                            TransactionDb.findTransaction(pendingTransactionId).getTwoPhased().commit(transaction,senderAccount,recipientAccount);
-                            PendingTransactionPoll.finishPoll(poll);
-                        }
-                    } //TODO: else should be an error, but it must be checked in validateAttachment that indeed all
-                    // of the pendingIds correspond to polls that are not yet finished, and then this isFinished check should not be needed here at all
+
+                    if (VotePhased.addVote(poll, senderAccount, transaction)) {
+                        Transaction pendingTransaction = TransactionDb.findTransaction(pendingTransactionId);
+                        pendingTransaction.getTwoPhased().commit(pendingTransaction, senderAccount, recipientAccount);
+                        PendingTransactionPoll.finishPoll(poll);
+                    }
                 }
             }
         };
@@ -692,9 +709,7 @@ public abstract class TransactionType {
                     throw new NxtException.NotValidException("Invalid poll attachment: " + attachment.getJSONObject());
                 }
 
-                if (transaction.getRecipientId() != 0
-                 //TODO: not needed, recipientId == 0 and amountNQT == 0 for transactions with no recipient are already enforced in TransactionImpl()
-                        || transaction.getFeeNQT() < Constants.POLL_FEE_NQT
+                if (transaction.getFeeNQT() < Constants.POLL_FEE_NQT
                         //TODO: don't use a POLL_FEE_NQT constant, use the new variable fee framework instead
                         || transaction.getAmountNQT() != 0) {
                     throw new NxtException.NotValidException("Invalid tx params for poll: " + attachment.getJSONObject());

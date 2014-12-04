@@ -457,15 +457,10 @@ public interface Appendix {
 
         TwoPhased(JSONObject attachmentData){
             super(attachmentData);
-            //TODO: The json-simple library returns numbers always as Longs when the json has been parsed from a string,
-            // therefore most of the code below will fail. You have to use e.g.:
-            // maxHeight = ((Long)attachmentData.get("releaseHeight)).intValue();
-            // votingModel = ((Long)attachmentData.get("votingModel")).byteValue();
-            // and for longs, always use Convert.parseLong(...), so that to be able to handle either Long, or String
-            maxHeight = (Integer) attachmentData.get("releaseHeight");
-            quorum = (Long) attachmentData.get("quorum");
-            voteThreshold = (Long) attachmentData.get("voteThreshold");
-            votingModel = (Byte) attachmentData.get("votingModel");
+            maxHeight = ((Long)attachmentData.get("releaseHeight")).intValue();
+            quorum = Convert.parseLong(attachmentData.get("quorum"));
+            voteThreshold = Convert.parseLong(attachmentData.get("voteThreshold"));
+            votingModel = ((Long)attachmentData.get("votingModel")).byteValue();
             if (votingModel == Constants.VOTING_MODEL_ASSET) {
                 assetId = Convert.parseUnsignedLong((String)attachmentData.get("asset"));
             } else {
