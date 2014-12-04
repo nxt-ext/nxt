@@ -4325,18 +4325,13 @@
                 <div class="modal-content">
                     <div class="modal-header">
                         <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                        <h4 class="modal-title"><span data-i18n="mint_currency">Mint Currency</span> - <span id="mine_currency_name"></span></h4>
+                        <h4 class="modal-title"><span data-i18n="mint_currency">Mint Currency</span> - <span id="mine_currency_code"></span></h4>
                     </div>
                     <div class="modal-body">            
                         <form role="form" autocomplete="off">
                             <div class="callout callout-danger error_message" style="display:none"></div>
                             <div class="form-group">
-                                <label for="mine_currency_currency" data-i18n="currency">Currency</label>
-                                <input type="text" class="form-control" name="currency" id="mine_currency_currency" placeholder="Currency" data-i18n="[placeholder]currency" tabindex="1" />
-                            </div>
-                            <div class="form-group">
-                                <label for="mine_currency_nonce" data-i18n="nonce">Nonce</label>
-                                <input type="text" class="form-control" name="nonce" id="mine_currency_nonce" data-i18n="nonce" tabindex="1" />
+                                <input type="hidden" name="currency" id="mine_currency_currency" />
                             </div>
                             <div class="form-group">
                                 <label for="mine_currency_units" data-i18n="units">Units</label>
@@ -4346,7 +4341,10 @@
                                 <label for="mine_currency_counter" data-i18n="counter">Counter</label>
                                 <input type="text" class="form-control" name="counter" id="mine_currency_counter" data-i18n="counter" tabindex="1" />
                             </div>
-                            
+                            <div class="form-group">
+                                <label for="mine_currency_nonce" data-i18n="nonce">Nonce</label>
+                                <input type="text" class="form-control" name="nonce" id="mine_currency_nonce" data-i18n="nonce" tabindex="1" />
+                            </div>
                             <div class="row advanced">
                                 <div class="col-xs-6 col-sm-6 col-md-6">
                                     <div class="form-group">

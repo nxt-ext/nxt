@@ -896,10 +896,29 @@ var NRS = (function(NRS, $, undefined) {
 
 		var currency = $invoker.data("currency");
 		var currencyName = $invoker.data("name");
+		var currencyCode = $invoker.data("code");
 
 		$("#mine_currency_currency").val(currency);
-		$("#mine_currency_name").html(String(currencyName).escapeHTML());
+		$("#mine_currency_code").html(String(currencyCode).escapeHTML());
 
+	});
+	
+	/* Fill in counter field after units is inputed */
+	$("#mine_currency_units").blur(function() {
+		NRS.sendRequest("getMintingTarget", {
+			"code": $("#mine_currency_code").html(),
+			"account": NRS.accountRS,
+			"units": this.value
+		}, function(response) {
+			if (response && !response.errorCode){
+				$("#mine_currency_modal .error_message").hide();
+				$("#mine_currency_counter").val(response.counter);
+			}
+			else if (response.errorCode){
+				$("#mine_currency_modal .error_message").html(response.errorDescription);
+				$("#mine_currency_modal .error_message").show();
+			}
+		})
 	});
 
    return NRS;
