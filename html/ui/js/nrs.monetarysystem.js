@@ -190,7 +190,11 @@ var NRS = (function(NRS, $, undefined) {
 			"currency": currencyId
 		}, function(response) {
 			var rows = "";
+			var total = 0;
 			if (response.founders && response.founders.length) {
+				for (var i = 0; i < response.founders.length; i++) {
+					total = parseFloat(NRS.convertToNXT(response.founders[i].amountPerUnitNQT)) + parseFloat(total);
+				}
 				for (var i = 0; i < response.founders.length; i++) {
 					var account = response.founders[i].accountRS;
 					rows += "<tr>" +
@@ -198,12 +202,17 @@ var NRS = (function(NRS, $, undefined) {
 							"<a href='#' data-user='" + NRS.getAccountFormatted(account, "account") + "' class='user_info'>" + NRS.getAccountTitle(account, "account") + "</a>" +
 						"</td>" +
 						"<td>" + NRS.convertToNXT(response.founders[i].amountPerUnitNQT) + "</td>" +
-						"<td></td>" +
+						"<td>" + (((NRS.convertToNXT(response.founders[i].amountPerUnitNQT))/total)*100).toFixed(2) + "%</td>" +
 					"</tr>";
 				}
 			} else {
 				rows = "<tr><td colspan='3'>None</td></tr>";
 			}
+			rows += "<tr>" +
+						"<td><b>Total:</b></td>" +
+						"<td>" + total + "</td>" +
+						"<td>100%</td>" +
+					"</tr>";
 			var foundersTable = $("#currency_founders_table");
 			foundersTable.find("tbody").empty().append(rows);
 			NRS.dataLoadFinished(foundersTable);
