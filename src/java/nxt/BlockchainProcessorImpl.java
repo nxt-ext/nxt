@@ -518,7 +518,14 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
 
     @Override
     public List<BlockImpl> popOffTo(int height) {
-        return popOffTo(blockchain.getBlockAtHeight(height));
+        if (height >= blockchain.getHeight()) {
+            return Collections.emptyList();
+        } else if (height < getMinRollbackHeight()) {
+            popOffWithRescan(height);
+            return Collections.emptyList();
+        } else {
+            return popOffTo(blockchain.getBlockAtHeight(height));
+        }
     }
 
     @Override
@@ -818,6 +825,19 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         BlockDb.deleteBlocksFrom(block.getId());
         blockListeners.notify(block, Event.BLOCK_POPPED);
         return previousBlock;
+    }
+
+    private void popOffWithRescan(int height) {
+        synchronized (blockchain) {
+            try {
+                BlockImpl block = BlockDb.findBlockAtHeight(height);
+                scheduleScan(0, false);
+                BlockDb.deleteBlocksFrom(block.getId());
+                Logger.logDebugMessage("Deleted blocks starting from height %s", height);
+            } finally {
+                scan(0, false);
+            }
+        }
     }
 
     int getBlockVersion(int previousBlockHeight) {
