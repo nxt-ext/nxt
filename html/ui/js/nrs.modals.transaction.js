@@ -804,6 +804,7 @@ var NRS = (function(NRS, $, undefined) {
 						"type": $.t("currency_issuance"),
 						"name": transaction.attachment.name,
 						"currency_code": transaction.attachment.code,
+						"type": transaction.attachment.type,
 						"description": transaction.attachment.description,
 						"initialSupply": transaction.attachment.initialSupply,
 						"reserveSupply": transaction.attachment.reserveSupply,
@@ -857,7 +858,7 @@ var NRS = (function(NRS, $, undefined) {
 						var data = {
 							"type": $.t("reserve_claim"),
 							"currency_code": currency.code,
-							"units": [transaction.attachment.quantityQNT, currency.decimals],
+							"units": [transaction.attachment.quantityQNT, currency.decimals]
 						};
 
 						if (transaction.sender != NRS.account) {
@@ -875,15 +876,13 @@ var NRS = (function(NRS, $, undefined) {
 				case 3:
 					async = true;
 
-					NRS.sendRequest("getAsset", {
-						"asset": transaction.attachment.asset
-					}, function(asset, input) {
+					NRS.sendRequest("getCurrency", {
+						"currency": transaction.attachment.currency
+					}, function(currency) {
 						var data = {
-							"type": $.t("bid_order_placement"),
-							"asset_name": asset.name,
-							"quantity": [transaction.attachment.quantityQNT, asset.decimals],
-							"price_formatted_html": NRS.formatOrderPricePerWholeQNT(transaction.attachment.priceNQT, asset.decimals) + " NXT",
-							"total_formatted_html": NRS.formatAmount(NRS.calculateOrderTotalNQT(transaction.attachment.quantityQNT, transaction.attachment.priceNQT)) + " NXT"
+							"type": $.t("currency_transfer"),
+							"code": currency.code,
+							"units": [transaction.attachment.units, currency.decimals]
 						};
 
 						if (transaction.sender != NRS.account) {
@@ -901,36 +900,31 @@ var NRS = (function(NRS, $, undefined) {
 				case 4:
 					async = true;
 
-					NRS.sendRequest("getTransaction", {
-						"transaction": transaction.attachment.order
-					}, function(transaction, input) {
-						if (transaction.attachment.asset) {
-							NRS.sendRequest("getAsset", {
-								"asset": transaction.attachment.asset
-							}, function(asset) {
-								var data = {
-									"type": $.t("ask_order_cancellation"),
-									"asset_name": asset.name,
-									"quantity": [transaction.attachment.quantityQNT, asset.decimals],
-									"price_formatted_html": NRS.formatOrderPricePerWholeQNT(transaction.attachment.priceNQT, asset.decimals) + " NXT",
-									"total_formatted_html": NRS.formatAmount(NRS.calculateOrderTotalNQT(transaction.attachment.quantityQNT, transaction.attachment.priceNQT)) + " NXT"
-								};
+					NRS.sendRequest("getCurrency", {
+						"currency": transaction.attachment.currency
+					}, function (currency) {
+						var data = {
+							"type": $.t("exchange_offer"),
+							"code": currency.code,
+							"initialBuySupply": [transaction.attachment.initialBuySupply, currency.decimals],
+							"totalBuyLimit": transaction.attachment.totalBuyLimit,
+							"buyRateNQT": transaction.attachment.buyRateNQT,
+							"initialSellSupply": transaction.attachment.initialSellSupply,
+							"totalSellLimit": transaction.attachment.totalSellLimit,
+							"sellRateNQT": transaction.attachment.sellRateNQT,
+							"expirationHeight": transaction.attachment.expirationHeight
+						};
 
-								if (transaction.sender != NRS.account) {
-									data["sender"] = NRS.getAccountTitle(transaction, "sender");
-								}
-
-								$("#transaction_info_table tbody").append(NRS.createInfoTable(data));
-								$("#transaction_info_table").show();
-
-								$("#transaction_info_modal").modal("show");
-								NRS.fetchingModalData = false;
-							});
-						} else {
-							NRS.fetchingModalData = false;
+						if (transaction.sender != NRS.account) {
+							data["sender"] = NRS.getAccountTitle(transaction, "sender");
 						}
-					});
 
+						$("#transaction_info_table tbody").append(NRS.createInfoTable(data));
+						$("#transaction_info_table").show();
+
+						$("#transaction_info_modal").modal("show");
+						NRS.fetchingModalData = false;
+					});
 					break;
 				case 5:
 					async = true;

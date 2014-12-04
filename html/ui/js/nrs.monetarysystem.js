@@ -57,7 +57,7 @@ var NRS = (function(NRS, $, undefined) {
 		$("#sell_currency_button").data("currency", currencyCode);
 		$("#buy_currency_button").data("currency", currencyCode);
 
-		var currencyId;
+		var currencyId = 0;
 		var refresh = true; // TODO set this value like in AE
 		NRS.sendRequest("getCurrency+", {
 			"code": currencyCode
@@ -113,7 +113,7 @@ var NRS = (function(NRS, $, undefined) {
 		NRS.pageLoaded();
 	});
 
-	NRS.loadCurrencyOffers = function(type, currencyId, refresh) {
+	NRS.loadCurrencyOffers = function(type, currencyId/*, refresh*/) {
 		NRS.sendRequest("get" + type.capitalize() + "Offers+", {
 			"currency": currencyId,
 			"firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
@@ -134,7 +134,7 @@ var NRS = (function(NRS, $, undefined) {
 					var unconfirmedTransaction = NRS.unconfirmedTransactions[i];
 					unconfirmedTransaction.offer = unconfirmedTransaction.transaction;
 
-					if (unconfirmedTransaction.type == 5 && unconfirmedTransaction.subtype == 4 && unconfirmedTransaction.asset == assetId) {
+					if (unconfirmedTransaction.type == 5 && unconfirmedTransaction.subtype == 4 && unconfirmedTransaction.currency == currencyId) {
 						offers.push($.extend(true, {}, unconfirmedTransaction)); //make sure it's a deep copy
 						added = true;
 					}
@@ -155,20 +155,24 @@ var NRS = (function(NRS, $, undefined) {
          if (response.offers && response.offers.length) {
 				var rows = "";
 				var decimals = $("#currency_decimals").text();
-				for (var i = 0; i < response.offers.length; i++) {
+				for (i = 0; i < response.offers.length; i++) {
 					var offer = response.offers[i];
-					if (i == 0) {
-						$("#" + type + "_currency_price").val(NRS.convertToNXT(offer.rateNQT));
+					var rateNQT = offer.rateNQT || (type == "sell" ? offer.attachment.sellRateNQT : offer.attachment.buyRateNQT);
+               if (i == 0) {
+						$("#" + type + "_currency_price").val(NRS.convertToNXT(rateNQT));
 					}
 
-					var accountRS = String(offer.accountRS).escapeHTML();
+					// The offers collection contains both real offers and unconfirmed offers and the code below works for both types
+					var accountRS = offer.accountRS || offer.senderRS;
+               accountRS = String(accountRS).escapeHTML();
+					var accountLink = offer.unconfirmed ? "You - <strong>Pending</strong>" : (offer.account == NRS.account ? "<strong>You</strong>" : "<a href='#' class='user-info' data-user='" + accountRS + "'>" + accountRS + "</a>");
+					var supply = offer.supply || (type == "sell" ? offer.attachment.initialSellSupply : offer.attachment.initialBuySupply);
+					var limit = offer.limit || (type == "sell" ? offer.attachment.totalSellLimit : offer.attachment.totalBuyLimit);
                rows += "<tr>" +
-						"<td>" +
-							"<a href='#' class='user-info' data-user='" + accountRS + "'>" + accountRS + "</a>" +
-						"</td>" +
-						"<td>" + NRS.convertToQNTf(offer.supply, decimals) + "</td>" +
-						"<td>" + NRS.convertToQNTf(offer.limit, decimals) + "</td>" +
-						"<td>" + NRS.formatAmount(offer.rateNQT) + "</td>" +
+						"<td>" + accountLink + "</td>" +
+						"<td>" + NRS.convertToQNTf(supply, decimals) + "</td>" +
+						"<td>" + NRS.convertToQNTf(limit, decimals) + "</td>" +
+						"<td>" + NRS.formatAmount(rateNQT) + "</td>" +
 					"</tr>";
 				}
 				offersTable.find("tbody").empty().append(rows);

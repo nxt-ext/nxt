@@ -995,7 +995,7 @@ var NRS = (function(NRS, $, undefined) {
 			} else if (/_formatted$/i.test(key)) {
 				key = key.replace("_formatted", "");
 				value = String(value).escapeHTML();
-			} else if (key == "quantity" && $.isArray(value)) {
+			} else if ((key == "quantity" || key == "initial_buy_supply") && $.isArray(value)) {
 				if ($.isArray(value)) {
 					value = NRS.formatQuantity(value[0], value[1]);
 				} else {
