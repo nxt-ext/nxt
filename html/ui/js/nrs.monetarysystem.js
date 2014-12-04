@@ -183,6 +183,10 @@ var NRS = (function(NRS, $, undefined) {
 		});
 	};
 	
+	NRS.incoming.monetary_system = function() {
+		search.trigger("submit");
+	};
+
 	/* CURRENCY FOUNDERS MODEL */
 	var foundersModal = $("#currency_founders_modal");
 	foundersModal.on("show.bs.modal", function(e) {
