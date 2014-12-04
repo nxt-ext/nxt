@@ -21,6 +21,14 @@ public enum HashFunction {
         }
     },
     /**
+     * Use Java implementation of Scrypt
+     */
+    SCRYPT((byte)5) {
+        public byte[] hash(byte[] input) {
+            return Scrypt.hash(input);
+        }
+    },
+    /**
      * Use proprietary NXT implementation of Keccak with 25 rounds (code 25)
      */
     Keccak25((byte)25) {
