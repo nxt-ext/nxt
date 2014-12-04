@@ -518,24 +518,26 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
 
     @Override
     public List<BlockImpl> popOffTo(int height) {
-        if (height >= blockchain.getHeight()) {
-            return Collections.emptyList();
+        if (height <= 0) {
+            fullReset();
         } else if (height < getMinRollbackHeight()) {
             popOffWithRescan(height);
             return Collections.emptyList();
-        } else {
+        } else if (height < blockchain.getHeight()) {
             return popOffTo(blockchain.getBlockAtHeight(height));
         }
+        return Collections.emptyList();
     }
 
     @Override
     public void fullReset() {
         synchronized (blockchain) {
-            //BlockDb.deleteBlock(Genesis.GENESIS_BLOCK_ID); // fails with stack overflow in H2
-            BlockDb.deleteAll();
-            addGenesisBlock();
             try {
                 setGetMoreBlocks(false);
+                scheduleScan(0, false);
+                //BlockDb.deleteBlock(Genesis.GENESIS_BLOCK_ID); // fails with stack overflow in H2
+                BlockDb.deleteAll();
+                addGenesisBlock();
                 scan(0, false);
             } finally {
                 setGetMoreBlocks(true);
