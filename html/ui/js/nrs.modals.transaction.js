@@ -821,7 +821,7 @@ var NRS = (function(NRS, $, undefined) {
 						data["sender"] = NRS.getAccountTitle(transaction, "sender");
 					}
 
-					$("#transaction_info_callout").html("<a href='#' data-goto-currency='" + String(transaction.transaction).escapeHTML() + "'>Click here</a> to view this currency in the Monetary System.").show();
+					$("#transaction_info_callout").html("<a href='#' data-goto-currency='" + String(transaction.attachment.code).escapeHTML() + "'>Click here</a> to view this currency in the Monetary System.").show();
 
 					$("#transaction_info_table tbody").append(NRS.createInfoTable(data));
 					$("#transaction_info_table").show();
@@ -836,8 +836,9 @@ var NRS = (function(NRS, $, undefined) {
 						var data = {
 							"type": $.t("reserve_increase"),
 							"code": currency.code,
-							"reserve_units": currency.code,
-							"amount_per_unit_formatted_html": NRS.formatAmount(transaction.attachment.amountPerUnitNQT) + " NXT"
+							"reserve_units": currency.reserveSupply,
+							"amount_per_unit_formatted_html": NRS.formatAmount(transaction.attachment.amountPerUnitNQT) + " NXT",
+							"reserved_amount_formatted_html": NRS.formatAmount(NRS.calculateOrderTotalNQT(transaction.attachment.amountPerUnitNQT, currency.reserveSupply)) + " NXT"
 						};
 
 						data["sender"] = NRS.getAccountTitle(transaction, "sender");
@@ -859,7 +860,8 @@ var NRS = (function(NRS, $, undefined) {
 						var data = {
 							"type": $.t("reserve_claim"),
 							"code": currency.code,
-							"units": [transaction.attachment.units, currency.decimals]
+							"units": [transaction.attachment.units, currency.decimals],
+							"claimed_amount_formatted_html": NRS.formatAmount(NRS.calculateOrderTotalNQT(transaction.attachment.currentReservePerUnitNQT, transaction.attachment.units)) + " NXT"
 						};
 
 						if (transaction.sender != NRS.account) {
@@ -938,7 +940,10 @@ var NRS = (function(NRS, $, undefined) {
 							"type": $.t("buy_currency"),
 							"code": currency.code,
 							"units": [transaction.attachment.units, currency.decimals],
-							"rate": NRS.formatAmount(transaction.attachment.rateNQT) + rateUnitsStr
+							"rate": NRS.formatAmount(transaction.attachment.rateNQT) + rateUnitsStr,
+							"total_formatted_html": NRS.formatAmount(
+								NRS.calculateOrderTotalNQT(
+									NRS.formatQuantity(transaction.attachment.units, currency.decimals), transaction.attachment.rateNQT)) + " NXT"
 						};
 
 						if (transaction.sender != NRS.account) {
@@ -964,7 +969,10 @@ var NRS = (function(NRS, $, undefined) {
 							"type": $.t("sell_currency"),
 							"code": currency.code,
 							"units": [transaction.attachment.units, currency.decimals],
-							"rate": NRS.formatAmount(transaction.attachment.rateNQT) + rateUnitsStr
+							"rate": NRS.formatAmount(transaction.attachment.rateNQT) + rateUnitsStr,
+							"total_formatted_html": NRS.formatAmount(
+								NRS.calculateOrderTotalNQT(
+									NRS.formatQuantity(transaction.attachment.units, currency.decimals), transaction.attachment.rateNQT)) + " NXT"
 						};
 
 						if (transaction.sender != NRS.account) {
