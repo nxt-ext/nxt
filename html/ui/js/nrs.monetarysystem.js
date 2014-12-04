@@ -912,7 +912,8 @@ var NRS = (function(NRS, $, undefined) {
 		}, function(response) {
 			if (response && !response.errorCode){
 				$("#mine_currency_modal .error_message").hide();
-				$("#mine_currency_counter").val(response.counter);
+				$("#mine_currency_counter").val(response.counter+1);
+				$("#mine_currency_difficulty").val(response.difficulty);
 			}
 			else if (response.errorCode){
 				$("#mine_currency_modal .error_message").html(response.errorDescription);
