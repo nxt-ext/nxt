@@ -810,14 +810,12 @@ var NRS = (function(NRS, $, undefined) {
 			$(".optional_reserve").show();
 			issuanceHeight.val("");
 			issuanceHeight.prop("disabled", false);
-			$("#issue_currency_min_reserve").prop("disabled", false);
-			$("#issue_currency_min_reserve_supply").prop("disabled", false);
+			$(".optional_reserve input").prop("disabled", false);
 		} else {
 			$(".optional_reserve").hide();
+			$(".optional_reserve input").prop("disabled", true);
 			issuanceHeight.val(0);
 			issuanceHeight.prop("disabled", true);
-			$("#issue_currency_min_reserve").prop("disabled", true);
-			$("#issue_currency_min_reserve_supply").prop("disabled", true);
 		}
 	});
 
@@ -838,8 +836,10 @@ var NRS = (function(NRS, $, undefined) {
 	$('#issue_currency_mintable').change(function () {
 		if ($(this).is(":checked")) {
 			$(".optional_mint").show();
+			$(".optional_mint input").prop("disabled", false);
 		} else {
 			$(".optional_mint").hide();
+			$(".optional_mint input").prop("disabled", true);
 		}
 	});
 
