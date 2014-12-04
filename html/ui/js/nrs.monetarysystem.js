@@ -78,6 +78,8 @@ var NRS = (function(NRS, $, undefined) {
 				$("#sell_currency_button").data("decimals", response.decimals);
 				if (NRS.isReservable(response.type)) {
 					$("#view_currency_founders_link").data("currency", response.currency);
+					$("#view_currency_founders_link").data("resSupply", response.reserveSupply);
+					$("#view_currency_founders_link").data("decimals", response.decimals);
 					$('#currency_founders_link').show();
 				}
 			} else{
@@ -199,18 +201,20 @@ var NRS = (function(NRS, $, undefined) {
 		}, function(response) {
 			var rows = "";
 			var total = 0;
+			var resSupply= $invoker.data("resSupply");
 			if (response.founders && response.founders.length) {
 				for (var i = 0; i < response.founders.length; i++) {
 					total = parseFloat(NRS.convertToNXT(response.founders[i].amountPerUnitNQT)) + parseFloat(total);
 				}
 				for (var i = 0; i < response.founders.length; i++) {
 					var account = response.founders[i].accountRS;
+					var percentage = (((NRS.convertToNXT(response.founders[i].amountPerUnitNQT))/total)*100).toFixed(2);
 					rows += "<tr>" +
 						"<td>" +
 							"<a href='#' data-user='" + NRS.getAccountFormatted(account, "account") + "' class='user_info'>" + NRS.getAccountTitle(account, "account") + "</a>" +
 						"</td>" +
 						"<td>" + NRS.convertToNXT(response.founders[i].amountPerUnitNQT) + "</td>" +
-						"<td>" + (((NRS.convertToNXT(response.founders[i].amountPerUnitNQT))/total)*100).toFixed(2) + "%</td>" +
+						"<td>" + ((percentage/100)*resSupply).toFixed($invoker.data("decimals")) + " Units (" + percentage + "%)</td>" +
 					"</tr>";
 				}
 			} else {
@@ -219,7 +223,7 @@ var NRS = (function(NRS, $, undefined) {
 			rows += "<tr>" +
 						"<td><b>Total:</b></td>" +
 						"<td>" + total + "</td>" +
-						"<td>100%</td>" +
+						"<td>" + resSupply + " Units (100%)</td>" +
 					"</tr>";
 			var foundersTable = $("#currency_founders_table");
 			foundersTable.find("tbody").empty().append(rows);
