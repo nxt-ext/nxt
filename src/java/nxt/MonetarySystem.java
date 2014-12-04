@@ -369,7 +369,6 @@ public abstract class MonetarySystem extends TransactionType {
                 return true;
             }
             return false;
-
         }
 
         @Override
