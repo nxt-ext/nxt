@@ -398,7 +398,7 @@ var NRS = (function(NRS, $, undefined) {
 		};
 	};
 	
-	//calculate preview price (calculated on every keypress)
+	//Calculate preview price (calculated on every keypress)
 	$("#sell_currency_units, #sell_currency_price, #buy_currency_units, #buy_currency_price").keyup(function() {
 		var currencyDecimals = $("#currency_decimals").text();
 		var orderType = $(this).data("type").toLowerCase();
@@ -482,6 +482,9 @@ var NRS = (function(NRS, $, undefined) {
 					for (var i = 0; i < response.currencies.length; i++) {
 						var currency_type = "";
 						var currency = response.currencies[i];
+						var name = String(currency.name).escapeHTML();
+						var currencyId = String(currency.currency).escapeHTML();
+						var currencyCode = String(currency.code).escapeHTML();
 						if (NRS.isExchangeable(currency.type)) {
 							currency_type += "<i title='" + $.t('exchangeable') + "' class='fa fa-exchange'></i> ";
 						}
@@ -499,29 +502,27 @@ var NRS = (function(NRS, $, undefined) {
 						}
 						rows += "<tr>" +
 							"<td>" +
-								"<a href='#' onClick='NRS.goToCurrency(&quot;" + String(currency.code) + "&quot;)' >" + String(currency.code).escapeHTML() + "</a>" +
+								"<a href='#' onClick='NRS.goToCurrency(&quot;" + currencyCode + "&quot;)' >" + currencyCode + "</a>" +
 							"</td>" +
-							"<td>" + currency.name + "</td>" +
+							"<td>" + name + "</td>" +
 							"<td>" + currency_type + "</td>" +
 							"<td>" + currency.issuanceHeight + "</td>" +
 							"<td>" + NRS.formatQuantity(currency.reserveSupply, currency.decimals) + "</td>" +
 							"<td>" + NRS.formatQuantity(currency.currentSupply, currency.decimals) + "</td>" +
 							"<td>" + NRS.formatQuantity(currency.maxSupply, currency.decimals) + "</td>" +
 							"<td>";
-								var name = String(currency.name).escapeHTML();
-								var currencyId = String(currency.currency).escapeHTML();
-								if (currency.accountRS == NRS.accountRS) {
-									rows += "<a href='#' class='btn btn-xs btn-default' data-toggle='modal' data-target='#delete_currency_modal' data-currency='" + currencyId + "' data-name='" + name + "' >" + $.t("delete") + "</a> ";
-								}
-								if (currency.issuanceHeight > NRS.lastBlockHeight && NRS.isReservable(currency.type)) {
-									rows += "<a href='#' class='btn btn-xs btn-default' data-toggle='modal' data-target='#reserve_currency_modal' data-currency='" + currencyId + "' data-name='" + name + "' >" + $.t("reserve") + "</a> ";
-								}
-								if (currency.issuanceHeight <= NRS.lastBlockHeight && NRS.isClaimable(currency.type)){
-									rows += "<a href='#' class='btn btn-xs btn-default' data-toggle='modal' data-target='#claim_currency_modal' data-currency='" + currencyId + "' data-name='" + name + "' >" + $.t("claim") + "</a> ";
-								}
-								if (NRS.isMintable(currency.type)){
-									rows += "<a href='#' class='btn btn-xs btn-default' data-toggle='modal' data-target='#mine_currency_modal' data-currency='" + currencyId + "' data-name='" + name + "' >" + $.t("mint") + "</a>";
-								}
+							if (currency.accountRS == NRS.accountRS) {
+								rows += "<a href='#' class='btn btn-xs btn-default' data-toggle='modal' data-target='#delete_currency_modal' data-currency='" + currencyId + "' data-name='" + name + "' data-code='" + currencyCode + "'>" + $.t("delete") + "</a> ";
+							}
+							if (currency.issuanceHeight > NRS.lastBlockHeight && NRS.isReservable(currency.type)) {
+								rows += "<a href='#' class='btn btn-xs btn-default' data-toggle='modal' data-target='#reserve_currency_modal' data-currency='" + currencyId + "' data-name='" + name + "' data-code='" + currencyCode + "'>" + $.t("reserve") + "</a> ";
+							}
+							if (currency.issuanceHeight <= NRS.lastBlockHeight && NRS.isClaimable(currency.type)){
+								rows += "<a href='#' class='btn btn-xs btn-default' data-toggle='modal' data-target='#claim_currency_modal' data-currency='" + currencyId + "' data-name='" + name + "' data-code='" + currencyCode + "' data-decimals='" + currency.decimals + "'>" + $.t("claim") + "</a> ";
+							}
+							if (NRS.isMintable(currency.type)){
+								rows += "<a href='#' class='btn btn-xs btn-default' data-toggle='modal' data-target='#mine_currency_modal' data-currency='" + currencyId + "' data-name='" + name + "' data-code='" + currencyCode + "'>" + $.t("mint") + "</a>";
+							}
 							rows += "</td></tr>";
 					}
 					var currenciesTable = $('#currencies_table');
@@ -839,10 +840,10 @@ var NRS = (function(NRS, $, undefined) {
 		var $invoker = $(e.relatedTarget);
 
 		var currency = $invoker.data("currency");
-		var currencyName = $invoker.data("name");
+		var currencyCode = $invoker.data("code");
 
 		$("#reserve_currency_currency").val(currency);
-		$("#reserve_currency_name").html(String(currencyName).escapeHTML());
+		$("#reserve_currency_code").html(String(currencyCode).escapeHTML());
 
 	});
 
@@ -860,12 +861,34 @@ var NRS = (function(NRS, $, undefined) {
 		var $invoker = $(e.relatedTarget);
 
 		var currency = $invoker.data("currency");
-		var currencyName = $invoker.data("name");
-
+		var currencyCode = $invoker.data("code");
+		
+		NRS.sendRequest("getAccountCurrencies", {
+			"code": currencyCode,
+			"account": NRS.accountRS
+		}, function(response) {
+			var availableUnitsMessage = "None Available";
+			if (response.units && response.units != 0) {
+				availableUnitsMessage = NRS.formatQuantity(response.units, response.decimals);
+			}
+			$("#claimAvailable").html(availableUnitsMessage);
+		})
+		
+		$("#claim_currency_decimals").val($invoker.data("decimals"));
 		$("#claim_currency_currency").val(currency);
-		$("#claim_currency_name").html(String(currencyName).escapeHTML());
+		$("#claim_currency_code").html(String(currencyCode).escapeHTML());
 
 	});
+	
+	/* Respect decimal positions on claiming a currency */
+	NRS.forms.currencyReserveClaim = function ($modal) {
+		var data = NRS.getFormData($modal.find("form:first"));
+		data.units = NRS.formatQuantity(data.units, data.decimals);
+
+		return {
+			"data": data
+		};
+	};
 
 	/* MINT CURRENCY MODEL */
 	$("#mine_currency_modal").on("show.bs.modal", function (e) {

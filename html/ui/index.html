@@ -4255,16 +4255,17 @@
                 <div class="modal-content">
                     <div class="modal-header">
                         <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                        <h4 class="modal-title"><span data-i18n="claim_currency">Claim currency</span> - <span id="claim_currency_name"></span></h4>
+                        <h4 class="modal-title"><span data-i18n="claim_currency">Claim currency</span> - <span id="claim_currency_code"></span></h4>
                     </div>
                     <div class="modal-body">            
                         <form role="form" autocomplete="off">
                             <div class="callout callout-danger error_message" style="display:none"></div>
                             <div class="form-group">
                                 <input type="hidden" name="currency" id="claim_currency_currency" />
+                                <input type="hidden" name="decimals" id="claim_currency_decimals" value="" />
                             </div>
                             <div class="form-group">
-                                <label for="claim_currency_amount" data-i18n="currency">Number of units to claim</label>
+                                <label for="claim_currency_amount" data-i18n="currency">Number of units to claim</label> <i>Units available: <span id="claimAvailable"></span></i>
                                 <input type="text" class="form-control" name="units" id="claim_currency_amount" placeholder="Number of units" data-i18n="units" tabindex="1" />
                             </div>
                             
@@ -4402,7 +4403,7 @@
                 <div class="modal-content">
                     <div class="modal-header">
                         <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                        <h4 class="modal-title"><span data-i18n="reserve_currency">Reserve currency</span> - <span id="reserve_currency_name"></span></h4>
+                        <h4 class="modal-title"><span data-i18n="reserve_currency">Reserve currency</span> - <span id="reserve_currency_code"></span></h4>
                     </div>
                     <div class="modal-body">            
                         <form role="form" autocomplete="off">
