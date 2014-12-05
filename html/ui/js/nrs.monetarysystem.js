@@ -898,13 +898,13 @@ var NRS = (function(NRS, $, undefined) {
 				var amountNQT = NRS.convertToNQT($("#reserve_currency_amount").val());
 				total += parseInt(amountNQT);
 				var share = amountNQT/total;
-				$("#reserve_currency_total").val($("#reserve_currency_resSupply").val().replace("'","")*$("#reserve_currency_amount").val()*share);
+				//$("#reserve_currency_total").val($("#reserve_currency_resSupply").val().replace("'","")*$("#reserve_currency_amount").val()*share);
 				$("#reserve_currency_amount_per_founder").val($("#reserve_currency_resSupply").val().replace("'","")*share);
 			}
 			else{
-				$("#reserve_currency_total").val($("#reserve_currency_resSupply").val().replace("'","")*$("#reserve_currency_amount").val());
 				$("#reserve_currency_amount_per_founder").val($("#reserve_currency_resSupply").val().replace("'",""));
 			}
+			$("#reserve_currency_total").val($("#reserve_currency_resSupply").val().replace("'","")*$("#reserve_currency_amount").val());
 		})
 	});
 
