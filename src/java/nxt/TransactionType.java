@@ -16,7 +16,7 @@ public abstract class TransactionType {
     private static final byte TYPE_COLORED_COINS = 2;
     private static final byte TYPE_DIGITAL_GOODS = 3;
     private static final byte TYPE_ACCOUNT_CONTROL = 4;
-    static final byte TYPE_MONETARY_SYSTEM = 5;
+    public static final byte TYPE_MONETARY_SYSTEM = 5;
 
     private static final byte SUBTYPE_PAYMENT_ORDINARY_PAYMENT = 0;
 
@@ -52,8 +52,8 @@ public abstract class TransactionType {
     static final byte SUBTYPE_MONETARY_SYSTEM_RESERVE_CLAIM = 2;
     static final byte SUBTYPE_MONETARY_SYSTEM_CURRENCY_TRANSFER = 3;
     static final byte SUBTYPE_MONETARY_SYSTEM_PUBLISH_EXCHANGE_OFFER = 4;
-    static final byte SUBTYPE_MONETARY_SYSTEM_EXCHANGE_BUY = 5;
-    static final byte SUBTYPE_MONETARY_SYSTEM_EXCHANGE_SELL = 6;
+    public static final byte SUBTYPE_MONETARY_SYSTEM_EXCHANGE_BUY = 5;
+    public static final byte SUBTYPE_MONETARY_SYSTEM_EXCHANGE_SELL = 6;
     static final byte SUBTYPE_MONETARY_SYSTEM_CURRENCY_MINTING = 7;
     static final byte SUBTYPE_MONETARY_SYSTEM_CURRENCY_DELETION = 8;
 

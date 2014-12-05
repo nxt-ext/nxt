@@ -17,7 +17,9 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.net.HttpURLConnection;
+import java.net.InetAddress;
 import java.net.URL;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -51,10 +53,6 @@ public class MintWorker {
         }
         long accountId = Account.getId(Crypto.getPublicKey(secretPhrase));
         String rsAccount = Convert.rsAccount(accountId);
-        long units = Nxt.getIntProperty("nxt.mint.unitsPerMint");
-        if (units == 0) {
-            units = 1;
-        }
         JSONObject currency = getCurrency(currencyCode);
         if (currency.get("currency") == null) {
             throw new IllegalArgumentException("Invalid currency code " + currencyCode);
@@ -64,6 +62,14 @@ public class MintWorker {
             throw new IllegalArgumentException("Minting algorithm not specified, currency " + currencyCode + " is not mintable");
         }
         byte algorithm = (byte)(long) currency.get("algorithm");
+        byte decimal = (byte)(long) currency.get("decimal");
+        long units = Nxt.getIntProperty("nxt.mint.unitsPerMint");
+        if (units == 0) {
+            units = 1;
+        }
+        if (decimal > 0) {
+            units *= (long)(Math.pow(10, decimal));
+        }
         JSONObject mintingTarget = getMintingTarget(currencyCode, rsAccount, units);
         long counter = (long) mintingTarget.get("counter");
         byte[] target = Convert.parseHexString((String) mintingTarget.get("targetBytes"));
@@ -154,11 +160,20 @@ public class MintWorker {
     private JSONObject getJsonResponse(Map<String, String> params) {
         JSONObject response;
         HttpURLConnection connection = null;
-        String host = Nxt.getStringProperty("nxt.apiServerHost");
+        String host = Nxt.getStringProperty("nxt.myAddress");
+        if (host == null) {
+            try {
+                host = InetAddress.getLocalHost().getHostAddress();
+            } catch (UnknownHostException e) {
+                host = "localhost";
+            }
+        }
+
         int port = Constants.isTestnet ? API.TESTNET_API_PORT : Nxt.getIntProperty("nxt.apiServerPort");
         String urlParams = getUrlParams(params);
         try {
             URL url = new URL("http", host, port, "/nxt?" + urlParams);
+            Logger.logDebugMessage("Sending request to server: " + url.toString());
             connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("POST");
             connection.setDoOutput(true);
