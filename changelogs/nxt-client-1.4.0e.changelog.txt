@@ -50,7 +50,7 @@ by arrival time at the forger's node.
 Improvements in blockchain download to prevent getting stuck on the wrong fork.
 Nodes will download blocks in batches of not more than 719 blocks at a time
 from a single peer, and after each such batch will verify  with
-nxt.numberOfForkConfirmations other peers (default 5)if this is the best
+nxt.numberOfForkConfirmations other peers (default 5) if this is the best
 fork, before continuing, unless the downloaded batch is of less than 10 blocks.
 
 Rescan status is now saved in the database, to prevent the database from being
