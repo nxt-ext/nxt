@@ -947,5 +947,7 @@
     "currency_transfer": "Currency Transfer",
     "issue_currency": "Issue Currency",
     "delete_currency": "Delete Currency",
+    "success_buy_order_currency": "The buy currency order has been submitted.",
+    "success_sell_order_currency": "The sell currency order has been submitted.",
     "": ""
 }
