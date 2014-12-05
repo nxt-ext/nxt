@@ -62,7 +62,7 @@ public class MintWorker {
             throw new IllegalArgumentException("Minting algorithm not specified, currency " + currencyCode + " is not mintable");
         }
         byte algorithm = (byte)(long) currency.get("algorithm");
-        byte decimal = (byte)(long) currency.get("decimal");
+        byte decimal = (byte)(long) currency.get("decimals");
         long units = Nxt.getIntProperty("nxt.mint.unitsPerMint");
         if (units == 0) {
             units = 1;
