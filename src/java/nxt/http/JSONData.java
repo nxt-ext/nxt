@@ -5,6 +5,7 @@ import nxt.Alias;
 import nxt.Appendix;
 import nxt.Asset;
 import nxt.AssetTransfer;
+import nxt.Attachment;
 import nxt.Block;
 import nxt.Currency;
 import nxt.CurrencyExchangeOffer;
@@ -415,6 +416,24 @@ final class JSONData {
         json.put("height", exchange.getHeight());
         if (includeCurrencyInfo) {
             putCurrencyInfo(json, exchange.getCurrencyId());
+        }
+        return json;
+    }
+
+    static JSONObject exchangeRequest(Transaction transaction, boolean includeCurrencyInfo) {
+        JSONObject json = new JSONObject();
+        json.put("transaction", Convert.toUnsignedLong(transaction.getId()));
+        Attachment.MonetarySystemExchange attachment = (Attachment.MonetarySystemExchange) transaction.getAttachment();
+        if (attachment instanceof Attachment.MonetarySystemExchangeSell) {
+            json.put("type", "sell");
+        } else {
+            json.put("type", "buy");
+        }
+        json.put("timestamp", transaction.getTimestamp());
+        json.put("units", String.valueOf(attachment.getUnits()));
+        json.put("rateNQT", String.valueOf(attachment.getRateNQT()));
+        if (includeCurrencyInfo) {
+            putCurrencyInfo(json, attachment.getCurrencyId());
         }
         return json;
     }
