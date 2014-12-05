@@ -104,6 +104,7 @@ var NRS = (function(NRS, $, undefined) {
 		
 		NRS.loadCurrencyOffers("buy", currencyId, refresh);
 		NRS.loadCurrencyOffers("sell", currencyId, refresh);
+		NRS.getExchangeRequests(currencyId);
 		NRS.getExchangeHistory(currencyCode);
 		if (NRS.accountInfo.unconfirmedBalanceNQT == "0") {
 			$("#ms_your_nxt_balance").html("0");
@@ -206,7 +207,7 @@ var NRS = (function(NRS, $, undefined) {
 				for (var i = 0; i < response.founders.length; i++) {
 					total = parseFloat(NRS.convertToNXT(response.founders[i].amountPerUnitNQT)) + parseFloat(total);
 				}
-				for (var i = 0; i < response.founders.length; i++) {
+				for (i = 0; i < response.founders.length; i++) {
 					var account = response.founders[i].accountRS;
 					var percentage = (((NRS.convertToNXT(response.founders[i].amountPerUnitNQT))/total)*100).toFixed(2);
 					rows += "<tr>" +
@@ -307,7 +308,53 @@ var NRS = (function(NRS, $, undefined) {
 			});
 		}
 	};
-	
+
+	NRS.getExchangeRequests = function(currencyId) {
+		NRS.sendRequest("getAccountExchangeRequests+", {
+			"currency": currencyId,
+			"account": NRS.accountRS,
+			"firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
+			"lastIndex": NRS.pageNumber * NRS.itemsPerPage
+		}, function (response) {
+			var requestTable = $("#ms_exchange_requests_table");
+			var exchangeRequests = response.exchangeRequests;
+			if (!exchangeRequests) {
+				exchangeRequests = [];
+			}
+			if (NRS.unconfirmedTransactions.length) {
+				for (var i = 0; i < NRS.unconfirmedTransactions.length; i++) {
+					var unconfirmedTransaction = NRS.unconfirmedTransactions[i];
+					if (unconfirmedTransaction.type == 5 && (unconfirmedTransaction.subtype == 5 || unconfirmedTransaction.subtype == 6) && unconfirmedTransaction.currency == currencyId) {
+						exchangeRequests.unshift($.extend(true, {}, unconfirmedTransaction)); //make sure it's a deep copy
+					}
+				}
+			}
+			if (response.exchangeRequests && response.exchangeRequests.length) {
+				if (response.exchangeRequests.length > NRS.itemsPerPage) {
+					NRS.hasMorePages = true;
+					response.exchangeRequests.pop();
+				}
+				var rows = "";
+				for (i = 0; i < response.exchangeRequests.length; i++) {
+					var exchangeRequest = response.exchangeRequests[i];
+					var type = (exchangeRequest.type == 5 ? "buy" : (exchangeRequest.type == 6 ? "sell" : exchangeRequest.type));
+					rows += "<tr>" +
+						"<td>" +
+							"<a href='#' onClick='NRS.showTransactionModal(&quot;" + exchangeRequest.transaction + "&quot;);'>" + (exchangeRequest.unconfirmed ? "<strong>Pending</strong>" : NRS.formatTimestamp(exchangeRequest.timestamp)) + "</a>" +
+						"</td>" +
+						"<td>" + type + "</td>" +
+						"<td>" + NRS.formatQuantity(exchangeRequest.units, exchangeRequest.decimals) + "</td>" +
+						"<td>" + NRS.formatAmount(exchangeRequest.rateNQT) + "</td>" +
+					"</tr>";
+				}
+				requestTable.find("tbody").empty().append(rows);
+			} else {
+				requestTable.find("tbody").empty();
+			}
+			NRS.dataLoadFinished(requestTable, true);
+		});
+	};
+
 	/* Monetary System Buy/Sell boxes */
 	$("#buy_currency_box .box-header, #sell_currency_box .box-header").click(function(e) {
 		e.preventDefault();
@@ -885,7 +932,7 @@ var NRS = (function(NRS, $, undefined) {
 	
 	$("#reserve_currency_amount").blur(function() {
 		NRS.sendRequest("getCurrencyFounders", {
-			"code": $("#reserve_currency_code").html(),
+			"code": $("#reserve_currency_code").html()
 		}, function(response) {
 			var total = 0;
 			var count = 0;
@@ -939,7 +986,7 @@ var NRS = (function(NRS, $, undefined) {
 				availableUnitsMessage = NRS.formatQuantity(response.units, response.decimals);
 			}
 			$("#claimAvailable").html(availableUnitsMessage);
-		})
+		});
 		
 		$("#claim_currency_decimals").val($invoker.data("decimals"));
 		$("#claim_currency_currency").val(currency);
