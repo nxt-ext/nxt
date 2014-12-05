@@ -665,7 +665,7 @@ public final class Peers {
         sendToSomePeers(request);
     }
 
-    public static void sendToSomePeers(List<Transaction> transactions) {
+    public static void sendToSomePeers(List<? extends Transaction> transactions) {
         JSONObject request = new JSONObject();
         JSONArray transactionsData = new JSONArray();
         for (Transaction transaction : transactions) {

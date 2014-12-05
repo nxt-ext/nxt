@@ -33,7 +33,7 @@ public final class BroadcastTransaction extends APIServlet.APIRequestHandler {
         } catch (NxtException.ValidationException|RuntimeException e) {
             Logger.logDebugMessage(e.getMessage(), e);
             response.put("errorCode", 4);
-            response.put("errorDescription", "Incorrect transaction: " + e.toString());
+            response.put("errorDescription", e.toString());
             response.put("error", e.getMessage());
         }
         return response;
