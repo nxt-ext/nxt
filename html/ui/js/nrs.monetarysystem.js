@@ -905,6 +905,12 @@ var NRS = (function(NRS, $, undefined) {
 				$("#reserve_currency_amount_per_founder").val($("#reserve_currency_resSupply").val().replace("'",""));
 			}
 			$("#reserve_currency_total").val($("#reserve_currency_resSupply").val().replace("'","")*$("#reserve_currency_amount").val());
+			if ($("#reserve_currency_resSupply").val().replace("'","")*$("#reserve_currency_amount").val() > 1000){
+				$("#reserve_currency_modal .callout-danger").html("You are locking over 1000 NXT");
+				$("#reserve_currency_modal .callout-danger").show();
+			}
+			else
+				$("#reserve_currency_modal .callout-danger").hide();
 		})
 	});
 
