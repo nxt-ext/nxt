@@ -111,7 +111,7 @@ public final class Exchange {
         Connection con = null;
         try {
             con = Db.db.getConnection();
-            PreparedStatement pstmt = con.prepareStatement("SELECT * FROM transaction where sender_id = ? AND type = ? AND (subtype == ? OR subtype == ?) " +
+            PreparedStatement pstmt = con.prepareStatement("SELECT * FROM transaction where sender_id = ? AND type = ? AND (subtype = ? OR subtype = ?) " +
                     " ORDER BY block_timestamp DESC, transaction_index DESC ");
             int i = 0;
             pstmt.setLong(++i, accountId);
