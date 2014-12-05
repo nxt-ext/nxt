@@ -8,6 +8,48 @@ import java.util.Map;
 
 public abstract class MonetarySystem extends TransactionType {
 
+    private static final byte SUBTYPE_MONETARY_SYSTEM_CURRENCY_ISSUANCE = 0;
+    private static final byte SUBTYPE_MONETARY_SYSTEM_RESERVE_INCREASE = 1;
+    private static final byte SUBTYPE_MONETARY_SYSTEM_RESERVE_CLAIM = 2;
+    private static final byte SUBTYPE_MONETARY_SYSTEM_CURRENCY_TRANSFER = 3;
+    private static final byte SUBTYPE_MONETARY_SYSTEM_PUBLISH_EXCHANGE_OFFER = 4;
+    private static final byte SUBTYPE_MONETARY_SYSTEM_EXCHANGE_BUY = 5;
+    private static final byte SUBTYPE_MONETARY_SYSTEM_EXCHANGE_SELL = 6;
+    private static final byte SUBTYPE_MONETARY_SYSTEM_CURRENCY_MINTING = 7;
+    private static final byte SUBTYPE_MONETARY_SYSTEM_CURRENCY_DELETION = 8;
+
+    private static final Fee NEXT_5LETTER_CURRENCY_ISSUANCE_FEE = new Fee(40 * Constants.ONE_NXT, 0);
+    private static final Fee NEXT_4LETTER_CURRENCY_ISSUANCE_FEE = new Fee(1000 * Constants.ONE_NXT, 0);
+    private static final Fee NEXT_3LETTER_CURRENCY_ISSUANCE_FEE = new Fee(25000 * Constants.ONE_NXT, 0);
+    private static final Fee BASELINE_5LETTER_CURRENCY_ISSUANCE_FEE = new Fee(40 * Constants.ONE_NXT, 0);
+    private static final Fee BASELINE_4LETTER_CURRENCY_ISSUANCE_FEE = new Fee(1000 * Constants.ONE_NXT, 0);
+    private static final Fee BASELINE_3LETTER_CURRENCY_ISSUANCE_FEE = new Fee(25000 * Constants.ONE_NXT, 0);
+
+    static TransactionType findTransactionType(byte subtype) {
+        switch (subtype) {
+            case MonetarySystem.SUBTYPE_MONETARY_SYSTEM_CURRENCY_ISSUANCE:
+                return MonetarySystem.CURRENCY_ISSUANCE;
+            case MonetarySystem.SUBTYPE_MONETARY_SYSTEM_RESERVE_INCREASE:
+                return MonetarySystem.RESERVE_INCREASE;
+            case MonetarySystem.SUBTYPE_MONETARY_SYSTEM_RESERVE_CLAIM:
+                return MonetarySystem.RESERVE_CLAIM;
+            case MonetarySystem.SUBTYPE_MONETARY_SYSTEM_CURRENCY_TRANSFER:
+                return MonetarySystem.CURRENCY_TRANSFER;
+            case MonetarySystem.SUBTYPE_MONETARY_SYSTEM_PUBLISH_EXCHANGE_OFFER:
+                return MonetarySystem.PUBLISH_EXCHANGE_OFFER;
+            case MonetarySystem.SUBTYPE_MONETARY_SYSTEM_EXCHANGE_BUY:
+                return MonetarySystem.EXCHANGE_BUY;
+            case MonetarySystem.SUBTYPE_MONETARY_SYSTEM_EXCHANGE_SELL:
+                return MonetarySystem.EXCHANGE_SELL;
+            case MonetarySystem.SUBTYPE_MONETARY_SYSTEM_CURRENCY_MINTING:
+                return MonetarySystem.CURRENCY_MINTING;
+            case MonetarySystem.SUBTYPE_MONETARY_SYSTEM_CURRENCY_DELETION:
+                return MonetarySystem.CURRENCY_DELETION;
+            default:
+                return null;
+        }
+    }
+
     private MonetarySystem() {}
 
     @Override
@@ -32,7 +74,7 @@ public abstract class MonetarySystem extends TransactionType {
 
         @Override
         public byte getSubtype() {
-            return TransactionType.SUBTYPE_MONETARY_SYSTEM_CURRENCY_ISSUANCE;
+            return SUBTYPE_MONETARY_SYSTEM_CURRENCY_ISSUANCE;
         }
 
         @Override
@@ -142,7 +184,7 @@ public abstract class MonetarySystem extends TransactionType {
 
         @Override
         public byte getSubtype() {
-            return TransactionType.SUBTYPE_MONETARY_SYSTEM_RESERVE_INCREASE;
+            return SUBTYPE_MONETARY_SYSTEM_RESERVE_INCREASE;
         }
 
         @Override
@@ -198,7 +240,7 @@ public abstract class MonetarySystem extends TransactionType {
 
         @Override
         public byte getSubtype() {
-            return TransactionType.SUBTYPE_MONETARY_SYSTEM_RESERVE_CLAIM;
+            return SUBTYPE_MONETARY_SYSTEM_RESERVE_CLAIM;
         }
 
         @Override
@@ -253,7 +295,7 @@ public abstract class MonetarySystem extends TransactionType {
 
         @Override
         public byte getSubtype() {
-            return TransactionType.SUBTYPE_MONETARY_SYSTEM_CURRENCY_TRANSFER;
+            return SUBTYPE_MONETARY_SYSTEM_CURRENCY_TRANSFER;
         }
 
         @Override
@@ -316,7 +358,7 @@ public abstract class MonetarySystem extends TransactionType {
 
         @Override
         public byte getSubtype() {
-            return TransactionType.SUBTYPE_MONETARY_SYSTEM_PUBLISH_EXCHANGE_OFFER;
+            return SUBTYPE_MONETARY_SYSTEM_PUBLISH_EXCHANGE_OFFER;
         }
 
         @Override
@@ -417,7 +459,7 @@ public abstract class MonetarySystem extends TransactionType {
 
         @Override
         public byte getSubtype() {
-            return TransactionType.SUBTYPE_MONETARY_SYSTEM_EXCHANGE_BUY;
+            return SUBTYPE_MONETARY_SYSTEM_EXCHANGE_BUY;
         }
 
         @Override
@@ -459,7 +501,7 @@ public abstract class MonetarySystem extends TransactionType {
 
         @Override
         public byte getSubtype() {
-            return TransactionType.SUBTYPE_MONETARY_SYSTEM_EXCHANGE_SELL;
+            return SUBTYPE_MONETARY_SYSTEM_EXCHANGE_SELL;
         }
 
         @Override
@@ -500,7 +542,7 @@ public abstract class MonetarySystem extends TransactionType {
 
         @Override
         public byte getSubtype() {
-            return TransactionType.SUBTYPE_MONETARY_SYSTEM_CURRENCY_MINTING;
+            return SUBTYPE_MONETARY_SYSTEM_CURRENCY_MINTING;
         }
 
         @Override
@@ -557,7 +599,7 @@ public abstract class MonetarySystem extends TransactionType {
 
         @Override
         public byte getSubtype() {
-            return TransactionType.SUBTYPE_MONETARY_SYSTEM_CURRENCY_DELETION;
+            return SUBTYPE_MONETARY_SYSTEM_CURRENCY_DELETION;
         }
 
         @Override

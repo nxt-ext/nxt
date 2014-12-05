@@ -16,7 +16,7 @@ public abstract class TransactionType {
     private static final byte TYPE_COLORED_COINS = 2;
     private static final byte TYPE_DIGITAL_GOODS = 3;
     private static final byte TYPE_ACCOUNT_CONTROL = 4;
-    public static final byte TYPE_MONETARY_SYSTEM = 5;
+    static final byte TYPE_MONETARY_SYSTEM = 5;
 
     private static final byte SUBTYPE_PAYMENT_ORDINARY_PAYMENT = 0;
 
@@ -47,30 +47,14 @@ public abstract class TransactionType {
     private static final byte SUBTYPE_DIGITAL_GOODS_FEEDBACK = 6;
     private static final byte SUBTYPE_DIGITAL_GOODS_REFUND = 7;
 
-    static final byte SUBTYPE_MONETARY_SYSTEM_CURRENCY_ISSUANCE = 0;
-    static final byte SUBTYPE_MONETARY_SYSTEM_RESERVE_INCREASE = 1;
-    static final byte SUBTYPE_MONETARY_SYSTEM_RESERVE_CLAIM = 2;
-    static final byte SUBTYPE_MONETARY_SYSTEM_CURRENCY_TRANSFER = 3;
-    static final byte SUBTYPE_MONETARY_SYSTEM_PUBLISH_EXCHANGE_OFFER = 4;
-    public static final byte SUBTYPE_MONETARY_SYSTEM_EXCHANGE_BUY = 5;
-    public static final byte SUBTYPE_MONETARY_SYSTEM_EXCHANGE_SELL = 6;
-    static final byte SUBTYPE_MONETARY_SYSTEM_CURRENCY_MINTING = 7;
-    static final byte SUBTYPE_MONETARY_SYSTEM_CURRENCY_DELETION = 8;
-
     private static final byte SUBTYPE_ACCOUNT_CONTROL_EFFECTIVE_BALANCE_LEASING = 0;
 
     private static final int BASELINE_FEE_HEIGHT = 1; // At release time must be less than current block - 1440
     private static final Fee BASELINE_FEE = new Fee(Constants.ONE_NXT, 0);
     private static final Fee BASELINE_ASSET_ISSUANCE_FEE = new Fee(1000 * Constants.ONE_NXT, 0);
-    static final Fee BASELINE_3LETTER_CURRENCY_ISSUANCE_FEE = new Fee(25000 * Constants.ONE_NXT, 0);
-    static final Fee BASELINE_4LETTER_CURRENCY_ISSUANCE_FEE = new Fee(1000 * Constants.ONE_NXT, 0);
-    static final Fee BASELINE_5LETTER_CURRENCY_ISSUANCE_FEE = new Fee(40 * Constants.ONE_NXT, 0);
     private static final int NEXT_FEE_HEIGHT = Integer.MAX_VALUE;
     private static final Fee NEXT_FEE = new Fee(Constants.ONE_NXT, 0);
     private static final Fee NEXT_ASSET_ISSUANCE_FEE = new Fee(1000 * Constants.ONE_NXT, 0);
-    static final Fee NEXT_3LETTER_CURRENCY_ISSUANCE_FEE = new Fee(25000 * Constants.ONE_NXT, 0);
-    static final Fee NEXT_4LETTER_CURRENCY_ISSUANCE_FEE = new Fee(1000 * Constants.ONE_NXT, 0);
-    static final Fee NEXT_5LETTER_CURRENCY_ISSUANCE_FEE = new Fee(40 * Constants.ONE_NXT, 0);
 
     public static TransactionType findTransactionType(byte type, byte subtype) {
         switch (type) {
@@ -152,26 +136,7 @@ public abstract class TransactionType {
                         return null;
                 }
             case TYPE_MONETARY_SYSTEM:
-                switch (subtype) {
-                    case SUBTYPE_MONETARY_SYSTEM_CURRENCY_ISSUANCE:
-                        return MonetarySystem.CURRENCY_ISSUANCE;
-                    case SUBTYPE_MONETARY_SYSTEM_RESERVE_INCREASE:
-                        return MonetarySystem.RESERVE_INCREASE;
-                    case SUBTYPE_MONETARY_SYSTEM_RESERVE_CLAIM:
-                        return MonetarySystem.RESERVE_CLAIM;
-                    case SUBTYPE_MONETARY_SYSTEM_CURRENCY_TRANSFER:
-                        return MonetarySystem.CURRENCY_TRANSFER;
-                    case SUBTYPE_MONETARY_SYSTEM_PUBLISH_EXCHANGE_OFFER:
-                        return MonetarySystem.PUBLISH_EXCHANGE_OFFER;
-                    case SUBTYPE_MONETARY_SYSTEM_EXCHANGE_BUY:
-                        return MonetarySystem.EXCHANGE_BUY;
-                    case SUBTYPE_MONETARY_SYSTEM_EXCHANGE_SELL:
-                        return MonetarySystem.EXCHANGE_SELL;
-                    case SUBTYPE_MONETARY_SYSTEM_CURRENCY_MINTING:
-                        return MonetarySystem.CURRENCY_MINTING;
-                    case SUBTYPE_MONETARY_SYSTEM_CURRENCY_DELETION:
-                        return MonetarySystem.CURRENCY_DELETION;
-                }
+                return MonetarySystem.findTransactionType(subtype);
             default:
                 return null;
         }
