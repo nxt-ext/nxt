@@ -506,6 +506,7 @@ var NRS = (function(NRS, $, undefined) {
 						var name = String(currency.name).escapeHTML();
 						var currencyId = String(currency.currency).escapeHTML();
 						var currencyCode = String(currency.code).escapeHTML();
+						var resSupply = NRS.formatQuantity(currency.reserveSupply, currency.decimals);
 						if (NRS.isExchangeable(currency.type)) {
 							currency_type += "<i title='" + $.t('exchangeable') + "' class='fa fa-exchange'></i> ";
 						}
@@ -528,7 +529,7 @@ var NRS = (function(NRS, $, undefined) {
 							"<td>" + name + "</td>" +
 							"<td>" + currency_type + "</td>" +
 							"<td>" + currency.issuanceHeight + "</td>" +
-							"<td>" + NRS.formatQuantity(currency.reserveSupply, currency.decimals) + "</td>" +
+							"<td>" + resSupply + "</td>" +
 							"<td>" + NRS.formatQuantity(currency.currentSupply, currency.decimals) + "</td>" +
 							"<td>" + NRS.formatQuantity(currency.maxSupply, currency.decimals) + "</td>" +
 							"<td>";
@@ -536,7 +537,7 @@ var NRS = (function(NRS, $, undefined) {
 								rows += "<a href='#' class='btn btn-xs btn-default' data-toggle='modal' data-target='#delete_currency_modal' data-currency='" + currencyId + "' data-name='" + name + "' data-code='" + currencyCode + "'>" + $.t("delete") + "</a> ";
 							}
 							if (currency.issuanceHeight > NRS.lastBlockHeight && NRS.isReservable(currency.type)) {
-								rows += "<a href='#' class='btn btn-xs btn-default' data-toggle='modal' data-target='#reserve_currency_modal' data-currency='" + currencyId + "' data-name='" + name + "' data-code='" + currencyCode + "'>" + $.t("reserve") + "</a> ";
+								rows += "<a href='#' class='btn btn-xs btn-default' data-toggle='modal' data-target='#reserve_currency_modal' data-currency='" + currencyId + "' data-name='" + name + "' data-code='" + currencyCode + "' data-ressupply='" + resSupply + "'>" + $.t("reserve") + "</a> ";
 							}
 							if (currency.issuanceHeight <= NRS.lastBlockHeight && NRS.isClaimable(currency.type)){
 								rows += "<a href='#' class='btn btn-xs btn-default' data-toggle='modal' data-target='#claim_currency_modal' data-currency='" + currencyId + "' data-name='" + name + "' data-code='" + currencyCode + "' data-decimals='" + currency.decimals + "'>" + $.t("claim") + "</a> ";
@@ -876,8 +877,36 @@ var NRS = (function(NRS, $, undefined) {
 		var currencyCode = $invoker.data("code");
 
 		$("#reserve_currency_currency").val(currency);
+		$("#reserve_currency_resSupply").val($invoker.data("ressupply"));
+		
 		$("#reserve_currency_code").html(String(currencyCode).escapeHTML());
 
+	});
+	
+	$("#reserve_currency_amount").blur(function() {
+		NRS.sendRequest("getCurrencyFounders", {
+			"code": $("#reserve_currency_code").html(),
+		}, function(response) {
+			var total = 0;
+			var count = 0;
+			if (response.founders && response.founders.length) {
+				for (var i = 0; i < response.founders.length; i++) {
+				 	var founder = response.founders[i];
+					total += parseInt(founder.amountPerUnitNQT);
+					count++;
+				}
+				var amountNQT = NRS.convertToNQT($("#reserve_currency_amount").val());
+				total += parseInt(amountNQT);
+				var share = amountNQT/total;
+				console.log(share);
+				$("#reserve_currency_total").val($("#reserve_currency_resSupply").val().replace("'","")*$("#reserve_currency_amount").val()*share);
+				$("#reserve_currency_amount_per_founder").val($("#reserve_currency_resSupply").val().replace("'","")*share);
+			}
+			else{
+				$("#reserve_currency_total").val($("#reserve_currency_resSupply").val().replace("'","")*$("#reserve_currency_amount").val());
+				$("#reserve_currency_amount_per_founder").val($("#reserve_currency_resSupply").val().replace("'",""));
+			}
+		})
 	});
 
 	NRS.forms.currencyReserveIncrease = function ($modal) {
