@@ -7,6 +7,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 
 class NxtDbVersion extends DbVersion {
 
@@ -482,8 +483,10 @@ class NxtDbVersion extends DbVersion {
             case 175:
                 Logger.logMessage("Will update transaction_index column...");
                 try (Connection con = Db.db.getConnection();
+                     Statement stmt = con.createStatement();
                      PreparedStatement pstmt = con.prepareStatement("SELECT * FROM transaction ORDER BY height, id FOR UPDATE",
                              ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_UPDATABLE)) {
+                    stmt.executeUpdate("SET UNDO_LOG 0");
                     try (ResultSet rs = pstmt.executeQuery()) {
                         int height = 0;
                         short index = 0;
@@ -500,6 +503,7 @@ class NxtDbVersion extends DbVersion {
                             rs.updateRow();
                         }
                     }
+                    stmt.executeUpdate("SET UNDO_LOG 1");
                 }
                 apply(null);
             case 176:
