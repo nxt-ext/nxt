@@ -124,10 +124,7 @@ var NRS = (function(NRS, $, undefined) {
 								}
 								rows += "<tr><td><a href='#' data-transaction='"+poll.transaction+"'>" + String(poll.attachment.name).escapeHTML() + "</a></td><td>" + pollDescription.escapeHTML() + "</td><td>" + (poll.sender != NRS.genesis ? "<a href='#' data-user='" + NRS.getAccountFormatted(poll, "sender") + "' class='user_info'>" + NRS.getAccountTitle(poll, "sender") + "</a>" : "Genesis") + "</td><td>" + NRS.formatTimestamp(poll.timestamp) + "</td><td>" + String(poll.attachment.finishBlockHeight - NRS.lastBlockHeight) + "</td><td><a href='#' data-toggle='modal' data-target='#cast_vote_modal'>Vote </td></tr>";
 							}
-							$el = $("#started_polls_table");
-							$el.find("tbody").empty().append(rows);
-							alert($("#started_polls_table").html());;
-							NRS.dataLoadFinished($el);							
+							NRS.dataLoaded(rows);						
 						}
 					});
 				}
@@ -135,7 +132,9 @@ var NRS = (function(NRS, $, undefined) {
 				NRS.dataLoaded();
 			}
 		});
+	}
 
+	NRS.pages.voted_polls = function() {
 		NRS.sendRequest("getAccountTransactions+",{"account": NRS.accountRS, "type": 1, "subtype": 3}, function(response) {
 			
 			if (response.transactions && response.transactions.length) {
@@ -146,7 +145,7 @@ var NRS = (function(NRS, $, undefined) {
 					NRS.sendRequest("getTransaction+", {
 						"transaction": response.transactions[i].attachment.pollId
 					}, function(poll, input) {
-						if (NRS.currentPage != "my_polls") {
+						if (NRS.currentPage != "voted_polls") {
 							polls = {};
 							return;
 						}
@@ -191,10 +190,7 @@ var NRS = (function(NRS, $, undefined) {
 								rows += "<tr><td><a href='#' data-transaction='"+poll.transaction+"'>" + String(poll.attachment.name).escapeHTML() + "</a></td><td>" + pollDescription.escapeHTML() + "</td><td>" + (poll.sender != NRS.genesis ? "<a href='#' data-user='" + NRS.getAccountFormatted(poll, "sender") + "' class='user_info'>" + NRS.getAccountTitle(poll, "sender") + "</a>" : "Genesis") + "</td><td>" + NRS.formatTimestamp(poll.timestamp) + "</td><td>" + String(poll.attachment.finishBlockHeight - NRS.lastBlockHeight) + "</td><td><a href='#' data-toggle='modal' data-target='#cast_vote_modal'>Vote </td></tr>";
 							}
 
-							$el = $("#started_polls_table");
-							$el.find("tbody").empty().append(rows);
-
-							NRS.dataLoadFinished($el);
+							NRS.dataLoaded(rows);
 						}
 					});
 				}
@@ -206,6 +202,10 @@ var NRS = (function(NRS, $, undefined) {
 
 	NRS.incoming.my_polls = function() {
 		NRS.loadPage("my_polls");
+	}
+
+	NRS.incoming.voted_polls = function() {
+		NRS.loadPage("voted_polls");
 	}
 
 
