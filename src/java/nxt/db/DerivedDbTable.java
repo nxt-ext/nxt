@@ -38,9 +38,7 @@ public abstract class DerivedDbTable {
         }
         try (Connection con = db.getConnection();
              Statement stmt = con.createStatement()) {
-            stmt.addBatch("SET REFERENTIAL_INTEGRITY FALSE");
             stmt.addBatch("TRUNCATE TABLE " + table);
-            stmt.addBatch("SET REFERENTIAL_INTEGRITY TRUE");
             stmt.executeBatch();
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);

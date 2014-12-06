@@ -16,29 +16,16 @@ public class GetAccountPendingTransactionToSignIds extends APIServlet.APIRequest
     static final GetAccountPendingTransactionToSignIds instance = new GetAccountPendingTransactionToSignIds();
 
     private GetAccountPendingTransactionToSignIds() {
-        super(new APITag[]{APITag.ACCOUNTS}, "account", "finished", "firstIndex", "lastIndex");
+        super(new APITag[]{APITag.ACCOUNTS, APITag.PENDING_TRANSACTIONS}, "account", "firstIndex", "lastIndex");
     }
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
         Account account = ParameterParser.getAccount(req);
-        String finishedValue = Convert.nullToEmpty(req.getParameter("finished")).toLowerCase();
         int firstIndex = ParameterParser.getFirstIndex(req);
         int lastIndex = ParameterParser.getLastIndex(req);
 
-        Boolean finished = null;
-        switch (finishedValue) {
-            case "true":
-                finished = true;
-                break;
-            case "false":
-                finished = false;
-                break;
-            default:
-                break;
-        }
-
-        List<Long> transactionIds = PendingTransactionPoll.getIdsByWhitelistedSigner(account, finished, firstIndex, lastIndex);
+        List<Long> transactionIds = PendingTransactionPoll.getIdsByWhitelistedSigner(account, firstIndex, lastIndex);
 
 
         JSONArray transactionIdsJson = new JSONArray();

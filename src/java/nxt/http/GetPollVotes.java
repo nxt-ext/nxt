@@ -36,6 +36,7 @@ public class GetPollVotes extends APIServlet.APIRequestHandler  {
             return INCORRECT_POLL;
         }
 
+        //TODO: close DbIterators
         DbIterator<Vote> votes = Vote.getVotes(pollId, firstIndex, lastIndex);
 
         JSONArray votesJson = new JSONArray();

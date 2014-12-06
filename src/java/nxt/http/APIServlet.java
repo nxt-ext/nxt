@@ -71,6 +71,7 @@ public final class APIServlet extends HttpServlet {
         map.put("cancelAskOrder", CancelAskOrder.instance);
         map.put("cancelBidOrder", CancelBidOrder.instance);
         map.put("castVote", CastVote.instance);
+        map.put("castVotePhased", CastVotePhased.instance);
         map.put("createPoll", CreatePoll.instance);
         map.put("decryptFrom", DecryptFrom.instance);
         map.put("dgsListing", DGSListing.instance);
@@ -135,6 +136,7 @@ public final class APIServlet extends HttpServlet {
         //map.put("getNextBlockGenerators", GetNextBlockGenerators.instance);
         map.put("getPeer", GetPeer.instance);
         map.put("getPeers", GetPeers.instance);
+        map.put("getPendingTransactionVotesCount", GetPendingTransactionVotesCount.instance);
         map.put("getPoll", GetPoll.instance);
         map.put("getPollIds", GetPollIds.instance);
         map.put("getPollResults", GetPollResults.instance);

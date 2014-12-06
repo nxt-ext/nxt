@@ -13,10 +13,11 @@ public class AbstractPoll {
     protected final byte votingModel;
 
     protected final long assetId;
+    //TODO: minBalance is defined in whole NXT for accounts, but in QNT for assets, why not be consistent and use NQT and QNT?
     protected final long minBalance;
     protected boolean finished;
 
-    public AbstractPoll(long accountId, int finishBlockHeight, byte votingModel, long assetId, long minBalance) {
+    AbstractPoll(long accountId, int finishBlockHeight, byte votingModel, long assetId, long minBalance) {
         this.accountId = accountId;
         this.finishBlockHeight = finishBlockHeight;
         this.votingModel = votingModel;
@@ -25,9 +26,9 @@ public class AbstractPoll {
         this.finished = false;
     }
 
-    public AbstractPoll(ResultSet rs) throws SQLException {
+    AbstractPoll(ResultSet rs) throws SQLException {
         this.accountId = rs.getLong("account_id");
-        this.finishBlockHeight = rs.getInt("finish");
+        this.finishBlockHeight = rs.getInt("finish_height");
         this.votingModel = rs.getByte("voting_model");
         this.assetId = rs.getLong("asset_id");
         this.minBalance = rs.getLong("min_balance");
@@ -54,39 +55,38 @@ public class AbstractPoll {
         return assetId;
     }
 
-    public boolean isFinished() {
-        return finished;
-    }
+    //todo: rename to isReleased?
+    public boolean isFinished() { return finished; }
 
-    public void setFinished(boolean finished) {
+    protected void setFinished(boolean finished) {
         this.finished = finished;
     }
 
-    static long calcWeight(AbstractPoll pollStructure, Account voter) {
+    long calcWeight(Account voter) {
         long weight = 0;
 
-        switch (pollStructure.votingModel) {
+        switch (votingModel) {
             case Constants.VOTING_MODEL_ASSET:
-                long qntBalance = voter.getAssetBalanceQNT(pollStructure.assetId);
-                if (qntBalance >= pollStructure.getMinBalance()) {
+                long qntBalance = voter.getAssetBalanceQNT(assetId);
+                if (qntBalance >= getMinBalance()) {
                     weight = qntBalance;
                 }
                 break;
             case Constants.VOTING_MODEL_ACCOUNT:
-                long assetId = pollStructure.getAssetId();
+                long assetId = getAssetId();
                 long balance;
                 if (assetId == 0) {
-                    balance = voter.getGuaranteedBalanceNQT(Constants.CONFIRMATIONS_RELIABLE_TX) / Constants.ONE_NXT;
+                    balance = voter.getBalanceNQT() / Constants.ONE_NXT;
                 } else {
-                    balance = voter.getAssetBalanceQNT(pollStructure.assetId);
+                    balance = voter.getAssetBalanceQNT(assetId);
                 }
-                if (balance >= pollStructure.getMinBalance()) {
+                if (balance >= getMinBalance()) {
                     weight = 1;
                 }
                 break;
             case Constants.VOTING_MODEL_BALANCE:
-                long nxtBalance = voter.getGuaranteedBalanceNQT(Constants.CONFIRMATIONS_RELIABLE_TX) / Constants.ONE_NXT;
-                if (nxtBalance >= pollStructure.getMinBalance()) {
+                long nxtBalance = voter.getBalanceNQT() / Constants.ONE_NXT;
+                if (nxtBalance >= getMinBalance()) {
                     weight = nxtBalance;
                 }
         }

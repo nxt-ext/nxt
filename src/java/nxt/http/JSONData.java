@@ -1,6 +1,20 @@
 package nxt.http;
 
-import nxt.*;
+import nxt.Account;
+import nxt.Alias;
+import nxt.Appendix;
+import nxt.Asset;
+import nxt.AssetTransfer;
+import nxt.Block;
+import nxt.Constants;
+import nxt.DigitalGoodsStore;
+import nxt.Nxt;
+import nxt.Order;
+import nxt.Poll;
+import nxt.Token;
+import nxt.Trade;
+import nxt.Transaction;
+import nxt.Vote;
 import nxt.crypto.Crypto;
 import nxt.crypto.EncryptedData;
 import nxt.peer.Hallmark;
@@ -12,7 +26,6 @@ import org.json.simple.JSONObject;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
 final class JSONData {
 
@@ -227,11 +240,14 @@ final class JSONData {
         json.put("minBalance", poll.getMinBalance());
 
         if (poll.getVotingModel() == Constants.VOTING_MODEL_ASSET) {
-            json.put("assetId", Convert.toUnsignedLong(poll.getAssetId()));
+            json.put("asset", Convert.toUnsignedLong(poll.getAssetId()));
         }
 
+        //TODO: call poll.getVoters() only if needed, add a boolean includeVoters parameter to control that
         JSONArray voters = new JSONArray();
         Collections.addAll(voters, poll.getVoters());
+        //TODO: this is wrong, you should not add the voter accountIds as signed longs, but use putAccount on each
+        // to get both the voter accountId as unsigned long, and the voter RS accountId
         json.put("voters", voters);
         json.put("finished", poll.isFinished());
         return json;
@@ -239,14 +255,15 @@ final class JSONData {
 
     static JSONObject pollResults(Poll poll) {
         JSONObject json = new JSONObject();
-        json.put("pollId", Convert.toUnsignedLong(poll.getId()));
+        json.put("poll", Convert.toUnsignedLong(poll.getId()));
 
         JSONArray results = new JSONArray();
 
         List<Pair<String,Long>> pairs = Poll.getResults(poll.getId());
-        for(Pair<String, Long> pair : pairs){
+        for (Pair<String, Long> pair : pairs) {
             JSONObject jsonPair = new JSONObject();
             jsonPair.put(pair.getFirst(), pair.getSecond().toString());
+            //TODO: what is first? what is second? use a specific class which makes it easy to read the code, instead of this generic Pair
             results.add(jsonPair);
         }
 
@@ -256,18 +273,19 @@ final class JSONData {
 
     static JSONObject vote(Poll poll, Vote vote){
         JSONObject json = new JSONObject();
+        //TODO: use putAccount instead
         json.put("voter",Convert.toUnsignedLong(vote.getVoterId()));
         json.put("voterRs",Convert.rsAccount(vote.getVoterId()));
         String[] options = poll.getOptions();
 
         JSONArray votesJson = new JSONArray();
         byte[] votes = vote.getVote();
-        for(int i=0; i<options.length; i++){
+        for (int i=0; i<options.length; i++) {
             String key = options[i];
             String value;
-            if(votes[i] == Constants.VOTING_NO_VOTE_VALUE){
+            if (votes[i] == Constants.VOTING_NO_VOTE_VALUE) {
                 value = "skipped";
-            }else{
+            } else {
                 value = Byte.toString(votes[i]);
             }
             JSONObject voteJson = new JSONObject();

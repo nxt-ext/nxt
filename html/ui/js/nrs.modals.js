@@ -149,6 +149,8 @@ var NRS = (function(NRS, $, undefined) {
 			$(obj).removeClass("col-xs-" + advancedSize + " col-sm-" + advancedSize + " col-md-" + advancedSize).addClass("col-xs-" + normalSize + " col-sm-" + normalSize + " col-md-" + normalSize);
 		});
 
+		$(this).find(".tx-modal-approve").empty();
+
 		var $feeInput = $(this).find("input[name=feeNXT]");
 
 		if ($feeInput.length) {
@@ -211,6 +213,10 @@ var NRS = (function(NRS, $, undefined) {
 			$modal.find(".advanced").hide();
 		}
 
+		if ($modal.find(".tx-modal-approve").is(':empty')) {
+			NRS.initApproveDialog($modal);
+		}
+
 		$modal.find(".advanced_extend").each(function(index, obj) {
 			var normalSize = $(obj).data("normal");
 			var advancedSize = $(obj).data("advanced");
@@ -228,6 +234,7 @@ var NRS = (function(NRS, $, undefined) {
 			$(this).text($.t("advanced"));
 		}
 	});
+
 
 	return NRS;
 }(NRS || {}, jQuery));

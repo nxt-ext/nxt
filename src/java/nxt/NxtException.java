@@ -65,17 +65,6 @@ public abstract class NxtException extends Exception {
         }
     }
 
-    public static class IllegalStateException extends NxtException {
-
-        IllegalStateException(String message) {
-            super(message);
-        }
-
-        IllegalStateException(String message, Throwable cause) {
-            super(message, cause);
-        }
-    }
-
     public static final class StopException extends RuntimeException {
 
         public StopException(String message) {

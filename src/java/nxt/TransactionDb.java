@@ -132,7 +132,7 @@ final class TransactionDb {
             if (rs.getBoolean("has_encrypttoself_message")) {
                 builder.encryptToSelfMessage(new Appendix.EncryptToSelfMessage(buffer, version));
             }
-            if (rs.getBoolean("two_phased")){
+            if (rs.getBoolean("two_phased")) {
                 builder.twoPhased(new Appendix.TwoPhased(buffer, version));
             }
             if (version > 0) {

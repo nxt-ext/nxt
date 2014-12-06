@@ -90,7 +90,4 @@ public interface Transaction extends Comparable<Transaction> {
     int getECBlockHeight();
 
     long getECBlockId();
-
-    void release(); // release pending transaction (on max height)
-    void refuse(); // refuse pending transaction (on max height)
 }

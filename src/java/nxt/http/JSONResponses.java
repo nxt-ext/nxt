@@ -94,7 +94,6 @@ public final class JSONResponses {
     public static final JSONStreamAware MISSING_DESCRIPTION = missing("description");
     public static final JSONStreamAware MISSING_MINNUMBEROFOPTIONS = missing("minNumberOfOptions");
     public static final JSONStreamAware MISSING_MAXNUMBEROFOPTIONS = missing("maxNumberOfOptions");
-    public static final JSONStreamAware MISSING_OPTIONMODEL = missing("optionModel");
     public static final JSONStreamAware MISSING_VOTINGMODEL = missing("votingModel");
     public static final JSONStreamAware MISSING_FINISHHEIGHT = missing("finishHeight");
     public static final JSONStreamAware MISSING_POLL = missing("poll");
@@ -105,7 +104,7 @@ public final class JSONResponses {
     public static final JSONStreamAware INCORRECT_MAXNUMBEROFOPTIONS = incorrect("maxNumberOfOptions");
     public static final JSONStreamAware INCORRECT_MINRANGEVALUE = incorrect("minRangeValue");
     public static final JSONStreamAware INCORRECT_MAXRANGEVALUE = incorrect("maxRangeValue");
-    public static final JSONStreamAware INCORRECT_ZEROOPTIONS = incorrect("option","no options given");
+    public static final JSONStreamAware INCORRECT_ZEROOPTIONS = incorrect("option", "no options given");
     public static final JSONStreamAware INCORRECT_VOTINGMODEL = incorrect("votingModel");
     public static final JSONStreamAware INCORRECT_FINISHHEIGHT = incorrect("finishHeight");
     public static final JSONStreamAware INCORRECT_MINBALANCE = incorrect("minBalance");
@@ -113,6 +112,8 @@ public final class JSONResponses {
     public static final JSONStreamAware INCORRECT_VOTE = incorrect("vote");
     public static final JSONStreamAware UNKNOWN_POLL = unknown("poll");
     public static final JSONStreamAware UNKNOWN_POLL_RESULTS = unknown("pollResults");
+    public static final JSONStreamAware MISSING_PENDING_TRANSACTION = missing("pendingTransaction");
+    public static final JSONStreamAware INCORRECT_PENDING_TRANSACTION = incorrect("pendingTransaction");
     public static final JSONStreamAware INCORRECT_ACCOUNT_NAME_LENGTH = incorrect("name", "(length must be less than " + Constants.MAX_ACCOUNT_NAME_LENGTH + " characters)");
     public static final JSONStreamAware INCORRECT_ACCOUNT_DESCRIPTION_LENGTH = incorrect("description", "(length must be less than " + Constants.MAX_ACCOUNT_DESCRIPTION_LENGTH + " characters)");
     public static final JSONStreamAware MISSING_PERIOD = missing("period");

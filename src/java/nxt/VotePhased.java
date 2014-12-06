@@ -1,6 +1,7 @@
 package nxt;
 
 import nxt.db.*;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -8,6 +9,13 @@ import java.sql.SQLException;
 import java.util.Arrays;
 
 public class VotePhased {
+    //TODO: why does pending_transaction_id need to be part of the key?
+    // id is the id of the vote, and it is already unique as it is a transaction id
+    //
+    //edit: I didn't realize you allow voting for multiple pending transactions with a single transaction.
+    // But I don't like this either, first it leads to code complication,
+    // second it couples unrelated pending transactions and will lead to special cases that need to be considered
+    // I would remove this vanity feature and have one vote per transaction only.
     private static final DbKey.LinkKeyFactory<VotePhased> voteDbKeyFactory =
             new DbKey.LinkKeyFactory<VotePhased>("id", "pending_transaction_id") {
                 @Override
@@ -43,6 +51,7 @@ public class VotePhased {
                 } else {
                     return 0;
                 }
+                //TODO: con, pstmt and rs must be closed
             } catch (SQLException e) {
                 throw new RuntimeException(e.toString(), e);
             }
@@ -102,13 +111,25 @@ public class VotePhased {
         }
     }
 
-    static long allVotesFromDb(PendingTransactionPoll poll){
+    public static DbIterator<VotePhased> getByTransaction(long pendingTransactionId, int from, int to){
+        return voteTable.getManyBy(new DbClause.LongClause("pending_transaction_id",pendingTransactionId), from, to);
+    }
+
+    public static int getCount(long pendingTransactionId){
+        return voteTable.getCount(new DbClause.LongClause("pending_transaction_id",pendingTransactionId));
+    }
+
+    //TODO: this method needs a better name, why is it not called simply countVotes?
+    static long allVotesFromDb(PendingTransactionPoll poll) {
         long result = 0;
         DbClause clause = new DbClause.LongClause("pending_transaction_id", poll.getId());
+        //TODO: DbIterators must be closed
         DbIterator<VotePhased> votesIterator = voteTable.getManyBy(clause, 0, -1);
 
         while (votesIterator.hasNext()) {
-            long w = AbstractPoll.calcWeight(poll, Account.getAccount(votesIterator.next().voterId));
+            //TODO: when you change calcWeight to take accountId instead of Account, you can skip the getAccount call here
+            // and only get the Account if needed in calcWeight
+            long w = poll.calcWeight(Account.getAccount(votesIterator.next().voterId));
             if (w >= poll.minBalance) {
                 result += w;
             }
@@ -120,44 +141,34 @@ public class VotePhased {
     static boolean addVote(PendingTransactionPoll poll, Account voter,
                            Transaction transaction) {
 
-        if(!isVoteGiven(poll.getId(), voter.getId())) {
+        final long weight = poll.calcWeight(voter);
 
-            long[] whitelist = poll.getWhitelist();
-            if (whitelist != null && whitelist.length > 0 && Arrays.binarySearch(whitelist, voter.getId()) == -1) {
-                return false; //todo: move to validate only?
-            }
+        long estimate = 0;//voteTable.lastEstimate(poll.getId());
 
-            long[] blacklist = poll.getBlacklist();
-            if (blacklist != null && blacklist.length > 0 && Arrays.binarySearch(blacklist, voter.getId()) != -1) {
-                return false; //todo: move to validate only?
-            }
+        if (weight >= poll.minBalance) {
+            estimate += weight;
+        }
 
-            long weight = AbstractPoll.calcWeight(poll, voter);
-
-            long estimate = voteTable.lastEstimate(poll.getId());
-
+        //TODO: The complexity and performance hit of this counting can be avoided if counting is done only once,
+        // at finish height. I think this is what we should do, and get rid of the estimated count column.
+        // There are other problems with counting after each vote, a voter doesn't know in advance at what height
+        // his voting balance will be considered, so he has to keep the funds or assets in his account, frozen,
+        // until the vote is over. If counting is done at finish height only, he knows when the assets need to be
+        // in his account, doesn't need to have them there before that.
+        if (estimate >= poll.getQuorum() && poll.getVotingModel() != Constants.VOTING_MODEL_ACCOUNT) {
+            estimate = 0;//allVotesFromDb(poll);
             if (weight >= poll.minBalance) {
                 estimate += weight;
             }
-
-            if (estimate >= poll.getQuorum() && poll.getVotingModel() != Constants.VOTING_MODEL_ACCOUNT) {
-                estimate = allVotesFromDb(poll);
-                if (weight >= poll.minBalance) {
-                    estimate += weight;
-                }
-            }
-
-            VotePhased vote = new VotePhased(transaction, poll.getId(), estimate);
-            voteTable.insert(vote);
-            return estimate >= poll.getQuorum();
-        }else{
-            return false;
         }
+
+        VotePhased vote = new VotePhased(transaction, poll.getId(), estimate);
+        voteTable.insert(vote);
+        return estimate >= poll.getQuorum();
     }
 
-    static boolean isVoteGiven(long pendingTransactionId, long voterId){
-        DbClause clause = new DbClause.LongLongClause("pending_transaction_id", pendingTransactionId,
-                                                        "voter_id", voterId);
+    static boolean isVoteGiven(long pendingTransactionId, long voterId) {
+        DbClause clause = new DbClause.LongLongClause("pending_transaction_id", pendingTransactionId, "voter_id", voterId);
         return voteTable.getCount(clause) > 0;
     }
 }

@@ -44,11 +44,20 @@ final class TransactionProcessorImpl implements TransactionProcessor {
             public void notify(Block block) {
                 int height = block.getHeight();
                 if (height >= Constants.TWO_PHASED_TRANSACTIONS_BLOCK) {
-                    DbIterator<Long> txIdsToRefuse =
-                            PendingTransactionPoll.pendingTransactionsTable.finishing(height);
-                    for (Long txId : txIdsToRefuse) {
-                        Transaction tx = TransactionDb.findTransaction(txId);
-                        tx.refuse();
+                    //TODO: instead of using pendingTransactionsTable.finishing(), how about doing it all in the database:
+    /*
+    PreparedStatement pstmt = con.prepareStatement("SELECT transaction.* FROM transaction, pending_transaction " +
+            " WHERE pending_transaction.id = transaction.id AND pending_transaction.finish_height = ?  AND pending_transaction.finished = FALSE " +
+            " AND pending_transaction.latest = TRUE");
+    DbIterator<TransactionImpl> transactions = Nxt.getBlockchain().getTransactions(con, pstmt);
+    */
+                    //TODO: DbIterators must be closed
+                    DbIterator<Long> idsToRefuse = PendingTransactionPoll.pendingTransactionsTable.finishing(height);
+                    for (Long transactionId : idsToRefuse) {
+                        Transaction transaction = TransactionDb.findTransaction(transactionId);
+                        transaction.getTwoPhased().rollback(transaction,
+                                                            Account.getAccount(transaction.getSenderId()),
+                                                            Account.getAccount(transaction.getRecipientId()));
                     }
                 }
             }

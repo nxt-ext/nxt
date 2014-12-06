@@ -18,7 +18,8 @@ public class GetAccountPendingTransactionIds extends APIServlet.APIRequestHandle
     static final GetAccountPendingTransactionIds instance = new GetAccountPendingTransactionIds();
 
     private GetAccountPendingTransactionIds() {
-        super(new APITag[]{APITag.ACCOUNTS}, "account", "finished", "firstIndex", "lastIndex");
+        super(new APITag[]{APITag.ACCOUNTS, APITag.PENDING_TRANSACTIONS},
+                "account", "finished", "firstIndex", "lastIndex");
     }
 
     @Override

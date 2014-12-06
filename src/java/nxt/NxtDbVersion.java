@@ -380,49 +380,50 @@ class NxtDbVersion extends DbVersion {
             case 136:
                 apply("CREATE INDEX IF NOT EXISTS tag_in_stock_count_idx ON tag (in_stock_count DESC, height DESC)");
             case 137:
-                apply("DROP TABLE IF EXISTS poll");
+                apply(null);
             case 138:
-                apply("DROP TABLE IF EXISTS vote");
+                apply("DROP TABLE IF EXISTS poll");
             case 139:
-                apply("CREATE TABLE IF NOT EXISTS vote (db_id IDENTITY, id BIGINT NOT NULL, " +
-                        "FOREIGN KEY (id) REFERENCES transaction (id), poll_id BIGINT NOT NULL, "
-                        + "voter_id BIGINT NOT NULL, vote_bytes VARBINARY NOT NULL, height INT NOT NULL)");
+                apply("DROP TABLE IF EXISTS vote");
             case 140:
-                apply("CREATE UNIQUE INDEX IF NOT EXISTS vote_id_idx ON vote (id)");
+                apply("CREATE TABLE IF NOT EXISTS vote (db_id IDENTITY, id BIGINT NOT NULL, " +
+                        "poll_id BIGINT NOT NULL, voter_id BIGINT NOT NULL, vote_bytes VARBINARY NOT NULL, height INT NOT NULL)");
             case 141:
-                apply("CREATE INDEX IF NOT EXISTS vote_poll_id_idx ON vote (poll_id)");
+                apply("CREATE UNIQUE INDEX IF NOT EXISTS vote_id_idx ON vote (id)");
             case 142:
+                apply("CREATE UNIQUE INDEX IF NOT EXISTS vote_poll_id_idx ON vote (poll_id, voter_id)");
+            case 143:
                 apply("CREATE TABLE IF NOT EXISTS poll (db_id IDENTITY, id BIGINT NOT NULL, "
                         + "FOREIGN KEY (id) REFERENCES transaction (id), account_id BIGINT NOT NULL, name VARCHAR NOT NULL, "
                         + "description VARCHAR, options ARRAY NOT NULL, min_num_options TINYINT, max_num_options TINYINT, "
                         + "min_range_value TINYINT, max_range_value TINYINT, "
-                        + "finish INT NOT NULL, voting_model TINYINT NOT NULL, min_balance BIGINT, "
+                        + "finish_height INT NOT NULL, voting_model TINYINT NOT NULL, min_balance BIGINT, "
                         + "asset_id BIGINT, finished BOOLEAN, height INT NOT NULL, latest BOOLEAN DEFAULT TRUE NOT NULL)");
-            case 143:
-                apply("CREATE TABLE IF NOT EXISTS poll_results (db_id IDENTITY, poll_id BIGINT NOT NULL, "
-                        + "FOREIGN KEY (poll_id) REFERENCES poll (id) ON DELETE CASCADE, "
-                        + "option VARCHAR NOT NULL, result BIGINT NOT NULL,  height INT NOT NULL)");
             case 144:
-                apply("ALTER TABLE transaction ADD COLUMN IF NOT EXISTS two_phased BOOLEAN NOT NULL DEFAULT FALSE");
+                apply("CREATE TABLE IF NOT EXISTS poll_result (db_id IDENTITY, poll_id BIGINT NOT NULL, "
+                        + "option VARCHAR NOT NULL, result BIGINT NOT NULL,  height INT NOT NULL)");
             case 145:
-                apply("CREATE TABLE IF NOT EXISTS pending_transactions (db_id IDENTITY, id BIGINT NOT NULL, "
+                apply("ALTER TABLE transaction ADD COLUMN IF NOT EXISTS two_phased BOOLEAN NOT NULL DEFAULT FALSE");
+            case 146:
+                apply("CREATE TABLE IF NOT EXISTS pending_transaction (db_id IDENTITY, id BIGINT NOT NULL, "
                         + "FOREIGN KEY (id) REFERENCES transaction (id) ON DELETE CASCADE, account_id BIGINT NOT NULL, "
-                        + "signersCount TINYINT NOT NULL DEFAULT 0, blacklist BOOLEAN DEFAULT FALSE, "
-                        + "finish INT NOT NULL, voting_model TINYINT NOT NULL, quorum BIGINT NOT NULL, "
+                        + "signers_count TINYINT NOT NULL DEFAULT 0, blacklist BOOLEAN DEFAULT FALSE, "
+                        + "finish_height INT NOT NULL, voting_model TINYINT NOT NULL, quorum BIGINT NOT NULL, "
                         + "min_balance BIGINT NOT NULL, asset_id BIGINT NOT NULL, finished BOOLEAN NOT NULL, "
                         + "height INT NOT NULL, latest BOOLEAN DEFAULT TRUE NOT NULL)");
-            case 146:
+            case 147:
                 apply("CREATE TABLE IF NOT EXISTS vote_phased (db_id IDENTITY, id BIGINT NOT NULL, "
                         + "pending_transaction_id BIGINT NOT NULL, voter_id BIGINT NOT NULL, "
                         + "estimated_total BIGINT NOT NULL, height INT NOT NULL)");
-            case 147:
-                apply("CREATE TABLE IF NOT EXISTS pending_transactions_signers (db_id IDENTITY, "
+            case 148:
+                apply("CREATE TABLE IF NOT EXISTS pending_transaction_signer (db_id IDENTITY, "
                         + "poll_id BIGINT NOT NULL, account_id BIGINT NOT NULL, height INT NOT NULL)");
                 
-            case 148:
+            case 149:
                 BlockchainProcessorImpl.getInstance().forceScanAtStart();
                 apply(null);
-            case 149:
+            case 150:
+                //TODO: indexes on poll, poll_result, pending_transaction, vote_phased, pending_transaction_signer
                 return;
             default:
                 throw new RuntimeException("Blockchain database inconsistent with code, probably trying to run older code on newer database");

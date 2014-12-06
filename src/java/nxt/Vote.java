@@ -10,7 +10,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
 
-
 public final class Vote {
     private static final DbKey.LongKeyFactory<Vote> voteDbKeyFactory = new DbKey.LongKeyFactory<Vote>("id") {
         @Override
@@ -80,24 +79,28 @@ public final class Vote {
         return voteTable.getCount();
     }
 
-    public static Vote getVote(Long id) {
+    public static Vote getVote(long id) {
         return voteTable.get(voteDbKeyFactory.newKey(id));
     }
 
-    public static DbIterator<Vote> getVotes(Long id, int from, int to) {
+    public static DbIterator<Vote> getVotes(long id, int from, int to) {
         return voteTable.getManyBy(new DbClause.LongClause("poll_id", id), from, to);
     }
 
-    public static boolean isVoteGiven(long pollId, long voterId){
+    static boolean isVoteGiven(long pollId, long voterId){
         DbClause clause = new DbClause.LongLongClause("poll_id", pollId, "voter_id", voterId);
         boolean result = voteTable.getCount(clause) > 0;
         return result;
     }
 
+    //TODO: just return a List<Vote> instead
     public static List<Long> getVoters(Poll poll) {
         return voteTable.getManyIdsBy("voter_id", "poll_id", poll.getId());
     }
 
+    //TODO: what is the point of returning only the id instead of the complete Vote object,
+    // when in the only place you call this method, Poll.countResults() the first thing you do after calling it is to get the Vote
+    // should just return a List<Vote> instead and then you can get rid of the getManyIdsBy method completely
     public static List<Long> getVoteIds(Poll poll) {
         return voteTable.getManyIdsBy("id", "poll_id", poll.getId());
     }
