@@ -17,11 +17,12 @@ var NRS = (function(NRS, $, undefined) {
 							return;
 						}
 
-						if (!poll.errorCode) {
+						if (!poll.errorCode && poll.attachment.finishBlockHeight >= NRS.lastBlockHeight) {
 							polls[input.transaction] = poll;
 						}
 
 						nrPolls++;
+
 
 						if (nrPolls == response.pollIds.length) {
 							var rows = "";
@@ -122,7 +123,14 @@ var NRS = (function(NRS, $, undefined) {
 								if (pollDescription.length > 100) {
 									pollDescription = pollDescription.substring(0, 100) + "...";
 								}
-								rows += "<tr><td><a href='#' data-transaction='"+poll.transaction+"'>" + String(poll.attachment.name).escapeHTML() + "</a></td><td>" + pollDescription.escapeHTML() + "</td><td>" + (poll.sender != NRS.genesis ? "<a href='#' data-user='" + NRS.getAccountFormatted(poll, "sender") + "' class='user_info'>" + NRS.getAccountTitle(poll, "sender") + "</a>" : "Genesis") + "</td><td>" + NRS.formatTimestamp(poll.timestamp) + "</td><td>" + String(poll.attachment.finishBlockHeight - NRS.lastBlockHeight) + "</td><td><a href='#' data-toggle='modal' data-target='#cast_vote_modal'>Vote </td></tr>";
+								if(poll.attachment.finishBlockHeight >= NRS.lastBlockHeight) {}
+									rows += "<tr><td><a href='#' data-transaction='"+poll.transaction+"'>" + String(poll.attachment.name).escapeHTML() + "</a></td><td>" + pollDescription.escapeHTML() + "</td><td>" + (poll.sender != NRS.genesis ? "<a href='#' data-user='" + NRS.getAccountFormatted(poll, "sender") + "' class='user_info'>" + NRS.getAccountTitle(poll, "sender") + "</a>" : "Genesis") + "</td><td>" + NRS.formatTimestamp(poll.timestamp) + "</td><td>" + String(poll.attachment.finishBlockHeight - NRS.lastBlockHeight) + "</td><td><a href='#' data-toggle='modal' data-target='#cast_vote_modal'>Vote </td></tr>";
+								}
+								else {
+									rows += "<tr><td><a href='#' data-transaction='"+poll.transaction+"'>" + String(poll.attachment.name).escapeHTML() + "</a></td><td>" + pollDescription.escapeHTML() + "</td><td>" + (poll.sender != NRS.genesis ? "<a href='#' data-user='" + NRS.getAccountFormatted(poll, "sender") + "' class='user_info'>" + NRS.getAccountTitle(poll, "sender") + "</a>" : "Genesis") + "</td><td>" + NRS.formatTimestamp(poll.timestamp) + "</td><td>Completed</td><td><a href='#' data-poll='modal' data-target='#cast_vote_modal'>Vote </td></tr>";
+
+								}
+
 							}
 							NRS.dataLoaded(rows);						
 						}
@@ -137,13 +145,13 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.pages.voted_polls = function() {
 		NRS.sendRequest("getAccountTransactions+",{"account": NRS.accountRS, "type": 1, "subtype": 3}, function(response) {
 			
-			if (response.transactions && response.transactions.length) {
+			if (response.transactions && response.transactions.length > 0) {
 				var polls = {};
 				var nrPolls = 0;
 
 				for (var i = 0; i < response.transactions.length; i++) {
 					NRS.sendRequest("getTransaction+", {
-						"transaction": response.transactions[i].attachment.pollId
+						"transaction": response.transactions[i].attachment.poll
 					}, function(poll, input) {
 						if (NRS.currentPage != "voted_polls") {
 							polls = {};
