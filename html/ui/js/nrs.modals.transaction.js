@@ -935,26 +935,7 @@ var NRS = (function(NRS, $, undefined) {
 					NRS.sendRequest("getCurrency", {
 						"currency": transaction.attachment.currency
 					}, function(currency, input) {
-						var rateUnitsStr = " [ NXT / " + currency.code + " ]";
-						var data = {
-							"type": $.t("buy_currency"),
-							"code": currency.code,
-							"units": [transaction.attachment.units, currency.decimals],
-							"rate": NRS.formatAmount(transaction.attachment.rateNQT) + rateUnitsStr,
-							"total_formatted_html": NRS.formatAmount(
-								NRS.calculateOrderTotalNQT(
-									NRS.formatQuantity(transaction.attachment.units, currency.decimals), transaction.attachment.rateNQT)) + " NXT"
-						};
-
-						if (transaction.sender != NRS.account) {
-							data["sender"] = NRS.getAccountTitle(transaction, "sender");
-						}
-
-						$("#transaction_info_table tbody").append(NRS.createInfoTable(data));
-						$("#transaction_info_table").show();
-
-						$("#transaction_info_modal").modal("show");
-						NRS.fetchingModalData = false;
+						NRS.formatCurrencyExchange(currency, transaction, "buy");
 					});
 
 					break;
@@ -964,26 +945,7 @@ var NRS = (function(NRS, $, undefined) {
 					NRS.sendRequest("getCurrency", {
 						"currency": transaction.attachment.currency
 					}, function(currency, input) {
-						var rateUnitsStr = " [ NXT / " + currency.code + " ]";
-						var data = {
-							"type": $.t("sell_currency"),
-							"code": currency.code,
-							"units": [transaction.attachment.units, currency.decimals],
-							"rate": NRS.formatAmount(transaction.attachment.rateNQT) + rateUnitsStr,
-							"total_formatted_html": NRS.formatAmount(
-								NRS.calculateOrderTotalNQT(
-									NRS.formatQuantity(transaction.attachment.units, currency.decimals), transaction.attachment.rateNQT)) + " NXT"
-						};
-
-						if (transaction.sender != NRS.account) {
-							data["sender"] = NRS.getAccountTitle(transaction, "sender");
-						}
-
-						$("#transaction_info_table tbody").append(NRS.createInfoTable(data));
-						$("#transaction_info_table").show();
-
-						$("#transaction_info_modal").modal("show");
-						NRS.fetchingModalData = false;
+						NRS.formatCurrencyExchange(currency, transaction, "sell");
 					});
 
 					break;
@@ -1104,7 +1066,50 @@ var NRS = (function(NRS, $, undefined) {
 			$("#transaction_info_modal").modal("show");
 			NRS.fetchingModalData = false;
 		}
-	}
+	};
+
+	NRS.formatCurrencyExchange = function(currency, transaction, type) {
+		var rateUnitsStr = " [ NXT / " + currency.code + " ]";
+		var data = {
+			"type": $.t(type + "_currency"),
+			"code": currency.code,
+			"units": [transaction.attachment.units, currency.decimals],
+			"rate": NRS.formatAmount(transaction.attachment.rateNQT) + rateUnitsStr,
+			"total_formatted_html": NRS.formatAmount(
+				NRS.calculateOrderTotalNQT(
+					NRS.formatQuantity(transaction.attachment.units, currency.decimals), transaction.attachment.rateNQT)) + " NXT"
+		};
+		var rows = "";
+		NRS.sendRequest("getExchangesByExchangeRequest", {
+			"transaction": transaction.transaction
+		}, function(response) {
+			if (response.exchanges && response.exchanges.length > 0) {
+				rows = "<table class='table table-striped'><thead><tr>" +
+				"<th>" + $.t("Date") + "</th>" +
+				"<th>" + $.t("Units") + "</th>" +
+				"<th>" + $.t("Rate") + "</th>" +
+				"<tr></thead><tbody>";
+				for (var i = 0; i < response.exchanges.length; i++) {
+					var exchange = response.exchanges[i];
+					rows += "<tr>" +
+					"<td><a href='#' onClick='NRS.showTransactionModal(&quot;" + exchange.offer + "&quot;);'>" + NRS.formatTimestamp(exchange.timestamp) + "</a></td>" +
+					"<td>" + NRS.formatQuantity(exchange.units, exchange.decimals) + "</td>" +
+					"<td>" + NRS.formatAmount(exchange.rateNQT) + "</td>" +
+					"</tr>";
+				}
+				rows += "</tbody></table>";
+				data["exchanges_formatted_html"] = rows;
+			}
+		}, null, false);
+		if (transaction.sender != NRS.account) {
+			data["sender"] = NRS.getAccountTitle(transaction, "sender");
+		}
+		$("#transaction_info_table tbody").append(NRS.createInfoTable(data));
+		$("#transaction_info_table").show();
+
+		$("#transaction_info_modal").modal("show");
+		NRS.fetchingModalData = false;
+	};
 
 	$("#transaction_info_modal").on("hide.bs.modal", function(e) {
 		NRS.removeDecryptionForm($(this));
