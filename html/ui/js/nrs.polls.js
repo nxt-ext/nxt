@@ -126,14 +126,8 @@ var NRS = (function(NRS, $, undefined) {
 							}
 							$el = $("#started_polls_table");
 							$el.find("tbody").empty().append(rows);
-
-							NRS.dataLoadFinished($el);
-
-							if (!noPageLoad) {
-								NRS.pageLoaded();
-							}
-						
-							
+							alert($("#started_polls_table").html());;
+							NRS.dataLoadFinished($el);							
 						}
 					});
 				}
@@ -142,15 +136,15 @@ var NRS = (function(NRS, $, undefined) {
 			}
 		});
 
-		NRS.sendRequest("getTransactionIds+",{"account": NRS.accountRS}, function(response) {
+		NRS.sendRequest("getAccountTransactions+",{"account": NRS.accountRS, "type": 1, "subtype": 3}, function(response) {
 			
-			if (response.pollIds && response.pollIds.length) {
+			if (response.transactions && response.transactions.length) {
 				var polls = {};
 				var nrPolls = 0;
 
-				for (var i = 0; i < response.pollIds.length; i++) {
+				for (var i = 0; i < response.transactions.length; i++) {
 					NRS.sendRequest("getTransaction+", {
-						"transaction": response.pollIds[i]
+						"transaction": response.transactions[i].attachment.pollId
 					}, function(poll, input) {
 						if (NRS.currentPage != "my_polls") {
 							polls = {};
@@ -163,7 +157,7 @@ var NRS = (function(NRS, $, undefined) {
 
 						nrPolls++;
 
-						if (nrPolls == response.pollIds.length) {
+						if (nrPolls == response.transactions.length) {
 							var rows = "";
 
 							if (NRS.unconfirmedTransactions.length) {
@@ -183,7 +177,7 @@ var NRS = (function(NRS, $, undefined) {
 							}
 
 							for (var i = 0; i < nrPolls; i++) {
-								var poll = polls[response.pollIds[i]];
+								var poll = polls[response.transactions[i].attachment.pollId];
 
 								if (!poll) {
 									continue;
@@ -201,10 +195,6 @@ var NRS = (function(NRS, $, undefined) {
 							$el.find("tbody").empty().append(rows);
 
 							NRS.dataLoadFinished($el);
-
-							if (!noPageLoad) {
-								NRS.pageLoaded();
-							}	
 						}
 					});
 				}
@@ -267,11 +257,21 @@ var NRS = (function(NRS, $, undefined) {
 				$("#cast_vote_poll_name").text(response.attachment.name);
 				$("#cast_vote_poll_description").text(response.attachment.description);
 				$("#cast_vote_answers_entry").text("");
+				$("#cast_vote_range").text("Select between " + response.attachment.minNumberOfOptions + " and " + response.attachment.maxNumberOfOptions + " options from below.")
 				$("#cast_vote_poll").val(response.transaction);
-				for(var b=0; b<response.attachment.options.length; b++)
+				if(response.attachment.maxRangeValue != 1)
 				{
-					$("#cast_vote_answers_entry").append("<div class='answer_slider'><label name='cast_vote_answer_"+b+"'>"+response.attachment.options[b]+"</label> &nbsp;&nbsp;<span class='badge'>"+response.attachment.minRangeValue+"</span><br/><input class='form-control' step='1' value='"+response.attachment.minRangeValue+"' max='"+response.attachment.maxRangeValue+"' min='"+response.attachment.minRangeValue+"' type='range'/></div>");
-
+					for(var b=0; b<response.attachment.options.length; b++)
+					{
+						$("#cast_vote_answers_entry").append("<div class='answer_slider'><label name='cast_vote_answer_"+b+"'>"+response.attachment.options[b]+"</label> &nbsp;&nbsp;<span class='badge'>"+response.attachment.minRangeValue+"</span><br/><input class='form-control' step='1' value='"+response.attachment.minRangeValue+"' max='"+response.attachment.maxRangeValue+"' min='"+response.attachment.minRangeValue+"' type='range'/></div>");
+					}
+				}
+				else
+				{
+					for(var b=0; b<response.attachment.options.length; b++)
+					{
+						$("#cast_vote_answers_entry").append("<div class='answer_boxes'><label name='cast_vote_answer_"+b+"'><input type='checkbox'/>&nbsp;&nbsp;"+response.attachment.options[b]+"</label></div>");
+					}
 				}
 				$("#cast_vote_modal").modal();
 				$("input[type='range']").on("change mousemove", function() {
@@ -368,6 +368,11 @@ var NRS = (function(NRS, $, undefined) {
 			if (option) {
 				options.push(option);
 			}
+		});
+
+		$("#cast_vote_answers_entry div.answer_boxes input").each(function() {
+			var option = $(this).val() ? 1 : 0;
+			options.push(option);
 		});
 
 		var data = {
