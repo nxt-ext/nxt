@@ -95,8 +95,8 @@ var NRS = (function(NRS, $, undefined) {
 			"account": NRS.accountRS,
 			"currency": currencyId
 		}, function(response) {
-			if (response.accountCurrencies && response.accountCurrencies.length) {
-				$("#your_currency_balance").html(NRS.formatQuantity(response.units, response.decimals));
+			if (response.unconfirmedUnits) {
+				$("#your_currency_balance").html(NRS.formatQuantity(response.unconfirmedUnits, response.decimals));
 			} else {
 				$("#your_currency_balance").html(0);
 			}
@@ -162,7 +162,7 @@ var NRS = (function(NRS, $, undefined) {
 					var offer = response.offers[i];
 					var rateNQT = offer.rateNQT || (type == "sell" ? offer.attachment.sellRateNQT : offer.attachment.buyRateNQT);
                if (i == 0) {
-						$("#" + type + "_currency_price").val(NRS.calculateOrderPricePerWholeQNT(rateNQT, decimals));
+						$("#" + (type == "sell" ? "buy" : "sell") + "_currency_price").val(NRS.calculateOrderPricePerWholeQNT(rateNQT, decimals));
 					}
 
 					// The offers collection contains both real offers and unconfirmed offers and the code below works for both types
@@ -702,7 +702,7 @@ var NRS = (function(NRS, $, undefined) {
 						"<td>" + exchange.name + "</td>" +
 						"<td>" + exchange.code + "</td>" +
 						"<td>" + NRS.formatQuantity(exchange.units, exchange.decimals) + "</td>" +
-						"<td>" + NRS.formatAmount(exchange.rateNQT) + "</td>" +
+						"<td>" + NRS.calculateOrderPricePerWholeQNT(exchange.rateNQT, exchange.decimals) + "</td>" +
 					"</tr>";
 				}
 				NRS.dataLoaded(rows);
