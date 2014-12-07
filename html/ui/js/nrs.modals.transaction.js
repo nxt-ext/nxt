@@ -806,9 +806,9 @@ var NRS = (function(NRS, $, undefined) {
 						"code": transaction.attachment.code,
 						"currency_type": transaction.attachment.type,
 						"description": transaction.attachment.description,
-						"initial_units": transaction.attachment.initialSupply,
-						"reserve_units": transaction.attachment.reserveSupply,
-						"max_units": transaction.attachment.maxSupply,
+						"initial_units": [transaction.attachment.initialSupply, transaction.attachment.decimals],
+						"reserve_units": [transaction.attachment.reserveSupply, transaction.attachment.decimals],
+						"max_units": [transaction.attachment.maxSupply, transaction.attachment.decimals],
 						"decimals": transaction.attachment.decimals,
 						"issuance_height": transaction.attachment.issuanceHeight,
 						"min_reserve_per_unit_formatted_html": NRS.formatAmount(transaction.attachment.minReservePerUnitNQT) + " NXT",
@@ -836,7 +836,7 @@ var NRS = (function(NRS, $, undefined) {
 						var data = {
 							"type": $.t("reserve_increase"),
 							"code": currency.code,
-							"reserve_units": currency.reserveSupply,
+							"reserve_units": [currency.reserveSupply, currency.decimals],
 							"amount_per_unit_formatted_html": NRS.formatAmount(transaction.attachment.amountPerUnitNQT) + " NXT",
 							"reserved_amount_formatted_html": NRS.formatAmount(NRS.calculateOrderTotalNQT(transaction.attachment.amountPerUnitNQT, currency.reserveSupply)) + " NXT"
 						};
@@ -911,10 +911,10 @@ var NRS = (function(NRS, $, undefined) {
 							"code": currency.code,
 							"initial_buy_supply": [transaction.attachment.initialBuySupply, currency.decimals],
 							"total_buy_limit": [transaction.attachment.totalBuyLimit, currency.decimals],
-							"buy_rate_formatted_html": NRS.formatAmount(transaction.attachment.buyRateNQT) + rateUnitsStr,
+							"buy_rate_formatted_html": NRS.calculateOrderPricePerWholeQNT(transaction.attachment.buyRateNQT, currency.decimals) + rateUnitsStr,
 							"initial_sell_supply": [transaction.attachment.initialSellSupply, currency.decimals],
 							"total_sell_limit": [transaction.attachment.totalSellLimit, currency.decimals],
-							"sell_rate_formatted_html": NRS.formatAmount(transaction.attachment.sellRateNQT) + rateUnitsStr,
+							"sell_rate_formatted_html": NRS.calculateOrderPricePerWholeQNT(transaction.attachment.sellRateNQT, currency.decimals) + rateUnitsStr,
 							"expiration_height": transaction.attachment.expirationHeight
 						};
 
@@ -1074,10 +1074,8 @@ var NRS = (function(NRS, $, undefined) {
 			"type": $.t(type + "_currency"),
 			"code": currency.code,
 			"units": [transaction.attachment.units, currency.decimals],
-			"rate": NRS.formatAmount(transaction.attachment.rateNQT) + rateUnitsStr,
-			"total_formatted_html": NRS.formatAmount(
-				NRS.calculateOrderTotalNQT(
-					NRS.formatQuantity(transaction.attachment.units, currency.decimals), transaction.attachment.rateNQT)) + " NXT"
+			"rate": NRS.calculateOrderPricePerWholeQNT(transaction.attachment.rateNQT, currency.decimals) + rateUnitsStr,
+			"total_formatted_html": NRS.formatAmount(NRS.calculateOrderTotalNQT(transaction.attachment.units, transaction.attachment.rateNQT)) + " NXT"
 		};
 		var rows = "";
 		NRS.sendRequest("getExchangesByExchangeRequest", {
@@ -1088,13 +1086,16 @@ var NRS = (function(NRS, $, undefined) {
 				"<th>" + $.t("Date") + "</th>" +
 				"<th>" + $.t("Units") + "</th>" +
 				"<th>" + $.t("Rate") + "</th>" +
+				"<th>" + $.t("Total") + "</th>" +
 				"<tr></thead><tbody>";
 				for (var i = 0; i < response.exchanges.length; i++) {
 					var exchange = response.exchanges[i];
 					rows += "<tr>" +
 					"<td><a href='#' onClick='NRS.showTransactionModal(&quot;" + exchange.offer + "&quot;);'>" + NRS.formatTimestamp(exchange.timestamp) + "</a></td>" +
 					"<td>" + NRS.formatQuantity(exchange.units, exchange.decimals) + "</td>" +
-					"<td>" + NRS.formatAmount(exchange.rateNQT) + "</td>" +
+					"<td>" + NRS.calculateOrderPricePerWholeQNT(exchange.rateNQT, exchange.decimals) + "</td>" +
+					"<td>" + NRS.formatAmount(NRS.calculateOrderTotalNQT(exchange.units, exchange.rateNQT)) +
+					"</td>" +
 					"</tr>";
 				}
 				rows += "</tbody></table>";

@@ -970,7 +970,8 @@ var NRS = (function(NRS, $, undefined) {
 				key = key.replace("_formatted", "");
 				value = String(value).escapeHTML();
 			} else if ((key == "quantity" || key == "units" || key == "initial_buy_supply" || key == "initial_sell_supply" ||
-				key == "total_buy_limit" || key == "total_sell_limit") && $.isArray(value)) {
+				key == "total_buy_limit" || key == "total_sell_limit" ||
+				key == "initial_units" || key == "reserve_units" || key == "max_units") && $.isArray(value)) {
 				if ($.isArray(value)) {
 					value = NRS.formatQuantity(value[0], value[1]);
 				} else {
