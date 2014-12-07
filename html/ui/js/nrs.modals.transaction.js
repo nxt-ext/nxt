@@ -1081,6 +1081,8 @@ var NRS = (function(NRS, $, undefined) {
 		NRS.sendRequest("getExchangesByExchangeRequest", {
 			"transaction": transaction.transaction
 		}, function(response) {
+			var exchangedUnits = BigInteger.ZERO;
+			var exchangedTotal = BigInteger.ZERO;
 			if (response.exchanges && response.exchanges.length > 0) {
 				rows = "<table class='table table-striped'><thead><tr>" +
 				"<th>" + $.t("Date") + "</th>" +
@@ -1090,6 +1092,8 @@ var NRS = (function(NRS, $, undefined) {
 				"<tr></thead><tbody>";
 				for (var i = 0; i < response.exchanges.length; i++) {
 					var exchange = response.exchanges[i];
+					exchangedUnits = exchangedUnits.add(new BigInteger(exchange.units));
+					exchangedTotal = exchangedTotal.add(new BigInteger(exchange.units).multiply(new BigInteger(exchange.rateNQT)));
 					rows += "<tr>" +
 					"<td><a href='#' onClick='NRS.showTransactionModal(&quot;" + exchange.offer + "&quot;);'>" + NRS.formatTimestamp(exchange.timestamp) + "</a></td>" +
 					"<td>" + NRS.formatQuantity(exchange.units, exchange.decimals) + "</td>" +
@@ -1100,7 +1104,11 @@ var NRS = (function(NRS, $, undefined) {
 				}
 				rows += "</tbody></table>";
 				data["exchanges_formatted_html"] = rows;
+			} else {
+				data["exchanges"] = $.t("no_matching_exchange_offer");
 			}
+			data["units_exchanged"] = [exchangedUnits, currency.decimals];
+			data["total_exchanged"] = NRS.formatAmount(exchangedTotal);
 		}, null, false);
 		if (transaction.sender != NRS.account) {
 			data["sender"] = NRS.getAccountTitle(transaction, "sender");
