@@ -105,7 +105,7 @@ var NRS = (function(NRS, $, undefined) {
 		NRS.loadCurrencyOffers("buy", currencyId, refresh);
 		NRS.loadCurrencyOffers("sell", currencyId, refresh);
 		NRS.getExchangeRequests(currencyId);
-		NRS.getExchangeHistory(currencyCode);
+		NRS.getExchangeHistory(currencyId);
 		if (NRS.accountInfo.unconfirmedBalanceNQT == "0") {
 			$("#ms_your_nxt_balance").html("0");
 			$("#buy_automatic_price").addClass("zero").removeClass("nonzero");
@@ -162,7 +162,7 @@ var NRS = (function(NRS, $, undefined) {
 					var offer = response.offers[i];
 					var rateNQT = offer.rateNQT || (type == "sell" ? offer.attachment.sellRateNQT : offer.attachment.buyRateNQT);
                if (i == 0) {
-						$("#" + type + "_currency_price").val(NRS.convertToNXT(rateNQT));
+						$("#" + type + "_currency_price").val(NRS.calculateOrderPricePerWholeQNT(rateNQT, decimals));
 					}
 
 					// The offers collection contains both real offers and unconfirmed offers and the code below works for both types
@@ -175,7 +175,7 @@ var NRS = (function(NRS, $, undefined) {
 						"<td>" + accountLink + "</td>" +
 						"<td>" + NRS.convertToQNTf(supply, decimals) + "</td>" +
 						"<td>" + NRS.convertToQNTf(limit, decimals) + "</td>" +
-						"<td>" + NRS.formatAmount(rateNQT) + "</td>" +
+						"<td>" + NRS.calculateOrderPricePerWholeQNT(rateNQT, decimals) + "</td>" +
 					"</tr>";
 				}
 				offersTable.find("tbody").empty().append(rows);
@@ -238,10 +238,10 @@ var NRS = (function(NRS, $, undefined) {
 		foundersTable.parent().addClass("data-loading");
 	});
 	
-	NRS.getExchangeHistory = function(currencyCode) {
+	NRS.getExchangeHistory = function(currencyId) {
 		if (NRS.currenciesTradeHistoryType == "my_exchanges") {
 			NRS.sendRequest("getExchanges+", {
-				"code": currencyCode,
+				"currency": currencyId,
 				"account": NRS.accountRS,
 				"firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
 				"lastIndex": NRS.pageNumber * NRS.itemsPerPage
@@ -263,8 +263,8 @@ var NRS = (function(NRS, $, undefined) {
 							"<td>" +
 								"<a href='#' class='user-info' data-user='" + (exchange.buyerRS == NRS.accountRS ? "You" : exchange.buyerRS) + "'>" + (exchange.buyerRS == NRS.accountRS ? "You" : exchange.buyerRS) + "</a>" +
 							"</td>" +
-							"<td>" + NRS.formatQuantity(exchange.units, exchange.decimals) + "</td>" +
-							"<td>" + NRS.formatAmount(exchange.rateNQT) + "</td>" +
+							"<td>" + NRS.convertToQNTf(exchange.units, exchange.decimals) + "</td>" +
+							"<td>" + NRS.calculateOrderPricePerWholeQNT(exchange.rateNQT, exchange.decimals) + "</td>" +
 					  "</tr>";
 					}
 					historyTable.find("tbody").empty().append(rows);
@@ -275,7 +275,7 @@ var NRS = (function(NRS, $, undefined) {
 			});
 		} else {
 			NRS.sendRequest("getExchanges+", {
-				"code": currencyCode,
+				"currency": currencyId,
 				"firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
 				"lastIndex": NRS.pageNumber * NRS.itemsPerPage
 			}, function(response) {
@@ -287,18 +287,18 @@ var NRS = (function(NRS, $, undefined) {
 					}
 					var rows = "";
 					for (var i = 0; i < response.exchanges.length; i++) {
-						var exchanges = response.exchanges[i];
+						var exchange = response.exchanges[i];
 						rows += "<tr>" +
-							"<td>" + NRS.formatTimestamp(exchanges.timestamp) + "</td>" +
+							"<td>" + NRS.formatTimestamp(exchange.timestamp) + "</td>" +
 							"<td>" +
-								"<a href='#' class='user-info' data-user='" + (exchanges.sellerRS == NRS.accountRS ? "You" : exchanges.sellerRS) + "'>" + (exchanges.sellerRS == NRS.accountRS ? "You" : exchanges.sellerRS) + "</a>" +
+								"<a href='#' class='user-info' data-user='" + (exchange.sellerRS == NRS.accountRS ? "You" : exchange.sellerRS) + "'>" + (exchange.sellerRS == NRS.accountRS ? "You" : exchange.sellerRS) + "</a>" +
 							"</td>" +
 							"<td>" +
-								"<a href='#' class='user-info' data-user='" + (exchanges.buyerRS == NRS.accountRS ? "You" : exchanges.buyerRS) + "'>" + (exchanges.buyerRS == NRS.accountRS ? "You" : exchanges.buyerRS) + "</a>" +
+								"<a href='#' class='user-info' data-user='" + (exchange.buyerRS == NRS.accountRS ? "You" : exchange.buyerRS) + "'>" + (exchange.buyerRS == NRS.accountRS ? "You" : exchange.buyerRS) + "</a>" +
 							"</td>" +
-							"<td>" + NRS.formatQuantity(exchanges.units, exchanges.decimals) + "</td>" +
-							"<td>" + NRS.formatAmount(exchanges.rateNQT) + "</td>" +
-					  "</tr>";
+							"<td>" + NRS.convertToQNTf(exchange.units, exchange.decimals) + "</td>" +
+							"<td>" + NRS.calculateOrderPricePerWholeQNT(exchange.rateNQT, exchange.decimals) + "</td>" +
+						"</tr>";
 					}
 					historyTable.find("tbody").empty().append(rows);
 				} else {
@@ -343,8 +343,8 @@ var NRS = (function(NRS, $, undefined) {
 							"<a href='#' onClick='NRS.showTransactionModal(&quot;" + exchangeRequest.transaction + "&quot;);'>" + (exchangeRequest.unconfirmed ? "<strong>Pending</strong>" : NRS.formatTimestamp(exchangeRequest.timestamp)) + "</a>" +
 						"</td>" +
 						"<td>" + type + "</td>" +
-						"<td>" + NRS.formatQuantity(exchangeRequest.units, exchangeRequest.decimals) + "</td>" +
-						"<td>" + NRS.formatAmount(exchangeRequest.rateNQT) + "</td>" +
+						"<td>" + NRS.convertToQNTf(exchangeRequest.units, exchangeRequest.decimals) + "</td>" +
+						"<td>" + NRS.calculateOrderPricePerWholeQNT(exchangeRequest.rateNQT, exchangeRequest.decimals) + "</td>" +
 					"</tr>";
 				}
 				requestTable.find("tbody").empty().append(rows);
@@ -452,7 +452,7 @@ var NRS = (function(NRS, $, undefined) {
 		$("#currency_order_type").val((orderType == "buy" ? "currencyBuy" : "currencySell"));
 		$("#currency_order_code").val(currencyId);
 		$("#currency_order_quantity").val(unitsQNT.toString());
-		$("#currency_order_price").val(priceNQTPerWholeQNT.toString());
+		$("#currency_order_price").val(priceNQT.toString());
 		$("#currency_order_fee").val(feeNQT.toString());
 	});
 	
@@ -486,13 +486,6 @@ var NRS = (function(NRS, $, undefined) {
 		}
 	});
 	
-	
-	$("#ms_exchange_history_type").find(".btn").click(function(e) {
-		e.preventDefault();
-		NRS.currenciesTradeHistoryType = $(this).data("type");
-		NRS.getExchangeHistory($.trim($("#currency_search").find("input[name=q]").val()));
-	});
-
 	/* CURRENCIES PAGE */
 	NRS.pages.currencies = function() {
 		if (NRS.currenciesPageType == "my_currencies") {
@@ -896,10 +889,10 @@ var NRS = (function(NRS, $, undefined) {
 		var data = NRS.getFormData($modal.find("form:first"));
 		data.initialBuySupply = NRS.convertToQNT(data.initialBuySupply, data.decimals);
 		data.totalBuyLimit = NRS.convertToQNT(data.totalBuyLimit, data.decimals);
-		data.buyRateNQT = NRS.convertToNQT(data.buyRateNQT);
+		data.buyRateNQT = NRS.calculatePricePerWholeQNT(NRS.convertToNQT(data.buyRateNQT), data.decimals);
 		data.initialSellSupply = NRS.convertToQNT(data.initialSellSupply, data.decimals);
 		data.totalSellLimit = NRS.convertToQNT(data.totalSellLimit, data.decimals);
-		data.sellRateNQT = NRS.convertToNQT(data.sellRateNQT);
+		data.sellRateNQT = NRS.calculatePricePerWholeQNT(NRS.convertToNQT(data.sellRateNQT), data.decimals);
 		return {
 			"data": data
 		};
