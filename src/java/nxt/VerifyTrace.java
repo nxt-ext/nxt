@@ -174,7 +174,7 @@ public final class VerifyTrace {
                         totalAssetDelta = Convert.safeAdd(totalAssetDelta, delta);
                     }
                     System.out.println("total confirmed asset quantity change: " + totalAssetDelta);
-                    long assetBalance= assetValues.get("asset balance");
+                    long assetBalance = nullToZero(assetValues.get("asset balance"));
                     if (assetBalance != totalAssetDelta) {
                         System.out.println("ERROR: asset balance doesn't match total asset quantity change!!!");
                         failed.add(accountId);
@@ -196,7 +196,7 @@ public final class VerifyTrace {
                         totalCurrencyDelta = Convert.safeAdd(totalCurrencyDelta, delta);
                     }
                     System.out.println("total confirmed currency units change: " + totalCurrencyDelta);
-                    long currencyBalance = currencyValues.get("currency balance");
+                    long currencyBalance = nullToZero(currencyValues.get("currency balance"));
                     if (currencyBalance != totalCurrencyDelta) {
                         System.out.println("ERROR: currency balance doesn't match total currency units change!!!");
                         failed.add(accountId);
