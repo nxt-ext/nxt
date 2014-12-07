@@ -779,7 +779,9 @@ final class TransactionImpl implements Transaction {
         if (blockchainHeight >= Constants.PUBLIC_KEY_ANNOUNCEMENT_BLOCK) {
             if (recipientId != 0 && ! (recipientId == getSenderId() && blockchainHeight > Constants.MONETARY_SYSTEM_BLOCK)) {
                 Account recipientAccount = Account.getAccount(recipientId);
-                if ((recipientAccount == null || recipientAccount.getPublicKey() == null) && publicKeyAnnouncement == null) {
+                if (blockchainHeight < Constants.MONETARY_SYSTEM_BLOCK
+                        && (recipientAccount == null || recipientAccount.getPublicKey() == null)
+                        && publicKeyAnnouncement == null) {
                     throw new NxtException.NotCurrentlyValidException("Recipient account does not have a public key, must attach a public key announcement");
                 }
                 if (blockchainHeight >= Constants.MONETARY_SYSTEM_BLOCK && recipientAccount != null) {
