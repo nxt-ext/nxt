@@ -821,7 +821,7 @@ var NRS = (function(NRS, $, undefined) {
 						data["sender"] = NRS.getAccountTitle(transaction, "sender");
 					}
 
-					$("#transaction_info_callout").html("<a href='#' data-goto-currency='" + String(transaction.attachment.code).escapeHTML() + "'>Click here</a> to view this currency in the Monetary System.").show();
+					$("#transaction_info_callout").html("<a href='#' data-goto-currency='" + String(transaction.attachment.code).escapeHTML() + "'>Click here</a> to view this currency in the Exchange Booth.").show();
 
 					$("#transaction_info_table tbody").append(NRS.createInfoTable(data));
 					$("#transaction_info_table").show();
