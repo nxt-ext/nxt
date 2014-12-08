@@ -788,7 +788,12 @@ public abstract class TransactionType {
                 }
             }
 
-            //TODO: need to implement isDuplicate()
+            @Override
+            boolean isDuplicate(Transaction transaction, Map<TransactionType, Set<String>> duplicates) {
+                Attachment.MessagingVoteCasting attachment = (Attachment.MessagingVoteCasting) transaction.getAttachment();
+                String key = Convert.toUnsignedLong(attachment.getPollId()) + Convert.toUnsignedLong(transaction.getSenderId());
+                return isDuplicate(Messaging.VOTE_CASTING, key, duplicates);
+            }
 
             @Override
             public boolean canHaveRecipient() {
