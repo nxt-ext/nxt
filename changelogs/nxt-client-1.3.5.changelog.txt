@@ -12,6 +12,9 @@ Improved performance of Marketplace page, show counts for goods in stock only.
 
 Increased default purchase delivery deadline to 168 hours (1 week).
 
+Include full peer info in getPeers API if includePeerInfo=true, to avoid having
+to do a separate getPeer request for each peer.
+
 Allow sending messages with no recipient.
 
 UI improvements of the API /test page.
