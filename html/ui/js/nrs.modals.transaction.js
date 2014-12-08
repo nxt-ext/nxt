@@ -833,12 +833,13 @@ var NRS = (function(NRS, $, undefined) {
 					NRS.sendRequest("getCurrency", {
 						"currency": transaction.attachment.currency
 					}, function(currency, input) {
+						var amountPerUnitNQT = new BigInteger(transaction.attachment.amountPerUnitNQT).multiply(new BigInteger("" + Math.pow(10, currency.decimals)));
 						var data = {
 							"type": $.t("reserve_increase"),
 							"code": currency.code,
 							"reserve_units": [currency.reserveSupply, currency.decimals],
-							"amount_per_unit_formatted_html": NRS.formatAmount(transaction.attachment.amountPerUnitNQT) + " NXT",
-							"reserved_amount_formatted_html": NRS.formatAmount(NRS.calculateOrderTotalNQT(transaction.attachment.amountPerUnitNQT, currency.reserveSupply)) + " NXT"
+							"amount_per_unit_formatted_html": NRS.formatAmount(amountPerUnitNQT) + " NXT",
+							"reserved_amount_formatted_html": NRS.formatAmount(NRS.calculateOrderTotalNQT(amountPerUnitNQT, NRS.convertToQNTf(currency.reserveSupply, currency.decimals))) + " NXT"
 						};
 
 						data["sender"] = NRS.getAccountTitle(transaction, "sender");
@@ -857,11 +858,12 @@ var NRS = (function(NRS, $, undefined) {
 					NRS.sendRequest("getCurrency", {
 						"currency": transaction.attachment.currency
 					}, function(currency, input) {
+						var currentReservePerUnitNQT = new BigInteger(currency.currentReservePerUnitNQT).multiply(new BigInteger("" + Math.pow(10, currency.decimals)));
 						var data = {
 							"type": $.t("reserve_claim"),
 							"code": currency.code,
 							"units": [transaction.attachment.units, currency.decimals],
-							"claimed_amount_formatted_html": NRS.formatAmount(NRS.calculateOrderTotalNQT(transaction.attachment.currentReservePerUnitNQT, transaction.attachment.units)) + " NXT"
+							"claimed_amount_formatted_html": NRS.formatAmount(NRS.convertToQNTf(NRS.calculateOrderTotalNQT(currentReservePerUnitNQT, transaction.attachment.units), currency.decimals)) + " NXT"
 						};
 
 						if (transaction.sender != NRS.account) {
