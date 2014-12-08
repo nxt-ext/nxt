@@ -31,6 +31,11 @@ public class TestMintCalculations {
         Logger.logDebugMessage("final target for 100 units: " + Arrays.toString(target));
         Assert.assertEquals(32, target.length);
         Assert.assertArrayEquals(new byte[]{92, -113, -62, -11, 40, 92, -113, -62, -11, 40, 92, -113, -62, -11, 40, 92, -113, -62, -11, 40, 92, -113, -62, -11, 40, 92, -113, 2, 0, 0, 0, 0}, target);
+
+        target = CurrencyMint.getTarget((byte) 1, (byte) 5, 1, 0, 100000);
+        Logger.logDebugMessage("very low target: " + Arrays.toString(target));
+        Assert.assertEquals(32, target.length);
+        Assert.assertArrayEquals(new byte[]{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, target);
     }
 
     @Test
