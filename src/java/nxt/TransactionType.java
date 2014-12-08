@@ -303,9 +303,6 @@ public abstract class TransactionType {
 
             @Override
             void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
-                if (transaction.getAmountNQT() != 0) {
-                    throw new NxtException.NotValidException("Voting transaction amount <> 0!");
-                }
 
                 Attachment.PendingPaymentVoteCasting att = (Attachment.PendingPaymentVoteCasting) transaction.getAttachment();
                 long[] pendingIds = att.getPendingTransactionsIds();
@@ -788,11 +785,6 @@ public abstract class TransactionType {
 
                 if (positiveCount < poll.getMinNumberOfOptions() || positiveCount > poll.getMaxNumberOfOptions()) {
                     throw new NxtException.NotValidException("Invalid num of choices: " + attachment.getJSONObject());
-                }
-
-                //TODO: not needed, this check is now done in the TransactionImpl constructor for all transactions that can't have a recipient
-                if (transaction.getAmountNQT() != 0 || transaction.getRecipientId() != 0) {
-                    throw new NxtException.NotValidException("Vote casting has amount or recipient");
                 }
             }
 
