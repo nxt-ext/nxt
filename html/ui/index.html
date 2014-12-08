@@ -2802,12 +2802,12 @@
                                     <label for="issue_currency_reservable" style="font-weight:normal;" tabindex="6" data-i18n="reservable">Reservable</label>
                                 </div>
                                 <div class="form-group advanced optional_reserve">
-                                    <label for="issue_currency_min_reserve" data-i18n="min_reserve">MINIMUM AMOUNT OF NXT TO ACTIVATE RESERVE</label>
-                                    <input type="number" name="minReservePerUnitNQT" id="issue_currency_min_reserve" class="form-control" min="1" placeholder="Minimum Amount" data-i18n="minimum_reserve" tabindex="8" disabled>
+                                    <label for="issue_currency_min_reserve" data-i18n="min_reserve">MINIMUM AMOUNT OF NXT PER WHOLE UNIT NEEDED TO ACTIVATE CURRENCY</label>
+                                    <input name="minReservePerUnitNQT" id="issue_currency_min_reserve" class="form-control" placeholder="Minimum Amount Per Unit" data-i18n="minimum_reserve" tabindex="8" disabled>
                                 </div>
                                 <div class="form-group advanced optional_reserve">
-                                    <label for="issue_currency_min_reserve" data-i18n="reserve_supply">RESERVE SUPPLY</label>
-                                    <input type="number" name="reserveSupply" id="issue_currency_min_reserve_supply" class="form-control" min="1" placeholder="Reserve Supply" data-i18n="reserve_supply" tabindex="8" disabled>
+                                    <label for="issue_currency_min_reserve" data-i18n="reserve_supply">UNITS TO RESERVE</label>
+                                    <input type="number" name="reserveSupply" id="issue_currency_min_reserve_supply" class="form-control" min="1" placeholder="Number of Units" data-i18n="reserve_supply" tabindex="8" disabled>
                                 </div>
                                 <div class="input-group">
                                     <input type="checkbox" name="type" id="issue_currency_claimable" value="8" />
@@ -4439,30 +4439,21 @@
                     </div>
                     <div class="modal-body">            
                         <form role="form" autocomplete="off">
+                            <p>
+                                <span id="total_amount_reserved"></span>
+                                <span id="minimum_amount_required"></span>
+                            </p>
                             <div class="callout callout-danger error_message" style="display:none"></div>
                             <div class="form-group">
                                 <input type="hidden" class="form-control" name="currency" id="reserve_currency_currency" placeholder="Currency" data-i18n="[placeholder]currency" tabindex="1" />
                                 <input type="hidden" class="form-control" disabled id="reserve_currency_resSupply" />
+                                <input type="hidden" name="decimals" id="reserve_currency_decimals" value="" />
+                                <input type="hidden" name="minReserve" id="reserve_currency_minReserve" value="" />
                             </div>
                             <div class="form-group">
                                 <label for="reserve_currency_amount" data-i18n="currency">Amount of NXT per currency unit</label>
                                 <input type="text" class="form-control" name="amountPerUnitNQT" id="reserve_currency_amount" placeholder="Amount of NXT per currency unit" data-i18n="amount" tabindex="1" />
                             </div>
-                            <div class="row">
-								<div class="col-xs-6 col-sm-6 col-md-6">
-									<div class="form-group">
-										<label for="reserve_currency_total" data-i18n="currency">Amount of NXT needed</label>
-										<input type="text" class="form-control" id="reserve_currency_total" disabled />
-									</div>
-								</div>
-								<div class="col-xs-6 col-sm-6 col-md-6">
-									<div class="form-group">
-										<label for="reserve_currency_amount_per_founder" data-i18n="currency">Units with current founders</label>
-										<input type="text" class="form-control" id="reserve_currency_amount_per_founder" disabled />
-									</div>
-								</div>
-                            </div>
-                            
                             <div class="row advanced">
                                 <div class="col-xs-6 col-sm-6 col-md-6">
                                     <div class="form-group">
@@ -5397,7 +5388,7 @@
                 <div class="modal-content">
                     <div class="modal-header">
                         <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                        <h4 class="modal-title" data-i18n="currency_founders">Currency Founders</h4>
+                        <h4 class="modal-title"><span data-i18n="currency_founders">Currency Founders</span> - <span id="founders_currency_code"></span></h4>
                     </div>
                     <div class="modal-body">                            
                         <div class="data-container data-loading" style="max-height:350px;overflow:auto">
@@ -5405,8 +5396,10 @@
                                 <thead>
                                 <tr>
                                     <th data-i18n="account">Account</th>
-                                    <th data-i18n="amountPerUnitNXT">Amount Per Unit (NXT)</th>
-                                    <th data-i18n="units">Units</th>
+                                    <th data-i18n="amount_per_unit">Amount Per Unit</th>
+                                    <th data-i18n="amount_reserved">Amount Reserved</th>
+                                    <th data-i18n="allocated_units">Allocated Units</th>
+                                    <th data-i18n="percent_of_min">Percent of Minimum</th>
                                 </tr>
                                 </thead>
                                 <tbody>
