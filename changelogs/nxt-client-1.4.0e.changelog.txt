@@ -29,13 +29,8 @@ Added optional includeLessors, includeAssets, and includeCurrencies boolean
 parameters to getAccount API. Set to false when retrieving those data is not
 needed, in order to improve the getAccount performance.
 
-Allow non-encrypted arbitrary messages to have no recipient.
-
 After MS block, sending messages, selling aliases, and leasing balances, to the
 Genesis account, will be disallowed.
-
-Include full peer info in getPeers API if includePeerInfo=true, to avoid having
-to do a separate getPeer request for each peer.
 
 The popOff debug API now allows pop off of more than max rollback number of
 blocks, triggering a full rescan in such case.
