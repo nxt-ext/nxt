@@ -519,7 +519,7 @@ var NRS = (function(NRS, $, undefined) {
 							"<td>" + NRS.formatQuantity(currency.unconfirmedUnits, currency.decimals) + "</td>" +
 							"<td>" +
 								"<a href='#' class='btn btn-xs btn-default' data-toggle='modal' data-target='#transfer_currency_modal' data-currency='" + String(currency.currency).escapeHTML() + "' data-code='" + code + "' data-decimals='" + decimals + "'>" + $.t("transfer") + "</a> " +
-								"<a href='#' class='btn btn-xs btn-default' data-toggle='modal' data-target='#publish_exchange_offer_modal' data-currency='" + String(currency.currency).escapeHTML() + "' data-code='" + code + "' data-decimals='" + decimals + "'>" + $.t("exchange") + "</a>" +
+								"<a href='#' class='btn btn-xs btn-default' data-toggle='modal' data-target='#publish_exchange_offer_modal' data-currency='" + String(currency.currency).escapeHTML() + "' data-code='" + code + "' data-decimals='" + decimals + "'>" + $.t("publish_exchange_offer") + "</a>" +
 							"</td>" +
 						"</tr>";
 					}
@@ -571,7 +571,7 @@ var NRS = (function(NRS, $, undefined) {
 						}
 						rows += "<tr>" +
 							"<td>" +
-								"<a href='#' onClick='NRS.goToCurrency(&quot;" + currencyCode + "&quot;)' >" + currencyCode + "</a>" +
+								"<a href='#' data-transaction='" + currencyId + "' >" + currencyCode + "</a>" +
 							"</td>" +
 							"<td>" + name + "</td>" +
 							"<td>" + currency_type + "</td>" +
@@ -580,18 +580,11 @@ var NRS = (function(NRS, $, undefined) {
 							"<td>" + NRS.formatQuantity(currency.currentSupply, currency.decimals) + "</td>" +
 							"<td>" + NRS.formatQuantity(currency.maxSupply, currency.decimals) + "</td>" +
 							"<td>";
-							if (currency.accountRS == NRS.accountRS) {
-								rows += "<a href='#' class='btn btn-xs btn-default' data-toggle='modal' data-target='#delete_currency_modal' data-currency='" + currencyId + "' data-name='" + name + "' data-code='" + currencyCode + "'>" + $.t("delete") + "</a> ";
-							}
-							if (currency.issuanceHeight > NRS.lastBlockHeight && NRS.isReservable(currency.type)) {
-								rows += "<a href='#' class='btn btn-xs btn-default' data-toggle='modal' data-target='#reserve_currency_modal' data-currency='" + currencyId + "' data-name='" + name + "' data-code='" + currencyCode + "' data-ressupply='" + resSupply + "'>" + $.t("reserve") + "</a> ";
-							}
-							if (currency.issuanceHeight <= NRS.lastBlockHeight && NRS.isClaimable(currency.type)){
-								rows += "<a href='#' class='btn btn-xs btn-default' data-toggle='modal' data-target='#claim_currency_modal' data-currency='" + currencyId + "' data-name='" + name + "' data-code='" + currencyCode + "' data-decimals='" + currency.decimals + "'>" + $.t("claim") + "</a> ";
-							}
-							if (NRS.isMintable(currency.type)){
-								rows += "<a href='#' class='btn btn-xs btn-default' data-toggle='modal' data-target='#mine_currency_modal' data-currency='" + currencyId + "' data-name='" + name + "' data-code='" + currencyCode + "'>" + $.t("mint") + "</a>";
-							}
+							rows += "<a href='#' class='btn btn-xs btn-default' onClick='NRS.goToCurrency(&quot;" + currencyCode + "&quot;)' " + (!NRS.isExchangeable(currency.type) ? "disabled" : "") + ">" + $.t("exchange") + "</a>";
+							rows += "<a href='#' class='btn btn-xs btn-default' data-toggle='modal' data-target='#delete_currency_modal' data-currency='" + currencyId + "' data-name='" + name + "' data-code='" + currencyCode + "' " + (currency.accountRS == NRS.accountRS ? "" : "disabled") + " >" + $.t("delete") + "</a> ";
+							rows += "<a href='#' class='btn btn-xs btn-default' data-toggle='modal' data-target='#reserve_currency_modal' data-currency='" + currencyId + "' data-name='" + name + "' data-code='" + currencyCode + "' data-ressupply='" + resSupply + "' " + (currency.issuanceHeight > NRS.lastBlockHeight && NRS.isReservable(currency.type) ? "" : "disabled") + " >" + $.t("reserve") + "</a> ";
+							rows += "<a href='#' class='btn btn-xs btn-default' data-toggle='modal' data-target='#claim_currency_modal' data-currency='" + currencyId + "' data-name='" + name + "' data-code='" + currencyCode + "' data-decimals='" + currency.decimals + "' " + (currency.issuanceHeight <= NRS.lastBlockHeight && NRS.isClaimable(currency.type) ? "" : "disabled") + " >" + $.t("claim") + "</a> ";
+							rows += "<a href='#' class='btn btn-xs btn-default' data-toggle='modal' data-target='#mine_currency_modal' data-currency='" + currencyId + "' data-name='" + name + "' data-code='" + currencyCode + "' " + (!NRS.isMintable(currency.type) ? "disabled" : "") + " >" + $.t("mint") + "</a>";
 							rows += "</td></tr>";
 					}
 					var currenciesTable = $('#currencies_table');
