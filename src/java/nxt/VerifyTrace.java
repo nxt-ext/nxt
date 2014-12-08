@@ -17,11 +17,11 @@ public final class VerifyTrace {
 
     private static final List<String> balanceHeaders = Arrays.asList("balance", "unconfirmed balance");
     private static final List<String> deltaHeaders = Arrays.asList("transaction amount", "transaction fee",
-            "generation fee", "trade cost", "purchase cost", "discount", "refund");
+            "generation fee", "trade cost", "purchase cost", "discount", "refund", "exchange cost", "currency cost");
     private static final List<String> assetQuantityHeaders = Arrays.asList("asset balance", "unconfirmed asset balance");
     private static final List<String> deltaAssetQuantityHeaders = Arrays.asList("asset quantity", "trade quantity");
     private static final List<String> currencyBalanceHeaders = Arrays.asList("currency balance", "unconfirmed currency balance");
-    private static final List<String> deltaCurrencyUnitHeaders = Arrays.asList("currency units", "buy units", "sell units");
+    private static final List<String> deltaCurrencyUnitHeaders = Arrays.asList("currency units", "exchange quantity");
 
     private static boolean isBalance(String header) {
         return balanceHeaders.contains(header);
@@ -77,7 +77,8 @@ public final class VerifyTrace {
                     accountAssetMap = new HashMap<>();
                     accountAssetTotals.put(accountId, accountAssetMap);
                 }
-                if ("asset issuance".equals(valueMap.get("event"))) {
+                String event = valueMap.get("event");
+                if ("asset issuance".equals(event)) {
                     String assetId = valueMap.get("asset");
                     issuedAssetQuantities.put(assetId, Long.parseLong(valueMap.get("asset quantity")));
                 }
@@ -86,9 +87,25 @@ public final class VerifyTrace {
                     accountCurrencyMap = new HashMap<>();
                     accountCurrencyTotals.put(accountId, accountCurrencyMap);
                 }
-                if ("currency issuance".equals(valueMap.get("event"))) {
+                if ("currency issuance".equals(event)) {
                     String currencyId = valueMap.get("currency");
                     issuedCurrencyUnits.put(currencyId, Long.parseLong(valueMap.get("currency units")));
+                }
+                if ("crowdfunding".equals(event)) {
+                    String currencyId = valueMap.get("currency");
+                    issuedCurrencyUnits.put(currencyId, Long.parseLong(valueMap.get("crowdfunding")));
+                }
+                if ("currency mint".equals(event)) {
+                    String currencyId = valueMap.get("currency");
+                    issuedCurrencyUnits.put(currencyId, Convert.safeAdd(nullToZero(issuedCurrencyUnits.get(currencyId)), Long.parseLong(valueMap.get("currency units"))));
+                }
+                if ("currency claim".equals(event)) {
+                    String currencyId = valueMap.get("currency");
+                    issuedCurrencyUnits.put(currencyId, Convert.safeAdd(nullToZero(issuedCurrencyUnits.get(currencyId)), Long.parseLong(valueMap.get("currency units"))));
+                }
+                if ("currency delete".equals(event) || "undo crowdfunding".equals(event)) {
+                    String currencyId = valueMap.get("currency");
+                    issuedCurrencyUnits.put(currencyId, 0L);
                 }
                 for (Map.Entry<String,String> mapEntry : valueMap.entrySet()) {
                     String header = mapEntry.getKey();

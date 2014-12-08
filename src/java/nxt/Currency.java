@@ -6,6 +6,7 @@ import nxt.db.DbKey;
 import nxt.db.VersionedEntityDbTable;
 import nxt.util.Convert;
 import nxt.util.Listener;
+import nxt.util.Listeners;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -16,6 +17,10 @@ import java.util.List;
 
 @SuppressWarnings("UnusedDeclaration")
 public final class Currency {
+
+    public static enum Event {
+        BEFORE_DISTRIBUTE_CROWDFUNDING, BEFORE_UNDO_CROWDFUNDING, BEFORE_DELETE
+    }
 
     private static final DbKey.LongKeyFactory<Currency> currencyDbKeyFactory = new DbKey.LongKeyFactory<Currency>("id") {
 
@@ -39,6 +44,16 @@ public final class Currency {
         }
 
     };
+
+    private static final Listeners<Currency,Event> listeners = new Listeners<>();
+
+    public static boolean addListener(Listener<Currency> listener, Event eventType) {
+        return listeners.addListener(listener, eventType);
+    }
+
+    public static boolean removeListener(Listener<Currency> listener, Event eventType) {
+        return listeners.removeListener(listener, eventType);
+    }
 
     public static DbIterator<Currency> getAllCurrencies(int from, int to) {
         return currencyTable.getAll(from, to);
@@ -254,12 +269,12 @@ public final class Currency {
         return issuanceHeight <= BlockchainImpl.getInstance().getHeight();
     }
 
-    static void increaseReserve(Account account, long currencyId, long amountNQT) {
+    static void increaseReserve(Account account, long currencyId, long amountPerUnitNQT) {
         Currency currency = Currency.getCurrency(currencyId);
-        account.addToBalanceNQT(-Convert.safeMultiply(currency.getReserveSupply(), amountNQT));
-        currency.currentReservePerUnitNQT += amountNQT;
+        account.addToBalanceNQT(-Convert.safeMultiply(currency.getReserveSupply(), amountPerUnitNQT));
+        currency.currentReservePerUnitNQT += amountPerUnitNQT;
         currencyTable.insert(currency);
-        CurrencyFounder.addOrUpdateFounder(currencyId, account.getId(), amountNQT);
+        CurrencyFounder.addOrUpdateFounder(currencyId, account.getId(), amountPerUnitNQT);
     }
 
     static void claimReserve(Account account, long currencyId, long units) {
@@ -323,6 +338,7 @@ public final class Currency {
             // shouldn't happen as ownership has already been checked in validate, but as a safety check
             throw new IllegalStateException("Currency " + Convert.toUnsignedLong(currencyId) + " not entirely owned by " + Convert.toUnsignedLong(ownerAccountId));
         }
+        listeners.notify(this, Event.BEFORE_DELETE);
         Account ownerAccount = Account.getAccount(ownerAccountId);
         if (is(CurrencyType.RESERVABLE)) {
             if (is(CurrencyType.CLAIMABLE) && isActive()) {
@@ -363,8 +379,10 @@ public final class Currency {
             try (DbIterator<Currency> issuedCurrencies = currencyTable.getManyBy(new DbClause.IntClause("issuance_height", block.getHeight()), 0, -1)) {
                 for (Currency currency : issuedCurrencies) {
                     if (currency.getCurrentReservePerUnitNQT() < currency.getMinReservePerUnitNQT()) {
+                        listeners.notify(currency, Event.BEFORE_UNDO_CROWDFUNDING);
                         undoCrowdFunding(currency);
                     } else {
+                        listeners.notify(currency, Event.BEFORE_DISTRIBUTE_CROWDFUNDING);
                         distributeCurrency(currency);
                     }
                 }

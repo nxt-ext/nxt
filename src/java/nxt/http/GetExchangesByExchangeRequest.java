@@ -1,8 +1,6 @@
 package nxt.http;
 
 import nxt.Exchange;
-import nxt.Nxt;
-import nxt.Transaction;
 import nxt.db.DbIterator;
 import nxt.util.Convert;
 import org.json.simple.JSONArray;
@@ -11,7 +9,7 @@ import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
 
-import static nxt.http.JSONResponses.*;
+import static nxt.http.JSONResponses.MISSING_TRANSACTION;
 
 public final class GetExchangesByExchangeRequest extends APIServlet.APIRequestHandler {
 
