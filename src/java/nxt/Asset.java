@@ -55,14 +55,6 @@ public final class Asset {
         return assetTable.search(query, DbClause.EMPTY_CLAUSE, from, to, " ORDER BY ft.score DESC, asset.height DESC ");
     }
 
-    //TODO: the get by name methods should not be needed, as asset names are not unique, and there is already another method for search
-    public static DbIterator<Asset> getAssetsWithName(String name, int from, int to){
-        return assetTable.getManyBy(new DbClause.StringClause("name", name), from, to);
-    }
-
-    public static DbIterator<Asset> getAssetsWithName(String name){
-        return getAssetsWithName(name, 0, Integer.MAX_VALUE);
-    }
 
     static void addAsset(Transaction transaction, Attachment.ColoredCoinsAssetIssuance attachment) {
         assetTable.insert(new Asset(transaction, attachment));

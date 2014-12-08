@@ -166,11 +166,6 @@ public final class Poll extends AbstractPoll {
         pollTable.insert(poll);
     }
 
-    //TODO: this method is not needed, remove
-    static boolean exists(long id) { //TODO: remove
-        return getPoll(id) != null;
-    }
-
     public static Poll getPoll(long id) {
         return pollTable.get(pollDbKeyFactory.newKey(id));
     }
@@ -193,11 +188,6 @@ public final class Poll extends AbstractPoll {
 
     public static int getCount() {
         return pollTable.getCount();
-    }
-
-    //TODO: this method is not needed, remove
-    public static boolean isFinished(long pollId) {
-        return getPoll(pollId).isFinished();
     }
 
     private static void finishPoll(Poll poll) {

@@ -30,7 +30,7 @@ public final class CastVote extends CreateTransaction {
 
         long pollId = Convert.parseUnsignedLong(pollValue);
         Poll poll = Poll.getPoll(pollId);
-        if (poll == null || Poll.isFinished(pollId)) {
+        if (poll == null || poll.isFinished()) {
             return INCORRECT_POLL;
         }
 
