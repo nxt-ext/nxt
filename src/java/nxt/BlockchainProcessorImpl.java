@@ -823,6 +823,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             throw new RuntimeException("Cannot pop off genesis block");
         }
         BlockImpl previousBlock = blockchain.getBlock(block.getPreviousBlockId());
+        previousBlock.getTransactions();
         blockchain.setLastBlock(block, previousBlock);
         BlockDb.deleteBlocksFrom(block.getId());
         blockListeners.notify(block, Event.BLOCK_POPPED);
