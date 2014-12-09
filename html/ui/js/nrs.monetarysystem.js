@@ -965,7 +965,7 @@ var NRS = (function(NRS, $, undefined) {
 	$("#reserve_currency_amount").blur(function() {
 		var resSupply = NRS.convertToQNTf($("#reserve_currency_resSupply").val(), $("#reserve_currency_decimals").val());
 		var unitAmountNQT = NRS.convertToNQT(this.value);
-		$("#reserve_currency_total").val(NRS.convertToNXT(NRS.calculateOrderTotalNQT(unitAmountNQT, resSupply)));
+		$("#reserve_currency_total").html(NRS.formatAmount(NRS.calculateOrderTotalNQT(unitAmountNQT, resSupply)));
 	});
 
 	NRS.forms.currencyReserveIncrease = function ($modal) {
