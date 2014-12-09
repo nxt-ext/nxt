@@ -89,6 +89,8 @@ public final class Constants {
     public static final int MONETARY_SYSTEM_BLOCK = isTestnet ? 136500 : Integer.MAX_VALUE;
     public static final int LAST_KNOWN_BLOCK = isTestnet ? 136000 : 287000;
 
+    public static final int[] MIN_VERSION = new int[] {1, 2};
+
     static final long UNCONFIRMED_POOL_DEPOSIT_NQT = (isTestnet ? 50 : 100) * ONE_NXT;
 
     public static final long EPOCH_BEGINNING;
