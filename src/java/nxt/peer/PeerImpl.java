@@ -145,7 +145,7 @@ final class PeerImpl implements Peer {
                 }
             }
             if (isOldVersion) {
-                Logger.logDebugMessage("Blacklisting peer %s because of old version %s", peerAddress, version);
+                Logger.logDebugMessage("Blacklisting %s version %s", peerAddress, version);
             }
         }
     }
