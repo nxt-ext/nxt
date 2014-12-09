@@ -65,13 +65,12 @@ public class MintWorker {
         }
         byte algorithm = (byte)(long) currency.get("algorithm");
         byte decimal = (byte)(long) currency.get("decimals");
-        long units = Nxt.getIntProperty("nxt.mint.unitsPerMint");
-        if (units == 0) {
-            units = 1;
+        String unitsStr = Nxt.getStringProperty("nxt.mint.unitsPerMint");
+        double wholeUnits = 1;
+        if (unitsStr != null && unitsStr.length() > 0) {
+            wholeUnits = Double.parseDouble(unitsStr);
         }
-        if (decimal > 0) {
-            units *= (long)(Math.pow(10, decimal));
-        }
+        long units = (long)(wholeUnits * Math.pow(10, decimal));
         JSONObject mintingTarget = getMintingTarget(currencyCode, rsAccount, units);
         long counter = (long) mintingTarget.get("counter");
         byte[] target = Convert.parseHexString((String) mintingTarget.get("targetBytes"));
