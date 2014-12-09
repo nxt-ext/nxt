@@ -942,51 +942,31 @@ var NRS = (function(NRS, $, undefined) {
 	/* RESERVE CURRENCY MODEL */
 	$("#reserve_currency_modal").on("show.bs.modal", function (e) {
 		var $invoker = $(e.relatedTarget);
-
-		var currency = $invoker.data("currency");
 		var currencyCode = $invoker.data("code");
-		var decimals = $invoker.data("decimals");
-		var resSupply = $invoker.data("ressupply");
-		var minReserve = $invoker.data("minreserve");
+		NRS.sendRequest("getCurrency+", {
+			"code": currencyCode
+		}, function(response) {
+			if (response && !response.errorDescription) {
+				var currency = response.currency;
+				var decimals = response.decimals;
+				var resSupply = response.reserveSupply;
+				var minReserve = response.minReservePerUnitNQT;
+				var currentReserve = response.currentReservePerUnitNQT;
 
-		$("#reserve_currency_currency").val(currency);
-		$("#reserve_currency_code").html(String(currencyCode).escapeHTML());
-		$("#reserve_currency_decimals").val(decimals);
-		$("#reserve_currency_resSupply").val(resSupply);
-		$("#reserve_currency_minReserve").val(minReserve);
+				$("#reserve_currency_code").html(String(currencyCode).escapeHTML());
+				$("#reserve_currency_currency").val(currency);
+				$("#reserve_currency_decimals").val(decimals);
+				$("#reserve_currency_minReserve").val(minReserve);
+				$("#reserve_currency_resSupply").val(resSupply);
+			}
+		})
 	});
 	
-	// TODO implement using BigInteger like in foundersModal
-	//$("#reserve_currency_amount").blur(function() {
-	//	NRS.sendRequest("getCurrencyFounders", {
-	//		"code": $("#reserve_currency_code").html()
-	//	}, function(response) {
-	//		var total = 0;
-	//		var count = 0;
-	//		if (response.founders && response.founders.length) {
-	//			for (var i = 0; i < response.founders.length; i++) {
-	//			 	var founder = response.founders[i];
-	//				total += parseInt(founder.amountPerUnitNQT);
-	//				count++;
-	//			}
-	//			var amountNQT = NRS.convertToNQT($("#reserve_currency_amount").val());
-	//			total += parseInt(amountNQT);
-	//			var share = amountNQT/total;
-	//			//$("#reserve_currency_total").val($("#reserve_currency_resSupply").val().replace("'","")*$("#reserve_currency_amount").val()*share);
-	//			$("#reserve_currency_amount_per_founder").val($("#reserve_currency_resSupply").val().replace("'","")*share);
-	//		}
-	//		else{
-	//			$("#reserve_currency_amount_per_founder").val($("#reserve_currency_resSupply").val().replace("'",""));
-	//		}
-	//		$("#reserve_currency_total").val($("#reserve_currency_resSupply").val().replace("'","")*$("#reserve_currency_amount").val());
-	//		if ($("#reserve_currency_resSupply").val().replace("'","")*$("#reserve_currency_amount").val() > 1000){
-	//			$("#reserve_currency_modal .callout-danger").html("You are locking over 1000 NXT");
-	//			$("#reserve_currency_modal .callout-danger").show();
-	//		}
-	//		else
-	//			$("#reserve_currency_modal .callout-danger").hide();
-	//	})
-	//});
+	$("#reserve_currency_amount").blur(function() {
+		var resSupply = NRS.convertToQNTf($("#reserve_currency_resSupply").val(), $("#reserve_currency_decimals").val());
+		var unitAmountNQT = NRS.convertToNQT(this.value);
+		$("#reserve_currency_total").val(NRS.convertToNXT(NRS.calculateOrderTotalNQT(unitAmountNQT, resSupply)));
+	});
 
 	NRS.forms.currencyReserveIncrease = function ($modal) {
 		var data = NRS.getFormData($modal.find("form:first"));
