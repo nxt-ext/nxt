@@ -123,9 +123,9 @@ final class PeerImpl implements Peer {
     void setVersion(String version) {
         this.version = version;
         isOldVersion = false;
-        if (Nxt.APPLICATION.equals(application) && version != null) {
-            String[] versions = version.split("\\.");
-            if (versions.length < Constants.MIN_VERSION.length) {
+        if (Nxt.APPLICATION.equals(application)) {
+            String[] versions;
+            if (version == null || (versions = version.split("\\.")).length < Constants.MIN_VERSION.length) {
                 isOldVersion = true;
             } else {
                 for (int i = 0; i < Constants.MIN_VERSION.length; i++) {
