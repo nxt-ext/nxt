@@ -1,6 +1,6 @@
 New features:
 
-Monetary System. 
+Monetary System.
 See https://bitbucket.org/JeanLucPicard/nxt/issue/136/monetary-system for a
 detailed description.
 
@@ -20,6 +20,9 @@ syntax follows the java.util.regex.Pattern specification.
 
 
 API changes:
+
+After MS block, adding a public key announcement when sending a transaction to
+an account without a public key will be optional.
 
 Added withMessage boolean parameter to getAccountTransactions and 
 getAccountTransactionIds APIs, to return only transactions having a message
