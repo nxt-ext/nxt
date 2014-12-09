@@ -34,6 +34,7 @@ import java.net.URL;
 import java.net.UnknownHostException;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.zip.GZIPInputStream;
 
@@ -47,6 +48,7 @@ final class PeerImpl implements Peer {
     private volatile String platform;
     private volatile String application;
     private volatile String version;
+    private volatile boolean isOldVersion;
     private volatile long adjustedWeight;
     private volatile long blacklistingTime;
     private volatile State state;
@@ -120,6 +122,32 @@ final class PeerImpl implements Peer {
 
     void setVersion(String version) {
         this.version = version;
+        isOldVersion = false;
+        if (Nxt.APPLICATION.equals(application) && version != null) {
+            String[] versions = version.split("\\.");
+            if (versions.length < Constants.MIN_VERSION.length) {
+                isOldVersion = true;
+            } else {
+                for (int i = 0; i < Constants.MIN_VERSION.length; i++) {
+                    try {
+                        int v = Integer.parseInt(versions[i]);
+                        if (v > Constants.MIN_VERSION[i]) {
+                            isOldVersion = false;
+                            break;
+                        } else if (v < Constants.MIN_VERSION[i]) {
+                            isOldVersion = true;
+                            break;
+                        }
+                    } catch (NumberFormatException e) {
+                        isOldVersion = true;
+                        break;
+                    }
+                }
+            }
+            if (isOldVersion) {
+                Logger.logDebugMessage("Blacklisting %s version %s", peerAddress, version);
+            }
+        }
     }
 
     @Override
@@ -201,7 +229,7 @@ final class PeerImpl implements Peer {
 
     @Override
     public boolean isBlacklisted() {
-        return blacklistingTime > 0 || Peers.knownBlacklistedPeers.contains(peerAddress);
+        return blacklistingTime > 0 || isOldVersion || Peers.knownBlacklistedPeers.contains(peerAddress);
     }
 
     @Override
@@ -382,7 +410,7 @@ final class PeerImpl implements Peer {
         JSONObject response = send(Peers.myPeerInfoRequest);
         if (response != null) {
             application = (String)response.get("application");
-            version = (String)response.get("version");
+            setVersion((String) response.get("version"));
             platform = (String)response.get("platform");
             shareAddress = Boolean.TRUE.equals(response.get("shareAddress"));
             String newAnnouncedAddress = Convert.emptyToNull((String)response.get("announcedAddress"));

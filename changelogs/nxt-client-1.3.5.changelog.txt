@@ -17,4 +17,6 @@ to do a separate getPeer request for each peer.
 
 Allow sending messages with no recipient.
 
+Automatically blacklist peers with version older than 1.2.0.
+
 UI improvements of the API /test page.
