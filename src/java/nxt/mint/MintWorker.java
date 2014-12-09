@@ -16,9 +16,11 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.InetAddress;
 import java.net.URL;
+import java.net.URLEncoder;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -200,7 +202,11 @@ public class MintWorker {
         }
         StringBuilder sb = new StringBuilder();
         for (String key : params.keySet()) {
-            sb.append(key).append("=").append(params.get(key)).append("&");
+            try {
+                sb.append(key).append("=").append(URLEncoder.encode(params.get(key), "utf8")).append("&");
+            } catch (UnsupportedEncodingException e) {
+                throw new IllegalStateException(e);
+            }
         }
         String rc = sb.toString();
         if (rc.endsWith("&")) {
