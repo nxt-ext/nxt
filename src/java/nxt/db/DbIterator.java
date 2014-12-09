@@ -4,7 +4,9 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import java.util.NoSuchElementException;
 
 public final class DbIterator<T> implements Iterator<T>, Iterable<T>, AutoCloseable {
@@ -77,4 +79,11 @@ public final class DbIterator<T> implements Iterator<T>, Iterable<T>, AutoClosea
         return this;
     }
 
+    public List<T> toList(){
+        List<T> list = new ArrayList<>();
+        while(this.hasNext()){
+            list.add(next());
+        }
+        return list;
+    }
 }

@@ -6,7 +6,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Arrays;
 
 public class VotePhased {
     //TODO: why does pending_transaction_id need to be part of the key?
@@ -143,7 +142,7 @@ public class VotePhased {
 
         final long weight = poll.calcWeight(voter);
 
-        long estimate = 0;//voteTable.lastEstimate(poll.getId());
+        long estimate = voteTable.lastEstimate(poll.getId());
 
         if (weight >= poll.minBalance) {
             estimate += weight;
@@ -156,7 +155,7 @@ public class VotePhased {
         // until the vote is over. If counting is done at finish height only, he knows when the assets need to be
         // in his account, doesn't need to have them there before that.
         if (estimate >= poll.getQuorum() && poll.getVotingModel() != Constants.VOTING_MODEL_ACCOUNT) {
-            estimate = 0;//allVotesFromDb(poll);
+            estimate = allVotesFromDb(poll);
             if (weight >= poll.minBalance) {
                 estimate += weight;
             }

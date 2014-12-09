@@ -612,7 +612,10 @@ public interface Appendix {
             PendingTransactionPoll.pendingTransactionsTable.insert(poll);
         }
 
-        void commit(Transaction transaction, Account senderAccount, Account recipientAccount) {
+        void commit(Transaction transaction) {
+            Account senderAccount = Account.getAccount(transaction.getSenderId());
+            Account recipientAccount = Account.getAccount(transaction.getRecipientId());
+
             //TODO: I believe changing the senderAccount confirmed balance should also happen here
             if (recipientAccount != null) {
                 long amount = transaction.getAmountNQT();
@@ -628,8 +631,9 @@ public interface Appendix {
         //TODO: But what about changes to unconfirmed balances, everything that happens in applyUnconfirmed,
         //  and applyAttachmentUnconfirmed? When is this going to be rolled back too?
         //TODO: need a better name, rollback is already used for derived tables rollback
-        void rollback(Transaction transaction, Account senderAccount, Account recipientAccount) {
+        void rollback(Transaction transaction) {
             long transactionId = transaction.getId();
+            Account senderAccount = Account.getAccount(transaction.getSenderId());
 
             PendingTransactionPoll poll = PendingTransactionPoll.getPoll(transactionId);
 
@@ -638,7 +642,7 @@ public interface Appendix {
                 long votingResult = VotePhased.allVotesFromDb(poll);
                 if (votingResult >= poll.getQuorum()) {
                     //TODO: why does rollback do a commit? looks like a workaround for a bug elsewhere, not finding out in time that a commit should have been done?
-                    commit(transaction, senderAccount, recipientAccount);
+                    commit(transaction);
                     return;
                 }
             }

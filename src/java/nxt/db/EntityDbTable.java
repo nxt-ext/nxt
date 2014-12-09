@@ -6,8 +6,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
 
 public abstract class EntityDbTable<T> extends DerivedDbTable {
 
@@ -202,25 +200,6 @@ public abstract class EntityDbTable<T> extends DerivedDbTable {
                 return t;
             }
         });
-    }
-
-    //TODO: this is broken in case of versioned tables, also should use DbClause instead of assuming long value
-    //todo: change resulting type to DbIterator?
-    public List<Long> getManyIdsBy(String targetColumnName, String filterColumnName, long value) {
-        try (Connection con = db.getConnection();
-             PreparedStatement pstmt = con.prepareStatement("SELECT " + targetColumnName + " FROM " + table
-                     + " WHERE " + filterColumnName + " = ? ")) {
-            pstmt.setLong(1, value);
-            List<Long> result = new ArrayList<>();
-            try (ResultSet rs = pstmt.executeQuery()) {
-                while (rs.next()) {
-                    result.add(rs.getLong(targetColumnName));
-                }
-            }
-            return result;
-        } catch (SQLException e) {
-            throw new RuntimeException(e.toString(), e);
-        }
     }
 
     public final DbIterator<T> search(String query, DbClause dbClause, int from, int to) {

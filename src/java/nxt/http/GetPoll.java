@@ -15,13 +15,15 @@ public final class GetPoll extends APIServlet.APIRequestHandler {
     static final GetPoll instance = new GetPoll();
 
     private GetPoll() {
-        super(new APITag[] {APITag.VS}, "poll");
+        super(new APITag[] {APITag.VS}, "includeVoters", "poll");
     }
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) {
 
         String poll = req.getParameter("poll");
+        boolean includeVoters = "true".equalsIgnoreCase(req.getParameter("includeVoters"));
+
         if (poll == null) {
             return MISSING_POLL;
         }
@@ -36,7 +38,6 @@ public final class GetPoll extends APIServlet.APIRequestHandler {
             return INCORRECT_POLL;
         }
 
-        return JSONData.poll(pollData);
+        return JSONData.poll(pollData, includeVoters);
     }
-
 }

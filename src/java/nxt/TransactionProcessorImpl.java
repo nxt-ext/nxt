@@ -51,13 +51,11 @@ final class TransactionProcessorImpl implements TransactionProcessor {
             " AND pending_transaction.latest = TRUE");
     DbIterator<TransactionImpl> transactions = Nxt.getBlockchain().getTransactions(con, pstmt);
     */
-                    //TODO: DbIterators must be closed
-                    DbIterator<Long> idsToRefuse = PendingTransactionPoll.pendingTransactionsTable.finishing(height);
+
+                    List<Long> idsToRefuse = PendingTransactionPoll.pendingTransactionsTable.finishing(height).toList();
                     for (Long transactionId : idsToRefuse) {
                         Transaction transaction = TransactionDb.findTransaction(transactionId);
-                        transaction.getTwoPhased().rollback(transaction,
-                                                            Account.getAccount(transaction.getSenderId()),
-                                                            Account.getAccount(transaction.getRecipientId()));
+                        transaction.getTwoPhased().rollback(transaction);
                     }
                 }
             }

@@ -2,8 +2,6 @@ package nxt;
 
 import nxt.db.*;
 import nxt.util.*;
-import org.json.simple.JSONArray;
-import org.json.simple.parser.JSONParser;
 import java.sql.*;
 import java.util.*;
 
@@ -200,6 +198,10 @@ public final class Poll extends AbstractPoll {
         return pollResultsTable.get(pollResultsDbKeyFactory.newKey(pollId));
     }
 
+    public List<Vote> getVotes(){
+        return Vote.getVotes(this.getId(), 0, -1).toList();
+    }
+
     public long getId() {
         return id;
     }
@@ -233,10 +235,6 @@ public final class Poll extends AbstractPoll {
         return maxRangeValue;
     }
 
-    public List<Long> getVoters() {
-        return Vote.getVoters(this);
-    }
-
     private void calculateAndSavePollResults() {
         List<Pair<String, Long>> results = countResults();
         pollResultsTable.insert(this, results);
@@ -245,8 +243,7 @@ public final class Poll extends AbstractPoll {
     private List<Pair<String,Long>> countResults() {
         final long[] counts = new long[options.length];
 
-        for (long voteId : Vote.getVoteIds(this)) {
-            Vote vote = Vote.getVote(voteId);
+        for (Vote vote : Vote.getVotes(this.getId(), 0, -1).toList()) {
             long[] partialResult = countVote(vote);
 
             if (partialResult != null) {

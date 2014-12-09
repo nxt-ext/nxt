@@ -222,7 +222,7 @@ final class JSONData {
         return json;
     }
 
-    static JSONObject poll(Poll poll) {
+    static JSONObject poll(Poll poll, boolean includeVoters) {
         JSONObject json = new JSONObject();
         json.put("name", poll.getName());
         json.put("description", poll.getDescription());
@@ -244,12 +244,16 @@ final class JSONData {
             json.put("asset", Convert.toUnsignedLong(poll.getAssetId()));
         }
 
-        //TODO: call poll.getVoters() only if needed, add a boolean includeVoters parameter to control that
-        JSONArray voters = new JSONArray();
-        Collections.addAll(voters, poll.getVoters());
-        //TODO: this is wrong, you should not add the voter accountIds as signed longs, but use putAccount on each
-        // to get both the voter accountId as unsigned long, and the voter RS accountId
-        json.put("voters", voters);
+        if(includeVoters){
+            List<Vote> votes = poll.getVotes();
+            JSONArray votersJson = new JSONArray();
+            for(Vote vote : votes){
+                JSONObject voterObject = new JSONObject();
+                putAccount(voterObject, "voter", vote.getVoterId());
+                votersJson.add(voterObject);
+            }
+            json.put("voters", votersJson);
+        }
         json.put("finished", poll.isFinished());
         return json;
     }

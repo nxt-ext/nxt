@@ -191,18 +191,14 @@ public class PendingTransactionPoll extends AbstractPoll {
             pstmt.setLong(1, signer.getId());
             DbUtils.setLimits(2, pstmt, from, to);
 
-            //TODO: DbIterators must be closed
             DbIterator<Long> iterator = new DbIterator<>(con, pstmt, new DbIterator.ResultSetReader<Long>() {
                 @Override
                 public Long get(Connection con, ResultSet rs) throws Exception {
                     return rs.getLong(1);
                 }
             });
-            List<Long> result = new ArrayList<>();
-            while (iterator.hasNext()) {
-                result.add(iterator.next());
-            }
-            return result;
+
+            return iterator.toList();
         } catch (SQLException e) {
             throw new NxtException.StopException(e.toString(), e);
         }

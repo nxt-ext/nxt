@@ -9,6 +9,8 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 import javax.servlet.http.HttpServletRequest;
+import java.util.List;
+
 import static nxt.http.JSONResponses.INCORRECT_POLL;
 import static nxt.http.JSONResponses.MISSING_POLL;
 
@@ -36,12 +38,11 @@ public class GetPollVotes extends APIServlet.APIRequestHandler  {
             return INCORRECT_POLL;
         }
 
-        //TODO: close DbIterators
-        DbIterator<Vote> votes = Vote.getVotes(pollId, firstIndex, lastIndex);
+        List<Vote> votes = Vote.getVotes(pollId, firstIndex, lastIndex).toList();
 
         JSONArray votesJson = new JSONArray();
-        while (votes.hasNext()) {
-            votesJson.add(JSONData.vote(poll, votes.next()));
+        for (Vote vote : votes) {
+            votesJson.add(JSONData.vote(poll, vote));
         }
 
         JSONObject response = new JSONObject();
