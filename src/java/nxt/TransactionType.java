@@ -1231,7 +1231,7 @@ public abstract class TransactionType {
                             + "for dividend payment doesn't exist yet");
                 }
                 if (asset.getAccountId() != transaction.getSenderId() || attachment.getAmountNQTPerQNT() <= 0) {
-                    throw new NxtException.NotValidException("Invalid divident payment sender or amount " + attachment.getJSONObject());
+                    throw new NxtException.NotValidException("Invalid dividend payment sender or amount " + attachment.getJSONObject());
                 }
                 if (attachment.getHeight() > Nxt.getBlockchain().getHeight() || attachment.getHeight() < Nxt.getBlockchain().getHeight() - Constants.MAX_ROLLBACK) {
                     throw new NxtException.NotCurrentlyValidException("Invalid dividend payment height: " + attachment.getHeight());

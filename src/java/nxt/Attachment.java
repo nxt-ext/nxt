@@ -1070,8 +1070,8 @@ public interface Attachment extends Appendix {
         private final int height;
         private final long amountNQTPerQNT;
 
-        ColoredCoinsDividendPayment(ByteBuffer buffer, byte transactionVersiont) {
-            super(buffer, transactionVersiont);
+        ColoredCoinsDividendPayment(ByteBuffer buffer, byte transactionVersion) {
+            super(buffer, transactionVersion);
             this.assetId = buffer.getLong();
             this.height = buffer.getInt();
             this.amountNQTPerQNT = buffer.getLong();
@@ -1736,14 +1736,14 @@ public interface Attachment extends Appendix {
             this.decimals = ((Long) attachmentData.get("decimals")).byteValue();
         }
 
-        public MonetarySystemCurrencyIssuance(String name, String code, String description, byte type, long initalSupply, long reserveSupply,
+        public MonetarySystemCurrencyIssuance(String name, String code, String description, byte type, long initialSupply, long reserveSupply,
                                               long maxSupply, int issuanceHeight, long minReservePerUnitNQT, byte minDifficulty, byte maxDifficulty,
                                               byte ruleset, byte algorithm, byte decimals) {
             this.name = name;
             this.code = code;
             this.description = description;
             this.type = type;
-            this.initialSupply = initalSupply;
+            this.initialSupply = initialSupply;
             this.reserveSupply = reserveSupply;
             this.maxSupply = maxSupply;
             this.issuanceHeight = issuanceHeight;
