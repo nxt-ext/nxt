@@ -612,7 +612,7 @@ var NRS = (function(NRS, $, undefined) {
 							rows += "<a href='#' class='btn btn-xs btn-default' data-toggle='modal' data-target='#delete_currency_modal' data-currency='" + currencyId + "' data-name='" + name + "' data-code='" + currencyCode + "' " + (currency.accountRS == NRS.accountRS ? "" : "disabled") + " >" + $.t("delete") + "</a> ";
 							rows += "<a href='#' class='btn btn-xs btn-default' data-toggle='modal' data-target='#reserve_currency_modal' data-currency='" + currencyId + "' data-name='" + name + "' data-code='" + currencyCode + "' data-ressupply='" + resSupply + "' data-decimals='" + decimals + "' data-minreserve='" + minReserve + "' " + (currency.issuanceHeight > NRS.lastBlockHeight && NRS.isReservable(currency.type) ? "" : "disabled") + " >" + $.t("reserve") + "</a> ";
 							rows += "<a href='#' class='btn btn-xs btn-default' data-toggle='modal' data-target='#claim_currency_modal' data-currency='" + currencyId + "' data-name='" + name + "' data-code='" + currencyCode + "' data-decimals='" + decimals + "' " + (currency.issuanceHeight <= NRS.lastBlockHeight && NRS.isClaimable(currency.type) ? "" : "disabled") + " >" + $.t("claim") + "</a> ";
-							rows += "<a href='#' class='btn btn-xs btn-default' data-toggle='modal' data-target='#mine_currency_modal' data-currency='" + currencyId + "' data-name='" + name + "' data-code='" + currencyCode + "' " + "' data-decimals='" + decimals + (!NRS.isMintable(currency.type) ? "disabled" : "") + " >" + $.t("mint") + "</a> ";
+							rows += "<a href='#' class='btn btn-xs btn-default' data-toggle='modal' data-target='#mine_currency_modal' data-currency='" + currencyId + "' data-name='" + name + "' data-code='" + currencyCode + "' data-decimals='" + decimals + "' " + (!NRS.isMintable(currency.type) ? "disabled" : "") + " >" + $.t("mint") + "</a> ";
 							rows += "<a href='#' class='btn btn-xs btn-default' data-toggle='modal' data-target='#publish_exchange_offer_modal' data-currency='" + currencyId + "' data-code='" + currencyCode + "' data-decimals='" + currency.decimals + "' " + (!NRS.isExchangeable(currency.type) ? "disabled" : "") + " >" + $.t("publish_exchange_offer") + "</a>"
 							rows += "</td></tr>";
 					}
@@ -1036,11 +1036,12 @@ var NRS = (function(NRS, $, undefined) {
 		var $invoker = $(e.relatedTarget);
 
 		var currency = $invoker.data("currency");
-		var currencyName = $invoker.data("name");
 		var currencyCode = $invoker.data("code");
+		var decimals = $invoker.data("decimals");
 
 		$("#mine_currency_currency").val(currency);
 		$("#mine_currency_code").html(String(currencyCode).escapeHTML());
+		$("#mine_currency_decimals").val(decimals);
 
 	});
 	
@@ -1049,7 +1050,7 @@ var NRS = (function(NRS, $, undefined) {
 		NRS.sendRequest("getMintingTarget", {
 			"code": $("#mine_currency_code").html(),
 			"account": NRS.accountRS,
-			"units": this.value
+			"units": NRS.convertToQNT(this.value, $("#mine_currency_decimals").val())
 		}, function(response) {
 			if (response && !response.errorCode){
 				$("#mine_currency_modal .error_message").hide();
@@ -1062,6 +1063,17 @@ var NRS = (function(NRS, $, undefined) {
 			}
 		})
 	});
+
+		/* Respect decimal positions on claiming a currency */
+	NRS.forms.currencyMint = function ($modal) {
+		var data = NRS.getFormData($modal.find("form:first"));
+		data.units = NRS.convertToQNT(data.units, data.decimals);
+
+		return {
+			"data": data
+		};
+	};
+
 
    return NRS;
 }(NRS || {}, jQuery));
