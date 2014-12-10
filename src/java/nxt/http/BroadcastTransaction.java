@@ -26,7 +26,6 @@ public final class BroadcastTransaction extends APIServlet.APIRequestHandler {
         Transaction transaction = ParameterParser.parseTransaction(transactionBytes, transactionJSON);
         JSONObject response = new JSONObject();
         try {
-            transaction.validate();
             Nxt.getTransactionProcessor().broadcast(transaction);
             response.put("transaction", transaction.getStringId());
             response.put("fullHash", transaction.getFullHash());

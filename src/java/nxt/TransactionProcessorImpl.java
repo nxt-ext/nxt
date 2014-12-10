@@ -290,6 +290,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                 }
                 return;
             }
+            transaction.validate();
             processTransaction(new UnconfirmedTransaction((TransactionImpl) transaction, System.currentTimeMillis()));
             Logger.logDebugMessage("Accepted new transaction " + transaction.getStringId());
             List<Transaction> acceptedTransactions = Collections.singletonList(transaction);
