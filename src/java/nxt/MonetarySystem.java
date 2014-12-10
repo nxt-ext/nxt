@@ -591,6 +591,13 @@ public abstract class MonetarySystem extends TransactionType {
         }
 
         @Override
+        boolean isDuplicate(Transaction transaction, Map<TransactionType, Map<String, Boolean>> duplicates) {
+            Attachment.MonetarySystemCurrencyMinting attachment = (Attachment.MonetarySystemCurrencyMinting) transaction.getAttachment();
+            return super.isDuplicate(transaction, duplicates) ||
+                    TransactionType.isDuplicate(CURRENCY_MINTING, attachment.getCurrencyId() + ":" + transaction.getSenderId(), duplicates, true);
+        }
+
+            @Override
         public boolean canHaveRecipient() {
             return false;
         }
