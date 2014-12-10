@@ -95,7 +95,6 @@ public class MintWorker {
                 break;
             }
             mintingTarget = getMintingTarget(currencyCode, rsAccount, units);
-            counter = (long) mintingTarget.get("counter");
             target = Convert.parseHexString((String) mintingTarget.get("targetBytes"));
             difficulty = (long) mintingTarget.get("difficulty");
         }
