@@ -441,6 +441,9 @@ final class TransactionProcessorImpl implements TransactionProcessor {
             try {
                 TransactionImpl transaction = parseTransaction((JSONObject) transactionData);
                 receivedTransactions.add(transaction);
+                if (TransactionDb.hasTransaction(transaction.getId()) || unconfirmedTransactionTable.get(transaction.getDbKey()) != null) {
+                    continue;
+                }
                 transaction.validate();
                 UnconfirmedTransaction unconfirmedTransaction = new UnconfirmedTransaction(transaction, arrivalTimestamp);
                 processTransaction(unconfirmedTransaction);
