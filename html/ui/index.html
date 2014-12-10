@@ -1412,13 +1412,15 @@
                             <table class="table table-striped" id="exchange_history_table">
                                 <thead>
                                 <tr>
-                                    <th data-i18n="transaction">Transaction</th>
-									<th data-i18n="seller">Seller</th>
-									<th data-i18n="buyer">Buyer</th>
-									<th data-i18n="name">Name</th>
-									<th data-i18n="code">Code</th>
-									<th data-i18n="quantity">Quantity</th>
+                                    <th data-i18n="date">Date</th>
+                                    <th data-i18n="exchange_request">Exchange Request</th>
+                                    <th data-i18n="exchange_offer">Exchange Offer</th>
+                                    <th data-i18n="code">Code</th>
+                                    <th data-i18n="seller">Seller</th>
+                                    <th data-i18n="buyer">Buyer</th>
+									<th data-i18n="units">Units</th>
 									<th data-i18n="rate">Rate</th>
+									<th data-i18n="amount">Amount [NXT]</th>
                                 </tr>
                                 </thead>
                                 <tbody>
@@ -2803,7 +2805,7 @@
                                 </div>
                                 <div class="form-group advanced optional_reserve">
                                     <label for="issue_currency_min_reserve" data-i18n="min_reserve">MINIMUM AMOUNT OF NXT PER WHOLE UNIT NEEDED TO ACTIVATE CURRENCY</label>
-                                    <input name="minReservePerUnitNQT" id="issue_currency_min_reserve" class="form-control" placeholder="Minimum Amount Per Unit" data-i18n="minimum_reserve" tabindex="8" disabled>
+                                    <input name="minReservePerUnitNQT" id="issue_currency_min_reserve" class="form-control" placeholder="Minimum Amount Per Unit" data-i18n="minimum_reserve" tabindex="7" disabled>
                                 </div>
                                 <div class="form-group advanced optional_reserve">
                                     <label for="issue_currency_min_reserve" data-i18n="reserve_supply">UNITS TO RESERVE</label>
@@ -2811,23 +2813,23 @@
                                 </div>
                                 <div class="input-group">
                                     <input type="checkbox" name="type" id="issue_currency_claimable" value="8" />
-                                    <label for="issue_currency_claimable" style="font-weight:normal;" tabindex="7" data-i18n="claimable">Claimable</label>
+                                    <label for="issue_currency_claimable" style="font-weight:normal;" tabindex="9" data-i18n="claimable">Claimable</label>
                                 </div>
                                 <div class="input-group">
                                     <input type="checkbox" name="type" id="issue_currency_mintable"  class="issue_currency_mintable" value="16" />
-                                    <label for="issue_currency_mintable" style="font-weight:normal;" tabindex="8" data-i18n="mintable">Mintable</label>
+                                    <label for="issue_currency_mintable" style="font-weight:normal;" tabindex="10" data-i18n="mintable">Mintable</label>
                                 </div>
                                 <div class="form-group advanced optional_mint">
                                     <label for="issue_currency_min_difficulty"><span data-i18n="min_difficulty">MINIMUM DIFFICULTY</span> <i class="fa fa-question-circle show_popover" data-content="The exponent of the initial difficulty." data-i18n="[data-content]currency_decimals_help" data-container="body" style="color:#4CAA6E" ></i></label>
-                                    <input type="number" name="minDifficulty" id="issue_currency_min_difficulty" class="form-control" min="1" placeholder="Minimum Difficulty" data-i18n="minimum_difficulty" tabindex="9">
+                                    <input type="number" name="minDifficulty" id="issue_currency_min_difficulty" class="form-control" min="1" placeholder="Minimum Difficulty" data-i18n="minimum_difficulty" tabindex="11">
                                 </div>
                                 <div class="form-group advanced optional_mint">
                                     <label for="issue_currency_max_difficulty"><span data-i18n="max_difficulty">MAXIMUM DIFFICULTY</span> <i class="fa fa-question-circle show_popover" data-content="The exponent of the final difficulty." data-i18n="[data-content]currency_decimals_help" data-container="body" style="color:#4CAA6E" ></i></label>
-                                    <input type="number" name="maxDifficulty" id="issue_currency_max_difficulty" class="form-control" min="1" placeholder="Maximum Difficulty" data-i18n="maximum_difficulty" tabindex="10">
+                                    <input type="number" name="maxDifficulty" id="issue_currency_max_difficulty" class="form-control" min="1" placeholder="Maximum Difficulty" data-i18n="maximum_difficulty" tabindex="12">
                                 </div>
                                 <div class="form-group advanced optional_mint">
                                     <label for="issue_currency_algorithm" data-i18n="algorithm">ALGORITHM</label>
-                                    <select name="algorithm" id="issue_currency_algorithm" class="form-control">
+                                    <select name="algorithm" id="issue_currency_algorithm" class="form-control" tabindex="13">
 									  <option value="">Pick an algorithm</option>
 									  <option value="2">SHA256</option>
 									  <option value="3">SHA3</option>
@@ -2837,37 +2839,37 @@
                                 </div>
                                 <div class="input-group">
                                     <input type="checkbox" name="type" id="issue_currency_shuffleable" value="32" />
-                                    <label for="issue_currency_shuffleable" style="font-weight:normal;" tabindex="9" data-i18n="nonshuffleable"> Non-Shuffleable</label>
+                                    <label for="issue_currency_shuffleable" style="font-weight:normal;" tabindex="14" data-i18n="nonshuffleable"> Non-Shuffleable</label>
                                 </div>
                             </div>
                             <div class="row">
                             	<div class="col-xs-4 col-sm-4 col-md-4">
                                     <label for="issue_currency_initial_supply" data-i18n="initial_supply">INITIAL SUPPLY</label>
-                                    <input type="number" name="initialSupply" id="issue_currency_initial_supply" class="form-control" min="0" placeholder="Initial Supply" data-i18n="Initial_supply" tabindex="10">
+                                    <input type="number" name="initialSupply" id="issue_currency_initial_supply" class="form-control" min="0" placeholder="Initial Supply" data-i18n="Initial_supply" tabindex="15">
                                 </div>
 								<div class="col-xs-4 col-sm-4 col-md-4">
 									<div class="form-group">
 									<label for="issue_currency_max_supply" data-i18n="total_supply">TOTAL SUPPLY</label>
-									<input type="number" name="maxSupply" id="issue_currency_max_supply" class="form-control" min="1" placeholder="Total Supply" data-i18n="total_supply" tabindex="11">
+									<input type="number" name="maxSupply" id="issue_currency_max_supply" class="form-control" min="1" placeholder="Total Supply" data-i18n="total_supply" tabindex="16">
 								</div>
 								</div>
 								<div class="col-xs-4 col-sm-4 col-md-4">
 									<div class="form-group">
 										<label for="issue_currency_decimals"><span data-i18n="decimals">DECIMALS</span> <i class="fa fa-question-circle show_popover" data-content="The maximum allowed number of digits after the currency quantity decimal point." data-i18n="[data-content]currency_decimals_help" data-container="body" style="color:#4CAA6E" ></i></label>
-						                <input type="number" name="decimals" id="issue_currency_decimals" class="form-control" min="0" max="8" placeholder="Decimals" data-i18n="decimals" data-default="0" value="0" tabindex="12">
+						                <input type="number" name="decimals" id="issue_currency_decimals" class="form-control" min="0" max="8" placeholder="Decimals" data-i18n="decimals" data-default="0" value="0" tabindex="17">
 									</div>
 								</div>
 							</div>
                             <div class="form-group">
                                 <label for="issue_currency_issuance_height" data-i18n="issuance_height">ISSUANCE HEIGHT</label> <i>Current Height: <span class="nrs_current_block"></span></i>
-                                <input type="number" name="issuanceHeight" id="issue_currency_issuance_height" class="form-control" min="0" placeholder="Issuance Height" data-i18n="issuance_height" tabindex="13" value="0" disabled>
+                                <input type="number" name="issuanceHeight" id="issue_currency_issuance_height" class="form-control" min="0" placeholder="Issuance Height" data-i18n="issuance_height" tabindex="18" value="0" disabled>
                             </div>
                             <div class="row">
 								<div class="col-xs-6 col-sm-6 col-md-6 advanced" data-advanced="6">
 									<div class="form-group">
 										<label for="issue_currency_fee"><span data-i18n="fee">FEE</span> <i class="fa fa-exclamation-circle show_popover" data-content="The fees are the following: 3 Letters - 25000 NXT, 4 Letters - 1000 NXT, 5 Letters - 40 NXT" data-i18n="[data-content]currency_minimum_fee_help" data-container="body" style="color:red"></i></label>
 										<div class="input-group">
-											<input type="text" name="feeNXT" id="issue_currency_fee" class="form-control" placeholder="Fee" min="40" data-default="25000" value="25000" tabindex="6">
+											<input type="text" name="feeNXT" id="issue_currency_fee" class="form-control" placeholder="Fee" min="40" data-default="25000" value="25000" tabindex="19">
 											<span class="input-group-addon">NXT</span>
 										</div>
 									</div>
@@ -2875,29 +2877,29 @@
 								<div class="col-xs-6 col-sm-6 col-md-6 advanced">
 									<div class="form-group">
 										<label for="issue_currency_deadline" data-i18n="deadline_hours">DEADLINE (HOURS)</label>
-										<input type="number" name="deadline" id="issue_currency_deadline" class="form-control" placeholder="Deadline" data-i18n="deadline" min="1" data-default="24" value="24" tabindex="7">
+										<input type="number" name="deadline" id="issue_currency_deadline" class="form-control" placeholder="Deadline" data-i18n="deadline" min="1" data-default="24" value="24" tabindex="20">
 									</div>
 								</div>
 							</div>
 							<div class="form-group secret_phrase">
 								<label for="issue_currency_password" data-i18n="passphrase">PASSPHRASE</label>
-								<input type="password" name="secretPhrase" id="issue_currency_password" class="form-control" placeholder="" tabindex="14">
+								<input type="password" name="secretPhrase" id="issue_currency_password" class="form-control" placeholder="" tabindex="21">
 							</div>
 							<div class="form-group advanced">
 								<label for="issue_currency_referenced_transaction" data-i18n="referenced_transaction_hash">REFERENCED TRANSACTION HASH</label>
-								<input type="text" class="form-control" name="referencedTransactionFullHash" id="issue_currency_referenced_transaction" placeholder="Referenced Transaction Full Hash" data-i18n="referenced_transaction_full_hash" tabindex="6" spellcheck="false" />
+								<input type="text" class="form-control" name="referencedTransactionFullHash" id="issue_currency_referenced_transaction" placeholder="Referenced Transaction Full Hash" data-i18n="referenced_transaction_full_hash" tabindex="22" spellcheck="false" />
 							</div>
 							<div class="form-group advanced" style="margin-bottom:0;">
-								<input type="checkbox" name="doNotBroadcast" id="issue_currency_do_not_broadcast" value="1" /> <label for="issue_currency_do_not_broadcast" style="font-weight:normal;" tabindex="7" data-i18n="do_not_broadcast">Do Not Broadcast</label>
+								<input type="checkbox" name="doNotBroadcast" id="issue_currency_do_not_broadcast" value="1" /> <label for="issue_currency_do_not_broadcast" style="font-weight:normal;" tabindex="23" data-i18n="do_not_broadcast">Do Not Broadcast</label>
 							</div>
                             <div class="form-group advanced">
-                                <input type="checkbox" name="add_note_to_self" id="issue_currency_add_note_to_self" class="add_note_to_self" tabindex="8" /> <label for="issue_currency_add_note_to_self" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_note_to_self">Add Note to Self?</span></label>
+                                <input type="checkbox" name="add_note_to_self" id="issue_currency_add_note_to_self" class="add_note_to_self" tabindex="24" /> <label for="issue_currency_add_note_to_self" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_note_to_self">Add Note to Self?</span></label>
                             </div>
                             <div class="form-group advanced optional_note">
                                 <label for="issue_currency_note_to_self" data-i18n="note_to_self">Note to Self</label>
-                                <textarea class="form-control" id="issue_currency_note_to_self" name="note_to_self" rows="4" tabindex="9"></textarea>
+                                <textarea class="form-control" id="issue_currency_note_to_self" name="note_to_self" rows="4" tabindex="25"></textarea>
                                 <div style="margin-top:3px;">
-                                    <label style="font-weight:normal;color:#666" data-i18n="note_is_encrypted">This note is encrypted.</span></label>
+                                    <label style="font-weight:normal;color:#666" data-i18n="note_is_encrypted">This note is encrypted.</label>
                                 </div>
                             </div>
 							<input type="hidden" name="request_type" value="issueCurrency" />

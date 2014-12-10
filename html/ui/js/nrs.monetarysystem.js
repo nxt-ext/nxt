@@ -285,7 +285,7 @@ var NRS = (function(NRS, $, undefined) {
 							"<td>" +
 								"<a href='#' class='user-info' data-user='" + (exchange.buyerRS == NRS.accountRS ? "You" : exchange.buyerRS) + "'>" + (exchange.buyerRS == NRS.accountRS ? "You" : exchange.buyerRS) + "</a>" +
 							"</td>" +
-							"<td>" + NRS.convertToQNTf(exchange.units, exchange.decimals) + "</td>" +
+							"<td>" + NRS.formatQuantity(exchange.units, exchange.decimals) + "</td>" +
 							"<td>" + NRS.calculateOrderPricePerWholeQNT(exchange.rateNQT, exchange.decimals) + "</td>" +
 							"<td>" + NRS.formatAmount(NRS.calculateOrderTotalNQT(exchange.units, exchange.rateNQT, exchange.decimals)) + "</td>" +
 					  "</tr>";
@@ -319,7 +319,7 @@ var NRS = (function(NRS, $, undefined) {
 							"<td>" +
 								"<a href='#' class='user-info' data-user='" + (exchange.buyerRS == NRS.accountRS ? "You" : exchange.buyerRS) + "'>" + (exchange.buyerRS == NRS.accountRS ? "You" : exchange.buyerRS) + "</a>" +
 							"</td>" +
-							"<td>" + NRS.convertToQNTf(exchange.units, exchange.decimals) + "</td>" +
+							"<td>" + NRS.formatQuantity(exchange.units, exchange.decimals) + "</td>" +
 							"<td>" + NRS.calculateOrderPricePerWholeQNT(exchange.rateNQT, exchange.decimals) + "</td>" +
 							"<td>" + NRS.formatAmount(NRS.calculateOrderTotalNQT(exchange.units, exchange.rateNQT, exchange.decimals)) + "</td>" +
 						"</tr>";
@@ -723,15 +723,21 @@ var NRS = (function(NRS, $, undefined) {
 				for (var i = 0; i < response.exchanges.length; i++) {
 				 	var exchange = response.exchanges[i];
 					rows += "<tr>" +
+						"<td>" + NRS.formatTimestamp(exchange.timestamp) + "</td>" +
 						"<td>" +
 							"<a href='#' data-transaction='" + String(exchange.transaction).escapeHTML() + "'>" + String(exchange.transaction).escapeHTML() + "</a>" +
 						"</td>" +
+						"<td>" +
+							"<a href='#' data-transaction='" + String(exchange.offer).escapeHTML() + "'>" + String(exchange.offer).escapeHTML() + "</a>" +
+						"</td>" +
+						"<td>" +
+							"<a href='#' data-transaction='" + String(exchange.currency).escapeHTML() + "' >" + String(exchange.code).escapeHTML() + "</a>" +
+						"</td>" +
 						"<td>" + (exchange.sellerRS == NRS.accountRS ? "You" : "<a href='#' data-user='" + String(exchange.sellerRS).escapeHTML() + "'>" + String(exchange.sellerRS).escapeHTML() + "</a>") + "</td>" +
 						"<td>" + (exchange.buyerRS == NRS.accountRS ? "You" : "<a href='#' data-user='" + String(exchange.buyerRS).escapeHTML() + "'>" + String(exchange.buyerRS).escapeHTML() + "</a>") + "</td>" +
-						"<td>" + exchange.name + "</td>" +
-						"<td>" + exchange.code + "</td>" +
 						"<td>" + NRS.formatQuantity(exchange.units, exchange.decimals) + "</td>" +
 						"<td>" + NRS.calculateOrderPricePerWholeQNT(exchange.rateNQT, exchange.decimals) + "</td>" +
+						"<td>" + NRS.formatAmount(NRS.calculateOrderTotalNQT(exchange.units, exchange.rateNQT, exchange.decimals)) + "</td>" +
 					"</tr>";
 				}
 				NRS.dataLoaded(rows);
