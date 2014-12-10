@@ -23,6 +23,7 @@ import java.net.URL;
 import java.net.URLEncoder;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -93,6 +94,10 @@ public class MintWorker {
             if (response.get("error") != null || response.get("errorCode") != null) {
                 break;
             }
+            mintingTarget = getMintingTarget(currencyCode, rsAccount, units);
+            counter = (long) mintingTarget.get("counter");
+            target = Convert.parseHexString((String) mintingTarget.get("targetBytes"));
+            difficulty = (long) mintingTarget.get("difficulty");
         }
     }
 
@@ -107,9 +112,9 @@ public class MintWorker {
         long solution = solve(executorService, workersList);
         long computationTime = System.currentTimeMillis() - startTime;
         long hashes = solution - initialNonce;
-        Logger.logDebugMessage("solution nonce %d computed hashes %d rate vs. expected %.2f time %d [KH/Sec] %d",
-                solution, hashes, (float)hashes/(float)difficulty, computationTime, hashes/computationTime);
-        return currencyMint(secretPhrase, currencyCode, initialNonce, units, counter);
+        Logger.logDebugMessage("solution nonce %d computed hashes %d time %d [KH/Sec] %d rate of actual time vs. expected %.2f",
+                solution, hashes, computationTime, hashes/computationTime, (float)hashes/(float)difficulty);
+        return currencyMint(secretPhrase, currencyCode, solution, units, counter);
     }
 
     private long solve(Executor executor, Collection<Callable<Long>> solvers) {
@@ -243,6 +248,10 @@ public class MintWorker {
             while (!Thread.currentThread().isInterrupted()) {
                 byte[] hash = CurrencyMint.getHash(hashFunction, n, currencyId, units, counter, accountId);
                 if (CurrencyMint.meetsTarget(hash, target)) {
+                    Logger.logDebugMessage("%s found solution hash %s nonce %d currencyId %d units %d counter %d accountId %d" +
+                            " hash %s meets target %s",
+                            Thread.currentThread().getName(), hashFunction, n, currencyId, units, counter, accountId,
+                            Arrays.toString(hash), Arrays.toString(target));
                     return n;
                 }
                 n+=poolSize;
