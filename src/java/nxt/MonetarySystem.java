@@ -571,7 +571,7 @@ public abstract class MonetarySystem extends TransactionType {
             }
             long counter = CurrencyMint.getCounter(attachment.getCurrencyId(), transaction.getSenderId());
             if (attachment.getCounter() <= counter) {
-                throw new NxtException.NotValidException(String.format("Counter %d has to be bigger than %d", attachment.getCounter(), counter));
+                throw new NxtException.NotCurrentlyValidException(String.format("Counter %d has to be bigger than %d", attachment.getCounter(), counter));
             }
         }
 
