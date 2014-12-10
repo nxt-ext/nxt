@@ -92,6 +92,7 @@ var NRS = (function(NRS, $, undefined) {
 					peerPort = response[key];
 				}
 			}
+			
 			if (!isTestnet) {
 				$(".testnet_only").hide();
 			} else {
@@ -101,8 +102,19 @@ var NRS = (function(NRS, $, undefined) {
 				testnetWarningDiv.text(warningText);
 				$(".testnet_only, #testnet_login, #testnet_warning").show();
 			}
+			//Check if we reach the MS block on the main net, or if we are on the test net, then show the new features.  Otherwise hide them
+		    if ((!NRS.isTestNet && NRS.lastBlockHeight >= 935000) || NRS.isTestNet) {
+		    	$("#sidebar_monetary_system").show();
+		    	$("#dividend_payment_link").show();
+		    	$('#aliases_table').find('[data-target="#delete_alias_modal"]').show();
+		    }
+		    else {
+		    	$("#sidebar_monetary_system").hide();
+		    	$("#dividend_payment_link").hide();
+		    	$('#aliases_table').find('[data-target="#delete_alias_modal"]').hide();
+		    }
 		});
-
+		
 		if (!NRS.server) {
 			var hostName = window.location.hostname.toLowerCase();
 			NRS.isLocalHost = hostName == "localhost" || hostName == "127.0.0.1" || NRS.isPrivateIP(hostName);
