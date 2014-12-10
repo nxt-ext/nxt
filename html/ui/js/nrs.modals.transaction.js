@@ -3,7 +3,7 @@
  * @depends {nrs.modals.js}
  */
 var NRS = (function(NRS, $, undefined) {
-	$("#transactions_table, #dashboard_transactions_table, #transfer_history_table, #exchange_history_table, #currencies_table").on("click", "a[data-transaction]", function(e) {
+	$("#transactions_table, #dashboard_transactions_table, #transfer_history_table, #exchange_history_table, #currencies_table #exchange_info_table").on("click", "a[data-transaction]", function(e) {
 		e.preventDefault();
 
 		var transactionId = $(this).data("transaction");
@@ -1086,7 +1086,7 @@ var NRS = (function(NRS, $, undefined) {
 			var exchangedUnits = BigInteger.ZERO;
 			var exchangedTotal = BigInteger.ZERO;
 			if (response.exchanges && response.exchanges.length > 0) {
-				rows = "<table class='table table-striped'><thead><tr>" +
+				rows = "<table id='exchange_info_table' class='table table-striped'><thead><tr>" +
 				"<th>" + $.t("Date") + "</th>" +
 				"<th>" + $.t("Units") + "</th>" +
 				"<th>" + $.t("Rate") + "</th>" +
@@ -1097,7 +1097,7 @@ var NRS = (function(NRS, $, undefined) {
 					exchangedUnits = exchangedUnits.add(new BigInteger(exchange.units));
 					exchangedTotal = exchangedTotal.add(new BigInteger(exchange.units).multiply(new BigInteger(exchange.rateNQT)));
 					rows += "<tr>" +
-					"<td><a href='#' onClick='NRS.showTransactionModal(&quot;" + exchange.offer + "&quot;);'>" + NRS.formatTimestamp(exchange.timestamp) + "</a></td>" +
+					"<td><a href='#' data-transaction='" + String(exchange.offer).escapeHTML() + "'>" + NRS.formatTimestamp(exchange.timestamp) + "</a>" +
 					"<td>" + NRS.formatQuantity(exchange.units, exchange.decimals) + "</td>" +
 					"<td>" + NRS.calculateOrderPricePerWholeQNT(exchange.rateNQT, exchange.decimals) + "</td>" +
 					"<td>" + NRS.formatAmount(NRS.calculateOrderTotalNQT(exchange.units, exchange.rateNQT)) +
