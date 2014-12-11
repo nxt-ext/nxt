@@ -1,7 +1,7 @@
 New features:
 
 Monetary System.
-See https://bitbucket.org/JeanLucPicard/nxt/issue/136/monetary-system for a
+See https://bitbucket.org/JeanLucPicard/nxt/issue/205/monetary-system-documenation for a
 detailed description.
 
 Dividend payment transaction. Asset issuers can make a dividend payment to all
