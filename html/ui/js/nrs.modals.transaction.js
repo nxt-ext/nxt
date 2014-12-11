@@ -49,6 +49,15 @@ var NRS = (function(NRS, $, undefined) {
 		}
 		delete transactionDetails.transaction;
 
+		if (!transactionDetails.confirmations) {
+			transactionDetails.confirmations = "/";
+		}
+		if (!transactionDetails.block) {
+			transactionDetails.block = "unconfirmed";
+		}
+		if (transactionDetails.height == 2147483647) {
+			transactionDetails.height = "unknown";
+		}
 		$("#transaction_info_modal_transaction").html(String(transaction.transaction).escapeHTML());
 
 		$("#transaction_info_tab_link").tab("show");
