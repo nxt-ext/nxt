@@ -278,7 +278,9 @@ var NRS = (function(NRS, $, undefined) {
 					for (var i = 0; i < response.exchanges.length; i++) {
 						var exchange = response.exchanges[i];
 						rows += "<tr>" +
-							"<td>" + NRS.formatTimestamp(exchange.timestamp) + "</td>" +
+							"<td>" +
+								"<a href='#' data-transaction='" + String(exchange.transaction).escapeHTML() + "'>" + NRS.formatTimestamp(exchange.timestamp) + "</a>" +
+							"</td>" +
 							"<td>" +
 								"<a href='#' class='user-info' data-user='" + (exchange.sellerRS == NRS.accountRS ? "You" : exchange.sellerRS) + "'>" + (exchange.sellerRS == NRS.accountRS ? "You" : exchange.sellerRS) + "</a>" +
 							"</td>" +
@@ -312,7 +314,9 @@ var NRS = (function(NRS, $, undefined) {
 					for (var i = 0; i < response.exchanges.length; i++) {
 						var exchange = response.exchanges[i];
 						rows += "<tr>" +
-							"<td>" + NRS.formatTimestamp(exchange.timestamp) + "</td>" +
+							"<td>" +
+								"<a href='#' data-transaction='" + String(exchange.transaction).escapeHTML() + "'>" + NRS.formatTimestamp(exchange.timestamp) + "</a>" +
+							"</td>" +
 							"<td>" +
 								"<a href='#' class='user-info' data-user='" + (exchange.sellerRS == NRS.accountRS ? "You" : exchange.sellerRS) + "'>" + (exchange.sellerRS == NRS.accountRS ? "You" : exchange.sellerRS) + "</a>" +
 							"</td>" +
@@ -370,7 +374,7 @@ var NRS = (function(NRS, $, undefined) {
 					var type = (exchangeRequest.type == 5 ? "buy" : (exchangeRequest.type == 6 ? "sell" : exchangeRequest.type));
 					rows += "<tr>" +
 						"<td>" +
-							"<a href='#' onClick='NRS.showTransactionModal(&quot;" + exchangeRequest.transaction + "&quot;);'>" + (exchangeRequest.unconfirmed ? "<strong>Pending</strong>" : NRS.formatTimestamp(exchangeRequest.timestamp)) + "</a>" +
+							"<a href='#' data-transaction='" + String(exchangeRequest.transaction).escapeHTML() + "'>" + NRS.formatTimestamp(exchangeRequest.timestamp) + "</a>" +
 						"</td>" +
 						"<td>" + type + "</td>" +
 						"<td>" + NRS.convertToQNTf(exchangeRequest.units, exchangeRequest.decimals) + "</td>" +
@@ -642,6 +646,16 @@ var NRS = (function(NRS, $, undefined) {
 		NRS.loadPage("currencies");
 	});
 	
+	$("#ms_exchange_history_type").find(".btn").click(function(e) {
+		e.preventDefault();
+		NRS.currenciesTradeHistoryType = $(this).data("type");
+
+		var exchangeHistoryTable = $("#ms_exchanges_history_table");
+		exchangeHistoryTable.find("tbody").empty();
+		exchangeHistoryTable.parent().addClass("data-loading").removeClass("data-empty");
+		NRS.getExchangeHistory($("#currency_id").html(), false);
+	});
+
 	$("body").on("click", "a[data-goto-currency]", function(e) {
 		e.preventDefault();
 
