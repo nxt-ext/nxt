@@ -3,15 +3,19 @@
  * @depends {nrs.modals.js}
  */
 var NRS = (function(NRS, $, undefined) {
-	$("#transactions_table, #dashboard_transactions_table, #transfer_history_table, #exchange_history_table, #currencies_table #exchange_info_table").on("click", "a[data-transaction]", function(e) {
+	$("#transactions_table, #dashboard_transactions_table, #transfer_history_table, #exchange_history_table, #currencies_table, #transaction_info_table").on("click", "a[data-transaction]", function(e) {
 		e.preventDefault();
 
 		var transactionId = $(this).data("transaction");
-
-		NRS.showTransactionModal(transactionId);
+		var infoModal = $('#transaction_info_modal');
+		var isModalVisible = false;
+		if (infoModal && infoModal.data('bs.modal')) {
+			isModalVisible = infoModal.data('bs.modal').isShown;
+		}
+		NRS.showTransactionModal(transactionId, isModalVisible);
 	});
 
-	NRS.showTransactionModal = function(transaction) {
+	NRS.showTransactionModal = function(transaction, isModalVisible) {
 		if (NRS.fetchingModalData) {
 			return;
 		}
@@ -28,14 +32,14 @@ var NRS = (function(NRS, $, undefined) {
 				"transaction": transaction
 			}, function(response, input) {
 				response.transaction = input.transaction;
-				NRS.processTransactionModalData(response);
+				NRS.processTransactionModalData(response, isModalVisible);
 			});
 		} else {
-			NRS.processTransactionModalData(transaction);
+			NRS.processTransactionModalData(transaction, isModalVisible);
 		}
 	}
 
-	NRS.processTransactionModalData = function(transaction) {
+	NRS.processTransactionModalData = function(transaction, isModalVisible) {
 		var async = false;
 
 		var transactionDetails = $.extend({}, transaction);
@@ -927,7 +931,9 @@ var NRS = (function(NRS, $, undefined) {
 						$("#transaction_info_table tbody").append(NRS.createInfoTable(data));
 						$("#transaction_info_table").show();
 
-						$("#transaction_info_modal").modal("show");
+						if (!isModalVisible) {
+							$("#transaction_info_modal").modal("show");
+						}
 						NRS.fetchingModalData = false;
 					});
 					break;
@@ -1086,7 +1092,7 @@ var NRS = (function(NRS, $, undefined) {
 			var exchangedUnits = BigInteger.ZERO;
 			var exchangedTotal = BigInteger.ZERO;
 			if (response.exchanges && response.exchanges.length > 0) {
-				rows = "<table id='exchange_info_table' class='table table-striped'><thead><tr>" +
+				rows = "<table class='table table-striped'><thead><tr>" +
 				"<th>" + $.t("Date") + "</th>" +
 				"<th>" + $.t("Units") + "</th>" +
 				"<th>" + $.t("Rate") + "</th>" +
