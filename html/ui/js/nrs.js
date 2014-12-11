@@ -59,8 +59,12 @@ var NRS = (function(NRS, $, undefined) {
 
 	NRS.pages = {};
 	NRS.incoming = {};
-	
-	NRS.hasLocalStorage = _checkDOMenabled();
+
+	if (!_checkDOMenabled()) {
+		NRS.hasLocalStorage = false;
+	} else {
+   	NRS.hasLocalStorage = true;
+   }
 	
 	NRS.inApp = false;
 	NRS.appVersion = "";
