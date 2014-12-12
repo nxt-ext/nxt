@@ -106,13 +106,8 @@ public final class CurrencyMint {
         if (currencyMint != null && attachment.getCounter() <= currencyMint.getCounter()) {
             return;
         }
-
         Currency currency = Currency.getCurrency(attachment.getCurrencyId());
-        byte[] hash = getHash(currency.getAlgorithm(), attachment.getNonce(), attachment.getCurrencyId(), attachment.getUnits(),
-                attachment.getCounter(), account.getId());
-        byte[] target = getTarget(currency.getMinDifficulty(), currency.getMaxDifficulty(),
-                attachment.getUnits(), currency.getCurrentSupply() - currency.getReserveSupply(), currency.getMaxSupply() - currency.getReserveSupply());
-        if (meetsTarget(hash, target)) {
+        if (meetsTarget(account.getId(), currency, attachment)) {
             if (currencyMint == null) {
                 currencyMint = new CurrencyMint(attachment.getCurrencyId(), account.getId(), attachment.getCounter());
             } else {
@@ -144,6 +139,14 @@ public final class CurrencyMint {
         for (CurrencyMint mint : currencyMints) {
             currencyMintTable.delete(mint);
         }
+    }
+
+    static boolean meetsTarget(long accountId, Currency currency, Attachment.MonetarySystemCurrencyMinting attachment) {
+        byte[] hash = getHash(currency.getAlgorithm(), attachment.getNonce(), attachment.getCurrencyId(), attachment.getUnits(),
+                attachment.getCounter(), accountId);
+        byte[] target = getTarget(currency.getMinDifficulty(), currency.getMaxDifficulty(),
+                attachment.getUnits(), currency.getCurrentSupply() - currency.getReserveSupply(), currency.getMaxSupply() - currency.getReserveSupply());
+        return meetsTarget(hash, target);
     }
 
     public static boolean meetsTarget(byte[] hash, byte[] target) {

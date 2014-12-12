@@ -573,6 +573,9 @@ public abstract class MonetarySystem extends TransactionType {
             if (attachment.getCounter() <= counter) {
                 throw new NxtException.NotCurrentlyValidException(String.format("Counter %d has to be bigger than %d", attachment.getCounter(), counter));
             }
+            if (!CurrencyMint.meetsTarget(transaction.getSenderId(), currency, attachment)) {
+                throw new NxtException.NotCurrentlyValidException(String.format("Hash doesn't meet target %s", attachment.getJSONObject()));
+            }
         }
 
         @Override
