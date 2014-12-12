@@ -1095,6 +1095,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                                 if (!Arrays.equals(blockBytes, BlockImpl.parseBlock(blockJSON).getBytes())) {
                                     throw new NxtException.NotValidException("Block JSON cannot be parsed back to the same block");
                                 }
+                                Map<TransactionType, Map<String, Boolean>> duplicates = new HashMap<>();
                                 for (TransactionImpl transaction : currentBlock.getTransactions()) {
                                     if (!transaction.verifySignature()) {
                                         throw new NxtException.NotValidException("Invalid transaction signature");
@@ -1110,6 +1111,9 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                                         //throw new NxtException.NotValidException("Invalid transaction fork");
                                     }
                                     */
+                                    if (transaction.isDuplicate(duplicates)) {
+                                        throw new NxtException.NotValidException("Transaction is a duplicate: " + transaction.getStringId());
+                                    }
                                     transaction.validate();
                                     byte[] transactionBytes = transaction.getBytes();
                                     if (currentBlock.getHeight() > Constants.NQT_BLOCK
