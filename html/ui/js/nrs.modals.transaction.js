@@ -813,6 +813,7 @@ var NRS = (function(NRS, $, undefined) {
 		} else if (transaction.type == 5) {
 			switch (transaction.subtype) {
 				case 0:
+					var minReservePerUnitNQT = new BigInteger(transaction.attachment.minReservePerUnitNQT).multiply(new BigInteger("" + Math.pow(10, transaction.attachment.decimals)));
 					var data = {
 						"type": $.t("currency_issuance"),
 						"name": transaction.attachment.name,
@@ -824,21 +825,31 @@ var NRS = (function(NRS, $, undefined) {
 						"max_units": [transaction.attachment.maxSupply, transaction.attachment.decimals],
 						"decimals": transaction.attachment.decimals,
 						"issuance_height": transaction.attachment.issuanceHeight,
-						"min_reserve_per_unit_formatted_html": NRS.formatAmount(transaction.attachment.minReservePerUnitNQT) + " NXT",
+						"min_reserve_per_unit_formatted_html": NRS.formatAmount(minReservePerUnitNQT) + " NXT",
 						"minDifficulty": transaction.attachment.minDifficulty,
 						"maxDifficulty": transaction.attachment.maxDifficulty,
 						"algorithm": transaction.attachment.algorithm
 					};
+					NRS.sendRequest("getCurrency", {
+						"currency": transaction.transaction
+					}, function(currency, input) {
+						if (currency.currentSupply) {
+							data["current_units"] = NRS.convertToQNTf(currency.currentSupply, currency.decimals);
+						} else {
+							data["current_units"] = "0";
+						}
+						var currentReservePerUnitNQT = new BigInteger(currency.currentReservePerUnitNQT).multiply(new BigInteger("" + Math.pow(10, currency.decimals)));
+						data["current_reserve_per_unit_formatted_html"] = NRS.formatAmount(currentReservePerUnitNQT) + " NXT";
 
-					if (transaction.sender != NRS.account) {
-						data["sender"] = NRS.getAccountTitle(transaction, "sender");
-					}
+						if (transaction.sender != NRS.account) {
+							data["sender"] = NRS.getAccountTitle(transaction, "sender");
+						}
 
-					$("#transaction_info_callout").html("<a href='#' data-goto-currency='" + String(transaction.attachment.code).escapeHTML() + "'>Click here</a> to view this currency in the Exchange Booth.").show();
+						$("#transaction_info_callout").html("<a href='#' data-goto-currency='" + String(transaction.attachment.code).escapeHTML() + "'>Click here</a> to view this currency in the Exchange Booth.").show();
 
-					$("#transaction_info_table tbody").append(NRS.createInfoTable(data));
-					$("#transaction_info_table").show();
-
+						$("#transaction_info_table tbody").append(NRS.createInfoTable(data));
+						$("#transaction_info_table").show();
+					});
 					break;
 				case 1:
 					async = true;
