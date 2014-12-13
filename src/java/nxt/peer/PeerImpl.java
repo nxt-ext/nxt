@@ -121,6 +121,9 @@ final class PeerImpl implements Peer {
     }
 
     void setVersion(String version) {
+        if (this.version != null && this.version.equals(version)) {
+            return;
+        }
         this.version = version;
         isOldVersion = false;
         if (Nxt.APPLICATION.equals(application)) {
