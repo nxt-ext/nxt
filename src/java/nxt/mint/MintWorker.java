@@ -174,7 +174,7 @@ public class MintWorker {
     private JSONObject getJsonResponse(Map<String, String> params) {
         JSONObject response;
         HttpURLConnection connection = null;
-        String host = Nxt.getStringProperty("nxt.myAddress");
+        String host = Convert.emptyToNull(Nxt.getStringProperty("nxt.mint.serverAddress"));
         if (host == null) {
             try {
                 host = InetAddress.getLocalHost().getHostAddress();
