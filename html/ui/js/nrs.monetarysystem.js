@@ -1003,18 +1003,25 @@ var NRS = (function(NRS, $, undefined) {
 
 		var currency = $invoker.data("currency");
 		var currencyCode = $invoker.data("code");
-		
+
 		NRS.sendRequest("getAccountCurrencies", {
 			"code": currencyCode,
 			"account": NRS.accountRS
-		}, function(response) {
-			var availableUnitsMessage = "None Available";
-			if (response.units && response.units != 0) {
-				availableUnitsMessage = NRS.formatQuantity(response.units, response.decimals);
+		}, function (response) {
+			var availableUnits = "0";
+			if (response.units) {
+				availableUnits = NRS.formatQuantity(response.units, response.decimals);
 			}
-			$("#claimAvailable").html(availableUnitsMessage);
+			$("#claimAvailable").html(availableUnits);
 		});
-		
+
+		NRS.sendRequest("getCurrency", {
+			"currency": currency
+		}, function (response) {
+			var currentReservePerUnitNQT = new BigInteger(response.currentReservePerUnitNQT).multiply(new BigInteger("" + Math.pow(10, response.decimals)));
+			$("#claimRate").html(NRS.formatAmount(currentReservePerUnitNQT) + " [" + currencyCode + "/NXT]");
+		});
+
 		$("#claim_currency_decimals").val($invoker.data("decimals"));
 		$("#claim_currency_currency").val(currency);
 		$("#claim_currency_code").html(String(currencyCode).escapeHTML());
