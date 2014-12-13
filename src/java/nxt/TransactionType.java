@@ -363,7 +363,7 @@ public abstract class TransactionType {
 
                     if (VotePhased.addVote(poll, senderAccount, transaction)) {
                         Transaction pendingTransaction = TransactionDb.findTransaction(pendingTransactionId);
-                        pendingTransaction.getTwoPhased().commit(pendingTransaction, senderAccount, recipientAccount);
+                        pendingTransaction.getTwoPhased().commit(pendingTransaction);
                         PendingTransactionPoll.finishPoll(poll);
                     }
                 }
