@@ -17,4 +17,13 @@ to do a separate getPeer request for each peer.
 
 Allow sending messages with no recipient.
 
+Automatically blacklist peers with version older than 1.2.0.
+
 UI improvements of the API /test page.
+
+Changed nxt-default.properties to enable MVCC by default, to avoid database lock
+timeout errors.
+
+Updated jetty to version 9.2.6. If unpacking on top of a previous installation,
+delete your lib directory first to remove the old jetty libraries.
+

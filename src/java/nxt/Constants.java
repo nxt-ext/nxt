@@ -92,6 +92,8 @@ public final class Constants {
     public static final int LAST_KNOWN_BLOCK = isTestnet ? 80000 : 303000;
     public static final int TWO_PHASED_TRANSACTIONS_BLOCK = isTestnet ? 0 : Integer.MAX_VALUE;
 
+    public static final int[] MIN_VERSION = new int[] {1, 2};
+
     static final long UNCONFIRMED_POOL_DEPOSIT_NQT = (isTestnet ? 50 : 100) * ONE_NXT;
 
     public static final long EPOCH_BEGINNING;
