@@ -5210,6 +5210,7 @@
 							<li class="active" id="user_info_transactions" data-tab="transactions"><a href="#" data-i18n="transactions">Transactions</a></li>
 							<li id="user_info_assets" data-tab="assets"><a href="#" data-i18n="assets">Assets</a></li>
 							<li id="user_info_trade_history" data-tab="trade_history"><a href="#" data-i18n="trade_history">Trade History</a></li>
+                            <li id="user_info_currencies" data-tab="currencies"><a href="#" data-i18n="currencies">Currencies</a></li>
                             <li id="user_info_marketplace" data-tab="marketplace"><a href="#" data-i18n="marketplace">Marketplace</a></li>
 							<li id="user_info_aliases" data-tab="aliases"><a href="#" data-i18n="aliases">Aliases</a></li>
 							<li id="user_info_description" data-tab="description"><a href="#" data-i18n="description">Description</a></li>
@@ -5288,6 +5289,23 @@
                             <div class="data-loading-container"><img src="img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
                             <div class="data-empty-container" style="padding-top:10px" data-i18n="user_no_trade_history">This user has no trade history.</div>
                         </div>
+                        
+                        <div class="data-container data-loading user_info_modal_content" id="user_info_modal_currencies" style="display:none;max-height:350px;overflow:auto;">
+							<table class="table table-striped" id="user_info_modal_currencies_table">
+								<thead>
+							    <tr>
+							        <th data-i18n="code">Code</th>
+							        <th data-i18n="name">Name</th>
+							        <th data-i18n="units">Units</th>
+							    </tr>
+							    </thead>
+							    <tbody>
+							    
+							    </tbody>
+							</table>
+							<div class="data-loading-container"><img src="img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
+							<div class="data-empty-container" style="padding-top:10px" data-i18n="user_no_marketplace_listings">This user has no marketplace listings.</div>
+						</div>
 
 						<div class="data-container data-loading user_info_modal_content" id="user_info_modal_marketplace" style="display:none;max-height:350px;overflow:auto;">
 							<table class="table table-striped" id="user_info_modal_marketplace_table">

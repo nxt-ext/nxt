@@ -337,6 +337,30 @@ var NRS = (function(NRS, $, undefined) {
 			NRS.dataLoadFinished($("#user_info_modal_marketplace_table"));
 		});
 	}
+	
+	NRS.userInfoModal.currencies = function() {
+		NRS.sendRequest("getAccountCurrencies+", {
+			"account": NRS.userInfoModal.user
+		}, function(response) {
+			var rows = "";
+			if (response.accountCurrencies && response.accountCurrencies.length) {
+				for (var i = 0; i < response.accountCurrencies.length; i++) {
+					var currency = response.accountCurrencies[i];
+					var code = String(currency.code).escapeHTML();
+					var decimals = String(currency.decimals).escapeHTML();
+					rows += "<tr>" +
+						"<td>" +
+							"<a href='#' onClick='NRS.goToCurrency(&quot;" + String(currency.code) + "&quot;)' >" + code + "</a>" +
+						"</td>" +
+						"<td>" + currency.name + "</td>" +
+						"<td>" + NRS.formatQuantity(currency.unconfirmedUnits, currency.decimals) + "</td>" +
+					"</tr>";
+				}
+			}
+			$("#user_info_modal_currencies_table tbody").empty().append(rows);
+			NRS.dataLoadFinished($("#user_info_modal_currencies_table"));
+		});
+	}
 
 	NRS.userInfoModal.assets = function() {
 		NRS.sendRequest("getAccount", {
