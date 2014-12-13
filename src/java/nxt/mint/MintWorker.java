@@ -54,6 +54,7 @@ public class MintWorker {
         if (secretPhrase == null) {
             throw new IllegalArgumentException("nxt.mint.secretPhrase not specified");
         }
+        boolean isSubmitted = Nxt.getBooleanProperty("nxt.mint.isSubmitted");
         long accountId = Account.getId(Crypto.getPublicKey(secretPhrase));
         String rsAccount = Convert.rsAccount(accountId);
         JSONObject currency = getCurrency(currencyCode);
@@ -86,11 +87,12 @@ public class MintWorker {
             Logger.logDebugMessage("Thread pool size " + threadPoolSize);
         }
         ExecutorService executorService = Executors.newFixedThreadPool(threadPoolSize);
+        Logger.logInfoMessage("Mint worker started");
         while (true) {
             counter++;
             JSONObject response = mintImpl(currencyCode, secretPhrase, accountId, units, currencyId, algorithm, counter, target,
-                    initialNonce, threadPoolSize, executorService, difficulty);
-            Logger.logDebugMessage("currency mint response:" + response.toJSONString());
+                    initialNonce, threadPoolSize, executorService, difficulty, isSubmitted);
+            Logger.logInfoMessage("currency mint response:" + response.toJSONString());
             if (response.get("error") != null || response.get("errorCode") != null) {
                 break;
             }
@@ -101,7 +103,7 @@ public class MintWorker {
     }
 
     private JSONObject mintImpl(String currencyCode, String secretPhrase, long accountId, long units, long currencyId, byte algorithm,
-                                long counter, byte[] target, long initialNonce, int threadPoolSize, ExecutorService executorService, long difficulty) {
+                                long counter, byte[] target, long initialNonce, int threadPoolSize, ExecutorService executorService, long difficulty, boolean isSubmitted) {
         long startTime = System.currentTimeMillis();
         List<Callable<Long>> workersList = new ArrayList<>();
         for (int i=0; i < threadPoolSize; i++) {
@@ -111,9 +113,16 @@ public class MintWorker {
         long solution = solve(executorService, workersList);
         long computationTime = System.currentTimeMillis() - startTime;
         long hashes = solution - initialNonce;
-        Logger.logDebugMessage("solution nonce %d computed hashes %d time %d [KH/Sec] %d rate of actual time vs. expected %.2f",
-                solution, hashes, computationTime, hashes/computationTime, (float)hashes/(float)difficulty);
-        return currencyMint(secretPhrase, currencyCode, solution, units, counter);
+        Logger.logInfoMessage("solution nonce %d computed hashes %d time [sec] %.2f hash rate [KH/Sec] %d actual time vs. expected %.2f is submitted %b",
+                solution, hashes, (float) computationTime / 1000, hashes / computationTime, (float) hashes / (float) difficulty, isSubmitted);
+        JSONObject response;
+        if (isSubmitted) {
+            response = currencyMint(secretPhrase, currencyCode, solution, units, counter);
+        } else {
+            response = new JSONObject();
+            response.put("message", "nxt.mint.isSubmitted=false therefore currency mint transaction is not submitted");
+        }
+        return response;
     }
 
     private long solve(Executor executor, Collection<Callable<Long>> solvers) {
@@ -138,7 +147,7 @@ public class MintWorker {
         params.put("requestType", "currencyMint");
         params.put("secretPhrase", secretPhrase);
         params.put("feeNQT", Long.toString(Constants.ONE_NXT));
-        params.put("deadline", Integer.toString(1440));
+        params.put("deadline", Integer.toString(10));
         params.put("code", currencyCode);
         params.put("nonce", Long.toString(nonce));
         params.put("units", Long.toString(units));
