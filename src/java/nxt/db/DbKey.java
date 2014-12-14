@@ -162,7 +162,7 @@ public interface DbKey {
 
         @Override
         public boolean equals(Object o) {
-            return o instanceof StringKey && id != null ? id.equals(((StringKey)o).id) : ((StringKey)o).id == null;
+            return o instanceof StringKey && (id != null ? id.equals(((StringKey)o).id) : ((StringKey)o).id == null);
         }
 
         @Override

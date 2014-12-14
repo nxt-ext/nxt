@@ -123,6 +123,7 @@ final class JSONData {
         json.put("payloadLength", block.getPayloadLength());
         json.put("version", block.getVersion());
         json.put("baseTarget", Convert.toUnsignedLong(block.getBaseTarget()));
+        json.put("cumulativeDifficulty", block.getCumulativeDifficulty().toString());
         if (block.getPreviousBlockId() != 0) {
             json.put("previousBlock", Convert.toUnsignedLong(block.getPreviousBlockId()));
         }
@@ -165,8 +166,8 @@ final class JSONData {
         json.put("delisted", goods.isDelisted());
         json.put("timestamp", goods.getTimestamp());
         if (includeCounts) {
-            json.put("numberOfPurchases", DigitalGoodsStore.getGoodsPurchaseCount(goods.getId(), false));
-            json.put("numberOfPublicFeedbacks", DigitalGoodsStore.getGoodsPurchaseCount(goods.getId(), true));
+            json.put("numberOfPurchases", DigitalGoodsStore.Purchase.getGoodsPurchaseCount(goods.getId(), false, true));
+            json.put("numberOfPublicFeedbacks", DigitalGoodsStore.Purchase.getGoodsPurchaseCount(goods.getId(), true, true));
         }
         return json;
     }
@@ -200,6 +201,7 @@ final class JSONData {
 
     static JSONObject peer(Peer peer) {
         JSONObject json = new JSONObject();
+        json.put("address", peer.getPeerAddress());
         json.put("state", peer.getState().ordinal());
         json.put("announcedAddress", peer.getAnnouncedAddress());
         json.put("shareAddress", peer.shareAddress());

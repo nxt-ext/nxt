@@ -18,7 +18,7 @@ public final class SignTransaction extends APIServlet.APIRequestHandler {
     static final SignTransaction instance = new SignTransaction();
 
     private SignTransaction() {
-        super(new APITag[] {APITag.TRANSACTIONS}, "unsignedTransactionBytes", "unsignedTransactionJSON", "secretPhrase");
+        super(new APITag[] {APITag.TRANSACTIONS}, "unsignedTransactionBytes", "unsignedTransactionJSON", "secretPhrase", "validate");
     }
 
     @Override
@@ -33,9 +33,13 @@ public final class SignTransaction extends APIServlet.APIRequestHandler {
             return MISSING_SECRET_PHRASE;
         }
 
+        boolean validate = !"false".equalsIgnoreCase(req.getParameter("validate"));
+
         JSONObject response = new JSONObject();
         try {
-            transaction.validate();
+            if (validate) {
+                transaction.validate();
+            }
             if (transaction.getSignature() != null) {
                 response.put("errorCode", 4);
                 response.put("errorDescription", "Incorrect unsigned transaction - already signed");
