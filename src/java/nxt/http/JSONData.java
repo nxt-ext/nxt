@@ -11,6 +11,7 @@ import nxt.Currency;
 import nxt.CurrencyExchangeOffer;
 import nxt.CurrencyFounder;
 import nxt.CurrencyTransfer;
+import nxt.CurrencyType;
 import nxt.DigitalGoodsStore;
 import nxt.Exchange;
 import nxt.Nxt;
@@ -105,6 +106,13 @@ final class JSONData {
             json.put("numberOfExchanges", Exchange.getExchangeCount(currency.getId()));
             json.put("numberOfTransfers", CurrencyTransfer.getTransferCount(currency.getId()));
         }
+        JSONArray types = new JSONArray();
+        for (CurrencyType type : CurrencyType.values()) {
+            if (currency.is(type)) {
+                types.add(type.toString());
+            }
+        }
+        json.put("types", types);
         return json;
     }
 
