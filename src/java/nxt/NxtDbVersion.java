@@ -539,6 +539,8 @@ class NxtDbVersion extends DbVersion {
             case 190:
                 apply("CREATE INDEX IF NOT EXISTS currency_creation_height_idx ON currency (creation_height DESC)");
             case 191:
+                apply("ALTER TABLE currency_mint DROP COLUMN IF EXISTS submission_height");
+            case 192:
                 return;
             default:
                 throw new RuntimeException("Blockchain database inconsistent with code, probably trying to run older code on newer database");

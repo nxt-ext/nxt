@@ -53,14 +53,12 @@ public final class CurrencyMint {
     private final long currencyId;
     private final long accountId;
     private long counter;
-    private final int submission_height;
 
     private CurrencyMint(long currencyId, long accountId, long counter) {
         this.currencyId = currencyId;
         this.accountId = accountId;
         this.dbKey = currencyMintDbKeyFactory.newKey(this.currencyId, this.accountId);
         this.counter = counter;
-        this.submission_height = Nxt.getBlockchain().getHeight();
     }
 
     private CurrencyMint(ResultSet rs) throws SQLException {
@@ -68,17 +66,15 @@ public final class CurrencyMint {
         this.accountId = rs.getLong("account_id");
         this.dbKey = currencyMintDbKeyFactory.newKey(this.currencyId, this.accountId);
         this.counter = rs.getLong("counter");
-        this.submission_height = rs.getInt("submission_height");
     }
 
     private void save(Connection con) throws SQLException {
-        try (PreparedStatement pstmt = con.prepareStatement("MERGE INTO currency_mint (currency_id, account_id, counter, submission_height, height, latest) "
+        try (PreparedStatement pstmt = con.prepareStatement("MERGE INTO currency_mint (currency_id, account_id, counter, height, latest) "
                 + "KEY (currency_id, account_id, height) VALUES (?, ?, ?, ?, ?, TRUE)")) {
             int i = 0;
             pstmt.setLong(++i, this.getCurrencyId());
             pstmt.setLong(++i, this.getAccountId());
             pstmt.setLong(++i, this.getCounter());
-            pstmt.setInt(++i, this.getHeight());
             pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
             pstmt.executeUpdate();
         }
@@ -96,11 +92,6 @@ public final class CurrencyMint {
         return counter;
     }
 
-    public int getHeight() {
-        return submission_height;
-    }
-
-    
     static void mintCurrency(final Account account, final Attachment.MonetarySystemCurrencyMinting attachment) {
         CurrencyMint currencyMint = currencyMintTable.get(currencyMintDbKeyFactory.newKey(attachment.getCurrencyId(), account.getId()));
         if (currencyMint != null && attachment.getCounter() <= currencyMint.getCounter()) {
