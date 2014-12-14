@@ -951,5 +951,16 @@
     "delete_currency": "Delete Currency",
     "success_buy_order_currency": "The buy currency order has been submitted.",
     "success_sell_order_currency": "The sell currency order has been submitted.",
+    "currency_type": "Type Bitmask",
+    "initial_units": "Initial Units Supply",
+    "reserve_units": "Reserve Supply (including initial)",
+    "max_units": "Maximal Units Supply",
+    "issuance_height": "Activation Height",
+    "min_reserve_per_unit": "Minimal Reserve Per Unit",
+    "min_difficulty": "Minimum Difficulty",
+    "max_difficulty": "Maximum Difficulty",
+    "algorithm": "Algorithm",
+    "current_units": "Current Units Supply",
+    "current_reserve_per_unit": "Current Reserve Per Unit",
     "": ""
 }
