@@ -350,7 +350,7 @@ var NRS = (function(NRS, $, undefined) {
 					var decimals = String(currency.decimals).escapeHTML();
 					rows += "<tr>" +
 						"<td>" +
-							"<a href='#' onClick='NRS.goToCurrency(&quot;" + String(currency.code) + "&quot;)' >" + code + "</a>" +
+							"<a href='#' data-transaction='" + String(currency.currency).escapeHTML() + "' >" + code + "</a>" +
 						"</td>" +
 						"<td>" + currency.name + "</td>" +
 						"<td>" + NRS.formatQuantity(currency.unconfirmedUnits, currency.decimals) + "</td>" +
