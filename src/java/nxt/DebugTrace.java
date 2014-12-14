@@ -332,7 +332,7 @@ public final class DebugTrace {
         Map<String,String> map = getValues(currency.getAccountId(), false);
         map.put("currency", Convert.toUnsignedLong(currency.getId()));
         map.put("crowdfunding", String.valueOf(currency.getReserveSupply()));
-        map.put("currency units", String.valueOf(currency.getReserveSupply() - foundersTotal));
+        map.put("currency units", String.valueOf(currency.getReserveSupply() - currency.getCurrentSupply() - foundersTotal));
         if (!currency.is(CurrencyType.CLAIMABLE)) {
             map.put("currency cost", String.valueOf(Convert.safeMultiply(currency.getReserveSupply(), currency.getCurrentReservePerUnitNQT())));
         }
