@@ -95,6 +95,7 @@ final class JSONData {
         json.put("currentSupply", String.valueOf(currency.getCurrentSupply()));
         json.put("reserveSupply", String.valueOf(currency.getReserveSupply()));
         json.put("maxSupply", String.valueOf(currency.getMaxSupply()));
+        json.put("creationHeight", currency.getCreationHeight());
         json.put("issuanceHeight", currency.getIssuanceHeight());
         json.put("minReservePerUnitNQT", String.valueOf(currency.getMinReservePerUnitNQT()));
         json.put("currentReservePerUnitNQT", String.valueOf(currency.getCurrentReservePerUnitNQT()));

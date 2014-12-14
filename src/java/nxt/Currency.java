@@ -43,6 +43,11 @@ public final class Currency {
             currency.save(con);
         }
 
+        @Override
+        public String defaultSort() {
+            return " ORDER BY creation_height DESC ";
+        }
+
     };
 
     private static final Listeners<Currency,Event> listeners = new Listeners<>();
@@ -80,7 +85,7 @@ public final class Currency {
     }
 
     public static DbIterator<Currency> searchCurrencies(String query, int from, int to) {
-        return currencyTable.search(query, DbClause.EMPTY_CLAUSE, from, to, " ORDER BY ft.score DESC, currency.height DESC ");
+        return currencyTable.search(query, DbClause.EMPTY_CLAUSE, from, to, " ORDER BY ft.score DESC, currency.creation_height DESC ");
     }
 
     static void addCurrency(Transaction transaction, Attachment.MonetarySystemCurrencyIssuance attachment) {
@@ -116,6 +121,7 @@ public final class Currency {
     private final int type;
     private final long maxSupply;
     private final long reserveSupply;
+    private final int creationHeight;
     private final int issuanceHeight;
     private final long minReservePerUnitNQT;
     private final byte minDifficulty;
@@ -138,6 +144,7 @@ public final class Currency {
         this.currentSupply = attachment.getInitialSupply();
         this.reserveSupply = attachment.getReserveSupply();
         this.maxSupply = attachment.getMaxSupply();
+        this.creationHeight = transaction.getHeight();
         this.issuanceHeight = attachment.getIssuanceHeight();
         this.minReservePerUnitNQT = attachment.getMinReservePerUnitNQT();
         this.minDifficulty = attachment.getMinDifficulty();
@@ -159,6 +166,7 @@ public final class Currency {
         this.currentSupply = rs.getLong("current_supply");
         this.reserveSupply = rs.getLong("reserve_supply");
         this.maxSupply = rs.getLong("max_supply");
+        this.creationHeight = rs.getInt("creation_height");
         this.issuanceHeight = rs.getInt("issuance_height");
         this.minReservePerUnitNQT = rs.getLong("min_reserve_per_unit_nqt");
         this.minDifficulty = rs.getByte("min_difficulty");
@@ -171,9 +179,9 @@ public final class Currency {
 
     private void save(Connection con) throws SQLException {
         try (PreparedStatement pstmt = con.prepareStatement("MERGE INTO currency (id, account_id, name, code, "
-                + "description, type, current_supply, reserve_supply, max_supply, issuance_height, min_reserve_per_unit_nqt, "
+                + "description, type, current_supply, reserve_supply, max_supply, creation_height, issuance_height, min_reserve_per_unit_nqt, "
                 + "min_difficulty, max_difficulty, ruleset, algorithm, decimals, current_reserve_per_unit_nqt, height, latest) "
-                + "KEY (id, height) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, TRUE)")) {
+                + "KEY (id, height) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, TRUE)")) {
             int i = 0;
             pstmt.setLong(++i, this.getId());
             pstmt.setLong(++i, this.getAccountId());
@@ -184,6 +192,7 @@ public final class Currency {
             pstmt.setLong(++i, this.getCurrentSupply());
             pstmt.setLong(++i, this.getReserveSupply());
             pstmt.setLong(++i, this.getMaxSupply());
+            pstmt.setInt(++i, this.getCreationHeight());
             pstmt.setInt(++i, this.getIssuanceHeight());
             pstmt.setLong(++i, this.getMinReservePerUnitNQT());
             pstmt.setByte(++i, this.getMinDifficulty());
@@ -231,6 +240,10 @@ public final class Currency {
 
     public long getMaxSupply() {
         return maxSupply;
+    }
+
+    public int getCreationHeight() {
+        return creationHeight;
     }
 
     public int getIssuanceHeight() {

@@ -531,6 +531,14 @@ class NxtDbVersion extends DbVersion {
                 BlockchainProcessorImpl.getInstance().scheduleScan(0, false);
                 apply(null);
             case 187:
+                apply("ALTER TABLE currency ADD COLUMN IF NOT EXISTS creation_height INT");
+            case 188:
+                apply("UPDATE currency SET creation_height = SELECT height FROM transaction WHERE currency.id = transaction.id");
+            case 189:
+                apply("ALTER TABLE currency ALTER COLUMN creation_height SET NOT NULL");
+            case 190:
+                apply("CREATE INDEX IF NOT EXISTS currency_creation_height_idx ON currency (creation_height DESC)");
+            case 191:
                 return;
             default:
                 throw new RuntimeException("Blockchain database inconsistent with code, probably trying to run older code on newer database");
