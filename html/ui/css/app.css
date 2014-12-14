@@ -2583,6 +2583,10 @@ tr.tentative td {
 	background-color: #c4e1ec !important;
 }
 
+tr.tentative-allow-links td {
+	font-style: italic !important;
+}
+
 .tentative a {
 	pointer-events: none;
 	cursor: default;
@@ -2592,6 +2596,7 @@ tr.tentative td {
 	pointer-events:auto !important;
 	cursor:pointer !important;
 	color:#3c8dbc !important;
+    font-style: italic !important;
 }
 tr.tentative-crossed td {
     position: relative;
