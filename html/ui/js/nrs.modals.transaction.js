@@ -822,7 +822,7 @@ var NRS = (function(NRS, $, undefined) {
 						"currency_type": transaction.attachment.type,
 						"description": transaction.attachment.description,
 						"initial_units": [transaction.attachment.initialSupply, transaction.attachment.decimals],
-						"reserve_units": [transaction.attachment.reserveSupply, transaction.attachment.decimals],
+						"pre_activation_units": [transaction.attachment.reserveSupply, transaction.attachment.decimals],
 						"max_units": [transaction.attachment.maxSupply, transaction.attachment.decimals],
 						"decimals": transaction.attachment.decimals,
 						"issuance_height": transaction.attachment.issuanceHeight,
@@ -859,12 +859,13 @@ var NRS = (function(NRS, $, undefined) {
 						"currency": transaction.attachment.currency
 					}, function(currency, input) {
 						var amountPerUnitNQT = new BigInteger(transaction.attachment.amountPerUnitNQT).multiply(new BigInteger("" + Math.pow(10, currency.decimals)));
+						var resSupply = currency.reserveSupply - currency.initialSupply;
 						var data = {
 							"type": $.t("reserve_increase"),
 							"code": currency.code,
-							"reserve_units": [currency.reserveSupply, currency.decimals],
+							"reserve_units": [resSupply, currency.decimals],
 							"amount_per_unit_formatted_html": NRS.formatAmount(amountPerUnitNQT) + " NXT",
-							"reserved_amount_formatted_html": NRS.formatAmount(NRS.calculateOrderTotalNQT(amountPerUnitNQT, NRS.convertToQNTf(currency.reserveSupply, currency.decimals))) + " NXT"
+							"reserved_amount_formatted_html": NRS.formatAmount(NRS.calculateOrderTotalNQT(amountPerUnitNQT, NRS.convertToQNTf(resSupply, currency.decimals))) + " NXT"
 						};
 
 						data["sender"] = NRS.getAccountTitle(transaction, "sender");

@@ -89,7 +89,7 @@ var NRS = (function(NRS, $, undefined) {
 					var foundersLink = $("#view_currency_founders_link");
 					foundersLink.data("currency", response.currency);
 					foundersLink.data("code", response.code);
-					foundersLink.data("resSupply", response.reserveSupply);
+					foundersLink.data("resSupply", String(response.reserveSupply - response.initialSupply));
 					foundersLink.data("decimals", response.decimals);
 					foundersLink.data("minReservePerUnitNQT", response.minReservePerUnitNQT);
 					$('#currency_founders_link').show();
