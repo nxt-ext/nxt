@@ -123,6 +123,7 @@ final class JSONData {
         json.put("payloadLength", block.getPayloadLength());
         json.put("version", block.getVersion());
         json.put("baseTarget", Convert.toUnsignedLong(block.getBaseTarget()));
+        json.put("cumulativeDifficulty", block.getCumulativeDifficulty().toString());
         if (block.getPreviousBlockId() != 0) {
             json.put("previousBlock", Convert.toUnsignedLong(block.getPreviousBlockId()));
         }

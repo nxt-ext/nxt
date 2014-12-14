@@ -15,6 +15,8 @@ Increased default purchase delivery deadline to 168 hours (1 week).
 Include full peer info in getPeers API if includePeerInfo=true, to avoid having
 to do a separate getPeer request for each peer.
 
+Include cumulativeDifficulty in the block JSON.
+
 Allow transaction signing in signTransaction to skip the validation of the
 transaction bytes being signed, if an optional validate=false parameter is added.
 This would be useful when signing transaction bytes on a machine that doesn't have
