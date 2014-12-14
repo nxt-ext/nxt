@@ -528,7 +528,6 @@ class NxtDbVersion extends DbVersion {
             case 185:
                 apply("INSERT INTO scan (rescan, height, validate) VALUES (false, 0, false)");
             case 186:
-                BlockchainProcessorImpl.getInstance().scheduleScan(0, false);
                 apply(null);
             case 187:
                 apply("ALTER TABLE currency ADD COLUMN IF NOT EXISTS creation_height INT");
@@ -541,6 +540,11 @@ class NxtDbVersion extends DbVersion {
             case 191:
                 apply("ALTER TABLE currency_mint DROP COLUMN IF EXISTS submission_height");
             case 192:
+                apply("ALTER TABLE currency ADD COLUMN IF NOT EXISTS initial_supply BIGINT NOT NULL DEFAULT 0");
+            case 193:
+                BlockchainProcessorImpl.getInstance().scheduleScan(0, false);
+                apply(null);
+            case 194:
                 return;
             default:
                 throw new RuntimeException("Blockchain database inconsistent with code, probably trying to run older code on newer database");

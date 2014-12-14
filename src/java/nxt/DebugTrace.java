@@ -312,7 +312,7 @@ public final class DebugTrace {
     private void crowdfunding(Currency currency) {
         long totalAmountPerUnit = 0;
         long foundersTotal = 0;
-        final long remainingSupply = currency.getReserveSupply() - currency.getCurrentSupply();
+        final long remainingSupply = currency.getReserveSupply() - currency.getInitialSupply();
         List<CurrencyFounder> currencyFounders = new ArrayList<>();
         try (DbIterator<CurrencyFounder> founders = CurrencyFounder.getCurrencyFounders(currency.getId(), 0, Integer.MAX_VALUE)) {
             for (CurrencyFounder founder : founders) {
@@ -332,7 +332,7 @@ public final class DebugTrace {
         Map<String,String> map = getValues(currency.getAccountId(), false);
         map.put("currency", Convert.toUnsignedLong(currency.getId()));
         map.put("crowdfunding", String.valueOf(currency.getReserveSupply()));
-        map.put("currency units", String.valueOf(currency.getReserveSupply() - currency.getCurrentSupply() - foundersTotal));
+        map.put("currency units", String.valueOf(remainingSupply - foundersTotal));
         if (!currency.is(CurrencyType.CLAIMABLE)) {
             map.put("currency cost", String.valueOf(Convert.safeMultiply(currency.getReserveSupply(), currency.getCurrentReservePerUnitNQT())));
         }
@@ -352,7 +352,7 @@ public final class DebugTrace {
         }
         Map<String,String> map = getValues(currency.getAccountId(), false);
         map.put("currency", Convert.toUnsignedLong(currency.getId()));
-        map.put("currency units", String.valueOf(-currency.getCurrentSupply()));
+        map.put("currency units", String.valueOf(-currency.getInitialSupply()));
         map.put("event", "undo crowdfunding");
         log(map);
     }

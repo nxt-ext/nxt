@@ -129,6 +129,7 @@ public final class Currency {
     private final byte ruleset;
     private final byte algorithm;
     private final byte decimals;
+    private final long initialSupply;
     private long currentSupply;
 
     private long currentReservePerUnitNQT;
@@ -141,6 +142,7 @@ public final class Currency {
         this.code = attachment.getCode();
         this.description = attachment.getDescription();
         this.type = attachment.getType();
+        this.initialSupply = attachment.getInitialSupply();
         this.currentSupply = attachment.getInitialSupply();
         this.reserveSupply = attachment.getReserveSupply();
         this.maxSupply = attachment.getMaxSupply();
@@ -163,6 +165,7 @@ public final class Currency {
         this.code = rs.getString("code");
         this.description = rs.getString("description");
         this.type = rs.getInt("type");
+        this.initialSupply = rs.getLong("initial_supply");
         this.currentSupply = rs.getLong("current_supply");
         this.reserveSupply = rs.getLong("reserve_supply");
         this.maxSupply = rs.getLong("max_supply");
@@ -179,9 +182,9 @@ public final class Currency {
 
     private void save(Connection con) throws SQLException {
         try (PreparedStatement pstmt = con.prepareStatement("MERGE INTO currency (id, account_id, name, code, "
-                + "description, type, current_supply, reserve_supply, max_supply, creation_height, issuance_height, min_reserve_per_unit_nqt, "
+                + "description, type, initial_supply, current_supply, reserve_supply, max_supply, creation_height, issuance_height, min_reserve_per_unit_nqt, "
                 + "min_difficulty, max_difficulty, ruleset, algorithm, decimals, current_reserve_per_unit_nqt, height, latest) "
-                + "KEY (id, height) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, TRUE)")) {
+                + "KEY (id, height) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, TRUE)")) {
             int i = 0;
             pstmt.setLong(++i, this.getId());
             pstmt.setLong(++i, this.getAccountId());
@@ -189,6 +192,7 @@ public final class Currency {
             pstmt.setString(++i, this.getCode());
             pstmt.setString(++i, this.getDescription());
             pstmt.setInt(++i, this.getType());
+            pstmt.setLong(++i, this.getInitialSupply());
             pstmt.setLong(++i, this.getCurrentSupply());
             pstmt.setLong(++i, this.getReserveSupply());
             pstmt.setLong(++i, this.getMaxSupply());
@@ -228,6 +232,10 @@ public final class Currency {
 
     public int getType() {
         return type;
+    }
+
+    public long getInitialSupply() {
+        return initialSupply;
     }
 
     public long getCurrentSupply() {
@@ -408,14 +416,14 @@ public final class Currency {
                     Account.getAccount(founder.getAccountId()).addToBalanceAndUnconfirmedBalanceNQT(Convert.safeMultiply(currency.getReserveSupply(), founder.getAmountPerUnitNQT()));
                 }
             }
-            Account.getAccount(currency.getAccountId()).addToCurrencyAndUnconfirmedCurrencyUnits(currency.getId(), - currency.getCurrentSupply());
+            Account.getAccount(currency.getAccountId()).addToCurrencyAndUnconfirmedCurrencyUnits(currency.getId(), - currency.getInitialSupply());
             currencyTable.delete(currency);
             CurrencyFounder.remove(currency.getId());
         }
 
         private void distributeCurrency(Currency currency) {
             long totalAmountPerUnit = 0;
-            final long remainingSupply = currency.getReserveSupply() - currency.getCurrentSupply();
+            final long remainingSupply = currency.getReserveSupply() - currency.getInitialSupply();
             List<CurrencyFounder> currencyFounders = new ArrayList<>();
             try (DbIterator<CurrencyFounder> founders = CurrencyFounder.getCurrencyFounders(currency.getId(), 0, Integer.MAX_VALUE)) {
                 for (CurrencyFounder founder : founders) {
