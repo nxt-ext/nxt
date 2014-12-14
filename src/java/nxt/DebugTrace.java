@@ -655,10 +655,12 @@ public final class DebugTrace {
                 return Collections.emptyMap();
             }
             Attachment.MonetarySystemCurrencyMinting currencyMinting = (Attachment.MonetarySystemCurrencyMinting) attachment;
-            map.put("currency", Convert.toUnsignedLong(currencyMinting.getCurrencyId()));
-            long units = currencyMinting.getUnits();
-            map.put("currency units", String.valueOf(units));
-            map.put("event", "currency mint");
+            if (CurrencyMint.meetsTarget(accountId, Currency.getCurrency(currencyMinting.getCurrencyId()), currencyMinting)) {
+                map.put("currency", Convert.toUnsignedLong(currencyMinting.getCurrencyId()));
+                long units = currencyMinting.getUnits();
+                map.put("currency units", String.valueOf(units));
+                map.put("event", "currency mint");
+            }
         } else {
             return Collections.emptyMap();
         }
