@@ -539,11 +539,12 @@ var NRS = (function(NRS, $, undefined) {
 					var rows = "";
 					for (var i = 0; i < response.accountCurrencies.length; i++) {
 						var currency = response.accountCurrencies[i];
+						var currencyId = String(currency.currency).escapeHTML();
 						var code = String(currency.code).escapeHTML();
 						var decimals = String(currency.decimals).escapeHTML();
 						rows += "<tr>" +
 							"<td>" +
-								"<a href='#' onClick='NRS.goToCurrency(&quot;" + String(currency.code) + "&quot;)' >" + code + "</a>" +
+								"<a href='#' data-transaction='" + currencyId + "' >" + code + "</a>" +
 							"</td>" +
 							"<td>" + currency.name + "</td>" +
 							"<td>" + NRS.formatQuantity(currency.unconfirmedUnits, currency.decimals) + "</td>" +
@@ -555,11 +556,8 @@ var NRS = (function(NRS, $, undefined) {
 					}
 					var currenciesTable = $('#currencies_table');
 					currenciesTable.find('[data-i18n="type"]').hide();
-					currenciesTable.find('[data-i18n="issuance_height"]').hide();
-					currenciesTable.find('[data-i18n="max_supply"]').hide();
 					currenciesTable.find('[data-i18n="supply"]').hide();
-					currenciesTable.find('[data-i18n="init_supply"]').hide();
-					currenciesTable.find('[data-i18n="reserve_supply"]').hide();
+					currenciesTable.find('[data-i18n="max_supply"]').hide();
 					currenciesTable.find('[data-i18n="units"]').show();
 					NRS.dataLoaded(rows);
 				} else {
@@ -583,7 +581,7 @@ var NRS = (function(NRS, $, undefined) {
 						var name = String(currency.name).escapeHTML();
 						var currencyId = String(currency.currency).escapeHTML();
 						var currencyCode = String(currency.code).escapeHTML();
-						var resSupply = NRS.formatQuantity(currency.reserveSupply, currency.decimals);
+						var resSupply = NRS.formatQuantity(currency.reserveSupply - currency.initialSupply, currency.decimals);
 						var decimals = String(currency.decimals).escapeHTML();
 						var minReserve = String(currency.minReservePerUnitNQT).escapeHTML();
 						if (NRS.isExchangeable(currency.type)) {
@@ -607,8 +605,6 @@ var NRS = (function(NRS, $, undefined) {
 							"</td>" +
 							"<td>" + name + "</td>" +
 							"<td>" + currency_type + "</td>" +
-							"<td>" + currency.issuanceHeight + "</td>" +
-							"<td>" + resSupply + "</td>" +
 							"<td>" + NRS.formatQuantity(currency.currentSupply, currency.decimals) + "</td>" +
 							"<td>" + NRS.formatQuantity(currency.maxSupply, currency.decimals) + "</td>" +
 							"<td>";
@@ -622,11 +618,8 @@ var NRS = (function(NRS, $, undefined) {
 					}
 					var currenciesTable = $('#currencies_table');
 					currenciesTable.find('[data-i18n="type"]').show();
-					currenciesTable.find('[data-i18n="max_supply"]').show();
 					currenciesTable.find('[data-i18n="supply"]').show();
-					currenciesTable.find('[data-i18n="issuance_height"]').show();
-					currenciesTable.find('[data-i18n="init_supply"]').show();
-					currenciesTable.find('[data-i18n="reserve_supply"]').show();
+					currenciesTable.find('[data-i18n="max_supply"]').show();
 					currenciesTable.find('[data-i18n="units"]').hide();
 					NRS.dataLoaded(rows);
 				} else {
