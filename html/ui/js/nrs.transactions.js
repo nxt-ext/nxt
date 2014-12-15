@@ -697,6 +697,9 @@ var NRS = (function(NRS, $, undefined) {
 				case 5:
 					transactionType = $.t("bid_order_cancellation");
 					break;
+				case 6:
+					transactionType = $.t("dividend_payment");
+					break;
 			}
 		} else if (transaction.type == 3) {
 			switch (transaction.subtype) {
