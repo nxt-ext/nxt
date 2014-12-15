@@ -149,6 +149,8 @@ final class PeerImpl implements Peer {
             }
             if (isOldVersion) {
                 Logger.logDebugMessage(String.format("Blacklisting %s version %s", peerAddress, version));
+                setState(State.NON_CONNECTED);
+                Peers.notifyListeners(this, Peers.Event.BLACKLIST);
             }
         }
     }
@@ -427,10 +429,10 @@ final class PeerImpl implements Peer {
                 setAnnouncedAddress(peerAddress);
                 //Logger.logDebugMessage("Connected to peer without announced address, setting to " + peerAddress);
             }
-            if (analyzeHallmark(announcedAddress, (String)response.get("hallmark"))) {
+            if (!isOldVersion && analyzeHallmark(announcedAddress, (String)response.get("hallmark"))) {
                 setState(State.CONNECTED);
                 Peers.updateAddress(this);
-            } else {
+            } else if (!isBlacklisted()) {
                 blacklist();
             }
             lastUpdated = Nxt.getEpochTime();
