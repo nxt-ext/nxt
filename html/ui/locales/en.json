@@ -963,5 +963,7 @@
     "algorithm": "Algorithm",
     "current_units": "Current Units Supply",
     "current_reserve_per_unit": "Current Reserve Per Unit",
+    "offer": "Offer",
+    "founders": "Founders",
     "": ""
 }
