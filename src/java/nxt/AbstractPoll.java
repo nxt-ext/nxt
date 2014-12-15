@@ -13,7 +13,6 @@ public class AbstractPoll {
     protected final byte votingModel;
 
     protected final long assetId;
-    //TODO: minBalance is defined in whole NXT for accounts, but in QNT for assets, why not be consistent and use NQT and QNT?
     protected final long minBalance;
     protected boolean finished;
 
@@ -76,7 +75,7 @@ public class AbstractPoll {
                 long assetId = getAssetId();
                 long balance;
                 if (assetId == 0) {
-                    balance = voter.getBalanceNQT() / Constants.ONE_NXT;
+                    balance = voter.getBalanceNQT();
                 } else {
                     balance = voter.getAssetBalanceQNT(assetId);
                 }
@@ -85,9 +84,9 @@ public class AbstractPoll {
                 }
                 break;
             case Constants.VOTING_MODEL_BALANCE:
-                long nxtBalance = voter.getBalanceNQT() / Constants.ONE_NXT;
-                if (nxtBalance >= getMinBalance()) {
-                    weight = nxtBalance;
+                long nqtBalance = voter.getBalanceNQT();
+                if (nqtBalance >= getMinBalance()) {
+                    weight = nqtBalance;
                 }
         }
         return weight;
