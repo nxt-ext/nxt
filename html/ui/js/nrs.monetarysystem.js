@@ -541,7 +541,7 @@ var NRS = (function(NRS, $, undefined) {
 							"<td>" + NRS.formatQuantity(currency.unconfirmedUnits, currency.decimals) + "</td>" +
 							"<td>" +
 								"<a href='#' class='btn btn-xs btn-default' data-toggle='modal' data-target='#transfer_currency_modal' data-currency='" + String(currency.currency).escapeHTML() + "' data-code='" + code + "' data-decimals='" + decimals + "'>" + $.t("transfer") + "</a> " +
-								"<a href='#' class='btn btn-xs btn-default' data-toggle='modal' data-target='#publish_exchange_offer_modal' data-currency='" + String(currency.currency).escapeHTML() + "' data-code='" + code + "' data-decimals='" + decimals + "'>" + $.t("offer") + "</a>" +
+								"<a href='#' class='btn btn-xs btn-default' data-toggle='modal' data-target='#publish_exchange_offer_modal' data-currency='" + String(currency.currency).escapeHTML() + "' data-code='" + code + "' data-decimals='" + decimals + "' " + (!NRS.isExchangeable(currency.type) ? "disabled" : "") + " >" + $.t("offer") + "</a>" +
                 			"<a href='#' class='btn btn-xs btn-default' data-toggle='modal' data-target='#claim_currency_modal' data-currency='" + currencyId + "' data-name='" + name + "' data-code='" + code + "' data-decimals='" + decimals + "' " + (currency.issuanceHeight <= NRS.lastBlockHeight && NRS.isClaimable(currency.type) ? "" : "disabled") + " >" + $.t("claim") + "</a>" +
 						      "<a href='#' class='btn btn-xs btn-default' data-toggle='modal' data-target='#delete_currency_modal' data-currency='" + currencyId + "' data-name='" + name + "' data-code='" + code + "' " + (currency.accountRS == NRS.accountRS ? "" : "disabled") + " >" + $.t("delete") + "</a> " +
 							"</td>" +

@@ -515,6 +515,7 @@ final class JSONData {
         }
         json.put("name", currency.getName());
         json.put("code", currency.getCode());
+        json.put("type", currency.getType());
         json.put("decimals", currency.getDecimals());
     }
 
