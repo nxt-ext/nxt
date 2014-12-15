@@ -57,7 +57,6 @@ var NRS = (function(NRS, $, undefined) {
 		var currencyCode = $.trim($("#currency_search").find("input[name=q]").val());
 
 		if (!refresh) {
-			$('#currency_founders_link').hide();
 			$("#buy_currency_with_nxt").html("Exchange NXT for " + currencyCode);
 			$("#buy_currency_offers").html("Offers to Exchange NXT for " + currencyCode);
 			$("#sell_currency_with_nxt").html("Exchange " + currencyCode + " for NXT");
@@ -85,15 +84,6 @@ var NRS = (function(NRS, $, undefined) {
 				$("#currency_description").html(String(response.description).escapeHTML());
 				$("#buy_currency_button").data("decimals", response.decimals);
 				$("#sell_currency_button").data("decimals", response.decimals);
-				if (NRS.isReservable(response.type)) {
-					var foundersLink = $("#view_currency_founders_link");
-					foundersLink.data("currency", response.currency);
-					foundersLink.data("code", response.code);
-					foundersLink.data("resSupply", String(response.reserveSupply - response.initialSupply));
-					foundersLink.data("decimals", response.decimals);
-					foundersLink.data("minReservePerUnitNQT", response.minReservePerUnitNQT);
-					$('#currency_founders_link').show();
-				}
 			} else {
 				$("#MSnoCode").show();
 				$("#MScode").hide();
