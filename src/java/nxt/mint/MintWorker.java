@@ -147,7 +147,7 @@ public class MintWorker {
         params.put("requestType", "currencyMint");
         params.put("secretPhrase", secretPhrase);
         params.put("feeNQT", Long.toString(Constants.ONE_NXT));
-        params.put("deadline", Integer.toString(10));
+        params.put("deadline", Integer.toString(120));
         params.put("code", currencyCode);
         params.put("nonce", Long.toString(nonce));
         params.put("units", Long.toString(units));
