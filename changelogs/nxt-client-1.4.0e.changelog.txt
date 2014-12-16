@@ -1,3 +1,11 @@
+This is the experimental release to test the new Monetary System major feature.
+It is enabled on testnet, and those running testnet nodes should upgrade to this
+release, even if they don't plan to use the MS features, otherwise will be left
+on a fork. This release is also possible to run on main net, but is not to be
+considered stable for production use there. The Monetary System block is not yet
+defined for main net.
+
+
 New features:
 
 Monetary System.
