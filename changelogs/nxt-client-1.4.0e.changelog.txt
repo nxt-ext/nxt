@@ -9,7 +9,7 @@ defined for main net.
 New features:
 
 Monetary System.
-See https://bitbucket.org/JeanLucPicard/nxt/issue/205/monetary-system-documenation
+See https://bitbucket.org/JeanLucPicard/nxt/issue/205/monetary-system-documentation
 for a detailed description.
 See https://bitbucket.org/JeanLucPicard/nxt/issue/207/mint-worker-utility for a
 description of the MintWorker tool for currency minting.
