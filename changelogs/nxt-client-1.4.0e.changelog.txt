@@ -1,8 +1,10 @@
 New features:
 
 Monetary System.
-See https://bitbucket.org/JeanLucPicard/nxt/issue/205/monetary-system-documenation for a
-detailed description.
+See https://bitbucket.org/JeanLucPicard/nxt/issue/205/monetary-system-documenation
+for a detailed description.
+See https://bitbucket.org/JeanLucPicard/nxt/issue/207/mint-worker-utility for a
+description of the MintWorker tool for currency minting.
 
 Dividend payment transaction. Asset issuers can make a dividend payment to all
 asset holders with a single transaction. Required parameters are the blockchain
@@ -56,6 +58,7 @@ left in an inconsistent state when a rescan fails or is interrupted. Once a
 rescan has been scheduled, it will be triggered again at restart, until it
 completes successfully.
 
+Improvements in the processing of unconfirmed transactions.
 
 This release will perform a rescan on first start.
 
