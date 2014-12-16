@@ -574,8 +574,8 @@ var NRS = (function(NRS, $, undefined) {
 						var name = String(currency.name).escapeHTML();
 						var currencyId = String(currency.currency).escapeHTML();
 						var code = String(currency.code).escapeHTML();
-						var resSupplyQNT = String(currency.reserveSupply - currency.initialSupply);
-						var resSupply = NRS.convertToQNTf(currency.reserveSupply - currency.initialSupply, currency.decimals);
+						var resSupplyQNT = String(currency.reserveSupply);
+						var resSupply = NRS.convertToQNTf(currency.reserveSupply, currency.decimals);
 						var decimals = String(currency.decimals).escapeHTML();
 						var minReserve = String(currency.minReservePerUnitNQT).escapeHTML();
 						if (NRS.isExchangeable(currency.type)) {
@@ -956,13 +956,20 @@ var NRS = (function(NRS, $, undefined) {
 				var minReserve = response.minReservePerUnitNQT;
 				var currentReserve = response.currentReservePerUnitNQT;
 				var resSupply = response.reserveSupply;
+				var initialSupply = response.initialSupply;
 
 				$("#reserve_currency_code").html(String(currencyCode).escapeHTML());
 				$("#reserve_currency_currency").val(currency);
 				$("#reserve_currency_decimals").val(decimals);
 				$("#reserve_currency_minReserve").val(minReserve);
+				var minReservePerUnitNQT = new BigInteger(minReserve).multiply(new BigInteger("" + Math.pow(10, decimals)));
+				$("#reserve_currency_minReserve_text").html(NRS.formatAmount(minReservePerUnitNQT));
 				$("#reserve_currency_currentReserve").val(currentReserve);
+				var currentReservePerUnitNQT = new BigInteger(currentReserve).multiply(new BigInteger("" + Math.pow(10, decimals)));
+				$("#reserve_currency_currentReserve_text").html(NRS.formatAmount(currentReservePerUnitNQT));
 				$("#reserve_currency_resSupply").val(resSupply);
+				$("#reserve_currency_resSupply_text").html(NRS.formatQuantity(resSupply, decimals));
+				$("#reserve_currency_initialSupply_text").html(NRS.formatQuantity(initialSupply, decimals));
 			}
 		})
 	});
