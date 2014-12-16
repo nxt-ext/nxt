@@ -716,6 +716,9 @@ public abstract class TransactionType {
                     throw new NxtException.NotCurrentlyValidException("Invalid asset id for voting: " + attachment.getJSONObject());
                 }
 
+                if (attachment.getFinishBlockHeight() <= Nxt.getBlockchain().getHeight() + Constants.VOTING_MIN_VOTE_DURATION) {
+                    throw new NxtException.NotCurrentlyValidException("Invalid finishing height");
+                }
             }
 
             @Override

@@ -403,12 +403,6 @@ public interface Attachment extends Appendix {
             this.pollDescription = Convert.readString(buffer, buffer.getShort(), Constants.MAX_POLL_DESCRIPTION_LENGTH);
 
             this.finishBlockHeight = buffer.getInt();
-            //TODO: validation that depends on current blockchain height must be done in TransactionType.validateAttachment(), not here
-            /*
-            if (finishBlockHeight <= Nxt.getBlockchain().getHeight() + Constants.VOTING_MIN_VOTE_DURATION) {
-                throw new NxtException.NotCurrentlyValidException("Invalid finishing height");
-            }
-            */
 
             int numberOfOptions = buffer.get();
             if (numberOfOptions > Constants.MAX_POLL_OPTION_COUNT) {
