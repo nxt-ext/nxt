@@ -635,18 +635,6 @@ public interface Appendix {
             long transactionId = transaction.getId();
             Account senderAccount = Account.getAccount(transaction.getSenderId());
 
-            PendingTransactionPoll poll = PendingTransactionPoll.getPoll(transactionId);
-
-            //todo : move this check up? - yeah, looks like this must be done in that listener in TransactionProcessorImpl instead
-            if (poll.getVotingModel() != Constants.VOTING_MODEL_ACCOUNT) {
-                long votingResult = VotePhased.allVotesFromDb(poll);
-                if (votingResult >= poll.getQuorum()) {
-                    //TODO: why does rollback do a commit? looks like a workaround for a bug elsewhere, not finding out in time that a commit should have been done?
-                    commit(transaction);
-                    return;
-                }
-            }
-
             long amount = transaction.getAmountNQT();
             senderAccount.addToBalanceNQT(amount);
             //TODO:

@@ -361,7 +361,7 @@ public abstract class TransactionType {
                 for (long pendingTransactionId : pendingTransactionsIds) {
                     PendingTransactionPoll poll = PendingTransactionPoll.getPoll(pendingTransactionId);
 
-                    if (VotePhased.addVote(poll, senderAccount, transaction)) {
+                    if (VotePhased.addVote(poll, transaction)) {
                         Transaction pendingTransaction = TransactionDb.findTransaction(pendingTransactionId);
                         pendingTransaction.getTwoPhased().commit(pendingTransaction);
                         PendingTransactionPoll.finishPoll(poll);

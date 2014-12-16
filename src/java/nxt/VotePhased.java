@@ -37,24 +37,6 @@ public class VotePhased {
         protected void save(Connection con, VotePhased vote) throws SQLException {
             vote.save(con);
         }
-
-        protected long lastEstimate(long pendingTransactionId) {
-            try {
-                Connection con = db.getConnection();
-                PreparedStatement pstmt = con.prepareStatement("SELECT estimated_total FROM " + table
-                        + " WHERE pending_transaction_id = ?  ORDER BY db_id DESC LIMIT 1");
-                pstmt.setLong(1, pendingTransactionId);
-                ResultSet rs = pstmt.executeQuery();
-                if (rs.next()) {
-                    return rs.getLong(1);
-                } else {
-                    return 0;
-                }
-                //TODO: con, pstmt and rs must be closed
-            } catch (SQLException e) {
-                throw new RuntimeException(e.toString(), e);
-            }
-        }
     }
 
     final static VotePhasedTable voteTable = new VotePhasedTable();
@@ -67,14 +49,12 @@ public class VotePhased {
     private final DbKey dbKey;
     private final long pendingTransactionId;
     private final long voterId;
-    private final long estimatedTotal;
 
-    private VotePhased(Transaction transaction, long pendingTransactionId, long estimatedTotal) {
+    private VotePhased(Transaction transaction, long pendingTransactionId) {
         this.id = transaction.getId();
         this.pendingTransactionId = pendingTransactionId;
         this.dbKey = voteDbKeyFactory.newKey(this.id, this.pendingTransactionId);
         this.voterId = transaction.getSenderId();
-        this.estimatedTotal = estimatedTotal;
     }
 
     private VotePhased(ResultSet rs) throws SQLException {
@@ -82,7 +62,6 @@ public class VotePhased {
         this.pendingTransactionId = rs.getLong("pending_transaction_id");
         this.dbKey = voteDbKeyFactory.newKey(this.id, this.pendingTransactionId);
         this.voterId = rs.getLong("voter_id");
-        this.estimatedTotal = rs.getLong("estimated_total");
     }
 
     public long getId() {
@@ -98,13 +77,12 @@ public class VotePhased {
     }
 
     protected void save(Connection con) throws SQLException {
-        try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO vote_phased (id, pending_transaction_id, voter_id, "
-                + "estimated_total, height) VALUES (?, ?, ?, ?, ?)")) {
+        try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO vote_phased (id, pending_transaction_id, "
+                + "voter_id, height) VALUES (?, ?, ?, ?)")) {
             int i = 0;
             pstmt.setLong(++i, this.getId());
             pstmt.setLong(++i, this.getPendingTransactionId());
             pstmt.setLong(++i, this.getVoterId());
-            pstmt.setLong(++i, this.estimatedTotal);
             pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
             pstmt.executeUpdate();
         }
@@ -137,33 +115,10 @@ public class VotePhased {
         return result;
     }
 
-    static boolean addVote(PendingTransactionPoll poll, Account voter,
-                           Transaction transaction) {
-
-        final long weight = poll.calcWeight(voter);
-
-        long estimate = voteTable.lastEstimate(poll.getId());
-
-        if (weight >= poll.minBalance) {
-            estimate += weight;
-        }
-
-        //TODO: The complexity and performance hit of this counting can be avoided if counting is done only once,
-        // at finish height. I think this is what we should do, and get rid of the estimated count column.
-        // There are other problems with counting after each vote, a voter doesn't know in advance at what height
-        // his voting balance will be considered, so he has to keep the funds or assets in his account, frozen,
-        // until the vote is over. If counting is done at finish height only, he knows when the assets need to be
-        // in his account, doesn't need to have them there before that.
-        if (estimate >= poll.getQuorum() && poll.getVotingModel() != Constants.VOTING_MODEL_ACCOUNT) {
-            estimate = allVotesFromDb(poll);
-            if (weight >= poll.minBalance) {
-                estimate += weight;
-            }
-        }
-
-        VotePhased vote = new VotePhased(transaction, poll.getId(), estimate);
-        voteTable.insert(vote);
-        return estimate >= poll.getQuorum();
+    static boolean addVote(PendingTransactionPoll poll, Transaction transaction) {
+        voteTable.insert(new VotePhased(transaction, poll.getId()));
+        return poll.getVotingModel() == Constants.VOTING_MODEL_ACCOUNT
+                && VotePhased.getCount(poll.getId()) >= poll.getQuorum();
     }
 
     static boolean isVoteGiven(long pendingTransactionId, long voterId) {

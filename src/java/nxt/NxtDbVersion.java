@@ -413,7 +413,7 @@ class NxtDbVersion extends DbVersion {
             case 147:
                 apply("CREATE TABLE IF NOT EXISTS vote_phased (db_id IDENTITY, id BIGINT NOT NULL, "
                         + "pending_transaction_id BIGINT NOT NULL, voter_id BIGINT NOT NULL, "
-                        + "estimated_total BIGINT NOT NULL, height INT NOT NULL)");
+                        + "height INT NOT NULL)");
             case 148:
                 apply("CREATE TABLE IF NOT EXISTS pending_transaction_signer (db_id IDENTITY, "
                         + "poll_id BIGINT NOT NULL, account_id BIGINT NOT NULL, height INT NOT NULL)");
