@@ -206,8 +206,11 @@ var NRS = (function(NRS, $, undefined) {
 			var rows = "";
 			var decimals = $invoker.data("decimals");
 			var minReservePerUnitNQT = new BigInteger(String($invoker.data("minreserve"))).multiply(new BigInteger("" + Math.pow(10, decimals)));
+			var initialSupply = new BigInteger(String($invoker.data("initialsupply")));
 			var resSupply = new BigInteger(String($invoker.data("ressupply")));
 			var totalAmountReserved = BigInteger.ZERO;
+			$("#founders_reserve_units").html(NRS.formatQuantity(resSupply, decimals));
+			$("#founders_issuer_units").html(NRS.formatQuantity(initialSupply, decimals));
 			if (response.founders && response.founders.length) {
 				var amountPerUnitNQT = BigInteger.ZERO;
 				for (var i = 0; i < response.founders.length; i++) {
@@ -224,7 +227,7 @@ var NRS = (function(NRS, $, undefined) {
 						"</td>" +
 						"<td>" + NRS.convertToNXT(amountPerUnitNQT) + "</td>" +
 						"<td>" + NRS.convertToNXT(amountPerUnitNQT.multiply(new BigInteger(NRS.convertToQNTf(resSupply, decimals)))) + "</td>" +
-						"<td>" + NRS.formatQuantity(resSupply.multiply(amountPerUnitNQT).divide(totalAmountReserved), decimals) + "</td>" +
+						"<td>" + NRS.formatQuantity(resSupply.subtract(initialSupply).multiply(amountPerUnitNQT).divide(totalAmountReserved), decimals) + "</td>" +
 						"<td>" + percentage + "</td>" +
 					"</tr>";
 				}
@@ -235,7 +238,7 @@ var NRS = (function(NRS, $, undefined) {
 				"<td><b>Totals</b></td>" +
 				"<td>" + NRS.convertToNXT(totalAmountReserved) + "</td>" +
 				"<td>" + NRS.convertToNXT(totalAmountReserved.multiply(new BigInteger(NRS.convertToQNTf(resSupply, decimals)))) + "</td>" +
-				"<td>" + NRS.formatQuantity(resSupply, decimals) + "</td>" +
+				"<td>" + NRS.formatQuantity(resSupply.subtract(initialSupply), decimals) + "</td>" +
 				"<td>" + NRS.calculatePercentage(totalAmountReserved, minReservePerUnitNQT) + "</td>" +
 			"</tr>";
 			var foundersTable = $("#currency_founders_table");
@@ -575,6 +578,7 @@ var NRS = (function(NRS, $, undefined) {
 						var currencyId = String(currency.currency).escapeHTML();
 						var code = String(currency.code).escapeHTML();
 						var resSupplyQNT = String(currency.reserveSupply);
+						var initialSupplyQNT = currency.initialSupply;
 						var resSupply = NRS.convertToQNTf(currency.reserveSupply, currency.decimals);
 						var decimals = String(currency.decimals).escapeHTML();
 						var minReserve = String(currency.minReservePerUnitNQT).escapeHTML();
@@ -604,7 +608,7 @@ var NRS = (function(NRS, $, undefined) {
 							"<td>";
 							rows += "<a href='#' class='btn btn-xs btn-default' onClick='NRS.goToCurrency(&quot;" + code + "&quot;)' " + (!NRS.isExchangeable(currency.type) ? "disabled" : "") + ">" + $.t("exchange") + "</a> ";
 							rows += "<a href='#' class='btn btn-xs btn-default' data-toggle='modal' data-target='#reserve_currency_modal' data-currency='" + currencyId + "' data-name='" + name + "' data-code='" + code + "' data-ressupply='" + resSupply + "' data-decimals='" + decimals + "' data-minreserve='" + minReserve + "' " + (currency.issuanceHeight > NRS.lastBlockHeight && NRS.isReservable(currency.type) ? "" : "disabled") + " >" + $.t("reserve") + "</a> ";
-							rows += "<a href='#' class='btn btn-xs btn-default' data-toggle='modal' data-target='#currency_founders_modal' data-currency='" + currencyId + "' data-name='" + name + "' data-code='" + code + "' data-ressupply='" + resSupplyQNT + "' data-decimals='" + decimals + "' data-minreserve='" + minReserve + "' " + (NRS.isReservable(currency.type) ? "" : "disabled") + " >" + $.t("founders") + "</a> ";
+							rows += "<a href='#' class='btn btn-xs btn-default' data-toggle='modal' data-target='#currency_founders_modal' data-currency='" + currencyId + "' data-name='" + name + "' data-code='" + code + "' data-ressupply='" + resSupplyQNT + "' data-initialsupply='" + initialSupplyQNT + "' data-decimals='" + decimals + "' data-minreserve='" + minReserve + "' " + (NRS.isReservable(currency.type) ? "" : "disabled") + " >" + $.t("founders") + "</a> ";
 							rows += "<a href='#' class='btn btn-xs btn-default' data-toggle='modal' data-target='#mine_currency_modal' data-currency='" + currencyId + "' data-name='" + name + "' data-code='" + code + "' data-decimals='" + decimals + "' " + (!NRS.isMintable(currency.type) ? "disabled" : "") + " >" + $.t("mint") + "</a> ";
 							rows += "</td></tr>";
 					}
