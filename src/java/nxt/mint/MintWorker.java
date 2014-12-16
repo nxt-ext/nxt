@@ -73,7 +73,7 @@ public class MintWorker {
             wholeUnits = Double.parseDouble(unitsStr);
         }
         long units = (long)(wholeUnits * Math.pow(10, decimal));
-        JSONObject mintingTarget = getMintingTarget(currencyCode, rsAccount, units);
+        JSONObject mintingTarget = getMintingTarget(currencyId, rsAccount, units);
         long counter = (long) mintingTarget.get("counter");
         byte[] target = Convert.parseHexString((String) mintingTarget.get("targetBytes"));
         long difficulty = (long) mintingTarget.get("difficulty");
@@ -90,19 +90,19 @@ public class MintWorker {
         Logger.logInfoMessage("Mint worker started");
         while (true) {
             counter++;
-            JSONObject response = mintImpl(currencyCode, secretPhrase, accountId, units, currencyId, algorithm, counter, target,
+            JSONObject response = mintImpl(secretPhrase, accountId, units, currencyId, algorithm, counter, target,
                     initialNonce, threadPoolSize, executorService, difficulty, isSubmitted);
             Logger.logInfoMessage("currency mint response:" + response.toJSONString());
             if (response.get("error") != null || response.get("errorCode") != null) {
                 break;
             }
-            mintingTarget = getMintingTarget(currencyCode, rsAccount, units);
+            mintingTarget = getMintingTarget(currencyId, rsAccount, units);
             target = Convert.parseHexString((String) mintingTarget.get("targetBytes"));
             difficulty = (long) mintingTarget.get("difficulty");
         }
     }
 
-    private JSONObject mintImpl(String currencyCode, String secretPhrase, long accountId, long units, long currencyId, byte algorithm,
+    private JSONObject mintImpl(String secretPhrase, long accountId, long units, long currencyId, byte algorithm,
                                 long counter, byte[] target, long initialNonce, int threadPoolSize, ExecutorService executorService, long difficulty, boolean isSubmitted) {
         long startTime = System.currentTimeMillis();
         List<Callable<Long>> workersList = new ArrayList<>();
@@ -117,7 +117,7 @@ public class MintWorker {
                 solution, hashes, (float) computationTime / 1000, hashes / computationTime, (float) hashes / (float) difficulty, isSubmitted);
         JSONObject response;
         if (isSubmitted) {
-            response = currencyMint(secretPhrase, currencyCode, solution, units, counter);
+            response = currencyMint(secretPhrase, currencyId, solution, units, counter);
         } else {
             response = new JSONObject();
             response.put("message", "nxt.mint.isSubmitted=false therefore currency mint transaction is not submitted");
@@ -142,13 +142,13 @@ public class MintWorker {
         }
     }
 
-    private JSONObject currencyMint(String secretPhrase, String currencyCode, long nonce, long units, long counter) {
+    private JSONObject currencyMint(String secretPhrase, long currencyId, long nonce, long units, long counter) {
         Map<String, String> params = new HashMap<>();
         params.put("requestType", "currencyMint");
         params.put("secretPhrase", secretPhrase);
         params.put("feeNQT", Long.toString(Constants.ONE_NXT));
         params.put("deadline", Integer.toString(120));
-        params.put("code", currencyCode);
+        params.put("currency", Convert.toUnsignedLong(currencyId));
         params.put("nonce", Long.toString(nonce));
         params.put("units", Long.toString(units));
         params.put("counter", Long.toString(counter));
@@ -162,10 +162,10 @@ public class MintWorker {
         return getJsonResponse(params);
     }
 
-    private JSONObject getMintingTarget(String currencyCode, String rsAccount, long units) {
+    private JSONObject getMintingTarget(long currencyId, String rsAccount, long units) {
         Map<String, String> params = new HashMap<>();
         params.put("requestType", "getMintingTarget");
-        params.put("code", currencyCode);
+        params.put("currency", Convert.toUnsignedLong(currencyId));
         params.put("account", rsAccount);
         params.put("units", Long.toString(units));
         return getJsonResponse(params);

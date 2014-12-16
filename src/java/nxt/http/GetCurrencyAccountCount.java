@@ -13,7 +13,7 @@ public final class GetCurrencyAccountCount extends APIServlet.APIRequestHandler 
     static final GetCurrencyAccountCount instance = new GetCurrencyAccountCount();
 
     private GetCurrencyAccountCount() {
-        super(new APITag[] {APITag.MS}, "currency", "code", "height");
+        super(new APITag[] {APITag.MS}, "currency", "height");
     }
 
     @Override

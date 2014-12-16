@@ -17,7 +17,7 @@ public final class GetBuyOffers extends APIServlet.APIRequestHandler {
     static final GetBuyOffers instance = new GetBuyOffers();
 
     private GetBuyOffers() {
-        super(new APITag[] {APITag.MS}, "currency", "code", "account", "firstIndex", "lastIndex");
+        super(new APITag[] {APITag.MS}, "currency", "account", "firstIndex", "lastIndex");
     }
 
     @Override
