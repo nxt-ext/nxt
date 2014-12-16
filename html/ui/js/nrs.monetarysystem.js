@@ -950,9 +950,10 @@ var NRS = (function(NRS, $, undefined) {
 	/* RESERVE CURRENCY MODEL */
 	$("#reserve_currency_modal").on("show.bs.modal", function (e) {
 		var $invoker = $(e.relatedTarget);
+		var currency = $invoker.data("currency");
 		var currencyCode = $invoker.data("code");
 		NRS.sendRequest("getCurrency+", {
-			"code": currencyCode
+			"currency": currency
 		}, function(response) {
 			if (response && !response.errorDescription) {
 				var currency = response.currency;
@@ -1001,7 +1002,7 @@ var NRS = (function(NRS, $, undefined) {
 		var currencyCode = $invoker.data("code");
 
 		NRS.sendRequest("getAccountCurrencies", {
-			"code": currencyCode,
+			"currency": currency,
 			"account": NRS.accountRS
 		}, function (response) {
 			var availableUnits = "0";
@@ -1051,7 +1052,7 @@ var NRS = (function(NRS, $, undefined) {
 	/* Fill in counter field after units is inputed */
 	$("#mine_currency_units").blur(function() {
 		NRS.sendRequest("getMintingTarget", {
-			"code": $("#mine_currency_code").html(),
+			"currency": $("#mine_currency_currency").val(),
 			"account": NRS.accountRS,
 			"units": NRS.convertToQNT(this.value, $("#mine_currency_decimals").val())
 		}, function(response) {
