@@ -30,7 +30,7 @@ public final class GetAssetAccounts extends APIServlet.APIRequestHandler {
         try (DbIterator<Account.AccountAsset> iterator = asset.getAccounts(height, firstIndex, lastIndex)) {
             while (iterator.hasNext()) {
                 Account.AccountAsset accountAsset = iterator.next();
-                accountAssets.add(JSONData.accountAsset(accountAsset, true));
+                accountAssets.add(JSONData.accountAsset(accountAsset, true, false));
             }
         }
 

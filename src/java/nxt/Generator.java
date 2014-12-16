@@ -24,8 +24,17 @@ public final class Generator implements Comparable<Generator> {
         GENERATION_DEADLINE, START_FORGING, STOP_FORGING
     }
 
-    private static final byte[] fakeForgingPublicKey = Nxt.getBooleanProperty("nxt.enableFakeForging")
-            ? Account.getAccount(Convert.parseAccountId(Nxt.getStringProperty("nxt.fakeForgingAccount"))).getPublicKey() : null;
+    private static final byte[] fakeForgingPublicKey;
+    static {
+        byte[] publicKey = null;
+        if (Nxt.getBooleanProperty("nxt.enableFakeForging")) {
+            Account fakeForgingAccount = Account.getAccount(Convert.parseAccountId(Nxt.getStringProperty("nxt.fakeForgingAccount")));
+            if (fakeForgingAccount != null) {
+                publicKey = fakeForgingAccount.getPublicKey();
+            }
+        }
+        fakeForgingPublicKey = publicKey;
+    }
 
     private static final Listeners<Generator,Event> listeners = new Listeners<>();
 
@@ -152,7 +161,7 @@ public final class Generator implements Comparable<Generator> {
         return Constants.isTestnet && publicKey != null && Arrays.equals(publicKey, fakeForgingPublicKey);
     }
 
-    private static BigInteger getHit(byte[] publicKey, Block block) {
+    static BigInteger getHit(byte[] publicKey, Block block) {
         if (allowsFakeForging(publicKey)) {
             return BigInteger.ZERO;
         }
@@ -165,7 +174,7 @@ public final class Generator implements Comparable<Generator> {
         return new BigInteger(1, new byte[] {generationSignatureHash[7], generationSignatureHash[6], generationSignatureHash[5], generationSignatureHash[4], generationSignatureHash[3], generationSignatureHash[2], generationSignatureHash[1], generationSignatureHash[0]});
     }
 
-    private static long getHitTime(BigInteger effectiveBalance, BigInteger hit, Block block) {
+    static long getHitTime(BigInteger effectiveBalance, BigInteger hit, Block block) {
         return block.getTimestamp()
                 + hit.divide(BigInteger.valueOf(block.getBaseTarget()).multiply(effectiveBalance)).longValue();
     }
@@ -229,7 +238,7 @@ public final class Generator implements Comparable<Generator> {
         listeners.notify(this, Event.GENERATION_DEADLINE);
     }
 
-    private boolean forge(Block lastBlock, int timestamp) throws BlockchainProcessor.BlockNotAcceptedException {
+    boolean forge(Block lastBlock, int timestamp) throws BlockchainProcessor.BlockNotAcceptedException {
         if (verifyHit(hit, effectiveBalance, lastBlock, timestamp)) {
             while (true) {
                 try {

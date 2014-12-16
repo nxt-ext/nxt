@@ -3,6 +3,7 @@ package nxt.http;
 import nxt.NxtException;
 import nxt.Trade;
 import nxt.db.FilteringIterator;
+import nxt.util.Filter;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
@@ -27,7 +28,7 @@ public final class GetAllTrades extends APIServlet.APIRequestHandler {
         JSONObject response = new JSONObject();
         JSONArray trades = new JSONArray();
         try (FilteringIterator<Trade> tradeIterator = new FilteringIterator<>(Trade.getAllTrades(0, -1),
-                new FilteringIterator.Filter<Trade>() {
+                new Filter<Trade>() {
                     @Override
                     public boolean ok(Trade trade) {
                         return trade.getTimestamp() >= timestamp;

@@ -28,6 +28,7 @@ public final class Constants {
 
     public static final int MAX_ACCOUNT_NAME_LENGTH = 100;
     public static final int MAX_ACCOUNT_DESCRIPTION_LENGTH = 1000;
+    public static final int MAX_ACCOUNT_MESSAGE_PATTERN_LENGTH = 100;
 
     public static final long MAX_ASSET_QUANTITY_QNT = 1000000000L * 100000000L;
     public static final int MIN_ASSET_NAME_LENGTH = 3;
@@ -50,6 +51,19 @@ public final class Constants {
     public static final int MAX_HUB_ANNOUNCEMENT_URI_LENGTH = 1000;
     public static final long MIN_HUB_EFFECTIVE_BALANCE = 100000;
 
+    public static final int MIN_CURRENCY_NAME_LENGTH = 3;
+    public static final int MAX_CURRENCY_NAME_LENGTH = 10;
+    public static final int MIN_CURRENCY_CODE_LENGTH = 3;
+    public static final int MAX_CURRENCY_CODE_LENGTH = 5;
+    public static final int MAX_CURRENCY_DESCRIPTION_LENGTH = 1000;
+    public static final long MAX_CURRENCY_TOTAL_SUPPLY = 1000000000L * 100000000L;
+    public static final int MAX_MINTING_RATIO = 10000; // per mint units not more than 0.01% of total supply
+    public static final byte MIN_NUMBER_OF_SHUFFLING_PARTICIPANTS = 3;
+    public static final byte MAX_NUMBER_OF_SHUFFLING_PARTICIPANTS = 100;
+    public static final short MIN_SHUFFLING_DELAY = 5;
+    public static final short MAX_SHUFFLING_DELAY = 1440;
+    public static final int MAX_SHUFFLING_RECIPIENTS_LENGTH = 10000;
+
     public static final boolean isTestnet = Nxt.getBooleanProperty("nxt.isTestnet");
     public static final boolean isOffline = Nxt.getBooleanProperty("nxt.isOffline");
 
@@ -67,11 +81,13 @@ public final class Constants {
     public static final int FRACTIONAL_BLOCK = isTestnet ? NQT_BLOCK : 134000;
     public static final int ASSET_EXCHANGE_BLOCK = isTestnet ? NQT_BLOCK : 135000;
     public static final int REFERENCED_TRANSACTION_FULL_HASH_BLOCK = isTestnet ? NQT_BLOCK : 140000;
+    public static final int ASSET_EXCHANGE_BLOCK_2 = isTestnet ? NQT_BLOCK : Integer.MAX_VALUE;
     public static final int REFERENCED_TRANSACTION_FULL_HASH_BLOCK_TIMESTAMP = isTestnet ? 13031352 : 15134204;
     public static final int VOTING_SYSTEM_BLOCK = Integer.MAX_VALUE;
     public static final int DIGITAL_GOODS_STORE_BLOCK = isTestnet ? 77341 : 213000;
     public static final int PUBLIC_KEY_ANNOUNCEMENT_BLOCK = isTestnet ? 77341 : 215000;
-    public static final int LAST_KNOWN_BLOCK = isTestnet ? 80000 : 308000;
+    public static final int MONETARY_SYSTEM_BLOCK = isTestnet ? 136500 : Integer.MAX_VALUE;
+    public static final int LAST_KNOWN_BLOCK = isTestnet ? 136000 : 308000;
 
     public static final int[] MIN_VERSION = new int[] {1, 2};
 
@@ -91,6 +107,7 @@ public final class Constants {
     }
 
     public static final String ALPHABET = "0123456789abcdefghijklmnopqrstuvwxyz";
+    public static final String ALLOWED_CURRENCY_CODE_LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
     public static final int EC_RULE_TERMINATOR = 600; /* cfb: This constant defines a straight edge when "longest chain"
                                                         rule is outweighed by "economic majority" rule; the terminator

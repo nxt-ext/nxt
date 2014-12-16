@@ -1,13 +1,11 @@
 package nxt.db;
 
+import nxt.util.Filter;
+
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
 public final class FilteringIterator<T> implements Iterator<T>, Iterable<T>, AutoCloseable {
-
-    public static interface Filter<T> {
-        boolean ok(T t);
-    }
 
     private final DbIterator<T> dbIterator;
     private final Filter<T> filter;

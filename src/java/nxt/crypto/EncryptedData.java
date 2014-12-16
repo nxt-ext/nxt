@@ -55,12 +55,30 @@ public final class EncryptedData {
         return new EncryptedData(noteBytes, noteNonceBytes);
     }
 
+    public static EncryptedData readEncryptedData(ByteBuffer buffer, int length, int maxLength, long nonce)
+            throws NxtException.NotValidException {
+        if (length == 0) {
+            return EMPTY_DATA;
+        }
+        if (length > maxLength) {
+            throw new NxtException.NotValidException("Max encrypted data length exceeded: " + length);
+        }
+        byte[] noteBytes = new byte[length];
+        buffer.get(noteBytes);
+        return new EncryptedData(noteBytes, ByteBuffer.allocate(8).putLong(nonce).array());
+    }
+
     private final byte[] data;
     private final byte[] nonce;
 
     public EncryptedData(byte[] data, byte[] nonce) {
         this.data = data;
         this.nonce = nonce;
+    }
+
+    public EncryptedData(byte[] data, long nonce) {
+        this.data = data;
+        this.nonce = ByteBuffer.allocate(8).putLong(nonce).array();
     }
 
     public byte[] decrypt(byte[] myPrivateKey, byte[] theirPublicKey) {

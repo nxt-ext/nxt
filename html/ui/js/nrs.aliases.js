@@ -117,7 +117,7 @@ var NRS = (function(NRS, $, undefined) {
 						alias.status = "<span class='label label-small label-info'>" + alias.status + "</span>";
 					}
 
-					rows += "<tr" + (alias.tentative ? " class='tentative'" : "") + " data-alias='" + String(alias.aliasName).toLowerCase().escapeHTML() + "'><td class='alias'>" + String(alias.aliasName).escapeHTML() + "</td><td class='uri'>" + (alias.aliasURI.indexOf("http") === 0 ? "<a href='" + alias.aliasURI + "' target='_blank'>" + alias.shortAliasURI + "</a>" : alias.shortAliasURI) + "</td><td class='status'>" + alias.status + "</td><td style='white-space:nowrap'><a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#register_alias_modal' data-alias='" + String(alias.aliasName).escapeHTML() + "'>" + $.t("edit") + "</a> <a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#transfer_alias_modal' data-alias='" + String(alias.aliasName).escapeHTML() + "'>" + $.t("transfer") + "</a> <a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#sell_alias_modal' data-alias='" + String(alias.aliasName).escapeHTML() + "'>" + $.t("sell") + "</a>" + (allowCancel ? " <a class='btn btn-xs btn-default cancel_alias_sale' href='#' data-toggle='modal' data-target='#cancel_alias_sale_modal' data-alias='" + String(alias.aliasName).escapeHTML() + "'>" + $.t("cancel_sale") + "</a>" : "") + "</td></tr>";
+					rows += "<tr" + (alias.tentative ? " class='tentative'" : "") + " data-alias='" + String(alias.aliasName).toLowerCase().escapeHTML() + "'><td class='alias'>" + String(alias.aliasName).escapeHTML() + "</td><td class='uri'>" + (alias.aliasURI.indexOf("http") === 0 ? "<a href='" + alias.aliasURI + "' target='_blank'>" + alias.shortAliasURI + "</a>" : alias.shortAliasURI) + "</td><td class='status'>" + alias.status + "</td><td style='white-space:nowrap'><a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#register_alias_modal' data-alias='" + String(alias.aliasName).escapeHTML() + "'>" + $.t("edit") + "</a> <a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#transfer_alias_modal' data-alias='" + String(alias.aliasName).escapeHTML() + "'>" + $.t("transfer") + "</a> <a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#sell_alias_modal' data-alias='" + String(alias.aliasName).escapeHTML() + "'>" + $.t("sell") + "</a>" + (allowCancel ? " <a class='btn btn-xs btn-default cancel_alias_sale' href='#' data-toggle='modal' data-target='#cancel_alias_sale_modal' data-alias='" + String(alias.aliasName).escapeHTML() + "'>" + $.t("cancel_sale") + "</a>" : "") + "</td><td><button class='btn btn-xs btn-default' data-toggle='modal' data-target='#delete_alias_modal'>Delete Alias</button></td></tr>";
 
 					if (!alias.aliasURI) {
 						empty_alias_count++;
@@ -239,6 +239,42 @@ var NRS = (function(NRS, $, undefined) {
 				$row.find("td.status").html("<span class='label label-small label-info'>" + $.t("for_sale_indirect") + "</span>");
 			}
 		}
+	}
+
+
+	NRS.forms.deleteAlias = function($modal) {
+		var data = NRS.getFormData($modal.find("form:first"));
+
+		//var successMessage = "";
+		//var errorMessage = "";
+
+			successMessage = $.t("success_delete_alias");
+			errorMessage = $.t("error_delete_alias");
+
+		//	}
+		//}
+
+		delete data.modal;
+
+		return {
+			"data": data,
+			"successMessage": successMessage,
+			"errorMessage": errorMessage
+		};
+	}
+
+	NRS.forms.deleteAliasComplete = function(response, data) {
+		if (response.alreadyProcessed) {
+			return;
+		}
+
+		var $row = $("#aliases_table tr[data-alias=" + String(data.aliasName).toLowerCase().escapeHTML() + "]");
+
+		$row.addClass("tentative");
+
+		
+		$row.find("td.status").html("<span class='label label-small label-info'>" + $.t("delete_alias") + "</span>");
+
 	}
 
 	/*

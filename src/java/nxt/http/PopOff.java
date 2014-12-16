@@ -32,13 +32,18 @@ public final class PopOff extends APIServlet.APIRequestHandler {
 
         List<? extends Block> blocks;
         JSONArray blocksJSON = new JSONArray();
-        if (numBlocks > 0) {
-            blocks = Nxt.getBlockchainProcessor().popOffTo(Nxt.getBlockchain().getHeight() - numBlocks);
-        } else if (height > 0) {
-            blocks = Nxt.getBlockchainProcessor().popOffTo(height);
-        } else {
-            response.put("error", "invalid numBlocks or height");
-            return response;
+        try {
+            Nxt.getBlockchainProcessor().setGetMoreBlocks(false);
+            if (numBlocks > 0) {
+                blocks = Nxt.getBlockchainProcessor().popOffTo(Nxt.getBlockchain().getHeight() - numBlocks);
+            } else if (height > 0) {
+                blocks = Nxt.getBlockchainProcessor().popOffTo(height);
+            } else {
+                response.put("error", "invalid numBlocks or height");
+                return response;
+            }
+        } finally {
+            Nxt.getBlockchainProcessor().setGetMoreBlocks(true);
         }
         for (Block block : blocks) {
             blocksJSON.add(JSONData.block(block, true));

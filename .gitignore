@@ -11,11 +11,11 @@
 /nxt.jar
 /nxt_test_db
 /README_win.txt
-/package.sh
 /nxt.log.lck
 /bin
 /.classpath
 /.project
 /.settings/
 /compile.bat
+/test/classes/
 *.csv

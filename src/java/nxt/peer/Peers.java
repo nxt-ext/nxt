@@ -6,6 +6,7 @@ import nxt.Constants;
 import nxt.Db;
 import nxt.Nxt;
 import nxt.Transaction;
+import nxt.util.Filter;
 import nxt.util.JSON;
 import nxt.util.Listener;
 import nxt.util.Listeners;
@@ -68,7 +69,7 @@ public final class Peers {
     static final boolean getMorePeers;
 
     private static final int DEFAULT_PEER_PORT = 7874;
-    private static final int TESTNET_PEER_PORT = 6874;
+    private static final int TESTNET_PEER_PORT = 2874;
     private static final String myPlatform;
     private static final String myAddress;
     private static final int myPeerServerPort;
@@ -532,21 +533,36 @@ public final class Peers {
         return allPeers;
     }
 
-    public static Collection<? extends Peer> getActivePeers() {
-        List<PeerImpl> activePeers = new ArrayList<>();
-        for (PeerImpl peer : peers.values()) {
-            if (peer.getState() != Peer.State.NON_CONNECTED) {
-                activePeers.add(peer);
+    public static List<Peer> getActivePeers() {
+        return getPeers(new Filter<Peer>() {
+            @Override
+            public boolean ok(Peer peer) {
+                return peer.getState() != Peer.State.NON_CONNECTED;
             }
-        }
-        return activePeers;
+        });
     }
 
-    public static Collection<? extends Peer> getPeers(Peer.State state) {
-        List<PeerImpl> peerList = new ArrayList<>();
+    public static List<Peer> getPeers(final Peer.State state) {
+        return getPeers(new Filter<Peer>() {
+            @Override
+            public boolean ok(Peer peer) {
+                return peer.getState() == state;
+            }
+        });
+    }
+
+    public static List<Peer> getPeers(Filter<Peer> filter) {
+        return getPeers(filter, Integer.MAX_VALUE);
+    }
+
+    public static List<Peer> getPeers(Filter<Peer> filter, int limit) {
+        List<Peer> peerList = new ArrayList<>();
         for (PeerImpl peer : peers.values()) {
-            if (peer.getState() == state) {
+            if (filter.ok(peer)) {
                 peerList.add(peer);
+                if (peerList.size() >= limit) {
+                    return peerList;
+                }
             }
         }
         return peerList;
@@ -649,7 +665,7 @@ public final class Peers {
         sendToSomePeers(request);
     }
 
-    public static void sendToSomePeers(List<Transaction> transactions) {
+    public static void sendToSomePeers(List<? extends Transaction> transactions) {
         JSONObject request = new JSONObject();
         JSONArray transactionsData = new JSONArray();
         for (Transaction transaction : transactions) {
@@ -705,39 +721,43 @@ public final class Peers {
 
     }
 
-    public static Peer getAnyPeer(Peer.State state, boolean applyPullThreshold) {
+    public static Peer getAnyPeer(final Peer.State state, final boolean applyPullThreshold) {
+        return getWeightedPeer(getPublicPeers(state, applyPullThreshold));
+    }
 
-        List<Peer> selectedPeers = new ArrayList<>();
-        for (Peer peer : peers.values()) {
-            if (! peer.isBlacklisted() && peer.getState() == state && peer.shareAddress()
-                    && (!applyPullThreshold || ! Peers.enableHallmarkProtection || peer.getWeight() >= Peers.pullThreshold)) {
-                selectedPeers.add(peer);
+    public static List<Peer> getPublicPeers(final Peer.State state, final boolean applyPullThreshold) {
+        return getPeers(new Filter<Peer>() {
+            @Override
+            public boolean ok(Peer peer) {
+                return !peer.isBlacklisted() && peer.getState() == state && peer.getAnnouncedAddress() != null
+                        && (!applyPullThreshold || !Peers.enableHallmarkProtection || peer.getWeight() >= Peers.pullThreshold);
             }
+        });
+    }
+
+    public static Peer getWeightedPeer(List<Peer> selectedPeers) {
+        if (selectedPeers.isEmpty()) {
+            return null;
         }
-
-        if (selectedPeers.size() > 0) {
-            if (! Peers.enableHallmarkProtection) {
-                return selectedPeers.get(ThreadLocalRandom.current().nextInt(selectedPeers.size()));
+        if (! Peers.enableHallmarkProtection) {
+            return selectedPeers.get(ThreadLocalRandom.current().nextInt(selectedPeers.size()));
+        }
+        long totalWeight = 0;
+        for (Peer peer : selectedPeers) {
+            long weight = peer.getWeight();
+            if (weight == 0) {
+                weight = 1;
             }
-
-            long totalWeight = 0;
-            for (Peer peer : selectedPeers) {
-                long weight = peer.getWeight();
-                if (weight == 0) {
-                    weight = 1;
-                }
-                totalWeight += weight;
+            totalWeight += weight;
+        }
+        long hit = ThreadLocalRandom.current().nextLong(totalWeight);
+        for (Peer peer : selectedPeers) {
+            long weight = peer.getWeight();
+            if (weight == 0) {
+                weight = 1;
             }
-
-            long hit = ThreadLocalRandom.current().nextLong(totalWeight);
-            for (Peer peer : selectedPeers) {
-                long weight = peer.getWeight();
-                if (weight == 0) {
-                    weight = 1;
-                }
-                if ((hit -= weight) < 0) {
-                    return peer;
-                }
+            if ((hit -= weight) < 0) {
+                return peer;
             }
         }
         return null;
@@ -767,16 +787,13 @@ public final class Peers {
     }
 
     private static boolean hasEnoughConnectedPublicPeers(int limit) {
-        int numberOfConnectedPeers = 0;
-        for (Peer peer : peers.values()) {
-            if (peer.getState() == Peer.State.CONNECTED && peer.getAnnouncedAddress() != null
-                    && (! Peers.enableHallmarkProtection || peer.getWeight() > 0)) {
-                if (++numberOfConnectedPeers > limit) {
-                    return true;
-                }
+        return getPeers(new Filter<Peer>() {
+            @Override
+            public boolean ok(Peer peer) {
+                return !peer.isBlacklisted() && peer.getState() == Peer.State.CONNECTED && peer.getAnnouncedAddress() != null
+                        && (! Peers.enableHallmarkProtection || peer.getWeight() > 0);
             }
-        }
-        return false;
+        }, limit).size() >= limit;
     }
 
     private Peers() {} // never
