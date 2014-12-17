@@ -87,7 +87,8 @@ var NRS = (function(NRS, $, undefined) {
                         "dividend_payment_info_preview_success",
                         {
                             "amountNXT": totalNXT,
-                            "totalQuantity": NRS.formatQuantity(totalQuantityQNT, NRS.currentAsset.decimals)
+                            "totalQuantity": NRS.formatQuantity(totalQuantityQNT, NRS.currentAsset.decimals),
+                            "recipientCount": qualifiedDividendRecipients.length
                         }));
                     $callout.removeClass(classes).addClass("callout-info").show();
                 },
