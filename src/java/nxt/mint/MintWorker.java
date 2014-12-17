@@ -112,9 +112,12 @@ public class MintWorker {
         }
         long solution = solve(executorService, workersList);
         long computationTime = System.currentTimeMillis() - startTime;
+        if (computationTime == 0) {
+            computationTime = 1;
+        }
         long hashes = solution - initialNonce;
-        Logger.logInfoMessage("solution nonce %d computed hashes %d time [sec] %.2f hash rate [KH/Sec] %d actual time vs. expected %.2f is submitted %b",
-                solution, hashes, (float) computationTime / 1000, hashes / computationTime, (float) hashes / (float) difficulty, isSubmitted);
+        Logger.logInfoMessage("solution nonce %d unitsNQT %d counter %d computed hashes %d time [sec] %.2f hash rate [KH/Sec] %d actual time vs. expected %.2f is submitted %b",
+                solution, units, counter, hashes, (float) computationTime / 1000, hashes / computationTime, (float) hashes / (float) difficulty, isSubmitted);
         JSONObject response;
         if (isSubmitted) {
             response = currencyMint(secretPhrase, currencyId, solution, units, counter);
@@ -264,7 +267,7 @@ public class MintWorker {
                 }
                 n+=poolSize;
                 if (((n - nonce) % (poolSize * 1000000)) == 0) {
-                    Logger.logDebugMessage("%s computed %d [MH]", Thread.currentThread().getName(), (n - nonce) / poolSize / 1000000);
+                    Logger.logInfoMessage("%s computed %d [MH]", Thread.currentThread().getName(), (n - nonce) / poolSize / 1000000);
                 }
             }
             return null;
