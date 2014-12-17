@@ -720,14 +720,14 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     if (transaction.getId() == 0L) {
                         throw new TransactionNotAcceptedException("Invalid transaction id", transaction);
                     }
-                    if (transaction.isDuplicate(duplicates)) {
-                        throw new TransactionNotAcceptedException("Transaction is a duplicate: "
-                                + transaction.getStringId(), transaction);
-                    }
                     try {
                         transaction.validate();
                     } catch (NxtException.ValidationException e) {
                         throw new TransactionNotAcceptedException(e.getMessage(), transaction);
+                    }
+                    if (transaction.isDuplicate(duplicates)) {
+                        throw new TransactionNotAcceptedException("Transaction is a duplicate: "
+                                + transaction.getStringId(), transaction);
                     }
 
                     calculatedTotalAmount += transaction.getAmountNQT();
@@ -931,16 +931,16 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     continue;
                 }
 
-                if (unconfirmedTransaction.getTransaction().isDuplicate(duplicates)) {
-                    continue;
-                }
-
                 try {
                     unconfirmedTransaction.getTransaction().validate();
                 } catch (NxtException.NotCurrentlyValidException e) {
                     continue;
                 } catch (NxtException.ValidationException e) {
                     transactionProcessor.removeUnconfirmedTransaction(unconfirmedTransaction.getTransaction());
+                    continue;
+                }
+
+                if (unconfirmedTransaction.getTransaction().isDuplicate(duplicates)) {
                     continue;
                 }
 
@@ -1111,10 +1111,10 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                                         //throw new NxtException.NotValidException("Invalid transaction fork");
                                     }
                                     */
+                                    transaction.validate();
                                     if (transaction.isDuplicate(duplicates)) {
                                         throw new NxtException.NotValidException("Transaction is a duplicate: " + transaction.getStringId());
                                     }
-                                    transaction.validate();
                                     byte[] transactionBytes = transaction.getBytes();
                                     if (currentBlock.getHeight() > Constants.NQT_BLOCK
                                             && !Arrays.equals(transactionBytes, transactionProcessor.parseTransaction(transactionBytes).getBytes())) {
