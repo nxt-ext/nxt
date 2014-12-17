@@ -52,7 +52,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
 
     private final List<DerivedDbTable> derivedTables = new CopyOnWriteArrayList<>();
     private final boolean trimDerivedTables = Nxt.getBooleanProperty("nxt.trimDerivedTables");
-    private final int numberOfForkConfirmations = Nxt.getIntProperty("nxt.numberOfForkConfirmations");
+    private final int numberOfForkConfirmations = Nxt.getIntProperty(Constants.isTestnet ? "nxt.testnetNumberOfForkConfirmations" : "nxt.numberOfForkConfirmations");
 
     private volatile int lastTrimHeight;
 
