@@ -4,3 +4,5 @@ Fixed Currency Exchange Booth not working. Fixed currency decimals issue.
 
 Show total alias count in aliases page.
 
+Alias deletion UI fixes.
+
