@@ -3251,6 +3251,10 @@ a.list-group-item.active h4 span {
 .sidebar-menu #sidebar_dgs_seller > a[data-page~='my_dgs_listings'] i:first-child:before {content: "";}
 .sidebar-menu #sidebar_dgs_seller > a[data-page~='my_dgs_listings'] .pull-right {margin:15px 10px 0 0}
 
+.sidebar-menu #sidebar_monetary_system > a[data-page~='monetary_system'] i:first-child { background: #003b55 url(../img/corporate/nav/market.svg) no-repeat center center; background-size: 22px; height: 50px; width: 50px;}
+.sidebar-menu #sidebar_monetary_system > a[data-page~='monetary_system'] i:first-child:before {content: "";}
+.sidebar-menu #sidebar_monetary_system > a[data-page~='monetary_system'] .pull-right {margin:15px 10px 0 0}
+
 .sidebar-menu .treeview > a[data-page~='freemarket'] i:first-child { background: #003b55 url(../img/corporate/nav/market.svg) no-repeat center center; background-size: 22px; height: 50px; width: 50px;}
 .sidebar-menu .treeview > a[data-page~='freemarket'] i:first-child:before {content: "";}
 .sidebar-menu .treeview > a[data-page~='freemarket'] .pull-right {margin:15px 10px 0 0}

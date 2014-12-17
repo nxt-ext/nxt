@@ -101,6 +101,9 @@ var NRS = (function(NRS, $, undefined) {
 						case 7:
 							rows += "<i title='" + $.t("alias_buy") + "' class='fa fa-bookmark'></i> <i class='fa fa-money'></i>";
 							break;
+						case 8:
+							rows += "<i title='" + $.t("alias_deletion") + "' class='fa fa-bookmark'></i> <i class='fa fa-times'></i>";
+							break;
 					}
 				} else if (transaction.type == 2) {
 					switch (transaction.subtype) {
@@ -406,6 +409,9 @@ var NRS = (function(NRS, $, undefined) {
 						case 7:
 							rows += "<i title='" + $.t("alias_buy") + "' class='fa fa-bookmark'></i> <i class='fa fa-money'></i>";
 							break;
+						case 8:
+							rows += "<i title='" + $.t("alias_deletion") + "' class='fa fa-bookmark'></i> <i class='fa fa-times'></i>";
+							break;
 					}
 				} else if (transaction.type == 2) {
 					switch (transaction.subtype) {
@@ -675,6 +681,9 @@ var NRS = (function(NRS, $, undefined) {
 					break;
 				case 7:
 					transactionType = $.t("alias_buy");
+					break;
+				case 8:
+					transactionType = $.t("alias_deletion");
 					break;
 			}
 		} else if (transaction.type == 2) {
