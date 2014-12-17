@@ -3,6 +3,11 @@
  */
 var NRS = (function(NRS, $, undefined) {
 	NRS.pages.aliases = function() {
+		var alias_count;
+		NRS.sendRequest("getAliasCount+", {"account":NRS.account}, function(response) {
+			alias_count = response.numberOfAliases;
+		});
+		
 		NRS.sendRequest("getAliases+", {
 			"account": NRS.account,
 			"firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
@@ -59,9 +64,9 @@ var NRS = (function(NRS, $, undefined) {
 				var alias_account_count = 0,
 					alias_uri_count = 0,
 					empty_alias_count = 0,
-					alias_count = aliases.length;
+					page_alias_count = aliases.length;
 
-				for (var i = 0; i < alias_count; i++) {
+				for (var i = 0; i < page_alias_count; i++) {
 					var alias = aliases[i];
 
 					alias.status = "/";
