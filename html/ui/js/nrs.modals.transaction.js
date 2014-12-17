@@ -298,6 +298,19 @@ var NRS = (function(NRS, $, undefined) {
 					$("#transaction_info_table").show();
 
 					break;
+				case 8:
+					var data = {
+						"type": $.t("alias_deletion"),
+						"alias_name": transaction.attachment.alias,
+						"price": transaction.amountNQT,
+						"recipient": NRS.getAccountTitle(transaction, "recipient"),
+						"sender": NRS.getAccountTitle(transaction, "sender")
+					}
+
+					$("#transaction_info_table tbody").append(NRS.createInfoTable(data));
+					$("#transaction_info_table").show();
+
+					break;
 				default:
 					incorrect = true;
 					break;
