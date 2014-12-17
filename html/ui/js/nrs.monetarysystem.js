@@ -62,8 +62,6 @@ var NRS = (function(NRS, $, undefined) {
 			$("#sell_currency_with_nxt").html("Exchange " + currencyCode + " for NXT");
 			$("#sell_currency_offers").html("Offers to Exchange " + currencyCode + " for NXT");
 			$(".currency_code").html(String(currencyCode).escapeHTML());
-			$("#sell_currency_button").data("currency", currencyCode);
-			$("#buy_currency_button").data("currency", currencyCode);
 		}
 
 		var currencyId = 0;
@@ -82,7 +80,9 @@ var NRS = (function(NRS, $, undefined) {
 				$("#currency_max_supply").html(NRS.convertToQNTf(response.maxSupply, response.decimals).escapeHTML());
 				$("#currency_decimals").html(String(response.decimals).escapeHTML());
 				$("#currency_description").html(String(response.description).escapeHTML());
+				$("#buy_currency_button").data("currency", currencyId);
 				$("#buy_currency_button").data("decimals", response.decimals);
+				$("#sell_currency_button").data("currency", currencyId);
 				$("#sell_currency_button").data("decimals", response.decimals);
 			} else {
 				$("#MSnoCode").show();
@@ -480,7 +480,7 @@ var NRS = (function(NRS, $, undefined) {
 		}
 
 		$("#currency_order_type").val((exchangeType == "buy" ? "currencyBuy" : "currencySell"));
-		$("#currency_order_code").val(currencyId);
+		$("#currency_order_currency").val(currencyId);
 		$("#currency_order_quantity").val(unitsQNT.toString());
 		$("#currency_order_price").val(rateNQT.toString());
 		$("#currency_order_fee").val(feeNQT.toString());
