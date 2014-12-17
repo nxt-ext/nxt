@@ -200,6 +200,7 @@ public final class APIServlet extends HttpServlet {
         map.put("getForging", GetForging.instance);
         map.put("transferAsset", TransferAsset.instance);
         map.put("transferCurrency", TransferCurrency.instance);
+        map.put("canDeleteCurrency", CanDeleteCurrency.instance);
         map.put("deleteCurrency", DeleteCurrency.instance);
         map.put("dividendPayment", DividendPayment.instance);
         map.put("searchDGSGoods", SearchDGSGoods.instance);
