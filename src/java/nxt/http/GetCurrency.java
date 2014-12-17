@@ -35,8 +35,7 @@ public final class GetCurrency extends APIServlet.APIRequestHandler {
         if (currency == null) {
             throw new ParameterException(UNKNOWN_CURRENCY);
         }
-
-        return JSONData.currency(ParameterParser.getCurrency(req), includeCounts);
+        return JSONData.currency(currency, includeCounts);
     }
 
 }
