@@ -302,8 +302,6 @@ var NRS = (function(NRS, $, undefined) {
 					var data = {
 						"type": $.t("alias_deletion"),
 						"alias_name": transaction.attachment.alias,
-						"price": transaction.amountNQT,
-						"recipient": NRS.getAccountTitle(transaction, "recipient"),
 						"sender": NRS.getAccountTitle(transaction, "sender")
 					}
 
