@@ -3,6 +3,7 @@ package nxt.http;
 import nxt.Account;
 import nxt.Attachment;
 import nxt.NxtException;
+import nxt.util.Convert;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
@@ -17,9 +18,10 @@ public final class SendMessage extends CreateTransaction {
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
-        long recipient = ParameterParser.getRecipientId(req);
+        String recipientValue = Convert.emptyToNull(req.getParameter("recipient"));
+        long recipientId = recipientValue != null ? ParameterParser.getRecipientId(req) : 0;
         Account account = ParameterParser.getSenderAccount(req);
-        return createTransaction(req, account, recipient, 0, Attachment.ARBITRARY_MESSAGE);
+        return createTransaction(req, account, recipientId, 0, Attachment.ARBITRARY_MESSAGE);
     }
 
 }

@@ -10,9 +10,12 @@ var NRS = (function(NRS, $, undefined) {
 		"fee_warning": "100000000000",
 		"amount_warning": "10000000000000",
 		"asset_transfer_warning": "10000",
+		"currency_transfer_warning": "10000",
 		"24_hour_format": 1,
 		"remember_passphrase": 0,
-		"language": "en"
+		"language": "en",
+		"items_page": 15,
+		"themeChoice": "default"
 	};
 
 	NRS.defaultColors = {
@@ -185,7 +188,7 @@ var NRS = (function(NRS, $, undefined) {
 		}
 
 		for (var key in NRS.settings) {
-			if (/_warning/i.test(key) && key != "asset_transfer_warning") {
+			if (/_warning/i.test(key) && key != "asset_transfer_warning" && key != "currency_transfer_warning") {
 				if ($("#settings_" + key).length) {
 					$("#settings_" + key).val(NRS.convertToNXT(NRS.settings[key]));
 				}
@@ -442,9 +445,31 @@ var NRS = (function(NRS, $, undefined) {
 			}
 			NRS.applySettings();
 		}
-	}
-
+	};
 	NRS.applySettings = function(key) {
+	    if (!key || key == "themeChoice") {
+			if(NRS.settings["themeChoice"] == "default"){
+				var oldlink = document.getElementsByTagName("link").item(3);
+				var newlink = document.createElement("link");
+        		newlink.setAttribute("rel", "stylesheet");
+       			newlink.setAttribute("type", "text/css");
+        		newlink.setAttribute("href", 'css/app.css');
+				document.getElementsByTagName("head").item(0).replaceChild(newlink, oldlink);
+				$("#settings_box .box-success form .box-body .form-group").css("display", "block");
+			}
+			else if (NRS.settings["themeChoice"] != ""){
+				var oldlink = document.getElementsByTagName("link").item(3);
+				var newlink = document.createElement("link");
+        		newlink.setAttribute("rel", "stylesheet");
+       			newlink.setAttribute("type", "text/css");
+        		newlink.setAttribute("href", "css/" + NRS.settings["themeChoice"] + ".css");
+				document.getElementsByTagName("head").item(0).replaceChild(newlink, oldlink);
+				$("#settings_box .box-success form .box-body .form-group").css("display", "none");
+				$("#settings_box .box-success form .box-body .form-group:first-child").css("display", "block");
+			}
+			$("#change_theme").val(NRS.settings["themeChoice"]);
+		}
+		
 		if (!key || key == "language") {
 			if ($.i18n.lng() != NRS.settings["language"]) {
 				$.i18n.setLng(NRS.settings["language"], null, function() {
@@ -487,6 +512,10 @@ var NRS = (function(NRS, $, undefined) {
 			} else if (NRS.settings["news"] == 1) {
 				$("#news_link").show();
 			}
+		}
+		
+		if (!key || key == "items_page") {
+			NRS.itemsPerPage = NRS.settings["items_page"];
 		}
 
 		if (!NRS.inApp && !NRS.downloadingBlockchain) {
@@ -549,7 +578,7 @@ var NRS = (function(NRS, $, undefined) {
 		var key = $(this).attr("name");
 		var value = $(this).val();
 
-		if (/_warning/i.test(key) && key != "asset_transfer_warning") {
+		if (/_warning/i.test(key) && key != "asset_transfer_warning" && key != "currency_transfer_warning") {
 			value = NRS.convertToNQT(value);
 		}
 		NRS.updateSettings(key, value);

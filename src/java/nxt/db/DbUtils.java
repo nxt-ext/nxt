@@ -1,5 +1,8 @@
 package nxt.db;
 
+import nxt.util.Logger;
+
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Types;
@@ -14,6 +17,17 @@ public final class DbUtils {
                 } catch (Exception ignore) {}
             }
         }
+    }
+
+    public static void rollback(Connection con) {
+        try {
+            if (con != null) {
+                con.rollback();
+            }
+        } catch (SQLException e) {
+            Logger.logErrorMessage(e.toString(), e);
+        }
+
     }
 
     public static void setBytes(PreparedStatement pstmt, int index, byte[] bytes) throws SQLException {
@@ -55,7 +69,7 @@ public final class DbUtils {
         } else if (limit > 0) {
             return " LIMIT ? ";
         } else if (from > 0) {
-            return " OFFSET ? ";
+            return " LIMIT NULL OFFSET ? ";
         } else {
             return "";
         }

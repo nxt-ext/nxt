@@ -1,6 +1,7 @@
 package nxt;
 
 import nxt.crypto.Crypto;
+import nxt.db.DbIterator;
 import nxt.util.Listener;
 import nxt.util.Logger;
 import org.junit.Assert;
@@ -18,17 +19,19 @@ public abstract class AbstractBlockchainTest {
         Properties testProperties = new Properties();
         testProperties.setProperty("nxt.shareMyAddress", "false");
         testProperties.setProperty("nxt.savePeers", "false");
-        testProperties.setProperty("nxt.enableAPIServer", "false");
-        testProperties.setProperty("nxt.enableUIServer", "false");
+        //testProperties.setProperty("nxt.enableAPIServer", "false");
+        //testProperties.setProperty("nxt.enableUIServer", "false");
         testProperties.setProperty("nxt.disableGenerateBlocksThread", "true");
-        testProperties.setProperty("nxt.disableProcessTransactionsThread", "true");
-        testProperties.setProperty("nxt.disableRemoveUnconfirmedTransactionsThread", "true");
-        testProperties.setProperty("nxt.disableRebroadcastTransactionsThread", "true");
-        testProperties.setProperty("nxt.disablePeerUnBlacklistingThread", "true");
-        testProperties.setProperty("nxt.getMorePeers", "false");
+        //testProperties.setProperty("nxt.disableProcessTransactionsThread", "true");
+        //testProperties.setProperty("nxt.disableRemoveUnconfirmedTransactionsThread", "true");
+        //testProperties.setProperty("nxt.disableRebroadcastTransactionsThread", "true");
+        //testProperties.setProperty("nxt.disablePeerUnBlacklistingThread", "true");
+        //testProperties.setProperty("nxt.getMorePeers", "false");
+        testProperties.setProperty("nxt.testUnconfirmedTransactions", "true");
         testProperties.setProperty("nxt.debugTraceAccounts", "");
         testProperties.setProperty("nxt.debugLogUnconfirmed", "false");
         testProperties.setProperty("nxt.debugTraceQuote", "\"");
+        testProperties.setProperty("nxt.numberOfForkConfirmations", "0");
         return testProperties;
     }
 
@@ -49,20 +52,28 @@ public abstract class AbstractBlockchainTest {
     }
 
     protected static void shutdown() {
-        Nxt.shutdown();
+        TransactionProcessorImpl transactionProcessor = TransactionProcessorImpl.getInstance();
+        DbIterator<UnconfirmedTransaction> allUnconfirmedTransactions = transactionProcessor.getAllUnconfirmedTransactions();
+        for (UnconfirmedTransaction unconfirmedTransaction : allUnconfirmedTransactions) {
+            transactionProcessor.removeUnconfirmedTransaction(unconfirmedTransaction.getTransaction());
+        }
     }
 
     protected static void downloadTo(final int endHeight) {
-        Assert.assertTrue(blockchain.getHeight() <= endHeight);
+        if (blockchain.getHeight() == endHeight) {
+            return;
+        }
+        Assert.assertTrue(blockchain.getHeight() < endHeight);
         Listener<Block> stopListener = new Listener<Block>() {
             @Override
             public void notify(Block block) {
                 if (blockchain.getHeight() == endHeight) {
                     synchronized (doneLock) {
                         done = true;
+                        blockchainProcessor.setGetMoreBlocks(false);
                         doneLock.notifyAll();
+                        throw new NxtException.StopException("Reached height " + endHeight);
                     }
-                    throw new NxtException.StopException("Reached height " + endHeight);
                 }
             }
         };
@@ -84,6 +95,9 @@ public abstract class AbstractBlockchainTest {
     }
 
     protected static void forgeTo(final int endHeight, final String secretPhrase) {
+        if (blockchain.getHeight() == endHeight) {
+            return;
+        }
         Assert.assertTrue(blockchain.getHeight() < endHeight);
         Listener<Block> stopListener = new Listener<Block>() {
             @Override
@@ -91,9 +105,9 @@ public abstract class AbstractBlockchainTest {
                 if (blockchain.getHeight() == endHeight) {
                     synchronized (doneLock) {
                         done = true;
+                        Generator.stopForging(secretPhrase);
                         doneLock.notifyAll();
                     }
-                    Generator.stopForging(secretPhrase);
                 }
             }
         };

@@ -525,6 +525,9 @@ var NRS = (function(NRS, $, undefined) {
 			var nonceField = (typeof title != "string" ? title.nonce : key + "Nonce");
 
 			if (key == "encryptedMessage" || key == "encryptToSelfMessage") {
+			    if (key == "encryptToSelfMessage") {
+					otherAccount=accountId;
+				}
 				encrypted = _encryptedNote.transaction.attachment[key].data;
 				nonce = _encryptedNote.transaction.attachment[key].nonce;
 			} else if (_encryptedNote.transaction.attachment && _encryptedNote.transaction.attachment[key]) {

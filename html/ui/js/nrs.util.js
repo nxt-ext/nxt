@@ -282,7 +282,7 @@ var NRS = (function(NRS, $, undefined) {
 
 			if (!/^[0]+$/.test(toRemove)) {
 				//return new Big(price).div(new Big(Math.pow(10, decimals))).round(8, 0);
-				throw "Invalid input.";
+				throw $.t("error_invalid_input");
 			} else {
 				return price.slice(0, -decimals);
 			}
@@ -384,7 +384,7 @@ var NRS = (function(NRS, $, undefined) {
 
 			return parts[0] + "." + fraction;
 		} else {
-			throw "Incorrect input";
+			throw $.t("error_invalid_input");
 		}
 	}
 
@@ -405,7 +405,7 @@ var NRS = (function(NRS, $, undefined) {
 				var fraction = parts[1].substring(0, 8);
 			}
 		} else {
-			throw "Invalid input";
+			throw $.t("error_invalid_input");
 		}
 
 		for (var i = fraction.length; i < 8; i++) {
@@ -416,7 +416,7 @@ var NRS = (function(NRS, $, undefined) {
 
 		//in case there's a comma or something else in there.. at this point there should only be numbers
 		if (!/^\d+$/.test(result)) {
-			throw "Invalid input.";
+			throw $.t("error_invalid_input");
 		}
 
 		//remove leading zeroes
@@ -947,32 +947,6 @@ var NRS = (function(NRS, $, undefined) {
 
 	NRS.createInfoTable = function(data, fixed) {
 		var rows = "";
-
-		/*
-		var keys = [];
-
-		if (Object.keys) {
-			keys = Object.keys(data);
-		} else {
-			for (var key in data) {
-				keys.push(key);
-			}
-		}
-
-		keys.sort(function(a, b) {
-			if (a < b) {
-				return -1;
-			} else if (a > b) {
-				return 1
-			} else {
-				return 0
-			}
-		});
-
-		for (var i = 0; i < keys.length; i++) {
-			var key = keys[i];
-		*/
-
 		for (var key in data) {
 			var value = data[key];
 
@@ -995,7 +969,9 @@ var NRS = (function(NRS, $, undefined) {
 			} else if (/_formatted$/i.test(key)) {
 				key = key.replace("_formatted", "");
 				value = String(value).escapeHTML();
-			} else if (key == "quantity" && $.isArray(value)) {
+			} else if ((key == "quantity" || key == "units" || key == "initial_buy_supply" || key == "initial_sell_supply" ||
+				key == "total_buy_limit" || key == "total_sell_limit" || key == "units_exchanged" || key == "total_exchanged" ||
+				key == "initial_units" || key == "reserve_units" || key == "max_units") && $.isArray(value)) {
 				if ($.isArray(value)) {
 					value = NRS.formatQuantity(value[0], value[1]);
 				} else {
@@ -1005,11 +981,13 @@ var NRS = (function(NRS, $, undefined) {
 				value = NRS.formatAmount(new BigInteger(String(value))) + " NXT";
 			} else if (key == "sender" || key == "recipient" || key == "account" || key == "seller" || key == "buyer") {
 				value = "<a href='#' data-user='" + String(value).escapeHTML() + "'>" + NRS.getAccountTitle(value) + "</a>";
+			} else if (key == "request_processing_time") { /* Skip from displaying request processing time */
+				continue;
 			} else {
 				value = String(value).escapeHTML().nl2br();
 			}
 
-			rows += "<tr><td style='font-weight:bold;white-space:nowrap" + (fixed ? ";width:150px" : "") + "'>" + $.t(key).escapeHTML() + (type ? " " + type.escapeHTML() : "") + ":</td><td style='width:90%;word-break:break-all'>" + value + "</td></tr>";
+			rows += "<tr><td style='font-weight:bold" + (fixed ? ";width:150px" : "") + "'>" + $.t(key).escapeHTML() + (type ? " " + type.escapeHTML() : "") + ":</td><td style='width:90%;word-break:break-all'>" + value + "</td></tr>";
 		}
 
 		return rows;
@@ -1188,6 +1166,11 @@ var NRS = (function(NRS, $, undefined) {
 			$('.left-side').toggleClass("collapse-left");
 			$(".right-side").toggleClass("strech");
 		}
+		
+		$(".left-side").one($.support.transition.end,
+		function() {
+			$(".content.content-stretch:visible").width($(".page:visible").width());
+		});
 	});
 
 	$.fn.tree = function() {

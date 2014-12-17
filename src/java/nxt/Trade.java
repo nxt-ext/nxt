@@ -1,6 +1,5 @@
 package nxt;
 
-import nxt.db.Db;
 import nxt.db.DbClause;
 import nxt.db.DbIterator;
 import nxt.db.DbKey;
@@ -69,7 +68,7 @@ public final class Trade {
     public static DbIterator<Trade> getAccountTrades(long accountId, int from, int to) {
         Connection con = null;
         try {
-            con = Db.getConnection();
+            con = Db.db.getConnection();
             PreparedStatement pstmt = con.prepareStatement("SELECT * FROM trade WHERE seller_id = ?"
                     + " UNION ALL SELECT * FROM trade WHERE buyer_id = ? AND seller_id <> ? ORDER BY height DESC"
                     + DbUtils.limitsClause(from, to));
@@ -88,7 +87,7 @@ public final class Trade {
     public static DbIterator<Trade> getAccountAssetTrades(long accountId, long assetId, int from, int to) {
         Connection con = null;
         try {
-            con = Db.getConnection();
+            con = Db.db.getConnection();
             PreparedStatement pstmt = con.prepareStatement("SELECT * FROM trade WHERE seller_id = ? AND asset_id = ?"
                     + " UNION ALL SELECT * FROM trade WHERE buyer_id = ? AND seller_id <> ? AND asset_id = ? ORDER BY height DESC"
                     + DbUtils.limitsClause(from, to));
@@ -107,20 +106,11 @@ public final class Trade {
     }
 
     public static int getTradeCount(long assetId) {
-        try (Connection con = Db.getConnection();
-             PreparedStatement pstmt = con.prepareStatement("SELECT COUNT(*) FROM trade WHERE asset_id = ?")) {
-            pstmt.setLong(1, assetId);
-            try (ResultSet rs = pstmt.executeQuery()) {
-                rs.next();
-                return rs.getInt(1);
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException(e.toString(), e);
-        }
+        return tradeTable.getCount(new DbClause.LongClause("asset_id", assetId));
     }
 
-    static Trade addTrade(long assetId, Block block, Order.Ask askOrder, Order.Bid bidOrder, long quantityQNT, long priceNQT) {
-        Trade trade = new Trade(assetId, block, askOrder, bidOrder, quantityQNT, priceNQT);
+    static Trade addTrade(long assetId, Block block, Order.Ask askOrder, Order.Bid bidOrder) {
+        Trade trade = new Trade(assetId, block, askOrder, bidOrder);
         tradeTable.insert(trade);
         listeners.notify(trade, Event.TRADE);
         return trade;
@@ -142,8 +132,9 @@ public final class Trade {
     private final DbKey dbKey;
     private final long quantityQNT;
     private final long priceNQT;
+    private final boolean isBuy;
 
-    private Trade(long assetId, Block block, Order.Ask askOrder, Order.Bid bidOrder, long quantityQNT, long priceNQT) {
+    private Trade(long assetId, Block block, Order.Ask askOrder, Order.Bid bidOrder) {
         this.blockId = block.getId();
         this.height = block.getHeight();
         this.assetId = assetId;
@@ -155,8 +146,9 @@ public final class Trade {
         this.sellerId = askOrder.getAccountId();
         this.buyerId = bidOrder.getAccountId();
         this.dbKey = tradeDbKeyFactory.newKey(this.askOrderId, this.bidOrderId);
-        this.quantityQNT = quantityQNT;
-        this.priceNQT = priceNQT;
+        this.quantityQNT = Math.min(askOrder.getQuantityQNT(), bidOrder.getQuantityQNT());
+        this.isBuy = askOrderHeight < bidOrderHeight || (askOrderHeight == bidOrderHeight && askOrderId < bidOrderId);
+        this.priceNQT = isBuy ? askOrder.getPriceNQT() : bidOrder.getPriceNQT();
     }
 
     private Trade(ResultSet rs) throws SQLException {
@@ -173,6 +165,7 @@ public final class Trade {
         this.priceNQT = rs.getLong("price");
         this.timestamp = rs.getInt("timestamp");
         this.height = rs.getInt("height");
+        this.isBuy = askOrderHeight < bidOrderHeight || (askOrderHeight == bidOrderHeight && askOrderId < bidOrderId);
     }
 
     private void save(Connection con) throws SQLException {
@@ -228,6 +221,10 @@ public final class Trade {
 
     public int getHeight() {
         return height;
+    }
+
+    public boolean isBuy() {
+        return isBuy;
     }
 
     @Override

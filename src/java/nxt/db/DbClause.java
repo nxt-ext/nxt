@@ -17,6 +17,20 @@ public abstract class DbClause {
 
     protected abstract int set(PreparedStatement pstmt, int index) throws SQLException;
 
+    public static final DbClause EMPTY_CLAUSE = new FixedClause(" TRUE ");
+
+    public static final class FixedClause extends DbClause {
+
+        public FixedClause(String clause) {
+            super(clause);
+        }
+
+        @Override
+        protected int set(PreparedStatement pstmt, int index) throws SQLException {
+            return index;
+        }
+
+    }
 
     public static final class StringClause extends DbClause {
 
@@ -45,6 +59,22 @@ public abstract class DbClause {
 
         protected int set(PreparedStatement pstmt, int index) throws SQLException {
             pstmt.setLong(index, value);
+            return index + 1;
+        }
+
+    }
+
+    public static final class IntClause extends DbClause {
+
+        private final int value;
+
+        public IntClause(String columnName, int value) {
+            super(" " + columnName + " = ? ");
+            this.value = value;
+        }
+
+        protected int set(PreparedStatement pstmt, int index) throws SQLException {
+            pstmt.setInt(index, value);
             return index + 1;
         }
 

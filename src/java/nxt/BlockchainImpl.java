@@ -1,6 +1,5 @@
 package nxt;
 
-import nxt.db.Db;
 import nxt.db.DbIterator;
 import nxt.db.DbUtils;
 
@@ -46,6 +45,15 @@ final class BlockchainImpl implements Blockchain {
     }
 
     @Override
+    public BlockImpl getLastBlock(int timestamp) {
+        BlockImpl block = lastBlock.get();
+        if (timestamp >= block.getTimestamp()) {
+            return block;
+        }
+        return BlockDb.findLastBlock(timestamp);
+    }
+
+    @Override
     public BlockImpl getBlock(long blockId) {
         BlockImpl block = lastBlock.get();
         if (block.getId() == blockId) {
@@ -63,8 +71,24 @@ final class BlockchainImpl implements Blockchain {
     public DbIterator<BlockImpl> getAllBlocks() {
         Connection con = null;
         try {
-            con = Db.getConnection();
+            con = Db.db.getConnection();
             PreparedStatement pstmt = con.prepareStatement("SELECT * FROM block ORDER BY db_id ASC");
+            return getBlocks(con, pstmt);
+        } catch (SQLException e) {
+            DbUtils.close(con);
+            throw new RuntimeException(e.toString(), e);
+        }
+    }
+
+    @Override
+    public DbIterator<BlockImpl> getBlocks(int from, int to) {
+        Connection con = null;
+        try {
+            con = Db.db.getConnection();
+            PreparedStatement pstmt = con.prepareStatement("SELECT * FROM block WHERE height <= ? AND height >= ? ORDER BY height DESC");
+            int blockchainHeight = getHeight();
+            pstmt.setInt(1, blockchainHeight - from);
+            pstmt.setInt(2, blockchainHeight - to);
             return getBlocks(con, pstmt);
         } catch (SQLException e) {
             DbUtils.close(con);
@@ -81,9 +105,9 @@ final class BlockchainImpl implements Blockchain {
     public DbIterator<BlockImpl> getBlocks(Account account, int timestamp, int from, int to) {
         Connection con = null;
         try {
-            con = Db.getConnection();
+            con = Db.db.getConnection();
             PreparedStatement pstmt = con.prepareStatement("SELECT * FROM block WHERE generator_id = ? "
-                    + (timestamp > 0 ? " AND timestamp >= ? " : " ") + "ORDER BY db_id DESC"
+                    + (timestamp > 0 ? " AND timestamp >= ? " : " ") + "ORDER BY height DESC"
                     + DbUtils.limitsClause(from, to));
             int i = 0;
             pstmt.setLong(++i, account.getId());
@@ -94,6 +118,20 @@ final class BlockchainImpl implements Blockchain {
             return getBlocks(con, pstmt);
         } catch (SQLException e) {
             DbUtils.close(con);
+            throw new RuntimeException(e.toString(), e);
+        }
+    }
+
+    @Override
+    public int getBlockCount(Account account) {
+        try (Connection con = Db.db.getConnection();
+            PreparedStatement pstmt = con.prepareStatement("SELECT COUNT(*) FROM block WHERE generator_id = ?")) {
+            pstmt.setLong(1, account.getId());
+            try (ResultSet rs = pstmt.executeQuery()) {
+                rs.next();
+                return rs.getInt(1);
+            }
+        } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
         }
     }
@@ -113,7 +151,7 @@ final class BlockchainImpl implements Blockchain {
         if (limit > 1440) {
             throw new IllegalArgumentException("Can't get more than 1440 blocks at a time");
         }
-        try (Connection con = Db.getConnection();
+        try (Connection con = Db.db.getConnection();
              PreparedStatement pstmt = con.prepareStatement("SELECT id FROM block WHERE db_id > (SELECT db_id FROM block WHERE id = ?) ORDER BY db_id ASC LIMIT ?")) {
             List<Long> result = new ArrayList<>();
             pstmt.setLong(1, blockId);
@@ -134,7 +172,7 @@ final class BlockchainImpl implements Blockchain {
         if (limit > 1440) {
             throw new IllegalArgumentException("Can't get more than 1440 blocks at a time");
         }
-        try (Connection con = Db.getConnection();
+        try (Connection con = Db.db.getConnection();
              PreparedStatement pstmt = con.prepareStatement("SELECT * FROM block WHERE db_id > (SELECT db_id FROM block WHERE id = ?) ORDER BY db_id ASC LIMIT ?")) {
             List<BlockImpl> result = new ArrayList<>();
             pstmt.setLong(1, blockId);
@@ -175,26 +213,6 @@ final class BlockchainImpl implements Blockchain {
     }
 
     @Override
-    public List<BlockImpl> getBlocksFromHeight(int height) {
-        if (height < 0 || getHeight() - height > 1440) {
-            throw new IllegalArgumentException("Can't go back more than 1440 blocks");
-        }
-        try (Connection con = Db.getConnection();
-             PreparedStatement pstmt = con.prepareStatement("SELECT * FROM block WHERE height >= ? ORDER BY height ASC")) {
-            pstmt.setInt(1, height);
-            List<BlockImpl> result = new ArrayList<>();
-            try (ResultSet rs = pstmt.executeQuery()) {
-                while (rs.next()) {
-                    result.add(BlockDb.loadBlock(con, rs));
-                }
-            }
-            return result;
-        } catch (SQLException|NxtException.ValidationException e) {
-            throw new RuntimeException(e.toString(), e);
-        }
-    }
-
-    @Override
     public Transaction getTransaction(long transactionId) {
         return TransactionDb.findTransaction(transactionId);
     }
@@ -216,7 +234,7 @@ final class BlockchainImpl implements Blockchain {
 
     @Override
     public int getTransactionCount() {
-        try (Connection con = Db.getConnection(); PreparedStatement pstmt = con.prepareStatement("SELECT COUNT(*) FROM transaction");
+        try (Connection con = Db.db.getConnection(); PreparedStatement pstmt = con.prepareStatement("SELECT COUNT(*) FROM transaction");
              ResultSet rs = pstmt.executeQuery()) {
             rs.next();
             return rs.getInt(1);
@@ -229,7 +247,7 @@ final class BlockchainImpl implements Blockchain {
     public DbIterator<TransactionImpl> getAllTransactions() {
         Connection con = null;
         try {
-            con = Db.getConnection();
+            con = Db.db.getConnection();
             PreparedStatement pstmt = con.prepareStatement("SELECT * FROM transaction ORDER BY db_id ASC");
             return getTransactions(con, pstmt);
         } catch (SQLException e) {
@@ -240,12 +258,12 @@ final class BlockchainImpl implements Blockchain {
 
     @Override
     public DbIterator<TransactionImpl> getTransactions(Account account, byte type, byte subtype, int blockTimestamp) {
-        return getTransactions(account, 0, type, subtype, blockTimestamp, 0, -1);
+        return getTransactions(account, 0, type, subtype, blockTimestamp, false, 0, -1);
     }
 
     @Override
     public DbIterator<TransactionImpl> getTransactions(Account account, int numberOfConfirmations, byte type, byte subtype,
-                                                       int blockTimestamp, int from, int to) {
+                                                       int blockTimestamp, boolean withMessage, int from, int to) {
         int height = numberOfConfirmations > 0 ? getHeight() - numberOfConfirmations : Integer.MAX_VALUE;
         if (height < 0) {
             throw new IllegalArgumentException("Number of confirmations required " + numberOfConfirmations
@@ -267,6 +285,9 @@ final class BlockchainImpl implements Blockchain {
             if (height < Integer.MAX_VALUE) {
                 buf.append("AND height <= ? ");
             }
+            if (withMessage) {
+                buf.append("AND (has_message = TRUE OR has_encrypted_message = TRUE) ");
+            }
             buf.append("UNION ALL SELECT * FROM transaction WHERE sender_id = ? ");
             if (blockTimestamp > 0) {
                 buf.append("AND block_timestamp >= ? ");
@@ -280,9 +301,12 @@ final class BlockchainImpl implements Blockchain {
             if (height < Integer.MAX_VALUE) {
                 buf.append("AND height <= ? ");
             }
-            buf.append("ORDER BY block_timestamp DESC, id DESC");
+            if (withMessage) {
+                buf.append("AND (has_message = TRUE OR has_encrypted_message = TRUE OR has_encrypttoself_message = TRUE) ");
+            }
+            buf.append("ORDER BY block_timestamp DESC, transaction_index DESC");
             buf.append(DbUtils.limitsClause(from, to));
-            con = Db.getConnection();
+            con = Db.db.getConnection();
             PreparedStatement pstmt;
             int i = 0;
             pstmt = con.prepareStatement(buf.toString());

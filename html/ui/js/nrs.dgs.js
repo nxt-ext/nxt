@@ -2,18 +2,47 @@
  * @depends {nrs.js}
  */
 var NRS = (function(NRS, $, undefined) {
+	var _tagsPerPage = 34;
 	var _goodsToShow;
-	var _currentSeller;
+	var _currentSearch = {
+		"page": "",
+		"searchStr": ""
+	};
 
 	NRS.getMarketplaceItemHTML = function(good) {
-		return "<div style='float:right;color: #999999;background:white;padding:5px;border:1px solid #ccc;border-radius:3px'>" +
-			"<strong>" + $.t("seller") + "</strong>: <span><a href='#' data-user='" + NRS.getAccountFormatted(good, "seller") + "' class='user_info'>" + NRS.getAccountTitle(good, "seller") + "</a></span><br>" +
+		var html = "";
+		var id = 'good_'+ String(good.goods).escapeHTML();
+		html += '<div id="' + id +'" style="border:1px solid #ccc;padding:12px;margin-top:12px;margin-bottom:12px;">';
+		html += "<div style='float:right;color: #999999;background:white;padding:5px;border:1px solid #ccc;border-radius:3px'>" +
+			"<strong>" + $.t("seller") + '</strong>: <span><a href="#" onclick="event.preventDefault();NRS.dgs_search_seller(\'' + NRS.getAccountFormatted(good, "seller") + '\')">' + NRS.getAccountTitle(good, "seller") + "</a></span> " +
+			"(<a href='#' data-user='" + NRS.getAccountFormatted(good, "seller") + "' class='user_info'>" + $.t('info') + "</a>)<br>" +
 			"<strong>" + $.t("product_id") + "</strong>: &nbsp;<a href='#'' data-toggle='modal' data-target='#dgs_product_modal' data-goods='" + String(good.goods).escapeHTML() + "'>" + String(good.goods).escapeHTML() + "</a>" +
 			"</div>" +
 			"<h3 class='title'><a href='#' data-goods='" + String(good.goods).escapeHTML() + "' data-toggle='modal' data-target='#dgs_purchase_modal'>" + String(good.name).escapeHTML() + "</a></h3>" +
 			"<div class='price'><strong>" + NRS.formatAmount(good.priceNQT) + " NXT</strong></div>" +
-			"<div class='showmore'><div class='moreblock description'>" + String(good.description).escapeHTML().nl2br() + "</div></div>" +
-			"<span class='quantity'><strong>" + $.t("quantity") + "</strong>: " + NRS.format(good.quantity) + "</span> <span class='tags'><strong>" + $.t("tags") + "</strong>: " + String(good.tags).escapeHTML() + "</span><hr />";
+			"<div class='showmore'><div class='moreblock description'>" + String(good.description).autoLink().nl2br() + "</div></div>" +
+			"<div>";
+		if (good.numberOfPublicFeedbacks > 0) {
+			html += "<div style='float:right;'><a href='#' class='feedback' data-goods='" + String(good.goods).escapeHTML() + "' ";
+			html += "data-toggle='modal' data-target='#dgs_show_feedback_modal'>" + $.t('show_feedback', 'Show Feedback') + "</a></div>";
+		}
+
+		html += "<span class='quantity'><strong>" + $.t("quantity") + "</strong>: " + NRS.format(good.quantity) + "</span>&nbsp;&nbsp; " +
+			"<span class='purchases'><strong>" + $.t("purchases", "Purchases") + "</strong>: " + NRS.format(good.numberOfPurchases) + "</span>&nbsp;&nbsp; " +
+			"<span class='tags' style='display:inline-block;'><strong>" + $.t("tags") + "</strong>: ";
+
+		var tags = good.parsedTags;
+		for (var i=0; i<tags.length; i++) {
+			html += '<span style="display:inline-block;background-color:#fff;padding:2px 5px 2px 5px;border:1px solid #f2f2f2;">';
+			html += '<a href="#" class="tags" onclick="event.preventDefault(); NRS.dgs_search_tag(\'' + String(tags[i]).escapeHTML() + '\');">';
+			html += String(tags[i]).escapeHTML() + '</a>';
+			html += '</span>';
+		}
+		html += "</span>";
+		html += "</div>"
+		html += '</div>';
+
+		return html;
 	}
 
 	NRS.getMarketplacePurchaseHTML = function(purchase, showBuyer) {
@@ -75,54 +104,192 @@ var NRS = (function(NRS, $, undefined) {
 			"</div><hr />";
 	}
 
-	NRS.pages.dgs_search = function(callback) {
+	NRS.dgs_show_results = function(response) {
 		var content = "";
 
-		var seller = $.trim($(".dgs_search input[name=q]").val());
+		$("#dgs_search_contents").empty();
 
-		if (seller) {
-			if (seller != _currentSeller) {
-				$("#dgs_search_contents").empty();
-				_currentSeller = seller;
+		$("#dgs_search_results").show();
+		$("#dgs_search_center").hide();
+		$("#dgs_search_top").show();
+
+		if (response.goods && response.goods.length) {
+			if (response.goods.length > NRS.itemsPerPage) {
+				NRS.hasMorePages = true;
+				response.goods.pop();
+			} else {
+				NRS.hasMorePages = false;
 			}
 
-			$("#dgs_search_results").show();
-			$("#dgs_search_center").hide();
-			$("#dgs_search_top").show();
+			var content = "";
 
-			NRS.sendRequest("getDGSGoods+", {
-				"seller": seller,
-				"firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
-				"lastIndex": NRS.pageNumber * NRS.itemsPerPage
+			for (var i = 0; i < response.goods.length; i++) {
+				content += NRS.getMarketplaceItemHTML(response.goods[i]);
+			}
+		}
+
+		NRS.dataLoaded(content);
+		NRS.showMore();
+	}
+
+	NRS.dgs_load_tags = function() {
+		$('#dgs_tag_list').empty();
+		NRS.sendRequest("getDGSTags+", {
+				"firstIndex": NRS.pageNumber * _tagsPerPage - _tagsPerPage,
+				"lastIndex": NRS.pageNumber * _tagsPerPage
 			}, function(response) {
-				$("#dgs_search_contents").empty();
-
-				if (response.goods && response.goods.length) {
-					if (response.goods.length > NRS.itemsPerPage) {
+				var content = "";
+				if (response.tags && response.tags.length) {
+					if (response.tags.length > _tagsPerPage) {
 						NRS.hasMorePages = true;
-						response.goods.pop();
+					} else {
+						NRS.hasMorePages = false;
 					}
-
-					var content = "";
-
-					for (var i = 0; i < response.goods.length; i++) {
-						content += NRS.getMarketplaceItemHTML(response.goods[i]);
+					for (var i=0; i<response.tags.length; i++) {
+						content += '<div style="padding:5px 24px 5px 24px;text-align:center;background-color:#fff;font-size:16px;';
+						content += 'width:220px;display:inline-block;margin:2px;border:1px solid #f2f2f2;">';
+						content += '<a href="#" onclick="event.preventDefault(); NRS.dgs_search_tag(\'' +response.tags[i].tag + '\');">';
+						content += response.tags[i].tag.escapeHTML() + ' [' + response.tags[i].inStockCount + ']</a>';
+						content += '</div>';
 					}
 				}
-
-				NRS.dataLoaded(content);
-				NRS.showMore();
-
-				if (callback) {
-					callback();
-				}
+				$('#dgs_tag_list').html(content);
+				NRS.pageLoaded();
 			});
+	}
+
+	NRS.dgs_search_seller = function(seller) {
+		if (seller == null) {
+			seller = _currentSearch["searchStr"];
 		} else {
-			$("#dgs_search_center").show();
-			$("#dgs_search_top").hide();
-			$("#dgs_search_results").hide();
-			$("#dgs_search_contents").empty();
-			NRS.pageLoaded();
+			_currentSearch = {
+				"page": "seller",
+				"searchStr": seller
+			};
+			NRS.pageNumber = 1;
+			NRS.hasMorePages = false;
+		}
+		$(".dgs_search_pageheader_addon").hide();
+		$(".dgs_search_pageheader_addon_seller_text").text(seller);
+		$(".dgs_search_pageheader_addon_seller").show();
+		NRS.sendRequest("getDGSGoods+", {
+			"seller": seller,
+			"firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
+			"lastIndex": NRS.pageNumber * NRS.itemsPerPage
+		}, function(response) {
+			NRS.dgs_show_results(response);
+		});
+	}
+
+	NRS.dgs_search_fulltext = function(query) {
+		if (query == null) {
+			query = _currentSearch["searchStr"];
+		} else {
+			_currentSearch = {
+				"page": "fulltext",
+				"searchStr": query
+			};
+			NRS.pageNumber = 1;
+			NRS.hasMorePages = false;
+		}
+		$(".dgs_search_pageheader_addon").hide();
+		$(".dgs_search_pageheader_addon_fulltext_text").text('"' + query + '"');
+		$(".dgs_search_pageheader_addon_fulltext").show();
+		NRS.sendRequest("searchDGSGoods+", {
+			"query": query,
+			"firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
+			"lastIndex": NRS.pageNumber * NRS.itemsPerPage
+		}, function(response) {
+			NRS.dgs_show_results(response);
+		});
+	}
+
+	NRS.dgs_search_tag = function(tag) {
+		if (tag == null) {
+			tag = _currentSearch["searchStr"];
+		} else {
+			_currentSearch = {
+				"page": "tag",
+				"searchStr": tag
+			};
+			NRS.pageNumber = 1;
+			NRS.hasMorePages = false;
+		}
+		$(".dgs_search_pageheader_addon").hide();
+		$(".dgs_search_pageheader_addon_tag_text").text('"' + tag + '"');
+		$(".dgs_search_pageheader_addon_tag").show();
+		NRS.sendRequest("searchDGSGoods+", {
+			"tag": tag,
+			"firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
+			"lastIndex": NRS.pageNumber * NRS.itemsPerPage
+		}, function(response) {
+			NRS.dgs_show_results(response);
+		});
+	}
+
+	NRS.dgs_search_main = function(callback) {
+		if (_currentSearch["page"] != "main") {
+			NRS.pageNumber = 1;
+			NRS.hasMorePages = false;
+		}
+		_currentSearch = {
+			"page": "main",
+			"searchStr": ""
+		};
+		$(".dgs_search input[name=q]").val("").trigger("unmask").mask("NXT-****-****-****-*****", {
+			"unmask": false
+		});
+		$(".dgs_fulltext_search input[name=fs_q]").val("");
+		$(".dgs_search_pageheader_addon").hide();
+		$("#dgs_search_contents").empty();
+		NRS.dgs_load_tags();
+
+		NRS.sendRequest("getDGSPurchases+", {
+			"buyer": NRS.account
+		}, function(response) {
+			if (response.purchases && response.purchases.length != null) {
+				$("#dgs_user_purchase_count").html(response.purchases.length).removeClass("loading_dots");
+			}
+		});
+
+		NRS.sendRequest("getDGSGoodsCount+", {
+		}, function(response) {
+			if (response.numberOfGoods) {
+				$("#dgs_product_count").html(response.numberOfGoods).removeClass("loading_dots");
+			}
+		});
+		NRS.sendRequest("getDGSPurchaseCount+", {
+		}, function(response) {
+			if (response.numberOfPurchases) {
+				$("#dgs_total_purchase_count").html(response.numberOfPurchases).removeClass("loading_dots");
+			}
+		});
+		NRS.sendRequest("getDGSTagCount+", {
+		}, function(response) {
+			if (response.numberOfTags) {
+				$("#dgs_tag_count").html(response.numberOfTags).removeClass("loading_dots");
+			}
+		});
+
+		$("#dgs_search_center").show();
+		$("#dgs_search_top").hide();
+		$("#dgs_search_results").hide();
+
+		if (callback) {
+			callback();
+		}
+	}
+
+
+	NRS.pages.dgs_search = function(callback) {
+		if (_currentSearch["page"] == "seller") {
+			NRS.dgs_search_seller();
+		} else if (_currentSearch["page"] == "fulltext") {
+			NRS.dgs_search_fulltext();
+		} else if (_currentSearch["page"] == "tag") {
+			NRS.dgs_search_tag();
+		} else {
+			NRS.dgs_search_main(callback);
 		}
 	}
 
@@ -241,7 +408,8 @@ var NRS = (function(NRS, $, undefined) {
 			"seller": NRS.account,
 			"firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
 			"lastIndex": NRS.pageNumber * NRS.itemsPerPage,
-			"inStockOnly": "false"
+			"inStockOnly": "false",
+			"hideDelisted": "true"
 		}, function(response) {
 			if (response.goods && response.goods.length) {
 				if (response.goods.length > NRS.itemsPerPage) {
@@ -250,30 +418,30 @@ var NRS = (function(NRS, $, undefined) {
 				}
 
 				for (var i = 0; i < response.goods.length; i++) {
-					var good = response.goods[i];
+						var good = response.goods[i];
 
-					var deleted = false;
-					var tentative = false;
-					var quantityFormatted = false;
+						var deleted = false;
+						var tentative = false;
+						var quantityFormatted = false;
 
-					var unconfirmedTransaction = NRS.getUnconfirmedTransactionFromCache(3, [1, 2, 3], {
-						"goods": good.goods
-					});
+						var unconfirmedTransaction = NRS.getUnconfirmedTransactionFromCache(3, [1, 2, 3], {
+							"goods": good.goods
+						});
 
-					if (unconfirmedTransaction) {
-						if (unconfirmedTransaction.subtype == 1) {
-							deleted = tentative = true;
-						} else if (unconfirmedTransaction.subtype == 2) {
-							good.priceNQT = unconfirmedTransaction.priceNQT;
-							tentative = true;
-						} else {
-							good.quantity = NRS.format(good.quantity) + (String(unconfirmedTransaction.deltaQuantity).charAt(0) != "-" ? "+" : "") + NRS.format(unconfirmedTransaction.deltaQuantity);
-							tentative = true;
-							quantityFormatted = true;
+						if (unconfirmedTransaction) {
+							if (unconfirmedTransaction.subtype == 1) {
+								deleted = tentative = true;
+							} else if (unconfirmedTransaction.subtype == 2) {
+								good.priceNQT = unconfirmedTransaction.priceNQT;
+								tentative = true;
+							} else {
+								good.quantity = NRS.format(good.quantity) + (String(unconfirmedTransaction.deltaQuantity).charAt(0) != "-" ? "+" : "") + NRS.format(unconfirmedTransaction.deltaQuantity);
+								tentative = true;
+								quantityFormatted = true;
+							}
 						}
-					}
 
-					rows += "<tr class='" + (tentative ? "tentative" : "") + (deleted ? " tentative-crossed" : "") + "' data-goods='" + String(good.goods).escapeHTML() + "'><td><a href='#' data-toggle='modal' data-target='#dgs_product_modal' data-goods='" + String(good.goods).escapeHTML() + "'>" + String(good.name).escapeHTML() + "</a></td><td class='quantity'>" + (quantityFormatted ? good.quantity : NRS.format(good.quantity)) + "</td><td class='price'>" + NRS.formatAmount(good.priceNQT) + " NXT</td><td style='white-space:nowrap'><a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#dgs_price_change_modal' data-goods='" + String(good.goods).escapeHTML() + "'>" + $.t("change_price") + "</a> <a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#dgs_quantity_change_modal' data-goods='" + String(good.goods).escapeHTML() + "'>" + $.t("change_qty") + "</a> <a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#dgs_delisting_modal' data-goods='" + String(good.goods).escapeHTML() + "'>" + $.t("delete") + "</a></td></tr>";
+						rows += "<tr class='" + (tentative ? "tentative" : "") + (deleted ? " tentative-crossed" : "") + "' data-goods='" + String(good.goods).escapeHTML() + "'><td><a href='#' data-toggle='modal' data-target='#dgs_product_modal' data-goods='" + String(good.goods).escapeHTML() + "'>" + String(good.name).escapeHTML() + "</a></td><td class='quantity'>" + (quantityFormatted ? good.quantity : NRS.format(good.quantity)) + "</td><td class='price'>" + NRS.formatAmount(good.priceNQT) + " NXT</td><td style='white-space:nowrap'><a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#dgs_price_change_modal' data-goods='" + String(good.goods).escapeHTML() + "'>" + $.t("change_price") + "</a> <a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#dgs_quantity_change_modal' data-goods='" + String(good.goods).escapeHTML() + "'>" + $.t("change_qty") + "</a> <a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#dgs_delisting_modal' data-goods='" + String(good.goods).escapeHTML() + "'>" + $.t("delete") + "</a></td></tr>";
 				}
 			}
 
@@ -841,6 +1009,31 @@ var NRS = (function(NRS, $, undefined) {
 		$("#dgs_quantity_change_current_quantity, #dgs_price_change_current_price, #dgs_quantity_change_quantity, #dgs_price_change_price").val("0");
 	});
 
+	$("#dgs_show_feedback_modal").on("show.bs.modal", function(e) {
+		var $modal = $(this);
+		var $invoker = $(e.relatedTarget);
+		var goods = $invoker.data("goods");
+		$modal.find(".modal_content table").empty();
+		NRS.sendRequest("getDGSGoodsPurchases+", {
+			"goods": goods,
+			"withPublicFeedbacksOnly": true,
+		}, function(response) {
+			if (response.purchases.length && response.purchases.length > 0) {
+				for (var i=0; i<response.purchases.length; i++) {
+					var purchase = response.purchases[i];
+					if (purchase.publicFeedbacks.length && purchase.publicFeedbacks.length > 0) {
+						$modal.find(".modal_content table").append('<tr><td>' + String(purchase.publicFeedbacks[0]).escapeHTML() + '</td></tr>');
+					}
+				}
+			}
+		});
+	});
+
+	$(".dgs_my_purchases_link").click(function(e) {
+		e.preventDefault();
+		$("#sidebar_dgs_buyer a[data-page=purchased_dgs]").addClass("active").trigger("click");
+	});
+
 	$(".dgs_search").on("submit", function(e) {
 		e.preventDefault();
 
@@ -858,7 +1051,7 @@ var NRS = (function(NRS, $, undefined) {
 					"type": "danger"
 				});
 			} else {
-				NRS.pages.dgs_search();
+				NRS.dgs_search_seller(seller);
 			}
 		} else {
 			$.growl($.t("error_invalid_seller"), {
@@ -867,14 +1060,19 @@ var NRS = (function(NRS, $, undefined) {
 		}
 	});
 
+	$(".dgs_fulltext_search").on("submit", function(e) {
+		e.preventDefault();
+		
+		var query = $.trim($(this).find("input[name=fs_q]").val());
+
+		if (query != "") {
+			NRS.dgs_search_fulltext(query);
+		}
+	});
+
 	$("#dgs_clear_results").on("click", function(e) {
 		e.preventDefault();
-
-		$(".dgs_search input[name=q]").val("").trigger("unmask").mask("NXT-****-****-****-*****", {
-			"unmask": false
-		});
-
-		NRS.pages.dgs_search();
+		NRS.dgs_search_main();
 	});
 
 	$("#user_info_modal").on("click", "a[data-goto-goods]", function(e) {

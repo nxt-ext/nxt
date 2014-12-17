@@ -18,9 +18,7 @@ public final class Scan extends APIServlet.APIRequestHandler {
     JSONStreamAware processRequest(HttpServletRequest req) {
         JSONObject response = new JSONObject();
         try {
-            if ("true".equalsIgnoreCase(req.getParameter("validate"))) {
-                Nxt.getBlockchainProcessor().validateAtNextScan();
-            }
+            boolean validate = "true".equalsIgnoreCase(req.getParameter("validate"));
             int numBlocks = 0;
             try {
                 numBlocks = Integer.parseInt(req.getParameter("numBlocks"));
@@ -30,13 +28,18 @@ public final class Scan extends APIServlet.APIRequestHandler {
                 height = Integer.parseInt(req.getParameter("height"));
             } catch (NumberFormatException ignore) {}
             long start = System.currentTimeMillis();
-            if (numBlocks > 0) {
-                Nxt.getBlockchainProcessor().scan(Nxt.getBlockchain().getHeight() - numBlocks + 1);
-            } else if (height >= 0) {
-                Nxt.getBlockchainProcessor().scan(height);
-            } else {
-                response.put("error", "invalid numBlocks or height");
-                return response;
+            try {
+                Nxt.getBlockchainProcessor().setGetMoreBlocks(false);
+                if (numBlocks > 0) {
+                    Nxt.getBlockchainProcessor().scan(Nxt.getBlockchain().getHeight() - numBlocks + 1, validate);
+                } else if (height >= 0) {
+                    Nxt.getBlockchainProcessor().scan(height, validate);
+                } else {
+                    response.put("error", "invalid numBlocks or height");
+                    return response;
+                }
+            } finally {
+                Nxt.getBlockchainProcessor().setGetMoreBlocks(true);
             }
             long end = System.currentTimeMillis();
             response.put("done", true);

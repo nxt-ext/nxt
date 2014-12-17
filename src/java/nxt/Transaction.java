@@ -4,7 +4,7 @@ import org.json.simple.JSONObject;
 
 import java.util.List;
 
-public interface Transaction extends Comparable<Transaction> {
+public interface Transaction {
 
     public static interface Builder {
 
@@ -39,6 +39,8 @@ public interface Transaction extends Comparable<Transaction> {
     long getBlockId();
 
     Block getBlock();
+
+    short getIndex();
 
     int getTimestamp();
 
