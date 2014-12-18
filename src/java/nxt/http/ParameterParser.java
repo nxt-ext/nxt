@@ -1,14 +1,6 @@
 package nxt.http;
 
-import nxt.Account;
-import nxt.Alias;
-import nxt.Asset;
-import nxt.Constants;
-import nxt.Currency;
-import nxt.DigitalGoodsStore;
-import nxt.Nxt;
-import nxt.NxtException;
-import nxt.Transaction;
+import nxt.*;
 import nxt.crypto.Crypto;
 import nxt.crypto.EncryptedData;
 import nxt.util.Convert;
@@ -114,6 +106,15 @@ final class ParameterParser {
 
     static long getPriceNQT(HttpServletRequest req) throws ParameterException {
         return getLong(req, "priceNQT", 1L, Constants.MAX_BALANCE_NQT, true);
+    }
+
+    static Poll getPoll(HttpServletRequest req) throws ParameterException {
+        long pollId = getLong(req, "poll", Long.MIN_VALUE, Long.MAX_VALUE, true);
+        Poll poll = Poll.getPoll(pollId);
+        if (poll == null) {
+            throw new ParameterException(INCORRECT_POLL);
+        }
+        return poll;
     }
 
     static Asset getAsset(HttpServletRequest req) throws ParameterException {

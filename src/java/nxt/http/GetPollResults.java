@@ -1,6 +1,7 @@
 package nxt.http;
 
 
+import nxt.NxtException;
 import nxt.Poll;
 import nxt.util.Convert;
 import org.json.simple.JSONStreamAware;
@@ -17,23 +18,11 @@ public class GetPollResults extends APIServlet.APIRequestHandler {
     }
 
     @Override
-    JSONStreamAware processRequest(HttpServletRequest req) {
-
-        String pollIdValue = Convert.emptyToNull(req.getParameter("poll"));
-        if (pollIdValue == null) {
-            return MISSING_POLL;
-        }
-
-        long pollId = Convert.parseUnsignedLong(pollIdValue);
-
-        Poll poll = Poll.getPoll(pollId);
-        if (poll == null) {
-            return INCORRECT_POLL;
-        }
+    JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
+        Poll poll = ParameterParser.getPoll(req);
         if (!poll.isFinished()) {
             return UNKNOWN_POLL_RESULTS;
         }
-
         return JSONData.pollResults(poll);
     }
 }

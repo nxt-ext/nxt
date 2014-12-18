@@ -26,6 +26,7 @@ public final class Constants {
     public static final byte VOTING_MODEL_BALANCE = 0;
     public static final byte VOTING_MODEL_ACCOUNT = 1;
     public static final byte VOTING_MODEL_ASSET = 2;
+    public static final byte VOTING_MODEL_MS_COIN = 3;
 
     public static final byte VOTING_DEFAULT_MIN_BALANCE = 0;
     public static final byte VOTING_DEFAULT_MIN_NUMBER_OF_CHOICES = 1;
@@ -36,6 +37,7 @@ public final class Constants {
 
     public static final byte PENDING_TRANSACTIONS_MAX_WHITELIST_SIZE = 10;
     public static final byte PENDING_TRANSACTIONS_MAX_BLACKLIST_SIZE = 5;
+    public static final int  PENDING_TRANSACTIONS_MAX_PERIOD = 14*1440;
 
 
     public static final int MAX_ALIAS_URI_LENGTH = 1000;
