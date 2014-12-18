@@ -364,7 +364,7 @@ var NRS = (function(NRS, $, undefined) {
 				var rows = "";
 				for (i = 0; i < response.exchangeRequests.length; i++) {
 					var exchangeRequest = response.exchangeRequests[i];
-					var type = (exchangeRequest.type == 5 ? "buy" : (exchangeRequest.type == 6 ? "sell" : exchangeRequest.type));
+					var type = (exchangeRequest.subtype == 5 ? "buy" : (exchangeRequest.subtype == 6 ? "sell" : exchangeRequest.type));
 					rows += "<tr>" +
 						"<td>" +
 							"<a href='#' data-transaction='" + String(exchangeRequest.transaction).escapeHTML() + "'>" + NRS.formatTimestamp(exchangeRequest.timestamp) + "</a>" +
