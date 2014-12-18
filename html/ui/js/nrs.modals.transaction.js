@@ -490,7 +490,7 @@ var NRS = (function(NRS, $, undefined) {
                                 var data = {
                                     "type": $.t("dividend_payment"),
                                     "asset_name": asset.name,
-                                    "amount_per_asset": NRS.formatOrderPricePerWholeQNT(transaction.attachment.amountNQTPerQNT, asset.decimals) + " NXT",
+                                    "amount_per_share": NRS.formatOrderPricePerWholeQNT(transaction.attachment.amountNQTPerQNT, asset.decimals) + " NXT",
                                     "height": transaction.attachment.height
                                 };
 

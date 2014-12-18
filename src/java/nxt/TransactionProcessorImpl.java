@@ -447,7 +447,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                 processTransaction(unconfirmedTransaction);
                 if (broadcastedTransactions.contains(transaction)) {
                     Logger.logDebugMessage("Received back transaction " + transaction.getStringId()
-                            + " that we generated, will not forward to peers");
+                            + " that we broadcasted, will not forward again to peers");
                 } else {
                     sendToPeersTransactions.add(transaction);
                 }
