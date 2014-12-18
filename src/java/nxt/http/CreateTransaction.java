@@ -6,6 +6,7 @@ import nxt.Attachment;
 import nxt.Nxt;
 import nxt.NxtException;
 import nxt.Transaction;
+import nxt.Constants;
 import nxt.crypto.Crypto;
 import nxt.crypto.EncryptedData;
 import nxt.util.Convert;

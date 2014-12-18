@@ -209,6 +209,11 @@ class UnconfirmedTransaction implements Transaction {
     }
 
     @Override
+    public Appendix.TwoPhased getTwoPhased() {
+        return transaction.getTwoPhased();
+    }
+
+    @Override
     public List<? extends Appendix> getAppendages() {
         return transaction.getAppendages();
     }

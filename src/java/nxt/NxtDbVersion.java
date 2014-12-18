@@ -533,49 +533,47 @@ class NxtDbVersion extends DbVersion {
             case 186:
                 apply("CREATE INDEX IF NOT EXISTS currency_creation_height_idx ON currency (creation_height DESC)");
             case 187:
-                BlockchainProcessorImpl.getInstance().scheduleScan(0, false);
-                apply(null);
-            case 138:
                 apply("DROP TABLE IF EXISTS poll");
-            case 139:
+            case 188:
                 apply("DROP TABLE IF EXISTS vote");
-            case 140:
+            case 189:
                 apply("CREATE TABLE IF NOT EXISTS vote (db_id IDENTITY, id BIGINT NOT NULL, " +
                         "poll_id BIGINT NOT NULL, voter_id BIGINT NOT NULL, vote_bytes VARBINARY NOT NULL, height INT NOT NULL)");
-            case 141:
+            case 190:
                 apply("CREATE UNIQUE INDEX IF NOT EXISTS vote_id_idx ON vote (id)");
-            case 142:
+            case 191:
                 apply("CREATE UNIQUE INDEX IF NOT EXISTS vote_poll_id_idx ON vote (poll_id, voter_id)");
-            case 143:
+            case 192:
                 apply("CREATE TABLE IF NOT EXISTS poll (db_id IDENTITY, id BIGINT NOT NULL, "
                         + "FOREIGN KEY (id) REFERENCES transaction (id), account_id BIGINT NOT NULL, name VARCHAR NOT NULL, "
                         + "description VARCHAR, options ARRAY NOT NULL, min_num_options TINYINT, max_num_options TINYINT, "
                         + "min_range_value TINYINT, max_range_value TINYINT, "
                         + "finish_height INT NOT NULL, voting_model TINYINT NOT NULL, min_balance BIGINT, "
                         + "asset_id BIGINT, finished BOOLEAN, height INT NOT NULL, latest BOOLEAN DEFAULT TRUE NOT NULL)");
-            case 144:
+            case 193:
                 apply("CREATE TABLE IF NOT EXISTS poll_result (db_id IDENTITY, poll_id BIGINT NOT NULL, "
                         + "option VARCHAR NOT NULL, result BIGINT NOT NULL,  height INT NOT NULL)");
-            case 145:
+            case 194:
                 apply("ALTER TABLE transaction ADD COLUMN IF NOT EXISTS two_phased BOOLEAN NOT NULL DEFAULT FALSE");
-            case 146:
+            case 195:
                 apply("CREATE TABLE IF NOT EXISTS pending_transaction (db_id IDENTITY, id BIGINT NOT NULL, "
                         + "FOREIGN KEY (id) REFERENCES transaction (id) ON DELETE CASCADE, account_id BIGINT NOT NULL, "
                         + "signers_count TINYINT NOT NULL DEFAULT 0, blacklist BOOLEAN DEFAULT FALSE, "
                         + "finish_height INT NOT NULL, voting_model TINYINT NOT NULL, quorum BIGINT NOT NULL, "
                         + "min_balance BIGINT NOT NULL, asset_id BIGINT NOT NULL, finished BOOLEAN NOT NULL, "
                         + "height INT NOT NULL, latest BOOLEAN DEFAULT TRUE NOT NULL)");
-            case 147:
+            case 196:
                 apply("CREATE TABLE IF NOT EXISTS vote_phased (db_id IDENTITY, id BIGINT NOT NULL, "
                         + "pending_transaction_id BIGINT NOT NULL, voter_id BIGINT NOT NULL, "
                         + "height INT NOT NULL)");
-            case 148:
+            case 197:
                 apply("CREATE TABLE IF NOT EXISTS pending_transaction_signer (db_id IDENTITY, "
                         + "poll_id BIGINT NOT NULL, account_id BIGINT NOT NULL, height INT NOT NULL)");
-            case 150:
+            case 198:
+                BlockchainProcessorImpl.getInstance().scheduleScan(0, false);
+                apply(null);
+            case 199:
                 //TODO: indexes on poll, poll_result, pending_transaction, vote_phased, pending_transaction_signer
-                return;
-            case 188:
                 return;
             default:
                 throw new RuntimeException("Blockchain database inconsistent with code, probably trying to run older code on newer database");

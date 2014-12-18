@@ -103,7 +103,6 @@ public final class Constants {
     public static final int VOTING_SYSTEM_BLOCK = isTestnet ? 0 : Integer.MAX_VALUE;
     public static final int DIGITAL_GOODS_STORE_BLOCK = isTestnet ? 77341 : 213000;
     public static final int PUBLIC_KEY_ANNOUNCEMENT_BLOCK = isTestnet ? 77341 : 215000;
-    public static final int LAST_KNOWN_BLOCK = isTestnet ? 80000 : 308000;
     public static final int TWO_PHASED_TRANSACTIONS_BLOCK = isTestnet ? 0 : Integer.MAX_VALUE;
     public static final int MONETARY_SYSTEM_BLOCK = isTestnet ? 150000 : Integer.MAX_VALUE;
     public static final int LAST_KNOWN_BLOCK = isTestnet ? 136000 : 310000;

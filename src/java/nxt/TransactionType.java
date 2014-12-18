@@ -3,9 +3,7 @@ package nxt;
 import nxt.util.Convert;
 import org.json.simple.JSONObject;
 import java.nio.ByteBuffer;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 
 public abstract class TransactionType {
@@ -353,13 +351,13 @@ public abstract class TransactionType {
             }
 
             @Override
-            boolean isDuplicate(Transaction transaction, Map<TransactionType, Set<String>> duplicates) {
+            boolean isDuplicate(Transaction transaction, Map<TransactionType, Map<String,Boolean>> duplicates) {
                 Attachment.PendingPaymentVoteCasting attachment = (Attachment.PendingPaymentVoteCasting) transaction.getAttachment();
                 String voter = Convert.toUnsignedLong(transaction.getSenderId());
                 long[] pendingTransactionIds = attachment.getPendingTransactionsIds();
                 for(long pendingTransactionId : pendingTransactionIds){
                     String compositeKey = voter + Convert.toUnsignedLong(pendingTransactionId);
-                    if(isDuplicate(Payment.PENDING_PAYMENT_VOTE_CASTING, compositeKey, duplicates)){
+                    if(isDuplicate(Payment.PENDING_PAYMENT_VOTE_CASTING, compositeKey, duplicates, true)){
                         return true;
                     }
                 }
@@ -867,10 +865,10 @@ public abstract class TransactionType {
             }
 
             @Override
-            boolean isDuplicate(Transaction transaction, Map<TransactionType, Set<String>> duplicates) {
+            boolean isDuplicate(final Transaction transaction, final Map<TransactionType, Map<String, Boolean>> duplicates) {
                 Attachment.MessagingVoteCasting attachment = (Attachment.MessagingVoteCasting) transaction.getAttachment();
                 String key = Convert.toUnsignedLong(attachment.getPollId()) + Convert.toUnsignedLong(transaction.getSenderId());
-                return isDuplicate(Messaging.VOTE_CASTING, key, duplicates);
+                return isDuplicate(Messaging.VOTE_CASTING, key, duplicates, true);
             }
 
             @Override
