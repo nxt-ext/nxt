@@ -47,7 +47,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public final class Users {
 
-    private static final int TESTNET_UI_PORT=6875;
+    private static final int TESTNET_UI_PORT=2875;
 
     private static final ConcurrentMap<String, User> users = new ConcurrentHashMap<>();
     private static final Collection<User> allUsers = Collections.unmodifiableCollection(users.values());
@@ -440,28 +440,6 @@ public final class Users {
                     Users.sendNewDataToAll(response);
                 }
             }, TransactionProcessor.Event.ADDED_CONFIRMED_TRANSACTIONS);
-
-            Nxt.getTransactionProcessor().addListener(new Listener<List<? extends Transaction>>() {
-                @Override
-                public void notify(List<? extends Transaction> transactions) {
-                    JSONObject response = new JSONObject();
-                    JSONArray newTransactions = new JSONArray();
-                    for (Transaction transaction : transactions) {
-                        JSONObject newTransaction = new JSONObject();
-                        newTransaction.put("index", Users.getIndex(transaction));
-                        newTransaction.put("timestamp", transaction.getTimestamp());
-                        newTransaction.put("deadline", transaction.getDeadline());
-                        newTransaction.put("recipient", Convert.toUnsignedLong(transaction.getRecipientId()));
-                        newTransaction.put("amountNQT", transaction.getAmountNQT());
-                        newTransaction.put("feeNQT", transaction.getFeeNQT());
-                        newTransaction.put("sender", Convert.toUnsignedLong(transaction.getSenderId()));
-                        newTransaction.put("id", transaction.getStringId());
-                        newTransactions.add(newTransaction);
-                    }
-                    response.put("addedDoubleSpendingTransactions", newTransactions);
-                    Users.sendNewDataToAll(response);
-                }
-            }, TransactionProcessor.Event.ADDED_DOUBLESPENDING_TRANSACTIONS);
 
             Nxt.getBlockchainProcessor().addListener(new Listener<Block>() {
                 @Override

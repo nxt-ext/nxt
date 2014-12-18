@@ -62,7 +62,7 @@ public final class DbIterator<T> implements Iterator<T>, Iterable<T>, AutoClosea
 
     @Override
     public void remove() {
-        throw new UnsupportedOperationException("Removal not suported");
+        throw new UnsupportedOperationException("Removal not supported");
     }
 
     @Override

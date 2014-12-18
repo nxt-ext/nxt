@@ -572,6 +572,14 @@ var NRS = (function(NRS, $, undefined) {
 			$("#asset_description").html(String(asset.description).autoLink());
 			$("#asset_quantity").html(NRS.formatQuantity(asset.quantityQNT, asset.decimals));
 
+            // Only asset issuers have the ability to pay dividends.
+            // TODO: Is there a clean way to move this block of code to
+            // nrs.modals.dividendpayment.js?
+            if (asset.accountRS !== NRS.accountRS)
+            {
+                $("#dividend_payment_link").hide();
+            }
+
 			$(".asset_name").html(String(asset.name).escapeHTML());
 			$("#sell_asset_button").data("asset", assetId);
 			$("#buy_asset_button").data("asset", assetId);
@@ -1242,6 +1250,23 @@ var NRS = (function(NRS, $, undefined) {
 			};
 		}
 	}
+
+    NRS.getAssetAccounts = function(assetId, height, success, error) {
+        NRS.sendRequest(
+            "getAssetAccounts",
+            {"asset": assetId, "height": height},
+            function (response){
+                if (response.errorCode)
+                {
+                    error(response);
+                }
+                else
+                {
+                    success(response);
+                }
+            },
+            false);
+    };
 
 	$("#asset_exchange_sidebar_group_context").on("click", "a", function(e) {
 		e.preventDefault();

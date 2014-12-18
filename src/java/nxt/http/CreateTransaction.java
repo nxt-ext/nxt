@@ -1,17 +1,19 @@
 package nxt.http;
 
-import nxt.*;
+import nxt.Account;
+import nxt.Appendix;
+import nxt.Attachment;
+import nxt.Nxt;
+import nxt.NxtException;
+import nxt.Transaction;
 import nxt.crypto.Crypto;
 import nxt.crypto.EncryptedData;
 import nxt.util.Convert;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
-
 import javax.servlet.http.HttpServletRequest;
 import java.util.Arrays;
-
 import static nxt.http.JSONResponses.*;
-
 
 abstract class CreateTransaction extends APIServlet.APIRequestHandler {
 
@@ -50,7 +52,6 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
             throws NxtException {
         String deadlineValue = req.getParameter("deadline");
         String referencedTransactionFullHash = Convert.emptyToNull(req.getParameter("referencedTransactionFullHash"));
-        String referencedTransactionId = Convert.emptyToNull(req.getParameter("referencedTransaction"));
         String secretPhrase = Convert.emptyToNull(req.getParameter("secretPhrase"));
         String publicKeyValue = Convert.emptyToNull(req.getParameter("publicKey"));
         boolean broadcast = !"false".equalsIgnoreCase(req.getParameter("broadcast"));
@@ -211,9 +212,6 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
         }
 
         long feeNQT = ParameterParser.getFeeNQT(req);
-        if (referencedTransactionId != null) {
-            return INCORRECT_REFERENCED_TRANSACTION;
-        }
 
         JSONObject response = new JSONObject();
 
@@ -242,7 +240,6 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
                 builder.twoPhased(twoPhased);
             }
             Transaction transaction = builder.build();
-            transaction.validate();
             try {
                 if (Convert.safeAdd(amountNQT, transaction.getFeeNQT()) > senderAccount.getUnconfirmedBalanceNQT()) {
                     return NOT_ENOUGH_FUNDS;
@@ -260,9 +257,11 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
                     Nxt.getTransactionProcessor().broadcast(transaction);
                     response.put("broadcasted", true);
                 } else {
+                    transaction.validate();
                     response.put("broadcasted", false);
                 }
             } else {
+                transaction.validate();
                 response.put("broadcasted", false);
             }
             response.put("unsignedTransactionBytes", Convert.toHexString(transaction.getUnsignedBytes()));

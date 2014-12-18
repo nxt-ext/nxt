@@ -78,6 +78,22 @@ public abstract class DbClause {
         }
     }
 
+    public static final class IntClause extends DbClause {
+
+        private final int value;
+
+        public IntClause(String columnName, int value) {
+            super(" " + columnName + " = ? ");
+            this.value = value;
+        }
+
+        protected int set(PreparedStatement pstmt, int index) throws SQLException {
+            pstmt.setInt(index, value);
+            return index + 1;
+        }
+
+    }
+
     public static final class LongBooleanClause extends DbClause {
 
         private final long value1;

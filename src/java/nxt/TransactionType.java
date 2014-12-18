@@ -4,9 +4,8 @@ import nxt.util.Convert;
 import org.json.simple.JSONObject;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 
 
 public abstract class TransactionType {
@@ -16,6 +15,7 @@ public abstract class TransactionType {
     private static final byte TYPE_COLORED_COINS = 2;
     private static final byte TYPE_DIGITAL_GOODS = 3;
     private static final byte TYPE_ACCOUNT_CONTROL = 4;
+    static final byte TYPE_MONETARY_SYSTEM = 5;
 
     private static final byte SUBTYPE_PAYMENT_ORDINARY_PAYMENT = 0;
     private static final byte SUBTYPE_PENDING_PAYMENT_VOTE_CASTING = 1;
@@ -28,6 +28,7 @@ public abstract class TransactionType {
     private static final byte SUBTYPE_MESSAGING_ACCOUNT_INFO = 5;
     private static final byte SUBTYPE_MESSAGING_ALIAS_SELL = 6;
     private static final byte SUBTYPE_MESSAGING_ALIAS_BUY = 7;
+    private static final byte SUBTYPE_MESSAGING_ALIAS_DELETE = 8;
 
     private static final byte SUBTYPE_COLORED_COINS_ASSET_ISSUANCE = 0;
     private static final byte SUBTYPE_COLORED_COINS_ASSET_TRANSFER = 1;
@@ -35,6 +36,7 @@ public abstract class TransactionType {
     private static final byte SUBTYPE_COLORED_COINS_BID_ORDER_PLACEMENT = 3;
     private static final byte SUBTYPE_COLORED_COINS_ASK_ORDER_CANCELLATION = 4;
     private static final byte SUBTYPE_COLORED_COINS_BID_ORDER_CANCELLATION = 5;
+    private static final byte SUBTYPE_COLORED_COINS_DIVIDEND_PAYMENT = 6;
 
     private static final byte SUBTYPE_DIGITAL_GOODS_LISTING = 0;
     private static final byte SUBTYPE_DIGITAL_GOODS_DELISTING = 1;
@@ -83,6 +85,8 @@ public abstract class TransactionType {
                         return Messaging.ALIAS_SELL;
                     case SUBTYPE_MESSAGING_ALIAS_BUY:
                         return Messaging.ALIAS_BUY;
+                    case SUBTYPE_MESSAGING_ALIAS_DELETE:
+                        return Messaging.ALIAS_DELETE;
                     default:
                         return null;
                 }
@@ -100,6 +104,8 @@ public abstract class TransactionType {
                         return ColoredCoins.ASK_ORDER_CANCELLATION;
                     case SUBTYPE_COLORED_COINS_BID_ORDER_CANCELLATION:
                         return ColoredCoins.BID_ORDER_CANCELLATION;
+                    case SUBTYPE_COLORED_COINS_DIVIDEND_PAYMENT:
+                        return ColoredCoins.DIVIDEND_PAYMENT;
                     default:
                         return null;
                 }
@@ -131,13 +137,14 @@ public abstract class TransactionType {
                     default:
                         return null;
                 }
+            case TYPE_MONETARY_SYSTEM:
+                return MonetarySystem.findTransactionType(subtype);
             default:
                 return null;
         }
     }
 
-    private TransactionType() {
-    }
+    TransactionType() {}
 
     public abstract byte getType();
 
@@ -203,17 +210,22 @@ public abstract class TransactionType {
 
     abstract void undoAttachmentUnconfirmed(Transaction transaction, Account senderAccount);
 
-    boolean isDuplicate(Transaction transaction, Map<TransactionType, Set<String>> duplicates) {
+    boolean isDuplicate(Transaction transaction, Map<TransactionType, Map<String,Boolean>> duplicates) {
         return false;
     }
 
-    static boolean isDuplicate(TransactionType uniqueType, String key, Map<TransactionType, Set<String>> duplicates) {
-        Set<String> typeDuplicates = duplicates.get(uniqueType);
+    static boolean isDuplicate(TransactionType uniqueType, String key, Map<TransactionType, Map<String, Boolean>> duplicates, boolean exclusive) {
+        Map<String,Boolean> typeDuplicates = duplicates.get(uniqueType);
         if (typeDuplicates == null) {
-            typeDuplicates = new HashSet<>();
+            typeDuplicates = new HashMap<>();
             duplicates.put(uniqueType, typeDuplicates);
         }
-        return ! typeDuplicates.add(key);
+        Boolean hasExclusive = typeDuplicates.get(key);
+        if (hasExclusive == null) {
+            typeDuplicates.put(key, exclusive);
+            return false;
+        }
+        return hasExclusive || exclusive;
     }
 
     public abstract boolean canHaveRecipient();
@@ -417,6 +429,9 @@ public abstract class TransactionType {
                 if (transaction.getAmountNQT() != 0) {
                     throw new NxtException.NotValidException("Invalid arbitrary message: " + attachment.getJSONObject());
                 }
+                if (transaction.getRecipientId() == Genesis.CREATOR_ID && Nxt.getBlockchain().getHeight() > Constants.MONETARY_SYSTEM_BLOCK) {
+                    throw new NxtException.NotCurrentlyValidException("Sending messages to Genesis not allowed.");
+                }
             }
 
             @Override
@@ -455,9 +470,9 @@ public abstract class TransactionType {
             }
 
             @Override
-            boolean isDuplicate(Transaction transaction, Map<TransactionType, Set<String>> duplicates) {
+            boolean isDuplicate(Transaction transaction, Map<TransactionType, Map<String,Boolean>> duplicates) {
                 Attachment.MessagingAliasAssignment attachment = (Attachment.MessagingAliasAssignment) transaction.getAttachment();
-                return isDuplicate(Messaging.ALIAS_ASSIGNMENT, attachment.getAliasName().toLowerCase(), duplicates);
+                return isDuplicate(Messaging.ALIAS_ASSIGNMENT, attachment.getAliasName().toLowerCase(), duplicates, true);
             }
 
             @Override
@@ -512,10 +527,10 @@ public abstract class TransactionType {
             }
 
             @Override
-            boolean isDuplicate(Transaction transaction, Map<TransactionType, Set<String>> duplicates) {
+            boolean isDuplicate(Transaction transaction, Map<TransactionType, Map<String,Boolean>> duplicates) {
                 Attachment.MessagingAliasSell attachment = (Attachment.MessagingAliasSell) transaction.getAttachment();
                 // not a bug, uniqueness is based on Messaging.ALIAS_ASSIGNMENT
-                return isDuplicate(Messaging.ALIAS_ASSIGNMENT, attachment.getAliasName().toLowerCase(), duplicates);
+                return isDuplicate(Messaging.ALIAS_ASSIGNMENT, attachment.getAliasName().toLowerCase(), duplicates, true);
             }
 
             @Override
@@ -546,6 +561,9 @@ public abstract class TransactionType {
                     throw new NxtException.NotCurrentlyValidException("Alias hasn't been registered yet: " + aliasName);
                 } else if (alias.getAccountId() != transaction.getSenderId()) {
                     throw new NxtException.NotCurrentlyValidException("Alias doesn't belong to sender: " + aliasName);
+                }
+                if (transaction.getRecipientId() == Genesis.CREATOR_ID && Nxt.getBlockchain().getHeight() > Constants.MONETARY_SYSTEM_BLOCK) {
+                    throw new NxtException.NotCurrentlyValidException("Selling alias to Genesis not allowed");
                 }
             }
 
@@ -587,10 +605,10 @@ public abstract class TransactionType {
             }
 
             @Override
-            boolean isDuplicate(Transaction transaction, Map<TransactionType, Set<String>> duplicates) {
+            boolean isDuplicate(Transaction transaction, Map<TransactionType, Map<String,Boolean>> duplicates) {
                 Attachment.MessagingAliasBuy attachment = (Attachment.MessagingAliasBuy) transaction.getAttachment();
                 // not a bug, uniqueness is based on Messaging.ALIAS_ASSIGNMENT
-                return isDuplicate(Messaging.ALIAS_ASSIGNMENT, attachment.getAliasName().toLowerCase(), duplicates);
+                return isDuplicate(Messaging.ALIAS_ASSIGNMENT, attachment.getAliasName().toLowerCase(), duplicates, true);
             }
 
             @Override
@@ -624,6 +642,63 @@ public abstract class TransactionType {
             @Override
             public boolean canHaveRecipient() {
                 return true;
+            }
+
+        };
+
+        public static final TransactionType ALIAS_DELETE = new Messaging() {
+
+            @Override
+            public final byte getSubtype() {
+                return TransactionType.SUBTYPE_MESSAGING_ALIAS_DELETE;
+            }
+
+            @Override
+            Attachment.MessagingAliasDelete parseAttachment(final ByteBuffer buffer, final byte transactionVersion) throws NxtException.NotValidException {
+                return new Attachment.MessagingAliasDelete(buffer, transactionVersion);
+            }
+
+            @Override
+            Attachment.MessagingAliasDelete parseAttachment(final JSONObject attachmentData) throws NxtException.NotValidException {
+                return new Attachment.MessagingAliasDelete(attachmentData);
+            }
+
+            @Override
+            void applyAttachment(final Transaction transaction, final Account senderAccount, final Account recipientAccount) {
+                final Attachment.MessagingAliasDelete attachment =
+                        (Attachment.MessagingAliasDelete) transaction.getAttachment();
+                Alias.deleteAlias(attachment.getAliasName());
+            }
+
+            @Override
+            boolean isDuplicate(final Transaction transaction, final Map<TransactionType, Map<String, Boolean>> duplicates) {
+                Attachment.MessagingAliasDelete attachment = (Attachment.MessagingAliasDelete) transaction.getAttachment();
+                // not a bug, uniqueness is based on Messaging.ALIAS_ASSIGNMENT
+                return isDuplicate(Messaging.ALIAS_ASSIGNMENT, attachment.getAliasName().toLowerCase(), duplicates, true);
+            }
+
+            @Override
+            void validateAttachment(final Transaction transaction) throws NxtException.ValidationException {
+                if (Nxt.getBlockchain().getLastBlock().getHeight() < Constants.MONETARY_SYSTEM_BLOCK) {
+                    throw new NxtException.NotYetEnabledException("Alias delete operation not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
+                }
+                final Attachment.MessagingAliasDelete attachment =
+                        (Attachment.MessagingAliasDelete) transaction.getAttachment();
+                final String aliasName = attachment.getAliasName();
+                if (aliasName == null || aliasName.length() == 0) {
+                    throw new NxtException.NotValidException("Missing alias name");
+                }
+                final Alias alias = Alias.getAlias(aliasName);
+                if (alias == null) {
+                    throw new NxtException.NotCurrentlyValidException("Alias hasn't been registered yet: " + aliasName);
+                } else if (alias.getAccountId() != transaction.getSenderId()) {
+                    throw new NxtException.NotCurrentlyValidException("Alias doesn't belong to sender: " + aliasName);
+                }
+            }
+
+            @Override
+            public boolean canHaveRecipient() {
+                return false;
             }
 
         };
@@ -874,8 +949,12 @@ public abstract class TransactionType {
             @Override
             void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
                 Attachment.MessagingAccountInfo attachment = (Attachment.MessagingAccountInfo)transaction.getAttachment();
+                if (attachment.getVersion() >= 2 && Nxt.getBlockchain().getHeight() < Constants.MONETARY_SYSTEM_BLOCK) {
+                    throw new NxtException.NotYetEnabledException("Message patterns not yet enabled");
+                }
                 if (attachment.getName().length() > Constants.MAX_ACCOUNT_NAME_LENGTH
                         || attachment.getDescription().length() > Constants.MAX_ACCOUNT_DESCRIPTION_LENGTH
+                        || (attachment.getMessagePattern() != null && attachment.getMessagePattern().pattern().length() > Constants.MAX_ACCOUNT_MESSAGE_PATTERN_LENGTH)
                         ) {
                     throw new NxtException.NotValidException("Invalid account info issuance: " + attachment.getJSONObject());
                 }
@@ -884,7 +963,7 @@ public abstract class TransactionType {
             @Override
             void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
                 Attachment.MessagingAccountInfo attachment = (Attachment.MessagingAccountInfo) transaction.getAttachment();
-                senderAccount.setAccountInfo(attachment.getName(), attachment.getDescription());
+                senderAccount.setAccountInfo(attachment.getName(), attachment.getDescription(), attachment.getMessagePattern());
             }
 
             @Override
@@ -912,12 +991,12 @@ public abstract class TransactionType {
             }
 
             @Override
-            public Fee getBaselineFee() {
+            public Fee getBaselineFee(TransactionImpl transaction) {
                 return BASELINE_ASSET_ISSUANCE_FEE;
             }
 
             @Override
-            public Fee getNextFee() {
+            public Fee getNextFee(TransactionImpl transaction) {
                 return NEXT_ASSET_ISSUANCE_FEE;
             }
 
@@ -1261,6 +1340,80 @@ public abstract class TransactionType {
             }
 
         };
+
+        public static final TransactionType DIVIDEND_PAYMENT = new ColoredCoins() {
+
+            @Override
+            public final byte getSubtype() {
+                return TransactionType.SUBTYPE_COLORED_COINS_DIVIDEND_PAYMENT;
+            }
+
+            @Override
+            Attachment.ColoredCoinsDividendPayment parseAttachment(ByteBuffer buffer, byte transactionVersion) {
+                return new Attachment.ColoredCoinsDividendPayment(buffer, transactionVersion);
+            }
+
+            @Override
+            Attachment.ColoredCoinsDividendPayment parseAttachment(JSONObject attachmentData) {
+                return new Attachment.ColoredCoinsDividendPayment(attachmentData);
+            }
+
+            @Override
+            boolean applyAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
+                Attachment.ColoredCoinsDividendPayment attachment = (Attachment.ColoredCoinsDividendPayment)transaction.getAttachment();
+                Asset asset = Asset.getAsset(attachment.getAssetId());
+                long quantityQNT = asset.getQuantityQNT()
+                        - senderAccount.getAssetBalanceQNT(attachment.getAssetId(), attachment.getHeight())
+                        - Account.getAssetBalanceQNT(Genesis.CREATOR_ID, attachment.getAssetId(), attachment.getHeight());
+                long totalDividendPayment = Convert.safeMultiply(attachment.getAmountNQTPerQNT(), quantityQNT);
+                if (senderAccount.getUnconfirmedBalanceNQT() >= totalDividendPayment) {
+                    senderAccount.addToUnconfirmedBalanceNQT(-totalDividendPayment);
+                    return true;
+                }
+                return false;
+            }
+
+            @Override
+            void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
+                Attachment.ColoredCoinsDividendPayment attachment = (Attachment.ColoredCoinsDividendPayment)transaction.getAttachment();
+                senderAccount.payDividends(attachment.getAssetId(), attachment.getHeight(), attachment.getAmountNQTPerQNT());
+            }
+
+            @Override
+            void undoAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
+                Attachment.ColoredCoinsDividendPayment attachment = (Attachment.ColoredCoinsDividendPayment)transaction.getAttachment();
+                long quantityQNT = Asset.getAsset(attachment.getAssetId()).getQuantityQNT()
+                        - senderAccount.getAssetBalanceQNT(attachment.getAssetId(), attachment.getHeight())
+                        - Account.getAssetBalanceQNT(Genesis.CREATOR_ID, attachment.getAssetId(), attachment.getHeight());
+                senderAccount.addToUnconfirmedBalanceNQT(Convert.safeMultiply(attachment.getAmountNQTPerQNT(), quantityQNT));
+            }
+
+            @Override
+            void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
+                if (Nxt.getBlockchain().getLastBlock().getHeight() < Constants.MONETARY_SYSTEM_BLOCK) {
+                    throw new NxtException.NotYetEnabledException("Dividend payment not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
+                }
+                Attachment.ColoredCoinsDividendPayment attachment = (Attachment.ColoredCoinsDividendPayment)transaction.getAttachment();
+                Asset asset = Asset.getAsset(attachment.getAssetId());
+                if (asset == null) {
+                    throw new NxtException.NotCurrentlyValidException("Asset " + Convert.toUnsignedLong(attachment.getAssetId())
+                            + "for dividend payment doesn't exist yet");
+                }
+                if (asset.getAccountId() != transaction.getSenderId() || attachment.getAmountNQTPerQNT() <= 0) {
+                    throw new NxtException.NotValidException("Invalid dividend payment sender or amount " + attachment.getJSONObject());
+                }
+                if (attachment.getHeight() > Nxt.getBlockchain().getHeight() || attachment.getHeight() < Nxt.getBlockchain().getHeight() - Constants.MAX_ROLLBACK) {
+                    throw new NxtException.NotCurrentlyValidException("Invalid dividend payment height: " + attachment.getHeight());
+                }
+            }
+
+            @Override
+            public boolean canHaveRecipient() {
+                return false;
+            }
+
+        };
+
     }
 
     public static abstract class DigitalGoods extends TransactionType {
@@ -1373,9 +1526,9 @@ public abstract class TransactionType {
             }
 
             @Override
-            boolean isDuplicate(Transaction transaction, Map<TransactionType, Set<String>> duplicates) {
+            boolean isDuplicate(Transaction transaction, Map<TransactionType, Map<String,Boolean>> duplicates) {
                 Attachment.DigitalGoodsDelisting attachment = (Attachment.DigitalGoodsDelisting) transaction.getAttachment();
-                return isDuplicate(DigitalGoods.DELISTING, Convert.toUnsignedLong(attachment.getGoodsId()), duplicates);
+                return isDuplicate(DigitalGoods.DELISTING, Convert.toUnsignedLong(attachment.getGoodsId()), duplicates, true);
             }
 
             @Override
@@ -1423,10 +1576,10 @@ public abstract class TransactionType {
             }
 
             @Override
-            boolean isDuplicate(Transaction transaction, Map<TransactionType, Set<String>> duplicates) {
+            boolean isDuplicate(Transaction transaction, Map<TransactionType, Map<String, Boolean>> duplicates) {
                 Attachment.DigitalGoodsPriceChange attachment = (Attachment.DigitalGoodsPriceChange) transaction.getAttachment();
                 // not a bug, uniqueness is based on DigitalGoods.DELISTING
-                return isDuplicate(DigitalGoods.DELISTING, Convert.toUnsignedLong(attachment.getGoodsId()), duplicates);
+                return isDuplicate(DigitalGoods.DELISTING, Convert.toUnsignedLong(attachment.getGoodsId()), duplicates, true);
             }
 
             @Override
@@ -1475,10 +1628,10 @@ public abstract class TransactionType {
             }
 
             @Override
-            boolean isDuplicate(Transaction transaction, Map<TransactionType, Set<String>> duplicates) {
+            boolean isDuplicate(Transaction transaction, Map<TransactionType, Map<String, Boolean>> duplicates) {
                 Attachment.DigitalGoodsQuantityChange attachment = (Attachment.DigitalGoodsQuantityChange) transaction.getAttachment();
                 // not a bug, uniqueness is based on DigitalGoods.DELISTING
-                return isDuplicate(DigitalGoods.DELISTING, Convert.toUnsignedLong(attachment.getGoodsId()), duplicates);
+                return isDuplicate(DigitalGoods.DELISTING, Convert.toUnsignedLong(attachment.getGoodsId()), duplicates, true);
             }
 
             @Override
@@ -1552,6 +1705,16 @@ public abstract class TransactionType {
             }
 
             @Override
+            boolean isDuplicate(Transaction transaction, Map<TransactionType, Map<String, Boolean>> duplicates) {
+                if (Nxt.getBlockchain().getHeight() < Constants.MONETARY_SYSTEM_BLOCK) {
+                    return false;
+                }
+                Attachment.DigitalGoodsPurchase attachment = (Attachment.DigitalGoodsPurchase) transaction.getAttachment();
+                // not a bug, uniqueness is based on DigitalGoods.DELISTING
+                return isDuplicate(DigitalGoods.DELISTING, Convert.toUnsignedLong(attachment.getGoodsId()), duplicates, false);
+            }
+
+            @Override
             public boolean canHaveRecipient() {
                 return true;
             }
@@ -1602,9 +1765,9 @@ public abstract class TransactionType {
             }
 
             @Override
-            boolean isDuplicate(Transaction transaction, Map<TransactionType, Set<String>> duplicates) {
+            boolean isDuplicate(Transaction transaction, Map<TransactionType, Map<String, Boolean>> duplicates) {
                 Attachment.DigitalGoodsDelivery attachment = (Attachment.DigitalGoodsDelivery) transaction.getAttachment();
-                return isDuplicate(DigitalGoods.DELIVERY, Convert.toUnsignedLong(attachment.getPurchaseId()), duplicates);
+                return isDuplicate(DigitalGoods.DELIVERY, Convert.toUnsignedLong(attachment.getPurchaseId()), duplicates, true);
             }
 
             @Override
@@ -1726,9 +1889,9 @@ public abstract class TransactionType {
             }
 
             @Override
-            boolean isDuplicate(Transaction transaction, Map<TransactionType, Set<String>> duplicates) {
+            boolean isDuplicate(Transaction transaction, Map<TransactionType, Map<String, Boolean>> duplicates) {
                 Attachment.DigitalGoodsRefund attachment = (Attachment.DigitalGoodsRefund) transaction.getAttachment();
-                return isDuplicate(DigitalGoods.REFUND, Convert.toUnsignedLong(attachment.getPurchaseId()), duplicates);
+                return isDuplicate(DigitalGoods.REFUND, Convert.toUnsignedLong(attachment.getPurchaseId()), duplicates, true);
             }
 
             @Override
@@ -1797,6 +1960,9 @@ public abstract class TransactionType {
                     throw new NxtException.NotCurrentlyValidException("Invalid effective balance leasing: "
                             + " recipient account " + transaction.getRecipientId() + " not found or no public key published");
                 }
+                if (transaction.getRecipientId() == Genesis.CREATOR_ID && Nxt.getBlockchain().getHeight() > Constants.MONETARY_SYSTEM_BLOCK) {
+                    throw new NxtException.NotCurrentlyValidException("Leasing to Genesis account not allowed");
+                }
             }
 
             @Override
@@ -1808,24 +1974,24 @@ public abstract class TransactionType {
 
     }
 
-    long minimumFeeNQT(int height, int appendagesSize) {
+    long minimumFeeNQT(TransactionImpl transaction, int height, int appendagesSize) throws NxtException.NotValidException {
         if (height < BASELINE_FEE_HEIGHT) {
             return 0; // No need to validate fees before baseline block
         }
         Fee fee;
         if (height >= NEXT_FEE_HEIGHT) {
-            fee = getNextFee();
+            fee = getNextFee(transaction);
         } else {
-            fee = getBaselineFee();
+            fee = getBaselineFee(transaction);
         }
         return Convert.safeAdd(fee.getConstantFee(), Convert.safeMultiply(appendagesSize, fee.getAppendagesFee()));
     }
 
-    protected Fee getBaselineFee() {
+    protected Fee getBaselineFee(TransactionImpl transaction) throws NxtException.NotValidException {
         return BASELINE_FEE;
     }
 
-    protected Fee getNextFee() {
+    protected Fee getNextFee(TransactionImpl transaction) throws NxtException.NotValidException {
         return NEXT_FEE;
     }
 
@@ -1854,5 +2020,4 @@ public abstract class TransactionType {
                     '}';
         }
     }
-
 }

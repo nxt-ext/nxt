@@ -18,6 +18,7 @@ public final class Convert {
     private static final long[] multipliers = {1, 10, 100, 1000, 10000, 100000, 1000000, 10000000, 100000000};
 
     public static final BigInteger two64 = new BigInteger("18446744073709551616");
+    public static int counter;
 
     private Convert() {} //never
 
@@ -113,8 +114,8 @@ public final class Convert {
         return fullHashToId(Convert.parseHexString(hash));
     }
 
-    public static Date fromEpochTime(int epochTime) {
-        return new Date(epochTime * 1000L + Constants.EPOCH_BEGINNING - 500L);
+    public static long fromEpochTime(int epochTime) {
+        return epochTime * 1000L + Constants.EPOCH_BEGINNING - 500L;
     }
 
     public static String emptyToNull(String s) {

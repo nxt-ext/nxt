@@ -1,7 +1,9 @@
 package nxt.http;
 
 import nxt.Constants;
+import nxt.CurrencyType;
 import nxt.Genesis;
+import nxt.MonetarySystem;
 import nxt.TransactionType;
 import nxt.util.Convert;
 import nxt.util.JSON;
@@ -57,6 +59,10 @@ public final class GetConstants extends APIServlet.APIRequestHandler {
         subtype.put("description", "Alias buy");
         subtypes.add(subtype);
         subtype = new JSONObject();
+        subtype.put("value", TransactionType.Messaging.ALIAS_DELETE.getSubtype());
+        subtype.put("description", "Alias delete");
+        subtypes.add(subtype);
+        subtype = new JSONObject();
         subtype.put("value", TransactionType.Messaging.POLL_CREATION.getSubtype());
         subtype.put("description", "Poll creation");
         subtypes.add(subtype);
@@ -101,6 +107,10 @@ public final class GetConstants extends APIServlet.APIRequestHandler {
         subtype = new JSONObject();
         subtype.put("value", TransactionType.ColoredCoins.BID_ORDER_CANCELLATION.getSubtype());
         subtype.put("description", "Bid order cancellation");
+        subtypes.add(subtype);
+        subtype = new JSONObject();
+        subtype.put("value", TransactionType.ColoredCoins.DIVIDEND_PAYMENT.getSubtype());
+        subtype.put("description", "Dividend payment");
         subtypes.add(subtype);
         transactionType.put("subtypes", subtypes);
         transactionTypes.add(transactionType);
@@ -152,7 +162,57 @@ public final class GetConstants extends APIServlet.APIRequestHandler {
         subtypes.add(subtype);
         transactionType.put("subtypes", subtypes);
         transactionTypes.add(transactionType);
+        transactionType = new JSONObject();
+        transactionType.put("value", MonetarySystem.CURRENCY_ISSUANCE.getType());
+        transactionType.put("description", "Monetary System");
+        subtypes = new JSONArray();
+        subtype = new JSONObject();
+        subtype.put("value", MonetarySystem.CURRENCY_ISSUANCE.getSubtype());
+        subtype.put("description", "Currency issuance");
+        subtypes.add(subtype);
+        subtype = new JSONObject();
+        subtype.put("value", MonetarySystem.RESERVE_INCREASE.getSubtype());
+        subtype.put("description", "Reserve increase");
+        subtypes.add(subtype);
+        subtype = new JSONObject();
+        subtype.put("value", MonetarySystem.RESERVE_CLAIM.getSubtype());
+        subtype.put("description", "Reserve claim");
+        subtypes.add(subtype);
+        subtype = new JSONObject();
+        subtype.put("value", MonetarySystem.CURRENCY_TRANSFER.getSubtype());
+        subtype.put("description", "Currency transfer");
+        subtypes.add(subtype);
+        subtype = new JSONObject();
+        subtype.put("value", MonetarySystem.PUBLISH_EXCHANGE_OFFER.getSubtype());
+        subtype.put("description", "Publish exchange offer");
+        subtypes.add(subtype);
+        subtype = new JSONObject();
+        subtype.put("value", MonetarySystem.EXCHANGE_BUY.getSubtype());
+        subtype.put("description", "Exchange buy");
+        subtypes.add(subtype);
+        subtype = new JSONObject();
+        subtype.put("value", MonetarySystem.EXCHANGE_SELL.getSubtype());
+        subtype.put("description", "Exchange sell");
+        subtypes.add(subtype);
+        subtype = new JSONObject();
+        subtype.put("value", MonetarySystem.CURRENCY_MINTING.getSubtype());
+        subtype.put("description", "Currency minting");
+        subtypes.add(subtype);
+        subtype = new JSONObject();
+        subtype.put("value", MonetarySystem.CURRENCY_DELETION.getSubtype());
+        subtype.put("description", "Currency deletion");
+        subtypes.add(subtype);
+        transactionType.put("subtypes", subtypes);
+        transactionTypes.add(transactionType);
         response.put("transactionTypes", transactionTypes);
+
+        JSONArray currencyTypes = new JSONArray();
+        for (CurrencyType currencyType : CurrencyType.values()) {
+            JSONObject typeJSON = new JSONObject();
+            typeJSON.put(currencyType.toString(), currencyType.getCode());
+            currencyTypes.add(typeJSON);
+        }
+        response.put("currencyTypes", currencyTypes);
 
         JSONArray peerStates = new JSONArray();
         JSONObject peerState = new JSONObject();

@@ -83,8 +83,18 @@ public abstract class VersionedEntityDbTable<T> extends EntityDbTable<T> {
                     dbKeys.add(dbKeyFactory.newKey(rs));
                 }
             }
+            /*
+            if (dbKeys.size() > 0 && Logger.isDebugEnabled()) {
+                Logger.logDebugMessage(String.format("rollback table %s found %d records to update to latest", table, dbKeys.size()));
+            }
+            */
             pstmtDelete.setInt(1, height);
-            pstmtDelete.executeUpdate();
+            int deletedRecordsCount = pstmtDelete.executeUpdate();
+            /*
+            if (deletedRecordsCount > 0 && Logger.isDebugEnabled()) {
+                Logger.logDebugMessage(String.format("rollback table %s deleting %d records", table, deletedRecordsCount));
+            }
+            */
             for (DbKey dbKey : dbKeys) {
                 int i = 1;
                 i = dbKey.setPK(pstmtSetLatest, i);

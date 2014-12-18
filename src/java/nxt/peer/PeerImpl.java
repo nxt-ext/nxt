@@ -34,7 +34,6 @@ import java.net.URL;
 import java.net.UnknownHostException;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.zip.GZIPInputStream;
 
@@ -126,9 +125,9 @@ final class PeerImpl implements Peer {
         }
         this.version = version;
         isOldVersion = false;
-        if (Nxt.APPLICATION.equals(application) && version != null) {
-            String[] versions = version.split("\\.");
-            if (versions.length < Constants.MIN_VERSION.length) {
+        if (Nxt.APPLICATION.equals(application)) {
+            String[] versions;
+            if (version == null || (versions = version.split("\\.")).length < Constants.MIN_VERSION.length) {
                 isOldVersion = true;
             } else {
                 for (int i = 0; i < Constants.MIN_VERSION.length; i++) {
@@ -149,6 +148,8 @@ final class PeerImpl implements Peer {
             }
             if (isOldVersion) {
                 Logger.logDebugMessage(String.format("Blacklisting %s version %s", peerAddress, version));
+                setState(State.NON_CONNECTED);
+                Peers.notifyListeners(this, Peers.Event.BLACKLIST);
             }
         }
     }
@@ -406,7 +407,7 @@ final class PeerImpl implements Peer {
         } else if (getWeight() < o.getWeight()) {
             return 1;
         }
-        return 0;
+        return getPeerAddress().compareTo(o.getPeerAddress());
     }
 
     void connect() {
@@ -427,10 +428,10 @@ final class PeerImpl implements Peer {
                 setAnnouncedAddress(peerAddress);
                 //Logger.logDebugMessage("Connected to peer without announced address, setting to " + peerAddress);
             }
-            if (analyzeHallmark(announcedAddress, (String)response.get("hallmark"))) {
+            if (!isOldVersion && analyzeHallmark(announcedAddress, (String)response.get("hallmark"))) {
                 setState(State.CONNECTED);
                 Peers.updateAddress(this);
-            } else {
+            } else if (!isBlacklisted()) {
                 blacklist();
             }
             lastUpdated = Nxt.getEpochTime();

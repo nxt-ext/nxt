@@ -17,7 +17,7 @@ import java.util.Properties;
 
 public final class Nxt {
 
-    public static final String VERSION = "1.3.5";
+    public static final String VERSION = "1.4.1e";
     public static final String APPLICATION = "NRS";
 
     private static volatile Time time = new Time.EpochTime();
@@ -130,10 +130,6 @@ public final class Nxt {
     }
 
     public static void main(String[] args) {
-        if (! Constants.isTestnet) {
-            Logger.logMessage("This release is for testnet only, exiting!");
-            System.exit(1);
-        }
         Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
             @Override
             public void run() {
@@ -185,6 +181,13 @@ public final class Nxt {
                 AssetTransfer.init();
                 Vote.init();
                 VotePhased.init();
+                Currency.init();
+                CurrencyBuyOffer.init();
+                CurrencySellOffer.init();
+                CurrencyFounder.init();
+                CurrencyMint.init();
+                CurrencyTransfer.init();
+                Exchange.init();
                 Peers.init();
                 Generator.init();
                 API.init();

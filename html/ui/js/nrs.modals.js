@@ -60,6 +60,22 @@ var NRS = (function(NRS, $, undefined) {
 		}
 	});
 
+	$(".issue_currency_reservable").on("change", function(e) {
+		if ($(this).is(":checked")) {
+			$(this).closest("form").find(".optional_reserve").fadeIn();
+		} else {
+			$(this).closest("form").find(".optional_reserve").hide();
+		}
+	});
+
+	$(".issue_currency_mintable").on("change", function(e) {
+		if ($(this).is(":checked")) {
+			$(this).closest("form").find(".optional_mint").fadeIn();
+		} else {
+			$(this).closest("form").find(".optional_mint").hide();
+		}
+	});
+
 	//hide modal when another one is activated.
 	$(".modal").on("show.bs.modal", function(e) {
 		var $inputFields = $(this).find("input[name=recipient], input[name=account_id]").not("[type=hidden]");
