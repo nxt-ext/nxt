@@ -434,12 +434,8 @@ final class JSONData {
     static JSONObject exchangeRequest(Transaction transaction, boolean includeCurrencyInfo) {
         JSONObject json = new JSONObject();
         json.put("transaction", Convert.toUnsignedLong(transaction.getId()));
+        json.put("subtype", transaction.getType().getSubtype());
         Attachment.MonetarySystemExchange attachment = (Attachment.MonetarySystemExchange) transaction.getAttachment();
-        if (attachment instanceof Attachment.MonetarySystemExchangeSell) {
-            json.put("type", "sell");
-        } else {
-            json.put("type", "buy");
-        }
         json.put("timestamp", transaction.getTimestamp());
         json.put("units", String.valueOf(attachment.getUnits()));
         json.put("rateNQT", String.valueOf(attachment.getRateNQT()));
