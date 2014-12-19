@@ -497,6 +497,30 @@ var NRS = (function(NRS, $, undefined) {
 		};
 	};
 	
+	$("#buy_currency_units_initial, #buy_currency_units_total, #buy_currency_rate, #sell_currency_units_initial, #sell_currency_units_total, #sell_currency_rate").keydown(function(e) {
+		var decimals = $("#publish_exchange_offer_decimals").val();
+
+		var charCode = !e.charCode ? e.which : e.charCode;
+		if (NRS.isControlKey(charCode) || e.ctrlKey || e.metaKey) {
+			return;
+		}
+		var isUnitsField = /_units/i.test($(this).attr("id"));
+		var maxFractionLength = (isUnitsField ? decimals : 8 - decimals);
+		return NRS.validateDecimals(maxFractionLength, charCode, $(this).val(), e);
+	});
+
+	$("#sell_currency_units, #sell_currency_price, #buy_currency_units, #buy_currency_price").keydown(function(e) {
+		var decimals = $("#currency_decimals").html();
+
+		var charCode = !e.charCode ? e.which : e.charCode;
+		if (NRS.isControlKey(charCode) || e.ctrlKey || e.metaKey) {
+			return;
+		}
+		var isUnitsField = /_units/i.test($(this).attr("id"));
+		var maxFractionLength = (isUnitsField ? decimals : 8 - decimals);
+		return NRS.validateDecimals(maxFractionLength, charCode, $(this).val(), e);
+	});
+
 	//Calculate preview price (calculated on every keypress)
 	$("#sell_currency_units, #sell_currency_price, #buy_currency_units, #buy_currency_price").keyup(function() {
 		var currencyDecimals = $("#currency_decimals").text();

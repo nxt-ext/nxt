@@ -1487,5 +1487,71 @@ var NRS = (function(NRS, $, undefined) {
 		}
 	}
 
+	NRS.isControlKey = function(charCode) {
+		return !(charCode >= 32 || charCode == 10 || charCode == 13);
+	};
+
+	NRS.validateDecimals = function (maxFractionLength, charCode, val, e) {
+		if (maxFractionLength) {
+			//allow 1 single period character
+			if (charCode == 110 || charCode == 190) {
+				if (val.indexOf(".") != -1) {
+					e.preventDefault();
+					return false;
+				} else {
+					return true;
+				}
+			}
+		} else {
+			//do not allow period
+			if (charCode == 110 || charCode == 190 || charCode == 188) {
+				$.growl($.t("error_fractions"), {
+					"type": "danger"
+				});
+				e.preventDefault();
+				return false;
+			}
+		}
+		if (charCode >= 96 && charCode <= 105) {
+			// convert numeric keyboard code to normal ascii otherwise String.fromCharCode()
+			// returns the wrong value
+			charCode = charCode + 48 - 96;
+		}
+		var input = val + String.fromCharCode(charCode);
+
+		var afterComma = input.match(/\.(\d*)$/);
+
+		//only allow as many as there are decimals allowed..
+		if (afterComma && afterComma[1].length > maxFractionLength) {
+			var selectedText = NRS.getSelectedText();
+
+			if (selectedText != val) {
+				var errorMessage = $.t("error_decimals", {
+					"count": maxFractionLength
+				});
+				$.growl(errorMessage, {
+					"type": "danger"
+				});
+
+				e.preventDefault();
+				return false;
+			}
+		}
+
+		//numeric characters, left/right key, backspace, delete
+		if (charCode == 8 || charCode == 37 || charCode == 39 || charCode == 46 || (charCode >= 48 && charCode <= 57 && !isNaN(String.fromCharCode(charCode)))) {
+			return true;
+		} else {
+			//comma
+			if (charCode == 188) {
+				$.growl($.t("error_comma_not_allowed"), {
+					"type": "danger"
+				});
+			}
+			e.preventDefault();
+			return false;
+		}
+	};
+
 	return NRS;
 }(NRS || {}, jQuery));
