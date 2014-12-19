@@ -153,7 +153,7 @@ public final class DebugTrace {
 
     private static final String[] columns = {"height", "event", "account", "asset", "currency", "balance", "unconfirmed balance",
             "asset balance", "unconfirmed asset balance", "currency balance", "unconfirmed currency balance",
-            "transaction amount", "transaction fee", "generation fee", "effective balance",
+            "transaction amount", "transaction fee", "generation fee", "effective balance", "dividend",
             "order", "order price", "order quantity", "order cost",
             "offer", "buy rate", "sell rate", "buy units", "sell units", "buy cost", "sell cost",
             "trade price", "trade quantity", "trade cost",
@@ -603,9 +603,6 @@ public final class DebugTrace {
                 map.put("recipient", Convert.toUnsignedLong(transaction.getRecipientId()));
             }
         } else if (attachment instanceof Attachment.MonetarySystemPublishExchangeOffer) {
-            if (isRecipient) {
-                return Collections.emptyMap();
-            }
             Attachment.MonetarySystemPublishExchangeOffer publishOffer = (Attachment.MonetarySystemPublishExchangeOffer)attachment;
             map.put("currency", Convert.toUnsignedLong(publishOffer.getCurrencyId()));
             map.put("offer", transaction.getStringId());
@@ -621,9 +618,6 @@ public final class DebugTrace {
             map.put("sell cost", sellCost.toString());
             map.put("event", "offer");
         } else if (attachment instanceof Attachment.MonetarySystemCurrencyIssuance) {
-            if (isRecipient) {
-                return Collections.emptyMap();
-            }
             Attachment.MonetarySystemCurrencyIssuance currencyIssuance = (Attachment.MonetarySystemCurrencyIssuance) attachment;
             map.put("currency", transaction.getStringId());
             map.put("currency units", String.valueOf(currencyIssuance.getInitialSupply()));
@@ -651,9 +645,6 @@ public final class DebugTrace {
             map.put("currency cost", String.valueOf(-Convert.safeMultiply(reserveIncrease.getAmountPerUnitNQT(), currency.getReserveSupply())));
             map.put("event", "currency reserve");
         } else if (attachment instanceof Attachment.MonetarySystemCurrencyMinting) {
-            if (isRecipient) {
-                return Collections.emptyMap();
-            }
             Attachment.MonetarySystemCurrencyMinting currencyMinting = (Attachment.MonetarySystemCurrencyMinting) attachment;
             if (CurrencyMint.meetsTarget(accountId, Currency.getCurrency(currencyMinting.getCurrencyId()), currencyMinting)) {
                 map.put("currency", Convert.toUnsignedLong(currencyMinting.getCurrencyId()));
@@ -661,6 +652,27 @@ public final class DebugTrace {
                 map.put("currency units", String.valueOf(units));
                 map.put("event", "currency mint");
             }
+        } else if (attachment instanceof Attachment.ColoredCoinsDividendPayment) {
+            Attachment.ColoredCoinsDividendPayment dividendPayment = (Attachment.ColoredCoinsDividendPayment)attachment;
+            long totalDividend = 0;
+            String assetId = Convert.toUnsignedLong(dividendPayment.getAssetId());
+            try (DbIterator<Account.AccountAsset> iterator = Account.getAssetAccounts(dividendPayment.getAssetId(), dividendPayment.getHeight(), 0, -1)) {
+                while (iterator.hasNext()) {
+                    Account.AccountAsset accountAsset = iterator.next();
+                    if (accountAsset.getAccountId() != accountId && accountAsset.getAccountId() != Genesis.CREATOR_ID) {
+                        long dividend = Convert.safeMultiply(accountAsset.getQuantityQNT(), dividendPayment.getAmountNQTPerQNT());
+                        Map recipient = getValues(accountAsset.getAccountId(), false);
+                        recipient.put("dividend", String.valueOf(dividend));
+                        recipient.put("asset", assetId);
+                        recipient.put("event", "dividend");
+                        totalDividend += dividend;
+                        log(recipient);
+                    }
+                }
+            }
+            map.put("dividend", String.valueOf(-totalDividend));
+            map.put("asset", assetId);
+            map.put("event", "dividend");
         } else {
             return Collections.emptyMap();
         }
