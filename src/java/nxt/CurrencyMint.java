@@ -45,7 +45,6 @@ public final class CurrencyMint {
         }
 
     };
-    public static final byte[] ZEROS = new byte[]{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
     static void init() {}
 
@@ -171,9 +170,6 @@ public final class CurrencyMint {
     public static byte[] getTarget(byte min, byte max, long units, long currentSupply, long totalSupply) {
         BigInteger targetNum = getNumericTarget(min, max, units, currentSupply, totalSupply);
         byte[] targetRowBytes = targetNum.toByteArray();
-        if (targetRowBytes.length > 32) {
-            targetRowBytes = ZEROS;
-        }
         if (targetRowBytes.length == 32) {
             return reverse(targetRowBytes);
         }

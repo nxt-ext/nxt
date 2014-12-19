@@ -6,6 +6,7 @@ import nxt.util.Logger;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.math.BigInteger;
 import java.util.Arrays;
 
 public class TestMintCalculations {
@@ -32,10 +33,12 @@ public class TestMintCalculations {
         Assert.assertEquals(32, target.length);
         Assert.assertArrayEquals(new byte[]{92, -113, -62, -11, 40, 92, -113, -62, -11, 40, 92, -113, -62, -11, 40, 92, -113, -62, -11, 40, 92, -113, -62, -11, 40, 92, -113, 2, 0, 0, 0, 0}, target);
 
-        target = CurrencyMint.getTarget((byte) 1, (byte) 5, 1, 0, 100000);
-        Logger.logDebugMessage("very low target: " + Arrays.toString(target));
-        Assert.assertEquals(32, target.length);
-        Assert.assertArrayEquals(new byte[]{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, target);
+        try {
+            CurrencyMint.getTarget((byte) 1, (byte) 5, 1, 0, 100000);
+            Assert.fail();
+        } catch(IllegalArgumentException e) {
+            Logger.logDebugMessage("Difficulty too low");
+        }
     }
 
     @Test
@@ -88,5 +91,16 @@ public class TestMintCalculations {
         Assert.assertEquals("da3f4f010d772567a8896465d11df28693b244c91b8ba4bea5a30f6be572b667".toLowerCase(), Convert.toHexString(hash));
         hash = HashFunction.SCRYPT.hash(new byte[]{});
         Assert.assertEquals("0cf2967ca5c120e80b37f8f75c971842e05da107278c1058e6ffbc68911c11f1", Convert.toHexString(hash));
+    }
+
+    @Test
+    public void lowDifficultyProblem() {
+        BigInteger numericTarget = CurrencyMint.getNumericTarget((byte)1, (byte)255, 1, 0, 0);
+        byte[] targetRowBytes = numericTarget.toByteArray();
+        Assert.assertEquals(33, targetRowBytes.length);
+
+        numericTarget = CurrencyMint.getNumericTarget((byte)2, (byte)255, 1, 0, 0);
+        targetRowBytes = numericTarget.toByteArray();
+        Assert.assertEquals(32, targetRowBytes.length);
     }
 }
