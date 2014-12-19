@@ -49,16 +49,9 @@ public class PendingTransactionPoll extends AbstractPoll {
         }
     };
 
-    //TODO: after removing the finishing() method, this class can become anonymous
-    final static class PendingTransactionsTable extends VersionedEntityDbTable<PendingTransactionPoll> {
 
-        protected PendingTransactionsTable() {
-            this(pollDbKeyFactory);
-        }
-
-        protected PendingTransactionsTable(DbKey.Factory<PendingTransactionPoll> dbKeyFactory) {
-            super("pending_transaction", dbKeyFactory);
-        }
+    private final static VersionedEntityDbTable<PendingTransactionPoll> pendingTransactionsTable =
+            new VersionedEntityDbTable<PendingTransactionPoll>("pending_transaction", pollDbKeyFactory) {
 
         //TODO: this method can be removed once getting the pending transactions is optimized, see the comment in TransactionProcessorImpl
         DbIterator<Long> finishing(int height) {
@@ -87,9 +80,7 @@ public class PendingTransactionPoll extends AbstractPoll {
         protected void save(Connection con, PendingTransactionPoll poll) throws SQLException {
             poll.save(con);
         }
-    }
-
-    final static PendingTransactionsTable pendingTransactionsTable = new PendingTransactionsTable();
+    };
 
     static void init() {
     }
@@ -143,6 +134,14 @@ public class PendingTransactionPoll extends AbstractPoll {
 
     public long getId() {
         return id;
+    }
+
+    public static void addPoll(PendingTransactionPoll poll){
+        pendingTransactionsTable.insert(poll);
+    }
+
+    public static DbIterator<PendingTransactionPoll> finishing(int height){
+        return pendingTransactionsTable.getManyBy(new DbClause.IntClause("finish_height", height), 0, Integer.MAX_VALUE);
     }
 
     public static PendingTransactionPoll getPoll(long id) {

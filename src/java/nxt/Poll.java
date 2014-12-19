@@ -102,14 +102,12 @@ public final class Poll extends AbstractPoll {
     }
 
     private static void checkPolls(int currentHeight) {
-        for (Poll poll : getActivePolls()) {
-        //TODO: it is expensive to go through all active polls, need to use a custom sql query to get only those that finish at the current height
-            if (poll.finishBlockHeight == currentHeight) {
-                //TODO: the below two methods are only ever used here, may just inline them
-                poll.calculateAndSavePollResults();
-                finishPoll(poll);
+        for (Poll poll : getPollsFinishingAt(currentHeight)) {
+                List<Pair<String, Long>> results = poll.countResults();
+                pollResultsTable.insert(poll, results);
+                poll.setFinished(true);
+                pollTable.insert(poll);
                 System.out.println("Poll " + poll.getId() + " has been finished"); //TODO: Logger
-            }
         }
     }
 
@@ -184,13 +182,12 @@ public final class Poll extends AbstractPoll {
         return pollTable.getManyBy(new DbClause.LongClause("account_id", accountId), from, to);
     }
 
-    public static int getCount() {
-        return pollTable.getCount();
+    public static DbIterator<Poll> getPollsFinishingAt(int height) {
+        return pollTable.getManyBy(new DbClause.IntClause("height", height), 0, Integer.MAX_VALUE);
     }
 
-    private static void finishPoll(Poll poll) {
-        poll.setFinished(true);
-        pollTable.insert(poll);
+    public static int getCount() {
+        return pollTable.getCount();
     }
 
     //TODO: use PollResult instead of Pair
@@ -233,11 +230,6 @@ public final class Poll extends AbstractPoll {
 
     public byte getMaxRangeValue() {
         return maxRangeValue;
-    }
-
-    private void calculateAndSavePollResults() {
-        List<Pair<String, Long>> results = countResults();
-        pollResultsTable.insert(this, results);
     }
 
     private List<Pair<String,Long>> countResults() {

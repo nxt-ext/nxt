@@ -605,11 +605,9 @@ public interface Appendix {
         @Override
         void apply(Transaction transaction, Account senderAccount, Account recipientAccount) {
             long id = transaction.getId();
-
-            //TODO: move this logic to PendingTransactionPoll.addPoll(), and make pendingTransactionsTable private
             PendingTransactionPoll poll = new PendingTransactionPoll(id, senderAccount.getId(), maxHeight,
                     votingModel, quorum, voteThreshold, assetId, whitelist, blacklist);
-            PendingTransactionPoll.pendingTransactionsTable.insert(poll);
+            PendingTransactionPoll.addPoll(poll);
         }
 
         void commit(Transaction transaction) {
