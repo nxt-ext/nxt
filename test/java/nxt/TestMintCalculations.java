@@ -95,11 +95,11 @@ public class TestMintCalculations {
 
     @Test
     public void lowDifficultyProblem() {
-        BigInteger numericTarget = CurrencyMint.getNumericTarget((byte)1, (byte)255, 1, 0, 0);
+        BigInteger numericTarget = CurrencyMint.getNumericTarget((byte)1, (byte)255, 1, 0, 100000);
         byte[] targetRowBytes = numericTarget.toByteArray();
         Assert.assertEquals(33, targetRowBytes.length);
 
-        numericTarget = CurrencyMint.getNumericTarget((byte)2, (byte)255, 1, 0, 0);
+        numericTarget = CurrencyMint.getNumericTarget((byte)2, (byte)255, 1, 0, 100000);
         targetRowBytes = numericTarget.toByteArray();
         Assert.assertEquals(32, targetRowBytes.length);
     }
