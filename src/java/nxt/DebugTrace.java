@@ -197,20 +197,6 @@ public final class DebugTrace {
         return accountId != 0 && (accountIds.isEmpty() || accountIds.contains(accountId));
     }
 
-    private boolean include(Attachment attachment) {
-        if (attachment instanceof Attachment.DigitalGoodsPurchase) {
-            long sellerId = DigitalGoodsStore.Goods.getGoods(((Attachment.DigitalGoodsPurchase) attachment).getGoodsId()).getSellerId();
-            return include(sellerId);
-        } else if (attachment instanceof Attachment.DigitalGoodsDelivery) {
-            long buyerId = DigitalGoodsStore.Purchase.getPurchase(((Attachment.DigitalGoodsDelivery) attachment).getPurchaseId()).getBuyerId();
-            return include(buyerId);
-        } else if (attachment instanceof Attachment.DigitalGoodsRefund) {
-            long buyerId = DigitalGoodsStore.Purchase.getPurchase(((Attachment.DigitalGoodsRefund) attachment).getPurchaseId()).getBuyerId();
-            return include(buyerId);
-        }
-        return false;
-    }
-
     // Note: Trade events occur before the change in account balances
     private void trace(Trade trade) {
         long askAccountId = Order.Ask.getAskOrder(trade.getAskOrderId()).getAccountId();
@@ -289,11 +275,6 @@ public final class DebugTrace {
             if (include(recipientId)) {
                 log(getValues(recipientId, transaction, true));
                 log(getValues(recipientId, transaction, transaction.getAttachment(), true));
-            } else {
-                Attachment attachment = transaction.getAttachment();
-                if (include(attachment)) {
-                    log(getValues(recipientId, transaction, transaction.getAttachment(), true));
-                }
             }
         }
     }
