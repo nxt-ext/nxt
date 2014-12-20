@@ -510,6 +510,7 @@ public final class Peers {
             }
             Logger.logShutdownMessage(buf.toString());
         }
+        ThreadPool.shutdownExecutor(sendingService);
         ThreadPool.shutdownExecutor(sendToPeersService);
 
     }

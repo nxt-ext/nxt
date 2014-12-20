@@ -55,7 +55,7 @@ public class TestCurrencyMint extends BlockchainTest {
         long nonce;
         for (nonce=0; nonce < Long.MAX_VALUE; nonce++) {
             if (CurrencyMint.meetsTarget(CurrencyMint.getHash((byte)algorithm, nonce, Convert.parseUnsignedLong(currencyId), units, 1, id1),
-                    CurrencyMint.getTarget((byte)2, (byte)8, units, 0, 100000))) {
+                    CurrencyMint.getTarget(2, 8, units, 0, 100000))) {
                 break;
             }
         }
