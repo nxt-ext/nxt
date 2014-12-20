@@ -160,10 +160,10 @@ public enum CurrencyType {
                 } catch(IllegalArgumentException e) {
                     throw new NxtException.NotValidException("Illegal algorithm code specified" , e);
                 }
-                if (issuanceAttachment.getMinDifficulty() <= 1 || issuanceAttachment.getMaxDifficulty() > 127 ||
+                if (issuanceAttachment.getMinDifficulty() < 1 || issuanceAttachment.getMaxDifficulty() > 255 ||
                         issuanceAttachment.getMaxDifficulty() < issuanceAttachment.getMinDifficulty()) {
                     throw new NxtException.NotValidException(
-                            String.format("Invalid minting difficulties min %d max %d, difficulty must be between 2 and 127, max larger than min",
+                            String.format("Invalid minting difficulties min %d max %d, difficulty must be between 1 and 255, max larger than min",
                                     issuanceAttachment.getMinDifficulty(), issuanceAttachment.getMaxDifficulty()));
                 }
                 if (issuanceAttachment.getMaxSupply() <= issuanceAttachment.getReserveSupply()) {

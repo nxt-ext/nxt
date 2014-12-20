@@ -167,7 +167,7 @@ public final class CurrencyMint {
         return hashFunction.hash(buffer.array());
     }
 
-    public static byte[] getTarget(byte min, byte max, long units, long currentSupply, long totalSupply) {
+    public static byte[] getTarget(int min, int max, long units, long currentSupply, long totalSupply) {
         BigInteger targetNum = getNumericTarget(min, max, units, currentSupply, totalSupply);
         byte[] targetRowBytes = targetNum.toByteArray();
         if (targetRowBytes.length == 32) {
@@ -179,9 +179,12 @@ public final class CurrencyMint {
         return reverse(targetBytes);
     }
 
-    public static BigInteger getNumericTarget(byte min, byte max, long units, float currentSupply, float totalSupply) {
-        int exp = 256 - (min + Math.round((max - min) * (currentSupply / totalSupply)));
-        return (BigInteger.valueOf(2).pow(exp)).divide(BigInteger.valueOf(units));
+    public static BigInteger getNumericTarget(int min, int max, long units, long currentSupply, long totalSupply) {
+        if (min < 1 || max > 255) {
+            throw new IllegalArgumentException(String.format("Min: %d, Max: %d, allowed range is 1 to 255", min, max));
+        }
+        int exp = (int)(256 - min - ((max - min) * currentSupply) / totalSupply);
+        return BigInteger.valueOf(2).pow(exp).subtract(BigInteger.ONE).divide(BigInteger.valueOf(units));
     }
 
     private static byte[] reverse(byte[] b) {

@@ -124,8 +124,8 @@ public final class Currency {
     private final int creationHeight;
     private final int issuanceHeight;
     private final long minReservePerUnitNQT;
-    private final byte minDifficulty;
-    private final byte maxDifficulty;
+    private final int minDifficulty;
+    private final int maxDifficulty;
     private final byte ruleset;
     private final byte algorithm;
     private final byte decimals;
@@ -172,8 +172,8 @@ public final class Currency {
         this.creationHeight = rs.getInt("creation_height");
         this.issuanceHeight = rs.getInt("issuance_height");
         this.minReservePerUnitNQT = rs.getLong("min_reserve_per_unit_nqt");
-        this.minDifficulty = rs.getByte("min_difficulty");
-        this.maxDifficulty = rs.getByte("max_difficulty");
+        this.minDifficulty = rs.getByte("min_difficulty") & 0xFF;
+        this.maxDifficulty = rs.getByte("max_difficulty") & 0xFF;
         this.ruleset = rs.getByte("ruleset");
         this.algorithm = rs.getByte("algorithm");
         this.decimals = rs.getByte("decimals");
@@ -199,8 +199,8 @@ public final class Currency {
             pstmt.setInt(++i, this.getCreationHeight());
             pstmt.setInt(++i, this.getIssuanceHeight());
             pstmt.setLong(++i, this.getMinReservePerUnitNQT());
-            pstmt.setByte(++i, this.getMinDifficulty());
-            pstmt.setByte(++i, this.getMaxDifficulty());
+            pstmt.setByte(++i, (byte)this.getMinDifficulty());
+            pstmt.setByte(++i, (byte)this.getMaxDifficulty());
             pstmt.setByte(++i, this.getRuleset());
             pstmt.setByte(++i, this.getAlgorithm());
             pstmt.setByte(++i, this.getDecimals());
@@ -262,11 +262,11 @@ public final class Currency {
         return minReservePerUnitNQT;
     }
 
-    public byte getMinDifficulty() {
+    public int getMinDifficulty() {
         return minDifficulty;
     }
 
-    public byte getMaxDifficulty() {
+    public int getMaxDifficulty() {
         return maxDifficulty;
     }
 
