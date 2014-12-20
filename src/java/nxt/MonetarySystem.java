@@ -152,12 +152,6 @@ public abstract class MonetarySystem extends TransactionType {
                     || attachment.getRuleset() != 0) {
                 throw new NxtException.NotValidException("Invalid currency issuance: " + attachment.getJSONObject());
             }
-            if (Convert.safeMultiply(attachment.getMinReservePerUnitNQT(), attachment.getReserveSupply()) > Constants.MAX_BALANCE_NQT) {
-                throw new NxtException.NotValidException("Invalid currency issuance, min reserve per unit is too large");
-            }
-            if (attachment.getMinDifficulty() < 2 || attachment.getMinDifficulty() > attachment.getMaxDifficulty() || attachment.getMaxDifficulty() > 128) {
-                throw new NxtException.NotValidException("Invalid currency issuance, difficulty exponent value must be between 2 and 128 and min cannot be bigger than max");
-            }
             CurrencyType.validate(attachment.getType(), transaction);
             CurrencyType.validateCurrencyNaming(transaction.getSenderId(), attachment);
         }
