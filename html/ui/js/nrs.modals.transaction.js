@@ -968,8 +968,9 @@ var NRS = (function(NRS, $, undefined) {
 				if (currency != null && NRS.isExchangeable(currency.type)) {
 					$("#transaction_info_callout").append("<a href='#' data-goto-currency='" + String(currency.code).escapeHTML() + "'>Click here</a> to view this currency in the Exchange Booth.<br />").show();
 				}
+				console.log(currency);
 				if (currency != null && NRS.isReservable(currency.type)){
-					$("#transaction_info_callout").append("<a href='#' data-toggle='modal' data-target='#currency_founders_modal' data-currency='" + String(currency.currency).escapeHTML() + "' data-name='" + String(currency.name).escapeHTML() + "' data-code='" + String(currency.code).escapeHTML() + "' data-ressupply='" + String(currency.resSupplyQNT).escapeHTML() + "' data-initialsupply='" + String(currency.initialSupplyQNT).escapeHTML() + "' data-decimals='" + String(currency.decimals).escapeHTML() + "' data-minreserve='" + String(currency.minReserve).escapeHTML() + "' >Click here</a> to view this currency's Founders.").show();
+					$("#transaction_info_callout").append("<a href='#' data-toggle='modal' data-target='#currency_founders_modal' data-currency='" + String(currency.currency).escapeHTML() + "' data-name='" + String(currency.name).escapeHTML() + "' data-code='" + String(currency.code).escapeHTML() + "' data-ressupply='" + String(currency.reserveSupply).escapeHTML() + "' data-initialsupply='" + String(currency.initialSupply).escapeHTML() + "' data-decimals='" + String(currency.decimals).escapeHTML() + "' data-minreserve='" + String(currency.minReservePerUnitNQT).escapeHTML() + "' >Click here</a> to view this currency's Founders.").show();
 				}
 
 				$("#transaction_info_table tbody").append(NRS.createInfoTable(data));
