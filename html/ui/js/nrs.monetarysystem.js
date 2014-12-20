@@ -868,7 +868,7 @@ var NRS = (function(NRS, $, undefined) {
 	/* TRANSFER CURRENCY FORM */
 	NRS.forms.transferCurrency = function($modal) {
 		var data = NRS.getFormData($modal.find("form:first"));
-
+		var decimals = parseInt(data.decimals, 10);
 		if (!data.units) {
 			return {
 				"error": $.t("error_not_specified", {
@@ -891,7 +891,7 @@ var NRS = (function(NRS, $, undefined) {
 		}
 
 		try {
-			data.units = NRS.convertToQNT(data.units, data.decimals);
+			data.units = NRS.convertToQNT(data.units, decimals);
 		} catch (e) {
 			return {
 				"error": $.t("error_incorrect_units_plus", {
