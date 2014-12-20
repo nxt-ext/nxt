@@ -387,5 +387,23 @@ var NRS = (function(NRS, $, undefined) {
 		};
 	}
 
+	NRS.exportContacts = function() {
+		if (NRS.contacts && (Object.keys(NRS.contacts).length > 0)) {
+			var contacts_download = document.createElement('a');
+			contacts_download.href = 'data:attachment/json,' + JSON.stringify( NRS.contacts );
+			contacts_download.target = '_blank';
+			contacts_download.download = 'contacts.json';
+
+			document.body.appendChild(contacts_download);
+			contacts_download.click();
+			document.body.removeChild(contacts_download);
+		} else {
+			console.log('No contacts found in database to backup');
+		}
+	}
+	$("#export_contacts_button").on("click", function() {
+		NRS.exportContacts();
+	});
+
 	return NRS;
 }(NRS || {}, jQuery));
