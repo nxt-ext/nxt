@@ -1,6 +1,7 @@
 package nxt;
 
 import nxt.crypto.HashFunction;
+import nxt.util.Convert;
 
 import java.util.EnumSet;
 import java.util.Set;
@@ -73,6 +74,9 @@ public enum CurrencyType {
                 if (attachment.getMinReservePerUnitNQT() <= 0) {
                     throw new NxtException.NotValidException("Minimum reserve per unit must be > 0");
                 }
+                if (Convert.safeMultiply(attachment.getMinReservePerUnitNQT(), attachment.getReserveSupply()) > Constants.MAX_BALANCE_NQT) {
+                    throw new NxtException.NotValidException("Minimal reserve per unit is too large");
+                }
                 if (attachment.getReserveSupply() <= attachment.getInitialSupply()) {
                     throw new NxtException.NotValidException("Reserve supply must exceed initial supply");
                 }
@@ -96,6 +100,9 @@ public enum CurrencyType {
                 Attachment.MonetarySystemCurrencyIssuance attachment = (Attachment.MonetarySystemCurrencyIssuance) transaction.getAttachment();
                 if (attachment.getIssuanceHeight() != 0) {
                     throw new NxtException.NotValidException("Issuance height for non-reservable currency must be 0");
+                }
+                if (attachment.getMinReservePerUnitNQT() > 0) {
+                    throw new NxtException.NotValidException("Minimum reserve per unit for non-reservable currency must be 0 ");
                 }
                 if (attachment.getReserveSupply() > 0) {
                     throw new NxtException.NotValidException("Reserve supply for non-reservable currency must be 0");
@@ -153,10 +160,10 @@ public enum CurrencyType {
                 } catch(IllegalArgumentException e) {
                     throw new NxtException.NotValidException("Illegal algorithm code specified" , e);
                 }
-                if (issuanceAttachment.getMinDifficulty() <= 0 ||
+                if (issuanceAttachment.getMinDifficulty() <= 1 || issuanceAttachment.getMaxDifficulty() > 127 ||
                         issuanceAttachment.getMaxDifficulty() < issuanceAttachment.getMinDifficulty()) {
                     throw new NxtException.NotValidException(
-                            String.format("Invalid minting difficulties min %d max %d",
+                            String.format("Invalid minting difficulties min %d max %d, difficulty must be between 2 and 127, max larger than min",
                                     issuanceAttachment.getMinDifficulty(), issuanceAttachment.getMaxDifficulty()));
                 }
                 if (issuanceAttachment.getMaxSupply() <= issuanceAttachment.getReserveSupply()) {
