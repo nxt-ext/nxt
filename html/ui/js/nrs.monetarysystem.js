@@ -198,6 +198,11 @@ var NRS = (function(NRS, $, undefined) {
 		var $invoker = $(e.relatedTarget);
 
 		var currencyId = $invoker.data("currency");
+		var issueHeight = $invoker.data("issueHeight");
+		if (issueHeight>NRS.lastBlockHeight)
+			$("#founders_blocks_active").html(issueHeight-NRS.lastBlockHeight);
+		else
+			$("#founders_blocks_active").html("Active");
 		$("#founders_currency_code").html(String($invoker.data("code")).escapeHTML());
 
 		NRS.sendRequest("getCurrencyFounders", {
@@ -633,7 +638,7 @@ var NRS = (function(NRS, $, undefined) {
 							"<td>";
 							rows += "<a href='#' class='btn btn-xs btn-default' onClick='NRS.goToCurrency(&quot;" + code + "&quot;)' " + (!NRS.isExchangeable(currency.type) ? "disabled" : "") + ">" + $.t("exchange") + "</a> ";
 							rows += "<a href='#' class='btn btn-xs btn-default' data-toggle='modal' data-target='#reserve_currency_modal' data-currency='" + currencyId + "' data-name='" + name + "' data-code='" + code + "' data-ressupply='" + resSupply + "' data-decimals='" + decimals + "' data-minreserve='" + minReserve + "' " + (currency.issuanceHeight > NRS.lastBlockHeight && NRS.isReservable(currency.type) ? "" : "disabled") + " >" + $.t("reserve") + "</a> ";
-							rows += "<a href='#' class='btn btn-xs btn-default' data-toggle='modal' data-target='#currency_founders_modal' data-currency='" + currencyId + "' data-name='" + name + "' data-code='" + code + "' data-ressupply='" + resSupplyQNT + "' data-initialsupply='" + initialSupplyQNT + "' data-decimals='" + decimals + "' data-minreserve='" + minReserve + "' " + (NRS.isReservable(currency.type) ? "" : "disabled") + " >" + $.t("founders") + "</a> ";
+							//rows += "<a href='#' class='btn btn-xs btn-default' data-toggle='modal' data-target='#currency_founders_modal' data-currency='" + currencyId + "' data-name='" + name + "' data-code='" + code + "' data-ressupply='" + resSupplyQNT + "' data-initialsupply='" + initialSupplyQNT + "' data-decimals='" + decimals + "' data-minreserve='" + minReserve + "' " + (NRS.isReservable(currency.type) ? "" : "disabled") + " >" + $.t("founders") + "</a> ";
 							rows += "<a href='#' class='btn btn-xs btn-default' data-toggle='modal' data-target='#mine_currency_modal' data-currency='" + currencyId + "' data-name='" + name + "' data-code='" + code + "' data-decimals='" + decimals + "' " + (!NRS.isMintable(currency.type) ? "disabled" : "") + " >" + $.t("mint") + "</a> ";
 							rows += "</td></tr>";
 					}
