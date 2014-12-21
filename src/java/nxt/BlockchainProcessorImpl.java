@@ -133,6 +133,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                         return;
                     }
 
+                    long lastBlockId = blockchain.getLastBlock().getId();
                     downloadBlockchain(peer, commonBlock);
 
                     if (blockchain.getHeight() - commonBlock.getHeight() <= 10) {
@@ -171,7 +172,11 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     }
                     Logger.logDebugMessage("Got " + confirmations + " confirmations");
 
-                    Logger.logDebugMessage("Downloaded " + (blockchain.getHeight() - commonBlock.getHeight()) + " blocks");
+                    if (blockchain.getLastBlock().getId() != lastBlockId) {
+                        Logger.logDebugMessage("Downloaded " + (blockchain.getHeight() - commonBlock.getHeight()) + " blocks");
+                    } else {
+                        Logger.logDebugMessage("Did not accept peer's blocks, back to our own fork");
+                    }
 
                 } catch (NxtException.StopException e) {
                     Logger.logMessage("Blockchain download stopped: " + e.getMessage());
@@ -375,7 +380,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             }
 
             if (pushedForkBlocks == 0) {
-                Logger.logDebugMessage("Didn't accept any of the peer's fork blocks, pushing back my previous blocks");
+                Logger.logDebugMessage("Didn't accept any blocks, pushing back my previous blocks");
                 for (int i = myPoppedOffBlocks.size() - 1; i >= 0; i--) {
                     BlockImpl block = myPoppedOffBlocks.remove(i);
                     try {
