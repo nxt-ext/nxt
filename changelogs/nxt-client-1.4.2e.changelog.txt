@@ -1,0 +1,24 @@
+Additional validations of Monetary System transactions, and bugfixes
+in existing validations.
+
+Allow setting a different file as default page for the API server,
+in nxt.apiWelcomeFile, default index.html.
+
+Bugfixes in processing decimal point conversions in the UI, affecting
+MS and AE transactions.
+
+Bugfixes in currency minting and in MintWorker.
+
+Fixed the UI issue of client not responding after submission of certain
+MS transactions.
+
+Fixed duplicate transactions on the dashboard UI issue.
+
+Monetary System UI improvements.
+
+Improved peer networking to run the sending of blocks and transactions
+to peers in a background thread.
+
+This release will force a rescan on testnet only, deleting blocks after
+159306.
+
