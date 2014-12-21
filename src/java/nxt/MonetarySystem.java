@@ -152,6 +152,13 @@ public abstract class MonetarySystem extends TransactionType {
                     || attachment.getRuleset() != 0) {
                 throw new NxtException.NotValidException("Invalid currency issuance: " + attachment.getJSONObject());
             }
+            int t = 1;
+            for (int i = 0; i < 32; i++) {
+                if ((t & attachment.getType()) != 0 && CurrencyType.get(t) == null) {
+                    throw new NxtException.NotValidException("Invalid currency type: " + attachment.getType());
+                }
+                t <<= 1;
+            }
             CurrencyType.validate(attachment.getType(), transaction);
             CurrencyType.validateCurrencyNaming(transaction.getSenderId(), attachment);
         }
@@ -376,6 +383,7 @@ public abstract class MonetarySystem extends TransactionType {
             Attachment.MonetarySystemPublishExchangeOffer attachment = (Attachment.MonetarySystemPublishExchangeOffer) transaction.getAttachment();
             if (attachment.getBuyRateNQT() <= 0
                     || attachment.getSellRateNQT() <= 0
+                    || attachment.getBuyRateNQT() >= attachment.getSellRateNQT()
                     || attachment.getTotalBuyLimit() < 0
                     || attachment.getTotalSellLimit() < 0
                     || attachment.getInitialBuySupply() < 0
@@ -385,17 +393,6 @@ public abstract class MonetarySystem extends TransactionType {
             }
             Currency currency = Currency.getCurrency(attachment.getCurrencyId());
             CurrencyType.validate(currency, transaction);
-            Account account = Account.getAccount(transaction.getSenderId());
-            long requiredBalance = Convert.safeMultiply(attachment.getInitialBuySupply(), attachment.getBuyRateNQT());
-            if (account.getUnconfirmedBalanceNQT() < requiredBalance) {
-                throw new NxtException.NotCurrentlyValidException(String.format("Cannot publish exchange offer, account balance %d lower than offer initial balance %d",
-                        account.getUnconfirmedBalanceNQT(), requiredBalance));
-            }
-            long requiredUnits = account.getUnconfirmedCurrencyUnits(attachment.getCurrencyId());
-            if (requiredUnits < attachment.getInitialSellSupply()) {
-                throw new NxtException.NotCurrentlyValidException(String.format("Cannot publish exchange offer, currency units %d lower than offer initial units %d",
-                        requiredUnits, attachment.getInitialSellSupply()));
-            }
             if (! currency.isActive()) {
                 throw new NxtException.NotCurrentlyValidException("Currency not currently active: " + attachment.getJSONObject());
             }
