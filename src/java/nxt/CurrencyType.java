@@ -217,6 +217,14 @@ public enum CurrencyType {
 
     abstract void validateMissing(Currency currency, Transaction transaction, Set<CurrencyType> validators) throws NxtException.ValidationException;
 
+    public static CurrencyType get(int code) {
+        for (CurrencyType currencyType : values()) {
+            if (currencyType.getCode() == code) {
+                return currencyType;
+            }
+        }
+        return null;
+    }
 
     static void validate(Currency currency, Transaction transaction) throws NxtException.ValidationException {
         if (currency == null) {

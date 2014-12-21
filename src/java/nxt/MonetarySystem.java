@@ -152,6 +152,13 @@ public abstract class MonetarySystem extends TransactionType {
                     || attachment.getRuleset() != 0) {
                 throw new NxtException.NotValidException("Invalid currency issuance: " + attachment.getJSONObject());
             }
+            int t = 1;
+            for (int i = 0; i < 32; i++) {
+                if ((t & attachment.getType()) != 0 && CurrencyType.get(t) == null) {
+                    throw new NxtException.NotValidException("Invalid currency type: " + attachment.getType());
+                }
+                t <<= 1;
+            }
             CurrencyType.validate(attachment.getType(), transaction);
             CurrencyType.validateCurrencyNaming(transaction.getSenderId(), attachment);
         }
@@ -376,6 +383,7 @@ public abstract class MonetarySystem extends TransactionType {
             Attachment.MonetarySystemPublishExchangeOffer attachment = (Attachment.MonetarySystemPublishExchangeOffer) transaction.getAttachment();
             if (attachment.getBuyRateNQT() <= 0
                     || attachment.getSellRateNQT() <= 0
+                    || attachment.getBuyRateNQT() >= attachment.getSellRateNQT()
                     || attachment.getTotalBuyLimit() < 0
                     || attachment.getTotalSellLimit() < 0
                     || attachment.getInitialBuySupply() < 0
