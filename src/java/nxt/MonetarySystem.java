@@ -385,17 +385,6 @@ public abstract class MonetarySystem extends TransactionType {
             }
             Currency currency = Currency.getCurrency(attachment.getCurrencyId());
             CurrencyType.validate(currency, transaction);
-            Account account = Account.getAccount(transaction.getSenderId());
-            long requiredBalance = Convert.safeMultiply(attachment.getInitialBuySupply(), attachment.getBuyRateNQT());
-            if (account.getUnconfirmedBalanceNQT() < requiredBalance) {
-                throw new NxtException.NotCurrentlyValidException(String.format("Cannot publish exchange offer, account balance %d lower than offer initial balance %d",
-                        account.getUnconfirmedBalanceNQT(), requiredBalance));
-            }
-            long requiredUnits = account.getUnconfirmedCurrencyUnits(attachment.getCurrencyId());
-            if (requiredUnits < attachment.getInitialSellSupply()) {
-                throw new NxtException.NotCurrentlyValidException(String.format("Cannot publish exchange offer, currency units %d lower than offer initial units %d",
-                        requiredUnits, attachment.getInitialSellSupply()));
-            }
             if (! currency.isActive()) {
                 throw new NxtException.NotCurrentlyValidException("Currency not currently active: " + attachment.getJSONObject());
             }
