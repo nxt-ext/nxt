@@ -22,7 +22,6 @@ in such a way that no trusted third parties are required anymore.
     - *general* - Java 7 or 8
     - *Ubuntu* - `http://www.webupd8.org/2012/01/install-oracle-java-jdk-7-in-ubuntu-via.html`
     - *Debian* - `http://www.webupd8.org/2012/06/how-to-install-oracle-java-7-in-debian.html`
-    - *openSUSE 12.3* - `zypper install java-1_7_0-openjdk`
 
   - *repository* - `git clone https://bitbucket.org/JeanLucPicard/nxt.git`
   
