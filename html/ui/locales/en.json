@@ -915,5 +915,7 @@
     "error_send_message": "An unknown error occured! Message may or may not be sent.",
     "seller_account_id": "Seller's Account ID",
     "status_new_account_old": "Welcome to your new NXT account. Your account ID is <strong>__account_id__<\/strong>. You should fund it with some coins.",
-    "error_no_contacts_available": "There are no contacts available"
+    "error_no_contacts_available": "There are no contacts available",
+    "export_contact": "Export Contacts",
+    "import_contact": "Import Contacts"
 }
