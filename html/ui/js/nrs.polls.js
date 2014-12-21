@@ -72,7 +72,7 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.pages.my_polls = function() {
-		NRS.sendRequest("getPollIds+",{"account": NRS.accountRS}, function(response) {
+		NRS.sendRequest("getPollIds", {"account": NRS.accountRS}, function(response) {
 			if (response.pollIds && response.pollIds.length) {
 				var polls = {};
 				var nrPolls = 0;
@@ -81,16 +81,17 @@ var NRS = (function(NRS, $, undefined) {
 					NRS.sendRequest("getTransaction+", {
 						"transaction": response.pollIds[i]
 					}, function(poll, input) {
-						if (NRS.currentPage != "my_polls") {
+						if (NRS.currentPage != "polls") {
 							polls = {};
 							return;
 						}
 
-						if (!poll.errorCode) {
+						if (!poll.errorCode && poll.attachment.finishBlockHeight >= NRS.lastBlockHeight) {
 							polls[input.transaction] = poll;
 						}
 
 						nrPolls++;
+
 
 						if (nrPolls == response.pollIds.length) {
 							var rows = "";
@@ -123,16 +124,9 @@ var NRS = (function(NRS, $, undefined) {
 								if (pollDescription.length > 100) {
 									pollDescription = pollDescription.substring(0, 100) + "...";
 								}
-								if(poll.attachment.finishBlockHeight >= NRS.lastBlockHeight) {}
-									rows += "<tr><td><a href='#' data-transaction='"+poll.transaction+"'>" + String(poll.attachment.name).escapeHTML() + "</a></td><td>" + pollDescription.escapeHTML() + "</td><td>" + (poll.sender != NRS.genesis ? "<a href='#' data-user='" + NRS.getAccountFormatted(poll, "sender") + "' class='user_info'>" + NRS.getAccountTitle(poll, "sender") + "</a>" : "Genesis") + "</td><td>" + NRS.formatTimestamp(poll.timestamp) + "</td><td>" + String(poll.attachment.finishBlockHeight - NRS.lastBlockHeight) + "</td><td><a href='#' data-toggle='modal' data-target='#cast_vote_modal'>Vote </td></tr>";
-								}
-								else {
-									rows += "<tr><td><a href='#' data-transaction='"+poll.transaction+"'>" + String(poll.attachment.name).escapeHTML() + "</a></td><td>" + pollDescription.escapeHTML() + "</td><td>" + (poll.sender != NRS.genesis ? "<a href='#' data-user='" + NRS.getAccountFormatted(poll, "sender") + "' class='user_info'>" + NRS.getAccountTitle(poll, "sender") + "</a>" : "Genesis") + "</td><td>" + NRS.formatTimestamp(poll.timestamp) + "</td><td>Completed</td><td><a href='#' data-poll='modal' data-target='#cast_vote_modal'>Vote </td></tr>";
-
-								}
-
+								rows += "<tr><td><a class='poll_list_title' href='#' data-transaction='"+poll.transaction+"'>" + String(poll.attachment.name).escapeHTML() + "</a></td><td>" + pollDescription.escapeHTML() + "</td><td>" + (poll.sender != NRS.genesis ? "<a href='#' data-user='" + NRS.getAccountFormatted(poll, "sender") + "' class='user_info'>" + NRS.getAccountTitle(poll, "sender") + "</a>" : "Genesis") + "</td><td>" + NRS.formatTimestamp(poll.timestamp) + "</td><td>" + String(poll.attachment.finishBlockHeight - NRS.lastBlockHeight) + "</td><td><a href='#' class='vote_button' data-poll='" + poll.transaction +"'>Vote </td></tr>";
 							}
-							NRS.dataLoaded(rows);						
+							NRS.dataLoaded(rows);
 						}
 					});
 				}
@@ -140,6 +134,10 @@ var NRS = (function(NRS, $, undefined) {
 				NRS.dataLoaded();
 			}
 		});
+	}
+
+	NRS.incoming.my_polls = function() {
+		NRS.loadPage("my_polls");
 	}
 
 	NRS.pages.voted_polls = function() {
@@ -208,10 +206,6 @@ var NRS = (function(NRS, $, undefined) {
 		});
 	}
 
-	NRS.incoming.my_polls = function() {
-		NRS.loadPage("my_polls");
-	}
-
 	NRS.incoming.voted_polls = function() {
 		NRS.loadPage("voted_polls");
 	}
@@ -265,7 +259,11 @@ var NRS = (function(NRS, $, undefined) {
 				$("#cast_vote_poll_name").text(response.attachment.name);
 				$("#cast_vote_poll_description").text(response.attachment.description);
 				$("#cast_vote_answers_entry").text("");
+				if(response.attachment.minNumberOfOptions != response.attachment.maxNumberOfOptions)
 				$("#cast_vote_range").text("Select between " + response.attachment.minNumberOfOptions + " and " + response.attachment.maxNumberOfOptions + " options from below.")
+				else if(response.attachment.minNumberOfOptions != 1) $("#cast_vote_range").text("Select " + response.attachment.minNumberOfOptions +  " options from below.")
+				else $("#cast_vote_range").text("Select 1 option from below.")
+
 				$("#cast_vote_poll").val(response.transaction);
 				if(response.attachment.maxRangeValue != 1)
 				{
