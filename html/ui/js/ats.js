@@ -26,23 +26,41 @@ var ATS = (function(ATS, $, undefined) {
             event.preventDefault();    
         });
         
-        $('#navi-show-open').click(function(e) {
-            $('.api-call-All').each(function() {
-                if($(this).find('.panel-collapse.in').length != 0) {
-                    $(this).show();
-                } else {
-                    $(this).hide();
-                }
-            });
-            $('#navi-show-all').css('font-weight', 'normal');
-            $(this).css('font-weight', 'bold');
+        $("#navi-show-fields").click(function(e) {
+            if ($(this).attr("data-navi-val") == "ALL") {
+                $('.api-call-input-tr').each(function() {
+                    if($(this).find("input").val() != "") {
+                        $(this).show();
+                    } else {
+                        $(this).hide();
+                    }
+                });
+                $(this).attr("data-navi-val", "NONEMPTY");
+                $(this).text("Show All Fields");
+            } else {
+                $('.api-call-input-tr').show();
+                $(this).attr("data-navi-val", "ALL");
+                $(this).text("Show Non-Empty Fields");
+            }
             e.preventDefault();
         });
 
-        $('#navi-show-all').click(function(e) {
-            $('.api-call-All').show();
-            $('#navi-show-open').css('font-weight', 'normal');
-            $(this).css('font-weight', 'bold');
+        $("#navi-show-tabs").click(function(e) {
+            if ($(this).attr("data-navi-val") == "ALL") {
+                $('.api-call-All').each(function() {
+                    if($(this).find('.panel-collapse.in').length != 0) {
+                        $(this).show();
+                    } else {
+                        $(this).hide();
+                    }
+                });
+                $(this).attr("data-navi-val", "OPEN");
+                $(this).text("Show All Tabs");
+            } else {
+                $('.api-call-All').show();
+                $(this).attr("data-navi-val", "ALL");
+                $(this).text("Show Open Tabs");
+            }
             e.preventDefault();
         });
 
@@ -105,13 +123,21 @@ var ATS = (function(ATS, $, undefined) {
         var params = {};
         for (i = 0; i < form.elements.length; i++) {
             if (form.elements[i].type != 'button' && form.elements[i].value && form.elements[i].value != 'submit') {
-                params[form.elements[i].name] = form.elements[i].value;
+                var key = form.elements[i].name;
+                var value = form.elements[i].value;
+                if(key in params) {
+                    var index = params[key].length;
+                    params[key][index] = value;
+                } else {
+                    params[key] = [value];
+                }
             }
         }
         $.ajax({
             url: url,
             type: 'POST',
-            data: params
+            data: params,
+            traditional: true // "true" needed for duplicate params
         })
         .done(function(result) {
             var resultStr = JSON.stringify(JSON.parse(result), null, 4);
@@ -123,7 +149,7 @@ var ATS = (function(ATS, $, undefined) {
             alert('API not available, check if Nxt Server is running!');
         });
         if ($(form).has('.uri-link').length > 0) { 
-            var uri = '/nxt?' + jQuery.param(params);
+            var uri = '/nxt?' + jQuery.param(params, true);
             var html = '<a href="' + uri + '" target="_blank" style="font-size:12px;font-weight:normal;">Open GET URL</a>';
             form.getElementsByClassName("uri-link")[0].innerHTML = html;
         }
@@ -135,7 +161,6 @@ var ATS = (function(ATS, $, undefined) {
         $('#navi-selected').attr('href', newUrl);
         $('#navi-selected').text('SELECTED (' + ATS.selectedApiCalls.length + ')');
         ATS.setCookie('selected_api_calls', ATS.selectedApiCalls.join('_'), 30);
-        console.log(ATS.selectedApiCalls);
     }
 
     ATS.setSelectedApiCalls = function() {

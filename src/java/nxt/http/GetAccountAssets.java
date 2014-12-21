@@ -32,7 +32,7 @@ public final class GetAccountAssets extends APIServlet.APIRequestHandler {
             try (DbIterator<Account.AccountAsset> accountAssets = account.getAssets(height, 0, -1)) {
                 JSONArray assetJSON = new JSONArray();
                 while (accountAssets.hasNext()) {
-                    assetJSON.add(JSONData.accountAsset(accountAssets.next(), false));
+                    assetJSON.add(JSONData.accountAsset(accountAssets.next(), false, true));
                 }
                 response.put("accountAssets", assetJSON);
                 return response;
@@ -41,7 +41,7 @@ public final class GetAccountAssets extends APIServlet.APIRequestHandler {
             Asset asset = ParameterParser.getAsset(req);
             Account.AccountAsset accountAsset = account.getAsset(asset.getId(), height);
             if (accountAsset != null) {
-                return JSONData.accountAsset(accountAsset, false);
+                return JSONData.accountAsset(accountAsset, false, true);
             }
             return JSON.emptyJSON;
         }

@@ -11,9 +11,7 @@ import org.json.simple.JSONStreamAware;
 import javax.servlet.http.HttpServletRequest;
 
 import static nxt.http.JSONResponses.INCORRECT_ALIAS_OWNER;
-import static nxt.http.JSONResponses.INCORRECT_PRICE;
 import static nxt.http.JSONResponses.INCORRECT_RECIPIENT;
-import static nxt.http.JSONResponses.MISSING_PRICE;
 
 
 public final class SellAlias extends CreateTransaction {
@@ -29,19 +27,7 @@ public final class SellAlias extends CreateTransaction {
         Alias alias = ParameterParser.getAlias(req);
         Account owner = ParameterParser.getSenderAccount(req);
 
-        String priceValueNQT = Convert.emptyToNull(req.getParameter("priceNQT"));
-        if (priceValueNQT == null) {
-            return MISSING_PRICE;
-        }
-        long priceNQT;
-        try {
-            priceNQT = Long.parseLong(priceValueNQT);
-        } catch (RuntimeException e) {
-            return INCORRECT_PRICE;
-        }
-        if (priceNQT < 0 || priceNQT > Constants.MAX_BALANCE_NQT) {
-            throw new ParameterException(INCORRECT_PRICE);
-        }
+        long priceNQT = ParameterParser.getLong(req, "priceNQT", 0L, Constants.MAX_BALANCE_NQT, true);
 
         String recipientValue = Convert.emptyToNull(req.getParameter("recipient"));
         long recipientId = 0;

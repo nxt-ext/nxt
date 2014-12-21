@@ -5,8 +5,15 @@ import nxt.Alias;
 import nxt.Appendix;
 import nxt.Asset;
 import nxt.AssetTransfer;
+import nxt.Attachment;
 import nxt.Block;
+import nxt.Currency;
+import nxt.CurrencyExchangeOffer;
+import nxt.CurrencyFounder;
+import nxt.CurrencyTransfer;
+import nxt.CurrencyType;
 import nxt.DigitalGoodsStore;
+import nxt.Exchange;
 import nxt.Nxt;
 import nxt.Order;
 import nxt.Poll;
@@ -22,6 +29,7 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 import java.util.Collections;
+import java.util.Map;
 
 final class JSONData {
 
@@ -76,7 +84,49 @@ final class JSONData {
         return json;
     }
 
-    static JSONObject accountAsset(Account.AccountAsset accountAsset, boolean includeAccount) {
+    static JSONObject currency(Currency currency, boolean includeCounts) {
+        JSONObject json = new JSONObject();
+        json.put("currency", Convert.toUnsignedLong(currency.getId()));
+        putAccount(json, "account", currency.getAccountId());
+        json.put("name", currency.getName());
+        json.put("code", currency.getCode());
+        json.put("description", currency.getDescription());
+        json.put("type", currency.getType());
+        json.put("initialSupply", String.valueOf(currency.getInitialSupply()));
+        json.put("currentSupply", String.valueOf(currency.getCurrentSupply()));
+        json.put("reserveSupply", String.valueOf(currency.getReserveSupply()));
+        json.put("maxSupply", String.valueOf(currency.getMaxSupply()));
+        json.put("creationHeight", currency.getCreationHeight());
+        json.put("issuanceHeight", currency.getIssuanceHeight());
+        json.put("minReservePerUnitNQT", String.valueOf(currency.getMinReservePerUnitNQT()));
+        json.put("currentReservePerUnitNQT", String.valueOf(currency.getCurrentReservePerUnitNQT()));
+        json.put("minDifficulty", currency.getMinDifficulty());
+        json.put("maxDifficulty", currency.getMaxDifficulty());
+        json.put("algorithm", currency.getAlgorithm());
+        json.put("decimals", currency.getDecimals());
+        if (includeCounts) {
+            json.put("numberOfExchanges", Exchange.getExchangeCount(currency.getId()));
+            json.put("numberOfTransfers", CurrencyTransfer.getTransferCount(currency.getId()));
+        }
+        JSONArray types = new JSONArray();
+        for (CurrencyType type : CurrencyType.values()) {
+            if (currency.is(type)) {
+                types.add(type.toString());
+            }
+        }
+        json.put("types", types);
+        return json;
+    }
+
+    static JSONObject currencyFounder(CurrencyFounder founder) {
+        JSONObject json = new JSONObject();
+        json.put("currency", Convert.toUnsignedLong(founder.getCurrencyId()));
+        putAccount(json, "account", founder.getAccountId());
+        json.put("amountPerUnitNQT", String.valueOf(founder.getAmountPerUnitNQT()));
+        return json;
+    }
+
+    static JSONObject accountAsset(Account.AccountAsset accountAsset, boolean includeAccount, boolean includeAssetInfo) {
         JSONObject json = new JSONObject();
         if (includeAccount) {
             putAccount(json, "account", accountAsset.getAccountId());
@@ -84,6 +134,23 @@ final class JSONData {
         json.put("asset", Convert.toUnsignedLong(accountAsset.getAssetId()));
         json.put("quantityQNT", String.valueOf(accountAsset.getQuantityQNT()));
         json.put("unconfirmedQuantityQNT", String.valueOf(accountAsset.getUnconfirmedQuantityQNT()));
+        if (includeAssetInfo) {
+            putAssetInfo(json, accountAsset.getAssetId());
+        }
+        return json;
+    }
+
+    static JSONObject accountCurrency(Account.AccountCurrency accountCurrency, boolean includeAccount, boolean includeCurrencyInfo) {
+        JSONObject json = new JSONObject();
+        if (includeAccount) {
+            putAccount(json, "account", accountCurrency.getAccountId());
+        }
+        json.put("currency", Convert.toUnsignedLong(accountCurrency.getCurrencyId()));
+        json.put("units", String.valueOf(accountCurrency.getUnits()));
+        json.put("unconfirmedUnits", String.valueOf(accountCurrency.getUnconfirmedUnits()));
+        if (includeCurrencyInfo) {
+            putCurrencyInfo(json, accountCurrency.getCurrencyId());
+        }
         return json;
     }
 
@@ -110,6 +177,19 @@ final class JSONData {
         return json;
     }
 
+    static JSONObject offer(CurrencyExchangeOffer offer) {
+        JSONObject json = new JSONObject();
+        json.put("offer", Convert.toUnsignedLong(offer.getId()));
+        putAccount(json, "account", offer.getAccountId());
+        json.put("height", offer.getHeight());
+        json.put("expirationHeight", offer.getExpirationHeight());
+        json.put("currency", Convert.toUnsignedLong(offer.getCurrencyId()));
+        json.put("rateNQT", String.valueOf(offer.getRateNQT()));
+        json.put("limit", String.valueOf(offer.getLimit()));
+        json.put("supply", String.valueOf(offer.getSupply()));
+        return json;
+    }
+
     static JSONObject block(Block block, boolean includeTransactions) {
         JSONObject json = new JSONObject();
         json.put("block", block.getStringId());
@@ -123,6 +203,7 @@ final class JSONData {
         json.put("payloadLength", block.getPayloadLength());
         json.put("version", block.getVersion());
         json.put("baseTarget", Convert.toUnsignedLong(block.getBaseTarget()));
+        json.put("cumulativeDifficulty", block.getCumulativeDifficulty().toString());
         if (block.getPreviousBlockId() != 0) {
             json.put("previousBlock", Convert.toUnsignedLong(block.getPreviousBlockId()));
         }
@@ -150,7 +231,7 @@ final class JSONData {
         return json;
     }
 
-    static JSONObject goods(DigitalGoodsStore.Goods goods) {
+    static JSONObject goods(DigitalGoodsStore.Goods goods, boolean includeCounts) {
         JSONObject json = new JSONObject();
         json.put("goods", Convert.toUnsignedLong(goods.getId()));
         json.put("name", goods.getName());
@@ -159,8 +240,23 @@ final class JSONData {
         json.put("priceNQT", String.valueOf(goods.getPriceNQT()));
         putAccount(json, "seller", goods.getSellerId());
         json.put("tags", goods.getTags());
+        JSONArray tagsJSON = new JSONArray();
+        Collections.addAll(tagsJSON, goods.getParsedTags());
+        json.put("parsedTags", tagsJSON);
         json.put("delisted", goods.isDelisted());
         json.put("timestamp", goods.getTimestamp());
+        if (includeCounts) {
+            json.put("numberOfPurchases", DigitalGoodsStore.Purchase.getGoodsPurchaseCount(goods.getId(), false, true));
+            json.put("numberOfPublicFeedbacks", DigitalGoodsStore.Purchase.getGoodsPurchaseCount(goods.getId(), true, true));
+        }
+        return json;
+    }
+
+    static JSONObject tag(DigitalGoodsStore.Tag tag) {
+        JSONObject json = new JSONObject();
+        json.put("tag", tag.getTag());
+        json.put("inStockCount", tag.getInStockCount());
+        json.put("totalCount", tag.getTotalCount());
         return json;
     }
 
@@ -185,6 +281,7 @@ final class JSONData {
 
     static JSONObject peer(Peer peer) {
         JSONObject json = new JSONObject();
+        json.put("address", peer.getPeerAddress());
         json.put("state", peer.getState().ordinal());
         json.put("announcedAddress", peer.getAnnouncedAddress());
         json.put("shareAddress", peer.shareAddress());
@@ -246,9 +343,9 @@ final class JSONData {
             }
             json.put("feedbackNotes", feedbacks);
         }
-        if (purchase.getPublicFeedback() != null) {
+        if (purchase.getPublicFeedbacks() != null) {
             JSONArray publicFeedbacks = new JSONArray();
-            for (String publicFeedback : purchase.getPublicFeedback()) {
+            for (String publicFeedback : purchase.getPublicFeedbacks()) {
                 publicFeedbacks.add(publicFeedback);
             }
             json.put("publicFeedbacks", publicFeedbacks);
@@ -281,9 +378,7 @@ final class JSONData {
         json.put("height", trade.getHeight());
         json.put("tradeType", trade.isBuy() ? "buy" : "sell");
         if (includeAssetInfo) {
-            Asset asset = Asset.getAsset(trade.getAssetId());
-            json.put("name", asset.getName());
-            json.put("decimals", asset.getDecimals());
+            putAssetInfo(json, trade.getAssetId());
         }
         return json;
     }
@@ -298,9 +393,54 @@ final class JSONData {
         json.put("height", assetTransfer.getHeight());
         json.put("timestamp", assetTransfer.getTimestamp());
         if (includeAssetInfo) {
-            Asset asset = Asset.getAsset(assetTransfer.getAssetId());
-            json.put("name", asset.getName());
-            json.put("decimals", asset.getDecimals());
+            putAssetInfo(json, assetTransfer.getAssetId());
+        }
+        return json;
+    }
+
+    static JSONObject currencyTransfer(CurrencyTransfer transfer, boolean includeCurrencyInfo) {
+        JSONObject json = new JSONObject();
+        json.put("transfer", Convert.toUnsignedLong(transfer.getId()));
+        json.put("currency", Convert.toUnsignedLong(transfer.getCurrencyId()));
+        putAccount(json, "sender", transfer.getSenderId());
+        putAccount(json, "recipient", transfer.getRecipientId());
+        json.put("units", String.valueOf(transfer.getUnits()));
+        json.put("height", transfer.getHeight());
+        json.put("timestamp", transfer.getTimestamp());
+        if (includeCurrencyInfo) {
+            putCurrencyInfo(json, transfer.getCurrencyId());
+        }
+        return json;
+    }
+
+    static JSONObject exchange(Exchange exchange, boolean includeCurrencyInfo) {
+        JSONObject json = new JSONObject();
+        json.put("transaction", Convert.toUnsignedLong(exchange.getTransactionId()));
+        json.put("timestamp", exchange.getTimestamp());
+        json.put("units", String.valueOf(exchange.getUnits()));
+        json.put("rateNQT", String.valueOf(exchange.getRate()));
+        json.put("currency", Convert.toUnsignedLong(exchange.getCurrencyId()));
+        json.put("offer", Convert.toUnsignedLong(exchange.getOfferId()));
+        putAccount(json, "seller", exchange.getSellerId());
+        putAccount(json, "buyer", exchange.getBuyerId());
+        json.put("block", Convert.toUnsignedLong(exchange.getBlockId()));
+        json.put("height", exchange.getHeight());
+        if (includeCurrencyInfo) {
+            putCurrencyInfo(json, exchange.getCurrencyId());
+        }
+        return json;
+    }
+
+    static JSONObject exchangeRequest(Transaction transaction, boolean includeCurrencyInfo) {
+        JSONObject json = new JSONObject();
+        json.put("transaction", Convert.toUnsignedLong(transaction.getId()));
+        json.put("subtype", transaction.getType().getSubtype());
+        Attachment.MonetarySystemExchange attachment = (Attachment.MonetarySystemExchange) transaction.getAttachment();
+        json.put("timestamp", transaction.getTimestamp());
+        json.put("units", String.valueOf(attachment.getUnits()));
+        json.put("rateNQT", String.valueOf(attachment.getRateNQT()));
+        if (includeCurrencyInfo) {
+            putCurrencyInfo(json, attachment.getCurrencyId());
         }
         return json;
     }
@@ -332,7 +472,11 @@ final class JSONData {
             attachmentJSON.putAll(appendage.getJSONObject());
         }
         if (! attachmentJSON.isEmpty()) {
-            modifyAttachmentJSON(attachmentJSON);
+            for (Map.Entry entry : (Iterable<Map.Entry>) attachmentJSON.entrySet()) {
+                if (entry.getValue() instanceof Long) {
+                    entry.setValue(String.valueOf(entry.getValue()));
+                }
+            }
             json.put("attachment", attachmentJSON);
         }
         putAccount(json, "sender", transaction.getSenderId());
@@ -351,32 +495,31 @@ final class JSONData {
         json.put("block", Convert.toUnsignedLong(transaction.getBlockId()));
         json.put("confirmations", Nxt.getBlockchain().getHeight() - transaction.getHeight());
         json.put("blockTimestamp", transaction.getBlockTimestamp());
+        json.put("transactionIndex", transaction.getIndex());
         return json;
-    }
-
-    // ugly, hopefully temporary
-    private static void modifyAttachmentJSON(JSONObject json) {
-        Long quantityQNT = (Long) json.remove("quantityQNT");
-        if (quantityQNT != null) {
-            json.put("quantityQNT", String.valueOf(quantityQNT));
-        }
-        Long priceNQT = (Long) json.remove("priceNQT");
-        if (priceNQT != null) {
-            json.put("priceNQT", String.valueOf(priceNQT));
-        }
-        Long discountNQT = (Long) json.remove("discountNQT");
-        if (discountNQT != null) {
-            json.put("discountNQT", String.valueOf(discountNQT));
-        }
-        Long refundNQT = (Long) json.remove("refundNQT");
-        if (refundNQT != null) {
-            json.put("refundNQT", String.valueOf(refundNQT));
-        }
     }
 
     static void putAccount(JSONObject json, String name, long accountId) {
         json.put(name, Convert.toUnsignedLong(accountId));
         json.put(name + "RS", Convert.rsAccount(accountId));
+    }
+
+    static void putCurrencyInfo(JSONObject json, long currencyId) {
+        Currency currency = Currency.getCurrency(currencyId);
+        if (currency == null) {
+            return;
+        }
+        json.put("name", currency.getName());
+        json.put("code", currency.getCode());
+        json.put("type", currency.getType());
+        json.put("decimals", currency.getDecimals());
+        json.put("issuanceHeight", currency.getIssuanceHeight());
+    }
+
+    static void putAssetInfo(JSONObject json, long assetId) {
+        Asset asset = Asset.getAsset(assetId);
+        json.put("name", asset.getName());
+        json.put("decimals", asset.getDecimals());
     }
 
     private JSONData() {} // never

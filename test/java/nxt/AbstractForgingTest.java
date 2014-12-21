@@ -21,8 +21,6 @@ public abstract class AbstractForgingTest extends AbstractBlockchainTest {
         AbstractBlockchainTest.init(properties);
         startHeight = blockchain.getHeight();
         Assert.assertTrue(startHeight >= minStartHeight);
-        testForgingSecretPhrase = Nxt.getStringProperty("nxt.testForgingSecretPhrase");
-        Assert.assertTrue("nxt.testForgingSecretPhrase must be defined in your nxt.properties file", testForgingSecretPhrase != null);
     }
 
     protected static void shutdown() {

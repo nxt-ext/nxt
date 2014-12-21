@@ -55,24 +55,21 @@ public class APITestServlet extends HttpServlet {
             "</div>" +
             "<div class=\"container\" style=\"min-width: 90%;\">" +
             "<div class=\"row\">" + 
-            "  <div class=\"col-xs-12\" style=\"margin-bottom:15px;\">" +
-            "    <div class=\"pull-right\" style=\"padding-top:7px;\">" +
-            "      <a href=\"#\" id=\"navi-show-open\">Show Open</a>" +
-            "       | " +
-            "      <a href=\"#\" id=\"navi-show-all\" style=\"font-weight:bold;\">Show All</a>" +
-            "    </div>" +
-            "    <div class=\"pull-right\" style=\"margin-right: 15px;\">" +
+            "  <div class=\"col-xs-12\" style=\"margin-bottom:10px;\">" +
+            "    <div class=\"pull-right\">" +
             "      <div class=\"btn-group\">" +
-            "        <button type=\"button\" class=\"btn btn-default dropdown-toggle\" data-toggle=\"dropdown\">" +
+            "        <button type=\"button\" class=\"btn btn-default btn-sm dropdown-toggle\" data-toggle=\"dropdown\">" +
             "          <i class=\"fa fa-check-circle-o\"></i> <i class=\"fa fa-circle-o\"></i>" +
             "        </button>" +
-            "        <ul class=\"dropdown-menu\" role=\"menu\">" +
+            "        <ul class=\"dropdown-menu\" role=\"menu\" style=\"font-size:12px;\">" +
             "          <li><a href=\"#\" id=\"navi-select-all-d-add-btn\">Select All Displayed (Add)</a></li>" +
             "          <li><a href=\"#\" id=\"navi-select-all-d-replace-btn\">Select All Displayed (Replace)</a></li>" +
             "          <li><a href=\"#\" id=\"navi-deselect-all-d-btn\">Deselect All Displayed</a></li>" +
             "          <li><a href=\"#\" id=\"navi-deselect-all-btn\">Deselect All</a></li>" +
             "        </ul>" +
             "      </div>" +
+            "      <button type=\"button\" id=\"navi-show-fields\" data-navi-val=\"ALL\" class=\"btn btn-default btn-sm\" style=\"width:165px;\">Show Non-Empty Fields</button>" +
+            "      <button type=\"button\" id=\"navi-show-tabs\" data-navi-val=\"ALL\" class=\"btn btn-default btn-sm\" style=\"width:130px;\">Show Open Tabs</button>" +
             "    </div>" +
             "  </div>" +
             "</div>" +
@@ -206,9 +203,7 @@ public class APITestServlet extends HttpServlet {
     }
 
     private static String fullTextMessage(String msg, String msgType) {
-        StringBuilder buf = new StringBuilder();
-        buf.append("<div class=\"alert alert-").append(msgType).append("\" role=\"alert\">").append(msg).append("</div>");
-        return buf.toString();
+        return "<div class=\"alert alert-" + msgType + "\" role=\"alert\">" + msg + "</div>";
     }
 
     private static String form(String requestType, boolean singleView, String className, List<String> parameters, boolean requirePost) {
@@ -244,7 +239,7 @@ public class APITestServlet extends HttpServlet {
         buf.append("<div class=\"col-xs-12 col-lg-6\" style=\"min-width: 40%;\">");
         buf.append("<table class=\"table\">");
         for (String parameter : parameters) {
-            buf.append("<tr>");
+            buf.append("<tr class=\"api-call-input-tr\">");
             buf.append("<td>").append(parameter).append(":</td>");
             buf.append("<td><input type=\"");
             buf.append("secretPhrase".equals(parameter) ? "password" : "text");

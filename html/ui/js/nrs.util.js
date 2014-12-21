@@ -947,32 +947,6 @@ var NRS = (function(NRS, $, undefined) {
 
 	NRS.createInfoTable = function(data, fixed) {
 		var rows = "";
-
-		/*
-		var keys = [];
-
-		if (Object.keys) {
-			keys = Object.keys(data);
-		} else {
-			for (var key in data) {
-				keys.push(key);
-			}
-		}
-
-		keys.sort(function(a, b) {
-			if (a < b) {
-				return -1;
-			} else if (a > b) {
-				return 1
-			} else {
-				return 0
-			}
-		});
-
-		for (var i = 0; i < keys.length; i++) {
-			var key = keys[i];
-		*/
-
 		for (var key in data) {
 			var value = data[key];
 
@@ -995,7 +969,9 @@ var NRS = (function(NRS, $, undefined) {
 			} else if (/_formatted$/i.test(key)) {
 				key = key.replace("_formatted", "");
 				value = String(value).escapeHTML();
-			} else if (key == "quantity" && $.isArray(value)) {
+			} else if ((key == "quantity" || key == "units" || key == "initial_buy_supply" || key == "initial_sell_supply" ||
+				key == "total_buy_limit" || key == "total_sell_limit" || key == "units_exchanged" || key == "total_exchanged" ||
+				key == "initial_units" || key == "reserve_units" || key == "max_units") && $.isArray(value)) {
 				if ($.isArray(value)) {
 					value = NRS.formatQuantity(value[0], value[1]);
 				} else {
@@ -1510,6 +1486,72 @@ var NRS = (function(NRS, $, undefined) {
 			return nameKey.replace(/_/g, " ").escapeHTML();
 		}
 	}
+
+	NRS.isControlKey = function(charCode) {
+		return !(charCode >= 32 || charCode == 10 || charCode == 13);
+	};
+
+	NRS.validateDecimals = function (maxFractionLength, charCode, val, e) {
+		if (maxFractionLength) {
+			//allow 1 single period character
+			if (charCode == 110 || charCode == 190) {
+				if (val.indexOf(".") != -1) {
+					e.preventDefault();
+					return false;
+				} else {
+					return true;
+				}
+			}
+		} else {
+			//do not allow period
+			if (charCode == 110 || charCode == 190 || charCode == 188) {
+				$.growl($.t("error_fractions"), {
+					"type": "danger"
+				});
+				e.preventDefault();
+				return false;
+			}
+		}
+		if (charCode >= 96 && charCode <= 105) {
+			// convert numeric keyboard code to normal ascii otherwise String.fromCharCode()
+			// returns the wrong value
+			charCode = charCode + 48 - 96;
+		}
+		var input = val + String.fromCharCode(charCode);
+
+		var afterComma = input.match(/\.(\d*)$/);
+
+		//only allow as many as there are decimals allowed..
+		if (afterComma && afterComma[1].length > maxFractionLength) {
+			var selectedText = NRS.getSelectedText();
+
+			if (selectedText != val) {
+				var errorMessage = $.t("error_decimals", {
+					"count": maxFractionLength
+				});
+				$.growl(errorMessage, {
+					"type": "danger"
+				});
+
+				e.preventDefault();
+				return false;
+			}
+		}
+
+		//numeric characters, left/right key, backspace, delete
+		if (charCode == 8 || charCode == 37 || charCode == 39 || charCode == 46 || (charCode >= 48 && charCode <= 57 && !isNaN(String.fromCharCode(charCode)))) {
+			return true;
+		} else {
+			//comma
+			if (charCode == 188) {
+				$.growl($.t("error_comma_not_allowed"), {
+					"type": "danger"
+				});
+			}
+			e.preventDefault();
+			return false;
+		}
+	};
 
 	return NRS;
 }(NRS || {}, jQuery));

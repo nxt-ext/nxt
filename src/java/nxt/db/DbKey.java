@@ -64,6 +64,28 @@ public interface DbKey {
 
     }
 
+    public static abstract class StringKeyFactory<T> extends Factory<T> {
+
+        private final String idColumn;
+
+        public StringKeyFactory(String idColumn) {
+            super(" WHERE " + idColumn + " = ? ",
+                    idColumn,
+                    " a." + idColumn + " = b." + idColumn + " ");
+            this.idColumn = idColumn;
+        }
+
+        @Override
+        public DbKey newKey(ResultSet rs) throws SQLException {
+            return new StringKey(rs.getString(idColumn));
+        }
+
+        public DbKey newKey(String id) {
+            return new StringKey(id);
+        }
+
+    }
+
     public static abstract class LinkKeyFactory<T> extends Factory<T> {
 
         private final String idColumnA;
@@ -115,6 +137,37 @@ public interface DbKey {
         @Override
         public int hashCode() {
             return (int)(id ^ (id >>> 32));
+        }
+
+    }
+
+    static final class StringKey implements DbKey {
+
+        private final String id;
+
+        private StringKey(String id) {
+            this.id = id;
+        }
+
+        @Override
+        public int setPK(PreparedStatement pstmt) throws SQLException {
+            return setPK(pstmt, 1);
+        }
+
+        @Override
+        public int setPK(PreparedStatement pstmt, int index) throws SQLException {
+            pstmt.setString(index, id);
+            return index + 1;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            return o instanceof StringKey && (id != null ? id.equals(((StringKey)o).id) : ((StringKey)o).id == null);
+        }
+
+        @Override
+        public int hashCode() {
+            return id != null ? id.hashCode() : 0;
         }
 
     }

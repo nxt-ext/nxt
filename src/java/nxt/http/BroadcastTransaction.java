@@ -26,14 +26,13 @@ public final class BroadcastTransaction extends APIServlet.APIRequestHandler {
         Transaction transaction = ParameterParser.parseTransaction(transactionBytes, transactionJSON);
         JSONObject response = new JSONObject();
         try {
-            transaction.validate();
             Nxt.getTransactionProcessor().broadcast(transaction);
             response.put("transaction", transaction.getStringId());
             response.put("fullHash", transaction.getFullHash());
         } catch (NxtException.ValidationException|RuntimeException e) {
             Logger.logDebugMessage(e.getMessage(), e);
             response.put("errorCode", 4);
-            response.put("errorDescription", "Incorrect transaction: " + e.toString());
+            response.put("errorDescription", e.toString());
             response.put("error", e.getMessage());
         }
         return response;

@@ -18,7 +18,6 @@ import java.util.Arrays;
 import static nxt.http.JSONResponses.FEATURE_NOT_AVAILABLE;
 import static nxt.http.JSONResponses.INCORRECT_ARBITRARY_MESSAGE;
 import static nxt.http.JSONResponses.INCORRECT_DEADLINE;
-import static nxt.http.JSONResponses.INCORRECT_REFERENCED_TRANSACTION;
 import static nxt.http.JSONResponses.MISSING_DEADLINE;
 import static nxt.http.JSONResponses.MISSING_SECRET_PHRASE;
 import static nxt.http.JSONResponses.NOT_ENOUGH_FUNDS;
@@ -57,7 +56,6 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
             throws NxtException {
         String deadlineValue = req.getParameter("deadline");
         String referencedTransactionFullHash = Convert.emptyToNull(req.getParameter("referencedTransactionFullHash"));
-        String referencedTransactionId = Convert.emptyToNull(req.getParameter("referencedTransaction"));
         String secretPhrase = Convert.emptyToNull(req.getParameter("secretPhrase"));
         String publicKeyValue = Convert.emptyToNull(req.getParameter("publicKey"));
         boolean broadcast = !"false".equalsIgnoreCase(req.getParameter("broadcast"));
@@ -106,9 +104,6 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
         }
 
         long feeNQT = ParameterParser.getFeeNQT(req);
-        if (referencedTransactionId != null) {
-            return INCORRECT_REFERENCED_TRANSACTION;
-        }
 
         JSONObject response = new JSONObject();
 
@@ -134,7 +129,6 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
                 builder.encryptToSelfMessage(encryptToSelfMessage);
             }
             Transaction transaction = builder.build();
-            transaction.validate();
             try {
                 if (Convert.safeAdd(amountNQT, transaction.getFeeNQT()) > senderAccount.getUnconfirmedBalanceNQT()) {
                     return NOT_ENOUGH_FUNDS;
@@ -152,9 +146,11 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
                     Nxt.getTransactionProcessor().broadcast(transaction);
                     response.put("broadcasted", true);
                 } else {
+                    transaction.validate();
                     response.put("broadcasted", false);
                 }
             } else {
+                transaction.validate();
                 response.put("broadcasted", false);
             }
             response.put("unsignedTransactionBytes", Convert.toHexString(transaction.getUnsignedBytes()));

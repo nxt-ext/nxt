@@ -48,4 +48,9 @@ public abstract class DerivedDbTable {
         //nothing to trim
     }
 
+    @Override
+    public String toString() {
+        return table;
+    }
+
 }

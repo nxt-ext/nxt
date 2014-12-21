@@ -115,6 +115,10 @@ public final class Alias {
         return aliasTable.getCount();
     }
 
+    public static int getAccountAliasCount(long accountId) {
+        return aliasTable.getCount(new DbClause.LongClause("account_id", accountId));
+    }
+
     public static DbIterator<Alias> getAliasesByOwner(long accountId, int from, int to) {
         return aliasTable.getManyBy(new DbClause.LongClause("account_id", accountId), from, to);
     }
@@ -129,6 +133,15 @@ public final class Alias {
 
     public static Offer getOffer(Alias alias) {
         return offerTable.get(offerDbKeyFactory.newKey(alias.getId()));
+    }
+
+    static void deleteAlias(final String aliasName) {
+        final Alias alias = getAlias(aliasName);
+        final Offer offer = Alias.getOffer(alias);
+        if (offer != null) {
+            offerTable.delete(offer);
+        }
+        aliasTable.delete(alias);
     }
 
     static void addOrUpdateAlias(Transaction transaction, Attachment.MessagingAliasAssignment attachment) {
