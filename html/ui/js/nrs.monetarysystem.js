@@ -57,7 +57,7 @@ var NRS = (function(NRS, $, undefined) {
 		if (data && data.refresh) {
 			refresh = true;
 		}
-
+		NRS.pageNumber = 1;
 		var currencyCode = $.trim($("#currency_search").find("input[name=q]").val());
 
 		if (!refresh) {
