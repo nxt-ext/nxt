@@ -17,7 +17,7 @@ public final class GetSellOffers extends APIServlet.APIRequestHandler {
     static final GetSellOffers instance = new GetSellOffers();
 
     private GetSellOffers() {
-        super(new APITag[] {APITag.MS}, "currency", "account", "firstIndex", "lastIndex");
+        super(new APITag[] {APITag.MS}, "currency", "account", "availableOnly", "firstIndex", "lastIndex");
     }
 
     @Override
@@ -25,6 +25,7 @@ public final class GetSellOffers extends APIServlet.APIRequestHandler {
 
         String currencyId = Convert.emptyToNull(req.getParameter("currency"));
         String accountId = Convert.emptyToNull(req.getParameter("account"));
+        boolean availableOnly = "true".equalsIgnoreCase(req.getParameter("availableOnly"));
 
         int firstIndex = ParameterParser.getFirstIndex(req);
         int lastIndex = ParameterParser.getLastIndex(req);
@@ -37,10 +38,10 @@ public final class GetSellOffers extends APIServlet.APIRequestHandler {
         try {
             if (accountId == null) {
                 Currency currency = ParameterParser.getCurrency(req);
-                offers = CurrencySellOffer.getOffers(currency, firstIndex, lastIndex);
+                offers = CurrencySellOffer.getOffers(currency, availableOnly, firstIndex, lastIndex);
             } else if (currencyId == null) {
                 Account account = ParameterParser.getAccount(req);
-                offers = CurrencySellOffer.getOffers(account, firstIndex, lastIndex);
+                offers = CurrencySellOffer.getOffers(account, availableOnly, firstIndex, lastIndex);
             } else {
                 Currency currency = ParameterParser.getCurrency(req);
                 Account account = ParameterParser.getAccount(req);

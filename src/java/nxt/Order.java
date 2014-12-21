@@ -198,14 +198,7 @@ public abstract class Order {
         }
 
         public static DbIterator<Ask> getAskOrdersByAccountAsset(final long accountId, final long assetId, int from, int to) {
-            DbClause dbClause = new DbClause(" account_id = ? AND asset_id = ? ") {
-                @Override
-                public int set(PreparedStatement pstmt, int index) throws SQLException {
-                    pstmt.setLong(index++, accountId);
-                    pstmt.setLong(index++, assetId);
-                    return index;
-                }
-            };
+            DbClause dbClause = new DbClause.LongClause("account_id", accountId).and(new DbClause.LongClause("asset_id", assetId));
             return askOrderTable.getManyBy(dbClause, from, to);
         }
 
@@ -334,14 +327,7 @@ public abstract class Order {
         }
 
         public static DbIterator<Bid> getBidOrdersByAccountAsset(final long accountId, final long assetId, int from, int to) {
-            DbClause dbClause = new DbClause(" account_id = ? AND asset_id = ? ") {
-                @Override
-                public int set(PreparedStatement pstmt, int index) throws SQLException {
-                    pstmt.setLong(index++, accountId);
-                    pstmt.setLong(index++, assetId);
-                    return index;
-                }
-            };
+            DbClause dbClause = new DbClause.LongClause("account_id", accountId).and(new DbClause.LongClause("asset_id", assetId));
             return bidOrderTable.getManyBy(dbClause, from, to);
         }
 

@@ -73,6 +73,8 @@ public abstract class CurrencyExchangeOffer {
 
     }
 
+    static final DbClause availableOnlyDbClause = new DbClause.FixedClause(" unit_limit <> 0 AND supply <> 0 ");
+
     static void exchangeCurrencyForNXT(Transaction transaction, Account account, final long currencyId, final long rateNQT, long units) {
         long extraAmountNQT = 0;
         long remainingUnits = units;
