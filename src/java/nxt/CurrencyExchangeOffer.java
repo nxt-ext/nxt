@@ -86,6 +86,9 @@ public abstract class CurrencyExchangeOffer {
         }
 
         for (CurrencyBuyOffer offer : currencyBuyOffers) {
+            if (remainingUnits == 0) {
+                break;
+            }
             long curUnits = Math.min(Math.min(remainingUnits, offer.getSupply()), offer.getLimit());
             long curAmountNQT = Convert.safeMultiply(curUnits, offer.getRateNQT());
 
@@ -119,7 +122,13 @@ public abstract class CurrencyExchangeOffer {
         }
 
         for (CurrencySellOffer offer : currencySellOffers) {
+            if (remainingAmountNQT == 0) {
+                break;
+            }
             long curUnits = Math.min(Math.min(remainingAmountNQT / offer.getRateNQT(), offer.getSupply()), offer.getLimit());
+            if (curUnits == 0) {
+                continue;
+            }
             long curAmountNQT = Convert.safeMultiply(curUnits, offer.getRateNQT());
 
             extraUnits = Convert.safeAdd(extraUnits, curUnits);
