@@ -89,7 +89,7 @@ public final class API {
                 defaultServletHolder.setInitParameter("redirectWelcome", "true");
                 defaultServletHolder.setInitParameter("gzip", "true");
                 apiHandler.addServlet(defaultServletHolder, "/*");
-                apiHandler.setWelcomeFiles(new String[]{"index.html"});
+                apiHandler.setWelcomeFiles(new String[]{Nxt.getStringProperty("nxt.apiWelcomeFile")});
             }
 
             String javadocResourceBase = Nxt.getStringProperty("nxt.javadocResourceBase");
