@@ -523,7 +523,7 @@ var NRS = (function(NRS, $, undefined) {
 			}
 
 			if (onlyUnconfirmed) {
-				$("#dashboard_transactions_table tbody tr.tentative").remove();
+				$("#dashboard_transactions_table tbody tr.tentative-allow-links").remove();
 				$("#dashboard_transactions_table tbody").prepend(rows);
 			} else {
 				$("#dashboard_transactions_table tbody").empty().append(rows);
@@ -538,7 +538,7 @@ var NRS = (function(NRS, $, undefined) {
 				}
 			}
 		} else if (unconfirmed) {
-			$("#dashboard_transactions_table tbody tr.tentative").remove();
+			$("#dashboard_transactions_table tbody tr.tentative-allow-links").remove();
 		}
 	}
 

@@ -87,6 +87,8 @@ final class PeerImpl implements Peer {
         } else if (state != State.NON_CONNECTED) {
             this.state = state;
             Peers.notifyListeners(this, Peers.Event.CHANGED_ACTIVE_PEER);
+        } else {
+            this.state = state;
         }
     }
 

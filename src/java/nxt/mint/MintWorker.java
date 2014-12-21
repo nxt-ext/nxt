@@ -19,6 +19,7 @@ import java.io.Reader;
 import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.InetAddress;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.net.UnknownHostException;
@@ -188,8 +189,13 @@ public class MintWorker {
 
         int port = Constants.isTestnet ? API.TESTNET_API_PORT : Nxt.getIntProperty("nxt.apiServerPort");
         String urlParams = getUrlParams(params);
+        URL url;
         try {
-            URL url = new URL("http", host, port, "/nxt?" + urlParams);
+            url = new URL("http", host, port, "/nxt?" + urlParams);
+        } catch (MalformedURLException e) {
+            throw new IllegalStateException(e);
+        }
+        try {
             Logger.logDebugMessage("Sending request to server: " + url.toString());
             connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("POST");
@@ -207,6 +213,13 @@ public class MintWorker {
                 connection.disconnect();
             }
             throw new IllegalStateException(e);
+        }
+        if (response == null) {
+            throw new IllegalStateException(String.format("Request %s response error", url));
+        }
+        if (response.get("errorCode") != null) {
+            throw new IllegalStateException(String.format("Request %s produced error response code %s message \"%s\"",
+                    url, response.get("errorCode"), response.get("errorDescription")));
         }
         return response;
     }
