@@ -383,7 +383,7 @@ public abstract class MonetarySystem extends TransactionType {
             Attachment.MonetarySystemPublishExchangeOffer attachment = (Attachment.MonetarySystemPublishExchangeOffer) transaction.getAttachment();
             if (attachment.getBuyRateNQT() <= 0
                     || attachment.getSellRateNQT() <= 0
-                    || attachment.getBuyRateNQT() >= attachment.getSellRateNQT()
+                    || attachment.getBuyRateNQT() > attachment.getSellRateNQT()
                     || attachment.getTotalBuyLimit() < 0
                     || attachment.getTotalSellLimit() < 0
                     || attachment.getInitialBuySupply() < 0
