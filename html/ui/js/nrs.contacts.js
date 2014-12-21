@@ -398,7 +398,7 @@ var NRS = (function(NRS, $, undefined) {
 			contacts_download.click();
 			document.body.removeChild(contacts_download);
 		} else {
-			console.log('No contacts found in database to backup');
+			$.growl($.t("error_no_contacts_available"), {"type":"warning"}).show();
 		}
 	}
 	$("#export_contacts_button").on("click", function() {
@@ -406,12 +406,7 @@ var NRS = (function(NRS, $, undefined) {
 	});
 
 	NRS.importContacts = function(imported_contacts) {
-		console.log('Import contacts called');
-		console.log(imported_contacts);
-
 		$.each(imported_contacts, function(index, imported_contact) {
-			console.log('Importing contact ' + imported_contact.name);
-			
 			NRS.database.select("contacts", [{
 				"account": imported_contact.account
 			}, {
@@ -419,16 +414,10 @@ var NRS = (function(NRS, $, undefined) {
 			}], function(error, contacts) {
 				if (contacts && contacts.length) {
 					if (contacts[0].name == imported_contact.name) {
-						//$modal.find(".error_message").html($.t("error_contact_name_exists")).show();
-						$.growl($.t("error_contact_name_exists")).show();
-						console.log('Error, contact already exists with same name:'+imported_contact.name);
+						$.growl(imported_contact.name + ' - ' + $.t("error_contact_name_exists"), {"type":"warning"}).show();
 					} else {
-						//$modal.find(".error_message").html($.t("error_contact_account_id_exists")).show();
-						$.growl($.t("error_contact_account_id_exists")).show();
-						console.log('Error, contact already exists with same account ID:'+imported_contact.account);
+						$.growl(imported_contact.account + ' - ' + $.t("error_contact_account_id_exists"), {"type":"warning"}).show();
 					}
-					/*$btn.button("reset");
-					$modal.modal("unlock");*/
 				} else {
 					NRS.database.insert("contacts", {
 						name: imported_contact.name,
@@ -446,10 +435,7 @@ var NRS = (function(NRS, $, undefined) {
 						};
 
 						setTimeout(function() {
-							/*$btn.button("reset");
-							$modal.modal("unlock");
-							$modal.modal("hide");*/
-							$.growl($.t("success_contact_add"), {
+							$.growl(imported_contact.name + ' - ' + $.t("success_contact_add"), {
 								"type": "success"
 							});
 
