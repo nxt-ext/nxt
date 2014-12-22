@@ -176,7 +176,7 @@ var NRS = (function(NRS, $, undefined) {
 						"type": $.t("poll_creation"),
 						"name": transaction.attachment.name,
 						"description": transaction.attachment.description,
-						"finish_height": transaction.attachment.finishHeight,
+						"finish_height": transaction.attachment.finishBlockHeight,
 						"min_number_of_options": transaction.attachment.minNumberOfOptions,
 						"max_number_of_options": transaction.attachment.maxNumberOfOptions,
 						"min_range_value": transaction.attachment.minRangeValue,
