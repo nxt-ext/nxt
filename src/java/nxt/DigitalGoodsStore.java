@@ -113,6 +113,7 @@ public final class DigitalGoodsStore {
         public static int getCount() {
             return tagTable.getCount();
         }
+
         public static int getCountInStock() {
             return tagTable.getCount(new DbClause.FixedClause(" in_stock_count > 0 "));
         }
@@ -619,13 +620,7 @@ public final class DigitalGoodsStore {
         }
 
         public static DbIterator<Purchase> getPendingSellerPurchases(final long sellerId, int from, int to) {
-            DbClause dbClause = new DbClause(" seller_id = ? AND pending = TRUE ") {
-                @Override
-                public int set(PreparedStatement pstmt, int index) throws SQLException {
-                    pstmt.setLong(index++, sellerId);
-                    return index;
-                }
-            };
+            DbClause dbClause = new DbClause.LongClause("seller_id", sellerId).and(new DbClause.FixedClause("pending = TRUE"));
             return purchaseTable.getManyBy(dbClause, from, to);
         }
 

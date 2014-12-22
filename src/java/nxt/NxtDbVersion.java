@@ -570,11 +570,16 @@ class NxtDbVersion extends DbVersion {
                 apply("CREATE TABLE IF NOT EXISTS pending_transaction_signer (db_id IDENTITY, "
                         + "poll_id BIGINT NOT NULL, account_id BIGINT NOT NULL, height INT NOT NULL)");
             case 198:
+                BlockchainProcessorImpl.getInstance().scheduleScan(0, false);
+                apply(null);
+            case 199:
+                apply(null);
+            case 200:
                 if (Constants.isTestnet) {
                     BlockchainProcessorImpl.getInstance().scheduleScan(0, true);
                 }
                 apply(null);
-            case 199:
+            case 201:
                 return;
             default:
                 throw new RuntimeException("Blockchain database inconsistent with code, probably trying to run older code on newer database");

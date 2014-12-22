@@ -17,6 +17,17 @@ public abstract class DbClause {
 
     protected abstract int set(PreparedStatement pstmt, int index) throws SQLException;
 
+    public DbClause and(final DbClause other) {
+        return new DbClause(this.clause + " AND " + other.clause) {
+            @Override
+            protected int set(PreparedStatement pstmt, int index) throws SQLException {
+                index = DbClause.this.set(pstmt, index);
+                index = other.set(pstmt, index);
+                return index;
+            }
+        };
+    }
+
     public static final DbClause EMPTY_CLAUSE = new FixedClause(" TRUE ");
 
     public static final class FixedClause extends DbClause {
