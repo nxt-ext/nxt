@@ -1215,7 +1215,7 @@
 								<div class="input-group">
 									<input type="text" name="q" class="form-control" placeholder="Currency Code..." data-i18n="[placeholder]search_currency">
 									<span class="input-group-btn">
-										<button name="seach" class="btn btn-flat"><i class="fa fa-search"></i></button>
+										<button name="search" class="btn btn-flat"><i class="fa fa-search"></i></button>
 									</span>
 								</div>
 							</form>             
@@ -2812,8 +2812,8 @@
 								<label data-i18n="exchange_description">EXCHANGE DESCRIPTION</label>
 								<p id="currency_order_description"></p>
 								<input type="hidden" name="currency" id="currency_order_currency" value="" />
-								<input type="hidden" name="units" id="currency_order_quantity" value="" />
-								<input type="hidden" name="rateNQT" id="currency_order_price" value="" />
+								<input type="hidden" name="units" id="currency_order_units" value="" />
+								<input type="hidden" name="rateNQT" id="currency_order_rate" value="" />
 								<input type="hidden" name="feeNQT" id="currency_order_fee" value="" />
 								<input type="hidden" name="deadline" id="currency_order_deadline" data-default="24" value="24" />
 							</div>
@@ -2895,11 +2895,11 @@
                                 </div>
                                 <div class="form-group advanced optional_mint">
                                     <label for="issue_currency_min_difficulty"><span data-i18n="min_difficulty">MINIMUM DIFFICULTY</span> <i class="fa fa-question-circle show_popover" data-content="The exponent of the initial difficulty." data-i18n="[data-content]currency_decimals_help" data-container="body" style="color:#4CAA6E" ></i></label>
-                                    <input type="number" name="minDifficulty" id="issue_currency_min_difficulty" class="form-control" min="1" placeholder="Minimum Difficulty" data-i18n="minimum_difficulty" tabindex="11">
+                                    <input type="number" name="minDifficulty" id="issue_currency_min_difficulty" class="form-control" min="1" max="255" placeholder="Minimum Difficulty" data-i18n="minimum_difficulty" tabindex="11">
                                 </div>
                                 <div class="form-group advanced optional_mint">
                                     <label for="issue_currency_max_difficulty"><span data-i18n="max_difficulty">MAXIMUM DIFFICULTY</span> <i class="fa fa-question-circle show_popover" data-content="The exponent of the final difficulty." data-i18n="[data-content]currency_decimals_help" data-container="body" style="color:#4CAA6E" ></i></label>
-                                    <input type="number" name="maxDifficulty" id="issue_currency_max_difficulty" class="form-control" min="1" placeholder="Maximum Difficulty" data-i18n="maximum_difficulty" tabindex="12">
+                                    <input type="number" name="maxDifficulty" id="issue_currency_max_difficulty" class="form-control" min="1" max="255" placeholder="Maximum Difficulty" data-i18n="maximum_difficulty" tabindex="12">
                                 </div>
                                 <div class="form-group advanced optional_mint">
                                     <label for="issue_currency_algorithm" data-i18n="algorithm">ALGORITHM</label>
@@ -5572,8 +5572,9 @@
                     <div class="modal-body">                            
                         <div class="form-group">
                             <p>
-                                <label for="founders_reserve_units" data-i18n="reserve_units">Reserve Units</label> <i><span id="founders_reserve_units"></span></i>
-                                <label for="founders_issuer_units" data-i18n="issuer_units">Issuer Units</label> <i><span id="founders_issuer_units"></span></i>
+                                <label for="founders_reserve_units" data-i18n="reserve_units">Reserve Units</label>: <i><span id="founders_reserve_units"></span></i> | 
+                                <label for="founders_issuer_units" data-i18n="issuer_units">Issuer Units</label>: <i><span id="founders_issuer_units"></span></i> | 
+                                <label for="founders_blocks_active" data-i18n="blocks_until_active">Blocks until active</label>: <i><span id="founders_blocks_active"></span></i>
                             </p>
                         </div>
                         <div class="data-container data-loading" style="max-height:350px;overflow:auto">

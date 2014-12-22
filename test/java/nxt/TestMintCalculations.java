@@ -6,36 +6,39 @@ import nxt.util.Logger;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.math.BigInteger;
 import java.util.Arrays;
 
 public class TestMintCalculations {
 
     @Test
     public void targetCalculation() {
-        byte[] target = CurrencyMint.getTarget((byte) 4, (byte) 32, 1, 0, 100000);
+        byte[] target = CurrencyMint.getTarget(4, 32, 1, 0, 100000);
         Logger.logDebugMessage("initial target: " + Arrays.toString(target));
         Assert.assertEquals(32, target.length);
         Assert.assertArrayEquals(new byte[]{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 16}, target);
 
-        target = CurrencyMint.getTarget((byte) 4, (byte) 32, 1, 50000, 100000);
+        target = CurrencyMint.getTarget(4, 32, 1, 50000, 100000);
         Logger.logDebugMessage("midway target: " + Arrays.toString(target));
         Assert.assertEquals(32, target.length);
         Assert.assertArrayEquals(new byte[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 64, 0, 0}, target);
 
-        target = CurrencyMint.getTarget((byte) 4, (byte) 32, 1, 100000, 100000);
+        target = CurrencyMint.getTarget(4, 32, 1, 100000, 100000);
         Logger.logDebugMessage("final target: " + Arrays.toString(target));
         Assert.assertEquals(32, target.length);
         Assert.assertArrayEquals(new byte[]{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0}, target);
 
-        target = CurrencyMint.getTarget((byte) 4, (byte) 32, 100, 100000, 100000);
+        target = CurrencyMint.getTarget(4, 32, 100, 100000, 100000);
         Logger.logDebugMessage("final target for 100 units: " + Arrays.toString(target));
         Assert.assertEquals(32, target.length);
         Assert.assertArrayEquals(new byte[]{92, -113, -62, -11, 40, 92, -113, -62, -11, 40, 92, -113, -62, -11, 40, 92, -113, -62, -11, 40, 92, -113, -62, -11, 40, 92, -113, 2, 0, 0, 0, 0}, target);
 
-        target = CurrencyMint.getTarget((byte) 1, (byte) 5, 1, 0, 100000);
-        Logger.logDebugMessage("very low target: " + Arrays.toString(target));
-        Assert.assertEquals(32, target.length);
-        Assert.assertArrayEquals(new byte[]{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, target);
+        try {
+            CurrencyMint.getTarget(1, 5, 1, 0, 100000);
+            Assert.fail();
+        } catch(IllegalArgumentException e) {
+            Logger.logDebugMessage("Difficulty too low");
+        }
     }
 
     @Test
@@ -43,7 +46,7 @@ public class TestMintCalculations {
         long nonce;
         for (nonce=0; nonce < Long.MAX_VALUE; nonce++) {
             if (CurrencyMint.meetsTarget(CurrencyMint.getHash(HashFunction.Keccak25.getId(), nonce, 123, 1, 1, 987),
-                    CurrencyMint.getTarget((byte) 8, (byte) 16, 1, 0, 100000))) {
+                    CurrencyMint.getTarget(8, 16, 1, 0, 100000))) {
                 break;
             }
         }
@@ -51,7 +54,7 @@ public class TestMintCalculations {
 
         for (nonce=0; nonce < Long.MAX_VALUE; nonce++) {
             if (CurrencyMint.meetsTarget(CurrencyMint.getHash(HashFunction.Keccak25.getId(), nonce, 123, 1, 1, 987),
-                    CurrencyMint.getTarget((byte) 8, (byte) 16, 1, 100000, 100000))) {
+                    CurrencyMint.getTarget(8, 16, 1, 100000, 100000))) {
                 break;
             }
         }
@@ -59,7 +62,7 @@ public class TestMintCalculations {
 
         for (nonce=0; nonce < Long.MAX_VALUE; nonce++) {
             if (CurrencyMint.meetsTarget(CurrencyMint.getHash(HashFunction.Keccak25.getId(), nonce, 123, 100, 1, 987),
-                    CurrencyMint.getTarget((byte) 8, (byte) 16, 100, 0, 100000))) {
+                    CurrencyMint.getTarget(8, 16, 100, 0, 100000))) {
                 break;
             }
         }
@@ -84,9 +87,36 @@ public class TestMintCalculations {
 
     @Test
     public void scrypt() {
-        byte[] hash = HashFunction.SCRYPT.hash(new byte[]{(byte)0x41, (byte)0xFB});
+        byte[] hash = HashFunction.SCRYPT.hash(new byte[]{(byte) 0x41, (byte) 0xFB});
         Assert.assertEquals("da3f4f010d772567a8896465d11df28693b244c91b8ba4bea5a30f6be572b667".toLowerCase(), Convert.toHexString(hash));
         hash = HashFunction.SCRYPT.hash(new byte[]{});
         Assert.assertEquals("0cf2967ca5c120e80b37f8f75c971842e05da107278c1058e6ffbc68911c11f1", Convert.toHexString(hash));
+    }
+
+    @Test
+    public void lowDifficultyProblem() {
+        BigInteger numericTarget = CurrencyMint.getNumericTarget(1, 255, 1, 0, 100000);
+        byte[] targetRowBytes = numericTarget.toByteArray();
+        Assert.assertEquals(32, targetRowBytes.length);
+
+        numericTarget = CurrencyMint.getNumericTarget(2, 255, 1, 0, 100000);
+        targetRowBytes = numericTarget.toByteArray();
+        Assert.assertEquals(32, targetRowBytes.length);
+
+        numericTarget = CurrencyMint.getNumericTarget(254, 255, 1, 0, 100000);
+        targetRowBytes = numericTarget.toByteArray();
+        Assert.assertEquals(1, targetRowBytes.length);
+
+        numericTarget = CurrencyMint.getNumericTarget(1, 255, 1, 100000, 100000);
+        targetRowBytes = numericTarget.toByteArray();
+        Assert.assertEquals(1, targetRowBytes.length);
+
+        numericTarget = CurrencyMint.getNumericTarget(2, 255, 1, 100000, 100000);
+        targetRowBytes = numericTarget.toByteArray();
+        Assert.assertEquals(1, targetRowBytes.length);
+
+        numericTarget = CurrencyMint.getNumericTarget(254, 255, 1, 100000, 100000);
+        targetRowBytes = numericTarget.toByteArray();
+        Assert.assertEquals(1, targetRowBytes.length);
     }
 }
