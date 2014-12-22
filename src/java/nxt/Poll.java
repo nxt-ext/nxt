@@ -55,24 +55,21 @@ public final class Poll extends AbstractPoll {
         }
     };
 
-    //TODO: replace Pair with a PollResult class
-    private static final ValuesDbTable<Poll, Pair<String, Long>> pollResultsTable = new ValuesDbTable<Poll,Pair<String,Long>>("poll_result", pollResultsDbKeyFactory) {
+    private static final ValuesDbTable<Poll, PartialPollResult> pollResultsTable = new ValuesDbTable<Poll,PartialPollResult>("poll_result", pollResultsDbKeyFactory) {
 
         @Override
-        protected Pair<String,Long> load(Connection con, ResultSet rs) throws SQLException {
-            return new Pair<>(rs.getString("option"), rs.getLong("result"));
+        protected PartialPollResult load(Connection con, ResultSet rs) throws SQLException {
+            return new PartialPollResult(rs.getString("option"), rs.getLong("result"));
         }
 
         @Override
-        protected void save(Connection con, Poll poll, Pair<String, Long> optionResult) throws SQLException {
-            String option = optionResult.getFirst();
-            Long result = optionResult.getSecond();
+        protected void save(Connection con, Poll poll, PartialPollResult optionResult) throws SQLException {
             try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO poll_result (poll_id, "
                     + "option, result, height) VALUES (?, ?, ?, ?)")) {
                 int i = 0;
                 pstmt.setLong(++i, poll.getId());
-                pstmt.setString(++i, option);
-                pstmt.setLong(++i, result);
+                pstmt.setString(++i, optionResult.getOption());
+                pstmt.setLong(++i, optionResult.getVotes());
                 pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
                 pstmt.executeUpdate();
             }
@@ -103,7 +100,7 @@ public final class Poll extends AbstractPoll {
 
     private static void checkPolls(int currentHeight) {
         for (Poll poll : getPollsFinishingAt(currentHeight)) {
-                List<Pair<String, Long>> results = poll.countResults();
+                List<PartialPollResult> results = poll.countResults();
                 pollResultsTable.insert(poll, results);
                 poll.setFinished(true);
                 pollTable.insert(poll);
@@ -192,8 +189,7 @@ public final class Poll extends AbstractPoll {
         return pollTable.getCount();
     }
 
-    //TODO: use PollResult instead of Pair
-    public static List<Pair<String,Long>> getResults(long pollId){
+    public static List<PartialPollResult> getResults(long pollId){
         return pollResultsTable.get(pollResultsDbKeyFactory.newKey(pollId));
     }
 
@@ -234,7 +230,7 @@ public final class Poll extends AbstractPoll {
         return maxRangeValue;
     }
 
-    private List<Pair<String,Long>> countResults() {
+    private List<PartialPollResult> countResults() {
         final long[] counts = new long[options.length];
 
         for (Vote vote : Vote.getVotes(this.getId(), 0, -1).toList()) {
@@ -247,9 +243,9 @@ public final class Poll extends AbstractPoll {
             }
         }
 
-        List<Pair<String, Long>> results = new ArrayList<>(options.length);
+        List<PartialPollResult> results = new ArrayList<>(options.length);
         for (int i = 0; i < options.length; i++) {
-            results.add(new Pair<>(options[i], counts[i]));
+            results.add(new PartialPollResult(options[i], counts[i]));
         }
         return results;
     }
@@ -274,6 +270,24 @@ public final class Poll extends AbstractPoll {
             return partialResult;
         } else {
             return null;
+        }
+    }
+
+    public static class PartialPollResult{
+        final String option;
+        final long votes;
+
+        public PartialPollResult(String option, long votes) {
+            this.option = option;
+            this.votes = votes;
+        }
+
+        public String getOption() {
+            return option;
+        }
+
+        public long getVotes() {
+            return votes;
         }
     }
 }

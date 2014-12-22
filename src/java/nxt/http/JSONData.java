@@ -343,17 +343,16 @@ final class JSONData {
         JSONObject json = new JSONObject();
         json.put("poll", Convert.toUnsignedLong(poll.getId()));
 
-        JSONArray results = new JSONArray();
+        JSONArray resultsJson = new JSONArray();
 
-        List<Pair<String,Long>> pairs = Poll.getResults(poll.getId());
-        for (Pair<String, Long> pair : pairs) {
+        List<Poll.PartialPollResult> results = Poll.getResults(poll.getId());
+        for (Poll.PartialPollResult result : results) {
             JSONObject jsonPair = new JSONObject();
-            jsonPair.put(pair.getFirst(), pair.getSecond().toString());
-            //TODO: what is first? what is second? use a specific class which makes it easy to read the code, instead of this generic Pair
-            results.add(jsonPair);
+            jsonPair.put(result.getOption(), result.getVotes());
+            resultsJson.add(jsonPair);
         }
 
-        json.put("results", results);
+        json.put("results", resultsJson);
         return json;
     }
 
