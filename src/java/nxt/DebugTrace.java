@@ -339,17 +339,22 @@ public final class DebugTrace {
     }
 
     private void delete(Currency currency) {
-        long accountId;
-        long units;
+        long accountId = 0;
+        long units = 0;
         if (!currency.isActive()) {
             accountId = currency.getAccountId();
             units = currency.getCurrentSupply();
         } else {
             try (DbIterator<Account.AccountCurrency> accountCurrencies = Account.getCurrencyAccounts(currency.getId(), 0, -1)) {
-                Account.AccountCurrency accountCurrency = accountCurrencies.next();
-                accountId = accountCurrency.getAccountId();
-                units = accountCurrency.getUnits();
+                if (accountCurrencies.hasNext()) {
+                    Account.AccountCurrency accountCurrency = accountCurrencies.next();
+                    accountId = accountCurrency.getAccountId();
+                    units = accountCurrency.getUnits();
+                }
             }
+        }
+        if (accountId == 0 || units == 0) {
+            return;
         }
         Map<String,String> map = getValues(accountId, false);
         map.put("currency", Convert.toUnsignedLong(currency.getId()));

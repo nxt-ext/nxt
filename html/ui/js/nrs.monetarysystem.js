@@ -123,6 +123,81 @@ var NRS = (function(NRS, $, undefined) {
 		}
 		NRS.pageLoaded();
 	});
+	
+	/* Search on Currencies Page */
+	$("#currencies_search").on("submit", function(e, data) {
+		e.preventDefault();
+		
+		//refresh is true if data is refreshed automatically by the system (when a new block arrives)
+		var refresh = false;
+		if (data && data.refresh) {
+			refresh = true;
+		}
+		
+		NRS.pageNumber = 1;
+		var requestAPI = "searchCurrencies+";
+		var query = $.trim($("#currencies_search").find("input[name=searchquery]").val());
+		if (query == "") requestAPI = "getAllCurrencies+";
+		NRS.sendRequest(requestAPI, {
+			"query": query,
+			"firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
+			"lastIndex": NRS.pageNumber * NRS.itemsPerPage
+		}, function(response) {
+			NRS.hasMorePages = false;
+			if (response.currencies && response.currencies.length) {
+				if (response.currencies.length > NRS.itemsPerPage) {
+					NRS.hasMorePages = true;
+					response.currencies.pop();
+				}
+				var rows = "";
+				for (var i = 0; i < response.currencies.length; i++) {
+					var currency_type = "";
+					var currency = response.currencies[i];
+					var name = String(currency.name).escapeHTML();
+					var currencyId = String(currency.currency).escapeHTML();
+					var code = String(currency.code).escapeHTML();
+					var resSupply = NRS.convertToQNTf(currency.reserveSupply, currency.decimals);
+					var decimals = String(currency.decimals).escapeHTML();
+					var minReserve = String(currency.minReservePerUnitNQT).escapeHTML();
+					if (NRS.isExchangeable(currency.type)) {
+						currency_type += "<i title='" + $.t('exchangeable') + "' class='fa fa-exchange'></i> ";
+					}
+					if (NRS.isControllable(currency.type)) {
+						currency_type += "<i title='" + $.t('controllable') + "' class='ion-ios7-toggle'></i> ";
+					}
+					if (NRS.isReservable(currency.type)) {
+						currency_type += "<i title='" + $.t('reservable') + "' class='fa fa-university'></i> ";
+					}
+					if (NRS.isClaimable(currency.type)) {
+						currency_type += "<i title='" + $.t('claimable') + "' class='ion-android-archive'></i> ";
+					}
+					if (NRS.isMintable(currency.type)) {
+						currency_type += "<i title='" + $.t('mintable') + "' class='fa fa-money'></i> ";
+					}
+					rows += "<tr>" +
+						"<td>" +
+							"<a href='#' data-transaction='" + currencyId + "' >" + code + "</a>" +
+						"</td>" +
+						"<td>" + name + "</td>" +
+						"<td>" + currency_type + "</td>" +
+						"<td>" + NRS.formatQuantity(currency.currentSupply, currency.decimals) + "</td>" +
+						"<td>" + NRS.formatQuantity(currency.maxSupply, currency.decimals) + "</td>" +
+						"<td>";
+						rows += "<a href='#' class='btn btn-xs btn-default' onClick='NRS.goToCurrency(&quot;" + code + "&quot;)' " + (!NRS.isExchangeable(currency.type) ? "disabled" : "") + ">" + $.t("exchange") + "</a> ";
+						rows += "<a href='#' class='btn btn-xs btn-default' data-toggle='modal' data-target='#reserve_currency_modal' data-currency='" + currencyId + "' data-name='" + name + "' data-code='" + code + "' data-ressupply='" + resSupply + "' data-decimals='" + decimals + "' data-minreserve='" + minReserve + "' " + (currency.issuanceHeight > NRS.lastBlockHeight && NRS.isReservable(currency.type) ? "" : "disabled") + " >" + $.t("reserve") + "</a> ";
+						rows += "</td></tr>";
+				}
+				var currenciesTable = $('#currencies_table');
+				currenciesTable.find('[data-i18n="type"]').show();
+				currenciesTable.find('[data-i18n="supply"]').show();
+				currenciesTable.find('[data-i18n="max_supply"]').show();
+				currenciesTable.find('[data-i18n="units"]').hide();
+				NRS.dataLoaded(rows);
+			} else {
+				NRS.dataLoaded();
+			}
+		}, false);
+	});
 
 	NRS.loadCurrencyOffers = function(type, currencyId, refresh) {
 		NRS.sendRequest("get" + type.capitalize() + "Offers+", {

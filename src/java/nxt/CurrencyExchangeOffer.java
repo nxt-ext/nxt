@@ -141,6 +141,7 @@ public abstract class CurrencyExchangeOffer {
 
             Account counterAccount = Account.getAccount(offer.getAccountId());
             counterAccount.addToBalanceNQT(curAmountNQT);
+            counterAccount.addToUnconfirmedBalanceNQT(Convert.safeMultiply(curUnits, offer.getRateNQT() - offer.getCounterOffer().getRateNQT()));
             counterAccount.addToCurrencyUnits(currencyId, -curUnits);
             Exchange.addExchange(transaction, currencyId, offer, offer.getAccountId(), account.getId(), curUnits);
         }
@@ -157,7 +158,7 @@ public abstract class CurrencyExchangeOffer {
         CurrencySellOffer.remove(sellOffer);
 
         Account account = Account.getAccount(buyOffer.getAccountId());
-        account.addToUnconfirmedBalanceNQT(buyOffer.getSupply());
+        account.addToUnconfirmedBalanceNQT(Convert.safeMultiply(buyOffer.getSupply(), buyOffer.getRateNQT()));
         account.addToUnconfirmedCurrencyUnits(buyOffer.getCurrencyId(), sellOffer.getSupply());
     }
 
