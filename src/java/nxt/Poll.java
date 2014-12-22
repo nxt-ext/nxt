@@ -146,19 +146,21 @@ public final class Poll extends AbstractPoll {
         this.maxRangeValue = rs.getByte("max_range_value");
     }
 
-    //TODO: refactor to take the Attachment.MessagingPollCreation as parameter instead of all those
-    static void addPoll(long id, long accountId, String name, String description, String[] options,
-                        int finishBlockHeight, byte votingModel,
-                        long minBalance,
-                        long assetId,
-                        byte minNumberOfOptions,
-                        byte maxNumberOfOptions,
-                        byte minRangeValue,
-                        byte maxRangeValue) {
+    static void addPoll(long pollId, long accountId, Attachment.MessagingPollCreation attachment) {
 
-        Poll poll = new Poll(id, accountId, name, description, options, finishBlockHeight, votingModel,
-                minNumberOfOptions, maxNumberOfOptions,minRangeValue, maxRangeValue, minBalance, assetId);
-
+        Poll poll = new Poll(pollId,
+                accountId,
+                attachment.getPollName(),
+                attachment.getPollDescription(),
+                attachment.getPollOptions(),
+                attachment.getFinishBlockHeight(),
+                attachment.getVotingModel(),
+                attachment.getMinNumberOfOptions(),
+                attachment.getMaxNumberOfOptions(),
+                attachment.getMinRangeValue(),
+                attachment.getMaxRangeValue(),
+                attachment.getMinBalance(),
+                attachment.getAssetId());
         pollTable.insert(poll);
     }
 

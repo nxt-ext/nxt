@@ -720,20 +720,7 @@ public abstract class TransactionType {
             @Override
             void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
                 Attachment.MessagingPollCreation attachment = (Attachment.MessagingPollCreation) transaction.getAttachment();
-                //TODO: change addPoll to take the attachment as parameter instead
-                Poll.addPoll(transaction.getId(),
-                        senderAccount.getId(),
-                        attachment.getPollName(),
-                        attachment.getPollDescription(),
-                        attachment.getPollOptions(),
-                        attachment.getFinishBlockHeight(),
-                        attachment.getVotingModel(),
-                        attachment.getMinBalance(),
-                        attachment.getAssetId(),
-                        attachment.getMinNumberOfOptions(),
-                        attachment.getMaxNumberOfOptions(),
-                        attachment.getMinRangeValue(),
-                        attachment.getMaxRangeValue());
+                Poll.addPoll(transaction.getId(), senderAccount.getId(), attachment);
             }
 
             @Override
