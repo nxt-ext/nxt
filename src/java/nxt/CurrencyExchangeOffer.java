@@ -158,7 +158,7 @@ public abstract class CurrencyExchangeOffer {
         CurrencySellOffer.remove(sellOffer);
 
         Account account = Account.getAccount(buyOffer.getAccountId());
-        account.addToUnconfirmedBalanceNQT(buyOffer.getSupply());
+        account.addToUnconfirmedBalanceNQT(Convert.safeMultiply(buyOffer.getSupply(), buyOffer.getRateNQT()));
         account.addToUnconfirmedCurrencyUnits(buyOffer.getCurrencyId(), sellOffer.getSupply());
     }
 
