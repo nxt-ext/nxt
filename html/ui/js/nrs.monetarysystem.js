@@ -163,7 +163,7 @@ var NRS = (function(NRS, $, undefined) {
 						currency_type += "<i title='" + $.t('exchangeable') + "' class='fa fa-exchange'></i> ";
 					}
 					if (NRS.isControllable(currency.type)) {
-						currency_type += "<i title='" + $.t('controllable') + "' class='ion-ios7-toggle'></i> ";
+						currency_type += "<i title='" + $.t('controllable') + "' class='fa fa-sliders'></i> ";
 					}
 					if (NRS.isReservable(currency.type)) {
 						currency_type += "<i title='" + $.t('reservable') + "' class='fa fa-university'></i> ";
@@ -696,7 +696,7 @@ var NRS = (function(NRS, $, undefined) {
 							currency_type += "<i title='" + $.t('exchangeable') + "' class='fa fa-exchange'></i> ";
 						}
 						if (NRS.isControllable(currency.type)) {
-							currency_type += "<i title='" + $.t('controllable') + "' class='ion-ios7-toggle'></i> ";
+							currency_type += "<i title='" + $.t('controllable') + "' class='fa fa-sliders'></i> ";
 						}
 						if (NRS.isReservable(currency.type)) {
 							currency_type += "<i title='" + $.t('reservable') + "' class='fa fa-university'></i> ";
