@@ -133,11 +133,15 @@ var NRS = (function(NRS, $, undefined) {
 		if (data && data.refresh) {
 			refresh = true;
 		}
-
+		
+		NRS.pageNumber = 1;
+		var requestAPI = "searchCurrencies+";
 		var query = $.trim($("#currencies_search").find("input[name=searchquery]").val());
-
-		NRS.sendRequest("searchCurrencies+", {
-			"query": query
+		if (query == "") requestAPI = "getAllCurrencies+";
+		NRS.sendRequest(requestAPI, {
+			"query": query,
+			"firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
+			"lastIndex": NRS.pageNumber * NRS.itemsPerPage
 		}, function(response) {
 			NRS.hasMorePages = false;
 			if (response.currencies && response.currencies.length) {
@@ -193,7 +197,6 @@ var NRS = (function(NRS, $, undefined) {
 				NRS.dataLoaded();
 			}
 		}, false);
-
 	});
 
 	NRS.loadCurrencyOffers = function(type, currencyId, refresh) {
