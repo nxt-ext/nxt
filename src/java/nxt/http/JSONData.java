@@ -358,9 +358,7 @@ final class JSONData {
 
     static JSONObject vote(Poll poll, Vote vote){
         JSONObject json = new JSONObject();
-        //TODO: use putAccount instead
-        json.put("voter",Convert.toUnsignedLong(vote.getVoterId()));
-        json.put("voterRs",Convert.rsAccount(vote.getVoterId()));
+        putAccount(json, "voter", vote.getVoterId());
         String[] options = poll.getOptions();
 
         JSONArray votesJson = new JSONArray();

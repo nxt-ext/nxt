@@ -48,6 +48,48 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
         return createTransaction(req, senderAccount, recipientId, amountNQT, Attachment.ORDINARY_PAYMENT);
     }
 
+    private Appendix.TwoPhased parseTwoPhased(HttpServletRequest req) throws ParameterException {
+        byte votingModel = ParameterParser.getByte(req, "pendingVotingModel", Constants.VOTING_MODEL_ACCOUNT, Constants.VOTING_MODEL_MS_COIN);
+
+        int maxHeight = ParameterParser.getInt(req, "pendingMaxHeight",
+                Nxt.getBlockchain().getHeight() + Constants.VOTING_MIN_VOTE_DURATION,
+                Nxt.getBlockchain().getHeight() + Constants.PENDING_TRANSACTIONS_MAX_PERIOD,
+                true);
+
+        long quorum = ParameterParser.getLong(req, "pendingQuorum", 0, Long.MAX_VALUE, true);
+        long minBalance = ParameterParser.getLong(req, "pendingMinBalance", 0, Long.MAX_VALUE, true);
+
+        long assetId = ParameterParser.getLong(req, "pendingAsset", Long.MIN_VALUE, Long.MAX_VALUE, false);
+        if (votingModel == Constants.VOTING_MODEL_ASSET && assetId == 0) {
+            throw new ParameterException(MISSING_PENDING_ASSET_ID);
+        }
+
+        long[] whitelist = new long[0];
+        String[] whitelistValues = req.getParameterValues("pendingWhitelisted");
+        if (whitelistValues.length > 0) {
+            whitelist = new long[whitelistValues.length];
+            for (int i = 0; i < whitelist.length; i++) {
+                whitelist[i] = Convert.parseAccountId(whitelistValues[i]);
+            }
+        }
+        if (votingModel == Constants.VOTING_MODEL_ACCOUNT && whitelist.length == 0) {
+            throw new ParameterException(INCORRECT_PENDING_WHITELIST);
+        }
+
+        long[] blacklist = new long[0];
+        String[] blacklistValues = req.getParameterValues("pendingBlacklisted");
+        if (blacklistValues.length > 0) {
+            blacklist = new long[blacklistValues.length];
+            for (int i = 0; i < blacklist.length; i++) {
+                blacklist[i] = Convert.parseAccountId(blacklistValues[i]);
+            }
+        }
+        if (votingModel == Constants.VOTING_MODEL_ACCOUNT && blacklist.length != 0) {
+            throw new ParameterException(INCORRECT_PENDING_BLACKLISTED);
+        }
+        return new Appendix.TwoPhased(maxHeight, votingModel, assetId, quorum, minBalance, whitelist, blacklist);
+    }
+
     final JSONStreamAware createTransaction(HttpServletRequest req, Account senderAccount, long recipientId,
                                             long amountNQT, Attachment attachment)
             throws NxtException {
@@ -87,47 +129,8 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
         Appendix.TwoPhased twoPhased = null;
         String isPending = Convert.emptyToNull(req.getParameter("isPending"));
         if ("true".equalsIgnoreCase(isPending)){
-            byte votingModel = ParameterParser.getByte(req, "pendingVotingModel", Constants.VOTING_MODEL_ACCOUNT, Constants.VOTING_MODEL_MS_COIN);
-
-            int maxHeight = ParameterParser.getInt(req, "pendingMaxHeight",
-                    Nxt.getBlockchain().getHeight() + Constants.VOTING_MIN_VOTE_DURATION,
-                    Nxt.getBlockchain().getHeight() + Constants.PENDING_TRANSACTIONS_MAX_PERIOD,
-                    true);
-
-            long quorum = ParameterParser.getLong(req, "pendingQuorum", 0, Long.MAX_VALUE, true);
-            long minBalance = ParameterParser.getLong(req, "pendingMinBalance", 0, Long.MAX_VALUE, true);
-
-            long assetId = ParameterParser.getLong(req, "pendingAsset", Long.MIN_VALUE, Long.MAX_VALUE, false);
-            if (votingModel == Constants.VOTING_MODEL_ASSET && assetId == 0) {
-                return MISSING_PENDING_ASSET_ID;
-            }
-
-            long[] whitelist = new long[0];
-            String[] whitelistValues = req.getParameterValues("pendingWhitelisted");
-            if (whitelistValues.length > 0) {
-                whitelist = new long[whitelistValues.length];
-                for (int i = 0; i < whitelist.length; i++) {
-                    whitelist[i] = Convert.parseAccountId(whitelistValues[i]);
-                }
-            }
-            if (votingModel == Constants.VOTING_MODEL_ACCOUNT && whitelist.length == 0) {
-                return INCORRECT_PENDING_WHITELIST;
-            }
-
-            long[] blacklist = new long[0];
-            String[] blacklistValues = req.getParameterValues("pendingBlacklisted");
-            if (blacklistValues.length > 0) {
-                blacklist = new long[blacklistValues.length];
-                for (int i = 0; i < blacklist.length; i++) {
-                    blacklist[i] = Convert.parseAccountId(blacklistValues[i]);
-                }
-            }
-            if (votingModel == Constants.VOTING_MODEL_ACCOUNT && blacklist.length != 0) {
-                return INCORRECT_PENDING_BLACKLISTED;
-            }
-
-            twoPhased = new Appendix.TwoPhased(maxHeight, votingModel, assetId, quorum, minBalance, whitelist, blacklist);
-        } //TODO: this was a very long if, better move to a separate method
+            twoPhased = parseTwoPhased(req);
+        }
 
         if (secretPhrase == null && publicKeyValue == null) {
             return MISSING_SECRET_PHRASE;
