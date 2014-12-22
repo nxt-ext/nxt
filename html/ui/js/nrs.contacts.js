@@ -464,6 +464,8 @@ var NRS = (function(NRS, $, undefined) {
 			NRS.importContacts(imported_contacts);
 		};
 		reader.readAsText(file);
+		var button = $("#import_contacts_button_field");
+		button.replaceWith( button = button.clone(true) ); // Recreate button to clean it
 		return false;
 	});
 	$("#import_contacts_button").on("click", function() {
