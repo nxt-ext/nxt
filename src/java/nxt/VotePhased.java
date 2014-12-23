@@ -96,25 +96,6 @@ public class VotePhased {
         return voteTable.getCount(new DbClause.LongClause("pending_transaction_id",pendingTransactionId));
     }
 
-    //TODO: this method needs a better name, why is it not called simply countVotes?
-    static long allVotesFromDb(PendingTransactionPoll poll) {
-        long result = 0;
-        DbClause clause = new DbClause.LongClause("pending_transaction_id", poll.getId());
-        //TODO: DbIterators must be closed
-        DbIterator<VotePhased> votesIterator = voteTable.getManyBy(clause, 0, -1);
-
-        while (votesIterator.hasNext()) {
-            //TODO: when you change calcWeight to take accountId instead of Account, you can skip the getAccount call here
-            // and only get the Account if needed in calcWeight
-            long w = poll.calcWeight(Account.getAccount(votesIterator.next().voterId));
-            if (w >= poll.minBalance) {
-                result += w;
-            }
-        }
-
-        return result;
-    }
-
     static boolean addVote(PendingTransactionPoll poll, Transaction transaction) {
         voteTable.insert(new VotePhased(transaction, poll.getId()));
         return poll.getVotingModel() == Constants.VOTING_MODEL_ACCOUNT
