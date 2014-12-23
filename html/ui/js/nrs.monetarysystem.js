@@ -127,13 +127,13 @@ var NRS = (function(NRS, $, undefined) {
 	/* Search on Currencies Page */
 	$("#currencies_search").on("submit", function(e, data) {
 		e.preventDefault();
-		
+
 		//refresh is true if data is refreshed automatically by the system (when a new block arrives)
 		var refresh = false;
 		if (data && data.refresh) {
 			refresh = true;
 		}
-		
+
 		NRS.pageNumber = 1;
 		var requestAPI = "searchCurrencies+";
 		var query = $.trim($("#currencies_search").find("input[name=searchquery]").val());
@@ -453,7 +453,7 @@ var NRS = (function(NRS, $, undefined) {
 				for (i = 0; i < response.exchangeRequests.length; i++) {
 					var exchangeRequest = response.exchangeRequests[i];
 					var type = (exchangeRequest.subtype == 5 ? "buy" : (exchangeRequest.subtype == 6 ? "sell" : exchangeRequest.type));
-					rows += "<tr>" +
+					rows += "<tr class='" + (exchangeRequest.hasOwnProperty('confirmed') && !exchangeRequest.confirmed ? "tentative-allow-links" : "confirmed") + "'>" +
 						"<td>" +
 							"<a href='#' data-transaction='" + String(exchangeRequest.transaction).escapeHTML() + "'>" + NRS.formatTimestamp(exchangeRequest.timestamp) + "</a>" +
 						"</td>" +
