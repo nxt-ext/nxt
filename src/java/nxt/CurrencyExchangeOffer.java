@@ -73,6 +73,8 @@ public abstract class CurrencyExchangeOffer {
 
     }
 
+    static final DbClause availableOnlyDbClause = new DbClause.FixedClause(" unit_limit <> 0 AND supply <> 0 ");
+
     static void exchangeCurrencyForNXT(Transaction transaction, Account account, final long currencyId, final long rateNQT, long units) {
         long extraAmountNQT = 0;
         long remainingUnits = units;
@@ -86,6 +88,9 @@ public abstract class CurrencyExchangeOffer {
         }
 
         for (CurrencyBuyOffer offer : currencyBuyOffers) {
+            if (remainingUnits == 0) {
+                break;
+            }
             long curUnits = Math.min(Math.min(remainingUnits, offer.getSupply()), offer.getLimit());
             long curAmountNQT = Convert.safeMultiply(curUnits, offer.getRateNQT());
 
@@ -119,7 +124,13 @@ public abstract class CurrencyExchangeOffer {
         }
 
         for (CurrencySellOffer offer : currencySellOffers) {
+            if (remainingAmountNQT == 0) {
+                break;
+            }
             long curUnits = Math.min(Math.min(remainingAmountNQT / offer.getRateNQT(), offer.getSupply()), offer.getLimit());
+            if (curUnits == 0) {
+                continue;
+            }
             long curAmountNQT = Convert.safeMultiply(curUnits, offer.getRateNQT());
 
             extraUnits = Convert.safeAdd(extraUnits, curUnits);
@@ -130,6 +141,7 @@ public abstract class CurrencyExchangeOffer {
 
             Account counterAccount = Account.getAccount(offer.getAccountId());
             counterAccount.addToBalanceNQT(curAmountNQT);
+            counterAccount.addToUnconfirmedBalanceNQT(Convert.safeMultiply(curUnits, offer.getRateNQT() - offer.getCounterOffer().getRateNQT()));
             counterAccount.addToCurrencyUnits(currencyId, -curUnits);
             Exchange.addExchange(transaction, currencyId, offer, offer.getAccountId(), account.getId(), curUnits);
         }
@@ -146,7 +158,7 @@ public abstract class CurrencyExchangeOffer {
         CurrencySellOffer.remove(sellOffer);
 
         Account account = Account.getAccount(buyOffer.getAccountId());
-        account.addToUnconfirmedBalanceNQT(buyOffer.getSupply());
+        account.addToUnconfirmedBalanceNQT(Convert.safeMultiply(buyOffer.getSupply(), buyOffer.getRateNQT()));
         account.addToUnconfirmedCurrencyUnits(buyOffer.getCurrencyId(), sellOffer.getSupply());
     }
 

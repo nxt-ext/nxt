@@ -47,30 +47,14 @@ public abstract class TransactionType {
     private static final byte SUBTYPE_DIGITAL_GOODS_FEEDBACK = 6;
     private static final byte SUBTYPE_DIGITAL_GOODS_REFUND = 7;
 
-    static final byte SUBTYPE_MONETARY_SYSTEM_CURRENCY_ISSUANCE = 0;
-    static final byte SUBTYPE_MONETARY_SYSTEM_RESERVE_INCREASE = 1;
-    static final byte SUBTYPE_MONETARY_SYSTEM_RESERVE_CLAIM = 2;
-    static final byte SUBTYPE_MONETARY_SYSTEM_CURRENCY_TRANSFER = 3;
-    static final byte SUBTYPE_MONETARY_SYSTEM_PUBLISH_EXCHANGE_OFFER = 4;
-    static final byte SUBTYPE_MONETARY_SYSTEM_EXCHANGE_BUY = 5;
-    static final byte SUBTYPE_MONETARY_SYSTEM_EXCHANGE_SELL = 6;
-    static final byte SUBTYPE_MONETARY_SYSTEM_CURRENCY_MINTING = 7;
-    static final byte SUBTYPE_MONETARY_SYSTEM_CURRENCY_DELETION = 8;
-
     private static final byte SUBTYPE_ACCOUNT_CONTROL_EFFECTIVE_BALANCE_LEASING = 0;
 
     private static final int BASELINE_FEE_HEIGHT = 1; // At release time must be less than current block - 1440
     private static final Fee BASELINE_FEE = new Fee(Constants.ONE_NXT, 0);
     private static final Fee BASELINE_ASSET_ISSUANCE_FEE = new Fee(1000 * Constants.ONE_NXT, 0);
-    static final Fee BASELINE_3LETTER_CURRENCY_ISSUANCE_FEE = new Fee(25000 * Constants.ONE_NXT, 0);
-    static final Fee BASELINE_4LETTER_CURRENCY_ISSUANCE_FEE = new Fee(1000 * Constants.ONE_NXT, 0);
-    static final Fee BASELINE_5LETTER_CURRENCY_ISSUANCE_FEE = new Fee(40 * Constants.ONE_NXT, 0);
     private static final int NEXT_FEE_HEIGHT = Integer.MAX_VALUE;
     private static final Fee NEXT_FEE = new Fee(Constants.ONE_NXT, 0);
     private static final Fee NEXT_ASSET_ISSUANCE_FEE = new Fee(1000 * Constants.ONE_NXT, 0);
-    static final Fee NEXT_3LETTER_CURRENCY_ISSUANCE_FEE = new Fee(25000 * Constants.ONE_NXT, 0);
-    static final Fee NEXT_4LETTER_CURRENCY_ISSUANCE_FEE = new Fee(1000 * Constants.ONE_NXT, 0);
-    static final Fee NEXT_5LETTER_CURRENCY_ISSUANCE_FEE = new Fee(40 * Constants.ONE_NXT, 0);
 
     public static TransactionType findTransactionType(byte type, byte subtype) {
         switch (type) {
@@ -152,26 +136,7 @@ public abstract class TransactionType {
                         return null;
                 }
             case TYPE_MONETARY_SYSTEM:
-                switch (subtype) {
-                    case SUBTYPE_MONETARY_SYSTEM_CURRENCY_ISSUANCE:
-                        return MonetarySystem.CURRENCY_ISSUANCE;
-                    case SUBTYPE_MONETARY_SYSTEM_RESERVE_INCREASE:
-                        return MonetarySystem.RESERVE_INCREASE;
-                    case SUBTYPE_MONETARY_SYSTEM_RESERVE_CLAIM:
-                        return MonetarySystem.RESERVE_CLAIM;
-                    case SUBTYPE_MONETARY_SYSTEM_CURRENCY_TRANSFER:
-                        return MonetarySystem.CURRENCY_TRANSFER;
-                    case SUBTYPE_MONETARY_SYSTEM_PUBLISH_EXCHANGE_OFFER:
-                        return MonetarySystem.PUBLISH_EXCHANGE_OFFER;
-                    case SUBTYPE_MONETARY_SYSTEM_EXCHANGE_BUY:
-                        return MonetarySystem.EXCHANGE_BUY;
-                    case SUBTYPE_MONETARY_SYSTEM_EXCHANGE_SELL:
-                        return MonetarySystem.EXCHANGE_SELL;
-                    case SUBTYPE_MONETARY_SYSTEM_CURRENCY_MINTING:
-                        return MonetarySystem.CURRENCY_MINTING;
-                    case SUBTYPE_MONETARY_SYSTEM_CURRENCY_DELETION:
-                        return MonetarySystem.CURRENCY_DELETION;
-                }
+                return MonetarySystem.findTransactionType(subtype);
             default:
                 return null;
         }
@@ -376,6 +341,9 @@ public abstract class TransactionType {
                 if (transaction.getAmountNQT() != 0) {
                     throw new NxtException.NotValidException("Invalid arbitrary message: " + attachment.getJSONObject());
                 }
+                if (transaction.getRecipientId() == Genesis.CREATOR_ID && Nxt.getBlockchain().getHeight() > Constants.MONETARY_SYSTEM_BLOCK) {
+                    throw new NxtException.NotCurrentlyValidException("Sending messages to Genesis not allowed.");
+                }
             }
 
             @Override
@@ -505,6 +473,9 @@ public abstract class TransactionType {
                     throw new NxtException.NotCurrentlyValidException("Alias hasn't been registered yet: " + aliasName);
                 } else if (alias.getAccountId() != transaction.getSenderId()) {
                     throw new NxtException.NotCurrentlyValidException("Alias doesn't belong to sender: " + aliasName);
+                }
+                if (transaction.getRecipientId() == Genesis.CREATOR_ID && Nxt.getBlockchain().getHeight() > Constants.MONETARY_SYSTEM_BLOCK) {
+                    throw new NxtException.NotCurrentlyValidException("Selling alias to Genesis not allowed");
                 }
             }
 
@@ -1250,7 +1221,7 @@ public abstract class TransactionType {
 
             @Override
             void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
-                if (Nxt.getBlockchain().getLastBlock().getHeight() < Constants.ASSET_EXCHANGE_BLOCK_2) {
+                if (Nxt.getBlockchain().getLastBlock().getHeight() < Constants.MONETARY_SYSTEM_BLOCK) {
                     throw new NxtException.NotYetEnabledException("Dividend payment not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
                 }
                 Attachment.ColoredCoinsDividendPayment attachment = (Attachment.ColoredCoinsDividendPayment)transaction.getAttachment();
@@ -1260,7 +1231,7 @@ public abstract class TransactionType {
                             + "for dividend payment doesn't exist yet");
                 }
                 if (asset.getAccountId() != transaction.getSenderId() || attachment.getAmountNQTPerQNT() <= 0) {
-                    throw new NxtException.NotValidException("Invalid divident payment sender or amount " + attachment.getJSONObject());
+                    throw new NxtException.NotValidException("Invalid dividend payment sender or amount " + attachment.getJSONObject());
                 }
                 if (attachment.getHeight() > Nxt.getBlockchain().getHeight() || attachment.getHeight() < Nxt.getBlockchain().getHeight() - Constants.MAX_ROLLBACK) {
                     throw new NxtException.NotCurrentlyValidException("Invalid dividend payment height: " + attachment.getHeight());
@@ -1375,7 +1346,7 @@ public abstract class TransactionType {
             @Override
             void doValidateAttachment(Transaction transaction) throws NxtException.ValidationException {
                 Attachment.DigitalGoodsDelisting attachment = (Attachment.DigitalGoodsDelisting) transaction.getAttachment();
-                DigitalGoodsStore.Goods goods = DigitalGoodsStore.getGoods(attachment.getGoodsId());
+                DigitalGoodsStore.Goods goods = DigitalGoodsStore.Goods.getGoods(attachment.getGoodsId());
                 if (goods != null && transaction.getSenderId() != goods.getSellerId()) {
                     throw new NxtException.NotValidException("Invalid digital goods delisting - seller is different: " + attachment.getJSONObject());
                 }
@@ -1424,7 +1395,7 @@ public abstract class TransactionType {
             @Override
             void doValidateAttachment(Transaction transaction) throws NxtException.ValidationException {
                 Attachment.DigitalGoodsPriceChange attachment = (Attachment.DigitalGoodsPriceChange) transaction.getAttachment();
-                DigitalGoodsStore.Goods goods = DigitalGoodsStore.getGoods(attachment.getGoodsId());
+                DigitalGoodsStore.Goods goods = DigitalGoodsStore.Goods.getGoods(attachment.getGoodsId());
                 if (attachment.getPriceNQT() <= 0 || attachment.getPriceNQT() > Constants.MAX_BALANCE_NQT
                         || (goods != null && transaction.getSenderId() != goods.getSellerId())) {
                     throw new NxtException.NotValidException("Invalid digital goods price change: " + attachment.getJSONObject());
@@ -1475,7 +1446,7 @@ public abstract class TransactionType {
             @Override
             void doValidateAttachment(Transaction transaction) throws NxtException.ValidationException {
                 Attachment.DigitalGoodsQuantityChange attachment = (Attachment.DigitalGoodsQuantityChange) transaction.getAttachment();
-                DigitalGoodsStore.Goods goods = DigitalGoodsStore.getGoods(attachment.getGoodsId());
+                DigitalGoodsStore.Goods goods = DigitalGoodsStore.Goods.getGoods(attachment.getGoodsId());
                 if (attachment.getDeltaQuantity() < -Constants.MAX_DGS_LISTING_QUANTITY
                         || attachment.getDeltaQuantity() > Constants.MAX_DGS_LISTING_QUANTITY
                         || (goods != null && transaction.getSenderId() != goods.getSellerId())) {
@@ -1543,7 +1514,7 @@ public abstract class TransactionType {
             @Override
             void doValidateAttachment(Transaction transaction) throws NxtException.ValidationException {
                 Attachment.DigitalGoodsPurchase attachment = (Attachment.DigitalGoodsPurchase) transaction.getAttachment();
-                DigitalGoodsStore.Goods goods = DigitalGoodsStore.getGoods(attachment.getGoodsId());
+                DigitalGoodsStore.Goods goods = DigitalGoodsStore.Goods.getGoods(attachment.getGoodsId());
                 if (attachment.getQuantity() <= 0 || attachment.getQuantity() > Constants.MAX_DGS_LISTING_QUANTITY
                         || attachment.getPriceNQT() <= 0 || attachment.getPriceNQT() > Constants.MAX_BALANCE_NQT
                         || (goods != null && goods.getSellerId() != transaction.getRecipientId())) {
@@ -1607,7 +1578,7 @@ public abstract class TransactionType {
             @Override
             void doValidateAttachment(Transaction transaction) throws NxtException.ValidationException {
                 Attachment.DigitalGoodsDelivery attachment = (Attachment.DigitalGoodsDelivery) transaction.getAttachment();
-                DigitalGoodsStore.Purchase purchase = DigitalGoodsStore.getPendingPurchase(attachment.getPurchaseId());
+                DigitalGoodsStore.Purchase purchase = DigitalGoodsStore.Purchase.getPendingPurchase(attachment.getPurchaseId());
                 if (attachment.getGoods().getData().length > Constants.MAX_DGS_GOODS_LENGTH
                         || attachment.getGoods().getData().length == 0
                         || attachment.getGoods().getNonce().length != 32
@@ -1663,7 +1634,7 @@ public abstract class TransactionType {
             @Override
             void doValidateAttachment(Transaction transaction) throws NxtException.ValidationException {
                 Attachment.DigitalGoodsFeedback attachment = (Attachment.DigitalGoodsFeedback) transaction.getAttachment();
-                DigitalGoodsStore.Purchase purchase = DigitalGoodsStore.getPurchase(attachment.getPurchaseId());
+                DigitalGoodsStore.Purchase purchase = DigitalGoodsStore.Purchase.getPurchase(attachment.getPurchaseId());
                 if (purchase != null &&
                         (purchase.getSellerId() != transaction.getRecipientId()
                                 || transaction.getSenderId() != purchase.getBuyerId())) {
@@ -1733,7 +1704,7 @@ public abstract class TransactionType {
             @Override
             void doValidateAttachment(Transaction transaction) throws NxtException.ValidationException {
                 Attachment.DigitalGoodsRefund attachment = (Attachment.DigitalGoodsRefund) transaction.getAttachment();
-                DigitalGoodsStore.Purchase purchase = DigitalGoodsStore.getPurchase(attachment.getPurchaseId());
+                DigitalGoodsStore.Purchase purchase = DigitalGoodsStore.Purchase.getPurchase(attachment.getPurchaseId());
                 if (attachment.getRefundNQT() < 0 || attachment.getRefundNQT() > Constants.MAX_BALANCE_NQT
                         || (purchase != null &&
                         (purchase.getBuyerId() != transaction.getRecipientId()
@@ -1819,6 +1790,9 @@ public abstract class TransactionType {
                         || (recipientAccount.getPublicKey() == null && ! transaction.getStringId().equals("5081403377391821646"))) {
                     throw new NxtException.NotCurrentlyValidException("Invalid effective balance leasing: "
                             + " recipient account " + transaction.getRecipientId() + " not found or no public key published");
+                }
+                if (transaction.getRecipientId() == Genesis.CREATOR_ID && Nxt.getBlockchain().getHeight() > Constants.MONETARY_SYSTEM_BLOCK) {
+                    throw new NxtException.NotCurrentlyValidException("Leasing to Genesis account not allowed");
                 }
             }
 

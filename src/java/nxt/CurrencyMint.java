@@ -52,14 +52,12 @@ public final class CurrencyMint {
     private final long currencyId;
     private final long accountId;
     private long counter;
-    private final int submission_height;
 
     private CurrencyMint(long currencyId, long accountId, long counter) {
         this.currencyId = currencyId;
         this.accountId = accountId;
         this.dbKey = currencyMintDbKeyFactory.newKey(this.currencyId, this.accountId);
         this.counter = counter;
-        this.submission_height = Nxt.getBlockchain().getHeight();
     }
 
     private CurrencyMint(ResultSet rs) throws SQLException {
@@ -67,17 +65,15 @@ public final class CurrencyMint {
         this.accountId = rs.getLong("account_id");
         this.dbKey = currencyMintDbKeyFactory.newKey(this.currencyId, this.accountId);
         this.counter = rs.getLong("counter");
-        this.submission_height = rs.getInt("submission_height");
     }
 
     private void save(Connection con) throws SQLException {
-        try (PreparedStatement pstmt = con.prepareStatement("MERGE INTO currency_mint (currency_id, account_id, counter, submission_height, height, latest) "
-                + "KEY (currency_id, account_id, height) VALUES (?, ?, ?, ?, ?, TRUE)")) {
+        try (PreparedStatement pstmt = con.prepareStatement("MERGE INTO currency_mint (currency_id, account_id, counter, height, latest) "
+                + "KEY (currency_id, account_id, height) VALUES (?, ?, ?, ?, TRUE)")) {
             int i = 0;
             pstmt.setLong(++i, this.getCurrencyId());
             pstmt.setLong(++i, this.getAccountId());
             pstmt.setLong(++i, this.getCounter());
-            pstmt.setInt(++i, this.getHeight());
             pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
             pstmt.executeUpdate();
         }
@@ -95,23 +91,13 @@ public final class CurrencyMint {
         return counter;
     }
 
-    public int getHeight() {
-        return submission_height;
-    }
-
-    
     static void mintCurrency(final Account account, final Attachment.MonetarySystemCurrencyMinting attachment) {
         CurrencyMint currencyMint = currencyMintTable.get(currencyMintDbKeyFactory.newKey(attachment.getCurrencyId(), account.getId()));
         if (currencyMint != null && attachment.getCounter() <= currencyMint.getCounter()) {
             return;
         }
-
         Currency currency = Currency.getCurrency(attachment.getCurrencyId());
-        byte[] hash = getHash(currency.getAlgorithm(), attachment.getNonce(), attachment.getCurrencyId(), attachment.getUnits(),
-                attachment.getCounter(), account.getId());
-        byte[] target = getTarget(currency.getMinDifficulty(), currency.getMaxDifficulty(),
-                attachment.getUnits(), currency.getCurrentSupply() - currency.getReserveSupply(), currency.getMaxSupply() - currency.getReserveSupply());
-        if (meetsTarget(hash, target)) {
+        if (meetsTarget(account.getId(), currency, attachment)) {
             if (currencyMint == null) {
                 currencyMint = new CurrencyMint(attachment.getCurrencyId(), account.getId(), attachment.getCounter());
             } else {
@@ -119,8 +105,17 @@ public final class CurrencyMint {
             }
             currencyMintTable.insert(currencyMint);
             long units = Math.min(attachment.getUnits(), currency.getMaxSupply() - currency.getCurrentSupply());
-            account.addToCurrencyAndUnconfirmedCurrencyUnits(attachment.getUnits(), units);
+            account.addToCurrencyAndUnconfirmedCurrencyUnits(currency.getId(), units);
             currency.increaseSupply(units);
+        }
+    }
+
+    public static long getCounter(long currencyId, long accountId) {
+        CurrencyMint currencyMint = currencyMintTable.get(currencyMintDbKeyFactory.newKey(currencyId, accountId));
+        if (currencyMint != null) {
+            return currencyMint.getCounter();
+        } else {
+            return 0;
         }
     }
 
@@ -136,6 +131,14 @@ public final class CurrencyMint {
         }
     }
 
+    static boolean meetsTarget(long accountId, Currency currency, Attachment.MonetarySystemCurrencyMinting attachment) {
+        byte[] hash = getHash(currency.getAlgorithm(), attachment.getNonce(), attachment.getCurrencyId(), attachment.getUnits(),
+                attachment.getCounter(), accountId);
+        byte[] target = getTarget(currency.getMinDifficulty(), currency.getMaxDifficulty(),
+                attachment.getUnits(), currency.getCurrentSupply() - currency.getReserveSupply(), currency.getMaxSupply() - currency.getReserveSupply());
+        return meetsTarget(hash, target);
+    }
+
     public static boolean meetsTarget(byte[] hash, byte[] target) {
         for (int i = hash.length - 1; i >= 0; i--) {
             if ((hash[i] & 0xff) > (target[i] & 0xff)) {
@@ -149,6 +152,11 @@ public final class CurrencyMint {
     }
 
     public static byte[] getHash(byte algorithm, long nonce, long currencyId, long units, long counter, long accountId) {
+        HashFunction hashFunction = HashFunction.getHashFunction(algorithm);
+        return getHash(hashFunction, nonce, currencyId, units, counter, accountId);
+    }
+
+    public static byte[] getHash(HashFunction hashFunction, long nonce, long currencyId, long units, long counter, long accountId) {
         ByteBuffer buffer = ByteBuffer.allocate(8 + 8 + 8 + 8 + 8);
         buffer.order(ByteOrder.LITTLE_ENDIAN);
         buffer.putLong(nonce);
@@ -156,10 +164,10 @@ public final class CurrencyMint {
         buffer.putLong(units);
         buffer.putLong(counter);
         buffer.putLong(accountId);
-        return HashFunction.getHashFunction(algorithm).hash(buffer.array());
+        return hashFunction.hash(buffer.array());
     }
 
-    public static byte[] getTarget(byte min, byte max, long units, long currentSupply, long totalSupply) {
+    public static byte[] getTarget(int min, int max, long units, long currentSupply, long totalSupply) {
         BigInteger targetNum = getNumericTarget(min, max, units, currentSupply, totalSupply);
         byte[] targetRowBytes = targetNum.toByteArray();
         if (targetRowBytes.length == 32) {
@@ -171,12 +179,15 @@ public final class CurrencyMint {
         return reverse(targetBytes);
     }
 
-    public static BigInteger getNumericTarget(byte min, byte max, long units, float currentSupply, float totalSupply) {
-        int exp = 256 - (min + Math.round((max - min) * (currentSupply / totalSupply)));
-        return (BigInteger.valueOf(2).pow(exp)).divide(BigInteger.valueOf(units));
+    public static BigInteger getNumericTarget(int min, int max, long units, long currentSupply, long totalSupply) {
+        if (min < 1 || max > 255) {
+            throw new IllegalArgumentException(String.format("Min: %d, Max: %d, allowed range is 1 to 255", min, max));
+        }
+        int exp = (int)(256 - min - ((max - min) * currentSupply) / totalSupply);
+        return BigInteger.valueOf(2).pow(exp).subtract(BigInteger.ONE).divide(BigInteger.valueOf(units));
     }
 
-    static byte[] reverse(byte[] b) {
+    private static byte[] reverse(byte[] b) {
         for(int i=0; i < b.length/2; i++) {
             byte temp = b[i];
             b[i] = b[b.length - i - 1];

@@ -13,7 +13,7 @@ public final class DeleteCurrency extends CreateTransaction {
     static final DeleteCurrency instance = new DeleteCurrency();
 
     private DeleteCurrency() {
-        super(new APITag[] {APITag.MS, APITag.CREATE_TRANSACTION}, "currency", "code");
+        super(new APITag[] {APITag.MS, APITag.CREATE_TRANSACTION}, "currency");
     }
 
     @Override

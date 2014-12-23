@@ -29,7 +29,7 @@ import java.util.Set;
 
 public final class API {
 
-    private static final int TESTNET_API_PORT = 6876;
+    public static final int TESTNET_API_PORT = 6876;
 
     static final Set<String> allowedBotHosts;
     static final boolean enableDebugAPI = Nxt.getBooleanProperty("nxt.enableDebugAPI");
@@ -89,7 +89,7 @@ public final class API {
                 defaultServletHolder.setInitParameter("redirectWelcome", "true");
                 defaultServletHolder.setInitParameter("gzip", "true");
                 apiHandler.addServlet(defaultServletHolder, "/*");
-                apiHandler.setWelcomeFiles(new String[]{"index.html"});
+                apiHandler.setWelcomeFiles(new String[]{Nxt.getStringProperty("nxt.apiWelcomeFile")});
             }
 
             String javadocResourceBase = Nxt.getStringProperty("nxt.javadocResourceBase");

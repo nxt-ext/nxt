@@ -251,14 +251,21 @@ var NRS = (function(NRS, $, undefined) {
 				$("#dgs_user_purchase_count").html(response.purchases.length).removeClass("loading_dots");
 			}
 		});
-		NRS.sendRequest("getState+", {
+
+		NRS.sendRequest("getDGSGoodsCount+", {
 		}, function(response) {
 			if (response.numberOfGoods) {
 				$("#dgs_product_count").html(response.numberOfGoods).removeClass("loading_dots");
 			}
+		});
+		NRS.sendRequest("getDGSPurchaseCount+", {
+		}, function(response) {
 			if (response.numberOfPurchases) {
 				$("#dgs_total_purchase_count").html(response.numberOfPurchases).removeClass("loading_dots");
 			}
+		});
+		NRS.sendRequest("getDGSTagCount+", {
+		}, function(response) {
 			if (response.numberOfTags) {
 				$("#dgs_tag_count").html(response.numberOfTags).removeClass("loading_dots");
 			}

@@ -17,7 +17,7 @@ public final class GetAccountCurrencies extends APIServlet.APIRequestHandler {
     static final GetAccountCurrencies instance = new GetAccountCurrencies();
 
     private GetAccountCurrencies() {
-        super(new APITag[] {APITag.ACCOUNTS, APITag.MS}, "account", "currency", "code", "height");
+        super(new APITag[] {APITag.ACCOUNTS, APITag.MS}, "account", "currency", "height");
     }
 
     @Override
@@ -26,9 +26,8 @@ public final class GetAccountCurrencies extends APIServlet.APIRequestHandler {
         Account account = ParameterParser.getAccount(req);
         int height = ParameterParser.getHeight(req);
         String currencyValue = Convert.emptyToNull(req.getParameter("currency"));
-        String codeValue = Convert.emptyToNull(req.getParameter("code"));
 
-        if (currencyValue == null && codeValue == null) {
+        if (currencyValue == null) {
             JSONObject response = new JSONObject();
             try (DbIterator<Account.AccountCurrency> accountCurrencies = account.getCurrencies(height, 0, -1)) {
                 JSONArray currencyJSON = new JSONArray();

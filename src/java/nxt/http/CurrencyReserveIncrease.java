@@ -15,7 +15,7 @@ import javax.servlet.http.HttpServletRequest;
  * Parameters
  * <ul>
  * <li>currency - currency id
- * <li>amountPerUnitNQT - the NXT amount invested into increasing the value of a single currency unit.<br>
+ * <li>amountPerUnitNQT - the NQT amount invested into increasing the value of a single currency unit.<br>
  * This value is multiplied by the currency total supply and the result is deducted from the sender's account balance.
  * </ul>
  * </p>
@@ -32,7 +32,7 @@ public final class CurrencyReserveIncrease extends CreateTransaction {
     static final CurrencyReserveIncrease instance = new CurrencyReserveIncrease();
 
     private CurrencyReserveIncrease() {
-        super(new APITag[] {APITag.MS, APITag.CREATE_TRANSACTION}, "currency", "code", "amountPerUnitNQT");
+        super(new APITag[] {APITag.MS, APITag.CREATE_TRANSACTION}, "currency", "amountPerUnitNQT");
     }
 
     @Override

@@ -28,11 +28,7 @@ public interface BlockchainProcessor extends Observable<Block,BlockchainProcesso
 
     void fullReset();
 
-    void scan(int height);
-
-    void forceScanAtStart();
-
-    void validateAtNextScan();
+    void scan(int height, boolean validate);
 
     void setGetMoreBlocks(boolean getMoreBlocks);
 

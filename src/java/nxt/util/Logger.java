@@ -246,6 +246,16 @@ public final class Logger {
     }
 
     /**
+     * Log an INFO message
+     *
+     * @param       format             Message format
+     * @param       args               Message args
+     */
+    public static void logInfoMessage(String format, Object ... args) {
+        doLog(Level.INFO, String.format(format, args), null);
+    }
+
+    /**
      * Log an INFO exception
      *
      * @param       message             Message
@@ -266,6 +276,16 @@ public final class Logger {
      */
     public static void logDebugMessage(String message) {
         doLog(Level.DEBUG, message, null);
+    }
+
+    /**
+     * Log a debug message
+     *
+     * @param       format             Message format
+     * @param       args               Message args
+     */
+    public static void logDebugMessage(String format, Object ... args) {
+        doLog(Level.DEBUG, String.format(format, args), null);
     }
 
     /**

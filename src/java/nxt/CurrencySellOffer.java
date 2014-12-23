@@ -6,7 +6,6 @@ import nxt.db.DbKey;
 import nxt.db.VersionedEntityDbTable;
 
 import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
@@ -48,11 +47,27 @@ public final class CurrencySellOffer extends CurrencyExchangeOffer {
     }
 
     public static DbIterator<CurrencySellOffer> getOffers(Currency currency, int from, int to) {
-        return sellOfferTable.getManyBy(new DbClause.LongClause("currency_id", currency.getId()), from, to, " ORDER BY rate ASC, creation_height ASC, transaction_index ASC ");
+        return getOffers(currency, false, from, to);
+    }
+
+    public static DbIterator<CurrencySellOffer> getOffers(Currency currency, boolean availableOnly, int from, int to) {
+        DbClause dbClause = new DbClause.LongClause("currency_id", currency.getId());
+        if (availableOnly) {
+            dbClause = dbClause.and(availableOnlyDbClause);
+        }
+        return sellOfferTable.getManyBy(dbClause, from, to, " ORDER BY rate ASC, creation_height ASC, transaction_index ASC ");
     }
 
     public static DbIterator<CurrencySellOffer> getOffers(Account account, int from, int to) {
-        return sellOfferTable.getManyBy(new DbClause.LongClause("account_id", account.getId()), from, to, " ORDER BY rate ASC, creation_height ASC, transaction_index ASC ");
+        return getOffers(account, false, from, to);
+    }
+
+    public static DbIterator<CurrencySellOffer> getOffers(Account account, boolean availableOnly, int from, int to) {
+        DbClause dbClause = new DbClause.LongClause("account_id", account.getId());
+        if (availableOnly) {
+            dbClause = dbClause.and(availableOnlyDbClause);
+        }
+        return sellOfferTable.getManyBy(dbClause, from, to, " ORDER BY rate ASC, creation_height ASC, transaction_index ASC ");
     }
 
     public static CurrencySellOffer getOffer(Currency currency, Account account) {
@@ -60,15 +75,7 @@ public final class CurrencySellOffer extends CurrencyExchangeOffer {
     }
 
     static CurrencySellOffer getOffer(final long currencyId, final long accountId) {
-        DbClause dbClause = new DbClause(" currency_id = ? AND account_id = ? ") {
-            @Override
-            protected int set(PreparedStatement pstmt, int index) throws SQLException {
-                pstmt.setLong(index++, currencyId);
-                pstmt.setLong(index++, accountId);
-                return index;
-            }
-        };
-        return sellOfferTable.getBy(dbClause);
+        return sellOfferTable.getBy(new DbClause.LongClause("currency_id", currencyId).and(new DbClause.LongClause("account_id", accountId)));
     }
 
     public static DbIterator<CurrencySellOffer> getOffers(DbClause dbClause, int from, int to) {
@@ -89,7 +96,7 @@ public final class CurrencySellOffer extends CurrencyExchangeOffer {
 
     static void init() {}
 
-    protected final DbKey dbKey;
+    private final DbKey dbKey;
 
     private CurrencySellOffer(Transaction transaction, Attachment.MonetarySystemPublishExchangeOffer attachment) {
         super(transaction.getId(), attachment.getCurrencyId(), transaction.getSenderId(), attachment.getSellRateNQT(),

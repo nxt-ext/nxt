@@ -43,7 +43,7 @@ public final class PublishExchangeOffer extends CreateTransaction {
     static final PublishExchangeOffer instance = new PublishExchangeOffer();
 
     private PublishExchangeOffer() {
-        super(new APITag[] {APITag.MS, APITag.CREATE_TRANSACTION}, "currency", "code", "buyRateNQT", "sellRateNQT",
+        super(new APITag[] {APITag.MS, APITag.CREATE_TRANSACTION}, "currency", "buyRateNQT", "sellRateNQT",
                 "totalBuyLimit", "totalSellLimit", "initialBuySupply", "initialSellSupply", "expirationHeight");
     }
 

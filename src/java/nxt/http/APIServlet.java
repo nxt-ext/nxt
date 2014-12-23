@@ -139,6 +139,7 @@ public final class APIServlet extends HttpServlet {
         map.put("getDGSPurchaseCount", GetDGSPurchaseCount.instance);
         map.put("getDGSPendingPurchases", GetDGSPendingPurchases.instance);
         map.put("getDGSTags", GetDGSTags.instance);
+        map.put("getDGSTagCount", GetDGSTagCount.instance);
         map.put("getGuaranteedBalance", GetGuaranteedBalance.instance);
         map.put("getECBlock", GetECBlock.instance);
         map.put("getMyInfo", GetMyInfo.instance);
@@ -151,6 +152,8 @@ public final class APIServlet extends HttpServlet {
         map.put("getTime", GetTime.instance);
         map.put("getTrades", GetTrades.instance);
         map.put("getExchanges", GetExchanges.instance);
+        map.put("getExchangesByExchangeRequest", GetExchangesByExchangeRequest.instance);
+        map.put("getExchangesByOffer", GetExchangesByOffer.instance);
         map.put("getAllTrades", GetAllTrades.instance);
         map.put("getAllExchanges", GetAllExchanges.instance);
         map.put("getAssetTransfers", GetAssetTransfers.instance);
@@ -174,6 +177,7 @@ public final class APIServlet extends HttpServlet {
         map.put("getBidOrder", GetBidOrder.instance);
         map.put("getBidOrderIds", GetBidOrderIds.instance);
         map.put("getBidOrders", GetBidOrders.instance);
+        map.put("getAccountExchangeRequests", GetAccountExchangeRequests.instance);
         map.put("getMintingTarget", GetMintingTarget.instance);
         map.put("issueAsset", IssueAsset.instance);
         map.put("issueCurrency", IssueCurrency.instance);
@@ -197,6 +201,7 @@ public final class APIServlet extends HttpServlet {
         map.put("getForging", GetForging.instance);
         map.put("transferAsset", TransferAsset.instance);
         map.put("transferCurrency", TransferCurrency.instance);
+        map.put("canDeleteCurrency", CanDeleteCurrency.instance);
         map.put("deleteCurrency", DeleteCurrency.instance);
         map.put("dividendPayment", DividendPayment.instance);
         map.put("searchDGSGoods", SearchDGSGoods.instance);
