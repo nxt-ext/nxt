@@ -7,7 +7,7 @@ Added getExchangesByOffer API to get executed currency exchanges for an offer.
 
 Do not log currency exchanges of zero amount.
 
-Fixed setting of peer state.
+Fixed setting of peer state. Improvements in connecting to peers.
 
 Added README.md, DEVELOPERS-GUIDE.md OPERATORS-GUIDE.md, and USERS-GUIDE.md
 files.
