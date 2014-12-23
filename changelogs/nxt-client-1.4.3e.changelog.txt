@@ -14,7 +14,8 @@ files.
 
 Added search for currencies based on code, name, or description keywords.
 
-Fixed bugs in unconfirmed balance handling in currency exchange.
+Fixed bugs in unconfirmed balance handling in currency exchange and currency
+deletion.
 
 This release will perform a rescan, on testnet only.
 
