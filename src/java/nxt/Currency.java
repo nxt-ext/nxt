@@ -363,6 +363,7 @@ public final class Currency {
         Account ownerAccount = Account.getAccount(ownerAccountId);
         if (is(CurrencyType.RESERVABLE)) {
             if (is(CurrencyType.CLAIMABLE) && isActive()) {
+                ownerAccount.addToUnconfirmedCurrencyUnits(currencyId, -ownerAccount.getCurrencyUnits(currencyId));
                 Currency.claimReserve(ownerAccount, currencyId, ownerAccount.getCurrencyUnits(currencyId));
             }
             if (!isActive()) {
