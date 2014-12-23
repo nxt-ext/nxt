@@ -50,9 +50,11 @@ public abstract class TransactionType {
     private static final int BASELINE_FEE_HEIGHT = 1; // At release time must be less than current block - 1440
     private static final Fee BASELINE_FEE = new Fee(Constants.ONE_NXT, 0);
     private static final Fee BASELINE_ASSET_ISSUANCE_FEE = new Fee(1000 * Constants.ONE_NXT, 0);
+    private static final Fee BASELINE_POLL_FEE = new Fee(10 * Constants.ONE_NXT, 0);
     private static final int NEXT_FEE_HEIGHT = Integer.MAX_VALUE;
     private static final Fee NEXT_FEE = new Fee(Constants.ONE_NXT, 0);
     private static final Fee NEXT_ASSET_ISSUANCE_FEE = new Fee(1000 * Constants.ONE_NXT, 0);
+    private static final Fee NEXT_POLL_FEE = new Fee(10 * Constants.ONE_NXT, 0);
 
     public static TransactionType findTransactionType(byte type, byte subtype) {
         switch (type) {
@@ -708,6 +710,16 @@ public abstract class TransactionType {
             }
 
             @Override
+            public Fee getBaselineFee(TransactionImpl transaction) {
+                return BASELINE_POLL_FEE;
+            }
+
+            @Override
+            public Fee getNextFee(TransactionImpl transaction) {
+                return NEXT_POLL_FEE;
+            }
+
+            @Override
             Attachment.MessagingPollCreation parseAttachment(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
                 return new Attachment.MessagingPollCreation(buffer, transactionVersion);
             }
@@ -764,12 +776,6 @@ public abstract class TransactionType {
                         || attachment.getPollDescription().length() > Constants.MAX_POLL_DESCRIPTION_LENGTH
                         || attachment.getPollOptions().length > Constants.MAX_POLL_OPTION_COUNT) {
                     throw new NxtException.NotValidException("Invalid poll attachment: " + attachment.getJSONObject());
-                }
-
-                if (transaction.getFeeNQT() < Constants.POLL_FEE_NQT
-                        //TODO: don't use a POLL_FEE_NQT constant, use the new variable fee framework instead
-                        || transaction.getAmountNQT() != 0) {
-                    throw new NxtException.NotValidException("Invalid tx params for poll: " + attachment.getJSONObject());
                 }
 
                 if (attachment.getAssetId() != 0 && Asset.getAsset(attachment.getAssetId()) == null) {
