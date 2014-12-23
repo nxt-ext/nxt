@@ -132,7 +132,11 @@ public final class Exchange {
     }
 
     public static DbIterator<Exchange> getExchanges(long transactionId) {
-        return exchangeTable.getManyBy(new DbClause.LongClause("transaction_id", transactionId), 0, -1, " ORDER BY db_id DESC ");
+        return exchangeTable.getManyBy(new DbClause.LongClause("transaction_id", transactionId), 0, -1, " ORDER BY height DESC ");
+    }
+
+    public static DbIterator<Exchange> getOfferExchanges(long offerId, int from, int to) {
+        return exchangeTable.getManyBy(new DbClause.LongClause("offer_id", offerId), from, to, " ORDER BY height DESC ");
     }
 
     public static int getExchangeCount(long currencyId) {

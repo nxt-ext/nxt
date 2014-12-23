@@ -27,11 +27,12 @@ public final class GetExchangesByExchangeRequest extends APIServlet.APIRequestHa
         }
         long transactionId = Convert.parseUnsignedLong(transactionIdString);
         boolean includeCurrencyInfo = !"false".equalsIgnoreCase(req.getParameter("includeCurrencyInfo"));
-        DbIterator<Exchange> exchanges = Exchange.getExchanges(transactionId);
         JSONObject response = new JSONObject();
         JSONArray exchangesData = new JSONArray();
-        while (exchanges.hasNext()) {
-            exchangesData.add(JSONData.exchange(exchanges.next(), includeCurrencyInfo));
+        try (DbIterator<Exchange> exchanges = Exchange.getExchanges(transactionId)) {
+            while (exchanges.hasNext()) {
+                exchangesData.add(JSONData.exchange(exchanges.next(), includeCurrencyInfo));
+            }
         }
         response.put("exchanges", exchangesData);
         return response;

@@ -5,6 +5,8 @@ import nxt.Alias;
 import nxt.Asset;
 import nxt.Constants;
 import nxt.Currency;
+import nxt.CurrencyBuyOffer;
+import nxt.CurrencySellOffer;
 import nxt.DigitalGoodsStore;
 import nxt.Nxt;
 import nxt.NxtException;
@@ -150,6 +152,42 @@ final class ParameterParser {
             throw new ParameterException(UNKNOWN_CURRENCY);
         }
         return currency;
+    }
+
+    static CurrencyBuyOffer getBuyOffer(HttpServletRequest req) throws ParameterException {
+        String offerValue = Convert.emptyToNull(req.getParameter("offer"));
+        if (offerValue == null) {
+            throw new ParameterException(MISSING_OFFER);
+        }
+        CurrencyBuyOffer offer;
+        try {
+            long offerId = Convert.parseUnsignedLong(offerValue);
+            offer = CurrencyBuyOffer.getOffer(offerId);
+        } catch (RuntimeException e) {
+            throw new ParameterException(INCORRECT_OFFER);
+        }
+        if (offer == null) {
+            throw new ParameterException(UNKNOWN_OFFER);
+        }
+        return offer;
+    }
+
+    static CurrencySellOffer getSellOffer(HttpServletRequest req) throws ParameterException {
+        String offerValue = Convert.emptyToNull(req.getParameter("offer"));
+        if (offerValue == null) {
+            throw new ParameterException(MISSING_OFFER);
+        }
+        CurrencySellOffer offer;
+        try {
+            long offerId = Convert.parseUnsignedLong(offerValue);
+            offer = CurrencySellOffer.getOffer(offerId);
+        } catch (RuntimeException e) {
+            throw new ParameterException(INCORRECT_OFFER);
+        }
+        if (offer == null) {
+            throw new ParameterException(UNKNOWN_OFFER);
+        }
+        return offer;
     }
 
     static long getQuantityQNT(HttpServletRequest req) throws ParameterException {
