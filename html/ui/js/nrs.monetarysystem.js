@@ -201,7 +201,7 @@ var NRS = (function(NRS, $, undefined) {
 
 	NRS.loadCurrencyOffers = function(type, currencyId, refresh) {
 		NRS.sendRequest("get" + type.capitalize() + "Offers+", {
-			"currency": currencyId,
+			"currency": currencyId, "availableOnly": "true",
 			"firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
 			"lastIndex": NRS.pageNumber * NRS.itemsPerPage
 		}, function(response) {
