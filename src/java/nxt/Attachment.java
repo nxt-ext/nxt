@@ -154,7 +154,7 @@ public interface Attachment extends Appendix {
 
         @Override
         public TransactionType getTransactionType() {
-            return TransactionType.Payment.PENDING_PAYMENT_VOTE_CASTING;
+            return TransactionType.Messaging.PENDING_PAYMENT_VOTE_CASTING;
         }
 
         public long[] getPendingTransactionsIds() {

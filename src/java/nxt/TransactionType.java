@@ -16,7 +16,6 @@ public abstract class TransactionType {
     static final byte TYPE_MONETARY_SYSTEM = 5;
 
     private static final byte SUBTYPE_PAYMENT_ORDINARY_PAYMENT = 0;
-    private static final byte SUBTYPE_PENDING_PAYMENT_VOTE_CASTING = 1;
 
     private static final byte SUBTYPE_MESSAGING_ARBITRARY_MESSAGE = 0;
     private static final byte SUBTYPE_MESSAGING_ALIAS_ASSIGNMENT = 1;
@@ -27,6 +26,7 @@ public abstract class TransactionType {
     private static final byte SUBTYPE_MESSAGING_ALIAS_SELL = 6;
     private static final byte SUBTYPE_MESSAGING_ALIAS_BUY = 7;
     private static final byte SUBTYPE_MESSAGING_ALIAS_DELETE = 8;
+    private static final byte SUBTYPE_PENDING_PAYMENT_VOTE_CASTING = 9;
 
     private static final byte SUBTYPE_COLORED_COINS_ASSET_ISSUANCE = 0;
     private static final byte SUBTYPE_COLORED_COINS_ASSET_TRANSFER = 1;
@@ -62,8 +62,6 @@ public abstract class TransactionType {
                 switch (subtype) {
                     case SUBTYPE_PAYMENT_ORDINARY_PAYMENT:
                         return Payment.ORDINARY;
-                    case SUBTYPE_PENDING_PAYMENT_VOTE_CASTING:
-                        return Payment.PENDING_PAYMENT_VOTE_CASTING;
                     default:
                         return null;
                 }
@@ -87,6 +85,8 @@ public abstract class TransactionType {
                         return Messaging.ALIAS_BUY;
                     case SUBTYPE_MESSAGING_ALIAS_DELETE:
                         return Messaging.ALIAS_DELETE;
+                    case SUBTYPE_PENDING_PAYMENT_VOTE_CASTING:
+                        return Messaging.PENDING_PAYMENT_VOTE_CASTING;
                     default:
                         return null;
                 }
@@ -285,99 +285,6 @@ public abstract class TransactionType {
             void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
                 if (transaction.getAmountNQT() <= 0 || transaction.getAmountNQT() >= Constants.MAX_BALANCE_NQT) {
                     throw new NxtException.NotValidException("Invalid ordinary payment");
-                }
-            }
-        };
-
-
-        //TODO: why is this a Payment? shouldn't it be Messaging? and does voting apply to ordinary payment transactions only?
-        public static final TransactionType PENDING_PAYMENT_VOTE_CASTING = new Payment() {
-
-            @Override
-            public final byte getSubtype() {
-                return TransactionType.SUBTYPE_PENDING_PAYMENT_VOTE_CASTING;
-            }
-
-            @Override
-            Attachment.PendingPaymentVoteCasting parseAttachment(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
-                return new Attachment.PendingPaymentVoteCasting(buffer, transactionVersion);
-            }
-
-            @Override
-            Attachment.PendingPaymentVoteCasting parseAttachment(JSONObject attachmentData) throws NxtException.NotValidException {
-                return new Attachment.PendingPaymentVoteCasting(attachmentData);
-            }
-
-            @Override
-            public boolean canHaveRecipient() {
-                return false;
-            }
-
-            @Override
-            void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
-
-                Attachment.PendingPaymentVoteCasting att = (Attachment.PendingPaymentVoteCasting) transaction.getAttachment();
-                long[] pendingIds = att.getPendingTransactionsIds();
-                if (pendingIds.length > Constants.MAX_VOTES_PER_VOTING_TRANSACTION) {
-                    throw new NxtException.NotValidException("No more than "+Constants.MAX_VOTES_PER_VOTING_TRANSACTION
-                                                                +" votes allowed for two-phased multivoting");
-                }
-
-                long voterId = transaction.getSenderId();
-                for (long pendingId : pendingIds) {
-                    PendingTransactionPoll poll = PendingTransactionPoll.getPoll(pendingId);
-                    if (poll == null) {
-                        System.out.println("Wrong pending transaction: " + pendingId); //TODO: Logger
-                        throw new NxtException.NotValidException("Wrong pending transaction");
-                    }
-
-                    if(poll.isFinished()){
-                        throw new NxtException.NotValidException("Attempt to vote on finished pending transaction");
-                    }
-
-                    long[] whitelist = poll.getWhitelist();
-                    if (whitelist != null && whitelist.length > 0 && Arrays.binarySearch(whitelist, voterId) == -1) {
-                        throw new NxtException.NotValidException("Voter is not in the pending transaction whitelist");
-                    }
-
-                    long[] blacklist = poll.getBlacklist();
-                    if (blacklist != null && blacklist.length > 0 && Arrays.binarySearch(blacklist, voterId) != -1) {
-                        throw new NxtException.NotValidException("Voter is in the pending transaction whitelist");
-                    }
-
-                    if (VotePhased.isVoteGiven(pendingId, transaction.getSenderId())) {
-                        // TODO: Is the pendingIds array itself also checked for duplicate ids somewhere? isDuplicate enough?
-                        throw new NxtException.NotValidException("Double voting attempt");
-                    }
-                }
-            }
-
-            @Override
-            boolean isDuplicate(Transaction transaction, Map<TransactionType, Map<String,Boolean>> duplicates) {
-                Attachment.PendingPaymentVoteCasting attachment = (Attachment.PendingPaymentVoteCasting) transaction.getAttachment();
-                String voter = Convert.toUnsignedLong(transaction.getSenderId());
-                long[] pendingTransactionIds = attachment.getPendingTransactionsIds();
-                for(long pendingTransactionId : pendingTransactionIds){
-                    String compositeKey = voter + Convert.toUnsignedLong(pendingTransactionId);
-                    if(isDuplicate(Payment.PENDING_PAYMENT_VOTE_CASTING, compositeKey, duplicates, true)){
-                        return true;
-                    }
-                }
-                return false;
-            }
-
-            @Override
-            final void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
-                Attachment.PendingPaymentVoteCasting attachment = (Attachment.PendingPaymentVoteCasting) transaction.getAttachment();
-                long[] pendingTransactionsIds = attachment.getPendingTransactionsIds();
-                for (long pendingTransactionId : pendingTransactionsIds) {
-                    PendingTransactionPoll poll = PendingTransactionPoll.getPoll(pendingTransactionId);
-
-                    if (VotePhased.addVote(poll, transaction)) {
-                        Transaction pendingTransaction = TransactionDb.findTransaction(pendingTransactionId);
-                        pendingTransaction.getTwoPhased().commit(pendingTransaction);
-                        PendingTransactionPoll.finishPoll(poll);
-                    }
                 }
             }
         };
@@ -869,6 +776,96 @@ public abstract class TransactionType {
                 return false;
             }
 
+        };
+
+        public static final TransactionType PENDING_PAYMENT_VOTE_CASTING = new Messaging() {
+            @Override
+            public final byte getSubtype() {
+                return TransactionType.SUBTYPE_PENDING_PAYMENT_VOTE_CASTING;
+            }
+
+            @Override
+            Attachment.PendingPaymentVoteCasting parseAttachment(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
+                return new Attachment.PendingPaymentVoteCasting(buffer, transactionVersion);
+            }
+
+            @Override
+            Attachment.PendingPaymentVoteCasting parseAttachment(JSONObject attachmentData) throws NxtException.NotValidException {
+                return new Attachment.PendingPaymentVoteCasting(attachmentData);
+            }
+
+            @Override
+            public boolean canHaveRecipient() {
+                return false;
+            }
+
+            @Override
+            void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
+
+                Attachment.PendingPaymentVoteCasting att = (Attachment.PendingPaymentVoteCasting) transaction.getAttachment();
+                long[] pendingIds = att.getPendingTransactionsIds();
+                if (pendingIds.length > Constants.MAX_VOTES_PER_VOTING_TRANSACTION) {
+                    throw new NxtException.NotValidException("No more than "+Constants.MAX_VOTES_PER_VOTING_TRANSACTION
+                            +" votes allowed for two-phased multivoting");
+                }
+
+                long voterId = transaction.getSenderId();
+                for (long pendingId : pendingIds) {
+                    PendingTransactionPoll poll = PendingTransactionPoll.getPoll(pendingId);
+                    if (poll == null) {
+                        System.out.println("Wrong pending transaction: " + pendingId); //TODO: Logger
+                        throw new NxtException.NotValidException("Wrong pending transaction");
+                    }
+
+                    if(poll.isFinished()){
+                        throw new NxtException.NotValidException("Attempt to vote on finished pending transaction");
+                    }
+
+                    long[] whitelist = poll.getWhitelist();
+                    if (whitelist != null && whitelist.length > 0 && Arrays.binarySearch(whitelist, voterId) == -1) {
+                        throw new NxtException.NotValidException("Voter is not in the pending transaction whitelist");
+                    }
+
+                    long[] blacklist = poll.getBlacklist();
+                    if (blacklist != null && blacklist.length > 0 && Arrays.binarySearch(blacklist, voterId) != -1) {
+                        throw new NxtException.NotValidException("Voter is in the pending transaction whitelist");
+                    }
+
+                    if (VotePhased.isVoteGiven(pendingId, transaction.getSenderId())) {
+                        // TODO: Is the pendingIds array itself also checked for duplicate ids somewhere? isDuplicate enough?
+                        throw new NxtException.NotValidException("Double voting attempt");
+                    }
+                }
+            }
+
+            @Override
+            boolean isDuplicate(Transaction transaction, Map<TransactionType, Map<String,Boolean>> duplicates) {
+                Attachment.PendingPaymentVoteCasting attachment = (Attachment.PendingPaymentVoteCasting) transaction.getAttachment();
+                String voter = Convert.toUnsignedLong(transaction.getSenderId());
+                long[] pendingTransactionIds = attachment.getPendingTransactionsIds();
+                for(long pendingTransactionId : pendingTransactionIds){
+                    String compositeKey = voter + Convert.toUnsignedLong(pendingTransactionId);
+                    if(isDuplicate(Messaging.PENDING_PAYMENT_VOTE_CASTING, compositeKey, duplicates, true)){
+                        return true;
+                    }
+                }
+                return false;
+            }
+
+            @Override
+            final void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
+                Attachment.PendingPaymentVoteCasting attachment = (Attachment.PendingPaymentVoteCasting) transaction.getAttachment();
+                long[] pendingTransactionsIds = attachment.getPendingTransactionsIds();
+                for (long pendingTransactionId : pendingTransactionsIds) {
+                    PendingTransactionPoll poll = PendingTransactionPoll.getPoll(pendingTransactionId);
+
+                    if (VotePhased.addVote(poll, transaction)) {
+                        Transaction pendingTransaction = TransactionDb.findTransaction(pendingTransactionId);
+                        pendingTransaction.getTwoPhased().commit(pendingTransaction);
+                        PendingTransactionPoll.finishPoll(poll);
+                    }
+                }
+            }
         };
 
         public static final TransactionType HUB_ANNOUNCEMENT = new Messaging() {
