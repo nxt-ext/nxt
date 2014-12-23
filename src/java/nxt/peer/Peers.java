@@ -336,9 +336,11 @@ public final class Peers {
                 try {
 
                     if (!hasEnoughConnectedPublicPeers(Peers.maxNumberOfConnectedPublicPeers)) {
-                        PeerImpl peer = (PeerImpl)getAnyPeer(ThreadLocalRandom.current().nextInt(2) == 0 ? Peer.State.NON_CONNECTED : Peer.State.DISCONNECTED, false);
-                        if (peer != null) {
-                            peer.connect();
+                        for (int i = 0; i < 10; i++) {
+                            PeerImpl peer = (PeerImpl) getAnyPeer(ThreadLocalRandom.current().nextInt(2) == 0 ? Peer.State.NON_CONNECTED : Peer.State.DISCONNECTED, false);
+                            if (peer != null) {
+                                peer.connect();
+                            }
                         }
                     }
 
@@ -743,7 +745,7 @@ public final class Peers {
         if (selectedPeers.isEmpty()) {
             return null;
         }
-        if (! Peers.enableHallmarkProtection) {
+        if (! Peers.enableHallmarkProtection || ThreadLocalRandom.current().nextInt(3) == 0) {
             return selectedPeers.get(ThreadLocalRandom.current().nextInt(selectedPeers.size()));
         }
         long totalWeight = 0;

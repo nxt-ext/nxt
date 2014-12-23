@@ -966,5 +966,7 @@
     "offer": "Offer",
     "founders": "Founders",
     "alias_deletion": "Alias Deletion",
+    "no_open_sell_offers": "No open sell offers.",
+    "no_open_buy_offers": "No open buy offers.",
     "": ""
 }

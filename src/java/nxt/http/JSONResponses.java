@@ -140,6 +140,9 @@ public final class JSONResponses {
     public static final JSONStreamAware MISSING_CURRENCY = missing("currency");
     public static final JSONStreamAware UNKNOWN_CURRENCY = unknown("currency");
     public static final JSONStreamAware INCORRECT_CURRENCY = incorrect("currency");
+    public static final JSONStreamAware MISSING_OFFER = missing("offer");
+    public static final JSONStreamAware UNKNOWN_OFFER = unknown("offer");
+    public static final JSONStreamAware INCORRECT_OFFER = incorrect("offer");
     public static final JSONStreamAware INCORRECT_MESSAGE_PATTERN_REGEX = incorrect("messagePatternRegex");
     public static final JSONStreamAware INCORRECT_MESSAGE_PATTERN_FLAGS = incorrect("messagePatternFlags");
 
