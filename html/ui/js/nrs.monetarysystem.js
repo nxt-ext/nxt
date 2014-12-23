@@ -127,13 +127,6 @@ var NRS = (function(NRS, $, undefined) {
 	/* Search on Currencies Page */
 	$("#currencies_search").on("submit", function(e, data) {
 		e.preventDefault();
-
-		//refresh is true if data is refreshed automatically by the system (when a new block arrives)
-		var refresh = false;
-		if (data && data.refresh) {
-			refresh = true;
-		}
-
 		NRS.pageNumber = 1;
 		var requestAPI = "searchCurrencies+";
 		var query = $.trim($("#currencies_search").find("input[name=searchquery]").val());
