@@ -154,7 +154,6 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.getCurrencyRows = function(response) {
 		var rows = "";
 		for (var i = 0; i < response.currencies.length; i++) {
-			var currency_type = "";
 			var currency = response.currencies[i];
 			var name = String(currency.name).escapeHTML();
 			var currencyId = String(currency.currency).escapeHTML();
@@ -162,27 +161,13 @@ var NRS = (function(NRS, $, undefined) {
 			var resSupply = NRS.convertToQNTf(currency.reserveSupply, currency.decimals);
 			var decimals = String(currency.decimals).escapeHTML();
 			var minReserve = String(currency.minReservePerUnitNQT).escapeHTML();
-			if (NRS.isExchangeable(currency.type)) {
-				currency_type += "<i title='" + $.t('exchangeable') + "' class='fa fa-exchange'></i> ";
-			}
-			if (NRS.isControllable(currency.type)) {
-				currency_type += "<i title='" + $.t('controllable') + "' class='fa fa-sliders'></i> ";
-			}
-			if (NRS.isReservable(currency.type)) {
-				currency_type += "<i title='" + $.t('reservable') + "' class='fa fa-university'></i> ";
-			}
-			if (NRS.isClaimable(currency.type)) {
-				currency_type += "<i title='" + $.t('claimable') + "' class='ion-android-archive'></i> ";
-			}
-			if (NRS.isMintable(currency.type)) {
-				currency_type += "<i title='" + $.t('mintable') + "' class='fa fa-money'></i> ";
-			}
+			var typeIcons = NRS.getTypeIcons(currency.type);
 			rows += "<tr>" +
 				"<td>" +
 					"<a href='#' data-transaction='" + currencyId + "' >" + code + "</a>" +
 				"</td>" +
 				"<td>" + name + "</td>" +
-				"<td>" + currency_type + "</td>" +
+				"<td>" + typeIcons + "</td>" +
 				"<td>" + NRS.formatQuantity(currency.currentSupply, currency.decimals) + "</td>" +
 				"<td>" + NRS.formatQuantity(currency.maxSupply, currency.decimals) + "</td>" +
 				"<td>";
@@ -191,6 +176,26 @@ var NRS = (function(NRS, $, undefined) {
 				rows += "</td></tr>";
 		}
 		return rows;
+	};
+
+	NRS.getTypeIcons = function(type) {
+		var typeIcons = "";
+		if (NRS.isExchangeable(type)) {
+			typeIcons += "<i title='" + $.t('exchangeable') + "' class='fa fa-exchange'></i> ";
+		}
+		if (NRS.isControllable(type)) {
+			typeIcons += "<i title='" + $.t('controllable') + "' class='fa fa-sliders'></i> ";
+		}
+		if (NRS.isReservable(type)) {
+			typeIcons += "<i title='" + $.t('reservable') + "' class='fa fa-university'></i> ";
+		}
+		if (NRS.isClaimable(type)) {
+			typeIcons += "<i title='" + $.t('claimable') + "' class='ion-android-archive'></i> ";
+		}
+		if (NRS.isMintable(type)) {
+			typeIcons += "<i title='" + $.t('mintable') + "' class='fa fa-money'></i> ";
+		}
+		return typeIcons;
 	};
 
 	NRS.currenciesTableLayout = function() {
@@ -651,21 +656,24 @@ var NRS = (function(NRS, $, undefined) {
 						var code = String(currency.code).escapeHTML();
 						var name = String(currency.name).escapeHTML();
 						var decimals = String(currency.decimals).escapeHTML();
+						var typeIcons = NRS.getTypeIcons(currency.type);
+						var isOfferEnabled = NRS.isExchangeable(currency.type) && (!NRS.isControllable(currency.type) || NRS.account == currency.issuerAccount);
 						rows += "<tr>" +
 							"<td>" +
 								"<a href='#' data-transaction='" + currencyId + "' >" + code + "</a>" +
 							"</td>" +
 							"<td>" + currency.name + "</td>" +
+							"<td>" + typeIcons + "</td>" +
 							"<td>" + NRS.formatQuantity(currency.unconfirmedUnits, currency.decimals) + "</td>" +
 							"<td>" +
 								"<a href='#' class='btn btn-xs btn-default' data-toggle='modal' data-target='#transfer_currency_modal' data-currency='" + String(currency.currency).escapeHTML() + "' data-code='" + code + "' data-decimals='" + decimals + "'>" + $.t("transfer") + "</a> " +
-								"<a href='#' class='btn btn-xs btn-default' data-toggle='modal' data-target='#publish_exchange_offer_modal' data-currency='" + String(currency.currency).escapeHTML() + "' data-code='" + code + "' data-decimals='" + decimals + "' " + (!NRS.isExchangeable(currency.type) ? "disabled" : "") + " >" + $.t("offer") + "</a> " +
+								"<a href='#' class='btn btn-xs btn-default' data-toggle='modal' data-target='#publish_exchange_offer_modal' data-currency='" + String(currency.currency).escapeHTML() + "' data-code='" + code + "' data-decimals='" + decimals + "' " + (isOfferEnabled ? "" : "disabled") + " >" + $.t("offer") + "</a> " +
               				"<a href='#' class='btn btn-xs btn-default' data-toggle='modal' data-target='#claim_currency_modal' data-currency='" + currencyId + "' data-name='" + name + "' data-code='" + code + "' data-decimals='" + decimals + "' " + (currency.issuanceHeight <= NRS.lastBlockHeight && NRS.isClaimable(currency.type) ? "" : "disabled") + " >" + $.t("claim") + "</a> " +
 							"</td>" +
 						"</tr>";
 					}
 					var currenciesTable = $('#currencies_table');
-					currenciesTable.find('[data-i18n="type"]').hide();
+					currenciesTable.find('[data-i18n="type"]').show();
 					currenciesTable.find('[data-i18n="supply"]').hide();
 					currenciesTable.find('[data-i18n="max_supply"]').hide();
 					currenciesTable.find('[data-i18n="units"]').show();
