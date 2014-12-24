@@ -642,11 +642,13 @@ public interface Attachment extends Appendix {
         private final long pollId;
         private final byte[] pollVote;
 
-        public MessagingVoteCasting(ByteBuffer buffer, byte transactionVersion) {
+        public MessagingVoteCasting(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
             super(buffer, transactionVersion);
             pollId = buffer.getLong();
             int numberOfOptions = buffer.get();
-            //TODO: check numberOfOptions to be less than the allowed max, to prevent out of memory attacks
+            if (numberOfOptions > Constants.MAX_POLL_OPTION_COUNT) {
+                throw new NxtException.NotValidException("More than " + Constants.MAX_POLL_OPTION_COUNT + " options in a vote");
+            }
             pollVote = new byte[numberOfOptions];
             buffer.get(pollVote);
         }
