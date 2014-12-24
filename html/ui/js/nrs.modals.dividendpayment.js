@@ -37,6 +37,16 @@ var NRS = (function(NRS, $, undefined) {
         $(this).find(".dividend_payment_info").first().hide();
     });
 
+    $("#dividend_payment_amount_per_share").keydown(function(e) {
+        var decimals = NRS.currentAsset.decimals;
+
+        var charCode = !e.charCode ? e.which : e.charCode;
+        if (NRS.isControlKey(charCode) || e.ctrlKey || e.metaKey) {
+            return;
+        }
+        return NRS.validateDecimals(8-decimals, charCode, $(this).val(), e);
+   	});
+
     $("#dividend_payment_amount_per_share, #dividend_payment_height").on("blur", function() {
         var $modal = $(this).closest(".modal");
         var amountNXTPerShare = $modal.find("#dividend_payment_amount_per_share").val();
