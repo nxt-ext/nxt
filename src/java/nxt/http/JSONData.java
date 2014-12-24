@@ -514,6 +514,7 @@ final class JSONData {
         json.put("type", currency.getType());
         json.put("decimals", currency.getDecimals());
         json.put("issuanceHeight", currency.getIssuanceHeight());
+        putAccount(json, "issuerAccount", currency.getAccountId());
     }
 
     static void putAssetInfo(JSONObject json, long assetId) {
