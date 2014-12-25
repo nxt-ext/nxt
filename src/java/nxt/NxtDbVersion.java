@@ -538,11 +538,13 @@ class NxtDbVersion extends DbVersion {
             case 188:
                 apply(null);
             case 189:
+                apply(null);
+            case 190:
                 if (Constants.isTestnet) {
                     BlockchainProcessorImpl.getInstance().scheduleScan(0, true);
                 }
                 apply(null);
-            case 190:
+            case 191:
                 return;
             default:
                 throw new RuntimeException("Blockchain database inconsistent with code, probably trying to run older code on newer database");

@@ -119,9 +119,10 @@ public final class CurrencyBuyOffer extends CurrencyExchangeOffer {
         return CurrencySellOffer.getOffer(id);
     }
 
-    void increaseSupply(long delta) {
-        super.increaseSupply(delta);
+    long increaseSupply(long delta) {
+        long excess = super.increaseSupply(delta);
         buyOfferTable.insert(this);
+        return excess;
     }
 
     void decreaseLimitAndSupply(long delta) {
