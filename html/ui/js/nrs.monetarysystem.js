@@ -256,12 +256,19 @@ var NRS = (function(NRS, $, undefined) {
 					}
 
 					// The offers collection contains both real offers and unconfirmed offers and the code below works for both types
+					var transactionLink;
+					if (offer.unconfirmed) {
+						transactionLink = "<a href='#' data-transaction='" + String(offer.transaction).escapeHTML() + "'>/</a>";
+					} else {
+						transactionLink = "<a href='#' data-transaction='" + String(offer.offer).escapeHTML() + "'>" + offer.height + "</a>";
+					}
 					var accountRS = offer.accountRS || offer.senderRS;
                accountRS = String(accountRS).escapeHTML();
 					var accountLink = offer.unconfirmed ? "You - <strong>Pending</strong>" : (offer.account == NRS.account ? "<strong>You</strong>" : "<a href='#' class='user-info' data-user='" + accountRS + "'>" + accountRS + "</a>");
 					var supply = offer.supply || (type == "sell" ? offer.attachment.initialSellSupply : offer.attachment.initialBuySupply);
 					var limit = offer.limit || (type == "sell" ? offer.attachment.totalSellLimit : offer.attachment.totalBuyLimit);
                rows += "<tr>" +
+						"<td>" + transactionLink + "</td>" +
 						"<td>" + accountLink + "</td>" +
 						"<td>" + NRS.convertToQNTf(supply, decimals) + "</td>" +
 						"<td>" + NRS.convertToQNTf(limit, decimals) + "</td>" +
