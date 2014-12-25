@@ -968,5 +968,8 @@
     "alias_deletion": "Alias Deletion",
     "no_open_sell_offers": "No open sell offers.",
     "no_open_buy_offers": "No open buy offers.",
+    "error_no_contacts_available": "There are no contacts available",
+    "export_contact": "Export Contacts",
+    "import_contact": "Import Contacts",
     "": ""
 }
