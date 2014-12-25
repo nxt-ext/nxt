@@ -905,18 +905,7 @@ var NRS = (function(NRS, $, undefined) {
 					break;
 				case 4:
 					if (currency) {
-						var rateUnitsStr = " [ NXT / " + currency.code + " ]";
-						var data = {
-							"type": $.t("exchange_offer"),
-							"code": currency.code,
-							"initial_buy_supply": [transaction.attachment.initialBuySupply, currency.decimals],
-							"total_buy_limit": [transaction.attachment.totalBuyLimit, currency.decimals],
-							"buy_rate_formatted_html": NRS.calculateOrderPricePerWholeQNT(transaction.attachment.buyRateNQT, currency.decimals) + rateUnitsStr,
-							"initial_sell_supply": [transaction.attachment.initialSellSupply, currency.decimals],
-							"total_sell_limit": [transaction.attachment.totalSellLimit, currency.decimals],
-							"sell_rate_formatted_html": NRS.calculateOrderPricePerWholeQNT(transaction.attachment.sellRateNQT, currency.decimals) + rateUnitsStr,
-							"expiration_height": transaction.attachment.expirationHeight
-						};
+						data = NRS.formatCurrencyOffer(currency, transaction);
 					} else {
 						data = NRS.getUnknownCurrencyData(transaction);
 					}
@@ -1090,6 +1079,69 @@ var NRS = (function(NRS, $, undefined) {
 			}
 			data["units_exchanged"] = [exchangedUnits, currency.decimals];
 			data["total_exchanged"] = NRS.formatAmount(exchangedTotal);
+		}, null, false);
+		return data;
+	};
+
+	NRS.formatCurrencyOffer = function(currency, transaction) {
+		var rateUnitsStr = " [ NXT / " + currency.code + " ]";
+		var buyOffer;
+		var sellOffer;
+		NRS.sendRequest("getOffer", {
+			"offer": transaction.transaction
+		}, function(response) {
+			buyOffer = response.buyOffer;
+			sellOffer = response.sellOffer;
+		}, null, false);
+		var data = {
+			"type": $.t("exchange_offer"),
+			"code": currency.code,
+			"buy_supply_formatted_html": NRS.formatQuantity(buyOffer.supply, currency.decimals) + " (initial: " + NRS.formatQuantity(transaction.attachment.initialBuySupply, currency.decimals) + ")",
+			"buy_limit_formatted_html": NRS.formatQuantity(buyOffer.limit, currency.decimals) + " (initial: " + NRS.formatQuantity(transaction.attachment.totalBuyLimit, currency.decimals) + ")",
+			"buy_rate_formatted_html": NRS.calculateOrderPricePerWholeQNT(transaction.attachment.buyRateNQT, currency.decimals) + rateUnitsStr,
+			"sell_supply_formatted_html": NRS.formatQuantity(sellOffer.supply, currency.decimals) + " (initial: " + NRS.formatQuantity(transaction.attachment.initialSellSupply, currency.decimals) + ")",
+			"sell_limit_formatted_html": NRS.formatQuantity(sellOffer.limit, currency.decimals) + " (initial: " + NRS.formatQuantity(transaction.attachment.totalSellLimit, currency.decimals) + ")",
+			"sell_rate_formatted_html": NRS.calculateOrderPricePerWholeQNT(transaction.attachment.sellRateNQT, currency.decimals) + rateUnitsStr,
+			"expiration_height": transaction.attachment.expirationHeight
+		};
+		var rows = "";
+		NRS.sendRequest("getExchangesByOffer", {
+			"offer": transaction.transaction
+		}, function(response) {
+			var exchangedUnits = BigInteger.ZERO;
+			var exchangedTotal = BigInteger.ZERO;
+			if (response.exchanges && response.exchanges.length > 0) {
+				rows = "<table class='table table-striped'><thead><tr>" +
+				"<th>" + $.t("Date") + "</th>" +
+				"<th>" + $.t("Type") + "</th>" +
+				"<th>" + $.t("Units") + "</th>" +
+				"<th>" + $.t("Rate") + "</th>" +
+				"<th>" + $.t("Total") + "</th>" +
+				"<tr></thead><tbody>";
+				for (var i = 0; i < response.exchanges.length; i++) {
+					var exchange = response.exchanges[i];
+					exchangedUnits = exchangedUnits.add(new BigInteger(exchange.units));
+					exchangedTotal = exchangedTotal.add(new BigInteger(exchange.units).multiply(new BigInteger(exchange.rateNQT)));
+					var exchangeType = exchange.seller == transaction.sender ? "Buy" : "Sell";
+					if (exchange.seller == exchange.buyer) {
+						exchangeType = "Same";
+					}
+					rows += "<tr>" +
+					"<td><a href='#' data-transaction='" + String(exchange.transaction).escapeHTML() + "'>" + NRS.formatTimestamp(exchange.timestamp) + "</a>" +
+					"<td>" + exchangeType + "</td>" +
+					"<td>" + NRS.formatQuantity(exchange.units, exchange.decimals) + "</td>" +
+					"<td>" + NRS.calculateOrderPricePerWholeQNT(exchange.rateNQT, exchange.decimals) + "</td>" +
+					"<td>" + NRS.formatAmount(NRS.calculateOrderTotalNQT(exchange.units, exchange.rateNQT)) +
+					"</td>" +
+					"</tr>";
+				}
+				rows += "</tbody></table>";
+				data["exchanges_formatted_html"] = rows;
+			} else {
+				data["exchanges"] = $.t("no_matching_exchange_request");
+			}
+			data["units_exchanged"] = [exchangedUnits, currency.decimals];
+			data["total_exchanged"] = NRS.formatAmount(exchangedTotal) + " [NXT]";
 		}, null, false);
 		return data;
 	};
