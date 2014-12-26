@@ -98,11 +98,12 @@ public abstract class CurrencyExchangeOffer {
             remainingUnits = Convert.safeSubtract(remainingUnits, curUnits);
 
             offer.decreaseLimitAndSupply(curUnits);
-            offer.getCounterOffer().increaseSupply(curUnits);
+            long excess = offer.getCounterOffer().increaseSupply(curUnits);
 
             Account counterAccount = Account.getAccount(offer.getAccountId());
             counterAccount.addToBalanceNQT(-curAmountNQT);
             counterAccount.addToCurrencyUnits(currencyId, curUnits);
+            counterAccount.addToUnconfirmedCurrencyUnits(currencyId, excess);
             Exchange.addExchange(transaction, currencyId, offer, account.getId(), offer.getAccountId(), curUnits);
         }
 
@@ -137,11 +138,13 @@ public abstract class CurrencyExchangeOffer {
             remainingAmountNQT = Convert.safeSubtract(remainingAmountNQT, curAmountNQT);
 
             offer.decreaseLimitAndSupply(curUnits);
-            offer.getCounterOffer().increaseSupply(curUnits);
+            long excess = offer.getCounterOffer().increaseSupply(curUnits);
 
             Account counterAccount = Account.getAccount(offer.getAccountId());
             counterAccount.addToBalanceNQT(curAmountNQT);
-            counterAccount.addToUnconfirmedBalanceNQT(Convert.safeMultiply(curUnits, offer.getRateNQT() - offer.getCounterOffer().getRateNQT()));
+            counterAccount.addToUnconfirmedBalanceNQT(Convert.safeAdd(
+                    Convert.safeMultiply(curUnits - excess, offer.getRateNQT() - offer.getCounterOffer().getRateNQT()),
+                    Convert.safeMultiply(excess, offer.getRateNQT())));
             counterAccount.addToCurrencyUnits(currencyId, -curUnits);
             Exchange.addExchange(transaction, currencyId, offer, offer.getAccountId(), account.getId(), curUnits);
         }
@@ -251,8 +254,10 @@ public abstract class CurrencyExchangeOffer {
 
     public abstract CurrencyExchangeOffer getCounterOffer();
 
-    void increaseSupply(long delta) {
-        supply += delta;
+    long increaseSupply(long delta) {
+        long excess = Math.max(Convert.safeAdd(supply, Convert.safeSubtract(delta, limit)), 0);
+        supply += delta - excess;
+        return excess;
     }
 
     void decreaseLimitAndSupply(long delta) {

@@ -17,7 +17,7 @@ public final class GetAccountExchangeRequests extends APIServlet.APIRequestHandl
     static final GetAccountExchangeRequests instance = new GetAccountExchangeRequests();
 
     private GetAccountExchangeRequests() {
-        super(new APITag[] {APITag.ACCOUNTS}, "account", "currency", "firstIndex", "lastIndex");
+        super(new APITag[] {APITag.ACCOUNTS, APITag.MS}, "account", "currency", "firstIndex", "lastIndex");
     }
 
     @Override

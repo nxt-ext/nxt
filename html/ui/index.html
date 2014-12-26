@@ -547,6 +547,9 @@
                     	<h1 data-i18n="contacts">Contacts</h1>
                     	<div style="position:absolute;top:9px;right:9px;">
 							<button id="add_contact_button" type="button" class="btn btn-default" data-toggle="modal" data-target="#add_contact_modal" data-i18n="add_contact">Add Contact</button>
+                            <button id="export_contacts_button" type="button" class="btn btn-default" data-i18n="export_contact">Export Contacts</button>
+                            <input type="file" id="import_contacts_button_field" />
+                            <button id="import_contacts_button" type="button" class="btn btn-default" data-i18n="import_contact">Import Contacts</button>
 						</div>
                     </section>
                 	
@@ -1317,6 +1320,7 @@
 		                 	                <table class="table table-striped" id="ms_open_sell_orders_table">
 												<thead>
 												<tr>
+												    <th data-i18n="height">Height</th>
 												    <th data-i18n="account">Account</th>
 												    <th data-i18n="units">Units</th>
 												    <th data-i18n="limit">Limit</th>
@@ -1401,6 +1405,7 @@
 		                 		            <table class="table table-striped" id="ms_open_buy_orders_table">
 												<thead>
 												<tr>
+												    <th data-i18n="height">Height</th>
 												    <th data-i18n="account">Account</th>
 												    <th data-i18n="units">Units</th>
 												    <th data-i18n="limit">Limit</th>

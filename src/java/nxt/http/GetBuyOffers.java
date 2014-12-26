@@ -46,7 +46,9 @@ public final class GetBuyOffers extends APIServlet.APIRequestHandler {
                 Currency currency = ParameterParser.getCurrency(req);
                 Account account = ParameterParser.getAccount(req);
                 CurrencyBuyOffer offer = CurrencyBuyOffer.getOffer(currency, account);
-                offerData.add(JSONData.offer(offer));
+                if (offer != null) {
+                    offerData.add(JSONData.offer(offer));
+                }
                 return response;
             }
             while (offers.hasNext()) {

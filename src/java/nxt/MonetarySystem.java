@@ -391,6 +391,10 @@ public abstract class MonetarySystem extends TransactionType {
                     || attachment.getExpirationHeight() < 0) {
                 throw new NxtException.NotValidException("Invalid exchange offer: " + attachment.getJSONObject());
             }
+            if (attachment.getTotalBuyLimit() < attachment.getInitialBuySupply()
+                || attachment.getTotalSellLimit() < attachment.getInitialSellSupply()) {
+                throw new NxtException.NotValidException("Initial supplies must not exceed total limits");
+            }
             Currency currency = Currency.getCurrency(attachment.getCurrencyId());
             CurrencyType.validate(currency, transaction);
             if (! currency.isActive()) {

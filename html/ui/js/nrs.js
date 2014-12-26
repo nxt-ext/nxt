@@ -818,7 +818,7 @@ var NRS = (function(NRS, $, undefined) {
 			accountLeasingStatus = $.t("balance_is_leased_out", {
 				"start": String(NRS.accountInfo.currentLeasingHeightFrom).escapeHTML(),
 				"end": String(NRS.accountInfo.currentLeasingHeightTo).escapeHTML(),
-				"account": String(NRS.accountInfo.currentLessee).escapeHTML()
+				"account": String(NRS.accountInfo.currentLesseeRS).escapeHTML()
 			});
 			$("#lease_balance_message").html($.t("balance_leased_out_help"));
 		} else if (NRS.lastBlockHeight < NRS.accountInfo.currentLeasingHeightTo) {
@@ -826,7 +826,7 @@ var NRS = (function(NRS, $, undefined) {
 			accountLeasingStatus = $.t("balance_will_be_leased_out", {
 				"start": String(NRS.accountInfo.currentLeasingHeightFrom).escapeHTML(),
 				"end": String(NRS.accountInfo.currentLeasingHeightTo).escapeHTML(),
-				"account": String(NRS.accountInfo.currentLessee).escapeHTML()
+				"account": String(NRS.accountInfo.currentLesseeRS).escapeHTML()
 			});
 			$("#lease_balance_message").html($.t("balance_leased_out_help"));
 		} else {
