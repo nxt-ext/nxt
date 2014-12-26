@@ -628,8 +628,8 @@ public interface Appendix {
 
         //TODO: But what about changes to unconfirmed balances, everything that happens in applyUnconfirmed,
         //  and applyAttachmentUnconfirmed? When is this going to be rolled back too?
-        //TODO: need a better name, rollback is already used for derived tables rollback
-        void rollback(Transaction transaction) {
+        //todo: by-assets verification
+        void verify(Transaction transaction) {
             long transactionId = transaction.getId();
             Account senderAccount = Account.getAccount(transaction.getSenderId());
 

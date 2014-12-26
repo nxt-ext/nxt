@@ -53,24 +53,6 @@ public class PendingTransactionPoll extends AbstractPoll {
     private final static VersionedEntityDbTable<PendingTransactionPoll> pendingTransactionsTable =
             new VersionedEntityDbTable<PendingTransactionPoll>("pending_transaction", pollDbKeyFactory) {
 
-        //TODO: this method can be removed once getting the pending transactions is optimized, see the comment in TransactionProcessorImpl
-        DbIterator<Long> finishing(int height) {
-            try {
-                Connection con = db.getConnection();
-                PreparedStatement pstmt = con.prepareStatement("SELECT id FROM " + table
-                        + " WHERE finish_height = ?  AND finished = FALSE AND latest = TRUE");
-                pstmt.setInt(1, height);
-                return new DbIterator<>(con, pstmt, new DbIterator.ResultSetReader<Long>() {
-                    @Override
-                    public Long get(Connection con, ResultSet rs) throws Exception {
-                        return rs.getLong("id");
-                    }
-                });
-            } catch (SQLException e) {
-                throw new RuntimeException(e.toString(), e);
-            }
-        }
-
         @Override
         protected PendingTransactionPoll load(Connection con, ResultSet rs) throws SQLException {
             return new PendingTransactionPoll(rs);

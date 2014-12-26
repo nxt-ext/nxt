@@ -46,19 +46,26 @@ final class TransactionProcessorImpl implements TransactionProcessor {
             public void notify(Block block) {
                 int height = block.getHeight();
                 if (height >= Constants.TWO_PHASED_TRANSACTIONS_BLOCK) {
-                    //TODO: instead of using pendingTransactionsTable.finishing(), how about doing it all in the database:
-    /*
-    PreparedStatement pstmt = con.prepareStatement("SELECT transaction.* FROM transaction, pending_transaction " +
-            " WHERE pending_transaction.id = transaction.id AND pending_transaction.finish_height = ?  AND pending_transaction.finished = FALSE " +
-            " AND pending_transaction.latest = TRUE");
-    DbIterator<TransactionImpl> transactions = Nxt.getBlockchain().getTransactions(con, pstmt);
-    */
+                    try(
+                            Connection con = Db.db.getConnection();
+                            PreparedStatement pstmt = con.prepareStatement("SELECT transaction.* FROM transaction, pending_transaction " +
+                                    " WHERE pending_transaction.id = transaction.id AND pending_transaction.finish_height = ?  AND pending_transaction.finished = FALSE " +
+                                    " AND pending_transaction.latest = TRUE")
+                            ) {
 
-                    List<PendingTransactionPoll> idsToRefuse = PendingTransactionPoll.finishing(height).toList();
-                    for (PendingTransactionPoll poll: idsToRefuse) {
-                        Transaction transaction = TransactionDb.findTransaction(poll.getId());
-                        transaction.getTwoPhased().rollback(transaction);
+                        pstmt.setInt(1, height);
+                        DbIterator<? extends Transaction> transactions = Nxt.getBlockchain().getTransactions(con, pstmt);
+
+                        while(transactions.hasNext()){
+                            Transaction transaction = transactions.next();
+                            transaction.getTwoPhased().verify(transaction);
+                        }
+                        con.close();
+                    }  catch (SQLException e) {
+                        throw new RuntimeException(e.toString(), e);
                     }
+
+
                 }
             }
         }, BlockchainProcessor.Event.AFTER_BLOCK_APPLY);
