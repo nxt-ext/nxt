@@ -16,17 +16,17 @@ public class TestMintCalculations {
         byte[] target = CurrencyMint.getTarget(4, 32, 1, 0, 100000);
         Logger.logDebugMessage("initial target: " + Arrays.toString(target));
         Assert.assertEquals(32, target.length);
-        Assert.assertArrayEquals(new byte[]{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 16}, target);
+        Assert.assertArrayEquals(new byte[]{-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 15}, target);
 
         target = CurrencyMint.getTarget(4, 32, 1, 50000, 100000);
         Logger.logDebugMessage("midway target: " + Arrays.toString(target));
         Assert.assertEquals(32, target.length);
-        Assert.assertArrayEquals(new byte[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 64, 0, 0}, target);
+        Assert.assertArrayEquals(new byte[] {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 63, 0, 0}, target);
 
         target = CurrencyMint.getTarget(4, 32, 1, 100000, 100000);
         Logger.logDebugMessage("final target: " + Arrays.toString(target));
         Assert.assertEquals(32, target.length);
-        Assert.assertArrayEquals(new byte[]{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0}, target);
+        Assert.assertArrayEquals(new byte[]{-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, 0, 0, 0}, target);
 
         target = CurrencyMint.getTarget(4, 32, 100, 100000, 100000);
         Logger.logDebugMessage("final target for 100 units: " + Arrays.toString(target));
@@ -34,7 +34,7 @@ public class TestMintCalculations {
         Assert.assertArrayEquals(new byte[]{92, -113, -62, -11, 40, 92, -113, -62, -11, 40, 92, -113, -62, -11, 40, 92, -113, -62, -11, 40, 92, -113, -62, -11, 40, 92, -113, 2, 0, 0, 0, 0}, target);
 
         try {
-            CurrencyMint.getTarget(1, 5, 1, 0, 100000);
+            CurrencyMint.getTarget(0, 5, 1, 0, 100000);
             Assert.fail();
         } catch(IllegalArgumentException e) {
             Logger.logDebugMessage("Difficulty too low");
