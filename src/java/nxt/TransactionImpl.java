@@ -15,7 +15,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 final class TransactionImpl implements Transaction {
 
@@ -45,6 +44,7 @@ final class TransactionImpl implements Transaction {
         private String fullHash;
         private int ecBlockHeight;
         private long ecBlockId;
+        private short index = -1;
 
         BuilderImpl(byte version, byte[] senderPublicKey, long amountNQT, long feeNQT, int timestamp, short deadline,
                     Attachment.AbstractAttachment attachment) {
@@ -158,6 +158,11 @@ final class TransactionImpl implements Transaction {
             return this;
         }
 
+        BuilderImpl index(short index) {
+            this.index = index;
+            return this;
+        }
+
     }
 
     private final short deadline;
@@ -185,6 +190,7 @@ final class TransactionImpl implements Transaction {
     private volatile Block block;
     private volatile byte[] signature;
     private volatile int blockTimestamp = -1;
+    private volatile short index = -1;
     private volatile long id;
     private volatile String stringId;
     private volatile long senderId;
@@ -204,6 +210,7 @@ final class TransactionImpl implements Transaction {
         this.version = builder.version;
         this.blockId = builder.blockId;
         this.height = builder.height;
+        this.index = builder.index;
         this.id = builder.id;
         this.senderId = builder.senderId;
         this.blockTimestamp = builder.blockTimestamp;
@@ -233,14 +240,9 @@ final class TransactionImpl implements Transaction {
             appendagesSize += appendage.getSize();
         }
         this.appendagesSize = appendagesSize;
-        int effectiveHeight = (height < Integer.MAX_VALUE ? height : Nxt.getBlockchain().getHeight());
-        long minimumFeeNQT = type.minimumFeeNQT(effectiveHeight, appendagesSize);
-        if (builder.feeNQT > 0 && builder.feeNQT < minimumFeeNQT) {
-            throw new NxtException.NotValidException(String.format("Requested fee %d less than the minimum fee %d",
-                    builder.feeNQT, minimumFeeNQT));
-        }
         if (builder.feeNQT <= 0) {
-            feeNQT = minimumFeeNQT;
+            int effectiveHeight = (height < Integer.MAX_VALUE ? height : Nxt.getBlockchain().getHeight());
+            feeNQT = type.minimumFeeNQT(this, effectiveHeight, appendagesSize);
         } else {
             feeNQT = builder.feeNQT;
         }
@@ -359,8 +361,21 @@ final class TransactionImpl implements Transaction {
         this.block = null;
         this.blockId = 0;
         this.blockTimestamp = -1;
+        this.index = -1;
         // must keep the height set, as transactions already having been included in a popped-off block before
         // get priority when sorted for inclusion in a new block
+    }
+
+    @Override
+    public short getIndex() {
+        if (index == -1) {
+            throw new IllegalStateException("Transaction index has not been set");
+        }
+        return index;
+    }
+
+    void setIndex(int index) {
+        this.index = (short)index;
     }
 
     @Override
@@ -695,11 +710,6 @@ final class TransactionImpl implements Transaction {
         return (int)(getId() ^ (getId() >>> 32));
     }
 
-    @Override
-    public int compareTo(Transaction other) {
-        return Long.compare(this.getId(), other.getId());
-    }
-
     public boolean verifySignature() {
         Account account = Account.getAccount(getSenderId());
         if (account == null) {
@@ -757,21 +767,29 @@ final class TransactionImpl implements Transaction {
 
     @Override
     public void validate() throws NxtException.ValidationException {
+        int blockchainHeight = Nxt.getBlockchain().getHeight();
         for (Appendix.AbstractAppendix appendage : appendages) {
             appendage.validate(this);
         }
-        long minimumFeeNQT = type.minimumFeeNQT(Nxt.getBlockchain().getHeight(), appendagesSize);
+        long minimumFeeNQT = type.minimumFeeNQT(this, blockchainHeight, appendagesSize);
         if (feeNQT < minimumFeeNQT) {
             throw new NxtException.NotCurrentlyValidException(String.format("Transaction fee %d less than minimum fee %d at height %d",
-                    feeNQT, minimumFeeNQT, Nxt.getBlockchain().getHeight()));
+                    feeNQT, minimumFeeNQT, blockchainHeight));
         }
-        if (Nxt.getBlockchain().getHeight() >= Constants.PUBLIC_KEY_ANNOUNCEMENT_BLOCK) {
-            // TODO: allow at next hard fork
-            if (recipientId != 0 /* && recipientId != getSenderId() */) {
+        if (blockchainHeight >= Constants.PUBLIC_KEY_ANNOUNCEMENT_BLOCK) {
+            if (recipientId != 0 && ! (recipientId == getSenderId() && blockchainHeight > Constants.MONETARY_SYSTEM_BLOCK)) {
                 Account recipientAccount = Account.getAccount(recipientId);
-                if ((recipientAccount == null || recipientAccount.getPublicKey() == null) && publicKeyAnnouncement == null) {
+                if (blockchainHeight < Constants.MONETARY_SYSTEM_BLOCK
+                        && (recipientAccount == null || recipientAccount.getPublicKey() == null)
+                        && publicKeyAnnouncement == null) {
                     throw new NxtException.NotCurrentlyValidException("Recipient account does not have a public key, must attach a public key announcement");
                 }
+                if (blockchainHeight >= Constants.MONETARY_SYSTEM_BLOCK && recipientAccount != null) {
+                	if (recipientAccount.getMessagePattern() != null
+                        && (message == null || ! recipientAccount.getMessagePattern().matcher(Convert.toString(message.getMessage())).matches())) {
+                    	throw new NxtException.NotCurrentlyValidException("Recipient account requires a message attachment matching " + recipientAccount.getMessagePattern().pattern());
+                	}
+            	}
             }
         }
     }
@@ -799,7 +817,7 @@ final class TransactionImpl implements Transaction {
         type.undoUnconfirmed(this, senderAccount);
     }
 
-    boolean isDuplicate(Map<TransactionType, Set<String>> duplicates) {
+    boolean isDuplicate(Map<TransactionType, Map<String, Boolean>> duplicates) {
         return type.isDuplicate(this, duplicates);
     }
 

@@ -136,6 +136,7 @@ final class TransactionDb {
                 builder.ecBlockHeight(ecBlockHeight);
                 builder.ecBlockId(ecBlockId);
             }
+            builder.index(rs.getShort("transaction_index"));
 
             return builder.build();
 
@@ -146,7 +147,7 @@ final class TransactionDb {
 
     static List<TransactionImpl> findBlockTransactions(long blockId) {
         try (Connection con = Db.db.getConnection();
-             PreparedStatement pstmt = con.prepareStatement("SELECT * FROM transaction WHERE block_id = ? ORDER BY id")) {
+             PreparedStatement pstmt = con.prepareStatement("SELECT * FROM transaction WHERE block_id = ? ORDER BY transaction_index")) {
             pstmt.setLong(1, blockId);
             try (ResultSet rs = pstmt.executeQuery()) {
                 List<TransactionImpl> list = new ArrayList<>();
@@ -165,13 +166,14 @@ final class TransactionDb {
 
     static void saveTransactions(Connection con, List<TransactionImpl> transactions) {
         try {
+            short index = 0;
             for (TransactionImpl transaction : transactions) {
                 try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO transaction (id, deadline, sender_public_key, "
                         + "recipient_id, amount, fee, referenced_transaction_full_hash, height, "
                         + "block_id, signature, timestamp, type, subtype, sender_id, attachment_bytes, "
                         + "block_timestamp, full_hash, version, has_message, has_encrypted_message, has_public_key_announcement, "
-                        + "has_encrypttoself_message, ec_block_height, ec_block_id) "
-                        + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
+                        + "has_encrypttoself_message, ec_block_height, ec_block_id, transaction_index) "
+                        + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
                     int i = 0;
                     pstmt.setLong(++i, transaction.getId());
                     pstmt.setShort(++i, transaction.getDeadline());
@@ -210,6 +212,7 @@ final class TransactionDb {
                     pstmt.setBoolean(++i, transaction.getEncryptToSelfMessage() != null);
                     pstmt.setInt(++i, transaction.getECBlockHeight());
                     DbUtils.setLongZeroToNull(pstmt, ++i, transaction.getECBlockId());
+                    pstmt.setShort(++i, index++);
                     pstmt.executeUpdate();
                 }
             }

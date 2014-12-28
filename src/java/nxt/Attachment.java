@@ -7,6 +7,7 @@ import org.json.simple.JSONObject;
 
 import java.nio.ByteBuffer;
 import java.util.Collections;
+import java.util.regex.Pattern;
 
 public interface Attachment extends Appendix {
 
@@ -253,12 +254,62 @@ public interface Attachment extends Appendix {
         @Override
         void putMyBytes(ByteBuffer buffer) {
             byte[] aliasBytes = Convert.toBytes(aliasName);
-            buffer.put((byte)aliasBytes.length);
+            buffer.put((byte) aliasBytes.length);
             buffer.put(aliasBytes);
         }
 
         @Override
         void putMyJSON(JSONObject attachment) {
+            attachment.put("alias", aliasName);
+        }
+
+        public String getAliasName(){
+            return aliasName;
+        }
+    }
+
+    public final static class MessagingAliasDelete extends AbstractAttachment {
+
+        private final String aliasName;
+
+        MessagingAliasDelete(final ByteBuffer buffer, final byte transactionVersion) throws NxtException.NotValidException {
+            super(buffer, transactionVersion);
+            this.aliasName = Convert.readString(buffer, buffer.get(), Constants.MAX_ALIAS_LENGTH);
+        }
+
+        MessagingAliasDelete(final JSONObject attachmentData) {
+            super(attachmentData);
+            this.aliasName = Convert.nullToEmpty((String) attachmentData.get("alias"));
+        }
+
+        public MessagingAliasDelete(final String aliasName) {
+            this.aliasName = aliasName;
+        }
+
+        @Override
+        String getAppendixName() {
+            return "AliasDelete";
+        }
+
+        @Override
+        public TransactionType getTransactionType() {
+            return TransactionType.Messaging.ALIAS_DELETE;
+        }
+
+        @Override
+        int getMySize() {
+            return 1 + Convert.toBytes(aliasName).length;
+        }
+
+        @Override
+        void putMyBytes(final ByteBuffer buffer) {
+            byte[] aliasBytes = Convert.toBytes(aliasName);
+            buffer.put((byte)aliasBytes.length);
+            buffer.put(aliasBytes);
+        }
+
+        @Override
+        void putMyJSON(final JSONObject attachment) {
             attachment.put("alias", aliasName);
         }
 
@@ -546,22 +597,54 @@ public interface Attachment extends Appendix {
 
         private final String name;
         private final String description;
+        private final Pattern messagePattern;
 
         MessagingAccountInfo(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
             super(buffer, transactionVersion);
             this.name = Convert.readString(buffer, buffer.get(), Constants.MAX_ACCOUNT_NAME_LENGTH);
             this.description = Convert.readString(buffer, buffer.getShort(), Constants.MAX_ACCOUNT_DESCRIPTION_LENGTH);
+            if (getVersion() < 2) {
+                this.messagePattern = null;
+            } else {
+                String regex = Convert.readString(buffer, buffer.getShort(), Constants.MAX_ACCOUNT_MESSAGE_PATTERN_LENGTH);
+                if (regex.length() > 0) {
+                    int flags = buffer.getInt();
+                    this.messagePattern = Pattern.compile(regex, flags);
+                } else {
+                    this.messagePattern = null;
+                }
+            }
         }
 
         MessagingAccountInfo(JSONObject attachmentData) {
             super(attachmentData);
             this.name = Convert.nullToEmpty((String) attachmentData.get("name"));
             this.description = Convert.nullToEmpty((String) attachmentData.get("description"));
+            if (getVersion() < 2) {
+                this.messagePattern = null;
+            } else {
+                String regex = Convert.emptyToNull((String)attachmentData.get("messagePatternRegex"));
+                if (regex != null) {
+                    int flags = ((Long) attachmentData.get("messagePatternFlags")).intValue();
+                    this.messagePattern = Pattern.compile(regex, flags);
+                } else {
+                    this.messagePattern = null;
+                }
+            }
         }
 
         public MessagingAccountInfo(String name, String description) {
+            super(1);
             this.name = name;
             this.description = description;
+            this.messagePattern = null;
+        }
+
+        public MessagingAccountInfo(String name, String description, Pattern messagePattern) {
+            super(messagePattern == null ? 1 : 2);
+            this.name = name;
+            this.description = description;
+            this.messagePattern = messagePattern;
         }
 
         @Override
@@ -571,7 +654,8 @@ public interface Attachment extends Appendix {
 
         @Override
         int getMySize() {
-            return 1 + Convert.toBytes(name).length + 2 + Convert.toBytes(description).length;
+            return 1 + Convert.toBytes(name).length + 2 + Convert.toBytes(description).length +
+                    (getVersion() < 2 ? 0 : 2 + (messagePattern == null ? 0 : Convert.toBytes(messagePattern.pattern()).length + 4));
         }
 
         @Override
@@ -582,12 +666,26 @@ public interface Attachment extends Appendix {
             buffer.put(name);
             buffer.putShort((short) description.length);
             buffer.put(description);
+            if (getVersion() >=2 ) {
+                if (messagePattern == null) {
+                    buffer.putShort((short)0);
+                } else {
+                    byte[] regexBytes = Convert.toBytes(messagePattern.pattern());
+                    buffer.putShort((short) regexBytes.length);
+                    buffer.put(regexBytes);
+                    buffer.putInt(messagePattern.flags());
+                }
+            }
         }
 
         @Override
         void putMyJSON(JSONObject attachment) {
             attachment.put("name", name);
             attachment.put("description", description);
+            if (messagePattern != null) {
+                attachment.put("messagePatternRegex", messagePattern.pattern());
+                attachment.put("messagePatternFlags", messagePattern.flags());
+            }
         }
 
         @Override
@@ -601,6 +699,10 @@ public interface Attachment extends Appendix {
 
         public String getDescription() {
             return description;
+        }
+
+        public Pattern getMessagePattern() {
+            return messagePattern;
         }
 
     }
@@ -962,6 +1064,75 @@ public interface Attachment extends Appendix {
 
     }
 
+    public final static class ColoredCoinsDividendPayment extends AbstractAttachment {
+
+        private final long assetId;
+        private final int height;
+        private final long amountNQTPerQNT;
+
+        ColoredCoinsDividendPayment(ByteBuffer buffer, byte transactionVersion) {
+            super(buffer, transactionVersion);
+            this.assetId = buffer.getLong();
+            this.height = buffer.getInt();
+            this.amountNQTPerQNT = buffer.getLong();
+        }
+
+        ColoredCoinsDividendPayment(JSONObject attachmentData) {
+            super(attachmentData);
+            this.assetId = Convert.parseUnsignedLong((String)attachmentData.get("asset"));
+            this.height = ((Long)attachmentData.get("height")).intValue();
+            this.amountNQTPerQNT = Convert.parseLong(attachmentData.get("amountNQTPerQNT"));
+        }
+
+        public ColoredCoinsDividendPayment(long assetId, int height, long amountNQTPerQNT) {
+            this.assetId = assetId;
+            this.height = height;
+            this.amountNQTPerQNT = amountNQTPerQNT;
+        }
+
+        @Override
+        String getAppendixName() {
+            return "DividendPayment";
+        }
+
+        @Override
+        int getMySize() {
+            return 8 + 4 + 8;
+        }
+
+        @Override
+        void putMyBytes(ByteBuffer buffer) {
+            buffer.putLong(assetId);
+            buffer.putInt(height);
+            buffer.putLong(amountNQTPerQNT);
+        }
+
+        @Override
+        void putMyJSON(JSONObject attachment) {
+            attachment.put("asset", Convert.toUnsignedLong(assetId));
+            attachment.put("height", height);
+            attachment.put("amountNQTPerQNT", amountNQTPerQNT);
+        }
+
+        @Override
+        public TransactionType getTransactionType() {
+            return TransactionType.ColoredCoins.DIVIDEND_PAYMENT;
+        }
+
+        public long getAssetId() {
+            return assetId;
+        }
+
+        public int getHeight() {
+            return height;
+        }
+
+        public long getAmountNQTPerQNT() {
+            return amountNQTPerQNT;
+        }
+
+    }
+
     public final static class DigitalGoodsListing extends AbstractAttachment {
 
         private final String name;
@@ -1297,7 +1468,7 @@ public interface Attachment extends Appendix {
 
         DigitalGoodsDelivery(JSONObject attachmentData) {
             super(attachmentData);
-            this.purchaseId = Convert.parseUnsignedLong((String)attachmentData.get("purchase"));
+            this.purchaseId = Convert.parseUnsignedLong((String) attachmentData.get("purchase"));
             this.goods = new EncryptedData(Convert.parseHexString((String)attachmentData.get("goodsData")),
                     Convert.parseHexString((String)attachmentData.get("goodsNonce")));
             this.discountNQT = Convert.parseLong(attachmentData.get("discountNQT"));
@@ -1505,4 +1676,740 @@ public interface Attachment extends Appendix {
             return period;
         }
     }
+
+    public static interface MonetarySystemAttachment {
+
+        long getCurrencyId();
+
+    }
+
+    public final static class MonetarySystemCurrencyIssuance extends AbstractAttachment {
+
+        private final String name;
+        private final String code;
+        private final String description;
+        private final byte type;
+        private final long initialSupply;
+        private final long reserveSupply;
+        private final long maxSupply;
+        private final int issuanceHeight;
+        private final long minReservePerUnitNQT;
+        private final int minDifficulty;
+        private final int maxDifficulty;
+        private final byte ruleset;
+        private final byte algorithm;
+        private final byte decimals;
+
+        MonetarySystemCurrencyIssuance(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
+            super(buffer, transactionVersion);
+            this.name = Convert.readString(buffer, buffer.get(), Constants.MAX_CURRENCY_NAME_LENGTH);
+            this.code = Convert.readString(buffer, buffer.get(), Constants.MAX_CURRENCY_CODE_LENGTH);
+            this.description = Convert.readString(buffer, buffer.getShort(), Constants.MAX_CURRENCY_DESCRIPTION_LENGTH);
+            this.type = buffer.get();
+            this.initialSupply = buffer.getLong();
+            this.reserveSupply = buffer.getLong();
+            this.maxSupply = buffer.getLong();
+            this.issuanceHeight = buffer.getInt();
+            this.minReservePerUnitNQT = buffer.getLong();
+            this.minDifficulty = buffer.get() & 0xFF;
+            this.maxDifficulty = buffer.get() & 0xFF;
+            this.ruleset = buffer.get();
+            this.algorithm = buffer.get();
+            this.decimals = buffer.get();
+        }
+
+        MonetarySystemCurrencyIssuance(JSONObject attachmentData) {
+            super(attachmentData);
+            this.name = (String)attachmentData.get("name");
+            this.code = (String)attachmentData.get("code");
+            this.description = (String)attachmentData.get("description");
+            this.type = ((Long)attachmentData.get("type")).byteValue();
+            this.initialSupply = Convert.parseLong(attachmentData.get("initialSupply"));
+            this.reserveSupply = Convert.parseLong(attachmentData.get("reserveSupply"));
+            this.maxSupply = Convert.parseLong(attachmentData.get("maxSupply"));
+            this.issuanceHeight = ((Long)attachmentData.get("issuanceHeight")).intValue();
+            this.minReservePerUnitNQT = Convert.parseLong(attachmentData.get("minReservePerUnitNQT"));
+            this.minDifficulty = ((Long)attachmentData.get("minDifficulty")).intValue();
+            this.maxDifficulty = ((Long)attachmentData.get("maxDifficulty")).intValue();
+            this.ruleset = ((Long)attachmentData.get("ruleset")).byteValue();
+            this.algorithm = ((Long)attachmentData.get("algorithm")).byteValue();
+            this.decimals = ((Long) attachmentData.get("decimals")).byteValue();
+        }
+
+        public MonetarySystemCurrencyIssuance(String name, String code, String description, byte type, long initialSupply, long reserveSupply,
+                                              long maxSupply, int issuanceHeight, long minReservePerUnitNQT, int minDifficulty, int maxDifficulty,
+                                              byte ruleset, byte algorithm, byte decimals) {
+            this.name = name;
+            this.code = code;
+            this.description = description;
+            this.type = type;
+            this.initialSupply = initialSupply;
+            this.reserveSupply = reserveSupply;
+            this.maxSupply = maxSupply;
+            this.issuanceHeight = issuanceHeight;
+            this.minReservePerUnitNQT = minReservePerUnitNQT;
+            this.minDifficulty = minDifficulty;
+            this.maxDifficulty = maxDifficulty;
+            this.ruleset = ruleset;
+            this.algorithm = algorithm;
+            this.decimals = decimals;
+        }
+
+        @Override
+        String getAppendixName() {
+            return "CurrencyIssuance";
+        }
+
+        @Override
+        int getMySize() {
+            return 1 + Convert.toBytes(name).length + 1 + Convert.toBytes(code).length + 2 +
+                    Convert.toBytes(description).length + 1 + 8 + 8 + 8 + 4 + 8 + 1 + 1 + 1 + 1 + 1;
+        }
+
+        @Override
+        void putMyBytes(ByteBuffer buffer) {
+            byte[] name = Convert.toBytes(this.name);
+            byte[] code = Convert.toBytes(this.code);
+            byte[] description = Convert.toBytes(this.description);
+            buffer.put((byte)name.length);
+            buffer.put(name);
+            buffer.put((byte)code.length);
+            buffer.put(code);
+            buffer.putShort((short) description.length);
+            buffer.put(description);
+            buffer.put(type);
+            buffer.putLong(initialSupply);
+            buffer.putLong(reserveSupply);
+            buffer.putLong(maxSupply);
+            buffer.putInt(issuanceHeight);
+            buffer.putLong(minReservePerUnitNQT);
+            buffer.put((byte)minDifficulty);
+            buffer.put((byte)maxDifficulty);
+            buffer.put(ruleset);
+            buffer.put(algorithm);
+            buffer.put(decimals);
+        }
+
+        @Override
+        void putMyJSON(JSONObject attachment) {
+            attachment.put("name", name);
+            attachment.put("code", code);
+            attachment.put("description", description);
+            attachment.put("type", type);
+            attachment.put("initialSupply", initialSupply);
+            attachment.put("reserveSupply", reserveSupply);
+            attachment.put("maxSupply", maxSupply);
+            attachment.put("issuanceHeight", issuanceHeight);
+            attachment.put("minReservePerUnitNQT", minReservePerUnitNQT);
+            attachment.put("minDifficulty", minDifficulty);
+            attachment.put("maxDifficulty", maxDifficulty);
+            attachment.put("ruleset", ruleset);
+            attachment.put("algorithm", algorithm);
+            attachment.put("decimals", decimals);
+        }
+
+        @Override
+        public TransactionType getTransactionType() {
+            return MonetarySystem.CURRENCY_ISSUANCE;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public String getCode() {
+            return code;
+        }
+
+        public String getDescription() {
+            return description;
+        }
+
+        public byte getType() {
+            return type;
+        }
+
+        public long getInitialSupply() {
+            return initialSupply;
+        }
+
+        public long getReserveSupply() {
+            return reserveSupply;
+        }
+
+        public long getMaxSupply() {
+            return maxSupply;
+        }
+
+        public int getIssuanceHeight() {
+            return issuanceHeight;
+        }
+
+        public long getMinReservePerUnitNQT() {
+            return minReservePerUnitNQT;
+        }
+
+        public int getMinDifficulty() {
+            return minDifficulty;
+        }
+
+        public int getMaxDifficulty() {
+            return maxDifficulty;
+        }
+
+        public byte getRuleset() {
+            return ruleset;
+        }
+
+        public byte getAlgorithm() {
+            return algorithm;
+        }
+
+        public byte getDecimals() {
+            return decimals;
+        }
+    }
+
+    public final static class MonetarySystemReserveIncrease extends AbstractAttachment implements MonetarySystemAttachment {
+
+        private final long currencyId;
+        private final long amountPerUnitNQT;
+
+        MonetarySystemReserveIncrease(ByteBuffer buffer, byte transactionVersion) {
+            super(buffer, transactionVersion);
+            this.currencyId = buffer.getLong();
+            this.amountPerUnitNQT = buffer.getLong();
+        }
+
+        MonetarySystemReserveIncrease(JSONObject attachmentData) {
+            super(attachmentData);
+            this.currencyId = Convert.parseUnsignedLong((String)attachmentData.get("currency"));
+            this.amountPerUnitNQT = Convert.parseLong(attachmentData.get("amountPerUnitNQT"));
+        }
+
+        public MonetarySystemReserveIncrease(long currencyId, long amountPerUnitNQT) {
+            this.currencyId = currencyId;
+            this.amountPerUnitNQT = amountPerUnitNQT;
+        }
+
+        @Override
+        String getAppendixName() {
+            return "ReserveIncrease";
+        }
+
+        @Override
+        int getMySize() {
+            return 8 + 8;
+        }
+
+        @Override
+        void putMyBytes(ByteBuffer buffer) {
+            buffer.putLong(currencyId);
+            buffer.putLong(amountPerUnitNQT);
+        }
+
+        @Override
+        void putMyJSON(JSONObject attachment) {
+            attachment.put("currency", Convert.toUnsignedLong(currencyId));
+            attachment.put("amountPerUnitNQT", amountPerUnitNQT);
+        }
+
+        @Override
+        public TransactionType getTransactionType() {
+            return MonetarySystem.RESERVE_INCREASE;
+        }
+
+        @Override
+        public long getCurrencyId() {
+            return currencyId;
+        }
+
+        public long getAmountPerUnitNQT() {
+            return amountPerUnitNQT;
+        }
+
+    }
+
+    public final static class MonetarySystemReserveClaim extends AbstractAttachment implements MonetarySystemAttachment {
+
+        private final long currencyId;
+        private final long units;
+
+        MonetarySystemReserveClaim(ByteBuffer buffer, byte transactionVersion) {
+            super(buffer, transactionVersion);
+            this.currencyId = buffer.getLong();
+            this.units = buffer.getLong();
+        }
+
+        MonetarySystemReserveClaim(JSONObject attachmentData) {
+            super(attachmentData);
+            this.currencyId = Convert.parseUnsignedLong((String)attachmentData.get("currency"));
+            this.units = Convert.parseLong(attachmentData.get("units"));
+        }
+
+        public MonetarySystemReserveClaim(long currencyId, long units) {
+            this.currencyId = currencyId;
+            this.units = units;
+        }
+
+        @Override
+        String getAppendixName() {
+            return "ReserveClaim";
+        }
+
+        @Override
+        int getMySize() {
+            return 8 + 8;
+        }
+
+        @Override
+        void putMyBytes(ByteBuffer buffer) {
+            buffer.putLong(currencyId);
+            buffer.putLong(units);
+        }
+
+        @Override
+        void putMyJSON(JSONObject attachment) {
+            attachment.put("currency", Convert.toUnsignedLong(currencyId));
+            attachment.put("units", units);
+        }
+
+        @Override
+        public TransactionType getTransactionType() {
+            return MonetarySystem.RESERVE_CLAIM;
+        }
+
+        @Override
+        public long getCurrencyId() {
+            return currencyId;
+        }
+
+        public long getUnits() {
+            return units;
+        }
+
+    }
+
+    public final static class MonetarySystemCurrencyTransfer extends AbstractAttachment implements MonetarySystemAttachment {
+
+        private final long currencyId;
+        private final long units;
+
+        MonetarySystemCurrencyTransfer(ByteBuffer buffer, byte transactionVersion) {
+            super(buffer, transactionVersion);
+            this.currencyId = buffer.getLong();
+            this.units = buffer.getLong();
+        }
+
+        MonetarySystemCurrencyTransfer(JSONObject attachmentData) {
+            super(attachmentData);
+            this.currencyId = Convert.parseUnsignedLong((String)attachmentData.get("currency"));
+            this.units = Convert.parseLong(attachmentData.get("units"));
+        }
+
+        public MonetarySystemCurrencyTransfer(long currencyId, long units) {
+            this.currencyId = currencyId;
+            this.units = units;
+        }
+
+        @Override
+        String getAppendixName() {
+            return "CurrencyTransfer";
+        }
+
+        @Override
+        int getMySize() {
+            return 8 + 8;
+        }
+
+        @Override
+        void putMyBytes(ByteBuffer buffer) {
+            buffer.putLong(currencyId);
+            buffer.putLong(units);
+        }
+
+        @Override
+        void putMyJSON(JSONObject attachment) {
+            attachment.put("currency", Convert.toUnsignedLong(currencyId));
+            attachment.put("units", units);
+        }
+
+        @Override
+        public TransactionType getTransactionType() {
+            return MonetarySystem.CURRENCY_TRANSFER;
+        }
+
+        @Override
+        public long getCurrencyId() {
+            return currencyId;
+        }
+
+        public long getUnits() {
+            return units;
+        }
+    }
+
+    public final static class MonetarySystemPublishExchangeOffer extends AbstractAttachment implements MonetarySystemAttachment {
+
+        private final long currencyId;
+        private final long buyRateNQT;
+        private final long sellRateNQT;
+        private final long totalBuyLimit;
+        private final long totalSellLimit;
+        private final long initialBuySupply;
+        private final long initialSellSupply;
+        private final int expirationHeight;
+
+        MonetarySystemPublishExchangeOffer(ByteBuffer buffer, byte transactionVersion) {
+            super(buffer, transactionVersion);
+            this.currencyId = buffer.getLong();
+            this.buyRateNQT = buffer.getLong();
+            this.sellRateNQT = buffer.getLong();
+            this.totalBuyLimit = buffer.getLong();
+            this.totalSellLimit = buffer.getLong();
+            this.initialBuySupply = buffer.getLong();
+            this.initialSellSupply = buffer.getLong();
+            this.expirationHeight = buffer.getInt();
+        }
+
+        MonetarySystemPublishExchangeOffer(JSONObject attachmentData) {
+            super(attachmentData);
+            this.currencyId = Convert.parseUnsignedLong((String)attachmentData.get("currency"));
+            this.buyRateNQT = Convert.parseLong(attachmentData.get("buyRateNQT"));
+            this.sellRateNQT = Convert.parseLong(attachmentData.get("sellRateNQT"));
+            this.totalBuyLimit = Convert.parseLong(attachmentData.get("totalBuyLimit"));
+            this.totalSellLimit = Convert.parseLong(attachmentData.get("totalSellLimit"));
+            this.initialBuySupply = Convert.parseLong(attachmentData.get("initialBuySupply"));
+            this.initialSellSupply = Convert.parseLong(attachmentData.get("initialSellSupply"));
+            this.expirationHeight = ((Long)attachmentData.get("expirationHeight")).intValue();
+        }
+
+        public MonetarySystemPublishExchangeOffer(long currencyId, long buyRateNQT, long sellRateNQT, long totalBuyLimit,
+                                                  long totalSellLimit, long initialBuySupply, long initialSellSupply, int expirationHeight) {
+            this.currencyId = currencyId;
+            this.buyRateNQT = buyRateNQT;
+            this.sellRateNQT = sellRateNQT;
+            this.totalBuyLimit = totalBuyLimit;
+            this.totalSellLimit = totalSellLimit;
+            this.initialBuySupply = initialBuySupply;
+            this.initialSellSupply = initialSellSupply;
+            this.expirationHeight = expirationHeight;
+        }
+
+        @Override
+        String getAppendixName() {
+            return "PublishExchangeOffer";
+        }
+
+        @Override
+        int getMySize() {
+            return 8 + 8 + 8 + 8 + 8 + 8 + 8 + 4;
+        }
+
+        @Override
+        void putMyBytes(ByteBuffer buffer) {
+            buffer.putLong(currencyId);
+            buffer.putLong(buyRateNQT);
+            buffer.putLong(sellRateNQT);
+            buffer.putLong(totalBuyLimit);
+            buffer.putLong(totalSellLimit);
+            buffer.putLong(initialBuySupply);
+            buffer.putLong(initialSellSupply);
+            buffer.putInt(expirationHeight);
+        }
+
+        @Override
+        void putMyJSON(JSONObject attachment) {
+            attachment.put("currency", Convert.toUnsignedLong(currencyId));
+            attachment.put("buyRateNQT", buyRateNQT);
+            attachment.put("sellRateNQT", sellRateNQT);
+            attachment.put("totalBuyLimit", totalBuyLimit);
+            attachment.put("totalSellLimit", totalSellLimit);
+            attachment.put("initialBuySupply", initialBuySupply);
+            attachment.put("initialSellSupply", initialSellSupply);
+            attachment.put("expirationHeight", expirationHeight);
+        }
+
+        @Override
+        public TransactionType getTransactionType() {
+            return MonetarySystem.PUBLISH_EXCHANGE_OFFER;
+        }
+
+        @Override
+        public long getCurrencyId() {
+            return currencyId;
+        }
+
+        public long getBuyRateNQT() {
+            return buyRateNQT;
+        }
+
+        public long getSellRateNQT() {
+            return sellRateNQT;
+        }
+
+        public long getTotalBuyLimit() {
+            return totalBuyLimit;
+        }
+
+        public long getTotalSellLimit() {
+            return totalSellLimit;
+        }
+
+        public long getInitialBuySupply() {
+            return initialBuySupply;
+        }
+
+        public long getInitialSellSupply() {
+            return initialSellSupply;
+        }
+
+        public int getExpirationHeight() {
+            return expirationHeight;
+        }
+
+    }
+
+    abstract static class MonetarySystemExchange extends AbstractAttachment implements MonetarySystemAttachment {
+
+        private final long currencyId;
+        private final long rateNQT;
+        private final long units;
+
+        private MonetarySystemExchange(ByteBuffer buffer, byte transactionVersion) {
+            super(buffer, transactionVersion);
+            this.currencyId = buffer.getLong();
+            this.rateNQT = buffer.getLong();
+            this.units = buffer.getLong();
+        }
+
+        private MonetarySystemExchange(JSONObject attachmentData) {
+            super(attachmentData);
+            this.currencyId = Convert.parseUnsignedLong((String)attachmentData.get("currency"));
+            this.rateNQT = Convert.parseLong(attachmentData.get("rateNQT"));
+            this.units = Convert.parseLong(attachmentData.get("units"));
+        }
+
+        private MonetarySystemExchange(long currencyId, long rateNQT, long units) {
+            this.currencyId = currencyId;
+            this.rateNQT = rateNQT;
+            this.units = units;
+        }
+
+        @Override
+        int getMySize() {
+            return 8 + 8 + 8;
+        }
+
+        @Override
+        void putMyBytes(ByteBuffer buffer) {
+            buffer.putLong(currencyId);
+            buffer.putLong(rateNQT);
+            buffer.putLong(units);
+        }
+
+        @Override
+        void putMyJSON(JSONObject attachment) {
+            attachment.put("currency", Convert.toUnsignedLong(currencyId));
+            attachment.put("rateNQT", rateNQT);
+            attachment.put("units", units);
+        }
+
+        @Override
+        public long getCurrencyId() {
+            return currencyId;
+        }
+
+        public long getRateNQT() {
+            return rateNQT;
+        }
+
+        public long getUnits() {
+            return units;
+        }
+
+    }
+
+    public final static class MonetarySystemExchangeBuy extends MonetarySystemExchange {
+
+        MonetarySystemExchangeBuy(ByteBuffer buffer, byte transactionVersion) {
+            super(buffer, transactionVersion);
+        }
+
+        MonetarySystemExchangeBuy(JSONObject attachmentData) {
+            super(attachmentData);
+        }
+
+        public MonetarySystemExchangeBuy(long currencyId, long rateNQT, long units) {
+            super(currencyId, rateNQT, units);
+        }
+
+        @Override
+        String getAppendixName() {
+            return "ExchangeBuy";
+        }
+
+        @Override
+        public TransactionType getTransactionType() {
+            return MonetarySystem.EXCHANGE_BUY;
+        }
+
+    }
+
+    public final static class MonetarySystemExchangeSell extends MonetarySystemExchange {
+
+        MonetarySystemExchangeSell(ByteBuffer buffer, byte transactionVersion) {
+            super(buffer, transactionVersion);
+        }
+
+        MonetarySystemExchangeSell(JSONObject attachmentData) {
+            super(attachmentData);
+        }
+
+        public MonetarySystemExchangeSell(long currencyId, long rateNQT, long units) {
+            super(currencyId, rateNQT, units);
+        }
+
+        @Override
+        String getAppendixName() {
+            return "ExchangeSell";
+        }
+
+        @Override
+        public TransactionType getTransactionType() {
+            return MonetarySystem.EXCHANGE_SELL;
+        }
+
+    }
+
+    public final static class MonetarySystemCurrencyMinting extends AbstractAttachment implements MonetarySystemAttachment {
+
+        private final long nonce;
+        private final long currencyId;
+        private final long units;
+        private final long counter;
+
+        MonetarySystemCurrencyMinting(ByteBuffer buffer, byte transactionVersion) {
+            super(buffer, transactionVersion);
+            this.nonce = buffer.getLong();
+            this.currencyId = buffer.getLong();
+            this.units = buffer.getLong();
+            this.counter = buffer.getLong();
+        }
+
+        MonetarySystemCurrencyMinting(JSONObject attachmentData) {
+            super(attachmentData);
+            this.nonce = Convert.parseLong(attachmentData.get("nonce"));
+            this.currencyId = Convert.parseUnsignedLong((String)attachmentData.get("currency"));
+            this.units = Convert.parseLong(attachmentData.get("units"));
+            this.counter = Convert.parseLong(attachmentData.get("counter"));
+        }
+
+        public MonetarySystemCurrencyMinting(long nonce, long currencyId, long units, long counter) {
+            this.nonce = nonce;
+            this.currencyId = currencyId;
+            this.units = units;
+            this.counter = counter;
+        }
+
+        @Override
+        String getAppendixName() {
+            return "CurrencyMinting";
+        }
+
+        @Override
+        int getMySize() {
+            return 8 + 8 + 8 + 8;
+        }
+
+        @Override
+        void putMyBytes(ByteBuffer buffer) {
+            buffer.putLong(nonce);
+            buffer.putLong(currencyId);
+            buffer.putLong(units);
+            buffer.putLong(counter);
+        }
+
+        @Override
+        void putMyJSON(JSONObject attachment) {
+            attachment.put("nonce", nonce);
+            attachment.put("currency", Convert.toUnsignedLong(currencyId));
+            attachment.put("units", units);
+            attachment.put("counter", counter);
+        }
+
+        @Override
+        public TransactionType getTransactionType() {
+            return MonetarySystem.CURRENCY_MINTING;
+        }
+
+        public long getNonce() {
+            return nonce;
+        }
+
+        @Override
+        public long getCurrencyId() {
+            return currencyId;
+        }
+
+        public long getUnits() {
+            return units;
+        }
+
+        public long getCounter() {
+            return counter;
+        }
+
+    }
+
+    public final static class MonetarySystemCurrencyDeletion extends AbstractAttachment implements MonetarySystemAttachment {
+
+        private final long currencyId;
+
+        MonetarySystemCurrencyDeletion(ByteBuffer buffer, byte transactionVersion) {
+            super(buffer, transactionVersion);
+            this.currencyId = buffer.getLong();
+        }
+
+        MonetarySystemCurrencyDeletion(JSONObject attachmentData) {
+            super(attachmentData);
+            this.currencyId = Convert.parseUnsignedLong((String)attachmentData.get("currency"));
+        }
+
+        public MonetarySystemCurrencyDeletion(long currencyId) {
+            this.currencyId = currencyId;
+        }
+
+        @Override
+        String getAppendixName() {
+            return "CurrencyDeletion";
+        }
+
+        @Override
+        int getMySize() {
+            return 8;
+        }
+
+        @Override
+        void putMyBytes(ByteBuffer buffer) {
+            buffer.putLong(currencyId);
+        }
+
+        @Override
+        void putMyJSON(JSONObject attachment) {
+            attachment.put("currency", Convert.toUnsignedLong(currencyId));
+        }
+
+        @Override
+        public TransactionType getTransactionType() {
+            return MonetarySystem.CURRENCY_DELETION;
+        }
+
+        @Override
+        public long getCurrencyId() {
+            return currencyId;
+        }
+
+    }
+
 }

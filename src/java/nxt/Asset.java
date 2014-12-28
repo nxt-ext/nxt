@@ -147,4 +147,5 @@ public final class Asset {
     public DbIterator<AssetTransfer> getAssetTransfers(int from, int to) {
         return AssetTransfer.getAssetTransfers(this.assetId, from, to);
     }
+
 }

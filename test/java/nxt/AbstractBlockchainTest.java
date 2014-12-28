@@ -1,6 +1,7 @@
 package nxt;
 
 import nxt.crypto.Crypto;
+import nxt.db.DbIterator;
 import nxt.util.Listener;
 import nxt.util.Logger;
 import org.junit.Assert;
@@ -30,6 +31,7 @@ public abstract class AbstractBlockchainTest {
         testProperties.setProperty("nxt.debugTraceAccounts", "");
         testProperties.setProperty("nxt.debugLogUnconfirmed", "false");
         testProperties.setProperty("nxt.debugTraceQuote", "\"");
+        testProperties.setProperty("nxt.numberOfForkConfirmations", "0");
         return testProperties;
     }
 
@@ -50,7 +52,11 @@ public abstract class AbstractBlockchainTest {
     }
 
     protected static void shutdown() {
-        Nxt.shutdown();
+        TransactionProcessorImpl transactionProcessor = TransactionProcessorImpl.getInstance();
+        DbIterator<UnconfirmedTransaction> allUnconfirmedTransactions = transactionProcessor.getAllUnconfirmedTransactions();
+        for (UnconfirmedTransaction unconfirmedTransaction : allUnconfirmedTransactions) {
+            transactionProcessor.removeUnconfirmedTransaction(unconfirmedTransaction.getTransaction());
+        }
     }
 
     protected static void downloadTo(final int endHeight) {

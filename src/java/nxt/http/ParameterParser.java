@@ -4,6 +4,9 @@ import nxt.Account;
 import nxt.Alias;
 import nxt.Asset;
 import nxt.Constants;
+import nxt.Currency;
+import nxt.CurrencyBuyOffer;
+import nxt.CurrencySellOffer;
 import nxt.DigitalGoodsStore;
 import nxt.Nxt;
 import nxt.NxtException;
@@ -23,6 +26,63 @@ import java.util.List;
 import static nxt.http.JSONResponses.*;
 
 final class ParameterParser {
+
+    static byte getByte(HttpServletRequest req, String name, byte min, byte max) throws ParameterException {
+        String paramValue = Convert.emptyToNull(req.getParameter(name));
+        if (paramValue == null) {
+            return 0;
+        }
+        byte value;
+        try {
+            value = Byte.parseByte(paramValue);
+        } catch (RuntimeException e) {
+            throw new ParameterException(incorrect(name));
+        }
+        if (value < min || value > max) {
+            throw new ParameterException(incorrect(name));
+        }
+        return value;
+    }
+
+    static int getInt(HttpServletRequest req, String name, int min, int max, boolean isMandatory) throws ParameterException {
+        String paramValue = Convert.emptyToNull(req.getParameter(name));
+        if (paramValue == null) {
+            if (isMandatory) {
+                throw new ParameterException(missing(name));
+            }
+            return 0;
+        }
+        int value;
+        try {
+            value = Integer.parseInt(paramValue);
+        } catch (RuntimeException e) {
+            throw new ParameterException(incorrect(name));
+        }
+        if (value < min || value > max) {
+            throw new ParameterException(incorrect(name));
+        }
+        return value;
+    }
+
+    static long getLong(HttpServletRequest req, String name, long min, long max, boolean isMandatory) throws ParameterException {
+        String paramValue = Convert.emptyToNull(req.getParameter(name));
+        if (paramValue == null) {
+            if (isMandatory) {
+                throw new ParameterException(missing(name));
+            }
+            return 0;
+        }
+        long value;
+        try {
+            value = Long.parseLong(paramValue);
+        } catch (RuntimeException e) {
+            throw new ParameterException(incorrect(name));
+        }
+        if (value < min || value > max) {
+            throw new ParameterException(incorrect(name));
+        }
+        return value;
+    }
 
     static Alias getAlias(HttpServletRequest req) throws ParameterException {
         long aliasId;
@@ -47,54 +107,15 @@ final class ParameterParser {
     }
 
     static long getAmountNQT(HttpServletRequest req) throws ParameterException {
-        String amountValueNQT = Convert.emptyToNull(req.getParameter("amountNQT"));
-        if (amountValueNQT == null) {
-            throw new ParameterException(MISSING_AMOUNT);
-        }
-        long amountNQT;
-        try {
-            amountNQT = Long.parseLong(amountValueNQT);
-        } catch (RuntimeException e) {
-            throw new ParameterException(INCORRECT_AMOUNT);
-        }
-        if (amountNQT <= 0 || amountNQT >= Constants.MAX_BALANCE_NQT) {
-            throw new ParameterException(INCORRECT_AMOUNT);
-        }
-        return amountNQT;
+        return getLong(req, "amountNQT", 1L, Constants.MAX_BALANCE_NQT, true);
     }
 
     static long getFeeNQT(HttpServletRequest req) throws ParameterException {
-        String feeValueNQT = Convert.emptyToNull(req.getParameter("feeNQT"));
-        if (feeValueNQT == null) {
-            throw new ParameterException(MISSING_FEE);
-        }
-        long feeNQT;
-        try {
-            feeNQT = Long.parseLong(feeValueNQT);
-        } catch (RuntimeException e) {
-            throw new ParameterException(INCORRECT_FEE);
-        }
-        if (feeNQT < 0 || feeNQT >= Constants.MAX_BALANCE_NQT) {
-            throw new ParameterException(INCORRECT_FEE);
-        }
-        return feeNQT;
+        return getLong(req, "feeNQT", 0L, Constants.MAX_BALANCE_NQT, true);
     }
 
     static long getPriceNQT(HttpServletRequest req) throws ParameterException {
-        String priceValueNQT = Convert.emptyToNull(req.getParameter("priceNQT"));
-        if (priceValueNQT == null) {
-            throw new ParameterException(MISSING_PRICE);
-        }
-        long priceNQT;
-        try {
-            priceNQT = Long.parseLong(priceValueNQT);
-        } catch (RuntimeException e) {
-            throw new ParameterException(INCORRECT_PRICE);
-        }
-        if (priceNQT <= 0 || priceNQT > Constants.MAX_BALANCE_NQT) {
-            throw new ParameterException(INCORRECT_PRICE);
-        }
-        return priceNQT;
+        return getLong(req, "priceNQT", 1L, Constants.MAX_BALANCE_NQT, true);
     }
 
     static Asset getAsset(HttpServletRequest req) throws ParameterException {
@@ -115,21 +136,66 @@ final class ParameterParser {
         return asset;
     }
 
-    static long getQuantityQNT(HttpServletRequest req) throws ParameterException {
-        String quantityValueQNT = Convert.emptyToNull(req.getParameter("quantityQNT"));
-        if (quantityValueQNT == null) {
-            throw new ParameterException(MISSING_QUANTITY);
+    static Currency getCurrency(HttpServletRequest req) throws ParameterException {
+        String currencyValue = Convert.emptyToNull(req.getParameter("currency"));
+        if (currencyValue == null) {
+            throw new ParameterException(MISSING_CURRENCY);
         }
-        long quantityQNT;
+        Currency currency;
         try {
-            quantityQNT = Long.parseLong(quantityValueQNT);
+            long currencyId = Convert.parseUnsignedLong(currencyValue);
+            currency = Currency.getCurrency(currencyId);
         } catch (RuntimeException e) {
-            throw new ParameterException(INCORRECT_QUANTITY);
+            throw new ParameterException(INCORRECT_CURRENCY);
         }
-        if (quantityQNT <= 0 || quantityQNT > Constants.MAX_ASSET_QUANTITY_QNT) {
-            throw new ParameterException(INCORRECT_ASSET_QUANTITY);
+        if (currency == null) {
+            throw new ParameterException(UNKNOWN_CURRENCY);
         }
-        return quantityQNT;
+        return currency;
+    }
+
+    static CurrencyBuyOffer getBuyOffer(HttpServletRequest req) throws ParameterException {
+        String offerValue = Convert.emptyToNull(req.getParameter("offer"));
+        if (offerValue == null) {
+            throw new ParameterException(MISSING_OFFER);
+        }
+        CurrencyBuyOffer offer;
+        try {
+            long offerId = Convert.parseUnsignedLong(offerValue);
+            offer = CurrencyBuyOffer.getOffer(offerId);
+        } catch (RuntimeException e) {
+            throw new ParameterException(INCORRECT_OFFER);
+        }
+        if (offer == null) {
+            throw new ParameterException(UNKNOWN_OFFER);
+        }
+        return offer;
+    }
+
+    static CurrencySellOffer getSellOffer(HttpServletRequest req) throws ParameterException {
+        String offerValue = Convert.emptyToNull(req.getParameter("offer"));
+        if (offerValue == null) {
+            throw new ParameterException(MISSING_OFFER);
+        }
+        CurrencySellOffer offer;
+        try {
+            long offerId = Convert.parseUnsignedLong(offerValue);
+            offer = CurrencySellOffer.getOffer(offerId);
+        } catch (RuntimeException e) {
+            throw new ParameterException(INCORRECT_OFFER);
+        }
+        if (offer == null) {
+            throw new ParameterException(UNKNOWN_OFFER);
+        }
+        return offer;
+    }
+
+    static long getQuantityQNT(HttpServletRequest req) throws ParameterException {
+        return getLong(req, "quantityQNT", 1L, Constants.MAX_ASSET_QUANTITY_QNT, true);
+    }
+
+    static long getAmountNQTPerQNT(HttpServletRequest req) throws ParameterException {
+        return getLong(req, "amountNQTPerQNT", 1L, Constants.MAX_BALANCE_NQT, true);
     }
 
     static long getOrderId(HttpServletRequest req) throws ParameterException {
@@ -163,16 +229,7 @@ final class ParameterParser {
     }
 
     static int getGoodsQuantity(HttpServletRequest req) throws ParameterException {
-        String quantityString = Convert.emptyToNull(req.getParameter("quantity"));
-        try {
-            int quantity = Integer.parseInt(quantityString);
-            if (quantity < 0 || quantity > Constants.MAX_DGS_LISTING_QUANTITY) {
-                throw new ParameterException(INCORRECT_QUANTITY);
-            }
-            return quantity;
-        } catch (NumberFormatException e) {
-            throw new ParameterException(INCORRECT_QUANTITY);
-        }
+        return getInt(req, "quantity", 0, Constants.MAX_DGS_LISTING_QUANTITY, true);
     }
 
     static EncryptedData getEncryptedMessage(HttpServletRequest req, Account recipientAccount) throws ParameterException {
@@ -325,20 +382,7 @@ final class ParameterParser {
     }
 
     static int getTimestamp(HttpServletRequest req) throws ParameterException {
-        String timestampValue = Convert.emptyToNull(req.getParameter("timestamp"));
-        if (timestampValue == null) {
-            return 0;
-        }
-        int timestamp;
-        try {
-            timestamp = Integer.parseInt(timestampValue);
-        } catch (NumberFormatException e) {
-            throw new ParameterException(INCORRECT_TIMESTAMP);
-        }
-        if (timestamp < 0) {
-            throw new ParameterException(INCORRECT_TIMESTAMP);
-        }
-        return timestamp;
+        return getInt(req, "timestamp", 0, Integer.MAX_VALUE, false);
     }
 
     static long getRecipientId(HttpServletRequest req) throws ParameterException {
@@ -403,19 +447,7 @@ final class ParameterParser {
     }
 
     static int getNumberOfConfirmations(HttpServletRequest req) throws ParameterException {
-        String numberOfConfirmationsValue = Convert.emptyToNull(req.getParameter("numberOfConfirmations"));
-        if (numberOfConfirmationsValue != null) {
-            try {
-                int numberOfConfirmations = Integer.parseInt(numberOfConfirmationsValue);
-                if (numberOfConfirmations <= Nxt.getBlockchain().getHeight()) {
-                    return numberOfConfirmations;
-                }
-                throw new ParameterException(INCORRECT_NUMBER_OF_CONFIRMATIONS);
-            } catch (NumberFormatException e) {
-                throw new ParameterException(INCORRECT_NUMBER_OF_CONFIRMATIONS);
-            }
-        }
-        return 0;
+        return getInt(req, "numberOfConfirmations", 0, Nxt.getBlockchain().getHeight(), false);
     }
 
     static int getHeight(HttpServletRequest req) throws ParameterException {
