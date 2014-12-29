@@ -1,0 +1,43 @@
+<div class="modal fade" id="asset_order_modal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <!-- todo -->
+                <h4 class="modal-title" data-i18n="confirm__order">Confirm <span class="asset_order_modal_type"></span> Order</h4>
+            </div>
+            <div class="modal-body">            
+                <form role="form" autocomplete="off">
+                    <div class="callout callout-danger error_message" style="display:none"></div>
+                    <div class="form-group">
+                        <label data-i18n="order_description">ORDER DESCRIPTION</label>
+                        <p id="asset_order_description"></p>
+                        <input type="hidden" name="asset" id="asset_order_asset" value="" />
+                        <input type="hidden" name="quantityQNT" id="asset_order_quantity" value="" />
+                        <input type="hidden" name="priceNQT" id="asset_order_price" value="" />
+                        <input type="hidden" name="feeNQT" id="asset_order_fee" value="" />
+                        <input type="hidden" name="deadline" id="asset_order_deadline" data-default="24" value="24" />
+                    </div>
+                    <div class="form-group">
+                        <label><span data-i18n="total">TOTAL</span> <i id="asset_order_total_tooltip" class="fa fa-question-circle" style="color:#4CAA6E" data-toggle="popover" data-placement="right" data-content=""></i></label>
+                        <p id="asset_order_total"></p>
+                    </div>
+                    <div class="form-group">
+                        <label data-i18n="fee">FEE</label>
+                        <p id="asset_order_fee_paid"></p>
+                    </div>
+                    <div class="form-group secret_phrase">
+                        <label for="asset_order_password" data-i18n="passphrase">PASSPHRASE</label>
+                        <input type="password" name="secretPhrase" id="asset_order_password" class="form-control" placeholder="" tabindex="1">
+                    </div>
+                    <input type="hidden" name="asset_order_type"  id="asset_order_type" />
+                    <input type="hidden" name="request_type" value="orderAsset" />
+                </form>
+            </div>
+            <div class="modal-footer" style="margin-top:0;">
+                <button type="button" class="btn btn-default" data-dismiss="modal" data-i18n="cancel">Cancel</button>
+                <button type="button" class="btn btn-primary" data-loading-text="Submitting..." id="asset_order_modal_button" data-i18n="[data-loading-text]submitting"></button>
+            </div>
+        </div>
+    </div>
+</div>
