@@ -314,3 +314,101 @@
         </div>
     </div>
 </div>
+
+<div class="modal fade" id="asset_distribution_modal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-wider">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title" data-i18n="Asset Distribution">Asset Distribution</h4>
+            </div>
+            <div class="modal-body">                            
+                <div class="data-container data-loading" style="max-height:350px;overflow:auto">
+                    <table class="table table-striped" id="asset_distribution_table">
+                        <thead>
+                        <tr>
+                            <th data-i18n="account">Account</th>
+                            <th data-i18n="quantity">Quantity</th>
+                            <th data-i18n="percentage">Percentage</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        
+                        </tbody>
+                    </table>
+                    <div class="data-loading-container"><img src="img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
+                    <div class="data-empty-container"><p data-i18n="error">Error</p></div>
+                </div>
+            </div>
+            <div class="modal-footer" style="margin-top:0;">
+                <button type="button" class="btn btn-primary" data-dismiss="modal" data-i18n="close">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="asset_exchange_change_group_name_modal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title" data-i18n="change_group_name">Change Group Name</h4>
+            </div>
+            <div class="modal-body">            
+                <form role="form" autocomplete="off">
+                    <div class="callout callout-danger error_message" style="display:none"></div>
+                    <p data-i18n="change_group_name_help">Type a new group name.</p>
+                    <div class="form-group">
+                        <label data-i18n="old_group_name">OLD GROUP NAME</label>
+                        <p id="asset_exchange_change_group_name_old_display"></p>
+                        <input type="hidden" name="old_group_name" id="asset_exchange_change_group_name_old" value="" />
+                    </div>
+                    <div class="form-group">
+                        <label for="asset_exchange_change_group_name_new" data-i18n="new_group_name">NEW GROUP_NAME</label>
+                        <input type="text" class="form-control" name="new_group_name" id="asset_exchange_change_group_name_new" placeholder="New group name" data-i18n="[placeholder]new_group_name" />
+                    </div>
+                    <input type="hidden" name="request_type" value="assetExchangeChangeGroupName" />
+                </form>
+            </div>
+            <div class="modal-footer" style="margin-top:0;">
+                <button type="button" class="btn btn-default" data-dismiss="modal" data-i18n="cancel">Cancel</button>
+                <button type="button" class="btn btn-primary" id="asset_exchange_change_group_name_submit" data-loading-text="Submitting..." data-i18n="change_group_name;[data-loading-text]submitting">Change Group Name</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="asset_exchange_group_modal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title" data-i18n="group_asset">Group Asset</h4>
+            </div>
+            <div class="modal-body">            
+                <form role="form" autocomplete="off">
+                    <div class="callout callout-danger error_message" style="display:none"></div>
+                    <p data-i18n="group_asset_help">Choose a group for this asset.</p>
+                    <div class="form-group">
+                        <label data-i18n="asset">ASSET</label>
+                        <p id="asset_exchange_group_title"></p>
+                        <input type="hidden" name="asset_exchange_group_asset" id="asset_exchange_group_asset" value="" />
+                    </div>
+                    <div class="form-group">
+                        <label for="asset_exchange_group_group" data-i18n="group">GROUP</label>
+                        <select name="asset_exchange_group_group" id="asset_exchange_group_group" class="form-control">
+                        </select>
+                    </div>
+                    <div class="form-group" id="asset_exchange_group_new_group_div" style="display:none">
+                        <input type="text" class="form-control" name="asset_exchange_group_new_group" id="asset_exchange_group_new_group" placeholder="New Group Title" data-i18n="new_group_title"/>
+                    </div>
+                    <input type="hidden" name="request_type" value="assetExchangeGroup" />
+                </form>
+            </div>
+            <div class="modal-footer" style="margin-top:0;">
+                <button type="button" class="btn btn-default" data-dismiss="modal" data-i18n="cancel">Cancel</button>
+                <button type="button" class="btn btn-primary" id="asset_exchange_group_submit" data-loading-text="Submitting..." data-i18n="add_to_group;[data-loading-text]submitting">Add to Group</button>
+            </div>
+        </div>
+    </div>
+</div>

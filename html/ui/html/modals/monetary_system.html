@@ -703,3 +703,44 @@
         </div>
     </div>
 </div>
+
+<div class="modal fade" id="currency_founders_modal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-wider">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title"><span data-i18n="currency_founders">Currency Founders</span> - <span id="founders_currency_code"></span></h4>
+            </div>
+            <div class="modal-body">                            
+                <div class="form-group">
+                    <p>
+                        <label for="founders_reserve_units" data-i18n="reserve_units">Reserve Units</label>: <i><span id="founders_reserve_units"></span></i> | 
+                        <label for="founders_issuer_units" data-i18n="issuer_units">Issuer Units</label>: <i><span id="founders_issuer_units"></span></i> | 
+                        <label for="founders_blocks_active" data-i18n="blocks_until_active">Blocks until active</label>: <i><span id="founders_blocks_active"></span></i>
+                    </p>
+                </div>
+                <div class="data-container data-loading" style="max-height:350px;overflow:auto">
+                    <table class="table table-striped" id="currency_founders_table">
+                        <thead>
+                        <tr>
+                            <th data-i18n="account">Account</th>
+                            <th data-i18n="amount_per_unit">Amount Per Unit</th>
+                            <th data-i18n="amount_reserved">Amount Reserved</th>
+                            <th data-i18n="founders_units">Founders Units</th>
+                            <th data-i18n="percent_of_min">Percent of Minimum</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        
+                        </tbody>
+                    </table>
+                    <div class="data-loading-container"><img src="img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
+                    <div class="data-empty-container"><p data-i18n="error">Error</p></div>
+                </div>
+            </div>
+            <div class="modal-footer" style="margin-top:0;">
+                <button type="button" class="btn btn-primary" data-dismiss="modal" data-i18n="close">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
