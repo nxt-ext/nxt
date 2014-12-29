@@ -402,3 +402,304 @@
         </div>
     </div>
 </div>
+
+<div class="modal fade" id="claim_currency_modal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title"><span data-i18n="claim_currency">Claim currency</span> - <span id="claim_currency_code"></span></h4>
+            </div>
+            <div class="modal-body">            
+                <form role="form" autocomplete="off">
+                    <div class="callout callout-danger error_message" style="display:none"></div>
+                    <div class="form-group">
+                        <input type="hidden" name="currency" id="claim_currency_currency" />
+                        <input type="hidden" name="decimals" id="claim_currency_decimals" value="" />
+                    </div>
+                    <div class="form-group">
+                        <label for="claim_currency_amount" data-i18n="currency_units_to_claim">Number of units to claim</label> <i><span id="claimAvailable"></span></i>
+                        <label for="claim_currency_amount" data-i18n="currency_claim_rate">Claim rate</label> <i><span id="claimRate"></span></i>
+                        <input type="text" class="form-control" name="units" id="claim_currency_amount" placeholder="Number of units" data-i18n="units" tabindex="1" />
+                    </div>
+                    
+                    <div class="row advanced">
+                        <div class="col-xs-6 col-sm-6 col-md-6">
+                            <div class="form-group">
+                                <label for="claim_currency_fee" data-i18n="fee">FEE</label>
+                                <div class="input-group">
+                                    <input type="number" name="feeNXT" id="claim_currency_fee" class="form-control" step="any" min="1" placeholder="Fee" data-i18n="[placeholder]fee" data-default="1" value="1" tabindex="3">
+                                    <span class="input-group-addon">NXT</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-xs-6 col-sm-6 col-md-6">
+                            <div class="form-group">
+                                <label for="claim_currency_deadline" data-i18n="deadline_hours">DEADLINE (HOURS)</label>
+                                <input type="number" name="deadline" id="claim_currency_deadline" class="form-control" placeholder="Deadline" data-i18n="[placeholder]deadline" min="1" data-default="24" value="24" tabindex="4">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group secret_phrase">
+                        <label for="claim_currency_password" data-i18n="passphrase">PASSPHRASE</label>
+                        <input type="password" name="secretPhrase" id="claim_currency_password" class="form-control" placeholder="" tabindex="5">
+                    </div>
+                    <div class="form-group advanced">
+                        <label for="claim_currency_referenced_transaction" data-i18n="referenced_transaction_hash">REFERENCED TRANSACTION HASH</label>
+                        <input type="text" class="form-control" name="referencedTransactionFullHash" id="claim_currency_referenced_transaction" placeholder="Referenced Transaction Full Hash" data-i18n="[placeholder]referenced_transaction_full_hash" tabindex="6" spellcheck="false" />
+                    </div>
+                    <div class="form-group advanced" style="margin-bottom:0;">
+                        <input type="checkbox" name="doNotBroadcast" id="register_currency_do_not_broadcast" value="1" /> <label for="register_currency_do_not_broadcast" style="font-weight:normal;" tabindex="7" data-i18n="do_not_broadcast">Do Not Broadcast</label>
+                    </div>
+                    <div class="form-group advanced">
+                        <input type="checkbox" name="add_note_to_self" id="claim_currency_add_note_to_self" class="add_note_to_self" tabindex="8" /> <label for="claim_currency_add_note_to_self" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_note_to_self">Add Note to Self?</span></label>
+                    </div>
+                    <div class="form-group advanced optional_note">
+                        <label for="claim_currency_note_to_self" data-i18n="note_to_self">Note to Self</label>
+                        <textarea class="form-control" id="claim_currency_note_to_self" name="note_to_self" rows="4" tabindex="9"></textarea>
+                        <div style="margin-top:3px;">
+                            <label style="font-weight:normal;color:#666" data-i18n="note_is_encrypted">This note is encrypted.</span></label>
+                        </div>
+                    </div>
+                    <input type="hidden" name="request_type" value="currencyReserveClaim" />
+                </form>
+            </div>
+            <div class="modal-footer" style="margin-top:0;">
+                <div class="advanced_info"><strong data-i18n="fee">Fee</strong>: <span class="advanced_fee">1 NXT</span> - <a href="#" data-i18n="advanced">advanced</a></div>
+
+                <button type="button" class="btn btn-default" data-dismiss="modal" data-i18n="cancel">Cancel</button>
+                <button type="button" class="btn btn-primary" id="claim_currency_button" data-loading-text="Submitting..." data-i18n="claim;[data-loading-text]submitting">Claim currency</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="mine_currency_modal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title"><span data-i18n="mint_currency">Mint Currency</span> - <span id="mine_currency_code"></span></h4>
+            </div>
+            <div class="modal-body">            
+                <form role="form" autocomplete="off">
+                    <div class="callout callout-danger error_message" style="display:none"></div>
+                    <div class="form-group">
+                        <input type="hidden" name="currency" id="mine_currency_currency" />
+                        <input type="hidden" name="decimals" id="mine_currency_decimals" />
+                    </div>
+                    <div class="form-group">
+                        <label for="mine_currency_units" data-i18n="units">Units</label>
+                        <input type="text" class="form-control" name="units" id="mine_currency_units" data-i18n="units" tabindex="1" />
+                    </div>
+                    <div class="form-group">
+                        <label for="mine_currency_counter" data-i18n="counter">Counter</label>
+                        <input type="text" class="form-control" name="counter" id="mine_currency_counter" data-i18n="counter" tabindex="1" />
+                    </div>
+                    <div class="form-group">
+                        <label for="mine_currency_difficulty" data-i18n="difficulty">Difficulty</label>
+                        <input type="text" class="form-control" name="difficulty" id="mine_currency_difficulty" data-i18n="difficulty" disabled tabindex="1" />
+                    </div>
+                    <div class="form-group">
+                        <label for="mine_currency_nonce" data-i18n="nonce">Nonce</label>
+                        <input type="text" class="form-control" name="nonce" id="mine_currency_nonce" data-i18n="nonce" tabindex="1" />
+                    </div>
+                    <div class="row advanced">
+                        <div class="col-xs-6 col-sm-6 col-md-6">
+                            <div class="form-group">
+                                <label for="mine_currency_fee" data-i18n="fee">FEE</label>
+                                <div class="input-group">
+                                    <input type="number" name="feeNXT" id="mine_currency_fee" class="form-control" step="any" min="1" placeholder="Fee" data-i18n="[placeholder]fee" data-default="1" value="1" tabindex="3">
+                                    <span class="input-group-addon">NXT</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-xs-6 col-sm-6 col-md-6">
+                            <div class="form-group">
+                                <label for="mine_currency_deadline" data-i18n="deadline_hours">DEADLINE (HOURS)</label>
+                                <input type="number" name="deadline" id="mine_currency_deadline" class="form-control" placeholder="Deadline" data-i18n="[placeholder]deadline" min="1" data-default="24" value="24" tabindex="4">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group secret_phrase">
+                        <label for="mine_currency_password" data-i18n="passphrase">PASSPHRASE</label>
+                        <input type="password" name="secretPhrase" id="mine_currency_password" class="form-control" placeholder="" tabindex="5">
+                    </div>
+                    <div class="form-group advanced">
+                        <label for="mine_currency_referenced_transaction" data-i18n="referenced_transaction_hash">REFERENCED TRANSACTION HASH</label>
+                        <input type="text" class="form-control" name="referencedTransactionFullHash" id="mine_currency_referenced_transaction" placeholder="Referenced Transaction Full Hash" data-i18n="[placeholder]referenced_transaction_full_hash" tabindex="6" spellcheck="false" />
+                    </div>
+                    <div class="form-group advanced" style="margin-bottom:0;">
+                        <input type="checkbox" name="doNotBroadcast" id="register_currency_do_not_broadcast" value="1" /> <label for="register_currency_do_not_broadcast" style="font-weight:normal;" tabindex="7" data-i18n="do_not_broadcast">Do Not Broadcast</label>
+                    </div>
+                    <div class="form-group advanced">
+                        <input type="checkbox" name="add_note_to_self" id="mine_currency_add_note_to_self" class="add_note_to_self" tabindex="8" /> <label for="mine_currency_add_note_to_self" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_note_to_self">Add Note to Self?</span></label>
+                    </div>
+                    <div class="form-group advanced optional_note">
+                        <label for="mine_currency_note_to_self" data-i18n="note_to_self">Note to Self</label>
+                        <textarea class="form-control" id="mine_currency_note_to_self" name="note_to_self" rows="4" tabindex="9"></textarea>
+                        <div style="margin-top:3px;">
+                            <label style="font-weight:normal;color:#666" data-i18n="note_is_encrypted">This note is encrypted.</span></label>
+                        </div>
+                    </div>
+                    <input type="hidden" name="request_type" value="currencyMint" />
+                </form>
+            </div>
+            <div class="modal-footer" style="margin-top:0;">
+                <div class="advanced_info"><strong data-i18n="fee">Fee</strong>: <span class="advanced_fee">1 NXT</span> - <a href="#" data-i18n="advanced">advanced</a></div>
+
+                <button type="button" class="btn btn-default" data-dismiss="modal" data-i18n="cancel">Cancel</button>
+                <button type="button" class="btn btn-primary" id="mine_currency_button" data-loading-text="Submitting..." data-i18n="mint;[data-loading-text]submitting">Mint currency</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="reserve_currency_modal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title"><span data-i18n="reserve_currency">Reserve currency</span> - <span id="reserve_currency_code"></span></h4>
+            </div>
+            <div class="modal-body">            
+                <form role="form" autocomplete="off">
+                    <div class="callout callout-danger error_message" style="display:none"></div>
+                    <div class="form-group">
+                        <input type="hidden" class="form-control" name="currency" id="reserve_currency_currency" placeholder="Currency" data-i18n="[placeholder]currency" tabindex="1" />
+                        <input type="hidden" name="decimals" id="reserve_currency_decimals" value="" />
+                        <input type="hidden" name="minReserve" id="reserve_currency_minReserve" value="" />
+                        <input type="hidden" name="currentReserve" id="reserve_currency_currentReserve" value="" />
+                        <input type="hidden" name="resSupply" id="reserve_currency_resSupply" value="" />
+                        </p>
+                        <label for="reserve_currency_resSupply_text" data-i18n="reserve_supply">Reserve Supply</label> </span><i><span id="reserve_currency_resSupply_text"></span></i>
+                        <label for="reserve_currency_initialSupply_text" data-i18n="initial_supply_included">Initial Supply Included</label> </span><i><span id="reserve_currency_initialSupply_text"></span></i>
+                        </p>
+                        <p>
+                        <label for="reserve_currency_minReserve_text" data-i18n="activation_per_unit_reserve">Activation Per Unit Reserve</label> </span><i><span id="reserve_currency_minReserve_text"></span></i>
+                        <label for="reserve_currency_currentReserve_text" data-i18n="current_per_unit_reserve">Current Per Unit Reserve</label> </span><i><span id="reserve_currency_currentReserve_text"></span></i>
+                        </p>
+                    </div>
+                    <div class="form-group">
+                        <label for="reserve_currency_amount" data-i18n="currency">Amount of NXT per currency unit</label>
+                        <input type="text" class="form-control" name="amountPerUnitNQT" id="reserve_currency_amount" placeholder="NXT per unit" data-i18n="amount" tabindex="1" />
+                    </div>
+                    <div class="form-group">
+                        <label for="reserve_currency_total" data-i18n="currency">Amount of NXT reserved</label>
+                        <span id="reserve_currency_total"></span>
+                    </div>
+                    <div class="row advanced">
+                        <div class="col-xs-6 col-sm-6 col-md-6">
+                            <div class="form-group">
+                                <label for="reserve_currency_fee" data-i18n="fee">FEE</label>
+                                <div class="input-group">
+                                    <input type="number" name="feeNXT" id="reserve_currency_fee" class="form-control" step="any" min="1" placeholder="Fee" data-i18n="[placeholder]fee" data-default="1" value="1" tabindex="3">
+                                    <span class="input-group-addon">NXT</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-xs-6 col-sm-6 col-md-6">
+                            <div class="form-group">
+                                <label for="reserve_currency_deadline" data-i18n="deadline_hours">DEADLINE (HOURS)</label>
+                                <input type="number" name="deadline" id="reserve_currency_deadline" class="form-control" placeholder="Deadline" data-i18n="[placeholder]deadline" min="1" data-default="24" value="24" tabindex="4">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group secret_phrase">
+                        <label for="reserve_currency_password" data-i18n="passphrase">PASSPHRASE</label>
+                        <input type="password" name="secretPhrase" id="reserve_currency_password" class="form-control" placeholder="" tabindex="5">
+                    </div>
+                    <div class="form-group advanced">
+                        <label for="reserve_currency_referenced_transaction" data-i18n="referenced_transaction_hash">REFERENCED TRANSACTION HASH</label>
+                        <input type="text" class="form-control" name="referencedTransactionFullHash" id="reserve_currency_referenced_transaction" placeholder="Referenced Transaction Full Hash" data-i18n="[placeholder]referenced_transaction_full_hash" tabindex="6" spellcheck="false" />
+                    </div>
+                    <div class="form-group advanced" style="margin-bottom:0;">
+                        <input type="checkbox" name="doNotBroadcast" id="register_currency_do_not_broadcast" value="1" /> <label for="register_currency_do_not_broadcast" style="font-weight:normal;" tabindex="7" data-i18n="do_not_broadcast">Do Not Broadcast</label>
+                    </div>
+                    <div class="form-group advanced">
+                        <input type="checkbox" name="add_note_to_self" id="reserve_currency_add_note_to_self" class="add_note_to_self" tabindex="8" /> <label for="reserve_currency_add_note_to_self" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_note_to_self">Add Note to Self?</span></label>
+                    </div>
+                    <div class="form-group advanced optional_note">
+                        <label for="reserve_currency_note_to_self" data-i18n="note_to_self">Note to Self</label>
+                        <textarea class="form-control" id="reserve_currency_note_to_self" name="note_to_self" rows="4" tabindex="9"></textarea>
+                        <div style="margin-top:3px;">
+                            <label style="font-weight:normal;color:#666" data-i18n="note_is_encrypted">This note is encrypted.</span></label>
+                        </div>
+                    </div>
+                    <input type="hidden" name="request_type" value="currencyReserveIncrease" />
+                </form>
+            </div>
+            <div class="modal-footer" style="margin-top:0;">
+                <div class="advanced_info"><strong data-i18n="fee">Fee</strong>: <span class="advanced_fee">1 NXT</span> - <a href="#" data-i18n="advanced">advanced</a></div>
+
+                <button type="button" class="btn btn-default" data-dismiss="modal" data-i18n="cancel">Cancel</button>
+                <button type="button" class="btn btn-primary" id="reserve_currency_button" data-loading-text="Submitting..." data-i18n="reserve;[data-loading-text]submitting">Reserve currency</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="delete_currency_modal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title"><span data-i18n="delete_currency">Delete currency</span> - <span id="delete_currency_code"></span></h4>
+            </div>
+            <div class="modal-body">            
+                <form role="form" autocomplete="off">
+                    <div class="callout callout-danger error_message" style="display:none"></div>
+                    <div class="form-group">
+                        <input type="hidden" class="form-control" name="currency" id="delete_currency_currency" />
+                    </div>
+                    
+                    <div class="row advanced">
+                        <div class="col-xs-6 col-sm-6 col-md-6">
+                            <div class="form-group">
+                                <label for="delete_currency_fee" data-i18n="fee">FEE</label>
+                                <div class="input-group">
+                                    <input type="number" name="feeNXT" id="delete_currency_fee" class="form-control" step="any" min="1" placeholder="Fee" data-i18n="[placeholder]fee" data-default="1" value="1" tabindex="3">
+                                    <span class="input-group-addon">NXT</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-xs-6 col-sm-6 col-md-6">
+                            <div class="form-group">
+                                <label for="delete_currency_deadline" data-i18n="deadline_hours">DEADLINE (HOURS)</label>
+                                <input type="number" name="deadline" id="delete_currency_deadline" class="form-control" placeholder="Deadline" data-i18n="[placeholder]deadline" min="1" data-default="24" value="24" tabindex="4">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group secret_phrase">
+                        <label for="delete_currency_password" data-i18n="passphrase">PASSPHRASE</label>
+                        <input type="password" name="secretPhrase" id="delete_currency_password" class="form-control" placeholder="" tabindex="5">
+                    </div>
+                    <div class="form-group advanced">
+                        <label for="delete_currency_referenced_transaction" data-i18n="referenced_transaction_hash">REFERENCED TRANSACTION HASH</label>
+                        <input type="text" class="form-control" name="referencedTransactionFullHash" id="delete_currency_referenced_transaction" placeholder="Referenced Transaction Full Hash" data-i18n="[placeholder]referenced_transaction_full_hash" tabindex="6" spellcheck="false" />
+                    </div>
+                    <div class="form-group advanced" style="margin-bottom:0;">
+                        <input type="checkbox" name="doNotBroadcast" id="register_currency_do_not_broadcast" value="1" /> <label for="register_currency_do_not_broadcast" style="font-weight:normal;" tabindex="7" data-i18n="do_not_broadcast">Do Not Broadcast</label>
+                    </div>
+                    <div class="form-group advanced">
+                        <input type="checkbox" name="add_note_to_self" id="delete_currency_add_note_to_self" class="add_note_to_self" tabindex="8" /> <label for="delete_currency_add_note_to_self" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_note_to_self">Add Note to Self?</span></label>
+                    </div>
+                    <div class="form-group advanced optional_note">
+                        <label for="delete_currency_note_to_self" data-i18n="note_to_self">Note to Self</label>
+                        <textarea class="form-control" id="delete_currency_note_to_self" name="note_to_self" rows="4" tabindex="9"></textarea>
+                        <div style="margin-top:3px;">
+                            <label style="font-weight:normal;color:#666" data-i18n="note_is_encrypted">This note is encrypted.</span></label>
+                        </div>
+                    </div>
+                    <input type="hidden" name="request_type" value="deleteCurrency" />
+                </form>
+            </div>
+            <div class="modal-footer" style="margin-top:0;">
+                <div class="advanced_info"><strong data-i18n="fee">Fee</strong>: <span class="advanced_fee">1 NXT</span> - <a href="#" data-i18n="advanced">advanced</a></div>
+
+                <button type="button" class="btn btn-default" data-dismiss="modal" data-i18n="cancel">Cancel</button>
+                <button type="button" class="btn btn-primary" id="delete_currency_button" data-loading-text="Submitting..." data-i18n="delete;[data-loading-text]submitting">Delete currency</button>
+            </div>
+        </div>
+    </div>
+</div>
