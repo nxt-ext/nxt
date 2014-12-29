@@ -205,3 +205,28 @@
         </div>
     </div>
 </div>
+
+<div class="modal fade" id="add_asset_bookmark_modal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title" data-i18n="add_asset">Add Asset</h4>
+            </div>
+            <div class="modal-body">            
+                <form role="form" autocomplete="off">
+                    <div class="callout callout-danger error_message" style="display:none"></div>
+                    <div class="form-group">
+                        <label for="add_asset_bookmark_id" data-i18n="asset_or_account_id">ASSET OR ACCOUNT ID</label> <i class="fa fa-question-circle show_popover" style="color:#4CAA6E" data-content="Find the ID on the issuer's website or announcement page." data-container="body" data-i18n="[data-content]find_asset_id_help"></i></label>
+                        <input type="text" class="form-control" name="id" id="add_asset_bookmark_id" placeholder="ID" autofocus tabindex="1" />
+                    </div>
+                    <input type="hidden" name="request_type" value="addAssetBookmark" />
+                </form>
+            </div>
+            <div class="modal-footer" style="margin-top:0;">
+                <button type="button" class="btn btn-default" data-dismiss="modal" data-i18n="cancel">Cancel</button>
+                <button type="button" class="btn btn-primary" data-loading-text="Submitting..." data-i18n="add_asset;[data-loading-text]submitting">Add Asset</button>
+            </div>
+        </div>
+    </div>
+</div>
