@@ -292,50 +292,14 @@
             </aside>
             <aside id="content" class="right-side">
                 
-                <!-- dashboard_page removed -->
-
-                <!-- transactions_page removed -->
-
-                <!-- messages_page removed -->
-                
-                <!-- contacts_page removed -->
-                
-                <!-- polls_page removed -->
-                
-                <!-- aliases_page removed -->
-                                
-                <!-- asset exchange pages removed (5) -->
-
-                <!-- monetary system pages removed (3) -->
-
-                <!-- DGS pages removed (5) -->
-
-                <!-- settings_page removed -->
-
-                <!-- peers_page removed -->
-
-                <!-- news_page removed -->                
-
-                <!-- blocks_page removed -->
+                <!-- Pages moved to own files in html/pages/ -->
 
             </aside>
         </div>
 	
 		<div id="testnet_warning" style="display:none;position:fixed;bottom:0;left:0;padding:5px;background:red;color:white;border-top-right-radius:5px;" data-i18n="[html]testnet_warning"><strong>Warning</strong>: You are connected to the TestNet. Do not use your real passphrase!</div>
 
-        <!-- lease_balance_modal removed -->
-		
-        <!-- stop_forging_modal removed -->
-
-        <!-- start_forging_modal removed -->
-
-        <!-- cancel_order_modal removed -->
-		
-        <!-- asset_order_modal removed -->
-		
-        <!-- transfer_asset_modal removed -->
-				
-        <!-- transfer_currency_modal removed -->
+        <!-- Modals moved to own files in html/modals/ -->
 		
 		<div class="modal fade" id="add_asset_bookmark_modal" tabindex="-1" role="dialog" aria-hidden="true">
 			<div class="modal-dialog">
@@ -3832,13 +3796,10 @@
             $.get("html/pages/peers.html", '', function (data) { $("#content").append(data); });
             $.get("html/pages/news.html", '', function (data) { $("#content").append(data); });
 
-            $.get("html/modals/lease_balance.html", '', function (data) { $("body").append(data); });
-            $.get("html/modals/stop_forging.html", '', function (data) { $("body").append(data); });
-            $.get("html/modals/start_forging.html", '', function (data) { $("body").append(data); });
-            $.get("html/modals/cancel_order.html", '', function (data) { $("body").append(data); });
-            $.get("html/modals/asset_order.html", '', function (data) { $("body").append(data); });
-            $.get("html/modals/transfer_asset.html", '', function (data) { $("body").append(data); });
-            $.get("html/modals/transfer_currency.html", '', function (data) { $("body").append(data); });
+            $.get("html/modals/balanceleasing.html", '', function (data) { $("body").append(data); });
+            $.get("html/modals/forging.html", '', function (data) { $("body").append(data); });
+            $.get("html/modals/asset_exchange.html", '', function (data) { $("body").append(data); });
+            $.get("html/modals/monetary_system.html", '', function (data) { $("body").append(data); });
             jQuery.ajaxSetup({ async: true });
         </script>
 
