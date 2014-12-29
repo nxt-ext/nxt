@@ -129,7 +129,6 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
                 builder.encryptToSelfMessage(encryptToSelfMessage);
             }
             Transaction transaction = builder.build();
-            transaction.validate();
             try {
                 if (Convert.safeAdd(amountNQT, transaction.getFeeNQT()) > senderAccount.getUnconfirmedBalanceNQT()) {
                     return NOT_ENOUGH_FUNDS;
@@ -147,9 +146,11 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
                     Nxt.getTransactionProcessor().broadcast(transaction);
                     response.put("broadcasted", true);
                 } else {
+                    transaction.validate();
                     response.put("broadcasted", false);
                 }
             } else {
+                transaction.validate();
                 response.put("broadcasted", false);
             }
             response.put("unsignedTransactionBytes", Convert.toHexString(transaction.getUnsignedBytes()));

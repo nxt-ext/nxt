@@ -1,6 +1,7 @@
 package nxt.http;
 
 import nxt.Constants;
+import nxt.CurrencyType;
 import nxt.Genesis;
 import nxt.MonetarySystem;
 import nxt.TransactionType;
@@ -204,6 +205,14 @@ public final class GetConstants extends APIServlet.APIRequestHandler {
         transactionType.put("subtypes", subtypes);
         transactionTypes.add(transactionType);
         response.put("transactionTypes", transactionTypes);
+
+        JSONArray currencyTypes = new JSONArray();
+        for (CurrencyType currencyType : CurrencyType.values()) {
+            JSONObject typeJSON = new JSONObject();
+            typeJSON.put(currencyType.toString(), currencyType.getCode());
+            currencyTypes.add(typeJSON);
+        }
+        response.put("currencyTypes", currencyTypes);
 
         JSONArray peerStates = new JSONArray();
         JSONObject peerState = new JSONObject();

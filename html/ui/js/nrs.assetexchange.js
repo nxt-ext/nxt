@@ -975,92 +975,16 @@ var NRS = (function(NRS, $, undefined) {
 		} catch (err) {}
 	});
 
-	function isControlKey(charCode) {
-		if (charCode >= 32)
-			return false;
-		if (charCode == 10)
-			return false;
-		if (charCode == 13)
-			return false;
-
-		return true;
-	}
-
 	$("#buy_asset_quantity, #buy_asset_price, #sell_asset_quantity, #sell_asset_price, #buy_asset_fee, #sell_asset_fee").keydown(function(e) {
 		var charCode = !e.charCode ? e.which : e.charCode;
 
-		if (isControlKey(charCode) || e.ctrlKey || e.metaKey) {
+		if (NRS.isControlKey(charCode) || e.ctrlKey || e.metaKey) {
 			return;
 		}
-
 		var isQuantityField = /_quantity/i.test($(this).attr("id"));
-
-		var maxFractionLength = (isQuantityField ? NRS.currentAsset.decimals : 8 - NRS.currentAsset.decimals);
-
-		if (maxFractionLength) {
-			//allow 1 single period character
-			if (charCode == 110 || charCode == 190) {
-				if ($(this).val().indexOf(".") != -1) {
-					e.preventDefault();
-					return false;
-				} else {
-					return;
-				}
-			}
-		} else {
-			//do not allow period
-			if (charCode == 110 || charCode == 190 || charCode == 188) {
-				$.growl($.t("error_fractions"), {
-					"type": "danger"
-				});
-				e.preventDefault();
-				return false;
-			}
-		}
-
-		var input = $(this).val() + String.fromCharCode(charCode);
-
-		var afterComma = input.match(/\.(\d*)$/);
-
-		//only allow as many as there are decimals allowed..
-		if (afterComma && afterComma[1].length > maxFractionLength) {
-			var selectedText = NRS.getSelectedText();
-
-			if (selectedText != $(this).val()) {
-				var errorMessage;
-
-				if (isQuantityField) {
-					errorMessage = $.t("error_asset_decimals", {
-						"count": (0 + NRS.currentAsset.decimals)
-					});
-				} else {
-					errorMessage = $.t("error_decimals", {
-						"count": (8 - NRS.currentAsset.decimals)
-					});
-				}
-
-				$.growl(errorMessage, {
-					"type": "danger"
-				});
-
-				e.preventDefault();
-				return false;
-			}
-		}
-
-		//numeric characters, left/right key, backspace, delete
-		if (charCode == 8 || charCode == 37 || charCode == 39 || charCode == 46 || (charCode >= 48 && charCode <= 57 && !isNaN(String.fromCharCode(charCode))) || (charCode >= 96 && charCode <= 105)) {
-			return;
-		} else {
-			//comma
-			if (charCode == 188) {
-				$.growl($.t("error_comma_not_allowed"), {
-					"type": "danger"
-				});
-			}
-			e.preventDefault();
-			return false;
-		}
+		var decimals = NRS.currentAsset.decimals;
+		var maxFractionLength = (isQuantityField ? decimals : 8 - decimals);
+		NRS.validateDecimals(maxFractionLength, charCode, $(this).val(), e);
 	});
 
 	//calculate preview price (calculated on every keypress)

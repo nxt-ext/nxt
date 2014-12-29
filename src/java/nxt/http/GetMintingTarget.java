@@ -15,6 +15,7 @@ import java.math.BigInteger;
  * Parameters
  * <ul>
  * <li>currency - currency id
+ * <li>account - miner account id
  * <li>units - number of currency units the miner is trying to mint
  * </ul>
  */
@@ -23,7 +24,7 @@ public final class GetMintingTarget extends APIServlet.APIRequestHandler {
     static final GetMintingTarget instance = new GetMintingTarget();
 
     private GetMintingTarget() {
-        super(new APITag[] {APITag.MS}, "currency", "code", "units");
+        super(new APITag[] {APITag.MS}, "currency", "account", "units");
     }
 
     @Override
@@ -32,11 +33,10 @@ public final class GetMintingTarget extends APIServlet.APIRequestHandler {
         JSONObject json = new JSONObject();
         json.put("currency", Convert.toUnsignedLong(currency.getId()));
         long units = ParameterParser.getLong(req, "units", 1, currency.getMaxSupply() - currency.getReserveSupply(), true);
-        BigInteger target = nxt.CurrencyMint.getNumericTarget(currency.getMinDifficulty(), currency.getMaxDifficulty(), units,
-                currency.getCurrentSupply() - currency.getReserveSupply(), currency.getMaxSupply() - currency.getReserveSupply());
-        json.put("difficulty", BigInteger.valueOf(2).pow(256).divide(target));
-        json.put("targetBytes", Convert.toHexString(nxt.CurrencyMint.getTarget(currency.getMinDifficulty(), currency.getMaxDifficulty(), units,
-                currency.getCurrentSupply() - currency.getReserveSupply(), currency.getMaxSupply() - currency.getReserveSupply())));
+        BigInteger numericTarget = nxt.CurrencyMint.getNumericTarget(currency, units);
+        json.put("difficulty", BigInteger.valueOf(2).pow(256).subtract(BigInteger.ONE).divide(numericTarget));
+        json.put("targetBytes", Convert.toHexString(nxt.CurrencyMint.getTarget(numericTarget)));
+        json.put("counter", nxt.CurrencyMint.getCounter(currency.getId(), ParameterParser.getAccount(req).getId()));
         return json;
     }
 

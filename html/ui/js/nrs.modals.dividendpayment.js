@@ -9,14 +9,14 @@ var NRS = (function(NRS, $, undefined) {
 
         data.asset = NRS.currentAsset.asset;
 
-        if (!data.amountNXTPerAsset) {
+        if (!data.amountNXTPerShare) {
             return {
-                "error": $.t("error_amount_per_asset_required")
+                "error": $.t("error_amount_per_share_required")
             }
         }
         else {
             data.amountNQTPerQNT = NRS.calculatePricePerWholeQNT(
-                NRS.convertToNQT(data.amountNXTPerAsset),
+                NRS.convertToNQT(data.amountNXTPerShare),
                 NRS.currentAsset.decimals);
         }
 
@@ -26,7 +26,7 @@ var NRS = (function(NRS, $, undefined) {
             }
         }
 
-        delete data.amountNXTPerAsset;
+        delete data.amountNXTPerShare;
 
         return {
             "data": data
@@ -37,21 +37,31 @@ var NRS = (function(NRS, $, undefined) {
         $(this).find(".dividend_payment_info").first().hide();
     });
 
-    $("#dividend_payment_amount_per_asset, #dividend_payment_height").on("blur", function() {
+    $("#dividend_payment_amount_per_share").keydown(function(e) {
+        var decimals = NRS.currentAsset.decimals;
+
+        var charCode = !e.charCode ? e.which : e.charCode;
+        if (NRS.isControlKey(charCode) || e.ctrlKey || e.metaKey) {
+            return;
+        }
+        return NRS.validateDecimals(8-decimals, charCode, $(this).val(), e);
+   	});
+
+    $("#dividend_payment_amount_per_share, #dividend_payment_height").on("blur", function() {
         var $modal = $(this).closest(".modal");
-        var amountNXTPerAsset = $modal.find("#dividend_payment_amount_per_asset").val();
+        var amountNXTPerShare = $modal.find("#dividend_payment_amount_per_share").val();
         var height = $modal.find("#dividend_payment_height").val();
 
         var $callout = $modal.find(".dividend_payment_info").first();
 
-        showDividendPaymentInfoPreview($callout, amountNXTPerAsset, height);
+        showDividendPaymentInfoPreview($callout, amountNXTPerShare, height);
     });
 
-    function showDividendPaymentInfoPreview($callout, amountNXTPerAsset, height) {
+    function showDividendPaymentInfoPreview($callout, amountNXTPerShare, height) {
         var classes = "callout-info callout-danger callout-warning";
 
-        if (!amountNXTPerAsset) {
-            $callout.html($.t("error_amount_per_asset_required"));
+        if (!amountNXTPerShare) {
+            $callout.html($.t("error_amount_per_share_required"));
             $callout.removeClass(classes).addClass("callout-warning").show();
         }
         else if (!/^\d+$/.test(height)) {
@@ -78,7 +88,7 @@ var NRS = (function(NRS, $, undefined) {
                         });
 
                     var priceNQT = new BigInteger(NRS.calculatePricePerWholeQNT(
-                        NRS.convertToNQT(amountNXTPerAsset),
+                        NRS.convertToNQT(amountNXTPerShare),
                         NRS.currentAsset.decimals));
 
                     var totalNXT = NRS.calculateOrderTotal(totalQuantityQNT, priceNQT);
@@ -87,7 +97,8 @@ var NRS = (function(NRS, $, undefined) {
                         "dividend_payment_info_preview_success",
                         {
                             "amountNXT": totalNXT,
-                            "totalQuantity": NRS.formatQuantity(totalQuantityQNT, NRS.currentAsset.decimals)
+                            "totalQuantity": NRS.formatQuantity(totalQuantityQNT, NRS.currentAsset.decimals),
+                            "recipientCount": qualifiedDividendRecipients.length
                         }));
                     $callout.removeClass(classes).addClass("callout-info").show();
                 },

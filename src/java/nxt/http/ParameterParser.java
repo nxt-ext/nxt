@@ -5,6 +5,8 @@ import nxt.Alias;
 import nxt.Asset;
 import nxt.Constants;
 import nxt.Currency;
+import nxt.CurrencyBuyOffer;
+import nxt.CurrencySellOffer;
 import nxt.DigitalGoodsStore;
 import nxt.Nxt;
 import nxt.NxtException;
@@ -137,15 +139,7 @@ final class ParameterParser {
     static Currency getCurrency(HttpServletRequest req) throws ParameterException {
         String currencyValue = Convert.emptyToNull(req.getParameter("currency"));
         if (currencyValue == null) {
-            String currencyCode = Convert.emptyToNull(req.getParameter("code"));
-            if (currencyCode == null) {
-                throw new ParameterException(MISSING_CURRENCY);
-            }
-            Currency currency = Currency.getCurrencyByCode(currencyCode);
-            if (currency == null) {
-                throw new ParameterException(UNKNOWN_CURRENCY);
-            }
-            return currency;
+            throw new ParameterException(MISSING_CURRENCY);
         }
         Currency currency;
         try {
@@ -158,6 +152,42 @@ final class ParameterParser {
             throw new ParameterException(UNKNOWN_CURRENCY);
         }
         return currency;
+    }
+
+    static CurrencyBuyOffer getBuyOffer(HttpServletRequest req) throws ParameterException {
+        String offerValue = Convert.emptyToNull(req.getParameter("offer"));
+        if (offerValue == null) {
+            throw new ParameterException(MISSING_OFFER);
+        }
+        CurrencyBuyOffer offer;
+        try {
+            long offerId = Convert.parseUnsignedLong(offerValue);
+            offer = CurrencyBuyOffer.getOffer(offerId);
+        } catch (RuntimeException e) {
+            throw new ParameterException(INCORRECT_OFFER);
+        }
+        if (offer == null) {
+            throw new ParameterException(UNKNOWN_OFFER);
+        }
+        return offer;
+    }
+
+    static CurrencySellOffer getSellOffer(HttpServletRequest req) throws ParameterException {
+        String offerValue = Convert.emptyToNull(req.getParameter("offer"));
+        if (offerValue == null) {
+            throw new ParameterException(MISSING_OFFER);
+        }
+        CurrencySellOffer offer;
+        try {
+            long offerId = Convert.parseUnsignedLong(offerValue);
+            offer = CurrencySellOffer.getOffer(offerId);
+        } catch (RuntimeException e) {
+            throw new ParameterException(INCORRECT_OFFER);
+        }
+        if (offer == null) {
+            throw new ParameterException(UNKNOWN_OFFER);
+        }
+        return offer;
     }
 
     static long getQuantityQNT(HttpServletRequest req) throws ParameterException {
@@ -188,7 +218,7 @@ final class ParameterParser {
         DigitalGoodsStore.Goods goods;
         try {
             long goodsId = Convert.parseUnsignedLong(goodsValue);
-            goods = DigitalGoodsStore.getGoods(goodsId);
+            goods = DigitalGoodsStore.Goods.getGoods(goodsId);
             if (goods == null) {
                 throw new ParameterException(UNKNOWN_GOODS);
             }
@@ -273,7 +303,7 @@ final class ParameterParser {
             throw new ParameterException(MISSING_PURCHASE);
         }
         try {
-            DigitalGoodsStore.Purchase purchase = DigitalGoodsStore.getPurchase(Convert.parseUnsignedLong(purchaseIdString));
+            DigitalGoodsStore.Purchase purchase = DigitalGoodsStore.Purchase.getPurchase(Convert.parseUnsignedLong(purchaseIdString));
             if (purchase == null) {
                 throw new ParameterException(INCORRECT_PURCHASE);
             }

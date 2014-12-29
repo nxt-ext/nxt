@@ -7,7 +7,7 @@ var NRS = (function(NRS, $, undefined) {
 		"user": 0
 	};
 
-	$("#blocks_table, #polls_table, #contacts_table, #transactions_table, #dashboard_transactions_table, #asset_account, #asset_exchange_ask_orders_table, #transfer_history_table, #asset_exchange_bid_orders_table, #alias_info_table, .dgs_page_contents, .modal-content, #register_alias_modal, #asset_exchange_trade_history_table, #trade_history_table, #ms_open_sell_orders_table, #ms_open_buy_orders_table, #ms_exchanges_history_table").on("click", "a[data-user]", function(e) {
+	$("#blocks_table, #polls_table, #contacts_table, #transactions_table, #dashboard_transactions_table, #asset_account, #asset_exchange_ask_orders_table, #transfer_history_table, #asset_exchange_bid_orders_table, #alias_info_table, .dgs_page_contents, .modal-content, #register_alias_modal, #asset_exchange_trade_history_table, #trade_history_table, #ms_open_sell_orders_table, #ms_open_buy_orders_table, #ms_exchanges_history_table, #exchange_history_table").on("click", "a[data-user]", function(e) {
 		e.preventDefault();
 
 		var account = $(this).data("user");
@@ -214,21 +214,36 @@ var NRS = (function(NRS, $, undefined) {
 								break;
 						}
 					} else if (transaction.type == 5) {
-					switch (transaction.subtype) {
-						case 0:
-							transactionType = $.t("issue_currency");
-							break;
-						case 1:
-							break;
-						case 2:
-							break;
-						case 3:
-							break;
-						case 4:
-							transactionType = $.t("publish_exchange_offer");
-							break;
+						switch (transaction.subtype) {
+							case 0:
+								transactionType = $.t("issue_currency");
+								break;
+							case 1:
+								transactionType = $.t("reserve_increase");
+								break;
+							case 2:
+								transactionType = $.t("reserve_claim");
+								break;
+							case 3:
+								transactionType = $.t("currency_transfer");
+								break;
+							case 4:
+								transactionType = $.t("publish_exchange_offer");
+								break;
+							case 5:
+								transactionType = $.t("buy_currency");
+								break;
+							case 6:
+								transactionType = $.t("sell_currency");
+								break;
+							case 7:
+								transactionType = $.t("mint_currency");
+								break;
+							case 8:
+								transactionType = $.t("delete_currency");
+								break;	
+						}
 					}
-				}
 
 					if (/^NXT\-/i.test(NRS.userInfoModal.user)) {
 						var receiving = (transaction.recipientRS == NRS.userInfoModal.user);
@@ -243,7 +258,7 @@ var NRS = (function(NRS, $, undefined) {
 
 					var account = (receiving ? "sender" : "recipient");
 
-					rows += "<tr><td>" + NRS.formatTimestamp(transaction.timestamp) + "</td><td>" + transactionType + "</td><td style='width:5px;padding-right:0;'>" + (transaction.type == 0 ? (receiving ? "<i class='fa fa-plus-circle' style='color:#65C62E'></i>" : "<i class='fa fa-minus-circle' style='color:#E04434'></i>") : "") + "</td><td " + (transaction.type == 0 && receiving ? " style='color:#006400;'" : (!receiving && transaction.amount > 0 ? " style='color:red'" : "")) + ">" + NRS.formatAmount(transaction.amount) + "</td><td " + (!receiving ? " style='color:red'" : "") + ">" + NRS.formatAmount(transaction.fee) + "</td><td>" + NRS.getAccountTitle(transaction, account) + "</td></tr>";
+					rows += "<tr><td><a href='#' data-transaction='" + String(transaction.transaction).escapeHTML() + "'>" + NRS.formatTimestamp(transaction.timestamp) + "</a></td><td>" + transactionType + "</td><td style='width:5px;padding-right:0;'>" + (transaction.type == 0 ? (receiving ? "<i class='fa fa-plus-circle' style='color:#65C62E'></i>" : "<i class='fa fa-minus-circle' style='color:#E04434'></i>") : "") + "</td><td " + (transaction.type == 0 && receiving ? " style='color:#006400;'" : (!receiving && transaction.amount > 0 ? " style='color:red'" : "")) + ">" + NRS.formatAmount(transaction.amount) + "</td><td " + (!receiving ? " style='color:red'" : "") + ">" + NRS.formatAmount(transaction.fee) + "</td><td>" + NRS.getAccountTitle(transaction, account) + "</td></tr>";
 				}
 
 				$("#user_info_modal_transactions_table tbody").empty().append(rows);
@@ -320,6 +335,30 @@ var NRS = (function(NRS, $, undefined) {
 
 			$("#user_info_modal_marketplace_table tbody").empty().append(rows);
 			NRS.dataLoadFinished($("#user_info_modal_marketplace_table"));
+		});
+	}
+	
+	NRS.userInfoModal.currencies = function() {
+		NRS.sendRequest("getAccountCurrencies+", {
+			"account": NRS.userInfoModal.user
+		}, function(response) {
+			var rows = "";
+			if (response.accountCurrencies && response.accountCurrencies.length) {
+				for (var i = 0; i < response.accountCurrencies.length; i++) {
+					var currency = response.accountCurrencies[i];
+					var code = String(currency.code).escapeHTML();
+					var decimals = String(currency.decimals).escapeHTML();
+					rows += "<tr>" +
+						"<td>" +
+							"<a href='#' data-transaction='" + String(currency.currency).escapeHTML() + "' >" + code + "</a>" +
+						"</td>" +
+						"<td>" + currency.name + "</td>" +
+						"<td>" + NRS.formatQuantity(currency.unconfirmedUnits, currency.decimals) + "</td>" +
+					"</tr>";
+				}
+			}
+			$("#user_info_modal_currencies_table tbody").empty().append(rows);
+			NRS.dataLoadFinished($("#user_info_modal_currencies_table"));
 		});
 	}
 

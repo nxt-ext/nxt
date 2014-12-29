@@ -120,8 +120,7 @@ public class BlockchainProcessorTest extends AbstractBlockchainTest {
     private static void rescan(final int numBlocks) {
         int endHeight = blockchain.getHeight();
         int rescanHeight = endHeight - numBlocks;
-        blockchainProcessor.validateAtNextScan();
-        blockchainProcessor.scan(rescanHeight);
+        blockchainProcessor.scan(rescanHeight, true);
         Assert.assertEquals(endHeight, blockchain.getHeight());
         Logger.logMessage("Successfully rescanned blockchain from " + rescanHeight + " to " + endHeight);
         compareTraceFiles();

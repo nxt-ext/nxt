@@ -31,7 +31,7 @@ public final class CurrencyBuy extends CreateTransaction {
     static final CurrencyBuy instance = new CurrencyBuy();
 
     private CurrencyBuy() {
-        super(new APITag[] {APITag.MS, APITag.CREATE_TRANSACTION}, "currency", "code", "rateNQT", "units");
+        super(new APITag[] {APITag.MS, APITag.CREATE_TRANSACTION}, "currency", "rateNQT", "units");
     }
 
     @Override

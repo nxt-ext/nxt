@@ -18,18 +18,21 @@ import javax.servlet.http.HttpServletRequest;
  * <p/>
  * Pass the following parameters in order to issue a currency
  * <ul>
- * <li>name - unique identifier of the currency composed of between 3 to 10 latin alphabetic symbols and numbers
- * <li>code - unique 3 letter currency trading symbol composed of upper case latin letters
+ * <li>name - unique identifier of the currency composed of between 3 to 10 latin alphabetic symbols and numbers, name must be
+ * no shorter than code. name and code are mutually unique.
+ * <li>code - unique 3 to 5 letter currency trading symbol composed of upper case latin letters
  * <li>description - free text description of the currency limited to 1000 characters
  * <li>type - a numeric value representing a bit vector modeling the currency capabilities (see below)
  * <li>ruleset - for future use, always set to 0
  * <li>maxSupply - the total number of currency units which can be created
  * <li>initialSupply - the number of currency units created when the currency is issued (pre-mine)
+ * <li>decimals - currency units are divisible to this number of decimals
  * <li>issuanceHeight - the blockchain height at which the currency would become active
+ * For {@link nxt.CurrencyType#RESERVABLE} currency
  * <li>minReservePerUnitNQT - the minimum NXT value per unit to allow the currency to become active
  * For {@link nxt.CurrencyType#RESERVABLE} currency
  * <li>reserveSupply - the number of units that will be distributed to founders when currency becomes active (less initialSupply)
- * For {@link nxt.CurrencyType#MINTABLE} currency
+ * For {@link nxt.CurrencyType#RESERVABLE} currency
  * <li>minDifficulty - for mint-able currency, the exponent of the initial difficulty.
  * For {@link nxt.CurrencyType#MINTABLE} currency
  * <li>maxDifficulty - for mint-able currency, the exponent of the final difficulty.
@@ -41,10 +44,14 @@ import javax.servlet.http.HttpServletRequest;
  * Constraints
  * <ul>
  * <li>A given currency can not be neither {@link nxt.CurrencyType#EXCHANGEABLE} nor {@link nxt.CurrencyType#CLAIMABLE}.<br>
- * <li>Currency becomes active once the blockchain height reaches the currency issuance height.<br>
- * At this time, in case the currency is {@link nxt.CurrencyType#RESERVABLE} and the minReservePerUnitNQT has not been reached the currency issuance is cancelled and
+ * <li>A {@link nxt.CurrencyType#RESERVABLE} currency becomes active once the blockchain height reaches the currency issuance height.<br>
+ * At this time, if the minReservePerUnitNQT has not been reached the currency issuance is cancelled and
  * funds are returned to the founders.<br>
  * Otherwise the currency becomes active and remains active until deleted, provided deletion is possible.
+ * When a {@link nxt.CurrencyType#RESERVABLE} becomes active, in case it is {@link nxt.CurrencyType#CLAIMABLE} the NXT used for
+ * reserving the currency are locked until they are claimed back.
+ * When a {@link nxt.CurrencyType#RESERVABLE} becomes active, in case it is non {@link nxt.CurrencyType#CLAIMABLE} the NXT used for
+ * reserving the currency are sent to the issuer account as crowd funding.
  * <li>When issuing a {@link nxt.CurrencyType#MINTABLE} currency, the number of units per {@link nxt.http.CurrencyMint} cannot exceed 0.01% of the
  * total supply. Therefore make sure totalSupply > 10000 or otherwise the currency cannot be minted
  * <li>difficulty is calculated as follows<br>
@@ -110,8 +117,8 @@ public final class IssueCurrency extends CreateTransaction {
         long initialSupply = ParameterParser.getLong(req, "initialSupply", 0, maxSupply, false);
         int issuanceHeight = ParameterParser.getInt(req, "issuanceHeight", 0, Integer.MAX_VALUE, false);
         long minReservePerUnit = ParameterParser.getLong(req, "minReservePerUnitNQT", 1, Constants.MAX_BALANCE_NQT, false);
-        byte minDifficulty = ParameterParser.getByte(req, "minDifficulty", (byte)0, Byte.MAX_VALUE);
-        byte maxDifficulty = ParameterParser.getByte(req, "maxDifficulty", (byte)0, Byte.MAX_VALUE);
+        int minDifficulty = ParameterParser.getInt(req, "minDifficulty", 1, 255, false);
+        int maxDifficulty = ParameterParser.getInt(req, "maxDifficulty", 1, 255, false);
         byte ruleset = ParameterParser.getByte(req, "ruleset", (byte)0, Byte.MAX_VALUE);
         byte algorithm = ParameterParser.getByte(req, "algorithm", (byte)0, Byte.MAX_VALUE);
         byte decimals = ParameterParser.getByte(req, "decimals", (byte)0, Byte.MAX_VALUE);

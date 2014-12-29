@@ -1070,8 +1070,8 @@ public interface Attachment extends Appendix {
         private final int height;
         private final long amountNQTPerQNT;
 
-        ColoredCoinsDividendPayment(ByteBuffer buffer, byte transactionVersiont) {
-            super(buffer, transactionVersiont);
+        ColoredCoinsDividendPayment(ByteBuffer buffer, byte transactionVersion) {
+            super(buffer, transactionVersion);
             this.assetId = buffer.getLong();
             this.height = buffer.getInt();
             this.amountNQTPerQNT = buffer.getLong();
@@ -1694,8 +1694,8 @@ public interface Attachment extends Appendix {
         private final long maxSupply;
         private final int issuanceHeight;
         private final long minReservePerUnitNQT;
-        private final byte minDifficulty;
-        private final byte maxDifficulty;
+        private final int minDifficulty;
+        private final int maxDifficulty;
         private final byte ruleset;
         private final byte algorithm;
         private final byte decimals;
@@ -1711,14 +1711,14 @@ public interface Attachment extends Appendix {
             this.maxSupply = buffer.getLong();
             this.issuanceHeight = buffer.getInt();
             this.minReservePerUnitNQT = buffer.getLong();
-            this.minDifficulty = buffer.get();
-            this.maxDifficulty = buffer.get();
+            this.minDifficulty = buffer.get() & 0xFF;
+            this.maxDifficulty = buffer.get() & 0xFF;
             this.ruleset = buffer.get();
             this.algorithm = buffer.get();
             this.decimals = buffer.get();
         }
 
-        MonetarySystemCurrencyIssuance(JSONObject attachmentData) throws NxtException.NotValidException {
+        MonetarySystemCurrencyIssuance(JSONObject attachmentData) {
             super(attachmentData);
             this.name = (String)attachmentData.get("name");
             this.code = (String)attachmentData.get("code");
@@ -1729,21 +1729,21 @@ public interface Attachment extends Appendix {
             this.maxSupply = Convert.parseLong(attachmentData.get("maxSupply"));
             this.issuanceHeight = ((Long)attachmentData.get("issuanceHeight")).intValue();
             this.minReservePerUnitNQT = Convert.parseLong(attachmentData.get("minReservePerUnitNQT"));
-            this.minDifficulty = ((Long)attachmentData.get("minDifficulty")).byteValue();
-            this.maxDifficulty = ((Long)attachmentData.get("maxDifficulty")).byteValue();
+            this.minDifficulty = ((Long)attachmentData.get("minDifficulty")).intValue();
+            this.maxDifficulty = ((Long)attachmentData.get("maxDifficulty")).intValue();
             this.ruleset = ((Long)attachmentData.get("ruleset")).byteValue();
             this.algorithm = ((Long)attachmentData.get("algorithm")).byteValue();
             this.decimals = ((Long) attachmentData.get("decimals")).byteValue();
         }
 
-        public MonetarySystemCurrencyIssuance(String name, String code, String description, byte type, long initalSupply, long reserveSupply,
-                                              long maxSupply, int issuanceHeight, long minReservePerUnitNQT, byte minDifficulty, byte maxDifficulty,
+        public MonetarySystemCurrencyIssuance(String name, String code, String description, byte type, long initialSupply, long reserveSupply,
+                                              long maxSupply, int issuanceHeight, long minReservePerUnitNQT, int minDifficulty, int maxDifficulty,
                                               byte ruleset, byte algorithm, byte decimals) {
             this.name = name;
             this.code = code;
             this.description = description;
             this.type = type;
-            this.initialSupply = initalSupply;
+            this.initialSupply = initialSupply;
             this.reserveSupply = reserveSupply;
             this.maxSupply = maxSupply;
             this.issuanceHeight = issuanceHeight;
@@ -1783,8 +1783,8 @@ public interface Attachment extends Appendix {
             buffer.putLong(maxSupply);
             buffer.putInt(issuanceHeight);
             buffer.putLong(minReservePerUnitNQT);
-            buffer.put(minDifficulty);
-            buffer.put(maxDifficulty);
+            buffer.put((byte)minDifficulty);
+            buffer.put((byte)maxDifficulty);
             buffer.put(ruleset);
             buffer.put(algorithm);
             buffer.put(decimals);
@@ -1801,11 +1801,11 @@ public interface Attachment extends Appendix {
             attachment.put("maxSupply", maxSupply);
             attachment.put("issuanceHeight", issuanceHeight);
             attachment.put("minReservePerUnitNQT", minReservePerUnitNQT);
-            attachment.put("minDifficulty", minDifficulty & 0xFF);
-            attachment.put("maxDifficulty", maxDifficulty & 0xFF);
-            attachment.put("ruleset", ruleset & 0xFF);
-            attachment.put("algorithm", algorithm & 0xFF);
-            attachment.put("decimals", decimals & 0xFF);
+            attachment.put("minDifficulty", minDifficulty);
+            attachment.put("maxDifficulty", maxDifficulty);
+            attachment.put("ruleset", ruleset);
+            attachment.put("algorithm", algorithm);
+            attachment.put("decimals", decimals);
         }
 
         @Override
@@ -1849,11 +1849,11 @@ public interface Attachment extends Appendix {
             return minReservePerUnitNQT;
         }
 
-        public byte getMinDifficulty() {
+        public int getMinDifficulty() {
             return minDifficulty;
         }
 
-        public byte getMaxDifficulty() {
+        public int getMaxDifficulty() {
             return maxDifficulty;
         }
 
@@ -1995,7 +1995,7 @@ public interface Attachment extends Appendix {
         private final long currencyId;
         private final long units;
 
-        MonetarySystemCurrencyTransfer(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
+        MonetarySystemCurrencyTransfer(ByteBuffer buffer, byte transactionVersion) {
             super(buffer, transactionVersion);
             this.currencyId = buffer.getLong();
             this.units = buffer.getLong();
