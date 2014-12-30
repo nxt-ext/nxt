@@ -167,9 +167,12 @@ public final class CurrencyMint {
         return hashFunction.hash(buffer.array());
     }
 
-    public static byte[] getTarget(int min, int max, long units, long currentSupply, long totalSupply) {
-        BigInteger targetNum = getNumericTarget(min, max, units, currentSupply, totalSupply);
-        byte[] targetRowBytes = targetNum.toByteArray();
+    public static byte[] getTarget(int min, int max, long units, long currentMintableSupply, long totalMintableSupply) {
+        return getTarget(getNumericTarget(min, max, units, currentMintableSupply, totalMintableSupply));
+    }
+
+    public static byte[] getTarget(BigInteger numericTarget) {
+        byte[] targetRowBytes = numericTarget.toByteArray();
         if (targetRowBytes.length == 32) {
             return reverse(targetRowBytes);
         }
@@ -179,11 +182,16 @@ public final class CurrencyMint {
         return reverse(targetBytes);
     }
 
-    public static BigInteger getNumericTarget(int min, int max, long units, long currentSupply, long totalSupply) {
+    public static BigInteger getNumericTarget(Currency currency, long units) {
+        return getNumericTarget(currency.getMinDifficulty(), currency.getMaxDifficulty(), units,
+                currency.getCurrentSupply() - currency.getReserveSupply(), currency.getMaxSupply() - currency.getReserveSupply());
+    }
+
+    public static BigInteger getNumericTarget(int min, int max, long units, long currentMintableSupply, long totalMintableSupply) {
         if (min < 1 || max > 255) {
             throw new IllegalArgumentException(String.format("Min: %d, Max: %d, allowed range is 1 to 255", min, max));
         }
-        int exp = (int)(256 - min - ((max - min) * currentSupply) / totalSupply);
+        int exp = (int)(256 - min - ((max - min) * currentMintableSupply) / totalMintableSupply);
         return BigInteger.valueOf(2).pow(exp).subtract(BigInteger.ONE).divide(BigInteger.valueOf(units));
     }
 
