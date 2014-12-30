@@ -461,75 +461,85 @@
 	</div>
 </div>
 
-
-<div class="modal fade" id="account_info_modal" tabindex="-1" role="dialog" aria-hidden="true">
-	<div class="modal-dialog">
-   		<div class="modal-content">
-      		<div class="modal-header">
-        		<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-       		 	<h4 class="modal-title" data-i18n="set_account_info">Set Account Info</h4>
-      		</div>
-	      	<div class="modal-body">			
-				<form role="form" autocomplete="off">
-					<div class="callout callout-danger error_message" style="display:none"></div>
-					<div class="form-group">
-						<label for="account_info_name" data-i18n="name">NAME</label>
-						<input type="text" class="form-control" name="name" id="account_info_name" placeholder="Your Name" data-i18n="[placeholder]your_name" tabindex="1" />
-					</div>
-					<div class="form-group">
-						<label for="account_info_description" data-i18n="description">DESCRIPTION</label>
-						<textarea class="form-control" id="account_info_description" name="description" rows="4" tabindex="2"></textarea>
-					</div>
-					<div class="row advanced">
-						<div class="col-xs-6 col-sm-6 col-md-6">
-							<div class="form-group">
-								<label for="account_info_fee" data-i18n="fee">FEE</label>
-								<div class="input-group">
-									<input type="number" name="feeNXT" id="account_info_fee" class="form-control" step="any" min="1" placeholder="Fee" data-i18n="[placeholder]fee" data-default="1" value="1" tabindex="3">
-									<span class="input-group-addon">NXT</span>
-								</div>
-							</div>
-						</div>
-						<div class="col-xs-6 col-sm-6 col-md-6">
-							<div class="form-group">
-								<label for="account_info_deadline" data-i18n="deadline_hours">DEADLINE (HOURS)</label>
-								<input type="number" name="deadline" id="account_info_deadline" class="form-control" placeholder="Deadline" data-i18n="[placeholder]deadline" min="1" data-default="24" value="24" tabindex="4">
-							</div>
-						</div>
-					</div>
-					<div class="form-group secret_phrase">
-						<label for="account_info_password" data-i18n="passphrase">PASSPHRASE</label>
-						<input type="password" name="secretPhrase" id="account_info_password" class="form-control" placeholder="" tabindex="5">
-					</div>
-					<div class="form-group advanced">
-						<label for="account_info_referenced_transaction" data-i18n="referenced_transaction_hash">REFERENCED TRANSACTION HASH</label>
-						<input type="text" class="form-control" name="referencedTransactionFullHash" id="account_info_referenced_transaction" placeholder="Referenced Transaction Full Hash" data-i18n="[placeholder]referenced_transaction_full_hash" tabindex="6" spellcheck="false" />
-					</div>
-					<div class="form-group advanced" style="margin-bottom:0;">
-						<input type="checkbox" name="doNotBroadcast" id="account_info_do_not_broadcast" value="1" /> <label for="account_info_do_not_broadcast" style="font-weight:normal;" tabindex="7" data-i18n="do_not_broadcast">Do Not Broadcast</label>
-					</div>
+<div class="modal fade" id="dividend_payment_modal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title" data-i18n="pay_dividends">Pay Dividends</h4>
+            </div>
+            <div class="modal-body">
+                <form role="form" autocomplete="off">
+                    <div class="callout callout-danger error_message" style="display:none"></div>
+                    <div class="row">
+                        <div class="col-xs-6 col-sm-6 col-md-6" data-normal="12" data-advanced="6">
+                            <div class="form-group">
+                                <label for="dividend_payment_amount_per_share"><span data-i18n="amount_per_share">AMOUNT_PER_SHARE</span> <i class="fa fa-exclamation-circle show_popover" data-content="The minimum amount per share is 1 Nxt." data-i18n="[data-content]dividend_payment_minimum_fee_help" data-container="body" style="color:red"></i></label>
+                                <div class="input-group">
+                                    <input type="number" name="amountNXTPerShare" id="dividend_payment_amount_per_share" class="form-control" placeholder="" step="any" tabindex="6">
+                                    <span class="input-group-addon">NXT</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-xs-6 col-sm-6 col-md-6">
+                            <div class="form-group">
+                                <label for="dividend_payment_height"><span data-i18n="height">HEIGHT</span></label> <i>Current Height: <span class="nrs_current_block"></span></i> <i class="fa fa-exclamation-circle show_popover" data-content="Dividend calculation height must be within the last 1440 blocks." data-i18n="[data-content]dividend_payment_height_help" data-container="body" style="color:red"></i>
+                                <input type="number" name="height" id="dividend_payment_height" class="form-control" min="0" placeholder="Height" data-i18n="height" data-default="" value="" tabindex="5">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row advanced">
+                        <div class="col-xs-6 col-sm-6 col-md-6">
+                            <div class="form-group">
+                                <label for="dividend_payment_fee"><span data-i18n="fee">FEE</span> <i class="fa fa-exclamation-circle show_popover" data-content="The minimum fee to pay dividends is 1 Nxt." data-i18n="[data-content]asset_minimum_fee_help" data-container="body" style="color:red"></i></label>
+                                <div class="input-group">
+                                    <input type="number" name="feeNXT" id="dividend_payment_fee" class="form-control" placeholder="Fee" step="any" min="1" data-default="1" value="1" tabindex="6">
+                                    <span class="input-group-addon">NXT</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-xs-6 col-sm-6 col-md-6">
+                            <div class="form-group">
+                                <label for="dividend_payment_deadline" data-i18n="deadline_hours">DEADLINE (HOURS)</label>
+                                <input type="number" name="deadline" id="dividend_payment_deadline" class="form-control" placeholder="Deadline" data-i18n="deadline" min="1" data-default="24" value="24" tabindex="7">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group secret_phrase">
+                        <label for="dividend_payment_password" data-i18n="passphrase">PASSPHRASE</label>
+                        <input type="password" name="secretPhrase" id="dividend_payment_password" class="form-control" placeholder="" tabindex="8">
+                    </div>
                     <div class="form-group advanced">
-                        <input type="checkbox" name="add_note_to_self" id="account_info_add_note_to_self" class="add_note_to_self" tabindex="8" /> <label for="account_info_add_note_to_self" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_note_to_self">Add Note to Self?</span></label>
+                        <label for="dividend_payment_referenced_transaction" data-i18n="referenced_transaction_hash">REFERENCED TRANSACTION HASH</label>
+                        <input type="text" class="form-control" name="referencedTransactionFullHash" id="dividend_payment_referenced_transaction" placeholder="Referenced Transaction Full Hash" data-i18n="referenced_transaction_full_hash" tabindex="6" spellcheck="false" />
+                    </div>
+                    <div class="form-group advanced" style="margin-bottom:0;">
+                        <input type="checkbox" name="doNotBroadcast" id="dividend_payment_do_not_broadcast" value="1" /> <label for="dividend_payment_do_not_broadcast" style="font-weight:normal;" tabindex="7" data-i18n="do_not_broadcast">Do Not Broadcast</label>
+                    </div>
+                    <div class="form-group advanced">
+                        <input type="checkbox" name="add_note_to_self" id="dividend_payment_add_note_to_self" class="add_note_to_self" tabindex="8" /> <label for="dividend_payment_add_note_to_self" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_note_to_self">Add Note to Self?</span></label>
                     </div>
                     <div class="form-group advanced optional_note">
-                        <label for="account_info_note_to_self" data-i18n="note_to_self">Note to Self</label>
-                        <textarea class="form-control" id="account_info_note_to_self" name="note_to_self" rows="4" tabindex="9"></textarea>
+                        <label for="dividend_payment_note_to_self" data-i18n="note_to_self">Note to Self</label>
+                        <textarea class="form-control" id="dividend_payment_note_to_self" name="note_to_self" rows="4" tabindex="9"></textarea>
                         <div style="margin-top:3px;">
                             <label style="font-weight:normal;color:#666" data-i18n="note_is_encrypted">This note is encrypted.</span></label>
                         </div>
                     </div>
-					<input type="hidden" name="request_type" value="setAccountInfo" />
-				</form>
-			</div>
-	       	<div class="modal-footer" style="margin-top:0;">
-	       		<div class="advanced_info"><strong data-i18n="fee">Fee</strong>: <span class="advanced_fee">1 NXT</span> - <a href="#" data-i18n="advanced">advanced</a></div>
+                    <div class="callout dividend_payment_info" style="display:none;margin-bottom: 0;"></div>
+                    <input type="hidden" name="request_type" value="dividendPayment" />
+                </form>
+            </div>
+            <div class="modal-footer" style="margin-top:0;">
+                <div class="advanced_info"><strong data-i18n="fee">Fee</strong>: <span class="advanced_fee">1 NXT</span> - <a href="#" data-i18n="advanced">advanced</a></div>
 
-				<button type="button" class="btn btn-default" data-dismiss="modal" data-i18n="cancel">Cancel</button>
-	     	    <button type="button" class="btn btn-primary" data-loading-text="Submitting..." data-i18n="update_account_info;[data-loading-text]submitting">Update Account Info</button>
-	      	</div>
-    	</div>
-  	</div>
+                <button type="button" class="btn btn-default" data-dismiss="modal" data-i18n="cancel">Cancel</button>
+                <button type="button" class="btn btn-primary" data-loading-text="Submitting..." data-i18n="pay_dividends;[data-loading-text]submitting">Pay Dividends</button>
+            </div>
+        </div>
+    </div>
 </div>
+
 
 <div class="modal fade modal-no-hide" id="token_modal" tabindex="-1" role="dialog" aria-hidden="true">
 	<div class="modal-dialog">
@@ -626,86 +636,6 @@
 					    </div>
 					</div>
 	      		</div>
-			</div>
-	      	<div class="modal-footer" style="margin-top:0;">
-				<button type="button" class="btn btn-primary" data-dismiss="modal" data-i18n="close">Close</button>
-	     	</div>
-		</div>
-	</div>
-</div>
-
-<div class="modal fade" id="transaction_info_modal" tabindex="-1" role="dialog" aria-hidden="true">
-	<div class="modal-dialog">
-    	<div class="modal-content">
-      		<div class="modal-header">
-        		<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-        		<!-- todo -->
-        		<h4 class="modal-title">Transaction <strong><span id="transaction_info_modal_transaction"></span></strong> Info</h4>
-     		</div>
-	      	<div class="modal-body">
-	      		<div class="tabbable">
-					<ul class="nav nav-pills nav-justified" style="margin-bottom:10px">
-						<li class="active"><a href="#transaction_info_tab" data-toggle="tab" id="transaction_info_tab_link" data-i18n="info">Info</a></li>
-                        <li id="transaction_info_actions"><a href="#transaction_info_actions_tab" data-toggle="tab" data-i18n="actions">Actions</a></li>
-						<li><a href="#transaction_info_details_tab" data-toggle="tab" data-i18n="transaction_details">Transaction Details</a></li>
-					</ul>
-					<div class="tab-content">
-					    <div class="tab-pane active" id="transaction_info_tab">
-					    	<div id="transaction_info_callout" class="callout callout-info" style="display:none;"></div>
-
-							<div id="transaction_info_output_top" style="display: none;"></div>	
-							
-				      		<table class="table table-striped" id="transaction_info_table" style="display:none;margin-bottom: 0;">
-				      		    <tbody>
-				      		    	
-				      		    </tbody>
-				      		</table>
-
-				      		<div id="transaction_info_output_bottom" style="display: none;margin-top:10px;"></div>
-				      		<div id="transaction_info_bottom" style="display: none;"></div>
-					    </div>
-                        <div class="tab-pane" id="transaction_info_actions_tab">
-                            <div class="row">
-                                <div class="col-xs-8 col-md-8" style="margin-left:auto;margin-right:auto;float:none;">
-                                    <button type="button" class="btn btn-default btn-lg btn-block" data-toggle="modal" data-target="#send_money_modal" data-account="" data-i18n="send_nxt_to_sender">Send NXT to Sender</button>
-                                    <button type="button" class="btn btn-default btn-lg btn-block" data-toggle="modal" data-target="#send_message_modal" data-account="" data-i18n="send_message_to_sender">Send Message to Sender</button>
-                                    <button type="button" id="transaction_info_modal_add_as_contact" class="btn btn-default btn-lg btn-block" data-toggle="modal" data-target="#add_contact_modal" data-account="" data-i18n="add_sender_as_contact">Add Sender as Contact</button>
-                                </div>
-                            </div>
-                        </div>
-					    <div class="tab-pane" id="transaction_info_details_tab" style="max-height:350px;overflow:auto;">
-							<table class="table table-striped" id="transaction_info_details_table" style="margin-bottom:0;table-layout:fixed;">
-							    <tbody>
-							    	
-							    </tbody>
-							</table>
-					    </div>
-					</div>
-	      		</div>
-			</div>
-	      	<div class="modal-footer" style="margin-top:0;">
-				<button type="button" class="btn btn-primary" data-dismiss="modal" data-i18n="close">Close</button>
-	     	</div>
-		</div>
-	</div>
-</div>
-
-<div class="modal fade" id="alias_info_modal" tabindex="-1" role="dialog" aria-hidden="true">
-	<div class="modal-dialog">
-    	<div class="modal-content">
-      		<div class="modal-header">
-        		<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-        		<!-- todo -->
-        		<h4 class="modal-title">Alias <strong><span id="alias_info_modal_alias"></span></strong></h4>
-     		</div>
-	      	<div class="modal-body">
-	      		<table class="table table-striped" id="alias_info_table" style="margin-bottom: 0;">
-	      		    <tbody>
-	      		    	
-	      		    </tbody>
-	      		</table>
-
-	      		<div class="callout callout-info" id="alias_sale_callout" style="display:none;margin-top:10px;margin-bottom:0;"></div>
 			</div>
 	      	<div class="modal-footer" style="margin-top:0;">
 				<button type="button" class="btn btn-primary" data-dismiss="modal" data-i18n="close">Close</button>
@@ -866,291 +796,6 @@
 	</div>
 </div>
 
-<div class="modal fade" id="dividend_payment_modal" tabindex="-1" role="dialog" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                <h4 class="modal-title" data-i18n="pay_dividends">Pay Dividends</h4>
-            </div>
-            <div class="modal-body">
-                <form role="form" autocomplete="off">
-                    <div class="callout callout-danger error_message" style="display:none"></div>
-                    <div class="row">
-                        <div class="col-xs-6 col-sm-6 col-md-6" data-normal="12" data-advanced="6">
-                            <div class="form-group">
-                                <label for="dividend_payment_amount_per_share"><span data-i18n="amount_per_share">AMOUNT_PER_SHARE</span> <i class="fa fa-exclamation-circle show_popover" data-content="The minimum amount per share is 1 Nxt." data-i18n="[data-content]dividend_payment_minimum_fee_help" data-container="body" style="color:red"></i></label>
-                                <div class="input-group">
-                                    <input type="number" name="amountNXTPerShare" id="dividend_payment_amount_per_share" class="form-control" placeholder="" step="any" tabindex="6">
-                                    <span class="input-group-addon">NXT</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-xs-6 col-sm-6 col-md-6">
-                            <div class="form-group">
-                                <label for="dividend_payment_height"><span data-i18n="height">HEIGHT</span></label> <i>Current Height: <span class="nrs_current_block"></span></i> <i class="fa fa-exclamation-circle show_popover" data-content="Dividend calculation height must be within the last 1440 blocks." data-i18n="[data-content]dividend_payment_height_help" data-container="body" style="color:red"></i>
-                                <input type="number" name="height" id="dividend_payment_height" class="form-control" min="0" placeholder="Height" data-i18n="height" data-default="" value="" tabindex="5">
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row advanced">
-                        <div class="col-xs-6 col-sm-6 col-md-6">
-                            <div class="form-group">
-                                <label for="dividend_payment_fee"><span data-i18n="fee">FEE</span> <i class="fa fa-exclamation-circle show_popover" data-content="The minimum fee to pay dividends is 1 Nxt." data-i18n="[data-content]asset_minimum_fee_help" data-container="body" style="color:red"></i></label>
-                                <div class="input-group">
-                                    <input type="number" name="feeNXT" id="dividend_payment_fee" class="form-control" placeholder="Fee" step="any" min="1" data-default="1" value="1" tabindex="6">
-                                    <span class="input-group-addon">NXT</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-xs-6 col-sm-6 col-md-6">
-                            <div class="form-group">
-                                <label for="dividend_payment_deadline" data-i18n="deadline_hours">DEADLINE (HOURS)</label>
-                                <input type="number" name="deadline" id="dividend_payment_deadline" class="form-control" placeholder="Deadline" data-i18n="deadline" min="1" data-default="24" value="24" tabindex="7">
-                            </div>
-                        </div>
-                    </div>
-                    <div class="form-group secret_phrase">
-                        <label for="dividend_payment_password" data-i18n="passphrase">PASSPHRASE</label>
-                        <input type="password" name="secretPhrase" id="dividend_payment_password" class="form-control" placeholder="" tabindex="8">
-                    </div>
-                    <div class="form-group advanced">
-                        <label for="dividend_payment_referenced_transaction" data-i18n="referenced_transaction_hash">REFERENCED TRANSACTION HASH</label>
-                        <input type="text" class="form-control" name="referencedTransactionFullHash" id="dividend_payment_referenced_transaction" placeholder="Referenced Transaction Full Hash" data-i18n="referenced_transaction_full_hash" tabindex="6" spellcheck="false" />
-                    </div>
-                    <div class="form-group advanced" style="margin-bottom:0;">
-                        <input type="checkbox" name="doNotBroadcast" id="dividend_payment_do_not_broadcast" value="1" /> <label for="dividend_payment_do_not_broadcast" style="font-weight:normal;" tabindex="7" data-i18n="do_not_broadcast">Do Not Broadcast</label>
-                    </div>
-                    <div class="form-group advanced">
-                        <input type="checkbox" name="add_note_to_self" id="dividend_payment_add_note_to_self" class="add_note_to_self" tabindex="8" /> <label for="dividend_payment_add_note_to_self" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_note_to_self">Add Note to Self?</span></label>
-                    </div>
-                    <div class="form-group advanced optional_note">
-                        <label for="dividend_payment_note_to_self" data-i18n="note_to_self">Note to Self</label>
-                        <textarea class="form-control" id="dividend_payment_note_to_self" name="note_to_self" rows="4" tabindex="9"></textarea>
-                        <div style="margin-top:3px;">
-                            <label style="font-weight:normal;color:#666" data-i18n="note_is_encrypted">This note is encrypted.</span></label>
-                        </div>
-                    </div>
-                    <div class="callout dividend_payment_info" style="display:none;margin-bottom: 0;"></div>
-                    <input type="hidden" name="request_type" value="dividendPayment" />
-                </form>
-            </div>
-            <div class="modal-footer" style="margin-top:0;">
-                <div class="advanced_info"><strong data-i18n="fee">Fee</strong>: <span class="advanced_fee">1 NXT</span> - <a href="#" data-i18n="advanced">advanced</a></div>
-
-                <button type="button" class="btn btn-default" data-dismiss="modal" data-i18n="cancel">Cancel</button>
-                <button type="button" class="btn btn-primary" data-loading-text="Submitting..." data-i18n="pay_dividends;[data-loading-text]submitting">Pay Dividends</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="modal fade" id="account_details_modal" tabindex="-1" role="dialog" aria-hidden="true">
-	<div class="modal-dialog">
-	    <div class="modal-content">
-	     	<div class="modal-header">
-	        	<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-	        	<h4 class="modal-title" data-i18n="account_details">Account Details</h4>
-	      	</div>
-	      	<div class="modal-body">	
-	      		<ul class="nav nav-pills nav-justified" style="margin-bottom:10px">
-					<li class="active" id="account_details_balance_nav" data-tab="balance"><a href="#" data-i18n="account_details">Account Details</a></li>
-					<li data-tab="leasing"><a href="#" data-i18n="account_leasing">Account Leasing</a></li>
-				</ul>
-
-				<div id="account_details_modal_balance" class="account_details_modal_content" style="display:none">
-		      		<div class="callout callout-danger" id="account_balance_warning" style="display:none"></div>
-	
-					<table class="table" id="account_balance_table" style="margin-bottom:0;table-layout:fixed;">
-					    <tbody>
-					    	<tr>
-					    		<td style="font-weight: bold;width:180px;"><span data-i18n="account_id">Account ID</span>:</td><td><span id="account_balance_account_rs"></span></td>
-					    	</tr>
-                            <tr>
-                                <td style="font-weight: bold;width:180px;"><span data-i18n="numeric_account_id">Numeric Account ID</span>:</td><td><span id="account_balance_account"></span></td>
-                            </tr>
-					    	<tr>
-					    		<td style="font-weight: bold"><span data-i18n="balance">Balance</span>:</td><td><span id="account_balance_balance"></span></td>
-					    	</tr>
-					    	<tr>
-					    		<td style="font-weight: bold"><span data-i18n="available_balance">Available Balance</span>:</td><td><span id="account_balance_unconfirmed_balance"></span></td>
-					    	</tr>
-					    	<tr>
-					    		<td style="font-weight: bold"><span data-i18n="guaranteed_balance">Guaranteed Balance</span>:</td><td><span id="account_balance_guaranteed_balance"></span></td>
-					    	</tr>
-					    	<tr>
-					    		<td style="font-weight: bold"><span data-i18n="effective_balance">Effective Balance</span>:</td><td><span id="account_balance_effective_balance"></span></td>
-					    	</tr>
-					    	<tr>
-					    		<td style="font-weight: bold"><span data-i18n="forged_balance">Forged Balance</span>:</td><td><span id="account_balance_forged_balance"></span></td>
-					    	</tr>
-					    	<tr>
-					    		<td style="font-weight: bold"><span data-i18n="public_key">Public Key</span>:</td><td><span id="account_balance_public_key" style="word-break:break-all;word-wrap: break-word;"></span></td>
-					    	</tr>
-                            <tr>
-                                <td style="font-weight: bold"><span data-i18n="account_qr_code">Account QR Code</span>:</td><td><div id="account_details_modal_qr_code"></div></td>
-                            </tr>
-					    </tbody>
-				 	</table>
-				 </div>
-
-				<div id="account_details_modal_leasing" class="account_details_modal_content" style="display:none">     
-					<div id="account_leasing_status" class="nrs_message" style="display:none"></div>
-					<div id="account_lessor_container" style="display:none;max-height:350px;overflow:auto;">
-						<table class="table table-striped" id="account_lessor_table" style="margin-bottom:0">
-							<thead>
-						    <tr>
-						        <th data-i18n="lessor">Lessor</th>
-						    </tr>
-						    </thead>
-						    <tbody>
-						    	
-						    </tbody>
-						</table>
-					</div>
-					<div style="padding-top:10px"><a href="#" data-toggle="modal" data-target="#lease_balance_modal" data-i18n="lease_balance_to_account">Lease your balance to another account.</a></div>
-				</div>
-			</div>
-			<div class="modal-footer" style="margin-top:0;">
-	        	<button type="button" class="btn btn-primary" data-dismiss="modal" data-i18n="close">Close</button>
-	      	</div>
-		</div>
-	</div>
-</div>
-
-<div class="modal fade" id="raw_transaction_modal" tabindex="-1" role="dialog" aria-hidden="true">
-	<div class="modal-dialog">
-	    <div class="modal-content">
-	     	<div class="modal-header">
-	        	<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-	        	<h4 class="modal-title" data-i18n="raw_transaction_details">Raw Transaction Details</h4>
-	      	</div>
-	      	<div class="modal-body">	
-	      		<label data-i18n="unsigned_transaction_bytes">UNSIGNED TRANSACTION BYTES</label>
-	      		<div class="form-group">
-		      		<textarea class="form-control" id="raw_transaction_modal_unsigned_transaction_bytes" rows="4"></textarea>
-				</div>
-	      		<label data-i18n="signed_transaction_bytes">SIGNED TRANSACTION BYTES</label>
-	      		<div class="form-group">
-	      			<textarea class="form-control" id="raw_transaction_modal_transaction_bytes" rows="4"></textarea>
-	      		</div>
-	      		<div id="raw_transaction_modal_full_hash_container">
-		      		<label data-i18n="full_transaction_hash">FULL TRANSACTION HASH</label>
-		      		<div class="form-group">
-			      		<textarea class="form-control" id="raw_transaction_modal_full_hash" rows="1"></textarea>
-					</div>
-				</div>
-				<div id="raw_transaction_modal_signature_hash_container">
-		      		<label data-i18n="signature_hash">SIGNATURE HASH</label>
-		      		<div class="form-group">
-		      			<textarea class="form-control" id="raw_transaction_modal_signature_hash" rows="1"></textarea>
-		      		</div>
-		      	</div>
-			</div>
-			<div class="modal-footer" style="margin-top:0;">
-	        	<button type="button" class="btn btn-primary" data-dismiss="modal" data-i18n="close">Close</button>
-	      	</div>
-		</div>
-	</div>
-</div>
-
-<div class="modal fade modal-no-hide" id="transaction_operations_modal" tabindex="-1" role="dialog" aria-hidden="true">
-	<div class="modal-dialog">
-    	<div class="modal-content">
-      		<div class="modal-header">
-        		<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-        		<h4 class="modal-title" data-i18n="advanced_transaction_operations">Advanced Transaction Operations</h4>
-      		</div>
-	      	<div class="modal-body">	
-				<ul class="nav nav-pills nav-justified" style="margin-bottom:10px">
-					<li class="active" id="broadcast_transaction_nav" data-tab="broadcast_transaction"><a href="#" data-i18n="broadcast_transaction">Broadcast Transaction</a></li>
-					<li data-tab="parse_transaction"><a href="#" data-i18n="parse_transaction">Parse Transaction</a></li>
-					<li data-tab="calculate_full_hash"><a href="#" data-i18n="calculate_full_hash">Calculate Full Hash</a></li>
-				</ul>
-
-				<div id="transaction_operations_modal_broadcast_transaction" class="tab_content" style="display:none">
-					<form role="form" id="broadcast_transaction_form" autocomplete="off">
-						<div class="callout callout-danger error_message" style="display:none"></div>
-						<div class="form-group">
-							<label for="broadcast_transaction_transaction_bytes" data-i18n="transaction_bytes">TRANSACTION BYTES</label>
-							<textarea class="form-control" name="transactionBytes" id="broadcast_transaction_transaction_bytes" rows="4" placeholder="Signed Transaction Bytes" data-i18n="[placeholder]signed_transaction_bytes"></textarea>
-						</div>
-						<input type="hidden" name="request_type" value="broadcastTransaction" />
-					</form>
-				 </div>
-
-				<div id="transaction_operations_modal_parse_transaction" class="tab_content" style="display:none">   
-					<form role="form" id="parse_transaction_form" autocomplete="off">
-						<div class="callout callout-danger error_message" style="display:none"></div>
-						<div class="form-group">
-							<label for="parse_transaction_transaction_bytes" data-i18n="transaction_bytes">TRANSACTION BYTES</label>
-							<textarea class="form-control" name="transactionBytes" id="parse_transaction_transaction_bytes" rows="4" placeholder="Transaction Bytes" data-i18n="[placeholder]transaction_bytes"></textarea>
-						</div>
-						<input type="hidden" name="request_type" value="parseTransaction" />
-						<div id="parse_transaction_output" class="output" style="max-height:350px;overflow:auto">
-							<table class="table table-striped output_table" id="parse_transaction_output_table" style="margin-bottom:0;table-layout:fixed">
-								<tbody></tbody>
-							</table>
-						</div>
-					</form>
-				</div>
-
-				<div id="transaction_operations_modal_calculate_full_hash" class="tab_content" style="display:none">
-						<form role="form" id="calculate_full_hash_form" autocomplete="off">
-						<div class="callout callout-danger error_message" style="display:none"></div>
-						<div class="form-group">
-							<label for="calculate_full_hash_unsigned_transaction_bytes" data-i18n="unsigned_transaction_bytes">UNSIGNED TRANSACTION BYTES</label>
-							<textarea class="form-control" name="unsignedTransactionBytes" id="calculate_full_hash_unsigned_transaction_bytes" rows="4" placeholder="Unsigned Transaction Bytes" data-i18n="[placeholder]unsigned_transaction_bytes"></textarea>
-						</div>
-						<div class="form-group">
-							<label for="calculate_full_hash_signature_hash" data-i18n="signature_hash">SIGNATURE HASH</label>
-							<textarea class="form-control" name="signatureHash" id="calculate_full_hash_signature_hash" rows="1" placeholder="Signature Hash" data-i18n="[placeholder]signature_hash"></textarea>
-						</div>
-						<input type="hidden" name="request_type" value="calculateFullHash" />
-						<div id="calculate_full_hash_output" class="output" style="max-height:350px;overflow:auto">
-							<table class="table table-striped output_table" id="calculate_full_hash_output_table" style="margin-bottom:0;table-layout:fixed">
-								<tbody></tbody>
-							</table>
-						</div>
-					</form>
-				</div>
-
-			</div>
-	      	<div class="modal-footer" style="margin-top:0;">
-		        <button type="button" class="btn btn-default" data-dismiss="modal" data-i18n="cancel">Cancel</button>
-		        <button type="button" class="btn btn-primary" id="transaction_operations_modal_button" data-loading-text="Submitting..." data-i18n="submit;[data-loading-text]submitting">Submit</button>
-	    	</div>
-		</div>
-  	</div>
-</div>
-
-<div class="modal fade" id="messages_decrypt_modal" tabindex="-1" role="dialog" aria-hidden="true">
-	<div class="modal-dialog">
-    	<div class="modal-content">
-      		<div class="modal-header">
-      			<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-        		<h4 class="modal-title" data-i18n="decrypt_messages">Decrypt Messages</h4>
-      		</div>
-      		<div class="modal-body">
-				<form role="form" autocomplete="off">
-					<div class="callout callout-danger error_message" style="background:#fbe7e7" data-i18n="passphrase_required_for_decryption">Your passphrase is required to decrypt these messages.</div>
-					<div class="form-group secret_phrase">
-						<label for="messages_decrypt_password" data-i18n="passphrase">PASSPHRASE</label>
-						<input type="password" name="secretPhrase" id="messages_decrypt_password" class="form-control" placeholder="" tabindex="8">
-					</div>
-					<div class="form-group" style="margin-bottom:0">
-						<input type="checkbox" name="rememberPassword" id="messages_decrypt_remember_password" /> <span></span><label for="messages_decrypt_remember_password" style="font-weight:normal;" data-i18n="remember_decryption_passphrase">Remember passphrase for decryption</label>
-					</div>
-					<input type="hidden" name="request_type" value="decryptMessages" />
-				</form>
-      		</div>
-      		<div class="modal-footer" style="margin-top:0;">
-		        <button type="button" class="btn btn-default" data-dismiss="modal" data-i18n="cancel">Cancel</button>
-		        <button type="button" class="btn btn-primary" data-loading-text="Decrypting..." data-i18n="decrypt;[data-loading-text]decrypting">Decrypt</button>
-	      	</div>
-      	</div>
-    </div>
-</div>
 
 
 		<div id="decrypt_note_form_container" style="display:none;">
@@ -1262,12 +907,14 @@
             $.get("html/pages/news.html", '', function (data) { $("#content").append(data); });
 
             $.get("html/modals/nrs.html", '', function (data) { $("body").append(data); });
+            $.get("html/modals/transactions.html", '', function (data) { $("body").append(data); });
             $.get("html/modals/balanceleasing.html", '', function (data) { $("body").append(data); });
             $.get("html/modals/forging.html", '', function (data) { $("body").append(data); });
             $.get("html/modals/asset_exchange.html", '', function (data) { $("body").append(data); });
             $.get("html/modals/monetary_system.html", '', function (data) { $("body").append(data); });
             $.get("html/modals/dgs.html", '', function (data) { $("body").append(data); });
             $.get("html/modals/contacts.html", '', function (data) { $("body").append(data); });
+            $.get("html/modals/messages.html", '', function (data) { $("body").append(data); });
             $.get("html/modals/aliases.html", '', function (data) { $("body").append(data); });
             jQuery.ajaxSetup({ async: true });
         </script>
