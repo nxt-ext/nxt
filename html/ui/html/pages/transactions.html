@@ -1,0 +1,75 @@
+<div id="transactions_page" class="paginated page">
+    <section class="content-header">
+        <h1 data-i18n="transactions">Transactions</h1>
+        <div style="position:absolute;top:9px;right:9px;">
+            <div class="btn-group">
+                <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+                    <span class="text" data-i18n="all_transactions">All Transactions</span> <span class="caret"></span>
+                </button>
+                <ul id="transactions_page_type" class="dropdown-menu" role="menu" style="right:0;left:auto;">
+                    <li><a href="#" data-type="" data-i18n="all_transactions">All Transactions</a></li>
+                    <li><a href="#" data-type="0:0" data-i18n="ordinary_payment">Ordinary Payment</a></li>
+                    <li><a href="#" data-type="1:0" data-i18n="arbitrary_message">Arbitrary Message</a></li>
+                    <li><a href="#" data-type="1:1" data-i18n="alias_assignment">Alias Assignment</a></li>
+                    <li><a href="#" data-type="1:6" data-i18n="alias_sale">Alias Sale</a></li>
+                    <li><a href="#" data-type="1:7" data-i18n="alias_buy">Alias Buy</a></li>
+                    <li><a href="#" data-type="1:8" data-i18n="alias_deletion">Alias Deletion</a></li>
+                    <li><a href="#" data-type="1:2" data-i18n="poll_creation">Poll Creation</a></li>
+                    <li><a href="#" data-type="1:3" data-i18n="vote_casting">Vote Casting</a></li>
+                    <li><a href="#" data-type="1:4" data-i18n="hub_announcement">Hub Announcement</a></li>
+                    <li><a href="#" data-type="1:5" data-i18n="account_info">Account Info</a></li>
+                    <li><a href="#" data-type="2:0" data-i18n="asset_issuance">Asset Issuance</a></li>
+                    <li><a href="#" data-type="2:1" data-i18n="asset_transfer">Asset Transfer</a></li>
+                    <li><a href="#" data-type="2:2" data-i18n="ask_order_placement">Ask Order Placement</a></li>
+                    <li><a href="#" data-type="2:3" data-i18n="bid_order_placement">Bid Order Placement</a></li>
+                    <li><a href="#" data-type="2:4" data-i18n="ask_order_cancellation">Ask Order Cancellation</a></li>
+                    <li><a href="#" data-type="2:5" data-i18n="bid_order_cancellation">Bid Order Cancellation</a></li>
+                    <li><a href="#" data-type="3:0" data-i18n="marketplace_listing">Marketplace Listing</a></li>
+                    <li><a href="#" data-type="3:1" data-i18n="marketplace_removal">Marketplace Removal</a></li>
+                    <li><a href="#" data-type="3:2" data-i18n="marketplace_price_change">Marketplace Price Change</a></li>
+                    <li><a href="#" data-type="3:3" data-i18n="marketplace_quantity_change">Marketplace Quantity Change</a></li>
+                    <li><a href="#" data-type="3:4" data-i18n="marketplace_purchase">Marketplace Purchase</a></li>
+                    <li><a href="#" data-type="3:5" data-i18n="marketplace_delivery">Marketplace Delivery</a></li>
+                    <li><a href="#" data-type="3:6" data-i18n="marketplace_feedback">Marketplace Feedback</a></li>
+                    <li><a href="#" data-type="3:7" data-i18n="marketplace_refund">Marketplace Refund</a></li>
+                    <li><a href="#" data-type="4:0" data-i18n="balance_leasing">Balance Leasing</a></li>
+                    <li><a href="#" data-type="5:0" data-i18n="issue_currency">Issue Currency</a></li>
+                    <li><a href="#" data-type="5:1" data-i18n="reserve_increase">Reserve Increase</a></li>
+                    <li><a href="#" data-type="5:2" data-i18n="reserve_claim">Reserve Claim</a></li>
+                    <li><a href="#" data-type="5:3" data-i18n="currency_transfer">Currency Transfer</a></li>
+                    <li><a href="#" data-type="5:4" data-i18n="publish_exchange_offer">Publish Exchange Offer</a></li>
+                    <li><a href="#" data-type="5:5" data-i18n="currency_buy">Buy Currency</a></li>
+                    <li><a href="#" data-type="5:6" data-i18n="currency_sell">Sell Currency</a></li>
+                    <li><a href="#" data-type="5:7" data-i18n="mint_currency">Mint Currency</a></li>
+                    <li><a href="#" data-type="5:8" data-i18n="delete_currency">Delete Currency</a></li>
+                    <li><a href="#" data-type="unconfirmed" data-i18n="unconfirmed_transactions">Unconfirmed Transactions</a></li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <section class="content">
+        <div class="data-container data-loading">
+            <table class="table table-striped" id="transactions_table">
+                <thead>
+                <tr>
+                    <th data-i18n="transaction_id" style="width:1%">Transaction ID</th>
+                    <th><i class='fa fa-envelope-o'></i></th>
+                    <th data-i18n="date">Date</th>
+                    <th data-i18n="type">Type</th>
+                    <th data-i18n="amount" colspan="2">Amount</th>
+                    <th data-i18n="fee">Fee</th>
+                    <th data-i18n="account">Account</th>
+                    <th data-i18n="confirmations">Confirmations</th>
+                </tr>
+                </thead>
+                <tbody>
+                
+                </tbody>
+            </table>
+            <div class="data-loading-container"><img src="img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
+            <div class="data-empty-container"><p data-i18n="no_transactions_found">No transactions found.</p></div>
+        </div>
+        <div class="data-pagination"></div>
+    </section>
+</div>

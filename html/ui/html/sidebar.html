@@ -1,0 +1,74 @@
+<section class="sidebar">
+    <div class="user-panel">
+        <div class="pull-left info">
+            <div class="pull-left info">
+                <div style="margin-bottom:5px;"><a href="#" id="account_name" data-toggle="modal" data-target="#account_info_modal" data-i18n="no_name_set">No Name Set</a></div>
+                <div id="account_id_dropdown" class="dropdown" style="margin-bottom:5px">
+                    <span id="account_id" class="dropdown-toggle" data-toggle="dropdown" data-type="account_id" style="font-weight:bold"></span>
+                    <ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu1">
+                        <li role="presentation" class="copy_link"><a role="menuitem" tabindex="-1" href="#" data-type="account_rs" data-i18n="copy_account_id">Copy Account ID</a></li>
+                        <li role="presentation" class="remote_only copy_link"><a role="menuitem" tabindex="-1" href="#" data-type="message_link" data-i18n="copy_send_message_link">Copy "Send Message" Link</a></li>
+                        <li role="presentation" class="remote_only copy_link"><a role="menuitem" tabindex="-1" href="#" data-type="send_link" data-i18n="copy_send_nxt_link">Copy "Send NXT" Link</a></li>
+                    </ul>
+                </div>
+                <a id="sideBalance" data-target="#account_details_modal" data-toggle="modal" href="#"><span id="account_balance_sidebar" class="loading_dots"><span>.</span><span>.</span><span>.</span></span> NXT</a>
+                <a href="#" data-page="peers" id="connected_indicator" class="connected goto-page" style="display:none;font-size:13px;"><i class="fa fa-circle" style="font-size:12px;"></i> <span data-18n="connected">Connected</span></a>
+                <a href="#" id="forging_indicator" class="forging" style="display:none;font-size:13px;"><i class="fa fa-circle" style="font-size:12px;"></i> <span data-18n="forging">Forging</span></a>
+            </div>
+        </div>
+    </div>       
+    <form action="#" method="get" class="sidebar-form" id="id_search" autocomplete="off">
+        <div class="input-group">
+            <input type="text" name="q" class="form-control" placeholder="Search by ID..." data-i18n="[placeholder]search_by_id">
+            <span class="input-group-btn">
+                <button type="submit" name="seach" id="search-btn" class="btn btn-flat"><i class="fa fa-search"></i></button>
+            </span>
+        </div>
+    </form>             
+    <ul class="sidebar-menu">
+        <li class="active" id="dashboard_link"><a href="#" data-page="dashboard"><i class="fa fa-dashboard"></i> <span data-i18n="dashboard">Dashboard</span></a></li>
+        <li><a href="#" data-page="transactions"><i class="fa fa-briefcase"></i> <span data-i18n="transactions">Transactions</span></a></li>
+        <li class="treeview" id="sidebar_asset_exchange">
+            <a href="#" data-page="asset_exchange"><i class="fa fa-signal"></i><span data-i18n="asset_exchange">Asset Exchange</span><i class="fa pull-right fa-angle-right" style="padding-top:3px"></i></a>
+            <ul class="treeview-menu" style="display: none;">
+                <li><a href="#" data-page="asset_exchange"><i class="fa fa-angle-double-right"></i> <span data-i18n="asset_exchange">Asset Exchange</span></a></li>
+                <li><a href="#" data-page="trade_history"><i class="fa fa-angle-double-right"></i> <span data-i18n="trade_history">Trade History</span></a></li>
+                <li><a href="#" data-page="transfer_history"><i class="fa fa-angle-double-right"></i> <span data-i18n="transfer_history">Transfer History</span></a></li>
+                <li><a href="#" data-page="my_assets"><i class="fa fa-angle-double-right"></i> <span data-i18n="my_assets">My Assets</span></a></li>
+                <li><a href="#" data-page="open_orders"><i class="fa fa-angle-double-right"></i> <span data-i18n="open_orders">Open Orders</span></a></li>
+                <li><a href="#" data-toggle="modal" data-target="#issue_asset_modal"><i class="fa fa-angle-double-right"></i> <span data-i18n="issue_asset">Issue Asset</span></a></li>
+            </ul>
+        </li>
+        <li class="treeview" id="sidebar_monetary_system">
+            <a href="#" data-page="monetary_system"><i class="fa fa-bank"></i><span data-i18n="monetary_system">Monetary System</span><i class="fa pull-right fa-angle-right" style="padding-top:3px"></i></a>
+            <ul class="treeview-menu" style="display: none;">
+                <li><a href="#" data-page="currencies"><i class="fa fa-angle-double-right"></i> <span data-i18n="currencies">Currencies</span></a></li>
+                <li><a href="#" data-page="exchange_history"><i class="fa fa-angle-double-right"></i> <span data-i18n="exchange_history">Exchange History</span></a></li>
+                <li><a href="#" data-toggle="modal" data-target="#issue_currency_modal"><i class="fa fa-angle-double-right"></i> <span data-i18n="issue_currency">Issue Currency</span></a></li>
+            </ul>
+        </li>
+        <li class="treeview" id="sidebar_dgs_buyer">
+            <a href="#" data-page="dgs_search"><i class="fa fa-shopping-cart"></i><span data-i18n="marketplace">Marketplace</span><i class="fa pull-right fa-angle-right" style="padding-top:3px"></i></a>
+            <ul class="treeview-menu" style="display: none;">
+                <li><a href="#" data-page="dgs_search"><i class="fa fa-angle-double-right"></i> <span data-i18n="marketplace">Marketplace</span></a></li>
+                <li><a href="#" data-page="purchased_dgs"><i class="fa fa-angle-double-right"></i> <span data-i18n="purchased_products">Purchased Products</span></a></li>
+            </ul>
+        </li>
+        <li class="treeview" id="sidebar_dgs_seller">
+            <a href="#" data-page="my_dgs_listings"><i class="fa fa-shopping-cart"></i><span data-i18n="my_store">My Store</span><i class="fa pull-right fa-angle-right" style="padding-top:3px"></i></a>
+            <ul class="treeview-menu" style="display: none;">
+                <li><a href="#" data-page="my_dgs_listings"><i class="fa fa-angle-double-right"></i> <span data-i18n="my_products_for_sale">My Products For Sale</span></a></li>
+                <li><a href="#" data-page="pending_orders_dgs"><i class="fa fa-angle-double-right"></i> <span data-i18n="my_pending_orders">My Pending Orders</span></a></li>
+                <li><a href="#" data-page="completed_orders_dgs"><i class="fa fa-angle-double-right"></i> <span data-i18n="my_completed_orders">My Completed Orders</span></a></li>
+                <li><a href="#" data-toggle="modal" data-target="#dgs_listing_modal"><i class="fa fa-angle-double-right"></i> <span data-i18n="list_product_for_sale">List Product For Sale</span></a></li>
+            </ul>
+        </li>
+        <li><a href="#" data-page="contacts"><i class="fa fa-user"></i> <span data-i18n="contacts">Contacts</span></a></li>
+        <li><a href="#" data-page="messages"><i class="fa fa-envelope"></i> <span data-i18n="messages">Messages</span></a></li>
+        <li><a href="#" data-page="aliases"><i class="fa fa-bookmark"></i> <span data-i18n="aliases">Aliases</span></a></li>
+        <!-- <li class="testnet_only"><a href="#" data-page="polls"><i class="fa fa-thumbs-up"></i><span data-i18n="polls">Polls</span></a></li> -->
+        <li><a href="#" data-page="blocks"><i class="fa fa-bars"></i> <span data-i18n="blocks">Blocks</span></a></li>
+        <li><a href="#" data-page="peers"><i class="fa fa-cloud"></i> <span data-i18n="peers">Peers</span></a></li>
+        <li id="news_link"><a href="#" data-page="news"><i class="fa fa-book"></i> <span data-i18n="news">News</span></a></li>
+    </ul>
+</section>
