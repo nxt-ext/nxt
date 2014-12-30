@@ -18,18 +18,10 @@ public abstract class CurrencyExchangeOffer {
 
         Nxt.getBlockchainProcessor().addListener(new Listener<Block>() {
 
-            final DbClause expiredOffersClause = new DbClause(" expiration_height <= ? ") {
-                @Override
-                protected int set(PreparedStatement pstmt, int index) throws SQLException {
-                    pstmt.setInt(index++, Nxt.getBlockchain().getHeight());
-                    return index;
-                }
-            };
-
             @Override
             public void notify(Block block) {
                 List<CurrencyBuyOffer> expired = new ArrayList<>();
-                try (DbIterator<CurrencyBuyOffer> offers = CurrencyBuyOffer.getOffers(expiredOffersClause, 0, -1)) {
+                try (DbIterator<CurrencyBuyOffer> offers = CurrencyBuyOffer.getOffers(new DbClause.IntClause("expiration_height", block.getHeight()), 0, -1)) {
                     for (CurrencyBuyOffer offer : offers) {
                         expired.add(offer);
                     }
