@@ -728,7 +728,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     try {
                         transaction.validate();
                     } catch (NxtException.ValidationException e) {
-                        throw new TransactionNotAcceptedException(e.getMessage(), transaction);
+                        throw new TransactionNotAcceptedException(e, transaction);
                     }
                     if (transaction.isDuplicate(duplicates)) {
                         throw new TransactionNotAcceptedException("Transaction is a duplicate: "
