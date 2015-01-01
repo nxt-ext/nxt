@@ -369,7 +369,7 @@ final class BlockImpl implements Block {
                 transaction.apply();
             } catch (RuntimeException e) {
                 Logger.logErrorMessage(e.toString(), e);
-                throw new BlockchainProcessor.TransactionNotAcceptedException(e.toString(), transaction);
+                throw new BlockchainProcessor.TransactionNotAcceptedException(e, transaction);
             }
         }
     }
