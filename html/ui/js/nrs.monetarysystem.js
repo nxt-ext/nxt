@@ -90,6 +90,13 @@ var NRS = (function(NRS, $, undefined) {
 				var sellCurrencyButton = $("#sell_currency_button");
 				sellCurrencyButton.data("currency", currencyId);
 				sellCurrencyButton.data("decimals", response.decimals);
+				if (!refresh) {
+					var msLinksCallout = $("#ms_links_callout");
+					msLinksCallout.html("");
+					msLinksCallout.append("<a href='#' data-toggle='modal' data-target='#transfer_currency_modal' data-currency='" + String(response.currency).escapeHTML() + "' data-code='" + response.code + "' data-decimals='" + response.decimals + "'>" + $.t("transfer") + "</a>");
+					msLinksCallout.append(" | ");
+					msLinksCallout.append("<a href='#' data-toggle='modal' data-target='#publish_exchange_offer_modal' data-currency='" + String(response.currency).escapeHTML() + "' data-code='" + response.code + "' data-decimals='" + response.decimals + "'>" + $.t("offer") + "</a>");
+				}
 			} else {
 				$("#MSnoCode").show();
 				$("#MScode").hide();
