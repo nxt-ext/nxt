@@ -104,7 +104,7 @@ var NRS = (function(NRS, $, undefined) {
 				$(".testnet_only, #testnet_login, #testnet_warning").show();
 			}
 			//Check if we reach the MS block on the main net, or if we are on the test net, then show the new features.  Otherwise hide them
-		    if ((!NRS.isTestNet && NRS.lastBlockHeight >= 935000) || NRS.isTestNet) {
+		    if ((!NRS.isTestNet && NRS.lastBlockHeight >= 330000) || NRS.isTestNet) {
 		    	$("#sidebar_monetary_system").show();
 		    	$("#dividend_payment_link").show();
 		    	$('#aliases_table').find('[data-target="#delete_alias_modal"]').show();
@@ -818,7 +818,7 @@ var NRS = (function(NRS, $, undefined) {
 			accountLeasingStatus = $.t("balance_is_leased_out", {
 				"start": String(NRS.accountInfo.currentLeasingHeightFrom).escapeHTML(),
 				"end": String(NRS.accountInfo.currentLeasingHeightTo).escapeHTML(),
-				"account": String(NRS.accountInfo.currentLessee).escapeHTML()
+				"account": String(NRS.accountInfo.currentLesseeRS).escapeHTML()
 			});
 			$("#lease_balance_message").html($.t("balance_leased_out_help"));
 		} else if (NRS.lastBlockHeight < NRS.accountInfo.currentLeasingHeightTo) {
@@ -826,7 +826,7 @@ var NRS = (function(NRS, $, undefined) {
 			accountLeasingStatus = $.t("balance_will_be_leased_out", {
 				"start": String(NRS.accountInfo.currentLeasingHeightFrom).escapeHTML(),
 				"end": String(NRS.accountInfo.currentLeasingHeightTo).escapeHTML(),
-				"account": String(NRS.accountInfo.currentLessee).escapeHTML()
+				"account": String(NRS.accountInfo.currentLesseeRS).escapeHTML()
 			});
 			$("#lease_balance_message").html($.t("balance_leased_out_help"));
 		} else {

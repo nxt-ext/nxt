@@ -18,18 +18,10 @@ public abstract class CurrencyExchangeOffer {
 
         Nxt.getBlockchainProcessor().addListener(new Listener<Block>() {
 
-            final DbClause expiredOffersClause = new DbClause(" expiration_height <= ? ") {
-                @Override
-                protected int set(PreparedStatement pstmt, int index) throws SQLException {
-                    pstmt.setInt(index++, Nxt.getBlockchain().getHeight());
-                    return index;
-                }
-            };
-
             @Override
             public void notify(Block block) {
                 List<CurrencyBuyOffer> expired = new ArrayList<>();
-                try (DbIterator<CurrencyBuyOffer> offers = CurrencyBuyOffer.getOffers(expiredOffersClause, 0, -1)) {
+                try (DbIterator<CurrencyBuyOffer> offers = CurrencyBuyOffer.getOffers(new DbClause.IntClause("expiration_height", block.getHeight()), 0, -1)) {
                     for (CurrencyBuyOffer offer : offers) {
                         expired.add(offer);
                     }
@@ -98,11 +90,12 @@ public abstract class CurrencyExchangeOffer {
             remainingUnits = Convert.safeSubtract(remainingUnits, curUnits);
 
             offer.decreaseLimitAndSupply(curUnits);
-            offer.getCounterOffer().increaseSupply(curUnits);
+            long excess = offer.getCounterOffer().increaseSupply(curUnits);
 
             Account counterAccount = Account.getAccount(offer.getAccountId());
             counterAccount.addToBalanceNQT(-curAmountNQT);
             counterAccount.addToCurrencyUnits(currencyId, curUnits);
+            counterAccount.addToUnconfirmedCurrencyUnits(currencyId, excess);
             Exchange.addExchange(transaction, currencyId, offer, account.getId(), offer.getAccountId(), curUnits);
         }
 
@@ -137,11 +130,13 @@ public abstract class CurrencyExchangeOffer {
             remainingAmountNQT = Convert.safeSubtract(remainingAmountNQT, curAmountNQT);
 
             offer.decreaseLimitAndSupply(curUnits);
-            offer.getCounterOffer().increaseSupply(curUnits);
+            long excess = offer.getCounterOffer().increaseSupply(curUnits);
 
             Account counterAccount = Account.getAccount(offer.getAccountId());
             counterAccount.addToBalanceNQT(curAmountNQT);
-            counterAccount.addToUnconfirmedBalanceNQT(Convert.safeMultiply(curUnits, offer.getRateNQT() - offer.getCounterOffer().getRateNQT()));
+            counterAccount.addToUnconfirmedBalanceNQT(Convert.safeAdd(
+                    Convert.safeMultiply(curUnits - excess, offer.getRateNQT() - offer.getCounterOffer().getRateNQT()),
+                    Convert.safeMultiply(excess, offer.getRateNQT())));
             counterAccount.addToCurrencyUnits(currencyId, -curUnits);
             Exchange.addExchange(transaction, currencyId, offer, offer.getAccountId(), account.getId(), curUnits);
         }
@@ -251,8 +246,10 @@ public abstract class CurrencyExchangeOffer {
 
     public abstract CurrencyExchangeOffer getCounterOffer();
 
-    void increaseSupply(long delta) {
-        supply += delta;
+    long increaseSupply(long delta) {
+        long excess = Math.max(Convert.safeAdd(supply, Convert.safeSubtract(delta, limit)), 0);
+        supply += delta - excess;
+        return excess;
     }
 
     void decreaseLimitAndSupply(long delta) {

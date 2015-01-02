@@ -409,6 +409,9 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                         iterator.remove();
                         addedUnconfirmedTransactions.add(unconfirmedTransaction.getTransaction());
                     } catch (NxtException.NotCurrentlyValidException ignore) {
+                        if (unconfirmedTransaction.getExpiration() < Nxt.getEpochTime()) {
+                            iterator.remove();
+                        }
                     } catch (NxtException.ValidationException|RuntimeException e) {
                         iterator.remove();
                     }
@@ -476,11 +479,8 @@ final class TransactionProcessorImpl implements TransactionProcessor {
     private void processTransaction(UnconfirmedTransaction unconfirmedTransaction) throws NxtException.ValidationException {
         TransactionImpl transaction = unconfirmedTransaction.getTransaction();
         int curTime = Nxt.getEpochTime();
-        if (transaction.getTimestamp() > curTime + 15 || transaction.getDeadline() > 1440) {
+        if (transaction.getTimestamp() > curTime + 15 || transaction.getDeadline() > 1440 || transaction.getExpiration() < curTime) {
             throw new NxtException.NotCurrentlyValidException("Invalid transaction timestamp");
-        }
-        if (transaction.getExpiration() < curTime) {
-            throw new NxtException.NotValidException("Expired transaction");
         }
         if (transaction.getVersion() < 1) {
             throw new NxtException.NotValidException("Invalid transaction version");

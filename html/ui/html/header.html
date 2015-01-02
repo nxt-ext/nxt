@@ -1,0 +1,50 @@
+<header class="header">
+    <a href="#" class="logo" id="logo" data-page="dashboard">
+        <img src="img/nxt_logo_small.png" style="opacity:0.95" />
+    </a>
+    <nav class="navbar navbar-static-top" role="navigation">
+        <a href="#" class="navbar-btn sidebar-toggle" id="offcanvas_toggle" role="button">
+            <span class="sr-only" data-i18n="toggle_navigation">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+        </a>
+        <div class="navbar-right">
+            <ul class="nav navbar-nav">
+                <li class="dropdown"><a href="#" data-toggle="modal" data-target="#send_money_modal" data-i18n="send_nxt">Send NXT</a></li>
+                <li class="dropdown"><a href="#" data-toggle="modal" data-target="#send_message_modal" data-i18n="send_message">Send Message</a></li>
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                        <i class="fa fa-cog"></i>
+                    </a>
+                    <ul class="dropdown-menu" role="menu">
+                        <li><a href="#" class="goto-page" data-page="settings" data-i18n="settings">Settings</a></li>
+                        <li><a href="#" data-toggle="modal" data-target="#token_modal" data-i18n="generate_token">Generate Token</a></li>
+                        <li><a href="#" data-toggle="modal" data-target="#transaction_operations_modal" data-i18n="transaction_operations">Transaction Operations</a></li>
+                    </ul>
+                </li>
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                        <i class="fa fa-question-circle"></i>
+                    </a>
+                    <ul class="dropdown-menu" role="menu">
+                        <li><a role="menuitem" tabindex="-1" href="http://nxt.org/" target="_blank">Nxt.org</a></li>
+                        <li><a role="menuitem" tabindex="-1" href="https://nxtforum.org/" target="_blank" data-i18n="link.nxt_forum">Nxt Forum</a></li>
+                        <li><a role="menuitem" tabindex="-1" href="https://wiki.nxtcrypto.org/" target="_blank" data-i18n="link.nxt_wiki">Nxt Wiki</a></li>
+                        <li><a role="menuitem" tabindex="-1" href="https://wiki.nxtcrypto.org/wiki/Nxt_client_interface" target="_blank" data-i18n="link.interface_tutorial">Interface Tutorial</a></li>
+                        <li><a role="menuitem" tabindex="-1" href="https://wiki.nxtcrypto.org/wiki/Asset_Exchange" target="_blank" data-i18n="link.asset_exchange_tutorial">Asset Exchange Tutorial</a></li>
+                    </ul>
+                </li>
+                <li class="dropdown" id="logout_button_container">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown" id="logout_button">
+                        <i class="fa fa-power-off"></i>
+                    </a>
+                    <ul class="dropdown-menu" role="menu">
+                        <li><a role="menuitem" tabindex="-1" href="#" onclick="NRS.logout()" data-i18n="logout">Log Out</a></li>
+                        <li><a role="menuitem" tabindex="-1" href="#" onclick="NRS.logout(true)" data-i18n="logout_stop_forging">Log Out &amp; Stop Forging</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+    </nav>
+</header>
