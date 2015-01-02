@@ -806,7 +806,7 @@ var NRS = (function(NRS, $, undefined) {
 				assetTotal += assets.quantity[assets.asset[i]]*assets.trades[assets.asset[i]];
 		}
 		
-		$("#account_assets_balance").html(NRS.formatStyledAmount(assetTotal));
+		$("#account_assets_balance").html(NRS.formatStyledAmount(new Big(assetTotal).toFixed(8)));
 	};
 
 	NRS.updateAccountLeasingStatus = function() {
