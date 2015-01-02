@@ -327,103 +327,103 @@ var NRS = (function(NRS, $, undefined) {
 
 		if (requestType == "sendMoney" || requestType == "transferAsset") {
 			var merchantInfo = $modal.find("input[name=merchant_info]").val();
+			if (merchantInfo) {
+				var result = merchantInfo.match(/#merchant:(.*)#/i);
 
-			var result = merchantInfo.match(/#merchant:(.*)#/i);
+				if (result && result[1]) {
+					merchantInfo = $.trim(result[1]);
 
-			if (result && result[1]) {
-				merchantInfo = $.trim(result[1]);
-
-				if (!data.add_message || !data.message) {
-					$form.find(".error_message").html($.t("info_merchant_message_required")).show();
-					if (formErrorFunction) {
-						formErrorFunction(false, data);
-					}
-					NRS.unlockForm($modal, $btn);
-					return;
-				}
-
-				if (merchantInfo == "numeric") {
-					merchantInfo = "[0-9]+";
-				} else if (merchantInfo == "alphanumeric") {
-					merchantInfo = "[a-zA-Z0-9]+";
-				}
-
-				var regexParts = merchantInfo.match(/^\/(.*?)\/(.*)$/);
-
-				if (!regexParts) {
-					regexParts = ["", merchantInfo, ""];
-				}
-
-				var strippedRegex = regexParts[1].replace(/^[\^\(]*/, "").replace(/[\$\)]*$/, "");
-
-				if (regexParts[1].charAt(0) != "^") {
-					regexParts[1] = "^" + regexParts[1];
-				}
-
-				if (regexParts[1].slice(-1) != "$") {
-					regexParts[1] = regexParts[1] + "$";
-				}
-
-				if (regexParts[2].indexOf("i") !== -1) {
-					var regexp = new RegExp(regexParts[1], "i");
-				} else {
-					var regexp = new RegExp(regexParts[1]);
-				}
-
-				if (!regexp.test(data.message)) {
-					var regexType;
-					var errorMessage;
-					var lengthRequirement = strippedRegex.match(/\{(.*)\}/);
-
-					if (lengthRequirement) {
-						strippedRegex = strippedRegex.replace(lengthRequirement[0], "+");
+					if (!data.add_message || !data.message) {
+						$form.find(".error_message").html($.t("info_merchant_message_required")).show();
+						if (formErrorFunction) {
+							formErrorFunction(false, data);
+						}
+						NRS.unlockForm($modal, $btn);
+						return;
 					}
 
-					if (strippedRegex == "[0-9]+") {
-						regexType = "numeric";
-					} else if (strippedRegex == "[a-z0-9]+" || strippedRegex.toLowerCase() == "[a-za-z0-9]+" || strippedRegex == "[a-z0-9]+") {
-						regexType = "alphanumeric";
+					if (merchantInfo == "numeric") {
+						merchantInfo = "[0-9]+";
+					} else if (merchantInfo == "alphanumeric") {
+						merchantInfo = "[a-zA-Z0-9]+";
+					}
+
+					var regexParts = merchantInfo.match(/^\/(.*?)\/(.*)$/);
+
+					if (!regexParts) {
+						regexParts = ["", merchantInfo, ""];
+					}
+
+					var strippedRegex = regexParts[1].replace(/^[\^\(]*/, "").replace(/[\$\)]*$/, "");
+
+					if (regexParts[1].charAt(0) != "^") {
+						regexParts[1] = "^" + regexParts[1];
+					}
+
+					if (regexParts[1].slice(-1) != "$") {
+						regexParts[1] = regexParts[1] + "$";
+					}
+
+					if (regexParts[2].indexOf("i") !== -1) {
+						var regexp = new RegExp(regexParts[1], "i");
 					} else {
-						regexType = "custom";
+						var regexp = new RegExp(regexParts[1]);
 					}
 
-					if (lengthRequirement) {
-						var minLength, maxLength, requiredLength;
+					if (!regexp.test(data.message)) {
+						var regexType;
+						var errorMessage;
+						var lengthRequirement = strippedRegex.match(/\{(.*)\}/);
 
-						if (lengthRequirement[1].indexOf(",") != -1) {
-							lengthRequirement = lengthRequirement[1].split(",");
-							var minLength = parseInt(lengthRequirement[0], 10);
-							if (lengthRequirement[1]) {
-								var maxLength = parseInt(lengthRequirement[1], 10);
-								errorMessage = $.t("error_merchant_message_" + regexType + "_range_length", {
-									"minLength": minLength,
-									"maxLength": maxLength
-								});
+						if (lengthRequirement) {
+							strippedRegex = strippedRegex.replace(lengthRequirement[0], "+");
+						}
+
+						if (strippedRegex == "[0-9]+") {
+							regexType = "numeric";
+						} else if (strippedRegex == "[a-z0-9]+" || strippedRegex.toLowerCase() == "[a-za-z0-9]+" || strippedRegex == "[a-z0-9]+") {
+							regexType = "alphanumeric";
+						} else {
+							regexType = "custom";
+						}
+
+						if (lengthRequirement) {
+							var minLength, maxLength, requiredLength;
+
+							if (lengthRequirement[1].indexOf(",") != -1) {
+								lengthRequirement = lengthRequirement[1].split(",");
+								var minLength = parseInt(lengthRequirement[0], 10);
+								if (lengthRequirement[1]) {
+									var maxLength = parseInt(lengthRequirement[1], 10);
+									errorMessage = $.t("error_merchant_message_" + regexType + "_range_length", {
+										"minLength": minLength,
+										"maxLength": maxLength
+									});
+								} else {
+									errorMessage = $.t("error_merchant_message_" + regexType + "_min_length", {
+										"minLength": minLength
+									});
+								}
 							} else {
-								errorMessage = $.t("error_merchant_message_" + regexType + "_min_length", {
-									"minLength": minLength
+								var requiredLength = parseInt(lengthRequirement[1], 10);
+								errorMessage = $.t("error_merchant_message_" + regexType + "_length", {
+									"length": requiredLength
 								});
 							}
 						} else {
-							var requiredLength = parseInt(lengthRequirement[1], 10);
-							errorMessage = $.t("error_merchant_message_" + regexType + "_length", {
-								"length": requiredLength
-							});
+							errorMessage = $.t("error_merchant_message_" + regexType);
 						}
-					} else {
-						errorMessage = $.t("error_merchant_message_" + regexType);
-					}
 
-					$form.find(".error_message").html(errorMessage).show();
-					if (formErrorFunction) {
-						formErrorFunction(false, data);
+						$form.find(".error_message").html(errorMessage).show();
+						if (formErrorFunction) {
+							formErrorFunction(false, data);
+						}
+						NRS.unlockForm($modal, $btn);
+						return;
 					}
-					NRS.unlockForm($modal, $btn);
-					return;
 				}
 			}
 		}
-
 		try {
 			data = NRS.addMessageData(data, requestType);
 		} catch (err) {
