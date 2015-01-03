@@ -661,7 +661,7 @@ var NRS = (function(NRS, $, undefined) {
 				var balance = NRS.accountInfo.unconfirmedAssetBalances[i];
 
 				if (balance.asset == assetId) {
-					NRS.currentAsset.yourBalanceNQT = balance.unconfirmedBalanceQNT;
+					NRS.currentAsset.yourBalanceQNT = balance.unconfirmedBalanceQNT;
 					$("#your_asset_balance").html(NRS.formatQuantity(balance.unconfirmedBalanceQNT, NRS.currentAsset.decimals));
 					if (balance.unconfirmedBalanceQNT == "0") {
 						$("#sell_automatic_price").addClass("zero").removeClass("nonzero");
@@ -673,8 +673,8 @@ var NRS = (function(NRS, $, undefined) {
 			}
 		}
 
-		if (!NRS.currentAsset.yourBalanceNQT) {
-			NRS.currentAsset.yourBalanceNQT = "0";
+		if (!NRS.currentAsset.yourBalanceQNT) {
+			NRS.currentAsset.yourBalanceQNT = "0";
 			$("#your_asset_balance").html("0");
 		}
 
@@ -933,11 +933,10 @@ var NRS = (function(NRS, $, undefined) {
 			var type = ($(this).attr("id") == "sell_automatic_price" ? "sell" : "buy");
 
 			var price = new Big(NRS.convertToNQT(String($("#" + type + "_asset_price").val())));
-			var balance = new Big(type == "buy" ? NRS.accountInfo.unconfirmedBalanceNQT : NRS.currentAsset.yourBalanceNQT);
 			var balanceNQT = new Big(NRS.accountInfo.unconfirmedBalanceNQT);
 			var maxQuantity = new Big(NRS.convertToQNTf(NRS.currentAsset.quantityQNT, NRS.currentAsset.decimals));
 
-			if (balance.cmp(new Big("0")) <= 0) {
+			if (balanceNQT.cmp(new Big("0")) <= 0) {
 				return;
 			}
 
@@ -947,22 +946,18 @@ var NRS = (function(NRS, $, undefined) {
 				$("#" + type + "_asset_price").val(NRS.convertToNXT(price.toString()));
 			}
 
-			var quantity = new Big(NRS.amountToPrecision((type == "sell" ? balanceNQT : balance).div(price).toString(), NRS.currentAsset.decimals));
+			if (type == "sell") {
+				var quantity = new Big(NRS.currentAsset.yourBalanceQNT ? NRS.convertToQNTf(NRS.currentAsset.yourBalanceQNT, NRS.currentAsset.decimals) : "0");
+			} else {
+				var quantity = new Big(NRS.amountToPrecision(balanceNQT.div(price).toString(), NRS.currentAsset.decimals));
+			}
 
 			var total = quantity.times(price);
 
 			//proposed quantity is bigger than available quantity
-			if (quantity.cmp(maxQuantity) == 1) {
+			if (type == "buy" && quantity.cmp(maxQuantity) == 1) {
 				quantity = maxQuantity;
 				total = quantity.times(price);
-			}
-
-			if (type == "sell") {
-				var maxUserQuantity = new Big(NRS.convertToQNTf(balance, NRS.currentAsset.decimals));
-				if (quantity.cmp(maxUserQuantity) == -1) {
-					quantity = maxUserQuantity;
-					total = quantity.times(price);
-				}
 			}
 
 			$("#" + type + "_asset_quantity").val(quantity.toString());

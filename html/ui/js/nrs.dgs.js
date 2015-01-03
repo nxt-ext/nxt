@@ -976,7 +976,7 @@ var NRS = (function(NRS, $, undefined) {
 				}
 
 				if (type == "dgs_purchase_modal" || type == "dgs_product_modal") {
-					output += "<tr><td colspan='2'><div style='max-height:150px;overflow:auto;'>" + String(response.description).escapeHTML().nl2br() + "</div></td></tr>";
+					output += "<tr><td colspan='2'><div style='max-height:150px;overflow:auto;'>" + String(response.description).autoLink().nl2br() + "</div></td></tr>";
 				}
 
 				output += "</table>";
