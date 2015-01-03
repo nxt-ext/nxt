@@ -66,12 +66,13 @@
 			<file src="README.txt" targetdir="${INSTALL_PATH}" override="true"/>
 			<file src="NXT_Wallet.url" targetdir="${INSTALL_PATH}" override="true"/>
 			<file src="MIT-license.txt" targetdir="${INSTALL_PATH}" override="true"/>
-			<fileset dir="lib" targetdir="${INSTALL_PATH}/lib" override="true"/>
-			<fileset dir="changelogs" targetdir="${INSTALL_PATH}/changelogs" override="true"/>
-			<fileset dir="classes" targetdir="${INSTALL_PATH}/classes" override="true"/>
-			<fileset dir="conf" targetdir="${INSTALL_PATH}/conf" override="true"/>
-			<fileset dir="html" targetdir="${INSTALL_PATH}/html" override="true"/>
-			<fileset dir="src" targetdir="${INSTALL_PATH}/src" override="true"/>
+			<file src="conf/nxt-default.properties" targetdir="${INSTALL_PATH}/conf" override="true"/>
+			<file src="conf/logging-default.properties" targetdir="${INSTALL_PATH}/conf" override="true"/>
+			<fileset dir="lib" targetdir="${INSTALL_PATH}/lib" override="true" excludes=".gitignore"/>
+			<fileset dir="changelogs" targetdir="${INSTALL_PATH}/changelogs" override="true" excludes=".gitignore"/>
+			<fileset dir="classes" targetdir="${INSTALL_PATH}/classes" override="true" excludes=".gitignore"/>
+			<fileset dir="html" targetdir="${INSTALL_PATH}/html" override="true" excludes=".gitignore"/>
+			<fileset dir="src" targetdir="${INSTALL_PATH}/src" override="true" excludes=".gitignore"/>
 		</pack>
         <pack name="jre" required="no">
             <description>Java 32 bit</description>
