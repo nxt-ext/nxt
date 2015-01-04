@@ -63,36 +63,6 @@ public final class APIServlet extends HttpServlet {
 
     }
 
-    private static class NetworkAddress {
-        private BigInteger netAddress;
-        private BigInteger netMask;
-
-        public NetworkAddress(String address) {
-            int slashPos = address.indexOf('/');
-            if (slashPos > 0) {
-                try {
-                    InetAddress targetHostAddress = InetAddress.getByName(address.substring(0, slashPos));
-                    byte[] srcBytes = targetHostAddress.getAddress();
-                    byte[] dstBytes = new byte[srcBytes.length];
-                    netAddress = new BigInteger(1, srcBytes);
-                    int maskBitLength = Integer.valueOf(address.substring(slashPos + 1));
-                    int addressBitLength = (targetHostAddress instanceof Inet4Address) ? 32 : 128;
-                    netMask = BigInteger.ZERO
-                            .setBit(addressBitLength)
-                            .subtract(BigInteger.ONE)
-                            .subtract(BigInteger.ZERO.setBit(addressBitLength - maskBitLength).subtract(BigInteger.ONE));
-                } catch (UnknownHostException e) {
-                }
-            }
-        }
-
-        public boolean contains(BigInteger hostAddressToCheck) {
-            return hostAddressToCheck.and(netMask).equals(netAddress);
-        }
-    }
-
-    private static ConcurrentHashMap<String, NetworkAddress> maskedAddressCache = new ConcurrentHashMap<>();
-
     private static final boolean enforcePost = Nxt.getBooleanProperty("nxt.apiServerEnforcePOST");
 
     static final Map<String,APIRequestHandler> apiRequestHandlers;
@@ -276,9 +246,7 @@ public final class APIServlet extends HttpServlet {
 
             long startTime = System.currentTimeMillis();
 
-			if (API.allowedBotHosts != null
-                    && !(API.allowedBotHosts.contains(req.getRemoteHost()) || checkIPRanges(API.allowedBotHosts,
-                            req.getRemoteHost()))) {
+			if (! API.isAllowed(req.getRemoteHost())) {
                 response = ERROR_NOT_ALLOWED;
                 return;
             }
@@ -330,29 +298,6 @@ public final class APIServlet extends HttpServlet {
             }
         }
 
-    }
-
-    private boolean checkIPRanges(Set<String> hostList, String host) {
-        try {
-            BigInteger hostAddressToCheck = new BigInteger(InetAddress.getByName(host).getAddress());
-            for (String targetHost : hostList) {
-                if (targetHost.contains("/")) {
-                    NetworkAddress maskedInetAddress = maskedAddressCache.get(targetHost);
-                    if (maskedInetAddress == null) {
-                        maskedInetAddress = new NetworkAddress(targetHost);
-                        maskedAddressCache.put(targetHost, maskedInetAddress);
-                    }
-                    if (maskedInetAddress.contains(hostAddressToCheck)) {
-                        return true;
-                    }
-                }
-            }
-        } catch (UnknownHostException e) {
-            // can't resolve, disallow
-            Logger.logErrorMessage("Unknown remote host " + host);
-            return false;
-        }
-        return false;
     }
 
 }
