@@ -6,6 +6,8 @@ blockchain height.
 
 Refactoring of the UI html, splitting index.html into multiple files.
 
+Added offer and transfer links to currency exchange booth UI.
+
 This release will perform a rescan on testnet only, with a rollback to block
 159305.
 

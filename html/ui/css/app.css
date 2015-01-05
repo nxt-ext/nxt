@@ -79,14 +79,14 @@ body > .header {
 .left-side {
   position: absolute;
   width: 220px;
+  height: 100%;
+  min-height: inherit !important;
   top: 0;
+  bottom: 0;
   transition: margin .7s;
   -webkit-transition: margin .7s;
 }
 @media screen and (min-width: 992px) {
-  .left-side {
-    top: 50px;
-  }
   /*Right side strech mode*/
   .right-side.strech {
     margin-left: 0;
@@ -98,9 +98,15 @@ body > .header {
   .left-side.collapse-left {
     margin-left: -220px;
   }
+  .sidebar {
+    margin-top: 50px;
+  }
 }
 /*Give content full width on xs screens*/
 @media screen and (max-width: 992px) {
+  .sidebar {
+    margin-top: 50px;
+  }
   .right-side {
     margin-left: 0;
   }
@@ -532,9 +538,11 @@ body > .header .logo .icon {
   body.fixed > .header {
     position: fixed;
   }
-  body.fixed > .wrapper,
-  body.fixed .sidebar-offcanvas {
+  body.fixed > .wrapper {
     margin-top: 100px!important;
+  }
+  .sidebar {
+    margin-top: 100px;
   }
 }
 /*
@@ -542,6 +550,8 @@ body > .header .logo .icon {
 --------------------------
 */
 .sidebar {
+  overflow-y: auto;
+  max-height: 100%;
   margin-bottom: 5px;
 }
 .sidebar-form input:focus {
@@ -552,7 +562,7 @@ body > .header .logo .icon {
 }
 .sidebar .sidebar-menu {
   list-style: none;
-  margin: 0;
+  margin: 0 0 50px 0;
   padding: 0;
 }
 .sidebar .sidebar-menu > li {
@@ -660,7 +670,7 @@ body > .header .logo .icon {
     left: 0;
   }
   body.fixed .sidebar-offcanvas {
-    margin-top: 50px;
+    margin-top: 0px;
     left: -220px;
   }
   body.fixed .row-offcanvas-left.active .navbar {

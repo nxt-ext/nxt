@@ -19,7 +19,8 @@
                         <div class="input-group">
                             <input type="text" class="form-control" name="recipient" id="transfer_currency_recipient" placeholder="Recipient Account" data-i18n="[placeholder]recipient_account" autofocus tabindex="1" />
                             <span class="input-group-btn btn-group recipient_selector">
-                                <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown"><span class="glyphicon glyphicon-user"></span></button>    <ul class="dropdown-menu scrollable-menu" role="menu" style="right:0;left:auto;"></ul>
+                                <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown"><span class="glyphicon glyphicon-user"></span></button>
+                                <ul class="dropdown-menu scrollable-menu" role="menu" style="right:0;left:auto;"></ul>
                             </span>
                         </div>
                     </div>
@@ -362,7 +363,7 @@
                             </div>
                         </div>
                         <div class="form-group">
-                            <label for="expiration_Height" class="col-sm-3 control-label" data-i18n="expiration_height">Expiration Height</label><i>Current Height: <span class="nrs_current_block"></span></i>
+                            <label for="expiration_height" class="col-sm-3 control-label" data-i18n="expiration_height">Expiration Height</label><i>Current Height: <span class="nrs_current_block"></span></i>
                             <div class="col-sm-9">
                                 <div class="input-group">
                                     <input id="expiration_height" type="number" name="expirationHeight" class="form-control" tabindex="8" />
@@ -449,7 +450,7 @@
                         <input type="text" class="form-control" name="referencedTransactionFullHash" id="claim_currency_referenced_transaction" placeholder="Referenced Transaction Full Hash" data-i18n="[placeholder]referenced_transaction_full_hash" tabindex="6" spellcheck="false" />
                     </div>
                     <div class="form-group advanced" style="margin-bottom:0;">
-                        <input type="checkbox" name="doNotBroadcast" id="register_currency_do_not_broadcast" value="1" /> <label for="register_currency_do_not_broadcast" style="font-weight:normal;" tabindex="7" data-i18n="do_not_broadcast">Do Not Broadcast</label>
+                        <input type="checkbox" name="doNotBroadcast" id="claim_currency_do_not_broadcast" value="1" /> <label for="claim_currency_do_not_broadcast" style="font-weight:normal;" tabindex="7" data-i18n="do_not_broadcast">Do Not Broadcast</label>
                     </div>
                     <div class="form-group advanced">
                         <input type="checkbox" name="add_note_to_self" id="claim_currency_add_note_to_self" class="add_note_to_self" tabindex="8" /> <label for="claim_currency_add_note_to_self" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_note_to_self">Add Note to Self?</span></label>
@@ -530,7 +531,7 @@
                         <input type="text" class="form-control" name="referencedTransactionFullHash" id="mine_currency_referenced_transaction" placeholder="Referenced Transaction Full Hash" data-i18n="[placeholder]referenced_transaction_full_hash" tabindex="6" spellcheck="false" />
                     </div>
                     <div class="form-group advanced" style="margin-bottom:0;">
-                        <input type="checkbox" name="doNotBroadcast" id="register_currency_do_not_broadcast" value="1" /> <label for="register_currency_do_not_broadcast" style="font-weight:normal;" tabindex="7" data-i18n="do_not_broadcast">Do Not Broadcast</label>
+                        <input type="checkbox" name="doNotBroadcast" id="mine_currency_do_not_broadcast" value="1" /> <label for="mine_currency_do_not_broadcast" style="font-weight:normal;" tabindex="7" data-i18n="do_not_broadcast">Do Not Broadcast</label>
                     </div>
                     <div class="form-group advanced">
                         <input type="checkbox" name="add_note_to_self" id="mine_currency_add_note_to_self" class="add_note_to_self" tabindex="8" /> <label for="mine_currency_add_note_to_self" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_note_to_self">Add Note to Self?</span></label>
@@ -571,13 +572,13 @@
                         <input type="hidden" name="minReserve" id="reserve_currency_minReserve" value="" />
                         <input type="hidden" name="currentReserve" id="reserve_currency_currentReserve" value="" />
                         <input type="hidden" name="resSupply" id="reserve_currency_resSupply" value="" />
-                        </p>
-                        <label for="reserve_currency_resSupply_text" data-i18n="reserve_supply">Reserve Supply</label> </span><i><span id="reserve_currency_resSupply_text"></span></i>
-                        <label for="reserve_currency_initialSupply_text" data-i18n="initial_supply_included">Initial Supply Included</label> </span><i><span id="reserve_currency_initialSupply_text"></span></i>
+                        <p>
+                        <label for="reserve_currency_resSupply_text" data-i18n="reserve_supply">Reserve Supply</label> <i><span id="reserve_currency_resSupply_text"></span></i>
+                        <label for="reserve_currency_initialSupply_text" data-i18n="initial_supply_included">Initial Supply Included</label> <i><span id="reserve_currency_initialSupply_text"></span></i>
                         </p>
                         <p>
-                        <label for="reserve_currency_minReserve_text" data-i18n="activation_per_unit_reserve">Activation Per Unit Reserve</label> </span><i><span id="reserve_currency_minReserve_text"></span></i>
-                        <label for="reserve_currency_currentReserve_text" data-i18n="current_per_unit_reserve">Current Per Unit Reserve</label> </span><i><span id="reserve_currency_currentReserve_text"></span></i>
+                        <label for="reserve_currency_minReserve_text" data-i18n="activation_per_unit_reserve">Activation Per Unit Reserve</label> <i><span id="reserve_currency_minReserve_text"></span></i>
+                        <label for="reserve_currency_currentReserve_text" data-i18n="current_per_unit_reserve">Current Per Unit Reserve</label> <i><span id="reserve_currency_currentReserve_text"></span></i>
                         </p>
                     </div>
                     <div class="form-group">
@@ -614,7 +615,7 @@
                         <input type="text" class="form-control" name="referencedTransactionFullHash" id="reserve_currency_referenced_transaction" placeholder="Referenced Transaction Full Hash" data-i18n="[placeholder]referenced_transaction_full_hash" tabindex="6" spellcheck="false" />
                     </div>
                     <div class="form-group advanced" style="margin-bottom:0;">
-                        <input type="checkbox" name="doNotBroadcast" id="register_currency_do_not_broadcast" value="1" /> <label for="register_currency_do_not_broadcast" style="font-weight:normal;" tabindex="7" data-i18n="do_not_broadcast">Do Not Broadcast</label>
+                        <input type="checkbox" name="doNotBroadcast" id="reserve_currency_do_not_broadcast" value="1" /> <label for="reserve_currency_do_not_broadcast" style="font-weight:normal;" tabindex="7" data-i18n="do_not_broadcast">Do Not Broadcast</label>
                     </div>
                     <div class="form-group advanced">
                         <input type="checkbox" name="add_note_to_self" id="reserve_currency_add_note_to_self" class="add_note_to_self" tabindex="8" /> <label for="reserve_currency_add_note_to_self" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_note_to_self">Add Note to Self?</span></label>
@@ -679,7 +680,7 @@
                         <input type="text" class="form-control" name="referencedTransactionFullHash" id="delete_currency_referenced_transaction" placeholder="Referenced Transaction Full Hash" data-i18n="[placeholder]referenced_transaction_full_hash" tabindex="6" spellcheck="false" />
                     </div>
                     <div class="form-group advanced" style="margin-bottom:0;">
-                        <input type="checkbox" name="doNotBroadcast" id="register_currency_do_not_broadcast" value="1" /> <label for="register_currency_do_not_broadcast" style="font-weight:normal;" tabindex="7" data-i18n="do_not_broadcast">Do Not Broadcast</label>
+                        <input type="checkbox" name="doNotBroadcast" id="delete_currency_do_not_broadcast" value="1" /> <label for="delete_currency_do_not_broadcast" style="font-weight:normal;" tabindex="7" data-i18n="do_not_broadcast">Do Not Broadcast</label>
                     </div>
                     <div class="form-group advanced">
                         <input type="checkbox" name="add_note_to_self" id="delete_currency_add_note_to_self" class="add_note_to_self" tabindex="8" /> <label for="delete_currency_add_note_to_self" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_note_to_self">Add Note to Self?</span></label>
