@@ -20,7 +20,6 @@ public final class Constants {
         }
     }
 
-    public static final byte MAX_VOTES_PER_VOTING_TRANSACTION = 10;
     public static final byte VOTING_MODEL_BALANCE = 0;
     public static final byte VOTING_MODEL_ACCOUNT = 1;
     public static final byte VOTING_MODEL_ASSET = 2;

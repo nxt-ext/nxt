@@ -8,13 +8,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 public class VotePhased {
-    //TODO: why does pending_transaction_id need to be part of the key?
-    // id is the id of the vote, and it is already unique as it is a transaction id
-    //
-    //edit: I didn't realize you allow voting for multiple pending transactions with a single transaction.
-    // But I don't like this either, first it leads to code complication,
-    // second it couples unrelated pending transactions and will lead to special cases that need to be considered
-    // I would remove this vanity feature and have one vote per transaction only.
     private static final DbKey.LinkKeyFactory<VotePhased> voteDbKeyFactory =
             new DbKey.LinkKeyFactory<VotePhased>("id", "pending_transaction_id") {
                 @Override

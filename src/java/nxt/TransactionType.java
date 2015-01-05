@@ -804,9 +804,12 @@ public abstract class TransactionType {
 
                 Attachment.PendingPaymentVoteCasting att = (Attachment.PendingPaymentVoteCasting) transaction.getAttachment();
                 long[] pendingIds = att.getPendingTransactionsIds();
-                if (pendingIds.length > Constants.MAX_VOTES_PER_VOTING_TRANSACTION) {
-                    throw new NxtException.NotValidException("No more than "+Constants.MAX_VOTES_PER_VOTING_TRANSACTION
-                            +" votes allowed for two-phased multivoting");
+                if (pendingIds.length > 2) {
+                    throw new NxtException.NotValidException("No more than 2 votes allowed for two-phased multivoting");
+                }
+
+                if (pendingIds.length == 2 && pendingIds[0] == pendingIds[1]) {
+                    throw new NxtException.NotValidException("Duplicate votes");
                 }
 
                 long voterId = transaction.getSenderId();
@@ -832,7 +835,6 @@ public abstract class TransactionType {
                     }
 
                     if (VotePhased.isVoteGiven(pendingId, transaction.getSenderId())) {
-                        // TODO: Is the pendingIds array itself also checked for duplicate ids somewhere? isDuplicate enough?
                         throw new NxtException.NotValidException("Double voting attempt");
                     }
                 }
