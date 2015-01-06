@@ -109,10 +109,21 @@ final class ParameterParser {
     }
 
     static Poll getPoll(HttpServletRequest req) throws ParameterException {
-        long pollId = getLong(req, "poll", Long.MIN_VALUE, Long.MAX_VALUE, true);
-        Poll poll = Poll.getPoll(pollId);
-        if (poll == null) {
+        String pollValue = Convert.emptyToNull(req.getParameter("poll"));
+        if (pollValue == null) {
+            throw new ParameterException(MISSING_POLL);
+        }
+
+        Poll poll;
+        try {
+            long pollId = Convert.parseUnsignedLong(pollValue);
+            poll = Poll.getPoll(pollId);
+        }catch(RuntimeException e){
             throw new ParameterException(INCORRECT_POLL);
+        }
+
+        if (poll == null) {
+            throw new ParameterException(UNKNOWN_POLL);
         }
         return poll;
     }

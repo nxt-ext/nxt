@@ -182,7 +182,7 @@ public final class Poll extends AbstractPoll {
     }
 
     public static DbIterator<Poll> getPollsFinishingAt(int height) {
-        return pollTable.getManyBy(new DbClause.IntClause("height", height), 0, Integer.MAX_VALUE);
+        return pollTable.getManyBy(new DbClause.IntClause("finish_height", height), 0, Integer.MAX_VALUE);
     }
 
     public static int getCount() {

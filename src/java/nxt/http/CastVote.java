@@ -21,12 +21,10 @@ public final class CastVote extends CreateTransaction {
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
-        long pollId = ParameterParser.getLong(req, "poll", Long.MIN_VALUE, Long.MAX_VALUE, true);
-        Poll poll = Poll.getPoll(pollId);
-        if (poll == null || poll.isFinished()) {
+        Poll poll = ParameterParser.getPoll(req);
+        if (poll.isFinished()) {
             return INCORRECT_POLL;
         }
-
 
         int numberOfOptions = poll.getOptions().length;
         byte[] vote = new byte[numberOfOptions];

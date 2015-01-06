@@ -20,7 +20,7 @@ public final class GetPollIds extends APIServlet.APIRequestHandler {
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
-        String accountId = Convert.emptyToNull(req.getParameter("poll"));
+        String accountId = Convert.emptyToNull(req.getParameter("account"));
 
         int firstIndex = ParameterParser.getFirstIndex(req);
         int lastIndex = ParameterParser.getLastIndex(req);
