@@ -276,9 +276,7 @@ public final class APIServlet extends HttpServlet {
 
             long startTime = System.currentTimeMillis();
 
-			if (API.allowedBotHosts != null
-                    && !(API.allowedBotHosts.contains(req.getRemoteHost()) || checkIPRanges(API.allowedBotHosts,
-                            req.getRemoteHost()))) {
+			if (! API.isAllowed(req.getRemoteHost())) {
                 response = ERROR_NOT_ALLOWED;
                 return;
             }

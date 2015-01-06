@@ -640,12 +640,14 @@ public interface Attachment extends Appendix {
             this.messagePattern = null;
         }
 
+        /*
         public MessagingAccountInfo(String name, String description, Pattern messagePattern) {
             super(messagePattern == null ? 1 : 2);
             this.name = name;
             this.description = description;
             this.messagePattern = messagePattern;
         }
+        */
 
         @Override
         String getAppendixName() {
