@@ -53,6 +53,7 @@ public final class API {
                         nets.add(new NetworkAddress(host));
                     } catch (UnknownHostException e) {
                         Logger.logErrorMessage("Unknown network " + host, e);
+                        throw new RuntimeException(e.toString(), e);
                     }
                 } else {
                     hosts.add(host);
@@ -206,12 +207,12 @@ public final class API {
         private BigInteger netMask;
 
         private NetworkAddress(String address) throws UnknownHostException {
-            int slashPos = address.indexOf('/');
-            if (slashPos > 0) {
-                InetAddress targetHostAddress = InetAddress.getByName(address.substring(0, slashPos));
+            String[] addressParts = address.split("/");
+            if (addressParts.length == 2) {
+                InetAddress targetHostAddress = InetAddress.getByName(addressParts[0]);
                 byte[] srcBytes = targetHostAddress.getAddress();
                 netAddress = new BigInteger(1, srcBytes);
-                int maskBitLength = Integer.valueOf(address.substring(slashPos + 1));
+                int maskBitLength = Integer.valueOf(addressParts[1]);
                 int addressBitLength = (targetHostAddress instanceof Inet4Address) ? 32 : 128;
                 netMask = BigInteger.ZERO
                         .setBit(addressBitLength)
