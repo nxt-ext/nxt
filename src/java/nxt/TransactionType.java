@@ -779,7 +779,8 @@ public abstract class TransactionType {
             @Override
             void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
                 Attachment.MessagingAccountInfo attachment = (Attachment.MessagingAccountInfo)transaction.getAttachment();
-                if (attachment.getVersion() >= 2 && Nxt.getBlockchain().getHeight() < Constants.MONETARY_SYSTEM_BLOCK) {
+                //if (attachment.getVersion() >= 2 && Nxt.getBlockchain().getHeight() < Constants.MONETARY_SYSTEM_BLOCK) {
+                if (attachment.getMessagePattern() != null) {
                     throw new NxtException.NotYetEnabledException("Message patterns not yet enabled");
                 }
                 if (attachment.getName().length() > Constants.MAX_ACCOUNT_NAME_LENGTH
