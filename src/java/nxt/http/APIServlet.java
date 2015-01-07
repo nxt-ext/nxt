@@ -18,6 +18,7 @@ import java.math.BigInteger;
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -30,6 +31,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import static nxt.http.JSONResponses.ERROR_INCORRECT_REQUEST;
 import static nxt.http.JSONResponses.ERROR_NOT_ALLOWED;
 import static nxt.http.JSONResponses.POST_REQUIRED;
+import static nxt.http.JSONResponses.NO_PASSWORD_IN_CONFIG;
+import static nxt.http.JSONResponses.INCORRECT_ADMIN_PASSWORD;
 
 public final class APIServlet extends HttpServlet {
 
@@ -39,7 +42,15 @@ public final class APIServlet extends HttpServlet {
         private final Set<APITag> apiTags;
 
         APIRequestHandler(APITag[] apiTags, String... parameters) {
-            this.parameters = Collections.unmodifiableList(Arrays.asList(parameters));
+            List<String> parametersList;
+            if (requirePassword()) {
+                parametersList = new ArrayList<String>(parameters.length + 1);
+                parametersList.add("adminPassword");
+                parametersList.addAll(Arrays.asList(parameters));
+            } else {
+                parametersList = Arrays.asList(parameters);
+            }
+            this.parameters = Collections.unmodifiableList(parametersList);
             this.apiTags = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(apiTags)));
         }
 
@@ -60,7 +71,10 @@ public final class APIServlet extends HttpServlet {
         boolean startDbTransaction() {
             return false;
         }
-
+        
+        boolean requirePassword() {
+        	return false;
+        }
     }
 
     private static class NetworkAddress {
@@ -94,6 +108,7 @@ public final class APIServlet extends HttpServlet {
     private static ConcurrentHashMap<String, NetworkAddress> maskedAddressCache = new ConcurrentHashMap<>();
 
     private static final boolean enforcePost = Nxt.getBooleanProperty("nxt.apiServerEnforcePOST");
+    private static final String adminPassword = Nxt.getStringProperty("nxt.adminPassword", "");
 
     static final Map<String,APIRequestHandler> apiRequestHandlers;
 
@@ -296,6 +311,16 @@ public final class APIServlet extends HttpServlet {
             if (enforcePost && apiRequestHandler.requirePost() && ! "POST".equals(req.getMethod())) {
                 response = POST_REQUIRED;
                 return;
+            }
+
+            if (apiRequestHandler.requirePassword()) {
+                if (adminPassword.isEmpty()) {
+                    response = NO_PASSWORD_IN_CONFIG;
+                    return;
+                } else if (!adminPassword.equals(req.getParameter("adminPassword"))) {
+                    response = INCORRECT_ADMIN_PASSWORD;
+                    return;
+                }
             }
 
             try {
