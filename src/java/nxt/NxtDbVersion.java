@@ -100,46 +100,42 @@ class NxtDbVersion extends DbVersion {
             case 37:
                 if (!Constants.isTestnet) {
                     apply("INSERT INTO peer (address) VALUES " +
-                            "('85.25.198.120'), ('banli.szn.dk'), ('80.86.92.139'), ('94.113.207.67'), ('162.243.145.83'), " +
-                            "('enricoip.no-ip.biz'), ('bitsy06.vps.nxtcrypto.org'), ('93.81.191.235'), ('94.102.50.69'), " +
-                            "('23.88.59.163'), ('nxt3.webice.ru'), ('178.62.185.131'), ('83.35.165.232'), ('80.150.243.95'), " +
-                            "('54.65.152.248'), ('88.163.78.131'), ('54.64.135.26'), ('nxt5.webice.ru'), ('89.212.19.49'), " +
-                            "('178.33.203.157'), ('nxt01.now.im'), ('80.150.243.11'), ('nxt1.webice.ru'), ('217.51.10.8'), " +
-                            "('167.114.2.203'), ('5.196.227.91'), ('89.72.57.246'), ('198.211.127.34'), ('nxtx.ru'), " +
-                            "('nxtnode.linuxd.org'), ('beor.homeip.net'), ('192.99.246.20'), ('nacho.damnserver.com'), " +
-                            "('84.241.44.180'), ('93.103.20.35'), ('cryptkeeper.vps.nxtcrypto.org'), ('195.154.127.172'), " +
-                            "('80.86.92.66'), ('87.139.122.157'), ('167.114.71.191'), ('81.64.77.101'), ('85.84.66.131'), " +
-                            "('118.18.12.138'), ('txn14.cloudapp.net'), ('bitsy07.vps.nxtcrypto.org'), ('pakisnxt.no-ip.org'), " +
-                            "('192.3.158.120'), ('46.173.9.98'), ('192.99.246.33'), ('108.61.57.76'), ('node5.mynxtcoin.org'), " +
-                            "('54.154.19.155'), ('69.172.212.4'), ('gunka.szn.dk'), ('95.68.77.55'), ('23.89.192.151'), " +
-                            "('nxt4.webice.ru'), ('77.179.115.112'), ('62.194.6.163'), ('bitsy10.vps.nxtcrypto.org'), " +
-                            "('77.120.107.17'), ('209.222.2.110'), ('167.114.2.171'), ('54.64.165.249'), ('104.236.52.104'), " +
-                            "('176.94.115.161'), ('66.30.204.105'), ('103.22.181.239'), ('silvanoip.dhcp.biz'), ('5.196.26.85'), " +
-                            "('188.138.88.154'), ('209.126.70.156'), ('191.238.101.73'), ('scripterron.dyndns.biz'), " +
-                            "('198.50.146.93'), ('167.114.2.205'), ('nxt.phukhew.com'), ('5.147.113.212'), ('84.242.91.139'), " +
-                            "('sluni.szn.dk'), ('bitsy09.vps.nxtcrypto.org'), ('node4.mynxtcoin.org'), ('23.88.104.225'), " +
-                            "('178.15.99.67'), ('82.0.149.148'), ('67.212.71.171'), ('162.243.242.8'), ('184.164.72.177'), " +
-                            "('167.114.2.206'), ('172.245.57.170'), ('209.126.70.159'), ('2.225.88.10'), ('54.69.13.182'), " +
-                            "('192.99.212.250'), ('113.106.85.172'), ('192.99.246.126'), ('nxtnode.hopto.org'), ('dilnu.szn.dk'), " +
-                            "('104.131.103.151'), ('178.32.122.65'), ('nxt10.webice.ru'), ('92.222.72.98'), ('54.69.94.208'), " +
-                            "('131.72.136.251'), ('87.139.122.48'), ('nxt.sx'), ('104.130.7.74'), ('89.250.240.60'), " +
-                            "('23.102.0.45'), ('jnxt.org'), ('89.250.243.166'), ('54.83.4.11'), ('81.2.216.179'), " +
-                            "('178.24.154.23'), ('98.210.27.184'), ('77.88.208.12'), ('209.126.70.170'), ('178.150.207.53'), " +
-                            "('80.153.101.190'), ('92.47.120.90'), ('190.10.9.166'), ('37.187.21.28'), ('88.79.173.189'), " +
-                            "('162.243.122.251'), ('67.212.71.173'), ('98.89.94.71'), ('node0.forgenxt.com'), ('nxt6.webice.ru'), " +
-                            "('23.95.37.134'), ('31.186.100.21'), ('78.56.100.171'), ('217.26.24.27'), ('81.220.60.240'), " +
-                            "('92.222.22.16'), ('178.20.9.9'), ('phalanx149.ddns.net'), ('bug.airdns.org'), ('81.23.22.150'), " +
-                            "('enricoip.no-ip.biz:65074'), ('67.212.71.172'), ('nxtforgersr.ddns.net'), ('91.121.150.75'), " +
-                            "('vh44.linkpc.net:7872'), ('zdani.szn.dk'), ('81.169.150.141'), ('83.82.53.78'), ('37.59.115.204'), " +
-                            "('80.150.243.97'), ('54.169.132.50'), ('85.25.223.7'), ('167.114.2.204'), ('23.88.246.117'), " +
-                            "('54.213.222.141'), ('espo.no-ip.biz'), ('vh44.ddns.net:7873'), ('miasik.no-ip.org'), " +
-                            "('198.98.122.86'), ('23.88.59.40'), ('77.58.253.73')");
+                            "('81.64.77.101'), ('37.59.121.207'), ('81.220.60.240'), ('67.212.71.171'), ('nxtx.ru'), ('74.14.104.31'), " +
+                            "('167.114.113.250'), ('174.140.167.239'), ('54.76.16.49'), ('167.114.113.249'), ('167.114.113.246'), " +
+                            "('178.150.207.53'), ('dtodorov.asuscomm.com'), ('80.153.101.190'), ('46.246.44.6'), ('85.84.67.68'), " +
+                            "('107.155.87.235'), ('192.99.246.33'), ('81.2.216.179'), ('79.145.11.180'), ('167.114.96.223'), " +
+                            "('23.89.192.151'), ('vh44.linkpc.net:7872'), ('87.139.122.48'), ('5.9.8.9:7874'), ('87.139.122.157'), " +
+                            "('23.95.37.134'), ('nxt.alkeron.com'), ('95.85.31.45'), ('67.212.71.172'), ('167.114.113.201'), " +
+                            "('77.88.208.12'), ('66.30.204.105'), ('megaman.thican.net'), ('62.194.6.163'), ('167.114.113.194'), " +
+                            "('41.242.1.239'), ('2.49.240.80'), ('37.59.115.207'), ('23.88.59.163'), ('173.231.157.159'), " +
+                            "('83.69.2.13'), ('213.46.57.77'), ('54.149.162.21'), ('178.62.185.131'), ('5.196.26.85'), " +
+                            "('162.243.242.8'), ('185.13.231.139'), ('167.114.2.205'), ('167.114.2.204'), ('167.114.2.206'), " +
+                            "('109.230.224.65'), ('167.114.2.203'), ('69.163.40.132'), ('beor.homeip.net'), ('2.225.88.10'), " +
+                            "('txn14.cloudapp.net'), ('192.99.246.20'), ('nxt.cybermailing.com'), ('46.28.111.249'), ('80.150.243.95'), " +
+                            "('80.150.243.97'), ('finnikola.ddns.net'), ('46.109.89.219'), ('5.196.227.91'), ('178.15.99.67'), " +
+                            "('104.131.254.22'), ('198.211.127.34'), ('192.99.212.250'), ('191.238.101.73'), ('95.24.24.19'), " +
+                            "('miasik.no-ip.org'), ('vps.krusherpt.com'), ('213.239.201.57'), ('77.58.253.73'), ('198.57.198.33'), " +
+                            "('167.114.113.25'), ('167.114.113.27'), ('92.222.72.98'), ('178.20.9.9'), ('23.102.0.45'), " +
+                            "('54.148.118.78'), ('54.169.132.50'), ('192.99.68.108'), ('85.214.222.82'), ('node7.mynxtcoin.org'), " +
+                            "('54.149.226.76'), ('nacho.damnserver.com'), ('54.64.9.73'), ('raspnxt.hopto.org'), ('23.88.59.40'), " +
+                            "('54.214.250.209'), ('89.250.243.166'), ('89.72.57.246'), ('209.222.2.110'), ('78.46.92.78'), " +
+                            "('167.114.2.171'), ('108.61.57.76'), ('198.98.119.85'), ('192.3.158.120'), ('107.170.75.92'), " +
+                            "('80.150.243.10'), ('80.150.243.11'), ('gtwins.f3322.net'), ('54.69.38.116'), ('87.138.143.21'), " +
+                            "('113.106.85.172'), ('78.56.100.171'), ('cryptkeeper.vps.nxtcrypto.org'), ('91.98.139.194'), " +
+                            "('128.199.112.173'), ('sluni.szn.dk'), ('54.213.222.141'), ('zdani.szn.dk'), ('107.170.164.129'), " +
+                            "('nxtnode.hopto.org'), ('37.187.238.130'), ('121.42.137.198'), ('195.154.111.47'), ('192.99.246.126'), " +
+                            "('node4.mynxtcoin.org'), ('54.235.205.213'), ('scripterron.dyndns.biz'), ('95.29.212.224'), " +
+                            "('54.149.131.73'), ('54.83.4.11'), ('82.165.145.37'), ('phalanx149.ddns.net'), ('184.164.72.177'), " +
+                            "('167.114.2.94'), ('173.17.82.130'), ('node0.forgenxt.com'), ('162.243.122.251'), ('192.99.151.160'), " +
+                            "('banli.szn.dk'), ('54.77.73.122'), ('84.253.125.186'), ('54.65.89.15'), ('node5.mynxtcoin.org'), " +
+                            "('178.33.203.157'), ('bug.airdns.org'), ('node6.mynxtcoin.org'), ('190.10.9.166'), ('24.149.126.206')");
                 } else {
                     apply("INSERT INTO peer (address) VALUES " +
                             "('nxt.scryptmh.eu'), ('54.186.98.117'), ('178.150.207.53'), ('192.241.223.132'), ('node9.mynxtcoin.org'), " +
                             "('node10.mynxtcoin.org'), ('node3.mynxtcoin.org'), ('109.87.169.253'), ('nxtnet.fr'), ('50.112.241.97'), " +
                             "('2.84.142.149'), ('bug.airdns.org'), ('83.212.103.14'), ('62.210.131.30'), ('104.131.254.22'), " +
-                            "('46.28.111.249'), ('94.79.54.205'), ('174.140.168.136'), ('107.170.3.62')");
+                            "('46.28.111.249'), ('94.79.54.205'), ('174.140.168.136'), ('107.170.3.62'), ('node1.forgenxt.com'), " +
+                            "('5.196.1.215'), ('nxt01.now.im')");
                 }
             case 38:
                 apply("ALTER TABLE transaction ADD COLUMN IF NOT EXISTS full_hash BINARY(32)");
@@ -533,6 +529,7 @@ class NxtDbVersion extends DbVersion {
             case 186:
                 apply("CREATE INDEX IF NOT EXISTS currency_creation_height_idx ON currency (creation_height DESC)");
             case 187:
+                BlockchainProcessorImpl.getInstance().scheduleScan(0, false);
                 apply(null);
             case 188:
                 apply(null);
@@ -541,53 +538,50 @@ class NxtDbVersion extends DbVersion {
             case 190:
                 apply(null);
             case 191:
-                apply("DROP TABLE IF EXISTS poll");
+                apply(null);                
             case 192:
-                apply("DROP TABLE IF EXISTS vote");
+                apply("DROP TABLE IF EXISTS poll");
             case 193:
+                apply("DROP TABLE IF EXISTS vote");
+            case 194:
                 apply("CREATE TABLE IF NOT EXISTS vote (db_id IDENTITY, id BIGINT NOT NULL, " +
                         "poll_id BIGINT NOT NULL, voter_id BIGINT NOT NULL, vote_bytes VARBINARY NOT NULL, height INT NOT NULL)");
-            case 194:
-                apply("CREATE UNIQUE INDEX IF NOT EXISTS vote_id_idx ON vote (id)");
             case 195:
-                apply("CREATE UNIQUE INDEX IF NOT EXISTS vote_poll_id_idx ON vote (poll_id, voter_id)");
+                apply("CREATE UNIQUE INDEX IF NOT EXISTS vote_id_idx ON vote (id)");
             case 196:
+                apply("CREATE UNIQUE INDEX IF NOT EXISTS vote_poll_id_idx ON vote (poll_id, voter_id)");
+            case 197:
                 apply("CREATE TABLE IF NOT EXISTS poll (db_id IDENTITY, id BIGINT NOT NULL, "
                         + "FOREIGN KEY (id) REFERENCES transaction (id), account_id BIGINT NOT NULL, name VARCHAR NOT NULL, "
                         + "description VARCHAR, options ARRAY NOT NULL, min_num_options TINYINT, max_num_options TINYINT, "
                         + "min_range_value TINYINT, max_range_value TINYINT, "
                         + "finish_height INT NOT NULL, voting_model TINYINT NOT NULL, min_balance BIGINT, "
                         + "asset_id BIGINT, finished BOOLEAN, height INT NOT NULL, latest BOOLEAN DEFAULT TRUE NOT NULL)");
-            case 197:
+            case 198:
                 apply("CREATE TABLE IF NOT EXISTS poll_result (db_id IDENTITY, poll_id BIGINT NOT NULL, "
                         + "option VARCHAR NOT NULL, result BIGINT NOT NULL,  height INT NOT NULL)");
-            case 198:
-                apply("ALTER TABLE transaction ADD COLUMN IF NOT EXISTS two_phased BOOLEAN NOT NULL DEFAULT FALSE");
             case 199:
+                apply("ALTER TABLE transaction ADD COLUMN IF NOT EXISTS two_phased BOOLEAN NOT NULL DEFAULT FALSE");
+            case 200:
                 apply("CREATE TABLE IF NOT EXISTS pending_transaction (db_id IDENTITY, id BIGINT NOT NULL, "
                         + "FOREIGN KEY (id) REFERENCES transaction (id) ON DELETE CASCADE, account_id BIGINT NOT NULL, "
                         + "signers_count TINYINT NOT NULL DEFAULT 0, blacklist BOOLEAN DEFAULT FALSE, "
                         + "finish_height INT NOT NULL, voting_model TINYINT NOT NULL, quorum BIGINT NOT NULL, "
                         + "min_balance BIGINT NOT NULL, asset_id BIGINT NOT NULL, finished BOOLEAN NOT NULL, "
                         + "height INT NOT NULL, latest BOOLEAN DEFAULT TRUE NOT NULL)");
-            case 200:
+            case 201:
                 apply("CREATE TABLE IF NOT EXISTS vote_phased (db_id IDENTITY, id BIGINT NOT NULL, "
                         + "pending_transaction_id BIGINT NOT NULL, voter_id BIGINT NOT NULL, "
                         + "height INT NOT NULL)");
-            case 201:
+            case 202:
                 apply("CREATE TABLE IF NOT EXISTS pending_transaction_signer (db_id IDENTITY, "
                         + "poll_id BIGINT NOT NULL, account_id BIGINT NOT NULL, height INT NOT NULL)");
-            case 202:
-                BlockchainProcessorImpl.getInstance().scheduleScan(0, false);
-                apply(null);
             case 203:
-                apply(null);
-            case 204:
                 if (Constants.isTestnet) {
                     BlockchainProcessorImpl.getInstance().scheduleScan(0, true);
                 }
                 apply(null);
-            case 205:
+            case 204:
                 return;
             default:
                 throw new RuntimeException("Blockchain database inconsistent with code, probably trying to run older code on newer database");
