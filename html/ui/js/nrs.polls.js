@@ -72,7 +72,7 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.pages.my_polls = function() {
-		NRS.sendRequest("getPollIds", {"account": NRS.accountRS}, function(response) {
+		NRS.sendRequest("getPollIds+", {"account": NRS.account}, function(response) {
 			if (response.pollIds && response.pollIds.length) {
 				var polls = {};
 				var nrPolls = 0;
@@ -81,12 +81,12 @@ var NRS = (function(NRS, $, undefined) {
 					NRS.sendRequest("getTransaction+", {
 						"transaction": response.pollIds[i]
 					}, function(poll, input) {
-						if (NRS.currentPage != "polls") {
+						if (NRS.currentPage != "my_polls") {
 							polls = {};
 							return;
 						}
 
-						if (!poll.errorCode && poll.attachment.finishBlockHeight >= NRS.lastBlockHeight) {
+						if (!poll.errorCode) {
 							polls[input.transaction] = poll;
 						}
 
@@ -141,14 +141,14 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.pages.voted_polls = function() {
-		NRS.sendRequest("getAccountTransactions+",{"account": NRS.accountRS, "type": 1, "subtype": 3}, function(response) {
+		NRS.sendRequest("getAccountTransactions",{"account": NRS.accountRS, "type": 1, "subtype": 3}, function(response) {
 			
 			if (response.transactions && response.transactions.length > 0) {
 				var polls = {};
 				var nrPolls = 0;
 
 				for (var i = 0; i < response.transactions.length; i++) {
-					NRS.sendRequest("getTransaction+", {
+					NRS.sendRequest("getTransaction", {
 						"transaction": response.transactions[i].attachment.poll
 					}, function(poll, input) {
 						if (NRS.currentPage != "voted_polls") {
