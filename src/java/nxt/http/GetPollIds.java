@@ -20,17 +20,17 @@ public final class GetPollIds extends APIServlet.APIRequestHandler {
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
-        String accountId = Convert.emptyToNull(req.getParameter("account"));
+        String accountValue = Convert.emptyToNull(req.getParameter("account"));
 
         int firstIndex = ParameterParser.getFirstIndex(req);
         int lastIndex = ParameterParser.getLastIndex(req);
 
         DbIterator<Poll> polls;
 
-        if (accountId == null) {
+        if (accountValue == null) {
             polls = Poll.getAllPolls(firstIndex, lastIndex);
         } else {
-            polls = Poll.getPollsByAccount(Convert.parseUnsignedLong(accountId), firstIndex, lastIndex);
+            polls = Poll.getPollsByAccount(Convert.parseAccountId(accountValue), firstIndex, lastIndex);
         }
 
         JSONArray pollIds = new JSONArray();

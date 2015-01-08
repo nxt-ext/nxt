@@ -582,6 +582,8 @@ class NxtDbVersion extends DbVersion {
                 }
                 apply(null);
             case 204:
+                apply(null);
+            case 205:
                 return;
             default:
                 throw new RuntimeException("Blockchain database inconsistent with code, probably trying to run older code on newer database");
