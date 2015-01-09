@@ -383,10 +383,10 @@ var NRS = (function(NRS, $, undefined) {
 								"<a href='#' data-transaction='" + String(exchange.transaction).escapeHTML() + "'>" + NRS.formatTimestamp(exchange.timestamp) + "</a>" +
 							"</td>" +
 							"<td>" +
-								"<a href='#' class='user-info' data-user='" + (exchange.sellerRS == NRS.accountRS ? "You" : exchange.sellerRS) + "'>" + (exchange.sellerRS == NRS.accountRS ? "You" : exchange.sellerRS) + "</a>" +
+								"<a href='#' class='user-info' data-user='" + exchange.sellerRS + "'>" + NRS.getAccountTitle(exchange.sellerRS) + "</a>" +
 							"</td>" +
 							"<td>" +
-								"<a href='#' class='user-info' data-user='" + (exchange.buyerRS == NRS.accountRS ? "You" : exchange.buyerRS) + "'>" + (exchange.buyerRS == NRS.accountRS ? "You" : exchange.buyerRS) + "</a>" +
+								"<a href='#' class='user-info' data-user='" + exchange.buyerRS + "'>" + NRS.getAccountTitle(exchange.buyerRS) + "</a>" +
 							"</td>" +
 							"<td>" + NRS.formatQuantity(exchange.units, exchange.decimals) + "</td>" +
 							"<td>" + NRS.calculateOrderPricePerWholeQNT(exchange.rateNQT, exchange.decimals) + "</td>" +
@@ -419,10 +419,10 @@ var NRS = (function(NRS, $, undefined) {
 								"<a href='#' data-transaction='" + String(exchange.transaction).escapeHTML() + "'>" + NRS.formatTimestamp(exchange.timestamp) + "</a>" +
 							"</td>" +
 							"<td>" +
-								"<a href='#' class='user-info' data-user='" + (exchange.sellerRS == NRS.accountRS ? "You" : exchange.sellerRS) + "'>" + (exchange.sellerRS == NRS.accountRS ? "You" : exchange.sellerRS) + "</a>" +
+								"<a href='#' class='user-info' data-user='" + exchange.sellerRS + "'>" + NRS.getAccountTitle(exchange.sellerRS) + "</a>" +
 							"</td>" +
 							"<td>" +
-								"<a href='#' class='user-info' data-user='" + (exchange.buyerRS == NRS.accountRS ? "You" : exchange.buyerRS) + "'>" + (exchange.buyerRS == NRS.accountRS ? "You" : exchange.buyerRS) + "</a>" +
+								"<a href='#' class='user-info' data-user='" + exchange.buyerRS + "'>" + NRS.getAccountTitle(exchange.buyerRS) + "</a>" +
 							"</td>" +
 							"<td>" + NRS.formatQuantity(exchange.units, exchange.decimals) + "</td>" +
 							"<td>" + NRS.calculateOrderPricePerWholeQNT(exchange.rateNQT, exchange.decimals) + "</td>" +
@@ -827,8 +827,12 @@ var NRS = (function(NRS, $, undefined) {
 						"<td>" +
 							"<a href='#' data-transaction='" + String(exchange.currency).escapeHTML() + "' >" + String(exchange.code).escapeHTML() + "</a>" +
 						"</td>" +
-						"<td>" + (exchange.sellerRS == NRS.accountRS ? "You" : "<a href='#' data-user='" + String(exchange.sellerRS).escapeHTML() + "'>" + String(exchange.sellerRS).escapeHTML() + "</a>") + "</td>" +
-						"<td>" + (exchange.buyerRS == NRS.accountRS ? "You" : "<a href='#' data-user='" + String(exchange.buyerRS).escapeHTML() + "'>" + String(exchange.buyerRS).escapeHTML() + "</a>") + "</td>" +
+						"<td>" +
+							"<a href='#' class='user-info' data-user='" + exchange.sellerRS + "'>" + NRS.getAccountTitle(exchange.sellerRS) + "</a>" +
+						"</td>" +
+						"<td>" +
+							"<a href='#' class='user-info' data-user='" + exchange.buyerRS + "'>" + NRS.getAccountTitle(exchange.buyerRS) + "</a>" +
+						"</td>" +
 						"<td>" + NRS.formatQuantity(exchange.units, exchange.decimals) + "</td>" +
 						"<td>" + NRS.calculateOrderPricePerWholeQNT(exchange.rateNQT, exchange.decimals) + "</td>" +
 						"<td>" + NRS.formatAmount(NRS.calculateOrderTotalNQT(exchange.units, exchange.rateNQT, exchange.decimals)) + "</td>" +
