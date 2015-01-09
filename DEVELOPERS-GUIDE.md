@@ -110,22 +110,32 @@ When adding new text/labeling visible in the UI do the following:
 - Please don't use namespaces in your keys (e.g. not ``namespace.mynewkey``) since this is complicating the filestructure of translation files when created automatically and cause problems when importing files to translation service
 - If you later change the english text in the HTML please also change the text within the english translation file, otherwise the new english text is overwritten with the old english text from translation file
 
-#### Process translation files #####
+#### Updating base translation file #####
 
-Translation of the client UI to other languages is done by the community within a crowdsourced process on the platform Crowdin:
+The basis for other translations is the **english translation** file in ``ui/locales/en/translation.json``. To update the file with the latest keys, english base translations do the following:
+
+1. Count the rows of the english translation file, e.g. ``wc -l ui/locales/en/translation.json``
+2. To avoid intervenings with 3rd party files create a temporary folder for files to be parsed ``ui/trans-tmp/`` (``cp -R ui/js ui/trans-tmp/``, ``cp -R ui/html/ ui/trans-tmp/``, ``cp ui/*.html ui/trans-tmp/``)
+3. Parse translation strings not yet included in the english translation file with the i18next parser (extra install) with ``i18next ui -r -l en -o ui/locales/`` (if there is a strange "reuseSuffix" entry at the top of the file: this is a bug, delete!)
+4. Check for at least 3-4 translation keys in translation_old.json that these really doesn't exist in the code base any more, recount the rows of translation file, compare to old count
+5. Search for empty translation strings in english translation file forgotten by devs (by searching for empty string ""), full-text search in client folders for associated key and manually fill-in english string to translation file.
+
+#### Translation to other languages ####
+
+Translation of the client UI to other languages is done by the community within a crowdsourced process on the platform **Crowdin**:
 
 - https://crowdin.com/project/nxt-ui-translation
 
 For providing new translation strings on the platform for the community to translate do the following:
 
-1. FIRST download the latest translation files from Crowdin (you need permissions for that), to make sure that no new translations are lost, and replace the language folders like ``fa``, ``pt-BR``,... with the folders downloaded. Please make sure to NOT touch the english folder ``en``.
-2. Count the rows of the english translation file, e.g. ``wc -l ui/locales/en/translation.json``
-3. To avoid intervenings with 3rd party files create a temporary folder for files to be parsed ``ui/trans-tmp/`` (``cp -R ui/js ui/trans-tmp/``, ``cp -R ui/html/ ui/trans-tmp/``, ``cp ui/*.html ui/trans-tmp/``)
-2. Parse translation strings not yet included in the english translation file with the i18next parser (extra install) with ``i18next ui -r -l en -o ui/locales/`` (if there is a strange "reuseSuffix" entry at the top of the file: this is a bug, delete!)
-3. Check for at least 3-4 translation keys in translation_old.json that these really doesn't exist in the code base any more, recount the rows of translation file, compare to old count
-4. Search for empty translation strings in english translation file forgotten by devs (by searching for empty string ""), full-text search in client folders for associated key and manually fill-in english string to translation file.
+1. Update the english base translation file (see above guide)
+2. Update the ``translation.json`` file on Crowdin (permissions needed)
+3. Inform the community about new translation tasks
 
+Updating the client with new translations:
 
+1. Download the latest translation files from Crowdin (permissions needed) and replace the language folders like ``fa``, ``pt-BR``,... with the folders downloaded. Please make sure to NOT touch the english folder ``en``.
+2. New languages can be added in ``ui/html/pages/settings.html``.
 
 
 
