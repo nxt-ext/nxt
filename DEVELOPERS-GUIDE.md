@@ -112,7 +112,16 @@ When adding new text/labeling visible in the UI do the following:
 
 #### Process translation files #####
 
-TODO
+Translation of the client UI to other languages is done by the community within a crowdsourced process on the platform Crowdin:
+
+- https://crowdin.com/project/nxt-ui-translation
+
+For providing new translation strings on the platform for the community to translate do the following:
+
+1. FIRST download the latest translation files from Crowdin (you need permissions for that), to make sure that no new translations are lost, and replace the language folders like ``fa``, ``pt-BR``,... with the folders downloaded. Please make sure to NOT touch the english folder ``en``.
+2. 
+
+
 
 
 
