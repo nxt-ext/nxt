@@ -120,8 +120,10 @@ For providing new translation strings on the platform for the community to trans
 
 1. FIRST download the latest translation files from Crowdin (you need permissions for that), to make sure that no new translations are lost, and replace the language folders like ``fa``, ``pt-BR``,... with the folders downloaded. Please make sure to NOT touch the english folder ``en``.
 2. Count the rows of the english translation file, e.g. ``wc -l ui/locales/en/translation.json``
-2. Parse translation strings not yet included in the english translation file with the i18next parser (extra install) with ``i18next ui -r -l en -s . -o ui/locales/`` (a file in the ``fonts`` folder is - depending on parser options - either causing a strange bug ("null bytes in path") or adding strange translation keys, so please move this folder outside of the ``ui/`` directory for this and move it back afterwards)
-3. Search for empty translation strings in english translation file forgotten by devs (by searching for empty string ""), full-text search in client folders for associated key and manually fill-in english string to translation file.
+3. To avoid intervenings with 3rd party files create a temporary folder for files to be parsed ``ui/trans-tmp/`` (``cp -R ui/js ui/trans-tmp/``, ``cp -R ui/html/ ui/trans-tmp/``, ``cp ui/*.html ui/trans-tmp/``)
+2. Parse translation strings not yet included in the english translation file with the i18next parser (extra install) with ``i18next ui -r -l en -o ui/locales/`` (if there is a strange "reuseSuffix" entry at the top of the file: this is a bug, delete!)
+3. Check for at least 3-4 translation keys in translation_old.json that these really doesn't exist in the code base any more, recount the rows of translation file, compare to old count
+4. Search for empty translation strings in english translation file forgotten by devs (by searching for empty string ""), full-text search in client folders for associated key and manually fill-in english string to translation file.
 
 
 
