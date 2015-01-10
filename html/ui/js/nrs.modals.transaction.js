@@ -92,8 +92,8 @@ var NRS = (function(NRS, $, undefined) {
 						"type": $.t("ordinary_payment"),
 						"amount": transaction.amountNQT,
 						"fee": transaction.feeNQT,
-						"recipient": NRS.getAccountTitle(transaction, "recipient"),
-						"sender": NRS.getAccountTitle(transaction, "sender")
+						"recipient": transaction.recipientRS ? transaction.recipientRS : transaction.recipient,
+						"sender": transaction.senderRS ? transaction.senderRS : transaction.sender
 					};
 
 					$("#transaction_info_table tbody").append(NRS.createInfoTable(data));
@@ -319,8 +319,8 @@ var NRS = (function(NRS, $, undefined) {
 						"type": $.t("alias_buy"),
 						"alias_name": transaction.attachment.alias,
 						"price": transaction.amountNQT,
-						"recipient": NRS.getAccountTitle(transaction, "recipient"),
-						"sender": NRS.getAccountTitle(transaction, "sender")
+						"recipient": transaction.recipientRS ? transaction.recipientRS : transaction.recipient,
+						"sender": transaction.senderRS ? transaction.senderRS : transaction.sender
 					}
 
 					$("#transaction_info_table tbody").append(NRS.createInfoTable(data));
@@ -331,7 +331,7 @@ var NRS = (function(NRS, $, undefined) {
 					var data = {
 						"type": $.t("alias_deletion"),
 						"alias_name": transaction.attachment.alias,
-						"sender": NRS.getAccountTitle(transaction, "sender")
+						"sender": transaction.senderRS ? transaction.senderRS : transaction.sender
 					}
 
 					$("#transaction_info_table tbody").append(NRS.createInfoTable(data));
@@ -1104,7 +1104,7 @@ var NRS = (function(NRS, $, undefined) {
 				data["exchanges"] = $.t("no_matching_exchange_offer");
 			}
 			data["units_exchanged"] = [exchangedUnits, currency.decimals];
-			data["total_exchanged"] = NRS.formatAmount(exchangedTotal);
+			data["total_exchanged"] = NRS.formatAmount(exchangedTotal) + " [NXT]";
 		}, null, false);
 		return data;
 	};
