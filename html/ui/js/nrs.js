@@ -106,7 +106,7 @@ var NRS = (function(NRS, $, undefined) {
 			$("#sidebar_monetary_system").show();
 			$("#dividend_payment_link").show();
 			$('#aliases_table').find('[data-target="#delete_alias_modal"]').show();
-		    
+
 		});
 		
 		if (!NRS.server) {
