@@ -135,6 +135,7 @@ For providing new translation strings on the platform for the community to trans
 Updating the client with new translations:
 
 1. Download the latest translation files from Crowdin (permissions needed) and replace the language folders like ``fa``, ``pt-BR``,... with the folders downloaded. Please make sure to NOT touch the english folder ``en``.
+2. Rename all folder names to lowercase, e.g. ``es-ES`` to ``es-es``.
 2. New languages can be added in ``ui/html/pages/settings.html``.
 
 
