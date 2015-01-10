@@ -263,7 +263,7 @@ var NRS = (function(NRS, $, undefined) {
 			var address = new NxtAddress();
 
 			if (address.set(data.account_rs)) {
-				data.account_id = address.account_id();
+				data.account = address.account_id();
 			} else {
 				return {
 					"error": $.t("error_account_id")
