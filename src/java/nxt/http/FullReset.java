@@ -1,6 +1,7 @@
 package nxt.http;
 
 import nxt.Nxt;
+
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
@@ -33,6 +34,6 @@ public final class FullReset extends APIServlet.APIRequestHandler {
 
     @Override
     boolean requirePassword() {
-        return true;
+        return !API.disableAdminPassword;
     }
 }

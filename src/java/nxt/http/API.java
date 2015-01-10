@@ -38,8 +38,9 @@ public final class API {
 
     private static final Set<String> allowedBotHosts;
     private static final List<NetworkAddress> allowedBotNets;
-    static final boolean enableDebugAPI = Nxt.getBooleanProperty("nxt.enableDebugAPI");
-
+    static final String adminPassword = Nxt.getStringProperty("nxt.adminPassword", "");
+    static final boolean disableAdminPassword = Nxt.getBooleanProperty("nxt.disableAdminPassword");
+    
     private static final Server apiServer;
 
     static {
@@ -133,9 +134,8 @@ public final class API {
             }
 
             apiHandler.addServlet(APITestServlet.class, "/test");
-            if (enableDebugAPI) {
-                apiHandler.addServlet(DbShellServlet.class, "/dbshell");
-            }
+
+            apiHandler.addServlet(DbShellServlet.class, "/dbshell");
 
             if (Nxt.getBooleanProperty("nxt.apiServerCORS")) {
                 FilterHolder filterHolder = apiHandler.addFilter(CrossOriginFilter.class, "/*", null);

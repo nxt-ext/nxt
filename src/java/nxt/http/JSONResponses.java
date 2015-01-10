@@ -248,7 +248,7 @@ public final class JSONResponses {
     static {
         JSONObject response = new JSONObject();
         response.put("errorCode", 8);
-        response.put("errorDescription", "No password is configured. Please set nxt.adminPassword");
+        response.put("errorDescription", "Administrator's password is not configured. Please set nxt.adminPassword");
         NO_PASSWORD_IN_CONFIG = JSON.prepare(response);
     }
 

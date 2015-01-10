@@ -1,6 +1,7 @@
 package nxt.http;
 
 import nxt.Nxt;
+
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
@@ -55,4 +56,8 @@ public final class Scan extends APIServlet.APIRequestHandler {
         return true;
     }
 
+    @Override
+    boolean requirePassword() {
+        return !API.disableAdminPassword;
+    }
 }

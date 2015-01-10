@@ -108,8 +108,6 @@ public final class APIServlet extends HttpServlet {
     private static ConcurrentHashMap<String, NetworkAddress> maskedAddressCache = new ConcurrentHashMap<>();
 
     private static final boolean enforcePost = Nxt.getBooleanProperty("nxt.apiServerEnforcePOST");
-    private static final String adminPassword = Nxt.getStringProperty("nxt.adminPassword", "");
-
     static final Map<String,APIRequestHandler> apiRequestHandlers;
 
     static {
@@ -257,14 +255,11 @@ public final class APIServlet extends HttpServlet {
         map.put("searchDGSGoods", SearchDGSGoods.instance);
         map.put("searchAssets", SearchAssets.instance);
         map.put("searchCurrencies", SearchCurrencies.instance);
-
-        if (API.enableDebugAPI) {
-            map.put("clearUnconfirmedTransactions", ClearUnconfirmedTransactions.instance);
-            map.put("fullReset", FullReset.instance);
-            map.put("popOff", PopOff.instance);
-            map.put("scan", Scan.instance);
-            map.put("luceneReindex", LuceneReindex.instance);
-        }
+        map.put("clearUnconfirmedTransactions", ClearUnconfirmedTransactions.instance);
+        map.put("fullReset", FullReset.instance);
+        map.put("popOff", PopOff.instance);
+        map.put("scan", Scan.instance);
+        map.put("luceneReindex", LuceneReindex.instance);
 
         apiRequestHandlers = Collections.unmodifiableMap(map);
     }
@@ -314,10 +309,10 @@ public final class APIServlet extends HttpServlet {
             }
 
             if (apiRequestHandler.requirePassword()) {
-                if (adminPassword.isEmpty()) {
+                if (API.adminPassword.isEmpty()) {
                     response = NO_PASSWORD_IN_CONFIG;
                     return;
-                } else if (!adminPassword.equals(req.getParameter("adminPassword"))) {
+                } else if (!API.adminPassword.equals(req.getParameter("adminPassword"))) {
                     response = INCORRECT_ADMIN_PASSWORD;
                     return;
                 }
