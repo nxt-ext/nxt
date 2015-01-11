@@ -130,7 +130,7 @@ Translation of the client UI to other languages is done by the community within 
 For providing new translation strings on the platform for the community to translate do the following:
 
 1. Update the english base translation file (see above guide)
-2. Compare the number of translation keys in your generated file with the number of keys in the file on the Crowdin website and make sure, these fit together and there weren't any misses in the creation process
+2. Compare the number of translation keys in your generated file with the number of keys in the file on the Crowdin website and make sure, these fit together and there weren't any misses in the creation process (don't be confused by Crowdin actually displaying "Words" count, you have to look at the "Settings -> Reports" tab for comparison)
 3. Update the ``translation.json`` file on Crowdin (permissions needed)
 4. Inform the community about new translation tasks
 
