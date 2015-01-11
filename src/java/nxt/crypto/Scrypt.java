@@ -9,47 +9,20 @@ import java.security.NoSuchAlgorithmException;
 @SuppressWarnings({"PointlessBitwiseExpression", "PointlessArithmeticExpression"})
 public class Scrypt {
 
-    private static final ThreadLocal<Mac> threadLocalMac =
-        new ThreadLocal<Mac>() {
-            @Override
-            protected Mac initialValue() {
-                try {
-                    return Mac.getInstance("HmacSHA256");
-                } catch (NoSuchAlgorithmException e) {
-                    throw new IllegalStateException(e);
-                }
-            }
-        };
-
-    private static final ThreadLocal<byte[]> threadLocalH = getThreadLocalByteArray(32);
-    private static final ThreadLocal<byte[]> threadLocalB = getThreadLocalByteArray(128 + 4);
-    private static final ThreadLocal<int[]> threadLocalX = getThreadLocalIntArray(32);
-    private static final ThreadLocal<int[]> threadLocalV = getThreadLocalIntArray(32 * 1024);
-
-    private static ThreadLocal<byte[]> getThreadLocalByteArray(final int length) {
-        return new ThreadLocal<byte[]>() {
-            @Override
-            protected byte[] initialValue() {
-                return new byte[length];
-            }
-        };
+    private final Mac mac;
+    {
+        try {
+            mac = Mac.getInstance("HmacSHA256");
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException(e);
+        }
     }
+    private byte[] H = new byte[32];
+    private byte[] B = new byte[128 + 4];
+    private int[] X = new int[32];
+    private int[] V = new int[32 * 1024];
 
-    private static ThreadLocal<int[]> getThreadLocalIntArray(final int length) {
-        return new ThreadLocal<int[]>() {
-            @Override
-            protected int[] initialValue() {
-                return new int[length];
-            }
-        };
-    }
-
-    public static byte[] hash(final byte input[]) {
-        Mac mac = threadLocalMac.get();
-        byte[] H = threadLocalH.get();
-        byte[] B = threadLocalB.get();
-        int[] X = threadLocalX.get();
-        int[] V = threadLocalV.get();
+    public byte[] hash(final byte input[]) {
         int i, j, k;
         System.arraycopy(input, 0, B, 0, input.length);
         try {
@@ -79,15 +52,15 @@ public class Scrypt {
 
         for (i = 0; i < 1024; i++) {
             System.arraycopy(X, 0, V, i * 32, 32);
-            xorSalsa8(X, 0, 16);
-            xorSalsa8(X, 16, 0);
+            xorSalsa8(0, 16);
+            xorSalsa8(16, 0);
         }
         for (i = 0; i < 1024; i++) {
             k = (X[16] & 1023) * 32;
             for (j = 0; j < 32; j++)
                 X[j] ^= V[k + j];
-            xorSalsa8(X, 0, 16);
-            xorSalsa8(X, 16, 0);
+            xorSalsa8(0, 16);
+            xorSalsa8(16, 0);
         }
 
         for (i = 0; i < 32; i++) {
@@ -108,7 +81,7 @@ public class Scrypt {
         return H;
     }
 
-    private static void xorSalsa8(int[] X, int di, int xi) {
+    private void xorSalsa8(int di, int xi) {
         int x00 = (X[di + 0] ^= X[xi + 0]);
         int x01 = (X[di + 1] ^= X[xi + 1]);
         int x02 = (X[di + 2] ^= X[xi + 2]);
