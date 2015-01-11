@@ -9,14 +9,18 @@ import java.security.NoSuchAlgorithmException;
 @SuppressWarnings({"PointlessBitwiseExpression", "PointlessArithmeticExpression"})
 public class Scrypt {
 
-    private static final Mac mac;
-    static {
-        try {
-            mac = Mac.getInstance("HmacSHA256");
-        } catch (NoSuchAlgorithmException e) {
-            throw new IllegalStateException(e);
-        }
-    }
+    private static final ThreadLocal<Mac> threadLocalMac =
+        new ThreadLocal<Mac>() {
+            @Override
+            protected Mac initialValue() {
+                try {
+                    return Mac.getInstance("HmacSHA256");
+                } catch (NoSuchAlgorithmException e) {
+                    throw new IllegalStateException(e);
+                }
+            }
+        };
+
     private static byte[] H = new byte[32];
     private static byte[] B = new byte[128 + 4];
     private static int[] X = new int[32];
@@ -25,6 +29,7 @@ public class Scrypt {
     public static byte[] hash(final byte input[]) {
         int i, j, k;
         System.arraycopy(input, 0, B, 0, input.length);
+        Mac mac = threadLocalMac.get();
         try {
             mac.init(new SecretKeySpec(B, 0, 40, "HmacSHA256"));
         } catch (InvalidKeyException e) {
