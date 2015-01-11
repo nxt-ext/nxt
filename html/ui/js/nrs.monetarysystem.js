@@ -59,14 +59,11 @@ var NRS = (function(NRS, $, undefined) {
 		}
 		NRS.pageNumber = 1;
 		var currencyCode = $.trim($("#currency_search").find("input[name=q]").val());
-
-		if (!refresh) {
-			$("#buy_currency_with_nxt").html("Exchange NXT for " + currencyCode);
-			$("#buy_currency_offers").html("Offers to Exchange NXT for " + currencyCode);
-			$("#sell_currency_with_nxt").html("Exchange " + currencyCode + " for NXT");
-			$("#sell_currency_offers").html("Offers to Exchange " + currencyCode + " for NXT");
-			$(".currency_code").html(String(currencyCode).escapeHTML());
-		}
+		$("#buy_currency_with_nxt").html("Exchange NXT for " + currencyCode);
+		$("#buy_currency_offers").html("Offers to Exchange NXT for " + currencyCode);
+		$("#sell_currency_with_nxt").html("Exchange " + currencyCode + " for NXT");
+		$("#sell_currency_offers").html("Offers to Exchange " + currencyCode + " for NXT");
+		$(".currency_code").html(String(currencyCode).escapeHTML());
 
 		var currencyId = 0;
 		NRS.sendRequest("getCurrency+", {
@@ -383,10 +380,10 @@ var NRS = (function(NRS, $, undefined) {
 								"<a href='#' data-transaction='" + String(exchange.transaction).escapeHTML() + "'>" + NRS.formatTimestamp(exchange.timestamp) + "</a>" +
 							"</td>" +
 							"<td>" +
-								"<a href='#' class='user-info' data-user='" + (exchange.sellerRS == NRS.accountRS ? "You" : exchange.sellerRS) + "'>" + (exchange.sellerRS == NRS.accountRS ? "You" : exchange.sellerRS) + "</a>" +
+								"<a href='#' class='user-info' data-user='" + exchange.sellerRS + "'>" + NRS.getAccountTitle(exchange.sellerRS) + "</a>" +
 							"</td>" +
 							"<td>" +
-								"<a href='#' class='user-info' data-user='" + (exchange.buyerRS == NRS.accountRS ? "You" : exchange.buyerRS) + "'>" + (exchange.buyerRS == NRS.accountRS ? "You" : exchange.buyerRS) + "</a>" +
+								"<a href='#' class='user-info' data-user='" + exchange.buyerRS + "'>" + NRS.getAccountTitle(exchange.buyerRS) + "</a>" +
 							"</td>" +
 							"<td>" + NRS.formatQuantity(exchange.units, exchange.decimals) + "</td>" +
 							"<td>" + NRS.calculateOrderPricePerWholeQNT(exchange.rateNQT, exchange.decimals) + "</td>" +
@@ -419,10 +416,10 @@ var NRS = (function(NRS, $, undefined) {
 								"<a href='#' data-transaction='" + String(exchange.transaction).escapeHTML() + "'>" + NRS.formatTimestamp(exchange.timestamp) + "</a>" +
 							"</td>" +
 							"<td>" +
-								"<a href='#' class='user-info' data-user='" + (exchange.sellerRS == NRS.accountRS ? "You" : exchange.sellerRS) + "'>" + (exchange.sellerRS == NRS.accountRS ? "You" : exchange.sellerRS) + "</a>" +
+								"<a href='#' class='user-info' data-user='" + exchange.sellerRS + "'>" + NRS.getAccountTitle(exchange.sellerRS) + "</a>" +
 							"</td>" +
 							"<td>" +
-								"<a href='#' class='user-info' data-user='" + (exchange.buyerRS == NRS.accountRS ? "You" : exchange.buyerRS) + "'>" + (exchange.buyerRS == NRS.accountRS ? "You" : exchange.buyerRS) + "</a>" +
+								"<a href='#' class='user-info' data-user='" + exchange.buyerRS + "'>" + NRS.getAccountTitle(exchange.buyerRS) + "</a>" +
 							"</td>" +
 							"<td>" + NRS.formatQuantity(exchange.units, exchange.decimals) + "</td>" +
 							"<td>" + NRS.calculateOrderPricePerWholeQNT(exchange.rateNQT, exchange.decimals) + "</td>" +
@@ -827,8 +824,12 @@ var NRS = (function(NRS, $, undefined) {
 						"<td>" +
 							"<a href='#' data-transaction='" + String(exchange.currency).escapeHTML() + "' >" + String(exchange.code).escapeHTML() + "</a>" +
 						"</td>" +
-						"<td>" + (exchange.sellerRS == NRS.accountRS ? "You" : "<a href='#' data-user='" + String(exchange.sellerRS).escapeHTML() + "'>" + String(exchange.sellerRS).escapeHTML() + "</a>") + "</td>" +
-						"<td>" + (exchange.buyerRS == NRS.accountRS ? "You" : "<a href='#' data-user='" + String(exchange.buyerRS).escapeHTML() + "'>" + String(exchange.buyerRS).escapeHTML() + "</a>") + "</td>" +
+						"<td>" +
+							"<a href='#' class='user-info' data-user='" + exchange.sellerRS + "'>" + NRS.getAccountTitle(exchange.sellerRS) + "</a>" +
+						"</td>" +
+						"<td>" +
+							"<a href='#' class='user-info' data-user='" + exchange.buyerRS + "'>" + NRS.getAccountTitle(exchange.buyerRS) + "</a>" +
+						"</td>" +
 						"<td>" + NRS.formatQuantity(exchange.units, exchange.decimals) + "</td>" +
 						"<td>" + NRS.calculateOrderPricePerWholeQNT(exchange.rateNQT, exchange.decimals) + "</td>" +
 						"<td>" + NRS.formatAmount(NRS.calculateOrderTotalNQT(exchange.units, exchange.rateNQT, exchange.decimals)) + "</td>" +
@@ -1121,7 +1122,7 @@ var NRS = (function(NRS, $, undefined) {
 			"currency": currency
 		}, function (response) {
 			var currentReservePerUnitNQT = new BigInteger(response.currentReservePerUnitNQT).multiply(new BigInteger("" + Math.pow(10, response.decimals)));
-			$("#claimRate").html(NRS.formatAmount(currentReservePerUnitNQT) + " [" + currencyCode + "/NXT]");
+			$("#claimRate").html(NRS.formatAmount(currentReservePerUnitNQT) + " [NXT/" + currencyCode + "]");
 		});
 
 		$("#claim_currency_decimals").val($invoker.data("decimals"));

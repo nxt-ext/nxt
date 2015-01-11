@@ -2,7 +2,7 @@
 <html class="lockscreen">
     <head>
         <meta charset="UTF-8">
-        <title data-i18n="app.title">NXT Wallet</title>
+        <title data-i18n="app_title">NXT Wallet</title>
         <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport" />
         <meta http-equiv="X-UA-Compatible" content="IE=edge" />
         <link href="css/bootstrap.min.css" rel="stylesheet" type="text/css" />
@@ -40,9 +40,10 @@
         <script type="text/javascript">
             $.i18n.init({
                 fallbackLng: "en",
+                fallbackOnEmpty: true,
                 lowerCaseLng: true,
                 detectLngFromLocalStorage: true,
-                resGetPath: "locales/__lng__.json",
+                resGetPath: "locales/__lng__/translation.json",
                 debug: false
             }, function() {
                 $("[data-i18n]").i18n();

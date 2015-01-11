@@ -248,7 +248,7 @@ final class PeerImpl implements Peer {
         }
         if (! isBlacklisted()) {
             if (cause instanceof IOException) {
-                Logger.logDebugMessage("Blacklisting " + peerAddress + " because of: " + cause.getMessage());
+                Logger.logDebugMessage("Blacklisting " + peerAddress + " because of: " + cause.toString());
             } else {
                 Logger.logDebugMessage("Blacklisting " + peerAddress + " because of: " + cause.toString(), cause);
             }
@@ -434,7 +434,8 @@ final class PeerImpl implements Peer {
                 setAnnouncedAddress(peerAddress);
                 //Logger.logDebugMessage("Connected to peer without announced address, setting to " + peerAddress);
             }
-            if (!isOldVersion && analyzeHallmark(announcedAddress, (String)response.get("hallmark"))) {
+            analyzeHallmark(announcedAddress, (String)response.get("hallmark"));
+            if (!isOldVersion) {
                 setState(State.CONNECTED);
                 Peers.updateAddress(this);
             } else if (!isBlacklisted()) {
@@ -466,10 +467,29 @@ final class PeerImpl implements Peer {
             String host = uri.getHost();
 
             Hallmark hallmark = Hallmark.parseHallmark(hallmarkString);
-            if (!hallmark.isValid()
-                    || !(hallmark.getHost().equals(host) || InetAddress.getByName(host).equals(InetAddress.getByName(hallmark.getHost())))) {
-                //Logger.logDebugMessage("Invalid hallmark for " + host + ", hallmark host is " + hallmark.getHost());
+            if (!hallmark.isValid()) {
+                Logger.logDebugMessage("Invalid hallmark " + hallmarkString + " for " + host);
+                this.hallmark = null;
                 return false;
+            }
+            if (!hallmark.getHost().equals(host)) {
+                InetAddress[] hosts = InetAddress.getAllByName(host);
+                InetAddress[] hallmarks =
+                        InetAddress.getAllByName(hallmark.getHost());
+                boolean validHost = false;
+                hostLoop: for (InetAddress nextHost : hosts) {
+                    for (InetAddress nextHallmark : hallmarks) {
+                        if (nextHost.equals(nextHallmark)) {
+                            validHost = true;
+                            break hostLoop;
+                        }
+                    }
+                }
+                if (!validHost) {
+                    Logger.logDebugMessage("Hallmark " + hallmarkString + " doesn't match " + host + ", hallmark host is " + hallmark.getHost());
+                    this.hallmark = null;
+                    return false;
+                }
             }
             this.hallmark = hallmark;
             long accountId = Account.getId(hallmark.getPublicKey());
@@ -502,6 +522,7 @@ final class PeerImpl implements Peer {
         } catch (URISyntaxException | RuntimeException e) {
             Logger.logDebugMessage("Failed to analyze hallmark for peer " + address + ", " + e.toString(), e);
         }
+        this.hallmark = null;
         return false;
 
     }

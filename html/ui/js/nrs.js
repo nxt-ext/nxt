@@ -103,10 +103,6 @@ var NRS = (function(NRS, $, undefined) {
 				testnetWarningDiv.text(warningText);
 				$(".testnet_only, #testnet_login, #testnet_warning").show();
 			}
-			$("#sidebar_monetary_system").show();
-			$("#dividend_payment_link").show();
-			$('#aliases_table').find('[data-target="#delete_alias_modal"]').show();
-
 		});
 		
 		if (!NRS.server) {

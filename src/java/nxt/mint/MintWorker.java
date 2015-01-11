@@ -12,17 +12,28 @@ import nxt.util.Logger;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONValue;
 
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSession;
+import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.UnsupportedEncodingException;
+import java.math.BigInteger;
 import java.net.HttpURLConnection;
 import java.net.InetAddress;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.net.UnknownHostException;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -40,6 +51,39 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 public class MintWorker {
+
+    // Verify-all name verifier
+    private final static HostnameVerifier hostNameVerifier = new HostnameVerifier() {
+        public boolean verify(String hostname, SSLSession session) {
+            return true;
+        }
+    };
+
+    // Trust-all socket factory
+    private static final SSLSocketFactory sslSocketFactory;
+    static {
+        TrustManager[] trustAllCerts = new TrustManager[] { new X509TrustManager() {
+            public java.security.cert.X509Certificate[] getAcceptedIssuers() {
+                return null;
+            }
+            public void checkClientTrusted(X509Certificate[] certs, String authType) {
+            }
+            public void checkServerTrusted(X509Certificate[] certs, String authType) {
+            }
+        }};
+        SSLContext sc;
+        try {
+            sc = SSLContext.getInstance("TLS");
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException(e);
+        }
+        try {
+            sc.init(null, trustAllCerts, new java.security.SecureRandom());
+        } catch (KeyManagementException e) {
+            throw new IllegalStateException(e);
+        }
+        sslSocketFactory = sc.getSocketFactory();
+    }
 
     public static void main(String[] args) {
         MintWorker mintWorker = new MintWorker();
@@ -77,7 +121,7 @@ public class MintWorker {
         JSONObject mintingTarget = getMintingTarget(currencyId, rsAccount, units);
         long counter = (long) mintingTarget.get("counter");
         byte[] target = Convert.parseHexString((String) mintingTarget.get("targetBytes"));
-        long difficulty = (long) mintingTarget.get("difficulty");
+        BigInteger difficulty = new BigInteger((String)mintingTarget.get("difficulty"));
         long initialNonce = Nxt.getIntProperty("nxt.mint.initialNonce");
         if (initialNonce == 0) {
             initialNonce = new Random().nextLong();
@@ -99,12 +143,12 @@ public class MintWorker {
             }
             mintingTarget = getMintingTarget(currencyId, rsAccount, units);
             target = Convert.parseHexString((String) mintingTarget.get("targetBytes"));
-            difficulty = (long) mintingTarget.get("difficulty");
+            difficulty = new BigInteger((String)mintingTarget.get("difficulty"));
         }
     }
 
     private JSONObject mintImpl(String secretPhrase, long accountId, long units, long currencyId, byte algorithm,
-                                long counter, byte[] target, long initialNonce, int threadPoolSize, ExecutorService executorService, long difficulty, boolean isSubmitted) {
+                                long counter, byte[] target, long initialNonce, int threadPoolSize, ExecutorService executorService, BigInteger difficulty, boolean isSubmitted) {
         long startTime = System.currentTimeMillis();
         List<Callable<Long>> workersList = new ArrayList<>();
         for (int i=0; i < threadPoolSize; i++) {
@@ -117,8 +161,9 @@ public class MintWorker {
             computationTime = 1;
         }
         long hashes = solution - initialNonce;
+        float hashesPerDifficulty = BigInteger.valueOf(-1).equals(difficulty) ? 0 : (float) hashes / difficulty.floatValue();
         Logger.logInfoMessage("solution nonce %d unitsNQT %d counter %d computed hashes %d time [sec] %.2f hash rate [KH/Sec] %d actual time vs. expected %.2f is submitted %b",
-                solution, units, counter, hashes, (float) computationTime / 1000, hashes / computationTime, (float) hashes / (float) difficulty, isSubmitted);
+                solution, units, counter, hashes, (float) computationTime / 1000, hashes / computationTime, hashesPerDifficulty, isSubmitted);
         JSONObject response;
         if (isSubmitted) {
             response = currencyMint(secretPhrase, currencyId, solution, units, counter);
@@ -186,12 +231,18 @@ public class MintWorker {
                 host = "localhost";
             }
         }
-
+        String protocol = "http";
+        boolean useHttps = Nxt.getBooleanProperty("nxt.mint.useHttps");
+        if (useHttps) {
+            protocol = "https";
+            HttpsURLConnection.setDefaultSSLSocketFactory(sslSocketFactory);
+            HttpsURLConnection.setDefaultHostnameVerifier(hostNameVerifier);
+        }
         int port = Constants.isTestnet ? API.TESTNET_API_PORT : Nxt.getIntProperty("nxt.apiServerPort");
         String urlParams = getUrlParams(params);
         URL url;
         try {
-            url = new URL("http", host, port, "/nxt?" + urlParams);
+            url = new URL(protocol, host, port, "/nxt?" + urlParams);
         } catch (MalformedURLException e) {
             throw new IllegalStateException(e);
         }

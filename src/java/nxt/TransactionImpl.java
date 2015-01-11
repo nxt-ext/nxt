@@ -776,24 +776,15 @@ final class TransactionImpl implements Transaction {
             throw new NxtException.NotCurrentlyValidException(String.format("Transaction fee %d less than minimum fee %d at height %d",
                     feeNQT, minimumFeeNQT, blockchainHeight));
         }
-        if (blockchainHeight >= Constants.PUBLIC_KEY_ANNOUNCEMENT_BLOCK) {
-            if (recipientId != 0 && ! (recipientId == getSenderId() && blockchainHeight > Constants.MONETARY_SYSTEM_BLOCK)) {
-                Account recipientAccount = Account.getAccount(recipientId);
-                if (blockchainHeight < Constants.MONETARY_SYSTEM_BLOCK
-                        && (recipientAccount == null || recipientAccount.getPublicKey() == null)
-                        && publicKeyAnnouncement == null) {
-                    throw new NxtException.NotCurrentlyValidException("Recipient account does not have a public key, must attach a public key announcement");
-                }
-                /*
-                if (blockchainHeight >= Constants.MONETARY_SYSTEM_BLOCK && recipientAccount != null) {
-                	if (recipientAccount.getMessagePattern() != null
-                        && (message == null || ! recipientAccount.getMessagePattern().matcher(Convert.toString(message.getMessage())).matches())) {
-                    	throw new NxtException.NotCurrentlyValidException("Recipient account requires a message attachment matching " + recipientAccount.getMessagePattern().pattern());
-                	}
-            	}
-            	*/
-            }
-        }
+        /*
+        Account recipientAccount = Account.getAccount(recipientId);
+       	if (blockchainHeight >= Constants.MONETARY_SYSTEM_BLOCK && recipientAccount != null) {
+			if (recipientAccount.getMessagePattern() != null
+                    && (message == null || ! recipientAccount.getMessagePattern().matcher(Convert.toString(message.getMessage())).matches())) {
+                throw new NxtException.NotCurrentlyValidException("Recipient account requires a message attachment matching " + recipientAccount.getMessagePattern().pattern());
+               }
+         }
+         */
     }
 
     // returns false iff double spending
@@ -821,6 +812,10 @@ final class TransactionImpl implements Transaction {
 
     boolean isDuplicate(Map<TransactionType, Map<String, Boolean>> duplicates) {
         return type.isDuplicate(this, duplicates);
+    }
+
+    boolean isUnconfirmedDuplicate(Map<TransactionType, Map<String, Boolean>> duplicates) {
+        return type.isUnconfirmedDuplicate(this, duplicates);
     }
 
 }
