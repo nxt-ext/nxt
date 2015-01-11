@@ -147,8 +147,6 @@ public class MintWorker {
         }
     }
 
-    private static final BigInteger MAX_DIFFICULTY = BigInteger.valueOf(Long.MAX_VALUE);
-
     private JSONObject mintImpl(String secretPhrase, long accountId, long units, long currencyId, byte algorithm,
                                 long counter, byte[] target, long initialNonce, int threadPoolSize, ExecutorService executorService, BigInteger difficulty, boolean isSubmitted) {
         long startTime = System.currentTimeMillis();
@@ -163,7 +161,7 @@ public class MintWorker {
             computationTime = 1;
         }
         long hashes = solution - initialNonce;
-        float hashesPerDifficulty = BigInteger.valueOf(-1).equals(difficulty) || difficulty.compareTo(MAX_DIFFICULTY) > 0 ? 0 : (float) hashes / (float) difficulty.longValue();
+        float hashesPerDifficulty = BigInteger.valueOf(-1).equals(difficulty) ? 0 : (float) hashes / difficulty.floatValue();
         Logger.logInfoMessage("solution nonce %d unitsNQT %d counter %d computed hashes %d time [sec] %.2f hash rate [KH/Sec] %d actual time vs. expected %.2f is submitted %b",
                 solution, units, counter, hashes, (float) computationTime / 1000, hashes / computationTime, hashesPerDifficulty, isSubmitted);
         JSONObject response;
