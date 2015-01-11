@@ -5,6 +5,13 @@ Added a checkpoint at block 330000.
 
 Various minor UI bugfixes.
 
+Fixed currency search. Fixed handling of very high minting difficulties.
+Fixed concurrency issues with Scrypt minting, can use multiple threads now.
+
+Allow use of https for submitting minting transactions, set
+nxt.mint.useHttps=true. Note that this will accept any SSL certificate as valid,
+therefore will not protect you against man-in-the-middle attacks when minting.
+
 Improvements in translations handling, documented in DEVELOPERS-GUIDE.md.
 
 Better validation of hallmarks for peers with multiple addresses. Do not
