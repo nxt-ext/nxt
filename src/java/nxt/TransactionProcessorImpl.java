@@ -23,9 +23,11 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -88,6 +90,8 @@ final class TransactionProcessorImpl implements TransactionProcessor {
     private final Set<TransactionImpl> broadcastedTransactions = Collections.newSetFromMap(new ConcurrentHashMap<TransactionImpl,Boolean>());
     private final Listeners<List<? extends Transaction>,Event> transactionListeners = new Listeners<>();
     private final Set<UnconfirmedTransaction> lostTransactions = new HashSet<>();
+    private final Map<TransactionType, Map<String, Boolean>> unconfirmedDuplicates = new HashMap<>();
+
 
     private final Runnable removeUnconfirmedTransactionsThread = new Runnable() {
 
@@ -337,6 +341,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
             } finally {
                 Db.db.endTransaction();
             }
+            unconfirmedDuplicates.clear();
             transactionListeners.notify(removed, Event.REMOVED_UNCONFIRMED_TRANSACTIONS);
         }
     }
@@ -351,6 +356,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
             }
         }
         unconfirmedTransactionTable.truncate();
+        unconfirmedDuplicates.clear();
         transactionListeners.notify(removed, Event.REMOVED_UNCONFIRMED_TRANSACTIONS);
     }
 
@@ -507,6 +513,10 @@ final class TransactionProcessorImpl implements TransactionProcessor {
 
                 if (! transaction.applyUnconfirmed()) {
                     throw new NxtException.NotCurrentlyValidException("Double spending or insufficient balance");
+                }
+
+                if (transaction.isUnconfirmedDuplicate(unconfirmedDuplicates)) {
+                    throw new NxtException.NotCurrentlyValidException("Duplicate unconfirmed transaction");
                 }
 
                 unconfirmedTransactionTable.insert(unconfirmedTransaction);

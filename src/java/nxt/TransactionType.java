@@ -204,6 +204,10 @@ public abstract class TransactionType {
         return false;
     }
 
+    boolean isUnconfirmedDuplicate(Transaction transaction, Map<TransactionType, Map<String,Boolean>> duplicates) {
+        return false;
+    }
+
     static boolean isDuplicate(TransactionType uniqueType, String key, Map<TransactionType, Map<String, Boolean>> duplicates, boolean exclusive) {
         Map<String,Boolean> typeDuplicates = duplicates.get(uniqueType);
         if (typeDuplicates == null) {
