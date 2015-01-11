@@ -108,6 +108,7 @@ When adding new text/labeling visible in the UI do the following:
 - Use one of the methods outlined above, choose an appropriate translation key
 - Add both the key and the english text to the top of the english translation file
 - Please don't use namespaces in your keys (e.g. not ``namespace.mynewkey``) since this is complicating the filestructure of translation files when created automatically and cause problems when importing files to translation service
+- Don't use the ``$.t()`` function in a dynamic way (e.g. ``$.t(type + "_currency")``), otherwise translation keys can't be extracted from the code
 - If you later change the english text in the HTML please also change the text within the english translation file, otherwise the new english text is overwritten with the old english text from translation file
 
 #### Updating base translation file #####
@@ -117,7 +118,7 @@ The basis for other translations is the **english translation** file in ``ui/loc
 1. Count the rows of the english translation file, e.g. ``wc -l ui/locales/en/translation.json``
 2. To avoid intervenings with 3rd party files create a temporary folder for files to be parsed ``ui/trans-tmp/`` (``cp -R ui/js ui/trans-tmp/``, ``cp -R ui/html/ ui/trans-tmp/``, ``cp ui/*.html ui/trans-tmp/``)
 3. Parse translation strings not yet included in the english translation file with the i18next parser (extra install) with ``i18next ui -r -l en -o ui/locales/`` (if there is a strange "reuseSuffix" entry at the top of the file: this is a bug, delete!)
-4. Check for at least 3-4 translation keys in translation_old.json that these really doesn't exist in the code base any more, recount the rows of translation file, compare to old count
+4. There are still some dynamic uses of the ``$.t()`` function in the code base (e.g. ``$.t(type + "_currency")``), causing ``i18next`` to not detect these keys. If there is a generated ``translation_old.json`` file, add these strings manually to the ``translation.json`` file (keep an eye on commatas at the end of the lines!)
 5. Search for empty translation strings in english translation file forgotten by devs (by searching for empty string ""), full-text search in client folders for associated key and manually fill-in english string to translation file.
 
 #### Translation to other languages ####
@@ -129,8 +130,9 @@ Translation of the client UI to other languages is done by the community within 
 For providing new translation strings on the platform for the community to translate do the following:
 
 1. Update the english base translation file (see above guide)
-2. Update the ``translation.json`` file on Crowdin (permissions needed)
-3. Inform the community about new translation tasks
+2. Compare the number of translation keys in your generated file with the number of keys in the file on the Crowdin website and make sure, these fit together and there weren't any misses in the creation process
+3. Update the ``translation.json`` file on Crowdin (permissions needed)
+4. Inform the community about new translation tasks
 
 Updating the client with new translations:
 
