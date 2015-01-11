@@ -12,15 +12,16 @@ public class AbstractPoll {
     protected final int finishBlockHeight;
     protected final byte votingModel;
 
-    protected final long assetId;
+    protected final long holdingId; //whether asset id or MS coin id
     protected final long minBalance;
+    //protected final byte minBalanceModel;
     protected boolean finished;
 
-    AbstractPoll(long accountId, int finishBlockHeight, byte votingModel, long assetId, long minBalance) {
+    AbstractPoll(long accountId, int finishBlockHeight, byte votingModel, long holdingId, long minBalance) {
         this.accountId = accountId;
         this.finishBlockHeight = finishBlockHeight;
         this.votingModel = votingModel;
-        this.assetId = assetId;
+        this.holdingId = holdingId;
         this.minBalance = minBalance;
         this.finished = false;
     }
@@ -29,7 +30,7 @@ public class AbstractPoll {
         this.accountId = rs.getLong("account_id");
         this.finishBlockHeight = rs.getInt("finish_height");
         this.votingModel = rs.getByte("voting_model");
-        this.assetId = rs.getLong("asset_id");
+        this.holdingId = rs.getLong("holding_id");
         this.minBalance = rs.getLong("min_balance");
         this.finished = rs.getBoolean("finished");
     }
@@ -50,9 +51,7 @@ public class AbstractPoll {
         return minBalance;
     }
 
-    public long getAssetId() {
-        return assetId;
-    }
+    public long getHoldingId() { return holdingId; }
 
     public boolean isFinished() { return finished; }
 
@@ -65,18 +64,26 @@ public class AbstractPoll {
 
         switch (votingModel) {
             case Constants.VOTING_MODEL_ASSET:
+                long assetId = getHoldingId();
                 long qntBalance = voter.getAssetBalanceQNT(assetId);
                 if (qntBalance >= getMinBalance()) {
                     weight = qntBalance;
                 }
                 break;
+            case Constants.VOTING_MODEL_MS_COIN:
+                long currencyId = getHoldingId();
+                long units = voter.getCurrency(currencyId).getUnits();
+                if (units >= getMinBalance()) {
+                    weight = units;
+                }
+                break;
             case Constants.VOTING_MODEL_ACCOUNT:
-                long assetId = getAssetId();
+                long assetId0 = getHoldingId(); //todo: fix
                 long balance;
-                if (assetId == 0) {
+                if (assetId0 == 0) {
                     balance = voter.getBalanceNQT();
                 } else {
-                    balance = voter.getAssetBalanceQNT(assetId);
+                    balance = voter.getAssetBalanceQNT(assetId0);
                 }
                 if (balance >= getMinBalance()) {
                     weight = 1;

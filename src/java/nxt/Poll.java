@@ -31,7 +31,7 @@ public final class Poll extends AbstractPoll {
         @Override
         protected void save(Connection con, Poll poll) throws SQLException {
             try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO poll (id, account_id, "
-                    + "name, description, options, finish_height, voting_model, min_balance, asset_id, "
+                    + "name, description, options, finish_height, voting_model, min_balance, holding_id, "
                     + "min_num_options, max_num_options, min_range_value, max_range_value, finished, height) "
                     + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
                 int i = 0;
@@ -43,7 +43,7 @@ public final class Poll extends AbstractPoll {
                 pstmt.setInt(++i, poll.getFinishBlockHeight());
                 pstmt.setByte(++i, poll.getVotingModel());
                 pstmt.setLong(++i, poll.getMinBalance());
-                pstmt.setLong(++i, poll.getAssetId());
+                pstmt.setLong(++i, poll.getHoldingId());
                 pstmt.setByte(++i, poll.getMinNumberOfOptions());
                 pstmt.setByte(++i, poll.getMaxNumberOfOptions());
                 pstmt.setByte(++i, poll.getMinRangeValue());

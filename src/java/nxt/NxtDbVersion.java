@@ -556,7 +556,7 @@ class NxtDbVersion extends DbVersion {
                         + "description VARCHAR, options ARRAY NOT NULL, min_num_options TINYINT, max_num_options TINYINT, "
                         + "min_range_value TINYINT, max_range_value TINYINT, "
                         + "finish_height INT NOT NULL, voting_model TINYINT NOT NULL, min_balance BIGINT, "
-                        + "asset_id BIGINT, finished BOOLEAN, height INT NOT NULL, latest BOOLEAN DEFAULT TRUE NOT NULL)");
+                        + "holding_id BIGINT, finished BOOLEAN, height INT NOT NULL, latest BOOLEAN DEFAULT TRUE NOT NULL)");
             case 198:
                 apply("CREATE TABLE IF NOT EXISTS poll_result (db_id IDENTITY, poll_id BIGINT NOT NULL, "
                         + "option VARCHAR NOT NULL, result BIGINT NOT NULL,  height INT NOT NULL)");
@@ -567,7 +567,7 @@ class NxtDbVersion extends DbVersion {
                         + "FOREIGN KEY (id) REFERENCES transaction (id) ON DELETE CASCADE, account_id BIGINT NOT NULL, "
                         + "signers_count TINYINT NOT NULL DEFAULT 0, blacklist BOOLEAN DEFAULT FALSE, "
                         + "finish_height INT NOT NULL, voting_model TINYINT NOT NULL, quorum BIGINT NOT NULL, "
-                        + "min_balance BIGINT NOT NULL, asset_id BIGINT NOT NULL, finished BOOLEAN NOT NULL, "
+                        + "min_balance BIGINT NOT NULL, holding_id BIGINT NOT NULL, finished BOOLEAN NOT NULL, "
                         + "height INT NOT NULL, latest BOOLEAN DEFAULT TRUE NOT NULL)");
             case 201:
                 apply("CREATE TABLE IF NOT EXISTS vote_phased (db_id IDENTITY, id BIGINT NOT NULL, "

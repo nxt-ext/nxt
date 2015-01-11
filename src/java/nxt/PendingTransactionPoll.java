@@ -141,17 +141,17 @@ public class PendingTransactionPoll extends AbstractPoll {
     }
 
     public static DbIterator<PendingTransactionPoll> getFinishedByAssetId(long assetId, int firstIndex, int lastIndex) {
-        DbClause clause = new DbClause.LongBooleanClause("asset_id", assetId, "finished", true);
+        DbClause clause = new DbClause.LongBooleanClause("holding_id", assetId, "finished", true);
         return pendingTransactionsTable.getManyBy(clause, firstIndex, lastIndex);
     }
 
     public static DbIterator<PendingTransactionPoll> getByAssetId(long assetId, int firstIndex, int lastIndex) {
-        DbClause clause = new DbClause.LongClause("asset_id", assetId);
+        DbClause clause = new DbClause.LongClause("holding_id", assetId);
         return pendingTransactionsTable.getManyBy(clause, firstIndex, lastIndex);
     }
 
     public static DbIterator<PendingTransactionPoll> getActiveByAssetId(long assetId, int firstIndex, int lastIndex) {
-        DbClause clause = new DbClause.LongBooleanClause("asset_id", assetId, "finished", false);
+        DbClause clause = new DbClause.LongBooleanClause("holding_id", assetId, "finished", false);
         return pendingTransactionsTable.getManyBy(clause, firstIndex, lastIndex);
     }
 
@@ -209,7 +209,7 @@ public class PendingTransactionPoll extends AbstractPoll {
         }
 
         try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO pending_transaction (id, account_id, "
-                + "finish_height, signers_count, blacklist, voting_model, quorum, min_balance, asset_id, "
+                + "finish_height, signers_count, blacklist, voting_model, quorum, min_balance, holding_id, "
                 + "finished, height) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
             int i = 0;
             pstmt.setLong(++i, getId());
@@ -220,7 +220,7 @@ public class PendingTransactionPoll extends AbstractPoll {
             pstmt.setByte(++i, getVotingModel());
             pstmt.setLong(++i, getQuorum());
             pstmt.setLong(++i, getMinBalance());
-            pstmt.setLong(++i, getAssetId());
+            pstmt.setLong(++i, getHoldingId());
             pstmt.setBoolean(++i, isFinished());
             pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
             pstmt.executeUpdate();

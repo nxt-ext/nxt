@@ -40,6 +40,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
         return instance;
     }
 
+    //register block listener to check 2-phased transactions finishing at the block height
     static {
         Nxt.getBlockchainProcessor().addListener(new Listener<Block>() {
             @Override

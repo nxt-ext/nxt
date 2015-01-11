@@ -8,6 +8,7 @@ import org.json.simple.JSONObject;
 
 import java.nio.ByteBuffer;
 import java.util.Arrays;
+import java.util.List;
 
 public interface Appendix {
 
@@ -429,7 +430,7 @@ public interface Appendix {
         private final long quorum;
         private final long voteThreshold;
         private final byte votingModel;
-        private final long assetId;
+        private final long holdingId;
         private final long[] whitelist;
         private final long[] blacklist;
 
@@ -452,7 +453,7 @@ public interface Appendix {
                 blacklist[pvc] = buffer.getLong();
             }
 
-            assetId = buffer.getLong();
+            holdingId = buffer.getLong();
         }
 
         TwoPhased(JSONObject attachmentData){
@@ -462,9 +463,9 @@ public interface Appendix {
             voteThreshold = Convert.parseLong(attachmentData.get("voteThreshold"));
             votingModel = ((Long)attachmentData.get("votingModel")).byteValue();
             if (votingModel == Constants.VOTING_MODEL_ASSET) {
-                assetId = Convert.parseUnsignedLong((String)attachmentData.get("asset"));
+                holdingId = Convert.parseUnsignedLong((String)attachmentData.get("asset"));
             } else {
-                assetId = 0;
+                holdingId = 0;
             }
 
             JSONArray whitelistJson = (JSONArray) (attachmentData.get("whitelist"));
@@ -489,7 +490,7 @@ public interface Appendix {
             this(maxHeight, votingModel, 0, quorum, voteThreshold, whitelist, blacklist);
         }
 
-        public TwoPhased(int maxHeight, byte votingModel, long assetId, long quorum,
+        public TwoPhased(int maxHeight, byte votingModel, long holdingId, long quorum,
                   long voteThreshold, long[] whitelist, long[] blacklist) {
             this.maxHeight = maxHeight;
             this.votingModel = votingModel;
@@ -508,7 +509,7 @@ public interface Appendix {
                 this.blacklist = blacklist;
             }
 
-            this.assetId = assetId;
+            this.holdingId = holdingId;
         }
 
         @Override
@@ -538,7 +539,7 @@ public interface Appendix {
                 buffer.putLong(account);
             }
 
-            buffer.putLong(assetId);
+            buffer.putLong(holdingId);
         }
 
         @Override
@@ -547,7 +548,7 @@ public interface Appendix {
             json.put("quorum", quorum);
             json.put("voteThreshold", voteThreshold);
             json.put("votingModel", votingModel);
-            json.put("asset", Convert.toUnsignedLong(assetId));
+            json.put("asset", Convert.toUnsignedLong(holdingId));
 
             JSONArray whitelistJson = new JSONArray();
             for (long accountId : whitelist) {
@@ -569,7 +570,9 @@ public interface Appendix {
                 throw new NxtException.NotValidException("Pending transaction with by-balance voting is prohibited");
             }
 
-            if (votingModel != Constants.VOTING_MODEL_ACCOUNT && votingModel != Constants.VOTING_MODEL_ASSET) {
+            if (votingModel != Constants.VOTING_MODEL_ACCOUNT &&
+                    votingModel != Constants.VOTING_MODEL_ASSET &&
+                    votingModel != Constants.VOTING_MODEL_MS_COIN) {
                 throw new NxtException.NotValidException("Invalid voting model");
             }
 
@@ -593,8 +596,8 @@ public interface Appendix {
                 throw new NxtException.NotValidException("Possible voters list is too big");
             }
 
-            if (votingModel == Constants.VOTING_MODEL_ASSET && assetId == 0) {
-                throw new NxtException.NotValidException("Invalid assetId");
+            if (votingModel == Constants.VOTING_MODEL_ASSET && holdingId == 0) {
+                throw new NxtException.NotValidException("Invalid holdingId");
             }
 
             if (maxHeight < Nxt.getBlockchain().getHeight() + Constants.VOTING_MIN_VOTE_DURATION) {
@@ -606,7 +609,7 @@ public interface Appendix {
         void apply(Transaction transaction, Account senderAccount, Account recipientAccount) {
             long id = transaction.getId();
             PendingTransactionPoll poll = new PendingTransactionPoll(id, senderAccount.getId(), maxHeight,
-                    votingModel, quorum, voteThreshold, assetId, whitelist, blacklist);
+                    votingModel, quorum, voteThreshold, holdingId, whitelist, blacklist);
             PendingTransactionPoll.addPoll(poll);
         }
 
@@ -631,19 +634,31 @@ public interface Appendix {
         //todo: by-assets verification
         void verify(Transaction transaction) {
             long transactionId = transaction.getId();
-            Account senderAccount = Account.getAccount(transaction.getSenderId());
+            List<VotePhased> votes = VotePhased.getByTransaction(transactionId, 0, Integer.MAX_VALUE).toList();
 
-            long amount = transaction.getAmountNQT();
-            senderAccount.addToBalanceNQT(amount);
-            //TODO:
-            // Changes to sender's account balance should be handled the same way as the rest of the changes
-            // that the transaction causes, i.e. the changes done in applyAttachment()
-            // If you don't call applyAttachment() for a pending transaction until commit, then you should also
-            // not change the sender balance (but only his unconfirmed balance, which is already done in
-            // applyUnconfirmed()) until commit, and if you do that you shouldn't need to roll that back
-            // by calling sender.addToBalanceNQT() here either
-            Logger.logDebugMessage("Transaction " + transactionId + " has been refused");
-            System.out.println("Transaction " + transactionId + " has been refused"); //TODO: remove
+            PendingTransactionPoll poll = PendingTransactionPoll.getPoll(transactionId);
+            long cumulativeWeight = 0;
+            for(VotePhased vote:votes){
+                cumulativeWeight += poll.calcWeight(Account.getAccount(vote.getVoterId()));
+            }
+
+            if(cumulativeWeight >= poll.getQuorum()){
+                commit(transaction);
+            }else{
+                Account senderAccount = Account.getAccount(transaction.getSenderId());
+                long amount = transaction.getAmountNQT();
+                senderAccount.addToBalanceNQT(amount);
+
+                //TODO:
+                // Changes to sender's account balance should be handled the same way as the rest of the changes
+                // that the transaction causes, i.e. the changes done in applyAttachment()
+                // If you don't call applyAttachment() for a pending transaction until commit, then you should also
+                // not change the sender balance (but only his unconfirmed balance, which is already done in
+                // applyUnconfirmed()) until commit, and if you do that you shouldn't need to roll that back
+                // by calling sender.addToBalanceNQT() here either
+                Logger.logDebugMessage("Transaction " + transactionId + " has been refused");
+                System.out.println("Transaction " + transactionId + " has been refused"); //TODO: remove
+            }
         }
 
         public int getMaxHeight() {
@@ -662,8 +677,8 @@ public interface Appendix {
             return votingModel;
         }
 
-        public long getAssetId() {
-            return assetId;
+        public long getHoldingId() {
+            return holdingId;
         }
 
         public long[] getWhitelist() {
