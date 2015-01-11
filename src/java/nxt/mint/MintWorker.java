@@ -230,8 +230,8 @@ public class MintWorker {
             }
         }
         String protocol = "http";
-        boolean enableSSL = Nxt.getBooleanProperty("nxt.mint.apiSSL");
-        if (enableSSL) {
+        boolean useHttps = Nxt.getBooleanProperty("nxt.mint.useHttps");
+        if (useHttps) {
             protocol = "https";
             HttpsURLConnection.setDefaultSSLSocketFactory(sslSocketFactory);
             HttpsURLConnection.setDefaultHostnameVerifier(hostNameVerifier);
