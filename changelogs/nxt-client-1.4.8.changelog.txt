@@ -1,0 +1,19 @@
+Removed some validations and logic no longer needed after the Monetary System
+block.
+
+Added a checkpoint at block 330000.
+
+Various minor UI bugfixes.
+
+Improvements in translations handling, documented in DEVELOPERS-GUIDE.md.
+
+Better validation of hallmarks for peers with multiple addresses. Do not
+blacklist peers with invalid hallmarks but just treat them as not hallmarked.
+
+Blacklist peers with versions older than 1.4.
+
+As more than 720 blocks have passed since the MS block, nodes older than 1.4
+are now on a fork that will not be resolved by itself. To fix that, upgrading
+such nodes from a version older than 1.4 to this release will cause deletion
+and full download of the blockchain.
+

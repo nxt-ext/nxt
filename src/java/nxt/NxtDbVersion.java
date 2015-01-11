@@ -1,13 +1,8 @@
 package nxt;
 
 import nxt.db.DbVersion;
-import nxt.util.Logger;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 
 class NxtDbVersion extends DbVersion {
 
@@ -478,47 +473,24 @@ class NxtDbVersion extends DbVersion {
                 apply("CREATE INDEX IF NOT EXISTS unconfirmed_transaction_height_fee_timestamp_idx ON unconfirmed_transaction "
                         + "(transaction_height ASC, fee_per_byte DESC, arrival_timestamp ASC)");
             case 174:
-                apply("ALTER TABLE transaction ADD COLUMN IF NOT EXISTS transaction_index SMALLINT");
-            case 175:
-                Logger.logMessage("Will update transaction_index column...");
-                try (Connection con = Db.db.getConnection();
-                     Statement stmt = con.createStatement();
-                     PreparedStatement pstmt = con.prepareStatement("SELECT * FROM transaction ORDER BY height, id FOR UPDATE",
-                             ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_UPDATABLE)) {
-                    stmt.executeUpdate("SET UNDO_LOG 0");
-                    try (ResultSet rs = pstmt.executeQuery()) {
-                        int height = 0;
-                        short index = 0;
-                        while (rs.next()) {
-                            int nextHeight = rs.getInt("height");
-                            if (nextHeight != height) {
-                                index = 0;
-                                if (height / 5000 != nextHeight / 5000) {
-                                    Logger.logMessage("Processed " + (nextHeight / 5000) * 5000 + " blocks");
-                                }
-                                height = nextHeight;
-                            }
-                            rs.updateShort("transaction_index", index++);
-                            rs.updateRow();
-                        }
-                    }
-                    stmt.executeUpdate("SET UNDO_LOG 1");
-                }
+                BlockDb.deleteAll();
                 apply(null);
+            case 175:
+                apply("ALTER TABLE transaction ADD COLUMN IF NOT EXISTS transaction_index SMALLINT NOT NULL");
             case 176:
-                apply("ALTER TABLE transaction ALTER COLUMN transaction_index SET NOT NULL");
+                apply(null);
             case 177:
-                apply("ALTER TABLE ask_order ADD COLUMN IF NOT EXISTS transaction_index SMALLINT");
+                apply("TRUNCATE TABLE ask_order");
             case 178:
-                apply("UPDATE ask_order SET transaction_index = (SELECT transaction_index FROM transaction WHERE transaction.id = ask_order.id)");
+                apply("ALTER TABLE ask_order ADD COLUMN IF NOT EXISTS transaction_index SMALLINT NOT NULL");
             case 179:
-                apply("ALTER TABLE ask_order ALTER COLUMN transaction_index SET NOT NULL");
+                apply(null);
             case 180:
-                apply("ALTER TABLE bid_order ADD COLUMN IF NOT EXISTS transaction_index SMALLINT");
+                apply("TRUNCATE TABLE bid_order");
             case 181:
-                apply("UPDATE bid_order SET transaction_index = (SELECT transaction_index FROM transaction WHERE transaction.id = bid_order.id)");
+                apply("ALTER TABLE bid_order ADD COLUMN IF NOT EXISTS transaction_index SMALLINT NOT NULL");
             case 182:
-                apply("ALTER TABLE bid_order ALTER COLUMN transaction_index SET NOT NULL");
+                apply(null);
             case 183:
                 apply("CALL FTL_CREATE_INDEX('PUBLIC', 'CURRENCY', 'CODE,NAME,DESCRIPTION')");
             case 184:

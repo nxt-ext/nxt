@@ -398,6 +398,9 @@ public final class Currency {
 
         @Override
         public void notify(Block block) {
+            if (block.getHeight() <= Constants.MONETARY_SYSTEM_BLOCK) {
+                return;
+            }
             try (DbIterator<Currency> issuedCurrencies = currencyTable.getManyBy(new DbClause.IntClause("issuance_height", block.getHeight()), 0, -1)) {
                 for (Currency currency : issuedCurrencies) {
                     if (currency.getCurrentReservePerUnitNQT() < currency.getMinReservePerUnitNQT()) {

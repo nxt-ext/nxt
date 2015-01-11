@@ -84,11 +84,10 @@ public final class Constants {
     public static final int REFERENCED_TRANSACTION_FULL_HASH_BLOCK_TIMESTAMP = isTestnet ? 13031352 : 15134204;
     public static final int VOTING_SYSTEM_BLOCK = Integer.MAX_VALUE;
     public static final int DIGITAL_GOODS_STORE_BLOCK = isTestnet ? 77341 : 213000;
-    public static final int PUBLIC_KEY_ANNOUNCEMENT_BLOCK = isTestnet ? 77341 : 215000;
     public static final int MONETARY_SYSTEM_BLOCK = isTestnet ? 150000 : 330000;
-    public static final int LAST_KNOWN_BLOCK = isTestnet ? 136000 : 326000;
+    public static final int LAST_KNOWN_BLOCK = isTestnet ? 150000 : 330000;
 
-    public static final int[] MIN_VERSION = new int[] {1, 2};
+    public static final int[] MIN_VERSION = new int[] {1, 4};
 
     static final long UNCONFIRMED_POOL_DEPOSIT_NQT = (isTestnet ? 50 : 100) * ONE_NXT;
 

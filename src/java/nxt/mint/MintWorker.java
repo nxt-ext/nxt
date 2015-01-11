@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.UnsupportedEncodingException;
+import java.math.BigInteger;
 import java.net.HttpURLConnection;
 import java.net.InetAddress;
 import java.net.MalformedURLException;
@@ -120,7 +121,7 @@ public class MintWorker {
         JSONObject mintingTarget = getMintingTarget(currencyId, rsAccount, units);
         long counter = (long) mintingTarget.get("counter");
         byte[] target = Convert.parseHexString((String) mintingTarget.get("targetBytes"));
-        long difficulty = (long) mintingTarget.get("difficulty");
+        BigInteger difficulty = new BigInteger((String)mintingTarget.get("difficulty"));
         long initialNonce = Nxt.getIntProperty("nxt.mint.initialNonce");
         if (initialNonce == 0) {
             initialNonce = new Random().nextLong();
@@ -142,12 +143,14 @@ public class MintWorker {
             }
             mintingTarget = getMintingTarget(currencyId, rsAccount, units);
             target = Convert.parseHexString((String) mintingTarget.get("targetBytes"));
-            difficulty = (long) mintingTarget.get("difficulty");
+            difficulty = new BigInteger((String)mintingTarget.get("difficulty"));
         }
     }
 
+    private static final BigInteger MAX_DIFFICULTY = BigInteger.valueOf(Long.MAX_VALUE);
+
     private JSONObject mintImpl(String secretPhrase, long accountId, long units, long currencyId, byte algorithm,
-                                long counter, byte[] target, long initialNonce, int threadPoolSize, ExecutorService executorService, long difficulty, boolean isSubmitted) {
+                                long counter, byte[] target, long initialNonce, int threadPoolSize, ExecutorService executorService, BigInteger difficulty, boolean isSubmitted) {
         long startTime = System.currentTimeMillis();
         List<Callable<Long>> workersList = new ArrayList<>();
         for (int i=0; i < threadPoolSize; i++) {
@@ -160,8 +163,9 @@ public class MintWorker {
             computationTime = 1;
         }
         long hashes = solution - initialNonce;
+        float hashesPerDifficulty = BigInteger.valueOf(-1).equals(difficulty) || difficulty.compareTo(MAX_DIFFICULTY) > 0 ? 0 : (float) hashes / (float) difficulty.longValue();
         Logger.logInfoMessage("solution nonce %d unitsNQT %d counter %d computed hashes %d time [sec] %.2f hash rate [KH/Sec] %d actual time vs. expected %.2f is submitted %b",
-                solution, units, counter, hashes, (float) computationTime / 1000, hashes / computationTime, (float) hashes / (float) difficulty, isSubmitted);
+                solution, units, counter, hashes, (float) computationTime / 1000, hashes / computationTime, hashesPerDifficulty, isSubmitted);
         JSONObject response;
         if (isSubmitted) {
             response = currencyMint(secretPhrase, currencyId, solution, units, counter);

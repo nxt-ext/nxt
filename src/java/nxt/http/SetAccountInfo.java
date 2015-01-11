@@ -8,12 +8,9 @@ import nxt.util.Convert;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.regex.Pattern;
 
 import static nxt.http.JSONResponses.INCORRECT_ACCOUNT_DESCRIPTION_LENGTH;
 import static nxt.http.JSONResponses.INCORRECT_ACCOUNT_NAME_LENGTH;
-import static nxt.http.JSONResponses.INCORRECT_MESSAGE_PATTERN_FLAGS;
-import static nxt.http.JSONResponses.INCORRECT_MESSAGE_PATTERN_REGEX;
 
 public final class SetAccountInfo extends CreateTransaction {
 

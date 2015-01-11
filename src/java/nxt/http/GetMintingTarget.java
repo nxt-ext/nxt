@@ -34,7 +34,7 @@ public final class GetMintingTarget extends APIServlet.APIRequestHandler {
         json.put("currency", Convert.toUnsignedLong(currency.getId()));
         long units = ParameterParser.getLong(req, "units", 1, currency.getMaxSupply() - currency.getReserveSupply(), true);
         BigInteger numericTarget = nxt.CurrencyMint.getNumericTarget(currency, units);
-        json.put("difficulty", BigInteger.valueOf(2).pow(256).subtract(BigInteger.ONE).divide(numericTarget));
+        json.put("difficulty", String.valueOf(BigInteger.ZERO.equals(numericTarget) ? -1 : BigInteger.valueOf(2).pow(256).subtract(BigInteger.ONE).divide(numericTarget)));
         json.put("targetBytes", Convert.toHexString(nxt.CurrencyMint.getTarget(numericTarget)));
         json.put("counter", nxt.CurrencyMint.getCounter(currency.getId(), ParameterParser.getAccount(req).getId()));
         return json;
