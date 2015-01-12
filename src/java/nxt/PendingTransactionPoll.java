@@ -120,6 +120,18 @@ public class PendingTransactionPoll extends AbstractPoll {
 
     public static void addPoll(PendingTransactionPoll poll){
         pendingTransactionsTable.insert(poll);
+
+        long[] signers;
+
+        if (poll.getBlacklist().length > 0) {
+            signers = poll.getBlacklist();
+        } else {
+            signers = poll.getWhitelist();
+        }
+
+        if (signers.length > 0) {
+            signersTable.insert(poll, Convert.arrayOfLongsToList(signers));
+        }
     }
 
     public static DbIterator<PendingTransactionPoll> finishing(int height){
@@ -198,14 +210,14 @@ public class PendingTransactionPoll extends AbstractPoll {
 
     private void save(Connection con) throws SQLException {
         boolean isBlacklist;
-        long[] signers;
+        byte signersCount;
 
-        if (blacklist.length > 0) {
+        if (getBlacklist().length > 0) {
             isBlacklist = true;
-            signers = blacklist;
+            signersCount = (byte)getBlacklist().length;
         } else {
             isBlacklist = false;
-            signers = whitelist;
+            signersCount = (byte)getWhitelist().length;
         }
 
         try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO pending_transaction (id, account_id, "
@@ -215,7 +227,7 @@ public class PendingTransactionPoll extends AbstractPoll {
             pstmt.setLong(++i, getId());
             pstmt.setLong(++i, getAccountId());
             pstmt.setInt(++i, getFinishBlockHeight());
-            pstmt.setByte(++i, (byte) signers.length);
+            pstmt.setByte(++i, signersCount);
             pstmt.setBoolean(++i, isBlacklist);
             pstmt.setByte(++i, getVotingModel());
             pstmt.setLong(++i, getQuorum());
@@ -224,14 +236,6 @@ public class PendingTransactionPoll extends AbstractPoll {
             pstmt.setBoolean(++i, isFinished());
             pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
             pstmt.executeUpdate();
-
-            //TODO: this is wrong, because pending_transaction is a versioned table, while pending_transaction_signers is not
-            // pendingTransactionTable.insert is called twice, at different heights, which will result in two inserts into
-            // signersTable at different height, which should never be done for non-versioned tables
-            // Either modify the signers table only once, outside of this method, or make signers table versioned
-            if (signers.length > 0) {
-                signersTable.insert(this, Convert.arrayOfLongsToList(signers));
-            }
         }
     }
 
