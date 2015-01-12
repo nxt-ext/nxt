@@ -58,6 +58,6 @@ public final class Scan extends APIServlet.APIRequestHandler {
 
     @Override
     boolean requirePassword() {
-        return !API.disableAdminPassword;
+        return true;
     }
 }

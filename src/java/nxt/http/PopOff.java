@@ -61,7 +61,7 @@ public final class PopOff extends APIServlet.APIRequestHandler {
 
     @Override
     boolean requirePassword() {
-        return !API.disableAdminPassword;
+        return true;
     }
 
 }

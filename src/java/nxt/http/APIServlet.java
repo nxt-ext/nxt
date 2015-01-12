@@ -38,8 +38,8 @@ public final class APIServlet extends HttpServlet {
 
         APIRequestHandler(APITag[] apiTags, String... parameters) {
             List<String> parametersList;
-            if (requirePassword()) {
-                parametersList = new ArrayList<String>(parameters.length + 1);
+            if (requirePassword() && ! API.disableAdminPassword) {
+                parametersList = new ArrayList<>(parameters.length + 1);
                 parametersList.add("adminPassword");
                 parametersList.addAll(Arrays.asList(parameters));
             } else {
@@ -273,7 +273,7 @@ public final class APIServlet extends HttpServlet {
                 return;
             }
 
-            if (apiRequestHandler.requirePassword()) {
+            if (apiRequestHandler.requirePassword() && !API.disableAdminPassword) {
                 if (API.adminPassword.isEmpty()) {
                     response = NO_PASSWORD_IN_CONFIG;
                     return;

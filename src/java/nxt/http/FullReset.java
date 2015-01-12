@@ -34,6 +34,6 @@ public final class FullReset extends APIServlet.APIRequestHandler {
 
     @Override
     boolean requirePassword() {
-        return !API.disableAdminPassword;
+        return true;
     }
 }

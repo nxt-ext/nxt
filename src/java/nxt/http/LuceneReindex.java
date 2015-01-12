@@ -37,7 +37,7 @@ public final class LuceneReindex extends APIServlet.APIRequestHandler {
 
     @Override
     boolean requirePassword() {
-        return !API.disableAdminPassword;
+        return true;
     }
 
 }

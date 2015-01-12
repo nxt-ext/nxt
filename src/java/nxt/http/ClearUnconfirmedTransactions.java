@@ -33,6 +33,6 @@ public final class ClearUnconfirmedTransactions extends APIServlet.APIRequestHan
 
     @Override
     boolean requirePassword() {
-        return !API.disableAdminPassword;
+        return true;
     }
 }
