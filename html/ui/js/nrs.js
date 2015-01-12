@@ -446,21 +446,24 @@ var NRS = (function(NRS, $, undefined) {
 	};
 
 	NRS.addPagination = function(section) {
-		var output = "";
+		var hideLink = "style='visibility: hidden;'";
+      var hidePrev = (NRS.pageNumber == 1 ? hideLink : "");
+		var prevLink = "<a href='#'" + hidePrev + " data-page='" + (NRS.pageNumber - 1) + "'>&laquo; " + $.t("previous") + "</a>";
+		var hideNext = (!NRS.hasMorePages ? hideLink : "");
+		var nextLink = "<a href='#' " + hideNext + " data-page='" + (NRS.pageNumber + 1) + "'>" + $.t("next") + " &raquo;</a>";
+		var startRow = (NRS.pageNumber-1) * NRS.itemsPerPage + 1;
+		var endRow = NRS.pageNumber * NRS.itemsPerPage;
 
-		if (NRS.pageNumber == 2) {
-			output += "<a href='#' data-page='1'>&laquo; " + $.t("previous_page") + "</a>";
-		} else if (NRS.pageNumber > 2) {
-			//output += "<a href='#' data-page='1'>&laquo; First Page</a>";
-			output += " <a href='#' data-page='" + (NRS.pageNumber - 1) + "'>&laquo; " + $.t("previous_page") + "</a>";
-		}
+		var rowNumbers = "";
 		if (NRS.hasMorePages) {
+			rowNumbers = "<span>Displaying rows " + startRow + " to " + endRow + "</span>";
+		} else {
 			if (NRS.pageNumber > 1) {
-				output += "&nbsp;&nbsp;&nbsp;";
+				rowNumbers = "<span>Displaying rows " + startRow + "+</span>";
 			}
-			output += " <a href='#' data-page='" + (NRS.pageNumber + 1) + "'>" + $.t("next_page") + " &raquo;</a>";
 		}
-
+		var separator = "&nbsp;&nbsp;&nbsp;";
+		var output = prevLink + separator + nextLink + separator + rowNumbers;
 		var $paginationContainer = $("#" + NRS.currentPage + "_page .data-pagination");
 
 		if ($paginationContainer.length) {
