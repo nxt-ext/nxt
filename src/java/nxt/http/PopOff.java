@@ -2,11 +2,13 @@ package nxt.http;
 
 import nxt.Block;
 import nxt.Nxt;
+
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
+
 import java.util.List;
 
 public final class PopOff extends APIServlet.APIRequestHandler {
@@ -54,6 +56,11 @@ public final class PopOff extends APIServlet.APIRequestHandler {
 
     @Override
     final boolean requirePost() {
+        return true;
+    }
+
+    @Override
+    boolean requirePassword() {
         return true;
     }
 

@@ -861,6 +861,7 @@
   "total_memory": "Total Memory",
   "total_purchases": "Total Purchases",
   "total_supply": "Total Supply",
+  "completed_sales": "Completed Sales",
   "trade_history": "Trade History",
   "transaction": "Transaction",
   "transaction_bytes": "Transaction Bytes",

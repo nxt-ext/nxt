@@ -604,7 +604,7 @@ var NRS = (function(NRS, $, undefined) {
 			NRS.accountInfo = response;
 
 			if (response.errorCode) {
-				$("#account_balance, #account_balance_sidebar, #account_nr_assets, #account_assets_balance, #account_message_count").html("0");
+				$("#account_balance, #account_balance_sidebar, #account_nr_assets, #account_assets_balance, #account_currency_count, #account_purchase_count, #account_pending_sale_count, #account_completed_sale_count, #account_message_count, #account_alias_count").html("0");
 				
 				if (NRS.accountInfo.errorCode == 5) {
 					if (NRS.downloadingBlockchain) {
@@ -732,9 +732,14 @@ var NRS = (function(NRS, $, undefined) {
 				}
 				else {
 					$("#account_assets_balance").html(0);
-				}
-								
+				}								
 				$("#account_nr_assets").html(nr_assets);
+
+				if (NRS.accountInfo.accountCurrencies && NRS.accountInfo.accountCurrencies.length) {
+					$("#account_currency_count").empty().append(NRS.accountInfo.accountCurrencies.length);
+				} else {
+					$("#account_currency_count").empty().append("0");
+				}
 
 				/* Display message count in top and limit to 100 for now because of possible performance issues*/	
 				NRS.sendRequest("getAccountTransactions+", {
@@ -756,7 +761,40 @@ var NRS = (function(NRS, $, undefined) {
 				
 				/***  ******************   ***/
 				
-			
+				NRS.sendRequest("getAliasCount+", {
+					"account":NRS.account
+				}, function(response) {
+					if (response.numberOfAliases != null) {
+						$("#account_alias_count").empty().append(response.numberOfAliases);
+					}
+				});
+				
+				NRS.sendRequest("getDGSPurchaseCount+", {
+					"buyer": NRS.account
+				}, function(response) {
+					if (response.numberOfPurchases != null) {
+						$("#account_purchase_count").empty().append(response.numberOfPurchases);
+					}
+				});
+
+				NRS.sendRequest("getDGSPendingPurchases+", {
+					"seller": NRS.account
+				}, function(response) {
+					if (response.purchases && response.purchases.length) {
+						$("#account_pending_sale_count").empty().append(response.purchases.length);
+					} else {
+						$("#account_pending_sale_count").empty().append("0");
+					}
+				});
+
+				NRS.sendRequest("getDGSPurchaseCount+", {
+					"seller": NRS.account,
+					"completed": true,
+				}, function(response) {
+					if (response.numberOfPurchases != null) {
+						$("#account_completed_sale_count").empty().append(response.numberOfPurchases);
+					}
+				});
 
 				if (NRS.lastBlockHeight) {
 					var isLeased = NRS.lastBlockHeight >= NRS.accountInfo.currentLeasingHeightFrom;
@@ -782,7 +820,7 @@ var NRS = (function(NRS, $, undefined) {
 			}
 
 			if (firstRun) {
-				$("#account_balance, #account_balance_sidebar, #account_assets_balance, #account_nr_assets, #account_message_count").removeClass("loading_dots");
+				$("#account_balance, #account_balance_sidebar, #account_assets_balance, #account_nr_assets, #account_currency_count, #account_purchase_count, #account_pending_sale_count, #account_completed_sale_count, #account_message_count, #account_alias_count").removeClass("loading_dots");
 			}
 
 			if (callback) {
