@@ -9,20 +9,20 @@ import java.security.NoSuchAlgorithmException;
 @SuppressWarnings({"PointlessBitwiseExpression", "PointlessArithmeticExpression"})
 public class Scrypt {
 
-    private static final Mac mac;
-    static {
+    private final Mac mac;
+    {
         try {
             mac = Mac.getInstance("HmacSHA256");
         } catch (NoSuchAlgorithmException e) {
             throw new IllegalStateException(e);
         }
     }
-    private static byte[] H = new byte[32];
-    private static byte[] B = new byte[128 + 4];
-    private static int[] X = new int[32];
-    private static int[] V = new int[32 * 1024];
+    private byte[] H = new byte[32];
+    private byte[] B = new byte[128 + 4];
+    private int[] X = new int[32];
+    private int[] V = new int[32 * 1024];
 
-    public static byte[] hash(final byte input[]) {
+    public byte[] hash(final byte input[]) {
         int i, j, k;
         System.arraycopy(input, 0, B, 0, input.length);
         try {
@@ -81,7 +81,7 @@ public class Scrypt {
         return H;
     }
 
-    private static void xorSalsa8(int di, int xi) {
+    private void xorSalsa8(int di, int xi) {
         int x00 = (X[di + 0] ^= X[xi + 0]);
         int x01 = (X[di + 1] ^= X[xi + 1]);
         int x02 = (X[di + 2] ^= X[xi + 2]);
