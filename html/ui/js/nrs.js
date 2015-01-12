@@ -601,7 +601,7 @@ var NRS = (function(NRS, $, undefined) {
 			NRS.accountInfo = response;
 
 			if (response.errorCode) {
-				$("#account_balance, #account_balance_sidebar, #account_nr_assets, #account_assets_balance, #account_currency_count, #account_message_count, #account_alias_count").html("0");
+				$("#account_balance, #account_balance_sidebar, #account_nr_assets, #account_assets_balance, #account_currency_count, #account_purchase_count, #account_message_count, #account_alias_count").html("0");
 				
 				if (NRS.accountInfo.errorCode == 5) {
 					if (NRS.downloadingBlockchain) {
@@ -761,13 +761,18 @@ var NRS = (function(NRS, $, undefined) {
 				NRS.sendRequest("getAliasCount+", {
 					"account":NRS.account
 				}, function(response) {
-					if (response.numberOfAliases) {
+					if (response.numberOfAliases != null) {
 						$("#account_alias_count").empty().append(response.numberOfAliases);
-					} else {
-						$("#account_alias_count").empty().append("0");
 					}
 				});
-			
+				
+				NRS.sendRequest("getDGSPurchaseCount+", {
+					"buyer": NRS.account
+				}, function(response) {
+					if (response.numberOfPurchases != null) {
+						$("#account_purchase_count").empty().append(response.numberOfPurchases);
+					}
+				});
 
 				if (NRS.lastBlockHeight) {
 					var isLeased = NRS.lastBlockHeight >= NRS.accountInfo.currentLeasingHeightFrom;
@@ -793,7 +798,7 @@ var NRS = (function(NRS, $, undefined) {
 			}
 
 			if (firstRun) {
-				$("#account_balance, #account_balance_sidebar, #account_assets_balance, #account_nr_assets, #account_currency_count, #account_message_count, #account_alias_count").removeClass("loading_dots");
+				$("#account_balance, #account_balance_sidebar, #account_assets_balance, #account_nr_assets, #account_currency_count, #account_purchase_count, #account_message_count, #account_alias_count").removeClass("loading_dots");
 			}
 
 			if (callback) {
