@@ -601,7 +601,7 @@ var NRS = (function(NRS, $, undefined) {
 			NRS.accountInfo = response;
 
 			if (response.errorCode) {
-				$("#account_balance, #account_balance_sidebar, #account_nr_assets, #account_assets_balance, #account_message_count, #account_alias_count").html("0");
+				$("#account_balance, #account_balance_sidebar, #account_nr_assets, #account_assets_balance, #account_currency_count, #account_message_count, #account_alias_count").html("0");
 				
 				if (NRS.accountInfo.errorCode == 5) {
 					if (NRS.downloadingBlockchain) {
@@ -729,9 +729,14 @@ var NRS = (function(NRS, $, undefined) {
 				}
 				else {
 					$("#account_assets_balance").html(0);
-				}
-								
+				}								
 				$("#account_nr_assets").html(nr_assets);
+
+				if (NRS.accountInfo.accountCurrencies && NRS.accountInfo.accountCurrencies.length) {
+					$("#account_currency_count").empty().append(NRS.accountInfo.accountCurrencies.length);
+				} else {
+					$("#account_currency_count").empty().append("0");
+				}
 
 				/* Display message count in top and limit to 100 for now because of possible performance issues*/	
 				NRS.sendRequest("getAccountTransactions+", {
@@ -788,7 +793,7 @@ var NRS = (function(NRS, $, undefined) {
 			}
 
 			if (firstRun) {
-				$("#account_balance, #account_balance_sidebar, #account_assets_balance, #account_nr_assets, #account_message_count, #account_alias_count").removeClass("loading_dots");
+				$("#account_balance, #account_balance_sidebar, #account_assets_balance, #account_nr_assets, #account_currency_count, #account_message_count, #account_alias_count").removeClass("loading_dots");
 			}
 
 			if (callback) {
