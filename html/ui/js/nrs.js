@@ -774,6 +774,25 @@ var NRS = (function(NRS, $, undefined) {
 					}
 				});
 
+				NRS.sendRequest("getDGSPendingPurchases+", {
+					"seller": NRS.account
+				}, function(response) {
+					if (response.purchases && response.purchases.length) {
+						$("#account_pending_sale_count").empty().append(response.purchases.length);
+					} else {
+						$("#account_pending_sale_count").empty().append("0");
+					}
+				});
+
+				NRS.sendRequest("getDGSPurchaseCount+", {
+					"seller": NRS.account,
+					"completed": true,
+				}, function(response) {
+					if (response.numberOfPurchases != null) {
+						$("#account_completed_sale_count").empty().append(response.numberOfPurchases);
+					}
+				});
+
 				if (NRS.lastBlockHeight) {
 					var isLeased = NRS.lastBlockHeight >= NRS.accountInfo.currentLeasingHeightFrom;
 					if (isLeased != NRS.IsLeased) {
