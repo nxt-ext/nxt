@@ -390,17 +390,25 @@ var NRS = (function(NRS, $, undefined) {
 			}
 
 			var ownsAsset = false;
+			var ownsQuantityQNT = 0;
 
 			if (NRS.accountInfo.assetBalances) {
 				$.each(NRS.accountInfo.assetBalances, function(key, assetBalance) {
 					if (assetBalance.asset == asset.asset && assetBalance.balanceQNT != "0") {
 						ownsAsset = true;
+						ownsQuantityQNT = assetBalance.balanceQNT;
 						return false;
 					}
 				});
 			}
 
-			rows += "<a href='#' class='list-group-item list-group-item-" + (ungrouped ? "ungrouped" : "grouped") + (ownsAsset ? " owns_asset" : " not_owns_asset") + "' data-cache='" + i + "' data-asset='" + String(asset.asset).escapeHTML() + "'" + (!ungrouped ? " data-groupname='" + asset.groupName.escapeHTML() + "'" : "") + (isClosedGroup ? " style='display:none'" : "") + " data-closed='" + isClosedGroup + "'><h4 class='list-group-item-heading'>" + asset.name.escapeHTML() + "</h4><p class='list-group-item-text'>qty: " + NRS.formatQuantity(asset.quantityQNT, asset.decimals) + "</p></a>";
+			rows += "<a href='#' class='list-group-item list-group-item-" + (ungrouped ? "ungrouped" : "grouped") + (ownsAsset ? " owns_asset" : " not_owns_asset") + "' ";
+			rows += "data-cache='" + i + "' ";
+			rows += "data-asset='" + String(asset.asset).escapeHTML() + "'" + (!ungrouped ? " data-groupname='" + asset.groupName.escapeHTML() + "'" : "");
+			rows += (isClosedGroup ? " style='display:none'" : "") + " data-closed='" + isClosedGroup + "'>";
+			rows += "<h4 class='list-group-item-heading'>" + asset.name.escapeHTML() + "</h4>";
+			rows += "<p class='list-group-item-text'><span data-i18n=\"quantity\">Quantity</span>: " + NRS.formatQuantity(ownsQuantityQNT, asset.decimals) + "</p>";
+			rows += "</a>";
 		}
 
 		var active = $("#asset_exchange_sidebar a.active");
