@@ -1041,7 +1041,7 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.formatCurrencyExchange = function(currency, transaction, type) {
 		var rateUnitsStr = " [ NXT / " + currency.code + " ]";
 		var data = {
-			"type": $.t(type + "_currency"),
+			"type": type == "sell" ? $.t("sell_currency") : $.t("buy_currency"),
 			"code": currency.code,
 			"units": [transaction.attachment.units, currency.decimals],
 			"rate": NRS.calculateOrderPricePerWholeQNT(transaction.attachment.rateNQT, currency.decimals) + rateUnitsStr,
