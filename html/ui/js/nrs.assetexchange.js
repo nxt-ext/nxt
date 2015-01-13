@@ -1006,6 +1006,7 @@ var NRS = (function(NRS, $, undefined) {
 		var assetId = $invoker.data("asset");
 
 		$("#asset_order_modal_button").html(orderType + " Asset").data("resetText", orderType + " Asset");
+		$(".asset_order_modal_type").html(orderType);
 
 		orderType = orderType.toLowerCase();
 
