@@ -100,6 +100,7 @@ public class MintWorker {
             throw new IllegalArgumentException("nxt.mint.secretPhrase not specified");
         }
         boolean isSubmitted = Nxt.getBooleanProperty("nxt.mint.isSubmitted");
+        boolean isStopOnError = Nxt.getBooleanProperty("nxt.mint.stopOnError");
         long accountId = Account.getId(Crypto.getPublicKey(secretPhrase));
         String rsAccount = Convert.rsAccount(accountId);
         JSONObject currency = getCurrency(currencyCode);
@@ -138,7 +139,7 @@ public class MintWorker {
             JSONObject response = mintImpl(secretPhrase, accountId, units, currencyId, algorithm, counter, target,
                     initialNonce, threadPoolSize, executorService, difficulty, isSubmitted);
             Logger.logInfoMessage("currency mint response:" + response.toJSONString());
-            if (response.get("error") != null || response.get("errorCode") != null) {
+            if ((response.get("error") != null || response.get("errorCode") != null) && isStopOnError) {
                 break;
             }
             mintingTarget = getMintingTarget(currencyId, rsAccount, units);
