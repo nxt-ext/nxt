@@ -976,6 +976,7 @@ var NRS = (function(NRS, $, undefined) {
 							}), {
 								"type": "success"
 							});
+							NRS.loadAssetExchangeSidebar();
 						}
 					} else {
 						asset.difference = asset.difference.substring(1);
@@ -990,6 +991,7 @@ var NRS = (function(NRS, $, undefined) {
 							}), {
 								"type": "success"
 							});
+							NRS.loadAssetExchangeSidebar();
 						}
 					}
 				});
