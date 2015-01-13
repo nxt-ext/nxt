@@ -1,10 +1,12 @@
 package nxt.http;
 
 import nxt.Db;
+
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
+
 import java.sql.Connection;
 import java.sql.SQLException;
 
@@ -30,6 +32,11 @@ public final class LuceneReindex extends APIServlet.APIRequestHandler {
 
     @Override
     final boolean requirePost() {
+        return true;
+    }
+
+    @Override
+    boolean requirePassword() {
         return true;
     }
 

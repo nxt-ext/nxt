@@ -14,6 +14,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.Writer;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -25,6 +26,8 @@ import java.util.Set;
 import static nxt.http.JSONResponses.ERROR_INCORRECT_REQUEST;
 import static nxt.http.JSONResponses.ERROR_NOT_ALLOWED;
 import static nxt.http.JSONResponses.POST_REQUIRED;
+import static nxt.http.JSONResponses.NO_PASSWORD_IN_CONFIG;
+import static nxt.http.JSONResponses.INCORRECT_ADMIN_PASSWORD;
 
 public final class APIServlet extends HttpServlet {
 
@@ -34,7 +37,15 @@ public final class APIServlet extends HttpServlet {
         private final Set<APITag> apiTags;
 
         APIRequestHandler(APITag[] apiTags, String... parameters) {
-            this.parameters = Collections.unmodifiableList(Arrays.asList(parameters));
+            List<String> parametersList;
+            if (requirePassword() && ! API.disableAdminPassword) {
+                parametersList = new ArrayList<>(parameters.length + 1);
+                parametersList.add("adminPassword");
+                parametersList.addAll(Arrays.asList(parameters));
+            } else {
+                parametersList = Arrays.asList(parameters);
+            }
+            this.parameters = Collections.unmodifiableList(parametersList);
             this.apiTags = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(apiTags)));
         }
 
@@ -55,11 +66,13 @@ public final class APIServlet extends HttpServlet {
         boolean startDbTransaction() {
             return false;
         }
-
+        
+        boolean requirePassword() {
+        	return false;
+        }
     }
 
     private static final boolean enforcePost = Nxt.getBooleanProperty("nxt.apiServerEnforcePOST");
-
     static final Map<String,APIRequestHandler> apiRequestHandlers;
 
     static {
@@ -215,14 +228,11 @@ public final class APIServlet extends HttpServlet {
         map.put("searchDGSGoods", SearchDGSGoods.instance);
         map.put("searchAssets", SearchAssets.instance);
         map.put("searchCurrencies", SearchCurrencies.instance);
-
-        if (API.enableDebugAPI) {
-            map.put("clearUnconfirmedTransactions", ClearUnconfirmedTransactions.instance);
-            map.put("fullReset", FullReset.instance);
-            map.put("popOff", PopOff.instance);
-            map.put("scan", Scan.instance);
-            map.put("luceneReindex", LuceneReindex.instance);
-        }
+        map.put("clearUnconfirmedTransactions", ClearUnconfirmedTransactions.instance);
+        map.put("fullReset", FullReset.instance);
+        map.put("popOff", PopOff.instance);
+        map.put("scan", Scan.instance);
+        map.put("luceneReindex", LuceneReindex.instance);
 
         apiRequestHandlers = Collections.unmodifiableMap(map);
     }
@@ -269,6 +279,16 @@ public final class APIServlet extends HttpServlet {
             if (enforcePost && apiRequestHandler.requirePost() && ! "POST".equals(req.getMethod())) {
                 response = POST_REQUIRED;
                 return;
+            }
+
+            if (apiRequestHandler.requirePassword() && !API.disableAdminPassword) {
+                if (API.adminPassword.isEmpty()) {
+                    response = NO_PASSWORD_IN_CONFIG;
+                    return;
+                } else if (!API.adminPassword.equals(req.getParameter("adminPassword"))) {
+                    response = INCORRECT_ADMIN_PASSWORD;
+                    return;
+                }
             }
 
             try {
