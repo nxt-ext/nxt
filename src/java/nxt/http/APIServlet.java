@@ -25,9 +25,9 @@ import java.util.Set;
 
 import static nxt.http.JSONResponses.ERROR_INCORRECT_REQUEST;
 import static nxt.http.JSONResponses.ERROR_NOT_ALLOWED;
-import static nxt.http.JSONResponses.POST_REQUIRED;
-import static nxt.http.JSONResponses.NO_PASSWORD_IN_CONFIG;
 import static nxt.http.JSONResponses.INCORRECT_ADMIN_PASSWORD;
+import static nxt.http.JSONResponses.NO_PASSWORD_IN_CONFIG;
+import static nxt.http.JSONResponses.POST_REQUIRED;
 
 public final class APIServlet extends HttpServlet {
 
