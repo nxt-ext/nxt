@@ -139,11 +139,18 @@ public class MintWorker {
         Logger.logInfoMessage("Mint worker started");
         while (true) {
             counter++;
-            JSONObject response = mintImpl(secretPhrase, accountId, units, currencyId, algorithm, counter, target,
+            try {
+                JSONObject response = mintImpl(secretPhrase, accountId, units, currencyId, algorithm, counter, target,
                     initialNonce, threadPoolSize, executorService, difficulty, isSubmitted);
-            Logger.logInfoMessage("currency mint response:" + response.toJSONString());
-            if ((response.get("error") != null || response.get("errorCode") != null) && isStopOnError) {
-                break;
+                Logger.logInfoMessage("currency mint response:" + response.toJSONString());
+            } catch (Exception e) {
+                Logger.logInfoMessage("mint error", e);
+                if (isStopOnError) {
+                    Logger.logInfoMessage("stopping on error");
+                    break;
+                } else {
+                    Logger.logInfoMessage("continue");
+                }
             }
             mintingTarget = getMintingTarget(currencyId, rsAccount, units);
             target = Convert.parseHexString((String) mintingTarget.get("targetBytes"));
@@ -211,6 +218,7 @@ public class MintWorker {
             params.put("transactionBytes", Convert.toHexString(transaction.getBytes()));
             return getJsonResponse(params);
         } catch (NxtException.NotValidException e) {
+            Logger.logInfoMessage("local signing failed", e);
             JSONObject response = new JSONObject();
             response.put("error", e.toString());
             return response;
@@ -290,6 +298,10 @@ public class MintWorker {
         if (response.get("errorCode") != null) {
             throw new IllegalStateException(String.format("Request %s produced error response code %s message \"%s\"",
                     url, response.get("errorCode"), response.get("errorDescription")));
+        }
+        if (response.get("error") != null) {
+            throw new IllegalStateException(String.format("Request %s produced error %s",
+                    url, response.get("error")));
         }
         return response;
     }
