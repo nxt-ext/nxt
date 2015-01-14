@@ -20,6 +20,12 @@ public interface Transaction {
 
         Builder publicKeyAnnouncement(Appendix.PublicKeyAnnouncement publicKeyAnnouncement);
 
+        Builder timestamp(int timestamp);
+
+        Builder ecBlockHeight(int height);
+
+        Builder ecBlockId(long blockId);
+
         Transaction build() throws NxtException.NotValidException;
 
     }

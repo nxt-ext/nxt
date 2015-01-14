@@ -596,11 +596,14 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             List<TransactionImpl> transactions = new ArrayList<>();
             for (int i = 0; i < Genesis.GENESIS_RECIPIENTS.length; i++) {
                 TransactionImpl transaction = new TransactionImpl.BuilderImpl((byte) 0, Genesis.CREATOR_PUBLIC_KEY,
-                        Genesis.GENESIS_AMOUNTS[i] * Constants.ONE_NXT, 0, 0, (short) 0,
+                        Genesis.GENESIS_AMOUNTS[i] * Constants.ONE_NXT, 0, (short) 0,
                         Attachment.ORDINARY_PAYMENT)
+                        .timestamp(0)
                         .recipientId(Genesis.GENESIS_RECIPIENTS[i])
                         .signature(Genesis.GENESIS_SIGNATURES[i])
                         .height(0)
+                        .ecBlockHeight(0)
+                        .ecBlockId(0)
                         .build();
                 transactions.add(transaction);
             }

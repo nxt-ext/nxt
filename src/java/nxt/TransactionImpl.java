@@ -26,7 +26,6 @@ final class TransactionImpl implements Transaction {
         private final long feeNQT;
         private final TransactionType type;
         private final byte version;
-        private final int timestamp;
         private final Attachment.AbstractAttachment attachment;
 
         private long recipientId;
@@ -40,16 +39,17 @@ final class TransactionImpl implements Transaction {
         private int height = Integer.MAX_VALUE;
         private long id;
         private long senderId;
+        private int timestamp = Integer.MAX_VALUE;
         private int blockTimestamp = -1;
         private String fullHash;
+        private boolean ecBlockSet = false;
         private int ecBlockHeight;
         private long ecBlockId;
         private short index = -1;
 
-        BuilderImpl(byte version, byte[] senderPublicKey, long amountNQT, long feeNQT, int timestamp, short deadline,
+        BuilderImpl(byte version, byte[] senderPublicKey, long amountNQT, long feeNQT, short deadline,
                     Attachment.AbstractAttachment attachment) {
             this.version = version;
-            this.timestamp = timestamp;
             this.deadline = deadline;
             this.senderPublicKey = senderPublicKey;
             this.amountNQT = amountNQT;
@@ -60,6 +60,14 @@ final class TransactionImpl implements Transaction {
 
         @Override
         public TransactionImpl build() throws NxtException.NotValidException {
+            if (timestamp == Integer.MAX_VALUE) {
+                timestamp = Nxt.getEpochTime();
+            }
+            if (!ecBlockSet) {
+                Block ecBlock = EconomicClustering.getECBlock(timestamp);
+                this.ecBlockHeight = ecBlock.getHeight();
+                this.ecBlockId = ecBlock.getId();
+            }
             return new TransactionImpl(this);
         }
 
@@ -106,6 +114,26 @@ final class TransactionImpl implements Transaction {
             return this;
         }
 
+        @Override
+        public BuilderImpl timestamp(int timestamp) {
+            this.timestamp = timestamp;
+            return this;
+        }
+
+        @Override
+        public BuilderImpl ecBlockHeight(int height) {
+            this.ecBlockHeight = height;
+            this.ecBlockSet = true;
+            return this;
+        }
+
+        @Override
+        public BuilderImpl ecBlockId(long blockId) {
+            this.ecBlockId = blockId;
+            this.ecBlockSet = true;
+            return this;
+        }
+
         BuilderImpl id(long id) {
             this.id = id;
             return this;
@@ -145,16 +173,6 @@ final class TransactionImpl implements Transaction {
 
         BuilderImpl blockTimestamp(int blockTimestamp) {
             this.blockTimestamp = blockTimestamp;
-            return this;
-        }
-
-        BuilderImpl ecBlockHeight(int height) {
-            this.ecBlockHeight = height;
-            return this;
-        }
-
-        BuilderImpl ecBlockId(long blockId) {
-            this.ecBlockId = blockId;
             return this;
         }
 
@@ -557,8 +575,9 @@ final class TransactionImpl implements Transaction {
                 ecBlockId = buffer.getLong();
             }
             TransactionType transactionType = TransactionType.findTransactionType(type, subtype);
-            TransactionImpl.BuilderImpl builder = new TransactionImpl.BuilderImpl(version, senderPublicKey, amountNQT, feeNQT,
-                    timestamp, deadline, transactionType.parseAttachment(buffer, version))
+            TransactionImpl.BuilderImpl builder = new BuilderImpl(version, senderPublicKey, amountNQT, feeNQT,
+                    deadline, transactionType.parseAttachment(buffer, version))
+                    .timestamp(timestamp)
                     .referencedTransactionFullHash(referencedTransactionFullHash)
                     .signature(signature)
                     .ecBlockHeight(ecBlockHeight)
@@ -650,16 +669,25 @@ final class TransactionImpl implements Transaction {
             Long versionValue = (Long) transactionData.get("version");
             byte version = versionValue == null ? 0 : versionValue.byteValue();
             JSONObject attachmentData = (JSONObject) transactionData.get("attachment");
+            int ecBlockHeight = 0;
+            long ecBlockId = 0;
+            if (version > 0) {
+                ecBlockHeight = ((Long) transactionData.get("ecBlockHeight")).intValue();
+                ecBlockId = Convert.parseUnsignedLong((String) transactionData.get("ecBlockId"));
+            }
 
             TransactionType transactionType = TransactionType.findTransactionType(type, subtype);
             if (transactionType == null) {
                 throw new NxtException.NotValidException("Invalid transaction type: " + type + ", " + subtype);
             }
-            TransactionImpl.BuilderImpl builder = new TransactionImpl.BuilderImpl(version, senderPublicKey,
-                    amountNQT, feeNQT, timestamp, deadline,
+            TransactionImpl.BuilderImpl builder = new BuilderImpl(version, senderPublicKey,
+                    amountNQT, feeNQT, deadline,
                     transactionType.parseAttachment(attachmentData))
+                    .timestamp(timestamp)
                     .referencedTransactionFullHash(referencedTransactionFullHash)
-                    .signature(signature);
+                    .signature(signature)
+                    .ecBlockHeight(ecBlockHeight)
+                    .ecBlockId(ecBlockId);
             if (transactionType.canHaveRecipient()) {
                 long recipientId = Convert.parseUnsignedLong((String) transactionData.get("recipient"));
                 builder.recipientId(recipientId);
@@ -669,10 +697,6 @@ final class TransactionImpl implements Transaction {
                 builder.encryptedMessage(Appendix.EncryptedMessage.parse(attachmentData));
                 builder.publicKeyAnnouncement((Appendix.PublicKeyAnnouncement.parse(attachmentData)));
                 builder.encryptToSelfMessage(Appendix.EncryptToSelfMessage.parse(attachmentData));
-            }
-            if (version > 0) {
-                builder.ecBlockHeight(((Long) transactionData.get("ecBlockHeight")).intValue());
-                builder.ecBlockId(Convert.parseUnsignedLong((String) transactionData.get("ecBlockId")));
             }
             return builder.build();
         } catch (NxtException.NotValidException|RuntimeException e) {
@@ -732,7 +756,7 @@ final class TransactionImpl implements Transaction {
 
     private boolean useNQT() {
         return this.height > Constants.NQT_BLOCK
-                && (this.height < Integer.MAX_VALUE
+                && (this.timestamp > (Constants.isTestnet ? 12908200 : 14271000)
                 || Nxt.getBlockchain().getHeight() >= Constants.NQT_BLOCK);
     }
 
