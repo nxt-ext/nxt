@@ -4,13 +4,13 @@ package nxt.http;
 import nxt.Account;
 import nxt.NxtException;
 import nxt.PendingTransactionPoll;
-import nxt.db.DbIterator;
 import nxt.util.Convert;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.List;
 
 
 public class GetAccountPendingTransactionIds extends APIServlet.APIRequestHandler {
@@ -19,7 +19,7 @@ public class GetAccountPendingTransactionIds extends APIServlet.APIRequestHandle
 
     private GetAccountPendingTransactionIds() {
         super(new APITag[]{APITag.ACCOUNTS, APITag.PENDING_TRANSACTIONS},
-                "account", "finished", "firstIndex", "lastIndex");
+                "account", "firstIndex", "lastIndex");
     }
 
     @Override
@@ -30,24 +30,11 @@ public class GetAccountPendingTransactionIds extends APIServlet.APIRequestHandle
         int lastIndex = ParameterParser.getLastIndex(req);
 
         long accountId = account.getId();
-        String finished = Convert.nullToEmpty(req.getParameter("finished")).toLowerCase();
-        DbIterator<PendingTransactionPoll> iterator;
-        switch (finished) {
-            case "true":
-                iterator = PendingTransactionPoll.getFinishedByAccountId(accountId, firstIndex, lastIndex);
-                break;
-            case "false":
-                iterator = PendingTransactionPoll.getActiveByAccountId(accountId, firstIndex, lastIndex);
-                break;
-            default:
-                iterator = PendingTransactionPoll.getByAccountId(accountId, firstIndex, lastIndex);
-                break;
-        }
+        List<PendingTransactionPoll> polls = PendingTransactionPoll.getByAccountId(accountId, firstIndex, lastIndex).toList();
 
         JSONArray transactionIds = new JSONArray();
-        while (iterator.hasNext()) {
-            PendingTransactionPoll pendingTransactionPoll = iterator.next();
-            transactionIds.add(Convert.toUnsignedLong(pendingTransactionPoll.getId()));
+        for (PendingTransactionPoll poll:polls) {
+            transactionIds.add(Convert.toUnsignedLong(poll.getId()));
         }
 
         JSONObject response = new JSONObject();

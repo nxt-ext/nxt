@@ -642,6 +642,8 @@ public interface Appendix {
                 cumulativeWeight += poll.calcWeight(Account.getAccount(vote.getVoterId()));
             }
 
+            PendingTransactionPoll.finishPoll(poll);
+
             if(cumulativeWeight >= poll.getQuorum()){
                 commit(transaction);
             }else{

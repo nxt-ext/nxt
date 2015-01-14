@@ -558,6 +558,9 @@ class NxtDbVersion extends DbVersion {
             case 204:
                 apply(null);
             case 205:
+                apply("ALTER TABLE pending_transaction_signer  ADD COLUMN IF NOT EXISTS "
+                        + "latest BOOLEAN DEFAULT TRUE NOT NULL");
+            case 206:
                 return;
             default:
                 throw new RuntimeException("Blockchain database inconsistent with code, probably trying to run older code on newer database");

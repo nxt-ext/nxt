@@ -23,20 +23,8 @@ public class GetAssetPendingTransactionIds extends APIServlet.APIRequestHandler 
         Asset asset = ParameterParser.getAsset(req);
         int firstIndex = ParameterParser.getFirstIndex(req);
         int lastIndex = ParameterParser.getLastIndex(req);
-        String finished = Convert.nullToEmpty(req.getParameter("finished")).toLowerCase();
 
-        DbIterator<PendingTransactionPoll> iterator;
-        switch (finished) {
-            case "true":
-                iterator = PendingTransactionPoll.getFinishedByAssetId(asset.getId(), firstIndex, lastIndex);
-                break;
-            case "false":
-                iterator = PendingTransactionPoll.getActiveByAssetId(asset.getId(), firstIndex, lastIndex);
-                break;
-            default:
-                iterator = PendingTransactionPoll.getByAssetId(asset.getId(), firstIndex, lastIndex);
-                break;
-        }
+        DbIterator<PendingTransactionPoll> iterator = PendingTransactionPoll.getByAssetId(asset.getId(), firstIndex, lastIndex);
 
         JSONArray transactionIds = new JSONArray();
         while (iterator.hasNext()) {

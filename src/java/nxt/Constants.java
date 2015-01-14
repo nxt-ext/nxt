@@ -20,6 +20,10 @@ public final class Constants {
         }
     }
 
+    public static final boolean isVotingSystemEnabled = Nxt.getBooleanProperty("nxt.enableVotingSystem");
+    public static final boolean isVotingDataTrimmed = Nxt.getBooleanProperty("nxt.trimVotingData");
+    public static final int VOTING_DATA_TIME_TO_LIVE = Nxt.getIntProperty("nxt.votingDataTimeToLive");
+
     public static final byte MAX_VOTES_PER_VOTING_TRANSACTION = 2;
     public static final byte VOTING_MODEL_BALANCE = 0;
     public static final byte VOTING_MODEL_ACCOUNT = 1;
@@ -32,6 +36,10 @@ public final class Constants {
     public static final byte VOTING_MAX_RANGE_VALUE_LIMIT = 100;
     public static final byte VOTING_NO_VOTE_VALUE = Byte.MIN_VALUE;
     public static final byte VOTING_MIN_VOTE_DURATION = 10;
+
+
+    public static final boolean isPhasedVotingDataTrimmed = Nxt.getBooleanProperty("nxt.trimPhasedVotingData");
+    public static final int PHASED_VOTING_DATA_TIME_TO_LIVE = Nxt.getIntProperty("nxt.phasedVotingDataTimeToLive");
 
     public static final byte PENDING_TRANSACTIONS_MAX_WHITELIST_SIZE = 10;
     public static final byte PENDING_TRANSACTIONS_MAX_BLACKLIST_SIZE = 5;

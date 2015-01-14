@@ -4,7 +4,6 @@ import nxt.db.*;
 import nxt.util.Convert;
 
 import java.sql.*;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -29,7 +28,7 @@ public class PendingTransactionPoll extends AbstractPoll {
         }
     };
 
-    final static ValuesDbTable<PendingTransactionPoll, Long> signersTable = new ValuesDbTable<PendingTransactionPoll, Long>("pending_transaction_signer", signersDbKeyFactory) {
+    final static VersionedValuesDbTable<PendingTransactionPoll, Long> signersTable = new VersionedValuesDbTable<PendingTransactionPoll, Long>("pending_transaction_signer", signersDbKeyFactory) {
 
         @Override
         protected Long load(Connection con, ResultSet rs) throws SQLException {
@@ -147,28 +146,8 @@ public class PendingTransactionPoll extends AbstractPoll {
         return pendingTransactionsTable.getManyBy(clause, firstIndex, lastIndex);
     }
 
-    public static DbIterator<PendingTransactionPoll> getActiveByAccountId(long accountId, int firstIndex, int lastIndex) {
-        DbClause clause = new DbClause.LongBooleanClause("account_id", accountId, "finished", false);
-        return pendingTransactionsTable.getManyBy(clause, firstIndex, lastIndex);
-    }
-
-    public static DbIterator<PendingTransactionPoll> getFinishedByAssetId(long assetId, int firstIndex, int lastIndex) {
-        DbClause clause = new DbClause.LongBooleanClause("holding_id", assetId, "finished", true);
-        return pendingTransactionsTable.getManyBy(clause, firstIndex, lastIndex);
-    }
-
     public static DbIterator<PendingTransactionPoll> getByAssetId(long assetId, int firstIndex, int lastIndex) {
         DbClause clause = new DbClause.LongClause("holding_id", assetId);
-        return pendingTransactionsTable.getManyBy(clause, firstIndex, lastIndex);
-    }
-
-    public static DbIterator<PendingTransactionPoll> getActiveByAssetId(long assetId, int firstIndex, int lastIndex) {
-        DbClause clause = new DbClause.LongBooleanClause("holding_id", assetId, "finished", false);
-        return pendingTransactionsTable.getManyBy(clause, firstIndex, lastIndex);
-    }
-
-    public static DbIterator<PendingTransactionPoll> getFinishedByAccountId(long accountId, int firstIndex, int lastIndex) {
-        DbClause clause = new DbClause.LongBooleanClause("account_id", accountId, "finished", true);
         return pendingTransactionsTable.getManyBy(clause, firstIndex, lastIndex);
     }
 
@@ -239,16 +218,9 @@ public class PendingTransactionPoll extends AbstractPoll {
         }
     }
 
-    //TODO: Is the pending poll entry needed after the block in which it is set to finished? It would be best if the pending_transaction
-    // record is set to deleted, i.e. call pendingTransactionsTable.delete(poll), because this will keep the table small, otherwise
-    // it will grow without limits. Deleted records are permanently deleted 1440 blocks after their deletion.
-    // If you do delete, signers table needs to be versioned and also deleted from.
-    //
-    // If keeping historical results is important, consider adding those to a separate table that is kept for the record, but
-    // never queried for currently pending transactions, e.g. similar to how asset exchange orders are deleted after being filled,
-    // but a record is kept in the trade table.
     static void finishPoll(PendingTransactionPoll poll) {
-        poll.setFinished(true);
-        pendingTransactionsTable.insert(poll);
+        pendingTransactionsTable.delete(poll);
+        signersTable.delete(poll);
+        //todo: clear VOTE_PHASED table as well
     }
 }
