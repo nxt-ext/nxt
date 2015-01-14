@@ -1,9 +1,11 @@
 package nxt.mint;
 
-import nxt.Account;
+import nxt.Attachment;
 import nxt.Constants;
 import nxt.CurrencyMint;
 import nxt.Nxt;
+import nxt.NxtException;
+import nxt.Transaction;
 import nxt.crypto.Crypto;
 import nxt.crypto.HashFunction;
 import nxt.http.API;
@@ -95,13 +97,14 @@ public class MintWorker {
         if (currencyCode == null) {
             throw new IllegalArgumentException("nxt.mint.currencyCode not specified");
         }
-        String secretPhrase = Convert.emptyToNull(Nxt.getStringProperty("nxt.mint.secretPhrase"));
+        String secretPhrase = Convert.emptyToNull(Nxt.getStringProperty("nxt.mint.secretPhrase", null, true));
         if (secretPhrase == null) {
             throw new IllegalArgumentException("nxt.mint.secretPhrase not specified");
         }
         boolean isSubmitted = Nxt.getBooleanProperty("nxt.mint.isSubmitted");
         boolean isStopOnError = Nxt.getBooleanProperty("nxt.mint.stopOnError");
-        long accountId = Account.getId(Crypto.getPublicKey(secretPhrase));
+        byte[] publicKeyHash = Crypto.sha256().digest(Crypto.getPublicKey(secretPhrase));
+        long accountId = Convert.fullHashToId(publicKeyHash);
         String rsAccount = Convert.rsAccount(accountId);
         JSONObject currency = getCurrency(currencyCode);
         if (currency.get("currency") == null) {
@@ -193,16 +196,25 @@ public class MintWorker {
     }
 
     private JSONObject currencyMint(String secretPhrase, long currencyId, long nonce, long units, long counter) {
-        Map<String, String> params = new HashMap<>();
-        params.put("requestType", "currencyMint");
-        params.put("secretPhrase", secretPhrase);
-        params.put("feeNQT", Long.toString(Constants.ONE_NXT));
-        params.put("deadline", Integer.toString(120));
-        params.put("currency", Convert.toUnsignedLong(currencyId));
-        params.put("nonce", Long.toString(nonce));
-        params.put("units", Long.toString(units));
-        params.put("counter", Long.toString(counter));
-        return getJsonResponse(params);
+        JSONObject ecBlock = getECBlock();
+        Attachment attachment = new Attachment.MonetarySystemCurrencyMinting(nonce, currencyId, units, counter);
+        Transaction.Builder builder = Nxt.getTransactionProcessor().newTransactionBuilder(Crypto.getPublicKey(secretPhrase), 0, Constants.ONE_NXT,
+                (short) 120, attachment)
+                .timestamp(((Long) ecBlock.get("timestamp")).intValue())
+                .ecBlockHeight(((Long) ecBlock.get("ecBlockHeight")).intValue())
+                .ecBlockId(Convert.parseUnsignedLong((String) ecBlock.get("ecBlockId")));
+        try {
+            Transaction transaction = builder.build();
+            transaction.sign(secretPhrase);
+            Map<String, String> params = new HashMap<>();
+            params.put("requestType", "broadcastTransaction");
+            params.put("transactionBytes", Convert.toHexString(transaction.getBytes()));
+            return getJsonResponse(params);
+        } catch (NxtException.NotValidException e) {
+            JSONObject response = new JSONObject();
+            response.put("error", e.toString());
+            return response;
+        }
     }
 
     private JSONObject getCurrency(String currencyCode) {
@@ -218,6 +230,12 @@ public class MintWorker {
         params.put("currency", Convert.toUnsignedLong(currencyId));
         params.put("account", rsAccount);
         params.put("units", Long.toString(units));
+        return getJsonResponse(params);
+    }
+
+    private JSONObject getECBlock() {
+        Map<String, String> params = new HashMap<>();
+        params.put("requestType", "getECBlock");
         return getJsonResponse(params);
     }
 
