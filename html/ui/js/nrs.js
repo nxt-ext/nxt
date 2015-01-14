@@ -789,7 +789,7 @@ var NRS = (function(NRS, $, undefined) {
 
 				NRS.sendRequest("getDGSPurchaseCount+", {
 					"seller": NRS.account,
-					"completed": true,
+					"completed": true
 				}, function(response) {
 					if (response.numberOfPurchases != null) {
 						$("#account_completed_sale_count").empty().append(response.numberOfPurchases);
