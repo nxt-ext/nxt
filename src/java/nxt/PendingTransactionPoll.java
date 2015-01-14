@@ -155,7 +155,7 @@ public class PendingTransactionPoll extends AbstractPoll {
         try (Connection con = Db.db.getConnection();
              PreparedStatement pstmt = con.prepareStatement("SELECT DISTINCT pending_transaction.id "
                      + "from pending_transaction, pending_transactions_signers "
-                     + "WHERE pending_transaction.latest = TRUE AND pending_transaction.finished = false AND "
+                     + "WHERE pending_transaction.latest = TRUE AND "
                      + "pending_transaction.blacklist = false AND "
                      + "pending_transaction.id = pending_transactions_signers.poll_id "
                      + "AND pending_transaction_signers.account_id = ? "
@@ -201,7 +201,7 @@ public class PendingTransactionPoll extends AbstractPoll {
 
         try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO pending_transaction (id, account_id, "
                 + "finish_height, signers_count, blacklist, voting_model, quorum, min_balance, holding_id, "
-                + "finished, height) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
+                + "height) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
             int i = 0;
             pstmt.setLong(++i, getId());
             pstmt.setLong(++i, getAccountId());
@@ -212,7 +212,6 @@ public class PendingTransactionPoll extends AbstractPoll {
             pstmt.setLong(++i, getQuorum());
             pstmt.setLong(++i, getMinBalance());
             pstmt.setLong(++i, getHoldingId());
-            pstmt.setBoolean(++i, isFinished());
             pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
             pstmt.executeUpdate();
         }

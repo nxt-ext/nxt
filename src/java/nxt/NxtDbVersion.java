@@ -530,7 +530,7 @@ class NxtDbVersion extends DbVersion {
                         + "description VARCHAR, options ARRAY NOT NULL, min_num_options TINYINT, max_num_options TINYINT, "
                         + "min_range_value TINYINT, max_range_value TINYINT, "
                         + "finish_height INT NOT NULL, voting_model TINYINT NOT NULL, min_balance BIGINT, "
-                        + "holding_id BIGINT, finished BOOLEAN, height INT NOT NULL, latest BOOLEAN DEFAULT TRUE NOT NULL)");
+                        + "holding_id BIGINT, height INT NOT NULL, latest BOOLEAN DEFAULT TRUE NOT NULL)");
             case 198:
                 apply("CREATE TABLE IF NOT EXISTS poll_result (db_id IDENTITY, poll_id BIGINT NOT NULL, "
                         + "option VARCHAR NOT NULL, result BIGINT NOT NULL,  height INT NOT NULL)");
@@ -541,7 +541,7 @@ class NxtDbVersion extends DbVersion {
                         + "FOREIGN KEY (id) REFERENCES transaction (id) ON DELETE CASCADE, account_id BIGINT NOT NULL, "
                         + "signers_count TINYINT NOT NULL DEFAULT 0, blacklist BOOLEAN DEFAULT FALSE, "
                         + "finish_height INT NOT NULL, voting_model TINYINT NOT NULL, quorum BIGINT NOT NULL, "
-                        + "min_balance BIGINT NOT NULL, holding_id BIGINT NOT NULL, finished BOOLEAN NOT NULL, "
+                        + "min_balance BIGINT NOT NULL, holding_id BIGINT NOT NULL,  "
                         + "height INT NOT NULL, latest BOOLEAN DEFAULT TRUE NOT NULL)");
             case 201:
                 apply("CREATE TABLE IF NOT EXISTS vote_phased (db_id IDENTITY, id BIGINT NOT NULL, "
@@ -549,7 +549,8 @@ class NxtDbVersion extends DbVersion {
                         + "height INT NOT NULL)");
             case 202:
                 apply("CREATE TABLE IF NOT EXISTS pending_transaction_signer (db_id IDENTITY, "
-                        + "poll_id BIGINT NOT NULL, account_id BIGINT NOT NULL, height INT NOT NULL)");
+                        + "poll_id BIGINT NOT NULL, account_id BIGINT NOT NULL, "
+                        + "height INT NOT NULL, latest BOOLEAN DEFAULT TRUE NOT NULL)");
             case 203:
                 if (Constants.isTestnet) {
                     BlockchainProcessorImpl.getInstance().scheduleScan(0, true);
@@ -558,9 +559,6 @@ class NxtDbVersion extends DbVersion {
             case 204:
                 apply(null);
             case 205:
-                apply("ALTER TABLE pending_transaction_signer  ADD COLUMN IF NOT EXISTS "
-                        + "latest BOOLEAN DEFAULT TRUE NOT NULL");
-            case 206:
                 return;
             default:
                 throw new RuntimeException("Blockchain database inconsistent with code, probably trying to run older code on newer database");

@@ -15,7 +15,6 @@ public class AbstractPoll {
     protected final long holdingId; //whether asset id or MS coin id
     protected final long minBalance;
     //protected final byte minBalanceModel;
-    protected boolean finished;
 
     AbstractPoll(long accountId, int finishBlockHeight, byte votingModel, long holdingId, long minBalance) {
         this.accountId = accountId;
@@ -23,7 +22,6 @@ public class AbstractPoll {
         this.votingModel = votingModel;
         this.holdingId = holdingId;
         this.minBalance = minBalance;
-        this.finished = false;
     }
 
     AbstractPoll(ResultSet rs) throws SQLException {
@@ -32,7 +30,6 @@ public class AbstractPoll {
         this.votingModel = rs.getByte("voting_model");
         this.holdingId = rs.getLong("holding_id");
         this.minBalance = rs.getLong("min_balance");
-        this.finished = rs.getBoolean("finished");
     }
 
     public long getAccountId() {
@@ -53,11 +50,7 @@ public class AbstractPoll {
 
     public long getHoldingId() { return holdingId; }
 
-    public boolean isFinished() { return finished; }
-
-    protected void setFinished(boolean finished) {
-        this.finished = finished;
-    }
+    public boolean isFinished() { return Nxt.getBlockchain().getHeight() >= finishBlockHeight; }
 
     long calcWeight(Account voter) {
         long weight = 0;

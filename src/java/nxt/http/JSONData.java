@@ -339,13 +339,12 @@ final class JSONData {
         return json;
     }
 
-    static JSONObject pollResults(Poll poll) {
+    static JSONObject pollResults(Poll poll, List<Poll.PartialPollResult> results) {
         JSONObject json = new JSONObject();
         json.put("poll", Convert.toUnsignedLong(poll.getId()));
 
         JSONArray resultsJson = new JSONArray();
 
-        List<Poll.PartialPollResult> results = Poll.getResults(poll.getId());
         for (Poll.PartialPollResult result : results) {
             JSONObject jsonPair = new JSONObject();
             jsonPair.put(result.getOption(), result.getVotes());
