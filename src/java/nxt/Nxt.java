@@ -67,13 +67,17 @@ public final class Nxt {
     }
 
     public static String getStringProperty(String name) {
-        return getStringProperty(name, null);
+        return getStringProperty(name, null, false);
     }
 
     public static String getStringProperty(String name, String defaultValue) {
+        return getStringProperty(name, defaultValue, false);
+    }
+
+    public static String getStringProperty(String name, String defaultValue, boolean doNotLog) {
         String value = properties.getProperty(name);
         if (value != null && ! "".equals(value)) {
-            Logger.logMessage(name + " = \"" + value + "\"");
+            Logger.logMessage(name + " = \"" + (doNotLog ? "{not logged}" : value) + "\"");
             return value;
         } else {
             Logger.logMessage(name + " not defined");
