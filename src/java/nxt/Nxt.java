@@ -125,6 +125,10 @@ public final class Nxt {
         return TransactionProcessorImpl.getInstance();
     }
 
+    public static Transaction.Builder newTransactionBuilder(byte[] senderPublicKey, long amountNQT, long feeNQT, short deadline, Attachment attachment) {
+        return new TransactionImpl.BuilderImpl((byte)1, senderPublicKey, amountNQT, feeNQT, deadline, (Attachment.AbstractAttachment)attachment);
+    }
+
     public static int getEpochTime() {
         return time.getTime();
     }

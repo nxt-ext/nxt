@@ -2,7 +2,7 @@ package nxt.mint;
 
 import nxt.Attachment;
 import nxt.Constants;
-import nxt.CurrencyMint;
+import nxt.CurrencyMinting;
 import nxt.Nxt;
 import nxt.NxtException;
 import nxt.Transaction;
@@ -198,7 +198,7 @@ public class MintWorker {
     private JSONObject currencyMint(String secretPhrase, long currencyId, long nonce, long units, long counter) {
         JSONObject ecBlock = getECBlock();
         Attachment attachment = new Attachment.MonetarySystemCurrencyMinting(nonce, currencyId, units, counter);
-        Transaction.Builder builder = Nxt.getTransactionProcessor().newTransactionBuilder(Crypto.getPublicKey(secretPhrase), 0, Constants.ONE_NXT,
+        Transaction.Builder builder = Nxt.newTransactionBuilder(Crypto.getPublicKey(secretPhrase), 0, Constants.ONE_NXT,
                 (short) 120, attachment)
                 .timestamp(((Long) ecBlock.get("timestamp")).intValue())
                 .ecBlockHeight(((Long) ecBlock.get("ecBlockHeight")).intValue())
@@ -340,8 +340,8 @@ public class MintWorker {
         public Long call() {
             long n = nonce;
             while (!Thread.currentThread().isInterrupted()) {
-                byte[] hash = CurrencyMint.getHash(hashFunction, n, currencyId, units, counter, accountId);
-                if (CurrencyMint.meetsTarget(hash, target)) {
+                byte[] hash = CurrencyMinting.getHash(hashFunction, n, currencyId, units, counter, accountId);
+                if (CurrencyMinting.meetsTarget(hash, target)) {
                     Logger.logDebugMessage("%s found solution hash %s nonce %d currencyId %d units %d counter %d accountId %d" +
                             " hash %s meets target %s",
                             Thread.currentThread().getName(), hashFunction, n, currencyId, units, counter, accountId,

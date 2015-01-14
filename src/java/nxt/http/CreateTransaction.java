@@ -111,7 +111,7 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
         byte[] publicKey = secretPhrase != null ? Crypto.getPublicKey(secretPhrase) : Convert.parseHexString(publicKeyValue);
 
         try {
-            Transaction.Builder builder = Nxt.getTransactionProcessor().newTransactionBuilder(publicKey, amountNQT, feeNQT,
+            Transaction.Builder builder = Nxt.newTransactionBuilder(publicKey, amountNQT, feeNQT,
                     deadline, attachment).referencedTransactionFullHash(referencedTransactionFullHash);
             if (attachment.getTransactionType().canHaveRecipient()) {
                 builder.recipientId(recipientId);

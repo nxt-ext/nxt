@@ -632,7 +632,7 @@ public final class DebugTrace {
             map.put("event", "currency reserve");
         } else if (attachment instanceof Attachment.MonetarySystemCurrencyMinting) {
             Attachment.MonetarySystemCurrencyMinting currencyMinting = (Attachment.MonetarySystemCurrencyMinting) attachment;
-            if (CurrencyMint.meetsTarget(accountId, Currency.getCurrency(currencyMinting.getCurrencyId()), currencyMinting)) {
+            if (CurrencyMinting.meetsTarget(accountId, Currency.getCurrency(currencyMinting.getCurrencyId()), currencyMinting)) {
                 map.put("currency", Convert.toUnsignedLong(currencyMinting.getCurrencyId()));
                 long units = currencyMinting.getUnits();
                 map.put("currency units", String.valueOf(units));
