@@ -7,7 +7,7 @@ import java.sql.SQLException;
  * Abstract poll structure, parent for concrete poll implementations e.g. Poll or PendingTransactionPoll
  */
 
-public class AbstractPoll {
+public abstract class AbstractPoll {
     protected final long accountId;
     protected final int finishBlockHeight;
     protected final byte votingModel;
@@ -49,8 +49,6 @@ public class AbstractPoll {
     }
 
     public long getHoldingId() { return holdingId; }
-
-    public boolean isFinished() { return Nxt.getBlockchain().getHeight() >= finishBlockHeight; }
 
     long calcWeight(Account voter) {
         long weight = 0;

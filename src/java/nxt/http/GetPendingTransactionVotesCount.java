@@ -37,7 +37,6 @@ public class GetPendingTransactionVotesCount extends APIServlet.APIRequestHandle
         response.put("quorum", quorum);
         response.put("refusalHeight", poll.getFinishBlockHeight());
         response.put("height", Nxt.getBlockchain().getHeight());
-        response.put("released", poll.isFinished());
         return response;
     }
 }

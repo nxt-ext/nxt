@@ -818,11 +818,7 @@ public abstract class TransactionType {
                     PendingTransactionPoll poll = PendingTransactionPoll.getPoll(pendingId);
                     if (poll == null) {
                         System.out.println("Wrong pending transaction: " + pendingId); //TODO: Logger
-                        throw new NxtException.NotValidException("Wrong pending transaction");
-                    }
-
-                    if(poll.isFinished()){
-                        throw new NxtException.NotValidException("Attempt to vote on finished pending transaction");
+                        throw new NxtException.NotValidException("Wrong pending transaction or poll is finished");
                     }
 
                     long[] whitelist = poll.getWhitelist();

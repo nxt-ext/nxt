@@ -18,7 +18,7 @@ import static nxt.http.JSONResponses.*;
 
 abstract class CreateTransaction extends APIServlet.APIRequestHandler {
 
-    private static final String[] commonParameters = new String[] {"secretPhrase", "publicKey", "feeNQT",
+    private static final String[] commonParameters = new String[]{"secretPhrase", "publicKey", "feeNQT",
             "deadline", "referencedTransactionFullHash", "broadcast",
             "message", "messageIsText",
             "messageToEncrypt", "messageToEncryptIsText", "encryptedMessageData", "encryptedMessageNonce",
@@ -39,7 +39,7 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
     }
 
     final JSONStreamAware createTransaction(HttpServletRequest req, Account senderAccount, Attachment attachment)
-        throws NxtException {
+            throws NxtException {
         return createTransaction(req, senderAccount, 0, 0, attachment);
     }
 
@@ -128,7 +128,7 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
 
         Appendix.TwoPhased twoPhased = null;
         String isPending = Convert.emptyToNull(req.getParameter("isPending"));
-        if ("true".equalsIgnoreCase(isPending)){
+        if ("true".equalsIgnoreCase(isPending)) {
             twoPhased = parseTwoPhased(req);
         }
 
@@ -173,7 +173,7 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
             if (encryptToSelfMessage != null) {
                 builder.encryptToSelfMessage(encryptToSelfMessage);
             }
-            if (twoPhased!=null) {
+            if (twoPhased != null) {
                 builder.twoPhased(twoPhased);
             }
             Transaction transaction = builder.build();
