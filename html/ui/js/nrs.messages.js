@@ -327,8 +327,6 @@ var NRS = (function(NRS, $, undefined) {
 		e.preventDefault();
 		
 		var account = $(this).data("goto-messages-account");
-		
-		
 		NRS.goToPage("messages", function(){ $('#message_sidebar a[data-account=' + account + ']').trigger('click'); });
 	});
 
