@@ -558,6 +558,7 @@
   "message_is_encrypted": "This message is encrypted.",
   "message_is_not_encrypted": "This message is not encrypted.",
   "messages": "Messages",
+  "you_received_message": "You received a <a href='#' data-goto-messages-account='__account__'>message</a> from __name__.",
   "min_difficulty": "Minimum Difficulty",
   "min_reserve": "UNITS TO RESERVE",
   "minimum_difficulty": "Minimum Difficulty",
