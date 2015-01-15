@@ -1,0 +1,23 @@
+Added second row of info boxes on Dashboard, other UI improvements.
+
+Password protect the Debug APIs. The nxt.enableDebugAPI property is no longer
+used. Instead, the debug APIs which allow direct manipulation of the blockchain
+database are always enabled, but are now protected with a password, which needs
+to be set in the nxt.adminPassword property. Password is not required when the
+API server is listening on the localhost interface only (the default).
+The password protection can be disabled by setting nxt.disableAdminPassword=true.
+
+MintWorker improvements. Added nxt.mint.stopOnError property, default false, to
+allow continuing minting even after an error occurred.
+
+Minting transactions are now signed locally and sent to the server using the
+broadcastTransaction API. Thus the secretPhrase for the minting account is never
+sent to the server, and the server or the connection to it do not need to be
+trusted. The secretPhrase is also not logged to the log output anymore.
+
+Some refactoring to allow creation and signing of transactions using the Java API
+even in the complete absence of blockchain data, as needed for the MintWorker.
+
+Minor peer networking improvement, addPeers and processBlock requests are now
+executed in the background.
+

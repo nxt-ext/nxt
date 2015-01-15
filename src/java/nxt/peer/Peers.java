@@ -95,7 +95,7 @@ public final class Peers {
 
     static final Collection<PeerImpl> allPeers = Collections.unmodifiableCollection(peers.values());
 
-    private static final ExecutorService sendToPeersService = Executors.newCachedThreadPool();
+    static final ExecutorService peersService = Executors.newCachedThreadPool();
     private static final ExecutorService sendingService = Executors.newFixedThreadPool(10);
 
     static {
@@ -195,7 +195,7 @@ public final class Peers {
 
             private void loadPeers(Collection<String> addresses) {
                 for (final String address : addresses) {
-                    Future<String> unresolvedAddress = sendToPeersService.submit(new Callable<String>() {
+                    Future<String> unresolvedAddress = peersService.submit(new Callable<String>() {
                         @Override
                         public String call() {
                             Peer peer = Peers.addPeer(address);
@@ -513,7 +513,7 @@ public final class Peers {
             Logger.logShutdownMessage(buf.toString());
         }
         ThreadPool.shutdownExecutor(sendingService);
-        ThreadPool.shutdownExecutor(sendToPeersService);
+        ThreadPool.shutdownExecutor(peersService);
 
     }
 
@@ -695,7 +695,7 @@ public final class Peers {
                     }
 
                     if (!peer.isBlacklisted() && peer.getState() == Peer.State.CONNECTED && peer.getAnnouncedAddress() != null) {
-                        Future<JSONObject> futureResponse = sendToPeersService.submit(new Callable<JSONObject>() {
+                        Future<JSONObject> futureResponse = peersService.submit(new Callable<JSONObject>() {
                             @Override
                             public JSONObject call() {
                                 return peer.send(jsonRequest);
