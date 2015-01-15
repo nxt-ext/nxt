@@ -906,12 +906,12 @@ var NRS = (function(NRS, $, undefined) {
 				var blocksLeftTooltip = "From block " + lessorInfo.currentHeightFrom + " to block " + lessorInfo.currentHeightTo;
 				var nextLessee = "Not set";
 				var nextTooltip = "Next lessee not set";
-				if (lessorInfo.nextLesseeId == NRS.accountRS) {
+				if (lessorInfo.nextLesseeRS == NRS.accountRS) {
 					nextLessee = "You";
 					nextTooltip = "From block " + lessorInfo.nextHeightFrom + " to block " + lessorInfo.nextHeightTo;
 				} else if (lessorInfo.nextHeightFrom < 2147483647) {
 					nextLessee = "Not you";
-					nextTooltip = "Account " + NRS.getAccountTitle(lessorInfo.nextLesseeId) +" from block " + lessorInfo.nextHeightFrom + " to block " + lessorInfo.nextHeightTo;
+					nextTooltip = "Account " + NRS.getAccountTitle(lessorInfo.nextLesseeRS) +" from block " + lessorInfo.nextHeightFrom + " to block " + lessorInfo.nextHeightTo;
 				}
 				rows += "<tr>" +
 					"<td><a href='#' data-user='" + String(lessor).escapeHTML() + "'>" + NRS.getAccountTitle(lessor) + "</a></td>" +
