@@ -842,6 +842,14 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.updateAccountLeasingStatus = function() {
 		var accountLeasingLabel = "";
 		var accountLeasingStatus = "";
+		var nextLesseeStatus = "";
+		if (NRS.accountInfo.nextLeasingHeightFrom < 2147483647) {
+			nextLesseeStatus = $.t("next_lessee_status", {
+				"start": String(NRS.accountInfo.nextLeasingHeightFrom).escapeHTML(),
+				"end": String(NRS.accountInfo.nextLeasingHeightTo).escapeHTML(),
+				"account": String(NRS.convertNumericToRSAccountFormat(NRS.accountInfo.nextLessee)).escapeHTML()
+			})
+		}
 
 		if (NRS.lastBlockHeight >= NRS.accountInfo.currentLeasingHeightFrom) {
 			accountLeasingLabel = $.t("leased_out");
@@ -863,6 +871,9 @@ var NRS = (function(NRS, $, undefined) {
 		} else {
 			accountLeasingStatus = $.t("balance_not_leased_out");
 			$("#lease_balance_message").html($.t("balance_leasing_help"));
+		}
+		if (nextLesseeStatus != "") {
+			accountLeasingStatus += "<br>" + nextLesseeStatus;
 		}
 
 		if (NRS.accountInfo.effectiveBalanceNXT == 0) {
@@ -895,12 +906,12 @@ var NRS = (function(NRS, $, undefined) {
 				var blocksLeftTooltip = "From block " + lessorInfo.currentHeightFrom + " to block " + lessorInfo.currentHeightTo;
 				var nextLessee = "Not set";
 				var nextTooltip = "Next lessee not set";
-				if (lessorInfo.nextLesseeId == NRS.accountRS) {
+				if (lessorInfo.nextLesseeRS == NRS.accountRS) {
 					nextLessee = "You";
 					nextTooltip = "From block " + lessorInfo.nextHeightFrom + " to block " + lessorInfo.nextHeightTo;
 				} else if (lessorInfo.nextHeightFrom < 2147483647) {
 					nextLessee = "Not you";
-					nextTooltip = "Account " + NRS.getAccountTitle(lessorInfo.nextLesseeId) +" from block " + lessorInfo.nextHeightFrom + " to block " + lessorInfo.nextHeightTo;
+					nextTooltip = "Account " + NRS.getAccountTitle(lessorInfo.nextLesseeRS) +" from block " + lessorInfo.nextHeightFrom + " to block " + lessorInfo.nextHeightTo;
 				}
 				rows += "<tr>" +
 					"<td><a href='#' data-user='" + String(lessor).escapeHTML() + "'>" + NRS.getAccountTitle(lessor) + "</a></td>" +
