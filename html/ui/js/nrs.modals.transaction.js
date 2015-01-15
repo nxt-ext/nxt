@@ -165,11 +165,7 @@ var NRS = (function(NRS, $, undefined) {
 						"alias": transaction.attachment.alias,
 						"data_formatted_html": transaction.attachment.uri.autoLink()
 					};
-
-					if (transaction.sender != NRS.account) {
-						data["sender"] = NRS.getAccountTitle(transaction, "sender");
-					}
-
+					data["sender"] = transaction.senderRS ? transaction.senderRS : transaction.sender;
 					$("#transaction_info_table").find("tbody").append(NRS.createInfoTable(data));
 					$("#transaction_info_table").show();
 
@@ -180,11 +176,7 @@ var NRS = (function(NRS, $, undefined) {
 						"name": transaction.attachment.name,
 						"description": transaction.attachment.description
 					};
-
-					if (transaction.sender != NRS.account) {
-						data["sender"] = NRS.getAccountTitle(transaction, "sender");
-					}
-
+					data["sender"] = transaction.senderRS ? transaction.senderRS : transaction.sender;
 					$("#transaction_info_table").find("tbody").append(NRS.createInfoTable(data));
 					$("#transaction_info_table").show();
 
@@ -193,11 +185,7 @@ var NRS = (function(NRS, $, undefined) {
 					var data = {
 						"type": $.t("vote_casting")
 					};
-
-					if (transaction.sender != NRS.account) {
-						data["sender"] = NRS.getAccountTitle(transaction, "sender");
-					}
-
+					data["sender"] = transaction.senderRS ? transaction.senderRS : transaction.sender;
 					$("#transaction_info_table").find("tbody").append(NRS.createInfoTable(data));
 					$("#transaction_info_table").show();
 
@@ -243,10 +231,10 @@ var NRS = (function(NRS, $, undefined) {
 					}
 
 					if (type != $.t("alias_sale_cancellation")) {
-						data["recipient"] = NRS.getAccountTitle(transaction, "recipient");
+						data["recipient"] = transaction.recipientRS ? transaction.recipientRS : transaction.recipient;
 					}
 
-					data["sender"] = NRS.getAccountTitle(transaction, "sender");
+					data["sender"] = transaction.senderRS ? transaction.senderRS : transaction.sender;
 
 					if (type == $.t("alias_sale")) {
 						var message = "";
@@ -326,11 +314,7 @@ var NRS = (function(NRS, $, undefined) {
 						"decimals": transaction.attachment.decimals,
 						"description": transaction.attachment.description
 					};
-
-					if (transaction.sender != NRS.account) {
-						data["sender"] = NRS.getAccountTitle(transaction, "sender");
-					}
-
+					data["sender"] = transaction.senderRS ? transaction.senderRS : transaction.sender;
 					$("#transaction_info_callout").html("<a href='#' data-goto-asset='" + String(transaction.transaction).escapeHTML() + "'>Click here</a> to view this asset in the Asset Exchange.").show();
 
 					$("#transaction_info_table").find("tbody").append(NRS.createInfoTable(data));
@@ -349,8 +333,8 @@ var NRS = (function(NRS, $, undefined) {
 							"quantity": [transaction.attachment.quantityQNT, asset.decimals]
 						};
 
-						data["sender"] = NRS.getAccountTitle(transaction, "sender");
-						data["recipient"] = NRS.getAccountTitle(transaction, "recipient");
+						data["sender"] = transaction.senderRS ? transaction.senderRS : transaction.sender;
+						data["recipient"] = transaction.recipientRS ? transaction.recipientRS : transaction.recipient;
 
 						$("#transaction_info_table").find("tbody").append(NRS.createInfoTable(data));
 						$("#transaction_info_table").show();
@@ -374,10 +358,7 @@ var NRS = (function(NRS, $, undefined) {
 							"total_formatted_html": NRS.formatAmount(NRS.calculateOrderTotalNQT(transaction.attachment.quantityQNT, transaction.attachment.priceNQT)) + " NXT"
 						};
 
-						if (transaction.sender != NRS.account) {
-							data["sender"] = NRS.getAccountTitle(transaction, "sender");
-						}
-
+						data["sender"] = transaction.senderRS ? transaction.senderRS : transaction.sender;
 						$("#transaction_info_table").find("tbody").append(NRS.createInfoTable(data));
 						$("#transaction_info_table").show();
 
@@ -399,11 +380,7 @@ var NRS = (function(NRS, $, undefined) {
 							"price_formatted_html": NRS.formatOrderPricePerWholeQNT(transaction.attachment.priceNQT, asset.decimals) + " NXT",
 							"total_formatted_html": NRS.formatAmount(NRS.calculateOrderTotalNQT(transaction.attachment.quantityQNT, transaction.attachment.priceNQT)) + " NXT"
 						};
-
-						if (transaction.sender != NRS.account) {
-							data["sender"] = NRS.getAccountTitle(transaction, "sender");
-						}
-
+						data["sender"] = transaction.senderRS ? transaction.senderRS : transaction.sender;
 						$("#transaction_info_table").find("tbody").append(NRS.createInfoTable(data));
 						$("#transaction_info_table").show();
 
@@ -429,11 +406,7 @@ var NRS = (function(NRS, $, undefined) {
 									"price_formatted_html": NRS.formatOrderPricePerWholeQNT(transaction.attachment.priceNQT, asset.decimals) + " NXT",
 									"total_formatted_html": NRS.formatAmount(NRS.calculateOrderTotalNQT(transaction.attachment.quantityQNT, transaction.attachment.priceNQT)) + " NXT"
 								};
-
-								if (transaction.sender != NRS.account) {
-									data["sender"] = NRS.getAccountTitle(transaction, "sender");
-								}
-
+								data["sender"] = transaction.senderRS ? transaction.senderRS : transaction.sender;
 								$("#transaction_info_table").find("tbody").append(NRS.createInfoTable(data));
 								$("#transaction_info_table").show();
 
@@ -463,11 +436,7 @@ var NRS = (function(NRS, $, undefined) {
 									"price_formatted_html": NRS.formatOrderPricePerWholeQNT(transaction.attachment.priceNQT, asset.decimals) + " NXT",
 									"total_formatted_html": NRS.formatAmount(NRS.calculateOrderTotalNQT(transaction.attachment.quantityQNT, transaction.attachment.priceNQT)) + " NXT"
 								};
-
-								if (transaction.sender != NRS.account) {
-									data["sender"] = NRS.getAccountTitle(transaction, "sender");
-								}
-
+								data["sender"] = transaction.senderRS ? transaction.senderRS : transaction.sender;
 								$("#transaction_info_table").find("tbody").append(NRS.createInfoTable(data));
 								$("#transaction_info_table").show();
 
@@ -496,11 +465,7 @@ var NRS = (function(NRS, $, undefined) {
                                     "amount_per_share": NRS.formatOrderPricePerWholeQNT(transaction.attachment.amountNQTPerQNT, asset.decimals) + " NXT",
                                     "height": transaction.attachment.height
                                 };
-
-                                if (transaction.sender != NRS.account) {
-                                    data["sender"] = NRS.getAccountTitle(transaction, "sender");
-                                }
-
+  										  data["sender"] = transaction.senderRS ? transaction.senderRS : transaction.sender;
                                 $("#transaction_info_table").find("tbody").append(NRS.createInfoTable(data));
                                 $("#transaction_info_table").show();
 
@@ -952,10 +917,7 @@ var NRS = (function(NRS, $, undefined) {
 					break;
 			}
 			if (!incorrect) {
-				if (transaction.sender != NRS.account) {
-					data["sender"] = NRS.getAccountTitle(transaction, "sender");
-				}
-
+            data["sender"] = transaction.senderRS ? transaction.senderRS : transaction.sender;
 				$("#transaction_info_callout").html("");
 				if (currency != null && NRS.isExchangeable(currency.type)) {
 					$("#transaction_info_callout").append("<a href='#' data-goto-currency='" + String(currency.code).escapeHTML() + "'>Click here</a> to view this currency in the Exchange Booth.<br />").show();
