@@ -296,19 +296,6 @@ final class TransactionProcessorImpl implements TransactionProcessor {
     }
 
     @Override
-    public Transaction.Builder newTransactionBuilder(byte[] senderPublicKey, long amountNQT, long feeNQT, short deadline,
-                                                     Attachment attachment) {
-        byte version = (byte)1; //(byte) getTransactionVersion(Nxt.getBlockchain().getHeight());
-        int timestamp = Nxt.getEpochTime();
-        TransactionImpl.BuilderImpl builder = new TransactionImpl.BuilderImpl(version, senderPublicKey, amountNQT, feeNQT, timestamp,
-                deadline, (Attachment.AbstractAttachment)attachment);
-        Block ecBlock = EconomicClustering.getECBlock(timestamp);
-        builder.ecBlockHeight(ecBlock.getHeight());
-        builder.ecBlockId(ecBlock.getId());
-        return builder;
-    }
-
-    @Override
     public void broadcast(Transaction transaction) throws NxtException.ValidationException {
         synchronized (BlockchainImpl.getInstance()) {
             if (TransactionDb.hasTransaction(transaction.getId())) {

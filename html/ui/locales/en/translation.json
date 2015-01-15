@@ -92,12 +92,12 @@
   "avg_amount_per_block": "Avg. Amount Per Block",
   "avg_fee_per_block": "Avg. Fee Per Block",
   "balance": "Balance",
-  "balance_is_leased_out": "Your account effective balance is leased out starting from block __start__ until block __end__ to account <a href='#' data-user='__account__' class='user_info'>__account__</a>",
+  "balance_is_leased_out": "Your account effective balance is leased out for the next __blocks__ blocks (until block __end__) to account <a href='#' data-user='__account__' class='user_info'>__account__</a>",
   "balance_leased_out_help": "<strong>Remember</strong>: This lease will take effect after the current lease has ended.",
   "balance_leasing": "Balance Leasing",
   "balance_leasing_help": "<strong>Remember</strong>: Once submitted the lease cannot be cancelled.",
   "balance_not_leased_out": "Your account effective balance is not leased out.",
-  "balance_will_be_leased_out": "Your account effective balance will be leased out starting from block __start__ until block __end__ to account <a href='#' data-user='__account__' class='user_info'>__account__</a>",
+  "balance_will_be_leased_out": "Your account effective balance will be leased out in __blocks__ blocks (block range __start__ to __end__) to account <a href='#' data-user='__account__' class='user_info'>__account__</a>",
   "base_target": "Base Target",
   "basic": "Basic",
   "bid_order_cancellation": "Bid Order Cancellation",
@@ -1104,5 +1104,6 @@
   "min_reserve_per_unit": "Minimal Reserve Per Unit",
   "current_units": "Current Units Supply",
   "current_reserve_per_unit": "Current Reserve Per Unit",
-  "founders": "Founders"
+  "founders": "Founders",
+  "next_lessee_status": "The next lease period is scheduled from block __start__ to block __end__, the lessee account is <a href='#' data-user='__account__' class='user_info'>__account__</a>"
 }

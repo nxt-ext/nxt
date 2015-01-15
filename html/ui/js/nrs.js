@@ -789,7 +789,7 @@ var NRS = (function(NRS, $, undefined) {
 
 				NRS.sendRequest("getDGSPurchaseCount+", {
 					"seller": NRS.account,
-					"completed": true,
+					"completed": true
 				}, function(response) {
 					if (response.numberOfPurchases != null) {
 						$("#account_completed_sale_count").empty().append(response.numberOfPurchases);
@@ -842,11 +842,19 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.updateAccountLeasingStatus = function() {
 		var accountLeasingLabel = "";
 		var accountLeasingStatus = "";
+		var nextLesseeStatus = "";
+		if (NRS.accountInfo.nextLeasingHeightFrom < 2147483647) {
+			nextLesseeStatus = $.t("next_lessee_status", {
+				"start": String(NRS.accountInfo.nextLeasingHeightFrom).escapeHTML(),
+				"end": String(NRS.accountInfo.nextLeasingHeightTo).escapeHTML(),
+				"account": String(NRS.convertNumericToRSAccountFormat(NRS.accountInfo.nextLessee)).escapeHTML()
+			})
+		}
 
 		if (NRS.lastBlockHeight >= NRS.accountInfo.currentLeasingHeightFrom) {
 			accountLeasingLabel = $.t("leased_out");
 			accountLeasingStatus = $.t("balance_is_leased_out", {
-				"start": String(NRS.accountInfo.currentLeasingHeightFrom).escapeHTML(),
+				"blocks": String(NRS.accountInfo.currentLeasingHeightTo - NRS.lastBlockHeight).escapeHTML(),
 				"end": String(NRS.accountInfo.currentLeasingHeightTo).escapeHTML(),
 				"account": String(NRS.accountInfo.currentLesseeRS).escapeHTML()
 			});
@@ -854,6 +862,7 @@ var NRS = (function(NRS, $, undefined) {
 		} else if (NRS.lastBlockHeight < NRS.accountInfo.currentLeasingHeightTo) {
 			accountLeasingLabel = $.t("leased_soon");
 			accountLeasingStatus = $.t("balance_will_be_leased_out", {
+				"blocks": String(NRS.accountInfo.currentLeasingHeightFrom - NRS.lastBlockHeight).escapeHTML(),
 				"start": String(NRS.accountInfo.currentLeasingHeightFrom).escapeHTML(),
 				"end": String(NRS.accountInfo.currentLeasingHeightTo).escapeHTML(),
 				"account": String(NRS.accountInfo.currentLesseeRS).escapeHTML()
@@ -862,6 +871,9 @@ var NRS = (function(NRS, $, undefined) {
 		} else {
 			accountLeasingStatus = $.t("balance_not_leased_out");
 			$("#lease_balance_message").html($.t("balance_leasing_help"));
+		}
+		if (nextLesseeStatus != "") {
+			accountLeasingStatus += "<br>" + nextLesseeStatus;
 		}
 
 		if (NRS.accountInfo.effectiveBalanceNXT == 0) {
@@ -887,14 +899,31 @@ var NRS = (function(NRS, $, undefined) {
 
 			var rows = "";
 
-			for (var i = 0; i < NRS.accountInfo.lessors.length; i++) {
-				var lessor = NRS.convertNumericToRSAccountFormat(NRS.accountInfo.lessors[i]);
-
-				rows += "<tr><td><a href='#' data-user='" + String(lessor).escapeHTML() + "'>" + NRS.getAccountTitle(lessor) + "</a></td></tr>";
+			for (var i = 0; i < NRS.accountInfo.lessorsRS.length; i++) {
+				var lessor = NRS.accountInfo.lessorsRS[i];
+				var lessorInfo = NRS.accountInfo.lessorsInfo[i];
+				var blocksLeft = lessorInfo.currentHeightTo - NRS.lastBlockHeight;
+				var blocksLeftTooltip = "From block " + lessorInfo.currentHeightFrom + " to block " + lessorInfo.currentHeightTo;
+				var nextLessee = "Not set";
+				var nextTooltip = "Next lessee not set";
+				if (lessorInfo.nextLesseeRS == NRS.accountRS) {
+					nextLessee = "You";
+					nextTooltip = "From block " + lessorInfo.nextHeightFrom + " to block " + lessorInfo.nextHeightTo;
+				} else if (lessorInfo.nextHeightFrom < 2147483647) {
+					nextLessee = "Not you";
+					nextTooltip = "Account " + NRS.getAccountTitle(lessorInfo.nextLesseeRS) +" from block " + lessorInfo.nextHeightFrom + " to block " + lessorInfo.nextHeightTo;
+				}
+				rows += "<tr>" +
+					"<td><a href='#' data-user='" + String(lessor).escapeHTML() + "'>" + NRS.getAccountTitle(lessor) + "</a></td>" +
+					"<td>" + String(lessorInfo.effectiveBalanceNXT).escapeHTML() + "</td>" +
+					"<td><label>" + String(blocksLeft).escapeHTML() + " <i class='fa fa-question-circle show_popover' data-toggle='tooltip' title='" + blocksLeftTooltip + "' data-placement='right' style='color:#4CAA6E'></i></label></td>" +
+					"<td><label>" + String(nextLessee).escapeHTML() + " <i class='fa fa-question-circle show_popover' data-toggle='tooltip' title='" + nextTooltip + "' data-placement='right' style='color:#4CAA6E'></i></label></td>" +
+				"</tr>";
 			}
 
 			$("#account_lessor_table tbody").empty().append(rows);
 			$("#account_lessor_container").show();
+			$("#account_lessor_table [data-toggle='tooltip']").tooltip();
 		} else {
 			$("#account_lessor_table tbody").empty();
 			$("#account_lessor_container").hide();
@@ -976,6 +1005,7 @@ var NRS = (function(NRS, $, undefined) {
 							}), {
 								"type": "success"
 							});
+							NRS.loadAssetExchangeSidebar();
 						}
 					} else {
 						asset.difference = asset.difference.substring(1);
@@ -990,6 +1020,7 @@ var NRS = (function(NRS, $, undefined) {
 							}), {
 								"type": "success"
 							});
+							NRS.loadAssetExchangeSidebar();
 						}
 					}
 				});

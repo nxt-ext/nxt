@@ -2,13 +2,11 @@ package nxt.http;
 
 import nxt.Block;
 import nxt.Nxt;
-
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
-
 import java.util.List;
 
 public final class PopOff extends APIServlet.APIRequestHandler {

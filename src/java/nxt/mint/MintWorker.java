@@ -1,9 +1,11 @@
 package nxt.mint;
 
-import nxt.Account;
+import nxt.Attachment;
 import nxt.Constants;
-import nxt.CurrencyMint;
+import nxt.CurrencyMinting;
 import nxt.Nxt;
+import nxt.NxtException;
+import nxt.Transaction;
 import nxt.crypto.Crypto;
 import nxt.crypto.HashFunction;
 import nxt.http.API;
@@ -95,12 +97,14 @@ public class MintWorker {
         if (currencyCode == null) {
             throw new IllegalArgumentException("nxt.mint.currencyCode not specified");
         }
-        String secretPhrase = Convert.emptyToNull(Nxt.getStringProperty("nxt.mint.secretPhrase"));
+        String secretPhrase = Convert.emptyToNull(Nxt.getStringProperty("nxt.mint.secretPhrase", null, true));
         if (secretPhrase == null) {
             throw new IllegalArgumentException("nxt.mint.secretPhrase not specified");
         }
         boolean isSubmitted = Nxt.getBooleanProperty("nxt.mint.isSubmitted");
-        long accountId = Account.getId(Crypto.getPublicKey(secretPhrase));
+        boolean isStopOnError = Nxt.getBooleanProperty("nxt.mint.stopOnError");
+        byte[] publicKeyHash = Crypto.sha256().digest(Crypto.getPublicKey(secretPhrase));
+        long accountId = Convert.fullHashToId(publicKeyHash);
         String rsAccount = Convert.rsAccount(accountId);
         JSONObject currency = getCurrency(currencyCode);
         if (currency.get("currency") == null) {
@@ -135,11 +139,18 @@ public class MintWorker {
         Logger.logInfoMessage("Mint worker started");
         while (true) {
             counter++;
-            JSONObject response = mintImpl(secretPhrase, accountId, units, currencyId, algorithm, counter, target,
+            try {
+                JSONObject response = mintImpl(secretPhrase, accountId, units, currencyId, algorithm, counter, target,
                     initialNonce, threadPoolSize, executorService, difficulty, isSubmitted);
-            Logger.logInfoMessage("currency mint response:" + response.toJSONString());
-            if (response.get("error") != null || response.get("errorCode") != null) {
-                break;
+                Logger.logInfoMessage("currency mint response:" + response.toJSONString());
+            } catch (Exception e) {
+                Logger.logInfoMessage("mint error", e);
+                if (isStopOnError) {
+                    Logger.logInfoMessage("stopping on error");
+                    break;
+                } else {
+                    Logger.logInfoMessage("continue");
+                }
             }
             mintingTarget = getMintingTarget(currencyId, rsAccount, units);
             target = Convert.parseHexString((String) mintingTarget.get("targetBytes"));
@@ -192,16 +203,26 @@ public class MintWorker {
     }
 
     private JSONObject currencyMint(String secretPhrase, long currencyId, long nonce, long units, long counter) {
-        Map<String, String> params = new HashMap<>();
-        params.put("requestType", "currencyMint");
-        params.put("secretPhrase", secretPhrase);
-        params.put("feeNQT", Long.toString(Constants.ONE_NXT));
-        params.put("deadline", Integer.toString(120));
-        params.put("currency", Convert.toUnsignedLong(currencyId));
-        params.put("nonce", Long.toString(nonce));
-        params.put("units", Long.toString(units));
-        params.put("counter", Long.toString(counter));
-        return getJsonResponse(params);
+        JSONObject ecBlock = getECBlock();
+        Attachment attachment = new Attachment.MonetarySystemCurrencyMinting(nonce, currencyId, units, counter);
+        Transaction.Builder builder = Nxt.newTransactionBuilder(Crypto.getPublicKey(secretPhrase), 0, Constants.ONE_NXT,
+                (short) 120, attachment)
+                .timestamp(((Long) ecBlock.get("timestamp")).intValue())
+                .ecBlockHeight(((Long) ecBlock.get("ecBlockHeight")).intValue())
+                .ecBlockId(Convert.parseUnsignedLong((String) ecBlock.get("ecBlockId")));
+        try {
+            Transaction transaction = builder.build();
+            transaction.sign(secretPhrase);
+            Map<String, String> params = new HashMap<>();
+            params.put("requestType", "broadcastTransaction");
+            params.put("transactionBytes", Convert.toHexString(transaction.getBytes()));
+            return getJsonResponse(params);
+        } catch (NxtException.NotValidException e) {
+            Logger.logInfoMessage("local signing failed", e);
+            JSONObject response = new JSONObject();
+            response.put("error", e.toString());
+            return response;
+        }
     }
 
     private JSONObject getCurrency(String currencyCode) {
@@ -217,6 +238,12 @@ public class MintWorker {
         params.put("currency", Convert.toUnsignedLong(currencyId));
         params.put("account", rsAccount);
         params.put("units", Long.toString(units));
+        return getJsonResponse(params);
+    }
+
+    private JSONObject getECBlock() {
+        Map<String, String> params = new HashMap<>();
+        params.put("requestType", "getECBlock");
         return getJsonResponse(params);
     }
 
@@ -272,6 +299,10 @@ public class MintWorker {
             throw new IllegalStateException(String.format("Request %s produced error response code %s message \"%s\"",
                     url, response.get("errorCode"), response.get("errorDescription")));
         }
+        if (response.get("error") != null) {
+            throw new IllegalStateException(String.format("Request %s produced error %s",
+                    url, response.get("error")));
+        }
         return response;
     }
 
@@ -321,8 +352,8 @@ public class MintWorker {
         public Long call() {
             long n = nonce;
             while (!Thread.currentThread().isInterrupted()) {
-                byte[] hash = CurrencyMint.getHash(hashFunction, n, currencyId, units, counter, accountId);
-                if (CurrencyMint.meetsTarget(hash, target)) {
+                byte[] hash = CurrencyMinting.getHash(hashFunction, n, currencyId, units, counter, accountId);
+                if (CurrencyMinting.meetsTarget(hash, target)) {
                     Logger.logDebugMessage("%s found solution hash %s nonce %d currencyId %d units %d counter %d accountId %d" +
                             " hash %s meets target %s",
                             Thread.currentThread().getName(), hashFunction, n, currencyId, units, counter, accountId,

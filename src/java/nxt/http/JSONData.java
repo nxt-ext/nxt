@@ -72,6 +72,18 @@ final class JSONData {
         return json;
     }
 
+    static JSONObject lessor(Account account) {
+        JSONObject json = new JSONObject();
+        json.put("currentLesseeRS", Convert.rsAccount(account.getCurrentLesseeId()));
+        json.put("currentHeightFrom", String.valueOf(account.getCurrentLeasingHeightFrom()));
+        json.put("currentHeightTo", String.valueOf(account.getCurrentLeasingHeightTo()));
+        json.put("nextLesseeRS", Convert.rsAccount(account.getNextLesseeId()));
+        json.put("nextHeightFrom", String.valueOf(account.getNextLeasingHeightFrom()));
+        json.put("nextHeightTo", String.valueOf(account.getNextLeasingHeightTo()));
+        json.put("effectiveBalanceNXT", String.valueOf(account.getGuaranteedBalanceNQT(1440) / Constants.ONE_NXT));
+        return json;
+    }
+
     static JSONObject asset(Asset asset, boolean includeCounts) {
         JSONObject json = new JSONObject();
         putAccount(json, "account", asset.getAccountId());

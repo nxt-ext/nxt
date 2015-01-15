@@ -38,7 +38,7 @@ public final class API {
 
     private static final Set<String> allowedBotHosts;
     private static final List<NetworkAddress> allowedBotNets;
-    static final String adminPassword = Nxt.getStringProperty("nxt.adminPassword", "");
+    static final String adminPassword = Nxt.getStringProperty("nxt.adminPassword", "", true);
     static final boolean disableAdminPassword;
     private static final Server apiServer;
 

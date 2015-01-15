@@ -20,9 +20,14 @@ public interface Transaction {
 
         Builder publicKeyAnnouncement(Appendix.PublicKeyAnnouncement publicKeyAnnouncement);
 
-        Builder twoPhased(Appendix.TwoPhased twoPhased);
+        Builder timestamp(int timestamp);
+
+        Builder ecBlockHeight(int height);
+
+        Builder ecBlockId(long blockId);
 
         Transaction build() throws NxtException.NotValidException;
+        Builder twoPhased(Appendix.TwoPhased twoPhased);
     }
 
     long getId();
