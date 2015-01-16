@@ -9,6 +9,8 @@ import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
 
+
+//todo: is this call needed?
 public class GetFinishedPollIds extends APIServlet.APIRequestHandler {
     static final GetFinishedPollIds instance = new GetFinishedPollIds();
 

@@ -21,7 +21,7 @@ public final class Poll extends AbstractPoll {
         }
     };
 
-    private final static VersionedEntityDbTable<Poll> pollTable = new VersionedEntityDbTable<Poll>("poll", pollDbKeyFactory) {
+    private final static EntityDbTable<Poll> pollTable = new EntityDbTable<Poll>("poll", pollDbKeyFactory) {
 
         @Override
         protected Poll load(Connection con, ResultSet rs) throws SQLException {
@@ -165,13 +165,9 @@ public final class Poll extends AbstractPoll {
     }
 
     //todo: fix
-    public static DbIterator<Poll> getActivePolls() {
-        return pollTable.getManyBy(new DbClause.BooleanClause("finished", false), 0, Integer.MAX_VALUE);
-    }
-
-    //todo: fix
     public static DbIterator<Poll> getFinishedPolls() {
-        return pollTable.getManyBy(new DbClause.BooleanClause("finished", true), 0, Integer.MAX_VALUE);
+        int height = Nxt.getBlockchain().getHeight();
+        return pollTable.getManyBy(new DbClause.IntNotGreaterThan("finish_height", height), 0, Integer.MAX_VALUE);
     }
 
     public static DbIterator<Poll> getAllPolls(int from, int to) {

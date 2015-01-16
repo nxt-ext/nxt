@@ -74,21 +74,6 @@ public abstract class DbClause {
         }
     }
 
-    public static final class BooleanClause extends DbClause {
-
-        private final boolean value;
-
-        public BooleanClause(String columnName, boolean value) {
-            super(" " + columnName + " = ? ");
-            this.value = value;
-        }
-
-        protected int set(PreparedStatement pstmt, int index) throws SQLException {
-            pstmt.setBoolean(index, value);
-            return index + 1;
-        }
-    }
-
     public static final class IntClause extends DbClause {
 
         private final int value;
@@ -105,21 +90,18 @@ public abstract class DbClause {
 
     }
 
-    public static final class LongBooleanClause extends DbClause {
+    public static final class IntNotGreaterThan extends DbClause {
 
-        private final long value1;
-        private final boolean value2;
+        private final int value;
 
-        public LongBooleanClause(String column1Name, long value1, String column2Name, boolean value2) {
-            super(" " + column1Name + " = ? AND " + column2Name + " = ? ");
-            this.value1 = value1;
-            this.value2 = value2;
+        public IntNotGreaterThan(String columnName, int value) {
+            super(" " + columnName + " < ? ");
+            this.value = value;
         }
 
         protected int set(PreparedStatement pstmt, int index) throws SQLException {
-            pstmt.setLong(index, value1);
-            pstmt.setBoolean(index + 1, value2);
-            return index + 2;
+            pstmt.setInt(index, value);
+            return index + 1;
         }
     }
 
