@@ -446,24 +446,45 @@ var NRS = (function(NRS, $, undefined) {
 	};
 
 	NRS.addPagination = function(section) {
-		var hideLink = "style='visibility: hidden;'";
-      var hidePrev = (NRS.pageNumber == 1 ? hideLink : "");
-		var prevLink = "<a href='#'" + hidePrev + " data-page='" + (NRS.pageNumber - 1) + "'>&laquo; " + $.t("previous") + "</a>";
-		var hideNext = (!NRS.hasMorePages ? hideLink : "");
-		var nextLink = "<a href='#' " + hideNext + " data-page='" + (NRS.pageNumber + 1) + "'>" + $.t("next") + " &raquo;</a>";
-		var startRow = (NRS.pageNumber-1) * NRS.itemsPerPage + 1;
-		var endRow = NRS.pageNumber * NRS.itemsPerPage;
+		var firstStartNr = 1;
+		var firstEndNr = NRS.itemsPerPage;
+		var currentStartNr = (NRS.pageNumber-1) * NRS.itemsPerPage + 1;
+		var currentEndNr = NRS.pageNumber * NRS.itemsPerPage;
 
-		var rowNumbers = "";
+        var prevHTML = '<span style="display:inline-block;width:48px;text-align:right;">';
+        var firstHTML = '<span style="display:inline-block;width:48px;text-align:right;">';
+		var currentHTML = '<span style="display:inline-block;width:48px;text-align:left;">';
+		var nextHTML = '<span style="display:inline-block;width:48px;text-align:left;">';
+
+        if (NRS.pageNumber > 1) {
+        	prevHTML += "<a href='#' data-page='" + (NRS.pageNumber - 1) + "'>&laquo; " + $.t("previous") + "</a>";
+        } else {
+        	prevHTML += '&nbsp;';
+        }
+
 		if (NRS.hasMorePages) {
-			rowNumbers = "<span>Displaying rows " + startRow + " to " + endRow + "</span>";
+			currentHTML += currentStartNr + "-" + currentEndNr;
+			nextHTML += "<a href='#' data-page='" + (NRS.pageNumber + 1) + "'>" + $.t("next") + " &raquo;</a>";
 		} else {
 			if (NRS.pageNumber > 1) {
-				rowNumbers = "<span>Displaying rows " + startRow + "+</span>";
+				currentHTML += currentStartNr + "+";
+			} else {
+				currentHTML += "&nbsp;";
 			}
+			nextHTML += "&nbsp;";
 		}
-		var separator = "&nbsp;&nbsp;&nbsp;";
-		var output = prevLink + separator + nextLink + separator + rowNumbers;
+		if (NRS.pageNumber > 1) {
+			firstHTML += "<a href='#' data-page='1'>" + firstStartNr + "-" + firstEndNr + "</a>&nbsp;|&nbsp;";
+		} else {
+			firstHTML += "&nbsp;";
+		}
+
+		prevHTML += '</span>';
+		firstHTML += '</span>'; 
+		currentHTML += '</span>';
+		nextHTML += '</span>';
+
+		var output = prevHTML + firstHTML + currentHTML + nextHTML;
 		var $paginationContainer = $("#" + NRS.currentPage + "_page .data-pagination");
 
 		if ($paginationContainer.length) {
