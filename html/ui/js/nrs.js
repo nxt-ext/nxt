@@ -452,8 +452,8 @@ var NRS = (function(NRS, $, undefined) {
 		var currentEndNr = NRS.pageNumber * NRS.itemsPerPage;
 
 		var prevHTML = '<span style="display:inline-block;width:48px;text-align:right;">';
-		var firstHTML = '<span style="display:inline-block;width:48px;text-align:right;vertical-align:top;margin-top:4px;">';
-		var currentHTML = '<span style="display:inline-block;width:48px;text-align:left;vertical-align:top;margin-top:4px;">';
+		var firstHTML = '<span style="display:inline-block;min-width:48px;text-align:right;vertical-align:top;margin-top:4px;">';
+		var currentHTML = '<span style="display:inline-block;min-width:48px;text-align:left;vertical-align:top;margin-top:4px;">';
 		var nextHTML = '<span style="display:inline-block;width:48px;text-align:left;">';
 
 		if (NRS.pageNumber > 1) {
@@ -464,7 +464,7 @@ var NRS = (function(NRS, $, undefined) {
 		}
 
 		if (NRS.hasMorePages) {
-			currentHTML += currentStartNr + "-" + currentEndNr;
+			currentHTML += currentStartNr + "-" + currentEndNr + "&nbsp;";
 			nextHTML += "<a href='#' data-page='" + (NRS.pageNumber + 1) + "' title='" + $.t("next") + "' style='font-size:20px;'>";
 			nextHTML += "<i class='fa fa-arrow-circle-right'></i></a>";
 		} else {
@@ -476,7 +476,7 @@ var NRS = (function(NRS, $, undefined) {
 			nextHTML += "&nbsp;";
 		}
 		if (NRS.pageNumber > 1) {
-			firstHTML += "<a href='#' data-page='1'>" + firstStartNr + "-" + firstEndNr + "</a>&nbsp;|&nbsp;";
+			firstHTML += "&nbsp;<a href='#' data-page='1'>" + firstStartNr + "-" + firstEndNr + "</a>&nbsp;|&nbsp;";
 		} else {
 			firstHTML += "&nbsp;";
 		}
