@@ -13,6 +13,10 @@ even in the complete absence of blockchain data, as needed for the MintWorker.
 Minor peer networking improvement, addPeers and processBlock requests are now
 executed in the background.
 
+Improvements in fork resolution. The peer networking getNextBlocks API no longer
+limits the number of blocks returned to 1 MB total payload size, but always
+returns 720 blocks, if available.
+
 
 MintWorker
 ==========
