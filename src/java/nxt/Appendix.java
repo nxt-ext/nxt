@@ -616,21 +616,19 @@ public interface Appendix {
         void commit(Transaction transaction) {
             Account senderAccount = Account.getAccount(transaction.getSenderId());
             Account recipientAccount = Account.getAccount(transaction.getRecipientId());
+            long amount = transaction.getAmountNQT();
 
-            //TODO: I believe changing the senderAccount confirmed balance should also happen here
+            //apply
+            senderAccount.addToBalanceNQT(-amount);
             if (recipientAccount != null) {
-                long amount = transaction.getAmountNQT();
-                recipientAccount.addToBalanceNQT(amount);
+                recipientAccount.addToBalanceAndUnconfirmedBalanceNQT(amount);
             }
-
             transaction.getType().applyAttachment(transaction, senderAccount, recipientAccount);
 
             Logger.logDebugMessage("Transaction " + transaction.getId() + " has been released");
             System.out.println("Transaction " + transaction.getId() + " has been released"); //TODO: Logger
         }
 
-        //TODO: But what about changes to unconfirmed balances, everything that happens in applyUnconfirmed,
-        //  and applyAttachmentUnconfirmed? When is this going to be rolled back too?
         //todo: by-assets verification
         void verify(Transaction transaction) {
             long transactionId = transaction.getId();
@@ -649,15 +647,10 @@ public interface Appendix {
             }else{
                 Account senderAccount = Account.getAccount(transaction.getSenderId());
                 long amount = transaction.getAmountNQT();
-                senderAccount.addToBalanceNQT(amount);
 
-                //TODO:
-                // Changes to sender's account balance should be handled the same way as the rest of the changes
-                // that the transaction causes, i.e. the changes done in applyAttachment()
-                // If you don't call applyAttachment() for a pending transaction until commit, then you should also
-                // not change the sender balance (but only his unconfirmed balance, which is already done in
-                // applyUnconfirmed()) until commit, and if you do that you shouldn't need to roll that back
-                // by calling sender.addToBalanceNQT() here either
+                transaction.getType().undoAttachmentUnconfirmed(transaction, senderAccount);
+                senderAccount.addToUnconfirmedBalanceNQT(amount);
+
                 Logger.logDebugMessage("Transaction " + transactionId + " has been refused");
                 System.out.println("Transaction " + transactionId + " has been refused"); //TODO: remove
             }

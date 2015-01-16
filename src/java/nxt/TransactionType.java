@@ -180,19 +180,19 @@ public abstract class TransactionType {
     final void apply(Transaction transaction, Account senderAccount, Account recipientAccount) {
         long amount = transaction.getAmountNQT();
 
-        senderAccount.addToBalanceNQT(- (Convert.safeAdd(amount, transaction.getFeeNQT())));
+        senderAccount.addToBalanceNQT(-transaction.getFeeNQT());
 
         if (transaction.getReferencedTransactionFullHash() != null
                 && transaction.getTimestamp() > Constants.REFERENCED_TRANSACTION_FULL_HASH_BLOCK_TIMESTAMP) {
             senderAccount.addToUnconfirmedBalanceNQT(Constants.UNCONFIRMED_POOL_DEPOSIT_NQT);
         }
-        //TODO: changing the senderAccount confirmed balance (except for the fee, which should always be charged here and not later)
-        // should also not be done in case of a two-phased transaction, in order to handle consistently assets, currencies
-        // and everything else that gets done in applyAttachment, and does not get done here in case of two-phased
-        if (recipientAccount != null && transaction.getTwoPhased() == null) {
-            recipientAccount.addToBalanceAndUnconfirmedBalanceNQT(amount);
-        }
-        if (transaction.getTwoPhased() == null) {
+
+        if (transaction.getTwoPhased() == null){
+            senderAccount.addToBalanceNQT(-amount);
+
+            if (recipientAccount != null) {
+                recipientAccount.addToBalanceAndUnconfirmedBalanceNQT(amount);
+            }
             applyAttachment(transaction, senderAccount, recipientAccount);
         }
     }
