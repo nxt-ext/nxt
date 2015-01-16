@@ -22,24 +22,13 @@ final class GetNextBlocks extends PeerServlet.PeerRequestHandler {
     JSONStreamAware processRequest(JSONObject request, Peer peer) {
 
         JSONObject response = new JSONObject();
+        JSONArray nextBlocksArray = new JSONArray();
 
-        List<Block> nextBlocks = new ArrayList<>();
-        int totalLength = 0;
         long blockId = Convert.parseUnsignedLong((String) request.get("blockId"));
-        List<? extends Block> blocks = Nxt.getBlockchain().getBlocksAfter(blockId, 720 - 1);
+        List<? extends Block> blocks = Nxt.getBlockchain().getBlocksAfter(blockId, 720);
 
         for (Block block : blocks) {
-            int length = Constants.BLOCK_HEADER_LENGTH + block.getPayloadLength();
-            if (totalLength + length > 1048576) {
-                break;
-            }
-            nextBlocks.add(block);
-            totalLength += length;
-        }
-
-        JSONArray nextBlocksArray = new JSONArray();
-        for (Block nextBlock : nextBlocks) {
-            nextBlocksArray.add(nextBlock.getJSONObject());
+            nextBlocksArray.add(block.getJSONObject());
         }
         response.put("nextBlocks", nextBlocksArray);
 
