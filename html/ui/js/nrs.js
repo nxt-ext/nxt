@@ -99,7 +99,7 @@ var NRS = (function(NRS, $, undefined) {
 			} else {
 				NRS.isTestNet = true;
 				var testnetWarningDiv = $("#testnet_warning");
-			var warningText = testnetWarningDiv.text() + " The testnet peer port is " + peerPort + (isOffline ? ", the peer is working offline." : ".");
+				var warningText = testnetWarningDiv.text() + " The testnet peer port is " + peerPort + (isOffline ? ", the peer is working offline." : ".");
 				testnetWarningDiv.text(warningText);
 				$(".testnet_only, #testnet_login, #testnet_warning").show();
 			}
