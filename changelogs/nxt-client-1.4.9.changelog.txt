@@ -32,7 +32,7 @@ Added second row of info boxes on Dashboard.
 
 Notifications for incoming messages.
 
-Table pages now display row numbers next to the paging buttons.
+Reworked page navigation.
 
 Account leasing dialog now displays the number of blocks until lease expiration.
 
