@@ -63,7 +63,7 @@ var NRS = (function(NRS, $, undefined) {
 	if (!_checkDOMenabled()) {
 		NRS.hasLocalStorage = false;
 	} else {
-   	NRS.hasLocalStorage = true;
+	NRS.hasLocalStorage = true;
    }
 	
 	NRS.inApp = false;
@@ -99,7 +99,7 @@ var NRS = (function(NRS, $, undefined) {
 			} else {
 				NRS.isTestNet = true;
 				var testnetWarningDiv = $("#testnet_warning");
-            var warningText = testnetWarningDiv.text() + " The testnet peer port is " + peerPort + (isOffline ? ", the peer is working offline." : ".");
+			var warningText = testnetWarningDiv.text() + " The testnet peer port is " + peerPort + (isOffline ? ", the peer is working offline." : ".");
 				testnetWarningDiv.text(warningText);
 				$(".testnet_only, #testnet_login, #testnet_warning").show();
 			}
@@ -451,20 +451,22 @@ var NRS = (function(NRS, $, undefined) {
 		var currentStartNr = (NRS.pageNumber-1) * NRS.itemsPerPage + 1;
 		var currentEndNr = NRS.pageNumber * NRS.itemsPerPage;
 
-        var prevHTML = '<span style="display:inline-block;width:48px;text-align:right;">';
-        var firstHTML = '<span style="display:inline-block;width:48px;text-align:right;">';
-		var currentHTML = '<span style="display:inline-block;width:48px;text-align:left;">';
+		var prevHTML = '<span style="display:inline-block;width:48px;text-align:right;">';
+		var firstHTML = '<span style="display:inline-block;width:48px;text-align:right;vertical-align:top;margin-top:4px;">';
+		var currentHTML = '<span style="display:inline-block;width:48px;text-align:left;vertical-align:top;margin-top:4px;">';
 		var nextHTML = '<span style="display:inline-block;width:48px;text-align:left;">';
 
-        if (NRS.pageNumber > 1) {
-        	prevHTML += "<a href='#' data-page='" + (NRS.pageNumber - 1) + "'>&laquo; " + $.t("previous") + "</a>";
-        } else {
-        	prevHTML += '&nbsp;';
-        }
+		if (NRS.pageNumber > 1) {
+			prevHTML += "<a href='#' data-page='" + (NRS.pageNumber - 1) + "' title='" + $.t("previous") + "' style='font-size:20px;'>";
+			prevHTML += "<i class='fa fa-arrow-circle-left'></i></a>";
+		} else {
+			prevHTML += '&nbsp;';
+		}
 
 		if (NRS.hasMorePages) {
 			currentHTML += currentStartNr + "-" + currentEndNr;
-			nextHTML += "<a href='#' data-page='" + (NRS.pageNumber + 1) + "'>" + $.t("next") + " &raquo;</a>";
+			nextHTML += "<a href='#' data-page='" + (NRS.pageNumber + 1) + "' title='" + $.t("next") + "' style='font-size:20px;'>";
+			nextHTML += "<i class='fa fa-arrow-circle-right'></i></a>";
 		} else {
 			if (NRS.pageNumber > 1) {
 				currentHTML += currentStartNr + "+";
