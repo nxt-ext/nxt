@@ -137,50 +137,52 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                         return;
                     }
 
-                    long lastBlockId = blockchain.getLastBlock().getId();
-                    downloadBlockchain(peer, commonBlock);
+                    synchronized (blockchain) {
+                        long lastBlockId = blockchain.getLastBlock().getId();
+                        downloadBlockchain(peer, commonBlock);
 
-                    if (blockchain.getHeight() - commonBlock.getHeight() <= 10) {
-                        return;
-                    }
+                        if (blockchain.getHeight() - commonBlock.getHeight() <= 10) {
+                            return;
+                        }
 
-                    int confirmations = 0;
-                    for (Peer otherPeer : connectedPublicPeers) {
-                        if (confirmations >= numberOfForkConfirmations) {
-                            break;
+                        int confirmations = 0;
+                        for (Peer otherPeer : connectedPublicPeers) {
+                            if (confirmations >= numberOfForkConfirmations) {
+                                break;
+                            }
+                            if (peer.getPeerAddress().equals(otherPeer.getPeerAddress())) {
+                                continue;
+                            }
+                            long otherPeerCommonBlockId = getCommonBlockId(otherPeer, commonBlockId);
+                            if (otherPeerCommonBlockId == 0) {
+                                continue;
+                            }
+                            if (otherPeerCommonBlockId == blockchain.getLastBlock().getId()) {
+                                confirmations++;
+                                continue;
+                            }
+                            if (blockchain.getHeight() - blockchain.getBlock(otherPeerCommonBlockId).getHeight() >= 720) {
+                                continue;
+                            }
+                            String otherPeerCumulativeDifficulty;
+                            JSONObject otherPeerResponse = peer.send(getCumulativeDifficultyRequest);
+                            if (otherPeerResponse == null || (otherPeerCumulativeDifficulty = (String) response.get("cumulativeDifficulty")) == null) {
+                                continue;
+                            }
+                            if (new BigInteger(otherPeerCumulativeDifficulty).compareTo(blockchain.getLastBlock().getCumulativeDifficulty()) <= 0) {
+                                continue;
+                            }
+                            Logger.logDebugMessage("Found a peer with better difficulty");
+                            downloadBlockchain(otherPeer, commonBlock); // not otherPeerCommonBlock
                         }
-                        if (peer.getPeerAddress().equals(otherPeer.getPeerAddress())) {
-                            continue;
-                        }
-                        long otherPeerCommonBlockId = getCommonBlockId(otherPeer, commonBlockId);
-                        if (otherPeerCommonBlockId == 0) {
-                            continue;
-                        }
-                        if (otherPeerCommonBlockId == blockchain.getLastBlock().getId()) {
-                            confirmations++;
-                            continue;
-                        }
-                        if (blockchain.getHeight() - blockchain.getBlock(otherPeerCommonBlockId).getHeight() >= 720) {
-                            continue;
-                        }
-                        String otherPeerCumulativeDifficulty;
-                        JSONObject otherPeerResponse = peer.send(getCumulativeDifficultyRequest);
-                        if (otherPeerResponse == null || (otherPeerCumulativeDifficulty = (String) response.get("cumulativeDifficulty")) == null) {
-                            continue;
-                        }
-                        if (new BigInteger(otherPeerCumulativeDifficulty).compareTo(blockchain.getLastBlock().getCumulativeDifficulty()) <= 0) {
-                            continue;
-                        }
-                        Logger.logDebugMessage("Found a peer with better difficulty");
-                        downloadBlockchain(otherPeer, commonBlock); // not otherPeerCommonBlock
-                    }
-                    Logger.logDebugMessage("Got " + confirmations + " confirmations");
+                        Logger.logDebugMessage("Got " + confirmations + " confirmations");
 
-                    if (blockchain.getLastBlock().getId() != lastBlockId) {
-                        Logger.logDebugMessage("Downloaded " + (blockchain.getHeight() - commonBlock.getHeight()) + " blocks");
-                    } else {
-                        Logger.logDebugMessage("Did not accept peer's blocks, back to our own fork");
-                    }
+                        if (blockchain.getLastBlock().getId() != lastBlockId) {
+                            Logger.logDebugMessage("Downloaded " + (blockchain.getHeight() - commonBlock.getHeight()) + " blocks");
+                        } else {
+                            Logger.logDebugMessage("Did not accept peer's blocks, back to our own fork");
+                        }
+                    } // synchronized
 
                 } catch (NxtException.StopException e) {
                     Logger.logMessage("Blockchain download stopped: " + e.getMessage());
@@ -280,50 +282,46 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 return;
             }
 
-            synchronized (blockchain) {
+            List<BlockImpl> forkBlocks = new ArrayList<>();
 
-                List<BlockImpl> forkBlocks = new ArrayList<>();
+            for (Object o : nextBlocks) {
+                JSONObject blockData = (JSONObject) o;
+                BlockImpl block;
+                try {
+                    block = BlockImpl.parseBlock(blockData);
+                } catch (NxtException.NotCurrentlyValidException e) {
+                    Logger.logDebugMessage("Cannot validate block: " + e.toString()
+                            + ", will try again later", e);
+                    break;
+                } catch (RuntimeException | NxtException.ValidationException e) {
+                    Logger.logDebugMessage("Failed to parse block: " + e.toString(), e);
+                    peer.blacklist(e);
+                    return;
+                }
 
-                for (Object o : nextBlocks) {
-                    JSONObject blockData = (JSONObject) o;
-                    BlockImpl block;
+                if (blockchain.getLastBlock().getId() == block.getPreviousBlockId()) {
                     try {
-                        block = BlockImpl.parseBlock(blockData);
-                    } catch (NxtException.NotCurrentlyValidException e) {
-                        Logger.logDebugMessage("Cannot validate block: " + e.toString()
-                                + ", will try again later", e);
-                        break;
-                    } catch (RuntimeException | NxtException.ValidationException e) {
-                        Logger.logDebugMessage("Failed to parse block: " + e.toString(), e);
+                        pushBlock(block);
+                        if (blockchain.getHeight() - commonBlock.getHeight() == 720 - 1) {
+                            break;
+                        }
+                    } catch (BlockNotAcceptedException e) {
                         peer.blacklist(e);
                         return;
                     }
-
-                    if (blockchain.getLastBlock().getId() == block.getPreviousBlockId()) {
-                        try {
-                            pushBlock(block);
-                            if (blockchain.getHeight() - commonBlock.getHeight() == 720 - 1) {
-                                break;
-                            }
-                        } catch (BlockNotAcceptedException e) {
-                            peer.blacklist(e);
-                            return;
-                        }
-                    } else {
-                        forkBlocks.add(block);
-                        if (forkBlocks.size() == 720 - 1) {
-                            break;
-                        }
+                } else {
+                    forkBlocks.add(block);
+                    if (forkBlocks.size() == 720 - 1) {
+                        break;
                     }
-
                 }
 
-                if (forkBlocks.size() > 0 && blockchain.getHeight() - commonBlock.getHeight() < 720) {
-                    Logger.logDebugMessage("Will process a fork of " + forkBlocks.size() + " blocks");
-                    processFork(peer, forkBlocks, commonBlock);
-                }
+            }
 
-            } //synchronized
+            if (forkBlocks.size() > 0 && blockchain.getHeight() - commonBlock.getHeight() < 720) {
+                Logger.logDebugMessage("Will process a fork of " + forkBlocks.size() + " blocks");
+                processFork(peer, forkBlocks, commonBlock);
+            }
 
         }
 
