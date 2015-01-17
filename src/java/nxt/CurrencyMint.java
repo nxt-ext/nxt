@@ -4,6 +4,8 @@ import nxt.db.DbClause;
 import nxt.db.DbIterator;
 import nxt.db.DbKey;
 import nxt.db.VersionedEntityDbTable;
+import nxt.util.Listener;
+import nxt.util.Listeners;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -17,6 +19,23 @@ import java.util.List;
  */
 public final class CurrencyMint {
 
+    public static enum Event {
+        CURRENCY_MINT
+    }
+
+    public static class Mint {
+
+        public final long accountId;
+        public final long currencyId;
+        public final long units;
+
+        private Mint(long accountId, long currencyId, long units) {
+            this.accountId = accountId;
+            this.currencyId = currencyId;
+            this.units = units;
+        }
+
+    }
 
     private static final DbKey.LinkKeyFactory<CurrencyMint> currencyMintDbKeyFactory = new DbKey.LinkKeyFactory<CurrencyMint>("currency_id", "account_id") {
 
@@ -40,6 +59,17 @@ public final class CurrencyMint {
         }
 
     };
+
+    private static final Listeners<Mint,Event> listeners = new Listeners<>();
+
+    public static boolean addListener(Listener<Mint> listener, Event eventType) {
+        return listeners.addListener(listener, eventType);
+    }
+
+    public static boolean removeListener(Listener<Mint> listener, Event eventType) {
+        return listeners.removeListener(listener, eventType);
+    }
+
 
     static void init() {}
 
@@ -102,6 +132,7 @@ public final class CurrencyMint {
             long units = Math.min(attachment.getUnits(), currency.getMaxSupply() - currency.getCurrentSupply());
             account.addToCurrencyAndUnconfirmedCurrencyUnits(currency.getId(), units);
             currency.increaseSupply(units);
+            listeners.notify(new Mint(account.getId(), currency.getId(), units), Event.CURRENCY_MINT);
         }
     }
 
