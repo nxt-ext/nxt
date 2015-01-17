@@ -66,7 +66,7 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
 
         long[] whitelist = new long[0];
         String[] whitelistValues = req.getParameterValues("pendingWhitelisted");
-        if (whitelistValues.length > 0) {
+        if (whitelistValues != null && whitelistValues.length > 0) {
             whitelist = new long[whitelistValues.length];
             for (int i = 0; i < whitelist.length; i++) {
                 whitelist[i] = Convert.parseAccountId(whitelistValues[i]);
@@ -78,7 +78,7 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
 
         long[] blacklist = new long[0];
         String[] blacklistValues = req.getParameterValues("pendingBlacklisted");
-        if (blacklistValues.length > 0) {
+        if (blacklistValues != null && blacklistValues.length > 0) {
             blacklist = new long[blacklistValues.length];
             for (int i = 0; i < blacklist.length; i++) {
                 blacklist[i] = Convert.parseAccountId(blacklistValues[i]);
