@@ -41,3 +41,16 @@ Reworked page navigation.
 Account leasing dialog now displays the number of blocks until lease expiration.
 
 Fixed named account links on the transaction info dialog.
+
+Client Translation
+==================
+Added translations for monetary system for different languages.
+
+Stable: English, Spanish, French, Lithuanian, Portuguese (Brazilian), Russian,
+Chinese (Simplified), Chinese (Traditional)
+
+Beta: German, Finnish, Galician, Croatian, Indonesian, Italian, Japanese, Dutch,
+Slovakian, Portuguese, Serbian (Cyrillic), Serbian (Latin), Ukrainian
+
+
+
