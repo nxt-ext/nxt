@@ -13,6 +13,10 @@ even in the complete absence of blockchain data, as needed for the MintWorker.
 Minor peer networking improvement, addPeers and processBlock requests are now
 executed in the background.
 
+Improvements in fork resolution. The peer networking getNextBlocks API no longer
+limits the number of blocks returned to 1 MB total payload size, but always
+returns 720 blocks, if available.
+
 
 MintWorker
 ==========
@@ -30,8 +34,23 @@ User Interface
 ==============
 Added second row of info boxes on Dashboard.
 
-Table pages now display row numbers next to the paging buttons.
+Notifications for incoming messages.
+
+Reworked page navigation.
 
 Account leasing dialog now displays the number of blocks until lease expiration.
 
 Fixed named account links on the transaction info dialog.
+
+Client Translation
+==================
+Added translations for monetary system for different languages.
+
+Stable: English, Spanish, French, Lithuanian, Portuguese (Brazilian), Russian,
+Chinese (Simplified), Chinese (Traditional)
+
+Beta: German, Finnish, Galician, Croatian, Indonesian, Italian, Japanese, Dutch,
+Slovakian, Portuguese, Serbian (Cyrillic), Serbian (Latin), Ukrainian
+
+
+
