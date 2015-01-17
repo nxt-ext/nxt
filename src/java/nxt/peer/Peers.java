@@ -573,7 +573,15 @@ public final class Peers {
     }
 
     public static Peer getPeer(String peerAddress) {
-        return peers.get(peerAddress);
+        Peer peer;
+        if ((peer = peers.get(peerAddress)) != null) {
+            return peer;
+        }
+        String address;
+        if ((address = announcedAddresses.get(peerAddress)) != null) {
+            peer = peers.get(address);
+        }
+        return peer;
     }
 
     public static Peer addPeer(String announcedAddress) {
@@ -663,6 +671,10 @@ public final class Peers {
         }
     }
 
+    public static void connectPeer(Peer peer) {
+        ((PeerImpl)peer).connect();
+    }
+    
     public static void sendToSomePeers(Block block) {
         JSONObject request = block.getJSONObject();
         request.put("requestType", "processBlock");
