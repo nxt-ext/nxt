@@ -94,9 +94,17 @@
 
 ### Translation ###
 
+#### Language Translations ####
+
+Translation of the client UI to other languages is done by the community within a crowdsourced process on the platform **Crowdin**:
+
+- https://crowdin.com/project/nxt-ui-translation
+
+If you feel comfortable translating you are very welcome to join and help with translations.
+
 #### Coding ####
 
-Translation is done with the ``i18next`` Javascript translation library. Translations can be added to the code in the following way:
+On the development side, the ``i18next`` Javascript translation library is used for translation. Translations and associated translation keys can be added to the code in the following way:
 
 - With ``data-i18n`` data attribute in HTML code, e.g. ``<span data-i18n="send_message">Send Message</span>``
 - Via ``$.t()`` function in JS, e.g. ``$.t("send_message")``
@@ -121,24 +129,22 @@ The basis for other translations is the **english translation** file in ``ui/loc
 4. There are still some dynamic uses of the ``$.t()`` function in the code base (e.g. ``$.t(type + "_currency")``), causing ``i18next`` to not detect these keys. If there is a generated ``translation_old.json`` file, add these strings manually to the ``translation.json`` file (keep an eye on commatas at the end of the lines!)
 5. Search for empty translation strings in english translation file forgotten by devs (by searching for empty string ""), full-text search in client folders for associated key and manually fill-in english string to translation file.
 
-#### Translation to other languages ####
-
-Translation of the client UI to other languages is done by the community within a crowdsourced process on the platform **Crowdin**:
-
-- https://crowdin.com/project/nxt-ui-translation
+#### Publish new base translations ####
 
 For providing new translation strings on the platform for the community to translate do the following:
 
 1. Update the english base translation file (see above guide)
+2. Build the Crowdin project (permissions needed) and make a backup download of the latest translations
 2. Compare the number of translation keys in your generated file with the number of keys in the file on the Crowdin website and make sure, these fit together and there weren't any misses in the creation process (don't be confused by Crowdin actually displaying "Words" count, you have to look at the "Settings -> Reports" tab for comparison)
-3. Update the ``translation.json`` file on Crowdin (permissions needed)
+3. Update the ``translation.json`` file on Crowdin
 4. Inform the community about new translation tasks
 
-Updating the client with new translations:
+#### Integrating new translations into the client ####
 
 1. Download the latest translation files from Crowdin (permissions needed) and replace the language folders like ``fa``, ``pt-BR``,... with the folders downloaded. Please make sure to NOT touch the english folder ``en``.
-2. Rename all folder names to lowercase, e.g. ``es-ES`` to ``es-es``.
-2. New languages can be added in ``ui/html/pages/settings.html``.
+2. Make some consistency checks (lengths of old/new files, "git diff" on language files)
+3. Rename all folder names to lowercase, e.g. ``es-ES`` to ``es-es``.
+4. New languages can be added to ``NRS.languages`` in ``ui/js/nrs.settings.js`` file. Review the status of the languages (70-80%+ Beta, 90-95%+ Stable), eventually add new languages
 
 
 

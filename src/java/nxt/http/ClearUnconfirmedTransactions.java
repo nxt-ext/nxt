@@ -31,4 +31,8 @@ public final class ClearUnconfirmedTransactions extends APIServlet.APIRequestHan
         return true;
     }
 
+    @Override
+    boolean requirePassword() {
+        return true;
+    }
 }

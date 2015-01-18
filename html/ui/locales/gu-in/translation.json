@@ -558,6 +558,7 @@
   "message_is_encrypted":"",
   "message_is_not_encrypted":"",
   "messages":"",
+  "you_received_message":"",
   "min_difficulty":"",
   "min_reserve":"",
   "minimum_difficulty":"",
@@ -689,6 +690,7 @@
   "poll_creation":"",
   "poll_name":"",
   "polls":"",
+  "previous":"",
   "previous_page":"",
   "price":"",
   "private_feedback":"",
@@ -860,6 +862,7 @@
   "total_memory":"",
   "total_purchases":"",
   "total_supply":"",
+  "completed_sales":"",
   "trade_history":"",
   "transaction":"",
   "transaction_bytes":"",
@@ -1102,5 +1105,6 @@
   "min_reserve_per_unit":"",
   "current_units":"",
   "current_reserve_per_unit":"",
-  "founders":""
+  "founders":"",
+  "next_lessee_status":""
 }

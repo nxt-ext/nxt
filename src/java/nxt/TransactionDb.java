@@ -95,6 +95,7 @@ final class TransactionDb {
             int blockTimestamp = rs.getInt("block_timestamp");
             byte[] fullHash = rs.getBytes("full_hash");
             byte version = rs.getByte("version");
+            short transactionIndex = rs.getShort("transaction_index");
 
             ByteBuffer buffer = null;
             if (attachmentBytes != null) {
@@ -104,8 +105,8 @@ final class TransactionDb {
 
             TransactionType transactionType = TransactionType.findTransactionType(type, subtype);
             TransactionImpl.BuilderImpl builder = new TransactionImpl.BuilderImpl(version, senderPublicKey,
-                    amountNQT, feeNQT, timestamp, deadline,
-                    transactionType.parseAttachment(buffer, version))
+                    amountNQT, feeNQT, deadline, transactionType.parseAttachment(buffer, version))
+                    .timestamp(timestamp)
                     .referencedTransactionFullHash(referencedTransactionFullHash)
                     .signature(signature)
                     .blockId(blockId)
@@ -113,7 +114,10 @@ final class TransactionDb {
                     .id(id)
                     .senderId(senderId)
                     .blockTimestamp(blockTimestamp)
-                    .fullHash(fullHash);
+                    .fullHash(fullHash)
+                    .ecBlockHeight(ecBlockHeight)
+                    .ecBlockId(ecBlockId)
+                    .index(transactionIndex);
             if (transactionType.canHaveRecipient()) {
                 long recipientId = rs.getLong("recipient_id");
                 if (! rs.wasNull()) {
@@ -132,11 +136,6 @@ final class TransactionDb {
             if (rs.getBoolean("has_encrypttoself_message")) {
                 builder.encryptToSelfMessage(new Appendix.EncryptToSelfMessage(buffer, version));
             }
-            if (version > 0) {
-                builder.ecBlockHeight(ecBlockHeight);
-                builder.ecBlockId(ecBlockId);
-            }
-            builder.index(rs.getShort("transaction_index"));
 
             return builder.build();
 

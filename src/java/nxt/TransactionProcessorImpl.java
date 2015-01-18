@@ -78,6 +78,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                 throw new RuntimeException(e.toString(), e);
             }
             super.rollback(height);
+            unconfirmedDuplicates.clear();
         }
 
         @Override
@@ -224,18 +225,24 @@ final class TransactionProcessorImpl implements TransactionProcessor {
     private TransactionProcessorImpl() {
         ThreadPool.scheduleThread("ProcessTransactions", processTransactionsThread, 5);
         ThreadPool.scheduleThread("RemoveUnconfirmedTransactions", removeUnconfirmedTransactionsThread, 1);
-        if (enableTransactionRebroadcasting) {
-            ThreadPool.scheduleThread("RebroadcastTransactions", rebroadcastTransactionsThread, 60);
-            ThreadPool.runAfterStart(new Runnable() {
-                @Override
-                public void run() {
+        ThreadPool.runAfterStart(new Runnable() {
+            @Override
+            public void run() {
+                synchronized (BlockchainImpl.getInstance()) {
                     try (DbIterator<UnconfirmedTransaction> oldNonBroadcastedTransactions = getAllUnconfirmedTransactions()) {
                         for (UnconfirmedTransaction unconfirmedTransaction : oldNonBroadcastedTransactions) {
-                            broadcastedTransactions.add(unconfirmedTransaction.getTransaction());
+                            if (unconfirmedTransaction.getTransaction().isUnconfirmedDuplicate(unconfirmedDuplicates)) {
+                                Logger.logErrorMessage("Duplicate unconfirmed transaction " + unconfirmedTransaction.getTransaction().getJSONObject().toString());
+                            } else if (enableTransactionRebroadcasting) {
+                                broadcastedTransactions.add(unconfirmedTransaction.getTransaction());
+                            }
                         }
                     }
                 }
-            });
+            }
+        });
+        if (enableTransactionRebroadcasting) {
+            ThreadPool.scheduleThread("RebroadcastTransactions", rebroadcastTransactionsThread, 60);
         }
     }
 
@@ -261,19 +268,6 @@ final class TransactionProcessorImpl implements TransactionProcessor {
     @Override
     public Transaction getUnconfirmedTransaction(long transactionId) {
         return unconfirmedTransactionTable.get(unconfirmedTransactionDbKeyFactory.newKey(transactionId));
-    }
-
-    @Override
-    public Transaction.Builder newTransactionBuilder(byte[] senderPublicKey, long amountNQT, long feeNQT, short deadline,
-                                                     Attachment attachment) {
-        byte version = (byte)1; //(byte) getTransactionVersion(Nxt.getBlockchain().getHeight());
-        int timestamp = Nxt.getEpochTime();
-        TransactionImpl.BuilderImpl builder = new TransactionImpl.BuilderImpl(version, senderPublicKey, amountNQT, feeNQT, timestamp,
-                deadline, (Attachment.AbstractAttachment)attachment);
-        Block ecBlock = EconomicClustering.getECBlock(timestamp);
-        builder.ecBlockHeight(ecBlock.getHeight());
-        builder.ecBlockId(ecBlock.getId());
-        return builder;
     }
 
     @Override

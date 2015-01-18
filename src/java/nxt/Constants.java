@@ -85,7 +85,7 @@ public final class Constants {
     public static final int VOTING_SYSTEM_BLOCK = Integer.MAX_VALUE;
     public static final int DIGITAL_GOODS_STORE_BLOCK = isTestnet ? 77341 : 213000;
     public static final int MONETARY_SYSTEM_BLOCK = isTestnet ? 150000 : 330000;
-    public static final int LAST_KNOWN_BLOCK = isTestnet ? 150000 : 330000;
+    public static final int LAST_KNOWN_BLOCK = isTestnet ? 150000 : 335000;
 
     public static final int[] MIN_VERSION = new int[] {1, 4};
 
