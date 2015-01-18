@@ -53,6 +53,3 @@ Chinese (Simplified), Chinese (Traditional)
 
 Beta: German, Finnish, Galician, Croatian, Indonesian, Italian, Japanese, Dutch,
 Slovakian, Portuguese, Serbian (Cyrillic), Serbian (Latin), Ukrainian
-
-
-
