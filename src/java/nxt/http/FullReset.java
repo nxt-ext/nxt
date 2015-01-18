@@ -31,4 +31,8 @@ public final class FullReset extends APIServlet.APIRequestHandler {
         return true;
     }
 
+    @Override
+    boolean requirePassword() {
+        return true;
+    }
 }

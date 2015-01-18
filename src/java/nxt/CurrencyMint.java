@@ -1,20 +1,17 @@
 package nxt;
 
-import nxt.crypto.HashFunction;
 import nxt.db.DbClause;
 import nxt.db.DbIterator;
 import nxt.db.DbKey;
 import nxt.db.VersionedEntityDbTable;
+import nxt.util.Listener;
+import nxt.util.Listeners;
 
-import java.math.BigInteger;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -22,6 +19,23 @@ import java.util.List;
  */
 public final class CurrencyMint {
 
+    public static enum Event {
+        CURRENCY_MINT
+    }
+
+    public static class Mint {
+
+        public final long accountId;
+        public final long currencyId;
+        public final long units;
+
+        private Mint(long accountId, long currencyId, long units) {
+            this.accountId = accountId;
+            this.currencyId = currencyId;
+            this.units = units;
+        }
+
+    }
 
     private static final DbKey.LinkKeyFactory<CurrencyMint> currencyMintDbKeyFactory = new DbKey.LinkKeyFactory<CurrencyMint>("currency_id", "account_id") {
 
@@ -45,6 +59,17 @@ public final class CurrencyMint {
         }
 
     };
+
+    private static final Listeners<Mint,Event> listeners = new Listeners<>();
+
+    public static boolean addListener(Listener<Mint> listener, Event eventType) {
+        return listeners.addListener(listener, eventType);
+    }
+
+    public static boolean removeListener(Listener<Mint> listener, Event eventType) {
+        return listeners.removeListener(listener, eventType);
+    }
+
 
     static void init() {}
 
@@ -97,7 +122,7 @@ public final class CurrencyMint {
             return;
         }
         Currency currency = Currency.getCurrency(attachment.getCurrencyId());
-        if (meetsTarget(account.getId(), currency, attachment)) {
+        if (CurrencyMinting.meetsTarget(account.getId(), currency, attachment)) {
             if (currencyMint == null) {
                 currencyMint = new CurrencyMint(attachment.getCurrencyId(), account.getId(), attachment.getCounter());
             } else {
@@ -107,6 +132,7 @@ public final class CurrencyMint {
             long units = Math.min(attachment.getUnits(), currency.getMaxSupply() - currency.getCurrentSupply());
             account.addToCurrencyAndUnconfirmedCurrencyUnits(currency.getId(), units);
             currency.increaseSupply(units);
+            listeners.notify(new Mint(account.getId(), currency.getId(), units), Event.CURRENCY_MINT);
         }
     }
 
@@ -131,76 +157,4 @@ public final class CurrencyMint {
         }
     }
 
-    static boolean meetsTarget(long accountId, Currency currency, Attachment.MonetarySystemCurrencyMinting attachment) {
-        byte[] hash = getHash(currency.getAlgorithm(), attachment.getNonce(), attachment.getCurrencyId(), attachment.getUnits(),
-                attachment.getCounter(), accountId);
-        byte[] target = getTarget(currency.getMinDifficulty(), currency.getMaxDifficulty(),
-                attachment.getUnits(), currency.getCurrentSupply() - currency.getReserveSupply(), currency.getMaxSupply() - currency.getReserveSupply());
-        return meetsTarget(hash, target);
-    }
-
-    public static boolean meetsTarget(byte[] hash, byte[] target) {
-        for (int i = hash.length - 1; i >= 0; i--) {
-            if ((hash[i] & 0xff) > (target[i] & 0xff)) {
-                return false;
-            }
-            if ((hash[i] & 0xff) < (target[i] & 0xff)) {
-                return true;
-            }
-        }
-        return true;
-    }
-
-    public static byte[] getHash(byte algorithm, long nonce, long currencyId, long units, long counter, long accountId) {
-        HashFunction hashFunction = HashFunction.getHashFunction(algorithm);
-        return getHash(hashFunction, nonce, currencyId, units, counter, accountId);
-    }
-
-    public static byte[] getHash(HashFunction hashFunction, long nonce, long currencyId, long units, long counter, long accountId) {
-        ByteBuffer buffer = ByteBuffer.allocate(8 + 8 + 8 + 8 + 8);
-        buffer.order(ByteOrder.LITTLE_ENDIAN);
-        buffer.putLong(nonce);
-        buffer.putLong(currencyId);
-        buffer.putLong(units);
-        buffer.putLong(counter);
-        buffer.putLong(accountId);
-        return hashFunction.hash(buffer.array());
-    }
-
-    public static byte[] getTarget(int min, int max, long units, long currentMintableSupply, long totalMintableSupply) {
-        return getTarget(getNumericTarget(min, max, units, currentMintableSupply, totalMintableSupply));
-    }
-
-    public static byte[] getTarget(BigInteger numericTarget) {
-        byte[] targetRowBytes = numericTarget.toByteArray();
-        if (targetRowBytes.length == 32) {
-            return reverse(targetRowBytes);
-        }
-        byte[] targetBytes = new byte[32];
-        Arrays.fill(targetBytes, 0, 32 - targetRowBytes.length, (byte) 0);
-        System.arraycopy(targetRowBytes, 0, targetBytes, 32 - targetRowBytes.length, targetRowBytes.length);
-        return reverse(targetBytes);
-    }
-
-    public static BigInteger getNumericTarget(Currency currency, long units) {
-        return getNumericTarget(currency.getMinDifficulty(), currency.getMaxDifficulty(), units,
-                currency.getCurrentSupply() - currency.getReserveSupply(), currency.getMaxSupply() - currency.getReserveSupply());
-    }
-
-    public static BigInteger getNumericTarget(int min, int max, long units, long currentMintableSupply, long totalMintableSupply) {
-        if (min < 1 || max > 255) {
-            throw new IllegalArgumentException(String.format("Min: %d, Max: %d, allowed range is 1 to 255", min, max));
-        }
-        int exp = (int)(256 - min - ((max - min) * currentMintableSupply) / totalMintableSupply);
-        return BigInteger.valueOf(2).pow(exp).subtract(BigInteger.ONE).divide(BigInteger.valueOf(units));
-    }
-
-    private static byte[] reverse(byte[] b) {
-        for(int i=0; i < b.length/2; i++) {
-            byte temp = b[i];
-            b[i] = b[b.length - i - 1];
-            b[b.length - i - 1] = temp;
-        }
-        return b;
-    }
 }

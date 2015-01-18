@@ -25,7 +25,7 @@ public enum HashFunction {
      */
     SCRYPT((byte)5) {
         public byte[] hash(byte[] input) {
-            return Scrypt.hash(input);
+            return threadLocalScrypt.get().hash(input);
         }
     },
     /**
@@ -34,6 +34,13 @@ public enum HashFunction {
     Keccak25((byte)25) {
         public byte[] hash(byte[] input) {
             return KNV25.hash(input);
+        }
+    };
+
+    private static final ThreadLocal<Scrypt> threadLocalScrypt = new ThreadLocal<Scrypt>() {
+        @Override
+        protected Scrypt initialValue() {
+            return new Scrypt();
         }
     };
 

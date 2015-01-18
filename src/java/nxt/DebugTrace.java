@@ -82,6 +82,12 @@ public final class DebugTrace {
                 debugTrace.delete(currency);
             }
         }, Currency.Event.BEFORE_DELETE);
+        CurrencyMint.addListener(new Listener<CurrencyMint.Mint>() {
+            @Override
+            public void notify(CurrencyMint.Mint mint) {
+                debugTrace.currencyMint(mint);
+            }
+        }, CurrencyMint.Event.CURRENCY_MINT);
         Account.addListener(new Listener<Account>() {
             @Override
             public void notify(Account account) {
@@ -379,6 +385,17 @@ public final class DebugTrace {
         log(map);
     }
 
+    private void currencyMint(CurrencyMint.Mint mint) {
+        if (!include(mint.accountId)) {
+            return;
+        }
+        Map<String, String> map = getValues(mint.accountId, false);
+        map.put("currency", Convert.toUnsignedLong(mint.currencyId));
+        map.put("currency units", String.valueOf(mint.units));
+        map.put("event", "currency mint");
+        log(map);
+    }
+
     private Map<String,String> getValues(long accountId, boolean unconfirmed) {
         Map<String,String> map = new HashMap<>();
         map.put("account", Convert.toUnsignedLong(accountId));
@@ -630,14 +647,6 @@ public final class DebugTrace {
             Currency currency = Currency.getCurrency(reserveIncrease.getCurrencyId());
             map.put("currency cost", String.valueOf(-Convert.safeMultiply(reserveIncrease.getAmountPerUnitNQT(), currency.getReserveSupply())));
             map.put("event", "currency reserve");
-        } else if (attachment instanceof Attachment.MonetarySystemCurrencyMinting) {
-            Attachment.MonetarySystemCurrencyMinting currencyMinting = (Attachment.MonetarySystemCurrencyMinting) attachment;
-            if (CurrencyMint.meetsTarget(accountId, Currency.getCurrency(currencyMinting.getCurrencyId()), currencyMinting)) {
-                map.put("currency", Convert.toUnsignedLong(currencyMinting.getCurrencyId()));
-                long units = currencyMinting.getUnits();
-                map.put("currency units", String.valueOf(units));
-                map.put("event", "currency mint");
-            }
         } else if (attachment instanceof Attachment.ColoredCoinsDividendPayment) {
             Attachment.ColoredCoinsDividendPayment dividendPayment = (Attachment.ColoredCoinsDividendPayment)attachment;
             long totalDividend = 0;

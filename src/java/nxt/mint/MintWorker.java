@@ -1,9 +1,11 @@
 package nxt.mint;
 
-import nxt.Account;
+import nxt.Attachment;
 import nxt.Constants;
-import nxt.CurrencyMint;
+import nxt.CurrencyMinting;
 import nxt.Nxt;
+import nxt.NxtException;
+import nxt.Transaction;
 import nxt.crypto.Crypto;
 import nxt.crypto.HashFunction;
 import nxt.http.API;
@@ -12,17 +14,28 @@ import nxt.util.Logger;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONValue;
 
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSession;
+import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.UnsupportedEncodingException;
+import java.math.BigInteger;
 import java.net.HttpURLConnection;
 import java.net.InetAddress;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.net.UnknownHostException;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -41,6 +54,39 @@ import java.util.concurrent.Future;
 
 public class MintWorker {
 
+    // Verify-all name verifier
+    private final static HostnameVerifier hostNameVerifier = new HostnameVerifier() {
+        public boolean verify(String hostname, SSLSession session) {
+            return true;
+        }
+    };
+
+    // Trust-all socket factory
+    private static final SSLSocketFactory sslSocketFactory;
+    static {
+        TrustManager[] trustAllCerts = new TrustManager[] { new X509TrustManager() {
+            public java.security.cert.X509Certificate[] getAcceptedIssuers() {
+                return null;
+            }
+            public void checkClientTrusted(X509Certificate[] certs, String authType) {
+            }
+            public void checkServerTrusted(X509Certificate[] certs, String authType) {
+            }
+        }};
+        SSLContext sc;
+        try {
+            sc = SSLContext.getInstance("TLS");
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException(e);
+        }
+        try {
+            sc.init(null, trustAllCerts, new java.security.SecureRandom());
+        } catch (KeyManagementException e) {
+            throw new IllegalStateException(e);
+        }
+        sslSocketFactory = sc.getSocketFactory();
+    }
+
     public static void main(String[] args) {
         MintWorker mintWorker = new MintWorker();
         mintWorker.mint();
@@ -51,12 +97,14 @@ public class MintWorker {
         if (currencyCode == null) {
             throw new IllegalArgumentException("nxt.mint.currencyCode not specified");
         }
-        String secretPhrase = Convert.emptyToNull(Nxt.getStringProperty("nxt.mint.secretPhrase"));
+        String secretPhrase = Convert.emptyToNull(Nxt.getStringProperty("nxt.mint.secretPhrase", null, true));
         if (secretPhrase == null) {
             throw new IllegalArgumentException("nxt.mint.secretPhrase not specified");
         }
         boolean isSubmitted = Nxt.getBooleanProperty("nxt.mint.isSubmitted");
-        long accountId = Account.getId(Crypto.getPublicKey(secretPhrase));
+        boolean isStopOnError = Nxt.getBooleanProperty("nxt.mint.stopOnError");
+        byte[] publicKeyHash = Crypto.sha256().digest(Crypto.getPublicKey(secretPhrase));
+        long accountId = Convert.fullHashToId(publicKeyHash);
         String rsAccount = Convert.rsAccount(accountId);
         JSONObject currency = getCurrency(currencyCode);
         if (currency.get("currency") == null) {
@@ -77,7 +125,7 @@ public class MintWorker {
         JSONObject mintingTarget = getMintingTarget(currencyId, rsAccount, units);
         long counter = (long) mintingTarget.get("counter");
         byte[] target = Convert.parseHexString((String) mintingTarget.get("targetBytes"));
-        long difficulty = (long) mintingTarget.get("difficulty");
+        BigInteger difficulty = new BigInteger((String)mintingTarget.get("difficulty"));
         long initialNonce = Nxt.getIntProperty("nxt.mint.initialNonce");
         if (initialNonce == 0) {
             initialNonce = new Random().nextLong();
@@ -91,20 +139,27 @@ public class MintWorker {
         Logger.logInfoMessage("Mint worker started");
         while (true) {
             counter++;
-            JSONObject response = mintImpl(secretPhrase, accountId, units, currencyId, algorithm, counter, target,
+            try {
+                JSONObject response = mintImpl(secretPhrase, accountId, units, currencyId, algorithm, counter, target,
                     initialNonce, threadPoolSize, executorService, difficulty, isSubmitted);
-            Logger.logInfoMessage("currency mint response:" + response.toJSONString());
-            if (response.get("error") != null || response.get("errorCode") != null) {
-                break;
+                Logger.logInfoMessage("currency mint response:" + response.toJSONString());
+            } catch (Exception e) {
+                Logger.logInfoMessage("mint error", e);
+                if (isStopOnError) {
+                    Logger.logInfoMessage("stopping on error");
+                    break;
+                } else {
+                    Logger.logInfoMessage("continue");
+                }
             }
             mintingTarget = getMintingTarget(currencyId, rsAccount, units);
             target = Convert.parseHexString((String) mintingTarget.get("targetBytes"));
-            difficulty = (long) mintingTarget.get("difficulty");
+            difficulty = new BigInteger((String)mintingTarget.get("difficulty"));
         }
     }
 
     private JSONObject mintImpl(String secretPhrase, long accountId, long units, long currencyId, byte algorithm,
-                                long counter, byte[] target, long initialNonce, int threadPoolSize, ExecutorService executorService, long difficulty, boolean isSubmitted) {
+                                long counter, byte[] target, long initialNonce, int threadPoolSize, ExecutorService executorService, BigInteger difficulty, boolean isSubmitted) {
         long startTime = System.currentTimeMillis();
         List<Callable<Long>> workersList = new ArrayList<>();
         for (int i=0; i < threadPoolSize; i++) {
@@ -117,8 +172,9 @@ public class MintWorker {
             computationTime = 1;
         }
         long hashes = solution - initialNonce;
+        float hashesPerDifficulty = BigInteger.valueOf(-1).equals(difficulty) ? 0 : (float) hashes / difficulty.floatValue();
         Logger.logInfoMessage("solution nonce %d unitsNQT %d counter %d computed hashes %d time [sec] %.2f hash rate [KH/Sec] %d actual time vs. expected %.2f is submitted %b",
-                solution, units, counter, hashes, (float) computationTime / 1000, hashes / computationTime, (float) hashes / (float) difficulty, isSubmitted);
+                solution, units, counter, hashes, (float) computationTime / 1000, hashes / computationTime, hashesPerDifficulty, isSubmitted);
         JSONObject response;
         if (isSubmitted) {
             response = currencyMint(secretPhrase, currencyId, solution, units, counter);
@@ -147,16 +203,26 @@ public class MintWorker {
     }
 
     private JSONObject currencyMint(String secretPhrase, long currencyId, long nonce, long units, long counter) {
-        Map<String, String> params = new HashMap<>();
-        params.put("requestType", "currencyMint");
-        params.put("secretPhrase", secretPhrase);
-        params.put("feeNQT", Long.toString(Constants.ONE_NXT));
-        params.put("deadline", Integer.toString(120));
-        params.put("currency", Convert.toUnsignedLong(currencyId));
-        params.put("nonce", Long.toString(nonce));
-        params.put("units", Long.toString(units));
-        params.put("counter", Long.toString(counter));
-        return getJsonResponse(params);
+        JSONObject ecBlock = getECBlock();
+        Attachment attachment = new Attachment.MonetarySystemCurrencyMinting(nonce, currencyId, units, counter);
+        Transaction.Builder builder = Nxt.newTransactionBuilder(Crypto.getPublicKey(secretPhrase), 0, Constants.ONE_NXT,
+                (short) 120, attachment)
+                .timestamp(((Long) ecBlock.get("timestamp")).intValue())
+                .ecBlockHeight(((Long) ecBlock.get("ecBlockHeight")).intValue())
+                .ecBlockId(Convert.parseUnsignedLong((String) ecBlock.get("ecBlockId")));
+        try {
+            Transaction transaction = builder.build();
+            transaction.sign(secretPhrase);
+            Map<String, String> params = new HashMap<>();
+            params.put("requestType", "broadcastTransaction");
+            params.put("transactionBytes", Convert.toHexString(transaction.getBytes()));
+            return getJsonResponse(params);
+        } catch (NxtException.NotValidException e) {
+            Logger.logInfoMessage("local signing failed", e);
+            JSONObject response = new JSONObject();
+            response.put("error", e.toString());
+            return response;
+        }
     }
 
     private JSONObject getCurrency(String currencyCode) {
@@ -175,6 +241,12 @@ public class MintWorker {
         return getJsonResponse(params);
     }
 
+    private JSONObject getECBlock() {
+        Map<String, String> params = new HashMap<>();
+        params.put("requestType", "getECBlock");
+        return getJsonResponse(params);
+    }
+
     private JSONObject getJsonResponse(Map<String, String> params) {
         JSONObject response;
         HttpURLConnection connection = null;
@@ -186,12 +258,18 @@ public class MintWorker {
                 host = "localhost";
             }
         }
-
+        String protocol = "http";
+        boolean useHttps = Nxt.getBooleanProperty("nxt.mint.useHttps");
+        if (useHttps) {
+            protocol = "https";
+            HttpsURLConnection.setDefaultSSLSocketFactory(sslSocketFactory);
+            HttpsURLConnection.setDefaultHostnameVerifier(hostNameVerifier);
+        }
         int port = Constants.isTestnet ? API.TESTNET_API_PORT : Nxt.getIntProperty("nxt.apiServerPort");
         String urlParams = getUrlParams(params);
         URL url;
         try {
-            url = new URL("http", host, port, "/nxt?" + urlParams);
+            url = new URL(protocol, host, port, "/nxt?" + urlParams);
         } catch (MalformedURLException e) {
             throw new IllegalStateException(e);
         }
@@ -220,6 +298,10 @@ public class MintWorker {
         if (response.get("errorCode") != null) {
             throw new IllegalStateException(String.format("Request %s produced error response code %s message \"%s\"",
                     url, response.get("errorCode"), response.get("errorDescription")));
+        }
+        if (response.get("error") != null) {
+            throw new IllegalStateException(String.format("Request %s produced error %s",
+                    url, response.get("error")));
         }
         return response;
     }
@@ -270,8 +352,8 @@ public class MintWorker {
         public Long call() {
             long n = nonce;
             while (!Thread.currentThread().isInterrupted()) {
-                byte[] hash = CurrencyMint.getHash(hashFunction, n, currencyId, units, counter, accountId);
-                if (CurrencyMint.meetsTarget(hash, target)) {
+                byte[] hash = CurrencyMinting.getHash(hashFunction, n, currencyId, units, counter, accountId);
+                if (CurrencyMinting.meetsTarget(hash, target)) {
                     Logger.logDebugMessage("%s found solution hash %s nonce %d currencyId %d units %d counter %d accountId %d" +
                             " hash %s meets target %s",
                             Thread.currentThread().getName(), hashFunction, n, currencyId, units, counter, accountId,

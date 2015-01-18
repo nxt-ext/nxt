@@ -7,6 +7,7 @@ import nxt.Asset;
 import nxt.AssetTransfer;
 import nxt.Attachment;
 import nxt.Block;
+import nxt.Constants;
 import nxt.Currency;
 import nxt.CurrencyExchangeOffer;
 import nxt.CurrencyFounder;
@@ -65,6 +66,18 @@ final class JSONData {
             json.put("forgedBalanceNQT", String.valueOf(account.getForgedBalanceNQT()));
             json.put("guaranteedBalanceNQT", String.valueOf(account.getGuaranteedBalanceNQT(1440)));
         }
+        return json;
+    }
+
+    static JSONObject lessor(Account account) {
+        JSONObject json = new JSONObject();
+        json.put("currentLesseeRS", Convert.rsAccount(account.getCurrentLesseeId()));
+        json.put("currentHeightFrom", String.valueOf(account.getCurrentLeasingHeightFrom()));
+        json.put("currentHeightTo", String.valueOf(account.getCurrentLeasingHeightTo()));
+        json.put("nextLesseeRS", Convert.rsAccount(account.getNextLesseeId()));
+        json.put("nextHeightFrom", String.valueOf(account.getNextLeasingHeightFrom()));
+        json.put("nextHeightTo", String.valueOf(account.getNextLeasingHeightTo()));
+        json.put("effectiveBalanceNXT", String.valueOf(account.getGuaranteedBalanceNQT(1440) / Constants.ONE_NXT));
         return json;
     }
 

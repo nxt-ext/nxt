@@ -2,7 +2,7 @@ package nxt.http;
 
 import nxt.BlockchainTest;
 import nxt.Constants;
-import nxt.CurrencyMint;
+import nxt.CurrencyMinting;
 import nxt.CurrencyType;
 import nxt.crypto.HashFunction;
 import nxt.util.Convert;
@@ -54,8 +54,8 @@ public class TestCurrencyMint extends BlockchainTest {
         long algorithm = (Long)getCurrencyResponse.get("algorithm");
         long nonce;
         for (nonce=0; nonce < Long.MAX_VALUE; nonce++) {
-            if (CurrencyMint.meetsTarget(CurrencyMint.getHash((byte)algorithm, nonce, Convert.parseUnsignedLong(currencyId), units, 1, id1),
-                    CurrencyMint.getTarget(2, 8, units, 0, 100000))) {
+            if (CurrencyMinting.meetsTarget(CurrencyMinting.getHash((byte) algorithm, nonce, Convert.parseUnsignedLong(currencyId), units, 1, id1),
+                    CurrencyMinting.getTarget(2, 8, units, 0, 100000))) {
                 break;
             }
         }

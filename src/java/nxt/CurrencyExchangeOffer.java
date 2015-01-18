@@ -20,6 +20,9 @@ public abstract class CurrencyExchangeOffer {
 
             @Override
             public void notify(Block block) {
+                if (block.getHeight() <= Constants.MONETARY_SYSTEM_BLOCK) {
+                    return;
+                }
                 List<CurrencyBuyOffer> expired = new ArrayList<>();
                 try (DbIterator<CurrencyBuyOffer> offers = CurrencyBuyOffer.getOffers(new DbClause.IntClause("expiration_height", block.getHeight()), 0, -1)) {
                     for (CurrencyBuyOffer offer : offers) {

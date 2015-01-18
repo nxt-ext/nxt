@@ -38,8 +38,8 @@ public final class API {
 
     private static final Set<String> allowedBotHosts;
     private static final List<NetworkAddress> allowedBotNets;
-    static final boolean enableDebugAPI = Nxt.getBooleanProperty("nxt.enableDebugAPI");
-
+    static final String adminPassword = Nxt.getStringProperty("nxt.adminPassword", "", true);
+    static final boolean disableAdminPassword;
     private static final Server apiServer;
 
     static {
@@ -70,6 +70,8 @@ public final class API {
         if (enableAPIServer) {
             final int port = Constants.isTestnet ? TESTNET_API_PORT : Nxt.getIntProperty("nxt.apiServerPort");
             final String host = Nxt.getStringProperty("nxt.apiServerHost");
+            disableAdminPassword = Nxt.getBooleanProperty("nxt.disableAdminPassword") || "127.0.0.1".equals(host);
+
             apiServer = new Server();
             ServerConnector connector;
 
@@ -133,9 +135,8 @@ public final class API {
             }
 
             apiHandler.addServlet(APITestServlet.class, "/test");
-            if (enableDebugAPI) {
-                apiHandler.addServlet(DbShellServlet.class, "/dbshell");
-            }
+
+            apiHandler.addServlet(DbShellServlet.class, "/dbshell");
 
             if (Nxt.getBooleanProperty("nxt.apiServerCORS")) {
                 FilterHolder filterHolder = apiHandler.addFilter(CrossOriginFilter.class, "/*", null);
@@ -165,6 +166,7 @@ public final class API {
 
         } else {
             apiServer = null;
+            disableAdminPassword = false;
             Logger.logMessage("API server not enabled");
         }
 
