@@ -44,6 +44,8 @@ Fixed named account links on the transaction info dialog.
 
 Client Translation
 ==================
+Added language selection to welcome screen.
+
 Added translations for monetary system for different languages.
 
 Stable: English, Spanish, French, Lithuanian, Portuguese (Brazilian), Russian,
