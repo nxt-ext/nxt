@@ -51,11 +51,9 @@
 
     <packs>
         <pack name="server" required="yes">
-            <description>server files</description>
+            <description>Common Server Files</description>
             <file src="nxt.jar" targetdir="${INSTALL_PATH}" override="true"/>
-            <file src="nxt.exe" targetdir="${INSTALL_PATH}" override="true"/>
-            <file src="run.bat" targetdir="${INSTALL_PATH}" override="true"/>
-            <file src="run.sh" targetdir="${INSTALL_PATH}" override="true"/>
+            <file src="run.sh" targetdir="${INSTALL_PATH}" override="false"/>
             <file src="run-tor.sh" targetdir="${INSTALL_PATH}" override="true"/>
             <file src="compile.sh" targetdir="${INSTALL_PATH}" override="true"/>
             <file src="win-compile.sh" targetdir="${INSTALL_PATH}" override="true"/>
@@ -73,6 +71,16 @@
 			<fileset dir="classes" targetdir="${INSTALL_PATH}/classes" override="true" excludes=".gitignore"/>
 			<fileset dir="html" targetdir="${INSTALL_PATH}/html" override="true" excludes=".gitignore"/>
 			<fileset dir="src" targetdir="${INSTALL_PATH}/src" override="true" excludes=".gitignore"/>
+		</pack>
+        <pack name="server.windows" required="yes">
+            <description>Windows Specific Resources</description>
+			<os family="windows"/>
+            <file src="nxt.exe" targetdir="${INSTALL_PATH}" override="true"/>
+            <file src="run.bat" targetdir="${INSTALL_PATH}" override="false"/>
+			<parsable targetfile="${INSTALL_PATH}/run.bat"/>
+			<singlefile src="resource/nxt.properties" target="${INSTALL_PATH}/resource/nxt.properties" override="true"/>
+			<parsable targetfile="${INSTALL_PATH}/resource/nxt.properties"/>
+			<singlefile src="resource/nxt.properties.template" target="${USER_HOME}/AppData/Roaming/NXT/nxt.properties" override="false"/>
 		</pack>
         <pack name="jre" required="no">
             <description>Java 32 bit</description>
