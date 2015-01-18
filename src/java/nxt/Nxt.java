@@ -10,6 +10,8 @@ import nxt.util.Time;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.management.ManagementFactory;
+import java.security.AccessControlException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -28,16 +30,17 @@ public final class Nxt {
     private static final Properties defaultProperties = new Properties();
     static {
         System.out.println("Initializing Nxt server version " + Nxt.VERSION);
-        loadProperties(defaultProperties, NXT_DEFAULT_PROPERTIES);
+        printCommandLineArguments();
+        loadProperties(defaultProperties, NXT_DEFAULT_PROPERTIES, true);
     }
 
     private static final Properties properties = new Properties(defaultProperties);
 
     static {
-        loadProperties(properties, NXT_PROPERTIES);
+        loadProperties(properties, NXT_PROPERTIES, false);
     }
 
-    private static Properties loadProperties(Properties properties, String propertiesFile) {
+    public static Properties loadProperties(Properties properties, String propertiesFile, boolean isMandatory) {
         try {
             String configFile = System.getProperty(propertiesFile);
             if (configFile != null) {
@@ -55,7 +58,13 @@ public final class Nxt {
                         properties.load(is);
                         return properties;
                     } else {
-                        throw new IllegalArgumentException(String.format("%s not in classpath and system property %s not defined either", propertiesFile, propertiesFile));
+                        String message = String.format("%s not in classpath and system property %s is undefined", propertiesFile, propertiesFile);
+                        if (isMandatory) {
+                            throw new IllegalArgumentException(message);
+                        } else {
+                            System.out.printf(message + "\n", propertiesFile, propertiesFile);
+                            return properties;
+                        }
                     }
                 } catch (IOException e) {
                     throw new IllegalArgumentException("Error loading " + propertiesFile, e);
@@ -67,33 +76,19 @@ public final class Nxt {
         }
     }
 
-    private static Properties loadPropertiesOld(Properties properties, String propertiesFile) {
+    private static void printCommandLineArguments() {
         try {
-            try (InputStream is = ClassLoader.getSystemResourceAsStream(propertiesFile)) {
-                if (is != null) {
-                    System.out.printf("Loading %s from classpath\n", propertiesFile);
-                    properties.load(is);
-                    return properties;
-                } else {
-                    String configFile = System.getProperty(propertiesFile);
-                    if (configFile != null) {
-                        System.out.printf("Loading default properties from %s\n", configFile);
-                        try (InputStream fis = new FileInputStream(configFile)) {
-                            properties.load(fis);
-                            return properties;
-                        } catch (IOException e) {
-                            throw new IllegalArgumentException(String.format("Error loading %s from %s", propertiesFile, configFile));
-                        }
-                    } else {
-                        throw new IllegalArgumentException(String.format("%s not in classpath and system property %s not defined either", propertiesFile, propertiesFile));
-                    }
-                }
-            } catch (IOException e) {
-                throw new IllegalArgumentException("Error loading " + propertiesFile, e);
+            List<String> inputArguments = ManagementFactory.getRuntimeMXBean().getInputArguments();
+            if (inputArguments != null && inputArguments.size() > 0) {
+                System.out.println("Command line arguments");
+            } else {
+                return;
             }
-        } catch(IllegalArgumentException e) {
-            e.printStackTrace(); // make sure we log this exception
-            throw e;
+            for (String inputArgument : inputArguments) {
+                System.out.println(inputArgument);
+            }
+        } catch (AccessControlException e) {
+            System.out.println("Cannot read input arguments " + e.getMessage());
         }
     }
 

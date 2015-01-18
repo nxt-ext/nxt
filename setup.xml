@@ -2,7 +2,7 @@
 <installation version="5.0">
     <info>
         <appname>NXT</appname>
-        <appversion>1.4.6</appversion>
+        <appversion>1.4.9</appversion>
         <url>http://nxt.org</url>
     </info>
 
@@ -36,6 +36,7 @@
 
 	<variables>
 		<variable name="$InstallerFrame.logfilePath" value="default"/>
+		<variable name="DesktopShortcutCheckboxEnabled" value="true"/>
 	</variables>
 
     <panels>
@@ -53,14 +54,6 @@
         <pack name="server" required="yes">
             <description>Common Server Files</description>
             <file src="nxt.jar" targetdir="${INSTALL_PATH}" override="true"/>
-            <file src="run.sh" targetdir="${INSTALL_PATH}" override="false"/>
-            <file src="run-tor.sh" targetdir="${INSTALL_PATH}" override="true"/>
-            <file src="compile.sh" targetdir="${INSTALL_PATH}" override="true"/>
-            <file src="win-compile.sh" targetdir="${INSTALL_PATH}" override="true"/>
-			<file src="javadoc.sh" targetdir="${INSTALL_PATH}" override="true"/>
-			<file src="verify.sh" targetdir="${INSTALL_PATH}" override="true"/>
-			<file src="docker_start.sh" targetdir="${INSTALL_PATH}" override="true"/>
-			<file src="Dockerfile" targetdir="${INSTALL_PATH}" override="true"/>
 			<file src="README.txt" targetdir="${INSTALL_PATH}" override="true"/>
 			<file src="NXT_Wallet.url" targetdir="${INSTALL_PATH}" override="true"/>
 			<file src="MIT-license.txt" targetdir="${INSTALL_PATH}" override="true"/>
@@ -72,7 +65,7 @@
 			<fileset dir="html" targetdir="${INSTALL_PATH}/html" override="true" excludes=".gitignore"/>
 			<fileset dir="src" targetdir="${INSTALL_PATH}/src" override="true" excludes=".gitignore"/>
 		</pack>
-        <pack name="server.windows" required="yes">
+        <pack name="server.windows" os="windows" required="yes">
             <description>Windows Specific Resources</description>
 			<os family="windows"/>
             <file src="nxt.exe" targetdir="${INSTALL_PATH}" override="true"/>
@@ -81,10 +74,29 @@
 			<singlefile src="resource/nxt.properties" target="${INSTALL_PATH}/resource/nxt.properties" override="true"/>
 			<parsable targetfile="${INSTALL_PATH}/resource/nxt.properties"/>
 			<singlefile src="resource/nxt.properties.template" target="${USER_HOME}/AppData/Roaming/NXT/nxt.properties" override="false"/>
+			<singlefile src="resource/logging.properties.template" target="${USER_HOME}/AppData/Roaming/NXT/logging.properties" override="false"/>
+			<singlefile src="resource/logs" target="${USER_HOME}/AppData/Roaming/NXT/logs" override="false"/>
 		</pack>
-        <pack name="jre" required="no">
+        <pack name="server.unix" os="unix" required="yes">
+            <description>Unix Specific Resources</description>
+            <file src="run.sh" targetdir="${INSTALL_PATH}" override="false"/>
+			<executable targetfile="${INSTALL_PATH}/run.sh"/>
+            <file src="run-tor.sh" targetdir="${INSTALL_PATH}" override="true"/>
+			<executable targetfile="${INSTALL_PATH}/run-tor.sh"/>
+            <file src="compile.sh" targetdir="${INSTALL_PATH}" override="true"/>
+			<executable targetfile="${INSTALL_PATH}/compile.sh"/>
+            <file src="win-compile.sh" targetdir="${INSTALL_PATH}" override="true"/>
+			<executable targetfile="${INSTALL_PATH}/win-compile.sh"/>
+			<file src="javadoc.sh" targetdir="${INSTALL_PATH}" override="true"/>
+			<executable targetfile="${INSTALL_PATH}/javadoc.sh"/>
+			<file src="verify.sh" targetdir="${INSTALL_PATH}" override="true"/>
+			<executable targetfile="${INSTALL_PATH}/verify.sh"/>
+			<file src="docker_start.sh" targetdir="${INSTALL_PATH}" override="true"/>
+			<executable targetfile="${INSTALL_PATH}/docker_start.sh"/>
+			<file src="Dockerfile" targetdir="${INSTALL_PATH}" override="true"/>
+		</pack>
+        <pack name="jre" os="windows" required="no">
             <description>Java 32 bit</description>
-			<os family="windows"/>
 			<fileset dir="jre" targetdir="${INSTALL_PATH}/jre" override="true"/>
 		</pack>
 	</packs>
