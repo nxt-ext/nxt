@@ -6,6 +6,8 @@ import org.h2.jdbcx.JdbcConnectionPool;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class BasicDb {
 
@@ -22,8 +24,19 @@ public class BasicDb {
             return this;
         }
 
+        Pattern dbUrlPattern = Pattern.compile("(\\w+):(\\w+?):(.*/nxt)(;.*)?");
+
         public DbProperties dbUrl(String dbUrl) {
-            this.dbUrl = dbUrl;
+            Matcher matcher = dbUrlPattern.matcher(dbUrl);
+            if (!matcher.matches()) {
+                throw new IllegalArgumentException("Illegal database URL " + dbUrl);
+            }
+            String protocol = matcher.group(1);
+            String database = matcher.group(2);
+            String url = matcher.group(3);
+            url = url.replace("$USER_HOME", System.getProperty("user.home").replace('\\', '/'));
+            String parameters = matcher.group(4);
+            this.dbUrl = protocol + ":" + database + ":" + url + parameters;
             return this;
         }
 
