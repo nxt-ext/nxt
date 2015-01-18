@@ -1,5 +1,6 @@
 <shortcuts>
 	<skipIfNotSupported/>
+	<defaultCurrentUser/>
 	<programGroup defaultName="NXT" location="startMenu"/>
 	<shortcut
 		name="Nxt Server"
