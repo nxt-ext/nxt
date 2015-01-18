@@ -490,7 +490,7 @@ public final class Account {
     }
 
     private static DbIterator<Account> getLeaseChangingAccounts(final int height) {
-        return accountTable.getManyBy(new LeaseChangingAccountsClause(height), 0, -1, " ORDER BY current_lessee_id ");
+        return accountTable.getManyBy(new LeaseChangingAccountsClause(height), 0, -1, " ORDER BY current_lessee_id, id ");
     }
 
     public static DbIterator<AccountAsset> getAssetAccounts(long assetId, int from, int to) {
