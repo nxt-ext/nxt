@@ -22,36 +22,78 @@ public final class Nxt {
 
     private static volatile Time time = new Time.EpochTime();
 
+    public static final String NXT_DEFAULT_PROPERTIES = "nxt-default.properties";
+    public static final String NXT_PROPERTIES = "nxt.properties";
+
     private static final Properties defaultProperties = new Properties();
     static {
         System.out.println("Initializing Nxt server version " + Nxt.VERSION);
-        try (InputStream is = ClassLoader.getSystemResourceAsStream("nxt-default.properties")) {
-            if (is != null) {
-                Nxt.defaultProperties.load(is);
+        loadProperties(defaultProperties, NXT_DEFAULT_PROPERTIES);
+    }
+
+    private static final Properties properties = new Properties(defaultProperties);
+
+    static {
+        loadProperties(properties, NXT_PROPERTIES);
+    }
+
+    private static Properties loadProperties(Properties properties, String propertiesFile) {
+        try {
+            String configFile = System.getProperty(propertiesFile);
+            if (configFile != null) {
+                System.out.printf("Loading %s from %s\n", propertiesFile, configFile);
+                try (InputStream fis = new FileInputStream(configFile)) {
+                    properties.load(fis);
+                    return properties;
+                } catch (IOException e) {
+                    throw new IllegalArgumentException(String.format("Error loading %s from %s", propertiesFile, configFile));
+                }
             } else {
-                String configFile = System.getProperty("nxt-default.properties");
-                if (configFile != null) {
-                    try (InputStream fis = new FileInputStream(configFile)) {
-                        Nxt.defaultProperties.load(fis);
-                    } catch (IOException e) {
-                        throw new RuntimeException("Error loading nxt-default.properties from " + configFile);
+                try (InputStream is = ClassLoader.getSystemResourceAsStream(propertiesFile)) {
+                    if (is != null) {
+                        System.out.printf("Loading %s from classpath\n", propertiesFile);
+                        properties.load(is);
+                        return properties;
+                    } else {
+                        throw new IllegalArgumentException(String.format("%s not in classpath and system property %s not defined either", propertiesFile, propertiesFile));
                     }
-                } else {
-                    throw new RuntimeException("nxt-default.properties not in classpath and system property nxt-default.properties not defined either");
+                } catch (IOException e) {
+                    throw new IllegalArgumentException("Error loading " + propertiesFile, e);
                 }
             }
-        } catch (IOException e) {
-            throw new RuntimeException("Error loading nxt-default.properties", e);
+        } catch(IllegalArgumentException e) {
+            e.printStackTrace(); // make sure we log this exception
+            throw e;
         }
     }
-    private static final Properties properties = new Properties(defaultProperties);
-    static {
-        try (InputStream is = ClassLoader.getSystemResourceAsStream("nxt.properties")) {
-            if (is != null) {
-                Nxt.properties.load(is);
-            } // ignore if missing
-        } catch (IOException e) {
-            throw new RuntimeException("Error loading nxt.properties", e);
+
+    private static Properties loadPropertiesOld(Properties properties, String propertiesFile) {
+        try {
+            try (InputStream is = ClassLoader.getSystemResourceAsStream(propertiesFile)) {
+                if (is != null) {
+                    System.out.printf("Loading %s from classpath\n", propertiesFile);
+                    properties.load(is);
+                    return properties;
+                } else {
+                    String configFile = System.getProperty(propertiesFile);
+                    if (configFile != null) {
+                        System.out.printf("Loading default properties from %s\n", configFile);
+                        try (InputStream fis = new FileInputStream(configFile)) {
+                            properties.load(fis);
+                            return properties;
+                        } catch (IOException e) {
+                            throw new IllegalArgumentException(String.format("Error loading %s from %s", propertiesFile, configFile));
+                        }
+                    } else {
+                        throw new IllegalArgumentException(String.format("%s not in classpath and system property %s not defined either", propertiesFile, propertiesFile));
+                    }
+                }
+            } catch (IOException e) {
+                throw new IllegalArgumentException("Error loading " + propertiesFile, e);
+            }
+        } catch(IllegalArgumentException e) {
+            e.printStackTrace(); // make sure we log this exception
+            throw e;
         }
     }
 
