@@ -713,6 +713,11 @@ public abstract class TransactionType {
                     throw new NxtException.NotValidException("Invalid min balance model: "+ attachment.getJSONObject());
                 }
 
+                if (votingModel == Constants.VOTING_MODEL_BALANCE
+                        && minBalanceModel != Constants.VOTING_MINBALANCE_BYBALANCE) {
+                    throw new NxtException.NotValidException("Invalid min balance model: "+ attachment.getJSONObject());
+                }
+
                 if (votingModel == Constants.VOTING_MODEL_MS_COIN
                         && minBalanceModel != Constants.VOTING_MINBALANCE_COIN) {
                     throw new NxtException.NotValidException("Invalid min balance model: " + attachment.getJSONObject());

@@ -67,7 +67,6 @@ public final class CreatePoll extends CreateTransaction {
 
         byte votingModel = ParameterParser.getByte(req, "votingModel", Constants.VOTING_MODEL_BALANCE, Constants.VOTING_MODEL_MS_COIN, true);
 
-
         byte minNumberOfOptions = ParameterParser.getByte(req, "minNumberOfOptions", (byte) 1, optionsSize, true);
         byte maxNumberOfOptions = ParameterParser.getByte(req, "maxNumberOfOptions", minNumberOfOptions, optionsSize, true);
 
@@ -79,10 +78,12 @@ public final class CreatePoll extends CreateTransaction {
                 minNumberOfOptions, maxNumberOfOptions, minRangeValue, maxRangeValue);
 
         long minBalance = ParameterParser.getLong(req, "minBalance", 0, Long.MAX_VALUE, false);
-        byte minBalanceModel = ParameterParser.getByte(req, "minBalanceModel",
-                Constants.VOTING_MINBALANCE_UNDEFINED, Constants.VOTING_MINBALANCE_COIN, false);
 
-        builder.minBalance(minBalanceModel, minBalance);
+        if(minBalance!=0) {
+            byte minBalanceModel = ParameterParser.getByte(req, "minBalanceModel",
+                    Constants.VOTING_MINBALANCE_UNDEFINED, Constants.VOTING_MINBALANCE_COIN, true);
+            builder.minBalance(minBalanceModel, minBalance);
+        }
 
         long holdingId = ParameterParser.getLong(req, "holding", Long.MIN_VALUE, Long.MAX_VALUE, false);
         if (holdingId != 0) {
