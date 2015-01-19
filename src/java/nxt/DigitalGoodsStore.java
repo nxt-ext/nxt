@@ -37,7 +37,7 @@ public final class DigitalGoodsStore {
         Nxt.getBlockchainProcessor().addListener(new Listener<Block>() {
             @Override
             public void notify(Block block) {
-                if (block.getHeight() < Constants.DIGITAL_GOODS_STORE_BLOCK) {
+                if (block.getHeight() <= Constants.DIGITAL_GOODS_STORE_BLOCK) {
                     return;
                 }
                 List<Purchase> expiredPurchases = new ArrayList<>();

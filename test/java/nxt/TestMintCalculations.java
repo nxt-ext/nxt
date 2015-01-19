@@ -13,28 +13,28 @@ public class TestMintCalculations {
 
     @Test
     public void targetCalculation() {
-        byte[] target = CurrencyMint.getTarget(4, 32, 1, 0, 100000);
+        byte[] target = CurrencyMinting.getTarget(4, 32, 1, 0, 100000);
         Logger.logDebugMessage("initial target: " + Arrays.toString(target));
         Assert.assertEquals(32, target.length);
         Assert.assertArrayEquals(new byte[]{-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 15}, target);
 
-        target = CurrencyMint.getTarget(4, 32, 1, 50000, 100000);
+        target = CurrencyMinting.getTarget(4, 32, 1, 50000, 100000);
         Logger.logDebugMessage("midway target: " + Arrays.toString(target));
         Assert.assertEquals(32, target.length);
         Assert.assertArrayEquals(new byte[] {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 63, 0, 0}, target);
 
-        target = CurrencyMint.getTarget(4, 32, 1, 100000, 100000);
+        target = CurrencyMinting.getTarget(4, 32, 1, 100000, 100000);
         Logger.logDebugMessage("final target: " + Arrays.toString(target));
         Assert.assertEquals(32, target.length);
         Assert.assertArrayEquals(new byte[]{-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, 0, 0, 0}, target);
 
-        target = CurrencyMint.getTarget(4, 32, 100, 100000, 100000);
+        target = CurrencyMinting.getTarget(4, 32, 100, 100000, 100000);
         Logger.logDebugMessage("final target for 100 units: " + Arrays.toString(target));
         Assert.assertEquals(32, target.length);
         Assert.assertArrayEquals(new byte[]{92, -113, -62, -11, 40, 92, -113, -62, -11, 40, 92, -113, -62, -11, 40, 92, -113, -62, -11, 40, 92, -113, -62, -11, 40, 92, -113, 2, 0, 0, 0, 0}, target);
 
         try {
-            CurrencyMint.getTarget(0, 5, 1, 0, 100000);
+            CurrencyMinting.getTarget(0, 5, 1, 0, 100000);
             Assert.fail();
         } catch(IllegalArgumentException e) {
             Logger.logDebugMessage("Difficulty too low");
@@ -45,24 +45,24 @@ public class TestMintCalculations {
     public void hashing() {
         long nonce;
         for (nonce=0; nonce < Long.MAX_VALUE; nonce++) {
-            if (CurrencyMint.meetsTarget(CurrencyMint.getHash(HashFunction.Keccak25.getId(), nonce, 123, 1, 1, 987),
-                    CurrencyMint.getTarget(8, 16, 1, 0, 100000))) {
+            if (CurrencyMinting.meetsTarget(CurrencyMinting.getHash(HashFunction.Keccak25.getId(), nonce, 123, 1, 1, 987),
+                    CurrencyMinting.getTarget(8, 16, 1, 0, 100000))) {
                 break;
             }
         }
         Assert.assertEquals(149, nonce);
 
         for (nonce=0; nonce < Long.MAX_VALUE; nonce++) {
-            if (CurrencyMint.meetsTarget(CurrencyMint.getHash(HashFunction.Keccak25.getId(), nonce, 123, 1, 1, 987),
-                    CurrencyMint.getTarget(8, 16, 1, 100000, 100000))) {
+            if (CurrencyMinting.meetsTarget(CurrencyMinting.getHash(HashFunction.Keccak25.getId(), nonce, 123, 1, 1, 987),
+                    CurrencyMinting.getTarget(8, 16, 1, 100000, 100000))) {
                 break;
             }
         }
         Assert.assertEquals(120597, nonce);
 
         for (nonce=0; nonce < Long.MAX_VALUE; nonce++) {
-            if (CurrencyMint.meetsTarget(CurrencyMint.getHash(HashFunction.Keccak25.getId(), nonce, 123, 100, 1, 987),
-                    CurrencyMint.getTarget(8, 16, 100, 0, 100000))) {
+            if (CurrencyMinting.meetsTarget(CurrencyMinting.getHash(HashFunction.Keccak25.getId(), nonce, 123, 100, 1, 987),
+                    CurrencyMinting.getTarget(8, 16, 100, 0, 100000))) {
                 break;
             }
         }
@@ -95,27 +95,27 @@ public class TestMintCalculations {
 
     @Test
     public void lowDifficultyProblem() {
-        BigInteger numericTarget = CurrencyMint.getNumericTarget(1, 255, 1, 0, 100000);
+        BigInteger numericTarget = CurrencyMinting.getNumericTarget(1, 255, 1, 0, 100000);
         byte[] targetRowBytes = numericTarget.toByteArray();
         Assert.assertEquals(32, targetRowBytes.length);
 
-        numericTarget = CurrencyMint.getNumericTarget(2, 255, 1, 0, 100000);
+        numericTarget = CurrencyMinting.getNumericTarget(2, 255, 1, 0, 100000);
         targetRowBytes = numericTarget.toByteArray();
         Assert.assertEquals(32, targetRowBytes.length);
 
-        numericTarget = CurrencyMint.getNumericTarget(254, 255, 1, 0, 100000);
+        numericTarget = CurrencyMinting.getNumericTarget(254, 255, 1, 0, 100000);
         targetRowBytes = numericTarget.toByteArray();
         Assert.assertEquals(1, targetRowBytes.length);
 
-        numericTarget = CurrencyMint.getNumericTarget(1, 255, 1, 100000, 100000);
+        numericTarget = CurrencyMinting.getNumericTarget(1, 255, 1, 100000, 100000);
         targetRowBytes = numericTarget.toByteArray();
         Assert.assertEquals(1, targetRowBytes.length);
 
-        numericTarget = CurrencyMint.getNumericTarget(2, 255, 1, 100000, 100000);
+        numericTarget = CurrencyMinting.getNumericTarget(2, 255, 1, 100000, 100000);
         targetRowBytes = numericTarget.toByteArray();
         Assert.assertEquals(1, targetRowBytes.length);
 
-        numericTarget = CurrencyMint.getNumericTarget(254, 255, 1, 100000, 100000);
+        numericTarget = CurrencyMinting.getNumericTarget(254, 255, 1, 100000, 100000);
         targetRowBytes = numericTarget.toByteArray();
         Assert.assertEquals(1, targetRowBytes.length);
     }

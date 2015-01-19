@@ -28,7 +28,6 @@ public final class CastVote extends CreateTransaction {
 
         int numberOfOptions = poll.getOptions().length;
         byte[] vote = new byte[numberOfOptions];
-        //todo: optimize with ParameterParser?
         try {
             for (int i = 1; i <= numberOfOptions; i++) {
                 String voteValue = req.getParameter("vote" + i);

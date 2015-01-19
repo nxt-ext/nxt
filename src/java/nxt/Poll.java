@@ -21,7 +21,7 @@ public final class Poll extends AbstractPoll {
         }
     };
 
-    private final static VersionedEntityDbTable<Poll> pollTable = new VersionedEntityDbTable<Poll>("poll", pollDbKeyFactory) {
+    private final static EntityDbTable<Poll> pollTable = new EntityDbTable<Poll>("poll", pollDbKeyFactory) {
 
         @Override
         protected Poll load(Connection con, ResultSet rs) throws SQLException {
@@ -32,8 +32,8 @@ public final class Poll extends AbstractPoll {
         protected void save(Connection con, Poll poll) throws SQLException {
             try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO poll (id, account_id, "
                     + "name, description, options, finish_height, voting_model, min_balance, holding_id, "
-                    + "min_num_options, max_num_options, min_range_value, max_range_value, finished, height) "
-                    + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
+                    + "min_num_options, max_num_options, min_range_value, max_range_value, height) "
+                    + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
                 int i = 0;
                 pstmt.setLong(++i, poll.getId());
                 pstmt.setLong(++i, poll.getAccountId());
@@ -48,7 +48,6 @@ public final class Poll extends AbstractPoll {
                 pstmt.setByte(++i, poll.getMaxNumberOfOptions());
                 pstmt.setByte(++i, poll.getMinRangeValue());
                 pstmt.setByte(++i, poll.getMaxRangeValue());
-                pstmt.setBoolean(++i, poll.isFinished());
                 pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
                 pstmt.executeUpdate();
             }
@@ -76,7 +75,19 @@ public final class Poll extends AbstractPoll {
         }
     };
 
-    static void init() {}
+    static void init() {
+        if(Constants.isPollsProcessing) {
+            Nxt.getBlockchainProcessor().addListener(new Listener<Block>() {
+                @Override
+                public void notify(Block block) {
+                    int height = block.getHeight();
+                    if (height >= Constants.VOTING_SYSTEM_BLOCK) {
+                        Poll.checkPolls(height);
+                    }
+                }
+            }, BlockchainProcessor.Event.AFTER_BLOCK_APPLY);
+        }
+    }
 
     private final long id;
     private final DbKey dbKey;
@@ -86,24 +97,10 @@ public final class Poll extends AbstractPoll {
     private final byte minNumberOfOptions, maxNumberOfOptions;
     private final byte minRangeValue, maxRangeValue;
 
-    static {
-        Nxt.getBlockchainProcessor().addListener(new Listener<Block>() {
-            @Override
-            public void notify(Block block) {
-                int height = block.getHeight();
-                if (height >= Constants.VOTING_SYSTEM_BLOCK) {
-                    Poll.checkPolls(height);
-                }
-            }
-        }, BlockchainProcessor.Event.AFTER_BLOCK_APPLY);
-    }
-
     private static void checkPolls(int currentHeight) {
         for (Poll poll : getPollsFinishingAt(currentHeight)) {
                 List<PartialPollResult> results = poll.countResults();
                 pollResultsTable.insert(poll, results);
-                poll.setFinished(true);
-                pollTable.insert(poll);
                 System.out.println("Poll " + poll.getId() + " has been finished"); //TODO: Logger
         }
     }
@@ -143,6 +140,8 @@ public final class Poll extends AbstractPoll {
         this.maxRangeValue = rs.getByte("max_range_value");
     }
 
+    public boolean isFinished(){ return finishBlockHeight >= Nxt.getBlockchain().getHeight(); }
+
     static void addPoll(long pollId, long accountId, Attachment.MessagingPollCreation attachment) {
 
         Poll poll = new Poll(pollId,
@@ -165,12 +164,10 @@ public final class Poll extends AbstractPoll {
         return pollTable.get(pollDbKeyFactory.newKey(id));
     }
 
-    public static DbIterator<Poll> getActivePolls() {
-        return pollTable.getManyBy(new DbClause.BooleanClause("finished", false), 0, Integer.MAX_VALUE);
-    }
-
+    //todo: fix
     public static DbIterator<Poll> getFinishedPolls() {
-        return pollTable.getManyBy(new DbClause.BooleanClause("finished", true), 0, Integer.MAX_VALUE);
+        int height = Nxt.getBlockchain().getHeight();
+        return pollTable.getManyBy(new DbClause.IntNotGreaterThan("finish_height", height), 0, Integer.MAX_VALUE);
     }
 
     public static DbIterator<Poll> getAllPolls(int from, int to) {
@@ -230,7 +227,7 @@ public final class Poll extends AbstractPoll {
         return maxRangeValue;
     }
 
-    private List<PartialPollResult> countResults() {
+    public List<PartialPollResult> countResults() {
         final long[] counts = new long[options.length];
 
         for (Vote vote : Vote.getVotes(this.getId(), 0, -1).toList()) {

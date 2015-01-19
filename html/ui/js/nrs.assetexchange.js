@@ -390,17 +390,25 @@ var NRS = (function(NRS, $, undefined) {
 			}
 
 			var ownsAsset = false;
+			var ownsQuantityQNT = 0;
 
 			if (NRS.accountInfo.assetBalances) {
 				$.each(NRS.accountInfo.assetBalances, function(key, assetBalance) {
 					if (assetBalance.asset == asset.asset && assetBalance.balanceQNT != "0") {
 						ownsAsset = true;
+						ownsQuantityQNT = assetBalance.balanceQNT;
 						return false;
 					}
 				});
 			}
 
-			rows += "<a href='#' class='list-group-item list-group-item-" + (ungrouped ? "ungrouped" : "grouped") + (ownsAsset ? " owns_asset" : " not_owns_asset") + "' data-cache='" + i + "' data-asset='" + String(asset.asset).escapeHTML() + "'" + (!ungrouped ? " data-groupname='" + asset.groupName.escapeHTML() + "'" : "") + (isClosedGroup ? " style='display:none'" : "") + " data-closed='" + isClosedGroup + "'><h4 class='list-group-item-heading'>" + asset.name.escapeHTML() + "</h4><p class='list-group-item-text'>qty: " + NRS.formatQuantity(asset.quantityQNT, asset.decimals) + "</p></a>";
+			rows += "<a href='#' class='list-group-item list-group-item-" + (ungrouped ? "ungrouped" : "grouped") + (ownsAsset ? " owns_asset" : " not_owns_asset") + "' ";
+			rows += "data-cache='" + i + "' ";
+			rows += "data-asset='" + String(asset.asset).escapeHTML() + "'" + (!ungrouped ? " data-groupname='" + asset.groupName.escapeHTML() + "'" : "");
+			rows += (isClosedGroup ? " style='display:none'" : "") + " data-closed='" + isClosedGroup + "'>";
+			rows += "<h4 class='list-group-item-heading'>" + asset.name.escapeHTML() + "</h4>";
+			rows += "<p class='list-group-item-text'><span data-i18n=\"quantity\">Quantity</span>: " + NRS.formatQuantity(ownsQuantityQNT, asset.decimals) + "</p>";
+			rows += "</a>";
 		}
 
 		var active = $("#asset_exchange_sidebar a.active");
@@ -571,15 +579,6 @@ var NRS = (function(NRS, $, undefined) {
 			$("#asset_name").html(String(asset.name).escapeHTML());
 			$("#asset_description").html(String(asset.description).autoLink());
 			$("#asset_quantity").html(NRS.formatQuantity(asset.quantityQNT, asset.decimals));
-
-            // Only asset issuers have the ability to pay dividends.
-            // TODO: Is there a clean way to move this block of code to
-            // nrs.modals.dividendpayment.js?
-            if (asset.accountRS !== NRS.accountRS)
-            {
-                $("#dividend_payment_link").hide();
-            }
-
 			$(".asset_name").html(String(asset.name).escapeHTML());
 			$("#sell_asset_button").data("asset", assetId);
 			$("#buy_asset_button").data("asset", assetId);
@@ -646,6 +645,13 @@ var NRS = (function(NRS, $, undefined) {
 				$("#asset_exchange_bookmark_this_asset").hide();
 				NRS.viewingAsset = false;
 			}
+		}
+
+		// Only asset issuers have the ability to pay dividends.
+		if (asset.accountRS == NRS.accountRS) {
+         $("#dividend_payment_link").show();
+		} else {
+			$("#dividend_payment_link").hide();
 		}
 
 		if (NRS.accountInfo.unconfirmedBalanceNQT == "0") {
@@ -1008,6 +1014,7 @@ var NRS = (function(NRS, $, undefined) {
 		var assetId = $invoker.data("asset");
 
 		$("#asset_order_modal_button").html(orderType + " Asset").data("resetText", orderType + " Asset");
+		$(".asset_order_modal_type").html(orderType);
 
 		orderType = orderType.toLowerCase();
 

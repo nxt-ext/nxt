@@ -238,10 +238,6 @@ public enum CurrencyType {
     }
 
     private static void validate(Currency currency, int type, Transaction transaction) throws NxtException.ValidationException {
-        // sanity checks for all currency types
-        if (Nxt.getBlockchain().getLastBlock().getHeight() < Constants.MONETARY_SYSTEM_BLOCK) {
-            throw new NxtException.NotYetEnabledException("Monetary System not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
-        }
         if (transaction.getAmountNQT() != 0) {
             throw new NxtException.NotValidException("Currency transaction NXT amount must be 0");
         }

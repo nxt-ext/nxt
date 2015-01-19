@@ -33,4 +33,9 @@ public final class LuceneReindex extends APIServlet.APIRequestHandler {
         return true;
     }
 
+    @Override
+    boolean requirePassword() {
+        return true;
+    }
+
 }

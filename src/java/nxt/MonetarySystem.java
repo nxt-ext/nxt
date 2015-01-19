@@ -577,7 +577,7 @@ public abstract class MonetarySystem extends TransactionType {
             if (attachment.getCounter() <= counter) {
                 throw new NxtException.NotCurrentlyValidException(String.format("Counter %d has to be bigger than %d", attachment.getCounter(), counter));
             }
-            if (!CurrencyMint.meetsTarget(transaction.getSenderId(), currency, attachment)) {
+            if (!CurrencyMinting.meetsTarget(transaction.getSenderId(), currency, attachment)) {
                 throw new NxtException.NotCurrentlyValidException(String.format("Hash doesn't meet target %s", attachment.getJSONObject()));
             }
         }
@@ -604,7 +604,13 @@ public abstract class MonetarySystem extends TransactionType {
                     TransactionType.isDuplicate(CURRENCY_MINTING, attachment.getCurrencyId() + ":" + transaction.getSenderId(), duplicates, true);
         }
 
-            @Override
+        @Override
+        boolean isUnconfirmedDuplicate(Transaction transaction, Map<TransactionType, Map<String, Boolean>> duplicates) {
+            Attachment.MonetarySystemCurrencyMinting attachment = (Attachment.MonetarySystemCurrencyMinting) transaction.getAttachment();
+            return TransactionType.isDuplicate(CURRENCY_MINTING, attachment.getCurrencyId() + ":" + transaction.getSenderId(), duplicates, true);
+        }
+
+        @Override
         public boolean canHaveRecipient() {
             return false;
         }

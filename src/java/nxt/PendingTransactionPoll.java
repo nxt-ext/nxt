@@ -4,7 +4,6 @@ import nxt.db.*;
 import nxt.util.Convert;
 
 import java.sql.*;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -29,7 +28,7 @@ public class PendingTransactionPoll extends AbstractPoll {
         }
     };
 
-    final static ValuesDbTable<PendingTransactionPoll, Long> signersTable = new ValuesDbTable<PendingTransactionPoll, Long>("pending_transaction_signer", signersDbKeyFactory) {
+    final static VersionedValuesDbTable<PendingTransactionPoll, Long> signersTable = new VersionedValuesDbTable<PendingTransactionPoll, Long>("pending_transaction_signer", signersDbKeyFactory) {
 
         @Override
         protected Long load(Connection con, ResultSet rs) throws SQLException {
@@ -120,6 +119,18 @@ public class PendingTransactionPoll extends AbstractPoll {
 
     public static void addPoll(PendingTransactionPoll poll){
         pendingTransactionsTable.insert(poll);
+
+        long[] signers;
+
+        if (poll.getBlacklist().length > 0) {
+            signers = poll.getBlacklist();
+        } else {
+            signers = poll.getWhitelist();
+        }
+
+        if (signers.length > 0) {
+            signersTable.insert(poll, Convert.arrayOfLongsToList(signers));
+        }
     }
 
     public static DbIterator<PendingTransactionPoll> finishing(int height){
@@ -135,28 +146,8 @@ public class PendingTransactionPoll extends AbstractPoll {
         return pendingTransactionsTable.getManyBy(clause, firstIndex, lastIndex);
     }
 
-    public static DbIterator<PendingTransactionPoll> getActiveByAccountId(long accountId, int firstIndex, int lastIndex) {
-        DbClause clause = new DbClause.LongBooleanClause("account_id", accountId, "finished", false);
-        return pendingTransactionsTable.getManyBy(clause, firstIndex, lastIndex);
-    }
-
-    public static DbIterator<PendingTransactionPoll> getFinishedByAssetId(long assetId, int firstIndex, int lastIndex) {
-        DbClause clause = new DbClause.LongBooleanClause("holding_id", assetId, "finished", true);
-        return pendingTransactionsTable.getManyBy(clause, firstIndex, lastIndex);
-    }
-
     public static DbIterator<PendingTransactionPoll> getByAssetId(long assetId, int firstIndex, int lastIndex) {
         DbClause clause = new DbClause.LongClause("holding_id", assetId);
-        return pendingTransactionsTable.getManyBy(clause, firstIndex, lastIndex);
-    }
-
-    public static DbIterator<PendingTransactionPoll> getActiveByAssetId(long assetId, int firstIndex, int lastIndex) {
-        DbClause clause = new DbClause.LongBooleanClause("holding_id", assetId, "finished", false);
-        return pendingTransactionsTable.getManyBy(clause, firstIndex, lastIndex);
-    }
-
-    public static DbIterator<PendingTransactionPoll> getFinishedByAccountId(long accountId, int firstIndex, int lastIndex) {
-        DbClause clause = new DbClause.LongBooleanClause("account_id", accountId, "finished", true);
         return pendingTransactionsTable.getManyBy(clause, firstIndex, lastIndex);
     }
 
@@ -164,7 +155,7 @@ public class PendingTransactionPoll extends AbstractPoll {
         try (Connection con = Db.db.getConnection();
              PreparedStatement pstmt = con.prepareStatement("SELECT DISTINCT pending_transaction.id "
                      + "from pending_transaction, pending_transactions_signers "
-                     + "WHERE pending_transaction.latest = TRUE AND pending_transaction.finished = false AND "
+                     + "WHERE pending_transaction.latest = TRUE AND "
                      + "pending_transaction.blacklist = false AND "
                      + "pending_transaction.id = pending_transactions_signers.poll_id "
                      + "AND pending_transaction_signers.account_id = ? "
@@ -198,53 +189,37 @@ public class PendingTransactionPoll extends AbstractPoll {
 
     private void save(Connection con) throws SQLException {
         boolean isBlacklist;
-        long[] signers;
+        byte signersCount;
 
-        if (blacklist.length > 0) {
+        if (getBlacklist().length > 0) {
             isBlacklist = true;
-            signers = blacklist;
+            signersCount = (byte)getBlacklist().length;
         } else {
             isBlacklist = false;
-            signers = whitelist;
+            signersCount = (byte)getWhitelist().length;
         }
 
         try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO pending_transaction (id, account_id, "
                 + "finish_height, signers_count, blacklist, voting_model, quorum, min_balance, holding_id, "
-                + "finished, height) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
+                + "height) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
             int i = 0;
             pstmt.setLong(++i, getId());
             pstmt.setLong(++i, getAccountId());
             pstmt.setInt(++i, getFinishBlockHeight());
-            pstmt.setByte(++i, (byte) signers.length);
+            pstmt.setByte(++i, signersCount);
             pstmt.setBoolean(++i, isBlacklist);
             pstmt.setByte(++i, getVotingModel());
             pstmt.setLong(++i, getQuorum());
             pstmt.setLong(++i, getMinBalance());
             pstmt.setLong(++i, getHoldingId());
-            pstmt.setBoolean(++i, isFinished());
             pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
             pstmt.executeUpdate();
-
-            //TODO: this is wrong, because pending_transaction is a versioned table, while pending_transaction_signers is not
-            // pendingTransactionTable.insert is called twice, at different heights, which will result in two inserts into
-            // signersTable at different height, which should never be done for non-versioned tables
-            // Either modify the signers table only once, outside of this method, or make signers table versioned
-            if (signers.length > 0) {
-                signersTable.insert(this, Convert.arrayOfLongsToList(signers));
-            }
         }
     }
 
-    //TODO: Is the pending poll entry needed after the block in which it is set to finished? It would be best if the pending_transaction
-    // record is set to deleted, i.e. call pendingTransactionsTable.delete(poll), because this will keep the table small, otherwise
-    // it will grow without limits. Deleted records are permanently deleted 1440 blocks after their deletion.
-    // If you do delete, signers table needs to be versioned and also deleted from.
-    //
-    // If keeping historical results is important, consider adding those to a separate table that is kept for the record, but
-    // never queried for currently pending transactions, e.g. similar to how asset exchange orders are deleted after being filled,
-    // but a record is kept in the trade table.
     static void finishPoll(PendingTransactionPoll poll) {
-        poll.setFinished(true);
-        pendingTransactionsTable.insert(poll);
+        pendingTransactionsTable.delete(poll);
+        signersTable.delete(poll);
+        //todo: clear VOTE_PHASED table as well
     }
 }

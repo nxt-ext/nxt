@@ -57,4 +57,9 @@ public final class PopOff extends APIServlet.APIRequestHandler {
         return true;
     }
 
+    @Override
+    boolean requirePassword() {
+        return true;
+    }
+
 }

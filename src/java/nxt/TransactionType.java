@@ -180,19 +180,19 @@ public abstract class TransactionType {
     final void apply(Transaction transaction, Account senderAccount, Account recipientAccount) {
         long amount = transaction.getAmountNQT();
 
-        senderAccount.addToBalanceNQT(- (Convert.safeAdd(amount, transaction.getFeeNQT())));
+        senderAccount.addToBalanceNQT(-transaction.getFeeNQT());
 
         if (transaction.getReferencedTransactionFullHash() != null
                 && transaction.getTimestamp() > Constants.REFERENCED_TRANSACTION_FULL_HASH_BLOCK_TIMESTAMP) {
             senderAccount.addToUnconfirmedBalanceNQT(Constants.UNCONFIRMED_POOL_DEPOSIT_NQT);
         }
-        //TODO: changing the senderAccount confirmed balance (except for the fee, which should always be charged here and not later)
-        // should also not be done in case of a two-phased transaction, in order to handle consistently assets, currencies
-        // and everything else that gets done in applyAttachment, and does not get done here in case of two-phased
-        if (recipientAccount != null && transaction.getTwoPhased() == null) {
-            recipientAccount.addToBalanceAndUnconfirmedBalanceNQT(amount);
-        }
-        if (transaction.getTwoPhased() == null) {
+
+        if (transaction.getTwoPhased() == null){
+            senderAccount.addToBalanceNQT(-amount);
+
+            if (recipientAccount != null) {
+                recipientAccount.addToBalanceAndUnconfirmedBalanceNQT(amount);
+            }
             applyAttachment(transaction, senderAccount, recipientAccount);
         }
     }
@@ -211,6 +211,10 @@ public abstract class TransactionType {
     abstract void undoAttachmentUnconfirmed(Transaction transaction, Account senderAccount);
 
     boolean isDuplicate(Transaction transaction, Map<TransactionType, Map<String,Boolean>> duplicates) {
+        return false;
+    }
+
+    boolean isUnconfirmedDuplicate(Transaction transaction, Map<TransactionType, Map<String,Boolean>> duplicates) {
         return false;
     }
 
@@ -469,7 +473,7 @@ public abstract class TransactionType {
                 } else if (alias.getAccountId() != transaction.getSenderId()) {
                     throw new NxtException.NotCurrentlyValidException("Alias doesn't belong to sender: " + aliasName);
                 }
-                if (transaction.getRecipientId() == Genesis.CREATOR_ID && Nxt.getBlockchain().getHeight() > Constants.MONETARY_SYSTEM_BLOCK) {
+                if (transaction.getRecipientId() == Genesis.CREATOR_ID) {
                     throw new NxtException.NotCurrentlyValidException("Selling alias to Genesis not allowed");
                 }
             }
@@ -586,9 +590,6 @@ public abstract class TransactionType {
 
             @Override
             void validateAttachment(final Transaction transaction) throws NxtException.ValidationException {
-                if (Nxt.getBlockchain().getLastBlock().getHeight() < Constants.MONETARY_SYSTEM_BLOCK) {
-                    throw new NxtException.NotYetEnabledException("Alias delete operation not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
-                }
                 final Attachment.MessagingAliasDelete attachment =
                         (Attachment.MessagingAliasDelete) transaction.getAttachment();
                 final String aliasName = attachment.getAliasName();
@@ -817,11 +818,7 @@ public abstract class TransactionType {
                     PendingTransactionPoll poll = PendingTransactionPoll.getPoll(pendingId);
                     if (poll == null) {
                         System.out.println("Wrong pending transaction: " + pendingId); //TODO: Logger
-                        throw new NxtException.NotValidException("Wrong pending transaction");
-                    }
-
-                    if(poll.isFinished()){
-                        throw new NxtException.NotValidException("Attempt to vote on finished pending transaction");
+                        throw new NxtException.NotValidException("Wrong pending transaction or poll is finished");
                     }
 
                     long[] whitelist = poll.getWhitelist();
@@ -1381,9 +1378,6 @@ public abstract class TransactionType {
 
             @Override
             void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
-                if (Nxt.getBlockchain().getLastBlock().getHeight() < Constants.MONETARY_SYSTEM_BLOCK) {
-                    throw new NxtException.NotYetEnabledException("Dividend payment not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
-                }
                 Attachment.ColoredCoinsDividendPayment attachment = (Attachment.ColoredCoinsDividendPayment)transaction.getAttachment();
                 Asset asset = Asset.getAsset(attachment.getAssetId());
                 if (asset == null) {
@@ -1951,7 +1945,7 @@ public abstract class TransactionType {
                     throw new NxtException.NotCurrentlyValidException("Invalid effective balance leasing: "
                             + " recipient account " + transaction.getRecipientId() + " not found or no public key published");
                 }
-                if (transaction.getRecipientId() == Genesis.CREATOR_ID && Nxt.getBlockchain().getHeight() > Constants.MONETARY_SYSTEM_BLOCK) {
+                if (transaction.getRecipientId() == Genesis.CREATOR_ID) {
                     throw new NxtException.NotCurrentlyValidException("Leasing to Genesis account not allowed");
                 }
             }

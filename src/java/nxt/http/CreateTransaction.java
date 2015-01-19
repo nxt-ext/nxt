@@ -18,7 +18,7 @@ import static nxt.http.JSONResponses.*;
 
 abstract class CreateTransaction extends APIServlet.APIRequestHandler {
 
-    private static final String[] commonParameters = new String[] {"secretPhrase", "publicKey", "feeNQT",
+    private static final String[] commonParameters = new String[]{"secretPhrase", "publicKey", "feeNQT",
             "deadline", "referencedTransactionFullHash", "broadcast",
             "message", "messageIsText",
             "messageToEncrypt", "messageToEncryptIsText", "encryptedMessageData", "encryptedMessageNonce",
@@ -39,7 +39,7 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
     }
 
     final JSONStreamAware createTransaction(HttpServletRequest req, Account senderAccount, Attachment attachment)
-        throws NxtException {
+            throws NxtException {
         return createTransaction(req, senderAccount, 0, 0, attachment);
     }
 
@@ -66,7 +66,7 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
 
         long[] whitelist = new long[0];
         String[] whitelistValues = req.getParameterValues("pendingWhitelisted");
-        if (whitelistValues.length > 0) {
+        if (whitelistValues != null && whitelistValues.length > 0) {
             whitelist = new long[whitelistValues.length];
             for (int i = 0; i < whitelist.length; i++) {
                 whitelist[i] = Convert.parseAccountId(whitelistValues[i]);
@@ -78,7 +78,7 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
 
         long[] blacklist = new long[0];
         String[] blacklistValues = req.getParameterValues("pendingBlacklisted");
-        if (blacklistValues.length > 0) {
+        if (blacklistValues != null && blacklistValues.length > 0) {
             blacklist = new long[blacklistValues.length];
             for (int i = 0; i < blacklist.length; i++) {
                 blacklist[i] = Convert.parseAccountId(blacklistValues[i]);
@@ -128,7 +128,7 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
 
         Appendix.TwoPhased twoPhased = null;
         String isPending = Convert.emptyToNull(req.getParameter("isPending"));
-        if ("true".equalsIgnoreCase(isPending)){
+        if ("true".equalsIgnoreCase(isPending)) {
             twoPhased = parseTwoPhased(req);
         }
 
@@ -156,7 +156,7 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
         byte[] publicKey = secretPhrase != null ? Crypto.getPublicKey(secretPhrase) : Convert.parseHexString(publicKeyValue);
 
         try {
-            Transaction.Builder builder = Nxt.getTransactionProcessor().newTransactionBuilder(publicKey, amountNQT, feeNQT,
+            Transaction.Builder builder = Nxt.newTransactionBuilder(publicKey, amountNQT, feeNQT,
                     deadline, attachment).referencedTransactionFullHash(referencedTransactionFullHash);
             if (attachment.getTransactionType().canHaveRecipient()) {
                 builder.recipientId(recipientId);
@@ -173,7 +173,7 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
             if (encryptToSelfMessage != null) {
                 builder.encryptToSelfMessage(encryptToSelfMessage);
             }
-            if (twoPhased!=null) {
+            if (twoPhased != null) {
                 builder.twoPhased(twoPhased);
             }
             Transaction transaction = builder.build();

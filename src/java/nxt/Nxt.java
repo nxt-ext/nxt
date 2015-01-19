@@ -17,7 +17,7 @@ import java.util.Properties;
 
 public final class Nxt {
 
-    public static final String VERSION = "1.4.7";
+    public static final String VERSION = "1.4.9";
     public static final String APPLICATION = "NRS";
 
     private static volatile Time time = new Time.EpochTime();
@@ -67,13 +67,17 @@ public final class Nxt {
     }
 
     public static String getStringProperty(String name) {
-        return getStringProperty(name, null);
+        return getStringProperty(name, null, false);
     }
 
     public static String getStringProperty(String name, String defaultValue) {
+        return getStringProperty(name, defaultValue, false);
+    }
+
+    public static String getStringProperty(String name, String defaultValue, boolean doNotLog) {
         String value = properties.getProperty(name);
         if (value != null && ! "".equals(value)) {
-            Logger.logMessage(name + " = \"" + value + "\"");
+            Logger.logMessage(name + " = \"" + (doNotLog ? "{not logged}" : value) + "\"");
             return value;
         } else {
             Logger.logMessage(name + " not defined");
@@ -119,6 +123,10 @@ public final class Nxt {
 
     public static TransactionProcessor getTransactionProcessor() {
         return TransactionProcessorImpl.getInstance();
+    }
+
+    public static Transaction.Builder newTransactionBuilder(byte[] senderPublicKey, long amountNQT, long feeNQT, short deadline, Attachment attachment) {
+        return new TransactionImpl.BuilderImpl((byte)1, senderPublicKey, amountNQT, feeNQT, deadline, (Attachment.AbstractAttachment)attachment);
     }
 
     public static int getEpochTime() {
