@@ -31,9 +31,9 @@ public final class Poll extends AbstractPoll {
         @Override
         protected void save(Connection con, Poll poll) throws SQLException {
             try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO poll (id, account_id, "
-                    + "name, description, options, finish_height, voting_model, min_balance, holding_id, "
-                    + "min_num_options, max_num_options, min_range_value, max_range_value, height) "
-                    + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
+                    + "name, description, options, finish_height, voting_model, min_balance, min_balance_model, "
+                    + "holding_id, min_num_options, max_num_options, min_range_value, max_range_value, height) "
+                    + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
                 int i = 0;
                 pstmt.setLong(++i, poll.getId());
                 pstmt.setLong(++i, poll.getAccountId());
@@ -43,6 +43,7 @@ public final class Poll extends AbstractPoll {
                 pstmt.setInt(++i, poll.getFinishBlockHeight());
                 pstmt.setByte(++i, poll.getVotingModel());
                 pstmt.setLong(++i, poll.getMinBalance());
+                pstmt.setByte(++i, poll.getMinBalanceModel());
                 pstmt.setLong(++i, poll.getHoldingId());
                 pstmt.setByte(++i, poll.getMinNumberOfOptions());
                 pstmt.setByte(++i, poll.getMaxNumberOfOptions());
@@ -109,8 +110,8 @@ public final class Poll extends AbstractPoll {
                  byte votingModel,
                  byte minNumberOfOptions, byte maxNumberOfOptions,
                  byte minRangeValue, byte maxRangeValue,
-                 long minBalance, long assetId) {
-        super(accountId, finishBlockHeight, votingModel, assetId, minBalance);
+                 long minBalance, byte minBalanceModel, long holdingId) {
+        super(accountId, finishBlockHeight, votingModel, holdingId, minBalance, minBalanceModel);
 
         this.id = id;
         this.dbKey = pollDbKeyFactory.newKey(this.id);
@@ -126,6 +127,8 @@ public final class Poll extends AbstractPoll {
 
     private Poll(ResultSet rs) throws SQLException {
         super(rs);
+
+        this.minBalanceModel = rs.getByte("min_balance_model");
 
         this.id = rs.getLong("id");
         this.dbKey = pollDbKeyFactory.newKey(this.id);
@@ -156,7 +159,8 @@ public final class Poll extends AbstractPoll {
                 attachment.getMinRangeValue(),
                 attachment.getMaxRangeValue(),
                 attachment.getMinBalance(),
-                attachment.getAssetId());
+                attachment.getMinBalanceModel(),
+                attachment.getHoldingId());
         pollTable.insert(poll);
     }
 

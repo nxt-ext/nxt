@@ -428,8 +428,8 @@ public interface Appendix {
 
         private final int maxHeight;
         private final long quorum;
-        private final long voteThreshold;
         private final byte votingModel;
+        private final long minBalance;
         private final long holdingId;
         private final long[] whitelist;
         private final long[] blacklist;
@@ -439,7 +439,7 @@ public interface Appendix {
             maxHeight = buffer.getInt();
             votingModel = buffer.get();
             quorum = buffer.getLong();
-            voteThreshold = buffer.getLong();
+            minBalance = buffer.getLong();
 
             byte whitelistSize = buffer.get();
             whitelist = new long[whitelistSize];
@@ -460,10 +460,10 @@ public interface Appendix {
             super(attachmentData);
             maxHeight = ((Long)attachmentData.get("releaseHeight")).intValue();
             quorum = Convert.parseLong(attachmentData.get("quorum"));
-            voteThreshold = Convert.parseLong(attachmentData.get("voteThreshold"));
+            minBalance = Convert.parseLong(attachmentData.get("minBalance"));
             votingModel = ((Long)attachmentData.get("votingModel")).byteValue();
-            if (votingModel == Constants.VOTING_MODEL_ASSET) {
-                holdingId = Convert.parseUnsignedLong((String)attachmentData.get("asset"));
+            if (votingModel == Constants.VOTING_MODEL_ASSET || votingModel == Constants.VOTING_MODEL_MS_COIN) {
+                holdingId = Convert.parseUnsignedLong((String)attachmentData.get("holding"));
             } else {
                 holdingId = 0;
             }
@@ -485,17 +485,17 @@ public interface Appendix {
             this(maxHeight, Constants.VOTING_MODEL_ACCOUNT, quorum, 0, whitelist, null);
         }
 
-        public TwoPhased(int maxHeight, byte votingModel, long quorum, long voteThreshold,
+        public TwoPhased(int maxHeight, byte votingModel, long quorum, long minBalance,
                   long[] whitelist, long[] blacklist) {
-            this(maxHeight, votingModel, 0, quorum, voteThreshold, whitelist, blacklist);
+            this(maxHeight, votingModel, 0, quorum, minBalance, whitelist, blacklist);
         }
 
         public TwoPhased(int maxHeight, byte votingModel, long holdingId, long quorum,
-                  long voteThreshold, long[] whitelist, long[] blacklist) {
+                  long minBalance, long[] whitelist, long[] blacklist) {
             this.maxHeight = maxHeight;
             this.votingModel = votingModel;
             this.quorum = quorum;
-            this.voteThreshold = voteThreshold;
+            this.minBalance = minBalance;
 
             if (whitelist == null) {
                 this.whitelist = new long[0];
@@ -527,7 +527,7 @@ public interface Appendix {
             buffer.putInt(maxHeight);
             buffer.put(votingModel);
             buffer.putLong(quorum);
-            buffer.putLong(voteThreshold);
+            buffer.putLong(minBalance);
 
             buffer.put((byte) whitelist.length);
             for (long account : whitelist) {
@@ -546,9 +546,9 @@ public interface Appendix {
         void putMyJSON(JSONObject json) {
             json.put("releaseHeight", maxHeight);
             json.put("quorum", quorum);
-            json.put("voteThreshold", voteThreshold);
+            json.put("minBalance", minBalance);
             json.put("votingModel", votingModel);
-            json.put("asset", Convert.toUnsignedLong(holdingId));
+            json.put("holding", Convert.toUnsignedLong(holdingId));
 
             JSONArray whitelistJson = new JSONArray();
             for (long accountId : whitelist) {
@@ -563,7 +563,6 @@ public interface Appendix {
             json.put("blacklist", blacklistJson);
         }
 
-        //todo: some more checks?
         @Override
         void validate(Transaction transaction) throws NxtException.ValidationException {
             if(votingModel == Constants.VOTING_MODEL_BALANCE){
@@ -584,23 +583,30 @@ public interface Appendix {
                 throw new NxtException.NotValidException("By-account voting with empty whitelist");
             }
 
-            if (votingModel == Constants.VOTING_MODEL_ACCOUNT && voteThreshold != 0) {
+            if (votingModel == Constants.VOTING_MODEL_ACCOUNT && minBalance != 0) {
                 throw new NxtException.NotValidException("minBalance has to be zero when by-account voting on pending transaction");
             }
 
+            if (votingModel == Constants.VOTING_MODEL_ACCOUNT && holdingId != 0) {
+                throw new NxtException.NotValidException("holdingId provided in by-account voting");
+            }
+
             if (whitelist.length > Constants.PENDING_TRANSACTIONS_MAX_WHITELIST_SIZE) {
-                throw new NxtException.NotValidException("Possible voters list is too big");
+                throw new NxtException.NotValidException("Whitelist is too big");
             }
 
             if (blacklist.length > Constants.PENDING_TRANSACTIONS_MAX_BLACKLIST_SIZE) {
-                throw new NxtException.NotValidException("Possible voters list is too big");
+                throw new NxtException.NotValidException("Blacklist is too big");
             }
 
-            if (votingModel == Constants.VOTING_MODEL_ASSET && holdingId == 0) {
+            if ((votingModel == Constants.VOTING_MODEL_ASSET || votingModel == Constants.VOTING_MODEL_MS_COIN)
+                    && holdingId == 0) {
                 throw new NxtException.NotValidException("Invalid holdingId");
             }
 
-            if (maxHeight < Nxt.getBlockchain().getHeight() + Constants.VOTING_MIN_VOTE_DURATION) {
+            int currentHeight = Nxt.getBlockchain().getHeight();
+            if (maxHeight < currentHeight + Constants.VOTING_MIN_VOTE_DURATION
+                    || maxHeight > currentHeight + Constants.VOTING_MAX_VOTE_DURATION) {
                 throw new NxtException.NotValidException("Invalid max height");
             }
         }
@@ -609,7 +615,7 @@ public interface Appendix {
         void apply(Transaction transaction, Account senderAccount, Account recipientAccount) {
             long id = transaction.getId();
             PendingTransactionPoll poll = new PendingTransactionPoll(id, senderAccount.getId(), maxHeight,
-                    votingModel, quorum, voteThreshold, holdingId, whitelist, blacklist);
+                    votingModel, quorum, minBalance, holdingId, whitelist, blacklist);
             PendingTransactionPoll.addPoll(poll);
         }
 
@@ -664,8 +670,8 @@ public interface Appendix {
             return quorum;
         }
 
-        public long getVoteThreshold() {
-            return voteThreshold;
+        public long getMinBalance() {
+            return minBalance;
         }
 
         public byte getVotingModel() {

@@ -394,16 +394,18 @@ public interface Attachment extends Appendix {
             private final String[] pollOptions;
 
             private final int finishBlockHeight;
-
-
             private final byte votingModel;
 
-            private long minBalance = Constants.VOTING_DEFAULT_MIN_BALANCE;
+            private long minBalance = 0;
+            private byte minBalanceModel = Constants.VOTING_MINBALANCE_UNDEFINED;
+
             private byte minNumberOfOptions = Constants.VOTING_DEFAULT_MIN_NUMBER_OF_CHOICES;
             private byte maxNumberOfOptions;
+
             private final byte minRangeValue;
             private final byte maxRangeValue;
-            private long assetId;
+
+            private long holdingId;
 
             public PollBuilder(final String pollName, final String pollDescription, final String[] pollOptions,
                                final int finishBlockHeight, final byte votingModel,
@@ -419,15 +421,34 @@ public interface Attachment extends Appendix {
                 this.maxNumberOfOptions = maxNumberOfOptions;
                 this.minRangeValue = minRangeValue;
                 this.maxRangeValue = maxRangeValue;
+
+                switch (votingModel) {
+                    case Constants.VOTING_MODEL_ASSET:
+                        minBalanceModel = Constants.VOTING_MINBALANCE_ASSET;
+                        break;
+                    case Constants.VOTING_MODEL_MS_COIN:
+                        minBalanceModel = Constants.VOTING_MINBALANCE_COIN;
+                        break;
+                    case Constants.VOTING_MODEL_BALANCE:
+                        minBalanceModel = Constants.VOTING_MINBALANCE_BYBALANCE;
+                        break;
+                }
             }
 
-            public PollBuilder minBalance(long minBalance) {
+            public PollBuilder minBalance(byte minBalanceModel, long minBalance) {
+                this.minBalanceModel = minBalanceModel;
                 this.minBalance = minBalance;
                 return this;
             }
 
-            public PollBuilder assetId(long assetId) {
-                this.assetId = assetId;
+            public PollBuilder minBalance(long minBalance) {
+                this.minBalanceModel = Constants.VOTING_MINBALANCE_UNDEFINED;
+                this.minBalance = minBalance;
+                return this;
+            }
+
+            public PollBuilder holdingId(long holdingId) {
+                this.holdingId = holdingId;
                 return this;
             }
 
@@ -443,10 +464,12 @@ public interface Attachment extends Appendix {
         private final int finishBlockHeight;
         private final byte votingModel;
 
-        private final long minBalance; //for all kinds of voting
         private byte minNumberOfOptions = Constants.VOTING_DEFAULT_MIN_NUMBER_OF_CHOICES, maxNumberOfOptions; //only for choice voting
         private final byte minRangeValue, maxRangeValue;
-        private long assetId = 0; // only for asset voting
+
+        private final long minBalance;
+        private final byte minBalanceModel;
+        private long holdingId = 0;
 
         MessagingPollCreation(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
             super(buffer, transactionVersion);
@@ -467,15 +490,15 @@ public interface Attachment extends Appendix {
 
             this.votingModel = buffer.get();
 
-            this.minBalance = buffer.getLong();
-
             this.minNumberOfOptions = buffer.get();
             this.maxNumberOfOptions = buffer.get();
 
             this.minRangeValue = buffer.get();
             this.maxRangeValue = buffer.get();
 
-            this.assetId = buffer.getLong();
+            this.minBalance = buffer.getLong();
+            this.minBalanceModel = buffer.get();
+            this.holdingId = buffer.getLong();
         }
 
         MessagingPollCreation(JSONObject attachmentData) {
@@ -490,9 +513,6 @@ public interface Attachment extends Appendix {
             for (int i = 0; i < pollOptions.length; i++) {
                 this.pollOptions[i] = ((String) options.get(i)).trim();
             }
-
-            this.minBalance = Convert.parseLong(attachmentData.get("minBalance"));
-
             this.votingModel = ((Long) attachmentData.get("votingModel")).byteValue();
 
             this.minNumberOfOptions = ((Long) attachmentData.get("minNumberOfOptions")).byteValue();
@@ -500,7 +520,9 @@ public interface Attachment extends Appendix {
             this.minRangeValue = ((Long) attachmentData.get("minRangeValue")).byteValue();
             this.maxRangeValue = ((Long) attachmentData.get("maxRangeValue")).byteValue();
 
-            this.assetId = Convert.parseUnsignedLong((String)attachmentData.get("asset"));
+            this.minBalance = Convert.parseLong(attachmentData.get("minBalance"));
+            this.minBalanceModel = ((Long)attachmentData.get("minBalance")).byteValue();
+            this.holdingId = Convert.parseUnsignedLong((String)attachmentData.get("holding"));
         }
 
         public MessagingPollCreation(PollBuilder builder) {
@@ -516,7 +538,8 @@ public interface Attachment extends Appendix {
             this.minRangeValue = builder.minRangeValue;
             this.maxRangeValue = builder.maxRangeValue;
             this.minBalance = builder.minBalance;
-            this.assetId = builder.assetId;
+            this.minBalanceModel = builder.minBalanceModel;
+            this.holdingId = builder.holdingId;
         }
 
         @Override
@@ -531,7 +554,7 @@ public interface Attachment extends Appendix {
                 size += 2 + Convert.toBytes(pollOption).length;
             }
 
-            size += 4 + 1 + 8 + 1 + 1 + 1 + 1 + 8;
+            size += 4 + 1 + 1 + 1 + 1 + 1 + 8 + 1 + 8;
 
             return size;
         }
@@ -556,14 +579,15 @@ public interface Attachment extends Appendix {
                 buffer.put(option);
             }
             buffer.put(this.votingModel);
-            buffer.putLong(minBalance);
 
             buffer.put(this.minNumberOfOptions);
             buffer.put(this.maxNumberOfOptions);
             buffer.put(this.minRangeValue);
             buffer.put(this.maxRangeValue);
 
-            buffer.putLong(this.assetId);
+            buffer.putLong(minBalance);
+            buffer.put(minBalanceModel);
+            buffer.putLong(this.holdingId);
         }
 
         @Override
@@ -587,8 +611,8 @@ public interface Attachment extends Appendix {
             attachment.put("votingModel", this.votingModel);
 
             attachment.put("minBalance", this.minBalance);
-
-            attachment.put("asset", Convert.toUnsignedLong(this.assetId));
+            attachment.put("minBalanceModel", this.minBalanceModel);
+            attachment.put("holding", Convert.toUnsignedLong(this.holdingId));
         }
 
         @Override
@@ -624,17 +648,13 @@ public interface Attachment extends Appendix {
 
         public byte getMaxRangeValue() { return maxRangeValue; }
 
-        public byte getVotingModel() {
-            return votingModel;
-        }
+        public byte getVotingModel() { return votingModel; }
 
-        public long getMinBalance() {
-            return minBalance;
-        }
+        public long getMinBalance() { return minBalance; }
 
-        public long getAssetId() {
-            return assetId;
-        }
+        public byte getMinBalanceModel() { return minBalanceModel; }
+
+        public long getHoldingId() { return holdingId; }
     }
 
     public final static class MessagingVoteCasting extends AbstractAttachment {
@@ -778,17 +798,11 @@ public interface Attachment extends Appendix {
         }
 
         @Override
-        public TransactionType getTransactionType() {
-            return TransactionType.Messaging.HUB_ANNOUNCEMENT;
-        }
+        public TransactionType getTransactionType() { return TransactionType.Messaging.HUB_ANNOUNCEMENT; }
 
-        public long getMinFeePerByteNQT() {
-            return minFeePerByteNQT;
-        }
+        public long getMinFeePerByteNQT() { return minFeePerByteNQT; }
 
-        public String[] getUris() {
-            return uris;
-        }
+        public String[] getUris() { return uris; }
     }
 
     public final static class MessagingAccountInfo extends AbstractAttachment {

@@ -30,12 +30,17 @@ public final class Constants {
     public static final byte VOTING_MODEL_ASSET = 2;
     public static final byte VOTING_MODEL_MS_COIN = 3;
 
-    public static final byte VOTING_DEFAULT_MIN_BALANCE = 0;
+    public static final byte VOTING_MINBALANCE_UNDEFINED = 0;
+    public static final byte VOTING_MINBALANCE_BYBALANCE = 1;
+    public static final byte VOTING_MINBALANCE_ASSET = 2;
+    public static final byte VOTING_MINBALANCE_COIN = 3;
+
     public static final byte VOTING_DEFAULT_MIN_NUMBER_OF_CHOICES = 1;
     public static final byte VOTING_MIN_RANGE_VALUE_LIMIT = -100;
     public static final byte VOTING_MAX_RANGE_VALUE_LIMIT = 100;
     public static final byte VOTING_NO_VOTE_VALUE = Byte.MIN_VALUE;
     public static final byte VOTING_MIN_VOTE_DURATION = 10;
+    public static final int VOTING_MAX_VOTE_DURATION = 14*1440;
 
 
     public static final boolean isPhasedVotingDataTrimmed = Nxt.getBooleanProperty("nxt.trimPhasedVotingData");
@@ -43,7 +48,6 @@ public final class Constants {
 
     public static final byte PENDING_TRANSACTIONS_MAX_WHITELIST_SIZE = 10;
     public static final byte PENDING_TRANSACTIONS_MAX_BLACKLIST_SIZE = 5;
-    public static final int  PENDING_TRANSACTIONS_MAX_PERIOD = 14*1440;
 
 
     public static final int MAX_ALIAS_URI_LENGTH = 1000;

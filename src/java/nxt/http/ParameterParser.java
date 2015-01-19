@@ -17,9 +17,12 @@ import static nxt.http.JSONResponses.*;
 
 final class ParameterParser {
 
-    static byte getByte(HttpServletRequest req, String name, byte min, byte max) throws ParameterException {
+    static byte getByte(HttpServletRequest req, String name, byte min, byte max, boolean isMandatory) throws ParameterException {
         String paramValue = Convert.emptyToNull(req.getParameter(name));
         if (paramValue == null) {
+            if (isMandatory) {
+                throw new ParameterException(missing(name));
+            }
             return 0;
         }
         byte value;
