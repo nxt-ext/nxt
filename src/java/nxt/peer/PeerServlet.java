@@ -76,7 +76,7 @@ public final class PeerServlet extends HttpServlet {
         JSONStreamAware response;
 
         try {
-            peer = Peers.addPeer(req.getRemoteAddr(), null);
+            peer = Peers.addPeer(req.getRemoteAddr(), -1, null);
             if (peer == null) {
                 return;
             }

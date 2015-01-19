@@ -607,25 +607,30 @@ public final class Peers {
                 return peer;
             }
             InetAddress inetAddress = InetAddress.getByName(host);
-            return addPeer(inetAddress.getHostAddress(), announcedAddress);
+            return addPeer(inetAddress.getHostAddress(), uri.getPort(), announcedAddress);
         } catch (URISyntaxException | UnknownHostException e) {
             //Logger.logDebugMessage("Invalid peer address: " + announcedAddress + ", " + e.toString());
             return null;
         }
     }
 
-    static PeerImpl addPeer(final String address, final String announcedAddress) {
+    static PeerImpl addPeer(final String address, int port, final String announcedAddress) {
 
         //re-add the [] to ipv6 addresses lost in getHostAddress() above
-        String clean_address = address;
-        if (clean_address.split(":").length > 2) {
-            clean_address = "[" + clean_address + "]";
+        String cleanAddress = address;
+        if (cleanAddress.split(":").length > 2) {
+            cleanAddress = "[" + cleanAddress + "]";
         }
+        
+        if (port >= 0) {
+            cleanAddress = cleanAddress + ":" + port;
+        }
+        
         PeerImpl peer;
-        if ((peer = peers.get(clean_address)) != null) {
+        if ((peer = peers.get(cleanAddress)) != null) {
             return peer;
         }
-        String peerAddress = normalizeHostAndPort(clean_address);
+        String peerAddress = normalizeHostAndPort(cleanAddress);
         if (peerAddress == null) {
             return null;
         }
