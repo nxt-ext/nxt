@@ -49,14 +49,15 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
     }
 
     private Appendix.TwoPhased parseTwoPhased(HttpServletRequest req) throws ParameterException {
-        byte votingModel = ParameterParser.getByte(req, "pendingVotingModel", Constants.VOTING_MODEL_ACCOUNT, Constants.VOTING_MODEL_MS_COIN);
+        byte votingModel = ParameterParser.getByte(req, "pendingVotingModel", Constants.VOTING_MODEL_ACCOUNT, Constants.VOTING_MODEL_MS_COIN, true);
 
         int maxHeight = ParameterParser.getInt(req, "pendingMaxHeight",
                 Nxt.getBlockchain().getHeight() + Constants.VOTING_MIN_VOTE_DURATION,
-                Nxt.getBlockchain().getHeight() + Constants.PENDING_TRANSACTIONS_MAX_PERIOD,
+                Nxt.getBlockchain().getHeight() + Constants.VOTING_MAX_VOTE_DURATION,
                 true);
 
         long quorum = ParameterParser.getLong(req, "pendingQuorum", 0, Long.MAX_VALUE, true);
+
         long minBalance = ParameterParser.getLong(req, "pendingMinBalance", 0, Long.MAX_VALUE, true);
 
         long assetId = ParameterParser.getLong(req, "pendingAsset", Long.MIN_VALUE, Long.MAX_VALUE, false);

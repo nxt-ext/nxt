@@ -63,8 +63,7 @@ public class PendingTransactionPoll extends AbstractPoll {
         }
     };
 
-    static void init() {
-    }
+    static void init() {}
 
     PendingTransactionPoll(long id, long accountId, int finishBlockHeight,
                                   byte votingModel, long quorum, long voteThreshold,

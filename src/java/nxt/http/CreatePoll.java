@@ -1,12 +1,11 @@
 package nxt.http;
 
 import nxt.*;
-import nxt.util.Convert;
 import nxt.Attachment.MessagingPollCreation.PollBuilder;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 import static nxt.http.JSONResponses.*;
@@ -16,12 +15,12 @@ public final class CreatePoll extends CreateTransaction {
     static final CreatePoll instance = new CreatePoll();
 
     private CreatePoll() {
-        super(new APITag[] {APITag.VS, APITag.CREATE_TRANSACTION},
+        super(new APITag[]{APITag.VS, APITag.CREATE_TRANSACTION},
                 "name", "description", "finishHeight", "votingModel",
                 "minNumberOfOptions", "maxNumberOfOptions",
                 "minRangeValue", "maxRangeValue",
-                "minBalance", "assetId",
-                "option1","option2","option3");
+                "minBalance", "minBalanceModel", "holding",
+                "option1", "option2", "option3");
     }
 
     @Override
@@ -30,19 +29,10 @@ public final class CreatePoll extends CreateTransaction {
         String nameValue = req.getParameter("name");
         String descriptionValue = req.getParameter("description");
 
-        String finishHeightValue = Convert.emptyToNull(req.getParameter("finishHeight"));
-
-
-        String votingModelValue = Convert.emptyToNull(req.getParameter("votingModel"));
-
         if (nameValue == null) {
             return MISSING_NAME;
         } else if (descriptionValue == null) {
             return MISSING_DESCRIPTION;
-        } else if (finishHeightValue == null) {
-            return MISSING_FINISHHEIGHT;
-        } else if (votingModelValue == null) {
-            return MISSING_VOTINGMODEL;
         }
 
         if (nameValue.length() > Constants.MAX_POLL_NAME_LENGTH) {
@@ -53,9 +43,9 @@ public final class CreatePoll extends CreateTransaction {
             return INCORRECT_POLL_DESCRIPTION_LENGTH;
         }
 
-        List<String> options = new ArrayList<>(Constants.MAX_POLL_OPTION_COUNT / 20);
+        List<String> options = new LinkedList<>();
         while (options.size() <= Constants.MAX_POLL_OPTION_COUNT) {
-            String optionValue = req.getParameter("option" + (options.size()+1));
+            String optionValue = req.getParameter("option" + (options.size() + 1));
             if (optionValue == null) {
                 break;
             }
@@ -65,120 +55,38 @@ public final class CreatePoll extends CreateTransaction {
             options.add(optionValue.trim());
         }
 
-        if(options.size()==0){
+        byte optionsSize = (byte) options.size();
+        if (options.size() == 0) {
             return INCORRECT_ZEROOPTIONS;
         }
 
-        int finishHeight;
-        try {
-            finishHeight = Integer.parseInt(finishHeightValue);
-            if (finishHeight <= Nxt.getBlockchain().getHeight()) {
-                return INCORRECT_FINISHHEIGHT;
-            }
-        } catch (NumberFormatException e) {
-            return INCORRECT_FINISHHEIGHT;
-        }
+        int currentHeight = Nxt.getBlockchain().getHeight();
+        int finishHeight = ParameterParser.getInt(req, "finishHeight",
+                currentHeight + Constants.VOTING_MIN_VOTE_DURATION,
+                currentHeight + Constants.VOTING_MAX_VOTE_DURATION, true);
 
-        byte votingModel;
-        try {
-            votingModel = Byte.parseByte(votingModelValue);
-            if (votingModel != Constants.VOTING_MODEL_ACCOUNT && votingModel != Constants.VOTING_MODEL_ASSET &&
-                    votingModel != Constants.VOTING_MODEL_BALANCE) {
-                return INCORRECT_VOTINGMODEL;
-            }
-        } catch (NumberFormatException e) {
-            return INCORRECT_VOTINGMODEL;
-        }
+        byte votingModel = ParameterParser.getByte(req, "votingModel", Constants.VOTING_MODEL_BALANCE, Constants.VOTING_MODEL_MS_COIN, true);
 
-        String minBalanceValue = Convert.emptyToNull(req.getParameter("minBalance"));
-        long minBalance = Constants.VOTING_DEFAULT_MIN_BALANCE;
-        if (minBalanceValue != null) {
-            try {
-                minBalance = Long.parseLong(minBalanceValue);
-                if (minBalance < 0) {
-                    return INCORRECT_MINBALANCE;
-                }
-            } catch (NumberFormatException e) {
-                return INCORRECT_MINBALANCE;
-            }
-        }
 
-        String minNumberOfOptionsValue = req.getParameter("minNumberOfOptions");
-        String maxNumberOfOptionsValue = req.getParameter("maxNumberOfOptions");
+        byte minNumberOfOptions = ParameterParser.getByte(req, "minNumberOfOptions", (byte) 1, optionsSize, true);
+        byte maxNumberOfOptions = ParameterParser.getByte(req, "maxNumberOfOptions", minNumberOfOptions, optionsSize, true);
 
-        if (minNumberOfOptionsValue == null) {
-            return MISSING_MINNUMBEROFOPTIONS;
-        } else if (maxNumberOfOptionsValue == null) {
-            return MISSING_MAXNUMBEROFOPTIONS;
-        }
-
-        byte minNumberOfOptions;
-        try {
-            minNumberOfOptions = Byte.parseByte(minNumberOfOptionsValue);
-            if (minNumberOfOptions < 1 || minNumberOfOptions > options.size()) {
-                return INCORRECT_MINNUMBEROFOPTIONS;
-            }
-        } catch (NumberFormatException e) {
-            return INCORRECT_MINNUMBEROFOPTIONS;
-        }
-
-        byte maxNumberOfOptions;
-        try {
-            maxNumberOfOptions = Byte.parseByte(maxNumberOfOptionsValue);
-            if (maxNumberOfOptions < 1 || maxNumberOfOptions > options.size()) {
-                return INCORRECT_MAXNUMBEROFOPTIONS;
-            }
-        } catch (NumberFormatException e) {
-            return INCORRECT_MAXNUMBEROFOPTIONS;
-        }
-
-        String minRangeValueString = req.getParameter("minRangeValue");
-        String maxRangeValueString = req.getParameter("maxRangeValue");
-
-        if (minRangeValueString == null) {
-            return MISSING_MINNUMBEROFOPTIONS;
-        } else if (maxRangeValueString == null) {
-            return MISSING_MAXNUMBEROFOPTIONS;
-        }
-
-        byte minRangeValue;
-        try {
-            minRangeValue = Byte.parseByte(minRangeValueString);
-            if (minRangeValue < Constants.VOTING_MIN_RANGE_VALUE_LIMIT) {
-                return INCORRECT_MINNUMBEROFOPTIONS;
-            }
-        } catch (NumberFormatException e) {
-            return INCORRECT_MINRANGEVALUE;
-        }
-
-        byte maxRangeValue;
-        try {
-            maxRangeValue = Byte.parseByte(maxRangeValueString);
-            if (maxRangeValue > Constants.VOTING_MAX_RANGE_VALUE_LIMIT) {
-                return INCORRECT_MAXNUMBEROFOPTIONS;
-            }
-        } catch (NumberFormatException e) {
-            return INCORRECT_MAXRANGEVALUE;
-        }
+        byte minRangeValue = ParameterParser.getByte(req, "minRangeValue", Constants.VOTING_MIN_RANGE_VALUE_LIMIT, Constants.VOTING_MAX_RANGE_VALUE_LIMIT, true);
+        byte maxRangeValue = ParameterParser.getByte(req, "maxRangeValue", minRangeValue, Constants.VOTING_MAX_RANGE_VALUE_LIMIT, true);
 
         PollBuilder builder = new PollBuilder(nameValue.trim(), descriptionValue.trim(),
-                options.toArray(new String[options.size()]),finishHeight, votingModel,
+                options.toArray(new String[options.size()]), finishHeight, votingModel,
                 minNumberOfOptions, maxNumberOfOptions, minRangeValue, maxRangeValue);
-        builder.minBalance(minBalance);
 
+        long minBalance = ParameterParser.getLong(req, "minBalance", 0, Long.MAX_VALUE, false);
+        byte minBalanceModel = ParameterParser.getByte(req, "minBalanceModel",
+                Constants.VOTING_MINBALANCE_UNDEFINED, Constants.VOTING_MINBALANCE_COIN, false);
 
-        if (votingModel == Constants.VOTING_MODEL_ASSET) {
-            String assetIdValue = Convert.emptyToNull(req.getParameter("assetId"));
+        builder.minBalance(minBalanceModel, minBalance);
 
-            try {
-                long assetId = Convert.parseUnsignedLong(assetIdValue);
-                if (Asset.getAsset(assetId) == null) {
-                    return INCORRECT_ASSET;
-                }
-                builder.assetId(assetId);
-            } catch (NumberFormatException e) {
-                return INCORRECT_ASSET;
-            }
+        long holdingId = ParameterParser.getLong(req, "holding", Long.MIN_VALUE, Long.MAX_VALUE, false);
+        if (holdingId != 0) {
+            builder.holdingId(holdingId);
         }
 
         Account account = ParameterParser.getSenderAccount(req);

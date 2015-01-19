@@ -14,14 +14,24 @@ public abstract class AbstractPoll {
 
     protected final long holdingId; //whether asset id or MS coin id
     protected final long minBalance;
-    //protected final byte minBalanceModel;
+    protected byte minBalanceModel = Constants.VOTING_MINBALANCE_UNDEFINED;
 
-    AbstractPoll(long accountId, int finishBlockHeight, byte votingModel, long holdingId, long minBalance) {
+    AbstractPoll(long accountId, int finishBlockHeight,
+                 byte votingModel, long holdingId,
+                 long minBalance){
+        this(accountId, finishBlockHeight, votingModel, holdingId, minBalance,
+                Constants.VOTING_MINBALANCE_UNDEFINED);
+    }
+
+    AbstractPoll(long accountId, int finishBlockHeight,
+                 byte votingModel, long holdingId,
+                 long minBalance, byte minBalanceModel) {
         this.accountId = accountId;
         this.finishBlockHeight = finishBlockHeight;
         this.votingModel = votingModel;
         this.holdingId = holdingId;
         this.minBalance = minBalance;
+        this.minBalanceModel = minBalanceModel;
     }
 
     AbstractPoll(ResultSet rs) throws SQLException {
@@ -30,6 +40,8 @@ public abstract class AbstractPoll {
         this.votingModel = rs.getByte("voting_model");
         this.holdingId = rs.getLong("holding_id");
         this.minBalance = rs.getLong("min_balance");
+
+        this.minBalanceModel = Constants.VOTING_MINBALANCE_UNDEFINED;
     }
 
     public long getAccountId() {
@@ -50,6 +62,8 @@ public abstract class AbstractPoll {
 
     public long getHoldingId() { return holdingId; }
 
+    public byte getMinBalanceModel() { return minBalanceModel; }
+
     long calcWeight(Account voter) {
         long weight = 0;
 
@@ -69,12 +83,17 @@ public abstract class AbstractPoll {
                 }
                 break;
             case Constants.VOTING_MODEL_ACCOUNT:
-                long assetId0 = getHoldingId(); //todo: fix
-                long balance;
-                if (assetId0 == 0) {
-                    balance = voter.getBalanceNQT();
-                } else {
-                    balance = voter.getAssetBalanceQNT(assetId0);
+                long holdingId = getHoldingId();
+                long balance = 0;
+                switch(minBalanceModel){
+                    case Constants.VOTING_MINBALANCE_BYBALANCE:
+                        balance = voter.getBalanceNQT();
+                        break;
+                    case Constants.VOTING_MINBALANCE_ASSET:
+                        balance = voter.getAssetBalanceQNT(holdingId);
+                        break;
+                    case Constants.VOTING_MINBALANCE_COIN:
+                        balance = voter.getCurrency(holdingId).getUnits();
                 }
                 if (balance >= getMinBalance()) {
                     weight = 1;

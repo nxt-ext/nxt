@@ -645,9 +645,12 @@ public abstract class TransactionType {
 
             @Override
             void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
-                if (Nxt.getBlockchain().getLastBlock().getHeight() < Constants.VOTING_SYSTEM_BLOCK) {
+                int currentHeight = Nxt.getBlockchain().getHeight();
+
+                if (currentHeight < Constants.VOTING_SYSTEM_BLOCK) {
                     throw new NxtException.NotYetEnabledException("Voting System not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
                 }
+
                 Attachment.MessagingPollCreation attachment = (Attachment.MessagingPollCreation) transaction.getAttachment();
                 for (int i = 0; i < attachment.getPollOptions().length; i++) {
                     if (attachment.getPollOptions()[i].length() > Constants.MAX_POLL_OPTION_LENGTH) {
@@ -655,23 +658,32 @@ public abstract class TransactionType {
                     }
                 }
 
-                if (attachment.getVotingModel() != Constants.VOTING_MODEL_ACCOUNT
-                        && attachment.getVotingModel() != Constants.VOTING_MODEL_BALANCE
-                        && attachment.getVotingModel() != Constants.VOTING_MODEL_ASSET) {
+                byte votingModel = attachment.getVotingModel();
+                if (votingModel != Constants.VOTING_MODEL_ACCOUNT
+                        && votingModel != Constants.VOTING_MODEL_BALANCE
+                        && votingModel != Constants.VOTING_MODEL_ASSET
+                        && votingModel != Constants.VOTING_MODEL_MS_COIN) {
                     throw new NxtException.NotValidException("Invalid voting model value: " + attachment.getJSONObject());
                 }
 
-                if (attachment.getVotingModel() == Constants.VOTING_MODEL_ASSET && attachment.getAssetId() == 0) {
+                if (votingModel == Constants.VOTING_MODEL_ASSET && attachment.getHoldingId() == 0) {
                     throw new NxtException.NotValidException("No asset id provided: " + attachment.getJSONObject());
                 }
 
-                if (attachment.getMinNumberOfOptions() < 1) {
+                if (votingModel == Constants.VOTING_MODEL_MS_COIN && attachment.getHoldingId() == 0) {
+                    throw new NxtException.NotValidException("No MS coin id provided: " + attachment.getJSONObject());
+                }
+
+                int optionsCount = attachment.getPollOptions().length;
+
+                if (attachment.getMinNumberOfOptions() < 1
+                        || attachment.getMinNumberOfOptions() > optionsCount) {
                     throw new NxtException.NotValidException("Invalid min number of options: " + attachment.getJSONObject());
                 }
 
                 if (attachment.getMaxNumberOfOptions() < 1
                         || attachment.getMaxNumberOfOptions() < attachment.getMinNumberOfOptions()
-                        || attachment.getMaxNumberOfOptions() > attachment.getPollOptions().length) {
+                        || attachment.getMaxNumberOfOptions() > optionsCount) {
                     throw new NxtException.NotValidException("Invalid max number of options: " + attachment.getJSONObject());
                 }
 
@@ -686,20 +698,58 @@ public abstract class TransactionType {
                     throw new NxtException.NotValidException("Invalid poll attachment: " + attachment.getJSONObject());
                 }
 
-                if (attachment.getAssetId() != 0 && Asset.getAsset(attachment.getAssetId()) == null) {
-                    throw new NxtException.NotCurrentlyValidException("Invalid asset id for voting: " + attachment.getJSONObject());
+                long minBalance = attachment.getMinBalance();
+                byte minBalanceModel = attachment.getMinBalanceModel();
+
+                if(minBalanceModel != Constants.VOTING_MINBALANCE_UNDEFINED
+                        && minBalanceModel != Constants.VOTING_MINBALANCE_ASSET
+                        && minBalanceModel != Constants.VOTING_MINBALANCE_BYBALANCE
+                        && minBalanceModel != Constants.VOTING_MINBALANCE_COIN){
+                    throw new NxtException.NotValidException("Invalid min balance model " + attachment.getJSONObject());
                 }
 
-                if (attachment.getFinishBlockHeight() <= Nxt.getBlockchain().getHeight() + Constants.VOTING_MIN_VOTE_DURATION) {
-                    throw new NxtException.NotCurrentlyValidException("Invalid finishing height");
+                if (votingModel == Constants.VOTING_MODEL_ASSET
+                        && minBalanceModel != Constants.VOTING_MINBALANCE_ASSET) {
+                    throw new NxtException.NotValidException("Invalid min balance model: "+ attachment.getJSONObject());
+                }
+
+                if (votingModel == Constants.VOTING_MODEL_MS_COIN
+                        && minBalanceModel != Constants.VOTING_MINBALANCE_COIN) {
+                    throw new NxtException.NotValidException("Invalid min balance model: " + attachment.getJSONObject());
+                }
+
+                if (votingModel == Constants.VOTING_MODEL_ACCOUNT && minBalance == 0) {
+                    throw new NxtException.NotValidException("Min balance == 0 for by-account voting"+ attachment.getJSONObject());
+                }
+
+                if (minBalance > 0 && minBalanceModel == Constants.VOTING_MINBALANCE_UNDEFINED){
+                    throw new NxtException.NotValidException("Invalid min balance model: " + attachment.getJSONObject());
+                }
+
+                if (votingModel == Constants.VOTING_MODEL_ACCOUNT
+                        && minBalanceModel == Constants.VOTING_MINBALANCE_UNDEFINED) {
+                    throw new NxtException.NotValidException("Min balance model is undefined for by-account voting" + attachment.getJSONObject());
+                }
+
+                long holdingId = attachment.getHoldingId();
+                if (minBalanceModel == Constants.VOTING_MINBALANCE_ASSET
+                    && (holdingId == 0 || Asset.getAsset(holdingId) == null)) {
+                    throw new NxtException.NotValidException("Invalid asset id for voting: " + attachment.getJSONObject());
+                }
+
+                if (minBalanceModel == Constants.VOTING_MINBALANCE_COIN
+                        && (holdingId == 0 || Currency.getCurrency(holdingId) == null)) {
+                    throw new NxtException.NotValidException("Invalid MS coin id for voting: " + attachment.getJSONObject());
+                }
+
+                if (attachment.getFinishBlockHeight() < currentHeight + Constants.VOTING_MIN_VOTE_DURATION
+                    || attachment.getFinishBlockHeight() > currentHeight + Constants.VOTING_MAX_VOTE_DURATION) {
+                    throw new NxtException.NotValidException("Invalid finishing height" + attachment.getJSONObject());
                 }
             }
 
             @Override
-            public boolean canHaveRecipient() {
-                return false;
-            }
-
+            public boolean canHaveRecipient() { return false; }
         };
 
         public final static TransactionType VOTE_CASTING = new Messaging() {
