@@ -332,6 +332,7 @@ final class JSONData {
         json.put("maxRangeValue", poll.getMaxRangeValue());
 
         json.put("minBalance", poll.getMinBalance());
+        json.put("minBalanceModel", poll.getMinBalanceModel());
 
         if (poll.getVotingModel() == Constants.VOTING_MODEL_ASSET) {
             json.put("holding", Convert.toUnsignedLong(poll.getHoldingId()));
