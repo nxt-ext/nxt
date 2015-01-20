@@ -1092,13 +1092,17 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.updateBlockchainDownloadProgress = function() {
 		if (NRS.state.lastBlockchainFeederHeight && NRS.state.numberOfBlocks < NRS.state.lastBlockchainFeederHeight) {
 			var percentage = parseInt(Math.round((NRS.state.numberOfBlocks / NRS.state.lastBlockchainFeederHeight) * 100), 10);
+			var blocksLeft = NRS.state.lastBlockchainFeederHeight - NRS.state.numberOfBlocks;
 		} else {
 			var percentage = 100;
+			var blocksLeft = 0;
 		}
 
 		if (percentage == 100) {
 			$("#downloading_blockchain .progress").hide();
 		} else {
+			$("#downloading_blockchain .blocks_left_outer").show();
+			$("#downloading_blockchain .blocks_left").html($.t("blocks_left", { "numBlocks": blocksLeft }));
 			$("#downloading_blockchain .progress").show();
 			$("#downloading_blockchain .progress-bar").css("width", percentage + "%");
 			$("#downloading_blockchain .sr-only").html($.t("percent_complete", {

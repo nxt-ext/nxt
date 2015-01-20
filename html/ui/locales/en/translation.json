@@ -237,6 +237,7 @@
   "downloaded_hash": "Downloaded Hash",
   "downloaded_volume": "Downloaded Volume",
   "downloading_blockchain": "Downloading Blockchain",
+  "blocks_left": "__numBlocks__ blocks left",
   "drop_update": "Drop client update (zip file) here when downloaded or click to select.",
   "edit": "Edit",
   "effective_balance": "Effective Balance",
