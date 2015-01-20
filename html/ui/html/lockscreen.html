@@ -46,7 +46,15 @@
             </div>
             
             <div class="panel panel-default" id="welcome_panel" style="display:none;max-width:500px;">
-                <div class="panel-heading"><span class="glyphicon glyphicon-lock"></span> <span data-i18n="welcome_to_nxt">Welcome to Nxt</span></div>
+                <div class="panel-heading">
+                    <div style="float:right;">
+                        <select name="language" class="form-control" style="width:150px">
+                        </select>
+                    </div>
+                    <div style="display:inline-block;padding-top:6px;padding-bottom:4px;">
+                        <span class="glyphicon glyphicon-lock"></span> <span data-i18n="welcome_to_nxt">Welcome to Nxt</span>
+                    </div>
+                </div>
                 <div class="panel-body">
                     <button class="btn btn-primary" id="registration_cancel" onclick="NRS.showLoginScreen();return false;" data-i18n="returning_user_q">Returning User?</button>
                     &nbsp;&nbsp;
