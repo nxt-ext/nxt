@@ -38,6 +38,9 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.database = null;
 	NRS.databaseSupport = false;
 
+	NRS.serverConnect = false;
+	NRS.peerConnect = false;
+
 	NRS.settings = {};
 	NRS.contacts = {};
 
@@ -254,12 +257,14 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.getState = function(callback) {
 		NRS.sendRequest("getBlockchainStatus", function(response) {
 			if (response.errorCode) {
+				NRS.serverConnect = false;
 				//todo
 			} else {
 				var firstTime = !("lastBlock" in NRS.state);
 				var previousLastBlock = (firstTime ? "0" : NRS.state.lastBlock);
 
 				NRS.state = response;
+				NRS.serverConnect = true;
 
 				if (firstTime) {
 					$("#nrs_version").html(NRS.state.version).removeClass("loading_dots");
@@ -292,10 +297,6 @@ var NRS = (function(NRS, $, undefined) {
 							NRS.handleIncomingTransactions(unconfirmedTransactions, false);
 						});
 					}
-					//only done so that download progress meter updates correctly based on lastFeederHeight
-					if (NRS.downloadingBlockchain) {
-						NRS.updateBlockchainDownloadProgress();
-					}
 				}
 
 				if (callback) {
@@ -304,6 +305,10 @@ var NRS = (function(NRS, $, undefined) {
 			}
 			/* Checks if the client is connected to active peers */
 			NRS.checkConnected();
+			//only done so that download progress meter updates correctly based on lastFeederHeight
+			if (NRS.downloadingBlockchain) {
+				NRS.updateBlockchainDownloadProgress();
+			}
 		});
 	};
 
@@ -607,10 +612,12 @@ var NRS = (function(NRS, $, undefined) {
 			"state": "CONNECTED"
 		}, function(response) {
 			if (response.peers && response.peers.length) {
+				NRS.peerConnect = true;
 				$("#connected_indicator").addClass("connected");
 				$("#connected_indicator span").html($.t("Connected")).attr("data-i18n", "connected");
 				$("#connected_indicator").show();
 			} else {
+				NRS.peerConnect = false;
 				$("#connected_indicator").removeClass("connected");
 				$("#connected_indicator span").html($.t("Not Connected")).attr("data-i18n", "not_connected");
 				$("#connected_indicator").show();
@@ -1090,20 +1097,31 @@ var NRS = (function(NRS, $, undefined) {
 	};
 
 	NRS.updateBlockchainDownloadProgress = function() {
-		if (NRS.state.lastBlockchainFeederHeight && NRS.state.numberOfBlocks < NRS.state.lastBlockchainFeederHeight) {
-			var percentage = parseInt(Math.round((NRS.state.numberOfBlocks / NRS.state.lastBlockchainFeederHeight) * 100), 10);
+		if (!NRS.serverConnect || !NRS.peerConnect) {
+			$("#downloading_blockchain .db_active").hide();
+			$("#downloading_blockchain .db_halted").show();
 		} else {
-			var percentage = 100;
-		}
+			$("#downloading_blockchain .db_halted").hide();
+			$("#downloading_blockchain .db_active").show();
+			if (NRS.state.lastBlockchainFeederHeight && NRS.state.numberOfBlocks < NRS.state.lastBlockchainFeederHeight) {
+				var percentage = parseInt(Math.round((NRS.state.numberOfBlocks / NRS.state.lastBlockchainFeederHeight) * 100), 10);
+				var blocksLeft = NRS.state.lastBlockchainFeederHeight - NRS.state.numberOfBlocks;
+			} else {
+				var percentage = 100;
+				var blocksLeft = 0;
+			}
 
-		if (percentage == 100) {
-			$("#downloading_blockchain .progress").hide();
-		} else {
-			$("#downloading_blockchain .progress").show();
-			$("#downloading_blockchain .progress-bar").css("width", percentage + "%");
-			$("#downloading_blockchain .sr-only").html($.t("percent_complete", {
-				"percent": percentage
-			}));
+			if (percentage == 100) {
+				$("#downloading_blockchain .progress").hide();
+			} else {
+				$("#downloading_blockchain .blocks_left_outer").show();
+				$("#downloading_blockchain .blocks_left").html($.t("blocks_left", { "numBlocks": blocksLeft }));
+				$("#downloading_blockchain .progress").show();
+				$("#downloading_blockchain .progress-bar").css("width", percentage + "%");
+				$("#downloading_blockchain .sr-only").html($.t("percent_complete", {
+					"percent": percentage
+				}));
+			}
 		}
 	};
 

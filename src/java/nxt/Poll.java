@@ -143,7 +143,7 @@ public final class Poll extends AbstractPoll {
         this.maxRangeValue = rs.getByte("max_range_value");
     }
 
-    public boolean isFinished(){ return finishBlockHeight >= Nxt.getBlockchain().getHeight(); }
+    public boolean isFinished(){ return finishBlockHeight < Nxt.getBlockchain().getHeight(); }
 
     static void addPoll(long pollId, long accountId, Attachment.MessagingPollCreation attachment) {
 
