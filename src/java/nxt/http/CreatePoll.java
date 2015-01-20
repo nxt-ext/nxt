@@ -79,7 +79,7 @@ public final class CreatePoll extends CreateTransaction {
 
         long minBalance = ParameterParser.getLong(req, "minBalance", 0, Long.MAX_VALUE, false);
 
-        if(minBalance!=0) {
+        if (minBalance != 0) {
             byte minBalanceModel = ParameterParser.getByte(req, "minBalanceModel",
                     Constants.VOTING_MINBALANCE_UNDEFINED, Constants.VOTING_MINBALANCE_COIN, true);
             builder.minBalance(minBalanceModel, minBalance);
@@ -91,7 +91,6 @@ public final class CreatePoll extends CreateTransaction {
         }
 
         Account account = ParameterParser.getSenderAccount(req);
-
         Attachment attachment = new Attachment.MessagingPollCreation(builder);
         return createTransaction(req, account, attachment);
     }

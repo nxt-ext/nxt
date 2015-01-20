@@ -42,7 +42,6 @@ public final class CastVote extends CreateTransaction {
         }
 
         Account account = ParameterParser.getSenderAccount(req);
-
         Attachment attachment = new Attachment.MessagingVoteCasting(poll.getId(), vote);
         return createTransaction(req, account, attachment);
     }
