@@ -4,10 +4,39 @@
         <appname>NXT</appname>
         <appversion>1.4.9</appversion>
         <url>http://nxt.org</url>
+		<run-privileged condition="izpack.windowsinstall"/>
     </info>
-
-    <native type="izpack" name="ShellLink.dll"/>
-    <native type="izpack" name="ShellLink_x64.dll"/>
+	
+	<listeners>
+		<listener classname="SummaryLoggerInstallerListener" stage="install"/>
+		<listener classname="RegistryInstallerListener" stage="install" >
+			<os family="windows"/>
+		</listener>
+			<listener classname="RegistryUninstallerListener" stage="uninstall" >
+		<os family="windows"/>
+		</listener>
+	</listeners>
+	
+    <natives>
+		<native type="izpack" name="ShellLink.dll" stage="both">
+			<os family="windows"/>
+		</native>
+		<native type="izpack" name="ShellLink_x64.dll" stage="both">
+			<os family="windows"/>
+		</native>
+		<native type="izpack" name="WinSetupAPI.dll" stage="both">
+			<os family="windows"/>
+		</native>
+		<native type="izpack" name="WinSetupAPI_x64.dll" stage="both">
+			<os family="windows"/>
+		</native>
+		<native type="3rdparty" name="COIOSHelper.dll" stage="uninstall">
+			<os family="windows"/>
+		</native>
+		<native type="3rdparty" name="COIOSHelper_x64.dll" stage="uninstall">
+			<os family="windows"/>
+		</native>
+    </natives>
 	
     <guiprefs width="800" height="600" resizable="no">
 		<modifier key="useButtonIcons" value="no"/>
@@ -75,7 +104,7 @@
 			<parsable targetfile="${INSTALL_PATH}/resource/nxt.properties"/>
 			<singlefile src="resource/nxt.properties.template" target="${USER_HOME}/AppData/Roaming/NXT/nxt.properties" override="false"/>
 			<singlefile src="resource/logging.properties.template" target="${USER_HOME}/AppData/Roaming/NXT/logging.properties" override="false"/>
-			<singlefile src="resource/logs" target="${USER_HOME}/AppData/Roaming/NXT/logs" override="false"/>
+			<singlefile src="resource/logs/nxt.log" target="${USER_HOME}/AppData/Roaming/NXT/logs/nxt.log" override="false"/>
 		</pack>
         <pack name="server.unix" os="unix" required="yes">
             <description>Unix Specific Resources</description>
