@@ -317,6 +317,7 @@ final class JSONData {
 
     static JSONObject poll(Poll poll, boolean includeVoters) {
         JSONObject json = new JSONObject();
+        json.put("poll", Convert.toUnsignedLong(poll.getId()));
         json.put("name", poll.getName());
         json.put("description", poll.getDescription());
         JSONArray options = new JSONArray();

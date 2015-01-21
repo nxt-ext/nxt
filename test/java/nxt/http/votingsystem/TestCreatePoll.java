@@ -11,9 +11,7 @@ import org.junit.Test;
 
 public class TestCreatePoll extends BlockchainTest {
 
-    @Test
-    public void createPoll() {
-        APICall apiCall = new CreatePollBuilder().build();
+    static String issueCreatePoll(APICall apiCall) {
         JSONObject createPollResponse = apiCall.invoke();
         Logger.logMessage("createPollResponse: " + createPollResponse.toJSONString());
         String pollId = (String) createPollResponse.get("transaction");
@@ -25,6 +23,13 @@ public class TestCreatePoll extends BlockchainTest {
         JSONObject getPollResponse = apiCall.invoke();
         Logger.logMessage("getPollResponse:" + getPollResponse.toJSONString());
         Assert.assertEquals(pollId, getPollResponse.get("poll"));
+        return pollId;
+    }
+
+    @Test
+    public void createPoll() {
+        APICall apiCall = new CreatePollBuilder().build();
+        issueCreatePoll(apiCall);
     }
 
     public static class CreatePollBuilder extends APICall.Builder {
