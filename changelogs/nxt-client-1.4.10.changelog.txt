@@ -1,0 +1,8 @@
+Improved display of blockchain downloading status in the client UI.
+
+Fixed a bug in transaction bytes parsing which could cause signature
+verification failed errors and break forging.
+
+Updated jetty to version 9.2.7. If unpacking on top of a previous installation,
+delete your lib directory first to remove the old jetty libraries.
+
