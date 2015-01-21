@@ -24,6 +24,30 @@ var NRS = (function(NRS, $, undefined) {
 		"boxes": "#3E96BB"
 	};
 
+	NRS.languages = {
+		"de": "Deutsch (Beta)",          // german
+		"en": "English",                 // english
+		"es-es": "Español",              // spanish
+		"fi": "Suomi (Beta)",            // finnish
+		"fr": "Français",                // french
+		"gl": "Galego (Beta)",           // galician
+		"sh": "Hrvatski (Beta)",         // croatian
+		"id": "Bahasa Indonesia (Beta)", // indonesian
+		"it": "Italiano (Beta)",         // italian
+		"ja": "日本語 (Beta)",            // japanese
+		"lt": "Lietuviškai",             // lithuanian
+		"nl": "Nederlands (Beta)",       // dutch
+		"sk": "Slovensky (Beta)",        // slovakian
+		"pt-pt": "Português (Beta)",     // portugese
+		"pt-br": "Português Brasileiro", // portugese, brazilian
+		"sr": "Српски (Beta)",           // serbian, cyrillic
+		"sr-cs": "Srpski (Beta)",        // serbian, latin
+		"uk": "Yкраiнска (Beta)",        // ukrainian
+		"ru": "Русский",                 // russian
+		"zh-cn": "中文 (simplified)",     // chinese simplified
+		"zh-tw": "中文 (traditional)"     // chinese traditional
+	}
+
 	var userStyles = {};
 
 	userStyles.header = {
@@ -151,6 +175,7 @@ var NRS = (function(NRS, $, undefined) {
 	};
 
 	NRS.pages.settings = function() {
+
 		for (var style in userStyles) {
 			var $dropdown = $("#" + style + "_color_scheme");
 
@@ -421,6 +446,16 @@ var NRS = (function(NRS, $, undefined) {
 		}
 	});
 
+	NRS.createLangSelect = function() {
+		// Build language select box for settings page, login
+		var $langSelBoxes = $('select[name="language"]');
+		$langSelBoxes.empty();
+		$.each(NRS.languages, function(code, name) {
+			$langSelBoxes.append('<option value="' + code + '">' + name + '</option>');
+		});
+		$langSelBoxes.val(NRS.settings['language']);
+	}
+
 	NRS.getSettings = function() {
 		if (NRS.databaseSupport) {
 			NRS.database.select("data", [{
@@ -435,6 +470,7 @@ var NRS = (function(NRS, $, undefined) {
 					});
 					NRS.settings = NRS.defaultSettings;
 				}
+				NRS.createLangSelect();
 				NRS.applySettings();
 			});
 		} else {
@@ -443,6 +479,7 @@ var NRS = (function(NRS, $, undefined) {
 			} else {
 				NRS.settings = NRS.defaultSettings;
 			}
+			NRS.createLangSelect();
 			NRS.applySettings();
 		}
 	};
@@ -565,7 +602,7 @@ var NRS = (function(NRS, $, undefined) {
 		NRS.applySettings(key);
 	}
 
-	$("#settings_box select").on("change", function(e) {
+	$("#settings_box select, #welcome_panel select[name='language']").on("change", function(e) {
 		e.preventDefault();
 
 		var key = $(this).attr("name");

@@ -144,7 +144,7 @@ For providing new translation strings on the platform for the community to trans
 1. Download the latest translation files from Crowdin (permissions needed) and replace the language folders like ``fa``, ``pt-BR``,... with the folders downloaded. Please make sure to NOT touch the english folder ``en``.
 2. Make some consistency checks (lengths of old/new files, "git diff" on language files)
 3. Rename all folder names to lowercase, e.g. ``es-ES`` to ``es-es``.
-4. New languages can be added in ``ui/html/pages/settings.html``. Review the status of the languages (70-80%+ Beta, 90-95%+ Stable), eventually add new languages
+4. New languages can be added to ``NRS.languages`` in ``ui/js/nrs.settings.js`` file. Review the status of the languages (70-80%+ Beta, 90-95%+ Stable), eventually add new languages
 
 
 
