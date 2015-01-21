@@ -1,4 +1,4 @@
-package nxt.http;
+package nxt.http.monetarysystem;
 
 import nxt.BlockchainProcessor;
 import nxt.Helper;
