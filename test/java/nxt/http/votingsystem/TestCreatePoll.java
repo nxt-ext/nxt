@@ -6,15 +6,25 @@ import nxt.Nxt;
 import nxt.http.APICall;
 import nxt.util.Logger;
 import org.json.simple.JSONObject;
+import org.junit.Assert;
 import org.junit.Test;
 
-public class TestVoting extends BlockchainTest {
+public class TestCreatePoll extends BlockchainTest {
 
     @Test
     public void createPoll() {
         APICall apiCall = new CreatePollBuilder().build();
         JSONObject createPollResponse = apiCall.invoke();
         Logger.logMessage("createPollResponse: " + createPollResponse.toJSONString());
+        String pollId = (String) createPollResponse.get("transaction");
+
+        generateBlock();
+
+        apiCall = new APICall.Builder("getPoll").param("poll", pollId).build();
+
+        JSONObject getPollResponse = apiCall.invoke();
+        Logger.logMessage("getPollResponse:" + getPollResponse.toJSONString());
+        Assert.assertEquals(pollId, getPollResponse.get("poll"));
     }
 
     public static class CreatePollBuilder extends APICall.Builder {

@@ -4,7 +4,6 @@ package nxt.http.votingsystem;
 import nxt.BlockchainProcessor;
 import nxt.Helper;
 import nxt.Nxt;
-import nxt.http.monetarysystem.*;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -13,7 +12,7 @@ import org.junit.runners.Suite;
 
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
-        TestVoting.class
+        TestCreatePoll.class
 })
 
 public class VotingSuite {
@@ -22,7 +21,7 @@ public class VotingSuite {
     public static void init() {
         Nxt.init();
         Nxt.getBlockchainProcessor().addListener(new Helper.BlockListener(), BlockchainProcessor.Event.BLOCK_GENERATED);
-        Assert.assertEquals(0, Helper.getCount("unconfirmed_transaction"));
+        //Assert.assertEquals(0, Helper.getCount("unconfirmed_transaction"));
     }
 
     @AfterClass
