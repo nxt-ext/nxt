@@ -356,7 +356,7 @@ public final class Peers {
                     }
 
                     if (hasTooManyKnownPeers() && hasEnoughConnectedPublicPeers(Peers.maxNumberOfConnectedPublicPeers)) {
-                        Logger.logDebugMessage("Peer pool size is " + peers.size() + ", removing known peers last updated more than a week ago");
+                        int initialSize = peers.size();
                         for (PeerImpl peer : peers.values()) {
                             if (now - peer.getLastUpdated() > 7 * 24 * 3600) {
                                 peer.remove();
@@ -365,7 +365,7 @@ public final class Peers {
                                 break;
                             }
                         }
-                        Logger.logDebugMessage("Peer pool size is " + peers.size());
+                        Logger.logDebugMessage("Reduced peer pool size from " + initialSize + " to " + peers.size());
                     }
 
                 } catch (Exception e) {
