@@ -512,55 +512,53 @@ class NxtDbVersion extends DbVersion {
             case 190:
                 apply(null);
             case 191:
-                apply(null);                
+                apply(null);
             case 192:
-                apply("DROP TABLE IF EXISTS poll");
+                if (Constants.isTestnet) {
+                    BlockchainProcessorImpl.getInstance().scheduleScan(0, true);
+                }
+                apply(null);
             case 193:
-                apply("DROP TABLE IF EXISTS vote");
+                apply("DROP TABLE IF EXISTS poll");
             case 194:
+                apply("DROP TABLE IF EXISTS vote");
+            case 195:
                 apply("CREATE TABLE IF NOT EXISTS vote (db_id IDENTITY, id BIGINT NOT NULL, " +
                         "poll_id BIGINT NOT NULL, voter_id BIGINT NOT NULL, vote_bytes VARBINARY NOT NULL, height INT NOT NULL)");
-            case 195:
-                apply("CREATE UNIQUE INDEX IF NOT EXISTS vote_id_idx ON vote (id)");
             case 196:
-                apply("CREATE UNIQUE INDEX IF NOT EXISTS vote_poll_id_idx ON vote (poll_id, voter_id)");
+                apply("CREATE UNIQUE INDEX IF NOT EXISTS vote_id_idx ON vote (id)");
             case 197:
+                apply("CREATE UNIQUE INDEX IF NOT EXISTS vote_poll_id_idx ON vote (poll_id, voter_id)");
+            case 198:
                 apply("CREATE TABLE IF NOT EXISTS poll (db_id IDENTITY, id BIGINT NOT NULL, "
                         + "account_id BIGINT NOT NULL, name VARCHAR NOT NULL, "
                         + "description VARCHAR, options ARRAY NOT NULL, min_num_options TINYINT, max_num_options TINYINT, "
                         + "min_range_value TINYINT, max_range_value TINYINT, "
                         + "finish_height INT NOT NULL, voting_model TINYINT NOT NULL, min_balance BIGINT, "
                         + "min_balance_model TINYINT, holding_id BIGINT, height INT NOT NULL)");
-            case 198:
+            case 199:
                 apply("CREATE TABLE IF NOT EXISTS poll_result (db_id IDENTITY, poll_id BIGINT NOT NULL, "
                         + "option VARCHAR NOT NULL, result BIGINT NOT NULL,  height INT NOT NULL)");
-            case 199:
-                apply("ALTER TABLE transaction ADD COLUMN IF NOT EXISTS two_phased BOOLEAN NOT NULL DEFAULT FALSE");
             case 200:
+                apply("ALTER TABLE transaction ADD COLUMN IF NOT EXISTS two_phased BOOLEAN NOT NULL DEFAULT FALSE");
+            case 201:
                 apply("CREATE TABLE IF NOT EXISTS pending_transaction (db_id IDENTITY, id BIGINT NOT NULL, "
-                        + "FOREIGN KEY (id) REFERENCES transaction (id) ON DELETE CASCADE, account_id BIGINT NOT NULL, "
+                        + "account_id BIGINT NOT NULL, "
                         + "signers_count TINYINT NOT NULL DEFAULT 0, blacklist BOOLEAN DEFAULT FALSE, "
                         + "finish_height INT NOT NULL, voting_model TINYINT NOT NULL, quorum BIGINT NOT NULL, "
                         + "min_balance BIGINT NOT NULL, holding_id BIGINT NOT NULL,  "
                         + "height INT NOT NULL, latest BOOLEAN DEFAULT TRUE NOT NULL)");
-            case 201:
+            case 202:
                 apply("CREATE TABLE IF NOT EXISTS vote_phased (db_id IDENTITY, id BIGINT NOT NULL, "
                         + "pending_transaction_id BIGINT NOT NULL, voter_id BIGINT NOT NULL, "
                         + "height INT NOT NULL)");
-            case 202:
+            case 203:
                 apply("CREATE TABLE IF NOT EXISTS pending_transaction_signer (db_id IDENTITY, "
                         + "poll_id BIGINT NOT NULL, account_id BIGINT NOT NULL, "
                         + "height INT NOT NULL, latest BOOLEAN DEFAULT TRUE NOT NULL)");
 
                 //todo: more indexes on VS & 2PTs tables
-            case 203:
-                if (Constants.isTestnet) {
-                    BlockchainProcessorImpl.getInstance().scheduleScan(0, true);
-                }
-                apply(null);
             case 204:
-                apply(null);
-            case 205:
                 return;
             default:
                 throw new RuntimeException("Blockchain database inconsistent with code, probably trying to run older code on newer database");
