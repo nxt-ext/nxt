@@ -603,11 +603,12 @@ public final class Peers {
             if (host == null) {
                 return null;
             }
-            if ((peer = peers.get(host)) != null) {
+            int port = uri.getPort();
+            if ((peer = peers.get(port > 0 && port != Peers.getDefaultPeerPort() ? host + ":" + port : host)) != null) {
                 return peer;
             }
             InetAddress inetAddress = InetAddress.getByName(host);
-            return addPeer(inetAddress.getHostAddress(), uri.getPort(), announcedAddress);
+            return addPeer(inetAddress.getHostAddress(), port, announcedAddress);
         } catch (URISyntaxException | UnknownHostException e) {
             //Logger.logDebugMessage("Invalid peer address: " + announcedAddress + ", " + e.toString());
             return null;
@@ -622,7 +623,7 @@ public final class Peers {
             cleanAddress = "[" + cleanAddress + "]";
         }
         
-        if (port >= 0) {
+        if (port > 0 && port != Peers.getDefaultPeerPort()) {
             cleanAddress = cleanAddress + ":" + port;
         }
         
@@ -647,6 +648,10 @@ public final class Peers {
         peer = new PeerImpl(peerAddress, announcedPeerAddress);
         if (Constants.isTestnet && peer.getPort() > 0 && peer.getPort() != TESTNET_PEER_PORT) {
             Logger.logDebugMessage("Peer " + peerAddress + " on testnet is not using port " + TESTNET_PEER_PORT + ", ignoring");
+            return null;
+        }
+        if (!Constants.isTestnet && peer.getPort() > 0 && peer.getPort() == TESTNET_PEER_PORT) {
+            Logger.logDebugMessage("Peer " + peerAddress + " is using testnet port " + peer.getPort() + ", ignoring");
             return null;
         }
         peers.put(peerAddress, peer);
@@ -803,7 +808,7 @@ public final class Peers {
                 return null;
             }
             int port = uri.getPort();
-            return port == -1 ? host : host + ':' + port;
+            return port == -1 || port == Peers.getDefaultPeerPort() ? host : host + ':' + port;
         } catch (URISyntaxException |UnknownHostException e) {
             return null;
         }
