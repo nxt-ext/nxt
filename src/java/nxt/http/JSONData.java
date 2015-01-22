@@ -27,7 +27,6 @@ import nxt.crypto.EncryptedData;
 import nxt.peer.Hallmark;
 import nxt.peer.Peer;
 import nxt.util.Convert;
-import nxt.util.Pair;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
