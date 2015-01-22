@@ -1,6 +1,7 @@
 package nxt;
 
 import nxt.util.Convert;
+import nxt.util.Logger;
 import org.json.simple.JSONObject;
 import java.nio.ByteBuffer;
 import java.util.*;
@@ -872,7 +873,7 @@ public abstract class TransactionType {
                 for (long pendingId : pendingIds) {
                     PendingTransactionPoll poll = PendingTransactionPoll.getPoll(pendingId);
                     if (poll == null) {
-                        System.out.println("Wrong pending transaction: " + pendingId); //TODO: Logger
+                        Logger.logDebugMessage("Wrong pending transaction: " + pendingId);
                         throw new NxtException.NotValidException("Wrong pending transaction or poll is finished");
                     }
 

@@ -102,7 +102,7 @@ public final class Poll extends AbstractPoll {
         for (Poll poll : getPollsFinishingAt(currentHeight)) {
                 List<PartialPollResult> results = poll.countResults();
                 pollResultsTable.insert(poll, results);
-                System.out.println("Poll " + poll.getId() + " has been finished"); //TODO: Logger
+                Logger.logDebugMessage("Poll " + poll.getId() + " has been finished");
         }
     }
 
