@@ -2903,7 +2903,7 @@ a.list-group-item-header:hover {
 	right:10px;
 	color:white;
 	background:black;
-	padding:5px;
+	padding:10px 15px 10px 15px;
 	-webkit-border-radius: 3px;
 	-moz-border-radius: 3px;
 	border-radius: 3px;

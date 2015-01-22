@@ -239,6 +239,7 @@
   "downloaded_volume": "Downloaded Volume",
   "downloading_blockchain": "Downloading Blockchain",
   "blocks_left": "__numBlocks__ blocks left",
+  "last_num_blocks": "Last __blocks__",
   "drop_update": "Drop client update (zip file) here when downloaded or click to select.",
   "edit": "Edit",
   "effective_balance": "Effective Balance",
