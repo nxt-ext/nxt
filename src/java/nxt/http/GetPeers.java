@@ -14,7 +14,7 @@ public final class GetPeers extends APIServlet.APIRequestHandler {
     static final GetPeers instance = new GetPeers();
 
     private GetPeers() {
-        super(new APITag[] {APITag.INFO}, "active", "state", "includePeerInfo");
+        super(new APITag[] {APITag.NETWORK}, "active", "state", "includePeerInfo");
     }
 
     @Override
