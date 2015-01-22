@@ -38,8 +38,7 @@ public abstract class DerivedDbTable {
         }
         try (Connection con = db.getConnection();
              Statement stmt = con.createStatement()) {
-            stmt.addBatch("TRUNCATE TABLE " + table);
-            stmt.executeBatch();
+            stmt.executeUpdate("TRUNCATE TABLE " + table);
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
         }
