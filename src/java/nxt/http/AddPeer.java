@@ -18,7 +18,7 @@ public class AddPeer extends APIRequestHandler {
     static final AddPeer instance = new AddPeer();
     
     private AddPeer() {
-        super(new APITag[] {APITag.DEBUG}, "peer");
+        super(new APITag[] {APITag.NETWORK}, "peer");
     }
 
     @Override

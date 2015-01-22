@@ -18,7 +18,7 @@ public class BlacklistPeer extends APIRequestHandler {
     static final BlacklistPeer instance = new BlacklistPeer();
     
     private BlacklistPeer() {
-        super(new APITag[] {APITag.DEBUG}, "peer");
+        super(new APITag[] {APITag.NETWORK}, "peer");
     }
 
     @Override
@@ -44,6 +44,6 @@ public class BlacklistPeer extends APIRequestHandler {
 
     @Override
     boolean requirePassword() {
-        return !API.disableAdminPassword;
+        return true;
     }
 }
