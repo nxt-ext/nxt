@@ -15,12 +15,12 @@ public class TestCreatePoll extends BlockchainTest {
         JSONObject createPollResponse = apiCall.invoke();
         Logger.logMessage("createPollResponse: " + createPollResponse.toJSONString());
 
+        generateBlock();
+
         try {
             String pollId = (String) createPollResponse.get("transaction");
 
             if(!shouldFail && pollId == null) Assert.fail();
-
-            generateBlock();
 
             apiCall = new APICall.Builder("getPoll").param("poll", pollId).build();
 
@@ -37,12 +37,19 @@ public class TestCreatePoll extends BlockchainTest {
     @Test
     public void createValidPoll() {
         APICall apiCall = new CreatePollBuilder().build();
+
+        issueCreatePoll(apiCall, false);
+
+        apiCall = new CreatePollBuilder().votingModel(Constants.VOTING_MODEL_BALANCE).build();
         issueCreatePoll(apiCall, false);
     }
 
     @Test
     public void createInvalidPoll() {
         APICall apiCall = new CreatePollBuilder().minBalance(-Constants.ONE_NXT).build();
+        issueCreatePoll(apiCall, true);
+
+        apiCall = new CreatePollBuilder().minBalance(0).build();
         issueCreatePoll(apiCall, true);
     }
 
@@ -67,8 +74,26 @@ public class TestCreatePoll extends BlockchainTest {
             param("option2", "John");
         }
 
+        public CreatePollBuilder votingModel(byte votingModel) {
+            param("votingModel", votingModel);
+            return this;
+        }
+
         public CreatePollBuilder minBalance(long minBalance) {
             param("minBalance", minBalance);
+            return this;
+        }
+
+        public CreatePollBuilder minBalance(long minBalance, byte minBalanceModel) {
+            param("minBalance", minBalance);
+            param("minBalanceModel", minBalanceModel);
+            return this;
+        }
+
+        public CreatePollBuilder minBalance(long minBalance, byte minBalanceModel, long holdingId) {
+            param("minBalance", minBalance);
+            param("minBalanceModel", minBalanceModel);
+            param("holdingId", holdingId);
             return this;
         }
     }

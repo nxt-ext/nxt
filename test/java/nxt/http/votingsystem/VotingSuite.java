@@ -1,6 +1,5 @@
 package nxt.http.votingsystem;
 
-
 import nxt.BlockchainProcessor;
 import nxt.Helper;
 import nxt.Nxt;
@@ -20,8 +19,9 @@ public class VotingSuite {
     @BeforeClass
     public static void init() {
         Nxt.init();
+        Nxt.getTransactionProcessor().clearUnconfirmedTransactions();
         Nxt.getBlockchainProcessor().addListener(new Helper.BlockListener(), BlockchainProcessor.Event.BLOCK_GENERATED);
-//        Assert.assertEquals(0, Helper.getCount("unconfirmed_transaction"));
+        Assert.assertEquals(0, Helper.getCount("unconfirmed_transaction"));
     }
 
     @AfterClass
