@@ -854,4 +854,5 @@ final class TransactionImpl implements Transaction {
     boolean isUnconfirmedDuplicate(Map<TransactionType, Map<String, Boolean>> duplicates) {
         return type.isUnconfirmedDuplicate(this, duplicates);
     }
+
 }

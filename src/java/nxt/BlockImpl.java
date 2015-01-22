@@ -312,7 +312,9 @@ final class BlockImpl implements Block {
     }
 
     boolean verifyGenerationSignature() throws BlockchainProcessor.BlockOutOfOrderException {
+
         try {
+
             BlockImpl previousBlock = BlockchainImpl.getInstance().getBlock(getPreviousBlockId());
             if (previousBlock == null) {
                 throw new BlockchainProcessor.BlockOutOfOrderException("Can't verify signature because previous block is missing");
@@ -349,7 +351,9 @@ final class BlockImpl implements Block {
 
             Logger.logMessage("Error verifying block generation signature", e);
             return false;
+
         }
+
     }
 
     private static final long[] badBlocks = new long[] {

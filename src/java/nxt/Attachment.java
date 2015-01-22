@@ -4,10 +4,10 @@ import nxt.crypto.EncryptedData;
 import nxt.util.Convert;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
+
 import java.nio.ByteBuffer;
 import java.util.Collections;
 import java.util.regex.Pattern;
-
 
 public interface Attachment extends Appendix {
 

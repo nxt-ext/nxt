@@ -261,7 +261,7 @@ public interface Appendix {
             super(buffer, transactionVersion);
         }
 
-        EncryptedMessage(JSONObject attachmentData) throws NxtException.NotValidException {
+        EncryptedMessage(JSONObject attachmentData) {
             super(attachmentData, (JSONObject)attachmentData.get("encryptedMessage"));
         }
 
