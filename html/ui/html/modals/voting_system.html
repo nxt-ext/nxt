@@ -24,6 +24,7 @@
                                     <option selected value="0">Vote By NXT Balance</option>
                                     <option value="1">One Vote Per Account</option>
                                     <option value="2">Vote By Asset</option>
+                                    <option value="3">Vote By MS Currency</option>
                                 </select>
                             </div>
                         </div>
@@ -33,8 +34,32 @@
                                 <input type="text" name="assetId" id="create_poll_asset_id" class="form-control" placeholder="" tabindex="5">
                             </div>
                         </div>
-                        
+                        <div class="col-xs-6 col-sm-6 col-md-6" aria-hidden="true" id="create_poll_ms_currency_group" style="display: none;">
+                            <div class="form-group">
+                                <label for="create_poll_ms_id" data-i18n="poll_duration_nr_blocks">MS Coin ID</label>
+                                <input type="text" name="msId" id="create_poll_ms_id" class="form-control" placeholder="" tabindex="5">
+                            </div>
+                        </div>
+
                     </div>
+
+                    <div class="row">
+                        <div class="col-xs-12 col-sm-12 col-md-12" aria-hidden="true" id="create_poll_min_balance_type_group" style="display: none;">
+                            <strong>Min Voting Balance Type: </strong>
+                            <div class="form-group">
+                                <label class="radio-inline">
+                                    <input type="radio" name="minBalanceType" id="create_poll_min_balance_type_1" value="1" selected> By Nxt Balance
+                                </label>
+                                <label class="radio-inline">
+                                    <input type="radio" name="minBalanceType" id="create_poll_min_balance_type_2" value="2"> By Asset
+                                </label>
+                                <label class="radio-inline">
+                                    <input type="radio" name="minBalanceType" id="create_poll_min_balance_type_3" value="3"> By MS Coin
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="row">
                         <div class="col-xs-6 col-sm-6 col-md-6">
                             <div class="form-group">

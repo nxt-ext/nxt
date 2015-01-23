@@ -232,12 +232,58 @@ var NRS = (function(NRS, $, undefined) {
 		// poll type changed, lets see if we have to include/remove the asset id
 		if($("#create_poll_type").val() == "2") {
 			$("#create_poll_asset_id_group").css("display", "inline");
+			$("#create_poll_ms_currency_group").css("display", "none");
+			$("#create_poll_type_group").removeClass("col-xs-12").addClass("col-xs-6");
+			$("#create_poll_type_group").removeClass("col-sm-12").addClass("col-sm-6");
+			$("#create_poll_type_group").removeClass("col-md-12").addClass("col-md-6");
+		}
+		else if($("#create_poll_type").val() == "3") {
+			$("#create_poll_asset_id_group").css("display", "none");
+			$("#create_poll_ms_currency_group").css("display", "inline");
 			$("#create_poll_type_group").removeClass("col-xs-12").addClass("col-xs-6");
 			$("#create_poll_type_group").removeClass("col-sm-12").addClass("col-sm-6");
 			$("#create_poll_type_group").removeClass("col-md-12").addClass("col-md-6");
 		}
 		else {
 			$("#create_poll_asset_id_group").css("display", "none");
+			$("#create_poll_ms_currency_group").css("display", "none");
+			$("#create_poll_type_group").removeClass("col-xs-6").addClass("col-xs-12");
+			$("#create_poll_type_group").removeClass("col-sm-6").addClass("col-sm-12");
+			$("#create_poll_type_group").removeClass("col-md-6").addClass("col-md-12");
+		}
+
+		if($("#create_poll_type").val() == "1")
+		{
+			// ok now lets show the bottom things...
+			$("#create_poll_min_balance_type_group").css("display", "inline");
+		}
+		else
+		{
+			$("#create_poll_min_balance_type_group").css("display", "none");
+		}
+
+	});
+
+	$("input[name=minBalanceType]:radio").change(function () {
+		var value = $(this).val();
+
+		if(value == "2") {
+			$("#create_poll_asset_id_group").css("display", "inline");
+			$("#create_poll_ms_currency_group").css("display", "none");
+			$("#create_poll_type_group").removeClass("col-xs-12").addClass("col-xs-6");
+			$("#create_poll_type_group").removeClass("col-sm-12").addClass("col-sm-6");
+			$("#create_poll_type_group").removeClass("col-md-12").addClass("col-md-6");
+		}
+		else if(value == "3") {
+			$("#create_poll_asset_id_group").css("display", "none");
+			$("#create_poll_ms_currency_group").css("display", "inline");
+			$("#create_poll_type_group").removeClass("col-xs-12").addClass("col-xs-6");
+			$("#create_poll_type_group").removeClass("col-sm-12").addClass("col-sm-6");
+			$("#create_poll_type_group").removeClass("col-md-12").addClass("col-md-6");
+		}
+		else {
+			$("#create_poll_asset_id_group").css("display", "none");
+			$("#create_poll_ms_currency_group").css("display", "none");
 			$("#create_poll_type_group").removeClass("col-xs-6").addClass("col-xs-12");
 			$("#create_poll_type_group").removeClass("col-sm-6").addClass("col-sm-12");
 			$("#create_poll_type_group").removeClass("col-md-6").addClass("col-md-12");
@@ -352,7 +398,7 @@ var NRS = (function(NRS, $, undefined) {
 			"maxNumberOfOptions": $("#create_poll_max_options").val(),
 			"minRangeValue": $("#create_poll_min_range_value").val(),
 			"maxRangeValue": $("#create_poll_max_range_value").val(),
-			"minBalance": $("#create_poll_min_balance").val(),
+			"minBalance": (parseInt($("#create_poll_min_balance").val())*100000000),
 			"feeNQT": (parseInt($("#create_poll_fee").val()) * 100000000),
 			"deadline": $("#create_poll_deadline").val(),
 			"secretPhrase": $("#create_poll_password").val()
@@ -361,16 +407,28 @@ var NRS = (function(NRS, $, undefined) {
 		if($("#create_poll_type").val() == "0")
 		{
 			data["votingModel"] = 0;
-
+			data["minBalanceModel"] = 1;
 		}
 		if($("#create_poll_type").val() == "1")
 		{
 			data["votingModel"] = 1;
+			var val = $('input:radio[name=minBalanceType]:checked').val();
+			data["minBalanceModel"] = val;
+
+			if(val == 2) data["holding"] = $("#create_poll_asset_id").val();
+			else if(val == 3) data["holding"] = $("#create_poll_ms_currency").val();
 		}
 		if($("#create_poll_type").val() == "2")
 		{
 			data["votingModel"] = 2;
-			data["assetId"] = $("#create_poll_asset_id").val();
+			data["holding"] = $("#create_poll_asset_id").val();
+			data["minBalanceModel"] = 2;
+		}
+		else if($("#create_poll_type").val() == "3")
+		{
+			data["votingModel"] = 3;
+			data["holding"] = $("#create_poll_ms_currency").val();
+			data["minBalanceModel"] = 3;
 		}
 
 		for (var i = 0; i < options.length; i++) {
