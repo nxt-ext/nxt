@@ -16,7 +16,7 @@ public class GetAccountPolls extends APIServlet.APIRequestHandler {
     static final GetAccountPolls instance = new GetAccountPolls();
 
     private GetAccountPolls() {
-        super(new APITag[] {APITag.ACCOUNTS, APITag.VS}, "includeVoters", "account", "firstIndex", "lastIndex");
+        super(new APITag[]{APITag.ACCOUNTS, APITag.VS}, "includeVoters", "account", "firstIndex", "lastIndex");
     }
 
     @Override

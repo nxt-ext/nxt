@@ -27,7 +27,6 @@ import nxt.crypto.EncryptedData;
 import nxt.peer.Hallmark;
 import nxt.peer.Peer;
 import nxt.util.Convert;
-import nxt.util.Pair;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
@@ -317,6 +316,7 @@ final class JSONData {
 
     static JSONObject poll(Poll poll, boolean includeVoters) {
         JSONObject json = new JSONObject();
+        json.put("poll", Convert.toUnsignedLong(poll.getId()));
         json.put("name", poll.getName());
         json.put("description", poll.getDescription());
         JSONArray options = new JSONArray();

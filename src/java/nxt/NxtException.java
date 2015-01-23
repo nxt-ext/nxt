@@ -63,6 +63,7 @@ public abstract class NxtException extends Exception {
         public NotValidException(String message, Throwable cause) {
             super(message, cause);
         }
+
     }
 
     public static final class StopException extends RuntimeException {

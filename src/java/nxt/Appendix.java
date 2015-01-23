@@ -261,7 +261,7 @@ public interface Appendix {
             super(buffer, transactionVersion);
         }
 
-        EncryptedMessage(JSONObject attachmentData) throws NxtException.NotValidException {
+        EncryptedMessage(JSONObject attachmentData) {
             super(attachmentData, (JSONObject)attachmentData.get("encryptedMessage"));
         }
 
@@ -632,12 +632,12 @@ public interface Appendix {
             transaction.getType().applyAttachment(transaction, senderAccount, recipientAccount);
 
             Logger.logDebugMessage("Transaction " + transaction.getId() + " has been released");
-            System.out.println("Transaction " + transaction.getId() + " has been released"); //TODO: Logger
         }
 
-        //todo: by-assets verification
         void verify(Transaction transaction) {
             long transactionId = transaction.getId();
+
+            //todo: change back to iterator
             List<VotePhased> votes = VotePhased.getByTransaction(transactionId, 0, Integer.MAX_VALUE).toList();
 
             PendingTransactionPoll poll = PendingTransactionPoll.getPoll(transactionId);
@@ -658,7 +658,6 @@ public interface Appendix {
                 senderAccount.addToUnconfirmedBalanceNQT(amount);
 
                 Logger.logDebugMessage("Transaction " + transactionId + " has been refused");
-                System.out.println("Transaction " + transactionId + " has been refused"); //TODO: remove
             }
         }
 

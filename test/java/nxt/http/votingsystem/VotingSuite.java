@@ -1,4 +1,4 @@
-package nxt.http;
+package nxt.http.votingsystem;
 
 import nxt.BlockchainProcessor;
 import nxt.Helper;
@@ -11,19 +11,15 @@ import org.junit.runners.Suite;
 
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
-        TestCurrencyIssuance.class,
-        TestCurrencyExchange.class,
-        TestCurrencyReserveAndClaim.class,
-        TestCurrencyMint.class,
-        nxt.TestMintCalculations.class,
-        DeleteCurrencyTest.class,
+        TestCreatePoll.class
 })
 
-public class CurrencySuite {
+public class VotingSuite {
 
     @BeforeClass
     public static void init() {
         Nxt.init();
+        Nxt.getTransactionProcessor().clearUnconfirmedTransactions();
         Nxt.getBlockchainProcessor().addListener(new Helper.BlockListener(), BlockchainProcessor.Event.BLOCK_GENERATED);
         Assert.assertEquals(0, Helper.getCount("unconfirmed_transaction"));
     }
@@ -35,3 +31,4 @@ public class CurrencySuite {
     }
 
 }
+
