@@ -2,6 +2,7 @@ package nxt;
 
 import nxt.db.DbVersion;
 
+import java.sql.Connection;
 import java.sql.SQLException;
 
 class NxtDbVersion extends DbVersion {
@@ -533,6 +534,11 @@ class NxtDbVersion extends DbVersion {
                 BlockchainProcessorImpl.getInstance().scheduleScan(0, false);
                 apply(null);
             case 199:
+                try (Connection con = db.getConnection()) {
+                    org.h2.fulltext.FullTextLucene.reindex(con);
+                }
+                apply(null);
+            case 200:
                 return;
             default:
                 throw new RuntimeException("Blockchain database inconsistent with code, probably trying to run older code on newer database");
