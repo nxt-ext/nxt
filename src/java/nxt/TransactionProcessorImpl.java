@@ -264,7 +264,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                     try (DbIterator<UnconfirmedTransaction> oldNonBroadcastedTransactions = getAllUnconfirmedTransactions()) {
                         for (UnconfirmedTransaction unconfirmedTransaction : oldNonBroadcastedTransactions) {
                             if (unconfirmedTransaction.getTransaction().isUnconfirmedDuplicate(unconfirmedDuplicates)) {
-                                Logger.logErrorMessage("Duplicate unconfirmed transaction " + unconfirmedTransaction.getTransaction().getJSONObject().toString());
+                                Logger.logDebugMessage("Skipping duplicate unconfirmed transaction " + unconfirmedTransaction.getTransaction().getJSONObject().toString());
                             } else if (enableTransactionRebroadcasting) {
                                 broadcastedTransactions.add(unconfirmedTransaction.getTransaction());
                             }
