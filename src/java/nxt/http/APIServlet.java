@@ -233,7 +233,9 @@ public final class APIServlet extends HttpServlet {
         map.put("popOff", PopOff.instance);
         map.put("scan", Scan.instance);
         map.put("luceneReindex", LuceneReindex.instance);
-
+        map.put("addPeer", AddPeer.instance);
+        map.put("blacklistPeer", BlacklistPeer.instance);
+        
         apiRequestHandlers = Collections.unmodifiableMap(map);
     }
 
