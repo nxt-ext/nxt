@@ -26,9 +26,23 @@
         <value name="HelpLink"
                keypath="SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\$UNINSTALL_NAME"
                root="HKLM"
+               string="https://nxtforum.org/nxt-helpdesk"/>
+        <value name="URLInfoAbout"
+               keypath="SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\$UNINSTALL_NAME"
+               root="HKLM"
                string="$APP_URL"/>
-			   
-			   HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall\NXT 1.4.9
+       <value name="Publisher"
+               keypath="SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\$UNINSTALL_NAME"
+               root="HKLM"
+               string="nxt.org"/>
+       <value name="Version"
+               keypath="SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\$UNINSTALL_NAME"
+               root="HKLM"
+               string="$APP_VER"/>
+       <value name="DisplayVersion"
+               keypath="SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\$UNINSTALL_NAME"
+               root="HKLM"
+               string="$APP_VER"/>
     </pack>
 </registry>
 

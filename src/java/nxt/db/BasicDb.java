@@ -1,13 +1,12 @@
 package nxt.db;
 
+import nxt.Nxt;
 import nxt.util.Logger;
 import org.h2.jdbcx.JdbcConnectionPool;
 
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class BasicDb {
 
@@ -15,6 +14,11 @@ public class BasicDb {
 
         private long maxCacheSize;
         private String dbUrl;
+        private String dbType;
+        private String dbDir;
+        private String dbParams;
+        private String dbUsername;
+        private String dbPassword;
         private int maxConnections;
         private int loginTimeout;
         private int defaultLockTimeout;
@@ -24,19 +28,33 @@ public class BasicDb {
             return this;
         }
 
-        Pattern dbUrlPattern = Pattern.compile("(\\w+):(\\w+?):(.*/nxt)(;.*)?");
-
         public DbProperties dbUrl(String dbUrl) {
-            Matcher matcher = dbUrlPattern.matcher(dbUrl);
-            if (!matcher.matches()) {
-                throw new IllegalArgumentException("Illegal database URL " + dbUrl);
-            }
-            String protocol = matcher.group(1);
-            String database = matcher.group(2);
-            String url = matcher.group(3);
-            url = url.replace("$USER_HOME", System.getProperty("user.home").replace('\\', '/'));
-            String parameters = matcher.group(4);
-            this.dbUrl = protocol + ":" + database + ":" + url + parameters;
+            this.dbUrl = dbUrl;
+            return this;
+        }
+
+        public DbProperties dbType(String dbType) {
+            this.dbType = dbType;
+            return this;
+        }
+
+        public DbProperties dbDir(String dbDir) {
+            this.dbDir = dbDir;
+            return this;
+        }
+
+        public DbProperties dbParams(String dbParams) {
+            this.dbParams = dbParams;
+            return this;
+        }
+
+        public DbProperties dbUsername(String dbUsername) {
+            this.dbUsername = dbUsername;
+            return this;
+        }
+
+        public DbProperties dbPassword(String dbPassword) {
+            this.dbPassword = dbPassword;
             return this;
         }
 
@@ -60,6 +78,8 @@ public class BasicDb {
     private JdbcConnectionPool cp;
     private volatile int maxActiveConnections;
     private final String dbUrl;
+    private final String dbUsername;
+    private final String dbPassword;
     private final int maxConnections;
     private final int loginTimeout;
     private final int defaultLockTimeout;
@@ -70,18 +90,24 @@ public class BasicDb {
             maxCacheSize = Math.min(256, Math.max(16, (Runtime.getRuntime().maxMemory() / (1024 * 1024) - 128)/2)) * 1024;
         }
         String dbUrl = dbProperties.dbUrl;
+        if (dbUrl == null) {
+            String dbDir = Nxt.mode.getDbDir(dbProperties.dbDir);
+            dbUrl = String.format("jdbc:%s:%s;%s", dbProperties.dbType, dbDir, dbProperties.dbParams);
+        }
         if (!dbUrl.contains("CACHE_SIZE=")) {
             dbUrl += ";CACHE_SIZE=" + maxCacheSize;
         }
         this.dbUrl = dbUrl;
+        this.dbUsername = dbProperties.dbUsername;
+        this.dbPassword = dbProperties.dbPassword;
         this.maxConnections = dbProperties.maxConnections;
         this.loginTimeout = dbProperties.loginTimeout;
         this.defaultLockTimeout = dbProperties.defaultLockTimeout;
     }
 
-    public void init(String username, String password, DbVersion dbVersion) {
-        Logger.logDebugMessage("Database jdbc url set to: " + dbUrl);
-        cp = JdbcConnectionPool.create(dbUrl, username, password);
+    public void init(DbVersion dbVersion) {
+        Logger.logDebugMessage("Database jdbc url set to %s username %s", dbUrl, dbUsername);
+        cp = JdbcConnectionPool.create(dbUrl, dbUsername, dbPassword);
         cp.setMaxConnections(maxConnections);
         cp.setLoginTimeout(loginTimeout);
         try (Connection con = cp.getConnection();

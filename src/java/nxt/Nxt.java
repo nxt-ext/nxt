@@ -1,8 +1,12 @@
 package nxt;
 
+import nxt.env.DesktopMode;
+import nxt.env.UserInterfaceMode;
+import nxt.env.UserInterfaceModeFactory;
 import nxt.http.API;
 import nxt.peer.Peers;
 import nxt.user.Users;
+import nxt.util.Convert;
 import nxt.util.Logger;
 import nxt.util.ThreadPool;
 import nxt.util.Time;
@@ -11,6 +15,9 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.management.ManagementFactory;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.security.AccessControlException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -26,11 +33,15 @@ public final class Nxt {
 
     public static final String NXT_DEFAULT_PROPERTIES = "nxt-default.properties";
     public static final String NXT_PROPERTIES = "nxt.properties";
+    public static final String CONFIG_DIR = "conf";
+
+    public static final UserInterfaceMode mode;
 
     private static final Properties defaultProperties = new Properties();
     static {
         System.out.println("Initializing Nxt server version " + Nxt.VERSION);
         printCommandLineArguments();
+        mode = UserInterfaceModeFactory.getMode();
         loadProperties(defaultProperties, NXT_DEFAULT_PROPERTIES, true);
     }
 
@@ -40,8 +51,9 @@ public final class Nxt {
         loadProperties(properties, NXT_PROPERTIES, false);
     }
 
-    public static Properties loadProperties(Properties properties, String propertiesFile, boolean isMandatory) {
+    public static Properties loadProperties(Properties properties, String propertiesFile, boolean isDefault) {
         try {
+            // Load properties from location specified as command line parameter
             String configFile = System.getProperty(propertiesFile);
             if (configFile != null) {
                 System.out.printf("Loading %s from %s\n", propertiesFile, configFile);
@@ -53,19 +65,38 @@ public final class Nxt {
                 }
             } else {
                 try (InputStream is = ClassLoader.getSystemResourceAsStream(propertiesFile)) {
+                    // When running nxt.exe from a Windows installation we always have nxt.properties in the classpath but this is not the nxt properties file
+                    // Therefore we first load it from the classpath and then look for the real nxt.properties in the user folder.
                     if (is != null) {
                         System.out.printf("Loading %s from classpath\n", propertiesFile);
                         properties.load(is);
-                        return properties;
-                    } else {
-                        String message = String.format("%s not in classpath and system property %s is undefined", propertiesFile, propertiesFile);
-                        if (isMandatory) {
-                            throw new IllegalArgumentException(message);
-                        } else {
-                            System.out.printf(message + "\n", propertiesFile, propertiesFile);
+                        if (isDefault) {
                             return properties;
                         }
                     }
+                    // load non-default properties files from the user folder
+                    if (!mode.isLoadPropertyFileFromUserDir()) {
+                        return properties;
+                    }
+                    if (!Files.isReadable(Paths.get(DesktopMode.NXT_USER_HOME))) {
+                        System.out.printf("Creating dir %s\n", DesktopMode.NXT_USER_HOME);
+                        Files.createDirectory(Paths.get(DesktopMode.NXT_USER_HOME));
+                    }
+                    Path confDir = Paths.get(DesktopMode.NXT_USER_HOME, CONFIG_DIR);
+                    if (!Files.isReadable(confDir)) {
+                        System.out.printf("Creating dir %s\n", confDir);
+                        Files.createDirectory(confDir);
+                    }
+                    Path propPath = Paths.get(confDir.toString(), propertiesFile);
+                    if (Files.isReadable(propPath)) {
+                        System.out.printf("Loading %s from dir %s\n", propertiesFile, confDir);
+                        properties.load(Files.newInputStream(propPath));
+                    } else {
+                        System.out.printf("Creating property file %s\n", propPath);
+                        Files.createFile(propPath);
+                        Files.write(propPath, Convert.toBytes("# use this file for workstation specific " + propertiesFile));
+                    }
+                    return properties;
                 } catch (IOException e) {
                     throw new IllegalArgumentException("Error loading " + propertiesFile, e);
                 }
@@ -274,7 +305,8 @@ public final class Nxt {
                 "os.arch",
                 "sun.arch.data.model",
                 "os.name",
-                "file.encoding"
+                "file.encoding",
+                "nxt.desktop.mode"
         };
         for (String property : loggedProperties) {
             Logger.logDebugMessage(String.format("%s = %s", property, System.getProperty(property)));

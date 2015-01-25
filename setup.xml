@@ -1,9 +1,8 @@
 <?xml version="1.0" encoding="iso-8859-1"  ?>
 <installation version="5.0">
     <properties>
-		<!--property file="resource/build.properties"/-->
 		<property name="appversion" value="1.4.10"/>
-		</properties>
+	</properties>
 	<info>
         <appname>NXT</appname>
         <appversion>@{appversion}</appversion>
@@ -61,9 +60,9 @@
     <resources>
 		<res id="InfoPanel.info" src="changelogs/nxt-client-@{appversion}.changelog.txt" parse="yes"/>
 		<res id="LicencePanel.licence" src="MIT-license.txt"/>
-		<res id="Installer.image" src="html/ui/img/nxt_logo.png"/>
+		<res id="Installer.image" src="html/ui/img/installer.left.pane.jpg"/>
 		<res id="shortcutSpec.xml" src="shortcutSpec.xml"/>
-        <!--res id="RegistrySpec.xml" src="RegistrySpec.xml"/-->		
+        <res id="RegistrySpec.xml" src="RegistrySpec.xml"/>		
     </resources>
 
 	<variables>
@@ -104,10 +103,6 @@
             <file src="run.bat" targetdir="${INSTALL_PATH}" override="false"/>
 			<parsable targetfile="${INSTALL_PATH}/run.bat"/>
 			<singlefile src="resource/nxt.properties" target="${INSTALL_PATH}/resource/nxt.properties" override="true"/>
-			<parsable targetfile="${INSTALL_PATH}/resource/nxt.properties"/>
-			<singlefile src="resource/nxt.properties.template" target="${USER_HOME}/AppData/Roaming/NXT/nxt.properties" override="false"/>
-			<singlefile src="resource/logging.properties.template" target="${USER_HOME}/AppData/Roaming/NXT/logging.properties" override="false"/>
-			<singlefile src="resource/logs/nxt.log" target="${USER_HOME}/AppData/Roaming/NXT/logs/nxt.log" override="false"/>
 		</pack>
         <pack name="server.unix" os="unix" required="yes">
             <description>Unix Specific Resources</description>
