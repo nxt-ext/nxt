@@ -15,8 +15,8 @@
 		<listener classname="RegistryInstallerListener" stage="install" >
 			<os family="windows"/>
 		</listener>
-			<listener classname="RegistryUninstallerListener" stage="uninstall" >
-		<os family="windows"/>
+		<listener classname="RegistryUninstallerListener" stage="uninstall" >
+			<os family="windows"/>
 		</listener>
 	</listeners>
 	
