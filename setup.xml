@@ -1,10 +1,14 @@
 <?xml version="1.0" encoding="iso-8859-1"  ?>
 <installation version="5.0">
-    <info>
+    <properties>
+		<!--property file="resource/build.properties"/-->
+		<property name="appversion" value="1.4.10"/>
+		</properties>
+	<info>
         <appname>NXT</appname>
-        <appversion>1.4.9</appversion>
+        <appversion>@{appversion}</appversion>
         <url>http://nxt.org</url>
-		<run-privileged condition="izpack.windowsinstall"/>
+        <run-privileged condition="izpack.windowsinstall"/>
     </info>
 	
 	<listeners>
@@ -38,29 +42,28 @@
 		</native>
     </natives>
 	
-    <guiprefs width="800" height="600" resizable="no">
-		<modifier key="useButtonIcons" value="no"/>
-		<modifier key="useLabelIcons" value="no"/>
-		<modifier key="labelGap" value="2"/>
-		<modifier key="layoutAnchor" value="NORTHWEST"/>
-		<modifier key="useHeadingPanel" value="yes"/>
-		<modifier key="headingImageOnLeft" value="yes"/>
-		<modifier key="headingLineCount" value="1"/>
-		<modifier key="headingFontSize" value="1.5"/>
-		<modifier key="headingBackgroundColor" value="0x00ffffff"/>
-		<modifier key="headingPanelCounter" value="text"/>
-		<modifier key="headingPanelCounterPos" value="inHeading"/>
-	</guiprefs>
+    <guiprefs height="700" resizable="yes" width="870">
+        <!-- GUI adaption for more information see "Modifying the GUI" in the documentation -->
+        <modifier key="langDisplayType" value="default"/>
+        <modifier key="layoutAnchor" value="CENTER"/>
+        <modifier key="headingPanelCounter" value="progressbar"/>
+        <modifier key="headingPanelCounterPos" value="inNavigationPanel"/>
+        <modifier key="allYGap" value="4"/>
+        <modifier key="paragraphYGap" value="10"/>
+        <modifier key="filler1YGap" value="5"/>
+        <modifier key="filler3XGap" value="10"/>
+    </guiprefs>
 
 	<locale>
         <langpack iso3="eng"/>
     </locale>
 
     <resources>
-		<res id="InfoPanel.info" src="README.txt" parse="yes"/>
+		<res id="InfoPanel.info" src="changelogs/nxt-client-@{appversion}.changelog.txt" parse="yes"/>
 		<res id="LicencePanel.licence" src="MIT-license.txt"/>
 		<res id="Installer.image" src="html/ui/img/nxt_logo.png"/>
-		<res id="shortcutSpec.xml" src="shortcutSpec.xml"/>    
+		<res id="shortcutSpec.xml" src="shortcutSpec.xml"/>
+        <!--res id="RegistrySpec.xml" src="RegistrySpec.xml"/-->		
     </resources>
 
 	<variables>
@@ -69,14 +72,14 @@
 	</variables>
 
     <panels>
-        <panel classname="HelloPanel"/>
+        <panel classname="CheckedHelloPanel" id="hellopanel"/>	
         <panel classname="LicencePanel"/>
         <panel classname="InfoPanel"/>
         <panel classname="TargetPanel"/>
         <panel classname="PacksPanel"/>
 		<panel classname="ShortcutPanel"/>
         <panel classname="InstallPanel"/>
-        <panel classname="FinishPanel"/>
+        <panel classname="SimpleFinishPanel"/>
     </panels>
 
     <packs>
