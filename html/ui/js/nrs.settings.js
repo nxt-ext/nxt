@@ -33,16 +33,16 @@ var NRS = (function(NRS, $, undefined) {
 		"gl": "Galego (Beta)",           // galician
 		"sh": "Hrvatski (Beta)",         // croatian
 		"id": "Bahasa Indonesia (Beta)", // indonesian
-		"it": "Italiano (Beta)",         // italian
+		"it": "Italiano",                // italian
 		"ja": "日本語 (Beta)",            // japanese
 		"lt": "Lietuviškai",             // lithuanian
-		"nl": "Nederlands (Beta)",       // dutch
+		"nl": "Nederlands",              // dutch
 		"sk": "Slovensky (Beta)",        // slovakian
 		"pt-pt": "Português (Beta)",     // portugese
 		"pt-br": "Português Brasileiro", // portugese, brazilian
 		"sr": "Српски (Beta)",           // serbian, cyrillic
 		"sr-cs": "Srpski (Beta)",        // serbian, latin
-		"uk": "Yкраiнска (Beta)",        // ukrainian
+		"uk": "Yкраiнска",               // ukrainian
 		"ru": "Русский",                 // russian
 		"zh-cn": "中文 (simplified)",     // chinese simplified
 		"zh-tw": "中文 (traditional)"     // chinese traditional
