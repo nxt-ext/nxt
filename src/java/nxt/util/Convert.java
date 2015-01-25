@@ -145,7 +145,7 @@ public final class Convert {
 
     public static String toString(byte[] bytes) {
         try {
-            return new String(bytes, "UTF-8").trim();
+            return new String(bytes, "UTF-8");
         } catch (UnsupportedEncodingException e) {
             throw new RuntimeException(e.toString(), e);
         }

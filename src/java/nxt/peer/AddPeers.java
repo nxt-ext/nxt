@@ -14,7 +14,7 @@ final class AddPeers extends PeerServlet.PeerRequestHandler {
     @Override
     JSONStreamAware processRequest(JSONObject request, Peer peer) {
         final JSONArray peers = (JSONArray)request.get("peers");
-        if (peers != null && Peers.getMorePeers) {
+        if (peers != null && Peers.getMorePeers && !Peers.hasTooManyKnownPeers()) {
             Peers.peersService.submit(new Runnable() {
                 @Override
                 public void run() {

@@ -11,7 +11,7 @@ var NRS = (function(NRS, $, undefined) {
 			"block": blockID
 		}, function(response) {
 			if (response.errorCode && response.errorCode == -1) {
-				NRS.getBlock(blockID, callback, pageRequest);
+				setTimeout(function (){ NRS.getBlock(blockID, callback, pageRequest); }, 2500);
 			} else {
 				if (callback) {
 					response.block = blockID;
