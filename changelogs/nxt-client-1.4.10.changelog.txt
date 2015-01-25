@@ -25,6 +25,11 @@ peer list, provided the node has enough connected public peers, until the number
 of known peers is again reduced to below nxt.minNumberOfKnownPeers (default
 1000).
 
+Improved database performance by storing currency supply and reserve per unit
+data in a separate table.
+
+This release will perform a rescan on first start.
+
 Updated jetty to version 9.2.7. If unpacking on top of a previous installation,
 delete your lib directory first to remove the old jetty libraries.
 

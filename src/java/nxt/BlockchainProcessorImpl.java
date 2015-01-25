@@ -1063,6 +1063,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     }
                 }
                 Db.db.commitTransaction();
+                Logger.logDebugMessage("Rolled back derived tables");
                 pstmtSelect.setInt(1, height);
                 BlockImpl currentBlock = BlockDb.findBlockAtHeight(height);
                 blockListeners.notify(currentBlock, Event.RESCAN_BEGIN);
