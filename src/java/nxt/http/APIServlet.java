@@ -79,12 +79,12 @@ public final class APIServlet extends HttpServlet {
 
         Map<String,APIRequestHandler> map = new HashMap<>();
 
+        map.put("approvePendingTransaction", ApprovePendingTransaction.instance);
         map.put("broadcastTransaction", BroadcastTransaction.instance);
         map.put("calculateFullHash", CalculateFullHash.instance);
         map.put("cancelAskOrder", CancelAskOrder.instance);
         map.put("cancelBidOrder", CancelBidOrder.instance);
         map.put("castVote", CastVote.instance);
-        map.put("castVotePhased", CastVotePhased.instance);
         map.put("createPoll", CreatePoll.instance);
         map.put("currencyBuy", CurrencyBuy.instance);
         map.put("currencySell", CurrencySell.instance);
@@ -110,7 +110,7 @@ public final class APIServlet extends HttpServlet {
         map.put("getAccountBlocks", GetAccountBlocks.instance);
         map.put("getAccountId", GetAccountId.instance);
         map.put("getAccountPendingTransactionIds", GetAccountPendingTransactionIds.instance);
-        map.put("getAccountPendingTransactionToSignIds", GetAccountPendingTransactionToSignIds.instance);
+        map.put("getAccountPendingTransactionToApproveIds", GetAccountPendingTransactionToApproveIds.instance);
         map.put("getAccountPolls", GetAccountPolls.instance);
         map.put("getAccountPublicKey", GetAccountPublicKey.instance);
         map.put("getAccountTransactionIds", GetAccountTransactionIds.instance);
