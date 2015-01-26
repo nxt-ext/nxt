@@ -4,7 +4,9 @@ import nxt.util.Logger;
 
 import javax.swing.*;
 import java.io.File;
+import java.io.IOException;
 import java.net.URI;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Properties;
@@ -44,9 +46,19 @@ public class DesktopMode implements UserInterfaceMode {
         if (loggingProperties.getProperty(LOG_FILE_PATTERN) == null) {
             return;
         }
-        Path path = Paths.get(NXT_USER_HOME, loggingProperties.getProperty(LOG_FILE_PATTERN));
-        logFileDir = new File(path.getParent().toString());
-        loggingProperties.setProperty(LOG_FILE_PATTERN, path.toString());
+        Path logFilePattern = Paths.get(NXT_USER_HOME, loggingProperties.getProperty(LOG_FILE_PATTERN));
+        loggingProperties.setProperty(LOG_FILE_PATTERN, logFilePattern.toString());
+
+        Path logDirPath = logFilePattern.getParent();
+        this.logFileDir = new File(logDirPath.toString());
+        if (!Files.isReadable(logDirPath)) {
+            System.out.printf("Creating dir %s\n", logDirPath);
+            try {
+                Files.createDirectory(logDirPath);
+            } catch (IOException e) {
+                throw new IllegalArgumentException("Cannot create " + logDirPath, e);
+            }
+        }
     }
 
     @Override

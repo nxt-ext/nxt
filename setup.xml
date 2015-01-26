@@ -95,6 +95,7 @@
 			<fileset dir="classes" targetdir="${INSTALL_PATH}/classes" override="true" excludes=".gitignore"/>
 			<fileset dir="html" targetdir="${INSTALL_PATH}/html" override="true" excludes=".gitignore"/>
 			<fileset dir="src" targetdir="${INSTALL_PATH}/src" override="true" excludes=".gitignore"/>
+			<fileset dir="logs" targetdir="${INSTALL_PATH}/logs" override="true"/>			
 		</pack>
         <pack name="server.windows" os="windows" required="yes">
             <description>Windows Specific Resources</description>
