@@ -9,7 +9,7 @@ import java.sql.Statement;
 
 public abstract class DbVersion {
 
-    protected BasicDb db;
+    private BasicDb db;
 
     void init(BasicDb db) {
         this.db = db;

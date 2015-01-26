@@ -534,10 +534,7 @@ class NxtDbVersion extends DbVersion {
                 BlockchainProcessorImpl.getInstance().scheduleScan(0, false);
                 apply(null);
             case 199:
-                try (Connection con = db.getConnection()) {
-                    org.h2.fulltext.FullTextLucene.reindex(con);
-                }
-                apply(null);
+                apply("CALL FTL_REINDEX()");
             case 200:
                 apply("DROP TABLE IF EXISTS poll");
             case 201:
