@@ -1,5 +1,8 @@
 Improved display of blockchain downloading status in the client UI.
 
+Added client translations, changed state from beta to stable for the following
+languages: Italian, Dutch, Ukrainian.
+
 Fixed a bug in transaction bytes parsing which could cause signature
 verification failed errors and break forging.
 
@@ -24,6 +27,11 @@ that have been last connected to more than a week ago are removed from the known
 peer list, provided the node has enough connected public peers, until the number
 of known peers is again reduced to below nxt.minNumberOfKnownPeers (default
 1000).
+
+Improved database performance by storing currency supply and reserve per unit
+data in a separate table.
+
+This release will perform a rescan on first start.
 
 Updated jetty to version 9.2.7. If unpacking on top of a previous installation,
 delete your lib directory first to remove the old jetty libraries.
