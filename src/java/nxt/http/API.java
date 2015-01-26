@@ -25,6 +25,8 @@ import org.eclipse.jetty.util.ssl.SslContextFactory;
 import java.math.BigInteger;
 import java.net.Inet4Address;
 import java.net.InetAddress;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -41,6 +43,7 @@ public final class API {
     static final String adminPassword = Nxt.getStringProperty("nxt.adminPassword", "", true);
     static final boolean disableAdminPassword;
     private static final Server apiServer;
+    private static URI browserUri;
 
     static {
         List<String> allowedBotHostsList = Nxt.getStringListProperty("nxt.allowedBotHosts");
@@ -94,7 +97,11 @@ public final class API {
             } else {
                 connector = new ServerConnector(apiServer);
             }
-
+            try {
+                browserUri = new URI(enableSSL ? "https" : "http", null, "localhost", port, "/index.html", null, null);
+            } catch (URISyntaxException e) {
+                Logger.logInfoMessage("Cannot resolve browser URI", e);
+            }
             connector.setPort(port);
             connector.setHost(host);
             connector.setIdleTimeout(Nxt.getIntProperty("nxt.apiServerIdleTimeout"));
@@ -229,6 +236,10 @@ public final class API {
             return hostAddressToCheck.and(netMask).equals(netAddress);
         }
 
+    }
+
+    public static URI getBrowserUri() {
+        return browserUri;
     }
 
     private API() {} // never

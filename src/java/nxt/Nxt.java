@@ -15,6 +15,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.management.ManagementFactory;
+import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -242,7 +243,10 @@ public final class Nxt {
                 long startTime = System.currentTimeMillis();
                 Logger.init();
                 logSystemProperties();
+                mode.init();
+                setServerStatus("NXT Server - Loading database", null);
                 Db.init();
+                setServerStatus("NXT Server - Loading resources", null);
                 TransactionProcessorImpl.getInstance();
                 BlockchainProcessorImpl.getInstance();
                 Account.init();
@@ -277,6 +281,7 @@ public final class Nxt {
                 long currentTime = System.currentTimeMillis();
                 Logger.logMessage("Initialization took " + (currentTime - startTime) / 1000 + " seconds");
                 Logger.logMessage("Nxt server " + VERSION + " started successfully.");
+                setServerStatus("NXT Server - Online", API.getBrowserUri());
                 if (Constants.isTestnet) {
                     Logger.logMessage("RUNNING ON TESTNET - DO NOT USE REAL ACCOUNTS!");
                 }
@@ -313,6 +318,10 @@ public final class Nxt {
         }
         Logger.logDebugMessage(String.format("availableProcessors = %s", Runtime.getRuntime().availableProcessors()));
         Logger.logDebugMessage(String.format("maxMemory = %s", Runtime.getRuntime().maxMemory()));
+    }
+
+    public static void setServerStatus(String status, URI wallet) {
+        mode.setServerStatus(status, wallet);
     }
 
     private Nxt() {} // never

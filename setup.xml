@@ -60,7 +60,7 @@
     <resources>
 		<res id="InfoPanel.info" src="changelogs/nxt-client-@{appversion}.changelog.txt" parse="yes"/>
 		<res id="LicencePanel.licence" src="MIT-license.txt"/>
-		<res id="Installer.image" src="html/ui/img/installer.left.pane.jpg"/>
+		<res id="Installer.image" src="html/ui/img/installer_left_pane.png"/>
 		<res id="shortcutSpec.xml" src="shortcutSpec.xml"/>
         <res id="RegistrySpec.xml" src="RegistrySpec.xml"/>		
     </resources>

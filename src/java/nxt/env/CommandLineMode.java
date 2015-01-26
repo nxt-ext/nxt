@@ -1,5 +1,6 @@
 package nxt.env;
 
+import java.net.URI;
 import java.util.Properties;
 
 public class CommandLineMode implements UserInterfaceMode {
@@ -16,4 +17,10 @@ public class CommandLineMode implements UserInterfaceMode {
     public String getDbDir(String dbDir) {
         return dbDir;
     }
+
+    @Override
+    public void init() {}
+
+    @Override
+    public void setServerStatus(String status, URI wallet) {}
 }
