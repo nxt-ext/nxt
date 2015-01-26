@@ -1,5 +1,8 @@
 Improved display of blockchain downloading status in the client UI.
 
+Added client translations, changed state from beta to stable for the following
+languages: Italian, Dutch, Ukrainian.
+
 Fixed a bug in transaction bytes parsing which could cause signature
 verification failed errors and break forging.
 
