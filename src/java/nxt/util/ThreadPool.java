@@ -49,7 +49,7 @@ public final class ThreadPool {
         }
     }
 
-    public static void start(int timeMultiplier) {
+    public static synchronized void start(int timeMultiplier) {
         if (scheduledThreadPool != null) {
             throw new IllegalStateException("Executor service already started");
         }
