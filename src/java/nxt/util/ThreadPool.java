@@ -13,7 +13,7 @@ import java.util.concurrent.TimeUnit;
 
 public final class ThreadPool {
 
-    private static ScheduledExecutorService scheduledThreadPool;
+    private static volatile ScheduledExecutorService scheduledThreadPool;
     private static Map<Runnable,Long> backgroundJobs = new HashMap<>();
     private static List<Runnable> beforeStartJobs = new ArrayList<>();
     private static List<Runnable> lastBeforeStartJobs = new ArrayList<>();
@@ -49,7 +49,7 @@ public final class ThreadPool {
         }
     }
 
-    public static synchronized void start(int timeMultiplier) {
+    public static void start(int timeMultiplier) {
         if (scheduledThreadPool != null) {
             throw new IllegalStateException("Executor service already started");
         }
@@ -81,7 +81,7 @@ public final class ThreadPool {
         thread.start();
     }
 
-    public static synchronized void shutdown() {
+    public static void shutdown() {
         if (scheduledThreadPool != null) {
 	        Logger.logShutdownMessage("Stopping background jobs...");
     	    shutdownExecutor(scheduledThreadPool);
