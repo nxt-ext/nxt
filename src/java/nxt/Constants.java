@@ -15,8 +15,8 @@ public final class Constants {
     public static final long MAX_BASE_TARGET = MAX_BALANCE_NXT * INITIAL_BASE_TARGET;
     public static final int MAX_ROLLBACK = Nxt.getIntProperty("nxt.maxRollback");
     static {
-        if (MAX_ROLLBACK < 1440) {
-            throw new RuntimeException("nxt.maxRollback must be at least 1440");
+        if (MAX_ROLLBACK < 1441) {
+            throw new RuntimeException("nxt.maxRollback must be at least 1441");
         }
     }
 
