@@ -70,4 +70,9 @@ public class DesktopMode implements UserInterfaceMode {
     public void setServerStatus(String status, URI wallet) {
         desktopSystemTray.setToolTip(new SystemTrayDataProvider(status, wallet, logFileDir));
     }
+
+    @Override
+    public void shutdown() {
+        desktopSystemTray.shutdown();
+    }
 }

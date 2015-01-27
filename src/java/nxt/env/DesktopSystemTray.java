@@ -1,5 +1,14 @@
 package nxt.env;
 
+import nxt.Block;
+import nxt.BlockchainProcessor;
+import nxt.Constants;
+import nxt.Generator;
+import nxt.Nxt;
+import nxt.http.API;
+import nxt.peer.Peer;
+import nxt.peer.Peers;
+import nxt.util.Convert;
 import nxt.util.Logger;
 
 import javax.swing.*;
@@ -7,6 +16,7 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
+import java.util.Collection;
 
 public class DesktopSystemTray {
 
@@ -54,7 +64,7 @@ public class DesktopSystemTray {
 
         trayIcon.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                trayIcon.displayMessage("NXT", trayIcon.getToolTip(), TrayIcon.MessageType.INFO);
+                displayStatus();
             }
         });
 
@@ -78,13 +88,53 @@ public class DesktopSystemTray {
             }
         });
 
+        status.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                displayStatus();
+            }
+        });
+
         shutdown.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                tray.remove(trayIcon);
                 Logger.logInfoMessage("Shutdown requested by System Tray");
                 System.exit(0); // Implicitly invokes shutdown using the shutdown hook
             }
         });
+    }
+
+    private void displayStatus() {
+        Block lastBlock = Nxt.getBlockchain().getLastBlock();
+        BlockchainProcessor blockchainProcessor = Nxt.getBlockchainProcessor();
+        Peer lastBlockchainFeeder = blockchainProcessor.getLastBlockchainFeeder();
+        Collection<Generator> allGenerators = Generator.getAllGenerators();
+
+        StringBuilder generators = new StringBuilder();
+        for (Generator generator : allGenerators) {
+            generators.append('\n').append(Convert.rsAccount(generator.getAccountId()));
+        }
+        StringBuilder sb = new StringBuilder();
+        String format = "%s: %s\n";
+        sb.append(String.format(format, "Application", Nxt.APPLICATION));
+        sb.append(String.format(format, "Version", Nxt.VERSION));
+        sb.append(String.format(format, "Network", (Constants.isTestnet) ? "test" : "main"));
+        sb.append(String.format(format, "Working offline", Constants.isOffline));
+        sb.append(String.format(format, "Wallet", API.getBrowserUri()));
+        sb.append(String.format(format, "Peer port", Peers.getDefaultPeerPort()));
+        sb.append("\nBlockchain\n");
+        sb.append(lastBlock == null ? "" : String.format(format, "Height", lastBlock.getHeight()));
+        sb.append(lastBlockchainFeeder == null ? "" : String.format(format, "Last feeder", lastBlockchainFeeder.getAnnouncedAddress()));
+        sb.append(String.format(format, "Time stamp", Nxt.getEpochTime()));
+        sb.append("\n");
+        sb.append(String.format(format, "Forging", allGenerators.size() > 0));
+        sb.append(String.format(format, "Forging accounts", generators.toString()));
+        sb.append("\nEnvironment\n");
+        sb.append(String.format(format, "Number of peers", Peers.getAllPeers().size()));
+        sb.append(String.format(format, "Available processors", Runtime.getRuntime().availableProcessors()));
+        sb.append(String.format(format, "Max memory", humanReadableByteCount(Runtime.getRuntime().maxMemory())));
+        sb.append(String.format(format, "Total memory", humanReadableByteCount(Runtime.getRuntime().totalMemory())));
+        sb.append(String.format(format, "Free memory", humanReadableByteCount(Runtime.getRuntime().freeMemory())));
+        sb.append(String.format(format, "Process id", Nxt.getProcessId()));
+        JOptionPane.showMessageDialog(null, sb.toString(), "NXT Server Status", JOptionPane.INFORMATION_MESSAGE);
     }
 
     void setToolTip(final SystemTrayDataProvider dataProvider) {
@@ -98,4 +148,21 @@ public class DesktopSystemTray {
         });
     }
 
+    void shutdown() {
+        SwingUtilities.invokeLater(new Runnable() {
+            public void run() {
+                tray.remove(trayIcon);
+            }
+        });
+    }
+
+    public static String humanReadableByteCount(long bytes) {
+        int unit = 1000;
+        if (bytes < unit) {
+            return bytes + " B";
+        }
+        int exp = (int) (Math.log(bytes) / Math.log(unit));
+        String pre = "" + ("KMGTPE").charAt(exp-1);
+        return String.format("%.1f %sB", bytes / Math.pow(unit, exp), pre);
+    }
 }

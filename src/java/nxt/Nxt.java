@@ -234,6 +234,7 @@ public final class Nxt {
         Db.shutdown();
         Logger.logShutdownMessage("Nxt server " + VERSION + " stopped.");
         Logger.shutdown();
+        mode.shutdown();
     }
 
     private static class Init {
@@ -318,6 +319,19 @@ public final class Nxt {
         }
         Logger.logDebugMessage(String.format("availableProcessors = %s", Runtime.getRuntime().availableProcessors()));
         Logger.logDebugMessage(String.format("maxMemory = %s", Runtime.getRuntime().maxMemory()));
+        Logger.logDebugMessage(String.format("processId = %s", getProcessId()));
+    }
+
+    public static String getProcessId() {
+        String runtimeName = ManagementFactory.getRuntimeMXBean().getName();
+        if (runtimeName == null) {
+            return "";
+        }
+        String[] tokens = runtimeName.split("@");
+        if (tokens.length == 2) {
+            return tokens[0];
+        }
+        return "";
     }
 
     public static void setServerStatus(String status, URI wallet) {

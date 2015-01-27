@@ -23,4 +23,7 @@ public class CommandLineMode implements UserInterfaceMode {
 
     @Override
     public void setServerStatus(String status, URI wallet) {}
+
+    @Override
+    public void shutdown() {}
 }

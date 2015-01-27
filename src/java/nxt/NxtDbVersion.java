@@ -2,7 +2,6 @@ package nxt;
 
 import nxt.db.DbVersion;
 
-import java.sql.Connection;
 import java.sql.SQLException;
 
 class NxtDbVersion extends DbVersion {
@@ -538,7 +537,7 @@ class NxtDbVersion extends DbVersion {
             case 200:
                 return;
             default:
-                throw new RuntimeException("Blockchain database inconsistent with code, probably trying to run older code on newer database");
+                throw new RuntimeException("Blockchain database inconsistent with code, at update " + nextUpdate + ", probably trying to run older code on newer database");
         }
     }
 

@@ -13,4 +13,6 @@ public interface UserInterfaceMode {
     void init();
 
     void setServerStatus(String status, URI wallet);
+
+    void shutdown();
 }
