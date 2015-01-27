@@ -491,7 +491,7 @@ final class PeerImpl implements Peer {
                     }
                 }
                 if (!validHost) {
-                    Logger.logDebugMessage("Hallmark " + hallmarkString + " doesn't match " + host + ", hallmark host is " + hallmark.getHost());
+                    Logger.logDebugMessage("Hallmark host " + hallmark.getHost() + " doesn't match " + host);
                     this.hallmark = null;
                     return false;
                 }
