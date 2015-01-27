@@ -58,7 +58,11 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
 
         long quorum = ParameterParser.getLong(req, "pendingQuorum", 0, Long.MAX_VALUE, true);
 
-        long minBalance = ParameterParser.getLong(req, "pendingMinBalance", 0, Long.MAX_VALUE, true);
+        long minBalance = ParameterParser.getLong(req, "pendingMinBalance", 0, Long.MAX_VALUE, false);
+        if ((votingModel == Constants.VOTING_MODEL_ACCOUNT && minBalance != 0)
+                || (votingModel != Constants.VOTING_MODEL_ACCOUNT && minBalance == 0)) {
+            throw new ParameterException(incorrect("pendingMinBalance"));
+        }
 
         long holdingId = ParameterParser.getLong(req, "pendingHolding", Long.MIN_VALUE, Long.MAX_VALUE, false);
         if ((votingModel == Constants.VOTING_MODEL_ASSET || votingModel == Constants.VOTING_MODEL_MS_COIN)
