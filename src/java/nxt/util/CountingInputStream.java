@@ -7,16 +7,18 @@ import java.io.InputStream;
 public class CountingInputStream extends FilterInputStream {
 
     private long count;
+    private final long limit;
 
-    public CountingInputStream(InputStream in) {
+    public CountingInputStream(InputStream in, long limit) {
         super(in);
+        this.limit = limit;
     }
 
     @Override
     public int read() throws IOException {
         int read = super.read();
         if (read >= 0) {
-            count += 1;
+            incCount(1);
         }
         return read;
     }
@@ -25,7 +27,7 @@ public class CountingInputStream extends FilterInputStream {
     public int read(byte[] b, int off, int len) throws IOException {
         int read = super.read(b, off, len);
         if (read >= 0) {
-            count += read;
+            incCount(read);
         }
         return read;
     }
@@ -34,7 +36,7 @@ public class CountingInputStream extends FilterInputStream {
     public long skip(long n) throws IOException {
         long skipped = super.skip(n);
         if (skipped >= 0) {
-            count += skipped;
+            incCount(skipped);
         }
         return skipped;
     }
@@ -43,4 +45,10 @@ public class CountingInputStream extends FilterInputStream {
         return count;
     }
 
+    private void incCount(long n) {
+        count += n;
+        if (count > limit) {
+            throw new RuntimeException("Maximum size exceeded: " + count);
+        }
+    }
 }

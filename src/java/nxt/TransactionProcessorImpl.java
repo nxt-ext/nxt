@@ -197,7 +197,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                     if (peer == null) {
                         return;
                     }
-                    JSONObject response = peer.send(getUnconfirmedTransactionsRequest);
+                    JSONObject response = peer.send(getUnconfirmedTransactionsRequest, 10 * 1024 * 1024);
                     if (response == null) {
                         return;
                     }

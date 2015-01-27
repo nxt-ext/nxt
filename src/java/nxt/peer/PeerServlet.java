@@ -9,6 +9,7 @@ import org.eclipse.jetty.servlets.gzip.CompressedResponseWrapper;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 import org.json.simple.JSONValue;
+import org.json.simple.parser.ParseException;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
@@ -85,9 +86,9 @@ public final class PeerServlet extends HttpServlet {
             }
 
             JSONObject request;
-            CountingInputStream cis = new CountingInputStream(req.getInputStream());
+            CountingInputStream cis = new CountingInputStream(req.getInputStream(), Peers.MAX_REQUEST_SIZE);
             try (Reader reader = new InputStreamReader(cis, "UTF-8")) {
-                request = (JSONObject) JSONValue.parse(reader);
+                request = (JSONObject) JSONValue.parseWithException(reader);
             }
             if (request == null) {
                 return;
@@ -113,7 +114,10 @@ public final class PeerServlet extends HttpServlet {
                 response = UNSUPPORTED_PROTOCOL;
             }
 
-        } catch (RuntimeException e) {
+        } catch (RuntimeException|ParseException e) {
+            if (peer != null) {
+                peer.blacklist(e);
+            }
             Logger.logDebugMessage("Error processing POST request", e);
             JSONObject json = new JSONObject();
             json.put("error", e.toString());
