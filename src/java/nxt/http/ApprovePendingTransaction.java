@@ -8,10 +8,10 @@ import javax.servlet.http.HttpServletRequest;
 import static nxt.http.JSONResponses.MISSING_PENDING_TRANSACTION;
 import static nxt.http.JSONResponses.INCORRECT_PENDING_TRANSACTION;
 
-public class CastVotePhased extends CreateTransaction {
-    static final CastVotePhased instance = new CastVotePhased();
+public class ApprovePendingTransaction extends CreateTransaction {
+    static final ApprovePendingTransaction instance = new ApprovePendingTransaction();
 
-    private CastVotePhased() { super(new APITag[]{APITag.CREATE_TRANSACTION,
+    private ApprovePendingTransaction() { super(new APITag[]{APITag.CREATE_TRANSACTION,
                                                     APITag.PENDING_TRANSACTIONS},"pendingTransaction"); }
 
     @Override

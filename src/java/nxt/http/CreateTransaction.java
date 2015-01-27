@@ -23,7 +23,7 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
             "message", "messageIsText",
             "messageToEncrypt", "messageToEncryptIsText", "encryptedMessageData", "encryptedMessageNonce",
             "messageToEncryptToSelf", "messageToEncryptToSelfIsText", "encryptToSelfMessageData", "encryptToSelfMessageNonce",
-            "isPending", "pendingMaxHeight", "pendingVotingModel", "pendingQuorum", "pendingMinBalance", "pendingAsset",
+            "isPending", "pendingMaxHeight", "pendingVotingModel", "pendingQuorum", "pendingMinBalance", "pendingHolding",
             "pendingWhitelisted", "pendingWhitelisted", "pendingWhitelisted",
             "pendingBlacklisted", "pendingBlacklisted", "pendingBlacklisted",
             "recipientPublicKey"};
@@ -60,8 +60,9 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
 
         long minBalance = ParameterParser.getLong(req, "pendingMinBalance", 0, Long.MAX_VALUE, true);
 
-        long assetId = ParameterParser.getLong(req, "pendingAsset", Long.MIN_VALUE, Long.MAX_VALUE, false);
-        if (votingModel == Constants.VOTING_MODEL_ASSET && assetId == 0) {
+        long holdingId = ParameterParser.getLong(req, "pendingHolding", Long.MIN_VALUE, Long.MAX_VALUE, false);
+        if ((votingModel == Constants.VOTING_MODEL_ASSET || votingModel == Constants.VOTING_MODEL_MS_COIN)
+                && holdingId == 0) {
             throw new ParameterException(MISSING_PENDING_ASSET_ID);
         }
 
@@ -88,7 +89,7 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
         if (votingModel == Constants.VOTING_MODEL_ACCOUNT && blacklist.length != 0) {
             throw new ParameterException(INCORRECT_PENDING_BLACKLISTED);
         }
-        return new Appendix.TwoPhased(maxHeight, votingModel, assetId, quorum, minBalance, whitelist, blacklist);
+        return new Appendix.TwoPhased(maxHeight, votingModel, holdingId, quorum, minBalance, whitelist, blacklist);
     }
 
     final JSONStreamAware createTransaction(HttpServletRequest req, Account senderAccount, long recipientId,

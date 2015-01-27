@@ -11,11 +11,11 @@ import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 
 
-public class GetAccountPendingTransactionToSignIds extends APIServlet.APIRequestHandler {
+public class GetAccountPendingTransactionToApproveIds extends APIServlet.APIRequestHandler {
 
-    static final GetAccountPendingTransactionToSignIds instance = new GetAccountPendingTransactionToSignIds();
+    static final GetAccountPendingTransactionToApproveIds instance = new GetAccountPendingTransactionToApproveIds();
 
-    private GetAccountPendingTransactionToSignIds() {
+    private GetAccountPendingTransactionToApproveIds() {
         super(new APITag[]{APITag.ACCOUNTS, APITag.PENDING_TRANSACTIONS}, "account", "firstIndex", "lastIndex");
     }
 
