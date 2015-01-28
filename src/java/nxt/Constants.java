@@ -15,8 +15,8 @@ public final class Constants {
     public static final long MAX_BASE_TARGET = MAX_BALANCE_NXT * INITIAL_BASE_TARGET;
     public static final int MAX_ROLLBACK = Nxt.getIntProperty("nxt.maxRollback");
     static {
-        if (MAX_ROLLBACK < 1440) {
-            throw new RuntimeException("nxt.maxRollback must be at least 1440");
+        if (MAX_ROLLBACK < 1441) {
+            throw new RuntimeException("nxt.maxRollback must be at least 1441");
         }
     }
 
@@ -116,7 +116,7 @@ public final class Constants {
     public static final int DIGITAL_GOODS_STORE_BLOCK = isTestnet ? 77341 : 213000;
     public static final int TWO_PHASED_TRANSACTIONS_BLOCK = isTestnet ? 0 : Integer.MAX_VALUE;
     public static final int MONETARY_SYSTEM_BLOCK = isTestnet ? 150000 : 330000;
-    public static final int LAST_KNOWN_BLOCK = isTestnet ? 150000 : 340000;
+    public static final int LAST_KNOWN_BLOCK = isTestnet ? 150000 : 342000;
 
     public static final int[] MIN_VERSION = new int[] {1, 4};
 
