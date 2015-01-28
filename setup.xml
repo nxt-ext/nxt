@@ -101,9 +101,12 @@
             <description>Windows Specific Resources</description>
 			<os family="windows"/>
             <file src="nxt.exe" targetdir="${INSTALL_PATH}" override="true"/>
+            <file src="nxtservice.exe" targetdir="${INSTALL_PATH}" override="true"/>
+            <file src="nxtservice.jar" targetdir="${INSTALL_PATH}" override="true"/>
             <file src="run.bat" targetdir="${INSTALL_PATH}" override="false"/>
 			<parsable targetfile="${INSTALL_PATH}/run.bat"/>
 			<singlefile src="resource/nxt.properties" target="${INSTALL_PATH}/resource/nxt.properties" override="true"/>
+			<singlefile src="resource/nxtservice.properties" target="${INSTALL_PATH}/resource/nxtservice.properties" override="true"/>
 		</pack>
         <pack name="server.unix" os="unix" required="yes">
             <description>Unix Specific Resources</description>

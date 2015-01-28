@@ -1,7 +1,7 @@
 package nxt;
 
 import nxt.env.DesktopMode;
-import nxt.env.UserInterfaceMode;
+import nxt.env.RuntimeMode;
 import nxt.env.UserInterfaceModeFactory;
 import nxt.http.API;
 import nxt.peer.Peers;
@@ -36,7 +36,7 @@ public final class Nxt {
     public static final String NXT_PROPERTIES = "nxt.properties";
     public static final String CONFIG_DIR = "conf";
 
-    public static final UserInterfaceMode mode;
+    public static final RuntimeMode mode;
 
     private static final Properties defaultProperties = new Properties();
     static {
@@ -312,7 +312,7 @@ public final class Nxt {
                 "sun.arch.data.model",
                 "os.name",
                 "file.encoding",
-                "nxt.desktop.mode"
+                RuntimeMode.RUNTIME_MODE_ARG
         };
         for (String property : loggedProperties) {
             Logger.logDebugMessage(String.format("%s = %s", property, System.getProperty(property)));

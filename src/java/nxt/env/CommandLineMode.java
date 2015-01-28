@@ -3,7 +3,7 @@ package nxt.env;
 import java.net.URI;
 import java.util.Properties;
 
-public class CommandLineMode implements UserInterfaceMode {
+public class CommandLineMode implements RuntimeMode {
 
     @Override
     public boolean isLoadPropertyFileFromUserDir() {
