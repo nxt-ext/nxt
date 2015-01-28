@@ -65,6 +65,7 @@ public final class GetState extends APIServlet.APIRequestHandler {
             response.put("numberOfGoods", DigitalGoodsStore.Goods.getCount());
             response.put("numberOfPurchases", DigitalGoodsStore.Purchase.getCount());
             response.put("numberOfTags", DigitalGoodsStore.Tag.getCount());
+            //TODO: add Poll, Vote, and Phasing counts
             //response.put("numberOfPolls", Poll.getCount());
             //response.put("numberOfVotes", Vote.getCount());
         }

@@ -1,12 +1,20 @@
 package nxt.http;
 
 
-import nxt.*;
+import nxt.Account;
+import nxt.Appendix;
+import nxt.Attachment;
+import nxt.Constants;
+import nxt.Nxt;
+import nxt.NxtException;
+import nxt.Transaction;
 import nxt.util.Convert;
 import org.json.simple.JSONStreamAware;
+
 import javax.servlet.http.HttpServletRequest;
-import static nxt.http.JSONResponses.MISSING_PENDING_TRANSACTION;
+
 import static nxt.http.JSONResponses.INCORRECT_PENDING_TRANSACTION;
+import static nxt.http.JSONResponses.MISSING_PENDING_TRANSACTION;
 
 public class ApprovePendingTransaction extends CreateTransaction {
     static final ApprovePendingTransaction instance = new ApprovePendingTransaction();

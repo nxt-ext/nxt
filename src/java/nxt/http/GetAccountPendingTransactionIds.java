@@ -4,13 +4,13 @@ package nxt.http;
 import nxt.Account;
 import nxt.NxtException;
 import nxt.PendingTransactionPoll;
+import nxt.db.DbIterator;
 import nxt.util.Convert;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.List;
 
 
 public class GetAccountPendingTransactionIds extends APIServlet.APIRequestHandler {
@@ -29,14 +29,12 @@ public class GetAccountPendingTransactionIds extends APIServlet.APIRequestHandle
         int firstIndex = ParameterParser.getFirstIndex(req);
         int lastIndex = ParameterParser.getLastIndex(req);
 
-        long accountId = account.getId();
-        List<PendingTransactionPoll> polls = PendingTransactionPoll.getByAccountId(accountId, firstIndex, lastIndex).toList();
-
         JSONArray transactionIds = new JSONArray();
-        for (PendingTransactionPoll poll:polls) {
-            transactionIds.add(Convert.toUnsignedLong(poll.getId()));
+        try (DbIterator<PendingTransactionPoll> polls = PendingTransactionPoll.getByAccountId(account.getId(), firstIndex, lastIndex)) {
+            for (PendingTransactionPoll poll : polls) {
+                transactionIds.add(Convert.toUnsignedLong(poll.getId()));
+            }
         }
-
         JSONObject response = new JSONObject();
         response.put("transactionIds", transactionIds);
         return response;

@@ -78,6 +78,7 @@ public final class GetConstants extends APIServlet.APIRequestHandler {
         subtype.put("value", TransactionType.Messaging.ACCOUNT_INFO.getSubtype());
         subtype.put("description", "Account info");
         subtypes.add(subtype);
+        //TODO: add Phasing transaction types
         transactionType.put("subtypes", subtypes);
         transactionTypes.add(transactionType);
         transactionType = new JSONObject();

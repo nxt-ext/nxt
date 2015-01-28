@@ -88,7 +88,7 @@ public final class Vote {
     }
 
     static boolean isVoteGiven(long pollId, long voterId){
-        DbClause clause = new DbClause.LongLongClause("poll_id", pollId, "voter_id", voterId);
+        DbClause clause = new DbClause.LongClause("poll_id", pollId).and(new DbClause.LongClause("voter_id", voterId));
         return voteTable.getCount(clause) > 0;
     }
     

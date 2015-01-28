@@ -1,9 +1,20 @@
 package nxt;
 
-import nxt.db.*;
-import nxt.util.*;
-import java.sql.*;
-import java.util.*;
+import nxt.db.DbClause;
+import nxt.db.DbIterator;
+import nxt.db.DbKey;
+import nxt.db.EntityDbTable;
+import nxt.db.ValuesDbTable;
+import nxt.util.Listener;
+import nxt.util.Logger;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 public final class Poll extends AbstractPoll {
 
@@ -171,7 +182,8 @@ public final class Poll extends AbstractPoll {
     //todo: fix
     public static DbIterator<Poll> getFinishedPolls() {
         int height = Nxt.getBlockchain().getHeight();
-        return pollTable.getManyBy(new DbClause.IntNotGreaterThan("finish_height", height), 0, Integer.MAX_VALUE);
+        //TODO: < or <= ?
+        return pollTable.getManyBy(new DbClause.IntClause("finish_height", DbClause.Op.LT, height), 0, Integer.MAX_VALUE);
     }
 
     public static DbIterator<Poll> getAllPolls(int from, int to) {
@@ -194,8 +206,8 @@ public final class Poll extends AbstractPoll {
         return pollResultsTable.get(pollResultsDbKeyFactory.newKey(pollId));
     }
 
-    public List<Vote> getVotes(){
-        return Vote.getVotes(this.getId(), 0, -1).toList();
+    public DbIterator<Vote> getVotes(){
+        return Vote.getVotes(this.getId(), 0, -1);
     }
 
     public long getId() {
@@ -234,12 +246,13 @@ public final class Poll extends AbstractPoll {
     public List<PartialPollResult> countResults() {
         final long[] counts = new long[options.length];
 
-        for (Vote vote : Vote.getVotes(this.getId(), 0, -1).toList()) {
-            long[] partialResult = countVote(vote);
-
-            if (partialResult != null) {
-                for (int idx = 0; idx < partialResult.length; idx++) {
-                    counts[idx] += partialResult[idx];
+        try (DbIterator<Vote> votes = Vote.getVotes(this.getId(), 0, -1)) {
+            for (Vote vote : votes) {
+                long[] partialResult = countVote(vote);
+                if (partialResult != null) {
+                    for (int idx = 0; idx < partialResult.length; idx++) {
+                        counts[idx] += partialResult[idx];
+                    }
                 }
             }
         }

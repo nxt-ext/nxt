@@ -24,6 +24,7 @@ import nxt.Transaction;
 import nxt.Vote;
 import nxt.crypto.Crypto;
 import nxt.crypto.EncryptedData;
+import nxt.db.DbIterator;
 import nxt.peer.Hallmark;
 import nxt.peer.Peer;
 import nxt.util.Convert;
@@ -338,13 +339,14 @@ final class JSONData {
             json.put("holding", Convert.toUnsignedLong(poll.getHoldingId()));
         }
 
-        if(includeVoters){
-            List<Vote> votes = poll.getVotes();
+        if (includeVoters) {
             JSONArray votersJson = new JSONArray();
-            for(Vote vote : votes){
-                JSONObject voterObject = new JSONObject();
-                putAccount(voterObject, "voter", vote.getVoterId());
-                votersJson.add(voterObject);
+            try (DbIterator<Vote> votes = poll.getVotes()) {
+                for (Vote vote : votes) {
+                    JSONObject voterObject = new JSONObject();
+                    putAccount(voterObject, "voter", vote.getVoterId());
+                    votersJson.add(voterObject);
+                }
             }
             json.put("voters", votersJson);
         }

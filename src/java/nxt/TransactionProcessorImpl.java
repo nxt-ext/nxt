@@ -128,21 +128,14 @@ final class TransactionProcessorImpl implements TransactionProcessor {
 
     private final Runnable removeUnconfirmedTransactionsThread = new Runnable() {
 
-        private final DbClause expiredClause = new DbClause(" expiration < ? ") {
-            @Override
-            protected int set(PreparedStatement pstmt, int index) throws SQLException {
-                pstmt.setInt(index, Nxt.getEpochTime());
-                return index + 1;
-            }
-        };
-
         @Override
         public void run() {
 
             try {
                 try {
                     List<UnconfirmedTransaction> expiredTransactions = new ArrayList<>();
-                    try (DbIterator<UnconfirmedTransaction> iterator = unconfirmedTransactionTable.getManyBy(expiredClause, 0, -1, "")) {
+                    try (DbIterator<UnconfirmedTransaction> iterator = unconfirmedTransactionTable.getManyBy(
+                            new DbClause.IntClause("expiration", DbClause.Op.LT, Nxt.getEpochTime()), 0, -1, "")) {
                         while (iterator.hasNext()) {
                             expiredTransactions.add(iterator.next());
                         }

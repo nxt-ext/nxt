@@ -1,14 +1,23 @@
 package nxt.http;
 
-import nxt.*;
+import nxt.Account;
+import nxt.Attachment;
 import nxt.Attachment.MessagingPollCreation.PollBuilder;
+import nxt.Constants;
+import nxt.Nxt;
+import nxt.NxtException;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.LinkedList;
 import java.util.List;
 
-import static nxt.http.JSONResponses.*;
+import static nxt.http.JSONResponses.INCORRECT_POLL_DESCRIPTION_LENGTH;
+import static nxt.http.JSONResponses.INCORRECT_POLL_NAME_LENGTH;
+import static nxt.http.JSONResponses.INCORRECT_POLL_OPTION_LENGTH;
+import static nxt.http.JSONResponses.INCORRECT_ZEROOPTIONS;
+import static nxt.http.JSONResponses.MISSING_DESCRIPTION;
+import static nxt.http.JSONResponses.MISSING_NAME;
 
 public final class CreatePoll extends CreateTransaction {
 

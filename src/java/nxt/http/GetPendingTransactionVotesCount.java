@@ -5,14 +5,12 @@ import nxt.Nxt;
 import nxt.NxtException;
 import nxt.PendingTransactionPoll;
 import nxt.VotePhased;
-import nxt.util.Convert;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
 
 import static nxt.http.JSONResponses.INCORRECT_PENDING_TRANSACTION;
-import static nxt.http.JSONResponses.MISSING_TRANSACTION;
 
 public class GetPendingTransactionVotesCount extends APIServlet.APIRequestHandler {
     static final GetPendingTransactionVotesCount instance = new GetPendingTransactionVotesCount();

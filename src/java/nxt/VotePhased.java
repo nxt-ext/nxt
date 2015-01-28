@@ -1,6 +1,9 @@
 package nxt;
 
-import nxt.db.*;
+import nxt.db.DbClause;
+import nxt.db.DbIterator;
+import nxt.db.DbKey;
+import nxt.db.EntityDbTable;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -96,7 +99,7 @@ public class VotePhased {
     }
 
     static boolean isVoteGiven(long pendingTransactionId, long voterId) {
-        DbClause clause = new DbClause.LongLongClause("pending_transaction_id", pendingTransactionId, "voter_id", voterId);
+        DbClause clause = new DbClause.LongClause("pending_transaction_id", pendingTransactionId).and(new DbClause.LongClause("voter_id", voterId));
         return voteTable.getCount(clause) > 0;
     }
 }

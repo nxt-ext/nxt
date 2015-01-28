@@ -715,15 +715,9 @@ public final class Account {
     }
 
     private DbClause getLessorsClause(final int height) {
-        return new DbClause(" current_lessee_id = ? AND current_leasing_height_from <= ? AND current_leasing_height_to > ? ") {
-            @Override
-            public int set(PreparedStatement pstmt, int index) throws SQLException {
-                pstmt.setLong(index++, getId());
-                pstmt.setInt(index++, height);
-                pstmt.setInt(index++, height);
-                return index;
-            }
-        };
+        return new DbClause.LongClause("current_lessee_id", getId())
+                .and(new DbClause.IntClause("current_leasing_height_from", DbClause.Op.LTE, height))
+                .and(new DbClause.IntClause("current_leasing_height_to", DbClause.Op.GT, height));
     }
 
     public DbIterator<Account> getLessors() {

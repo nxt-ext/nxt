@@ -1,6 +1,7 @@
 package nxt;
 
 import nxt.crypto.EncryptedData;
+import nxt.db.DbIterator;
 import nxt.util.Convert;
 import nxt.util.Logger;
 import org.json.simple.JSONArray;
@@ -8,7 +9,6 @@ import org.json.simple.JSONObject;
 
 import java.nio.ByteBuffer;
 import java.util.Arrays;
-import java.util.List;
 
 public interface Appendix {
 
@@ -635,29 +635,21 @@ public interface Appendix {
         }
 
         void verify(Transaction transaction) {
-            long transactionId = transaction.getId();
-
-            //todo: change back to iterator
-            List<VotePhased> votes = VotePhased.getByTransaction(transactionId, 0, Integer.MAX_VALUE).toList();
-
-            PendingTransactionPoll poll = PendingTransactionPoll.getPoll(transactionId);
+            PendingTransactionPoll poll = PendingTransactionPoll.getPoll(transaction.getId());
             long cumulativeWeight = 0;
-            for(VotePhased vote:votes){
-                cumulativeWeight += poll.calcWeight(Account.getAccount(vote.getVoterId()));
+            try (DbIterator<VotePhased> votes = VotePhased.getByTransaction(transaction.getId(), 0, Integer.MAX_VALUE)) {
+                for (VotePhased vote : votes) {
+                    cumulativeWeight += poll.calcWeight(Account.getAccount(vote.getVoterId()));
+                }
             }
-
             PendingTransactionPoll.finishPoll(poll);
-
-            if(cumulativeWeight >= poll.getQuorum()){
+            if (cumulativeWeight >= poll.getQuorum()) {
                 commit(transaction);
-            }else{
+            } else {
                 Account senderAccount = Account.getAccount(transaction.getSenderId());
-                long amount = transaction.getAmountNQT();
-
                 transaction.getType().undoAttachmentUnconfirmed(transaction, senderAccount);
-                senderAccount.addToUnconfirmedBalanceNQT(amount);
-
-                Logger.logDebugMessage("Transaction " + transactionId + " has been refused");
+                senderAccount.addToUnconfirmedBalanceNQT(transaction.getAmountNQT());
+                Logger.logDebugMessage("Transaction " + transaction.getStringId() + " has been refused");
             }
         }
 

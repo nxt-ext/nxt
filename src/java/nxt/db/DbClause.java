@@ -5,6 +5,21 @@ import java.sql.SQLException;
 
 public abstract class DbClause {
 
+    public enum Op {
+
+        LT("<"), LTE("<="), GT(">"), GTE(">="), NE("<>");
+
+        private final String operator;
+
+        private Op(String operator) {
+            this.operator = operator;
+        }
+
+        public String operator() {
+            return operator;
+        }
+    }
+
     private final String clause;
 
     protected DbClause(String clause) {
@@ -68,6 +83,11 @@ public abstract class DbClause {
             this.value = value;
         }
 
+        public LongClause(String columnName, Op operator, long value) {
+            super(" " + columnName + operator.operator() + "? ");
+            this.value = value;
+        }
+
         protected int set(PreparedStatement pstmt, int index) throws SQLException {
             pstmt.setLong(index, value);
             return index + 1;
@@ -83,19 +103,8 @@ public abstract class DbClause {
             this.value = value;
         }
 
-        protected int set(PreparedStatement pstmt, int index) throws SQLException {
-            pstmt.setInt(index, value);
-            return index + 1;
-        }
-
-    }
-
-    public static final class IntNotGreaterThan extends DbClause {
-
-        private final int value;
-
-        public IntNotGreaterThan(String columnName, int value) {
-            super(" " + columnName + " < ? ");
+        public IntClause(String columnName, Op operator, int value) {
+            super(" " + columnName + operator.operator() + "? ");
             this.value = value;
         }
 
@@ -103,23 +112,7 @@ public abstract class DbClause {
             pstmt.setInt(index, value);
             return index + 1;
         }
+
     }
 
-    public static final class LongLongClause extends DbClause {
-
-        private final long value1;
-        private final long value2;
-
-        public LongLongClause(String column1Name, long value1, String column2Name, long value2) {
-            super(" " + column1Name + " = ? AND " + column2Name + " = ? ");
-            this.value1 = value1;
-            this.value2 = value2;
-        }
-
-        protected int set(PreparedStatement pstmt, int index) throws SQLException {
-            pstmt.setLong(index, value1);
-            pstmt.setLong(index + 1, value2);
-            return index + 2;
-        }
-    }
 }

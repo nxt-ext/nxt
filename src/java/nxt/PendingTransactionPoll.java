@@ -1,9 +1,17 @@
 package nxt;
 
-import nxt.db.*;
+import nxt.db.DbClause;
+import nxt.db.DbIterator;
+import nxt.db.DbKey;
+import nxt.db.DbUtils;
+import nxt.db.VersionedEntityDbTable;
+import nxt.db.VersionedValuesDbTable;
 import nxt.util.Convert;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.List;
 
@@ -150,28 +158,30 @@ public class PendingTransactionPoll extends AbstractPoll {
         return pendingTransactionsTable.getManyBy(clause, firstIndex, lastIndex);
     }
 
-    public static List<Long> getIdsByWhitelistedSigner(Account signer,  int from, int to) {
-        try (Connection con = Db.db.getConnection();
-             PreparedStatement pstmt = con.prepareStatement("SELECT DISTINCT pending_transaction.id "
-                     + "from pending_transaction, pending_transactions_signers "
-                     + "WHERE pending_transaction.latest = TRUE AND "
-                     + "pending_transaction.blacklist = false AND "
-                     + "pending_transaction.id = pending_transactions_signers.poll_id "
-                     + "AND pending_transaction_signers.account_id = ? "
-                     + DbUtils.limitsClause(from, to))) {
+    public static DbIterator<Long> getIdsByWhitelistedSigner(Account signer,  int from, int to) {
+        Connection con = null;
+        try {
+            con = Db.db.getConnection();
+            PreparedStatement pstmt = con.prepareStatement("SELECT DISTINCT pending_transaction.id "
+                    + "from pending_transaction, pending_transactions_signers "
+                    + "WHERE pending_transaction.latest = TRUE AND "
+                    + "pending_transaction.blacklist = false AND "
+                    + "pending_transaction.id = pending_transactions_signers.poll_id "
+                    + "AND pending_transaction_signers.account_id = ? "
+                    + DbUtils.limitsClause(from, to));
             pstmt.setLong(1, signer.getId());
             DbUtils.setLimits(2, pstmt, from, to);
 
-            DbIterator<Long> iterator = new DbIterator<>(con, pstmt, new DbIterator.ResultSetReader<Long>() {
+            return new DbIterator<>(con, pstmt, new DbIterator.ResultSetReader<Long>() {
                 @Override
                 public Long get(Connection con, ResultSet rs) throws Exception {
                     return rs.getLong(1);
                 }
             });
 
-            return iterator.toList();
         } catch (SQLException e) {
-            throw new NxtException.StopException(e.toString(), e);
+            DbUtils.close(con);
+            throw new RuntimeException(e.toString(), e);
         }
     }
 

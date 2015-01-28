@@ -9,7 +9,7 @@ import org.json.simple.JSONStreamAware;
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 
-import static nxt.http.JSONResponses.*;
+import static nxt.http.JSONResponses.UNKNOWN_POLL_RESULTS;
 
 public class GetPollResults extends APIServlet.APIRequestHandler {
     static final GetPollResults instance = new GetPollResults();

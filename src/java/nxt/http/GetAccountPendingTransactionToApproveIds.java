@@ -3,12 +3,13 @@ package nxt.http;
 import nxt.Account;
 import nxt.NxtException;
 import nxt.PendingTransactionPoll;
+import nxt.db.DbIterator;
 import nxt.util.Convert;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
+
 import javax.servlet.http.HttpServletRequest;
-import java.util.List;
 
 
 public class GetAccountPendingTransactionToApproveIds extends APIServlet.APIRequestHandler {
@@ -25,12 +26,11 @@ public class GetAccountPendingTransactionToApproveIds extends APIServlet.APIRequ
         int firstIndex = ParameterParser.getFirstIndex(req);
         int lastIndex = ParameterParser.getLastIndex(req);
 
-        List<Long> transactionIds = PendingTransactionPoll.getIdsByWhitelistedSigner(account, firstIndex, lastIndex);
-
-
         JSONArray transactionIdsJson = new JSONArray();
-        for (Long transactionId : transactionIds) {
-            transactionIdsJson.add(Convert.toUnsignedLong(transactionId));
+        try (DbIterator<Long> transactionIds = PendingTransactionPoll.getIdsByWhitelistedSigner(account, firstIndex, lastIndex)) {
+            for (Long transactionId : transactionIds) {
+                transactionIdsJson.add(Convert.toUnsignedLong(transactionId));
+            }
         }
         JSONObject response = new JSONObject();
         response.put("transactionIds", transactionIdsJson);
