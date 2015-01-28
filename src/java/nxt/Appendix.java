@@ -604,6 +604,10 @@ public interface Appendix {
                 throw new NxtException.NotValidException("Invalid holdingId");
             }
 
+            if(quorum <= 0){
+                throw new NxtException.NotValidException("quorum <= 0");
+            }
+
             int currentHeight = Nxt.getBlockchain().getHeight();
             if (maxHeight < currentHeight + Constants.VOTING_MIN_VOTE_DURATION
                     || maxHeight > currentHeight + Constants.VOTING_MAX_VOTE_DURATION) {

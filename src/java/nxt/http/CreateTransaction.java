@@ -67,7 +67,7 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
                 Nxt.getBlockchain().getHeight() + Constants.VOTING_MAX_VOTE_DURATION,
                 true);
 
-        long quorum = ParameterParser.getLong(req, "pendingQuorum", 0, Long.MAX_VALUE, true);
+        long quorum = ParameterParser.getLong(req, "pendingQuorum", 1, Long.MAX_VALUE, true);
 
         long minBalance = ParameterParser.getLong(req, "pendingMinBalance", 0, Long.MAX_VALUE, false);
         if ((votingModel == Constants.VOTING_MODEL_ACCOUNT && minBalance != 0)

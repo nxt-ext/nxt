@@ -22,7 +22,8 @@ public class TestCreateTwoPhased extends BlockchainTest {
         try {
             String transactionId = (String) twoPhased.get("transaction");
 
-            if (!shouldFail && transactionId == null) Assert.fail();
+            if ((!shouldFail && transactionId == null)
+                    || (shouldFail && transactionId != null)) Assert.fail();
 
             return transactionId;
         } catch (Throwable t) {
@@ -46,7 +47,22 @@ public class TestCreateTwoPhased extends BlockchainTest {
             param("pendingVotingModel", Constants.VOTING_MODEL_ACCOUNT);
             param("pendingQuorum", 1);
             param("pendingWhitelisted", Convert.toUnsignedLong(id3));
-            param("pendingMaxHeight", height+15);
+            param("pendingMaxHeight", height + 15);
+        }
+
+        public TwoPhasedMoneyTransferBuilder maxHeight(int maxHeight) {
+            param("pendingMaxHeight", maxHeight);
+            return this;
+        }
+
+        public TwoPhasedMoneyTransferBuilder quorum(int quorum) {
+            param("pendingQuorum", quorum);
+            return this;
+        }
+
+        public TwoPhasedMoneyTransferBuilder whitelisted(long accountId) {
+            param("pendingWhitelisted", Convert.toUnsignedLong(accountId));
+            return this;
         }
     }
 
@@ -55,5 +71,20 @@ public class TestCreateTwoPhased extends BlockchainTest {
     public void createValidtwoPhasedMoneyTransfer() {
         APICall apiCall = new TwoPhasedMoneyTransferBuilder().build();
         issueCreateTwoPhased(apiCall, false);
+    }
+
+    @Test
+    public void createInvalidtwoPhasedMoneyTransfer() {
+        int height = Nxt.getBlockchain().getHeight();
+
+        APICall apiCall = new TwoPhasedMoneyTransferBuilder().maxHeight(height + 5).build();
+        issueCreateTwoPhased(apiCall, true);
+
+        apiCall = new TwoPhasedMoneyTransferBuilder().maxHeight(height + 100000).build();
+        issueCreateTwoPhased(apiCall, true);
+
+        apiCall = new TwoPhasedMoneyTransferBuilder().quorum(0).build();
+        issueCreateTwoPhased(apiCall, true);
+
     }
 }
