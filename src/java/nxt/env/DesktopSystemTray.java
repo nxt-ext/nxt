@@ -16,6 +16,7 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.Collection;
 
 public class DesktopSystemTray {
@@ -120,13 +121,18 @@ public class DesktopSystemTray {
         sb.append(String.format(format, "Working offline", Constants.isOffline));
         sb.append(String.format(format, "Wallet", API.getBrowserUri()));
         sb.append(String.format(format, "Peer port", Peers.getDefaultPeerPort()));
+        sb.append(String.format(format, "Program folder", Paths.get(".").toAbsolutePath().getParent()));
+        sb.append(String.format(format, "User folder", Paths.get(DesktopMode.NXT_USER_HOME).toAbsolutePath()));
+
         sb.append("\nBlockchain\n");
         sb.append(lastBlock == null ? "" : String.format(format, "Height", lastBlock.getHeight()));
         sb.append(lastBlockchainFeeder == null ? "" : String.format(format, "Last feeder", lastBlockchainFeeder.getAnnouncedAddress()));
         sb.append(String.format(format, "Time stamp", Nxt.getEpochTime()));
         sb.append("\n");
         sb.append(String.format(format, "Forging", allGenerators.size() > 0));
-        sb.append(String.format(format, "Forging accounts", generators.toString()));
+        if (allGenerators.size() > 0) {
+            sb.append(String.format(format, "Forging accounts", generators.toString()));
+        }
         sb.append("\nEnvironment\n");
         sb.append(String.format(format, "Number of peers", Peers.getAllPeers().size()));
         sb.append(String.format(format, "Available processors", Runtime.getRuntime().availableProcessors()));
