@@ -1,4 +1,5 @@
 /.idea/
+/html/ui/.idea/
 /nxt.iml
 /nxt_db
 /webapps/
@@ -9,6 +10,7 @@
 /html/**/*.gz
 /keystore
 /nxt.jar
+/nxtservice.jar
 /nxt_test_db
 /README_win.txt
 /nxt.log.lck
@@ -21,3 +23,4 @@
 *.csv
 /jre
 /dist
+/logs
