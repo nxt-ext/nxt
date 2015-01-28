@@ -163,11 +163,11 @@ public class PendingTransactionPoll extends AbstractPoll {
         try {
             con = Db.db.getConnection();
             PreparedStatement pstmt = con.prepareStatement("SELECT DISTINCT pending_transaction.id "
-                    + "from pending_transaction, pending_transactions_signers "
+                    + "from pending_transaction, pending_transaction_signer "
                     + "WHERE pending_transaction.latest = TRUE AND "
                     + "pending_transaction.blacklist = false AND "
-                    + "pending_transaction.id = pending_transactions_signers.poll_id "
-                    + "AND pending_transaction_signers.account_id = ? "
+                    + "pending_transaction.id = pending_transaction_signer.poll_id "
+                    + "AND pending_transaction_signer.account_id = ? "
                     + DbUtils.limitsClause(from, to));
             pstmt.setLong(1, signer.getId());
             DbUtils.setLimits(2, pstmt, from, to);

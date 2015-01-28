@@ -12,7 +12,7 @@ import org.junit.runners.Suite;
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
         TestCreateTwoPhased.class,
-        //TestGetAccountPendingTransactionToApproveIds.class
+        TestGetAccountPendingTransactionToApproveIds.class
 })
 
 public class TwoPhasedSuite {
