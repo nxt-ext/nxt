@@ -50,8 +50,18 @@ public class TestCreateTwoPhased extends BlockchainTest {
             param("pendingMaxHeight", height + 15);
         }
 
+        public TwoPhasedMoneyTransferBuilder votingModel(byte model) {
+            param("pendingVotingModel", model);
+            return this;
+        }
+
         public TwoPhasedMoneyTransferBuilder maxHeight(int maxHeight) {
             param("pendingMaxHeight", maxHeight);
+            return this;
+        }
+
+        public TwoPhasedMoneyTransferBuilder minBalance(long minBalance) {
+            param("pendingMinBalance", minBalance);
             return this;
         }
 
@@ -62,6 +72,11 @@ public class TestCreateTwoPhased extends BlockchainTest {
 
         public TwoPhasedMoneyTransferBuilder whitelisted(long accountId) {
             param("pendingWhitelisted", Convert.toUnsignedLong(accountId));
+            return this;
+        }
+
+        public TwoPhasedMoneyTransferBuilder blacklisted(long accountId) {
+            param("pendingBlacklisted", Convert.toUnsignedLong(accountId));
             return this;
         }
     }
@@ -86,5 +101,14 @@ public class TestCreateTwoPhased extends BlockchainTest {
         apiCall = new TwoPhasedMoneyTransferBuilder().quorum(0).build();
         issueCreateTwoPhased(apiCall, true);
 
+        apiCall = new TwoPhasedMoneyTransferBuilder().blacklisted(id3).build();
+        issueCreateTwoPhased(apiCall, true);
+
+        apiCall = new TwoPhasedMoneyTransferBuilder().votingModel(Constants.VOTING_MODEL_ASSET).build();
+        issueCreateTwoPhased(apiCall, true);
+
+        apiCall = new TwoPhasedMoneyTransferBuilder().votingModel(Constants.VOTING_MODEL_ASSET)
+                .minBalance(50).build();
+        issueCreateTwoPhased(apiCall, true);
     }
 }

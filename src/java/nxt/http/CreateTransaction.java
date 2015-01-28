@@ -22,7 +22,7 @@ import static nxt.http.JSONResponses.INCORRECT_DEADLINE;
 import static nxt.http.JSONResponses.INCORRECT_PENDING_BLACKLISTED;
 import static nxt.http.JSONResponses.INCORRECT_PENDING_WHITELIST;
 import static nxt.http.JSONResponses.MISSING_DEADLINE;
-import static nxt.http.JSONResponses.MISSING_PENDING_ASSET_ID;
+import static nxt.http.JSONResponses.MISSING_PENDING_HOLDING_ID;
 import static nxt.http.JSONResponses.MISSING_SECRET_PHRASE;
 import static nxt.http.JSONResponses.NOT_ENOUGH_FUNDS;
 import static nxt.http.JSONResponses.incorrect;
@@ -78,7 +78,7 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
         long holdingId = ParameterParser.getLong(req, "pendingHolding", Long.MIN_VALUE, Long.MAX_VALUE, false);
         if ((votingModel == Constants.VOTING_MODEL_ASSET || votingModel == Constants.VOTING_MODEL_MS_COIN)
                 && holdingId == 0) {
-            throw new ParameterException(MISSING_PENDING_ASSET_ID);
+            throw new ParameterException(MISSING_PENDING_HOLDING_ID);
         }
 
         long[] whitelist = new long[0];

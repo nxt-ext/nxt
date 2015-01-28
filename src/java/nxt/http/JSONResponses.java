@@ -23,7 +23,7 @@ public final class JSONResponses {
     public static final JSONStreamAware INCORRECT_PENDING_WHITELIST = incorrect("pendingWhitelisted");
     public static final JSONStreamAware INCORRECT_PENDING_BLACKLISTED = incorrect("blacklisted");
     public static final JSONStreamAware INCORRECT_DEADLINE = incorrect("deadline");
-    public static final JSONStreamAware MISSING_PENDING_ASSET_ID = missing("pendingAssetId");
+    public static final JSONStreamAware MISSING_PENDING_HOLDING_ID = missing("pendingHoldingId");
     public static final JSONStreamAware INCORRECT_FEE = incorrect("fee");
     public static final JSONStreamAware MISSING_TRANSACTION_BYTES_OR_JSON = missing("transactionBytes", "transactionJSON");
     public static final JSONStreamAware INCORRECT_TRANSACTION_BYTES_OR_JSON = incorrect("transactionBytes or transactionJSON");
