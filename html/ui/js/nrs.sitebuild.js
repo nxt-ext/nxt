@@ -47,12 +47,11 @@ var NRS = (function(NRS, $, undefined) {
         jQuery.ajaxSetup({ async: false });
         
         $.get("html/modals/templates.html #secret_phrase_modal_template", '', function (data) {
-            var $template = $(data);
+            var template = Handlebars.compile(data);
             $('div[data-include-modal-template="secret_phrase_modal_template"]').each(function(i) {
-                $(this).append($template.children().clone());
-                var id = 'secret_phrase_modal_' + String(i) + '_passphrase';
-                $(this).find('label').attr('for', id);
-                $(this).find('input').attr('id', id);
+                var context = { nr: String(i) };
+                $contextTemplate = $(template(context));
+                $(this).append($contextTemplate.children().clone());
             });
         });
         
