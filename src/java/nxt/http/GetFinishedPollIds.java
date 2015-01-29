@@ -1,6 +1,7 @@
 package nxt.http;
 
 
+import nxt.Nxt;
 import nxt.Poll;
 import nxt.util.Convert;
 import org.json.simple.JSONArray;
@@ -20,9 +21,10 @@ public class GetFinishedPollIds extends APIServlet.APIRequestHandler {
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) {
+        int height = Nxt.getBlockchain().getHeight();
 
         JSONArray pollIds = new JSONArray();
-        for (Poll poll : Poll.getFinishedPolls()) {
+        for (Poll poll : Poll.getPollsFinishingAtOrBefore(height)) {
             pollIds.add(Convert.toUnsignedLong(poll.getId()));
         }
 

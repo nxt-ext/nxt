@@ -31,6 +31,29 @@ public final class Vote {
         }
     };
 
+    public static int getCount() {
+        return voteTable.getCount();
+    }
+
+    public static Vote getVote(long id) {
+        return voteTable.get(voteDbKeyFactory.newKey(id));
+    }
+
+    public static DbIterator<Vote> getVotes(long pollId, int from, int to) {
+        return voteTable.getManyBy(new DbClause.LongClause("poll_id", pollId), from, to);
+    }
+
+    static boolean isVoteGiven(long pollId, long voterId){
+        DbClause clause = new DbClause.LongClause("poll_id", pollId).and(new DbClause.LongClause("voter_id", voterId));
+        return voteTable.getCount(clause) > 0;
+    }
+
+    static Vote addVote(Transaction transaction, Attachment.MessagingVoteCasting attachment) {
+        Vote vote = new Vote(transaction, attachment);
+        voteTable.insert(vote);
+        return vote;
+    }
+
     static void init() {}
 
 
@@ -56,12 +79,6 @@ public final class Vote {
         this.voteBytes = rs.getBytes("vote_bytes");
     }
 
-    static Vote addVote(Transaction transaction, Attachment.MessagingVoteCasting attachment) {
-        Vote vote = new Vote(transaction, attachment);
-        voteTable.insert(vote);
-        return vote;
-    }
-
     protected void save(Connection con) throws SQLException {
         try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO vote (id, poll_id, voter_id, "
                 + "vote_bytes, height) VALUES (?, ?, ?, ?, ?)")) {
@@ -75,23 +92,6 @@ public final class Vote {
         }
     }
 
-    public static int getCount() {
-        return voteTable.getCount();
-    }
-
-    public static Vote getVote(long id) {
-        return voteTable.get(voteDbKeyFactory.newKey(id));
-    }
-
-    public static DbIterator<Vote> getVotes(long pollId, int from, int to) {
-        return voteTable.getManyBy(new DbClause.LongClause("poll_id", pollId), from, to);
-    }
-
-    static boolean isVoteGiven(long pollId, long voterId){
-        DbClause clause = new DbClause.LongClause("poll_id", pollId).and(new DbClause.LongClause("voter_id", voterId));
-        return voteTable.getCount(clause) > 0;
-    }
-    
     public long getId() {
         return id;
     }

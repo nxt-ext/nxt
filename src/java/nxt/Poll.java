@@ -88,19 +88,79 @@ public final class Poll extends AbstractPoll {
         }
     };
 
+    public static Poll getPoll(long id) {
+        return pollTable.get(pollDbKeyFactory.newKey(id));
+    }
+
+    public static DbIterator<Poll> getPollsFinishingAtOrBefore(int height) {
+        return pollTable.getManyBy(new DbClause.IntClause("finish_height", DbClause.Op.LTE, height), 0, Integer.MAX_VALUE);
+    }
+
+    public static DbIterator<Poll> getAllPolls(int from, int to) {
+        return pollTable.getAll(from, to);
+    }
+
+    public static DbIterator<Poll> getPollsByAccount(long accountId, int from, int to) {
+        return pollTable.getManyBy(new DbClause.LongClause("account_id", accountId), from, to);
+    }
+
+    public static DbIterator<Poll> getPollsFinishingAt(int height) {
+        return pollTable.getManyBy(new DbClause.IntClause("finish_height", height), 0, Integer.MAX_VALUE);
+    }
+
+    public static int getCount() {
+        return pollTable.getCount();
+    }
+
+    static void addPoll(Transaction transaction, Attachment.MessagingPollCreation attachment) {
+        Poll poll = new Poll(transaction.getId(), transaction.getSenderId(), attachment);
+        pollTable.insert(poll);
+    }
+
     static void init() {}
 
     static {
-        if(Constants.isPollsProcessing) {
-            Nxt.getBlockchainProcessor().addListener(new Listener<Block>() {
-                @Override
-                public void notify(Block block) {
-                    int height = block.getHeight();
-                    if (height >= Constants.VOTING_SYSTEM_BLOCK) {
+        Nxt.getBlockchainProcessor().addListener(new Listener<Block>() {
+            @Override
+            public void notify(Block block) {
+                int height = block.getHeight();
+                if (height >= Constants.VOTING_SYSTEM_BLOCK) {
+                    if (Constants.isPollsProcessing) {
                         Poll.checkPolls(height);
                     }
+                    int purgeHeight = Nxt.getBlockchainProcessor().getMinRollbackHeight();
+                    if (purgeHeight > 0) {
+                        Poll.purgeVotes(purgeHeight);
+                    }
                 }
-            }, BlockchainProcessor.Event.AFTER_BLOCK_APPLY);
+            }
+        }, BlockchainProcessor.Event.AFTER_BLOCK_APPLY);
+    }
+
+    private static void checkPolls(int currentHeight) {
+        try (DbIterator<Poll> polls = getPollsFinishingAt(currentHeight)) {
+            for (Poll poll : polls) {
+                try {
+                    List<PartialPollResult> results = poll.countResults(currentHeight);
+                    pollResultsTable.insert(poll, results);
+                    Logger.logDebugMessage("Poll " + Convert.toUnsignedLong(poll.getId()) + " has been finished");
+                } catch (RuntimeException e) { // could happen e.g. because of overflow in safeMultiply
+                    Logger.logErrorMessage("Couldn't count votes for poll " + Convert.toUnsignedLong(poll.getId()));
+                }
+            }
+        }
+    }
+
+    private static void purgeVotes(int purgeHeight) {
+        try (Connection con = Db.db.getConnection();
+             DbIterator<Poll> polls = getPollsFinishingAtOrBefore(purgeHeight);
+             PreparedStatement pstmt = con.prepareStatement("DELETE FROM vote WHERE poll_id = ?")) {
+            for (Poll poll : polls) {
+                pstmt.setLong(1, poll.getId());
+                pstmt.executeUpdate();
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e.toString(), e);
         }
     }
 
@@ -109,16 +169,10 @@ public final class Poll extends AbstractPoll {
     private final String name;
     private final String description;
     private final String[] options;
-    private final byte minNumberOfOptions, maxNumberOfOptions;
-    private final byte minRangeValue, maxRangeValue;
-
-    private static void checkPolls(int currentHeight) {
-        for (Poll poll : getPollsFinishingAt(currentHeight)) {
-            List<PartialPollResult> results = poll.countResults(currentHeight);
-            pollResultsTable.insert(poll, results);
-            Logger.logDebugMessage("Poll " + Convert.toUnsignedLong(poll.getId()) + " has been finished");
-        }
-    }
+    private final byte minNumberOfOptions;
+    private final byte maxNumberOfOptions;
+    private final byte minRangeValue;
+    private final byte maxRangeValue;
 
     private Poll(long id, long accountId, Attachment.MessagingPollCreation attachment) {
         super(accountId, attachment.getFinishHeight(), attachment.getVotingModel(), attachment.getHoldingId(),
@@ -155,38 +209,6 @@ public final class Poll extends AbstractPoll {
     }
 
     public boolean isFinished() { return finishHeight < Nxt.getBlockchain().getHeight(); }
-
-    static void addPoll(Transaction transaction, Attachment.MessagingPollCreation attachment) {
-        Poll poll = new Poll(transaction.getId(), transaction.getSenderId(), attachment);
-        pollTable.insert(poll);
-    }
-
-    public static Poll getPoll(long id) {
-        return pollTable.get(pollDbKeyFactory.newKey(id));
-    }
-
-    //todo: fix
-    public static DbIterator<Poll> getFinishedPolls() {
-        int height = Nxt.getBlockchain().getHeight();
-        //TODO: < or <= ?
-        return pollTable.getManyBy(new DbClause.IntClause("finish_height", DbClause.Op.LT, height), 0, Integer.MAX_VALUE);
-    }
-
-    public static DbIterator<Poll> getAllPolls(int from, int to) {
-        return pollTable.getAll(from, to);
-    }
-
-    public static DbIterator<Poll> getPollsByAccount(long accountId, int from, int to) {
-        return pollTable.getManyBy(new DbClause.LongClause("account_id", accountId), from, to);
-    }
-
-    public static DbIterator<Poll> getPollsFinishingAt(int height) {
-        return pollTable.getManyBy(new DbClause.IntClause("finish_height", height), 0, Integer.MAX_VALUE);
-    }
-
-    public static int getCount() {
-        return pollTable.getCount();
-    }
 
     public List<PartialPollResult> getResults() {
         if (Constants.isPollsProcessing && isFinished()) {
@@ -245,7 +267,7 @@ public final class Poll extends AbstractPoll {
                 long[] partialResult = countVote(vote, height);
                 if (partialResult != null) {
                     for (int idx = 0; idx < partialResult.length; idx++) {
-                        counts[idx] += partialResult[idx];
+                        counts[idx] = Convert.safeAdd(counts[idx], partialResult[idx]);
                     }
                 }
             }
@@ -268,7 +290,7 @@ public final class Poll extends AbstractPoll {
         if (weight > 0) {
             for (int idx = 0; idx < optVals.length; idx++) {
                 if (optVals[idx] != Constants.VOTING_NO_VOTE_VALUE) {
-                    partialResult[idx] = optVals[idx] * weight;
+                    partialResult[idx] = Convert.safeMultiply(optVals[idx], weight);
                 }
             }
             return partialResult;
@@ -278,6 +300,7 @@ public final class Poll extends AbstractPoll {
     }
 
     public static class PartialPollResult {
+
         private final String option;
         private final long votes;
 

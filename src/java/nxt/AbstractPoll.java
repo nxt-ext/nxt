@@ -82,7 +82,7 @@ abstract class AbstractPoll {
                 break;
             case Constants.VOTING_MODEL_ACCOUNT:
                 long balance;
-                switch(minBalanceModel){
+                switch (minBalanceModel) {
                     case Constants.VOTING_MINBALANCE_BYBALANCE:
                         balance = Account.getAccount(voterId, height).getBalanceNQT();
                         break;

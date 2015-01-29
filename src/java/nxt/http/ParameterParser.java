@@ -132,7 +132,7 @@ final class ParameterParser {
         try {
             long pollId = Convert.parseUnsignedLong(pollValue);
             poll = Poll.getPoll(pollId);
-        }catch(RuntimeException e){
+        } catch (RuntimeException e) {
             throw new ParameterException(INCORRECT_POLL);
         }
 
