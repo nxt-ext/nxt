@@ -9,25 +9,25 @@ import java.sql.SQLException;
 
 abstract class AbstractPoll {
     protected final long accountId;
-    protected final int finishBlockHeight;
+    protected final int finishHeight;
     protected final byte votingModel;
 
     protected final long holdingId; //either asset id or MS coin id
     protected final long minBalance;
     protected byte minBalanceModel = Constants.VOTING_MINBALANCE_UNDEFINED;
 
-    AbstractPoll(long accountId, int finishBlockHeight,
+    AbstractPoll(long accountId, int finishHeight,
                  byte votingModel, long holdingId,
                  long minBalance) {
-        this(accountId, finishBlockHeight, votingModel, holdingId, minBalance,
+        this(accountId, finishHeight, votingModel, holdingId, minBalance,
                 Constants.VOTING_MINBALANCE_UNDEFINED);
     }
 
-    AbstractPoll(long accountId, int finishBlockHeight,
+    AbstractPoll(long accountId, int finishHeight,
                  byte votingModel, long holdingId,
                  long minBalance, byte minBalanceModel) {
         this.accountId = accountId;
-        this.finishBlockHeight = finishBlockHeight;
+        this.finishHeight = finishHeight;
         this.votingModel = votingModel;
         this.holdingId = holdingId;
         this.minBalance = minBalance;
@@ -36,7 +36,7 @@ abstract class AbstractPoll {
 
     AbstractPoll(ResultSet rs) throws SQLException {
         this.accountId = rs.getLong("account_id");
-        this.finishBlockHeight = rs.getInt("finish_height");
+        this.finishHeight = rs.getInt("finish_height");
         this.votingModel = rs.getByte("voting_model");
         this.holdingId = rs.getLong("holding_id");
         this.minBalance = rs.getLong("min_balance");
@@ -52,8 +52,8 @@ abstract class AbstractPoll {
         return votingModel;
     }
 
-    public final int getFinishBlockHeight() {
-        return finishBlockHeight;
+    public final int getFinishHeight() {
+        return finishHeight;
     }
 
     public final long getMinBalance() {
@@ -64,18 +64,18 @@ abstract class AbstractPoll {
 
     public final byte getMinBalanceModel() { return minBalanceModel; }
 
-    long calcWeight(long voterId) {
+    long calcWeight(long voterId, int height) {
         long weight = 0;
 
         switch (votingModel) {
             case Constants.VOTING_MODEL_ASSET:
-                long qntBalance = Account.getAssetBalanceQNT(voterId, holdingId);
+                long qntBalance = Account.getAssetBalanceQNT(voterId, holdingId, height);
                 if (qntBalance >= getMinBalance()) {
                     weight = qntBalance;
                 }
                 break;
             case Constants.VOTING_MODEL_CURRENCY:
-                long units = Account.getCurrencyUnits(voterId, holdingId);
+                long units = Account.getCurrencyUnits(voterId, holdingId, height);
                 if (units >= getMinBalance()) {
                     weight = units;
                 }
@@ -84,13 +84,13 @@ abstract class AbstractPoll {
                 long balance;
                 switch(minBalanceModel){
                     case Constants.VOTING_MINBALANCE_BYBALANCE:
-                        balance = Account.getAccount(voterId).getBalanceNQT();
+                        balance = Account.getAccount(voterId, height).getBalanceNQT();
                         break;
                     case Constants.VOTING_MINBALANCE_ASSET:
-                        balance = Account.getAssetBalanceQNT(voterId, holdingId);
+                        balance = Account.getAssetBalanceQNT(voterId, holdingId, height);
                         break;
                     case Constants.VOTING_MINBALANCE_CURRENCY:
-                        balance = Account.getCurrencyUnits(voterId, holdingId);
+                        balance = Account.getCurrencyUnits(voterId, holdingId, height);
                         break;
                     default:
                         throw new RuntimeException("Invalid minBalanceModel " + minBalanceModel);
@@ -100,7 +100,7 @@ abstract class AbstractPoll {
                 }
                 break;
             case Constants.VOTING_MODEL_BALANCE:
-                long nqtBalance = Account.getAccount(voterId).getBalanceNQT();
+                long nqtBalance = Account.getAccount(voterId, height).getBalanceNQT();
                 if (nqtBalance >= getMinBalance()) {
                     weight = nqtBalance;
                 }

@@ -79,7 +79,6 @@ public final class JSONResponses {
     public static final JSONStreamAware INCORRECT_POLL = incorrect("poll");
     public static final JSONStreamAware INCORRECT_VOTE = incorrect("vote");
     public static final JSONStreamAware UNKNOWN_POLL = unknown("poll");
-    public static final JSONStreamAware UNKNOWN_POLL_RESULTS = unknown("pollResults");
     public static final JSONStreamAware MISSING_PENDING_TRANSACTION = missing("pendingTransaction");
     public static final JSONStreamAware INCORRECT_PENDING_TRANSACTION = incorrect("pendingTransaction");
     public static final JSONStreamAware INCORRECT_ACCOUNT_NAME_LENGTH = incorrect("name", "(length must be less than " + Constants.MAX_ACCOUNT_NAME_LENGTH + " characters)");
@@ -252,6 +251,14 @@ public final class JSONResponses {
         response.put("errorCode", 8);
         response.put("errorDescription", "Administrator's password is not configured. Please set nxt.adminPassword");
         NO_PASSWORD_IN_CONFIG = JSON.prepare(response);
+    }
+
+    public static final JSONStreamAware POLL_RESULTS_NOT_AVAILABLE;
+    static {
+        JSONObject response = new JSONObject();
+        response.put("errorCode", 8);
+        response.put("errorDescription", "Poll results no longer available, set nxt.processPolls=true and rescan");
+        POLL_RESULTS_NOT_AVAILABLE = JSON.prepare(response);
     }
 
     static JSONStreamAware missing(String... paramNames) {

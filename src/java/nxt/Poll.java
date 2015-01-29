@@ -52,7 +52,7 @@ public final class Poll extends AbstractPoll {
                 pstmt.setString(++i, poll.getName());
                 pstmt.setString(++i, poll.getDescription());
                 pstmt.setObject(++i, poll.getOptions());
-                pstmt.setInt(++i, poll.getFinishBlockHeight());
+                pstmt.setInt(++i, poll.getFinishHeight());
                 pstmt.setByte(++i, poll.getVotingModel());
                 pstmt.setLong(++i, poll.getMinBalance());
                 pstmt.setByte(++i, poll.getMinBalanceModel());
@@ -114,14 +114,14 @@ public final class Poll extends AbstractPoll {
 
     private static void checkPolls(int currentHeight) {
         for (Poll poll : getPollsFinishingAt(currentHeight)) {
-            List<PartialPollResult> results = poll.countResults();
+            List<PartialPollResult> results = poll.countResults(currentHeight);
             pollResultsTable.insert(poll, results);
             Logger.logDebugMessage("Poll " + Convert.toUnsignedLong(poll.getId()) + " has been finished");
         }
     }
 
     private Poll(long id, long accountId, Attachment.MessagingPollCreation attachment) {
-        super(accountId, attachment.getFinishBlockHeight(), attachment.getVotingModel(), attachment.getHoldingId(),
+        super(accountId, attachment.getFinishHeight(), attachment.getVotingModel(), attachment.getHoldingId(),
                 attachment.getMinBalance(), attachment.getMinBalanceModel());
 
         this.id = id;
@@ -154,7 +154,7 @@ public final class Poll extends AbstractPoll {
         this.maxRangeValue = rs.getByte("max_range_value");
     }
 
-    public boolean isFinished() { return finishBlockHeight < Nxt.getBlockchain().getHeight(); }
+    public boolean isFinished() { return finishHeight < Nxt.getBlockchain().getHeight(); }
 
     static void addPoll(Transaction transaction, Attachment.MessagingPollCreation attachment) {
         Poll poll = new Poll(transaction.getId(), transaction.getSenderId(), attachment);
@@ -188,8 +188,16 @@ public final class Poll extends AbstractPoll {
         return pollTable.getCount();
     }
 
-    public static List<PartialPollResult> getResults(long pollId){
-        return pollResultsTable.get(pollResultsDbKeyFactory.newKey(pollId));
+    public List<PartialPollResult> getResults() {
+        if (Constants.isPollsProcessing && isFinished()) {
+            return pollResultsTable.get(pollResultsDbKeyFactory.newKey(id));
+        } else {
+            int countHeight = Math.min(finishHeight, Nxt.getBlockchain().getHeight());
+            if (countHeight < Nxt.getBlockchainProcessor().getMinRollbackHeight()) {
+                return null;
+            }
+            return countResults(countHeight);
+        }
     }
 
     public DbIterator<Vote> getVotes(){
@@ -229,12 +237,12 @@ public final class Poll extends AbstractPoll {
         return maxRangeValue;
     }
 
-    public List<PartialPollResult> countResults() {
+    private List<PartialPollResult> countResults(int height) {
         final long[] counts = new long[options.length];
 
         try (DbIterator<Vote> votes = Vote.getVotes(this.getId(), 0, -1)) {
             for (Vote vote : votes) {
-                long[] partialResult = countVote(vote);
+                long[] partialResult = countVote(vote, height);
                 if (partialResult != null) {
                     for (int idx = 0; idx < partialResult.length; idx++) {
                         counts[idx] += partialResult[idx];
@@ -250,10 +258,10 @@ public final class Poll extends AbstractPoll {
         return results;
     }
 
-    private long[] countVote(Vote vote) {
+    private long[] countVote(Vote vote, int height) {
         final long[] partialResult = new long[options.length];
 
-        final long weight = calcWeight(vote.getVoterId());
+        final long weight = calcWeight(vote.getVoterId(), height);
 
         final byte[] optVals = vote.getVote();
 

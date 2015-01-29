@@ -323,7 +323,7 @@ final class JSONData {
         JSONArray options = new JSONArray();
         Collections.addAll(options, poll.getOptions());
         json.put("options", options);
-        json.put("finishBlockHeight", poll.getFinishBlockHeight());
+        json.put("finishHeight", poll.getFinishHeight());
 
         json.put("votingModel", poll.getVotingModel());
 
@@ -357,6 +357,7 @@ final class JSONData {
     static JSONObject pollResults(Poll poll, List<Poll.PartialPollResult> results) {
         JSONObject json = new JSONObject();
         json.put("poll", Convert.toUnsignedLong(poll.getId()));
+        json.put("finished", poll.isFinished());
 
         JSONArray resultsJson = new JSONArray();
 

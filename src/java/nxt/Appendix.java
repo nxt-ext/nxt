@@ -640,7 +640,7 @@ public interface Appendix {
             long cumulativeWeight = 0;
             try (DbIterator<VotePhased> votes = VotePhased.getByTransaction(transaction.getId(), 0, Integer.MAX_VALUE)) {
                 for (VotePhased vote : votes) {
-                    cumulativeWeight += poll.calcWeight(vote.getVoterId());
+                    cumulativeWeight += poll.calcWeight(vote.getVoterId(), Math.min(maxHeight, Nxt.getBlockchain().getHeight()));
                 }
             }
             PendingTransactionPoll.finishPoll(poll);

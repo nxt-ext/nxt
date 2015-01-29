@@ -33,7 +33,7 @@ public class GetPendingTransactionVotesCount extends APIServlet.APIRequestHandle
         JSONObject response = new JSONObject();
         response.put("votesCount", count);
         response.put("quorum", quorum);
-        response.put("refusalHeight", poll.getFinishBlockHeight());
+        response.put("refusalHeight", poll.getFinishHeight());
         response.put("height", Nxt.getBlockchain().getHeight());
         return response;
     }
