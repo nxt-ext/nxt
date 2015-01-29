@@ -60,9 +60,13 @@ abstract class AbstractPoll {
         return minBalance;
     }
 
-    public final long getHoldingId() { return holdingId; }
+    public final long getHoldingId() {
+        return holdingId;
+    }
 
-    public final byte getMinBalanceModel() { return minBalanceModel; }
+    public final byte getMinBalanceModel() {
+        return minBalanceModel;
+    }
 
     long calcWeight(long voterId, int height) {
         long weight = 0;

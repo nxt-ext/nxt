@@ -79,11 +79,11 @@ public class VotePhased {
         }
     }
 
-    public static DbIterator<VotePhased> getByTransaction(long pendingTransactionId, int from, int to){
+    public static DbIterator<VotePhased> getByTransaction(long pendingTransactionId, int from, int to) {
         return votePhasedTable.getManyBy(new DbClause.LongClause("pending_transaction_id", pendingTransactionId), from, to);
     }
 
-    public static int getCount(long pendingTransactionId){
+    public static int getCount(long pendingTransactionId) {
         return votePhasedTable.getCount(new DbClause.LongClause("pending_transaction_id", pendingTransactionId));
     }
 
