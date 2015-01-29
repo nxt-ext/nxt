@@ -6,7 +6,8 @@ import org.junit.runners.Suite;
 
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
-        TestCreatePoll.class
+        TestCreatePoll.class,
+        TestCastVote.class
 })
 
 public class VotingSuite extends HttpApiSuite { }
