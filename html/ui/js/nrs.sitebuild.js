@@ -50,6 +50,14 @@ var NRS = (function(NRS, $, undefined) {
             var html = "";
             var template = undefined;
 
+            html = $(data).filter('div#recipient_modal_template').html();
+            template = Handlebars.compile(html);
+            $('div[data-replace-with-modal-template="recipient_modal_template"]').each(function(i) {
+                var name = $(this).closest('.modal').attr('id').replace('_modal', '');
+                var context = { name: name };
+                $(this).replaceWith(template(context));
+            });
+
             html = $(data).filter('div#add_message_modal_template').html();
             template = Handlebars.compile(html);
             $('div[data-replace-with-modal-template="add_message_modal_template"]').each(function(i) {
@@ -57,7 +65,7 @@ var NRS = (function(NRS, $, undefined) {
                 var context = { name: name };
                 $(this).replaceWith(template(context));
             });
-            
+
             html = $(data).filter('div#secret_phrase_modal_template').html();
             template = Handlebars.compile(html);
             $('div[data-replace-with-modal-template="secret_phrase_modal_template"]').each(function(i) {

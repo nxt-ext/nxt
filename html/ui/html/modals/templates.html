@@ -1,3 +1,21 @@
+<div id="recipient_modal_template">
+    <div class="form-group">
+        <label for="{{name}}_recipient" data-i18n="recipient">RECIPIENT</label>
+        <div class="input-group">
+            <input type="text" class="form-control" name="recipient" id="{{name}}_recipient" placeholder="Recipient Account" data-i18n="[placeholder]recipient_account" autofocus tabindex="1" />
+            <span class="input-group-btn btn-group recipient_selector">
+                <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown"><span class="glyphicon glyphicon-user"></span></button>
+                <ul class="dropdown-menu scrollable-menu" role="menu" style="right:0;left:auto;"></ul>
+            </span>
+        </div>
+    </div>
+    <div class="form-group recipient_public_key">
+        <label for="{{name}}_recipient_public_key" data-i18n="recipient_public_key">Recipient Public Key</label>
+        <input type="text" class="form-control" name="recipientPublicKey" id="{{name}}_recipient_public_key" placeholder="Public Key" data-i18n="[placeholder]public_key" tabindex="2" spellcheck="false" />
+    </div>
+</div>
+
+
 <div id="add_message_modal_template">
     <div class="form-group add_message_container">
         <input type="checkbox" name="add_message" id="{{name}}_add_message" class="add_message" tabindex="6" /> <label for="{{name}}_add_message" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_message_q">Add a Message?</span></label>
