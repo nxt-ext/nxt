@@ -34,9 +34,37 @@ public class TestApprovePendingTransaction extends BlockchainTest {
         Assert.assertNotNull(response.get("transaction"));
         generateBlock();
 
-        Assert.assertNotEquals(balanceById(id1), balance1);
-        Assert.assertNotEquals(balanceById(id2), balance2);
-        Assert.assertEquals(balance3 - balanceById(id3), fee);
+        Assert.assertNotEquals(balance1, balanceById(id1));
+        Assert.assertNotEquals(balance2, balanceById(id2));
+        Assert.assertEquals(fee, balance3 - balanceById(id3));
+    }
+
+    @Test
+    public void invalidVoteCasting() {
+        APICall apiCall = new TwoPhasedMoneyTransferBuilder().build();
+        String transactionId = TestCreateTwoPhased.issueCreateTwoPhased(apiCall, false);
+        generateBlock();
+
+        long balance1 = balanceById(id1);
+        long balance2 = balanceById(id2);
+        long balance4 = balanceById(id4);
+
+        long fee = Constants.ONE_NXT;
+
+        apiCall = new APICall.Builder("approvePendingTransaction")
+                .param("secretPhrase", secretPhrase4)
+                .param("pendingTransaction", transactionId)
+                .param("feeNQT", fee)
+                .build();
+
+        JSONObject response = apiCall.invoke();
+        Logger.logMessage("approvePendingTransaction:" + response.toJSONString());
+        Assert.assertNotNull(response.get("error"));
+        generateBlock();
+
+        Assert.assertEquals(balance1, balanceById(id1));
+        Assert.assertEquals(balance2, balanceById(id2));
+        Assert.assertEquals(balance4, balanceById(id4));
     }
 
 }
