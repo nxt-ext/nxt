@@ -4,6 +4,7 @@ import nxt.BlockchainTest;
 import nxt.Constants;
 import nxt.http.APICall;
 import nxt.util.Logger;
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.junit.Assert;
 import nxt.http.votingsystem.TestCreatePoll.*;
@@ -28,6 +29,14 @@ public class TestCastVote extends BlockchainTest {
         Logger.logMessage("voteCasting:" + response.toJSONString());
         Assert.assertNull(response.get("error"));
         generateBlock();
+
+        apiCall = new APICall.Builder("getPollResults").param("poll", poll).build();
+        JSONObject getPollResponse = apiCall.invoke();
+        Logger.logMessage("getPollResultsResponse:" + getPollResponse.toJSONString());
+        JSONArray results = (JSONArray)getPollResponse.get("results");
+        JSONObject ringoVote = (JSONObject)results.get(0);
+        long ringoResult = (Long) ringoVote.get("Ringo");
+        Assert.assertEquals(1, ringoResult);
     }
 
     @Test
