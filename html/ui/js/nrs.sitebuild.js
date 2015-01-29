@@ -46,15 +46,25 @@ var NRS = (function(NRS, $, undefined) {
     NRS.loadModalHTMLTemplates = function(options) {
         jQuery.ajaxSetup({ async: false });
         
-        $.get("html/modals/templates.html #secret_phrase_modal_template", '', function (data) {
-            var template = Handlebars.compile(data);
+        $.get("html/modals/templates.html", '', function (data) {
+            var html = "";
+            var template = undefined;
+
+            html = $(data).filter('div#secret_phrase_modal_template').html();
+            template = Handlebars.compile(html);
             $('div[data-include-modal-template="secret_phrase_modal_template"]').each(function(i) {
                 var context = { nr: String(i) };
-                $contextTemplate = $(template(context));
-                $(this).append($contextTemplate.children().clone());
+                $(this).replaceWith(template(context));
+            });
+
+            html = $(data).filter('div#advanced_modal_template').html();
+            template = Handlebars.compile(html);
+            $('div[data-include-modal-template="advanced_modal_template"]').each(function(i) {
+                var context = { nr: String(i) };
+                $(this).replaceWith(template(context));
             });
         });
-        
+
         jQuery.ajaxSetup({ async: true });
     }
 

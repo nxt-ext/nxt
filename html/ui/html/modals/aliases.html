@@ -50,41 +50,9 @@
                         <input type="text" class="form-control" name="aliasURI" id="register_alias_uri" placeholder="URI" data-i18n="[placeholder]uri" tabindex="2" />
                         <p class="help-block" id="register_alias_help"></p>
                     </div>
-                    <div class="form-group secret_phrase" data-include-modal-template="secret_phrase_modal_template"></div>
-                    <div class="row advanced">
-                        <div class="col-xs-6 col-sm-6 col-md-6">
-                            <div class="form-group">
-                                <label for="register_alias_fee" data-i18n="fee">FEE</label>
-                                <div class="input-group">
-                                    <input type="number" name="feeNXT" id="register_alias_fee" class="form-control" step="any" min="1" placeholder="Fee" data-i18n="[placeholder]fee" data-default="1" value="1" tabindex="3">
-                                    <span class="input-group-addon">NXT</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-xs-6 col-sm-6 col-md-6">
-                            <div class="form-group">
-                                <label for="register_alias_deadline" data-i18n="deadline_hours">DEADLINE (HOURS)</label>
-                                <input type="number" name="deadline" id="register_alias_deadline" class="form-control" placeholder="Deadline" data-i18n="[placeholder]deadline" min="1" data-default="24" value="24" tabindex="4">
-                            </div>
-                        </div>
-                    </div>
-                    <div class="form-group advanced">
-                        <label for="register_alias_referenced_transaction" data-i18n="referenced_transaction_hash">REFERENCED TRANSACTION HASH</label>
-                        <input type="text" class="form-control" name="referencedTransactionFullHash" id="register_alias_referenced_transaction" placeholder="Referenced Transaction Full Hash" data-i18n="[placeholder]referenced_transaction_full_hash" tabindex="6" spellcheck="false" />
-                    </div>
-                    <div class="form-group advanced" style="margin-bottom:0;">
-                        <input type="checkbox" name="doNotBroadcast" id="register_alias_do_not_broadcast" value="1" /> <label for="register_alias_do_not_broadcast" style="font-weight:normal;" tabindex="7" data-i18n="do_not_broadcast">Do Not Broadcast</label>
-                    </div>
-                    <div class="form-group advanced">
-                        <input type="checkbox" name="add_note_to_self" id="register_alias_add_note_to_self" class="add_note_to_self" tabindex="8" /> <label for="register_alias_add_note_to_self" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_note_to_self">Add Note to Self?</span></label>
-                    </div>
-                    <div class="form-group advanced optional_note">
-                        <label for="register_alias_note_to_self" data-i18n="note_to_self">Note to Self</label>
-                        <textarea class="form-control" id="register_alias_note_to_self" name="note_to_self" rows="4" tabindex="9"></textarea>
-                        <div style="margin-top:3px;">
-                            <label style="font-weight:normal;color:#666" data-i18n="note_is_encrypted">This note is encrypted.</span></label>
-                        </div>
-                    </div>
+                    <div data-include-modal-template="secret_phrase_modal_template"></div>
+                    <div data-include-modal-template="advanced_modal_template"></div>
+                    
                     <input type="hidden" name="register_alias_alias_update" id="register_alias_alias_update" value="0" />
                     <input type="hidden" name="request_type" value="setAlias" />
                 </form>
