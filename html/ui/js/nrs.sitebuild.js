@@ -52,14 +52,14 @@ var NRS = (function(NRS, $, undefined) {
 
             html = $(data).filter('div#secret_phrase_modal_template').html();
             template = Handlebars.compile(html);
-            $('div[data-include-modal-template="secret_phrase_modal_template"]').each(function(i) {
+            $('div[data-replace-with-modal-template="secret_phrase_modal_template"]').each(function(i) {
                 var context = { nr: String(i) };
                 $(this).replaceWith(template(context));
             });
 
             html = $(data).filter('div#advanced_modal_template').html();
             template = Handlebars.compile(html);
-            $('div[data-include-modal-template="advanced_modal_template"]').each(function(i) {
+            $('div[data-replace-with-modal-template="advanced_modal_template"]').each(function(i) {
                 var context = { nr: String(i) };
                 $(this).replaceWith(template(context));
             });
