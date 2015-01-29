@@ -666,7 +666,7 @@ public abstract class TransactionType {
                 if (votingModel != Constants.VOTING_MODEL_ACCOUNT
                         && votingModel != Constants.VOTING_MODEL_BALANCE
                         && votingModel != Constants.VOTING_MODEL_ASSET
-                        && votingModel != Constants.VOTING_MODEL_MS_COIN) {
+                        && votingModel != Constants.VOTING_MODEL_CURRENCY) {
                     throw new NxtException.NotValidException("Invalid voting model value: " + attachment.getJSONObject());
                 }
 
@@ -674,8 +674,8 @@ public abstract class TransactionType {
                     throw new NxtException.NotValidException("No asset id provided: " + attachment.getJSONObject());
                 }
 
-                if (votingModel == Constants.VOTING_MODEL_MS_COIN && attachment.getHoldingId() == 0) {
-                    throw new NxtException.NotValidException("No MS coin id provided: " + attachment.getJSONObject());
+                if (votingModel == Constants.VOTING_MODEL_CURRENCY && attachment.getHoldingId() == 0) {
+                    throw new NxtException.NotValidException("No currency id provided: " + attachment.getJSONObject());
                 }
 
                 int optionsCount = attachment.getPollOptions().length;
@@ -708,7 +708,7 @@ public abstract class TransactionType {
                 if (minBalanceModel != Constants.VOTING_MINBALANCE_UNDEFINED
                         && minBalanceModel != Constants.VOTING_MINBALANCE_ASSET
                         && minBalanceModel != Constants.VOTING_MINBALANCE_BYBALANCE
-                        && minBalanceModel != Constants.VOTING_MINBALANCE_COIN) {
+                        && minBalanceModel != Constants.VOTING_MINBALANCE_CURRENCY) {
                     throw new NxtException.NotValidException("Invalid min balance model " + attachment.getJSONObject());
                 }
 
@@ -722,8 +722,8 @@ public abstract class TransactionType {
                     throw new NxtException.NotValidException("Invalid min balance model: "+ attachment.getJSONObject());
                 }
 
-                if (votingModel == Constants.VOTING_MODEL_MS_COIN
-                        && minBalanceModel != Constants.VOTING_MINBALANCE_COIN) {
+                if (votingModel == Constants.VOTING_MODEL_CURRENCY
+                        && minBalanceModel != Constants.VOTING_MINBALANCE_CURRENCY) {
                     throw new NxtException.NotValidException("Invalid min balance model: " + attachment.getJSONObject());
                 }
 
@@ -746,9 +746,9 @@ public abstract class TransactionType {
                     throw new NxtException.NotValidException("Invalid asset id for voting: " + attachment.getJSONObject());
                 }
 
-                if (minBalanceModel == Constants.VOTING_MINBALANCE_COIN
+                if (minBalanceModel == Constants.VOTING_MINBALANCE_CURRENCY
                         && (holdingId == 0 || Currency.getCurrency(holdingId) == null)) {
-                    throw new NxtException.NotValidException("Invalid MS coin id for voting: " + attachment.getJSONObject());
+                    throw new NxtException.NotValidException("Invalid currency id for voting: " + attachment.getJSONObject());
                 }
 
                 if (attachment.getFinishBlockHeight() < currentHeight + Constants.VOTING_MIN_VOTE_DURATION

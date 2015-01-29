@@ -74,7 +74,7 @@ public final class CreatePoll extends CreateTransaction {
                 currentHeight + Constants.VOTING_MIN_VOTE_DURATION,
                 currentHeight + Constants.VOTING_MAX_VOTE_DURATION, true);
 
-        byte votingModel = ParameterParser.getByte(req, "votingModel", Constants.VOTING_MODEL_BALANCE, Constants.VOTING_MODEL_MS_COIN, true);
+        byte votingModel = ParameterParser.getByte(req, "votingModel", Constants.VOTING_MODEL_BALANCE, Constants.VOTING_MODEL_CURRENCY, true);
 
         byte minNumberOfOptions = ParameterParser.getByte(req, "minNumberOfOptions", (byte) 1, optionsSize, true);
         byte maxNumberOfOptions = ParameterParser.getByte(req, "maxNumberOfOptions", minNumberOfOptions, optionsSize, true);
@@ -90,7 +90,7 @@ public final class CreatePoll extends CreateTransaction {
 
         if (minBalance != 0) {
             byte minBalanceModel = ParameterParser.getByte(req, "minBalanceModel",
-                    Constants.VOTING_MINBALANCE_UNDEFINED, Constants.VOTING_MINBALANCE_COIN, true);
+                    Constants.VOTING_MINBALANCE_UNDEFINED, Constants.VOTING_MINBALANCE_CURRENCY, true);
             builder.minBalance(minBalanceModel, minBalance);
         }
 

@@ -28,12 +28,12 @@ public final class Constants {
     public static final byte VOTING_MODEL_BALANCE = 0;
     public static final byte VOTING_MODEL_ACCOUNT = 1;
     public static final byte VOTING_MODEL_ASSET = 2;
-    public static final byte VOTING_MODEL_MS_COIN = 3;
+    public static final byte VOTING_MODEL_CURRENCY = 3;
 
     public static final byte VOTING_MINBALANCE_UNDEFINED = 0;
     public static final byte VOTING_MINBALANCE_BYBALANCE = 1;
     public static final byte VOTING_MINBALANCE_ASSET = 2;
-    public static final byte VOTING_MINBALANCE_COIN = 3;
+    public static final byte VOTING_MINBALANCE_CURRENCY = 3;
 
     public static final byte VOTING_DEFAULT_MIN_NUMBER_OF_CHOICES = 1;
     public static final byte VOTING_MIN_RANGE_VALUE_LIMIT = -100;

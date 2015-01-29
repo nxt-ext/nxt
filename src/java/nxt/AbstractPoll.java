@@ -74,7 +74,7 @@ abstract class AbstractPoll {
                     weight = qntBalance;
                 }
                 break;
-            case Constants.VOTING_MODEL_MS_COIN:
+            case Constants.VOTING_MODEL_CURRENCY:
                 long units = Account.getCurrencyUnits(voterId, holdingId);
                 if (units >= getMinBalance()) {
                     weight = units;
@@ -89,7 +89,7 @@ abstract class AbstractPoll {
                     case Constants.VOTING_MINBALANCE_ASSET:
                         balance = Account.getAssetBalanceQNT(voterId, holdingId);
                         break;
-                    case Constants.VOTING_MINBALANCE_COIN:
+                    case Constants.VOTING_MINBALANCE_CURRENCY:
                         balance = Account.getCurrencyUnits(voterId, holdingId);
                         break;
                     default:

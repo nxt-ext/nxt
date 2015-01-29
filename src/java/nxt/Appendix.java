@@ -462,7 +462,7 @@ public interface Appendix {
             quorum = Convert.parseLong(attachmentData.get("quorum"));
             minBalance = Convert.parseLong(attachmentData.get("minBalance"));
             votingModel = ((Long)attachmentData.get("votingModel")).byteValue();
-            if (votingModel == Constants.VOTING_MODEL_ASSET || votingModel == Constants.VOTING_MODEL_MS_COIN) {
+            if (votingModel == Constants.VOTING_MODEL_ASSET || votingModel == Constants.VOTING_MODEL_CURRENCY) {
                 holdingId = Convert.parseUnsignedLong((String)attachmentData.get("holding"));
             } else {
                 holdingId = 0;
@@ -571,7 +571,7 @@ public interface Appendix {
 
             if (votingModel != Constants.VOTING_MODEL_ACCOUNT &&
                     votingModel != Constants.VOTING_MODEL_ASSET &&
-                    votingModel != Constants.VOTING_MODEL_MS_COIN) {
+                    votingModel != Constants.VOTING_MODEL_CURRENCY) {
                 throw new NxtException.NotValidException("Invalid voting model");
             }
 
@@ -599,7 +599,7 @@ public interface Appendix {
                 throw new NxtException.NotValidException("Blacklist is too big");
             }
 
-            if ((votingModel == Constants.VOTING_MODEL_ASSET || votingModel == Constants.VOTING_MODEL_MS_COIN)
+            if ((votingModel == Constants.VOTING_MODEL_ASSET || votingModel == Constants.VOTING_MODEL_CURRENCY)
                     && holdingId == 0) {
                 throw new NxtException.NotValidException("Invalid holdingId");
             }
