@@ -1,7 +1,24 @@
+<div id="add_message_modal_template">
+    <div class="form-group add_message_container">
+        <input type="checkbox" name="add_message" id="{{name}}_add_message" class="add_message" tabindex="6" /> <label for="{{name}}_add_message" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_message_q">Add a Message?</span></label>
+    </div>
+    <div class="form-group optional_message">
+        <label for="{{name}}_message" data-i18n="message">MESSAGE</label>
+        <textarea class="form-control" id="{{name}}_message" name="message" rows="4" tabindex="3"></textarea>
+         <div style="margin-top:3px" id="{{name}}_to_specific_account_message_options">
+            <label for="{{name}}_encrypt_message" style="font-weight:normal;color:#666"><input type="checkbox" name="encrypt_message" id="{{name}}_encrypt_message" value="1" data-default="checked" checked="checked" /> <span data-i18n="encrypt_message">Encrypt Message</span></label>
+        </div>
+        <div style="margin-top:3px;display:none" id="{{name}}_to_anyone_message_options">
+            <label for="{{name}}_encrypt_message" style="font-weight:normal;color:#666" data-i18n="message_is_not_encrypted">This message is not encrypted.</span></label>
+        </div>
+    </div>
+</div>
+
+
 <div id="secret_phrase_modal_template">
     <div class="form-group secret_phrase">
-        <label for="secret_phrase_modal_{{nr}}_passphrase" data-i18n="passphrase">PASSPHRASE</label>
-        <input type="password" name="secretPhrase" id="secret_phrase_modal_{{nr}}_passphrase" class="form-control" placeholder="" tabindex="5">
+        <label for="{{name}}_password" data-i18n="passphrase">PASSPHRASE</label>
+        <input type="password" name="secretPhrase" id="{{name}}_password" class="form-control" placeholder="" tabindex="5">
     </div>
 </div>
 
@@ -10,33 +27,33 @@
     <div class="row advanced">
         <div class="col-xs-6 col-sm-6 col-md-6">
             <div class="form-group">
-                <label for="register_alias_fee" data-i18n="fee">FEE</label>
+                <label for="{{name}}_fee" data-i18n="fee">FEE</label>
                 <div class="input-group">
-                    <input type="number" name="feeNXT" id="register_alias_fee" class="form-control" step="any" min="1" placeholder="Fee" data-i18n="[placeholder]fee" data-default="1" value="1" tabindex="3">
+                    <input type="number" name="feeNXT" id="{{name}}_fee" class="form-control" step="any" min="1" placeholder="Fee" data-i18n="[placeholder]fee" data-default="1" value="1" tabindex="3">
                     <span class="input-group-addon">NXT</span>
                 </div>
             </div>
         </div>
         <div class="col-xs-6 col-sm-6 col-md-6">
             <div class="form-group">
-                <label for="register_alias_deadline" data-i18n="deadline_hours">DEADLINE (HOURS)</label>
-                <input type="number" name="deadline" id="register_alias_deadline" class="form-control" placeholder="Deadline" data-i18n="[placeholder]deadline" min="1" data-default="24" value="24" tabindex="4">
+                <label for="{{name}}_deadline" data-i18n="deadline_hours">DEADLINE (HOURS)</label>
+                <input type="number" name="deadline" id="{{name}}_deadline" class="form-control" placeholder="Deadline" data-i18n="[placeholder]deadline" min="1" data-default="24" value="24" tabindex="4">
             </div>
         </div>
     </div>
     <div class="form-group advanced">
-        <label for="register_alias_referenced_transaction" data-i18n="referenced_transaction_hash">REFERENCED TRANSACTION HASH</label>
-        <input type="text" class="form-control" name="referencedTransactionFullHash" id="register_alias_referenced_transaction" placeholder="Referenced Transaction Full Hash" data-i18n="[placeholder]referenced_transaction_full_hash" tabindex="6" spellcheck="false" />
+        <label for="{{name}}_referenced_transaction" data-i18n="referenced_transaction_hash">REFERENCED TRANSACTION HASH</label>
+        <input type="text" class="form-control" name="referencedTransactionFullHash" id="{{name}}_referenced_transaction" placeholder="Referenced Transaction Full Hash" data-i18n="[placeholder]referenced_transaction_full_hash" tabindex="6" spellcheck="false" />
     </div>
     <div class="form-group advanced" style="margin-bottom:0;">
-        <input type="checkbox" name="doNotBroadcast" id="register_alias_do_not_broadcast" value="1" /> <label for="register_alias_do_not_broadcast" style="font-weight:normal;" tabindex="7" data-i18n="do_not_broadcast">Do Not Broadcast</label>
+        <input type="checkbox" name="doNotBroadcast" id="{{name}}_do_not_broadcast" value="1" /> <label for="{{name}}_do_not_broadcast" style="font-weight:normal;" tabindex="7" data-i18n="do_not_broadcast">Do Not Broadcast</label>
     </div>
     <div class="form-group advanced">
-        <input type="checkbox" name="add_note_to_self" id="register_alias_add_note_to_self" class="add_note_to_self" tabindex="8" /> <label for="register_alias_add_note_to_self" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_note_to_self">Add Note to Self?</span></label>
+        <input type="checkbox" name="add_note_to_self" id="{{name}}_add_note_to_self" class="add_note_to_self" tabindex="8" /> <label for="{{name}}_add_note_to_self" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_note_to_self">Add Note to Self?</span></label>
     </div>
     <div class="form-group advanced optional_note">
-        <label for="register_alias_note_to_self" data-i18n="note_to_self">Note to Self</label>
-        <textarea class="form-control" id="register_alias_note_to_self" name="note_to_self" rows="4" tabindex="9"></textarea>
+        <label for="{{name}}_note_to_self" data-i18n="note_to_self">Note to Self</label>
+        <textarea class="form-control" id="{{name}}_note_to_self" name="note_to_self" rows="4" tabindex="9"></textarea>
         <div style="margin-top:3px;">
             <label style="font-weight:normal;color:#666" data-i18n="note_is_encrypted">This note is encrypted.</span></label>
         </div>
