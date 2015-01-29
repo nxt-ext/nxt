@@ -1,8 +1,6 @@
 package nxt.http.twophased;
 
 import nxt.BlockchainTest;
-import nxt.Constants;
-import nxt.Nxt;
 import nxt.http.APICall;
 import nxt.util.Convert;
 import nxt.util.Logger;
@@ -19,6 +17,7 @@ public class TestGetAccountPendingTransactionToApproveIds extends BlockchainTest
         APICall apiCall = new TwoPhasedMoneyTransferBuilder().build();
         String transactionId = TestCreateTwoPhased.issueCreateTwoPhased(apiCall, false);
 
+        generateBlock();
         generateBlock();
 
         apiCall = new APICall.Builder("getAccountPendingTransactionToApproveIds")

@@ -7,7 +7,8 @@ import org.junit.runners.Suite;
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
         TestCreateTwoPhased.class,
-        TestGetAccountPendingTransactionToApproveIds.class
+        TestGetAccountPendingTransactionToApproveIds.class,
+        TestApprovePendingTransaction.class
 })
 
 public class TwoPhasedSuite extends HttpApiSuite { }
