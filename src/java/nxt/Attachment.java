@@ -96,10 +96,10 @@ public interface Attachment extends Appendix {
 
     };
 
-    public final static class PendingPaymentVoteCasting extends AbstractAttachment {
+    public final static class PendingTransactionVoteCasting extends AbstractAttachment {
         private final long[] pendingTransactionsIds;
 
-        PendingPaymentVoteCasting(ByteBuffer buffer, byte transactionVersion) {
+        PendingTransactionVoteCasting(ByteBuffer buffer, byte transactionVersion) {
             super(buffer, transactionVersion);
             byte length = buffer.get();
             pendingTransactionsIds = new long[length];
@@ -108,7 +108,7 @@ public interface Attachment extends Appendix {
             }
         }
 
-        PendingPaymentVoteCasting(JSONObject attachmentData) {
+        PendingTransactionVoteCasting(JSONObject attachmentData) {
             super(attachmentData);
             JSONArray jsArr = (JSONArray) (attachmentData.get("pendingTransactions"));
             pendingTransactionsIds = new long[jsArr.size()];
@@ -117,17 +117,17 @@ public interface Attachment extends Appendix {
             }
         }
 
-        public PendingPaymentVoteCasting(long pendingTransactionId) {
+        public PendingTransactionVoteCasting(long pendingTransactionId) {
             this.pendingTransactionsIds = new long[]{pendingTransactionId};
         }
 
-        public PendingPaymentVoteCasting(long[] pendingTransactionsIds) {
+        public PendingTransactionVoteCasting(long[] pendingTransactionsIds) {
             this.pendingTransactionsIds = pendingTransactionsIds;
         }
 
         @Override
         String getAppendixName() {
-            return "PendingPaymentVoteCasting";
+            return "PendingTransactionVoteCasting";
         }
 
         @Override
@@ -154,7 +154,7 @@ public interface Attachment extends Appendix {
 
         @Override
         public TransactionType getTransactionType() {
-            return TransactionType.Messaging.PENDING_PAYMENT_VOTE_CASTING;
+            return TransactionType.Messaging.PENDING_TRANSACTION_VOTE_CASTING;
         }
 
         public long[] getPendingTransactionsIds() {

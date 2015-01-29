@@ -456,7 +456,7 @@ public interface Appendix {
             holdingId = buffer.getLong();
         }
 
-        TwoPhased(JSONObject attachmentData){
+        TwoPhased(JSONObject attachmentData) {
             super(attachmentData);
             maxHeight = ((Long)attachmentData.get("releaseHeight")).intValue();
             quorum = Convert.parseLong(attachmentData.get("quorum"));
@@ -481,7 +481,7 @@ public interface Appendix {
             }
         }
 
-        public TwoPhased(int maxHeight, long quorum, long[] whitelist){
+        public TwoPhased(int maxHeight, long quorum, long[] whitelist) {
             this(maxHeight, Constants.VOTING_MODEL_ACCOUNT, quorum, 0, whitelist, null);
         }
 
@@ -565,7 +565,7 @@ public interface Appendix {
 
         @Override
         void validate(Transaction transaction) throws NxtException.ValidationException {
-            if(votingModel == Constants.VOTING_MODEL_BALANCE){
+            if (votingModel == Constants.VOTING_MODEL_BALANCE) {
                 throw new NxtException.NotValidException("Pending transaction with by-balance voting is prohibited");
             }
 
@@ -575,7 +575,7 @@ public interface Appendix {
                 throw new NxtException.NotValidException("Invalid voting model");
             }
 
-            if (whitelist.length * (-blacklist.length) < 0){
+            if (whitelist.length * (-blacklist.length) < 0) {
                 throw new NxtException.NotValidException("Both whitelist & blacklist are non-empty");
             }
 
@@ -604,7 +604,7 @@ public interface Appendix {
                 throw new NxtException.NotValidException("Invalid holdingId");
             }
 
-            if(quorum <= 0){
+            if (quorum <= 0) {
                 throw new NxtException.NotValidException("quorum <= 0");
             }
 
@@ -632,7 +632,7 @@ public interface Appendix {
             }
             transaction.getType().applyAttachment(transaction, senderAccount, recipientAccount);
 
-            Logger.logDebugMessage("Transaction " + transaction.getId() + " has been released");
+            Logger.logDebugMessage("Transaction " + transaction.getStringId() + " has been released");
         }
 
         void verify(Transaction transaction) {

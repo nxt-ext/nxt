@@ -5,6 +5,7 @@ import nxt.db.DbIterator;
 import nxt.db.DbKey;
 import nxt.db.EntityDbTable;
 import nxt.db.ValuesDbTable;
+import nxt.util.Convert;
 import nxt.util.Listener;
 import nxt.util.Logger;
 
@@ -87,7 +88,9 @@ public final class Poll extends AbstractPoll {
         }
     };
 
-    static void init() {
+    static void init() {}
+
+    static {
         if(Constants.isPollsProcessing) {
             Nxt.getBlockchainProcessor().addListener(new Listener<Block>() {
                 @Override
@@ -111,29 +114,26 @@ public final class Poll extends AbstractPoll {
 
     private static void checkPolls(int currentHeight) {
         for (Poll poll : getPollsFinishingAt(currentHeight)) {
-                List<PartialPollResult> results = poll.countResults();
-                pollResultsTable.insert(poll, results);
-                Logger.logDebugMessage("Poll " + poll.getId() + " has been finished");
+            List<PartialPollResult> results = poll.countResults();
+            pollResultsTable.insert(poll, results);
+            Logger.logDebugMessage("Poll " + Convert.toUnsignedLong(poll.getId()) + " has been finished");
         }
     }
 
-    private Poll(long id, long accountId, String name, String description, String[] options, int finishBlockHeight,
-                 byte votingModel,
-                 byte minNumberOfOptions, byte maxNumberOfOptions,
-                 byte minRangeValue, byte maxRangeValue,
-                 long minBalance, byte minBalanceModel, long holdingId) {
-        super(accountId, finishBlockHeight, votingModel, holdingId, minBalance, minBalanceModel);
+    private Poll(long id, long accountId, Attachment.MessagingPollCreation attachment) {
+        super(accountId, attachment.getFinishBlockHeight(), attachment.getVotingModel(), attachment.getHoldingId(),
+                attachment.getMinBalance(), attachment.getMinBalanceModel());
 
         this.id = id;
         this.dbKey = pollDbKeyFactory.newKey(this.id);
-        this.name = name;
-        this.description = description;
-        this.options = options;
+        this.name = attachment.getPollName();
+        this.description = attachment.getPollDescription();
+        this.options = attachment.getPollOptions();
 
-        this.minNumberOfOptions = minNumberOfOptions;
-        this.maxNumberOfOptions = maxNumberOfOptions;
-        this.minRangeValue = minRangeValue;
-        this.maxRangeValue = maxRangeValue;
+        this.minNumberOfOptions = attachment.getMinNumberOfOptions();
+        this.maxNumberOfOptions = attachment.getMaxNumberOfOptions();
+        this.minRangeValue = attachment.getMinRangeValue();
+        this.maxRangeValue = attachment.getMaxRangeValue();
     }
 
     private Poll(ResultSet rs) throws SQLException {
@@ -154,24 +154,10 @@ public final class Poll extends AbstractPoll {
         this.maxRangeValue = rs.getByte("max_range_value");
     }
 
-    public boolean isFinished(){ return finishBlockHeight < Nxt.getBlockchain().getHeight(); }
+    public boolean isFinished() { return finishBlockHeight < Nxt.getBlockchain().getHeight(); }
 
-    static void addPoll(long pollId, long accountId, Attachment.MessagingPollCreation attachment) {
-
-        Poll poll = new Poll(pollId,
-                accountId,
-                attachment.getPollName(),
-                attachment.getPollDescription(),
-                attachment.getPollOptions(),
-                attachment.getFinishBlockHeight(),
-                attachment.getVotingModel(),
-                attachment.getMinNumberOfOptions(),
-                attachment.getMaxNumberOfOptions(),
-                attachment.getMinRangeValue(),
-                attachment.getMaxRangeValue(),
-                attachment.getMinBalance(),
-                attachment.getMinBalanceModel(),
-                attachment.getHoldingId());
+    static void addPoll(Transaction transaction, Attachment.MessagingPollCreation attachment) {
+        Poll poll = new Poll(transaction.getId(), transaction.getSenderId(), attachment);
         pollTable.insert(poll);
     }
 
@@ -287,9 +273,9 @@ public final class Poll extends AbstractPoll {
         }
     }
 
-    public static class PartialPollResult{
-        final String option;
-        final long votes;
+    public static class PartialPollResult {
+        private final String option;
+        private final long votes;
 
         public PartialPollResult(String option, long votes) {
             this.option = option;

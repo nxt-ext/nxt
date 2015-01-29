@@ -49,26 +49,17 @@ final class TransactionProcessorImpl implements TransactionProcessor {
             public void notify(Block block) {
                 int height = block.getHeight();
                 if (height >= Constants.TWO_PHASED_TRANSACTIONS_BLOCK) {
-                    try(
-                            Connection con = Db.db.getConnection();
-                            PreparedStatement pstmt = con.prepareStatement("SELECT transaction.* FROM transaction, pending_transaction " +
-                                    " WHERE pending_transaction.id = transaction.id AND pending_transaction.finish_height = ? " +
-                                    " AND pending_transaction.latest = TRUE")
-                            ) {
-
+                    try (Connection con = Db.db.getConnection();
+                         PreparedStatement pstmt = con.prepareStatement("SELECT transaction.* FROM transaction, pending_transaction " +
+                                 " WHERE pending_transaction.id = transaction.id AND pending_transaction.finish_height = ? " +
+                                 " AND pending_transaction.latest = TRUE")) {
                         pstmt.setInt(1, height);
-                        DbIterator<? extends Transaction> transactions = Nxt.getBlockchain().getTransactions(con, pstmt);
-
-                        while(transactions.hasNext()){
-                            Transaction transaction = transactions.next();
+                        for (Transaction transaction : Nxt.getBlockchain().getTransactions(con, pstmt)) {
                             transaction.getTwoPhased().verify(transaction);
                         }
-                        con.close();
                     }  catch (SQLException e) {
                         throw new RuntimeException(e.toString(), e);
                     }
-
-
                 }
             }
         }, BlockchainProcessor.Event.AFTER_BLOCK_APPLY);

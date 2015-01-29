@@ -200,16 +200,8 @@ public class PendingTransactionPoll extends AbstractPoll {
     public long getQuorum() { return quorum; }
 
     private void save(Connection con) throws SQLException {
-        boolean isBlacklist;
-        byte signersCount;
-
-        if (getBlacklist().length > 0) {
-            isBlacklist = true;
-            signersCount = (byte)getBlacklist().length;
-        } else {
-            isBlacklist = false;
-            signersCount = (byte)getWhitelist().length;
-        }
+        boolean isBlacklist = getBlacklist().length > 0;
+        byte signersCount = isBlacklist ? (byte)getBlacklist().length : (byte)getWhitelist().length;
 
         try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO pending_transaction (id, account_id, "
                 + "finish_height, signers_count, blacklist, voting_model, quorum, min_balance, holding_id, "

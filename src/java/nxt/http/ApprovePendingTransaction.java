@@ -51,7 +51,7 @@ public class ApprovePendingTransaction extends CreateTransaction {
         }
 
         Account account = ParameterParser.getSenderAccount(req);
-        Attachment attachment = new Attachment.PendingPaymentVoteCasting(pendingTransactionIds);
+        Attachment attachment = new Attachment.PendingTransactionVoteCasting(pendingTransactionIds);
         return createTransaction(req, account, attachment);
     }
 }

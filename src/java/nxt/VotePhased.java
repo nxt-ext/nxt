@@ -19,10 +19,7 @@ public class VotePhased {
                 }
             };
 
-    private static final class VotePhasedTable extends EntityDbTable<VotePhased> {
-        protected VotePhasedTable() {
-            super("vote_phased", voteDbKeyFactory);
-        }
+    private static final EntityDbTable<VotePhased> votePhasedTable = new EntityDbTable<VotePhased>("vote_phased", voteDbKeyFactory) {
 
         @Override
         protected VotePhased load(Connection con, ResultSet rs) throws SQLException {
@@ -33,10 +30,8 @@ public class VotePhased {
         protected void save(Connection con, VotePhased vote) throws SQLException {
             vote.save(con);
         }
-    }
 
-    final static VotePhasedTable voteTable = new VotePhasedTable();
-
+    };
 
     static void init() {
     }
@@ -72,7 +67,7 @@ public class VotePhased {
         return voterId;
     }
 
-    protected void save(Connection con) throws SQLException {
+    private void save(Connection con) throws SQLException {
         try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO vote_phased (id, pending_transaction_id, "
                 + "voter_id, height) VALUES (?, ?, ?, ?)")) {
             int i = 0;
@@ -85,21 +80,21 @@ public class VotePhased {
     }
 
     public static DbIterator<VotePhased> getByTransaction(long pendingTransactionId, int from, int to){
-        return voteTable.getManyBy(new DbClause.LongClause("pending_transaction_id",pendingTransactionId), from, to);
+        return votePhasedTable.getManyBy(new DbClause.LongClause("pending_transaction_id", pendingTransactionId), from, to);
     }
 
     public static int getCount(long pendingTransactionId){
-        return voteTable.getCount(new DbClause.LongClause("pending_transaction_id",pendingTransactionId));
+        return votePhasedTable.getCount(new DbClause.LongClause("pending_transaction_id", pendingTransactionId));
     }
 
     static boolean addVote(PendingTransactionPoll poll, Transaction transaction) {
-        voteTable.insert(new VotePhased(transaction, poll.getId()));
+        votePhasedTable.insert(new VotePhased(transaction, poll.getId()));
         return poll.getVotingModel() == Constants.VOTING_MODEL_ACCOUNT
                 && VotePhased.getCount(poll.getId()) >= poll.getQuorum();
     }
 
     static boolean isVoteGiven(long pendingTransactionId, long voterId) {
         DbClause clause = new DbClause.LongClause("pending_transaction_id", pendingTransactionId).and(new DbClause.LongClause("voter_id", voterId));
-        return voteTable.getCount(clause) > 0;
+        return votePhasedTable.getCount(clause) > 0;
     }
 }
