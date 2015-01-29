@@ -751,8 +751,8 @@ public abstract class TransactionType {
                     throw new NxtException.NotValidException("Invalid currency id for voting: " + attachment.getJSONObject());
                 }
 
-                if (attachment.getFinishBlockHeight() < currentHeight + Constants.VOTING_MIN_VOTE_DURATION
-                    || attachment.getFinishBlockHeight() > currentHeight + Constants.VOTING_MAX_VOTE_DURATION) {
+                if (attachment.getFinishHeight() < currentHeight + Constants.VOTING_MIN_VOTE_DURATION
+                    || attachment.getFinishHeight() > currentHeight + Constants.VOTING_MAX_VOTE_DURATION) {
                     throw new NxtException.NotCurrentlyValidException("Invalid finishing height" + attachment.getJSONObject());
                 }
             }

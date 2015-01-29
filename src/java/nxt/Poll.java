@@ -52,7 +52,7 @@ public final class Poll extends AbstractPoll {
                 pstmt.setString(++i, poll.getName());
                 pstmt.setString(++i, poll.getDescription());
                 pstmt.setObject(++i, poll.getOptions());
-                pstmt.setInt(++i, poll.getFinishBlockHeight());
+                pstmt.setInt(++i, poll.getFinishHeight());
                 pstmt.setByte(++i, poll.getVotingModel());
                 pstmt.setLong(++i, poll.getMinBalance());
                 pstmt.setByte(++i, poll.getMinBalanceModel());
@@ -121,7 +121,7 @@ public final class Poll extends AbstractPoll {
     }
 
     private Poll(long id, long accountId, Attachment.MessagingPollCreation attachment) {
-        super(accountId, attachment.getFinishBlockHeight(), attachment.getVotingModel(), attachment.getHoldingId(),
+        super(accountId, attachment.getFinishHeight(), attachment.getVotingModel(), attachment.getHoldingId(),
                 attachment.getMinBalance(), attachment.getMinBalanceModel());
 
         this.id = id;
@@ -154,7 +154,7 @@ public final class Poll extends AbstractPoll {
         this.maxRangeValue = rs.getByte("max_range_value");
     }
 
-    public boolean isFinished() { return finishBlockHeight < Nxt.getBlockchain().getHeight(); }
+    public boolean isFinished() { return finishHeight < Nxt.getBlockchain().getHeight(); }
 
     static void addPoll(Transaction transaction, Attachment.MessagingPollCreation attachment) {
         Poll poll = new Poll(transaction.getId(), transaction.getSenderId(), attachment);
@@ -192,7 +192,7 @@ public final class Poll extends AbstractPoll {
         if (Constants.isPollsProcessing && isFinished()) {
             return pollResultsTable.get(pollResultsDbKeyFactory.newKey(id));
         } else {
-            int countHeight = Math.min(finishBlockHeight, Nxt.getBlockchain().getHeight());
+            int countHeight = Math.min(finishHeight, Nxt.getBlockchain().getHeight());
             if (countHeight < Nxt.getBlockchainProcessor().getMinRollbackHeight()) {
                 return null;
             }

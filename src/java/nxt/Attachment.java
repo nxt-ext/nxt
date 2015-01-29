@@ -393,7 +393,7 @@ public interface Attachment extends Appendix {
             private final String pollDescription;
             private final String[] pollOptions;
 
-            private final int finishBlockHeight;
+            private final int finishHeight;
             private final byte votingModel;
 
             private long minBalance = 0;
@@ -408,14 +408,14 @@ public interface Attachment extends Appendix {
             private long holdingId;
 
             public PollBuilder(final String pollName, final String pollDescription, final String[] pollOptions,
-                               final int finishBlockHeight, final byte votingModel,
+                               final int finishHeight, final byte votingModel,
                                byte minNumberOfOptions, byte maxNumberOfOptions,
                                byte minRangeValue, byte maxRangeValue) {
                 this.pollName = pollName;
                 this.pollDescription = pollDescription;
                 this.pollOptions = pollOptions;
 
-                this.finishBlockHeight = finishBlockHeight;
+                this.finishHeight = finishHeight;
                 this.votingModel = votingModel;
                 this.minNumberOfOptions = minNumberOfOptions;
                 this.maxNumberOfOptions = maxNumberOfOptions;
@@ -461,7 +461,7 @@ public interface Attachment extends Appendix {
         private final String pollDescription;
         private final String[] pollOptions;
 
-        private final int finishBlockHeight;
+        private final int finishHeight;
         private final byte votingModel;
 
         private byte minNumberOfOptions = Constants.VOTING_DEFAULT_MIN_NUMBER_OF_CHOICES, maxNumberOfOptions; //only for choice voting
@@ -476,7 +476,7 @@ public interface Attachment extends Appendix {
             this.pollName = Convert.readString(buffer, buffer.getShort(), Constants.MAX_POLL_NAME_LENGTH);
             this.pollDescription = Convert.readString(buffer, buffer.getShort(), Constants.MAX_POLL_DESCRIPTION_LENGTH);
 
-            this.finishBlockHeight = buffer.getInt();
+            this.finishHeight = buffer.getInt();
 
             int numberOfOptions = buffer.get();
             if (numberOfOptions > Constants.MAX_POLL_OPTION_COUNT) {
@@ -506,7 +506,7 @@ public interface Attachment extends Appendix {
 
             this.pollName = ((String) attachmentData.get("name")).trim();
             this.pollDescription = ((String) attachmentData.get("description")).trim();
-            this.finishBlockHeight = ((Long) attachmentData.get("finishBlockHeight")).intValue();
+            this.finishHeight = ((Long) attachmentData.get("finishHeight")).intValue();
 
             JSONArray options = (JSONArray) attachmentData.get("options");
             this.pollOptions = new String[options.size()];
@@ -529,7 +529,7 @@ public interface Attachment extends Appendix {
             this.pollName = builder.pollName;
             this.pollDescription = builder.pollDescription;
             this.pollOptions = builder.pollOptions;
-            this.finishBlockHeight = builder.finishBlockHeight;
+            this.finishHeight = builder.finishHeight;
 
             this.votingModel = builder.votingModel;
 
@@ -572,7 +572,7 @@ public interface Attachment extends Appendix {
             buffer.put(name);
             buffer.putShort((short) description.length);
             buffer.put(description);
-            buffer.putInt(finishBlockHeight);
+            buffer.putInt(finishHeight);
             buffer.put((byte) options.length);
             for (byte[] option : options) {
                 buffer.putShort((short) option.length);
@@ -594,7 +594,7 @@ public interface Attachment extends Appendix {
         void putMyJSON(JSONObject attachment) {
             attachment.put("name", this.pollName);
             attachment.put("description", this.pollDescription);
-            attachment.put("finishBlockHeight", this.finishBlockHeight);
+            attachment.put("finishHeight", this.finishHeight);
             JSONArray options = new JSONArray();
             if (this.pollOptions != null) {
                 Collections.addAll(options, this.pollOptions);
@@ -628,8 +628,8 @@ public interface Attachment extends Appendix {
             return pollDescription;
         }
 
-        public int getFinishBlockHeight() {
-            return finishBlockHeight;
+        public int getFinishHeight() {
+            return finishHeight;
         }
 
         public String[] getPollOptions() {

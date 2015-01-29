@@ -73,10 +73,10 @@ public class PendingTransactionPoll extends AbstractPoll {
 
     static void init() {}
 
-    private PendingTransactionPoll(long id, long accountId, int finishBlockHeight,
+    private PendingTransactionPoll(long id, long accountId, int finishHeight,
                                   byte votingModel, long quorum, long voteThreshold,
                                   long assetId, long[] whitelist, long[] blacklist) {
-        super(accountId, finishBlockHeight, votingModel, assetId, voteThreshold);
+        super(accountId, finishHeight, votingModel, assetId, voteThreshold);
         this.id = id;
         this.dbKey = pollDbKeyFactory.newKey(this.id);
         this.quorum = quorum;
@@ -209,7 +209,7 @@ public class PendingTransactionPoll extends AbstractPoll {
             int i = 0;
             pstmt.setLong(++i, getId());
             pstmt.setLong(++i, getAccountId());
-            pstmt.setInt(++i, getFinishBlockHeight());
+            pstmt.setInt(++i, getFinishHeight());
             pstmt.setByte(++i, signersCount);
             pstmt.setBoolean(++i, isBlacklist);
             pstmt.setByte(++i, getVotingModel());

@@ -323,7 +323,7 @@ final class JSONData {
         JSONArray options = new JSONArray();
         Collections.addAll(options, poll.getOptions());
         json.put("options", options);
-        json.put("finishBlockHeight", poll.getFinishBlockHeight());
+        json.put("finishHeight", poll.getFinishHeight());
 
         json.put("votingModel", poll.getVotingModel());
 

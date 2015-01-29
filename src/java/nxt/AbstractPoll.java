@@ -9,25 +9,25 @@ import java.sql.SQLException;
 
 abstract class AbstractPoll {
     protected final long accountId;
-    protected final int finishBlockHeight;
+    protected final int finishHeight;
     protected final byte votingModel;
 
     protected final long holdingId; //either asset id or MS coin id
     protected final long minBalance;
     protected byte minBalanceModel = Constants.VOTING_MINBALANCE_UNDEFINED;
 
-    AbstractPoll(long accountId, int finishBlockHeight,
+    AbstractPoll(long accountId, int finishHeight,
                  byte votingModel, long holdingId,
                  long minBalance) {
-        this(accountId, finishBlockHeight, votingModel, holdingId, minBalance,
+        this(accountId, finishHeight, votingModel, holdingId, minBalance,
                 Constants.VOTING_MINBALANCE_UNDEFINED);
     }
 
-    AbstractPoll(long accountId, int finishBlockHeight,
+    AbstractPoll(long accountId, int finishHeight,
                  byte votingModel, long holdingId,
                  long minBalance, byte minBalanceModel) {
         this.accountId = accountId;
-        this.finishBlockHeight = finishBlockHeight;
+        this.finishHeight = finishHeight;
         this.votingModel = votingModel;
         this.holdingId = holdingId;
         this.minBalance = minBalance;
@@ -36,7 +36,7 @@ abstract class AbstractPoll {
 
     AbstractPoll(ResultSet rs) throws SQLException {
         this.accountId = rs.getLong("account_id");
-        this.finishBlockHeight = rs.getInt("finish_height");
+        this.finishHeight = rs.getInt("finish_height");
         this.votingModel = rs.getByte("voting_model");
         this.holdingId = rs.getLong("holding_id");
         this.minBalance = rs.getLong("min_balance");
@@ -52,8 +52,8 @@ abstract class AbstractPoll {
         return votingModel;
     }
 
-    public final int getFinishBlockHeight() {
-        return finishBlockHeight;
+    public final int getFinishHeight() {
+        return finishHeight;
     }
 
     public final long getMinBalance() {
