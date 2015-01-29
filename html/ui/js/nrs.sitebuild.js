@@ -39,5 +39,26 @@ var NRS = (function(NRS, $, undefined) {
     	jQuery.ajaxSetup({ async: true });
     }
 
+    NRS.loadPageHTMLTemplates = function(options) {
+        //Not used stub, for future use
+    }
+
+    NRS.loadModalHTMLTemplates = function(options) {
+        jQuery.ajaxSetup({ async: false });
+        
+        $.get("html/modals/templates.html #secret_phrase_modal_template", '', function (data) {
+            var $template = $(data);
+
+            $('div [data-include-modal-template="secret_phrase_modal_template"]').each(function(i) {
+                $(this).append($template.children().clone());
+                var id = 'secret_phrase_modal_passphrase_' + String(i);
+                $(this).find('label').attr('for', id);
+                $(this).find('input').attr('id', id);
+            });
+        });
+        
+        jQuery.ajaxSetup({ async: true });
+    }
+
 return NRS;
 }(NRS || {}, jQuery));
