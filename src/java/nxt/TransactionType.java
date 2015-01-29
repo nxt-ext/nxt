@@ -182,22 +182,19 @@ public abstract class TransactionType {
     abstract boolean applyAttachmentUnconfirmed(Transaction transaction, Account senderAccount);
 
     final void apply(Transaction transaction, Account senderAccount, Account recipientAccount) {
-        long amount = transaction.getAmountNQT();
-
-        senderAccount.addToBalanceNQT(-transaction.getFeeNQT());
-
         if (transaction.getReferencedTransactionFullHash() != null
                 && transaction.getTimestamp() > Constants.REFERENCED_TRANSACTION_FULL_HASH_BLOCK_TIMESTAMP) {
             senderAccount.addToUnconfirmedBalanceNQT(Constants.UNCONFIRMED_POOL_DEPOSIT_NQT);
         }
-
-        if (transaction.getTwoPhased() == null){
-            senderAccount.addToBalanceNQT(-amount);
-
+        if (transaction.getTwoPhased() == null) {
+            long amount = transaction.getAmountNQT();
+            senderAccount.addToBalanceNQT(-Convert.safeAdd(amount, transaction.getFeeNQT()));
             if (recipientAccount != null) {
                 recipientAccount.addToBalanceAndUnconfirmedBalanceNQT(amount);
             }
             applyAttachment(transaction, senderAccount, recipientAccount);
+        } else {
+            senderAccount.addToBalanceNQT(-transaction.getFeeNQT());
         }
     }
 
