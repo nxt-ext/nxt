@@ -357,6 +357,7 @@ final class JSONData {
     static JSONObject pollResults(Poll poll, List<Poll.PartialPollResult> results) {
         JSONObject json = new JSONObject();
         json.put("poll", Convert.toUnsignedLong(poll.getId()));
+        json.put("finished", poll.isFinished());
 
         JSONArray resultsJson = new JSONArray();
 

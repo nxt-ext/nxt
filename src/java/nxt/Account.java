@@ -394,9 +394,6 @@ public final class Account {
     }
 
     public static int getAssetAccountCount(long assetId, int height) {
-        if (height < 0) {
-            return getAssetAccountCount(assetId);
-        }
         return accountAssetTable.getCount(new DbClause.LongClause("asset_id", assetId), height);
     }
 
@@ -405,9 +402,6 @@ public final class Account {
     }
 
     public static int getAccountAssetCount(long accountId, int height) {
-        if (height < 0) {
-            return getAccountAssetCount(accountId);
-        }
         return accountAssetTable.getCount(new DbClause.LongClause("account_id", accountId), height);
     }
 
@@ -416,9 +410,6 @@ public final class Account {
     }
 
     public static int getCurrencyAccountCount(long currencyId, int height) {
-        if (height < 0) {
-            return getCurrencyAccountCount(currencyId);
-        }
         return accountCurrencyTable.getCount(new DbClause.LongClause("currency_id", currencyId), height);
     }
 
@@ -427,9 +418,6 @@ public final class Account {
     }
 
     public static int getAccountCurrencyCount(long accountId, int height) {
-        if (height < 0) {
-            return getAccountCurrencyCount(accountId);
-        }
         return accountCurrencyTable.getCount(new DbClause.LongClause("account_id", accountId), height);
     }
 
@@ -498,9 +486,6 @@ public final class Account {
     }
 
     public static DbIterator<AccountAsset> getAssetAccounts(long assetId, int height, int from, int to) {
-        if (height < 0) {
-            return getAssetAccounts(assetId, from, to);
-        }
         return accountAssetTable.getManyBy(new DbClause.LongClause("asset_id", assetId), height, from, to, " ORDER BY quantity DESC, account_id ");
     }
 
@@ -817,9 +802,6 @@ public final class Account {
     }
 
     public AccountAsset getAsset(long assetId, int height) {
-        if (height < 0) {
-            return getAsset(assetId);
-        }
         return accountAssetTable.get(accountAssetDbKeyFactory.newKey(this.id, assetId), height);
     }
 
@@ -840,9 +822,6 @@ public final class Account {
     }
 
     public AccountCurrency getCurrency(long currencyId, int height) {
-        if (height < 0) {
-            return getCurrency(currencyId);
-        }
         return accountCurrencyTable.get(accountCurrencyDbKeyFactory.newKey(this.id, currencyId), height);
     }
 
