@@ -7,18 +7,18 @@ import java.sql.SQLException;
  * Abstract poll structure, parent for concrete poll implementations e.g. Poll or PendingTransactionPoll
  */
 
-public abstract class AbstractPoll {
+abstract class AbstractPoll {
     protected final long accountId;
     protected final int finishBlockHeight;
     protected final byte votingModel;
 
-    protected final long holdingId; //whether asset id or MS coin id
+    protected final long holdingId; //either asset id or MS coin id
     protected final long minBalance;
     protected byte minBalanceModel = Constants.VOTING_MINBALANCE_UNDEFINED;
 
     AbstractPoll(long accountId, int finishBlockHeight,
                  byte votingModel, long holdingId,
-                 long minBalance){
+                 long minBalance) {
         this(accountId, finishBlockHeight, votingModel, holdingId, minBalance,
                 Constants.VOTING_MINBALANCE_UNDEFINED);
     }

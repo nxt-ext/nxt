@@ -705,10 +705,10 @@ public abstract class TransactionType {
                 long minBalance = attachment.getMinBalance();
                 byte minBalanceModel = attachment.getMinBalanceModel();
 
-                if(minBalanceModel != Constants.VOTING_MINBALANCE_UNDEFINED
+                if (minBalanceModel != Constants.VOTING_MINBALANCE_UNDEFINED
                         && minBalanceModel != Constants.VOTING_MINBALANCE_ASSET
                         && minBalanceModel != Constants.VOTING_MINBALANCE_BYBALANCE
-                        && minBalanceModel != Constants.VOTING_MINBALANCE_COIN){
+                        && minBalanceModel != Constants.VOTING_MINBALANCE_COIN) {
                     throw new NxtException.NotValidException("Invalid min balance model " + attachment.getJSONObject());
                 }
 
@@ -731,7 +731,7 @@ public abstract class TransactionType {
                     throw new NxtException.NotValidException("Min balance == 0 for by-account voting"+ attachment.getJSONObject());
                 }
 
-                if (minBalance > 0 && minBalanceModel == Constants.VOTING_MINBALANCE_UNDEFINED){
+                if (minBalance > 0 && minBalanceModel == Constants.VOTING_MINBALANCE_UNDEFINED) {
                     throw new NxtException.NotValidException("Invalid min balance model: " + attachment.getJSONObject());
                 }
 
@@ -753,7 +753,7 @@ public abstract class TransactionType {
 
                 if (attachment.getFinishBlockHeight() < currentHeight + Constants.VOTING_MIN_VOTE_DURATION
                     || attachment.getFinishBlockHeight() > currentHeight + Constants.VOTING_MAX_VOTE_DURATION) {
-                    throw new NxtException.NotValidException("Invalid finishing height" + attachment.getJSONObject());
+                    throw new NxtException.NotCurrentlyValidException("Invalid finishing height" + attachment.getJSONObject());
                 }
             }
 

@@ -73,7 +73,7 @@ public class PendingTransactionPoll extends AbstractPoll {
 
     static void init() {}
 
-    PendingTransactionPoll(long id, long accountId, int finishBlockHeight,
+    private PendingTransactionPoll(long id, long accountId, int finishBlockHeight,
                                   byte votingModel, long quorum, long voteThreshold,
                                   long assetId, long[] whitelist, long[] blacklist) {
         super(accountId, finishBlockHeight, votingModel, assetId, voteThreshold);
@@ -124,7 +124,10 @@ public class PendingTransactionPoll extends AbstractPoll {
         return id;
     }
 
-    public static void addPoll(PendingTransactionPoll poll){
+    static void addPoll(Transaction transaction, Appendix.TwoPhased appendix) {
+        PendingTransactionPoll poll = new PendingTransactionPoll(transaction.getId(), transaction.getSenderId(),
+                appendix.getMaxHeight(), appendix.getVotingModel(), appendix.getQuorum(), appendix.getMinBalance(),
+                appendix.getHoldingId(), appendix.getWhitelist(), appendix.getBlacklist());
         pendingTransactionsTable.insert(poll);
 
         long[] signers;
@@ -140,7 +143,7 @@ public class PendingTransactionPoll extends AbstractPoll {
         }
     }
 
-    public static DbIterator<PendingTransactionPoll> finishing(int height){
+    public static DbIterator<PendingTransactionPoll> finishing(int height) {
         return pendingTransactionsTable.getManyBy(new DbClause.IntClause("finish_height", height), 0, Integer.MAX_VALUE);
     }
 
