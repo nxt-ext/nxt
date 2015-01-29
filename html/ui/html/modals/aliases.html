@@ -125,7 +125,7 @@
                     <div data-replace-with-modal-template="add_message_modal_template"></div>
                     <div data-replace-with-modal-template="secret_phrase_modal_template"></div>
                     <div data-replace-with-modal-template="advanced_modal_template"></div>
-                    
+
                     <input type="hidden" name="request_type" value="buyAlias" />
                     <input type="hidden" name="recipient" id="buy_alias_recipient" value="" />
                 </form>
@@ -170,54 +170,10 @@
                         <label for="transfer_alias_recipient_public_key" data-i18n="recipient_public_key">Recipient Public Key</label>
                         <input type="text" class="form-control" name="recipientPublicKey" id="transfer_alias_recipient_public_key" placeholder="Public Key" data-i18n="[placeholder]public_key" tabindex="2" spellcheck="false" />
                     </div>
-                    <div class="form-group">
-                        <input type="checkbox" name="add_message" id="transfer_alias_add_message" class="add_message" tabindex="6" /> <label for="transfer_alias_add_message" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_message_q">Add a Message?</span></label>
-                    </div>
-                    <div class="form-group optional_message">
-                        <label for="transfer_alias_message" data-i18n="message">MESSAGE</label>
-                        <textarea class="form-control" id="transfer_alias_message" name="message" rows="4" tabindex="3"></textarea>
-                         <div style="margin-top:3px">
-                            <label for="transfer_alias_encrypt_message" style="font-weight:normal;color:#666"><input type="checkbox" name="encrypt_message" id="transfer_alias_encrypt_message" value="1" data-default="checked" checked="checked" /> <span data-i18n="encrypt_message">Encrypt Message</span></label>
-                        </div>
-                    </div>
-                    <div class="row advanced">
-                        <div class="col-xs-6 col-sm-6 col-md-6">
-                            <div class="form-group">
-                                <label for="transfer_alias_fee" data-i18n="fee">FEE</label>
-                                <div class="input-group">
-                                    <input type="number" name="feeNXT" id="transfer_alias_fee" class="form-control" step="any" min="1" placeholder="Fee" data-i18n="[placeholder]fee" data-default="1" value="1" tabindex="4">
-                                    <span class="input-group-addon">NXT</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-xs-6 col-sm-6 col-md-6">
-                            <div class="form-group">
-                                <label for="transfer_alias_deadline" data-i18n="deadline_hours">DEADLINE (HOURS)</label>
-                                <input type="number" name="deadline" id="transfer_alias_deadline" class="form-control" placeholder="Deadline" data-i18n="[placeholder]deadline" min="1" data-default="24" value="24" tabindex="5">
-                            </div>
-                        </div>
-                    </div>
-                    <div class="form-group secret_phrase">
-                        <label for="transfer_alias_password" data-i18n="passphrase">PASSPHRASE</label>
-                        <input type="password" name="secretPhrase" id="transfer_alias_password" class="form-control" placeholder="" tabindex="6">
-                    </div>
-                    <div class="form-group advanced">
-                        <label for="transfer_alias_referenced_transaction" data-i18n="referenced_transaction_hash">REFERENCED TRANSACTION HASH</label>
-                        <input type="text" class="form-control" name="referencedTransactionFullHash" id="transfer_alias_referenced_transaction" placeholder="Referenced Transaction Full Hash" data-i18n="[placeholder]referenced_transaction_full_hash" tabindex="7" spellcheck="false" />
-                    </div>
-                    <div class="form-group advanced" style="margin-bottom:5px;">
-                        <input type="checkbox" name="doNotBroadcast" id="transfer_alias_do_not_broadcast" value="1" /> <label for="transfer_alias_do_not_broadcast" style="font-weight:normal;" tabindex="8" data-i18n="do_not_broadcast">Do Not Broadcast</label>
-                    </div>
-                    <div class="form-group advanced">
-                        <input type="checkbox" name="add_note_to_self" id="transfer_alias_add_note_to_self" class="add_note_to_self" tabindex="9" /> <label for="transfer_alias_add_note_to_self" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_note_to_self">Add Note to Self?</span></label>
-                    </div>
-                    <div class="form-group advanced optional_note">
-                        <label for="transfer_alias_note_to_self" data-i18n="note_to_self">Note to Self</label>
-                        <textarea class="form-control" id="transfer_alias_note_to_self" name="note_to_self" rows="4" tabindex="10"></textarea>
-                        <div style="margin-top:3px;">
-                            <label style="font-weight:normal;color:#666" data-i18n="note_is_encrypted">This note is encrypted.</span></label>
-                        </div>
-                    </div>
+                    <div data-replace-with-modal-template="add_message_modal_template"></div>
+                    <div data-replace-with-modal-template="secret_phrase_modal_template"></div>
+                    <div data-replace-with-modal-template="advanced_modal_template"></div>
+
                     <div class="callout account_info" style="display:none;margin-bottom: 0;"></div>
                     <input type="hidden" name="request_type" value="sellAlias" />
                     <input type="hidden" name="modal" value="transfer_alias" />
@@ -314,54 +270,10 @@
                         <input type="hidden" name="aliasName" value="" />
                         <input type="hidden" name="modal" value="cancel_alias_sale" />
                     </div>
-                    <div class="row advanced">
-                        <div class="col-xs-6 col-sm-6 col-md-6">
-                            <div class="form-group">
-                                <label for="cancel_alias_sale_fee" data-i18n="fee">FEE</label>
-                                <div class="input-group">
-                                    <input type="number" name="feeNXT" id="cancel_alias_sale_fee" class="form-control" step="any" min="1" placeholder="Fee" data-i18n="[placeholder]fee" data-default="1" value="1" tabindex="1">
-                                    <span class="input-group-addon">NXT</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-xs-6 col-sm-6 col-md-6">
-                            <div class="form-group">
-                                <label for="cancel_alias_sale_deadline" data-i18n="deadline_hours">DEADLINE (HOURS)</label>
-                                <input type="number" name="deadline" id="cancel_alias_sale_deadline" class="form-control" placeholder="Deadline" data-i18n="[placeholder]deadline" min="1" data-default="24" value="24" tabindex="2">
-                            </div>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <input type="checkbox" name="add_message" id="cancel_alias_sale_add_message" class="add_message" tabindex="6" /> <label for="cancel_alias_sale_add_message" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_message_q">Add a Message?</span></label>
-                    </div>
-                    <div class="form-group optional_message">
-                        <label for="cancel_alias_sale_message" data-i18n="message">MESSAGE</label>
-                        <textarea class="form-control" id="cancel_alias_sale_message" name="message" rows="4" tabindex="3"></textarea>
-                         <div style="margin-top:3px">
-                            <label for="cancel_alias_sale_encrypt_message" style="font-weight:normal;color:#666"><input type="checkbox" name="encrypt_message" id="cancel_alias_sale_encrypt_message" value="1" data-default="unchecked" /> <span data-i18n="encrypt_message">Encrypt Message</span></label>
-                        </div>
-                    </div>
-                    <div class="form-group secret_phrase">
-                        <label for="cancel_alias_sale_password" data-i18n="passphrase">PASSPHRASE</label>
-                        <input type="password" name="secretPhrase" id="cancel_alias_sale_password" class="form-control" placeholder="" tabindex="5">
-                    </div>
-                    <div class="form-group advanced">
-                        <label for="cancel_alias_sale_referenced_transaction" data-i18n="referenced_transaction_hash">REFERENCED TRANSACTION HASH</label>
-                        <input type="text" class="form-control" name="referencedTransactionFullHash" id="cancel_alias_sale_referenced_transaction" placeholder="Referenced Transaction Full Hash" data-i18n="[placeholder]referenced_transaction_full_hash" tabindex="6" spellcheck="false" />
-                    </div>
-                    <div class="form-group advanced" style="margin-bottom:0;">
-                        <input type="checkbox" name="doNotBroadcast" id="cancel_alias_sale_do_not_broadcast" value="1" /> <label for="cancel_alias_sale_do_not_broadcast" style="font-weight:normal;" tabindex="7" data-i18n="do_not_broadcast">Do Not Broadcast</label>
-                    </div>
-                    <div class="form-group advanced">
-                        <input type="checkbox" name="add_note_to_self" id="cancel_alias_sale_add_note_to_self" class="add_note_to_self" tabindex="8" /> <label for="cancel_alias_sale_add_note_to_self" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_note_to_self">Add Note to Self?</span></label>
-                    </div>
-                    <div class="form-group advanced optional_note">
-                        <label for="cancel_alias_sale_note_to_self" data-i18n="note_to_self">Note to Self</label>
-                        <textarea class="form-control" id="cancel_alias_sale_note_to_self" name="note_to_self" rows="4" tabindex="9"></textarea>
-                        <div style="margin-top:3px;">
-                            <label style="font-weight:normal;color:#666" data-i18n="note_is_encrypted">This note is encrypted.</span></label>
-                        </div>
-                    </div>
+                    <div data-replace-with-modal-template="add_message_modal_template"></div>
+                    <div data-replace-with-modal-template="secret_phrase_modal_template"></div>
+                    <div data-replace-with-modal-template="advanced_modal_template"></div>
+                    
                     <input type="hidden" name="request_type" value="sellAlias" />
                 </form>
             </div>
