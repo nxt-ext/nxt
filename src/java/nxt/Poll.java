@@ -250,14 +250,10 @@ public final class Poll extends AbstractPoll {
         return results;
     }
 
-
-    //TODO: pass accountId instead of Account to calcWeight, then when voting by asset balance there is no need to ever get
-    // the actual Account object, this will help performance
     private long[] countVote(Vote vote) {
         final long[] partialResult = new long[options.length];
 
-        final Account voter = Account.getAccount(vote.getVoterId());
-        final long weight = calcWeight(voter);
+        final long weight = calcWeight(vote.getVoterId());
 
         final byte[] optVals = vote.getVote();
 

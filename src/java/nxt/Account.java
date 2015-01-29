@@ -515,9 +515,34 @@ public final class Account {
         return accountCurrencyTable.getManyBy(new DbClause.LongClause("currency_id", currencyId), height, from, to);
     }
 
-    public static long getAssetBalanceQNT(final long accountId, final long assetId, final int height) {
-        final AccountAsset accountAsset = accountAssetTable.get(accountAssetDbKeyFactory.newKey(accountId, assetId), height);
+    public static long getAssetBalanceQNT(long accountId, long assetId, int height) {
+        AccountAsset accountAsset = accountAssetTable.get(accountAssetDbKeyFactory.newKey(accountId, assetId), height);
         return accountAsset == null ? 0 : accountAsset.quantityQNT;
+    }
+
+    public static long getAssetBalanceQNT(long accountId, long assetId) {
+        AccountAsset accountAsset = accountAssetTable.get(accountAssetDbKeyFactory.newKey(accountId, assetId));
+        return accountAsset == null ? 0 : accountAsset.quantityQNT;
+    }
+
+    public static long getUnconfirmedAssetBalanceQNT(long accountId, long assetId) {
+        AccountAsset accountAsset = accountAssetTable.get(accountAssetDbKeyFactory.newKey(accountId, assetId));
+        return accountAsset == null ? 0 : accountAsset.unconfirmedQuantityQNT;
+    }
+
+    public static long getCurrencyUnits(long accountId, long currencyId, int height) {
+        AccountCurrency accountCurrency = accountCurrencyTable.get(accountCurrencyDbKeyFactory.newKey(accountId, currencyId), height);
+        return accountCurrency == null ? 0 : accountCurrency.units;
+    }
+
+    public static long getCurrencyUnits(long accountId, long currencyId) {
+        AccountCurrency accountCurrency = accountCurrencyTable.get(accountCurrencyDbKeyFactory.newKey(accountId, currencyId));
+        return accountCurrency == null ? 0 : accountCurrency.units;
+    }
+
+    public static long getUnconfirmedCurrencyUnits(long accountId, long currencyId) {
+        AccountCurrency accountCurrency = accountCurrencyTable.get(accountCurrencyDbKeyFactory.newKey(accountId, currencyId));
+        return accountCurrency == null ? 0 : accountCurrency.unconfirmedUnits;
     }
 
     static void init() {}
@@ -799,18 +824,15 @@ public final class Account {
     }
 
     public long getAssetBalanceQNT(long assetId) {
-        AccountAsset accountAsset = accountAssetTable.get(accountAssetDbKeyFactory.newKey(this.id, assetId));
-        return accountAsset == null ? 0 : accountAsset.quantityQNT;
+        return getAssetBalanceQNT(this.id, assetId);
     }
 
     public long getAssetBalanceQNT(long assetId, int height) {
-        AccountAsset accountAsset = accountAssetTable.get(accountAssetDbKeyFactory.newKey(this.id, assetId), height);
-        return accountAsset == null ? 0 : accountAsset.quantityQNT;
+        return getAssetBalanceQNT(this.id, assetId, height);
     }
 
     public long getUnconfirmedAssetBalanceQNT(long assetId) {
-        AccountAsset accountAsset = accountAssetTable.get(accountAssetDbKeyFactory.newKey(this.id, assetId));
-        return accountAsset == null ? 0 : accountAsset.unconfirmedQuantityQNT;
+        return getUnconfirmedAssetBalanceQNT(this.id, assetId);
     }
 
     public AccountCurrency getCurrency(long currencyId) {
@@ -836,13 +858,15 @@ public final class Account {
     }
 
     public long getCurrencyUnits(long currencyId) {
-        AccountCurrency accountCurrency = accountCurrencyTable.get(accountCurrencyDbKeyFactory.newKey(this.id, currencyId));
-        return accountCurrency == null ? 0 : accountCurrency.units;
+        return getCurrencyUnits(this.id, currencyId);
+    }
+
+    public long getCurrencyUnits(long currencyId, int height) {
+        return getCurrencyUnits(this.id, currencyId, height);
     }
 
     public long getUnconfirmedCurrencyUnits(long currencyId) {
-        AccountCurrency accountCurrency = accountCurrencyTable.get(accountCurrencyDbKeyFactory.newKey(this.id, currencyId));
-        return accountCurrency == null ? 0 : accountCurrency.unconfirmedUnits;
+        return getUnconfirmedCurrencyUnits(this.id, currencyId);
     }
 
     public long getCurrentLesseeId() {
