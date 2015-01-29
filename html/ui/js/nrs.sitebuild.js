@@ -81,6 +81,14 @@ var NRS = (function(NRS, $, undefined) {
                 var context = { name: name };
                 $(this).replaceWith(template(context));
             });
+
+            html = $(data).filter('div#advanced_modal_no_fee_deadline_template').html();
+            template = Handlebars.compile(html);
+            $('div[data-replace-with-modal-template="advanced_modal_no_fee_deadline_template"]').each(function(i) {
+                var name = $(this).closest('.modal').attr('id').replace('_modal', '');
+                var context = { name: name };
+                $(this).replaceWith(template(context));
+            });
         });
 
         jQuery.ajaxSetup({ async: true });
