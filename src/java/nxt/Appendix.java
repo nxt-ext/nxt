@@ -565,14 +565,10 @@ public interface Appendix {
 
         @Override
         void validate(Transaction transaction) throws NxtException.ValidationException {
-            if (votingModel == Constants.VOTING_MODEL_BALANCE) {
-                throw new NxtException.NotValidException("Pending transaction with by-balance voting is prohibited");
-            }
-
             if (votingModel != Constants.VOTING_MODEL_ACCOUNT &&
                     votingModel != Constants.VOTING_MODEL_ASSET &&
                     votingModel != Constants.VOTING_MODEL_CURRENCY) {
-                throw new NxtException.NotValidException("Invalid voting model");
+                throw new NxtException.NotValidException("Invalid voting model for pending transaction");
             }
 
             if (whitelist.length * (-blacklist.length) < 0) {
@@ -584,11 +580,11 @@ public interface Appendix {
             }
 
             if (votingModel == Constants.VOTING_MODEL_ACCOUNT && minBalance != 0) {
-                throw new NxtException.NotValidException("minBalance has to be zero when by-account voting on pending transaction");
+                throw new NxtException.NotValidException("minBalance has to be zero for by-account voting on pending transaction");
             }
 
             if (votingModel == Constants.VOTING_MODEL_ACCOUNT && holdingId != 0) {
-                throw new NxtException.NotValidException("holdingId provided in by-account voting");
+                throw new NxtException.NotValidException("holdingId is provided for by-account voting");
             }
 
             if (whitelist.length > Constants.PENDING_TRANSACTIONS_MAX_WHITELIST_SIZE) {
