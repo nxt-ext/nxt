@@ -29,6 +29,21 @@ public final class Vote {
         protected void save(Connection con, Vote vote) throws SQLException {
             vote.save(con);
         }
+
+        @Override
+        public void trim(int height) {
+            super.trim(height);
+            try (Connection con = Db.db.getConnection();
+                 DbIterator<Poll> polls = Poll.getPollsFinishingAtOrBefore(height);
+                 PreparedStatement pstmt = con.prepareStatement("DELETE FROM vote WHERE poll_id = ?")) {
+                for (Poll poll : polls) {
+                    pstmt.setLong(1, poll.getId());
+                    pstmt.executeUpdate();
+                }
+            } catch (SQLException e) {
+                throw new RuntimeException(e.toString(), e);
+            }
+        }
     };
 
     public static int getCount() {

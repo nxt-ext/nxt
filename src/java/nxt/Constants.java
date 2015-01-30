@@ -20,7 +20,6 @@ public final class Constants {
         }
     }
 
-    public static final boolean isPollsProcessing = Nxt.getBooleanProperty("nxt.processPolls");
     public static final boolean isVotingDataTrimmed = Nxt.getBooleanProperty("nxt.trimVotingData");
     public static final int VOTING_DATA_TIME_TO_LIVE = Nxt.getIntProperty("nxt.votingDataTimeToLive");
 

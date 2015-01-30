@@ -19,6 +19,8 @@ import java.util.List;
 
 public final class Poll extends AbstractPoll {
 
+    private static final boolean isPollsProcessing = Nxt.getBooleanProperty("nxt.processPolls");
+
     private static final DbKey.LongKeyFactory<Poll> pollDbKeyFactory = new DbKey.LongKeyFactory<Poll>("id") {
         @Override
         public DbKey newKey(Poll poll) {
@@ -120,21 +122,17 @@ public final class Poll extends AbstractPoll {
     static void init() {}
 
     static {
-        Nxt.getBlockchainProcessor().addListener(new Listener<Block>() {
-            @Override
-            public void notify(Block block) {
-                int height = block.getHeight();
-                if (height >= Constants.VOTING_SYSTEM_BLOCK) {
-                    if (Constants.isPollsProcessing) {
+        if (Poll.isPollsProcessing) {
+            Nxt.getBlockchainProcessor().addListener(new Listener<Block>() {
+                @Override
+                public void notify(Block block) {
+                    int height = block.getHeight();
+                    if (height >= Constants.VOTING_SYSTEM_BLOCK) {
                         Poll.checkPolls(height);
                     }
-                    int purgeHeight = Nxt.getBlockchainProcessor().getMinRollbackHeight();
-                    if (purgeHeight > 0) {
-                        Poll.purgeVotes(purgeHeight);
-                    }
                 }
-            }
-        }, BlockchainProcessor.Event.AFTER_BLOCK_APPLY);
+            }, BlockchainProcessor.Event.AFTER_BLOCK_APPLY);
+        }
     }
 
     private static void checkPolls(int currentHeight) {
@@ -148,19 +146,6 @@ public final class Poll extends AbstractPoll {
                     Logger.logErrorMessage("Couldn't count votes for poll " + Convert.toUnsignedLong(poll.getId()));
                 }
             }
-        }
-    }
-
-    private static void purgeVotes(int purgeHeight) {
-        try (Connection con = Db.db.getConnection();
-             DbIterator<Poll> polls = getPollsFinishingAtOrBefore(purgeHeight);
-             PreparedStatement pstmt = con.prepareStatement("DELETE FROM vote WHERE poll_id = ?")) {
-            for (Poll poll : polls) {
-                pstmt.setLong(1, poll.getId());
-                pstmt.executeUpdate();
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException(e.toString(), e);
         }
     }
 
@@ -211,7 +196,7 @@ public final class Poll extends AbstractPoll {
     public boolean isFinished() { return finishHeight < Nxt.getBlockchain().getHeight(); }
 
     public List<PartialPollResult> getResults() {
-        if (Constants.isPollsProcessing && isFinished()) {
+        if (Poll.isPollsProcessing && isFinished()) {
             return pollResultsTable.get(pollResultsDbKeyFactory.newKey(id));
         } else {
             int countHeight = Math.min(finishHeight, Nxt.getBlockchain().getHeight());
