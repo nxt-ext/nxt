@@ -78,7 +78,7 @@ var NRS = (function(NRS, $, undefined) {
 
 	//hide modal when another one is activated.
 	$(".modal").on("show.bs.modal", function(e) {
-		var $inputFields = $(this).find("input[name=recipient], input[name=account_id]").not("[type=hidden]");
+		var $inputFields = $(this).find("input[name=recipient], input[name=account_id], input[name=pendingWhitelisted], input[name=pendingBlacklisted]").not("[type=hidden]");
 
 		$.each($inputFields, function() {
 			if ($(this).hasClass("noMask")) {
@@ -102,6 +102,11 @@ var NRS = (function(NRS, $, undefined) {
 		}
 
 		$(this).find(".form-group").css("margin-bottom", "");
+
+		// Activating context help popovers
+		$(function () { 
+            $("[data-toggle='popover']").popover(); 
+        });
 	});
 
 	$(".modal").on("shown.bs.modal", function() {
@@ -214,6 +219,27 @@ var NRS = (function(NRS, $, undefined) {
 			$feeInfo.html(NRS.formatAmount(NRS.convertToNQT($(this).val())) + " NXT");
 		}
 	});
+
+	$('.approve_tab_list a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
+        $(e.target).closest('.approve_tab_panel').find('.tab-pane input').prop('disabled', true);
+        $(e.target).closest('.approve_tab_panel').find('.tab-pane.active input').prop('disabled', false);
+    });
+
+    $(".add_account_btn").click(function(e) {
+    	var $accountBox = $(this).closest('.account_box');
+        var $clone = $accountBox.find(".form_group_accounts").first().clone();
+        $clone.find("input").val("");
+        $accountBox.find(".added_account_list").append($clone);
+    });
+
+    $(".modal").on("click", "button.btn.remove_account_btn", function(e) {
+    	e.preventDefault();
+    	var $accountBox = $(this).closest('.account_box');
+    	if ($accountBox.find(".form_group_accounts").length == 1) {
+            return;
+        }
+        $(this).closest(".form_group_accounts").remove();
+    });
 
 	$(".advanced_info a").on("click", function(e) {
 		e.preventDefault();
