@@ -103,6 +103,8 @@ var NRS = (function(NRS, $, undefined) {
 
 		$(this).find(".form-group").css("margin-bottom", "");
 
+		$(this).find('.approve_tab_list a:first').click();
+
 		// Activating context help popovers
 		$(function () { 
             $("[data-toggle='popover']").popover(); 
@@ -221,8 +223,16 @@ var NRS = (function(NRS, $, undefined) {
 	});
 
 	$('.approve_tab_list a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
-        $(e.target).closest('.approve_tab_panel').find('.tab-pane input').prop('disabled', true);
-        $(e.target).closest('.approve_tab_panel').find('.tab-pane.active input').prop('disabled', false);
+        $am = $(this).closest('.approve_modal');
+        $am.find('.tab-pane input').prop('disabled', true);
+        $am.find('.tab-pane.active input').prop('disabled', false);
+        if ($(this).hasClass("at_no_approval")) {
+        	$am.find('.approve_generic').hide();
+        	$am.find('.approve_generic input').prop('disabled', true);
+        } else {
+        	$am.find('.approve_generic input').prop('disabled', false);
+        	$am.find('.approve_generic').show();
+        }
     });
 
     $(".add_account_btn").click(function(e) {
@@ -253,10 +263,6 @@ var NRS = (function(NRS, $, undefined) {
 			$modal.find(".advanced").not(not).fadeIn();
 		} else {
 			$modal.find(".advanced").hide();
-		}
-
-		if ($modal.find(".tx-modal-approve").is(':empty')) {
-			NRS.initApproveDialog($modal);
 		}
 
 		$modal.find(".advanced_extend").each(function(index, obj) {

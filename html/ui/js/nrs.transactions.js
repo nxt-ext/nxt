@@ -51,8 +51,10 @@ var NRS = (function(NRS, $, undefined) {
 				html += " NXT";
 			} else if (vm == 1) {
 				html += ' <i class="fa fa-group"></i>';
+			} else if (vm == 2) {
+				html = "Asset";
 			} else {
-				html = "Asset"
+				html = "Currency";
 			}
 			return html;
 		} else {
