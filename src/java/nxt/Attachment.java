@@ -113,7 +113,7 @@ public interface Attachment extends Appendix {
             JSONArray jsArr = (JSONArray) (attachmentData.get("pendingTransactions"));
             pendingTransactionsIds = new long[jsArr.size()];
             for (int i = 0; i < pendingTransactionsIds.length; i++) {
-                pendingTransactionsIds[i] =  Convert.parseUnsignedLong((String)jsArr.get(i));
+                pendingTransactionsIds[i] = Convert.parseUnsignedLong((String) jsArr.get(i));
             }
         }
 
@@ -137,7 +137,7 @@ public interface Attachment extends Appendix {
 
         @Override
         void putMyBytes(ByteBuffer buffer) {
-            buffer.put((byte)pendingTransactionsIds.length);
+            buffer.put((byte) pendingTransactionsIds.length);
             for (long id : pendingTransactionsIds) {
                 buffer.putLong(id);
             }
@@ -160,7 +160,6 @@ public interface Attachment extends Appendix {
         public long[] getPendingTransactionsIds() {
             return pendingTransactionsIds;
         }
-
     }
 
 
@@ -521,8 +520,8 @@ public interface Attachment extends Appendix {
             this.maxRangeValue = ((Long) attachmentData.get("maxRangeValue")).byteValue();
 
             this.minBalance = Convert.parseLong(attachmentData.get("minBalance"));
-            this.minBalanceModel = ((Long)attachmentData.get("minBalance")).byteValue();
-            this.holdingId = Convert.parseUnsignedLong((String)attachmentData.get("holding"));
+            this.minBalanceModel = ((Long) attachmentData.get("minBalance")).byteValue();
+            this.holdingId = Convert.parseUnsignedLong((String) attachmentData.get("holding"));
         }
 
         public MessagingPollCreation(PollBuilder builder) {
@@ -644,17 +643,29 @@ public interface Attachment extends Appendix {
             return maxNumberOfOptions;
         }
 
-        public byte getMinRangeValue() { return minRangeValue; }
+        public byte getMinRangeValue() {
+            return minRangeValue;
+        }
 
-        public byte getMaxRangeValue() { return maxRangeValue; }
+        public byte getMaxRangeValue() {
+            return maxRangeValue;
+        }
 
-        public byte getVotingModel() { return votingModel; }
+        public byte getVotingModel() {
+            return votingModel;
+        }
 
-        public long getMinBalance() { return minBalance; }
+        public long getMinBalance() {
+            return minBalance;
+        }
 
-        public byte getMinBalanceModel() { return minBalanceModel; }
+        public byte getMinBalanceModel() {
+            return minBalanceModel;
+        }
 
-        public long getHoldingId() { return holdingId; }
+        public long getHoldingId() {
+            return holdingId;
+        }
     }
 
     public final static class MessagingVoteCasting extends AbstractAttachment {
@@ -722,9 +733,13 @@ public interface Attachment extends Appendix {
             return TransactionType.Messaging.VOTE_CASTING;
         }
 
-        public long getPollId() { return pollId; }
+        public long getPollId() {
+            return pollId;
+        }
 
-        public byte[] getPollVote() { return pollVote; }
+        public byte[] getPollVote() {
+            return pollVote;
+        }
     }
 
     public final static class MessagingHubAnnouncement extends AbstractAttachment {

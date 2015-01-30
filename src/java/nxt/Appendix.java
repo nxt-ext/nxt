@@ -458,12 +458,12 @@ public interface Appendix {
 
         TwoPhased(JSONObject attachmentData) {
             super(attachmentData);
-            maxHeight = ((Long)attachmentData.get("releaseHeight")).intValue();
+            maxHeight = ((Long) attachmentData.get("releaseHeight")).intValue();
             quorum = Convert.parseLong(attachmentData.get("quorum"));
             minBalance = Convert.parseLong(attachmentData.get("minBalance"));
-            votingModel = ((Long)attachmentData.get("votingModel")).byteValue();
+            votingModel = ((Long) attachmentData.get("votingModel")).byteValue();
             if (votingModel == Constants.VOTING_MODEL_ASSET || votingModel == Constants.VOTING_MODEL_CURRENCY) {
-                holdingId = Convert.parseUnsignedLong((String)attachmentData.get("holding"));
+                holdingId = Convert.parseUnsignedLong((String) attachmentData.get("holding"));
             } else {
                 holdingId = 0;
             }
@@ -471,7 +471,7 @@ public interface Appendix {
             JSONArray whitelistJson = (JSONArray) (attachmentData.get("whitelist"));
             whitelist = new long[whitelistJson.size()];
             for (int i = 0; i < whitelist.length; i++) {
-                whitelist[i] = Convert.parseUnsignedLong((String)whitelistJson.get(i));
+                whitelist[i] = Convert.parseUnsignedLong((String) whitelistJson.get(i));
             }
 
             JSONArray blacklistJson = (JSONArray) (attachmentData.get("blacklist"));
@@ -486,12 +486,12 @@ public interface Appendix {
         }
 
         public TwoPhased(int maxHeight, byte votingModel, long quorum, long minBalance,
-                  long[] whitelist, long[] blacklist) {
+                         long[] whitelist, long[] blacklist) {
             this(maxHeight, votingModel, 0, quorum, minBalance, whitelist, blacklist);
         }
 
         public TwoPhased(int maxHeight, byte votingModel, long holdingId, long quorum,
-                  long minBalance, long[] whitelist, long[] blacklist) {
+                         long minBalance, long[] whitelist, long[] blacklist) {
             this.maxHeight = maxHeight;
             this.votingModel = votingModel;
             this.quorum = quorum;
@@ -519,7 +519,7 @@ public interface Appendix {
 
         @Override
         int getMySize() {
-            return 4 + 1 + 8 + 8 + 1 + 8 * whitelist.length + 1 + 8 * blacklist.length + 8 ;
+            return 4 + 1 + 8 + 8 + 1 + 8 * whitelist.length + 1 + 8 * blacklist.length + 8;
         }
 
         @Override
@@ -579,7 +579,7 @@ public interface Appendix {
                 throw new NxtException.NotValidException("Both whitelist & blacklist are non-empty");
             }
 
-            if (votingModel == Constants.VOTING_MODEL_ACCOUNT && whitelist.length == 0 ) {
+            if (votingModel == Constants.VOTING_MODEL_ACCOUNT && whitelist.length == 0) {
                 throw new NxtException.NotValidException("By-account voting with empty whitelist");
             }
 
