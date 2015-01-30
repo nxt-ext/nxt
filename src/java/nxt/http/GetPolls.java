@@ -11,22 +11,28 @@ import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
 
-public class GetAccountPolls extends APIServlet.APIRequestHandler {
+public class GetPolls extends APIServlet.APIRequestHandler {
 
-    static final GetAccountPolls instance = new GetAccountPolls();
+    static final GetPolls instance = new GetPolls();
 
-    private GetAccountPolls() {
+    private GetPolls() {
         super(new APITag[]{APITag.ACCOUNTS, APITag.VS}, "includeVoters", "account", "firstIndex", "lastIndex");
     }
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
-        Account account = ParameterParser.getAccount(req);
+        Account account = ParameterParser.getAccount(req, false);
         int firstIndex = ParameterParser.getFirstIndex(req);
         int lastIndex = ParameterParser.getLastIndex(req);
         boolean includeVoters = "true".equalsIgnoreCase(req.getParameter("includeVoters"));
 
-        DbIterator<Poll> polls = Poll.getPollsByAccount(account.getId(), firstIndex, lastIndex);
+        DbIterator<Poll> polls;
+
+        if(account == null) {
+            polls = Poll.getAllPolls(firstIndex, lastIndex);
+        } else {
+            polls = Poll.getPollsByAccount(account.getId(), firstIndex, lastIndex);
+        }
 
         JSONArray pollsJson = new JSONArray();
         while (polls.hasNext()) {

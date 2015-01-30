@@ -17,7 +17,7 @@ public class GetFinishedPollIds extends APIServlet.APIRequestHandler {
     static final GetFinishedPollIds instance = new GetFinishedPollIds();
 
     private GetFinishedPollIds() {
-        super(new APITag[] {APITag.VS});
+        super(new APITag[]{APITag.VS});
     }
 
     @Override
@@ -33,6 +33,5 @@ public class GetFinishedPollIds extends APIServlet.APIRequestHandler {
         JSONObject response = new JSONObject();
         response.put("pollIds", pollIds);
         return response;
-
     }
 }

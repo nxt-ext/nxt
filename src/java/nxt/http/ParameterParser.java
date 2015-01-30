@@ -367,13 +367,17 @@ final class ParameterParser {
     }
 
     static Account getAccount(HttpServletRequest req) throws ParameterException {
+        return getAccount(req, true);
+    }
+
+    static Account getAccount(HttpServletRequest req, boolean isMandatory) throws ParameterException {
         String accountValue = Convert.emptyToNull(req.getParameter("account"));
         if (accountValue == null) {
             throw new ParameterException(MISSING_ACCOUNT);
         }
         try {
             Account account = Account.getAccount(Convert.parseAccountId(accountValue));
-            if (account == null) {
+            if (account == null && isMandatory) {
                 throw new ParameterException(UNKNOWN_ACCOUNT);
             }
             return account;

@@ -9,11 +9,11 @@ import org.json.simple.JSONObject;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class TestGetAccountPolls extends BlockchainTest {
+public class TestGetPolls extends BlockchainTest {
 
     @Test
     public void accountPollsIncrease() {
-        APICall apiCall = new APICall.Builder("getAccountPolls")
+        APICall apiCall = new APICall.Builder("getPolls")
                 .param("includeVoters", "false")
                 .param("account", Convert.toUnsignedLong(id4))
                 .param("firstIndex", 0)
@@ -21,7 +21,7 @@ public class TestGetAccountPolls extends BlockchainTest {
                 .build();
 
         JSONObject jsonResponse = apiCall.invoke();
-        Logger.logMessage("getAccountPollsResponse:" + jsonResponse.toJSONString());
+        Logger.logMessage("getPollsResponse:" + jsonResponse.toJSONString());
         JSONArray polls = (JSONArray) jsonResponse.get("polls");
         int initialSize = polls.size();
 
@@ -30,7 +30,7 @@ public class TestGetAccountPolls extends BlockchainTest {
         generateBlock();
 
         jsonResponse = apiCall.invoke();
-        Logger.logMessage("getAccountPollsResponse:" + jsonResponse.toJSONString());
+        Logger.logMessage("getPollsResponse:" + jsonResponse.toJSONString());
         polls = (JSONArray) jsonResponse.get("polls");
         int size = polls.size();
 
