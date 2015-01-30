@@ -620,7 +620,7 @@ public interface Appendix {
             PendingTransactionPoll.addPoll(transaction, this);
         }
 
-        void commit(Transaction transaction) {
+        void release(Transaction transaction) {
             Account senderAccount = Account.getAccount(transaction.getSenderId());
             Account recipientAccount = Account.getAccount(transaction.getRecipientId());
             long amount = transaction.getAmountNQT();
@@ -645,7 +645,7 @@ public interface Appendix {
             }
             PendingTransactionPoll.finishPoll(poll);
             if (cumulativeWeight >= poll.getQuorum()) {
-                commit(transaction);
+                release(transaction);
             } else {
                 Account senderAccount = Account.getAccount(transaction.getSenderId());
                 transaction.getType().undoAttachmentUnconfirmed(transaction, senderAccount);
