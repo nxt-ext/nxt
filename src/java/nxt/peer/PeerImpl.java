@@ -407,6 +407,9 @@ final class PeerImpl implements Peer {
             connection.disconnect();
         }
 
+        if (response != null && response.get("error") != null) {
+            Logger.logDebugMessage("Peer returned error: " + response.toJSONString());
+        }
         return response;
 
     }
