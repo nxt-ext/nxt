@@ -311,7 +311,7 @@ final class BlockImpl implements Block {
         byte[] data2 = new byte[data.length - 64];
         System.arraycopy(data, 0, data2, 0, data2.length);
 
-        return Crypto.verify(blockSignature, data2, getGeneratorPublicKey(), version >= 3) && account.setOrVerify(getGeneratorPublicKey(), this.height);
+        return Crypto.verify(blockSignature, data2, getGeneratorPublicKey(), version >= 3) && account.setOrVerify(getGeneratorPublicKey());
 
     }
 

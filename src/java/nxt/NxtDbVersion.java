@@ -169,8 +169,9 @@ class NxtDbVersion extends DbVersion {
             case 54:
                 apply("ALTER TABLE transaction ALTER COLUMN recipient_id SET NULL");
             case 55:
+                apply("CREATE TABLE IF NOT EXISTS public_key (db_id IDENTITY, account_id BIGINT NOT NULL, "
+                        + "public_key BINARY(32), height INT NOT NULL, FOREIGN KEY (height) REFERENCES block (height) ON DELETE CASCADE)");
                 BlockDb.deleteAll();
-                apply(null);
             case 56:
                 apply("CREATE INDEX IF NOT EXISTS transaction_recipient_id_idx ON transaction (recipient_id)");
             case 57:

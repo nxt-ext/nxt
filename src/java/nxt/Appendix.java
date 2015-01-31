@@ -403,7 +403,7 @@ public interface Appendix {
 
         @Override
         void apply(Transaction transaction, Account senderAccount, Account recipientAccount) {
-            if (recipientAccount.setOrVerify(publicKey, transaction.getHeight())) {
+            if (recipientAccount.setOrVerify(publicKey)) {
                 recipientAccount.apply(this.publicKey, transaction.getHeight());
             }
         }

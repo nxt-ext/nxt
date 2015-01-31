@@ -288,8 +288,8 @@ public final class Account {
 
         @Override
         protected void save(Connection con, byte[] publicKey) throws SQLException {
-            try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO public_key (account_id, public_key, height) "
-                    + "VALUES (?, ?, ?)")) {
+            try (PreparedStatement pstmt = con.prepareStatement("MERGE INTO public_key (account_id, public_key, height) "
+                    + "KEY (account_id) VALUES (?, ?, ?)")) {
                 int i = 0;
                 pstmt.setLong(++i, Account.getId(publicKey));
                 pstmt.setBytes(++i, publicKey);
@@ -952,9 +952,8 @@ public final class Account {
     // this.publicKey is set to null (in which case this.publicKey also gets set to key)
     // or
     // this.publicKey is already set to an array equal to key
-    boolean setOrVerify(byte[] key, int height) {
+    boolean setOrVerify(byte[] key) {
         if (this.getPublicKey() == null) {
-            this.keyHeight = -1;
             this.publicKey = key;
             return true;
         } else {
@@ -963,13 +962,13 @@ public final class Account {
     }
 
     void apply(byte[] key, int height) {
-        if (! setOrVerify(key, height)) {
+        if (! setOrVerify(key)) {
             throw new IllegalStateException("Public key mismatch");
         }
-        if (this.keyHeight == -1) {
+        if (this.keyHeight == 0) {
             this.keyHeight = height;
-            publicKeyTable.insert(this.publicKey);
             accountTable.insert(this);
+            publicKeyTable.insert(this.publicKey);
         }
     }
 
