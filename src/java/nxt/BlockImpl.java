@@ -396,9 +396,9 @@ final class BlockImpl implements Block {
         }
     }
 
-    private void calculateBaseTarget(BlockImpl previousBlock) {
+    void calculateBaseTarget(BlockImpl previousBlock) {
 
-        if (this.getId() != Genesis.GENESIS_BLOCK_ID || previousBlockId != 0) {
+        if ((this.getId() != Genesis.GENESIS_BLOCK_ID || previousBlockId != 0) && cumulativeDifficulty.equals(BigInteger.ZERO)) {
             long curBaseTarget = previousBlock.baseTarget;
             long newBaseTarget = BigInteger.valueOf(curBaseTarget)
                     .multiply(BigInteger.valueOf(this.timestamp - previousBlock.timestamp))

@@ -40,12 +40,12 @@ public final class Generator implements Comparable<Generator> {
 
     private static final ConcurrentMap<String, Generator> generators = new ConcurrentHashMap<>();
     private static final Collection<Generator> allGenerators = Collections.unmodifiableCollection(generators.values());
-    private static volatile List<Generator> sortedForgers;
+    private static List<Generator> sortedForgers;
+    private static long lastBlockId;
 
     private static final Runnable generateBlocksThread = new Runnable() {
 
         private volatile int lastTimestamp;
-        private volatile long lastBlockId;
 
         @Override
         public void run() {
@@ -74,8 +74,9 @@ public final class Generator implements Comparable<Generator> {
                             Collections.sort(forgers);
                             sortedForgers = Collections.unmodifiableList(forgers);
                         }
+                        int generationTimestamp = timestamp - 20;
                         for (Generator generator : sortedForgers) {
-                            if (generator.getHitTime() > timestamp + 1 || generator.forge(lastBlock, timestamp)) {
+                            if (generator.getHitTime() > generationTimestamp + 1 || generator.forge(lastBlock, generationTimestamp)) {
                                 return;
                             }
                         }
@@ -136,6 +137,19 @@ public final class Generator implements Comparable<Generator> {
 
     public static Collection<Generator> getAllGenerators() {
         return allGenerators;
+    }
+
+    public static long getNextHitTime(long lastBlockId, int curTime) {
+        synchronized (Nxt.getBlockchain()) {
+            if (lastBlockId == Generator.lastBlockId && sortedForgers != null) {
+                for (Generator generator : sortedForgers) {
+                    if (generator.getHitTime() > curTime - 20) {
+                        return generator.getHitTime();
+                    }
+                }
+            }
+            return Long.MAX_VALUE;
+        }
     }
 
     static boolean verifyHit(BigInteger hit, BigInteger effectiveBalance, Block previousBlock, int timestamp) {
@@ -245,7 +259,7 @@ public final class Generator implements Comparable<Generator> {
                     BlockchainProcessorImpl.getInstance().generateBlock(secretPhrase, timestamp);
                     return true;
                 } catch (BlockchainProcessor.TransactionNotAcceptedException e) {
-                    if (Nxt.getEpochTime() - timestamp > 10) {
+                    if (Nxt.getEpochTime() - timestamp > 30) {
                         throw e;
                     }
                 }

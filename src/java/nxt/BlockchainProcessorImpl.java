@@ -537,7 +537,26 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
     @Override
     public void processPeerBlock(JSONObject request) throws NxtException {
         BlockImpl block = BlockImpl.parseBlock(request);
-        pushBlock(block);
+        synchronized (blockchain) {
+            if (block.getPreviousBlockId() == blockchain.getLastBlock().getPreviousBlockId()) {
+                block.calculateBaseTarget(blockchain.getBlock(block.getPreviousBlockId()));
+                if (block.getCumulativeDifficulty().compareTo(blockchain.getLastBlock().getCumulativeDifficulty()) <= 0) {
+                    return;
+                }
+                BlockImpl lastBlock = popOffTo(blockchain.getBlock(block.getPreviousBlockId())).get(0);
+                try {
+                    pushBlock(block);
+                    TransactionProcessorImpl.getInstance().processLater(lastBlock.getTransactions());
+                    Logger.logDebugMessage("Last block " + lastBlock.getStringId() + " was replaced by " + block.getStringId());
+                } catch (BlockNotAcceptedException e) {
+                    Logger.logDebugMessage("Replacement block failed to be accepted, pushing back our last block");
+                    pushBlock(lastBlock);
+                    TransactionProcessorImpl.getInstance().processLater(block.getTransactions());
+                }
+            } else {
+                pushBlock(block);
+            }
+        }
     }
 
     @Override
@@ -653,6 +672,13 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     throw new BlockOutOfOrderException("Invalid timestamp: " + block.getTimestamp()
                             + " current time is " + curTime + ", previous block timestamp is " + previousLastBlock.getTimestamp());
                 }
+                long nextHitTime = Generator.getNextHitTime(previousLastBlock.getId(), curTime);
+                if (block.getTimestamp() > nextHitTime) {
+                    String msg = "Rejecting block " + block.getStringId() + " at height " + previousLastBlock.getHeight()
+                            + " sent before its time, block timestamp is " + block.getTimestamp() + " next generator hit time is " + nextHitTime;
+                    Logger.logDebugMessage(msg);
+                    throw new BlockOutOfOrderException(msg);
+                }
                 if (block.getId() == 0L || BlockDb.hasBlock(block.getId())) {
                     throw new BlockNotAcceptedException("Duplicate block or invalid id");
                 }
@@ -758,7 +784,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
 
         blockListeners.notify(block, Event.BLOCK_PUSHED);
 
-        if (block.getTimestamp() >= Nxt.getEpochTime() - 15) {
+        if (block.getTimestamp() >= curTime - 35) {
             Peers.sendToSomePeers(block);
         }
 
@@ -997,7 +1023,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             pushBlock(block);
             blockListeners.notify(block, Event.BLOCK_GENERATED);
             Logger.logDebugMessage("Account " + Convert.toUnsignedLong(block.getGeneratorId()) + " generated block " + block.getStringId()
-                    + " at height " + block.getHeight());
+                    + " at height " + block.getHeight() + " timestamp " + block.getTimestamp() + " fee " + ((float)block.getTotalFeeNQT())/Constants.ONE_NXT);
         } catch (TransactionNotAcceptedException e) {
             Logger.logDebugMessage("Generate block failed: " + e.getMessage());
             Transaction transaction = e.getTransaction();
