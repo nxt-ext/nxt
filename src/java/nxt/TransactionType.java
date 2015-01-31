@@ -1786,7 +1786,7 @@ public abstract class TransactionType {
                             + transaction.getJSONObject() + " transaction " + transaction.getStringId());
                 }
                 if (recipientAccount == null
-                        || (recipientAccount.getPublicKey() == null && ! transaction.getStringId().equals("5081403377391821646"))) {
+                        || (recipientAccount.getKeyHeight() <= 0 && ! transaction.getStringId().equals("5081403377391821646"))) {
                     throw new NxtException.NotCurrentlyValidException("Invalid effective balance leasing: "
                             + " recipient account " + transaction.getRecipientId() + " not found or no public key published");
                 }
