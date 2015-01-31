@@ -645,7 +645,7 @@ public final class Account {
         return creationHeight;
     }
 
-    private int getKeyHeight() {
+    int getKeyHeight() {
         return keyHeight;
     }
 

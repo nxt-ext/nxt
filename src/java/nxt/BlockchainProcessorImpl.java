@@ -675,7 +675,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 long nextHitTime = Generator.getNextHitTime(previousLastBlock.getId(), curTime);
                 if (block.getTimestamp() > nextHitTime) {
                     String msg = "Rejecting block " + block.getStringId() + " at height " + previousLastBlock.getHeight()
-                            + " sent before its time, block timestamp is " + block.getTimestamp() + " next generator hit time is " + nextHitTime;
+                            + " sent too early, block timestamp is " + block.getTimestamp() + " my next hit time is " + nextHitTime;
                     Logger.logDebugMessage(msg);
                     throw new BlockOutOfOrderException(msg);
                 }
