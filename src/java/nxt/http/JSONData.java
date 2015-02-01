@@ -516,6 +516,7 @@ final class JSONData {
     static JSONObject generator(Generator generator, int elapsedTime) {
         JSONObject response = new JSONObject();
         long deadline = generator.getDeadline();
+        putAccount(response, "account", generator.getAccountId());
         response.put("deadline", deadline);
         response.put("hitTime", generator.getHitTime());
         response.put("remaining", Math.max(deadline - elapsedTime, 0));
