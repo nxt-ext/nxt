@@ -90,7 +90,7 @@ public final class CreatePoll extends CreateTransaction {
 
         if (minBalance != 0) {
             byte minBalanceModel = ParameterParser.getByte(req, "minBalanceModel",
-                    Constants.VOTING_MINBALANCE_UNDEFINED, Constants.VOTING_MINBALANCE_CURRENCY, true);
+                    Constants.VOTING_MINBALANCE_BYBALANCE, Constants.VOTING_MINBALANCE_CURRENCY, true);
             builder.minBalance(minBalanceModel, minBalance);
         }
 

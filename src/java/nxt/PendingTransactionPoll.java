@@ -56,7 +56,6 @@ public class PendingTransactionPoll extends AbstractPoll {
         }
     };
 
-
     private final static VersionedEntityDbTable<PendingTransactionPoll> pendingTransactionsTable =
             new VersionedEntityDbTable<PendingTransactionPoll>("pending_transaction", pollDbKeyFactory) {
 
@@ -119,6 +118,11 @@ public class PendingTransactionPoll extends AbstractPoll {
                 this.blacklist = new long[0];
             }
         }
+    }
+
+    @Override
+    long calcWeightForByAccountModel(long voterId, int height) {
+        throw new RuntimeException("PendingTransactionPoll.calcWeightForByAccountModel is called but must not");
     }
 
     public long getId() {
@@ -188,7 +192,6 @@ public class PendingTransactionPoll extends AbstractPoll {
             throw new RuntimeException(e.toString(), e);
         }
     }
-
 
     public long[] getWhitelist() {
         return whitelist;

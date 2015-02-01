@@ -158,10 +158,11 @@ public final class Poll extends AbstractPoll {
     private final byte maxNumberOfOptions;
     private final byte minRangeValue;
     private final byte maxRangeValue;
+    private final byte minBalanceModel;
 
     private Poll(long id, long accountId, Attachment.MessagingPollCreation attachment) {
         super(accountId, attachment.getFinishHeight(), attachment.getVotingModel(), attachment.getHoldingId(),
-                attachment.getMinBalance(), attachment.getMinBalanceModel());
+                attachment.getMinBalance());
 
         this.id = id;
         this.dbKey = pollDbKeyFactory.newKey(this.id);
@@ -173,6 +174,8 @@ public final class Poll extends AbstractPoll {
         this.maxNumberOfOptions = attachment.getMaxNumberOfOptions();
         this.minRangeValue = attachment.getMinRangeValue();
         this.maxRangeValue = attachment.getMaxRangeValue();
+
+        this.minBalanceModel = attachment.getMinBalanceModel();
     }
 
     private Poll(ResultSet rs) throws SQLException {
@@ -191,6 +194,29 @@ public final class Poll extends AbstractPoll {
         this.maxNumberOfOptions = rs.getByte("max_num_options");
         this.minRangeValue = rs.getByte("min_range_value");
         this.maxRangeValue = rs.getByte("max_range_value");
+    }
+
+    @Override
+    long calcWeightForByAccountModel(long voterId, int height) {
+        long balance;
+        switch (minBalanceModel) {
+            case Constants.VOTING_MINBALANCE_BYBALANCE:
+                balance = Account.getAccount(voterId, height).getBalanceNQT();
+                break;
+            case Constants.VOTING_MINBALANCE_ASSET:
+                balance = Account.getAssetBalanceQNT(voterId, holdingId, height);
+                break;
+            case Constants.VOTING_MINBALANCE_CURRENCY:
+                balance = Account.getCurrencyUnits(voterId, holdingId, height);
+                break;
+            default:
+                throw new RuntimeException("Invalid minBalanceModel " + minBalanceModel);
+        }
+        if (balance >= getMinBalance()) {
+            return 1;
+        } else {
+            return 0;
+        }
     }
 
     public boolean isFinished() { return finishHeight < Nxt.getBlockchain().getHeight(); }
@@ -242,6 +268,10 @@ public final class Poll extends AbstractPoll {
 
     public byte getMaxRangeValue() {
         return maxRangeValue;
+    }
+
+    public byte getMinBalanceModel() {
+        return minBalanceModel;
     }
 
     private List<PartialPollResult> countResults(int height) {

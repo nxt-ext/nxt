@@ -396,7 +396,7 @@ public interface Attachment extends Appendix {
             private final byte votingModel;
 
             private long minBalance = 0;
-            private byte minBalanceModel = Constants.VOTING_MINBALANCE_UNDEFINED;
+            private byte minBalanceModel;
 
             private byte minNumberOfOptions = Constants.VOTING_DEFAULT_MIN_NUMBER_OF_CHOICES;
             private byte maxNumberOfOptions;
@@ -441,7 +441,6 @@ public interface Attachment extends Appendix {
             }
 
             public PollBuilder minBalance(long minBalance) {
-                this.minBalanceModel = Constants.VOTING_MINBALANCE_UNDEFINED;
                 this.minBalance = minBalance;
                 return this;
             }

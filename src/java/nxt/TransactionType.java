@@ -705,8 +705,7 @@ public abstract class TransactionType {
                 long minBalance = attachment.getMinBalance();
                 byte minBalanceModel = attachment.getMinBalanceModel();
 
-                if (minBalanceModel != Constants.VOTING_MINBALANCE_UNDEFINED
-                        && minBalanceModel != Constants.VOTING_MINBALANCE_ASSET
+                if (minBalanceModel != Constants.VOTING_MINBALANCE_ASSET
                         && minBalanceModel != Constants.VOTING_MINBALANCE_BYBALANCE
                         && minBalanceModel != Constants.VOTING_MINBALANCE_CURRENCY) {
                     throw new NxtException.NotValidException("Invalid min balance model " + attachment.getJSONObject());
@@ -731,24 +730,15 @@ public abstract class TransactionType {
                     throw new NxtException.NotValidException("Min balance == 0 for by-account voting"+ attachment.getJSONObject());
                 }
 
-                if (minBalance > 0 && minBalanceModel == Constants.VOTING_MINBALANCE_UNDEFINED) {
-                    throw new NxtException.NotValidException("Invalid min balance model: " + attachment.getJSONObject());
-                }
-
-                if (votingModel == Constants.VOTING_MODEL_ACCOUNT
-                        && minBalanceModel == Constants.VOTING_MINBALANCE_UNDEFINED) {
-                    throw new NxtException.NotValidException("Min balance model is undefined for by-account voting" + attachment.getJSONObject());
-                }
-
                 long holdingId = attachment.getHoldingId();
                 if (minBalanceModel == Constants.VOTING_MINBALANCE_ASSET
                     && (holdingId == 0 || Asset.getAsset(holdingId) == null)) {
-                    throw new NxtException.NotValidException("Invalid asset id for voting: " + attachment.getJSONObject());
+                    throw new NxtException.NotValidException("Invalid asset for voting: " + attachment.getJSONObject());
                 }
 
                 if (minBalanceModel == Constants.VOTING_MINBALANCE_CURRENCY
                         && (holdingId == 0 || Currency.getCurrency(holdingId) == null)) {
-                    throw new NxtException.NotValidException("Invalid currency id for voting: " + attachment.getJSONObject());
+                    throw new NxtException.NotValidException("Invalid currency for voting: " + attachment.getJSONObject());
                 }
 
                 if (attachment.getFinishHeight() < currentHeight + Constants.VOTING_MIN_VOTE_DURATION

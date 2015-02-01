@@ -14,24 +14,15 @@ abstract class AbstractPoll {
 
     protected final long holdingId; //either asset id or MS coin id
     protected final long minBalance;
-    protected byte minBalanceModel = Constants.VOTING_MINBALANCE_UNDEFINED;
 
     AbstractPoll(long accountId, int finishHeight,
                  byte votingModel, long holdingId,
                  long minBalance) {
-        this(accountId, finishHeight, votingModel, holdingId, minBalance,
-                Constants.VOTING_MINBALANCE_UNDEFINED);
-    }
-
-    AbstractPoll(long accountId, int finishHeight,
-                 byte votingModel, long holdingId,
-                 long minBalance, byte minBalanceModel) {
         this.accountId = accountId;
         this.finishHeight = finishHeight;
         this.votingModel = votingModel;
         this.holdingId = holdingId;
         this.minBalance = minBalance;
-        this.minBalanceModel = minBalanceModel;
     }
 
     AbstractPoll(ResultSet rs) throws SQLException {
@@ -40,8 +31,6 @@ abstract class AbstractPoll {
         this.votingModel = rs.getByte("voting_model");
         this.holdingId = rs.getLong("holding_id");
         this.minBalance = rs.getLong("min_balance");
-
-        this.minBalanceModel = Constants.VOTING_MINBALANCE_UNDEFINED;
     }
 
     public final long getAccountId() {
@@ -64,9 +53,7 @@ abstract class AbstractPoll {
         return holdingId;
     }
 
-    public final byte getMinBalanceModel() {
-        return minBalanceModel;
-    }
+    abstract long calcWeightForByAccountModel(long voterId, int height);
 
     long calcWeight(long voterId, int height) {
         long weight = 0;
@@ -85,23 +72,7 @@ abstract class AbstractPoll {
                 }
                 break;
             case Constants.VOTING_MODEL_ACCOUNT:
-                long balance;
-                switch (minBalanceModel) {
-                    case Constants.VOTING_MINBALANCE_BYBALANCE:
-                        balance = Account.getAccount(voterId, height).getBalanceNQT();
-                        break;
-                    case Constants.VOTING_MINBALANCE_ASSET:
-                        balance = Account.getAssetBalanceQNT(voterId, holdingId, height);
-                        break;
-                    case Constants.VOTING_MINBALANCE_CURRENCY:
-                        balance = Account.getCurrencyUnits(voterId, holdingId, height);
-                        break;
-                    default:
-                        throw new RuntimeException("Invalid minBalanceModel " + minBalanceModel);
-                }
-                if (balance >= getMinBalance()) {
-                    weight = 1;
-                }
+                weight = calcWeightForByAccountModel(voterId, height);
                 break;
             case Constants.VOTING_MODEL_BALANCE:
                 long nqtBalance = Account.getAccount(voterId, height).getBalanceNQT();
