@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -40,7 +41,7 @@ public final class Generator implements Comparable<Generator> {
 
     private static final ConcurrentMap<String, Generator> generators = new ConcurrentHashMap<>();
     private static final Collection<Generator> allGenerators = Collections.unmodifiableCollection(generators.values());
-    private static List<Generator> sortedForgers;
+    private static volatile List<Generator> sortedForgers;
     private static long lastBlockId;
 
     private static final Runnable generateBlocksThread = new Runnable() {
@@ -129,6 +130,19 @@ public final class Generator implements Comparable<Generator> {
             listeners.notify(generator, Event.STOP_FORGING);
         }
         return generator;
+    }
+
+    public static int stopForging() {
+        int count = generators.size();
+        Iterator<Generator> iter = generators.values().iterator();
+        while (iter.hasNext()) {
+            Generator generator = iter.next();
+            iter.remove();
+            Logger.logDebugMessage("Account " + Convert.toUnsignedLong(generator.getAccountId()) + " stopped forging");
+            listeners.notify(generator, Event.STOP_FORGING);
+        }
+        sortedForgers = null;
+        return count;
     }
 
     public static Generator getGenerator(String secretPhrase) {
