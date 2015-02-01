@@ -55,7 +55,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                                  " AND pending_transaction.latest = TRUE")) {
                         pstmt.setInt(1, height);
                         for (Transaction transaction : Nxt.getBlockchain().getTransactions(con, pstmt)) {
-                            transaction.getTwoPhased().verify(transaction);
+                            transaction.getTwoPhased().finalVerification(transaction);
                         }
                     }  catch (SQLException e) {
                         throw new RuntimeException(e.toString(), e);

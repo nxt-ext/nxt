@@ -1,7 +1,6 @@
 package nxt;
 
 import nxt.crypto.EncryptedData;
-import nxt.db.DbIterator;
 import nxt.util.Convert;
 import nxt.util.Logger;
 import org.json.simple.JSONArray;
@@ -631,16 +630,10 @@ public interface Appendix {
             Logger.logDebugMessage("Transaction " + transaction.getStringId() + " has been released");
         }
 
-        void verify(Transaction transaction) {
+        void finalVerification(Transaction transaction) {
             PendingTransactionPoll poll = PendingTransactionPoll.getPoll(transaction.getId());
-            long cumulativeWeight = 0;
-            try (DbIterator<VotePhased> votes = VotePhased.getByTransaction(transaction.getId(), 0, Integer.MAX_VALUE)) {
-                for (VotePhased vote : votes) {
-                    cumulativeWeight += poll.calcWeight(vote.getVoterId(), Math.min(maxHeight, Nxt.getBlockchain().getHeight()));
-                }
-            }
             PendingTransactionPoll.finishPoll(poll);
-            if (cumulativeWeight >= poll.getQuorum()) {
+            if (VotePhased.countVotes(poll) >= poll.getQuorum()) {
                 release(transaction);
             } else {
                 Account senderAccount = Account.getAccount(transaction.getSenderId());

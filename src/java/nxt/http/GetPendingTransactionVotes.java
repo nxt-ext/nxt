@@ -1,10 +1,10 @@
 package nxt.http;
 
-
 import nxt.Nxt;
 import nxt.NxtException;
 import nxt.PendingTransactionPoll;
 import nxt.VotePhased;
+import nxt.util.Convert;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
@@ -12,10 +12,10 @@ import javax.servlet.http.HttpServletRequest;
 
 import static nxt.http.JSONResponses.INCORRECT_PENDING_TRANSACTION;
 
-public class GetPendingTransactionVotesCount extends APIServlet.APIRequestHandler {
-    static final GetPendingTransactionVotesCount instance = new GetPendingTransactionVotesCount();
+public class GetPendingTransactionVotes extends APIServlet.APIRequestHandler {
+    static final GetPendingTransactionVotes instance = new GetPendingTransactionVotes();
 
-    private GetPendingTransactionVotesCount() {
+    private GetPendingTransactionVotes() {
         super(new APITag[]{APITag.PENDING_TRANSACTIONS}, "pendingTransaction");
     }
 
@@ -23,17 +23,18 @@ public class GetPendingTransactionVotesCount extends APIServlet.APIRequestHandle
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
         long transactionId = ParameterParser.getLong(req, "pendingTransaction", Long.MIN_VALUE, Long.MAX_VALUE, true);
         PendingTransactionPoll poll = PendingTransactionPoll.getPoll(transactionId);
-        if(poll == null){
-            return  INCORRECT_PENDING_TRANSACTION;
+        if (poll == null) {
+            return INCORRECT_PENDING_TRANSACTION;
         }
 
-        int count = VotePhased.getCount(transactionId);
+        long votes = VotePhased.countVotes(poll);
         long quorum = poll.getQuorum();
 
         JSONObject response = new JSONObject();
-        response.put("votesCount", count);
+        response.put("pendingTransaction", Convert.toUnsignedLong(transactionId));
+        response.put("votes", votes);
         response.put("quorum", quorum);
-        response.put("refusalHeight", poll.getFinishHeight());
+        response.put("finishHeight", poll.getFinishHeight());
         response.put("height", Nxt.getBlockchain().getHeight());
         return response;
     }

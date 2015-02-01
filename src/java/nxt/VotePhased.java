@@ -83,14 +83,25 @@ public class VotePhased {
         return votePhasedTable.getManyBy(new DbClause.LongClause("pending_transaction_id", pendingTransactionId), from, to);
     }
 
-    public static int getCount(long pendingTransactionId) {
-        return votePhasedTable.getCount(new DbClause.LongClause("pending_transaction_id", pendingTransactionId));
+    public static long countVotes(PendingTransactionPoll poll) {
+        switch (poll.votingModel){
+            case Constants.VOTING_MODEL_ACCOUNT:
+                return votePhasedTable.getCount(new DbClause.LongClause("pending_transaction_id", poll.getId()));
+            default:
+                long cumulativeWeight = 0;
+                try (DbIterator<VotePhased> votes = VotePhased.getByTransaction(poll.getId(), 0, Integer.MAX_VALUE)) {
+                    for (VotePhased vote : votes) {
+                        cumulativeWeight += poll.calcWeight(vote.getVoterId(), Math.min(poll.getFinishHeight(), Nxt.getBlockchain().getHeight()));
+                    }
+                }
+                return cumulativeWeight;
+        }
     }
 
     static boolean addVote(PendingTransactionPoll poll, Transaction transaction) {
         votePhasedTable.insert(new VotePhased(transaction, poll.getId()));
         return poll.getVotingModel() == Constants.VOTING_MODEL_ACCOUNT
-                && VotePhased.getCount(poll.getId()) >= poll.getQuorum();
+                && VotePhased.countVotes(poll) >= poll.getQuorum();
     }
 
     static boolean isVoteGiven(long pendingTransactionId, long voterId) {
