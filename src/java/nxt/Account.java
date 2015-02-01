@@ -723,7 +723,7 @@ public final class Account {
 
         Block lastBlock = Nxt.getBlockchain().getLastBlock();
         if (lastBlock.getHeight() >= Constants.TRANSPARENT_FORGING_BLOCK_6
-                && lastBlock.getHeight() - keyHeight <= 1440) {
+                && (keyHeight == 0 || lastBlock.getHeight() - keyHeight <= 1440)) {
             return 0; // cfb: Accounts with the public key revealed less than 1440 blocks ago are not allowed to generate blocks
         }
         if (lastBlock.getHeight() < Constants.TRANSPARENT_FORGING_BLOCK_3
