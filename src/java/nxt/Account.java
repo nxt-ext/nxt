@@ -7,6 +7,7 @@ import nxt.db.DbIterator;
 import nxt.db.DbKey;
 import nxt.db.DbUtils;
 import nxt.db.DerivedDbTable;
+import nxt.db.EntityDbTable;
 import nxt.db.VersionedEntityDbTable;
 import nxt.util.Convert;
 import nxt.util.Listener;
@@ -269,6 +270,47 @@ public final class Account {
 
     };
 
+    private static final DbKey.LongKeyFactory<byte[]> publicKeyDbKeyFactory = new DbKey.LongKeyFactory<byte[]>("account_id") {
+
+        @Override
+        public DbKey newKey(byte[] publicKey) {
+            return newKey(Account.getId(publicKey));
+        }
+
+    };
+
+    private static final EntityDbTable<byte[]> publicKeyTable = new EntityDbTable<byte[]>("public_key", publicKeyDbKeyFactory) {
+
+        @Override
+        protected byte[] load(Connection con, ResultSet rs) throws SQLException {
+            return rs.getBytes("public_key");
+        }
+
+        @Override
+        protected void save(Connection con, byte[] publicKey) throws SQLException {
+            try (PreparedStatement pstmt = con.prepareStatement("MERGE INTO public_key (account_id, public_key, height) "
+                    + "KEY (account_id) VALUES (?, ?, ?)")) {
+                int i = 0;
+                pstmt.setLong(++i, Account.getId(publicKey));
+                pstmt.setBytes(++i, publicKey);
+                pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
+                pstmt.executeUpdate();
+            }
+        }
+
+        // this table is special, rollback and truncate is handled by the BlockDb delete
+        @Override
+        public void rollback(int height) {
+            clearCache();
+        }
+
+        @Override
+        public void truncate() {
+            clearCache();
+        }
+
+    };
+
     private static final DbKey.LinkKeyFactory<AccountAsset> accountAssetDbKeyFactory = new DbKey.LinkKeyFactory<AccountAsset>("account_id", "asset_id") {
 
         @Override
@@ -331,7 +373,7 @@ public final class Account {
         public void trim(int height) {
             try (Connection con = Db.db.getConnection();
                  PreparedStatement pstmtDelete = con.prepareStatement("DELETE FROM account_guaranteed_balance "
-                         + "WHERE height < ?")) {
+                         + "WHERE height < ? AND height >= 0")) {
                 pstmtDelete.setInt(1, height - 1440);
                 pstmtDelete.executeUpdate();
             } catch (SQLException e) {
@@ -458,6 +500,10 @@ public final class Account {
         return Convert.fullHashToId(publicKeyHash);
     }
 
+    public static byte[] getPublicKey(long id) {
+        return publicKeyTable.get(publicKeyDbKeyFactory.newKey(id));
+    }
+
     static Account addOrGetAccount(long id) {
         if (id == 0) {
             throw new IllegalArgumentException("Invalid accountId 0");
@@ -526,7 +572,7 @@ public final class Account {
     private final long id;
     private final DbKey dbKey;
     private final int creationHeight;
-    private byte[] publicKey;
+    private volatile byte[] publicKey;
     private int keyHeight;
     private long balanceNQT;
     private long unconfirmedBalanceNQT;
@@ -556,7 +602,6 @@ public final class Account {
         this.id = rs.getLong("id");
         this.dbKey = accountDbKeyFactory.newKey(this.id);
         this.creationHeight = rs.getInt("creation_height");
-        this.publicKey = rs.getBytes("public_key");
         this.keyHeight = rs.getInt("key_height");
         this.balanceNQT = rs.getLong("balance");
         this.unconfirmedBalanceNQT = rs.getLong("unconfirmed_balance");
@@ -577,16 +622,15 @@ public final class Account {
     }
 
     private void save(Connection con) throws SQLException {
-        try (PreparedStatement pstmt = con.prepareStatement("MERGE INTO account (id, creation_height, public_key, "
+        try (PreparedStatement pstmt = con.prepareStatement("MERGE INTO account (id, creation_height, "
                 + "key_height, balance, unconfirmed_balance, forged_balance, name, description, "
                 + "current_leasing_height_from, current_leasing_height_to, current_lessee_id, "
                 + "next_leasing_height_from, next_leasing_height_to, next_lessee_id, message_pattern_regex, message_pattern_flags, "
                 + "height, latest) "
-                + "KEY (id, height) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, TRUE)")) {
+                + "KEY (id, height) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, TRUE)")) {
             int i = 0;
             pstmt.setLong(++i, this.getId());
             pstmt.setInt(++i, this.getCreationHeight());
-            DbUtils.setBytes(pstmt, ++i, this.getPublicKey());
             pstmt.setInt(++i, this.getKeyHeight());
             pstmt.setLong(++i, this.getBalanceNQT());
             pstmt.setLong(++i, this.getUnconfirmedBalanceNQT());
@@ -635,8 +679,8 @@ public final class Account {
     }
 
     public byte[] getPublicKey() {
-        if (this.keyHeight == -1) {
-            return null;
+        if (this.publicKey == null) {
+            this.publicKey = publicKeyTable.get(publicKeyDbKeyFactory.newKey(this.id));
         }
         return publicKey;
     }
@@ -653,14 +697,14 @@ public final class Account {
         if (getPublicKey() == null) {
             throw new IllegalArgumentException("Recipient account doesn't have a public key set");
         }
-        return EncryptedData.encrypt(data, Crypto.getPrivateKey(senderSecretPhrase), publicKey);
+        return EncryptedData.encrypt(data, Crypto.getPrivateKey(senderSecretPhrase), getPublicKey());
     }
 
     public byte[] decryptFrom(EncryptedData encryptedData, String recipientSecretPhrase) {
         if (getPublicKey() == null) {
             throw new IllegalArgumentException("Sender account doesn't have a public key set");
         }
-        return encryptedData.decrypt(Crypto.getPrivateKey(recipientSecretPhrase), publicKey);
+        return encryptedData.decrypt(Crypto.getPrivateKey(recipientSecretPhrase), getPublicKey());
     }
 
     public long getBalanceNQT() {
@@ -679,7 +723,7 @@ public final class Account {
 
         Block lastBlock = Nxt.getBlockchain().getLastBlock();
         if (lastBlock.getHeight() >= Constants.TRANSPARENT_FORGING_BLOCK_6
-                && (getPublicKey() == null || lastBlock.getHeight() - keyHeight <= 1440)) {
+                && (keyHeight == 0 || lastBlock.getHeight() - keyHeight <= 1440)) {
             return 0; // cfb: Accounts with the public key revealed less than 1440 blocks ago are not allowed to generate blocks
         }
         if (lastBlock.getHeight() < Constants.TRANSPARENT_FORGING_BLOCK_3
@@ -877,7 +921,7 @@ public final class Account {
 
     void leaseEffectiveBalance(long lesseeId, short period) {
         Account lessee = Account.getAccount(lesseeId);
-        if (lessee != null && lessee.getPublicKey() != null) {
+        if (lessee != null && lessee.getKeyHeight() > 0) {
             int height = Nxt.getBlockchain().getHeight();
             if (currentLeasingHeightFrom == Integer.MAX_VALUE) {
                 currentLeasingHeightFrom = height + 1440;
@@ -908,49 +952,23 @@ public final class Account {
     // this.publicKey is set to null (in which case this.publicKey also gets set to key)
     // or
     // this.publicKey is already set to an array equal to key
-    boolean setOrVerify(byte[] key, int height) {
-        if (this.publicKey == null) {
-            if (Db.db.isInTransaction()) {
-                this.publicKey = key;
-                this.keyHeight = -1;
-                accountTable.insert(this);
-            }
+    boolean setOrVerify(byte[] key) {
+        if (this.getPublicKey() == null) {
+            this.publicKey = key;
             return true;
-        } else if (Arrays.equals(this.publicKey, key)) {
-            return true;
-        } else if (this.keyHeight == -1) {
-            Logger.logMessage("DUPLICATE KEY!!!");
-            Logger.logMessage("Account key for " + Convert.toUnsignedLong(id) + " was already set to a different one at the same height "
-                    + ", current height is " + height + ", rejecting new key");
-            return false;
-        } else if (this.keyHeight >= height) {
-            Logger.logMessage("DUPLICATE KEY!!!");
-            if (Db.db.isInTransaction()) {
-                Logger.logMessage("Changing key for account " + Convert.toUnsignedLong(id) + " at height " + height
-                        + ", was previously set to a different one at height " + keyHeight);
-                this.publicKey = key;
-                this.keyHeight = height;
-                accountTable.insert(this);
-            }
-            return true;
+        } else {
+            return Arrays.equals(this.publicKey, key);
         }
-        Logger.logMessage("DUPLICATE KEY!!!");
-        Logger.logMessage("Invalid key for account " + Convert.toUnsignedLong(id) + " at height " + height
-                + ", was already set to a different one at height " + keyHeight);
-        return false;
     }
 
     void apply(byte[] key, int height) {
-        if (! setOrVerify(key, this.creationHeight)) {
+        if (! setOrVerify(key)) {
             throw new IllegalStateException("Public key mismatch");
         }
-        if (this.publicKey == null) {
-            throw new IllegalStateException("Public key has not been set for account " + Convert.toUnsignedLong(id)
-                    +" at height " + height + ", key height is " + keyHeight);
-        }
-        if (this.keyHeight == -1 || this.keyHeight > height) {
+        if (this.keyHeight == 0) {
             this.keyHeight = height;
             accountTable.insert(this);
+            publicKeyTable.insert(this.publicKey);
         }
     }
 

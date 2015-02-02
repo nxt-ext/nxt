@@ -396,14 +396,14 @@ public interface Appendix {
                 throw new NxtException.NotValidException("Public key announcements not enabled for version 0 transactions");
             }
             Account recipientAccount = Account.getAccount(recipientId);
-            if (recipientAccount != null && recipientAccount.getPublicKey() != null && ! Arrays.equals(publicKey, recipientAccount.getPublicKey())) {
+            if (recipientAccount != null && recipientAccount.getKeyHeight() > 0 && ! Arrays.equals(publicKey, recipientAccount.getPublicKey())) {
                 throw new NxtException.NotCurrentlyValidException("A different public key for this account has already been announced");
             }
         }
 
         @Override
         void apply(Transaction transaction, Account senderAccount, Account recipientAccount) {
-            if (recipientAccount.setOrVerify(publicKey, transaction.getHeight())) {
+            if (recipientAccount.setOrVerify(publicKey)) {
                 recipientAccount.apply(this.publicKey, transaction.getHeight());
             }
         }
