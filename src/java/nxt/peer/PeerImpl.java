@@ -247,8 +247,12 @@ final class PeerImpl implements Peer {
             // prevents erroneous blacklisting during loading of blockchain from scratch
             return;
         }
+        if (cause instanceof ParseException) {
+            Logger.logDebugMessage("Peer " + peerAddress + " returned invalid response ", cause);
+            return;
+        }
         if (! isBlacklisted()) {
-            if (cause instanceof IOException || cause instanceof ParseException) {
+            if (cause instanceof IOException /*|| cause instanceof ParseException*/) {
                 Logger.logDebugMessage("Blacklisting " + peerAddress + " because of: " + cause.toString());
             } else {
                 Logger.logDebugMessage("Blacklisting " + peerAddress + " because of: " + cause.toString(), cause);
