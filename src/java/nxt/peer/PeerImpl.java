@@ -248,7 +248,7 @@ final class PeerImpl implements Peer {
             return;
         }
         if (cause instanceof ParseException) {
-            Logger.logDebugMessage("Peer " + peerAddress + " returned invalid response ", cause);
+            Logger.logDebugMessage("Peer " + peerAddress + " returned invalid response: " + cause.toString());
             return;
         }
         if (! isBlacklisted()) {
