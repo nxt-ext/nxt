@@ -572,7 +572,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         if (height <= 0) {
             fullReset();
         } else if (height < getMinRollbackHeight()) {
-            popOffWithRescan(height);
+            popOffWithRescan(height + 1);
             return Collections.emptyList();
         } else if (height < blockchain.getHeight()) {
             return popOffTo(blockchain.getBlockAtHeight(height));
