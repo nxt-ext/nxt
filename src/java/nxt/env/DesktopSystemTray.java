@@ -1,12 +1,10 @@
 package nxt.env;
 
 import nxt.Block;
-import nxt.BlockchainProcessor;
 import nxt.Constants;
 import nxt.Generator;
 import nxt.Nxt;
 import nxt.http.API;
-import nxt.peer.Peer;
 import nxt.peer.Peers;
 import nxt.util.Convert;
 import nxt.util.Logger;
@@ -18,10 +16,12 @@ import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.Collection;
+import java.util.Date;
 
 public class DesktopSystemTray {
 
     private SystemTray tray;
+    private ImageIcon imageIcon;
     private TrayIcon trayIcon;
     private MenuItem openWallet;
     private MenuItem viewLog;
@@ -33,7 +33,8 @@ public class DesktopSystemTray {
             return;
         }
         final PopupMenu popup = new PopupMenu();
-        trayIcon = new TrayIcon(new ImageIcon("html/ui/img/nxt-icon-32x32.png", "tray icon").getImage());
+        imageIcon = new ImageIcon("html/ui/img/nxt-icon-32x32.png", "tray icon");
+        trayIcon = new TrayIcon(imageIcon.getImage());
         trayIcon.setImageAutoSize(true);
         tray = SystemTray.getSystemTray();
 
@@ -105,8 +106,6 @@ public class DesktopSystemTray {
 
     private void displayStatus() {
         Block lastBlock = Nxt.getBlockchain().getLastBlock();
-        BlockchainProcessor blockchainProcessor = Nxt.getBlockchainProcessor();
-        Peer lastBlockchainFeeder = blockchainProcessor.getLastBlockchainFeeder();
         Collection<Generator> allGenerators = Generator.getAllGenerators();
 
         StringBuilder generators = new StringBuilder();
@@ -118,16 +117,20 @@ public class DesktopSystemTray {
         sb.append(String.format(format, "Application", Nxt.APPLICATION));
         sb.append(String.format(format, "Version", Nxt.VERSION));
         sb.append(String.format(format, "Network", (Constants.isTestnet) ? "test" : "main"));
-        sb.append(String.format(format, "Working offline", Constants.isOffline));
+        sb.append(Constants.isTestnet ? String.format(format, "Working offline", Constants.isOffline) : "");
         sb.append(String.format(format, "Wallet", API.getBrowserUri()));
         sb.append(String.format(format, "Peer port", Peers.getDefaultPeerPort()));
         sb.append(String.format(format, "Program folder", Paths.get(".").toAbsolutePath().getParent()));
         sb.append(String.format(format, "User folder", Paths.get(DesktopMode.NXT_USER_HOME).toAbsolutePath()));
 
-        sb.append("\nBlockchain\n");
-        sb.append(lastBlock == null ? "" : String.format(format, "Height", lastBlock.getHeight()));
-        sb.append(lastBlockchainFeeder == null ? "" : String.format(format, "Last feeder", lastBlockchainFeeder.getAnnouncedAddress()));
-        sb.append(String.format(format, "Time stamp", Nxt.getEpochTime()));
+        if (lastBlock != null) {
+            sb.append("\nLast Block\n");
+            sb.append(String.format(format, "Height", lastBlock.getHeight()));
+            sb.append(String.format(format, "Timestamp", lastBlock.getTimestamp()));
+            sb.append(String.format(format, "Time", new Date(Convert.fromEpochTime(lastBlock.getTimestamp()))));
+            sb.append(String.format(format, "Seconds passed", Nxt.getEpochTime() - lastBlock.getTimestamp()));
+        }
+
         sb.append("\n");
         sb.append(String.format(format, "Forging", allGenerators.size() > 0));
         if (allGenerators.size() > 0) {
@@ -140,7 +143,7 @@ public class DesktopSystemTray {
         sb.append(String.format(format, "Total memory", humanReadableByteCount(Runtime.getRuntime().totalMemory())));
         sb.append(String.format(format, "Free memory", humanReadableByteCount(Runtime.getRuntime().freeMemory())));
         sb.append(String.format(format, "Process id", Nxt.getProcessId()));
-        JOptionPane.showMessageDialog(null, sb.toString(), "NXT Server Status", JOptionPane.INFORMATION_MESSAGE);
+        JOptionPane.showMessageDialog(null, sb.toString(), "NXT Server Status", JOptionPane.INFORMATION_MESSAGE, imageIcon);
     }
 
     void setToolTip(final SystemTrayDataProvider dataProvider) {

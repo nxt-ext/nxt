@@ -75,7 +75,6 @@
         <panel classname="LicencePanel"/>
         <panel classname="InfoPanel"/>
         <panel classname="TargetPanel"/>
-        <panel classname="PacksPanel"/>
 		<panel classname="ShortcutPanel"/>
         <panel classname="InstallPanel"/>
         <panel classname="SimpleFinishPanel"/>
@@ -126,7 +125,7 @@
 			<executable targetfile="${INSTALL_PATH}/docker_start.sh"/>
 			<file src="Dockerfile" targetdir="${INSTALL_PATH}" override="true"/>
 		</pack>
-        <pack name="jre" os="windows" required="no">
+        <pack name="jre" os="windows" required="yes" uninstall="false">
             <description>Java 32 bit</description>
 			<fileset dir="jre" targetdir="${INSTALL_PATH}/jre" override="true"/>
 		</pack>
