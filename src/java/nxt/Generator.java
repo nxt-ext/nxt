@@ -82,7 +82,6 @@ public final class Generator implements Comparable<Generator> {
                             }
                         }
                         int generationLimit = Nxt.getEpochTime() - delayTime;
-                        setDelay(Constants.FORGING_DELAY);
                         for (Generator generator : sortedForgers) {
                             if (generator.getHitTime() > generationLimit || generator.forge(lastBlock, generationLimit)) {
                                 return;
@@ -292,6 +291,7 @@ public final class Generator implements Comparable<Generator> {
         while (true) {
             try {
                 BlockchainProcessorImpl.getInstance().generateBlock(secretPhrase, timestamp);
+                setDelay(Constants.FORGING_DELAY);
                 return true;
             } catch (BlockchainProcessor.TransactionNotAcceptedException e) {
                 // the bad transaction has been expunged, try again
