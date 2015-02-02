@@ -119,12 +119,12 @@ public final class Peers {
             try {
                 Hallmark hallmark = Hallmark.parseHallmark(Peers.myHallmark);
                 if (!hallmark.isValid() || myAddress == null) {
-                    throw new RuntimeException();
+                    throw new RuntimeException("Hallmark is invalid or myAddress undefined");
                 }
                 URI uri = new URI("http://" + myAddress.trim());
                 String host = uri.getHost();
                 if (!hallmark.getHost().equals(host)) {
-                    throw new RuntimeException();
+                    throw new RuntimeException("Hallmark host " + hallmark.getHost() + " differs from myAddress " + host);
                 }
             } catch (RuntimeException | URISyntaxException e) {
                 Logger.logMessage("Your hallmark is invalid: " + Peers.myHallmark + " for your address: " + myAddress);
