@@ -1193,7 +1193,7 @@ public final class Account {
             }
         }
         for (final AccountAsset accountAsset : accountAssets) {
-            if (accountAsset.getAccountId() != this.id && accountAsset.getAccountId() != Genesis.CREATOR_ID) {
+            if (accountAsset.getAccountId() != this.id && accountAsset.getAccountId() != Genesis.CREATOR_ID && accountAsset.getQuantityQNT() != 0) {
                 long dividend = Convert.safeMultiply(accountAsset.getQuantityQNT(), amountNQTPerQNT);
                 Account.getAccount(accountAsset.getAccountId()).addToBalanceAndUnconfirmedBalanceNQT(dividend);
                 totalDividend += dividend;
