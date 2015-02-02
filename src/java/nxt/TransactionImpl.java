@@ -21,7 +21,7 @@ final class TransactionImpl implements Transaction {
     static final class BuilderImpl implements Builder {
 
         private final short deadline;
-        private final byte[] senderPublicKey;
+        private byte[] senderPublicKey;
         private final long amountNQT;
         private final long feeNQT;
         private final TransactionType type;
@@ -184,7 +184,7 @@ final class TransactionImpl implements Transaction {
     }
 
     private final short deadline;
-    private final byte[] senderPublicKey;
+    private volatile byte[] senderPublicKey;
     private final long recipientId;
     private final long amountNQT;
     private final long feeNQT;
@@ -265,7 +265,7 @@ final class TransactionImpl implements Transaction {
             feeNQT = builder.feeNQT;
         }
 
-        if ((timestamp == 0 && Arrays.equals(senderPublicKey, Genesis.CREATOR_PUBLIC_KEY))
+        if ((timestamp == 0 && Arrays.equals(getSenderPublicKey(), Genesis.CREATOR_PUBLIC_KEY))
                 ? (deadline != 0 || feeNQT != 0)
                 : deadline < 1
                 || feeNQT > Constants.MAX_BALANCE_NQT
@@ -308,6 +308,9 @@ final class TransactionImpl implements Transaction {
 
     @Override
     public byte[] getSenderPublicKey() {
+        if (senderPublicKey == null) {
+            senderPublicKey = Account.getPublicKey(senderId);
+        }
         return senderPublicKey;
     }
 
@@ -467,7 +470,7 @@ final class TransactionImpl implements Transaction {
     @Override
     public long getSenderId() {
         if (senderId == 0) {
-            senderId = Account.getId(senderPublicKey);
+            senderId = Account.getId(getSenderPublicKey());
         }
         return senderId;
     }
@@ -507,7 +510,7 @@ final class TransactionImpl implements Transaction {
             buffer.put((byte) ((version << 4) | type.getSubtype()));
             buffer.putInt(timestamp);
             buffer.putShort(deadline);
-            buffer.put(senderPublicKey);
+            buffer.put(getSenderPublicKey());
             buffer.putLong(type.canHaveRecipient() ? recipientId : Genesis.CREATOR_ID);
             if (useNQT()) {
                 buffer.putLong(amountNQT);
@@ -632,7 +635,7 @@ final class TransactionImpl implements Transaction {
         json.put("subtype", type.getSubtype());
         json.put("timestamp", timestamp);
         json.put("deadline", deadline);
-        json.put("senderPublicKey", Convert.toHexString(senderPublicKey));
+        json.put("senderPublicKey", Convert.toHexString(getSenderPublicKey()));
         if (type.canHaveRecipient()) {
             json.put("recipient", Convert.toUnsignedLong(recipientId));
         }
@@ -743,7 +746,7 @@ final class TransactionImpl implements Transaction {
             return false;
         }
         byte[] data = zeroSignature(getBytes());
-        return Crypto.verify(signature, data, senderPublicKey, useNQT()) && account.setOrVerify(senderPublicKey, this.getHeight());
+        return Crypto.verify(signature, data, getSenderPublicKey(), useNQT()) && account.setOrVerify(getSenderPublicKey());
     }
 
     int getSize() {
@@ -819,7 +822,7 @@ final class TransactionImpl implements Transaction {
 
     void apply() {
         Account senderAccount = Account.getAccount(getSenderId());
-        senderAccount.apply(senderPublicKey, this.getHeight());
+        senderAccount.apply(getSenderPublicKey(), this.getHeight());
         Account recipientAccount = Account.getAccount(recipientId);
         if (recipientAccount == null && recipientId != 0) {
             recipientAccount = Account.addOrGetAccount(recipientId);

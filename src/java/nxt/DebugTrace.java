@@ -157,6 +157,7 @@ public final class DebugTrace {
         return debugTrace;
     }
 
+    //NOTE: first and last columns should not have a blank entry in any row, otherwise VerifyTrace fails to parse the line
     private static final String[] columns = {"height", "event", "account", "asset", "currency", "balance", "unconfirmed balance",
             "asset balance", "unconfirmed asset balance", "currency balance", "unconfirmed currency balance",
             "transaction amount", "transaction fee", "generation fee", "effective balance", "dividend",
@@ -167,7 +168,7 @@ public final class DebugTrace {
             "crowdfunding", "claim", "mint",
             "asset quantity", "currency units", "transaction", "lessee", "lessor guaranteed balance",
             "purchase", "purchase price", "purchase quantity", "purchase cost", "discount", "refund",
-            "sender", "recipient", "block", "timestamp"};
+            "sender", "recipient", "key height", "block", "timestamp"};
 
     private static final Map<String,String> headers = new HashMap<>();
     static {
@@ -405,6 +406,8 @@ public final class DebugTrace {
         map.put("timestamp", String.valueOf(Nxt.getBlockchain().getLastBlock().getTimestamp()));
         map.put("height", String.valueOf(Nxt.getBlockchain().getHeight()));
         map.put("event", unconfirmed ? "unconfirmed balance" : "balance");
+        map.put("key height", String.valueOf(account != null ? account.getKeyHeight() : 0));
+        map.put("effective balance", String.valueOf(account != null ? account.getEffectiveBalanceNXT() : 0));
         return map;
     }
 
@@ -465,7 +468,6 @@ public final class DebugTrace {
         map.put("generation fee", String.valueOf(fee));
         map.put("block", block.getStringId());
         map.put("event", "block");
-        map.put("effective balance", String.valueOf(Account.getAccount(accountId).getEffectiveBalanceNXT()));
         map.put("timestamp", String.valueOf(block.getTimestamp()));
         map.put("height", String.valueOf(block.getHeight()));
         return map;
@@ -654,7 +656,7 @@ public final class DebugTrace {
             try (DbIterator<Account.AccountAsset> iterator = Account.getAssetAccounts(dividendPayment.getAssetId(), dividendPayment.getHeight(), 0, -1)) {
                 while (iterator.hasNext()) {
                     Account.AccountAsset accountAsset = iterator.next();
-                    if (accountAsset.getAccountId() != accountId && accountAsset.getAccountId() != Genesis.CREATOR_ID) {
+                    if (accountAsset.getAccountId() != accountId && accountAsset.getAccountId() != Genesis.CREATOR_ID && accountAsset.getQuantityQNT() != 0) {
                         long dividend = Convert.safeMultiply(accountAsset.getQuantityQNT(), dividendPayment.getAmountNQTPerQNT());
                         Map recipient = getValues(accountAsset.getAccountId(), false);
                         recipient.put("dividend", String.valueOf(dividend));

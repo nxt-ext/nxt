@@ -44,6 +44,9 @@ public final class Nxt {
         printCommandLineArguments();
         mode = UserInterfaceModeFactory.getMode();
         loadProperties(defaultProperties, NXT_DEFAULT_PROPERTIES, true);
+        if (!VERSION.equals(Nxt.defaultProperties.getProperty("nxt.version"))) {
+            throw new RuntimeException("Using an nxt-default.properties file from a version other than " + VERSION + " is not supported!!!");
+        }
     }
 
     private static final Properties properties = new Properties(defaultProperties);
@@ -207,13 +210,17 @@ public final class Nxt {
     }
 
     public static void main(String[] args) {
-        Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
-            @Override
-            public void run() {
-                Nxt.shutdown();
-            }
-        }));
-        init();
+        try {
+            Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    Nxt.shutdown();
+                }
+            }));
+            init();
+        } catch (Throwable t) {
+            System.out.println("Fatal error: " + t.toString());
+        }
     }
 
     public static void init(Properties customProperties) {

@@ -120,7 +120,7 @@ final class BlockDb {
             long totalAmountNQT = rs.getLong("total_amount");
             long totalFeeNQT = rs.getLong("total_fee");
             int payloadLength = rs.getInt("payload_length");
-            byte[] generatorPublicKey = rs.getBytes("generator_public_key");
+            long generatorId = rs.getLong("generator_id");
             byte[] previousBlockHash = rs.getBytes("previous_block_hash");
             BigInteger cumulativeDifficulty = new BigInteger(rs.getBytes("cumulative_difficulty"));
             long baseTarget = rs.getLong("base_target");
@@ -131,7 +131,7 @@ final class BlockDb {
             byte[] payloadHash = rs.getBytes("payload_hash");
             long id = rs.getLong("id");
             return new BlockImpl(version, timestamp, previousBlockId, totalAmountNQT, totalFeeNQT, payloadLength, payloadHash,
-                    generatorPublicKey, generationSignature, blockSignature, previousBlockHash,
+                    generatorId, generationSignature, blockSignature, previousBlockHash,
                     cumulativeDifficulty, baseTarget, nextBlockId, height, id);
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
@@ -141,9 +141,9 @@ final class BlockDb {
     static void saveBlock(Connection con, BlockImpl block) {
         try {
             try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO block (id, version, timestamp, previous_block_id, "
-                    + "total_amount, total_fee, payload_length, generator_public_key, previous_block_hash, cumulative_difficulty, "
+                    + "total_amount, total_fee, payload_length, previous_block_hash, cumulative_difficulty, "
                     + "base_target, height, generation_signature, block_signature, payload_hash, generator_id) "
-                    + " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
+                    + " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
                 int i = 0;
                 pstmt.setLong(++i, block.getId());
                 pstmt.setInt(++i, block.getVersion());
@@ -152,7 +152,6 @@ final class BlockDb {
                 pstmt.setLong(++i, block.getTotalAmountNQT());
                 pstmt.setLong(++i, block.getTotalFeeNQT());
                 pstmt.setInt(++i, block.getPayloadLength());
-                pstmt.setBytes(++i, block.getGeneratorPublicKey());
                 pstmt.setBytes(++i, block.getPreviousBlockHash());
                 pstmt.setBytes(++i, block.getCumulativeDifficulty().toByteArray());
                 pstmt.setLong(++i, block.getBaseTarget());
@@ -176,7 +175,7 @@ final class BlockDb {
         }
     }
 
-    // relying on cascade triggers in the database to delete the transactions for all deleted blocks
+    // relying on cascade triggers in the database to delete the transactions and public keys for all deleted blocks
     static void deleteBlocksFrom(long blockId) {
         if (!Db.db.isInTransaction()) {
             try {
@@ -235,6 +234,7 @@ final class BlockDb {
                 stmt.executeUpdate("SET REFERENTIAL_INTEGRITY FALSE");
                 stmt.executeUpdate("TRUNCATE TABLE transaction");
                 stmt.executeUpdate("TRUNCATE TABLE block");
+                stmt.executeUpdate("TRUNCATE TABLE public_key");
                 stmt.executeUpdate("SET REFERENTIAL_INTEGRITY TRUE");
                 Db.db.commitTransaction();
             } catch (SQLException e) {

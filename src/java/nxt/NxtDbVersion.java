@@ -169,8 +169,9 @@ class NxtDbVersion extends DbVersion {
             case 54:
                 apply("ALTER TABLE transaction ALTER COLUMN recipient_id SET NULL");
             case 55:
+                apply("CREATE TABLE IF NOT EXISTS public_key (db_id IDENTITY, account_id BIGINT NOT NULL, "
+                        + "public_key BINARY(32), height INT NOT NULL, FOREIGN KEY (height) REFERENCES block (height) ON DELETE CASCADE)");
                 BlockDb.deleteAll();
-                apply(null);
             case 56:
                 apply("CREATE INDEX IF NOT EXISTS transaction_recipient_id_idx ON transaction (recipient_id)");
             case 57:
@@ -475,8 +476,9 @@ class NxtDbVersion extends DbVersion {
                 apply("CREATE INDEX IF NOT EXISTS unconfirmed_transaction_height_fee_timestamp_idx ON unconfirmed_transaction "
                         + "(transaction_height ASC, fee_per_byte DESC, arrival_timestamp ASC)");
             case 174:
+                apply("CREATE TABLE IF NOT EXISTS public_key (db_id IDENTITY, account_id BIGINT NOT NULL, "
+                        + "public_key BINARY(32), height INT NOT NULL, FOREIGN KEY (height) REFERENCES block (height) ON DELETE CASCADE)");
                 BlockDb.deleteAll();
-                apply(null);
             case 175:
                 apply("ALTER TABLE transaction ADD COLUMN IF NOT EXISTS transaction_index SMALLINT NOT NULL");
             case 176:
@@ -535,6 +537,70 @@ class NxtDbVersion extends DbVersion {
             case 199:
                 apply("CALL FTL_REINDEX()");
             case 200:
+                apply("CREATE TABLE IF NOT EXISTS public_key (db_id IDENTITY, account_id BIGINT NOT NULL, "
+                        + "public_key BINARY(32), height INT NOT NULL, FOREIGN KEY (height) REFERENCES block (height) ON DELETE CASCADE)");
+            case 201:
+                apply("INSERT INTO public_key (account_id, public_key, height) SELECT id, public_key, min(height) "
+                        + "FROM account WHERE public_key IS NOT NULL GROUP BY id");
+            case 202:
+                apply("CREATE UNIQUE INDEX IF NOT EXISTS public_key_account_id_idx ON public_key (account_id)");
+            case 203:
+                apply("ALTER TABLE account DROP COLUMN IF EXISTS public_key");
+            case 204:
+                apply("ALTER TABLE block DROP COLUMN IF EXISTS generator_public_key");
+            case 205:
+                apply("ALTER TABLE transaction DROP COLUMN IF EXISTS sender_public_key");
+            case 206:
+                apply("CREATE INDEX IF NOT EXISTS account_height_idx ON account(height)");
+            case 207:
+                apply("CREATE INDEX IF NOT EXISTS account_asset_height_idx ON account_asset(height)");
+            case 208:
+                apply("CREATE INDEX IF NOT EXISTS account_currency_height_idx ON account_currency(height)");
+            case 209:
+                apply("CREATE INDEX IF NOT EXISTS account_guaranteed_balance_height_idx ON account_guaranteed_balance(height)");
+            case 210:
+                apply("CREATE INDEX IF NOT EXISTS alias_height_idx ON alias(height)");
+            case 211:
+                apply("CREATE INDEX IF NOT EXISTS alias_offer_height_idx ON alias_offer(height)");
+            case 212:
+                apply("CREATE INDEX IF NOT EXISTS ask_order_height_idx ON ask_order(height)");
+            case 213:
+                apply("CREATE INDEX IF NOT EXISTS asset_height_idx ON asset(height)");
+            case 214:
+                apply("CREATE INDEX IF NOT EXISTS asset_transfer_height_idx ON asset_transfer(height)");
+            case 215:
+                apply("CREATE INDEX IF NOT EXISTS bid_order_height_idx ON bid_order(height)");
+            case 216:
+                apply("CREATE INDEX IF NOT EXISTS buy_offer_height_idx ON buy_offer(height)");
+            case 217:
+                apply("CREATE INDEX IF NOT EXISTS currency_height_idx ON currency(height)");
+            case 218:
+                apply("CREATE INDEX IF NOT EXISTS currency_founder_height_idx ON currency_founder(height)");
+            case 219:
+                apply("CREATE INDEX IF NOT EXISTS currency_mint_height_idx ON currency_mint(height)");
+            case 220:
+                apply("CREATE INDEX IF NOT EXISTS currency_supply_height_idx ON currency_supply(height)");
+            case 221:
+                apply("CREATE INDEX IF NOT EXISTS currency_transfer_height_idx ON currency_transfer(height)");
+            case 222:
+                apply("CREATE INDEX IF NOT EXISTS exchange_height_idx ON exchange(height)");
+            case 223:
+                apply("CREATE INDEX IF NOT EXISTS goods_height_idx ON goods(height)");
+            case 224:
+                apply("CREATE INDEX IF NOT EXISTS public_key_height_idx ON public_key(height)");
+            case 225:
+                apply("CREATE INDEX IF NOT EXISTS purchase_height_idx ON purchase(height)");
+            case 226:
+                apply("CREATE INDEX IF NOT EXISTS purchase_feedback_height_idx ON purchase_feedback(height)");
+            case 227:
+                apply("CREATE INDEX IF NOT EXISTS purchase_public_feedback_height_idx ON purchase_public_feedback(height)");
+            case 228:
+                apply("CREATE INDEX IF NOT EXISTS sell_offer_height_idx ON sell_offer(height)");
+            case 229:
+                apply("CREATE INDEX IF NOT EXISTS tag_height_idx ON tag(height)");
+            case 230:
+                apply("CREATE INDEX IF NOT EXISTS trade_height_idx ON trade(height)");
+            case 231:
                 return;
             default:
                 throw new RuntimeException("Blockchain database inconsistent with code, at update " + nextUpdate + ", probably trying to run older code on newer database");
