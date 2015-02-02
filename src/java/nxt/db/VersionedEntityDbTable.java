@@ -60,7 +60,7 @@ public abstract class VersionedEntityDbTable<T> extends EntityDbTable<T> {
     }
 
     @Override
-    public final void trim(int height) {
+    public void trim(int height) {
         trim(db, table, height, dbKeyFactory);
     }
 

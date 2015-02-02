@@ -332,6 +332,17 @@ public final class Account {
             accountAsset.save(con);
         }
 
+        // need to keep 1440 more than the default to support the dividend payment transaction
+        @Override
+        public void trim(int height) {
+            super.trim(Math.max(0, height - 1440));
+        }
+
+        @Override
+        public void checkAvailable(int height) {
+            super.checkAvailable(height + 1440);
+        }
+
         @Override
         protected String defaultSort() {
             return " ORDER BY quantity DESC, account_id, asset_id ";

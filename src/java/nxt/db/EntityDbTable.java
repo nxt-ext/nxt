@@ -36,7 +36,7 @@ public abstract class EntityDbTable<T> extends DerivedDbTable {
         db.getCache(table).clear();
     }
 
-    public final void checkAvailable(int height) {
+    public void checkAvailable(int height) {
         if (multiversion && height < Nxt.getBlockchainProcessor().getMinRollbackHeight()) {
             throw new IllegalArgumentException("Historical data as of height " + height +" not available, set nxt.trimDerivedTables=false and re-scan");
         }
