@@ -408,7 +408,12 @@ final class PeerImpl implements Peer {
         }
 
         if (response != null && response.get("error") != null) {
-            Logger.logDebugMessage("Peer returned error: " + response.toJSONString());
+            Logger.logDebugMessage("Peer " + peerAddress + " version " + version + " returned error: " + response.toJSONString());
+            try {
+                StringWriter stringWriter = new StringWriter();
+                request.writeJSONString(stringWriter);
+                Logger.logDebugMessage("Request: " + stringWriter.toString());
+            } catch (IOException ignore) {}
         }
         return response;
 
