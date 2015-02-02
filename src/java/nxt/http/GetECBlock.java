@@ -1,6 +1,7 @@
 package nxt.http;
 
 import nxt.Block;
+import nxt.Constants;
 import nxt.EconomicClustering;
 import nxt.Nxt;
 import nxt.NxtException;
@@ -23,7 +24,7 @@ public final class GetECBlock extends APIServlet.APIRequestHandler {
         if (timestamp == 0) {
             timestamp = Nxt.getEpochTime();
         }
-        if (timestamp < Nxt.getBlockchain().getLastBlock().getTimestamp() - 15) {
+        if (timestamp < Nxt.getBlockchain().getLastBlock().getTimestamp() - Constants.MAX_TIMEDRIFT) {
             return JSONResponses.INCORRECT_TIMESTAMP;
         }
         Block ecBlock = EconomicClustering.getECBlock(timestamp);

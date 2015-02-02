@@ -41,23 +41,19 @@ public final class Generator implements Comparable<Generator> {
 
     private static final ConcurrentMap<String, Generator> generators = new ConcurrentHashMap<>();
     private static final Collection<Generator> allGenerators = Collections.unmodifiableCollection(generators.values());
-    private static volatile List<Generator> sortedForgers;
+    private static volatile List<Generator> sortedForgers = null;
     private static long lastBlockId;
+    private static int delayTime = Constants.FORGING_DELAY;
 
     private static final Runnable generateBlocksThread = new Runnable() {
 
-        private volatile int lastTimestamp;
+        private volatile boolean logged;
 
         @Override
         public void run() {
 
             try {
                 try {
-                    int timestamp = Nxt.getEpochTime();
-                    if (timestamp == lastTimestamp) {
-                        return;
-                    }
-                    lastTimestamp = timestamp;
                     synchronized (Nxt.getBlockchain()) {
                         Block lastBlock = Nxt.getBlockchain().getLastBlock();
                         if (lastBlock == null || lastBlock.getHeight() < Constants.LAST_KNOWN_BLOCK) {
@@ -74,10 +70,21 @@ public final class Generator implements Comparable<Generator> {
                             }
                             Collections.sort(forgers);
                             sortedForgers = Collections.unmodifiableList(forgers);
+                            logged = false;
                         }
-                        int generationTimestamp = timestamp - 20;
+                        if (!logged) {
+                            for (Generator generator : sortedForgers) {
+                                if (generator.getDeadline() > 120) {
+                                    break;
+                                }
+                                Logger.logDebugMessage(generator.toString());
+                                logged = true;
+                            }
+                        }
+                        int generationLimit = Nxt.getEpochTime() - delayTime;
+                        setDelay(Constants.FORGING_DELAY);
                         for (Generator generator : sortedForgers) {
-                            if (generator.getHitTime() > generationTimestamp + 1 || generator.forge(lastBlock, generationTimestamp)) {
+                            if (generator.getHitTime() > generationLimit || generator.forge(lastBlock)) {
                                 return;
                             }
                         }
@@ -113,12 +120,11 @@ public final class Generator implements Comparable<Generator> {
         Generator generator = new Generator(secretPhrase);
         Generator old = generators.putIfAbsent(secretPhrase, generator);
         if (old != null) {
-            Logger.logDebugMessage("Account " + Convert.toUnsignedLong(old.getAccountId()) + " is already forging");
+            Logger.logDebugMessage(old + " is already forging");
             return old;
         }
         listeners.notify(generator, Event.START_FORGING);
-        Logger.logDebugMessage("Account " + Convert.toUnsignedLong(generator.getAccountId()) + " started forging, deadline "
-                + generator.getDeadline() + " seconds");
+        Logger.logDebugMessage(generator + " started");
         return generator;
     }
 
@@ -126,7 +132,7 @@ public final class Generator implements Comparable<Generator> {
         Generator generator = generators.remove(secretPhrase);
         if (generator != null) {
             sortedForgers = null;
-            Logger.logDebugMessage("Account " + Convert.toUnsignedLong(generator.getAccountId()) + " stopped forging");
+            Logger.logDebugMessage(generator + " stopped");
             listeners.notify(generator, Event.STOP_FORGING);
         }
         return generator;
@@ -138,7 +144,7 @@ public final class Generator implements Comparable<Generator> {
         while (iter.hasNext()) {
             Generator generator = iter.next();
             iter.remove();
-            Logger.logDebugMessage("Account " + Convert.toUnsignedLong(generator.getAccountId()) + " stopped forging");
+            Logger.logDebugMessage(generator + " stopped");
             listeners.notify(generator, Event.STOP_FORGING);
         }
         sortedForgers = null;
@@ -153,16 +159,26 @@ public final class Generator implements Comparable<Generator> {
         return allGenerators;
     }
 
+    public static List<Generator> getSortedForgers() {
+        return sortedForgers == null ? Collections.<Generator>emptyList() : sortedForgers;
+    }
+
     public static long getNextHitTime(long lastBlockId, int curTime) {
         synchronized (Nxt.getBlockchain()) {
             if (lastBlockId == Generator.lastBlockId && sortedForgers != null) {
                 for (Generator generator : sortedForgers) {
-                    if (generator.getHitTime() >= curTime - 20) {
+                    if (generator.getHitTime() >= curTime - delayTime) {
                         return generator.getHitTime();
                     }
                 }
             }
             return Long.MAX_VALUE;
+        }
+    }
+
+    static void setDelay(int delay) {
+        synchronized (Nxt.getBlockchain()) {
+            Generator.delayTime = delay;
         }
     }
 
@@ -252,7 +268,7 @@ public final class Generator implements Comparable<Generator> {
 
     @Override
     public String toString() {
-        return "account: " + Convert.toUnsignedLong(accountId) + " deadline: " + getDeadline();
+        return "Forger " + Convert.toUnsignedLong(accountId) + " deadline " + getDeadline() + " hit " + hitTime;
     }
 
     private void setLastBlock(Block lastBlock) {
@@ -266,20 +282,28 @@ public final class Generator implements Comparable<Generator> {
         listeners.notify(this, Event.GENERATION_DEADLINE);
     }
 
-    boolean forge(Block lastBlock, int timestamp) throws BlockchainProcessor.BlockNotAcceptedException {
-        if (verifyHit(hit, effectiveBalance, lastBlock, timestamp)) {
-            while (true) {
-                try {
-                    BlockchainProcessorImpl.getInstance().generateBlock(secretPhrase, timestamp);
-                    return true;
-                } catch (BlockchainProcessor.TransactionNotAcceptedException e) {
-                    if (Nxt.getEpochTime() - timestamp > 30) {
-                        throw e;
-                    }
+    boolean forge(Block lastBlock) throws BlockchainProcessor.BlockNotAcceptedException {
+        int timestamp = (int)hitTime + 1;
+        if (!verifyHit(hit, effectiveBalance, lastBlock, timestamp)) {
+            timestamp = Nxt.getEpochTime();
+            Logger.logDebugMessage(this.toString() + " failed to forge, trying now at " + timestamp);
+            if (!verifyHit(hit, effectiveBalance, lastBlock, timestamp)) {
+                Logger.logDebugMessage(this.toString() + " failed to forge at " + timestamp);
+                return false;
+            }
+        }
+        int start = Nxt.getEpochTime();
+        while (true) {
+            try {
+                BlockchainProcessorImpl.getInstance().generateBlock(secretPhrase, timestamp);
+                return true;
+            } catch (BlockchainProcessor.TransactionNotAcceptedException e) {
+                // the bad transaction has been expunged, try again
+                if (Nxt.getEpochTime() - start > 10) { // give up after trying for 10 s
+                    throw e;
                 }
             }
         }
-        return false;
     }
 
 }

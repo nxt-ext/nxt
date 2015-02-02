@@ -42,7 +42,7 @@ public final class GetForging extends APIServlet.APIRequestHandler {
             API.verifyPassword(req);
             JSONObject response = new JSONObject();
             JSONArray generators = new JSONArray();
-            for (Generator generator : Generator.getAllGenerators()) {
+            for (Generator generator : Generator.getSortedForgers()) {
                 generators.add(JSONData.generator(generator, elapsedTime));
             }
             response.put("generators", generators);
