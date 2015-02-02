@@ -84,7 +84,7 @@ public final class Generator implements Comparable<Generator> {
                         int generationLimit = Nxt.getEpochTime() - delayTime;
                         setDelay(Constants.FORGING_DELAY);
                         for (Generator generator : sortedForgers) {
-                            if (generator.getHitTime() > generationLimit || generator.forge(lastBlock)) {
+                            if (generator.getHitTime() > generationLimit || generator.forge(lastBlock, generationLimit)) {
                                 return;
                             }
                         }
@@ -282,15 +282,11 @@ public final class Generator implements Comparable<Generator> {
         listeners.notify(this, Event.GENERATION_DEADLINE);
     }
 
-    boolean forge(Block lastBlock) throws BlockchainProcessor.BlockNotAcceptedException {
-        int timestamp = (int)hitTime + 1;
+    boolean forge(Block lastBlock, int generationLimit) throws BlockchainProcessor.BlockNotAcceptedException {
+        int timestamp = (generationLimit - hitTime > 3600) ? generationLimit : (int)hitTime + 1;
         if (!verifyHit(hit, effectiveBalance, lastBlock, timestamp)) {
-            timestamp = Nxt.getEpochTime();
-            Logger.logDebugMessage(this.toString() + " failed to forge, trying now at " + timestamp);
-            if (!verifyHit(hit, effectiveBalance, lastBlock, timestamp)) {
-                Logger.logDebugMessage(this.toString() + " failed to forge at " + timestamp);
-                return false;
-            }
+            Logger.logDebugMessage(this.toString() + " failed to forge at " + timestamp);
+            return false;
         }
         int start = Nxt.getEpochTime();
         while (true) {
