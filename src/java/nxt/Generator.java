@@ -172,7 +172,7 @@ public final class Generator implements Comparable<Generator> {
                     }
                 }
             }
-            return Long.MAX_VALUE;
+            return 0;
         }
     }
 
