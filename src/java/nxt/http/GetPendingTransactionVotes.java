@@ -21,17 +21,13 @@ public class GetPendingTransactionVotes extends APIServlet.APIRequestHandler {
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
-        long transactionId = ParameterParser.getLong(req, "pendingTransaction", Long.MIN_VALUE, Long.MAX_VALUE, true);
-        PendingTransactionPoll poll = PendingTransactionPoll.getPoll(transactionId);
-        if (poll == null) {
-            return INCORRECT_PENDING_TRANSACTION;
-        }
+        PendingTransactionPoll poll = ParameterParser.getPendingTransactionPoll(req);
 
         long votes = VotePhased.countVotes(poll);
         long quorum = poll.getQuorum();
 
         JSONObject response = new JSONObject();
-        response.put("pendingTransaction", Convert.toUnsignedLong(transactionId));
+        response.put("pendingTransaction", Convert.toUnsignedLong(poll.getId()));
         response.put("votes", votes);
         response.put("quorum", quorum);
         response.put("finishHeight", poll.getFinishHeight());
