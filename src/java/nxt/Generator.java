@@ -167,7 +167,7 @@ public final class Generator implements Comparable<Generator> {
         synchronized (Nxt.getBlockchain()) {
             if (lastBlockId == Generator.lastBlockId && sortedForgers != null) {
                 for (Generator generator : sortedForgers) {
-                    if (generator.getHitTime() >= curTime - delayTime) {
+                    if (generator.getHitTime() >= curTime - Constants.FORGING_DELAY) {
                         return generator.getHitTime();
                     }
                 }
