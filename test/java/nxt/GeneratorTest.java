@@ -26,10 +26,10 @@ public class GeneratorTest extends BlockchainTest {
         int i=1;
         try {
             while (i<deadline) {
-                Assert.assertFalse(generator.forge(lastBlock, lastBlock.getTimestamp() + i));
+                Assert.assertFalse(generator.forge(lastBlock));
                 i += 100;
             }
-            Assert.assertEquals(true, generator.forge(lastBlock, (int)hitTime + 1));
+            Assert.assertEquals(true, generator.forge(lastBlock));
         } catch (BlockchainProcessor.BlockNotAcceptedException e) {
             e.printStackTrace();
         }
