@@ -40,6 +40,9 @@ public final class Nxt {
                     throw new RuntimeException("nxt-default.properties not in classpath and system property nxt-default.properties not defined either");
                 }
             }
+            if (!VERSION.equals(Nxt.defaultProperties.getProperty("nxt.version"))) {
+                throw new RuntimeException("Using an nxt-default.properties file from a version other than " + VERSION + " is not supported!!!");
+            }
         } catch (IOException e) {
             throw new RuntimeException("Error loading nxt-default.properties", e);
         }
