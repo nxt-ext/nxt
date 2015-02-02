@@ -1,5 +1,7 @@
 package nxt;
 
+import nxt.util.Logger;
+
 import java.util.Calendar;
 import java.util.TimeZone;
 
@@ -16,6 +18,7 @@ public final class Constants {
     public static final int MAX_ROLLBACK = Nxt.getIntProperty("nxt.maxRollback");
     static {
         if (MAX_ROLLBACK < 1441) {
+            Logger.logErrorMessage("nxt.maxRollback must be at least 1441");
             throw new RuntimeException("nxt.maxRollback must be at least 1441");
         }
     }

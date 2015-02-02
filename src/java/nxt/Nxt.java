@@ -141,13 +141,17 @@ public final class Nxt {
     }
 
     public static void main(String[] args) {
-        Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
-            @Override
-            public void run() {
-                Nxt.shutdown();
-            }
-        }));
-        init();
+        try {
+            Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    Nxt.shutdown();
+                }
+            }));
+            init();
+        } catch (Throwable t) {
+            System.out.println("Fatal error: " + t.toString());
+        }
     }
 
     public static void init(Properties customProperties) {
