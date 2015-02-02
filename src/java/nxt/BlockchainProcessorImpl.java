@@ -692,7 +692,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                             + " block timestamp " + block.getTimestamp() + " next hit time " + nextHitTime
                             + " current time " + curTime;
                     Logger.logDebugMessage(msg);
-                    Generator.setDelay(0);
+                    Generator.setDelay(-Constants.FORGING_SPEEDUP);
                     throw new BlockOutOfOrderException(msg);
                 }
                 if (!block.verifyBlockSignature()) {
