@@ -18,7 +18,6 @@ public class TestGetAccountPendingTransactionToApproveIds extends BlockchainTest
         String transactionId = TestCreateTwoPhased.issueCreateTwoPhased(apiCall, false);
 
         generateBlock();
-        generateBlock();
 
         apiCall = new APICall.Builder("getAccountPendingTransactionToApproveIds")
                 .param("account", Convert.toUnsignedLong(id3))
@@ -27,7 +26,7 @@ public class TestGetAccountPendingTransactionToApproveIds extends BlockchainTest
                 .build();
 
         JSONObject response = apiCall.invoke();
-        Logger.logMessage("getAccountPendingTransactionToApproveIds:" + response.toJSONString());
+        Logger.logMessage("getAccountPendingTransactionToApproveIdsResponse:" + response.toJSONString());
         Assert.assertTrue(((JSONArray) response.get("transactionIds")).contains(transactionId));
     }
 }

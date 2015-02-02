@@ -30,7 +30,7 @@ public class TestApprovePendingTransaction extends BlockchainTest {
                 .build();
 
         JSONObject response = apiCall.invoke();
-        Logger.logMessage("approvePendingTransaction:" + response.toJSONString());
+        Logger.logMessage("approvePendingTransactionResponse:" + response.toJSONString());
         Assert.assertNotNull(response.get("transaction"));
         generateBlock();
 
@@ -58,7 +58,7 @@ public class TestApprovePendingTransaction extends BlockchainTest {
                 .build();
 
         JSONObject response = apiCall.invoke();
-        Logger.logMessage("approvePendingTransaction:" + response.toJSONString());
+        Logger.logMessage("approvePendingTransactionResponse:" + response.toJSONString());
         Assert.assertNotNull(response.get("error"));
         generateBlock();
 
