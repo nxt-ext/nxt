@@ -4,10 +4,15 @@ import nxt.Constants;
 import nxt.NxtException;
 import nxt.crypto.Crypto;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 
 public final class Convert {
 
@@ -188,6 +193,34 @@ public final class Convert {
             fractionalPart *= 10;
         }
         return wholePart * multipliers[decimals] + fractionalPart;
+    }
+
+    public static byte[] compress(byte[] bytes) {
+        try (ByteArrayOutputStream bos = new ByteArrayOutputStream();
+             GZIPOutputStream gzip = new GZIPOutputStream(bos)) {
+            gzip.write(bytes);
+            gzip.flush();
+            gzip.close();
+            return bos.toByteArray();
+        } catch (IOException e) {
+            throw new RuntimeException(e.getMessage(), e);
+        }
+    }
+
+    public static byte[] uncompress(byte[] bytes) {
+        try (ByteArrayInputStream bis = new ByteArrayInputStream(bytes);
+             GZIPInputStream gzip = new GZIPInputStream(bis);
+             ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
+            byte[] buffer = new byte[1024];
+            int nRead;
+            while ((nRead = gzip.read(buffer, 0, buffer.length)) > 0) {
+                bos.write(buffer, 0, nRead);
+            }
+            bos.flush();
+            return bos.toByteArray();
+        } catch (IOException e) {
+            throw new RuntimeException(e.getMessage(), e);
+        }
     }
 
     // overflow checking based on https://www.securecoding.cert.org/confluence/display/java/NUM00-J.+Detect+or+prevent+integer+overflow

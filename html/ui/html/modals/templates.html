@@ -1,0 +1,100 @@
+<div id="recipient_modal_template">
+    <div class="form-group">
+        <label for="{{name}}_recipient" data-i18n="recipient">RECIPIENT</label>
+        <div class="input-group">
+            <input type="text" class="form-control" name="recipient" id="{{name}}_recipient" placeholder="Recipient Account" data-i18n="[placeholder]recipient_account" autofocus tabindex="1" />
+            <span class="input-group-btn btn-group recipient_selector">
+                <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown"><span class="glyphicon glyphicon-user"></span></button>
+                <ul class="dropdown-menu scrollable-menu" role="menu" style="right:0;left:auto;"></ul>
+            </span>
+        </div>
+    </div>
+    <div class="form-group recipient_public_key">
+        <label for="{{name}}_recipient_public_key" data-i18n="recipient_public_key">Recipient Public Key</label>
+        <input type="text" class="form-control" name="recipientPublicKey" id="{{name}}_recipient_public_key" placeholder="Public Key" data-i18n="[placeholder]public_key" tabindex="2" spellcheck="false" />
+    </div>
+</div>
+
+
+<div id="add_message_modal_template">
+    <div class="form-group add_message_container">
+        <input type="checkbox" name="add_message" id="{{name}}_add_message" class="add_message" tabindex="6" /> <label for="{{name}}_add_message" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_message_q">Add a Message?</span></label>
+    </div>
+    <div class="form-group optional_message">
+        <label for="{{name}}_message" data-i18n="message">MESSAGE</label>
+        <textarea class="form-control" id="{{name}}_message" name="message" rows="4" tabindex="3"></textarea>
+         <div style="margin-top:3px" id="{{name}}_to_specific_account_message_options">
+            <label for="{{name}}_encrypt_message" style="font-weight:normal;color:#666"><input type="checkbox" name="encrypt_message" id="{{name}}_encrypt_message" value="1" data-default="checked" checked="checked" /> <span data-i18n="encrypt_message">Encrypt Message</span></label>
+        </div>
+        <div style="margin-top:3px;display:none" id="{{name}}_to_anyone_message_options">
+            <label for="{{name}}_encrypt_message" style="font-weight:normal;color:#666" data-i18n="message_is_not_encrypted">This message is not encrypted.</span></label>
+        </div>
+    </div>
+</div>
+
+
+<div id="secret_phrase_modal_template">
+    <div class="form-group secret_phrase">
+        <label for="{{name}}_password" data-i18n="passphrase">PASSPHRASE</label>
+        <input type="password" name="secretPhrase" id="{{name}}_password" class="form-control" placeholder="" tabindex="5">
+    </div>
+</div>
+
+
+<div id="advanced_modal_template">
+    <div class="row advanced">
+        <div class="col-xs-6 col-sm-6 col-md-6">
+            <div class="form-group">
+                <label for="{{name}}_fee" data-i18n="fee">FEE</label>
+                <div class="input-group">
+                    <input type="number" name="feeNXT" id="{{name}}_fee" class="form-control" step="any" min="1" placeholder="Fee" data-i18n="[placeholder]fee" data-default="1" value="1" tabindex="3">
+                    <span class="input-group-addon">NXT</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-xs-6 col-sm-6 col-md-6">
+            <div class="form-group">
+                <label for="{{name}}_deadline" data-i18n="deadline_hours">DEADLINE (HOURS)</label>
+                <input type="number" name="deadline" id="{{name}}_deadline" class="form-control" placeholder="Deadline" data-i18n="[placeholder]deadline" min="1" data-default="24" value="24" tabindex="4">
+            </div>
+        </div>
+    </div>
+    <div class="form-group advanced">
+        <label for="{{name}}_referenced_transaction" data-i18n="referenced_transaction_hash">REFERENCED TRANSACTION HASH</label>
+        <input type="text" class="form-control" name="referencedTransactionFullHash" id="{{name}}_referenced_transaction" placeholder="Referenced Transaction Full Hash" data-i18n="[placeholder]referenced_transaction_full_hash" tabindex="6" spellcheck="false" />
+    </div>
+    <div class="form-group advanced" style="margin-bottom:0;">
+        <input type="checkbox" name="doNotBroadcast" id="{{name}}_do_not_broadcast" value="1" /> <label for="{{name}}_do_not_broadcast" style="font-weight:normal;" tabindex="7" data-i18n="do_not_broadcast">Do Not Broadcast</label>
+    </div>
+    <div class="form-group advanced">
+        <input type="checkbox" name="add_note_to_self" id="{{name}}_add_note_to_self" class="add_note_to_self" tabindex="8" /> <label for="{{name}}_add_note_to_self" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_note_to_self">Add Note to Self?</span></label>
+    </div>
+    <div class="form-group advanced optional_note">
+        <label for="{{name}}_note_to_self" data-i18n="note_to_self">Note to Self</label>
+        <textarea class="form-control" id="{{name}}_note_to_self" name="note_to_self" rows="4" tabindex="9"></textarea>
+        <div style="margin-top:3px;">
+            <label style="font-weight:normal;color:#666" data-i18n="note_is_encrypted">This note is encrypted.</span></label>
+        </div>
+    </div>
+</div>
+
+
+<div id="advanced_modal_no_fee_deadline_template">
+    <div class="form-group advanced">
+        <label for="{{name}}_referenced_transaction" data-i18n="referenced_transaction_hash">REFERENCED TRANSACTION HASH</label>
+        <input type="text" class="form-control" name="referencedTransactionFullHash" id="{{name}}_referenced_transaction" placeholder="Referenced Transaction Full Hash" data-i18n="[placeholder]referenced_transaction_full_hash" tabindex="6" spellcheck="false" />
+    </div>
+    <div class="form-group advanced" style="margin-bottom:0;">
+        <input type="checkbox" name="doNotBroadcast" id="{{name}}_do_not_broadcast" value="1" /> <label for="{{name}}_do_not_broadcast" style="font-weight:normal;" tabindex="7" data-i18n="do_not_broadcast">Do Not Broadcast</label>
+    </div>
+    <div class="form-group advanced">
+        <input type="checkbox" name="add_note_to_self" id="{{name}}_add_note_to_self" class="add_note_to_self" tabindex="8" /> <label for="{{name}}_add_note_to_self" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_note_to_self">Add Note to Self?</span></label>
+    </div>
+    <div class="form-group advanced optional_note">
+        <label for="{{name}}_note_to_self" data-i18n="note_to_self">Note to Self</label>
+        <textarea class="form-control" id="{{name}}_note_to_self" name="note_to_self" rows="4" tabindex="9"></textarea>
+        <div style="margin-top:3px;">
+            <label style="font-weight:normal;color:#666" data-i18n="note_is_encrypted">This note is encrypted.</span></label>
+        </div>
+    </div>
+</div>
