@@ -1,7 +1,8 @@
 package nxt.http.twophased;
 
 
-import junit.framework.Assert;
+import org.json.simple.JSONArray;
+import org.junit.Assert;
 import nxt.BlockchainTest;
 import nxt.Constants;
 import nxt.http.APICall;
@@ -32,8 +33,6 @@ public class TestGetPendingTransactionVotes extends BlockchainTest {
 
         generateBlock();
 
-        System.out.println("transactionId: " + transactionId);
-
         apiCall = new APICall.Builder("getPendingTransactionVotes")
                 .param("pendingTransaction", transactionId)
                 .build();
@@ -42,6 +41,18 @@ public class TestGetPendingTransactionVotes extends BlockchainTest {
 
         Assert.assertNull(response.get("errorCode"));
         Assert.assertEquals(1, ((Long) response.get("votes")).intValue());
+
+        apiCall = new APICall.Builder("getPendingTransactionVotes")
+                .param("pendingTransaction", transactionId)
+                .param("includeVoters", "true")
+                .build();
+        response = apiCall.invoke();
+        Logger.logMessage("getPendingTransactionVotesResponse:" + response.toJSONString());
+
+        Assert.assertNull(response.get("errorCode"));
+        Assert.assertEquals(1, ((Long) response.get("votes")).intValue());
+        Assert.assertNotNull(response.get("voters"));
+        Assert.assertEquals(1, ((JSONArray)response.get("voters")).size());
     }
 
 }
