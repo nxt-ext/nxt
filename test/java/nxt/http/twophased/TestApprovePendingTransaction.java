@@ -36,9 +36,9 @@ public class TestApprovePendingTransaction extends BlockchainTest {
         Assert.assertNotNull(response.get("transaction"));
         generateBlock();
 
-        Assert.assertNotEquals(balance1, balanceById(id1));
-        Assert.assertNotEquals(balance2, balanceById(id2));
-        Assert.assertEquals(fee, balance3 - balanceById(id3));
+        Assert.assertNotEquals("id1 balance: ", balance1, balanceById(id1));
+        Assert.assertNotEquals("id2 balance: ", balance2, balanceById(id2));
+        Assert.assertEquals("fee", fee, balance3 - balanceById(id3));
     }
 
     @Test
@@ -66,9 +66,9 @@ public class TestApprovePendingTransaction extends BlockchainTest {
         Assert.assertNotNull(response.get("error"));
         generateBlock();
 
-        Assert.assertEquals(balance1, balanceById(id1));
-        Assert.assertEquals(balance2, balanceById(id2));
-        Assert.assertEquals(balance4, balanceById(id4));
+        Assert.assertEquals("id1 balance: ", balance1, balanceById(id1));
+        Assert.assertEquals("id2 balance: ", balance2, balanceById(id2));
+        Assert.assertEquals("id4 balance: ", balance4, balanceById(id4));
     }
 
 }
