@@ -618,33 +618,35 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.buildTransactionsTypeNavi = function() {
-		$('#transactions_type_navi').empty();
 		var html = '';
-		html += '<li role="presentation" data-toggle="popover" data-placement="top" data-content="All Transactions" class="active"><a href="#" data-transaction-type="" ';
-		html += ' data-i18n="all">';
-		html += 'All</a></li>';
+		html += '<li role="presentation" class="active"><a href="#" data-transaction-type="" ';
+		html += 'data-toggle="popover" data-placement="top" data-content="All" data-container="body" data-i18n="[data-content]all">';
+		html += '<span data-i18n="all">All</span></a></li>';
 		$('#transactions_type_navi').append(html);
 
 		$.each(NRS.transactionTypes, function(typeIndex, typeDict) {
-			html = '<li role="presentation"><a href="#" data-transaction-type="' + typeIndex + '">';
+			popupContent = $.t(typeDict.i18nKeyTitle);
+			html = '<li role="presentation"><a href="#" data-transaction-type="' + typeIndex + '" ';
+			html += 'data-toggle="popover" data-placement="top" data-content="' + popupContent + '" data-container="body">';
 			html += typeDict.iconHTML + '</a></li>';
 			$('#transactions_type_navi').append(html);
 		});
 
-		html  = '<li role="presentation"><a href="#" data-transaction-type="unconfirmed" data-i18n="unconfirmed">';
-		html += 'Unconfirmed</a></li>';
+		html  = '<li role="presentation"><a href="#" data-transaction-type="unconfirmed" ';
+		html += 'data-toggle="popover" data-placement="top" data-content="Unconfirmed" data-container="body" data-i18n="[data-content]unconfirmed">';
+		html += '<span data-i18n="unconfirmed">Unconfirmed</span></a></li>';
 		$('#transactions_type_navi').append(html);
-		html  = '<li role="presentation"><a href="#" data-transaction-type="pending" data-i18n="pending">';
-		html += 'Pending</a></li>';
+		html  = '<li role="presentation"><a href="#" data-transaction-type="pending" ';
+		html += 'data-toggle="popover" data-placement="top" data-content="Pending" data-container="body" data-i18n="[data-content]pending">';
+		html += '<span data-i18n="pending">Pending</span></a></li>';
 		$('#transactions_type_navi').append(html);
 
-		$('#transactions_type_navi li[data-toggle="popover"]').popover({
+		$('#transactions_type_navi a[data-toggle="popover"]').popover({
 			"trigger": "hover"
 		});
 	}
 
 	NRS.buildTransactionPageTypeMenu = function() {
-		$('#transactions_page_type').empty();
 		$('#transactions_page_type').append('<li><a href="#" data-type="" data-i18n="all_transactions">All Transactions</a></li>');
 		$.each(NRS.transactionTypes, function(typeIndex, typeDict) {
 			$.each(typeDict['subTypes'], function(subTypeIndex, subTypeDict) {
@@ -659,6 +661,11 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.pages.transactions = function() {
+		if ($('#transactions_type_navi').children().length == 0) {
+			NRS.buildTransactionsTypeNavi();
+			NRS.buildTransactionPageTypeMenu();
+		}
+
 		var selectedType = $('#transactions_type_navi li.active a').attr('data-transaction-type');
 		if (selectedType == "unconfirmed") {
 			NRS.displayUnconfirmedTransactions();
@@ -770,11 +777,6 @@ var NRS = (function(NRS, $, undefined) {
 		html += (!transaction.confirmed ? "/" : (transaction.confirmations > 1440 ? "1440+" : NRS.formatAmount(transaction.confirmations))) + "</td>";
 		html += "</tr>";
 		return html;
-	}
-
-	NRS.initTransactionsPage = function() {
-		NRS.buildTransactionsTypeNavi();
-		NRS.buildTransactionPageTypeMenu();
 	}
 
 	$(document).on("click", "#transactions_type_navi li a", function(e) {

@@ -16,8 +16,8 @@ var NRS = (function(NRS, $, undefined) {
             }
         },
         1: {
-            'title': "Messaging/Voting/Alias",
-            'i18nKeyTitle': 'messaging_voting_alias',
+            'title': "Messaging/Voting/Aliases",
+            'i18nKeyTitle': 'messaging_voting_aliases',
             'iconHTML': "<i class='fa fa-envelope-square'></i>",
             'subTypes': {
                 0: {
