@@ -77,6 +77,23 @@ final class ParameterParser {
         return value;
     }
 
+    static boolean getBoolean(HttpServletRequest req, String name, boolean isMandatory) throws ParameterException {
+        String paramValue = Convert.emptyToNull(req.getParameter(name));
+        if (paramValue == null) {
+            if (isMandatory) {
+                throw new ParameterException(missing(name));
+            }
+            return false;
+        }
+        boolean value;
+        try {
+            value = Boolean.parseBoolean(paramValue);
+        } catch (RuntimeException e) {
+            throw new ParameterException(incorrect(name));
+        }
+        return value;
+    }
+
     static PendingTransactionPoll getPendingTransactionPoll(HttpServletRequest req) throws ParameterException {
         long transactionId;
         try {
