@@ -42,7 +42,7 @@ public class TestCreateTwoPhased extends BlockchainTest {
             secretPhrase(secretPhrase1);
             feeNQT(Constants.ONE_NXT);
             recipient(id2);
-            param("amountNQT", 10 * Constants.ONE_NXT);
+            param("amountNQT", 50 * Constants.ONE_NXT);
             param("isPending", "true");
             param("pendingVotingModel", Constants.VOTING_MODEL_ACCOUNT);
             param("pendingQuorum", 1);

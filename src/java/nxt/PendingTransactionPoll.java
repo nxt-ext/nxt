@@ -120,6 +120,10 @@ public class PendingTransactionPoll extends AbstractPoll {
         }
     }
 
+    public static int getActiveCount() {
+        return pendingTransactionsTable.getCount();
+    }
+
     @Override
     long calcWeightForByAccountModel(long voterId, int height) {
         throw new RuntimeException("PendingTransactionPoll.calcWeightForByAccountModel is called but must not");

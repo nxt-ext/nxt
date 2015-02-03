@@ -1,17 +1,6 @@
 package nxt.http;
 
-import nxt.Account;
-import nxt.Alias;
-import nxt.Asset;
-import nxt.Constants;
-import nxt.Currency;
-import nxt.CurrencyBuyOffer;
-import nxt.CurrencySellOffer;
-import nxt.DigitalGoodsStore;
-import nxt.Nxt;
-import nxt.NxtException;
-import nxt.Poll;
-import nxt.Transaction;
+import nxt.*;
 import nxt.crypto.Crypto;
 import nxt.crypto.EncryptedData;
 import nxt.util.Convert;
@@ -86,6 +75,40 @@ final class ParameterParser {
             throw new ParameterException(incorrect(name));
         }
         return value;
+    }
+
+    static boolean getBoolean(HttpServletRequest req, String name, boolean isMandatory) throws ParameterException {
+        String paramValue = Convert.emptyToNull(req.getParameter(name));
+        if (paramValue == null) {
+            if (isMandatory) {
+                throw new ParameterException(missing(name));
+            }
+            return false;
+        }
+        boolean value;
+        try {
+            value = Boolean.parseBoolean(paramValue);
+        } catch (RuntimeException e) {
+            throw new ParameterException(incorrect(name));
+        }
+        return value;
+    }
+
+    static PendingTransactionPoll getPendingTransactionPoll(HttpServletRequest req) throws ParameterException {
+        long transactionId;
+        try {
+            transactionId = Convert.parseUnsignedLong(Convert.emptyToNull(req.getParameter("pendingTransaction")));
+        } catch (RuntimeException e) {
+            throw new ParameterException(INCORRECT_PENDING_TRANSACTION);
+        }
+        if(transactionId == 0){
+            throw new ParameterException(INCORRECT_PENDING_TRANSACTION);
+        }
+        PendingTransactionPoll pendingTransactionPoll = PendingTransactionPoll.getPoll(transactionId);
+        if(pendingTransactionPoll==null){
+            throw new ParameterException(MISSING_PENDING_TRANSACTION);
+        }
+        return pendingTransactionPoll;
     }
 
     static Alias getAlias(HttpServletRequest req) throws ParameterException {

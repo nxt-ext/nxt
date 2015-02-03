@@ -1,6 +1,7 @@
 package nxt.http.twophased;
 
 import nxt.BlockchainTest;
+import nxt.Constants;
 import nxt.http.APICall;
 import nxt.util.Convert;
 import nxt.util.Logger;
@@ -13,11 +14,10 @@ import nxt.http.twophased.TestCreateTwoPhased.*;
 public class TestGetAccountPendingTransactionToApproveIds extends BlockchainTest {
 
     @Test
-    public void validTransactionLookup() {
+    public void simpleTransactionLookup() {
         APICall apiCall = new TwoPhasedMoneyTransferBuilder().build();
         String transactionId = TestCreateTwoPhased.issueCreateTwoPhased(apiCall, false);
 
-        generateBlock();
         generateBlock();
 
         apiCall = new APICall.Builder("getAccountPendingTransactionToApproveIds")
@@ -27,7 +27,39 @@ public class TestGetAccountPendingTransactionToApproveIds extends BlockchainTest
                 .build();
 
         JSONObject response = apiCall.invoke();
-        Logger.logMessage("getAccountPendingTransactionToApproveIds:" + response.toJSONString());
+        Logger.logMessage("getAccountPendingTransactionToApproveIdsResponse:" + response.toJSONString());
+        Assert.assertTrue(((JSONArray) response.get("transactionIds")).contains(transactionId));
+    }
+
+    @Test
+    public void transactionLookupAfterVote() {
+
+        APICall apiCall = new TwoPhasedMoneyTransferBuilder()
+                .quorum(3)
+                .build();
+        String transactionId = TestCreateTwoPhased.issueCreateTwoPhased(apiCall, false);
+
+        generateBlock();
+
+        long fee = Constants.ONE_NXT;
+        apiCall = new APICall.Builder("approvePendingTransaction")
+                .param("secretPhrase", secretPhrase3)
+                .param("pendingTransaction", transactionId)
+                .param("feeNQT", fee)
+                .build();
+        JSONObject response = apiCall.invoke();
+        Logger.logMessage("approvePendingTransactionResponse:" + response.toJSONString());
+
+        generateBlock();
+
+        apiCall = new APICall.Builder("getAccountPendingTransactionToApproveIds")
+                .param("account", Convert.toUnsignedLong(id3))
+                .param("firstIndex", 0)
+                .param("lastIndex", 9)
+                .build();
+
+        response = apiCall.invoke();
+        Logger.logMessage("getAccountPendingTransactionToApproveIdsResponse:" + response.toJSONString());
         Assert.assertTrue(((JSONArray) response.get("transactionIds")).contains(transactionId));
     }
 }

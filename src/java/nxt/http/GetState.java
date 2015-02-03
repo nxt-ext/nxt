@@ -1,19 +1,6 @@
 package nxt.http;
 
-import nxt.Account;
-import nxt.Alias;
-import nxt.Asset;
-import nxt.AssetTransfer;
-import nxt.Constants;
-import nxt.Currency;
-import nxt.CurrencyBuyOffer;
-import nxt.CurrencyTransfer;
-import nxt.DigitalGoodsStore;
-import nxt.Exchange;
-import nxt.Generator;
-import nxt.Nxt;
-import nxt.Order;
-import nxt.Trade;
+import nxt.*;
 import nxt.peer.Peers;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
@@ -65,9 +52,10 @@ public final class GetState extends APIServlet.APIRequestHandler {
             response.put("numberOfGoods", DigitalGoodsStore.Goods.getCount());
             response.put("numberOfPurchases", DigitalGoodsStore.Purchase.getCount());
             response.put("numberOfTags", DigitalGoodsStore.Tag.getCount());
-            //TODO: add Poll, Vote, and Phasing counts
-            //response.put("numberOfPolls", Poll.getCount());
-            //response.put("numberOfVotes", Vote.getCount());
+            response.put("numberOfPolls", Poll.getCount());
+            response.put("numberOfVotes", Vote.getCount());
+            response.put("numberOfActivePendingTransactions", PendingTransactionPoll.getActiveCount());
+            //todo: all pending transactions made count?
         }
         response.put("numberOfPeers", Peers.getAllPeers().size());
         response.put("numberOfUnlockedAccounts", Generator.getAllGenerators().size());

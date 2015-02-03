@@ -144,8 +144,8 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
         }
 
         Appendix.TwoPhased twoPhased = null;
-        String isPending = Convert.emptyToNull(req.getParameter("isPending"));
-        if ("true".equalsIgnoreCase(isPending)) {
+        boolean isPending = ParameterParser.getBoolean(req, "isPending", false);
+        if (isPending) {
             twoPhased = parseTwoPhased(req);
         }
 
