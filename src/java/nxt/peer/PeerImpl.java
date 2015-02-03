@@ -248,7 +248,9 @@ final class PeerImpl implements Peer {
             return;
         }
         if (cause instanceof ParseException) {
-            Logger.logDebugMessage("Peer " + peerAddress + " returned invalid response: " + cause.toString());
+            if (!"Unexpected token END OF FILE at position 0.".equals(cause.toString())) {
+                Logger.logDebugMessage("Peer " + peerAddress + " returned invalid response: " + cause.toString());
+            }
             return;
         }
         if (! isBlacklisted()) {
