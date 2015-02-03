@@ -65,23 +65,22 @@ a:hover { text-decoration: underline; outline: none; color: #636363; } /* Mr. V 
 /*right side - contins main content*/
 .right-side {
   background-color: #fff;
-  margin-left: 200px;
+  margin-left: 220px;
   transition: margin .7s;
   -webkit-transition: margin .7s;
 }
 /*left side - contains sidebar*/
 .left-side {
   position: absolute;
-  width: 200px;
+  width: 220px;
+  height: 100%;
+  min-height: inherit !important;
   top: 0;
+  bottom: 0;
   transition: margin .7s;
   -webkit-transition: margin .7s;
 }
 @media screen and (min-width: 992px) {
-  .left-side {
-    /*top: 215px;*/
-    top:50px; /* Mr. V */
-  }
   /*Right side strech mode*/
   .right-side.strech {
     margin-left: 0;
@@ -304,7 +303,7 @@ body > .header .navbar .sidebar-toggle {
   margin-top: 8px;
   margin-right: 0;
   margin-bottom: 8px;
-  margin-left: 200px;
+  margin-left: 220px;
   background-color: transparent;
   background-image: none;
   border: 1px solid transparent;
@@ -443,9 +442,11 @@ body > .header .navbar .nav > li > a:hover > .label {
   body.fixed > .header {
     position: fixed;
   }
-  body.fixed > .wrapper,
-  body.fixed .sidebar-offcanvas {
+  body.fixed > .wrapper {
     margin-top: 100px!important;
+  }
+  .sidebar {
+	margin-top: 100px;
   }
 }
 /*
@@ -454,6 +455,9 @@ body > .header .navbar .nav > li > a:hover > .label {
 */
 .sidebar {
   margin-bottom: 5px;
+  margin-top: 50px;
+  overflow-y: auto;
+  max-height: 100%;
 }
 .sidebar-form input:focus {
   -webkit-box-shadow: none;
@@ -463,7 +467,7 @@ body > .header .navbar .nav > li > a:hover > .label {
 }
 .sidebar .sidebar-menu {
   list-style: none;
-  margin: 0;
+  margin: 0 0 50px 0;
   padding: 0;
 }
 .sidebar .sidebar-menu > li {
@@ -565,7 +569,7 @@ body > .header .navbar .nav > li > a:hover > .label {
   }
   body.fixed .sidebar-offcanvas {
     /*margin-top: 215px;*/
-    margin-top: 50px; /* Mr. V */
+    margin-top: 0px;
     left: -220px;
     -webkit-transition: margin-top 0.8s; /* For Safari 3.1 to 6.0 */
 	transition: margin-top 0.8s;
@@ -2647,7 +2651,7 @@ a.list-group-item:hover {
 .content-splitter-right {
 	position: absolute;
 	top: 0;
-	left: 200px;
+	left: 220px;
 	bottom: 0 !important;
 	right: 0;
 }
@@ -3251,7 +3255,7 @@ a.list-group-item.active h4 span {
 .sidebar-menu #sidebar_dgs_seller > a[data-page~='my_dgs_listings'] i:first-child:before {content: "";}
 .sidebar-menu #sidebar_dgs_seller > a[data-page~='my_dgs_listings'] .pull-right {margin:15px 10px 0 0}
 
-.sidebar-menu #sidebar_monetary_system > a[data-page~='monetary_system'] i:first-child { background: #003b55 url(../img/corporate/nav/market.svg) no-repeat center center; background-size: 22px; height: 50px; width: 50px;}
+.sidebar-menu #sidebar_monetary_system > a[data-page~='monetary_system'] i:first-child { background: #003b55 url(../img/corporate/nav/ms.svg) no-repeat center center; background-size: 22px; height: 50px; width: 50px;}
 .sidebar-menu #sidebar_monetary_system > a[data-page~='monetary_system'] i:first-child:before {content: "";}
 .sidebar-menu #sidebar_monetary_system > a[data-page~='monetary_system'] .pull-right {margin:15px 10px 0 0}
 
@@ -3292,7 +3296,7 @@ a.list-group-item.active h4 span {
 	padding: 0 5px;
 }
 .right-side > .page > .content > .row .col-lg-3 .small-box{ 
-	background: url("../img/corporate/header.png") repeat fixed left top rgba(0, 0, 0, 0);
+	background: url("../img/corporate/header.png") repeat scroll left top rgba(0, 0, 0, 0);
 	margin: 0 0 10px;
 	/*box-shadow: 1px 1px 5px 0 rgba(0, 0, 0, 0.5);*/
 }
