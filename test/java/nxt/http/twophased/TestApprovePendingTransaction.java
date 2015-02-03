@@ -13,6 +13,8 @@ public class TestApprovePendingTransaction extends BlockchainTest {
 
     @Test
     public void validVoteCasting() {
+        generateBlock();
+
         APICall apiCall = new TwoPhasedMoneyTransferBuilder().build();
         String transactionId = TestCreateTwoPhased.issueCreateTwoPhased(apiCall, false);
         generateBlock();
@@ -41,6 +43,8 @@ public class TestApprovePendingTransaction extends BlockchainTest {
 
     @Test
     public void invalidVoteCasting() {
+        generateBlock();
+
         APICall apiCall = new TwoPhasedMoneyTransferBuilder().build();
         String transactionId = TestCreateTwoPhased.issueCreateTwoPhased(apiCall, false);
         generateBlock();
