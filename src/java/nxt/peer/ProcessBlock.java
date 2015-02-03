@@ -20,7 +20,7 @@ final class ProcessBlock extends PeerServlet.PeerRequestHandler {
         Block lastBlock = Nxt.getBlockchain().getLastBlock();
         if (lastBlock.getStringId().equals(previousBlockId) ||
                 (Convert.parseUnsignedLong(previousBlockId) == lastBlock.getPreviousBlockId()
-                        && ! Convert.toHexString(lastBlock.getBlockSignature()).equals(request.get("blockSignature")))) {
+                        && lastBlock.getTimestamp() > Convert.parseLong(request.get("timestamp")))) {
             Peers.peersService.submit(new Runnable() {
                 @Override
                 public void run() {

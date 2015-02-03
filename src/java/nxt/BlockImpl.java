@@ -400,7 +400,7 @@ final class BlockImpl implements Block {
         }
     }
 
-    void calculateBaseTarget(BlockImpl previousBlock) {
+    private void calculateBaseTarget(BlockImpl previousBlock) {
 
         if ((this.getId() != Genesis.GENESIS_BLOCK_ID || previousBlockId != 0) && cumulativeDifficulty.equals(BigInteger.ZERO)) {
             long curBaseTarget = previousBlock.baseTarget;
