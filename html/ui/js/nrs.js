@@ -269,6 +269,7 @@ var NRS = (function(NRS, $, undefined) {
 				if (firstTime) {
 					$("#nrs_version").html(NRS.state.version).removeClass("loading_dots");
 					NRS.getBlock(NRS.state.lastBlock, NRS.handleInitialBlocks);
+					NRS.initTransactionsPage();
 				} else if (NRS.state.isScanning) {
 					//do nothing but reset NRS.state so that when isScanning is done, everything is reset.
 					isScanning = true;
