@@ -54,7 +54,8 @@ public final class GetState extends APIServlet.APIRequestHandler {
             response.put("numberOfTags", DigitalGoodsStore.Tag.getCount());
             response.put("numberOfPolls", Poll.getCount());
             response.put("numberOfVotes", Vote.getCount());
-            response.put("numberOfActivePendingTransactions", PendingTransactionPoll.getCount());
+            response.put("numberOfActivePendingTransactions", PendingTransactionPoll.getActiveCount());
+            //todo: all pending transactions made count?
         }
         response.put("numberOfPeers", Peers.getAllPeers().size());
         response.put("numberOfUnlockedAccounts", Generator.getAllGenerators().size());

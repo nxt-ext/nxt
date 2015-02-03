@@ -120,7 +120,7 @@ public class PendingTransactionPoll extends AbstractPoll {
         }
     }
 
-    public static int getCount() {
+    public static int getActiveCount() {
         return pendingTransactionsTable.getCount();
     }
 
