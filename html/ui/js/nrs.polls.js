@@ -66,7 +66,7 @@ var NRS = (function(NRS, $, undefined) {
 			}
 		});
 	}
-
+ 
 	NRS.incoming.polls = function() {
 		NRS.loadPage("polls");
 	}
@@ -362,7 +362,7 @@ var NRS = (function(NRS, $, undefined) {
 						$("#cast_vote_answers_entry").append("<div class='answer_boxes'><label name='cast_vote_answer_"+b+"'><input type='checkbox'/>&nbsp;&nbsp;"+response.attachment.options[b]+"</label></div>");
 					}
 				}
-				$("#cast_vote_modal").modal();
+				$("#poll_results_modal").modal();
 				$("input[type='range']").on("change mousemove", function() {
 					$(this).parent().children(".badge").text($(this).val());
 
@@ -371,6 +371,32 @@ var NRS = (function(NRS, $, undefined) {
 
 			
 		});	
+$("#poll_results_modal").on("show.bs.modal", function(e) {
+
+		$("#poll_results_modal_statistics").show();
+		// now lets put the data in the correct place...
+});
+
+$("#poll_results_modal ul.nav li").click(function(e) {
+		e.preventDefault();
+
+		var tab = $(this).data("tab");
+
+		$(this).siblings().removeClass("active");
+		$(this).addClass("active");
+
+		$(".poll_results_modal_content").hide();
+
+		var content = $("#poll_results_modal_" + tab);
+
+		content.show();
+	});
+
+	$("#poll_results_modal").on("hidden.bs.modal", function(e) {
+		$(this).find(".poll_results_modal_content").hide();
+		$(this).find("ul.nav li.active").removeClass("active");
+		$("#poll_results_statistics_nav").addClass("active");
+	});
 
 		
 

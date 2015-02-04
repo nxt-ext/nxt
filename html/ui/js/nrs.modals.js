@@ -165,6 +165,12 @@ var NRS = (function(NRS, $, undefined) {
 			$(obj).removeClass("col-xs-" + advancedSize + " col-sm-" + advancedSize + " col-md-" + advancedSize).addClass("col-xs-" + normalSize + " col-sm-" + normalSize + " col-md-" + normalSize);
 		});
 
+		$("#create_poll_asset_id_group").css("display", "none");
+		$("#create_poll_ms_currency_group").css("display", "none");
+		$("#create_poll_type_group").removeClass("col-xs-6").addClass("col-xs-12");
+		$("#create_poll_type_group").removeClass("col-sm-6").addClass("col-sm-12");
+		$("#create_poll_type_group").removeClass("col-md-6").addClass("col-md-12");
+
 		$(this).find(".tx-modal-approve").empty();
 
 		var $feeInput = $(this).find("input[name=feeNXT]");
