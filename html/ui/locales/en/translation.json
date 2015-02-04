@@ -1,4 +1,14 @@
 {
+  "success_add_peer": "Peer added successfully!",
+  "success_connect_peer": "Peer connected successfully!",
+  "peer_already_added": "Peer already added!",
+  "connect": "Connect",
+  "blacklist": "Blacklist",
+  "success_blacklist_peer": "Peer blacklisted successfully!",
+  "blacklist_peer_confirmation": "Are you sure you want to blacklist this peer?",
+  "add_peer": "Add Peer",
+  "peer_address": "Peer Address",
+  "blacklist_peer": "Blacklist Peer",
   "Asset Distribution": "Asset Distribution",
   "Connected": "Connected",
   "Date": "Date",
@@ -1112,8 +1122,5 @@
   "current_units": "Current Units Supply",
   "current_reserve_per_unit": "Current Reserve Per Unit",
   "founders": "Founders",
-  "next_lessee_status": "The next lease period is scheduled from block __start__ to block __end__, the lessee account is <a href='#' data-user='__account__' class='user_info'>__account__</a>",
-  "success_add_peer": "Peer added successfully!",
-  "blacklist": "Blacklist",
-  "success_blacklist_peer": "Peer blacklisted successfully!"
+  "next_lessee_status": "The next lease period is scheduled from block __start__ to block __end__, the lessee account is <a href='#' data-user='__account__' class='user_info'>__account__</a>"
 }

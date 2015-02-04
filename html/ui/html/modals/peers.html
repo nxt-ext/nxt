@@ -31,9 +31,9 @@
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
                 <h4 class="modal-title" data-i18n="blacklist_peer">Blacklist Peer</h4>
             </div>
-            <div class="modal-body">            
+            <div class="modal-body">
+                <div class="callout callout-danger never_hide" data-i18n="blacklist_peer_confirmation">Are you sure you want to blacklist this peer?</div>
                 <form role="form" autocomplete="off">
-                    <div class="callout callout-danger" data-i18n="blacklist_peer_confirmation">Are you sure you want to blacklist this peer?</div>
                     <p><strong data-i18n="name">Address</strong>: <span id="blacklist_peer_address"></span></p>
 
                     <input type="hidden" name="peer" id="blacklist_peer_field_id" value="" />

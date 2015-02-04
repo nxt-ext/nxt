@@ -48,6 +48,10 @@ var NRS = (function(NRS, $, undefined) {
 
 					rows += "<td style='text-align:right;'>";
 					rows += "<a class='btn btn-xs btn-default' href='#' data-toggle='modal' ";
+					rows += "data-target='#blacklist_peer_modal' ";
+					rows += "data-peer='" + String(peer.announcedAddress).escapeHTML() + "'>" + $.t("connect") + "</a>";
+					rows += "</td>";
+					rows += "<a class='btn btn-xs btn-default' href='#' data-toggle='modal' ";
 					rows += "data-target='#blacklist_peer_modal' " + (NRS.needsAdminPassword ? "disabled " : "");
 					rows += "data-peer='" + String(peer.announcedAddress).escapeHTML() + "'>" + $.t("blacklist") + "</a>";
 					rows += "</td>";
@@ -72,8 +76,17 @@ var NRS = (function(NRS, $, undefined) {
 	}
 	
 	NRS.forms.addPeerComplete = function(response, data) {
-		$.growl($.t("success_add_peer"), {
-			"type": "success"
+		var message = "success_add_peer";
+		var growlType = "success";
+		if (response.state == 1) {
+			message = "success_connect_peer";
+		} else if (!response.isNewlyAdded) {
+			message = "peer_already_added";
+			growlType = "danger";
+		}
+		
+		$.growl($.t(message), {
+			"type": growlType
 		});
 		NRS.loadPage("peers");
 	}
