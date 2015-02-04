@@ -24,14 +24,14 @@ public class PendingTransactionPoll extends AbstractPoll {
         }
     };
 
-    private static final DbKey.LongKeyFactory<PendingTransactionPoll> signersDbKeyFactory = new DbKey.LongKeyFactory<PendingTransactionPoll>("poll_id") {
+    private static final DbKey.LongKeyFactory<PendingTransactionPoll> signersDbKeyFactory = new DbKey.LongKeyFactory<PendingTransactionPoll>("pending_transaction_id") {
         @Override
         public DbKey newKey(PendingTransactionPoll poll) {
             return poll.dbKey;
         }
     };
 
-    final static ValuesDbTable<PendingTransactionPoll, Long> signersTable = new VersionedValuesDbTable<PendingTransactionPoll, Long>("pending_transaction_signer", signersDbKeyFactory) {
+    final static ValuesDbTable<PendingTransactionPoll, Long> signersTable = new ValuesDbTable<PendingTransactionPoll, Long>("pending_transaction_signer", signersDbKeyFactory) {
 
         @Override
         protected Long load(Connection con, ResultSet rs) throws SQLException {
@@ -206,7 +206,7 @@ public class PendingTransactionPoll extends AbstractPoll {
                     + "from pending_transaction, pending_transaction_signer "
                     + "WHERE pending_transaction.latest = TRUE AND "
                     + "pending_transaction.blacklist = false AND "
-                    + "pending_transaction.id = pending_transaction_signer.poll_id "
+                    + "pending_transaction.id = pending_transaction_signer.pending_transaction_id "
                     + "AND pending_transaction_signer.account_id = ? "
                     + DbUtils.limitsClause(from, to));
             pstmt.setLong(1, signer.getId());
