@@ -540,19 +540,12 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         BlockImpl lastBlock = blockchain.getLastBlock();
         if (block.getPreviousBlockId() == lastBlock.getId()) {
             pushBlock(block);
-        } else if (block.getPreviousBlockId() == lastBlock.getPreviousBlockId()) {
-            BlockImpl previousBlock = blockchain.getBlock(block.getPreviousBlockId());
-            if (previousBlock == null) {
-                return;
-            }
-            block.calculateBaseTarget(previousBlock);
-            if (block.getCumulativeDifficulty().compareTo(lastBlock.getCumulativeDifficulty()) <= 0) {
-                return;
-            }
+        } else if (block.getPreviousBlockId() == lastBlock.getPreviousBlockId() && block.getTimestamp() < lastBlock.getTimestamp()) {
             synchronized (blockchain) {
                 if (lastBlock.getId() != blockchain.getLastBlock().getId()) {
                     return; // blockchain changed, ignore the block
                 }
+                BlockImpl previousBlock = blockchain.getBlock(lastBlock.getPreviousBlockId());
                 lastBlock = popOffTo(previousBlock).get(0);
                 try {
                     pushBlock(block);
