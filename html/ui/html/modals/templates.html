@@ -1,71 +1,198 @@
-<div id="tx-modal-approve-template">
-    <div role="tabpanel" style="padding-top:6px;">
-        <!-- Nav tabs -->
-        <ul class="nav nav-tabs" role="tablist">
-            <li role="presentation" class="active">
-                <a href="#approve-tab-no-app" aria-controls="approve-tab-no-app" role="tab" data-toggle="tab"><span data-i18n="no_approval">No Approval</span></a></li>
-            <li role="presentation"><a href="#approve-tab-accounts" aria-controls="approve-tab-accounts" role="tab" data-toggle="tab" data-i18n="accounts">Accounts</a></li>
-            <li role="presentation"><a href="#approve-tab-everyone" aria-controls="approve-tab-everyone" role="tab" data-toggle="tab" data-i18n="everyone">Everyone</a></li>
-            <li role="presentation"><a href="#approve-tab-ahs" aria-controls="approve-tab-ahs" role="tab" data-toggle="tab" data-i18n="asset_holders">Asset Holders</a></li>
-        </ul>
+<div id="recipient_modal_template">
+    <div class="form-group">
+        <label for="{{name}}_recipient" data-i18n="recipient">RECIPIENT</label>
+        <div class="input-group">
+            <input type="text" class="form-control" name="recipient" id="{{name}}_recipient" placeholder="Recipient Account" data-i18n="[placeholder]recipient_account" autofocus tabindex="1" />
+            <span class="input-group-btn btn-group recipient_selector">
+                <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown"><span class="glyphicon glyphicon-user"></span></button>
+                <ul class="dropdown-menu scrollable-menu" role="menu" style="right:0;left:auto;"></ul>
+            </span>
+        </div>
+    </div>
+    <div class="form-group recipient_public_key">
+        <label for="{{name}}_recipient_public_key" data-i18n="recipient_public_key">Recipient Public Key</label>
+        <input type="text" class="form-control" name="recipientPublicKey" id="{{name}}_recipient_public_key" placeholder="Public Key" data-i18n="[placeholder]public_key" tabindex="2" spellcheck="false" />
+    </div>
+</div>
 
-        <!-- Tab panes -->
-        <div class="tab-content">
-            <div role="tabpanel" class="tab-pane tab-pane-approve active" id="approve-tab-no-app">
-                <span data-i18n="process_without_approval">Process without approval.</span>
-                <input type="hidden" name="isPending" value="false" />
+
+<div id="add_message_modal_template">
+    <div class="form-group add_message_container">
+        <input type="checkbox" name="add_message" id="{{name}}_add_message" class="add_message" tabindex="6" /> <label for="{{name}}_add_message" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_message_q">Add a Message?</span></label>
+    </div>
+    <div class="form-group optional_message">
+        <label for="{{name}}_message" data-i18n="message">MESSAGE</label>
+        <textarea class="form-control" id="{{name}}_message" name="message" rows="4" tabindex="3"></textarea>
+         <div style="margin-top:3px" id="{{name}}_to_specific_account_message_options">
+            <label for="{{name}}_encrypt_message" style="font-weight:normal;color:#666"><input type="checkbox" name="encrypt_message" id="{{name}}_encrypt_message" value="1" data-default="checked" checked="checked" /> <span data-i18n="encrypt_message">Encrypt Message</span></label>
+        </div>
+        <div style="margin-top:3px;display:none" id="{{name}}_to_anyone_message_options">
+            <label for="{{name}}_encrypt_message" style="font-weight:normal;color:#666" data-i18n="message_is_not_encrypted">This message is not encrypted.</span></label>
+        </div>
+    </div>
+</div>
+
+
+<div id="secret_phrase_modal_template">
+    <div class="form-group secret_phrase">
+        <label for="{{name}}_password" data-i18n="passphrase">PASSPHRASE</label>
+        <input type="password" name="secretPhrase" id="{{name}}_password" class="form-control" placeholder="" tabindex="5">
+    </div>
+</div>
+
+
+<div id="advanced_modal_template">
+    <div class="row advanced">
+        <div class="col-xs-6 col-sm-6 col-md-6">
+            <div class="form-group">
+                <label for="{{name}}_fee" data-i18n="fee">FEE</label>
+                <div class="input-group">
+                    <input type="number" name="feeNXT" id="{{name}}_fee" class="form-control" step="any" min="1" placeholder="Fee" data-i18n="[placeholder]fee" data-default="1" value="1" tabindex="3">
+                    <span class="input-group-addon">NXT</span>
+                </div>
             </div>
-            <div role="tabpanel" class="tab-pane tab-pane-approve" id="approve-tab-accounts">
-                <div class="row">
-                    <div class="col-xs-12 approve-accounts-box">
-                        <label data-i18n="requested_for_approval">Request For Approval</label>
-                        <i class="fa fa-question-circle modal-context-help" data-content="The following accounts will be requested to approve the transaction." data-toggle="popover" data-trigger="hover" data-container="body" data-i18n="[data-content]approve_tx_accounts_requested_help"></i>
-                        <div class="form-group form-group-accounts">
-                            <div class="input-group">
-                                <input type="text" class="form-control" name="pendingWhitelisted" placeholder="Account" data-i18n="[placeholder]account" />
-                                <span class="input-group-btn">
-                                    <button class="btn remove_account" type="button"><i class="fa fa-minus" style="color:white"></i></button>
-                                </span>
+        </div>
+        <div class="col-xs-6 col-sm-6 col-md-6">
+            <div class="form-group">
+                <label for="{{name}}_deadline" data-i18n="deadline_hours">DEADLINE (HOURS)</label>
+                <input type="number" name="deadline" id="{{name}}_deadline" class="form-control" placeholder="Deadline" data-i18n="[placeholder]deadline" min="1" data-default="24" value="24" tabindex="4">
+            </div>
+        </div>
+    </div>
+
+    <div class="advanced approve_modal">
+        <div role="tabpanel" class="approve_tab_panel">
+            <!-- Nav tabs -->
+            <ul class="nav nav-tabs approve_tab_list" role="tablist">
+                <li role="presentation" class="active">
+                    <a href="#{{name}}_approve_tab_no_approval" aria-controls="{{name}}_approve_tab_no_approval" class="at_no_approval" role="tab" data-toggle="tab"><span data-i18n="no_approval">No Approval</span></a></li>
+                <li role="presentation">
+                    <a href="#{{name}}_approve_tab_accounts" aria-controls="{{name}}_approve_tab_accounts" class="at_accounts" role="tab" data-toggle="tab" data-i18n="accounts">Accounts</a>
+                </li>
+                <li role="presentation">
+                    <a href="#{{name}}_approve_tab_asset_holders" aria-controls="{{name}}_approve_tab_asset_holders" class="at_asset_holders" role="tab" data-toggle="tab" data-i18n="asset_holders">Asset Holders</a>
+                </li>
+                <li role="presentation">
+                    <a href="#{{name}}_approve_tab_currency_holders" aria-controls="{{name}}_approve_tab_currency_holders" class="at_currency_holders" role="tab" data-toggle="tab" data-i18n="currency_holders">Currency Holders</a>
+                </li>
+            </ul>
+
+            <!-- Tab panes -->
+            <div class="tab-content">
+                <div role="tabpanel" class="tab-pane tab_pane_approve active" id="{{name}}_approve_tab_no_approval">
+                    <span data-i18n="process_without_approval">Process without approval.</span>
+                    <input type="hidden" name="isPending" value="false" />
+                </div>
+                <div role="tabpanel" class="tab-pane tab_pane_approve" id="{{name}}_approve_tab_accounts">
+                    <div class="account_box">
+                        <div class="row">
+                            <div class="col-xs-12 added_account_list">
+                                <label data-i18n="requested_for_approval">Request For Approval</label>
+                                <i class="fa fa-question-circle modal-context-help" data-content="The following accounts will be requested to approve the transaction." data-toggle="popover" data-trigger="hover" data-container="body" data-i18n="[data-content]approve_tx_accounts_requested_help"></i>
+                                <div class="form-group form_group_accounts">
+                                    <div class="input-group">
+                                        <input type="text" class="form-control" name="pendingWhitelisted" placeholder="Account" data-i18n="[placeholder]account" disabled />
+                                        <span class="input-group-btn">
+                                            <button class="btn remove_account_btn" type="button"><i class="fa fa-minus" style="color:white"></i></button>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row form-group">
+                            <div class="col-xs-12">
+                                <a href="#" class="btn btn-primary add_account_btn"><i class="fa fa-plus"></i> <span data-i18n="add_account">Add Account</span></a>
                             </div>
                         </div>
                     </div>
+                    <input type="hidden" name="isPending" value="true" disabled />
+                    <input type="hidden" name="pendingVotingModel" value="1" disabled />
+                    <input type="hidden" name="pendingMinBalance" value="0" disabled/>
                 </div>
-                <div class="row form-group">
-                    <div class="col-xs-12">
-                        <a href="#" class="btn btn-primary" id="approve-add-account"><i class="fa fa-plus"></i> <span data-i18n="add_account">Add Account</span></a>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-xs-6 approve-amount-box">
-                        <div class="form-group">
-                            <label data-i18n="necessary_amount_accounts_nxt">Necessary Amount of Accounts | NXT</label>
-                            <i class="fa fa-question-circle modal-context-help" data-content="Transaction becomes valid when a certain amount of accounts have approved the transaction or the approving accounts represent a certain amount of NXT." data-toggle="popover" data-trigger="hover" data-container="body" data-i18n="[data-content]approve_tx_necessary_amount_help"></i>
-                            <input name="pendingQuorum" class="form-control" placeholder="Necessary Amount" data-i18n="[placeholder]necessary_amount" style="width:65%;display:inline-block;vertical-align:middle;">
-                            <div class="btn-group" role="group">
-                                <button type="button" class="btn btn-default approve-amount-accounts-btn"><i class="fa fa-group"></i></button>
-                                <button type="button" class="btn btn-default approve-amount-nxt-btn">NXT</button>
+                <div role="tabpanel" class="tab-pane tab_pane_approve" id="{{name}}_approve_tab_asset_holders">
+                    <div class="row">
+                        <div class="col-xs-6">
+                            <div class="form-group">
+                                <label data-i18n="asset_id">Asset ID</label>
+                                <i class="fa fa-question-circle modal-context-help" data-content="Asset ID." data-toggle="popover" data-trigger="hover" data-container="body" data-i18n="[data-content]approve_tx_asset_id_help"></i>
+                                <input type="text"  class="form-control" name="pendingHolding" id="{{name}}_asset_id" placeholder="Asset ID" data-i18n="[placeholder]asset_id" tabindex="2" disabled/>
                             </div>
                         </div>
                     </div>
-                    <div class="col-xs-6">
-                        <div class="form-group">
-                            <label for="send_money_deadline" data-i18n="finish_at_block">Finish At Block</label>
-                            <input type="number" name="pendingMaxHeight" class="form-control" placeholder="Finish At Block" data-i18n="finish_at_block">
+                    <input type="hidden" name="isPending" value="true" disabled />
+                    <input type="hidden" name="pendingVotingModel" value="2" disabled />
+                    <input type="hidden" name="pendingMinBalance" value="1" disabled/>
+                </div>
+                <div role="tabpanel" class="tab-pane tab_pane_approve" id="{{name}}_approve_tab_currency_holders">
+                    <div class="row">
+                        <div class="col-xs-6">
+                            <div class="form-group">
+                                <label data-i18n="currency_id">Currency ID</label>
+                                <i class="fa fa-question-circle modal-context-help" data-content="Currency ID." data-toggle="popover" data-trigger="hover" data-container="body" data-i18n="[data-content]approve_tx_asset_id_help"></i>
+                                <input type="text"  class="form-control" name="pendingHolding" id="{{name}}_asset_id" placeholder="Currency ID" data-i18n="[placeholder]currency_id" tabindex="2" disabled/>
+                            </div>
                         </div>
                     </div>
+                    <input type="hidden" name="isPending" value="true" disabled />
+                    <input type="hidden" name="pendingVotingModel" value="3" disabled />
+                    <input type="hidden" name="pendingMinBalance" value="1" disabled/>
                 </div>
-                <input type="hidden" name="isPending" value="true" disabled />
-                <input type="hidden" name="pendingVotingModel" disabled />
-                <input type="hidden" name="pendingMinBalance" value="0" />
             </div>
-            <div role="tabpanel" class="tab-pane tab-pane-approve" id="approve-tab-everyone">
-                <input type="hidden" name="isPending" value="true" disabled />
-                <input type="hidden" name="pendingVotingModel" disabled />
+        </div>
+        <div class="row approve_generic" style="display:none;">
+            <div class="col-xs-6">
+                <div class="form-group">
+                    <label data-i18n="necessary_amount_accounts">Necessary Approvals</label>
+                    <i class="fa fa-question-circle modal-context-help" data-content="Necessary amount of approvals for the transaction to become valid." data-toggle="popover" data-trigger="hover" data-container="body" data-i18n="[data-content]approve_tx_necessary_amount_help"></i>
+                    <input name="pendingQuorum" type="number" value="1" min="1" class="form-control" disabled />
+                </div>
             </div>
-            <div role="tabpanel" class="tab-pane tab-pane-approve" id="approve-tab-ahs">
-                <input type="hidden" name="isPending" value="true" disabled />
-                <input type="hidden" name="pendingVotingModel" value="2" disabled />
+            <div class="col-xs-6">
+                <div class="form-group">
+                    <label for="send_money_deadline" data-i18n="max_height">Max Height</label>
+                    <i class="fa fa-question-circle modal-context-help" data-content="Transaction will be cancelled if not approved on maximal block height." data-toggle="popover" data-trigger="hover" data-container="body" data-i18n="[data-content]approve_tx_max_height_help"></i>
+                    <input type="number" name="pendingMaxHeight" class="form-control" placeholder="Max Block Height to Become Valid" data-i18n="max_height_for_approval" disabled />
+                </div>
             </div>
+        </div>
+    </div>
+
+    <div class="form-group advanced">
+        <label for="{{name}}_referenced_transaction" data-i18n="referenced_transaction_hash">REFERENCED TRANSACTION HASH</label>
+        <input type="text" class="form-control" name="referencedTransactionFullHash" id="{{name}}_referenced_transaction" placeholder="Referenced Transaction Full Hash" data-i18n="[placeholder]referenced_transaction_full_hash" tabindex="6" spellcheck="false" />
+    </div>
+    <div class="form-group advanced" style="margin-bottom:0;">
+        <input type="checkbox" name="doNotBroadcast" id="{{name}}_do_not_broadcast" value="1" /> <label for="{{name}}_do_not_broadcast" style="font-weight:normal;" tabindex="7" data-i18n="do_not_broadcast">Do Not Broadcast</label>
+    </div>
+    <div class="form-group advanced">
+        <input type="checkbox" name="add_note_to_self" id="{{name}}_add_note_to_self" class="add_note_to_self" tabindex="8" /> <label for="{{name}}_add_note_to_self" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_note_to_self">Add Note to Self?</span></label>
+    </div>
+    <div class="form-group advanced optional_note">
+        <label for="{{name}}_note_to_self" data-i18n="note_to_self">Note to Self</label>
+        <textarea class="form-control" id="{{name}}_note_to_self" name="note_to_self" rows="4" tabindex="9"></textarea>
+        <div style="margin-top:3px;">
+            <label style="font-weight:normal;color:#666" data-i18n="note_is_encrypted">This note is encrypted.</span></label>
+        </div>
+    </div>
+</div>
+
+
+<div id="advanced_modal_no_fee_deadline_template">
+    <div class="form-group advanced">
+        <label for="{{name}}_referenced_transaction" data-i18n="referenced_transaction_hash">REFERENCED TRANSACTION HASH</label>
+        <input type="text" class="form-control" name="referencedTransactionFullHash" id="{{name}}_referenced_transaction" placeholder="Referenced Transaction Full Hash" data-i18n="[placeholder]referenced_transaction_full_hash" tabindex="6" spellcheck="false" />
+    </div>
+    <div class="form-group advanced" style="margin-bottom:0;">
+        <input type="checkbox" name="doNotBroadcast" id="{{name}}_do_not_broadcast" value="1" /> <label for="{{name}}_do_not_broadcast" style="font-weight:normal;" tabindex="7" data-i18n="do_not_broadcast">Do Not Broadcast</label>
+    </div>
+    <div class="form-group advanced">
+        <input type="checkbox" name="add_note_to_self" id="{{name}}_add_note_to_self" class="add_note_to_self" tabindex="8" /> <label for="{{name}}_add_note_to_self" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_note_to_self">Add Note to Self?</span></label>
+    </div>
+    <div class="form-group advanced optional_note">
+        <label for="{{name}}_note_to_self" data-i18n="note_to_self">Note to Self</label>
+        <textarea class="form-control" id="{{name}}_note_to_self" name="note_to_self" rows="4" tabindex="9"></textarea>
+        <div style="margin-top:3px;">
+            <label style="font-weight:normal;color:#666" data-i18n="note_is_encrypted">This note is encrypted.</span></label>
         </div>
     </div>
 </div>

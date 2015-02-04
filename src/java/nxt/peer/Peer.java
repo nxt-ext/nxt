@@ -51,4 +51,6 @@ public interface Peer extends Comparable<Peer> {
 
     JSONObject send(JSONStreamAware request);
 
+    JSONObject send(JSONStreamAware request, int maxResponseSize);
+
 }

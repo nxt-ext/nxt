@@ -77,6 +77,40 @@ final class ParameterParser {
         return value;
     }
 
+    static boolean getBoolean(HttpServletRequest req, String name, boolean isMandatory) throws ParameterException {
+        String paramValue = Convert.emptyToNull(req.getParameter(name));
+        if (paramValue == null) {
+            if (isMandatory) {
+                throw new ParameterException(missing(name));
+            }
+            return false;
+        }
+        boolean value;
+        try {
+            value = Boolean.parseBoolean(paramValue);
+        } catch (RuntimeException e) {
+            throw new ParameterException(incorrect(name));
+        }
+        return value;
+    }
+
+    static PendingTransactionPoll getPendingTransactionPoll(HttpServletRequest req) throws ParameterException {
+        long transactionId;
+        try {
+            transactionId = Convert.parseUnsignedLong(Convert.emptyToNull(req.getParameter("pendingTransaction")));
+        } catch (RuntimeException e) {
+            throw new ParameterException(INCORRECT_PENDING_TRANSACTION);
+        }
+        if(transactionId == 0){
+            throw new ParameterException(INCORRECT_PENDING_TRANSACTION);
+        }
+        PendingTransactionPoll pendingTransactionPoll = PendingTransactionPoll.getPoll(transactionId);
+        if(pendingTransactionPoll==null){
+            throw new ParameterException(MISSING_PENDING_TRANSACTION);
+        }
+        return pendingTransactionPoll;
+    }
+
     static Alias getAlias(HttpServletRequest req) throws ParameterException {
         long aliasId;
         try {
@@ -121,7 +155,7 @@ final class ParameterParser {
         try {
             long pollId = Convert.parseUnsignedLong(pollValue);
             poll = Poll.getPoll(pollId);
-        }catch(RuntimeException e){
+        } catch (RuntimeException e) {
             throw new ParameterException(INCORRECT_POLL);
         }
 
@@ -356,13 +390,17 @@ final class ParameterParser {
     }
 
     static Account getAccount(HttpServletRequest req) throws ParameterException {
+        return getAccount(req, true);
+    }
+
+    static Account getAccount(HttpServletRequest req, boolean isMandatory) throws ParameterException {
         String accountValue = Convert.emptyToNull(req.getParameter("account"));
         if (accountValue == null) {
             throw new ParameterException(MISSING_ACCOUNT);
         }
         try {
             Account account = Account.getAccount(Convert.parseAccountId(accountValue));
-            if (account == null) {
+            if (account == null && isMandatory) {
                 throw new ParameterException(UNKNOWN_ACCOUNT);
             }
             return account;

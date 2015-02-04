@@ -37,20 +37,23 @@ public class TestCreatePoll extends BlockchainTest {
     @Test
     public void createValidPoll() {
         APICall apiCall = new CreatePollBuilder().build();
-
         issueCreatePoll(apiCall, false);
+        generateBlock();
 
         apiCall = new CreatePollBuilder().votingModel(Constants.VOTING_MODEL_BALANCE).build();
         issueCreatePoll(apiCall, false);
+        generateBlock();
     }
 
     @Test
     public void createInvalidPoll() {
         APICall apiCall = new CreatePollBuilder().minBalance(-Constants.ONE_NXT).build();
         issueCreatePoll(apiCall, true);
+        generateBlock();
 
         apiCall = new CreatePollBuilder().minBalance(0).build();
         issueCreatePoll(apiCall, true);
+        generateBlock();
     }
 
     public static class CreatePollBuilder extends APICall.Builder {
@@ -71,7 +74,7 @@ public class TestCreatePoll extends BlockchainTest {
             param("minBalanceModel", Constants.VOTING_MINBALANCE_BYBALANCE);
             param("option1", "Ringo");
             param("option2", "Paul");
-            param("option2", "John");
+            param("option3", "John");
         }
 
         public CreatePollBuilder votingModel(byte votingModel) {

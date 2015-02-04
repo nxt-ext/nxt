@@ -24,6 +24,7 @@ import nxt.Transaction;
 import nxt.Vote;
 import nxt.crypto.Crypto;
 import nxt.crypto.EncryptedData;
+import nxt.db.DbIterator;
 import nxt.peer.Hallmark;
 import nxt.peer.Peer;
 import nxt.util.Convert;
@@ -316,13 +317,14 @@ final class JSONData {
 
     static JSONObject poll(Poll poll, boolean includeVoters) {
         JSONObject json = new JSONObject();
+        putAccount(json, "account", poll.getAccountId());
         json.put("poll", Convert.toUnsignedLong(poll.getId()));
         json.put("name", poll.getName());
         json.put("description", poll.getDescription());
         JSONArray options = new JSONArray();
         Collections.addAll(options, poll.getOptions());
         json.put("options", options);
-        json.put("finishBlockHeight", poll.getFinishBlockHeight());
+        json.put("finishHeight", poll.getFinishHeight());
 
         json.put("votingModel", poll.getVotingModel());
 
@@ -334,17 +336,18 @@ final class JSONData {
         json.put("minBalance", poll.getMinBalance());
         json.put("minBalanceModel", poll.getMinBalanceModel());
 
-        if (poll.getVotingModel() == Constants.VOTING_MODEL_ASSET) {
+        if (poll.getVotingModel() == Constants.VOTING_MODEL_ASSET || poll.getVotingModel() == Constants.VOTING_MODEL_CURRENCY) {
             json.put("holding", Convert.toUnsignedLong(poll.getHoldingId()));
         }
 
-        if(includeVoters){
-            List<Vote> votes = poll.getVotes();
+        if (includeVoters) {
             JSONArray votersJson = new JSONArray();
-            for(Vote vote : votes){
-                JSONObject voterObject = new JSONObject();
-                putAccount(voterObject, "voter", vote.getVoterId());
-                votersJson.add(voterObject);
+            try (DbIterator<Vote> votes = poll.getVotes()) {
+                for (Vote vote : votes) {
+                    JSONObject voterObject = new JSONObject();
+                    putAccount(voterObject, "voter", vote.getVoterId());
+                    votersJson.add(voterObject);
+                }
             }
             json.put("voters", votersJson);
         }
@@ -355,6 +358,7 @@ final class JSONData {
     static JSONObject pollResults(Poll poll, List<Poll.PartialPollResult> results) {
         JSONObject json = new JSONObject();
         json.put("poll", Convert.toUnsignedLong(poll.getId()));
+        json.put("finished", poll.isFinished());
 
         JSONArray resultsJson = new JSONArray();
 

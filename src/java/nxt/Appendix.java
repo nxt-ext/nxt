@@ -8,7 +8,6 @@ import org.json.simple.JSONObject;
 
 import java.nio.ByteBuffer;
 import java.util.Arrays;
-import java.util.List;
 
 public interface Appendix {
 
@@ -456,14 +455,14 @@ public interface Appendix {
             holdingId = buffer.getLong();
         }
 
-        TwoPhased(JSONObject attachmentData){
+        TwoPhased(JSONObject attachmentData) {
             super(attachmentData);
-            maxHeight = ((Long)attachmentData.get("releaseHeight")).intValue();
+            maxHeight = ((Long) attachmentData.get("releaseHeight")).intValue();
             quorum = Convert.parseLong(attachmentData.get("quorum"));
             minBalance = Convert.parseLong(attachmentData.get("minBalance"));
-            votingModel = ((Long)attachmentData.get("votingModel")).byteValue();
-            if (votingModel == Constants.VOTING_MODEL_ASSET || votingModel == Constants.VOTING_MODEL_MS_COIN) {
-                holdingId = Convert.parseUnsignedLong((String)attachmentData.get("holding"));
+            votingModel = ((Long) attachmentData.get("votingModel")).byteValue();
+            if (votingModel == Constants.VOTING_MODEL_ASSET || votingModel == Constants.VOTING_MODEL_CURRENCY) {
+                holdingId = Convert.parseUnsignedLong((String) attachmentData.get("holding"));
             } else {
                 holdingId = 0;
             }
@@ -471,7 +470,7 @@ public interface Appendix {
             JSONArray whitelistJson = (JSONArray) (attachmentData.get("whitelist"));
             whitelist = new long[whitelistJson.size()];
             for (int i = 0; i < whitelist.length; i++) {
-                whitelist[i] = Convert.parseUnsignedLong((String)whitelistJson.get(i));
+                whitelist[i] = Convert.parseUnsignedLong((String) whitelistJson.get(i));
             }
 
             JSONArray blacklistJson = (JSONArray) (attachmentData.get("blacklist"));
@@ -481,17 +480,17 @@ public interface Appendix {
             }
         }
 
-        public TwoPhased(int maxHeight, long quorum, long[] whitelist){
+        public TwoPhased(int maxHeight, long quorum, long[] whitelist) {
             this(maxHeight, Constants.VOTING_MODEL_ACCOUNT, quorum, 0, whitelist, null);
         }
 
         public TwoPhased(int maxHeight, byte votingModel, long quorum, long minBalance,
-                  long[] whitelist, long[] blacklist) {
+                         long[] whitelist, long[] blacklist) {
             this(maxHeight, votingModel, 0, quorum, minBalance, whitelist, blacklist);
         }
 
         public TwoPhased(int maxHeight, byte votingModel, long holdingId, long quorum,
-                  long minBalance, long[] whitelist, long[] blacklist) {
+                         long minBalance, long[] whitelist, long[] blacklist) {
             this.maxHeight = maxHeight;
             this.votingModel = votingModel;
             this.quorum = quorum;
@@ -519,7 +518,7 @@ public interface Appendix {
 
         @Override
         int getMySize() {
-            return 4 + 1 + 8 + 8 + 1 + 8 * whitelist.length + 1 + 8 * blacklist.length + 8 ;
+            return 4 + 1 + 8 + 8 + 1 + 8 * whitelist.length + 1 + 8 * blacklist.length + 8;
         }
 
         @Override
@@ -565,30 +564,26 @@ public interface Appendix {
 
         @Override
         void validate(Transaction transaction) throws NxtException.ValidationException {
-            if(votingModel == Constants.VOTING_MODEL_BALANCE){
-                throw new NxtException.NotValidException("Pending transaction with by-balance voting is prohibited");
-            }
-
             if (votingModel != Constants.VOTING_MODEL_ACCOUNT &&
                     votingModel != Constants.VOTING_MODEL_ASSET &&
-                    votingModel != Constants.VOTING_MODEL_MS_COIN) {
-                throw new NxtException.NotValidException("Invalid voting model");
+                    votingModel != Constants.VOTING_MODEL_CURRENCY) {
+                throw new NxtException.NotValidException("Invalid voting model for pending transaction");
             }
 
-            if (whitelist.length * (-blacklist.length) < 0){
+            if (whitelist.length * (-blacklist.length) < 0) {
                 throw new NxtException.NotValidException("Both whitelist & blacklist are non-empty");
             }
 
-            if (votingModel == Constants.VOTING_MODEL_ACCOUNT && whitelist.length == 0 ) {
+            if (votingModel == Constants.VOTING_MODEL_ACCOUNT && whitelist.length == 0) {
                 throw new NxtException.NotValidException("By-account voting with empty whitelist");
             }
 
             if (votingModel == Constants.VOTING_MODEL_ACCOUNT && minBalance != 0) {
-                throw new NxtException.NotValidException("minBalance has to be zero when by-account voting on pending transaction");
+                throw new NxtException.NotValidException("minBalance has to be zero for by-account voting on pending transaction");
             }
 
             if (votingModel == Constants.VOTING_MODEL_ACCOUNT && holdingId != 0) {
-                throw new NxtException.NotValidException("holdingId provided in by-account voting");
+                throw new NxtException.NotValidException("holdingId is provided for by-account voting");
             }
 
             if (whitelist.length > Constants.PENDING_TRANSACTIONS_MAX_WHITELIST_SIZE) {
@@ -599,9 +594,13 @@ public interface Appendix {
                 throw new NxtException.NotValidException("Blacklist is too big");
             }
 
-            if ((votingModel == Constants.VOTING_MODEL_ASSET || votingModel == Constants.VOTING_MODEL_MS_COIN)
+            if ((votingModel == Constants.VOTING_MODEL_ASSET || votingModel == Constants.VOTING_MODEL_CURRENCY)
                     && holdingId == 0) {
                 throw new NxtException.NotValidException("Invalid holdingId");
+            }
+
+            if (quorum <= 0) {
+                throw new NxtException.NotValidException("quorum <= 0");
             }
 
             int currentHeight = Nxt.getBlockchain().getHeight();
@@ -613,13 +612,10 @@ public interface Appendix {
 
         @Override
         void apply(Transaction transaction, Account senderAccount, Account recipientAccount) {
-            long id = transaction.getId();
-            PendingTransactionPoll poll = new PendingTransactionPoll(id, senderAccount.getId(), maxHeight,
-                    votingModel, quorum, minBalance, holdingId, whitelist, blacklist);
-            PendingTransactionPoll.addPoll(poll);
+            PendingTransactionPoll.addPoll(transaction, this);
         }
 
-        void commit(Transaction transaction) {
+        void release(Transaction transaction) {
             Account senderAccount = Account.getAccount(transaction.getSenderId());
             Account recipientAccount = Account.getAccount(transaction.getRecipientId());
             long amount = transaction.getAmountNQT();
@@ -631,33 +627,19 @@ public interface Appendix {
             }
             transaction.getType().applyAttachment(transaction, senderAccount, recipientAccount);
 
-            Logger.logDebugMessage("Transaction " + transaction.getId() + " has been released");
+            Logger.logDebugMessage("Transaction " + transaction.getStringId() + " has been released");
         }
 
-        void verify(Transaction transaction) {
-            long transactionId = transaction.getId();
-
-            //todo: change back to iterator
-            List<VotePhased> votes = VotePhased.getByTransaction(transactionId, 0, Integer.MAX_VALUE).toList();
-
-            PendingTransactionPoll poll = PendingTransactionPoll.getPoll(transactionId);
-            long cumulativeWeight = 0;
-            for(VotePhased vote:votes){
-                cumulativeWeight += poll.calcWeight(Account.getAccount(vote.getVoterId()));
-            }
-
+        void finalVerification(Transaction transaction) {
+            PendingTransactionPoll poll = PendingTransactionPoll.getPoll(transaction.getId());
             PendingTransactionPoll.finishPoll(poll);
-
-            if(cumulativeWeight >= poll.getQuorum()){
-                commit(transaction);
-            }else{
+            if (VotePhased.countVotes(poll) >= poll.getQuorum()) {
+                release(transaction);
+            } else {
                 Account senderAccount = Account.getAccount(transaction.getSenderId());
-                long amount = transaction.getAmountNQT();
-
                 transaction.getType().undoAttachmentUnconfirmed(transaction, senderAccount);
-                senderAccount.addToUnconfirmedBalanceNQT(amount);
-
-                Logger.logDebugMessage("Transaction " + transactionId + " has been refused");
+                senderAccount.addToUnconfirmedBalanceNQT(transaction.getAmountNQT());
+                Logger.logDebugMessage("Transaction " + transaction.getStringId() + " has been refused");
             }
         }
 

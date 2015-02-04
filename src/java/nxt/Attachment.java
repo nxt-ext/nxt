@@ -96,10 +96,10 @@ public interface Attachment extends Appendix {
 
     };
 
-    public final static class PendingPaymentVoteCasting extends AbstractAttachment {
+    public final static class PendingTransactionVoteCasting extends AbstractAttachment {
         private final long[] pendingTransactionsIds;
 
-        PendingPaymentVoteCasting(ByteBuffer buffer, byte transactionVersion) {
+        PendingTransactionVoteCasting(ByteBuffer buffer, byte transactionVersion) {
             super(buffer, transactionVersion);
             byte length = buffer.get();
             pendingTransactionsIds = new long[length];
@@ -108,26 +108,26 @@ public interface Attachment extends Appendix {
             }
         }
 
-        PendingPaymentVoteCasting(JSONObject attachmentData) {
+        PendingTransactionVoteCasting(JSONObject attachmentData) {
             super(attachmentData);
             JSONArray jsArr = (JSONArray) (attachmentData.get("pendingTransactions"));
             pendingTransactionsIds = new long[jsArr.size()];
             for (int i = 0; i < pendingTransactionsIds.length; i++) {
-                pendingTransactionsIds[i] =  Convert.parseUnsignedLong((String)jsArr.get(i));
+                pendingTransactionsIds[i] = Convert.parseUnsignedLong((String) jsArr.get(i));
             }
         }
 
-        public PendingPaymentVoteCasting(long pendingTransactionId) {
+        public PendingTransactionVoteCasting(long pendingTransactionId) {
             this.pendingTransactionsIds = new long[]{pendingTransactionId};
         }
 
-        public PendingPaymentVoteCasting(long[] pendingTransactionsIds) {
+        public PendingTransactionVoteCasting(long[] pendingTransactionsIds) {
             this.pendingTransactionsIds = pendingTransactionsIds;
         }
 
         @Override
         String getAppendixName() {
-            return "PendingPaymentVoteCasting";
+            return "PendingTransactionVoteCasting";
         }
 
         @Override
@@ -137,7 +137,7 @@ public interface Attachment extends Appendix {
 
         @Override
         void putMyBytes(ByteBuffer buffer) {
-            buffer.put((byte)pendingTransactionsIds.length);
+            buffer.put((byte) pendingTransactionsIds.length);
             for (long id : pendingTransactionsIds) {
                 buffer.putLong(id);
             }
@@ -154,13 +154,12 @@ public interface Attachment extends Appendix {
 
         @Override
         public TransactionType getTransactionType() {
-            return TransactionType.Messaging.PENDING_PAYMENT_VOTE_CASTING;
+            return TransactionType.Messaging.PENDING_TRANSACTION_VOTE_CASTING;
         }
 
         public long[] getPendingTransactionsIds() {
             return pendingTransactionsIds;
         }
-
     }
 
 
@@ -393,11 +392,11 @@ public interface Attachment extends Appendix {
             private final String pollDescription;
             private final String[] pollOptions;
 
-            private final int finishBlockHeight;
+            private final int finishHeight;
             private final byte votingModel;
 
             private long minBalance = 0;
-            private byte minBalanceModel = Constants.VOTING_MINBALANCE_UNDEFINED;
+            private byte minBalanceModel;
 
             private byte minNumberOfOptions = Constants.VOTING_DEFAULT_MIN_NUMBER_OF_CHOICES;
             private byte maxNumberOfOptions;
@@ -408,14 +407,14 @@ public interface Attachment extends Appendix {
             private long holdingId;
 
             public PollBuilder(final String pollName, final String pollDescription, final String[] pollOptions,
-                               final int finishBlockHeight, final byte votingModel,
+                               final int finishHeight, final byte votingModel,
                                byte minNumberOfOptions, byte maxNumberOfOptions,
                                byte minRangeValue, byte maxRangeValue) {
                 this.pollName = pollName;
                 this.pollDescription = pollDescription;
                 this.pollOptions = pollOptions;
 
-                this.finishBlockHeight = finishBlockHeight;
+                this.finishHeight = finishHeight;
                 this.votingModel = votingModel;
                 this.minNumberOfOptions = minNumberOfOptions;
                 this.maxNumberOfOptions = maxNumberOfOptions;
@@ -426,8 +425,8 @@ public interface Attachment extends Appendix {
                     case Constants.VOTING_MODEL_ASSET:
                         minBalanceModel = Constants.VOTING_MINBALANCE_ASSET;
                         break;
-                    case Constants.VOTING_MODEL_MS_COIN:
-                        minBalanceModel = Constants.VOTING_MINBALANCE_COIN;
+                    case Constants.VOTING_MODEL_CURRENCY:
+                        minBalanceModel = Constants.VOTING_MINBALANCE_CURRENCY;
                         break;
                     case Constants.VOTING_MODEL_BALANCE:
                         minBalanceModel = Constants.VOTING_MINBALANCE_BYBALANCE;
@@ -442,7 +441,6 @@ public interface Attachment extends Appendix {
             }
 
             public PollBuilder minBalance(long minBalance) {
-                this.minBalanceModel = Constants.VOTING_MINBALANCE_UNDEFINED;
                 this.minBalance = minBalance;
                 return this;
             }
@@ -461,7 +459,7 @@ public interface Attachment extends Appendix {
         private final String pollDescription;
         private final String[] pollOptions;
 
-        private final int finishBlockHeight;
+        private final int finishHeight;
         private final byte votingModel;
 
         private byte minNumberOfOptions = Constants.VOTING_DEFAULT_MIN_NUMBER_OF_CHOICES, maxNumberOfOptions; //only for choice voting
@@ -476,7 +474,7 @@ public interface Attachment extends Appendix {
             this.pollName = Convert.readString(buffer, buffer.getShort(), Constants.MAX_POLL_NAME_LENGTH);
             this.pollDescription = Convert.readString(buffer, buffer.getShort(), Constants.MAX_POLL_DESCRIPTION_LENGTH);
 
-            this.finishBlockHeight = buffer.getInt();
+            this.finishHeight = buffer.getInt();
 
             int numberOfOptions = buffer.get();
             if (numberOfOptions > Constants.MAX_POLL_OPTION_COUNT) {
@@ -506,7 +504,7 @@ public interface Attachment extends Appendix {
 
             this.pollName = ((String) attachmentData.get("name")).trim();
             this.pollDescription = ((String) attachmentData.get("description")).trim();
-            this.finishBlockHeight = ((Long) attachmentData.get("finishBlockHeight")).intValue();
+            this.finishHeight = ((Long) attachmentData.get("finishHeight")).intValue();
 
             JSONArray options = (JSONArray) attachmentData.get("options");
             this.pollOptions = new String[options.size()];
@@ -521,15 +519,15 @@ public interface Attachment extends Appendix {
             this.maxRangeValue = ((Long) attachmentData.get("maxRangeValue")).byteValue();
 
             this.minBalance = Convert.parseLong(attachmentData.get("minBalance"));
-            this.minBalanceModel = ((Long)attachmentData.get("minBalance")).byteValue();
-            this.holdingId = Convert.parseUnsignedLong((String)attachmentData.get("holding"));
+            this.minBalanceModel = ((Long) attachmentData.get("minBalance")).byteValue();
+            this.holdingId = Convert.parseUnsignedLong((String) attachmentData.get("holding"));
         }
 
         public MessagingPollCreation(PollBuilder builder) {
             this.pollName = builder.pollName;
             this.pollDescription = builder.pollDescription;
             this.pollOptions = builder.pollOptions;
-            this.finishBlockHeight = builder.finishBlockHeight;
+            this.finishHeight = builder.finishHeight;
 
             this.votingModel = builder.votingModel;
 
@@ -572,7 +570,7 @@ public interface Attachment extends Appendix {
             buffer.put(name);
             buffer.putShort((short) description.length);
             buffer.put(description);
-            buffer.putInt(finishBlockHeight);
+            buffer.putInt(finishHeight);
             buffer.put((byte) options.length);
             for (byte[] option : options) {
                 buffer.putShort((short) option.length);
@@ -594,7 +592,7 @@ public interface Attachment extends Appendix {
         void putMyJSON(JSONObject attachment) {
             attachment.put("name", this.pollName);
             attachment.put("description", this.pollDescription);
-            attachment.put("finishBlockHeight", this.finishBlockHeight);
+            attachment.put("finishHeight", this.finishHeight);
             JSONArray options = new JSONArray();
             if (this.pollOptions != null) {
                 Collections.addAll(options, this.pollOptions);
@@ -628,8 +626,8 @@ public interface Attachment extends Appendix {
             return pollDescription;
         }
 
-        public int getFinishBlockHeight() {
-            return finishBlockHeight;
+        public int getFinishHeight() {
+            return finishHeight;
         }
 
         public String[] getPollOptions() {
@@ -644,17 +642,29 @@ public interface Attachment extends Appendix {
             return maxNumberOfOptions;
         }
 
-        public byte getMinRangeValue() { return minRangeValue; }
+        public byte getMinRangeValue() {
+            return minRangeValue;
+        }
 
-        public byte getMaxRangeValue() { return maxRangeValue; }
+        public byte getMaxRangeValue() {
+            return maxRangeValue;
+        }
 
-        public byte getVotingModel() { return votingModel; }
+        public byte getVotingModel() {
+            return votingModel;
+        }
 
-        public long getMinBalance() { return minBalance; }
+        public long getMinBalance() {
+            return minBalance;
+        }
 
-        public byte getMinBalanceModel() { return minBalanceModel; }
+        public byte getMinBalanceModel() {
+            return minBalanceModel;
+        }
 
-        public long getHoldingId() { return holdingId; }
+        public long getHoldingId() {
+            return holdingId;
+        }
     }
 
     public final static class MessagingVoteCasting extends AbstractAttachment {
@@ -722,9 +732,13 @@ public interface Attachment extends Appendix {
             return TransactionType.Messaging.VOTE_CASTING;
         }
 
-        public long getPollId() { return pollId; }
+        public long getPollId() {
+            return pollId;
+        }
 
-        public byte[] getPollVote() { return pollVote; }
+        public byte[] getPollVote() {
+            return pollVote;
+        }
     }
 
     public final static class MessagingHubAnnouncement extends AbstractAttachment {

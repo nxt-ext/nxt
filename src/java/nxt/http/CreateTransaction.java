@@ -3,18 +3,29 @@ package nxt.http;
 import nxt.Account;
 import nxt.Appendix;
 import nxt.Attachment;
+import nxt.Constants;
 import nxt.Nxt;
 import nxt.NxtException;
 import nxt.Transaction;
-import nxt.Constants;
 import nxt.crypto.Crypto;
 import nxt.crypto.EncryptedData;
 import nxt.util.Convert;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
+
 import javax.servlet.http.HttpServletRequest;
 import java.util.Arrays;
-import static nxt.http.JSONResponses.*;
+
+import static nxt.http.JSONResponses.FEATURE_NOT_AVAILABLE;
+import static nxt.http.JSONResponses.INCORRECT_ARBITRARY_MESSAGE;
+import static nxt.http.JSONResponses.INCORRECT_DEADLINE;
+import static nxt.http.JSONResponses.INCORRECT_PENDING_BLACKLISTED;
+import static nxt.http.JSONResponses.INCORRECT_PENDING_WHITELIST;
+import static nxt.http.JSONResponses.MISSING_DEADLINE;
+import static nxt.http.JSONResponses.MISSING_PENDING_HOLDING_ID;
+import static nxt.http.JSONResponses.MISSING_SECRET_PHRASE;
+import static nxt.http.JSONResponses.NOT_ENOUGH_FUNDS;
+import static nxt.http.JSONResponses.incorrect;
 
 abstract class CreateTransaction extends APIServlet.APIRequestHandler {
 
@@ -49,21 +60,25 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
     }
 
     private Appendix.TwoPhased parseTwoPhased(HttpServletRequest req) throws ParameterException {
-        byte votingModel = ParameterParser.getByte(req, "pendingVotingModel", Constants.VOTING_MODEL_ACCOUNT, Constants.VOTING_MODEL_MS_COIN, true);
+        byte votingModel = ParameterParser.getByte(req, "pendingVotingModel", Constants.VOTING_MODEL_ACCOUNT, Constants.VOTING_MODEL_CURRENCY, true);
 
         int maxHeight = ParameterParser.getInt(req, "pendingMaxHeight",
                 Nxt.getBlockchain().getHeight() + Constants.VOTING_MIN_VOTE_DURATION,
                 Nxt.getBlockchain().getHeight() + Constants.VOTING_MAX_VOTE_DURATION,
                 true);
 
-        long quorum = ParameterParser.getLong(req, "pendingQuorum", 0, Long.MAX_VALUE, true);
+        long quorum = ParameterParser.getLong(req, "pendingQuorum", 1, Long.MAX_VALUE, true);
 
-        long minBalance = ParameterParser.getLong(req, "pendingMinBalance", 0, Long.MAX_VALUE, true);
+        long minBalance = ParameterParser.getLong(req, "pendingMinBalance", 0, Long.MAX_VALUE, false);
+        if ((votingModel == Constants.VOTING_MODEL_ACCOUNT && minBalance != 0)
+                || (votingModel != Constants.VOTING_MODEL_ACCOUNT && minBalance == 0)) {
+            throw new ParameterException(incorrect("pendingMinBalance"));
+        }
 
         long holdingId = ParameterParser.getLong(req, "pendingHolding", Long.MIN_VALUE, Long.MAX_VALUE, false);
-        if ((votingModel == Constants.VOTING_MODEL_ASSET || votingModel == Constants.VOTING_MODEL_MS_COIN)
+        if ((votingModel == Constants.VOTING_MODEL_ASSET || votingModel == Constants.VOTING_MODEL_CURRENCY)
                 && holdingId == 0) {
-            throw new ParameterException(MISSING_PENDING_ASSET_ID);
+            throw new ParameterException(MISSING_PENDING_HOLDING_ID);
         }
 
         long[] whitelist = new long[0];
@@ -129,8 +144,8 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
         }
 
         Appendix.TwoPhased twoPhased = null;
-        String isPending = Convert.emptyToNull(req.getParameter("isPending"));
-        if ("true".equalsIgnoreCase(isPending)) {
+        boolean isPending = ParameterParser.getBoolean(req, "isPending", false);
+        if (isPending) {
             twoPhased = parseTwoPhased(req);
         }
 

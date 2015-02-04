@@ -6,6 +6,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.List;
 
 public abstract class VersionedValuesDbTable<T, V> extends ValuesDbTable<T, V> {
 
@@ -31,9 +32,26 @@ public abstract class VersionedValuesDbTable<T, V> extends ValuesDbTable<T, V> {
                 rs.next();
                 if (rs.getInt("count") > 0) {
                     try (PreparedStatement pstmt = con.prepareStatement("UPDATE " + table
-                            + " SET latest = FALSE AND height = " + height + " " + dbKeyFactory.getPKClause() + " AND latest = TRUE")) {
+                            + " SET latest = FALSE " + dbKeyFactory.getPKClause() + " AND height = ? AND latest = TRUE")) {
+                        int j = dbKey.setPK(pstmt);
+                        pstmt.setInt(j, height);
+                        if (pstmt.executeUpdate() > 0) {
+                            return true;
+                        }
+                    }
+                    List<V> values = get(dbKey);
+                    if (values.isEmpty()) {
+                        return false;
+                    }
+                    for (V v : values) {
+                        save(con, t, v);
+                    }
+                    try (PreparedStatement pstmt = con.prepareStatement("UPDATE " + table
+                            + " SET latest = FALSE " + dbKeyFactory.getPKClause() + " AND latest = TRUE")) {
                         dbKey.setPK(pstmt);
-                        pstmt.executeUpdate();
+                        if (pstmt.executeUpdate() == 0) {
+                            throw new RuntimeException(); // should not happen
+                        }
                     }
                     return true;
                 } else {

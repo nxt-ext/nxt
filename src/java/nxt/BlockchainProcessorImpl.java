@@ -332,7 +332,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             JSONObject request = new JSONObject();
             request.put("requestType", "getNextBlocks");
             request.put("blockId", Convert.toUnsignedLong(curBlockId));
-            JSONObject response = peer.send(JSON.prepareRequest(request));
+            JSONObject response = peer.send(JSON.prepareRequest(request), 192 * 1024 * 1024);
             if (response == null) {
                 return null;
             }

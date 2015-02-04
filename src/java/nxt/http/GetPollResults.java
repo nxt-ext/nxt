@@ -1,7 +1,6 @@
 package nxt.http;
 
 
-import nxt.Constants;
 import nxt.NxtException;
 import nxt.Poll;
 import org.json.simple.JSONStreamAware;
@@ -9,7 +8,7 @@ import org.json.simple.JSONStreamAware;
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 
-import static nxt.http.JSONResponses.*;
+import static nxt.http.JSONResponses.POLL_RESULTS_NOT_AVAILABLE;
 
 public class GetPollResults extends APIServlet.APIRequestHandler {
     static final GetPollResults instance = new GetPollResults();
@@ -21,16 +20,10 @@ public class GetPollResults extends APIServlet.APIRequestHandler {
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
         Poll poll = ParameterParser.getPoll(req);
-        List<Poll.PartialPollResult> results;
-
-        if (Constants.isPollsProcessing) {
-            if (!poll.isFinished()) {
-                return UNKNOWN_POLL_RESULTS;
-            }
-            results = Poll.getResults(poll.getId());
-        } else {
-            results = poll.countResults();
+        List<Poll.PartialPollResult> pollResults = poll.getResults();
+        if (pollResults == null) {
+            return POLL_RESULTS_NOT_AVAILABLE;
         }
-        return JSONData.pollResults(poll, results);
+        return JSONData.pollResults(poll, poll.getResults());
     }
 }

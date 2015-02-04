@@ -1,17 +1,15 @@
 package nxt.http;
 
-import static nxt.http.JSONResponses.MISSING_PEER;
-import static nxt.http.JSONResponses.UNKNOWN_PEER;
-
-import javax.servlet.http.HttpServletRequest;
-
-import org.json.simple.JSONObject;
-import org.json.simple.JSONStreamAware;
-
 import nxt.NxtException;
 import nxt.http.APIServlet.APIRequestHandler;
 import nxt.peer.Peer;
 import nxt.peer.Peers;
+import org.json.simple.JSONObject;
+import org.json.simple.JSONStreamAware;
+
+import javax.servlet.http.HttpServletRequest;
+
+import static nxt.http.JSONResponses.MISSING_PEER;
 
 public class AddPeer extends APIRequestHandler {
 

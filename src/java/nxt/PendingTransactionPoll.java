@@ -1,9 +1,17 @@
 package nxt;
 
-import nxt.db.*;
+import nxt.db.DbClause;
+import nxt.db.DbIterator;
+import nxt.db.DbKey;
+import nxt.db.DbUtils;
+import nxt.db.VersionedEntityDbTable;
+import nxt.db.VersionedValuesDbTable;
 import nxt.util.Convert;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.List;
 
@@ -48,27 +56,27 @@ public class PendingTransactionPoll extends AbstractPoll {
         }
     };
 
-
     private final static VersionedEntityDbTable<PendingTransactionPoll> pendingTransactionsTable =
             new VersionedEntityDbTable<PendingTransactionPoll>("pending_transaction", pollDbKeyFactory) {
 
-        @Override
-        protected PendingTransactionPoll load(Connection con, ResultSet rs) throws SQLException {
-            return new PendingTransactionPoll(rs);
-        }
+                @Override
+                protected PendingTransactionPoll load(Connection con, ResultSet rs) throws SQLException {
+                    return new PendingTransactionPoll(rs);
+                }
 
-        @Override
-        protected void save(Connection con, PendingTransactionPoll poll) throws SQLException {
-            poll.save(con);
-        }
-    };
+                @Override
+                protected void save(Connection con, PendingTransactionPoll poll) throws SQLException {
+                    poll.save(con);
+                }
+            };
 
-    static void init() {}
+    static void init() {
+    }
 
-    PendingTransactionPoll(long id, long accountId, int finishBlockHeight,
-                                  byte votingModel, long quorum, long voteThreshold,
-                                  long assetId, long[] whitelist, long[] blacklist) {
-        super(accountId, finishBlockHeight, votingModel, assetId, voteThreshold);
+    private PendingTransactionPoll(long id, long accountId, int finishHeight,
+                                   byte votingModel, long quorum, long voteThreshold,
+                                   long assetId, long[] whitelist, long[] blacklist) {
+        super(accountId, finishHeight, votingModel, assetId, voteThreshold);
         this.id = id;
         this.dbKey = pollDbKeyFactory.newKey(this.id);
         this.quorum = quorum;
@@ -112,11 +120,23 @@ public class PendingTransactionPoll extends AbstractPoll {
         }
     }
 
+    public static int getActiveCount() {
+        return pendingTransactionsTable.getCount();
+    }
+
+    @Override
+    long calcWeightForByAccountModel(long voterId, int height) {
+        throw new RuntimeException("PendingTransactionPoll.calcWeightForByAccountModel is called but must not");
+    }
+
     public long getId() {
         return id;
     }
 
-    public static void addPoll(PendingTransactionPoll poll){
+    static void addPoll(Transaction transaction, Appendix.TwoPhased appendix) {
+        PendingTransactionPoll poll = new PendingTransactionPoll(transaction.getId(), transaction.getSenderId(),
+                appendix.getMaxHeight(), appendix.getVotingModel(), appendix.getQuorum(), appendix.getMinBalance(),
+                appendix.getHoldingId(), appendix.getWhitelist(), appendix.getBlacklist());
         pendingTransactionsTable.insert(poll);
 
         long[] signers;
@@ -132,7 +152,7 @@ public class PendingTransactionPoll extends AbstractPoll {
         }
     }
 
-    public static DbIterator<PendingTransactionPoll> finishing(int height){
+    public static DbIterator<PendingTransactionPoll> finishing(int height) {
         return pendingTransactionsTable.getManyBy(new DbClause.IntClause("finish_height", height), 0, Integer.MAX_VALUE);
     }
 
@@ -150,31 +170,32 @@ public class PendingTransactionPoll extends AbstractPoll {
         return pendingTransactionsTable.getManyBy(clause, firstIndex, lastIndex);
     }
 
-    public static List<Long> getIdsByWhitelistedSigner(Account signer,  int from, int to) {
-        try (Connection con = Db.db.getConnection();
-             PreparedStatement pstmt = con.prepareStatement("SELECT DISTINCT pending_transaction.id "
-                     + "from pending_transaction, pending_transactions_signers "
-                     + "WHERE pending_transaction.latest = TRUE AND "
-                     + "pending_transaction.blacklist = false AND "
-                     + "pending_transaction.id = pending_transactions_signers.poll_id "
-                     + "AND pending_transaction_signers.account_id = ? "
-                     + DbUtils.limitsClause(from, to))) {
+    public static DbIterator<Long> getIdsByWhitelistedSigner(Account signer, int from, int to) {
+        Connection con = null;
+        try {
+            con = Db.db.getConnection();
+            PreparedStatement pstmt = con.prepareStatement("SELECT DISTINCT pending_transaction.id "
+                    + "from pending_transaction, pending_transaction_signer "
+                    + "WHERE pending_transaction.latest = TRUE AND "
+                    + "pending_transaction.blacklist = false AND "
+                    + "pending_transaction.id = pending_transaction_signer.poll_id "
+                    + "AND pending_transaction_signer.account_id = ? "
+                    + DbUtils.limitsClause(from, to));
             pstmt.setLong(1, signer.getId());
             DbUtils.setLimits(2, pstmt, from, to);
 
-            DbIterator<Long> iterator = new DbIterator<>(con, pstmt, new DbIterator.ResultSetReader<Long>() {
+            return new DbIterator<>(con, pstmt, new DbIterator.ResultSetReader<Long>() {
                 @Override
                 public Long get(Connection con, ResultSet rs) throws Exception {
                     return rs.getLong(1);
                 }
             });
 
-            return iterator.toList();
         } catch (SQLException e) {
-            throw new NxtException.StopException(e.toString(), e);
+            DbUtils.close(con);
+            throw new RuntimeException(e.toString(), e);
         }
     }
-
 
     public long[] getWhitelist() {
         return whitelist;
@@ -184,19 +205,13 @@ public class PendingTransactionPoll extends AbstractPoll {
         return blacklist;
     }
 
-    public long getQuorum() { return quorum; }
+    public long getQuorum() {
+        return quorum;
+    }
 
     private void save(Connection con) throws SQLException {
-        boolean isBlacklist;
-        byte signersCount;
-
-        if (getBlacklist().length > 0) {
-            isBlacklist = true;
-            signersCount = (byte)getBlacklist().length;
-        } else {
-            isBlacklist = false;
-            signersCount = (byte)getWhitelist().length;
-        }
+        boolean isBlacklist = getBlacklist().length > 0;
+        byte signersCount = isBlacklist ? (byte) getBlacklist().length : (byte) getWhitelist().length;
 
         try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO pending_transaction (id, account_id, "
                 + "finish_height, signers_count, blacklist, voting_model, quorum, min_balance, holding_id, "
@@ -204,7 +219,7 @@ public class PendingTransactionPoll extends AbstractPoll {
             int i = 0;
             pstmt.setLong(++i, getId());
             pstmt.setLong(++i, getAccountId());
-            pstmt.setInt(++i, getFinishBlockHeight());
+            pstmt.setInt(++i, getFinishHeight());
             pstmt.setByte(++i, signersCount);
             pstmt.setBoolean(++i, isBlacklist);
             pstmt.setByte(++i, getVotingModel());

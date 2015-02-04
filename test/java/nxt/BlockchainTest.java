@@ -56,4 +56,9 @@ public abstract class BlockchainTest extends AbstractBlockchainTest {
         }
     }
 
+    protected long balanceById(long id){
+        return Account.getAccount(id).getBalanceNQT();
+    }
+
+
 }

@@ -3224,14 +3224,15 @@ table.purchase td {
   display:none;
 }
 
-.tx-modal-approve, #tx-modal-approve-template {
-  display: none;
-  margin-bottom: 22px;
+.approve_modal {
+  border-bottom: 1px solid #ddd;
+  padding: 6px 0px 12px 0px;
+  margin-top: 3px;
+  margin-bottom: 18px;
 }
 
-.tab-pane-approve {
-  border-bottom: 1px solid #ddd;
-  padding: 16px 0px 16px 0px;
+.tab_pane_approve {
+  padding: 16px 0px 0px 0px;
 }
 
 .callout-bottom {

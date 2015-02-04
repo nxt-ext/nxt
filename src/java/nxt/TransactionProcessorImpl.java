@@ -49,26 +49,17 @@ final class TransactionProcessorImpl implements TransactionProcessor {
             public void notify(Block block) {
                 int height = block.getHeight();
                 if (height >= Constants.TWO_PHASED_TRANSACTIONS_BLOCK) {
-                    try(
-                            Connection con = Db.db.getConnection();
-                            PreparedStatement pstmt = con.prepareStatement("SELECT transaction.* FROM transaction, pending_transaction " +
-                                    " WHERE pending_transaction.id = transaction.id AND pending_transaction.finish_height = ? " +
-                                    " AND pending_transaction.latest = TRUE")
-                            ) {
-
+                    try (Connection con = Db.db.getConnection();
+                         PreparedStatement pstmt = con.prepareStatement("SELECT transaction.* FROM transaction, pending_transaction " +
+                                 " WHERE pending_transaction.id = transaction.id AND pending_transaction.finish_height = ? " +
+                                 " AND pending_transaction.latest = TRUE")) {
                         pstmt.setInt(1, height);
-                        DbIterator<? extends Transaction> transactions = Nxt.getBlockchain().getTransactions(con, pstmt);
-
-                        while(transactions.hasNext()){
-                            Transaction transaction = transactions.next();
-                            transaction.getTwoPhased().verify(transaction);
+                        for (Transaction transaction : Nxt.getBlockchain().getTransactions(con, pstmt)) {
+                            transaction.getTwoPhased().finalVerification(transaction);
                         }
-                        con.close();
                     }  catch (SQLException e) {
                         throw new RuntimeException(e.toString(), e);
                     }
-
-
                 }
             }
         }, BlockchainProcessor.Event.AFTER_BLOCK_APPLY);
@@ -128,21 +119,14 @@ final class TransactionProcessorImpl implements TransactionProcessor {
 
     private final Runnable removeUnconfirmedTransactionsThread = new Runnable() {
 
-        private final DbClause expiredClause = new DbClause(" expiration < ? ") {
-            @Override
-            protected int set(PreparedStatement pstmt, int index) throws SQLException {
-                pstmt.setInt(index, Nxt.getEpochTime());
-                return index + 1;
-            }
-        };
-
         @Override
         public void run() {
 
             try {
                 try {
                     List<UnconfirmedTransaction> expiredTransactions = new ArrayList<>();
-                    try (DbIterator<UnconfirmedTransaction> iterator = unconfirmedTransactionTable.getManyBy(expiredClause, 0, -1, "")) {
+                    try (DbIterator<UnconfirmedTransaction> iterator = unconfirmedTransactionTable.getManyBy(
+                            new DbClause.IntClause("expiration", DbClause.Op.LT, Nxt.getEpochTime()), 0, -1, "")) {
                         while (iterator.hasNext()) {
                             expiredTransactions.add(iterator.next());
                         }
@@ -229,7 +213,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                     if (peer == null) {
                         return;
                     }
-                    JSONObject response = peer.send(getUnconfirmedTransactionsRequest);
+                    JSONObject response = peer.send(getUnconfirmedTransactionsRequest, 10 * 1024 * 1024);
                     if (response == null) {
                         return;
                     }

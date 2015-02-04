@@ -18,7 +18,7 @@ public final class GetPoll extends APIServlet.APIRequestHandler {
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
         Poll poll = ParameterParser.getPoll(req);
-        boolean includeVoters = "true".equalsIgnoreCase(req.getParameter("includeVoters"));
+        boolean includeVoters = ParameterParser.getBoolean(req, "includeVoters", false);
         return JSONData.poll(poll, includeVoters);
     }
 }

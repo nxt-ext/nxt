@@ -17,7 +17,7 @@ var NRS = (function(NRS, $, undefined) {
 							return;
 						}
 
-						if (!poll.errorCode && poll.attachment.finishBlockHeight >= NRS.lastBlockHeight) {
+						if (!poll.errorCode && poll.attachment.finishHeight >= NRS.lastBlockHeight) {
 							polls[input.transaction] = poll;
 						}
 
@@ -38,7 +38,7 @@ var NRS = (function(NRS, $, undefined) {
 											pollDescription = pollDescription.substring(0, 100) + "...";
 										}
 
-										rows += "<tr class='tentative'><td>" + String(unconfirmedTransaction.attachment.name).escapeHTML() + "</td><td>" + pollDescription.escapeHTML() + "</td><td>" + (unconfirmedTransaction.sender != NRS.genesis ? "<a href='#' data-user='" + NRS.getAccountFormatted(unconfirmedTransaction, "sender") + "' class='user_info'>" + NRS.getAccountTitle(unconfirmedTransaction, "sender") + "</a>" : "Genesis") + "</td><td>" + NRS.formatTimestamp(unconfirmedTransaction.timestamp) + "</td><td>" + String(unconfirmedTransaction.attachment.finishBlockHeight - NRS.lastBlockHeight)  + "</td><td><a href='#'>Vote (todo)</td></tr>";
+										rows += "<tr class='tentative'><td>" + String(unconfirmedTransaction.attachment.name).escapeHTML() + "</td><td>" + pollDescription.escapeHTML() + "</td><td>" + (unconfirmedTransaction.sender != NRS.genesis ? "<a href='#' data-user='" + NRS.getAccountFormatted(unconfirmedTransaction, "sender") + "' class='user_info'>" + NRS.getAccountTitle(unconfirmedTransaction, "sender") + "</a>" : "Genesis") + "</td><td>" + NRS.formatTimestamp(unconfirmedTransaction.timestamp) + "</td><td>" + String(unconfirmedTransaction.attachment.finishHeight - NRS.lastBlockHeight)  + "</td><td><a href='#'>Vote (todo)</td></tr>";
 									}
 								}
 							}
@@ -55,7 +55,7 @@ var NRS = (function(NRS, $, undefined) {
 								if (pollDescription.length > 100) {
 									pollDescription = pollDescription.substring(0, 100) + "...";
 								}
-								rows += "<tr><td><a class='poll_list_title' href='#' data-transaction='"+poll.transaction+"'>" + String(poll.attachment.name).escapeHTML() + "</a></td><td>" + pollDescription.escapeHTML() + "</td><td>" + (poll.sender != NRS.genesis ? "<a href='#' data-user='" + NRS.getAccountFormatted(poll, "sender") + "' class='user_info'>" + NRS.getAccountTitle(poll, "sender") + "</a>" : "Genesis") + "</td><td>" + NRS.formatTimestamp(poll.timestamp) + "</td><td>" + String(poll.attachment.finishBlockHeight - NRS.lastBlockHeight) + "</td><td><a href='#' class='vote_button' data-poll='" + poll.transaction +"'>Vote </td></tr>";
+								rows += "<tr><td><a class='poll_list_title' href='#' data-transaction='"+poll.transaction+"'>" + String(poll.attachment.name).escapeHTML() + "</a></td><td>" + pollDescription.escapeHTML() + "</td><td>" + (poll.sender != NRS.genesis ? "<a href='#' data-user='" + NRS.getAccountFormatted(poll, "sender") + "' class='user_info'>" + NRS.getAccountTitle(poll, "sender") + "</a>" : "Genesis") + "</td><td>" + NRS.formatTimestamp(poll.timestamp) + "</td><td>" + String(poll.attachment.finishHeight - NRS.lastBlockHeight) + "</td><td><a href='#' class='vote_button' data-poll='" + poll.transaction +"'>Vote </td></tr>";
 							}
 							NRS.dataLoaded(rows);
 						}
@@ -113,9 +113,9 @@ var NRS = (function(NRS, $, undefined) {
 								rows += "<td>" + pollDescription.escapeHTML() + "</td>";
 								rows += "<td>" + (poll.sender != NRS.genesis ? "<a href='#' data-user='" + NRS.getAccountFormatted(poll, "sender") + "' class='user_info'>" + NRS.getAccountTitle(poll, "sender") + "</a>" : "Genesis") + "</td>"
 								rows += "<td>" + NRS.formatTimestamp(poll.timestamp) + "</td>";
-								if(poll.attachment.finishBlockHeight > NRS.lastBlockHeight)
+								if(poll.attachment.finishHeight > NRS.lastBlockHeight)
 								{
-									rows += "<td>" + String(poll.attachment.finishBlockHeight - NRS.lastBlockHeight) + "</td>";
+									rows += "<td>" + String(poll.attachment.finishHeight - NRS.lastBlockHeight) + "</td>";
 									rows += "<td><a href='#' class='vote_button' data-poll='" + poll.transaction +"'>Vote </td>";
 
 								}
@@ -181,9 +181,9 @@ var NRS = (function(NRS, $, undefined) {
 								rows += "<td>" + pollDescription.escapeHTML() + "</td>";
 								rows += "<td>" + (poll.sender != NRS.genesis ? "<a href='#' data-user='" + NRS.getAccountFormatted(poll, "sender") + "' class='user_info'>" + NRS.getAccountTitle(poll, "sender") + "</a>" : "Genesis") + "</td>"
 								rows += "<td>" + NRS.formatTimestamp(poll.timestamp) + "</td>";
-								if(poll.attachment.finishBlockHeight > NRS.lastBlockHeight)
+								if(poll.attachment.finishHeight > NRS.lastBlockHeight)
 								{
-									rows += "<td>" + String(poll.attachment.finishBlockHeight - NRS.lastBlockHeight) + "</td>";
+									rows += "<td>" + String(poll.attachment.finishHeight - NRS.lastBlockHeight) + "</td>";
 									rows += "<td>Waiting... </td>";
 
 								}

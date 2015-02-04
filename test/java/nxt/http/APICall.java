@@ -1,5 +1,6 @@
 package nxt.http;
 
+import nxt.util.Convert;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONValue;
 import org.junit.Assert;
@@ -66,6 +67,11 @@ public class APICall {
             return this;
         }
 
+        public Builder recipient(long id) {
+            params.put("recipient", Convert.toUnsignedLong(id));
+            return this;
+        }
+
         public APICall build() {
             return new APICall(this);
         }
@@ -78,6 +84,7 @@ public class APICall {
         when(req.getMethod()).thenReturn("POST");
         for (String key : params.keySet()) {
             when(req.getParameter(key)).thenReturn(params.get(key));
+            when(req.getParameterValues(key)).thenReturn(new String[]{params.get(key)});
         }
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         PrintWriter writer = new PrintWriter(new OutputStreamWriter(out));

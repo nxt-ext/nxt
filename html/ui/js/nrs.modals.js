@@ -78,7 +78,7 @@ var NRS = (function(NRS, $, undefined) {
 
 	//hide modal when another one is activated.
 	$(".modal").on("show.bs.modal", function(e) {
-		var $inputFields = $(this).find("input[name=recipient], input[name=account_id]").not("[type=hidden]");
+		var $inputFields = $(this).find("input[name=recipient], input[name=account_id], input[name=pendingWhitelisted], input[name=pendingBlacklisted]").not("[type=hidden]");
 
 		$.each($inputFields, function() {
 			if ($(this).hasClass("noMask")) {
@@ -102,6 +102,13 @@ var NRS = (function(NRS, $, undefined) {
 		}
 
 		$(this).find(".form-group").css("margin-bottom", "");
+
+		$(this).find('.approve_tab_list a:first').click();
+
+		// Activating context help popovers
+		$(function () { 
+            $("[data-toggle='popover']").popover(); 
+        });
 	});
 
 	$(".modal").on("shown.bs.modal", function() {
@@ -221,6 +228,35 @@ var NRS = (function(NRS, $, undefined) {
 		}
 	});
 
+	$('.approve_tab_list a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
+        $am = $(this).closest('.approve_modal');
+        $am.find('.tab-pane input').prop('disabled', true);
+        $am.find('.tab-pane.active input').prop('disabled', false);
+        if ($(this).hasClass("at_no_approval")) {
+        	$am.find('.approve_generic').hide();
+        	$am.find('.approve_generic input').prop('disabled', true);
+        } else {
+        	$am.find('.approve_generic input').prop('disabled', false);
+        	$am.find('.approve_generic').show();
+        }
+    });
+
+    $(".add_account_btn").click(function(e) {
+    	var $accountBox = $(this).closest('.account_box');
+        var $clone = $accountBox.find(".form_group_accounts").first().clone();
+        $clone.find("input").val("");
+        $accountBox.find(".added_account_list").append($clone);
+    });
+
+    $(".modal").on("click", "button.btn.remove_account_btn", function(e) {
+    	e.preventDefault();
+    	var $accountBox = $(this).closest('.account_box');
+    	if ($accountBox.find(".form_group_accounts").length == 1) {
+            return;
+        }
+        $(this).closest(".form_group_accounts").remove();
+    });
+
 	$(".advanced_info a").on("click", function(e) {
 		e.preventDefault();
 
@@ -233,10 +269,6 @@ var NRS = (function(NRS, $, undefined) {
 			$modal.find(".advanced").not(not).fadeIn();
 		} else {
 			$modal.find(".advanced").hide();
-		}
-
-		if ($modal.find(".tx-modal-approve").is(':empty')) {
-			NRS.initApproveDialog($modal);
 		}
 
 		$modal.find(".advanced_extend").each(function(index, obj) {
