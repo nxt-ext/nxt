@@ -47,14 +47,10 @@ var NRS = (function(NRS, $, undefined) {
 					rows += "<td>" + (peer.platform ? String(peer.platform).escapeHTML() : "?") + "</td>"
 
 					rows += "<td style='text-align:right;'>";
-					if (!NRS.needsAdminPassword) {
-						rows += "<a class='btn btn-xs btn-default' href='#' data-toggle='modal' ";
-						rows += "data-target='#blacklist_peer_modal' data-peer='" + String(peer.announcedAddress).escapeHTML() + "'>" + $.t("blacklist") + "</a>";
-					} else {
-						rows += "-&nbsp;";
-					}
+					rows += "<a class='btn btn-xs btn-default' href='#' data-toggle='modal' ";
+					rows += "data-target='#blacklist_peer_modal' " + (NRS.needsAdminPassword ? "disabled " : "");
+					rows += "data-peer='" + String(peer.announcedAddress).escapeHTML() + "'>" + $.t("blacklist") + "</a>";
 					rows += "</td>";
-					
 					rows += "</tr>";
 				}
 
