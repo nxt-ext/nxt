@@ -10,7 +10,7 @@ will still be generated and submitted.
 Delay forging and submission of blocks by 20 s, configurable via the
 nxt.forgingDelay property, in order to be able to accumulate more transactions
 in the forged block. The arrival of a front-running block from a peer however
-cancels that delay and the next block is generated 3 s earlier instead,
+cancels that delay and the next block is generated up to 3 s earlier instead,
 which can be controlled via the nxt.forgingSpeedup property.
 
 The above time shifts apply to the physical time of block generation and
@@ -20,7 +20,8 @@ within 1 s accuracy, and are not possible to modify.
 Better logging of peer networking errors. Log, but do not blacklist missing or
 malformed JSON responses.
 
-UI for adding and blacklisting peers
+UI for adding and blacklisting peers. Blacklisting from the UI is possible
+only when admin password is not needed (disabled or running on localhost).
 
 Database optimization. Moved the public key of accounts, transaction senders,
 and block forgers to a separate table, resulting in 15% reduction of total
