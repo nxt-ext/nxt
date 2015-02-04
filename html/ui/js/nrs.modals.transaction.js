@@ -1047,7 +1047,7 @@ var NRS = (function(NRS, $, undefined) {
 				data["exchanges"] = $.t("no_matching_exchange_offer");
 			}
 			data["units_exchanged"] = [exchangedUnits, currency.decimals];
-			data["total_exchanged"] = NRS.formatAmount(exchangedTotal) + " [NXT]";
+			data["total_exchanged"] = NRS.formatAmount(exchangedTotal, false, true) + " [NXT]";
 		}, null, false);
 		return data;
 	};
@@ -1115,7 +1115,7 @@ var NRS = (function(NRS, $, undefined) {
 				data["exchanges"] = $.t("no_matching_exchange_request");
 			}
 			data["units_exchanged"] = [exchangedUnits, currency.decimals];
-			data["total_exchanged"] = NRS.formatAmount(exchangedTotal) + " [NXT]";
+			data["total_exchanged"] = NRS.formatAmount(exchangedTotal, false, true) + " [NXT]";
 		}, null, false);
 		return data;
 	};
