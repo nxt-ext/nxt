@@ -239,6 +239,10 @@ var NRS = (function(NRS, $, undefined) {
 				if (callback) {
 					callback(alreadyProcessed);
 				}
+				if (NRS.currentPage == 'transactions' || NRS.currentPage == 'dashboard') {
+					NRS.incoming[NRS.currentPage]();
+				}
+
 				NRS.getAccountInfo();
 			} else if (callback) {
 				callback(false);
