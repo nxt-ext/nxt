@@ -40,7 +40,7 @@ public class PendingTransactionPoll extends AbstractPoll {
 
         @Override
         protected void save(Connection con, PendingTransactionPoll poll, Long accountId) throws SQLException {
-            try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO " + table + "(poll_id, "
+            try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO " + table + "(pending_transaction_id, "
                     + "account_id, height) VALUES (?, ?, ?)")) {
                 int i = 0;
                 pstmt.setLong(++i, poll.getId());
@@ -69,7 +69,7 @@ public class PendingTransactionPoll extends AbstractPoll {
                     try (Connection con = Db.db.getConnection();
                          DbIterator<PendingTransactionPoll> pollsToTrim = finishing(height);
                          PreparedStatement pstmt1 = con.prepareStatement("DELETE FROM pending_transaction WHERE id = ?");
-                         PreparedStatement pstmt2 = con.prepareStatement("DELETE FROM pending_transaction_signer WHERE poll_id = ?");
+                         PreparedStatement pstmt2 = con.prepareStatement("DELETE FROM pending_transaction_signer WHERE pending_transaction_id = ?");
                          PreparedStatement pstmt3 = con.prepareStatement("DELETE FROM vote_phased WHERE pending_transaction_id = ?")) {
                         while (pollsToTrim.hasNext()) {
                             PendingTransactionPoll polltoTrim = pollsToTrim.next();

@@ -572,10 +572,11 @@ class NxtDbVersion extends DbVersion {
                 apply("CREATE TABLE IF NOT EXISTS pending_transaction_signer (db_id IDENTITY, "
                         + "poll_id BIGINT NOT NULL, account_id BIGINT NOT NULL, "
                         + "height INT NOT NULL, latest BOOLEAN DEFAULT TRUE NOT NULL)");
-
-                //todo: more indexes on VS & 2PTs tables
             case 211:
+                apply("ALTER TABLE pending_transaction_signer ALTER COLUMN poll_id RENAME TO pending_transaction_id");
+            case 212:
                 return;
+            //todo: more indexes on VS & 2PTs tables
             default:
                 throw new RuntimeException("Blockchain database inconsistent with code, probably trying to run older code on newer database");
         }
