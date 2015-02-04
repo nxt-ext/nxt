@@ -656,7 +656,7 @@ public final class DebugTrace {
             try (DbIterator<Account.AccountAsset> iterator = Account.getAssetAccounts(dividendPayment.getAssetId(), dividendPayment.getHeight(), 0, -1)) {
                 while (iterator.hasNext()) {
                     Account.AccountAsset accountAsset = iterator.next();
-                    if (accountAsset.getAccountId() != accountId && accountAsset.getAccountId() != Genesis.CREATOR_ID) {
+                    if (accountAsset.getAccountId() != accountId && accountAsset.getAccountId() != Genesis.CREATOR_ID && accountAsset.getQuantityQNT() != 0) {
                         long dividend = Convert.safeMultiply(accountAsset.getQuantityQNT(), dividendPayment.getAmountNQTPerQNT());
                         Map recipient = getValues(accountAsset.getAccountId(), false);
                         recipient.put("dividend", String.valueOf(dividend));

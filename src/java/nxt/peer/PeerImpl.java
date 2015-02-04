@@ -247,8 +247,14 @@ final class PeerImpl implements Peer {
             // prevents erroneous blacklisting during loading of blockchain from scratch
             return;
         }
+        if (cause instanceof ParseException) {
+            if (!"Unexpected token END OF FILE at position 0.".equals(cause.toString())) {
+                Logger.logDebugMessage("Peer " + peerAddress + " returned invalid response: " + cause.toString());
+            }
+            return;
+        }
         if (! isBlacklisted()) {
-            if (cause instanceof IOException || cause instanceof ParseException) {
+            if (cause instanceof IOException /*|| cause instanceof ParseException*/) {
                 Logger.logDebugMessage("Blacklisting " + peerAddress + " because of: " + cause.toString());
             } else {
                 Logger.logDebugMessage("Blacklisting " + peerAddress + " because of: " + cause.toString(), cause);
@@ -408,7 +414,12 @@ final class PeerImpl implements Peer {
         }
 
         if (response != null && response.get("error") != null) {
-            Logger.logDebugMessage("Peer returned error: " + response.toJSONString());
+            Logger.logDebugMessage("Peer " + peerAddress + " version " + version + " returned error: " + response.toJSONString());
+            try {
+                StringWriter stringWriter = new StringWriter();
+                request.writeJSONString(stringWriter);
+                Logger.logDebugMessage("Request: " + stringWriter.toString());
+            } catch (IOException ignore) {}
         }
         return response;
 
