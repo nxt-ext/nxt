@@ -10,6 +10,131 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.unconfirmedTransactionsChange = true;
 
 
+	NRS.handleIncomingTransactions = function(transactions, confirmedTransactionIds) {
+		var oldBlock = (confirmedTransactionIds === false); //we pass false instead of an [] in case there is no new block..
+
+		if (typeof confirmedTransactionIds != "object") {
+			confirmedTransactionIds = [];
+		}
+
+		if (confirmedTransactionIds.length) {
+			NRS.lastTransactions = confirmedTransactionIds.toString();
+		}
+
+		if (confirmedTransactionIds.length || NRS.unconfirmedTransactionsChange) {
+			transactions.sort(NRS.sortArray);
+
+			NRS.incoming.updateDashboardTransactions(transactions, confirmedTransactionIds.length == 0);
+		}
+
+		//always refresh peers and unconfirmed transactions..
+		if (NRS.currentPage == "peers") {
+			NRS.incoming.peers();
+		} else if (NRS.currentPage == "transactions" && $('#transactions_type_navi li.active a').attr('data-transaction-type') == "unconfirmed") {
+			NRS.incoming.transactions();
+		} else {
+			if (NRS.currentPage != 'messages' && (!oldBlock || NRS.unconfirmedTransactionsChange)) {
+				if (NRS.incoming[NRS.currentPage]) {
+					NRS.incoming[NRS.currentPage](transactions);
+				}
+			}
+		}
+		// always call incoming for messages to enable message notifications
+		if (!oldBlock || NRS.unconfirmedTransactionsChange) {
+			NRS.incoming['messages'](transactions);
+		}
+	}
+
+	NRS.getUnconfirmedTransactions = function(callback) {
+		NRS.sendRequest("getUnconfirmedTransactions", {
+			"account": NRS.account
+		}, function(response) {
+			if (response.unconfirmedTransactions && response.unconfirmedTransactions.length) {
+				var unconfirmedTransactions = [];
+				var unconfirmedTransactionIds = [];
+
+				response.unconfirmedTransactions.sort(function(x, y) {
+					if (x.timestamp < y.timestamp) {
+						return 1;
+					} else if (x.timestamp > y.timestamp) {
+						return -1;
+					} else {
+						return 0;
+					}
+				});
+				
+				for (var i = 0; i < response.unconfirmedTransactions.length; i++) {
+					var unconfirmedTransaction = response.unconfirmedTransactions[i];
+
+					unconfirmedTransaction.confirmed = false;
+					unconfirmedTransaction.unconfirmed = true;
+					unconfirmedTransaction.confirmations = "/";
+
+					if (unconfirmedTransaction.attachment) {
+						for (var key in unconfirmedTransaction.attachment) {
+							if (!unconfirmedTransaction.hasOwnProperty(key)) {
+								unconfirmedTransaction[key] = unconfirmedTransaction.attachment[key];
+							}
+						}
+					}
+					unconfirmedTransactions.push(unconfirmedTransaction);
+					unconfirmedTransactionIds.push(unconfirmedTransaction.transaction);
+				}
+				NRS.unconfirmedTransactions = unconfirmedTransactions;
+				var unconfirmedTransactionIdString = unconfirmedTransactionIds.toString();
+
+				if (unconfirmedTransactionIdString != NRS.unconfirmedTransactionIds) {
+					NRS.unconfirmedTransactionsChange = true;
+					NRS.unconfirmedTransactionIds = unconfirmedTransactionIdString;
+				} else {
+					NRS.unconfirmedTransactionsChange = false;
+				}
+
+				if (callback) {
+					callback(unconfirmedTransactions);
+				} else if (NRS.unconfirmedTransactionsChange) {
+					NRS.incoming.updateDashboardTransactions(unconfirmedTransactions, true);
+				}
+			} else {
+				NRS.unconfirmedTransactions = [];
+
+				if (NRS.unconfirmedTransactionIds) {
+					NRS.unconfirmedTransactionsChange = true;
+				} else {
+					NRS.unconfirmedTransactionsChange = false;
+				}
+
+				NRS.unconfirmedTransactionIds = "";
+				if (callback) {
+					callback([]);
+				} else if (NRS.unconfirmedTransactionsChange) {
+					NRS.incoming.updateDashboardTransactions([], true);
+				}
+			}
+		});
+	}
+
+	NRS.handleInitialTransactions = function(transactions, transactionIds) {
+		if (transactions.length) {
+			var rows = "";
+
+			transactions.sort(NRS.sortArray);
+
+			if (transactionIds.length) {
+				NRS.lastTransactions = transactionIds.toString();
+			}
+
+			for (var i = 0; i < transactions.length; i++) {
+				var transaction = transactions[i];
+				rows += NRS.getTransactionRowHTML(transaction);
+			}
+
+			$("#dashboard_transactions_table tbody").empty().append(rows);
+		}
+
+		NRS.dataLoadFinished($("#dashboard_transactions_table"));
+	}
+
 	NRS.getInitialTransactions = function() {
 		NRS.sendRequest("getAccountTransactions", {
 			"account": NRS.account,
@@ -38,27 +163,6 @@ var NRS = (function(NRS, $, undefined) {
 				});
 			}
 		});
-	}
-
-	NRS.handleInitialTransactions = function(transactions, transactionIds) {
-		if (transactions.length) {
-			var rows = "";
-
-			transactions.sort(NRS.sortArray);
-
-			if (transactionIds.length) {
-				NRS.lastTransactions = transactionIds.toString();
-			}
-
-			for (var i = 0; i < transactions.length; i++) {
-				var transaction = transactions[i];
-				rows += NRS.getTransactionRowHTML(transaction);
-			}
-
-			$("#dashboard_transactions_table tbody").empty().append(rows);
-		}
-
-		NRS.dataLoadFinished($("#dashboard_transactions_table"));
 	}
 
 	NRS.getNewTransactions = function() {
@@ -99,114 +203,6 @@ var NRS = (function(NRS, $, undefined) {
 				});
 			}
 		});
-	}
-
-	NRS.getUnconfirmedTransactions = function(callback) {
-		NRS.sendRequest("getUnconfirmedTransactions", {
-			"account": NRS.account
-		}, function(response) {
-			if (response.unconfirmedTransactions && response.unconfirmedTransactions.length) {
-				var unconfirmedTransactions = [];
-				var unconfirmedTransactionIds = [];
-
-				response.unconfirmedTransactions.sort(function(x, y) {
-					if (x.timestamp < y.timestamp) {
-						return 1;
-					} else if (x.timestamp > y.timestamp) {
-						return -1;
-					} else {
-						return 0;
-					}
-				});
-
-				for (var i = 0; i < response.unconfirmedTransactions.length; i++) {
-					var unconfirmedTransaction = response.unconfirmedTransactions[i];
-
-					unconfirmedTransaction.confirmed = false;
-					unconfirmedTransaction.unconfirmed = true;
-					unconfirmedTransaction.confirmations = "/";
-
-					if (unconfirmedTransaction.attachment) {
-						for (var key in unconfirmedTransaction.attachment) {
-							if (!unconfirmedTransaction.hasOwnProperty(key)) {
-								unconfirmedTransaction[key] = unconfirmedTransaction.attachment[key];
-							}
-						}
-					}
-
-					unconfirmedTransactions.push(unconfirmedTransaction);
-					unconfirmedTransactionIds.push(unconfirmedTransaction.transaction);
-				}
-
-				NRS.unconfirmedTransactions = unconfirmedTransactions;
-
-				var unconfirmedTransactionIdString = unconfirmedTransactionIds.toString();
-
-				if (unconfirmedTransactionIdString != NRS.unconfirmedTransactionIds) {
-					NRS.unconfirmedTransactionsChange = true;
-					NRS.unconfirmedTransactionIds = unconfirmedTransactionIdString;
-				} else {
-					NRS.unconfirmedTransactionsChange = false;
-				}
-
-				if (callback) {
-					callback(unconfirmedTransactions);
-				} else if (NRS.unconfirmedTransactionsChange) {
-					NRS.incoming.updateDashboardTransactions(unconfirmedTransactions, true);
-				}
-			} else {
-				NRS.unconfirmedTransactions = [];
-
-				if (NRS.unconfirmedTransactionIds) {
-					NRS.unconfirmedTransactionsChange = true;
-				} else {
-					NRS.unconfirmedTransactionsChange = false;
-				}
-
-				NRS.unconfirmedTransactionIds = "";
-
-				if (callback) {
-					callback([]);
-				} else if (NRS.unconfirmedTransactionsChange) {
-					NRS.incoming.updateDashboardTransactions([], true);
-				}
-			}
-		});
-	}
-
-	NRS.handleIncomingTransactions = function(transactions, confirmedTransactionIds) {
-		var oldBlock = (confirmedTransactionIds === false); //we pass false instead of an [] in case there is no new block..
-
-		if (typeof confirmedTransactionIds != "object") {
-			confirmedTransactionIds = [];
-		}
-
-		if (confirmedTransactionIds.length) {
-			NRS.lastTransactions = confirmedTransactionIds.toString();
-		}
-
-		if (confirmedTransactionIds.length || NRS.unconfirmedTransactionsChange) {
-			transactions.sort(NRS.sortArray);
-
-			NRS.incoming.updateDashboardTransactions(transactions, confirmedTransactionIds.length == 0);
-		}
-
-		//always refresh peers and unconfirmed transactions..
-		if (NRS.currentPage == "peers") {
-			NRS.incoming.peers();
-		} else if (NRS.currentPage == "transactions" && $('#transactions_type_navi li.active a').attr('data-transaction-type') == "unconfirmed") {
-			NRS.incoming.transactions();
-		} else {
-			if (NRS.currentPage != 'messages' && (!oldBlock || NRS.unconfirmedTransactionsChange)) {
-				if (NRS.incoming[NRS.currentPage]) {
-					NRS.incoming[NRS.currentPage](transactions);
-				}
-			}
-		}
-		// always call incoming for messages to enable message notifications
-		if (!oldBlock || NRS.unconfirmedTransactionsChange) {
-			NRS.incoming['messages'](transactions);
-		}
 	}
 
 	//todo: add to dashboard? 
