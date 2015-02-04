@@ -239,6 +239,7 @@
   "downloaded_volume": "Downloaded Volume",
   "downloading_blockchain": "Downloading Blockchain",
   "blocks_left": "__numBlocks__ blocks left",
+  "blocks_left_no_param": "blocks left",
   "last_num_blocks": "Last __blocks__",
   "drop_update": "Drop client update (zip file) here when downloaded or click to select.",
   "edit": "Edit",
@@ -1110,5 +1111,8 @@
   "current_units": "Current Units Supply",
   "current_reserve_per_unit": "Current Reserve Per Unit",
   "founders": "Founders",
-  "next_lessee_status": "The next lease period is scheduled from block __start__ to block __end__, the lessee account is <a href='#' data-user='__account__' class='user_info'>__account__</a>"
+  "next_lessee_status": "The next lease period is scheduled from block __start__ to block __end__, the lessee account is <a href='#' data-user='__account__' class='user_info'>__account__</a>",
+  "success_add_peer": "Peer added successfully!",
+  "blacklist": "Blacklist",
+  "success_blacklist_peer": "Peer blacklisted successfully!"
 }

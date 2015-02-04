@@ -77,6 +77,7 @@ public final class GetState extends APIServlet.APIRequestHandler {
         response.put("peerPort", Peers.getDefaultPeerPort());
         response.put("isTestnet", Constants.isTestnet);
         response.put("isOffline", Constants.isOffline);
+        response.put("needsAdminPassword", !API.disableAdminPassword);
         return response;
     }
 

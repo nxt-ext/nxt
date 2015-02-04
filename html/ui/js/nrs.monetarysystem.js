@@ -929,6 +929,43 @@ var NRS = (function(NRS, $, undefined) {
 		}
 	};
 
+   $("#currency_distribution_modal").on("show.bs.modal", function(e) {
+  		var $invoker = $(e.relatedTarget);
+
+  		var code = $invoker.data("code");
+      var currency;
+      NRS.sendRequest("getCurrency", {
+         "code": code
+      }, function(response) {
+         currency = response;
+      }, false);
+  		NRS.sendRequest("getCurrencyAccounts", {
+  			"currency": currency.currency
+  		}, function(response) {
+  			var rows = "";
+
+  			if (response.accountCurrencies) {
+  				response.accountCurrencies.sort(function(a, b) {
+  					return new BigInteger(b.units).compareTo(new BigInteger(a.units));
+  				});
+
+  				for (var i = 0; i < response.accountCurrencies.length; i++) {
+  					var account = response.accountCurrencies[i];
+  					var percentageCurrency = NRS.calculatePercentage(account.units, currency.currentSupply);
+  					rows += "<tr><td><a href='#' data-user='" + NRS.getAccountFormatted(account, "account") + "' class='user_info'>" + (account.account == currency.account ? "Currency Issuer" : NRS.getAccountTitle(account, "account")) + "</a></td><td>" + NRS.formatQuantity(account.units, currency.decimals) + "</td><td>" + percentageCurrency + "%</td></tr>";
+  				}
+  			}
+
+  			$("#currency_distribution_table tbody").empty().append(rows);
+  			NRS.dataLoadFinished($("#currency_distribution_table"));
+  		});
+  	});
+
+  	$("#currency_distribution_modal").on("hidden.bs.modal", function(e) {
+  		$("#currency_distribution_table tbody").empty();
+  		$("#currency_distribution_table").parent().addClass("data-loading");
+  	});
+
 	/* TRANSFER CURRENCY FORM */
 	NRS.forms.transferCurrency = function($modal) {
 		var data = NRS.getFormData($modal.find("form:first"));

@@ -37,44 +37,9 @@
                             </div>
                         </div>
                     </div>
-                    <div class="row advanced">
-                        <div class="col-xs-6 col-sm-6 col-md-6">
-                            <div class="form-group">
-                                <label for="dgs_listing_fee" data-i18n="fee">FEE</label>
-                                <div class="input-group">
-                                    <input type="number" name="feeNXT" id="dgs_listing_fee" class="form-control" placeholder="Fee" data-i18n="[placeholder]fee" step="any" min="1" data-default="1" value="1" tabindex="6">
-                                    <span class="input-group-addon">NXT</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-xs-6 col-sm-6 col-md-6">
-                            <div class="form-group">
-                                <label for="dgs_listing_deadline" data-i18n="deadline_hours">DEADLINE (HOURS)</label>
-                                <input type="number" name="deadline" id="dgs_listing_deadline" class="form-control" placeholder="Deadline" data-i18n="[placeholder]deadline" min="1" data-default="24" value="24" tabindex="7">
-                            </div>
-                        </div>
-                    </div>
-                    <div class="form-group secret_phrase">
-                        <label for="dgs_listing_password" data-i18n="passphrase">PASSPHRASE</label>
-                        <input type="password" name="secretPhrase" id="dgs_listing_password" class="form-control" placeholder="" tabindex="8">
-                    </div>
-                    <div class="form-group advanced">
-                        <label for="dgs_listing_referenced_transaction" data-i18n="referenced_transaction_hash">REFERENCED TRANSACTION HASH</label>
-                        <input type="text" class="form-control" name="referencedTransactionFullHash" id="dgs_listing_referenced_transaction" placeholder="Referenced Transaction Full Hash" data-i18n="[placeholder]referenced_transaction_full_hash" tabindex="6" spellcheck="false" />
-                    </div>
-                    <div class="form-group advanced" style="margin-bottom:0;">
-                        <input type="checkbox" name="doNotBroadcast" id="dgs_listing_do_not_broadcast" value="1" /> <label for="dgs_listing_do_not_broadcast" style="font-weight:normal;" tabindex="7" data-i18n="do_not_broadcast">Do Not Broadcast</label>
-                    </div>
-                    <div class="form-group advanced">
-                        <input type="checkbox" name="add_note_to_self" id="dgs_listing_add_note_to_self" class="add_note_to_self" tabindex="8" /> <label for="dgs_listing_add_note_to_self" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_note_to_self">Add Note to Self?</span></label>
-                    </div>
-                    <div class="form-group advanced optional_note">
-                        <label for="dgs_listing_note_to_self" data-i18n="note_to_self">Note to Self</label>
-                        <textarea class="form-control" id="dgs_listing_note_to_self" name="note_to_self" rows="4" tabindex="9"></textarea>
-                        <div style="margin-top:3px;">
-                            <label style="font-weight:normal;color:#666" data-i18n="note_is_encrypted">This note is encrypted.</span></label>
-                        </div>
-                    </div>
+                    <div data-replace-with-modal-template="secret_phrase_modal_template"></div>
+                    <div data-replace-with-modal-template="advanced_modal_template"></div>
+
                     <input type="hidden" name="request_type" value="dgsListing" />
                 </form>
             </div>
@@ -103,44 +68,9 @@
                     <div class="row">
                         <div class="goods_info" data-i18n="loading">Loading...</div>
                     </div>
-                    <div class="row advanced">
-                        <div class="col-xs-6 col-sm-6 col-md-6">
-                            <div class="form-group">
-                                <label for="dgs_delisting_fee" data-i18n="fee">FEE</label>
-                                <div class="input-group">
-                                    <input type="number" name="feeNXT" id="dgs_delisting_fee" class="form-control" step="any" min="1" placeholder="Fee" data-i18n="[placeholder]fee" data-default="1" value="1" tabindex="2">
-                                    <span class="input-group-addon">NXT</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-xs-6 col-sm-6 col-md-6">
-                            <div class="form-group">
-                                <label for="dgs_delisting_deadline" data-i18n="deadline_hours">DEADLINE (HOURS)</label>
-                                 <input type="number" name="deadline" id="dgs_delisting_deadline" class="form-control" placeholder="Deadline" data-i18n="[placeholder]deadline" min="1" data-default="24" value="24" tabindex="3">
-                            </div>
-                        </div>
-                    </div>
-                    <div class="form-group secret_phrase">
-                        <label for="dgs_delisting_password" data-i18n="passphrase">PASSPHRASE</label>
-                        <input type="password" name="secretPhrase" id="dgs_delisting_password" class="form-control" placeholder="" tabindex="1">
-                    </div>
-                    <div class="form-group advanced">
-                        <label for="dgs_delisting_referenced_transaction" data-i18n="referenced_transaction_hash">REFERENCED TRANSACTION HASH</label>
-                        <input type="text" class="form-control" name="referencedTransactionFullHash" id="dgs_delisting_referenced_transaction" placeholder="Referenced Transaction Full Hash" data-i18n="[placeholder]referenced_transaction_full_hash" tabindex="6" spellcheck="false" />
-                    </div>
-                    <div class="form-group advanced" style="margin-bottom:0;">
-                        <input type="checkbox" name="doNotBroadcast" id="dgs_delisting_do_not_broadcast" value="1" /> <label for="dgs_delisting_do_not_broadcast" style="font-weight:normal;" tabindex="7" data-i18n="do_not_broadcast">Do Not Broadcast</label>
-                    </div>
-                    <div class="form-group advanced">
-                        <input type="checkbox" name="add_note_to_self" id="dgs_delisting_add_note_to_self" class="add_note_to_self" tabindex="8" /> <label for="dgs_delisting_add_note_to_self" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_note_to_self">Add Note to Self?</span></label>
-                    </div>
-                    <div class="form-group advanced optional_note">
-                        <label for="dgs_delisting_note_to_self" data-i18n="note_to_self">Note to Self</label>
-                        <textarea class="form-control" id="dgs_delisting_note_to_self" name="note_to_self" rows="4" tabindex="9"></textarea>
-                        <div style="margin-top:3px;">
-                            <label style="font-weight:normal;color:#666" data-i18n="note_is_encrypted">This note is encrypted.</span></label>
-                        </div>
-                    </div>
+                    <div data-replace-with-modal-template="secret_phrase_modal_template"></div>
+                    <div data-replace-with-modal-template="advanced_modal_template"></div>
+
                     <input type="hidden" name="request_type" value="dgsDelisting" />
                 </form>
             </div>
@@ -185,44 +115,9 @@
                             </div>
                         </div>
                     </div>
-                    <div class="row advanced">
-                        <div class="col-xs-6 col-sm-6 col-md-6">
-                            <div class="form-group">
-                                <label for="dgs_price_change_fee" data-i18n="fee">FEE</label>
-                                <div class="input-group">
-                                    <input type="number" name="feeNXT" id="dgs_price_change_fee" class="form-control" step="any" min="1" placeholder="Fee" data-i18n="fee" data-default="1" value="1" tabindex="2">
-                                    <span class="input-group-addon">NXT</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-xs-6 col-sm-6 col-md-6">
-                            <div class="form-group">
-                                <label for="dgs_price_change_deadline" data-i18n="deadline_hours">DEADLINE (HOURS)</label>
-                                <input type="number" name="deadline" id="dgs_price_change_deadline" class="form-control" placeholder="Deadline" data-i18n="[placeholder]deadline" min="1" data-default="24" value="24" tabindex="3">
-                            </div>
-                        </div>
-                    </div>
-                    <div class="form-group secret_phrase">
-                        <label for="dgs_price_change_password" data-i18n="passphrase">PASSPHRASE</label>
-                        <input type="password" name="secretPhrase" id="dgs_price_change_password" class="form-control" placeholder="" tabindex="4">
-                    </div>
-                    <div class="form-group advanced">
-                        <label for="dgs_price_change_referenced_transaction" data-i18n="referenced_transaction_hash">REFERENCED TRANSACTION HASH</label>
-                        <input type="text" class="form-control" name="referencedTransactionFullHash" id="dgs_price_change_referenced_transaction" placeholder="Referenced Transaction Full Hash" data-i18n="[placeholder]referenced_transaction_full_hash" tabindex="6" spellcheck="false" />
-                    </div>
-                    <div class="form-group advanced" style="margin-bottom:0;">
-                        <input type="checkbox" name="doNotBroadcast" id="dgs_price_change_do_not_broadcast" value="1" /> <label for="dgs_price_change_do_not_broadcast" style="font-weight:normal;" tabindex="7" data-i18n="do_not_broadcast">Do Not Broadcast</label>
-                    </div>
-                    <div class="form-group advanced">
-                        <input type="checkbox" name="add_note_to_self" id="dgs_price_change_add_note_to_self" class="add_note_to_self" tabindex="8" /> <label for="dgs_price_change_add_note_to_self" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_note_to_self">Add Note to Self?</span></label>
-                    </div>
-                    <div class="form-group advanced optional_note">
-                        <label for="dgs_price_change_note_to_self" data-i18n="note_to_self">Note to Self</label>
-                        <textarea class="form-control" id="dgs_price_change_note_to_self" name="note_to_self" rows="4" tabindex="9"></textarea>
-                        <div style="margin-top:3px;">
-                            <label style="font-weight:normal;color:#666" data-i18n="note_is_encrypted">This note is encrypted.</span></label>
-                        </div>
-                    </div>
+                    <div data-replace-with-modal-template="secret_phrase_modal_template"></div>
+                    <div data-replace-with-modal-template="advanced_modal_template"></div>
+
                     <input type="hidden" name="request_type" value="dgsPriceChange" />
                 </form>
             </div>
@@ -264,44 +159,9 @@
                             </div>
                         </div>
                     </div>
-                    <div class="row advanced">
-                        <div class="col-xs-6 col-sm-6 col-md-6">
-                            <div class="form-group">
-                                <label for="dgs_quantity_change_fee" data-i18n="fee">FEE</label>
-                                <div class="input-group">
-                                    <input type="number" name="feeNXT" id="dgs_quantity_change_fee" class="form-control" step="any" min="1" placeholder="Fee" data-i18n="[placeholder]fee" data-default="1" value="1" tabindex="2">
-                                    <span class="input-group-addon">NXT</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-xs-6 col-sm-6 col-md-6">
-                            <div class="form-group">
-                                <label for="dgs_quantity_change_deadline" data-i18n="deadline_hours">DEADLINE (HOURS)</label>
-                                <input type="number" name="deadline" id="dgs_quantity_change_deadline" class="form-control" placeholder="Deadline" data-i18n="[placeholder]deadline" min="1" data-default="24" value="24" tabindex="3">
-                            </div>
-                        </div>
-                    </div>
-                    <div class="form-group secret_phrase">
-                        <label for="dgs_quantity_change_password" data-i18n="passphrase">PASSPHRASE</label>
-                        <input type="password" name="secretPhrase" id="dgs_quantity_change_password" class="form-control" placeholder="" tabindex="4">
-                    </div>
-                    <div class="form-group advanced">
-                        <label for="dgs_quantity_change_referenced_transaction" data-i18n="referenced_transaction_hash">REFERENCED TRANSACTION HASH</label>
-                        <input type="text" class="form-control" name="referencedTransactionFullHash" id="dgs_quantity_change_referenced_transaction" placeholder="Referenced Transaction Full Hash" data-i18n="[placeholder]referenced_transaction_full_hash" tabindex="6" spellcheck="false" />
-                    </div>
-                    <div class="form-group advanced" style="margin-bottom:0;">
-                        <input type="checkbox" name="doNotBroadcast" id="dgs_quantity_change_do_not_broadcast" value="1" /> <label for="dgs_quantity_change_do_not_broadcast" style="font-weight:normal;" tabindex="7" data-i18n="do_not_broadcast">Do Not Broadcast</label>
-                    </div>
-                    <div class="form-group advanced">
-                        <input type="checkbox" name="add_note_to_self" id="dgs_quantity_change_add_note_to_self" class="add_note_to_self" tabindex="8" /> <label for="dgs_quantity_change_add_note_to_self" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_note_to_self">Add Note to Self?</span></label>
-                    </div>
-                    <div class="form-group advanced optional_note">
-                        <label for="dgs_quantity_change_note_to_self" data-i18n="note_to_self">Note to Self</label>
-                        <textarea class="form-control" id="dgs_quantity_change_note_to_self" name="note_to_self" rows="4" tabindex="9"></textarea>
-                        <div style="margin-top:3px;">
-                            <label style="font-weight:normal;color:#666" data-i18n="note_is_encrypted">This note is encrypted.</span></label>
-                        </div>
-                    </div>
+                    <div data-replace-with-modal-template="secret_phrase_modal_template"></div>
+                    <div data-replace-with-modal-template="advanced_modal_template"></div>
+
                     <input type="hidden" name="request_type" value="dgsQuantityChange" />
                 </form>
             </div>
@@ -393,55 +253,10 @@
                             </div>
                         </div>
                     </div>
-                    <div class="form-group">
-                        <input type="checkbox" name="add_message" id="dgs_purchase_add_message" class="add_message" tabindex="6" /> <label for="dgs_purchase_add_message" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_message_q">Add a Message?</span></label>
-                    </div>
-                    <div class="form-group optional_message">
-                        <label for="dgs_purchase_message" data-i18n="message">MESSAGE</label>
-                        <textarea class="form-control" id="dgs_purchase_message" name="message" rows="4" tabindex="7"></textarea>
-                        <input type="hidden" name="encrypt_message" value="1" />
-                        <div style="margin-top:3px;">
-                            <label style="font-weight:normal;color:#666" data-i18n="message_is_encrypted">This message is encrypted.</span></label>
-                        </div>
-                    </div>
-                    <div class="row advanced">
-                        <div class="col-xs-6 col-sm-6 col-md-6">
-                            <div class="form-group">
-                                <label for="dgs_purchase_fee" data-i18n="fee">FEE</label>
-                                <div class="input-group">
-                                    <input type="number" name="feeNXT" id="dgs_purchase_fee" class="form-control" placeholder="Fee" data-i18n="[placeholder]fee" step="any" min="1" data-default="1" value="1" tabindex="5">
-                                    <span class="input-group-addon">NXT</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-xs-6 col-sm-6 col-md-6">
-                            <div class="form-group">
-                                <label for="dgs_purchase_deadline" data-i18n="deadline_hours">DEADLINE (HOURS)</label>
-                                <input type="number" name="deadline" id="dgs_purchase_deadline" class="form-control" placeholder="Deadline" data-i18n="[placeholder]deadline" min="1" data-default="24" value="24" tabindex="6">
-                            </div>
-                        </div>
-                    </div>
-                    <div class="form-group secret_phrase">
-                        <label for="dgs_purchase_password" data-i18n="passphrase">PASSPHRASE</label>
-                        <input type="password" name="secretPhrase" id="dgs_purchase_password" class="form-control" placeholder="" tabindex="7">
-                    </div>
-                    <div class="form-group advanced">
-                        <label for="dgs_purchase_referenced_transaction" data-i18n="referenced_transaction_hash">REFERENCED TRANSACTION HASH</label>
-                        <input type="text" class="form-control" name="referencedTransactionFullHash" id="dgs_purchase_referenced_transaction" placeholder="Referenced Transaction Full Hash" data-i18n="[placeholder]referenced_transaction_full_hash" tabindex="6" spellcheck="false" />
-                    </div>
-                    <div class="form-group advanced" style="margin-bottom:0;">
-                        <input type="checkbox" name="doNotBroadcast" id="dgs_purchase_do_not_broadcast" value="1" /> <label for="dgs_purchase_do_not_broadcast" style="font-weight:normal;" tabindex="7" data-i18n="do_not_broadcast">Do Not Broadcast</label>
-                    </div>
-                    <div class="form-group advanced">
-                        <input type="checkbox" name="add_note_to_self" id="dgs_purchase_add_note_to_self" class="add_note_to_self" tabindex="8" /> <label for="dgs_purchase_add_note_to_self" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_note_to_self">Add Note to Self?</span></label>
-                    </div>
-                    <div class="form-group advanced optional_note">
-                        <label for="dgs_purchase_note_to_self" data-i18n="note_to_self">Note to Self</label>
-                        <textarea class="form-control" id="dgs_purchase_note_to_self" name="note_to_self" rows="4" tabindex="9"></textarea>
-                        <div style="margin-top:3px;">
-                            <label style="font-weight:normal;color:#666" data-i18n="note_is_encrypted">This note is encrypted.</span></label>
-                        </div>
-                    </div>
+                    <div data-replace-with-modal-template="add_message_modal_template"></div>
+                    <div data-replace-with-modal-template="secret_phrase_modal_template"></div>
+                    <div data-replace-with-modal-template="advanced_modal_template"></div>
+
                     <input type="hidden" name="request_type" value="dgsPurchase" />
                 </form>
             </div>
@@ -485,44 +300,9 @@
                             <span class="input-group-addon">NXT</span>
                         </div>
                     </div>
-                    <div class="row advanced">
-                        <div class="col-xs-6 col-sm-6 col-md-6">
-                            <div class="form-group">
-                                <label for="dgs_delivery_fee" data-i18n="fee">FEE</label>
-                                <div class="input-group">
-                                    <input type="number" name="feeNXT" id="dgs_delivery_fee" class="form-control" placeholder="Fee" data-i18n="[placeholder]fee" step="any" min="1" data-default="1" value="1" tabindex="4">
-                                    <span class="input-group-addon">NXT</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-xs-6 col-sm-6 col-md-6">
-                            <div class="form-group">
-                                <label for="dgs_delivery_deadline" data-i18n="deadline_hours">DEADLINE (HOURS)</label>
-                                <input type="number" name="deadline" id="dgs_delivery_deadline" class="form-control" placeholder="Deadline" data-i18n="[placeholder]deadline" min="1" data-default="24" value="24" tabindex="5">
-                            </div>
-                        </div>
-                    </div>
-                    <div class="form-group secret_phrase">
-                        <label for="dgs_delivery_password" data-i18n="passphrase">PASSPHRASE</label>
-                        <input type="password" name="secretPhrase" id="dgs_delivery_password" class="form-control" placeholder="" tabindex="6">
-                    </div>
-                    <div class="form-group advanced">
-                        <label for="dgs_delivery_referenced_transaction" data-i18n="referenced_transaction_hash">REFERENCED TRANSACTION HASH</label>
-                        <input type="text" class="form-control" name="referencedTransactionFullHash" id="dgs_delivery_referenced_transaction" placeholder="Referenced Transaction Full Hash" data-i18n="[placeholder]referenced_transaction_full_hash" tabindex="7" spellcheck="false" />
-                    </div>
-                    <div class="form-group advanced" style="margin-bottom:0;">
-                        <input type="checkbox" name="doNotBroadcast" id="dgs_delivery_do_not_broadcast" value="1" /> <label for="dgs_delivery_do_not_broadcast" style="font-weight:normal;" tabindex="8" data-i18n="do_not_broadcast">Do Not Broadcast</label>
-                    </div>
-                    <div class="form-group advanced">
-                        <input type="checkbox" name="add_note_to_self" id="dgs_delivery_add_note_to_self" class="add_note_to_self" tabindex="9" /> <label for="dgs_delivery_add_note_to_self" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_note_to_self">Add Note to Self?</span></label>
-                    </div>
-                    <div class="form-group advanced optional_note">
-                        <label for="dgs_delivery_note_to_self" data-i18n="note_to_self">Note to Self</label>
-                        <textarea class="form-control" id="dgs_delivery_note_to_self" name="note_to_self" rows="4" tabindex="10"></textarea>
-                        <div style="margin-top:3px;">
-                            <label style="font-weight:normal;color:#666" data-i18n="note_is_encrypted">This note is encrypted.</span></label>
-                        </div>
-                    </div>
+                    <div data-replace-with-modal-template="secret_phrase_modal_template"></div>
+                    <div data-replace-with-modal-template="advanced_modal_template"></div>
+
                     <input type="hidden" name="request_type" value="dgsDelivery" />
                 </form>
             </div>
@@ -628,54 +408,10 @@
                             <span class="input-group-addon">NXT</span>
                         </div>
                     </div>
-                    <div class="form-group">
-                        <input type="checkbox" name="add_message" id="dgs_refund_add_message" class="add_message" tabindex="6" /> <label for="dgs_refund_add_message" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_message_q">Add a Message?</span></label>
-                    </div>
-                    <div class="form-group optional_message">
-                        <label for="dgs_refund_message" data-i18n="message">MESSAGE</label>
-                        <textarea class="form-control" id="dgs_refund_message" name="message" rows="4" tabindex="7"></textarea>
-                         <div style="margin-top:3px">
-                            <label for="dgs_refund_encrypt_message" style="font-weight:normal;color:#666"><input type="checkbox" name="encrypt_message" id="dgs_refund_encrypt_message" value="1" data-default="checked" checked="checked" /> <span data-i18n="encrypt_message">Encrypt Message</span></label>
-                        </div>
-                    </div>
-                    <div class="row advanced">
-                        <div class="col-xs-6 col-sm-6 col-md-6">
-                            <div class="form-group">
-                                <label for="dgs_refund_fee" data-i18n="fee">FEE</label>
-                                <div class="input-group">
-                                    <input type="number" name="feeNXT" id="dgs_refund_fee" class="form-control" placeholder="Fee" data-i18n="fee" step="any" min="1" data-default="1" value="1" tabindex="4">
-                                    <span class="input-group-addon">NXT</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-xs-6 col-sm-6 col-md-6">
-                            <div class="form-group">
-                                <label for="dgs_refund_deadline" data-i18n="deadline_hours">DEADLINE (HOURS)</label>
-                                <input type="number" name="deadline" id="dgs_refund_deadline" class="form-control" placeholder="Deadline" data-i18n="[placeholder]deadline" min="1" data-default="24" value="24" tabindex="5">
-                            </div>
-                        </div>
-                    </div>
-                    <div class="form-group secret_phrase">
-                        <label for="dgs_refund_password" data-i18n="passphrase">PASSPHRASE</label>
-                        <input type="password" name="secretPhrase" id="dgs_refund_password" class="form-control" placeholder="" tabindex="6">
-                    </div>
-                    <div class="form-group advanced">
-                        <label for="dgs_refund_referenced_transaction" data-i18n="referenced_transaction_hash">REFERENCED TRANSACTION HASH</label>
-                        <input type="text" class="form-control" name="referencedTransactionFullHash" id="dgs_refund_referenced_transaction" placeholder="Referenced Transaction Full Hash" data-i18n="referenced_transaction_full_hash" tabindex="6" spellcheck="false" />
-                    </div>
-                    <div class="form-group advanced" style="margin-bottom:0;">
-                        <input type="checkbox" name="doNotBroadcast" id="dgs_refund_do_not_broadcast" value="1" /> <label for="dgs_refund_do_not_broadcast" style="font-weight:normal;" tabindex="7" data-i18n="do_not_broadcast">Do Not Broadcast</label>
-                    </div>
-                    <div class="form-group advanced">
-                        <input type="checkbox" name="add_note_to_self" id="dgs_refund_add_note_to_self" class="add_note_to_self" tabindex="8" /> <label for="dgs_refund_add_note_to_self" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_note_to_self">Add Note to Self?</span></label>
-                    </div>
-                    <div class="form-group advanced optional_note">
-                        <label for="dgs_refund_note_to_self" data-i18n="note_to_self">Note to Self</label>
-                        <textarea class="form-control" id="dgs_refund_note_to_self" name="note_to_self" rows="4" tabindex="9"></textarea>
-                        <div style="margin-top:3px;">
-                            <label style="font-weight:normal;color:#666" data-i18n="note_is_encrypted">This note is encrypted.</span></label>
-                        </div>
-                    </div>
+                    <div data-replace-with-modal-template="add_message_modal_template"></div>
+                    <div data-replace-with-modal-template="secret_phrase_modal_template"></div>
+                    <div data-replace-with-modal-template="advanced_modal_template"></div>
+
                     <input type="hidden" name="request_type" value="dgsRefund" />
                 </form>
             </div>
@@ -715,44 +451,9 @@
                             <option value="public" data-i18n="public_feedback">Public Feedback</option>
                         </select>
                     </div>
-                    <div class="row advanced">
-                        <div class="col-xs-6 col-sm-6 col-md-6">
-                            <div class="form-group">
-                                <label for="dgs_feedback_fee" data-i18n="fee">FEE</label>
-                                <div class="input-group">
-                                    <input type="number" name="feeNXT" id="dgs_feedback_fee" class="form-control" placeholder="Fee" data-i18n="fee" step="any" min="1" data-default="1" value="1" tabindex="6">
-                                    <span class="input-group-addon">NXT</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-xs-6 col-sm-6 col-md-6">
-                            <div class="form-group">
-                                <label for="dgs_feedback_deadline" data-i18n="deadline_hours">DEADLINE (HOURS)</label>
-                                <input type="number" name="deadline" id="dgs_feedback_deadline" class="form-control" placeholder="Deadline" data-i18n="[placeholder]deadline" min="1" data-default="24" value="24" tabindex="7">
-                            </div>
-                        </div>
-                    </div>
-                    <div class="form-group secret_phrase">
-                        <label for="dgs_feedback_password" data-i18n="passphrase">PASSPHRASE</label>
-                        <input type="password" name="secretPhrase" id="dgs_feedback_password" class="form-control" placeholder="" tabindex="8">
-                    </div>
-                    <div class="form-group advanced">
-                        <label for="dgs_feedback_referenced_transaction" data-i18n="referenced_transaction_hash">REFERENCED TRANSACTION HASH</label>
-                        <input type="text" class="form-control" name="referencedTransactionFullHash" id="dgs_feedback_referenced_transaction" placeholder="Referenced Transaction Full Hash" data-i18n="[placeholder]referenced_transaction_full_hash" tabindex="6" spellcheck="false" />
-                    </div>
-                    <div class="form-group advanced" style="margin-bottom:0;">
-                        <input type="checkbox" name="doNotBroadcast" id="dgs_feedback_do_not_broadcast" value="1" /> <label for="dgs_feedback_do_not_broadcast" style="font-weight:normal;" tabindex="7" data-i18n="do_not_broadcast">Do Not Broadcast</label>
-                    </div>
-                    <div class="form-group advanced">
-                        <input type="checkbox" name="add_note_to_self" id="dgs_feedback_add_note_to_self" class="add_note_to_self" tabindex="8" /> <label for="dgs_feedback_add_note_to_self" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_note_to_self">Add Note to Self?</span></label>
-                    </div>
-                    <div class="form-group advanced optional_note">
-                        <label for="dgs_feedback_note_to_self" data-i18n="note_to_self">Note to Self</label>
-                        <textarea class="form-control" id="dgs_feedback_note_to_self" name="note_to_self" rows="4" tabindex="9"></textarea>
-                        <div style="margin-top:3px;">
-                            <label style="font-weight:normal;color:#666" data-i18n="note_is_encrypted">This note is encrypted.</span></label>
-                        </div>
-                    </div>
+                    <div data-replace-with-modal-template="secret_phrase_modal_template"></div>
+                    <div data-replace-with-modal-template="advanced_modal_template"></div>
+                    
                     <input type="hidden" name="request_type" value="dgsFeedback" />
                 </form>
             </div>

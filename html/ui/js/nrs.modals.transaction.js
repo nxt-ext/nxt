@@ -917,14 +917,21 @@ var NRS = (function(NRS, $, undefined) {
 					break;
 			}
 			if (!incorrect) {
-            data["sender"] = transaction.senderRS ? transaction.senderRS : transaction.sender;
+				if (transaction.sender != NRS.account) {
+					data["sender"] = NRS.getAccountTitle(transaction, "sender");
+				}
+				
 				$("#transaction_info_callout").html("");
 				if (currency != null && NRS.isExchangeable(currency.type)) {
-					$("#transaction_info_callout").append("<a href='#' data-goto-currency='" + String(currency.code).escapeHTML() + "'>Click here</a> to view this currency in the Exchange Booth.<br />").show();
+					$("#transaction_info_callout").append("<a href='#' data-goto-currency='" + String(currency.code).escapeHTML() + "'>Exchange Booth</a><br/>");
 				}
 				if (currency != null && NRS.isReservable(currency.type)){
-					$("#transaction_info_callout").append("<a href='#' data-toggle='modal' data-target='#currency_founders_modal' data-currency='" + String(currency.currency).escapeHTML() + "' data-name='" + String(currency.name).escapeHTML() + "' data-code='" + String(currency.code).escapeHTML() + "' data-ressupply='" + String(currency.reserveSupply).escapeHTML() + "' data-initialsupply='" + String(currency.initialSupply).escapeHTML() + "' data-decimals='" + String(currency.decimals).escapeHTML() + "' data-minreserve='" + String(currency.minReservePerUnitNQT).escapeHTML() + "' data-issueheight='" + String(currency.issuanceHeight).escapeHTML() + "' >Click here</a> to view this currency's Founders.").show();
+					$("#transaction_info_callout").append("<a href='#' data-toggle='modal' data-target='#currency_founders_modal' data-currency='" + String(currency.currency).escapeHTML() + "' data-name='" + String(currency.name).escapeHTML() + "' data-code='" + String(currency.code).escapeHTML() + "' data-ressupply='" + String(currency.reserveSupply).escapeHTML() + "' data-initialsupply='" + String(currency.initialSupply).escapeHTML() + "' data-decimals='" + String(currency.decimals).escapeHTML() + "' data-minreserve='" + String(currency.minReservePerUnitNQT).escapeHTML() + "' data-issueheight='" + String(currency.issuanceHeight).escapeHTML() + "'>View Founders</a><br/>");
 				}
+				if (currency != null){
+					$("#transaction_info_callout").append("<a href='#' data-toggle='modal' data-target='#currency_distribution_modal' data-code='" + String(currency.code).escapeHTML() + "'>Currency Distribution</a>");
+				}
+            $("#transaction_info_callout").show();
 
 				$("#transaction_info_table").find("tbody").append(NRS.createInfoTable(data));
 				$("#transaction_info_table").show();
@@ -1040,7 +1047,7 @@ var NRS = (function(NRS, $, undefined) {
 				data["exchanges"] = $.t("no_matching_exchange_offer");
 			}
 			data["units_exchanged"] = [exchangedUnits, currency.decimals];
-			data["total_exchanged"] = NRS.formatAmount(exchangedTotal) + " [NXT]";
+			data["total_exchanged"] = NRS.formatAmount(exchangedTotal, false, true) + " [NXT]";
 		}, null, false);
 		return data;
 	};
@@ -1108,7 +1115,7 @@ var NRS = (function(NRS, $, undefined) {
 				data["exchanges"] = $.t("no_matching_exchange_request");
 			}
 			data["units_exchanged"] = [exchangedUnits, currency.decimals];
-			data["total_exchanged"] = NRS.formatAmount(exchangedTotal) + " [NXT]";
+			data["total_exchanged"] = NRS.formatAmount(exchangedTotal, false, true) + " [NXT]";
 		}, null, false);
 		return data;
 	};

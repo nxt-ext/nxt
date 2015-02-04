@@ -61,6 +61,7 @@
         <script src="js/3rdparty/pako.js" type="text/javascript"></script>
         <script src="js/3rdparty/maskedinput.js" type="text/javascript"></script>
         <script src="js/3rdparty/qrcode.js" type="text/javascript"></script>
+        <script src="js/3rdparty/handlebars.js" type="text/javascript"></script>
         <script src="js/nrs.sitebuild.js" type="text/javascript"></script>
 
         <script type="text/javascript">
@@ -75,13 +76,13 @@
             NRS.loadPageHTML("html/pages/asset_exchange.html");
             NRS.loadPageHTML("html/pages/monetary_system.html");
             NRS.loadPageHTML("html/pages/dgs.html");
-            NRS.loadPageHTML("html/pages/polls.html");
             NRS.loadPageHTML("html/pages/contacts.html");
             NRS.loadPageHTML("html/pages/messages.html");
             NRS.loadPageHTML("html/pages/aliases.html");
             NRS.loadPageHTML("html/pages/blocks.html");
             NRS.loadPageHTML("html/pages/peers.html");
             NRS.loadPageHTML("html/pages/news.html");
+            NRS.loadPageHTMLTemplates();
 
             NRS.loadModalHTML("html/modals/nrs.html");
             NRS.loadModalHTML("html/modals/transactions.html");
@@ -89,11 +90,12 @@
             NRS.loadModalHTML("html/modals/forging.html");
             NRS.loadModalHTML("html/modals/asset_exchange.html");
             NRS.loadModalHTML("html/modals/monetary_system.html");
-            NRS.loadModalHTML("html/modals/voting_system.html");
             NRS.loadModalHTML("html/modals/dgs.html");
             NRS.loadModalHTML("html/modals/contacts.html");
             NRS.loadModalHTML("html/modals/messages.html");
             NRS.loadModalHTML("html/modals/aliases.html");
+            NRS.loadModalHTML("html/modals/peers.html");
+            NRS.loadModalHTMLTemplates();
         </script>
 
         <script src="js/util/extensions.js" type="text/javascript"></script>
