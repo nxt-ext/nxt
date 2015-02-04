@@ -44,8 +44,8 @@ public class BlockchainProcessorTest extends AbstractBlockchainTest {
     public void reset() {
         debugTrace.resetLog();
         if (blockchain.getHeight() > startHeight) {
-            blockchainProcessor.fullReset();
-            Assert.assertEquals(0, blockchain.getHeight());
+            blockchainProcessor.popOffTo(startHeight);
+            Assert.assertEquals(startHeight, blockchain.getHeight());
         }
         Assert.assertTrue(blockchain.getHeight() <= startHeight);
     }

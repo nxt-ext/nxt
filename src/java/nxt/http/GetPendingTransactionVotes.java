@@ -31,6 +31,7 @@ public class GetPendingTransactionVotes extends APIServlet.APIRequestHandler {
         response.put("votes", votesTotal);
         response.put("quorum", quorum);
         response.put("finishHeight", poll.getFinishHeight());
+        response.put("finished", poll.isFinished());
         response.put("height", Nxt.getBlockchain().getHeight());
 
         if (includeVoters) {

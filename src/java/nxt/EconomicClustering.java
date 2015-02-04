@@ -20,7 +20,7 @@ public final class EconomicClustering {
 
     public static Block getECBlock(int timestamp) {
         Block block = blockchain.getLastBlock();
-        if (timestamp < block.getTimestamp() - 15) {
+        if (timestamp < block.getTimestamp() - Constants.MAX_TIMEDRIFT) {
             throw new IllegalArgumentException("Timestamp cannot be more than 15 s earlier than last block timestamp: " + block.getTimestamp());
         }
         int distance = 0;

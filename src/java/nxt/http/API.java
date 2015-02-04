@@ -22,6 +22,7 @@ import org.eclipse.jetty.servlets.CrossOriginFilter;
 import org.eclipse.jetty.servlets.GzipFilter;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 
+import javax.servlet.http.HttpServletRequest;
 import java.math.BigInteger;
 import java.net.Inet4Address;
 import java.net.InetAddress;
@@ -31,6 +32,9 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+
+import static nxt.http.JSONResponses.INCORRECT_ADMIN_PASSWORD;
+import static nxt.http.JSONResponses.NO_PASSWORD_IN_CONFIG;
 
 public final class API {
 
@@ -181,6 +185,17 @@ public final class API {
             } catch (Exception e) {
                 Logger.logShutdownMessage("Failed to stop API server", e);
             }
+        }
+    }
+
+    static void verifyPassword(HttpServletRequest req) throws ParameterException {
+        if (API.disableAdminPassword) {
+            return;
+        }
+        if (API.adminPassword.isEmpty()) {
+            throw new ParameterException(NO_PASSWORD_IN_CONFIG);
+        } else if (!API.adminPassword.equals(req.getParameter("adminPassword"))) {
+            throw new ParameterException(INCORRECT_ADMIN_PASSWORD);
         }
     }
 

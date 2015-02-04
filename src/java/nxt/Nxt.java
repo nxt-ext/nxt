@@ -40,6 +40,9 @@ public final class Nxt {
                     throw new RuntimeException("nxt-default.properties not in classpath and system property nxt-default.properties not defined either");
                 }
             }
+            if (!VERSION.equals(Nxt.defaultProperties.getProperty("nxt.version"))) {
+                throw new RuntimeException("Using an nxt-default.properties file from a version other than " + VERSION + " is not supported!!!");
+            }
         } catch (IOException e) {
             throw new RuntimeException("Error loading nxt-default.properties", e);
         }
@@ -138,13 +141,17 @@ public final class Nxt {
     }
 
     public static void main(String[] args) {
-        Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
-            @Override
-            public void run() {
-                Nxt.shutdown();
-            }
-        }));
-        init();
+        try {
+            Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    Nxt.shutdown();
+                }
+            }));
+            init();
+        } catch (Throwable t) {
+            System.out.println("Fatal error: " + t.toString());
+        }
     }
 
     public static void init(Properties customProperties) {

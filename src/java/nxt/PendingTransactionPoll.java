@@ -1,11 +1,6 @@
 package nxt;
 
-import nxt.db.DbClause;
-import nxt.db.DbIterator;
-import nxt.db.DbKey;
-import nxt.db.DbUtils;
-import nxt.db.VersionedEntityDbTable;
-import nxt.db.VersionedValuesDbTable;
+import nxt.db.*;
 import nxt.util.Convert;
 
 import java.sql.Connection;
@@ -29,14 +24,14 @@ public class PendingTransactionPoll extends AbstractPoll {
         }
     };
 
-    private static final DbKey.LongKeyFactory<PendingTransactionPoll> signersDbKeyFactory = new DbKey.LongKeyFactory<PendingTransactionPoll>("poll_id") {
+    private static final DbKey.LongKeyFactory<PendingTransactionPoll> signersDbKeyFactory = new DbKey.LongKeyFactory<PendingTransactionPoll>("pending_transaction_id") {
         @Override
         public DbKey newKey(PendingTransactionPoll poll) {
             return poll.dbKey;
         }
     };
 
-    final static VersionedValuesDbTable<PendingTransactionPoll, Long> signersTable = new VersionedValuesDbTable<PendingTransactionPoll, Long>("pending_transaction_signer", signersDbKeyFactory) {
+    final static ValuesDbTable<PendingTransactionPoll, Long> signersTable = new ValuesDbTable<PendingTransactionPoll, Long>("pending_transaction_signer", signersDbKeyFactory) {
 
         @Override
         protected Long load(Connection con, ResultSet rs) throws SQLException {
@@ -45,7 +40,7 @@ public class PendingTransactionPoll extends AbstractPoll {
 
         @Override
         protected void save(Connection con, PendingTransactionPoll poll, Long accountId) throws SQLException {
-            try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO " + table + "(poll_id, "
+            try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO " + table + "(pending_transaction_id, "
                     + "account_id, height) VALUES (?, ?, ?)")) {
                 int i = 0;
                 pstmt.setLong(++i, poll.getId());
@@ -56,8 +51,8 @@ public class PendingTransactionPoll extends AbstractPoll {
         }
     };
 
-    private final static VersionedEntityDbTable<PendingTransactionPoll> pendingTransactionsTable =
-            new VersionedEntityDbTable<PendingTransactionPoll>("pending_transaction", pollDbKeyFactory) {
+    private final static EntityDbTable<PendingTransactionPoll> pendingTransactionsTable =
+            new EntityDbTable<PendingTransactionPoll>("pending_transaction", pollDbKeyFactory) {
 
                 @Override
                 protected PendingTransactionPoll load(Connection con, ResultSet rs) throws SQLException {
@@ -67,6 +62,28 @@ public class PendingTransactionPoll extends AbstractPoll {
                 @Override
                 protected void save(Connection con, PendingTransactionPoll poll) throws SQLException {
                     poll.save(con);
+                }
+
+                @Override
+                public void trim(int height) {
+                    try (Connection con = Db.db.getConnection();
+                         DbIterator<PendingTransactionPoll> pollsToTrim = finishing(height);
+                         PreparedStatement pstmt1 = con.prepareStatement("DELETE FROM pending_transaction WHERE id = ?");
+                         PreparedStatement pstmt2 = con.prepareStatement("DELETE FROM pending_transaction_signer WHERE pending_transaction_id = ?");
+                         PreparedStatement pstmt3 = con.prepareStatement("DELETE FROM vote_phased WHERE pending_transaction_id = ?")) {
+                        while (pollsToTrim.hasNext()) {
+                            PendingTransactionPoll polltoTrim = pollsToTrim.next();
+                            long id = polltoTrim.getId();
+                            pstmt1.setLong(1, id);
+                            pstmt1.executeUpdate();
+                            pstmt2.setLong(1, id);
+                            pstmt2.executeUpdate();
+                            pstmt3.setLong(1, id);
+                            pstmt3.executeUpdate();
+                        }
+                    } catch (SQLException e) {
+                        throw new RuntimeException(e.toString(), e);
+                    }
                 }
             };
 
@@ -118,6 +135,17 @@ public class PendingTransactionPoll extends AbstractPoll {
                 this.blacklist = new long[0];
             }
         }
+    }
+
+    // calculated
+    public boolean isFinished() {
+        boolean preRelease = false;
+        if (this.votingModel == Constants.VOTING_MODEL_ACCOUNT) {
+            preRelease = VotePhased.countVotes(this) >= quorum;
+        }
+
+        //todo: or >= ?
+        return preRelease || this.finishHeight > Nxt.getBlockchain().getHeight();
     }
 
     public static int getActiveCount() {
@@ -178,7 +206,7 @@ public class PendingTransactionPoll extends AbstractPoll {
                     + "from pending_transaction, pending_transaction_signer "
                     + "WHERE pending_transaction.latest = TRUE AND "
                     + "pending_transaction.blacklist = false AND "
-                    + "pending_transaction.id = pending_transaction_signer.poll_id "
+                    + "pending_transaction.id = pending_transaction_signer.pending_transaction_id "
                     + "AND pending_transaction_signer.account_id = ? "
                     + DbUtils.limitsClause(from, to));
             pstmt.setLong(1, signer.getId());
@@ -229,11 +257,5 @@ public class PendingTransactionPoll extends AbstractPoll {
             pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
             pstmt.executeUpdate();
         }
-    }
-
-    static void finishPoll(PendingTransactionPoll poll) {
-        pendingTransactionsTable.delete(poll);
-        signersTable.delete(poll);
-        //todo: clear VOTE_PHASED table as well
     }
 }

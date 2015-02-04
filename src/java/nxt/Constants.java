@@ -1,5 +1,7 @@
 package nxt;
 
+import nxt.util.Logger;
+
 import java.util.Calendar;
 import java.util.TimeZone;
 
@@ -16,12 +18,14 @@ public final class Constants {
     public static final int MAX_ROLLBACK = Nxt.getIntProperty("nxt.maxRollback");
     static {
         if (MAX_ROLLBACK < 1441) {
+            Logger.logErrorMessage("nxt.maxRollback must be at least 1441");
             throw new RuntimeException("nxt.maxRollback must be at least 1441");
         }
     }
 
-    public static final boolean isVotingDataTrimmed = Nxt.getBooleanProperty("nxt.trimVotingData");
-    public static final int VOTING_DATA_TIME_TO_LIVE = Nxt.getIntProperty("nxt.votingDataTimeToLive");
+    public static final int MAX_TIMEDRIFT = 15; // allow up to 15 s clock difference
+    public static final int FORGING_DELAY = Nxt.getIntProperty("nxt.forgingDelay");
+    public static final int FORGING_SPEEDUP = Nxt.getIntProperty("nxt.forgingSpeedup");
 
     public static final byte MAX_VOTES_PER_VOTING_TRANSACTION = 2;
     public static final byte VOTING_MODEL_BALANCE = 0;
@@ -41,12 +45,8 @@ public final class Constants {
     public static final int VOTING_MAX_VOTE_DURATION = 14*1440;
 
 
-    public static final boolean isPhasedVotingDataTrimmed = Nxt.getBooleanProperty("nxt.trimPhasedVotingData");
-    public static final int PHASED_VOTING_DATA_TIME_TO_LIVE = Nxt.getIntProperty("nxt.phasedVotingDataTimeToLive");
-
     public static final byte PENDING_TRANSACTIONS_MAX_WHITELIST_SIZE = 10;
     public static final byte PENDING_TRANSACTIONS_MAX_BLACKLIST_SIZE = 5;
-
 
     public static final int MAX_ALIAS_URI_LENGTH = 1000;
     public static final int MAX_ALIAS_LENGTH = 100;
@@ -114,7 +114,7 @@ public final class Constants {
     public static final int DIGITAL_GOODS_STORE_BLOCK = isTestnet ? 77341 : 213000;
     public static final int TWO_PHASED_TRANSACTIONS_BLOCK = isTestnet ? 0 : Integer.MAX_VALUE;
     public static final int MONETARY_SYSTEM_BLOCK = isTestnet ? 150000 : 330000;
-    public static final int LAST_KNOWN_BLOCK = isTestnet ? 150000 : 342000;
+    public static final int LAST_KNOWN_BLOCK = isTestnet ? 150000 : 348000;
 
     public static final int[] MIN_VERSION = new int[] {1, 4};
 
