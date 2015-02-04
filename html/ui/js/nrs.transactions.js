@@ -413,6 +413,32 @@ var NRS = (function(NRS, $, undefined) {
 		$('#transactions_page_type').append('<li><a href="#" data-type="unconfirmed" data-i18n="unconfirmed_transactions">Unconfirmed Transactions</a></li>');
 	}
 
+	NRS.displayUnconfirmedTransactions = function() {
+		NRS.sendRequest("getUnconfirmedTransactions", function(response) {
+			var rows = "";
+
+			if (response.unconfirmedTransactions && response.unconfirmedTransactions.length) {
+				for (var i = 0; i < response.unconfirmedTransactions.length; i++) {
+					rows += NRS.getTransactionRowHTML(response.unconfirmedTransactions[i]);
+				}
+			}
+			NRS.dataLoaded(rows);
+		});
+	}
+
+	NRS.displayPendingTransactions = function() {
+		NRS.sendRequest("getPendingTransactions", function(response) {
+			var rows = "";
+
+			if (response.unconfirmedTransactions && response.unconfirmedTransactions.length) {
+				for (var i = 0; i < response.unconfirmedTransactions.length; i++) {
+					rows += NRS.getTransactionRowHTML(response.unconfirmedTransactions[i]);
+				}
+			}
+			NRS.dataLoaded(rows);
+		});
+	}
+
 	NRS.pages.transactions = function() {
 		if ($('#transactions_type_navi').children().length == 0) {
 			NRS.buildTransactionsTypeNavi();
@@ -424,6 +450,10 @@ var NRS = (function(NRS, $, undefined) {
 			NRS.displayUnconfirmedTransactions();
 			return;
 		}
+		/*if (selectedType == "pending") {
+			NRS.displayPendingTransactions();
+			return;
+		}*/
 
 		var rows = "";
 		var params = {
@@ -470,20 +500,6 @@ var NRS = (function(NRS, $, undefined) {
 
 	NRS.incoming.transactions = function(transactions) {
 		NRS.loadPage("transactions");
-	}
-
-	NRS.displayUnconfirmedTransactions = function() {
-		NRS.sendRequest("getUnconfirmedTransactions", function(response) {
-			var rows = "";
-
-			if (response.unconfirmedTransactions && response.unconfirmedTransactions.length) {
-				for (var i = 0; i < response.unconfirmedTransactions.length; i++) {
-					rows += NRS.getTransactionRowHTML(response.unconfirmedTransactions[i]);
-				}
-			}
-
-			NRS.dataLoaded(rows);
-		});
 	}
 
 	$(document).on("click", "#transactions_type_navi li a", function(e) {
