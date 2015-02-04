@@ -64,7 +64,7 @@ public final class Logger {
                 Properties loggingProperties = new Properties();
                 Nxt.loadProperties(loggingProperties, "logging-default.properties", true);
                 Nxt.loadProperties(loggingProperties, "logging.properties", false);
-                Nxt.mode.updateLogFileHandler(loggingProperties);
+                Nxt.updateLogFileHandler(loggingProperties);
                 if (loggingProperties.size() > 0) {
                     ByteArrayOutputStream outStream = new ByteArrayOutputStream();
                     loggingProperties.store(outStream, "logging properties");

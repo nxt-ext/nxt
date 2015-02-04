@@ -121,7 +121,7 @@ public class DesktopSystemTray {
         sb.append(String.format(format, "Wallet", API.getBrowserUri()));
         sb.append(String.format(format, "Peer port", Peers.getDefaultPeerPort()));
         sb.append(String.format(format, "Program folder", Paths.get(".").toAbsolutePath().getParent()));
-        sb.append(String.format(format, "User folder", Paths.get(DesktopMode.NXT_USER_HOME).toAbsolutePath()));
+        sb.append(String.format(format, "User folder", Paths.get(Nxt.getUserHomeDir()).toAbsolutePath()));
 
         if (lastBlock != null) {
             sb.append("\nLast Block\n");

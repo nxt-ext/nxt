@@ -1,20 +1,16 @@
 package nxt.env;
 
+import java.io.File;
 import java.net.URI;
 import java.util.Properties;
 
 public interface RuntimeMode {
+
     public final String RUNTIME_MODE_ARG = "nxt.runtime.mode";
-
-    boolean isLoadPropertyFileFromUserDir();
-
-    void updateLogFileHandler(Properties loggingProperties);
-
-    String getDbDir(String dbDir);
 
     void init();
 
-    void setServerStatus(String status, URI wallet);
+    void setServerStatus(String status, URI wallet, File logFileDir);
 
     void shutdown();
 }

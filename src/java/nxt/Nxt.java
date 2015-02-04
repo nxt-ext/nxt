@@ -1,8 +1,8 @@
 package nxt;
 
-import nxt.env.DesktopMode;
+import nxt.env.DirProvider;
+import nxt.env.RuntimeEnvironment;
 import nxt.env.RuntimeMode;
-import nxt.env.UserInterfaceModeFactory;
 import nxt.http.API;
 import nxt.peer.Peers;
 import nxt.user.Users;
@@ -36,13 +36,15 @@ public final class Nxt {
     public static final String NXT_PROPERTIES = "nxt.properties";
     public static final String CONFIG_DIR = "conf";
 
-    public static final RuntimeMode mode;
+    private static final RuntimeMode runtimeMode;
+    private static final DirProvider dirProvider;
 
     private static final Properties defaultProperties = new Properties();
     static {
         System.out.println("Initializing Nxt server version " + Nxt.VERSION);
         printCommandLineArguments();
-        mode = UserInterfaceModeFactory.getMode();
+        runtimeMode = RuntimeEnvironment.getRuntimeMode();
+        dirProvider = RuntimeEnvironment.getDirProvider();
         loadProperties(defaultProperties, NXT_DEFAULT_PROPERTIES, true);
         if (!VERSION.equals(Nxt.defaultProperties.getProperty("nxt.version"))) {
             throw new RuntimeException("Using an nxt-default.properties file from a version other than " + VERSION + " is not supported!!!");
@@ -79,14 +81,14 @@ public final class Nxt {
                         }
                     }
                     // load non-default properties files from the user folder
-                    if (!mode.isLoadPropertyFileFromUserDir()) {
+                    if (!dirProvider.isLoadPropertyFileFromUserDir()) {
                         return properties;
                     }
-                    if (!Files.isReadable(Paths.get(DesktopMode.NXT_USER_HOME))) {
-                        System.out.printf("Creating dir %s\n", DesktopMode.NXT_USER_HOME);
-                        Files.createDirectory(Paths.get(DesktopMode.NXT_USER_HOME));
+                    if (!Files.isReadable(Paths.get(dirProvider.getUserHomeDir()))) {
+                        System.out.printf("Creating dir %s\n", dirProvider.getUserHomeDir());
+                        Files.createDirectory(Paths.get(dirProvider.getUserHomeDir()));
                     }
-                    Path confDir = Paths.get(DesktopMode.NXT_USER_HOME, CONFIG_DIR);
+                    Path confDir = Paths.get(dirProvider.getUserHomeDir(), CONFIG_DIR);
                     if (!Files.isReadable(confDir)) {
                         System.out.printf("Creating dir %s\n", confDir);
                         Files.createDirectory(confDir);
@@ -241,7 +243,7 @@ public final class Nxt {
         Db.shutdown();
         Logger.logShutdownMessage("Nxt server " + VERSION + " stopped.");
         Logger.shutdown();
-        mode.shutdown();
+        runtimeMode.shutdown();
     }
 
     private static class Init {
@@ -251,7 +253,7 @@ public final class Nxt {
                 long startTime = System.currentTimeMillis();
                 Logger.init();
                 logSystemProperties();
-                mode.init();
+                runtimeMode.init();
                 setServerStatus("NXT Server - Loading database", null);
                 Db.init();
                 setServerStatus("NXT Server - Loading resources", null);
@@ -341,8 +343,20 @@ public final class Nxt {
         return "";
     }
 
+    public static String getDbDir(String dbDir) {
+        return dirProvider.getDbDir(dbDir);
+    }
+
+    public static void updateLogFileHandler(Properties loggingProperties) {
+        dirProvider.updateLogFileHandler(loggingProperties);
+    }
+
+    public static String getUserHomeDir() {
+        return dirProvider.getUserHomeDir();
+    }
+
     public static void setServerStatus(String status, URI wallet) {
-        mode.setServerStatus(status, wallet);
+        runtimeMode.setServerStatus(status, wallet, dirProvider.getLogFileDir());
     }
 
     private Nxt() {} // never

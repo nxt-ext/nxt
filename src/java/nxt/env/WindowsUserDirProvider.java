@@ -7,7 +7,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Properties;
 
-public abstract class UserSpecificMode implements RuntimeMode {
+public class WindowsUserDirProvider implements DirProvider {
 
     public static final String NXT_USER_HOME = Paths.get(System.getProperty("user.home"), "AppData", "Roaming", "NXT").toString();
     public static final String LOG_FILE_PATTERN = "java.util.logging.FileHandler.pattern";
@@ -41,5 +41,15 @@ public abstract class UserSpecificMode implements RuntimeMode {
     @Override
     public String getDbDir(String dbDir) {
         return Paths.get(NXT_USER_HOME, dbDir).toString();
+    }
+
+    @Override
+    public File getLogFileDir() {
+        return logFileDir;
+    }
+
+    @Override
+    public String getUserHomeDir() {
+        return NXT_USER_HOME;
     }
 }

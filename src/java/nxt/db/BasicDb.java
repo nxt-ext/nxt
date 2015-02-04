@@ -91,7 +91,7 @@ public class BasicDb {
         }
         String dbUrl = dbProperties.dbUrl;
         if (dbUrl == null) {
-            String dbDir = Nxt.mode.getDbDir(dbProperties.dbDir);
+            String dbDir = Nxt.getDbDir(dbProperties.dbDir);
             dbUrl = String.format("jdbc:%s:%s;%s", dbProperties.dbType, dbDir, dbProperties.dbParams);
         }
         if (!dbUrl.contains("CACHE_SIZE=")) {

@@ -1,9 +1,10 @@
 package nxt.env;
 
 import javax.swing.*;
+import java.io.File;
 import java.net.URI;
 
-public class DesktopMode extends UserSpecificMode implements RuntimeMode {
+public class DesktopMode implements RuntimeMode {
 
     private DesktopSystemTray desktopSystemTray;
 
@@ -19,7 +20,7 @@ public class DesktopMode extends UserSpecificMode implements RuntimeMode {
     }
 
     @Override
-    public void setServerStatus(String status, URI wallet) {
+    public void setServerStatus(String status, URI wallet, File logFileDir) {
         desktopSystemTray.setToolTip(new SystemTrayDataProvider(status, wallet, logFileDir));
     }
 
