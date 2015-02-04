@@ -36,3 +36,5 @@ API server is listening on the localhost interface only.
 Enforce that the nxt-default.properties file used matches the version of the
 current release.
 
+Added currency distribution dialog invoked using a link from the currency 
+transaction info dialog.
