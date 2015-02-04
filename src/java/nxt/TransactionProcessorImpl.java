@@ -495,7 +495,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
     private void processTransaction(UnconfirmedTransaction unconfirmedTransaction) throws NxtException.ValidationException {
         TransactionImpl transaction = unconfirmedTransaction.getTransaction();
         int curTime = Nxt.getEpochTime();
-        if (transaction.getTimestamp() > curTime + 15 || transaction.getDeadline() > 1440 || transaction.getExpiration() < curTime) {
+        if (transaction.getTimestamp() > curTime + Constants.MAX_TIMEDRIFT || transaction.getDeadline() > 1440 || transaction.getExpiration() < curTime) {
             throw new NxtException.NotCurrentlyValidException("Invalid transaction timestamp");
         }
         if (transaction.getVersion() < 1) {

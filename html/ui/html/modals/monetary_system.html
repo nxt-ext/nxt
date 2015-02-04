@@ -234,6 +234,38 @@
     </div>
 </div>
 
+<div class="modal fade" id="currency_distribution_modal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-wider">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title" data-i18n="Currency Distribution">Currency Distribution</h4>
+            </div>
+            <div class="modal-body">
+                <div class="data-container data-loading" style="max-height:350px;overflow:auto">
+                    <table class="table table-striped" id="currency_distribution_table">
+                        <thead>
+                        <tr>
+                            <th data-i18n="account">Account</th>
+                            <th data-i18n="units">Units</th>
+                            <th data-i18n="percentage">Percentage</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+
+                        </tbody>
+                    </table>
+                    <div class="data-loading-container"><img src="img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
+                    <div class="data-empty-container"><p data-i18n="error">Error</p></div>
+                </div>
+            </div>
+            <div class="modal-footer" style="margin-top:0;">
+                <button type="button" class="btn btn-primary" data-dismiss="modal" data-i18n="close">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="modal fade" id="publish_exchange_offer_modal" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -451,11 +483,11 @@
                         </p>
                     </div>
                     <div class="form-group">
-                        <label for="reserve_currency_amount" data-i18n="currency">Amount of NXT per currency unit</label>
+                        <label for="reserve_currency_amount" data-i18n="amount_per_currency_unit">Amount of NXT per currency unit</label>
                         <input type="text" class="form-control" name="amountPerUnitNQT" id="reserve_currency_amount" placeholder="NXT per unit" data-i18n="amount" tabindex="1" />
                     </div>
                     <div class="form-group">
-                        <label for="reserve_currency_total" data-i18n="currency">Amount of NXT reserved</label>
+                        <label for="reserve_currency_total" data-i18n="amount_nxt_reserved">Amount of NXT reserved</label>
                         <span id="reserve_currency_total"></span>
                     </div>
                     <div data-replace-with-modal-template="secret_phrase_modal_template"></div>

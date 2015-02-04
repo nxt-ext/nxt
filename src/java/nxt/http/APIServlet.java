@@ -283,17 +283,10 @@ public final class APIServlet extends HttpServlet {
                 return;
             }
 
-            if (apiRequestHandler.requirePassword() && !API.disableAdminPassword) {
-                if (API.adminPassword.isEmpty()) {
-                    response = NO_PASSWORD_IN_CONFIG;
-                    return;
-                } else if (!API.adminPassword.equals(req.getParameter("adminPassword"))) {
-                    response = INCORRECT_ADMIN_PASSWORD;
-                    return;
-                }
-            }
-
             try {
+                if (apiRequestHandler.requirePassword()) {
+                    API.verifyPassword(req);
+                }
                 if (apiRequestHandler.startDbTransaction()) {
                     Db.db.beginTransaction();
                 }

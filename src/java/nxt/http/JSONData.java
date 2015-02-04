@@ -15,6 +15,7 @@ import nxt.CurrencyTransfer;
 import nxt.CurrencyType;
 import nxt.DigitalGoodsStore;
 import nxt.Exchange;
+import nxt.Generator;
 import nxt.Nxt;
 import nxt.Order;
 import nxt.Poll;
@@ -575,6 +576,16 @@ final class JSONData {
         json.put("blockTimestamp", transaction.getBlockTimestamp());
         json.put("transactionIndex", transaction.getIndex());
         return json;
+    }
+
+    static JSONObject generator(Generator generator, int elapsedTime) {
+        JSONObject response = new JSONObject();
+        long deadline = generator.getDeadline();
+        putAccount(response, "account", generator.getAccountId());
+        response.put("deadline", deadline);
+        response.put("hitTime", generator.getHitTime());
+        response.put("remaining", Math.max(deadline - elapsedTime, 0));
+        return response;
     }
 
     static void putAccount(JSONObject json, String name, long accountId) {

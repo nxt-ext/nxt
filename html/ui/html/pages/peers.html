@@ -1,5 +1,10 @@
 <div id="peers_page" class="page">
-    <section class="content-header"><h1 data-i18n="peers">Peers</h1></section>
+    <section class="content-header">
+        <h1 data-i18n="peers">Peers</h1>
+        <div style="position:absolute;top:9px;right:9px;">
+            <button id="add_peer_button" type="button" class="btn btn-default" data-toggle="modal" data-target="#add_peer_modal" data-i18n="add_peer">Add Peer</button>
+        </div>
+    </section>
     <section class="content">
         <div class="row">
             <div class="col-lg-3 col-xs-6">
@@ -54,6 +59,7 @@
                     <th data-i18n="uploaded">Uploaded</th>
                     <th data-i18n="application">Application</th>
                     <th data-i18n="platform">Platform</th>
+                    <th data-i18n="actions" style="text-align:right;">Actions</th>
                 </tr>
                 </thead>
                 <tbody>
