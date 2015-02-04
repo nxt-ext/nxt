@@ -95,15 +95,12 @@ var NRS = (function(NRS, $, undefined) {
 		html += "<tr " + (!transaction.confirmed && (transaction.recipient == NRS.account || transaction.sender == NRS.account) ? " class='tentative-allow-links'" : "") + ">";
 		
 		html += "<td>";
-  		html += "<a href='#' data-transaction='" + String(transaction.transaction).escapeHTML() + "' style='font-weight:bold;'>";
-  		html += String(transaction.transaction).escapeHTML() + "</a>";
+  		html += "<a href='#' data-timestamp='" + String(transaction.timestamp).escapeHTML() + "' ";
+  		html += "data-transaction='" + String(transaction.transaction).escapeHTML() + "'>";
+  		html += NRS.formatTimestamp(transaction.timestamp) + "</a>";
   		html += "</td>";
 
   		html += "<td>" + (hasMessage ? "&nbsp; <i class='fa fa-envelope-o'></i>&nbsp;" : "&nbsp;") + "</td>";
-
-  		html += "<td>"
-  		html += "<span data-timestamp='" + String(transaction.timestamp).escapeHTML() + "' style='font-size:12px;''>" + NRS.formatTimestamp(transaction.timestamp) + "</span>";
-		html += "</td>";
 		
 		var iconHTML = NRS.transactionTypes[transaction.type]['iconHTML'] + " " + NRS.transactionTypes[transaction.type]['subTypes'][transaction.subtype]['iconHTML'];
 		html += '<td style="vertical-align:middle;">';
@@ -111,17 +108,17 @@ var NRS = (function(NRS, $, undefined) {
 		html += '<span style="font-size:11px;display:inline-block;margin-top:5px;">' + transactionType + '</span>';
 		html += '</td>';
 		
-		html += "<td>" + ((NRS.getAccountLink(transaction, "sender") == "/" && transaction.type == 2) ? "Asset Exchange" : NRS.getAccountLink(transaction, "sender")) + " ";
-		html += "<i class='fa fa-arrow-circle-right' style='color:#777;'></i> " + ((NRS.getAccountLink(transaction, "recipient") == "/" && transaction.type == 2) ? "Asset Exchange" : NRS.getAccountLink(transaction, "recipient")) + "</td>";
-
 		html += "<td style='width:5px;padding-right:0;vertical-align:middle;'>";
 		html += (transaction.type == 0 ? (receiving ? "<i class='fa fa-plus-circle' style='color:#65C62E'></i>" : "<i class='fa fa-minus-circle' style='color:#E04434'></i>") : "") + "</td>";
 		html += "<td style='vertical-align:middle;" + (transaction.type == 0 && receiving ? " color:#006400;" : (!receiving && transaction.amount > 0 ? " color:red;" : "")) + "'>" + NRS.formatAmount(transaction.amount) + "</td>";
 		html += "<td style='vertical-align:middle;" + (!receiving ? " color:red;" : "") + "'>" + NRS.formatAmount(transaction.fee) + "</td>";
 
+		html += "<td>" + ((NRS.getAccountLink(transaction, "sender") == "/" && transaction.type == 2) ? "Asset Exchange" : NRS.getAccountLink(transaction, "sender")) + " ";
+		html += "<i class='fa fa-arrow-circle-right' style='color:#777;'></i> " + ((NRS.getAccountLink(transaction, "recipient") == "/" && transaction.type == 2) ? "Asset Exchange" : NRS.getAccountLink(transaction, "recipient")) + "</td>";
+
 		html += "<td class='confirmations' ";
 		html += "data-content='" + (transaction.confirmed ? NRS.formatAmount(transaction.confirmations) + " " + $.t("confirmations") : $.t("unconfirmed_transaction")) + "' ";
-		html += "data-container='body' data-placement='left' style='vertical-align:middle;font-size:12px;'>";
+		html += "data-container='body' data-placement='left' style='vertical-align:middle;text-align:center;font-size:12px;'>";
 		html += (!transaction.confirmed ? "-" : (transaction.confirmations > 1440 ? "1440+" : NRS.formatAmount(transaction.confirmations))) + "</td>";
 		html += "</tr>";
 		return html;
