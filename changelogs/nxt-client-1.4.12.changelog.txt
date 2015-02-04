@@ -20,6 +20,8 @@ within 1 s accuracy, and are not possible to modify.
 Better logging of peer networking errors. Log, but do not blacklist missing or
 malformed JSON responses.
 
+UI for adding and blacklisting peers
+
 Database optimization. Moved the public key of accounts, transaction senders,
 and block forgers to a separate table, resulting in 15% reduction of total
 database size. This change will be performed at first start and will take some

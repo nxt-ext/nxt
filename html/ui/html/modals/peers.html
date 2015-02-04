@@ -1,0 +1,49 @@
+<div class="modal fade" id="add_peer_modal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title" data-i18n="add_peer">Add Peer</h4>
+            </div>
+            <div class="modal-body">
+                <form role="form" autocomplete="off">
+                    <div class="callout callout-danger error_message" style="display:none"></div>
+                    <div class="form-group">
+                        <label for="add_peer_address" data-i18n="address">ADDRESS</label>
+                        <input type="text" class="form-control" name="peer" id="add_peer_address" placeholder="Peer Address" data-i18n="[placeholder]peer_address" autofocus tabindex="1" />
+                    </div>
+                    <div class="callout account_info" style="display:none;margin-bottom: 0;"></div>
+                    <input type="hidden" name="request_type" value="addPeer" />
+                </form>
+            </div>
+            <div class="modal-footer" style="margin-top:0;">
+                <button type="button" class="btn btn-default" data-dismiss="modal" data-i18n="cancel">Cancel</button>
+                <button type="button" class="btn btn-primary" data-loading-text="Submitting..." data-i18n="add_peer;[placeholder]submitting">Add Peer</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="blacklist_peer_modal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title" data-i18n="blacklist_peer">Blacklist Peer</h4>
+            </div>
+            <div class="modal-body">            
+                <form role="form" autocomplete="off">
+                    <div class="callout callout-danger" data-i18n="blacklist_peer_confirmation">Are you sure you want to blacklist this peer?</div>
+                    <p><strong data-i18n="name">Address</strong>: <span id="blacklist_peer_address"></span></p>
+
+                    <input type="hidden" name="peer" id="blacklist_peer_field_id" value="" />
+                    <input type="hidden" name="request_type" value="blacklistPeer" />
+                </form>
+            </div>
+            <div class="modal-footer" style="margin-top:0;">
+                <button type="button" class="btn btn-default" data-dismiss="modal" data-i18n="no">No</button>
+                <button type="button" class="btn btn-primary" data-loading-text="Submitting..." data-i18n="yes;[data-loading-text]submitting">Yes</button>
+            </div>
+        </div>
+    </div>
+</div>
