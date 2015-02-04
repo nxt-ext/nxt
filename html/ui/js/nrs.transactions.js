@@ -314,7 +314,7 @@ var NRS = (function(NRS, $, undefined) {
   		html += NRS.formatTimestamp(transaction.timestamp) + "</a>";
   		html += "</td>";
 
-  		html += "<td>" + (hasMessage ? "&nbsp; <i class='fa fa-envelope-o'></i>&nbsp;" : "&nbsp;") + "</td>";
+  		html += "<td style='text-align:center;'>" + (hasMessage ? "&nbsp; <i class='fa fa-envelope-o'></i>&nbsp;" : "&nbsp;") + "</td>";
 		
 		var iconHTML = NRS.transactionTypes[transaction.type]['iconHTML'] + " " + NRS.transactionTypes[transaction.type]['subTypes'][transaction.subtype]['iconHTML'];
 		html += '<td style="vertical-align:middle;">';
