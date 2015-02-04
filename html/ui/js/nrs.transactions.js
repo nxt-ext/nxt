@@ -23,8 +23,6 @@ var NRS = (function(NRS, $, undefined) {
 
 		if (confirmedTransactionIds.length || NRS.unconfirmedTransactionsChange) {
 			transactions.sort(NRS.sortArray);
-
-			NRS.incoming.updateDashboardTransactions(transactions, confirmedTransactionIds.length == 0);
 		}
 
 		//always refresh peers and unconfirmed transactions..
@@ -92,8 +90,6 @@ var NRS = (function(NRS, $, undefined) {
 
 				if (callback) {
 					callback(unconfirmedTransactions);
-				} else if (NRS.unconfirmedTransactionsChange) {
-					NRS.incoming.updateDashboardTransactions(unconfirmedTransactions, true);
 				}
 			} else {
 				NRS.unconfirmedTransactions = [];
@@ -107,8 +103,6 @@ var NRS = (function(NRS, $, undefined) {
 				NRS.unconfirmedTransactionIds = "";
 				if (callback) {
 					callback([]);
-				} else if (NRS.unconfirmedTransactionsChange) {
-					NRS.incoming.updateDashboardTransactions([], true);
 				}
 			}
 		});
@@ -223,9 +217,7 @@ var NRS = (function(NRS, $, undefined) {
 						}
 					}
 				}
-
 				var alreadyProcessed = false;
-
 				try {
 					var regex = new RegExp("(^|,)" + transactionId + "(,|$)");
 
@@ -244,13 +236,9 @@ var NRS = (function(NRS, $, undefined) {
 				if (!alreadyProcessed) {
 					NRS.unconfirmedTransactions.unshift(response);
 				}
-
 				if (callback) {
 					callback(alreadyProcessed);
 				}
-
-				NRS.incoming.updateDashboardTransactions(NRS.unconfirmedTransactions, true);
-
 				NRS.getAccountInfo();
 			} else if (callback) {
 				callback(false);
@@ -314,7 +302,7 @@ var NRS = (function(NRS, $, undefined) {
 		}
 
 		var html = "";
-		html += "<tr " + (!transaction.confirmed && (transaction.recipient == NRS.account || transaction.sender == NRS.account) ? " class='tentative-allow-links'" : "") + ">";
+		html += "<tr>";
 		
 		html += "<td>";
   		html += "<a href='#' data-timestamp='" + String(transaction.timestamp).escapeHTML() + "' ";
@@ -346,37 +334,34 @@ var NRS = (function(NRS, $, undefined) {
 		return html;
 	}
 
-	NRS.incoming.updateDashboardTransactions = function(newTransactions, unconfirmed) {
-		var newTransactionCount = newTransactions.length;
-
-		if (newTransactionCount) {
-			var rows = "";
-
-			var onlyUnconfirmed = true;
-
-			for (var i = 0; i < newTransactionCount; i++) {
-				var transaction = newTransactions[i];
-				rows += NRS.getTransactionRowHTML(transaction);
+	NRS.incoming.dashboard = function() {
+		var rows = "";
+		var params = {
+			"account": NRS.account,
+			"firstIndex": 0,
+			"lastIndex": 9
+		};
+		
+		var unconfirmedTransactions = NRS.unconfirmedTransactions;
+		if (unconfirmedTransactions) {
+			for (var i = 0; i < unconfirmedTransactions.length; i++) {
+				rows += NRS.getTransactionRowHTML(unconfirmedTransactions[i]);
 			}
+		}
 
-			if (onlyUnconfirmed) {
-				$("#dashboard_transactions_table tbody tr.tentative-allow-links").remove();
-				$("#dashboard_transactions_table tbody").prepend(rows);
+		NRS.sendRequest("getAccountTransactions+", params, function(response) {
+			if (response.transactions && response.transactions.length) {
+				for (var i = 0; i < response.transactions.length; i++) {
+					var transaction = response.transactions[i];
+					transaction.confirmed = true;
+					rows += NRS.getTransactionRowHTML(transaction);
+				}
+
+				$("#dashboard_transactions_table tbody").empty().append(rows);
 			} else {
 				$("#dashboard_transactions_table tbody").empty().append(rows);
 			}
-
-			var $parent = $("#dashboard_transactions_table").parent();
-
-			if ($parent.hasClass("data-empty")) {
-				$parent.removeClass("data-empty");
-				if ($parent.data("no-padding")) {
-					$parent.parent().addClass("no-padding");
-				}
-			}
-		} else if (unconfirmed) {
-			$("#dashboard_transactions_table tbody tr.tentative-allow-links").remove();
-		}
+		});
 	}
 
 	NRS.buildTransactionsTypeNavi = function() {
