@@ -120,6 +120,17 @@ public class PendingTransactionPoll extends AbstractPoll {
         }
     }
 
+    // calculated
+    public boolean isFinished() {
+        boolean preRelease = false;
+        if (this.votingModel == Constants.VOTING_MODEL_ACCOUNT) {
+            preRelease = VotePhased.countVotes(this) >= quorum;
+        }
+
+        //todo: or >= ?
+        return preRelease || this.finishHeight > Nxt.getBlockchain().getHeight();
+    }
+
     public static int getActiveCount() {
         return pendingTransactionsTable.getCount();
     }
