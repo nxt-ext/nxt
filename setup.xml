@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="iso-8859-1"  ?>
 <installation version="5.0">
     <properties>
-		<property name="appversion" value="1.4.10"/>
+		<property file="conf/nxt-default.properties" prefix="runtime"/>
 	</properties>
 	<info>
         <appname>NXT</appname>
-        <appversion>@{appversion}</appversion>
+        <appversion>@{runtime.nxt.version}</appversion>
         <url>http://nxt.org</url>
         <run-privileged condition="izpack.windowsinstall"/>
     </info>
@@ -53,12 +53,37 @@
         <modifier key="filler3XGap" value="10"/>
     </guiprefs>
 
-	<locale>
+    <locale>
         <langpack iso3="eng"/>
+        <langpack iso3="fra"/>
+        <langpack iso3="deu"/>
+        <langpack iso3="ita"/>
+        <langpack iso3="jpn"/>
+        <langpack iso3="spa"/>
+        <langpack iso3="dan"/>
+        <langpack iso3="ell"/>
+        <langpack iso3="cat"/>
+        <langpack iso3="nld"/>
+        <langpack iso3="fin"/>
+        <langpack iso3="swe"/>
+        <langpack iso3="prt"/>
+        <langpack iso3="pol"/>
+        <langpack iso3="rus"/>
+        <langpack iso3="ukr"/>
+        <langpack iso3="hun"/>
+        <langpack iso3="slk"/>
+        <langpack iso3="ron"/>
+        <langpack iso3="msa"/>
+        <langpack iso3="nor"/>
+        <langpack iso3="chn"/>
+        <langpack iso3="srp"/>
+        <langpack iso3="ces"/>
+        <langpack iso3="kor"/>
+        <langpack iso3="glg"/>
     </locale>
 
     <resources>
-		<res id="InfoPanel.info" src="changelogs/nxt-client-@{appversion}.changelog.txt" parse="yes"/>
+		<res id="InfoPanel.info" src="changelogs/nxt-client-@{runtime.nxt.version}.changelog.txt" parse="yes"/>
 		<res id="LicencePanel.licence" src="MIT-license.txt"/>
 		<res id="Installer.image" src="html/ui/img/installer_left_pane.png"/>
 		<res id="shortcutSpec.xml" src="shortcutSpec.xml"/>
@@ -75,7 +100,9 @@
         <panel classname="LicencePanel"/>
         <panel classname="InfoPanel"/>
         <panel classname="TargetPanel"/>
-		<panel classname="ShortcutPanel"/>
+		<panel classname="ShortcutPanel">
+			<os family="windows"/>
+		</panel>
         <panel classname="InstallPanel"/>
         <panel classname="SimpleFinishPanel"/>
     </panels>
