@@ -24,7 +24,7 @@ public class GetPolls extends APIServlet.APIRequestHandler {
         Account account = ParameterParser.getAccount(req, false);
         int firstIndex = ParameterParser.getFirstIndex(req);
         int lastIndex = ParameterParser.getLastIndex(req);
-        boolean includeVoters = "true".equalsIgnoreCase(req.getParameter("includeVoters"));
+        boolean includeVoters = ParameterParser.getBoolean(req, "includeVoters", false);
 
         DbIterator<Poll> polls;
 
