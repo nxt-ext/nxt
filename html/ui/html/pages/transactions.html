@@ -4,20 +4,21 @@
     </section>
 
     <section class="content">
-        <div>
-            <div style="float:right;">
-            <div class="btn-group">
-                <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
-                    <span class="text" data-i18n="all_transactions">All Transactions</span> <span class="caret"></span>
-                </button>
-                <ul id="transactions_page_type" class="dropdown-menu" role="menu" style="right:0;left:auto;">
-                </ul>
+        <div class="panel panel-default" style="margin-bottom:4px;" id="transactions_type_navi_box">
+            <div class="panel-body">
+                <div style="float:right;padding-top:3px;">
+                    <a href="#" data-i18n="show_type_menu" class="btn btn-default" id="transactions_sub_type_show_hide_btn" role="button">Show Type Menu</a>
+                </div>
+                <ul class="nav nav-pills" id="transactions_type_navi"></ul>
             </div>
         </div>
-        <div>
-            <ul class="nav nav-pills" id="transactions_type_navi" style="margin-bottom:20px;"></ul>
+        <div class="panel panel-default" style="display:none;margin-bottom:10px;" id="transactions_sub_type_navi_box">
+            <div class="panel-body">
+                <ul class="nav nav-pills" id="transactions_sub_type_navi"></ul>
+            </div>
         </div>
-        <div class="data-container data-loading">
+        <div class="panel panel-default">
+        <div class="data-container data-loading panel-body">
             <table class="table table-striped" id="transactions_table">
                 <thead>
                 <tr>
@@ -36,8 +37,11 @@
                 </tbody>
             </table>
             <div class="data-loading-container"><img src="img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
-            <div class="data-empty-container"><p data-i18n="no_transactions_found">No transactions found.</p></div>
+            <div class="data-empty-container" style="text-align:center;">
+                <p style="padding-top:80px;padding-bottom:100px;"><span data-i18n="no_transactions_found">No transactions found</span>.</p>
+            </div>
         </div>
+    </div>
         <div class="data-pagination"></div>
     </section>
 </div>

@@ -378,9 +378,9 @@ var NRS = (function(NRS, $, undefined) {
 		$('#transactions_type_navi').append(html);
 
 		$.each(NRS.transactionTypes, function(typeIndex, typeDict) {
-			popupContent = $.t(typeDict.i18nKeyTitle);
+			titleString = $.t(typeDict.i18nKeyTitle);
 			html = '<li role="presentation"><a href="#" data-transaction-type="' + typeIndex + '" ';
-			html += 'data-toggle="popover" data-placement="top" data-content="' + popupContent + '" data-container="body">';
+			html += 'data-toggle="popover" data-placement="top" data-content="' + titleString + '" data-container="body">';
 			html += typeDict.iconHTML + '</a></li>';
 			$('#transactions_type_navi').append(html);
 		});
@@ -399,18 +399,22 @@ var NRS = (function(NRS, $, undefined) {
 		});
 	}
 
-	NRS.buildTransactionPageTypeMenu = function() {
-		$('#transactions_page_type').append('<li><a href="#" data-type="" data-i18n="all_transactions">All Transactions</a></li>');
-		$.each(NRS.transactionTypes, function(typeIndex, typeDict) {
-			$.each(typeDict['subTypes'], function(subTypeIndex, subTypeDict) {
-				var html  = '';
-				html += '<li><a href="#" data-type="' + typeIndex + ':' + subTypeIndex + '">';
-				html += '<span style="display:inline-block;width:45px;">' + typeDict.iconHTML + ' ' + subTypeDict.iconHTML + '</span>';
-				html += '<span data-i18n="' + subTypeDict.i18nKeyTitle + '">' + subTypeDict.title + '</span></a></li>';
-				$('#transactions_page_type').append(html);
+	NRS.buildTransactionsSubTypeNavi = function() {
+		$('#transactions_sub_type_navi').empty();
+		html  = '<li role="presentation" class="active"><a href="#" data-transaction-sub-type="">';
+		html += '<span data-i18n="all_types">All Types</span></a></li>';
+		$('#transactions_sub_type_navi').append(html);
+
+		var typeIndex = $('#transactions_type_navi li.active a').attr('data-transaction-type');
+		if (typeIndex && typeIndex != "unconfirmed" && typeIndex != "pending") {
+				var typeDict = NRS.transactionTypes[typeIndex];
+				$.each(typeDict["subTypes"], function(subTypeIndex, subTypeDict) {
+				subTitleString = $.t(subTypeDict.i18nKeyTitle);
+				html = '<li role="presentation"><a href="#" data-transaction-sub-type="' + subTypeIndex + '">';
+				html += subTypeDict.iconHTML + ' ' + subTitleString + '</a></li>';
+				$('#transactions_sub_type_navi').append(html);
 			});
-		});
-		$('#transactions_page_type').append('<li><a href="#" data-type="unconfirmed" data-i18n="unconfirmed_transactions">Unconfirmed Transactions</a></li>');
+		}
 	}
 
 	NRS.displayUnconfirmedTransactions = function() {
@@ -442,10 +446,14 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.pages.transactions = function() {
 		if ($('#transactions_type_navi').children().length == 0) {
 			NRS.buildTransactionsTypeNavi();
-			NRS.buildTransactionPageTypeMenu();
+			NRS.buildTransactionsSubTypeNavi();
 		}
 
 		var selectedType = $('#transactions_type_navi li.active a').attr('data-transaction-type');
+		var selectedSubType = $('#transactions_sub_type_navi li.active a').attr('data-transaction-sub-type');
+		if (!selectedSubType) {
+			selectedSubType = "";
+		}
 		if (selectedType == "unconfirmed") {
 			NRS.displayUnconfirmedTransactions();
 			return;
@@ -464,8 +472,9 @@ var NRS = (function(NRS, $, undefined) {
 
 		if (selectedType) {
 			params.type = selectedType;
-			params.subtype = "";
-			var unconfirmedTransactions = NRS.getUnconfirmedTransactionsFromCache(params.type, []);
+			params.subtype = selectedSubType;
+
+			var unconfirmedTransactions = NRS.getUnconfirmedTransactionsFromCache(params.type, (params.subtype ? params.subtype : []));
 		} else {
 			var unconfirmedTransactions = NRS.unconfirmedTransactions;
 		}
@@ -506,34 +515,28 @@ var NRS = (function(NRS, $, undefined) {
 		e.preventDefault();
 		$('#transactions_type_navi li.active').removeClass('active');
   		$(this).parent('li').addClass('active');
+  		NRS.buildTransactionsSubTypeNavi();
   		NRS.pageNumber = 1;
 		NRS.loadPage("transactions");
 	});
 
-	$(document).on("click", "#transactions_page_type li a", function(e) {
+	$(document).on("click", "#transactions_sub_type_navi li a", function(e) {
 		e.preventDefault();
-
-		var type = $(this).data("type");
-
-		if (!type) {
-			NRS.transactionsPageType = null;
-		} else if (type == "unconfirmed") {
-			NRS.transactionsPageType = "unconfirmed";
-		} else {
-			type = type.split(":");
-			NRS.transactionsPageType = {
-				"type": type[0],
-				"subtype": type[1]
-			};
-		}
-
-		$(this).parents(".btn-group").find(".text").text($(this).text());
-
-		$(".popover").remove();
-
-		NRS.pageNumber = 1;
-
+		$('#transactions_sub_type_navi li.active').removeClass('active');
+  		$(this).parent('li').addClass('active');
+  		NRS.pageNumber = 1;
 		NRS.loadPage("transactions");
+	});
+
+	$(document).on("click", "#transactions_sub_type_show_hide_btn", function(e) {
+		e.preventDefault();
+		if ($('#transactions_sub_type_navi_box').is(':visible')) {
+			$('#transactions_sub_type_navi_box').hide();
+			$(this).text($.t('show_type_menu', 'Show Type Menu'));
+		} else {
+			$('#transactions_sub_type_navi_box').show();
+			$(this).text($.t('hide_type_menu', 'Hide Type Menu'));
+		}
 	});
 
 	return NRS;
