@@ -51,28 +51,28 @@ public final class PeerServlet extends HttpServlet {
     private static final JSONStreamAware UNSUPPORTED_REQUEST_TYPE;
     static {
         JSONObject response = new JSONObject();
-        response.put("error", "Unsupported request type!");
+        response.put("error", Errors.UNSUPPORTED_REQUEST_TYPE);
         UNSUPPORTED_REQUEST_TYPE = JSON.prepare(response);
     }
 
     private static final JSONStreamAware UNSUPPORTED_PROTOCOL;
     static {
         JSONObject response = new JSONObject();
-        response.put("error", "Unsupported protocol!");
+        response.put("error", Errors.UNSUPPORTED_PROTOCOL);
         UNSUPPORTED_PROTOCOL = JSON.prepare(response);
     }
 
     private static final JSONStreamAware BLACKLISTED;
     static {
         JSONObject response = new JSONObject();
-        response.put("error", "Your peer is blacklisted");
+        response.put("error", Errors.BLACKLISTED);
         BLACKLISTED = JSON.prepare(response);
     }
 
     private static final JSONStreamAware UNKNOWN_PEER;
     static {
         JSONObject response = new JSONObject();
-        response.put("error", "Your peer address cannot be resolved");
+        response.put("error", Errors.UNKNOWN_PEER);
         UNKNOWN_PEER = JSON.prepare(response);
     }
 
