@@ -145,7 +145,7 @@ public class PendingTransactionPoll extends AbstractPoll {
         }
 
         //todo: or >= ?
-        return preRelease || this.finishHeight > Nxt.getBlockchain().getHeight();
+        return preRelease || Nxt.getBlockchain().getHeight() > this.finishHeight;
     }
 
     public static int getActiveCount() {
