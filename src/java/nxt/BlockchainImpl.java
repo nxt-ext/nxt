@@ -258,12 +258,13 @@ final class BlockchainImpl implements Blockchain {
 
     @Override
     public DbIterator<TransactionImpl> getTransactions(Account account, byte type, byte subtype, int blockTimestamp) {
-        return getTransactions(account, 0, type, subtype, blockTimestamp, false, 0, -1);
+        return getTransactions(account, 0, type, subtype, blockTimestamp, false, false, 0, -1);
     }
 
     @Override
     public DbIterator<TransactionImpl> getTransactions(Account account, int numberOfConfirmations, byte type, byte subtype,
-                                                       int blockTimestamp, boolean withMessage, int from, int to) {
+                                                       int blockTimestamp, boolean withMessage, boolean twoPhased,
+                                                       int from, int to) {
         int height = numberOfConfirmations > 0 ? getHeight() - numberOfConfirmations : Integer.MAX_VALUE;
         if (height < 0) {
             throw new IllegalArgumentException("Number of confirmations required " + numberOfConfirmations
@@ -288,6 +289,10 @@ final class BlockchainImpl implements Blockchain {
             if (withMessage) {
                 buf.append("AND (has_message = TRUE OR has_encrypted_message = TRUE) ");
             }
+            if (twoPhased) {
+                buf.append("AND two_phased = TRUE ");
+            }
+
             buf.append("UNION ALL SELECT * FROM transaction WHERE sender_id = ? ");
             if (blockTimestamp > 0) {
                 buf.append("AND block_timestamp >= ? ");
