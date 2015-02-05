@@ -369,7 +369,7 @@ public final class Peers {
                     if (hasTooManyKnownPeers() && hasEnoughConnectedPublicPeers(Peers.maxNumberOfConnectedPublicPeers)) {
                         int initialSize = peers.size();
                         for (PeerImpl peer : peers.values()) {
-                            if (now - peer.getLastUpdated() > 7 * 24 * 3600) {
+                            if (now - peer.getLastUpdated() > 24 * 3600) {
                                 peer.remove();
                             }
                             if (hasTooFewKnownPeers()) {
