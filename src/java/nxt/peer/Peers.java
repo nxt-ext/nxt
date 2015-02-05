@@ -634,7 +634,7 @@ public final class Peers {
                 return null;
             }
             int port = uri.getPort();
-            if ((peer = peers.get(port > 0 && port != Peers.getDefaultPeerPort() ? host + ":" + port : host)) != null) {
+            if ((peer = peers.get(addressWithPort(host, port))) != null) {
                 return peer;
             }
             InetAddress inetAddress = InetAddress.getByName(host);
@@ -652,11 +652,9 @@ public final class Peers {
         if (cleanAddress.split(":").length > 2) {
             cleanAddress = "[" + cleanAddress + "]";
         }
-        
-        if (port > 0 && port != Peers.getDefaultPeerPort()) {
-            cleanAddress = cleanAddress + ":" + port;
-        }
-        
+
+        cleanAddress = addressWithPort(cleanAddress, port);
+
         PeerImpl peer;
         if ((peer = peers.get(cleanAddress)) != null) {
             return peer;
@@ -825,6 +823,19 @@ public final class Peers {
         return null;
     }
 
+    static String addressWithPort(String address) {
+        try {
+            URI uri = new URI("http://" + address.trim());
+            return addressWithPort(uri.getHost(), uri.getPort());
+        } catch (URISyntaxException e) {
+            return null;
+        }
+    }
+
+    static String addressWithPort(String host, int port) {
+        return port > 0 && port != Peers.getDefaultPeerPort() ? host + ":" + port : host;
+    }
+
     static String normalizeHostAndPort(String address) {
         try {
             if (address == null) {
@@ -841,8 +852,7 @@ public final class Peers {
                                                    inetAddress.isLinkLocalAddress()) {
                 return null;
             }
-            int port = uri.getPort();
-            return port == -1 || port == Peers.getDefaultPeerPort() ? host : host + ':' + port;
+            return addressWithPort(host, uri.getPort());
         } catch (URISyntaxException |UnknownHostException e) {
             return null;
         }
