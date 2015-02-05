@@ -255,25 +255,49 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.getPendingTransactionHTML = function(t) {
-		if (t.attachment && t.attachment["version.TwoPhased"] && t.attachment.votingModel) {
-			var html = "";
-			var attachment = t.attachment;
-			var vm = attachment.votingModel;
+		var html = "";
 
-			html += String(attachment.quorum);
-			if (vm == 0) {
-				html += " NXT";
-			} else if (vm == 1) {
-				html += ' <i class="fa fa-group"></i>';
-			} else if (vm == 2) {
-				html = "Asset";
-			} else {
-				html = "Currency";
-			}
-			return html;
+		if (t.attachment && t.attachment["version.TwoPhased"] && t.attachment.votingModel) {
+			NRS.sendRequest("getPendingTransactionVotes", {
+				"pendingTransaction": t.transaction
+			}, function(response) {
+				if (response.pendingTransaction) {
+					var attachment = t.attachment;
+					var vm = attachment.votingModel;
+					if (response.votes < response.quorum) {
+						var state = "warning";
+					} else {
+						var state = "success";
+					}
+					html += "<div style='display:inline-block;border:1px solid #e2e2e2;background-color:#fff;padding:3px;'>";
+					html += "<div class='label label-" + state + "' style='display:inline-block;margin-right:5px;'>";
+					if (vm == 1) {
+						html += '<i class="fa fa-group"></i> ';
+					} else if (vm == 2) {
+						html = "Asset";
+					} else {
+						html = "Currency";
+					}
+					html += "</div>";
+					
+					html += '<div class="progress" style="display:inline-block;height:10px;width: 50px;">';
+    				html += '<div class="progress-bar progress-bar-' + state + '" role="progressbar" aria-valuenow="60" ';
+    				html += 'aria-valuemin="0" aria-valuemax="100" style="height:10px;width: 30px;">';
+      				html += '<span class="sr-only">60% Complete</span>';
+    				html += '</div>';
+  					html += '</div> ';
+
+					html += "</div>";
+					//html += " " + String(response.votes) + "/" + String(response.quorum);
+				} else {
+					html = "&nbsp;";
+				}
+			}, false);
 		} else {
-			return "&nbsp;";
+			html = "&nbsp;";
 		}
+		console.log(html);
+		return html;
 	}
 
 	NRS.getTransactionRowHTML = function(transaction) {
@@ -391,7 +415,7 @@ var NRS = (function(NRS, $, undefined) {
 		$('#transactions_type_navi').append(html);
 		html  = '<li role="presentation"><a href="#" data-transaction-type="pending" ';
 		html += 'data-toggle="popover" data-placement="top" data-content="Pending" data-container="body" data-i18n="[data-content]pending">';
-		html += '<span data-i18n="pending">Pending</span></a></li>';
+		html += '<i class="fa fa-gavel"></i>&nbsp; <span data-i18n="pending">Pending</span></a></li>';
 		$('#transactions_type_navi').append(html);
 
 		$('#transactions_type_navi a[data-toggle="popover"]').popover({
