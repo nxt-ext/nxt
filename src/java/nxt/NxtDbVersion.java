@@ -641,6 +641,8 @@ class NxtDbVersion extends DbVersion {
             case 242:
                 apply("ALTER TABLE pending_transaction_signer ALTER COLUMN poll_id RENAME TO pending_transaction_id");
             case 243:
+                apply("ALTER TABLE pending_transaction ADD COLUMN finished BOOLEAN");
+            case 244:
                 return;
             //todo: more indexes on VS & 2PTs tables
             default:

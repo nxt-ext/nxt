@@ -906,6 +906,7 @@ public abstract class TransactionType {
                     PendingTransactionPoll poll = PendingTransactionPoll.getPoll(pendingTransactionId);
 
                     if (VotePhased.addVote(poll, transaction)) {
+                        poll.updateDbWithFinished();
                         Transaction pendingTransaction = TransactionDb.findTransaction(pendingTransactionId);
                         pendingTransaction.getTwoPhased().release(pendingTransaction);
                     }

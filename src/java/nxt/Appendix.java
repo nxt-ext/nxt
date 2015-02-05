@@ -632,6 +632,7 @@ public interface Appendix {
 
         void finalVerification(Transaction transaction) {
             PendingTransactionPoll poll = PendingTransactionPoll.getPoll(transaction.getId());
+            poll.updateDbWithFinished();
             if (VotePhased.countVotes(poll) >= poll.getQuorum()) {
                 release(transaction);
             } else {

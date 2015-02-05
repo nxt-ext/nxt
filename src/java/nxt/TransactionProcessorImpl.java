@@ -52,7 +52,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                     try (Connection con = Db.db.getConnection();
                          PreparedStatement pstmt = con.prepareStatement("SELECT transaction.* FROM transaction, pending_transaction " +
                                  " WHERE pending_transaction.id = transaction.id AND pending_transaction.finish_height = ? " +
-                                 " AND pending_transaction.latest = TRUE")) {
+                                 " AND pending_transaction.finished = FALSE AND pending_transaction.latest = TRUE")) {
                         pstmt.setInt(1, height);
                         for (Transaction transaction : Nxt.getBlockchain().getTransactions(con, pstmt)) {
                             transaction.getTwoPhased().finalVerification(transaction);

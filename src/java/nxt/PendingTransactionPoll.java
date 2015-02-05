@@ -16,6 +16,7 @@ public class PendingTransactionPoll extends AbstractPoll {
     private final long[] whitelist;
     private final long[] blacklist;
     private final long quorum;
+    private boolean finished;
 
     private static final DbKey.LongKeyFactory<PendingTransactionPoll> pollDbKeyFactory = new DbKey.LongKeyFactory<PendingTransactionPoll>("id") {
         @Override
@@ -51,8 +52,8 @@ public class PendingTransactionPoll extends AbstractPoll {
         }
     };
 
-    private final static EntityDbTable<PendingTransactionPoll> pendingTransactionsTable =
-            new EntityDbTable<PendingTransactionPoll>("pending_transaction", pollDbKeyFactory) {
+    private final static VersionedEntityDbTable<PendingTransactionPoll> pendingTransactionsTable =
+            new VersionedEntityDbTable<PendingTransactionPoll>("pending_transaction", pollDbKeyFactory) {
 
                 @Override
                 protected PendingTransactionPoll load(Connection con, ResultSet rs) throws SQLException {
@@ -135,17 +136,21 @@ public class PendingTransactionPoll extends AbstractPoll {
                 this.blacklist = new long[0];
             }
         }
+
+        this.finished = rs.getBoolean("finished");
     }
 
-    // calculated
-    public boolean isFinished() {
-        boolean preRelease = false;
-        if (this.votingModel == Constants.VOTING_MODEL_ACCOUNT) {
-            preRelease = VotePhased.countVotes(this) >= quorum;
-        }
+    public void updateDbWithFinished() {
+        setFinished(true);
+        pendingTransactionsTable.insert(this);
+    }
 
-        //todo: or >= ?
-        return preRelease || Nxt.getBlockchain().getHeight() > this.finishHeight;
+    public void setFinished(boolean finished) {
+        this.finished = finished;
+    }
+
+    public boolean isFinished() {
+        return finished;
     }
 
     public static int getActiveCount() {
@@ -165,6 +170,7 @@ public class PendingTransactionPoll extends AbstractPoll {
         PendingTransactionPoll poll = new PendingTransactionPoll(transaction.getId(), transaction.getSenderId(),
                 appendix.getMaxHeight(), appendix.getVotingModel(), appendix.getQuorum(), appendix.getMinBalance(),
                 appendix.getHoldingId(), appendix.getWhitelist(), appendix.getBlacklist());
+
         pendingTransactionsTable.insert(poll);
 
         long[] signers;
@@ -206,6 +212,7 @@ public class PendingTransactionPoll extends AbstractPoll {
                     + "from pending_transaction, pending_transaction_signer "
                     + "WHERE pending_transaction.latest = TRUE AND "
                     + "pending_transaction.blacklist = false AND "
+                    + "pending_transaction.finished = false AND "
                     + "pending_transaction.id = pending_transaction_signer.pending_transaction_id "
                     + "AND pending_transaction_signer.account_id = ? "
                     + DbUtils.limitsClause(from, to));
@@ -221,6 +228,24 @@ public class PendingTransactionPoll extends AbstractPoll {
 
         } catch (SQLException e) {
             DbUtils.close(con);
+            throw new RuntimeException(e.toString(), e);
+        }
+    }
+
+    public static DbIterator<? extends Transaction> getPendingTransactionsForAccount(Account account, int from, int to) {
+        Connection con = null;
+        try {
+            con = Db.db.getConnection();
+            PreparedStatement pstmt = con.prepareStatement("SELECT transaction.* FROM transaction, pending_transaction " +
+                            " WHERE transaction.sender_id = ? AND pending_transaction.id = transaction.id " +
+                            " AND pending_transaction.finished = FALSE AND pending_transaction.latest = TRUE " +
+                            DbUtils.limitsClause(from, to)
+            );
+            pstmt.setLong(1, account.getId());
+            DbUtils.setLimits(2, pstmt, from, to);
+
+            return Nxt.getBlockchain().getTransactions(con, pstmt);
+        } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
         }
     }
@@ -243,7 +268,7 @@ public class PendingTransactionPoll extends AbstractPoll {
 
         try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO pending_transaction (id, account_id, "
                 + "finish_height, signers_count, blacklist, voting_model, quorum, min_balance, holding_id, "
-                + "height) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
+                + "finished, height) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
             int i = 0;
             pstmt.setLong(++i, getId());
             pstmt.setLong(++i, getAccountId());
@@ -254,6 +279,7 @@ public class PendingTransactionPoll extends AbstractPoll {
             pstmt.setLong(++i, getQuorum());
             pstmt.setLong(++i, getMinBalance());
             pstmt.setLong(++i, getHoldingId());
+            pstmt.setBoolean(++i, isFinished());
             pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
             pstmt.executeUpdate();
         }
