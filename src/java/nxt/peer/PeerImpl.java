@@ -56,6 +56,7 @@ final class PeerImpl implements Peer {
     private volatile long downloadedVolume;
     private volatile long uploadedVolume;
     private volatile int lastUpdated;
+    private volatile int lastConnectAttempt;
     private volatile long hallmarkBalance = -1;
     private volatile int hallmarkBalanceHeight;
 
@@ -310,6 +311,10 @@ final class PeerImpl implements Peer {
         return blacklistingCause == null ? "unknown" : blacklistingCause;
     }
 
+    int getLastConnectAttempt() {
+        return lastConnectAttempt;
+    }
+
     @Override
     public JSONObject send(final JSONStreamAware request) {
         return send(request, Peers.MAX_RESPONSE_SIZE);
@@ -445,6 +450,7 @@ final class PeerImpl implements Peer {
     }
 
     void connect() {
+        lastConnectAttempt = Nxt.getEpochTime();
         JSONObject response = send(Peers.myPeerInfoRequest);
         if (response != null && (application = (String)response.get("application")) != null) {
             setVersion((String) response.get("version"));
@@ -469,7 +475,7 @@ final class PeerImpl implements Peer {
             } else if (!isBlacklisted()) {
                 blacklist("Old version");
             }
-            lastUpdated = Nxt.getEpochTime();
+            lastUpdated = lastConnectAttempt;
         } else {
             //Logger.logDebugMessage("Failed to connect to peer " + peerAddress);
             setState(State.NON_CONNECTED);

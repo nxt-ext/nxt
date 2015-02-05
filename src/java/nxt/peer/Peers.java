@@ -341,6 +341,7 @@ public final class Peers {
             try {
                 try {
 
+                    final int now = Nxt.getEpochTime();
                     if (!hasEnoughConnectedPublicPeers(Peers.maxNumberOfConnectedPublicPeers)) {
                         List<Future> futures = new ArrayList<>();
                         for (int i = 0; i < 10; i++) {
@@ -348,7 +349,7 @@ public final class Peers {
                                 @Override
                                 public void run() {
                                     PeerImpl peer = (PeerImpl) getAnyPeer(ThreadLocalRandom.current().nextInt(2) == 0 ? Peer.State.NON_CONNECTED : Peer.State.DISCONNECTED, false);
-                                    if (peer != null) {
+                                    if (peer != null && now - peer.getLastConnectAttempt() > 600) {
                                         peer.connect();
                                     }
                                 }
@@ -359,7 +360,6 @@ public final class Peers {
                         }
                     }
 
-                    int now = Nxt.getEpochTime();
                     for (PeerImpl peer : peers.values()) {
                         if (peer.getState() == Peer.State.CONNECTED && now - peer.getLastUpdated() > 3600) {
                             peer.connect();
