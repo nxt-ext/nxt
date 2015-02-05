@@ -97,7 +97,10 @@ public final class PeerServlet extends HttpServlet {
                 return;
             }
             if (peer.isBlacklisted()) {
-                sendResponse(peer, BLACKLISTED, resp);
+                JSONObject jsonObject = new JSONObject();
+                jsonObject.put("error", Errors.BLACKLISTED);
+                jsonObject.put("cause", peer.getBlacklistingCause());
+                sendResponse(peer, JSON.prepare(jsonObject), resp);
                 return;
             }
 

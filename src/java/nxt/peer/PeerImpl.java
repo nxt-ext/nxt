@@ -51,6 +51,7 @@ final class PeerImpl implements Peer {
     private volatile boolean isOldVersion;
     private volatile long adjustedWeight;
     private volatile long blacklistingTime;
+    private volatile String blacklistingCause;
     private volatile State state;
     private volatile long downloadedVolume;
     private volatile long uploadedVolume;
@@ -257,12 +258,13 @@ final class PeerImpl implements Peer {
                 Logger.logDebugMessage("Blacklisting " + peerAddress + " because of: " + cause.toString(), cause);
             }
         }
-        blacklist();
+        blacklist(cause.toString());
     }
 
     @Override
-    public void blacklist() {
+    public void blacklist(String cause) {
         blacklistingTime = System.currentTimeMillis();
+        blacklistingCause = cause;
         setState(State.NON_CONNECTED);
         Peers.notifyListeners(this, Peers.Event.BLACKLIST);
     }
@@ -271,6 +273,7 @@ final class PeerImpl implements Peer {
     public void unBlacklist() {
         setState(State.NON_CONNECTED);
         blacklistingTime = 0;
+        blacklistingCause = null;
         Peers.notifyListeners(this, Peers.Event.UNBLACKLIST);
     }
 
@@ -299,6 +302,11 @@ final class PeerImpl implements Peer {
 
     void setLastUpdated(int lastUpdated) {
         this.lastUpdated = lastUpdated;
+    }
+
+    @Override
+    public String getBlacklistingCause() {
+        return blacklistingCause;
     }
 
     @Override
@@ -412,7 +420,7 @@ final class PeerImpl implements Peer {
 
         if (response != null && response.get("error") != null) {
             if (Errors.BLACKLISTED.equals(response.get("error"))) {
-                Logger.logDebugMessage("Peer " + peerAddress + " has blacklisted us, disconnecting");
+                Logger.logDebugMessage("Peer " + peerAddress + " has blacklisted us because of: \'" + response.get("cause") + "\', disconnecting");
                 deactivate();
             } else {
                 Logger.logDebugMessage("Peer " + peerAddress + " version " + version + " returned error: " + response.toJSONString());
@@ -461,7 +469,7 @@ final class PeerImpl implements Peer {
                 setState(State.CONNECTED);
                 Peers.updateAddress(this);
             } else if (!isBlacklisted()) {
-                blacklist();
+                blacklist("Old version");
             }
             lastUpdated = Nxt.getEpochTime();
         } else {
