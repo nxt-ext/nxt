@@ -342,11 +342,20 @@ public final class Peers {
                 try {
 
                     if (!hasEnoughConnectedPublicPeers(Peers.maxNumberOfConnectedPublicPeers)) {
+                        List<Future> futures = new ArrayList<>();
                         for (int i = 0; i < 10; i++) {
-                            PeerImpl peer = (PeerImpl) getAnyPeer(ThreadLocalRandom.current().nextInt(2) == 0 ? Peer.State.NON_CONNECTED : Peer.State.DISCONNECTED, false);
-                            if (peer != null) {
-                                peer.connect();
-                            }
+                            futures.add(peersService.submit(new Runnable() {
+                                @Override
+                                public void run() {
+                                    PeerImpl peer = (PeerImpl) getAnyPeer(ThreadLocalRandom.current().nextInt(2) == 0 ? Peer.State.NON_CONNECTED : Peer.State.DISCONNECTED, false);
+                                    if (peer != null) {
+                                        peer.connect();
+                                    }
+                                }
+                            }));
+                        }
+                        for (Future future : futures) {
+                            future.get();
                         }
                     }
 
