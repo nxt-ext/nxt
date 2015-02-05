@@ -343,14 +343,15 @@ var NRS = (function(NRS, $, undefined) {
 
 			function voteModal(data, input)
 			{
-				alert(votes);
 				if(input.req=="getPollResults") results = data;
 				if(input.req=="getPollVotes") votes = data;
 				if(input.req=="getPoll") poll = data;
 
 				if(results !== undefined && votes !== undefined && poll !== undefined)
 				{
-					alert("ready");
+					$("#poll_results_options").append("<tr><td style='font-weight: bold;width:180px;'><span data-i18n='poll_name'>Poll Name</span>:</td><td><span id='poll_results_poll_name'>"+poll.name+"</span></td></tr>");
+					$("#poll_results_options").append("<tr><td style='font-weight: bold;width:180px;'><span data-i18n='poll_id'>Poll Id</span>:</td><td><span id='poll_results_poll_id'>"+poll.poll+"</span></td></tr>");
+
 					$("#poll_results_poll_name").text(poll.name);
 					$("#poll_results_poll_id").text(poll.poll);
 
@@ -364,6 +365,18 @@ var NRS = (function(NRS, $, undefined) {
 					{
 						$("#poll_results_options").append("<tr><td style='font-weight: bold;width:180px;'><span>"+Object.keys(results.results[b])[0]+"</span>:</td><td><span id='poll_results_result_"+b+"'>"+results.results[b][Object.keys(results.results[b])[0]]+"</span></td></tr>");
 					}
+					if(votes.votes.length == 0)
+					{
+						$("poll_results_voters").text("<span data-il8n='voter_data_pruned'>Voter data has been pruned from the blockchain</span>");
+					}
+					else {
+						for(var c=0; c<votes.votes.length;c++)
+						{
+							
+						}
+					}
+
+
 					/*if(response.attachment.minNumberOfOptions != response.attachment.maxNumberOfOptions)
 					$("#cast_vote_range").text("Select between " + response.attachment.minNumberOfOptions + " and " + response.attachment.maxNumberOfOptions + " options from below.")
 					else if(response.attachment.minNumberOfOptions != 1) $("#cast_vote_range").text("Select " + response.attachment.minNumberOfOptions +  " options from below.")
@@ -423,6 +436,7 @@ $("#poll_results_modal ul.nav li").click(function(e) {
 		$(this).find(".poll_results_modal_content").hide();
 		$(this).find("ul.nav li.active").removeClass("active");
 		$("#poll_results_statistics_nav").addClass("active");
+		$("#poll_results_options").text("");
 	});
 
 		
