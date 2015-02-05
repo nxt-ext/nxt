@@ -404,14 +404,14 @@ final class PeerImpl implements Peer {
             blacklist(e);
         } catch (IOException e) {
             if (! (e instanceof UnknownHostException || e instanceof SocketTimeoutException || e instanceof SocketException)) {
-                Logger.logDebugMessage("Error sending JSON request " + e.toString());
+                Logger.logDebugMessage("Error sending JSON request: " + e.toString());
             }
             if ((Peers.communicationLoggingMask & Peers.LOGGING_MASK_EXCEPTIONS) != 0) {
                 log += " >>> " + e.toString();
                 showLog = true;
             }
             if (state == State.CONNECTED) {
-                Logger.logDebugMessage("Disconnecting " + peerAddress + " because of " + e.toString());
+                //Logger.logDebugMessage("Disconnecting " + peerAddress + " because of " + e.toString());
                 setState(State.DISCONNECTED);
             } else {
                 setState(State.NON_CONNECTED);
