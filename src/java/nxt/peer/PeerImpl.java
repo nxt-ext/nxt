@@ -8,6 +8,7 @@ import nxt.NxtException;
 import nxt.util.Convert;
 import nxt.util.CountingInputStream;
 import nxt.util.CountingOutputStream;
+import nxt.util.JSON;
 import nxt.util.Logger;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
@@ -22,7 +23,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.Reader;
-import java.io.StringWriter;
 import java.io.Writer;
 import java.net.HttpURLConnection;
 import java.net.InetAddress;
@@ -271,6 +271,7 @@ final class PeerImpl implements Peer {
 
     @Override
     public void unBlacklist() {
+        Logger.logDebugMessage("Unblacklisting " + peerAddress);
         setState(State.NON_CONNECTED);
         blacklistingTime = 0;
         blacklistingCause = null;
@@ -306,7 +307,7 @@ final class PeerImpl implements Peer {
 
     @Override
     public String getBlacklistingCause() {
-        return blacklistingCause;
+        return blacklistingCause == null ? "unknown" : blacklistingCause;
     }
 
     @Override
@@ -336,9 +337,7 @@ final class PeerImpl implements Peer {
             URL url = new URL(buf.toString());
 
             if (Peers.communicationLoggingMask != 0) {
-                StringWriter stringWriter = new StringWriter();
-                request.writeJSONString(stringWriter);
-                log = "\"" + url.toString() + "\": " + stringWriter.toString();
+                log = "\"" + url.toString() + "\": " + JSON.toString(request);
             }
 
             connection = (HttpURLConnection)url.openConnection();
@@ -389,6 +388,7 @@ final class PeerImpl implements Peer {
                     log += " >>> Peer responded with HTTP " + connection.getResponseCode() + " code!";
                     showLog = true;
                 }
+                Logger.logDebugMessage("Peer " + peerAddress + " responded with HTTP " + connection.getResponseCode());
                 if (state == State.CONNECTED) {
                     setState(State.DISCONNECTED);
                 } else {
@@ -406,6 +406,7 @@ final class PeerImpl implements Peer {
                 showLog = true;
             }
             if (state == State.CONNECTED) {
+                Logger.logDebugMessage("Disconnecting " + peerAddress + " because of " + e.toString() /* + ", request was " + JSON.toString(request)*/);
                 setState(State.DISCONNECTED);
             }
         }
@@ -423,13 +424,8 @@ final class PeerImpl implements Peer {
                 Logger.logDebugMessage("Peer " + peerAddress + " has blacklisted us because of: \'" + response.get("cause") + "\', disconnecting");
                 deactivate();
             } else {
-                Logger.logDebugMessage("Peer " + peerAddress + " version " + version + " returned error: " + response.toJSONString());
-                try {
-                    StringWriter stringWriter = new StringWriter();
-                    request.writeJSONString(stringWriter);
-                    Logger.logDebugMessage("Request: " + stringWriter.toString());
-                } catch (IOException ignore) {
-                }
+                Logger.logDebugMessage("Peer " + peerAddress + " version " + version + " returned error: " + response.toJSONString()
+                        + ", request was: " + JSON.toString(request));
             }
         }
         return response;
@@ -456,6 +452,7 @@ final class PeerImpl implements Peer {
             String newAnnouncedAddress = Convert.emptyToNull((String)response.get("announcedAddress"));
             if (newAnnouncedAddress != null && ! newAnnouncedAddress.equals(announcedAddress)) {
                 // force verification of changed announced address
+                Logger.logDebugMessage("Peer " + peerAddress + " has new announced address " + newAnnouncedAddress + ", old is " + announcedAddress);
                 setState(Peer.State.NON_CONNECTED);
                 setAnnouncedAddress(newAnnouncedAddress);
                 return;
@@ -473,6 +470,7 @@ final class PeerImpl implements Peer {
             }
             lastUpdated = Nxt.getEpochTime();
         } else {
+            //Logger.logDebugMessage("Failed to connect to peer " + peerAddress);
             setState(State.NON_CONNECTED);
         }
     }

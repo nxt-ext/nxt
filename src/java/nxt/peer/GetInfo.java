@@ -1,6 +1,7 @@
 package nxt.peer;
 
 import nxt.Nxt;
+import nxt.util.Logger;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
@@ -18,6 +19,7 @@ final class GetInfo extends PeerServlet.PeerRequestHandler {
         if (announcedAddress != null && (announcedAddress = announcedAddress.trim()).length() > 0) {
             if (peerImpl.getAnnouncedAddress() != null && ! announcedAddress.equals(peerImpl.getAnnouncedAddress())) {
                 // force verification of changed announced address
+                Logger.logDebugMessage("Peer " + peer.getPeerAddress() + " changed announced address from " + peer.getAnnouncedAddress() + " to " + announcedAddress);
                 peerImpl.setState(Peer.State.NON_CONNECTED);
             }
             peerImpl.setAnnouncedAddress(announcedAddress);

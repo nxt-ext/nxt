@@ -4,6 +4,7 @@ import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import java.io.IOException;
+import java.io.StringWriter;
 import java.io.Writer;
 
 public final class JSON {
@@ -27,4 +28,11 @@ public final class JSON {
         return prepare(json);
     }
 
+    public static String toString(JSONStreamAware jsonStreamAware) {
+        StringWriter stringWriter = new StringWriter();
+        try {
+            jsonStreamAware.writeJSONString(stringWriter);
+        } catch (IOException ignore) {}
+        return stringWriter.toString();
+    }
 }
