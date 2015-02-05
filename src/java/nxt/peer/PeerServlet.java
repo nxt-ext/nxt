@@ -134,11 +134,11 @@ public final class PeerServlet extends HttpServlet {
                 response = UNSUPPORTED_PROTOCOL;
             }
 
-        } catch (RuntimeException|ParseException e) {
+        } catch (RuntimeException|ParseException|IOException e) {
             if (peer != null) {
                 peer.blacklist(e);
             }
-            Logger.logDebugMessage("Error processing POST request", e);
+            Logger.logDebugMessage("Error processing POST request: " + e.toString());
             JSONObject json = new JSONObject();
             json.put("error", e.toString());
             response = json;
