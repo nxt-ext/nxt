@@ -336,41 +336,68 @@ var NRS = (function(NRS, $, undefined) {
 			e.preventDefault();
 			var transactionId = $(this).data("results");
 
-			NRS.sendRequest("getTransaction", {
-				"transaction": transactionId
-			}, function(response, input) {
-				$("#cast_vote_poll_name").text(response.attachment.name);
-				$("#cast_vote_poll_description").text(response.attachment.description);
-				$("#cast_vote_answers_entry").text("");
-				if(response.attachment.minNumberOfOptions != response.attachment.maxNumberOfOptions)
-				$("#cast_vote_range").text("Select between " + response.attachment.minNumberOfOptions + " and " + response.attachment.maxNumberOfOptions + " options from below.")
-				else if(response.attachment.minNumberOfOptions != 1) $("#cast_vote_range").text("Select " + response.attachment.minNumberOfOptions +  " options from below.")
-				else $("#cast_vote_range").text("Select 1 option from below.")
+			NRS.sendRequest("getPollResults", {"poll": transactionId, "req":"getPollResults"}, voteModal);
+			NRS.sendRequest("getPollVotes", {"poll": transactionId, "req":"getPollVotes"}, voteModal);
+			NRS.sendRequest("getPoll", {"poll": transactionId, "req": "getPoll"}, voteModal);
+			var results, votes, poll;
 
-				$("#cast_vote_poll").val(response.transaction);
-				if(response.attachment.maxRangeValue != 1)
-				{
-					for(var b=0; b<response.attachment.options.length; b++)
-					{
-						$("#cast_vote_answers_entry").append("<div class='answer_slider'><label name='cast_vote_answer_"+b+"'>"+response.attachment.options[b]+"</label> &nbsp;&nbsp;<span class='badge'>"+response.attachment.minRangeValue+"</span><br/><input class='form-control' step='1' value='"+response.attachment.minRangeValue+"' max='"+response.attachment.maxRangeValue+"' min='"+response.attachment.minRangeValue+"' type='range'/></div>");
-					}
-				}
-				else
-				{
-					for(var b=0; b<response.attachment.options.length; b++)
-					{
-						$("#cast_vote_answers_entry").append("<div class='answer_boxes'><label name='cast_vote_answer_"+b+"'><input type='checkbox'/>&nbsp;&nbsp;"+response.attachment.options[b]+"</label></div>");
-					}
-				}
-				$("#poll_results_modal").modal();
-				$("input[type='range']").on("change mousemove", function() {
-					$(this).parent().children(".badge").text($(this).val());
+			function voteModal(data, input)
+			{
+				alert(votes);
+				if(input.req=="getPollResults") results = data;
+				if(input.req=="getPollVotes") votes = data;
+				if(input.req=="getPoll") poll = data;
 
-				});
-			});
+				if(results !== undefined && votes !== undefined && poll !== undefined)
+				{
+					alert("ready");
+					$("#poll_results_poll_name").text(poll.name);
+					$("#poll_results_poll_id").text(poll.poll);
+
+
+					$("#poll_results_number_of_voters").text(votes.votes.length);
+
+
+					$("#poll_results_modal").modal();
+
+					for(var b=0; b<results.results.length; b++)
+					{
+						$("#poll_results_options").append("<tr><td style='font-weight: bold;width:180px;'><span>"+Object.keys(results.results[b])[0]+"</span>:</td><td><span id='poll_results_result_"+b+"'>"+results.results[b][Object.keys(results.results[b])[0]]+"</span></td></tr>");
+					}
+					/*if(response.attachment.minNumberOfOptions != response.attachment.maxNumberOfOptions)
+					$("#cast_vote_range").text("Select between " + response.attachment.minNumberOfOptions + " and " + response.attachment.maxNumberOfOptions + " options from below.")
+					else if(response.attachment.minNumberOfOptions != 1) $("#cast_vote_range").text("Select " + response.attachment.minNumberOfOptions +  " options from below.")
+					else $("#cast_vote_range").text("Select 1 option from below.")
+
+					$("#cast_vote_poll").val(response.transaction);
+					if(response.attachment.maxRangeValue != 1)
+					{
+						for(var b=0; b<response.attachment.options.length; b++)
+						{
+							$("#cast_vote_answers_entry").append("<div class='answer_slider'><label name='cast_vote_answer_"+b+"'>"+response.attachment.options[b]+"</label> &nbsp;&nbsp;<span class='badge'>"+response.attachment.minRangeValue+"</span><br/><input class='form-control' step='1' value='"+response.attachment.minRangeValue+"' max='"+response.attachment.maxRangeValue+"' min='"+response.attachment.minRangeValue+"' type='range'/></div>");
+						}
+					}
+					else
+					{
+						for(var b=0; b<response.attachment.options.length; b++)
+						{
+							$("#cast_vote_answers_entry").append("<div class='answer_boxes'><label name='cast_vote_answer_"+b+"'><input type='checkbox'/>&nbsp;&nbsp;"+response.attachment.options[b]+"</label></div>");
+						}
+					}
+					
+					$("input[type='range']").on("change mousemove", function() {
+						$(this).parent().children(".badge").text($(this).val());
+
+					});*/
+				}
+
+
+			}
 
 			
 		});	
+		
+
 $("#poll_results_modal").on("show.bs.modal", function(e) {
 
 		$("#poll_results_modal_statistics").show();
@@ -432,8 +459,8 @@ $("#poll_results_modal ul.nav li").click(function(e) {
 
 		if($("#create_poll_type").val() == "0")
 		{
-			data["votingModel"] = 0;
-			data["minBalanceModel"] = 1;
+			data["votingModel"] = 1;
+			data["minBalanceModel"] = 0;
 		}
 		if($("#create_poll_type").val() == "1")
 		{
@@ -448,13 +475,13 @@ $("#poll_results_modal ul.nav li").click(function(e) {
 		{
 			data["votingModel"] = 2;
 			data["holding"] = $("#create_poll_asset_id").val();
-			data["minBalanceModel"] = 2;
+			data["minBalanceModel"] = 1;
 		}
 		else if($("#create_poll_type").val() == "3")
 		{
 			data["votingModel"] = 3;
 			data["holding"] = $("#create_poll_ms_currency").val();
-			data["minBalanceModel"] = 3;
+			data["minBalanceModel"] = 2;
 		}
 
 		for (var i = 0; i < options.length; i++) {
@@ -492,13 +519,14 @@ $("#poll_results_modal ul.nav li").click(function(e) {
 
 		$("#cast_vote_answers_entry div.answer_slider input").each(function() {
 			var option = $.trim($(this).val());
+			if(option == 0) option = -127;
 			if (option) {
 				options.push(option);
 			}
 		});
 
 		$("#cast_vote_answers_entry div.answer_boxes input").each(function() {
-			var option = $(this).val() ? 1 : 0;
+			var option = $(this).is(':checked') ? 1 : -128;
 			options.push(option);
 		});
 

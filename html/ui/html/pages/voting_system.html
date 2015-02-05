@@ -159,87 +159,28 @@
                         <div id="poll_details" style="display:none;">
 
                             <div style="float:right;color: #999999;background:white;padding:5px;border:1px solid #ccc;border-radius:3px">
-                                <strong data-i18n="account">Account</strong>: <span id="asset_account"></span><br />
-                                <span id="asset_id_dropdown" class="dropdown" style="margin-bottom:0;">
-                                    <strong data-i18n="asset_id">Asset Id</strong>: &nbsp;<a href="#" id="asset_id" class="dropdown-toggle" data-toggle="dropdown"></a>
+                                <strong data-i18n="account">Account</strong>: <span id="poll_account"></span><br />
+                                <span id="poll_id_dropdown" class="dropdown" style="margin-bottom:0;">
+                                    <strong data-i18n="poll_id">Poll Id</strong>: &nbsp;<a href="#" id="poll_id" class="dropdown-toggle" data-toggle="dropdown"></a>
                                     <ul class="dropdown-menu" role="menu" style="right:0;left:auto;text-align:left;">
-                                        <li role="presentation" class="copy_link"><a role="menuitem" tabindex="-1" href="#" data-type="asset_id" data-i18n="copy_asset_id">Copy Asset ID</a></li>
-                                        <li role="presentation" class="remote_only copy_link"><a role="menuitem" tabindex="-1" href="#" data-type="asset_link" data-i18n="copy_asset_link">Copy Asset Link</a></li>
+                                        <li role="presentation" class="copy_link"><a role="menuitem" tabindex="-1" href="#" data-type="poll_id" data-i18n="copy_poll_id">Copy Poll ID</a></li>
+                                        <li role="presentation" class="remote_only copy_link"><a role="menuitem" tabindex="-1" href="#" data-type="poll_link" data-i18n="copy_poll_link">Copy Poll Link</a></li>
                                     </ul>
                                 </span>
                             </div>
                             <h3 style="margin-top:0" id="asset_name"></h3>
 
                             <div style="color:#838383;margin-bottom:5px">
-                                <strong data-i18n="total_available">Total Available</strong>: <span id="asset_quantity"></span> | 
-                                <strong data-i18n="asset_decimals">Asset Decimals</strong>: <span id="asset_decimals"></span> | 
-                                <strong data-i18n="distribution">Distribution</strong>: <a href="#" data-toggle="modal" data-target="#asset_distribution_modal" data-i18n="view_asset_distribution" data-asset="" id="view_asset_distribution_link">View Asset Distribution</a>
-                                <span id="dividend_payment_link"> | <strong data-i18n="pay_dividends">Pay Dividends</strong>: <a href="#" data-toggle="modal" data-target="#dividend_payment_modal" data-i18n="dividends_payment">Dividends Payment</a></span>
+                                <strong data-i18n="start_date">Start Date</strong>: <span id="start_date"></span> | 
+                                <strong data-i18n="blocks_left">Blocks Left</strong>: <span id="blocks_left"></span> | 
+                                <span id="dividend_payment_link"> | <strong data-i18n="vote_in_poll">Vote In Poll</strong>: <a href="#" data-toggle="modal" data-target="#cast_vote_modal" data-i18n="vote">Vote</a></span>
                             </div>
 
-                            <div id="asset_description"></div>
+                            <div id="poll_description"></div>
                             <hr />
                                   
                             <div class="row">
                                 <div class="col-md-6">
-                                    <div class="box box-solid box-info collapsed-box" id="buy_asset_box">
-                                        <div class="box-header" style="background-color:#DFF0D9;color: #48AB6C;">
-                                        <h3 class="box-title" id="buy_asset_with_nxt"></h3>
-                                           <div class="box-tools pull-right">
-                                            <button class="btn btn-info btn-sm" style="background-color: #48AB6C"><i class="fa fa-plus"></i></button>
-                                            </div>
-                                        </div>
-                                        <div class="box-body no-padding" style="display:none">
-                                            <div style="background-color:#DFF0D9;color: #666;padding-left:10px;padding-right: 10px;padding-top: 0px;padding-bottom:3px;" id="buy_automatic_price"><strong data-i18n="balance">Balance</strong>: <span id="your_nxt_balance"></span> NXT</div>
-                                        
-                                            <form role="form" class="form-horizontal" style="padding: 10px;;max-width:350px;margin-left:auto;margin-right:auto;" autocomplete="off">
-                                                <div style="margin-left:-20px">
-                                                    <div class="form-group">
-                                                        <label for="buy_asset_quantity" class="col-sm-3 control-label" data-i18n="quantity">Quantity</label>
-                                                        <div class="col-sm-9">
-                                                            <div class="input-group">
-                                                                <input id="buy_asset_quantity" type="text" name="buy_asset_quantity" value="0" class="form-control" data-type="buy" />
-                                                                <span class="input-group-addon"><span class="asset_name"></span></span>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <div class="form-group">
-                                                        <label for="buy_asset_price" class="col-sm-3 control-label" data-i18n="price">Price</label>
-                                                        <div class="col-sm-9">
-                                                            <div class="input-group">
-                                                                <input id="buy_asset_price" type="text" value="0" name="buy_asset_price" class="form-control" data-type="buy" />
-                                                                <span class="input-group-addon">NXT / <span class="asset_name"></span></span>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <div class="form-group">
-                                                        <label for="buy_asset_total" class="col-sm-3 control-label" data-i18n="total">Total</label>
-                                                        <div class="col-sm-9">
-                                                            <div class="input-group">
-                                                                <input type="text" name="buy_asset_total" id="buy_asset_total" readonly value="0" class="form-control disabled" />
-                                                                <span class="input-group-addon">NXT</span>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <div class="form-group">
-                                                        <label for="buy_asset_fee" class="col-sm-3 control-label" data-i18n="fee">Fee</label>
-                                                        <div class="col-sm-9">
-                                                            <div class="input-group">
-                                                                <input type="text" id="buy_asset_fee" name="buy_asset_fee" value="1" class="form-control" />
-                                                                <span class="input-group-addon">NXT</span>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <div class="form-group form-group-last">
-                                                        <div class="col-sm-3"></div>
-                                                        <div class="col-sm-9">
-                                                            <button type="button" class="btn btn-primary btn-lg btn-block" id="buy_asset_button" data-toggle="modal" data-target="#asset_order_modal" data-asset="" data-type="Buy"><span data-i18n="buy">Buy</span> (NXT → <span class="asset_name"></span>)</button>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </form>
-                                        </div>
-                                    </div>
                                     <div class="box box-danger" style="min-height:400px;max-height: 400px;overflow: auto;;">
                                         <div class="box-header">
                                             <h3 class="box-title"><span data-i18n="sell_orders">Sell Orders</span> <span id="sell_orders_count"></span></h3>
@@ -266,64 +207,7 @@
                                     </div>
                                 </div>
                                 <div class="col-md-6">
-                                    <div class="box box-solid box-info collapsed-box" id="sell_asset_box">
-                                        <div class="box-header" style="background:#F2DEDE;color:#ED4348;">
-                                            <h3 class="box-title" id="sell_asset_for_nxt"></h3>
-                                            <div class="box-tools pull-right">
-                                                <button class="btn btn-info btn-sm" style="background-color: #ED4348"> <i class="fa fa-plus"></i></button>
-                                            </div>
-                                        </div>
-                                        <div class="box-body no-padding" style="display:none">
-                                            <div style="background-color:#F2DEDE;color: #666;padding-left:10px;padding-right: 10px;padding-top: 0px;padding-bottom:3px;" id="sell_automatic_price"><strong data-i18n="balance">Balance</strong>: <span id="your_asset_balance"></span> <span class="asset_name"></span></div>
-                                                                                                                                                        
-                                            <form role="form" class="form-horizontal" style="padding: 10px;max-width:350px;margin-left:auto;margin-right:auto;" autocomplete="off">
-                                                <div style="margin-left:-20px">
-                                                    <div class="form-group">
-                                                        <label for="sell_asset_quantity" class="col-sm-3 control-label" data-i18n="quantity">Quantity</label>
-                                                        <div class="col-sm-9">
-                                                            <div class="input-group">
-                                                                <input id="sell_asset_quantity" type="text" name="sell_asset_quantity" value="0" class="form-control" data-type="sell" />
-                                                                <span class="input-group-addon"><span class="asset_name"></span></span>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <div class="form-group">
-                                                        <label for="sell_asset_price" class="col-sm-3 control-label" data-i18n="price">Price</label>
-                                                        <div class="col-sm-9">
-                                                            <div class="input-group">
-                                                                <input id="sell_asset_price" type="text" value="0" name="sell_asset_price" class="form-control" data-type="sell" />
-                                                                <span class="input-group-addon">NXT / <span class="asset_name"></span></span>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <div class="form-group">
-                                                        <label for="sell_asset_total" class="col-sm-3 control-label" data-i18n="total">Total</label>
-                                                        <div class="col-sm-9">
-                                                            <div class="input-group">
-                                                                <input type="text" name="sell_asset_total" id="sell_asset_total" readonly value="0" class="form-control disabled" />
-                                                                <span class="input-group-addon">NXT</span>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <div class="form-group">
-                                                        <label for="sell_asset_fee" class="col-sm-3 control-label" data-i18n="fee">Fee</label>
-                                                        <div class="col-sm-9">
-                                                            <div class="input-group">
-                                                                <input type="text" id="sell_asset_fee" name="sell_asset_fee" value="1" class="form-control" />
-                                                                <span class="input-group-addon">NXT</span>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <div class="form-group form-group-last">
-                                                        <div class="col-sm-3"></div>
-                                                        <div class="col-sm-9">
-                                                            <button type="button" class="btn btn-primary btn-lg btn-block" id="sell_asset_button" data-toggle="modal" data-target="#asset_order_modal" data-asset="" data-type="Sell"><span data-i18n="sell">Sell</span> (<span class="asset_name"></span> → NXT)</button>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </form>
-                                        </div>
-                                    </div>
+                                    
                                     <div class="box box-success" style="min-height:400px;max-height: 400px;overflow: auto;">
                                         <div class="box-header">
                                             <h3 class="box-title"><span data-i18n="buy_orders">Buy Orders</span> <span id="buy_orders_count"></span></h3>
@@ -347,44 +231,6 @@
                                                 <div class="data-empty-container"><p data-i18n="no_buy_orders_for_asset">No buy orders for this asset.</p></div>
                                             </div>
                                         </div>
-                                    </div>
-                                </div>
-                            </div>
-                                    
-                            <div class="box box-primary" style="max-height:500px;overflow:auto;margin-bottom:10px;">
-                                <div class="box-header">
-                                    <h3 class="box-title" data-i18n="trade_history">Trade History</h3>
-                                    <div style="position:absolute;top:9px;right:9px;">
-                                        <div class="btn-group" data-toggle="buttons" id="asset_exchange_trade_history_type">
-                                            <label class="btn btn-default active" data-type="everyone">
-                                                <input type="radio" name="asset_exchange_trade_history_type"> <span data-i18n="everyone">Everyone</span>
-                                            </label>
-                                            <label class="btn btn-default" data-type="you">
-                                                <input type="radio" name="asset_exchange_trade_history_type"> <span data-i18n="you">You</span>
-                                            </label>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="box-body no-padding">
-                                    <div class="data-container data-loading" data-no-padding="true">
-                                        <table class="table table-striped" id="asset_exchange_trade_history_table">
-                                            <thead>
-                                            <tr>
-                                                <th data-i18n="date">Date</th>
-                                                <th data-i18n="type">Type</th>
-                                                <th data-i18n="quantity">Quantity</th>
-                                                <th data-i18n="price">Price</th>
-                                                <th data-i18n="total">Total</th>
-                                                <th data-i18n="buyer">Buyer</th>
-                                                <th data-i18n="seller">Seller</th>
-                                            </tr>
-                                            </thead>
-                                            <tbody>
-                                            
-                                            </tbody>
-                                        </table>
-                                        <div class="data-loading-container"><img class="loading" src="img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
-                                        <div class="data-empty-container"><p data-i18n="no_trade_history">No trade history available.</p></div>
                                     </div>
                                 </div>
                             </div>

@@ -48,13 +48,13 @@
                             <strong>Min Voting Balance Type: </strong>
                             <div class="form-group">
                                 <label class="radio-inline">
-                                    <input type="radio" name="minBalanceType" id="create_poll_min_balance_type_1" value="1" selected> By Nxt Balance
+                                    <input type="radio" name="minBalanceType" id="create_poll_min_balance_type_1" value="0" selected> By Nxt Balance
                                 </label>
                                 <label class="radio-inline">
-                                    <input type="radio" name="minBalanceType" id="create_poll_min_balance_type_2" value="2"> By Asset
+                                    <input type="radio" name="minBalanceType" id="create_poll_min_balance_type_2" value="1"> By Asset
                                 </label>
                                 <label class="radio-inline">
-                                    <input type="radio" name="minBalanceType" id="create_poll_min_balance_type_3" value="3"> By MS Coin
+                                    <input type="radio" name="minBalanceType" id="create_poll_min_balance_type_3" value="2"> By MS Coin
                                 </label>
                             </div>
                         </div>
@@ -223,26 +223,26 @@
                     <div class="callout callout-danger" id="poll_results_warning" style="display:none"></div>
     
                     <table class="table" id="poll_results_table" style="margin-bottom:0;table-layout:fixed;">
-                        <tbody>
+                        <tbody id="poll_results_options">
                             <tr>
-                                <td style="font-weight: bold;width:180px;"><span data-i18n="poll_name_id">Poll Name (id)</span>:</td><td><span id="poll_results_poll_name_id"></span></td>
+                                <td style="font-weight: bold;width:180px;"><span data-i18n="poll_name">Poll Name</span>:</td><td><span id="poll_results_poll_name"></span></td>
                             </tr>
-                            <tr>
+                             <tr>
+                                <td style="font-weight: bold;width:180px;"><span data-i18n="poll_id">Poll Id</span>:</td><td><span id="poll_results_poll_id"></span></td>
+                            </tr>
+                            <!--<tr>
                                 <td style="font-weight: bold;width:180px;"><span data-i18n="number_of_voters">Number Of Voters</span>:</td><td><span id="poll_results_number_of_voters"></span></td>
                             </tr>
                             <tr>
                                 <td style="font-weight: bold"><span data-i18n="percent_voted">Percent Voted </span>:</td><td><span id="poll_results_percent_voted"></span></td>
-                            </tr>
-                            <div class="poll_results_options">
-
-                            </div>
+                            </tr>-->
                         </tbody>
                     </table>
                  </div>
 
                 <div id="poll_results_modal_voters" class="poll_results_modal_content" style="display:none">     
                     <table class="table" id="poll_voters_table" style="margin-bottom:0;table-layout:fixed;">
-                        <tbody>
+                        <tbody id="poll_results_voters">
                             <tr>
                                 <td style="font-weight: bold;width:180px;"><span data-i18n="poll_name_id">ahhahahaha</span>:</td><td><span id="poll_results_poll_name_id"></span></td>
                             </tr>
@@ -252,9 +252,7 @@
                             <tr>
                                 <td style="font-weight: bold"><span data-i18n="percent_voted">aoe Voted </span>:</td><td><span id="poll_results_percent_voted"></span></td>
                             </tr>
-                            <div class="poll_results_options">
-
-                            </div>
+                           
                         </tbody>
                     </table>
                     
