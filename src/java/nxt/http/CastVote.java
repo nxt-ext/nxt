@@ -5,6 +5,7 @@ import nxt.Attachment;
 import nxt.Constants;
 import nxt.NxtException;
 import nxt.Poll;
+import nxt.util.Convert;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
@@ -32,7 +33,7 @@ public final class CastVote extends CreateTransaction {
         byte[] vote = new byte[numberOfOptions];
         try {
             for (int i = 1; i <= numberOfOptions; i++) {
-                String voteValue = req.getParameter("vote" + i);
+                String voteValue = Convert.emptyToNull(req.getParameter("vote" + i));
                 if (voteValue != null) {
                     vote[i - 1] = Byte.parseByte(voteValue);
                 } else {

@@ -440,17 +440,12 @@ public interface Attachment extends Appendix {
                 return this;
             }
 
-            public PollBuilder minBalance(long minBalance) {
-                this.minBalance = minBalance;
-                return this;
-            }
-
             public PollBuilder holdingId(long holdingId) {
                 this.holdingId = holdingId;
                 return this;
             }
 
-            public MessagingPollCreation buildAttachment() {
+            public MessagingPollCreation build() {
                 return new MessagingPollCreation(this);
             }
         }
@@ -462,8 +457,10 @@ public interface Attachment extends Appendix {
         private final int finishHeight;
         private final byte votingModel;
 
-        private byte minNumberOfOptions = Constants.VOTING_DEFAULT_MIN_NUMBER_OF_CHOICES, maxNumberOfOptions; //only for choice voting
-        private final byte minRangeValue, maxRangeValue;
+        private byte minNumberOfOptions = Constants.VOTING_DEFAULT_MIN_NUMBER_OF_CHOICES;
+        private byte maxNumberOfOptions; //only for choice voting
+        private final byte minRangeValue;
+        private final byte maxRangeValue;
 
         private final long minBalance;
         private final byte minBalanceModel;
@@ -523,7 +520,7 @@ public interface Attachment extends Appendix {
             this.holdingId = Convert.parseUnsignedLong((String) attachmentData.get("holding"));
         }
 
-        public MessagingPollCreation(PollBuilder builder) {
+        private MessagingPollCreation(PollBuilder builder) {
             this.pollName = builder.pollName;
             this.pollDescription = builder.pollDescription;
             this.pollOptions = builder.pollOptions;

@@ -657,7 +657,8 @@ public abstract class TransactionType {
 
                 Attachment.MessagingPollCreation attachment = (Attachment.MessagingPollCreation) transaction.getAttachment();
                 for (int i = 0; i < attachment.getPollOptions().length; i++) {
-                    if (attachment.getPollOptions()[i].length() > Constants.MAX_POLL_OPTION_LENGTH) {
+                    if (attachment.getPollOptions()[i].length() > Constants.MAX_POLL_OPTION_LENGTH
+                            || attachment.getPollOptions()[i].isEmpty()) {
                         throw new NxtException.NotValidException("Invalid poll options length: " + attachment.getJSONObject());
                     }
                 }
@@ -691,14 +692,16 @@ public abstract class TransactionType {
                     throw new NxtException.NotValidException("Invalid max number of options: " + attachment.getJSONObject());
                 }
 
-                if(attachment.getMinRangeValue() < Constants.VOTING_MIN_RANGE_VALUE_LIMIT
+                if (attachment.getMinRangeValue() < Constants.VOTING_MIN_RANGE_VALUE_LIMIT
                         || attachment.getMaxRangeValue() > Constants.VOTING_MAX_RANGE_VALUE_LIMIT ){
                     throw new NxtException.NotValidException("Invalid range: " + attachment.getJSONObject());
                 }
 
                 if (attachment.getPollName().length() > Constants.MAX_POLL_NAME_LENGTH
+                        || attachment.getPollName().isEmpty()
                         || attachment.getPollDescription().length() > Constants.MAX_POLL_DESCRIPTION_LENGTH
-                        || attachment.getPollOptions().length > Constants.MAX_POLL_OPTION_COUNT) {
+                        || attachment.getPollOptions().length > Constants.MAX_POLL_OPTION_COUNT
+                        || attachment.getPollOptions().length == 0) {
                     throw new NxtException.NotValidException("Invalid poll attachment: " + attachment.getJSONObject());
                 }
 
@@ -732,7 +735,7 @@ public abstract class TransactionType {
 
                 long holdingId = attachment.getHoldingId();
                 if (minBalanceModel == Constants.VOTING_MINBALANCE_ASSET
-                    && (holdingId == 0 || Asset.getAsset(holdingId) == null)) {
+                        && (holdingId == 0 || Asset.getAsset(holdingId) == null)) {
                     throw new NxtException.NotValidException("Invalid asset for voting: " + attachment.getJSONObject());
                 }
 

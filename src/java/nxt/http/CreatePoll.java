@@ -6,10 +6,11 @@ import nxt.Attachment.MessagingPollCreation.PollBuilder;
 import nxt.Constants;
 import nxt.Nxt;
 import nxt.NxtException;
+import nxt.util.Convert;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
 
 import static nxt.http.JSONResponses.INCORRECT_POLL_DESCRIPTION_LENGTH;
@@ -35,10 +36,10 @@ public final class CreatePoll extends CreateTransaction {
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
 
-        String nameValue = req.getParameter("name");
+        String nameValue = Convert.emptyToNull(req.getParameter("name"));
         String descriptionValue = req.getParameter("description");
 
-        if (nameValue == null) {
+        if (nameValue == null || nameValue.trim().isEmpty()) {
             return MISSING_NAME;
         } else if (descriptionValue == null) {
             return MISSING_DESCRIPTION;
@@ -52,16 +53,16 @@ public final class CreatePoll extends CreateTransaction {
             return INCORRECT_POLL_DESCRIPTION_LENGTH;
         }
 
-        List<String> options = new LinkedList<>();
+        List<String> options = new ArrayList<>();
         while (options.size() <= Constants.MAX_POLL_OPTION_COUNT) {
-            String optionValue = req.getParameter("option" + (options.size() + 1));
+            String optionValue = Convert.emptyToNull(req.getParameter("option" + (options.size() + 1)));
             if (optionValue == null) {
                 break;
             }
-            if (optionValue.length() > Constants.MAX_POLL_OPTION_LENGTH) {
+            if (optionValue.length() > Constants.MAX_POLL_OPTION_LENGTH || (optionValue = optionValue.trim()).isEmpty()) {
                 return INCORRECT_POLL_OPTION_LENGTH;
             }
-            options.add(optionValue.trim());
+            options.add(optionValue);
         }
 
         byte optionsSize = (byte) options.size();
@@ -100,7 +101,7 @@ public final class CreatePoll extends CreateTransaction {
         }
 
         Account account = ParameterParser.getSenderAccount(req);
-        Attachment attachment = new Attachment.MessagingPollCreation(builder);
+        Attachment attachment = builder.build();
         return createTransaction(req, account, attachment);
     }
 }
