@@ -25,8 +25,6 @@ import java.util.Set;
 
 import static nxt.http.JSONResponses.ERROR_INCORRECT_REQUEST;
 import static nxt.http.JSONResponses.ERROR_NOT_ALLOWED;
-import static nxt.http.JSONResponses.INCORRECT_ADMIN_PASSWORD;
-import static nxt.http.JSONResponses.NO_PASSWORD_IN_CONFIG;
 import static nxt.http.JSONResponses.POST_REQUIRED;
 
 public final class APIServlet extends HttpServlet {
@@ -109,8 +107,7 @@ public final class APIServlet extends HttpServlet {
         map.put("getAccountBlockIds", GetAccountBlockIds.instance);
         map.put("getAccountBlocks", GetAccountBlocks.instance);
         map.put("getAccountId", GetAccountId.instance);
-        map.put("getAccountPendingTransactionIds", GetAccountPendingTransactionIds.instance);
-        map.put("getAccountPendingTransactionToApproveIds", GetAccountPendingTransactionToApproveIds.instance);
+        map.put("getAccountPendingTransactionsToApprove", GetAccountPendingTransactionsToApprove.instance);
         map.put("getPolls", GetPolls.instance);
         map.put("getAccountPendingTransactions", GetAccountPendingTransactions.instance);
         map.put("getAccountPublicKey", GetAccountPublicKey.instance);
@@ -134,7 +131,7 @@ public final class APIServlet extends HttpServlet {
         map.put("getAssetsByIssuer", GetAssetsByIssuer.instance);
         map.put("getAssetAccounts", GetAssetAccounts.instance);
         map.put("getAssetAccountCount", GetAssetAccountCount.instance);
-        map.put("getAssetPendingTransactionIds", GetAssetPendingTransactionIds.instance);
+        map.put("getAssetPendingTransactions", GetAssetPendingTransactions.instance);
         map.put("getBalance", GetBalance.instance);
         map.put("getBlock", GetBlock.instance);
         map.put("getBlockId", GetBlockId.instance);
@@ -148,6 +145,7 @@ public final class APIServlet extends HttpServlet {
         map.put("getCurrenciesByIssuer", GetCurrenciesByIssuer.instance);
         map.put("getCurrencyAccounts", GetCurrencyAccounts.instance);
         map.put("getCurrencyAccountCount", GetCurrencyAccountCount.instance);
+        map.put("getCurrencyPendingTransactions", GetCurrencyPendingTransactions.instance);
         map.put("getDGSGoods", GetDGSGoods.instance);
         map.put("getDGSGoodsCount", GetDGSGoodsCount.instance);
         map.put("getDGSGood", GetDGSGood.instance);
