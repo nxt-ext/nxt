@@ -61,7 +61,7 @@ var NRS = (function(NRS, $, undefined) {
 	*/
 
 	//todo later: http://twitter.github.io/typeahead.js/
-	$("span.recipient_selector button").on("click", function(e) {
+	$("span.recipient_selector button, span.plain_adress_selector button").on("click", function(e) {
 		if (!Object.keys(NRS.contacts).length) {
 			e.preventDefault();
 			e.stopPropagation();
@@ -73,7 +73,7 @@ var NRS = (function(NRS, $, undefined) {
 		$list.empty();
 
 		for (var accountId in NRS.contacts) {
-			$list.append("<li><a href='#' data-contact='" + String(NRS.contacts[accountId].name).escapeHTML() + "'>" + String(NRS.contacts[accountId].name).escapeHTML() + "</a></li>");
+			$list.append("<li><a href='#' data-contact-id='" + accountId + "' data-contact='" + String(NRS.contacts[accountId].name).escapeHTML() + "'>" + String(NRS.contacts[accountId].name).escapeHTML() + "</a></li>");
 		}
 	});
 
@@ -81,6 +81,11 @@ var NRS = (function(NRS, $, undefined) {
 		e.preventDefault();
 		$(this).closest("form").find("input[name=converted_account_id]").val("");
 		$(this).closest("form").find("input[name=recipient],input[name=account_id]").not("[type=hidden]").trigger("unmask").val($(this).data("contact")).trigger("blur");
+	});
+
+	$("span.plain_adress_selector").on("click", "ul li a", function(e) {
+		e.preventDefault();
+		$(this).closest(".input-group").find("input.plain_adress_selector_input").not("[type=hidden]").trigger("unmask").val($(this).data("contact-id")).trigger("blur");
 	});
 
 	NRS.forms.sendMoneyComplete = function(response, data) {
