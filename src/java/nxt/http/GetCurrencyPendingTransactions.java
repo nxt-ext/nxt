@@ -1,8 +1,7 @@
 package nxt.http;
 
-
-import nxt.Asset;
 import nxt.Constants;
+import nxt.Currency;
 import nxt.PendingTransactionPoll;
 import nxt.Transaction;
 import nxt.db.DbIterator;
@@ -12,25 +11,25 @@ import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
 
-public class GetAssetPendingTransactions extends APIServlet.APIRequestHandler {
-    static final GetAssetPendingTransactions instance = new GetAssetPendingTransactions();
+public class GetCurrencyPendingTransactions extends APIServlet.APIRequestHandler {
+    static final GetCurrencyPendingTransactions instance = new GetCurrencyPendingTransactions();
 
-    private GetAssetPendingTransactions() {
-        super(new APITag[]{APITag.AE, APITag.PENDING_TRANSACTIONS}, "asset", "firstIndex", "lastIndex");
+    private GetCurrencyPendingTransactions() {
+        super(new APITag[]{APITag.AE, APITag.PENDING_TRANSACTIONS}, "currency", "firstIndex", "lastIndex");
     }
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws ParameterException {
-        Asset asset = ParameterParser.getAsset(req);
+        Currency currency = ParameterParser.getCurrency(req);
         int firstIndex = ParameterParser.getFirstIndex(req);
         int lastIndex = ParameterParser.getLastIndex(req);
 
-        long assetId = asset.getId();
-        byte votingModel = Constants.VOTING_MODEL_ASSET;
+        long currencyId = currency.getId();
+        byte votingModel = Constants.VOTING_MODEL_CURRENCY;
 
         JSONArray transactions = new JSONArray();
         try (DbIterator<? extends Transaction> iterator =
-                     PendingTransactionPoll.getPendingTransactionsForHolding(assetId, votingModel, firstIndex, lastIndex)) {
+                     PendingTransactionPoll.getPendingTransactionsForHolding(currencyId, votingModel, firstIndex, lastIndex)) {
             while (iterator.hasNext()) {
                 Transaction transaction = iterator.next();
                 transactions.add(JSONData.transaction(transaction));

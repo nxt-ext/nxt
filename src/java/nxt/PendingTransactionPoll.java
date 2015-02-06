@@ -226,20 +226,23 @@ public class PendingTransactionPoll extends AbstractPoll {
         }
     }
 
-    public static DbIterator<? extends Transaction> getPendingTransactionsForAsset(Asset asset, int from, int to) {
+    public static DbIterator<? extends Transaction>
+        getPendingTransactionsForHolding(long holdingId, byte votingModel, int from, int to) {
+
         Connection con = null;
         try {
             con = Db.db.getConnection();
             PreparedStatement pstmt = con.prepareStatement("SELECT transaction.* " +
                     "FROM transaction, pending_transaction " +
                     "WHERE pending_transaction.holding_id = ? " +
-                    "AND pending_transaction.voting_model = " + Constants.VOTING_MODEL_ASSET + " " +
+                    "AND pending_transaction.voting_model = ? " +
                     "AND pending_transaction.id = transaction.id " +
                     "AND pending_transaction.finished = FALSE " +
                     "AND pending_transaction.latest = TRUE " +
                     DbUtils.limitsClause(from, to));
-            pstmt.setLong(1, asset.getId());
-            DbUtils.setLimits(2, pstmt, from, to);
+            pstmt.setLong(1, holdingId);
+            pstmt.setByte(2, votingModel);
+            DbUtils.setLimits(3, pstmt, from, to);
 
             return Nxt.getBlockchain().getTransactions(con, pstmt);
         } catch (SQLException e) {
