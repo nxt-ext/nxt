@@ -727,6 +727,7 @@
   "recipient_account": "Recipient Account",
   "recipient_alias_suggestion": "If you want to type an alias, prepend it with the @ character.",
   "recipient_info": "The recipient account has a public key and a balance of __nxt__ NXT.",
+  "recipient_info_with_name": "The recipient account, named __name__, has a public key and a balance of __nxt__ NXT.",
   "recipient_malformed": "The recipient account is malformed, please adjust.",
   "recipient_malformed_suggestion": "The recipient address is malformed, did you mean __recipient__ ?",
   "recipient_no_public_key_pka": "The recipient account does not have a public key, meaning it has never had an outgoing transaction. The account has a balance of __nxt__ NXT. You can increase security by providing the recipient public key.",
