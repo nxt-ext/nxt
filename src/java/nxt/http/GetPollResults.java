@@ -24,6 +24,6 @@ public class GetPollResults extends APIServlet.APIRequestHandler {
         if (pollResults == null) {
             return POLL_RESULTS_NOT_AVAILABLE;
         }
-        return JSONData.pollResults(poll, poll.getResults());
+        return JSONData.pollResults(poll, pollResults);
     }
 }
