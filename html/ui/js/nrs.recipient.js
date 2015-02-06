@@ -88,6 +88,16 @@ var NRS = (function(NRS, $, undefined) {
 		$(this).closest(".input-group").find("input.plain_adress_selector_input").not("[type=hidden]").trigger("unmask").val($(this).data("contact-id")).trigger("blur");
 	});
 
+	$(".plain_adress_selector_input").on("keyup blur show", "", function(e) {
+		var currentValue = $(this).val();
+		if (NRS.contacts[currentValue]) {
+			var contactInfo = NRS.contacts[currentValue]['name'];
+		} else {
+			var contactInfo = " ";
+		}
+		$(this).closest(".input-group").find(".pas_contact_info").text(contactInfo);
+	});
+
 	NRS.forms.sendMoneyComplete = function(response, data) {
 		if (!(data["_extra"] && data["_extra"].convertedAccount) && !(data.recipient in NRS.contacts)) {
 			$.growl($.t("success_send_money") + " <a href='#' data-account='" + NRS.getAccountFormatted(data, "recipient") + "' data-toggle='modal' data-target='#add_contact_modal' style='text-decoration:underline'>" + $.t("add_recipient_to_contacts_q") + "</a>", {

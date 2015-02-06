@@ -3224,6 +3224,15 @@ table.purchase td {
   display:none;
 }
 
+.pas_contact_info {
+  display:table-cell;
+  vertical-align:middle;
+  min-width:80px;
+  border:1px solid #ccc;
+  padding:0px 10px 0px 10px;
+  background-color:#f2f2f2;
+}
+
 .approve_modal {
   border-bottom: 1px solid #ddd;
   padding: 6px 0px 12px 0px;

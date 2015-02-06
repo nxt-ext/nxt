@@ -104,7 +104,7 @@ var NRS = (function(NRS, $, undefined) {
 		$(this).find(".form-group").css("margin-bottom", "");
 
 		$(this).find('.approve_tab_list a:first').click();
-
+		$(this).find(".pas_contact_info").text(" ");
 		// Activating context help popovers
 		$(function () { 
             $("[data-toggle='popover']").popover(); 
@@ -245,6 +245,7 @@ var NRS = (function(NRS, $, undefined) {
     	var $accountBox = $(this).closest('.account_box');
         var $clone = $accountBox.find(".form_group_accounts").first().clone();
         $clone.find("input").val("");
+        $clone.find(".pas_contact_info").text("");
         $accountBox.find(".added_account_list").append($clone);
     });
 
