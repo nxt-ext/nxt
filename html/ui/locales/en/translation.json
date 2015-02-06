@@ -9,6 +9,7 @@
   "add_peer": "Add Peer",
   "peer_address": "Peer Address",
   "blacklist_peer": "Blacklist Peer",
+  "failed_connect_peer": "Failed to connect peer!",
   "Asset Distribution": "Asset Distribution",
   "Connected": "Connected",
   "Date": "Date",
