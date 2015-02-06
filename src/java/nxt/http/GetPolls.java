@@ -5,6 +5,7 @@ import nxt.Account;
 import nxt.NxtException;
 import nxt.Poll;
 import nxt.db.DbIterator;
+import nxt.db.DbUtils;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
@@ -26,17 +27,20 @@ public class GetPolls extends APIServlet.APIRequestHandler {
         int lastIndex = ParameterParser.getLastIndex(req);
         boolean includeVoters = ParameterParser.getBoolean(req, "includeVoters", false);
 
-        DbIterator<Poll> polls;
-
-        if(account == null) {
-            polls = Poll.getAllPolls(firstIndex, lastIndex);
-        } else {
-            polls = Poll.getPollsByAccount(account.getId(), firstIndex, lastIndex);
-        }
-
         JSONArray pollsJson = new JSONArray();
-        while (polls.hasNext()) {
-            pollsJson.add(JSONData.poll(polls.next(), includeVoters));
+        DbIterator<Poll> polls = null;
+        try {
+            if (account == null) {
+                polls = Poll.getAllPolls(firstIndex, lastIndex);
+            } else {
+                polls = Poll.getPollsByAccount(account.getId(), firstIndex, lastIndex);
+            }
+
+            while (polls.hasNext()) {
+                pollsJson.add(JSONData.poll(polls.next(), includeVoters));
+            }
+        } finally {
+            DbUtils.close(polls);
         }
 
         JSONObject response = new JSONObject();
