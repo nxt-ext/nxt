@@ -24,6 +24,13 @@ var NRS = (function(NRS, $, undefined) {
 		$("#raw_transaction_modal").modal("show");
 	}
 
+	NRS.initAdvancedModalFormValues = function() {
+		var initBlockHeight = NRS.lastBlockHeight + 7000;
+		$elem = $(".pending_max_height_group").find("input[name=pendingMaxHeight]");
+		$elem.val(initBlockHeight);
+		$elem.trigger("change");
+	}
+
 	$("#transaction_operations_modal").on("show.bs.modal", function(e) {
 		$(this).find(".output_table tbody").empty();
 		$(this).find(".output").hide();

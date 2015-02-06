@@ -296,7 +296,6 @@ var NRS = (function(NRS, $, undefined) {
 		} else {
 			html = "&nbsp;";
 		}
-		console.log(html);
 		return html;
 	}
 

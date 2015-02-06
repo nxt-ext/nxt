@@ -153,10 +153,14 @@
                 </div>
             </div>
             <div class="col-xs-6">
-                <div class="form-group">
-                    <label for="send_money_deadline" data-i18n="max_height">Max Height</label>
+                <div class="form-group pending_max_height_group block_height_group">
+                    <div style="float:right;">
+                        <span class="bhg_time_estimate"></span>
+                        <i class="fa fa-question-circle modal-context-help" data-content="" data-toggle="popover" data-trigger="hover" data-container="body" data-i18n="[data-content]block_height_estimate_help"></i>
+                    </div>
+                    <label for="{{name}}_pending_max_height" data-i18n="max_height">Max Height</label>
                     <i class="fa fa-question-circle modal-context-help" data-content="Transaction will be cancelled if not approved on maximal block height." data-toggle="popover" data-trigger="hover" data-container="#{{name}}_approve_modal" data-i18n="[data-content]approve_tx_max_height_help"></i>
-                    <input type="number" name="pendingMaxHeight" class="form-control" placeholder="Max Block Height to Become Valid" data-i18n="max_height_for_approval" disabled />
+                    <input type="text" name="pendingMaxHeight" id="{{name}}_pending_max_height" class="form-control bhg_time_input" placeholder="Max Block Height to Become Valid" data-i18n="max_height_for_approval" disabled />
                 </div>
             </div>
         </div>

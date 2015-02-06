@@ -36,6 +36,23 @@ var NRS = (function(NRS, $, undefined) {
 		}
 	});
 
+	NRS.updateBlockHeightEstimates = function($fields) {
+		$fields.each(function(key, elem) {
+			var blockHeight = $(elem).val();
+			var $bhg = $elem.closest('.block_height_group');
+			var output = "<i class='fa fa-clock-o'></i> ";
+			if (blockHeight) {
+				var blockDiff = blockHeight - NRS.lastBlockHeight;
+				var diffSecs = blockDiff * NRS.averageBlockGenerationTime;
+				output += moment().add(diffSecs, 'seconds').format('DD/MM/YYYY HH:mm:ss') + " ";
+
+			} else {
+				output += '-';
+			}
+			$bhg.find(".bhg_time_estimate").html(output);
+		});
+	}
+
 	//Reset scroll position of tab when shown.
 	$('a[data-toggle="tab"]').on("shown.bs.tab", function(e) {
 		var target = $(e.target).attr("href");
@@ -104,11 +121,14 @@ var NRS = (function(NRS, $, undefined) {
 		$(this).find(".form-group").css("margin-bottom", "");
 
 		$(this).find('.approve_tab_list a:first').click();
+		NRS.initAdvancedModalFormValues();
 		$(this).find(".pas_contact_info").text(" ");
 		// Activating context help popovers
 		$(function () { 
             $("[data-toggle='popover']").popover(); 
         });
+		NRS.updateBlockHeightEstimates($(this).find(".block_height_group .bhg_time_input"));
+
 	});
 
 	$(".modal").on("shown.bs.modal", function() {
@@ -226,6 +246,10 @@ var NRS = (function(NRS, $, undefined) {
 		if ($feeInfo.length) {
 			$feeInfo.html(NRS.formatAmount(NRS.convertToNQT($(this).val())) + " NXT");
 		}
+	});
+
+	$('.modal .block_height_group .bhg_time_input').on('keyup', function(e) {
+		NRS.updateBlockHeightEstimates($(this));
 	});
 
 	$('.approve_tab_list a[data-toggle="tab"]').on('shown.bs.tab', function (e) {

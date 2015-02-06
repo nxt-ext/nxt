@@ -204,7 +204,7 @@ var NRS = (function(NRS, $, undefined) {
 				NRS.positionAssetSidebar();
 			}
 		});
-
+		
 		$("[data-toggle='tooltip']").tooltip();
 
 		$(".sidebar .treeview").tree();
