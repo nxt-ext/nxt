@@ -165,7 +165,6 @@ public final class APIServlet extends HttpServlet {
         map.put("getPeers", GetPeers.instance);
         map.put("getPendingTransactionVotes", GetPendingTransactionVotes.instance);
         map.put("getPoll", GetPoll.instance);
-        map.put("getPollIds", GetPollIds.instance);
         map.put("getPollResults", GetPollResults.instance);
         map.put("getPollVotes", GetPollVotes.instance);
         map.put("getState", GetState.instance);
