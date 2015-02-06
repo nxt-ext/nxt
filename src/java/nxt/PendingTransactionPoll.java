@@ -204,13 +204,13 @@ public class PendingTransactionPoll extends AbstractPoll {
         return pendingTransactionsTable.getManyBy(clause, firstIndex, lastIndex);
     }
 
-    public static DbIterator<Long> getIdsByWhitelistedSigner(Account signer, int from, int to) {
+    public static DbIterator<? extends Transaction> getPendingTransactionsForApprover(Account signer, int from, int to) {
         Connection con = null;
         try {
             con = Db.db.getConnection();
-            PreparedStatement pstmt = con.prepareStatement("SELECT DISTINCT pending_transaction.id "
-                    + "from pending_transaction, pending_transaction_signer "
-                    + "WHERE pending_transaction.latest = TRUE AND "
+            PreparedStatement pstmt = con.prepareStatement("SELECT transaction.* "
+                    + "FROM transaction, pending_transaction, pending_transaction_signer "
+                    + "WHERE transaction.id = pending_transaction.id AND pending_transaction.latest = TRUE AND "
                     + "pending_transaction.blacklist = false AND "
                     + "pending_transaction.finished = false AND "
                     + "pending_transaction.id = pending_transaction_signer.pending_transaction_id "
@@ -219,13 +219,29 @@ public class PendingTransactionPoll extends AbstractPoll {
             pstmt.setLong(1, signer.getId());
             DbUtils.setLimits(2, pstmt, from, to);
 
-            return new DbIterator<>(con, pstmt, new DbIterator.ResultSetReader<Long>() {
-                @Override
-                public Long get(Connection con, ResultSet rs) throws Exception {
-                    return rs.getLong(1);
-                }
-            });
+            return Nxt.getBlockchain().getTransactions(con, pstmt);
+        } catch (SQLException e) {
+            DbUtils.close(con);
+            throw new RuntimeException(e.toString(), e);
+        }
+    }
 
+    public static DbIterator<? extends Transaction> getPendingTransactionsForAsset(Asset asset, int from, int to) {
+        Connection con = null;
+        try {
+            con = Db.db.getConnection();
+            PreparedStatement pstmt = con.prepareStatement("SELECT transaction.* " +
+                    "FROM transaction, pending_transaction " +
+                    "WHERE pending_transaction.holding_id = ? " +
+                    "AND pending_transaction.voting_model = " + Constants.VOTING_MODEL_ASSET + " " +
+                    "AND pending_transaction.id = transaction.id " +
+                    "AND pending_transaction.finished = FALSE " +
+                    "AND pending_transaction.latest = TRUE " +
+                    DbUtils.limitsClause(from, to));
+            pstmt.setLong(1, asset.getId());
+            DbUtils.setLimits(2, pstmt, from, to);
+
+            return Nxt.getBlockchain().getTransactions(con, pstmt);
         } catch (SQLException e) {
             DbUtils.close(con);
             throw new RuntimeException(e.toString(), e);
@@ -239,13 +255,13 @@ public class PendingTransactionPoll extends AbstractPoll {
             PreparedStatement pstmt = con.prepareStatement("SELECT transaction.* FROM transaction, pending_transaction " +
                             " WHERE transaction.sender_id = ? AND pending_transaction.id = transaction.id " +
                             " AND pending_transaction.finished = FALSE AND pending_transaction.latest = TRUE " +
-                            DbUtils.limitsClause(from, to)
-            );
+                            DbUtils.limitsClause(from, to));
             pstmt.setLong(1, account.getId());
             DbUtils.setLimits(2, pstmt, from, to);
 
             return Nxt.getBlockchain().getTransactions(con, pstmt);
         } catch (SQLException e) {
+            DbUtils.close(con);
             throw new RuntimeException(e.toString(), e);
         }
     }
