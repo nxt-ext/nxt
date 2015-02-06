@@ -427,13 +427,9 @@ final class PeerImpl implements Peer {
         }
 
         if (response != null && response.get("error") != null) {
-            if (Errors.BLACKLISTED.equals(response.get("error"))) {
-                Logger.logDebugMessage("Peer " + peerAddress + " has blacklisted us because of: \'" + response.get("cause") + "\', disconnecting");
-                deactivate();
-            } else {
-                Logger.logDebugMessage("Peer " + peerAddress + " version " + version + " returned error: " + response.toJSONString()
-                        + ", request was: " + JSON.toString(request));
-            }
+            Logger.logDebugMessage("Peer " + peerAddress + " version " + version + " returned error: " + response.toJSONString()
+                    + ", request was: " + JSON.toString(request) + ", disconnecting");
+            deactivate();
         }
         return response;
 
