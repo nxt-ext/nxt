@@ -643,8 +643,22 @@ class NxtDbVersion extends DbVersion {
             case 243:
                 apply("ALTER TABLE pending_transaction ADD COLUMN finished BOOLEAN");
             case 244:
+                apply("CREATE INDEX IF NOT EXISTS vote_height_idx ON vote(height)");
+            case 245:
+                apply("CREATE UNIQUE INDEX IF NOT EXISTS poll_id_idx ON poll(id)");
+            case 246:
+                apply("CREATE INDEX IF NOT EXISTS poll_height_idx ON poll(height)");
+            case 247:
+                apply("CREATE INDEX IF NOT EXISTS poll_account_idx ON poll(account_id)");
+            case 248:
+                apply("CREATE INDEX IF NOT EXISTS poll_finish_height_idx ON poll(finish_height DESC)");
+            case 249:
+                apply("CREATE UNIQUE INDEX IF NOT EXISTS poll_result_poll_id_idx ON poll_result(poll_id)");
+            case 250:
+                apply("CREATE INDEX IF NOT EXISTS poll_result_height_idx ON poll_result(height)");
+            case 251:
                 return;
-            //todo: more indexes on VS & 2PTs tables
+            //todo: more indexes on 2PTs tables
             default:
                 throw new RuntimeException("Blockchain database inconsistent with code, probably trying to run older code on newer database");
         }
