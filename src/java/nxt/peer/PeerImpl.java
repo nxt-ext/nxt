@@ -8,6 +8,7 @@ import nxt.NxtException;
 import nxt.util.Convert;
 import nxt.util.CountingInputStream;
 import nxt.util.CountingOutputStream;
+import nxt.util.JSON;
 import nxt.util.Logger;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
@@ -22,7 +23,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.Reader;
-import java.io.StringWriter;
 import java.io.Writer;
 import java.net.HttpURLConnection;
 import java.net.InetAddress;
@@ -51,10 +51,12 @@ final class PeerImpl implements Peer {
     private volatile boolean isOldVersion;
     private volatile long adjustedWeight;
     private volatile long blacklistingTime;
+    private volatile String blacklistingCause;
     private volatile State state;
     private volatile long downloadedVolume;
     private volatile long uploadedVolume;
     private volatile int lastUpdated;
+    private volatile int lastConnectAttempt;
     private volatile long hallmarkBalance = -1;
     private volatile int hallmarkBalanceHeight;
 
@@ -257,20 +259,23 @@ final class PeerImpl implements Peer {
                 Logger.logDebugMessage("Blacklisting " + peerAddress + " because of: " + cause.toString(), cause);
             }
         }
-        blacklist();
+        blacklist(cause.toString());
     }
 
     @Override
-    public void blacklist() {
+    public void blacklist(String cause) {
         blacklistingTime = System.currentTimeMillis();
+        blacklistingCause = cause;
         setState(State.NON_CONNECTED);
         Peers.notifyListeners(this, Peers.Event.BLACKLIST);
     }
 
     @Override
     public void unBlacklist() {
+        Logger.logDebugMessage("Unblacklisting " + peerAddress);
         setState(State.NON_CONNECTED);
         blacklistingTime = 0;
+        blacklistingCause = null;
         Peers.notifyListeners(this, Peers.Event.UNBLACKLIST);
     }
 
@@ -302,6 +307,15 @@ final class PeerImpl implements Peer {
     }
 
     @Override
+    public String getBlacklistingCause() {
+        return blacklistingCause == null ? "unknown" : blacklistingCause;
+    }
+
+    int getLastConnectAttempt() {
+        return lastConnectAttempt;
+    }
+
+    @Override
     public JSONObject send(final JSONStreamAware request) {
         return send(request, Peers.MAX_RESPONSE_SIZE);
     }
@@ -328,9 +342,7 @@ final class PeerImpl implements Peer {
             URL url = new URL(buf.toString());
 
             if (Peers.communicationLoggingMask != 0) {
-                StringWriter stringWriter = new StringWriter();
-                request.writeJSONString(stringWriter);
-                log = "\"" + url.toString() + "\": " + stringWriter.toString();
+                log = "\"" + url.toString() + "\": " + JSON.toString(request);
             }
 
             connection = (HttpURLConnection)url.openConnection();
@@ -381,6 +393,7 @@ final class PeerImpl implements Peer {
                     log += " >>> Peer responded with HTTP " + connection.getResponseCode() + " code!";
                     showLog = true;
                 }
+                Logger.logDebugMessage("Peer " + peerAddress + " responded with HTTP " + connection.getResponseCode());
                 if (state == State.CONNECTED) {
                     setState(State.DISCONNECTED);
                 } else {
@@ -391,14 +404,17 @@ final class PeerImpl implements Peer {
             blacklist(e);
         } catch (IOException e) {
             if (! (e instanceof UnknownHostException || e instanceof SocketTimeoutException || e instanceof SocketException)) {
-                Logger.logDebugMessage("Error sending JSON request", e);
+                Logger.logDebugMessage("Error sending JSON request: " + e.toString());
             }
             if ((Peers.communicationLoggingMask & Peers.LOGGING_MASK_EXCEPTIONS) != 0) {
                 log += " >>> " + e.toString();
                 showLog = true;
             }
             if (state == State.CONNECTED) {
+                //Logger.logDebugMessage("Disconnecting " + peerAddress + " because of " + e.toString());
                 setState(State.DISCONNECTED);
+            } else {
+                setState(State.NON_CONNECTED);
             }
         }
 
@@ -412,16 +428,11 @@ final class PeerImpl implements Peer {
 
         if (response != null && response.get("error") != null) {
             if (Errors.BLACKLISTED.equals(response.get("error"))) {
-                Logger.logDebugMessage("Peer " + peerAddress + " has blacklisted us, disconnecting");
+                Logger.logDebugMessage("Peer " + peerAddress + " has blacklisted us because of: \'" + response.get("cause") + "\', disconnecting");
                 deactivate();
             } else {
-                Logger.logDebugMessage("Peer " + peerAddress + " version " + version + " returned error: " + response.toJSONString());
-                try {
-                    StringWriter stringWriter = new StringWriter();
-                    request.writeJSONString(stringWriter);
-                    Logger.logDebugMessage("Request: " + stringWriter.toString());
-                } catch (IOException ignore) {
-                }
+                Logger.logDebugMessage("Peer " + peerAddress + " version " + version + " returned error: " + response.toJSONString()
+                        + ", request was: " + JSON.toString(request));
             }
         }
         return response;
@@ -439,15 +450,16 @@ final class PeerImpl implements Peer {
     }
 
     void connect() {
+        lastConnectAttempt = Nxt.getEpochTime();
         JSONObject response = send(Peers.myPeerInfoRequest);
-        if (response != null) {
-            application = (String)response.get("application");
+        if (response != null && (application = (String)response.get("application")) != null) {
             setVersion((String) response.get("version"));
             platform = (String)response.get("platform");
             shareAddress = Boolean.TRUE.equals(response.get("shareAddress"));
             String newAnnouncedAddress = Convert.emptyToNull((String)response.get("announcedAddress"));
-            if (newAnnouncedAddress != null && ! newAnnouncedAddress.equals(announcedAddress)) {
+            if (newAnnouncedAddress != null && ! (newAnnouncedAddress = Peers.addressWithPort(newAnnouncedAddress)).equals(announcedAddress)) {
                 // force verification of changed announced address
+                Logger.logDebugMessage("Peer " + peerAddress + " has new announced address " + newAnnouncedAddress + ", old is " + announcedAddress);
                 setState(Peer.State.NON_CONNECTED);
                 setAnnouncedAddress(newAnnouncedAddress);
                 return;
@@ -461,10 +473,11 @@ final class PeerImpl implements Peer {
                 setState(State.CONNECTED);
                 Peers.updateAddress(this);
             } else if (!isBlacklisted()) {
-                blacklist();
+                blacklist("Old version");
             }
-            lastUpdated = Nxt.getEpochTime();
+            lastUpdated = lastConnectAttempt;
         } else {
+            //Logger.logDebugMessage("Failed to connect to peer " + peerAddress);
             setState(State.NON_CONNECTED);
         }
     }

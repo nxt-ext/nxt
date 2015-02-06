@@ -97,7 +97,10 @@ public final class PeerServlet extends HttpServlet {
                 return;
             }
             if (peer.isBlacklisted()) {
-                sendResponse(peer, BLACKLISTED, resp);
+                JSONObject jsonObject = new JSONObject();
+                jsonObject.put("error", Errors.BLACKLISTED);
+                jsonObject.put("cause", peer.getBlacklistingCause());
+                sendResponse(peer, JSON.prepare(jsonObject), resp);
                 return;
             }
 
@@ -131,11 +134,11 @@ public final class PeerServlet extends HttpServlet {
                 response = UNSUPPORTED_PROTOCOL;
             }
 
-        } catch (RuntimeException|ParseException e) {
+        } catch (RuntimeException|ParseException|IOException e) {
             if (peer != null) {
                 peer.blacklist(e);
             }
-            Logger.logDebugMessage("Error processing POST request", e);
+            Logger.logDebugMessage("Error processing POST request: " + e.toString());
             JSONObject json = new JSONObject();
             json.put("error", e.toString());
             response = json;

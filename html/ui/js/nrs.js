@@ -1209,7 +1209,8 @@ var NRS = (function(NRS, $, undefined) {
 							NRS.showAccountModal(response);
 						} else {
 							NRS.sendRequest("getBlock", {
-								"block": id
+								"block": id,
+                        "includeTransactions": "true"
 							}, function(response, input) {
 								if (!response.errorCode) {
 									response.block = input.block;

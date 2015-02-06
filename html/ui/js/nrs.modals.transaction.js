@@ -27,16 +27,21 @@ var NRS = (function(NRS, $, undefined) {
 		$("#transaction_info_table").hide();
 		$("#transaction_info_table").find("tbody").empty();
 
-		if (typeof transaction != "object") {
-			NRS.sendRequest("getTransaction", {
-				"transaction": transaction
-			}, function(response, input) {
-				response.transaction = input.transaction;
-				NRS.processTransactionModalData(response, isModalVisible);
-			});
-		} else {
-			NRS.processTransactionModalData(transaction, isModalVisible);
-		}
+		try {
+         if (typeof transaction != "object") {
+            NRS.sendRequest("getTransaction", {
+               "transaction": transaction
+            }, function(response, input) {
+               response.transaction = input.transaction;
+               NRS.processTransactionModalData(response, isModalVisible);
+            });
+         } else {
+            NRS.processTransactionModalData(transaction, isModalVisible);
+         }
+      } catch (e) {
+         NRS.fetchingModalData = false;
+         throw e;
+      }
 	};
 
 	NRS.processTransactionModalData = function(transaction, isModalVisible) {
