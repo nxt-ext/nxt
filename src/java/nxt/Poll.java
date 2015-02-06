@@ -69,15 +69,15 @@ public final class Poll extends AbstractPoll {
         }
     };
 
-    private static final ValuesDbTable<Poll, PartialPollResult> pollResultsTable = new ValuesDbTable<Poll,PartialPollResult>("poll_result", pollResultsDbKeyFactory) {
+    private static final ValuesDbTable<Poll, PollResult> pollResultsTable = new ValuesDbTable<Poll,PollResult>("poll_result", pollResultsDbKeyFactory) {
 
         @Override
-        protected PartialPollResult load(Connection con, ResultSet rs) throws SQLException {
-            return new PartialPollResult(rs.getString("option"), rs.getLong("result"));
+        protected PollResult load(Connection con, ResultSet rs) throws SQLException {
+            return new PollResult(rs.getString("option"), rs.getLong("result"));
         }
 
         @Override
-        protected void save(Connection con, Poll poll, PartialPollResult optionResult) throws SQLException {
+        protected void save(Connection con, Poll poll, PollResult optionResult) throws SQLException {
             try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO poll_result (poll_id, "
                     + "option, result, height) VALUES (?, ?, ?, ?)")) {
                 int i = 0;
@@ -139,7 +139,7 @@ public final class Poll extends AbstractPoll {
         try (DbIterator<Poll> polls = getPollsFinishingAt(currentHeight)) {
             for (Poll poll : polls) {
                 try {
-                    List<PartialPollResult> results = poll.countResults(currentHeight);
+                    List<PollResult> results = poll.countResults(currentHeight);
                     pollResultsTable.insert(poll, results);
                     Logger.logDebugMessage("Poll " + Convert.toUnsignedLong(poll.getId()) + " has been finished");
                 } catch (RuntimeException e) { // could happen e.g. because of overflow in safeMultiply
@@ -221,7 +221,7 @@ public final class Poll extends AbstractPoll {
 
     public boolean isFinished() { return finishHeight < Nxt.getBlockchain().getHeight(); }
 
-    public List<PartialPollResult> getResults() {
+    public List<PollResult> getResults() {
         if (Poll.isPollsProcessing && isFinished()) {
             return pollResultsTable.get(pollResultsDbKeyFactory.newKey(id));
         } else {
@@ -274,7 +274,7 @@ public final class Poll extends AbstractPoll {
         return minBalanceModel;
     }
 
-    private List<PartialPollResult> countResults(int height) {
+    private List<PollResult> countResults(int height) {
         final long[] counts = new long[options.length];
 
         try (DbIterator<Vote> votes = Vote.getVotes(this.getId(), 0, -1)) {
@@ -288,9 +288,9 @@ public final class Poll extends AbstractPoll {
             }
         }
 
-        List<PartialPollResult> results = new ArrayList<>(options.length);
+        List<PollResult> results = new ArrayList<>(options.length);
         for (int i = 0; i < options.length; i++) {
-            results.add(new PartialPollResult(options[i], counts[i]));
+            results.add(new PollResult(options[i], counts[i]));
         }
         return results;
     }
@@ -314,12 +314,12 @@ public final class Poll extends AbstractPoll {
         }
     }
 
-    public static class PartialPollResult {
+    public static class PollResult {
 
         private final String option;
         private final long votes;
 
-        public PartialPollResult(String option, long votes) {
+        public PollResult(String option, long votes) {
             this.option = option;
             this.votes = votes;
         }

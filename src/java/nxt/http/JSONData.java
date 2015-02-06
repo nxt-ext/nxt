@@ -359,14 +359,14 @@ final class JSONData {
         return json;
     }
 
-    static JSONObject pollResults(Poll poll, List<Poll.PartialPollResult> results) {
+    static JSONObject pollResults(Poll poll, List<Poll.PollResult> results) {
         JSONObject json = new JSONObject();
         json.put("poll", Convert.toUnsignedLong(poll.getId()));
         json.put("finished", poll.isFinished());
 
         JSONArray resultsJson = new JSONArray();
 
-        for (Poll.PartialPollResult result : results) {
+        for (Poll.PollResult result : results) {
             JSONObject jsonPair = new JSONObject();
             jsonPair.put(result.getOption(), result.getVotes());
             resultsJson.add(jsonPair);
