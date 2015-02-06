@@ -287,7 +287,11 @@ final class PeerImpl implements Peer {
 
     @Override
     public void deactivate() {
-        setState(State.NON_CONNECTED);
+        if (state == State.CONNECTED) {
+            setState(State.DISCONNECTED);
+        } else {
+            setState(State.NON_CONNECTED);
+        }
         Peers.notifyListeners(this, Peers.Event.DEACTIVATE);
     }
 
@@ -345,7 +349,7 @@ final class PeerImpl implements Peer {
                 log = "\"" + url.toString() + "\": " + JSON.toString(request);
             }
 
-            connection = (HttpURLConnection)url.openConnection();
+            connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("POST");
             connection.setDoOutput(true);
             connection.setConnectTimeout(Peers.connectTimeout);
@@ -387,6 +391,11 @@ final class PeerImpl implements Peer {
                         }
                     }
                     updateDownloadedVolume(cis.getCount());
+                    if (response != null && response.get("error") != null) {
+                        Logger.logDebugMessage("Peer " + peerAddress + " version " + version + " returned error: " + response.toJSONString()
+                                + ", request was: " + JSON.toString(request) + ", disconnecting");
+                        deactivate();
+                    }
                 }
             } else {
                 if ((Peers.communicationLoggingMask & Peers.LOGGING_MASK_NON200_RESPONSES) != 0) {
@@ -394,28 +403,19 @@ final class PeerImpl implements Peer {
                     showLog = true;
                 }
                 Logger.logDebugMessage("Peer " + peerAddress + " responded with HTTP " + connection.getResponseCode());
-                if (state == State.CONNECTED) {
-                    setState(State.DISCONNECTED);
-                } else {
-                    setState(State.NON_CONNECTED);
-                }
+                deactivate();
             }
-        } catch (RuntimeException|ParseException e) {
+        } catch (NxtException.NxtIOException e) {
             blacklist(e);
-        } catch (IOException e) {
-            if (! (e instanceof UnknownHostException || e instanceof SocketTimeoutException || e instanceof SocketException)) {
+        } catch (RuntimeException|ParseException|IOException e) {
+            if (! (e instanceof UnknownHostException || e instanceof SocketTimeoutException || e instanceof SocketException || Errors.END_OF_FILE.equals(e.toString()))) {
                 Logger.logDebugMessage("Error sending JSON request: " + e.toString());
             }
             if ((Peers.communicationLoggingMask & Peers.LOGGING_MASK_EXCEPTIONS) != 0) {
                 log += " >>> " + e.toString();
                 showLog = true;
             }
-            if (state == State.CONNECTED) {
-                //Logger.logDebugMessage("Disconnecting " + peerAddress + " because of " + e.toString());
-                setState(State.DISCONNECTED);
-            } else {
-                setState(State.NON_CONNECTED);
-            }
+            deactivate();
         }
 
         if (showLog) {
@@ -426,11 +426,6 @@ final class PeerImpl implements Peer {
             connection.disconnect();
         }
 
-        if (response != null && response.get("error") != null) {
-            Logger.logDebugMessage("Peer " + peerAddress + " version " + version + " returned error: " + response.toJSONString()
-                    + ", request was: " + JSON.toString(request) + ", disconnecting");
-            deactivate();
-        }
         return response;
 
     }
