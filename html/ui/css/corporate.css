@@ -117,7 +117,8 @@ body.fixed .navbar {
   left: 0;
   right: 0;
   /*background-color: #002e43; /*WESLEY */
-  background: url(../img/corporate/header.png) repeat left top fixed;
+  //background: url(../img/corporate/header.png) repeat left top fixed;
+  background: url("../img/corporate/header.png") no-repeat scroll left top #004e6d;
 }
 body.fixed .wrapper {
 	-webkit-transition: margin-top 0.8s; /* For Safari 3.1 to 6.0 */
@@ -3300,7 +3301,7 @@ a.list-group-item.active h4 span {
 	margin: 0 0 10px;
 	/*box-shadow: 1px 1px 5px 0 rgba(0, 0, 0, 0.5);*/
 }
-.right-side > .page > .content > .row {
+.right-side > .page > .content > .row,  .content > #dgs_search_center > .row {
     margin: 0 !important;
     background-color: #fff;
     /*left: 0;

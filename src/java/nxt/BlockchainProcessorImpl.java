@@ -140,6 +140,9 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     }
 
                     synchronized (blockchain) {
+                        if (betterCumulativeDifficulty.compareTo(blockchain.getLastBlock().getCumulativeDifficulty()) <= 0) {
+                            return;
+                        }
                         long lastBlockId = blockchain.getLastBlock().getId();
                         downloadBlockchain(peer, commonBlock);
 
