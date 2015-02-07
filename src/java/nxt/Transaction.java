@@ -26,8 +26,9 @@ public interface Transaction {
 
         Builder ecBlockId(long blockId);
 
+        Builder phasing(Appendix.Phasing phasing);
+
         Transaction build() throws NxtException.NotValidException;
-        Builder twoPhased(Appendix.TwoPhased twoPhased);
     }
 
     long getId();
@@ -90,7 +91,7 @@ public interface Transaction {
 
     Appendix.EncryptToSelfMessage getEncryptToSelfMessage();
 
-    Appendix.TwoPhased getTwoPhased();
+    Appendix.Phasing getPhasing();
 
     List<? extends Appendix> getAppendages();
 

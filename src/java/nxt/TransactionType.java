@@ -182,20 +182,16 @@ public abstract class TransactionType {
     abstract boolean applyAttachmentUnconfirmed(Transaction transaction, Account senderAccount);
 
     final void apply(Transaction transaction, Account senderAccount, Account recipientAccount) {
-        if (transaction.getReferencedTransactionFullHash() != null
-                && transaction.getTimestamp() > Constants.REFERENCED_TRANSACTION_FULL_HASH_BLOCK_TIMESTAMP) {
-            senderAccount.addToUnconfirmedBalanceNQT(Constants.UNCONFIRMED_POOL_DEPOSIT_NQT);
-        }
-        if (transaction.getTwoPhased() == null) {
-            long amount = transaction.getAmountNQT();
+        long amount = transaction.getAmountNQT();
+        if (transaction.getPhasing() == null) {
             senderAccount.addToBalanceNQT(-Convert.safeAdd(amount, transaction.getFeeNQT()));
-            if (recipientAccount != null) {
-                recipientAccount.addToBalanceAndUnconfirmedBalanceNQT(amount);
-            }
-            applyAttachment(transaction, senderAccount, recipientAccount);
         } else {
-            senderAccount.addToBalanceNQT(-transaction.getFeeNQT());
+            senderAccount.addToBalanceNQT(-amount);
         }
+        if (recipientAccount != null) {
+            recipientAccount.addToBalanceAndUnconfirmedBalanceNQT(amount);
+        }
+        applyAttachment(transaction, senderAccount, recipientAccount);
     }
 
     abstract void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount);
@@ -909,9 +905,9 @@ public abstract class TransactionType {
                     PendingTransactionPoll poll = PendingTransactionPoll.getPoll(pendingTransactionId);
 
                     if (VotePhased.addVote(poll, transaction)) {
-                        poll.updateDbWithFinished();
-                        Transaction pendingTransaction = TransactionDb.findTransaction(pendingTransactionId);
-                        pendingTransaction.getTwoPhased().release(pendingTransaction);
+                        poll.finish();
+                        TransactionImpl pendingTransaction = TransactionDb.findTransaction(pendingTransactionId);
+                        pendingTransaction.getPhasing().release(pendingTransaction);
                     }
                 }
             }

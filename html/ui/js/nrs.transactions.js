@@ -257,13 +257,13 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.getPendingTransactionHTML = function(t) {
 		var html = "";
 
-		if (t.attachment && t.attachment["version.TwoPhased"] && t.attachment.votingModel) {
+		if (t.attachment && t.attachment["version.Phasing"] && t.attachment.phasingVotingModel) {
 			NRS.sendRequest("getPendingTransactionVotes", {
 				"pendingTransaction": t.transaction
 			}, function(response) {
 				if (response.pendingTransaction) {
 					var attachment = t.attachment;
-					var vm = attachment.votingModel;
+					var vm = attachment.phasingVotingModel;
 					if (response.votes < response.quorum) {
 						var state = "warning";
 					} else {

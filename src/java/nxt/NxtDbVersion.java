@@ -641,7 +641,7 @@ class NxtDbVersion extends DbVersion {
             case 242:
                 apply("ALTER TABLE pending_transaction_signer ALTER COLUMN poll_id RENAME TO pending_transaction_id");
             case 243:
-                apply("ALTER TABLE pending_transaction ADD COLUMN finished BOOLEAN");
+                apply("ALTER TABLE pending_transaction ADD COLUMN IF NOT EXISTS finished BOOLEAN");
             case 244:
                 apply("CREATE INDEX IF NOT EXISTS vote_height_idx ON vote(height)");
             case 245:
@@ -657,6 +657,8 @@ class NxtDbVersion extends DbVersion {
             case 250:
                 apply("CREATE INDEX IF NOT EXISTS poll_result_height_idx ON poll_result(height)");
             case 251:
+                apply("ALTER TABLE transaction ALTER COLUMN two_phased RENAME TO has_phasing");
+            case 252:
                 return;
             //todo: more indexes on 2PTs tables
             default:

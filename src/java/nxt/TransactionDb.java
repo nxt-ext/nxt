@@ -15,7 +15,7 @@ import java.util.List;
 
 final class TransactionDb {
 
-    static Transaction findTransaction(long transactionId) {
+    static TransactionImpl findTransaction(long transactionId) {
         try (Connection con = Db.db.getConnection();
              PreparedStatement pstmt = con.prepareStatement("SELECT * FROM transaction WHERE id = ?")) {
             pstmt.setLong(1, transactionId);
@@ -32,7 +32,7 @@ final class TransactionDb {
         }
     }
 
-    static Transaction findTransactionByFullHash(String fullHash) {
+    static TransactionImpl findTransactionByFullHash(String fullHash) {
         try (Connection con = Db.db.getConnection();
              PreparedStatement pstmt = con.prepareStatement("SELECT * FROM transaction WHERE full_hash = ?")) {
             pstmt.setBytes(1, Convert.parseHexString(fullHash));
@@ -135,8 +135,8 @@ final class TransactionDb {
             if (rs.getBoolean("has_encrypttoself_message")) {
                 builder.encryptToSelfMessage(new Appendix.EncryptToSelfMessage(buffer, version));
             }
-            if (rs.getBoolean("two_phased")) {
-                builder.twoPhased(new Appendix.TwoPhased(buffer, version));
+            if (rs.getBoolean("has_phasing")) {
+                builder.phasing(new Appendix.Phasing(buffer, version));
             }
            
             return builder.build();
@@ -173,7 +173,7 @@ final class TransactionDb {
                         + "recipient_id, amount, fee, referenced_transaction_full_hash, height, "
                         + "block_id, signature, timestamp, type, subtype, sender_id, attachment_bytes, "
                         + "block_timestamp, full_hash, version, has_message, has_encrypted_message, has_public_key_announcement, "
-                        + "has_encrypttoself_message, two_phased, ec_block_height, ec_block_id, transaction_index) "
+                        + "has_encrypttoself_message, has_phasing, ec_block_height, ec_block_id, transaction_index) "
                         + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
                     int i = 0;
                     pstmt.setLong(++i, transaction.getId());
@@ -210,7 +210,7 @@ final class TransactionDb {
                     pstmt.setBoolean(++i, transaction.getEncryptedMessage() != null);
                     pstmt.setBoolean(++i, transaction.getPublicKeyAnnouncement() != null);
                     pstmt.setBoolean(++i, transaction.getEncryptToSelfMessage() != null);
-                    pstmt.setBoolean(++i, transaction.getTwoPhased() != null);
+                    pstmt.setBoolean(++i, transaction.getPhasing() != null);
                     pstmt.setInt(++i, transaction.getECBlockHeight());
                     DbUtils.setLongZeroToNull(pstmt, ++i, transaction.getECBlockId());
                     pstmt.setShort(++i, index++);

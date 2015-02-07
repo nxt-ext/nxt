@@ -59,7 +59,7 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
         return createTransaction(req, senderAccount, recipientId, amountNQT, Attachment.ORDINARY_PAYMENT);
     }
 
-    private Appendix.TwoPhased parseTwoPhased(HttpServletRequest req) throws ParameterException {
+    private Appendix.Phasing parsePhasing(HttpServletRequest req) throws ParameterException {
         byte votingModel = ParameterParser.getByte(req, "pendingVotingModel", Constants.VOTING_MODEL_ACCOUNT, Constants.VOTING_MODEL_CURRENCY, true);
 
         int maxHeight = ParameterParser.getInt(req, "pendingMaxHeight",
@@ -104,7 +104,7 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
         if (votingModel == Constants.VOTING_MODEL_ACCOUNT && blacklist.length != 0) {
             throw new ParameterException(INCORRECT_PENDING_BLACKLISTED);
         }
-        return new Appendix.TwoPhased(maxHeight, votingModel, holdingId, quorum, minBalance, whitelist, blacklist);
+        return new Appendix.Phasing(maxHeight, votingModel, holdingId, quorum, minBalance, whitelist, blacklist);
     }
 
     final JSONStreamAware createTransaction(HttpServletRequest req, Account senderAccount, long recipientId,
@@ -143,10 +143,10 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
             publicKeyAnnouncement = new Appendix.PublicKeyAnnouncement(Convert.parseHexString(recipientPublicKey));
         }
 
-        Appendix.TwoPhased twoPhased = null;
+        Appendix.Phasing phasing = null;
         boolean isPending = ParameterParser.getBoolean(req, "isPending", false);
         if (isPending) {
-            twoPhased = parseTwoPhased(req);
+            phasing = parsePhasing(req);
         }
 
         if (secretPhrase == null && publicKeyValue == null) {
@@ -190,8 +190,8 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
             if (encryptToSelfMessage != null) {
                 builder.encryptToSelfMessage(encryptToSelfMessage);
             }
-            if (twoPhased != null) {
-                builder.twoPhased(twoPhased);
+            if (phasing != null) {
+                builder.phasing(phasing);
             }
             Transaction transaction = builder.build();
             try {

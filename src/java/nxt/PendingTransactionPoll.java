@@ -140,13 +140,9 @@ public class PendingTransactionPoll extends AbstractPoll {
         this.finished = rs.getBoolean("finished");
     }
 
-    public void updateDbWithFinished() {
-        setFinished(true);
+    void finish() {
+        this.finished = true;
         pendingTransactionsTable.insert(this);
-    }
-
-    public void setFinished(boolean finished) {
-        this.finished = finished;
     }
 
     public boolean isFinished() {
@@ -166,9 +162,9 @@ public class PendingTransactionPoll extends AbstractPoll {
         return id;
     }
 
-    static void addPoll(Transaction transaction, Appendix.TwoPhased appendix) {
+    static void addPoll(Transaction transaction, Appendix.Phasing appendix) {
         PendingTransactionPoll poll = new PendingTransactionPoll(transaction.getId(), transaction.getSenderId(),
-                appendix.getMaxHeight(), appendix.getVotingModel(), appendix.getQuorum(), appendix.getMinBalance(),
+                appendix.getReleaseHeight(), appendix.getVotingModel(), appendix.getQuorum(), appendix.getMinBalance(),
                 appendix.getHoldingId(), appendix.getWhitelist(), appendix.getBlacklist());
 
         pendingTransactionsTable.insert(poll);

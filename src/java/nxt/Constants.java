@@ -45,8 +45,8 @@ public final class Constants {
     public static final int VOTING_MAX_VOTE_DURATION = 14*1440;
 
 
-    public static final byte PENDING_TRANSACTIONS_MAX_WHITELIST_SIZE = 10;
-    public static final byte PENDING_TRANSACTIONS_MAX_BLACKLIST_SIZE = 5;
+    public static final byte MAX_PHASING_WHITELIST_SIZE = 10;
+    public static final byte MAX_PHASING_BLACKLIST_SIZE = 5;
 
     public static final int MAX_ALIAS_URI_LENGTH = 1000;
     public static final int MAX_ALIAS_LENGTH = 100;
