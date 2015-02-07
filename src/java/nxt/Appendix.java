@@ -419,13 +419,13 @@ public interface Appendix {
     public static class Phasing extends AbstractAppendix {
 
         static Phasing parse(JSONObject attachmentData) {
-            if (attachmentData.get("phasingReleaseHeight") == null) {
+            if (attachmentData.get("phasingFinishHeight") == null) {
                 return null;
             }
             return new Phasing(attachmentData);
         }
 
-        private final int releaseHeight;
+        private final int finishHeight;
         private final long quorum;
         private final byte votingModel;
         private final long minBalance;
@@ -435,7 +435,7 @@ public interface Appendix {
 
         Phasing(ByteBuffer buffer, byte transactionVersion) {
             super(buffer, transactionVersion);
-            releaseHeight = buffer.getInt();
+            finishHeight = buffer.getInt();
             votingModel = buffer.get();
             quorum = buffer.getLong();
             minBalance = buffer.getLong();
@@ -457,7 +457,7 @@ public interface Appendix {
 
         Phasing(JSONObject attachmentData) {
             super(attachmentData);
-            releaseHeight = ((Long) attachmentData.get("phasingReleaseHeight")).intValue();
+            finishHeight = ((Long) attachmentData.get("phasingFinishHeight")).intValue();
             quorum = Convert.parseLong(attachmentData.get("phasingQuorum"));
             minBalance = Convert.parseLong(attachmentData.get("phasingMinBalance"));
             votingModel = ((Long) attachmentData.get("phasingVotingModel")).byteValue();
@@ -491,9 +491,9 @@ public interface Appendix {
         }
         */
 
-        public Phasing(int releaseHeight, byte votingModel, long holdingId, long quorum,
+        public Phasing(int finishHeight, byte votingModel, long holdingId, long quorum,
                        long minBalance, long[] whitelist, long[] blacklist) {
-            this.releaseHeight = releaseHeight;
+            this.finishHeight = finishHeight;
             this.votingModel = votingModel;
             this.quorum = quorum;
             this.minBalance = minBalance;
@@ -525,7 +525,7 @@ public interface Appendix {
 
         @Override
         void putMyBytes(ByteBuffer buffer) {
-            buffer.putInt(releaseHeight);
+            buffer.putInt(finishHeight);
             buffer.put(votingModel);
             buffer.putLong(quorum);
             buffer.putLong(minBalance);
@@ -545,7 +545,7 @@ public interface Appendix {
 
         @Override
         void putMyJSON(JSONObject json) {
-            json.put("phasingReleaseHeight", releaseHeight);
+            json.put("phasingFinishHeight", finishHeight);
             json.put("phasingQuorum", quorum);
             json.put("phasingMinBalance", minBalance);
             json.put("phasingVotingModel", votingModel);
@@ -606,8 +606,8 @@ public interface Appendix {
             }
 
             int currentHeight = Nxt.getBlockchain().getHeight();
-            if (releaseHeight < currentHeight + Constants.VOTING_MIN_VOTE_DURATION
-                    || releaseHeight > currentHeight + Constants.VOTING_MAX_VOTE_DURATION) {
+            if (finishHeight < currentHeight + Constants.VOTING_MIN_VOTE_DURATION
+                    || finishHeight > currentHeight + Constants.VOTING_MAX_VOTE_DURATION) {
                 throw new NxtException.NotValidException("Invalid release height");
             }
         }
@@ -642,8 +642,8 @@ public interface Appendix {
             }
         }
 
-        public int getReleaseHeight() {
-            return releaseHeight;
+        public int getFinishHeight() {
+            return finishHeight;
         }
 
         public long getQuorum() {

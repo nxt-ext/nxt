@@ -81,25 +81,29 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
             throw new ParameterException(MISSING_PENDING_HOLDING_ID);
         }
 
-        long[] whitelist = new long[0];
+        long[] whitelist;
         String[] whitelistValues = req.getParameterValues("pendingWhitelisted");
         if (whitelistValues != null && whitelistValues.length > 0) {
             whitelist = new long[whitelistValues.length];
             for (int i = 0; i < whitelist.length; i++) {
                 whitelist[i] = Convert.parseAccountId(whitelistValues[i]);
             }
+        } else {
+            whitelist = new long[0];
         }
         if (votingModel == Constants.VOTING_MODEL_ACCOUNT && whitelist.length == 0) {
             throw new ParameterException(INCORRECT_PENDING_WHITELIST);
         }
 
-        long[] blacklist = new long[0];
+        long[] blacklist;
         String[] blacklistValues = req.getParameterValues("pendingBlacklisted");
         if (blacklistValues != null && blacklistValues.length > 0) {
             blacklist = new long[blacklistValues.length];
             for (int i = 0; i < blacklist.length; i++) {
                 blacklist[i] = Convert.parseAccountId(blacklistValues[i]);
             }
+        } else {
+            blacklist = new long[0];
         }
         if (votingModel == Constants.VOTING_MODEL_ACCOUNT && blacklist.length != 0) {
             throw new ParameterException(INCORRECT_PENDING_BLACKLISTED);

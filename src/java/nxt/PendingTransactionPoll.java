@@ -11,12 +11,6 @@ import java.util.Arrays;
 import java.util.List;
 
 public class PendingTransactionPoll extends AbstractPoll {
-    private final long id;
-    private final DbKey dbKey;
-    private final long[] whitelist;
-    private final long[] blacklist;
-    private final long quorum;
-    private boolean finished;
 
     private static final DbKey.LongKeyFactory<PendingTransactionPoll> pollDbKeyFactory = new DbKey.LongKeyFactory<PendingTransactionPoll>("id") {
         @Override
@@ -32,7 +26,7 @@ public class PendingTransactionPoll extends AbstractPoll {
         }
     };
 
-    final static ValuesDbTable<PendingTransactionPoll, Long> signersTable = new ValuesDbTable<PendingTransactionPoll, Long>("pending_transaction_signer", signersDbKeyFactory) {
+    private static final ValuesDbTable<PendingTransactionPoll, Long> signersTable = new ValuesDbTable<PendingTransactionPoll, Long>("pending_transaction_signer", signersDbKeyFactory) {
 
         @Override
         protected Long load(Connection con, ResultSet rs) throws SQLException {
@@ -52,7 +46,7 @@ public class PendingTransactionPoll extends AbstractPoll {
         }
     };
 
-    private final static VersionedEntityDbTable<PendingTransactionPoll> pendingTransactionsTable =
+    private static final VersionedEntityDbTable<PendingTransactionPoll> pendingTransactionsTable =
             new VersionedEntityDbTable<PendingTransactionPoll>("pending_transaction", pollDbKeyFactory) {
 
                 @Override
@@ -67,8 +61,9 @@ public class PendingTransactionPoll extends AbstractPoll {
 
                 @Override
                 public void trim(int height) {
+                    super.trim(height);
                     try (Connection con = Db.db.getConnection();
-                         DbIterator<PendingTransactionPoll> pollsToTrim = finishing(height);
+                         DbIterator<PendingTransactionPoll> pollsToTrim = getFinishingBefore(height);
                          PreparedStatement pstmt1 = con.prepareStatement("DELETE FROM pending_transaction WHERE id = ?");
                          PreparedStatement pstmt2 = con.prepareStatement("DELETE FROM pending_transaction_signer WHERE pending_transaction_id = ?");
                          PreparedStatement pstmt3 = con.prepareStatement("DELETE FROM vote_phased WHERE pending_transaction_id = ?")) {
@@ -84,106 +79,18 @@ public class PendingTransactionPoll extends AbstractPoll {
                         }
                     } catch (SQLException e) {
                         throw new RuntimeException(e.toString(), e);
+                    } finally {
+                        clearCache();
                     }
                 }
             };
 
-    static void init() {
+    public static int getPendingCount() {
+        return pendingTransactionsTable.getCount(new DbClause.FixedClause("finished = FALSE"));
     }
 
-    private PendingTransactionPoll(long id, long accountId, int finishHeight,
-                                   byte votingModel, long quorum, long voteThreshold,
-                                   long assetId, long[] whitelist, long[] blacklist) {
-        super(accountId, finishHeight, votingModel, assetId, voteThreshold);
-        this.id = id;
-        this.dbKey = pollDbKeyFactory.newKey(this.id);
-        this.quorum = quorum;
-
-        if (whitelist != null) {
-            this.whitelist = whitelist;
-            Arrays.sort(this.whitelist);
-        } else {
-            this.whitelist = new long[0];
-        }
-
-
-        if (blacklist != null) {
-            this.blacklist = blacklist;
-            Arrays.sort(this.blacklist);
-        } else {
-            this.blacklist = new long[0];
-        }
-    }
-
-    private PendingTransactionPoll(ResultSet rs) throws SQLException {
-        super(rs);
-        this.id = rs.getLong("id");
-        this.quorum = rs.getLong("quorum");
-        this.dbKey = pollDbKeyFactory.newKey(this.id);
-
-        byte signersCount = rs.getByte("signers_count");
-        if (signersCount == 0) {
-            this.whitelist = new long[0];
-            this.blacklist = new long[0];
-        } else {
-            List<Long> signers = signersTable.get(signersDbKeyFactory.newKey(this));
-            boolean isBlacklist = rs.getBoolean("blacklist");
-            if (isBlacklist) {
-                this.whitelist = new long[0];
-                this.blacklist = Convert.reversedListOfLongsToArray(signers);
-            } else {
-                this.whitelist = Convert.reversedListOfLongsToArray(signers);
-                this.blacklist = new long[0];
-            }
-        }
-
-        this.finished = rs.getBoolean("finished");
-    }
-
-    void finish() {
-        this.finished = true;
-        pendingTransactionsTable.insert(this);
-    }
-
-    public boolean isFinished() {
-        return finished;
-    }
-
-    public static int getActiveCount() {
-        return pendingTransactionsTable.getCount();
-    }
-
-    @Override
-    long calcWeightForByAccountModel(long voterId, int height) {
-        throw new RuntimeException("PendingTransactionPoll.calcWeightForByAccountModel is called but must not");
-    }
-
-    public long getId() {
-        return id;
-    }
-
-    static void addPoll(Transaction transaction, Appendix.Phasing appendix) {
-        PendingTransactionPoll poll = new PendingTransactionPoll(transaction.getId(), transaction.getSenderId(),
-                appendix.getReleaseHeight(), appendix.getVotingModel(), appendix.getQuorum(), appendix.getMinBalance(),
-                appendix.getHoldingId(), appendix.getWhitelist(), appendix.getBlacklist());
-
-        pendingTransactionsTable.insert(poll);
-
-        long[] signers;
-
-        if (poll.getBlacklist().length > 0) {
-            signers = poll.getBlacklist();
-        } else {
-            signers = poll.getWhitelist();
-        }
-
-        if (signers.length > 0) {
-            signersTable.insert(poll, Convert.arrayOfLongsToList(signers));
-        }
-    }
-
-    public static DbIterator<PendingTransactionPoll> finishing(int height) {
-        return pendingTransactionsTable.getManyBy(new DbClause.IntClause("finish_height", height), 0, Integer.MAX_VALUE);
+    public static DbIterator<PendingTransactionPoll> getFinishingBefore(int height) {
+        return pendingTransactionsTable.getManyBy(new DbClause.IntClause("finish_height", DbClause.Op.LT, height), 0, Integer.MAX_VALUE);
     }
 
     public static PendingTransactionPoll getPoll(long id) {
@@ -195,8 +102,8 @@ public class PendingTransactionPoll extends AbstractPoll {
         return pendingTransactionsTable.getManyBy(clause, firstIndex, lastIndex);
     }
 
-    public static DbIterator<PendingTransactionPoll> getByAssetId(long assetId, int firstIndex, int lastIndex) {
-        DbClause clause = new DbClause.LongClause("holding_id", assetId);
+    public static DbIterator<PendingTransactionPoll> getByHoldingId(long holdingId, int firstIndex, int lastIndex) {
+        DbClause clause = new DbClause.LongClause("holding_id", holdingId);
         return pendingTransactionsTable.getManyBy(clause, firstIndex, lastIndex);
     }
 
@@ -222,8 +129,7 @@ public class PendingTransactionPoll extends AbstractPoll {
         }
     }
 
-    public static DbIterator<? extends Transaction>
-        getPendingTransactionsForHolding(long holdingId, byte votingModel, int from, int to) {
+    public static DbIterator<? extends Transaction> getPendingTransactionsForHolding(long holdingId, byte votingModel, int from, int to) {
 
         Connection con = null;
         try {
@@ -252,9 +158,9 @@ public class PendingTransactionPoll extends AbstractPoll {
         try {
             con = Db.db.getConnection();
             PreparedStatement pstmt = con.prepareStatement("SELECT transaction.* FROM transaction, pending_transaction " +
-                            " WHERE transaction.sender_id = ? AND pending_transaction.id = transaction.id " +
-                            " AND pending_transaction.finished = FALSE AND pending_transaction.latest = TRUE " +
-                            DbUtils.limitsClause(from, to));
+                    " WHERE transaction.sender_id = ? AND pending_transaction.id = transaction.id " +
+                    " AND pending_transaction.finished = FALSE AND pending_transaction.latest = TRUE " +
+                    DbUtils.limitsClause(from, to));
             pstmt.setLong(1, account.getId());
             DbUtils.setLimits(2, pstmt, from, to);
 
@@ -263,6 +169,92 @@ public class PendingTransactionPoll extends AbstractPoll {
             DbUtils.close(con);
             throw new RuntimeException(e.toString(), e);
         }
+    }
+
+    static void addPoll(Transaction transaction, Appendix.Phasing appendix) {
+        PendingTransactionPoll poll = new PendingTransactionPoll(transaction.getId(), transaction.getSenderId(), appendix);
+
+        pendingTransactionsTable.insert(poll);
+
+        long[] signers;
+
+        if (poll.getBlacklist().length > 0) {
+            signers = poll.getBlacklist();
+        } else {
+            signers = poll.getWhitelist();
+        }
+
+        if (signers.length > 0) {
+            signersTable.insert(poll, Convert.arrayOfLongsToList(signers));
+        }
+    }
+
+    static void init() {
+    }
+
+    private final long id;
+    private final DbKey dbKey;
+    private final long[] whitelist;
+    private final long[] blacklist;
+    private final long quorum;
+    private boolean finished;
+
+    private PendingTransactionPoll(long id, long accountId, Appendix.Phasing appendix) {
+        super(accountId, appendix.getFinishHeight(), appendix.getVotingModel(), appendix.getHoldingId(), appendix.getMinBalance());
+        this.id = id;
+        this.dbKey = pollDbKeyFactory.newKey(this.id);
+        this.quorum = appendix.getQuorum();
+        this.whitelist = appendix.getWhitelist();
+        if (this.whitelist.length > 0) {
+            Arrays.sort(this.whitelist);
+        }
+        this.blacklist = appendix.getBlacklist();
+        if (this.blacklist.length > 0) {
+            Arrays.sort(this.blacklist);
+        }
+    }
+
+    private PendingTransactionPoll(ResultSet rs) throws SQLException {
+        super(rs);
+        this.id = rs.getLong("id");
+        this.quorum = rs.getLong("quorum");
+        this.dbKey = pollDbKeyFactory.newKey(this.id);
+
+        byte signersCount = rs.getByte("signers_count");
+        if (signersCount == 0) {
+            this.whitelist = new long[0];
+            this.blacklist = this.whitelist;
+        } else {
+            List<Long> signers = signersTable.get(signersDbKeyFactory.newKey(this));
+            boolean isBlacklist = rs.getBoolean("blacklist");
+            if (isBlacklist) {
+                this.whitelist = new long[0];
+                this.blacklist = Convert.reversedListOfLongsToArray(signers);
+            } else {
+                this.whitelist = Convert.reversedListOfLongsToArray(signers);
+                this.blacklist = new long[0];
+            }
+        }
+
+        this.finished = rs.getBoolean("finished");
+    }
+
+    void finish() {
+        this.finished = true;
+        pendingTransactionsTable.insert(this);
+    }
+
+    public boolean isFinished() {
+        return finished;
+    }
+
+    @Override
+    long calcWeightForByAccountModel(long voterId, int height) {
+        throw new RuntimeException("PendingTransactionPoll.calcWeightForByAccountModel is called but must not");
+    }
+
+    public long getId() {
+        return id;
     }
 
     public long[] getWhitelist() {

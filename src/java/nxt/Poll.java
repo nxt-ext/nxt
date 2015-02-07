@@ -19,6 +19,25 @@ import java.util.List;
 
 public final class Poll extends AbstractPoll {
 
+    public static final class PollResult {
+
+        private final String option;
+        private final long votes;
+
+        public PollResult(String option, long votes) {
+            this.option = option;
+            this.votes = votes;
+        }
+
+        public String getOption() {
+            return option;
+        }
+
+        public long getVotes() {
+            return votes;
+        }
+    }
+
     private static final boolean isPollsProcessing = Nxt.getBooleanProperty("nxt.processPolls");
 
     private static final DbKey.LongKeyFactory<Poll> pollDbKeyFactory = new DbKey.LongKeyFactory<Poll>("id") {
@@ -314,22 +333,4 @@ public final class Poll extends AbstractPoll {
         }
     }
 
-    public static class PollResult {
-
-        private final String option;
-        private final long votes;
-
-        public PollResult(String option, long votes) {
-            this.option = option;
-            this.votes = votes;
-        }
-
-        public String getOption() {
-            return option;
-        }
-
-        public long getVotes() {
-            return votes;
-        }
-    }
 }
