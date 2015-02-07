@@ -180,23 +180,25 @@ var NRS = (function(NRS, $, undefined) {
 		}
 
 		var originalRequestType = requestType;
-
-		if (NRS.downloadingBlockchain) {
-			$form.find(".error_message").html($.t("error_blockchain_downloading")).show();
-			if (formErrorFunction) {
-				formErrorFunction();
+		
+		if (requestType != "addPeer" && requestType != "blacklistPeer") {
+			if (NRS.downloadingBlockchain) {
+				$form.find(".error_message").html($.t("error_blockchain_downloading")).show();
+				if (formErrorFunction) {
+					formErrorFunction();
+				}
+				NRS.unlockForm($modal, $btn);
+				return;
+			} else if (NRS.state.isScanning) {
+				$form.find(".error_message").html($.t("error_form_blockchain_rescanning")).show();
+				if (formErrorFunction) {
+					formErrorFunction();
+				}
+				NRS.unlockForm($modal, $btn);
+				return;
 			}
-			NRS.unlockForm($modal, $btn);
-			return;
-		} else if (NRS.state.isScanning) {
-			$form.find(".error_message").html($.t("error_form_blockchain_rescanning")).show();
-			if (formErrorFunction) {
-				formErrorFunction();
-			}
-			NRS.unlockForm($modal, $btn);
-			return;
 		}
-
+		
 		var invalidElement = false;
 
 		//TODO
