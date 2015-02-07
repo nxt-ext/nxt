@@ -204,8 +204,12 @@ public final class Peers {
                     Future<String> unresolvedAddress = peersService.submit(new Callable<String>() {
                         @Override
                         public String call() {
-                            Peer peer = Peers.addPeer(address);
-                            return peer == null ? address : null;
+                            PeerImpl peer = Peers.findOrCreatePeer(address, true);
+                            if (peer != null) {
+                                Peers.addPeer(peer);
+                                return null;
+                            }
+                            return address;
                         }
                     });
                     unresolvedPeers.add(unresolvedAddress);
@@ -431,7 +435,9 @@ public final class Peers {
                     Set<String> addedAddresses = new HashSet<>();
                     if (peers != null) {
                         for (Object announcedAddress : peers) {
-                            if (addPeer((String) announcedAddress) != null) {
+                            PeerImpl newPeer = findOrCreatePeer((String) announcedAddress, true);
+                            if (newPeer != null) {
+                                Peers.addPeer(newPeer);
                                 addedAddresses.add((String) announcedAddress);
                             }
                         }
@@ -603,23 +609,15 @@ public final class Peers {
     }
 
     public static Peer getPeer(String peerAddress) {
-        Peer peer;
-        if ((peer = peers.get(peerAddress)) != null) {
-            return peer;
-        }
-        String address;
-        if ((address = announcedAddresses.get(peerAddress)) != null) {
-            peer = peers.get(address);
-        }
-        return peer;
+        return peers.get(peerAddress);
     }
 
-    public static Peer addPeer(String announcedAddress) {
+    public static PeerImpl findOrCreatePeer(String announcedAddress, boolean create) {
         if (announcedAddress == null) {
             return null;
         }
         announcedAddress = announcedAddress.trim();
-        Peer peer;
+        PeerImpl peer;
         if ((peer = peers.get(announcedAddress)) != null) {
             return peer;
         }
@@ -638,14 +636,14 @@ public final class Peers {
                 return peer;
             }
             InetAddress inetAddress = InetAddress.getByName(host);
-            return addPeer(inetAddress.getHostAddress(), port, announcedAddress);
+            return findOrCreatePeer(inetAddress.getHostAddress(), port, announcedAddress, create);
         } catch (URISyntaxException | UnknownHostException e) {
             //Logger.logDebugMessage("Invalid peer address: " + announcedAddress + ", " + e.toString());
             return null;
         }
     }
 
-    static PeerImpl addPeer(final String address, int port, final String announcedAddress) {
+    static PeerImpl findOrCreatePeer(final String address, int port, final String announcedAddress, final boolean create) {
 
         //re-add the [] to ipv6 addresses lost in getHostAddress() above
         String cleanAddress = address;
@@ -667,6 +665,10 @@ public final class Peers {
             return peer;
         }
 
+        if (!create) {
+            return null;
+        }
+
         String announcedPeerAddress = address.equals(announcedAddress) ? peerAddress : normalizeHostAndPort(announcedAddress);
 
         if (Peers.myAddress != null && Peers.myAddress.length() > 0 && Peers.myAddress.equalsIgnoreCase(announcedPeerAddress)) {
@@ -682,14 +684,15 @@ public final class Peers {
             Logger.logDebugMessage("Peer " + peerAddress + " is using testnet port " + peer.getPort() + ", ignoring");
             return null;
         }
-        if (!hasTooManyKnownPeers()) {
-            peers.put(peerAddress, peer);
-            if (announcedAddress != null) {
-                updateAddress(peer);
-            }
-            listeners.notify(peer, Event.NEW_PEER);
-        }
         return peer;
+    }
+
+    public static boolean addPeer(Peer peer) {
+        if (addOrUpdate((PeerImpl)peer)) {
+            listeners.notify(peer, Event.NEW_PEER);
+            return true;
+        }
+        return false;
     }
 
     static PeerImpl removePeer(PeerImpl peer) {
@@ -699,7 +702,7 @@ public final class Peers {
         return peers.remove(peer.getPeerAddress());
     }
 
-    static void updateAddress(PeerImpl peer) {
+    static boolean addOrUpdate(PeerImpl peer) {
         String oldAddress = announcedAddresses.put(peer.getAnnouncedAddress(), peer.getPeerAddress());
         if (oldAddress != null && !peer.getPeerAddress().equals(oldAddress)) {
             //Logger.logDebugMessage("Peer " + peer.getAnnouncedAddress() + " has changed address from " + oldAddress
@@ -709,7 +712,7 @@ public final class Peers {
                 Peers.notifyListeners(oldPeer, Peers.Event.REMOVE);
             }
         }
-        peers.put(peer.getPeerAddress(), peer);
+        return peers.put(peer.getPeerAddress(), peer) == null;
     }
 
     public static void connectPeer(Peer peer) {
@@ -858,11 +861,11 @@ public final class Peers {
         }
     }
 
-    static boolean hasTooFewKnownPeers() {
+    public static boolean hasTooFewKnownPeers() {
         return peers.size() < Peers.minNumberOfKnownPeers;
     }
 
-    static boolean hasTooManyKnownPeers() {
+    public static boolean hasTooManyKnownPeers() {
         return peers.size() > Peers.maxNumberOfKnownPeers;
     }
 

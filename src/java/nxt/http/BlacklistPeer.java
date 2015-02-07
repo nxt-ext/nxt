@@ -29,11 +29,11 @@ public class BlacklistPeer extends APIRequestHandler {
         if (peerAddress == null) {
             return MISSING_PEER;
         }
-        Peer peer = Peers.getPeer(peerAddress);
+        Peer peer = Peers.findOrCreatePeer(peerAddress, true);
         if (peer == null) {
-            //maybe add as new peer?
             return UNKNOWN_PEER;
         } else {
+            Peers.addPeer(peer);
             peer.blacklist("Manual blacklist");
             response.put("done", true);
         }
