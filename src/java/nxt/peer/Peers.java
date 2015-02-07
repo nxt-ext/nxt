@@ -706,13 +706,15 @@ public final class Peers {
     }
 
     static boolean addOrUpdate(PeerImpl peer) {
-        String oldAddress = announcedAddresses.put(peer.getAnnouncedAddress(), peer.getPeerAddress());
-        if (oldAddress != null && !peer.getPeerAddress().equals(oldAddress)) {
-            //Logger.logDebugMessage("Peer " + peer.getAnnouncedAddress() + " has changed address from " + oldAddress
-            //        + " to " + peer.getPeerAddress());
-            Peer oldPeer = peers.remove(oldAddress);
-            if (oldPeer != null) {
-                Peers.notifyListeners(oldPeer, Peers.Event.REMOVE);
+        if (peer.getAnnouncedAddress() != null) {
+            String oldAddress = announcedAddresses.put(peer.getAnnouncedAddress(), peer.getPeerAddress());
+            if (oldAddress != null && !peer.getPeerAddress().equals(oldAddress)) {
+                //Logger.logDebugMessage("Peer " + peer.getAnnouncedAddress() + " has changed address from " + oldAddress
+                //        + " to " + peer.getPeerAddress());
+                Peer oldPeer = peers.remove(oldAddress);
+                if (oldPeer != null) {
+                    Peers.notifyListeners(oldPeer, Peers.Event.REMOVE);
+                }
             }
         }
         return peers.put(peer.getPeerAddress(), peer) == null;
