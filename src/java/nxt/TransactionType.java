@@ -851,7 +851,7 @@ public abstract class TransactionType {
 
                 Attachment.PendingTransactionVoteCasting att = (Attachment.PendingTransactionVoteCasting) transaction.getAttachment();
                 long[] pendingIds = att.getPendingTransactionsIds();
-                if (pendingIds.length > 2) {
+                if (pendingIds.length > Constants.MAX_VOTES_PER_VOTING_TRANSACTION) {
                     throw new NxtException.NotValidException("No more than 2 votes allowed for two-phased multivoting");
                 }
 
@@ -864,20 +864,20 @@ public abstract class TransactionType {
                     PendingTransactionPoll poll = PendingTransactionPoll.getPoll(pendingId);
                     if (poll == null) {
                         Logger.logDebugMessage("Wrong pending transaction: " + pendingId);
-                        throw new NxtException.NotValidException("Wrong pending transaction or poll is finished");
+                        throw new NxtException.NotCurrentlyValidException("Wrong pending transaction or poll is finished");
                     }
 
                     long[] whitelist = poll.getWhitelist();
-                    if (whitelist != null && whitelist.length > 0 && Arrays.binarySearch(whitelist, voterId) == -1) {
+                    if (whitelist.length > 0 && Arrays.binarySearch(whitelist, voterId) == -1) {
                         throw new NxtException.NotValidException("Voter is not in the pending transaction whitelist");
                     }
 
                     long[] blacklist = poll.getBlacklist();
-                    if (blacklist != null && blacklist.length > 0 && Arrays.binarySearch(blacklist, voterId) != -1) {
+                    if (blacklist.length > 0 && Arrays.binarySearch(blacklist, voterId) != -1) {
                         throw new NxtException.NotValidException("Voter is in the pending transaction whitelist");
                     }
 
-                    if (VotePhased.isVoteGiven(pendingId, transaction.getSenderId())) {
+                    if (VotePhased.isVoteGiven(pendingId, voterId)) {
                         throw new NxtException.NotCurrentlyValidException("Double voting attempt");
                     }
                 }
@@ -906,7 +906,7 @@ public abstract class TransactionType {
 
                     if (VotePhased.addVote(poll, transaction)) {
                         poll.finish();
-                        TransactionImpl pendingTransaction = TransactionDb.findTransaction(pendingTransactionId);
+                        TransactionImpl pendingTransaction = BlockchainImpl.getInstance().getTransaction(pendingTransactionId);
                         pendingTransaction.getPhasing().release(pendingTransaction);
                     }
                 }
