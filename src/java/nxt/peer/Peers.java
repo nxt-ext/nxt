@@ -439,6 +439,9 @@ public final class Peers {
                             if (newPeer != null) {
                                 Peers.addPeer(newPeer);
                                 addedAddresses.add((String) announcedAddress);
+                                if (hasTooManyKnownPeers()) {
+                                    break;
+                                }
                             }
                         }
                         if (savePeers && addedNewPeer) {

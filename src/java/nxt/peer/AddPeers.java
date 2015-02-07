@@ -22,6 +22,9 @@ final class AddPeers extends PeerServlet.PeerRequestHandler {
                         Peer peer = Peers.findOrCreatePeer((String) announcedAddress, true);
                         if (peer != null) {
                             Peers.addPeer(peer);
+                            if (Peers.hasTooManyKnownPeers()) {
+                                break;
+                            }
                         }
                     }
                 }
