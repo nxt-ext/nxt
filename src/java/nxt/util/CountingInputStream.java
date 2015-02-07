@@ -1,5 +1,7 @@
 package nxt.util;
 
+import nxt.NxtException;
+
 import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -45,10 +47,10 @@ public class CountingInputStream extends FilterInputStream {
         return count;
     }
 
-    private void incCount(long n) {
+    private void incCount(long n) throws NxtException.NxtIOException {
         count += n;
         if (count > limit) {
-            throw new RuntimeException("Maximum size exceeded: " + count);
+            throw new NxtException.NxtIOException("Maximum size exceeded: " + count);
         }
     }
 }

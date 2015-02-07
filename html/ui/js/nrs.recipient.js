@@ -111,13 +111,25 @@ var NRS = (function(NRS, $, undefined) {
 			"account": accountId
 		}, function(response) {
 			if (response.publicKey) {
-				callback({
-					"type": "info",
-					"message": $.t("recipient_info", {
-						"nxt": NRS.formatAmount(response.unconfirmedBalanceNQT, false, true)
-					}),
-					"account": response
-				});
+				if (response.name){
+					callback({
+						"type": "info",
+						"message": $.t("recipient_info_with_name", {
+							"name" : response.name,
+							"nxt": NRS.formatAmount(response.unconfirmedBalanceNQT, false, true)
+						}),
+						"account": response
+					});
+				}
+				else{
+					callback({
+						"type": "info",
+						"message": $.t("recipient_info", {
+							"nxt": NRS.formatAmount(response.unconfirmedBalanceNQT, false, true)
+						}),
+						"account": response
+					});
+				}
 			} else {
 				if (response.errorCode) {
 					if (response.errorCode == 4) {

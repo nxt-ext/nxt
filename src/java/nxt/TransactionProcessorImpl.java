@@ -437,7 +437,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
         List<TransactionImpl> receivedTransactions = new ArrayList<>();
         List<TransactionImpl> sendToPeersTransactions = new ArrayList<>();
         List<TransactionImpl> addedUnconfirmedTransactions = new ArrayList<>();
-        boolean invalidTransactionsFound = false;
+        List<Exception> exceptions = new ArrayList<>();
         for (Object transactionData : transactionsData) {
             try {
                 TransactionImpl transaction = parseTransaction((JSONObject) transactionData);
@@ -459,7 +459,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
             } catch (NxtException.NotCurrentlyValidException ignore) {
             } catch (NxtException.ValidationException|RuntimeException e) {
                 Logger.logDebugMessage(String.format("Invalid transaction from peer: %s", ((JSONObject) transactionData).toJSONString()), e);
-                invalidTransactionsFound = true;
+                exceptions.add(e);
             }
         }
         if (sendToPeersTransactions.size() > 0) {
@@ -471,8 +471,8 @@ final class TransactionProcessorImpl implements TransactionProcessor {
         for (TransactionImpl transaction : receivedTransactions) {
             broadcastedTransactions.remove(transaction);
         }
-        if (invalidTransactionsFound) {
-            throw new NxtException.NotValidException("Peer sends invalid transactions");
+        if (!exceptions.isEmpty()) {
+            throw new NxtException.NotValidException("Peer sends invalid transactions: " + exceptions.toString());
         }
     }
 
