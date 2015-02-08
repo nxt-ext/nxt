@@ -1,5 +1,7 @@
 package nxt;
 
+import nxt.util.Convert;
+
 public final class PollCounting {
 
     private final byte votingModel;
@@ -15,20 +17,65 @@ public final class PollCounting {
         this.minBalanceModel = minBalanceModel;
     }
 
-    public final byte getVotingModel() {
+    public byte getVotingModel() {
         return votingModel;
     }
 
-    public final long getMinBalance() {
+    public long getMinBalance() {
         return minBalance;
     }
 
-    public final long getHoldingId() {
+    public long getHoldingId() {
         return holdingId;
     }
 
-    public final byte getMinBalanceModel() {
+    public byte getMinBalanceModel() {
         return minBalanceModel;
+    }
+
+    public void validate() throws NxtException.ValidationException {
+        if (votingModel != Constants.VOTING_MODEL_ACCOUNT
+                && votingModel != Constants.VOTING_MODEL_NQT
+                && votingModel != Constants.VOTING_MODEL_ASSET
+                && votingModel != Constants.VOTING_MODEL_CURRENCY) {
+            throw new NxtException.NotValidException("Invalid voting model value: " + votingModel);
+        }
+        if ((votingModel == Constants.VOTING_MODEL_ASSET || votingModel == Constants.VOTING_MODEL_CURRENCY) && holdingId == 0) {
+            throw new NxtException.NotValidException("No holdingId provided");
+        }
+        if (votingModel == Constants.VOTING_MODEL_CURRENCY && Currency.getCurrency(holdingId) == null) {
+            throw new NxtException.NotCurrentlyValidException("Currency " + Convert.toUnsignedLong(holdingId) + " not found");
+        }
+        if (votingModel == Constants.VOTING_MODEL_ASSET && Asset.getAsset(holdingId) == null) {
+            throw new NxtException.NotCurrentlyValidException("Asset " + Convert.toUnsignedLong(holdingId) + " not found");
+        }
+        if (minBalance < 0) {
+            throw new NxtException.NotValidException("Invalid minBalance " + minBalance);
+        }
+        if (minBalance > 0) {
+            if (minBalanceModel != Constants.VOTING_MINBALANCE_ASSET
+                    && minBalanceModel != Constants.VOTING_MINBALANCE_NQT
+                    && minBalanceModel != Constants.VOTING_MINBALANCE_CURRENCY) {
+                throw new NxtException.NotValidException("Invalid min balance model " + minBalanceModel);
+            }
+            if ((votingModel == Constants.VOTING_MODEL_ASSET && minBalanceModel != Constants.VOTING_MINBALANCE_ASSET)
+                    || (votingModel == Constants.VOTING_MODEL_NQT && minBalanceModel != Constants.VOTING_MINBALANCE_NQT)
+                    || (votingModel == Constants.VOTING_MODEL_CURRENCY && minBalanceModel != Constants.VOTING_MINBALANCE_CURRENCY)) {
+                throw new NxtException.NotValidException("Invalid min balance model: " + minBalanceModel + " for voting model " + votingModel);
+            }
+            if ((minBalanceModel == Constants.VOTING_MINBALANCE_ASSET || minBalanceModel == Constants.VOTING_MINBALANCE_CURRENCY) && holdingId == 0) {
+                throw new NxtException.NotValidException("No holdingId provided");
+            }
+            if (minBalanceModel == Constants.VOTING_MINBALANCE_ASSET && Asset.getAsset(holdingId) == null) {
+                throw new NxtException.NotCurrentlyValidException("Invalid min balance asset: " + Convert.toUnsignedLong(holdingId));
+            }
+            if (minBalanceModel == Constants.VOTING_MINBALANCE_CURRENCY && Currency.getCurrency(holdingId) == null) {
+                throw new NxtException.NotCurrentlyValidException("Invalid min balance currency: " + Convert.toUnsignedLong(holdingId));
+            }
+        }
+        if (minBalance == 0 && votingModel == Constants.VOTING_MODEL_ACCOUNT && holdingId != 0) {
+            throw new NxtException.NotValidException("HoldingId cannot be used in by account voting with no min balance");
+        }
     }
 
     long calcWeight(long voterId, int height) {
@@ -54,27 +101,29 @@ public final class PollCounting {
                 }
                 break;
             case Constants.VOTING_MODEL_ACCOUNT:
-                long result;
-                long balance;
-                switch (minBalanceModel) {
-                    case Constants.VOTING_MINBALANCE_ASSET:
-                        balance = Account.getAssetBalanceQNT(voterId, holdingId, height);
-                        break;
-                    case Constants.VOTING_MINBALANCE_CURRENCY:
-                        balance = Account.getCurrencyUnits(voterId, holdingId, height);
-                        break;
-                    case Constants.VOTING_MINBALANCE_NQT:
-                        balance = Account.getAccount(voterId, height).getBalanceNQT();
-                        break;
-                    default:
-                        throw new RuntimeException("Invalid minBalanceModel " + minBalanceModel);
-                }
-                if (balance >= minBalance) {
-                    result = 1;
+                if (minBalance == 0) {
+                    weight = 1;
                 } else {
-                    result = 0;
+                    long balance;
+                    switch (minBalanceModel) {
+                        case Constants.VOTING_MINBALANCE_ASSET:
+                            balance = Account.getAssetBalanceQNT(voterId, holdingId, height);
+                            break;
+                        case Constants.VOTING_MINBALANCE_CURRENCY:
+                            balance = Account.getCurrencyUnits(voterId, holdingId, height);
+                            break;
+                        case Constants.VOTING_MINBALANCE_NQT:
+                            balance = Account.getAccount(voterId, height).getBalanceNQT();
+                            break;
+                        default:
+                            throw new RuntimeException("Invalid minBalanceModel " + minBalanceModel);
+                    }
+                    if (balance >= minBalance) {
+                        weight = 1;
+                    } else {
+                        weight = 0;
+                    }
                 }
-                weight = result;
                 break;
             default:
                 throw new RuntimeException("Invalid votingModel " + votingModel);

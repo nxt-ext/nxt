@@ -32,6 +32,7 @@ public class GetPollResults extends APIServlet.APIRequestHandler {
             long minBalance = ParameterParser.getLong(req, "minBalance", 0, Long.MAX_VALUE, false);
             byte minBalanceModel = ParameterParser.getByte(req, "minBalanceModel", Constants.VOTING_MINBALANCE_NQT, Constants.VOTING_MINBALANCE_CURRENCY, false);
             PollCounting pollCounting = new PollCounting(votingModel, holdingId, minBalance, minBalanceModel);
+            pollCounting.validate();
             pollResults = poll.getResults(pollCounting);
         }
         if (pollResults == null) {

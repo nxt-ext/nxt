@@ -572,23 +572,9 @@ public interface Appendix {
 
         @Override
         void validate(Transaction transaction) throws NxtException.ValidationException {
-            if (votingModel != Constants.VOTING_MODEL_ACCOUNT &&
-                    votingModel != Constants.VOTING_MODEL_ASSET &&
-                    votingModel != Constants.VOTING_MODEL_CURRENCY &&
-                    votingModel != Constants.VOTING_MODEL_NQT) {
-                throw new NxtException.NotValidException("Invalid voting model for phasing transaction");
-            }
 
             if (whitelist.length * (-blacklist.length) < 0) {
                 throw new NxtException.NotValidException("Both whitelist & blacklist are non-empty");
-            }
-
-            if (votingModel == Constants.VOTING_MODEL_ACCOUNT && whitelist.length == 0) {
-                throw new NxtException.NotValidException("By-account voting with empty whitelist");
-            }
-
-            if (votingModel == Constants.VOTING_MODEL_ACCOUNT && holdingId != 0) {
-                throw new NxtException.NotValidException("holding is provided for by-account voting");
             }
 
             if (whitelist.length > Constants.MAX_PHASING_WHITELIST_SIZE) {
@@ -599,9 +585,8 @@ public interface Appendix {
                 throw new NxtException.NotValidException("Blacklist is too big");
             }
 
-            if ((votingModel == Constants.VOTING_MODEL_ASSET || votingModel == Constants.VOTING_MODEL_CURRENCY)
-                    && holdingId == 0) {
-                throw new NxtException.NotValidException("Invalid holding");
+            if (votingModel == Constants.VOTING_MODEL_ACCOUNT && whitelist.length == 0) {
+                throw new NxtException.NotValidException("By-account voting with empty whitelist");
             }
 
             if (quorum <= 0) {
@@ -613,7 +598,9 @@ public interface Appendix {
                     || finishHeight > currentHeight + Constants.VOTING_MAX_VOTE_DURATION) {
                 throw new NxtException.NotValidException("Invalid release height");
             }
-            //TODO: more validation for VOTING_MODEL_NQT and VOTING_MINBALANCE_MODEL
+
+            PollCounting pollCounting = new PollCounting(votingModel, holdingId, minBalance, minBalanceModel);
+            pollCounting.validate();
         }
 
         @Override
