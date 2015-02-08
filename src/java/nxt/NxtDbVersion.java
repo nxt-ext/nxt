@@ -659,8 +659,35 @@ class NxtDbVersion extends DbVersion {
             case 251:
                 apply("ALTER TABLE transaction ALTER COLUMN two_phased RENAME TO has_phasing");
             case 252:
+                apply("ALTER TABLE pending_transaction RENAME TO phasing_poll");
+            case 253:
+                apply("ALTER TABLE phasing_poll ALTER COLUMN signers_count RENAME TO voter_count");
+            case 254:
+                apply("ALTER TABLE vote_phased RENAME TO phasing_vote");
+            case 255:
+                apply("ALTER TABLE phasing_vote ALTER COLUMN pending_transaction_id RENAME TO transaction_id");
+            case 256:
+                apply("ALTER TABLE pending_transaction_signer RENAME TO phasing_voter");
+            case 257:
+                apply("ALTER TABLE phasing_voter ALTER COLUMN poll_id RENAME TO transaction_id");
+            case 258:
+                apply("ALTER TABLE phasing_voter ALTER COLUMN account_id RENAME TO voter_id");
+            case 259:
+                apply("CREATE UNIQUE INDEX IF NOT EXISTS phasing_poll_id_height_idx ON phasing_poll(id, height DESC)");
+            case 260:
+                apply("CREATE INDEX IF NOT EXISTS phasing_poll_height_idx ON phasing_poll(height)");
+            case 261:
+                apply("CREATE INDEX IF NOT EXISTS phasing_poll_account_id_idx ON phasing_poll(account_id, height DESC)");
+            case 262:
+                apply("CREATE INDEX IF NOT EXISTS phasing_poll_holding_id_idx ON phasing_poll(holding_id, height DESC)");
+            case 263:
+                apply("CREATE UNIQUE INDEX IF NOT EXISTS phasing_vote_id_transaction_idx ON phasing_vote(id, transaction_id)");
+            case 264:
+                apply("CREATE UNIQUE INDEX IF NOT EXISTS phasing_vote_transaction_voter_idx ON phasing_vote(transaction_id, voter_id)");
+            case 265:
+                apply("CREATE INDEX IF NOT EXISTS phasing_voter_id_height_idx ON phasing_voter(transaction_id, height DESC");
+            case 266:
                 return;
-            //todo: more indexes on 2PTs tables
             default:
                 throw new RuntimeException("Blockchain database inconsistent with code, probably trying to run older code on newer database");
         }

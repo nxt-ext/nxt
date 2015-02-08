@@ -33,11 +33,11 @@ public class ApprovePendingTransaction extends CreateTransaction {
         long[] pendingTransactionIds = new long[pendingTransactionValues.length];
         for (int i = 0; i < pendingTransactionValues.length; i++) {
             pendingTransactionIds[i] = Convert.parseUnsignedLong(pendingTransactionValues[i]);
-            PendingTransactionPoll pendingTransactionPoll = PendingTransactionPoll.getPoll(pendingTransactionIds[i]);
-            if (pendingTransactionPoll == null) {
+            PhasingPoll phasingPoll = PhasingPoll.getPoll(pendingTransactionIds[i]);
+            if (phasingPoll == null) {
                 return INCORRECT_PENDING_TRANSACTION;
             }
-            if (pendingTransactionPoll.getFinishHeight() < Nxt.getBlockchain().getHeight()) {
+            if (phasingPoll.getFinishHeight() < Nxt.getBlockchain().getHeight()) {
                 return INCORRECT_PENDING_TRANSACTION;
             }
         }

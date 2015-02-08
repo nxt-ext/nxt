@@ -814,7 +814,7 @@ public abstract class TransactionType {
 
                 long voterId = transaction.getSenderId();
                 for (long pendingId : pendingIds) {
-                    PendingTransactionPoll poll = PendingTransactionPoll.getPoll(pendingId);
+                    PhasingPoll poll = PhasingPoll.getPoll(pendingId);
                     if (poll == null) {
                         Logger.logDebugMessage("Wrong pending transaction: " + pendingId);
                         throw new NxtException.NotCurrentlyValidException("Wrong pending transaction or poll is finished");
@@ -830,7 +830,7 @@ public abstract class TransactionType {
                         throw new NxtException.NotValidException("Voter is in the pending transaction whitelist");
                     }
 
-                    if (VotePhased.isVoteGiven(pendingId, voterId)) {
+                    if (PhasingVote.isVoteGiven(pendingId, voterId)) {
                         throw new NxtException.NotCurrentlyValidException("Double voting attempt");
                     }
                 }
@@ -855,9 +855,9 @@ public abstract class TransactionType {
                 Attachment.PendingTransactionVoteCasting attachment = (Attachment.PendingTransactionVoteCasting) transaction.getAttachment();
                 long[] pendingTransactionsIds = attachment.getPendingTransactionsIds();
                 for (long pendingTransactionId : pendingTransactionsIds) {
-                    PendingTransactionPoll poll = PendingTransactionPoll.getPoll(pendingTransactionId);
+                    PhasingPoll poll = PhasingPoll.getPoll(pendingTransactionId);
 
-                    if (VotePhased.addVote(poll, transaction)) {
+                    if (PhasingVote.addVote(poll, transaction)) {
                         poll.finish();
                         TransactionImpl pendingTransaction = BlockchainImpl.getInstance().getTransaction(pendingTransactionId);
                         pendingTransaction.getPhasing().release(pendingTransaction);

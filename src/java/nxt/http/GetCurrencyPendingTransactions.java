@@ -2,7 +2,7 @@ package nxt.http;
 
 import nxt.Constants;
 import nxt.Currency;
-import nxt.PendingTransactionPoll;
+import nxt.PhasingPoll;
 import nxt.Transaction;
 import nxt.db.DbIterator;
 import org.json.simple.JSONArray;
@@ -29,7 +29,7 @@ public class GetCurrencyPendingTransactions extends APIServlet.APIRequestHandler
 
         JSONArray transactions = new JSONArray();
         try (DbIterator<? extends Transaction> iterator =
-                     PendingTransactionPoll.getPendingTransactionsForHolding(currencyId, votingModel, firstIndex, lastIndex)) {
+                     PhasingPoll.getPendingTransactionsForHolding(currencyId, votingModel, firstIndex, lastIndex)) {
             while (iterator.hasNext()) {
                 Transaction transaction = iterator.next();
                 transactions.add(JSONData.transaction(transaction));

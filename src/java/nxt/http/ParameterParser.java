@@ -94,7 +94,7 @@ final class ParameterParser {
         return value;
     }
 
-    static PendingTransactionPoll getPendingTransactionPoll(HttpServletRequest req) throws ParameterException {
+    static PhasingPoll getPendingTransactionPoll(HttpServletRequest req) throws ParameterException {
         long transactionId;
         try {
             transactionId = Convert.parseUnsignedLong(Convert.emptyToNull(req.getParameter("pendingTransaction")));
@@ -104,11 +104,11 @@ final class ParameterParser {
         if(transactionId == 0){
             throw new ParameterException(INCORRECT_PENDING_TRANSACTION);
         }
-        PendingTransactionPoll pendingTransactionPoll = PendingTransactionPoll.getPoll(transactionId);
-        if(pendingTransactionPoll==null){
+        PhasingPoll phasingPoll = PhasingPoll.getPoll(transactionId);
+        if(phasingPoll ==null){
             throw new ParameterException(MISSING_PENDING_TRANSACTION);
         }
-        return pendingTransactionPoll;
+        return phasingPoll;
     }
 
     static Alias getAlias(HttpServletRequest req) throws ParameterException {

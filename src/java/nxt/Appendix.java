@@ -605,7 +605,7 @@ public interface Appendix {
 
         @Override
         void apply(Transaction transaction, Account senderAccount, Account recipientAccount) {
-            PendingTransactionPoll.addPoll(transaction, this);
+            PhasingPoll.addPoll(transaction, this);
         }
 
         void release(TransactionImpl transaction) {
@@ -621,9 +621,9 @@ public interface Appendix {
         }
 
         void finalVerification(TransactionImpl transaction) {
-            PendingTransactionPoll poll = PendingTransactionPoll.getPoll(transaction.getId());
+            PhasingPoll poll = PhasingPoll.getPoll(transaction.getId());
             poll.finish();
-            if (VotePhased.countVotes(poll) >= poll.getQuorum()) {
+            if (PhasingVote.countVotes(poll) >= poll.getQuorum()) {
                 release(transaction);
             } else {
                 Account senderAccount = Account.getAccount(transaction.getSenderId());

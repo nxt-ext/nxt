@@ -2,10 +2,9 @@ package nxt.http;
 
 import nxt.Account;
 import nxt.NxtException;
-import nxt.PendingTransactionPoll;
+import nxt.PhasingPoll;
 import nxt.Transaction;
 import nxt.db.DbIterator;
-import nxt.util.Convert;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
@@ -28,7 +27,7 @@ public class GetAccountPendingTransactionsToApprove extends APIServlet.APIReques
         int lastIndex = ParameterParser.getLastIndex(req);
 
         JSONArray transactions = new JSONArray();
-        try (DbIterator<? extends Transaction> iterator = PendingTransactionPoll.getPendingTransactionsForApprover(account, firstIndex, lastIndex)) {
+        try (DbIterator<? extends Transaction> iterator = PhasingPoll.getPendingTransactionsForApprover(account, firstIndex, lastIndex)) {
             while (iterator.hasNext()) {
                 Transaction transaction = iterator.next();
                 transactions.add(JSONData.transaction(transaction));
