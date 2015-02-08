@@ -15,7 +15,7 @@ public class GetCurrencyPendingTransactions extends APIServlet.APIRequestHandler
     static final GetCurrencyPendingTransactions instance = new GetCurrencyPendingTransactions();
 
     private GetCurrencyPendingTransactions() {
-        super(new APITag[]{APITag.AE, APITag.PENDING_TRANSACTIONS}, "currency", "firstIndex", "lastIndex");
+        super(new APITag[]{APITag.AE, APITag.PHASING}, "currency", "firstIndex", "lastIndex");
     }
 
     @Override
@@ -29,7 +29,7 @@ public class GetCurrencyPendingTransactions extends APIServlet.APIRequestHandler
 
         JSONArray transactions = new JSONArray();
         try (DbIterator<? extends Transaction> iterator =
-                     PhasingPoll.getPendingTransactionsForHolding(currencyId, votingModel, firstIndex, lastIndex)) {
+                     PhasingPoll.getHoldingPendingTransactions(currencyId, votingModel, firstIndex, lastIndex)) {
             while (iterator.hasNext()) {
                 Transaction transaction = iterator.next();
                 transactions.add(JSONData.transaction(transaction));

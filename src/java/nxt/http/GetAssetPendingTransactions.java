@@ -16,7 +16,7 @@ public class GetAssetPendingTransactions extends APIServlet.APIRequestHandler {
     static final GetAssetPendingTransactions instance = new GetAssetPendingTransactions();
 
     private GetAssetPendingTransactions() {
-        super(new APITag[]{APITag.AE, APITag.PENDING_TRANSACTIONS}, "asset", "firstIndex", "lastIndex");
+        super(new APITag[]{APITag.AE, APITag.PHASING}, "asset", "firstIndex", "lastIndex");
     }
 
     @Override
@@ -30,7 +30,7 @@ public class GetAssetPendingTransactions extends APIServlet.APIRequestHandler {
 
         JSONArray transactions = new JSONArray();
         try (DbIterator<? extends Transaction> iterator =
-                     PhasingPoll.getPendingTransactionsForHolding(assetId, votingModel, firstIndex, lastIndex)) {
+                     PhasingPoll.getHoldingPendingTransactions(assetId, votingModel, firstIndex, lastIndex)) {
             while (iterator.hasNext()) {
                 Transaction transaction = iterator.next();
                 transactions.add(JSONData.transaction(transaction));

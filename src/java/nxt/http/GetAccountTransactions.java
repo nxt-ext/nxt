@@ -17,7 +17,7 @@ public final class GetAccountTransactions extends APIServlet.APIRequestHandler {
 
     private GetAccountTransactions() {
         super(new APITag[] {APITag.ACCOUNTS, APITag.TRANSACTIONS}, "account", "timestamp", "type", "subtype",
-                "firstIndex", "lastIndex", "numberOfConfirmations", "withMessage", "twoPhased");
+                "firstIndex", "lastIndex", "numberOfConfirmations", "withMessage", "phased");
     }
 
     @Override
@@ -26,8 +26,8 @@ public final class GetAccountTransactions extends APIServlet.APIRequestHandler {
         Account account = ParameterParser.getAccount(req);
         int timestamp = ParameterParser.getTimestamp(req);
         int numberOfConfirmations = ParameterParser.getNumberOfConfirmations(req);
-        boolean withMessage = ParameterParser.getBoolean(req,"withMessage",false);
-        boolean twoPhased = ParameterParser.getBoolean(req,"twoPhased",false);
+        boolean withMessage = ParameterParser.getBoolean(req, "withMessage", false);
+        boolean phased = ParameterParser.getBoolean(req, "phased", false);
 
         byte type;
         byte subtype;
@@ -47,7 +47,7 @@ public final class GetAccountTransactions extends APIServlet.APIRequestHandler {
 
         JSONArray transactions = new JSONArray();
         try (DbIterator<? extends Transaction> iterator = Nxt.getBlockchain().getTransactions(account, numberOfConfirmations, type, subtype, timestamp,
-                withMessage, twoPhased, firstIndex, lastIndex)) {
+                withMessage, phased, firstIndex, lastIndex)) {
             while (iterator.hasNext()) {
                 Transaction transaction = iterator.next();
                 transactions.add(JSONData.transaction(transaction));

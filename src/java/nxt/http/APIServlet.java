@@ -77,7 +77,7 @@ public final class APIServlet extends HttpServlet {
 
         Map<String,APIRequestHandler> map = new HashMap<>();
 
-        map.put("approvePendingTransaction", ApprovePendingTransaction.instance);
+        map.put("approveTransaction", ApproveTransaction.instance);
         map.put("broadcastTransaction", BroadcastTransaction.instance);
         map.put("calculateFullHash", CalculateFullHash.instance);
         map.put("cancelAskOrder", CancelAskOrder.instance);
@@ -107,7 +107,7 @@ public final class APIServlet extends HttpServlet {
         map.put("getAccountBlockIds", GetAccountBlockIds.instance);
         map.put("getAccountBlocks", GetAccountBlocks.instance);
         map.put("getAccountId", GetAccountId.instance);
-        map.put("getAccountPendingTransactionsToApprove", GetAccountPendingTransactionsToApprove.instance);
+        map.put("getVoterPendingTransactions", GetVoterPendingTransactions.instance);
         map.put("getPolls", GetPolls.instance);
         map.put("getAccountPendingTransactions", GetAccountPendingTransactions.instance);
         map.put("getAccountPublicKey", GetAccountPublicKey.instance);
@@ -163,7 +163,7 @@ public final class APIServlet extends HttpServlet {
         //map.put("getNextBlockGenerators", GetNextBlockGenerators.instance);
         map.put("getPeer", GetPeer.instance);
         map.put("getPeers", GetPeers.instance);
-        map.put("getPendingTransactionVotes", GetPendingTransactionVotes.instance);
+        map.put("getPhasingVotes", GetPhasingVotes.instance);
         map.put("getPoll", GetPoll.instance);
         map.put("getPollResults", GetPollResults.instance);
         map.put("getPollVotes", GetPollVotes.instance);

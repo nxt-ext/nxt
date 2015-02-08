@@ -20,7 +20,7 @@ public class PhasingVote {
                 }
             };
 
-    private static final EntityDbTable<PhasingVote> votePhasedTable = new EntityDbTable<PhasingVote>("phasing_vote", voteDbKeyFactory) {
+    private static final EntityDbTable<PhasingVote> phasingVoteTable = new EntityDbTable<PhasingVote>("phasing_vote", voteDbKeyFactory) {
 
         @Override
         protected PhasingVote load(Connection con, ResultSet rs) throws SQLException {
@@ -35,12 +35,12 @@ public class PhasingVote {
     };
 
     public static DbIterator<PhasingVote> getByTransaction(long pendingTransactionId, int from, int to) {
-        return votePhasedTable.getManyBy(new DbClause.LongClause("transaction_id", pendingTransactionId), from, to);
+        return phasingVoteTable.getManyBy(new DbClause.LongClause("transaction_id", pendingTransactionId), from, to);
     }
 
     public static long countVotes(PhasingPoll poll) {
         if (poll.getDefaultVoteWeighting().getVotingModel() == Constants.VOTING_MODEL_ACCOUNT && poll.getDefaultVoteWeighting().getMinBalance() == 0) {
-            return votePhasedTable.getCount(new DbClause.LongClause("transaction_id", poll.getId()));
+            return phasingVoteTable.getCount(new DbClause.LongClause("transaction_id", poll.getId()));
         }
         long cumulativeWeight = 0;
         try (DbIterator<PhasingVote> votes = PhasingVote.getByTransaction(poll.getId(), 0, Integer.MAX_VALUE)) {
@@ -52,14 +52,14 @@ public class PhasingVote {
     }
 
     static boolean addVote(PhasingPoll poll, Transaction transaction) {
-        votePhasedTable.insert(new PhasingVote(transaction, poll.getId()));
+        phasingVoteTable.insert(new PhasingVote(transaction, poll.getId()));
         return poll.getDefaultVoteWeighting().getVotingModel() == Constants.VOTING_MODEL_ACCOUNT && poll.getDefaultVoteWeighting().getMinBalance() == 0
-                && votePhasedTable.getCount(new DbClause.LongClause("transaction_id", poll.getId())) >= poll.getQuorum();
+                && phasingVoteTable.getCount(new DbClause.LongClause("transaction_id", poll.getId())) >= poll.getQuorum();
     }
 
     static boolean isVoteGiven(long pendingTransactionId, long voterId) {
         DbClause clause = new DbClause.LongClause("transaction_id", pendingTransactionId).and(new DbClause.LongClause("voter_id", voterId));
-        return votePhasedTable.getCount(clause) > 0;
+        return phasingVoteTable.getCount(clause) > 0;
     }
 
     static void init() {

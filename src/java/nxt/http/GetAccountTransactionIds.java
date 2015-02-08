@@ -17,7 +17,7 @@ public final class GetAccountTransactionIds extends APIServlet.APIRequestHandler
 
     private GetAccountTransactionIds() {
         super(new APITag[] {APITag.ACCOUNTS, APITag.TRANSACTIONS}, "account", "timestamp", "type", "subtype",
-                "firstIndex", "lastIndex", "numberOfConfirmations", "withMessage", "twoPhased");
+                "firstIndex", "lastIndex", "numberOfConfirmations", "withMessage", "phased");
     }
 
     @Override
@@ -27,7 +27,7 @@ public final class GetAccountTransactionIds extends APIServlet.APIRequestHandler
         int timestamp = ParameterParser.getTimestamp(req);
         int numberOfConfirmations = ParameterParser.getNumberOfConfirmations(req);
         boolean withMessage = ParameterParser.getBoolean(req, "withMessage", false);
-        boolean twoPhased = ParameterParser.getBoolean(req, "twoPhased", false);
+        boolean phased = ParameterParser.getBoolean(req, "phased", false);
 
         byte type;
         byte subtype;
@@ -47,7 +47,7 @@ public final class GetAccountTransactionIds extends APIServlet.APIRequestHandler
 
         JSONArray transactionIds = new JSONArray();
         try (DbIterator<? extends Transaction> iterator = Nxt.getBlockchain().getTransactions(account, numberOfConfirmations, type, subtype, timestamp,
-                withMessage, twoPhased, firstIndex, lastIndex)) {
+                withMessage, phased, firstIndex, lastIndex)) {
             while (iterator.hasNext()) {
                 Transaction transaction = iterator.next();
                 transactionIds.add(transaction.getStringId());

@@ -25,9 +25,9 @@ public class TestApprovePendingTransaction extends BlockchainTest {
 
         long fee = Constants.ONE_NXT;
 
-        apiCall = new APICall.Builder("approvePendingTransaction")
+        apiCall = new APICall.Builder("approveTransaction")
                 .param("secretPhrase", secretPhrase3)
-                .param("pendingTransaction", transactionId)
+                .param("transaction", transactionId)
                 .param("feeNQT", fee)
                 .build();
 
@@ -55,9 +55,9 @@ public class TestApprovePendingTransaction extends BlockchainTest {
 
         long fee = Constants.ONE_NXT;
 
-        apiCall = new APICall.Builder("approvePendingTransaction")
+        apiCall = new APICall.Builder("approveTransaction")
                 .param("secretPhrase", secretPhrase4)
-                .param("pendingTransaction", transactionId)
+                .param("transaction", transactionId)
                 .param("feeNQT", fee)
                 .build();
 

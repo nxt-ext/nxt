@@ -667,11 +667,11 @@ class NxtDbVersion extends DbVersion {
             case 255:
                 apply("ALTER TABLE phasing_vote ALTER COLUMN pending_transaction_id RENAME TO transaction_id");
             case 256:
-                apply("ALTER TABLE pending_transaction_signer RENAME TO phasing_voter");
+                apply("ALTER TABLE pending_transaction_signer RENAME TO phasing_poll_voter");
             case 257:
-                apply("ALTER TABLE phasing_voter ALTER COLUMN poll_id RENAME TO transaction_id");
+                apply("ALTER TABLE phasing_poll_voter ALTER COLUMN poll_id RENAME TO transaction_id");
             case 258:
-                apply("ALTER TABLE phasing_voter ALTER COLUMN account_id RENAME TO voter_id");
+                apply("ALTER TABLE phasing_poll_voter ALTER COLUMN account_id RENAME TO voter_id");
             case 259:
                 apply("CREATE UNIQUE INDEX IF NOT EXISTS phasing_poll_id_height_idx ON phasing_poll(id, height DESC)");
             case 260:
@@ -685,7 +685,7 @@ class NxtDbVersion extends DbVersion {
             case 264:
                 apply("CREATE UNIQUE INDEX IF NOT EXISTS phasing_vote_transaction_voter_idx ON phasing_vote(transaction_id, voter_id)");
             case 265:
-                apply("CREATE INDEX IF NOT EXISTS phasing_voter_id_height_idx ON phasing_voter(transaction_id, height DESC");
+                apply("CREATE INDEX IF NOT EXISTS phasing_poll_voter_id_height_idx ON phasing_poll_voter(transaction_id, height DESC");
             case 266:
                 return;
             default:

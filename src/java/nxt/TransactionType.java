@@ -30,7 +30,7 @@ public abstract class TransactionType {
     private static final byte SUBTYPE_MESSAGING_ALIAS_SELL = 6;
     private static final byte SUBTYPE_MESSAGING_ALIAS_BUY = 7;
     private static final byte SUBTYPE_MESSAGING_ALIAS_DELETE = 8;
-    private static final byte SUBTYPE_PENDING_TRANSACTION_VOTE_CASTING = 9;
+    private static final byte SUBTYPE_MESSAGING_PHASING_VOTE_CASTING = 9;
 
     private static final byte SUBTYPE_COLORED_COINS_ASSET_ISSUANCE = 0;
     private static final byte SUBTYPE_COLORED_COINS_ASSET_TRANSFER = 1;
@@ -89,8 +89,8 @@ public abstract class TransactionType {
                         return Messaging.ALIAS_BUY;
                     case SUBTYPE_MESSAGING_ALIAS_DELETE:
                         return Messaging.ALIAS_DELETE;
-                    case SUBTYPE_PENDING_TRANSACTION_VOTE_CASTING:
-                        return Messaging.PENDING_TRANSACTION_VOTE_CASTING;
+                    case SUBTYPE_MESSAGING_PHASING_VOTE_CASTING:
+                        return Messaging.PHASING_VOTE_CASTING;
                     default:
                         return null;
                 }
@@ -778,20 +778,20 @@ public abstract class TransactionType {
 
         };
 
-        public static final TransactionType PENDING_TRANSACTION_VOTE_CASTING = new Messaging() {
+        public static final TransactionType PHASING_VOTE_CASTING = new Messaging() {
             @Override
             public final byte getSubtype() {
-                return TransactionType.SUBTYPE_PENDING_TRANSACTION_VOTE_CASTING;
+                return TransactionType.SUBTYPE_MESSAGING_PHASING_VOTE_CASTING;
             }
 
             @Override
-            Attachment.PendingTransactionVoteCasting parseAttachment(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
-                return new Attachment.PendingTransactionVoteCasting(buffer, transactionVersion);
+            Attachment.MessagingPhasingVoteCasting parseAttachment(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
+                return new Attachment.MessagingPhasingVoteCasting(buffer, transactionVersion);
             }
 
             @Override
-            Attachment.PendingTransactionVoteCasting parseAttachment(JSONObject attachmentData) throws NxtException.NotValidException {
-                return new Attachment.PendingTransactionVoteCasting(attachmentData);
+            Attachment.MessagingPhasingVoteCasting parseAttachment(JSONObject attachmentData) throws NxtException.NotValidException {
+                return new Attachment.MessagingPhasingVoteCasting(attachmentData);
             }
 
             @Override
@@ -802,8 +802,8 @@ public abstract class TransactionType {
             @Override
             void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
 
-                Attachment.PendingTransactionVoteCasting att = (Attachment.PendingTransactionVoteCasting) transaction.getAttachment();
-                long[] pendingIds = att.getPendingTransactionsIds();
+                Attachment.MessagingPhasingVoteCasting att = (Attachment.MessagingPhasingVoteCasting) transaction.getAttachment();
+                long[] pendingIds = att.getTransactionsIds();
                 if (pendingIds.length > Constants.MAX_VOTES_PER_VOTING_TRANSACTION) {
                     throw new NxtException.NotValidException("No more than 2 votes allowed for two-phased multivoting");
                 }
@@ -838,12 +838,12 @@ public abstract class TransactionType {
 
             @Override
             boolean isDuplicate(Transaction transaction, Map<TransactionType, Map<String,Boolean>> duplicates) {
-                Attachment.PendingTransactionVoteCasting attachment = (Attachment.PendingTransactionVoteCasting) transaction.getAttachment();
+                Attachment.MessagingPhasingVoteCasting attachment = (Attachment.MessagingPhasingVoteCasting) transaction.getAttachment();
                 String voter = Convert.toUnsignedLong(transaction.getSenderId());
-                long[] pendingTransactionIds = attachment.getPendingTransactionsIds();
+                long[] pendingTransactionIds = attachment.getTransactionsIds();
                 for (long pendingTransactionId : pendingTransactionIds) {
                     String compositeKey = voter + ":" + Convert.toUnsignedLong(pendingTransactionId);
-                    if (isDuplicate(Messaging.PENDING_TRANSACTION_VOTE_CASTING, compositeKey, duplicates, true)) {
+                    if (isDuplicate(Messaging.PHASING_VOTE_CASTING, compositeKey, duplicates, true)) {
                         return true;
                     }
                 }
@@ -852,8 +852,8 @@ public abstract class TransactionType {
 
             @Override
             final void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
-                Attachment.PendingTransactionVoteCasting attachment = (Attachment.PendingTransactionVoteCasting) transaction.getAttachment();
-                long[] pendingTransactionsIds = attachment.getPendingTransactionsIds();
+                Attachment.MessagingPhasingVoteCasting attachment = (Attachment.MessagingPhasingVoteCasting) transaction.getAttachment();
+                long[] pendingTransactionsIds = attachment.getTransactionsIds();
                 for (long pendingTransactionId : pendingTransactionsIds) {
                     PhasingPoll poll = PhasingPoll.getPoll(pendingTransactionId);
 

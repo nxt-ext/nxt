@@ -43,40 +43,40 @@ public class TestCreateTwoPhased extends BlockchainTest {
             feeNQT(Constants.ONE_NXT);
             recipient(id2);
             param("amountNQT", 50 * Constants.ONE_NXT);
-            param("isPending", "true");
-            param("pendingVotingModel", Constants.VOTING_MODEL_ACCOUNT);
-            param("pendingQuorum", 1);
-            param("pendingWhitelisted", Convert.toUnsignedLong(id3));
-            param("pendingMaxHeight", height + 15);
+            param("phased", "true");
+            param("phasingVotingModel", Constants.VOTING_MODEL_ACCOUNT);
+            param("phasingQuorum", 1);
+            param("phasingWhitelisted", Convert.toUnsignedLong(id3));
+            param("phasingFinishHeight", height + 15);
         }
 
         public TwoPhasedMoneyTransferBuilder votingModel(byte model) {
-            param("pendingVotingModel", model);
+            param("phasingVotingModel", model);
             return this;
         }
 
         public TwoPhasedMoneyTransferBuilder maxHeight(int maxHeight) {
-            param("pendingMaxHeight", maxHeight);
+            param("phasingFinishHeight", maxHeight);
             return this;
         }
 
         public TwoPhasedMoneyTransferBuilder minBalance(long minBalance) {
-            param("pendingMinBalance", minBalance);
+            param("phasingMinBalance", minBalance);
             return this;
         }
 
         public TwoPhasedMoneyTransferBuilder quorum(int quorum) {
-            param("pendingQuorum", quorum);
+            param("phasingQuorum", quorum);
             return this;
         }
 
         public TwoPhasedMoneyTransferBuilder whitelisted(long accountId) {
-            param("pendingWhitelisted", Convert.toUnsignedLong(accountId));
+            param("phasingWhitelisted", Convert.toUnsignedLong(accountId));
             return this;
         }
 
         public TwoPhasedMoneyTransferBuilder blacklisted(long accountId) {
-            param("pendingBlacklisted", Convert.toUnsignedLong(accountId));
+            param("phasingBlacklisted", Convert.toUnsignedLong(accountId));
             return this;
         }
     }

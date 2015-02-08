@@ -20,10 +20,10 @@ public final class JSONResponses {
     public static final JSONStreamAware MISSING_ALIAS_NAME = missing("aliasName");
     public static final JSONStreamAware MISSING_ALIAS_OR_ALIAS_NAME = missing("alias", "aliasName");
     public static final JSONStreamAware MISSING_DEADLINE = missing("deadline");
-    public static final JSONStreamAware INCORRECT_PENDING_WHITELIST = incorrect("pendingWhitelisted");
-    public static final JSONStreamAware INCORRECT_PENDING_BLACKLISTED = incorrect("blacklisted");
+    public static final JSONStreamAware INCORRECT_PENDING_WHITELIST = incorrect("phasingWhitelisted");
+    public static final JSONStreamAware INCORRECT_PENDING_BLACKLISTED = incorrect("phasingBlacklisted");
     public static final JSONStreamAware INCORRECT_DEADLINE = incorrect("deadline");
-    public static final JSONStreamAware MISSING_PENDING_HOLDING_ID = missing("pendingHoldingId");
+    public static final JSONStreamAware MISSING_PENDING_HOLDING_ID = missing("phasingHoldingId");
     public static final JSONStreamAware INCORRECT_FEE = incorrect("fee");
     public static final JSONStreamAware MISSING_TRANSACTION_BYTES_OR_JSON = missing("transactionBytes", "transactionJSON");
     public static final JSONStreamAware INCORRECT_TRANSACTION_BYTES_OR_JSON = incorrect("transactionBytes or transactionJSON");
@@ -79,8 +79,8 @@ public final class JSONResponses {
     public static final JSONStreamAware INCORRECT_POLL = incorrect("poll");
     public static final JSONStreamAware INCORRECT_VOTE = incorrect("vote");
     public static final JSONStreamAware UNKNOWN_POLL = unknown("poll");
-    public static final JSONStreamAware MISSING_PENDING_TRANSACTION = missing("pendingTransaction");
-    public static final JSONStreamAware INCORRECT_PENDING_TRANSACTION = incorrect("pendingTransaction");
+    public static final JSONStreamAware MISSING_PENDING_TRANSACTION = missing("transaction");
+    public static final JSONStreamAware INCORRECT_PENDING_TRANSACTION = incorrect("transaction");
     public static final JSONStreamAware INCORRECT_ACCOUNT_NAME_LENGTH = incorrect("name", "(length must be less than " + Constants.MAX_ACCOUNT_NAME_LENGTH + " characters)");
     public static final JSONStreamAware INCORRECT_ACCOUNT_DESCRIPTION_LENGTH = incorrect("description", "(length must be less than " + Constants.MAX_ACCOUNT_DESCRIPTION_LENGTH + " characters)");
     public static final JSONStreamAware INCORRECT_UNSIGNED_BYTES = incorrect("unsignedTransactionBytes");

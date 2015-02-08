@@ -263,7 +263,7 @@ final class BlockchainImpl implements Blockchain {
 
     @Override
     public DbIterator<TransactionImpl> getTransactions(Account account, int numberOfConfirmations, byte type, byte subtype,
-                                                       int blockTimestamp, boolean withMessage, boolean twoPhased,
+                                                       int blockTimestamp, boolean withMessage, boolean phased,
                                                        int from, int to) {
         int height = numberOfConfirmations > 0 ? getHeight() - numberOfConfirmations : Integer.MAX_VALUE;
         if (height < 0) {
@@ -289,7 +289,7 @@ final class BlockchainImpl implements Blockchain {
             if (withMessage) {
                 buf.append("AND (has_message = TRUE OR has_encrypted_message = TRUE) ");
             }
-            if (twoPhased) {
+            if (phased) {
                 buf.append("AND has_phasing = TRUE ");
             }
 
@@ -309,7 +309,7 @@ final class BlockchainImpl implements Blockchain {
             if (withMessage) {
                 buf.append("AND (has_message = TRUE OR has_encrypted_message = TRUE OR has_encrypttoself_message = TRUE) ");
             }
-            if (twoPhased) {
+            if (phased) {
                 buf.append("AND has_phasing = TRUE ");
             }
             buf.append("ORDER BY block_timestamp DESC, transaction_index DESC");

@@ -96,49 +96,49 @@ public interface Attachment extends Appendix {
 
     };
 
-    public final static class PendingTransactionVoteCasting extends AbstractAttachment {
-        private final long[] pendingTransactionsIds;
+    public final static class MessagingPhasingVoteCasting extends AbstractAttachment {
+        private final long[] transactionsIds;
 
-        PendingTransactionVoteCasting(ByteBuffer buffer, byte transactionVersion) {
+        MessagingPhasingVoteCasting(ByteBuffer buffer, byte transactionVersion) {
             super(buffer, transactionVersion);
             byte length = buffer.get();
-            pendingTransactionsIds = new long[length];
+            transactionsIds = new long[length];
             for (int i = 0; i < length; i++) {
-                pendingTransactionsIds[i] = buffer.getLong();
+                transactionsIds[i] = buffer.getLong();
             }
         }
 
-        PendingTransactionVoteCasting(JSONObject attachmentData) {
+        MessagingPhasingVoteCasting(JSONObject attachmentData) {
             super(attachmentData);
-            JSONArray jsArr = (JSONArray) (attachmentData.get("pendingTransactions"));
-            pendingTransactionsIds = new long[jsArr.size()];
-            for (int i = 0; i < pendingTransactionsIds.length; i++) {
-                pendingTransactionsIds[i] = Convert.parseUnsignedLong((String) jsArr.get(i));
+            JSONArray jsArr = (JSONArray) (attachmentData.get("transactions"));
+            transactionsIds = new long[jsArr.size()];
+            for (int i = 0; i < transactionsIds.length; i++) {
+                transactionsIds[i] = Convert.parseUnsignedLong((String) jsArr.get(i));
             }
         }
 
-        public PendingTransactionVoteCasting(long pendingTransactionId) {
-            this.pendingTransactionsIds = new long[]{pendingTransactionId};
+        public MessagingPhasingVoteCasting(long transactionId) {
+            this.transactionsIds = new long[]{transactionId};
         }
 
-        public PendingTransactionVoteCasting(long[] pendingTransactionsIds) {
-            this.pendingTransactionsIds = pendingTransactionsIds;
+        public MessagingPhasingVoteCasting(long[] transactionsIds) {
+            this.transactionsIds = transactionsIds;
         }
 
         @Override
         String getAppendixName() {
-            return "PendingTransactionVoteCasting";
+            return "MessagingPhasingVoteCasting";
         }
 
         @Override
         int getMySize() {
-            return 1 + 8 * pendingTransactionsIds.length;
+            return 1 + 8 * transactionsIds.length;
         }
 
         @Override
         void putMyBytes(ByteBuffer buffer) {
-            buffer.put((byte) pendingTransactionsIds.length);
-            for (long id : pendingTransactionsIds) {
+            buffer.put((byte) transactionsIds.length);
+            for (long id : transactionsIds) {
                 buffer.putLong(id);
             }
         }
@@ -146,19 +146,19 @@ public interface Attachment extends Appendix {
         @Override
         void putMyJSON(JSONObject attachment) {
             JSONArray ja = new JSONArray();
-            for (long pendingTransactionId : pendingTransactionsIds) {
+            for (long pendingTransactionId : transactionsIds) {
                 ja.add(Convert.toUnsignedLong(pendingTransactionId));
             }
-            attachment.put("pendingTransactions", ja);
+            attachment.put("transactions", ja);
         }
 
         @Override
         public TransactionType getTransactionType() {
-            return TransactionType.Messaging.PENDING_TRANSACTION_VOTE_CASTING;
+            return TransactionType.Messaging.PHASING_VOTE_CASTING;
         }
 
-        public long[] getPendingTransactionsIds() {
-            return pendingTransactionsIds;
+        public long[] getTransactionsIds() {
+            return transactionsIds;
         }
     }
 

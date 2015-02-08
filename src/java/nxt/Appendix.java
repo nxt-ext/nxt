@@ -596,7 +596,7 @@ public interface Appendix {
             int currentHeight = Nxt.getBlockchain().getHeight();
             if (finishHeight < currentHeight + Constants.VOTING_MIN_VOTE_DURATION
                     || finishHeight > currentHeight + Constants.VOTING_MAX_VOTE_DURATION) {
-                throw new NxtException.NotValidException("Invalid release height");
+                throw new NxtException.NotValidException("Invalid finish height");
             }
 
             VoteWeighting voteWeighting = new VoteWeighting(votingModel, holdingId, minBalance, minBalanceModel);

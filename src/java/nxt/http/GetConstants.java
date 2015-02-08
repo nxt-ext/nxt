@@ -79,8 +79,8 @@ public final class GetConstants extends APIServlet.APIRequestHandler {
         subtype.put("description", "Alias delete");
         subtypes.add(subtype);
         subtype = new JSONObject();
-        subtype.put("value", TransactionType.Messaging.PENDING_TRANSACTION_VOTE_CASTING.getSubtype());
-        subtype.put("description", "Pending Transaction Vote Casting");
+        subtype.put("value", TransactionType.Messaging.PHASING_VOTE_CASTING.getSubtype());
+        subtype.put("description", "Phasing vote casting");
         subtypes.add(subtype);
         transactionType.put("subtypes", subtypes);
         transactionTypes.add(transactionType);
@@ -168,7 +168,7 @@ public final class GetConstants extends APIServlet.APIRequestHandler {
         transactionTypes.add(transactionType);
         transactionType = new JSONObject();
         transactionType.put("value", MonetarySystem.CURRENCY_ISSUANCE.getType());
-        transactionType.put("description", "Monetary System");
+        transactionType.put("description", "Monetary system");
         subtypes = new JSONArray();
         subtype = new JSONObject();
         subtype.put("value", MonetarySystem.CURRENCY_ISSUANCE.getSubtype());

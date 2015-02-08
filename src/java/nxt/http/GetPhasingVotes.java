@@ -9,23 +9,23 @@ import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
 
-public class GetPendingTransactionVotes extends APIServlet.APIRequestHandler {
-    static final GetPendingTransactionVotes instance = new GetPendingTransactionVotes();
+public class GetPhasingVotes extends APIServlet.APIRequestHandler {
+    static final GetPhasingVotes instance = new GetPhasingVotes();
 
-    private GetPendingTransactionVotes() {
-        super(new APITag[]{APITag.PENDING_TRANSACTIONS}, "pendingTransaction", "includeVoters");
+    private GetPhasingVotes() {
+        super(new APITag[]{APITag.PHASING}, "transaction", "includeVoters");
     }
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
-        PhasingPoll poll = ParameterParser.getPendingTransactionPoll(req);
+        PhasingPoll poll = ParameterParser.getPhasingPoll(req);
         boolean includeVoters = ParameterParser.getBoolean(req, "includeVoters", false);
 
         long votesTotal = PhasingVote.countVotes(poll);
         long quorum = poll.getQuorum();
 
         JSONObject response = new JSONObject();
-        response.put("pendingTransaction", Convert.toUnsignedLong(poll.getId()));
+        response.put("transaction", Convert.toUnsignedLong(poll.getId()));
         response.put("votes", votesTotal);
         response.put("quorum", quorum);
         response.put("finishHeight", poll.getFinishHeight());

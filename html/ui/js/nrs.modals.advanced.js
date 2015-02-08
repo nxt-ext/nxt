@@ -26,7 +26,7 @@ var NRS = (function(NRS, $, undefined) {
 
 	NRS.initAdvancedModalFormValues = function() {
 		var initBlockHeight = NRS.lastBlockHeight + 7000;
-		$elem = $(".pending_max_height_group").find("input[name=pendingMaxHeight]");
+		$elem = $(".pending_max_height_group").find("input[name=phasingFinishHeight]");
 		$elem.val(initBlockHeight);
 		$elem.trigger("change");
 	}

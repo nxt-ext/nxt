@@ -94,18 +94,18 @@ final class ParameterParser {
         return value;
     }
 
-    static PhasingPoll getPendingTransactionPoll(HttpServletRequest req) throws ParameterException {
+    static PhasingPoll getPhasingPoll(HttpServletRequest req) throws ParameterException {
         long transactionId;
         try {
-            transactionId = Convert.parseUnsignedLong(Convert.emptyToNull(req.getParameter("pendingTransaction")));
+            transactionId = Convert.parseUnsignedLong(Convert.emptyToNull(req.getParameter("transaction")));
         } catch (RuntimeException e) {
             throw new ParameterException(INCORRECT_PENDING_TRANSACTION);
         }
-        if(transactionId == 0){
+        if (transactionId == 0) {
             throw new ParameterException(INCORRECT_PENDING_TRANSACTION);
         }
         PhasingPoll phasingPoll = PhasingPoll.getPoll(transactionId);
-        if(phasingPoll ==null){
+        if (phasingPoll ==null) {
             throw new ParameterException(MISSING_PENDING_TRANSACTION);
         }
         return phasingPoll;

@@ -26,7 +26,7 @@ public class PhasingPoll extends AbstractPoll {
         }
     };
 
-    private static final ValuesDbTable<PhasingPoll, Long> votersTable = new ValuesDbTable<PhasingPoll, Long>("phasing_voter", votersDbKeyFactory) {
+    private static final ValuesDbTable<PhasingPoll, Long> votersTable = new ValuesDbTable<PhasingPoll, Long>("phasing_poll_voter", votersDbKeyFactory) {
 
         @Override
         protected Long load(Connection con, ResultSet rs) throws SQLException {
@@ -35,7 +35,7 @@ public class PhasingPoll extends AbstractPoll {
 
         @Override
         protected void save(Connection con, PhasingPoll poll, Long accountId) throws SQLException {
-            try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO phasing_voter (transaction_id, "
+            try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO phasing_poll_voter (transaction_id, "
                     + "voter_id, height) VALUES (?, ?, ?)")) {
                 int i = 0;
                 pstmt.setLong(++i, poll.getId());
@@ -65,7 +65,7 @@ public class PhasingPoll extends AbstractPoll {
                     try (Connection con = Db.db.getConnection();
                          DbIterator<PhasingPoll> pollsToTrim = getFinishingBefore(height);
                          PreparedStatement pstmt1 = con.prepareStatement("DELETE FROM phasing_poll WHERE id = ?");
-                         PreparedStatement pstmt2 = con.prepareStatement("DELETE FROM phasing_voter WHERE transaction_id = ?");
+                         PreparedStatement pstmt2 = con.prepareStatement("DELETE FROM phasing_poll_voter WHERE transaction_id = ?");
                          PreparedStatement pstmt3 = con.prepareStatement("DELETE FROM phasing_vote WHERE transaction_id = ?")) {
                         while (pollsToTrim.hasNext()) {
                             PhasingPoll polltoTrim = pollsToTrim.next();
@@ -107,17 +107,17 @@ public class PhasingPoll extends AbstractPoll {
         return phasingPollTable.getManyBy(clause, firstIndex, lastIndex);
     }
 
-    public static DbIterator<? extends Transaction> getPendingTransactionsForApprover(Account voter, int from, int to) {
+    public static DbIterator<? extends Transaction> getVoterPendingTransactions(Account voter, int from, int to) {
         Connection con = null;
         try {
             con = Db.db.getConnection();
             PreparedStatement pstmt = con.prepareStatement("SELECT transaction.* "
-                    + "FROM transaction, phasing_poll, phasing_voter "
+                    + "FROM transaction, phasing_poll, phasing_poll_voter "
                     + "WHERE transaction.id = phasing_poll.id AND phasing_poll.latest = TRUE AND "
                     + "phasing_poll.blacklist = false AND "
                     + "phasing_poll.finished = false AND "
-                    + "phasing_poll.id = phasing_voter.transaction_id "
-                    + "AND phasing_voter.voter_id = ? "
+                    + "phasing_poll.id = phasing_poll_voter.transaction_id "
+                    + "AND phasing_poll_voter.voter_id = ? "
                     + DbUtils.limitsClause(from, to));
             pstmt.setLong(1, voter.getId());
             DbUtils.setLimits(2, pstmt, from, to);
@@ -129,7 +129,7 @@ public class PhasingPoll extends AbstractPoll {
         }
     }
 
-    public static DbIterator<? extends Transaction> getPendingTransactionsForHolding(long holdingId, byte votingModel, int from, int to) {
+    public static DbIterator<? extends Transaction> getHoldingPendingTransactions(long holdingId, byte votingModel, int from, int to) {
 
         Connection con = null;
         try {
@@ -153,7 +153,7 @@ public class PhasingPoll extends AbstractPoll {
         }
     }
 
-    public static DbIterator<? extends Transaction> getPendingTransactionsForAccount(Account sender, int from, int to) {
+    public static DbIterator<? extends Transaction> getAccountPendingTransactions(Account sender, int from, int to) {
         Connection con = null;
         try {
             con = Db.db.getConnection();

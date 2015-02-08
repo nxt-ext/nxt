@@ -81,7 +81,7 @@
             <div class="tab-content">
                 <div role="tabpanel" class="tab-pane tab_pane_approve active" id="{{name}}_approve_tab_no_approval">
                     <span data-i18n="process_without_approval">Process without approval.</span>
-                    <input type="hidden" name="isPending" value="false" />
+                    <input type="hidden" name="phased" value="false" />
                 </div>
                 <div role="tabpanel" class="tab-pane tab_pane_approve" id="{{name}}_approve_tab_accounts">
                     <div class="account_box">
@@ -91,7 +91,7 @@
                                 <i class="fa fa-question-circle modal-context-help" data-content="The following accounts will be requested to approve the transaction." data-toggle="popover" data-trigger="hover" data-container="#{{name}}_approve_modal" data-i18n="[data-content]approve_tx_accounts_requested_help"></i>
                                 <div class="form-group form_group_accounts">
                                     <div class="input-group">
-                                        <input type="text" class="form-control plain_adress_selector_input" name="pendingWhitelisted" placeholder="Account" data-i18n="[placeholder]account" disabled />
+                                        <input type="text" class="form-control plain_adress_selector_input" name="phasingWhitelisted" placeholder="Account" data-i18n="[placeholder]account" disabled />
                                         <div class="pas_contact_info">&nbsp;</div>
                                         <span class="input-group-btn">
                                             <button class="btn btn-default remove_account_btn" type="button"><i class="fa fa-minus"></i></button>
@@ -110,9 +110,9 @@
                             </div>
                         </div>
                     </div>
-                    <input type="hidden" name="isPending" value="true" disabled />
-                    <input type="hidden" name="pendingVotingModel" value="1" disabled />
-                    <input type="hidden" name="pendingMinBalance" value="0" disabled/>
+                    <input type="hidden" name="phased" value="true" disabled />
+                    <input type="hidden" name="phasingVotingModel" value="1" disabled />
+                    <input type="hidden" name="phasingMinBalance" value="0" disabled/>
                 </div>
                 <div role="tabpanel" class="tab-pane tab_pane_approve" id="{{name}}_approve_tab_asset_holders">
                     <div class="row">
@@ -120,13 +120,13 @@
                             <div class="form-group">
                                 <label data-i18n="asset_id">Asset ID</label>
                                 <i class="fa fa-question-circle modal-context-help" data-content="Asset ID." data-toggle="popover" data-trigger="hover" data-container="#{{name}}_approve_modal" data-i18n="[data-content]approve_tx_asset_id_help"></i>
-                                <input type="text"  class="form-control" name="pendingHolding" id="{{name}}_asset_id" placeholder="Asset ID" data-i18n="[placeholder]asset_id" tabindex="2" disabled/>
+                                <input type="text"  class="form-control" name="phasingHolding" id="{{name}}_asset_id" placeholder="Asset ID" data-i18n="[placeholder]asset_id" tabindex="2" disabled/>
                             </div>
                         </div>
                     </div>
-                    <input type="hidden" name="isPending" value="true" disabled />
-                    <input type="hidden" name="pendingVotingModel" value="2" disabled />
-                    <input type="hidden" name="pendingMinBalance" value="1" disabled/>
+                    <input type="hidden" name="phased" value="true" disabled />
+                    <input type="hidden" name="phasingVotingModel" value="2" disabled />
+                    <input type="hidden" name="phasingMinBalance" value="1" disabled/>
                 </div>
                 <div role="tabpanel" class="tab-pane tab_pane_approve" id="{{name}}_approve_tab_currency_holders">
                     <div class="row">
@@ -134,13 +134,13 @@
                             <div class="form-group">
                                 <label data-i18n="currency_id">Currency ID</label>
                                 <i class="fa fa-question-circle modal-context-help" data-content="Currency ID." data-toggle="popover" data-trigger="hover" data-container="#{{name}}_approve_modal" data-i18n="[data-content]approve_tx_asset_id_help"></i>
-                                <input type="text"  class="form-control" name="pendingHolding" id="{{name}}_asset_id" placeholder="Currency ID" data-i18n="[placeholder]currency_id" tabindex="2" disabled/>
+                                <input type="text"  class="form-control" name="phasingHolding" id="{{name}}_asset_id" placeholder="Currency ID" data-i18n="[placeholder]currency_id" tabindex="2" disabled/>
                             </div>
                         </div>
                     </div>
-                    <input type="hidden" name="isPending" value="true" disabled />
-                    <input type="hidden" name="pendingVotingModel" value="3" disabled />
-                    <input type="hidden" name="pendingMinBalance" value="1" disabled/>
+                    <input type="hidden" name="phased" value="true" disabled />
+                    <input type="hidden" name="phasingVotingModel" value="3" disabled />
+                    <input type="hidden" name="phasingMinBalance" value="1" disabled/>
                 </div>
             </div>
         </div>
@@ -149,7 +149,7 @@
                 <div class="form-group">
                     <label data-i18n="necessary_amount_accounts">Necessary Amount (Accounts)</label>
                     <i class="fa fa-question-circle modal-context-help" data-content="Necessary amount of approvals for the transaction to become valid." data-toggle="popover" data-trigger="hover" data-container="#{{name}}_approve_modal" data-i18n="[data-content]approve_tx_necessary_amount_help"></i>
-                    <input name="pendingQuorum" type="number" value="1" min="1" class="form-control" disabled />
+                    <input name="phasingQuorum" type="number" value="1" min="1" class="form-control" disabled />
                 </div>
             </div>
             <div class="col-xs-6">
@@ -160,7 +160,7 @@
                     </div>
                     <label for="{{name}}_pending_max_height" data-i18n="max_height">Max Height</label>
                     <i class="fa fa-question-circle modal-context-help" data-content="Transaction will be cancelled if not approved on maximal block height." data-toggle="popover" data-trigger="hover" data-container="#{{name}}_approve_modal" data-i18n="[data-content]approve_tx_max_height_help"></i>
-                    <input type="text" name="pendingMaxHeight" id="{{name}}_pending_max_height" class="form-control bhg_time_input" placeholder="Max Block Height to Become Valid" data-i18n="max_height_for_approval" disabled />
+                    <input type="text" name="phasingFinishHeight" id="{{name}}_pending_max_height" class="form-control bhg_time_input" placeholder="Max Block Height to Become Valid" data-i18n="max_height_for_approval" disabled />
                 </div>
             </div>
         </div>
