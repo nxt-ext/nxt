@@ -290,6 +290,13 @@ public final class JSONResponses {
         return JSON.prepare(response);
     }
 
+    static JSONStreamAware fileNotFound(String objectName) {
+        JSONObject response = new JSONObject();
+        response.put("errorCode", 10);
+        response.put("errorDescription", "File not found " + objectName);
+        return JSON.prepare(response);
+    }
+
     private JSONResponses() {} // never
 
 }
