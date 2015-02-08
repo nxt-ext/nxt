@@ -661,7 +661,7 @@ public abstract class TransactionType {
 
                 byte votingModel = attachment.getVotingModel();
                 if (votingModel != Constants.VOTING_MODEL_ACCOUNT
-                        && votingModel != Constants.VOTING_MODEL_BALANCE
+                        && votingModel != Constants.VOTING_MODEL_NQT
                         && votingModel != Constants.VOTING_MODEL_ASSET
                         && votingModel != Constants.VOTING_MODEL_CURRENCY) {
                     throw new NxtException.NotValidException("Invalid voting model value: " + attachment.getJSONObject());
@@ -705,7 +705,7 @@ public abstract class TransactionType {
                 byte minBalanceModel = attachment.getMinBalanceModel();
 
                 if (minBalanceModel != Constants.VOTING_MINBALANCE_ASSET
-                        && minBalanceModel != Constants.VOTING_MINBALANCE_BYBALANCE
+                        && minBalanceModel != Constants.VOTING_MINBALANCE_NQT
                         && minBalanceModel != Constants.VOTING_MINBALANCE_CURRENCY) {
                     throw new NxtException.NotValidException("Invalid min balance model " + attachment.getJSONObject());
                 }
@@ -715,8 +715,8 @@ public abstract class TransactionType {
                     throw new NxtException.NotValidException("Invalid min balance model: "+ attachment.getJSONObject());
                 }
 
-                if (votingModel == Constants.VOTING_MODEL_BALANCE
-                        && minBalanceModel != Constants.VOTING_MINBALANCE_BYBALANCE) {
+                if (votingModel == Constants.VOTING_MODEL_NQT
+                        && minBalanceModel != Constants.VOTING_MINBALANCE_NQT) {
                     throw new NxtException.NotValidException("Invalid min balance model: "+ attachment.getJSONObject());
                 }
 

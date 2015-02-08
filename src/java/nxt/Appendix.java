@@ -429,6 +429,7 @@ public interface Appendix {
         private final long quorum;
         private final byte votingModel;
         private final long minBalance;
+        private final byte minBalanceModel;
         private final long holdingId;
         private final long[] whitelist;
         private final long[] blacklist;
@@ -453,6 +454,7 @@ public interface Appendix {
             }
 
             holdingId = buffer.getLong();
+            minBalanceModel = buffer.get();
         }
 
         Phasing(JSONObject attachmentData) {
@@ -478,6 +480,7 @@ public interface Appendix {
             for (int i = 0; i < blacklist.length; i++) {
                 blacklist[i] = Convert.parseUnsignedLong((String) blacklistJson.get(i));
             }
+            minBalanceModel = ((Long) attachmentData.get("phasingMinBalanceModel")).byteValue();
         }
 
         /*
@@ -492,11 +495,12 @@ public interface Appendix {
         */
 
         public Phasing(int finishHeight, byte votingModel, long holdingId, long quorum,
-                       long minBalance, long[] whitelist, long[] blacklist) {
+                       long minBalance, byte minBalanceModel, long[] whitelist, long[] blacklist) {
             this.finishHeight = finishHeight;
             this.votingModel = votingModel;
             this.quorum = quorum;
             this.minBalance = minBalance;
+            this.minBalanceModel = minBalanceModel;
 
             if (whitelist == null) {
                 this.whitelist = new long[0];
@@ -520,7 +524,7 @@ public interface Appendix {
 
         @Override
         int getMySize() {
-            return 4 + 1 + 8 + 8 + 1 + 8 * whitelist.length + 1 + 8 * blacklist.length + 8;
+            return 4 + 1 + 8 + 8 + 1 + 8 * whitelist.length + 1 + 8 * blacklist.length + 8 + 1;
         }
 
         @Override
@@ -541,6 +545,7 @@ public interface Appendix {
             }
 
             buffer.putLong(holdingId);
+            buffer.put(minBalanceModel);
         }
 
         @Override
@@ -562,13 +567,15 @@ public interface Appendix {
                 blacklistJson.add(Convert.toUnsignedLong(accountId));
             }
             json.put("phasingBlacklist", blacklistJson);
+            json.put("phasingMinBalanceModel", minBalanceModel);
         }
 
         @Override
         void validate(Transaction transaction) throws NxtException.ValidationException {
             if (votingModel != Constants.VOTING_MODEL_ACCOUNT &&
                     votingModel != Constants.VOTING_MODEL_ASSET &&
-                    votingModel != Constants.VOTING_MODEL_CURRENCY) {
+                    votingModel != Constants.VOTING_MODEL_CURRENCY &&
+                    votingModel != Constants.VOTING_MODEL_NQT) {
                 throw new NxtException.NotValidException("Invalid voting model for phasing transaction");
             }
 
@@ -578,10 +585,6 @@ public interface Appendix {
 
             if (votingModel == Constants.VOTING_MODEL_ACCOUNT && whitelist.length == 0) {
                 throw new NxtException.NotValidException("By-account voting with empty whitelist");
-            }
-
-            if (votingModel == Constants.VOTING_MODEL_ACCOUNT && minBalance != 0) {
-                throw new NxtException.NotValidException("minBalance has to be zero for by-account voting on phasing transaction");
             }
 
             if (votingModel == Constants.VOTING_MODEL_ACCOUNT && holdingId != 0) {
@@ -610,6 +613,7 @@ public interface Appendix {
                     || finishHeight > currentHeight + Constants.VOTING_MAX_VOTE_DURATION) {
                 throw new NxtException.NotValidException("Invalid release height");
             }
+            //TODO: more validation for VOTING_MODEL_NQT and VOTING_MINBALANCE_MODEL
         }
 
         @Override
@@ -668,6 +672,10 @@ public interface Appendix {
 
         public long[] getBlacklist() {
             return blacklist;
+        }
+
+        public byte getMinBalanceModel() {
+            return minBalanceModel;
         }
     }
 }

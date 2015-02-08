@@ -200,7 +200,8 @@ public class PendingTransactionPoll extends AbstractPoll {
     private boolean finished;
 
     private PendingTransactionPoll(long id, long accountId, Appendix.Phasing appendix) {
-        super(accountId, appendix.getFinishHeight(), appendix.getVotingModel(), appendix.getHoldingId(), appendix.getMinBalance());
+        super(accountId, appendix.getFinishHeight(), appendix.getVotingModel(), appendix.getHoldingId(),
+                appendix.getMinBalance(), appendix.getMinBalanceModel());
         this.id = id;
         this.dbKey = pollDbKeyFactory.newKey(this.id);
         this.quorum = appendix.getQuorum();
@@ -248,11 +249,6 @@ public class PendingTransactionPoll extends AbstractPoll {
         return finished;
     }
 
-    @Override
-    long calcWeightForByAccountModel(long voterId, int height) {
-        throw new RuntimeException("PendingTransactionPoll.calcWeightForByAccountModel is called but must not");
-    }
-
     public long getId() {
         return id;
     }
@@ -275,17 +271,18 @@ public class PendingTransactionPoll extends AbstractPoll {
 
         try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO pending_transaction (id, account_id, "
                 + "finish_height, signers_count, blacklist, voting_model, quorum, min_balance, holding_id, "
-                + "finished, height) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
+                + "min_balance_model, finished, height) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
             int i = 0;
             pstmt.setLong(++i, getId());
             pstmt.setLong(++i, getAccountId());
             pstmt.setInt(++i, getFinishHeight());
             pstmt.setByte(++i, signersCount);
             pstmt.setBoolean(++i, isBlacklist);
-            pstmt.setByte(++i, getVotingModel());
+            pstmt.setByte(++i, getDefaultPollCounting().getVotingModel());
             pstmt.setLong(++i, getQuorum());
-            pstmt.setLong(++i, getMinBalance());
-            pstmt.setLong(++i, getHoldingId());
+            pstmt.setLong(++i, getDefaultPollCounting().getMinBalance());
+            pstmt.setLong(++i, getDefaultPollCounting().getHoldingId());
+            pstmt.setByte(++i, getDefaultPollCounting().getMinBalanceModel());
             pstmt.setBoolean(++i, isFinished());
             pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
             pstmt.executeUpdate();

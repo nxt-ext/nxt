@@ -70,10 +70,9 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
         long quorum = ParameterParser.getLong(req, "pendingQuorum", 1, Long.MAX_VALUE, true);
 
         long minBalance = ParameterParser.getLong(req, "pendingMinBalance", 0, Long.MAX_VALUE, false);
-        if ((votingModel == Constants.VOTING_MODEL_ACCOUNT && minBalance != 0)
-                || (votingModel != Constants.VOTING_MODEL_ACCOUNT && minBalance == 0)) {
-            throw new ParameterException(incorrect("pendingMinBalance"));
-        }
+
+        byte minBalanceModel = ParameterParser.getByte(req, "minBalanceModel",
+                Constants.VOTING_MINBALANCE_NQT, Constants.VOTING_MINBALANCE_CURRENCY, false);
 
         long holdingId = ParameterParser.getLong(req, "pendingHolding", Long.MIN_VALUE, Long.MAX_VALUE, false);
         if ((votingModel == Constants.VOTING_MODEL_ASSET || votingModel == Constants.VOTING_MODEL_CURRENCY)
@@ -108,7 +107,7 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
         if (votingModel == Constants.VOTING_MODEL_ACCOUNT && blacklist.length != 0) {
             throw new ParameterException(INCORRECT_PENDING_BLACKLISTED);
         }
-        return new Appendix.Phasing(maxHeight, votingModel, holdingId, quorum, minBalance, whitelist, blacklist);
+        return new Appendix.Phasing(maxHeight, votingModel, holdingId, quorum, minBalance, minBalanceModel, whitelist, blacklist);
     }
 
     final JSONStreamAware createTransaction(HttpServletRequest req, Account senderAccount, long recipientId,

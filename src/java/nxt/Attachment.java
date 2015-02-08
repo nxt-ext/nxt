@@ -428,8 +428,8 @@ public interface Attachment extends Appendix {
                     case Constants.VOTING_MODEL_CURRENCY:
                         minBalanceModel = Constants.VOTING_MINBALANCE_CURRENCY;
                         break;
-                    case Constants.VOTING_MODEL_BALANCE:
-                        minBalanceModel = Constants.VOTING_MINBALANCE_BYBALANCE;
+                    case Constants.VOTING_MODEL_NQT:
+                        minBalanceModel = Constants.VOTING_MINBALANCE_NQT;
                         break;
                 }
             }

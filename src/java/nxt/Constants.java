@@ -28,12 +28,12 @@ public final class Constants {
     public static final int FORGING_SPEEDUP = Nxt.getIntProperty("nxt.forgingSpeedup");
 
     public static final byte MAX_VOTES_PER_VOTING_TRANSACTION = 2;
-    public static final byte VOTING_MODEL_BALANCE = 0;
+    public static final byte VOTING_MODEL_NQT = 0;
     public static final byte VOTING_MODEL_ACCOUNT = 1;
     public static final byte VOTING_MODEL_ASSET = 2;
     public static final byte VOTING_MODEL_CURRENCY = 3;
 
-    public static final byte VOTING_MINBALANCE_BYBALANCE = 0;
+    public static final byte VOTING_MINBALANCE_NQT = 0;
     public static final byte VOTING_MINBALANCE_ASSET = 1;
     public static final byte VOTING_MINBALANCE_CURRENCY = 2;
 
