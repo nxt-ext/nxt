@@ -30,7 +30,7 @@ public abstract class TransactionType {
     private static final byte SUBTYPE_MESSAGING_ALIAS_SELL = 6;
     private static final byte SUBTYPE_MESSAGING_ALIAS_BUY = 7;
     private static final byte SUBTYPE_MESSAGING_ALIAS_DELETE = 8;
-    private static final byte SUBTYPE_PENDING_TRANSACTION_VOTE_CASTING = 9;
+    private static final byte SUBTYPE_MESSAGING_PHASING_VOTE_CASTING = 9;
 
     private static final byte SUBTYPE_COLORED_COINS_ASSET_ISSUANCE = 0;
     private static final byte SUBTYPE_COLORED_COINS_ASSET_TRANSFER = 1;
@@ -89,8 +89,8 @@ public abstract class TransactionType {
                         return Messaging.ALIAS_BUY;
                     case SUBTYPE_MESSAGING_ALIAS_DELETE:
                         return Messaging.ALIAS_DELETE;
-                    case SUBTYPE_PENDING_TRANSACTION_VOTE_CASTING:
-                        return Messaging.PENDING_TRANSACTION_VOTE_CASTING;
+                    case SUBTYPE_MESSAGING_PHASING_VOTE_CASTING:
+                        return Messaging.PHASING_VOTE_CASTING;
                     default:
                         return null;
                 }
@@ -659,22 +659,6 @@ public abstract class TransactionType {
                     }
                 }
 
-                byte votingModel = attachment.getVotingModel();
-                if (votingModel != Constants.VOTING_MODEL_ACCOUNT
-                        && votingModel != Constants.VOTING_MODEL_BALANCE
-                        && votingModel != Constants.VOTING_MODEL_ASSET
-                        && votingModel != Constants.VOTING_MODEL_CURRENCY) {
-                    throw new NxtException.NotValidException("Invalid voting model value: " + attachment.getJSONObject());
-                }
-
-                if (votingModel == Constants.VOTING_MODEL_ASSET && attachment.getHoldingId() == 0) {
-                    throw new NxtException.NotValidException("No asset id provided: " + attachment.getJSONObject());
-                }
-
-                if (votingModel == Constants.VOTING_MODEL_CURRENCY && attachment.getHoldingId() == 0) {
-                    throw new NxtException.NotValidException("No currency id provided: " + attachment.getJSONObject());
-                }
-
                 int optionsCount = attachment.getPollOptions().length;
 
                 if (attachment.getMinNumberOfOptions() < 1
@@ -701,48 +685,17 @@ public abstract class TransactionType {
                     throw new NxtException.NotValidException("Invalid poll attachment: " + attachment.getJSONObject());
                 }
 
-                long minBalance = attachment.getMinBalance();
-                byte minBalanceModel = attachment.getMinBalanceModel();
-
-                if (minBalanceModel != Constants.VOTING_MINBALANCE_ASSET
-                        && minBalanceModel != Constants.VOTING_MINBALANCE_BYBALANCE
-                        && minBalanceModel != Constants.VOTING_MINBALANCE_CURRENCY) {
-                    throw new NxtException.NotValidException("Invalid min balance model " + attachment.getJSONObject());
-                }
-
-                if (votingModel == Constants.VOTING_MODEL_ASSET
-                        && minBalanceModel != Constants.VOTING_MINBALANCE_ASSET) {
-                    throw new NxtException.NotValidException("Invalid min balance model: "+ attachment.getJSONObject());
-                }
-
-                if (votingModel == Constants.VOTING_MODEL_BALANCE
-                        && minBalanceModel != Constants.VOTING_MINBALANCE_BYBALANCE) {
-                    throw new NxtException.NotValidException("Invalid min balance model: "+ attachment.getJSONObject());
-                }
-
-                if (votingModel == Constants.VOTING_MODEL_CURRENCY
-                        && minBalanceModel != Constants.VOTING_MINBALANCE_CURRENCY) {
-                    throw new NxtException.NotValidException("Invalid min balance model: " + attachment.getJSONObject());
-                }
-
-                if (votingModel == Constants.VOTING_MODEL_ACCOUNT && minBalance == 0) {
-                    throw new NxtException.NotValidException("Min balance == 0 for by-account voting"+ attachment.getJSONObject());
-                }
-
-                long holdingId = attachment.getHoldingId();
-                if (minBalanceModel == Constants.VOTING_MINBALANCE_ASSET
-                        && (holdingId == 0 || Asset.getAsset(holdingId) == null)) {
-                    throw new NxtException.NotValidException("Invalid asset for voting: " + attachment.getJSONObject());
-                }
-
-                if (minBalanceModel == Constants.VOTING_MINBALANCE_CURRENCY
-                        && (holdingId == 0 || Currency.getCurrency(holdingId) == null)) {
-                    throw new NxtException.NotValidException("Invalid currency for voting: " + attachment.getJSONObject());
-                }
-
                 if (attachment.getFinishHeight() < currentHeight + Constants.VOTING_MIN_VOTE_DURATION
                     || attachment.getFinishHeight() > currentHeight + Constants.VOTING_MAX_VOTE_DURATION) {
                     throw new NxtException.NotCurrentlyValidException("Invalid finishing height" + attachment.getJSONObject());
+                }
+
+                VoteWeighting voteWeighting = new VoteWeighting(attachment.getVotingModel(), attachment.getHoldingId(),
+                        attachment.getMinBalance(), attachment.getMinBalanceModel());
+                voteWeighting.validate();
+
+                if (voteWeighting.getVotingModel() == VoteWeighting.VotingModel.ACCOUNT && voteWeighting.getMinBalance() == 0) {
+                    throw new NxtException.NotValidException("Min balance == 0 for by-account voting"+ attachment.getJSONObject());
                 }
             }
 
@@ -825,20 +778,20 @@ public abstract class TransactionType {
 
         };
 
-        public static final TransactionType PENDING_TRANSACTION_VOTE_CASTING = new Messaging() {
+        public static final TransactionType PHASING_VOTE_CASTING = new Messaging() {
             @Override
             public final byte getSubtype() {
-                return TransactionType.SUBTYPE_PENDING_TRANSACTION_VOTE_CASTING;
+                return TransactionType.SUBTYPE_MESSAGING_PHASING_VOTE_CASTING;
             }
 
             @Override
-            Attachment.PendingTransactionVoteCasting parseAttachment(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
-                return new Attachment.PendingTransactionVoteCasting(buffer, transactionVersion);
+            Attachment.MessagingPhasingVoteCasting parseAttachment(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
+                return new Attachment.MessagingPhasingVoteCasting(buffer, transactionVersion);
             }
 
             @Override
-            Attachment.PendingTransactionVoteCasting parseAttachment(JSONObject attachmentData) throws NxtException.NotValidException {
-                return new Attachment.PendingTransactionVoteCasting(attachmentData);
+            Attachment.MessagingPhasingVoteCasting parseAttachment(JSONObject attachmentData) throws NxtException.NotValidException {
+                return new Attachment.MessagingPhasingVoteCasting(attachmentData);
             }
 
             @Override
@@ -849,8 +802,8 @@ public abstract class TransactionType {
             @Override
             void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
 
-                Attachment.PendingTransactionVoteCasting att = (Attachment.PendingTransactionVoteCasting) transaction.getAttachment();
-                long[] pendingIds = att.getPendingTransactionsIds();
+                Attachment.MessagingPhasingVoteCasting att = (Attachment.MessagingPhasingVoteCasting) transaction.getAttachment();
+                long[] pendingIds = att.getTransactionsIds();
                 if (pendingIds.length > Constants.MAX_VOTES_PER_VOTING_TRANSACTION) {
                     throw new NxtException.NotValidException("No more than 2 votes allowed for two-phased multivoting");
                 }
@@ -861,7 +814,7 @@ public abstract class TransactionType {
 
                 long voterId = transaction.getSenderId();
                 for (long pendingId : pendingIds) {
-                    PendingTransactionPoll poll = PendingTransactionPoll.getPoll(pendingId);
+                    PhasingPoll poll = PhasingPoll.getPoll(pendingId);
                     if (poll == null) {
                         Logger.logDebugMessage("Wrong pending transaction: " + pendingId);
                         throw new NxtException.NotCurrentlyValidException("Wrong pending transaction or poll is finished");
@@ -877,7 +830,7 @@ public abstract class TransactionType {
                         throw new NxtException.NotValidException("Voter is in the pending transaction blacklist");
                     }
 
-                    if (VotePhased.isVoteGiven(pendingId, voterId)) {
+                    if (PhasingVote.isVoteGiven(pendingId, voterId)) {
                         throw new NxtException.NotCurrentlyValidException("Double voting attempt");
                     }
                 }
@@ -885,12 +838,12 @@ public abstract class TransactionType {
 
             @Override
             boolean isDuplicate(Transaction transaction, Map<TransactionType, Map<String,Boolean>> duplicates) {
-                Attachment.PendingTransactionVoteCasting attachment = (Attachment.PendingTransactionVoteCasting) transaction.getAttachment();
+                Attachment.MessagingPhasingVoteCasting attachment = (Attachment.MessagingPhasingVoteCasting) transaction.getAttachment();
                 String voter = Convert.toUnsignedLong(transaction.getSenderId());
-                long[] pendingTransactionIds = attachment.getPendingTransactionsIds();
+                long[] pendingTransactionIds = attachment.getTransactionsIds();
                 for (long pendingTransactionId : pendingTransactionIds) {
                     String compositeKey = voter + ":" + Convert.toUnsignedLong(pendingTransactionId);
-                    if (isDuplicate(Messaging.PENDING_TRANSACTION_VOTE_CASTING, compositeKey, duplicates, true)) {
+                    if (isDuplicate(Messaging.PHASING_VOTE_CASTING, compositeKey, duplicates, true)) {
                         return true;
                     }
                 }
@@ -899,12 +852,12 @@ public abstract class TransactionType {
 
             @Override
             final void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
-                Attachment.PendingTransactionVoteCasting attachment = (Attachment.PendingTransactionVoteCasting) transaction.getAttachment();
-                long[] pendingTransactionsIds = attachment.getPendingTransactionsIds();
+                Attachment.MessagingPhasingVoteCasting attachment = (Attachment.MessagingPhasingVoteCasting) transaction.getAttachment();
+                long[] pendingTransactionsIds = attachment.getTransactionsIds();
                 for (long pendingTransactionId : pendingTransactionsIds) {
-                    PendingTransactionPoll poll = PendingTransactionPoll.getPoll(pendingTransactionId);
+                    PhasingPoll poll = PhasingPoll.getPoll(pendingTransactionId);
 
-                    if (VotePhased.addVote(poll, transaction)) {
+                    if (PhasingVote.addVote(poll, transaction)) {
                         poll.finish();
                         TransactionImpl pendingTransaction = BlockchainImpl.getInstance().getTransaction(pendingTransactionId);
                         pendingTransaction.getPhasing().release(pendingTransaction);

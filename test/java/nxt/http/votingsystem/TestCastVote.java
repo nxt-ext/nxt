@@ -3,11 +3,11 @@ package nxt.http.votingsystem;
 import nxt.BlockchainTest;
 import nxt.Constants;
 import nxt.http.APICall;
+import nxt.http.votingsystem.TestCreatePoll.CreatePollBuilder;
 import nxt.util.Logger;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.junit.Assert;
-import nxt.http.votingsystem.TestCreatePoll.*;
 import org.junit.Test;
 
 public class TestCastVote extends BlockchainTest {

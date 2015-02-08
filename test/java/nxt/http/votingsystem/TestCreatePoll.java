@@ -3,6 +3,7 @@ package nxt.http.votingsystem;
 import nxt.BlockchainTest;
 import nxt.Constants;
 import nxt.Nxt;
+import nxt.VoteWeighting;
 import nxt.http.APICall;
 import nxt.util.Logger;
 import org.json.simple.JSONObject;
@@ -40,7 +41,7 @@ public class TestCreatePoll extends BlockchainTest {
         issueCreatePoll(apiCall, false);
         generateBlock();
 
-        apiCall = new CreatePollBuilder().votingModel(Constants.VOTING_MODEL_BALANCE).build();
+        apiCall = new CreatePollBuilder().votingModel(VoteWeighting.VotingModel.NQT.getCode()).build();
         issueCreatePoll(apiCall, false);
         generateBlock();
     }
@@ -65,13 +66,13 @@ public class TestCreatePoll extends BlockchainTest {
             param("name", "Test1");
             param("description", "The most cool Beatles guy?");
             param("finishHeight", Nxt.getBlockchain().getHeight() + 100);
-            param("votingModel", Constants.VOTING_MODEL_ACCOUNT);
+            param("votingModel", VoteWeighting.VotingModel.ACCOUNT.getCode());
             param("minNumberOfOptions", 1);
             param("maxNumberOfOptions", 2);
             param("minRangeValue", 0);
             param("maxRangeValue", 1);
             param("minBalance", 10 * Constants.ONE_NXT);
-            param("minBalanceModel", Constants.VOTING_MINBALANCE_BYBALANCE);
+            param("minBalanceModel", VoteWeighting.MinBalanceModel.NQT.getCode());
             param("option1", "Ringo");
             param("option2", "Paul");
             param("option3", "John");

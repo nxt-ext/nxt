@@ -191,11 +191,11 @@ public final class Nxt {
                 Hub.init();
                 Order.init();
                 Poll.init();
-                PendingTransactionPoll.init();
+                PhasingPoll.init();
                 Trade.init();
                 AssetTransfer.init();
                 Vote.init();
-                VotePhased.init();
+                PhasingVote.init();
                 Currency.init();
                 CurrencyBuyOffer.init();
                 CurrencySellOffer.init();

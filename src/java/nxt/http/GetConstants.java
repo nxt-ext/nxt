@@ -5,6 +5,7 @@ import nxt.CurrencyType;
 import nxt.Genesis;
 import nxt.MonetarySystem;
 import nxt.TransactionType;
+import nxt.VoteWeighting;
 import nxt.util.Convert;
 import nxt.util.JSON;
 import org.json.simple.JSONArray;
@@ -79,8 +80,8 @@ public final class GetConstants extends APIServlet.APIRequestHandler {
         subtype.put("description", "Alias delete");
         subtypes.add(subtype);
         subtype = new JSONObject();
-        subtype.put("value", TransactionType.Messaging.PENDING_TRANSACTION_VOTE_CASTING.getSubtype());
-        subtype.put("description", "Pending Transaction Vote Casting");
+        subtype.put("value", TransactionType.Messaging.PHASING_VOTE_CASTING.getSubtype());
+        subtype.put("description", "Phasing vote casting");
         subtypes.add(subtype);
         transactionType.put("subtypes", subtypes);
         transactionTypes.add(transactionType);
@@ -168,7 +169,7 @@ public final class GetConstants extends APIServlet.APIRequestHandler {
         transactionTypes.add(transactionType);
         transactionType = new JSONObject();
         transactionType.put("value", MonetarySystem.CURRENCY_ISSUANCE.getType());
-        transactionType.put("description", "Monetary System");
+        transactionType.put("description", "Monetary system");
         subtypes = new JSONArray();
         subtype = new JSONObject();
         subtype.put("value", MonetarySystem.CURRENCY_ISSUANCE.getSubtype());
@@ -217,6 +218,22 @@ public final class GetConstants extends APIServlet.APIRequestHandler {
             currencyTypes.add(typeJSON);
         }
         response.put("currencyTypes", currencyTypes);
+
+        JSONArray votingModels = new JSONArray();
+        for (VoteWeighting.VotingModel votingModel : VoteWeighting.VotingModel.values()) {
+            JSONObject modelJSON = new JSONObject();
+            modelJSON.put(votingModel.toString(), votingModel.getCode());
+            votingModels.add(modelJSON);
+        }
+        response.put("votingModels", votingModels);
+
+        JSONArray minBalanceModels = new JSONArray();
+        for (VoteWeighting.MinBalanceModel minBalanceModel : VoteWeighting.MinBalanceModel.values()) {
+            JSONObject modelJSON = new JSONObject();
+            modelJSON.put(minBalanceModel.toString(), minBalanceModel.getCode());
+            minBalanceModels.add(modelJSON);
+        }
+        response.put("minBalanceModels", minBalanceModels);
 
         JSONArray peerStates = new JSONArray();
         JSONObject peerState = new JSONObject();

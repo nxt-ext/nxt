@@ -3,11 +3,11 @@ package nxt.http.twophased;
 import nxt.BlockchainTest;
 import nxt.Constants;
 import nxt.http.APICall;
+import nxt.http.twophased.TestCreateTwoPhased.TwoPhasedMoneyTransferBuilder;
 import nxt.util.Logger;
 import org.json.simple.JSONObject;
 import org.junit.Assert;
 import org.junit.Test;
-import nxt.http.twophased.TestCreateTwoPhased.*;
 
 public class TestApprovePendingTransaction extends BlockchainTest {
 
@@ -25,9 +25,9 @@ public class TestApprovePendingTransaction extends BlockchainTest {
 
         long fee = Constants.ONE_NXT;
 
-        apiCall = new APICall.Builder("approvePendingTransaction")
+        apiCall = new APICall.Builder("approveTransaction")
                 .param("secretPhrase", secretPhrase3)
-                .param("pendingTransaction", transactionId)
+                .param("transaction", transactionId)
                 .param("feeNQT", fee)
                 .build();
 
@@ -55,9 +55,9 @@ public class TestApprovePendingTransaction extends BlockchainTest {
 
         long fee = Constants.ONE_NXT;
 
-        apiCall = new APICall.Builder("approvePendingTransaction")
+        apiCall = new APICall.Builder("approveTransaction")
                 .param("secretPhrase", secretPhrase4)
-                .param("pendingTransaction", transactionId)
+                .param("transaction", transactionId)
                 .param("feeNQT", fee)
                 .build();
 

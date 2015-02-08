@@ -1,6 +1,18 @@
 package nxt.http;
 
-import nxt.*;
+import nxt.Account;
+import nxt.Alias;
+import nxt.Asset;
+import nxt.Constants;
+import nxt.Currency;
+import nxt.CurrencyBuyOffer;
+import nxt.CurrencySellOffer;
+import nxt.DigitalGoodsStore;
+import nxt.Nxt;
+import nxt.NxtException;
+import nxt.PhasingPoll;
+import nxt.Poll;
+import nxt.Transaction;
 import nxt.crypto.Crypto;
 import nxt.crypto.EncryptedData;
 import nxt.util.Convert;
@@ -94,21 +106,21 @@ final class ParameterParser {
         return value;
     }
 
-    static PendingTransactionPoll getPendingTransactionPoll(HttpServletRequest req) throws ParameterException {
+    static PhasingPoll getPhasingPoll(HttpServletRequest req) throws ParameterException {
         long transactionId;
         try {
-            transactionId = Convert.parseUnsignedLong(Convert.emptyToNull(req.getParameter("pendingTransaction")));
+            transactionId = Convert.parseUnsignedLong(Convert.emptyToNull(req.getParameter("transaction")));
         } catch (RuntimeException e) {
             throw new ParameterException(INCORRECT_PENDING_TRANSACTION);
         }
-        if(transactionId == 0){
+        if (transactionId == 0) {
             throw new ParameterException(INCORRECT_PENDING_TRANSACTION);
         }
-        PendingTransactionPoll pendingTransactionPoll = PendingTransactionPoll.getPoll(transactionId);
-        if(pendingTransactionPoll==null){
+        PhasingPoll phasingPoll = PhasingPoll.getPoll(transactionId);
+        if (phasingPoll ==null) {
             throw new ParameterException(MISSING_PENDING_TRANSACTION);
         }
-        return pendingTransactionPoll;
+        return phasingPoll;
     }
 
     static Alias getAlias(HttpServletRequest req) throws ParameterException {

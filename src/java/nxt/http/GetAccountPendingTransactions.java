@@ -3,7 +3,7 @@ package nxt.http;
 
 import nxt.Account;
 import nxt.NxtException;
-import nxt.PendingTransactionPoll;
+import nxt.PhasingPoll;
 import nxt.Transaction;
 import nxt.db.DbIterator;
 import org.json.simple.JSONArray;
@@ -16,7 +16,7 @@ public class GetAccountPendingTransactions extends APIServlet.APIRequestHandler 
     static final GetAccountPendingTransactions instance = new GetAccountPendingTransactions();
 
     private GetAccountPendingTransactions() {
-        super(new APITag[]{APITag.ACCOUNTS, APITag.PENDING_TRANSACTIONS},
+        super(new APITag[]{APITag.ACCOUNTS, APITag.PHASING},
                 "account", "firstIndex", "lastIndex");
     }
 
@@ -29,8 +29,8 @@ public class GetAccountPendingTransactions extends APIServlet.APIRequestHandler 
 
         JSONArray transactions = new JSONArray();
 
-        try(DbIterator<? extends Transaction> iterator =
-                PendingTransactionPoll.getPendingTransactionsForAccount(account, firstIndex, lastIndex)){
+        try (DbIterator<? extends Transaction> iterator =
+                PhasingPoll.getAccountPendingTransactions(account, firstIndex, lastIndex)) {
             while (iterator.hasNext()) {
                 Transaction transaction = iterator.next();
                 transactions.add(JSONData.transaction(transaction));

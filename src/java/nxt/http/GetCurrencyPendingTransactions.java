@@ -1,9 +1,9 @@
 package nxt.http;
 
-import nxt.Constants;
 import nxt.Currency;
-import nxt.PendingTransactionPoll;
+import nxt.PhasingPoll;
 import nxt.Transaction;
+import nxt.VoteWeighting;
 import nxt.db.DbIterator;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -15,7 +15,7 @@ public class GetCurrencyPendingTransactions extends APIServlet.APIRequestHandler
     static final GetCurrencyPendingTransactions instance = new GetCurrencyPendingTransactions();
 
     private GetCurrencyPendingTransactions() {
-        super(new APITag[]{APITag.AE, APITag.PENDING_TRANSACTIONS}, "currency", "firstIndex", "lastIndex");
+        super(new APITag[]{APITag.AE, APITag.PHASING}, "currency", "firstIndex", "lastIndex");
     }
 
     @Override
@@ -25,11 +25,10 @@ public class GetCurrencyPendingTransactions extends APIServlet.APIRequestHandler
         int lastIndex = ParameterParser.getLastIndex(req);
 
         long currencyId = currency.getId();
-        byte votingModel = Constants.VOTING_MODEL_CURRENCY;
 
         JSONArray transactions = new JSONArray();
         try (DbIterator<? extends Transaction> iterator =
-                     PendingTransactionPoll.getPendingTransactionsForHolding(currencyId, votingModel, firstIndex, lastIndex)) {
+                     PhasingPoll.getHoldingPendingTransactions(currencyId, VoteWeighting.VotingModel.CURRENCY, firstIndex, lastIndex)) {
             while (iterator.hasNext()) {
                 Transaction transaction = iterator.next();
                 transactions.add(JSONData.transaction(transaction));

@@ -23,6 +23,7 @@ import nxt.Token;
 import nxt.Trade;
 import nxt.Transaction;
 import nxt.Vote;
+import nxt.VoteWeighting;
 import nxt.crypto.Crypto;
 import nxt.crypto.EncryptedData;
 import nxt.db.DbIterator;
@@ -330,18 +331,19 @@ final class JSONData {
         json.put("options", options);
         json.put("finishHeight", poll.getFinishHeight());
 
-        json.put("votingModel", poll.getVotingModel());
+        json.put("votingModel", poll.getDefaultVoteWeighting().getVotingModel().getCode());
 
         json.put("minNumberOfOptions", poll.getMinNumberOfOptions());
         json.put("maxNumberOfOptions", poll.getMaxNumberOfOptions());
         json.put("minRangeValue", poll.getMinRangeValue());
         json.put("maxRangeValue", poll.getMaxRangeValue());
 
-        json.put("minBalance", poll.getMinBalance());
-        json.put("minBalanceModel", poll.getMinBalanceModel());
+        json.put("minBalance", poll.getDefaultVoteWeighting().getMinBalance());
+        json.put("minBalanceModel", poll.getDefaultVoteWeighting().getMinBalanceModel().getCode());
 
-        if (poll.getVotingModel() == Constants.VOTING_MODEL_ASSET || poll.getVotingModel() == Constants.VOTING_MODEL_CURRENCY) {
-            json.put("holding", Convert.toUnsignedLong(poll.getHoldingId()));
+        if (poll.getDefaultVoteWeighting().getVotingModel() == VoteWeighting.VotingModel.ASSET
+                || poll.getDefaultVoteWeighting().getVotingModel() == VoteWeighting.VotingModel.CURRENCY) {
+            json.put("holding", Convert.toUnsignedLong(poll.getDefaultVoteWeighting().getHoldingId()));
         }
 
         if (includeVoters) {
@@ -531,7 +533,7 @@ final class JSONData {
         JSONObject json = new JSONObject();
         json.put("type", transaction.getType().getType());
         json.put("subtype", transaction.getType().getSubtype());
-        json.put("phasing", transaction.getPhasing() != null);
+        json.put("phased", transaction.getPhasing() != null);
         json.put("timestamp", transaction.getTimestamp());
         json.put("deadline", transaction.getDeadline());
         json.put("senderPublicKey", Convert.toHexString(transaction.getSenderPublicKey()));

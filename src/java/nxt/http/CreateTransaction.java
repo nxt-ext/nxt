@@ -7,6 +7,7 @@ import nxt.Constants;
 import nxt.Nxt;
 import nxt.NxtException;
 import nxt.Transaction;
+import nxt.VoteWeighting;
 import nxt.crypto.Crypto;
 import nxt.crypto.EncryptedData;
 import nxt.util.Convert;
@@ -25,7 +26,6 @@ import static nxt.http.JSONResponses.MISSING_DEADLINE;
 import static nxt.http.JSONResponses.MISSING_PENDING_HOLDING_ID;
 import static nxt.http.JSONResponses.MISSING_SECRET_PHRASE;
 import static nxt.http.JSONResponses.NOT_ENOUGH_FUNDS;
-import static nxt.http.JSONResponses.incorrect;
 
 abstract class CreateTransaction extends APIServlet.APIRequestHandler {
 
@@ -34,9 +34,9 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
             "message", "messageIsText",
             "messageToEncrypt", "messageToEncryptIsText", "encryptedMessageData", "encryptedMessageNonce",
             "messageToEncryptToSelf", "messageToEncryptToSelfIsText", "encryptToSelfMessageData", "encryptToSelfMessageNonce",
-            "isPending", "pendingMaxHeight", "pendingVotingModel", "pendingQuorum", "pendingMinBalance", "pendingHolding",
-            "pendingWhitelisted", "pendingWhitelisted", "pendingWhitelisted",
-            "pendingBlacklisted", "pendingBlacklisted", "pendingBlacklisted",
+            "phased", "phasingFinishHeight", "phasingVotingModel", "phasingQuorum", "phasingMinBalance", "phasingHolding", "phasingMinBalanceModel",
+            "phasingWhitelisted", "phasingWhitelisted", "phasingWhitelisted",
+            "phasingBlacklisted", "phasingBlacklisted", "phasingBlacklisted",
             "recipientPublicKey"};
 
     private static String[] addCommonParameters(String[] parameters) {
@@ -60,29 +60,27 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
     }
 
     private Appendix.Phasing parsePhasing(HttpServletRequest req) throws ParameterException {
-        byte votingModel = ParameterParser.getByte(req, "pendingVotingModel", Constants.VOTING_MODEL_ACCOUNT, Constants.VOTING_MODEL_CURRENCY, true);
+        byte votingModel = ParameterParser.getByte(req, "phasingVotingModel", (byte)0, (byte)3, true);
 
-        int maxHeight = ParameterParser.getInt(req, "pendingMaxHeight",
+        int maxHeight = ParameterParser.getInt(req, "phasingFinishHeight",
                 Nxt.getBlockchain().getHeight() + Constants.VOTING_MIN_VOTE_DURATION,
                 Nxt.getBlockchain().getHeight() + Constants.VOTING_MAX_VOTE_DURATION,
                 true);
 
-        long quorum = ParameterParser.getLong(req, "pendingQuorum", 1, Long.MAX_VALUE, true);
+        long quorum = ParameterParser.getLong(req, "phasingQuorum", 1, Long.MAX_VALUE, true);
 
-        long minBalance = ParameterParser.getLong(req, "pendingMinBalance", 0, Long.MAX_VALUE, false);
-        if ((votingModel == Constants.VOTING_MODEL_ACCOUNT && minBalance != 0)
-                || (votingModel != Constants.VOTING_MODEL_ACCOUNT && minBalance == 0)) {
-            throw new ParameterException(incorrect("pendingMinBalance"));
-        }
+        long minBalance = ParameterParser.getLong(req, "phasingMinBalance", 0, Long.MAX_VALUE, false);
 
-        long holdingId = ParameterParser.getLong(req, "pendingHolding", Long.MIN_VALUE, Long.MAX_VALUE, false);
-        if ((votingModel == Constants.VOTING_MODEL_ASSET || votingModel == Constants.VOTING_MODEL_CURRENCY)
+        byte minBalanceModel = ParameterParser.getByte(req, "phasingMinBalanceModel", (byte)0, (byte)3, false);
+
+        long holdingId = ParameterParser.getLong(req, "phasingHolding", Long.MIN_VALUE, Long.MAX_VALUE, false);
+        if ((votingModel == VoteWeighting.VotingModel.ASSET.getCode() || votingModel == VoteWeighting.VotingModel.CURRENCY.getCode())
                 && holdingId == 0) {
             throw new ParameterException(MISSING_PENDING_HOLDING_ID);
         }
 
         long[] whitelist;
-        String[] whitelistValues = req.getParameterValues("pendingWhitelisted");
+        String[] whitelistValues = req.getParameterValues("phasingWhitelisted");
         if (whitelistValues != null && whitelistValues.length > 0) {
             whitelist = new long[whitelistValues.length];
             for (int i = 0; i < whitelist.length; i++) {
@@ -91,12 +89,12 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
         } else {
             whitelist = new long[0];
         }
-        if (votingModel == Constants.VOTING_MODEL_ACCOUNT && whitelist.length == 0) {
+        if (votingModel == VoteWeighting.VotingModel.ACCOUNT.getCode() && whitelist.length == 0) {
             throw new ParameterException(INCORRECT_PENDING_WHITELIST);
         }
 
         long[] blacklist;
-        String[] blacklistValues = req.getParameterValues("pendingBlacklisted");
+        String[] blacklistValues = req.getParameterValues("phasingBlacklisted");
         if (blacklistValues != null && blacklistValues.length > 0) {
             blacklist = new long[blacklistValues.length];
             for (int i = 0; i < blacklist.length; i++) {
@@ -105,10 +103,10 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
         } else {
             blacklist = new long[0];
         }
-        if (votingModel == Constants.VOTING_MODEL_ACCOUNT && blacklist.length != 0) {
+        if (votingModel == VoteWeighting.VotingModel.ACCOUNT.getCode() && blacklist.length != 0) {
             throw new ParameterException(INCORRECT_PENDING_BLACKLISTED);
         }
-        return new Appendix.Phasing(maxHeight, votingModel, holdingId, quorum, minBalance, whitelist, blacklist);
+        return new Appendix.Phasing(maxHeight, votingModel, holdingId, quorum, minBalance, minBalanceModel, whitelist, blacklist);
     }
 
     final JSONStreamAware createTransaction(HttpServletRequest req, Account senderAccount, long recipientId,
@@ -148,8 +146,8 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
         }
 
         Appendix.Phasing phasing = null;
-        boolean isPending = ParameterParser.getBoolean(req, "isPending", false);
-        if (isPending) {
+        boolean phased = ParameterParser.getBoolean(req, "phased", false);
+        if (phased) {
             phasing = parsePhasing(req);
         }
 

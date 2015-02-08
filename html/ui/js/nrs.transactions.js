@@ -258,10 +258,10 @@ var NRS = (function(NRS, $, undefined) {
 		var html = "";
 
 		if (t.attachment && t.attachment["version.Phasing"] && t.attachment.phasingVotingModel) {
-			NRS.sendRequest("getPendingTransactionVotes", {
-				"pendingTransaction": t.transaction
+			NRS.sendRequest("getPhasingVotes", {
+				"transaction": t.transaction
 			}, function(response) {
-				if (response.pendingTransaction) {
+				if (response.transaction) {
 					var attachment = t.attachment;
 					var vm = attachment.phasingVotingModel;
 					if (response.votes < response.quorum) {

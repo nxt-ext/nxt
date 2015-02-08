@@ -2,10 +2,9 @@ package nxt.http;
 
 import nxt.Account;
 import nxt.NxtException;
-import nxt.PendingTransactionPoll;
+import nxt.PhasingPoll;
 import nxt.Transaction;
 import nxt.db.DbIterator;
-import nxt.util.Convert;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
@@ -13,12 +12,12 @@ import org.json.simple.JSONStreamAware;
 import javax.servlet.http.HttpServletRequest;
 
 
-public class GetAccountPendingTransactionsToApprove extends APIServlet.APIRequestHandler {
+public class GetVoterPendingTransactions extends APIServlet.APIRequestHandler {
 
-    static final GetAccountPendingTransactionsToApprove instance = new GetAccountPendingTransactionsToApprove();
+    static final GetVoterPendingTransactions instance = new GetVoterPendingTransactions();
 
-    private GetAccountPendingTransactionsToApprove() {
-        super(new APITag[]{APITag.ACCOUNTS, APITag.PENDING_TRANSACTIONS}, "account", "firstIndex", "lastIndex");
+    private GetVoterPendingTransactions() {
+        super(new APITag[]{APITag.ACCOUNTS, APITag.PHASING}, "account", "firstIndex", "lastIndex");
     }
 
     @Override
@@ -28,7 +27,7 @@ public class GetAccountPendingTransactionsToApprove extends APIServlet.APIReques
         int lastIndex = ParameterParser.getLastIndex(req);
 
         JSONArray transactions = new JSONArray();
-        try (DbIterator<? extends Transaction> iterator = PendingTransactionPoll.getPendingTransactionsForApprover(account, firstIndex, lastIndex)) {
+        try (DbIterator<? extends Transaction> iterator = PhasingPoll.getVoterPendingTransactions(account, firstIndex, lastIndex)) {
             while (iterator.hasNext()) {
                 Transaction transaction = iterator.next();
                 transactions.add(JSONData.transaction(transaction));
