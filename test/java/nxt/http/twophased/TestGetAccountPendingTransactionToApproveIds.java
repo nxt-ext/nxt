@@ -3,13 +3,11 @@ package nxt.http.twophased;
 import nxt.BlockchainTest;
 import nxt.Constants;
 import nxt.http.APICall;
+import nxt.http.twophased.TestCreateTwoPhased.TwoPhasedMoneyTransferBuilder;
 import nxt.util.Convert;
 import nxt.util.Logger;
-import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
-import org.junit.Assert;
 import org.junit.Test;
-import nxt.http.twophased.TestCreateTwoPhased.*;
 
 public class TestGetAccountPendingTransactionToApproveIds extends BlockchainTest {
 

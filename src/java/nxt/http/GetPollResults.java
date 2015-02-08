@@ -26,10 +26,10 @@ public class GetPollResults extends APIServlet.APIRequestHandler {
         if (Convert.emptyToNull(req.getParameter("votingModel")) == null) {
             pollResults = poll.getResults();
         } else {
-            byte votingModel = ParameterParser.getByte(req, "votingModel", VoteWeighting.VotingModel.NQT.getCode(), VoteWeighting.VotingModel.CURRENCY.getCode(), true);
+            byte votingModel = ParameterParser.getByte(req, "votingModel", (byte)0, (byte)3, true);
             long holdingId = ParameterParser.getLong(req, "holding", Long.MIN_VALUE, Long.MAX_VALUE, false);
             long minBalance = ParameterParser.getLong(req, "minBalance", 0, Long.MAX_VALUE, false);
-            byte minBalanceModel = ParameterParser.getByte(req, "minBalanceModel", VoteWeighting.MinBalanceModel.NQT.getCode(), VoteWeighting.MinBalanceModel.CURRENCY.getCode(), false);
+            byte minBalanceModel = ParameterParser.getByte(req, "minBalanceModel", (byte)0, (byte)3, false);
             VoteWeighting voteWeighting = new VoteWeighting(votingModel, holdingId, minBalance, minBalanceModel);
             voteWeighting.validate();
             pollResults = poll.getResults(voteWeighting);

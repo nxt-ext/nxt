@@ -50,9 +50,9 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                 int height = block.getHeight();
                 if (height >= Constants.TWO_PHASED_TRANSACTIONS_BLOCK) {
                     try (Connection con = Db.db.getConnection();
-                         PreparedStatement pstmt = con.prepareStatement("SELECT transaction.* FROM transaction, pending_transaction " +
-                                 " WHERE pending_transaction.id = transaction.id AND pending_transaction.finish_height = ? " +
-                                 " AND pending_transaction.finished = FALSE AND pending_transaction.latest = TRUE")) {
+                         PreparedStatement pstmt = con.prepareStatement("SELECT transaction.* FROM transaction, phasing_poll " +
+                                 " WHERE phasing_poll.id = transaction.id AND phasing_poll.finish_height = ? " +
+                                 " AND phasing_poll.finished = FALSE AND phasing_poll.latest = TRUE")) {
                         pstmt.setInt(1, height);
                         for (TransactionImpl transaction : BlockchainImpl.getInstance().getTransactions(con, pstmt)) {
                             transaction.getPhasing().finalVerification(transaction);
