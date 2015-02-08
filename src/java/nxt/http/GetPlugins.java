@@ -48,7 +48,7 @@ public final class GetPlugins extends APIServlet.APIRequestHandler {
         return response;
     }
 
-    public static class PluginDirListing extends SimpleFileVisitor<Path> {
+    private static class PluginDirListing extends SimpleFileVisitor<Path> {
 
         private final List<Path> directories = new ArrayList<>();
 
