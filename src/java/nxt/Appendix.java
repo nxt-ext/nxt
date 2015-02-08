@@ -599,8 +599,8 @@ public interface Appendix {
                 throw new NxtException.NotValidException("Invalid release height");
             }
 
-            PollCounting pollCounting = new PollCounting(votingModel, holdingId, minBalance, minBalanceModel);
-            pollCounting.validate();
+            VoteWeighting voteWeighting = new VoteWeighting(votingModel, holdingId, minBalance, minBalanceModel);
+            voteWeighting.validate();
         }
 
         @Override

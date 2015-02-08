@@ -690,11 +690,11 @@ public abstract class TransactionType {
                     throw new NxtException.NotCurrentlyValidException("Invalid finishing height" + attachment.getJSONObject());
                 }
 
-                PollCounting pollCounting = new PollCounting(attachment.getVotingModel(), attachment.getHoldingId(),
+                VoteWeighting voteWeighting = new VoteWeighting(attachment.getVotingModel(), attachment.getHoldingId(),
                         attachment.getMinBalance(), attachment.getMinBalanceModel());
-                pollCounting.validate();
+                voteWeighting.validate();
 
-                if (pollCounting.getVotingModel() == Constants.VOTING_MODEL_ACCOUNT && pollCounting.getMinBalance() == 0) {
+                if (voteWeighting.getVotingModel() == Constants.VOTING_MODEL_ACCOUNT && voteWeighting.getMinBalance() == 0) {
                     throw new NxtException.NotValidException("Min balance == 0 for by-account voting"+ attachment.getJSONObject());
                 }
             }

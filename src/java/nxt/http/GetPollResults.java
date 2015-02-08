@@ -4,7 +4,7 @@ package nxt.http;
 import nxt.Constants;
 import nxt.NxtException;
 import nxt.Poll;
-import nxt.PollCounting;
+import nxt.VoteWeighting;
 import nxt.util.Convert;
 import org.json.simple.JSONStreamAware;
 
@@ -31,9 +31,9 @@ public class GetPollResults extends APIServlet.APIRequestHandler {
             long holdingId = ParameterParser.getLong(req, "holding", Long.MIN_VALUE, Long.MAX_VALUE, false);
             long minBalance = ParameterParser.getLong(req, "minBalance", 0, Long.MAX_VALUE, false);
             byte minBalanceModel = ParameterParser.getByte(req, "minBalanceModel", Constants.VOTING_MINBALANCE_NQT, Constants.VOTING_MINBALANCE_CURRENCY, false);
-            PollCounting pollCounting = new PollCounting(votingModel, holdingId, minBalance, minBalanceModel);
-            pollCounting.validate();
-            pollResults = poll.getResults(pollCounting);
+            VoteWeighting voteWeighting = new VoteWeighting(votingModel, holdingId, minBalance, minBalanceModel);
+            voteWeighting.validate();
+            pollResults = poll.getResults(voteWeighting);
         }
         if (pollResults == null) {
             return POLL_RESULTS_NOT_AVAILABLE;

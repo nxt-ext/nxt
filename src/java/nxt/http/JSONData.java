@@ -330,18 +330,18 @@ final class JSONData {
         json.put("options", options);
         json.put("finishHeight", poll.getFinishHeight());
 
-        json.put("votingModel", poll.getDefaultPollCounting().getVotingModel());
+        json.put("votingModel", poll.getDefaultVoteWeighting().getVotingModel());
 
         json.put("minNumberOfOptions", poll.getMinNumberOfOptions());
         json.put("maxNumberOfOptions", poll.getMaxNumberOfOptions());
         json.put("minRangeValue", poll.getMinRangeValue());
         json.put("maxRangeValue", poll.getMaxRangeValue());
 
-        json.put("minBalance", poll.getDefaultPollCounting().getMinBalance());
-        json.put("minBalanceModel", poll.getDefaultPollCounting().getMinBalanceModel());
+        json.put("minBalance", poll.getDefaultVoteWeighting().getMinBalance());
+        json.put("minBalanceModel", poll.getDefaultVoteWeighting().getMinBalanceModel());
 
-        if (poll.getDefaultPollCounting().getVotingModel() == Constants.VOTING_MODEL_ASSET || poll.getDefaultPollCounting().getVotingModel() == Constants.VOTING_MODEL_CURRENCY) {
-            json.put("holding", Convert.toUnsignedLong(poll.getDefaultPollCounting().getHoldingId()));
+        if (poll.getDefaultVoteWeighting().getVotingModel() == Constants.VOTING_MODEL_ASSET || poll.getDefaultVoteWeighting().getVotingModel() == Constants.VOTING_MODEL_CURRENCY) {
+            json.put("holding", Convert.toUnsignedLong(poll.getDefaultVoteWeighting().getHoldingId()));
         }
 
         if (includeVoters) {

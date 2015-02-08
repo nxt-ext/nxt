@@ -39,13 +39,13 @@ public class VotePhased {
     }
 
     public static long countVotes(PendingTransactionPoll poll) {
-        if (poll.getDefaultPollCounting().getVotingModel() == Constants.VOTING_MODEL_ACCOUNT && poll.getDefaultPollCounting().getMinBalance() == 0) {
+        if (poll.getDefaultVoteWeighting().getVotingModel() == Constants.VOTING_MODEL_ACCOUNT && poll.getDefaultVoteWeighting().getMinBalance() == 0) {
             return votePhasedTable.getCount(new DbClause.LongClause("pending_transaction_id", poll.getId()));
         }
         long cumulativeWeight = 0;
         try (DbIterator<VotePhased> votes = VotePhased.getByTransaction(poll.getId(), 0, Integer.MAX_VALUE)) {
             for (VotePhased vote : votes) {
-                cumulativeWeight += poll.getDefaultPollCounting().calcWeight(vote.getVoterId(), Math.min(poll.getFinishHeight(), Nxt.getBlockchain().getHeight()));
+                cumulativeWeight += poll.getDefaultVoteWeighting().calcWeight(vote.getVoterId(), Math.min(poll.getFinishHeight(), Nxt.getBlockchain().getHeight()));
             }
         }
         return cumulativeWeight;
@@ -53,7 +53,7 @@ public class VotePhased {
 
     static boolean addVote(PendingTransactionPoll poll, Transaction transaction) {
         votePhasedTable.insert(new VotePhased(transaction, poll.getId()));
-        return poll.getDefaultPollCounting().getVotingModel() == Constants.VOTING_MODEL_ACCOUNT && poll.getDefaultPollCounting().getMinBalance() == 0
+        return poll.getDefaultVoteWeighting().getVotingModel() == Constants.VOTING_MODEL_ACCOUNT && poll.getDefaultVoteWeighting().getMinBalance() == 0
                 && votePhasedTable.getCount(new DbClause.LongClause("pending_transaction_id", poll.getId())) >= poll.getQuorum();
     }
 

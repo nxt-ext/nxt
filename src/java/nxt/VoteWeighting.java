@@ -2,7 +2,7 @@ package nxt;
 
 import nxt.util.Convert;
 
-public final class PollCounting {
+public final class VoteWeighting {
 
     private final byte votingModel;
     private final long holdingId; //either asset id or MS coin id
@@ -10,7 +10,7 @@ public final class PollCounting {
     private final byte minBalanceModel;
 
 
-    public PollCounting(byte votingModel, long holdingId, long minBalance, byte minBalanceModel) {
+    public VoteWeighting(byte votingModel, long holdingId, long minBalance, byte minBalanceModel) {
         this.votingModel = votingModel;
         this.holdingId = holdingId;
         this.minBalance = minBalance;
@@ -78,7 +78,7 @@ public final class PollCounting {
         }
     }
 
-    long calcWeight(long voterId, int height) {
+    public long calcWeight(long voterId, int height) {
         long weight = 0;
 
         switch (votingModel) {

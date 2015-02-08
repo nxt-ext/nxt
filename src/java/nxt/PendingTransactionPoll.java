@@ -278,11 +278,11 @@ public class PendingTransactionPoll extends AbstractPoll {
             pstmt.setInt(++i, getFinishHeight());
             pstmt.setByte(++i, signersCount);
             pstmt.setBoolean(++i, isBlacklist);
-            pstmt.setByte(++i, getDefaultPollCounting().getVotingModel());
+            pstmt.setByte(++i, getDefaultVoteWeighting().getVotingModel());
             pstmt.setLong(++i, getQuorum());
-            pstmt.setLong(++i, getDefaultPollCounting().getMinBalance());
-            pstmt.setLong(++i, getDefaultPollCounting().getHoldingId());
-            pstmt.setByte(++i, getDefaultPollCounting().getMinBalanceModel());
+            pstmt.setLong(++i, getDefaultVoteWeighting().getMinBalance());
+            pstmt.setLong(++i, getDefaultVoteWeighting().getHoldingId());
+            pstmt.setByte(++i, getDefaultVoteWeighting().getMinBalanceModel());
             pstmt.setBoolean(++i, isFinished());
             pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
             pstmt.executeUpdate();

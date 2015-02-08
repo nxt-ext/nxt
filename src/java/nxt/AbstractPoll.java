@@ -9,7 +9,7 @@ import java.sql.SQLException;
 
 abstract class AbstractPoll {
 
-    private final PollCounting defaultPollCounting;
+    private final VoteWeighting defaultVoteWeighting;
     private final long accountId;
     private final int finishHeight;
 
@@ -18,13 +18,13 @@ abstract class AbstractPoll {
                  long minBalance, byte minBalanceModel) {
         this.accountId = accountId;
         this.finishHeight = finishHeight;
-        this.defaultPollCounting = new PollCounting(votingModel, holdingId, minBalance, minBalanceModel);
+        this.defaultVoteWeighting = new VoteWeighting(votingModel, holdingId, minBalance, minBalanceModel);
     }
 
     AbstractPoll(ResultSet rs) throws SQLException {
         this.accountId = rs.getLong("account_id");
         this.finishHeight = rs.getInt("finish_height");
-        this.defaultPollCounting = new PollCounting(rs.getByte("voting_model"), rs.getLong("holding_id"),
+        this.defaultVoteWeighting = new VoteWeighting(rs.getByte("voting_model"), rs.getLong("holding_id"),
                 rs.getLong("min_balance"), rs.getByte("min_balance_model"));
     }
 
@@ -36,8 +36,8 @@ abstract class AbstractPoll {
         return finishHeight;
     }
 
-    public final PollCounting getDefaultPollCounting() {
-        return defaultPollCounting;
+    public final VoteWeighting getDefaultVoteWeighting() {
+        return defaultVoteWeighting;
     }
 
 }
