@@ -1,6 +1,11 @@
 package nxt;
 
-import nxt.db.*;
+import nxt.db.DbClause;
+import nxt.db.DbIterator;
+import nxt.db.DbKey;
+import nxt.db.DbUtils;
+import nxt.db.ValuesDbTable;
+import nxt.db.VersionedEntityDbTable;
 import nxt.util.Convert;
 
 import java.sql.Connection;
@@ -129,7 +134,7 @@ public class PhasingPoll extends AbstractPoll {
         }
     }
 
-    public static DbIterator<? extends Transaction> getHoldingPendingTransactions(long holdingId, byte votingModel, int from, int to) {
+    public static DbIterator<? extends Transaction> getHoldingPendingTransactions(long holdingId, VoteWeighting.VotingModel votingModel, int from, int to) {
 
         Connection con = null;
         try {
@@ -143,7 +148,7 @@ public class PhasingPoll extends AbstractPoll {
                     "AND phasing_poll.latest = TRUE " +
                     DbUtils.limitsClause(from, to));
             pstmt.setLong(1, holdingId);
-            pstmt.setByte(2, votingModel);
+            pstmt.setByte(2, votingModel.getCode());
             DbUtils.setLimits(3, pstmt, from, to);
 
             return Nxt.getBlockchain().getTransactions(con, pstmt);
@@ -278,11 +283,11 @@ public class PhasingPoll extends AbstractPoll {
             pstmt.setInt(++i, getFinishHeight());
             pstmt.setByte(++i, voterCount);
             pstmt.setBoolean(++i, isBlacklist);
-            pstmt.setByte(++i, getDefaultVoteWeighting().getVotingModel());
+            pstmt.setByte(++i, getDefaultVoteWeighting().getVotingModel().getCode());
             pstmt.setLong(++i, getQuorum());
             pstmt.setLong(++i, getDefaultVoteWeighting().getMinBalance());
             pstmt.setLong(++i, getDefaultVoteWeighting().getHoldingId());
-            pstmt.setByte(++i, getDefaultVoteWeighting().getMinBalanceModel());
+            pstmt.setByte(++i, getDefaultVoteWeighting().getMinBalanceModel().getCode());
             pstmt.setBoolean(++i, isFinished());
             pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
             pstmt.executeUpdate();

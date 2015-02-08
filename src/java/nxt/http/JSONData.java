@@ -23,6 +23,7 @@ import nxt.Token;
 import nxt.Trade;
 import nxt.Transaction;
 import nxt.Vote;
+import nxt.VoteWeighting;
 import nxt.crypto.Crypto;
 import nxt.crypto.EncryptedData;
 import nxt.db.DbIterator;
@@ -330,7 +331,7 @@ final class JSONData {
         json.put("options", options);
         json.put("finishHeight", poll.getFinishHeight());
 
-        json.put("votingModel", poll.getDefaultVoteWeighting().getVotingModel());
+        json.put("votingModel", poll.getDefaultVoteWeighting().getVotingModel().getCode());
 
         json.put("minNumberOfOptions", poll.getMinNumberOfOptions());
         json.put("maxNumberOfOptions", poll.getMaxNumberOfOptions());
@@ -338,9 +339,10 @@ final class JSONData {
         json.put("maxRangeValue", poll.getMaxRangeValue());
 
         json.put("minBalance", poll.getDefaultVoteWeighting().getMinBalance());
-        json.put("minBalanceModel", poll.getDefaultVoteWeighting().getMinBalanceModel());
+        json.put("minBalanceModel", poll.getDefaultVoteWeighting().getMinBalanceModel().getCode());
 
-        if (poll.getDefaultVoteWeighting().getVotingModel() == Constants.VOTING_MODEL_ASSET || poll.getDefaultVoteWeighting().getVotingModel() == Constants.VOTING_MODEL_CURRENCY) {
+        if (poll.getDefaultVoteWeighting().getVotingModel() == VoteWeighting.VotingModel.ASSET
+                || poll.getDefaultVoteWeighting().getVotingModel() == VoteWeighting.VotingModel.CURRENCY) {
             json.put("holding", Convert.toUnsignedLong(poll.getDefaultVoteWeighting().getHoldingId()));
         }
 

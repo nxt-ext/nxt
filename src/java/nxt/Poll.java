@@ -74,9 +74,9 @@ public final class Poll extends AbstractPoll {
                 pstmt.setString(++i, poll.getDescription());
                 pstmt.setObject(++i, poll.getOptions());
                 pstmt.setInt(++i, poll.getFinishHeight());
-                pstmt.setByte(++i, poll.getDefaultVoteWeighting().getVotingModel());
+                pstmt.setByte(++i, poll.getDefaultVoteWeighting().getVotingModel().getCode());
                 pstmt.setLong(++i, poll.getDefaultVoteWeighting().getMinBalance());
-                pstmt.setByte(++i, poll.getDefaultVoteWeighting().getMinBalanceModel());
+                pstmt.setByte(++i, poll.getDefaultVoteWeighting().getMinBalanceModel().getCode());
                 pstmt.setLong(++i, poll.getDefaultVoteWeighting().getHoldingId());
                 pstmt.setByte(++i, poll.getMinNumberOfOptions());
                 pstmt.setByte(++i, poll.getMaxNumberOfOptions());

@@ -2,9 +2,9 @@ package nxt.http;
 
 
 import nxt.Asset;
-import nxt.Constants;
 import nxt.PhasingPoll;
 import nxt.Transaction;
+import nxt.VoteWeighting;
 import nxt.db.DbIterator;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -26,11 +26,10 @@ public class GetAssetPendingTransactions extends APIServlet.APIRequestHandler {
         int lastIndex = ParameterParser.getLastIndex(req);
 
         long assetId = asset.getId();
-        byte votingModel = Constants.VOTING_MODEL_ASSET;
 
         JSONArray transactions = new JSONArray();
         try (DbIterator<? extends Transaction> iterator =
-                     PhasingPoll.getHoldingPendingTransactions(assetId, votingModel, firstIndex, lastIndex)) {
+                     PhasingPoll.getHoldingPendingTransactions(assetId, VoteWeighting.VotingModel.ASSET, firstIndex, lastIndex)) {
             while (iterator.hasNext()) {
                 Transaction transaction = iterator.next();
                 transactions.add(JSONData.transaction(transaction));

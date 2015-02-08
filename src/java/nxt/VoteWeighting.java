@@ -4,20 +4,131 @@ import nxt.util.Convert;
 
 public final class VoteWeighting {
 
-    private final byte votingModel;
+    public enum VotingModel {
+        NQT(0) {
+            @Override
+            public final long calcWeight(VoteWeighting voteWeighting, long voterId, int height) {
+                long nqtBalance = Account.getAccount(voterId, height).getBalanceNQT();
+                return nqtBalance >= voteWeighting.minBalance ? nqtBalance : 0;
+            }
+            @Override
+            public final MinBalanceModel defaultMinBalanceModel() {
+                return MinBalanceModel.NQT;
+            }
+        },
+        ACCOUNT(1) {
+            @Override
+            public final long calcWeight(VoteWeighting voteWeighting, long voterId, int height) {
+                return (voteWeighting.minBalance == 0 || voteWeighting.minBalanceModel.getBalance(voteWeighting, voterId, height) >= voteWeighting.minBalance) ? 1 : 0;
+            }
+            @Override
+            public final MinBalanceModel defaultMinBalanceModel() {
+                return null;
+            }
+        },
+        ASSET(2) {
+            @Override
+            public final long calcWeight(VoteWeighting voteWeighting, long voterId, int height) {
+                long qntBalance = Account.getAssetBalanceQNT(voterId, voteWeighting.holdingId, height);
+                return qntBalance >= voteWeighting.minBalance ? qntBalance : 0;
+            }
+            @Override
+            public final MinBalanceModel defaultMinBalanceModel() {
+                return MinBalanceModel.ASSET;
+            }
+        },
+        CURRENCY(3) {
+            @Override
+            public final long calcWeight(VoteWeighting voteWeighting, long voterId, int height) {
+                long units = Account.getCurrencyUnits(voterId, voteWeighting.holdingId, height);
+                return units >= voteWeighting.minBalance ? units : 0;
+            }
+            @Override
+            public final MinBalanceModel defaultMinBalanceModel() {
+                return MinBalanceModel.CURRENCY;
+            }
+        };
+
+        private final byte code;
+
+        private VotingModel(int code) {
+            this.code = (byte)code;
+        }
+
+        public byte getCode() {
+            return code;
+        }
+
+        public abstract long calcWeight(VoteWeighting voteWeighting, long voterId, int height);
+
+        public abstract MinBalanceModel defaultMinBalanceModel();
+
+        public static VotingModel get(byte code) {
+            for (VotingModel votingModel : values()) {
+                if (votingModel.getCode() == code) {
+                    return votingModel;
+                }
+            }
+            return null;
+        }
+    }
+
+    public enum MinBalanceModel {
+        NQT(0) {
+            @Override
+            public final long getBalance(VoteWeighting voteWeighting, long voterId, int height) {
+                return Account.getAccount(voterId, height).getBalanceNQT();
+            }
+        },
+        ASSET(1) {
+            @Override
+            public final long getBalance(VoteWeighting voteWeighting, long voterId, int height) {
+                return Account.getAssetBalanceQNT(voterId, voteWeighting.holdingId, height);
+            }
+        },
+        CURRENCY(2) {
+            @Override
+            public final long getBalance(VoteWeighting voteWeighting, long voterId, int height) {
+                return Account.getCurrencyUnits(voterId, voteWeighting.holdingId, height);
+            }
+        };
+
+        private final byte code;
+
+        private MinBalanceModel(int code) {
+            this.code = (byte)code;
+        }
+
+        public byte getCode() {
+            return code;
+        }
+
+        public abstract long getBalance(VoteWeighting voteWeighting, long voterId, int height);
+
+        public static MinBalanceModel get(byte code) {
+            for (MinBalanceModel minBalanceModel : values()) {
+                if (minBalanceModel.getCode() == code) {
+                    return minBalanceModel;
+                }
+            }
+            return null;
+        }
+    }
+
+    private final VotingModel votingModel;
     private final long holdingId; //either asset id or MS coin id
     private final long minBalance;
-    private final byte minBalanceModel;
+    private final MinBalanceModel minBalanceModel;
 
 
     public VoteWeighting(byte votingModel, long holdingId, long minBalance, byte minBalanceModel) {
-        this.votingModel = votingModel;
+        this.votingModel = VotingModel.get(votingModel);
         this.holdingId = holdingId;
         this.minBalance = minBalance;
-        this.minBalanceModel = minBalanceModel;
+        this.minBalanceModel = MinBalanceModel.get(minBalanceModel);
     }
 
-    public byte getVotingModel() {
+    public VotingModel getVotingModel() {
         return votingModel;
     }
 
@@ -29,106 +140,50 @@ public final class VoteWeighting {
         return holdingId;
     }
 
-    public byte getMinBalanceModel() {
+    public MinBalanceModel getMinBalanceModel() {
         return minBalanceModel;
     }
 
     public void validate() throws NxtException.ValidationException {
-        if (votingModel != Constants.VOTING_MODEL_ACCOUNT
-                && votingModel != Constants.VOTING_MODEL_NQT
-                && votingModel != Constants.VOTING_MODEL_ASSET
-                && votingModel != Constants.VOTING_MODEL_CURRENCY) {
+        if (votingModel == null) {
             throw new NxtException.NotValidException("Invalid voting model value: " + votingModel);
         }
-        if ((votingModel == Constants.VOTING_MODEL_ASSET || votingModel == Constants.VOTING_MODEL_CURRENCY) && holdingId == 0) {
+        if ((votingModel == VotingModel.ASSET || votingModel == VotingModel.CURRENCY) && holdingId == 0) {
             throw new NxtException.NotValidException("No holdingId provided");
         }
-        if (votingModel == Constants.VOTING_MODEL_CURRENCY && Currency.getCurrency(holdingId) == null) {
+        if (votingModel == VotingModel.CURRENCY && Currency.getCurrency(holdingId) == null) {
             throw new NxtException.NotCurrentlyValidException("Currency " + Convert.toUnsignedLong(holdingId) + " not found");
         }
-        if (votingModel == Constants.VOTING_MODEL_ASSET && Asset.getAsset(holdingId) == null) {
+        if (votingModel == VotingModel.ASSET && Asset.getAsset(holdingId) == null) {
             throw new NxtException.NotCurrentlyValidException("Asset " + Convert.toUnsignedLong(holdingId) + " not found");
         }
         if (minBalance < 0) {
             throw new NxtException.NotValidException("Invalid minBalance " + minBalance);
         }
         if (minBalance > 0) {
-            if (minBalanceModel != Constants.VOTING_MINBALANCE_ASSET
-                    && minBalanceModel != Constants.VOTING_MINBALANCE_NQT
-                    && minBalanceModel != Constants.VOTING_MINBALANCE_CURRENCY) {
+            if (minBalanceModel == null) {
                 throw new NxtException.NotValidException("Invalid min balance model " + minBalanceModel);
             }
-            if ((votingModel == Constants.VOTING_MODEL_ASSET && minBalanceModel != Constants.VOTING_MINBALANCE_ASSET)
-                    || (votingModel == Constants.VOTING_MODEL_NQT && minBalanceModel != Constants.VOTING_MINBALANCE_NQT)
-                    || (votingModel == Constants.VOTING_MODEL_CURRENCY && minBalanceModel != Constants.VOTING_MINBALANCE_CURRENCY)) {
+            if (votingModel.defaultMinBalanceModel() != null && votingModel.defaultMinBalanceModel() != minBalanceModel) {
                 throw new NxtException.NotValidException("Invalid min balance model: " + minBalanceModel + " for voting model " + votingModel);
             }
-            if ((minBalanceModel == Constants.VOTING_MINBALANCE_ASSET || minBalanceModel == Constants.VOTING_MINBALANCE_CURRENCY) && holdingId == 0) {
+            if ((minBalanceModel == MinBalanceModel.ASSET || minBalanceModel == MinBalanceModel.CURRENCY) && holdingId == 0) {
                 throw new NxtException.NotValidException("No holdingId provided");
             }
-            if (minBalanceModel == Constants.VOTING_MINBALANCE_ASSET && Asset.getAsset(holdingId) == null) {
+            if (minBalanceModel == MinBalanceModel.ASSET && Asset.getAsset(holdingId) == null) {
                 throw new NxtException.NotCurrentlyValidException("Invalid min balance asset: " + Convert.toUnsignedLong(holdingId));
             }
-            if (minBalanceModel == Constants.VOTING_MINBALANCE_CURRENCY && Currency.getCurrency(holdingId) == null) {
+            if (minBalanceModel == MinBalanceModel.CURRENCY && Currency.getCurrency(holdingId) == null) {
                 throw new NxtException.NotCurrentlyValidException("Invalid min balance currency: " + Convert.toUnsignedLong(holdingId));
             }
         }
-        if (minBalance == 0 && votingModel == Constants.VOTING_MODEL_ACCOUNT && holdingId != 0) {
+        if (minBalance == 0 && votingModel == VotingModel.ACCOUNT && holdingId != 0) {
             throw new NxtException.NotValidException("HoldingId cannot be used in by account voting with no min balance");
         }
     }
 
     public long calcWeight(long voterId, int height) {
-        long weight = 0;
-
-        switch (votingModel) {
-            case Constants.VOTING_MODEL_ASSET:
-                long qntBalance = Account.getAssetBalanceQNT(voterId, holdingId, height);
-                if (qntBalance >= minBalance) {
-                    weight = qntBalance;
-                }
-                break;
-            case Constants.VOTING_MODEL_CURRENCY:
-                long units = Account.getCurrencyUnits(voterId, holdingId, height);
-                if (units >= minBalance) {
-                    weight = units;
-                }
-                break;
-            case Constants.VOTING_MODEL_NQT:
-                long nqtBalance = Account.getAccount(voterId, height).getBalanceNQT();
-                if (nqtBalance >= minBalance) {
-                    weight = nqtBalance;
-                }
-                break;
-            case Constants.VOTING_MODEL_ACCOUNT:
-                if (minBalance == 0) {
-                    weight = 1;
-                } else {
-                    long balance;
-                    switch (minBalanceModel) {
-                        case Constants.VOTING_MINBALANCE_ASSET:
-                            balance = Account.getAssetBalanceQNT(voterId, holdingId, height);
-                            break;
-                        case Constants.VOTING_MINBALANCE_CURRENCY:
-                            balance = Account.getCurrencyUnits(voterId, holdingId, height);
-                            break;
-                        case Constants.VOTING_MINBALANCE_NQT:
-                            balance = Account.getAccount(voterId, height).getBalanceNQT();
-                            break;
-                        default:
-                            throw new RuntimeException("Invalid minBalanceModel " + minBalanceModel);
-                    }
-                    if (balance >= minBalance) {
-                        weight = 1;
-                    } else {
-                        weight = 0;
-                    }
-                }
-                break;
-            default:
-                throw new RuntimeException("Invalid votingModel " + votingModel);
-        }
-        return weight;
+        return votingModel.calcWeight(this, voterId, height);
     }
 
 }

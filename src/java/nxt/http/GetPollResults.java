@@ -1,7 +1,6 @@
 package nxt.http;
 
 
-import nxt.Constants;
 import nxt.NxtException;
 import nxt.Poll;
 import nxt.VoteWeighting;
@@ -27,10 +26,10 @@ public class GetPollResults extends APIServlet.APIRequestHandler {
         if (Convert.emptyToNull(req.getParameter("votingModel")) == null) {
             pollResults = poll.getResults();
         } else {
-            byte votingModel = ParameterParser.getByte(req, "votingModel", Constants.VOTING_MODEL_NQT, Constants.VOTING_MODEL_CURRENCY, true);
+            byte votingModel = ParameterParser.getByte(req, "votingModel", VoteWeighting.VotingModel.NQT.getCode(), VoteWeighting.VotingModel.CURRENCY.getCode(), true);
             long holdingId = ParameterParser.getLong(req, "holding", Long.MIN_VALUE, Long.MAX_VALUE, false);
             long minBalance = ParameterParser.getLong(req, "minBalance", 0, Long.MAX_VALUE, false);
-            byte minBalanceModel = ParameterParser.getByte(req, "minBalanceModel", Constants.VOTING_MINBALANCE_NQT, Constants.VOTING_MINBALANCE_CURRENCY, false);
+            byte minBalanceModel = ParameterParser.getByte(req, "minBalanceModel", VoteWeighting.MinBalanceModel.NQT.getCode(), VoteWeighting.MinBalanceModel.CURRENCY.getCode(), false);
             VoteWeighting voteWeighting = new VoteWeighting(votingModel, holdingId, minBalance, minBalanceModel);
             voteWeighting.validate();
             pollResults = poll.getResults(voteWeighting);

@@ -421,17 +421,7 @@ public interface Attachment extends Appendix {
                 this.minRangeValue = minRangeValue;
                 this.maxRangeValue = maxRangeValue;
 
-                switch (votingModel) {
-                    case Constants.VOTING_MODEL_ASSET:
-                        minBalanceModel = Constants.VOTING_MINBALANCE_ASSET;
-                        break;
-                    case Constants.VOTING_MODEL_CURRENCY:
-                        minBalanceModel = Constants.VOTING_MINBALANCE_CURRENCY;
-                        break;
-                    case Constants.VOTING_MODEL_NQT:
-                        minBalanceModel = Constants.VOTING_MINBALANCE_NQT;
-                        break;
-                }
+                this.minBalanceModel = VoteWeighting.VotingModel.get(votingModel).defaultMinBalanceModel().getCode();
             }
 
             public PollBuilder minBalance(byte minBalanceModel, long minBalance) {

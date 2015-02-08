@@ -7,6 +7,7 @@ import nxt.Constants;
 import nxt.Nxt;
 import nxt.NxtException;
 import nxt.Transaction;
+import nxt.VoteWeighting;
 import nxt.crypto.Crypto;
 import nxt.crypto.EncryptedData;
 import nxt.util.Convert;
@@ -25,7 +26,6 @@ import static nxt.http.JSONResponses.MISSING_DEADLINE;
 import static nxt.http.JSONResponses.MISSING_PENDING_HOLDING_ID;
 import static nxt.http.JSONResponses.MISSING_SECRET_PHRASE;
 import static nxt.http.JSONResponses.NOT_ENOUGH_FUNDS;
-import static nxt.http.JSONResponses.incorrect;
 
 abstract class CreateTransaction extends APIServlet.APIRequestHandler {
 
@@ -34,7 +34,7 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
             "message", "messageIsText",
             "messageToEncrypt", "messageToEncryptIsText", "encryptedMessageData", "encryptedMessageNonce",
             "messageToEncryptToSelf", "messageToEncryptToSelfIsText", "encryptToSelfMessageData", "encryptToSelfMessageNonce",
-            "phased", "phasingFinishHeight", "phasingVotingModel", "phasingQuorum", "phasingMinBalance", "phasingHolding",
+            "phased", "phasingFinishHeight", "phasingVotingModel", "phasingQuorum", "phasingMinBalance", "phasingHolding", "phasingMinBalanceModel",
             "phasingWhitelisted", "phasingWhitelisted", "phasingWhitelisted",
             "phasingBlacklisted", "phasingBlacklisted", "phasingBlacklisted",
             "recipientPublicKey"};
@@ -60,7 +60,7 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
     }
 
     private Appendix.Phasing parsePhasing(HttpServletRequest req) throws ParameterException {
-        byte votingModel = ParameterParser.getByte(req, "phasingVotingModel", Constants.VOTING_MODEL_NQT, Constants.VOTING_MODEL_CURRENCY, true);
+        byte votingModel = ParameterParser.getByte(req, "phasingVotingModel", VoteWeighting.VotingModel.NQT.getCode(), VoteWeighting.VotingModel.CURRENCY.getCode(), true);
 
         int maxHeight = ParameterParser.getInt(req, "phasingFinishHeight",
                 Nxt.getBlockchain().getHeight() + Constants.VOTING_MIN_VOTE_DURATION,
@@ -72,10 +72,10 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
         long minBalance = ParameterParser.getLong(req, "phasingMinBalance", 0, Long.MAX_VALUE, false);
 
         byte minBalanceModel = ParameterParser.getByte(req, "phasingMinBalanceModel",
-                Constants.VOTING_MINBALANCE_NQT, Constants.VOTING_MINBALANCE_CURRENCY, false);
+                VoteWeighting.MinBalanceModel.NQT.getCode(), VoteWeighting.MinBalanceModel.CURRENCY.getCode(), false);
 
         long holdingId = ParameterParser.getLong(req, "phasingHolding", Long.MIN_VALUE, Long.MAX_VALUE, false);
-        if ((votingModel == Constants.VOTING_MODEL_ASSET || votingModel == Constants.VOTING_MODEL_CURRENCY)
+        if ((votingModel == VoteWeighting.VotingModel.ASSET.getCode() || votingModel == VoteWeighting.VotingModel.CURRENCY.getCode())
                 && holdingId == 0) {
             throw new ParameterException(MISSING_PENDING_HOLDING_ID);
         }
@@ -90,7 +90,7 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
         } else {
             whitelist = new long[0];
         }
-        if (votingModel == Constants.VOTING_MODEL_ACCOUNT && whitelist.length == 0) {
+        if (votingModel == VoteWeighting.VotingModel.ACCOUNT.getCode() && whitelist.length == 0) {
             throw new ParameterException(INCORRECT_PENDING_WHITELIST);
         }
 
@@ -104,7 +104,7 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
         } else {
             blacklist = new long[0];
         }
-        if (votingModel == Constants.VOTING_MODEL_ACCOUNT && blacklist.length != 0) {
+        if (votingModel == VoteWeighting.VotingModel.ACCOUNT.getCode() && blacklist.length != 0) {
             throw new ParameterException(INCORRECT_PENDING_BLACKLISTED);
         }
         return new Appendix.Phasing(maxHeight, votingModel, holdingId, quorum, minBalance, minBalanceModel, whitelist, blacklist);

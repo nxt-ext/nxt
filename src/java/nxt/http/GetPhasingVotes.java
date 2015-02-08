@@ -1,6 +1,9 @@
 package nxt.http;
 
-import nxt.*;
+import nxt.Nxt;
+import nxt.NxtException;
+import nxt.PhasingPoll;
+import nxt.PhasingVote;
 import nxt.db.DbIterator;
 import nxt.util.Convert;
 import org.json.simple.JSONArray;

@@ -463,11 +463,7 @@ public interface Appendix {
             quorum = Convert.parseLong(attachmentData.get("phasingQuorum"));
             minBalance = Convert.parseLong(attachmentData.get("phasingMinBalance"));
             votingModel = ((Long) attachmentData.get("phasingVotingModel")).byteValue();
-            if (votingModel == Constants.VOTING_MODEL_ASSET || votingModel == Constants.VOTING_MODEL_CURRENCY) {
-                holdingId = Convert.parseUnsignedLong((String) attachmentData.get("phasingHolding"));
-            } else {
-                holdingId = 0;
-            }
+            holdingId = Convert.parseUnsignedLong((String) attachmentData.get("phasingHolding"));
 
             JSONArray whitelistJson = (JSONArray) (attachmentData.get("phasingWhitelist"));
             whitelist = new long[whitelistJson.size()];
@@ -585,10 +581,6 @@ public interface Appendix {
                 throw new NxtException.NotValidException("Blacklist is too big");
             }
 
-            if (votingModel == Constants.VOTING_MODEL_ACCOUNT && whitelist.length == 0) {
-                throw new NxtException.NotValidException("By-account voting with empty whitelist");
-            }
-
             if (quorum <= 0) {
                 throw new NxtException.NotValidException("quorum <= 0");
             }
@@ -601,6 +593,11 @@ public interface Appendix {
 
             VoteWeighting voteWeighting = new VoteWeighting(votingModel, holdingId, minBalance, minBalanceModel);
             voteWeighting.validate();
+
+            if (voteWeighting.getVotingModel() == VoteWeighting.VotingModel.ACCOUNT && whitelist.length == 0) {
+                throw new NxtException.NotValidException("By-account voting with empty whitelist");
+            }
+
         }
 
         @Override

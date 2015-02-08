@@ -694,7 +694,7 @@ public abstract class TransactionType {
                         attachment.getMinBalance(), attachment.getMinBalanceModel());
                 voteWeighting.validate();
 
-                if (voteWeighting.getVotingModel() == Constants.VOTING_MODEL_ACCOUNT && voteWeighting.getMinBalance() == 0) {
+                if (voteWeighting.getVotingModel() == VoteWeighting.VotingModel.ACCOUNT && voteWeighting.getMinBalance() == 0) {
                     throw new NxtException.NotValidException("Min balance == 0 for by-account voting"+ attachment.getJSONObject());
                 }
             }

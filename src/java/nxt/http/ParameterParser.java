@@ -1,6 +1,18 @@
 package nxt.http;
 
-import nxt.*;
+import nxt.Account;
+import nxt.Alias;
+import nxt.Asset;
+import nxt.Constants;
+import nxt.Currency;
+import nxt.CurrencyBuyOffer;
+import nxt.CurrencySellOffer;
+import nxt.DigitalGoodsStore;
+import nxt.Nxt;
+import nxt.NxtException;
+import nxt.PhasingPoll;
+import nxt.Poll;
+import nxt.Transaction;
 import nxt.crypto.Crypto;
 import nxt.crypto.EncryptedData;
 import nxt.util.Convert;

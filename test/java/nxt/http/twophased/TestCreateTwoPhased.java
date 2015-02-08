@@ -3,6 +3,7 @@ package nxt.http.twophased;
 import nxt.BlockchainTest;
 import nxt.Constants;
 import nxt.Nxt;
+import nxt.VoteWeighting;
 import nxt.http.APICall;
 import nxt.util.Convert;
 import nxt.util.Logger;
@@ -44,7 +45,7 @@ public class TestCreateTwoPhased extends BlockchainTest {
             recipient(id2);
             param("amountNQT", 50 * Constants.ONE_NXT);
             param("phased", "true");
-            param("phasingVotingModel", Constants.VOTING_MODEL_ACCOUNT);
+            param("phasingVotingModel", VoteWeighting.VotingModel.ACCOUNT.getCode());
             param("phasingQuorum", 1);
             param("phasingWhitelisted", Convert.toUnsignedLong(id3));
             param("phasingFinishHeight", height + 15);
@@ -104,10 +105,10 @@ public class TestCreateTwoPhased extends BlockchainTest {
         apiCall = new TwoPhasedMoneyTransferBuilder().blacklisted(id3).build();
         issueCreateTwoPhased(apiCall, true);
 
-        apiCall = new TwoPhasedMoneyTransferBuilder().votingModel(Constants.VOTING_MODEL_ASSET).build();
+        apiCall = new TwoPhasedMoneyTransferBuilder().votingModel(VoteWeighting.VotingModel.ASSET.getCode()).build();
         issueCreateTwoPhased(apiCall, true);
 
-        apiCall = new TwoPhasedMoneyTransferBuilder().votingModel(Constants.VOTING_MODEL_ASSET)
+        apiCall = new TwoPhasedMoneyTransferBuilder().votingModel(VoteWeighting.VotingModel.ASSET.getCode())
                 .minBalance(50).build();
         issueCreateTwoPhased(apiCall, true);
     }
