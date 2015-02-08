@@ -622,71 +622,51 @@ class NxtDbVersion extends DbVersion {
                 apply("CREATE TABLE IF NOT EXISTS poll_result (db_id IDENTITY, poll_id BIGINT NOT NULL, "
                         + "option VARCHAR NOT NULL, result BIGINT NOT NULL,  height INT NOT NULL)");
             case 238:
-                apply("ALTER TABLE transaction ADD COLUMN IF NOT EXISTS two_phased BOOLEAN NOT NULL DEFAULT FALSE");
+                apply("ALTER TABLE transaction ADD COLUMN IF NOT EXISTS phased BOOLEAN NOT NULL DEFAULT FALSE");
             case 239:
-                apply("CREATE TABLE IF NOT EXISTS pending_transaction (db_id IDENTITY, id BIGINT NOT NULL, "
-                        + "account_id BIGINT NOT NULL, "
-                        + "signers_count TINYINT NOT NULL DEFAULT 0, blacklist BOOLEAN DEFAULT FALSE, "
+                apply("CREATE TABLE IF NOT EXISTS phasing_poll (db_id IDENTITY, id BIGINT NOT NULL, "
+                        + "account_id BIGINT NOT NULL, finished BOOLEAN, "
+                        + "voter_count TINYINT NOT NULL DEFAULT 0, blacklist BOOLEAN DEFAULT FALSE, "
                         + "finish_height INT NOT NULL, voting_model TINYINT NOT NULL, quorum BIGINT NOT NULL, "
                         + "min_balance BIGINT NOT NULL, holding_id BIGINT NOT NULL, min_balance_model TINYINT, "
                         + "height INT NOT NULL, latest BOOLEAN DEFAULT TRUE NOT NULL)");
             case 240:
-                apply("CREATE TABLE IF NOT EXISTS vote_phased (db_id IDENTITY, id BIGINT NOT NULL, "
-                        + "pending_transaction_id BIGINT NOT NULL, voter_id BIGINT NOT NULL, "
+                apply("CREATE TABLE IF NOT EXISTS phasing_vote (db_id IDENTITY, id BIGINT NOT NULL, "
+                        + "transaction_id BIGINT NOT NULL, voter_id BIGINT NOT NULL, "
                         + "height INT NOT NULL)");
             case 241:
-                apply("CREATE TABLE IF NOT EXISTS pending_transaction_signer (db_id IDENTITY, "
-                        + "poll_id BIGINT NOT NULL, account_id BIGINT NOT NULL, "
+                apply("CREATE TABLE IF NOT EXISTS phasing_poll_voter (db_id IDENTITY, "
+                        + "transaction_id BIGINT NOT NULL, voter_id BIGINT NOT NULL, "
                         + "height INT NOT NULL, latest BOOLEAN DEFAULT TRUE NOT NULL)");
             case 242:
-                apply("ALTER TABLE pending_transaction_signer ALTER COLUMN poll_id RENAME TO pending_transaction_id");
-            case 243:
-                apply("ALTER TABLE pending_transaction ADD COLUMN IF NOT EXISTS finished BOOLEAN");
-            case 244:
                 apply("CREATE INDEX IF NOT EXISTS vote_height_idx ON vote(height)");
-            case 245:
+            case 243:
                 apply("CREATE UNIQUE INDEX IF NOT EXISTS poll_id_idx ON poll(id)");
-            case 246:
+            case 244:
                 apply("CREATE INDEX IF NOT EXISTS poll_height_idx ON poll(height)");
-            case 247:
+            case 245:
                 apply("CREATE INDEX IF NOT EXISTS poll_account_idx ON poll(account_id)");
-            case 248:
+            case 246:
                 apply("CREATE INDEX IF NOT EXISTS poll_finish_height_idx ON poll(finish_height DESC)");
-            case 249:
+            case 247:
                 apply("CREATE UNIQUE INDEX IF NOT EXISTS poll_result_poll_id_idx ON poll_result(poll_id)");
-            case 250:
+            case 248:
                 apply("CREATE INDEX IF NOT EXISTS poll_result_height_idx ON poll_result(height)");
-            case 251:
-                apply("ALTER TABLE transaction ALTER COLUMN two_phased RENAME TO has_phasing");
-            case 252:
-                apply("ALTER TABLE pending_transaction RENAME TO phasing_poll");
-            case 253:
-                apply("ALTER TABLE phasing_poll ALTER COLUMN signers_count RENAME TO voter_count");
-            case 254:
-                apply("ALTER TABLE vote_phased RENAME TO phasing_vote");
-            case 255:
-                apply("ALTER TABLE phasing_vote ALTER COLUMN pending_transaction_id RENAME TO transaction_id");
-            case 256:
-                apply("ALTER TABLE pending_transaction_signer RENAME TO phasing_poll_voter");
-            case 257:
-                apply("ALTER TABLE phasing_poll_voter ALTER COLUMN pending_transaction_id RENAME TO transaction_id");
-            case 258:
-                apply("ALTER TABLE phasing_poll_voter ALTER COLUMN account_id RENAME TO voter_id");
-            case 259:
+            case 249:
                 apply("CREATE UNIQUE INDEX IF NOT EXISTS phasing_poll_id_height_idx ON phasing_poll(id, height DESC)");
-            case 260:
+            case 250:
                 apply("CREATE INDEX IF NOT EXISTS phasing_poll_height_idx ON phasing_poll(height)");
-            case 261:
+            case 251:
                 apply("CREATE INDEX IF NOT EXISTS phasing_poll_account_id_idx ON phasing_poll(account_id, height DESC)");
-            case 262:
+            case 252:
                 apply("CREATE INDEX IF NOT EXISTS phasing_poll_holding_id_idx ON phasing_poll(holding_id, height DESC)");
-            case 263:
+            case 253:
                 apply("CREATE UNIQUE INDEX IF NOT EXISTS phasing_vote_id_transaction_idx ON phasing_vote(id, transaction_id)");
-            case 264:
+            case 254:
                 apply("CREATE UNIQUE INDEX IF NOT EXISTS phasing_vote_transaction_voter_idx ON phasing_vote(transaction_id, voter_id)");
-            case 265:
+            case 255:
                 apply("CREATE INDEX IF NOT EXISTS phasing_poll_voter_id_height_idx ON phasing_poll_voter(transaction_id, height DESC)");
-            case 266:
+            case 256:
                 return;
             default:
                 throw new RuntimeException("Blockchain database inconsistent with code, probably trying to run older code on newer database");

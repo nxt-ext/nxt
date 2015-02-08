@@ -290,7 +290,7 @@ final class BlockchainImpl implements Blockchain {
                 buf.append("AND (has_message = TRUE OR has_encrypted_message = TRUE) ");
             }
             if (phased) {
-                buf.append("AND has_phasing = TRUE ");
+                buf.append("AND phased = TRUE ");
             }
 
             buf.append("UNION ALL SELECT * FROM transaction WHERE sender_id = ? ");
@@ -310,7 +310,7 @@ final class BlockchainImpl implements Blockchain {
                 buf.append("AND (has_message = TRUE OR has_encrypted_message = TRUE OR has_encrypttoself_message = TRUE) ");
             }
             if (phased) {
-                buf.append("AND has_phasing = TRUE ");
+                buf.append("AND phased = TRUE ");
             }
             buf.append("ORDER BY block_timestamp DESC, transaction_index DESC");
             buf.append(DbUtils.limitsClause(from, to));
