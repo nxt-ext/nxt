@@ -25,22 +25,23 @@ public final class GetPlugins extends APIServlet.APIRequestHandler {
         super(new APITag[] {APITag.INFO});
     }
 
+    private static final Path PLUGINS_HOME = Paths.get("./html/ui/plugins");
+
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) {
 
         JSONObject response = new JSONObject();
-        Path path = Paths.get("./html/ui/plugins");
-        if (Files.isReadable(path)) {
-            return JSONResponses.fileNotFound(path.toString());
+        if (!Files.isReadable(PLUGINS_HOME)) {
+            return JSONResponses.fileNotFound(PLUGINS_HOME.toString());
         }
-        List<Path> directories = new ArrayList<>();
+        PluginDirListing pluginDirListing = new PluginDirListing();
         try {
-            Files.walkFileTree(path, EnumSet.noneOf(FileVisitOption.class), 1, new PluginDirListing(directories));
+            Files.walkFileTree(PLUGINS_HOME, EnumSet.noneOf(FileVisitOption.class), 2, pluginDirListing);
         } catch (IOException e) {
             return JSONResponses.fileNotFound(e.getMessage());
         }
         JSONArray plugins = new JSONArray();
-        for (Path dir : directories) {
+        for (Path dir : pluginDirListing.getDirectories()) {
             plugins.add(Paths.get(dir.toString()).getFileName());
         }
         response.put("plugins", plugins);
@@ -49,11 +50,7 @@ public final class GetPlugins extends APIServlet.APIRequestHandler {
 
     public static class PluginDirListing extends SimpleFileVisitor<Path> {
 
-        List<Path> directories;
-
-        public PluginDirListing(List<Path> directories) {
-            this.directories = directories;
-        }
+        private final List<Path> directories = new ArrayList<>();
 
         @Override
         public FileVisitResult visitFile(Path file, BasicFileAttributes attr) {
@@ -61,13 +58,20 @@ public final class GetPlugins extends APIServlet.APIRequestHandler {
         }
 
         @Override
-        public FileVisitResult postVisitDirectory(Path dir, IOException exc) {
+        public FileVisitResult postVisitDirectory(Path dir, IOException e) {
+            if (!PLUGINS_HOME.equals(dir)) {
+                directories.add(dir);
+            }
             return FileVisitResult.CONTINUE;
         }
 
         @Override
-        public FileVisitResult visitFileFailed(Path file, IOException exc) {
+        public FileVisitResult visitFileFailed(Path file, IOException e) {
             return FileVisitResult.CONTINUE;
+        }
+
+        public List<Path> getDirectories() {
+            return directories;
         }
     }
 
