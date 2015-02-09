@@ -8,7 +8,7 @@ import org.junit.runners.Suite;
 @Suite.SuiteClasses({
         TestCreateTwoPhased.class,
         TestGetVoterPendingTransactions.class,
-        TestApprovePendingTransaction.class,
+        TestApproveTransaction.class,
         TestGetPendingTransactionVotes.class
 })
 

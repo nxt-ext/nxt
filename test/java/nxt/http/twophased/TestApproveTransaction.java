@@ -9,7 +9,7 @@ import org.json.simple.JSONObject;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class TestApprovePendingTransaction extends BlockchainTest {
+public class TestApproveTransaction extends BlockchainTest {
 
     @Test
     public void validVoteCasting() {
