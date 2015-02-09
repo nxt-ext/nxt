@@ -42,7 +42,7 @@ public final class GetPlugins extends APIServlet.APIRequestHandler {
         }
         JSONArray plugins = new JSONArray();
         for (Path dir : pluginDirListing.getDirectories()) {
-            plugins.add(Paths.get(dir.toString()).getFileName());
+            plugins.add(Paths.get(dir.toString()).getFileName().toString());
         }
         response.put("plugins", plugins);
         return response;
