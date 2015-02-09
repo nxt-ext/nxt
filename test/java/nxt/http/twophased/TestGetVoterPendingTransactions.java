@@ -6,10 +6,26 @@ import nxt.http.APICall;
 import nxt.http.twophased.TestCreateTwoPhased.TwoPhasedMoneyTransferBuilder;
 import nxt.util.Convert;
 import nxt.util.Logger;
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
+import org.junit.Assert;
 import org.junit.Test;
 
-public class TestGetAccountPendingTransactionToApproveIds extends BlockchainTest {
+import java.util.Iterator;
+
+public class TestGetVoterPendingTransactions extends BlockchainTest {
+
+    private boolean searchForTransactionId(JSONArray transactionsJson, String transactionId){
+        boolean found = false;
+        for (Object transactionsJsonObj : transactionsJson) {
+            JSONObject transactionObject = (JSONObject) transactionsJsonObj;
+            String iteratedTransactionId = (String) transactionObject.get("transaction");
+            if (iteratedTransactionId.equals(transactionId)) {
+                found = true; break;
+            }
+        }
+        return found;
+    }
 
     @Test
     public void simpleTransactionLookup() {
@@ -26,7 +42,8 @@ public class TestGetAccountPendingTransactionToApproveIds extends BlockchainTest
 
         JSONObject response = apiCall.invoke();
         Logger.logMessage("getVoterPendingTransactionsResponse:" + response.toJSONString());
-        //Assert.assertTrue(((JSONArray) response.get("transactionIds")).contains(transactionId));
+        JSONArray transactionsJson = (JSONArray) response.get("transactions");
+        Assert.assertTrue(searchForTransactionId(transactionsJson, transactionId));
     }
 
     @Test
@@ -58,6 +75,7 @@ public class TestGetAccountPendingTransactionToApproveIds extends BlockchainTest
 
         response = apiCall.invoke();
         Logger.logMessage("getVoterPendingTransactionsResponse:" + response.toJSONString());
-        //Assert.assertTrue(((JSONArray) response.get("transactionIds")).contains(transactionId));
+        JSONArray transactionsJson = (JSONArray) response.get("transactions");
+        Assert.assertTrue(searchForTransactionId(transactionsJson, transactionId));
     }
 }
