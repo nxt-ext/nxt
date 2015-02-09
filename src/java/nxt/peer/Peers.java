@@ -341,16 +341,25 @@ public final class Peers {
             try {
                 try {
 
+                    final int now = Nxt.getEpochTime();
                     if (!hasEnoughConnectedPublicPeers(Peers.maxNumberOfConnectedPublicPeers)) {
+                        List<Future> futures = new ArrayList<>();
                         for (int i = 0; i < 10; i++) {
-                            PeerImpl peer = (PeerImpl) getAnyPeer(ThreadLocalRandom.current().nextInt(2) == 0 ? Peer.State.NON_CONNECTED : Peer.State.DISCONNECTED, false);
-                            if (peer != null) {
-                                peer.connect();
-                            }
+                            futures.add(peersService.submit(new Runnable() {
+                                @Override
+                                public void run() {
+                                    PeerImpl peer = (PeerImpl) getAnyPeer(ThreadLocalRandom.current().nextInt(2) == 0 ? Peer.State.NON_CONNECTED : Peer.State.DISCONNECTED, false);
+                                    if (peer != null && now - peer.getLastConnectAttempt() > 600) {
+                                        peer.connect();
+                                    }
+                                }
+                            }));
+                        }
+                        for (Future future : futures) {
+                            future.get();
                         }
                     }
 
-                    int now = Nxt.getEpochTime();
                     for (PeerImpl peer : peers.values()) {
                         if (peer.getState() == Peer.State.CONNECTED && now - peer.getLastUpdated() > 3600) {
                             peer.connect();
@@ -360,7 +369,7 @@ public final class Peers {
                     if (hasTooManyKnownPeers() && hasEnoughConnectedPublicPeers(Peers.maxNumberOfConnectedPublicPeers)) {
                         int initialSize = peers.size();
                         for (PeerImpl peer : peers.values()) {
-                            if (now - peer.getLastUpdated() > 7 * 24 * 3600) {
+                            if (now - peer.getLastUpdated() > 24 * 3600) {
                                 peer.remove();
                             }
                             if (hasTooFewKnownPeers()) {
@@ -625,7 +634,7 @@ public final class Peers {
                 return null;
             }
             int port = uri.getPort();
-            if ((peer = peers.get(port > 0 && port != Peers.getDefaultPeerPort() ? host + ":" + port : host)) != null) {
+            if ((peer = peers.get(addressWithPort(host, port))) != null) {
                 return peer;
             }
             InetAddress inetAddress = InetAddress.getByName(host);
@@ -643,11 +652,9 @@ public final class Peers {
         if (cleanAddress.split(":").length > 2) {
             cleanAddress = "[" + cleanAddress + "]";
         }
-        
-        if (port > 0 && port != Peers.getDefaultPeerPort()) {
-            cleanAddress = cleanAddress + ":" + port;
-        }
-        
+
+        cleanAddress = addressWithPort(cleanAddress, port);
+
         PeerImpl peer;
         if ((peer = peers.get(cleanAddress)) != null) {
             return peer;
@@ -816,6 +823,19 @@ public final class Peers {
         return null;
     }
 
+    static String addressWithPort(String address) {
+        try {
+            URI uri = new URI("http://" + address.trim());
+            return addressWithPort(uri.getHost(), uri.getPort());
+        } catch (URISyntaxException e) {
+            return null;
+        }
+    }
+
+    static String addressWithPort(String host, int port) {
+        return port > 0 && port != Peers.getDefaultPeerPort() ? host + ":" + port : host;
+    }
+
     static String normalizeHostAndPort(String address) {
         try {
             if (address == null) {
@@ -832,8 +852,7 @@ public final class Peers {
                                                    inetAddress.isLinkLocalAddress()) {
                 return null;
             }
-            int port = uri.getPort();
-            return port == -1 || port == Peers.getDefaultPeerPort() ? host : host + ':' + port;
+            return addressWithPort(host, uri.getPort());
         } catch (URISyntaxException |UnknownHostException e) {
             return null;
         }

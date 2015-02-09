@@ -51,28 +51,28 @@ public final class PeerServlet extends HttpServlet {
     private static final JSONStreamAware UNSUPPORTED_REQUEST_TYPE;
     static {
         JSONObject response = new JSONObject();
-        response.put("error", "Unsupported request type!");
+        response.put("error", Errors.UNSUPPORTED_REQUEST_TYPE);
         UNSUPPORTED_REQUEST_TYPE = JSON.prepare(response);
     }
 
     private static final JSONStreamAware UNSUPPORTED_PROTOCOL;
     static {
         JSONObject response = new JSONObject();
-        response.put("error", "Unsupported protocol!");
+        response.put("error", Errors.UNSUPPORTED_PROTOCOL);
         UNSUPPORTED_PROTOCOL = JSON.prepare(response);
     }
 
     private static final JSONStreamAware BLACKLISTED;
     static {
         JSONObject response = new JSONObject();
-        response.put("error", "Your peer is blacklisted");
+        response.put("error", Errors.BLACKLISTED);
         BLACKLISTED = JSON.prepare(response);
     }
 
     private static final JSONStreamAware UNKNOWN_PEER;
     static {
         JSONObject response = new JSONObject();
-        response.put("error", "Your peer address cannot be resolved");
+        response.put("error", Errors.UNKNOWN_PEER);
         UNKNOWN_PEER = JSON.prepare(response);
     }
 
@@ -97,7 +97,10 @@ public final class PeerServlet extends HttpServlet {
                 return;
             }
             if (peer.isBlacklisted()) {
-                sendResponse(peer, BLACKLISTED, resp);
+                JSONObject jsonObject = new JSONObject();
+                jsonObject.put("error", Errors.BLACKLISTED);
+                jsonObject.put("cause", peer.getBlacklistingCause());
+                sendResponse(peer, JSON.prepare(jsonObject), resp);
                 return;
             }
 
@@ -131,11 +134,11 @@ public final class PeerServlet extends HttpServlet {
                 response = UNSUPPORTED_PROTOCOL;
             }
 
-        } catch (RuntimeException|ParseException e) {
+        } catch (RuntimeException|ParseException|IOException e) {
             if (peer != null) {
                 peer.blacklist(e);
             }
-            Logger.logDebugMessage("Error processing POST request", e);
+            Logger.logDebugMessage("Error processing POST request: " + e.toString());
             JSONObject json = new JSONObject();
             json.put("error", e.toString());
             response = json;

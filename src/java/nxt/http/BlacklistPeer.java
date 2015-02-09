@@ -34,7 +34,7 @@ public class BlacklistPeer extends APIRequestHandler {
             //maybe add as new peer?
             return UNKNOWN_PEER;
         } else {
-            peer.blacklist();
+            peer.blacklist("Manual blacklist");
             response.put("done", true);
         }
         

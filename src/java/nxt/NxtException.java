@@ -1,5 +1,7 @@
 package nxt;
 
+import java.io.IOException;
+
 public abstract class NxtException extends Exception {
 
     protected NxtException() {
@@ -73,6 +75,18 @@ public abstract class NxtException extends Exception {
         }
 
         public StopException(String message, Throwable cause) {
+            super(message, cause);
+        }
+
+    }
+
+    public static final class NxtIOException extends IOException {
+
+        public NxtIOException(String message) {
+            super(message);
+        }
+
+        public NxtIOException(String message, Throwable cause) {
             super(message, cause);
         }
 

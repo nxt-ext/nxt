@@ -5,6 +5,7 @@ import nxt.CurrencyType;
 import nxt.Genesis;
 import nxt.MonetarySystem;
 import nxt.TransactionType;
+import nxt.crypto.HashFunction;
 import nxt.util.Convert;
 import nxt.util.JSON;
 import org.json.simple.JSONArray;
@@ -213,6 +214,14 @@ public final class GetConstants extends APIServlet.APIRequestHandler {
             currencyTypes.add(typeJSON);
         }
         response.put("currencyTypes", currencyTypes);
+
+        JSONArray hashFunctions = new JSONArray();
+        for (HashFunction hashFunction : HashFunction.values()) {
+            JSONObject hashJSON = new JSONObject();
+            hashJSON.put(hashFunction.toString(), hashFunction.getId());
+            hashFunctions.add(hashJSON);
+        }
+        response.put("hashAlgorithms", hashFunctions);
 
         JSONArray peerStates = new JSONArray();
         JSONObject peerState = new JSONObject();
