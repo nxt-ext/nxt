@@ -363,8 +363,8 @@ var NRS = (function(NRS, $, undefined) {
 			$newActiveA.parent("li").addClass("active");
 		}
 
+		$("ul.sidebar-menu li.sm_treeview_submenu").removeClass("active");
 		if($(this).parent("li").hasClass("sm_treeview_submenu")) {
-			$(this).closest("ul").find("li").removeClass("active");
 			$(this).closest("li").addClass("active");
 		}
 
