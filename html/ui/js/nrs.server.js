@@ -930,7 +930,7 @@ var NRS = (function(NRS, $, undefined) {
 				transaction.goodsIsText = goodsLength < 0; // ugly hack??
 
 				if (goodsLength < 0) {
-					goodsLength &= 2147483647;
+					goodsLength &= NRS.constants.MAX_INT_JAVA;
 				}
 
 				pos += 4;
@@ -1244,7 +1244,7 @@ var NRS = (function(NRS, $, undefined) {
 			transaction.messageIsText = messageLength < 0; // ugly hack??
 
 			if (messageLength < 0) {
-				messageLength &= 2147483647;
+				messageLength &= NRS.constants.MAX_INT_JAVA;
 			}
 
 			pos += 4;
@@ -1284,7 +1284,7 @@ var NRS = (function(NRS, $, undefined) {
 			transaction.messageToEncryptIsText = encryptedMessageLength < 0;
 
 			if (encryptedMessageLength < 0) {
-				encryptedMessageLength &= 2147483647;
+				encryptedMessageLength &= NRS.constants.MAX_INT_JAVA;
 			}
 
 			pos += 4;
@@ -1339,7 +1339,7 @@ var NRS = (function(NRS, $, undefined) {
 			transaction.messageToEncryptToSelfIsText = encryptedToSelfMessageLength < 0;
 
 			if (encryptedToSelfMessageLength < 0) {
-				encryptedToSelfMessageLength &= 2147483647;
+				encryptedToSelfMessageLength &= NRS.constants.MAX_INT_JAVA;
 			}
 
 			pos += 4;

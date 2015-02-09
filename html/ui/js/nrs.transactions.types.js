@@ -221,7 +221,6 @@ var NRS = (function(NRS, $, undefined) {
             }
         },
     }
-
-
-return NRS;
+    
+    return NRS;
 }(NRS || {}, jQuery));

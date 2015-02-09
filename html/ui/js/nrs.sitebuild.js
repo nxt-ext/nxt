@@ -93,6 +93,6 @@ var NRS = (function(NRS, $, undefined) {
 
         jQuery.ajaxSetup({ async: true });
     }
-
-return NRS;
+    
+    return NRS;
 }(NRS || {}, jQuery));

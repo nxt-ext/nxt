@@ -877,7 +877,7 @@ var NRS = (function(NRS, $, undefined) {
 		var accountLeasingLabel = "";
 		var accountLeasingStatus = "";
 		var nextLesseeStatus = "";
-		if (NRS.accountInfo.nextLeasingHeightFrom < 2147483647) {
+		if (NRS.accountInfo.nextLeasingHeightFrom < NRS.constants.MAX_INT_JAVA) {
 			nextLesseeStatus = $.t("next_lessee_status", {
 				"start": String(NRS.accountInfo.nextLeasingHeightFrom).escapeHTML(),
 				"end": String(NRS.accountInfo.nextLeasingHeightTo).escapeHTML(),
@@ -943,7 +943,7 @@ var NRS = (function(NRS, $, undefined) {
 				if (lessorInfo.nextLesseeRS == NRS.accountRS) {
 					nextLessee = "You";
 					nextTooltip = "From block " + lessorInfo.nextHeightFrom + " to block " + lessorInfo.nextHeightTo;
-				} else if (lessorInfo.nextHeightFrom < 2147483647) {
+				} else if (lessorInfo.nextHeightFrom < NRS.constants.MAX_INT_JAVA) {
 					nextLessee = "Not you";
 					nextTooltip = "Account " + NRS.getAccountTitle(lessorInfo.nextLesseeRS) +" from block " + lessorInfo.nextHeightFrom + " to block " + lessorInfo.nextHeightTo;
 				}

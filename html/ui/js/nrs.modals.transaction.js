@@ -60,7 +60,7 @@ var NRS = (function(NRS, $, undefined) {
 		if (!transactionDetails.block) {
 			transactionDetails.block = "unconfirmed";
 		}
-		if (transactionDetails.height == 2147483647) {
+		if (transactionDetails.height == NRS.constants.MAX_INT_JAVA) {
 			transactionDetails.height = "unknown";
 		} else {
 			transactionDetails.height_formatted_html = "<a href='#' data-block='" + String(transactionDetails.height).escapeHTML() + "'>" + String(transactionDetails.height).escapeHTML() + "</a>";
