@@ -15,18 +15,6 @@ import java.util.Iterator;
 
 public class TestGetVoterPendingTransactions extends BlockchainTest {
 
-    private boolean searchForTransactionId(JSONArray transactionsJson, String transactionId){
-        boolean found = false;
-        for (Object transactionsJsonObj : transactionsJson) {
-            JSONObject transactionObject = (JSONObject) transactionsJsonObj;
-            String iteratedTransactionId = (String) transactionObject.get("transaction");
-            if (iteratedTransactionId.equals(transactionId)) {
-                found = true; break;
-            }
-        }
-        return found;
-    }
-
     @Test
     public void simpleTransactionLookup() {
         APICall apiCall = new TwoPhasedMoneyTransferBuilder().build();
@@ -43,7 +31,7 @@ public class TestGetVoterPendingTransactions extends BlockchainTest {
         JSONObject response = apiCall.invoke();
         Logger.logMessage("getVoterPendingTransactionsResponse:" + response.toJSONString());
         JSONArray transactionsJson = (JSONArray) response.get("transactions");
-        Assert.assertTrue(searchForTransactionId(transactionsJson, transactionId));
+        Assert.assertTrue(TwoPhasedSuite.searchForTransactionId(transactionsJson, transactionId));
     }
 
     @Test
@@ -76,6 +64,6 @@ public class TestGetVoterPendingTransactions extends BlockchainTest {
         response = apiCall.invoke();
         Logger.logMessage("getVoterPendingTransactionsResponse:" + response.toJSONString());
         JSONArray transactionsJson = (JSONArray) response.get("transactions");
-        Assert.assertTrue(searchForTransactionId(transactionsJson, transactionId));
+        Assert.assertTrue(TwoPhasedSuite.searchForTransactionId(transactionsJson, transactionId));
     }
 }
