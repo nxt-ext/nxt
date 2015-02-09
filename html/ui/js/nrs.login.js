@@ -271,7 +271,7 @@ var NRS = (function(NRS, $, undefined) {
 						}
 					});
 					$(".sidebar .treeview").tree();
-					$("#dashboard_link").addClass("active");
+					$('#dashboard_link a').addClass("ignore").click();
 
 					NRS.getInitialTransactions();
 

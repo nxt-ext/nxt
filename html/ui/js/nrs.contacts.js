@@ -57,16 +57,6 @@ var NRS = (function(NRS, $, undefined) {
 		});
 	}
 
-	NRS.setup.contacts = function() {
-		var options = {
-			"id": 'sidebar_contacts',
-			"titleHTML": '<i class="fa fa-user"></i> <span data-i18n="contacts">Contacts</span>',
-			"page": 'contacts',
-			"desiredPosition": 80
-		}
-		NRS.addSimpleSidebarMenuItem(options);
-	}
-
 	NRS.forms.addContact = function($modal) {
 		var data = NRS.getFormData($modal.find("form:first"));
 

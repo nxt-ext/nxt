@@ -393,7 +393,6 @@ var NRS = (function(NRS, $, undefined) {
 
 	$("button.goto-page, a.goto-page").click(function(event) {
 		event.preventDefault();
-
 		NRS.goToPage($(this).data("page"));
 	});
 

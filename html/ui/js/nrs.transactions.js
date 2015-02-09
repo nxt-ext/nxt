@@ -542,13 +542,20 @@ var NRS = (function(NRS, $, undefined) {
 			"desiredPosition": 10
 		}
 		NRS.addSimpleSidebarMenuItem(options);
+		var sidebarId = 'sidebar_transactions';
 		options = {
-			"id": 'sidebar_transactions',
+			"id": sidebarId,
 			"titleHTML": '<i class="fa fa-briefcase"></i> <span data-i18n="transactions">Transactions</span>',
 			"page": 'transactions',
 			"desiredPosition": 20
 		}
-		NRS.addSimpleSidebarMenuItem(options);
+		NRS.addTreeviewSidebarMenuItem(options);
+		options = {
+			"titleHTML": '<span data-i18n="approval_requests">Approval Requests</span>',
+			"type": 'PAGE',
+			"page": 'transactions'
+		}
+		NRS.appendToTSMenuItem(sidebarId, options);
 	}
 
 	$(document).on("click", "#transactions_type_navi li a", function(e) {
