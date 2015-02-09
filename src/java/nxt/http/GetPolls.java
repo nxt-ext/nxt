@@ -12,6 +12,7 @@ import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
 
+//todo: filter to get only finished polls?
 public class GetPolls extends APIServlet.APIRequestHandler {
 
     static final GetPolls instance = new GetPolls();
