@@ -208,6 +208,52 @@ var NRS = (function(NRS, $, undefined) {
 		NRS.loadPage("voted_polls");
 	}
 
+	NRS.setup.polls = function() {
+		var sidebarId = 'sidebar_voting_system';
+		var options = {
+			"id": sidebarId,
+			"titleHTML": '<i class="fa fa-check-square-o"></i><span data-i18n="voting_system">Voting</span>',
+			"page": 'polls',
+			"desiredPosition": 50
+		}
+		NRS.addTreeviewSidebarMenuItem(options);
+		options = {
+			"titleHTML": '<span data-i18n="active_polls">Active Polls</span>',
+			"type": 'PAGE',
+			"page": 'polls'
+		}
+		NRS.appendToTSMenuItem(sidebarId, options);
+		options = {
+			"titleHTML": '<span data-i18n="relevant_polls">Relevant Polls</span>',
+			"type": 'PAGE',
+			"page": 'relevant_polls'
+		}
+		NRS.appendToTSMenuItem(sidebarId, options);
+		options = {
+			"titleHTML": '<span data-i18n="followed_polls">Followed Polls</span>',
+			"type": 'PAGE',
+			"page": 'followed_polls'
+		}
+		NRS.appendToTSMenuItem(sidebarId, options);
+		options = {
+			"titleHTML": '<span data-i18n="my_polls">My Polls</span>',
+			"type": 'PAGE',
+			"page": 'my_polls'
+		}
+		NRS.appendToTSMenuItem(sidebarId, options);
+		options = {
+			"titleHTML": '<span data-i18n="my_votes">My Votes</span>',
+			"type": 'PAGE',
+			"page": 'voted_polls'
+		}
+		NRS.appendToTSMenuItem(sidebarId, options);
+		options = {
+			"titleHTML": '<span data-i18n="create_poll">Create Poll</span>',
+			"type": 'MODAL',
+			"modalId": 'create_poll_modal'
+		}
+		NRS.appendToTSMenuItem(sidebarId, options);
+	}
 
 
 	$("#create_poll_answers").on("click", "button.btn.remove_answer", function(e) {

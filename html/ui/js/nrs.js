@@ -63,6 +63,7 @@ var NRS = (function(NRS, $, undefined) {
 
 	NRS.pages = {};
 	NRS.incoming = {};
+	NRS.setup = {};
 
 	if (!_checkDOMenabled()) {
 		NRS.hasLocalStorage = false;
@@ -207,8 +208,6 @@ var NRS = (function(NRS, $, undefined) {
 		
 		$("[data-toggle='tooltip']").tooltip();
 
-		$(".sidebar .treeview").tree();
-
 		$("#dgs_search_account_top, #dgs_search_account_center").mask("NXT-****-****-****-*****", {
 			"unmask": false
 		});
@@ -316,7 +315,7 @@ var NRS = (function(NRS, $, undefined) {
 		});
 	};
 
-	$("#logo, .sidebar-menu a").click(function(e, data) {
+	$("#logo, .sidebar-menu").on("click", "a", function(e, data) {
 		if ($(this).hasClass("ignore")) {
 			$(this).removeClass("ignore");
 			return;
@@ -345,22 +344,28 @@ var NRS = (function(NRS, $, undefined) {
 
 		$(".content-header h1").find(".loading_dots").remove();
 
-		var changeActive = !($(this).closest("ul").hasClass("treeview-menu"));
+		if ($(this).attr("id") && $(this).attr("id") == "logo") {
+			var $newActiveA = $("#dashboard_link a");
+		} else {
+			var $newActiveA = $(this);
+		}
+		var $newActivePageLi = $newActiveA.closest("li.treeview");
+		var $currentActivePageLi = $("ul.sidebar-menu > li.active");
 
-		if (changeActive) {
-			var currentActive = $("ul.sidebar-menu > li.active");
-
-			if (currentActive.hasClass("treeview")) {
-				currentActive.children("a").first().addClass("ignore").click();
-			} else {
-				currentActive.removeClass("active");
+		$("ul.sidebar-menu > li.active").each(function(key, elem) {
+			if ($newActivePageLi.attr("id") != $(elem).attr("id")) {
+				$(elem).children("a").first().addClass("ignore").click();
 			}
+		});
 
-			if ($(this).attr("id") && $(this).attr("id") == "logo") {
-				$("#dashboard_link").addClass("active");
-			} else {
-				$(this).parent().addClass("active");
-			}
+		$("ul.sidebar-menu > li.sm_simple").removeClass("active");
+		if ($newActiveA.parent("li").hasClass("sm_simple")) {
+			$newActiveA.parent("li").addClass("active");
+		}
+
+		if($(this).parent("li").hasClass("sm_treeview_submenu")) {
+			$(this).closest("ul").find("li").removeClass("active");
+			$(this).closest("li").addClass("active");
 		}
 
 		if (NRS.currentPage != "messages") {

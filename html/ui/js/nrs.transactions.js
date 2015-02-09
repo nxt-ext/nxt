@@ -534,6 +534,23 @@ var NRS = (function(NRS, $, undefined) {
 		NRS.loadPage("transactions");
 	}
 
+	NRS.setup.transactions = function() {
+		var options = {
+			"id": 'dashboard_link',
+			"titleHTML": '<i class="fa fa-dashboard"></i> <span data-i18n="dashboard">Dashboard</span></a>',
+			"page": 'dashboard',
+			"desiredPosition": 10
+		}
+		NRS.addSimpleSidebarMenuItem(options);
+		options = {
+			"id": 'sidebar_transactions',
+			"titleHTML": '<i class="fa fa-briefcase"></i> <span data-i18n="transactions">Transactions</span>',
+			"page": 'transactions',
+			"desiredPosition": 20
+		}
+		NRS.addSimpleSidebarMenuItem(options);
+	}
+
 	$(document).on("click", "#transactions_type_navi li a", function(e) {
 		e.preventDefault();
 		$('#transactions_type_navi li.active').removeClass('active');

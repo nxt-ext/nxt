@@ -265,7 +265,16 @@ var NRS = (function(NRS, $, undefined) {
 
 					$(window).on("hashchange", NRS.checkLocationHash);
 
+					$.each(NRS.pages, function(key, value) {
+						if(key in NRS.setup) {
+							NRS.setup[key]();
+						}
+					});
+					$(".sidebar .treeview").tree();
+					$("#dashboard_link").addClass("active");
+
 					NRS.getInitialTransactions();
+
 				});
 			});
 		});

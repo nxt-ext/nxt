@@ -2,6 +2,7 @@
  * @depends {nrs.js}
  */
 var NRS = (function(NRS, $, undefined) {
+
 	NRS.pages.peers = function() {
 		NRS.sendRequest("getPeers+", {
 			"active": "true",
@@ -83,6 +84,16 @@ var NRS = (function(NRS, $, undefined) {
 			"type": "success"
 		});
 		NRS.loadPage("peers");
+	}
+
+	NRS.setup.peers = function() {
+		var options = {
+			"id": 'sidebar_peers',
+			"titleHTML": '<i class="fa fa-cloud"></i> <span data-i18n="peers">Peers</span></a>',
+			"page": 'peers',
+			"desiredPosition": 120
+		}
+		NRS.addSimpleSidebarMenuItem(options);
 	}
 	
 	$("#blacklist_peer_modal").on("show.bs.modal", function(e) {

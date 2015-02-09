@@ -52,6 +52,16 @@ var NRS = (function(NRS, $, undefined) {
 		NRS.pageLoaded();
 	}
 
+	NRS.setup.news = function() {
+		var options = {
+			"id": 'sidebar_news',
+			"titleHTML": '<i class="fa fa-book"></i> <span data-i18n="news">News</span>',
+			"page": 'news',
+			"desiredPosition": 130
+		}
+		NRS.addSimpleSidebarMenuItem(options);
+	}
+
 	NRS.newsLoaded = function($el) {
 		$el.removeClass("data-loading").find("img").remove();
 	}
