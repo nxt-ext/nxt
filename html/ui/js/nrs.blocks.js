@@ -295,16 +295,6 @@ var NRS = (function(NRS, $, undefined) {
 		}
 	}
 
-	NRS.setup.blocks = function() {
-		var options = {
-			"id": 'sidebar_blocks',
-			"titleHTML": '<i class="fa fa-bars"></i> <span data-i18n="blocks">Blocks</span></a>',
-			"page": 'blocks',
-			"desiredPosition": 110
-		}
-		NRS.addSimpleSidebarMenuItem(options);
-	}
-
 	NRS.incoming.blocks = function() {
 		NRS.loadPage("blocks");
 	}

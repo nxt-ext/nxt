@@ -85,16 +85,6 @@ var NRS = (function(NRS, $, undefined) {
 		});
 		NRS.loadPage("peers");
 	}
-
-	NRS.setup.peers = function() {
-		var options = {
-			"id": 'sidebar_peers',
-			"titleHTML": '<i class="fa fa-cloud"></i> <span data-i18n="peers">Peers</span></a>',
-			"page": 'peers',
-			"desiredPosition": 120
-		}
-		NRS.addSimpleSidebarMenuItem(options);
-	}
 	
 	$("#blacklist_peer_modal").on("show.bs.modal", function(e) {
 		var $invoker = $(e.relatedTarget);

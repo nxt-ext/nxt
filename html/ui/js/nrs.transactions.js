@@ -535,21 +535,26 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.setup.transactions = function() {
+		var sidebarId = 'dashboard_link';
 		var options = {
-			"id": 'dashboard_link',
-			"titleHTML": '<i class="fa fa-dashboard"></i> <span data-i18n="dashboard">Dashboard</span></a>',
+			"id": sidebarId,
+			"titleHTML": '<i class="fa fa-dashboard"></i> <span data-i18n="dashboard">Dashboard</span>',
 			"page": 'dashboard',
 			"desiredPosition": 10
 		}
-		NRS.addSimpleSidebarMenuItem(options);
-		var sidebarId = 'sidebar_transactions';
-		options = {
-			"id": sidebarId,
-			"titleHTML": '<i class="fa fa-briefcase"></i> <span data-i18n="transactions">Transactions</span>',
-			"page": 'transactions',
-			"desiredPosition": 20
-		}
 		NRS.addTreeviewSidebarMenuItem(options);
+		options = {
+			"titleHTML": '<span data-i18n="dashboard">Dashboard</span>',
+			"type": 'PAGE',
+			"page": 'dashboard'
+		}
+		NRS.appendToTSMenuItem(sidebarId, options);
+		options = {
+			"titleHTML": '<span data-i18n="my_transactions">My Transactions</span>',
+			"type": 'PAGE',
+			"page": 'transactions'
+		}
+		NRS.appendToTSMenuItem(sidebarId, options);
 		options = {
 			"titleHTML": '<span data-i18n="approval_requests">Approval Requests</span>',
 			"type": 'PAGE',
