@@ -186,7 +186,9 @@ var NRS = (function(NRS, $, undefined) {
 
 		NRS.automaticallyCheckRecipient();
 
-		$(".show_popover").popover({
+		$("body").popover({
+			"selector": ".show_popover",
+			"html": true,
 			"trigger": "hover"
 		});
 
