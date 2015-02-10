@@ -7,6 +7,7 @@ import nxt.MonetarySystem;
 import nxt.TransactionType;
 import nxt.VoteWeighting;
 import nxt.crypto.HashFunction;
+import nxt.peer.Peer;
 import nxt.util.Convert;
 import nxt.util.JSON;
 import org.json.simple.JSONArray;
@@ -212,51 +213,34 @@ public final class GetConstants extends APIServlet.APIRequestHandler {
         transactionTypes.add(transactionType);
         response.put("transactionTypes", transactionTypes);
 
-        JSONArray currencyTypes = new JSONArray();
+        JSONObject currencyTypes = new JSONObject();
         for (CurrencyType currencyType : CurrencyType.values()) {
-            JSONObject typeJSON = new JSONObject();
-            typeJSON.put(currencyType.toString(), currencyType.getCode());
-            currencyTypes.add(typeJSON);
+            currencyTypes.put(currencyType.toString(), currencyType.getCode());
         }
         response.put("currencyTypes", currencyTypes);
 
-        JSONArray votingModels = new JSONArray();
+        JSONObject votingModels = new JSONObject();
         for (VoteWeighting.VotingModel votingModel : VoteWeighting.VotingModel.values()) {
-            JSONObject modelJSON = new JSONObject();
-            modelJSON.put(votingModel.toString(), votingModel.getCode());
-            votingModels.add(modelJSON);
+            votingModels.put(votingModel.toString(), votingModel.getCode());
         }
         response.put("votingModels", votingModels);
 
-        JSONArray minBalanceModels = new JSONArray();
+        JSONObject minBalanceModels = new JSONObject();
         for (VoteWeighting.MinBalanceModel minBalanceModel : VoteWeighting.MinBalanceModel.values()) {
-            JSONObject modelJSON = new JSONObject();
-            modelJSON.put(minBalanceModel.toString(), minBalanceModel.getCode());
-            minBalanceModels.add(modelJSON);
+            minBalanceModels.put(minBalanceModel.toString(), minBalanceModel.getCode());
         }
         response.put("minBalanceModels", minBalanceModels);
 
-        JSONArray hashFunctions = new JSONArray();
+        JSONObject hashFunctions = new JSONObject();
         for (HashFunction hashFunction : HashFunction.values()) {
-            JSONObject hashJSON = new JSONObject();
-            hashJSON.put(hashFunction.toString(), hashFunction.getId());
-            hashFunctions.add(hashJSON);
+            hashFunctions.put(hashFunction.toString(), hashFunction.getId());
         }
         response.put("hashAlgorithms", hashFunctions);
 
-        JSONArray peerStates = new JSONArray();
-        JSONObject peerState = new JSONObject();
-        peerState.put("value", 0);
-        peerState.put("description", "Non-connected");
-        peerStates.add(peerState);
-        peerState = new JSONObject();
-        peerState.put("value", 1);
-        peerState.put("description", "Connected");
-        peerStates.add(peerState);
-        peerState = new JSONObject();
-        peerState.put("value", 2);
-        peerState.put("description", "Disconnected");
-        peerStates.add(peerState);
+        JSONObject peerStates = new JSONObject();
+        for (Peer.State peerState : Peer.State.values()) {
+            peerStates.put(peerState.toString(), peerState.ordinal());
+        }
         response.put("peerStates", peerStates);
 
         CONSTANTS = JSON.prepare(response);
