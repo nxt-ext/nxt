@@ -6,7 +6,9 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.regex.Pattern;
 
 public interface Attachment extends Appendix {
@@ -97,32 +99,30 @@ public interface Attachment extends Appendix {
     };
 
     public final static class MessagingPhasingVoteCasting extends AbstractAttachment {
-        private final long[] transactionsIds;
+        private final List<byte[]> transactionFullHashes;
 
         MessagingPhasingVoteCasting(ByteBuffer buffer, byte transactionVersion) {
             super(buffer, transactionVersion);
             byte length = buffer.get();
-            transactionsIds = new long[length];
+            transactionFullHashes = new ArrayList<>(length);
             for (int i = 0; i < length; i++) {
-                transactionsIds[i] = buffer.getLong();
+                byte[] hash = new byte[32];
+                buffer.get(hash);
+                transactionFullHashes.add(hash);
             }
         }
 
         MessagingPhasingVoteCasting(JSONObject attachmentData) {
             super(attachmentData);
-            JSONArray jsArr = (JSONArray) (attachmentData.get("transactions"));
-            transactionsIds = new long[jsArr.size()];
-            for (int i = 0; i < transactionsIds.length; i++) {
-                transactionsIds[i] = Convert.parseUnsignedLong((String) jsArr.get(i));
+            JSONArray jsonArray = (JSONArray) (attachmentData.get("transactionFullHashes"));
+            transactionFullHashes = new ArrayList<>(jsonArray.size());
+            for (int i = 0; i < jsonArray.size(); i++) {
+                transactionFullHashes.add(Convert.parseHexString((String)jsonArray.get(i)));
             }
         }
 
-        public MessagingPhasingVoteCasting(long transactionId) {
-            this.transactionsIds = new long[]{transactionId};
-        }
-
-        public MessagingPhasingVoteCasting(long[] transactionsIds) {
-            this.transactionsIds = transactionsIds;
+        public MessagingPhasingVoteCasting(List<byte[]> transactionFullHashes) {
+            this.transactionFullHashes = transactionFullHashes;
         }
 
         @Override
@@ -132,24 +132,24 @@ public interface Attachment extends Appendix {
 
         @Override
         int getMySize() {
-            return 1 + 8 * transactionsIds.length;
+            return 1 + 32 * transactionFullHashes.size();
         }
 
         @Override
         void putMyBytes(ByteBuffer buffer) {
-            buffer.put((byte) transactionsIds.length);
-            for (long id : transactionsIds) {
-                buffer.putLong(id);
+            buffer.put((byte) transactionFullHashes.size());
+            for (byte[] hash : transactionFullHashes) {
+                buffer.put(hash);
             }
         }
 
         @Override
         void putMyJSON(JSONObject attachment) {
-            JSONArray ja = new JSONArray();
-            for (long pendingTransactionId : transactionsIds) {
-                ja.add(Convert.toUnsignedLong(pendingTransactionId));
+            JSONArray jsonArray = new JSONArray();
+            for (byte[] hash : transactionFullHashes) {
+                jsonArray.add(Convert.toHexString(hash));
             }
-            attachment.put("transactions", ja);
+            attachment.put("transactionFullHashes", jsonArray);
         }
 
         @Override
@@ -157,8 +157,8 @@ public interface Attachment extends Appendix {
             return TransactionType.Messaging.PHASING_VOTE_CASTING;
         }
 
-        public long[] getTransactionsIds() {
-            return transactionsIds;
+        public List<byte[]> getTransactionFullHashes() {
+            return transactionFullHashes;
         }
     }
 

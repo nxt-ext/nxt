@@ -16,7 +16,7 @@ public class TestApproveTransaction extends BlockchainTest {
         generateBlock();
 
         APICall apiCall = new TwoPhasedMoneyTransferBuilder().build();
-        String transactionId = TestCreateTwoPhased.issueCreateTwoPhased(apiCall, false);
+        JSONObject transactionJSON = TestCreateTwoPhased.issueCreateTwoPhased(apiCall, false);
         generateBlock();
 
         long balance1 = balanceById(id1);
@@ -27,7 +27,7 @@ public class TestApproveTransaction extends BlockchainTest {
 
         apiCall = new APICall.Builder("approveTransaction")
                 .param("secretPhrase", secretPhrase3)
-                .param("transaction", transactionId)
+                .param("transactionFullHash", (String)transactionJSON.get("fullHash"))
                 .param("feeNQT", fee)
                 .build();
 
@@ -46,7 +46,7 @@ public class TestApproveTransaction extends BlockchainTest {
         generateBlock();
 
         APICall apiCall = new TwoPhasedMoneyTransferBuilder().build();
-        String transactionId = TestCreateTwoPhased.issueCreateTwoPhased(apiCall, false);
+        JSONObject transactionJSON = TestCreateTwoPhased.issueCreateTwoPhased(apiCall, false);
         generateBlock();
 
         long balance1 = balanceById(id1);
@@ -57,7 +57,7 @@ public class TestApproveTransaction extends BlockchainTest {
 
         apiCall = new APICall.Builder("approveTransaction")
                 .param("secretPhrase", secretPhrase4)
-                .param("transaction", transactionId)
+                .param("transactionFullHash", (String)transactionJSON.get("fullHash"))
                 .param("feeNQT", fee)
                 .build();
 

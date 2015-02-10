@@ -18,14 +18,16 @@ public class TestGetPendingTransactionVotes extends BlockchainTest {
         APICall apiCall = new TestCreateTwoPhased.TwoPhasedMoneyTransferBuilder()
                 .quorum(3)
                 .build();
-        String transactionId = TestCreateTwoPhased.issueCreateTwoPhased(apiCall, false);
+        JSONObject transactionJSON = TestCreateTwoPhased.issueCreateTwoPhased(apiCall, false);
+        String fullHash = (String)transactionJSON.get("fullHash");
+        String transactionId = (String)transactionJSON.get("transaction");
 
         generateBlock();
 
         long fee = Constants.ONE_NXT;
         apiCall = new APICall.Builder("approveTransaction")
                 .param("secretPhrase", secretPhrase3)
-                .param("transaction", transactionId)
+                .param("transactionFullHash", fullHash)
                 .param("feeNQT", fee)
                 .build();
         JSONObject response = apiCall.invoke();

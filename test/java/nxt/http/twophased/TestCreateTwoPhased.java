@@ -14,7 +14,7 @@ import org.junit.Test;
 
 public class TestCreateTwoPhased extends BlockchainTest {
 
-    static String issueCreateTwoPhased(APICall apiCall, boolean shouldFail) {
+    static JSONObject issueCreateTwoPhased(APICall apiCall, boolean shouldFail) {
         JSONObject twoPhased = apiCall.invoke();
         Logger.logMessage("two-phased sendMoney: " + twoPhased.toJSONString());
 
@@ -25,8 +25,7 @@ public class TestCreateTwoPhased extends BlockchainTest {
 
             if ((!shouldFail && transactionId == null)
                     || (shouldFail && transactionId != null)) Assert.fail();
-
-            return transactionId;
+            return twoPhased;
         } catch (Throwable t) {
             if (!shouldFail) Assert.fail(t.getMessage());
             return null;

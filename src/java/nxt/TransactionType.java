@@ -7,6 +7,7 @@ import org.json.simple.JSONObject;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 
@@ -802,22 +803,26 @@ public abstract class TransactionType {
             @Override
             void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
 
-                Attachment.MessagingPhasingVoteCasting att = (Attachment.MessagingPhasingVoteCasting) transaction.getAttachment();
-                long[] pendingIds = att.getTransactionsIds();
-                if (pendingIds.length > Constants.MAX_VOTES_PER_VOTING_TRANSACTION) {
+                Attachment.MessagingPhasingVoteCasting attachment = (Attachment.MessagingPhasingVoteCasting) transaction.getAttachment();
+                List<byte[]> pendingTransactionFullHashes = attachment.getTransactionFullHashes();
+                if (pendingTransactionFullHashes.size() > Constants.MAX_VOTES_PER_VOTING_TRANSACTION) {
                     throw new NxtException.NotValidException("No more than 2 votes allowed for two-phased multivoting");
                 }
 
-                if (pendingIds.length == 2 && pendingIds[0] == pendingIds[1]) {
+                if (pendingTransactionFullHashes.size() == 2 && Arrays.equals(pendingTransactionFullHashes.get(0), pendingTransactionFullHashes.get(1))) {
                     throw new NxtException.NotValidException("Duplicate votes");
                 }
 
                 long voterId = transaction.getSenderId();
-                for (long pendingId : pendingIds) {
+                for (byte[] hash : pendingTransactionFullHashes) {
+                    long pendingId = Convert.fullHashToId(hash);
                     PhasingPoll poll = PhasingPoll.getPoll(pendingId);
                     if (poll == null) {
                         Logger.logDebugMessage("Wrong pending transaction: " + pendingId);
                         throw new NxtException.NotCurrentlyValidException("Wrong pending transaction or poll is finished");
+                    }
+                    if (!Arrays.equals(poll.getFullHash(), hash)) {
+                        throw new NxtException.NotCurrentlyValidException("Hashes don't match");
                     }
 
                     long[] whitelist = poll.getWhitelist();
@@ -840,9 +845,9 @@ public abstract class TransactionType {
             boolean isDuplicate(Transaction transaction, Map<TransactionType, Map<String,Boolean>> duplicates) {
                 Attachment.MessagingPhasingVoteCasting attachment = (Attachment.MessagingPhasingVoteCasting) transaction.getAttachment();
                 String voter = Convert.toUnsignedLong(transaction.getSenderId());
-                long[] pendingTransactionIds = attachment.getTransactionsIds();
-                for (long pendingTransactionId : pendingTransactionIds) {
-                    String compositeKey = voter + ":" + Convert.toUnsignedLong(pendingTransactionId);
+                List<byte[]> pendingTransactionFullHashes = attachment.getTransactionFullHashes();
+                for (byte[] hash : pendingTransactionFullHashes) {
+                    String compositeKey = voter + ":" + Convert.toHexString(hash);
                     if (isDuplicate(Messaging.PHASING_VOTE_CASTING, compositeKey, duplicates, true)) {
                         return true;
                     }
@@ -853,10 +858,10 @@ public abstract class TransactionType {
             @Override
             final void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
                 Attachment.MessagingPhasingVoteCasting attachment = (Attachment.MessagingPhasingVoteCasting) transaction.getAttachment();
-                long[] pendingTransactionsIds = attachment.getTransactionsIds();
-                for (long pendingTransactionId : pendingTransactionsIds) {
+                List<byte[]> pendingTransactionFullHashes = attachment.getTransactionFullHashes();
+                for (byte[] hash : pendingTransactionFullHashes) {
+                    long pendingTransactionId = Convert.fullHashToId(hash);
                     PhasingPoll poll = PhasingPoll.getPoll(pendingTransactionId);
-
                     if (PhasingVote.addVote(poll, transaction)) {
                         poll.finish();
                         TransactionImpl pendingTransaction = BlockchainImpl.getInstance().getTransaction(pendingTransactionId);

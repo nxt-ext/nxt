@@ -11,6 +11,8 @@ import nxt.util.Convert;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.ArrayList;
+import java.util.List;
 
 import static nxt.http.JSONResponses.INCORRECT_PENDING_TRANSACTION;
 import static nxt.http.JSONResponses.MISSING_PENDING_TRANSACTION;
@@ -20,12 +22,12 @@ public class ApproveTransaction extends CreateTransaction {
 
     private ApproveTransaction() {
         super(new APITag[]{APITag.CREATE_TRANSACTION,
-                APITag.PHASING}, "transaction");
+                APITag.PHASING}, "transactionFullHash");
     }
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
-        String[] pendingTransactionValues = req.getParameterValues("transaction");
+        String[] pendingTransactionValues = req.getParameterValues("transactionFullHash");
 
         if (pendingTransactionValues.length == 0) {
             return MISSING_PENDING_TRANSACTION;
@@ -35,20 +37,21 @@ public class ApproveTransaction extends CreateTransaction {
             return INCORRECT_PENDING_TRANSACTION;
         }
 
-        long[] pendingTransactionIds = new long[pendingTransactionValues.length];
+        List<byte[]> pendingTransactionFullHashes = new ArrayList<>(pendingTransactionValues.length);
         for (int i = 0; i < pendingTransactionValues.length; i++) {
-            pendingTransactionIds[i] = Convert.parseUnsignedLong(pendingTransactionValues[i]);
-            PhasingPoll phasingPoll = PhasingPoll.getPoll(pendingTransactionIds[i]);
+            byte[] hash = Convert.parseHexString(pendingTransactionValues[i]);
+            PhasingPoll phasingPoll = PhasingPoll.getPoll(Convert.fullHashToId(hash));
             if (phasingPoll == null) {
                 return INCORRECT_PENDING_TRANSACTION;
             }
             if (phasingPoll.getFinishHeight() < Nxt.getBlockchain().getHeight()) {
                 return INCORRECT_PENDING_TRANSACTION;
             }
+            pendingTransactionFullHashes.add(hash);
         }
 
         Account account = ParameterParser.getSenderAccount(req);
-        Attachment attachment = new Attachment.MessagingPhasingVoteCasting(pendingTransactionIds);
+        Attachment attachment = new Attachment.MessagingPhasingVoteCasting(pendingTransactionFullHashes);
         return createTransaction(req, account, attachment);
     }
 }

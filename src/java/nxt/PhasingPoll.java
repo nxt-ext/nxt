@@ -177,7 +177,7 @@ public class PhasingPoll extends AbstractPoll {
     }
 
     static void addPoll(Transaction transaction, Appendix.Phasing appendix) {
-        PhasingPoll poll = new PhasingPoll(transaction.getId(), transaction.getSenderId(), appendix);
+        PhasingPoll poll = new PhasingPoll(transaction, appendix);
 
         phasingPollTable.insert(poll);
 
@@ -202,12 +202,13 @@ public class PhasingPoll extends AbstractPoll {
     private final long[] whitelist;
     private final long[] blacklist;
     private final long quorum;
+    private final byte[] fullHash;
     private boolean finished;
 
-    private PhasingPoll(long id, long accountId, Appendix.Phasing appendix) {
-        super(accountId, appendix.getFinishHeight(), appendix.getVotingModel(), appendix.getHoldingId(),
+    private PhasingPoll(Transaction transaction, Appendix.Phasing appendix) {
+        super(transaction.getSenderId(), appendix.getFinishHeight(), appendix.getVotingModel(), appendix.getHoldingId(),
                 appendix.getMinBalance(), appendix.getMinBalanceModel());
-        this.id = id;
+        this.id = transaction.getId();
         this.dbKey = pollDbKeyFactory.newKey(this.id);
         this.quorum = appendix.getQuorum();
         this.whitelist = appendix.getWhitelist();
@@ -218,6 +219,7 @@ public class PhasingPoll extends AbstractPoll {
         if (this.blacklist.length > 0) {
             Arrays.sort(this.blacklist);
         }
+        this.fullHash = Convert.parseHexString(transaction.getFullHash());
     }
 
     private PhasingPoll(ResultSet rs) throws SQLException {
@@ -241,7 +243,7 @@ public class PhasingPoll extends AbstractPoll {
                 this.blacklist = new long[0];
             }
         }
-
+        this.fullHash = rs.getBytes("full_hash");
         this.finished = rs.getBoolean("finished");
     }
 
@@ -270,13 +272,17 @@ public class PhasingPoll extends AbstractPoll {
         return quorum;
     }
 
+    public byte[] getFullHash() {
+        return fullHash;
+    }
+
     private void save(Connection con) throws SQLException {
         boolean isBlacklist = getBlacklist().length > 0;
         byte voterCount = isBlacklist ? (byte) getBlacklist().length : (byte) getWhitelist().length;
 
         try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO phasing_poll (id, account_id, "
                 + "finish_height, voter_count, blacklist, voting_model, quorum, min_balance, holding_id, "
-                + "min_balance_model, finished, height) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
+                + "min_balance_model, full_hash, finished, height) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
             int i = 0;
             pstmt.setLong(++i, getId());
             pstmt.setLong(++i, getAccountId());
@@ -288,6 +294,7 @@ public class PhasingPoll extends AbstractPoll {
             pstmt.setLong(++i, getDefaultVoteWeighting().getMinBalance());
             pstmt.setLong(++i, getDefaultVoteWeighting().getHoldingId());
             pstmt.setByte(++i, getDefaultVoteWeighting().getMinBalanceModel().getCode());
+            pstmt.setBytes(++i, getFullHash());
             pstmt.setBoolean(++i, isFinished());
             pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
             pstmt.executeUpdate();

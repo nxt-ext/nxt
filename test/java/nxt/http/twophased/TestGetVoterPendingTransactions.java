@@ -11,14 +11,13 @@ import org.json.simple.JSONObject;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.util.Iterator;
-
 public class TestGetVoterPendingTransactions extends BlockchainTest {
 
     @Test
     public void simpleTransactionLookup() {
         APICall apiCall = new TwoPhasedMoneyTransferBuilder().build();
-        String transactionId = TestCreateTwoPhased.issueCreateTwoPhased(apiCall, false);
+        JSONObject transactionJSON = TestCreateTwoPhased.issueCreateTwoPhased(apiCall, false);
+        String transactionId = (String)transactionJSON.get("transaction");
 
         generateBlock();
 
@@ -40,7 +39,8 @@ public class TestGetVoterPendingTransactions extends BlockchainTest {
         APICall apiCall = new TwoPhasedMoneyTransferBuilder()
                 .quorum(3)
                 .build();
-        String transactionId = TestCreateTwoPhased.issueCreateTwoPhased(apiCall, false);
+        JSONObject transactionJSON = TestCreateTwoPhased.issueCreateTwoPhased(apiCall, false);
+        String transactionId = (String)transactionJSON.get("transaction");
 
         generateBlock();
 
