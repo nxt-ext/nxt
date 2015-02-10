@@ -66,8 +66,11 @@
             <ul class="nav nav-tabs approve_tab_list" role="tablist">
                 <li role="presentation" class="active show_popover" data-toggle="popover" data-placement="top" data-content="Transaction don't need further approval to become valid" data-container="#{{name}}_approve_modal" data-i18n="[data-content]approve_modal_no_approval_tab_help">
                     <a href="#{{name}}_approve_tab_no_approval" aria-controls="{{name}}_approve_tab_no_approval" class="at_no_approval" role="tab" data-toggle="tab"><span class="label label-default"><i class="fa fa-gavel"></i></span> <span class="label label-default"><i class="ion-close-circled"></i></span></a></li>
-                <li role="presentation" class="show_popover" data-toggle="popover" data-placement="top" data-content="Transaction has to be approved by one or more other accounts" data-container="#{{name}}_approve_modal" data-i18n="[data-content]approve_modal_by_account_tab_help">
+                <li role="presentation" class="show_popover" data-toggle="popover" data-placement="top" data-content="Transaction has to be approved by a certain amount of accounts" data-container="#{{name}}_approve_modal" data-i18n="[data-content]approve_modal_by_account_tab_help">
                     <a href="#{{name}}_approve_tab_accounts" aria-controls="{{name}}_approve_tab_accounts" class="at_accounts" role="tab" data-toggle="tab"><span class="label label-default"><i class="fa fa-gavel"></i></span> <span class="label label-warning"><i class="fa fa-group"></i></span></a>
+                </li>    
+                <li role="presentation" class="show_popover" data-toggle="popover" data-placement="top" data-content="Transaction has to be approved by accounts holding a certain amount of NXT" data-container="#{{name}}_approve_modal" data-i18n="[data-content]approve_modal_by_balance_tab_help">
+                    <a href="#{{name}}_approve_tab_balance" aria-controls="{{name}}_approve_tab_balance" class="at_balance" role="tab" data-toggle="tab"><span class="label label-default"><i class="fa fa-gavel"></i></span> <span class="label label-warning"><i class="fa fa-money"></i></span></a>
                 </li>
                 <li role="presentation" class="show_popover" data-toggle="popover" data-placement="top" data-content="Transaction has to be approved by asset holders with a certain stake" data-container="#{{name}}_approve_modal" data-i18n="[data-content]approve_modal_by_asset_tab_help">
                     <a href="#{{name}}_approve_tab_asset_holders" aria-controls="{{name}}_approve_tab_asset_holders" class="at_asset_holders" role="tab" data-toggle="tab"><span class="label label-default"><i class="fa fa-gavel"></i></span> <span class="label label-warning"><i class="fa fa-signal"></i></span></a>
@@ -84,34 +87,13 @@
                     <input type="hidden" name="phased" value="false" />
                 </div>
                 <div role="tabpanel" class="tab-pane tab_pane_approve" id="{{name}}_approve_tab_accounts">
-                    <div class="account_box">
-                        <div class="row">
-                            <div class="col-xs-12 added_account_list">
-                                <label data-i18n="accounts">Accounts</label>
-                                <i class="fa fa-question-circle modal-context-help" data-content="The following accounts will be requested to approve the transaction." data-toggle="popover" data-trigger="hover" data-container="#{{name}}_approve_modal" data-i18n="[data-content]approve_tx_accounts_requested_help"></i>
-                                <div class="form-group form_group_accounts">
-                                    <div class="input-group">
-                                        <input type="text" class="form-control plain_adress_selector_input" name="phasingWhitelisted" placeholder="Account" data-i18n="[placeholder]account" disabled />
-                                        <div class="pas_contact_info">&nbsp;</div>
-                                        <span class="input-group-btn">
-                                            <button class="btn btn-default remove_account_btn" type="button"><i class="fa fa-minus"></i></button>
-                                        </span>
-                                        <span class="input-group-btn btn-group plain_adress_selector">
-                                            <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown"><span class="glyphicon glyphicon-user"></span></button>
-                                            <ul class="dropdown-menu scrollable-menu" role="menu" style="right:0;left:auto;"></ul>
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="row form-group">
-                            <div class="col-xs-12">
-                                <a href="#" class="btn btn-primary add_account_btn"><i class="fa fa-plus"></i> <span data-i18n="add_account">Add Account</span></a>
-                            </div>
-                        </div>
-                    </div>
                     <input type="hidden" name="phased" value="true" disabled />
                     <input type="hidden" name="phasingVotingModel" value="0" disabled />
+                    <input type="hidden" name="phasingMinBalance" value="0" disabled/>
+                </div>
+                <div role="tabpanel" class="tab-pane tab_pane_approve" id="{{name}}_approve_tab_balance">
+                    <input type="hidden" name="phased" value="true" disabled />
+                    <input type="hidden" name="phasingVotingModel" value="1" disabled />
                     <input type="hidden" name="phasingMinBalance" value="0" disabled/>
                 </div>
                 <div role="tabpanel" class="tab-pane tab_pane_approve" id="{{name}}_approve_tab_asset_holders">
@@ -126,7 +108,7 @@
                     </div>
                     <input type="hidden" name="phased" value="true" disabled />
                     <input type="hidden" name="phasingVotingModel" value="2" disabled />
-                    <input type="hidden" name="phasingMinBalance" value="1" disabled/>
+                    <input type="hidden" name="phasingMinBalance" value="0" disabled/>
                 </div>
                 <div role="tabpanel" class="tab-pane tab_pane_approve" id="{{name}}_approve_tab_currency_holders">
                     <div class="row">
@@ -140,10 +122,38 @@
                     </div>
                     <input type="hidden" name="phased" value="true" disabled />
                     <input type="hidden" name="phasingVotingModel" value="3" disabled />
-                    <input type="hidden" name="phasingMinBalance" value="1" disabled/>
+                    <input type="hidden" name="phasingMinBalance" value="0" disabled/>
                 </div>
             </div>
         </div>
+        
+        <div class="approve_whitelist_accounts account_box" style="display:none;">
+            <div class="row">
+                <div class="col-xs-12 added_account_list">
+                    <label data-i18n="accounts">Accounts</label>
+                    <i class="fa fa-question-circle modal-context-help" data-content="The following accounts will be requested to approve the transaction." data-toggle="popover" data-trigger="hover" data-container="#{{name}}_approve_modal" data-i18n="[data-content]approve_tx_accounts_requested_help"></i>
+                    <div class="form-group form_group_accounts">
+                        <div class="input-group">
+                            <input type="text" class="form-control plain_adress_selector_input" name="phasingWhitelisted" placeholder="Account" data-i18n="[placeholder]account" disabled />
+                            <div class="pas_contact_info">&nbsp;</div>
+                            <span class="input-group-btn">
+                                <button class="btn btn-default remove_account_btn" type="button"><i class="fa fa-minus"></i></button>
+                            </span>
+                            <span class="input-group-btn btn-group plain_adress_selector">
+                                <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown"><span class="glyphicon glyphicon-user"></span></button>
+                                <ul class="dropdown-menu scrollable-menu" role="menu" style="right:0;left:auto;"></ul>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row form-group">
+                <div class="col-xs-12">
+                    <a href="#" class="btn btn-primary add_account_btn"><i class="fa fa-plus"></i> <span data-i18n="add_account">Add Account</span></a>
+                </div>
+            </div>
+        </div>
+
         <div class="row approve_generic" style="display:none;">
             <div class="col-xs-6">
                 <div class="form-group">

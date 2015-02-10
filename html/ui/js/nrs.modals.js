@@ -125,7 +125,9 @@ var NRS = (function(NRS, $, undefined) {
 		$(this).find(".pas_contact_info").text(" ");
 		// Activating context help popovers
 		$(function () { 
-            $("[data-toggle='popover']").popover(); 
+            $("[data-toggle='popover']").popover({
+            	"html": true
+            }); 
         });
 		NRS.updateBlockHeightEstimates($(this).find(".block_height_group .bhg_time_input"));
 
@@ -262,6 +264,13 @@ var NRS = (function(NRS, $, undefined) {
         } else {
         	$am.find('.approve_generic input').prop('disabled', false);
         	$am.find('.approve_generic').show();
+        }
+        if ($(this).hasClass("at_accounts") || $(this).hasClass("at_balance")) {
+        	$am.find('.approve_whitelist_accounts input').prop('disabled', false);
+        	$am.find('.approve_whitelist_accounts').show();
+        } else {
+        	$am.find('.approve_whitelist_accounts').hide();
+        	$am.find('.approve_whitelist_accounts input').prop('disabled', true);
         }
     });
 
