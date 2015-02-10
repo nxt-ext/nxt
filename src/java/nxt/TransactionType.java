@@ -236,9 +236,11 @@ public abstract class TransactionType {
         return canHaveRecipient();
     }
 
+    public abstract String getName();
+
     @Override
     public final String toString() {
-        return "type: " + getType() + ", subtype: " + getSubtype();
+        return getName() + " type: " + getType() + ", subtype: " + getSubtype();
     }
 
     public static abstract class Payment extends TransactionType {
@@ -274,6 +276,11 @@ public abstract class TransactionType {
             @Override
             public final byte getSubtype() {
                 return TransactionType.SUBTYPE_PAYMENT_ORDINARY_PAYMENT;
+            }
+
+            @Override
+            public String getName() {
+                return "OrdinaryPayment";
             }
 
             @Override
@@ -322,6 +329,11 @@ public abstract class TransactionType {
             }
 
             @Override
+            public String getName() {
+                return "ArbitraryMessage";
+            }
+
+            @Override
             Attachment.EmptyAttachment parseAttachment(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
                 return Attachment.ARBITRARY_MESSAGE;
             }
@@ -363,6 +375,11 @@ public abstract class TransactionType {
             @Override
             public final byte getSubtype() {
                 return TransactionType.SUBTYPE_MESSAGING_ALIAS_ASSIGNMENT;
+            }
+
+            @Override
+            public String getName() {
+                return "AliasAssignment";
             }
 
             @Override
@@ -419,6 +436,11 @@ public abstract class TransactionType {
             @Override
             public final byte getSubtype() {
                 return TransactionType.SUBTYPE_MESSAGING_ALIAS_SELL;
+            }
+
+            @Override
+            public String getName() {
+                return "AliasSell";
             }
 
             @Override
@@ -499,6 +521,11 @@ public abstract class TransactionType {
             }
 
             @Override
+            public String getName() {
+                return "AliasBuy";
+            }
+
+            @Override
             Attachment.MessagingAliasBuy parseAttachment(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
                 return new Attachment.MessagingAliasBuy(buffer, transactionVersion);
             }
@@ -566,6 +593,11 @@ public abstract class TransactionType {
             }
 
             @Override
+            public String getName() {
+                return "AliasDelete";
+            }
+
+            @Override
             Attachment.MessagingAliasDelete parseAttachment(final ByteBuffer buffer, final byte transactionVersion) throws NxtException.NotValidException {
                 return new Attachment.MessagingAliasDelete(buffer, transactionVersion);
             }
@@ -617,6 +649,12 @@ public abstract class TransactionType {
             public final byte getSubtype() {
                 return TransactionType.SUBTYPE_MESSAGING_POLL_CREATION;
             }
+
+            @Override
+            public String getName() {
+                return "PollCreation";
+            }
+
 
             @Override
             public Fee getBaselineFee(TransactionImpl transaction) {
@@ -711,6 +749,11 @@ public abstract class TransactionType {
             }
 
             @Override
+            public String getName() {
+                return "VoteCasting";
+            }
+
+            @Override
             Attachment.MessagingVoteCasting parseAttachment(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
                 return new Attachment.MessagingVoteCasting(buffer, transactionVersion);
             }
@@ -783,6 +826,11 @@ public abstract class TransactionType {
             @Override
             public final byte getSubtype() {
                 return TransactionType.SUBTYPE_MESSAGING_PHASING_VOTE_CASTING;
+            }
+
+            @Override
+            public String getName() {
+                return "PhasingVoteCasting";
             }
 
             @Override
@@ -879,6 +927,11 @@ public abstract class TransactionType {
             }
 
             @Override
+            public String getName() {
+                return "HubAnnouncement";
+            }
+
+            @Override
             Attachment.MessagingHubAnnouncement parseAttachment(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
                 return new Attachment.MessagingHubAnnouncement(buffer, transactionVersion);
             }
@@ -925,6 +978,11 @@ public abstract class TransactionType {
             @Override
             public byte getSubtype() {
                 return TransactionType.SUBTYPE_MESSAGING_ACCOUNT_INFO;
+            }
+
+            @Override
+            public String getName() {
+                return "AccountInfo";
             }
 
             @Override
@@ -980,6 +1038,11 @@ public abstract class TransactionType {
             @Override
             public final byte getSubtype() {
                 return TransactionType.SUBTYPE_COLORED_COINS_ASSET_ISSUANCE;
+            }
+
+            @Override
+            public String getName() {
+                return "AssetIssuance";
             }
 
             @Override
@@ -1051,6 +1114,11 @@ public abstract class TransactionType {
             @Override
             public final byte getSubtype() {
                 return TransactionType.SUBTYPE_COLORED_COINS_ASSET_TRANSFER;
+            }
+
+            @Override
+            public String getName() {
+                return "AssetTransfer";
             }
 
             @Override
@@ -1151,6 +1219,11 @@ public abstract class TransactionType {
             }
 
             @Override
+            public String getName() {
+                return "AskOrderPlacement";
+            }
+
+            @Override
             Attachment.ColoredCoinsAskOrderPlacement parseAttachment(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
                 return new Attachment.ColoredCoinsAskOrderPlacement(buffer, transactionVersion);
             }
@@ -1192,6 +1265,11 @@ public abstract class TransactionType {
             @Override
             public final byte getSubtype() {
                 return TransactionType.SUBTYPE_COLORED_COINS_BID_ORDER_PLACEMENT;
+            }
+
+            @Override
+            public String getName() {
+                return "BidOrderPlacement";
             }
 
             @Override
@@ -1267,6 +1345,11 @@ public abstract class TransactionType {
             }
 
             @Override
+            public String getName() {
+                return "AskOrderCancellation";
+            }
+
+            @Override
             Attachment.ColoredCoinsAskOrderCancellation parseAttachment(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
                 return new Attachment.ColoredCoinsAskOrderCancellation(buffer, transactionVersion);
             }
@@ -1304,6 +1387,11 @@ public abstract class TransactionType {
             }
 
             @Override
+            public String getName() {
+                return "BidOrderCancellation";
+            }
+
+            @Override
             Attachment.ColoredCoinsBidOrderCancellation parseAttachment(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
                 return new Attachment.ColoredCoinsBidOrderCancellation(buffer, transactionVersion);
             }
@@ -1338,6 +1426,11 @@ public abstract class TransactionType {
             @Override
             public final byte getSubtype() {
                 return TransactionType.SUBTYPE_COLORED_COINS_DIVIDEND_PAYMENT;
+            }
+
+            @Override
+            public String getName() {
+                return "DividendPayment";
             }
 
             @Override
@@ -1443,6 +1536,11 @@ public abstract class TransactionType {
             }
 
             @Override
+            public String getName() {
+                return "DigitalGoodsListing";
+            }
+
+            @Override
             Attachment.DigitalGoodsListing parseAttachment(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
                 return new Attachment.DigitalGoodsListing(buffer, transactionVersion);
             }
@@ -1483,6 +1581,11 @@ public abstract class TransactionType {
             @Override
             public final byte getSubtype() {
                 return TransactionType.SUBTYPE_DIGITAL_GOODS_DELISTING;
+            }
+
+            @Override
+            public String getName() {
+                return "DigitalGoodsDelisting";
             }
 
             @Override
@@ -1532,6 +1635,11 @@ public abstract class TransactionType {
             @Override
             public final byte getSubtype() {
                 return TransactionType.SUBTYPE_DIGITAL_GOODS_PRICE_CHANGE;
+            }
+
+            @Override
+            public String getName() {
+                return "DigitalGoodsPriceChange";
             }
 
             @Override
@@ -1586,6 +1694,11 @@ public abstract class TransactionType {
             }
 
             @Override
+            public String getName() {
+                return "DigitalGoodsQuantityChange";
+            }
+
+            @Override
             Attachment.DigitalGoodsQuantityChange parseAttachment(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
                 return new Attachment.DigitalGoodsQuantityChange(buffer, transactionVersion);
             }
@@ -1635,6 +1748,11 @@ public abstract class TransactionType {
             @Override
             public final byte getSubtype() {
                 return TransactionType.SUBTYPE_DIGITAL_GOODS_PURCHASE;
+            }
+
+            @Override
+            public String getName() {
+                return "DigitalGoodsPurchase";
             }
 
             @Override
@@ -1718,6 +1836,11 @@ public abstract class TransactionType {
             }
 
             @Override
+            public String getName() {
+                return "DigitalGoodsDelivery";
+            }
+
+            @Override
             Attachment.DigitalGoodsDelivery parseAttachment(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
                 return new Attachment.DigitalGoodsDelivery(buffer, transactionVersion);
             }
@@ -1774,6 +1897,11 @@ public abstract class TransactionType {
             }
 
             @Override
+            public String getName() {
+                return "DigitalGoodsFeedback";
+            }
+
+            @Override
             Attachment.DigitalGoodsFeedback parseAttachment(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
                 return new Attachment.DigitalGoodsFeedback(buffer, transactionVersion);
             }
@@ -1824,6 +1952,11 @@ public abstract class TransactionType {
             @Override
             public final byte getSubtype() {
                 return TransactionType.SUBTYPE_DIGITAL_GOODS_REFUND;
+            }
+
+            @Override
+            public String getName() {
+                return "DigitalGoodsRefund";
             }
 
             @Override
@@ -1916,6 +2049,11 @@ public abstract class TransactionType {
             @Override
             public final byte getSubtype() {
                 return TransactionType.SUBTYPE_ACCOUNT_CONTROL_EFFECTIVE_BALANCE_LEASING;
+            }
+
+            @Override
+            public String getName() {
+                return "EffectiveBalanceLeasing";
             }
 
             @Override

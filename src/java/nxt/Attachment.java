@@ -32,6 +32,11 @@ public interface Attachment extends Appendix {
         private AbstractAttachment() {}
 
         @Override
+        final String getAppendixName() {
+            return getTransactionType().getName();
+        }
+
+        @Override
         final void validate(Transaction transaction) throws NxtException.ValidationException {
             getTransactionType().validateAttachment(transaction);
         }
@@ -72,11 +77,6 @@ public interface Attachment extends Appendix {
     public final static EmptyAttachment ORDINARY_PAYMENT = new EmptyAttachment() {
 
         @Override
-        String getAppendixName() {
-            return "OrdinaryPayment";
-        }
-
-        @Override
         public TransactionType getTransactionType() {
             return TransactionType.Payment.ORDINARY;
         }
@@ -87,81 +87,11 @@ public interface Attachment extends Appendix {
     public final static EmptyAttachment ARBITRARY_MESSAGE = new EmptyAttachment() {
 
         @Override
-        String getAppendixName() {
-            return "ArbitraryMessage";
-        }
-
-        @Override
         public TransactionType getTransactionType() {
             return TransactionType.Messaging.ARBITRARY_MESSAGE;
         }
 
     };
-
-    public final static class MessagingPhasingVoteCasting extends AbstractAttachment {
-        private final List<byte[]> transactionFullHashes;
-
-        MessagingPhasingVoteCasting(ByteBuffer buffer, byte transactionVersion) {
-            super(buffer, transactionVersion);
-            byte length = buffer.get();
-            transactionFullHashes = new ArrayList<>(length);
-            for (int i = 0; i < length; i++) {
-                byte[] hash = new byte[32];
-                buffer.get(hash);
-                transactionFullHashes.add(hash);
-            }
-        }
-
-        MessagingPhasingVoteCasting(JSONObject attachmentData) {
-            super(attachmentData);
-            JSONArray jsonArray = (JSONArray) (attachmentData.get("transactionFullHashes"));
-            transactionFullHashes = new ArrayList<>(jsonArray.size());
-            for (int i = 0; i < jsonArray.size(); i++) {
-                transactionFullHashes.add(Convert.parseHexString((String)jsonArray.get(i)));
-            }
-        }
-
-        public MessagingPhasingVoteCasting(List<byte[]> transactionFullHashes) {
-            this.transactionFullHashes = transactionFullHashes;
-        }
-
-        @Override
-        String getAppendixName() {
-            return "MessagingPhasingVoteCasting";
-        }
-
-        @Override
-        int getMySize() {
-            return 1 + 32 * transactionFullHashes.size();
-        }
-
-        @Override
-        void putMyBytes(ByteBuffer buffer) {
-            buffer.put((byte) transactionFullHashes.size());
-            for (byte[] hash : transactionFullHashes) {
-                buffer.put(hash);
-            }
-        }
-
-        @Override
-        void putMyJSON(JSONObject attachment) {
-            JSONArray jsonArray = new JSONArray();
-            for (byte[] hash : transactionFullHashes) {
-                jsonArray.add(Convert.toHexString(hash));
-            }
-            attachment.put("transactionFullHashes", jsonArray);
-        }
-
-        @Override
-        public TransactionType getTransactionType() {
-            return TransactionType.Messaging.PHASING_VOTE_CASTING;
-        }
-
-        public List<byte[]> getTransactionFullHashes() {
-            return transactionFullHashes;
-        }
-    }
-
 
     public final static class MessagingAliasAssignment extends AbstractAttachment {
 
@@ -183,11 +113,6 @@ public interface Attachment extends Appendix {
         public MessagingAliasAssignment(String aliasName, String aliasURI) {
             this.aliasName = aliasName.trim();
             this.aliasURI = aliasURI.trim();
-        }
-
-        @Override
-        String getAppendixName() {
-            return "AliasAssignment";
         }
 
         @Override
@@ -248,11 +173,6 @@ public interface Attachment extends Appendix {
         }
 
         @Override
-        String getAppendixName() {
-            return "AliasSell";
-        }
-
-        @Override
         public TransactionType getTransactionType() {
             return TransactionType.Messaging.ALIAS_SELL;
         }
@@ -304,11 +224,6 @@ public interface Attachment extends Appendix {
         }
 
         @Override
-        String getAppendixName() {
-            return "AliasBuy";
-        }
-
-        @Override
         public TransactionType getTransactionType() {
             return TransactionType.Messaging.ALIAS_BUY;
         }
@@ -351,11 +266,6 @@ public interface Attachment extends Appendix {
 
         public MessagingAliasDelete(final String aliasName) {
             this.aliasName = aliasName;
-        }
-
-        @Override
-        String getAppendixName() {
-            return "AliasDelete";
         }
 
         @Override
@@ -528,11 +438,6 @@ public interface Attachment extends Appendix {
         }
 
         @Override
-        String getAppendixName() {
-            return "PollCreation";
-        }
-
-        @Override
         int getMySize() {
             int size = 2 + Convert.toBytes(pollName).length + 2 + Convert.toBytes(pollDescription).length + 1;
             for (String pollOption : pollOptions) {
@@ -686,11 +591,6 @@ public interface Attachment extends Appendix {
         }
 
         @Override
-        String getAppendixName() {
-            return "VoteCasting";
-        }
-
-        @Override
         int getMySize() {
             return 8 + 1 + this.pollVote.length;
         }
@@ -725,6 +625,65 @@ public interface Attachment extends Appendix {
 
         public byte[] getPollVote() {
             return pollVote;
+        }
+    }
+
+    public final static class MessagingPhasingVoteCasting extends AbstractAttachment {
+        private final List<byte[]> transactionFullHashes;
+
+        MessagingPhasingVoteCasting(ByteBuffer buffer, byte transactionVersion) {
+            super(buffer, transactionVersion);
+            byte length = buffer.get();
+            transactionFullHashes = new ArrayList<>(length);
+            for (int i = 0; i < length; i++) {
+                byte[] hash = new byte[32];
+                buffer.get(hash);
+                transactionFullHashes.add(hash);
+            }
+        }
+
+        MessagingPhasingVoteCasting(JSONObject attachmentData) {
+            super(attachmentData);
+            JSONArray jsonArray = (JSONArray) (attachmentData.get("transactionFullHashes"));
+            transactionFullHashes = new ArrayList<>(jsonArray.size());
+            for (int i = 0; i < jsonArray.size(); i++) {
+                transactionFullHashes.add(Convert.parseHexString((String)jsonArray.get(i)));
+            }
+        }
+
+        public MessagingPhasingVoteCasting(List<byte[]> transactionFullHashes) {
+            this.transactionFullHashes = transactionFullHashes;
+        }
+
+        @Override
+        int getMySize() {
+            return 1 + 32 * transactionFullHashes.size();
+        }
+
+        @Override
+        void putMyBytes(ByteBuffer buffer) {
+            buffer.put((byte) transactionFullHashes.size());
+            for (byte[] hash : transactionFullHashes) {
+                buffer.put(hash);
+            }
+        }
+
+        @Override
+        void putMyJSON(JSONObject attachment) {
+            JSONArray jsonArray = new JSONArray();
+            for (byte[] hash : transactionFullHashes) {
+                jsonArray.add(Convert.toHexString(hash));
+            }
+            attachment.put("transactionFullHashes", jsonArray);
+        }
+
+        @Override
+        public TransactionType getTransactionType() {
+            return TransactionType.Messaging.PHASING_VOTE_CASTING;
+        }
+
+        public List<byte[]> getTransactionFullHashes() {
+            return transactionFullHashes;
         }
     }
 
@@ -763,11 +722,6 @@ public interface Attachment extends Appendix {
         public MessagingHubAnnouncement(long minFeePerByteNQT, String[] uris) {
             this.minFeePerByteNQT = minFeePerByteNQT;
             this.uris = uris;
-        }
-
-        @Override
-        String getAppendixName() {
-            return "HubAnnouncement";
         }
 
         @Override
@@ -863,11 +817,6 @@ public interface Attachment extends Appendix {
         */
 
         @Override
-        String getAppendixName() {
-            return "AccountInfo";
-        }
-
-        @Override
         int getMySize() {
             return 1 + Convert.toBytes(name).length + 2 + Convert.toBytes(description).length +
                     (getVersion() < 2 ? 0 : 2 + (messagePattern == null ? 0 : Convert.toBytes(messagePattern.pattern()).length + 4));
@@ -953,11 +902,6 @@ public interface Attachment extends Appendix {
         }
 
         @Override
-        String getAppendixName() {
-            return "AssetIssuance";
-        }
-
-        @Override
         int getMySize() {
             return 1 + Convert.toBytes(name).length + 2 + Convert.toBytes(description).length + 8 + 1;
         }
@@ -1028,11 +972,6 @@ public interface Attachment extends Appendix {
             this.assetId = assetId;
             this.quantityQNT = quantityQNT;
             this.comment = null;
-        }
-
-        @Override
-        String getAppendixName() {
-            return "AssetTransfer";
         }
 
         @Override
@@ -1152,11 +1091,6 @@ public interface Attachment extends Appendix {
         }
 
         @Override
-        String getAppendixName() {
-            return "AskOrderPlacement";
-        }
-
-        @Override
         public TransactionType getTransactionType() {
             return TransactionType.ColoredCoins.ASK_ORDER_PLACEMENT;
         }
@@ -1175,11 +1109,6 @@ public interface Attachment extends Appendix {
 
         public ColoredCoinsBidOrderPlacement(long assetId, long quantityQNT, long priceNQT) {
             super(assetId, quantityQNT, priceNQT);
-        }
-
-        @Override
-        String getAppendixName() {
-            return "BidOrderPlacement";
         }
 
         @Override
@@ -1242,11 +1171,6 @@ public interface Attachment extends Appendix {
         }
 
         @Override
-        String getAppendixName() {
-            return "AskOrderCancellation";
-        }
-
-        @Override
         public TransactionType getTransactionType() {
             return TransactionType.ColoredCoins.ASK_ORDER_CANCELLATION;
         }
@@ -1265,11 +1189,6 @@ public interface Attachment extends Appendix {
 
         public ColoredCoinsBidOrderCancellation(long orderId) {
             super(orderId);
-        }
-
-        @Override
-        String getAppendixName() {
-            return "BidOrderCancellation";
         }
 
         @Override
@@ -1303,11 +1222,6 @@ public interface Attachment extends Appendix {
             this.assetId = assetId;
             this.height = height;
             this.amountNQTPerQNT = amountNQTPerQNT;
-        }
-
-        @Override
-        String getAppendixName() {
-            return "DividendPayment";
         }
 
         @Override
@@ -1383,11 +1297,6 @@ public interface Attachment extends Appendix {
         }
 
         @Override
-        String getAppendixName() {
-            return "DigitalGoodsListing";
-        }
-
-        @Override
         int getMySize() {
             return 2 + Convert.toBytes(name).length + 2 + Convert.toBytes(description).length + 2
                         + Convert.toBytes(tags).length + 4 + 8;
@@ -1453,11 +1362,6 @@ public interface Attachment extends Appendix {
         }
 
         @Override
-        String getAppendixName() {
-            return "DigitalGoodsDelisting";
-        }
-
-        @Override
         int getMySize() {
             return 8;
         }
@@ -1501,11 +1405,6 @@ public interface Attachment extends Appendix {
         public DigitalGoodsPriceChange(long goodsId, long priceNQT) {
             this.goodsId = goodsId;
             this.priceNQT = priceNQT;
-        }
-
-        @Override
-        String getAppendixName() {
-            return "DigitalGoodsPriceChange";
         }
 
         @Override
@@ -1556,11 +1455,6 @@ public interface Attachment extends Appendix {
         public DigitalGoodsQuantityChange(long goodsId, int deltaQuantity) {
             this.goodsId = goodsId;
             this.deltaQuantity = deltaQuantity;
-        }
-
-        @Override
-        String getAppendixName() {
-            return "DigitalGoodsQuantityChange";
         }
 
         @Override
@@ -1619,11 +1513,6 @@ public interface Attachment extends Appendix {
             this.quantity = quantity;
             this.priceNQT = priceNQT;
             this.deliveryDeadlineTimestamp = deliveryDeadlineTimestamp;
-        }
-
-        @Override
-        String getAppendixName() {
-            return "DigitalGoodsPurchase";
         }
 
         @Override
@@ -1698,11 +1587,6 @@ public interface Attachment extends Appendix {
         }
 
         @Override
-        String getAppendixName() {
-            return "DigitalGoodsDelivery";
-        }
-
-        @Override
         int getMySize() {
             return 8 + 4 + goods.getSize() + 8;
         }
@@ -1761,11 +1645,6 @@ public interface Attachment extends Appendix {
         }
 
         @Override
-        String getAppendixName() {
-            return "DigitalGoodsFeedback";
-        }
-
-        @Override
         int getMySize() {
             return 8;
         }
@@ -1812,11 +1691,6 @@ public interface Attachment extends Appendix {
         }
 
         @Override
-        String getAppendixName() {
-            return "DigitalGoodsRefund";
-        }
-
-        @Override
         int getMySize() {
             return 8 + 8;
         }
@@ -1860,11 +1734,6 @@ public interface Attachment extends Appendix {
 
         public AccountControlEffectiveBalanceLeasing(short period) {
             this.period = period;
-        }
-
-        @Override
-        String getAppendixName() {
-            return "EffectiveBalanceLeasing";
         }
 
         @Override
@@ -1968,11 +1837,6 @@ public interface Attachment extends Appendix {
             this.ruleset = ruleset;
             this.algorithm = algorithm;
             this.decimals = decimals;
-        }
-
-        @Override
-        String getAppendixName() {
-            return "CurrencyIssuance";
         }
 
         @Override
@@ -2108,11 +1972,6 @@ public interface Attachment extends Appendix {
         }
 
         @Override
-        String getAppendixName() {
-            return "ReserveIncrease";
-        }
-
-        @Override
         int getMySize() {
             return 8 + 8;
         }
@@ -2168,11 +2027,6 @@ public interface Attachment extends Appendix {
         }
 
         @Override
-        String getAppendixName() {
-            return "ReserveClaim";
-        }
-
-        @Override
         int getMySize() {
             return 8 + 8;
         }
@@ -2225,11 +2079,6 @@ public interface Attachment extends Appendix {
         public MonetarySystemCurrencyTransfer(long currencyId, long units) {
             this.currencyId = currencyId;
             this.units = units;
-        }
-
-        @Override
-        String getAppendixName() {
-            return "CurrencyTransfer";
         }
 
         @Override
@@ -2309,11 +2158,6 @@ public interface Attachment extends Appendix {
             this.initialBuySupply = initialBuySupply;
             this.initialSellSupply = initialSellSupply;
             this.expirationHeight = expirationHeight;
-        }
-
-        @Override
-        String getAppendixName() {
-            return "PublishExchangeOffer";
         }
 
         @Override
@@ -2460,11 +2304,6 @@ public interface Attachment extends Appendix {
         }
 
         @Override
-        String getAppendixName() {
-            return "ExchangeBuy";
-        }
-
-        @Override
         public TransactionType getTransactionType() {
             return MonetarySystem.EXCHANGE_BUY;
         }
@@ -2483,11 +2322,6 @@ public interface Attachment extends Appendix {
 
         public MonetarySystemExchangeSell(long currencyId, long rateNQT, long units) {
             super(currencyId, rateNQT, units);
-        }
-
-        @Override
-        String getAppendixName() {
-            return "ExchangeSell";
         }
 
         @Override
@@ -2525,11 +2359,6 @@ public interface Attachment extends Appendix {
             this.currencyId = currencyId;
             this.units = units;
             this.counter = counter;
-        }
-
-        @Override
-        String getAppendixName() {
-            return "CurrencyMinting";
         }
 
         @Override
@@ -2593,11 +2422,6 @@ public interface Attachment extends Appendix {
 
         public MonetarySystemCurrencyDeletion(long currencyId) {
             this.currencyId = currencyId;
-        }
-
-        @Override
-        String getAppendixName() {
-            return "CurrencyDeletion";
         }
 
         @Override

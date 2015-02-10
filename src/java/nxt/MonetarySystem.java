@@ -78,6 +78,11 @@ public abstract class MonetarySystem extends TransactionType {
         }
 
         @Override
+        public String getName() {
+            return "CurrencyIssuance";
+        }
+
+        @Override
         public Fee getBaselineFee(TransactionImpl transaction) throws NxtException.NotValidException {
             Attachment.MonetarySystemCurrencyIssuance attachment = (Attachment.MonetarySystemCurrencyIssuance) transaction.getAttachment();
             if (Currency.getCurrencyByCode(attachment.getCode()) != null || Currency.getCurrencyByCode(attachment.getName().toUpperCase()) != null
@@ -195,6 +200,11 @@ public abstract class MonetarySystem extends TransactionType {
         }
 
         @Override
+        public String getName() {
+            return "ReserveIncrease";
+        }
+
+        @Override
         Attachment.MonetarySystemReserveIncrease parseAttachment(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
             return new Attachment.MonetarySystemReserveIncrease(buffer, transactionVersion);
         }
@@ -251,6 +261,11 @@ public abstract class MonetarySystem extends TransactionType {
         }
 
         @Override
+        public String getName() {
+            return "ReserveClaim";
+        }
+
+        @Override
         Attachment.MonetarySystemReserveClaim parseAttachment(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
             return new Attachment.MonetarySystemReserveClaim(buffer, transactionVersion);
         }
@@ -303,6 +318,11 @@ public abstract class MonetarySystem extends TransactionType {
         @Override
         public byte getSubtype() {
             return SUBTYPE_MONETARY_SYSTEM_CURRENCY_TRANSFER;
+        }
+
+        @Override
+        public String getName() {
+            return "CurrencyTransfer";
         }
 
         @Override
@@ -366,6 +386,11 @@ public abstract class MonetarySystem extends TransactionType {
         @Override
         public byte getSubtype() {
             return SUBTYPE_MONETARY_SYSTEM_PUBLISH_EXCHANGE_OFFER;
+        }
+
+        @Override
+        public String getName() {
+            return "PublishExchangeOffer";
         }
 
         @Override
@@ -467,6 +492,11 @@ public abstract class MonetarySystem extends TransactionType {
         }
 
         @Override
+        public String getName() {
+            return "ExchangeBuy";
+        }
+
+        @Override
         Attachment.MonetarySystemExchangeBuy parseAttachment(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
             return new Attachment.MonetarySystemExchangeBuy(buffer, transactionVersion);
         }
@@ -509,6 +539,11 @@ public abstract class MonetarySystem extends TransactionType {
         }
 
         @Override
+        public String getName() {
+            return "ExchangeSell";
+        }
+
+        @Override
         Attachment.MonetarySystemExchangeSell parseAttachment(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
             return new Attachment.MonetarySystemExchangeSell(buffer, transactionVersion);
         }
@@ -547,6 +582,11 @@ public abstract class MonetarySystem extends TransactionType {
         @Override
         public byte getSubtype() {
             return SUBTYPE_MONETARY_SYSTEM_CURRENCY_MINTING;
+        }
+
+        @Override
+        public String getName() {
+            return "CurrencyMinting";
         }
 
         @Override
@@ -624,6 +664,11 @@ public abstract class MonetarySystem extends TransactionType {
         @Override
         public byte getSubtype() {
             return SUBTYPE_MONETARY_SYSTEM_CURRENCY_DELETION;
+        }
+
+        @Override
+        public String getName() {
+            return "CurrencyDeletion";
         }
 
         @Override
