@@ -111,6 +111,7 @@ var NRS = (function(NRS, $, undefined) {
 				testnetWarningDiv.text(warningText);
 				$(".testnet_only, #testnet_login, #testnet_warning").show();
 			}
+			NRS.loadServerConstants();
 		});
 		
 		if (!NRS.server) {
