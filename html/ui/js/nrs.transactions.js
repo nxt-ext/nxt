@@ -264,41 +264,73 @@ var NRS = (function(NRS, $, undefined) {
 				if (response.transaction) {
 					var attachment = t.attachment;
 					var vm = attachment.phasingVotingModel;
-					if (response.votes < response.quorum) {
-						if (response.finished) {
-							var state = "danger";
-							var color = "#f56954";
+
+					var state = "";
+					var color = "";
+					var icon = "";
+					var votesFormatted = "";
+					var quorumFormatted = "";
+					var finishHeightFormatted = String(response.finishHeight);
+					var percentageFormatted = NRS.calculatePercentage(response.votes, response.quorum) + "%";
+					var percentageProgressBar = Math.round(response.votes * 100 / response.quorum);
+					var progressBarWidth = Math.round(percentageProgressBar / 2);
+
+					if (response.finished) {
+						var finishedFormatted = "Yes";
+					} else {
+						var finishedFormatted = "No";
+					}
+
+					if (response.finished) {
+						if (response.votes >= response.quorum) {
+							state = "success";
+							color = "#00a65a";	
 						} else {
-							var state = "warning";
-							var color = "#f39c12";
+							state = "danger";
+							color = "#f56954";							
 						}
 					} else {
-						var state = "success";
-						var color = "#00a65a";
+						state = "warning";
+						color = "#f39c12";
 					}
-					html += "<div style='display:inline-block;min-width:94px;text-align:left;border:1px solid #e2e2e2;background-color:#fff;padding:3px;'>";
-					html += "<div class='label label-" + state + "' style='display:inline-block;margin-right:5px;'>";
 					if (vm == 0) {
-						html += '<i class="fa fa-group"></i> ';
+						icon = '<i class="fa fa-group"></i>';
+						votesFormatted = String(response.votes);
+						quorumFormatted = String(response.quorum);
 					}
 					if (vm == 1) {
-						html += '<i class="fa fa-money"></i> ';
+						icon = '<i class="fa fa-money"></i>';
+						votesFormatted = String(response.votes);
+						quorumFormatted = String(response.quorum);
 					}
 					if (vm == 2) {
-						html += '<i class="fa fa-signal"></i> ';
+						icon = '<i class="fa fa-signal"></i>';
+						votesFormatted = String(response.votes);
+						quorumFormatted = String(response.quorum);
 					}
 					if (vm == 3) {
-						html += '<i class="fa fa-bank"></i> ';
+						icon = '<i class="fa fa-bank"></i>';
+						votesFormatted = String(response.votes);
+						quorumFormatted = String(response.quorum);
 					}
-					html += "</div>";
+					var popover = "<table class='table table-striped'>";
+					popover += "<tr><td>Votes:</td><td>" + votesFormatted + " / " + quorumFormatted + "</td></tr>";
+					popover += "<tr><td>Percentage:</td><td>" + percentageFormatted + "</td></tr>";
+					popover += "<tr><td>Finish Height:</td><td>" + finishHeightFormatted + "</td></tr>";
+					popover += "<tr><td>Finished:</td><td>" + finishedFormatted + "</td></tr>";
+					popover += "</table>";
+
+					html += '<div class="show_popover" style="display:inline-block;min-width:94px;text-align:left;border:1px solid #e2e2e2;background-color:#fff;padding:3px;" ';
+ 				 	html += 'data-toggle="popover" data-placement="top" data-content="' + popover + '" data-container="body">';
+					html += "<div class='label label-" + state + "' style='display:inline-block;margin-right:5px;'>" + icon + "</div>";
 					
 					if (vm == 0) {
-						html += '<span style="color:' + color + '">' + String(response.votes) + '</span> / <span>' + String(response.quorum) + '</span>';
+						html += '<span style="color:' + color + '">' + votesFormatted + '</span> / <span>' + quorumFormatted + '</span>';
 					} else {
 						html += '<div class="progress" style="display:inline-block;height:10px;width: 50px;">';
-    					html += '<div class="progress-bar progress-bar-' + state + '" role="progressbar" aria-valuenow="60" ';
-    					html += 'aria-valuemin="0" aria-valuemax="100" style="height:10px;width: 30px;">';
-      					html += '<span class="sr-only">60% Complete</span>';
+    					html += '<div class="progress-bar progress-bar-' + state + '" role="progressbar" aria-valuenow="' + percentageProgressBar + '" ';
+    					html += 'aria-valuemin="0" aria-valuemax="100" style="height:10px;width: ' + progressBarWidth + 'px;">';
+      					html += '<span class="sr-only">' + percentageProgressBar + '% Complete</span>';
     					html += '</div>';
   						html += '</div> ';
   					}
@@ -370,10 +402,10 @@ var NRS = (function(NRS, $, undefined) {
 
 		html += "<td style='text-align:center;'>" + NRS.getPendingTransactionHTML(transaction) + "</td>";
 
-		html += "<td class='confirmations' ";
-		html += "data-content='" + (transaction.confirmed ? NRS.formatAmount(transaction.confirmations) + " " + $.t("confirmations") : $.t("unconfirmed_transaction")) + "' ";
-		html += "data-container='body' data-placement='left' style='vertical-align:middle;text-align:center;font-size:12px;'>";
-		html += (!transaction.confirmed ? "-" : (transaction.confirmations > 1440 ? "1440+" : NRS.formatAmount(transaction.confirmations))) + "</td>";
+		html += "<td class='confirmations' style='vertical-align:middle;text-align:center;font-size:12px;'>";
+		html += "<span class='show_popover' data-content='" + (transaction.confirmed ? NRS.formatAmount(transaction.confirmations) + " " + $.t("confirmations") : $.t("unconfirmed_transaction")) + "' ";
+		html += "data-container='body' data-placement='left'>";
+		html += (!transaction.confirmed ? "-" : (transaction.confirmations > 1440 ? "1440+" : NRS.formatAmount(transaction.confirmations))) + "</span></td>";
 		html += "</tr>";
 		return html;
 	}
