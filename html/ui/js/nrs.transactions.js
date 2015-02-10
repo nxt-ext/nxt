@@ -257,7 +257,7 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.getPendingTransactionHTML = function(t) {
 		var html = "";
 
-		if (t.attachment && t.attachment["version.Phasing"] && t.attachment.phasingVotingModel) {
+		if (t.attachment && t.attachment["version.Phasing"] && t.attachment.phasingVotingModel != undefined) {
 			NRS.sendRequest("getPhasingVotes", {
 				"transaction": t.transaction
 			}, function(response) {
@@ -265,30 +265,45 @@ var NRS = (function(NRS, $, undefined) {
 					var attachment = t.attachment;
 					var vm = attachment.phasingVotingModel;
 					if (response.votes < response.quorum) {
-						var state = "warning";
+						if (response.finished) {
+							var state = "danger";
+							var color = "#f56954";
+						} else {
+							var state = "warning";
+							var color = "#f39c12";
+						}
 					} else {
 						var state = "success";
+						var color = "#00a65a";
 					}
-					html += "<div style='display:inline-block;border:1px solid #e2e2e2;background-color:#fff;padding:3px;'>";
+					html += "<div style='display:inline-block;min-width:94px;text-align:left;border:1px solid #e2e2e2;background-color:#fff;padding:3px;'>";
 					html += "<div class='label label-" + state + "' style='display:inline-block;margin-right:5px;'>";
-					if (vm == 1) {
+					if (vm == 0) {
 						html += '<i class="fa fa-group"></i> ';
-					} else if (vm == 2) {
-						html = "Asset";
-					} else {
-						html = "Currency";
+					}
+					if (vm == 1) {
+						html += '<i class="fa fa-money"></i> ';
+					}
+					if (vm == 2) {
+						html += '<i class="fa fa-signal"></i> ';
+					}
+					if (vm == 3) {
+						html += '<i class="fa fa-bank"></i> ';
 					}
 					html += "</div>";
 					
-					html += '<div class="progress" style="display:inline-block;height:10px;width: 50px;">';
-    				html += '<div class="progress-bar progress-bar-' + state + '" role="progressbar" aria-valuenow="60" ';
-    				html += 'aria-valuemin="0" aria-valuemax="100" style="height:10px;width: 30px;">';
-      				html += '<span class="sr-only">60% Complete</span>';
-    				html += '</div>';
-  					html += '</div> ';
+					if (vm == 0) {
+						html += '<span style="color:' + color + '">' + String(response.votes) + '</span> / <span>' + String(response.quorum) + '</span>';
+					} else {
+						html += '<div class="progress" style="display:inline-block;height:10px;width: 50px;">';
+    					html += '<div class="progress-bar progress-bar-' + state + '" role="progressbar" aria-valuenow="60" ';
+    					html += 'aria-valuemin="0" aria-valuemax="100" style="height:10px;width: 30px;">';
+      					html += '<span class="sr-only">60% Complete</span>';
+    					html += '</div>';
+  						html += '</div> ';
+  					}
 
 					html += "</div>";
-					//html += " " + String(response.votes) + "/" + String(response.quorum);
 				} else {
 					html = "&nbsp;";
 				}
@@ -454,12 +469,16 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.displayPendingTransactions = function() {
-		NRS.sendRequest("getPendingTransactions", function(response) {
+		NRS.sendRequest("getAccountPendingTransactions", {
+			"account": NRS.account
+		}, function(response) {
 			var rows = "";
 
-			if (response.unconfirmedTransactions && response.unconfirmedTransactions.length) {
-				for (var i = 0; i < response.unconfirmedTransactions.length; i++) {
-					rows += NRS.getTransactionRowHTML(response.unconfirmedTransactions[i]);
+			if (response.transactions && response.transactions.length) {
+				for (var i = 0; i < response.transactions.length; i++) {
+					t = response.transactions[i];
+					t.confirmed = true;
+					rows += NRS.getTransactionRowHTML(t);
 				}
 			}
 			NRS.dataLoaded(rows);
@@ -481,10 +500,10 @@ var NRS = (function(NRS, $, undefined) {
 			NRS.displayUnconfirmedTransactions();
 			return;
 		}
-		/*if (selectedType == "pending") {
+		if (selectedType == "pending") {
 			NRS.displayPendingTransactions();
 			return;
-		}*/
+		}
 
 		var rows = "";
 		var params = {

@@ -87,7 +87,7 @@
                     <div class="account_box">
                         <div class="row">
                             <div class="col-xs-12 added_account_list">
-                                <label data-i18n="accounts_requested">Accounts Requested</label>
+                                <label data-i18n="accounts">Accounts</label>
                                 <i class="fa fa-question-circle modal-context-help" data-content="The following accounts will be requested to approve the transaction." data-toggle="popover" data-trigger="hover" data-container="#{{name}}_approve_modal" data-i18n="[data-content]approve_tx_accounts_requested_help"></i>
                                 <div class="form-group form_group_accounts">
                                     <div class="input-group">
@@ -111,7 +111,7 @@
                         </div>
                     </div>
                     <input type="hidden" name="phased" value="true" disabled />
-                    <input type="hidden" name="phasingVotingModel" value="1" disabled />
+                    <input type="hidden" name="phasingVotingModel" value="0" disabled />
                     <input type="hidden" name="phasingMinBalance" value="0" disabled/>
                 </div>
                 <div role="tabpanel" class="tab-pane tab_pane_approve" id="{{name}}_approve_tab_asset_holders">
@@ -147,7 +147,7 @@
         <div class="row approve_generic" style="display:none;">
             <div class="col-xs-6">
                 <div class="form-group">
-                    <label data-i18n="necessary_amount_accounts">Necessary Amount (Accounts)</label>
+                    <label data-i18n="necessary_amount_accounts">Amount (Accounts)</label>
                     <i class="fa fa-question-circle modal-context-help" data-content="Necessary amount of approvals for the transaction to become valid." data-toggle="popover" data-trigger="hover" data-container="#{{name}}_approve_modal" data-i18n="[data-content]approve_tx_necessary_amount_help"></i>
                     <input name="phasingQuorum" type="number" value="1" min="1" class="form-control" disabled />
                 </div>
