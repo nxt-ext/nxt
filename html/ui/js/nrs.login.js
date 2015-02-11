@@ -117,6 +117,63 @@ var NRS = (function(NRS, $, undefined) {
 			NRS.login(password);
 		}
 	});
+	
+	NRS.loginAccount = function(account, callback) {
+		NRS.sendRequest("getBlockchainStatus", function(response) {
+			if (response.errorCode) {
+				$.growl($.t("error_server_connect"), {
+					"type": "danger",
+					"offset": 10
+				});
+
+				return;
+			}
+
+			NRS.state = response;
+			NRS.sendRequest("getAccount", {
+				"account": account
+			}, function(response) {
+				if (!response.errorCode) {
+					NRS.account = String(response.account).escapeHTML();
+					NRS.accountRS = String(response.accountRS).escapeHTML();
+					NRS.publicKey = String(response.publicKey).escapeHTML();
+				}
+				$("#account_id").html(String(NRS.accountRS).escapeHTML()).css("font-size", "12px");
+				console.log(NRS.account + "::"+ NRS.accountRS + "::"+NRS.publicKey);
+				if (NRS.state) {
+					NRS.checkBlockHeight();
+				}
+				
+				NRS.getAccountInfo(true, function() {
+					if (NRS.accountInfo.currentLeasingHeightFrom) {
+						NRS.isLeased = (NRS.lastBlockHeight >= NRS.accountInfo.currentLeasingHeightFrom && NRS.lastBlockHeight <= NRS.accountInfo.currentLeasingHeightTo);
+					} else {
+						NRS.isLeased = false;
+					}
+				});
+				
+				NRS.unlock();
+
+				if (NRS.isOutdated) {
+					$.growl($.t("nrs_update_available"), {
+						"type": "danger"
+					});
+				}
+
+				if (!NRS.downloadingBlockchain) {
+					NRS.checkIfOnAFork();
+				}
+
+				NRS.setupClipboardFunctionality();
+
+				if (callback) {
+					callback();
+				}
+
+				NRS.getInitialTransactions();
+			});
+		});
+	}
 
 	NRS.login = function(password, callback) {
 		if (!password.length) {
