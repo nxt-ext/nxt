@@ -13,6 +13,14 @@ import org.junit.Test;
 
 public class TestGetVoterPendingTransactions extends BlockchainTest {
 
+    static APICall getVoterPendingTransactions() {
+        return new APICall.Builder("getVoterPendingTransactions")
+                .param("account", Convert.toUnsignedLong(id3))
+                .param("firstIndex", 0)
+                .param("lastIndex", 10)
+                .build();
+    }
+
     @Test
     public void simpleTransactionLookup() {
         APICall apiCall = new TwoPhasedMoneyTransferBuilder().build();
@@ -21,13 +29,7 @@ public class TestGetVoterPendingTransactions extends BlockchainTest {
 
         generateBlock();
 
-        apiCall = new APICall.Builder("getVoterPendingTransactions")
-                .param("account", Convert.toUnsignedLong(id3))
-                .param("firstIndex", 0)
-                .param("lastIndex", 10)
-                .build();
-
-        JSONObject response = apiCall.invoke();
+        JSONObject response = getVoterPendingTransactions().invoke();
         Logger.logMessage("getVoterPendingTransactionsResponse:" + response.toJSONString());
         JSONArray transactionsJson = (JSONArray) response.get("transactions");
         Assert.assertTrue(TwoPhasedSuite.searchForTransactionId(transactionsJson, transactionId));
@@ -55,15 +57,30 @@ public class TestGetVoterPendingTransactions extends BlockchainTest {
 
         generateBlock();
 
-        apiCall = new APICall.Builder("getVoterPendingTransactions")
-                .param("account", Convert.toUnsignedLong(id3))
-                .param("firstIndex", 0)
-                .param("lastIndex", 9)
-                .build();
-
-        response = apiCall.invoke();
+        response = getVoterPendingTransactions().invoke();
         Logger.logMessage("getVoterPendingTransactionsResponse:" + response.toJSONString());
         JSONArray transactionsJson = (JSONArray) response.get("transactions");
         Assert.assertTrue(TwoPhasedSuite.searchForTransactionId(transactionsJson, transactionId));
+    }
+
+    @Test
+    public void sorting() {
+        for (int i = 0; i < 15; i++) {
+            APICall apiCall = new TestCreateTwoPhased.TwoPhasedMoneyTransferBuilder().build();
+            TestCreateTwoPhased.issueCreateTwoPhased(apiCall, false);
+        }
+
+        JSONObject response = getVoterPendingTransactions().invoke();
+        Logger.logMessage("getVoterPendingTransactionsResponse:" + response.toJSONString());
+        JSONArray transactionsJson = (JSONArray) response.get("transactions");
+
+        //sorting check
+        int prevHeight = Integer.MAX_VALUE;
+        for (Object transactionsJsonObj : transactionsJson) {
+            JSONObject transactionObject = (JSONObject) transactionsJsonObj;
+            int height = ((Long) transactionObject.get("height")).intValue();
+            Assert.assertTrue(height <= prevHeight);
+            prevHeight = height;
+        }
     }
 }
