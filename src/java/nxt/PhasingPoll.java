@@ -123,6 +123,7 @@ public class PhasingPoll extends AbstractPoll {
                     + "phasing_poll.finished = false AND "
                     + "phasing_poll.id = phasing_poll_voter.transaction_id "
                     + "AND phasing_poll_voter.voter_id = ? "
+                    + "ORDER BY transaction.height DESC"
                     + DbUtils.limitsClause(from, to));
             pstmt.setLong(1, voter.getId());
             DbUtils.setLimits(2, pstmt, from, to);
