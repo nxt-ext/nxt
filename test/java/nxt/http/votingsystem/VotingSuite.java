@@ -1,6 +1,6 @@
 package nxt.http.votingsystem;
 
-import nxt.http.HttpApiSuite;
+import nxt.http.AbstractHttpApiSuite;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 
@@ -11,4 +11,4 @@ import org.junit.runners.Suite;
         TestGetPolls.class
 })
 
-public class VotingSuite extends HttpApiSuite { }
+public class VotingSuite extends AbstractHttpApiSuite { }

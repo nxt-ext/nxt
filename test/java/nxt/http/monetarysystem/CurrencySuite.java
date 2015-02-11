@@ -1,7 +1,6 @@
 package nxt.http.monetarysystem;
 
-
-import nxt.http.HttpApiSuite;
+import nxt.http.AbstractHttpApiSuite;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 
@@ -15,4 +14,4 @@ import org.junit.runners.Suite;
         DeleteCurrencyTest.class,
 })
 
-public class CurrencySuite extends HttpApiSuite { }
+public class CurrencySuite extends AbstractHttpApiSuite { }

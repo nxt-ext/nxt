@@ -1,6 +1,7 @@
 package nxt.http.twophased;
 
-import nxt.http.HttpApiSuite;
+import nxt.http.AbstractHttpApiSuite;
+import nxt.http.AbstractHttpApiSuite;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.junit.runner.RunWith;
@@ -17,7 +18,7 @@ import org.junit.runners.Suite;
         TestGetCurrencyPendingTransactions.class
 })
 
-public class TwoPhasedSuite extends HttpApiSuite {
+public class TwoPhasedSuite extends AbstractHttpApiSuite {
     static boolean searchForTransactionId(JSONArray transactionsJson, String transactionId) {
         boolean found = false;
         for (Object transactionsJsonObj : transactionsJson) {
