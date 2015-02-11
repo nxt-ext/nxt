@@ -64,6 +64,11 @@ var NRS = (function(NRS, $, undefined) {
                     'title': "Alias Deletion",
                     'i18nKeyTitle': 'alias_deletion',
                     'iconHTML': "<i class='fa fa-times'></i>"
+                },
+                9: {
+                    'title': "Approve Transaction",
+                    'i18nKeyTitle': 'approve_transaction',
+                    'iconHTML': "<i class='fa fa-gavel'></i>"
                 }
             }
         },

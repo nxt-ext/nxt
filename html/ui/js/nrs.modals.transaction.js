@@ -1165,6 +1165,12 @@ var NRS = (function(NRS, $, undefined) {
 		return data;
 	};
 
+	$(document).on("click", ".approve_transaction_btn", function(e) {
+		e.preventDefault();
+		$('#approve_transaction_modal .at_transaction_full_hash_display').text($(this).data("transaction"));
+		$('#approve_transaction_modal #at_transaction_full_hash').val($(this).data("fullHash"));
+	});
+
 	$("#transaction_info_modal").on("hide.bs.modal", function(e) {
 		NRS.removeDecryptionForm($(this));
 		$("#transaction_info_output_bottom, #transaction_info_output_top, #transaction_info_bottom").html("").hide();
