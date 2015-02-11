@@ -43,52 +43,28 @@ var NRS = (function(NRS, $, undefined) {
         //Not used stub, for future use
     }
 
+    function _replaceModalHTMLTemplateDiv(data, templateName) {
+        var html = $(data).filter('div#' + templateName).html();
+        var template = Handlebars.compile(html);
+        $('div[data-replace-with-modal-template="' + templateName + '"]').each(function(i) {
+            var name = $(this).closest('.modal').attr('id').replace('_modal', '');
+            var context = { name: name };
+            $(this).replaceWith(template(context));
+        });
+    }
+
     NRS.loadModalHTMLTemplates = function(options) {
         jQuery.ajaxSetup({ async: false });
         
         $.get("html/modals/templates.html", '', function (data) {
-            var html = "";
-            var template = undefined;
-
-            html = $(data).filter('div#recipient_modal_template').html();
-            template = Handlebars.compile(html);
-            $('div[data-replace-with-modal-template="recipient_modal_template"]').each(function(i) {
-                var name = $(this).closest('.modal').attr('id').replace('_modal', '');
-                var context = { name: name };
-                $(this).replaceWith(template(context));
-            });
-
-            html = $(data).filter('div#add_message_modal_template').html();
-            template = Handlebars.compile(html);
-            $('div[data-replace-with-modal-template="add_message_modal_template"]').each(function(i) {
-                var name = $(this).closest('.modal').attr('id').replace('_modal', '');
-                var context = { name: name };
-                $(this).replaceWith(template(context));
-            });
-
-            html = $(data).filter('div#secret_phrase_modal_template').html();
-            template = Handlebars.compile(html);
-            $('div[data-replace-with-modal-template="secret_phrase_modal_template"]').each(function(i) {
-                var name = $(this).closest('.modal').attr('id').replace('_modal', '');
-                var context = { name: name };
-                $(this).replaceWith(template(context));
-            });
-
-            html = $(data).filter('div#advanced_modal_template').html();
-            template = Handlebars.compile(html);
-            $('div[data-replace-with-modal-template="advanced_modal_template"]').each(function(i) {
-                var name = $(this).closest('.modal').attr('id').replace('_modal', '');
-                var context = { name: name };
-                $(this).replaceWith(template(context));
-            });
-
-            html = $(data).filter('div#advanced_modal_no_fee_deadline_template').html();
-            template = Handlebars.compile(html);
-            $('div[data-replace-with-modal-template="advanced_modal_no_fee_deadline_template"]').each(function(i) {
-                var name = $(this).closest('.modal').attr('id').replace('_modal', '');
-                var context = { name: name };
-                $(this).replaceWith(template(context));
-            });
+            _replaceModalHTMLTemplateDiv(data, 'recipient_modal_template');
+            _replaceModalHTMLTemplateDiv(data, 'add_message_modal_template');
+            _replaceModalHTMLTemplateDiv(data, 'secret_phrase_modal_template');
+            _replaceModalHTMLTemplateDiv(data, 'advanced_fee_deadline_template');
+            _replaceModalHTMLTemplateDiv(data, 'advanced_approve_template');
+            _replaceModalHTMLTemplateDiv(data, 'advanced_rt_hash_template');
+            _replaceModalHTMLTemplateDiv(data, 'advanced_broadcast_template');
+            _replaceModalHTMLTemplateDiv(data, 'advanced_note_to_self_template');
         });
 
         jQuery.ajaxSetup({ async: true });
