@@ -296,6 +296,7 @@ var NRS = (function(NRS, $, undefined) {
 					NRS.getBlock(NRS.state.lastBlock, NRS.handleNewBlocks);
 					if (NRS.account) {
 						NRS.getNewTransactions();
+						NRS.updateApprovalPages();
 					}
 				} else {
 					if (NRS.account) {

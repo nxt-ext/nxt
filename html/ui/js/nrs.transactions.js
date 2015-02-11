@@ -199,6 +199,12 @@ var NRS = (function(NRS, $, undefined) {
 		});
 	}
 
+	NRS.updateApprovalPages = function() {
+		if (NRS.currentPage == 'approval_requests_account' || NRS.currentPage == 'approval_requests_asset_holder' || NRS.currentPage == 'approval_requests_currency_holder') {
+			NRS.loadPage(NRS.currentPage);
+		}
+	}
+
 	//todo: add to dashboard? 
 	NRS.addUnconfirmedTransaction = function(transactionId, callback) {
 		NRS.sendRequest("getTransaction", {
@@ -346,7 +352,7 @@ var NRS = (function(NRS, $, undefined) {
 		return html;
 	}
 
-	NRS.getTransactionRowHTML = function(transaction) {
+	NRS.getTransactionRowHTML = function(transaction, actions) {
 		var transactionType = $.t(NRS.transactionTypes[transaction.type]['subTypes'][transaction.subtype]['i18nKeyTitle']);
 
 		if (transaction.type == 1 && transaction.subtype == 6 && transaction.attachment.priceNQT == "0") {
@@ -406,6 +412,11 @@ var NRS = (function(NRS, $, undefined) {
 		html += "<span class='show_popover' data-content='" + (transaction.confirmed ? NRS.formatAmount(transaction.confirmations) + " " + $.t("confirmations") : $.t("unconfirmed_transaction")) + "' ";
 		html += "data-container='body' data-placement='left'>";
 		html += (!transaction.confirmed ? "-" : (transaction.confirmations > 1440 ? "1440+" : NRS.formatAmount(transaction.confirmations))) + "</span></td>";
+		if (actions) {
+			html += '<td style="text-align:right;">';
+			html += "Approve";
+			html += "</td>";
+		}
 		html += "</tr>";
 		return html;
 	}
@@ -501,9 +512,12 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.displayPendingTransactions = function() {
-		NRS.sendRequest("getAccountPendingTransactions", {
-			"account": NRS.account
-		}, function(response) {
+		var params = {
+			"account": NRS.account,
+			"firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
+			"lastIndex": NRS.pageNumber * NRS.itemsPerPage
+		};
+		NRS.sendRequest("getAccountPendingTransactions", params, function(response) {
 			var rows = "";
 
 			if (response.transactions && response.transactions.length) {
@@ -581,6 +595,26 @@ var NRS = (function(NRS, $, undefined) {
 		});
 	}
 
+	NRS.pages.approval_requests_account = function() {
+		var params = {
+			"account": NRS.account,
+			"firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
+			"lastIndex": NRS.pageNumber * NRS.itemsPerPage
+		};
+		NRS.sendRequest("getVoterPendingTransactions", params, function(response) {
+			var rows = "";
+
+			if (response.transactions && response.transactions.length) {
+				for (var i = 0; i < response.transactions.length; i++) {
+					t = response.transactions[i];
+					t.confirmed = true;
+					rows += NRS.getTransactionRowHTML(t, ['approve']);
+				}
+			}
+			NRS.dataLoaded(rows);
+		});
+	}
+
 	NRS.incoming.transactions = function(transactions) {
 		NRS.loadPage("transactions");
 	}
@@ -609,7 +643,7 @@ var NRS = (function(NRS, $, undefined) {
 		options = {
 			"titleHTML": '<span data-i18n="approval_requests">Approval Requests</span>',
 			"type": 'PAGE',
-			"page": 'transactions'
+			"page": 'approval_requests_account'
 		}
 		NRS.appendToTSMenuItem(sidebarId, options);
 	}
