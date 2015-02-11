@@ -47,7 +47,7 @@ public class TestCreateTwoPhased extends BlockchainTest {
             param("phasingVotingModel", VoteWeighting.VotingModel.ACCOUNT.getCode());
             param("phasingQuorum", 1);
             param("phasingWhitelisted", Convert.toUnsignedLong(id3));
-            param("phasingFinishHeight", height + 15);
+            param("phasingFinishHeight", height + 50);
         }
 
         public TwoPhasedMoneyTransferBuilder votingModel(byte model) {
