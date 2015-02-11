@@ -79,6 +79,11 @@ public class TestCreateTwoPhased extends BlockchainTest {
             param("phasingBlacklisted", Convert.toUnsignedLong(accountId));
             return this;
         }
+
+        public TwoPhasedMoneyTransferBuilder holding(long accountId) {
+            param("phasingHolding", Convert.toUnsignedLong(accountId));
+            return this;
+        }
     }
 
 
