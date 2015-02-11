@@ -73,7 +73,8 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
 
         byte minBalanceModel = ParameterParser.getByte(req, "phasingMinBalanceModel", (byte)0, (byte)3, false);
 
-        long holdingId = ParameterParser.getLong(req, "phasingHolding", Long.MIN_VALUE, Long.MAX_VALUE, false);
+        long holdingId = ParameterParser.getLong(req, "phasingHolding", Long.MIN_VALUE, Long.MAX_VALUE, false, true);
+
         if ((votingModel == VoteWeighting.VotingModel.ASSET.getCode() || votingModel == VoteWeighting.VotingModel.CURRENCY.getCode())
                 && holdingId == 0) {
             throw new ParameterException(MISSING_PENDING_HOLDING_ID);
