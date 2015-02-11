@@ -69,7 +69,13 @@ final class ParameterParser {
         return value;
     }
 
-    static long getLong(HttpServletRequest req, String name, long min, long max, boolean isMandatory) throws ParameterException {
+    static long getLong(HttpServletRequest req, String name, long min, long max,
+                        boolean isMandatory) throws ParameterException {
+        return getLong(req, name, min, max, isMandatory, false);
+    }
+
+    static long getLong(HttpServletRequest req, String name, long min, long max,
+                        boolean isMandatory, boolean encoded) throws ParameterException {
         String paramValue = Convert.emptyToNull(req.getParameter(name));
         if (paramValue == null) {
             if (isMandatory) {
@@ -79,7 +85,11 @@ final class ParameterParser {
         }
         long value;
         try {
-            value = Long.parseLong(paramValue);
+            if(encoded){
+                value = Convert.parseUnsignedLong(paramValue);
+            }else {
+                value = Long.parseLong(paramValue);
+            }
         } catch (RuntimeException e) {
             throw new ParameterException(incorrect(name));
         }
