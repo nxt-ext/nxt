@@ -139,7 +139,7 @@ var NRS = (function(NRS, $, undefined) {
 					NRS.publicKey = String(response.publicKey).escapeHTML();
 				}
 				$("#account_id").html(String(NRS.accountRS).escapeHTML()).css("font-size", "12px");
-				console.log(NRS.account + "::"+ NRS.accountRS + "::"+NRS.publicKey);
+
 				if (NRS.state) {
 					NRS.checkBlockHeight();
 				}
@@ -151,6 +151,11 @@ var NRS = (function(NRS, $, undefined) {
 						NRS.isLeased = false;
 					}
 				});
+				
+				$("#forging_indicator").removeClass("forging");
+				$("#forging_indicator span").html($.t("not_forging")).attr("data-i18n", "not_forging");
+				$("#forging_indicator").show();
+				NRS.isForging = false;
 				
 				NRS.unlock();
 
@@ -169,6 +174,14 @@ var NRS = (function(NRS, $, undefined) {
 				if (callback) {
 					callback();
 				}
+
+				$.each(NRS.pages, function(key, value) {
+					if(key in NRS.setup) {
+						NRS.setup[key]();
+					}
+				});
+				$(".sidebar .treeview").tree();
+				$('#dashboard_link a').addClass("ignore").click();
 
 				NRS.getInitialTransactions();
 			});
