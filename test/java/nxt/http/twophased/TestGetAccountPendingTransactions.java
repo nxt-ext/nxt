@@ -12,7 +12,7 @@ import org.junit.Test;
 
 public class TestGetAccountPendingTransactions extends BlockchainTest {
 
-    private APICall pendingTransactionsApiCall() {
+    static APICall pendingTransactionsApiCall() {
         return new APICall.Builder("getAccountPendingTransactions")
                 .param("account", Convert.toUnsignedLong(id1))
                 .param("firstIndex", 0)

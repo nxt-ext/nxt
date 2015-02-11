@@ -7,9 +7,13 @@ import nxt.VoteWeighting;
 import nxt.http.APICall;
 import nxt.util.Convert;
 import nxt.util.Logger;
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.junit.Assert;
 import org.junit.Test;
+
+import java.util.ArrayList;
+import java.util.List;
 
 
 public class TestCreateTwoPhased extends BlockchainTest {
@@ -89,13 +93,13 @@ public class TestCreateTwoPhased extends BlockchainTest {
 
 
     @Test
-    public void createValidtwoPhasedMoneyTransfer() {
+    public void validMoneyTransfer() {
         APICall apiCall = new TwoPhasedMoneyTransferBuilder().build();
         issueCreateTwoPhased(apiCall, false);
     }
 
     @Test
-    public void createInvalidtwoPhasedMoneyTransfer() {
+    public void invalidMoneyTransfer() {
         int height = Nxt.getBlockchain().getHeight();
 
         APICall apiCall = new TwoPhasedMoneyTransferBuilder().maxHeight(height + 5).build();
@@ -117,5 +121,28 @@ public class TestCreateTwoPhased extends BlockchainTest {
                 .minBalance(50, VoteWeighting.MinBalanceModel.ASSET.getCode())
                 .build();
         issueCreateTwoPhased(apiCall, true);
+    }
+
+    @Test
+    public void unconfirmed() {
+        List<String> transactionIds = new ArrayList<>(10);
+
+        for(int i=0; i < 10; i++){
+            APICall apiCall = new TwoPhasedMoneyTransferBuilder().build();
+            JSONObject transactionJSON = issueCreateTwoPhased(apiCall, false);
+            String idString = (String) transactionJSON.get("transaction");
+            transactionIds.add(idString);
+        }
+
+        APICall apiCall = new TwoPhasedMoneyTransferBuilder().build();
+        JSONObject unconfirmed = apiCall.invoke();
+
+        JSONObject response = TestGetAccountPendingTransactions.pendingTransactionsApiCall().invoke();
+        Logger.logMessage("getAccountPendingTransactionsResponse:" + response.toJSONString());
+        JSONArray transactionsJson = (JSONArray) response.get("transactions");
+
+        for(String idString:transactionIds){
+            Assert.assertTrue(TwoPhasedSuite.searchForTransactionId(transactionsJson, idString));
+        }
     }
 }
