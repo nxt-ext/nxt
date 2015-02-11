@@ -8,7 +8,7 @@ import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 
-public class HttpApiSuite {
+public abstract class AbstractHttpApiSuite {
     @BeforeClass
     public static void init() {
         Nxt.init();

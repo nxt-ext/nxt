@@ -146,6 +146,7 @@ public class PhasingPoll extends AbstractPoll {
                     "AND phasing_poll.id = transaction.id " +
                     "AND phasing_poll.finished = FALSE " +
                     "AND phasing_poll.latest = TRUE " +
+                    "ORDER BY transaction.height DESC " +
                     DbUtils.limitsClause(from, to));
             pstmt.setLong(1, holdingId);
             pstmt.setByte(2, votingModel.getCode());
@@ -165,6 +166,7 @@ public class PhasingPoll extends AbstractPoll {
             PreparedStatement pstmt = con.prepareStatement("SELECT transaction.* FROM transaction, phasing_poll " +
                     " WHERE phasing_poll.account_id = ? AND phasing_poll.id = transaction.id " +
                     " AND phasing_poll.finished = FALSE AND phasing_poll.latest = TRUE " +
+                    " ORDER BY transaction.height DESC " +
                     DbUtils.limitsClause(from, to));
             pstmt.setLong(1, sender.getId());
             DbUtils.setLimits(2, pstmt, from, to);

@@ -17,7 +17,7 @@ public class TestGetVoterPendingTransactions extends BlockchainTest {
     public void simpleTransactionLookup() {
         APICall apiCall = new TwoPhasedMoneyTransferBuilder().build();
         JSONObject transactionJSON = TestCreateTwoPhased.issueCreateTwoPhased(apiCall, false);
-        String transactionId = (String)transactionJSON.get("transaction");
+        String transactionId = (String) transactionJSON.get("transaction");
 
         generateBlock();
 
@@ -40,7 +40,7 @@ public class TestGetVoterPendingTransactions extends BlockchainTest {
                 .quorum(3)
                 .build();
         JSONObject transactionJSON = TestCreateTwoPhased.issueCreateTwoPhased(apiCall, false);
-        String transactionId = (String)transactionJSON.get("transaction");
+        String transactionId = (String) transactionJSON.get("transaction");
 
         generateBlock();
 
