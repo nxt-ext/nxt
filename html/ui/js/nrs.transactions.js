@@ -384,13 +384,13 @@ var NRS = (function(NRS, $, undefined) {
 		var html = "";
 		html += "<tr>";
 		
-		html += "<td>";
+		html += "<td style='vertical-align:middle;'>";
   		html += "<a href='#' data-timestamp='" + String(transaction.timestamp).escapeHTML() + "' ";
   		html += "data-transaction='" + String(transaction.transaction).escapeHTML() + "'>";
   		html += NRS.formatTimestamp(transaction.timestamp) + "</a>";
   		html += "</td>";
 
-  		html += "<td style='text-align:center;'>" + (hasMessage ? "&nbsp; <i class='fa fa-envelope-o'></i>&nbsp;" : "&nbsp;") + "</td>";
+  		html += "<td style='vertical-align:middle;text-align:center;'>" + (hasMessage ? "&nbsp; <i class='fa fa-envelope-o'></i>&nbsp;" : "&nbsp;") + "</td>";
 		
 		var iconHTML = NRS.transactionTypes[transaction.type]['iconHTML'] + " " + NRS.transactionTypes[transaction.type]['subTypes'][transaction.subtype]['iconHTML'];
 		html += '<td style="vertical-align:middle;">';
@@ -406,15 +406,17 @@ var NRS = (function(NRS, $, undefined) {
 		html += "<td>" + ((NRS.getAccountLink(transaction, "sender") == "/" && transaction.type == 2) ? "Asset Exchange" : NRS.getAccountLink(transaction, "sender")) + " ";
 		html += "<i class='fa fa-arrow-circle-right' style='color:#777;'></i> " + ((NRS.getAccountLink(transaction, "recipient") == "/" && transaction.type == 2) ? "Asset Exchange" : NRS.getAccountLink(transaction, "recipient")) + "</td>";
 
-		html += "<td style='text-align:center;'>" + NRS.getPendingTransactionHTML(transaction) + "</td>";
+		html += "<td style='vertical-align:middle;text-align:center;'>" + NRS.getPendingTransactionHTML(transaction) + "</td>";
 
 		html += "<td class='confirmations' style='vertical-align:middle;text-align:center;font-size:12px;'>";
 		html += "<span class='show_popover' data-content='" + (transaction.confirmed ? NRS.formatAmount(transaction.confirmations) + " " + $.t("confirmations") : $.t("unconfirmed_transaction")) + "' ";
 		html += "data-container='body' data-placement='left'>";
 		html += (!transaction.confirmed ? "-" : (transaction.confirmations > 1440 ? "1440+" : NRS.formatAmount(transaction.confirmations))) + "</span></td>";
 		if (actions) {
-			html += '<td style="text-align:right;">';
-			html += "Approve";
+			html += '<td style="vertical-align:middle;text-align:right;">';
+			html += "<a class='btn btn-xs btn-default approve_transaction_btn' href='#' data-toggle='modal' data-target='#approve_transaction_modal' ";
+			html += "data-transaction='" + String(transaction.transaction).escapeHTML() + "' data-full-hash='" + String(transaction.fullHash).escapeHTML() + "' ";
+			html += "data-i18n='approve'>Approve</a>";
 			html += "</td>";
 		}
 		html += "</tr>";
