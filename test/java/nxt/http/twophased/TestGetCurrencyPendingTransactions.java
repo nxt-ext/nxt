@@ -10,27 +10,26 @@ import org.json.simple.JSONObject;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class TestGetAssetPendingTransactions extends BlockchainTest {
-
+public class TestGetCurrencyPendingTransactions extends BlockchainTest {
     @Test
     public void simpleTransactionLookup() {
-        String asset = "18055555436405339905";
+        String currency = "17287739300802062230";
 
         APICall apiCall = new TestCreateTwoPhased.TwoPhasedMoneyTransferBuilder()
-                .votingModel(VoteWeighting.VotingModel.ASSET.getCode())
-                .holding(Convert.parseUnsignedLong(asset))
-                .minBalance(1, VoteWeighting.MinBalanceModel.ASSET.getCode())
+                .votingModel(VoteWeighting.VotingModel.CURRENCY.getCode())
+                .holding(Convert.parseUnsignedLong(currency))
+                .minBalance(1, VoteWeighting.MinBalanceModel.CURRENCY.getCode())
                 .build();
         JSONObject transactionJSON = TestCreateTwoPhased.issueCreateTwoPhased(apiCall, false);
 
-        apiCall = new APICall.Builder("getAssetPendingTransactions")
-                .param("asset", asset)
+        apiCall = new APICall.Builder("getCurrencyPendingTransactions")
+                .param("currency", currency)
                 .param("firstIndex", 0)
                 .param("lastIndex", 10)
                 .build();
 
         JSONObject response = apiCall.invoke();
-        Logger.logMessage("getAssetPendingTransactionsResponse:" + response.toJSONString());
+        Logger.logMessage("getCurrencyPendingTransactionsResponse:" + response.toJSONString());
         JSONArray transactionsJson = (JSONArray) response.get("transactions");
         Assert.assertTrue(TwoPhasedSuite.searchForTransactionId(transactionsJson, (String) transactionJSON.get("transaction")));
     }
