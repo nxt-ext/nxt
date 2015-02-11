@@ -60,8 +60,9 @@ public class TestCreateTwoPhased extends BlockchainTest {
             return this;
         }
 
-        public TwoPhasedMoneyTransferBuilder minBalance(long minBalance) {
+        public TwoPhasedMoneyTransferBuilder minBalance(long minBalance, byte minBalanceModel) {
             param("phasingMinBalance", minBalance);
+            param("phasingMinBalanceModel", minBalanceModel);
             return this;
         }
 
@@ -113,7 +114,8 @@ public class TestCreateTwoPhased extends BlockchainTest {
         issueCreateTwoPhased(apiCall, true);
 
         apiCall = new TwoPhasedMoneyTransferBuilder().votingModel(VoteWeighting.VotingModel.ASSET.getCode())
-                .minBalance(50).build();
+                .minBalance(50, VoteWeighting.MinBalanceModel.ASSET.getCode())
+                .build();
         issueCreateTwoPhased(apiCall, true);
     }
 }

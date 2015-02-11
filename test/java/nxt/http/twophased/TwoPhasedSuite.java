@@ -12,7 +12,8 @@ import org.junit.runners.Suite;
         TestGetVoterPendingTransactions.class,
         TestApproveTransaction.class,
         TestGetPendingTransactionVotes.class,
-        TestGetAccountPendingTransactions.class
+        TestGetAccountPendingTransactions.class,
+        TestGetAssetPendingTransactions.class
 })
 
 public class TwoPhasedSuite extends HttpApiSuite {
