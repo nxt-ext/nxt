@@ -27,7 +27,7 @@ public class TestApproveTransaction extends BlockchainTest {
 
         apiCall = new APICall.Builder("approveTransaction")
                 .param("secretPhrase", secretPhrase3)
-                .param("transactionFullHash", (String)transactionJSON.get("fullHash"))
+                .param("transactionFullHash", (String) transactionJSON.get("fullHash"))
                 .param("feeNQT", fee)
                 .build();
 
@@ -57,7 +57,7 @@ public class TestApproveTransaction extends BlockchainTest {
 
         apiCall = new APICall.Builder("approveTransaction")
                 .param("secretPhrase", secretPhrase4)
-                .param("transactionFullHash", (String)transactionJSON.get("fullHash"))
+                .param("transactionFullHash", (String) transactionJSON.get("fullHash"))
                 .param("feeNQT", fee)
                 .build();
 

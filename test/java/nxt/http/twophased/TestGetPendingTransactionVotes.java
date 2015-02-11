@@ -19,8 +19,8 @@ public class TestGetPendingTransactionVotes extends BlockchainTest {
                 .quorum(3)
                 .build();
         JSONObject transactionJSON = TestCreateTwoPhased.issueCreateTwoPhased(apiCall, false);
-        String fullHash = (String)transactionJSON.get("fullHash");
-        String transactionId = (String)transactionJSON.get("transaction");
+        String fullHash = (String) transactionJSON.get("fullHash");
+        String transactionId = (String) transactionJSON.get("transaction");
 
         generateBlock();
 
@@ -54,7 +54,7 @@ public class TestGetPendingTransactionVotes extends BlockchainTest {
         Assert.assertNull(response.get("errorCode"));
         Assert.assertEquals(1, ((Long) response.get("votes")).intValue());
         Assert.assertNotNull(response.get("voters"));
-        Assert.assertEquals(1, ((JSONArray)response.get("voters")).size());
+        Assert.assertEquals(1, ((JSONArray) response.get("voters")).size());
     }
 
 }

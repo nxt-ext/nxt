@@ -11,6 +11,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 public class TestGetCurrencyPendingTransactions extends BlockchainTest {
+
     @Test
     public void simpleTransactionLookup() {
         String currency = "17287739300802062230";

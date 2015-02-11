@@ -12,7 +12,7 @@ import org.junit.Test;
 
 public class TestGetAccountPendingTransactions extends BlockchainTest {
 
-    private APICall pendingTransactionsApiCall(){
+    private APICall pendingTransactionsApiCall() {
         return new APICall.Builder("getAccountPendingTransactions")
                 .param("account", Convert.toUnsignedLong(id1))
                 .param("firstIndex", 0)
@@ -28,7 +28,7 @@ public class TestGetAccountPendingTransactions extends BlockchainTest {
         JSONObject response = pendingTransactionsApiCall().invoke();
         Logger.logMessage("getAccountPendingTransactionsResponse:" + response.toJSONString());
         JSONArray transactionsJson = (JSONArray) response.get("transactions");
-        Assert.assertTrue(TwoPhasedSuite.searchForTransactionId(transactionsJson, (String)transactionJSON.get("transaction")));
+        Assert.assertTrue(TwoPhasedSuite.searchForTransactionId(transactionsJson, (String) transactionJSON.get("transaction")));
     }
 
     @Test
@@ -69,7 +69,7 @@ public class TestGetAccountPendingTransactions extends BlockchainTest {
         int prevHeight = Integer.MAX_VALUE;
         for (Object transactionsJsonObj : transactionsJson) {
             JSONObject transactionObject = (JSONObject) transactionsJsonObj;
-            int height = ((Long)transactionObject.get("height")).intValue();
+            int height = ((Long) transactionObject.get("height")).intValue();
             Assert.assertTrue(height <= prevHeight);
             prevHeight = height;
         }

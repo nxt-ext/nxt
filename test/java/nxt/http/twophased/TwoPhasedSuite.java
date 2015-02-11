@@ -18,16 +18,17 @@ import org.junit.runners.Suite;
 })
 
 public class TwoPhasedSuite extends HttpApiSuite {
-        static boolean searchForTransactionId(JSONArray transactionsJson, String transactionId){
-                boolean found = false;
-                for (Object transactionsJsonObj : transactionsJson) {
-                        JSONObject transactionObject = (JSONObject) transactionsJsonObj;
-                        String iteratedTransactionId = (String) transactionObject.get("transaction");
-                        if (iteratedTransactionId.equals(transactionId)) {
-                                found = true; break;
-                        }
-                }
-                return found;
+    static boolean searchForTransactionId(JSONArray transactionsJson, String transactionId) {
+        boolean found = false;
+        for (Object transactionsJsonObj : transactionsJson) {
+            JSONObject transactionObject = (JSONObject) transactionsJsonObj;
+            String iteratedTransactionId = (String) transactionObject.get("transaction");
+            if (iteratedTransactionId.equals(transactionId)) {
+                found = true;
+                break;
+            }
         }
+        return found;
+    }
 }
 
