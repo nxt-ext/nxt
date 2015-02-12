@@ -1181,6 +1181,10 @@ var NRS = (function(NRS, $, undefined) {
 		$('#approve_transaction_modal #at_transaction_full_hash').val($(this).data("fullHash"));
 	});
 
+	$("#approve_transaction_button").on("click", function(e) {
+		$('.approve_transaction_btn[data-full-hash="' + $("#at_transaction_full_hash").val() + '"]').addClass("disabled");
+	});
+
 	$("#transaction_info_modal").on("hide.bs.modal", function(e) {
 		NRS.removeDecryptionForm($(this));
 		$("#transaction_info_output_bottom, #transaction_info_output_top, #transaction_info_bottom").html("").hide();

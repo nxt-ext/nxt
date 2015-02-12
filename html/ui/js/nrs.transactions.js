@@ -199,13 +199,6 @@ var NRS = (function(NRS, $, undefined) {
 		});
 	}
 
-	NRS.updateApprovalPages = function() {
-		var pages = ['approval_requests_account'] //'approval_requests_asset_holder', 'approval_requests_currency_holder'
-		$.each(pages, function(key, page) {
-			NRS.loadPage(page);
-		});
-	}
-
 	//todo: add to dashboard? 
 	NRS.addUnconfirmedTransaction = function(transactionId, callback) {
 		NRS.sendRequest("getTransaction", {
@@ -414,10 +407,24 @@ var NRS = (function(NRS, $, undefined) {
 		html += "data-container='body' data-placement='left'>";
 		html += (!transaction.confirmed ? "-" : (transaction.confirmations > 1440 ? "1440+" : NRS.formatAmount(transaction.confirmations))) + "</span></td>";
 		if (actions) {
+			var disabledHTML = "";
+			var unconfirmedTransactions = NRS.unconfirmedTransactions;
+			if (unconfirmedTransactions) {
+				for (var i = 0; i < unconfirmedTransactions.length; i++) {
+					var ut = unconfirmedTransactions[i];
+					if (ut.attachment && ut.attachment["version.PhasingVoteCasting"] && ut.attachment.transactionFullHashes && ut.attachment.transactionFullHashes.length > 0) {
+						if (ut.attachment.transactionFullHashes[0] == transaction.fullHash) {
+						disabledHTML = "disabled";
+						console.log(disabledHTML);
+					}
+					}
+				}
+			}
+
 			html += '<td style="vertical-align:middle;text-align:right;">';
-			html += "<a class='btn btn-xs btn-default approve_transaction_btn' href='#' data-toggle='modal' data-target='#approve_transaction_modal' ";
+			html += "<a class='btn btn-xs btn-default approve_transaction_btn " + disabledHTML + "' href='#' data-toggle='modal' data-target='#approve_transaction_modal' ";
 			html += "data-transaction='" + String(transaction.transaction).escapeHTML() + "' data-full-hash='" + String(transaction.fullHash).escapeHTML() + "' ";
-			html += "data-i18n='approve'>Approve</a>";
+			html += "data-i18n='approve' >Approve</a>";
 			html += "</td>";
 		}
 		html += "</tr>";
@@ -599,6 +606,13 @@ var NRS = (function(NRS, $, undefined) {
 			} else {
 				NRS.dataLoaded(rows);
 			}
+		});
+	}
+
+	NRS.updateApprovalPages = function() {
+		var pages = ['approval_requests_account'] //'approval_requests_asset_holder', 'approval_requests_currency_holder'
+		$.each(pages, function(key, page) {
+			NRS.loadPage(page);
 		});
 	}
 

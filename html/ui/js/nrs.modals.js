@@ -321,6 +321,8 @@ var NRS = (function(NRS, $, undefined) {
 		} else {
 			$(this).text($.t("advanced"));
 		}
+		// Close accidentally triggered popovers
+		$(".show_popover").popover("hide");
 	});
 
 
