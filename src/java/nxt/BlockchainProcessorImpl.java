@@ -611,6 +611,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             Logger.logMessage("Genesis block already in database");
             BlockImpl lastBlock = BlockDb.findLastBlock();
             blockchain.setLastBlock(lastBlock);
+            popOffTo(lastBlock);
             Logger.logMessage("Last block height: " + lastBlock.getHeight());
             return;
         }
@@ -1187,7 +1188,9 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                                 }
                             }
                             BlockDb.deleteBlocksFrom(currentBlockId);
-                            blockchain.setLastBlock(BlockDb.findLastBlock());
+                            BlockImpl lastBlock = BlockDb.findLastBlock();
+                            blockchain.setLastBlock(lastBlock);
+                            popOffTo(lastBlock);
                         }
                         blockListeners.notify(currentBlock, Event.BLOCK_SCANNED);
                     }
