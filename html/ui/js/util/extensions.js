@@ -89,7 +89,7 @@ $.fn.hasAttr = function(name) {
 		options = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
 		pattern = /(^|\s)((?:https?|ftp):\/\/[\-A-Z0-9+\u0026\u2019@#\/%?=()~_|!:,.;]*[\-A-Z0-9+\u0026@#\/%=~()_|])/gi;
 
-		return this.replace(pattern, "$1<a href='$2' target='_blank'>$2</a>");
+		return output.replace(pattern, "$1<a href='$2' target='_blank'>$2</a>");
 	};
 
 	String.prototype['autoLink'] = autoLink;

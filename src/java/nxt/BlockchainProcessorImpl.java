@@ -611,6 +611,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             Logger.logMessage("Genesis block already in database");
             BlockImpl lastBlock = BlockDb.findLastBlock();
             blockchain.setLastBlock(lastBlock);
+            popOffTo(lastBlock);
             Logger.logMessage("Last block height: " + lastBlock.getHeight());
             return;
         }
@@ -812,6 +813,14 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
 
     private List<BlockImpl> popOffTo(Block commonBlock) {
         synchronized (blockchain) {
+            if (!Db.db.isInTransaction()) {
+                try {
+                    Db.db.beginTransaction();
+                    return popOffTo(commonBlock);
+                } finally {
+                    Db.db.endTransaction();
+                }
+            }
             if (commonBlock.getHeight() < getMinRollbackHeight()) {
                 throw new IllegalArgumentException("Rollback to height " + commonBlock.getHeight() + " not supported, "
                         + "current height " + Nxt.getBlockchain().getHeight());
@@ -822,7 +831,6 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             }
             List<BlockImpl> poppedOffBlocks = new ArrayList<>();
             try {
-                Db.db.beginTransaction();
                 BlockImpl block = blockchain.getLastBlock();
                 block.getTransactions();
                 Logger.logDebugMessage("Rollback from " + block.getHeight() + " to " + commonBlock.getHeight());
@@ -835,11 +843,12 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 }
                 Db.db.commitTransaction();
             } catch (RuntimeException e) {
+                Logger.logErrorMessage("Error popping off to " + commonBlock.getHeight() + ", " + e.toString());
                 Db.db.rollbackTransaction();
-                Logger.logDebugMessage("Error popping off to " + commonBlock.getHeight(), e);
+                BlockImpl lastBlock = BlockDb.findLastBlock();
+                blockchain.setLastBlock(lastBlock);
+                popOffTo(lastBlock);
                 throw e;
-            } finally {
-                Db.db.endTransaction();
             }
             return poppedOffBlocks;
         } // synchronized
@@ -1086,7 +1095,6 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                  PreparedStatement pstmtSelect = con.prepareStatement("SELECT * FROM block WHERE height >= ? ORDER BY db_id ASC");
                  PreparedStatement pstmtDone = con.prepareStatement("UPDATE scan SET rescan = FALSE, height = 0, validate = FALSE")) {
                 isScanning = true;
-                transactionProcessor.requeueAllUnconfirmedTransactions();
                 for (DerivedDbTable table : derivedTables) {
                     if (height == 0) {
                         table.truncate();
@@ -1180,7 +1188,9 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                                 }
                             }
                             BlockDb.deleteBlocksFrom(currentBlockId);
-                            blockchain.setLastBlock(BlockDb.findLastBlock());
+                            BlockImpl lastBlock = BlockDb.findLastBlock();
+                            blockchain.setLastBlock(lastBlock);
+                            popOffTo(lastBlock);
                         }
                         blockListeners.notify(currentBlock, Event.BLOCK_SCANNED);
                     }

@@ -80,7 +80,7 @@ var NRS = (function(NRS, $, undefined) {
 				$("#currency_current_supply").html(NRS.convertToQNTf(response.currentSupply, response.decimals).escapeHTML());
 				$("#currency_max_supply").html(NRS.convertToQNTf(response.maxSupply, response.decimals).escapeHTML());
 				$("#currency_decimals").html(String(response.decimals).escapeHTML());
-				$("#currency_description").html(String(response.description).escapeHTML());
+				$("#currency_description").html(String(response.description).autoLink());
 				var buyCurrencyButton = $("#buy_currency_button");
 				buyCurrencyButton.data("currency", currencyId);
 				buyCurrencyButton.data("decimals", response.decimals);
