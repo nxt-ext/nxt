@@ -11,27 +11,51 @@ import org.junit.Assert;
 import org.junit.Test;
 
 public class TestGetCurrencyPendingTransactions extends BlockchainTest {
+    private static String currency = "17287739300802062230";
 
-    @Test
-    public void simpleTransactionLookup() {
-        String currency = "17287739300802062230";
+    static APICall pendingTransactionsApiCall() {
+        return new APICall.Builder("getCurrencyPendingTransactions")
+                .param("currency", currency)
+                .param("firstIndex", 0)
+                .param("lastIndex", 20)
+                .build();
+    }
 
-        APICall apiCall = new TestCreateTwoPhased.TwoPhasedMoneyTransferBuilder()
+    private APICall byCurrencyApiCall(){
+        return new TestCreateTwoPhased.TwoPhasedMoneyTransferBuilder()
                 .votingModel(VoteWeighting.VotingModel.CURRENCY.getCode())
                 .holding(Convert.parseUnsignedLong(currency))
                 .minBalance(1, VoteWeighting.MinBalanceModel.CURRENCY.getCode())
                 .build();
-        JSONObject transactionJSON = TestCreateTwoPhased.issueCreateTwoPhased(apiCall, false);
+    }
 
-        apiCall = new APICall.Builder("getCurrencyPendingTransactions")
-                .param("currency", currency)
-                .param("firstIndex", 0)
-                .param("lastIndex", 10)
-                .build();
-
-        JSONObject response = apiCall.invoke();
+    @Test
+    public void simpleTransactionLookup() {
+        JSONObject transactionJSON = TestCreateTwoPhased.issueCreateTwoPhased(byCurrencyApiCall(), false);
+        JSONObject response = pendingTransactionsApiCall().invoke();
         Logger.logMessage("getCurrencyPendingTransactionsResponse:" + response.toJSONString());
         JSONArray transactionsJson = (JSONArray) response.get("transactions");
         Assert.assertTrue(TwoPhasedSuite.searchForTransactionId(transactionsJson, (String) transactionJSON.get("transaction")));
     }
+
+    @Test
+    public void sorting() {
+        for (int i = 0; i < 15; i++) {
+            TestCreateTwoPhased.issueCreateTwoPhased(byCurrencyApiCall(), false);
+        }
+
+        JSONObject response = pendingTransactionsApiCall().invoke();
+        Logger.logMessage("getCurrencyPendingTransactionsResponse:" + response.toJSONString());
+        JSONArray transactionsJson = (JSONArray) response.get("transactions");
+
+        //sorting check
+        int prevHeight = Integer.MAX_VALUE;
+        for (Object transactionsJsonObj : transactionsJson) {
+            JSONObject transactionObject = (JSONObject) transactionsJsonObj;
+            int height = ((Long) transactionObject.get("height")).intValue();
+            Assert.assertTrue(height <= prevHeight);
+            prevHeight = height;
+        }
+    }
+
 }
