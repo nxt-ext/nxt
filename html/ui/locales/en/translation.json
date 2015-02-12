@@ -55,6 +55,7 @@
   "all_currencies": "All Currencies",
   "all_exchanges": "All Exchanges",
   "all_transactions": "All Transactions",
+  "transaction_approval": "Transaction Approval",
   "amount": "Amount",
   "amount_per_share": "Amount Per Share",
   "amount_per_unit": "Amount Per Unit",

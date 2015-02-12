@@ -123,10 +123,10 @@ var NRS = (function(NRS, $, undefined) {
 				rows += NRS.getTransactionRowHTML(transaction);
 			}
 
-			$("#dashboard_transactions_table tbody").empty().append(rows);
+			$("#dashboard_table tbody").empty().append(rows);
 		}
 
-		NRS.dataLoadFinished($("#dashboard_transactions_table"));
+		NRS.dataLoadFinished($("#dashboard_table"));
 	}
 
 	NRS.getInitialTransactions = function() {
@@ -200,9 +200,10 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.updateApprovalPages = function() {
-		if (NRS.currentPage == 'approval_requests_account' || NRS.currentPage == 'approval_requests_asset_holder' || NRS.currentPage == 'approval_requests_currency_holder') {
-			NRS.loadPage(NRS.currentPage);
-		}
+		var pages = ['approval_requests_account'] //'approval_requests_asset_holder', 'approval_requests_currency_holder'
+		$.each(pages, function(key, page) {
+			NRS.loadPage(page);
+		});
 	}
 
 	//todo: add to dashboard? 
@@ -423,36 +424,6 @@ var NRS = (function(NRS, $, undefined) {
 		return html;
 	}
 
-	NRS.incoming.dashboard = function() {
-		var rows = "";
-		var params = {
-			"account": NRS.account,
-			"firstIndex": 0,
-			"lastIndex": 9
-		};
-		
-		var unconfirmedTransactions = NRS.unconfirmedTransactions;
-		if (unconfirmedTransactions) {
-			for (var i = 0; i < unconfirmedTransactions.length; i++) {
-				rows += NRS.getTransactionRowHTML(unconfirmedTransactions[i]);
-			}
-		}
-
-		NRS.sendRequest("getAccountTransactions+", params, function(response) {
-			if (response.transactions && response.transactions.length) {
-				for (var i = 0; i < response.transactions.length; i++) {
-					var transaction = response.transactions[i];
-					transaction.confirmed = true;
-					rows += NRS.getTransactionRowHTML(transaction);
-				}
-
-				$("#dashboard_transactions_table tbody").empty().append(rows);
-			} else {
-				$("#dashboard_transactions_table tbody").empty().append(rows);
-			}
-		});
-	}
-
 	NRS.buildTransactionsTypeNavi = function() {
 		var html = '';
 		html += '<li role="presentation" class="active"><a href="#" data-transaction-type="" ';
@@ -533,6 +504,40 @@ var NRS = (function(NRS, $, undefined) {
 		});
 	}
 
+	NRS.pages.dashboard = function() {
+		var rows = "";
+		var params = {
+			"account": NRS.account,
+			"firstIndex": 0,
+			"lastIndex": 9
+		};
+		
+		var unconfirmedTransactions = NRS.unconfirmedTransactions;
+		if (unconfirmedTransactions) {
+			for (var i = 0; i < unconfirmedTransactions.length; i++) {
+				rows += NRS.getTransactionRowHTML(unconfirmedTransactions[i]);
+			}
+		}
+
+		NRS.sendRequest("getAccountTransactions+", params, function(response) {
+			if (response.transactions && response.transactions.length) {
+				for (var i = 0; i < response.transactions.length; i++) {
+					var transaction = response.transactions[i];
+					transaction.confirmed = true;
+					rows += NRS.getTransactionRowHTML(transaction);
+				}
+
+				NRS.dataLoaded(rows);
+			} else {
+				NRS.dataLoaded(rows);
+			}
+		});
+	}
+
+	NRS.incoming.dashboard = function() {
+		NRS.loadPage("dashboard");
+	}
+
 	NRS.pages.transactions = function() {
 		if ($('#transactions_type_navi').children().length == 0) {
 			NRS.buildTransactionsTypeNavi();
@@ -606,7 +611,14 @@ var NRS = (function(NRS, $, undefined) {
 		NRS.sendRequest("getVoterPendingTransactions", params, function(response) {
 			var rows = "";
 
-			if (response.transactions && response.transactions.length) {
+			if (response.transactions && response.transactions.length != undefined) {
+				var $badge = $('#dashboard_link .sm_treeview_submenu a[data-page="approval_requests_account"] span.badge');
+				if (response.transactions.length == 0) {
+					$badge.hide();
+				} else {
+					$badge.text(response.transactions.length);
+					$badge.show();
+				}
 				for (var i = 0; i < response.transactions.length; i++) {
 					t = response.transactions[i];
 					t.confirmed = true;

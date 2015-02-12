@@ -192,7 +192,7 @@ var NRS = (function(NRS, $, undefined) {
 			"trigger": "hover"
 		});
 
-		$("#dashboard_transactions_table, #transactions_table").on("mouseenter", "td.confirmations", function() {
+		$("#dashboard_table, #transactions_table").on("mouseenter", "td.confirmations", function() {
 			$(this).popover("show");
 		}).on("mouseleave", "td.confirmations", function() {
 			$(this).popover("destroy");

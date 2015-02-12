@@ -109,7 +109,7 @@ var NRS = (function(NRS, $, undefined) {
             return false;
         }
         menuHTML += '><i class="fa fa-angle-double-right"></i> ';
-        menuHTML += options["titleHTML"] + '</a></li>';
+        menuHTML += options["titleHTML"] + ' <span class="badge" style="display:none;"></span></a></li>';
         $('#' + itemId + ' ul.treeview-menu').append(menuHTML);
     }
 
