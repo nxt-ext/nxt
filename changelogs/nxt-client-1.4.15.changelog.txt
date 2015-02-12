@@ -1,0 +1,2 @@
+Possible fix for the invalid CurrencyMint counter exception.
+
