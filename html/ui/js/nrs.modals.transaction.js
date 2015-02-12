@@ -857,7 +857,7 @@ var NRS = (function(NRS, $, undefined) {
 						"name": transaction.attachment.name,
 						"code": transaction.attachment.code,
 						"currency_type": transaction.attachment.type,
-						"description": transaction.attachment.description,
+                  "description_formatted_html": transaction.attachment.description.autoLink(),
 						"initial_units": [transaction.attachment.initialSupply, transaction.attachment.decimals],
 						"reserve_units": [transaction.attachment.reserveSupply, transaction.attachment.decimals],
 						"max_units": [transaction.attachment.maxSupply, transaction.attachment.decimals],
