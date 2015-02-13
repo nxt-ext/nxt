@@ -274,7 +274,7 @@ var NRS = (function(NRS, $, undefined) {
 					$('#dashboard_link a').addClass("ignore").click();
 
 					NRS.getInitialTransactions();
-
+					NRS.updateApprovalRequests();
 				});
 			});
 		});
