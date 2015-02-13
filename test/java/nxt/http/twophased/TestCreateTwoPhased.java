@@ -75,6 +75,11 @@ public class TestCreateTwoPhased extends BlockchainTest {
             return this;
         }
 
+        public TwoPhasedMoneyTransferBuilder noWhitelist() {
+            param("phasingWhitelisted", "");
+            return this;
+        }
+
         public TwoPhasedMoneyTransferBuilder whitelisted(long accountId) {
             param("phasingWhitelisted", Convert.toUnsignedLong(accountId));
             return this;
@@ -109,6 +114,9 @@ public class TestCreateTwoPhased extends BlockchainTest {
         issueCreateTwoPhased(apiCall, true);
 
         apiCall = new TwoPhasedMoneyTransferBuilder().quorum(0).build();
+        issueCreateTwoPhased(apiCall, true);
+
+        apiCall = new TwoPhasedMoneyTransferBuilder().noWhitelist().build();
         issueCreateTwoPhased(apiCall, true);
 
         apiCall = new TwoPhasedMoneyTransferBuilder().blacklisted(id3).build();
