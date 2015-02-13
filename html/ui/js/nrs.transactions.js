@@ -124,6 +124,7 @@ var NRS = (function(NRS, $, undefined) {
 			}
 
 			$("#dashboard_table tbody").empty().append(rows);
+			NRS.addPendingInfoToTransactionRows(transactions);
 		}
 
 		NRS.dataLoadFinished($("#dashboard_table"));
@@ -254,8 +255,9 @@ var NRS = (function(NRS, $, undefined) {
 		return b.timestamp - a.timestamp;
 	}
 
-	NRS.getPendingTransactionHTML = function(t) {
+	NRS.addPendingTransactionHTML = function(t) {
 		var html = "";
+		var $td = $('#tr_transaction_' + t.transaction + ' .td_transaction_pending');
 
 		if (t.attachment && t.attachment["version.Phasing"] && t.attachment.phasingVotingModel != undefined) {
 			NRS.sendRequest("getPhasingVotes", {
@@ -336,15 +338,25 @@ var NRS = (function(NRS, $, undefined) {
   					}
 
 					html += "</div>";
+					$td.html(html);
 				} else {
 					html = "&nbsp;";
+					$td.html(html);
 				}
 			}, false);
 		} else {
 			html = "&nbsp;";
+			$td.html(html);
 		}
-		return html;
 	}
+
+	NRS.addPendingInfoToTransactionRows = function(transactions) {
+		for (var i = 0; i < transactions.length; i++) {
+			var transaction = transactions[i];
+			NRS.addPendingTransactionHTML(transaction);
+		}
+	}
+
 
 	NRS.getTransactionRowHTML = function(transaction, actions) {
 		var transactionType = $.t(NRS.transactionTypes[transaction.type]['subTypes'][transaction.subtype]['i18nKeyTitle']);
@@ -376,7 +388,7 @@ var NRS = (function(NRS, $, undefined) {
 		}
 
 		var html = "";
-		html += "<tr>";
+		html += "<tr id='tr_transaction_" + transaction.transaction + "'>";
 		
 		html += "<td style='vertical-align:middle;'>";
   		html += "<a href='#' data-timestamp='" + String(transaction.timestamp).escapeHTML() + "' ";
@@ -400,7 +412,7 @@ var NRS = (function(NRS, $, undefined) {
 		html += "<td>" + ((NRS.getAccountLink(transaction, "sender") == "/" && transaction.type == 2) ? "Asset Exchange" : NRS.getAccountLink(transaction, "sender")) + " ";
 		html += "<i class='fa fa-arrow-circle-right' style='color:#777;'></i> " + ((NRS.getAccountLink(transaction, "recipient") == "/" && transaction.type == 2) ? "Asset Exchange" : NRS.getAccountLink(transaction, "recipient")) + "</td>";
 
-		html += "<td style='vertical-align:middle;text-align:center;'>" + NRS.getPendingTransactionHTML(transaction) + "</td>";
+		html += "<td class='td_transaction_pending' style='vertical-align:middle;text-align:center;'></td>";
 
 		html += "<td class='confirmations' style='vertical-align:middle;text-align:center;font-size:12px;'>";
 		html += "<span class='show_popover' data-content='" + (transaction.confirmed ? NRS.formatAmount(transaction.confirmations) + " " + $.t("confirmations") : $.t("unconfirmed_transaction")) + "' ";
@@ -415,7 +427,6 @@ var NRS = (function(NRS, $, undefined) {
 					if (ut.attachment && ut.attachment["version.PhasingVoteCasting"] && ut.attachment.transactionFullHashes && ut.attachment.transactionFullHashes.length > 0) {
 						if (ut.attachment.transactionFullHashes[0] == transaction.fullHash) {
 						disabledHTML = "disabled";
-						console.log(disabledHTML);
 					}
 					}
 				}
@@ -506,8 +517,12 @@ var NRS = (function(NRS, $, undefined) {
 					t.confirmed = true;
 					rows += NRS.getTransactionRowHTML(t);
 				}
+				NRS.dataLoaded(rows);
+				NRS.addPendingInfoToTransactionRows(response.transactions);
+			} else {
+				NRS.dataLoaded(rows);
 			}
-			NRS.dataLoaded(rows);
+			
 		});
 	}
 
@@ -535,6 +550,7 @@ var NRS = (function(NRS, $, undefined) {
 				}
 
 				NRS.dataLoaded(rows);
+				NRS.addPendingInfoToTransactionRows(response.transactions);
 			} else {
 				NRS.dataLoaded(rows);
 			}
@@ -603,6 +619,7 @@ var NRS = (function(NRS, $, undefined) {
 				}
 
 				NRS.dataLoaded(rows);
+				NRS.addPendingInfoToTransactionRows(response.transactions);
 			} else {
 				NRS.dataLoaded(rows);
 			}
