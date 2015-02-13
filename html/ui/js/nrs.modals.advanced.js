@@ -25,8 +25,10 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.initAdvancedModalFormValues = function() {
+		$(".pending_amount_accounts_group").find("input[name=phasingQuorum]").val(1);
+
 		var initBlockHeight = NRS.lastBlockHeight + 7000;
-		$elem = $(".pending_max_height_group").find("input[name=phasingFinishHeight]");
+		$elem = $(".pending_finish_height_group").find("input[name=phasingFinishHeight]");
 		$elem.val(initBlockHeight);
 		$elem.trigger("change");
 	}

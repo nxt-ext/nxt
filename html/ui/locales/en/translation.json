@@ -56,6 +56,8 @@
   "all_exchanges": "All Exchanges",
   "all_transactions": "All Transactions",
   "transaction_approval": "Transaction Approval",
+  "approve_transaction_amount_help": "Necessary amount for the transaction to become valid.",
+  "approve_transaction_finish_height_help": "Transaction will only become valid if approved until finish height.",
   "amount": "Amount",
   "amount_per_share": "Amount Per Share",
   "amount_per_unit": "Amount Per Unit",
