@@ -122,6 +122,9 @@ public class TestCreateTwoPhased extends BlockchainTest {
         apiCall = new TwoPhasedMoneyTransferBuilder().blacklisted(id3).build();
         issueCreateTwoPhased(apiCall, true);
 
+        apiCall = new TwoPhasedMoneyTransferBuilder().whitelisted(0).build();
+        issueCreateTwoPhased(apiCall, true);
+
         apiCall = new TwoPhasedMoneyTransferBuilder().votingModel(VoteWeighting.VotingModel.ASSET.getCode()).build();
         issueCreateTwoPhased(apiCall, true);
 
