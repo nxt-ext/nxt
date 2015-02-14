@@ -1,7 +1,6 @@
 package nxt.http;
 
 
-import nxt.Account;
 import nxt.NxtException;
 import nxt.Poll;
 import nxt.db.DbIterator;

@@ -38,10 +38,8 @@ public final class JSONResponses {
     public static final JSONStreamAware INCORRECT_TIMESTAMP = incorrect("timestamp");
     public static final JSONStreamAware UNKNOWN_ACCOUNT = unknown("account");
     public static final JSONStreamAware UNKNOWN_ALIAS = unknown("alias");
-    public static final JSONStreamAware MISSING_ASSET = missing("asset");
     public static final JSONStreamAware UNKNOWN_ASSET = unknown("asset");
     public static final JSONStreamAware INCORRECT_ASSET = incorrect("asset");
-    public static final JSONStreamAware MISSING_ASSET_NAME = missing("assetName");
     public static final JSONStreamAware MISSING_BLOCK = missing("block");
     public static final JSONStreamAware UNKNOWN_BLOCK = unknown("block");
     public static final JSONStreamAware INCORRECT_BLOCK = incorrect("block");
@@ -67,7 +65,6 @@ public final class JSONResponses {
     public static final JSONStreamAware INCORRECT_RECIPIENT = incorrect("recipient");
     public static final JSONStreamAware INCORRECT_ARBITRARY_MESSAGE = incorrect("message");
     public static final JSONStreamAware MISSING_DESCRIPTION = missing("description");
-    public static final JSONStreamAware MISSING_POLL = missing("poll");
     public static final JSONStreamAware INCORRECT_POLL_NAME_LENGTH = incorrect("name", "(length must be not longer than " + Constants.MAX_POLL_NAME_LENGTH + " characters)");
     public static final JSONStreamAware INCORRECT_POLL_DESCRIPTION_LENGTH = incorrect("description", "(length must be not longer than " + Constants.MAX_POLL_DESCRIPTION_LENGTH + " characters)");
     public static final JSONStreamAware INCORRECT_POLL_OPTION_LENGTH = incorrect("option", "(length must be not longer than " + Constants.MAX_POLL_OPTION_LENGTH + " characters)");
@@ -85,8 +82,6 @@ public final class JSONResponses {
     public static final JSONStreamAware INCORRECT_DGS_LISTING_NAME = incorrect("name", "(length must be not longer than " + Constants.MAX_DGS_LISTING_NAME_LENGTH + " characters)");
     public static final JSONStreamAware INCORRECT_DGS_LISTING_DESCRIPTION = incorrect("description", "(length must be not longer than " + Constants.MAX_DGS_LISTING_DESCRIPTION_LENGTH + " characters)");
     public static final JSONStreamAware INCORRECT_DGS_LISTING_TAGS = incorrect("tags", "(length must be not longer than " + Constants.MAX_DGS_LISTING_TAGS_LENGTH + " characters)");
-    public static final JSONStreamAware MISSING_GOODS = missing("goods");
-    public static final JSONStreamAware INCORRECT_GOODS = incorrect("goods");
     public static final JSONStreamAware UNKNOWN_GOODS = unknown("goods");
     public static final JSONStreamAware INCORRECT_DELTA_QUANTITY = incorrect("deltaQuantity");
     public static final JSONStreamAware MISSING_DELTA_QUANTITY = missing("deltaQuantity");
@@ -95,7 +90,6 @@ public final class JSONResponses {
     public static final JSONStreamAware INCORRECT_PURCHASE_QUANTITY = incorrect("quantity", "(quantity exceeds available goods quantity)");
     public static final JSONStreamAware INCORRECT_PURCHASE_PRICE = incorrect("priceNQT", "(purchase price doesn't match goods price)");
     public static final JSONStreamAware INCORRECT_PURCHASE = incorrect("purchase");
-    public static final JSONStreamAware MISSING_PURCHASE = missing("purchase");
     public static final JSONStreamAware INCORRECT_DGS_GOODS = incorrect("goodsToEncrypt");
     public static final JSONStreamAware INCORRECT_DGS_DISCOUNT = incorrect("discountNQT");
     public static final JSONStreamAware INCORRECT_DGS_REFUND = incorrect("refundNQT");

@@ -25,7 +25,31 @@ import javax.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
 import java.util.List;
 
-import static nxt.http.JSONResponses.*;
+import static nxt.http.JSONResponses.HEIGHT_NOT_AVAILABLE;
+import static nxt.http.JSONResponses.INCORRECT_ACCOUNT;
+import static nxt.http.JSONResponses.INCORRECT_ALIAS;
+import static nxt.http.JSONResponses.INCORRECT_DGS_ENCRYPTED_GOODS;
+import static nxt.http.JSONResponses.INCORRECT_ENCRYPTED_MESSAGE;
+import static nxt.http.JSONResponses.INCORRECT_HEIGHT;
+import static nxt.http.JSONResponses.INCORRECT_PENDING_TRANSACTION;
+import static nxt.http.JSONResponses.INCORRECT_PLAIN_MESSAGE;
+import static nxt.http.JSONResponses.INCORRECT_PUBLIC_KEY;
+import static nxt.http.JSONResponses.INCORRECT_PURCHASE;
+import static nxt.http.JSONResponses.INCORRECT_RECIPIENT;
+import static nxt.http.JSONResponses.MISSING_ACCOUNT;
+import static nxt.http.JSONResponses.MISSING_ALIAS_OR_ALIAS_NAME;
+import static nxt.http.JSONResponses.MISSING_SECRET_PHRASE;
+import static nxt.http.JSONResponses.MISSING_SECRET_PHRASE_OR_PUBLIC_KEY;
+import static nxt.http.JSONResponses.MISSING_TRANSACTION_BYTES_OR_JSON;
+import static nxt.http.JSONResponses.UNKNOWN_ACCOUNT;
+import static nxt.http.JSONResponses.UNKNOWN_ALIAS;
+import static nxt.http.JSONResponses.UNKNOWN_ASSET;
+import static nxt.http.JSONResponses.UNKNOWN_CURRENCY;
+import static nxt.http.JSONResponses.UNKNOWN_GOODS;
+import static nxt.http.JSONResponses.UNKNOWN_OFFER;
+import static nxt.http.JSONResponses.UNKNOWN_POLL;
+import static nxt.http.JSONResponses.incorrect;
+import static nxt.http.JSONResponses.missing;
 
 final class ParameterParser {
 
