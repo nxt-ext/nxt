@@ -22,7 +22,7 @@ public final class GetDGSGoods extends APIServlet.APIRequestHandler {
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
-        long sellerId = ParameterParser.getSellerId(req);
+        long sellerId = ParameterParser.getUnsignedLong(req, "seller", false);
         int firstIndex = ParameterParser.getFirstIndex(req);
         int lastIndex = ParameterParser.getLastIndex(req);
         boolean inStockOnly = !"false".equalsIgnoreCase(req.getParameter("inStockOnly"));

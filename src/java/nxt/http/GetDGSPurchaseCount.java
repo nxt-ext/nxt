@@ -18,8 +18,8 @@ public final class GetDGSPurchaseCount extends APIServlet.APIRequestHandler {
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
 
-        long sellerId = ParameterParser.getSellerId(req);
-        long buyerId = ParameterParser.getBuyerId(req);
+        long sellerId = ParameterParser.getUnsignedLong(req, "seller", false);
+        long buyerId = ParameterParser.getUnsignedLong(req, "buyer", false);
         final boolean completed = "true".equalsIgnoreCase(req.getParameter("completed"));
         final boolean withPublicFeedbacksOnly = "true".equalsIgnoreCase(req.getParameter("withPublicFeedbacksOnly"));
 

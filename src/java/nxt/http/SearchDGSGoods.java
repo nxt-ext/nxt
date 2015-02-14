@@ -23,7 +23,7 @@ public final class SearchDGSGoods extends APIServlet.APIRequestHandler {
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
-        long sellerId = ParameterParser.getSellerId(req);
+        long sellerId = ParameterParser.getUnsignedLong(req, "seller", false);
         String query = Convert.nullToEmpty(req.getParameter("query")).trim();
         String tag = Convert.emptyToNull(req.getParameter("tag"));
         if (tag != null) {

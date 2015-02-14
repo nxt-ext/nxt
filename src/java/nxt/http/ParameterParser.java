@@ -74,8 +74,12 @@ final class ParameterParser {
         return getLong(req, name, min, max, isMandatory, false);
     }
 
-    static long getLong(HttpServletRequest req, String name, long min, long max,
-                        boolean isMandatory, boolean encoded) throws ParameterException {
+    static long getUnsignedLong(HttpServletRequest req, String name, boolean isMandatory) throws ParameterException {
+        return getLong(req, name, Long.MIN_VALUE, Long.MAX_VALUE, isMandatory, true);
+    }
+
+    private static long getLong(HttpServletRequest req, String name, long min, long max,
+                        boolean isMandatory, boolean unsigned) throws ParameterException {
         String paramValue = Convert.emptyToNull(req.getParameter(name));
         if (paramValue == null) {
             if (isMandatory) {
@@ -85,9 +89,12 @@ final class ParameterParser {
         }
         long value;
         try {
-            if(encoded){
+            if (unsigned) {
                 value = Convert.parseUnsignedLong(paramValue);
-            }else {
+                if (value == 0) { // 0 is not allowed as an id
+                    throw new ParameterException(incorrect(name));
+                }
+            } else {
                 value = Long.parseLong(paramValue);
             }
         } catch (RuntimeException e) {
@@ -265,18 +272,6 @@ final class ParameterParser {
 
     static long getAmountNQTPerQNT(HttpServletRequest req) throws ParameterException {
         return getLong(req, "amountNQTPerQNT", 1L, Constants.MAX_BALANCE_NQT, true);
-    }
-
-    static long getOrderId(HttpServletRequest req) throws ParameterException {
-        String orderValue = Convert.emptyToNull(req.getParameter("order"));
-        if (orderValue == null) {
-            throw new ParameterException(MISSING_ORDER);
-        }
-        try {
-            return Convert.parseUnsignedLong(orderValue);
-        } catch (RuntimeException e) {
-            throw new ParameterException(INCORRECT_ORDER);
-        }
     }
 
     static DigitalGoodsStore.Goods getGoods(HttpServletRequest req) throws ParameterException {
@@ -457,42 +452,7 @@ final class ParameterParser {
     static int getTimestamp(HttpServletRequest req) throws ParameterException {
         return getInt(req, "timestamp", 0, Integer.MAX_VALUE, false);
     }
-
-    static long getRecipientId(HttpServletRequest req) throws ParameterException {
-        String recipientValue = Convert.emptyToNull(req.getParameter("recipient"));
-        if (recipientValue == null || "0".equals(recipientValue)) {
-            throw new ParameterException(MISSING_RECIPIENT);
-        }
-        long recipientId;
-        try {
-            recipientId = Convert.parseAccountId(recipientValue);
-        } catch (RuntimeException e) {
-            throw new ParameterException(INCORRECT_RECIPIENT);
-        }
-        if (recipientId == 0) {
-            throw new ParameterException(INCORRECT_RECIPIENT);
-        }
-        return recipientId;
-    }
-
-    static long getSellerId(HttpServletRequest req) throws ParameterException {
-        String sellerIdValue = Convert.emptyToNull(req.getParameter("seller"));
-        try {
-            return Convert.parseAccountId(sellerIdValue);
-        } catch (RuntimeException e) {
-            throw new ParameterException(INCORRECT_RECIPIENT);
-        }
-    }
-
-    static long getBuyerId(HttpServletRequest req) throws ParameterException {
-        String buyerIdValue = Convert.emptyToNull(req.getParameter("buyer"));
-        try {
-            return Convert.parseAccountId(buyerIdValue);
-        } catch (RuntimeException e) {
-            throw new ParameterException(INCORRECT_RECIPIENT);
-        }
-    }
-
+    
     static int getFirstIndex(HttpServletRequest req) {
         int firstIndex;
         try {

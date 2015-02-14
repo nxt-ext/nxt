@@ -18,8 +18,7 @@ public final class GetDGSGoodsCount extends APIServlet.APIRequestHandler {
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
-        String sellerIdValue = Convert.emptyToNull(req.getParameter("seller"));
-        long sellerId = sellerIdValue != null ? ParameterParser.getSellerId(req) : 0;
+        long sellerId = ParameterParser.getUnsignedLong(req, "seller", false);
         boolean inStockOnly = !"false".equalsIgnoreCase(req.getParameter("inStockOnly"));
 
         JSONObject response = new JSONObject();
