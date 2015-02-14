@@ -21,7 +21,7 @@ public final class LeaseBalance extends CreateTransaction {
 
         short period = (short)ParameterParser.getInt(req, "period", 1440, Short.MAX_VALUE, true);
         Account account = ParameterParser.getSenderAccount(req);
-        long recipient = ParameterParser.getUnsignedLong(req, "recipient", true);
+        long recipient = ParameterParser.getAccountId(req, "recipient", true);
         Account recipientAccount = Account.getAccount(recipient);
         if (recipientAccount == null || recipientAccount.getPublicKey() == null) {
             JSONObject response = new JSONObject();

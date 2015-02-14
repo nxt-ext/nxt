@@ -21,7 +21,7 @@ public final class TransferAsset extends CreateTransaction {
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
 
-        long recipient = ParameterParser.getUnsignedLong(req, "recipient", true);
+        long recipient = ParameterParser.getAccountId(req, "recipient", true);
 
         Asset asset = ParameterParser.getAsset(req);
         long quantityQNT = ParameterParser.getQuantityQNT(req);

@@ -21,7 +21,7 @@ public final class TransferCurrency extends CreateTransaction {
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
 
-        long recipient = ParameterParser.getUnsignedLong(req, "recipient", true);
+        long recipient = ParameterParser.getAccountId(req, "recipient", true);
 
         Currency currency = ParameterParser.getCurrency(req);
         long units = ParameterParser.getLong(req, "units", 0, Long.MAX_VALUE, true);

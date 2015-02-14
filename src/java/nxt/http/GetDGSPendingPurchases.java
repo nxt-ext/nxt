@@ -20,7 +20,7 @@ public final class GetDGSPendingPurchases extends APIServlet.APIRequestHandler {
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
 
-        long sellerId = ParameterParser.getUnsignedLong(req, "seller", true);
+        long sellerId = ParameterParser.getAccountId(req, "seller", true);
         int firstIndex = ParameterParser.getFirstIndex(req);
         int lastIndex = ParameterParser.getLastIndex(req);
 
