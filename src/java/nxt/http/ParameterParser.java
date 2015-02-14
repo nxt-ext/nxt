@@ -452,7 +452,7 @@ final class ParameterParser {
     static int getTimestamp(HttpServletRequest req) throws ParameterException {
         return getInt(req, "timestamp", 0, Integer.MAX_VALUE, false);
     }
-    
+
     static int getFirstIndex(HttpServletRequest req) {
         int firstIndex;
         try {

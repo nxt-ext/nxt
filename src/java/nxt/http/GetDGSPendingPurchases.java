@@ -9,8 +9,6 @@ import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
 
-import static nxt.http.JSONResponses.MISSING_SELLER;
-
 public final class GetDGSPendingPurchases extends APIServlet.APIRequestHandler {
 
     static final GetDGSPendingPurchases instance = new GetDGSPendingPurchases();

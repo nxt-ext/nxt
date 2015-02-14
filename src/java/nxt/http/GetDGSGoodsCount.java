@@ -2,7 +2,6 @@ package nxt.http;
 
 import nxt.DigitalGoodsStore;
 import nxt.NxtException;
-import nxt.util.Convert;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 

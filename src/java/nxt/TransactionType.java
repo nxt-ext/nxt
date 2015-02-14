@@ -878,11 +878,6 @@ public abstract class TransactionType {
                         throw new NxtException.NotValidException("Voter is not in the pending transaction whitelist");
                     }
 
-                    long[] blacklist = poll.getBlacklist();
-                    if (blacklist.length > 0 && Arrays.binarySearch(blacklist, voterId) != -1) {
-                        throw new NxtException.NotValidException("Voter is in the pending transaction blacklist");
-                    }
-
                     if (PhasingVote.isVoteGiven(pendingId, voterId)) {
                         throw new NxtException.NotCurrentlyValidException("Double voting attempt");
                     }

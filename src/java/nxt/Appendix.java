@@ -432,7 +432,6 @@ public interface Appendix {
         private final byte minBalanceModel;
         private final long holdingId;
         private final long[] whitelist;
-        private final long[] blacklist;
 
         Phasing(ByteBuffer buffer, byte transactionVersion) {
             super(buffer, transactionVersion);
@@ -440,19 +439,11 @@ public interface Appendix {
             votingModel = buffer.get();
             quorum = buffer.getLong();
             minBalance = buffer.getLong();
-
             byte whitelistSize = buffer.get();
             whitelist = new long[whitelistSize];
             for (int pvc = 0; pvc < whitelist.length; pvc++) {
                 whitelist[pvc] = buffer.getLong();
             }
-
-            byte blacklistSize = buffer.get();
-            blacklist = new long[blacklistSize];
-            for (int pvc = 0; pvc < blacklist.length; pvc++) {
-                blacklist[pvc] = buffer.getLong();
-            }
-
             holdingId = buffer.getLong();
             minBalanceModel = buffer.get();
         }
@@ -464,52 +455,22 @@ public interface Appendix {
             minBalance = Convert.parseLong(attachmentData.get("phasingMinBalance"));
             votingModel = ((Long) attachmentData.get("phasingVotingModel")).byteValue();
             holdingId = Convert.parseUnsignedLong((String) attachmentData.get("phasingHolding"));
-
             JSONArray whitelistJson = (JSONArray) (attachmentData.get("phasingWhitelist"));
             whitelist = new long[whitelistJson.size()];
             for (int i = 0; i < whitelist.length; i++) {
                 whitelist[i] = Convert.parseUnsignedLong((String) whitelistJson.get(i));
             }
-
-            JSONArray blacklistJson = (JSONArray) (attachmentData.get("phasingBlacklist"));
-            blacklist = new long[blacklistJson.size()];
-            for (int i = 0; i < blacklist.length; i++) {
-                blacklist[i] = Convert.parseUnsignedLong((String) blacklistJson.get(i));
-            }
             minBalanceModel = ((Long) attachmentData.get("phasingMinBalanceModel")).byteValue();
         }
 
-        /*
-        public Phasing(int releaseHeight, long quorum, long[] whitelist) {
-            this(releaseHeight, Constants.VOTING_MODEL_ACCOUNT, quorum, 0, whitelist, null);
-        }
-
-        public Phasing(int releaseHeight, byte votingModel, long quorum, long minBalance,
-                       long[] whitelist, long[] blacklist) {
-            this(releaseHeight, votingModel, 0, quorum, minBalance, whitelist, blacklist);
-        }
-        */
-
         public Phasing(int finishHeight, byte votingModel, long holdingId, long quorum,
-                       long minBalance, byte minBalanceModel, long[] whitelist, long[] blacklist) {
+                       long minBalance, byte minBalanceModel, long[] whitelist) {
             this.finishHeight = finishHeight;
             this.votingModel = votingModel;
             this.quorum = quorum;
             this.minBalance = minBalance;
             this.minBalanceModel = minBalanceModel;
-
-            if (whitelist == null) {
-                this.whitelist = new long[0];
-            } else {
-                this.whitelist = whitelist;
-            }
-
-            if (blacklist == null) {
-                this.blacklist = new long[0];
-            } else {
-                this.blacklist = blacklist;
-            }
-
+            this.whitelist = Convert.nullToEmpty(whitelist);
             this.holdingId = holdingId;
         }
 
@@ -520,7 +481,7 @@ public interface Appendix {
 
         @Override
         int getMySize() {
-            return 4 + 1 + 8 + 8 + 1 + 8 * whitelist.length + 1 + 8 * blacklist.length + 8 + 1;
+            return 4 + 1 + 8 + 8 + 1 + 8 * whitelist.length + 8 + 1;
         }
 
         @Override
@@ -529,17 +490,10 @@ public interface Appendix {
             buffer.put(votingModel);
             buffer.putLong(quorum);
             buffer.putLong(minBalance);
-
             buffer.put((byte) whitelist.length);
             for (long account : whitelist) {
                 buffer.putLong(account);
             }
-
-            buffer.put((byte) blacklist.length);
-            for (long account : blacklist) {
-                buffer.putLong(account);
-            }
-
             buffer.putLong(holdingId);
             buffer.put(minBalanceModel);
         }
@@ -551,34 +505,19 @@ public interface Appendix {
             json.put("phasingMinBalance", minBalance);
             json.put("phasingVotingModel", votingModel);
             json.put("phasingHolding", Convert.toUnsignedLong(holdingId));
-
             JSONArray whitelistJson = new JSONArray();
             for (long accountId : whitelist) {
                 whitelistJson.add(Convert.toUnsignedLong(accountId));
             }
             json.put("phasingWhitelist", whitelistJson);
-
-            JSONArray blacklistJson = new JSONArray();
-            for (long accountId : blacklist) {
-                blacklistJson.add(Convert.toUnsignedLong(accountId));
-            }
-            json.put("phasingBlacklist", blacklistJson);
             json.put("phasingMinBalanceModel", minBalanceModel);
         }
 
         @Override
         void validate(Transaction transaction) throws NxtException.ValidationException {
 
-            if (whitelist.length * (-blacklist.length) < 0) {
-                throw new NxtException.NotValidException("Both whitelist & blacklist are non-empty");
-            }
-
             if (whitelist.length > Constants.MAX_PHASING_WHITELIST_SIZE) {
                 throw new NxtException.NotValidException("Whitelist is too big");
-            }
-
-            if (blacklist.length > Constants.MAX_PHASING_BLACKLIST_SIZE) {
-                throw new NxtException.NotValidException("Blacklist is too big");
             }
 
             if (quorum <= 0) {
@@ -652,10 +591,6 @@ public interface Appendix {
 
         public long[] getWhitelist() {
             return whitelist;
-        }
-
-        public long[] getBlacklist() {
-            return blacklist;
         }
 
         public byte getMinBalanceModel() {

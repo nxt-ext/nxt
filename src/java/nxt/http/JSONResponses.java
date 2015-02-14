@@ -21,14 +21,11 @@ public final class JSONResponses {
     public static final JSONStreamAware MISSING_ALIAS_OR_ALIAS_NAME = missing("alias", "aliasName");
     public static final JSONStreamAware MISSING_DEADLINE = missing("deadline");
     public static final JSONStreamAware INCORRECT_PENDING_WHITELIST = incorrect("phasingWhitelisted");
-    public static final JSONStreamAware INCORRECT_PENDING_BLACKLISTED = incorrect("phasingBlacklisted");
     public static final JSONStreamAware INCORRECT_DEADLINE = incorrect("deadline");
     public static final JSONStreamAware MISSING_PENDING_HOLDING_ID = missing("phasingHoldingId");
     public static final JSONStreamAware INCORRECT_FEE = incorrect("fee");
     public static final JSONStreamAware MISSING_TRANSACTION_BYTES_OR_JSON = missing("transactionBytes", "transactionJSON");
     public static final JSONStreamAware INCORRECT_TRANSACTION_BYTES_OR_JSON = incorrect("transactionBytes or transactionJSON");
-    public static final JSONStreamAware MISSING_ORDER = missing("order");
-    public static final JSONStreamAware INCORRECT_ORDER = incorrect("order");
     public static final JSONStreamAware UNKNOWN_ORDER = unknown("order");
     public static final JSONStreamAware MISSING_HALLMARK = missing("hallmark");
     public static final JSONStreamAware INCORRECT_HALLMARK = incorrect("hallmark");
@@ -67,7 +64,6 @@ public final class JSONResponses {
     public static final JSONStreamAware INCORRECT_DATE = incorrect("date");
     public static final JSONStreamAware INCORRECT_REFERENCED_TRANSACTION = incorrect("referencedTransactionFullHash");
     public static final JSONStreamAware MISSING_MESSAGE = missing("message");
-    public static final JSONStreamAware MISSING_RECIPIENT = missing("recipient");
     public static final JSONStreamAware INCORRECT_RECIPIENT = incorrect("recipient");
     public static final JSONStreamAware INCORRECT_ARBITRARY_MESSAGE = incorrect("message");
     public static final JSONStreamAware MISSING_DESCRIPTION = missing("description");
@@ -103,7 +99,6 @@ public final class JSONResponses {
     public static final JSONStreamAware INCORRECT_DGS_GOODS = incorrect("goodsToEncrypt");
     public static final JSONStreamAware INCORRECT_DGS_DISCOUNT = incorrect("discountNQT");
     public static final JSONStreamAware INCORRECT_DGS_REFUND = incorrect("refundNQT");
-    public static final JSONStreamAware MISSING_SELLER = missing("seller");
     public static final JSONStreamAware INCORRECT_ENCRYPTED_MESSAGE = incorrect("encryptedMessageData");
     public static final JSONStreamAware INCORRECT_DGS_ENCRYPTED_GOODS = incorrect("goodsData");
     public static final JSONStreamAware MISSING_SECRET_PHRASE_OR_PUBLIC_KEY = missing("secretPhrase", "publicKey");

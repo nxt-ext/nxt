@@ -1,7 +1,6 @@
 package nxt.http.twophased;
 
 import nxt.http.AbstractHttpApiSuite;
-import nxt.http.AbstractHttpApiSuite;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.junit.runner.RunWith;
