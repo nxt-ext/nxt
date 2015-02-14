@@ -40,7 +40,7 @@ public abstract class ValuesDbTable<T,V> extends DerivedDbTable {
         }
         try (Connection con = db.getConnection();
              PreparedStatement pstmt = con.prepareStatement("SELECT * FROM " + table + dbKeyFactory.getPKClause()
-             + (multiversion ? " AND latest = TRUE" : "") + " ORDER BY db_id DESC")) {
+                     + (multiversion ? " AND latest = TRUE" : "") + " ORDER BY db_id")) {
             dbKey.setPK(pstmt);
             values = get(con, pstmt);
             if (db.isInTransaction()) {

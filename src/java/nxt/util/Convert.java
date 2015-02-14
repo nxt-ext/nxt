@@ -146,6 +146,22 @@ public final class Convert {
         return array == null ? EMPTY_LONG : array;
     }
 
+    public static long[] toArray(List<Long> list) {
+        long[] result = new long[list.size()];
+        for (int i = 0; i < list.size(); i++) {
+            result[i] = list.get(i);
+        }
+        return result;
+    }
+
+    public static List<Long> toList(long[] array) {
+        List<Long> result = new ArrayList<>(array.length);
+        for (long elem : array) {
+            result.add(elem);
+        }
+        return result;
+    }
+
     public static byte[] toBytes(String s) {
         try {
             return s.getBytes("UTF-8");
@@ -283,20 +299,4 @@ public final class Convert {
         return Math.abs(a);
     }
 
-    public static long[] reversedListOfLongsToArray(List<Long> list) {
-        int size = list.size();
-        long[] result = new long[size];
-        for (int i = size; i > 0; i--) {
-            result[size-i] = list.get(i-1);
-        }
-        return result;
-    }
-
-    public static List<Long> toList(long[] array) {
-        List<Long> result = new ArrayList<>(array.length);
-        for (long elem : array) {
-            result.add(elem);
-        }
-        return result;
-    }
 }

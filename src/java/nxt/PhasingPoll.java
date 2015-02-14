@@ -13,7 +13,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Arrays;
-import java.util.List;
 
 public class PhasingPoll extends AbstractPoll {
 
@@ -216,12 +215,7 @@ public class PhasingPoll extends AbstractPoll {
         this.quorum = rs.getLong("quorum");
         this.dbKey = pollDbKeyFactory.newKey(this.id);
         byte voterCount = rs.getByte("voter_count");
-        if (voterCount == 0) {
-            this.whitelist = Convert.EMPTY_LONG;
-        } else {
-            List<Long> voters = votersTable.get(votersDbKeyFactory.newKey(this));
-            this.whitelist = Convert.reversedListOfLongsToArray(voters);
-        }
+        this.whitelist = voterCount == 0 ? Convert.EMPTY_LONG : Convert.toArray(votersTable.get(votersDbKeyFactory.newKey(this)));
         this.fullHash = rs.getBytes("full_hash");
         this.finished = rs.getBoolean("finished");
     }

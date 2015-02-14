@@ -423,14 +423,14 @@ final class JSONData {
         if (purchase.getFeedbackNotes() != null) {
             JSONArray feedbacks = new JSONArray();
             for (EncryptedData encryptedData : purchase.getFeedbackNotes()) {
-                feedbacks.add(encryptedData(encryptedData));
+                feedbacks.add(0, encryptedData(encryptedData));
             }
             json.put("feedbackNotes", feedbacks);
         }
         if (purchase.getPublicFeedbacks() != null) {
             JSONArray publicFeedbacks = new JSONArray();
             for (String publicFeedback : purchase.getPublicFeedbacks()) {
-                publicFeedbacks.add(publicFeedback);
+                publicFeedbacks.add(0, publicFeedback);
             }
             json.put("publicFeedbacks", publicFeedbacks);
         }
