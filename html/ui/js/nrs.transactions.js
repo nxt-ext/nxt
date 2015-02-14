@@ -272,6 +272,7 @@ var NRS = (function(NRS, $, undefined) {
 					var icon = "";
 					var votesFormatted = "";
 					var quorumFormatted = "";
+					var unitFormattted = "";
 					var finishHeightFormatted = String(response.finishHeight);
 					var percentageFormatted = NRS.calculatePercentage(response.votes, response.quorum) + "%";
 					var percentageProgressBar = Math.round(response.votes * 100 / response.quorum);
@@ -299,24 +300,28 @@ var NRS = (function(NRS, $, undefined) {
 						icon = '<i class="fa fa-group"></i>';
 						votesFormatted = String(response.votes);
 						quorumFormatted = String(response.quorum);
+						unitFormattted = "";
 					}
 					if (vm == 1) {
 						icon = '<i class="fa fa-money"></i>';
-						votesFormatted = String(response.votes);
-						quorumFormatted = String(response.quorum);
+						votesFormatted = NRS.convertToNXT(response.votes);
+						quorumFormatted = NRS.convertToNXT(response.quorum);
+						unitFormattted = "NXT";
 					}
 					if (vm == 2) {
 						icon = '<i class="fa fa-signal"></i>';
 						votesFormatted = String(response.votes);
 						quorumFormatted = String(response.quorum);
+						unitFormattted = "";
 					}
 					if (vm == 3) {
 						icon = '<i class="fa fa-bank"></i>';
 						votesFormatted = String(response.votes);
 						quorumFormatted = String(response.quorum);
+						unitFormattted = "";
 					}
 					var popover = "<table class='table table-striped'>";
-					popover += "<tr><td>Votes:</td><td>" + votesFormatted + " / " + quorumFormatted + "</td></tr>";
+					popover += "<tr><td>Votes:</td><td>" + votesFormatted + " / " + quorumFormatted + " " + unitFormattted + "</td></tr>";
 					popover += "<tr><td>Percentage:</td><td>" + percentageFormatted + "</td></tr>";
 					popover += "<tr><td>Finish Height:</td><td>" + finishHeightFormatted + "</td></tr>";
 					popover += "<tr><td>Finished:</td><td>" + finishedFormatted + "</td></tr>";
