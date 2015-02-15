@@ -29,30 +29,20 @@ public abstract class VersionedEntityDbTable<T> extends EntityDbTable<T> {
             throw new IllegalStateException("Not in transaction");
         }
         DbKey dbKey = dbKeyFactory.newKey(t);
-        int height = Nxt.getBlockchain().getHeight();
         try (Connection con = db.getConnection();
              PreparedStatement pstmtCount = con.prepareStatement("SELECT COUNT(*) AS count FROM " + table + dbKeyFactory.getPKClause()
                 + " AND height < ?")) {
             int i = dbKey.setPK(pstmtCount);
-            pstmtCount.setInt(i, height);
+            pstmtCount.setInt(i, Nxt.getBlockchain().getHeight());
             try (ResultSet rs = pstmtCount.executeQuery()) {
                 rs.next();
                 if (rs.getInt("count") > 0) {
                     try (PreparedStatement pstmt = con.prepareStatement("UPDATE " + table
-                            + " SET latest = FALSE " + dbKeyFactory.getPKClause() + " AND height = ? AND latest = TRUE LIMIT 1")) {
-                        int j = dbKey.setPK(pstmt);
-                        pstmt.setInt(j, height);
-                        if (pstmt.executeUpdate() > 0) {
-                            return true;
-                        }
-                    }
-                    save(con, t);
-                    try (PreparedStatement pstmt = con.prepareStatement("UPDATE " + table
-                            + " SET latest = FALSE " + dbKeyFactory.getPKClause() + " AND latest = TRUE")) {
+                            + " SET latest = FALSE " + dbKeyFactory.getPKClause() + " AND latest = TRUE LIMIT 1")) {
                         dbKey.setPK(pstmt);
-                        if (pstmt.executeUpdate() == 0) {
-                            throw new RuntimeException(); // should not happen
-                        }
+                        pstmt.executeUpdate();
+                    save(con, t);
+                        pstmt.executeUpdate(); // delete after the save
                     }
                     return true;
                 } else {
