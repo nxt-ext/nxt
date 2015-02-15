@@ -35,10 +35,9 @@ public final class GetPhasingPolls extends APIServlet.APIRequestHandler {
             }
             try {
                 PhasingPoll poll = PhasingPoll.getPoll(Convert.parseUnsignedLong(transactionId));
-                if (poll == null) {
-                    return UNKNOWN_TRANSACTION;
+                if (poll != null) {
+                    jsonArray.add(JSONData.phasingPoll(poll, countVotes, includeVoters));
                 }
-                jsonArray.add(JSONData.phasingPoll(poll, countVotes, includeVoters));
             } catch (RuntimeException e) {
                 return INCORRECT_TRANSACTION;
             }
