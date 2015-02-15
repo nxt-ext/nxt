@@ -153,6 +153,7 @@ final class PeerImpl implements Peer {
             }
             if (isOldVersion) {
                 Logger.logDebugMessage(String.format("Blacklisting %s version %s", peerAddress, version));
+                blacklistingCause = "Old version: " + version;
                 setState(State.NON_CONNECTED);
                 Peers.notifyListeners(this, Peers.Event.BLACKLIST);
             }
@@ -464,7 +465,7 @@ final class PeerImpl implements Peer {
                 setState(State.CONNECTED);
                 Peers.addOrUpdate(this);
             } else if (!isBlacklisted()) {
-                blacklist("Old version");
+                blacklist("Old version: " + version);
             }
             lastUpdated = lastConnectAttempt;
         } else {
