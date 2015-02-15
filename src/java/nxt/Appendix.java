@@ -516,6 +516,11 @@ public interface Appendix {
         @Override
         void validate(Transaction transaction) throws NxtException.ValidationException {
 
+            int currentHeight = Nxt.getBlockchain().getHeight();
+            if (currentHeight < Constants.VOTING_SYSTEM_BLOCK) {
+                throw new NxtException.NotYetEnabledException("Voting System not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
+            }
+
             if (whitelist.length > Constants.MAX_PHASING_WHITELIST_SIZE) {
                 throw new NxtException.NotValidException("Whitelist is too big");
             }
@@ -524,7 +529,6 @@ public interface Appendix {
                 throw new NxtException.NotValidException("quorum <= 0");
             }
 
-            int currentHeight = Nxt.getBlockchain().getHeight();
             if (finishHeight < currentHeight + Constants.VOTING_MIN_VOTE_DURATION
                     || finishHeight > currentHeight + Constants.VOTING_MAX_VOTE_DURATION) {
                 throw new NxtException.NotValidException("Invalid finish height");

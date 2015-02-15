@@ -101,10 +101,10 @@ public final class Constants {
     public static final int ASSET_EXCHANGE_BLOCK = isTestnet ? NQT_BLOCK : 135000;
     public static final int REFERENCED_TRANSACTION_FULL_HASH_BLOCK = isTestnet ? NQT_BLOCK : 140000;
     public static final int REFERENCED_TRANSACTION_FULL_HASH_BLOCK_TIMESTAMP = isTestnet ? 13031352 : 15134204;
-    public static final int VOTING_SYSTEM_BLOCK = isTestnet ? 0 : Integer.MAX_VALUE;
     public static final int DIGITAL_GOODS_STORE_BLOCK = isTestnet ? 77341 : 213000;
-    public static final int TWO_PHASED_TRANSACTIONS_BLOCK = isTestnet ? 0 : Integer.MAX_VALUE;
     public static final int MONETARY_SYSTEM_BLOCK = isTestnet ? 150000 : 330000;
+    public static final int VOTING_SYSTEM_BLOCK = isTestnet ? 0 : Integer.MAX_VALUE;
+
     public static final int LAST_KNOWN_BLOCK = isTestnet ? 150000 : 355000;
 
     public static final int[] MIN_VERSION = new int[] {1, 4};

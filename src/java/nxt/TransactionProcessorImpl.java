@@ -48,7 +48,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
             @Override
             public void notify(Block block) {
                 int height = block.getHeight();
-                if (height >= Constants.TWO_PHASED_TRANSACTIONS_BLOCK) {
+                if (height >= Constants.VOTING_SYSTEM_BLOCK) {
                     try (Connection con = Db.db.getConnection();
                          PreparedStatement pstmt = con.prepareStatement("SELECT transaction.* FROM transaction, phasing_poll " +
                                  " WHERE phasing_poll.id = transaction.id AND phasing_poll.finish_height = ? " +
