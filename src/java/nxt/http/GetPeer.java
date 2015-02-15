@@ -25,7 +25,7 @@ public final class GetPeer extends APIServlet.APIRequestHandler {
             return MISSING_PEER;
         }
 
-        Peer peer = Peers.getPeer(peerAddress);
+        Peer peer = Peers.findOrCreatePeer(peerAddress, false);
         if (peer == null) {
             return UNKNOWN_PEER;
         }

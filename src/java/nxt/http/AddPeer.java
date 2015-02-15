@@ -22,22 +22,27 @@ public class AddPeer extends APIRequestHandler {
     @Override
     JSONStreamAware processRequest(HttpServletRequest request)
             throws NxtException {
-        JSONObject response = new JSONObject();
-        
-        String peerAddress = request.getParameter("peer");
+        final String peerAddress = request.getParameter("peer");
         if (peerAddress == null) {
             return MISSING_PEER;
         }
-        
-        Peer peer = Peers.addPeer(peerAddress);
-        
-        if (peer != null) {
-            Peers.connectPeer(peer);
-            response = JSONData.peer(peer);
+        JSONObject response = new JSONObject();
+        if (Peers.hasTooManyKnownPeers()) {
+            response.put("errorCode", 7);
+            response.put("errorDescription", "Too many known peers");
         } else {
-            response.put("error", "Failed to add peer");
+            Peer peer = Peers.findOrCreatePeer(peerAddress, true);
+            if (peer != null) {
+                Peers.connectPeer(peer);
+                response = JSONData.peer(peer);
+                if (Peers.addPeer(peer)) {
+                    response.put("isNewlyAdded", true);
+                }
+            } else {
+                response.put("errorCode", 8);
+                response.put("errorDescription", "Failed to add peer");
+            }
         }
-        
         return response;
     }
 
