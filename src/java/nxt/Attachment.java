@@ -6,14 +6,16 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.regex.Pattern;
 
 public interface Attachment extends Appendix {
 
     TransactionType getTransactionType();
 
-    abstract static class AbstractAttachment extends AbstractAppendix implements Attachment {
+    abstract static class AbstractAttachment extends Appendix.AbstractAppendix implements Attachment {
 
         private AbstractAttachment(ByteBuffer buffer, byte transactionVersion) {
             super(buffer, transactionVersion);
@@ -28,6 +30,11 @@ public interface Attachment extends Appendix {
         }
 
         private AbstractAttachment() {}
+
+        @Override
+        final String getAppendixName() {
+            return getTransactionType().getName();
+        }
 
         @Override
         final void validate(Transaction transaction) throws NxtException.ValidationException {
@@ -70,11 +77,6 @@ public interface Attachment extends Appendix {
     public final static EmptyAttachment ORDINARY_PAYMENT = new EmptyAttachment() {
 
         @Override
-        String getAppendixName() {
-            return "OrdinaryPayment";
-        }
-
-        @Override
         public TransactionType getTransactionType() {
             return TransactionType.Payment.ORDINARY;
         }
@@ -83,11 +85,6 @@ public interface Attachment extends Appendix {
 
     // the message payload is in the Appendix
     public final static EmptyAttachment ARBITRARY_MESSAGE = new EmptyAttachment() {
-
-        @Override
-        String getAppendixName() {
-            return "ArbitraryMessage";
-        }
 
         @Override
         public TransactionType getTransactionType() {
@@ -116,11 +113,6 @@ public interface Attachment extends Appendix {
         public MessagingAliasAssignment(String aliasName, String aliasURI) {
             this.aliasName = aliasName.trim();
             this.aliasURI = aliasURI.trim();
-        }
-
-        @Override
-        String getAppendixName() {
-            return "AliasAssignment";
         }
 
         @Override
@@ -181,11 +173,6 @@ public interface Attachment extends Appendix {
         }
 
         @Override
-        String getAppendixName() {
-            return "AliasSell";
-        }
-
-        @Override
         public TransactionType getTransactionType() {
             return TransactionType.Messaging.ALIAS_SELL;
         }
@@ -237,11 +224,6 @@ public interface Attachment extends Appendix {
         }
 
         @Override
-        String getAppendixName() {
-            return "AliasBuy";
-        }
-
-        @Override
         public TransactionType getTransactionType() {
             return TransactionType.Messaging.ALIAS_BUY;
         }
@@ -287,11 +269,6 @@ public interface Attachment extends Appendix {
         }
 
         @Override
-        String getAppendixName() {
-            return "AliasDelete";
-        }
-
-        @Override
         public TransactionType getTransactionType() {
             return TransactionType.Messaging.ALIAS_DELETE;
         }
@@ -320,56 +297,144 @@ public interface Attachment extends Appendix {
 
     public final static class MessagingPollCreation extends AbstractAttachment {
 
+        public final static class PollBuilder {
+            private final String pollName;
+            private final String pollDescription;
+            private final String[] pollOptions;
+
+            private final int finishHeight;
+            private final byte votingModel;
+
+            private long minBalance = 0;
+            private byte minBalanceModel;
+
+            private byte minNumberOfOptions = Constants.VOTING_DEFAULT_MIN_NUMBER_OF_CHOICES;
+            private byte maxNumberOfOptions;
+
+            private final byte minRangeValue;
+            private final byte maxRangeValue;
+
+            private long holdingId;
+
+            public PollBuilder(final String pollName, final String pollDescription, final String[] pollOptions,
+                               final int finishHeight, final byte votingModel,
+                               byte minNumberOfOptions, byte maxNumberOfOptions,
+                               byte minRangeValue, byte maxRangeValue) {
+                this.pollName = pollName;
+                this.pollDescription = pollDescription;
+                this.pollOptions = pollOptions;
+
+                this.finishHeight = finishHeight;
+                this.votingModel = votingModel;
+                this.minNumberOfOptions = minNumberOfOptions;
+                this.maxNumberOfOptions = maxNumberOfOptions;
+                this.minRangeValue = minRangeValue;
+                this.maxRangeValue = maxRangeValue;
+
+                this.minBalanceModel = VoteWeighting.VotingModel.get(votingModel).defaultMinBalanceModel().getCode();
+            }
+
+            public PollBuilder minBalance(byte minBalanceModel, long minBalance) {
+                this.minBalanceModel = minBalanceModel;
+                this.minBalance = minBalance;
+                return this;
+            }
+
+            public PollBuilder holdingId(long holdingId) {
+                this.holdingId = holdingId;
+                return this;
+            }
+
+            public MessagingPollCreation build() {
+                return new MessagingPollCreation(this);
+            }
+        }
+
         private final String pollName;
         private final String pollDescription;
         private final String[] pollOptions;
-        private final byte minNumberOfOptions, maxNumberOfOptions;
-        private final boolean optionsAreBinary;
+
+        private final int finishHeight;
+        private final byte votingModel;
+
+        private byte minNumberOfOptions = Constants.VOTING_DEFAULT_MIN_NUMBER_OF_CHOICES;
+        private byte maxNumberOfOptions; //only for choice voting
+        private final byte minRangeValue;
+        private final byte maxRangeValue;
+
+        private final long minBalance;
+        private final byte minBalanceModel;
+        private long holdingId = 0;
 
         MessagingPollCreation(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
             super(buffer, transactionVersion);
             this.pollName = Convert.readString(buffer, buffer.getShort(), Constants.MAX_POLL_NAME_LENGTH);
             this.pollDescription = Convert.readString(buffer, buffer.getShort(), Constants.MAX_POLL_DESCRIPTION_LENGTH);
+
+            this.finishHeight = buffer.getInt();
+
             int numberOfOptions = buffer.get();
             if (numberOfOptions > Constants.MAX_POLL_OPTION_COUNT) {
                 throw new NxtException.NotValidException("Invalid number of poll options: " + numberOfOptions);
             }
+
             this.pollOptions = new String[numberOfOptions];
             for (int i = 0; i < numberOfOptions; i++) {
-                pollOptions[i] = Convert.readString(buffer, buffer.getShort(), Constants.MAX_POLL_OPTION_LENGTH);
+                this.pollOptions[i] = Convert.readString(buffer, buffer.getShort(), Constants.MAX_POLL_OPTION_LENGTH);
             }
+
+            this.votingModel = buffer.get();
+
             this.minNumberOfOptions = buffer.get();
             this.maxNumberOfOptions = buffer.get();
-            this.optionsAreBinary = buffer.get() != 0;
+
+            this.minRangeValue = buffer.get();
+            this.maxRangeValue = buffer.get();
+
+            this.minBalance = buffer.getLong();
+            this.minBalanceModel = buffer.get();
+            this.holdingId = buffer.getLong();
         }
 
         MessagingPollCreation(JSONObject attachmentData) {
             super(attachmentData);
+
             this.pollName = ((String) attachmentData.get("name")).trim();
             this.pollDescription = ((String) attachmentData.get("description")).trim();
+            this.finishHeight = ((Long) attachmentData.get("finishHeight")).intValue();
+
             JSONArray options = (JSONArray) attachmentData.get("options");
             this.pollOptions = new String[options.size()];
             for (int i = 0; i < pollOptions.length; i++) {
-                pollOptions[i] = ((String) options.get(i)).trim();
+                this.pollOptions[i] = ((String) options.get(i)).trim();
             }
+            this.votingModel = ((Long) attachmentData.get("votingModel")).byteValue();
+
             this.minNumberOfOptions = ((Long) attachmentData.get("minNumberOfOptions")).byteValue();
             this.maxNumberOfOptions = ((Long) attachmentData.get("maxNumberOfOptions")).byteValue();
-            this.optionsAreBinary = (Boolean) attachmentData.get("optionsAreBinary");
+            this.minRangeValue = ((Long) attachmentData.get("minRangeValue")).byteValue();
+            this.maxRangeValue = ((Long) attachmentData.get("maxRangeValue")).byteValue();
+
+            this.minBalance = Convert.parseLong(attachmentData.get("minBalance"));
+            this.minBalanceModel = ((Long) attachmentData.get("minBalance")).byteValue();
+            this.holdingId = Convert.parseUnsignedLong((String) attachmentData.get("holding"));
         }
 
-        public MessagingPollCreation(String pollName, String pollDescription, String[] pollOptions, byte minNumberOfOptions,
-                                     byte maxNumberOfOptions, boolean optionsAreBinary) {
-            this.pollName = pollName;
-            this.pollDescription = pollDescription;
-            this.pollOptions = pollOptions;
-            this.minNumberOfOptions = minNumberOfOptions;
-            this.maxNumberOfOptions = maxNumberOfOptions;
-            this.optionsAreBinary = optionsAreBinary;
-        }
+        private MessagingPollCreation(PollBuilder builder) {
+            this.pollName = builder.pollName;
+            this.pollDescription = builder.pollDescription;
+            this.pollOptions = builder.pollOptions;
+            this.finishHeight = builder.finishHeight;
 
-        @Override
-        String getAppendixName() {
-            return "PollCreation";
+            this.votingModel = builder.votingModel;
+
+            this.minNumberOfOptions = builder.minNumberOfOptions;
+            this.maxNumberOfOptions = builder.maxNumberOfOptions;
+            this.minRangeValue = builder.minRangeValue;
+            this.maxRangeValue = builder.maxRangeValue;
+            this.minBalance = builder.minBalance;
+            this.minBalanceModel = builder.minBalanceModel;
+            this.holdingId = builder.holdingId;
         }
 
         @Override
@@ -378,7 +443,9 @@ public interface Attachment extends Appendix {
             for (String pollOption : pollOptions) {
                 size += 2 + Convert.toBytes(pollOption).length;
             }
-            size +=  1 + 1 + 1;
+
+            size += 4 + 1 + 1 + 1 + 1 + 1 + 8 + 1 + 8;
+
             return size;
         }
 
@@ -390,32 +457,52 @@ public interface Attachment extends Appendix {
             for (int i = 0; i < this.pollOptions.length; i++) {
                 options[i] = Convert.toBytes(this.pollOptions[i]);
             }
-            buffer.putShort((short)name.length);
+
+            buffer.putShort((short) name.length);
             buffer.put(name);
-            buffer.putShort((short)description.length);
+            buffer.putShort((short) description.length);
             buffer.put(description);
+            buffer.putInt(finishHeight);
             buffer.put((byte) options.length);
             for (byte[] option : options) {
                 buffer.putShort((short) option.length);
                 buffer.put(option);
             }
+            buffer.put(this.votingModel);
+
             buffer.put(this.minNumberOfOptions);
             buffer.put(this.maxNumberOfOptions);
-            buffer.put(this.optionsAreBinary ? (byte)1 : (byte)0);
+            buffer.put(this.minRangeValue);
+            buffer.put(this.maxRangeValue);
+
+            buffer.putLong(minBalance);
+            buffer.put(minBalanceModel);
+            buffer.putLong(this.holdingId);
         }
 
         @Override
         void putMyJSON(JSONObject attachment) {
             attachment.put("name", this.pollName);
             attachment.put("description", this.pollDescription);
+            attachment.put("finishHeight", this.finishHeight);
             JSONArray options = new JSONArray();
             if (this.pollOptions != null) {
                 Collections.addAll(options, this.pollOptions);
             }
             attachment.put("options", options);
+
+
             attachment.put("minNumberOfOptions", this.minNumberOfOptions);
             attachment.put("maxNumberOfOptions", this.maxNumberOfOptions);
-            attachment.put("optionsAreBinary", this.optionsAreBinary);
+
+            attachment.put("minRangeValue", this.minRangeValue);
+            attachment.put("maxRangeValue", this.maxRangeValue);
+
+            attachment.put("votingModel", this.votingModel);
+
+            attachment.put("minBalance", this.minBalance);
+            attachment.put("minBalanceModel", this.minBalanceModel);
+            attachment.put("holding", Convert.toUnsignedLong(this.holdingId));
         }
 
         @Override
@@ -423,18 +510,53 @@ public interface Attachment extends Appendix {
             return TransactionType.Messaging.POLL_CREATION;
         }
 
-        public String getPollName() { return pollName; }
+        public String getPollName() {
+            return pollName;
+        }
 
-        public String getPollDescription() { return pollDescription; }
+        public String getPollDescription() {
+            return pollDescription;
+        }
 
-        public String[] getPollOptions() { return pollOptions; }
+        public int getFinishHeight() {
+            return finishHeight;
+        }
 
-        public byte getMinNumberOfOptions() { return minNumberOfOptions; }
+        public String[] getPollOptions() {
+            return pollOptions;
+        }
 
-        public byte getMaxNumberOfOptions() { return maxNumberOfOptions; }
+        public byte getMinNumberOfOptions() {
+            return minNumberOfOptions;
+        }
 
-        public boolean isOptionsAreBinary() { return optionsAreBinary; }
+        public byte getMaxNumberOfOptions() {
+            return maxNumberOfOptions;
+        }
 
+        public byte getMinRangeValue() {
+            return minRangeValue;
+        }
+
+        public byte getMaxRangeValue() {
+            return maxRangeValue;
+        }
+
+        public byte getVotingModel() {
+            return votingModel;
+        }
+
+        public long getMinBalance() {
+            return minBalance;
+        }
+
+        public byte getMinBalanceModel() {
+            return minBalanceModel;
+        }
+
+        public long getHoldingId() {
+            return holdingId;
+        }
     }
 
     public final static class MessagingVoteCasting extends AbstractAttachment {
@@ -442,22 +564,22 @@ public interface Attachment extends Appendix {
         private final long pollId;
         private final byte[] pollVote;
 
-        MessagingVoteCasting(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
+        public MessagingVoteCasting(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
             super(buffer, transactionVersion);
-            this.pollId = buffer.getLong();
+            pollId = buffer.getLong();
             int numberOfOptions = buffer.get();
             if (numberOfOptions > Constants.MAX_POLL_OPTION_COUNT) {
-                throw new NxtException.NotValidException("Error parsing vote casting parameters");
+                throw new NxtException.NotValidException("More than " + Constants.MAX_POLL_OPTION_COUNT + " options in a vote");
             }
-            this.pollVote = new byte[numberOfOptions];
+            pollVote = new byte[numberOfOptions];
             buffer.get(pollVote);
         }
 
-        MessagingVoteCasting(JSONObject attachmentData) {
+        public MessagingVoteCasting(JSONObject attachmentData) {
             super(attachmentData);
-            this.pollId = Convert.parseUnsignedLong((String)attachmentData.get("pollId"));
-            JSONArray vote = (JSONArray)attachmentData.get("vote");
-            this.pollVote = new byte[vote.size()];
+            pollId = Convert.parseUnsignedLong((String) attachmentData.get("poll"));
+            JSONArray vote = (JSONArray) attachmentData.get("vote");
+            pollVote = new byte[vote.size()];
             for (int i = 0; i < pollVote.length; i++) {
                 pollVote[i] = ((Long) vote.get(i)).byteValue();
             }
@@ -466,11 +588,6 @@ public interface Attachment extends Appendix {
         public MessagingVoteCasting(long pollId, byte[] pollVote) {
             this.pollId = pollId;
             this.pollVote = pollVote;
-        }
-
-        @Override
-        String getAppendixName() {
-            return "VoteCasting";
         }
 
         @Override
@@ -487,7 +604,7 @@ public interface Attachment extends Appendix {
 
         @Override
         void putMyJSON(JSONObject attachment) {
-            attachment.put("pollId", Convert.toUnsignedLong(this.pollId));
+            attachment.put("poll", Convert.toUnsignedLong(this.pollId));
             JSONArray vote = new JSONArray();
             if (this.pollVote != null) {
                 for (byte aPollVote : this.pollVote) {
@@ -502,10 +619,72 @@ public interface Attachment extends Appendix {
             return TransactionType.Messaging.VOTE_CASTING;
         }
 
-        public long getPollId() { return pollId; }
+        public long getPollId() {
+            return pollId;
+        }
 
-        public byte[] getPollVote() { return pollVote; }
+        public byte[] getPollVote() {
+            return pollVote;
+        }
+    }
 
+    public final static class MessagingPhasingVoteCasting extends AbstractAttachment {
+        private final List<byte[]> transactionFullHashes;
+
+        MessagingPhasingVoteCasting(ByteBuffer buffer, byte transactionVersion) {
+            super(buffer, transactionVersion);
+            byte length = buffer.get();
+            transactionFullHashes = new ArrayList<>(length);
+            for (int i = 0; i < length; i++) {
+                byte[] hash = new byte[32];
+                buffer.get(hash);
+                transactionFullHashes.add(hash);
+            }
+        }
+
+        MessagingPhasingVoteCasting(JSONObject attachmentData) {
+            super(attachmentData);
+            JSONArray jsonArray = (JSONArray) (attachmentData.get("transactionFullHashes"));
+            transactionFullHashes = new ArrayList<>(jsonArray.size());
+            for (int i = 0; i < jsonArray.size(); i++) {
+                transactionFullHashes.add(Convert.parseHexString((String)jsonArray.get(i)));
+            }
+        }
+
+        public MessagingPhasingVoteCasting(List<byte[]> transactionFullHashes) {
+            this.transactionFullHashes = transactionFullHashes;
+        }
+
+        @Override
+        int getMySize() {
+            return 1 + 32 * transactionFullHashes.size();
+        }
+
+        @Override
+        void putMyBytes(ByteBuffer buffer) {
+            buffer.put((byte) transactionFullHashes.size());
+            for (byte[] hash : transactionFullHashes) {
+                buffer.put(hash);
+            }
+        }
+
+        @Override
+        void putMyJSON(JSONObject attachment) {
+            JSONArray jsonArray = new JSONArray();
+            for (byte[] hash : transactionFullHashes) {
+                jsonArray.add(Convert.toHexString(hash));
+            }
+            attachment.put("transactionFullHashes", jsonArray);
+        }
+
+        @Override
+        public TransactionType getTransactionType() {
+            return TransactionType.Messaging.PHASING_VOTE_CASTING;
+        }
+
+        public List<byte[]> getTransactionFullHashes() {
+            return transactionFullHashes;
+        }
     }
 
     public final static class MessagingHubAnnouncement extends AbstractAttachment {
@@ -543,11 +722,6 @@ public interface Attachment extends Appendix {
         public MessagingHubAnnouncement(long minFeePerByteNQT, String[] uris) {
             this.minFeePerByteNQT = minFeePerByteNQT;
             this.uris = uris;
-        }
-
-        @Override
-        String getAppendixName() {
-            return "HubAnnouncement";
         }
 
         @Override
@@ -650,11 +824,6 @@ public interface Attachment extends Appendix {
         */
 
         @Override
-        String getAppendixName() {
-            return "AccountInfo";
-        }
-
-        @Override
         int getMySize() {
             return 1 + Convert.toBytes(name).length + 2 + Convert.toBytes(description).length +
                     (getVersion() < 2 ? 0 : 2 + (messagePattern == null ? 0 : Convert.toBytes(messagePattern.pattern()).length + 4));
@@ -740,11 +909,6 @@ public interface Attachment extends Appendix {
         }
 
         @Override
-        String getAppendixName() {
-            return "AssetIssuance";
-        }
-
-        @Override
         int getMySize() {
             return 1 + Convert.toBytes(name).length + 2 + Convert.toBytes(description).length + 8 + 1;
         }
@@ -815,11 +979,6 @@ public interface Attachment extends Appendix {
             this.assetId = assetId;
             this.quantityQNT = quantityQNT;
             this.comment = null;
-        }
-
-        @Override
-        String getAppendixName() {
-            return "AssetTransfer";
         }
 
         @Override
@@ -939,11 +1098,6 @@ public interface Attachment extends Appendix {
         }
 
         @Override
-        String getAppendixName() {
-            return "AskOrderPlacement";
-        }
-
-        @Override
         public TransactionType getTransactionType() {
             return TransactionType.ColoredCoins.ASK_ORDER_PLACEMENT;
         }
@@ -962,11 +1116,6 @@ public interface Attachment extends Appendix {
 
         public ColoredCoinsBidOrderPlacement(long assetId, long quantityQNT, long priceNQT) {
             super(assetId, quantityQNT, priceNQT);
-        }
-
-        @Override
-        String getAppendixName() {
-            return "BidOrderPlacement";
         }
 
         @Override
@@ -1029,11 +1178,6 @@ public interface Attachment extends Appendix {
         }
 
         @Override
-        String getAppendixName() {
-            return "AskOrderCancellation";
-        }
-
-        @Override
         public TransactionType getTransactionType() {
             return TransactionType.ColoredCoins.ASK_ORDER_CANCELLATION;
         }
@@ -1052,11 +1196,6 @@ public interface Attachment extends Appendix {
 
         public ColoredCoinsBidOrderCancellation(long orderId) {
             super(orderId);
-        }
-
-        @Override
-        String getAppendixName() {
-            return "BidOrderCancellation";
         }
 
         @Override
@@ -1090,11 +1229,6 @@ public interface Attachment extends Appendix {
             this.assetId = assetId;
             this.height = height;
             this.amountNQTPerQNT = amountNQTPerQNT;
-        }
-
-        @Override
-        String getAppendixName() {
-            return "DividendPayment";
         }
 
         @Override
@@ -1170,11 +1304,6 @@ public interface Attachment extends Appendix {
         }
 
         @Override
-        String getAppendixName() {
-            return "DigitalGoodsListing";
-        }
-
-        @Override
         int getMySize() {
             return 2 + Convert.toBytes(name).length + 2 + Convert.toBytes(description).length + 2
                         + Convert.toBytes(tags).length + 4 + 8;
@@ -1240,11 +1369,6 @@ public interface Attachment extends Appendix {
         }
 
         @Override
-        String getAppendixName() {
-            return "DigitalGoodsDelisting";
-        }
-
-        @Override
         int getMySize() {
             return 8;
         }
@@ -1288,11 +1412,6 @@ public interface Attachment extends Appendix {
         public DigitalGoodsPriceChange(long goodsId, long priceNQT) {
             this.goodsId = goodsId;
             this.priceNQT = priceNQT;
-        }
-
-        @Override
-        String getAppendixName() {
-            return "DigitalGoodsPriceChange";
         }
 
         @Override
@@ -1343,11 +1462,6 @@ public interface Attachment extends Appendix {
         public DigitalGoodsQuantityChange(long goodsId, int deltaQuantity) {
             this.goodsId = goodsId;
             this.deltaQuantity = deltaQuantity;
-        }
-
-        @Override
-        String getAppendixName() {
-            return "DigitalGoodsQuantityChange";
         }
 
         @Override
@@ -1406,11 +1520,6 @@ public interface Attachment extends Appendix {
             this.quantity = quantity;
             this.priceNQT = priceNQT;
             this.deliveryDeadlineTimestamp = deliveryDeadlineTimestamp;
-        }
-
-        @Override
-        String getAppendixName() {
-            return "DigitalGoodsPurchase";
         }
 
         @Override
@@ -1485,11 +1594,6 @@ public interface Attachment extends Appendix {
         }
 
         @Override
-        String getAppendixName() {
-            return "DigitalGoodsDelivery";
-        }
-
-        @Override
         int getMySize() {
             return 8 + 4 + goods.getSize() + 8;
         }
@@ -1548,11 +1652,6 @@ public interface Attachment extends Appendix {
         }
 
         @Override
-        String getAppendixName() {
-            return "DigitalGoodsFeedback";
-        }
-
-        @Override
         int getMySize() {
             return 8;
         }
@@ -1599,11 +1698,6 @@ public interface Attachment extends Appendix {
         }
 
         @Override
-        String getAppendixName() {
-            return "DigitalGoodsRefund";
-        }
-
-        @Override
         int getMySize() {
             return 8 + 8;
         }
@@ -1647,11 +1741,6 @@ public interface Attachment extends Appendix {
 
         public AccountControlEffectiveBalanceLeasing(short period) {
             this.period = period;
-        }
-
-        @Override
-        String getAppendixName() {
-            return "EffectiveBalanceLeasing";
         }
 
         @Override
@@ -1755,11 +1844,6 @@ public interface Attachment extends Appendix {
             this.ruleset = ruleset;
             this.algorithm = algorithm;
             this.decimals = decimals;
-        }
-
-        @Override
-        String getAppendixName() {
-            return "CurrencyIssuance";
         }
 
         @Override
@@ -1895,11 +1979,6 @@ public interface Attachment extends Appendix {
         }
 
         @Override
-        String getAppendixName() {
-            return "ReserveIncrease";
-        }
-
-        @Override
         int getMySize() {
             return 8 + 8;
         }
@@ -1955,11 +2034,6 @@ public interface Attachment extends Appendix {
         }
 
         @Override
-        String getAppendixName() {
-            return "ReserveClaim";
-        }
-
-        @Override
         int getMySize() {
             return 8 + 8;
         }
@@ -2012,11 +2086,6 @@ public interface Attachment extends Appendix {
         public MonetarySystemCurrencyTransfer(long currencyId, long units) {
             this.currencyId = currencyId;
             this.units = units;
-        }
-
-        @Override
-        String getAppendixName() {
-            return "CurrencyTransfer";
         }
 
         @Override
@@ -2096,11 +2165,6 @@ public interface Attachment extends Appendix {
             this.initialBuySupply = initialBuySupply;
             this.initialSellSupply = initialSellSupply;
             this.expirationHeight = expirationHeight;
-        }
-
-        @Override
-        String getAppendixName() {
-            return "PublishExchangeOffer";
         }
 
         @Override
@@ -2247,11 +2311,6 @@ public interface Attachment extends Appendix {
         }
 
         @Override
-        String getAppendixName() {
-            return "ExchangeBuy";
-        }
-
-        @Override
         public TransactionType getTransactionType() {
             return MonetarySystem.EXCHANGE_BUY;
         }
@@ -2270,11 +2329,6 @@ public interface Attachment extends Appendix {
 
         public MonetarySystemExchangeSell(long currencyId, long rateNQT, long units) {
             super(currencyId, rateNQT, units);
-        }
-
-        @Override
-        String getAppendixName() {
-            return "ExchangeSell";
         }
 
         @Override
@@ -2312,11 +2366,6 @@ public interface Attachment extends Appendix {
             this.currencyId = currencyId;
             this.units = units;
             this.counter = counter;
-        }
-
-        @Override
-        String getAppendixName() {
-            return "CurrencyMinting";
         }
 
         @Override
@@ -2380,11 +2429,6 @@ public interface Attachment extends Appendix {
 
         public MonetarySystemCurrencyDeletion(long currencyId) {
             this.currencyId = currencyId;
-        }
-
-        @Override
-        String getAppendixName() {
-            return "CurrencyDeletion";
         }
 
         @Override

@@ -35,6 +35,7 @@ final class TransactionImpl implements Transaction {
         private Appendix.EncryptedMessage encryptedMessage;
         private Appendix.EncryptToSelfMessage encryptToSelfMessage;
         private Appendix.PublicKeyAnnouncement publicKeyAnnouncement;
+        private Appendix.Phasing phasing;
         private long blockId;
         private int height = Integer.MAX_VALUE;
         private long id;
@@ -134,6 +135,12 @@ final class TransactionImpl implements Transaction {
             return this;
         }
 
+        @Override
+        public Builder phasing(Appendix.Phasing phasing) {
+            this.phasing = phasing;
+            return this;
+        }
+
         BuilderImpl id(long id) {
             this.id = id;
             return this;
@@ -199,8 +206,9 @@ final class TransactionImpl implements Transaction {
     private final Appendix.EncryptedMessage encryptedMessage;
     private final Appendix.EncryptToSelfMessage encryptToSelfMessage;
     private final Appendix.PublicKeyAnnouncement publicKeyAnnouncement;
+    private final Appendix.Phasing phasing;
 
-    private final List<? extends Appendix.AbstractAppendix> appendages;
+    private final List<Appendix.AbstractAppendix> appendages;
     private final int appendagesSize;
 
     private volatile int height = Integer.MAX_VALUE;
@@ -251,6 +259,9 @@ final class TransactionImpl implements Transaction {
         }
         if ((this.encryptToSelfMessage = builder.encryptToSelfMessage) != null) {
             list.add(this.encryptToSelfMessage);
+        }
+        if ((this.phasing = builder.phasing) != null) {
+            list.add(this.phasing);
         }
         this.appendages = Collections.unmodifiableList(list);
         int appendagesSize = 0;
@@ -420,7 +431,7 @@ final class TransactionImpl implements Transaction {
     }
 
     @Override
-    public List<? extends Appendix> getAppendages() {
+    public List<Appendix.AbstractAppendix> getAppendages() {
         return appendages;
     }
 
@@ -495,6 +506,11 @@ final class TransactionImpl implements Transaction {
     @Override
     public Appendix.EncryptToSelfMessage getEncryptToSelfMessage() {
         return encryptToSelfMessage;
+    }
+
+    @Override
+    public Appendix.Phasing getPhasing() {
+        return phasing;
     }
 
     Appendix.PublicKeyAnnouncement getPublicKeyAnnouncement() {
@@ -604,6 +620,10 @@ final class TransactionImpl implements Transaction {
             if ((flags & position) != 0) {
                 builder.encryptToSelfMessage(new Appendix.EncryptToSelfMessage(buffer, version));
             }
+            position <<= 1;
+            if ((flags & position) != 0) {
+                builder.phasing(new Appendix.Phasing(buffer, version));
+            }
             return builder.build();
         } catch (NxtException.NotValidException|RuntimeException e) {
             Logger.logDebugMessage("Failed to parse transaction bytes: " + Convert.toHexString(bytes));
@@ -615,18 +635,6 @@ final class TransactionImpl implements Transaction {
     public byte[] getUnsignedBytes() {
         return zeroSignature(getBytes());
     }
-
-    /*
-    @Override
-    public Collection<TransactionType> getPhasingTransactionTypes() {
-        return getType().getPhasingTransactionTypes();
-    }
-
-    @Override
-    public Collection<TransactionType> getPhasedTransactionTypes() {
-        return getType().getPhasedTransactionTypes();
-    }
-    */
 
     @Override
     public JSONObject getJSONObject() {
@@ -700,6 +708,7 @@ final class TransactionImpl implements Transaction {
                 builder.encryptedMessage(Appendix.EncryptedMessage.parse(attachmentData));
                 builder.publicKeyAnnouncement((Appendix.PublicKeyAnnouncement.parse(attachmentData)));
                 builder.encryptToSelfMessage(Appendix.EncryptToSelfMessage.parse(attachmentData));
+                builder.phasing(Appendix.Phasing.parse(attachmentData));
             }
             return builder.build();
         } catch (NxtException.NotValidException|RuntimeException e) {
@@ -789,6 +798,10 @@ final class TransactionImpl implements Transaction {
         if (encryptToSelfMessage != null) {
             flags |= position;
         }
+        position <<= 1;
+        if (phasing != null) {
+            flags |= position;
+        }
         return flags;
     }
 
@@ -827,8 +840,17 @@ final class TransactionImpl implements Transaction {
         if (recipientAccount == null && recipientId != 0) {
             recipientAccount = Account.addOrGetAccount(recipientId);
         }
-        for (Appendix.AbstractAppendix appendage : appendages) {
-            appendage.apply(this, senderAccount, recipientAccount);
+        if (referencedTransactionFullHash != null
+                && timestamp > Constants.REFERENCED_TRANSACTION_FULL_HASH_BLOCK_TIMESTAMP) {
+            senderAccount.addToUnconfirmedBalanceNQT(Constants.UNCONFIRMED_POOL_DEPOSIT_NQT);
+        }
+        if (phasing == null) {
+            for (Appendix.AbstractAppendix appendage : appendages) {
+                appendage.apply(this, senderAccount, recipientAccount);
+            }
+        } else {
+            senderAccount.addToBalanceNQT(-feeNQT);
+            phasing.apply(this, senderAccount, recipientAccount);
         }
     }
 

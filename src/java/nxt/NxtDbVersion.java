@@ -601,10 +601,74 @@ class NxtDbVersion extends DbVersion {
             case 230:
                 apply("CREATE INDEX IF NOT EXISTS trade_height_idx ON trade(height)");
             case 231:
+                apply("DROP TABLE IF EXISTS poll");
+            case 232:
+                apply("DROP TABLE IF EXISTS vote");
+            case 233:
+                apply("CREATE TABLE IF NOT EXISTS vote (db_id IDENTITY, id BIGINT NOT NULL, " +
+                        "poll_id BIGINT NOT NULL, voter_id BIGINT NOT NULL, vote_bytes VARBINARY NOT NULL, height INT NOT NULL)");
+            case 234:
+                apply("CREATE UNIQUE INDEX IF NOT EXISTS vote_id_idx ON vote (id)");
+            case 235:
+                apply("CREATE UNIQUE INDEX IF NOT EXISTS vote_poll_id_idx ON vote (poll_id, voter_id)");
+            case 236:
+                apply("CREATE TABLE IF NOT EXISTS poll (db_id IDENTITY, id BIGINT NOT NULL, "
+                        + "account_id BIGINT NOT NULL, name VARCHAR NOT NULL, "
+                        + "description VARCHAR, options ARRAY NOT NULL, min_num_options TINYINT, max_num_options TINYINT, "
+                        + "min_range_value TINYINT, max_range_value TINYINT, "
+                        + "finish_height INT NOT NULL, voting_model TINYINT NOT NULL, min_balance BIGINT, "
+                        + "min_balance_model TINYINT, holding_id BIGINT, height INT NOT NULL)");
+            case 237:
+                apply("CREATE TABLE IF NOT EXISTS poll_result (db_id IDENTITY, poll_id BIGINT NOT NULL, "
+                        + "option VARCHAR NOT NULL, result BIGINT NOT NULL,  height INT NOT NULL)");
+            case 238:
+                apply("ALTER TABLE transaction ADD COLUMN IF NOT EXISTS phased BOOLEAN NOT NULL DEFAULT FALSE");
+            case 239:
+                apply("CREATE TABLE IF NOT EXISTS phasing_poll (db_id IDENTITY, id BIGINT NOT NULL, "
+                        + "account_id BIGINT NOT NULL, finished BOOLEAN, voter_count TINYINT NOT NULL DEFAULT 0, "
+                        + "finish_height INT NOT NULL, voting_model TINYINT NOT NULL, quorum BIGINT NOT NULL, "
+                        + "min_balance BIGINT NOT NULL, holding_id BIGINT NOT NULL, min_balance_model TINYINT, "
+                        + "full_hash BINARY(32) NOT NULL, height INT NOT NULL, latest BOOLEAN DEFAULT TRUE NOT NULL)");
+            case 240:
+                apply("CREATE TABLE IF NOT EXISTS phasing_vote (db_id IDENTITY, id BIGINT NOT NULL, "
+                        + "transaction_id BIGINT NOT NULL, voter_id BIGINT NOT NULL, "
+                        + "height INT NOT NULL)");
+            case 241:
+                apply("CREATE TABLE IF NOT EXISTS phasing_poll_voter (db_id IDENTITY, "
+                        + "transaction_id BIGINT NOT NULL, voter_id BIGINT NOT NULL, "
+                        + "height INT NOT NULL, latest BOOLEAN DEFAULT TRUE NOT NULL)");
+            case 242:
+                apply("CREATE INDEX IF NOT EXISTS vote_height_idx ON vote(height)");
+            case 243:
+                apply("CREATE UNIQUE INDEX IF NOT EXISTS poll_id_idx ON poll(id)");
+            case 244:
+                apply("CREATE INDEX IF NOT EXISTS poll_height_idx ON poll(height)");
+            case 245:
+                apply("CREATE INDEX IF NOT EXISTS poll_account_idx ON poll(account_id)");
+            case 246:
+                apply("CREATE INDEX IF NOT EXISTS poll_finish_height_idx ON poll(finish_height DESC)");
+            case 247:
+                apply("CREATE UNIQUE INDEX IF NOT EXISTS poll_result_poll_id_idx ON poll_result(poll_id)");
+            case 248:
+                apply("CREATE INDEX IF NOT EXISTS poll_result_height_idx ON poll_result(height)");
+            case 249:
+                apply("CREATE UNIQUE INDEX IF NOT EXISTS phasing_poll_id_height_idx ON phasing_poll(id, height DESC)");
+            case 250:
+                apply("CREATE INDEX IF NOT EXISTS phasing_poll_height_idx ON phasing_poll(height)");
+            case 251:
+                apply("CREATE INDEX IF NOT EXISTS phasing_poll_account_id_idx ON phasing_poll(account_id, height DESC)");
+            case 252:
+                apply("CREATE INDEX IF NOT EXISTS phasing_poll_holding_id_idx ON phasing_poll(holding_id, height DESC)");
+            case 253:
+                apply("CREATE UNIQUE INDEX IF NOT EXISTS phasing_vote_id_transaction_idx ON phasing_vote(id, transaction_id)");
+            case 254:
+                apply("CREATE UNIQUE INDEX IF NOT EXISTS phasing_vote_transaction_voter_idx ON phasing_vote(transaction_id, voter_id)");
+            case 255:
+                apply("CREATE INDEX IF NOT EXISTS phasing_poll_voter_id_height_idx ON phasing_poll_voter(transaction_id, height DESC)");
+            case 256:
                 return;
             default:
                 throw new RuntimeException("Blockchain database inconsistent with code, probably trying to run older code on newer database");
         }
     }
-
 }

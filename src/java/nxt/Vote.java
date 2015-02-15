@@ -9,20 +9,44 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.HashMap;
-import java.util.Map;
 
 public final class Vote {
+    private static final DbKey.LongKeyFactory<Vote> voteDbKeyFactory = new DbKey.LongKeyFactory<Vote>("id") {
+        @Override
+        public DbKey newKey(Vote vote) {
+            return vote.dbKey;
+        }
+    };
 
-    private static final DbKey.LongKeyFactory<Vote> voteDbKeyFactory = null;
+    private static final EntityDbTable<Vote> voteTable = new EntityDbTable<Vote>("vote", voteDbKeyFactory) {
 
-    private static final EntityDbTable<Vote> voteTable = null;
+        @Override
+        protected Vote load(Connection con, ResultSet rs) throws SQLException {
+            return new Vote(rs);
+        }
 
-    static Vote addVote(Transaction transaction, Attachment.MessagingVoteCasting attachment) {
-        Vote vote = new Vote(transaction, attachment);
-        voteTable.insert(vote);
-        return vote;
-    }
+        @Override
+        protected void save(Connection con, Vote vote) throws SQLException {
+            vote.save(con);
+        }
+
+        @Override
+        public void trim(int height) {
+            super.trim(height);
+            try (Connection con = Db.db.getConnection();
+                 DbIterator<Poll> polls = Poll.getPollsFinishingAtOrBefore(height);
+                 PreparedStatement pstmt = con.prepareStatement("DELETE FROM vote WHERE poll_id = ?")) {
+                for (Poll poll : polls) {
+                    pstmt.setLong(1, poll.getId());
+                    pstmt.executeUpdate();
+                }
+            } catch (SQLException e) {
+                throw new RuntimeException(e.toString(), e);
+            } finally {
+                clearCache();
+            }
+        }
+    };
 
     public static int getCount() {
         return voteTable.getCount();
@@ -32,15 +56,19 @@ public final class Vote {
         return voteTable.get(voteDbKeyFactory.newKey(id));
     }
 
-    public static Map<Long,Long> getVoters(Poll poll) {
-        Map<Long,Long> map = new HashMap<>();
-        try (DbIterator<Vote> voteIterator = voteTable.getManyBy(new DbClause.LongClause("poll_id", poll.getId()), 0, -1)) {
-            while (voteIterator.hasNext()) {
-                Vote vote = voteIterator.next();
-                map.put(vote.getVoterId(), vote.getId());
-            }
-        }
-        return map;
+    public static DbIterator<Vote> getVotes(long pollId, int from, int to) {
+        return voteTable.getManyBy(new DbClause.LongClause("poll_id", pollId), from, to);
+    }
+
+    static boolean isVoteGiven(long pollId, long voterId){
+        DbClause clause = new DbClause.LongClause("poll_id", pollId).and(new DbClause.LongClause("voter_id", voterId));
+        return voteTable.getCount(clause) > 0;
+    }
+
+    static Vote addVote(Transaction transaction, Attachment.MessagingVoteCasting attachment) {
+        Vote vote = new Vote(transaction, attachment);
+        voteTable.insert(vote);
+        return vote;
     }
 
     static void init() {}
@@ -68,7 +96,7 @@ public final class Vote {
         this.voteBytes = rs.getBytes("vote_bytes");
     }
 
-    private void save(Connection con) throws SQLException {
+    protected void save(Connection con) throws SQLException {
         try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO vote (id, poll_id, voter_id, "
                 + "vote_bytes, height) VALUES (?, ?, ?, ?, ?)")) {
             int i = 0;

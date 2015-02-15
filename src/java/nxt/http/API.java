@@ -38,7 +38,7 @@ import static nxt.http.JSONResponses.NO_PASSWORD_IN_CONFIG;
 
 public final class API {
 
-    public static final int TESTNET_API_PORT = 6876;
+    public static final int TESTNET_API_PORT = 2876;
 
     private static final Set<String> allowedBotHosts;
     private static final List<NetworkAddress> allowedBotNets;

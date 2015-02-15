@@ -2,6 +2,7 @@
  * @depends {nrs.js}
  */
 var NRS = (function(NRS, $, undefined) {
+
 	NRS.pages.peers = function() {
 		NRS.sendRequest("getPeers+", {
 			"active": "true",

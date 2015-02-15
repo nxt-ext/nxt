@@ -6,6 +6,9 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.tempBlocks = [];
 	var trackBlockchain = false;
 
+	NRS.averageBlockGenerationTime = null;
+
+
 	NRS.getBlock = function(blockID, callback, pageRequest) {
 		NRS.sendRequest("getBlock" + (pageRequest ? "+" : ""), {
 			"block": blockID
@@ -13,6 +16,14 @@ var NRS = (function(NRS, $, undefined) {
 			if (response.errorCode && response.errorCode == -1) {
 				setTimeout(function (){ NRS.getBlock(blockID, callback, pageRequest); }, 2500);
 			} else {
+				if (NRS.blocks.length >= 2) {
+					var max = Math.min(NRS.blocks.length-1, 10);
+					var diffSum = 0;
+					for (var i=1; i<=max; i++) {
+						diffSum += (NRS.blocks[i-1].timestamp - NRS.blocks[i].timestamp);
+					}
+					NRS.averageBlockGenerationTime = Math.round(diffSum/max);
+				}
 				if (callback) {
 					response.block = blockID;
 					callback(response);
@@ -215,7 +226,7 @@ var NRS = (function(NRS, $, undefined) {
 		$("#dashboard_blocks_table tbody").prepend(rows);
 
 		//update number of confirmations... perhaps we should also update it in tne NRS.transactions array
-		$("#dashboard_transactions_table tr.confirmed td.confirmations").each(function() {
+		$("#dashboard_table tr.confirmed td.confirmations").each(function() {
 			if ($(this).data("incoming")) {
 				$(this).removeData("incoming");
 				return true;
@@ -348,7 +359,7 @@ var NRS = (function(NRS, $, undefined) {
 			} else {
 				$("#blocks_transactions_per_hour").html(Math.round(totalTransactions / (time / 60) * 60)).removeClass("loading_dots");
 			}
-			$("#blocks_average_generation_time").html(Math.round(time / NRS.itemsPerPage) + "s").removeClass("loading_dots");
+			$("#blocks_average_generation_time").html(NRS.averageBlockGenerationTime + "s").removeClass("loading_dots");
 			$("#blocks_average_fee").html(NRS.formatStyledAmount(averageFee)).removeClass("loading_dots");
 			$("#blocks_average_amount").parent().parent().css('visibility', 'visible');
 			$("#blocks_page .ion-stats-bars").parent().css('visibility', 'visible');

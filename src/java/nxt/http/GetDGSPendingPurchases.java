@@ -9,8 +9,6 @@ import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
 
-import static nxt.http.JSONResponses.MISSING_SELLER;
-
 public final class GetDGSPendingPurchases extends APIServlet.APIRequestHandler {
 
     static final GetDGSPendingPurchases instance = new GetDGSPendingPurchases();
@@ -22,10 +20,7 @@ public final class GetDGSPendingPurchases extends APIServlet.APIRequestHandler {
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
 
-        long sellerId = ParameterParser.getSellerId(req);
-        if (sellerId == 0) {
-            return MISSING_SELLER;
-        }
+        long sellerId = ParameterParser.getAccountId(req, "seller", true);
         int firstIndex = ParameterParser.getFirstIndex(req);
         int lastIndex = ParameterParser.getLastIndex(req);
 

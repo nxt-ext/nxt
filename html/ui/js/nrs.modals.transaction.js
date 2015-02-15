@@ -3,7 +3,7 @@
  * @depends {nrs.modals.js}
  */
 var NRS = (function(NRS, $, undefined) {
-	$("#transactions_table, #dashboard_transactions_table, #transfer_history_table, #exchange_history_table, #currencies_table, #transaction_info_table, #ms_exchanges_history_table, #ms_exchange_requests_table, #user_info_modal_currencies, #block_info_transactions_table, #user_info_modal_transactions_table, #ms_open_buy_orders_table, #ms_open_sell_orders_table").on("click", "a[data-transaction]", function(e) {
+	$("#transactions_table, #dashboard_table, #transfer_history_table, #exchange_history_table, #currencies_table, #transaction_info_table, #ms_exchanges_history_table, #ms_exchange_requests_table, #user_info_modal_currencies, #block_info_transactions_table, #user_info_modal_transactions_table, #ms_open_buy_orders_table, #ms_open_sell_orders_table, #polls_table, #my_polls_table, #voted_polls_table").on("click", "a[data-transaction]", function(e) {
 		e.preventDefault();
 
 		var transactionId = $(this).data("transaction");
@@ -60,7 +60,7 @@ var NRS = (function(NRS, $, undefined) {
 		if (!transactionDetails.block) {
 			transactionDetails.block = "unconfirmed";
 		}
-		if (transactionDetails.height == 2147483647) {
+		if (transactionDetails.height == NRS.constants.MAX_INT_JAVA) {
 			transactionDetails.height = "unknown";
 		} else {
 			transactionDetails.height_formatted_html = "<a href='#' data-block='" + String(transactionDetails.height).escapeHTML() + "'>" + String(transactionDetails.height).escapeHTML() + "</a>";
@@ -179,8 +179,39 @@ var NRS = (function(NRS, $, undefined) {
 					var data = {
 						"type": $.t("poll_creation"),
 						"name": transaction.attachment.name,
-						"description": transaction.attachment.description
+						"description": transaction.attachment.description,
+						"finish_height": transaction.attachment.finishHeight,
+						"min_number_of_options": transaction.attachment.minNumberOfOptions,
+						"max_number_of_options": transaction.attachment.maxNumberOfOptions,
+						"min_range_value": transaction.attachment.minRangeValue,
+						"max_range_value": transaction.attachment.maxRangeValue,
+						"min_balance": transaction.attachment.minBalance
 					};
+
+					if(transaction.attachment.votingModel == "0")
+					{
+						data["voting_model"] = "Vote by NXT balance";
+
+					}
+					if(transaction.attachment.votingModel == "1")
+					{
+						data["voting_model"] = "Vote by Account";
+					}
+					if(transaction.attachment.votingModel == "2")
+					{
+						data["voting_model"] = "Vote by asset";
+						data["asset_id"] = transaction.attachment.assetId;
+					}
+
+					
+					for (var i = 0; i < transaction.attachment.options.length; i++) {
+						data["option_" + i] = transaction.attachment.options[i];
+					}
+
+					if (transaction.sender != NRS.account) {
+						data["sender"] = NRS.getAccountTitle(transaction, "sender");
+					}
+					
 					data["sender"] = transaction.senderRS ? transaction.senderRS : transaction.sender;
 					$("#transaction_info_table").find("tbody").append(NRS.createInfoTable(data));
 					$("#transaction_info_table").show();
@@ -299,6 +330,17 @@ var NRS = (function(NRS, $, undefined) {
 						"type": $.t("alias_deletion"),
 						"alias_name": transaction.attachment.alias,
 						"sender": transaction.senderRS ? transaction.senderRS : transaction.sender
+					};
+
+					$("#transaction_info_table").find("tbody").append(NRS.createInfoTable(data));
+					$("#transaction_info_table").show();
+
+					break;
+				case 9:
+					var data = {
+						"type": $.t("transaction_approval"),
+						"name": transaction.attachment.name,
+						"description": transaction.attachment.description
 					};
 
 					$("#transaction_info_table").find("tbody").append(NRS.createInfoTable(data));
@@ -579,7 +621,7 @@ var NRS = (function(NRS, $, undefined) {
 							"seller": NRS.getAccountFormatted(goods, "seller")
 						};
 
-						$("#transaction_info_table").find("tbody").append(NRS.createInfoTable(data));
+						$("#transaction_info_table tbody").append(NRS.createInfoTable(data));
 						$("#transaction_info_table").show();
 
 						NRS.sendRequest("getDGSPurchase", {
@@ -996,7 +1038,6 @@ var NRS = (function(NRS, $, undefined) {
 			}
 		}
 		
-
 		if (incorrect) {
 			$.growl($.t("error_unknown_transaction_type"), {
 				"type": "danger"
@@ -1133,6 +1174,16 @@ var NRS = (function(NRS, $, undefined) {
 		};
 		return data;
 	};
+
+	$(document).on("click", ".approve_transaction_btn", function(e) {
+		e.preventDefault();
+		$('#approve_transaction_modal .at_transaction_full_hash_display').text($(this).data("transaction"));
+		$('#approve_transaction_modal #at_transaction_full_hash').val($(this).data("fullHash"));
+	});
+
+	$("#approve_transaction_button").on("click", function(e) {
+		$('.approve_transaction_btn[data-full-hash="' + $("#at_transaction_full_hash").val() + '"]').addClass("disabled");
+	});
 
 	$("#transaction_info_modal").on("hide.bs.modal", function(e) {
 		NRS.removeDecryptionForm($(this));

@@ -330,6 +330,29 @@ var NRS = (function(NRS, $, undefined) {
 		});
 	}
 
+	NRS.setup.dgs_search = function() {
+		var sidebarId = 'sidebar_dgs_buyer';
+		var options = {
+			"id": sidebarId,
+			"titleHTML": '<i class="fa fa-shopping-cart"></i><span data-i18n="marketplace">Marketplace</span>',
+			"page": 'dgs_search',
+			"desiredPosition": 60
+		}
+		NRS.addTreeviewSidebarMenuItem(options);
+		options = {
+			"titleHTML": '<span data-i18n="marketplace">Marketplace</span></a>',
+			"type": 'PAGE',
+			"page": 'dgs_search'
+		}
+		NRS.appendToTSMenuItem(sidebarId, options);
+		options = {
+			"titleHTML": '<span data-i18n="purchased_products">Purchased Products</span>',
+			"type": 'PAGE',
+			"page": 'purchased_dgs'
+		}
+		NRS.appendToTSMenuItem(sidebarId, options);
+	}
+
 	NRS.incoming.purchased_dgs = function(transactions) {
 		if (NRS.hasTransactionUpdates(transactions)) {
 			NRS.loadPage("purchased_dgs");
@@ -447,6 +470,41 @@ var NRS = (function(NRS, $, undefined) {
 
 			NRS.dataLoaded(rows);
 		});
+	}
+
+	NRS.setup.my_dgs_listings = function() {
+		var sidebarId = 'sidebar_dgs_seller';
+		var options = {
+			"id": sidebarId,
+			"titleHTML": '<i class="fa fa-shopping-cart"></i><span data-i18n="my_store">My Store</span>',
+			"page": 'my_dgs_listings',
+			"desiredPosition": 70
+		}
+		NRS.addTreeviewSidebarMenuItem(options);
+		options = {
+			"titleHTML": '<span data-i18n="my_products_for_sale">My Products For Sale</span>',
+			"type": 'PAGE',
+			"page": 'my_dgs_listings'
+		}
+		NRS.appendToTSMenuItem(sidebarId, options);
+		options = {
+			"titleHTML": '<span data-i18n="my_pending_orders">My Pending Orders</span>',
+			"type": 'PAGE',
+			"page": 'pending_orders_dgs'
+		}
+		NRS.appendToTSMenuItem(sidebarId, options);
+		options = {
+			"titleHTML": '<span data-i18n="my_completed_orders">My Completed Orders</span>',
+			"type": 'PAGE',
+			"page": 'completed_orders_dgs'
+		}
+		NRS.appendToTSMenuItem(sidebarId, options);
+		options = {
+			"titleHTML": '<span data-i18n="list_product_for_sale">List Product For Sale</span>',
+			"type": 'MODAL',
+			"modalId": 'dgs_listing_modal'
+		}
+		NRS.appendToTSMenuItem(sidebarId, options);
 	}
 
 	NRS.incoming.my_dgs_listings = function(transactions) {
