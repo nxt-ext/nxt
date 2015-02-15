@@ -41,7 +41,7 @@ public abstract class VersionedEntityDbTable<T> extends EntityDbTable<T> {
                             + " SET latest = FALSE " + dbKeyFactory.getPKClause() + " AND latest = TRUE LIMIT 1")) {
                         dbKey.setPK(pstmt);
                         pstmt.executeUpdate();
-                    save(con, t);
+                        save(con, t);
                         pstmt.executeUpdate(); // delete after the save
                     }
                     return true;

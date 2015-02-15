@@ -299,7 +299,9 @@ public abstract class TransactionType {
                     throw new NxtException.NotValidException("Invalid ordinary payment");
                 }
             }
+
         };
+
     }
 
     public static abstract class Messaging extends TransactionType {
@@ -1017,6 +1019,7 @@ public abstract class TransactionType {
             }
 
         };
+
     }
 
     public static abstract class ColoredCoins extends TransactionType {

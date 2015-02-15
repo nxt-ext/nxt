@@ -34,7 +34,7 @@ public final class Constants {
     public static final byte VOTING_MAX_RANGE_VALUE_LIMIT = 100;
     public static final byte VOTING_NO_VOTE_VALUE = Byte.MIN_VALUE;
     public static final byte VOTING_MIN_VOTE_DURATION = 10;
-    public static final int VOTING_MAX_VOTE_DURATION = 14*1440;
+    public static final int VOTING_MAX_VOTE_DURATION = 14 * 1440;
 
 
     public static final byte MAX_PHASING_WHITELIST_SIZE = 10;

@@ -1201,6 +1201,6 @@ public final class Account {
 
     @Override
     public String toString() {
-        return "Account (account_id: " + Convert.toUnsignedLong(getId())+")";
+        return "Account " + Convert.toUnsignedLong(getId());
     }
 }
