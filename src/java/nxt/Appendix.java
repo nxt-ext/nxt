@@ -2,6 +2,8 @@ package nxt;
 
 import nxt.crypto.EncryptedData;
 import nxt.util.Convert;
+import nxt.util.Logger;
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 import java.nio.ByteBuffer;
@@ -414,4 +416,185 @@ public interface Appendix {
 
     }
 
+    public static class Phasing extends AbstractAppendix {
+
+        static Phasing parse(JSONObject attachmentData) {
+            if (attachmentData.get("phasingFinishHeight") == null) {
+                return null;
+            }
+            return new Phasing(attachmentData);
+        }
+
+        private final int finishHeight;
+        private final long quorum;
+        private final byte votingModel;
+        private final long minBalance;
+        private final byte minBalanceModel;
+        private final long holdingId;
+        private final long[] whitelist;
+
+        Phasing(ByteBuffer buffer, byte transactionVersion) {
+            super(buffer, transactionVersion);
+            finishHeight = buffer.getInt();
+            votingModel = buffer.get();
+            quorum = buffer.getLong();
+            minBalance = buffer.getLong();
+            byte whitelistSize = buffer.get();
+            whitelist = new long[whitelistSize];
+            for (int pvc = 0; pvc < whitelist.length; pvc++) {
+                whitelist[pvc] = buffer.getLong();
+            }
+            holdingId = buffer.getLong();
+            minBalanceModel = buffer.get();
+        }
+
+        Phasing(JSONObject attachmentData) {
+            super(attachmentData);
+            finishHeight = ((Long) attachmentData.get("phasingFinishHeight")).intValue();
+            quorum = Convert.parseLong(attachmentData.get("phasingQuorum"));
+            minBalance = Convert.parseLong(attachmentData.get("phasingMinBalance"));
+            votingModel = ((Long) attachmentData.get("phasingVotingModel")).byteValue();
+            holdingId = Convert.parseUnsignedLong((String) attachmentData.get("phasingHolding"));
+            JSONArray whitelistJson = (JSONArray) (attachmentData.get("phasingWhitelist"));
+            whitelist = new long[whitelistJson.size()];
+            for (int i = 0; i < whitelist.length; i++) {
+                whitelist[i] = Convert.parseUnsignedLong((String) whitelistJson.get(i));
+            }
+            minBalanceModel = ((Long) attachmentData.get("phasingMinBalanceModel")).byteValue();
+        }
+
+        public Phasing(int finishHeight, byte votingModel, long holdingId, long quorum,
+                       long minBalance, byte minBalanceModel, long[] whitelist) {
+            this.finishHeight = finishHeight;
+            this.votingModel = votingModel;
+            this.quorum = quorum;
+            this.minBalance = minBalance;
+            this.minBalanceModel = minBalanceModel;
+            this.whitelist = Convert.nullToEmpty(whitelist);
+            this.holdingId = holdingId;
+        }
+
+        @Override
+        String getAppendixName() {
+            return "Phasing";
+        }
+
+        @Override
+        int getMySize() {
+            return 4 + 1 + 8 + 8 + 1 + 8 * whitelist.length + 8 + 1;
+        }
+
+        @Override
+        void putMyBytes(ByteBuffer buffer) {
+            buffer.putInt(finishHeight);
+            buffer.put(votingModel);
+            buffer.putLong(quorum);
+            buffer.putLong(minBalance);
+            buffer.put((byte) whitelist.length);
+            for (long account : whitelist) {
+                buffer.putLong(account);
+            }
+            buffer.putLong(holdingId);
+            buffer.put(minBalanceModel);
+        }
+
+        @Override
+        void putMyJSON(JSONObject json) {
+            json.put("phasingFinishHeight", finishHeight);
+            json.put("phasingQuorum", quorum);
+            json.put("phasingMinBalance", minBalance);
+            json.put("phasingVotingModel", votingModel);
+            json.put("phasingHolding", Convert.toUnsignedLong(holdingId));
+            JSONArray whitelistJson = new JSONArray();
+            for (long accountId : whitelist) {
+                whitelistJson.add(Convert.toUnsignedLong(accountId));
+            }
+            json.put("phasingWhitelist", whitelistJson);
+            json.put("phasingMinBalanceModel", minBalanceModel);
+        }
+
+        @Override
+        void validate(Transaction transaction) throws NxtException.ValidationException {
+
+            if (whitelist.length > Constants.MAX_PHASING_WHITELIST_SIZE) {
+                throw new NxtException.NotValidException("Whitelist is too big");
+            }
+
+            if (quorum <= 0) {
+                throw new NxtException.NotValidException("quorum <= 0");
+            }
+
+            int currentHeight = Nxt.getBlockchain().getHeight();
+            if (finishHeight < currentHeight + Constants.VOTING_MIN_VOTE_DURATION
+                    || finishHeight > currentHeight + Constants.VOTING_MAX_VOTE_DURATION) {
+                throw new NxtException.NotValidException("Invalid finish height");
+            }
+
+            VoteWeighting voteWeighting = new VoteWeighting(votingModel, holdingId, minBalance, minBalanceModel);
+            voteWeighting.validate();
+
+            if (voteWeighting.getVotingModel() == VoteWeighting.VotingModel.ACCOUNT && whitelist.length == 0) {
+                throw new NxtException.NotValidException("By-account voting with empty whitelist");
+            }
+
+        }
+
+        @Override
+        void apply(Transaction transaction, Account senderAccount, Account recipientAccount) {
+            PhasingPoll.addPoll(transaction, this);
+        }
+
+        void release(TransactionImpl transaction) {
+            Account senderAccount = Account.getAccount(transaction.getSenderId());
+            Account recipientAccount = Account.getAccount(transaction.getRecipientId());
+            //apply all attachments and appendixes, except the phasing itself
+            for (Appendix.AbstractAppendix appendage : transaction.getAppendages()) {
+                if (appendage != transaction.getPhasing()) {
+                    appendage.apply(transaction, senderAccount, recipientAccount);
+                }
+            }
+            Logger.logDebugMessage("Transaction " + transaction.getStringId() + " has been released");
+        }
+
+        void finalVerification(TransactionImpl transaction) {
+            PhasingPoll poll = PhasingPoll.getPoll(transaction.getId());
+            poll.finish();
+            if (PhasingVote.countVotes(poll) >= poll.getQuorum()) {
+                release(transaction);
+            } else {
+                Account senderAccount = Account.getAccount(transaction.getSenderId());
+                transaction.getType().undoAttachmentUnconfirmed(transaction, senderAccount);
+                senderAccount.addToUnconfirmedBalanceNQT(transaction.getAmountNQT());
+                Logger.logDebugMessage("Transaction " + transaction.getStringId() + " has been refused");
+            }
+        }
+
+        public int getFinishHeight() {
+            return finishHeight;
+        }
+
+        public long getQuorum() {
+            return quorum;
+        }
+
+        public long getMinBalance() {
+            return minBalance;
+        }
+
+        public byte getVotingModel() {
+            return votingModel;
+        }
+
+        public long getHoldingId() {
+            return holdingId;
+        }
+
+        public long[] getWhitelist() {
+            return whitelist;
+        }
+
+        public byte getMinBalanceModel() {
+            return minBalanceModel;
+        }
+    }
 }

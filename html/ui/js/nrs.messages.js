@@ -38,6 +38,16 @@ var NRS = (function(NRS, $, undefined) {
 		});
 	}
 
+	NRS.setup.messages = function() {
+		var options = {
+			"id": 'sidebar_messages',
+			"titleHTML": '<i class="fa fa-envelope"></i> <span data-i18n="messages">Messages</span>',
+			"page": 'messages',
+			"desiredPosition": 90
+		}
+		NRS.addSimpleSidebarMenuItem(options);
+	}
+
 	function displayMessageSidebar(callback) {
 		var activeAccount = false;
 

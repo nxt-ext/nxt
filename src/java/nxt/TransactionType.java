@@ -1,11 +1,13 @@
 package nxt;
 
 import nxt.util.Convert;
+import nxt.util.Logger;
 import org.json.simple.JSONObject;
 
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 
@@ -29,6 +31,7 @@ public abstract class TransactionType {
     private static final byte SUBTYPE_MESSAGING_ALIAS_SELL = 6;
     private static final byte SUBTYPE_MESSAGING_ALIAS_BUY = 7;
     private static final byte SUBTYPE_MESSAGING_ALIAS_DELETE = 8;
+    private static final byte SUBTYPE_MESSAGING_PHASING_VOTE_CASTING = 9;
 
     private static final byte SUBTYPE_COLORED_COINS_ASSET_ISSUANCE = 0;
     private static final byte SUBTYPE_COLORED_COINS_ASSET_TRANSFER = 1;
@@ -52,9 +55,11 @@ public abstract class TransactionType {
     private static final int BASELINE_FEE_HEIGHT = 1; // At release time must be less than current block - 1440
     private static final Fee BASELINE_FEE = new Fee(Constants.ONE_NXT, 0);
     private static final Fee BASELINE_ASSET_ISSUANCE_FEE = new Fee(1000 * Constants.ONE_NXT, 0);
+    private static final Fee BASELINE_POLL_FEE = new Fee(10 * Constants.ONE_NXT, 0);
     private static final int NEXT_FEE_HEIGHT = Integer.MAX_VALUE;
     private static final Fee NEXT_FEE = new Fee(Constants.ONE_NXT, 0);
     private static final Fee NEXT_ASSET_ISSUANCE_FEE = new Fee(1000 * Constants.ONE_NXT, 0);
+    private static final Fee NEXT_POLL_FEE = new Fee(10 * Constants.ONE_NXT, 0);
 
     public static TransactionType findTransactionType(byte type, byte subtype) {
         switch (type) {
@@ -85,6 +90,8 @@ public abstract class TransactionType {
                         return Messaging.ALIAS_BUY;
                     case SUBTYPE_MESSAGING_ALIAS_DELETE:
                         return Messaging.ALIAS_DELETE;
+                    case SUBTYPE_MESSAGING_PHASING_VOTE_CASTING:
+                        return Messaging.PHASING_VOTE_CASTING;
                     default:
                         return null;
                 }
@@ -176,13 +183,14 @@ public abstract class TransactionType {
     abstract boolean applyAttachmentUnconfirmed(Transaction transaction, Account senderAccount);
 
     final void apply(Transaction transaction, Account senderAccount, Account recipientAccount) {
-        senderAccount.addToBalanceNQT(- (Convert.safeAdd(transaction.getAmountNQT(), transaction.getFeeNQT())));
-        if (transaction.getReferencedTransactionFullHash() != null
-                && transaction.getTimestamp() > Constants.REFERENCED_TRANSACTION_FULL_HASH_BLOCK_TIMESTAMP) {
-            senderAccount.addToUnconfirmedBalanceNQT(Constants.UNCONFIRMED_POOL_DEPOSIT_NQT);
+        long amount = transaction.getAmountNQT();
+        if (transaction.getPhasing() == null) {
+            senderAccount.addToBalanceNQT(-Convert.safeAdd(amount, transaction.getFeeNQT()));
+        } else {
+            senderAccount.addToBalanceNQT(-amount);
         }
         if (recipientAccount != null) {
-            recipientAccount.addToBalanceAndUnconfirmedBalanceNQT(transaction.getAmountNQT());
+            recipientAccount.addToBalanceAndUnconfirmedBalanceNQT(amount);
         }
         applyAttachment(transaction, senderAccount, recipientAccount);
     }
@@ -228,20 +236,12 @@ public abstract class TransactionType {
         return canHaveRecipient();
     }
 
+    public abstract String getName();
+
     @Override
     public final String toString() {
-        return "type: " + getType() + ", subtype: " + getSubtype();
+        return getName() + " type: " + getType() + ", subtype: " + getSubtype();
     }
-
-    /*
-    Collection<TransactionType> getPhasingTransactionTypes() {
-        return Collections.emptyList();
-    }
-
-    Collection<TransactionType> getPhasedTransactionTypes() {
-        return Collections.emptyList();
-    }
-    */
 
     public static abstract class Payment extends TransactionType {
 
@@ -267,7 +267,7 @@ public abstract class TransactionType {
         }
 
         @Override
-        final public boolean canHaveRecipient() {
+        public final boolean canHaveRecipient() {
             return true;
         }
 
@@ -276,6 +276,11 @@ public abstract class TransactionType {
             @Override
             public final byte getSubtype() {
                 return TransactionType.SUBTYPE_PAYMENT_ORDINARY_PAYMENT;
+            }
+
+            @Override
+            public String getName() {
+                return "OrdinaryPayment";
             }
 
             @Override
@@ -326,6 +331,11 @@ public abstract class TransactionType {
             }
 
             @Override
+            public String getName() {
+                return "ArbitraryMessage";
+            }
+
+            @Override
             Attachment.EmptyAttachment parseAttachment(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
                 return Attachment.ARBITRARY_MESSAGE;
             }
@@ -367,6 +377,11 @@ public abstract class TransactionType {
             @Override
             public final byte getSubtype() {
                 return TransactionType.SUBTYPE_MESSAGING_ALIAS_ASSIGNMENT;
+            }
+
+            @Override
+            public String getName() {
+                return "AliasAssignment";
             }
 
             @Override
@@ -423,6 +438,11 @@ public abstract class TransactionType {
             @Override
             public final byte getSubtype() {
                 return TransactionType.SUBTYPE_MESSAGING_ALIAS_SELL;
+            }
+
+            @Override
+            public String getName() {
+                return "AliasSell";
             }
 
             @Override
@@ -503,6 +523,11 @@ public abstract class TransactionType {
             }
 
             @Override
+            public String getName() {
+                return "AliasBuy";
+            }
+
+            @Override
             Attachment.MessagingAliasBuy parseAttachment(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
                 return new Attachment.MessagingAliasBuy(buffer, transactionVersion);
             }
@@ -570,6 +595,11 @@ public abstract class TransactionType {
             }
 
             @Override
+            public String getName() {
+                return "AliasDelete";
+            }
+
+            @Override
             Attachment.MessagingAliasDelete parseAttachment(final ByteBuffer buffer, final byte transactionVersion) throws NxtException.NotValidException {
                 return new Attachment.MessagingAliasDelete(buffer, transactionVersion);
             }
@@ -623,6 +653,22 @@ public abstract class TransactionType {
             }
 
             @Override
+            public String getName() {
+                return "PollCreation";
+            }
+
+
+            @Override
+            public Fee getBaselineFee(TransactionImpl transaction) {
+                return BASELINE_POLL_FEE;
+            }
+
+            @Override
+            public Fee getNextFee(TransactionImpl transaction) {
+                return NEXT_POLL_FEE;
+            }
+
+            @Override
             Attachment.MessagingPollCreation parseAttachment(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
                 return new Attachment.MessagingPollCreation(buffer, transactionVersion);
             }
@@ -640,34 +686,73 @@ public abstract class TransactionType {
 
             @Override
             void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
-                if (Nxt.getBlockchain().getLastBlock().getHeight() < Constants.VOTING_SYSTEM_BLOCK) {
+                int currentHeight = Nxt.getBlockchain().getHeight();
+
+                if (currentHeight < Constants.VOTING_SYSTEM_BLOCK) {
                     throw new NxtException.NotYetEnabledException("Voting System not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
                 }
+
                 Attachment.MessagingPollCreation attachment = (Attachment.MessagingPollCreation) transaction.getAttachment();
                 for (int i = 0; i < attachment.getPollOptions().length; i++) {
-                    if (attachment.getPollOptions()[i].length() > Constants.MAX_POLL_OPTION_LENGTH) {
+                    if (attachment.getPollOptions()[i].length() > Constants.MAX_POLL_OPTION_LENGTH
+                            || attachment.getPollOptions()[i].isEmpty()) {
                         throw new NxtException.NotValidException("Invalid poll options length: " + attachment.getJSONObject());
                     }
                 }
+
+                int optionsCount = attachment.getPollOptions().length;
+
+                if (attachment.getMinNumberOfOptions() < 1
+                        || attachment.getMinNumberOfOptions() > optionsCount) {
+                    throw new NxtException.NotValidException("Invalid min number of options: " + attachment.getJSONObject());
+                }
+
+                if (attachment.getMaxNumberOfOptions() < 1
+                        || attachment.getMaxNumberOfOptions() < attachment.getMinNumberOfOptions()
+                        || attachment.getMaxNumberOfOptions() > optionsCount) {
+                    throw new NxtException.NotValidException("Invalid max number of options: " + attachment.getJSONObject());
+                }
+
+                if (attachment.getMinRangeValue() < Constants.VOTING_MIN_RANGE_VALUE_LIMIT
+                        || attachment.getMaxRangeValue() > Constants.VOTING_MAX_RANGE_VALUE_LIMIT ){
+                    throw new NxtException.NotValidException("Invalid range: " + attachment.getJSONObject());
+                }
+
                 if (attachment.getPollName().length() > Constants.MAX_POLL_NAME_LENGTH
+                        || attachment.getPollName().isEmpty()
                         || attachment.getPollDescription().length() > Constants.MAX_POLL_DESCRIPTION_LENGTH
-                        || attachment.getPollOptions().length > Constants.MAX_POLL_OPTION_COUNT) {
+                        || attachment.getPollOptions().length > Constants.MAX_POLL_OPTION_COUNT
+                        || attachment.getPollOptions().length == 0) {
                     throw new NxtException.NotValidException("Invalid poll attachment: " + attachment.getJSONObject());
+                }
+
+                if (attachment.getFinishHeight() < currentHeight + Constants.VOTING_MIN_VOTE_DURATION
+                    || attachment.getFinishHeight() > currentHeight + Constants.VOTING_MAX_VOTE_DURATION) {
+                    throw new NxtException.NotCurrentlyValidException("Invalid finishing height" + attachment.getJSONObject());
+                }
+
+                VoteWeighting voteWeighting = new VoteWeighting(attachment.getVotingModel(), attachment.getHoldingId(),
+                        attachment.getMinBalance(), attachment.getMinBalanceModel());
+                voteWeighting.validate();
+
+                if (voteWeighting.getVotingModel() == VoteWeighting.VotingModel.ACCOUNT && voteWeighting.getMinBalance() == 0) {
+                    throw new NxtException.NotValidException("Min balance == 0 for by-account voting"+ attachment.getJSONObject());
                 }
             }
 
             @Override
-            public boolean canHaveRecipient() {
-                return false;
-            }
-
+            public boolean canHaveRecipient() { return false; }
         };
 
         public final static TransactionType VOTE_CASTING = new Messaging() {
-
             @Override
             public final byte getSubtype() {
                 return TransactionType.SUBTYPE_MESSAGING_VOTE_CASTING;
+            }
+
+            @Override
+            public String getName() {
+                return "VoteCasting";
             }
 
             @Override
@@ -683,10 +768,7 @@ public abstract class TransactionType {
             @Override
             void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
                 Attachment.MessagingVoteCasting attachment = (Attachment.MessagingVoteCasting) transaction.getAttachment();
-                Poll poll = Poll.getPoll(attachment.getPollId());
-                if (poll != null) {
-                    Vote.addVote(transaction, attachment);
-                }
+                Vote.addVote(transaction, attachment);
             }
 
             @Override
@@ -694,14 +776,45 @@ public abstract class TransactionType {
                 if (Nxt.getBlockchain().getLastBlock().getHeight() < Constants.VOTING_SYSTEM_BLOCK) {
                     throw new NxtException.NotYetEnabledException("Voting System not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
                 }
+
                 Attachment.MessagingVoteCasting attachment = (Attachment.MessagingVoteCasting) transaction.getAttachment();
                 if (attachment.getPollId() == 0 || attachment.getPollVote() == null
                         || attachment.getPollVote().length > Constants.MAX_POLL_OPTION_COUNT) {
                     throw new NxtException.NotValidException("Invalid vote casting attachment: " + attachment.getJSONObject());
                 }
-                if (Poll.getPoll(attachment.getPollId()) == null) {
+
+                long pollId = attachment.getPollId();
+
+                Poll poll = Poll.getPoll(pollId);
+                if (poll == null) {
                     throw new NxtException.NotCurrentlyValidException("Invalid poll: " + Convert.toUnsignedLong(attachment.getPollId()));
                 }
+
+                if (Vote.isVoteGiven(pollId, transaction.getSenderId())) {
+                    throw new NxtException.NotCurrentlyValidException("Double voting attempt");
+                }
+
+                byte[] votes = attachment.getPollVote();
+                int positiveCount = 0;
+                for (byte vote : votes) {
+                    if (vote != Constants.VOTING_NO_VOTE_VALUE && (vote < poll.getMinRangeValue() || vote > poll.getMaxRangeValue())) {
+                        throw new NxtException.NotValidException("Invalid vote: " + attachment.getJSONObject());
+                    }
+                    if (vote != Constants.VOTING_NO_VOTE_VALUE) {
+                        positiveCount++;
+                    }
+                }
+
+                if (positiveCount < poll.getMinNumberOfOptions() || positiveCount > poll.getMaxNumberOfOptions()) {
+                    throw new NxtException.NotValidException("Invalid num of choices: " + attachment.getJSONObject());
+                }
+            }
+
+            @Override
+            boolean isDuplicate(final Transaction transaction, final Map<TransactionType, Map<String, Boolean>> duplicates) {
+                Attachment.MessagingVoteCasting attachment = (Attachment.MessagingVoteCasting) transaction.getAttachment();
+                String key = Convert.toUnsignedLong(attachment.getPollId()) + ":" + Convert.toUnsignedLong(transaction.getSenderId());
+                return isDuplicate(Messaging.VOTE_CASTING, key, duplicates, true);
             }
 
             @Override
@@ -711,11 +824,108 @@ public abstract class TransactionType {
 
         };
 
+        public static final TransactionType PHASING_VOTE_CASTING = new Messaging() {
+            @Override
+            public final byte getSubtype() {
+                return TransactionType.SUBTYPE_MESSAGING_PHASING_VOTE_CASTING;
+            }
+
+            @Override
+            public String getName() {
+                return "PhasingVoteCasting";
+            }
+
+            @Override
+            Attachment.MessagingPhasingVoteCasting parseAttachment(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
+                return new Attachment.MessagingPhasingVoteCasting(buffer, transactionVersion);
+            }
+
+            @Override
+            Attachment.MessagingPhasingVoteCasting parseAttachment(JSONObject attachmentData) throws NxtException.NotValidException {
+                return new Attachment.MessagingPhasingVoteCasting(attachmentData);
+            }
+
+            @Override
+            public boolean canHaveRecipient() {
+                return false;
+            }
+
+            @Override
+            void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
+
+                Attachment.MessagingPhasingVoteCasting attachment = (Attachment.MessagingPhasingVoteCasting) transaction.getAttachment();
+                List<byte[]> pendingTransactionFullHashes = attachment.getTransactionFullHashes();
+                if (pendingTransactionFullHashes.size() > Constants.MAX_VOTES_PER_VOTING_TRANSACTION) {
+                    throw new NxtException.NotValidException("No more than 2 votes allowed for two-phased multivoting");
+                }
+
+                if (pendingTransactionFullHashes.size() == 2 && Arrays.equals(pendingTransactionFullHashes.get(0), pendingTransactionFullHashes.get(1))) {
+                    throw new NxtException.NotValidException("Duplicate votes");
+                }
+
+                long voterId = transaction.getSenderId();
+                for (byte[] hash : pendingTransactionFullHashes) {
+                    long pendingId = Convert.fullHashToId(hash);
+                    PhasingPoll poll = PhasingPoll.getPoll(pendingId);
+                    if (poll == null) {
+                        Logger.logDebugMessage("Wrong pending transaction: " + pendingId);
+                        throw new NxtException.NotCurrentlyValidException("Wrong pending transaction or poll is finished");
+                    }
+                    if (!Arrays.equals(poll.getFullHash(), hash)) {
+                        throw new NxtException.NotCurrentlyValidException("Hashes don't match");
+                    }
+
+                    long[] whitelist = poll.getWhitelist();
+                    if (whitelist.length > 0 && Arrays.binarySearch(whitelist, voterId) == -1) {
+                        throw new NxtException.NotValidException("Voter is not in the pending transaction whitelist");
+                    }
+
+                    if (PhasingVote.isVoteGiven(pendingId, voterId)) {
+                        throw new NxtException.NotCurrentlyValidException("Double voting attempt");
+                    }
+                }
+            }
+
+            @Override
+            boolean isDuplicate(Transaction transaction, Map<TransactionType, Map<String,Boolean>> duplicates) {
+                Attachment.MessagingPhasingVoteCasting attachment = (Attachment.MessagingPhasingVoteCasting) transaction.getAttachment();
+                String voter = Convert.toUnsignedLong(transaction.getSenderId());
+                List<byte[]> pendingTransactionFullHashes = attachment.getTransactionFullHashes();
+                for (byte[] hash : pendingTransactionFullHashes) {
+                    String compositeKey = voter + ":" + Convert.toHexString(hash);
+                    if (isDuplicate(Messaging.PHASING_VOTE_CASTING, compositeKey, duplicates, true)) {
+                        return true;
+                    }
+                }
+                return false;
+            }
+
+            @Override
+            final void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
+                Attachment.MessagingPhasingVoteCasting attachment = (Attachment.MessagingPhasingVoteCasting) transaction.getAttachment();
+                List<byte[]> pendingTransactionFullHashes = attachment.getTransactionFullHashes();
+                for (byte[] hash : pendingTransactionFullHashes) {
+                    long pendingTransactionId = Convert.fullHashToId(hash);
+                    PhasingPoll poll = PhasingPoll.getPoll(pendingTransactionId);
+                    if (PhasingVote.addVote(poll, transaction)) {
+                        poll.finish();
+                        TransactionImpl pendingTransaction = BlockchainImpl.getInstance().getTransaction(pendingTransactionId);
+                        pendingTransaction.getPhasing().release(pendingTransaction);
+                    }
+                }
+            }
+        };
+
         public static final TransactionType HUB_ANNOUNCEMENT = new Messaging() {
 
             @Override
             public final byte getSubtype() {
                 return TransactionType.SUBTYPE_MESSAGING_HUB_ANNOUNCEMENT;
+            }
+
+            @Override
+            public String getName() {
+                return "HubAnnouncement";
             }
 
             @Override
@@ -765,6 +975,11 @@ public abstract class TransactionType {
             @Override
             public byte getSubtype() {
                 return TransactionType.SUBTYPE_MESSAGING_ACCOUNT_INFO;
+            }
+
+            @Override
+            public String getName() {
+                return "AccountInfo";
             }
 
             @Override
@@ -821,6 +1036,11 @@ public abstract class TransactionType {
             @Override
             public final byte getSubtype() {
                 return TransactionType.SUBTYPE_COLORED_COINS_ASSET_ISSUANCE;
+            }
+
+            @Override
+            public String getName() {
+                return "AssetIssuance";
             }
 
             @Override
@@ -892,6 +1112,11 @@ public abstract class TransactionType {
             @Override
             public final byte getSubtype() {
                 return TransactionType.SUBTYPE_COLORED_COINS_ASSET_TRANSFER;
+            }
+
+            @Override
+            public String getName() {
+                return "AssetTransfer";
             }
 
             @Override
@@ -992,6 +1217,11 @@ public abstract class TransactionType {
             }
 
             @Override
+            public String getName() {
+                return "AskOrderPlacement";
+            }
+
+            @Override
             Attachment.ColoredCoinsAskOrderPlacement parseAttachment(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
                 return new Attachment.ColoredCoinsAskOrderPlacement(buffer, transactionVersion);
             }
@@ -1033,6 +1263,11 @@ public abstract class TransactionType {
             @Override
             public final byte getSubtype() {
                 return TransactionType.SUBTYPE_COLORED_COINS_BID_ORDER_PLACEMENT;
+            }
+
+            @Override
+            public String getName() {
+                return "BidOrderPlacement";
             }
 
             @Override
@@ -1108,6 +1343,11 @@ public abstract class TransactionType {
             }
 
             @Override
+            public String getName() {
+                return "AskOrderCancellation";
+            }
+
+            @Override
             Attachment.ColoredCoinsAskOrderCancellation parseAttachment(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
                 return new Attachment.ColoredCoinsAskOrderCancellation(buffer, transactionVersion);
             }
@@ -1145,6 +1385,11 @@ public abstract class TransactionType {
             }
 
             @Override
+            public String getName() {
+                return "BidOrderCancellation";
+            }
+
+            @Override
             Attachment.ColoredCoinsBidOrderCancellation parseAttachment(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
                 return new Attachment.ColoredCoinsBidOrderCancellation(buffer, transactionVersion);
             }
@@ -1179,6 +1424,11 @@ public abstract class TransactionType {
             @Override
             public final byte getSubtype() {
                 return TransactionType.SUBTYPE_COLORED_COINS_DIVIDEND_PAYMENT;
+            }
+
+            @Override
+            public String getName() {
+                return "DividendPayment";
             }
 
             @Override
@@ -1284,6 +1534,11 @@ public abstract class TransactionType {
             }
 
             @Override
+            public String getName() {
+                return "DigitalGoodsListing";
+            }
+
+            @Override
             Attachment.DigitalGoodsListing parseAttachment(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
                 return new Attachment.DigitalGoodsListing(buffer, transactionVersion);
             }
@@ -1324,6 +1579,11 @@ public abstract class TransactionType {
             @Override
             public final byte getSubtype() {
                 return TransactionType.SUBTYPE_DIGITAL_GOODS_DELISTING;
+            }
+
+            @Override
+            public String getName() {
+                return "DigitalGoodsDelisting";
             }
 
             @Override
@@ -1373,6 +1633,11 @@ public abstract class TransactionType {
             @Override
             public final byte getSubtype() {
                 return TransactionType.SUBTYPE_DIGITAL_GOODS_PRICE_CHANGE;
+            }
+
+            @Override
+            public String getName() {
+                return "DigitalGoodsPriceChange";
             }
 
             @Override
@@ -1427,6 +1692,11 @@ public abstract class TransactionType {
             }
 
             @Override
+            public String getName() {
+                return "DigitalGoodsQuantityChange";
+            }
+
+            @Override
             Attachment.DigitalGoodsQuantityChange parseAttachment(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
                 return new Attachment.DigitalGoodsQuantityChange(buffer, transactionVersion);
             }
@@ -1476,6 +1746,11 @@ public abstract class TransactionType {
             @Override
             public final byte getSubtype() {
                 return TransactionType.SUBTYPE_DIGITAL_GOODS_PURCHASE;
+            }
+
+            @Override
+            public String getName() {
+                return "DigitalGoodsPurchase";
             }
 
             @Override
@@ -1559,6 +1834,11 @@ public abstract class TransactionType {
             }
 
             @Override
+            public String getName() {
+                return "DigitalGoodsDelivery";
+            }
+
+            @Override
             Attachment.DigitalGoodsDelivery parseAttachment(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
                 return new Attachment.DigitalGoodsDelivery(buffer, transactionVersion);
             }
@@ -1615,6 +1895,11 @@ public abstract class TransactionType {
             }
 
             @Override
+            public String getName() {
+                return "DigitalGoodsFeedback";
+            }
+
+            @Override
             Attachment.DigitalGoodsFeedback parseAttachment(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
                 return new Attachment.DigitalGoodsFeedback(buffer, transactionVersion);
             }
@@ -1665,6 +1950,11 @@ public abstract class TransactionType {
             @Override
             public final byte getSubtype() {
                 return TransactionType.SUBTYPE_DIGITAL_GOODS_REFUND;
+            }
+
+            @Override
+            public String getName() {
+                return "DigitalGoodsRefund";
             }
 
             @Override
@@ -1757,6 +2047,11 @@ public abstract class TransactionType {
             @Override
             public final byte getSubtype() {
                 return TransactionType.SUBTYPE_ACCOUNT_CONTROL_EFFECTIVE_BALANCE_LEASING;
+            }
+
+            @Override
+            public String getName() {
+                return "EffectiveBalanceLeasing";
             }
 
             @Override

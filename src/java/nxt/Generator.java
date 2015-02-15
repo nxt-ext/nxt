@@ -72,16 +72,16 @@ public final class Generator implements Comparable<Generator> {
                             sortedForgers = Collections.unmodifiableList(forgers);
                             logged = false;
                         }
+                        int generationLimit = Nxt.getEpochTime() - delayTime;
                         if (!logged) {
                             for (Generator generator : sortedForgers) {
-                                if (generator.getDeadline() > 120) {
+                                if (generator.getHitTime() - generationLimit > 60) {
                                     break;
                                 }
                                 Logger.logDebugMessage(generator.toString());
                                 logged = true;
                             }
                         }
-                        int generationLimit = Nxt.getEpochTime() - delayTime;
                         for (Generator generator : sortedForgers) {
                             if (generator.getHitTime() > generationLimit || generator.forge(lastBlock, generationLimit)) {
                                 return;

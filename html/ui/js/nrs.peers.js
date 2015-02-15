@@ -2,6 +2,7 @@
  * @depends {nrs.js}
  */
 var NRS = (function(NRS, $, undefined) {
+
 	NRS.connectPeer = function(peer) {
 		NRS.sendRequest("addPeer", {"peer": peer}, function(response) {
 			if (response.errorCode || response.error || response.state != 1) {

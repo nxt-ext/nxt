@@ -38,7 +38,7 @@ import static nxt.http.JSONResponses.NO_PASSWORD_IN_CONFIG;
 
 public final class API {
 
-    public static final int TESTNET_API_PORT = 6876;
+    public static final int TESTNET_API_PORT = 2876;
 
     private static final Set<String> allowedBotHosts;
     private static final List<NetworkAddress> allowedBotNets;
@@ -88,7 +88,7 @@ public final class API {
                 https_config.addCustomizer(new SecureRequestCustomizer());
                 SslContextFactory sslContextFactory = new SslContextFactory();
                 sslContextFactory.setKeyStorePath(Nxt.getStringProperty("nxt.keyStorePath"));
-                sslContextFactory.setKeyStorePassword(Nxt.getStringProperty("nxt.keyStorePassword"));
+                sslContextFactory.setKeyStorePassword(Nxt.getStringProperty("nxt.keyStorePassword", null, true));
                 sslContextFactory.setExcludeCipherSuites("SSL_RSA_WITH_DES_CBC_SHA", "SSL_DHE_RSA_WITH_DES_CBC_SHA",
                         "SSL_DHE_DSS_WITH_DES_CBC_SHA", "SSL_RSA_EXPORT_WITH_RC4_40_MD5", "SSL_RSA_EXPORT_WITH_DES40_CBC_SHA",
                         "SSL_DHE_RSA_EXPORT_WITH_DES40_CBC_SHA", "SSL_DHE_DSS_EXPORT_WITH_DES40_CBC_SHA");

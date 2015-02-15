@@ -64,8 +64,9 @@ public class TransactionalDb extends BasicDb {
             con.doRollback();
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
+        } finally {
+            transactionCaches.get().clear();
         }
-        transactionCaches.get().clear();
     }
 
     public void endTransaction() {

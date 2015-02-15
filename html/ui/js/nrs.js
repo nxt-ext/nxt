@@ -63,6 +63,7 @@ var NRS = (function(NRS, $, undefined) {
 
 	NRS.pages = {};
 	NRS.incoming = {};
+	NRS.setup = {};
 
 	if (!_checkDOMenabled()) {
 		NRS.hasLocalStorage = false;
@@ -110,6 +111,7 @@ var NRS = (function(NRS, $, undefined) {
 				testnetWarningDiv.text(warningText);
 				$(".testnet_only, #testnet_login, #testnet_warning").show();
 			}
+			NRS.loadServerConstants();
 		});
 		
 		if (!NRS.server) {
@@ -184,11 +186,13 @@ var NRS = (function(NRS, $, undefined) {
 
 		NRS.automaticallyCheckRecipient();
 
-		$(".show_popover").popover({
+		$("body").popover({
+			"selector": ".show_popover",
+			"html": true,
 			"trigger": "hover"
 		});
 
-		$("#dashboard_transactions_table, #transactions_table").on("mouseenter", "td.confirmations", function() {
+		$("#dashboard_table, #transactions_table").on("mouseenter", "td.confirmations", function() {
 			$(this).popover("show");
 		}).on("mouseleave", "td.confirmations", function() {
 			$(this).popover("destroy");
@@ -204,10 +208,8 @@ var NRS = (function(NRS, $, undefined) {
 				NRS.positionAssetSidebar();
 			}
 		});
-
+		
 		$("[data-toggle='tooltip']").tooltip();
-
-		$(".sidebar .treeview").tree();
 
 		$("#dgs_search_account_top, #dgs_search_account_center").mask("NXT-****-****-****-*****", {
 			"unmask": false
@@ -294,6 +296,7 @@ var NRS = (function(NRS, $, undefined) {
 					NRS.getBlock(NRS.state.lastBlock, NRS.handleNewBlocks);
 					if (NRS.account) {
 						NRS.getNewTransactions();
+						NRS.updateApprovalRequests();
 					}
 				} else {
 					if (NRS.account) {
@@ -316,7 +319,7 @@ var NRS = (function(NRS, $, undefined) {
 		});
 	};
 
-	$("#logo, .sidebar-menu a").click(function(e, data) {
+	$("#logo, .sidebar-menu").on("click", "a", function(e, data) {
 		if ($(this).hasClass("ignore")) {
 			$(this).removeClass("ignore");
 			return;
@@ -345,22 +348,28 @@ var NRS = (function(NRS, $, undefined) {
 
 		$(".content-header h1").find(".loading_dots").remove();
 
-		var changeActive = !($(this).closest("ul").hasClass("treeview-menu"));
+		if ($(this).attr("id") && $(this).attr("id") == "logo") {
+			var $newActiveA = $("#dashboard_link a");
+		} else {
+			var $newActiveA = $(this);
+		}
+		var $newActivePageLi = $newActiveA.closest("li.treeview");
+		var $currentActivePageLi = $("ul.sidebar-menu > li.active");
 
-		if (changeActive) {
-			var currentActive = $("ul.sidebar-menu > li.active");
-
-			if (currentActive.hasClass("treeview")) {
-				currentActive.children("a").first().addClass("ignore").click();
-			} else {
-				currentActive.removeClass("active");
+		$("ul.sidebar-menu > li.active").each(function(key, elem) {
+			if ($newActivePageLi.attr("id") != $(elem).attr("id")) {
+				$(elem).children("a").first().addClass("ignore").click();
 			}
+		});
 
-			if ($(this).attr("id") && $(this).attr("id") == "logo") {
-				$("#dashboard_link").addClass("active");
-			} else {
-				$(this).parent().addClass("active");
-			}
+		$("ul.sidebar-menu > li.sm_simple").removeClass("active");
+		if ($newActiveA.parent("li").hasClass("sm_simple")) {
+			$newActiveA.parent("li").addClass("active");
+		}
+
+		$("ul.sidebar-menu li.sm_treeview_submenu").removeClass("active");
+		if($(this).parent("li").hasClass("sm_treeview_submenu")) {
+			$(this).closest("li").addClass("active");
 		}
 
 		if (NRS.currentPage != "messages") {
@@ -388,7 +397,6 @@ var NRS = (function(NRS, $, undefined) {
 
 	$("button.goto-page, a.goto-page").click(function(event) {
 		event.preventDefault();
-
 		NRS.goToPage($(this).data("page"));
 	});
 
@@ -877,7 +885,7 @@ var NRS = (function(NRS, $, undefined) {
 		var accountLeasingLabel = "";
 		var accountLeasingStatus = "";
 		var nextLesseeStatus = "";
-		if (NRS.accountInfo.nextLeasingHeightFrom < 2147483647) {
+		if (NRS.accountInfo.nextLeasingHeightFrom < NRS.constants.MAX_INT_JAVA) {
 			nextLesseeStatus = $.t("next_lessee_status", {
 				"start": String(NRS.accountInfo.nextLeasingHeightFrom).escapeHTML(),
 				"end": String(NRS.accountInfo.nextLeasingHeightTo).escapeHTML(),
@@ -943,7 +951,7 @@ var NRS = (function(NRS, $, undefined) {
 				if (lessorInfo.nextLesseeRS == NRS.accountRS) {
 					nextLessee = "You";
 					nextTooltip = "From block " + lessorInfo.nextHeightFrom + " to block " + lessorInfo.nextHeightTo;
-				} else if (lessorInfo.nextHeightFrom < 2147483647) {
+				} else if (lessorInfo.nextHeightFrom < NRS.constants.MAX_INT_JAVA) {
 					nextLessee = "Not you";
 					nextTooltip = "Account " + NRS.getAccountTitle(lessorInfo.nextLesseeRS) +" from block " + lessorInfo.nextHeightFrom + " to block " + lessorInfo.nextHeightTo;
 				}

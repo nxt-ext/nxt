@@ -500,6 +500,19 @@ var NRS = (function(NRS, $, undefined) {
 					return;
 				}
 			}
+
+			if ("phasingQuorumNXT" in data) {
+				try {
+					var phasingQuorumNQT = NRS.convertToNQT(data.phasingQuorumNXT);
+				} catch (err) {
+					$form.find(".error_message").html(String(err).escapeHTML() + " (" + $.t("approve_amount_nxt") + ")").show();
+					if (formErrorFunction) {
+						formErrorFunction(false, data);
+					}
+					NRS.unlockForm($modal, $btn);
+					return;
+				}
+			}
 		}
 
 		if (data.doNotBroadcast) {

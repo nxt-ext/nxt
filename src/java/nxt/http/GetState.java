@@ -13,7 +13,10 @@ import nxt.Exchange;
 import nxt.Generator;
 import nxt.Nxt;
 import nxt.Order;
+import nxt.PhasingPoll;
+import nxt.Poll;
 import nxt.Trade;
+import nxt.Vote;
 import nxt.peer.Peers;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
@@ -65,8 +68,9 @@ public final class GetState extends APIServlet.APIRequestHandler {
             response.put("numberOfGoods", DigitalGoodsStore.Goods.getCount());
             response.put("numberOfPurchases", DigitalGoodsStore.Purchase.getCount());
             response.put("numberOfTags", DigitalGoodsStore.Tag.getCount());
-            //response.put("numberOfPolls", Poll.getCount());
-            //response.put("numberOfVotes", Vote.getCount());
+            response.put("numberOfPolls", Poll.getCount());
+            response.put("numberOfVotes", Vote.getCount());
+            response.put("numberOfPendingTransactions", PhasingPoll.getPendingCount());
         }
         response.put("numberOfPeers", Peers.getAllPeers().size());
         response.put("numberOfUnlockedAccounts", Generator.getAllGenerators().size());

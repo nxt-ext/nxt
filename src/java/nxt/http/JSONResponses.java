@@ -20,11 +20,12 @@ public final class JSONResponses {
     public static final JSONStreamAware MISSING_ALIAS_NAME = missing("aliasName");
     public static final JSONStreamAware MISSING_ALIAS_OR_ALIAS_NAME = missing("alias", "aliasName");
     public static final JSONStreamAware MISSING_DEADLINE = missing("deadline");
+    public static final JSONStreamAware INCORRECT_PENDING_WHITELIST = incorrect("phasingWhitelisted");
     public static final JSONStreamAware INCORRECT_DEADLINE = incorrect("deadline");
+    public static final JSONStreamAware MISSING_PENDING_HOLDING_ID = missing("phasingHoldingId");
+    public static final JSONStreamAware INCORRECT_FEE = incorrect("fee");
     public static final JSONStreamAware MISSING_TRANSACTION_BYTES_OR_JSON = missing("transactionBytes", "transactionJSON");
     public static final JSONStreamAware INCORRECT_TRANSACTION_BYTES_OR_JSON = incorrect("transactionBytes or transactionJSON");
-    public static final JSONStreamAware MISSING_ORDER = missing("order");
-    public static final JSONStreamAware INCORRECT_ORDER = incorrect("order");
     public static final JSONStreamAware UNKNOWN_ORDER = unknown("order");
     public static final JSONStreamAware MISSING_HALLMARK = missing("hallmark");
     public static final JSONStreamAware INCORRECT_HALLMARK = incorrect("hallmark");
@@ -37,10 +38,8 @@ public final class JSONResponses {
     public static final JSONStreamAware INCORRECT_TIMESTAMP = incorrect("timestamp");
     public static final JSONStreamAware UNKNOWN_ACCOUNT = unknown("account");
     public static final JSONStreamAware UNKNOWN_ALIAS = unknown("alias");
-    public static final JSONStreamAware MISSING_ASSET = missing("asset");
     public static final JSONStreamAware UNKNOWN_ASSET = unknown("asset");
     public static final JSONStreamAware INCORRECT_ASSET = incorrect("asset");
-    public static final JSONStreamAware MISSING_ASSET_NAME = missing("assetName");
     public static final JSONStreamAware MISSING_BLOCK = missing("block");
     public static final JSONStreamAware UNKNOWN_BLOCK = unknown("block");
     public static final JSONStreamAware INCORRECT_BLOCK = incorrect("block");
@@ -63,23 +62,18 @@ public final class JSONResponses {
     public static final JSONStreamAware INCORRECT_DATE = incorrect("date");
     public static final JSONStreamAware INCORRECT_REFERENCED_TRANSACTION = incorrect("referencedTransactionFullHash");
     public static final JSONStreamAware MISSING_MESSAGE = missing("message");
-    public static final JSONStreamAware MISSING_RECIPIENT = missing("recipient");
     public static final JSONStreamAware INCORRECT_RECIPIENT = incorrect("recipient");
     public static final JSONStreamAware INCORRECT_ARBITRARY_MESSAGE = incorrect("message");
     public static final JSONStreamAware MISSING_DESCRIPTION = missing("description");
-    public static final JSONStreamAware MISSING_MINNUMBEROFOPTIONS = missing("minNumberOfOptions");
-    public static final JSONStreamAware MISSING_MAXNUMBEROFOPTIONS = missing("maxNumberOfOptions");
-    public static final JSONStreamAware MISSING_OPTIONSAREBINARY = missing("optionsAreBinary");
-    public static final JSONStreamAware MISSING_POLL = missing("poll");
     public static final JSONStreamAware INCORRECT_POLL_NAME_LENGTH = incorrect("name", "(length must be not longer than " + Constants.MAX_POLL_NAME_LENGTH + " characters)");
     public static final JSONStreamAware INCORRECT_POLL_DESCRIPTION_LENGTH = incorrect("description", "(length must be not longer than " + Constants.MAX_POLL_DESCRIPTION_LENGTH + " characters)");
     public static final JSONStreamAware INCORRECT_POLL_OPTION_LENGTH = incorrect("option", "(length must be not longer than " + Constants.MAX_POLL_OPTION_LENGTH + " characters)");
-    public static final JSONStreamAware INCORRECT_MINNUMBEROFOPTIONS = incorrect("minNumberOfOptions");
-    public static final JSONStreamAware INCORRECT_MAXNUMBEROFOPTIONS = incorrect("maxNumberOfOptions");
-    public static final JSONStreamAware INCORRECT_OPTIONSAREBINARY = incorrect("optionsAreBinary");
+    public static final JSONStreamAware INCORRECT_ZEROOPTIONS = incorrect("option", "no options given");
     public static final JSONStreamAware INCORRECT_POLL = incorrect("poll");
     public static final JSONStreamAware INCORRECT_VOTE = incorrect("vote");
     public static final JSONStreamAware UNKNOWN_POLL = unknown("poll");
+    public static final JSONStreamAware MISSING_PENDING_TRANSACTION = missing("transaction");
+    public static final JSONStreamAware INCORRECT_PENDING_TRANSACTION = incorrect("transaction");
     public static final JSONStreamAware INCORRECT_ACCOUNT_NAME_LENGTH = incorrect("name", "(length must be less than " + Constants.MAX_ACCOUNT_NAME_LENGTH + " characters)");
     public static final JSONStreamAware INCORRECT_ACCOUNT_DESCRIPTION_LENGTH = incorrect("description", "(length must be less than " + Constants.MAX_ACCOUNT_DESCRIPTION_LENGTH + " characters)");
     public static final JSONStreamAware INCORRECT_UNSIGNED_BYTES = incorrect("unsignedTransactionBytes");
@@ -88,8 +82,6 @@ public final class JSONResponses {
     public static final JSONStreamAware INCORRECT_DGS_LISTING_NAME = incorrect("name", "(length must be not longer than " + Constants.MAX_DGS_LISTING_NAME_LENGTH + " characters)");
     public static final JSONStreamAware INCORRECT_DGS_LISTING_DESCRIPTION = incorrect("description", "(length must be not longer than " + Constants.MAX_DGS_LISTING_DESCRIPTION_LENGTH + " characters)");
     public static final JSONStreamAware INCORRECT_DGS_LISTING_TAGS = incorrect("tags", "(length must be not longer than " + Constants.MAX_DGS_LISTING_TAGS_LENGTH + " characters)");
-    public static final JSONStreamAware MISSING_GOODS = missing("goods");
-    public static final JSONStreamAware INCORRECT_GOODS = incorrect("goods");
     public static final JSONStreamAware UNKNOWN_GOODS = unknown("goods");
     public static final JSONStreamAware INCORRECT_DELTA_QUANTITY = incorrect("deltaQuantity");
     public static final JSONStreamAware MISSING_DELTA_QUANTITY = missing("deltaQuantity");
@@ -98,11 +90,9 @@ public final class JSONResponses {
     public static final JSONStreamAware INCORRECT_PURCHASE_QUANTITY = incorrect("quantity", "(quantity exceeds available goods quantity)");
     public static final JSONStreamAware INCORRECT_PURCHASE_PRICE = incorrect("priceNQT", "(purchase price doesn't match goods price)");
     public static final JSONStreamAware INCORRECT_PURCHASE = incorrect("purchase");
-    public static final JSONStreamAware MISSING_PURCHASE = missing("purchase");
     public static final JSONStreamAware INCORRECT_DGS_GOODS = incorrect("goodsToEncrypt");
     public static final JSONStreamAware INCORRECT_DGS_DISCOUNT = incorrect("discountNQT");
     public static final JSONStreamAware INCORRECT_DGS_REFUND = incorrect("refundNQT");
-    public static final JSONStreamAware MISSING_SELLER = missing("seller");
     public static final JSONStreamAware INCORRECT_ENCRYPTED_MESSAGE = incorrect("encryptedMessageData");
     public static final JSONStreamAware INCORRECT_DGS_ENCRYPTED_GOODS = incorrect("goodsData");
     public static final JSONStreamAware MISSING_SECRET_PHRASE_OR_PUBLIC_KEY = missing("secretPhrase", "publicKey");
@@ -252,6 +242,14 @@ public final class JSONResponses {
         NO_PASSWORD_IN_CONFIG = JSON.prepare(response);
     }
 
+    public static final JSONStreamAware POLL_RESULTS_NOT_AVAILABLE;
+    static {
+        JSONObject response = new JSONObject();
+        response.put("errorCode", 8);
+        response.put("errorDescription", "Poll results no longer available, set nxt.processPolls=true and rescan");
+        POLL_RESULTS_NOT_AVAILABLE = JSON.prepare(response);
+    }
+
     static JSONStreamAware missing(String... paramNames) {
         JSONObject response = new JSONObject();
         response.put("errorCode", 3);
@@ -278,6 +276,13 @@ public final class JSONResponses {
         JSONObject response = new JSONObject();
         response.put("errorCode", 5);
         response.put("errorDescription", "Unknown " + objectName);
+        return JSON.prepare(response);
+    }
+
+    static JSONStreamAware fileNotFound(String objectName) {
+        JSONObject response = new JSONObject();
+        response.put("errorCode", 10);
+        response.put("errorDescription", "File not found " + objectName);
         return JSON.prepare(response);
     }
 

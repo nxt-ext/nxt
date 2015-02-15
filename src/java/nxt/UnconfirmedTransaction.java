@@ -209,6 +209,11 @@ class UnconfirmedTransaction implements Transaction {
     }
 
     @Override
+    public Appendix.Phasing getPhasing() {
+        return transaction.getPhasing();
+    }
+
+    @Override
     public List<? extends Appendix> getAppendages() {
         return transaction.getAppendages();
     }

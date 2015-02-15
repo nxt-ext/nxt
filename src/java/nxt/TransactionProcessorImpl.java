@@ -42,6 +42,29 @@ final class TransactionProcessorImpl implements TransactionProcessor {
         return instance;
     }
 
+    //register block listener to check 2-phased transactions finishing at the block height
+    static {
+        Nxt.getBlockchainProcessor().addListener(new Listener<Block>() {
+            @Override
+            public void notify(Block block) {
+                int height = block.getHeight();
+                if (height >= Constants.TWO_PHASED_TRANSACTIONS_BLOCK) {
+                    try (Connection con = Db.db.getConnection();
+                         PreparedStatement pstmt = con.prepareStatement("SELECT transaction.* FROM transaction, phasing_poll " +
+                                 " WHERE phasing_poll.id = transaction.id AND phasing_poll.finish_height = ? " +
+                                 " AND phasing_poll.finished = FALSE AND phasing_poll.latest = TRUE")) {
+                        pstmt.setInt(1, height);
+                        for (TransactionImpl transaction : BlockchainImpl.getInstance().getTransactions(con, pstmt)) {
+                            transaction.getPhasing().finalVerification(transaction);
+                        }
+                    }  catch (SQLException e) {
+                        throw new RuntimeException(e.toString(), e);
+                    }
+                }
+            }
+        }, BlockchainProcessor.Event.AFTER_BLOCK_APPLY);
+    }
+
     final DbKey.LongKeyFactory<UnconfirmedTransaction> unconfirmedTransactionDbKeyFactory = new DbKey.LongKeyFactory<UnconfirmedTransaction>("id") {
 
         @Override
@@ -96,21 +119,14 @@ final class TransactionProcessorImpl implements TransactionProcessor {
 
     private final Runnable removeUnconfirmedTransactionsThread = new Runnable() {
 
-        private final DbClause expiredClause = new DbClause(" expiration < ? ") {
-            @Override
-            protected int set(PreparedStatement pstmt, int index) throws SQLException {
-                pstmt.setInt(index, Nxt.getEpochTime());
-                return index + 1;
-            }
-        };
-
         @Override
         public void run() {
 
             try {
                 try {
                     List<UnconfirmedTransaction> expiredTransactions = new ArrayList<>();
-                    try (DbIterator<UnconfirmedTransaction> iterator = unconfirmedTransactionTable.getManyBy(expiredClause, 0, -1, "")) {
+                    try (DbIterator<UnconfirmedTransaction> iterator = unconfirmedTransactionTable.getManyBy(
+                            new DbClause.IntClause("expiration", DbClause.Op.LT, Nxt.getEpochTime()), 0, -1, "")) {
                         while (iterator.hasNext()) {
                             expiredTransactions.add(iterator.next());
                         }
@@ -437,7 +453,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
         List<TransactionImpl> receivedTransactions = new ArrayList<>();
         List<TransactionImpl> sendToPeersTransactions = new ArrayList<>();
         List<TransactionImpl> addedUnconfirmedTransactions = new ArrayList<>();
-        boolean invalidTransactionsFound = false;
+        List<Exception> exceptions = new ArrayList<>();
         for (Object transactionData : transactionsData) {
             try {
                 TransactionImpl transaction = parseTransaction((JSONObject) transactionData);
@@ -459,7 +475,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
             } catch (NxtException.NotCurrentlyValidException ignore) {
             } catch (NxtException.ValidationException|RuntimeException e) {
                 Logger.logDebugMessage(String.format("Invalid transaction from peer: %s", ((JSONObject) transactionData).toJSONString()), e);
-                invalidTransactionsFound = true;
+                exceptions.add(e);
             }
         }
         if (sendToPeersTransactions.size() > 0) {
@@ -471,8 +487,8 @@ final class TransactionProcessorImpl implements TransactionProcessor {
         for (TransactionImpl transaction : receivedTransactions) {
             broadcastedTransactions.remove(transaction);
         }
-        if (invalidTransactionsFound) {
-            throw new NxtException.NotValidException("Peer sends invalid transactions");
+        if (!exceptions.isEmpty()) {
+            throw new NxtException.NotValidException("Peer sends invalid transactions: " + exceptions.toString());
         }
     }
 
