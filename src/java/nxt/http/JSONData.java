@@ -18,6 +18,8 @@ import nxt.Exchange;
 import nxt.Generator;
 import nxt.Nxt;
 import nxt.Order;
+import nxt.PhasingPoll;
+import nxt.PhasingVote;
 import nxt.Poll;
 import nxt.Token;
 import nxt.Trade;
@@ -370,7 +372,7 @@ final class JSONData {
 
         for (Poll.PollResult result : results) {
             JSONObject jsonPair = new JSONObject();
-            jsonPair.put(result.getOption(), result.getVotes());
+            jsonPair.put(result.getOption(), String.valueOf(result.getVotes()));
             resultsJson.add(jsonPair);
         }
 
@@ -398,6 +400,30 @@ final class JSONData {
             votesJson.add(voteJson);
         }
         json.put("votes", votesJson);
+        return json;
+    }
+
+    static JSONObject phasingPoll(PhasingPoll poll, boolean countVotes, boolean includeVoters) {
+        JSONObject json = new JSONObject();
+        json.put("transaction", Convert.toUnsignedLong(poll.getId()));
+        json.put("transactionFullHash", Convert.toHexString(poll.getFullHash()));
+        json.put("finished", poll.isFinished());
+        json.put("finishHeight", poll.getFinishHeight());
+        json.put("quorum", String.valueOf(poll.getQuorum()));
+        if (countVotes) {
+            json.put("votes", String.valueOf(PhasingVote.countVotes(poll)));
+        }
+        if (includeVoters) {
+            JSONArray votersJson = new JSONArray();
+            try (DbIterator<PhasingVote> votes = PhasingVote.getByTransaction(poll.getId(), 0, Integer.MAX_VALUE)) {
+                for (PhasingVote vote : votes) {
+                    JSONObject voterObject = new JSONObject();
+                    JSONData.putAccount(voterObject, "voter", vote.getVoterId());
+                    votersJson.add(voterObject);
+                }
+            }
+            json.put("voters", votersJson);
+        }
         return json;
     }
 

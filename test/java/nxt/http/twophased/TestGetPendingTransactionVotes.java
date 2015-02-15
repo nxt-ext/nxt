@@ -35,21 +35,22 @@ public class TestGetPendingTransactionVotes extends BlockchainTest {
 
         generateBlock();
 
-        apiCall = new APICall.Builder("getPhasingVotes")
+        apiCall = new APICall.Builder("getPhasingPoll")
                 .param("transaction", transactionId)
                 .build();
         response = apiCall.invoke();
-        Logger.logMessage("getPhasingVotesResponse:" + response.toJSONString());
+        Logger.logMessage("getPhasingPollResponse:" + response.toJSONString());
 
         Assert.assertNull(response.get("errorCode"));
         Assert.assertEquals(1, ((Long) response.get("votes")).intValue());
 
-        apiCall = new APICall.Builder("getPhasingVotes")
+        apiCall = new APICall.Builder("getPhasingPoll")
                 .param("transaction", transactionId)
                 .param("includeVoters", "true")
+                .param("countVotes", "true")
                 .build();
         response = apiCall.invoke();
-        Logger.logMessage("getPhasingVotesResponse:" + response.toJSONString());
+        Logger.logMessage("getPhasingPollResponse:" + response.toJSONString());
 
         Assert.assertNull(response.get("errorCode"));
         Assert.assertEquals(1, ((Long) response.get("votes")).intValue());

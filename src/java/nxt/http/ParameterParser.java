@@ -31,7 +31,7 @@ import static nxt.http.JSONResponses.INCORRECT_ALIAS;
 import static nxt.http.JSONResponses.INCORRECT_DGS_ENCRYPTED_GOODS;
 import static nxt.http.JSONResponses.INCORRECT_ENCRYPTED_MESSAGE;
 import static nxt.http.JSONResponses.INCORRECT_HEIGHT;
-import static nxt.http.JSONResponses.INCORRECT_PENDING_TRANSACTION;
+import static nxt.http.JSONResponses.INCORRECT_TRANSACTION;
 import static nxt.http.JSONResponses.INCORRECT_PLAIN_MESSAGE;
 import static nxt.http.JSONResponses.INCORRECT_PUBLIC_KEY;
 import static nxt.http.JSONResponses.INCORRECT_PURCHASE;
@@ -167,7 +167,7 @@ final class ParameterParser {
     static PhasingPoll getPhasingPoll(HttpServletRequest req) throws ParameterException {
         PhasingPoll phasingPoll = PhasingPoll.getPoll(getUnsignedLong(req, "transaction", true));
         if (phasingPoll ==null) {
-            throw new ParameterException(INCORRECT_PENDING_TRANSACTION);
+            throw new ParameterException(INCORRECT_TRANSACTION);
         }
         return phasingPoll;
     }

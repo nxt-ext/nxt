@@ -260,7 +260,7 @@ var NRS = (function(NRS, $, undefined) {
 		var $td = $('#tr_transaction_' + t.transaction + ' .td_transaction_pending');
 
 		if (t.attachment && t.attachment["version.Phasing"] && t.attachment.phasingVotingModel != undefined) {
-			NRS.sendRequest("getPhasingVotes", {
+			NRS.sendRequest("getPhasingPoll", {
 				"transaction": t.transaction
 			}, function(response) {
 				if (response.transaction) {
