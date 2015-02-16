@@ -11,7 +11,7 @@ import org.junit.runners.Suite;
         TestCreateTwoPhased.class,
         TestGetVoterPendingTransactions.class,
         TestApproveTransaction.class,
-        TestGetPendingTransactionVotes.class,
+        TestGetPhasingPoll.class,
         TestGetAccountPendingTransactions.class,
         TestGetAssetPendingTransactions.class,
         TestGetCurrencyPendingTransactions.class

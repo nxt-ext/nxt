@@ -10,7 +10,7 @@ import org.json.simple.JSONObject;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class TestGetPendingTransactionVotes extends BlockchainTest {
+public class TestGetPhasingPoll extends BlockchainTest {
 
     @Test
     public void transactionVotes() {
