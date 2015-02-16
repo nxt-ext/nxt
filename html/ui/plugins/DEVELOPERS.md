@@ -33,6 +33,7 @@ The following is the minimal file structure for a plugin:
 [plugin_name]/manifest.json
 [plugin_name]/html/pages/[plugin_name].html
 [plugin_name]/html/modals/[plugin_name].html
+[plugin_name]/js/nrs.[plugin_name].js
 [plugin_name]/css/[plugin_name].css
 ```
 
@@ -55,7 +56,7 @@ Meta information about the plugin is provided as a ``JSON`` dictionary in a
     "nrsVersion": "1.5.0", //ALWAYS provide three sequence numbers, no additions!
 
     //optional
-    "activated": false, //hard-set plugin activation/deactivation, default: true
+    "deactivated": true, //hard-set deactivation, default: false
     "sidebarOptOut": true //opt out of being listed under sidebar "Plugins" entry, default: false
 }
 ```
@@ -79,8 +80,14 @@ Due to the broad scope of plugins the functional compatility of the plugin when
 executed with various NRS versions can't be guaranteed by the plugin mechanism 
 and is the responsibility of the plugin creator.
 
-the ``nrs_version`` attribute in the manifest file indicates the NRS version
-the plugin was written for.
+The ``nrs_version`` attribute in the manifest file indicates the NRS version
+the plugin was written for. Due to possible changes in javascript API behaviour
+it is recommended to release a new plugin version for every new NRS release,
+though a plugin will still be running after minor release updates (e.g. a
+plugin written for "1.5.1" running under "1.5.5").
+
+After a mayor NRS update (e.g. from "1.5.9" to "1.6.0"), the plugin will stop
+working and has to be updated.
 
 ## Best Practices for Development ##
 
