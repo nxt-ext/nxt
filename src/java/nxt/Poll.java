@@ -117,6 +117,11 @@ public final class Poll extends AbstractPoll {
         return pollTable.getManyBy(new DbClause.IntClause("finish_height", height), 0, Integer.MAX_VALUE);
     }
 
+    public static DbIterator<Poll> searchPolls(String query, boolean includeFinished, int from, int to) {
+        DbClause dbClause = includeFinished ? DbClause.EMPTY_CLAUSE : new DbClause.IntClause("finish_height", DbClause.Op.GT, Nxt.getBlockchain().getHeight());
+        return pollTable.search(query, dbClause, from, to, " ORDER BY ft.score DESC, poll.height DESC ");
+    }
+
     public static int getCount() {
         return pollTable.getCount();
     }
