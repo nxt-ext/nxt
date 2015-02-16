@@ -4,6 +4,7 @@ import nxt.db.DbClause;
 import nxt.db.DbIterator;
 import nxt.db.DbKey;
 import nxt.db.DbUtils;
+import nxt.db.EntityDbTable;
 import nxt.db.ValuesDbTable;
 import nxt.db.VersionedEntityDbTable;
 import nxt.util.Convert;
@@ -16,10 +17,102 @@ import java.util.Arrays;
 
 public class PhasingPoll extends AbstractPoll {
 
-    private static final DbKey.LongKeyFactory<PhasingPoll> pollDbKeyFactory = new DbKey.LongKeyFactory<PhasingPoll>("id") {
+    public static final class PhasingPollResult {
+
+        private final long id;
+        private final DbKey dbKey;
+        private final int applyHeight;
+        private final long result;
+        private final boolean approved;
+
+        private PhasingPollResult(PhasingPoll poll, int height, long result) {
+            this.id = poll.getId();
+            this.dbKey = resultDbKeyFactory.newKey(this.id);
+            this.applyHeight = height;
+            this.result = result;
+            this.approved = result >= poll.getQuorum();
+        }
+
+        private PhasingPollResult(ResultSet rs) throws SQLException {
+            this.id = rs.getLong("id");
+            this.dbKey = resultDbKeyFactory.newKey(this.id);
+            this.applyHeight = rs.getInt("apply_height");
+            this.result = rs.getLong("result");
+            this.approved = rs.getBoolean("approved");
+        }
+
+        private void save(Connection con) throws SQLException {
+            try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO phasing_poll_result (id, "
+                    + "apply_height, result, approved, height) VALUES (?, ?, ?, ?, ?)")) {
+                int i = 0;
+                pstmt.setLong(++i, id);
+                pstmt.setInt(++i, applyHeight);
+                pstmt.setLong(++i, result);
+                pstmt.setBoolean(++i, approved);
+                pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
+                pstmt.executeUpdate();
+            }
+        }
+
+        public long getId() {
+            return id;
+        }
+
+        public int getApplyHeight() {
+            return applyHeight;
+        }
+
+        public long getResult() {
+            return result;
+        }
+
+        public boolean isApproved() {
+            return approved;
+        }
+    }
+
+    private static final DbKey.LongKeyFactory<PhasingPoll> phasingPollDbKeyFactory = new DbKey.LongKeyFactory<PhasingPoll>("id") {
         @Override
         public DbKey newKey(PhasingPoll poll) {
             return poll.dbKey;
+        }
+    };
+
+    private static final VersionedEntityDbTable<PhasingPoll> phasingPollTable = new VersionedEntityDbTable<PhasingPoll>("phasing_poll", phasingPollDbKeyFactory) {
+
+        @Override
+        protected PhasingPoll load(Connection con, ResultSet rs) throws SQLException {
+            return new PhasingPoll(rs);
+        }
+
+        @Override
+        protected void save(Connection con, PhasingPoll poll) throws SQLException {
+            poll.save(con);
+        }
+
+        @Override
+        public void trim(int height) {
+            super.trim(height);
+            try (Connection con = Db.db.getConnection();
+                 DbIterator<PhasingPoll> pollsToTrim = getFinishingBefore(height);
+                 PreparedStatement pstmt1 = con.prepareStatement("DELETE FROM phasing_poll WHERE id = ?");
+                 PreparedStatement pstmt2 = con.prepareStatement("DELETE FROM phasing_poll_voter WHERE transaction_id = ?");
+                 PreparedStatement pstmt3 = con.prepareStatement("DELETE FROM phasing_vote WHERE transaction_id = ?")) {
+                while (pollsToTrim.hasNext()) {
+                    PhasingPoll polltoTrim = pollsToTrim.next();
+                    long id = polltoTrim.getId();
+                    pstmt1.setLong(1, id);
+                    pstmt1.executeUpdate();
+                    pstmt2.setLong(1, id);
+                    pstmt2.executeUpdate();
+                    pstmt3.setLong(1, id);
+                    pstmt3.executeUpdate();
+                }
+            } catch (SQLException e) {
+                throw new RuntimeException(e.toString(), e);
+            } finally {
+                clearCache();
+            }
         }
     };
 
@@ -50,44 +143,29 @@ public class PhasingPoll extends AbstractPoll {
         }
     };
 
-    private static final VersionedEntityDbTable<PhasingPoll> phasingPollTable =
-            new VersionedEntityDbTable<PhasingPoll>("phasing_poll", pollDbKeyFactory) {
+    private static final DbKey.LongKeyFactory<PhasingPollResult> resultDbKeyFactory = new DbKey.LongKeyFactory<PhasingPollResult>("id") {
+        @Override
+        public DbKey newKey(PhasingPollResult phasingPollResult) {
+            return phasingPollResult.dbKey;
+        }
+    };
 
-                @Override
-                protected PhasingPoll load(Connection con, ResultSet rs) throws SQLException {
-                    return new PhasingPoll(rs);
-                }
+    private static final EntityDbTable<PhasingPollResult> resultTable = new EntityDbTable<PhasingPollResult>("phasing_poll_result", resultDbKeyFactory) {
 
-                @Override
-                protected void save(Connection con, PhasingPoll poll) throws SQLException {
-                    poll.save(con);
-                }
+        @Override
+        protected PhasingPollResult load(Connection con, ResultSet rs) throws SQLException {
+            return new PhasingPollResult(rs);
+        }
 
-                @Override
-                public void trim(int height) {
-                    super.trim(height);
-                    try (Connection con = Db.db.getConnection();
-                         DbIterator<PhasingPoll> pollsToTrim = getFinishingBefore(height);
-                         PreparedStatement pstmt1 = con.prepareStatement("DELETE FROM phasing_poll WHERE id = ?");
-                         PreparedStatement pstmt2 = con.prepareStatement("DELETE FROM phasing_poll_voter WHERE transaction_id = ?");
-                         PreparedStatement pstmt3 = con.prepareStatement("DELETE FROM phasing_vote WHERE transaction_id = ?")) {
-                        while (pollsToTrim.hasNext()) {
-                            PhasingPoll polltoTrim = pollsToTrim.next();
-                            long id = polltoTrim.getId();
-                            pstmt1.setLong(1, id);
-                            pstmt1.executeUpdate();
-                            pstmt2.setLong(1, id);
-                            pstmt2.executeUpdate();
-                            pstmt3.setLong(1, id);
-                            pstmt3.executeUpdate();
-                        }
-                    } catch (SQLException e) {
-                        throw new RuntimeException(e.toString(), e);
-                    } finally {
-                        clearCache();
-                    }
-                }
-            };
+        @Override
+        protected void save(Connection con, PhasingPollResult phasingPollResult) throws SQLException {
+            phasingPollResult.save(con);
+        }
+    };
+
+    public static PhasingPollResult getResult(long id) {
+        return resultTable.get(resultDbKeyFactory.newKey(id));
+    }
 
     public static int getPendingCount() {
         return phasingPollTable.getCount(new DbClause.FixedClause("finished = FALSE"));
@@ -98,7 +176,7 @@ public class PhasingPoll extends AbstractPoll {
     }
 
     public static PhasingPoll getPoll(long id) {
-        return phasingPollTable.getBy(new DbClause.LongClause("id", id));
+        return phasingPollTable.get(phasingPollDbKeyFactory.newKey(id));
     }
 
     public static DbIterator<PhasingPoll> getByAccountId(long accountId, int firstIndex, int lastIndex) {
@@ -200,7 +278,7 @@ public class PhasingPoll extends AbstractPoll {
         super(transaction.getSenderId(), appendix.getFinishHeight(), appendix.getVotingModel(), appendix.getHoldingId(),
                 appendix.getMinBalance(), appendix.getMinBalanceModel());
         this.id = transaction.getId();
-        this.dbKey = pollDbKeyFactory.newKey(this.id);
+        this.dbKey = phasingPollDbKeyFactory.newKey(this.id);
         this.quorum = appendix.getQuorum();
         this.whitelist = appendix.getWhitelist();
         if (this.whitelist.length > 0) {
@@ -213,14 +291,16 @@ public class PhasingPoll extends AbstractPoll {
         super(rs);
         this.id = rs.getLong("id");
         this.quorum = rs.getLong("quorum");
-        this.dbKey = pollDbKeyFactory.newKey(this.id);
+        this.dbKey = phasingPollDbKeyFactory.newKey(this.id);
         byte voterCount = rs.getByte("voter_count");
         this.whitelist = voterCount == 0 ? Convert.EMPTY_LONG : Convert.toArray(votersTable.get(votersDbKeyFactory.newKey(this)));
         this.fullHash = rs.getBytes("full_hash");
         this.finished = rs.getBoolean("finished");
     }
 
-    void finish() {
+    void finish(long result) {
+        PhasingPollResult phasingPollResult = new PhasingPollResult(this, Nxt.getBlockchain().getHeight(), result);
+        resultTable.insert(phasingPollResult);
         this.finished = true;
         phasingPollTable.insert(this);
     }

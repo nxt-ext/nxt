@@ -30,9 +30,9 @@ public class TestCastVote extends BlockchainTest {
         Assert.assertNull(response.get("error"));
         generateBlock();
 
-        apiCall = new APICall.Builder("getPollResults").param("poll", poll).build();
+        apiCall = new APICall.Builder("getPollResult").param("poll", poll).build();
         JSONObject getPollResponse = apiCall.invoke();
-        Logger.logMessage("getPollResultsResponse:" + getPollResponse.toJSONString());
+        Logger.logMessage("getPollResultResponse:" + getPollResponse.toJSONString());
         JSONArray results = (JSONArray)getPollResponse.get("results");
         JSONObject ringoVote = (JSONObject)results.get(0);
         long ringoResult = (Long) ringoVote.get("Ringo");

@@ -562,8 +562,9 @@ public interface Appendix {
 
         void finalVerification(TransactionImpl transaction) {
             PhasingPoll poll = PhasingPoll.getPoll(transaction.getId());
-            poll.finish();
-            if (PhasingVote.countVotes(poll) >= poll.getQuorum()) {
+            long result = PhasingVote.countVotes(poll);
+            poll.finish(result);
+            if (result >= poll.getQuorum()) {
                 release(transaction);
             } else {
                 Account senderAccount = Account.getAccount(transaction.getSenderId());

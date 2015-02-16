@@ -372,7 +372,7 @@ final class JSONData {
 
         for (Poll.PollResult result : results) {
             JSONObject jsonPair = new JSONObject();
-            jsonPair.put(result.getOption(), String.valueOf(result.getVotes()));
+            jsonPair.put(result.getOption(), String.valueOf(result.getResult()));
             resultsJson.add(jsonPair);
         }
 
@@ -410,8 +410,13 @@ final class JSONData {
         json.put("finished", poll.isFinished());
         json.put("finishHeight", poll.getFinishHeight());
         json.put("quorum", String.valueOf(poll.getQuorum()));
-        if (countVotes) {
-            json.put("votes", String.valueOf(PhasingVote.countVotes(poll)));
+        if (poll.isFinished()) {
+            PhasingPoll.PhasingPollResult phasingPollResult = PhasingPoll.getResult(poll.getId());
+            json.put("applyHeight", phasingPollResult.getApplyHeight());
+            json.put("approved", phasingPollResult.isApproved());
+            json.put("result", String.valueOf(phasingPollResult.getResult()));
+        } else if (countVotes) {
+            json.put("result", String.valueOf(PhasingVote.countVotes(poll)));
         }
         if (includeVoters) {
             JSONArray votersJson = new JSONArray();
@@ -424,6 +429,15 @@ final class JSONData {
             }
             json.put("voters", votersJson);
         }
+        return json;
+    }
+
+    static JSONObject phasingPollResult(PhasingPoll.PhasingPollResult phasingPollResult) {
+        JSONObject json = new JSONObject();
+        json.put("transaction", Convert.toUnsignedLong(phasingPollResult.getId()));
+        json.put("approved", phasingPollResult.isApproved());
+        json.put("result", String.valueOf(phasingPollResult.getResult()));
+        json.put("applyHeight", phasingPollResult.getApplyHeight());
         return json;
     }
 

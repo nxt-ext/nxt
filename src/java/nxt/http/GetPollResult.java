@@ -12,10 +12,11 @@ import java.util.List;
 
 import static nxt.http.JSONResponses.POLL_RESULTS_NOT_AVAILABLE;
 
-public class GetPollResults extends APIServlet.APIRequestHandler {
-    static final GetPollResults instance = new GetPollResults();
+public class GetPollResult extends APIServlet.APIRequestHandler {
 
-    private GetPollResults() {
+    static final GetPollResult instance = new GetPollResult();
+
+    private GetPollResult() {
         super(new APITag[]{APITag.VS}, "poll", "votingModel", "holding", "minBalance", "minBalanceModel");
     }
 

@@ -163,15 +163,7 @@ final class ParameterParser {
             throw new ParameterException(incorrect(name));
         }
     }
-
-    static PhasingPoll getPhasingPoll(HttpServletRequest req) throws ParameterException {
-        PhasingPoll phasingPoll = PhasingPoll.getPoll(getUnsignedLong(req, "transaction", true));
-        if (phasingPoll ==null) {
-            throw new ParameterException(UNKNOWN_TRANSACTION);
-        }
-        return phasingPoll;
-    }
-
+    
     static Alias getAlias(HttpServletRequest req) throws ParameterException {
         long aliasId;
         try {
