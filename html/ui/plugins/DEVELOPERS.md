@@ -50,11 +50,13 @@ Meta information about the plugin is provided as a ``JSON`` dictionary in a
     "myVersion": "Your plugin version", //no format requirements
     "short_description": "A description of your plugin", //max. 200 characters
     "infoUrl": "http://infosaboutmyplugin.info",
+    "startPage": "hello_world", //One of the pages used for NRS.pages.PAGENAME method(s)
 
     "nrsVersion": "1.5.0", //ALWAYS provide three sequence numbers, no additions!
 
     //optional
-    "activated": false //hard-set plugin activation/deactivation, default: true
+    "activated": false, //hard-set plugin activation/deactivation, default: true
+    "sidebarOptOut": true //opt out of being listed under sidebar "Plugins" entry, default: false
 }
 ```
 
@@ -79,6 +81,13 @@ and is the responsibility of the plugin creator.
 
 the ``nrs_version`` attribute in the manifest file indicates the NRS version
 the plugin was written for.
+
+## Best Practices for Development ##
+
+- Namespace your function names, CSS IDs and classes and other possible
+identifiers to avoid collisions affecting core NRS behaviour
+- Don't manipulate non-plugin HTML or CSS with your javascript code or CSS
+declarations
 
 ----
 ## Changelog ##

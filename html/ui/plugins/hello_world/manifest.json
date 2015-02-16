@@ -1,2 +1,11 @@
 {
+  "pluginVersion": 1,
+  "name": "Hello World",
+  "myVersion": "v.1.0",
+  "shortDescription": "This plugin is for demonstration purposes only",
+  "infoUrl": "http://moreinfosonhelloworldplugin.info",
+  "startPage": "hello_world",
+  "nrsVersion": "1.5.0",
+  "activated": true,
+  "sidebarOptOut": false
 }
