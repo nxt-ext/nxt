@@ -332,21 +332,12 @@ final class JSONData {
         Collections.addAll(options, poll.getOptions());
         json.put("options", options);
         json.put("finishHeight", poll.getFinishHeight());
-
-        json.put("votingModel", poll.getDefaultVoteWeighting().getVotingModel().getCode());
-
         json.put("minNumberOfOptions", poll.getMinNumberOfOptions());
         json.put("maxNumberOfOptions", poll.getMaxNumberOfOptions());
         json.put("minRangeValue", poll.getMinRangeValue());
         json.put("maxRangeValue", poll.getMaxRangeValue());
-
-        json.put("minBalance", poll.getDefaultVoteWeighting().getMinBalance());
-        json.put("minBalanceModel", poll.getDefaultVoteWeighting().getMinBalanceModel().getCode());
-
-        if (poll.getDefaultVoteWeighting().getVotingModel() == VoteWeighting.VotingModel.ASSET
-                || poll.getDefaultVoteWeighting().getVotingModel() == VoteWeighting.VotingModel.CURRENCY) {
-            json.put("holding", Convert.toUnsignedLong(poll.getDefaultVoteWeighting().getHoldingId()));
-        }
+        putAccount(json, "account", poll.getAccountId());
+        putVoteWeighting(json, poll.getDefaultVoteWeighting());
 
         if (includeVoters) {
             JSONArray votersJson = new JSONArray();
@@ -410,6 +401,8 @@ final class JSONData {
         json.put("finished", poll.isFinished());
         json.put("finishHeight", poll.getFinishHeight());
         json.put("quorum", String.valueOf(poll.getQuorum()));
+        putAccount(json, "account", poll.getAccountId());
+        putVoteWeighting(json, poll.getDefaultVoteWeighting());
         if (poll.isFinished()) {
             PhasingPoll.PhasingPollResult phasingPollResult = PhasingPoll.getResult(poll.getId());
             json.put("applyHeight", phasingPollResult.getApplyHeight());
@@ -439,6 +432,16 @@ final class JSONData {
         json.put("result", String.valueOf(phasingPollResult.getResult()));
         json.put("applyHeight", phasingPollResult.getApplyHeight());
         return json;
+    }
+
+    private static void putVoteWeighting(JSONObject json, VoteWeighting voteWeighting) {
+        json.put("votingModel", voteWeighting.getVotingModel().getCode());
+        json.put("minBalance", String.valueOf(voteWeighting.getMinBalance()));
+        json.put("minBalanceModel", voteWeighting.getMinBalanceModel().getCode());
+        if (voteWeighting.getVotingModel() == VoteWeighting.VotingModel.ASSET
+                || voteWeighting.getVotingModel() == VoteWeighting.VotingModel.CURRENCY) {
+            json.put("holding", Convert.toUnsignedLong(voteWeighting.getHoldingId()));
+        }
     }
 
     static JSONObject purchase(DigitalGoodsStore.Purchase purchase) {
