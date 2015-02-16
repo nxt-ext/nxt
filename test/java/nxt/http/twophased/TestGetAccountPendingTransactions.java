@@ -24,6 +24,7 @@ public class TestGetAccountPendingTransactions extends BlockchainTest {
     public void simpleTransactionLookup() {
         APICall apiCall = new TestCreateTwoPhased.TwoPhasedMoneyTransferBuilder().build();
         JSONObject transactionJSON = TestCreateTwoPhased.issueCreateTwoPhased(apiCall, false);
+        generateBlock();
 
         JSONObject response = pendingTransactionsApiCall().invoke();
         Logger.logMessage("getAccountPendingTransactionsResponse:" + response.toJSONString());
@@ -36,12 +37,12 @@ public class TestGetAccountPendingTransactions extends BlockchainTest {
         JSONObject response = pendingTransactionsApiCall().invoke();
         Logger.logMessage("getAccountPendingTransactionsResponse:" + response.toJSONString());
         JSONArray transactionsJson = (JSONArray) response.get("transactions");
-
         int transactionsSize0 = transactionsJson.size();
 
         APICall apiCall = new TestCreateTwoPhased.TwoPhasedMoneyTransferBuilder().build();
         JSONObject transactionJSON1 = TestCreateTwoPhased.issueCreateTwoPhased(apiCall, false);
         JSONObject transactionJSON2 = TestCreateTwoPhased.issueCreateTwoPhased(apiCall, false);
+        generateBlock();
 
         response = pendingTransactionsApiCall().invoke();
         Logger.logMessage("getAccountPendingTransactionsResponse:" + response.toJSONString());

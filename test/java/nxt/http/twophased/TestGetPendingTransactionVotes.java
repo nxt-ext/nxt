@@ -37,12 +37,13 @@ public class TestGetPendingTransactionVotes extends BlockchainTest {
 
         apiCall = new APICall.Builder("getPhasingPoll")
                 .param("transaction", transactionId)
+                .param("countVotes", "true")
                 .build();
         response = apiCall.invoke();
         Logger.logMessage("getPhasingPollResponse:" + response.toJSONString());
 
         Assert.assertNull(response.get("errorCode"));
-        Assert.assertEquals(1, ((Long) response.get("votes")).intValue());
+        Assert.assertEquals(1, Integer.parseInt((String) response.get("result")));
 
         apiCall = new APICall.Builder("getPhasingPoll")
                 .param("transaction", transactionId)
@@ -53,7 +54,7 @@ public class TestGetPendingTransactionVotes extends BlockchainTest {
         Logger.logMessage("getPhasingPollResponse:" + response.toJSONString());
 
         Assert.assertNull(response.get("errorCode"));
-        Assert.assertEquals(1, ((Long) response.get("votes")).intValue());
+        Assert.assertEquals(1, Integer.parseInt((String) response.get("result")));
         Assert.assertNotNull(response.get("voters"));
         Assert.assertEquals(1, ((JSONArray) response.get("voters")).size());
     }
