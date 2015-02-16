@@ -44,14 +44,14 @@ Meta information about the plugin is provided as a ``JSON`` dictionary in a
 ```
 {
     //mandatory
-    "plugin_version": 1,
+    "pluginVersion": 1, //Integer, don't use parenthesis!
     
     "name": "Name of your plugin", //max. 20 characters
-    "my_version": "Your plugin version", //no format requirements
+    "myVersion": "Your plugin version", //no format requirements
     "short_description": "A description of your plugin", //max. 200 characters
-    "info_url": "http://infosaboutmyplugin.info",
+    "infoUrl": "http://infosaboutmyplugin.info",
 
-    "nrs_version": "1.5.0", //ALWAYS provide three sequence numbers, no additions!
+    "nrsVersion": "1.5.0", //ALWAYS provide three sequence numbers, no additions!
 
     //optional
     "activated": false //hard-set plugin activation/deactivation, default: true
@@ -60,15 +60,18 @@ Meta information about the plugin is provided as a ``JSON`` dictionary in a
 
 Hint: Don't use comments in your own ``JSON`` file!
 
-### Plugin/Manifest Compatibility ###
+### Plugin Compatibility/Valdation ###
 
-Plugins are only valid when the manifest file provided is written for the same
+Plugins are compatible when the manifest file provided is written for the same
 mayor plugin version supported by the client where the plugin is installed.
 
 Mayor plugin versions won't change very often, minor plugin version releases will
 remain compatible within the mayor version.
 
-### NRS/Functional Compatibility ###
+When a detected plugin is determined as compatible the NRS client is then validating
+manifest file format and file structure.
+
+### NRS Compatibility ###
 
 Due to the broad scope of plugins the functional compatility of the plugin when 
 executed with various NRS versions can't be guaranteed by the plugin mechanism 
