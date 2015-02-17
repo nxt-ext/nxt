@@ -297,6 +297,9 @@ public final class PhasingPoll extends AbstractPoll {
     }
 
     void finish(long result) {
+        if (finished) {
+            throw new IllegalStateException("Poll " + Convert.toUnsignedLong(id) + " already finished");
+        }
         PhasingPollResult phasingPollResult = new PhasingPollResult(this, Nxt.getBlockchain().getHeight(), result);
         resultTable.insert(phasingPollResult);
         this.finished = true;
