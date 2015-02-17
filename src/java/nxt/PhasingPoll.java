@@ -15,7 +15,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Arrays;
 
-public class PhasingPoll extends AbstractPoll {
+public final class PhasingPoll extends AbstractPoll {
 
     public static final class PhasingPollResult {
 
@@ -268,7 +268,6 @@ public class PhasingPoll extends AbstractPoll {
     static void init() {
     }
 
-    private final long id;
     private final DbKey dbKey;
     private final long[] whitelist;
     private final long quorum;
@@ -276,9 +275,8 @@ public class PhasingPoll extends AbstractPoll {
     private boolean finished;
 
     private PhasingPoll(Transaction transaction, Appendix.Phasing appendix) {
-        super(transaction.getSenderId(), appendix.getFinishHeight(), appendix.getVotingModel(), appendix.getHoldingId(),
+        super(transaction.getId(), transaction.getSenderId(), appendix.getFinishHeight(), appendix.getVotingModel(), appendix.getHoldingId(),
                 appendix.getMinBalance(), appendix.getMinBalanceModel());
-        this.id = transaction.getId();
         this.dbKey = phasingPollDbKeyFactory.newKey(this.id);
         this.quorum = appendix.getQuorum();
         this.whitelist = appendix.getWhitelist();
@@ -290,9 +288,8 @@ public class PhasingPoll extends AbstractPoll {
 
     private PhasingPoll(ResultSet rs) throws SQLException {
         super(rs);
-        this.id = rs.getLong("id");
-        this.quorum = rs.getLong("quorum");
         this.dbKey = phasingPollDbKeyFactory.newKey(this.id);
+        this.quorum = rs.getLong("quorum");
         byte voterCount = rs.getByte("voter_count");
         this.whitelist = voterCount == 0 ? Convert.EMPTY_LONG : Convert.toArray(votersTable.get(votersDbKeyFactory.newKey(this)));
         this.fullHash = rs.getBytes("full_hash");
@@ -306,12 +303,9 @@ public class PhasingPoll extends AbstractPoll {
         phasingPollTable.insert(this);
     }
 
+    @Override
     public boolean isFinished() {
         return finished;
-    }
-
-    public long getId() {
-        return id;
     }
 
     public long[] getWhitelist() {
@@ -331,17 +325,17 @@ public class PhasingPoll extends AbstractPoll {
                 + "finish_height, voter_count, voting_model, quorum, min_balance, holding_id, "
                 + "min_balance_model, full_hash, finished, height) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
             int i = 0;
-            pstmt.setLong(++i, getId());
-            pstmt.setLong(++i, getAccountId());
-            pstmt.setInt(++i, getFinishHeight());
-            pstmt.setByte(++i, (byte) getWhitelist().length);
-            pstmt.setByte(++i, getDefaultVoteWeighting().getVotingModel().getCode());
-            pstmt.setLong(++i, getQuorum());
-            pstmt.setLong(++i, getDefaultVoteWeighting().getMinBalance());
-            pstmt.setLong(++i, getDefaultVoteWeighting().getHoldingId());
-            pstmt.setByte(++i, getDefaultVoteWeighting().getMinBalanceModel().getCode());
-            pstmt.setBytes(++i, getFullHash());
-            pstmt.setBoolean(++i, isFinished());
+            pstmt.setLong(++i, id);
+            pstmt.setLong(++i, accountId);
+            pstmt.setInt(++i, finishHeight);
+            pstmt.setByte(++i, (byte) whitelist.length);
+            pstmt.setByte(++i, defaultVoteWeighting.getVotingModel().getCode());
+            pstmt.setLong(++i, quorum);
+            pstmt.setLong(++i, defaultVoteWeighting.getMinBalance());
+            pstmt.setLong(++i, defaultVoteWeighting.getHoldingId());
+            pstmt.setByte(++i, defaultVoteWeighting.getMinBalanceModel().getCode());
+            pstmt.setBytes(++i, fullHash);
+            pstmt.setBoolean(++i, finished);
             pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
             pstmt.executeUpdate();
         }
