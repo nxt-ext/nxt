@@ -236,17 +236,18 @@ public class PhasingPoll extends AbstractPoll {
         }
     }
 
-    public static DbIterator<? extends Transaction> getAccountPendingTransactions(Account sender, int from, int to) {
+    public static DbIterator<? extends Transaction> getAccountPendingTransactions(Account account, int from, int to) {
         Connection con = null;
         try {
             con = Db.db.getConnection();
-            PreparedStatement pstmt = con.prepareStatement("SELECT transaction.* FROM transaction, phasing_poll " +
-                    " WHERE phasing_poll.account_id = ? AND phasing_poll.id = transaction.id " +
-                    " AND phasing_poll.finished = FALSE AND phasing_poll.latest = TRUE " +
-                    " ORDER BY transaction.height DESC " +
+            PreparedStatement pstmt = con.prepareStatement("SELECT transaction.* FROM transaction, phasing_poll  " +
+                    " WHERE transaction.phased = true AND (transaction.sender_id = ? OR transaction.recipient_id = ?) " +
+                    " AND phasing_poll.id = transaction.id  AND phasing_poll.latest = TRUE " +
+                    " AND phasing_poll.finished = FALSE ORDER BY transaction.height DESC " +
                     DbUtils.limitsClause(from, to));
-            pstmt.setLong(1, sender.getId());
-            DbUtils.setLimits(2, pstmt, from, to);
+            pstmt.setLong(1, account.getId());
+            pstmt.setLong(2, account.getId());
+            DbUtils.setLimits(3, pstmt, from, to);
 
             return Nxt.getBlockchain().getTransactions(con, pstmt);
         } catch (SQLException e) {
