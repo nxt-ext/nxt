@@ -336,7 +336,6 @@ final class JSONData {
         json.put("maxNumberOfOptions", poll.getMaxNumberOfOptions());
         json.put("minRangeValue", poll.getMinRangeValue());
         json.put("maxRangeValue", poll.getMaxRangeValue());
-        putAccount(json, "account", poll.getAccountId());
         putVoteWeighting(json, poll.getDefaultVoteWeighting());
 
         if (includeVoters) {

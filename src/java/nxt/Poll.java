@@ -127,7 +127,7 @@ public final class Poll extends AbstractPoll {
     }
 
     static void addPoll(Transaction transaction, Attachment.MessagingPollCreation attachment) {
-        Poll poll = new Poll(transaction.getId(), transaction.getSenderId(), attachment);
+        Poll poll = new Poll(transaction, attachment);
         pollTable.insert(poll);
     }
 
@@ -161,7 +161,6 @@ public final class Poll extends AbstractPoll {
         }
     }
 
-    private final long id;
     private final DbKey dbKey;
     private final String name;
     private final String description;
@@ -171,11 +170,10 @@ public final class Poll extends AbstractPoll {
     private final byte minRangeValue;
     private final byte maxRangeValue;
 
-    private Poll(long id, long accountId, Attachment.MessagingPollCreation attachment) {
-        super(accountId, attachment.getFinishHeight(), attachment.getVotingModel(), attachment.getHoldingId(),
+    private Poll(Transaction transaction, Attachment.MessagingPollCreation attachment) {
+        super(transaction.getId(), transaction.getSenderId(), attachment.getFinishHeight(), attachment.getVotingModel(), attachment.getHoldingId(),
                 attachment.getMinBalance(), attachment.getMinBalanceModel());
 
-        this.id = id;
         this.dbKey = pollDbKeyFactory.newKey(this.id);
         this.name = attachment.getPollName();
         this.description = attachment.getPollDescription();
@@ -189,7 +187,6 @@ public final class Poll extends AbstractPoll {
 
     private Poll(ResultSet rs) throws SQLException {
         super(rs);
-        this.id = rs.getLong("id");
         this.dbKey = pollDbKeyFactory.newKey(this.id);
         this.name = rs.getString("name");
         this.description = rs.getString("description");
@@ -208,25 +205,26 @@ public final class Poll extends AbstractPoll {
                 + "holding_id, min_num_options, max_num_options, min_range_value, max_range_value, height) "
                 + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
             int i = 0;
-            pstmt.setLong(++i, getId());
-            pstmt.setLong(++i, getAccountId());
-            pstmt.setString(++i, getName());
-            pstmt.setString(++i, getDescription());
-            pstmt.setObject(++i, getOptions());
-            pstmt.setInt(++i, getFinishHeight());
-            pstmt.setByte(++i, getDefaultVoteWeighting().getVotingModel().getCode());
-            pstmt.setLong(++i, getDefaultVoteWeighting().getMinBalance());
-            pstmt.setByte(++i, getDefaultVoteWeighting().getMinBalanceModel().getCode());
-            pstmt.setLong(++i, getDefaultVoteWeighting().getHoldingId());
-            pstmt.setByte(++i, getMinNumberOfOptions());
-            pstmt.setByte(++i, getMaxNumberOfOptions());
-            pstmt.setByte(++i, getMinRangeValue());
-            pstmt.setByte(++i, getMaxRangeValue());
+            pstmt.setLong(++i, id);
+            pstmt.setLong(++i, accountId);
+            pstmt.setString(++i, name);
+            pstmt.setString(++i, description);
+            pstmt.setObject(++i, options);
+            pstmt.setInt(++i, finishHeight);
+            pstmt.setByte(++i, defaultVoteWeighting.getVotingModel().getCode());
+            pstmt.setLong(++i, defaultVoteWeighting.getMinBalance());
+            pstmt.setByte(++i, defaultVoteWeighting.getMinBalanceModel().getCode());
+            pstmt.setLong(++i, defaultVoteWeighting.getHoldingId());
+            pstmt.setByte(++i, minNumberOfOptions);
+            pstmt.setByte(++i, maxNumberOfOptions);
+            pstmt.setByte(++i, minRangeValue);
+            pstmt.setByte(++i, maxRangeValue);
             pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
             pstmt.executeUpdate();
         }
     }
 
+    @Override
     public boolean isFinished() { return getFinishHeight() < Nxt.getBlockchain().getHeight(); }
 
     public List<PollResult> getResults(VoteWeighting voteWeighting) {
@@ -248,10 +246,6 @@ public final class Poll extends AbstractPoll {
 
     public DbIterator<Vote> getVotes(){
         return Vote.getVotes(this.getId(), 0, -1);
-    }
-
-    public long getId() {
-        return id;
     }
 
     public String getName() {
