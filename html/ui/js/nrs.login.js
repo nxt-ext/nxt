@@ -271,9 +271,11 @@ var NRS = (function(NRS, $, undefined) {
 							NRS.setup[key]();
 						}
 					});
+					
+					NRS.loadPlugins();
 					$(".sidebar .treeview").tree();
 					$('#dashboard_link a').addClass("ignore").click();
-
+					
 					NRS.getInitialTransactions();
 					NRS.updateApprovalRequests();
 				});

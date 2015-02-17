@@ -13,6 +13,7 @@ var NRS = (function(NRS, $, undefined) {
 		jQuery.ajaxSetup({ async: false });
     	$.ajax({
     		url: 'plugins/' + pluginId + '/manifest.json',
+            cache: false,
     		success: function(data){
     			manifest = data;
     		}
@@ -105,6 +106,7 @@ var NRS = (function(NRS, $, undefined) {
 			$.ajax({
     			url: mandatoryFiles[i],
     			type: 'HEAD',
+                cache: false,
     			success: function(data) {
     				//nothing to do
     			},
@@ -188,6 +190,53 @@ var NRS = (function(NRS, $, undefined) {
             $('#login_password').prop("disabled", false);
 		});
 	}
+
+    NRS.loadPlugin = function(pluginId) {
+        var plugin = NRS.plugins[pluginId];
+        var manifest = NRS.plugins[pluginId]['manifest'];
+        var pluginPath = 'plugins/' + pluginId + '/';
+        NRS.loadPageHTML(pluginPath + 'html/pages/' + pluginId + '.html');
+        NRS.loadPageHTML(pluginPath + 'html/modals/' + pluginId + '.html');
+
+        if (!manifest['sidebarOptOut']) {
+            var sidebarId = 'sidebar_plugins';
+            if ($('#' + sidebarId).length == 0) {
+                var options = {
+                    "id": sidebarId,
+                    "titleHTML": '<i class="fa fa-plug"></i> <span data-i18n="plugins">Plugins</span>',
+                    "page": 'plugins',
+                    "desiredPosition": 110
+                }
+                NRS.addTreeviewSidebarMenuItem(options);
+            }
+
+            options = {
+                "titleHTML": manifest['name'].escapeHTML(),
+                "type": 'PAGE',
+                "page": manifest['startPage']
+            }
+            NRS.appendToTSMenuItem(sidebarId, options);
+        }
+        var cssURL = pluginPath + 'css/' + pluginId + '.css';
+        if (document.createStyleSheet) {
+            document.createStyleSheet(cssURL);
+        } else {
+            $('<link rel="stylesheet" type="text/css" href="' + cssURL + '" />').appendTo('head');
+        }
+
+        $.getScript(pluginPath + 'js/nrs.' + pluginId + '.js', function( data, textStatus, jqxhr ) {});
+    }
+
+    NRS.loadPlugins = function() {
+        $.each(NRS.plugins, function(pluginId, pluginDict) {
+            if (pluginDict['launch_status'] == NRS.constants.PL_PAUSED) {
+                NRS.loadPlugin(pluginId);
+            }
+        });
+        NRS.loadPageHTMLTemplates();
+        NRS.loadModalHTMLTemplates();
+    }
+
 
 	return NRS;
 }(NRS || {}, jQuery));
