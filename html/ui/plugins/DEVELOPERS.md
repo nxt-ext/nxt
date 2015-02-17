@@ -21,7 +21,7 @@ the plugin.
 
 There is an example plugin ``hello_world`` which can be found in the ``plugins``
 folder. If you want to see this plugin in the client UI you can activate it
-in the associated ``manifest.json`` file.
+in the associated ``manifest.json`` file by setting the ``deactivated`` flag to ``false``.
 
 ----
 ## File Structure ###
@@ -65,26 +65,26 @@ Hint: Don't use comments in your own ``JSON`` file!
 
 ### Plugin Compatibility/Valdation ###
 
-Plugins are compatible when the manifest file provided is written for the same
-mayor plugin version supported by the client where the plugin is installed.
+Plugins are compatible when the manifest file is written for the same
+mayor plugin version supported by the installed client.
 
 Mayor plugin versions won't change very often, minor plugin version releases will
 remain compatible within the mayor version.
 
-When a detected plugin is determined as compatible the NRS client is then validating
+After a detected plugin is determined as compatible the NRS client will be validating the
 manifest file format and file structure.
 
 ### NRS Compatibility ###
 
-Due to the broad scope of plugins the functional compatility of the plugin when 
-executed with various NRS versions can't be guaranteed by the plugin mechanism 
+Due to the broad scope of plugins the functional compatility of the plugin 
+with various NRS versions can't be guaranteed by the plugin mechanism 
 and is the responsibility of the plugin creator.
 
 The ``nrs_version`` attribute in the manifest file indicates the NRS version
 the plugin was written for. Due to possible changes in javascript API behaviour
 it is recommended to release a new plugin version for every new NRS release,
 though a plugin will still be running after minor release updates (e.g. a
-plugin written for "1.5.1" running under "1.5.5").
+plugin written for "1.5.1" running under "1.5.5" client installation).
 
 After a mayor NRS update (e.g. from "1.5.9" to "1.6.0"), the plugin will stop
 working and has to be updated.
