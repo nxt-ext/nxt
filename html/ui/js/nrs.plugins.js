@@ -184,6 +184,8 @@ var NRS = (function(NRS, $, undefined) {
 					}
 				}
 			}
+            NRS.initPluginWarning();
+            $('#login_password').prop("disabled", false);
 		});
 	}
 

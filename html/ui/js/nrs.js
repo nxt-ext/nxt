@@ -144,6 +144,12 @@ var NRS = (function(NRS, $, undefined) {
 			}, 5000);
 		});
 
+		$("body").popover({
+			"selector": ".show_popover",
+			"html": true,
+			"trigger": "hover"
+		});
+
 		NRS.showLockscreen();
 
 		if (window.parent) {
@@ -186,12 +192,6 @@ var NRS = (function(NRS, $, undefined) {
 		NRS.allowLoginViaEnter();
 
 		NRS.automaticallyCheckRecipient();
-
-		$("body").popover({
-			"selector": ".show_popover",
-			"html": true,
-			"trigger": "hover"
-		});
 
 		$("#dashboard_table, #transactions_table").on("mouseenter", "td.confirmations", function() {
 			$(this).popover("show");
