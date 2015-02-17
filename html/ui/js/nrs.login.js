@@ -333,7 +333,6 @@ var NRS = (function(NRS, $, undefined) {
 				"trigger": "hover"
 			});
 
-
 			$("#lockscreen_active_plugins_warning").show();
 		} else {
 			$("#lockscreen_active_plugins_warning").hide();
