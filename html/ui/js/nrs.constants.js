@@ -19,6 +19,7 @@ var NRS = (function(NRS, $, undefined) {
         'PV_INCOMPATIBLE_MANIFEST_VERSION': 302,
         'PV_INVALID_MANIFEST_FILE': 303,
         'PV_INVALID_MISSING_FILES': 304,
+        'PV_INVALID_JAVASCRIPT_FILE': 305,
 
         //Plugin NRS compatibility status codes
         'PNC_COMPATIBLE': 100,

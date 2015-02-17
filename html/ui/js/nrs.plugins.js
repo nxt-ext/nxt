@@ -195,37 +195,48 @@ var NRS = (function(NRS, $, undefined) {
         var plugin = NRS.plugins[pluginId];
         var manifest = NRS.plugins[pluginId]['manifest'];
         var pluginPath = 'plugins/' + pluginId + '/';
-        NRS.loadPageHTML(pluginPath + 'html/pages/' + pluginId + '.html');
-        NRS.loadPageHTML(pluginPath + 'html/modals/' + pluginId + '.html');
 
-        if (!manifest['sidebarOptOut']) {
-            var sidebarId = 'sidebar_plugins';
-            if ($('#' + sidebarId).length == 0) {
-                var options = {
-                    "id": sidebarId,
-                    "titleHTML": '<i class="fa fa-plug"></i> <span data-i18n="plugins">Plugins</span>',
-                    "page": 'plugins',
-                    "desiredPosition": 110
+        $.getScript(pluginPath + 'js/nrs.' + pluginId + '.js')
+            .done(function(script, textStatus) {
+                NRS.loadPageHTML(pluginPath + 'html/pages/' + pluginId + '.html');
+                NRS.loadPageHTML(pluginPath + 'html/modals/' + pluginId + '.html');
+
+                if (!manifest['sidebarOptOut']) {
+                    var sidebarId = 'sidebar_plugins';
+                    if ($('#' + sidebarId).length == 0) {
+                        var options = {
+                            "id": sidebarId,
+                            "titleHTML": '<i class="fa fa-plug"></i> <span data-i18n="plugins">Plugins</span>',
+                            "page": 'plugins',
+                            "desiredPosition": 110
+                        }
+                        NRS.addTreeviewSidebarMenuItem(options);
+                    }
+
+                    options = {
+                        "titleHTML": manifest['name'].escapeHTML(),
+                        "type": 'PAGE',
+                        "page": manifest['startPage']
+                    }
+                    NRS.appendToTSMenuItem(sidebarId, options);
+                    $(".sidebar .treeview").tree();
                 }
-                NRS.addTreeviewSidebarMenuItem(options);
-            }
-
-            options = {
-                "titleHTML": manifest['name'].escapeHTML(),
-                "type": 'PAGE',
-                "page": manifest['startPage']
-            }
-            NRS.appendToTSMenuItem(sidebarId, options);
+                var cssURL = pluginPath + 'css/' + pluginId + '.css';
+                if (document.createStyleSheet) {
+                    document.createStyleSheet(cssURL);
+                } else {
+                    $('<link rel="stylesheet" type="text/css" href="' + cssURL + '" />').appendTo('head');
+                }
+                plugin['launch_status'] = NRS.constants.PL_RUNNING;
+                plugin['launch_status_msg'] = $.t('plugin_running', 'Running');
+            })
+            .fail(function(jqxhr, settings, exception) {
+                plugin['launch_status'] = NRS.constants.PL_DEACTIVATED;
+                plugin['launch_status_msg'] = $.t('plugin_deactivated', 'Deactivated');
+                plugin['validity'] = NRS.constants.PV_INVALID_JAVASCRIPT_FILE;
+                plugin['validity_msg'] = $.t('plugin_invalid_javascript_file', 'Invalid javascript file');
+            });
         }
-        var cssURL = pluginPath + 'css/' + pluginId + '.css';
-        if (document.createStyleSheet) {
-            document.createStyleSheet(cssURL);
-        } else {
-            $('<link rel="stylesheet" type="text/css" href="' + cssURL + '" />').appendTo('head');
-        }
-
-        $.getScript(pluginPath + 'js/nrs.' + pluginId + '.js', function( data, textStatus, jqxhr ) {});
-    }
 
     NRS.loadPlugins = function() {
         $.each(NRS.plugins, function(pluginId, pluginDict) {
