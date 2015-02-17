@@ -12,16 +12,20 @@ import org.junit.Test;
 
 public class TestGetAccountPendingTransactions extends BlockchainTest {
 
-    static APICall pendingTransactionsApiCall() {
+    static APICall pendingTransactionsApiCall(long id) {
         return new APICall.Builder("getAccountPendingTransactions")
-                .param("account", Convert.toUnsignedLong(id1))
+                .param("account", Convert.toUnsignedLong(id))
                 .param("firstIndex", 0)
                 .param("lastIndex", 10)
                 .build();
     }
 
+    static APICall pendingTransactionsApiCall() {
+        return pendingTransactionsApiCall(id1);
+    }
+
     @Test
-    public void simpleTransactionLookup() {
+    public void simpleOutgoingLookup() {
         APICall apiCall = new TestCreateTwoPhased.TwoPhasedMoneyTransferBuilder().build();
         JSONObject transactionJSON = TestCreateTwoPhased.issueCreateTwoPhased(apiCall, false);
         generateBlock();
@@ -30,7 +34,30 @@ public class TestGetAccountPendingTransactions extends BlockchainTest {
         Logger.logMessage("getAccountPendingTransactionsResponse:" + response.toJSONString());
         JSONArray transactionsJson = (JSONArray) response.get("transactions");
         Assert.assertTrue(TwoPhasedSuite.searchForTransactionId(transactionsJson, (String) transactionJSON.get("transaction")));
+
+        response = pendingTransactionsApiCall(id3).invoke();
+        Logger.logMessage("getAccountPendingTransactionsResponse:" + response.toJSONString());
+        transactionsJson = (JSONArray) response.get("transactions");
+        Assert.assertFalse(TwoPhasedSuite.searchForTransactionId(transactionsJson, (String) transactionJSON.get("transaction")));
     }
+
+    @Test
+    public void simpleIngoingLookup() {
+        APICall apiCall = new TestCreateTwoPhased.TwoPhasedMoneyTransferBuilder().build();
+        JSONObject transactionJSON = TestCreateTwoPhased.issueCreateTwoPhased(apiCall, false);
+        generateBlock();
+
+        JSONObject response = pendingTransactionsApiCall(id2).invoke();
+        Logger.logMessage("getAccountPendingTransactionsResponse:" + response.toJSONString());
+        JSONArray transactionsJson = (JSONArray) response.get("transactions");
+        Assert.assertTrue(TwoPhasedSuite.searchForTransactionId(transactionsJson, (String) transactionJSON.get("transaction")));
+
+        response = pendingTransactionsApiCall(id3).invoke();
+        Logger.logMessage("getAccountPendingTransactionsResponse:" + response.toJSONString());
+        transactionsJson = (JSONArray) response.get("transactions");
+        Assert.assertFalse(TwoPhasedSuite.searchForTransactionId(transactionsJson, (String) transactionJSON.get("transaction")));
+    }
+
 
     @Test
     public void multiple() {
