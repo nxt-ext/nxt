@@ -9,7 +9,18 @@ var NRS = (function(NRS, $, undefined) {
 		NRS.sendRequest("getBlockchainStatus", {}, function(response) {
 			if (response.lastBlock != undefined) {
 				$.each(response, function(fieldName, value) {
-					rows += "<tr><td>" + String(fieldName).escapeHTML() + "</td><td>" + String(value).escapeHTML() + "</td></tr>"; 
+					rows += "<tr>";
+					rows += "<td>" + String(fieldName).escapeHTML() + "</td>";
+					if (fieldName == "lastBlockchainFeederHeight" && value) {
+						//Make use of existing client modals and functionality
+						var valueHTML = "<a href='#' data-block='" + String(value).escapeHTML() + "' class='show_block_modal_action'>";
+						valueHTML += String(value).escapeHTML() + "</a>";
+					} else {
+						var valueHTML = String(value).escapeHTML();
+					}
+
+					rows += "<td>" + valueHTML + "</td>";
+					rows += "</tr>"; 
 				});
 			}
 			NRS.dataLoaded(rows);
