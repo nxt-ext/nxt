@@ -560,7 +560,8 @@ var NRS = (function(NRS, $, undefined) {
 				account: {
 					"primary": true,
 					"type": "VARCHAR(25)"
-				}
+				},
+				name: "VARCHAR(63)"
 			},
 			data: {
 				id: {
