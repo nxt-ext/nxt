@@ -3,7 +3,7 @@
  */
 var NRS = (function(NRS, $, undefined) {
 
-	NRS.pages.plugin_hello_world = function() {
+	NRS.pages.p_hello_world = function() {
 		var rows = "";
 		
 		NRS.sendRequest("getBlockchainStatus", {}, function(response) {

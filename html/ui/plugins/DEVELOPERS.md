@@ -93,6 +93,8 @@ working and has to be updated.
 
 - Namespace your function names, CSS IDs and classes and other possible
 identifiers to avoid collisions affecting core NRS behaviour
+- Convention vor namespacing: "p_[PLUGINNAME]_[LOCALIDENTIFIER]", e.g.
+"p_hello_world_info_modal"
 - Don't manipulate non-plugin HTML or CSS with your javascript code or CSS
 declarations
 
