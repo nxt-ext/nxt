@@ -3297,3 +3297,7 @@ input.masked {
   display: block;
   margin-bottom: 5px;
 }
+
+#login_account_container {
+  display: none;
+}
