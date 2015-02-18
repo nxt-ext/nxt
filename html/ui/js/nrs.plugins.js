@@ -135,17 +135,23 @@ var NRS = (function(NRS, $, undefined) {
 		var pvList = pluginNRSVersion.split('.');
 		var currentNRSVersion = NRS.state.version.replace(/[a-zA-Z]/g,'');
 		var cvList = currentNRSVersion.split('.');
-		if (pvList[0] == cvList[0] && pvList[1] == cvList[1]) {
-			if (pvList[2] == cvList[2]) {
-				plugin['nrs_compatibility'] = NRS.constants.PNC_COMPATIBLE;
-    			plugin['nrs_compatibility_msg'] = $.t('pnc_compatible_msg', 'Plugin compatible with NRS version');	
+        var versionCompare = NRS.versionCompare(pluginNRSVersion, currentNRSVersion);
+		if (versionCompare == 0) {
+        	plugin['nrs_compatibility'] = NRS.constants.PNC_COMPATIBLE;
+    		plugin['nrs_compatibility_msg'] = $.t('pnc_compatible_msg', 'Plugin compatible with NRS version');
+        } else {
+            if (versionCompare == 1) {
+				plugin['nrs_compatibility'] = NRS.constants.PNC_COMPATIBILITY_CLIENT_VERSION_TOO_OLD;
+                plugin['nrs_compatibility_msg'] = $.t('pnc_compatibility_build_for_newer_client_msg', 'Plugin build for newer client version');
 			} else {
-				plugin['nrs_compatibility'] = NRS.constants.PNC_COMPATIBILITY_WARNING;
-    			plugin['nrs_compatibility_msg'] = $.t('pnc_compatibility_warning_msg', 'Plugin build for another minor release version');
-			}
-		} else {
-			plugin['nrs_compatibility'] = NRS.constants.PNC_NOT_COMPATIBLE;
-			plugin['nrs_compatibility_msg'] = $.t('pnc_not_compatible_msg', 'Plugin build for another major release version');
+                if (pvList[0] == cvList[0] && pvList[1] == cvList[1]) {
+                    plugin['nrs_compatibility'] = NRS.constants.PNC_COMPATIBILITY_MINOR_RELEASE_DIFF;
+                    plugin['nrs_compatibility_msg'] = $.t('pnc_compatibility_minor_release_diff_msg', 'Plugin build for another minor release version');
+                } else {
+                    plugin['nrs_compatibility'] = NRS.constants.PNC_COMPATIBILITY_MAJOR_RELEASE_DIFF;
+                    plugin['nrs_compatibility_msg'] = $.t('pnc_compatibility_minor_release_diff_msg', 'Plugin build for another major release version');      
+                }
+            }
 		}
 	}
 

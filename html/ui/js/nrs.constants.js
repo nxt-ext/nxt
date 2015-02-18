@@ -23,9 +23,13 @@ var NRS = (function(NRS, $, undefined) {
 
         //Plugin NRS compatibility status codes
         'PNC_COMPATIBLE': 100,
+        'PNC_COMPATIBILITY_MINOR_RELEASE_DIFF': 101,
         'PNC_COMPATIBILITY_WARNING': 200,
-        'PNC_COMPATIBILITY_UNKNOWN': 300,
-        'PNC_NOT_COMPATIBLE': 301,
+        'PNC_COMPATIBILITY_MAJOR_RELEASE_DIFF': 202,
+        'PNC_NOT_COMPATIBLE': 300,
+        'PNC_COMPATIBILITY_UNKNOWN': 301,
+        'PNC_COMPATIBILITY_CLIENT_VERSION_TOO_OLD': 302,
+        
 
     	'SERVER': {}
     }
