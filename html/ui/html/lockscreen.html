@@ -27,13 +27,7 @@
                 <div class="lockscreen-item">
                     <div class="lockscreen-credentials">   
                         <div class="input-group">
-                        	<input type="text" class="form-control" id="login_account" name="login_account" placeholder="Your NXT Account" data-i18n="[placeholder]nxt_account" autofocus />
-                            <div class="input-group-btn" style="border:1px solid #fff;">
-                                <button class="btn btn-flat" onclick="NRS.loginAccount($('#login_account').val())"><i class="fa fa-arrow-right text-muted"></i></button>
-                            </div>
-                        </div>
-                        <div class="input-group">
-                            <input type="password" class="form-control" id="login_password" name="login_password" placeholder="Your Passphrase" data-i18n="[placeholder]your_passphrase" autofocus />
+                            <input type="password" class="form-control" id="login_password" name="login_password" placeholder="Your Passphrase" data-i18n="[placeholder]your_passphrase" autofocus disabled />
                             <div class="input-group-btn" style="border:1px solid #fff;">
                                 <button class="btn btn-flat" onclick="NRS.login($('#login_password').val())"><i class="fa fa-arrow-right text-muted"></i></button>
                             </div>
@@ -44,6 +38,24 @@
                 
                 <div id="remember_password_container">
                     <input type="checkbox" name="remember_password" id="remember_password" value="1" /> <span></span><label for="remember_password" data-i18n="remember_passphrase_during_session">Remember passphrase during session</label>
+                </div>
+
+                <div id="lockscreen_active_plugins_warning" style="margin-top:15px;display:none;">
+                <div style="display:inline-block;max-width: 400px; min-width: 400px;">
+                    <div>
+                        <span style="color:#fff;opacity:0.96;" data-i18n="active_plugins_detected">
+                            Active Plugins detected
+                        </span>
+                    </div>
+                    <div style="margin-top:10px;margin-bottom:7px;">
+                        <a href="#" id="lockscreen_active_plugins_overview" class="label label-default" data-content="" data-toggle="popover" data-placement="top" data-i18n="active_plugins">
+                            Active Plugins
+                        </a>&nbsp;
+                        <a href="#" id="lockscreen_active_plugins_security" class="label label-warning" data-content="" data-toggle="popover" data-placement="top" data-i18n="security_notice">
+                            Security Notice
+                        </a>
+                    </div>
+                </div>
                 </div>
                 
                 <div id="registration_link">
