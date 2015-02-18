@@ -275,6 +275,7 @@ var NRS = (function(NRS, $, undefined) {
 					NRS.loadPlugins();
 					$(".sidebar .treeview").tree();
 					$('#dashboard_link a').addClass("ignore").click();
+					$("[data-i18n]").i18n();
 
 					NRS.getInitialTransactions();
 					NRS.updateApprovalRequests();
