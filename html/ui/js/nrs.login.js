@@ -200,11 +200,12 @@ var NRS = (function(NRS, $, undefined) {
 						.append($("<li></li>")
 							.append($("<a></a>")
 								.attr("href","#")
-								.attr("style","display: inline-block;")
+								.attr("style","display: inline-block;width: 380px;")
 								.attr("onClick","NRS.loginAccount('"+account.account+"')")
 								.text(account.account))
 							.append($('<button aria-hidden="true" data-dismiss="modal" class="close" type="button">×</button>')
-								.attr("onClick","NRS.removeAccount('"+account.account+"')"))
+								.attr("onClick","NRS.removeAccount('"+account.account+"')")
+								.attr("style","margin-right:5px"))
 						);
 					}
 					else {
@@ -212,11 +213,12 @@ var NRS = (function(NRS, $, undefined) {
 						.append($("<li></li>")
 							.append($("<a></a>")
 								.attr("href","#")
-								.attr("style","display: inline-block;")
+								.attr("style","display: inline-block;width: 380px;")
 								.attr("onClick","NRS.loginAccount('"+account.account+"')")
 								.text(account.name+" ("+account.account+")"))
 							.append($('<button aria-hidden="true" data-dismiss="modal" class="close" type="button">×</button>')
-								.attr("onClick","NRS.removeAccount('"+account.account+"')"))
+								.attr("onClick","NRS.removeAccount('"+account.account+"')")
+								.attr("style","margin-right:5px"))
 						);
 					}
 				});
