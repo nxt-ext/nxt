@@ -32,7 +32,7 @@ var NRS = (function(NRS, $, undefined) {
 		"fr": "Français",                // french
 		"gl": "Galego (Beta)",           // galician
 		"sh": "Hrvatski (Beta)",         // croatian
-		"id": "Bahasa Indonesia (Beta)", // indonesian
+		"id": "Bahasa Indonesia",        // indonesian
 		"it": "Italiano",                // italian
 		"ja": "日本語 (Beta)",            // japanese
 		"lt": "Lietuviškai",             // lithuanian
