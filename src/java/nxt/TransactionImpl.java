@@ -811,6 +811,9 @@ final class TransactionImpl implements Transaction {
         for (Appendix.AbstractAppendix appendage : appendages) {
             appendage.validate(this);
         }
+        if (getSize() > Constants.MAX_PAYLOAD_LENGTH) {
+            throw new NxtException.NotValidException("Transaction size " + getSize() + " exceeds maximum payload size");
+        }
         long minimumFeeNQT = getMinimumFeeNQT(blockchainHeight);
         if (feeNQT < minimumFeeNQT) {
             throw new NxtException.NotCurrentlyValidException(String.format("Transaction fee %d less than minimum fee %d at height %d",

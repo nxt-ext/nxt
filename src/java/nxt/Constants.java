@@ -43,7 +43,9 @@ public final class Constants {
     public static final int MAX_ALIAS_LENGTH = 100;
 
     public static final int MAX_ARBITRARY_MESSAGE_LENGTH = 1000;
+    public static final int MAX_ARBITRARY_MESSAGE_LENGTH_2 = 40 * 1024;
     public static final int MAX_ENCRYPTED_MESSAGE_LENGTH = 1000;
+    public static final int MAX_ENCRYPTED_MESSAGE_LENGTH_2 = 40 * 1024;
 
     public static final int MAX_ACCOUNT_NAME_LENGTH = 100;
     public static final int MAX_ACCOUNT_DESCRIPTION_LENGTH = 1000;

@@ -103,7 +103,7 @@ public interface Appendix {
 
         @Override
         public Fee getNextFee(Transaction transaction) throws NxtException.NotValidException {
-            return Fee.NONE;
+            return getBaselineFee(transaction);
         }
 
         abstract void validate(Transaction transaction) throws NxtException.ValidationException;
@@ -113,6 +113,13 @@ public interface Appendix {
     }
 
     public static class Message extends AbstractAppendix {
+
+        private static final Fee MESSAGE_FEE = new Fee.SizeBasedFee(Constants.ONE_NXT) {
+            @Override
+            public int getSize(TransactionImpl transaction, Appendix appendix) {
+                return ((Message)appendix).getMessage().length;
+            }
+        };
 
         static Message parse(JSONObject attachmentData) {
             if (attachmentData.get("message") == null) {
@@ -131,7 +138,7 @@ public interface Appendix {
             if (messageLength < 0) {
                 messageLength &= Integer.MAX_VALUE;
             }
-            if (messageLength > Constants.MAX_ARBITRARY_MESSAGE_LENGTH) {
+            if (messageLength > Constants.MAX_ARBITRARY_MESSAGE_LENGTH_2) {
                 throw new NxtException.NotValidException("Invalid arbitrary message length: " + messageLength);
             }
             this.message = new byte[messageLength];
@@ -161,6 +168,11 @@ public interface Appendix {
         }
 
         @Override
+        public Fee getBaselineFee(Transaction transaction) {
+            return MESSAGE_FEE;
+        }
+
+        @Override
         int getMySize() {
             return 4 + message.length;
         }
@@ -185,8 +197,14 @@ public interface Appendix {
             if (transaction.getVersion() == 0 && transaction.getAttachment() != Attachment.ARBITRARY_MESSAGE) {
                 throw new NxtException.NotValidException("Message attachments not enabled for version 0 transactions");
             }
-            if (message.length > Constants.MAX_ARBITRARY_MESSAGE_LENGTH) {
-                throw new NxtException.NotValidException("Invalid arbitrary message length: " + message.length);
+            if (Nxt.getBlockchain().getHeight() < Constants.VOTING_SYSTEM_BLOCK) {
+                if (message.length > Constants.MAX_ARBITRARY_MESSAGE_LENGTH) {
+                    throw new NxtException.NotCurrentlyValidException("Invalid arbitrary message length: " + message.length);
+                }
+            } else {
+                if (message.length > Constants.MAX_ARBITRARY_MESSAGE_LENGTH_2) {
+                    throw new NxtException.NotValidException("Invalid arbitrary message length: " + message.length);
+                }
             }
         }
 
@@ -204,6 +222,13 @@ public interface Appendix {
 
     abstract static class AbstractEncryptedMessage extends AbstractAppendix {
 
+        private static final Fee ENCRYPTED_DATA_FEE = new Fee.SizeBasedFee(Constants.ONE_NXT) {
+            @Override
+            public int getSize(TransactionImpl transaction, Appendix appendix) {
+                return ((AbstractEncryptedMessage)appendix).getEncryptedData().getData().length;
+            }
+        };
+
         private final EncryptedData encryptedData;
         private final boolean isText;
 
@@ -214,7 +239,7 @@ public interface Appendix {
             if (length < 0) {
                 length &= Integer.MAX_VALUE;
             }
-            this.encryptedData = EncryptedData.readEncryptedData(buffer, length, Constants.MAX_ENCRYPTED_MESSAGE_LENGTH);
+            this.encryptedData = EncryptedData.readEncryptedData(buffer, length, Constants.MAX_ENCRYPTED_MESSAGE_LENGTH_2);
         }
 
         private AbstractEncryptedMessage(JSONObject attachmentJSON, JSONObject encryptedMessageJSON) {
@@ -228,6 +253,11 @@ public interface Appendix {
         private AbstractEncryptedMessage(EncryptedData encryptedData, boolean isText) {
             this.encryptedData = encryptedData;
             this.isText = isText;
+        }
+
+        @Override
+        public Fee getBaselineFee(Transaction transaction) {
+            return ENCRYPTED_DATA_FEE;
         }
 
         @Override
@@ -251,8 +281,14 @@ public interface Appendix {
 
         @Override
         void validate(Transaction transaction) throws NxtException.ValidationException {
-            if (encryptedData.getData().length > Constants.MAX_ENCRYPTED_MESSAGE_LENGTH) {
-                throw new NxtException.NotValidException("Max encrypted message length exceeded");
+            if (Nxt.getBlockchain().getHeight() < Constants.VOTING_SYSTEM_BLOCK) {
+                if (encryptedData.getData().length > Constants.MAX_ENCRYPTED_MESSAGE_LENGTH) {
+                    throw new NxtException.NotCurrentlyValidException("Max encrypted message length exceeded");
+                }
+            } else {
+                if (encryptedData.getData().length > Constants.MAX_ENCRYPTED_MESSAGE_LENGTH_2) {
+                    throw new NxtException.NotValidException("Max encrypted message length exceeded");
+                }
             }
             if ((encryptedData.getNonce().length != 32 && encryptedData.getData().length > 0)
                     || (encryptedData.getNonce().length != 0 && encryptedData.getData().length == 0)) {
@@ -572,14 +608,6 @@ public interface Appendix {
 
         @Override
         public Fee getBaselineFee(Transaction transaction) throws NxtException.NotValidException {
-            if (voteWeighting.getVotingModel() == VoteWeighting.VotingModel.ACCOUNT && voteWeighting.getMinBalance() == 0) {
-                return Fee.DEFAULT_FEE;
-            }
-            return PHASING_FEE;
-        }
-
-        @Override
-        public Fee getNextFee(Transaction transaction) throws NxtException.NotValidException {
             if (voteWeighting.getVotingModel() == VoteWeighting.VotingModel.ACCOUNT && voteWeighting.getMinBalance() == 0) {
                 return Fee.DEFAULT_FEE;
             }

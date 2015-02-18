@@ -30,20 +30,21 @@ public interface Fee {
 
     }
 
-    public static final class SizeBasedFee implements Fee {
+    public static abstract class SizeBasedFee implements Fee {
 
-        private final long constantFee;
-        private final long sizeBasedFee;
+        private final long feePerKByte;
 
-        public SizeBasedFee(long constantFee, long sizeBasedFee) {
-            this.constantFee = constantFee;
-            this.sizeBasedFee = sizeBasedFee;
+        public SizeBasedFee(long feePerKByte) {
+            this.feePerKByte = feePerKByte;
         }
 
+        // the first 1024 bytes are free
         @Override
-        public long getFee(TransactionImpl transaction, Appendix appendage) {
-            return Convert.safeAdd(constantFee, Convert.safeMultiply(appendage.getSize(), sizeBasedFee));
+        public final long getFee(TransactionImpl transaction, Appendix appendage) {
+            return Convert.safeMultiply(getSize(transaction, appendage) / 1024, feePerKByte);
         }
+
+        public abstract int getSize(TransactionImpl transaction, Appendix appendage);
 
     }
 

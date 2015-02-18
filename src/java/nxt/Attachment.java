@@ -51,11 +51,6 @@ public interface Attachment extends Appendix {
             return getTransactionType().getBaselineFee(transaction);
         }
 
-        @Override
-        public Fee getNextFee(Transaction transaction) throws NxtException.NotValidException {
-            return getTransactionType().getNextFee(transaction);
-        }
-
     }
 
     abstract static class EmptyAttachment extends AbstractAttachment {
