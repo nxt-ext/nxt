@@ -608,7 +608,7 @@ public interface Appendix {
 
         @Override
         public Fee getBaselineFee(Transaction transaction) throws NxtException.NotValidException {
-            if (voteWeighting.getVotingModel() == VoteWeighting.VotingModel.ACCOUNT && voteWeighting.getMinBalance() == 0) {
+            if (voteWeighting.isBalanceIndependent()) {
                 return Fee.DEFAULT_FEE;
             }
             return PHASING_FEE;

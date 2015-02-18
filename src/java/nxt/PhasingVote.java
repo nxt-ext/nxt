@@ -39,7 +39,7 @@ public class PhasingVote {
     }
 
     public static long countVotes(PhasingPoll poll) {
-        if (poll.getDefaultVoteWeighting().getVotingModel() == VoteWeighting.VotingModel.ACCOUNT && poll.getDefaultVoteWeighting().getMinBalance() == 0) {
+        if (poll.getDefaultVoteWeighting().isBalanceIndependent()) {
             return phasingVoteTable.getCount(new DbClause.LongClause("transaction_id", poll.getId()));
         }
         long cumulativeWeight = 0;
@@ -53,7 +53,7 @@ public class PhasingVote {
 
     static long addVote(PhasingPoll poll, Transaction transaction) {
         phasingVoteTable.insert(new PhasingVote(transaction, poll.getId()));
-        if (poll.getDefaultVoteWeighting().getVotingModel() == VoteWeighting.VotingModel.ACCOUNT && poll.getDefaultVoteWeighting().getMinBalance() == 0) {
+        if (poll.getDefaultVoteWeighting().isBalanceIndependent()) {
             return phasingVoteTable.getCount(new DbClause.LongClause("transaction_id", poll.getId()));
         }
         return 0;
