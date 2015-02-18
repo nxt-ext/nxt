@@ -204,7 +204,7 @@ var NRS = (function(NRS, $, undefined) {
 
 			if (address.set(account)) {
 				NRS.getAccountError(account, function(response) {
-					if (response.noPublicKey) {
+					if (response.noPublicKey && account!=NRS.accountRS) {
 						modal.find(".recipient_public_key").show();
 					} else {
 						modal.find("input[name=recipientPublicKey]").val("");
@@ -213,10 +213,13 @@ var NRS = (function(NRS, $, undefined) {
 					if (response.account && response.account.description) {
 						checkForMerchant(response.account.description, modal);
 					}
-
-					var message = response.message.escapeHTML();
-
-					callout.removeClass(classes).addClass("callout-" + response.type).html(message).show();
+					
+					if (account==NRS.accountRS)
+						callout.removeClass(classes).addClass("callout-" + response.type).html("This is your account").show();
+					else{
+						var message = response.message.escapeHTML();
+						callout.removeClass(classes).addClass("callout-" + response.type).html(message).show();
+					}
 				});
 			} else {
 				if (address.guess.length == 1) {
@@ -244,7 +247,7 @@ var NRS = (function(NRS, $, undefined) {
 					if (!error && contact.length) {
 						contact = contact[0];
 						NRS.getAccountError(contact.accountRS, function(response) {
-							if (response.noPublicKey) {
+							if (response.noPublicKey && account!=NRS.account) {
 								modal.find(".recipient_public_key").show();
 							} else {
 								modal.find("input[name=recipientPublicKey]").val("");
