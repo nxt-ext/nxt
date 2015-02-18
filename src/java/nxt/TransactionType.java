@@ -52,15 +52,6 @@ public abstract class TransactionType {
 
     private static final byte SUBTYPE_ACCOUNT_CONTROL_EFFECTIVE_BALANCE_LEASING = 0;
 
-    private static final int BASELINE_FEE_HEIGHT = 1; // At release time must be less than current block - 1440
-    private static final Fee BASELINE_FEE = new Fee(Constants.ONE_NXT, 0);
-    private static final Fee BASELINE_ASSET_ISSUANCE_FEE = new Fee(1000 * Constants.ONE_NXT, 0);
-    private static final Fee BASELINE_POLL_FEE = new Fee(10 * Constants.ONE_NXT, 0);
-    private static final int NEXT_FEE_HEIGHT = Integer.MAX_VALUE;
-    private static final Fee NEXT_FEE = new Fee(Constants.ONE_NXT, 0);
-    private static final Fee NEXT_ASSET_ISSUANCE_FEE = new Fee(1000 * Constants.ONE_NXT, 0);
-    private static final Fee NEXT_POLL_FEE = new Fee(10 * Constants.ONE_NXT, 0);
-
     public static TransactionType findTransactionType(byte type, byte subtype) {
         switch (type) {
             case TYPE_PAYMENT:
@@ -149,6 +140,9 @@ public abstract class TransactionType {
         }
     }
 
+    private static final Fee POLL_FEE = new Fee.ConstantFee(10 * Constants.ONE_NXT);
+    private static final Fee ASSET_ISSUANCE_FEE = new Fee.ConstantFee(1000 * Constants.ONE_NXT);
+
     TransactionType() {}
 
     public abstract byte getType();
@@ -234,6 +228,14 @@ public abstract class TransactionType {
 
     public boolean mustHaveRecipient() {
         return canHaveRecipient();
+    }
+
+    public Fee getBaselineFee(Transaction transaction) throws NxtException.NotValidException {
+        return Fee.DEFAULT_FEE;
+    }
+
+    public Fee getNextFee(Transaction transaction) throws NxtException.NotValidException {
+        return Fee.DEFAULT_FEE;
     }
 
     public abstract String getName();
@@ -647,6 +649,7 @@ public abstract class TransactionType {
         };
 
         public final static TransactionType POLL_CREATION = new Messaging() {
+
             @Override
             public final byte getSubtype() {
                 return TransactionType.SUBTYPE_MESSAGING_POLL_CREATION;
@@ -657,15 +660,14 @@ public abstract class TransactionType {
                 return "PollCreation";
             }
 
-
             @Override
-            public Fee getBaselineFee(TransactionImpl transaction) {
-                return BASELINE_POLL_FEE;
+            public Fee getBaselineFee(Transaction transaction) {
+                return POLL_FEE;
             }
 
             @Override
-            public Fee getNextFee(TransactionImpl transaction) {
-                return NEXT_POLL_FEE;
+            public Fee getNextFee(Transaction transaction) {
+                return POLL_FEE;
             }
 
             @Override
@@ -731,11 +733,9 @@ public abstract class TransactionType {
                     throw new NxtException.NotCurrentlyValidException("Invalid finishing height" + attachment.getJSONObject());
                 }
 
-                VoteWeighting voteWeighting = new VoteWeighting(attachment.getVotingModel(), attachment.getHoldingId(),
-                        attachment.getMinBalance(), attachment.getMinBalanceModel());
-                voteWeighting.validate();
+                attachment.getVoteWeighting().validate();
 
-                if (voteWeighting.getVotingModel() == VoteWeighting.VotingModel.ACCOUNT && voteWeighting.getMinBalance() == 0) {
+                if (attachment.getVoteWeighting().getVotingModel() == VoteWeighting.VotingModel.ACCOUNT && attachment.getVoteWeighting().getMinBalance() == 0) {
                     throw new NxtException.NotValidException("Min balance == 0 for by-account voting"+ attachment.getJSONObject());
                 }
             }
@@ -1052,13 +1052,13 @@ public abstract class TransactionType {
             }
 
             @Override
-            public Fee getBaselineFee(TransactionImpl transaction) {
-                return BASELINE_ASSET_ISSUANCE_FEE;
+            public Fee getBaselineFee(Transaction transaction) {
+                return ASSET_ISSUANCE_FEE;
             }
 
             @Override
-            public Fee getNextFee(TransactionImpl transaction) {
-                return NEXT_ASSET_ISSUANCE_FEE;
+            public Fee getNextFee(Transaction transaction) {
+                return ASSET_ISSUANCE_FEE;
             }
 
             @Override
@@ -2107,50 +2107,4 @@ public abstract class TransactionType {
 
     }
 
-    long minimumFeeNQT(TransactionImpl transaction, int height, int appendagesSize) throws NxtException.NotValidException {
-        if (height < BASELINE_FEE_HEIGHT) {
-            return 0; // No need to validate fees before baseline block
-        }
-        Fee fee;
-        if (height >= NEXT_FEE_HEIGHT) {
-            fee = getNextFee(transaction);
-        } else {
-            fee = getBaselineFee(transaction);
-        }
-        return Convert.safeAdd(fee.getConstantFee(), Convert.safeMultiply(appendagesSize, fee.getAppendagesFee()));
-    }
-
-    protected Fee getBaselineFee(TransactionImpl transaction) throws NxtException.NotValidException {
-        return BASELINE_FEE;
-    }
-
-    protected Fee getNextFee(TransactionImpl transaction) throws NxtException.NotValidException {
-        return NEXT_FEE;
-    }
-
-    public static final class Fee {
-        private final long constantFee;
-        private final long appendagesFee;
-
-        public Fee(long constantFee, long appendagesFee) {
-            this.constantFee = constantFee;
-            this.appendagesFee = appendagesFee;
-        }
-
-        public long getConstantFee() {
-            return constantFee;
-        }
-
-        public long getAppendagesFee() {
-            return appendagesFee;
-        }
-
-        @Override
-        public String toString() {
-            return "Fee{" +
-                    "constantFee=" + constantFee +
-                    ", appendagesFee=" + appendagesFee +
-                    '}';
-        }
-    }
 }

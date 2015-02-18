@@ -171,14 +171,11 @@ public final class Poll extends AbstractPoll {
     private final byte maxRangeValue;
 
     private Poll(Transaction transaction, Attachment.MessagingPollCreation attachment) {
-        super(transaction.getId(), transaction.getSenderId(), attachment.getFinishHeight(), attachment.getVotingModel(), attachment.getHoldingId(),
-                attachment.getMinBalance(), attachment.getMinBalanceModel());
-
+        super(transaction.getId(), transaction.getSenderId(), attachment.getFinishHeight(), attachment.getVoteWeighting());
         this.dbKey = pollDbKeyFactory.newKey(this.id);
         this.name = attachment.getPollName();
         this.description = attachment.getPollDescription();
         this.options = attachment.getPollOptions();
-
         this.minNumberOfOptions = attachment.getMinNumberOfOptions();
         this.maxNumberOfOptions = attachment.getMaxNumberOfOptions();
         this.minRangeValue = attachment.getMinRangeValue();

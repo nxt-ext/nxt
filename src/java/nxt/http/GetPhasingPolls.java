@@ -9,7 +9,6 @@ import org.json.simple.JSONStreamAware;
 import javax.servlet.http.HttpServletRequest;
 
 import static nxt.http.JSONResponses.INCORRECT_TRANSACTION;
-import static nxt.http.JSONResponses.UNKNOWN_TRANSACTION;
 
 public final class GetPhasingPolls extends APIServlet.APIRequestHandler {
 
