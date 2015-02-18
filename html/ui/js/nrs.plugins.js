@@ -235,6 +235,9 @@ var NRS = (function(NRS, $, undefined) {
                 }
                 plugin['launch_status'] = NRS.constants.PL_RUNNING;
                 plugin['launch_status_msg'] = $.t('plugin_running', 'Running');
+                if(manifest['startPage'] && manifest['startPage'] in NRS.setup) {
+                    NRS.setup[manifest['startPage']]();
+                }
             })
             .fail(function(jqxhr, settings, exception) {
                 plugin['launch_status'] = NRS.constants.PL_HALTED;

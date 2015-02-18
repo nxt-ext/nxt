@@ -16,6 +16,12 @@ var NRS = (function(NRS, $, undefined) {
 		});
 	}
 
+	NRS.setup.p_hello_world = function() {
+		//Do one-time initialization stuff here
+		$('#p_hello_world_startup_date_time').html(moment().format('LLL'));
+
+	}
+
 	return NRS;
 }(NRS || {}, jQuery));
 
