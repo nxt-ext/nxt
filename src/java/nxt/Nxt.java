@@ -176,6 +176,8 @@ public final class Nxt {
 
     private static class Init {
 
+        private static volatile boolean initialized = false;
+
         static {
             try {
                 long startTime = System.currentTimeMillis();
@@ -227,7 +229,12 @@ public final class Nxt {
             }
         }
 
-        private static void init() {}
+        private static void init() {
+            if (initialized) {
+                throw new RuntimeException("Nxt.init has already been called");
+            }
+            initialized = true;
+        }
 
         private Init() {} // never
 

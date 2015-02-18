@@ -94,7 +94,7 @@ public final class CreatePoll extends CreateTransaction {
             builder.minBalance(minBalanceModel, minBalance);
         }
 
-        long holdingId = ParameterParser.getLong(req, "holding", Long.MIN_VALUE, Long.MAX_VALUE, false);
+        long holdingId = ParameterParser.getUnsignedLong(req, "holding", false);
         if (holdingId != 0) {
             builder.holdingId(holdingId);
         }

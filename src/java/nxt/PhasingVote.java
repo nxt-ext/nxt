@@ -51,10 +51,12 @@ public class PhasingVote {
         return cumulativeWeight;
     }
 
-    static boolean addVote(PhasingPoll poll, Transaction transaction) {
+    static long addVote(PhasingPoll poll, Transaction transaction) {
         phasingVoteTable.insert(new PhasingVote(transaction, poll.getId()));
-        return poll.getDefaultVoteWeighting().getVotingModel() == VoteWeighting.VotingModel.ACCOUNT && poll.getDefaultVoteWeighting().getMinBalance() == 0
-                && phasingVoteTable.getCount(new DbClause.LongClause("transaction_id", poll.getId())) >= poll.getQuorum();
+        if (poll.getDefaultVoteWeighting().getVotingModel() == VoteWeighting.VotingModel.ACCOUNT && poll.getDefaultVoteWeighting().getMinBalance() == 0) {
+            return phasingVoteTable.getCount(new DbClause.LongClause("transaction_id", poll.getId()));
+        }
+        return 0;
     }
 
     static boolean isVoteGiven(long pendingTransactionId, long voterId) {

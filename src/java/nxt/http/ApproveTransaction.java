@@ -14,8 +14,9 @@ import javax.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
 import java.util.List;
 
-import static nxt.http.JSONResponses.INCORRECT_PENDING_TRANSACTION;
-import static nxt.http.JSONResponses.MISSING_PENDING_TRANSACTION;
+import static nxt.http.JSONResponses.INCORRECT_TRANSACTION;
+import static nxt.http.JSONResponses.MISSING_TRANSACTION;
+import static nxt.http.JSONResponses.UNKNOWN_TRANSACTION;
 
 public class ApproveTransaction extends CreateTransaction {
     static final ApproveTransaction instance = new ApproveTransaction();
@@ -30,11 +31,11 @@ public class ApproveTransaction extends CreateTransaction {
         String[] pendingTransactionValues = req.getParameterValues("transactionFullHash");
 
         if (pendingTransactionValues.length == 0) {
-            return MISSING_PENDING_TRANSACTION;
+            return MISSING_TRANSACTION;
         }
 
         if (pendingTransactionValues.length > Constants.MAX_VOTES_PER_VOTING_TRANSACTION) {
-            return INCORRECT_PENDING_TRANSACTION;
+            return INCORRECT_TRANSACTION;
         }
 
         List<byte[]> pendingTransactionFullHashes = new ArrayList<>(pendingTransactionValues.length);
@@ -42,10 +43,10 @@ public class ApproveTransaction extends CreateTransaction {
             byte[] hash = Convert.parseHexString(pendingTransactionValues[i]);
             PhasingPoll phasingPoll = PhasingPoll.getPoll(Convert.fullHashToId(hash));
             if (phasingPoll == null) {
-                return INCORRECT_PENDING_TRANSACTION;
+                return UNKNOWN_TRANSACTION;
             }
             if (phasingPoll.getFinishHeight() < Nxt.getBlockchain().getHeight()) {
-                return INCORRECT_PENDING_TRANSACTION;
+                return INCORRECT_TRANSACTION;
             }
             pendingTransactionFullHashes.add(hash);
         }

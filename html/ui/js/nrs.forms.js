@@ -180,23 +180,25 @@ var NRS = (function(NRS, $, undefined) {
 		}
 
 		var originalRequestType = requestType;
-
-		if (NRS.downloadingBlockchain) {
-			$form.find(".error_message").html($.t("error_blockchain_downloading")).show();
-			if (formErrorFunction) {
-				formErrorFunction();
+		
+		if (requestType != "addPeer" && requestType != "blacklistPeer") {
+			if (NRS.downloadingBlockchain) {
+				$form.find(".error_message").html($.t("error_blockchain_downloading")).show();
+				if (formErrorFunction) {
+					formErrorFunction();
+				}
+				NRS.unlockForm($modal, $btn);
+				return;
+			} else if (NRS.state.isScanning) {
+				$form.find(".error_message").html($.t("error_form_blockchain_rescanning")).show();
+				if (formErrorFunction) {
+					formErrorFunction();
+				}
+				NRS.unlockForm($modal, $btn);
+				return;
 			}
-			NRS.unlockForm($modal, $btn);
-			return;
-		} else if (NRS.state.isScanning) {
-			$form.find(".error_message").html($.t("error_form_blockchain_rescanning")).show();
-			if (formErrorFunction) {
-				formErrorFunction();
-			}
-			NRS.unlockForm($modal, $btn);
-			return;
 		}
-
+		
 		var invalidElement = false;
 
 		//TODO
@@ -491,6 +493,19 @@ var NRS = (function(NRS, $, undefined) {
 					$form.find(".error_message").html($.t("error_max_fee_warning", {
 						"nxt": NRS.formatAmount(NRS.settings["fee_warning"])
 					})).show();
+					if (formErrorFunction) {
+						formErrorFunction(false, data);
+					}
+					NRS.unlockForm($modal, $btn);
+					return;
+				}
+			}
+
+			if ("phasingQuorumNXT" in data) {
+				try {
+					var phasingQuorumNQT = NRS.convertToNQT(data.phasingQuorumNXT);
+				} catch (err) {
+					$form.find(".error_message").html(String(err).escapeHTML() + " (" + $.t("approve_amount_nxt") + ")").show();
 					if (formErrorFunction) {
 						formErrorFunction(false, data);
 					}

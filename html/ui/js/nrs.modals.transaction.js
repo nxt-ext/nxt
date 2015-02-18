@@ -3,7 +3,7 @@
  * @depends {nrs.modals.js}
  */
 var NRS = (function(NRS, $, undefined) {
-	$("#transactions_table, #dashboard_transactions_table, #transfer_history_table, #exchange_history_table, #currencies_table, #transaction_info_table, #ms_exchanges_history_table, #ms_exchange_requests_table, #user_info_modal_currencies, #block_info_transactions_table, #user_info_modal_transactions_table, #ms_open_buy_orders_table, #ms_open_sell_orders_table, #polls_table, #my_polls_table, #voted_polls_table").on("click", "a[data-transaction]", function(e) {
+	$("#transactions_table, #dashboard_table, #transfer_history_table, #exchange_history_table, #currencies_table, #transaction_info_table, #ms_exchanges_history_table, #ms_exchange_requests_table, #user_info_modal_currencies, #block_info_transactions_table, #user_info_modal_transactions_table, #ms_open_buy_orders_table, #ms_open_sell_orders_table, #polls_table, #my_polls_table, #voted_polls_table").on("click", "a[data-transaction]", function(e) {
 		e.preventDefault();
 
 		var transactionId = $(this).data("transaction");
@@ -330,6 +330,17 @@ var NRS = (function(NRS, $, undefined) {
 						"type": $.t("alias_deletion"),
 						"alias_name": transaction.attachment.alias,
 						"sender": transaction.senderRS ? transaction.senderRS : transaction.sender
+					};
+
+					$("#transaction_info_table").find("tbody").append(NRS.createInfoTable(data));
+					$("#transaction_info_table").show();
+
+					break;
+				case 9:
+					var data = {
+						"type": $.t("transaction_approval"),
+						"name": transaction.attachment.name,
+						"description": transaction.attachment.description
 					};
 
 					$("#transaction_info_table").find("tbody").append(NRS.createInfoTable(data));
@@ -846,7 +857,7 @@ var NRS = (function(NRS, $, undefined) {
 						"name": transaction.attachment.name,
 						"code": transaction.attachment.code,
 						"currency_type": transaction.attachment.type,
-						"description": transaction.attachment.description,
+                  "description_formatted_html": transaction.attachment.description.autoLink(),
 						"initial_units": [transaction.attachment.initialSupply, transaction.attachment.decimals],
 						"reserve_units": [transaction.attachment.reserveSupply, transaction.attachment.decimals],
 						"max_units": [transaction.attachment.maxSupply, transaction.attachment.decimals],
@@ -1027,7 +1038,6 @@ var NRS = (function(NRS, $, undefined) {
 			}
 		}
 		
-
 		if (incorrect) {
 			$.growl($.t("error_unknown_transaction_type"), {
 				"type": "danger"
@@ -1169,6 +1179,10 @@ var NRS = (function(NRS, $, undefined) {
 		e.preventDefault();
 		$('#approve_transaction_modal .at_transaction_full_hash_display').text($(this).data("transaction"));
 		$('#approve_transaction_modal #at_transaction_full_hash').val($(this).data("fullHash"));
+	});
+
+	$("#approve_transaction_button").on("click", function(e) {
+		$('.approve_transaction_btn[data-full-hash="' + $("#at_transaction_full_hash").val() + '"]').addClass("disabled");
 	});
 
 	$("#transaction_info_modal").on("hide.bs.modal", function(e) {

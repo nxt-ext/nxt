@@ -70,14 +70,21 @@ var NRS = (function(NRS, $, undefined) {
 
 		//convert NXT to NQT...
 		try {
-			var nxtFields = ["feeNXT", "amountNXT", "priceNXT", "refundNXT", "discountNXT"];
+			var nxtFields = [
+				["feeNXT", "NQT"],
+				["amountNXT", "NQT"],
+				["priceNXT", "NQT"],
+				["refundNXT", "NQT"],
+				["discountNXT", "NQT"],
+				["phasingQuorumNXT", ""]
+			];
 
 			for (var i = 0; i < nxtFields.length; i++) {
-				var nxtField = nxtFields[i];
+				var nxtField = nxtFields[i][0];
 				var field = nxtField.replace("NXT", "");
 
 				if (nxtField in data) {
-					data[field + "NQT"] = NRS.convertToNQT(data[nxtField]);
+					data[field + nxtFields[i][1]] = NRS.convertToNQT(data[nxtField]);
 					delete data[nxtField];
 				}
 			}

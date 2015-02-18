@@ -66,8 +66,8 @@ var NRS = (function(NRS, $, undefined) {
                     'iconHTML': "<i class='fa fa-times'></i>"
                 },
                 9: {
-                    'title': "Approve Transaction",
-                    'i18nKeyTitle': 'approve_transaction',
+                    'title': "Transaction Approval",
+                    'i18nKeyTitle': 'transaction_approval',
                     'iconHTML': "<i class='fa fa-gavel'></i>"
                 }
             }

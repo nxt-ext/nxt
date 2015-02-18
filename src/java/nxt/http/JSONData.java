@@ -18,6 +18,8 @@ import nxt.Exchange;
 import nxt.Generator;
 import nxt.Nxt;
 import nxt.Order;
+import nxt.PhasingPoll;
+import nxt.PhasingVote;
 import nxt.Poll;
 import nxt.Token;
 import nxt.Trade;
@@ -330,21 +332,11 @@ final class JSONData {
         Collections.addAll(options, poll.getOptions());
         json.put("options", options);
         json.put("finishHeight", poll.getFinishHeight());
-
-        json.put("votingModel", poll.getDefaultVoteWeighting().getVotingModel().getCode());
-
         json.put("minNumberOfOptions", poll.getMinNumberOfOptions());
         json.put("maxNumberOfOptions", poll.getMaxNumberOfOptions());
         json.put("minRangeValue", poll.getMinRangeValue());
         json.put("maxRangeValue", poll.getMaxRangeValue());
-
-        json.put("minBalance", poll.getDefaultVoteWeighting().getMinBalance());
-        json.put("minBalanceModel", poll.getDefaultVoteWeighting().getMinBalanceModel().getCode());
-
-        if (poll.getDefaultVoteWeighting().getVotingModel() == VoteWeighting.VotingModel.ASSET
-                || poll.getDefaultVoteWeighting().getVotingModel() == VoteWeighting.VotingModel.CURRENCY) {
-            json.put("holding", Convert.toUnsignedLong(poll.getDefaultVoteWeighting().getHoldingId()));
-        }
+        putVoteWeighting(json, poll.getDefaultVoteWeighting());
 
         if (includeVoters) {
             JSONArray votersJson = new JSONArray();
@@ -370,7 +362,7 @@ final class JSONData {
 
         for (Poll.PollResult result : results) {
             JSONObject jsonPair = new JSONObject();
-            jsonPair.put(result.getOption(), result.getVotes());
+            jsonPair.put(result.getOption(), String.valueOf(result.getResult()));
             resultsJson.add(jsonPair);
         }
 
@@ -401,6 +393,56 @@ final class JSONData {
         return json;
     }
 
+    static JSONObject phasingPoll(PhasingPoll poll, boolean countVotes, boolean includeVoters) {
+        JSONObject json = new JSONObject();
+        json.put("transaction", Convert.toUnsignedLong(poll.getId()));
+        json.put("transactionFullHash", Convert.toHexString(poll.getFullHash()));
+        json.put("finished", poll.isFinished());
+        json.put("finishHeight", poll.getFinishHeight());
+        json.put("quorum", String.valueOf(poll.getQuorum()));
+        putAccount(json, "account", poll.getAccountId());
+        putVoteWeighting(json, poll.getDefaultVoteWeighting());
+        if (poll.isFinished()) {
+            PhasingPoll.PhasingPollResult phasingPollResult = PhasingPoll.getResult(poll.getId());
+            json.put("applyHeight", phasingPollResult.getApplyHeight());
+            json.put("approved", phasingPollResult.isApproved());
+            json.put("result", String.valueOf(phasingPollResult.getResult()));
+        } else if (countVotes) {
+            json.put("result", String.valueOf(PhasingVote.countVotes(poll)));
+        }
+        if (includeVoters) {
+            JSONArray votersJson = new JSONArray();
+            try (DbIterator<PhasingVote> votes = PhasingVote.getByTransaction(poll.getId(), 0, Integer.MAX_VALUE)) {
+                for (PhasingVote vote : votes) {
+                    JSONObject voterObject = new JSONObject();
+                    JSONData.putAccount(voterObject, "voter", vote.getVoterId());
+                    votersJson.add(voterObject);
+                }
+            }
+            json.put("voters", votersJson);
+        }
+        return json;
+    }
+
+    static JSONObject phasingPollResult(PhasingPoll.PhasingPollResult phasingPollResult) {
+        JSONObject json = new JSONObject();
+        json.put("transaction", Convert.toUnsignedLong(phasingPollResult.getId()));
+        json.put("approved", phasingPollResult.isApproved());
+        json.put("result", String.valueOf(phasingPollResult.getResult()));
+        json.put("applyHeight", phasingPollResult.getApplyHeight());
+        return json;
+    }
+
+    private static void putVoteWeighting(JSONObject json, VoteWeighting voteWeighting) {
+        json.put("votingModel", voteWeighting.getVotingModel().getCode());
+        json.put("minBalance", String.valueOf(voteWeighting.getMinBalance()));
+        json.put("minBalanceModel", voteWeighting.getMinBalanceModel().getCode());
+        if (voteWeighting.getVotingModel() == VoteWeighting.VotingModel.ASSET
+                || voteWeighting.getVotingModel() == VoteWeighting.VotingModel.CURRENCY) {
+            json.put("holding", Convert.toUnsignedLong(voteWeighting.getHoldingId()));
+        }
+    }
+
     static JSONObject purchase(DigitalGoodsStore.Purchase purchase) {
         JSONObject json = new JSONObject();
         json.put("purchase", Convert.toUnsignedLong(purchase.getId()));
@@ -423,14 +465,14 @@ final class JSONData {
         if (purchase.getFeedbackNotes() != null) {
             JSONArray feedbacks = new JSONArray();
             for (EncryptedData encryptedData : purchase.getFeedbackNotes()) {
-                feedbacks.add(encryptedData(encryptedData));
+                feedbacks.add(0, encryptedData(encryptedData));
             }
             json.put("feedbackNotes", feedbacks);
         }
         if (purchase.getPublicFeedbacks() != null) {
             JSONArray publicFeedbacks = new JSONArray();
             for (String publicFeedback : purchase.getPublicFeedbacks()) {
-                publicFeedbacks.add(publicFeedback);
+                publicFeedbacks.add(0, publicFeedback);
             }
             json.put("publicFeedbacks", publicFeedbacks);
         }

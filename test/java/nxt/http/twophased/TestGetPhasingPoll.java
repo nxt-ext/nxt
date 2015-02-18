@@ -10,7 +10,7 @@ import org.json.simple.JSONObject;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class TestGetPendingTransactionVotes extends BlockchainTest {
+public class TestGetPhasingPoll extends BlockchainTest {
 
     @Test
     public void transactionVotes() {
@@ -35,24 +35,26 @@ public class TestGetPendingTransactionVotes extends BlockchainTest {
 
         generateBlock();
 
-        apiCall = new APICall.Builder("getPhasingVotes")
+        apiCall = new APICall.Builder("getPhasingPoll")
                 .param("transaction", transactionId)
+                .param("countVotes", "true")
                 .build();
         response = apiCall.invoke();
-        Logger.logMessage("getPhasingVotesResponse:" + response.toJSONString());
+        Logger.logMessage("getPhasingPollResponse:" + response.toJSONString());
 
         Assert.assertNull(response.get("errorCode"));
-        Assert.assertEquals(1, ((Long) response.get("votes")).intValue());
+        Assert.assertEquals(1, Integer.parseInt((String) response.get("result")));
 
-        apiCall = new APICall.Builder("getPhasingVotes")
+        apiCall = new APICall.Builder("getPhasingPoll")
                 .param("transaction", transactionId)
                 .param("includeVoters", "true")
+                .param("countVotes", "true")
                 .build();
         response = apiCall.invoke();
-        Logger.logMessage("getPhasingVotesResponse:" + response.toJSONString());
+        Logger.logMessage("getPhasingPollResponse:" + response.toJSONString());
 
         Assert.assertNull(response.get("errorCode"));
-        Assert.assertEquals(1, ((Long) response.get("votes")).intValue());
+        Assert.assertEquals(1, Integer.parseInt((String) response.get("result")));
         Assert.assertNotNull(response.get("voters"));
         Assert.assertEquals(1, ((JSONArray) response.get("voters")).size());
     }

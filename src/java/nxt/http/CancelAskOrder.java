@@ -20,7 +20,7 @@ public final class CancelAskOrder extends CreateTransaction {
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
-        long orderId = ParameterParser.getOrderId(req);
+        long orderId = ParameterParser.getUnsignedLong(req, "order", true);
         Account account = ParameterParser.getSenderAccount(req);
         Order.Ask orderData = Order.Ask.getAskOrder(orderId);
         if (orderData == null || orderData.getAccountId() != account.getId()) {

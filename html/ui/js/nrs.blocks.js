@@ -226,7 +226,7 @@ var NRS = (function(NRS, $, undefined) {
 		$("#dashboard_blocks_table tbody").prepend(rows);
 
 		//update number of confirmations... perhaps we should also update it in tne NRS.transactions array
-		$("#dashboard_transactions_table tr.confirmed td.confirmations").each(function() {
+		$("#dashboard_table tr.confirmed td.confirmations").each(function() {
 			if ($(this).data("incoming")) {
 				$(this).removeData("incoming");
 				return true;

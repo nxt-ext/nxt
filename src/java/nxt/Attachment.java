@@ -753,11 +753,18 @@ public interface Attachment extends Appendix {
         }
 
         @Override
-        public TransactionType getTransactionType() { return TransactionType.Messaging.HUB_ANNOUNCEMENT; }
+        public TransactionType getTransactionType() {
+            return TransactionType.Messaging.HUB_ANNOUNCEMENT;
+        }
 
-        public long getMinFeePerByteNQT() { return minFeePerByteNQT; }
+        public long getMinFeePerByteNQT() {
+            return minFeePerByteNQT;
+        }
 
-        public String[] getUris() { return uris; }
+        public String[] getUris() {
+            return uris;
+        }
+
     }
 
     public final static class MessagingAccountInfo extends AbstractAttachment {

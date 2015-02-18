@@ -22,6 +22,7 @@ public final class Convert {
     private static final long[] multipliers = {1, 10, 100, 1000, 10000, 100000, 1000000, 10000000, 100000000};
 
     public static final BigInteger two64 = new BigInteger("18446744073709551616");
+    public static final long[] EMPTY_LONG = new long[0];
 
     private Convert() {} //never
 
@@ -139,6 +140,26 @@ public final class Convert {
             }
         }
         return null;
+    }
+
+    public static long[] nullToEmpty(long[] array) {
+        return array == null ? EMPTY_LONG : array;
+    }
+
+    public static long[] toArray(List<Long> list) {
+        long[] result = new long[list.size()];
+        for (int i = 0; i < list.size(); i++) {
+            result[i] = list.get(i);
+        }
+        return result;
+    }
+
+    public static List<Long> toList(long[] array) {
+        List<Long> result = new ArrayList<>(array.length);
+        for (long elem : array) {
+            result.add(elem);
+        }
+        return result;
     }
 
     public static byte[] toBytes(String s) {
@@ -278,21 +299,4 @@ public final class Convert {
         return Math.abs(a);
     }
 
-    public static long[] reversedListOfLongsToArray(List<Long> list) {
-        int size = list.size();
-        long[] result = new long[size];
-        for (int i = size; i > 0; i--) {
-            result[size-i] = list.get(i-1);
-        }
-        return result;
-    }
-
-    public static List<Long> arrayOfLongsToList(long[] array) {
-        int length = array.length;
-        List<Long> result = new ArrayList<>(length);
-        for (long elem : array) {
-            result.add(elem);
-        }
-        return result;
-    }
 }

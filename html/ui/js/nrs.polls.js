@@ -382,14 +382,14 @@ var NRS = (function(NRS, $, undefined) {
 			e.preventDefault();
 			var transactionId = $(this).data("results");
 
-			NRS.sendRequest("getPollResults", {"poll": transactionId, "req":"getPollResults"}, voteModal);
+			NRS.sendRequest("getPollResult", {"poll": transactionId, "req":"getPollResult"}, voteModal);
 			NRS.sendRequest("getPollVotes", {"poll": transactionId, "req":"getPollVotes"}, voteModal);
 			NRS.sendRequest("getPoll", {"poll": transactionId, "req": "getPoll"}, voteModal);
 			var results, votes, poll;
 
 			function voteModal(data, input)
 			{
-				if(input.req=="getPollResults") results = data;
+				if(input.req=="getPollResult") results = data;
 				if(input.req=="getPollVotes") votes = data;
 				if(input.req=="getPoll") poll = data;
 

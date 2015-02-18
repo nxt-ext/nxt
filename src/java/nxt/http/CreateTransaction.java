@@ -20,7 +20,6 @@ import java.util.Arrays;
 import static nxt.http.JSONResponses.FEATURE_NOT_AVAILABLE;
 import static nxt.http.JSONResponses.INCORRECT_ARBITRARY_MESSAGE;
 import static nxt.http.JSONResponses.INCORRECT_DEADLINE;
-import static nxt.http.JSONResponses.INCORRECT_PENDING_BLACKLISTED;
 import static nxt.http.JSONResponses.INCORRECT_PENDING_WHITELIST;
 import static nxt.http.JSONResponses.MISSING_DEADLINE;
 import static nxt.http.JSONResponses.MISSING_PENDING_HOLDING_ID;
@@ -36,7 +35,6 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
             "messageToEncryptToSelf", "messageToEncryptToSelfIsText", "encryptToSelfMessageData", "encryptToSelfMessageNonce",
             "phased", "phasingFinishHeight", "phasingVotingModel", "phasingQuorum", "phasingMinBalance", "phasingHolding", "phasingMinBalanceModel",
             "phasingWhitelisted", "phasingWhitelisted", "phasingWhitelisted",
-            "phasingBlacklisted", "phasingBlacklisted", "phasingBlacklisted",
             "recipientPublicKey"};
 
     private static String[] addCommonParameters(String[] parameters) {
@@ -73,7 +71,7 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
 
         byte minBalanceModel = ParameterParser.getByte(req, "phasingMinBalanceModel", (byte)0, (byte)3, false);
 
-        long holdingId = ParameterParser.getLong(req, "phasingHolding", Long.MIN_VALUE, Long.MAX_VALUE, false, true);
+        long holdingId = ParameterParser.getUnsignedLong(req, "phasingHolding", false);
 
         if ((votingModel == VoteWeighting.VotingModel.ASSET.getCode() || votingModel == VoteWeighting.VotingModel.CURRENCY.getCode())
                 && holdingId == 0) {
@@ -88,26 +86,13 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
                 whitelist[i] = Convert.parseAccountId(whitelistValues[i]);
             }
         } else {
-            whitelist = new long[0];
+            whitelist = Convert.EMPTY_LONG;
         }
         if (votingModel == VoteWeighting.VotingModel.ACCOUNT.getCode() && whitelist.length == 0) {
             throw new ParameterException(INCORRECT_PENDING_WHITELIST);
         }
 
-        long[] blacklist;
-        String[] blacklistValues = req.getParameterValues("phasingBlacklisted");
-        if (blacklistValues != null && blacklistValues.length > 0) {
-            blacklist = new long[blacklistValues.length];
-            for (int i = 0; i < blacklist.length; i++) {
-                blacklist[i] = Convert.parseAccountId(blacklistValues[i]);
-            }
-        } else {
-            blacklist = new long[0];
-        }
-        if (votingModel == VoteWeighting.VotingModel.ACCOUNT.getCode() && blacklist.length != 0) {
-            throw new ParameterException(INCORRECT_PENDING_BLACKLISTED);
-        }
-        return new Appendix.Phasing(maxHeight, votingModel, holdingId, quorum, minBalance, minBalanceModel, whitelist, blacklist);
+        return new Appendix.Phasing(maxHeight, votingModel, holdingId, quorum, minBalance, minBalanceModel, whitelist);
     }
 
     final JSONStreamAware createTransaction(HttpServletRequest req, Account senderAccount, long recipientId,

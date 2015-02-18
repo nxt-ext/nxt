@@ -2,6 +2,7 @@ package nxt.http.twophased;
 
 import nxt.BlockchainTest;
 import nxt.Constants;
+import nxt.Nxt;
 import nxt.http.APICall;
 import nxt.http.twophased.TestCreateTwoPhased.TwoPhasedMoneyTransferBuilder;
 import nxt.util.Logger;
@@ -13,9 +14,12 @@ public class TestApproveTransaction extends BlockchainTest {
 
     @Test
     public void validVoteCasting() {
-        generateBlock();
+        int duration = 10;
 
-        APICall apiCall = new TwoPhasedMoneyTransferBuilder().build();
+        APICall apiCall = new TwoPhasedMoneyTransferBuilder()
+                .maxHeight(Nxt.getBlockchain().getHeight() + duration)
+                .build();
+
         JSONObject transactionJSON = TestCreateTwoPhased.issueCreateTwoPhased(apiCall, false);
         generateBlock();
 
@@ -36,16 +40,26 @@ public class TestApproveTransaction extends BlockchainTest {
         Assert.assertNotNull(response.get("transaction"));
         generateBlock();
 
-        Assert.assertNotEquals("id1 balance: ", balance1, balanceById(id1));
-        Assert.assertNotEquals("id2 balance: ", balance2, balanceById(id2));
+        long updBalance1 = balanceById(id1);
+        long updBalance2 = balanceById(id2);
+        Assert.assertNotEquals("id1 balance: ", balance1, updBalance1);
+        Assert.assertNotEquals("id2 balance: ", balance2, updBalance2);
         Assert.assertEquals("fee", fee, balance3 - balanceById(id3));
+
+        generateBlocks(duration);
+
+        Assert.assertEquals("id1 balance: ", updBalance1, balanceById(id1));
+        Assert.assertEquals("id2 balance: ", updBalance2, balanceById(id2));
     }
 
     @Test
     public void invalidVoteCasting() {
-        generateBlock();
+        int duration = 10;
 
-        APICall apiCall = new TwoPhasedMoneyTransferBuilder().build();
+        APICall apiCall = new TwoPhasedMoneyTransferBuilder()
+                .maxHeight(Nxt.getBlockchain().getHeight() + duration)
+                .build();
+
         JSONObject transactionJSON = TestCreateTwoPhased.issueCreateTwoPhased(apiCall, false);
         generateBlock();
 
@@ -65,6 +79,12 @@ public class TestApproveTransaction extends BlockchainTest {
         Logger.logMessage("approvePendingTransactionResponse:" + response.toJSONString());
         Assert.assertNotNull(response.get("error"));
         generateBlock();
+
+        Assert.assertEquals("id1 balance: ", balance1, balanceById(id1));
+        Assert.assertEquals("id2 balance: ", balance2, balanceById(id2));
+        Assert.assertEquals("id4 balance: ", balance4, balanceById(id4));
+
+        generateBlocks(duration);
 
         Assert.assertEquals("id1 balance: ", balance1, balanceById(id1));
         Assert.assertEquals("id2 balance: ", balance2, balanceById(id2));

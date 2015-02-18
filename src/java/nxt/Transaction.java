@@ -29,6 +29,7 @@ public interface Transaction {
         Builder phasing(Appendix.Phasing phasing);
 
         Transaction build() throws NxtException.NotValidException;
+
     }
 
     long getId();

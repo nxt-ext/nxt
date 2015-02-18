@@ -153,6 +153,7 @@ final class PeerImpl implements Peer {
             }
             if (isOldVersion) {
                 Logger.logDebugMessage(String.format("Blacklisting %s version %s", peerAddress, version));
+                blacklistingCause = "Old version: " + version;
                 setState(State.NON_CONNECTED);
                 Peers.notifyListeners(this, Peers.Event.BLACKLIST);
             }
@@ -259,7 +260,7 @@ final class PeerImpl implements Peer {
                 Logger.logDebugMessage("Blacklisting " + peerAddress + " because of: " + cause.toString(), cause);
             }
         }
-        blacklist(cause.toString());
+        blacklist(cause.toString() == null ? cause.getClass().getName() : cause.toString());
     }
 
     @Override
@@ -462,9 +463,9 @@ final class PeerImpl implements Peer {
             analyzeHallmark(announcedAddress, (String)response.get("hallmark"));
             if (!isOldVersion) {
                 setState(State.CONNECTED);
-                Peers.updateAddress(this);
+                Peers.addOrUpdate(this);
             } else if (!isBlacklisted()) {
-                blacklist("Old version");
+                blacklist("Old version: " + version);
             }
             lastUpdated = lastConnectAttempt;
         } else {

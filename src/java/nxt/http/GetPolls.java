@@ -1,7 +1,6 @@
 package nxt.http;
 
 
-import nxt.Account;
 import nxt.NxtException;
 import nxt.Poll;
 import nxt.db.DbIterator;
@@ -23,7 +22,7 @@ public class GetPolls extends APIServlet.APIRequestHandler {
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
-        Account account = ParameterParser.getAccount(req, false);
+        long accountId = ParameterParser.getAccountId(req, "account", false);
         int firstIndex = ParameterParser.getFirstIndex(req);
         int lastIndex = ParameterParser.getLastIndex(req);
         boolean includeVoters = ParameterParser.getBoolean(req, "includeVoters", false);
@@ -31,10 +30,10 @@ public class GetPolls extends APIServlet.APIRequestHandler {
         JSONArray pollsJson = new JSONArray();
         DbIterator<Poll> polls = null;
         try {
-            if (account == null) {
+            if (accountId == 0) {
                 polls = Poll.getAllPolls(firstIndex, lastIndex);
             } else {
-                polls = Poll.getPollsByAccount(account.getId(), firstIndex, lastIndex);
+                polls = Poll.getPollsByAccount(accountId, firstIndex, lastIndex);
             }
 
             while (polls.hasNext()) {

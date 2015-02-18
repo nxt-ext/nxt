@@ -299,7 +299,9 @@ public abstract class TransactionType {
                     throw new NxtException.NotValidException("Invalid ordinary payment");
                 }
             }
+
         };
+
     }
 
     public static abstract class Messaging extends TransactionType {
@@ -771,7 +773,7 @@ public abstract class TransactionType {
 
             @Override
             void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
-                if (Nxt.getBlockchain().getLastBlock().getHeight() < Constants.VOTING_SYSTEM_BLOCK) {
+                if (Nxt.getBlockchain().getHeight() < Constants.VOTING_SYSTEM_BLOCK) {
                     throw new NxtException.NotYetEnabledException("Voting System not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
                 }
 
@@ -851,6 +853,10 @@ public abstract class TransactionType {
             @Override
             void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
 
+                if (Nxt.getBlockchain().getHeight() < Constants.VOTING_SYSTEM_BLOCK) {
+                    throw new NxtException.NotYetEnabledException("Voting System not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
+                }
+
                 Attachment.MessagingPhasingVoteCasting attachment = (Attachment.MessagingPhasingVoteCasting) transaction.getAttachment();
                 List<byte[]> pendingTransactionFullHashes = attachment.getTransactionFullHashes();
                 if (pendingTransactionFullHashes.size() > Constants.MAX_VOTES_PER_VOTING_TRANSACTION) {
@@ -869,22 +875,18 @@ public abstract class TransactionType {
                         Logger.logDebugMessage("Wrong pending transaction: " + pendingId);
                         throw new NxtException.NotCurrentlyValidException("Wrong pending transaction or poll is finished");
                     }
-                    if (!Arrays.equals(poll.getFullHash(), hash)) {
-                        throw new NxtException.NotCurrentlyValidException("Hashes don't match");
-                    }
-
                     long[] whitelist = poll.getWhitelist();
                     if (whitelist.length > 0 && Arrays.binarySearch(whitelist, voterId) == -1) {
                         throw new NxtException.NotValidException("Voter is not in the pending transaction whitelist");
                     }
-
-                    long[] blacklist = poll.getBlacklist();
-                    if (blacklist.length > 0 && Arrays.binarySearch(blacklist, voterId) != -1) {
-                        throw new NxtException.NotValidException("Voter is in the pending transaction blacklist");
+                    if (!Arrays.equals(poll.getFullHash(), hash)) {
+                        throw new NxtException.NotCurrentlyValidException("Hashes don't match");
                     }
-
                     if (PhasingVote.isVoteGiven(pendingId, voterId)) {
                         throw new NxtException.NotCurrentlyValidException("Double voting attempt");
+                    }
+                    if (poll.isFinished()) {
+                        throw new NxtException.NotCurrentlyValidException("Voting for this transaction has already finished");
                     }
                 }
             }
@@ -910,10 +912,13 @@ public abstract class TransactionType {
                 for (byte[] hash : pendingTransactionFullHashes) {
                     long pendingTransactionId = Convert.fullHashToId(hash);
                     PhasingPoll poll = PhasingPoll.getPoll(pendingTransactionId);
-                    if (PhasingVote.addVote(poll, transaction)) {
-                        poll.finish();
-                        TransactionImpl pendingTransaction = BlockchainImpl.getInstance().getTransaction(pendingTransactionId);
-                        pendingTransaction.getPhasing().release(pendingTransaction);
+                    if (!poll.isFinished()) {
+                        long result = PhasingVote.addVote(poll, transaction);
+                        if (result >= poll.getQuorum()) {
+                            poll.finish(result);
+                            TransactionImpl pendingTransaction = BlockchainImpl.getInstance().getTransaction(pendingTransactionId);
+                            pendingTransaction.getPhasing().release(pendingTransaction);
+                        }
                     }
                 }
             }
@@ -1022,6 +1027,7 @@ public abstract class TransactionType {
             }
 
         };
+
     }
 
     public static abstract class ColoredCoins extends TransactionType {

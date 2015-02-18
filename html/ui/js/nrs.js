@@ -112,6 +112,7 @@ var NRS = (function(NRS, $, undefined) {
 				$(".testnet_only, #testnet_login, #testnet_warning").show();
 			}
 			NRS.loadServerConstants();
+			NRS.initializePlugins();
 		});
 		
 		if (!NRS.server) {
@@ -141,6 +142,12 @@ var NRS = (function(NRS, $, undefined) {
 			setTimeout(function() {
 				NRS.checkAliasVersions();
 			}, 5000);
+		});
+
+		$("body").popover({
+			"selector": ".show_popover",
+			"html": true,
+			"trigger": "hover"
 		});
 
 		NRS.showLockscreen();
@@ -186,13 +193,7 @@ var NRS = (function(NRS, $, undefined) {
 
 		NRS.automaticallyCheckRecipient();
 
-		$("body").popover({
-			"selector": ".show_popover",
-			"html": true,
-			"trigger": "hover"
-		});
-
-		$("#dashboard_transactions_table, #transactions_table").on("mouseenter", "td.confirmations", function() {
+		$("#dashboard_table, #transactions_table").on("mouseenter", "td.confirmations", function() {
 			$(this).popover("show");
 		}).on("mouseleave", "td.confirmations", function() {
 			$(this).popover("destroy");
@@ -296,7 +297,7 @@ var NRS = (function(NRS, $, undefined) {
 					NRS.getBlock(NRS.state.lastBlock, NRS.handleNewBlocks);
 					if (NRS.account) {
 						NRS.getNewTransactions();
-						NRS.updateApprovalPages();
+						NRS.updateApprovalRequests();
 					}
 				} else {
 					if (NRS.account) {

@@ -22,32 +22,42 @@ public final class Poll extends AbstractPoll {
     public static final class PollResult {
 
         private final String option;
-        private final long votes;
+        private final long result;
 
-        public PollResult(String option, long votes) {
+        private PollResult(String option, long result) {
             this.option = option;
-            this.votes = votes;
+            this.result = result;
+        }
+
+        private PollResult(ResultSet rs) throws SQLException {
+            this.option = rs.getString("option");
+            this.result = rs.getLong("result");
+        }
+
+        private void save(Connection con, Poll poll) throws SQLException {
+            try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO poll_result (poll_id, "
+                    + "option, result, height) VALUES (?, ?, ?, ?)")) {
+                int i = 0;
+                pstmt.setLong(++i, poll.getId());
+                pstmt.setString(++i, getOption());
+                pstmt.setLong(++i, getResult());
+                pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
+                pstmt.executeUpdate();
+            }
         }
 
         public String getOption() {
             return option;
         }
 
-        public long getVotes() {
-            return votes;
+        public long getResult() {
+            return result;
         }
     }
 
     private static final boolean isPollsProcessing = Nxt.getBooleanProperty("nxt.processPolls");
 
     private static final DbKey.LongKeyFactory<Poll> pollDbKeyFactory = new DbKey.LongKeyFactory<Poll>("id") {
-        @Override
-        public DbKey newKey(Poll poll) {
-            return poll.dbKey;
-        }
-    };
-
-    private static final DbKey.LongKeyFactory<Poll> pollResultsDbKeyFactory = new DbKey.LongKeyFactory<Poll>("poll_id") {
         @Override
         public DbKey newKey(Poll poll) {
             return poll.dbKey;
@@ -63,28 +73,14 @@ public final class Poll extends AbstractPoll {
 
         @Override
         protected void save(Connection con, Poll poll) throws SQLException {
-            try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO poll (id, account_id, "
-                    + "name, description, options, finish_height, voting_model, min_balance, min_balance_model, "
-                    + "holding_id, min_num_options, max_num_options, min_range_value, max_range_value, height) "
-                    + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
-                int i = 0;
-                pstmt.setLong(++i, poll.getId());
-                pstmt.setLong(++i, poll.getAccountId());
-                pstmt.setString(++i, poll.getName());
-                pstmt.setString(++i, poll.getDescription());
-                pstmt.setObject(++i, poll.getOptions());
-                pstmt.setInt(++i, poll.getFinishHeight());
-                pstmt.setByte(++i, poll.getDefaultVoteWeighting().getVotingModel().getCode());
-                pstmt.setLong(++i, poll.getDefaultVoteWeighting().getMinBalance());
-                pstmt.setByte(++i, poll.getDefaultVoteWeighting().getMinBalanceModel().getCode());
-                pstmt.setLong(++i, poll.getDefaultVoteWeighting().getHoldingId());
-                pstmt.setByte(++i, poll.getMinNumberOfOptions());
-                pstmt.setByte(++i, poll.getMaxNumberOfOptions());
-                pstmt.setByte(++i, poll.getMinRangeValue());
-                pstmt.setByte(++i, poll.getMaxRangeValue());
-                pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
-                pstmt.executeUpdate();
-            }
+            poll.save(con);
+        }
+    };
+
+    private static final DbKey.LongKeyFactory<Poll> pollResultsDbKeyFactory = new DbKey.LongKeyFactory<Poll>("poll_id") {
+        @Override
+        public DbKey newKey(Poll poll) {
+            return poll.dbKey;
         }
     };
 
@@ -92,20 +88,12 @@ public final class Poll extends AbstractPoll {
 
         @Override
         protected PollResult load(Connection con, ResultSet rs) throws SQLException {
-            return new PollResult(rs.getString("option"), rs.getLong("result"));
+            return new PollResult(rs);
         }
 
         @Override
-        protected void save(Connection con, Poll poll, PollResult optionResult) throws SQLException {
-            try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO poll_result (poll_id, "
-                    + "option, result, height) VALUES (?, ?, ?, ?)")) {
-                int i = 0;
-                pstmt.setLong(++i, poll.getId());
-                pstmt.setString(++i, optionResult.getOption());
-                pstmt.setLong(++i, optionResult.getVotes());
-                pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
-                pstmt.executeUpdate();
-            }
+        protected void save(Connection con, Poll poll, PollResult pollResult) throws SQLException {
+            pollResult.save(con, poll);
         }
     };
 
@@ -129,12 +117,17 @@ public final class Poll extends AbstractPoll {
         return pollTable.getManyBy(new DbClause.IntClause("finish_height", height), 0, Integer.MAX_VALUE);
     }
 
+    public static DbIterator<Poll> searchPolls(String query, boolean includeFinished, int from, int to) {
+        DbClause dbClause = includeFinished ? DbClause.EMPTY_CLAUSE : new DbClause.IntClause("finish_height", DbClause.Op.GT, Nxt.getBlockchain().getHeight());
+        return pollTable.search(query, dbClause, from, to, " ORDER BY ft.score DESC, poll.height DESC ");
+    }
+
     public static int getCount() {
         return pollTable.getCount();
     }
 
     static void addPoll(Transaction transaction, Attachment.MessagingPollCreation attachment) {
-        Poll poll = new Poll(transaction.getId(), transaction.getSenderId(), attachment);
+        Poll poll = new Poll(transaction, attachment);
         pollTable.insert(poll);
     }
 
@@ -168,7 +161,6 @@ public final class Poll extends AbstractPoll {
         }
     }
 
-    private final long id;
     private final DbKey dbKey;
     private final String name;
     private final String description;
@@ -178,11 +170,10 @@ public final class Poll extends AbstractPoll {
     private final byte minRangeValue;
     private final byte maxRangeValue;
 
-    private Poll(long id, long accountId, Attachment.MessagingPollCreation attachment) {
-        super(accountId, attachment.getFinishHeight(), attachment.getVotingModel(), attachment.getHoldingId(),
+    private Poll(Transaction transaction, Attachment.MessagingPollCreation attachment) {
+        super(transaction.getId(), transaction.getSenderId(), attachment.getFinishHeight(), attachment.getVotingModel(), attachment.getHoldingId(),
                 attachment.getMinBalance(), attachment.getMinBalanceModel());
 
-        this.id = id;
         this.dbKey = pollDbKeyFactory.newKey(this.id);
         this.name = attachment.getPollName();
         this.description = attachment.getPollDescription();
@@ -196,7 +187,6 @@ public final class Poll extends AbstractPoll {
 
     private Poll(ResultSet rs) throws SQLException {
         super(rs);
-        this.id = rs.getLong("id");
         this.dbKey = pollDbKeyFactory.newKey(this.id);
         this.name = rs.getString("name");
         this.description = rs.getString("description");
@@ -209,6 +199,32 @@ public final class Poll extends AbstractPoll {
         this.maxRangeValue = rs.getByte("max_range_value");
     }
 
+    private void save(Connection con) throws SQLException {
+        try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO poll (id, account_id, "
+                + "name, description, options, finish_height, voting_model, min_balance, min_balance_model, "
+                + "holding_id, min_num_options, max_num_options, min_range_value, max_range_value, height) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
+            int i = 0;
+            pstmt.setLong(++i, id);
+            pstmt.setLong(++i, accountId);
+            pstmt.setString(++i, name);
+            pstmt.setString(++i, description);
+            pstmt.setObject(++i, options);
+            pstmt.setInt(++i, finishHeight);
+            pstmt.setByte(++i, defaultVoteWeighting.getVotingModel().getCode());
+            pstmt.setLong(++i, defaultVoteWeighting.getMinBalance());
+            pstmt.setByte(++i, defaultVoteWeighting.getMinBalanceModel().getCode());
+            pstmt.setLong(++i, defaultVoteWeighting.getHoldingId());
+            pstmt.setByte(++i, minNumberOfOptions);
+            pstmt.setByte(++i, maxNumberOfOptions);
+            pstmt.setByte(++i, minRangeValue);
+            pstmt.setByte(++i, maxRangeValue);
+            pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
+            pstmt.executeUpdate();
+        }
+    }
+
+    @Override
     public boolean isFinished() { return getFinishHeight() < Nxt.getBlockchain().getHeight(); }
 
     public List<PollResult> getResults(VoteWeighting voteWeighting) {
@@ -230,10 +246,6 @@ public final class Poll extends AbstractPoll {
 
     public DbIterator<Vote> getVotes(){
         return Vote.getVotes(this.getId(), 0, -1);
-    }
-
-    public long getId() {
-        return id;
     }
 
     public String getName() {

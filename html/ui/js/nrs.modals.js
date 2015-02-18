@@ -95,7 +95,7 @@ var NRS = (function(NRS, $, undefined) {
 
 	//hide modal when another one is activated.
 	$(".modal").on("show.bs.modal", function(e) {
-		var $inputFields = $(this).find("input[name=recipient], input[name=account_id], input[name=phasingWhitelisted], input[name=phasingBlacklisted]").not("[type=hidden]");
+		var $inputFields = $(this).find("input[name=recipient], input[name=account_id], input[name=phasingWhitelisted]").not("[type=hidden]");
 
 		$.each($inputFields, function() {
 			if ($(this).hasClass("noMask")) {
@@ -258,13 +258,6 @@ var NRS = (function(NRS, $, undefined) {
         $am = $(this).closest('.approve_modal');
         $am.find('.tab-pane input').prop('disabled', true);
         $am.find('.tab-pane.active input').prop('disabled', false);
-        if ($(this).hasClass("at_no_approval")) {
-        	$am.find('.approve_generic').hide();
-        	$am.find('.approve_generic input').prop('disabled', true);
-        } else {
-        	$am.find('.approve_generic input').prop('disabled', false);
-        	$am.find('.approve_generic').show();
-        }
         if ($(this).hasClass("at_accounts") || $(this).hasClass("at_balance")) {
         	$am.find('.approve_whitelist_accounts input').prop('disabled', false);
         	$am.find('.approve_whitelist_accounts').show();
@@ -321,6 +314,8 @@ var NRS = (function(NRS, $, undefined) {
 		} else {
 			$(this).text($.t("advanced"));
 		}
+		// Close accidentally triggered popovers
+		$(".show_popover").popover("hide");
 	});
 
 
