@@ -188,6 +188,32 @@ var NRS = (function(NRS, $, undefined) {
 			});
 		});
 	}
+	
+	NRS.listAccounts = function() {
+		$('#login_account').empty();
+		NRS.database.select("accounts", null, function(error, accounts) {
+			$.each(accounts, function(index, account) {
+				$('#login_account')
+				.append($("<li></li>")
+					.append($("<a></a>")
+						.attr("href","#")
+						.attr("style","display: inline-block;")
+						.attr("onClick","NRS.loginAccount('"+account.account+"')")
+						.text(account.account))
+					.append($('<button aria-hidden="true" data-dismiss="modal" class="close" type="button">×</button>')
+						.attr("onClick","NRS.removeAccount('"+account.account+"')"))
+				); 
+			});
+		});
+	}
+	
+	NRS.removeAccount = function(account) {
+		NRS.database.delete("accounts", [{
+			"account": account
+		}], function() {
+			NRS.listAccounts();
+		});
+	}
 
 	NRS.login = function(password, callback) {
 		if (!password.length) {
@@ -345,6 +371,18 @@ var NRS = (function(NRS, $, undefined) {
 					NRS.loadPlugins();
 					$(".sidebar .treeview").tree();
 					$('#dashboard_link a').addClass("ignore").click();
+					
+					if ($("#remember_account").is(":checked")) {
+						if (NRS.databaseSupport){
+							NRS.database.select("accounts", [{"account": NRS.accountRS}], function(error, accounts) {
+								if (!accounts || !accounts.length) {
+									NRS.database.insert("accounts", {
+										account: NRS.accountRS,
+									});
+								}
+							});
+						}
+					}
 
 					NRS.getInitialTransactions();
 					NRS.updateApprovalRequests();
@@ -413,9 +451,7 @@ var NRS = (function(NRS, $, undefined) {
 
 	NRS.showLockscreen = function() {
 		if (NRS.hasLocalStorage && localStorage.getItem("logged_in")) {
-			setTimeout(function() {
-				$("#login_password").focus()
-			}, 10);
+			NRS.showLoginScreen();
 		} else {
 			NRS.showWelcomeScreen();
 		}

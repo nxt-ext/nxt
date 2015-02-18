@@ -25,7 +25,18 @@
                 </div>
 
                 <div class="lockscreen-item">
-                    <div class="lockscreen-credentials">   
+                    <div class="lockscreen-credentials">
+                    	<div class="input-group" style="width: 100%;">
+                            <div class="dropdown" style="width: 100%;">
+							  <button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-expanded="true" style="width: 100%;">
+								Select an Account to Login with
+								<span class="caret"></span>
+							  </button>
+							  <ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu1" id="login_account">
+
+							  </ul>
+							</div>
+                        </div>   
                         <div class="input-group">
                             <input type="password" class="form-control" id="login_password" name="login_password" placeholder="Your Passphrase" data-i18n="[placeholder]your_passphrase" autofocus disabled />
                             <div class="input-group-btn" style="border:1px solid #fff;">
@@ -36,6 +47,9 @@
                     </div>
                 </div>  
                 
+                <div id="remember_account_container">
+                    <input type="checkbox" name="remember_account" id="remember_account" value="1" /> <span></span><label for="remember_account" data-i18n="remember_account">Remember account on this computer</label>
+                </div>
                 <div id="remember_password_container">
                     <input type="checkbox" name="remember_password" id="remember_password" value="1" /> <span></span><label for="remember_password" data-i18n="remember_passphrase_during_session">Remember passphrase during session</label>
                 </div>

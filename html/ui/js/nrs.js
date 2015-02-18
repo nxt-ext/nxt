@@ -556,6 +556,12 @@ var NRS = (function(NRS, $, undefined) {
 				quantityQNT: "VARCHAR(15)",
 				groupName: "VARCHAR(30) COLLATE NOCASE"
 			},
+			accounts: {
+				account: {
+					"primary": true,
+					"type": "VARCHAR(25)"
+				}
+			},
 			data: {
 				id: {
 					"primary": true,
@@ -601,6 +607,7 @@ var NRS = (function(NRS, $, undefined) {
 							});
 						}
 					});
+					NRS.listAccounts();
 					if (callback) {
 						callback();
 					}
