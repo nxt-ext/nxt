@@ -13,7 +13,7 @@ use them.
 
 For a plugin to be valid is has to be delivered with a minimum set of files
 and come with a ``manifest.json`` plugin manifest file being compatibel with
-the current mayor plugin version and providing some meta information about
+the current major plugin version and providing some meta information about
 the plugin. 
 
 ----
@@ -51,9 +51,9 @@ Meta information about the plugin is provided as a ``JSON`` dictionary in a
     "myVersion": "Your plugin version", //no format requirements
     "short_description": "A description of your plugin", //max. 200 characters
     "infoUrl": "http://infosaboutmyplugin.info",
-    "startPage": "hello_world", //One of the pages used for NRS.pages.PAGENAME method(s)
+    "startPage": "p_hello_world", //One of the pages used for NRS.pages.PAGENAME method(s)
 
-    "nrsVersion": "1.5.0", //ALWAYS provide three sequence numbers, no additions!
+    "nrsVersion": "1.5.0", //ALWAYS provide three sequence numbers, no additions like "e"!
 
     //optional
     "deactivated": true, //hard-set deactivation, default: false
@@ -66,10 +66,10 @@ Hint: Don't use comments in your own ``JSON`` file!
 ### Plugin Compatibility/Valdation ###
 
 Plugins are compatible when the manifest file is written for the same
-mayor plugin version supported by the installed client.
+major plugin version supported by the installed client.
 
 Mayor plugin versions won't change very often, minor plugin version releases will
-remain compatible within the mayor version.
+remain compatible within the major version.
 
 After a detected plugin is determined as compatible the NRS client will be validating the
 manifest file format and file structure.
@@ -86,7 +86,7 @@ it is recommended to release a new plugin version for every new NRS release,
 though a plugin will still be running after minor release updates (e.g. a
 plugin written for "1.5.1" running under "1.5.5" client installation).
 
-After a mayor NRS update (e.g. from "1.5.9" to "1.6.0"), the plugin will stop
+After a major NRS update (e.g. from "1.5.9" to "1.6.0"), the plugin will stop
 working and has to be updated.
 
 ## Best Practices for Development ##

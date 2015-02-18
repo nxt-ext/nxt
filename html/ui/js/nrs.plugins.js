@@ -141,11 +141,11 @@ var NRS = (function(NRS, $, undefined) {
     			plugin['nrs_compatibility_msg'] = $.t('pnc_compatible_msg', 'Plugin compatible with NRS version');	
 			} else {
 				plugin['nrs_compatibility'] = NRS.constants.PNC_COMPATIBILITY_WARNING;
-    			plugin['nrs_compatibility_msg'] = $.t('pnc_compatibility_warning_msg', 'Plugin not build for current NRS version');
+    			plugin['nrs_compatibility_msg'] = $.t('pnc_compatibility_warning_msg', 'Plugin build for another minor release version');
 			}
 		} else {
 			plugin['nrs_compatibility'] = NRS.constants.PNC_NOT_COMPATIBLE;
-			plugin['nrs_compatibility_msg'] = $.t('pnc_not_compatible_msg', 'Plugin incompatible with NRS version');
+			plugin['nrs_compatibility_msg'] = $.t('pnc_not_compatible_msg', 'Plugin build for another major release version');
 		}
 	}
 
@@ -174,8 +174,8 @@ var NRS = (function(NRS, $, undefined) {
 							'validity_msg': $.t('pv_not_valid_msg', 'Plugin invalid'),
 							'nrs_compatibility': NRS.constants.PNC_COMPATIBILITY_UNKNOWN,
 							'nrs_compatibility_msg': $.t('pnc_compatible_unknown_msg', 'Plugin compatibility with NRS version unknown'),
-							'launch_status': NRS.constants.PL_ERROR,
-							'launch_status_msg': $.t('plugin_error', 'Error'),
+							'launch_status': NRS.constants.PL_HALTED,
+							'launch_status_msg': $.t('plugin_halted', 'Halted'),
 							'manifest': undefined
 						}
 						if (NRS.checkPluginValidity(response.plugins[i], manifest)) {
@@ -231,8 +231,8 @@ var NRS = (function(NRS, $, undefined) {
                 plugin['launch_status_msg'] = $.t('plugin_running', 'Running');
             })
             .fail(function(jqxhr, settings, exception) {
-                plugin['launch_status'] = NRS.constants.PL_DEACTIVATED;
-                plugin['launch_status_msg'] = $.t('plugin_deactivated', 'Deactivated');
+                plugin['launch_status'] = NRS.constants.PL_HALTED;
+                plugin['launch_status_msg'] = $.t('plugin_halted', 'Halted');
                 plugin['validity'] = NRS.constants.PV_INVALID_JAVASCRIPT_FILE;
                 plugin['validity_msg'] = $.t('plugin_invalid_javascript_file', 'Invalid javascript file');
             });
@@ -246,6 +246,86 @@ var NRS = (function(NRS, $, undefined) {
         });
         NRS.loadPageHTMLTemplates();
         NRS.loadModalHTMLTemplates();
+    }
+
+    NRS.getPluginRowHTML = function(pluginId) {
+        var plugin = NRS.plugins[pluginId];
+        var manifest = plugin['manifest'];
+
+        var html = "";
+        html += "<tr>";
+
+        if (manifest) {
+            var nameHTML = String(manifest['name']).escapeHTML();
+        } else {
+            var nameHTML = String(pluginId).escapeHTML();
+        }
+        html += "<td>" + nameHTML + "</td>";
+
+        html += "<td>" + ((manifest) ? String(manifest['myVersion']).escapeHTML() : "&nbsp;") + "</td>";
+
+        var websiteHTML = "&nbsp;";
+        if (manifest) {
+            websiteHTML = "<a href='" + encodeURI(String(manifest['infoUrl'])) + "' target='_blank'><span data-i18n='website'>Website</span></a>";
+        }
+        html += "<td>" + websiteHTML + "</td>";
+
+        var validityPopoverHTML = "data-content='" + plugin['validity_msg'].escapeHTML() + "' data-placement='top'";
+        if (100 <= plugin['validity'] && plugin['validity'] < 200) {
+            var validityText = $.t('valid', 'Valid');
+            var validityHTML = "<span class='label label-success show_popover' " + validityPopoverHTML + " style='display:inline-block;min-width:85px;'>";
+            validityHTML += validityText + " <i class='fa fa-check'></i></span>";
+        } else {
+            var validityText = $.t('invalid', 'Invalid');
+            var validityHTML = "<span class='label label-danger show_popover' " + validityPopoverHTML + " style='display:inline-block;min-width:85px;'>";
+            validityHTML += validityText + " <i class='fa fa-times-circle'></i></span>";
+        }
+        html += "<td style='text-align:center;'>" + validityHTML + "</td>";
+
+        if (manifest) {
+            var compatibilityPopoverHTML = "data-content='" + plugin['nrs_compatibility_msg'].escapeHTML() + "' data-placement='top'";
+            var compatibilityText = manifest['nrsVersion'].escapeHTML();
+            if (100 <= plugin['nrs_compatibility'] && plugin['nrs_compatibility'] < 200) {
+                var compatibilityHTML = "<span class='label label-success show_popover' " + compatibilityPopoverHTML + " style='display:inline-block;min-width:70px;'>";
+                compatibilityHTML += compatibilityText + "</span>";
+            } else if (200 <= plugin['nrs_compatibility'] && plugin['nrs_compatibility'] < 300) {
+                var compatibilityHTML = "<span class='label label-warning show_popover' " + compatibilityPopoverHTML + " style='display:inline-block;min-width:70px;'>";
+                compatibilityHTML += compatibilityText + "</span>";
+            } else {
+                var compatibilityHTML = "<span class='label label-danger show_popover' " + compatibilityPopoverHTML + " style='display:inline-block;min-width:70px;'>";
+                compatibilityHTML += compatibilityText + "</span>";
+            }
+        } else {
+            var compatibilityHTML = "&nbsp;";
+        }
+        html += "<td style='text-align:center;'>" + compatibilityHTML + "</td>";
+
+        var launchStatusText = plugin['launch_status_msg'].escapeHTML();
+        var launchStatusType = "default";
+        if (plugin['launch_status'] == NRS.constants.PL_RUNNING) {
+            launchStatusType = "success";
+        }
+        if (plugin['launch_status'] == NRS.constants.PL_PAUSED || plugin['launch_status'] == NRS.constants.PL_DEACTIVATED) {
+            launchStatusType = "warning";
+        }
+        if (plugin['launch_status'] == NRS.constants.PL_HALTED) {
+            launchStatusType = "danger";
+        }
+        html += "<td style='text-align:center;'><span class='label label-" + launchStatusType + "' style='display:inline-block;min-width:95px;'>";
+        html += launchStatusText + "</span></td>";
+
+        html += "</tr>";
+
+        return html;
+    }
+
+    NRS.pages.plugins_overview = function() {
+        var rows = "";
+        
+        $.each(NRS.plugins, function(pluginId, pluginDict) {
+            rows += NRS.getPluginRowHTML(pluginId);
+        });
+        NRS.dataLoaded(rows);
     }
 
 

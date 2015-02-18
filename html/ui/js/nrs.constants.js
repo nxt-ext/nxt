@@ -10,7 +10,7 @@ var NRS = (function(NRS, $, undefined) {
         'PL_RUNNING': 1,
         'PL_PAUSED': 2,
         'PL_DEACTIVATED': 3,
-        'PL_ERROR': 4,
+        'PL_HALTED': 4,
 
         //Plugin validity status codes
         'PV_VALID': 100,
