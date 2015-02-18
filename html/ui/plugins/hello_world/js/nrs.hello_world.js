@@ -12,7 +12,7 @@ var NRS = (function(NRS, $, undefined) {
 					rows += "<tr>";
 					rows += "<td>" + String(fieldName).escapeHTML() + "</td>";
 					if (fieldName == "lastBlockchainFeederHeight" && value) {
-						//Make use of existing client modals and functionality
+						//Making use of existing client modals and functionality
 						var valueHTML = "<a href='#' data-block='" + String(value).escapeHTML() + "' class='show_block_modal_action'>";
 						valueHTML += String(value).escapeHTML() + "</a>";
 					} else {
