@@ -1,6 +1,7 @@
 package nxt.http.twophased;
 
 import nxt.BlockchainTest;
+import nxt.Constants;
 import nxt.VoteWeighting;
 import nxt.http.APICall;
 import nxt.util.Convert;
@@ -26,6 +27,7 @@ public class TestGetAssetPendingTransactions extends BlockchainTest {
                 .votingModel(VoteWeighting.VotingModel.ASSET.getCode())
                 .holding(Convert.parseUnsignedLong(asset))
                 .minBalance(1, VoteWeighting.MinBalanceModel.ASSET.getCode())
+                .fee(21 * Constants.ONE_NXT)
                 .build();
     }
 
