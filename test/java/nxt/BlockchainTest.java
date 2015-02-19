@@ -24,9 +24,16 @@ public abstract class BlockchainTest extends AbstractBlockchainTest {
     protected static String secretPhrase4;
 
     protected static long id1;
+    protected static long id2;
+    protected static long id3;
+    protected static long id4;
 
     @Before
     public void init() {
+        Properties properties = ManualForgingTest.newTestProperties();
+        properties.setProperty("nxt.enableFakeForging", "true");
+        properties.setProperty("nxt.timeMultiplier", "1");
+        init(properties);
         for (int i=0; i<10; i++) {
             Tester tester = new Tester(unitTestsBaseSecretPhrase + i);
             Logger.logDebugMessage("tester %d RSAccount %s public key %s", i, tester.getRsAccount(), tester.getPublicKeyStr());
@@ -40,13 +47,10 @@ public abstract class BlockchainTest extends AbstractBlockchainTest {
         secretPhrase4 = testers.get(4).getSecretPhrase();
 
         id1 = testers.get(1).getId();
+        id2 = testers.get(2).getId();
+        id3 = testers.get(3).getId();
+        id4 = testers.get(4).getId();
 
-        Properties properties = ManualForgingTest.newTestProperties();
-        properties.setProperty("nxt.isTestnet", "true");
-        properties.setProperty("nxt.isOffline", "true");
-        properties.setProperty("nxt.enableFakeForging", "true");
-        properties.setProperty("nxt.timeMultiplier", "1");
-        AbstractForgingTest.init(properties);
         Nxt.setTime(new Time.CounterTime(Nxt.getEpochTime()));
         baseHeight = blockchain.getHeight();
         Logger.logMessage("baseHeight: " + baseHeight);
@@ -54,7 +58,8 @@ public abstract class BlockchainTest extends AbstractBlockchainTest {
 
     @After
     public void destroy() {
-        AbstractForgingTest.shutdown();
+        blockchainProcessor.popOffTo(baseHeight);
+        shutdown();
     }
 
     public static void generateBlock() {

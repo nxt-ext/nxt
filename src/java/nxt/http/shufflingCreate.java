@@ -29,7 +29,7 @@ public final class ShufflingCreate extends CreateTransaction {
         } else {
             amount = ParameterParser.getAmountNQT(req);
         }
-        byte participantCount = ParameterParser.getByte(req, "participantCount", Constants.MIN_SHUFFLING_PARTICIPANTS, Constants.MAX_SHUFFLING_PARTICIPANTS);
+        byte participantCount = ParameterParser.getByte(req, "participantCount", Constants.MIN_NUMBER_OF_SHUFFLING_PARTICIPANTS, Constants.MAX_NUMBER_OF_SHUFFLING_PARTICIPANTS, true);
         int cancellationHeight = ParameterParser.getInt(req, "cancellationHeight", 0, Integer.MAX_VALUE, true);
         Attachment attachment = new Attachment.MonetarySystemShufflingCreation(currencyId, amount, participantCount, cancellationHeight);
 

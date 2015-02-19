@@ -11,6 +11,7 @@ import nxt.DigitalGoodsStore;
 import nxt.Nxt;
 import nxt.NxtException;
 import nxt.Poll;
+import nxt.Shuffling;
 import nxt.Transaction;
 import nxt.crypto.Crypto;
 import nxt.crypto.EncryptedData;
@@ -34,11 +35,13 @@ import static nxt.http.JSONResponses.INCORRECT_PLAIN_MESSAGE;
 import static nxt.http.JSONResponses.INCORRECT_PUBLIC_KEY;
 import static nxt.http.JSONResponses.INCORRECT_PURCHASE;
 import static nxt.http.JSONResponses.INCORRECT_RECIPIENT;
+import static nxt.http.JSONResponses.INCORRECT_SHUFFLING;
 import static nxt.http.JSONResponses.MISSING_ACCOUNT;
 import static nxt.http.JSONResponses.MISSING_ALIAS_OR_ALIAS_NAME;
 import static nxt.http.JSONResponses.MISSING_SECRET_PHRASE;
 import static nxt.http.JSONResponses.MISSING_SECRET_PHRASE_OR_PUBLIC_KEY;
 import static nxt.http.JSONResponses.MISSING_TRANSACTION_BYTES_OR_JSON;
+import static nxt.http.JSONResponses.MISSING_SHUFFLING;
 import static nxt.http.JSONResponses.UNKNOWN_ACCOUNT;
 import static nxt.http.JSONResponses.UNKNOWN_ALIAS;
 import static nxt.http.JSONResponses.UNKNOWN_ASSET;
@@ -46,6 +49,7 @@ import static nxt.http.JSONResponses.UNKNOWN_CURRENCY;
 import static nxt.http.JSONResponses.UNKNOWN_GOODS;
 import static nxt.http.JSONResponses.UNKNOWN_OFFER;
 import static nxt.http.JSONResponses.UNKNOWN_POLL;
+import static nxt.http.JSONResponses.UNKNOWN_SHUFFLING;
 import static nxt.http.JSONResponses.incorrect;
 import static nxt.http.JSONResponses.missing;
 
@@ -213,8 +217,12 @@ final class ParameterParser {
     }
 
     static Currency getCurrency(HttpServletRequest req) throws ParameterException {
-        Currency currency = Currency.getCurrency(getUnsignedLong(req, "currency", true));
-        if (currency == null) {
+        return getCurrency(req, true);
+    }
+
+    static Currency getCurrency(HttpServletRequest req, boolean isMandatory) throws ParameterException {
+        Currency currency = Currency.getCurrency(getUnsignedLong(req, "currency", isMandatory));
+        if (isMandatory && currency == null) {
             throw new ParameterException(UNKNOWN_CURRENCY);
         }
         return currency;
@@ -234,6 +242,24 @@ final class ParameterParser {
             throw new ParameterException(UNKNOWN_OFFER);
         }
         return offer;
+    }
+
+    static Shuffling getShuffling(HttpServletRequest req) throws ParameterException {
+        String shufflingValue = Convert.emptyToNull(req.getParameter("shuffling"));
+        if (shufflingValue == null) {
+            throw new ParameterException(MISSING_SHUFFLING);
+        }
+        Shuffling shuffling;
+        try {
+            long shufflingId = Convert.parseUnsignedLong(shufflingValue);
+            shuffling = Shuffling.getShuffling(shufflingId);
+        } catch (RuntimeException e) {
+            throw new ParameterException(INCORRECT_SHUFFLING);
+        }
+        if (shuffling == null) {
+            throw new ParameterException(UNKNOWN_SHUFFLING);
+        }
+        return shuffling;
     }
 
     static long getQuantityQNT(HttpServletRequest req) throws ParameterException {

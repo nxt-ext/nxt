@@ -2475,11 +2475,6 @@ public interface Attachment extends Appendix {
         }
 
         @Override
-        String getAppendixName() {
-            return "ShufflingCreation";
-        }
-
-        @Override
         int getMySize() {
             return 8 + 8 + 1 + 4;
         }
@@ -2545,11 +2540,6 @@ public interface Attachment extends Appendix {
         }
 
         @Override
-        String getAppendixName() {
-            return "ShufflingRegistration";
-        }
-
-        @Override
         int getMySize() {
             return 8;
         }
@@ -2601,11 +2591,6 @@ public interface Attachment extends Appendix {
         public MonetarySystemShufflingProcessing(long shufflingId, byte[] data) {
             this.shufflingId = shufflingId;
             this.data = data;
-        }
-
-        @Override
-        String getAppendixName() {
-            return "ShufflingProcessing";
         }
 
         @Override
@@ -2664,11 +2649,6 @@ public interface Attachment extends Appendix {
         }
 
         @Override
-        String getAppendixName() {
-            return "ShufflingDistribution";
-        }
-
-        @Override
         int getMySize() {
             return 8;
         }
@@ -2714,11 +2694,6 @@ public interface Attachment extends Appendix {
 
         public MonetarySystemShufflingVerification(long shufflingId) {
             this.shufflingId = shufflingId;
-        }
-
-        @Override
-        String getAppendixName() {
-            return "ShufflingVerification";
         }
 
         @Override
@@ -2768,11 +2743,6 @@ public interface Attachment extends Appendix {
 
         public MonetarySystemShufflingCancellation(long shufflingId) {
             this.shufflingId = shufflingId;
-        }
-
-        @Override
-        String getAppendixName() {
-            return "ShufflingCancellation";
         }
 
         @Override

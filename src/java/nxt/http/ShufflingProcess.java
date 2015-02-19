@@ -59,7 +59,7 @@ public final class ShufflingProcess extends CreateTransaction {
         if (secretPhrase == null) {
             return MISSING_SECRET_PHRASE;
         }
-        long recipientId = ParameterParser.getRecipientId(req);
+        long recipientId = ParameterParser.getAccountId(req, "recipient", true);
 
         // Read the participant list for the shuffling
         DbIterator<ShufflingParticipant> participants = ShufflingParticipant.getParticipants(shuffling.getId());

@@ -21,6 +21,8 @@ import nxt.Order;
 import nxt.PhasingPoll;
 import nxt.PhasingVote;
 import nxt.Poll;
+import nxt.Shuffling;
+import nxt.ShufflingParticipant;
 import nxt.Token;
 import nxt.Trade;
 import nxt.Transaction;
@@ -207,6 +209,29 @@ final class JSONData {
         json.put("rateNQT", String.valueOf(offer.getRateNQT()));
         json.put("limit", String.valueOf(offer.getLimit()));
         json.put("supply", String.valueOf(offer.getSupply()));
+        return json;
+    }
+
+    static JSONObject shuffling(Shuffling shuffling) {
+        JSONObject json = new JSONObject();
+        json.put("shuffling", Convert.toUnsignedLong(shuffling.getId()));
+        putAccount(json, "issuer", shuffling.getIssuerId());
+        json.put("currency", shuffling.getCurrencyId());
+        putAccount(json, "assignee", shuffling.getAssigneeAccountId());
+        json.put("amount", shuffling.getAmount());
+        json.put("cancellationHeight", shuffling.getCancellationHeight());
+        json.put("participantCount", shuffling.getParticipantCount());
+        json.put("stage", shuffling.getStage().getCode());
+        return json;
+    }
+
+    static JSONObject participant(ShufflingParticipant participant) {
+        JSONObject json = new JSONObject();
+        json.put("shuffling", Convert.toUnsignedLong(participant.getShufflingId()));
+        putAccount(json, "account", participant.getAccountId());
+        putAccount(json, "nextAccount", participant.getNextAccountId());
+        putAccount(json, "recipient", participant.getRecipientId());
+        json.put("state", participant.getState().getCode());
         return json;
     }
 
