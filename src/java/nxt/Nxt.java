@@ -27,7 +27,7 @@ import java.util.Properties;
 
 public final class Nxt {
 
-    public static final String VERSION = "1.4.13";
+    public static final String VERSION = "1.5.0e";
     public static final String APPLICATION = "NRS";
 
     private static volatile Time time = new Time.EpochTime();
@@ -248,6 +248,8 @@ public final class Nxt {
 
     private static class Init {
 
+        private static volatile boolean initialized = false;
+
         static {
             try {
                 long startTime = System.currentTimeMillis();
@@ -266,9 +268,11 @@ public final class Nxt {
                 Hub.init();
                 Order.init();
                 Poll.init();
+                PhasingPoll.init();
                 Trade.init();
                 AssetTransfer.init();
                 Vote.init();
+                PhasingVote.init();
                 Currency.init();
                 CurrencyBuyOffer.init();
                 CurrencySellOffer.init();
@@ -301,7 +305,12 @@ public final class Nxt {
             }
         }
 
-        private static void init() {}
+        private static void init() {
+            if (initialized) {
+                throw new RuntimeException("Nxt.init has already been called");
+            }
+            initialized = true;
+        }
 
         private Init() {} // never
 

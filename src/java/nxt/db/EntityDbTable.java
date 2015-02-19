@@ -60,6 +60,9 @@ public abstract class EntityDbTable<T> extends DerivedDbTable {
     }
 
     public final T get(DbKey dbKey, int height) {
+        if (height < 0 || height == Nxt.getBlockchain().getHeight()) {
+            return get(dbKey);
+        }
         checkAvailable(height);
         try (Connection con = db.getConnection();
              PreparedStatement pstmt = con.prepareStatement("SELECT * FROM " + table + dbKeyFactory.getPKClause()
@@ -89,6 +92,9 @@ public abstract class EntityDbTable<T> extends DerivedDbTable {
     }
 
     public final T getBy(DbClause dbClause, int height) {
+        if (height < 0 || height == Nxt.getBlockchain().getHeight()) {
+            return getBy(dbClause);
+        }
         checkAvailable(height);
         try (Connection con = db.getConnection();
              PreparedStatement pstmt = con.prepareStatement("SELECT * FROM " + table + " AS a WHERE " + dbClause.getClause()
@@ -120,6 +126,9 @@ public abstract class EntityDbTable<T> extends DerivedDbTable {
                 t = (T) db.getCache(table).get(dbKey);
             }
             if (t == null) {
+                if (db.isInTransaction() && rs.getInt("height") > Nxt.getBlockchain().getHeight() && !"public_key".equals(table)) {
+                    throw new RuntimeException("Table " + table + " is at height " + rs.getInt("height") + " while blockchain is at " + Nxt.getBlockchain().getHeight());
+                }
                 t = load(con, rs);
                 if (doCache) {
                     db.getCache(table).put(dbKey, t);
@@ -158,6 +167,9 @@ public abstract class EntityDbTable<T> extends DerivedDbTable {
     }
 
     public final DbIterator<T> getManyBy(DbClause dbClause, int height, int from, int to, String sort) {
+        if (height < 0 || height == Nxt.getBlockchain().getHeight()) {
+            return getManyBy(dbClause, from, to, sort);
+        }
         checkAvailable(height);
         Connection con = null;
         try {
@@ -254,6 +266,9 @@ public abstract class EntityDbTable<T> extends DerivedDbTable {
     }
 
     public final DbIterator<T> getAll(int height, int from, int to, String sort) {
+        if (height < 0 || height == Nxt.getBlockchain().getHeight()) {
+            return getAll(from, to, sort);
+        }
         checkAvailable(height);
         Connection con = null;
         try {
@@ -300,6 +315,9 @@ public abstract class EntityDbTable<T> extends DerivedDbTable {
     }
 
     public final int getCount(DbClause dbClause, int height) {
+        if (height < 0 || height == Nxt.getBlockchain().getHeight()) {
+            return getCount(dbClause);
+        }
         checkAvailable(height);
         Connection con = null;
         try {

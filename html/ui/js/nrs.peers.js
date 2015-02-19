@@ -2,6 +2,22 @@
  * @depends {nrs.js}
  */
 var NRS = (function(NRS, $, undefined) {
+
+	NRS.connectPeer = function(peer) {
+		NRS.sendRequest("addPeer", {"peer": peer}, function(response) {
+			if (response.errorCode || response.error || response.state != 1) {
+				$.growl($.t("failed_connect_peer"), {
+					"type": "danger"
+				});
+			} else {
+				$.growl($.t("success_connect_peer"), {
+					"type": "success"
+				});
+			}
+			NRS.loadPage("peers");
+		});
+	}
+	
 	NRS.pages.peers = function() {
 		NRS.sendRequest("getPeers+", {
 			"active": "true",
@@ -47,6 +63,9 @@ var NRS = (function(NRS, $, undefined) {
 					rows += "<td>" + (peer.platform ? String(peer.platform).escapeHTML() : "?") + "</td>"
 
 					rows += "<td style='text-align:right;'>";
+					rows += "<a class='btn btn-xs btn-default' href='#' ";
+					rows += "onClick='NRS.connectPeer(\"" + String(peer.announcedAddress).escapeHTML() +  "\");'>";
+					rows += $.t("connect") + "</a>";
 					rows += "<a class='btn btn-xs btn-default' href='#' data-toggle='modal' ";
 					rows += "data-target='#blacklist_peer_modal' " + (NRS.needsAdminPassword ? "disabled " : "");
 					rows += "data-peer='" + String(peer.announcedAddress).escapeHTML() + "'>" + $.t("blacklist") + "</a>";
@@ -60,6 +79,8 @@ var NRS = (function(NRS, $, undefined) {
 				$("#peers_up_to_date").html(upToDate + '/' + activePeers).removeClass("loading_dots");
 
 				NRS.dataLoaded(rows);
+				
+				
 			} else {
 				$("#peers_uploaded_volume, #peers_downloaded_volume, #peers_connected, #peers_up_to_date").html("0").removeClass("loading_dots");
 				NRS.dataLoaded();
@@ -72,8 +93,17 @@ var NRS = (function(NRS, $, undefined) {
 	}
 	
 	NRS.forms.addPeerComplete = function(response, data) {
-		$.growl($.t("success_add_peer"), {
-			"type": "success"
+		var message = "success_add_peer";
+		var growlType = "success";
+		if (response.state == 1) {
+			message = "success_connect_peer";
+		} else if (!response.isNewlyAdded) {
+			message = "peer_already_added";
+			growlType = "danger";
+		}
+		
+		$.growl($.t(message), {
+			"type": growlType
 		});
 		NRS.loadPage("peers");
 	}

@@ -768,7 +768,7 @@ var NRS = (function(NRS, $, undefined) {
 			formattedAcc = object;
 			object = null;
 		} else {
-			if (typeof object[acc + "RS"] == "undefined") {
+			if (object == null || typeof object[acc + "RS"] == "undefined") {
 				return "/";
 			} else {
 				formattedAcc = String(object[acc + "RS"]).escapeHTML();
@@ -1040,7 +1040,7 @@ var NRS = (function(NRS, $, undefined) {
 		for (var i = 0; i < NRS.unconfirmedTransactions.length; i++) {
 			var unconfirmedTransaction = NRS.unconfirmedTransactions[i];
 
-			if (type.indexOf(unconfirmedTransaction.type) == -1 || subtype.indexOf(unconfirmedTransaction.subtype) == -1) {
+			if (type.indexOf(unconfirmedTransaction.type) == -1 || (subtype.length > 0 && subtype.indexOf(unconfirmedTransaction.subtype) == -1)) {
 				continue;
 			}
 

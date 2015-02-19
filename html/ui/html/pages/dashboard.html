@@ -100,14 +100,17 @@
                     <div class="box-header"><h3 class="box-title" data-i18n="recent_transactions">Recent Transactions</h3></div>
                     <div class="box-body no-padding">
                         <div class="data-container data-loading" data-no-padding="true" data-extra="#dashboard_transactions_footer">
-                            <table class="table table-striped" id="dashboard_transactions_table">
+                            <table class="table table-striped" id="dashboard_table">
                                 <thead>
                                 <tr>
-                                    <th data-i18n="date">Date</th>
-                                    <th colspan="2" data-i18n="amount_plus_fee">Amount + Fee</th>
-                                    <th data-i18n="fromAccount">From</th>
-                                    <th data-i18n="toAccount">To</th>
-                                    <th data-i18n="type" style="width:50px">Type</th>
+                                    <th data-i18n="transaction">Transaction</th>
+                                    <th style="width:60px;text-align:center;"><i class="fa fa-envelope-o"></i></th>
+                                    <th data-i18n="type">Type</th>
+                                    <th data-i18n="amount" colspan="2">Amount</th>
+                                    <th style="text-align:center;" data-i18n="fee">Fee</th>
+                                    <th data-i18n="account">Account</th>
+                                    <th style="text-align:center;"><i class="fa fa-gavel"></i></th>
+                                    <th style="text-align:center;" data-i18n="conf_abbrev">Conf.</th>
                                 </tr>
                                 </thead>
                                 <tbody>

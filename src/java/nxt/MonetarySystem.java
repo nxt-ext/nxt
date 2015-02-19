@@ -18,13 +18,6 @@ public abstract class MonetarySystem extends TransactionType {
     private static final byte SUBTYPE_MONETARY_SYSTEM_CURRENCY_MINTING = 7;
     private static final byte SUBTYPE_MONETARY_SYSTEM_CURRENCY_DELETION = 8;
 
-    private static final Fee NEXT_5LETTER_CURRENCY_ISSUANCE_FEE = new Fee(40 * Constants.ONE_NXT, 0);
-    private static final Fee NEXT_4LETTER_CURRENCY_ISSUANCE_FEE = new Fee(1000 * Constants.ONE_NXT, 0);
-    private static final Fee NEXT_3LETTER_CURRENCY_ISSUANCE_FEE = new Fee(25000 * Constants.ONE_NXT, 0);
-    private static final Fee BASELINE_5LETTER_CURRENCY_ISSUANCE_FEE = new Fee(40 * Constants.ONE_NXT, 0);
-    private static final Fee BASELINE_4LETTER_CURRENCY_ISSUANCE_FEE = new Fee(1000 * Constants.ONE_NXT, 0);
-    private static final Fee BASELINE_3LETTER_CURRENCY_ISSUANCE_FEE = new Fee(25000 * Constants.ONE_NXT, 0);
-
     static TransactionType findTransactionType(byte subtype) {
         switch (subtype) {
             case MonetarySystem.SUBTYPE_MONETARY_SYSTEM_CURRENCY_ISSUANCE:
@@ -49,6 +42,10 @@ public abstract class MonetarySystem extends TransactionType {
                 return null;
         }
     }
+
+    private static final Fee FIVE_LETTER_CURRENCY_ISSUANCE_FEE = new Fee.ConstantFee(40 * Constants.ONE_NXT);
+    private static final Fee FOUR_LETTER_CURRENCY_ISSUANCE_FEE = new Fee.ConstantFee(1000 * Constants.ONE_NXT);
+    private static final Fee THREE_LETTER_CURRENCY_ISSUANCE_FEE = new Fee.ConstantFee(25000 * Constants.ONE_NXT);
 
     private MonetarySystem() {}
 
@@ -78,41 +75,32 @@ public abstract class MonetarySystem extends TransactionType {
         }
 
         @Override
-        public Fee getBaselineFee(TransactionImpl transaction) throws NxtException.NotValidException {
+        public String getName() {
+            return "CurrencyIssuance";
+        }
+
+        @Override
+        public Fee getBaselineFee(Transaction transaction) throws NxtException.NotValidException {
             Attachment.MonetarySystemCurrencyIssuance attachment = (Attachment.MonetarySystemCurrencyIssuance) transaction.getAttachment();
             if (Currency.getCurrencyByCode(attachment.getCode()) != null || Currency.getCurrencyByCode(attachment.getName().toUpperCase()) != null
                     || Currency.getCurrencyByName(attachment.getName()) != null || Currency.getCurrencyByName(attachment.getCode()) != null) {
-                return BASELINE_5LETTER_CURRENCY_ISSUANCE_FEE;
+                return FIVE_LETTER_CURRENCY_ISSUANCE_FEE;
             }
             switch (Math.min(attachment.getCode().length(), attachment.getName().length())) {
                 case 3:
-                    return BASELINE_3LETTER_CURRENCY_ISSUANCE_FEE;
+                    return THREE_LETTER_CURRENCY_ISSUANCE_FEE;
                 case 4:
-                    return BASELINE_4LETTER_CURRENCY_ISSUANCE_FEE;
+                    return FOUR_LETTER_CURRENCY_ISSUANCE_FEE;
                 case 5:
-                    return BASELINE_5LETTER_CURRENCY_ISSUANCE_FEE;
+                    return FIVE_LETTER_CURRENCY_ISSUANCE_FEE;
                 default:
                     throw new NxtException.NotValidException("Invalid currency code length");
             }
         }
 
         @Override
-        public Fee getNextFee(TransactionImpl transaction) throws NxtException.NotValidException {
-            Attachment.MonetarySystemCurrencyIssuance attachment = (Attachment.MonetarySystemCurrencyIssuance) transaction.getAttachment();
-            if (Currency.getCurrencyByCode(attachment.getCode()) != null || Currency.getCurrencyByCode(attachment.getName().toUpperCase()) != null
-                    || Currency.getCurrencyByName(attachment.getName()) != null || Currency.getCurrencyByName(attachment.getCode()) != null) {
-                return NEXT_5LETTER_CURRENCY_ISSUANCE_FEE;
-            }
-            switch (Math.min(attachment.getCode().length(), attachment.getName().length())) {
-                case 3:
-                    return NEXT_3LETTER_CURRENCY_ISSUANCE_FEE;
-                case 4:
-                    return NEXT_4LETTER_CURRENCY_ISSUANCE_FEE;
-                case 5:
-                    return NEXT_5LETTER_CURRENCY_ISSUANCE_FEE;
-                default:
-                    throw new NxtException.NotValidException("Invalid currency code length");
-            }
+        public Fee getNextFee(Transaction transaction) throws NxtException.NotValidException {
+            return getBaselineFee(transaction);
         }
 
         @Override
@@ -195,6 +183,11 @@ public abstract class MonetarySystem extends TransactionType {
         }
 
         @Override
+        public String getName() {
+            return "ReserveIncrease";
+        }
+
+        @Override
         Attachment.MonetarySystemReserveIncrease parseAttachment(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
             return new Attachment.MonetarySystemReserveIncrease(buffer, transactionVersion);
         }
@@ -251,6 +244,11 @@ public abstract class MonetarySystem extends TransactionType {
         }
 
         @Override
+        public String getName() {
+            return "ReserveClaim";
+        }
+
+        @Override
         Attachment.MonetarySystemReserveClaim parseAttachment(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
             return new Attachment.MonetarySystemReserveClaim(buffer, transactionVersion);
         }
@@ -303,6 +301,11 @@ public abstract class MonetarySystem extends TransactionType {
         @Override
         public byte getSubtype() {
             return SUBTYPE_MONETARY_SYSTEM_CURRENCY_TRANSFER;
+        }
+
+        @Override
+        public String getName() {
+            return "CurrencyTransfer";
         }
 
         @Override
@@ -366,6 +369,11 @@ public abstract class MonetarySystem extends TransactionType {
         @Override
         public byte getSubtype() {
             return SUBTYPE_MONETARY_SYSTEM_PUBLISH_EXCHANGE_OFFER;
+        }
+
+        @Override
+        public String getName() {
+            return "PublishExchangeOffer";
         }
 
         @Override
@@ -467,6 +475,11 @@ public abstract class MonetarySystem extends TransactionType {
         }
 
         @Override
+        public String getName() {
+            return "ExchangeBuy";
+        }
+
+        @Override
         Attachment.MonetarySystemExchangeBuy parseAttachment(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
             return new Attachment.MonetarySystemExchangeBuy(buffer, transactionVersion);
         }
@@ -509,6 +522,11 @@ public abstract class MonetarySystem extends TransactionType {
         }
 
         @Override
+        public String getName() {
+            return "ExchangeSell";
+        }
+
+        @Override
         Attachment.MonetarySystemExchangeSell parseAttachment(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
             return new Attachment.MonetarySystemExchangeSell(buffer, transactionVersion);
         }
@@ -547,6 +565,11 @@ public abstract class MonetarySystem extends TransactionType {
         @Override
         public byte getSubtype() {
             return SUBTYPE_MONETARY_SYSTEM_CURRENCY_MINTING;
+        }
+
+        @Override
+        public String getName() {
+            return "CurrencyMinting";
         }
 
         @Override
@@ -622,6 +645,11 @@ public abstract class MonetarySystem extends TransactionType {
         @Override
         public byte getSubtype() {
             return SUBTYPE_MONETARY_SYSTEM_CURRENCY_DELETION;
+        }
+
+        @Override
+        public String getName() {
+            return "CurrencyDeletion";
         }
 
         @Override

@@ -80,7 +80,7 @@ var NRS = (function(NRS, $, undefined) {
 				$("#currency_current_supply").html(NRS.convertToQNTf(response.currentSupply, response.decimals).escapeHTML());
 				$("#currency_max_supply").html(NRS.convertToQNTf(response.maxSupply, response.decimals).escapeHTML());
 				$("#currency_decimals").html(String(response.decimals).escapeHTML());
-				$("#currency_description").html(String(response.description).escapeHTML());
+				$("#currency_description").html(String(response.description).autoLink());
 				var buyCurrencyButton = $("#buy_currency_button");
 				buyCurrencyButton.data("currency", currencyId);
 				buyCurrencyButton.data("decimals", response.decimals);
@@ -843,6 +843,35 @@ var NRS = (function(NRS, $, undefined) {
 		});
 	};
 	
+	NRS.setup.currencies = function() {
+		var sidebarId = 'sidebar_monetary_system';
+		var options = {
+			"id": sidebarId,
+			"titleHTML": '<i class="fa fa-bank"></i><span data-i18n="monetary_system">Monetary System</span>',
+			"page": 'monetary_system',
+			"desiredPosition": 40
+		}
+		NRS.addTreeviewSidebarMenuItem(options);
+		options = {
+			"titleHTML": '<span data-i18n="currencies">Currencies</span>',
+			"type": 'PAGE',
+			"page": 'currencies'
+		}
+		NRS.appendToTSMenuItem(sidebarId, options);
+		options = {
+			"titleHTML": '<span data-i18n="exchange_history">Exchange History</span>',
+			"type": 'PAGE',
+			"page": 'exchange_history'
+		}
+		NRS.appendToTSMenuItem(sidebarId, options);
+		options = {
+			"titleHTML": '<span data-i18n="issue_currency">Issue Currency</span></a>',
+			"type": 'MODAL',
+			"modalId": 'issue_currency_modal'
+		}
+		NRS.appendToTSMenuItem(sidebarId, options);
+	}
+
 	/* Calculate correct fees based on currency code length */
 	var issueCurrencyCode = $("#issue_currency_code");
 	issueCurrencyCode.keyup(function() {

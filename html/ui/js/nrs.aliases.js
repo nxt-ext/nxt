@@ -151,6 +151,16 @@ var NRS = (function(NRS, $, undefined) {
 		});
 	}
 
+	NRS.setup.aliases = function() {
+		var options = {
+			"id": 'sidebar_aliases',
+			"titleHTML": '<i class="fa fa-bookmark"></i> <span data-i18n="aliases">Aliases</span>',
+			"page": 'aliases',
+			"desiredPosition": 100
+		}
+		NRS.addSimpleSidebarMenuItem(options);
+	}
+
 	$("#transfer_alias_modal, #sell_alias_modal, #cancel_alias_sale_modal, #delete_alias_modal").on("show.bs.modal", function(e) {
 		var $invoker = $(e.relatedTarget);
 

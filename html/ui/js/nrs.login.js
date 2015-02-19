@@ -26,6 +26,7 @@ var NRS = (function(NRS, $, undefined) {
 		$("#account_phrase_custom_panel, #account_phrase_generator_panel, #welcome_panel, #custom_passphrase_link").hide();
 		$("#account_phrase_custom_panel :input:not(:button):not([type=submit])").val("");
 		$("#account_phrase_generator_panel :input:not(:button):not([type=submit])").val("");
+
 		$("#login_panel").show();
 		setTimeout(function() {
 			$("#login_password").focus()
@@ -265,7 +266,19 @@ var NRS = (function(NRS, $, undefined) {
 
 					$(window).on("hashchange", NRS.checkLocationHash);
 
+					$.each(NRS.pages, function(key, value) {
+						if(key in NRS.setup) {
+							NRS.setup[key]();
+						}
+					});
+					
+					NRS.loadPlugins();
+					$(".sidebar .treeview").tree();
+					$('#dashboard_link a').addClass("ignore").click();
+					$("[data-i18n]").i18n();
+
 					NRS.getInitialTransactions();
+					NRS.updateApprovalRequests();
 				});
 			});
 		});
@@ -276,6 +289,58 @@ var NRS = (function(NRS, $, undefined) {
 			e.preventDefault();
 		}
 	});
+
+	NRS.initPluginWarning = function() {
+		if (NRS.activePlugins) {
+			var html = "";
+			html += "<div style='font-size:13px;'>";
+			html += "<div style='background-color:#e6e6e6;padding:12px;'>";
+			html += "<span data-i18n='following_plugins_detected'>";
+			html += "The following active plugins have been detected and will be loaded after login:</span>";
+			html += "</div>";
+			html += "<ul class='list-unstyled' style='padding:11px;border:1px solid #e0e0e0;margin-top:8px;'>";
+			$.each(NRS.plugins, function(pluginId, pluginDict) {
+				if (pluginDict["launch_status"] == NRS.constants.PL_PAUSED) {
+					html += "<li style='font-weight:bold;'>" + pluginDict["manifest"]["name"] + "</li>";
+				}
+			});
+			html += "</ul>";
+			html += "</div>";
+
+			$('#lockscreen_active_plugins_overview').popover({
+				"html": true,
+				"content": html,
+				"trigger": "hover"
+			});
+
+			html = "";
+			html += "<div style='font-size:13px;padding:5px;'>";
+			html += "<p data-i18n='plugin_security_notice_full_access'>";
+			html += "Plugins are not sandboxed or restricted in any way and have full accesss to your client system including your Nxt passphrase.";
+			html += "</p>";
+			html += "<p data-i18n='plugin_security_notice_trusted_sources'>";
+			html += "Make sure to only run plugins downloaded from trusted sources, otherwise ";
+			html += "you can loose your NXT! In doubt don't log into the client with an account ";
+			html += "used to store larger amounts of NXT now or in the future while plugins ";
+			html += "are active."
+			html += "</p>";
+			html += "<p data-i18n='plugin_security_notice_remember_passphrase'>";
+			html += "Logging into the client without remembering the passphrase won't make ";
+			html += "the process more secure.";
+			html += "</p>";
+			html += "</div>";
+
+			$('#lockscreen_active_plugins_security').popover({
+				"html": true,
+				"content": html,
+				"trigger": "hover"
+			});
+
+			$("#lockscreen_active_plugins_warning").show();
+		} else {
+			$("#lockscreen_active_plugins_warning").hide();
+		}
+	}
 
 	NRS.showLockscreen = function() {
 		if (NRS.hasLocalStorage && localStorage.getItem("logged_in")) {

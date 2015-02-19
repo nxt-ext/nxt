@@ -3,7 +3,7 @@
  * @depends {nrs.modals.js}
  */
 var NRS = (function(NRS, $, undefined) {
-	$("#blocks_table, #dashboard_blocks_table, #transaction_info_details_table").on("click", "a[data-block]", function(event) {
+	$("body").on("click", ".show_block_modal_action", function(event) {
 		event.preventDefault();
 
 		if (NRS.fetchingModalData) {

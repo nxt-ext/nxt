@@ -32,7 +32,7 @@ var NRS = (function(NRS, $, undefined) {
 		"fr": "Français",                // french
 		"gl": "Galego (Beta)",           // galician
 		"sh": "Hrvatski (Beta)",         // croatian
-		"id": "Bahasa Indonesia (Beta)", // indonesian
+		"id": "Bahasa Indonesia",        // indonesian
 		"it": "Italiano",                // italian
 		"ja": "日本語 (Beta)",            // japanese
 		"lt": "Lietuviškai",             // lithuanian
@@ -568,7 +568,7 @@ var NRS = (function(NRS, $, undefined) {
 		}
 
 		if (key == "24_hour_format") {
-			var $dashboard_dates = $("#dashboard_transactions_table a[data-timestamp], #dashboard_blocks_table td[data-timestamp]");
+			var $dashboard_dates = $("#dashboard_table a[data-timestamp], #dashboard_blocks_table td[data-timestamp]");
 
 			$.each($dashboard_dates, function(key, value) {
 				$(this).html(NRS.formatTimestamp($(this).data("timestamp")));
