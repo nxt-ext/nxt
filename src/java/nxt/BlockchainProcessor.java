@@ -42,6 +42,10 @@ public interface BlockchainProcessor extends Observable<Block,BlockchainProcesso
             super(message);
         }
 
+        BlockNotAcceptedException(Throwable cause) {
+            super(cause);
+        }
+
     }
 
     public static class TransactionNotAcceptedException extends BlockNotAcceptedException {
@@ -50,6 +54,11 @@ public interface BlockchainProcessor extends Observable<Block,BlockchainProcesso
 
         TransactionNotAcceptedException(String message, TransactionImpl transaction) {
             super(message  + " transaction: " + transaction.getJSONObject().toJSONString());
+            this.transaction = transaction;
+        }
+
+        TransactionNotAcceptedException(Throwable cause, TransactionImpl transaction) {
+            super(cause);
             this.transaction = transaction;
         }
 

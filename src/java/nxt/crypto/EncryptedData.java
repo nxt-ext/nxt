@@ -1,6 +1,7 @@
 package nxt.crypto;
 
 import nxt.NxtException;
+import nxt.util.Convert;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -12,8 +13,6 @@ import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
-import java.util.zip.GZIPInputStream;
-import java.util.zip.GZIPOutputStream;
 
 public final class EncryptedData {
 
@@ -30,19 +29,11 @@ public final class EncryptedData {
         if (plaintext.length == 0) {
             return EMPTY_DATA;
         }
-        try (ByteArrayOutputStream bos = new ByteArrayOutputStream();
-             GZIPOutputStream gzip = new GZIPOutputStream(bos)) {
-            gzip.write(plaintext);
-            gzip.flush();
-            gzip.close();
-            byte[] compressedPlaintext = bos.toByteArray();
-            byte[] nonce = new byte[32];
-                secureRandom.get().nextBytes(nonce);
-            byte[] data = Crypto.aesEncrypt(compressedPlaintext, myPrivateKey, theirPublicKey, nonce);
-            return new EncryptedData(data, nonce);
-        } catch (IOException e) {
-            throw new RuntimeException(e.getMessage(), e);
-        }
+        byte[] compressedPlaintext = Convert.compress(plaintext);
+        byte[] nonce = new byte[32];
+        secureRandom.get().nextBytes(nonce);
+        byte[] data = Crypto.aesEncrypt(compressedPlaintext, myPrivateKey, theirPublicKey, nonce);
+        return new EncryptedData(data, nonce);
     }
 
     public static EncryptedData readEncryptedData(ByteBuffer buffer, int length, int maxLength)
@@ -90,20 +81,7 @@ public final class EncryptedData {
         if (data.length == 0) {
             return data;
         }
-        byte[] compressedPlaintext = Crypto.aesDecrypt(data, myPrivateKey, theirPublicKey, nonce);
-        try (ByteArrayInputStream bis = new ByteArrayInputStream(compressedPlaintext);
-             GZIPInputStream gzip = new GZIPInputStream(bis);
-             ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
-            byte[] buffer = new byte[1024];
-            int nRead;
-            while ((nRead = gzip.read(buffer, 0, buffer.length)) > 0) {
-                bos.write(buffer, 0, nRead);
-            }
-            bos.flush();
-            return bos.toByteArray();
-        } catch (IOException e) {
-            throw new RuntimeException(e.getMessage(), e);
-        }
+        return Convert.uncompress(Crypto.aesDecrypt(data, myPrivateKey, theirPublicKey, nonce));
     }
 
     public static byte[] marshalData(EncryptedData encryptedData) {

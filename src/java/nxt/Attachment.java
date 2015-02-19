@@ -6,14 +6,16 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.regex.Pattern;
 
 public interface Attachment extends Appendix {
 
     TransactionType getTransactionType();
 
-    abstract static class AbstractAttachment extends AbstractAppendix implements Attachment {
+    abstract static class AbstractAttachment extends Appendix.AbstractAppendix implements Attachment {
 
         private AbstractAttachment(ByteBuffer buffer, byte transactionVersion) {
             super(buffer, transactionVersion);
@@ -30,6 +32,11 @@ public interface Attachment extends Appendix {
         private AbstractAttachment() {}
 
         @Override
+        final String getAppendixName() {
+            return getTransactionType().getName();
+        }
+
+        @Override
         final void validate(Transaction transaction) throws NxtException.ValidationException {
             getTransactionType().validateAttachment(transaction);
         }
@@ -37,6 +44,11 @@ public interface Attachment extends Appendix {
         @Override
         final void apply(Transaction transaction, Account senderAccount, Account recipientAccount) {
             getTransactionType().apply(transaction, senderAccount, recipientAccount);
+        }
+
+        @Override
+        public Fee getBaselineFee(Transaction transaction) throws NxtException.NotValidException {
+            return getTransactionType().getBaselineFee(transaction);
         }
 
     }
@@ -70,11 +82,6 @@ public interface Attachment extends Appendix {
     public final static EmptyAttachment ORDINARY_PAYMENT = new EmptyAttachment() {
 
         @Override
-        String getAppendixName() {
-            return "OrdinaryPayment";
-        }
-
-        @Override
         public TransactionType getTransactionType() {
             return TransactionType.Payment.ORDINARY;
         }
@@ -83,11 +90,6 @@ public interface Attachment extends Appendix {
 
     // the message payload is in the Appendix
     public final static EmptyAttachment ARBITRARY_MESSAGE = new EmptyAttachment() {
-
-        @Override
-        String getAppendixName() {
-            return "ArbitraryMessage";
-        }
 
         @Override
         public TransactionType getTransactionType() {
@@ -116,11 +118,6 @@ public interface Attachment extends Appendix {
         public MessagingAliasAssignment(String aliasName, String aliasURI) {
             this.aliasName = aliasName.trim();
             this.aliasURI = aliasURI.trim();
-        }
-
-        @Override
-        String getAppendixName() {
-            return "AliasAssignment";
         }
 
         @Override
@@ -181,11 +178,6 @@ public interface Attachment extends Appendix {
         }
 
         @Override
-        String getAppendixName() {
-            return "AliasSell";
-        }
-
-        @Override
         public TransactionType getTransactionType() {
             return TransactionType.Messaging.ALIAS_SELL;
         }
@@ -237,11 +229,6 @@ public interface Attachment extends Appendix {
         }
 
         @Override
-        String getAppendixName() {
-            return "AliasBuy";
-        }
-
-        @Override
         public TransactionType getTransactionType() {
             return TransactionType.Messaging.ALIAS_BUY;
         }
@@ -287,11 +274,6 @@ public interface Attachment extends Appendix {
         }
 
         @Override
-        String getAppendixName() {
-            return "AliasDelete";
-        }
-
-        @Override
         public TransactionType getTransactionType() {
             return TransactionType.Messaging.ALIAS_DELETE;
         }
@@ -320,56 +302,137 @@ public interface Attachment extends Appendix {
 
     public final static class MessagingPollCreation extends AbstractAttachment {
 
+        public final static class PollBuilder {
+            private final String pollName;
+            private final String pollDescription;
+            private final String[] pollOptions;
+
+            private final int finishHeight;
+            private final byte votingModel;
+
+            private long minBalance = 0;
+            private byte minBalanceModel;
+
+            private byte minNumberOfOptions = Constants.VOTING_DEFAULT_MIN_NUMBER_OF_CHOICES;
+            private byte maxNumberOfOptions;
+
+            private final byte minRangeValue;
+            private final byte maxRangeValue;
+
+            private long holdingId;
+
+            public PollBuilder(final String pollName, final String pollDescription, final String[] pollOptions,
+                               final int finishHeight, final byte votingModel,
+                               byte minNumberOfOptions, byte maxNumberOfOptions,
+                               byte minRangeValue, byte maxRangeValue) {
+                this.pollName = pollName;
+                this.pollDescription = pollDescription;
+                this.pollOptions = pollOptions;
+
+                this.finishHeight = finishHeight;
+                this.votingModel = votingModel;
+                this.minNumberOfOptions = minNumberOfOptions;
+                this.maxNumberOfOptions = maxNumberOfOptions;
+                this.minRangeValue = minRangeValue;
+                this.maxRangeValue = maxRangeValue;
+
+                this.minBalanceModel = VoteWeighting.VotingModel.get(votingModel).defaultMinBalanceModel().getCode();
+            }
+
+            public PollBuilder minBalance(byte minBalanceModel, long minBalance) {
+                this.minBalanceModel = minBalanceModel;
+                this.minBalance = minBalance;
+                return this;
+            }
+
+            public PollBuilder holdingId(long holdingId) {
+                this.holdingId = holdingId;
+                return this;
+            }
+
+            public MessagingPollCreation build() {
+                return new MessagingPollCreation(this);
+            }
+        }
+
         private final String pollName;
         private final String pollDescription;
         private final String[] pollOptions;
-        private final byte minNumberOfOptions, maxNumberOfOptions;
-        private final boolean optionsAreBinary;
+
+        private final int finishHeight;
+
+        private final byte minNumberOfOptions;
+        private final byte maxNumberOfOptions; //only for choice voting
+        private final byte minRangeValue;
+        private final byte maxRangeValue;
+        private final VoteWeighting voteWeighting;
 
         MessagingPollCreation(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
             super(buffer, transactionVersion);
             this.pollName = Convert.readString(buffer, buffer.getShort(), Constants.MAX_POLL_NAME_LENGTH);
             this.pollDescription = Convert.readString(buffer, buffer.getShort(), Constants.MAX_POLL_DESCRIPTION_LENGTH);
+
+            this.finishHeight = buffer.getInt();
+
             int numberOfOptions = buffer.get();
             if (numberOfOptions > Constants.MAX_POLL_OPTION_COUNT) {
                 throw new NxtException.NotValidException("Invalid number of poll options: " + numberOfOptions);
             }
+
             this.pollOptions = new String[numberOfOptions];
             for (int i = 0; i < numberOfOptions; i++) {
-                pollOptions[i] = Convert.readString(buffer, buffer.getShort(), Constants.MAX_POLL_OPTION_LENGTH);
+                this.pollOptions[i] = Convert.readString(buffer, buffer.getShort(), Constants.MAX_POLL_OPTION_LENGTH);
             }
+
+            byte votingModel = buffer.get();
+
             this.minNumberOfOptions = buffer.get();
             this.maxNumberOfOptions = buffer.get();
-            this.optionsAreBinary = buffer.get() != 0;
+
+            this.minRangeValue = buffer.get();
+            this.maxRangeValue = buffer.get();
+
+            long minBalance = buffer.getLong();
+            byte minBalanceModel = buffer.get();
+            long holdingId = buffer.getLong();
+            this.voteWeighting = new VoteWeighting(votingModel, holdingId, minBalance, minBalanceModel);
         }
 
         MessagingPollCreation(JSONObject attachmentData) {
             super(attachmentData);
+
             this.pollName = ((String) attachmentData.get("name")).trim();
             this.pollDescription = ((String) attachmentData.get("description")).trim();
+            this.finishHeight = ((Long) attachmentData.get("finishHeight")).intValue();
+
             JSONArray options = (JSONArray) attachmentData.get("options");
             this.pollOptions = new String[options.size()];
             for (int i = 0; i < pollOptions.length; i++) {
-                pollOptions[i] = ((String) options.get(i)).trim();
+                this.pollOptions[i] = ((String) options.get(i)).trim();
             }
+            byte votingModel = ((Long) attachmentData.get("votingModel")).byteValue();
+
             this.minNumberOfOptions = ((Long) attachmentData.get("minNumberOfOptions")).byteValue();
             this.maxNumberOfOptions = ((Long) attachmentData.get("maxNumberOfOptions")).byteValue();
-            this.optionsAreBinary = (Boolean) attachmentData.get("optionsAreBinary");
+            this.minRangeValue = ((Long) attachmentData.get("minRangeValue")).byteValue();
+            this.maxRangeValue = ((Long) attachmentData.get("maxRangeValue")).byteValue();
+
+            long minBalance = Convert.parseLong(attachmentData.get("minBalance"));
+            byte minBalanceModel = ((Long) attachmentData.get("minBalance")).byteValue();
+            long holdingId = Convert.parseUnsignedLong((String) attachmentData.get("holding"));
+            this.voteWeighting = new VoteWeighting(votingModel, holdingId, minBalance, minBalanceModel);
         }
 
-        public MessagingPollCreation(String pollName, String pollDescription, String[] pollOptions, byte minNumberOfOptions,
-                                     byte maxNumberOfOptions, boolean optionsAreBinary) {
-            this.pollName = pollName;
-            this.pollDescription = pollDescription;
-            this.pollOptions = pollOptions;
-            this.minNumberOfOptions = minNumberOfOptions;
-            this.maxNumberOfOptions = maxNumberOfOptions;
-            this.optionsAreBinary = optionsAreBinary;
-        }
-
-        @Override
-        String getAppendixName() {
-            return "PollCreation";
+        private MessagingPollCreation(PollBuilder builder) {
+            this.pollName = builder.pollName;
+            this.pollDescription = builder.pollDescription;
+            this.pollOptions = builder.pollOptions;
+            this.finishHeight = builder.finishHeight;
+            this.minNumberOfOptions = builder.minNumberOfOptions;
+            this.maxNumberOfOptions = builder.maxNumberOfOptions;
+            this.minRangeValue = builder.minRangeValue;
+            this.maxRangeValue = builder.maxRangeValue;
+            this.voteWeighting = new VoteWeighting(builder.votingModel, builder.holdingId, builder.minBalance, builder.minBalanceModel);
         }
 
         @Override
@@ -378,7 +441,9 @@ public interface Attachment extends Appendix {
             for (String pollOption : pollOptions) {
                 size += 2 + Convert.toBytes(pollOption).length;
             }
-            size +=  1 + 1 + 1;
+
+            size += 4 + 1 + 1 + 1 + 1 + 1 + 8 + 1 + 8;
+
             return size;
         }
 
@@ -390,32 +455,52 @@ public interface Attachment extends Appendix {
             for (int i = 0; i < this.pollOptions.length; i++) {
                 options[i] = Convert.toBytes(this.pollOptions[i]);
             }
-            buffer.putShort((short)name.length);
+
+            buffer.putShort((short) name.length);
             buffer.put(name);
-            buffer.putShort((short)description.length);
+            buffer.putShort((short) description.length);
             buffer.put(description);
+            buffer.putInt(finishHeight);
             buffer.put((byte) options.length);
             for (byte[] option : options) {
                 buffer.putShort((short) option.length);
                 buffer.put(option);
             }
+            buffer.put(this.voteWeighting.getVotingModel().getCode());
+
             buffer.put(this.minNumberOfOptions);
             buffer.put(this.maxNumberOfOptions);
-            buffer.put(this.optionsAreBinary ? (byte)1 : (byte)0);
+            buffer.put(this.minRangeValue);
+            buffer.put(this.maxRangeValue);
+
+            buffer.putLong(this.voteWeighting.getMinBalance());
+            buffer.put(this.voteWeighting.getMinBalanceModel().getCode());
+            buffer.putLong(this.voteWeighting.getHoldingId());
         }
 
         @Override
         void putMyJSON(JSONObject attachment) {
             attachment.put("name", this.pollName);
             attachment.put("description", this.pollDescription);
+            attachment.put("finishHeight", this.finishHeight);
             JSONArray options = new JSONArray();
             if (this.pollOptions != null) {
                 Collections.addAll(options, this.pollOptions);
             }
             attachment.put("options", options);
+
+
             attachment.put("minNumberOfOptions", this.minNumberOfOptions);
             attachment.put("maxNumberOfOptions", this.maxNumberOfOptions);
-            attachment.put("optionsAreBinary", this.optionsAreBinary);
+
+            attachment.put("minRangeValue", this.minRangeValue);
+            attachment.put("maxRangeValue", this.maxRangeValue);
+
+            attachment.put("votingModel", this.voteWeighting.getVotingModel().getCode());
+
+            attachment.put("minBalance", this.voteWeighting.getMinBalance());
+            attachment.put("minBalanceModel", this.voteWeighting.getMinBalanceModel().getCode());
+            attachment.put("holding", Convert.toUnsignedLong(this.voteWeighting.getHoldingId()));
         }
 
         @Override
@@ -423,17 +508,41 @@ public interface Attachment extends Appendix {
             return TransactionType.Messaging.POLL_CREATION;
         }
 
-        public String getPollName() { return pollName; }
+        public String getPollName() {
+            return pollName;
+        }
 
-        public String getPollDescription() { return pollDescription; }
+        public String getPollDescription() {
+            return pollDescription;
+        }
 
-        public String[] getPollOptions() { return pollOptions; }
+        public int getFinishHeight() {
+            return finishHeight;
+        }
 
-        public byte getMinNumberOfOptions() { return minNumberOfOptions; }
+        public String[] getPollOptions() {
+            return pollOptions;
+        }
 
-        public byte getMaxNumberOfOptions() { return maxNumberOfOptions; }
+        public byte getMinNumberOfOptions() {
+            return minNumberOfOptions;
+        }
 
-        public boolean isOptionsAreBinary() { return optionsAreBinary; }
+        public byte getMaxNumberOfOptions() {
+            return maxNumberOfOptions;
+        }
+
+        public byte getMinRangeValue() {
+            return minRangeValue;
+        }
+
+        public byte getMaxRangeValue() {
+            return maxRangeValue;
+        }
+
+        public VoteWeighting getVoteWeighting() {
+            return voteWeighting;
+        }
 
     }
 
@@ -442,22 +551,22 @@ public interface Attachment extends Appendix {
         private final long pollId;
         private final byte[] pollVote;
 
-        MessagingVoteCasting(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
+        public MessagingVoteCasting(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
             super(buffer, transactionVersion);
-            this.pollId = buffer.getLong();
+            pollId = buffer.getLong();
             int numberOfOptions = buffer.get();
             if (numberOfOptions > Constants.MAX_POLL_OPTION_COUNT) {
-                throw new NxtException.NotValidException("Error parsing vote casting parameters");
+                throw new NxtException.NotValidException("More than " + Constants.MAX_POLL_OPTION_COUNT + " options in a vote");
             }
-            this.pollVote = new byte[numberOfOptions];
+            pollVote = new byte[numberOfOptions];
             buffer.get(pollVote);
         }
 
-        MessagingVoteCasting(JSONObject attachmentData) {
+        public MessagingVoteCasting(JSONObject attachmentData) {
             super(attachmentData);
-            this.pollId = Convert.parseUnsignedLong((String)attachmentData.get("pollId"));
-            JSONArray vote = (JSONArray)attachmentData.get("vote");
-            this.pollVote = new byte[vote.size()];
+            pollId = Convert.parseUnsignedLong((String) attachmentData.get("poll"));
+            JSONArray vote = (JSONArray) attachmentData.get("vote");
+            pollVote = new byte[vote.size()];
             for (int i = 0; i < pollVote.length; i++) {
                 pollVote[i] = ((Long) vote.get(i)).byteValue();
             }
@@ -466,11 +575,6 @@ public interface Attachment extends Appendix {
         public MessagingVoteCasting(long pollId, byte[] pollVote) {
             this.pollId = pollId;
             this.pollVote = pollVote;
-        }
-
-        @Override
-        String getAppendixName() {
-            return "VoteCasting";
         }
 
         @Override
@@ -487,7 +591,7 @@ public interface Attachment extends Appendix {
 
         @Override
         void putMyJSON(JSONObject attachment) {
-            attachment.put("pollId", Convert.toUnsignedLong(this.pollId));
+            attachment.put("poll", Convert.toUnsignedLong(this.pollId));
             JSONArray vote = new JSONArray();
             if (this.pollVote != null) {
                 for (byte aPollVote : this.pollVote) {
@@ -502,10 +606,72 @@ public interface Attachment extends Appendix {
             return TransactionType.Messaging.VOTE_CASTING;
         }
 
-        public long getPollId() { return pollId; }
+        public long getPollId() {
+            return pollId;
+        }
 
-        public byte[] getPollVote() { return pollVote; }
+        public byte[] getPollVote() {
+            return pollVote;
+        }
+    }
 
+    public final static class MessagingPhasingVoteCasting extends AbstractAttachment {
+        private final List<byte[]> transactionFullHashes;
+
+        MessagingPhasingVoteCasting(ByteBuffer buffer, byte transactionVersion) {
+            super(buffer, transactionVersion);
+            byte length = buffer.get();
+            transactionFullHashes = new ArrayList<>(length);
+            for (int i = 0; i < length; i++) {
+                byte[] hash = new byte[32];
+                buffer.get(hash);
+                transactionFullHashes.add(hash);
+            }
+        }
+
+        MessagingPhasingVoteCasting(JSONObject attachmentData) {
+            super(attachmentData);
+            JSONArray jsonArray = (JSONArray) (attachmentData.get("transactionFullHashes"));
+            transactionFullHashes = new ArrayList<>(jsonArray.size());
+            for (int i = 0; i < jsonArray.size(); i++) {
+                transactionFullHashes.add(Convert.parseHexString((String)jsonArray.get(i)));
+            }
+        }
+
+        public MessagingPhasingVoteCasting(List<byte[]> transactionFullHashes) {
+            this.transactionFullHashes = transactionFullHashes;
+        }
+
+        @Override
+        int getMySize() {
+            return 1 + 32 * transactionFullHashes.size();
+        }
+
+        @Override
+        void putMyBytes(ByteBuffer buffer) {
+            buffer.put((byte) transactionFullHashes.size());
+            for (byte[] hash : transactionFullHashes) {
+                buffer.put(hash);
+            }
+        }
+
+        @Override
+        void putMyJSON(JSONObject attachment) {
+            JSONArray jsonArray = new JSONArray();
+            for (byte[] hash : transactionFullHashes) {
+                jsonArray.add(Convert.toHexString(hash));
+            }
+            attachment.put("transactionFullHashes", jsonArray);
+        }
+
+        @Override
+        public TransactionType getTransactionType() {
+            return TransactionType.Messaging.PHASING_VOTE_CASTING;
+        }
+
+        public List<byte[]> getTransactionFullHashes() {
+            return transactionFullHashes;
+        }
     }
 
     public final static class MessagingHubAnnouncement extends AbstractAttachment {
@@ -543,11 +709,6 @@ public interface Attachment extends Appendix {
         public MessagingHubAnnouncement(long minFeePerByteNQT, String[] uris) {
             this.minFeePerByteNQT = minFeePerByteNQT;
             this.uris = uris;
-        }
-
-        @Override
-        String getAppendixName() {
-            return "HubAnnouncement";
         }
 
         @Override
@@ -640,17 +801,14 @@ public interface Attachment extends Appendix {
             this.messagePattern = null;
         }
 
+        /*
         public MessagingAccountInfo(String name, String description, Pattern messagePattern) {
             super(messagePattern == null ? 1 : 2);
             this.name = name;
             this.description = description;
             this.messagePattern = messagePattern;
         }
-
-        @Override
-        String getAppendixName() {
-            return "AccountInfo";
-        }
+        */
 
         @Override
         int getMySize() {
@@ -738,11 +896,6 @@ public interface Attachment extends Appendix {
         }
 
         @Override
-        String getAppendixName() {
-            return "AssetIssuance";
-        }
-
-        @Override
         int getMySize() {
             return 1 + Convert.toBytes(name).length + 2 + Convert.toBytes(description).length + 8 + 1;
         }
@@ -813,11 +966,6 @@ public interface Attachment extends Appendix {
             this.assetId = assetId;
             this.quantityQNT = quantityQNT;
             this.comment = null;
-        }
-
-        @Override
-        String getAppendixName() {
-            return "AssetTransfer";
         }
 
         @Override
@@ -937,11 +1085,6 @@ public interface Attachment extends Appendix {
         }
 
         @Override
-        String getAppendixName() {
-            return "AskOrderPlacement";
-        }
-
-        @Override
         public TransactionType getTransactionType() {
             return TransactionType.ColoredCoins.ASK_ORDER_PLACEMENT;
         }
@@ -960,11 +1103,6 @@ public interface Attachment extends Appendix {
 
         public ColoredCoinsBidOrderPlacement(long assetId, long quantityQNT, long priceNQT) {
             super(assetId, quantityQNT, priceNQT);
-        }
-
-        @Override
-        String getAppendixName() {
-            return "BidOrderPlacement";
         }
 
         @Override
@@ -1027,11 +1165,6 @@ public interface Attachment extends Appendix {
         }
 
         @Override
-        String getAppendixName() {
-            return "AskOrderCancellation";
-        }
-
-        @Override
         public TransactionType getTransactionType() {
             return TransactionType.ColoredCoins.ASK_ORDER_CANCELLATION;
         }
@@ -1053,11 +1186,6 @@ public interface Attachment extends Appendix {
         }
 
         @Override
-        String getAppendixName() {
-            return "BidOrderCancellation";
-        }
-
-        @Override
         public TransactionType getTransactionType() {
             return TransactionType.ColoredCoins.BID_ORDER_CANCELLATION;
         }
@@ -1070,8 +1198,8 @@ public interface Attachment extends Appendix {
         private final int height;
         private final long amountNQTPerQNT;
 
-        ColoredCoinsDividendPayment(ByteBuffer buffer, byte transactionVersiont) {
-            super(buffer, transactionVersiont);
+        ColoredCoinsDividendPayment(ByteBuffer buffer, byte transactionVersion) {
+            super(buffer, transactionVersion);
             this.assetId = buffer.getLong();
             this.height = buffer.getInt();
             this.amountNQTPerQNT = buffer.getLong();
@@ -1088,11 +1216,6 @@ public interface Attachment extends Appendix {
             this.assetId = assetId;
             this.height = height;
             this.amountNQTPerQNT = amountNQTPerQNT;
-        }
-
-        @Override
-        String getAppendixName() {
-            return "DividendPayment";
         }
 
         @Override
@@ -1168,11 +1291,6 @@ public interface Attachment extends Appendix {
         }
 
         @Override
-        String getAppendixName() {
-            return "DigitalGoodsListing";
-        }
-
-        @Override
         int getMySize() {
             return 2 + Convert.toBytes(name).length + 2 + Convert.toBytes(description).length + 2
                         + Convert.toBytes(tags).length + 4 + 8;
@@ -1238,11 +1356,6 @@ public interface Attachment extends Appendix {
         }
 
         @Override
-        String getAppendixName() {
-            return "DigitalGoodsDelisting";
-        }
-
-        @Override
         int getMySize() {
             return 8;
         }
@@ -1286,11 +1399,6 @@ public interface Attachment extends Appendix {
         public DigitalGoodsPriceChange(long goodsId, long priceNQT) {
             this.goodsId = goodsId;
             this.priceNQT = priceNQT;
-        }
-
-        @Override
-        String getAppendixName() {
-            return "DigitalGoodsPriceChange";
         }
 
         @Override
@@ -1341,11 +1449,6 @@ public interface Attachment extends Appendix {
         public DigitalGoodsQuantityChange(long goodsId, int deltaQuantity) {
             this.goodsId = goodsId;
             this.deltaQuantity = deltaQuantity;
-        }
-
-        @Override
-        String getAppendixName() {
-            return "DigitalGoodsQuantityChange";
         }
 
         @Override
@@ -1404,11 +1507,6 @@ public interface Attachment extends Appendix {
             this.quantity = quantity;
             this.priceNQT = priceNQT;
             this.deliveryDeadlineTimestamp = deliveryDeadlineTimestamp;
-        }
-
-        @Override
-        String getAppendixName() {
-            return "DigitalGoodsPurchase";
         }
 
         @Override
@@ -1483,11 +1581,6 @@ public interface Attachment extends Appendix {
         }
 
         @Override
-        String getAppendixName() {
-            return "DigitalGoodsDelivery";
-        }
-
-        @Override
         int getMySize() {
             return 8 + 4 + goods.getSize() + 8;
         }
@@ -1546,11 +1639,6 @@ public interface Attachment extends Appendix {
         }
 
         @Override
-        String getAppendixName() {
-            return "DigitalGoodsFeedback";
-        }
-
-        @Override
         int getMySize() {
             return 8;
         }
@@ -1594,11 +1682,6 @@ public interface Attachment extends Appendix {
         public DigitalGoodsRefund(long purchaseId, long refundNQT) {
             this.purchaseId = purchaseId;
             this.refundNQT = refundNQT;
-        }
-
-        @Override
-        String getAppendixName() {
-            return "DigitalGoodsRefund";
         }
 
         @Override
@@ -1648,11 +1731,6 @@ public interface Attachment extends Appendix {
         }
 
         @Override
-        String getAppendixName() {
-            return "EffectiveBalanceLeasing";
-        }
-
-        @Override
         int getMySize() {
             return 2;
         }
@@ -1694,8 +1772,8 @@ public interface Attachment extends Appendix {
         private final long maxSupply;
         private final int issuanceHeight;
         private final long minReservePerUnitNQT;
-        private final byte minDifficulty;
-        private final byte maxDifficulty;
+        private final int minDifficulty;
+        private final int maxDifficulty;
         private final byte ruleset;
         private final byte algorithm;
         private final byte decimals;
@@ -1711,8 +1789,8 @@ public interface Attachment extends Appendix {
             this.maxSupply = buffer.getLong();
             this.issuanceHeight = buffer.getInt();
             this.minReservePerUnitNQT = buffer.getLong();
-            this.minDifficulty = buffer.get();
-            this.maxDifficulty = buffer.get();
+            this.minDifficulty = buffer.get() & 0xFF;
+            this.maxDifficulty = buffer.get() & 0xFF;
             this.ruleset = buffer.get();
             this.algorithm = buffer.get();
             this.decimals = buffer.get();
@@ -1729,21 +1807,21 @@ public interface Attachment extends Appendix {
             this.maxSupply = Convert.parseLong(attachmentData.get("maxSupply"));
             this.issuanceHeight = ((Long)attachmentData.get("issuanceHeight")).intValue();
             this.minReservePerUnitNQT = Convert.parseLong(attachmentData.get("minReservePerUnitNQT"));
-            this.minDifficulty = ((Long)attachmentData.get("minDifficulty")).byteValue();
-            this.maxDifficulty = ((Long)attachmentData.get("maxDifficulty")).byteValue();
+            this.minDifficulty = ((Long)attachmentData.get("minDifficulty")).intValue();
+            this.maxDifficulty = ((Long)attachmentData.get("maxDifficulty")).intValue();
             this.ruleset = ((Long)attachmentData.get("ruleset")).byteValue();
             this.algorithm = ((Long)attachmentData.get("algorithm")).byteValue();
             this.decimals = ((Long) attachmentData.get("decimals")).byteValue();
         }
 
-        public MonetarySystemCurrencyIssuance(String name, String code, String description, byte type, long initalSupply, long reserveSupply,
-                                              long maxSupply, int issuanceHeight, long minReservePerUnitNQT, byte minDifficulty, byte maxDifficulty,
+        public MonetarySystemCurrencyIssuance(String name, String code, String description, byte type, long initialSupply, long reserveSupply,
+                                              long maxSupply, int issuanceHeight, long minReservePerUnitNQT, int minDifficulty, int maxDifficulty,
                                               byte ruleset, byte algorithm, byte decimals) {
             this.name = name;
             this.code = code;
             this.description = description;
             this.type = type;
-            this.initialSupply = initalSupply;
+            this.initialSupply = initialSupply;
             this.reserveSupply = reserveSupply;
             this.maxSupply = maxSupply;
             this.issuanceHeight = issuanceHeight;
@@ -1753,11 +1831,6 @@ public interface Attachment extends Appendix {
             this.ruleset = ruleset;
             this.algorithm = algorithm;
             this.decimals = decimals;
-        }
-
-        @Override
-        String getAppendixName() {
-            return "CurrencyIssuance";
         }
 
         @Override
@@ -1783,8 +1856,8 @@ public interface Attachment extends Appendix {
             buffer.putLong(maxSupply);
             buffer.putInt(issuanceHeight);
             buffer.putLong(minReservePerUnitNQT);
-            buffer.put(minDifficulty);
-            buffer.put(maxDifficulty);
+            buffer.put((byte)minDifficulty);
+            buffer.put((byte)maxDifficulty);
             buffer.put(ruleset);
             buffer.put(algorithm);
             buffer.put(decimals);
@@ -1801,11 +1874,11 @@ public interface Attachment extends Appendix {
             attachment.put("maxSupply", maxSupply);
             attachment.put("issuanceHeight", issuanceHeight);
             attachment.put("minReservePerUnitNQT", minReservePerUnitNQT);
-            attachment.put("minDifficulty", minDifficulty & 0xFF);
-            attachment.put("maxDifficulty", maxDifficulty & 0xFF);
-            attachment.put("ruleset", ruleset & 0xFF);
-            attachment.put("algorithm", algorithm & 0xFF);
-            attachment.put("decimals", decimals & 0xFF);
+            attachment.put("minDifficulty", minDifficulty);
+            attachment.put("maxDifficulty", maxDifficulty);
+            attachment.put("ruleset", ruleset);
+            attachment.put("algorithm", algorithm);
+            attachment.put("decimals", decimals);
         }
 
         @Override
@@ -1849,11 +1922,11 @@ public interface Attachment extends Appendix {
             return minReservePerUnitNQT;
         }
 
-        public byte getMinDifficulty() {
+        public int getMinDifficulty() {
             return minDifficulty;
         }
 
-        public byte getMaxDifficulty() {
+        public int getMaxDifficulty() {
             return maxDifficulty;
         }
 
@@ -1890,11 +1963,6 @@ public interface Attachment extends Appendix {
         public MonetarySystemReserveIncrease(long currencyId, long amountPerUnitNQT) {
             this.currencyId = currencyId;
             this.amountPerUnitNQT = amountPerUnitNQT;
-        }
-
-        @Override
-        String getAppendixName() {
-            return "ReserveIncrease";
         }
 
         @Override
@@ -1953,11 +2021,6 @@ public interface Attachment extends Appendix {
         }
 
         @Override
-        String getAppendixName() {
-            return "ReserveClaim";
-        }
-
-        @Override
         int getMySize() {
             return 8 + 8;
         }
@@ -2010,11 +2073,6 @@ public interface Attachment extends Appendix {
         public MonetarySystemCurrencyTransfer(long currencyId, long units) {
             this.currencyId = currencyId;
             this.units = units;
-        }
-
-        @Override
-        String getAppendixName() {
-            return "CurrencyTransfer";
         }
 
         @Override
@@ -2094,11 +2152,6 @@ public interface Attachment extends Appendix {
             this.initialBuySupply = initialBuySupply;
             this.initialSellSupply = initialSellSupply;
             this.expirationHeight = expirationHeight;
-        }
-
-        @Override
-        String getAppendixName() {
-            return "PublishExchangeOffer";
         }
 
         @Override
@@ -2245,11 +2298,6 @@ public interface Attachment extends Appendix {
         }
 
         @Override
-        String getAppendixName() {
-            return "ExchangeBuy";
-        }
-
-        @Override
         public TransactionType getTransactionType() {
             return MonetarySystem.EXCHANGE_BUY;
         }
@@ -2268,11 +2316,6 @@ public interface Attachment extends Appendix {
 
         public MonetarySystemExchangeSell(long currencyId, long rateNQT, long units) {
             super(currencyId, rateNQT, units);
-        }
-
-        @Override
-        String getAppendixName() {
-            return "ExchangeSell";
         }
 
         @Override
@@ -2310,11 +2353,6 @@ public interface Attachment extends Appendix {
             this.currencyId = currencyId;
             this.units = units;
             this.counter = counter;
-        }
-
-        @Override
-        String getAppendixName() {
-            return "CurrencyMinting";
         }
 
         @Override
@@ -2378,11 +2416,6 @@ public interface Attachment extends Appendix {
 
         public MonetarySystemCurrencyDeletion(long currencyId) {
             this.currencyId = currencyId;
-        }
-
-        @Override
-        String getAppendixName() {
-            return "CurrencyDeletion";
         }
 
         @Override

@@ -2,6 +2,8 @@ package nxt;
 
 import nxt.crypto.EncryptedData;
 import nxt.util.Convert;
+import nxt.util.Logger;
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 import java.nio.ByteBuffer;
@@ -13,6 +15,11 @@ public interface Appendix {
     void putBytes(ByteBuffer buffer);
     JSONObject getJSONObject();
     byte getVersion();
+    int getBaselineFeeHeight();
+    Fee getBaselineFee(Transaction transaction) throws NxtException.NotValidException;
+    int getNextFeeHeight();
+    Fee getNextFee(Transaction transaction) throws NxtException.NotValidException;
+
 
     static abstract class AbstractAppendix implements Appendix {
 
@@ -79,6 +86,26 @@ public interface Appendix {
             return transactionVersion == 0 ? version == 0 : version > 0;
         }
 
+        @Override
+        public int getBaselineFeeHeight() {
+            return 1;
+        }
+
+        @Override
+        public Fee getBaselineFee(Transaction transaction) throws NxtException.NotValidException {
+            return Fee.NONE;
+        }
+
+        @Override
+        public int getNextFeeHeight() {
+            return Integer.MAX_VALUE;
+        }
+
+        @Override
+        public Fee getNextFee(Transaction transaction) throws NxtException.NotValidException {
+            return getBaselineFee(transaction);
+        }
+
         abstract void validate(Transaction transaction) throws NxtException.ValidationException;
 
         abstract void apply(Transaction transaction, Account senderAccount, Account recipientAccount);
@@ -86,6 +113,13 @@ public interface Appendix {
     }
 
     public static class Message extends AbstractAppendix {
+
+        private static final Fee MESSAGE_FEE = new Fee.SizeBasedFee(Constants.ONE_NXT) {
+            @Override
+            public int getSize(TransactionImpl transaction, Appendix appendix) {
+                return ((Message)appendix).getMessage().length;
+            }
+        };
 
         static Message parse(JSONObject attachmentData) {
             if (attachmentData.get("message") == null) {
@@ -104,7 +138,7 @@ public interface Appendix {
             if (messageLength < 0) {
                 messageLength &= Integer.MAX_VALUE;
             }
-            if (messageLength > Constants.MAX_ARBITRARY_MESSAGE_LENGTH) {
+            if (messageLength > Constants.MAX_ARBITRARY_MESSAGE_LENGTH_2) {
                 throw new NxtException.NotValidException("Invalid arbitrary message length: " + messageLength);
             }
             this.message = new byte[messageLength];
@@ -134,6 +168,11 @@ public interface Appendix {
         }
 
         @Override
+        public Fee getBaselineFee(Transaction transaction) {
+            return MESSAGE_FEE;
+        }
+
+        @Override
         int getMySize() {
             return 4 + message.length;
         }
@@ -158,8 +197,14 @@ public interface Appendix {
             if (transaction.getVersion() == 0 && transaction.getAttachment() != Attachment.ARBITRARY_MESSAGE) {
                 throw new NxtException.NotValidException("Message attachments not enabled for version 0 transactions");
             }
-            if (message.length > Constants.MAX_ARBITRARY_MESSAGE_LENGTH) {
-                throw new NxtException.NotValidException("Invalid arbitrary message length: " + message.length);
+            if (Nxt.getBlockchain().getHeight() < Constants.VOTING_SYSTEM_BLOCK) {
+                if (message.length > Constants.MAX_ARBITRARY_MESSAGE_LENGTH) {
+                    throw new NxtException.NotCurrentlyValidException("Invalid arbitrary message length: " + message.length);
+                }
+            } else {
+                if (message.length > Constants.MAX_ARBITRARY_MESSAGE_LENGTH_2) {
+                    throw new NxtException.NotValidException("Invalid arbitrary message length: " + message.length);
+                }
             }
         }
 
@@ -177,6 +222,13 @@ public interface Appendix {
 
     abstract static class AbstractEncryptedMessage extends AbstractAppendix {
 
+        private static final Fee ENCRYPTED_DATA_FEE = new Fee.SizeBasedFee(Constants.ONE_NXT) {
+            @Override
+            public int getSize(TransactionImpl transaction, Appendix appendix) {
+                return ((AbstractEncryptedMessage)appendix).getEncryptedData().getData().length;
+            }
+        };
+
         private final EncryptedData encryptedData;
         private final boolean isText;
 
@@ -187,7 +239,7 @@ public interface Appendix {
             if (length < 0) {
                 length &= Integer.MAX_VALUE;
             }
-            this.encryptedData = EncryptedData.readEncryptedData(buffer, length, Constants.MAX_ENCRYPTED_MESSAGE_LENGTH);
+            this.encryptedData = EncryptedData.readEncryptedData(buffer, length, Constants.MAX_ENCRYPTED_MESSAGE_LENGTH_2);
         }
 
         private AbstractEncryptedMessage(JSONObject attachmentJSON, JSONObject encryptedMessageJSON) {
@@ -201,6 +253,11 @@ public interface Appendix {
         private AbstractEncryptedMessage(EncryptedData encryptedData, boolean isText) {
             this.encryptedData = encryptedData;
             this.isText = isText;
+        }
+
+        @Override
+        public Fee getBaselineFee(Transaction transaction) {
+            return ENCRYPTED_DATA_FEE;
         }
 
         @Override
@@ -224,8 +281,14 @@ public interface Appendix {
 
         @Override
         void validate(Transaction transaction) throws NxtException.ValidationException {
-            if (encryptedData.getData().length > Constants.MAX_ENCRYPTED_MESSAGE_LENGTH) {
-                throw new NxtException.NotValidException("Max encrypted message length exceeded");
+            if (Nxt.getBlockchain().getHeight() < Constants.VOTING_SYSTEM_BLOCK) {
+                if (encryptedData.getData().length > Constants.MAX_ENCRYPTED_MESSAGE_LENGTH) {
+                    throw new NxtException.NotCurrentlyValidException("Max encrypted message length exceeded");
+                }
+            } else {
+                if (encryptedData.getData().length > Constants.MAX_ENCRYPTED_MESSAGE_LENGTH_2) {
+                    throw new NxtException.NotValidException("Max encrypted message length exceeded");
+                }
             }
             if ((encryptedData.getNonce().length != 32 && encryptedData.getData().length > 0)
                     || (encryptedData.getNonce().length != 0 && encryptedData.getData().length == 0)) {
@@ -396,14 +459,14 @@ public interface Appendix {
                 throw new NxtException.NotValidException("Public key announcements not enabled for version 0 transactions");
             }
             Account recipientAccount = Account.getAccount(recipientId);
-            if (recipientAccount != null && recipientAccount.getPublicKey() != null && ! Arrays.equals(publicKey, recipientAccount.getPublicKey())) {
+            if (recipientAccount != null && recipientAccount.getKeyHeight() > 0 && ! Arrays.equals(publicKey, recipientAccount.getPublicKey())) {
                 throw new NxtException.NotCurrentlyValidException("A different public key for this account has already been announced");
             }
         }
 
         @Override
         void apply(Transaction transaction, Account senderAccount, Account recipientAccount) {
-            if (recipientAccount.setOrVerify(publicKey, transaction.getHeight())) {
+            if (recipientAccount.setOrVerify(publicKey)) {
                 recipientAccount.apply(this.publicKey, transaction.getHeight());
             }
         }
@@ -414,4 +477,184 @@ public interface Appendix {
 
     }
 
+    public static class Phasing extends AbstractAppendix {
+
+        private static final Fee PHASING_FEE = new Fee.ConstantFee(20 * Constants.ONE_NXT);
+
+        static Phasing parse(JSONObject attachmentData) {
+            if (attachmentData.get("phasingFinishHeight") == null) {
+                return null;
+            }
+            return new Phasing(attachmentData);
+        }
+
+        private final int finishHeight;
+        private final long quorum;
+        private final long[] whitelist;
+        private final VoteWeighting voteWeighting;
+
+        Phasing(ByteBuffer buffer, byte transactionVersion) {
+            super(buffer, transactionVersion);
+            finishHeight = buffer.getInt();
+            byte votingModel = buffer.get();
+            quorum = buffer.getLong();
+            long minBalance = buffer.getLong();
+            byte whitelistSize = buffer.get();
+            whitelist = new long[whitelistSize];
+            for (int pvc = 0; pvc < whitelist.length; pvc++) {
+                whitelist[pvc] = buffer.getLong();
+            }
+            long holdingId = buffer.getLong();
+            byte minBalanceModel = buffer.get();
+            voteWeighting = new VoteWeighting(votingModel, holdingId, minBalance, minBalanceModel);
+        }
+
+        Phasing(JSONObject attachmentData) {
+            super(attachmentData);
+            finishHeight = ((Long) attachmentData.get("phasingFinishHeight")).intValue();
+            quorum = Convert.parseLong(attachmentData.get("phasingQuorum"));
+            long minBalance = Convert.parseLong(attachmentData.get("phasingMinBalance"));
+            byte votingModel = ((Long) attachmentData.get("phasingVotingModel")).byteValue();
+            long holdingId = Convert.parseUnsignedLong((String) attachmentData.get("phasingHolding"));
+            JSONArray whitelistJson = (JSONArray) (attachmentData.get("phasingWhitelist"));
+            whitelist = new long[whitelistJson.size()];
+            for (int i = 0; i < whitelist.length; i++) {
+                whitelist[i] = Convert.parseUnsignedLong((String) whitelistJson.get(i));
+            }
+            byte minBalanceModel = ((Long) attachmentData.get("phasingMinBalanceModel")).byteValue();
+            voteWeighting = new VoteWeighting(votingModel, holdingId, minBalance, minBalanceModel);
+        }
+
+        public Phasing(int finishHeight, byte votingModel, long holdingId, long quorum,
+                       long minBalance, byte minBalanceModel, long[] whitelist) {
+            this.finishHeight = finishHeight;
+            this.quorum = quorum;
+            this.whitelist = Convert.nullToEmpty(whitelist);
+            voteWeighting = new VoteWeighting(votingModel, holdingId, minBalance, minBalanceModel);
+        }
+
+        @Override
+        String getAppendixName() {
+            return "Phasing";
+        }
+
+        @Override
+        int getMySize() {
+            return 4 + 1 + 8 + 8 + 1 + 8 * whitelist.length + 8 + 1;
+        }
+
+        @Override
+        void putMyBytes(ByteBuffer buffer) {
+            buffer.putInt(finishHeight);
+            buffer.put(voteWeighting.getVotingModel().getCode());
+            buffer.putLong(quorum);
+            buffer.putLong(voteWeighting.getMinBalance());
+            buffer.put((byte) whitelist.length);
+            for (long account : whitelist) {
+                buffer.putLong(account);
+            }
+            buffer.putLong(voteWeighting.getHoldingId());
+            buffer.put(voteWeighting.getMinBalanceModel().getCode());
+        }
+
+        @Override
+        void putMyJSON(JSONObject json) {
+            json.put("phasingFinishHeight", finishHeight);
+            json.put("phasingQuorum", quorum);
+            json.put("phasingMinBalance", voteWeighting.getMinBalance());
+            json.put("phasingVotingModel", voteWeighting.getVotingModel().getCode());
+            json.put("phasingHolding", Convert.toUnsignedLong(voteWeighting.getHoldingId()));
+            JSONArray whitelistJson = new JSONArray();
+            for (long accountId : whitelist) {
+                whitelistJson.add(Convert.toUnsignedLong(accountId));
+            }
+            json.put("phasingWhitelist", whitelistJson);
+            json.put("phasingMinBalanceModel", voteWeighting.getMinBalanceModel().getCode());
+        }
+
+        @Override
+        void validate(Transaction transaction) throws NxtException.ValidationException {
+
+            int currentHeight = Nxt.getBlockchain().getHeight();
+            if (currentHeight < Constants.VOTING_SYSTEM_BLOCK) {
+                throw new NxtException.NotYetEnabledException("Voting System not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
+            }
+
+            if (whitelist.length > Constants.MAX_PHASING_WHITELIST_SIZE) {
+                throw new NxtException.NotValidException("Whitelist is too big");
+            }
+
+            if (quorum <= 0) {
+                throw new NxtException.NotValidException("quorum <= 0");
+            }
+
+            if (finishHeight < currentHeight + Constants.VOTING_MIN_VOTE_DURATION
+                    || finishHeight > currentHeight + Constants.VOTING_MAX_VOTE_DURATION) {
+                throw new NxtException.NotValidException("Invalid finish height");
+            }
+
+            voteWeighting.validate();
+
+            if (voteWeighting.getVotingModel() == VoteWeighting.VotingModel.ACCOUNT && whitelist.length == 0) {
+                throw new NxtException.NotValidException("By-account voting with empty whitelist");
+            }
+
+        }
+
+        @Override
+        void apply(Transaction transaction, Account senderAccount, Account recipientAccount) {
+            PhasingPoll.addPoll(transaction, this);
+        }
+
+        @Override
+        public Fee getBaselineFee(Transaction transaction) throws NxtException.NotValidException {
+            if (voteWeighting.isBalanceIndependent()) {
+                return Fee.DEFAULT_FEE;
+            }
+            return PHASING_FEE;
+        }
+
+        void release(TransactionImpl transaction) {
+            Account senderAccount = Account.getAccount(transaction.getSenderId());
+            Account recipientAccount = Account.getAccount(transaction.getRecipientId());
+            //apply all attachments and appendixes, except the phasing itself
+            for (Appendix.AbstractAppendix appendage : transaction.getAppendages()) {
+                if (appendage != transaction.getPhasing()) {
+                    appendage.apply(transaction, senderAccount, recipientAccount);
+                }
+            }
+            Logger.logDebugMessage("Transaction " + transaction.getStringId() + " has been released");
+        }
+
+        void finalVerification(TransactionImpl transaction) {
+            PhasingPoll poll = PhasingPoll.getPoll(transaction.getId());
+            long result = PhasingVote.countVotes(poll);
+            poll.finish(result);
+            if (result >= poll.getQuorum()) {
+                release(transaction);
+            } else {
+                Account senderAccount = Account.getAccount(transaction.getSenderId());
+                transaction.getType().undoAttachmentUnconfirmed(transaction, senderAccount);
+                senderAccount.addToUnconfirmedBalanceNQT(transaction.getAmountNQT());
+                Logger.logDebugMessage("Transaction " + transaction.getStringId() + " has been refused");
+            }
+        }
+
+        public int getFinishHeight() {
+            return finishHeight;
+        }
+
+        public long getQuorum() {
+            return quorum;
+        }
+
+        public long[] getWhitelist() {
+            return whitelist;
+        }
+
+        public VoteWeighting getVoteWeighting() {
+            return voteWeighting;
+        }
+
+    }
 }

@@ -19,3 +19,5 @@
 /compile.bat
 /test/classes/
 *.csv
+deploy.sh
+

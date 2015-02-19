@@ -10,6 +10,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.net.URLEncoder;
 import java.sql.SQLException;
 
 public final class DbShellServlet extends HttpServlet {
@@ -21,7 +22,7 @@ public final class DbShellServlet extends HttpServlet {
                     "    <meta charset=\"UTF-8\"/>\n" +
                     "    <title>Nxt H2 Database Shell</title>\n" +
                     "    <script type=\"text/javascript\">\n" +
-                    "        function submitForm(form) {\n" +
+                    "        function submitForm(form, adminPassword) {\n" +
                     "            var url = '/dbshell';\n" +
                     "            var params = '';\n" +
                     "            for (i = 0; i < form.elements.length; i++) {\n" +
@@ -34,6 +35,9 @@ public final class DbShellServlet extends HttpServlet {
                     "                params += encodeURIComponent(form.elements[i].name);\n" +
                     "                params += '=';\n" +
                     "                params += encodeURIComponent(form.elements[i].value);\n" +
+                    "            }\n" +
+                    "            if (adminPassword && form.elements.length > 0) {\n" +
+                    "                params += '&adminPassword=' + adminPassword;\n" +
                     "            }\n" +
                     "            var request = new XMLHttpRequest();\n" +
                     "            request.open(\"POST\", url, false);\n" +
@@ -51,7 +55,8 @@ public final class DbShellServlet extends HttpServlet {
                     "</html>\n";
 
     private static final String form =
-            "<form action=\"/dbshell\" method=\"POST\" onsubmit=\"return submitForm(this);\">" +
+            "<form action=\"/dbshell\" method=\"POST\" onsubmit=\"return submitForm(this" + 
+                    (API.disableAdminPassword ? "" : ", '{adminPassword}'") + ");\">" +
                     "<table class=\"table\" style=\"width:90%;\">" +
                     "<tr><td><pre class=\"result\" style=\"float:top;width:90%;\">" +
                     "This is a database shell. Enter SQL to be evaluated, or \"help\" for help:" +
@@ -60,19 +65,54 @@ public final class DbShellServlet extends HttpServlet {
                     "</table>" +
                     "</form>";
 
+    private static final String errorNoPasswordIsConfigured =
+            "This page is password-protected, but no password is configured in nxt.properties. " +
+                    "Please set nxt.adminPassword or disable the password protection with nxt.disableAdminPassword";
+
+    private static final String passwordFormTemplate =
+            "<form action=\"/dbshell\" method=\"POST\">" +
+                    "<table class=\"table\">" +
+                    "<tr><td colspan=\"3\">%s</td></tr>" + 
+                    "<tr>" + 
+                    "<td>Password:</td>" +
+                    "<td><input type=\"password\" name=\"adminPassword\"/>" +
+                    "<input type=\"submit\" value=\"Go!\"/></td>" +
+                    "</tr>" +
+                    "</table>" +
+                    "<input type=\"hidden\" name=\"showShell\" value=\"true\"/>" +
+                    "</form>";
+
+    private static final String passwordForm = String.format(passwordFormTemplate, 
+            "<p>This page is password-protected. Please enter the administrator's password</p>");
+
+    private static final String passwordFormWrongPassword = String.format(passwordFormTemplate, 
+            "<p style=\"color:red\">The provided password does not match the value of nxt.adminPassword. Please try again!</p>");
+
+    
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         resp.setHeader("Cache-Control", "no-cache, no-store, must-revalidate, private");
         resp.setHeader("Pragma", "no-cache");
         resp.setDateHeader("Expires", 0);
-        if (API.allowedBotHosts != null && ! API.allowedBotHosts.contains(req.getRemoteHost())) {
+        if (! API.isAllowed(req.getRemoteHost())) {
             resp.sendError(HttpServletResponse.SC_FORBIDDEN);
             return;
         }
 
+        String body;
+        if (API.disableAdminPassword) {
+            body = form;
+        } else {
+            if (API.adminPassword.isEmpty()) {
+                body = errorNoPasswordIsConfigured;
+            } else {
+                body = passwordForm;
+            }
+        }
+        
         try (PrintStream out = new PrintStream(resp.getOutputStream())) {
             out.print(header);
-            out.print(form);
+            out.print(body);
             out.print(footer);
         }
     }
@@ -82,11 +122,36 @@ public final class DbShellServlet extends HttpServlet {
         resp.setHeader("Cache-Control", "no-cache, no-store, must-revalidate, private");
         resp.setHeader("Pragma", "no-cache");
         resp.setDateHeader("Expires", 0);
-        if (API.allowedBotHosts != null && ! API.allowedBotHosts.contains(req.getRemoteHost())) {
+        if (! API.isAllowed(req.getRemoteHost())) {
             resp.sendError(HttpServletResponse.SC_FORBIDDEN);
             return;
         }
 
+        String body = null;
+        if (!API.disableAdminPassword) {
+            if (API.adminPassword.isEmpty()) {
+                body = errorNoPasswordIsConfigured;
+            } else {
+                String adminPassword = req.getParameter("adminPassword");
+                if (API.adminPassword.equals(adminPassword)) {
+                    if ("true".equals(req.getParameter("showShell"))) {
+                        body = form.replace("{adminPassword}", URLEncoder.encode(adminPassword, "UTF-8") );
+                    }
+                } else {
+                    body = passwordFormWrongPassword;
+                }
+            }
+        }
+        
+        if (body != null) {
+            try (PrintStream out = new PrintStream(resp.getOutputStream())) {
+                out.print(header);
+                out.print(body);
+                out.print(footer);
+            }
+            return;
+        }
+        
         String line = Convert.nullToEmpty(req.getParameter("line"));
         try (PrintStream out = new PrintStream(resp.getOutputStream())) {
             out.println("\n> " + line);

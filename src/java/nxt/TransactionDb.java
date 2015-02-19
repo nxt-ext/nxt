@@ -15,7 +15,7 @@ import java.util.List;
 
 final class TransactionDb {
 
-    static Transaction findTransaction(long transactionId) {
+    static TransactionImpl findTransaction(long transactionId) {
         try (Connection con = Db.db.getConnection();
              PreparedStatement pstmt = con.prepareStatement("SELECT * FROM transaction WHERE id = ?")) {
             pstmt.setLong(1, transactionId);
@@ -32,7 +32,7 @@ final class TransactionDb {
         }
     }
 
-    static Transaction findTransactionByFullHash(String fullHash) {
+    static TransactionImpl findTransactionByFullHash(String fullHash) {
         try (Connection con = Db.db.getConnection();
              PreparedStatement pstmt = con.prepareStatement("SELECT * FROM transaction WHERE full_hash = ?")) {
             pstmt.setBytes(1, Convert.parseHexString(fullHash));
@@ -80,7 +80,6 @@ final class TransactionDb {
             byte subtype = rs.getByte("subtype");
             int timestamp = rs.getInt("timestamp");
             short deadline = rs.getShort("deadline");
-            byte[] senderPublicKey = rs.getBytes("sender_public_key");
             long amountNQT = rs.getLong("amount");
             long feeNQT = rs.getLong("fee");
             byte[] referencedTransactionFullHash = rs.getBytes("referenced_transaction_full_hash");
@@ -95,6 +94,7 @@ final class TransactionDb {
             int blockTimestamp = rs.getInt("block_timestamp");
             byte[] fullHash = rs.getBytes("full_hash");
             byte version = rs.getByte("version");
+            short transactionIndex = rs.getShort("transaction_index");
 
             ByteBuffer buffer = null;
             if (attachmentBytes != null) {
@@ -103,9 +103,9 @@ final class TransactionDb {
             }
 
             TransactionType transactionType = TransactionType.findTransactionType(type, subtype);
-            TransactionImpl.BuilderImpl builder = new TransactionImpl.BuilderImpl(version, senderPublicKey,
-                    amountNQT, feeNQT, timestamp, deadline,
-                    transactionType.parseAttachment(buffer, version))
+            TransactionImpl.BuilderImpl builder = new TransactionImpl.BuilderImpl(version, null,
+                    amountNQT, feeNQT, deadline, transactionType.parseAttachment(buffer, version))
+                    .timestamp(timestamp)
                     .referencedTransactionFullHash(referencedTransactionFullHash)
                     .signature(signature)
                     .blockId(blockId)
@@ -113,7 +113,10 @@ final class TransactionDb {
                     .id(id)
                     .senderId(senderId)
                     .blockTimestamp(blockTimestamp)
-                    .fullHash(fullHash);
+                    .fullHash(fullHash)
+                    .ecBlockHeight(ecBlockHeight)
+                    .ecBlockId(ecBlockId)
+                    .index(transactionIndex);
             if (transactionType.canHaveRecipient()) {
                 long recipientId = rs.getLong("recipient_id");
                 if (! rs.wasNull()) {
@@ -132,12 +135,10 @@ final class TransactionDb {
             if (rs.getBoolean("has_encrypttoself_message")) {
                 builder.encryptToSelfMessage(new Appendix.EncryptToSelfMessage(buffer, version));
             }
-            if (version > 0) {
-                builder.ecBlockHeight(ecBlockHeight);
-                builder.ecBlockId(ecBlockId);
+            if (rs.getBoolean("phased")) {
+                builder.phasing(new Appendix.Phasing(buffer, version));
             }
-            builder.index(rs.getShort("transaction_index"));
-
+           
             return builder.build();
 
         } catch (SQLException e) {
@@ -168,16 +169,15 @@ final class TransactionDb {
         try {
             short index = 0;
             for (TransactionImpl transaction : transactions) {
-                try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO transaction (id, deadline, sender_public_key, "
+                try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO transaction (id, deadline, "
                         + "recipient_id, amount, fee, referenced_transaction_full_hash, height, "
                         + "block_id, signature, timestamp, type, subtype, sender_id, attachment_bytes, "
                         + "block_timestamp, full_hash, version, has_message, has_encrypted_message, has_public_key_announcement, "
-                        + "has_encrypttoself_message, ec_block_height, ec_block_id, transaction_index) "
+                        + "has_encrypttoself_message, phased, ec_block_height, ec_block_id, transaction_index) "
                         + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
                     int i = 0;
                     pstmt.setLong(++i, transaction.getId());
                     pstmt.setShort(++i, transaction.getDeadline());
-                    pstmt.setBytes(++i, transaction.getSenderPublicKey());
                     DbUtils.setLongZeroToNull(pstmt, ++i, transaction.getRecipientId());
                     pstmt.setLong(++i, transaction.getAmountNQT());
                     pstmt.setLong(++i, transaction.getFeeNQT());
@@ -210,6 +210,7 @@ final class TransactionDb {
                     pstmt.setBoolean(++i, transaction.getEncryptedMessage() != null);
                     pstmt.setBoolean(++i, transaction.getPublicKeyAnnouncement() != null);
                     pstmt.setBoolean(++i, transaction.getEncryptToSelfMessage() != null);
+                    pstmt.setBoolean(++i, transaction.getPhasing() != null);
                     pstmt.setInt(++i, transaction.getECBlockHeight());
                     DbUtils.setLongZeroToNull(pstmt, ++i, transaction.getECBlockId());
                     pstmt.setShort(++i, index++);

@@ -1,11 +1,7 @@
 package nxt;
 
 import nxt.db.DbVersion;
-import nxt.util.Logger;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 
 class NxtDbVersion extends DbVersion {
@@ -99,44 +95,44 @@ class NxtDbVersion extends DbVersion {
             case 37:
                 if (!Constants.isTestnet) {
                     apply("INSERT INTO peer (address) VALUES " +
-                            "('37.59.121.207'), ('nxt.phukhew.com'), ('humanoide.thican.net'), ('108.170.40.4'), ('54.77.63.53'), " +
-                            "('89.250.243.200'), ('5.39.216.204'), ('198.211.127.34'), ('woll-e.net'), ('37.187.21.28'), ('54.191.19.147'), " +
-                            "('209.222.2.110'), ('46.109.34.36'), ('188.226.245.226'), ('107.170.75.92'), ('212.47.228.0'), " +
-                            "('nxt2.achnodes.com'), ('167.206.61.3'), ('81.64.77.101'), ('95.29.201.108'), ('178.162.198.109'), " +
-                            "('178.89.42.148'), ('148.251.139.82'), ('85.239.129.252'), ('54.200.114.193'), ('silvanoip.dhcp.biz'), " +
-                            "('37.120.168.131'), ('77.88.208.12'), ('58.95.145.117'), ('198.57.198.33'), ('host2.nuagelibre.org'), " +
-                            "('dtodorov.asuscomm.com'), ('178.15.99.67'), ('5.150.195.208'), ('jnxt.org'), ('lan.wow64.net'), " +
-                            "('198.27.64.207'), ('54.83.4.11'), ('88.163.78.131'), ('nxtpi.zapto.org'), ('188.226.197.131'), " +
-                            "('node7.mynxtcoin.org'), ('80.86.92.139'), ('184.164.72.177'), ('nxt.hofhom.nl'), ('85.25.198.120'), " +
-                            "('91.98.139.194'), ('46.109.48.18'), ('62.194.6.163'), ('96.240.128.221'), ('5.196.1.215'), ('87.139.122.48'), " +
-                            "('210.188.36.5'), ('89.72.57.246'), ('198.199.95.15'), ('191.238.101.73'), ('128.199.160.141'), " +
-                            "('85.214.222.82'), ('82.165.145.37'), ('85.84.67.234'), ('54.214.232.96'), ('91.121.150.75'), " +
-                            "('54.208.32.151'), ('178.33.203.157'), ('176.94.115.161'), ('miasik.no-ip.org'), ('nxt1.thican.net'), " +
-                            "('109.106.48.104'), ('23.89.192.151'), ('195.154.127.172'), ('ct.flipflop.mooo.com'), ('nxt1.achnodes.com'), " +
-                            "('nxt01.now.im'), ('78.46.92.78'), ('nxs1.hanza.co.id'), ('91.120.22.146'), ('128.199.228.211'), " +
-                            "('23.88.246.117'), ('162.243.122.251'), ('178.32.221.58'), ('217.26.24.27'), ('95.85.31.45'), " +
-                            "('109.230.224.65'), ('89.212.19.49'), ('46.4.212.230'), ('92.222.168.75'), ('181.165.178.28'), " +
-                            "('79.30.180.223'), ('178.62.50.75'), ('212.18.225.173'), ('37.59.115.204'), ('80.86.92.66'), " +
-                            "('95.24.83.220'), ('gunka.szn.dk'), ('80.153.101.190'), ('nxt.cybermailing.com'), ('54.200.116.75'), " +
-                            "('84.128.162.237'), ('81.23.22.150'), ('54.213.222.141'), ('185.21.192.9'), ('espo.no-ip.biz'), " +
-                            "('174.140.167.239'), ('nacho.damnserver.com'), ('92.222.0.105'), ('nxtx.ru'), ('188.226.206.41'), " +
-                            "('107.170.3.62'), ('211.149.213.86'), ('91.69.121.229'), ('176.9.0.19'), ('188.226.139.71'), " +
-                            "('nxt.shscrypto.net'), ('46.246.44.104'), ('87.98.163.78'), ('155.133.19.33'), ('195.154.67.124'), " +
-                            "('106.187.95.232'), ('2.225.88.10'), ('93.103.20.35'), ('168.63.232.16'), ('23.102.0.45'), ('46.28.111.249'), " +
-                            "('46.173.9.98'), ('178.62.240.203'), ('54.194.212.248'), ('89.250.240.60'), ('phalanx149.ddns.net'), " +
-                            "('37.139.6.166'), ('178.150.207.53'), ('scripterron.dyndns.biz'), ('nxtnode.hopto.org'), ('66.30.204.105'), " +
-                            "('nxt.alkeron.com'), ('96.251.124.95'), ('5.45.98.105'), ('nxt.sx'), ('76.176.198.6'), ('192.3.158.120'), " +
-                            "('83.217.195.132'), ('107.170.164.129'), ('54.68.87.225'), ('sluni.szn.dk'), ('212.47.237.7'), " +
-                            "('nxt.scryptmh.eu'), ('pakisnxt.no-ip.org'), ('85.214.155.115'), ('174.140.166.124'), ('190.10.9.166'), " +
-                            "('dorcsforge.cloudapp.net'), ('84.242.91.139'), ('54.187.153.45'), ('81.2.216.179'), ('84.133.75.209'), " +
-                            "('81.169.150.141'), ('85.10.201.15'), ('cryonet.de'), ('185.12.44.108'), ('54.200.180.57'), ('213.46.57.77'), " +
-                            "('46.237.8.30'), ('37.59.115.207'), ('67.212.71.173'), ('128.199.189.226'), ('node5.mynxtcoin.org'), " +
-                            "('188.35.156.10'), ('node6.mynxtcoin.org'), ('67.212.71.171'), ('84.200.206.220'), ('node1.nxt.thican.net'), " +
-                            "('oldminersnownodes.ddns.net'), ('90.153.106.133'), ('87.139.122.157'), ('beor.homeip.net'), " +
-                            "('192.157.226.151'), ('node4.mynxtcoin.org'), ('node0.forgenxt.com'), ('63.165.243.112'), ('23.88.104.225')");
+                            "('81.220.60.240'), ('nxt3.webice.ru'), ('nxtx.ru'), ('162.243.87.10'), ('80.153.101.190'), ('185.12.44.108'), " +
+                            "('79.145.11.180'), ('95.85.31.45'), ('81.169.150.141'), ('megaman.thican.net'), ('54.65.93.59'), " +
+                            "('23.88.59.163'), ('213.46.57.77'), ('37.59.115.204'), ('54.245.255.250'), ('178.62.185.131'), " +
+                            "('82.0.149.148'), ('gunka.szn.dk'), ('104.219.53.3'), ('txn14.cloudapp.net'), ('46.4.35.166'), " +
+                            "('80.150.243.95'), ('80.150.243.97'), ('pakisnxt.no-ip.org'), ('46.109.89.219'), ('5.196.227.91'), " +
+                            "('185.61.148.216'), ('miasik.no-ip.org'), ('213.239.201.57'), ('192.99.68.108'), ('107.170.43.82'), " +
+                            "('node7.mynxtcoin.org'), ('54.72.170.192'), ('23.88.59.40'), ('54.214.250.209'), ('nxt01.now.im'), " +
+                            "('54.65.215.219'), ('54.154.46.55'), ('78.46.198.253'), ('jnxt.org'), ('108.61.57.76'), ('91.202.253.240'), " +
+                            "('80.150.243.10'), ('80.150.243.11'), ('87.138.143.21'), ('46.246.44.44'), ('113.106.85.172'), " +
+                            "('78.56.100.171'), ('84.195.25.169'), ('cryptkeeper.vps.nxtcrypto.org'), ('128.199.112.173'), " +
+                            "('89.250.240.63'), ('89.250.240.60'), ('sluni.szn.dk'), ('91.214.169.126'), ('54.213.222.141'), " +
+                            "('zdani.szn.dk'), ('107.170.164.129'), ('nxtnode.hopto.org'), ('82.46.194.21'), ('121.42.137.198'), " +
+                            "('54.68.43.61'), ('54.69.53.67'), ('84.242.91.139'), ('54.83.4.11'), ('184.164.72.177'), " +
+                            "('enricoip.no-ip.biz'), ('nxt8.webice.ru'), ('162.243.122.251'), ('78.106.115.210'), ('84.253.125.186'), " +
+                            "('node5.mynxtcoin.org'), ('178.24.154.23'), ('1.34.219.47'), ('134.119.24.206'), ('85.25.198.120'), " +
+                            "('dilnu.szn.dk'), ('178.150.207.53'), ('nxt.sx'), ('nxt5.webice.ru'), ('85.84.67.68'), ('107.155.87.235'), " +
+                            "('85.25.43.169'), ('23.89.192.151'), ('95.215.44.229'), ('174.140.166.124'), ('87.139.122.48'), " +
+                            "('23.92.53.243'), ('87.139.122.157'), ('5.147.113.212'), ('ct.flipflop.mooo.com'), ('nxt.alkeron.com'), " +
+                            "('67.212.71.173'), ('nxt9.webice.ru'), ('nxt.hopto.me'), ('77.88.208.12'), ('66.30.204.105'), " +
+                            "('188.40.96.10'), ('62.194.6.163'), ('217.17.88.5'), ('41.242.1.239'), ('89.212.19.49'), ('162.243.242.8'), " +
+                            "('162.220.240.171'), ('109.254.63.44'), ('beor.homeip.net'), ('2.225.88.10'), ('91.121.150.75'), " +
+                            "('dorcsforge.cloudapp.net'), ('nxt.cybermailing.com'), ('46.28.111.249'), ('209.126.70.159'), " +
+                            "('178.15.99.67'), ('104.131.254.22'), ('198.211.127.34'), ('191.238.101.73'), ('vps.krusherpt.com'), " +
+                            "('vh44.ddns.net:7873'), ('77.58.253.73'), ('198.57.198.33'), ('92.222.72.98'), ('178.20.9.9'), " +
+                            "('81.23.22.150'), ('23.102.0.45'), ('88.163.78.131'), ('54.169.132.50'), ('37.59.14.7'), ('85.214.222.82'), " +
+                            "('nacho.damnserver.com'), ('103.25.59.185'), ('54.69.182.12'), ('89.72.57.246'), ('209.222.2.110'), " +
+                            "('78.46.92.78'), ('192.3.158.120'), ('107.170.75.92'), ('bug.airdns.org'), ('91.98.139.194'), ('37.187.238.130'), " +
+                            "('195.154.111.47'), ('37.187.21.28'), ('node4.mynxtcoin.org'), ('scripterron.dyndns.biz'), ('82.165.145.37'), " +
+                            "('94.26.187.66'), ('node2.krusherpt.com'), ('node0.forgenxt.com'), ('198.199.95.15'), ('88.188.122.73'), " +
+                            "('95.116.255.148'), ('91.69.121.207'), ('178.33.203.157'), ('node6.mynxtcoin.org'), ('54.149.167.132'), " +
+                            "('190.10.9.166'), ('24.149.126.206'), ('132.230.76.160'), ('humanoide.thican.net')");
                 } else {
                     apply("INSERT INTO peer (address) VALUES " +
-                            "('bug.airdns.org'), ('107.170.3.62')");
+                            "('nxt.scryptmh.eu'), ('54.186.98.117'), ('178.150.207.53'), ('192.241.223.132'), ('node9.mynxtcoin.org'), " +
+                            "('node10.mynxtcoin.org'), ('node3.mynxtcoin.org'), ('109.87.169.253'), ('nxtnet.fr'), ('50.112.241.97'), " +
+                            "('2.84.142.149'), ('bug.airdns.org'), ('83.212.103.14'), ('62.210.131.30'), ('104.131.254.22'), " +
+                            "('46.28.111.249'), ('94.79.54.205'), ('174.140.168.136'), ('107.170.3.62'), ('node1.forgenxt.com'), " +
+                            "('5.196.1.215'), ('nxt01.now.im'), ('37.139.6.166')");
                 }
             case 38:
                 apply("ALTER TABLE transaction ADD COLUMN IF NOT EXISTS full_hash BINARY(32)");
@@ -173,8 +169,9 @@ class NxtDbVersion extends DbVersion {
             case 54:
                 apply("ALTER TABLE transaction ALTER COLUMN recipient_id SET NULL");
             case 55:
+                apply("CREATE TABLE IF NOT EXISTS public_key (db_id IDENTITY, account_id BIGINT NOT NULL, "
+                        + "public_key BINARY(32), height INT NOT NULL, FOREIGN KEY (height) REFERENCES block (height) ON DELETE CASCADE)");
                 BlockDb.deleteAll();
-                apply(null);
             case 56:
                 apply("CREATE INDEX IF NOT EXISTS transaction_recipient_id_idx ON transaction (recipient_id)");
             case 57:
@@ -376,7 +373,7 @@ class NxtDbVersion extends DbVersion {
             case 133:
                 apply("CALL FTL_CREATE_INDEX('PUBLIC', 'ASSET', 'NAME,DESCRIPTION')");
             case 134:
-                apply("CREATE TABLE IF NOT EXISTS tag (db_id BIGINT IDENTITY, tag VARCHAR NOT NULL, in_stock_count INT NOT NULL, "
+                apply("CREATE TABLE IF NOT EXISTS tag (db_id IDENTITY, tag VARCHAR NOT NULL, in_stock_count INT NOT NULL, "
                         + "total_count INT NOT NULL, height INT NOT NULL, latest BOOLEAN NOT NULL DEFAULT TRUE)");
             case 135:
                 apply("CREATE UNIQUE INDEX IF NOT EXISTS tag_tag_idx ON tag (tag, height DESC)");
@@ -387,8 +384,9 @@ class NxtDbVersion extends DbVersion {
             case 138:
                 apply("CREATE TABLE IF NOT EXISTS currency (db_id IDENTITY, id BIGINT NOT NULL, account_id BIGINT NOT NULL, "
                         + "name VARCHAR NOT NULL, name_lower VARCHAR AS LOWER (name) NOT NULL, code VARCHAR NOT NULL, "
-                        + "description VARCHAR, type INT NOT NULL, current_supply BIGINT NOT NULL, reserve_supply BIGINT NOT NULL, max_supply BIGINT NOT NULL, "
-                        + "issuance_height INT NOT NULL, min_reserve_per_unit_nqt BIGINT NOT NULL, min_difficulty TINYINT NOT NULL, "
+                        + "description VARCHAR, type INT NOT NULL, initial_supply BIGINT NOT NULL DEFAULT 0, current_supply BIGINT NOT NULL, "
+                        + "reserve_supply BIGINT NOT NULL, max_supply BIGINT NOT NULL, creation_height INT NOT NULL, issuance_height INT NOT NULL, "
+                        + "min_reserve_per_unit_nqt BIGINT NOT NULL, min_difficulty TINYINT NOT NULL, "
                         + "max_difficulty TINYINT NOT NULL, ruleset TINYINT NOT NULL, algorithm TINYINT NOT NULL, "
                         + "current_reserve_per_unit_nqt BIGINT NOT NULL, decimals TINYINT NOT NULL DEFAULT 0,"
                         + "height INT NOT NULL, latest BOOLEAN NOT NULL DEFAULT TRUE)");
@@ -410,27 +408,27 @@ class NxtDbVersion extends DbVersion {
                 apply("CREATE UNIQUE INDEX IF NOT EXISTS currency_founder_currency_id_idx ON currency_founder (currency_id, account_id, height DESC)");
             case 145:
                 apply("CREATE TABLE IF NOT EXISTS currency_mint (db_id IDENTITY, currency_id BIGINT NOT NULL, account_id BIGINT NOT NULL, "
-                        + "counter BIGINT NOT NULL, submission_height INT NOT NULL, height INT NOT NULL, latest BOOLEAN NOT NULL DEFAULT TRUE)");
+                        + "counter BIGINT NOT NULL, height INT NOT NULL, latest BOOLEAN NOT NULL DEFAULT TRUE)");
             case 146:
                 apply("CREATE UNIQUE INDEX IF NOT EXISTS currency_mint_currency_id_account_id_idx ON currency_mint (currency_id, account_id, height DESC)");
             case 147:
-                apply("CREATE TABLE IF NOT EXISTS buy_offer (db_id INT IDENTITY, id BIGINT NOT NULL, currency_id BIGINT NOT NULL, account_id BIGINT NOT NULL,"
+                apply("CREATE TABLE IF NOT EXISTS buy_offer (db_id IDENTITY, id BIGINT NOT NULL, currency_id BIGINT NOT NULL, account_id BIGINT NOT NULL,"
                         + "rate BIGINT NOT NULL, unit_limit BIGINT NOT NULL, supply BIGINT NOT NULL, expiration_height INT NOT NULL,"
                         + "creation_height INT NOT NULL, transaction_index SMALLINT NOT NULL, height INT NOT NULL, latest BOOLEAN NOT NULL DEFAULT TRUE)");
             case 148:
                 apply("CREATE UNIQUE INDEX IF NOT EXISTS buy_offer_id_idx ON buy_offer (id, height DESC)");
             case 149:
-                apply("CREATE UNIQUE INDEX IF NOT EXISTS buy_offer_currency_id_account_id_idx ON buy_offer (currency_id, account_id, height DESC)");
+                apply("CREATE INDEX IF NOT EXISTS buy_offer_currency_id_account_id_idx ON buy_offer (currency_id, account_id, height DESC)");
             case 150:
-                apply("CREATE TABLE IF NOT EXISTS sell_offer (db_id INT IDENTITY, id BIGINT NOT NULL, currency_id BIGINT NOT NULL, account_id BIGINT NOT NULL, "
+                apply("CREATE TABLE IF NOT EXISTS sell_offer (db_id IDENTITY, id BIGINT NOT NULL, currency_id BIGINT NOT NULL, account_id BIGINT NOT NULL, "
                         + "rate BIGINT NOT NULL, unit_limit BIGINT NOT NULL, supply BIGINT NOT NULL, expiration_height INT NOT NULL, "
                         + "creation_height INT NOT NULL, transaction_index SMALLINT NOT NULL, height INT NOT NULL, latest BOOLEAN NOT NULL DEFAULT TRUE)");
             case 151:
                 apply("CREATE UNIQUE INDEX IF NOT EXISTS sell_offer_id_idx ON sell_offer (id, height DESC)");
             case 152:
-                apply("CREATE UNIQUE INDEX IF NOT EXISTS sell_offer_currency_id_account_id_idx ON sell_offer (currency_id, account_id, height DESC)");
+                apply("CREATE INDEX IF NOT EXISTS sell_offer_currency_id_account_id_idx ON sell_offer (currency_id, account_id, height DESC)");
             case 153:
-                apply("CREATE TABLE IF NOT EXISTS exchange (db_id INT IDENTITY, transaction_id BIGINT NOT NULL, currency_id BIGINT NOT NULL, block_id BIGINT NOT NULL, "
+                apply("CREATE TABLE IF NOT EXISTS exchange (db_id IDENTITY, transaction_id BIGINT NOT NULL, currency_id BIGINT NOT NULL, block_id BIGINT NOT NULL, "
                         + "offer_id BIGINT NOT NULL, seller_id BIGINT NOT NULL, "
                         + "buyer_id BIGINT NOT NULL, units BIGINT NOT NULL, "
                         + "rate BIGINT NOT NULL, timestamp INT NOT NULL, height INT NOT NULL)");
@@ -443,7 +441,7 @@ class NxtDbVersion extends DbVersion {
             case 157:
                 apply("CREATE INDEX IF NOT EXISTS exchange_buyer_id_idx ON exchange (buyer_id, height DESC)");
             case 158:
-                apply("CREATE TABLE IF NOT EXISTS currency_transfer (db_id INT IDENTITY, id BIGINT NOT NULL, currency_id BIGINT NOT NULL, "
+                apply("CREATE TABLE IF NOT EXISTS currency_transfer (db_id IDENTITY, id BIGINT NOT NULL, currency_id BIGINT NOT NULL, "
                         + "sender_id BIGINT NOT NULL, recipient_id BIGINT NOT NULL, units BIGINT NOT NULL, timestamp INT NOT NULL, "
                         + "height INT NOT NULL)");
             case 159:
@@ -478,44 +476,25 @@ class NxtDbVersion extends DbVersion {
                 apply("CREATE INDEX IF NOT EXISTS unconfirmed_transaction_height_fee_timestamp_idx ON unconfirmed_transaction "
                         + "(transaction_height ASC, fee_per_byte DESC, arrival_timestamp ASC)");
             case 174:
-                apply("ALTER TABLE transaction ADD COLUMN IF NOT EXISTS transaction_index SMALLINT");
+                apply("CREATE TABLE IF NOT EXISTS public_key (db_id IDENTITY, account_id BIGINT NOT NULL, "
+                        + "public_key BINARY(32), height INT NOT NULL, FOREIGN KEY (height) REFERENCES block (height) ON DELETE CASCADE)");
+                BlockDb.deleteAll();
             case 175:
-                Logger.logMessage("Will update transaction_index column...");
-                try (Connection con = Db.db.getConnection();
-                     PreparedStatement pstmt = con.prepareStatement("SELECT * FROM transaction ORDER BY height, id FOR UPDATE",
-                             ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_UPDATABLE)) {
-                    try (ResultSet rs = pstmt.executeQuery()) {
-                        int height = 0;
-                        short index = 0;
-                        while (rs.next()) {
-                            int nextHeight = rs.getInt("height");
-                            if (nextHeight != height) {
-                                index = 0;
-                                if (height / 5000 != nextHeight / 5000) {
-                                    Logger.logMessage("Processed " + (nextHeight / 5000) * 5000 + " blocks");
-                                }
-                                height = nextHeight;
-                            }
-                            rs.updateShort("transaction_index", index++);
-                            rs.updateRow();
-                        }
-                    }
-                }
-                apply(null);
+                apply("ALTER TABLE transaction ADD COLUMN IF NOT EXISTS transaction_index SMALLINT NOT NULL");
             case 176:
-                apply("ALTER TABLE transaction ALTER COLUMN transaction_index SET NOT NULL");
+                apply(null);
             case 177:
-                apply("ALTER TABLE ask_order ADD COLUMN IF NOT EXISTS transaction_index SMALLINT");
+                apply("TRUNCATE TABLE ask_order");
             case 178:
-                apply("UPDATE ask_order SET transaction_index = (SELECT transaction_index FROM transaction WHERE transaction.id = ask_order.id)");
+                apply("ALTER TABLE ask_order ADD COLUMN IF NOT EXISTS transaction_index SMALLINT NOT NULL");
             case 179:
-                apply("ALTER TABLE ask_order ALTER COLUMN transaction_index SET NOT NULL");
+                apply(null);
             case 180:
-                apply("ALTER TABLE bid_order ADD COLUMN IF NOT EXISTS transaction_index SMALLINT");
+                apply("TRUNCATE TABLE bid_order");
             case 181:
-                apply("UPDATE bid_order SET transaction_index = (SELECT transaction_index FROM transaction WHERE transaction.id = bid_order.id)");
+                apply("ALTER TABLE bid_order ADD COLUMN IF NOT EXISTS transaction_index SMALLINT NOT NULL");
             case 182:
-                apply("ALTER TABLE bid_order ALTER COLUMN transaction_index SET NOT NULL");
+                apply(null);
             case 183:
                 apply("CALL FTL_CREATE_INDEX('PUBLIC', 'CURRENCY', 'CODE,NAME,DESCRIPTION')");
             case 184:
@@ -524,31 +503,199 @@ class NxtDbVersion extends DbVersion {
             case 185:
                 apply("INSERT INTO scan (rescan, height, validate) VALUES (false, 0, false)");
             case 186:
+                apply("CREATE INDEX IF NOT EXISTS currency_creation_height_idx ON currency (creation_height DESC)");
+            case 187:
+                apply(null);
+            case 188:
+                apply(null);
+            case 189:
+                apply(null);
+            case 190:
+                apply(null);
+            case 191:
+                apply(null);
+            case 192:
+                if (Constants.isTestnet) {
+                    BlockchainProcessorImpl.getInstance().scheduleScan(0, true);
+                }
+                apply(null);
+            case 193:
+                apply("CREATE TABLE IF NOT EXISTS currency_supply (db_id IDENTITY, id BIGINT NOT NULL, "
+                        + "current_supply BIGINT NOT NULL, current_reserve_per_unit_nqt BIGINT NOT NULL, height INT NOT NULL, "
+                        + "latest BOOLEAN NOT NULL DEFAULT TRUE)");
+            case 194:
+                apply("CREATE UNIQUE INDEX IF NOT EXISTS currency_supply_id_height_idx ON currency_supply (id, height DESC)");
+            case 195:
+                apply("TRUNCATE TABLE currency");
+            case 196:
+                apply("ALTER TABLE currency DROP COLUMN IF EXISTS current_supply");
+            case 197:
+                apply("ALTER TABLE currency DROP COLUMN IF EXISTS current_reserve_per_unit_nqt");
+            case 198:
                 BlockchainProcessorImpl.getInstance().scheduleScan(0, false);
                 apply(null);
-            case 187:
+            case 199:
+                apply("CALL FTL_REINDEX()");
+            case 200:
+                apply("CREATE TABLE IF NOT EXISTS public_key (db_id IDENTITY, account_id BIGINT NOT NULL, "
+                        + "public_key BINARY(32), height INT NOT NULL, FOREIGN KEY (height) REFERENCES block (height) ON DELETE CASCADE)");
+            case 201:
+                apply("INSERT INTO public_key (account_id, public_key, height) SELECT id, public_key, min(height) "
+                        + "FROM account WHERE public_key IS NOT NULL GROUP BY id");
+            case 202:
+                apply("CREATE UNIQUE INDEX IF NOT EXISTS public_key_account_id_idx ON public_key (account_id)");
+            case 203:
+                apply("ALTER TABLE account DROP COLUMN IF EXISTS public_key");
+            case 204:
+                apply("ALTER TABLE block DROP COLUMN IF EXISTS generator_public_key");
+            case 205:
+                apply("ALTER TABLE transaction DROP COLUMN IF EXISTS sender_public_key");
+            case 206:
+                apply("CREATE INDEX IF NOT EXISTS account_height_idx ON account(height)");
+            case 207:
+                apply("CREATE INDEX IF NOT EXISTS account_asset_height_idx ON account_asset(height)");
+            case 208:
+                apply("CREATE INDEX IF NOT EXISTS account_currency_height_idx ON account_currency(height)");
+            case 209:
+                apply("CREATE INDEX IF NOT EXISTS account_guaranteed_balance_height_idx ON account_guaranteed_balance(height)");
+            case 210:
+                apply("CREATE INDEX IF NOT EXISTS alias_height_idx ON alias(height)");
+            case 211:
+                apply("CREATE INDEX IF NOT EXISTS alias_offer_height_idx ON alias_offer(height)");
+            case 212:
+                apply("CREATE INDEX IF NOT EXISTS ask_order_height_idx ON ask_order(height)");
+            case 213:
+                apply("CREATE INDEX IF NOT EXISTS asset_height_idx ON asset(height)");
+            case 214:
+                apply("CREATE INDEX IF NOT EXISTS asset_transfer_height_idx ON asset_transfer(height)");
+            case 215:
+                apply("CREATE INDEX IF NOT EXISTS bid_order_height_idx ON bid_order(height)");
+            case 216:
+                apply("CREATE INDEX IF NOT EXISTS buy_offer_height_idx ON buy_offer(height)");
+            case 217:
+                apply("CREATE INDEX IF NOT EXISTS currency_height_idx ON currency(height)");
+            case 218:
+                apply("CREATE INDEX IF NOT EXISTS currency_founder_height_idx ON currency_founder(height)");
+            case 219:
+                apply("CREATE INDEX IF NOT EXISTS currency_mint_height_idx ON currency_mint(height)");
+            case 220:
+                apply("CREATE INDEX IF NOT EXISTS currency_supply_height_idx ON currency_supply(height)");
+            case 221:
+                apply("CREATE INDEX IF NOT EXISTS currency_transfer_height_idx ON currency_transfer(height)");
+            case 222:
+                apply("CREATE INDEX IF NOT EXISTS exchange_height_idx ON exchange(height)");
+            case 223:
+                apply("CREATE INDEX IF NOT EXISTS goods_height_idx ON goods(height)");
+            case 224:
+                apply("CREATE INDEX IF NOT EXISTS public_key_height_idx ON public_key(height)");
+            case 225:
+                apply("CREATE INDEX IF NOT EXISTS purchase_height_idx ON purchase(height)");
+            case 226:
+                apply("CREATE INDEX IF NOT EXISTS purchase_feedback_height_idx ON purchase_feedback(height)");
+            case 227:
+                apply("CREATE INDEX IF NOT EXISTS purchase_public_feedback_height_idx ON purchase_public_feedback(height)");
+            case 228:
+                apply("CREATE INDEX IF NOT EXISTS sell_offer_height_idx ON sell_offer(height)");
+            case 229:
+                apply("CREATE INDEX IF NOT EXISTS tag_height_idx ON tag(height)");
+            case 230:
+                apply("CREATE INDEX IF NOT EXISTS trade_height_idx ON trade(height)");
+            case 231:
+                apply("DROP TABLE IF EXISTS poll");
+            case 232:
+                apply("DROP TABLE IF EXISTS vote");
+            case 233:
+                apply("CREATE TABLE IF NOT EXISTS vote (db_id IDENTITY, id BIGINT NOT NULL, " +
+                        "poll_id BIGINT NOT NULL, voter_id BIGINT NOT NULL, vote_bytes VARBINARY NOT NULL, height INT NOT NULL)");
+            case 234:
+                apply("CREATE UNIQUE INDEX IF NOT EXISTS vote_id_idx ON vote (id)");
+            case 235:
+                apply("CREATE UNIQUE INDEX IF NOT EXISTS vote_poll_id_idx ON vote (poll_id, voter_id)");
+            case 236:
+                apply("CREATE TABLE IF NOT EXISTS poll (db_id IDENTITY, id BIGINT NOT NULL, "
+                        + "account_id BIGINT NOT NULL, name VARCHAR NOT NULL, "
+                        + "description VARCHAR, options ARRAY NOT NULL, min_num_options TINYINT, max_num_options TINYINT, "
+                        + "min_range_value TINYINT, max_range_value TINYINT, "
+                        + "finish_height INT NOT NULL, voting_model TINYINT NOT NULL, min_balance BIGINT, "
+                        + "min_balance_model TINYINT, holding_id BIGINT, height INT NOT NULL)");
+            case 237:
+                apply("CREATE TABLE IF NOT EXISTS poll_result (db_id IDENTITY, poll_id BIGINT NOT NULL, "
+                        + "option VARCHAR NOT NULL, result BIGINT NOT NULL,  height INT NOT NULL)");
+            case 238:
+                apply("ALTER TABLE transaction ADD COLUMN IF NOT EXISTS phased BOOLEAN NOT NULL DEFAULT FALSE");
+            case 239:
+                apply("CREATE TABLE IF NOT EXISTS phasing_poll (db_id IDENTITY, id BIGINT NOT NULL, "
+                        + "account_id BIGINT NOT NULL, finished BOOLEAN, voter_count TINYINT NOT NULL DEFAULT 0, "
+                        + "finish_height INT NOT NULL, voting_model TINYINT NOT NULL, quorum BIGINT NOT NULL, "
+                        + "min_balance BIGINT NOT NULL, holding_id BIGINT NOT NULL, min_balance_model TINYINT, "
+                        + "full_hash BINARY(32) NOT NULL, height INT NOT NULL, latest BOOLEAN DEFAULT TRUE NOT NULL)");
+            case 240:
+                apply("CREATE TABLE IF NOT EXISTS phasing_vote (db_id IDENTITY, id BIGINT NOT NULL, "
+                        + "transaction_id BIGINT NOT NULL, voter_id BIGINT NOT NULL, "
+                        + "height INT NOT NULL)");
+            case 241:
+                apply("CREATE TABLE IF NOT EXISTS phasing_poll_voter (db_id IDENTITY, "
+                        + "transaction_id BIGINT NOT NULL, voter_id BIGINT NOT NULL, "
+                        + "height INT NOT NULL, latest BOOLEAN DEFAULT TRUE NOT NULL)");
+            case 242:
+                apply("CREATE INDEX IF NOT EXISTS vote_height_idx ON vote(height)");
+            case 243:
+                apply("CREATE UNIQUE INDEX IF NOT EXISTS poll_id_idx ON poll(id)");
+            case 244:
+                apply("CREATE INDEX IF NOT EXISTS poll_height_idx ON poll(height)");
+            case 245:
+                apply("CREATE INDEX IF NOT EXISTS poll_account_idx ON poll(account_id)");
+            case 246:
+                apply("CREATE INDEX IF NOT EXISTS poll_finish_height_idx ON poll(finish_height DESC)");
+            case 247:
+                apply("CREATE UNIQUE INDEX IF NOT EXISTS poll_result_poll_id_idx ON poll_result(poll_id)");
+            case 248:
+                apply("CREATE INDEX IF NOT EXISTS poll_result_height_idx ON poll_result(height)");
+            case 249:
+                apply("CREATE UNIQUE INDEX IF NOT EXISTS phasing_poll_id_height_idx ON phasing_poll(id, height DESC)");
+            case 250:
+                apply("CREATE INDEX IF NOT EXISTS phasing_poll_height_idx ON phasing_poll(height)");
+            case 251:
+                apply("CREATE INDEX IF NOT EXISTS phasing_poll_account_id_idx ON phasing_poll(account_id, height DESC)");
+            case 252:
+                apply("CREATE INDEX IF NOT EXISTS phasing_poll_holding_id_idx ON phasing_poll(holding_id, height DESC)");
+            case 253:
+                apply("CREATE UNIQUE INDEX IF NOT EXISTS phasing_vote_id_transaction_idx ON phasing_vote(id, transaction_id)");
+            case 254:
+                apply("CREATE UNIQUE INDEX IF NOT EXISTS phasing_vote_transaction_voter_idx ON phasing_vote(transaction_id, voter_id)");
+            case 255:
+                apply("CREATE INDEX IF NOT EXISTS phasing_poll_voter_id_height_idx ON phasing_poll_voter(transaction_id, height DESC)");
+            case 256:
+                apply("CREATE TABLE IF NOT EXISTS phasing_poll_result (db_id IDENTITY, id BIGINT NOT NULL, "
+                        + "apply_height INT NOT NULL, result BIGINT NOT NULL, approved BOOLEAN NOT NULL, height INT NOT NULL)");
+            case 257:
+                apply("CREATE UNIQUE INDEX IF NOT EXISTS phasing_poll_result_id_idx ON phasing_poll_result(id)");
+            case 258:
+                apply("CREATE INDEX IF NOT EXISTS phasing_poll_result_height_idx ON phasing_poll_result(height)");
+            case 259:
+                apply("CALL FTL_CREATE_INDEX('PUBLIC', 'POLL', 'NAME,DESCRIPTION')");
+            case 260:
                 apply("CREATE TABLE IF NOT EXISTS shuffling (db_id INT IDENTITY, id BIGINT NOT NULL, currency_id BIGINT NULL, "
                         + "issuer_id BIGINT NOT NULL, amount BIGINT NOT NULL, participant_count BIGINT NOT NULL, cancellation_height INT NOT NULL, "
                         + "stage TINYINT NOT NULL, assignee_account_id BIGINT NOT NULL, "
                         + "height INT NOT NULL, latest BOOLEAN NOT NULL DEFAULT TRUE)");
-            case 188:
+            case 261:
                 apply("CREATE UNIQUE INDEX IF NOT EXISTS shuffling_id_idx ON shuffling (id, height DESC)");
-            case 189:
+            case 262:
                 apply("CREATE INDEX IF NOT EXISTS shuffling_currency_id_idx ON shuffling (currency_id)");
-            case 190:
+            case 263:
                 apply("CREATE INDEX IF NOT EXISTS shuffling_stage_idx ON shuffling (stage)");
-            case 191:
+            case 264:
                 apply("CREATE TABLE IF NOT EXISTS shuffling_participant (db_id INT IDENTITY, shuffling_id BIGINT NOT NULL, "
                         + "account_id BIGINT NOT NULL, next_account_id BIGINT NULL, recipient_id BIGINT NOT NULL, "
                         + "state TINYINT NOT NULL, data VARBINARY, "
                         + "height INT NOT NULL, latest BOOLEAN NOT NULL DEFAULT TRUE)");
-            case 192:
+            case 265:
                 apply("CREATE UNIQUE INDEX IF NOT EXISTS shuffling_participant_shuffling_id_account_id_idx ON shuffling_participant (shuffling_id, account_id, height DESC)");
-            case 193:
+            case 266:
                 return;
             default:
                 throw new RuntimeException("Blockchain database inconsistent with code, probably trying to run older code on newer database");
         }
     }
-
 }

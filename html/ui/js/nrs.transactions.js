@@ -2,13 +2,133 @@
  * @depends {nrs.js}
  */
 var NRS = (function(NRS, $, undefined) {
+
 	NRS.lastTransactions = "";
 
 	NRS.unconfirmedTransactions = [];
 	NRS.unconfirmedTransactionIds = "";
 	NRS.unconfirmedTransactionsChange = true;
 
-	NRS.transactionsPageType = null;
+
+	NRS.handleIncomingTransactions = function(transactions, confirmedTransactionIds) {
+		var oldBlock = (confirmedTransactionIds === false); //we pass false instead of an [] in case there is no new block..
+
+		if (typeof confirmedTransactionIds != "object") {
+			confirmedTransactionIds = [];
+		}
+
+		if (confirmedTransactionIds.length) {
+			NRS.lastTransactions = confirmedTransactionIds.toString();
+		}
+
+		if (confirmedTransactionIds.length || NRS.unconfirmedTransactionsChange) {
+			transactions.sort(NRS.sortArray);
+		}
+
+		//always refresh peers and unconfirmed transactions..
+		if (NRS.currentPage == "peers") {
+			NRS.incoming.peers();
+		} else if (NRS.currentPage == "transactions" && $('#transactions_type_navi li.active a').attr('data-transaction-type') == "unconfirmed") {
+			NRS.incoming.transactions();
+		} else {
+			if (NRS.currentPage != 'messages' && (!oldBlock || NRS.unconfirmedTransactionsChange)) {
+				if (NRS.incoming[NRS.currentPage]) {
+					NRS.incoming[NRS.currentPage](transactions);
+				}
+			}
+		}
+		// always call incoming for messages to enable message notifications
+		if (!oldBlock || NRS.unconfirmedTransactionsChange) {
+			NRS.incoming['messages'](transactions);
+		}
+	}
+
+	NRS.getUnconfirmedTransactions = function(callback) {
+		NRS.sendRequest("getUnconfirmedTransactions", {
+			"account": NRS.account
+		}, function(response) {
+			if (response.unconfirmedTransactions && response.unconfirmedTransactions.length) {
+				var unconfirmedTransactions = [];
+				var unconfirmedTransactionIds = [];
+
+				response.unconfirmedTransactions.sort(function(x, y) {
+					if (x.timestamp < y.timestamp) {
+						return 1;
+					} else if (x.timestamp > y.timestamp) {
+						return -1;
+					} else {
+						return 0;
+					}
+				});
+				
+				for (var i = 0; i < response.unconfirmedTransactions.length; i++) {
+					var unconfirmedTransaction = response.unconfirmedTransactions[i];
+
+					unconfirmedTransaction.confirmed = false;
+					unconfirmedTransaction.unconfirmed = true;
+					unconfirmedTransaction.confirmations = "/";
+
+					if (unconfirmedTransaction.attachment) {
+						for (var key in unconfirmedTransaction.attachment) {
+							if (!unconfirmedTransaction.hasOwnProperty(key)) {
+								unconfirmedTransaction[key] = unconfirmedTransaction.attachment[key];
+							}
+						}
+					}
+					unconfirmedTransactions.push(unconfirmedTransaction);
+					unconfirmedTransactionIds.push(unconfirmedTransaction.transaction);
+				}
+				NRS.unconfirmedTransactions = unconfirmedTransactions;
+				var unconfirmedTransactionIdString = unconfirmedTransactionIds.toString();
+
+				if (unconfirmedTransactionIdString != NRS.unconfirmedTransactionIds) {
+					NRS.unconfirmedTransactionsChange = true;
+					NRS.unconfirmedTransactionIds = unconfirmedTransactionIdString;
+				} else {
+					NRS.unconfirmedTransactionsChange = false;
+				}
+
+				if (callback) {
+					callback(unconfirmedTransactions);
+				}
+			} else {
+				NRS.unconfirmedTransactions = [];
+
+				if (NRS.unconfirmedTransactionIds) {
+					NRS.unconfirmedTransactionsChange = true;
+				} else {
+					NRS.unconfirmedTransactionsChange = false;
+				}
+
+				NRS.unconfirmedTransactionIds = "";
+				if (callback) {
+					callback([]);
+				}
+			}
+		});
+	}
+
+	NRS.handleInitialTransactions = function(transactions, transactionIds) {
+		if (transactions.length) {
+			var rows = "";
+
+			transactions.sort(NRS.sortArray);
+
+			if (transactionIds.length) {
+				NRS.lastTransactions = transactionIds.toString();
+			}
+
+			for (var i = 0; i < transactions.length; i++) {
+				var transaction = transactions[i];
+				rows += NRS.getTransactionRowHTML(transaction);
+			}
+
+			$("#dashboard_table tbody").empty().append(rows);
+			NRS.addPendingInfoToTransactionRows(transactions);
+		}
+
+		NRS.dataLoadFinished($("#dashboard_table"));
+	}
 
 	NRS.getInitialTransactions = function() {
 		NRS.sendRequest("getAccountTransactions", {
@@ -38,158 +158,6 @@ var NRS = (function(NRS, $, undefined) {
 				});
 			}
 		});
-	}
-
-	NRS.handleInitialTransactions = function(transactions, transactionIds) {
-		if (transactions.length) {
-			var rows = "";
-
-			transactions.sort(NRS.sortArray);
-
-			if (transactionIds.length) {
-				NRS.lastTransactions = transactionIds.toString();
-			}
-
-			for (var i = 0; i < transactions.length; i++) {
-				var transaction = transactions[i];
-
-				var receiving = transaction.recipient == NRS.account;
-
-				var account = (receiving ? "sender" : "recipient");
-
-				if (transaction.amountNQT) {
-					transaction.amount = new BigInteger(transaction.amountNQT);
-					transaction.fee = new BigInteger(transaction.feeNQT);
-				}
-				
-
-				rows += "<tr class='" + (!transaction.confirmed ? "tentative" : "confirmed") + "'><td><a href='#' data-transaction='" + String(transaction.transaction).escapeHTML() + "' data-timestamp='" + String(transaction.timestamp).escapeHTML() + "'>" + NRS.formatTimestamp(transaction.timestamp) + "</a></td><td style='width:5px;padding-right:0;'>" + (transaction.type == 0 ? (receiving ? "<i class='fa fa-plus-circle' style='color:#65C62E'></i>" : "<i class='fa fa-minus-circle' style='color:#E04434'></i>") : "") + "</td><td><span" + (transaction.type == 0 && receiving ? " style='color:#006400'" : (!receiving && transaction.amount > 0 ? " style='color:red'" : "")) + ">" + NRS.formatAmount(transaction.amount) + "</span> <span" + ((!receiving && transaction.type == 0) ? " style='color:red'" : "") + ">+</span> <span" + (!receiving ? " style='color:red'" : "") + ">" + NRS.formatAmount(transaction.fee) + "</span></td><td>" + ((NRS.getAccountLink(transaction, "sender") == "/" && transaction.type == 2) ? "Asset Exchange" : NRS.getAccountLink(transaction, "sender")) + "</td><td>" + ((NRS.getAccountLink(transaction, "recipient") == "/" && transaction.type == 2) ? "Asset Exchange" : NRS.getAccountLink(transaction, "recipient")) + "</td><td>";
-				
-				if (transaction.type == 0) {
-					rows += "<i title='" + $.t("ordinary_payment") + "' class='fa fa-money'></i>";
-				} else if (transaction.type == 1) {
-					switch (transaction.subtype) {
-						case 0:
-							rows += "<i title='" + $.t("arbitrary_message") + "' class='fa fa-envelope-o'></i>";
-							break;
-						case 1:
-							rows += "<i title='" + $.t("alias_assignment") + "' class='fa fa-bookmark'></i>";
-							break;
-						case 2:
-							rows += "<i title='" + $.t("poll_creation") + "' class='fa fa-legal'></i>";
-							break;
-						case 3:
-							rows += "<i title='" + $.t("vote_casting") + "' class='fa fa-check'></i>";
-							break;
-						case 4:
-							rows += "<i title='" + $.t("hub_announcements") + "' class='ion-radio-waves'></i>";
-							break;
-						case 5:
-							rows += "<i title='" + $.t("account_info") + "' class='fa fa-info'></i>";
-							break;
-						case 6:
-							if (transaction.attachment.priceNQT == "0") {
-								if (transaction.sender == NRS.account && transaction.recipient == NRS.account) {
-									rows += "<i title='" + $.t("alias_sale_cancellation") + "' class='fa fa-bookmark'></i> <i class='fa fa-times'></i>";
-								} else {
-									rows += "<i title='" + $.t("alias_transfer") + "' class='fa fa-bookmark'></i> <i class='ion-arrow-swap'></i>";
-								}
-							} else {
-								rows += "<i title='" + $.t("alias_sale") + "' class='fa fa-bookmark'></i> <i class='fa fa-tag'></i>";
-							}
-							break;
-						case 7:
-							rows += "<i title='" + $.t("alias_buy") + "' class='fa fa-bookmark'></i> <i class='fa fa-money'></i>";
-							break;
-					}
-				} else if (transaction.type == 2) {
-					switch (transaction.subtype) {
-						case 0:
-							rows += '<i title="' + $.t("asset_issuance") + '" class="fa fa-signal"></i>';
-							break;
-						case 1:
-							rows += '<i title="' + $.t("asset_transfer") + '" class="fa fa-signal"></i> <i class="ion-arrow-swap"></i>';
-							break;
-						case 2:
-							rows += '<i title="' + $.t("ask_order_placement") + '" class="ion-arrow-graph-down-right"></i>';
-							break;
-						case 3:
-							rows += '<i title="' + $.t("bid_order_placement") + '" class="ion-arrow-graph-up-right"></i>';
-							break;
-						case 4:
-							rows += '<i title="' + $.t("ask_order_cancellation") + '" class="ion-arrow-graph-down-right"></i> <i class="fa fa-times"></i>';
-							break;
-						case 5:
-							rows += '<i title="' + $.t("bid_order_cancellation") + '" class="ion-arrow-graph-up-right"></i> <i class="fa fa-times"></i>';
-							break;
-					}
-				} else if (transaction.type == 3) {
-					switch (transaction.subtype) {
-						case 0:
-							rows += '<i title="' + $.t("marketplace_listing") + '" class="fa fa-shopping-cart"></i>';
-							break;
-						case 1:
-							rows += '<i title="' + $.t("marketplace_removal") + '" class="fa fa-shopping-cart"></i> <i class="fa fa-times"></i>';
-							break;
-						case 2:
-							rows += '<i title="' + $.t("marketplace_price_change") + '" class="fa fa-shopping-cart"></i> <i class="fa fa-line-chart"></i>';
-							break;
-						case 3:
-							rows += '<i title="' + $.t("marketplace_quantity_change") + '" class="fa fa-shopping-cart"></i> <i class="fa fa-sort"></i>';
-							break;
-						case 4:
-							rows += '<i title="' + $.t("marketplace_purchase") + '" class="fa fa-shopping-cart"></i> <i class="fa fa-money"></i>';
-							break;
-						case 5:
-							rows += '<i title="' + $.t("marketplace_delivery") + '" class="fa fa-shopping-cart"> <i class="fa fa-cube"></i>';
-							break;
-						case 6:
-							rows += '<i title="' + $.t("marketplace_feedback") + '" class="fa fa-shopping-cart"> <i class="ion-android-social"></i>';
-							break;
-						case 7:
-							rows += '<i title="' + $.t("marketplace_refund") + '" class="fa fa-shopping-cart"></i> <i class="fa fa-reply"></i>';
-							break;
-					}
-				} else if (transaction.type == 4) {
-					switch (transaction.subtype) {
-						case 0:
-							rows += '<i title="' + $.t("balance_leasing") + '" class="fa fa-money"></i> <i class="fa fa-arrow-circle-o-right">';
-							break;
-					}
-				} else if (transaction.type == 5) {
-					switch (transaction.subtype) {
-						case 0:
-							rows += '<i title="' + $.t("issue_currency") + '" class="fa fa-bank"></i>';
-							break;
-						case 1:
-							break;
-						case 2:
-							break;
-						case 3:
-							break;
-						case 4:
-							rows += '<i title="' + $.t("publish_exchange_offer") + '" class="fa fa-bank"></i> <i class="fa fa-list-alt "></i>';
-							break;
-						case 5:
-							rows += '<i title="' + $.t("buy_currency") + '" class="fa fa-bank"></i> <i class="ion-arrow-graph-up-right"></i>';
-							break;
-						case 6:
-							break;
-						case 7:
-							break;
-						case 8:
-							rows += '<i title="' + $.t("delete_currency") + '" class="fa fa-bank"></i> <i class="fa fa-times"></i>';
-							break;
-					}
-				}
-				 
-				 rows += "</td></tr>";
-			}
-
-			$("#dashboard_transactions_table tbody").empty().append(rows);
-		}
-
-		NRS.dataLoadFinished($("#dashboard_transactions_table"));
 	}
 
 	NRS.getNewTransactions = function() {
@@ -232,280 +200,6 @@ var NRS = (function(NRS, $, undefined) {
 		});
 	}
 
-	NRS.getUnconfirmedTransactions = function(callback) {
-		NRS.sendRequest("getUnconfirmedTransactions", {
-			"account": NRS.account
-		}, function(response) {
-			if (response.unconfirmedTransactions && response.unconfirmedTransactions.length) {
-				var unconfirmedTransactions = [];
-				var unconfirmedTransactionIds = [];
-
-				response.unconfirmedTransactions.sort(function(x, y) {
-					if (x.timestamp < y.timestamp) {
-						return 1;
-					} else if (x.timestamp > y.timestamp) {
-						return -1;
-					} else {
-						return 0;
-					}
-				});
-
-				for (var i = 0; i < response.unconfirmedTransactions.length; i++) {
-					var unconfirmedTransaction = response.unconfirmedTransactions[i];
-
-					unconfirmedTransaction.confirmed = false;
-					unconfirmedTransaction.unconfirmed = true;
-					unconfirmedTransaction.confirmations = "/";
-
-					if (unconfirmedTransaction.attachment) {
-						for (var key in unconfirmedTransaction.attachment) {
-							if (!unconfirmedTransaction.hasOwnProperty(key)) {
-								unconfirmedTransaction[key] = unconfirmedTransaction.attachment[key];
-							}
-						}
-					}
-
-					unconfirmedTransactions.push(unconfirmedTransaction);
-					unconfirmedTransactionIds.push(unconfirmedTransaction.transaction);
-				}
-
-				NRS.unconfirmedTransactions = unconfirmedTransactions;
-
-				var unconfirmedTransactionIdString = unconfirmedTransactionIds.toString();
-
-				if (unconfirmedTransactionIdString != NRS.unconfirmedTransactionIds) {
-					NRS.unconfirmedTransactionsChange = true;
-					NRS.unconfirmedTransactionIds = unconfirmedTransactionIdString;
-				} else {
-					NRS.unconfirmedTransactionsChange = false;
-				}
-
-				if (callback) {
-					callback(unconfirmedTransactions);
-				} else if (NRS.unconfirmedTransactionsChange) {
-					NRS.incoming.updateDashboardTransactions(unconfirmedTransactions, true);
-				}
-			} else {
-				NRS.unconfirmedTransactions = [];
-
-				if (NRS.unconfirmedTransactionIds) {
-					NRS.unconfirmedTransactionsChange = true;
-				} else {
-					NRS.unconfirmedTransactionsChange = false;
-				}
-
-				NRS.unconfirmedTransactionIds = "";
-
-				if (callback) {
-					callback([]);
-				} else if (NRS.unconfirmedTransactionsChange) {
-					NRS.incoming.updateDashboardTransactions([], true);
-				}
-			}
-		});
-	}
-
-	NRS.handleIncomingTransactions = function(transactions, confirmedTransactionIds) {
-		var oldBlock = (confirmedTransactionIds === false); //we pass false instead of an [] in case there is no new block..
-
-		if (typeof confirmedTransactionIds != "object") {
-			confirmedTransactionIds = [];
-		}
-
-		if (confirmedTransactionIds.length) {
-			NRS.lastTransactions = confirmedTransactionIds.toString();
-		}
-
-		if (confirmedTransactionIds.length || NRS.unconfirmedTransactionsChange) {
-			transactions.sort(NRS.sortArray);
-
-			NRS.incoming.updateDashboardTransactions(transactions, confirmedTransactionIds.length == 0);
-		}
-
-		//always refresh peers and unconfirmed transactions..
-		if (NRS.currentPage == "peers") {
-			NRS.incoming.peers();
-		} else if (NRS.currentPage == "transactions" && NRS.transactionsPageType == "unconfirmed") {
-			NRS.incoming.transactions();
-		} else {
-			if (!oldBlock || NRS.unconfirmedTransactionsChange) {
-				if (NRS.incoming[NRS.currentPage]) {
-					NRS.incoming[NRS.currentPage](transactions);
-				}
-			}
-		}
-	}
-
-	NRS.sortArray = function(a, b) {
-		return b.timestamp - a.timestamp;
-	}
-
-	NRS.incoming.updateDashboardTransactions = function(newTransactions, unconfirmed) {
-		var newTransactionCount = newTransactions.length;
-
-		if (newTransactionCount) {
-			var rows = "";
-
-			var onlyUnconfirmed = true;
-
-			for (var i = 0; i < newTransactionCount; i++) {
-				var transaction = newTransactions[i];
-
-				var receiving = transaction.recipient == NRS.account;
-				var account = (receiving ? "sender" : "recipient");
-
-				if (transaction.confirmed) {
-					onlyUnconfirmed = false;
-				}
-
-				if (transaction.amountNQT) {
-					transaction.amount = new BigInteger(transaction.amountNQT);
-					transaction.fee = new BigInteger(transaction.feeNQT);
-				}
-
-				rows += "<tr class='" + (!transaction.confirmed ? "tentative" : "confirmed") + "'><td><a href='#' data-transaction='" + String(transaction.transaction).escapeHTML() + "' data-timestamp='" + String(transaction.timestamp).escapeHTML() + "'>" + NRS.formatTimestamp(transaction.timestamp) + "</a></td><td style='width:5px;padding-right:0;'>" + (transaction.type == 0 ? (receiving ? "<i class='fa fa-plus-circle' style='color:#65C62E'></i>" : "<i class='fa fa-minus-circle' style='color:#E04434'></i>") : "") + "</td><td><span" + (transaction.type == 0 && receiving ? " style='color:#006400'" : (!receiving && transaction.amount > 0 ? " style='color:red'" : "")) + ">" + NRS.formatAmount(transaction.amount) + "</span> <span" + ((!receiving && transaction.type == 0) ? " style='color:red'" : "") + ">+</span> <span" + (!receiving ? " style='color:red'" : "") + ">" + NRS.formatAmount(transaction.fee) + "</span></td><td>" + ((NRS.getAccountLink(transaction, "sender") == "/" && transaction.type == 2) ? "Asset Exchange" : NRS.getAccountLink(transaction, "sender")) + "</td><td>" + ((NRS.getAccountLink(transaction, "recipient") == "/" && transaction.type == 2) ? "Asset Exchange" : NRS.getAccountLink(transaction, "recipient")) + "</td><td>";				
-				
-				if (transaction.type == 0) {
-					rows += "<i title='" + $.t("ordinary_payment") + "' class='fa fa-money'></i>";
-				} else if (transaction.type == 1) {
-					switch (transaction.subtype) {
-						case 0:
-							rows += "<i title='" + $.t("arbitrary_message") + "' class='fa fa-envelope-o'></i>";
-							break;
-						case 1:
-							rows += "<i title='" + $.t("alias_assignment") + "' class='fa fa-bookmark'></i>";
-							break;
-						case 2:
-							rows += "<i title='" + $.t("poll_creation") + "' class='fa fa-legal'></i>";
-							break;
-						case 3:
-							rows += "<i title='" + $.t("vote_casting") + "' class='fa fa-check'></i>";
-							break;
-						case 4:
-							rows += "<i title='" + $.t("hub_announcements") + "' class='ion-radio-waves'></i>";
-							break;
-						case 5:
-							rows += "<i title='" + $.t("account_info") + "' class='fa fa-info'></i>";
-							break;
-						case 6:
-							if (transaction.attachment.priceNQT == "0") {
-								if (transaction.sender == NRS.account && transaction.recipient == NRS.account) {
-									rows += "<i title='" + $.t("alias_sale_cancellation") + "' class='fa fa-bookmark'></i> <i class='fa fa-times'></i>";
-								} else {
-									rows += "<i title='" + $.t("alias_transfer") + "' class='fa fa-bookmark'></i> <i class='ion-arrow-swap'></i>";
-								}
-							} else {
-								rows += "<i title='" + $.t("alias_sale") + "' class='fa fa-bookmark'></i> <i class='fa fa-tag'></i>";
-							}
-							break;
-						case 7:
-							rows += "<i title='" + $.t("alias_buy") + "' class='fa fa-bookmark'></i> <i class='fa fa-money'></i>";
-							break;
-					}
-				} else if (transaction.type == 2) {
-					switch (transaction.subtype) {
-						case 0:
-							rows += '<i title="' + $.t("asset_issuance") + '" class="fa fa-signal"></i>';
-							break;
-						case 1:
-							rows += '<i title="' + $.t("asset_transfer") + '" class="fa fa-signal"></i> <i class="ion-arrow-swap"></i>';
-							break;
-						case 2:
-							rows += '<i title="' + $.t("ask_order_placement") + '" class="ion-arrow-graph-down-right"></i>';
-							break;
-						case 3:
-							rows += '<i title="' + $.t("bid_order_placement") + '" class="ion-arrow-graph-up-right"></i>';
-							break;
-						case 4:
-							rows += '<i title="' + $.t("ask_order_cancellation") + '" class="ion-arrow-graph-down-right"></i> <i class="fa fa-times"></i>';
-							break;
-						case 5:
-							rows += '<i title="' + $.t("bid_order_cancellation") + '" class="ion-arrow-graph-up-right"></i> <i class="fa fa-times"></i>';
-							break;
-					}
-				} else if (transaction.type == 3) {
-					switch (transaction.subtype) {
-						case 0:
-							rows += '<i title="' + $.t("marketplace_listing") + '" class="fa fa-shopping-cart"></i>';
-							break;
-						case 1:
-							rows += '<i title="' + $.t("marketplace_removal") + '" class="fa fa-shopping-cart"></i> <i class="fa fa-times"></i>';
-							break;
-						case 2:
-							rows += '<i title="' + $.t("marketplace_price_change") + '" class="fa fa-shopping-cart"></i> <i class="fa fa-line-chart"></i>';
-							break;
-						case 3:
-							rows += '<i title="' + $.t("marketplace_quantity_change") + '" class="fa fa-shopping-cart"></i> <i class="fa fa-sort"></i>';
-							break;
-						case 4:
-							rows += '<i title="' + $.t("marketplace_purchase") + '" class="fa fa-shopping-cart"></i> <i class="fa fa-money"></i>';
-							break;
-						case 5:
-							rows += '<i title="' + $.t("marketplace_delivery") + '" class="fa fa-shopping-cart"> <i class="fa fa-cube"></i>';
-							break;
-						case 6:
-							rows += '<i title="' + $.t("marketplace_feedback") + '" class="fa fa-shopping-cart"> <i class="ion-android-social"></i>';
-							break;
-						case 7:
-							rows += '<i title="' + $.t("marketplace_refund") + '" class="fa fa-shopping-cart"></i> <i class="fa fa-reply"></i>';
-							break;
-					}
-				} else if (transaction.type == 4) {
-					switch (transaction.subtype) {
-						case 0:
-							rows += '<i title="' + $.t("balance_leasing") + '" class="fa fa-money"></i> <i class="fa fa-arrow-circle-o-right">';
-							break;
-					}
-				} else if (transaction.type == 5) {
-					switch (transaction.subtype) {
-						case 0:
-							rows += '<i title="' + $.t("issue_currency") + '" class="fa fa-bank"></i>';
-							break;
-						case 1:
-							break;
-						case 2:
-							break;
-						case 3:
-							break;
-						case 4:
-							rows += '<i title="' + $.t("publish_exchange_offer") + '" class="fa fa-bank"></i> <i class="fa fa-list-alt "></i>';
-							break;
-						case 5:
-							rows += '<i title="' + $.t("buy_currency") + '" class="fa fa-bank"></i> <i class="ion-arrow-graph-up-right"></i>';
-							break;
-						case 6:
-							break;
-						case 7:
-							break;
-						case 8:
-							rows += '<i title="' + $.t("delete_currency") + '" class="fa fa-bank"></i> <i class="fa fa-times"></i>';
-							break;
-					}
-				}
-				 
-				 rows += "</td></tr>";
-			}
-
-			if (onlyUnconfirmed) {
-				$("#dashboard_transactions_table tbody tr.tentative").remove();
-				$("#dashboard_transactions_table tbody").prepend(rows);
-			} else {
-				$("#dashboard_transactions_table tbody").empty().append(rows);
-			}
-
-			var $parent = $("#dashboard_transactions_table").parent();
-
-			if ($parent.hasClass("data-empty")) {
-				$parent.removeClass("data-empty");
-				if ($parent.data("no-padding")) {
-					$parent.parent().addClass("no-padding");
-				}
-			}
-		} else if (unconfirmed) {
-			$("#dashboard_transactions_table tbody tr.tentative").remove();
-		}
-	}
-
 	//todo: add to dashboard? 
 	NRS.addUnconfirmedTransaction = function(transactionId, callback) {
 		NRS.sendRequest("getTransaction", {
@@ -524,9 +218,7 @@ var NRS = (function(NRS, $, undefined) {
 						}
 					}
 				}
-
 				var alreadyProcessed = false;
-
 				try {
 					var regex = new RegExp("(^|,)" + transactionId + "(,|$)");
 
@@ -545,12 +237,12 @@ var NRS = (function(NRS, $, undefined) {
 				if (!alreadyProcessed) {
 					NRS.unconfirmedTransactions.unshift(response);
 				}
-
 				if (callback) {
 					callback(alreadyProcessed);
 				}
-
-				NRS.incoming.updateDashboardTransactions(NRS.unconfirmedTransactions, true);
+				if (NRS.currentPage == 'transactions' || NRS.currentPage == 'dashboard') {
+					NRS.incoming[NRS.currentPage]();
+				}
 
 				NRS.getAccountInfo();
 			} else if (callback) {
@@ -559,24 +251,353 @@ var NRS = (function(NRS, $, undefined) {
 		});
 	}
 
+	NRS.sortArray = function(a, b) {
+		return b.timestamp - a.timestamp;
+	}
+
+	NRS.addPendingTransactionHTML = function(t) {
+		var html = "";
+		var $td = $('#tr_transaction_' + t.transaction + ' .td_transaction_pending');
+
+		if (t.attachment && t.attachment["version.Phasing"] && t.attachment.phasingVotingModel != undefined) {
+			NRS.sendRequest("getPhasingPoll", {
+				"transaction": t.transaction
+			}, function(response) {
+				if (response.transaction) {
+					var attachment = t.attachment;
+					var vm = attachment.phasingVotingModel;
+
+					var state = "";
+					var color = "";
+					var icon = "";
+					var votesFormatted = "";
+					var quorumFormatted = "";
+					var unitFormattted = "";
+					var finishHeightFormatted = String(response.finishHeight);
+					var percentageFormatted = NRS.calculatePercentage(response.votes, response.quorum) + "%";
+					var percentageProgressBar = Math.round(response.votes * 100 / response.quorum);
+					var progressBarWidth = Math.round(percentageProgressBar / 2);
+
+					if (response.finished) {
+						var finishedFormatted = "Yes";
+					} else {
+						var finishedFormatted = "No";
+					}
+
+					if (response.finished) {
+						if (response.votes >= response.quorum) {
+							state = "success";
+							color = "#00a65a";	
+						} else {
+							state = "danger";
+							color = "#f56954";							
+						}
+					} else {
+						state = "warning";
+						color = "#f39c12";
+					}
+					if (vm == 0) {
+						icon = '<i class="fa fa-group"></i>';
+						votesFormatted = String(response.votes);
+						quorumFormatted = String(response.quorum);
+						unitFormattted = "";
+					}
+					if (vm == 1) {
+						icon = '<i class="fa fa-money"></i>';
+						votesFormatted = NRS.convertToNXT(response.votes);
+						quorumFormatted = NRS.convertToNXT(response.quorum);
+						unitFormattted = "NXT";
+					}
+					if (vm == 2) {
+						icon = '<i class="fa fa-signal"></i>';
+						votesFormatted = String(response.votes);
+						quorumFormatted = String(response.quorum);
+						unitFormattted = "";
+					}
+					if (vm == 3) {
+						icon = '<i class="fa fa-bank"></i>';
+						votesFormatted = String(response.votes);
+						quorumFormatted = String(response.quorum);
+						unitFormattted = "";
+					}
+					var popover = "<table class='table table-striped'>";
+					popover += "<tr><td>Votes:</td><td>" + votesFormatted + " / " + quorumFormatted + " " + unitFormattted + "</td></tr>";
+					popover += "<tr><td>Percentage:</td><td>" + percentageFormatted + "</td></tr>";
+					popover += "<tr><td>Finish Height:</td><td>" + finishHeightFormatted + "</td></tr>";
+					popover += "<tr><td>Finished:</td><td>" + finishedFormatted + "</td></tr>";
+					popover += "</table>";
+
+					html += '<div class="show_popover" style="display:inline-block;min-width:94px;text-align:left;border:1px solid #e2e2e2;background-color:#fff;padding:3px;" ';
+ 				 	html += 'data-toggle="popover" data-placement="top" data-content="' + popover + '" data-container="body">';
+					html += "<div class='label label-" + state + "' style='display:inline-block;margin-right:5px;'>" + icon + "</div>";
+					
+					if (vm == 0) {
+						html += '<span style="color:' + color + '">' + votesFormatted + '</span> / <span>' + quorumFormatted + '</span>';
+					} else {
+						html += '<div class="progress" style="display:inline-block;height:10px;width: 50px;">';
+    					html += '<div class="progress-bar progress-bar-' + state + '" role="progressbar" aria-valuenow="' + percentageProgressBar + '" ';
+    					html += 'aria-valuemin="0" aria-valuemax="100" style="height:10px;width: ' + progressBarWidth + 'px;">';
+      					html += '<span class="sr-only">' + percentageProgressBar + '% Complete</span>';
+    					html += '</div>';
+  						html += '</div> ';
+  					}
+
+					html += "</div>";
+					$td.html(html);
+				} else {
+					html = "&nbsp;";
+					$td.html(html);
+				}
+			}, false);
+		} else {
+			html = "&nbsp;";
+			$td.html(html);
+		}
+	}
+
+	NRS.addPendingInfoToTransactionRows = function(transactions) {
+		for (var i = 0; i < transactions.length; i++) {
+			var transaction = transactions[i];
+			NRS.addPendingTransactionHTML(transaction);
+		}
+	}
+
+
+	NRS.getTransactionRowHTML = function(transaction, actions) {
+		var transactionType = $.t(NRS.transactionTypes[transaction.type]['subTypes'][transaction.subtype]['i18nKeyTitle']);
+
+		if (transaction.type == 1 && transaction.subtype == 6 && transaction.attachment.priceNQT == "0") {
+			if (transaction.sender == NRS.account && transaction.recipient == NRS.account) {
+				transactionType = $.t("alias_sale_cancellation");
+			} else {
+				transactionType = $.t("alias_transfer");
+			}
+		}
+
+		var receiving = transaction.recipient == NRS.account;
+		var account = (receiving ? "sender" : "recipient");
+
+		if (transaction.amountNQT) {
+			transaction.amount = new BigInteger(transaction.amountNQT);
+			transaction.fee = new BigInteger(transaction.feeNQT);
+		}
+
+		var hasMessage = false;
+
+		if (transaction.attachment) {
+			if (transaction.attachment.encryptedMessage || transaction.attachment.message) {
+				hasMessage = true;
+			} else if (transaction.sender == NRS.account && transaction.attachment.encryptToSelfMessage) {
+				hasMessage = true;
+			}
+		}
+
+		var html = "";
+		html += "<tr id='tr_transaction_" + transaction.transaction + "'>";
+		
+		html += "<td style='vertical-align:middle;'>";
+  		html += "<a href='#' data-timestamp='" + String(transaction.timestamp).escapeHTML() + "' ";
+  		html += "data-transaction='" + String(transaction.transaction).escapeHTML() + "'>";
+  		html += NRS.formatTimestamp(transaction.timestamp) + "</a>";
+  		html += "</td>";
+
+  		html += "<td style='vertical-align:middle;text-align:center;'>" + (hasMessage ? "&nbsp; <i class='fa fa-envelope-o'></i>&nbsp;" : "&nbsp;") + "</td>";
+		
+		var iconHTML = NRS.transactionTypes[transaction.type]['iconHTML'] + " " + NRS.transactionTypes[transaction.type]['subTypes'][transaction.subtype]['iconHTML'];
+		html += '<td style="vertical-align:middle;">';
+		html += '<span class="label label-primary" style="font-size:12px;">' + iconHTML + '</span>&nbsp; ';
+		html += '<span style="font-size:11px;display:inline-block;margin-top:5px;">' + transactionType + '</span>';
+		html += '</td>';
+		
+		html += "<td style='width:5px;padding-right:0;vertical-align:middle;'>";
+		html += (transaction.type == 0 ? (receiving ? "<i class='fa fa-plus-circle' style='color:#65C62E'></i>" : "<i class='fa fa-minus-circle' style='color:#E04434'></i>") : "") + "</td>";
+		html += "<td style='vertical-align:middle;" + (transaction.type == 0 && receiving ? " color:#006400;" : (!receiving && transaction.amount > 0 ? " color:red;" : "")) + "'>" + NRS.formatAmount(transaction.amount) + "</td>";
+		html += "<td style='vertical-align:middle;text-align:center;" + (!receiving ? " color:red;" : "") + "'>" + NRS.formatAmount(transaction.fee) + "</td>";
+
+		html += "<td>" + ((NRS.getAccountLink(transaction, "sender") == "/" && transaction.type == 2) ? "Asset Exchange" : NRS.getAccountLink(transaction, "sender")) + " ";
+		html += "<i class='fa fa-arrow-circle-right' style='color:#777;'></i> " + ((NRS.getAccountLink(transaction, "recipient") == "/" && transaction.type == 2) ? "Asset Exchange" : NRS.getAccountLink(transaction, "recipient")) + "</td>";
+
+		html += "<td class='td_transaction_pending' style='vertical-align:middle;text-align:center;'></td>";
+
+		html += "<td class='confirmations' style='vertical-align:middle;text-align:center;font-size:12px;'>";
+		html += "<span class='show_popover' data-content='" + (transaction.confirmed ? NRS.formatAmount(transaction.confirmations) + " " + $.t("confirmations") : $.t("unconfirmed_transaction")) + "' ";
+		html += "data-container='body' data-placement='left'>";
+		html += (!transaction.confirmed ? "-" : (transaction.confirmations > 1440 ? "1440+" : NRS.formatAmount(transaction.confirmations))) + "</span></td>";
+		if (actions) {
+			var disabledHTML = "";
+			var unconfirmedTransactions = NRS.unconfirmedTransactions;
+			if (unconfirmedTransactions) {
+				for (var i = 0; i < unconfirmedTransactions.length; i++) {
+					var ut = unconfirmedTransactions[i];
+					if (ut.attachment && ut.attachment["version.PhasingVoteCasting"] && ut.attachment.transactionFullHashes && ut.attachment.transactionFullHashes.length > 0) {
+						if (ut.attachment.transactionFullHashes[0] == transaction.fullHash) {
+						disabledHTML = "disabled";
+					}
+					}
+				}
+			}
+
+			html += '<td style="vertical-align:middle;text-align:right;">';
+			html += "<a class='btn btn-xs btn-default approve_transaction_btn " + disabledHTML + "' href='#' data-toggle='modal' data-target='#approve_transaction_modal' ";
+			html += "data-transaction='" + String(transaction.transaction).escapeHTML() + "' data-full-hash='" + String(transaction.fullHash).escapeHTML() + "' ";
+			html += "data-i18n='approve' >Approve</a>";
+			html += "</td>";
+		}
+		html += "</tr>";
+		return html;
+	}
+
+	NRS.buildTransactionsTypeNavi = function() {
+		var html = '';
+		html += '<li role="presentation" class="active"><a href="#" data-transaction-type="" ';
+		html += 'data-toggle="popover" data-placement="top" data-content="All" data-container="body" data-i18n="[data-content]all">';
+		html += '<span data-i18n="all">All</span></a></li>';
+		$('#transactions_type_navi').append(html);
+
+		$.each(NRS.transactionTypes, function(typeIndex, typeDict) {
+			titleString = $.t(typeDict.i18nKeyTitle);
+			html = '<li role="presentation"><a href="#" data-transaction-type="' + typeIndex + '" ';
+			html += 'data-toggle="popover" data-placement="top" data-content="' + titleString + '" data-container="body">';
+			html += typeDict.iconHTML + '</a></li>';
+			$('#transactions_type_navi').append(html);
+		});
+
+		html  = '<li role="presentation"><a href="#" data-transaction-type="unconfirmed" ';
+		html += 'data-toggle="popover" data-placement="top" data-content="Unconfirmed" data-container="body" data-i18n="[data-content]unconfirmed">';
+		html += '<span data-i18n="unconfirmed">Unconfirmed</span></a></li>';
+		$('#transactions_type_navi').append(html);
+		html  = '<li role="presentation"><a href="#" data-transaction-type="pending" ';
+		html += 'data-toggle="popover" data-placement="top" data-content="Pending" data-container="body" data-i18n="[data-content]pending">';
+		html += '<i class="fa fa-gavel"></i>&nbsp; <span data-i18n="pending">Pending</span></a></li>';
+		$('#transactions_type_navi').append(html);
+
+		$('#transactions_type_navi a[data-toggle="popover"]').popover({
+			"trigger": "hover"
+		});
+	}
+
+	NRS.buildTransactionsSubTypeNavi = function() {
+		$('#transactions_sub_type_navi').empty();
+		html  = '<li role="presentation" class="active"><a href="#" data-transaction-sub-type="">';
+		html += '<span data-i18n="all_types">All Types</span></a></li>';
+		$('#transactions_sub_type_navi').append(html);
+
+		var typeIndex = $('#transactions_type_navi li.active a').attr('data-transaction-type');
+		if (typeIndex && typeIndex != "unconfirmed" && typeIndex != "pending") {
+				var typeDict = NRS.transactionTypes[typeIndex];
+				$.each(typeDict["subTypes"], function(subTypeIndex, subTypeDict) {
+				subTitleString = $.t(subTypeDict.i18nKeyTitle);
+				html = '<li role="presentation"><a href="#" data-transaction-sub-type="' + subTypeIndex + '">';
+				html += subTypeDict.iconHTML + ' ' + subTitleString + '</a></li>';
+				$('#transactions_sub_type_navi').append(html);
+			});
+		}
+	}
+
+	NRS.displayUnconfirmedTransactions = function() {
+		NRS.sendRequest("getUnconfirmedTransactions", function(response) {
+			var rows = "";
+
+			if (response.unconfirmedTransactions && response.unconfirmedTransactions.length) {
+				for (var i = 0; i < response.unconfirmedTransactions.length; i++) {
+					rows += NRS.getTransactionRowHTML(response.unconfirmedTransactions[i]);
+				}
+			}
+			NRS.dataLoaded(rows);
+		});
+	}
+
+	NRS.displayPendingTransactions = function() {
+		var params = {
+			"account": NRS.account,
+			"firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
+			"lastIndex": NRS.pageNumber * NRS.itemsPerPage
+		};
+		NRS.sendRequest("getAccountPendingTransactions", params, function(response) {
+			var rows = "";
+
+			if (response.transactions && response.transactions.length) {
+				for (var i = 0; i < response.transactions.length; i++) {
+					t = response.transactions[i];
+					t.confirmed = true;
+					rows += NRS.getTransactionRowHTML(t);
+				}
+				NRS.dataLoaded(rows);
+				NRS.addPendingInfoToTransactionRows(response.transactions);
+			} else {
+				NRS.dataLoaded(rows);
+			}
+			
+		});
+	}
+
+	NRS.pages.dashboard = function() {
+		var rows = "";
+		var params = {
+			"account": NRS.account,
+			"firstIndex": 0,
+			"lastIndex": 9
+		};
+		
+		var unconfirmedTransactions = NRS.unconfirmedTransactions;
+		if (unconfirmedTransactions) {
+			for (var i = 0; i < unconfirmedTransactions.length; i++) {
+				rows += NRS.getTransactionRowHTML(unconfirmedTransactions[i]);
+			}
+		}
+
+		NRS.sendRequest("getAccountTransactions+", params, function(response) {
+			if (response.transactions && response.transactions.length) {
+				for (var i = 0; i < response.transactions.length; i++) {
+					var transaction = response.transactions[i];
+					transaction.confirmed = true;
+					rows += NRS.getTransactionRowHTML(transaction);
+				}
+
+				NRS.dataLoaded(rows);
+				NRS.addPendingInfoToTransactionRows(response.transactions);
+			} else {
+				NRS.dataLoaded(rows);
+			}
+		});
+	}
+
+	NRS.incoming.dashboard = function() {
+		NRS.loadPage("dashboard");
+	}
+
 	NRS.pages.transactions = function() {
-		if (NRS.transactionsPageType == "unconfirmed") {
+		if ($('#transactions_type_navi').children().length == 0) {
+			NRS.buildTransactionsTypeNavi();
+			NRS.buildTransactionsSubTypeNavi();
+		}
+
+		var selectedType = $('#transactions_type_navi li.active a').attr('data-transaction-type');
+		var selectedSubType = $('#transactions_sub_type_navi li.active a').attr('data-transaction-sub-type');
+		if (!selectedSubType) {
+			selectedSubType = "";
+		}
+		if (selectedType == "unconfirmed") {
 			NRS.displayUnconfirmedTransactions();
+			return;
+		}
+		if (selectedType == "pending") {
+			NRS.displayPendingTransactions();
 			return;
 		}
 
 		var rows = "";
-
 		var params = {
 			"account": NRS.account,
 			"firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
 			"lastIndex": NRS.pageNumber * NRS.itemsPerPage
 		};
 
-		if (NRS.transactionsPageType) {
-			params.type = NRS.transactionsPageType.type;
-			params.subtype = NRS.transactionsPageType.subtype;
-			var unconfirmedTransactions = NRS.getUnconfirmedTransactionsFromCache(params.type, params.subtype);
+		if (selectedType) {
+			params.type = selectedType;
+			params.subtype = selectedSubType;
+
+			var unconfirmedTransactions = NRS.getUnconfirmedTransactionsFromCache(params.type, (params.subtype ? params.subtype : []));
 		} else {
 			var unconfirmedTransactions = NRS.unconfirmedTransactions;
 		}
@@ -603,9 +624,58 @@ var NRS = (function(NRS, $, undefined) {
 				}
 
 				NRS.dataLoaded(rows);
+				NRS.addPendingInfoToTransactionRows(response.transactions);
 			} else {
 				NRS.dataLoaded(rows);
 			}
+		});
+	}
+
+	NRS.updateApprovalRequests = function() {
+		var params = {
+			"account": NRS.account,
+			"firstIndex": 0,
+			"lastIndex": 20
+		};
+		NRS.sendRequest("getVoterPendingTransactions", params, function(response) {
+			if (response.transactions && response.transactions.length != undefined) {
+				var $badge = $('#dashboard_link .sm_treeview_submenu a[data-page="approval_requests_account"] span.badge');
+				if (response.transactions.length == 0) {
+					$badge.hide();
+				} else {
+					if (response.transactions.length == 21) {
+						var length = "20+";
+					} else {
+						var length = String(response.transactions.length);
+					}
+					$badge.text(length);
+					$badge.show();
+				}
+			}
+		});
+		if (NRS.currentPage == 'approval_requests_account') {
+			NRS.loadPage(NRS.currentPage);
+		}
+	}
+
+	NRS.pages.approval_requests_account = function() {
+		var params = {
+			"account": NRS.account,
+			"firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
+			"lastIndex": NRS.pageNumber * NRS.itemsPerPage
+		};
+		NRS.sendRequest("getVoterPendingTransactions", params, function(response) {
+			var rows = "";
+
+			if (response.transactions && response.transactions.length != undefined) {
+				for (var i = 0; i < response.transactions.length; i++) {
+					t = response.transactions[i];
+					t.confirmed = true;
+					rows += NRS.getTransactionRowHTML(t, ['approve']);
+				}
+			}
+			NRS.dataLoaded(rows);
+			NRS.addPendingInfoToTransactionRows(response.transactions);
 		});
 	}
 
@@ -613,161 +683,61 @@ var NRS = (function(NRS, $, undefined) {
 		NRS.loadPage("transactions");
 	}
 
-	NRS.displayUnconfirmedTransactions = function() {
-		NRS.sendRequest("getUnconfirmedTransactions", function(response) {
-			var rows = "";
-
-			if (response.unconfirmedTransactions && response.unconfirmedTransactions.length) {
-				for (var i = 0; i < response.unconfirmedTransactions.length; i++) {
-					rows += NRS.getTransactionRowHTML(response.unconfirmedTransactions[i]);
-				}
-			}
-
-			NRS.dataLoaded(rows);
-		});
+	NRS.setup.transactions = function() {
+		var sidebarId = 'dashboard_link';
+		var options = {
+			"id": sidebarId,
+			"titleHTML": '<i class="fa fa-dashboard"></i> <span data-i18n="dashboard">Dashboard</span>',
+			"page": 'dashboard',
+			"desiredPosition": 10
+		}
+		NRS.addTreeviewSidebarMenuItem(options);
+		options = {
+			"titleHTML": '<span data-i18n="dashboard">Dashboard</span>',
+			"type": 'PAGE',
+			"page": 'dashboard'
+		}
+		NRS.appendToTSMenuItem(sidebarId, options);
+		options = {
+			"titleHTML": '<span data-i18n="my_transactions">My Transactions</span>',
+			"type": 'PAGE',
+			"page": 'transactions'
+		}
+		NRS.appendToTSMenuItem(sidebarId, options);
+		options = {
+			"titleHTML": '<span data-i18n="approval_requests">Approval Requests</span>',
+			"type": 'PAGE',
+			"page": 'approval_requests_account'
+		}
+		NRS.appendToTSMenuItem(sidebarId, options);
 	}
 
-	NRS.getTransactionRowHTML = function(transaction) {
-		var transactionType = $.t("unknown");
-
-		if (transaction.type == 0) {
-			transactionType = $.t("ordinary_payment");
-		} else if (transaction.type == 1) {
-			switch (transaction.subtype) {
-				case 0:
-					transactionType = $.t("arbitrary_message");
-					break;
-				case 1:
-					transactionType = $.t("alias_assignment");
-					break;
-				case 2:
-					transactionType = $.t("poll_creation");
-					break;
-				case 3:
-					transactionType = $.t("vote_casting");
-					break;
-				case 4:
-					transactionType = $.t("hub_announcements");
-					break;
-				case 5:
-					transactionType = $.t("account_info");
-					break;
-				case 6:
-					if (transaction.attachment.priceNQT == "0") {
-						if (transaction.sender == NRS.account && transaction.recipient == NRS.account) {
-							transactionType = $.t("alias_sale_cancellation");
-						} else {
-							transactionType = $.t("alias_transfer");
-						}
-					} else {
-						transactionType = $.t("alias_sale");
-					}
-					break;
-				case 7:
-					transactionType = $.t("alias_buy");
-					break;
-			}
-		} else if (transaction.type == 2) {
-			switch (transaction.subtype) {
-				case 0:
-					transactionType = $.t("asset_issuance");
-					break;
-				case 1:
-					transactionType = $.t("asset_transfer");
-					break;
-				case 2:
-					transactionType = $.t("ask_order_placement");
-					break;
-				case 3:
-					transactionType = $.t("bid_order_placement");
-					break;
-				case 4:
-					transactionType = $.t("ask_order_cancellation");
-					break;
-				case 5:
-					transactionType = $.t("bid_order_cancellation");
-					break;
-			}
-		} else if (transaction.type == 3) {
-			switch (transaction.subtype) {
-				case 0:
-					transactionType = $.t("marketplace_listing");
-					break;
-				case 1:
-					transactionType = $.t("marketplace_removal");
-					break;
-				case 2:
-					transactionType = $.t("marketplace_price_change");
-					break;
-				case 3:
-					transactionType = $.t("marketplace_quantity_change");
-					break;
-				case 4:
-					transactionType = $.t("marketplace_purchase");
-					break;
-				case 5:
-					transactionType = $.t("marketplace_delivery");
-					break;
-				case 6:
-					transactionType = $.t("marketplace_feedback");
-					break;
-				case 7:
-					transactionType = $.t("marketplace_refund");
-					break;
-			}
-		} else if (transaction.type == 4) {
-			switch (transaction.subtype) {
-				case 0:
-					transactionType = $.t("balance_leasing");
-					break;
-			}
-		}
-
-		var receiving = transaction.recipient == NRS.account;
-		var account = (receiving ? "sender" : "recipient");
-
-		if (transaction.amountNQT) {
-			transaction.amount = new BigInteger(transaction.amountNQT);
-			transaction.fee = new BigInteger(transaction.feeNQT);
-		}
-
-		var hasMessage = false;
-
-		if (transaction.attachment) {
-			if (transaction.attachment.encryptedMessage || transaction.attachment.message) {
-				hasMessage = true;
-			} else if (transaction.sender == NRS.account && transaction.attachment.encryptToSelfMessage) {
-				hasMessage = true;
-			}
-		}
-
-		return "<tr " + (!transaction.confirmed && (transaction.recipient == NRS.account || transaction.sender == NRS.account) ? " class='tentative'" : "") + "><td><a href='#' data-transaction='" + String(transaction.transaction).escapeHTML() + "'>" + String(transaction.transaction).escapeHTML() + "</a></td><td>" + (hasMessage ? "<i class='fa fa-envelope-o'></i>&nbsp;" : "/") + "</td><td>" + NRS.formatTimestamp(transaction.timestamp) + "</td><td>" + transactionType + "</td><td style='width:5px;padding-right:0;'>" + (transaction.type == 0 ? (receiving ? "<i class='fa fa-plus-circle' style='color:#65C62E'></i>" : "<i class='fa fa-minus-circle' style='color:#E04434'></i>") : "") + "</td><td " + (transaction.type == 0 && receiving ? " style='color:#006400;'" : (!receiving && transaction.amount > 0 ? " style='color:red'" : "")) + ">" + NRS.formatAmount(transaction.amount) + "</td><td " + (!receiving ? " style='color:red'" : "") + ">" + NRS.formatAmount(transaction.fee) + "</td><td>" + ((NRS.getAccountLink(transaction, account) == "/" && transaction.type == 2) ? "Asset Exchange" : NRS.getAccountLink(transaction, account)) + "</td><td class='confirmations' data-content='" + (transaction.confirmed ? NRS.formatAmount(transaction.confirmations) + " " + $.t("confirmations") : $.t("unconfirmed_transaction")) + "' data-container='body' data-placement='left'>" + (!transaction.confirmed ? "/" : (transaction.confirmations > 1440 ? "1440+" : NRS.formatAmount(transaction.confirmations))) + "</td></tr>";
-	}
-
-	$("#transactions_page_type li a").click(function(e) {
+	$(document).on("click", "#transactions_type_navi li a", function(e) {
 		e.preventDefault();
-
-		var type = $(this).data("type");
-
-		if (!type) {
-			NRS.transactionsPageType = null;
-		} else if (type == "unconfirmed") {
-			NRS.transactionsPageType = "unconfirmed";
-		} else {
-			type = type.split(":");
-			NRS.transactionsPageType = {
-				"type": type[0],
-				"subtype": type[1]
-			};
-		}
-
-		$(this).parents(".btn-group").find(".text").text($(this).text());
-
-		$(".popover").remove();
-
-		NRS.pageNumber = 1;
-
+		$('#transactions_type_navi li.active').removeClass('active');
+  		$(this).parent('li').addClass('active');
+  		NRS.buildTransactionsSubTypeNavi();
+  		NRS.pageNumber = 1;
 		NRS.loadPage("transactions");
+	});
+
+	$(document).on("click", "#transactions_sub_type_navi li a", function(e) {
+		e.preventDefault();
+		$('#transactions_sub_type_navi li.active').removeClass('active');
+  		$(this).parent('li').addClass('active');
+  		NRS.pageNumber = 1;
+		NRS.loadPage("transactions");
+	});
+
+	$(document).on("click", "#transactions_sub_type_show_hide_btn", function(e) {
+		e.preventDefault();
+		if ($('#transactions_sub_type_navi_box').is(':visible')) {
+			$('#transactions_sub_type_navi_box').hide();
+			$(this).text($.t('show_type_menu', 'Show Type Menu'));
+		} else {
+			$('#transactions_sub_type_navi_box').show();
+			$(this).text($.t('hide_type_menu', 'Hide Type Menu'));
+		}
 	});
 
 	return NRS;

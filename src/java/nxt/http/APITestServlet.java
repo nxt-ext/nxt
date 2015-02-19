@@ -157,7 +157,7 @@ public class APITestServlet extends HttpServlet {
         resp.setDateHeader("Expires", 0);
         resp.setContentType("text/html; charset=UTF-8");
 
-        if (API.allowedBotHosts != null && ! API.allowedBotHosts.contains(req.getRemoteHost())) {
+        if (! API.isAllowed(req.getRemoteHost())) {
             resp.sendError(HttpServletResponse.SC_FORBIDDEN);
             return;
         }
@@ -242,7 +242,7 @@ public class APITestServlet extends HttpServlet {
             buf.append("<tr class=\"api-call-input-tr\">");
             buf.append("<td>").append(parameter).append(":</td>");
             buf.append("<td><input type=\"");
-            buf.append("secretPhrase".equals(parameter) ? "password" : "text");
+            buf.append("secretPhrase".equals(parameter) || "adminPassword".equals(parameter) ? "password" : "text");
             buf.append("\" name=\"").append(parameter).append("\" style=\"width:100%;min-width:200px;\"/></td>");
             buf.append("</tr>");
         }

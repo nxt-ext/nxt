@@ -21,12 +21,11 @@ final class TransactionImpl implements Transaction {
     static final class BuilderImpl implements Builder {
 
         private final short deadline;
-        private final byte[] senderPublicKey;
+        private byte[] senderPublicKey;
         private final long amountNQT;
         private final long feeNQT;
         private final TransactionType type;
         private final byte version;
-        private final int timestamp;
         private final Attachment.AbstractAttachment attachment;
 
         private long recipientId;
@@ -36,20 +35,22 @@ final class TransactionImpl implements Transaction {
         private Appendix.EncryptedMessage encryptedMessage;
         private Appendix.EncryptToSelfMessage encryptToSelfMessage;
         private Appendix.PublicKeyAnnouncement publicKeyAnnouncement;
+        private Appendix.Phasing phasing;
         private long blockId;
         private int height = Integer.MAX_VALUE;
         private long id;
         private long senderId;
+        private int timestamp = Integer.MAX_VALUE;
         private int blockTimestamp = -1;
         private String fullHash;
+        private boolean ecBlockSet = false;
         private int ecBlockHeight;
         private long ecBlockId;
         private short index = -1;
 
-        BuilderImpl(byte version, byte[] senderPublicKey, long amountNQT, long feeNQT, int timestamp, short deadline,
+        BuilderImpl(byte version, byte[] senderPublicKey, long amountNQT, long feeNQT, short deadline,
                     Attachment.AbstractAttachment attachment) {
             this.version = version;
-            this.timestamp = timestamp;
             this.deadline = deadline;
             this.senderPublicKey = senderPublicKey;
             this.amountNQT = amountNQT;
@@ -60,6 +61,14 @@ final class TransactionImpl implements Transaction {
 
         @Override
         public TransactionImpl build() throws NxtException.NotValidException {
+            if (timestamp == Integer.MAX_VALUE) {
+                timestamp = Nxt.getEpochTime();
+            }
+            if (!ecBlockSet) {
+                Block ecBlock = EconomicClustering.getECBlock(timestamp);
+                this.ecBlockHeight = ecBlock.getHeight();
+                this.ecBlockId = ecBlock.getId();
+            }
             return new TransactionImpl(this);
         }
 
@@ -106,6 +115,32 @@ final class TransactionImpl implements Transaction {
             return this;
         }
 
+        @Override
+        public BuilderImpl timestamp(int timestamp) {
+            this.timestamp = timestamp;
+            return this;
+        }
+
+        @Override
+        public BuilderImpl ecBlockHeight(int height) {
+            this.ecBlockHeight = height;
+            this.ecBlockSet = true;
+            return this;
+        }
+
+        @Override
+        public BuilderImpl ecBlockId(long blockId) {
+            this.ecBlockId = blockId;
+            this.ecBlockSet = true;
+            return this;
+        }
+
+        @Override
+        public Builder phasing(Appendix.Phasing phasing) {
+            this.phasing = phasing;
+            return this;
+        }
+
         BuilderImpl id(long id) {
             this.id = id;
             return this;
@@ -148,16 +183,6 @@ final class TransactionImpl implements Transaction {
             return this;
         }
 
-        BuilderImpl ecBlockHeight(int height) {
-            this.ecBlockHeight = height;
-            return this;
-        }
-
-        BuilderImpl ecBlockId(long blockId) {
-            this.ecBlockId = blockId;
-            return this;
-        }
-
         BuilderImpl index(short index) {
             this.index = index;
             return this;
@@ -166,7 +191,7 @@ final class TransactionImpl implements Transaction {
     }
 
     private final short deadline;
-    private final byte[] senderPublicKey;
+    private volatile byte[] senderPublicKey;
     private final long recipientId;
     private final long amountNQT;
     private final long feeNQT;
@@ -181,8 +206,9 @@ final class TransactionImpl implements Transaction {
     private final Appendix.EncryptedMessage encryptedMessage;
     private final Appendix.EncryptToSelfMessage encryptToSelfMessage;
     private final Appendix.PublicKeyAnnouncement publicKeyAnnouncement;
+    private final Appendix.Phasing phasing;
 
-    private final List<? extends Appendix.AbstractAppendix> appendages;
+    private final List<Appendix.AbstractAppendix> appendages;
     private final int appendagesSize;
 
     private volatile int height = Integer.MAX_VALUE;
@@ -234,6 +260,9 @@ final class TransactionImpl implements Transaction {
         if ((this.encryptToSelfMessage = builder.encryptToSelfMessage) != null) {
             list.add(this.encryptToSelfMessage);
         }
+        if ((this.phasing = builder.phasing) != null) {
+            list.add(this.phasing);
+        }
         this.appendages = Collections.unmodifiableList(list);
         int appendagesSize = 0;
         for (Appendix appendage : appendages) {
@@ -242,12 +271,12 @@ final class TransactionImpl implements Transaction {
         this.appendagesSize = appendagesSize;
         if (builder.feeNQT <= 0) {
             int effectiveHeight = (height < Integer.MAX_VALUE ? height : Nxt.getBlockchain().getHeight());
-            feeNQT = type.minimumFeeNQT(this, effectiveHeight, appendagesSize);
+            feeNQT = getMinimumFeeNQT(effectiveHeight);
         } else {
             feeNQT = builder.feeNQT;
         }
 
-        if ((timestamp == 0 && Arrays.equals(senderPublicKey, Genesis.CREATOR_PUBLIC_KEY))
+        if ((timestamp == 0 && Arrays.equals(getSenderPublicKey(), Genesis.CREATOR_PUBLIC_KEY))
                 ? (deadline != 0 || feeNQT != 0)
                 : deadline < 1
                 || feeNQT > Constants.MAX_BALANCE_NQT
@@ -290,6 +319,9 @@ final class TransactionImpl implements Transaction {
 
     @Override
     public byte[] getSenderPublicKey() {
+        if (senderPublicKey == null) {
+            senderPublicKey = Account.getPublicKey(senderId);
+        }
         return senderPublicKey;
     }
 
@@ -399,7 +431,7 @@ final class TransactionImpl implements Transaction {
     }
 
     @Override
-    public List<? extends Appendix> getAppendages() {
+    public List<Appendix.AbstractAppendix> getAppendages() {
         return appendages;
     }
 
@@ -449,7 +481,7 @@ final class TransactionImpl implements Transaction {
     @Override
     public long getSenderId() {
         if (senderId == 0) {
-            senderId = Account.getId(senderPublicKey);
+            senderId = Account.getId(getSenderPublicKey());
         }
         return senderId;
     }
@@ -476,6 +508,11 @@ final class TransactionImpl implements Transaction {
         return encryptToSelfMessage;
     }
 
+    @Override
+    public Appendix.Phasing getPhasing() {
+        return phasing;
+    }
+
     Appendix.PublicKeyAnnouncement getPublicKeyAnnouncement() {
         return publicKeyAnnouncement;
     }
@@ -489,7 +526,7 @@ final class TransactionImpl implements Transaction {
             buffer.put((byte) ((version << 4) | type.getSubtype()));
             buffer.putInt(timestamp);
             buffer.putShort(deadline);
-            buffer.put(senderPublicKey);
+            buffer.put(getSenderPublicKey());
             buffer.putLong(type.canHaveRecipient() ? recipientId : Genesis.CREATOR_ID);
             if (useNQT()) {
                 buffer.putLong(amountNQT);
@@ -557,8 +594,9 @@ final class TransactionImpl implements Transaction {
                 ecBlockId = buffer.getLong();
             }
             TransactionType transactionType = TransactionType.findTransactionType(type, subtype);
-            TransactionImpl.BuilderImpl builder = new TransactionImpl.BuilderImpl(version, senderPublicKey, amountNQT, feeNQT,
-                    timestamp, deadline, transactionType.parseAttachment(buffer, version))
+            TransactionImpl.BuilderImpl builder = new BuilderImpl(version, senderPublicKey, amountNQT, feeNQT,
+                    deadline, transactionType.parseAttachment(buffer, version))
+                    .timestamp(timestamp)
                     .referencedTransactionFullHash(referencedTransactionFullHash)
                     .signature(signature)
                     .ecBlockHeight(ecBlockHeight)
@@ -582,6 +620,10 @@ final class TransactionImpl implements Transaction {
             if ((flags & position) != 0) {
                 builder.encryptToSelfMessage(new Appendix.EncryptToSelfMessage(buffer, version));
             }
+            position <<= 1;
+            if ((flags & position) != 0) {
+                builder.phasing(new Appendix.Phasing(buffer, version));
+            }
             return builder.build();
         } catch (NxtException.NotValidException|RuntimeException e) {
             Logger.logDebugMessage("Failed to parse transaction bytes: " + Convert.toHexString(bytes));
@@ -594,18 +636,6 @@ final class TransactionImpl implements Transaction {
         return zeroSignature(getBytes());
     }
 
-    /*
-    @Override
-    public Collection<TransactionType> getPhasingTransactionTypes() {
-        return getType().getPhasingTransactionTypes();
-    }
-
-    @Override
-    public Collection<TransactionType> getPhasedTransactionTypes() {
-        return getType().getPhasedTransactionTypes();
-    }
-    */
-
     @Override
     public JSONObject getJSONObject() {
         JSONObject json = new JSONObject();
@@ -613,7 +643,7 @@ final class TransactionImpl implements Transaction {
         json.put("subtype", type.getSubtype());
         json.put("timestamp", timestamp);
         json.put("deadline", deadline);
-        json.put("senderPublicKey", Convert.toHexString(senderPublicKey));
+        json.put("senderPublicKey", Convert.toHexString(getSenderPublicKey()));
         if (type.canHaveRecipient()) {
             json.put("recipient", Convert.toUnsignedLong(recipientId));
         }
@@ -650,16 +680,25 @@ final class TransactionImpl implements Transaction {
             Long versionValue = (Long) transactionData.get("version");
             byte version = versionValue == null ? 0 : versionValue.byteValue();
             JSONObject attachmentData = (JSONObject) transactionData.get("attachment");
+            int ecBlockHeight = 0;
+            long ecBlockId = 0;
+            if (version > 0) {
+                ecBlockHeight = ((Long) transactionData.get("ecBlockHeight")).intValue();
+                ecBlockId = Convert.parseUnsignedLong((String) transactionData.get("ecBlockId"));
+            }
 
             TransactionType transactionType = TransactionType.findTransactionType(type, subtype);
             if (transactionType == null) {
                 throw new NxtException.NotValidException("Invalid transaction type: " + type + ", " + subtype);
             }
-            TransactionImpl.BuilderImpl builder = new TransactionImpl.BuilderImpl(version, senderPublicKey,
-                    amountNQT, feeNQT, timestamp, deadline,
+            TransactionImpl.BuilderImpl builder = new BuilderImpl(version, senderPublicKey,
+                    amountNQT, feeNQT, deadline,
                     transactionType.parseAttachment(attachmentData))
+                    .timestamp(timestamp)
                     .referencedTransactionFullHash(referencedTransactionFullHash)
-                    .signature(signature);
+                    .signature(signature)
+                    .ecBlockHeight(ecBlockHeight)
+                    .ecBlockId(ecBlockId);
             if (transactionType.canHaveRecipient()) {
                 long recipientId = Convert.parseUnsignedLong((String) transactionData.get("recipient"));
                 builder.recipientId(recipientId);
@@ -669,10 +708,7 @@ final class TransactionImpl implements Transaction {
                 builder.encryptedMessage(Appendix.EncryptedMessage.parse(attachmentData));
                 builder.publicKeyAnnouncement((Appendix.PublicKeyAnnouncement.parse(attachmentData)));
                 builder.encryptToSelfMessage(Appendix.EncryptToSelfMessage.parse(attachmentData));
-            }
-            if (version > 0) {
-                builder.ecBlockHeight(((Long) transactionData.get("ecBlockHeight")).intValue());
-                builder.ecBlockId(Convert.parseUnsignedLong((String) transactionData.get("ecBlockId")));
+                builder.phasing(Appendix.Phasing.parse(attachmentData));
             }
             return builder.build();
         } catch (NxtException.NotValidException|RuntimeException e) {
@@ -719,7 +755,7 @@ final class TransactionImpl implements Transaction {
             return false;
         }
         byte[] data = zeroSignature(getBytes());
-        return Crypto.verify(signature, data, senderPublicKey, useNQT()) && account.setOrVerify(senderPublicKey, this.getHeight());
+        return Crypto.verify(signature, data, getSenderPublicKey(), useNQT()) && account.setOrVerify(getSenderPublicKey());
     }
 
     int getSize() {
@@ -732,7 +768,7 @@ final class TransactionImpl implements Transaction {
 
     private boolean useNQT() {
         return this.height > Constants.NQT_BLOCK
-                && (this.height < Integer.MAX_VALUE
+                && (this.timestamp > (Constants.isTestnet ? 12908200 : 14271000)
                 || Nxt.getBlockchain().getHeight() >= Constants.NQT_BLOCK);
     }
 
@@ -762,6 +798,10 @@ final class TransactionImpl implements Transaction {
         if (encryptToSelfMessage != null) {
             flags |= position;
         }
+        position <<= 1;
+        if (phasing != null) {
+            flags |= position;
+        }
         return flags;
     }
 
@@ -771,25 +811,23 @@ final class TransactionImpl implements Transaction {
         for (Appendix.AbstractAppendix appendage : appendages) {
             appendage.validate(this);
         }
-        long minimumFeeNQT = type.minimumFeeNQT(this, blockchainHeight, appendagesSize);
+        if (getSize() > Constants.MAX_PAYLOAD_LENGTH) {
+            throw new NxtException.NotValidException("Transaction size " + getSize() + " exceeds maximum payload size");
+        }
+        long minimumFeeNQT = getMinimumFeeNQT(blockchainHeight);
         if (feeNQT < minimumFeeNQT) {
             throw new NxtException.NotCurrentlyValidException(String.format("Transaction fee %d less than minimum fee %d at height %d",
                     feeNQT, minimumFeeNQT, blockchainHeight));
         }
-        if (blockchainHeight >= Constants.PUBLIC_KEY_ANNOUNCEMENT_BLOCK) {
-            if (recipientId != 0 && ! (recipientId == getSenderId() && blockchainHeight > Constants.MONETARY_SYSTEM_BLOCK)) {
-                Account recipientAccount = Account.getAccount(recipientId);
-                if ((recipientAccount == null || recipientAccount.getPublicKey() == null) && publicKeyAnnouncement == null) {
-                    throw new NxtException.NotCurrentlyValidException("Recipient account does not have a public key, must attach a public key announcement");
-                }
-                if (blockchainHeight >= Constants.MONETARY_SYSTEM_BLOCK && recipientAccount != null) {
-                	if (recipientAccount.getMessagePattern() != null
-                        && (message == null || ! recipientAccount.getMessagePattern().matcher(Convert.toString(message.getMessage())).matches())) {
-                    	throw new NxtException.NotCurrentlyValidException("Recipient account requires a message attachment matching " + recipientAccount.getMessagePattern().pattern());
-                	}
-            	}
-            }
-        }
+        /*
+        Account recipientAccount = Account.getAccount(recipientId);
+       	if (blockchainHeight >= Constants.MONETARY_SYSTEM_BLOCK && recipientAccount != null) {
+			if (recipientAccount.getMessagePattern() != null
+                    && (message == null || ! recipientAccount.getMessagePattern().matcher(Convert.toString(message.getMessage())).matches())) {
+                throw new NxtException.NotCurrentlyValidException("Recipient account requires a message attachment matching " + recipientAccount.getMessagePattern().pattern());
+               }
+         }
+         */
     }
 
     // returns false iff double spending
@@ -800,13 +838,22 @@ final class TransactionImpl implements Transaction {
 
     void apply() {
         Account senderAccount = Account.getAccount(getSenderId());
-        senderAccount.apply(senderPublicKey, this.getHeight());
+        senderAccount.apply(getSenderPublicKey(), this.getHeight());
         Account recipientAccount = Account.getAccount(recipientId);
         if (recipientAccount == null && recipientId != 0) {
             recipientAccount = Account.addOrGetAccount(recipientId);
         }
-        for (Appendix.AbstractAppendix appendage : appendages) {
-            appendage.apply(this, senderAccount, recipientAccount);
+        if (referencedTransactionFullHash != null
+                && timestamp > Constants.REFERENCED_TRANSACTION_FULL_HASH_BLOCK_TIMESTAMP) {
+            senderAccount.addToUnconfirmedBalanceNQT(Constants.UNCONFIRMED_POOL_DEPOSIT_NQT);
+        }
+        if (phasing == null) {
+            for (Appendix.AbstractAppendix appendage : appendages) {
+                appendage.apply(this, senderAccount, recipientAccount);
+            }
+        } else {
+            senderAccount.addToBalanceNQT(-feeNQT);
+            phasing.apply(this, senderAccount, recipientAccount);
         }
     }
 
@@ -817,6 +864,22 @@ final class TransactionImpl implements Transaction {
 
     boolean isDuplicate(Map<TransactionType, Map<String, Boolean>> duplicates) {
         return type.isDuplicate(this, duplicates);
+    }
+
+    boolean isUnconfirmedDuplicate(Map<TransactionType, Map<String, Boolean>> duplicates) {
+        return type.isUnconfirmedDuplicate(this, duplicates);
+    }
+
+    long getMinimumFeeNQT(int blockchainHeight) throws NxtException.NotValidException {
+        long totalFee = 0;
+        for (Appendix.AbstractAppendix appendage : appendages) {
+            if (blockchainHeight < appendage.getBaselineFeeHeight()) {
+                return 0; // No need to validate fees before baseline block
+            }
+            Fee fee = blockchainHeight >= appendage.getNextFeeHeight() ? appendage.getNextFee(this) : appendage.getBaselineFee(this);
+            totalFee = Convert.safeAdd(totalFee, fee.getFee(this, appendage));
+        }
+        return totalFee;
     }
 
 }

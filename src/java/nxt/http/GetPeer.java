@@ -14,7 +14,7 @@ public final class GetPeer extends APIServlet.APIRequestHandler {
     static final GetPeer instance = new GetPeer();
 
     private GetPeer() {
-        super(new APITag[] {APITag.INFO}, "peer");
+        super(new APITag[] {APITag.NETWORK}, "peer");
     }
 
     @Override
@@ -25,7 +25,7 @@ public final class GetPeer extends APIServlet.APIRequestHandler {
             return MISSING_PEER;
         }
 
-        Peer peer = Peers.getPeer(peerAddress);
+        Peer peer = Peers.findOrCreatePeer(peerAddress, false);
         if (peer == null) {
             return UNKNOWN_PEER;
         }

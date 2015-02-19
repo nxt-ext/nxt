@@ -1,5 +1,7 @@
 package nxt;
 
+import nxt.util.Logger;
+
 import java.util.Calendar;
 import java.util.TimeZone;
 
@@ -15,16 +17,35 @@ public final class Constants {
     public static final long MAX_BASE_TARGET = MAX_BALANCE_NXT * INITIAL_BASE_TARGET;
     public static final int MAX_ROLLBACK = Nxt.getIntProperty("nxt.maxRollback");
     static {
-        if (MAX_ROLLBACK < 1440) {
-            throw new RuntimeException("nxt.maxRollback must be at least 1440");
+        if (MAX_ROLLBACK < 1441) {
+            Logger.logErrorMessage("nxt.maxRollback must be at least 1441");
+            throw new RuntimeException("nxt.maxRollback must be at least 1441");
         }
     }
+
+    public static final int MAX_TIMEDRIFT = 15; // allow up to 15 s clock difference
+    public static final int FORGING_DELAY = Nxt.getIntProperty("nxt.forgingDelay");
+    public static final int FORGING_SPEEDUP = Nxt.getIntProperty("nxt.forgingSpeedup");
+
+    public static final byte MAX_VOTES_PER_VOTING_TRANSACTION = 2;
+
+    public static final byte VOTING_DEFAULT_MIN_NUMBER_OF_CHOICES = 1;
+    public static final byte VOTING_MIN_RANGE_VALUE_LIMIT = -100;
+    public static final byte VOTING_MAX_RANGE_VALUE_LIMIT = 100;
+    public static final byte VOTING_NO_VOTE_VALUE = Byte.MIN_VALUE;
+    public static final byte VOTING_MIN_VOTE_DURATION = 10;
+    public static final int VOTING_MAX_VOTE_DURATION = 14 * 1440;
+
+
+    public static final byte MAX_PHASING_WHITELIST_SIZE = 10;
 
     public static final int MAX_ALIAS_URI_LENGTH = 1000;
     public static final int MAX_ALIAS_LENGTH = 100;
 
     public static final int MAX_ARBITRARY_MESSAGE_LENGTH = 1000;
+    public static final int MAX_ARBITRARY_MESSAGE_LENGTH_2 = 40 * 1024;
     public static final int MAX_ENCRYPTED_MESSAGE_LENGTH = 1000;
+    public static final int MAX_ENCRYPTED_MESSAGE_LENGTH_2 = 40 * 1024;
 
     public static final int MAX_ACCOUNT_NAME_LENGTH = 100;
     public static final int MAX_ACCOUNT_DESCRIPTION_LENGTH = 1000;
@@ -58,8 +79,11 @@ public final class Constants {
     public static final int MAX_CURRENCY_DESCRIPTION_LENGTH = 1000;
     public static final long MAX_CURRENCY_TOTAL_SUPPLY = 1000000000L * 100000000L;
     public static final int MAX_MINTING_RATIO = 10000; // per mint units not more than 0.01% of total supply
-    public static final byte MIN_SHUFFLING_PARTICIPANTS = 3;
-    public static final byte MAX_SHUFFLING_PARTICIPANTS = 16;
+    public static final byte MIN_NUMBER_OF_SHUFFLING_PARTICIPANTS = 3;
+    public static final byte MAX_NUMBER_OF_SHUFFLING_PARTICIPANTS = 100;
+    public static final short MIN_SHUFFLING_DELAY = 5;
+    public static final short MAX_SHUFFLING_DELAY = 1440;
+    public static final int MAX_SHUFFLING_RECIPIENTS_LENGTH = 10000;
 
     public static final boolean isTestnet = Nxt.getBooleanProperty("nxt.isTestnet");
     public static final boolean isOffline = Nxt.getBooleanProperty("nxt.isOffline");
@@ -78,14 +102,14 @@ public final class Constants {
     public static final int FRACTIONAL_BLOCK = isTestnet ? NQT_BLOCK : 134000;
     public static final int ASSET_EXCHANGE_BLOCK = isTestnet ? NQT_BLOCK : 135000;
     public static final int REFERENCED_TRANSACTION_FULL_HASH_BLOCK = isTestnet ? NQT_BLOCK : 140000;
-    public static final int ASSET_EXCHANGE_BLOCK_2 = isTestnet ? NQT_BLOCK : Integer.MAX_VALUE;
     public static final int REFERENCED_TRANSACTION_FULL_HASH_BLOCK_TIMESTAMP = isTestnet ? 13031352 : 15134204;
-    public static final int VOTING_SYSTEM_BLOCK = Integer.MAX_VALUE;
     public static final int DIGITAL_GOODS_STORE_BLOCK = isTestnet ? 77341 : 213000;
-    public static final int PUBLIC_KEY_ANNOUNCEMENT_BLOCK = isTestnet ? 77341 : 215000;
-    public static final int MIN_LEASING_WAITING_PERIOD = isTestnet ? 1 : 1440;
-    public static final int MONETARY_SYSTEM_BLOCK = isTestnet ? 0 : Integer.MAX_VALUE;
-    public static final int LAST_KNOWN_BLOCK = isTestnet ? 80000 : 287000;
+    public static final int MONETARY_SYSTEM_BLOCK = isTestnet ? 150000 : 330000;
+    public static final int VOTING_SYSTEM_BLOCK = isTestnet ? 0 : Integer.MAX_VALUE;
+
+    public static final int LAST_KNOWN_BLOCK = isTestnet ? 150000 : 355000;
+
+    public static final int[] MIN_VERSION = new int[] {1, 4};
 
     static final long UNCONFIRMED_POOL_DEPOSIT_NQT = (isTestnet ? 50 : 100) * ONE_NXT;
 

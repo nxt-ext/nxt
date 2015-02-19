@@ -9,6 +9,7 @@ import org.eclipse.jetty.servlets.gzip.CompressedResponseWrapper;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 import org.json.simple.JSONValue;
+import org.json.simple.parser.ParseException;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
@@ -50,15 +51,29 @@ public final class PeerServlet extends HttpServlet {
     private static final JSONStreamAware UNSUPPORTED_REQUEST_TYPE;
     static {
         JSONObject response = new JSONObject();
-        response.put("error", "Unsupported request type!");
+        response.put("error", Errors.UNSUPPORTED_REQUEST_TYPE);
         UNSUPPORTED_REQUEST_TYPE = JSON.prepare(response);
     }
 
     private static final JSONStreamAware UNSUPPORTED_PROTOCOL;
     static {
         JSONObject response = new JSONObject();
-        response.put("error", "Unsupported protocol!");
+        response.put("error", Errors.UNSUPPORTED_PROTOCOL);
         UNSUPPORTED_PROTOCOL = JSON.prepare(response);
+    }
+
+    private static final JSONStreamAware BLACKLISTED;
+    static {
+        JSONObject response = new JSONObject();
+        response.put("error", Errors.BLACKLISTED);
+        BLACKLISTED = JSON.prepare(response);
+    }
+
+    private static final JSONStreamAware UNKNOWN_PEER;
+    static {
+        JSONObject response = new JSONObject();
+        response.put("error", Errors.UNKNOWN_PEER);
+        UNKNOWN_PEER = JSON.prepare(response);
     }
 
     private boolean isGzipEnabled;
@@ -76,33 +91,37 @@ public final class PeerServlet extends HttpServlet {
         JSONStreamAware response;
 
         try {
-            peer = Peers.addPeer(req.getRemoteAddr(), null);
+            peer = Peers.findOrCreatePeer(req.getRemoteAddr(), -1, null, true);
             if (peer == null) {
+                sendResponse(null, UNKNOWN_PEER, resp);
                 return;
             }
             if (peer.isBlacklisted()) {
+                JSONObject jsonObject = new JSONObject();
+                jsonObject.put("error", Errors.BLACKLISTED);
+                jsonObject.put("cause", peer.getBlacklistingCause());
+                sendResponse(peer, JSON.prepare(jsonObject), resp);
                 return;
+            } else {
+                Peers.addPeer(peer);
             }
 
             JSONObject request;
-            CountingInputStream cis = new CountingInputStream(req.getInputStream());
+            CountingInputStream cis = new CountingInputStream(req.getInputStream(), Peers.MAX_REQUEST_SIZE);
             try (Reader reader = new InputStreamReader(cis, "UTF-8")) {
-                request = (JSONObject) JSONValue.parse(reader);
+                request = (JSONObject) JSONValue.parseWithException(reader);
             }
+            peer.updateDownloadedVolume(cis.getCount());
             if (request == null) {
+                sendResponse(peer, UNSUPPORTED_REQUEST_TYPE, resp);
                 return;
             }
 
             if (peer.getState() == Peer.State.DISCONNECTED) {
                 peer.setState(Peer.State.CONNECTED);
                 if (peer.getAnnouncedAddress() != null) {
-                    Peers.updateAddress(peer);
+                    Peers.addOrUpdate(peer);
                 }
-            }
-            peer.updateDownloadedVolume(cis.getCount());
-            if (! peer.analyzeHallmark(peer.getPeerAddress(), (String)request.get("hallmark"))) {
-                peer.blacklist();
-                return;
             }
 
             if (request.get("protocol") != null && ((Number)request.get("protocol")).intValue() == 1) {
@@ -117,32 +136,40 @@ public final class PeerServlet extends HttpServlet {
                 response = UNSUPPORTED_PROTOCOL;
             }
 
-        } catch (RuntimeException e) {
-            Logger.logDebugMessage("Error processing POST request", e);
+        } catch (RuntimeException|ParseException|IOException e) {
+            if (peer != null) {
+                peer.blacklist(e);
+            }
+            Logger.logDebugMessage("Error processing POST request: " + e.toString());
             JSONObject json = new JSONObject();
             json.put("error", e.toString());
             response = json;
         }
 
-        resp.setContentType("text/plain; charset=UTF-8");
+        sendResponse(peer, response, resp);
+
+    }
+
+    private void sendResponse(PeerImpl peer, JSONStreamAware jsonResponse, HttpServletResponse httpResponse) throws IOException {
+        httpResponse.setContentType("text/plain; charset=UTF-8");
         try {
             long byteCount;
             if (isGzipEnabled) {
-                try (Writer writer = new OutputStreamWriter(resp.getOutputStream(), "UTF-8")) {
-                    response.writeJSONString(writer);
+                try (Writer writer = new OutputStreamWriter(httpResponse.getOutputStream(), "UTF-8")) {
+                    jsonResponse.writeJSONString(writer);
                 }
-                byteCount = ((Response) ((CompressedResponseWrapper) resp).getResponse()).getContentCount();
+                byteCount = ((Response) ((CompressedResponseWrapper) httpResponse).getResponse()).getContentCount();
             } else {
-                CountingOutputStream cos = new CountingOutputStream(resp.getOutputStream());
+                CountingOutputStream cos = new CountingOutputStream(httpResponse.getOutputStream());
                 try (Writer writer = new OutputStreamWriter(cos, "UTF-8")) {
-                    response.writeJSONString(writer);
+                    jsonResponse.writeJSONString(writer);
                 }
                 byteCount = cos.getCount();
             }
             if (peer != null) {
                 peer.updateUploadedVolume(byteCount);
             }
-        } catch (Exception e) {
+        } catch (RuntimeException|IOException e) {
             if (peer != null) {
                 peer.blacklist(e);
             }

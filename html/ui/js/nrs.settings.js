@@ -10,6 +10,7 @@ var NRS = (function(NRS, $, undefined) {
 		"fee_warning": "100000000000",
 		"amount_warning": "10000000000000",
 		"asset_transfer_warning": "10000",
+		"currency_transfer_warning": "10000",
 		"24_hour_format": 1,
 		"remember_passphrase": 0,
 		"language": "en",
@@ -22,6 +23,30 @@ var NRS = (function(NRS, $, undefined) {
 		"sidebar": "#F4F4F4",
 		"boxes": "#3E96BB"
 	};
+
+	NRS.languages = {
+		"de": "Deutsch (Beta)",          // german
+		"en": "English",                 // english
+		"es-es": "Español",              // spanish
+		"fi": "Suomi (Beta)",            // finnish
+		"fr": "Français",                // french
+		"gl": "Galego (Beta)",           // galician
+		"sh": "Hrvatski (Beta)",         // croatian
+		"id": "Bahasa Indonesia",        // indonesian
+		"it": "Italiano",                // italian
+		"ja": "日本語 (Beta)",            // japanese
+		"lt": "Lietuviškai",             // lithuanian
+		"nl": "Nederlands",              // dutch
+		"sk": "Slovensky (Beta)",        // slovakian
+		"pt-pt": "Português (Beta)",     // portugese
+		"pt-br": "Português Brasileiro", // portugese, brazilian
+		"sr": "Српски (Beta)",           // serbian, cyrillic
+		"sr-cs": "Srpski (Beta)",        // serbian, latin
+		"uk": "Yкраiнска",               // ukrainian
+		"ru": "Русский",                 // russian
+		"zh-cn": "中文 (simplified)",     // chinese simplified
+		"zh-tw": "中文 (traditional)"     // chinese traditional
+	}
 
 	var userStyles = {};
 
@@ -150,6 +175,7 @@ var NRS = (function(NRS, $, undefined) {
 	};
 
 	NRS.pages.settings = function() {
+
 		for (var style in userStyles) {
 			var $dropdown = $("#" + style + "_color_scheme");
 
@@ -187,7 +213,7 @@ var NRS = (function(NRS, $, undefined) {
 		}
 
 		for (var key in NRS.settings) {
-			if (/_warning/i.test(key) && key != "asset_transfer_warning") {
+			if (/_warning/i.test(key) && key != "asset_transfer_warning" && key != "currency_transfer_warning") {
 				if ($("#settings_" + key).length) {
 					$("#settings_" + key).val(NRS.convertToNXT(NRS.settings[key]));
 				}
@@ -420,6 +446,16 @@ var NRS = (function(NRS, $, undefined) {
 		}
 	});
 
+	NRS.createLangSelect = function() {
+		// Build language select box for settings page, login
+		var $langSelBoxes = $('select[name="language"]');
+		$langSelBoxes.empty();
+		$.each(NRS.languages, function(code, name) {
+			$langSelBoxes.append('<option value="' + code + '">' + name + '</option>');
+		});
+		$langSelBoxes.val(NRS.settings['language']);
+	}
+
 	NRS.getSettings = function() {
 		if (NRS.databaseSupport) {
 			NRS.database.select("data", [{
@@ -434,6 +470,7 @@ var NRS = (function(NRS, $, undefined) {
 					});
 					NRS.settings = NRS.defaultSettings;
 				}
+				NRS.createLangSelect();
 				NRS.applySettings();
 			});
 		} else {
@@ -442,6 +479,7 @@ var NRS = (function(NRS, $, undefined) {
 			} else {
 				NRS.settings = NRS.defaultSettings;
 			}
+			NRS.createLangSelect();
 			NRS.applySettings();
 		}
 	};
@@ -530,7 +568,7 @@ var NRS = (function(NRS, $, undefined) {
 		}
 
 		if (key == "24_hour_format") {
-			var $dashboard_dates = $("#dashboard_transactions_table a[data-timestamp], #dashboard_blocks_table td[data-timestamp]");
+			var $dashboard_dates = $("#dashboard_table a[data-timestamp], #dashboard_blocks_table td[data-timestamp]");
 
 			$.each($dashboard_dates, function(key, value) {
 				$(this).html(NRS.formatTimestamp($(this).data("timestamp")));
@@ -564,7 +602,7 @@ var NRS = (function(NRS, $, undefined) {
 		NRS.applySettings(key);
 	}
 
-	$("#settings_box select").on("change", function(e) {
+	$("#settings_box select, #welcome_panel select[name='language']").on("change", function(e) {
 		e.preventDefault();
 
 		var key = $(this).attr("name");
@@ -577,7 +615,7 @@ var NRS = (function(NRS, $, undefined) {
 		var key = $(this).attr("name");
 		var value = $(this).val();
 
-		if (/_warning/i.test(key) && key != "asset_transfer_warning") {
+		if (/_warning/i.test(key) && key != "asset_transfer_warning" && key != "currency_transfer_warning") {
 			value = NRS.convertToNQT(value);
 		}
 		NRS.updateSettings(key, value);

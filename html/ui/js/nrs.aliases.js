@@ -3,6 +3,11 @@
  */
 var NRS = (function(NRS, $, undefined) {
 	NRS.pages.aliases = function() {
+		var alias_count;
+		NRS.sendRequest("getAliasCount+", {"account":NRS.account}, function(response) {
+			alias_count = response.numberOfAliases;
+		});
+		
 		NRS.sendRequest("getAliases+", {
 			"account": NRS.account,
 			"firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
@@ -59,9 +64,9 @@ var NRS = (function(NRS, $, undefined) {
 				var alias_account_count = 0,
 					alias_uri_count = 0,
 					empty_alias_count = 0,
-					alias_count = aliases.length;
+					page_alias_count = aliases.length;
 
-				for (var i = 0; i < alias_count; i++) {
+				for (var i = 0; i < page_alias_count; i++) {
 					var alias = aliases[i];
 
 					alias.status = "/";
@@ -117,7 +122,7 @@ var NRS = (function(NRS, $, undefined) {
 						alias.status = "<span class='label label-small label-info'>" + alias.status + "</span>";
 					}
 
-					rows += "<tr" + (alias.tentative ? " class='tentative'" : "") + " data-alias='" + String(alias.aliasName).toLowerCase().escapeHTML() + "'><td class='alias'>" + String(alias.aliasName).escapeHTML() + "</td><td class='uri'>" + (alias.aliasURI.indexOf("http") === 0 ? "<a href='" + alias.aliasURI + "' target='_blank'>" + alias.shortAliasURI + "</a>" : alias.shortAliasURI) + "</td><td class='status'>" + alias.status + "</td><td style='white-space:nowrap'><a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#register_alias_modal' data-alias='" + String(alias.aliasName).escapeHTML() + "'>" + $.t("edit") + "</a> <a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#transfer_alias_modal' data-alias='" + String(alias.aliasName).escapeHTML() + "'>" + $.t("transfer") + "</a> <a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#sell_alias_modal' data-alias='" + String(alias.aliasName).escapeHTML() + "'>" + $.t("sell") + "</a>" + (allowCancel ? " <a class='btn btn-xs btn-default cancel_alias_sale' href='#' data-toggle='modal' data-target='#cancel_alias_sale_modal' data-alias='" + String(alias.aliasName).escapeHTML() + "'>" + $.t("cancel_sale") + "</a>" : "") + "</td><td><button class='btn btn-xs btn-default' data-toggle='modal' data-target='#delete_alias_modal'>Delete Alias</button></td></tr>";
+					rows += "<tr" + (alias.tentative ? " class='tentative'" : "") + " data-alias='" + String(alias.aliasName).toLowerCase().escapeHTML() + "'><td class='alias'>" + String(alias.aliasName).escapeHTML() + "</td><td class='uri'>" + (alias.aliasURI.indexOf("http") === 0 ? "<a href='" + alias.aliasURI + "' target='_blank'>" + alias.shortAliasURI + "</a>" : alias.shortAliasURI) + "</td><td class='status'>" + alias.status + "</td><td style='white-space:nowrap'><a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#register_alias_modal' data-alias='" + String(alias.aliasName).escapeHTML() + "'>" + $.t("edit") + "</a> <a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#transfer_alias_modal' data-alias='" + String(alias.aliasName).escapeHTML() + "'>" + $.t("transfer") + "</a> <a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#sell_alias_modal' data-alias='" + String(alias.aliasName).escapeHTML() + "'>" + $.t("sell") + "</a>" + (allowCancel ? " <a class='btn btn-xs btn-default cancel_alias_sale' href='#' data-toggle='modal' data-target='#cancel_alias_sale_modal' data-alias='" + String(alias.aliasName).escapeHTML() + "'>" + $.t("cancel_sale") + "</a>" : "") + " <a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#delete_alias_modal' data-alias='" + String(alias.aliasName).escapeHTML() + "'>" + $.t("delete") + "</a></td></tr>";
 
 					if (!alias.aliasURI) {
 						empty_alias_count++;
@@ -146,7 +151,17 @@ var NRS = (function(NRS, $, undefined) {
 		});
 	}
 
-	$("#transfer_alias_modal, #sell_alias_modal, #cancel_alias_sale_modal").on("show.bs.modal", function(e) {
+	NRS.setup.aliases = function() {
+		var options = {
+			"id": 'sidebar_aliases',
+			"titleHTML": '<i class="fa fa-bookmark"></i> <span data-i18n="aliases">Aliases</span>',
+			"page": 'aliases',
+			"desiredPosition": 100
+		}
+		NRS.addSimpleSidebarMenuItem(options);
+	}
+
+	$("#transfer_alias_modal, #sell_alias_modal, #cancel_alias_sale_modal, #delete_alias_modal").on("show.bs.modal", function(e) {
 		var $invoker = $(e.relatedTarget);
 
 		var alias = String($invoker.data("alias"));

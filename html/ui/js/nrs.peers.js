@@ -2,70 +2,85 @@
  * @depends {nrs.js}
  */
 var NRS = (function(NRS, $, undefined) {
+
+	NRS.connectPeer = function(peer) {
+		NRS.sendRequest("addPeer", {"peer": peer}, function(response) {
+			if (response.errorCode || response.error || response.state != 1) {
+				$.growl($.t("failed_connect_peer"), {
+					"type": "danger"
+				});
+			} else {
+				$.growl($.t("success_connect_peer"), {
+					"type": "success"
+				});
+			}
+			NRS.loadPage("peers");
+		});
+	}
+	
 	NRS.pages.peers = function() {
 		NRS.sendRequest("getPeers+", {
-			"active": "true"
+			"active": "true",
+			"includePeerInfo": "true"
 		}, function(response) {
 			if (response.peers && response.peers.length) {
-				var peers = {};
-				var nrPeers = 0;
-
+				var rows = "";
+				var uploaded = 0;
+				var downloaded = 0;
+				var connected = 0;
+				var upToDate = 0;
+				var activePeers = 0;
+				
 				for (var i = 0; i < response.peers.length; i++) {
-					NRS.sendRequest("getPeer+", {
-						"peer": response.peers[i]
-					}, function(peer, input) {
-						if (NRS.currentPage != "peers") {
-							peers = {};
-							return;
-						}
+					var peer = response.peers[i];
 
-						if (!peer.errorCode) {
-							peers[input.peer] = peer;
-						}
+					if (!peer) {
+						continue;
+					}
 
-						nrPeers++;
+					activePeers++;
+					downloaded += peer.downloadedVolume;
+					uploaded += peer.uploadedVolume;
+					if (peer.state == 1) {
+						connected++;
+					}
 
-						if (nrPeers == response.peers.length) {
-							var rows = "";
-							var uploaded = 0;
-							var downloaded = 0;
-							var connected = 0;
-							var upToDate = 0;
-							var activePeers = 0;
+					var versionToCompare = (!NRS.isTestNet ? NRS.normalVersion.versionNr : NRS.state.version);
 
-							for (var i = 0; i < nrPeers; i++) {
-								var peer = peers[response.peers[i]];
+					if (NRS.versionCompare(peer.version, versionToCompare) >= 0) {
+						upToDate++;
+					}
 
-								if (!peer) {
-									continue;
-								}
+					rows += "<tr>";
+					rows += "<td>";
+					rows += (peer.state == 1 ? "<i class='fa fa-check-circle' style='color:#5cb85c' title='Connected'></i>" : "<i class='fa fa-times-circle' style='color:#f0ad4e' title='Disconnected'></i>");
+					rows += "&nbsp;&nbsp;" + (peer.announcedAddress ? String(peer.announcedAddress).escapeHTML() : "No name") + "</td>";
+					rows += "<td" + (peer.weight > 0 ? " style='font-weight:bold'" : "") + ">" + NRS.formatWeight(peer.weight) + "</td>";
+					rows += "<td>" + NRS.formatVolume(peer.downloadedVolume) + "</td>";
+					rows += "<td>" + NRS.formatVolume(peer.uploadedVolume) + "</td>";
+					rows += "<td><span class='label label-" + (NRS.versionCompare(peer.version, versionToCompare) >= 0 ? "success" : "danger") + "'>";
+					rows += (peer.application && peer.version ? String(peer.application).escapeHTML() + " " + String(peer.version).escapeHTML() : "?") + "</label></td>";
+					rows += "<td>" + (peer.platform ? String(peer.platform).escapeHTML() : "?") + "</td>"
 
-								activePeers++;
-								downloaded += peer.downloadedVolume;
-								uploaded += peer.uploadedVolume;
-								if (peer.state == 1) {
-									connected++;
-								}
-
-								var versionToCompare = (!NRS.isTestNet ? NRS.normalVersion.versionNr : NRS.state.version);
-
-								if (NRS.versionCompare(peer.version, versionToCompare) >= 0) {
-									upToDate++;
-								}
-
-								rows += "<tr><td>" + (peer.state == 1 ? "<i class='fa fa-check-circle' style='color:#5cb85c' title='Connected'></i>" : "<i class='fa fa-times-circle' style='color:#f0ad4e' title='Disconnected'></i>") + "&nbsp;&nbsp;" + (peer.announcedAddress ? String(peer.announcedAddress).escapeHTML() : "No name") + "</td><td" + (peer.weight > 0 ? " style='font-weight:bold'" : "") + ">" + NRS.formatWeight(peer.weight) + "</td><td>" + NRS.formatVolume(peer.downloadedVolume) + "</td><td>" + NRS.formatVolume(peer.uploadedVolume) + "</td><td><span class='label label-" +
-									(NRS.versionCompare(peer.version, versionToCompare) >= 0 ? "success" : "danger") + "'>" + (peer.application && peer.version ? String(peer.application).escapeHTML() + " " + String(peer.version).escapeHTML() : "?") + "</label></td><td>" + (peer.platform ? String(peer.platform).escapeHTML() : "?") + "</td></tr>";
-							}
-
-							$("#peers_uploaded_volume").html(NRS.formatVolume(uploaded)).removeClass("loading_dots");
-							$("#peers_downloaded_volume").html(NRS.formatVolume(downloaded)).removeClass("loading_dots");
-							$("#peers_connected").html(connected).removeClass("loading_dots");
-							$("#peers_up_to_date").html(upToDate + '/' + activePeers).removeClass("loading_dots");
-
-							NRS.dataLoaded(rows);
-						}
-					});
+					rows += "<td style='text-align:right;'>";
+					rows += "<a class='btn btn-xs btn-default' href='#' ";
+					rows += "onClick='NRS.connectPeer(\"" + String(peer.announcedAddress).escapeHTML() +  "\");'>";
+					rows += $.t("connect") + "</a>";
+					rows += "<a class='btn btn-xs btn-default' href='#' data-toggle='modal' ";
+					rows += "data-target='#blacklist_peer_modal' " + (NRS.needsAdminPassword ? "disabled " : "");
+					rows += "data-peer='" + String(peer.announcedAddress).escapeHTML() + "'>" + $.t("blacklist") + "</a>";
+					rows += "</td>";
+					rows += "</tr>";
 				}
+
+				$("#peers_uploaded_volume").html(NRS.formatVolume(uploaded)).removeClass("loading_dots");
+				$("#peers_downloaded_volume").html(NRS.formatVolume(downloaded)).removeClass("loading_dots");
+				$("#peers_connected").html(connected).removeClass("loading_dots");
+				$("#peers_up_to_date").html(upToDate + '/' + activePeers).removeClass("loading_dots");
+
+				NRS.dataLoaded(rows);
+				
+				
 			} else {
 				$("#peers_uploaded_volume, #peers_downloaded_volume, #peers_connected, #peers_up_to_date").html("0").removeClass("loading_dots");
 				NRS.dataLoaded();
@@ -76,6 +91,38 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.incoming.peers = function() {
 		NRS.loadPage("peers");
 	}
+	
+	NRS.forms.addPeerComplete = function(response, data) {
+		var message = "success_add_peer";
+		var growlType = "success";
+		if (response.state == 1) {
+			message = "success_connect_peer";
+		} else if (!response.isNewlyAdded) {
+			message = "peer_already_added";
+			growlType = "danger";
+		}
+		
+		$.growl($.t(message), {
+			"type": growlType
+		});
+		NRS.loadPage("peers");
+	}
+	
+	NRS.forms.blacklistPeerComplete = function(response, data) {
+		$.growl($.t("success_blacklist_peer"), {
+			"type": "success"
+		});
+		NRS.loadPage("peers");
+	}
+	
+	$("#blacklist_peer_modal").on("show.bs.modal", function(e) {
+		var $invoker = $(e.relatedTarget);
 
+		var peerAddress = $invoker.data("peer");
+		
+		$("#blacklist_peer_address").html(peerAddress);
+		$("#blacklist_peer_field_id").val(peerAddress);
+	});
+	
 	return NRS;
 }(NRS || {}, jQuery));

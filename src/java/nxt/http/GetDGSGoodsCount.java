@@ -2,7 +2,6 @@ package nxt.http;
 
 import nxt.DigitalGoodsStore;
 import nxt.NxtException;
-import nxt.util.Convert;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
@@ -18,8 +17,7 @@ public final class GetDGSGoodsCount extends APIServlet.APIRequestHandler {
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
-        String sellerIdValue = Convert.emptyToNull(req.getParameter("seller"));
-        long sellerId = sellerIdValue != null ? ParameterParser.getSellerId(req) : 0;
+        long sellerId = ParameterParser.getAccountId(req, "seller", false);
         boolean inStockOnly = !"false".equalsIgnoreCase(req.getParameter("inStockOnly"));
 
         JSONObject response = new JSONObject();

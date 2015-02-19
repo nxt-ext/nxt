@@ -390,17 +390,25 @@ var NRS = (function(NRS, $, undefined) {
 			}
 
 			var ownsAsset = false;
+			var ownsQuantityQNT = 0;
 
 			if (NRS.accountInfo.assetBalances) {
 				$.each(NRS.accountInfo.assetBalances, function(key, assetBalance) {
 					if (assetBalance.asset == asset.asset && assetBalance.balanceQNT != "0") {
 						ownsAsset = true;
+						ownsQuantityQNT = assetBalance.balanceQNT;
 						return false;
 					}
 				});
 			}
 
-			rows += "<a href='#' class='list-group-item list-group-item-" + (ungrouped ? "ungrouped" : "grouped") + (ownsAsset ? " owns_asset" : " not_owns_asset") + "' data-cache='" + i + "' data-asset='" + String(asset.asset).escapeHTML() + "'" + (!ungrouped ? " data-groupname='" + asset.groupName.escapeHTML() + "'" : "") + (isClosedGroup ? " style='display:none'" : "") + " data-closed='" + isClosedGroup + "'><h4 class='list-group-item-heading'>" + asset.name.escapeHTML() + "</h4><p class='list-group-item-text'>qty: " + NRS.formatQuantity(asset.quantityQNT, asset.decimals) + "</p></a>";
+			rows += "<a href='#' class='list-group-item list-group-item-" + (ungrouped ? "ungrouped" : "grouped") + (ownsAsset ? " owns_asset" : " not_owns_asset") + "' ";
+			rows += "data-cache='" + i + "' ";
+			rows += "data-asset='" + String(asset.asset).escapeHTML() + "'" + (!ungrouped ? " data-groupname='" + asset.groupName.escapeHTML() + "'" : "");
+			rows += (isClosedGroup ? " style='display:none'" : "") + " data-closed='" + isClosedGroup + "'>";
+			rows += "<h4 class='list-group-item-heading'>" + asset.name.escapeHTML() + "</h4>";
+			rows += "<p class='list-group-item-text'><span data-i18n=\"quantity\">Quantity</span>: " + NRS.formatQuantity(ownsQuantityQNT, asset.decimals) + "</p>";
+			rows += "</a>";
 		}
 
 		var active = $("#asset_exchange_sidebar a.active");
@@ -571,15 +579,6 @@ var NRS = (function(NRS, $, undefined) {
 			$("#asset_name").html(String(asset.name).escapeHTML());
 			$("#asset_description").html(String(asset.description).autoLink());
 			$("#asset_quantity").html(NRS.formatQuantity(asset.quantityQNT, asset.decimals));
-
-            // Only asset issuers have the ability to pay dividends.
-            // TODO: Is there a clean way to move this block of code to
-            // nrs.modals.dividendpayment.js?
-            if (asset.accountRS !== NRS.accountRS)
-            {
-                $("#dividend_payment_link").hide();
-            }
-
 			$(".asset_name").html(String(asset.name).escapeHTML());
 			$("#sell_asset_button").data("asset", assetId);
 			$("#buy_asset_button").data("asset", assetId);
@@ -648,6 +647,13 @@ var NRS = (function(NRS, $, undefined) {
 			}
 		}
 
+		// Only asset issuers have the ability to pay dividends.
+		if (asset.accountRS == NRS.accountRS) {
+         $("#dividend_payment_link").show();
+		} else {
+			$("#dividend_payment_link").hide();
+		}
+
 		if (NRS.accountInfo.unconfirmedBalanceNQT == "0") {
 			$("#your_nxt_balance").html("0");
 			$("#buy_automatic_price").addClass("zero").removeClass("nonzero");
@@ -661,7 +667,7 @@ var NRS = (function(NRS, $, undefined) {
 				var balance = NRS.accountInfo.unconfirmedAssetBalances[i];
 
 				if (balance.asset == assetId) {
-					NRS.currentAsset.yourBalanceNQT = balance.unconfirmedBalanceQNT;
+					NRS.currentAsset.yourBalanceQNT = balance.unconfirmedBalanceQNT;
 					$("#your_asset_balance").html(NRS.formatQuantity(balance.unconfirmedBalanceQNT, NRS.currentAsset.decimals));
 					if (balance.unconfirmedBalanceQNT == "0") {
 						$("#sell_automatic_price").addClass("zero").removeClass("nonzero");
@@ -673,8 +679,8 @@ var NRS = (function(NRS, $, undefined) {
 			}
 		}
 
-		if (!NRS.currentAsset.yourBalanceNQT) {
-			NRS.currentAsset.yourBalanceNQT = "0";
+		if (!NRS.currentAsset.yourBalanceQNT) {
+			NRS.currentAsset.yourBalanceQNT = "0";
 			$("#your_asset_balance").html("0");
 		}
 
@@ -933,11 +939,10 @@ var NRS = (function(NRS, $, undefined) {
 			var type = ($(this).attr("id") == "sell_automatic_price" ? "sell" : "buy");
 
 			var price = new Big(NRS.convertToNQT(String($("#" + type + "_asset_price").val())));
-			var balance = new Big(type == "buy" ? NRS.accountInfo.unconfirmedBalanceNQT : NRS.currentAsset.yourBalanceNQT);
 			var balanceNQT = new Big(NRS.accountInfo.unconfirmedBalanceNQT);
 			var maxQuantity = new Big(NRS.convertToQNTf(NRS.currentAsset.quantityQNT, NRS.currentAsset.decimals));
 
-			if (balance.cmp(new Big("0")) <= 0) {
+			if (balanceNQT.cmp(new Big("0")) <= 0) {
 				return;
 			}
 
@@ -947,22 +952,18 @@ var NRS = (function(NRS, $, undefined) {
 				$("#" + type + "_asset_price").val(NRS.convertToNXT(price.toString()));
 			}
 
-			var quantity = new Big(NRS.amountToPrecision((type == "sell" ? balanceNQT : balance).div(price).toString(), NRS.currentAsset.decimals));
+			if (type == "sell") {
+				var quantity = new Big(NRS.currentAsset.yourBalanceQNT ? NRS.convertToQNTf(NRS.currentAsset.yourBalanceQNT, NRS.currentAsset.decimals) : "0");
+			} else {
+				var quantity = new Big(NRS.amountToPrecision(balanceNQT.div(price).toString(), NRS.currentAsset.decimals));
+			}
 
 			var total = quantity.times(price);
 
 			//proposed quantity is bigger than available quantity
-			if (quantity.cmp(maxQuantity) == 1) {
+			if (type == "buy" && quantity.cmp(maxQuantity) == 1) {
 				quantity = maxQuantity;
 				total = quantity.times(price);
-			}
-
-			if (type == "sell") {
-				var maxUserQuantity = new Big(NRS.convertToQNTf(balance, NRS.currentAsset.decimals));
-				if (quantity.cmp(maxUserQuantity) == -1) {
-					quantity = maxUserQuantity;
-					total = quantity.times(price);
-				}
 			}
 
 			$("#" + type + "_asset_quantity").val(quantity.toString());
@@ -975,92 +976,16 @@ var NRS = (function(NRS, $, undefined) {
 		} catch (err) {}
 	});
 
-	function isControlKey(charCode) {
-		if (charCode >= 32)
-			return false;
-		if (charCode == 10)
-			return false;
-		if (charCode == 13)
-			return false;
-
-		return true;
-	}
-
 	$("#buy_asset_quantity, #buy_asset_price, #sell_asset_quantity, #sell_asset_price, #buy_asset_fee, #sell_asset_fee").keydown(function(e) {
 		var charCode = !e.charCode ? e.which : e.charCode;
 
-		if (isControlKey(charCode) || e.ctrlKey || e.metaKey) {
+		if (NRS.isControlKey(charCode) || e.ctrlKey || e.metaKey) {
 			return;
 		}
-
 		var isQuantityField = /_quantity/i.test($(this).attr("id"));
-
-		var maxFractionLength = (isQuantityField ? NRS.currentAsset.decimals : 8 - NRS.currentAsset.decimals);
-
-		if (maxFractionLength) {
-			//allow 1 single period character
-			if (charCode == 110 || charCode == 190) {
-				if ($(this).val().indexOf(".") != -1) {
-					e.preventDefault();
-					return false;
-				} else {
-					return;
-				}
-			}
-		} else {
-			//do not allow period
-			if (charCode == 110 || charCode == 190 || charCode == 188) {
-				$.growl($.t("error_fractions"), {
-					"type": "danger"
-				});
-				e.preventDefault();
-				return false;
-			}
-		}
-
-		var input = $(this).val() + String.fromCharCode(charCode);
-
-		var afterComma = input.match(/\.(\d*)$/);
-
-		//only allow as many as there are decimals allowed..
-		if (afterComma && afterComma[1].length > maxFractionLength) {
-			var selectedText = NRS.getSelectedText();
-
-			if (selectedText != $(this).val()) {
-				var errorMessage;
-
-				if (isQuantityField) {
-					errorMessage = $.t("error_asset_decimals", {
-						"count": (0 + NRS.currentAsset.decimals)
-					});
-				} else {
-					errorMessage = $.t("error_decimals", {
-						"count": (8 - NRS.currentAsset.decimals)
-					});
-				}
-
-				$.growl(errorMessage, {
-					"type": "danger"
-				});
-
-				e.preventDefault();
-				return false;
-			}
-		}
-
-		//numeric characters, left/right key, backspace, delete
-		if (charCode == 8 || charCode == 37 || charCode == 39 || charCode == 46 || (charCode >= 48 && charCode <= 57 && !isNaN(String.fromCharCode(charCode))) || (charCode >= 96 && charCode <= 105)) {
-			return;
-		} else {
-			//comma
-			if (charCode == 188) {
-				$.growl($.t("error_comma_not_allowed"), {
-					"type": "danger"
-				});
-			}
-			e.preventDefault();
-			return false;
-		}
+		var decimals = NRS.currentAsset.decimals;
+		var maxFractionLength = (isQuantityField ? decimals : 8 - decimals);
+		NRS.validateDecimals(maxFractionLength, charCode, $(this).val(), e);
 	});
 
 	//calculate preview price (calculated on every keypress)
@@ -1089,6 +1014,7 @@ var NRS = (function(NRS, $, undefined) {
 		var assetId = $invoker.data("asset");
 
 		$("#asset_order_modal_button").html(orderType + " Asset").data("resetText", orderType + " Asset");
+		$(".asset_order_modal_type").html(orderType);
 
 		orderType = orderType.toLowerCase();
 
@@ -2113,6 +2039,53 @@ var NRS = (function(NRS, $, undefined) {
 		}
 
 		$("#open_orders_page tr[data-order=" + String(data.order).escapeHTML() + "]").addClass("tentative tentative-crossed").find("td.cancel").html("/");
+	}
+
+	NRS.setup.asset_exchange = function() {
+		var sidebarId = 'sidebar_asset_exchange';
+		var options = {
+			"id": sidebarId,
+			"titleHTML": '<i class="fa fa-signal"></i><span data-i18n="asset_exchange">Asset Exchange</span>',
+			"page": 'asset_exchange',
+			"desiredPosition": 30
+		}
+		NRS.addTreeviewSidebarMenuItem(options);
+		options = {
+			"titleHTML": '<span data-i18n="asset_exchange">Asset Exchange</span>',
+			"type": 'PAGE',
+			"page": 'asset_exchange'
+		}
+		NRS.appendToTSMenuItem(sidebarId, options);
+		options = {
+			"titleHTML": '<span data-i18n="trade_history">Trade History</span></a>',
+			"type": 'PAGE',
+			"page": 'trade_history'
+		}
+		NRS.appendToTSMenuItem(sidebarId, options);
+		options = {
+			"titleHTML": '<span data-i18n="transfer_history">Transfer History</span>',
+			"type": 'PAGE',
+			"page": 'transfer_history'
+		}
+		NRS.appendToTSMenuItem(sidebarId, options);
+		options = {
+			"titleHTML": '<span data-i18n="my_assets">My Assets</span></a>',
+			"type": 'PAGE',
+			"page": 'my_assets'
+		}
+		NRS.appendToTSMenuItem(sidebarId, options);
+		options = {
+			"titleHTML": '<span data-i18n="open_orders">Open Orders</span>',
+			"type": 'PAGE',
+			"page": 'open_orders'
+		}
+		NRS.appendToTSMenuItem(sidebarId, options);
+		options = {
+			"titleHTML": '<span data-i18n="issue_asset">Issue Asset</span>',
+			"type": 'MODAL',
+			"modalId": 'issue_asset_modal'
+		}
+		NRS.appendToTSMenuItem(sidebarId, options);
 	}
 
 	return NRS;

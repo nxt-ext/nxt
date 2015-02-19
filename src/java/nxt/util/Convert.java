@@ -4,10 +4,17 @@ import nxt.Constants;
 import nxt.NxtException;
 import nxt.crypto.Crypto;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 
 public final class Convert {
 
@@ -15,7 +22,7 @@ public final class Convert {
     private static final long[] multipliers = {1, 10, 100, 1000, 10000, 100000, 1000000, 10000000, 100000000};
 
     public static final BigInteger two64 = new BigInteger("18446744073709551616");
-    public static int counter;
+    public static final long[] EMPTY_LONG = new long[0];
 
     private Convert() {} //never
 
@@ -135,6 +142,26 @@ public final class Convert {
         return null;
     }
 
+    public static long[] nullToEmpty(long[] array) {
+        return array == null ? EMPTY_LONG : array;
+    }
+
+    public static long[] toArray(List<Long> list) {
+        long[] result = new long[list.size()];
+        for (int i = 0; i < list.size(); i++) {
+            result[i] = list.get(i);
+        }
+        return result;
+    }
+
+    public static List<Long> toList(long[] array) {
+        List<Long> result = new ArrayList<>(array.length);
+        for (long elem : array) {
+            result.add(elem);
+        }
+        return result;
+    }
+
     public static byte[] toBytes(String s) {
         try {
             return s.getBytes("UTF-8");
@@ -145,7 +172,7 @@ public final class Convert {
 
     public static String toString(byte[] bytes) {
         try {
-            return new String(bytes, "UTF-8").trim();
+            return new String(bytes, "UTF-8");
         } catch (UnsupportedEncodingException e) {
             throw new RuntimeException(e.toString(), e);
         }
@@ -188,6 +215,34 @@ public final class Convert {
             fractionalPart *= 10;
         }
         return wholePart * multipliers[decimals] + fractionalPart;
+    }
+
+    public static byte[] compress(byte[] bytes) {
+        try (ByteArrayOutputStream bos = new ByteArrayOutputStream();
+             GZIPOutputStream gzip = new GZIPOutputStream(bos)) {
+            gzip.write(bytes);
+            gzip.flush();
+            gzip.close();
+            return bos.toByteArray();
+        } catch (IOException e) {
+            throw new RuntimeException(e.getMessage(), e);
+        }
+    }
+
+    public static byte[] uncompress(byte[] bytes) {
+        try (ByteArrayInputStream bis = new ByteArrayInputStream(bytes);
+             GZIPInputStream gzip = new GZIPInputStream(bis);
+             ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
+            byte[] buffer = new byte[1024];
+            int nRead;
+            while ((nRead = gzip.read(buffer, 0, buffer.length)) > 0) {
+                bos.write(buffer, 0, nRead);
+            }
+            bos.flush();
+            return bos.toByteArray();
+        } catch (IOException e) {
+            throw new RuntimeException(e.getMessage(), e);
+        }
     }
 
     // overflow checking based on https://www.securecoding.cert.org/confluence/display/java/NUM00-J.+Detect+or+prevent+integer+overflow

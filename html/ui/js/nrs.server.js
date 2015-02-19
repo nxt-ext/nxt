@@ -70,14 +70,21 @@ var NRS = (function(NRS, $, undefined) {
 
 		//convert NXT to NQT...
 		try {
-			var nxtFields = ["feeNXT", "amountNXT", "priceNXT", "refundNXT", "discountNXT"];
+			var nxtFields = [
+				["feeNXT", "NQT"],
+				["amountNXT", "NQT"],
+				["priceNXT", "NQT"],
+				["refundNXT", "NQT"],
+				["discountNXT", "NQT"],
+				["phasingQuorumNXT", ""]
+			];
 
 			for (var i = 0; i < nxtFields.length; i++) {
-				var nxtField = nxtFields[i];
+				var nxtField = nxtFields[i][0];
 				var field = nxtField.replace("NXT", "");
 
 				if (nxtField in data) {
-					data[field + "NQT"] = NRS.convertToNQT(data[nxtField]);
+					data[field + nxtFields[i][1]] = NRS.convertToNQT(data[nxtField]);
 					delete data[nxtField];
 				}
 			}
@@ -930,7 +937,7 @@ var NRS = (function(NRS, $, undefined) {
 				transaction.goodsIsText = goodsLength < 0; // ugly hack??
 
 				if (goodsLength < 0) {
-					goodsLength &= 2147483647;
+					goodsLength &= NRS.constants.MAX_INT_JAVA;
 				}
 
 				pos += 4;
@@ -1244,7 +1251,7 @@ var NRS = (function(NRS, $, undefined) {
 			transaction.messageIsText = messageLength < 0; // ugly hack??
 
 			if (messageLength < 0) {
-				messageLength &= 2147483647;
+				messageLength &= NRS.constants.MAX_INT_JAVA;
 			}
 
 			pos += 4;
@@ -1284,7 +1291,7 @@ var NRS = (function(NRS, $, undefined) {
 			transaction.messageToEncryptIsText = encryptedMessageLength < 0;
 
 			if (encryptedMessageLength < 0) {
-				encryptedMessageLength &= 2147483647;
+				encryptedMessageLength &= NRS.constants.MAX_INT_JAVA;
 			}
 
 			pos += 4;
@@ -1339,7 +1346,7 @@ var NRS = (function(NRS, $, undefined) {
 			transaction.messageToEncryptToSelfIsText = encryptedToSelfMessageLength < 0;
 
 			if (encryptedToSelfMessageLength < 0) {
-				encryptedToSelfMessageLength &= 2147483647;
+				encryptedToSelfMessageLength &= NRS.constants.MAX_INT_JAVA;
 			}
 
 			pos += 4;

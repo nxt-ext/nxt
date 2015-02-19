@@ -26,6 +26,10 @@ public abstract class ValuesDbTable<T,V> extends DerivedDbTable {
 
     protected abstract void save(Connection con, T t, V v) throws SQLException;
 
+    protected void clearCache() {
+        db.getCache(table).clear();
+    }
+
     public final List<V> get(DbKey dbKey) {
         List<V> values;
         if (db.isInTransaction()) {
@@ -36,7 +40,7 @@ public abstract class ValuesDbTable<T,V> extends DerivedDbTable {
         }
         try (Connection con = db.getConnection();
              PreparedStatement pstmt = con.prepareStatement("SELECT * FROM " + table + dbKeyFactory.getPKClause()
-             + (multiversion ? " AND latest = TRUE" : "") + " ORDER BY db_id DESC")) {
+                     + (multiversion ? " AND latest = TRUE" : "") + " ORDER BY db_id")) {
             dbKey.setPK(pstmt);
             values = get(con, pstmt);
             if (db.isInTransaction()) {

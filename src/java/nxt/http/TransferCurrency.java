@@ -15,13 +15,13 @@ public final class TransferCurrency extends CreateTransaction {
     static final TransferCurrency instance = new TransferCurrency();
 
     private TransferCurrency() {
-        super(new APITag[] {APITag.MS, APITag.CREATE_TRANSACTION}, "recipient", "currency", "code", "units");
+        super(new APITag[] {APITag.MS, APITag.CREATE_TRANSACTION}, "recipient", "currency", "units");
     }
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
 
-        long recipient = ParameterParser.getRecipientId(req);
+        long recipient = ParameterParser.getAccountId(req, "recipient", true);
 
         Currency currency = ParameterParser.getCurrency(req);
         long units = ParameterParser.getLong(req, "units", 0, Long.MAX_VALUE, true);

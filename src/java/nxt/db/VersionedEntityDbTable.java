@@ -2,7 +2,6 @@ package nxt.db;
 
 
 import nxt.Nxt;
-import nxt.util.Logger;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -61,7 +60,7 @@ public abstract class VersionedEntityDbTable<T> extends EntityDbTable<T> {
     }
 
     @Override
-    public final void trim(int height) {
+    public void trim(int height) {
         trim(db, table, height, dbKeyFactory);
     }
 
@@ -84,15 +83,18 @@ public abstract class VersionedEntityDbTable<T> extends EntityDbTable<T> {
                     dbKeys.add(dbKeyFactory.newKey(rs));
                 }
             }
+            /*
             if (dbKeys.size() > 0 && Logger.isDebugEnabled()) {
                 Logger.logDebugMessage(String.format("rollback table %s found %d records to update to latest", table, dbKeys.size()));
             }
-
+            */
             pstmtDelete.setInt(1, height);
             int deletedRecordsCount = pstmtDelete.executeUpdate();
+            /*
             if (deletedRecordsCount > 0 && Logger.isDebugEnabled()) {
                 Logger.logDebugMessage(String.format("rollback table %s deleting %d records", table, deletedRecordsCount));
             }
+            */
             for (DbKey dbKey : dbKeys) {
                 int i = 1;
                 i = dbKey.setPK(pstmtSetLatest, i);
@@ -114,8 +116,8 @@ public abstract class VersionedEntityDbTable<T> extends EntityDbTable<T> {
              PreparedStatement pstmtSelect = con.prepareStatement("SELECT " + dbKeyFactory.getPKColumns() + ", MAX(height) AS max_height"
                      + " FROM " + table + " WHERE height < ? GROUP BY " + dbKeyFactory.getPKColumns() + " HAVING COUNT(DISTINCT height) > 1");
              PreparedStatement pstmtDelete = con.prepareStatement("DELETE FROM " + table + dbKeyFactory.getPKClause()
-                     + " AND height < ?");
-            PreparedStatement pstmtDeleteDeleted = con.prepareStatement("DELETE FROM " + table + " WHERE height < ? AND latest = FALSE "
+                     + " AND height < ? AND height >= 0");
+            PreparedStatement pstmtDeleteDeleted = con.prepareStatement("DELETE FROM " + table + " WHERE height < ? AND height >= 0 AND latest = FALSE "
                     + " AND (" + dbKeyFactory.getPKColumns() + ") NOT IN (SELECT (" + dbKeyFactory.getPKColumns() + ") FROM "
                     + table + " WHERE height >= ?)")) {
             pstmtSelect.setInt(1, height);

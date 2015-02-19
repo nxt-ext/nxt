@@ -11,8 +11,7 @@ public interface TransactionProcessor extends Observable<List<? extends Transact
     public static enum Event {
         REMOVED_UNCONFIRMED_TRANSACTIONS,
         ADDED_UNCONFIRMED_TRANSACTIONS,
-        ADDED_CONFIRMED_TRANSACTIONS,
-        ADDED_DOUBLESPENDING_TRANSACTIONS
+        ADDED_CONFIRMED_TRANSACTIONS
     }
 
     DbIterator<? extends Transaction> getAllUnconfirmedTransactions();
@@ -28,7 +27,5 @@ public interface TransactionProcessor extends Observable<List<? extends Transact
     Transaction parseTransaction(byte[] bytes) throws NxtException.ValidationException;
 
     Transaction parseTransaction(JSONObject json) throws NxtException.ValidationException;
-
-    Transaction.Builder newTransactionBuilder(byte[] senderPublicKey, long amountNQT, long feeNQT, short deadline, Attachment attachment);
 
 }

@@ -20,6 +20,14 @@ public interface Transaction {
 
         Builder publicKeyAnnouncement(Appendix.PublicKeyAnnouncement publicKeyAnnouncement);
 
+        Builder timestamp(int timestamp);
+
+        Builder ecBlockHeight(int height);
+
+        Builder ecBlockId(long blockId);
+
+        Builder phasing(Appendix.Phasing phasing);
+
         Transaction build() throws NxtException.NotValidException;
 
     }
@@ -84,16 +92,11 @@ public interface Transaction {
 
     Appendix.EncryptToSelfMessage getEncryptToSelfMessage();
 
+    Appendix.Phasing getPhasing();
+
     List<? extends Appendix> getAppendages();
-
-    /*
-    Collection<TransactionType> getPhasingTransactionTypes();
-
-    Collection<TransactionType> getPhasedTransactionTypes();
-    */
 
     int getECBlockHeight();
 
     long getECBlockId();
-
 }

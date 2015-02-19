@@ -37,7 +37,7 @@ public final class DigitalGoodsStore {
         Nxt.getBlockchainProcessor().addListener(new Listener<Block>() {
             @Override
             public void notify(Block block) {
-                if (block.getHeight() < Constants.DIGITAL_GOODS_STORE_BLOCK) {
+                if (block.getHeight() <= Constants.DIGITAL_GOODS_STORE_BLOCK) {
                     return;
                 }
                 List<Purchase> expiredPurchases = new ArrayList<>();
@@ -113,6 +113,7 @@ public final class DigitalGoodsStore {
         public static int getCount() {
             return tagTable.getCount();
         }
+
         public static int getCountInStock() {
             return tagTable.getCount(new DbClause.FixedClause(" in_stock_count > 0 "));
         }
@@ -619,13 +620,7 @@ public final class DigitalGoodsStore {
         }
 
         public static DbIterator<Purchase> getPendingSellerPurchases(final long sellerId, int from, int to) {
-            DbClause dbClause = new DbClause(" seller_id = ? AND pending = TRUE ") {
-                @Override
-                public int set(PreparedStatement pstmt, int index) throws SQLException {
-                    pstmt.setLong(index++, sellerId);
-                    return index;
-                }
-            };
+            DbClause dbClause = new DbClause.LongClause("seller_id", sellerId).and(new DbClause.FixedClause("pending = TRUE"));
             return purchaseTable.getManyBy(dbClause, from, to);
         }
 
@@ -637,14 +632,9 @@ public final class DigitalGoodsStore {
         private static DbIterator<Purchase> getExpiredPendingPurchases(Block block) {
             final int timestamp = block.getTimestamp();
             final int previousTimestamp = Nxt.getBlockchain().getBlock(block.getPreviousBlockId()).getTimestamp();
-            DbClause dbClause = new DbClause(" deadline < ? AND deadline >= ? AND pending = TRUE ") {
-                @Override
-                public int set(PreparedStatement pstmt, int index) throws SQLException {
-                    pstmt.setLong(index++, timestamp);
-                    pstmt.setLong(index++, previousTimestamp);
-                    return index;
-                }
-            };
+            DbClause dbClause = new DbClause.LongClause("deadline", DbClause.Op.LT, timestamp)
+                    .and(new DbClause.LongClause("deadline", DbClause.Op.GTE, previousTimestamp))
+                    .and(new DbClause.FixedClause("pending = TRUE"));
             return purchaseTable.getManyBy(dbClause, 0, -1);
         }
 

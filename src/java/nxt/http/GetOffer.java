@@ -18,9 +18,8 @@ public final class GetOffer extends APIServlet.APIRequestHandler {
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws ParameterException {
         JSONObject response = new JSONObject();
-        long offerId = ParameterParser.getLong(req, "offer", Long.MIN_VALUE, Long.MAX_VALUE, true);
-        CurrencyBuyOffer buyOffer = CurrencyBuyOffer.getOffer(offerId);
-        CurrencySellOffer sellOffer = CurrencySellOffer.getOffer(offerId);
+        CurrencyBuyOffer buyOffer = ParameterParser.getBuyOffer(req);
+        CurrencySellOffer sellOffer = ParameterParser.getSellOffer(req);
         response.put("buyOffer", JSONData.offer(buyOffer));
         response.put("sellOffer", JSONData.offer(sellOffer));
         return response;

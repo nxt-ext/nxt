@@ -2,7 +2,7 @@
 VERSION=$1
 PACKAGE=nxt-client-${VERSION}.zip
 
-FILES="conf lib html MIT-license.txt run.sh run.bat run-tor.sh verify.sh changelogs README.txt README_win.txt NXT_Wallet.url Dockerfile docker_start.sh classes nxt.jar src compile.sh win-compile.sh javadoc.sh package.sh"
+FILES="conf lib html MIT-license.txt run.sh run.bat run-tor.sh verify.sh changelogs README.txt README_win.txt NXT_Wallet.url Dockerfile docker_start.sh classes nxt.jar src compile.sh win-compile.sh javadoc.sh package.sh mint.bat mint.sh"
 
 ./compile.sh
 ./jar.sh

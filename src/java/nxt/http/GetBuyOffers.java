@@ -17,7 +17,7 @@ public final class GetBuyOffers extends APIServlet.APIRequestHandler {
     static final GetBuyOffers instance = new GetBuyOffers();
 
     private GetBuyOffers() {
-        super(new APITag[] {APITag.MS}, "currency", "code", "account", "firstIndex", "lastIndex");
+        super(new APITag[] {APITag.MS}, "currency", "account", "availableOnly", "firstIndex", "lastIndex");
     }
 
     @Override
@@ -25,6 +25,7 @@ public final class GetBuyOffers extends APIServlet.APIRequestHandler {
 
         String currencyId = Convert.emptyToNull(req.getParameter("currency"));
         String accountId = Convert.emptyToNull(req.getParameter("account"));
+        boolean availableOnly = "true".equalsIgnoreCase(req.getParameter("availableOnly"));
 
         int firstIndex = ParameterParser.getFirstIndex(req);
         int lastIndex = ParameterParser.getLastIndex(req);
@@ -37,15 +38,17 @@ public final class GetBuyOffers extends APIServlet.APIRequestHandler {
         try {
             if (accountId == null) {
                 Currency currency = ParameterParser.getCurrency(req);
-                offers = CurrencyBuyOffer.getOffers(currency, firstIndex, lastIndex);
+                offers = CurrencyBuyOffer.getOffers(currency, availableOnly, firstIndex, lastIndex);
             } else if (currencyId == null) {
                 Account account = ParameterParser.getAccount(req);
-                offers = CurrencyBuyOffer.getOffers(account, firstIndex, lastIndex);
+                offers = CurrencyBuyOffer.getOffers(account, availableOnly, firstIndex, lastIndex);
             } else {
                 Currency currency = ParameterParser.getCurrency(req);
                 Account account = ParameterParser.getAccount(req);
                 CurrencyBuyOffer offer = CurrencyBuyOffer.getOffer(currency, account);
-                offerData.add(JSONData.offer(offer));
+                if (offer != null) {
+                    offerData.add(JSONData.offer(offer));
+                }
                 return response;
             }
             while (offers.hasNext()) {

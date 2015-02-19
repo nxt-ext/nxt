@@ -17,11 +17,12 @@ var NRS = (function(NRS, $, undefined) {
 							return;
 						}
 
-						if (!poll.errorCode) {
+						if (!poll.errorCode && poll.attachment.finishHeight >= NRS.lastBlockHeight) {
 							polls[input.transaction] = poll;
 						}
 
 						nrPolls++;
+
 
 						if (nrPolls == response.pollIds.length) {
 							var rows = "";
@@ -37,7 +38,7 @@ var NRS = (function(NRS, $, undefined) {
 											pollDescription = pollDescription.substring(0, 100) + "...";
 										}
 
-										rows += "<tr class='tentative'><td>" + String(unconfirmedTransaction.attachment.name).escapeHTML() + "</td><td>" + pollDescription.escapeHTML() + "</td><td>" + (unconfirmedTransaction.sender != NRS.genesis ? "<a href='#' data-user='" + NRS.getAccountFormatted(unconfirmedTransaction, "sender") + "' class='user_info'>" + NRS.getAccountTitle(unconfirmedTransaction, "sender") + "</a>" : "Genesis") + "</td><td>" + NRS.formatTimestamp(unconfirmedTransaction.timestamp) + "</td><td><a href='#'>Vote (todo)</td></tr>";
+										rows += "<tr class='tentative'><td>" + String(unconfirmedTransaction.attachment.name).escapeHTML() + "</td><td>" + pollDescription.escapeHTML() + "</td><td>" + (unconfirmedTransaction.sender != NRS.genesis ? "<a href='#' data-user='" + NRS.getAccountFormatted(unconfirmedTransaction, "sender") + "' class='user_info'>" + NRS.getAccountTitle(unconfirmedTransaction, "sender") + "</a>" : "Genesis") + "</td><td>" + NRS.formatTimestamp(unconfirmedTransaction.timestamp) + "</td><td>" + String(unconfirmedTransaction.attachment.finishHeight - NRS.lastBlockHeight)  + "</td><td><a href='#'>Vote (todo)</td></tr>";
 									}
 								}
 							}
@@ -54,10 +55,77 @@ var NRS = (function(NRS, $, undefined) {
 								if (pollDescription.length > 100) {
 									pollDescription = pollDescription.substring(0, 100) + "...";
 								}
-
-								rows += "<tr><td>" + String(poll.attachment.name).escapeHTML() + "</td><td>" + pollDescription.escapeHTML() + "</td><td>" + (poll.sender != NRS.genesis ? "<a href='#' data-user='" + NRS.getAccountFormatted(poll, "sender") + "' class='user_info'>" + NRS.getAccountTitle(poll, "sender") + "</a>" : "Genesis") + "</td><td>" + NRS.formatTimestamp(poll.timestamp) + "</td><td><a href='#'>Vote (todo)</td></tr>";
+								rows += "<tr><td><a class='poll_list_title' href='#' data-transaction='"+poll.transaction+"'>" + String(poll.attachment.name).escapeHTML() + "</a></td><td>" + pollDescription.escapeHTML() + "</td><td>" + (poll.sender != NRS.genesis ? "<a href='#' data-user='" + NRS.getAccountFormatted(poll, "sender") + "' class='user_info'>" + NRS.getAccountTitle(poll, "sender") + "</a>" : "Genesis") + "</td><td>" + NRS.formatTimestamp(poll.timestamp) + "</td><td>" + String(poll.attachment.finishHeight - NRS.lastBlockHeight) + "</td><td><a href='#' class='vote_button' data-poll='" + poll.transaction +"'>Vote </td></tr>";
 							}
+							NRS.dataLoaded(rows);
+						}
+					});
+				}
+			} else {
+				NRS.dataLoaded();
+			}
+		});
+	}
+ 
+	NRS.incoming.polls = function() {
+		NRS.loadPage("polls");
+	}
 
+	NRS.pages.my_polls = function() {
+		NRS.sendRequest("getPollIds+", {"account": NRS.account}, function(response) {
+			if (response.pollIds && response.pollIds.length) {
+				var polls = {};
+				var nrPolls = 0;
+
+				for (var i = 0; i < response.pollIds.length; i++) {
+					NRS.sendRequest("getTransaction+", {
+						"transaction": response.pollIds[i]
+					}, function(poll, input) {
+						if (NRS.currentPage != "my_polls") {
+							polls = {};
+							return;
+						}
+
+						if (!poll.errorCode) {
+							polls[input.transaction] = poll;
+						}
+
+						nrPolls++;
+
+
+						if (nrPolls == response.pollIds.length) {
+							var rows = "";
+
+							for (var i = 0; i < nrPolls; i++) {
+								var poll = polls[response.pollIds[i]];
+
+								if (!poll) {
+									continue;
+								}
+
+								var pollDescription = String(poll.attachment.description);
+
+								if (pollDescription.length > 100) {
+									pollDescription = pollDescription.substring(0, 100) + "...";
+								}
+								rows += "<tr>"
+								rows += "<td><a class='poll_list_title' href='#' data-transaction='"+poll.transaction+"'>" + String(poll.attachment.name).escapeHTML() + "</a></td>";
+								rows += "<td>" + pollDescription.escapeHTML() + "</td>";
+								rows += "<td>" + (poll.sender != NRS.genesis ? "<a href='#' data-user='" + NRS.getAccountFormatted(poll, "sender") + "' class='user_info'>" + NRS.getAccountTitle(poll, "sender") + "</a>" : "Genesis") + "</td>"
+								rows += "<td>" + NRS.formatTimestamp(poll.timestamp) + "</td>";
+								if(poll.attachment.finishHeight > NRS.lastBlockHeight)
+								{
+									rows += "<td>" + String(poll.attachment.finishHeight - NRS.lastBlockHeight) + "</td>";
+									rows += "<td><a href='#' class='vote_button' data-poll='" + poll.transaction +"'>Vote </td>";
+
+								}
+								else
+								{
+									rows += "<td>Complete</td>";
+									rows += "<td><a href='#' class='results_button' data-results='" + poll.transaction +"'>Results </td>";
+								}
+								rows += "</tr>";
+							}
 							NRS.dataLoaded(rows);
 						}
 					});
@@ -68,9 +136,125 @@ var NRS = (function(NRS, $, undefined) {
 		});
 	}
 
-	NRS.incoming.polls = function() {
-		NRS.loadPage("polls");
+	NRS.incoming.my_polls = function() {
+		NRS.loadPage("my_polls");
 	}
+
+	NRS.pages.voted_polls = function() {
+		NRS.sendRequest("getAccountTransactions",{"account": NRS.accountRS, "type": 1, "subtype": 3}, function(response) {
+			
+			if (response.transactions && response.transactions.length > 0) {
+				var polls = {};
+				var nrPolls = 0;
+
+				for (var i = 0; i < response.transactions.length; i++) {
+					NRS.sendRequest("getTransaction", {
+						"transaction": response.transactions[i].attachment.poll
+					}, function(poll, input) {
+						if (NRS.currentPage != "voted_polls") {
+							polls = {};
+							return;
+						}
+
+						if (!poll.errorCode) {
+							polls[input.transaction] = poll;
+						}
+
+						nrPolls++;
+
+						if (nrPolls == response.transactions.length) {
+							var rows = "";
+
+							for (var i = 0; i < nrPolls; i++) {
+								var poll = polls[response.transactions[i].attachment.poll];
+
+								if (!poll) {
+									continue;
+								}
+								var pollDescription = String(poll.attachment.description);
+
+								if (pollDescription.length > 100) {
+									pollDescription = pollDescription.substring(0, 100) + "...";
+								}
+								rows += "<tr>"
+								rows += "<td><a class='poll_list_title' href='#' data-transaction='"+poll.transaction+"'>" + String(poll.attachment.name).escapeHTML() + "</a></td>";
+								rows += "<td>" + pollDescription.escapeHTML() + "</td>";
+								rows += "<td>" + (poll.sender != NRS.genesis ? "<a href='#' data-user='" + NRS.getAccountFormatted(poll, "sender") + "' class='user_info'>" + NRS.getAccountTitle(poll, "sender") + "</a>" : "Genesis") + "</td>"
+								rows += "<td>" + NRS.formatTimestamp(poll.timestamp) + "</td>";
+								if(poll.attachment.finishHeight > NRS.lastBlockHeight)
+								{
+									rows += "<td>" + String(poll.attachment.finishHeight - NRS.lastBlockHeight) + "</td>";
+									rows += "<td>Waiting... </td>";
+
+								}
+								else
+								{
+									rows += "<td>Complete</td>";
+									rows += "<td><a href='#' class='results_button' data-results='" + poll.transaction +"'>Results </td>";
+								}
+								rows += "</tr>";
+							}
+							NRS.dataLoaded(rows);
+						}
+					});
+				}
+			} else {
+				NRS.dataLoaded();
+			}
+		});
+	}
+
+	NRS.incoming.voted_polls = function() {
+		NRS.loadPage("voted_polls");
+	}
+
+	NRS.setup.polls = function() {
+		var sidebarId = 'sidebar_voting_system';
+		var options = {
+			"id": sidebarId,
+			"titleHTML": '<i class="fa fa-check-square-o"></i><span data-i18n="voting_system">Voting</span>',
+			"page": 'polls',
+			"desiredPosition": 50
+		}
+		NRS.addTreeviewSidebarMenuItem(options);
+		options = {
+			"titleHTML": '<span data-i18n="active_polls">Active Polls</span>',
+			"type": 'PAGE',
+			"page": 'polls'
+		}
+		NRS.appendToTSMenuItem(sidebarId, options);
+		options = {
+			"titleHTML": '<span data-i18n="relevant_polls">Relevant Polls</span>',
+			"type": 'PAGE',
+			"page": 'relevant_polls'
+		}
+		NRS.appendToTSMenuItem(sidebarId, options);
+		options = {
+			"titleHTML": '<span data-i18n="followed_polls">Followed Polls</span>',
+			"type": 'PAGE',
+			"page": 'followed_polls'
+		}
+		NRS.appendToTSMenuItem(sidebarId, options);
+		options = {
+			"titleHTML": '<span data-i18n="my_polls">My Polls</span>',
+			"type": 'PAGE',
+			"page": 'my_polls'
+		}
+		NRS.appendToTSMenuItem(sidebarId, options);
+		options = {
+			"titleHTML": '<span data-i18n="my_votes">My Votes</span>',
+			"type": 'PAGE',
+			"page": 'voted_polls'
+		}
+		NRS.appendToTSMenuItem(sidebarId, options);
+		options = {
+			"titleHTML": '<span data-i18n="create_poll">Create Poll</span>',
+			"type": 'MODAL',
+			"modalId": 'create_poll_modal'
+		}
+		NRS.appendToTSMenuItem(sidebarId, options);
+	}
+
 
 	$("#create_poll_answers").on("click", "button.btn.remove_answer", function(e) {
 		e.preventDefault();
@@ -90,12 +274,224 @@ var NRS = (function(NRS, $, undefined) {
 		$clone.appendTo("#create_poll_answers");
 	});
 
+	$("#create_poll_type").change(function() {
+		// poll type changed, lets see if we have to include/remove the asset id
+		if($("#create_poll_type").val() == "2") {
+			$("#create_poll_asset_id_group").css("display", "inline");
+			$("#create_poll_ms_currency_group").css("display", "none");
+			$("#create_poll_type_group").removeClass("col-xs-12").addClass("col-xs-6");
+			$("#create_poll_type_group").removeClass("col-sm-12").addClass("col-sm-6");
+			$("#create_poll_type_group").removeClass("col-md-12").addClass("col-md-6");
+		}
+		else if($("#create_poll_type").val() == "3") {
+			$("#create_poll_asset_id_group").css("display", "none");
+			$("#create_poll_ms_currency_group").css("display", "inline");
+			$("#create_poll_type_group").removeClass("col-xs-12").addClass("col-xs-6");
+			$("#create_poll_type_group").removeClass("col-sm-12").addClass("col-sm-6");
+			$("#create_poll_type_group").removeClass("col-md-12").addClass("col-md-6");
+		}
+		else {
+			$("#create_poll_asset_id_group").css("display", "none");
+			$("#create_poll_ms_currency_group").css("display", "none");
+			$("#create_poll_type_group").removeClass("col-xs-6").addClass("col-xs-12");
+			$("#create_poll_type_group").removeClass("col-sm-6").addClass("col-sm-12");
+			$("#create_poll_type_group").removeClass("col-md-6").addClass("col-md-12");
+		}
+
+		if($("#create_poll_type").val() == "1")
+		{
+			// ok now lets show the bottom things...
+			$("#create_poll_min_balance_type_group").css("display", "inline");
+		}
+		else
+		{
+			$("#create_poll_min_balance_type_group").css("display", "none");
+		}
+
+	});
+
+	$("input[name=minBalanceType]:radio").change(function () {
+		var value = $(this).val();
+
+		if(value == "2") {
+			$("#create_poll_asset_id_group").css("display", "inline");
+			$("#create_poll_ms_currency_group").css("display", "none");
+			$("#create_poll_type_group").removeClass("col-xs-12").addClass("col-xs-6");
+			$("#create_poll_type_group").removeClass("col-sm-12").addClass("col-sm-6");
+			$("#create_poll_type_group").removeClass("col-md-12").addClass("col-md-6");
+		}
+		else if(value == "3") {
+			$("#create_poll_asset_id_group").css("display", "none");
+			$("#create_poll_ms_currency_group").css("display", "inline");
+			$("#create_poll_type_group").removeClass("col-xs-12").addClass("col-xs-6");
+			$("#create_poll_type_group").removeClass("col-sm-12").addClass("col-sm-6");
+			$("#create_poll_type_group").removeClass("col-md-12").addClass("col-md-6");
+		}
+		else {
+			$("#create_poll_asset_id_group").css("display", "none");
+			$("#create_poll_ms_currency_group").css("display", "none");
+			$("#create_poll_type_group").removeClass("col-xs-6").addClass("col-xs-12");
+			$("#create_poll_type_group").removeClass("col-sm-6").addClass("col-sm-12");
+			$("#create_poll_type_group").removeClass("col-md-6").addClass("col-md-12");
+		}
+
+	});
+
+
+		$("#polls_table, #my_polls_table").on("click", "a[data-poll]", function(e) {
+			e.preventDefault();
+			var transactionId = $(this).data("poll");
+
+			NRS.sendRequest("getTransaction", {
+				"transaction": transactionId
+			}, function(response, input) {
+				$("#cast_vote_poll_name").text(response.attachment.name);
+				$("#cast_vote_poll_description").text(response.attachment.description);
+				$("#cast_vote_answers_entry").text("");
+				if(response.attachment.minNumberOfOptions != response.attachment.maxNumberOfOptions)
+				$("#cast_vote_range").text("Select between " + response.attachment.minNumberOfOptions + " and " + response.attachment.maxNumberOfOptions + " options from below.")
+				else if(response.attachment.minNumberOfOptions != 1) $("#cast_vote_range").text("Select " + response.attachment.minNumberOfOptions +  " options from below.")
+				else $("#cast_vote_range").text("Select 1 option from below.")
+
+				$("#cast_vote_poll").val(response.transaction);
+				if(response.attachment.maxRangeValue != 1)
+				{
+					for(var b=0; b<response.attachment.options.length; b++)
+					{
+						$("#cast_vote_answers_entry").append("<div class='answer_slider'><label name='cast_vote_answer_"+b+"'>"+response.attachment.options[b]+"</label> &nbsp;&nbsp;<span class='badge'>"+response.attachment.minRangeValue+"</span><br/><input class='form-control' step='1' value='"+response.attachment.minRangeValue+"' max='"+response.attachment.maxRangeValue+"' min='"+response.attachment.minRangeValue+"' type='range'/></div>");
+					}
+				}
+				else
+				{
+					for(var b=0; b<response.attachment.options.length; b++)
+					{
+						$("#cast_vote_answers_entry").append("<div class='answer_boxes'><label name='cast_vote_answer_"+b+"'><input type='checkbox'/>&nbsp;&nbsp;"+response.attachment.options[b]+"</label></div>");
+					}
+				}
+				$("#cast_vote_modal").modal();
+				$("input[type='range']").on("change mousemove", function() {
+					$(this).parent().children(".badge").text($(this).val());
+
+				});
+			});
+
+			
+		});	
+
+		$("#my_polls_table, #voted_polls_table").on("click", "a[data-results]", function(e) {
+			e.preventDefault();
+			var transactionId = $(this).data("results");
+
+			NRS.sendRequest("getPollResult", {"poll": transactionId, "req":"getPollResult"}, voteModal);
+			NRS.sendRequest("getPollVotes", {"poll": transactionId, "req":"getPollVotes"}, voteModal);
+			NRS.sendRequest("getPoll", {"poll": transactionId, "req": "getPoll"}, voteModal);
+			var results, votes, poll;
+
+			function voteModal(data, input)
+			{
+				if(input.req=="getPollResult") results = data;
+				if(input.req=="getPollVotes") votes = data;
+				if(input.req=="getPoll") poll = data;
+
+				if(results !== undefined && votes !== undefined && poll !== undefined)
+				{
+					$("#poll_results_options").append("<tr><td style='font-weight: bold;width:180px;'><span data-i18n='poll_name'>Poll Name</span>:</td><td><span id='poll_results_poll_name'>"+poll.name+"</span></td></tr>");
+					$("#poll_results_options").append("<tr><td style='font-weight: bold;width:180px;'><span data-i18n='poll_id'>Poll Id</span>:</td><td><span id='poll_results_poll_id'>"+poll.poll+"</span></td></tr>");
+
+					$("#poll_results_poll_name").text(poll.name);
+					$("#poll_results_poll_id").text(poll.poll);
+
+
+					$("#poll_results_number_of_voters").text(votes.votes.length);
+
+
+					$("#poll_results_modal").modal();
+
+					for(var b=0; b<results.results.length; b++)
+					{
+						$("#poll_results_options").append("<tr><td style='font-weight: bold;width:180px;'><span>"+Object.keys(results.results[b])[0]+"</span>:</td><td><span id='poll_results_result_"+b+"'>"+results.results[b][Object.keys(results.results[b])[0]]+"</span></td></tr>");
+					}
+					if(votes.votes.length == 0)
+					{
+						$("poll_results_voters").text("<span data-il8n='voter_data_pruned'>Voter data has been pruned from the blockchain</span>");
+					}
+					else {
+						for(var c=0; c<votes.votes.length;c++)
+						{
+							
+						}
+					}
+
+
+					/*if(response.attachment.minNumberOfOptions != response.attachment.maxNumberOfOptions)
+					$("#cast_vote_range").text("Select between " + response.attachment.minNumberOfOptions + " and " + response.attachment.maxNumberOfOptions + " options from below.")
+					else if(response.attachment.minNumberOfOptions != 1) $("#cast_vote_range").text("Select " + response.attachment.minNumberOfOptions +  " options from below.")
+					else $("#cast_vote_range").text("Select 1 option from below.")
+
+					$("#cast_vote_poll").val(response.transaction);
+					if(response.attachment.maxRangeValue != 1)
+					{
+						for(var b=0; b<response.attachment.options.length; b++)
+						{
+							$("#cast_vote_answers_entry").append("<div class='answer_slider'><label name='cast_vote_answer_"+b+"'>"+response.attachment.options[b]+"</label> &nbsp;&nbsp;<span class='badge'>"+response.attachment.minRangeValue+"</span><br/><input class='form-control' step='1' value='"+response.attachment.minRangeValue+"' max='"+response.attachment.maxRangeValue+"' min='"+response.attachment.minRangeValue+"' type='range'/></div>");
+						}
+					}
+					else
+					{
+						for(var b=0; b<response.attachment.options.length; b++)
+						{
+							$("#cast_vote_answers_entry").append("<div class='answer_boxes'><label name='cast_vote_answer_"+b+"'><input type='checkbox'/>&nbsp;&nbsp;"+response.attachment.options[b]+"</label></div>");
+						}
+					}
+					
+					$("input[type='range']").on("change mousemove", function() {
+						$(this).parent().children(".badge").text($(this).val());
+
+					});*/
+				}
+
+
+			}
+
+			
+		});	
+		
+
+$("#poll_results_modal").on("show.bs.modal", function(e) {
+
+		$("#poll_results_modal_statistics").show();
+		// now lets put the data in the correct place...
+});
+
+$("#poll_results_modal ul.nav li").click(function(e) {
+		e.preventDefault();
+
+		var tab = $(this).data("tab");
+
+		$(this).siblings().removeClass("active");
+		$(this).addClass("active");
+
+		$(".poll_results_modal_content").hide();
+
+		var content = $("#poll_results_modal_" + tab);
+
+		content.show();
+	});
+
+	$("#poll_results_modal").on("hidden.bs.modal", function(e) {
+		$(this).find(".poll_results_modal_content").hide();
+		$(this).find("ul.nav li.active").removeClass("active");
+		$("#poll_results_statistics_nav").addClass("active");
+		$("#poll_results_options").text("");
+	});
+
+		
+
 	NRS.forms.createPoll = function($modal) {
 		var options = new Array();
 
 		$("#create_poll_answers input.create_poll_answers").each(function() {
 			var option = $.trim($(this).val());
-
 			if (option) {
 				options.push(option);
 			}
@@ -105,20 +501,54 @@ var NRS = (function(NRS, $, undefined) {
 			//...
 		}
 
+		$("#create_poll_") //  idk why this is here, made by wesley.. -Jones
+
 		var data = {
 			"name": $("#create_poll_name").val(),
 			"description": $("#create_poll_description").val(),
-			"optionsAreBinary": "0",
+			"finishHeight": (parseInt(NRS.lastBlockHeight) + parseInt($("#create_poll_duration").val())),
 			"minNumberOfOptions": $("#create_poll_min_options").val(),
 			"maxNumberOfOptions": $("#create_poll_max_options").val(),
-			"feeNXT": "1",
-			"deadline": "24",
+			"minRangeValue": $("#create_poll_min_range_value").val(),
+			"maxRangeValue": $("#create_poll_max_range_value").val(),
+			"minBalance": (parseInt($("#create_poll_min_balance").val())*100000000),
+			"feeNQT": (parseInt($("#create_poll_fee").val()) * 100000000),
+			"deadline": $("#create_poll_deadline").val(),
 			"secretPhrase": $("#create_poll_password").val()
 		};
 
-		for (var i = 0; i < options.length; i++) {
-			data["option" + i] = options[i];
+		if($("#create_poll_type").val() == "0")
+		{
+			data["votingModel"] = 1;
+			data["minBalanceModel"] = 0;
 		}
+		if($("#create_poll_type").val() == "1")
+		{
+			data["votingModel"] = 1;
+			var val = $('input:radio[name=minBalanceType]:checked').val();
+			data["minBalanceModel"] = val;
+
+			if(val == 2) data["holding"] = $("#create_poll_asset_id").val();
+			else if(val == 3) data["holding"] = $("#create_poll_ms_currency").val();
+		}
+		if($("#create_poll_type").val() == "2")
+		{
+			data["votingModel"] = 2;
+			data["holding"] = $("#create_poll_asset_id").val();
+			data["minBalanceModel"] = 1;
+		}
+		else if($("#create_poll_type").val() == "3")
+		{
+			data["votingModel"] = 3;
+			data["holding"] = $("#create_poll_ms_currency").val();
+			data["minBalanceModel"] = 2;
+		}
+
+		for (var i = 0; i < options.length; i++) {
+			data["option" + (i+1)] = options[i];
+		}
+
+
 
 		return {
 			"requestType": "createPoll",
@@ -145,8 +575,43 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.forms.castVote = function($modal) {
+		var options = new Array();
 
+		$("#cast_vote_answers_entry div.answer_slider input").each(function() {
+			var option = $.trim($(this).val());
+			if(option == 0) option = -127;
+			if (option) {
+				options.push(option);
+			}
+		});
+
+		$("#cast_vote_answers_entry div.answer_boxes input").each(function() {
+			var option = $(this).is(':checked') ? 1 : -128;
+			options.push(option);
+		});
+
+		var data = {
+			"poll": $("#cast_vote_poll").val(),
+			"feeNQT": (parseInt($("#cast_vote_fee").val())*100000000),
+			"deadline": $("#cast_vote_deadline").val(),
+			"secretPhrase": $("#cast_vote_password").val()
+		};
+		for (var i = 0; i < options.length; i++) {
+			data["vote" + (i+1)] = options[i];
+		}
+
+
+
+		return {
+			"requestType": "castVote",
+			"data": data
+		};
+	}
+
+	NRS.forms.castVoteComplete = function(response, data) {
+		// don't think anything needs to go here
 	}
 
 	return NRS;
 }(NRS || {}, jQuery));
+

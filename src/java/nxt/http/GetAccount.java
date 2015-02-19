@@ -58,13 +58,16 @@ public final class GetAccount extends APIServlet.APIRequestHandler {
                 if (lessors.hasNext()) {
                     JSONArray lessorIds = new JSONArray();
                     JSONArray lessorIdsRS = new JSONArray();
+                    JSONArray lessorInfo = new JSONArray();
                     while (lessors.hasNext()) {
                         Account lessor = lessors.next();
                         lessorIds.add(Convert.toUnsignedLong(lessor.getId()));
                         lessorIdsRS.add(Convert.rsAccount(lessor.getId()));
+                        lessorInfo.add(JSONData.lessor(lessor));
                     }
                     response.put("lessors", lessorIds);
                     response.put("lessorsRS", lessorIdsRS);
+                    response.put("lessorsInfo", lessorInfo);
                 }
             }
         }

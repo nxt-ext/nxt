@@ -3,9 +3,11 @@ package nxt.http;
 import nxt.Account;
 import nxt.Appendix;
 import nxt.Attachment;
+import nxt.Constants;
 import nxt.Nxt;
 import nxt.NxtException;
 import nxt.Transaction;
+import nxt.VoteWeighting;
 import nxt.crypto.Crypto;
 import nxt.crypto.EncryptedData;
 import nxt.util.Convert;
@@ -18,17 +20,21 @@ import java.util.Arrays;
 import static nxt.http.JSONResponses.FEATURE_NOT_AVAILABLE;
 import static nxt.http.JSONResponses.INCORRECT_ARBITRARY_MESSAGE;
 import static nxt.http.JSONResponses.INCORRECT_DEADLINE;
+import static nxt.http.JSONResponses.INCORRECT_PENDING_WHITELIST;
 import static nxt.http.JSONResponses.MISSING_DEADLINE;
+import static nxt.http.JSONResponses.MISSING_PENDING_HOLDING_ID;
 import static nxt.http.JSONResponses.MISSING_SECRET_PHRASE;
 import static nxt.http.JSONResponses.NOT_ENOUGH_FUNDS;
 
 abstract class CreateTransaction extends APIServlet.APIRequestHandler {
 
-    private static final String[] commonParameters = new String[] {"secretPhrase", "publicKey", "feeNQT",
+    private static final String[] commonParameters = new String[]{"secretPhrase", "publicKey", "feeNQT",
             "deadline", "referencedTransactionFullHash", "broadcast",
             "message", "messageIsText",
             "messageToEncrypt", "messageToEncryptIsText", "encryptedMessageData", "encryptedMessageNonce",
             "messageToEncryptToSelf", "messageToEncryptToSelfIsText", "encryptToSelfMessageData", "encryptToSelfMessageNonce",
+            "phased", "phasingFinishHeight", "phasingVotingModel", "phasingQuorum", "phasingMinBalance", "phasingHolding", "phasingMinBalanceModel",
+            "phasingWhitelisted", "phasingWhitelisted", "phasingWhitelisted",
             "recipientPublicKey"};
 
     private static String[] addCommonParameters(String[] parameters) {
@@ -42,13 +48,51 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
     }
 
     final JSONStreamAware createTransaction(HttpServletRequest req, Account senderAccount, Attachment attachment)
-        throws NxtException {
+            throws NxtException {
         return createTransaction(req, senderAccount, 0, 0, attachment);
     }
 
     final JSONStreamAware createTransaction(HttpServletRequest req, Account senderAccount, long recipientId, long amountNQT)
             throws NxtException {
         return createTransaction(req, senderAccount, recipientId, amountNQT, Attachment.ORDINARY_PAYMENT);
+    }
+
+    private Appendix.Phasing parsePhasing(HttpServletRequest req) throws ParameterException {
+        byte votingModel = ParameterParser.getByte(req, "phasingVotingModel", (byte)0, (byte)3, true);
+
+        int maxHeight = ParameterParser.getInt(req, "phasingFinishHeight",
+                Nxt.getBlockchain().getHeight() + Constants.VOTING_MIN_VOTE_DURATION,
+                Nxt.getBlockchain().getHeight() + Constants.VOTING_MAX_VOTE_DURATION,
+                true);
+
+        long quorum = ParameterParser.getLong(req, "phasingQuorum", 1, Long.MAX_VALUE, true);
+
+        long minBalance = ParameterParser.getLong(req, "phasingMinBalance", 0, Long.MAX_VALUE, false);
+
+        byte minBalanceModel = ParameterParser.getByte(req, "phasingMinBalanceModel", (byte)0, (byte)3, false);
+
+        long holdingId = ParameterParser.getUnsignedLong(req, "phasingHolding", false);
+
+        if ((votingModel == VoteWeighting.VotingModel.ASSET.getCode() || votingModel == VoteWeighting.VotingModel.CURRENCY.getCode())
+                && holdingId == 0) {
+            throw new ParameterException(MISSING_PENDING_HOLDING_ID);
+        }
+
+        long[] whitelist;
+        String[] whitelistValues = req.getParameterValues("phasingWhitelisted");
+        if (whitelistValues != null && whitelistValues.length > 0) {
+            whitelist = new long[whitelistValues.length];
+            for (int i = 0; i < whitelist.length; i++) {
+                whitelist[i] = Convert.parseAccountId(whitelistValues[i]);
+            }
+        } else {
+            whitelist = Convert.EMPTY_LONG;
+        }
+        if (votingModel == VoteWeighting.VotingModel.ACCOUNT.getCode() && whitelist.length == 0) {
+            throw new ParameterException(INCORRECT_PENDING_WHITELIST);
+        }
+
+        return new Appendix.Phasing(maxHeight, votingModel, holdingId, quorum, minBalance, minBalanceModel, whitelist);
     }
 
     final JSONStreamAware createTransaction(HttpServletRequest req, Account senderAccount, long recipientId,
@@ -87,6 +131,12 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
             publicKeyAnnouncement = new Appendix.PublicKeyAnnouncement(Convert.parseHexString(recipientPublicKey));
         }
 
+        Appendix.Phasing phasing = null;
+        boolean phased = ParameterParser.getBoolean(req, "phased", false);
+        if (phased) {
+            phasing = parsePhasing(req);
+        }
+
         if (secretPhrase == null && publicKeyValue == null) {
             return MISSING_SECRET_PHRASE;
         } else if (deadlineValue == null) {
@@ -111,7 +161,7 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
         byte[] publicKey = secretPhrase != null ? Crypto.getPublicKey(secretPhrase) : Convert.parseHexString(publicKeyValue);
 
         try {
-            Transaction.Builder builder = Nxt.getTransactionProcessor().newTransactionBuilder(publicKey, amountNQT, feeNQT,
+            Transaction.Builder builder = Nxt.newTransactionBuilder(publicKey, amountNQT, feeNQT,
                     deadline, attachment).referencedTransactionFullHash(referencedTransactionFullHash);
             if (attachment.getTransactionType().canHaveRecipient()) {
                 builder.recipientId(recipientId);
@@ -128,8 +178,10 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
             if (encryptToSelfMessage != null) {
                 builder.encryptToSelfMessage(encryptToSelfMessage);
             }
+            if (phasing != null) {
+                builder.phasing(phasing);
+            }
             Transaction transaction = builder.build();
-            transaction.validate();
             try {
                 if (Convert.safeAdd(amountNQT, transaction.getFeeNQT()) > senderAccount.getUnconfirmedBalanceNQT()) {
                     return NOT_ENOUGH_FUNDS;
@@ -147,9 +199,11 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
                     Nxt.getTransactionProcessor().broadcast(transaction);
                     response.put("broadcasted", true);
                 } else {
+                    transaction.validate();
                     response.put("broadcasted", false);
                 }
             } else {
+                transaction.validate();
                 response.put("broadcasted", false);
             }
             response.put("unsignedTransactionBytes", Convert.toHexString(transaction.getUnsignedBytes()));

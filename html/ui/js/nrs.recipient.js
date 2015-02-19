@@ -3,7 +3,7 @@
  */
 var NRS = (function(NRS, $, undefined) {
 	NRS.automaticallyCheckRecipient = function() {
-		var $recipientFields = $("#send_money_recipient, #transfer_asset_recipient, #send_message_recipient, #add_contact_account_id, #update_contact_account_id, #lease_balance_recipient, #transfer_alias_recipient, #sell_alias_recipient");
+		var $recipientFields = $("#send_money_recipient, #transfer_asset_recipient, #transfer_currency_recipient, #send_message_recipient, #add_contact_account_id, #update_contact_account_id, #lease_balance_recipient, #transfer_alias_recipient, #sell_alias_recipient");
 
 		$recipientFields.on("blur", function() {
 			$(this).trigger("checkRecipient");
@@ -61,7 +61,7 @@ var NRS = (function(NRS, $, undefined) {
 	*/
 
 	//todo later: http://twitter.github.io/typeahead.js/
-	$("span.recipient_selector button").on("click", function(e) {
+	$(".modal").on("click", "span.recipient_selector button, span.plain_adress_selector button", function(e) {
 		if (!Object.keys(NRS.contacts).length) {
 			e.preventDefault();
 			e.stopPropagation();
@@ -73,14 +73,29 @@ var NRS = (function(NRS, $, undefined) {
 		$list.empty();
 
 		for (var accountId in NRS.contacts) {
-			$list.append("<li><a href='#' data-contact='" + String(NRS.contacts[accountId].name).escapeHTML() + "'>" + String(NRS.contacts[accountId].name).escapeHTML() + "</a></li>");
+			$list.append("<li><a href='#' data-contact-id='" + accountId + "' data-contact='" + String(NRS.contacts[accountId].name).escapeHTML() + "'>" + String(NRS.contacts[accountId].name).escapeHTML() + "</a></li>");
 		}
 	});
 
-	$("span.recipient_selector").on("click", "ul li a", function(e) {
+	$(".modal").on("click", "span.recipient_selector ul li a", function(e) {
 		e.preventDefault();
 		$(this).closest("form").find("input[name=converted_account_id]").val("");
 		$(this).closest("form").find("input[name=recipient],input[name=account_id]").not("[type=hidden]").trigger("unmask").val($(this).data("contact")).trigger("blur");
+	});
+
+	$(".modal").on("click", "span.plain_adress_selector ul li a", function(e) {
+		e.preventDefault();
+		$(this).closest(".input-group").find("input.plain_adress_selector_input").not("[type=hidden]").trigger("unmask").val($(this).data("contact-id")).trigger("blur");
+	});
+
+	$(".modal").on("keyup blur show", ".plain_adress_selector_input", function(e) {
+		var currentValue = $(this).val();
+		if (NRS.contacts[currentValue]) {
+			var contactInfo = NRS.contacts[currentValue]['name'];
+		} else {
+			var contactInfo = " ";
+		}
+		$(this).closest(".input-group").find(".pas_contact_info").text(contactInfo);
 	});
 
 	NRS.forms.sendMoneyComplete = function(response, data) {
@@ -111,13 +126,25 @@ var NRS = (function(NRS, $, undefined) {
 			"account": accountId
 		}, function(response) {
 			if (response.publicKey) {
-				callback({
-					"type": "info",
-					"message": $.t("recipient_info", {
-						"nxt": NRS.formatAmount(response.unconfirmedBalanceNQT, false, true)
-					}),
-					"account": response
-				});
+				if (response.name){
+					callback({
+						"type": "info",
+						"message": $.t("recipient_info_with_name", {
+							"name" : response.name,
+							"nxt": NRS.formatAmount(response.unconfirmedBalanceNQT, false, true)
+						}),
+						"account": response
+					});
+				}
+				else{
+					callback({
+						"type": "info",
+						"message": $.t("recipient_info", {
+							"nxt": NRS.formatAmount(response.unconfirmedBalanceNQT, false, true)
+						}),
+						"account": response
+					});
+				}
 			} else {
 				if (response.errorCode) {
 					if (response.errorCode == 4) {

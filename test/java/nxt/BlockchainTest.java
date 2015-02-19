@@ -66,4 +66,15 @@ public abstract class BlockchainTest extends AbstractBlockchainTest {
         }
     }
 
+    public static void generateBlocks(int howMany) {
+        for (int i = 0; i < howMany; i++) {
+            generateBlock();
+        }
+    }
+
+    protected long balanceById(long id) {
+        return Account.getAccount(id).getBalanceNQT();
+    }
+
+
 }

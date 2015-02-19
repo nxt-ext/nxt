@@ -8,19 +8,16 @@ import nxt.util.Convert;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.regex.Pattern;
 
 import static nxt.http.JSONResponses.INCORRECT_ACCOUNT_DESCRIPTION_LENGTH;
 import static nxt.http.JSONResponses.INCORRECT_ACCOUNT_NAME_LENGTH;
-import static nxt.http.JSONResponses.INCORRECT_MESSAGE_PATTERN_FLAGS;
-import static nxt.http.JSONResponses.INCORRECT_MESSAGE_PATTERN_REGEX;
 
 public final class SetAccountInfo extends CreateTransaction {
 
     static final SetAccountInfo instance = new SetAccountInfo();
 
     private SetAccountInfo() {
-        super(new APITag[] {APITag.ACCOUNTS, APITag.CREATE_TRANSACTION}, "name", "description", "messagePatternRegex", "messagePatternFlags");
+        super(new APITag[] {APITag.ACCOUNTS, APITag.CREATE_TRANSACTION}, "name", "description"/*, "messagePatternRegex", "messagePatternFlags"*/);
     }
 
     @Override
@@ -37,6 +34,7 @@ public final class SetAccountInfo extends CreateTransaction {
             return INCORRECT_ACCOUNT_DESCRIPTION_LENGTH;
         }
 
+        /*
         Pattern messagePattern = null;
         String regex = Convert.emptyToNull(req.getParameter("messagePatternRegex"));
         if (regex != null) {
@@ -50,9 +48,10 @@ public final class SetAccountInfo extends CreateTransaction {
                 return INCORRECT_MESSAGE_PATTERN_REGEX;
             }
         }
+        */
 
         Account account = ParameterParser.getSenderAccount(req);
-        Attachment attachment = new Attachment.MessagingAccountInfo(name, description, messagePattern);
+        Attachment attachment = new Attachment.MessagingAccountInfo(name, description);
         return createTransaction(req, account, attachment);
 
     }

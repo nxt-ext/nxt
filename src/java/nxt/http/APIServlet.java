@@ -14,6 +14,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.Writer;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -34,7 +35,15 @@ public final class APIServlet extends HttpServlet {
         private final Set<APITag> apiTags;
 
         APIRequestHandler(APITag[] apiTags, String... parameters) {
-            this.parameters = Collections.unmodifiableList(Arrays.asList(parameters));
+            List<String> parametersList;
+            if (requirePassword() && ! API.disableAdminPassword) {
+                parametersList = new ArrayList<>(parameters.length + 1);
+                parametersList.add("adminPassword");
+                parametersList.addAll(Arrays.asList(parameters));
+            } else {
+                parametersList = Arrays.asList(parameters);
+            }
+            this.parameters = Collections.unmodifiableList(parametersList);
             this.apiTags = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(apiTags)));
         }
 
@@ -55,28 +64,31 @@ public final class APIServlet extends HttpServlet {
         boolean startDbTransaction() {
             return false;
         }
-
+        
+        boolean requirePassword() {
+        	return false;
+        }
     }
 
     private static final boolean enforcePost = Nxt.getBooleanProperty("nxt.apiServerEnforcePOST");
-
     static final Map<String,APIRequestHandler> apiRequestHandlers;
 
     static {
 
         Map<String,APIRequestHandler> map = new HashMap<>();
 
+        map.put("approveTransaction", ApproveTransaction.instance);
         map.put("broadcastTransaction", BroadcastTransaction.instance);
         map.put("calculateFullHash", CalculateFullHash.instance);
         map.put("cancelAskOrder", CancelAskOrder.instance);
         map.put("cancelBidOrder", CancelBidOrder.instance);
+        map.put("castVote", CastVote.instance);
+        map.put("createPoll", CreatePoll.instance);
         map.put("currencyBuy", CurrencyBuy.instance);
         map.put("currencySell", CurrencySell.instance);
         map.put("currencyReserveIncrease", CurrencyReserveIncrease.instance);
         map.put("currencyReserveClaim", CurrencyReserveClaim.instance);
         map.put("currencyMint", CurrencyMint.instance);
-        //map.put("castVote", CastVote.instance);
-        //map.put("createPoll", CreatePoll.instance);
         map.put("decryptFrom", DecryptFrom.instance);
         map.put("dgsListing", DGSListing.instance);
         map.put("dgsDelisting", DGSDelisting.instance);
@@ -95,6 +107,9 @@ public final class APIServlet extends HttpServlet {
         map.put("getAccountBlockIds", GetAccountBlockIds.instance);
         map.put("getAccountBlocks", GetAccountBlocks.instance);
         map.put("getAccountId", GetAccountId.instance);
+        map.put("getVoterPendingTransactions", GetVoterPendingTransactions.instance);
+        map.put("getPolls", GetPolls.instance);
+        map.put("getAccountPendingTransactions", GetAccountPendingTransactions.instance);
         map.put("getAccountPublicKey", GetAccountPublicKey.instance);
         map.put("getAccountTransactionIds", GetAccountTransactionIds.instance);
         map.put("getAccountTransactions", GetAccountTransactions.instance);
@@ -116,6 +131,7 @@ public final class APIServlet extends HttpServlet {
         map.put("getAssetsByIssuer", GetAssetsByIssuer.instance);
         map.put("getAssetAccounts", GetAssetAccounts.instance);
         map.put("getAssetAccountCount", GetAssetAccountCount.instance);
+        map.put("getAssetPendingTransactions", GetAssetPendingTransactions.instance);
         map.put("getBalance", GetBalance.instance);
         map.put("getBlock", GetBlock.instance);
         map.put("getBlockId", GetBlockId.instance);
@@ -129,6 +145,7 @@ public final class APIServlet extends HttpServlet {
         map.put("getCurrenciesByIssuer", GetCurrenciesByIssuer.instance);
         map.put("getCurrencyAccounts", GetCurrencyAccounts.instance);
         map.put("getCurrencyAccountCount", GetCurrencyAccountCount.instance);
+        map.put("getCurrencyPendingTransactions", GetCurrencyPendingTransactions.instance);
         map.put("getDGSGoods", GetDGSGoods.instance);
         map.put("getDGSGoodsCount", GetDGSGoodsCount.instance);
         map.put("getDGSGood", GetDGSGood.instance);
@@ -142,16 +159,22 @@ public final class APIServlet extends HttpServlet {
         map.put("getDGSTagCount", GetDGSTagCount.instance);
         map.put("getGuaranteedBalance", GetGuaranteedBalance.instance);
         map.put("getECBlock", GetECBlock.instance);
+        map.put("getPlugins", GetPlugins.instance);
         map.put("getMyInfo", GetMyInfo.instance);
         //map.put("getNextBlockGenerators", GetNextBlockGenerators.instance);
         map.put("getPeer", GetPeer.instance);
         map.put("getPeers", GetPeers.instance);
-        //map.put("getPoll", GetPoll.instance);
-        //map.put("getPollIds", GetPollIds.instance);
+        map.put("getPhasingPoll", GetPhasingPoll.instance);
+        map.put("getPhasingPolls", GetPhasingPolls.instance);
+        map.put("getPoll", GetPoll.instance);
+        map.put("getPollResult", GetPollResult.instance);
+        map.put("getPollVotes", GetPollVotes.instance);
         map.put("getState", GetState.instance);
         map.put("getTime", GetTime.instance);
         map.put("getTrades", GetTrades.instance);
         map.put("getExchanges", GetExchanges.instance);
+        map.put("getExchangesByExchangeRequest", GetExchangesByExchangeRequest.instance);
+        map.put("getExchangesByOffer", GetExchangesByOffer.instance);
         map.put("getAllTrades", GetAllTrades.instance);
         map.put("getAllExchanges", GetAllExchanges.instance);
         map.put("getAssetTransfers", GetAssetTransfers.instance);
@@ -175,6 +198,7 @@ public final class APIServlet extends HttpServlet {
         map.put("getBidOrder", GetBidOrder.instance);
         map.put("getBidOrderIds", GetBidOrderIds.instance);
         map.put("getBidOrders", GetBidOrders.instance);
+        map.put("getAccountExchangeRequests", GetAccountExchangeRequests.instance);
         map.put("getMintingTarget", GetMintingTarget.instance);
         map.put("getShuffling", GetShuffling.instance);
         map.put("getShufflingParticipants", GetShufflingParticipants.instance);
@@ -206,20 +230,21 @@ public final class APIServlet extends HttpServlet {
         map.put("getForging", GetForging.instance);
         map.put("transferAsset", TransferAsset.instance);
         map.put("transferCurrency", TransferCurrency.instance);
+        map.put("canDeleteCurrency", CanDeleteCurrency.instance);
         map.put("deleteCurrency", DeleteCurrency.instance);
         map.put("dividendPayment", DividendPayment.instance);
         map.put("searchDGSGoods", SearchDGSGoods.instance);
         map.put("searchAssets", SearchAssets.instance);
         map.put("searchCurrencies", SearchCurrencies.instance);
-
-        if (API.enableDebugAPI) {
-            map.put("clearUnconfirmedTransactions", ClearUnconfirmedTransactions.instance);
-            map.put("fullReset", FullReset.instance);
-            map.put("popOff", PopOff.instance);
-            map.put("scan", Scan.instance);
-            map.put("luceneReindex", LuceneReindex.instance);
-        }
-
+        map.put("searchPolls", SearchPolls.instance);
+        map.put("clearUnconfirmedTransactions", ClearUnconfirmedTransactions.instance);
+        map.put("fullReset", FullReset.instance);
+        map.put("popOff", PopOff.instance);
+        map.put("scan", Scan.instance);
+        map.put("luceneReindex", LuceneReindex.instance);
+        map.put("addPeer", AddPeer.instance);
+        map.put("blacklistPeer", BlacklistPeer.instance);
+        
         apiRequestHandlers = Collections.unmodifiableMap(map);
     }
 
@@ -245,7 +270,7 @@ public final class APIServlet extends HttpServlet {
 
             long startTime = System.currentTimeMillis();
 
-            if (API.allowedBotHosts != null && ! API.allowedBotHosts.contains(req.getRemoteHost())) {
+			if (! API.isAllowed(req.getRemoteHost())) {
                 response = ERROR_NOT_ALLOWED;
                 return;
             }
@@ -268,6 +293,9 @@ public final class APIServlet extends HttpServlet {
             }
 
             try {
+                if (apiRequestHandler.requirePassword()) {
+                    API.verifyPassword(req);
+                }
                 if (apiRequestHandler.startDbTransaction()) {
                     Db.db.beginTransaction();
                 }
