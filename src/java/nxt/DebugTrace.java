@@ -154,6 +154,12 @@ public final class DebugTrace {
                 debugTrace.trace(block);
             }
         }, BlockchainProcessor.Event.BEFORE_BLOCK_APPLY);
+        Nxt.getTransactionProcessor().addListener(new Listener<List<? extends Transaction>>() {
+            @Override
+            public void notify(List<? extends Transaction> transactions) {
+                debugTrace.traceRelease(transactions.get(0));
+            }
+        }, TransactionProcessor.Event.RELEASE_PHASED_TRANSACTION);
         return debugTrace;
     }
 
@@ -274,15 +280,34 @@ public final class DebugTrace {
     private void trace(Block block) {
         for (Transaction transaction : block.getTransactions()) {
             long senderId = transaction.getSenderId();
+            if (transaction.getPhasing() != null) {
+                if (include(senderId)) {
+                    log(getValues(senderId, transaction, false, true, false));
+                }
+                continue;
+            }
             if (include(senderId)) {
-                log(getValues(senderId, transaction, false));
+                log(getValues(senderId, transaction, false, true, true));
                 log(getValues(senderId, transaction, transaction.getAttachment(), false));
             }
             long recipientId = transaction.getRecipientId();
             if (include(recipientId)) {
-                log(getValues(recipientId, transaction, true));
+                log(getValues(recipientId, transaction, true, true, true));
                 log(getValues(recipientId, transaction, transaction.getAttachment(), true));
             }
+        }
+    }
+
+    private void traceRelease(Transaction transaction) {
+        long senderId = transaction.getSenderId();
+        if (include(senderId)) {
+            log(getValues(senderId, transaction, false, false, true));
+            log(getValues(senderId, transaction, transaction.getAttachment(), false));
+        }
+        long recipientId = transaction.getRecipientId();
+        if (include(recipientId)) {
+            log(getValues(recipientId, transaction, true, false, true));
+            log(getValues(recipientId, transaction, transaction.getAttachment(), true));
         }
     }
 
@@ -433,7 +458,7 @@ public final class DebugTrace {
         return map;
     }
 
-    private Map<String,String> getValues(long accountId, Transaction transaction, boolean isRecipient) {
+    private Map<String,String> getValues(long accountId, Transaction transaction, boolean isRecipient, boolean logFee, boolean logAmount) {
         long amount = transaction.getAmountNQT();
         long fee = transaction.getFeeNQT();
         if (isRecipient) {
@@ -447,8 +472,12 @@ public final class DebugTrace {
             return Collections.emptyMap();
         }
         Map<String,String> map = getValues(accountId, false);
-        map.put("transaction amount", String.valueOf(amount));
-        map.put("transaction fee", String.valueOf(fee));
+        if (logAmount) {
+            map.put("transaction amount", String.valueOf(amount));
+        }
+        if (logFee) {
+            map.put("transaction fee", String.valueOf(fee));
+        }
         map.put("transaction", transaction.getStringId());
         if (isRecipient) {
             map.put("sender", Convert.toUnsignedLong(transaction.getSenderId()));
