@@ -11,7 +11,9 @@ public interface TransactionProcessor extends Observable<List<? extends Transact
     public static enum Event {
         REMOVED_UNCONFIRMED_TRANSACTIONS,
         ADDED_UNCONFIRMED_TRANSACTIONS,
-        ADDED_CONFIRMED_TRANSACTIONS
+        ADDED_CONFIRMED_TRANSACTIONS,
+        RELEASE_PHASED_TRANSACTION,
+        REJECT_PHASED_TRANSACTION
     }
 
     DbIterator<? extends Transaction> getAllUnconfirmedTransactions();

@@ -8,6 +8,7 @@ import org.json.simple.JSONObject;
 
 import java.nio.ByteBuffer;
 import java.util.Arrays;
+import java.util.Collections;
 
 public interface Appendix {
 
@@ -623,6 +624,7 @@ public interface Appendix {
                     appendage.apply(transaction, senderAccount, recipientAccount);
                 }
             }
+            TransactionProcessorImpl.getInstance().notifyListeners(Collections.singletonList(transaction), TransactionProcessor.Event.RELEASE_PHASED_TRANSACTION);
             Logger.logDebugMessage("Transaction " + transaction.getStringId() + " has been released");
         }
 
@@ -636,6 +638,7 @@ public interface Appendix {
                 Account senderAccount = Account.getAccount(transaction.getSenderId());
                 transaction.getType().undoAttachmentUnconfirmed(transaction, senderAccount);
                 senderAccount.addToUnconfirmedBalanceNQT(transaction.getAmountNQT());
+                TransactionProcessorImpl.getInstance().notifyListeners(Collections.singletonList(transaction), TransactionProcessor.Event.REJECT_PHASED_TRANSACTION);
                 Logger.logDebugMessage("Transaction " + transaction.getStringId() + " has been refused");
             }
         }
