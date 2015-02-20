@@ -8,6 +8,7 @@ import org.json.simple.JSONObject;
 
 import java.nio.ByteBuffer;
 import java.util.Arrays;
+import java.util.Collections;
 
 public interface Appendix {
 
@@ -15,6 +16,11 @@ public interface Appendix {
     void putBytes(ByteBuffer buffer);
     JSONObject getJSONObject();
     byte getVersion();
+    int getBaselineFeeHeight();
+    Fee getBaselineFee(Transaction transaction) throws NxtException.NotValidException;
+    int getNextFeeHeight();
+    Fee getNextFee(Transaction transaction) throws NxtException.NotValidException;
+
 
     static abstract class AbstractAppendix implements Appendix {
 
@@ -81,6 +87,26 @@ public interface Appendix {
             return transactionVersion == 0 ? version == 0 : version > 0;
         }
 
+        @Override
+        public int getBaselineFeeHeight() {
+            return 1;
+        }
+
+        @Override
+        public Fee getBaselineFee(Transaction transaction) throws NxtException.NotValidException {
+            return Fee.NONE;
+        }
+
+        @Override
+        public int getNextFeeHeight() {
+            return Integer.MAX_VALUE;
+        }
+
+        @Override
+        public Fee getNextFee(Transaction transaction) throws NxtException.NotValidException {
+            return getBaselineFee(transaction);
+        }
+
         abstract void validate(Transaction transaction) throws NxtException.ValidationException;
 
         abstract void apply(Transaction transaction, Account senderAccount, Account recipientAccount);
@@ -88,6 +114,13 @@ public interface Appendix {
     }
 
     public static class Message extends AbstractAppendix {
+
+        private static final Fee MESSAGE_FEE = new Fee.SizeBasedFee(Constants.ONE_NXT) {
+            @Override
+            public int getSize(TransactionImpl transaction, Appendix appendix) {
+                return ((Message)appendix).getMessage().length;
+            }
+        };
 
         static Message parse(JSONObject attachmentData) {
             if (attachmentData.get("message") == null) {
@@ -106,7 +139,7 @@ public interface Appendix {
             if (messageLength < 0) {
                 messageLength &= Integer.MAX_VALUE;
             }
-            if (messageLength > Constants.MAX_ARBITRARY_MESSAGE_LENGTH) {
+            if (messageLength > Constants.MAX_ARBITRARY_MESSAGE_LENGTH_2) {
                 throw new NxtException.NotValidException("Invalid arbitrary message length: " + messageLength);
             }
             this.message = new byte[messageLength];
@@ -136,6 +169,11 @@ public interface Appendix {
         }
 
         @Override
+        public Fee getBaselineFee(Transaction transaction) {
+            return MESSAGE_FEE;
+        }
+
+        @Override
         int getMySize() {
             return 4 + message.length;
         }
@@ -160,8 +198,14 @@ public interface Appendix {
             if (transaction.getVersion() == 0 && transaction.getAttachment() != Attachment.ARBITRARY_MESSAGE) {
                 throw new NxtException.NotValidException("Message attachments not enabled for version 0 transactions");
             }
-            if (message.length > Constants.MAX_ARBITRARY_MESSAGE_LENGTH) {
-                throw new NxtException.NotValidException("Invalid arbitrary message length: " + message.length);
+            if (Nxt.getBlockchain().getHeight() < Constants.VOTING_SYSTEM_BLOCK) {
+                if (message.length > Constants.MAX_ARBITRARY_MESSAGE_LENGTH) {
+                    throw new NxtException.NotCurrentlyValidException("Invalid arbitrary message length: " + message.length);
+                }
+            } else {
+                if (message.length > Constants.MAX_ARBITRARY_MESSAGE_LENGTH_2) {
+                    throw new NxtException.NotValidException("Invalid arbitrary message length: " + message.length);
+                }
             }
         }
 
@@ -179,6 +223,13 @@ public interface Appendix {
 
     abstract static class AbstractEncryptedMessage extends AbstractAppendix {
 
+        private static final Fee ENCRYPTED_DATA_FEE = new Fee.SizeBasedFee(Constants.ONE_NXT) {
+            @Override
+            public int getSize(TransactionImpl transaction, Appendix appendix) {
+                return ((AbstractEncryptedMessage)appendix).getEncryptedData().getData().length;
+            }
+        };
+
         private final EncryptedData encryptedData;
         private final boolean isText;
 
@@ -189,7 +240,7 @@ public interface Appendix {
             if (length < 0) {
                 length &= Integer.MAX_VALUE;
             }
-            this.encryptedData = EncryptedData.readEncryptedData(buffer, length, Constants.MAX_ENCRYPTED_MESSAGE_LENGTH);
+            this.encryptedData = EncryptedData.readEncryptedData(buffer, length, Constants.MAX_ENCRYPTED_MESSAGE_LENGTH_2);
         }
 
         private AbstractEncryptedMessage(JSONObject attachmentJSON, JSONObject encryptedMessageJSON) {
@@ -203,6 +254,11 @@ public interface Appendix {
         private AbstractEncryptedMessage(EncryptedData encryptedData, boolean isText) {
             this.encryptedData = encryptedData;
             this.isText = isText;
+        }
+
+        @Override
+        public Fee getBaselineFee(Transaction transaction) {
+            return ENCRYPTED_DATA_FEE;
         }
 
         @Override
@@ -226,8 +282,14 @@ public interface Appendix {
 
         @Override
         void validate(Transaction transaction) throws NxtException.ValidationException {
-            if (encryptedData.getData().length > Constants.MAX_ENCRYPTED_MESSAGE_LENGTH) {
-                throw new NxtException.NotValidException("Max encrypted message length exceeded");
+            if (Nxt.getBlockchain().getHeight() < Constants.VOTING_SYSTEM_BLOCK) {
+                if (encryptedData.getData().length > Constants.MAX_ENCRYPTED_MESSAGE_LENGTH) {
+                    throw new NxtException.NotCurrentlyValidException("Max encrypted message length exceeded");
+                }
+            } else {
+                if (encryptedData.getData().length > Constants.MAX_ENCRYPTED_MESSAGE_LENGTH_2) {
+                    throw new NxtException.NotValidException("Max encrypted message length exceeded");
+                }
             }
             if ((encryptedData.getNonce().length != 32 && encryptedData.getData().length > 0)
                     || (encryptedData.getNonce().length != 0 && encryptedData.getData().length == 0)) {
@@ -418,6 +480,8 @@ public interface Appendix {
 
     public static class Phasing extends AbstractAppendix {
 
+        private static final Fee PHASING_FEE = new Fee.ConstantFee(20 * Constants.ONE_NXT);
+
         static Phasing parse(JSONObject attachmentData) {
             if (attachmentData.get("phasingFinishHeight") == null) {
                 return null;
@@ -427,51 +491,47 @@ public interface Appendix {
 
         private final int finishHeight;
         private final long quorum;
-        private final byte votingModel;
-        private final long minBalance;
-        private final byte minBalanceModel;
-        private final long holdingId;
         private final long[] whitelist;
+        private final VoteWeighting voteWeighting;
 
         Phasing(ByteBuffer buffer, byte transactionVersion) {
             super(buffer, transactionVersion);
             finishHeight = buffer.getInt();
-            votingModel = buffer.get();
+            byte votingModel = buffer.get();
             quorum = buffer.getLong();
-            minBalance = buffer.getLong();
+            long minBalance = buffer.getLong();
             byte whitelistSize = buffer.get();
             whitelist = new long[whitelistSize];
             for (int pvc = 0; pvc < whitelist.length; pvc++) {
                 whitelist[pvc] = buffer.getLong();
             }
-            holdingId = buffer.getLong();
-            minBalanceModel = buffer.get();
+            long holdingId = buffer.getLong();
+            byte minBalanceModel = buffer.get();
+            voteWeighting = new VoteWeighting(votingModel, holdingId, minBalance, minBalanceModel);
         }
 
         Phasing(JSONObject attachmentData) {
             super(attachmentData);
             finishHeight = ((Long) attachmentData.get("phasingFinishHeight")).intValue();
             quorum = Convert.parseLong(attachmentData.get("phasingQuorum"));
-            minBalance = Convert.parseLong(attachmentData.get("phasingMinBalance"));
-            votingModel = ((Long) attachmentData.get("phasingVotingModel")).byteValue();
-            holdingId = Convert.parseUnsignedLong((String) attachmentData.get("phasingHolding"));
+            long minBalance = Convert.parseLong(attachmentData.get("phasingMinBalance"));
+            byte votingModel = ((Long) attachmentData.get("phasingVotingModel")).byteValue();
+            long holdingId = Convert.parseUnsignedLong((String) attachmentData.get("phasingHolding"));
             JSONArray whitelistJson = (JSONArray) (attachmentData.get("phasingWhitelist"));
             whitelist = new long[whitelistJson.size()];
             for (int i = 0; i < whitelist.length; i++) {
                 whitelist[i] = Convert.parseUnsignedLong((String) whitelistJson.get(i));
             }
-            minBalanceModel = ((Long) attachmentData.get("phasingMinBalanceModel")).byteValue();
+            byte minBalanceModel = ((Long) attachmentData.get("phasingMinBalanceModel")).byteValue();
+            voteWeighting = new VoteWeighting(votingModel, holdingId, minBalance, minBalanceModel);
         }
 
         public Phasing(int finishHeight, byte votingModel, long holdingId, long quorum,
                        long minBalance, byte minBalanceModel, long[] whitelist) {
             this.finishHeight = finishHeight;
-            this.votingModel = votingModel;
             this.quorum = quorum;
-            this.minBalance = minBalance;
-            this.minBalanceModel = minBalanceModel;
             this.whitelist = Convert.nullToEmpty(whitelist);
-            this.holdingId = holdingId;
+            voteWeighting = new VoteWeighting(votingModel, holdingId, minBalance, minBalanceModel);
         }
 
         @Override
@@ -487,30 +547,30 @@ public interface Appendix {
         @Override
         void putMyBytes(ByteBuffer buffer) {
             buffer.putInt(finishHeight);
-            buffer.put(votingModel);
+            buffer.put(voteWeighting.getVotingModel().getCode());
             buffer.putLong(quorum);
-            buffer.putLong(minBalance);
+            buffer.putLong(voteWeighting.getMinBalance());
             buffer.put((byte) whitelist.length);
             for (long account : whitelist) {
                 buffer.putLong(account);
             }
-            buffer.putLong(holdingId);
-            buffer.put(minBalanceModel);
+            buffer.putLong(voteWeighting.getHoldingId());
+            buffer.put(voteWeighting.getMinBalanceModel().getCode());
         }
 
         @Override
         void putMyJSON(JSONObject json) {
             json.put("phasingFinishHeight", finishHeight);
             json.put("phasingQuorum", quorum);
-            json.put("phasingMinBalance", minBalance);
-            json.put("phasingVotingModel", votingModel);
-            json.put("phasingHolding", Convert.toUnsignedLong(holdingId));
+            json.put("phasingMinBalance", voteWeighting.getMinBalance());
+            json.put("phasingVotingModel", voteWeighting.getVotingModel().getCode());
+            json.put("phasingHolding", Convert.toUnsignedLong(voteWeighting.getHoldingId()));
             JSONArray whitelistJson = new JSONArray();
             for (long accountId : whitelist) {
                 whitelistJson.add(Convert.toUnsignedLong(accountId));
             }
             json.put("phasingWhitelist", whitelistJson);
-            json.put("phasingMinBalanceModel", minBalanceModel);
+            json.put("phasingMinBalanceModel", voteWeighting.getMinBalanceModel().getCode());
         }
 
         @Override
@@ -534,7 +594,6 @@ public interface Appendix {
                 throw new NxtException.NotValidException("Invalid finish height");
             }
 
-            VoteWeighting voteWeighting = new VoteWeighting(votingModel, holdingId, minBalance, minBalanceModel);
             voteWeighting.validate();
 
             if (voteWeighting.getVotingModel() == VoteWeighting.VotingModel.ACCOUNT && whitelist.length == 0) {
@@ -548,6 +607,14 @@ public interface Appendix {
             PhasingPoll.addPoll(transaction, this);
         }
 
+        @Override
+        public Fee getBaselineFee(Transaction transaction) throws NxtException.NotValidException {
+            if (voteWeighting.isBalanceIndependent()) {
+                return Fee.DEFAULT_FEE;
+            }
+            return PHASING_FEE;
+        }
+
         void release(TransactionImpl transaction) {
             Account senderAccount = Account.getAccount(transaction.getSenderId());
             Account recipientAccount = Account.getAccount(transaction.getRecipientId());
@@ -557,6 +624,7 @@ public interface Appendix {
                     appendage.apply(transaction, senderAccount, recipientAccount);
                 }
             }
+            TransactionProcessorImpl.getInstance().notifyListeners(Collections.singletonList(transaction), TransactionProcessor.Event.RELEASE_PHASED_TRANSACTION);
             Logger.logDebugMessage("Transaction " + transaction.getStringId() + " has been released");
         }
 
@@ -570,6 +638,7 @@ public interface Appendix {
                 Account senderAccount = Account.getAccount(transaction.getSenderId());
                 transaction.getType().undoAttachmentUnconfirmed(transaction, senderAccount);
                 senderAccount.addToUnconfirmedBalanceNQT(transaction.getAmountNQT());
+                TransactionProcessorImpl.getInstance().notifyListeners(Collections.singletonList(transaction), TransactionProcessor.Event.REJECT_PHASED_TRANSACTION);
                 Logger.logDebugMessage("Transaction " + transaction.getStringId() + " has been refused");
             }
         }
@@ -582,24 +651,13 @@ public interface Appendix {
             return quorum;
         }
 
-        public long getMinBalance() {
-            return minBalance;
-        }
-
-        public byte getVotingModel() {
-            return votingModel;
-        }
-
-        public long getHoldingId() {
-            return holdingId;
-        }
-
         public long[] getWhitelist() {
             return whitelist;
         }
 
-        public byte getMinBalanceModel() {
-            return minBalanceModel;
+        public VoteWeighting getVoteWeighting() {
+            return voteWeighting;
         }
+
     }
 }

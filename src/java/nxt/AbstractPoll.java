@@ -14,13 +14,11 @@ abstract class AbstractPoll {
     protected final long accountId;
     protected final int finishHeight;
 
-    AbstractPoll(long id, long accountId, int finishHeight,
-                 byte votingModel, long holdingId,
-                 long minBalance, byte minBalanceModel) {
+    AbstractPoll(long id, long accountId, int finishHeight, VoteWeighting voteWeighting) {
         this.id = id;
         this.accountId = accountId;
         this.finishHeight = finishHeight;
-        this.defaultVoteWeighting = new VoteWeighting(votingModel, holdingId, minBalance, minBalanceModel);
+        this.defaultVoteWeighting = voteWeighting;
     }
 
     AbstractPoll(ResultSet rs) throws SQLException {

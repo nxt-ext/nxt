@@ -271,7 +271,7 @@ final class TransactionImpl implements Transaction {
         this.appendagesSize = appendagesSize;
         if (builder.feeNQT <= 0) {
             int effectiveHeight = (height < Integer.MAX_VALUE ? height : Nxt.getBlockchain().getHeight());
-            feeNQT = type.minimumFeeNQT(this, effectiveHeight, appendagesSize);
+            feeNQT = getMinimumFeeNQT(effectiveHeight);
         } else {
             feeNQT = builder.feeNQT;
         }
@@ -811,7 +811,10 @@ final class TransactionImpl implements Transaction {
         for (Appendix.AbstractAppendix appendage : appendages) {
             appendage.validate(this);
         }
-        long minimumFeeNQT = type.minimumFeeNQT(this, blockchainHeight, appendagesSize);
+        if (getSize() > Constants.MAX_PAYLOAD_LENGTH) {
+            throw new NxtException.NotValidException("Transaction size " + getSize() + " exceeds maximum payload size");
+        }
+        long minimumFeeNQT = getMinimumFeeNQT(blockchainHeight);
         if (feeNQT < minimumFeeNQT) {
             throw new NxtException.NotCurrentlyValidException(String.format("Transaction fee %d less than minimum fee %d at height %d",
                     feeNQT, minimumFeeNQT, blockchainHeight));
@@ -865,6 +868,18 @@ final class TransactionImpl implements Transaction {
 
     boolean isUnconfirmedDuplicate(Map<TransactionType, Map<String, Boolean>> duplicates) {
         return type.isUnconfirmedDuplicate(this, duplicates);
+    }
+
+    long getMinimumFeeNQT(int blockchainHeight) throws NxtException.NotValidException {
+        long totalFee = 0;
+        for (Appendix.AbstractAppendix appendage : appendages) {
+            if (blockchainHeight < appendage.getBaselineFeeHeight()) {
+                return 0; // No need to validate fees before baseline block
+            }
+            Fee fee = blockchainHeight >= appendage.getNextFeeHeight() ? appendage.getNextFee(this) : appendage.getBaselineFee(this);
+            totalFee = Convert.safeAdd(totalFee, fee.getFee(this, appendage));
+        }
+        return totalFee;
     }
 
 }

@@ -37,9 +37,10 @@ var NRS = (function(NRS, $, undefined) {
 				}
 			}
 		}
-		// always call incoming for messages to enable message notifications
 		if (!oldBlock || NRS.unconfirmedTransactionsChange) {
+			// always call incoming for messages to enable message notifications
 			NRS.incoming['messages'](transactions);
+			NRS.updateNotifications();
 		}
 	}
 
@@ -255,6 +256,13 @@ var NRS = (function(NRS, $, undefined) {
 		return b.timestamp - a.timestamp;
 	}
 
+	NRS.getTransactionIconHTML = function(type, subType) {
+		var iconHTML = NRS.transactionTypes[type]['iconHTML'] + " " + NRS.transactionTypes[type]['subTypes'][subType]['iconHTML'];
+		var html = '';
+		html += '<span class="label label-primary" style="font-size:12px;">' + iconHTML + '</span>';
+		return html;
+	}
+
 	NRS.addPendingTransactionHTML = function(t) {
 		var html = "";
 		var $td = $('#tr_transaction_' + t.transaction + ' .td_transaction_pending');
@@ -264,6 +272,9 @@ var NRS = (function(NRS, $, undefined) {
 				"transaction": t.transaction
 			}, function(response) {
 				if (response.transaction) {
+					if (!response.votes) {
+						response.votes = 0;
+					}
 					var attachment = t.attachment;
 					var vm = attachment.phasingVotingModel;
 
@@ -403,9 +414,9 @@ var NRS = (function(NRS, $, undefined) {
 
   		html += "<td style='vertical-align:middle;text-align:center;'>" + (hasMessage ? "&nbsp; <i class='fa fa-envelope-o'></i>&nbsp;" : "&nbsp;") + "</td>";
 		
-		var iconHTML = NRS.transactionTypes[transaction.type]['iconHTML'] + " " + NRS.transactionTypes[transaction.type]['subTypes'][transaction.subtype]['iconHTML'];
+		
 		html += '<td style="vertical-align:middle;">';
-		html += '<span class="label label-primary" style="font-size:12px;">' + iconHTML + '</span>&nbsp; ';
+		html += NRS.getTransactionIconHTML(transaction.type, transaction.subtype) + '&nbsp; ';
 		html += '<span style="font-size:11px;display:inline-block;margin-top:5px;">' + transactionType + '</span>';
 		html += '</td>';
 		

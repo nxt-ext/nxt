@@ -195,4 +195,8 @@ public final class VoteWeighting {
         return votingModel.calcWeight(this, voterId, height);
     }
 
+    public boolean isBalanceIndependent() {
+        return votingModel == VotingModel.ACCOUNT && minBalance == 0;
+    }
+
 }

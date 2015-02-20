@@ -275,8 +275,7 @@ public final class PhasingPoll extends AbstractPoll {
     private boolean finished;
 
     private PhasingPoll(Transaction transaction, Appendix.Phasing appendix) {
-        super(transaction.getId(), transaction.getSenderId(), appendix.getFinishHeight(), appendix.getVotingModel(), appendix.getHoldingId(),
-                appendix.getMinBalance(), appendix.getMinBalanceModel());
+        super(transaction.getId(), transaction.getSenderId(), appendix.getFinishHeight(), appendix.getVoteWeighting());
         this.dbKey = phasingPollDbKeyFactory.newKey(this.id);
         this.quorum = appendix.getQuorum();
         this.whitelist = appendix.getWhitelist();

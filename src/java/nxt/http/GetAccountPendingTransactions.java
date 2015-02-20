@@ -8,6 +8,7 @@ import nxt.db.DbIterator;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
+
 import javax.servlet.http.HttpServletRequest;
 
 public class GetAccountPendingTransactions extends APIServlet.APIRequestHandler {
