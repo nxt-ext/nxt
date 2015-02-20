@@ -308,6 +308,11 @@ var NRS = (function(NRS, $, undefined) {
 						$(".secret_phrase, .show_secret_phrase").hide();
 						$(".hide_secret_phrase").show();
 					}
+					if ($("#disable_all_plugins").length == 1 && !($("#disable_all_plugins").is(":checked"))) {
+						NRS.disableAllPlugins = false;
+					} else {
+						NRS.disableAllPlugins = true;
+					}
 
 					$("#account_id").html(String(NRS.accountRS).escapeHTML()).css("font-size", "12px");
 
@@ -429,7 +434,7 @@ var NRS = (function(NRS, $, undefined) {
 			html += "<div style='font-size:13px;'>";
 			html += "<div style='background-color:#e6e6e6;padding:12px;'>";
 			html += "<span data-i18n='following_plugins_detected'>";
-			html += "The following active plugins have been detected and will be loaded after login:</span>";
+			html += "The following active plugins have been detected:</span>";
 			html += "</div>";
 			html += "<ul class='list-unstyled' style='padding:11px;border:1px solid #e0e0e0;margin-top:8px;'>";
 			$.each(NRS.plugins, function(pluginId, pluginDict) {
