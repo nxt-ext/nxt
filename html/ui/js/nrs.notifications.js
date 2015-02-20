@@ -18,7 +18,7 @@ var NRS = (function(NRS, $, undefined) {
 					var html = "";
 					html += "<a href='#' style='display:block;background-color:#f0f0f0;border:1px solid #e2e2e2;padding:4px 12px 9px 12px;margin:2px;'>";
 					html += "<div style='float:right;'><div style='display:inline-block;margin-top:2px;'>";
-					html += "<span class='badge' style='background-color:#e06054;'>" + subTypeDict["notificationCount"] + "</span>";
+					html += "<span class='badge' style='background-color:#e65;'>" + subTypeDict["notificationCount"] + "</span>";
 					html += "</div></div>";
 					html += NRS.getTransactionIconHTML(typeIndex, subTypeIndex) + "&nbsp; ";
 					html += '<span style="font-size:12px;color:#000;display:inline-block;margin-top:5px;">';
@@ -37,8 +37,7 @@ var NRS = (function(NRS, $, undefined) {
 			});
 		});
 		if (totalCount > 0) {
-			$menuItem.find('span .nm_inner_subtype').css('backgroundColor', '#337ab7');
-			$menuItem.find('span .nm_inner_total').css('backgroundColor', '#e06054');
+			$menuItem.find('span.nm_badge').css('backgroundColor', '#e65');
 
 			var $markReadDiv = $("<div style='text-align:center;padding:12px 12px 8px 12px;'></div>");
 			var $markReadLink= $("<a href='#' style='color:#3c8dbc;'>" + $.t('notifications_mark_as_read', 'Mark all as read') + "</a>");
@@ -50,15 +49,13 @@ var NRS = (function(NRS, $, undefined) {
 			$markReadLink.appendTo($markReadDiv);
 			$popoverItem.append($markReadDiv);
 		} else {
-			$menuItem.find('span .nm_inner_subtype').css('backgroundColor', '#337ab7');
-			$menuItem.find('span .nm_inner_total').css('backgroundColor', '');
+			$menuItem.find('span.nm_badge').css('backgroundColor', '#a6a6a6');
 			var html = "";
 			html += "<div style='text-align:center;padding:12px;'>" + $.t('no_notifications', 'No current notifications') + "</div>";
 			$popoverItem.append(html);
 		}
 
-		$menuItem.find('span .nm_inner_subtype').html(String(subTypeCount));
-		$menuItem.find('span .nm_inner_total').html(String(totalCount));
+		$menuItem.find('span.nm_badge').html(String(totalCount));
 		$menuItem.show();
 
 		var template = '<div class="popover" style="min-width:350px;"><div class="arrow"></div><div class="popover-inner">';
