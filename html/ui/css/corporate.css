@@ -3333,6 +3333,7 @@ a.list-group-item.active h4 span {
 	border: 0;
 	border-radius: 0;
 }
+#user_info_modal .nav-pills > li > a { border-radius: 0px; padding:10px 0; }
 .nav-pills > li > a { border-radius: 0px; padding:10px; }
 .nav-pills > li.active > a, .nav-pills > li.active > a:hover, .nav-pills > li.active > a:focus { background-color: #0088B7;	}
 .small-box a {
