@@ -142,6 +142,13 @@ public abstract class TransactionType {
 
     private static final Fee POLL_FEE = new Fee.ConstantFee(10 * Constants.ONE_NXT);
     private static final Fee ASSET_ISSUANCE_FEE = new Fee.ConstantFee(1000 * Constants.ONE_NXT);
+    private static final Fee DGS_DELIVERY_FEE = new Fee.SizeBasedFee(Constants.ONE_NXT) {
+        @Override
+        public int getSize(TransactionImpl transaction, Appendix attachment) {
+            int length = ((Attachment.DigitalGoodsDelivery)attachment).getGoods().getData().length;
+            return length <= 10240 ? 1024 : length - 8 * 1024;
+        }
+    };
 
     TransactionType() {}
 
@@ -1847,6 +1854,11 @@ public abstract class TransactionType {
             }
 
             @Override
+            public Fee getBaselineFee(Transaction transaction) {
+                return DGS_DELIVERY_FEE;
+            }
+
+            @Override
             Attachment.DigitalGoodsDelivery parseAttachment(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
                 return new Attachment.DigitalGoodsDelivery(buffer, transactionVersion);
             }
@@ -1866,7 +1878,10 @@ public abstract class TransactionType {
             void doValidateAttachment(Transaction transaction) throws NxtException.ValidationException {
                 Attachment.DigitalGoodsDelivery attachment = (Attachment.DigitalGoodsDelivery) transaction.getAttachment();
                 DigitalGoodsStore.Purchase purchase = DigitalGoodsStore.Purchase.getPendingPurchase(attachment.getPurchaseId());
-                if (attachment.getGoods().getData().length > Constants.MAX_DGS_GOODS_LENGTH
+                if (Nxt.getBlockchain().getHeight() < Constants.VOTING_SYSTEM_BLOCK && attachment.getGoods().getData().length > Constants.MAX_DGS_GOODS_LENGTH) {
+                    throw new NxtException.NotCurrentlyValidException("Goods data exceeds " + Constants.MAX_DGS_GOODS_LENGTH);
+                }
+                if (attachment.getGoods().getData().length > Constants.MAX_DGS_GOODS_LENGTH_2
                         || attachment.getGoods().getData().length == 0
                         || attachment.getGoods().getNonce().length != 32
                         || attachment.getDiscountNQT() < 0 || attachment.getDiscountNQT() > Constants.MAX_BALANCE_NQT
