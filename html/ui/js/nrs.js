@@ -385,6 +385,7 @@ var NRS = (function(NRS, $, undefined) {
 
 		if (NRS.pages[page]) {
 			NRS.pageLoading();
+			NRS.resetNotificationState(page);
 
 			if (data && data.callback) {
 				NRS.pages[page](data.callback);
@@ -425,6 +426,7 @@ var NRS = (function(NRS, $, undefined) {
 			} else {
 				$link.trigger("click");
 			}
+			NRS.resetNotificationState(page);
 		} else {
 			NRS.currentPage = page;
 			NRS.currentSubPage = "";
@@ -436,6 +438,7 @@ var NRS = (function(NRS, $, undefined) {
 			$("#" + page + "_page").show();
 			if (NRS.pages[page]) {
 				NRS.pageLoading();
+				NRS.resetNotificationState(page);
 				NRS.pages[page](callback);
 			}
 		}

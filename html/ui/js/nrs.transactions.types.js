@@ -11,7 +11,8 @@ var NRS = (function(NRS, $, undefined) {
                 0: {
                     'title': "Ordinary Payment",
                     'i18nKeyTitle': 'ordinary_payment',
-                    'iconHTML': "<i class='fa fa-money'></i>"
+                    'iconHTML': "<i class='fa fa-money'></i>",
+                    'receiverPage': 'transactions'
                 }
             }
         },
@@ -23,7 +24,8 @@ var NRS = (function(NRS, $, undefined) {
                 0: {
                     'title': "Arbitrary Message",
                     'i18nKeyTitle': 'arbitrary_message',
-                    'iconHTML': "<i class='fa fa-envelope-o'></i>"
+                    'iconHTML': "<i class='fa fa-envelope-o'></i>",
+                    'receiverPage': 'messages'
                 },
                 1: {
                     'title': "Alias Assignment",
@@ -53,12 +55,14 @@ var NRS = (function(NRS, $, undefined) {
                 6: {
                     'title': "Alias Sale",
                     'i18nKeyTitle': 'alias_sale',
-                    'iconHTML': "<i class='fa fa-tag'></i>"
+                    'iconHTML': "<i class='fa fa-tag'></i>",
+                    'receiverPage': "aliases"
                 },
                 7: {
                     'title': "Alias Buy",
                     'i18nKeyTitle': 'alias_buy',
-                    'iconHTML': "<i class='fa fa-money'></i>"
+                    'iconHTML': "<i class='fa fa-money'></i>",
+                    'receiverPage': "aliases"
                 },
                 8: {
                     'title': "Alias Deletion",
@@ -68,7 +72,8 @@ var NRS = (function(NRS, $, undefined) {
                 9: {
                     'title': "Transaction Approval",
                     'i18nKeyTitle': 'transaction_approval',
-                    'iconHTML': "<i class='fa fa-gavel'></i>"
+                    'iconHTML': "<i class='fa fa-gavel'></i>",
+                    'receiverPage': "transactions"
                 }
             }
         },
@@ -85,32 +90,38 @@ var NRS = (function(NRS, $, undefined) {
                 1: {
                     'title': "Asset Transfer",
                     'i18nKeyTitle': 'asset_transfer',
-                    'iconHTML': '<i class="ion-arrow-swap"></i>'
+                    'iconHTML': '<i class="ion-arrow-swap"></i>',
+                    'receiverPage': "transfer_history"
                 },
                 2: {
                     'title': "Ask Order Placement",
                     'i18nKeyTitle': 'ask_order_placement',
-                    'iconHTML': '<i class="ion-arrow-graph-down-right"></i>'
+                    'iconHTML': '<i class="ion-arrow-graph-down-right"></i>',
+                    'receiverPage': "open_orders"
                 },
                 3: {
                     'title': "Bid Order Placement",
                     'i18nKeyTitle': 'bid_order_placement',
-                    'iconHTML': '<i class="ion-arrow-graph-up-right"></i>'
+                    'iconHTML': '<i class="ion-arrow-graph-up-right"></i>',
+                    'receiverPage': "open_orders"
                 },
                 4: {
                     'title': "Ask Order Cancellation",
                     'i18nKeyTitle': 'ask_order_cancellation',
-                    'iconHTML': '<i class="fa fa-times"></i>'
+                    'iconHTML': '<i class="fa fa-times"></i>',
+                    'receiverPage': "open_orders"
                 },
                 5: {
                     'title': "Bid Order Cancellation",
                     'i18nKeyTitle': 'bid_order_cancellation',
-                    'iconHTML': '<i class="fa fa-times"></i>'
+                    'iconHTML': '<i class="fa fa-times"></i>',
+                    'receiverPage': "open_orders"
                 },
                 6: {
                     'title': "Dividend Payment",
                     'i18nKeyTitle': 'dividend_payment',
-                    'iconHTML': '<i class="fa fa-gift"></i>'
+                    'iconHTML': '<i class="fa fa-gift"></i>',
+                    'receiverPage': "transactions"
                 }
             }
         },
@@ -142,22 +153,26 @@ var NRS = (function(NRS, $, undefined) {
                 4: {
                     'title': "Marketplace Purchase",
                     'i18nKeyTitle': 'marketplace_purchase',
-                    'iconHTML': '<i class="fa fa-money"></i>'
+                    'iconHTML': '<i class="fa fa-money"></i>',
+                    'receiverPage': "pending_orders_dgs"
                 },
                 5: {
                     'title': "Marketplace Delivery",
                     'i18nKeyTitle': 'marketplace_delivery',
-                    'iconHTML': '<i class="fa fa-cube"></i>'
+                    'iconHTML': '<i class="fa fa-cube"></i>',
+                    'receiverPage': "purchased_dgs"
                 },
                 6: {
                     'title': "Marketplace Feedback",
                     'i18nKeyTitle': 'marketplace_feedback',
-                    'iconHTML': '<i class="ion-android-social"></i>'
+                    'iconHTML': '<i class="ion-android-social"></i>',
+                    'receiverPage': "completed_orders_dgs"
                 },
                 7: {
                     'title': "Marketplace Refund",
                     'i18nKeyTitle': 'marketplace_refund',
-                    'iconHTML': '<i class="fa fa-reply"></i>'
+                    'iconHTML': '<i class="fa fa-reply"></i>',
+                    'receiverPage': "purchased_dgs"
                 }
             }
         },
@@ -169,7 +184,8 @@ var NRS = (function(NRS, $, undefined) {
                 0: {
                     'title': "Balance Leasing",
                     'i18nKeyTitle': 'balance_leasing',
-                    'iconHTML': '<i class="fa fa-arrow-circle-o-right"></i>'
+                    'iconHTML': '<i class="fa fa-arrow-circle-o-right"></i>',
+                    'receiverPage': "transactions"
                 }
             }
         },
@@ -191,12 +207,14 @@ var NRS = (function(NRS, $, undefined) {
                 2: {
                     'title': "Reserve Claim",
                     'i18nKeyTitle': 'reserve_claim',
-                    'iconHTML': '<i class="fa fa-truck"></i>'
+                    'iconHTML': '<i class="fa fa-truck"></i>',
+                    'receiverPage': "currencies"
                 },
                 3: {
                     'title': "Currency Transfer",
                     'i18nKeyTitle': 'currency_transfer',
-                    'iconHTML': '<i class="ion-arrow-swap"></i>'
+                    'iconHTML': '<i class="ion-arrow-swap"></i>',
+                    'receiverPage': "currencies"
                 },
                 4: {
                     'title': "Publish Exchange Offer",
@@ -206,17 +224,20 @@ var NRS = (function(NRS, $, undefined) {
                 5: {
                     'title': "Buy Currency",
                     'i18nKeyTitle': 'currency_buy',
-                    'iconHTML': '<i class="ion-arrow-graph-up-right"></i>'
+                    'iconHTML': '<i class="ion-arrow-graph-up-right"></i>',
+                    'receiverPage': "currencies"
                 },
                 6: {
                     'title': "Sell Currency",
                     'i18nKeyTitle': 'currency_sell',
-                    'iconHTML': '<i class="ion-arrow-graph-down-right"></i>'
+                    'iconHTML': '<i class="ion-arrow-graph-down-right"></i>',
+                    'receiverPage': "currencies"
                 },
                 7: {
                     'title': "Mint Currency",
                     'i18nKeyTitle': 'mint_currency',
-                    'iconHTML': '<i class="fa fa-money"></i>'
+                    'iconHTML': '<i class="fa fa-money"></i>',
+                    'receiverPage': "currencies"
                 },
                 8: {
                     'title': "Delete Currency",

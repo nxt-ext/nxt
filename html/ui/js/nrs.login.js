@@ -278,6 +278,7 @@ var NRS = (function(NRS, $, undefined) {
 					$("[data-i18n]").i18n();
 
 					NRS.getInitialTransactions();
+					NRS.updateNotifications();
 					NRS.updateApprovalRequests();
 				});
 			});
