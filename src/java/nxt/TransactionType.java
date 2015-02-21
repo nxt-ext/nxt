@@ -146,7 +146,7 @@ public abstract class TransactionType {
         @Override
         public int getSize(TransactionImpl transaction, Appendix attachment) {
             int length = ((Attachment.DigitalGoodsDelivery)attachment).getGoods().getData().length;
-            return length <= 10240 ? 1024 : length - 8 * 1024;
+            return length <= 10240 ? 1024 : (length - 8 * 1024);
         }
     };
     private static final Fee PHASING_VOTE_NO_WHITELIST_FEE = new Fee.ConstantFee(2 * Constants.ONE_NXT);
