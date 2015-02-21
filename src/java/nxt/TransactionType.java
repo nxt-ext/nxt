@@ -149,6 +149,8 @@ public abstract class TransactionType {
             return length <= 10240 ? 1024 : length - 8 * 1024;
         }
     };
+    private static final Fee PHASING_VOTE_NO_WHITELIST_FEE = new Fee.ConstantFee(5 * Constants.ONE_NXT);
+
 
     TransactionType() {}
 
@@ -242,7 +244,7 @@ public abstract class TransactionType {
     }
 
     public Fee getNextFee(Transaction transaction) throws NxtException.NotValidException {
-        return Fee.DEFAULT_FEE;
+        return getBaselineFee(transaction);
     }
 
     public abstract String getName();
@@ -673,11 +675,6 @@ public abstract class TransactionType {
             }
 
             @Override
-            public Fee getNextFee(Transaction transaction) {
-                return POLL_FEE;
-            }
-
-            @Override
             Attachment.MessagingPollCreation parseAttachment(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
                 return new Attachment.MessagingPollCreation(buffer, transactionVersion);
             }
@@ -847,6 +844,22 @@ public abstract class TransactionType {
             @Override
             public String getName() {
                 return "PhasingVoteCasting";
+            }
+
+            @Override
+            public Fee getBaselineFee(Transaction transaction) throws NxtException.NotValidException {
+                Attachment.MessagingPhasingVoteCasting attachment = (Attachment.MessagingPhasingVoteCasting) transaction.getAttachment();
+                for (byte[] hash : attachment.getTransactionFullHashes()) {
+                    long pendingId = Convert.fullHashToId(hash);
+                    PhasingPoll poll = PhasingPoll.getPoll(pendingId);
+                    if (poll == null) {
+                        throw new NxtException.NotValidException("Wrong pending transaction or poll is finished");
+                    }
+                    if (poll.getWhitelist().length == 0 && !poll.getDefaultVoteWeighting().isBalanceIndependent()) {
+                        return PHASING_VOTE_NO_WHITELIST_FEE;
+                    }
+                }
+                return Fee.DEFAULT_FEE;
             }
 
             @Override
@@ -1067,11 +1080,6 @@ public abstract class TransactionType {
 
             @Override
             public Fee getBaselineFee(Transaction transaction) {
-                return ASSET_ISSUANCE_FEE;
-            }
-
-            @Override
-            public Fee getNextFee(Transaction transaction) {
                 return ASSET_ISSUANCE_FEE;
             }
 
