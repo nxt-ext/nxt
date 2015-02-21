@@ -73,11 +73,6 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
 
         long holdingId = ParameterParser.getUnsignedLong(req, "phasingHolding", false);
 
-        if ((votingModel == VoteWeighting.VotingModel.ASSET.getCode() || votingModel == VoteWeighting.VotingModel.CURRENCY.getCode())
-                && holdingId == 0) {
-            throw new ParameterException(MISSING_PENDING_HOLDING_ID);
-        }
-
         long[] whitelist;
         String[] whitelistValues = req.getParameterValues("phasingWhitelisted");
         if (whitelistValues != null && whitelistValues.length > 0) {
@@ -87,9 +82,6 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
             }
         } else {
             whitelist = Convert.EMPTY_LONG;
-        }
-        if (votingModel == VoteWeighting.VotingModel.ACCOUNT.getCode() && whitelist.length == 0) {
-            throw new ParameterException(INCORRECT_PENDING_WHITELIST);
         }
 
         return new Appendix.Phasing(maxHeight, votingModel, holdingId, quorum, minBalance, minBalanceModel, whitelist);
