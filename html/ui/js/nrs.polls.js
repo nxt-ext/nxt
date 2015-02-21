@@ -224,12 +224,6 @@ var NRS = (function(NRS, $, undefined) {
 		}
 		NRS.appendToTSMenuItem(sidebarId, options);
 		options = {
-			"titleHTML": '<span data-i18n="relevant_polls">Relevant Polls</span>',
-			"type": 'PAGE',
-			"page": 'relevant_polls'
-		}
-		NRS.appendToTSMenuItem(sidebarId, options);
-		options = {
 			"titleHTML": '<span data-i18n="followed_polls">Followed Polls</span>',
 			"type": 'PAGE',
 			"page": 'followed_polls'
@@ -611,6 +605,657 @@ $("#poll_results_modal ul.nav li").click(function(e) {
 	NRS.forms.castVoteComplete = function(response, data) {
 		// don't think anything needs to go here
 	}
+
+
+
+
+	// a lot of stuff in followed polls, lets put that here
+	NRS.followedPolls = [];
+	NRS.followedPollIds = [];
+	NRS.viewingAsset = false; //viewing non-bookmarked asset
+	NRS.currentPoll = {};
+	var currentPollId = 0;
+
+	NRS.pages.followed_polls = function(callback) {
+		$(".content.content-stretch:visible").width($(".page:visible").width());
+
+		if (NRS.databaseSupport) {
+			NRS.followedPolls = [];
+			NRS.followedPollIds = [];
+
+			NRS.database.select("polls", null, function(error, polls) {
+				//select already bookmarked assets
+				$.each(polls, function(index, poll) {
+					NRS.cachePoll(poll);
+				});
+				
+					NRS.loadFollowedPollsSidebar(callback);
+			});
+		} 
+	}
+
+	NRS.cachePoll = function(poll) {
+		if (NRS.followedPollIds.indexOf(poll.poll) != -1) {
+			return;
+		}
+
+		NRS.followedPollIds.push(poll.poll);
+
+			poll.groupName = "";
+
+		var poll = {
+			"poll": String(poll.poll),
+			"name": String(poll.name).toLowerCase(),
+			"description": String(poll.description),
+		};
+
+		NRS.polls.push(poll);
+	}
+
+	NRS.forms.addFollowedPoll = function($modal) {
+		var data = NRS.getFormData($modal.find("form:first"));
+
+		data.id = $.trim(data.id);
+
+		if (!data.id) {
+			return {
+				"error": $.t("error_poll_id_required")
+			};
+		}
+
+		if (!/^\d+$/.test(data.id) && !/^NXT\-/i.test(data.id)) {
+			return {
+				"error": $.t("error_poll_id_invalid")
+			};
+		}
+		else {
+			NRS.sendRequest("getPoll", {
+				"poll": data.id
+			}, function(response) {
+				if (response.errorCode) {
+					NRS.showModalError($.t("no_poll_found"), $modal);
+				} else {
+					NRS.saveFollowedPolls(new Array(response), NRS.forms.addFollowedPollsComplete);
+				}
+			});
+		}
+	}
+
+	/*$("#asset_exchange_bookmark_this_asset").on("click", function() {
+		if (NRS.viewingAsset) {
+			NRS.saveAssetBookmarks(new Array(NRS.viewingAsset), function(newAssets) {
+				NRS.viewingAsset = false;
+				NRS.loadAssetExchangeSidebar(function() {
+					$("#asset_exchange_sidebar a[data-asset=" + newAssets[0].asset + "]").addClass("active").trigger("click");
+				});
+			});
+		}
+	});*/
+
+	NRS.forms.addFollowedPollsComplete = function(newPolls, submittedPolls) {
+		NRS.pollSearch = false;
+
+		if (newPolls.length == 0) {
+			NRS.closeModal();
+			$.growl($.t("error_poll_already_bookmarked", {
+				"count": submittedPolls.length
+			}), {
+				"type": "danger"
+			});
+			$("#followed_polls_sidebar a.active").removeClass("active");
+			$("#followed_polls_sidebar a[data-poll=" + submittedPolls[0].poll + "]").addClass("active").trigger("click");
+			return;
+		} else {
+			NRS.closeModal();
+
+			var message = $.t("success_poll_followed", {
+				"count": newPolls.length
+			});
+
+			if (!NRS.databaseSupport) {
+				message += " " + $.t("error_polls_save_db");
+			}
+
+			$.growl(message, {
+				"type": "success"
+			});
+
+			NRS.loadFollowedPollsSidebar(function(callback) {
+				$("#followed_polls_sidebar a.active").removeClass("active");
+				$("#followed_polls_sidebar a[data-asset=" + newPolls[0].poll + "]").addClass("active").trigger("click");
+			});
+		}
+	}
+
+	NRS.saveFollowedPolls = function(polls, callback) {
+		var newPollIds = [];
+		var newPolls = [];
+
+		$.each(polls, function(key, poll) {
+			var newPoll = {
+				"poll": String(poll.asset),
+				"name": String(poll.name),
+				"description": String(poll.description),
+			};
+
+			newPolls.push(newPoll);
+
+			if (NRS.databaseSupport) {
+				newPollIds.push({
+					"poll": String(poll.poll)
+				});
+			}
+		});
+
+		if (!NRS.databaseSupport) {
+			if (callback) {
+				callback(newPolls, polls);
+			}
+			return;
+		}
+
+		NRS.database.select("polls", newPollIds, function(error, existingPolls) {
+			var existingIds = [];
+
+			if (existingPolls.length) {
+				$.each(existingPolls, function(index, poll) {
+					existingIds.push(poll.poll);
+				});
+
+				newPoll = $.grep(newPolls, function(v) {
+					return (existingIds.indexOf(v.poll) === -1);
+				});
+			}
+
+			if (newPolls.length == 0) {
+				if (callback) {
+					callback([], polls);
+				}
+			} else {
+				NRS.database.insert("polls", newPolls, function(error) {
+					$.each(newPolls, function(key, poll) {
+						poll.name = poll.name.toLowerCase();
+						NRS.followedPollIds.push(poll.poll);
+						NRS.followedPolls.push(poll);
+					});
+
+					if (callback) {
+						//for some reason we need to wait a little or DB won't be able to fetch inserted record yet..
+						setTimeout(function() {
+							callback(newPolls, polls);
+						}, 50);
+					}
+				});
+			}
+		});
+	}
+
+	NRS.positionFollowedPollsSidebar = function() {
+		$("#followed_polls_sidebar").parent().css("position", "relative");
+		$("#followed_polls_sidebar").parent().css("padding-bottom", "5px");
+		//$("#asset_exchange_sidebar_content").height($(window).height() - 120);
+		$("#followed_polls_sidebar").height($(window).height() - 120);
+	}
+
+	//called on opening the asset exchange page and automatic refresh
+	NRS.loadFollowedPollsSidebar = function(callback) {
+		if (!NRS.followedPolls.length) {
+			NRS.pageLoaded(callback);
+			$("#asset_exchange_sidebar_content").empty();
+			$("#no_asset_selected, #loading_asset_data, #no_asset_search_results, #asset_details").hide();
+			$("#no_assets_available").show();
+			$("#asset_exchange_page").addClass("no_assets");
+			return;
+		}
+
+		var rows = "";
+
+		$("#asset_exchange_page").removeClass("no_assets");
+
+		NRS.positionAssetSidebar();
+
+		NRS.assets.sort(function(a, b) {
+			if (!a.groupName && !b.groupName) {
+				if (a.name > b.name) {
+					return 1;
+				} else if (a.name < b.name) {
+					return -1;
+				} else {
+					return 0;
+				}
+			} else if (!a.groupName) {
+				return 1;
+			} else if (!b.groupName) {
+				return -1;
+			} else if (a.groupName > b.groupName) {
+				return 1;
+			} else if (a.groupName < b.groupName) {
+				return -1;
+			} else {
+				if (a.name > b.name) {
+					return 1;
+				} else if (a.name < b.name) {
+					return -1;
+				} else {
+					return 0;
+				}
+			}
+		});
+
+		var lastGroup = "";
+		var ungrouped = true;
+		var isClosedGroup = false;
+
+		var isSearch = NRS.assetSearch !== false;
+		var searchResults = 0;
+
+		for (var i = 0; i < NRS.assets.length; i++) {
+			var asset = NRS.assets[i];
+
+			if (isSearch) {
+				if (NRS.assetSearch.indexOf(asset.asset) == -1) {
+					continue;
+				} else {
+					searchResults++;
+				}
+			}
+
+			if (asset.groupName.toLowerCase() != lastGroup) {
+				var to_check = (asset.groupName ? asset.groupName : "undefined");
+
+				if (NRS.closedGroups.indexOf(to_check) != -1) {
+					isClosedGroup = true;
+				} else {
+					isClosedGroup = false;
+				}
+
+				if (asset.groupName) {
+					ungrouped = false;
+					rows += "<a href='#' class='list-group-item list-group-item-header" + (asset.groupName == "Ignore List" ? " no-context" : "") + "'" + (asset.groupName != "Ignore List" ? " data-context='asset_exchange_sidebar_group_context' " : "data-context=''") + " data-groupname='" + asset.groupName.escapeHTML() + "' data-closed='" + isClosedGroup + "'><h4 class='list-group-item-heading'>" + asset.groupName.toUpperCase().escapeHTML() + "</h4><i class='fa fa-angle-" + (isClosedGroup ? "right" : "down") + " group_icon'></i></h4></a>";
+				} else {
+					ungrouped = true;
+					rows += "<a href='#' class='list-group-item list-group-item-header no-context' data-closed='" + isClosedGroup + "'><h4 class='list-group-item-heading'>UNGROUPED <i class='fa pull-right fa-angle-" + (isClosedGroup ? "right" : "down") + "'></i></h4></a>";
+				}
+
+				lastGroup = asset.groupName.toLowerCase();
+			}
+
+			var ownsAsset = false;
+			var ownsQuantityQNT = 0;
+
+			if (NRS.accountInfo.assetBalances) {
+				$.each(NRS.accountInfo.assetBalances, function(key, assetBalance) {
+					if (assetBalance.asset == asset.asset && assetBalance.balanceQNT != "0") {
+						ownsAsset = true;
+						ownsQuantityQNT = assetBalance.balanceQNT;
+						return false;
+					}
+				});
+			}
+
+			rows += "<a href='#' class='list-group-item list-group-item-" + (ungrouped ? "ungrouped" : "grouped") + (ownsAsset ? " owns_asset" : " not_owns_asset") + "' ";
+			rows += "data-cache='" + i + "' ";
+			rows += "data-asset='" + String(asset.asset).escapeHTML() + "'" + (!ungrouped ? " data-groupname='" + asset.groupName.escapeHTML() + "'" : "");
+			rows += (isClosedGroup ? " style='display:none'" : "") + " data-closed='" + isClosedGroup + "'>";
+			rows += "<h4 class='list-group-item-heading'>" + asset.name.escapeHTML() + "</h4>";
+			rows += "<p class='list-group-item-text'><span data-i18n=\"quantity\">Quantity</span>: " + NRS.formatQuantity(ownsQuantityQNT, asset.decimals) + "</p>";
+			rows += "</a>";
+		}
+
+		var active = $("#asset_exchange_sidebar a.active");
+
+
+		if (active.length) {
+			active = active.data("asset");
+		} else {
+			active = false;
+		}
+
+		$("#asset_exchange_sidebar_content").empty().append(rows);
+		$("#asset_exchange_sidebar_search").show();
+
+		if (isSearch) {
+			if (active && NRS.assetSearch.indexOf(active) != -1) {
+				//check if currently selected asset is in search results, if so keep it at that
+				$("#asset_exchange_sidebar a[data-asset=" + active + "]").addClass("active");
+			} else if (NRS.assetSearch.length == 1) {
+				//if there is only 1 search result, click it
+				$("#asset_exchange_sidebar a[data-asset=" + NRS.assetSearch[0] + "]").addClass("active").trigger("click");
+			}
+		} else if (active) {
+			$("#asset_exchange_sidebar a[data-asset=" + active + "]").addClass("active");
+		}
+
+		if (isSearch || NRS.assets.length >= 10) {
+			$("#asset_exchange_sidebar_search").show();
+		} else {
+			$("#asset_exchange_sidebar_search").hide();
+		}
+
+		if (isSearch && NRS.assetSearch.length == 0) {
+			$("#no_asset_search_results").show();
+			$("#asset_details, #no_asset_selected, #no_assets_available").hide();
+		} else if (!$("#asset_exchange_sidebar a.active").length) {
+			$("#no_asset_selected").show();
+			$("#asset_details, #no_assets_available, #no_asset_search_results").hide();
+		} else if (active) {
+			$("#no_assets_available, #no_asset_selected, #no_asset_search_results").hide();
+		}
+
+		if (NRS.viewingAsset) {
+			$("#asset_exchange_bookmark_this_asset").show();
+		} else {
+			$("#asset_exchange_bookmark_this_asset").hide();
+		}
+
+		NRS.pageLoaded(callback);
+	}
+
+	NRS.incoming.asset_exchange = function() {
+		if (!NRS.viewingAsset) {
+			//refresh active asset
+			var $active = $("#asset_exchange_sidebar a.active");
+
+			if ($active.length) {
+				$active.trigger("click", [{
+					"refresh": true
+				}]);
+			}
+		} else {
+			NRS.loadAsset(NRS.viewingAsset, true);
+		}
+
+		//update assets owned (colored)
+		$("#asset_exchange_sidebar a.list-group-item.owns_asset").removeClass("owns_asset").addClass("not_owns_asset");
+
+		if (NRS.accountInfo.assetBalances) {
+			$.each(NRS.accountInfo.assetBalances, function(key, assetBalance) {
+				if (assetBalance.balanceQNT != "0") {
+					$("#asset_exchange_sidebar a.list-group-item[data-asset=" + assetBalance.asset + "]").addClass("owns_asset").removeClass("not_owns_asset");
+				}
+			});
+		}
+	}
+
+	$("#asset_exchange_sidebar").on("click", "a", function(e, data) {
+		e.preventDefault();
+
+		currentAssetID = String($(this).data("asset")).escapeHTML();
+
+		//refresh is true if data is refreshed automatically by the system (when a new block arrives)
+		if (data && data.refresh) {
+			var refresh = true;
+		} else {
+			var refresh = false;
+		}
+
+		//clicked on a group
+		if (!currentAssetID) {
+			if (NRS.databaseSupport) {
+				var group = $(this).data("groupname");
+				var closed = $(this).data("closed");
+
+				if (!group) {
+					var $links = $("#asset_exchange_sidebar a.list-group-item-ungrouped");
+				} else {
+					var $links = $("#asset_exchange_sidebar a.list-group-item-grouped[data-groupname='" + group.escapeHTML() + "']");
+				}
+
+				if (!group) {
+					group = "undefined";
+				}
+
+				if (closed) {
+					var pos = NRS.closedGroups.indexOf(group);
+					if (pos >= 0) {
+						NRS.closedGroups.splice(pos);
+					}
+					$(this).data("closed", "");
+					$(this).find("i").removeClass("fa-angle-right").addClass("fa-angle-down");
+					$links.show();
+				} else {
+					NRS.closedGroups.push(group);
+					$(this).data("closed", true);
+					$(this).find("i").removeClass("fa-angle-down").addClass("fa-angle-right");
+					$links.hide();
+				}
+
+				NRS.database.update("data", {
+					"contents": NRS.closedGroups.join("#")
+				}, [{
+					"id": "closed_groups"
+				}]);
+			}
+
+			return;
+		}
+
+		if (NRS.databaseSupport) {
+			NRS.database.select("assets", [{
+				"asset": currentAssetID
+			}], function(error, asset) {
+				if (asset && asset.length && asset[0].asset == currentAssetID) {
+					NRS.loadAsset(asset[0], refresh);
+				}
+			});
+		} else {
+			NRS.sendRequest("getAsset+", {
+				"asset": currentAssetID
+			}, function(response, input) {
+				if (!response.errorCode && response.asset == currentAssetID) {
+					NRS.loadAsset(response, refresh);
+				}
+			});
+		}
+	});
+
+	NRS.loadAsset = function(asset, refresh) {
+		var assetId = asset.asset;
+
+		NRS.currentAsset = asset;
+		NRS.currentSubPage = assetId;
+
+		if (!refresh) {
+			$("#asset_exchange_sidebar a.active").removeClass("active");
+			$("#asset_exchange_sidebar a[data-asset=" + assetId + "]").addClass("active");
+
+			$("#no_asset_selected, #loading_asset_data, #no_assets_available, #no_asset_search_results").hide();
+			$("#asset_details").show().parent().animate({
+				"scrollTop": 0
+			}, 0);
+
+			$("#asset_account").html("<a href='#' data-user='" + NRS.getAccountFormatted(asset, "account") + "' class='user_info'>" + NRS.getAccountTitle(asset, "account") + "</a>");
+			$("#asset_id").html(assetId.escapeHTML());
+			$("#asset_decimals").html(String(asset.decimals).escapeHTML());
+			$("#asset_name").html(String(asset.name).escapeHTML());
+			$("#asset_description").html(String(asset.description).autoLink());
+			$("#asset_quantity").html(NRS.formatQuantity(asset.quantityQNT, asset.decimals));
+			$(".asset_name").html(String(asset.name).escapeHTML());
+			$("#sell_asset_button").data("asset", assetId);
+			$("#buy_asset_button").data("asset", assetId);
+			$("#view_asset_distribution_link").data("asset", assetId);
+			$("#sell_asset_for_nxt").html($.t("sell_asset_for_nxt", {
+				"assetName": String(asset.name).escapeHTML()
+			}));
+			$("#buy_asset_with_nxt").html($.t("buy_asset_with_nxt", {
+				"assetName": String(asset.name).escapeHTML()
+			}));
+			$("#sell_asset_price, #buy_asset_price").val("");
+			$("#sell_asset_quantity, #sell_asset_total, #buy_asset_quantity, #buy_asset_total").val("0");
+
+			$("#asset_exchange_ask_orders_table tbody").empty();
+			$("#asset_exchange_bid_orders_table tbody").empty();
+			$("#asset_exchange_trade_history_table tbody").empty();
+			$("#asset_exchange_ask_orders_table").parent().addClass("data-loading").removeClass("data-empty");
+			$("#asset_exchange_bid_orders_table").parent().addClass("data-loading").removeClass("data-empty");
+			$("#asset_exchange_trade_history_table").parent().addClass("data-loading").removeClass("data-empty");
+
+			$(".data-loading img.loading").hide();
+
+			setTimeout(function() {
+				$(".data-loading img.loading").fadeIn(200);
+			}, 200);
+
+			var nrDuplicates = 0;
+
+			$.each(NRS.assets, function(key, singleAsset) {
+				if (String(singleAsset.name).toLowerCase() == String(asset.name).toLowerCase() && singleAsset.asset != assetId) {
+					nrDuplicates++;
+				}
+			});
+
+			$("#asset_exchange_duplicates_warning").html($.t("asset_exchange_duplicates_warning", {
+				"count": nrDuplicates
+			}));
+
+			if (NRS.databaseSupport) {
+				NRS.sendRequest("getAsset", {
+					"asset": assetId
+				}, function(response) {
+					if (!response.errorCode) {
+						if (response.asset != asset.asset || response.account != asset.account || response.accountRS != asset.accountRS || response.decimals != asset.decimals || response.description != asset.description || response.name != asset.name || response.quantityQNT != asset.quantityQNT) {
+							NRS.database.delete("assets", [{
+								"asset": asset.asset
+							}], function() {
+								setTimeout(function() {
+									NRS.loadPage("asset_exchange");
+									$.growl("Invalid asset.", {
+										"type": "danger"
+									});
+								}, 50);
+							});
+						}
+					}
+				});
+			}
+
+			if (asset.viewingAsset) {
+				$("#asset_exchange_bookmark_this_asset").show();
+				NRS.viewingAsset = asset;
+			} else {
+				$("#asset_exchange_bookmark_this_asset").hide();
+				NRS.viewingAsset = false;
+			}
+		}
+
+		// Only asset issuers have the ability to pay dividends.
+		if (asset.accountRS == NRS.accountRS) {
+         $("#dividend_payment_link").show();
+		} else {
+			$("#dividend_payment_link").hide();
+		}
+
+		if (NRS.accountInfo.unconfirmedBalanceNQT == "0") {
+			$("#your_nxt_balance").html("0");
+			$("#buy_automatic_price").addClass("zero").removeClass("nonzero");
+		} else {
+			$("#your_nxt_balance").html(NRS.formatAmount(NRS.accountInfo.unconfirmedBalanceNQT));
+			$("#buy_automatic_price").addClass("nonzero").removeClass("zero");
+		}
+
+		if (NRS.accountInfo.unconfirmedAssetBalances) {
+			for (var i = 0; i < NRS.accountInfo.unconfirmedAssetBalances.length; i++) {
+				var balance = NRS.accountInfo.unconfirmedAssetBalances[i];
+
+				if (balance.asset == assetId) {
+					NRS.currentAsset.yourBalanceQNT = balance.unconfirmedBalanceQNT;
+					$("#your_asset_balance").html(NRS.formatQuantity(balance.unconfirmedBalanceQNT, NRS.currentAsset.decimals));
+					if (balance.unconfirmedBalanceQNT == "0") {
+						$("#sell_automatic_price").addClass("zero").removeClass("nonzero");
+					} else {
+						$("#sell_automatic_price").addClass("nonzero").removeClass("zero");
+					}
+					break;
+				}
+			}
+		}
+
+		if (!NRS.currentAsset.yourBalanceQNT) {
+			NRS.currentAsset.yourBalanceQNT = "0";
+			$("#your_asset_balance").html("0");
+		}
+
+		NRS.loadAssetOrders("ask", assetId, refresh);
+		NRS.loadAssetOrders("bid", assetId, refresh);
+
+		NRS.getAssetTradeHistory(assetId, refresh);
+	}
+
+	NRS.loadAssetOrders = function(type, assetId, refresh) {
+		type = type.toLowerCase();
+
+		NRS.sendRequest("get" + type.capitalize() + "Orders+" + assetId, {
+			"asset": assetId,
+			"firstIndex": 0,
+			"lastIndex": 50
+		}, function(response, input) {
+			var orders = response[type + "Orders"];
+
+			if (!orders) {
+				orders = [];
+			}
+
+			if (NRS.unconfirmedTransactions.length) {
+				var added = false;
+
+				for (var i = 0; i < NRS.unconfirmedTransactions.length; i++) {
+					var unconfirmedTransaction = NRS.unconfirmedTransactions[i];
+					unconfirmedTransaction.order = unconfirmedTransaction.transaction;
+
+					if (unconfirmedTransaction.type == 2 && (type == "ask" ? unconfirmedTransaction.subtype == 2 : unconfirmedTransaction.subtype == 3) && unconfirmedTransaction.asset == assetId) {
+						orders.push($.extend(true, {}, unconfirmedTransaction)); //make sure it's a deep copy
+						added = true;
+					}
+				}
+
+				if (added) {
+					orders.sort(function(a, b) {
+						if (type == "ask") {
+							//lowest price at the top
+							return new BigInteger(a.priceNQT).compareTo(new BigInteger(b.priceNQT));
+						} else {
+							//highest price at the top
+							return new BigInteger(b.priceNQT).compareTo(new BigInteger(a.priceNQT));
+						}
+					});
+				}
+			}
+
+			if (orders.length) {
+				$("#" + (type == "ask" ? "sell" : "buy") + "_orders_count").html("(" + orders.length + (orders.length == 50 ? "+" : "") + ")");
+
+				var rows = "";
+
+				for (var i = 0; i < orders.length; i++) {
+					var order = orders[i];
+
+					order.priceNQT = new BigInteger(order.priceNQT);
+					order.quantityQNT = new BigInteger(order.quantityQNT);
+					order.totalNQT = new BigInteger(NRS.calculateOrderTotalNQT(order.quantityQNT, order.priceNQT));
+
+					if (i == 0 && !refresh) {
+						$("#" + (type == "ask" ? "buy" : "sell") + "_asset_price").val(NRS.calculateOrderPricePerWholeQNT(order.priceNQT, NRS.currentAsset.decimals));
+					}
+
+					var className = (order.account == NRS.account ? "your-order" : "") + (order.unconfirmed ? " tentative" : (NRS.isUserCancelledOrder(order) ? " tentative tentative-crossed" : ""));
+
+					rows += "<tr class='" + className + "' data-transaction='" + String(order.order).escapeHTML() + "' data-quantity='" + order.quantityQNT.toString().escapeHTML() + "' data-price='" + order.priceNQT.toString().escapeHTML() + "'><td>" + (order.unconfirmed ? "You - <strong>Pending</strong>" : (order.account == NRS.account ? "<strong>You</strong>" : "<a href='#' data-user='" + NRS.getAccountFormatted(order, "account") + "' class='user_info'>" + (order.account == NRS.currentAsset.account ? "Asset Issuer" : NRS.getAccountTitle(order, "account")) + "</a>")) + "</td><td>" + NRS.formatQuantity(order.quantityQNT, NRS.currentAsset.decimals) + "</td><td>" + NRS.formatOrderPricePerWholeQNT(order.priceNQT, NRS.currentAsset.decimals) + "</td><td>" + NRS.formatAmount(order.totalNQT) + "</tr>";
+				}
+
+				$("#asset_exchange_" + type + "_orders_table tbody").empty().append(rows);
+			} else {
+				$("#asset_exchange_" + type + "_orders_table tbody").empty();
+				if (!refresh) {
+					$("#" + (type == "ask" ? "buy" : "sell") + "_asset_price").val("0");
+				}
+				$("#" + (type == "ask" ? "sell" : "buy") + "_orders_count").html("");
+			}
+
+			NRS.dataLoadFinished($("#asset_exchange_" + type + "_orders_table"), !refresh);
+		});
+	}
+
+
 
 	return NRS;
 }(NRS || {}, jQuery));
