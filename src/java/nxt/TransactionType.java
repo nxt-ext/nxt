@@ -149,7 +149,7 @@ public abstract class TransactionType {
             return length <= 10240 ? 1024 : length - 8 * 1024;
         }
     };
-    private static final Fee PHASING_VOTE_NO_WHITELIST_FEE = new Fee.ConstantFee(5 * Constants.ONE_NXT);
+    private static final Fee PHASING_VOTE_NO_WHITELIST_FEE = new Fee.ConstantFee(2 * Constants.ONE_NXT);
 
 
     TransactionType() {}

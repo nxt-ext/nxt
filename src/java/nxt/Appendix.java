@@ -480,7 +480,7 @@ public interface Appendix {
 
     public static class Phasing extends AbstractAppendix {
 
-        private static final Fee PHASING_FEE = new Fee.ConstantFee(10 * Constants.ONE_NXT);
+        private static final Fee PHASING_FEE = new Fee.ConstantFee(20 * Constants.ONE_NXT);
 
         static Phasing parse(JSONObject attachmentData) {
             if (attachmentData.get("phasingFinishHeight") == null) {
