@@ -804,6 +804,10 @@ public abstract class TransactionType {
                     throw new NxtException.NotCurrentlyValidException("Double voting attempt");
                 }
 
+                if (poll.isFinished()) {
+                    throw new NxtException.NotCurrentlyValidException("Voting for this poll has already finished");
+                }
+
                 byte[] votes = attachment.getPollVote();
                 int positiveCount = 0;
                 for (byte vote : votes) {
