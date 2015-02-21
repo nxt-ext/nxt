@@ -587,7 +587,8 @@ body > .header .logo .icon {
 .sidebar .sidebar-menu .treeview-menu > li {
   margin: 0;
 }
-.sidebar .sidebar-menu .treeview-menu > li > a {
+.sidebar .sidebar-menu .treeview-menu > li > a,
+.sidebar .sidebar-menu .treeview-menu > li > .sm_sub_header {
   padding: 5px 5px 5px 15px;
   display: block;
   font-size: 14px;

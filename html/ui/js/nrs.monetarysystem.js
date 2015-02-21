@@ -857,19 +857,19 @@ var NRS = (function(NRS, $, undefined) {
 			"type": 'PAGE',
 			"page": 'currencies'
 		}
-		NRS.appendToTSMenuItem(sidebarId, options);
+		NRS.appendMenuItemToTSMenuItem(sidebarId, options);
 		options = {
 			"titleHTML": '<span data-i18n="exchange_history">Exchange History</span>',
 			"type": 'PAGE',
 			"page": 'exchange_history'
 		}
-		NRS.appendToTSMenuItem(sidebarId, options);
+		NRS.appendMenuItemToTSMenuItem(sidebarId, options);
 		options = {
 			"titleHTML": '<span data-i18n="issue_currency">Issue Currency</span></a>',
 			"type": 'MODAL',
 			"modalId": 'issue_currency_modal'
 		}
-		NRS.appendToTSMenuItem(sidebarId, options);
+		NRS.appendMenuItemToTSMenuItem(sidebarId, options);
 	}
 
 	/* Calculate correct fees based on currency code length */

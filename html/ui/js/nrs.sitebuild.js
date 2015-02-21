@@ -99,7 +99,7 @@ var NRS = (function(NRS, $, undefined) {
         _appendToSidebar(menuHTML, options["desiredPosition"]);
     }
     
-    NRS.appendToTSMenuItem = function(itemId, options) {
+    NRS.appendMenuItemToTSMenuItem = function(itemId, options) {
         var menuHTML ='<li class="sm_treeview_submenu"><a href="#" ';
         if (options["type"] == 'PAGE' && options["page"]) {
             menuHTML += 'data-page="' + options["page"] + '"';
@@ -110,6 +110,13 @@ var NRS = (function(NRS, $, undefined) {
         }
         menuHTML += '><i class="fa fa-angle-double-right"></i> ';
         menuHTML += options["titleHTML"] + ' <span class="badge" style="display:none;"></span></a></li>';
+        $('#' + itemId + ' ul.treeview-menu').append(menuHTML);
+    }
+
+    NRS.appendSubHeaderToTSMenuItem = function(itemId, options) {
+        var menuHTML ='<li class="sm_treeview_submenu" style="background-color:#eee;color:#777;padding-top:3px;padding-bottom:3px;">';
+        menuHTML += '<span class="sm_sub_header"><span style="display:inline-block;width:20px;">&nbsp;</span> ';
+        menuHTML += options["titleHTML"] + ' </span></li>';
         $('#' + itemId + ' ul.treeview-menu').append(menuHTML);
     }
 

@@ -222,31 +222,31 @@ var NRS = (function(NRS, $, undefined) {
 			"type": 'PAGE',
 			"page": 'polls'
 		}
-		NRS.appendToTSMenuItem(sidebarId, options);
+		NRS.appendMenuItemToTSMenuItem(sidebarId, options);
 		options = {
 			"titleHTML": '<span data-i18n="followed_polls">Followed Polls</span>',
 			"type": 'PAGE',
 			"page": 'followed_polls'
 		}
-		NRS.appendToTSMenuItem(sidebarId, options);
+		NRS.appendMenuItemToTSMenuItem(sidebarId, options);
 		options = {
 			"titleHTML": '<span data-i18n="my_polls">My Polls</span>',
 			"type": 'PAGE',
 			"page": 'my_polls'
 		}
-		NRS.appendToTSMenuItem(sidebarId, options);
+		NRS.appendMenuItemToTSMenuItem(sidebarId, options);
 		options = {
 			"titleHTML": '<span data-i18n="my_votes">My Votes</span>',
 			"type": 'PAGE',
 			"page": 'voted_polls'
 		}
-		NRS.appendToTSMenuItem(sidebarId, options);
+		NRS.appendMenuItemToTSMenuItem(sidebarId, options);
 		options = {
 			"titleHTML": '<span data-i18n="create_poll">Create Poll</span>',
 			"type": 'MODAL',
 			"modalId": 'create_poll_modal'
 		}
-		NRS.appendToTSMenuItem(sidebarId, options);
+		NRS.appendMenuItemToTSMenuItem(sidebarId, options);
 	}
 
 
