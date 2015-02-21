@@ -44,6 +44,8 @@ public final class GetConstants extends APIServlet.APIRequestHandler {
                 }
                 JSONObject subtypeJSON = new JSONObject();
                 subtypeJSON.put("name", transactionType.getName());
+                subtypeJSON.put("canHaveRecipient", transactionType.canHaveRecipient());
+                subtypeJSON.put("mustHaveRecipient", transactionType.mustHaveRecipient());
                 subtypesJSON.put(subtype, subtypeJSON);
             }
             typeJSON.put("subtypes", subtypesJSON);
