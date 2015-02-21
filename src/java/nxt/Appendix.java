@@ -596,6 +596,7 @@ public interface Appendix {
 
             voteWeighting.validate();
 
+            //TODO: remove?
             if (voteWeighting.getVotingModel() == VoteWeighting.VotingModel.ACCOUNT && whitelist.length == 0) {
                 throw new NxtException.NotValidException("By-account voting with empty whitelist");
             }

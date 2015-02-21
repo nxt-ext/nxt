@@ -702,14 +702,16 @@ public abstract class TransactionType {
                 }
 
                 Attachment.MessagingPollCreation attachment = (Attachment.MessagingPollCreation) transaction.getAttachment();
-                for (int i = 0; i < attachment.getPollOptions().length; i++) {
-                    if (attachment.getPollOptions()[i].length() > Constants.MAX_POLL_OPTION_LENGTH
-                            || attachment.getPollOptions()[i].isEmpty()) {
-                        throw new NxtException.NotValidException("Invalid poll options length: " + attachment.getJSONObject());
-                    }
-                }
 
                 int optionsCount = attachment.getPollOptions().length;
+
+                if (attachment.getPollName().length() > Constants.MAX_POLL_NAME_LENGTH
+                        || attachment.getPollName().isEmpty()
+                        || attachment.getPollDescription().length() > Constants.MAX_POLL_DESCRIPTION_LENGTH
+                        || optionsCount > Constants.MAX_POLL_OPTION_COUNT
+                        || optionsCount == 0) {
+                    throw new NxtException.NotValidException("Invalid poll attachment: " + attachment.getJSONObject());
+                }
 
                 if (attachment.getMinNumberOfOptions() < 1
                         || attachment.getMinNumberOfOptions() > optionsCount) {
@@ -722,17 +724,16 @@ public abstract class TransactionType {
                     throw new NxtException.NotValidException("Invalid max number of options: " + attachment.getJSONObject());
                 }
 
+                for (int i = 0; i < optionsCount; i++) {
+                    if (attachment.getPollOptions()[i].length() > Constants.MAX_POLL_OPTION_LENGTH
+                            || attachment.getPollOptions()[i].isEmpty()) {
+                        throw new NxtException.NotValidException("Invalid poll options length: " + attachment.getJSONObject());
+                    }
+                }
+
                 if (attachment.getMinRangeValue() < Constants.VOTING_MIN_RANGE_VALUE_LIMIT
                         || attachment.getMaxRangeValue() > Constants.VOTING_MAX_RANGE_VALUE_LIMIT ){
                     throw new NxtException.NotValidException("Invalid range: " + attachment.getJSONObject());
-                }
-
-                if (attachment.getPollName().length() > Constants.MAX_POLL_NAME_LENGTH
-                        || attachment.getPollName().isEmpty()
-                        || attachment.getPollDescription().length() > Constants.MAX_POLL_DESCRIPTION_LENGTH
-                        || attachment.getPollOptions().length > Constants.MAX_POLL_OPTION_COUNT
-                        || attachment.getPollOptions().length == 0) {
-                    throw new NxtException.NotValidException("Invalid poll attachment: " + attachment.getJSONObject());
                 }
 
                 if (attachment.getFinishHeight() < currentHeight + Constants.VOTING_MIN_VOTE_DURATION
@@ -742,16 +743,21 @@ public abstract class TransactionType {
 
                 attachment.getVoteWeighting().validate();
 
+                //TODO: not needed?
                 if (attachment.getVoteWeighting().getVotingModel() == VoteWeighting.VotingModel.ACCOUNT && attachment.getVoteWeighting().getMinBalance() == 0) {
                     throw new NxtException.NotValidException("Min balance == 0 for by-account voting"+ attachment.getJSONObject());
                 }
             }
 
             @Override
-            public boolean canHaveRecipient() { return false; }
+            public boolean canHaveRecipient() {
+                return false;
+            }
+
         };
 
         public final static TransactionType VOTE_CASTING = new Messaging() {
+
             @Override
             public final byte getSubtype() {
                 return TransactionType.SUBTYPE_MESSAGING_VOTE_CASTING;
@@ -832,6 +838,7 @@ public abstract class TransactionType {
         };
 
         public static final TransactionType PHASING_VOTE_CASTING = new Messaging() {
+
             @Override
             public final byte getSubtype() {
                 return TransactionType.SUBTYPE_MESSAGING_PHASING_VOTE_CASTING;
