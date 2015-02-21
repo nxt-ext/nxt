@@ -740,10 +740,6 @@ public abstract class TransactionType {
 
                 attachment.getVoteWeighting().validate();
 
-                //TODO: not needed?
-                if (attachment.getVoteWeighting().getVotingModel() == VoteWeighting.VotingModel.ACCOUNT && attachment.getVoteWeighting().getMinBalance() == 0) {
-                    throw new NxtException.NotValidException("Min balance == 0 for by-account voting"+ attachment.getJSONObject());
-                }
             }
 
             @Override
