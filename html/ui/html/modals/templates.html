@@ -33,6 +33,17 @@
 </div>
 
 
+<div id="add_public_message_modal_template">
+    <div class="form-group add_message_container">
+        <input type="checkbox" name="add_message" id="{{name}}_add_public_message" class="add_message" tabindex="6" /> <label for="{{name}}_add_public_message" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_message_q">Add a Message?</span></label>
+    </div>
+    <div class="form-group optional_message">
+        <label for="{{name}}_public_message" data-i18n="message">MESSAGE</label>
+        <textarea class="form-control" id="{{name}}_public_message" name="message" rows="4" tabindex="3"></textarea>
+    </div>
+</div>
+
+
 <div id="secret_phrase_modal_template">
     <div class="form-group secret_phrase">
         <label for="{{name}}_password" data-i18n="passphrase">PASSPHRASE</label>
