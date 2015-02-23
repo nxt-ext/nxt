@@ -16,7 +16,7 @@ public class TestGetPhasingPoll extends BlockchainTest {
     public void transactionVotes() {
 
         APICall apiCall = new TestCreateTwoPhased.TwoPhasedMoneyTransferBuilder()
-                .quorum(3)
+                .quorum(1)
                 .build();
         JSONObject transactionJSON = TestCreateTwoPhased.issueCreateTwoPhased(apiCall, false);
         String fullHash = (String) transactionJSON.get("fullHash");
