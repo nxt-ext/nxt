@@ -77,14 +77,34 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.saveNotificationTimestamps = function() {
-		var cookieDict = {};
+		var tsDict = {};
 		$.each(NRS.transactionTypes, function(typeIndex, typeDict) {
 			$.each(typeDict["subTypes"], function(subTypeIndex, subTypeDict) {
-				var cookieKey = "ts_" + String(typeIndex) + "_" + String(subTypeIndex);
-				cookieDict[cookieKey] = subTypeDict["notificationTS"];
+				var tsKey = "ts_" + String(typeIndex) + "_" + String(subTypeIndex);
+				tsDict[tsKey] = subTypeDict["notificationTS"];
 			});
 		});
-		NRS.setCookie("notification_timestamps", JSON.stringify(cookieDict), 100);
+		var tsDictString = JSON.stringify(tsDict);
+		if(NRS.databaseSupport) {
+			NRS.database.select("data_" + NRS.account, [{
+				"id": "notification_timestamps"
+			}], function(error, result) {
+				if (result && result.length > 0) {
+					NRS.database.update("data_" + NRS.account, {
+						contents: tsDictString
+					}, [{
+						id: "notification_timestamps"
+					}]);
+				} else {
+					NRS.database.insert("data_" + NRS.account, {
+						id: "notification_timestamps",
+						contents: tsDictString
+					});
+				}
+			});
+		} else {
+			NRS.setCookie("notification_timestamps", tsDictString, 100);
+		}
 	}
 
 	NRS.initNotificationCounts = function(time) {
@@ -129,11 +149,22 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.updateNotifications = function() {
-		var cookie = NRS.getCookie("notification_timestamps");
-		if (cookie) {
-			var cookieDict = JSON.parse(cookie);
+		var tsDictString = "";
+		if (NRS.databaseSupport) {
+			NRS.database.select("data_" + NRS.account, [{
+				"id": "notification_timestamps"
+			}], function(error, result) {
+				if (result && result.length > 0) {
+					tsDictString = JSON.parse(result[0].contents);
+				}
+			});
 		} else {
-			var cookieDict = {};
+			tsDictString = NRS.getCookie("notification_timestamps");
+		}
+		if (tsDictString != "") {
+			var tsDict = JSON.parse(tsDictString);
+		} else {
+			var tsDict = {};
 		}
 
 		NRS.sendRequest("getTime", function(response) {
@@ -141,9 +172,9 @@ var NRS = (function(NRS, $, undefined) {
 				$.each(NRS.transactionTypes, function(typeIndex, typeDict) {
 					typeDict["notificationCount"] = 0;
 					$.each(typeDict["subTypes"], function(subTypeIndex, subTypeDict) {
-						var cookieKey = "ts_" + String(typeIndex) + "_" + String(subTypeIndex);
-						if (cookieDict[cookieKey]) {
-							subTypeDict["notificationTS"] = cookieDict[cookieKey];
+						var tsKey = "ts_" + String(typeIndex) + "_" + String(subTypeIndex);
+						if (tsDict[tsKey]) {
+							subTypeDict["notificationTS"] = tsDict[tsKey];
 						} else {
 							subTypeDict["notificationTS"] = response.time;
 						}
