@@ -19,7 +19,7 @@ var NRS = (function(NRS, $, undefined) {
 			NRS.assets = [];
 			NRS.assetIds = [];
 
-			NRS.database.select("assets", null, function(error, assets) {
+			NRS.database.select("assets_" + NRS.account, null, function(error, assets) {
 				//select already bookmarked assets
 				$.each(assets, function(index, asset) {
 					NRS.cacheAsset(asset);
@@ -263,7 +263,7 @@ var NRS = (function(NRS, $, undefined) {
 			return;
 		}
 
-		NRS.database.select("assets", newAssetIds, function(error, existingAssets) {
+		NRS.database.select("assets_" + NRS.account, newAssetIds, function(error, existingAssets) {
 			var existingIds = [];
 
 			if (existingAssets.length) {
@@ -281,7 +281,7 @@ var NRS = (function(NRS, $, undefined) {
 					callback([], assets);
 				}
 			} else {
-				NRS.database.insert("assets", newAssets, function(error) {
+				NRS.database.insert("assets_" + NRS.account, newAssets, function(error) {
 					$.each(newAssets, function(key, asset) {
 						asset.name = asset.name.toLowerCase();
 						NRS.assetIds.push(asset.asset);
@@ -529,7 +529,7 @@ var NRS = (function(NRS, $, undefined) {
 					$links.hide();
 				}
 
-				NRS.database.update("data", {
+				NRS.database.update("data_" + NRS.account, {
 					"contents": NRS.closedGroups.join("#")
 				}, [{
 					"id": "closed_groups"
@@ -540,7 +540,7 @@ var NRS = (function(NRS, $, undefined) {
 		}
 
 		if (NRS.databaseSupport) {
-			NRS.database.select("assets", [{
+			NRS.database.select("assets_" + NRS.account, [{
 				"asset": currentAssetID
 			}], function(error, asset) {
 				if (asset && asset.length && asset[0].asset == currentAssetID) {
@@ -623,7 +623,7 @@ var NRS = (function(NRS, $, undefined) {
 				}, function(response) {
 					if (!response.errorCode) {
 						if (response.asset != asset.asset || response.account != asset.account || response.accountRS != asset.accountRS || response.decimals != asset.decimals || response.description != asset.description || response.name != asset.name || response.quantityQNT != asset.quantityQNT) {
-							NRS.database.delete("assets", [{
+							NRS.database.delete("assets_" + NRS.account, [{
 								"asset": asset.asset
 							}], function() {
 								setTimeout(function() {
@@ -1218,7 +1218,7 @@ var NRS = (function(NRS, $, undefined) {
 			};
 		}
 
-		NRS.database.update("assets", {
+		NRS.database.update("assets_" + NRS.account, {
 			"groupName": newGroupName
 		}, [{
 			"groupName": oldGroupName
@@ -1247,14 +1247,14 @@ var NRS = (function(NRS, $, undefined) {
 		if (option == "add_to_group") {
 			$("#asset_exchange_group_asset").val(assetId);
 
-			NRS.database.select("assets", [{
+			NRS.database.select("assets_" + NRS.account, [{
 				"asset": assetId
 			}], function(error, asset) {
 				asset = asset[0];
 
 				$("#asset_exchange_group_title").html(String(asset.name).escapeHTML());
 
-				NRS.database.select("assets", [], function(error, assets) {
+				NRS.database.select("assets_" + NRS.account, [], function(error, assets) {
 					//NRS.database.execute("SELECT DISTINCT groupName FROM assets", [], function(groupNames) {					
 					var groupNames = [];
 
@@ -1291,7 +1291,7 @@ var NRS = (function(NRS, $, undefined) {
 				});
 			});
 		} else if (option == "remove_from_group") {
-			NRS.database.update("assets", {
+			NRS.database.update("assets_" + NRS.account, {
 				"groupName": ""
 			}, [{
 				"asset": assetId
@@ -1321,7 +1321,7 @@ var NRS = (function(NRS, $, undefined) {
 				});
 			} else {
 				//todo save delteed asset ids from accountissuers
-				NRS.database.delete("assets", [{
+				NRS.database.delete("assets_" + NRS.account, [{
 					"asset": assetId
 				}], function(error, affected) {
 					setTimeout(function() {
@@ -1355,7 +1355,7 @@ var NRS = (function(NRS, $, undefined) {
 			groupName = $("#asset_exchange_group_new_group").val();
 		}
 
-		NRS.database.update("assets", {
+		NRS.database.update("assets_" + NRS.account, {
 			"groupName": groupName
 		}, [{
 			"asset": assetId

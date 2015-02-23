@@ -457,30 +457,40 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.getSettings = function() {
-		if (NRS.databaseSupport) {
-			NRS.database.select("data", [{
+		if (!NRS.account) {
+			NRS.settings = NRS.defaultSettings;
+			if (NRS.getCookie("language")) {
+				NRS.settings["language"] = NRS.getCookie("language");
+			}
+			if (NRS.getCookie("themeChoice")) {
+				NRS.settings["themeChoice"] = NRS.getCookie("themeChoice");
+			}
+			NRS.createLangSelect();
+			NRS.applySettings();
+		} else {
+			if (NRS.databaseSupport) {
+			NRS.database.select("data_" + NRS.account, [{
 				"id": "settings"
 			}], function(error, result) {
 				if (result && result.length) {
 					NRS.settings = $.extend({}, NRS.defaultSettings, JSON.parse(result[0].contents));
 				} else {
-					NRS.database.insert("data", {
+					NRS.database.insert("data_" + NRS.account, {
 						id: "settings",
 						contents: "{}"
 					});
 					NRS.settings = NRS.defaultSettings;
 				}
-				NRS.createLangSelect();
 				NRS.applySettings();
 			});
-		} else {
-			if (NRS.hasLocalStorage) {
-				NRS.settings = $.extend({}, NRS.defaultSettings, JSON.parse(localStorage.getItem("settings")));
 			} else {
-				NRS.settings = NRS.defaultSettings;
+				if (NRS.hasLocalStorage) {
+					NRS.settings = $.extend({}, NRS.defaultSettings, JSON.parse(localStorage.getItem("settings")));
+				} else {
+					NRS.settings = NRS.defaultSettings;
+				}
+				NRS.applySettings();
 			}
-			NRS.createLangSelect();
-			NRS.applySettings();
 		}
 	};
 	NRS.applySettings = function(key) {
@@ -587,10 +597,17 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.updateSettings = function(key, value) {
 		if (key) {
 			NRS.settings[key] = value;
+			
+			if (key == "themeChoice") {
+				NRS.setCookie("themeChoice", value, 1000);
+			}
+			if (key == "language") {
+				NRS.setCookie("language", value, 1000);
+			}
 		}
 
 		if (NRS.databaseSupport) {
-			NRS.database.update("data", {
+			NRS.database.update("data_" + NRS.account, {
 				contents: JSON.stringify(NRS.settings)
 			}, [{
 				id: "settings"

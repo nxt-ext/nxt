@@ -261,6 +261,10 @@ var NRS = (function(NRS, $, undefined) {
 						NRS.checkIfOnAFork();
 					}
 
+					NRS.createDatabase(function() {
+						NRS.getSettings();
+					});
+
 					NRS.setupClipboardFunctionality();
 
 					if (callback) {

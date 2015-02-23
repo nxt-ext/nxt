@@ -1020,7 +1020,7 @@ $("#poll_results_modal ul.nav li").click(function(e) {
 					$links.hide();
 				}
 
-				NRS.database.update("data", {
+				NRS.database.update("data_" + NRS.account, {
 					"contents": NRS.closedGroups.join("#")
 				}, [{
 					"id": "closed_groups"
@@ -1031,7 +1031,7 @@ $("#poll_results_modal ul.nav li").click(function(e) {
 		}
 
 		if (NRS.databaseSupport) {
-			NRS.database.select("assets", [{
+			NRS.database.select("assets_" + NRS.account, [{
 				"asset": currentAssetID
 			}], function(error, asset) {
 				if (asset && asset.length && asset[0].asset == currentAssetID) {
@@ -1114,7 +1114,7 @@ $("#poll_results_modal ul.nav li").click(function(e) {
 				}, function(response) {
 					if (!response.errorCode) {
 						if (response.asset != asset.asset || response.account != asset.account || response.accountRS != asset.accountRS || response.decimals != asset.decimals || response.description != asset.description || response.name != asset.name || response.quantityQNT != asset.quantityQNT) {
-							NRS.database.delete("assets", [{
+							NRS.database.delete("assets_" + NRS.account, [{
 								"asset": asset.asset
 							}], function() {
 								setTimeout(function() {

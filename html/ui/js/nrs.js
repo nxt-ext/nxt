@@ -134,9 +134,7 @@ var NRS = (function(NRS, $, undefined) {
 			$("#remember_password").prop("checked", true);
 		}
 
-		NRS.createDatabase(function() {
-			NRS.getSettings();
-		});
+		NRS.getSettings();
 
 		NRS.getState(function() {
 			setTimeout(function() {
@@ -532,9 +530,34 @@ var NRS = (function(NRS, $, undefined) {
 		NRS.pages[NRS.currentPage]();
 	};
 
+	NRS.transferDataFromLegacyTables = function() {
+		NRS.database.insert("data_" + NRS.account, [{
+			"id": "legacy_data_transfer_done",
+			"contents": true
+		}], function(error, inserts) {
+			if (!error) {
+				var legacyTables = ["contacts", "assets"];
+				$(each, legacyTables, function(key, legacyTable) {
+					NRS.database.select(legacyTable, null, function(error, results) {
+						if (results && results.length > 0) {
+							NRS.database.insert(legacyTable + "_" + NRS.account, results, function(error, inserts) {
+								if (!error && inserts > 0) {
+									console.log(String(inserts) + " " + legacyTable + " data transfered from legacy DB table.");
+								}
+							})
+						}
+					});
+				});
+			}
+		});
+	}
+
 	NRS.createDatabase = function(callback) {
-		var schema = {
-			contacts: {
+		var schema = {}
+		var tableAddOn = ["", "_" + String(NRS.account)];
+		// Tables "contacts", "assets", "data" without account appendix are legacy tables (before switch to account based DB storage, don't use for data storage
+		$.each(tableAddOn, function(key, addOn) {
+			schema["contacts" + addOn] = {
 				id: {
 					"primary": true,
 					"autoincrement": true,
@@ -545,8 +568,8 @@ var NRS = (function(NRS, $, undefined) {
 				account: "VARCHAR(25)",
 				accountRS: "VARCHAR(25)",
 				description: "TEXT"
-			},
-			assets: {
+			}
+			schema["assets" + addOn] = {
 				account: "VARCHAR(25)",
 				accountRS: "VARCHAR(25)",
 				asset: {
@@ -558,15 +581,15 @@ var NRS = (function(NRS, $, undefined) {
 				decimals: "NUMBER",
 				quantityQNT: "VARCHAR(15)",
 				groupName: "VARCHAR(30) COLLATE NOCASE"
-			},
-			data: {
+			}
+			schema["data" + addOn] = {
 				id: {
 					"primary": true,
 					"type": "VARCHAR(40)"
 				},
 				contents: "TEXT"
 			}
-		};
+		});
 
 		NRS.assetTableKeys = ["account", "accountRS", "asset", "description", "name", "position", "decimals", "quantityQNT", "groupName"];
 
@@ -575,15 +598,23 @@ var NRS = (function(NRS, $, undefined) {
 				if (!error) {
 					NRS.databaseSupport = true;
 
-					NRS.loadContacts();
+					NRS.database.select("data_" + NRS.account, [{
+						"id": "legacy_data_transfer_done"
+					}], function(error, result) {
+						if (!result || result.length == 0) {
+							NRS.transferDataFromLegacyTables();
+						}
+					});
 
-					NRS.database.select("data", [{
+					NRS.loadContacts();
+					
+					NRS.database.select("data_" + NRS.account, [{
 						"id": "asset_exchange_version"
 					}], function(error, result) {
 						if (!result || !result.length) {
-							NRS.database.delete("assets", [], function(error, affected) {
+							NRS.database.delete("assets_" + NRS.account, [], function(error, affected) {
 								if (!error) {
-									NRS.database.insert("data", {
+									NRS.database.insert("data_" + NRS.account, {
 										"id": "asset_exchange_version",
 										"contents": 2
 									});
@@ -592,13 +623,13 @@ var NRS = (function(NRS, $, undefined) {
 						}
 					});
 
-					NRS.database.select("data", [{
+					NRS.database.select("data_" + NRS.account, [{
 						"id": "closed_groups"
 					}], function(error, result) {
 						if (result && result.length) {
 							NRS.closedGroups = result[0].contents.split("#");
 						} else {
-							NRS.database.insert("data", {
+							NRS.database.insert("data_" + NRS.account, {
 								id: "closed_groups",
 								contents: ""
 							});
@@ -695,7 +726,7 @@ var NRS = (function(NRS, $, undefined) {
 				var showAssetDifference = (!NRS.downloadingBlockchain || (NRS.blocks && NRS.blocks[0] && NRS.state && NRS.state.time - NRS.blocks[0].timestamp < 60 * 60 * 24 * 7));
 
 				if (NRS.databaseSupport) {
-					NRS.database.select("data", [{
+					NRS.database.select("data_" + NRS.account, [{
 						"id": "asset_balances_" + NRS.account
 					}], function(error, asset_balance) {
 						if (asset_balance && asset_balance.length) {
@@ -713,7 +744,7 @@ var NRS = (function(NRS, $, undefined) {
 								} else {
 									previous_balances = [];
 								}
-								NRS.database.update("data", {
+								NRS.database.update("data_" + NRS.account, {
 									contents: current_balances
 								}, [{
 									id: "asset_balances_" + NRS.account
@@ -723,7 +754,7 @@ var NRS = (function(NRS, $, undefined) {
 								}
 							}
 						} else {
-							NRS.database.insert("data", {
+							NRS.database.insert("data_" + NRS.account, {
 								id: "asset_balances_" + NRS.account,
 								contents: JSON.stringify(NRS.accountInfo.assetBalances)
 							});
