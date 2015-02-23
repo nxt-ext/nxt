@@ -278,7 +278,7 @@ final class TransactionImpl implements Transaction {
 
         if ((timestamp == 0 && Arrays.equals(getSenderPublicKey(), Genesis.CREATOR_PUBLIC_KEY))
                 ? (deadline != 0 || feeNQT != 0)
-                : deadline < 1
+                : (deadline < 1 || feeNQT <= 0)
                 || feeNQT > Constants.MAX_BALANCE_NQT
                 || amountNQT < 0
                 || amountNQT > Constants.MAX_BALANCE_NQT

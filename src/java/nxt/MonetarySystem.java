@@ -99,11 +99,6 @@ public abstract class MonetarySystem extends TransactionType {
         }
 
         @Override
-        public Fee getNextFee(Transaction transaction) throws NxtException.NotValidException {
-            return getBaselineFee(transaction);
-        }
-
-        @Override
         Attachment.MonetarySystemCurrencyIssuance parseAttachment(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
             return new Attachment.MonetarySystemCurrencyIssuance(buffer, transactionVersion);
         }

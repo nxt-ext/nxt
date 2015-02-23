@@ -708,19 +708,19 @@ var NRS = (function(NRS, $, undefined) {
 			"type": 'PAGE',
 			"page": 'dashboard'
 		}
-		NRS.appendToTSMenuItem(sidebarId, options);
+		NRS.appendMenuItemToTSMenuItem(sidebarId, options);
 		options = {
 			"titleHTML": '<span data-i18n="my_transactions">My Transactions</span>',
 			"type": 'PAGE',
 			"page": 'transactions'
 		}
-		NRS.appendToTSMenuItem(sidebarId, options);
+		NRS.appendMenuItemToTSMenuItem(sidebarId, options);
 		options = {
 			"titleHTML": '<span data-i18n="approval_requests">Approval Requests</span>',
 			"type": 'PAGE',
 			"page": 'approval_requests_account'
 		}
-		NRS.appendToTSMenuItem(sidebarId, options);
+		NRS.appendMenuItemToTSMenuItem(sidebarId, options);
 	}
 
 	$(document).on("click", "#transactions_type_navi li a", function(e) {

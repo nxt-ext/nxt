@@ -37,7 +37,8 @@ var NRS = (function(NRS, $, undefined) {
 			});
 		});
 		if (totalCount > 0) {
-			$menuItem.find('span.nm_badge').css('backgroundColor', '#e65');
+			$menuItem.find('span .nm_inner_subtype').css('backgroundColor', '#337ab7');
+			$menuItem.find('span .nm_inner_total').css('backgroundColor', '#e06054');
 
 			var $markReadDiv = $("<div style='text-align:center;padding:12px 12px 8px 12px;'></div>");
 			var $markReadLink= $("<a href='#' style='color:#3c8dbc;'>" + $.t('notifications_mark_as_read', 'Mark all as read') + "</a>");
@@ -49,13 +50,15 @@ var NRS = (function(NRS, $, undefined) {
 			$markReadLink.appendTo($markReadDiv);
 			$popoverItem.append($markReadDiv);
 		} else {
-			$menuItem.find('span.nm_badge').css('backgroundColor', '#a6a6a6');
+			$menuItem.find('span .nm_inner_subtype').css('backgroundColor', '#337ab7');
+			$menuItem.find('span .nm_inner_total').css('backgroundColor', '');
 			var html = "";
 			html += "<div style='text-align:center;padding:12px;'>" + $.t('no_notifications', 'No current notifications') + "</div>";
 			$popoverItem.append(html);
 		}
 
-		$menuItem.find('span.nm_badge').html(String(totalCount));
+		$menuItem.find('span .nm_inner_subtype').html(String(subTypeCount));
+		$menuItem.find('span .nm_inner_total').html(String(totalCount));
 		$menuItem.show();
 
 		var template = '<div class="popover" style="min-width:350px;"><div class="arrow"></div><div class="popover-inner">';

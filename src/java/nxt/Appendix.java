@@ -585,8 +585,18 @@ public interface Appendix {
                 throw new NxtException.NotValidException("Whitelist is too big");
             }
 
+            for (long accountId : whitelist) {
+                if (accountId == 0) {
+                    throw new NxtException.NotValidException("Invalid accountId 0 in whitelist");
+                }
+            }
+
             if (quorum <= 0) {
                 throw new NxtException.NotValidException("quorum <= 0");
+            }
+
+            if (voteWeighting.getVotingModel() == VoteWeighting.VotingModel.ACCOUNT && whitelist.length > 0 && quorum > whitelist.length) {
+                throw new NxtException.NotValidException("Quorum of " + quorum + " cannot be achieved in by-account voting with whitelist of length " + whitelist.length);
             }
 
             if (finishHeight < currentHeight + Constants.VOTING_MIN_VOTE_DURATION
@@ -595,10 +605,6 @@ public interface Appendix {
             }
 
             voteWeighting.validate();
-
-            if (voteWeighting.getVotingModel() == VoteWeighting.VotingModel.ACCOUNT && whitelist.length == 0) {
-                throw new NxtException.NotValidException("By-account voting with empty whitelist");
-            }
 
         }
 

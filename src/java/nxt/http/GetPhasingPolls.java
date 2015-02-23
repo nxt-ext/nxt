@@ -9,6 +9,7 @@ import org.json.simple.JSONStreamAware;
 import javax.servlet.http.HttpServletRequest;
 
 import static nxt.http.JSONResponses.INCORRECT_TRANSACTION;
+import static nxt.http.JSONResponses.MISSING_TRANSACTION;
 
 public final class GetPhasingPolls extends APIServlet.APIRequestHandler {
 
@@ -22,6 +23,9 @@ public final class GetPhasingPolls extends APIServlet.APIRequestHandler {
     JSONStreamAware processRequest(HttpServletRequest req) throws ParameterException {
 
         String[] transactions = req.getParameterValues("transaction");
+        if (transactions == null) {
+            return MISSING_TRANSACTION;
+        }
         boolean countVotes = ParameterParser.getBoolean(req, "countVotes", false);
         boolean includeVoters = ParameterParser.getBoolean(req, "includeVoters", false);
 

@@ -225,7 +225,7 @@ var NRS = (function(NRS, $, undefined) {
                         "type": 'PAGE',
                         "page": manifest['startPage']
                     }
-                    NRS.appendToTSMenuItem(sidebarId, options);
+                    NRS.appendMenuItemToTSMenuItem(sidebarId, options);
                     $(".sidebar .treeview").tree();
                 }
                 var cssURL = pluginPath + 'css/' + pluginId + '.css';
