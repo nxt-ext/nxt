@@ -536,15 +536,35 @@ var NRS = (function(NRS, $, undefined) {
 			"contents": true
 		}], function(error, inserts) {
 			if (!error) {
-				var legacyTables = ["contacts", "assets"];
-				$(each, legacyTables, function(key, legacyTable) {
+				var legacyTables = ["contacts", "assets", "data"];
+				$.each(legacyTables, function(key, legacyTable) {
 					NRS.database.select(legacyTable, null, function(error, results) {
 						if (results && results.length > 0) {
-							NRS.database.insert(legacyTable + "_" + NRS.account, results, function(error, inserts) {
+							if (legacyTable == "data") {
+								$.each(results, function(resKey, resDict) {
+									if (resDict["id"] == "settings") {
+										NRS.database.update(legacyTable + "_" + NRS.account, {
+											contents: resDict["contents"]
+										}, [{
+											id: "settings"
+										}]);
+										NRS.getSettings();
+									}
+									if (resDict["id"] == "closed_groups") {
+										NRS.database.update(legacyTable + "_" + NRS.account, {
+											contents: resDict["contents"]
+										}, [{
+											id: "closed_groups"
+										}]);
+									}
+								});
+							} else {
+								NRS.database.insert(legacyTable + "_" + NRS.account, results, function(error, inserts) {
 								if (!error && inserts > 0) {
 									console.log(String(inserts) + " " + legacyTable + " data transfered from legacy DB table.");
 								}
 							})
+							}
 						}
 					});
 				});
