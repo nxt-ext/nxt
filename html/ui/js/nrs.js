@@ -548,7 +548,14 @@ var NRS = (function(NRS, $, undefined) {
 										}, [{
 											id: "settings"
 										}]);
-										NRS.getSettings();
+										NRS.settings = $.extend({}, NRS.defaultSettings, JSON.parse(resDict["contents"]));
+										if (NRS.settings["themeChoice"]) {
+											NRS.setCookie("themeChoice", NRS.settings["themeChoice"], 1000);
+										}
+										if (NRS.settings["language"]) {
+											NRS.setCookie("language", NRS.settings["language"], 1000);
+										}
+										console.log("Settings transfered from legacy DB table.");
 									}
 									if (resDict["id"] == "closed_groups") {
 										NRS.database.update(legacyTable + "_" + NRS.account, {
@@ -556,6 +563,7 @@ var NRS = (function(NRS, $, undefined) {
 										}, [{
 											id: "closed_groups"
 										}]);
+										console.log("Closed groups data transfered from legacy DB table.");
 									}
 								});
 							} else {
@@ -570,6 +578,7 @@ var NRS = (function(NRS, $, undefined) {
 				});
 			}
 		});
+		setTimeout(function(){ NRS.applySettings() }, 1000);
 	}
 
 	NRS.createDatabase = function(callback) {
