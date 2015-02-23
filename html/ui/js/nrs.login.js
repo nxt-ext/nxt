@@ -421,7 +421,8 @@ var NRS = (function(NRS, $, undefined) {
 			})
 		}
 		if (NRS.hasLocalStorage) {
-			localStorage.clear();
+			localStorage.removeItem("logged_in");
+			localStorage.removeItem("settings")
 		}
 		var cookies = document.cookie.split(";");
 		for (var i = 0; i < cookies.length; i++) {
