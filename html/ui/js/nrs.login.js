@@ -409,6 +409,28 @@ var NRS = (function(NRS, $, undefined) {
 		}
 	}
 
+	$("#logout_clear_user_data_confirm_btn").click(function(e) {
+		e.preventDefault();
+		if (NRS.databaseSupport) {
+			var tableAddOn = ["", "_" + String(NRS.account)];
+			var userTables = ["contacts", "assets", "data"];
+			$.each(tableAddOn, function(aoKey, addOn) {
+				$.each(userTables, function(utKey, userTable) {
+					NRS.database.delete(userTable + addOn, []);
+				});
+			})
+		}
+		if (NRS.hasLocalStorage) {
+			localStorage.clear();
+		}
+		var cookies = document.cookie.split(";");
+		for (var i = 0; i < cookies.length; i++) {
+			NRS.deleteCookie(cookies[i].split("=")[0]);
+		}
+
+		NRS.logout();
+	})
+
 	NRS.setPassword = function(password) {
 		NRS.setEncryptionPassword(password);
 		NRS.setServerPassword(password);
