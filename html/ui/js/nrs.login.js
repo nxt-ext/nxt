@@ -181,8 +181,23 @@ var NRS = (function(NRS, $, undefined) {
 						NRS.setup[key]();
 					}
 				});
+				
+				NRS.loadPlugins();
 				$(".sidebar .treeview").tree();
 				$('#dashboard_link a').addClass("ignore").click();
+				
+				if ($("#remember_account").is(":checked")) {
+						if (NRS.databaseSupport){
+							NRS.database.select("accounts", [{"account": NRS.accountRS}], function(error, accounts) {
+								if (!accounts || !accounts.length) {
+									NRS.database.insert("accounts", {
+										account: NRS.accountRS,
+										name: NRS.accountInfo.name
+									});
+								}
+							});
+						}
+					}
 
 				NRS.getInitialTransactions();
 			});
@@ -194,6 +209,7 @@ var NRS = (function(NRS, $, undefined) {
 		NRS.database.select("accounts", null, function(error, accounts) {
 			if (accounts && accounts.length){
 				$('#login_account_container').show();
+				$('#login_account_container_other').hide();
 				$.each(accounts, function(index, account) {
 					if (!account.name || account.name == ""){
 						$('#login_account')
@@ -213,7 +229,7 @@ var NRS = (function(NRS, $, undefined) {
 						.append($("<li></li>")
 							.append($("<a></a>")
 								.attr("href","#")
-								.attr("style","display: inline-block;width: 380px;")
+								.attr("style","display: inline-block;width: 380px;overflow:hidden")
 								.attr("onClick","NRS.loginAccount('"+account.account+"')")
 								.text(account.name+" ("+account.account+")"))
 							.append($('<button aria-hidden="true" data-dismiss="modal" class="close" type="button">×</button>')
@@ -222,9 +238,18 @@ var NRS = (function(NRS, $, undefined) {
 						);
 					}
 				});
+				$('#login_account')
+						.append($("<li></li>")
+							.append($("<a></a>")
+								.attr("href","#")
+								.attr("style","display: inline-block;width: 380px;")
+								.attr("onClick","$('#login_account_container').hide();$('#login_account_container_other').show();")
+								.text("Other"))
+						);
 			}
 			else{
 				$('#login_account_container').hide();
+				$('#login_account_container_other').show();
 			}
 		});
 	}
