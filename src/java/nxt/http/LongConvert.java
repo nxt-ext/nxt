@@ -26,14 +26,14 @@ public final class LongConvert extends APIServlet.APIRequestHandler {
         BigInteger bigInteger = new BigInteger(id);
         if (bigInteger.signum() < 0) {
             if (bigInteger.negate().compareTo(Convert.two64) > 0) {
-                response.put("error", "overflow");
+                return JSONResponses.OVERFLOW;
             } else {
                 response.put("stringId", bigInteger.add(Convert.two64).toString());
                 response.put("longId", String.valueOf(bigInteger.longValue()));
             }
         } else {
             if (bigInteger.compareTo(Convert.two64) >= 0) {
-                response.put("error", "overflow");
+                return JSONResponses.OVERFLOW;
             } else {
                 response.put("stringId", bigInteger.toString());
                 response.put("longId", String.valueOf(bigInteger.longValue()));

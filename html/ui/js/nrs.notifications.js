@@ -37,7 +37,8 @@ var NRS = (function(NRS, $, undefined) {
 			});
 		});
 		if (totalCount > 0) {
-			$menuItem.find('span.nm_badge').css('backgroundColor', '#e65');
+			$menuItem.find('span .nm_inner_subtype').css('backgroundColor', '#337ab7');
+			$menuItem.find('span .nm_inner_total').css('backgroundColor', '#e06054');
 
 			var $markReadDiv = $("<div style='text-align:center;padding:12px 12px 8px 12px;'></div>");
 			var $markReadLink= $("<a href='#' style='color:#3c8dbc;'>" + $.t('notifications_mark_as_read', 'Mark all as read') + "</a>");
@@ -49,13 +50,15 @@ var NRS = (function(NRS, $, undefined) {
 			$markReadLink.appendTo($markReadDiv);
 			$popoverItem.append($markReadDiv);
 		} else {
-			$menuItem.find('span.nm_badge').css('backgroundColor', '#a6a6a6');
+			$menuItem.find('span .nm_inner_subtype').css('backgroundColor', '#337ab7');
+			$menuItem.find('span .nm_inner_total').css('backgroundColor', '');
 			var html = "";
 			html += "<div style='text-align:center;padding:12px;'>" + $.t('no_notifications', 'No current notifications') + "</div>";
 			$popoverItem.append(html);
 		}
 
-		$menuItem.find('span.nm_badge').html(String(totalCount));
+		$menuItem.find('span .nm_inner_subtype').html(String(subTypeCount));
+		$menuItem.find('span .nm_inner_total').html(String(totalCount));
 		$menuItem.show();
 
 		var template = '<div class="popover" style="min-width:350px;"><div class="arrow"></div><div class="popover-inner">';
@@ -74,14 +77,34 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.saveNotificationTimestamps = function() {
-		var cookieDict = {};
+		var tsDict = {};
 		$.each(NRS.transactionTypes, function(typeIndex, typeDict) {
 			$.each(typeDict["subTypes"], function(subTypeIndex, subTypeDict) {
-				var cookieKey = "ts_" + String(typeIndex) + "_" + String(subTypeIndex);
-				cookieDict[cookieKey] = subTypeDict["notificationTS"];
+				var tsKey = "ts_" + String(typeIndex) + "_" + String(subTypeIndex);
+				tsDict[tsKey] = subTypeDict["notificationTS"];
 			});
 		});
-		NRS.setCookie("notification_timestamps", JSON.stringify(cookieDict), 100);
+		var tsDictString = JSON.stringify(tsDict);
+		if(NRS.databaseSupport) {
+			NRS.database.select("data", [{
+				"id": "notification_timestamps"
+			}], function(error, result) {
+				if (result && result.length > 0) {
+					NRS.database.update("data", {
+						contents: tsDictString
+					}, [{
+						id: "notification_timestamps"
+					}]);
+				} else {
+					NRS.database.insert("data", {
+						id: "notification_timestamps",
+						contents: tsDictString
+					});
+				}
+			});
+		} else {
+			NRS.setCookie("notification_timestamps", tsDictString, 100);
+		}
 	}
 
 	NRS.initNotificationCounts = function(time) {
@@ -125,30 +148,47 @@ var NRS = (function(NRS, $, undefined) {
 		});
 	}
 
-	NRS.updateNotifications = function() {
-		var cookie = NRS.getCookie("notification_timestamps");
-		if (cookie) {
-			var cookieDict = JSON.parse(cookie);
+	NRS.loadNotificationsFromTimestamps = function(time, tsDictString) {
+		if (tsDictString != "") {
+			var tsDict = JSON.parse(tsDictString);
 		} else {
-			var cookieDict = {};
+			var tsDict = {};
 		}
 
+		$.each(NRS.transactionTypes, function(typeIndex, typeDict) {
+			typeDict["notificationCount"] = 0;
+			$.each(typeDict["subTypes"], function(subTypeIndex, subTypeDict) {
+				var tsKey = "ts_" + String(typeIndex) + "_" + String(subTypeIndex);
+				if (tsDict[tsKey]) {
+					subTypeDict["notificationTS"] = tsDict[tsKey];
+				} else {
+					subTypeDict["notificationTS"] = time;
+				}
+				subTypeDict["notificationCount"] = 0;
+			});
+		});
+		NRS.initNotificationCounts(time);
+		NRS.saveNotificationTimestamps();
+	}
+
+	NRS.updateNotifications = function() {
 		NRS.sendRequest("getTime", function(response) {
 			if (response.time) {
-				$.each(NRS.transactionTypes, function(typeIndex, typeDict) {
-					typeDict["notificationCount"] = 0;
-					$.each(typeDict["subTypes"], function(subTypeIndex, subTypeDict) {
-						var cookieKey = "ts_" + String(typeIndex) + "_" + String(subTypeIndex);
-						if (cookieDict[cookieKey]) {
-							subTypeDict["notificationTS"] = cookieDict[cookieKey];
-						} else {
-							subTypeDict["notificationTS"] = response.time;
+				var tsDictString = "";
+				if (NRS.databaseSupport) {
+					NRS.database.select("data", [{
+						"id": "notification_timestamps"
+					}], function(error, result) {
+						//console.log(result);
+						if (result && result.length > 0) {
+							tsDictString = result[0].contents;
+							NRS.loadNotificationsFromTimestamps(response.time, tsDictString);
 						}
-						subTypeDict["notificationCount"] = 0;
 					});
-				});
-				NRS.initNotificationCounts(response.time);
-				NRS.saveNotificationTimestamps();
+				} else {
+					tsDictString = NRS.getCookie("notification_timestamps");
+					NRS.loadNotificationsFromTimestamps(response.time, tsDictString);
+				}
 			}
 		});
 	}

@@ -260,6 +260,15 @@ var NRS = (function(NRS, $, undefined) {
 					if (!NRS.downloadingBlockchain) {
 						NRS.checkIfOnAFork();
 					}
+					if(navigator.userAgent.indexOf('Safari') != -1 && navigator.userAgent.indexOf('Chrome') == -1) {
+						// Don't use account based DB in Safari due to a buggy indexedDB implementation (2015-02-24)
+						NRS.createDatabase("NRS_USER_DB");
+						$.growl($.t("nrs_safari_no_account_based_db"), {
+							"type": "danger"
+						});
+					} else {
+						NRS.createDatabase("NRS_USER_DB_" + String(NRS.account));
+					}
 
 					NRS.setupClipboardFunctionality();
 
@@ -283,7 +292,6 @@ var NRS = (function(NRS, $, undefined) {
 					$("[data-i18n]").i18n();
 
 					NRS.getInitialTransactions();
-					NRS.updateNotifications();
 					NRS.updateApprovalRequests();
 				});
 			});
@@ -404,6 +412,26 @@ var NRS = (function(NRS, $, undefined) {
 			window.location.reload();
 		}
 	}
+
+	$("#logout_clear_user_data_confirm_btn").click(function(e) {
+		e.preventDefault();
+		if (NRS.database) {
+			indexedDB.deleteDatabase(NRS.database.name);
+		}
+		if (NRS.legacyDatabase) {
+			indexedDB.deleteDatabase(NRS.legacyDatabase.name);
+		}
+		if (NRS.hasLocalStorage) {
+			localStorage.removeItem("logged_in");
+			localStorage.removeItem("settings")
+		}
+		var cookies = document.cookie.split(";");
+		for (var i = 0; i < cookies.length; i++) {
+			NRS.deleteCookie(cookies[i].split("=")[0]);
+		}
+
+		NRS.logout();
+	})
 
 	NRS.setPassword = function(password) {
 		NRS.setEncryptionPassword(password);

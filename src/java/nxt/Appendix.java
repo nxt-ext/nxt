@@ -585,6 +585,12 @@ public interface Appendix {
                 throw new NxtException.NotValidException("Whitelist is too big");
             }
 
+            for (long accountId : whitelist) {
+                if (accountId == 0) {
+                    throw new NxtException.NotValidException("Invalid accountId 0 in whitelist");
+                }
+            }
+
             if (quorum <= 0) {
                 throw new NxtException.NotValidException("quorum <= 0");
             }

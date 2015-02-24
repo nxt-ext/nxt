@@ -35,8 +35,7 @@ public final class Scan extends APIServlet.APIRequestHandler {
                 } else if (height >= 0) {
                     Nxt.getBlockchainProcessor().scan(height, validate);
                 } else {
-                    response.put("error", "invalid numBlocks or height");
-                    return response;
+                    return JSONResponses.missing("numBlocks", "height");
                 }
             } finally {
                 Nxt.getBlockchainProcessor().setGetMoreBlocks(true);
@@ -45,7 +44,7 @@ public final class Scan extends APIServlet.APIRequestHandler {
             response.put("done", true);
             response.put("scanTime", (end - start)/1000);
         } catch (RuntimeException e) {
-            response.put("error", e.toString());
+            JSONData.putException(response, e);
         }
         return response;
     }

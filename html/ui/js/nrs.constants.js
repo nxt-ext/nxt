@@ -3,6 +3,8 @@
  */
 var NRS = (function(NRS, $, undefined) {
     NRS.constants = {
+        'DB_VERSION': 2,
+
         'PLUGIN_VERSION': 1,
     	'MAX_INT_JAVA': 2147483647,
 

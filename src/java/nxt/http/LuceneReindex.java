@@ -23,7 +23,7 @@ public final class LuceneReindex extends APIServlet.APIRequestHandler {
             org.h2.fulltext.FullTextLucene.reindex(con);
             response.put("done", true);
         } catch (SQLException e) {
-            response.put("error", e.toString());
+            JSONData.putException(response, e);
         }
         return response;
     }
