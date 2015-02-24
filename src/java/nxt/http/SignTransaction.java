@@ -58,10 +58,7 @@ public final class SignTransaction extends APIServlet.APIRequestHandler {
             response.put("verify", transaction.verifySignature());
         } catch (NxtException.ValidationException|RuntimeException e) {
             Logger.logDebugMessage(e.getMessage(), e);
-            response.put("errorCode", 4);
-            response.put("errorDescription", "Incorrect unsigned transaction: " + e.toString());
-            response.put("error", e.getMessage());
-            return response;
+            JSONData.putException(response, e, "Incorrect unsigned transaction");
         }
         return response;
     }

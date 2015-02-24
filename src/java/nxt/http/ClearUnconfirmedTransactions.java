@@ -21,7 +21,7 @@ public final class ClearUnconfirmedTransactions extends APIServlet.APIRequestHan
             Nxt.getTransactionProcessor().clearUnconfirmedTransactions();
             response.put("done", true);
         } catch (RuntimeException e) {
-            response.put("error", e.toString());
+            JSONData.putException(response, e);
         }
         return response;
     }

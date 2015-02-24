@@ -451,8 +451,7 @@ final class ParameterParser {
             } catch (NxtException.ValidationException|RuntimeException e) {
                 Logger.logDebugMessage(e.getMessage(), e);
                 JSONObject response = new JSONObject();
-                response.put("errorCode", 4);
-                response.put("errorDescription", "Incorrect transactionBytes: " + e.toString());
+                JSONData.putException(response, e, "Incorrect transactionBytes");
                 throw new ParameterException(response);
             }
         } else {
@@ -462,8 +461,7 @@ final class ParameterParser {
             } catch (NxtException.ValidationException | RuntimeException | ParseException e) {
                 Logger.logDebugMessage(e.getMessage(), e);
                 JSONObject response = new JSONObject();
-                response.put("errorCode", 4);
-                response.put("errorDescription", "Incorrect transactionJSON: " + e.toString());
+                JSONData.putException(response, e, "Incorrect transactionJSON");
                 throw new ParameterException(response);
             }
         }

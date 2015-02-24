@@ -7,7 +7,6 @@ import nxt.Constants;
 import nxt.Nxt;
 import nxt.NxtException;
 import nxt.Transaction;
-import nxt.VoteWeighting;
 import nxt.crypto.Crypto;
 import nxt.crypto.EncryptedData;
 import nxt.util.Convert;
@@ -15,14 +14,14 @@ import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import static nxt.http.JSONResponses.FEATURE_NOT_AVAILABLE;
 import static nxt.http.JSONResponses.INCORRECT_ARBITRARY_MESSAGE;
 import static nxt.http.JSONResponses.INCORRECT_DEADLINE;
-import static nxt.http.JSONResponses.INCORRECT_PENDING_WHITELIST;
 import static nxt.http.JSONResponses.MISSING_DEADLINE;
-import static nxt.http.JSONResponses.MISSING_PENDING_HOLDING_ID;
 import static nxt.http.JSONResponses.MISSING_SECRET_PHRASE;
 import static nxt.http.JSONResponses.NOT_ENOUGH_FUNDS;
 
@@ -76,9 +75,16 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
         long[] whitelist;
         String[] whitelistValues = req.getParameterValues("phasingWhitelisted");
         if (whitelistValues != null && whitelistValues.length > 0) {
-            whitelist = new long[whitelistValues.length];
-            for (int i = 0; i < whitelist.length; i++) {
-                whitelist[i] = Convert.parseAccountId(whitelistValues[i]);
+            List<Long> whitelistList = new ArrayList<>();
+            for (String whitelistValue : whitelistValues) {
+                long accountId = Convert.parseAccountId(whitelistValue);
+                if (accountId != 0) {
+                    whitelistList.add(accountId);
+                }
+            }
+            whitelist = new long[whitelistList.size()];
+            for (int i = 0; i < whitelistList.size(); i++) {
+                whitelist[i] = whitelistList.get(i);
             }
         } else {
             whitelist = Convert.EMPTY_LONG;
@@ -201,7 +207,7 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
         } catch (NxtException.NotYetEnabledException e) {
             return FEATURE_NOT_AVAILABLE;
         } catch (NxtException.ValidationException e) {
-            response.put("error", e.getMessage());
+            JSONData.putException(response, e);
         }
         return response;
 

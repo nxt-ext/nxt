@@ -29,9 +29,7 @@ public final class ParseTransaction extends APIServlet.APIRequestHandler {
         } catch (NxtException.ValidationException|RuntimeException e) {
             Logger.logDebugMessage(e.getMessage(), e);
             response.put("validate", false);
-            response.put("errorCode", 4);
-            response.put("errorDescription", "Invalid transaction: " + e.toString());
-            response.put("error", e.getMessage());
+            JSONData.putException(response, e, "Invalid transaction");
         }
         response.put("verify", transaction.verifySignature());
         return response;
