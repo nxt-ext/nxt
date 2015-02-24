@@ -206,7 +206,7 @@ var NRS = (function(NRS, $, undefined) {
 	
 	NRS.listAccounts = function() {
 		$('#login_account').empty();
-		NRS.database.select("accounts", null, function(error, accounts) {
+		NRS.legacyDatabase.select("accounts", null, function(error, accounts) {
 			if (accounts && accounts.length){
 				$('#login_account_container').show();
 				$('#login_account_container_other').hide();
@@ -255,7 +255,7 @@ var NRS = (function(NRS, $, undefined) {
 	}
 	
 	NRS.removeAccount = function(account) {
-		NRS.database.delete("accounts", [{
+		NRS.legacyDatabase.delete("accounts", [{
 			"account": account
 		}], function() {
 			NRS.listAccounts();
@@ -425,18 +425,18 @@ var NRS = (function(NRS, $, undefined) {
 					NRS.loadPlugins();
 					$(".sidebar .treeview").tree();
 					$('#dashboard_link a').addClass("ignore").click();
-					
+
 					if ($("#remember_account").is(":checked")) {
-						if (NRS.databaseSupport){
-							NRS.database.select("accounts", [{"account": NRS.accountRS}], function(error, accounts) {
+						//if (NRS.databaseSupport){
+							NRS.legacyDatabase.select("accounts", [{"account": NRS.accountRS}], function(error, accounts) {
 								if (!accounts || !accounts.length) {
-									NRS.database.insert("accounts", {
+									NRS.legacyDatabase.insert("accounts", {
 										account: NRS.accountRS,
 										name: NRS.accountInfo.name
 									});
 								}
 							});
-						}
+						//}
 					}
 
 					$("[data-i18n]").i18n();

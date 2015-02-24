@@ -538,7 +538,6 @@ var NRS = (function(NRS, $, undefined) {
 
 
 	NRS.initUserDBSuccess = function() {
-		console.log("test");
 		NRS.database.select("data", [{
 			"id": "asset_exchange_version"
 		}], function(error, result) {
@@ -622,7 +621,7 @@ var NRS = (function(NRS, $, undefined) {
 			quantityQNT: "VARCHAR(15)",
 			groupName: "VARCHAR(30) COLLATE NOCASE"
 		}
-		schema["accounts"]: {
+		schema["accounts"] = {
 			account: {
 				"primary": true,
 				"type": "VARCHAR(25)"
@@ -647,6 +646,7 @@ var NRS = (function(NRS, $, undefined) {
 								NRS.legacyDatabaseWithData = true;
 							}
 						});
+						NRS.listAccounts();
 					}
 				});
 			} catch (err) {
@@ -682,13 +682,6 @@ var NRS = (function(NRS, $, undefined) {
 			quantityQNT: "VARCHAR(15)",
 			groupName: "VARCHAR(30) COLLATE NOCASE"
 		}
-		schema["accounts"]: {
-			account: {
-				"primary": true,
-				"type": "VARCHAR(25)"
-			},
-			name: "VARCHAR(63)"
-		}
 		schema["data"] = {
 			id: {
 				"primary": true,
@@ -717,7 +710,6 @@ var NRS = (function(NRS, $, undefined) {
 							}
 						}
 					});
-					NRS.listAccounts();
 				} else {
 					NRS.initUserDBFail();
 				}
