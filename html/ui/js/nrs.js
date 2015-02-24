@@ -536,62 +536,8 @@ var NRS = (function(NRS, $, undefined) {
 		NRS.pages[NRS.currentPage]();
 	};
 
-	NRS.transferDataFromLegacyTables = function() {
-		NRS.database.insert("data", [{
-			"id": "legacy_data_transfer_done",
-			"contents": true
-		}], function(error, inserts) {
-			if (!error) {
-				var legacyTables = ["contacts", "assets", "data"];
-				$.each(legacyTables, function(key, legacyTable) {
-					NRS.database.select(legacyTable, null, function(error, results) {
-						if (results && results.length > 0) {
-							if (legacyTable == "data") {
-								$.each(results, function(resKey, resDict) {
-									if (resDict["id"] == "settings") {
-										NRS.database.update(legacyTable + "", {
-											contents: resDict["contents"]
-										}, [{
-											id: "settings"
-										}]);
-										NRS.settings = $.extend({}, NRS.defaultSettings, JSON.parse(resDict["contents"]));
-										if (NRS.settings["themeChoice"]) {
-											NRS.setCookie("themeChoice", NRS.settings["themeChoice"], 1000);
-										}
-										if (NRS.settings["language"]) {
-											NRS.setCookie("language", NRS.settings["language"], 1000);
-										}
-										console.log("Settings transfered from legacy DB table.");
-									}
-									if (resDict["id"] == "closed_groups") {
-										NRS.database.update(legacyTable + "", {
-											contents: resDict["contents"]
-										}, [{
-											id: "closed_groups"
-										}]);
-										console.log("Closed groups data transfered from legacy DB table.");
-									}
-								});
-							} else {
-								NRS.database.insert(legacyTable + "", results, function(error, inserts) {
-								if (!error && inserts > 0) {
-									console.log(String(inserts) + " " + legacyTable + " data transfered from legacy DB table.");
-								}
-							})
-							}
-						}
-					});
-				});
-			}
-		});
-		setTimeout(function(){ NRS.applySettings() }, 1000);
-	}
 
 	NRS.initUserDBSuccess = function() {
-		NRS.databaseSupport = true;
-
-		NRS.loadContacts();
-		
 		NRS.database.select("data", [{
 			"id": "asset_exchange_version"
 		}], function(error, result) {
@@ -619,8 +565,51 @@ var NRS = (function(NRS, $, undefined) {
 				});
 			}
 		});
+
+		NRS.databaseSupport = true;
+		NRS.loadContacts();
 		NRS.getSettings();
 		NRS.updateNotifications();
+	}
+
+	NRS.initUserDBWithLegacyData = function() {
+		NRS.legacyDatabase.select("contacts", null, function(error, results) {
+			if (!error && results && results.length >= 0) {
+				NRS.database.insert("contacts", results, function(error, inserts) {
+					if (!error && inserts >= 0) {
+						NRS.legacyDatabase.select("assets", null, function(error, results) {
+							if (!error && results && results.length >= 0) {
+								NRS.database.insert("assets", results, function(error, inserts) {
+									if (!error && inserts >= 0) {
+										NRS.legacyDatabase.select("data", null, function(error, results) {
+											if (!error && results && results.length >= 0) {
+												NRS.database.insert("data", results, function(error, inserts) {
+													if (!error && inserts >= 0) {
+														NRS.initUserDBSuccess();
+													} else {
+														NRS.initUserDBSuccess();
+													}
+												});
+											} else {
+												NRS.initUserDBSuccess();
+											}
+										});
+									} else {
+										NRS.initUserDBSuccess();
+									}
+								});
+							} else {
+								NRS.initUserDBSuccess();
+							}
+						});						
+					} else {
+						NRS.initUserDBSuccess();
+					}
+				});
+			} else {
+				NRS.initUserDBSuccess();
+			}
+		});
 	}
 
 	NRS.initUserDBFail = function() {
@@ -734,7 +723,11 @@ var NRS = (function(NRS, $, undefined) {
 							NRS.initUserDBSuccess();
 						} else {
 							NRS.databaseFirstStart = true;
-							NRS.initUserDBSuccess();
+							if (NRS.databaseFirstStart && NRS.legacyDatabaseWithData) {
+								NRS.initUserDBWithLegacyData();
+							} else {
+								NRS.initUserDBSuccess();
+							}
 						}
 					});
 				} else {
