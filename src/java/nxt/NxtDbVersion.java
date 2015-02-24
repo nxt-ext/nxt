@@ -675,7 +675,7 @@ class NxtDbVersion extends DbVersion {
             case 259:
                 apply("CALL FTL_CREATE_INDEX('PUBLIC', 'POLL', 'NAME,DESCRIPTION')");
             case 260:
-                apply("CREATE UNIQUE INDEX IF NOT EXISTS currency_founder_account_id_idx ON currency_founder (account_id, height DESC)");
+                apply("CREATE INDEX IF NOT EXISTS currency_founder_account_id_idx ON currency_founder (account_id, height DESC)");
             case 261:
                 return;
             default:
