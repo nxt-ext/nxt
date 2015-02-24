@@ -39,17 +39,16 @@ public class TestGetVoterPendingTransactions extends BlockchainTest {
     public void transactionLookupAfterVote() {
 
         APICall apiCall = new TwoPhasedMoneyTransferBuilder()
-                .quorum(3)
                 .build();
         JSONObject transactionJSON = TestCreateTwoPhased.issueCreateTwoPhased(apiCall, false);
-        String transactionId = (String) transactionJSON.get("transaction");
+        String transactionFullHash = (String) transactionJSON.get("fullHash");
 
         generateBlock();
 
         long fee = Constants.ONE_NXT;
         apiCall = new APICall.Builder("approveTransaction")
                 .param("secretPhrase", secretPhrase3)
-                .param("transaction", transactionId)
+                .param("transactionFullHash", transactionFullHash)
                 .param("feeNQT", fee)
                 .build();
         JSONObject response = apiCall.invoke();
@@ -60,7 +59,7 @@ public class TestGetVoterPendingTransactions extends BlockchainTest {
         response = getVoterPendingTransactions().invoke();
         Logger.logMessage("getVoterPendingTransactionsResponse:" + response.toJSONString());
         JSONArray transactionsJson = (JSONArray) response.get("transactions");
-        Assert.assertTrue(TwoPhasedSuite.searchForTransactionId(transactionsJson, transactionId));
+        Assert.assertFalse(TwoPhasedSuite.searchForTransactionId(transactionsJson, transactionFullHash));
     }
 
     @Test

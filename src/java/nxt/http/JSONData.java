@@ -636,12 +636,22 @@ final class JSONData {
         return response;
     }
 
+    static void putException(JSONObject json, Exception e) {
+        putException(json, e, "error");
+    }
+
+    static void putException(JSONObject json, Exception e, String error) {
+        json.put("errorCode", 4);
+        json.put("errorDescription", error + ": " + e.toString());
+        json.put("error", e.getMessage());
+    }
+
     static void putAccount(JSONObject json, String name, long accountId) {
         json.put(name, Convert.toUnsignedLong(accountId));
         json.put(name + "RS", Convert.rsAccount(accountId));
     }
 
-    static void putCurrencyInfo(JSONObject json, long currencyId) {
+    private static void putCurrencyInfo(JSONObject json, long currencyId) {
         Currency currency = Currency.getCurrency(currencyId);
         if (currency == null) {
             return;
@@ -654,7 +664,7 @@ final class JSONData {
         putAccount(json, "issuerAccount", currency.getAccountId());
     }
 
-    static void putAssetInfo(JSONObject json, long assetId) {
+    private static void putAssetInfo(JSONObject json, long assetId) {
         Asset asset = Asset.getAsset(assetId);
         json.put("name", asset.getName());
         json.put("decimals", asset.getDecimals());

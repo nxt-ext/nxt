@@ -404,6 +404,8 @@ var NRS = (function(NRS, $, undefined) {
 						NRS.checkIfOnAFork();
 					}
 
+					NRS.createDatabase();
+
 					NRS.setupClipboardFunctionality();
 
 					if (callback) {
@@ -440,7 +442,6 @@ var NRS = (function(NRS, $, undefined) {
 					$("[data-i18n]").i18n();
 
 					NRS.getInitialTransactions();
-					NRS.updateNotifications();
 					NRS.updateApprovalRequests();
 				});
 			});
@@ -559,6 +560,24 @@ var NRS = (function(NRS, $, undefined) {
 			window.location.reload();
 		}
 	}
+
+	$("#logout_clear_user_data_confirm_btn").click(function(e) {
+		e.preventDefault();
+		if (NRS.databaseSupport) {
+			indexedDB.deleteDatabase("NRS_USER_DB_" + String(NRS.account));
+			indexedDB.deleteDatabase("NRS_USER_DB");
+		}
+		if (NRS.hasLocalStorage) {
+			localStorage.removeItem("logged_in");
+			localStorage.removeItem("settings")
+		}
+		var cookies = document.cookie.split(";");
+		for (var i = 0; i < cookies.length; i++) {
+			NRS.deleteCookie(cookies[i].split("=")[0]);
+		}
+
+		NRS.logout();
+	})
 
 	NRS.setPassword = function(password) {
 		NRS.setEncryptionPassword(password);

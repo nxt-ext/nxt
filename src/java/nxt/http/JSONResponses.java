@@ -111,7 +111,8 @@ public final class JSONResponses {
     public static final JSONStreamAware INCORRECT_MESSAGE_PATTERN_REGEX = incorrect("messagePatternRegex");
     public static final JSONStreamAware INCORRECT_MESSAGE_PATTERN_FLAGS = incorrect("messagePatternFlags");
     public static final JSONStreamAware INCORRECT_ADMIN_PASSWORD = incorrect("adminPassword", "(the specified password does not match nxt.adminPassword)");
-    
+    public static final JSONStreamAware OVERFLOW = error("overflow");
+
     public static final JSONStreamAware NOT_ENOUGH_FUNDS;
     static {
         JSONObject response = new JSONObject();
@@ -281,6 +282,13 @@ public final class JSONResponses {
         JSONObject response = new JSONObject();
         response.put("errorCode", 10);
         response.put("errorDescription", "File not found " + objectName);
+        return JSON.prepare(response);
+    }
+
+    private static JSONStreamAware error(String error) {
+        JSONObject response = new JSONObject();
+        response.put("errorCode", 11);
+        response.put("errorDescription", error);
         return JSON.prepare(response);
     }
 
