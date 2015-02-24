@@ -24,6 +24,7 @@ import static nxt.http.JSONResponses.INCORRECT_DEADLINE;
 import static nxt.http.JSONResponses.MISSING_DEADLINE;
 import static nxt.http.JSONResponses.MISSING_SECRET_PHRASE;
 import static nxt.http.JSONResponses.NOT_ENOUGH_FUNDS;
+import static nxt.http.JSONResponses.INCORRECT_WHITELIST;
 
 abstract class CreateTransaction extends APIServlet.APIRequestHandler {
 
@@ -80,6 +81,8 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
                 long accountId = Convert.parseAccountId(whitelistValue);
                 if (accountId != 0) {
                     whitelistList.add(accountId);
+                } else {
+                    throw new ParameterException(INCORRECT_WHITELIST);
                 }
             }
             whitelist = new long[whitelistList.size()];
