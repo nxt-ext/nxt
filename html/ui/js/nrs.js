@@ -538,6 +538,7 @@ var NRS = (function(NRS, $, undefined) {
 
 
 	NRS.initUserDBSuccess = function() {
+		console.log("test");
 		NRS.database.select("data", [{
 			"id": "asset_exchange_version"
 		}], function(error, result) {
@@ -573,43 +574,15 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.initUserDBWithLegacyData = function() {
-		NRS.legacyDatabase.select("contacts", null, function(error, results) {
-			if (!error && results && results.length >= 0) {
-				NRS.database.insert("contacts", results, function(error, inserts) {
-					if (!error && inserts >= 0) {
-						NRS.legacyDatabase.select("assets", null, function(error, results) {
-							if (!error && results && results.length >= 0) {
-								NRS.database.insert("assets", results, function(error, inserts) {
-									if (!error && inserts >= 0) {
-										NRS.legacyDatabase.select("data", null, function(error, results) {
-											if (!error && results && results.length >= 0) {
-												NRS.database.insert("data", results, function(error, inserts) {
-													if (!error && inserts >= 0) {
-														NRS.initUserDBSuccess();
-													} else {
-														NRS.initUserDBSuccess();
-													}
-												});
-											} else {
-												NRS.initUserDBSuccess();
-											}
-										});
-									} else {
-										NRS.initUserDBSuccess();
-									}
-								});
-							} else {
-								NRS.initUserDBSuccess();
-							}
-						});						
-					} else {
-						NRS.initUserDBSuccess();
-					}
-				});
-			} else {
-				NRS.initUserDBSuccess();
-			}
+		var legacyTables = ["contacts", "assets", "data"];
+		$.each(legacyTables, function(key, table) {
+			NRS.legacyDatabase.select(table, null, function(error, results) {
+				if (!error && results && results.length >= 0) {
+					NRS.database.insert(table, results, function(error, inserts) {});
+				}
+			});
 		});
+		setTimeout(function(){ NRS.initUserDBSuccess(); }, 1000);
 	}
 
 	NRS.initUserDBFail = function() {
