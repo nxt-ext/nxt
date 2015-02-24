@@ -300,6 +300,16 @@ var NRS = (function(NRS, $, undefined) {
 					NRS.accountRS = String(response.accountRS).escapeHTML();
 					NRS.publicKey = NRS.getPublicKey(converters.stringToHexString(password));
 				}
+				
+				if ($("#login_account_other").val() != ""){
+					if (NRS.accountRS != $("#login_account_other").val() && NRS.account != $("#login_account_other").val()) {
+						$.growl($.t("Password and NXT account do no match"), {
+							"type": "danger",
+							"offset": 10
+						});
+						return;
+					}
+				}
 
 				if (!NRS.account) {
 					$.growl($.t("error_find_account_id"), {
