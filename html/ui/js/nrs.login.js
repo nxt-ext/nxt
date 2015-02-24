@@ -410,6 +410,7 @@ var NRS = (function(NRS, $, undefined) {
 		e.preventDefault();
 		if (NRS.databaseSupport) {
 			indexedDB.deleteDatabase("NRS_USER_DB_" + String(NRS.account));
+			indexedDB.deleteDatabase("NRS_USER_DB");
 		}
 		if (NRS.hasLocalStorage) {
 			localStorage.removeItem("logged_in");
