@@ -1167,7 +1167,10 @@ var NRS = (function(NRS, $, undefined) {
 	};
 
 	NRS.getUnknownCurrencyData = function(transaction) {
-		var data = {
+		if (!transaction) {
+         return {};
+      }
+      var data = {
 			"status": "Currency Deleted or not Issued",
 			"type": transaction.type,
 			"subType": transaction.subtype
