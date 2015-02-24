@@ -86,17 +86,17 @@ var NRS = (function(NRS, $, undefined) {
 		});
 		var tsDictString = JSON.stringify(tsDict);
 		if(NRS.databaseSupport) {
-			NRS.database.select("data_" + NRS.account, [{
+			NRS.database.select("data", [{
 				"id": "notification_timestamps"
 			}], function(error, result) {
 				if (result && result.length > 0) {
-					NRS.database.update("data_" + NRS.account, {
+					NRS.database.update("data", {
 						contents: tsDictString
 					}, [{
 						id: "notification_timestamps"
 					}]);
 				} else {
-					NRS.database.insert("data_" + NRS.account, {
+					NRS.database.insert("data", {
 						id: "notification_timestamps",
 						contents: tsDictString
 					});
@@ -148,41 +148,47 @@ var NRS = (function(NRS, $, undefined) {
 		});
 	}
 
-	NRS.updateNotifications = function() {
-		var tsDictString = "";
-		if (NRS.databaseSupport) {
-			NRS.database.select("data_" + NRS.account, [{
-				"id": "notification_timestamps"
-			}], function(error, result) {
-				if (result && result.length > 0) {
-					tsDictString = JSON.parse(result[0].contents);
-				}
-			});
-		} else {
-			tsDictString = NRS.getCookie("notification_timestamps");
-		}
+	NRS.loadNotificationsFromTimestamps = function(time, tsDictString) {
 		if (tsDictString != "") {
 			var tsDict = JSON.parse(tsDictString);
 		} else {
 			var tsDict = {};
 		}
 
+		$.each(NRS.transactionTypes, function(typeIndex, typeDict) {
+			typeDict["notificationCount"] = 0;
+			$.each(typeDict["subTypes"], function(subTypeIndex, subTypeDict) {
+				var tsKey = "ts_" + String(typeIndex) + "_" + String(subTypeIndex);
+				if (tsDict[tsKey]) {
+					subTypeDict["notificationTS"] = tsDict[tsKey];
+				} else {
+					subTypeDict["notificationTS"] = time;
+				}
+				subTypeDict["notificationCount"] = 0;
+			});
+		});
+		NRS.initNotificationCounts(time);
+		NRS.saveNotificationTimestamps();
+	}
+
+	NRS.updateNotifications = function() {
 		NRS.sendRequest("getTime", function(response) {
 			if (response.time) {
-				$.each(NRS.transactionTypes, function(typeIndex, typeDict) {
-					typeDict["notificationCount"] = 0;
-					$.each(typeDict["subTypes"], function(subTypeIndex, subTypeDict) {
-						var tsKey = "ts_" + String(typeIndex) + "_" + String(subTypeIndex);
-						if (tsDict[tsKey]) {
-							subTypeDict["notificationTS"] = tsDict[tsKey];
-						} else {
-							subTypeDict["notificationTS"] = response.time;
+				var tsDictString = "";
+				if (NRS.databaseSupport) {
+					NRS.database.select("data", [{
+						"id": "notification_timestamps"
+					}], function(error, result) {
+						//console.log(result);
+						if (result && result.length > 0) {
+							tsDictString = result[0].contents;
+							NRS.loadNotificationsFromTimestamps(response.time, tsDictString);
 						}
-						subTypeDict["notificationCount"] = 0;
 					});
-				});
-				NRS.initNotificationCounts(response.time);
-				NRS.saveNotificationTimestamps();
+				} else {
+					tsDictString = NRS.getCookie("notification_timestamps");
+					NRS.loadNotificationsFromTimestamps(response.time, tsDictString);
+				}
 			}
 		});
 	}

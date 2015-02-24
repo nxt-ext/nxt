@@ -37,6 +37,10 @@ var NRS = (function(NRS, $, undefined) {
 
 	NRS.database = null;
 	NRS.databaseSupport = false;
+	NRS.databaseFirstStart = false;
+
+	NRS.legacyDatabase = null;
+	NRS.legacyDatabaseWithData = false;
 
 	NRS.serverConnect = false;
 	NRS.peerConnect = false;
@@ -129,6 +133,8 @@ var NRS = (function(NRS, $, undefined) {
 		} catch (err) {
 			NRS.hasLocalStorage = false;
 		}
+
+		NRS.createLegacyDatabase();
 
 		if (NRS.getCookie("remember_passphrase")) {
 			$("#remember_password").prop("checked", true);
@@ -531,7 +537,7 @@ var NRS = (function(NRS, $, undefined) {
 	};
 
 	NRS.transferDataFromLegacyTables = function() {
-		NRS.database.insert("data_" + NRS.account, [{
+		NRS.database.insert("data", [{
 			"id": "legacy_data_transfer_done",
 			"contents": true
 		}], function(error, inserts) {
@@ -543,7 +549,7 @@ var NRS = (function(NRS, $, undefined) {
 							if (legacyTable == "data") {
 								$.each(results, function(resKey, resDict) {
 									if (resDict["id"] == "settings") {
-										NRS.database.update(legacyTable + "_" + NRS.account, {
+										NRS.database.update(legacyTable + "", {
 											contents: resDict["contents"]
 										}, [{
 											id: "settings"
@@ -558,7 +564,7 @@ var NRS = (function(NRS, $, undefined) {
 										console.log("Settings transfered from legacy DB table.");
 									}
 									if (resDict["id"] == "closed_groups") {
-										NRS.database.update(legacyTable + "_" + NRS.account, {
+										NRS.database.update(legacyTable + "", {
 											contents: resDict["contents"]
 										}, [{
 											id: "closed_groups"
@@ -567,7 +573,7 @@ var NRS = (function(NRS, $, undefined) {
 									}
 								});
 							} else {
-								NRS.database.insert(legacyTable + "_" + NRS.account, results, function(error, inserts) {
+								NRS.database.insert(legacyTable + "", results, function(error, inserts) {
 								if (!error && inserts > 0) {
 									console.log(String(inserts) + " " + legacyTable + " data transfered from legacy DB table.");
 								}
@@ -581,104 +587,162 @@ var NRS = (function(NRS, $, undefined) {
 		setTimeout(function(){ NRS.applySettings() }, 1000);
 	}
 
-	NRS.createDatabase = function(callback) {
-		var schema = {}
-		var tableAddOn = ["", "_" + String(NRS.account)];
-		// Tables "contacts", "assets", "data" without account appendix are legacy tables (before switch to account based DB storage, don't use for data storage
-		$.each(tableAddOn, function(key, addOn) {
-			schema["contacts" + addOn] = {
-				id: {
-					"primary": true,
-					"autoincrement": true,
-					"type": "NUMBER"
-				},
-				name: "VARCHAR(100) COLLATE NOCASE",
-				email: "VARCHAR(200)",
-				account: "VARCHAR(25)",
-				accountRS: "VARCHAR(25)",
-				description: "TEXT"
-			}
-			schema["assets" + addOn] = {
-				account: "VARCHAR(25)",
-				accountRS: "VARCHAR(25)",
-				asset: {
-					"primary": true,
-					"type": "VARCHAR(25)"
-				},
-				description: "TEXT",
-				name: "VARCHAR(10)",
-				decimals: "NUMBER",
-				quantityQNT: "VARCHAR(15)",
-				groupName: "VARCHAR(30) COLLATE NOCASE"
-			}
-			schema["data" + addOn] = {
-				id: {
-					"primary": true,
-					"type": "VARCHAR(40)"
-				},
-				contents: "TEXT"
+	NRS.initUserDBSuccess = function() {
+		NRS.databaseSupport = true;
+
+		NRS.loadContacts();
+		
+		NRS.database.select("data", [{
+			"id": "asset_exchange_version"
+		}], function(error, result) {
+			if (!result || !result.length) {
+				NRS.database.delete("assets", [], function(error, affected) {
+					if (!error) {
+						NRS.database.insert("data", {
+							"id": "asset_exchange_version",
+							"contents": 2
+						});
+					}
+				});
 			}
 		});
+
+		NRS.database.select("data", [{
+			"id": "closed_groups"
+		}], function(error, result) {
+			if (result && result.length) {
+				NRS.closedGroups = result[0].contents.split("#");
+			} else {
+				NRS.database.insert("data", {
+					id: "closed_groups",
+					contents: ""
+				});
+			}
+		});
+		NRS.getSettings();
+		NRS.updateNotifications();
+	}
+
+	NRS.initUserDBFail = function() {
+		NRS.database = null;
+		NRS.databaseSupport = false;
+		NRS.getSettings();
+		NRS.updateNotifications();
+	}
+
+	NRS.createLegacyDatabase = function() {
+		var schema = {}
+		var versionLegacyDB = 2;
+
+		// Legacy DB before switching to account based DBs, leave schema as is
+		schema["contacts"] = {
+			id: {
+				"primary": true,
+				"autoincrement": true,
+				"type": "NUMBER"
+			},
+			name: "VARCHAR(100) COLLATE NOCASE",
+			email: "VARCHAR(200)",
+			account: "VARCHAR(25)",
+			accountRS: "VARCHAR(25)",
+			description: "TEXT"
+		}
+		schema["assets"] = {
+			account: "VARCHAR(25)",
+			accountRS: "VARCHAR(25)",
+			asset: {
+				"primary": true,
+				"type": "VARCHAR(25)"
+			},
+			description: "TEXT",
+			name: "VARCHAR(10)",
+			decimals: "NUMBER",
+			quantityQNT: "VARCHAR(15)",
+			groupName: "VARCHAR(30) COLLATE NOCASE"
+		}
+		schema["data"] = {
+			id: {
+				"primary": true,
+				"type": "VARCHAR(40)"
+			},
+			contents: "TEXT"
+		}
+		if (versionLegacyDB = NRS.constants.DB_VERSION) {
+			try {
+				NRS.legacyDatabase = new WebDB("NRS_USER_DB", schema, versionLegacyDB, 4, function(error, db) {
+					if (!error) {
+						NRS.legacyDatabase.select("data", [{
+							"id": "settings"
+						}], function(error, result) {
+							if (result && result.length > 0) {
+								NRS.legacyDatabaseWithData = true;
+							}
+						});
+					}
+				});
+			} catch (err) {
+			}		
+		}
+	};
+
+	NRS.createDatabase = function() {
+		var schema = {}
+
+		schema["contacts"] = {
+			id: {
+				"primary": true,
+				"autoincrement": true,
+				"type": "NUMBER"
+			},
+			name: "VARCHAR(100) COLLATE NOCASE",
+			email: "VARCHAR(200)",
+			account: "VARCHAR(25)",
+			accountRS: "VARCHAR(25)",
+			description: "TEXT"
+		}
+		schema["assets"] = {
+			account: "VARCHAR(25)",
+			accountRS: "VARCHAR(25)",
+			asset: {
+				"primary": true,
+				"type": "VARCHAR(25)"
+			},
+			description: "TEXT",
+			name: "VARCHAR(10)",
+			decimals: "NUMBER",
+			quantityQNT: "VARCHAR(15)",
+			groupName: "VARCHAR(30) COLLATE NOCASE"
+		}
+		schema["data"] = {
+			id: {
+				"primary": true,
+				"type": "VARCHAR(40)"
+			},
+			contents: "TEXT"
+		}
 
 		NRS.assetTableKeys = ["account", "accountRS", "asset", "description", "name", "position", "decimals", "quantityQNT", "groupName"];
 
 		try {
-			NRS.database = new WebDB("NRS_USER_DB", schema, 2, 4, function(error, db) {
+			NRS.database = new WebDB("NRS_USER_DB_" + String(NRS.account), schema, NRS.constants.DB_VERSION, 4, function(error, db) {
 				if (!error) {
-					NRS.databaseSupport = true;
-
-					NRS.database.select("data_" + NRS.account, [{
-						"id": "legacy_data_transfer_done"
+					NRS.database.select("data", [{
+						"id": "settings"
 					}], function(error, result) {
-						if (!result || result.length == 0) {
-							NRS.transferDataFromLegacyTables();
-						}
-					});
-
-					NRS.loadContacts();
-					
-					NRS.database.select("data_" + NRS.account, [{
-						"id": "asset_exchange_version"
-					}], function(error, result) {
-						if (!result || !result.length) {
-							NRS.database.delete("assets_" + NRS.account, [], function(error, affected) {
-								if (!error) {
-									NRS.database.insert("data_" + NRS.account, {
-										"id": "asset_exchange_version",
-										"contents": 2
-									});
-								}
-							});
-						}
-					});
-
-					NRS.database.select("data_" + NRS.account, [{
-						"id": "closed_groups"
-					}], function(error, result) {
-						if (result && result.length) {
-							NRS.closedGroups = result[0].contents.split("#");
+						if (result && result.length > 0) {
+							NRS.databaseFirstStart = false;
+							NRS.initUserDBSuccess();
 						} else {
-							NRS.database.insert("data_" + NRS.account, {
-								id: "closed_groups",
-								contents: ""
-							});
+							NRS.databaseFirstStart = true;
+							NRS.initUserDBSuccess();
 						}
 					});
-					if (callback) {
-						callback();
-					}
 				} else {
-					if (callback) {
-						callback();
-					}
+					NRS.initUserDBFail();
 				}
 			});
 		} catch (err) {
-			NRS.database = null;
-			NRS.databaseSupport = false;
-			if (callback) {
-				callback();
-			}
+			NRS.initUserDBFail();
 		}
 	};
 	
@@ -755,8 +819,8 @@ var NRS = (function(NRS, $, undefined) {
 				var showAssetDifference = (!NRS.downloadingBlockchain || (NRS.blocks && NRS.blocks[0] && NRS.state && NRS.state.time - NRS.blocks[0].timestamp < 60 * 60 * 24 * 7));
 
 				if (NRS.databaseSupport) {
-					NRS.database.select("data_" + NRS.account, [{
-						"id": "asset_balances_" + NRS.account
+					NRS.database.select("data", [{
+						"id": "asset_balances"
 					}], function(error, asset_balance) {
 						if (asset_balance && asset_balance.length) {
 							var previous_balances = asset_balance[0].contents;
@@ -773,18 +837,18 @@ var NRS = (function(NRS, $, undefined) {
 								} else {
 									previous_balances = [];
 								}
-								NRS.database.update("data_" + NRS.account, {
+								NRS.database.update("data", {
 									contents: current_balances
 								}, [{
-									id: "asset_balances_" + NRS.account
+									id: "asset_balances"
 								}]);
 								if (showAssetDifference) {
 									NRS.checkAssetDifferences(NRS.accountInfo.assetBalances, previous_balances);
 								}
 							}
 						} else {
-							NRS.database.insert("data_" + NRS.account, {
-								id: "asset_balances_" + NRS.account,
+							NRS.database.insert("data", {
+								id: "asset_balances",
 								contents: JSON.stringify(NRS.accountInfo.assetBalances)
 							});
 						}

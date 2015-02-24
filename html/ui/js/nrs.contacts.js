@@ -5,7 +5,7 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.loadContacts = function() {
 		NRS.contacts = {};
 
-		NRS.database.select("contacts_" + NRS.account, null, function(error, contacts) {
+		NRS.database.select("contacts", null, function(error, contacts) {
 			if (contacts && contacts.length) {
 				$.each(contacts, function(index, contact) {
 					NRS.contacts[contact.account] = contact;
@@ -26,7 +26,7 @@ var NRS = (function(NRS, $, undefined) {
 		$("#contacts_table_container").show();
 		$("#contact_page_database_error").hide();
 
-		NRS.database.select("contacts_" + NRS.account, null, function(error, contacts) {
+		NRS.database.select("contacts", null, function(error, contacts) {
 			var rows = "";
 
 			if (contacts && contacts.length) {
@@ -133,7 +133,7 @@ var NRS = (function(NRS, $, undefined) {
 
 		var $btn = $modal.find("button.btn-primary:not([data-dismiss=modal], .ignore)");
 
-		NRS.database.select("contacts_" + NRS.account, [{
+		NRS.database.select("contacts", [{
 			"account": data.account_id
 		}, {
 			"name": data.name
@@ -147,7 +147,7 @@ var NRS = (function(NRS, $, undefined) {
 				$btn.button("reset");
 				$modal.modal("unlock");
 			} else {
-				NRS.database.insert("contacts_" + NRS.account, {
+				NRS.database.insert("contacts", {
 					name: data.name,
 					email: data.email,
 					account: data.account_id,
@@ -198,7 +198,7 @@ var NRS = (function(NRS, $, undefined) {
 			var dbQuery = {};
 			dbQuery[dbKey] = accountId;
 
-			NRS.database.select("contacts_" + NRS.account, [dbQuery], function(error, contact) {
+			NRS.database.select("contacts", [dbQuery], function(error, contact) {
 				contact = contact[0];
 
 				$("#update_contact_id").val(contact.id);
@@ -210,7 +210,7 @@ var NRS = (function(NRS, $, undefined) {
 		} else {
 			$("#update_contact_id").val(contactId);
 
-			NRS.database.select("contacts_" + NRS.account, [{
+			NRS.database.select("contacts", [{
 				"id": contactId
 			}], function(error, contact) {
 				contact = contact[0];
@@ -295,7 +295,7 @@ var NRS = (function(NRS, $, undefined) {
 
 		var $btn = $modal.find("button.btn-primary:not([data-dismiss=modal])");
 
-		NRS.database.select("contacts_" + NRS.account, [{
+		NRS.database.select("contacts", [{
 			"account": data.account_id
 		}], function(error, contacts) {
 			if (contacts && contacts.length && contacts[0].id != contactId) {
@@ -303,7 +303,7 @@ var NRS = (function(NRS, $, undefined) {
 				$btn.button("reset");
 				$modal.modal("unlock");
 			} else {
-				NRS.database.update("contacts_" + NRS.account, {
+				NRS.database.update("contacts", {
 					name: data.name,
 					email: data.email,
 					account: data.account_id,
@@ -353,7 +353,7 @@ var NRS = (function(NRS, $, undefined) {
 
 		$("#delete_contact_id").val(contactId);
 
-		NRS.database.select("contacts_" + NRS.account, [{
+		NRS.database.select("contacts", [{
 			"id": contactId
 		}], function(error, contact) {
 			contact = contact[0];
@@ -366,7 +366,7 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.forms.deleteContact = function($modal) {
 		var id = parseInt($("#delete_contact_id").val(), 10);
 
-		NRS.database.delete("contacts_" + NRS.account, [{
+		NRS.database.delete("contacts", [{
 			"id": id
 		}], function() {
 			delete NRS.contacts[$("#delete_contact_account_id").val()];
@@ -407,7 +407,7 @@ var NRS = (function(NRS, $, undefined) {
 
 	NRS.importContacts = function(imported_contacts) {
 		$.each(imported_contacts, function(index, imported_contact) {
-			NRS.database.select("contacts_" + NRS.account, [{
+			NRS.database.select("contacts", [{
 				"account": imported_contact.account
 			}, {
 				"name": imported_contact.name
@@ -419,7 +419,7 @@ var NRS = (function(NRS, $, undefined) {
 						$.growl(imported_contact.account + ' - ' + $.t("error_contact_account_id_exists"), {"type":"warning"}).show();
 					}
 				} else {
-					NRS.database.insert("contacts_" + NRS.account, {
+					NRS.database.insert("contacts", {
 						name: imported_contact.name,
 						email: imported_contact.email,
 						account: imported_contact.account,

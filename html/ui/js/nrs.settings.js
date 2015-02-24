@@ -469,13 +469,13 @@ var NRS = (function(NRS, $, undefined) {
 			NRS.applySettings();
 		} else {
 			if (NRS.databaseSupport) {
-			NRS.database.select("data_" + NRS.account, [{
+			NRS.database.select("data", [{
 				"id": "settings"
 			}], function(error, result) {
 				if (result && result.length) {
 					NRS.settings = $.extend({}, NRS.defaultSettings, JSON.parse(result[0].contents));
 				} else {
-					NRS.database.insert("data_" + NRS.account, {
+					NRS.database.insert("data", {
 						id: "settings",
 						contents: "{}"
 					});
@@ -607,7 +607,7 @@ var NRS = (function(NRS, $, undefined) {
 		}
 
 		if (NRS.databaseSupport) {
-			NRS.database.update("data_" + NRS.account, {
+			NRS.database.update("data", {
 				contents: JSON.stringify(NRS.settings)
 			}, [{
 				id: "settings"

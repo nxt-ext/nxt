@@ -261,9 +261,7 @@ var NRS = (function(NRS, $, undefined) {
 						NRS.checkIfOnAFork();
 					}
 
-					NRS.createDatabase(function() {
-						NRS.getSettings();
-					});
+					NRS.createDatabase();
 
 					NRS.setupClipboardFunctionality();
 
@@ -287,7 +285,6 @@ var NRS = (function(NRS, $, undefined) {
 					$("[data-i18n]").i18n();
 
 					NRS.getInitialTransactions();
-					NRS.updateNotifications();
 					NRS.updateApprovalRequests();
 				});
 			});
@@ -412,13 +409,7 @@ var NRS = (function(NRS, $, undefined) {
 	$("#logout_clear_user_data_confirm_btn").click(function(e) {
 		e.preventDefault();
 		if (NRS.databaseSupport) {
-			var tableAddOn = ["", "_" + String(NRS.account)];
-			var userTables = ["contacts", "assets", "data"];
-			$.each(tableAddOn, function(aoKey, addOn) {
-				$.each(userTables, function(utKey, userTable) {
-					NRS.database.delete(userTable + addOn, []);
-				});
-			})
+			indexedDB.deleteDatabase("NRS_USER_DB_" + String(NRS.account));
 		}
 		if (NRS.hasLocalStorage) {
 			localStorage.removeItem("logged_in");
