@@ -103,6 +103,7 @@ public final class JSONResponses {
     public static final JSONStreamAware INCORRECT_CURRENCY_CODE = incorrect("code", "(must contain only uppercase latin letters)");
     public static final JSONStreamAware INCORRECT_CURRENCY_DESCRIPTION_LENGTH = incorrect("description", "(length must not exceed " + Constants.MAX_CURRENCY_DESCRIPTION_LENGTH + " characters)");
     public static final JSONStreamAware MISSING_CURRENCY = missing("currency");
+    public static final JSONStreamAware MISSING_CURRENCY_ACCOUNT = missing("currency", "account");
     public static final JSONStreamAware UNKNOWN_CURRENCY = unknown("currency");
     public static final JSONStreamAware INCORRECT_CURRENCY = incorrect("currency");
     public static final JSONStreamAware MISSING_OFFER = missing("offer");

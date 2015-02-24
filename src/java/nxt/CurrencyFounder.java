@@ -105,6 +105,10 @@ public class CurrencyFounder {
         return currencyFounderTable.getManyBy(new DbClause.LongClause("currency_id", currencyId), from, to);
     }
 
+    public static DbIterator<CurrencyFounder> getFoundersCurrency(long accountId, int from, int to) {
+        return currencyFounderTable.getManyBy(new DbClause.LongClause("account_id", accountId), from, to);
+    }
+
     static void remove(long currencyId) {
         List<CurrencyFounder> founders = new ArrayList<>();
         try (DbIterator<CurrencyFounder> currencyFounders = CurrencyFounder.getCurrencyFounders(currencyId, 0, Integer.MAX_VALUE)) {
