@@ -1166,17 +1166,17 @@ var NRS = (function(NRS, $, undefined) {
 		return data;
 	};
 
-	NRS.getUnknownCurrencyData = function(transaction) {
-		if (!transaction) {
+   NRS.getUnknownCurrencyData = function (transaction) {
+      if (!transaction) {
          return {};
       }
       var data = {
-			"status": "Currency Deleted or not Issued",
-			"type": transaction.type,
-			"subType": transaction.subtype
-		};
-		return data;
-	};
+         "status": "Currency Deleted or not Issued",
+         "type": transaction.type,
+         "subType": transaction.subtype
+      };
+      return data;
+   };
 
 	$(document).on("click", ".approve_transaction_btn", function(e) {
 		e.preventDefault();
