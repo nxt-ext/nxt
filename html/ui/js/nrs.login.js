@@ -5,6 +5,13 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.newlyCreatedAccount = false;
 
 	NRS.allowLoginViaEnter = function() {
+		$("#login_account_other").keypress(function(e) {
+			if (e.which == '13') {
+				e.preventDefault();
+				var account = $("#login_account_other").val();
+				NRS.loginAccount(account);
+			}
+		});
 		$("#login_password").keypress(function(e) {
 			if (e.which == '13') {
 				e.preventDefault();
@@ -536,6 +543,7 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.showLockscreen = function() {
+		NRS.listAccounts();
 		if (NRS.hasLocalStorage && localStorage.getItem("logged_in")) {
 			NRS.showLoginScreen();
 		} else {

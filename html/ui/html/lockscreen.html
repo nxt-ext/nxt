@@ -26,7 +26,7 @@
 
                 <div class="lockscreen-item">
                     <div class="lockscreen-credentials">
-                    	<div class="input-group" id="login_account_container" style="width: 100%;display:none">
+                    	<div class="input-group" id="login_account_container" style="width: 100%;">
                             <div class="dropdown" style="width: 100%;">
 							  <button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-expanded="true" style="width: 100%;">
 								Select an Account to Login with
@@ -37,14 +37,14 @@
 							  </ul>
 							</div>
                         </div>
-                        <div class="input-group" id="login_account_container_other" style="display:none">
+                        <div class="input-group" id="login_account_container_other">
                             <input type="text" class="form-control" id="login_account_other" name="login_account_other" placeholder="Your NXT Account" data-i18n="[placeholder]your_account" autofocus />
                             <div class="input-group-btn" style="border:1px solid #fff;">
                                 <button class="btn btn-flat" onclick="NRS.loginAccount($('#login_account_other').val())"><i class="fa fa-arrow-right text-muted"></i></button>
                             </div>
                             <input type="hidden" name="check_password_length" id="login_check_password_length" value="1" />
                         </div>
-                        <div class="input-group">
+                        <div class="input-group" style="display:none">
                             <input type="password" class="form-control" id="login_password" name="login_password" placeholder="Your Passphrase" data-i18n="[placeholder]your_passphrase" autofocus disabled />
                             <div class="input-group-btn" style="border:1px solid #fff;">
                                 <button class="btn btn-flat" onclick="NRS.login($('#login_password').val())"><i class="fa fa-arrow-right text-muted"></i></button>
@@ -56,17 +56,17 @@
                 </div>  
                 <div class="btn-group" id="loginButtons" data-toggle="buttons">
 				  <label class="btn btn-primary active">
-					<input type="radio" name="loginType" id="passwordLogin" value="passphrase" autocomplete="off" /><i class="fa fa-key"></i>
+					<input type="radio" name="loginType" id="accountLogin" value="account" autocomplete="off" /><i class="fa fa-user"></i>
 				  </label>
 				  <label class="btn btn-primary">
-					<input type="radio" name="loginType" id="accountLogin" value="account" autocomplete="off" /><i class="fa fa-user"></i>
+					<input type="radio" name="loginType" id="passwordLogin" value="passphrase" autocomplete="off" /><i class="fa fa-key"></i>
 				  </label>
 				</div>
                 
                 <div id="remember_account_container">
                     <input type="checkbox" name="remember_account" id="remember_account" value="1" /> <span></span><label for="remember_account" data-i18n="remember_account">Remember account on this computer</label>
                 </div>
-                <div id="remember_password_container">
+                <div id="remember_password_container" style="display: none;">
                     <input type="checkbox" name="remember_password" id="remember_password" value="1" /> <span></span><label for="remember_password" data-i18n="remember_passphrase_during_session">Remember passphrase during session</label>
                 </div>
 
