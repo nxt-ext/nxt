@@ -187,16 +187,7 @@ var NRS = (function(NRS, $, undefined) {
 				$('#dashboard_link a').addClass("ignore").click();
 				
 				if ($("#remember_account").is(":checked")) {
-						if (NRS.databaseSupport){
-							NRS.database.select("accounts", [{"account": NRS.accountRS}], function(error, accounts) {
-								if (!accounts || !accounts.length) {
-									NRS.database.insert("accounts", {
-										account: NRS.accountRS,
-										name: NRS.accountInfo.name
-									});
-								}
-							});
-						}
+						NRS.setCookie("savedNxtAccounts",NRS.accountRS,30);
 					}
 
 				NRS.getInitialTransactions();
@@ -206,52 +197,34 @@ var NRS = (function(NRS, $, undefined) {
 	
 	NRS.listAccounts = function() {
 		$('#login_account').empty();
-		NRS.legacyDatabase.select("accounts", null, function(error, accounts) {
-			if (accounts && accounts.length){
-				$('#login_account_container').show();
-				$('#login_account_container_other').hide();
-				$.each(accounts, function(index, account) {
-					if (!account.name || account.name == ""){
-						$('#login_account')
-						.append($("<li></li>")
-							.append($("<a></a>")
-								.attr("href","#")
-								.attr("style","display: inline-block;width: 380px;")
-								.attr("onClick","NRS.loginAccount('"+account.account+"')")
-								.text(account.account))
-							.append($('<button aria-hidden="true" data-dismiss="modal" class="close" type="button">×</button>')
-								.attr("onClick","NRS.removeAccount('"+account.account+"')")
-								.attr("style","margin-right:5px"))
-						);
-					}
-					else {
-						$('#login_account')
-						.append($("<li></li>")
-							.append($("<a></a>")
-								.attr("href","#")
-								.attr("style","display: inline-block;width: 380px;overflow:hidden")
-								.attr("onClick","NRS.loginAccount('"+account.account+"')")
-								.text(account.name+" ("+account.account+")"))
-							.append($('<button aria-hidden="true" data-dismiss="modal" class="close" type="button">×</button>')
-								.attr("onClick","NRS.removeAccount('"+account.account+"')")
-								.attr("style","margin-right:5px"))
-						);
-					}
-				});
-				$('#login_account')
-						.append($("<li></li>")
-							.append($("<a></a>")
-								.attr("href","#")
-								.attr("style","display: inline-block;width: 380px;")
-								.attr("onClick","$('#login_account_container').hide();$('#login_account_container_other').show();")
-								.text("Other"))
-						);
-			}
-			else{
-				$('#login_account_container').hide();
-				$('#login_account_container_other').show();
-			}
-		});
+		console.log(NRS.getCookie("savedNxtAccounts"));
+		if (NRS.getCookie("savedNxtAccounts") && NRS.getCookie("savedNxtAccounts")!=""){
+			$('#login_account_container').show();
+			$('#login_account_container_other').hide();
+			$('#login_account')
+			.append($("<li></li>")
+				.append($("<a></a>")
+					.attr("href","#")
+					.attr("style","display: inline-block;width: 380px;")
+					.attr("onClick","NRS.loginAccount('"+NRS.getCookie('savedNxtAccounts')+"')")
+					.text(NRS.getCookie('savedNxtAccounts')))
+				.append($('<button aria-hidden="true" data-dismiss="modal" class="close" type="button">×</button>')
+					.attr("onClick","NRS.removeAccount('"+NRS.getCookie('savedNxtAccounts')+"')")
+					.attr("style","margin-right:5px"))
+			);
+			$('#login_account')
+			.append($("<li></li>")
+				.append($("<a></a>")
+					.attr("href","#")
+					.attr("style","display: inline-block;width: 380px;")
+					.attr("onClick","$('#login_account_container').hide();$('#login_account_container_other').show();")
+					.text("Other"))
+			);
+		}
+		else{
+			$('#login_account_container').hide();
+			$('#login_account_container_other').show();
+		}
 	}
 	
 	$("input:radio[name=loginType]").change(function(e) {
@@ -259,24 +232,19 @@ var NRS = (function(NRS, $, undefined) {
 		if (this.value == 'account') {
             NRS.listAccounts();
 			$('#login_password').parent().hide();
-			$('#remember_account_container').show();
 			$('#remember_password_container').hide();
         }
         else {
             $('#login_account_container').hide();
 			$('#login_account_container_other').hide();
 			$('#login_password').parent().show();
-			$('#remember_account_container').hide();
 			$('#remember_password_container').show();
         }
 	});
 	
 	NRS.removeAccount = function(account) {
-		NRS.legacyDatabase.delete("accounts", [{
-			"account": account
-		}], function() {
-			NRS.listAccounts();
-		});
+		NRS.deleteCookie('savedNxtAccounts');
+		NRS.listAccounts();
 	}
 
 	NRS.login = function(password, callback) {
@@ -463,14 +431,15 @@ var NRS = (function(NRS, $, undefined) {
 
 					if ($("#remember_account").is(":checked")) {
 						//if (NRS.databaseSupport){
-							NRS.legacyDatabase.select("accounts", [{"account": NRS.accountRS}], function(error, accounts) {
+							NRS.setCookie("savedNxtAccounts",NRS.accountRS,30);
+							/*NRS.legacyDatabase.select("accounts", [{"account": NRS.accountRS}], function(error, accounts) {
 								if (!accounts || !accounts.length) {
 									NRS.legacyDatabase.insert("accounts", {
 										account: NRS.accountRS,
 										name: NRS.accountInfo.name
 									});
 								}
-							});
+							});*/
 						//}
 					}
 
