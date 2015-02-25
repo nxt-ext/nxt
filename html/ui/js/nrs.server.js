@@ -281,6 +281,7 @@ var NRS = (function(NRS, $, undefined) {
 			currentPage: currentPage,
 			currentSubPage: currentSubPage,
 			shouldRetry: (type == "GET" ? 2 : undefined),
+			traditional: true,
 			data: data
 		}).done(function(response, status, xhr) {
 			if (NRS.console) {
