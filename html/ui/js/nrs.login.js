@@ -187,8 +187,13 @@ var NRS = (function(NRS, $, undefined) {
 				$('#dashboard_link a').addClass("ignore").click();
 				
 				if ($("#remember_account").is(":checked")) {
-						NRS.setCookie("savedNxtAccounts",NRS.accountRS,30);
+					if (NRS.getCookie("savedNxtAccounts") && NRS.getCookie("savedNxtAccounts")!=""){
+						var accounts=NRS.getCookie("savedNxtAccounts") + NRS.accountRS + ";";
+						NRS.setCookie("savedNxtAccounts",accounts,30);
 					}
+					else
+						NRS.setCookie("savedNxtAccounts",NRS.accountRS + ";",30);
+				}
 
 				NRS.getInitialTransactions();
 			});
@@ -197,21 +202,25 @@ var NRS = (function(NRS, $, undefined) {
 	
 	NRS.listAccounts = function() {
 		$('#login_account').empty();
-		console.log(NRS.getCookie("savedNxtAccounts"));
 		if (NRS.getCookie("savedNxtAccounts") && NRS.getCookie("savedNxtAccounts")!=""){
 			$('#login_account_container').show();
 			$('#login_account_container_other').hide();
-			$('#login_account')
-			.append($("<li></li>")
-				.append($("<a></a>")
-					.attr("href","#")
-					.attr("style","display: inline-block;width: 380px;")
-					.attr("onClick","NRS.loginAccount('"+NRS.getCookie('savedNxtAccounts')+"')")
-					.text(NRS.getCookie('savedNxtAccounts')))
-				.append($('<button aria-hidden="true" data-dismiss="modal" class="close" type="button">×</button>')
-					.attr("onClick","NRS.removeAccount('"+NRS.getCookie('savedNxtAccounts')+"')")
-					.attr("style","margin-right:5px"))
-			);
+			var accounts = NRS.getCookie("savedNxtAccounts").split(";");
+			$.each(accounts, function(index, account) {
+				if (account != ''){
+					$('#login_account')
+					.append($("<li></li>")
+						.append($("<a></a>")
+							.attr("href","#")
+							.attr("style","display: inline-block;width: 380px;")
+							.attr("onClick","NRS.loginAccount('"+account+"')")
+							.text(account))
+						.append($('<button aria-hidden="true" data-dismiss="modal" class="close" type="button">×</button>')
+							.attr("onClick","NRS.removeAccount('"+account+"')")
+							.attr("style","margin-right:5px"))
+					);
+				}
+			});
 			$('#login_account')
 			.append($("<li></li>")
 				.append($("<a></a>")
@@ -243,7 +252,11 @@ var NRS = (function(NRS, $, undefined) {
 	});
 	
 	NRS.removeAccount = function(account) {
-		NRS.deleteCookie('savedNxtAccounts');
+		var accounts = NRS.getCookie("savedNxtAccounts").replace(account+';','');
+		if (accounts == '')
+			NRS.deleteCookie('savedNxtAccounts');
+		else 
+			NRS.setCookie("savedNxtAccounts",accounts,30);
 		NRS.listAccounts();
 	}
 
@@ -430,17 +443,12 @@ var NRS = (function(NRS, $, undefined) {
 					$('#dashboard_link a').addClass("ignore").click();
 
 					if ($("#remember_account").is(":checked")) {
-						//if (NRS.databaseSupport){
-							NRS.setCookie("savedNxtAccounts",NRS.accountRS,30);
-							/*NRS.legacyDatabase.select("accounts", [{"account": NRS.accountRS}], function(error, accounts) {
-								if (!accounts || !accounts.length) {
-									NRS.legacyDatabase.insert("accounts", {
-										account: NRS.accountRS,
-										name: NRS.accountInfo.name
-									});
-								}
-							});*/
-						//}
+						if (NRS.getCookie("savedNxtAccounts") && NRS.getCookie("savedNxtAccounts")!=""){
+							var accounts=NRS.getCookie("savedNxtAccounts") + NRS.accountRS + ";";
+							NRS.setCookie("savedNxtAccounts",accounts,30);
+						}
+						else
+							NRS.setCookie("savedNxtAccounts",NRS.accountRS + ";",30);
 					}
 
 					$("[data-i18n]").i18n();
