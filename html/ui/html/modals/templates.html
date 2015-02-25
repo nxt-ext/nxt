@@ -80,7 +80,7 @@
             <ul class="nav nav-tabs approve_tab_list" role="tablist">
                 <li role="presentation" class="active show_popover" data-toggle="popover" data-delay="250" data-placement="top" data-content="Transaction don't need further approval to become valid" data-container="#{{name}}_approve_modal" data-i18n="[data-content]approve_modal_no_approval_tab_help">
                     <a href="#{{name}}_approve_tab_no_approval" aria-controls="{{name}}_approve_tab_no_approval" class="at_no_approval" role="tab" data-toggle="tab"><span class="label label-default"><i class="fa fa-gavel"></i></span> <span class="label label-default"><i class="ion-close-circled"></i></span></a></li>
-                <li role="presentation" class="show_popover" data-toggle="popover" data-placement="top" data-content="Transaction has to be approved by a certain amount of accounts" data-container="#{{name}}_approve_modal" data-i18n="[data-content]approve_modal_by_account_tab_help">
+                <li role="presentation" class="show_popover" data-toggle="popover" data-placement="top" data-content="Transaction has to be approved by a certain number of accounts" data-container="#{{name}}_approve_modal" data-i18n="[data-content]approve_modal_by_account_tab_help">
                     <a href="#{{name}}_approve_tab_accounts" aria-controls="{{name}}_approve_tab_accounts" class="at_accounts" role="tab" data-toggle="tab"><span class="label label-default"><i class="fa fa-gavel"></i></span> <span class="label label-warning"><i class="fa fa-group"></i></span></a>
                 </li>    
                 <li role="presentation" class="show_popover" data-toggle="popover" data-placement="top" data-content="Transaction has to be approved by accounts holding a certain amount of NXT" data-container="#{{name}}_approve_modal" data-i18n="[data-content]approve_modal_by_balance_tab_help">
@@ -104,8 +104,8 @@
                 <div role="tabpanel" class="tab-pane tab_pane_approve" id="{{name}}_approve_tab_accounts">
                     <div class="row">
                         <div class="col-xs-6">
-                            <div class="form-group pending_amount_accounts_group">
-                                <label data-i18n="approve_amount_accounts">Amount Accounts</label>
+                            <div class="form-group pending_number_accounts_group">
+                                <label data-i18n="approve_number_accounts">Number Accounts</label>
                                 <i class="fa fa-question-circle modal-context-help" data-content="" data-toggle="popover" data-trigger="hover" data-container="#{{name}}_approve_modal" data-i18n="[data-content]approve_transaction_amount_help"></i>
                                 <input name="phasingQuorum" type="number" min="1" class="form-control" disabled />
                             </div>
