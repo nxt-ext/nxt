@@ -39,6 +39,7 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.databaseSupport = false;
 	NRS.databaseFirstStart = false;
 
+	// Legacy database, don't use this for data storage
 	NRS.legacyDatabase = null;
 	NRS.legacyDatabaseWithData = false;
 
@@ -541,7 +542,6 @@ var NRS = (function(NRS, $, undefined) {
 
 
 	NRS.initUserDBSuccess = function() {
-		console.log("test");
 		NRS.database.select("data", [{
 			"id": "asset_exchange_version"
 		}], function(error, result) {
