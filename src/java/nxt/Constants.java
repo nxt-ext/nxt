@@ -33,9 +33,8 @@ public final class Constants {
     public static final byte VOTING_MIN_RANGE_VALUE_LIMIT = -100;
     public static final byte VOTING_MAX_RANGE_VALUE_LIMIT = 100;
     public static final byte VOTING_NO_VOTE_VALUE = Byte.MIN_VALUE;
-    public static final byte VOTING_MIN_VOTE_DURATION = 10;
+    public static final byte VOTING_MIN_VOTE_DURATION = 1;
     public static final int VOTING_MAX_VOTE_DURATION = 14 * 1440;
-
 
     public static final byte MAX_PHASING_WHITELIST_SIZE = 10;
 
@@ -67,6 +66,7 @@ public final class Constants {
     public static final int MAX_DGS_LISTING_DESCRIPTION_LENGTH = 1000;
     public static final int MAX_DGS_LISTING_TAGS_LENGTH = 100;
     public static final int MAX_DGS_GOODS_LENGTH = 10240;
+    public static final int MAX_DGS_GOODS_LENGTH_2 = 40 * 1024;
 
     public static final int MAX_HUB_ANNOUNCEMENT_URIS = 100;
     public static final int MAX_HUB_ANNOUNCEMENT_URI_LENGTH = 1000;

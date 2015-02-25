@@ -44,7 +44,7 @@ public class TestCreateTwoPhased extends BlockchainTest {
             int height = Nxt.getBlockchain().getHeight();
 
             secretPhrase(secretPhrase1);
-            feeNQT(Constants.ONE_NXT);
+            feeNQT(2*Constants.ONE_NXT);
             recipient(id2);
             param("amountNQT", 50 * Constants.ONE_NXT);
             param("phased", "true");
@@ -52,6 +52,11 @@ public class TestCreateTwoPhased extends BlockchainTest {
             param("phasingQuorum", 1);
             param("phasingWhitelisted", Convert.toUnsignedLong(id3));
             param("phasingFinishHeight", height + 50);
+        }
+
+        public TwoPhasedMoneyTransferBuilder fee(long fee) {
+            feeNQT(fee);
+            return this;
         }
 
         public TwoPhasedMoneyTransferBuilder votingModel(byte model) {

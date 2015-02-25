@@ -21,7 +21,7 @@ public final class FullReset extends APIServlet.APIRequestHandler {
             Nxt.getBlockchainProcessor().fullReset();
             response.put("done", true);
         } catch (RuntimeException e) {
-            response.put("error", e.toString());
+            JSONData.putException(response, e);
         }
         return response;
     }

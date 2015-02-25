@@ -2055,37 +2055,37 @@ var NRS = (function(NRS, $, undefined) {
 			"type": 'PAGE',
 			"page": 'asset_exchange'
 		}
-		NRS.appendToTSMenuItem(sidebarId, options);
+		NRS.appendMenuItemToTSMenuItem(sidebarId, options);
 		options = {
 			"titleHTML": '<span data-i18n="trade_history">Trade History</span></a>',
 			"type": 'PAGE',
 			"page": 'trade_history'
 		}
-		NRS.appendToTSMenuItem(sidebarId, options);
+		NRS.appendMenuItemToTSMenuItem(sidebarId, options);
 		options = {
 			"titleHTML": '<span data-i18n="transfer_history">Transfer History</span>',
 			"type": 'PAGE',
 			"page": 'transfer_history'
 		}
-		NRS.appendToTSMenuItem(sidebarId, options);
+		NRS.appendMenuItemToTSMenuItem(sidebarId, options);
 		options = {
 			"titleHTML": '<span data-i18n="my_assets">My Assets</span></a>',
 			"type": 'PAGE',
 			"page": 'my_assets'
 		}
-		NRS.appendToTSMenuItem(sidebarId, options);
+		NRS.appendMenuItemToTSMenuItem(sidebarId, options);
 		options = {
 			"titleHTML": '<span data-i18n="open_orders">Open Orders</span>',
 			"type": 'PAGE',
 			"page": 'open_orders'
 		}
-		NRS.appendToTSMenuItem(sidebarId, options);
+		NRS.appendMenuItemToTSMenuItem(sidebarId, options);
 		options = {
 			"titleHTML": '<span data-i18n="issue_asset">Issue Asset</span>',
 			"type": 'MODAL',
 			"modalId": 'issue_asset_modal'
 		}
-		NRS.appendToTSMenuItem(sidebarId, options);
+		NRS.appendMenuItemToTSMenuItem(sidebarId, options);
 	}
 
 	return NRS;

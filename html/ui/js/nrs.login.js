@@ -190,6 +190,11 @@ var NRS = (function(NRS, $, undefined) {
 						$(".secret_phrase, .show_secret_phrase").hide();
 						$(".hide_secret_phrase").show();
 					}
+					if ($("#disable_all_plugins").length == 1 && !($("#disable_all_plugins").is(":checked"))) {
+						NRS.disableAllPlugins = false;
+					} else {
+						NRS.disableAllPlugins = true;
+					}
 
 					$("#account_id").html(String(NRS.accountRS).escapeHTML()).css("font-size", "12px");
 
@@ -255,6 +260,15 @@ var NRS = (function(NRS, $, undefined) {
 					if (!NRS.downloadingBlockchain) {
 						NRS.checkIfOnAFork();
 					}
+					if(navigator.userAgent.indexOf('Safari') != -1 && navigator.userAgent.indexOf('Chrome') == -1) {
+						// Don't use account based DB in Safari due to a buggy indexedDB implementation (2015-02-24)
+						NRS.createDatabase("NRS_USER_DB");
+						$.growl($.t("nrs_safari_no_account_based_db"), {
+							"type": "danger"
+						});
+					} else {
+						NRS.createDatabase("NRS_USER_DB_" + String(NRS.account));
+					}
 
 					NRS.setupClipboardFunctionality();
 
@@ -296,7 +310,7 @@ var NRS = (function(NRS, $, undefined) {
 			html += "<div style='font-size:13px;'>";
 			html += "<div style='background-color:#e6e6e6;padding:12px;'>";
 			html += "<span data-i18n='following_plugins_detected'>";
-			html += "The following active plugins have been detected and will be loaded after login:</span>";
+			html += "The following active plugins have been detected:</span>";
 			html += "</div>";
 			html += "<ul class='list-unstyled' style='padding:11px;border:1px solid #e0e0e0;margin-top:8px;'>";
 			$.each(NRS.plugins, function(pluginId, pluginDict) {
@@ -398,6 +412,26 @@ var NRS = (function(NRS, $, undefined) {
 			window.location.reload();
 		}
 	}
+
+	$("#logout_clear_user_data_confirm_btn").click(function(e) {
+		e.preventDefault();
+		if (NRS.database) {
+			indexedDB.deleteDatabase(NRS.database.name);
+		}
+		if (NRS.legacyDatabase) {
+			indexedDB.deleteDatabase(NRS.legacyDatabase.name);
+		}
+		if (NRS.hasLocalStorage) {
+			localStorage.removeItem("logged_in");
+			localStorage.removeItem("settings")
+		}
+		var cookies = document.cookie.split(";");
+		for (var i = 0; i < cookies.length; i++) {
+			NRS.deleteCookie(cookies[i].split("=")[0]);
+		}
+
+		NRS.logout();
+	})
 
 	NRS.setPassword = function(password) {
 		NRS.setEncryptionPassword(password);

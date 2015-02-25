@@ -222,10 +222,12 @@ public final class Poll extends AbstractPoll {
     }
 
     @Override
-    public boolean isFinished() { return getFinishHeight() < Nxt.getBlockchain().getHeight(); }
+    public boolean isFinished() {
+        return finishHeight <= Nxt.getBlockchain().getHeight();
+    }
 
     public List<PollResult> getResults(VoteWeighting voteWeighting) {
-        if (this.getDefaultVoteWeighting().equals(voteWeighting)) {
+        if (defaultVoteWeighting.equals(voteWeighting)) {
             return getResults();
         } else {
             return countResults(voteWeighting);
@@ -237,7 +239,7 @@ public final class Poll extends AbstractPoll {
         if (Poll.isPollsProcessing && isFinished()) {
             return pollResultsTable.get(pollResultsDbKeyFactory.newKey(id));
         } else {
-            return countResults(getDefaultVoteWeighting());
+            return countResults(defaultVoteWeighting);
         }
     }
 
@@ -275,7 +277,7 @@ public final class Poll extends AbstractPoll {
     }
 
     private List<PollResult> countResults(VoteWeighting voteWeighting) {
-        int countHeight = Math.min(getFinishHeight(), Nxt.getBlockchain().getHeight());
+        int countHeight = Math.min(finishHeight, Nxt.getBlockchain().getHeight());
         if (countHeight < Nxt.getBlockchainProcessor().getMinRollbackHeight()) {
             return null;
         }

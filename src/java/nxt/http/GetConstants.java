@@ -32,6 +32,7 @@ public final class GetConstants extends APIServlet.APIRequestHandler {
         outer:
         for (int type = 0; ; type++) {
             JSONObject typeJSON = new JSONObject();
+            JSONObject subtypesJSON = new JSONObject();
             for (int subtype = 0; ; subtype++) {
                 TransactionType transactionType = TransactionType.findTransactionType((byte)type, (byte)subtype);
                 if (transactionType == null) {
@@ -41,8 +42,13 @@ public final class GetConstants extends APIServlet.APIRequestHandler {
                         break;
                     }
                 }
-                typeJSON.put(subtype, transactionType.getName());
+                JSONObject subtypeJSON = new JSONObject();
+                subtypeJSON.put("name", transactionType.getName());
+                subtypeJSON.put("canHaveRecipient", transactionType.canHaveRecipient());
+                subtypeJSON.put("mustHaveRecipient", transactionType.mustHaveRecipient());
+                subtypesJSON.put(subtype, subtypeJSON);
             }
+            typeJSON.put("subtypes", subtypesJSON);
             transactionJSON.put(type, typeJSON);
         }
         response.put("transactionTypes", transactionJSON);

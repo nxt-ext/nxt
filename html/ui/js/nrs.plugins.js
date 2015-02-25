@@ -4,6 +4,7 @@
 var NRS = (function(NRS, $, undefined) {
 
 	NRS.plugins = {}
+    NRS.disableAllPlugins = true;
 	NRS.activePlugins = false;
 
 
@@ -224,7 +225,7 @@ var NRS = (function(NRS, $, undefined) {
                         "type": 'PAGE',
                         "page": manifest['startPage']
                     }
-                    NRS.appendToTSMenuItem(sidebarId, options);
+                    NRS.appendMenuItemToTSMenuItem(sidebarId, options);
                     $(".sidebar .treeview").tree();
                 }
                 var cssURL = pluginPath + 'css/' + pluginId + '.css';
@@ -249,6 +250,10 @@ var NRS = (function(NRS, $, undefined) {
 
     NRS.loadPlugins = function() {
         $.each(NRS.plugins, function(pluginId, pluginDict) {
+            if (NRS.disableAllPlugins && pluginDict['launch_status'] == NRS.constants.PL_PAUSED) {
+                pluginDict['launch_status'] = NRS.constants.PL_DEACTIVATED;
+                pluginDict['launch_status_msg'] = $.t('plugin_deactivated', 'Deactivated');
+            }
             if (pluginDict['launch_status'] == NRS.constants.PL_PAUSED) {
                 NRS.loadPlugin(pluginId);
             }

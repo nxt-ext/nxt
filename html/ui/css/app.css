@@ -587,7 +587,8 @@ body > .header .logo .icon {
 .sidebar .sidebar-menu .treeview-menu > li {
   margin: 0;
 }
-.sidebar .sidebar-menu .treeview-menu > li > a {
+.sidebar .sidebar-menu .treeview-menu > li > a,
+.sidebar .sidebar-menu .treeview-menu > li > .sm_sub_header {
   padding: 5px 5px 5px 15px;
   display: block;
   font-size: 14px;
@@ -1991,8 +1992,14 @@ body > .header .logo .icon {
   text-decoration: none;
 }
 
-#login_panel #remember_password_container label{ opacity: 0.53; }
-#login_panel #remember_password_container label:hover { opacity: 1.0; }
+#login_panel #remember_password_container label, 
+#lockscreen_active_plugins_warning label {
+  opacity: 0.53;
+}
+#login_panel #remember_password_container label:hover,
+#lockscreen_active_plugins_warning label:hover {
+  opacity: 1.0;
+}
 
 /* 
     skin-blue 
