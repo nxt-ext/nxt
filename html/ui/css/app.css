@@ -1939,7 +1939,8 @@ body > .header .logo .icon {
   -moz-border-radius: 4px;
   border-radius: 4px;
   margin: 10px auto;
-  width: 400px;
+  width: 320px;
+  display: inline-block;
 }
 .lockscreen-item:before,
 .lockscreen-item:after {
@@ -3084,9 +3085,9 @@ hr {
 }
 
 #testnet_login {
-  display:inline-block;
+  display:block;
   text-align:left;
-  margin-bottom:0px;
+  margin:auto auto 0px auto;
 }
 
 #login_error  {
@@ -3308,4 +3309,9 @@ input.masked {
 
 #login_account_container {
   display: none;
+}
+
+#loginButtons {
+  margin: 10px 0;
+  vertical-align: top;
 }

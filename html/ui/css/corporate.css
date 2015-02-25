@@ -2079,7 +2079,8 @@ body > .header .navbar .nav > li > a:hover > .label {
   background: #fff;
   position: relative;
   margin: 10px auto;
-  width: 400px;
+  width: 320px;
+  display: inline-block;
 }
 .lockscreen-item:before,
 .lockscreen-item:after {
@@ -3266,6 +3267,10 @@ a.list-group-item.active h4 span {
 .sidebar-menu > li > a[data-page~='aliases'] i { background: #1f7ba6 url(../img/corporate/nav/aliases.svg) no-repeat center center; background-size: 15px; height: 50px; width: 50px;}
 .sidebar-menu > li > a[data-page~='aliases'] i:before {content: "";}
 
+.sidebar-menu #sidebar_plugins > a[data-page~='plugins'] i:first-child { background: #2385b4 url(../img/corporate/nav/blocks.svg) no-repeat center center; background-size: 22px; height: 50px; width: 50px;}
+.sidebar-menu #sidebar_plugins > a[data-page~='plugins'] i:first-child:before {content: "";}
+.sidebar-menu #sidebar_plugins > a[data-page~='plugins'] .pull-right {margin:15px 10px 0 0}
+
 .sidebar-menu > li > a[data-page~='polls'] i:first-child { background: #0b4962 url(../img/corporate/nav/blocks.png) no-repeat center center; background-size: 15px; height: 50px; width: 50px;}
 .sidebar-menu > li > a[data-page~='polls'] i:first-child:before {content: "";}
 .sidebar-menu > li > a[data-page~='polls'] > .pull-right {margin:15px 10px 0 0}
@@ -3926,9 +3931,9 @@ hr {
 }
 
 #testnet_login {
-  display:inline-block;
+  display:block;
   text-align:left;
-  margin-bottom:5px;
+  margin:auto auto 0px auto;
 }
 
 #asset_exchange_sidebar_search {
@@ -3988,4 +3993,13 @@ hr {
 #sideBalance {
   display: block;
   margin-bottom: 5px;
+}
+
+#login_account_container {
+  display: none;
+}
+
+#loginButtons {
+  margin: 10px 0;
+  vertical-align: top;
 }

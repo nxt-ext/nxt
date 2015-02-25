@@ -139,6 +139,11 @@ var NRS = (function(NRS, $, undefined) {
 					NRS.accountRS = String(response.accountRS).escapeHTML();
 					NRS.publicKey = String(response.publicKey).escapeHTML();
 				}
+				if ($("#disable_all_plugins").length == 1 && !($("#disable_all_plugins").is(":checked"))) {
+					NRS.disableAllPlugins = false;
+				} else {
+					NRS.disableAllPlugins = true;
+				}
 				$("#account_id").html(String(NRS.accountRS).escapeHTML()).css("font-size", "12px");
 
 				if (NRS.state) {
@@ -169,6 +174,15 @@ var NRS = (function(NRS, $, undefined) {
 				if (!NRS.downloadingBlockchain) {
 					NRS.checkIfOnAFork();
 				}
+				if(navigator.userAgent.indexOf('Safari') != -1 && navigator.userAgent.indexOf('Chrome') == -1) {
+					// Don't use account based DB in Safari due to a buggy indexedDB implementation (2015-02-24)
+					NRS.createDatabase("NRS_USER_DB");
+					$.growl($.t("nrs_safari_no_account_based_db"), {
+						"type": "danger"
+					});
+				} else {
+					NRS.createDatabase("NRS_USER_DB_" + String(NRS.account));
+				}
 
 				NRS.setupClipboardFunctionality();
 
@@ -185,7 +199,7 @@ var NRS = (function(NRS, $, undefined) {
 				NRS.loadPlugins();
 				$(".sidebar .treeview").tree();
 				$('#dashboard_link a').addClass("ignore").click();
-				
+
 				if ($("#remember_account").is(":checked")) {
 					if (NRS.getCookie("savedNxtAccounts") && NRS.getCookie("savedNxtAccounts")!=""){
 						var accounts=NRS.getCookie("savedNxtAccounts") + NRS.accountRS + ";";
@@ -195,7 +209,10 @@ var NRS = (function(NRS, $, undefined) {
 						NRS.setCookie("savedNxtAccounts",NRS.accountRS + ";",30);
 				}
 
+				$("[data-i18n]").i18n();
+
 				NRS.getInitialTransactions();
+				NRS.updateApprovalRequests();
 			});
 		});
 	}
@@ -212,7 +229,7 @@ var NRS = (function(NRS, $, undefined) {
 					.append($("<li></li>")
 						.append($("<a></a>")
 							.attr("href","#")
-							.attr("style","display: inline-block;width: 380px;")
+							.attr("style","display: inline-block;width: 360px;")
 							.attr("onClick","NRS.loginAccount('"+account+"')")
 							.text(account))
 						.append($('<button aria-hidden="true" data-dismiss="modal" class="close" type="button">×</button>')
