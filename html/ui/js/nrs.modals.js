@@ -255,6 +255,10 @@ var NRS = (function(NRS, $, undefined) {
 	});
 
 	$('.approve_tab_list a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
+        var feeAddition = $(this).data("feeNxtApprovalAddition");
+        $(this).closest(".modal").find("input[name='feeNXT_approval_addition']").val(feeAddition);
+        $(this).closest(".modal").find("span.feeNXT_approval_addition_info").html("+" + feeAddition);
+
         $am = $(this).closest('.approve_modal');
         $am.find('.tab-pane input').prop('disabled', true);
         $am.find('.tab-pane.active input').prop('disabled', false);
