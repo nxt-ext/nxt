@@ -838,13 +838,16 @@ var NRS = (function(NRS, $, undefined) {
 				});
 			});
 
-			clipboard.on("noflash", function(client, args) {
-				$("#account_id_dropdown .dropdown-menu, #asset_id_dropdown .dropdown-menu").remove();
-				$("#account_id_dropdown, #asset_id").data("toggle", "");
-				$.growl($.t("error_clipboard_copy_noflash"), {
-					"type": "danger"
+			if (!NRS.getCookie("clipboard_warning_shown")) {
+				clipboard.on("noflash", function(client, args) {
+					$("#account_id_dropdown .dropdown-menu, #asset_id_dropdown .dropdown-menu").remove();
+					$("#account_id_dropdown, #asset_id").data("toggle", "");
+					$.growl($.t("error_clipboard_copy_noflash"), {
+						"type": "danger"
+					});
 				});
-			});
+				NRS.setCookie("clipboard_warning_shown", "1", 30);
+			}
 
 			clipboard.on("wrongflash", function(client, args) {
 				$("#account_id_dropdown .dropdown-menu, #asset_id_dropdown .dropdown-menu").remove();
