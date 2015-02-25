@@ -39,6 +39,7 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.databaseSupport = false;
 	NRS.databaseFirstStart = false;
 
+	// Legacy database, don't use this for data storage
 	NRS.legacyDatabase = null;
 	NRS.legacyDatabaseWithData = false;
 
