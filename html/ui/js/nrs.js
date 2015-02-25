@@ -650,7 +650,6 @@ var NRS = (function(NRS, $, undefined) {
 								NRS.legacyDatabaseWithData = true;
 							}
 						});
-						NRS.listAccounts();
 					}
 				});
 			} catch (err) {

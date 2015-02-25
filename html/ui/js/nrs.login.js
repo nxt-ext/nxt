@@ -254,6 +254,23 @@ var NRS = (function(NRS, $, undefined) {
 		});
 	}
 	
+	$("input:radio[name=loginType]").change(function(e) {
+		e.preventDefault();
+		if (this.value == 'account') {
+            NRS.listAccounts();
+			$('#login_password').parent().hide();
+			$('#remember_account_container').show();
+			$('#remember_password_container').hide();
+        }
+        else {
+            $('#login_account_container').hide();
+			$('#login_account_container_other').hide();
+			$('#login_password').parent().show();
+			$('#remember_account_container').hide();
+			$('#remember_password_container').show();
+        }
+	});
+	
 	NRS.removeAccount = function(account) {
 		NRS.legacyDatabase.delete("accounts", [{
 			"account": account
@@ -301,7 +318,8 @@ var NRS = (function(NRS, $, undefined) {
 					NRS.publicKey = NRS.getPublicKey(converters.stringToHexString(password));
 				}
 				
-				if ($("#login_account_other").val() != ""){
+				// Not used with current setup
+				/*if ($("#login_account_other").val() != ""){
 					if (NRS.accountRS != $("#login_account_other").val() && NRS.account != $("#login_account_other").val()) {
 						$.growl($.t("Password and NXT account do no match"), {
 							"type": "danger",
@@ -309,7 +327,7 @@ var NRS = (function(NRS, $, undefined) {
 						});
 						return;
 					}
-				}
+				}*/
 
 				if (!NRS.account) {
 					$.growl($.t("error_find_account_id"), {
