@@ -1,6 +1,8 @@
-del nxt.jar 
-jar cfm nxt.jar src/META-INF/MANIFEST.MF -C classes .
-del nxtservice.jar
-jar cfm nxtservice.jar src/META-INF/MANIFEST.service.MF -C classes .
+java -cp classes nxt.util.ManifestGenerator 
 
-echo "nxt.jar generated successfully"
+del nxt.jar
+jar cfm nxt.jar resource/nxt.manifest.mf -C classes .
+del nxtservice.jar
+jar cfm nxtservice.jar resource/nxtservice.manifest.mf -C classes .
+
+echo "jar files generated successfully"
