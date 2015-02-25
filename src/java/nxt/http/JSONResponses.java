@@ -72,6 +72,7 @@ public final class JSONResponses {
     public static final JSONStreamAware INCORRECT_POLL = incorrect("poll");
     public static final JSONStreamAware INCORRECT_VOTE = incorrect("vote");
     public static final JSONStreamAware UNKNOWN_POLL = unknown("poll");
+    public static final JSONStreamAware INCORRECT_WHITELIST = incorrect("whitelist");
     public static final JSONStreamAware INCORRECT_ACCOUNT_NAME_LENGTH = incorrect("name", "(length must be less than " + Constants.MAX_ACCOUNT_NAME_LENGTH + " characters)");
     public static final JSONStreamAware INCORRECT_ACCOUNT_DESCRIPTION_LENGTH = incorrect("description", "(length must be less than " + Constants.MAX_ACCOUNT_DESCRIPTION_LENGTH + " characters)");
     public static final JSONStreamAware INCORRECT_UNSIGNED_BYTES = incorrect("unsignedTransactionBytes");
@@ -103,6 +104,7 @@ public final class JSONResponses {
     public static final JSONStreamAware INCORRECT_CURRENCY_CODE = incorrect("code", "(must contain only uppercase latin letters)");
     public static final JSONStreamAware INCORRECT_CURRENCY_DESCRIPTION_LENGTH = incorrect("description", "(length must not exceed " + Constants.MAX_CURRENCY_DESCRIPTION_LENGTH + " characters)");
     public static final JSONStreamAware MISSING_CURRENCY = missing("currency");
+    public static final JSONStreamAware MISSING_CURRENCY_ACCOUNT = missing("currency", "account");
     public static final JSONStreamAware UNKNOWN_CURRENCY = unknown("currency");
     public static final JSONStreamAware INCORRECT_CURRENCY = incorrect("currency");
     public static final JSONStreamAware MISSING_OFFER = missing("offer");

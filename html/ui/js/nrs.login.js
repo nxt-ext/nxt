@@ -413,8 +413,15 @@ var NRS = (function(NRS, $, undefined) {
 					if (!NRS.downloadingBlockchain) {
 						NRS.checkIfOnAFork();
 					}
-
-					NRS.createDatabase();
+					if(navigator.userAgent.indexOf('Safari') != -1 && navigator.userAgent.indexOf('Chrome') == -1) {
+						// Don't use account based DB in Safari due to a buggy indexedDB implementation (2015-02-24)
+						NRS.createDatabase("NRS_USER_DB");
+						$.growl($.t("nrs_safari_no_account_based_db"), {
+							"type": "danger"
+						});
+					} else {
+						NRS.createDatabase("NRS_USER_DB_" + String(NRS.account));
+					}
 
 					NRS.setupClipboardFunctionality();
 
@@ -573,9 +580,11 @@ var NRS = (function(NRS, $, undefined) {
 
 	$("#logout_clear_user_data_confirm_btn").click(function(e) {
 		e.preventDefault();
-		if (NRS.databaseSupport) {
-			indexedDB.deleteDatabase("NRS_USER_DB_" + String(NRS.account));
-			indexedDB.deleteDatabase("NRS_USER_DB");
+		if (NRS.database) {
+			indexedDB.deleteDatabase(NRS.database.name);
+		}
+		if (NRS.legacyDatabase) {
+			indexedDB.deleteDatabase(NRS.legacyDatabase.name);
 		}
 		if (NRS.hasLocalStorage) {
 			localStorage.removeItem("logged_in");

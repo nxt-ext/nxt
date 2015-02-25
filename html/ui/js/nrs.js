@@ -39,6 +39,7 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.databaseSupport = false;
 	NRS.databaseFirstStart = false;
 
+	// Legacy database, don't use this for data storage
 	NRS.legacyDatabase = null;
 	NRS.legacyDatabaseWithData = false;
 
@@ -133,8 +134,11 @@ var NRS = (function(NRS, $, undefined) {
 		} catch (err) {
 			NRS.hasLocalStorage = false;
 		}
-
-		NRS.createLegacyDatabase();
+		if(!(navigator.userAgent.indexOf('Safari') != -1 && navigator.userAgent.indexOf('Chrome') == -1)) {
+			// Not Safari
+			// Don't use account based DB in Safari due to a buggy indexedDB implementation (2015-02-24)
+			NRS.createLegacyDatabase();
+		}
 
 		if (NRS.getCookie("remember_passphrase")) {
 			$("#remember_password").prop("checked", true);
@@ -654,7 +658,7 @@ var NRS = (function(NRS, $, undefined) {
 		}
 	};
 
-	NRS.createDatabase = function() {
+	NRS.createDatabase = function(dbName) {
 		var schema = {}
 
 		schema["contacts"] = {
@@ -693,7 +697,7 @@ var NRS = (function(NRS, $, undefined) {
 		NRS.assetTableKeys = ["account", "accountRS", "asset", "description", "name", "position", "decimals", "quantityQNT", "groupName"];
 
 		try {
-			NRS.database = new WebDB("NRS_USER_DB_" + String(NRS.account), schema, NRS.constants.DB_VERSION, 4, function(error, db) {
+			NRS.database = new WebDB(dbName, schema, NRS.constants.DB_VERSION, 4, function(error, db) {
 				if (!error) {
 					NRS.database.select("data", [{
 						"id": "settings"

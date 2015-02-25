@@ -675,6 +675,7 @@
   "nrs_update": "NRS Update",
   "nrs_update_available": "A new NRS release is available. It is recommended that you update.",
   "nrs_version": "NRS Version",
+  "nrs_safari_no_account_based_db": "Storing user data for multiple accounts currently not supported in Safari.",
   "numeric_account_id": "Numeric Account ID",
   "nxt_account_id": "NXT Account ID",
   "nxt_token_generation_validation": "Nxt Token Generation / Validation",
