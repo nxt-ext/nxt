@@ -541,7 +541,6 @@ var NRS = (function(NRS, $, undefined) {
 
 
 	NRS.initUserDBSuccess = function() {
-		console.log("test");
 		NRS.database.select("data", [{
 			"id": "asset_exchange_version"
 		}], function(error, result) {

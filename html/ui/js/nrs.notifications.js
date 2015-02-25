@@ -107,6 +107,29 @@ var NRS = (function(NRS, $, undefined) {
 		}
 	}
 
+	NRS.resetNotificationState = function(page) {
+		NRS.sendRequest("getTime", function(response) {
+			if (response.time) {
+				$.each(NRS.transactionTypes, function(typeIndex, typeDict) {
+					$.each(typeDict["subTypes"], function(subTypeIndex, subTypeDict) {
+						if (!page || (page && subTypeDict["receiverPage"] == page)) {
+							var countBefore = subTypeDict["notificationCount"];
+							if (subTypeDict["lastKnownTransaction"]) {
+								subTypeDict["notificationTS"] = subTypeDict["lastKnownTransaction"].timestamp + 1;
+							} else {
+								subTypeDict["notificationTS"] = response.time;
+							}
+							subTypeDict["notificationCount"] = 0;
+							typeDict["notificationCount"] -= countBefore;
+						}
+					});
+				});
+				NRS.saveNotificationTimestamps();
+				NRS.updateNotificationUI();
+			}
+		});
+	}
+
 	NRS.initNotificationCounts = function(time) {
 		var fromTS = time - 60 * 60 * 24 * 14;
 		NRS.sendRequest("getAccountTransactions+", {
@@ -119,32 +142,18 @@ var NRS = (function(NRS, $, undefined) {
 				for (var i=0; i<response.transactions.length; i++) {
 					var t = response.transactions[i];
 					var subTypeDict = NRS.transactionTypes[t.type]["subTypes"][t.subtype];
-					if (t.recipient && t.recipient == NRS.account && subTypeDict["receiverPage"] && t.timestamp > subTypeDict["notificationTS"]) {
-						NRS.transactionTypes[t.type]["notificationCount"] += 1;
-						subTypeDict["notificationCount"] += 1;
+					if (t.recipient && t.recipient == NRS.account && subTypeDict["receiverPage"]) {
+						if (!subTypeDict["lastKnownTransaction"] || subTypeDict["lastKnownTransaction"].timestamp < t.timestamp) {
+							subTypeDict["lastKnownTransaction"] = t;
+						}
+						if (t.timestamp > subTypeDict["notificationTS"]) {
+							NRS.transactionTypes[t.type]["notificationCount"] += 1;
+							subTypeDict["notificationCount"] += 1;
+						}	
 					}
 				}
 			}
 			NRS.updateNotificationUI();
-		});
-	}
-
-	NRS.resetNotificationState = function(page) {
-		NRS.sendRequest("getTime", function(response) {
-			if (response.time) {
-				$.each(NRS.transactionTypes, function(typeIndex, typeDict) {
-					$.each(typeDict["subTypes"], function(subTypeIndex, subTypeDict) {
-						if (!page || (page && subTypeDict["receiverPage"] == page)) {
-							var countBefore = subTypeDict["notificationCount"];
-							subTypeDict["notificationTS"] = response.time;
-							subTypeDict["notificationCount"] = 0;
-							typeDict["notificationCount"] -= countBefore;
-						}
-					});
-				});
-				NRS.saveNotificationTimestamps();
-				NRS.updateNotificationUI();
-			}
 		});
 	}
 
