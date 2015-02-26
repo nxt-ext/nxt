@@ -269,11 +269,12 @@ var NRS = (function(NRS, $, undefined) {
 
 		if (t.attachment && t.attachment["version.Phasing"] && t.attachment.phasingVotingModel != undefined) {
 			NRS.sendRequest("getPhasingPoll", {
-				"transaction": t.transaction
+				"transaction": t.transaction,
+				"countVotes": true
 			}, function(response) {
 				if (response.transaction) {
-					if (!response.votes) {
-						response.votes = 0;
+					if (!response.result) {
+						response.result = 0;
 					}
 					var attachment = t.attachment;
 					var vm = attachment.phasingVotingModel;
@@ -281,12 +282,12 @@ var NRS = (function(NRS, $, undefined) {
 					var state = "";
 					var color = "";
 					var icon = "";
-					var votesFormatted = "";
+					var resultFormatted = "";
 					var quorumFormatted = "";
 					var unitFormattted = "";
 					var finishHeightFormatted = String(response.finishHeight);
-					var percentageFormatted = NRS.calculatePercentage(response.votes, response.quorum) + "%";
-					var percentageProgressBar = Math.round(response.votes * 100 / response.quorum);
+					var percentageFormatted = NRS.calculatePercentage(response.result, response.quorum) + "%";
+					var percentageProgressBar = Math.round(response.result * 100 / response.quorum);
 					var progressBarWidth = Math.round(percentageProgressBar / 2);
 
 					if (response.finished) {
@@ -296,7 +297,7 @@ var NRS = (function(NRS, $, undefined) {
 					}
 
 					if (response.finished) {
-						if (response.votes >= response.quorum) {
+						if (response.result >= response.quorum) {
 							state = "success";
 							color = "#00a65a";	
 						} else {
@@ -309,30 +310,30 @@ var NRS = (function(NRS, $, undefined) {
 					}
 					if (vm == 0) {
 						icon = '<i class="fa fa-group"></i>';
-						votesFormatted = String(response.votes);
+						resultFormatted = String(response.result);
 						quorumFormatted = String(response.quorum);
 						unitFormattted = "";
 					}
 					if (vm == 1) {
 						icon = '<i class="fa fa-money"></i>';
-						votesFormatted = NRS.convertToNXT(response.votes);
+						resultFormatted = NRS.convertToNXT(response.result);
 						quorumFormatted = NRS.convertToNXT(response.quorum);
 						unitFormattted = "NXT";
 					}
 					if (vm == 2) {
 						icon = '<i class="fa fa-signal"></i>';
-						votesFormatted = String(response.votes);
+						resultFormatted = String(response.result);
 						quorumFormatted = String(response.quorum);
 						unitFormattted = "";
 					}
 					if (vm == 3) {
 						icon = '<i class="fa fa-bank"></i>';
-						votesFormatted = String(response.votes);
+						resultFormatted = String(response.result);
 						quorumFormatted = String(response.quorum);
 						unitFormattted = "";
 					}
 					var popover = "<table class='table table-striped'>";
-					popover += "<tr><td>Votes:</td><td>" + votesFormatted + " / " + quorumFormatted + " " + unitFormattted + "</td></tr>";
+					popover += "<tr><td>Votes:</td><td>" + resultFormatted + " / " + quorumFormatted + " " + unitFormattted + "</td></tr>";
 					popover += "<tr><td>Percentage:</td><td>" + percentageFormatted + "</td></tr>";
 					popover += "<tr><td>Finish Height:</td><td>" + finishHeightFormatted + "</td></tr>";
 					popover += "<tr><td>Finished:</td><td>" + finishedFormatted + "</td></tr>";
@@ -343,7 +344,7 @@ var NRS = (function(NRS, $, undefined) {
 					html += "<div class='label label-" + state + "' style='display:inline-block;margin-right:5px;'>" + icon + "</div>";
 					
 					if (vm == 0) {
-						html += '<span style="color:' + color + '">' + votesFormatted + '</span> / <span>' + quorumFormatted + '</span>';
+						html += '<span style="color:' + color + '">' + resultFormatted + '</span> / <span>' + quorumFormatted + '</span>';
 					} else {
 						html += '<div class="progress" style="display:inline-block;height:10px;width: 50px;">';
     					html += '<div class="progress-bar progress-bar-' + state + '" role="progressbar" aria-valuenow="' + percentageProgressBar + '" ';
