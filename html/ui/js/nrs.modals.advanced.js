@@ -24,13 +24,30 @@ var NRS = (function(NRS, $, undefined) {
 		$("#raw_transaction_modal").modal("show");
 	}
 
-	NRS.initAdvancedModalFormValues = function() {
+	NRS.initAdvancedModalFormValues = function($modal) {
 		$(".pending_number_accounts_group").find("input[name=phasingQuorum]").val(1);
 
-		var initBlockHeight = NRS.lastBlockHeight + 7000;
-		$elem = $(".pending_finish_height_group").find("input[name=phasingFinishHeight]");
-		$elem.val(initBlockHeight);
-		$elem.trigger("change");
+		var context = {
+			labelText: "Finish Height",
+			labelI18n: "finish_height",
+			helpI18n: "approve_transaction_finish_height_help",
+			inputName: "phasingFinishHeight",
+			initBlockHeight: NRS.lastBlockHeight + 7000,
+			changeHeightBlocks: 500
+		}
+		var $elems = NRS.initModalUIElement($modal, '.pending_finish_height_group', 'block_height_modal_ui_element', context);
+		$elems.find('input').prop("disabled", true);
+
+		context = {
+			labelText: "Currency",
+			labelI18n: "currency",
+			inputCodeName: "phasingHoldingCurrencyCode",
+			inputIdName: "phasingHolding",
+			inputDecimalsName: "phasingHoldingCurrencyDecimals",
+			helpI18n: "add_currency_modal_help"
+		}
+		$elems = NRS.initModalUIElement($modal, '', 'add_currency_modal_ui_element', context);
+		$elems.find('input').prop("disabled", true);
 	}
 
 	$("#transaction_operations_modal").on("show.bs.modal", function(e) {
