@@ -32,11 +32,22 @@ var NRS = (function(NRS, $, undefined) {
 			labelI18n: "finish_height",
 			helpI18n: "approve_transaction_finish_height_help",
 			inputName: "phasingFinishHeight",
-			inputAddon: "disabled",
 			initBlockHeight: NRS.lastBlockHeight + 7000,
 			changeHeightBlocks: 500
 		}
-		NRS.initModalUIElement($modal, 'block_height_modal_ui_element', context);		
+		var $elems = NRS.initModalUIElement($modal, '.pending_finish_height_group', 'block_height_modal_ui_element', context);
+		$elems.find('input').prop("disabled", true);
+
+		context = {
+			labelText: "Currency",
+			labelI18n: "currency",
+			inputCodeName: "phasingHoldingCurrencyCode",
+			inputIdName: "phasingHolding",
+			inputDecimalsName: "phasingHoldingCurrencyDecimals",
+			helpI18n: "add_currency_modal_help"
+		}
+		$elems = NRS.initModalUIElement($modal, '', 'add_currency_modal_ui_element', context);
+		$elems.find('input').prop("disabled", true);
 	}
 
 	$("#transaction_operations_modal").on("show.bs.modal", function(e) {
