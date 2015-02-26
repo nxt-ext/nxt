@@ -107,6 +107,32 @@ var NRS = (function(NRS, $, undefined) {
 			}
 			return;
 		}
+		// convert currency decimal amount to base unit
+		try {
+			var currencyFields = [
+				["phasingQuorumQNTf", "phasingHoldingCurrencyDecimals"]
+			];
+
+			for (var i = 0; i < currencyFields.length; i++) {
+				var decimalUnitField = currencyFields[i][0];
+				var decimalsField = currencyFields[i][1];
+				var field = decimalUnitField.replace("QNTf", "");
+
+				if (decimalUnitField in data) {
+					data[field] = NRS.convertToQNT(parseInt(data[decimalUnitField]), parseInt(data[decimalsField]));
+					delete data[decimalUnitField];
+					delete data[decimalsField];
+				}
+			}
+		} catch (err) {
+			if (callback) {
+				callback({
+					"errorCode": 1,
+					"errorDescription": err + " (" + $.t(field) + ")"
+				});
+			}
+			return;
+		}
 
 		if (!data.recipientPublicKey) {
 			delete data.recipientPublicKey;

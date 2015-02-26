@@ -103,6 +103,7 @@
   "available_balance": "Available Balance",
   "available_for_transfer": "__qty__ available for transfer",
   "available_units": "Currency units available",
+  "add_currency_modal_help": "Enter the currency code of a currency.",
   "block_height_estimate_help": "Estimation when block height entered will be reached.",
   "current_block_height_help": "Current block height for orientation.",
   "avg_amount_per_block": "Avg. Amount Per Block",
