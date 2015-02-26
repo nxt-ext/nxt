@@ -67,7 +67,17 @@ var NRS = (function(NRS, $, undefined) {
 				}
 			}
 		});
-
+		//feeNXT addition fields
+		var nxtAdditionFields = [
+			"feeNXT_approval_addition"
+		];
+		for (var i = 0; i < nxtAdditionFields.length; i++) {
+			var nxtAdditionField = nxtAdditionFields[i];
+			if (nxtAdditionField in data && "feeNXT" in data && parseInt(data[nxtAdditionField]) >= 0) {
+				data["feeNXT"] = String(parseInt(data["feeNXT"]) + parseInt(data[nxtAdditionField]));
+				delete data[nxtAdditionField];
+			}
+		}
 		//convert NXT to NQT...
 		try {
 			var nxtFields = [
@@ -271,6 +281,7 @@ var NRS = (function(NRS, $, undefined) {
 			currentPage: currentPage,
 			currentSubPage: currentSubPage,
 			shouldRetry: (type == "GET" ? 2 : undefined),
+			traditional: true,
 			data: data
 		}).done(function(response, status, xhr) {
 			if (NRS.console) {

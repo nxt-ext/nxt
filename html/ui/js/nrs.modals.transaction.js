@@ -1155,14 +1155,17 @@ var NRS = (function(NRS, $, undefined) {
 		return data;
 	};
 
-	NRS.getUnknownCurrencyData = function(transaction) {
-		var data = {
-			"status": "Currency Deleted or not Issued",
-			"type": transaction.type,
-			"subType": transaction.subtype
-		};
-		return data;
-	};
+   NRS.getUnknownCurrencyData = function (transaction) {
+      if (!transaction) {
+         return {};
+      }
+      var data = {
+         "status": "Currency Deleted or not Issued",
+         "type": transaction.type,
+         "subType": transaction.subtype
+      };
+      return data;
+   };
 
 	$("#transaction_info_modal").on("hide.bs.modal", function(e) {
 		NRS.removeDecryptionForm($(this));
