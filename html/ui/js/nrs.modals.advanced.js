@@ -24,13 +24,19 @@ var NRS = (function(NRS, $, undefined) {
 		$("#raw_transaction_modal").modal("show");
 	}
 
-	NRS.initAdvancedModalFormValues = function() {
+	NRS.initAdvancedModalFormValues = function($modal) {
 		$(".pending_number_accounts_group").find("input[name=phasingQuorum]").val(1);
 
-		var initBlockHeight = NRS.lastBlockHeight + 7000;
-		$elem = $(".pending_finish_height_group").find("input[name=phasingFinishHeight]");
-		$elem.val(initBlockHeight);
-		$elem.trigger("change");
+		var context = {
+			labelText: "Finish Height",
+			labelI18n: "finish_height",
+			helpI18n: "approve_transaction_finish_height_help",
+			inputName: "phasingFinishHeight",
+			inputAddon: "disabled",
+			initBlockHeight: NRS.lastBlockHeight + 7000,
+			changeHeightBlocks: 500
+		}
+		NRS.initModalUIElement($modal, 'block_height_modal_ui_element', context);		
 	}
 
 	$("#transaction_operations_modal").on("show.bs.modal", function(e) {

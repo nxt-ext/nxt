@@ -115,15 +115,7 @@
                             </div>
                         </div>
                         <div class="col-xs-6">
-                            <div class="form-group pending_finish_height_group block_height_group">
-                                <div style="float:right;">
-                                    <span class="bhg_time_estimate"></span>
-                                    <i class="fa fa-question-circle modal-context-help" data-content="" data-toggle="popover" data-trigger="hover" data-container="body" data-i18n="[data-content]block_height_estimate_help"></i>
-                                </div>
-                                <label for="{{name}}_pending_finish_height" data-i18n="finish_height">Finish Height</label>
-                                <i class="fa fa-question-circle modal-context-help" data-content="" data-toggle="popover" data-trigger="hover" data-container="#{{name}}_approve_modal" data-i18n="[data-content]approve_transaction_finish_height_help"></i>
-                                <input type="text" name="phasingFinishHeight" id="{{name}}_pending_finish_height" class="form-control bhg_time_input" placeholder="Finish Height" data-i18n="finish_height" disabled />
-                            </div>
+                            <div class="form-group pending_finish_height_group" data-modal-ui-element="block_height_modal_ui_element">test</div>
                         </div>
                     </div>
                     <input type="hidden" name="phased" value="true" disabled />
@@ -146,12 +138,12 @@
                         <div class="col-xs-6">
                             <div class="form-group pending_finish_height_group block_height_group">
                                 <div style="float:right;">
-                                    <span class="bhg_time_estimate"></span>
+                                    <span class="bhm_ue_time_estimate"></span>
                                     <i class="fa fa-question-circle modal-context-help" data-content="" data-toggle="popover" data-trigger="hover" data-container="body" data-i18n="[data-content]block_height_estimate_help"></i>
                                 </div>
                                 <label for="{{name}}_pending_finish_height" data-i18n="finish_height">Finish Height</label>
                                 <i class="fa fa-question-circle modal-context-help" data-content="" data-toggle="popover" data-trigger="hover" data-container="#{{name}}_approve_modal" data-i18n="[data-content]approve_transaction_finish_height_help"></i>
-                                <input type="text" name="phasingFinishHeight" id="{{name}}_pending_finish_height" class="form-control bhg_time_input" placeholder="Finish Height" data-i18n="finish_height" disabled />
+                                <input type="text" name="phasingFinishHeight" id="{{name}}_pending_finish_height" class="form-control bhm_ue_time_input" placeholder="Finish Height" data-i18n="finish_height" disabled />
                             </div>
                         </div>
                     </div>
