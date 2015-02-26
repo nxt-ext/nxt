@@ -29,7 +29,7 @@ var NRS = (function(NRS, $, undefined) {
 		});
 	}
 
-	$("#send_message_modal, #send_money_modal, #add_contact_modal").on("show.bs.modal", function(e) {
+	$("#send_message_modal, #send_money_modal, #transfer_currency_modal, #add_contact_modal").on("show.bs.modal", function(e) {
 		var $invoker = $(e.relatedTarget);
 
 		var account = $invoker.data("account");

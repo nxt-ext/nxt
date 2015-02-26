@@ -754,30 +754,69 @@ var NRS = (function(NRS, $, undefined) {
 	};
 	
 	/* Transfer Currency Model */
+   var currencyCodeField = $("#transfer_currency_code");
 	$("#transfer_currency_modal").on("show.bs.modal", function(e) {
 		var $invoker = $(e.relatedTarget);
 
 		var currency = $invoker.data("currency");
 		var currencyCode = $invoker.data("code");
-		var decimals = $invoker.data("decimals");
+      var decimals = $invoker.data("decimals");
 
 		$("#transfer_currency_currency").val(currency);
 		$("#transfer_currency_decimals").val(decimals);
-		$("#transfer_currency_code, #transfer_currency_units_code").html(String(currencyCode).escapeHTML());
-		$("#transfer_currency_available").html("");
-		
-		NRS.sendRequest("getAccountCurrencies", {
-			"currency": currency,
-			"account": NRS.accountRS
+      if (currencyCode) {
+         currencyCodeField.val(currencyCode);
+         currencyCodeField.prop("readonly", true);
+         $("#transfer_currency_units_code").html(String(currencyCode).escapeHTML());
+         $("#transfer_currency_modal").find(".modal-title").html($.t("Transfer Currency"));
+      } else {
+         currencyCodeField.val('');
+         currencyCodeField.prop("readonly", false);
+         $("#transfer_currency_units_code").html('');
+         $("#transfer_currency_modal").find(".modal-title").html($.t("Send Currency"));
+      }
+		$("#transfer_currency_available").html('');
+
+      if (currency) {
+         NRS.updateAvailableCurrency(currency);
+      }
+	});
+
+   currencyCodeField.blur(function() {
+      if (!currencyCodeField.val() || currencyCodeField.val() == '') {
+         return;
+      }
+      currencyCodeField.val(currencyCodeField.val().toUpperCase());
+		NRS.sendRequest("getCurrency", {
+			"code": currencyCodeField.val()
 		}, function(response) {
-			var availablecurrencysMessage = " - None Available for Transfer";
-			if (response.unconfirmedUnits && response.unconfirmedUnits != "0") {
-				availablecurrencysMessage = " - " + $.t("available_units") + " " + NRS.formatQuantity(response.unconfirmedUnits, response.decimals);
+         var transferCurrencyModal = $("#transfer_currency_modal");
+         if (response && !response.errorCode) {
+            $("#transfer_currency_currency").val(response.currency);
+        		$("#transfer_currency_decimals").val(response.decimals);
+            NRS.updateAvailableCurrency(response.currency);
+            $("#transfer_currency_units_code").html(String(response.code).escapeHTML());
+            transferCurrencyModal.find(".error_message").hide();
+			} else if (response.errorCode){
+            transferCurrencyModal.find(".error_message").html(response.errorDescription);
+            transferCurrencyModal.find(".error_message").show();
 			}
-			$("#transfer_currency_available").html(availablecurrencysMessage);
 		})
 	});
-	
+
+   NRS.updateAvailableCurrency = function(currency) {
+      NRS.sendRequest("getAccountCurrencies", {
+         "currency": currency,
+         "account": NRS.accountRS
+      }, function (response) {
+         var availableCurrencyMessage = "None Available for Transfer";
+         if (response.unconfirmedUnits && response.unconfirmedUnits != "0") {
+            availableCurrencyMessage = $.t("available_units") + " " + NRS.formatQuantity(response.unconfirmedUnits, response.decimals);
+         }
+         $("#transfer_currency_available").html(availableCurrencyMessage);
+      })
+   };
+
 	/* Publish Exchange Offer Model */
 	$("#publish_exchange_offer_modal").on("show.bs.modal", function(e) {
 		var $invoker = $(e.relatedTarget);

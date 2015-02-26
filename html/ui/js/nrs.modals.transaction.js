@@ -1054,7 +1054,7 @@ var NRS = (function(NRS, $, undefined) {
 	};
 
 	NRS.formatCurrencyExchange = function(currency, transaction, type) {
-		var rateUnitsStr = " [ NXT / " + currency.code + " ]";
+		var rateUnitsStr = " [ " + currency.code + " / NXT ]";
 		var data = {
 			"type": type == "sell" ? $.t("sell_currency") : $.t("buy_currency"),
 			"code": currency.code,
@@ -1099,7 +1099,7 @@ var NRS = (function(NRS, $, undefined) {
 	};
 
 	NRS.formatCurrencyOffer = function(currency, transaction) {
-		var rateUnitsStr = " [ NXT / " + currency.code + " ]";
+		var rateUnitsStr = " [ " + currency.code + " / NXT ]";
 		var buyOffer;
 		var sellOffer;
 		NRS.sendRequest("getOffer", {
