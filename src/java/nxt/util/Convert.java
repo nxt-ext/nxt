@@ -88,7 +88,7 @@ public final class Convert {
     }
 
     public static long parseAccountId(String account) {
-        if (account == null || account.trim().isEmpty()) {
+        if (account == null || (account = account.trim()).isEmpty()) {
             return 0;
         }
         account = account.toUpperCase();
