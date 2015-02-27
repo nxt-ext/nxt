@@ -32,3 +32,16 @@
         </span>
     </div>
 </div>
+
+<div id="add_asset_modal_ui_element">
+    <label for="{{modalName}}_{{labelI18n}}" data-i18n="{{labelI18n}}">{{labelText}}</label>
+    <i class="fa fa-question-circle modal-context-help" data-content="" data-toggle="popover" data-trigger="hover" data-container="#{{modalId}}" data-i18n="[data-content]{{helpI18n}}"></i>
+    <div class="input-group">
+        <input type="text"  class="form-control aam_ue_asset_id_input" name="{{inputIdName}}" size="20" maxlength="20" id="{{modalName}}_{{labelI18n}}" placeholder="Asset ID" data-i18n="[placeholder]asset_id" tabindex="2" />
+        <input type="hidden" class="aam_ue_asset_decimals_input" name="{{inputDecimalsName}}" disabled>
+        <span class="input-group-addon" style="min-width:440px;text-align:left;">
+            <span class="aam_ue_asset_name">-</span>
+        </span>
+    </div>
+</div>
+

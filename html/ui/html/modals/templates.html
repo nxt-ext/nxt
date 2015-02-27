@@ -148,10 +148,21 @@
                     <div class="row">
                         <div class="col-xs-6">
                             <div class="form-group">
-                                <label data-i18n="asset_id">Asset ID</label>
-                                <i class="fa fa-question-circle modal-context-help" data-content="Asset ID." data-toggle="popover" data-trigger="hover" data-container="#{{name}}_approve_modal" data-i18n="[data-content]approve_tx_asset_id_help"></i>
-                                <input type="text"  class="form-control" name="phasingHolding" id="{{name}}_asset_id" placeholder="Asset ID" data-i18n="[placeholder]asset_id" tabindex="2" disabled/>
+                                <label data-i18n="asset_quantity">Asset Quantity</label>
+                                <i class="fa fa-question-circle modal-context-help" data-content="" data-toggle="popover" data-trigger="hover" data-container="#{{name}}_approve_modal" data-i18n="[data-content]approve_transaction_amount_help"></i>
+                                <div class="input-group">
+                                    <input type="text" name="phasingQuorumQNTf" step="any" min="0" class="form-control" placeholder="Asset Quantity" data-i18n="[placeholder]asset_quantity" tabindex="3" disabled>
+                                    <span class="input-group-addon">Quantity</span>
+                                </div>
                             </div>
+                        </div>
+                        <div class="col-xs-6">
+                            <div class="form-group pending_finish_height_group" data-modal-ui-element="block_height_modal_ui_element"></div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-xs-12">
+                            <div class="form-group" data-modal-ui-element="add_asset_modal_ui_element"></div>
                         </div>
                     </div>
                     <input type="hidden" name="phased" value="true" disabled />
