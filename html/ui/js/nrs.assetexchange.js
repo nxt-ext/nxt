@@ -2041,6 +2041,78 @@ var NRS = (function(NRS, $, undefined) {
 		$("#open_orders_page tr[data-order=" + String(data.order).escapeHTML() + "]").addClass("tentative tentative-crossed").find("td.cancel").html("/");
 	}
 
+	var _selectedApprovalAsset = "";
+
+	NRS.buildApprovalRequestAssetNavi = function() {
+		$select = $('#approve_asset_select');
+		$select.empty();
+
+		var assetSelected = false;
+		var $noneOption = $('<option value=""></option>');
+
+		NRS.sendRequest("getAccountAssets", {
+         	"account": NRS.accountRS
+      	}, function (response) {
+      		if (response.accountAssets) {
+      			if (response.accountAssets.length > 0) {
+					$noneOption.html($.t('no_asset_selected_for_approval', 'No Asset Selected'));
+					$.each(response.accountAssets, function(key, asset) {
+						var idString = String(asset.asset);
+						var $option = $('<option value="' + idString + '">' + String(asset.name).escapeHTML() + '</option>');
+						if (idString == _selectedApprovalAsset) {
+							$option.attr('selected', true);
+							assetSelected = true;
+						}
+						$option.appendTo($select);
+					});
+				} else {
+					$noneOption.html($.t('account_has_no_assets', 'Account has no assets'));
+				}
+      		} else {
+      			$noneOption.html($.t('no_connection'));
+      		}
+      		if (!_selectedApprovalAsset || !assetSelected) {
+				$noneOption.attr('selected', true);
+			}
+      		$noneOption.prependTo($select);
+      	});
+	}
+
+	NRS.pages.approval_requests_asset = function() {
+		NRS.buildApprovalRequestAssetNavi();
+
+		if (_selectedApprovalAsset != "") {
+			var params = {
+				"asset": _selectedApprovalAsset,
+				"firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
+				"lastIndex": NRS.pageNumber * NRS.itemsPerPage
+			};
+			NRS.sendRequest("getAssetPendingTransactions", params, function(response) {
+				var rows = "";
+
+				if (response.transactions && response.transactions.length > 0) {
+					for (var i = 0; i < response.transactions.length; i++) {
+						t = response.transactions[i];
+						t.confirmed = true;
+						rows += NRS.getTransactionRowHTML(t, ['approve']);
+					}
+				} else {
+					$('#ar_asset_no_entries').html($.t('no_current_approval_requests', 'No current approval requests'));
+				}
+				NRS.dataLoaded(rows);
+				NRS.addPendingInfoToTransactionRows(response.transactions);	
+				});
+		} else {
+			$('#ar_asset_no_entries').html($.t('please_select_asset_for_approval', 'Please select an asset'));
+			NRS.dataLoaded();
+		}
+	}
+
+	$('#approve_asset_select').on('change', function() {
+		_selectedApprovalAsset = $(this).find('option:selected').val();
+		NRS.loadPage("approval_requests_asset");
+	});
+
 	NRS.setup.asset_exchange = function() {
 		var sidebarId = 'sidebar_asset_exchange';
 		var options = {
@@ -2078,6 +2150,12 @@ var NRS = (function(NRS, $, undefined) {
 			"titleHTML": '<span data-i18n="open_orders">Open Orders</span>',
 			"type": 'PAGE',
 			"page": 'open_orders'
+		}
+		NRS.appendMenuItemToTSMenuItem(sidebarId, options);
+		options = {
+			"titleHTML": '<span data-i18n="approval_requests">Approval Requests</span>',
+			"type": 'PAGE',
+			"page": 'approval_requests_asset'
 		}
 		NRS.appendMenuItemToTSMenuItem(sidebarId, options);
 		options = {
