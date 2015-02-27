@@ -111,7 +111,7 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	_loadAssetInfoForId = function() {
-		if (_assetId && _assetId.length >= 16) {
+		if (_assetId && _assetId.length > 0) {
 			NRS.sendRequest("getAsset", {
 				"asset": _assetId
 			}, function(response) {
