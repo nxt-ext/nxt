@@ -23,9 +23,6 @@ public final class GetBlocks extends APIServlet.APIRequestHandler {
 
         int firstIndex = ParameterParser.getFirstIndex(req);
         int lastIndex = ParameterParser.getLastIndex(req);
-        if (lastIndex < 0 || lastIndex - firstIndex > 99) {
-            lastIndex = firstIndex + 99;
-        }
 
         boolean includeTransactions = "true".equalsIgnoreCase(req.getParameter("includeTransactions"));
 
