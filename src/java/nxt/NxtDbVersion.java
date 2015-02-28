@@ -677,6 +677,14 @@ class NxtDbVersion extends DbVersion {
             case 260:
                 apply("CREATE INDEX IF NOT EXISTS currency_founder_account_id_idx ON currency_founder (account_id, height DESC)");
             case 261:
+                apply("ALTER TABLE trade ADD COLUMN IF NOT EXISTS is_buy BOOLEAN DEFAULT FALSE NOT NULL");
+            case 262:
+                apply("UPDATE trade SET is_buy = TRUE WHERE ask_order_height < bid_order_height OR (ask_order_height = bid_order_height "
+                        + "AND ask_order_id < bid_order_id)");
+            case 263:
+                BlockchainProcessorImpl.getInstance().scheduleScan(Constants.VOTING_SYSTEM_BLOCK, false);
+                apply(null);
+            case 264:
                 return;
             default:
                 throw new RuntimeException("Blockchain database inconsistent with code, probably trying to run older code on newer database");

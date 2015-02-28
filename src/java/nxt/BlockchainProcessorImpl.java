@@ -1079,7 +1079,8 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             TransactionProcessorImpl transactionProcessor = TransactionProcessorImpl.getInstance();
             int blockchainHeight = Nxt.getBlockchain().getHeight();
             if (height > blockchainHeight + 1) {
-                throw new IllegalArgumentException("Rollback height " + (height - 1) + " exceeds current blockchain height of " + blockchainHeight);
+                Logger.logMessage("Rollback height " + (height - 1) + " exceeds current blockchain height of " + blockchainHeight + ", no scan needed");
+                return;
             }
             if (height > 0 && height < getMinRollbackHeight()) {
                 Logger.logMessage("Rollback of more than " + Constants.MAX_ROLLBACK + " blocks not supported, will do a full scan");

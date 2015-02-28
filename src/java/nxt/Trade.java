@@ -147,7 +147,8 @@ public final class Trade {
         this.buyerId = bidOrder.getAccountId();
         this.dbKey = tradeDbKeyFactory.newKey(this.askOrderId, this.bidOrderId);
         this.quantityQNT = Math.min(askOrder.getQuantityQNT(), bidOrder.getQuantityQNT());
-        this.isBuy = askOrderHeight < bidOrderHeight || (askOrderHeight == bidOrderHeight && askOrderId < bidOrderId);
+        this.isBuy = askOrderHeight < bidOrderHeight || (askOrderHeight == bidOrderHeight &&
+                (this.height <= Constants.VOTING_SYSTEM_BLOCK ? askOrderId < bidOrderId : askOrder.getTransactionIndex() < bidOrder.getTransactionIndex()));
         this.priceNQT = isBuy ? askOrder.getPriceNQT() : bidOrder.getPriceNQT();
     }
 
@@ -165,26 +166,27 @@ public final class Trade {
         this.priceNQT = rs.getLong("price");
         this.timestamp = rs.getInt("timestamp");
         this.height = rs.getInt("height");
-        this.isBuy = askOrderHeight < bidOrderHeight || (askOrderHeight == bidOrderHeight && askOrderId < bidOrderId);
+        this.isBuy = rs.getBoolean("is_buy");
     }
 
     private void save(Connection con) throws SQLException {
         try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO trade (asset_id, block_id, "
-                + "ask_order_id, bid_order_id, ask_order_height, bid_order_height, seller_id, buyer_id, quantity, price, timestamp, height) "
-                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
+                + "ask_order_id, bid_order_id, ask_order_height, bid_order_height, seller_id, buyer_id, quantity, price, is_buy, timestamp, height) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
             int i = 0;
-            pstmt.setLong(++i, this.getAssetId());
-            pstmt.setLong(++i, this.getBlockId());
-            pstmt.setLong(++i, this.getAskOrderId());
-            pstmt.setLong(++i, this.getBidOrderId());
-            pstmt.setInt(++i, this.getAskOrderHeight());
-            pstmt.setInt(++i, this.getBidOrderHeight());
-            pstmt.setLong(++i, this.getSellerId());
-            pstmt.setLong(++i, this.getBuyerId());
-            pstmt.setLong(++i, this.getQuantityQNT());
-            pstmt.setLong(++i, this.getPriceNQT());
-            pstmt.setInt(++i, this.getTimestamp());
-            pstmt.setInt(++i, this.getHeight());
+            pstmt.setLong(++i, this.assetId);
+            pstmt.setLong(++i, this.blockId);
+            pstmt.setLong(++i, this.askOrderId);
+            pstmt.setLong(++i, this.bidOrderId);
+            pstmt.setInt(++i, this.askOrderHeight);
+            pstmt.setInt(++i, this.bidOrderHeight);
+            pstmt.setLong(++i, this.sellerId);
+            pstmt.setLong(++i, this.buyerId);
+            pstmt.setLong(++i, this.quantityQNT);
+            pstmt.setLong(++i, this.priceNQT);
+            pstmt.setBoolean(++i, this.isBuy);
+            pstmt.setInt(++i, this.timestamp);
+            pstmt.setInt(++i, this.height);
             pstmt.executeUpdate();
         }
     }

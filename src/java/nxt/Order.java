@@ -118,6 +118,10 @@ public abstract class Order {
         return creationHeight;
     }
 
+    public int getTransactionIndex() {
+        return transactionIndex;
+    }
+
     @Override
     public String toString() {
         return getClass().getSimpleName() + " id: " + Convert.toUnsignedLong(id) + " account: " + Convert.toUnsignedLong(accountId)
