@@ -682,9 +682,17 @@ class NxtDbVersion extends DbVersion {
                 apply("UPDATE trade SET is_buy = TRUE WHERE ask_order_height < bid_order_height OR (ask_order_height = bid_order_height "
                         + "AND ask_order_id < bid_order_id)");
             case 263:
-                BlockchainProcessorImpl.getInstance().scheduleScan(Constants.VOTING_SYSTEM_BLOCK, false);
+                BlockchainProcessorImpl.getInstance().scheduleScan(Constants.VOTING_SYSTEM_BLOCK, true);
                 apply(null);
             case 264:
+                apply("DROP INDEX IF EXISTS phasing_poll_voter_id_height_idx");
+            case 265:
+                apply("CREATE UNIQUE INDEX IF NOT EXISTS phasing_poll_voter_transaction_voter_idx ON phasing_poll_voter(transaction_id, voter_id)");
+            case 266:
+                apply("ALTER TABLE phasing_poll_voter DROP COLUMN IF EXISTS latest");
+            case 267:
+                apply("CREATE INDEX IF NOT EXISTS phasing_poll_voter_height_idx ON phasing_poll_voter(height)");
+            case 268:
                 return;
             default:
                 throw new RuntimeException("Blockchain database inconsistent with code, probably trying to run older code on newer database");
