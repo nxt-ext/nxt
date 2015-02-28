@@ -279,9 +279,6 @@ public final class PhasingPoll extends AbstractPoll {
         this.dbKey = phasingPollDbKeyFactory.newKey(this.id);
         this.quorum = appendix.getQuorum();
         this.whitelist = appendix.getWhitelist();
-        if (this.whitelist.length > 0) {
-            Arrays.sort(this.whitelist);
-        }
         this.fullHash = Convert.parseHexString(transaction.getFullHash());
     }
 
