@@ -1077,11 +1077,6 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         scheduleScan(height, validate);
         synchronized (blockchain) {
             TransactionProcessorImpl transactionProcessor = TransactionProcessorImpl.getInstance();
-            int blockchainHeight = Nxt.getBlockchain().getHeight();
-            if (height > blockchainHeight + 1) {
-                Logger.logMessage("Rollback height " + (height - 1) + " exceeds current blockchain height of " + blockchainHeight + ", no scan needed");
-                return;
-            }
             if (height > 0 && height < getMinRollbackHeight()) {
                 Logger.logMessage("Rollback of more than " + Constants.MAX_ROLLBACK + " blocks not supported, will do a full scan");
                 height = 0;
@@ -1097,6 +1092,13 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                  PreparedStatement pstmtSelect = con.prepareStatement("SELECT * FROM block WHERE height >= ? ORDER BY db_id ASC");
                  PreparedStatement pstmtDone = con.prepareStatement("UPDATE scan SET rescan = FALSE, height = 0, validate = FALSE")) {
                 isScanning = true;
+                int blockchainHeight = Nxt.getBlockchain().getHeight();
+                if (height > blockchainHeight + 1) {
+                    Logger.logMessage("Rollback height " + (height - 1) + " exceeds current blockchain height of " + blockchainHeight + ", no scan needed");
+                    pstmtDone.executeUpdate();
+                    Db.db.commitTransaction();
+                    return;
+                }
                 for (DerivedDbTable table : derivedTables) {
                     if (height == 0) {
                         table.truncate();
