@@ -729,7 +729,7 @@ public abstract class TransactionType {
                 int currentHeight = Nxt.getBlockchain().getHeight();
 
                 if (currentHeight < Constants.VOTING_SYSTEM_BLOCK) {
-                    throw new NxtException.NotYetEnabledException("Voting System not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
+                    throw new NxtException.NotYetEnabledException("Voting System not yet enabled at height " + Nxt.getBlockchain().getHeight());
                 }
 
                 Attachment.MessagingPollCreation attachment = (Attachment.MessagingPollCreation) transaction.getAttachment();
@@ -781,6 +781,11 @@ public abstract class TransactionType {
                 return false;
             }
 
+            @Override
+            public boolean allowsPhasing() {
+                return true;
+            }
+
         };
 
         public final static TransactionType VOTE_CASTING = new Messaging() {
@@ -814,7 +819,7 @@ public abstract class TransactionType {
             @Override
             void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
                 if (Nxt.getBlockchain().getHeight() < Constants.VOTING_SYSTEM_BLOCK) {
-                    throw new NxtException.NotYetEnabledException("Voting System not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
+                    throw new NxtException.NotYetEnabledException("Voting System not yet enabled at height " + Nxt.getBlockchain().getHeight());
                 }
 
                 Attachment.MessagingVoteCasting attachment = (Attachment.MessagingVoteCasting) transaction.getAttachment();
@@ -866,6 +871,11 @@ public abstract class TransactionType {
                 return false;
             }
 
+            @Override
+            public boolean allowsPhasing() {
+                return true;
+            }
+
         };
 
         public static final TransactionType PHASING_VOTE_CASTING = new Messaging() {
@@ -915,7 +925,7 @@ public abstract class TransactionType {
             void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
 
                 if (Nxt.getBlockchain().getHeight() < Constants.VOTING_SYSTEM_BLOCK) {
-                    throw new NxtException.NotYetEnabledException("Voting System not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
+                    throw new NxtException.NotYetEnabledException("Voting System not yet enabled at height " + Nxt.getBlockchain().getHeight());
                 }
 
                 Attachment.MessagingPhasingVoteCasting attachment = (Attachment.MessagingPhasingVoteCasting) transaction.getAttachment();
@@ -976,6 +986,12 @@ public abstract class TransactionType {
                     PhasingVote.addVote(poll, transaction);
                 }
             }
+
+            @Override
+            public boolean allowsPhasing() {
+                return true;
+            }
+
         };
 
         public static final TransactionType HUB_ANNOUNCEMENT = new Messaging() {
@@ -1008,8 +1024,8 @@ public abstract class TransactionType {
 
             @Override
             void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
-                if (Nxt.getBlockchain().getLastBlock().getHeight() < Constants.TRANSPARENT_FORGING_BLOCK_7) {
-                    throw new NxtException.NotYetEnabledException("Hub terminal announcement not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
+                if (Nxt.getBlockchain().getHeight() < Constants.TRANSPARENT_FORGING_BLOCK_7) {
+                    throw new NxtException.NotYetEnabledException("Hub terminal announcement not yet enabled at height " + Nxt.getBlockchain().getHeight());
                 }
                 Attachment.MessagingHubAnnouncement attachment = (Attachment.MessagingHubAnnouncement) transaction.getAttachment();
                 if (attachment.getMinFeePerByteNQT() < 0 || attachment.getMinFeePerByteNQT() > Constants.MAX_BALANCE_NQT
@@ -1028,6 +1044,11 @@ public abstract class TransactionType {
             @Override
             public boolean canHaveRecipient() {
                 return false;
+            }
+
+            @Override
+            public boolean allowsPhasing() {
+                return true;
             }
 
         };
@@ -1078,6 +1099,11 @@ public abstract class TransactionType {
             @Override
             public boolean canHaveRecipient() {
                 return false;
+            }
+
+            @Override
+            public boolean allowsPhasing() {
+                return true;
             }
 
         };
