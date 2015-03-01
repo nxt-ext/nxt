@@ -303,6 +303,10 @@ final class TransactionImpl implements Transaction {
             }
         }
 
+        if (this.phasing != null && !type.allowsPhasing()) {
+            throw new NxtException.NotValidException("Transactions of this type do not support phasing");
+        }
+
         for (Appendix.AbstractAppendix appendage : appendages) {
             if (! appendage.verifyVersion(this.version)) {
                 throw new NxtException.NotValidException("Invalid attachment version " + appendage.getVersion()
