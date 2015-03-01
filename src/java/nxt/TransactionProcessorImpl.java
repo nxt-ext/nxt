@@ -42,29 +42,6 @@ final class TransactionProcessorImpl implements TransactionProcessor {
         return instance;
     }
 
-    //register block listener to check 2-phased transactions finishing at the block height
-    static {
-        Nxt.getBlockchainProcessor().addListener(new Listener<Block>() {
-            @Override
-            public void notify(Block block) {
-                int height = block.getHeight();
-                if (height >= Constants.VOTING_SYSTEM_BLOCK) {
-                    try (Connection con = Db.db.getConnection();
-                         PreparedStatement pstmt = con.prepareStatement("SELECT transaction.* FROM transaction, phasing_poll " +
-                                 " WHERE phasing_poll.id = transaction.id AND phasing_poll.finish_height = ? " +
-                                 " AND phasing_poll.finished = FALSE AND phasing_poll.latest = TRUE")) {
-                        pstmt.setInt(1, height);
-                        for (TransactionImpl transaction : BlockchainImpl.getInstance().getTransactions(con, pstmt)) {
-                            transaction.getPhasing().finalVerification(transaction);
-                        }
-                    }  catch (SQLException e) {
-                        throw new RuntimeException(e.toString(), e);
-                    }
-                }
-            }
-        }, BlockchainProcessor.Event.AFTER_BLOCK_APPLY);
-    }
-
     final DbKey.LongKeyFactory<UnconfirmedTransaction> unconfirmedTransactionDbKeyFactory = new DbKey.LongKeyFactory<UnconfirmedTransaction>("id") {
 
         @Override

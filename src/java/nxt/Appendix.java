@@ -635,7 +635,7 @@ public interface Appendix {
             return PHASING_FEE;
         }
 
-        void release(TransactionImpl transaction) {
+        private void release(TransactionImpl transaction) {
             Account senderAccount = Account.getAccount(transaction.getSenderId());
             Account recipientAccount = Account.getAccount(transaction.getRecipientId());
             //apply all attachments and appendixes, except the phasing itself
@@ -648,18 +648,22 @@ public interface Appendix {
             Logger.logDebugMessage("Transaction " + transaction.getStringId() + " has been released");
         }
 
-        void finalVerification(TransactionImpl transaction) {
+        void reject(TransactionImpl transaction) {
+            Account senderAccount = Account.getAccount(transaction.getSenderId());
+            transaction.getType().undoAttachmentUnconfirmed(transaction, senderAccount);
+            senderAccount.addToUnconfirmedBalanceNQT(transaction.getAmountNQT());
+            TransactionProcessorImpl.getInstance().notifyListeners(Collections.singletonList(transaction), TransactionProcessor.Event.REJECT_PHASED_TRANSACTION);
+            Logger.logDebugMessage("Transaction " + transaction.getStringId() + " has been rejected");
+        }
+
+        void countVotes(TransactionImpl transaction) {
             PhasingPoll poll = PhasingPoll.getPoll(transaction.getId());
             long result = PhasingVote.countVotes(poll);
             poll.finish(result);
             if (result >= poll.getQuorum()) {
                 release(transaction);
             } else {
-                Account senderAccount = Account.getAccount(transaction.getSenderId());
-                transaction.getType().undoAttachmentUnconfirmed(transaction, senderAccount);
-                senderAccount.addToUnconfirmedBalanceNQT(transaction.getAmountNQT());
-                TransactionProcessorImpl.getInstance().notifyListeners(Collections.singletonList(transaction), TransactionProcessor.Event.REJECT_PHASED_TRANSACTION);
-                Logger.logDebugMessage("Transaction " + transaction.getStringId() + " has been refused");
+                reject(transaction);
             }
         }
 

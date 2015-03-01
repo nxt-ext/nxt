@@ -221,11 +221,6 @@ public final class Poll extends AbstractPoll {
         }
     }
 
-    @Override
-    public boolean isFinished() {
-        return finishHeight <= Nxt.getBlockchain().getHeight();
-    }
-
     public List<PollResult> getResults(VoteWeighting voteWeighting) {
         if (defaultVoteWeighting.equals(voteWeighting)) {
             return getResults();

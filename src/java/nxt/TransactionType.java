@@ -939,14 +939,7 @@ public abstract class TransactionType {
                 for (byte[] hash : pendingTransactionFullHashes) {
                     long pendingTransactionId = Convert.fullHashToId(hash);
                     PhasingPoll poll = PhasingPoll.getPoll(pendingTransactionId);
-                    if (!poll.isFinished()) {
-                        long result = PhasingVote.addVote(poll, transaction);
-                        if (result >= poll.getQuorum()) {
-                            poll.finish(result);
-                            TransactionImpl pendingTransaction = BlockchainImpl.getInstance().getTransaction(pendingTransactionId);
-                            pendingTransaction.getPhasing().release(pendingTransaction);
-                        }
-                    }
+                    PhasingVote.addVote(poll, transaction);
                 }
             }
         };

@@ -4,7 +4,6 @@ package nxt.http;
 import nxt.Account;
 import nxt.Attachment;
 import nxt.Constants;
-import nxt.Nxt;
 import nxt.NxtException;
 import nxt.PhasingPoll;
 import nxt.util.Convert;
@@ -45,7 +44,7 @@ public class ApproveTransaction extends CreateTransaction {
             if (phasingPoll == null) {
                 return UNKNOWN_TRANSACTION;
             }
-            if (phasingPoll.getFinishHeight() < Nxt.getBlockchain().getHeight()) {
+            if (phasingPoll.isFinished()) {
                 return INCORRECT_TRANSACTION;
             }
             pendingTransactionFullHashes.add(hash);

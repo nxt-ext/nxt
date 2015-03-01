@@ -372,14 +372,6 @@ final class BlockImpl implements Block {
         generatorAccount.apply(getGeneratorPublicKey(), this.height);
         generatorAccount.addToBalanceAndUnconfirmedBalanceNQT(totalFeeNQT);
         generatorAccount.addToForgedBalanceNQT(totalFeeNQT);
-        for (TransactionImpl transaction : getTransactions()) {
-            try {
-                transaction.apply();
-            } catch (RuntimeException e) {
-                Logger.logErrorMessage(e.toString(), e);
-                throw new BlockchainProcessor.TransactionNotAcceptedException(e, transaction);
-            }
-        }
     }
 
     void setPrevious(BlockImpl block) {
