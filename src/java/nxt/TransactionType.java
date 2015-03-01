@@ -315,6 +315,11 @@ public abstract class TransactionType {
                 }
             }
 
+            @Override
+            public boolean allowsPhasing() {
+                return true;
+            }
+
         };
 
     }
@@ -385,6 +390,11 @@ public abstract class TransactionType {
                 return false;
             }
 
+            @Override
+            public boolean allowsPhasing() {
+                return true;
+            }
+
         };
 
         public static final TransactionType ALIAS_ASSIGNMENT = new Messaging() {
@@ -444,6 +454,11 @@ public abstract class TransactionType {
             @Override
             public boolean canHaveRecipient() {
                 return false;
+            }
+
+            @Override
+            public boolean allowsPhasing() {
+                return true;
             }
 
         };
@@ -528,6 +543,11 @@ public abstract class TransactionType {
                 return false;
             }
 
+            @Override
+            public boolean allowsPhasing() {
+                return true;
+            }
+
         };
 
         public static final TransactionType ALIAS_BUY = new Messaging() {
@@ -557,7 +577,7 @@ public abstract class TransactionType {
                 final Attachment.MessagingAliasBuy attachment =
                         (Attachment.MessagingAliasBuy) transaction.getAttachment();
                 final String aliasName = attachment.getAliasName();
-                Alias.changeOwner(transaction.getSenderId(), aliasName, transaction.getBlockTimestamp());
+                Alias.changeOwner(transaction.getSenderId(), aliasName);
             }
 
             @Override
@@ -597,6 +617,11 @@ public abstract class TransactionType {
 
             @Override
             public boolean canHaveRecipient() {
+                return true;
+            }
+
+            @Override
+            public boolean allowsPhasing() {
                 return true;
             }
 
@@ -657,6 +682,11 @@ public abstract class TransactionType {
             @Override
             public boolean canHaveRecipient() {
                 return false;
+            }
+
+            @Override
+            public boolean allowsPhasing() {
+                return true;
             }
 
         };
