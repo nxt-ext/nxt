@@ -195,6 +195,7 @@ final class JSONData {
         json.put("priceNQT", String.valueOf(order.getPriceNQT()));
         json.put("height", order.getHeight());
         json.put("transactionIndex", order.getTransactionIndex());
+        json.put("transactionHeight", order.getTransactionHeight());
         return json;
     }
 

@@ -148,8 +148,19 @@ public final class Trade {
         this.buyerId = bidOrder.getAccountId();
         this.dbKey = tradeDbKeyFactory.newKey(this.askOrderId, this.bidOrderId);
         this.quantityQNT = Math.min(askOrder.getQuantityQNT(), bidOrder.getQuantityQNT());
-        this.isBuy = askOrderHeight < bidOrderHeight || (askOrderHeight == bidOrderHeight &&
-                (this.height <= Constants.VOTING_SYSTEM_BLOCK ? askOrderId < bidOrderId : askOrder.getTransactionIndex() < bidOrder.getTransactionIndex()));
+        if (askOrderHeight < bidOrderHeight) {
+            this.isBuy = true;
+        } else if (askOrderHeight == bidOrderHeight) {
+            if (this.height <= Constants.VOTING_SYSTEM_BLOCK) {
+                this.isBuy = askOrderId < bidOrderId;
+            } else {
+                this.isBuy = askOrder.getTransactionHeight() < bidOrder.getTransactionHeight() ||
+                        (askOrder.getTransactionHeight() == bidOrder.getTransactionHeight()
+                                && askOrder.getTransactionIndex() < bidOrder.getTransactionIndex());
+            }
+        } else {
+            this.isBuy = false;
+        }
         this.priceNQT = isBuy ? askOrder.getPriceNQT() : bidOrder.getPriceNQT();
     }
 

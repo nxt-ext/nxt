@@ -515,9 +515,6 @@ class NxtDbVersion extends DbVersion {
             case 191:
                 apply(null);
             case 192:
-                if (Constants.isTestnet) {
-                    BlockchainProcessorImpl.getInstance().scheduleScan(0, true);
-                }
                 apply(null);
             case 193:
                 apply("CREATE TABLE IF NOT EXISTS currency_supply (db_id IDENTITY, id BIGINT NOT NULL, "
@@ -532,7 +529,6 @@ class NxtDbVersion extends DbVersion {
             case 197:
                 apply("ALTER TABLE currency DROP COLUMN IF EXISTS current_reserve_per_unit_nqt");
             case 198:
-                BlockchainProcessorImpl.getInstance().scheduleScan(0, false);
                 apply(null);
             case 199:
                 apply("CALL FTL_REINDEX()");
@@ -677,16 +673,23 @@ class NxtDbVersion extends DbVersion {
             case 260:
                 apply("CREATE INDEX IF NOT EXISTS currency_founder_account_id_idx ON currency_founder (account_id, height DESC)");
             case 261:
-                apply("ALTER TABLE trade ADD COLUMN IF NOT EXISTS is_buy BOOLEAN DEFAULT FALSE NOT NULL");
+                apply("TRUNCATE TABLE trade");
             case 262:
-                apply("UPDATE trade SET is_buy = TRUE WHERE ask_order_height < bid_order_height OR (ask_order_height = bid_order_height "
-                        + "AND ask_order_id < bid_order_id)");
+                apply("ALTER TABLE trade ADD COLUMN IF NOT EXISTS is_buy BOOLEAN NOT NULL");
             case 263:
-                BlockchainProcessorImpl.getInstance().scheduleScan(Constants.VOTING_SYSTEM_BLOCK, true);
-                apply(null);
-            case 264:
                 apply("CREATE INDEX IF NOT EXISTS phasing_poll_voter_height_idx ON phasing_poll_voter(height)");
+            case 264:
+                apply("TRUNCATE TABLE ask_order");
             case 265:
+                apply("ALTER TABLE ask_order ADD COLUMN IF NOT EXISTS transaction_height INT NOT NULL");
+            case 266:
+                apply("TRUNCATE TABLE bid_order");
+            case 267:
+                apply("ALTER TABLE bid_order ADD COLUMN IF NOT EXISTS transaction_height INT NOT NULL");
+            case 268:
+                BlockchainProcessorImpl.getInstance().scheduleScan(0, false);
+                apply(null);
+            case 269:
                 return;
             default:
                 throw new RuntimeException("Blockchain database inconsistent with code, probably trying to run older code on newer database");

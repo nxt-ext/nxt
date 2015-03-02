@@ -55,6 +55,7 @@ public abstract class Order {
     private final long priceNQT;
     private final int creationHeight;
     private final short transactionIndex;
+    private final int transactionHeight;
 
     private long quantityQNT;
 
@@ -66,6 +67,7 @@ public abstract class Order {
         this.priceNQT = attachment.getPriceNQT();
         this.creationHeight = Nxt.getBlockchain().getHeight();
         this.transactionIndex = transaction.getIndex();
+        this.transactionHeight = transaction.getHeight();
     }
 
     private Order(ResultSet rs) throws SQLException {
@@ -76,11 +78,12 @@ public abstract class Order {
         this.quantityQNT = rs.getLong("quantity");
         this.creationHeight = rs.getInt("creation_height");
         this.transactionIndex = rs.getShort("transaction_index");
+        this.transactionHeight = rs.getInt("transaction_height");
     }
 
     private void save(Connection con, String table) throws SQLException {
         try (PreparedStatement pstmt = con.prepareStatement("MERGE INTO " + table + " (id, account_id, asset_id, "
-                + "price, quantity, creation_height, transaction_index, height, latest) KEY (id, height) VALUES (?, ?, ?, ?, ?, ?, ?, ?, TRUE)")) {
+                + "price, quantity, creation_height, transaction_index, transaction_height, height, latest) KEY (id, height) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, TRUE)")) {
             int i = 0;
             pstmt.setLong(++i, this.id);
             pstmt.setLong(++i, this.accountId);
@@ -89,6 +92,7 @@ public abstract class Order {
             pstmt.setLong(++i, this.quantityQNT);
             pstmt.setInt(++i, this.creationHeight);
             pstmt.setShort(++i, this.transactionIndex);
+            pstmt.setInt(++i, this.transactionHeight);
             pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
             pstmt.executeUpdate();
         }
@@ -122,11 +126,15 @@ public abstract class Order {
         return transactionIndex;
     }
 
+    public final int getTransactionHeight() {
+        return transactionHeight;
+    }
+
     @Override
     public String toString() {
         return getClass().getSimpleName() + " id: " + Convert.toUnsignedLong(id) + " account: " + Convert.toUnsignedLong(accountId)
                 + " asset: " + Convert.toUnsignedLong(assetId) + " price: " + priceNQT + " quantity: " + quantityQNT
-                + " height: " + creationHeight + " transactionIndex: " + transactionIndex;
+                + " height: " + creationHeight + " transactionIndex: " + transactionIndex + " transactionHeight: " + transactionHeight;
     }
 
     private void setQuantityQNT(long quantityQNT) {
@@ -208,13 +216,13 @@ public abstract class Order {
 
         public static DbIterator<Ask> getSortedOrders(long assetId, int from, int to) {
             return askOrderTable.getManyBy(new DbClause.LongClause("asset_id", assetId), from, to,
-                    " ORDER BY price ASC, creation_height ASC, transaction_index ASC ");
+                    " ORDER BY price ASC, creation_height ASC, transaction_height ASC, transaction_index ASC ");
         }
 
         private static Ask getNextOrder(long assetId) {
             try (Connection con = Db.db.getConnection();
                  PreparedStatement pstmt = con.prepareStatement("SELECT * FROM ask_order WHERE asset_id = ? "
-                         + "AND latest = TRUE ORDER BY price ASC, creation_height ASC, transaction_index ASC LIMIT 1")) {
+                         + "AND latest = TRUE ORDER BY price ASC, creation_height ASC, transaction_height ASC, transaction_index ASC LIMIT 1")) {
                 pstmt.setLong(1, assetId);
                 try (DbIterator<Ask> askOrders = askOrderTable.getManyBy(con, pstmt, true)) {
                     return askOrders.hasNext() ? askOrders.next() : null;
@@ -337,13 +345,13 @@ public abstract class Order {
 
         public static DbIterator<Bid> getSortedOrders(long assetId, int from, int to) {
             return bidOrderTable.getManyBy(new DbClause.LongClause("asset_id", assetId), from, to,
-                    " ORDER BY price DESC, creation_height ASC, transaction_index ASC ");
+                    " ORDER BY price DESC, creation_height ASC, transaction_height ASC, transaction_index ASC ");
         }
 
         private static Bid getNextOrder(long assetId) {
             try (Connection con = Db.db.getConnection();
                  PreparedStatement pstmt = con.prepareStatement("SELECT * FROM bid_order WHERE asset_id = ? "
-                         + "AND latest = TRUE ORDER BY price DESC, creation_height ASC, transaction_index ASC LIMIT 1")) {
+                         + "AND latest = TRUE ORDER BY price DESC, creation_height ASC, transaction_height ASC, transaction_index ASC LIMIT 1")) {
                 pstmt.setLong(1, assetId);
                 try (DbIterator<Bid> bidOrders = bidOrderTable.getManyBy(con, pstmt, true)) {
                     return bidOrders.hasNext() ? bidOrders.next() : null;

@@ -1300,7 +1300,7 @@ public abstract class TransactionType {
 
             @Override
             public final boolean allowsPhasing() {
-                return false;
+                return true;
             }
 
         }
