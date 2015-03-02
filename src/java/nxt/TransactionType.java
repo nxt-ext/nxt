@@ -239,9 +239,7 @@ public abstract class TransactionType {
         return canHaveRecipient();
     }
 
-    public boolean allowsPhasing() {
-        return false;
-    }
+    public abstract boolean allowsPhasing();
 
     public Fee getBaselineFee(Transaction transaction) throws NxtException.NotValidException {
         return Fee.DEFAULT_FEE;
@@ -1296,7 +1294,12 @@ public abstract class TransactionType {
             }
 
             @Override
-            final public boolean canHaveRecipient() {
+            public final boolean canHaveRecipient() {
+                return false;
+            }
+
+            @Override
+            public final boolean allowsPhasing() {
                 return false;
             }
 
