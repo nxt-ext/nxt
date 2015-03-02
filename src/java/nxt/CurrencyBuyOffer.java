@@ -100,7 +100,7 @@ public final class CurrencyBuyOffer extends CurrencyExchangeOffer {
 
     private CurrencyBuyOffer(Transaction transaction, Attachment.MonetarySystemPublishExchangeOffer attachment) {
         super(transaction.getId(), attachment.getCurrencyId(), transaction.getSenderId(), attachment.getBuyRateNQT(),
-                attachment.getTotalBuyLimit(), attachment.getInitialBuySupply(), attachment.getExpirationHeight(), transaction.getHeight(),
+                attachment.getTotalBuyLimit(), attachment.getInitialBuySupply(), attachment.getExpirationHeight(),
                 transaction.getIndex());
         this.dbKey = buyOfferDbKeyFactory.newKey(id);
     }

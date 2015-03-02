@@ -100,7 +100,7 @@ public final class CurrencySellOffer extends CurrencyExchangeOffer {
 
     private CurrencySellOffer(Transaction transaction, Attachment.MonetarySystemPublishExchangeOffer attachment) {
         super(transaction.getId(), attachment.getCurrencyId(), transaction.getSenderId(), attachment.getSellRateNQT(),
-                attachment.getTotalSellLimit(), attachment.getInitialSellSupply(), attachment.getExpirationHeight(), transaction.getHeight(),
+                attachment.getTotalSellLimit(), attachment.getInitialSellSupply(), attachment.getExpirationHeight(),
                 transaction.getIndex());
         this.dbKey = sellOfferDbKeyFactory.newKey(id);
     }

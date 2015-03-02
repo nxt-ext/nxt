@@ -172,7 +172,7 @@ public abstract class CurrencyExchangeOffer {
     protected final short transactionIndex;
 
     protected CurrencyExchangeOffer(long id, long currencyId, long accountId, long rateNQT, long limit, long supply,
-                                    int expirationHeight, int creationHeight, short transactionIndex) {
+                                    int expirationHeight, short transactionIndex) {
         this.id = id;
         this.currencyId = currencyId;
         this.accountId = accountId;
@@ -180,7 +180,7 @@ public abstract class CurrencyExchangeOffer {
         this.limit = limit;
         this.supply = supply;
         this.expirationHeight = expirationHeight;
-        this.creationHeight = creationHeight;
+        this.creationHeight = Nxt.getBlockchain().getHeight();
         this.transactionIndex = transactionIndex;
     }
 
@@ -201,14 +201,14 @@ public abstract class CurrencyExchangeOffer {
                 + "rate, unit_limit, supply, expiration_height, creation_height, transaction_index, height, latest) "
                 + "KEY (id, height) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, TRUE)")) {
             int i = 0;
-            pstmt.setLong(++i, this.getId());
-            pstmt.setLong(++i, this.getCurrencyId());
-            pstmt.setLong(++i, this.getAccountId());
-            pstmt.setLong(++i, this.getRateNQT());
-            pstmt.setLong(++i, this.getLimit());
-            pstmt.setLong(++i, this.getSupply());
-            pstmt.setInt(++i, this.getExpirationHeight());
-            pstmt.setInt(++i, this.getHeight());
+            pstmt.setLong(++i, this.id);
+            pstmt.setLong(++i, this.currencyId);
+            pstmt.setLong(++i, this.accountId);
+            pstmt.setLong(++i, this.rateNQT);
+            pstmt.setLong(++i, this.limit);
+            pstmt.setLong(++i, this.supply);
+            pstmt.setInt(++i, this.expirationHeight);
+            pstmt.setInt(++i, this.creationHeight);
             pstmt.setShort(++i, this.transactionIndex);
             pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
             pstmt.executeUpdate();

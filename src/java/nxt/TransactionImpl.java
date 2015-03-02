@@ -842,7 +842,7 @@ final class TransactionImpl implements Transaction {
 
     void apply() {
         Account senderAccount = Account.getAccount(getSenderId());
-        senderAccount.apply(getSenderPublicKey(), this.getHeight());
+        senderAccount.apply(getSenderPublicKey());
         Account recipientAccount = Account.getAccount(recipientId);
         if (recipientAccount == null && recipientId != 0) {
             recipientAccount = Account.addOrGetAccount(recipientId);
