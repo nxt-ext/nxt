@@ -460,7 +460,7 @@ public abstract class MonetarySystem extends TransactionType {
 
         @Override
         public boolean allowsPhasing() {
-            return false;
+            return true;
         }
 
     };
