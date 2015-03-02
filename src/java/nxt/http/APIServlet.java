@@ -35,15 +35,15 @@ public final class APIServlet extends HttpServlet {
         private final Set<APITag> apiTags;
 
         APIRequestHandler(APITag[] apiTags, String... parameters) {
-            List<String> parametersList;
-            if (requirePassword() && ! API.disableAdminPassword) {
-                parametersList = new ArrayList<>(parameters.length + 1);
-                parametersList.add("adminPassword");
-                parametersList.addAll(Arrays.asList(parameters));
+            List<String> origParameters = Arrays.asList(parameters);
+            if ((requirePassword() || origParameters.contains("lastIndex")) && ! API.disableAdminPassword) {
+                List<String> newParameters = new ArrayList<>(parameters.length + 1);
+                newParameters.add("adminPassword");
+                newParameters.addAll(origParameters);
+                this.parameters = Collections.unmodifiableList(newParameters);
             } else {
-                parametersList = Arrays.asList(parameters);
+                this.parameters = origParameters;
             }
-            this.parameters = Collections.unmodifiableList(parametersList);
             this.apiTags = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(apiTags)));
         }
 

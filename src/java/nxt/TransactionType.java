@@ -553,7 +553,7 @@ public abstract class TransactionType {
                 final Attachment.MessagingAliasBuy attachment =
                         (Attachment.MessagingAliasBuy) transaction.getAttachment();
                 final String aliasName = attachment.getAliasName();
-                Alias.changeOwner(transaction.getSenderId(), aliasName, transaction.getBlockTimestamp());
+                Alias.changeOwner(transaction.getSenderId(), aliasName);
             }
 
             @Override
@@ -695,7 +695,7 @@ public abstract class TransactionType {
                 int currentHeight = Nxt.getBlockchain().getHeight();
 
                 if (currentHeight < Constants.VOTING_SYSTEM_BLOCK) {
-                    throw new NxtException.NotYetEnabledException("Voting System not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
+                    throw new NxtException.NotYetEnabledException("Voting System not yet enabled at height " + Nxt.getBlockchain().getHeight());
                 }
 
                 Attachment.MessagingPollCreation attachment = (Attachment.MessagingPollCreation) transaction.getAttachment();
@@ -780,7 +780,7 @@ public abstract class TransactionType {
             @Override
             void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
                 if (Nxt.getBlockchain().getHeight() < Constants.VOTING_SYSTEM_BLOCK) {
-                    throw new NxtException.NotYetEnabledException("Voting System not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
+                    throw new NxtException.NotYetEnabledException("Voting System not yet enabled at height " + Nxt.getBlockchain().getHeight());
                 }
 
                 Attachment.MessagingVoteCasting attachment = (Attachment.MessagingVoteCasting) transaction.getAttachment();
@@ -881,7 +881,7 @@ public abstract class TransactionType {
             void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
 
                 if (Nxt.getBlockchain().getHeight() < Constants.VOTING_SYSTEM_BLOCK) {
-                    throw new NxtException.NotYetEnabledException("Voting System not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
+                    throw new NxtException.NotYetEnabledException("Voting System not yet enabled at height " + Nxt.getBlockchain().getHeight());
                 }
 
                 Attachment.MessagingPhasingVoteCasting attachment = (Attachment.MessagingPhasingVoteCasting) transaction.getAttachment();
@@ -939,16 +939,10 @@ public abstract class TransactionType {
                 for (byte[] hash : pendingTransactionFullHashes) {
                     long pendingTransactionId = Convert.fullHashToId(hash);
                     PhasingPoll poll = PhasingPoll.getPoll(pendingTransactionId);
-                    if (!poll.isFinished()) {
-                        long result = PhasingVote.addVote(poll, transaction);
-                        if (result >= poll.getQuorum()) {
-                            poll.finish(result);
-                            TransactionImpl pendingTransaction = BlockchainImpl.getInstance().getTransaction(pendingTransactionId);
-                            pendingTransaction.getPhasing().release(pendingTransaction);
-                        }
-                    }
+                    PhasingVote.addVote(poll, transaction);
                 }
             }
+
         };
 
         public static final TransactionType HUB_ANNOUNCEMENT = new Messaging() {
@@ -981,8 +975,8 @@ public abstract class TransactionType {
 
             @Override
             void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
-                if (Nxt.getBlockchain().getLastBlock().getHeight() < Constants.TRANSPARENT_FORGING_BLOCK_7) {
-                    throw new NxtException.NotYetEnabledException("Hub terminal announcement not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
+                if (Nxt.getBlockchain().getHeight() < Constants.TRANSPARENT_FORGING_BLOCK_7) {
+                    throw new NxtException.NotYetEnabledException("Hub terminal announcement not yet enabled at height " + Nxt.getBlockchain().getHeight());
                 }
                 Attachment.MessagingHubAnnouncement attachment = (Attachment.MessagingHubAnnouncement) transaction.getAttachment();
                 if (attachment.getMinFeePerByteNQT() < 0 || attachment.getMinFeePerByteNQT() > Constants.MAX_BALANCE_NQT
@@ -1233,7 +1227,7 @@ public abstract class TransactionType {
             }
 
             @Override
-            final public boolean canHaveRecipient() {
+            public final boolean canHaveRecipient() {
                 return false;
             }
 
@@ -1359,7 +1353,7 @@ public abstract class TransactionType {
             }
 
             @Override
-            public boolean canHaveRecipient() {
+            public final boolean canHaveRecipient() {
                 return false;
             }
 
@@ -1834,7 +1828,7 @@ public abstract class TransactionType {
                 if (attachment.getQuantity() > goods.getQuantity() || attachment.getPriceNQT() != goods.getPriceNQT()) {
                     throw new NxtException.NotCurrentlyValidException("Goods price or quantity changed: " + attachment.getJSONObject());
                 }
-                if (attachment.getDeliveryDeadlineTimestamp() <= Nxt.getBlockchain().getLastBlock().getTimestamp()) {
+                if (attachment.getDeliveryDeadlineTimestamp() <= Nxt.getBlockchain().getLastBlockTimestamp()) {
                     throw new NxtException.NotCurrentlyValidException("Delivery deadline has already expired: " + attachment.getDeliveryDeadlineTimestamp());
                 }
             }

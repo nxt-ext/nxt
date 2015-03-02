@@ -206,7 +206,7 @@ public final class Currency {
         this.initialSupply = attachment.getInitialSupply();
         this.reserveSupply = attachment.getReserveSupply();
         this.maxSupply = attachment.getMaxSupply();
-        this.creationHeight = transaction.getHeight();
+        this.creationHeight = Nxt.getBlockchain().getHeight();
         this.issuanceHeight = attachment.getIssuanceHeight();
         this.minReservePerUnitNQT = attachment.getMinReservePerUnitNQT();
         this.minDifficulty = attachment.getMinDifficulty();
@@ -243,23 +243,23 @@ public final class Currency {
                 + "min_difficulty, max_difficulty, ruleset, algorithm, decimals, height, latest) "
                 + "KEY (id, height) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, TRUE)")) {
             int i = 0;
-            pstmt.setLong(++i, this.getId());
-            pstmt.setLong(++i, this.getAccountId());
-            pstmt.setString(++i, this.getName());
-            pstmt.setString(++i, this.getCode());
-            pstmt.setString(++i, this.getDescription());
-            pstmt.setInt(++i, this.getType());
-            pstmt.setLong(++i, this.getInitialSupply());
-            pstmt.setLong(++i, this.getReserveSupply());
-            pstmt.setLong(++i, this.getMaxSupply());
-            pstmt.setInt(++i, this.getCreationHeight());
-            pstmt.setInt(++i, this.getIssuanceHeight());
-            pstmt.setLong(++i, this.getMinReservePerUnitNQT());
-            pstmt.setByte(++i, (byte)this.getMinDifficulty());
-            pstmt.setByte(++i, (byte)this.getMaxDifficulty());
-            pstmt.setByte(++i, this.getRuleset());
-            pstmt.setByte(++i, this.getAlgorithm());
-            pstmt.setByte(++i, this.getDecimals());
+            pstmt.setLong(++i, this.currencyId);
+            pstmt.setLong(++i, this.accountId);
+            pstmt.setString(++i, this.name);
+            pstmt.setString(++i, this.code);
+            pstmt.setString(++i, this.description);
+            pstmt.setInt(++i, this.type);
+            pstmt.setLong(++i, this.initialSupply);
+            pstmt.setLong(++i, this.reserveSupply);
+            pstmt.setLong(++i, this.maxSupply);
+            pstmt.setInt(++i, this.creationHeight);
+            pstmt.setInt(++i, this.issuanceHeight);
+            pstmt.setLong(++i, this.minReservePerUnitNQT);
+            pstmt.setByte(++i, (byte)this.minDifficulty);
+            pstmt.setByte(++i, (byte)this.maxDifficulty);
+            pstmt.setByte(++i, this.ruleset);
+            pstmt.setByte(++i, this.algorithm);
+            pstmt.setByte(++i, this.decimals);
             pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
             pstmt.executeUpdate();
         }

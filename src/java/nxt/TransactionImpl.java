@@ -271,7 +271,11 @@ final class TransactionImpl implements Transaction {
         this.appendagesSize = appendagesSize;
         if (builder.feeNQT <= 0) {
             int effectiveHeight = (height < Integer.MAX_VALUE ? height : Nxt.getBlockchain().getHeight());
-            feeNQT = getMinimumFeeNQT(effectiveHeight);
+            if (this.phasing == null) {
+                feeNQT = getMinimumFeeNQT(effectiveHeight);
+            } else {
+                feeNQT = Math.max(getMinimumFeeNQT(effectiveHeight), getMinimumFeeNQT(phasing.getFinishHeight()));
+            }
         } else {
             feeNQT = builder.feeNQT;
         }
@@ -838,7 +842,7 @@ final class TransactionImpl implements Transaction {
 
     void apply() {
         Account senderAccount = Account.getAccount(getSenderId());
-        senderAccount.apply(getSenderPublicKey(), this.getHeight());
+        senderAccount.apply(getSenderPublicKey());
         Account recipientAccount = Account.getAccount(recipientId);
         if (recipientAccount == null && recipientId != 0) {
             recipientAccount = Account.addOrGetAccount(recipientId);

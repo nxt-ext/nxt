@@ -67,7 +67,7 @@ var NRS = (function(NRS, $, undefined) {
 	//add_currency_modal_ui_element
 	_currencyCode = null;
 	_acmElem = null;
-	_setCurrencyInfoNotExisting = function() {
+	_setAssetInfoNotExisting = function() {
 		$(_acmElem).find('.acm_ue_currency_id').html($.t('not_existing', 'Not existing'));
 		$(_acmElem).find('.acm_ue_currency_id_input').val("");
 		$(_acmElem).find('.acm_ue_currency_id_input').prop("disabled", true);
@@ -87,11 +87,11 @@ var NRS = (function(NRS, $, undefined) {
 					$(_acmElem).find('.acm_ue_currency_decimals_input').val(String(response.decimals));
 					$(_acmElem).find('.acm_ue_currency_decimals_input').prop("disabled", false);
 				} else {
-					_setCurrencyInfoNotExisting();
+					_setAssetInfoNotExisting();
 				}
 			});
 		} else {
-			_setCurrencyInfoNotExisting();
+			_setAssetInfoNotExisting();
 		}
 	}
 
@@ -99,6 +99,39 @@ var NRS = (function(NRS, $, undefined) {
 		_acmElem = $(this).closest('div[data-modal-ui-element="add_currency_modal_ui_element"]');
 		_currencyCode = $(this).val();
 		_delay(_loadCurrencyInfoForCode, 1000 );
+	});
+
+	//add_asset_modal_ui_element
+	_assetId = null;
+	_aamElem = null;
+	_setAssetInfoNotExisting = function() {
+		$(_aamElem).find('.aam_ue_asset_name').html($.t('not_existing', 'Not existing'));
+		$(_aamElem).find('.aam_ue_asset_decimals_input').val("");
+		$(_aamElem).find('.aam_ue_asset_decimals_input').prop("disabled", true);
+	}
+
+	_loadAssetInfoForId = function() {
+		if (_assetId && _assetId.length > 0) {
+			NRS.sendRequest("getAsset", {
+				"asset": _assetId
+			}, function(response) {
+				if (response && response.asset) {
+					$(_aamElem).find('.aam_ue_asset_name').html(String(response.name));
+					$(_aamElem).find('.aam_ue_asset_decimals_input').val(String(response.decimals));
+					$(_aamElem).find('.aam_ue_asset_decimals_input').prop("disabled", false);
+				} else {
+					_setAssetInfoNotExisting();
+				}
+			});
+		} else {
+			_setAssetInfoNotExisting();
+		}
+	}
+
+	$('body').on('keyup', '.modal div[data-modal-ui-element="add_asset_modal_ui_element"] .aam_ue_asset_id_input', function(e) {
+		_aamElem = $(this).closest('div[data-modal-ui-element="add_asset_modal_ui_element"]');
+		_assetId = $(this).val();
+		_delay(_loadAssetInfoForId, 1000 );
 	});
 
 

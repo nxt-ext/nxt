@@ -18,12 +18,13 @@ public final class GetExchanges extends APIServlet.APIRequestHandler {
     static final GetExchanges instance = new GetExchanges();
 
     private GetExchanges() {
-        super(new APITag[] {APITag.MS}, "currency", "account", "firstIndex", "lastIndex", "includeCurrencyInfo");
+        super(new APITag[] {APITag.MS}, "currency", "account", "firstIndex", "lastIndex", "timestamp", "includeCurrencyInfo");
     }
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
 
+        int timestamp = ParameterParser.getTimestamp(req);
         String currencyId = Convert.emptyToNull(req.getParameter("currency"));
         String accountId = Convert.emptyToNull(req.getParameter("account"));
         boolean includeCurrencyInfo = !"false".equalsIgnoreCase(req.getParameter("includeCurrencyInfo"));
@@ -47,7 +48,11 @@ public final class GetExchanges extends APIServlet.APIRequestHandler {
                 exchanges = Exchange.getAccountCurrencyExchanges(account.getId(), currency.getId(), firstIndex, lastIndex);
             }
             while (exchanges.hasNext()) {
-                exchangesData.add(JSONData.exchange(exchanges.next(), includeCurrencyInfo));
+                Exchange exchange = exchanges.next();
+                if (exchange.getTimestamp() < timestamp) {
+                    break;
+                }
+                exchangesData.add(JSONData.exchange(exchange, includeCurrencyInfo));
             }
         } finally {
             DbUtils.close(exchanges);

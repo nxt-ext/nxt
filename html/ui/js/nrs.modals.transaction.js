@@ -1182,6 +1182,8 @@ var NRS = (function(NRS, $, undefined) {
 		e.preventDefault();
 		$('#approve_transaction_modal .at_transaction_full_hash_display').text($(this).data("transaction"));
 		$('#approve_transaction_modal #at_transaction_full_hash').val($(this).data("fullHash"));
+		$('#approve_transaction_modal .advanced_fee').html($(this).data("transactionFee") + " NXT");
+		$('#approve_transaction_modal input[name="feeNXT"]').val($(this).data("transactionFee"));
 	});
 
 	$("#approve_transaction_button").on("click", function(e) {

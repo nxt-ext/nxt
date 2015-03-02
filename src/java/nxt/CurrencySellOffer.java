@@ -55,7 +55,7 @@ public final class CurrencySellOffer extends CurrencyExchangeOffer {
         if (availableOnly) {
             dbClause = dbClause.and(availableOnlyDbClause);
         }
-        return sellOfferTable.getManyBy(dbClause, from, to, " ORDER BY rate ASC, creation_height ASC, transaction_index ASC ");
+        return sellOfferTable.getManyBy(dbClause, from, to, " ORDER BY rate ASC, creation_height ASC, transaction_height ASC, transaction_index ASC ");
     }
 
     public static DbIterator<CurrencySellOffer> getOffers(Account account, int from, int to) {
@@ -67,7 +67,7 @@ public final class CurrencySellOffer extends CurrencyExchangeOffer {
         if (availableOnly) {
             dbClause = dbClause.and(availableOnlyDbClause);
         }
-        return sellOfferTable.getManyBy(dbClause, from, to, " ORDER BY rate ASC, creation_height ASC, transaction_index ASC ");
+        return sellOfferTable.getManyBy(dbClause, from, to, " ORDER BY rate ASC, creation_height ASC, transaction_height ASC, transaction_index ASC ");
     }
 
     public static CurrencySellOffer getOffer(Currency currency, Account account) {

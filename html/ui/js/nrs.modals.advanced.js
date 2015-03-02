@@ -39,11 +39,21 @@ var NRS = (function(NRS, $, undefined) {
 		$elems.find('input').prop("disabled", true);
 
 		context = {
+			labelText: "Asset",
+			labelI18n: "asset",
+			inputIdName: "phasingHolding",
+			inputDecimalsName: "phasingHoldingDecimals",
+			helpI18n: "add_asset_modal_help"
+		}
+		$elems = NRS.initModalUIElement($modal, '', 'add_asset_modal_ui_element', context);
+		$elems.find('input').prop("disabled", true);
+
+		context = {
 			labelText: "Currency",
 			labelI18n: "currency",
 			inputCodeName: "phasingHoldingCurrencyCode",
 			inputIdName: "phasingHolding",
-			inputDecimalsName: "phasingHoldingCurrencyDecimals",
+			inputDecimalsName: "phasingHoldingDecimals",
 			helpI18n: "add_currency_modal_help"
 		}
 		$elems = NRS.initModalUIElement($modal, '', 'add_currency_modal_ui_element', context);

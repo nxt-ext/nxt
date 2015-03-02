@@ -969,12 +969,12 @@ public final class Account {
         }
     }
 
-    void apply(byte[] key, int height) {
+    void apply(byte[] key) {
         if (! setOrVerify(key)) {
             throw new IllegalStateException("Public key mismatch");
         }
         if (this.keyHeight == 0) {
-            this.keyHeight = height;
+            this.keyHeight = Nxt.getBlockchain().getHeight();
             accountTable.insert(this);
             publicKeyTable.insert(this.publicKey);
         }

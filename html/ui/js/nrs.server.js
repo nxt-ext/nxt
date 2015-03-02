@@ -110,7 +110,7 @@ var NRS = (function(NRS, $, undefined) {
 		// convert currency decimal amount to base unit
 		try {
 			var currencyFields = [
-				["phasingQuorumQNTf", "phasingHoldingCurrencyDecimals"]
+				["phasingQuorumQNTf", "phasingHoldingDecimals"]
 			];
 
 			for (var i = 0; i < currencyFields.length; i++) {
@@ -840,6 +840,29 @@ var NRS = (function(NRS, $, undefined) {
 				}
 
 				break;
+         case "dividendPayment":
+            if (transaction.type !== 2 || transaction.subtype !== 6) {
+               return false;
+            }
+
+            transaction.asset = String(converters.byteArrayToBigInteger(byteArray, pos));
+
+            pos += 8;
+
+            transaction.height = String(converters.byteArrayToSignedInt32(byteArray, pos));
+
+            pos += 4;
+
+            transaction.amountNQTPerQNT = String(converters.byteArrayToBigInteger(byteArray, pos));
+
+            pos += 8;
+
+            if (transaction.asset !== data.asset ||
+               transaction.height !== data.height ||
+               transaction.amountNQTPerQNT !== data.amountNQTPerQNT) {
+               return false;
+            }
+            break;
 			case "dgsListing":
 				if (transaction.type !== 3 && transaction.subtype != 0) {
 					return false;
