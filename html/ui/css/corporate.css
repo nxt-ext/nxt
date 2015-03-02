@@ -3995,10 +3995,6 @@ hr {
   margin-bottom: 5px;
 }
 
-#login_account_container {
-  display: none;
-}
-
 #loginButtons {
   margin: 10px 0;
   vertical-align: top;
