@@ -1188,6 +1188,11 @@ public abstract class TransactionType {
                 return false;
             }
 
+            @Override
+            public boolean allowsPhasing() {
+                return true;
+            }
+
         };
 
         public static final TransactionType ASSET_TRANSFER = new ColoredCoins() {
@@ -1261,6 +1266,11 @@ public abstract class TransactionType {
 
             @Override
             public boolean canHaveRecipient() {
+                return true;
+            }
+
+            @Override
+            public boolean allowsPhasing() {
                 return true;
             }
 
