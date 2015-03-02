@@ -168,11 +168,6 @@ public abstract class MonetarySystem extends TransactionType {
             return false;
         }
 
-        @Override
-        public boolean allowsPhasing() {
-            return true;
-        }
-
     };
 
     public static final TransactionType RESERVE_INCREASE = new MonetarySystem() {
@@ -234,11 +229,6 @@ public abstract class MonetarySystem extends TransactionType {
             return false;
         }
 
-        @Override
-        public boolean allowsPhasing() {
-            return true;
-        }
-
     };
 
     public static final TransactionType RESERVE_CLAIM = new MonetarySystem() {
@@ -297,11 +287,6 @@ public abstract class MonetarySystem extends TransactionType {
         @Override
         public boolean canHaveRecipient() {
             return false;
-        }
-
-        @Override
-        public boolean allowsPhasing() {
-            return true;
         }
 
     };
@@ -369,11 +354,6 @@ public abstract class MonetarySystem extends TransactionType {
 
         @Override
         public boolean canHaveRecipient() {
-            return true;
-        }
-
-        @Override
-        public boolean allowsPhasing() {
             return true;
         }
 
@@ -458,11 +438,6 @@ public abstract class MonetarySystem extends TransactionType {
             return false;
         }
 
-        @Override
-        public boolean allowsPhasing() {
-            return true;
-        }
-
     };
 
     abstract static class MonetarySystemExchange extends MonetarySystem {
@@ -483,11 +458,6 @@ public abstract class MonetarySystem extends TransactionType {
         @Override
         public final boolean canHaveRecipient() {
             return false;
-        }
-
-        @Override
-        public final boolean allowsPhasing() {
-            return true;
         }
 
     }
@@ -663,11 +633,6 @@ public abstract class MonetarySystem extends TransactionType {
             return false;
         }
 
-        @Override
-        public boolean allowsPhasing() {
-            return true;
-        }
-
     };
 
     public static final TransactionType CURRENCY_DELETION = new MonetarySystem() {
@@ -736,11 +701,6 @@ public abstract class MonetarySystem extends TransactionType {
         @Override
         public boolean canHaveRecipient() {
             return false;
-        }
-
-        @Override
-        public boolean allowsPhasing() {
-            return true;
         }
 
     };

@@ -239,8 +239,6 @@ public abstract class TransactionType {
         return canHaveRecipient();
     }
 
-    public abstract boolean allowsPhasing();
-
     public Fee getBaselineFee(Transaction transaction) throws NxtException.NotValidException {
         return Fee.DEFAULT_FEE;
     }
@@ -313,11 +311,6 @@ public abstract class TransactionType {
                 }
             }
 
-            @Override
-            public boolean allowsPhasing() {
-                return true;
-            }
-
         };
 
     }
@@ -388,11 +381,6 @@ public abstract class TransactionType {
                 return false;
             }
 
-            @Override
-            public boolean allowsPhasing() {
-                return true;
-            }
-
         };
 
         public static final TransactionType ALIAS_ASSIGNMENT = new Messaging() {
@@ -452,11 +440,6 @@ public abstract class TransactionType {
             @Override
             public boolean canHaveRecipient() {
                 return false;
-            }
-
-            @Override
-            public boolean allowsPhasing() {
-                return true;
             }
 
         };
@@ -541,11 +524,6 @@ public abstract class TransactionType {
                 return false;
             }
 
-            @Override
-            public boolean allowsPhasing() {
-                return true;
-            }
-
         };
 
         public static final TransactionType ALIAS_BUY = new Messaging() {
@@ -618,11 +596,6 @@ public abstract class TransactionType {
                 return true;
             }
 
-            @Override
-            public boolean allowsPhasing() {
-                return true;
-            }
-
         };
 
         public static final TransactionType ALIAS_DELETE = new Messaging() {
@@ -680,11 +653,6 @@ public abstract class TransactionType {
             @Override
             public boolean canHaveRecipient() {
                 return false;
-            }
-
-            @Override
-            public boolean allowsPhasing() {
-                return true;
             }
 
         };
@@ -779,11 +747,6 @@ public abstract class TransactionType {
                 return false;
             }
 
-            @Override
-            public boolean allowsPhasing() {
-                return true;
-            }
-
         };
 
         public final static TransactionType VOTE_CASTING = new Messaging() {
@@ -867,11 +830,6 @@ public abstract class TransactionType {
             @Override
             public boolean canHaveRecipient() {
                 return false;
-            }
-
-            @Override
-            public boolean allowsPhasing() {
-                return true;
             }
 
         };
@@ -985,11 +943,6 @@ public abstract class TransactionType {
                 }
             }
 
-            @Override
-            public boolean allowsPhasing() {
-                return true;
-            }
-
         };
 
         public static final TransactionType HUB_ANNOUNCEMENT = new Messaging() {
@@ -1044,11 +997,6 @@ public abstract class TransactionType {
                 return false;
             }
 
-            @Override
-            public boolean allowsPhasing() {
-                return true;
-            }
-
         };
 
         public static final Messaging ACCOUNT_INFO = new Messaging() {
@@ -1097,11 +1045,6 @@ public abstract class TransactionType {
             @Override
             public boolean canHaveRecipient() {
                 return false;
-            }
-
-            @Override
-            public boolean allowsPhasing() {
-                return true;
             }
 
         };
@@ -1186,11 +1129,6 @@ public abstract class TransactionType {
                 return false;
             }
 
-            @Override
-            public boolean allowsPhasing() {
-                return true;
-            }
-
         };
 
         public static final TransactionType ASSET_TRANSFER = new ColoredCoins() {
@@ -1267,11 +1205,6 @@ public abstract class TransactionType {
                 return true;
             }
 
-            @Override
-            public boolean allowsPhasing() {
-                return true;
-            }
-
         };
 
         abstract static class ColoredCoinsOrderPlacement extends ColoredCoins {
@@ -1296,11 +1229,6 @@ public abstract class TransactionType {
             @Override
             public final boolean canHaveRecipient() {
                 return false;
-            }
-
-            @Override
-            public final boolean allowsPhasing() {
-                return true;
             }
 
         }
@@ -1427,11 +1355,6 @@ public abstract class TransactionType {
             @Override
             public final boolean canHaveRecipient() {
                 return false;
-            }
-
-            @Override
-            public final boolean allowsPhasing() {
-                return true;
             }
 
         }
@@ -1593,11 +1516,6 @@ public abstract class TransactionType {
                 return false;
             }
 
-            @Override
-            public boolean allowsPhasing() {
-                return true;
-            }
-
         };
 
     }
@@ -1630,11 +1548,6 @@ public abstract class TransactionType {
         }
 
         abstract void doValidateAttachment(Transaction transaction) throws NxtException.ValidationException;
-
-        @Override
-        public final boolean allowsPhasing() {
-            return true;
-        }
 
 
         public static final TransactionType LISTING = new DigitalGoods() {
@@ -2211,11 +2124,6 @@ public abstract class TransactionType {
 
             @Override
             public boolean canHaveRecipient() {
-                return true;
-            }
-
-            @Override
-            public boolean allowsPhasing() {
                 return true;
             }
 
