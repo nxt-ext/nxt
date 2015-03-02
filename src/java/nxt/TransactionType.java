@@ -1422,8 +1422,13 @@ public abstract class TransactionType {
             }
 
             @Override
-            public boolean canHaveRecipient() {
+            public final boolean canHaveRecipient() {
                 return false;
+            }
+
+            @Override
+            public final boolean allowsPhasing() {
+                return true;
             }
 
         }
@@ -1585,6 +1590,11 @@ public abstract class TransactionType {
                 return false;
             }
 
+            @Override
+            public boolean allowsPhasing() {
+                return true;
+            }
+
         };
 
     }
@@ -1617,6 +1627,11 @@ public abstract class TransactionType {
         }
 
         abstract void doValidateAttachment(Transaction transaction) throws NxtException.ValidationException;
+
+        @Override
+        public final boolean allowsPhasing() {
+            return true;
+        }
 
 
         public static final TransactionType LISTING = new DigitalGoods() {
@@ -1897,7 +1912,7 @@ public abstract class TransactionType {
                 if (attachment.getQuantity() > goods.getQuantity() || attachment.getPriceNQT() != goods.getPriceNQT()) {
                     throw new NxtException.NotCurrentlyValidException("Goods price or quantity changed: " + attachment.getJSONObject());
                 }
-                if (attachment.getDeliveryDeadlineTimestamp() <= Nxt.getBlockchain().getLastBlock().getTimestamp()) {
+                if (attachment.getDeliveryDeadlineTimestamp() <= Nxt.getBlockchain().getLastBlockTimestamp()) {
                     throw new NxtException.NotCurrentlyValidException("Delivery deadline has already expired: " + attachment.getDeliveryDeadlineTimestamp());
                 }
             }
@@ -2193,6 +2208,11 @@ public abstract class TransactionType {
 
             @Override
             public boolean canHaveRecipient() {
+                return true;
+            }
+
+            @Override
+            public boolean allowsPhasing() {
                 return true;
             }
 

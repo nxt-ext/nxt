@@ -26,7 +26,7 @@ public abstract class Order {
             }
 
 
-            Trade trade = Trade.addTrade(assetId, Nxt.getBlockchain().getLastBlock(), askOrder, bidOrder);
+            Trade trade = Trade.addTrade(assetId, askOrder, bidOrder);
 
             askOrder.updateQuantityQNT(Convert.safeSubtract(askOrder.getQuantityQNT(), trade.getQuantityQNT()));
             Account askAccount = Account.getAccount(askOrder.getAccountId());
@@ -64,7 +64,7 @@ public abstract class Order {
         this.assetId = attachment.getAssetId();
         this.quantityQNT = attachment.getQuantityQNT();
         this.priceNQT = attachment.getPriceNQT();
-        this.creationHeight = transaction.getHeight();
+        this.creationHeight = Nxt.getBlockchain().getHeight();
         this.transactionIndex = transaction.getIndex();
     }
 
@@ -82,31 +82,31 @@ public abstract class Order {
         try (PreparedStatement pstmt = con.prepareStatement("MERGE INTO " + table + " (id, account_id, asset_id, "
                 + "price, quantity, creation_height, transaction_index, height, latest) KEY (id, height) VALUES (?, ?, ?, ?, ?, ?, ?, ?, TRUE)")) {
             int i = 0;
-            pstmt.setLong(++i, this.getId());
-            pstmt.setLong(++i, this.getAccountId());
-            pstmt.setLong(++i, this.getAssetId());
-            pstmt.setLong(++i, this.getPriceNQT());
-            pstmt.setLong(++i, this.getQuantityQNT());
-            pstmt.setInt(++i, this.getHeight());
+            pstmt.setLong(++i, this.id);
+            pstmt.setLong(++i, this.accountId);
+            pstmt.setLong(++i, this.assetId);
+            pstmt.setLong(++i, this.priceNQT);
+            pstmt.setLong(++i, this.quantityQNT);
+            pstmt.setInt(++i, this.creationHeight);
             pstmt.setShort(++i, this.transactionIndex);
             pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
             pstmt.executeUpdate();
         }
     }
 
-    public long getId() {
+    public final long getId() {
         return id;
     }
 
-    public long getAccountId() {
+    public final long getAccountId() {
         return accountId;
     }
 
-    public long getAssetId() {
+    public final long getAssetId() {
         return assetId;
     }
 
-    public long getPriceNQT() {
+    public final long getPriceNQT() {
         return priceNQT;
     }
 
@@ -114,11 +114,11 @@ public abstract class Order {
         return quantityQNT;
     }
 
-    public int getHeight() {
+    public final int getHeight() {
         return creationHeight;
     }
 
-    public int getTransactionIndex() {
+    public final int getTransactionIndex() {
         return transactionIndex;
     }
 

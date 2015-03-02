@@ -109,8 +109,8 @@ public final class Trade {
         return tradeTable.getCount(new DbClause.LongClause("asset_id", assetId));
     }
 
-    static Trade addTrade(long assetId, Block block, Order.Ask askOrder, Order.Bid bidOrder) {
-        Trade trade = new Trade(assetId, block, askOrder, bidOrder);
+    static Trade addTrade(long assetId, Order.Ask askOrder, Order.Bid bidOrder) {
+        Trade trade = new Trade(assetId, askOrder, bidOrder);
         tradeTable.insert(trade);
         listeners.notify(trade, Event.TRADE);
         return trade;
@@ -134,7 +134,8 @@ public final class Trade {
     private final long priceNQT;
     private final boolean isBuy;
 
-    private Trade(long assetId, Block block, Order.Ask askOrder, Order.Bid bidOrder) {
+    private Trade(long assetId, Order.Ask askOrder, Order.Bid bidOrder) {
+        Block block = Nxt.getBlockchain().getLastBlock();
         this.blockId = block.getId();
         this.height = block.getHeight();
         this.assetId = assetId;
