@@ -754,30 +754,69 @@ var NRS = (function(NRS, $, undefined) {
 	};
 	
 	/* Transfer Currency Model */
+   var currencyCodeField = $("#transfer_currency_code");
 	$("#transfer_currency_modal").on("show.bs.modal", function(e) {
 		var $invoker = $(e.relatedTarget);
 
 		var currency = $invoker.data("currency");
 		var currencyCode = $invoker.data("code");
-		var decimals = $invoker.data("decimals");
+      var decimals = $invoker.data("decimals");
 
 		$("#transfer_currency_currency").val(currency);
 		$("#transfer_currency_decimals").val(decimals);
-		$("#transfer_currency_code, #transfer_currency_units_code").html(String(currencyCode).escapeHTML());
-		$("#transfer_currency_available").html("");
-		
-		NRS.sendRequest("getAccountCurrencies", {
-			"currency": currency,
-			"account": NRS.accountRS
+      if (currencyCode) {
+         currencyCodeField.val(currencyCode);
+         currencyCodeField.prop("readonly", true);
+         $("#transfer_currency_units_code").html(String(currencyCode).escapeHTML());
+         $("#transfer_currency_modal").find(".modal-title").html($.t("Transfer Currency"));
+      } else {
+         currencyCodeField.val('');
+         currencyCodeField.prop("readonly", false);
+         $("#transfer_currency_units_code").html('');
+         $("#transfer_currency_modal").find(".modal-title").html($.t("Send Currency"));
+      }
+		$("#transfer_currency_available").html('');
+
+      if (currency) {
+         NRS.updateAvailableCurrency(currency);
+      }
+	});
+
+   currencyCodeField.blur(function() {
+      if (!currencyCodeField.val() || currencyCodeField.val() == '') {
+         return;
+      }
+      currencyCodeField.val(currencyCodeField.val().toUpperCase());
+		NRS.sendRequest("getCurrency", {
+			"code": currencyCodeField.val()
 		}, function(response) {
-			var availablecurrencysMessage = " - None Available for Transfer";
-			if (response.unconfirmedUnits && response.unconfirmedUnits != "0") {
-				availablecurrencysMessage = " - " + $.t("available_units") + " " + NRS.formatQuantity(response.unconfirmedUnits, response.decimals);
+         var transferCurrencyModal = $("#transfer_currency_modal");
+         if (response && !response.errorCode) {
+            $("#transfer_currency_currency").val(response.currency);
+        		$("#transfer_currency_decimals").val(response.decimals);
+            NRS.updateAvailableCurrency(response.currency);
+            $("#transfer_currency_units_code").html(String(response.code).escapeHTML());
+            transferCurrencyModal.find(".error_message").hide();
+			} else if (response.errorCode){
+            transferCurrencyModal.find(".error_message").html(response.errorDescription);
+            transferCurrencyModal.find(".error_message").show();
 			}
-			$("#transfer_currency_available").html(availablecurrencysMessage);
 		})
 	});
-	
+
+   NRS.updateAvailableCurrency = function(currency) {
+      NRS.sendRequest("getAccountCurrencies", {
+         "currency": currency,
+         "account": NRS.accountRS
+      }, function (response) {
+         var availableCurrencyMessage = "None Available for Transfer";
+         if (response.unconfirmedUnits && response.unconfirmedUnits != "0") {
+            availableCurrencyMessage = $.t("available_units") + " " + NRS.formatQuantity(response.unconfirmedUnits, response.decimals);
+         }
+         $("#transfer_currency_available").html(availableCurrencyMessage);
+      })
+   };
+
 	/* Publish Exchange Offer Model */
 	$("#publish_exchange_offer_modal").on("show.bs.modal", function(e) {
 		var $invoker = $(e.relatedTarget);
@@ -843,6 +882,78 @@ var NRS = (function(NRS, $, undefined) {
 		});
 	};
 	
+	var _selectedApprovalCurrency = "";
+
+	NRS.buildApprovalRequestCurrencyNavi = function() {
+		$select = $('#approve_currency_select');
+		$select.empty();
+
+		var currencySelected = false;
+		var $noneOption = $('<option value=""></option>');
+
+		NRS.sendRequest("getAccountCurrencies", {
+         	"account": NRS.accountRS
+      	}, function (response) {
+      		if (response.accountCurrencies) {
+      			if (response.accountCurrencies.length > 0) {
+					$noneOption.html($.t('no_currency_selected', 'No Currency Selected'));
+					$.each(response.accountCurrencies, function(key, ac) {
+						var idString = String(ac.currency);
+						var $option = $('<option value="' + idString + '">' + String(ac.code) + '</option>');
+						if (idString == _selectedApprovalCurrency) {
+							$option.attr('selected', true);
+							currencySelected = true;
+						}
+						$option.appendTo($select);
+					});
+				} else {
+					$noneOption.html($.t('account_has_no_currencies', 'Account has no currencies'));
+				}
+      		} else {
+      			$noneOption.html($.t('no_connection'));
+      		}
+      		if (!_selectedApprovalCurrency || !currencySelected) {
+				$noneOption.attr('selected', true);
+			}
+      		$noneOption.prependTo($select);
+      	});
+	}
+
+	NRS.pages.approval_requests_currency = function() {
+		NRS.buildApprovalRequestCurrencyNavi();
+
+		if (_selectedApprovalCurrency != "") {
+			var params = {
+				"currency": _selectedApprovalCurrency,
+				"firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
+				"lastIndex": NRS.pageNumber * NRS.itemsPerPage
+			};
+			NRS.sendRequest("getCurrencyPendingTransactions", params, function(response) {
+				var rows = "";
+
+				if (response.transactions && response.transactions.length > 0) {
+					for (var i = 0; i < response.transactions.length; i++) {
+						t = response.transactions[i];
+						t.confirmed = true;
+						rows += NRS.getTransactionRowHTML(t, ['approve']);
+					}
+				} else {
+					$('#ar_currency_no_entries').html($.t('no_current_approval_requests', 'No current approval requests'));
+				}
+				NRS.dataLoaded(rows);
+				NRS.addPendingInfoToTransactionRows(response.transactions);	
+				});
+		} else {
+			$('#ar_currency_no_entries').html($.t('please_select_currency', 'Please select a currency'));
+			NRS.dataLoaded();
+		}
+	}
+
+	$('#approve_currency_select').on('change', function() {
+		_selectedApprovalCurrency = $(this).find('option:selected').val();
+		NRS.loadPage("approval_requests_currency");
+	});
+
 	NRS.setup.currencies = function() {
 		var sidebarId = 'sidebar_monetary_system';
 		var options = {
@@ -862,6 +973,12 @@ var NRS = (function(NRS, $, undefined) {
 			"titleHTML": '<span data-i18n="exchange_history">Exchange History</span>',
 			"type": 'PAGE',
 			"page": 'exchange_history'
+		}
+		NRS.appendMenuItemToTSMenuItem(sidebarId, options);
+		options = {
+			"titleHTML": '<span data-i18n="approval_requests">Approval Requests</span>',
+			"type": 'PAGE',
+			"page": 'approval_requests_currency'
 		}
 		NRS.appendMenuItemToTSMenuItem(sidebarId, options);
 		options = {

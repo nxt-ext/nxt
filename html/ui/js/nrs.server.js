@@ -107,6 +107,32 @@ var NRS = (function(NRS, $, undefined) {
 			}
 			return;
 		}
+		// convert currency decimal amount to base unit
+		try {
+			var currencyFields = [
+				["phasingQuorumQNTf", "phasingHoldingDecimals"]
+			];
+
+			for (var i = 0; i < currencyFields.length; i++) {
+				var decimalUnitField = currencyFields[i][0];
+				var decimalsField = currencyFields[i][1];
+				var field = decimalUnitField.replace("QNTf", "");
+
+				if (decimalUnitField in data) {
+					data[field] = NRS.convertToQNT(parseInt(data[decimalUnitField]), parseInt(data[decimalsField]));
+					delete data[decimalUnitField];
+					delete data[decimalsField];
+				}
+			}
+		} catch (err) {
+			if (callback) {
+				callback({
+					"errorCode": 1,
+					"errorDescription": err + " (" + $.t(field) + ")"
+				});
+			}
+			return;
+		}
 
 		if (!data.recipientPublicKey) {
 			delete data.recipientPublicKey;
@@ -814,6 +840,29 @@ var NRS = (function(NRS, $, undefined) {
 				}
 
 				break;
+         case "dividendPayment":
+            if (transaction.type !== 2 || transaction.subtype !== 6) {
+               return false;
+            }
+
+            transaction.asset = String(converters.byteArrayToBigInteger(byteArray, pos));
+
+            pos += 8;
+
+            transaction.height = String(converters.byteArrayToSignedInt32(byteArray, pos));
+
+            pos += 4;
+
+            transaction.amountNQTPerQNT = String(converters.byteArrayToBigInteger(byteArray, pos));
+
+            pos += 8;
+
+            if (transaction.asset !== data.asset ||
+               transaction.height !== data.height ||
+               transaction.amountNQTPerQNT !== data.amountNQTPerQNT) {
+               return false;
+            }
+            break;
 			case "dgsListing":
 				if (transaction.type !== 3 && transaction.subtype != 0) {
 					return false;

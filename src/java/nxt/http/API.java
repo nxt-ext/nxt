@@ -46,6 +46,8 @@ public final class API {
     private static final List<NetworkAddress> allowedBotNets;
     static final String adminPassword = Nxt.getStringProperty("nxt.adminPassword", "", true);
     static final boolean disableAdminPassword;
+    static final int maxRecords = Nxt.getIntProperty("nxt.maxAPIRecords");
+
     private static final Server apiServer;
     private static URI browserUri;
 

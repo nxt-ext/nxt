@@ -194,6 +194,8 @@ final class JSONData {
         json.put("quantityQNT", String.valueOf(order.getQuantityQNT()));
         json.put("priceNQT", String.valueOf(order.getPriceNQT()));
         json.put("height", order.getHeight());
+        json.put("transactionIndex", order.getTransactionIndex());
+        json.put("transactionHeight", order.getTransactionHeight());
         return json;
     }
 
@@ -404,9 +406,10 @@ final class JSONData {
         putVoteWeighting(json, poll.getDefaultVoteWeighting());
         if (poll.isFinished()) {
             PhasingPoll.PhasingPollResult phasingPollResult = PhasingPoll.getResult(poll.getId());
-            json.put("applyHeight", phasingPollResult.getApplyHeight());
-            json.put("approved", phasingPollResult.isApproved());
-            json.put("result", String.valueOf(phasingPollResult.getResult()));
+            if (phasingPollResult != null) {
+                json.put("approved", phasingPollResult.isApproved());
+                json.put("result", String.valueOf(phasingPollResult.getResult()));
+            }
         } else if (countVotes) {
             json.put("result", String.valueOf(PhasingVote.countVotes(poll)));
         }
@@ -429,7 +432,6 @@ final class JSONData {
         json.put("transaction", Convert.toUnsignedLong(phasingPollResult.getId()));
         json.put("approved", phasingPollResult.isApproved());
         json.put("result", String.valueOf(phasingPollResult.getResult()));
-        json.put("applyHeight", phasingPollResult.getApplyHeight());
         return json;
     }
 

@@ -3,6 +3,8 @@
  */
 var NRS = (function(NRS, $, undefined) {
 
+    _modalUIElements = null;
+
     NRS.loadLockscreenHTML = function(path, options) {
     	jQuery.ajaxSetup({ async: false });
     	$.get(path, '', function (data) { $("body").prepend(data); });
@@ -70,6 +72,34 @@ var NRS = (function(NRS, $, undefined) {
 
         jQuery.ajaxSetup({ async: true });
     }
+
+    NRS.preloadModalUIElements = function(options) {
+        jQuery.ajaxSetup({ async: false });
+        $.get("html/modals/ui_elements.html", '', function (data) {
+            _modalUIElements = data;
+        });
+        jQuery.ajaxSetup({ async: true });
+    }
+
+    NRS.initModalUIElement = function($modal, selector, elementName, context) {
+        var html = $(_modalUIElements).filter('div#' + elementName).html();
+        var template = Handlebars.compile(html);
+        var $elems = $modal.find("div[data-modal-ui-element='" + elementName + "']" + selector);
+        
+        var modalId = $modal.attr('id');
+        var modalName = modalId.replace('_modal', '');
+        context["modalId"] = modalId;
+        context["modalName"] = modalName;
+
+        $elems.each(function(i) {
+            $(this).empty();
+            $(this).append(template(context));
+        });
+
+        $("[data-i18n]").i18n();
+        return $elems;
+    }
+
 
     function _appendToSidebar(menuHTML, desiredPosition) {
         var inserted = false;

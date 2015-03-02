@@ -468,7 +468,7 @@ public interface Appendix {
         @Override
         void apply(Transaction transaction, Account senderAccount, Account recipientAccount) {
             if (recipientAccount.setOrVerify(publicKey)) {
-                recipientAccount.apply(this.publicKey, transaction.getHeight());
+                recipientAccount.apply(this.publicKey);
             }
         }
 
@@ -505,6 +505,9 @@ public interface Appendix {
             for (int pvc = 0; pvc < whitelist.length; pvc++) {
                 whitelist[pvc] = buffer.getLong();
             }
+            if (whitelist.length > 0) {
+                Arrays.sort(whitelist);
+            }
             long holdingId = buffer.getLong();
             byte minBalanceModel = buffer.get();
             voteWeighting = new VoteWeighting(votingModel, holdingId, minBalance, minBalanceModel);
@@ -522,6 +525,9 @@ public interface Appendix {
             for (int i = 0; i < whitelist.length; i++) {
                 whitelist[i] = Convert.parseUnsignedLong((String) whitelistJson.get(i));
             }
+            if (whitelist.length > 0) {
+                Arrays.sort(whitelist);
+            }
             byte minBalanceModel = ((Long) attachmentData.get("phasingMinBalanceModel")).byteValue();
             voteWeighting = new VoteWeighting(votingModel, holdingId, minBalance, minBalanceModel);
         }
@@ -531,6 +537,9 @@ public interface Appendix {
             this.finishHeight = finishHeight;
             this.quorum = quorum;
             this.whitelist = Convert.nullToEmpty(whitelist);
+            if (this.whitelist.length > 0) {
+                Arrays.sort(this.whitelist);
+            }
             voteWeighting = new VoteWeighting(votingModel, holdingId, minBalance, minBalanceModel);
         }
 
@@ -585,10 +594,15 @@ public interface Appendix {
                 throw new NxtException.NotValidException("Whitelist is too big");
             }
 
+            long previousAccountId = 0;
             for (long accountId : whitelist) {
                 if (accountId == 0) {
                     throw new NxtException.NotValidException("Invalid accountId 0 in whitelist");
                 }
+                if (accountId == previousAccountId) {
+                    throw new NxtException.NotValidException("Duplicate accountId " + Convert.toUnsignedLong(accountId) + " in whitelist");
+                }
+                previousAccountId = accountId;
             }
 
             if (quorum <= 0) {
@@ -621,7 +635,7 @@ public interface Appendix {
             return PHASING_FEE;
         }
 
-        void release(TransactionImpl transaction) {
+        private void release(TransactionImpl transaction) {
             Account senderAccount = Account.getAccount(transaction.getSenderId());
             Account recipientAccount = Account.getAccount(transaction.getRecipientId());
             //apply all attachments and appendixes, except the phasing itself
@@ -634,18 +648,22 @@ public interface Appendix {
             Logger.logDebugMessage("Transaction " + transaction.getStringId() + " has been released");
         }
 
-        void finalVerification(TransactionImpl transaction) {
+        void reject(TransactionImpl transaction) {
+            Account senderAccount = Account.getAccount(transaction.getSenderId());
+            transaction.getType().undoAttachmentUnconfirmed(transaction, senderAccount);
+            senderAccount.addToUnconfirmedBalanceNQT(transaction.getAmountNQT());
+            TransactionProcessorImpl.getInstance().notifyListeners(Collections.singletonList(transaction), TransactionProcessor.Event.REJECT_PHASED_TRANSACTION);
+            Logger.logDebugMessage("Transaction " + transaction.getStringId() + " has been rejected");
+        }
+
+        void countVotes(TransactionImpl transaction) {
             PhasingPoll poll = PhasingPoll.getPoll(transaction.getId());
             long result = PhasingVote.countVotes(poll);
             poll.finish(result);
             if (result >= poll.getQuorum()) {
                 release(transaction);
             } else {
-                Account senderAccount = Account.getAccount(transaction.getSenderId());
-                transaction.getType().undoAttachmentUnconfirmed(transaction, senderAccount);
-                senderAccount.addToUnconfirmedBalanceNQT(transaction.getAmountNQT());
-                TransactionProcessorImpl.getInstance().notifyListeners(Collections.singletonList(transaction), TransactionProcessor.Event.REJECT_PHASED_TRANSACTION);
-                Logger.logDebugMessage("Transaction " + transaction.getStringId() + " has been refused");
+                reject(transaction);
             }
         }
 

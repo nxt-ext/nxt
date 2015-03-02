@@ -290,7 +290,7 @@ public final class DigitalGoodsStore {
             this.quantity = attachment.getQuantity();
             this.priceNQT = attachment.getPriceNQT();
             this.delisted = false;
-            this.timestamp = transaction.getTimestamp();
+            this.timestamp = Nxt.getBlockchain().getLastBlockTimestamp();
         }
 
         private Goods(ResultSet rs) throws SQLException {
@@ -313,16 +313,16 @@ public final class DigitalGoodsStore {
                     + "description, tags, parsed_tags, timestamp, quantity, price, delisted, height, latest) KEY (id, height) "
                     + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, TRUE)")) {
                 int i = 0;
-                pstmt.setLong(++i, this.getId());
-                pstmt.setLong(++i, this.getSellerId());
-                pstmt.setString(++i, this.getName());
-                pstmt.setString(++i, this.getDescription());
-                pstmt.setString(++i, this.getTags());
-                pstmt.setObject(++i, this.getParsedTags());
-                pstmt.setInt(++i, this.getTimestamp());
-                pstmt.setInt(++i, this.getQuantity());
-                pstmt.setLong(++i, this.getPriceNQT());
-                pstmt.setBoolean(++i, this.isDelisted());
+                pstmt.setLong(++i, this.id);
+                pstmt.setLong(++i, this.sellerId);
+                pstmt.setString(++i, this.name);
+                pstmt.setString(++i, this.description);
+                pstmt.setString(++i, this.tags);
+                pstmt.setObject(++i, this.parsedTags);
+                pstmt.setInt(++i, this.timestamp);
+                pstmt.setInt(++i, this.quantity);
+                pstmt.setLong(++i, this.priceNQT);
+                pstmt.setBoolean(++i, this.delisted);
                 pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
                 pstmt.executeUpdate();
             }
@@ -672,7 +672,7 @@ public final class DigitalGoodsStore {
             this.priceNQT = attachment.getPriceNQT();
             this.deadline = attachment.getDeliveryDeadlineTimestamp();
             this.note = transaction.getEncryptedMessage() == null ? null : transaction.getEncryptedMessage().getEncryptedData();
-            this.timestamp = transaction.getTimestamp();
+            this.timestamp = Nxt.getBlockchain().getLastBlockTimestamp();
             this.isPending = true;
         }
 
@@ -702,25 +702,25 @@ public final class DigitalGoodsStore {
                     + "refund_nonce, has_feedback_notes, has_public_feedbacks, discount, refund, height, latest) KEY (id, height) "
                     + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, TRUE)")) {
                 int i = 0;
-                pstmt.setLong(++i, this.getId());
-                pstmt.setLong(++i, this.getBuyerId());
-                pstmt.setLong(++i, this.getGoodsId());
-                pstmt.setLong(++i, this.getSellerId());
-                pstmt.setInt(++i, this.getQuantity());
-                pstmt.setLong(++i, this.getPriceNQT());
-                pstmt.setInt(++i, this.getDeliveryDeadlineTimestamp());
-                setEncryptedData(pstmt, this.getNote(), ++i);
+                pstmt.setLong(++i, this.id);
+                pstmt.setLong(++i, this.buyerId);
+                pstmt.setLong(++i, this.goodsId);
+                pstmt.setLong(++i, this.sellerId);
+                pstmt.setInt(++i, this.quantity);
+                pstmt.setLong(++i, this.priceNQT);
+                pstmt.setInt(++i, this.deadline);
+                setEncryptedData(pstmt, this.note, ++i);
                 ++i;
-                pstmt.setInt(++i, this.getTimestamp());
-                pstmt.setBoolean(++i, this.isPending());
-                setEncryptedData(pstmt, this.getEncryptedGoods(), ++i);
+                pstmt.setInt(++i, this.timestamp);
+                pstmt.setBoolean(++i, this.isPending);
+                setEncryptedData(pstmt, this.encryptedGoods, ++i);
                 ++i;
-                setEncryptedData(pstmt, this.getRefundNote(), ++i);
+                setEncryptedData(pstmt, this.refundNote, ++i);
                 ++i;
                 pstmt.setBoolean(++i, this.hasFeedbackNotes);
                 pstmt.setBoolean(++i, this.hasPublicFeedbacks);
-                pstmt.setLong(++i, this.getDiscountNQT());
-                pstmt.setLong(++i, this.getRefundNQT());
+                pstmt.setLong(++i, this.discountNQT);
+                pstmt.setLong(++i, this.refundNQT);
                 pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
                 pstmt.executeUpdate();
             }
@@ -917,7 +917,7 @@ public final class DigitalGoodsStore {
     static void purchase(Transaction transaction,  Attachment.DigitalGoodsPurchase attachment) {
         Goods goods = Goods.goodsTable.get(Goods.goodsDbKeyFactory.newKey(attachment.getGoodsId()));
         if (! goods.isDelisted() && attachment.getQuantity() <= goods.getQuantity() && attachment.getPriceNQT() == goods.getPriceNQT()
-                && attachment.getDeliveryDeadlineTimestamp() > Nxt.getBlockchain().getLastBlock().getTimestamp()) {
+                && attachment.getDeliveryDeadlineTimestamp() > Nxt.getBlockchain().getLastBlockTimestamp()) {
             goods.changeQuantity(-attachment.getQuantity());
             Purchase purchase = new Purchase(transaction, attachment, goods.getSellerId());
             Purchase.purchaseTable.insert(purchase);

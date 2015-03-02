@@ -96,9 +96,9 @@ public final class CurrencyMint {
         try (PreparedStatement pstmt = con.prepareStatement("MERGE INTO currency_mint (currency_id, account_id, counter, height, latest) "
                 + "KEY (currency_id, account_id, height) VALUES (?, ?, ?, ?, TRUE)")) {
             int i = 0;
-            pstmt.setLong(++i, this.getCurrencyId());
-            pstmt.setLong(++i, this.getAccountId());
-            pstmt.setLong(++i, this.getCounter());
+            pstmt.setLong(++i, this.currencyId);
+            pstmt.setLong(++i, this.accountId);
+            pstmt.setLong(++i, this.counter);
             pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
             pstmt.executeUpdate();
         }

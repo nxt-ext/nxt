@@ -2,8 +2,7 @@ package nxt.http;
 
 import nxt.Exchange;
 import nxt.NxtException;
-import nxt.db.FilteringIterator;
-import nxt.util.Filter;
+import nxt.db.DbIterator;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
@@ -27,15 +26,13 @@ public final class GetAllExchanges extends APIServlet.APIRequestHandler {
 
         JSONObject response = new JSONObject();
         JSONArray exchanges = new JSONArray();
-        try (FilteringIterator<Exchange> exchangeIterator = new FilteringIterator<>(Exchange.getAllExchanges(0, -1),
-                new Filter<Exchange>() {
-                    @Override
-                    public boolean ok(Exchange exchange) {
-                        return exchange.getTimestamp() >= timestamp;
-                    }
-                }, firstIndex, lastIndex)) {
+        try (DbIterator<Exchange> exchangeIterator = Exchange.getAllExchanges(firstIndex, lastIndex)) {
             while (exchangeIterator.hasNext()) {
-                exchanges.add(JSONData.exchange(exchangeIterator.next(), includeCurrencyInfo));
+                Exchange exchange = exchangeIterator.next();
+                if (exchange.getTimestamp() < timestamp) {
+                    break;
+                }
+                exchanges.add(JSONData.exchange(exchange, includeCurrencyInfo));
             }
         }
         response.put("exchanges", exchanges);

@@ -406,14 +406,19 @@ final class ParameterParser {
     }
 
     static int getLastIndex(HttpServletRequest req) {
+        int lastIndex = Integer.MAX_VALUE;
         try {
-            int lastIndex = Integer.parseInt(req.getParameter("lastIndex"));
+            lastIndex = Integer.parseInt(req.getParameter("lastIndex"));
             if (lastIndex < 0) {
-                return Integer.MAX_VALUE;
+                lastIndex = Integer.MAX_VALUE;
             }
+        } catch (NumberFormatException e) {}
+        try {
+            API.verifyPassword(req);
             return lastIndex;
-        } catch (NumberFormatException e) {
-            return Integer.MAX_VALUE;
+        } catch (ParameterException e) {
+            int firstIndex = Math.min(getFirstIndex(req), Integer.MAX_VALUE - API.maxRecords + 1);
+            return Math.min(lastIndex, firstIndex + API.maxRecords - 1);
         }
     }
 

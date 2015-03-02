@@ -45,7 +45,9 @@ abstract class AbstractPoll {
         return defaultVoteWeighting;
     }
 
-    public abstract boolean isFinished();
+    public final boolean isFinished() {
+        return finishHeight <= Nxt.getBlockchain().getHeight();
+    }
 
 }
 

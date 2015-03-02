@@ -515,9 +515,6 @@ class NxtDbVersion extends DbVersion {
             case 191:
                 apply(null);
             case 192:
-                if (Constants.isTestnet) {
-                    BlockchainProcessorImpl.getInstance().scheduleScan(0, true);
-                }
                 apply(null);
             case 193:
                 apply("CREATE TABLE IF NOT EXISTS currency_supply (db_id IDENTITY, id BIGINT NOT NULL, "
@@ -532,7 +529,6 @@ class NxtDbVersion extends DbVersion {
             case 197:
                 apply("ALTER TABLE currency DROP COLUMN IF EXISTS current_reserve_per_unit_nqt");
             case 198:
-                BlockchainProcessorImpl.getInstance().scheduleScan(0, false);
                 apply(null);
             case 199:
                 apply("CALL FTL_REINDEX()");
@@ -625,10 +621,10 @@ class NxtDbVersion extends DbVersion {
                 apply("ALTER TABLE transaction ADD COLUMN IF NOT EXISTS phased BOOLEAN NOT NULL DEFAULT FALSE");
             case 239:
                 apply("CREATE TABLE IF NOT EXISTS phasing_poll (db_id IDENTITY, id BIGINT NOT NULL, "
-                        + "account_id BIGINT NOT NULL, finished BOOLEAN, voter_count TINYINT NOT NULL DEFAULT 0, "
+                        + "account_id BIGINT NOT NULL, voter_count TINYINT NOT NULL DEFAULT 0, "
                         + "finish_height INT NOT NULL, voting_model TINYINT NOT NULL, quorum BIGINT NOT NULL, "
                         + "min_balance BIGINT NOT NULL, holding_id BIGINT NOT NULL, min_balance_model TINYINT, "
-                        + "full_hash BINARY(32) NOT NULL, height INT NOT NULL, latest BOOLEAN DEFAULT TRUE NOT NULL)");
+                        + "full_hash BINARY(32) NOT NULL, height INT NOT NULL)");
             case 240:
                 apply("CREATE TABLE IF NOT EXISTS phasing_vote (db_id IDENTITY, id BIGINT NOT NULL, "
                         + "transaction_id BIGINT NOT NULL, voter_id BIGINT NOT NULL, "
@@ -636,7 +632,7 @@ class NxtDbVersion extends DbVersion {
             case 241:
                 apply("CREATE TABLE IF NOT EXISTS phasing_poll_voter (db_id IDENTITY, "
                         + "transaction_id BIGINT NOT NULL, voter_id BIGINT NOT NULL, "
-                        + "height INT NOT NULL, latest BOOLEAN DEFAULT TRUE NOT NULL)");
+                        + "height INT NOT NULL)");
             case 242:
                 apply("CREATE INDEX IF NOT EXISTS vote_height_idx ON vote(height)");
             case 243:
@@ -652,7 +648,7 @@ class NxtDbVersion extends DbVersion {
             case 248:
                 apply("CREATE INDEX IF NOT EXISTS poll_result_height_idx ON poll_result(height)");
             case 249:
-                apply("CREATE UNIQUE INDEX IF NOT EXISTS phasing_poll_id_height_idx ON phasing_poll(id, height DESC)");
+                apply("CREATE UNIQUE INDEX IF NOT EXISTS phasing_poll_id_idx ON phasing_poll(id)");
             case 250:
                 apply("CREATE INDEX IF NOT EXISTS phasing_poll_height_idx ON phasing_poll(height)");
             case 251:
@@ -664,10 +660,10 @@ class NxtDbVersion extends DbVersion {
             case 254:
                 apply("CREATE UNIQUE INDEX IF NOT EXISTS phasing_vote_transaction_voter_idx ON phasing_vote(transaction_id, voter_id)");
             case 255:
-                apply("CREATE INDEX IF NOT EXISTS phasing_poll_voter_id_height_idx ON phasing_poll_voter(transaction_id, height DESC)");
+                apply("CREATE UNIQUE INDEX IF NOT EXISTS phasing_poll_voter_transaction_voter_idx ON phasing_poll_voter(transaction_id, voter_id)");
             case 256:
                 apply("CREATE TABLE IF NOT EXISTS phasing_poll_result (db_id IDENTITY, id BIGINT NOT NULL, "
-                        + "apply_height INT NOT NULL, result BIGINT NOT NULL, approved BOOLEAN NOT NULL, height INT NOT NULL)");
+                        + "result BIGINT NOT NULL, approved BOOLEAN NOT NULL, height INT NOT NULL)");
             case 257:
                 apply("CREATE UNIQUE INDEX IF NOT EXISTS phasing_poll_result_id_idx ON phasing_poll_result(id)");
             case 258:
@@ -677,6 +673,31 @@ class NxtDbVersion extends DbVersion {
             case 260:
                 apply("CREATE INDEX IF NOT EXISTS currency_founder_account_id_idx ON currency_founder (account_id, height DESC)");
             case 261:
+                apply("TRUNCATE TABLE trade");
+            case 262:
+                apply("ALTER TABLE trade ADD COLUMN IF NOT EXISTS is_buy BOOLEAN NOT NULL");
+            case 263:
+                apply("CREATE INDEX IF NOT EXISTS phasing_poll_voter_height_idx ON phasing_poll_voter(height)");
+            case 264:
+                apply("TRUNCATE TABLE ask_order");
+            case 265:
+                apply("ALTER TABLE ask_order ADD COLUMN IF NOT EXISTS transaction_height INT NOT NULL");
+            case 266:
+                apply("TRUNCATE TABLE bid_order");
+            case 267:
+                apply("ALTER TABLE bid_order ADD COLUMN IF NOT EXISTS transaction_height INT NOT NULL");
+            case 268:
+                apply("TRUNCATE TABLE buy_offer");
+            case 269:
+                apply("ALTER TABLE buy_offer ADD COLUMN IF NOT EXISTS transaction_height INT NOT NULL");
+            case 270:
+                apply("TRUNCATE TABLE sell_offer");
+            case 271:
+                apply("ALTER TABLE sell_offer ADD COLUMN IF NOT EXISTS transaction_height INT NOT NULL");
+            case 272:
+                BlockchainProcessorImpl.getInstance().scheduleScan(0, false);
+                apply(null);
+            case 273:
                 return;
             default:
                 throw new RuntimeException("Blockchain database inconsistent with code, at update " + nextUpdate + ", probably trying to run older code on newer database");

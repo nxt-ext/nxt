@@ -14,17 +14,15 @@ import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 
 import static nxt.http.JSONResponses.FEATURE_NOT_AVAILABLE;
 import static nxt.http.JSONResponses.INCORRECT_ARBITRARY_MESSAGE;
 import static nxt.http.JSONResponses.INCORRECT_DEADLINE;
+import static nxt.http.JSONResponses.INCORRECT_WHITELIST;
 import static nxt.http.JSONResponses.MISSING_DEADLINE;
 import static nxt.http.JSONResponses.MISSING_SECRET_PHRASE;
 import static nxt.http.JSONResponses.NOT_ENOUGH_FUNDS;
-import static nxt.http.JSONResponses.INCORRECT_WHITELIST;
 
 abstract class CreateTransaction extends APIServlet.APIRequestHandler {
 
@@ -76,18 +74,13 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
         long[] whitelist;
         String[] whitelistValues = req.getParameterValues("phasingWhitelisted");
         if (whitelistValues != null && whitelistValues.length > 0) {
-            List<Long> whitelistList = new ArrayList<>();
-            for (String whitelistValue : whitelistValues) {
-                long accountId = Convert.parseAccountId(whitelistValue);
-                if (accountId != 0) {
-                    whitelistList.add(accountId);
-                } else {
+            whitelist = new long[whitelistValues.length];
+            for (int i = 0; i < whitelistValues.length; i++) {
+                long accountId = Convert.parseAccountId(whitelistValues[i]);
+                if (accountId == 0) {
                     throw new ParameterException(INCORRECT_WHITELIST);
                 }
-            }
-            whitelist = new long[whitelistList.size()];
-            for (int i = 0; i < whitelistList.size(); i++) {
-                whitelist[i] = whitelistList.get(i);
+                whitelist[i] = accountId;
             }
         } else {
             whitelist = Convert.EMPTY_LONG;

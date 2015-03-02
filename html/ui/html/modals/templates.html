@@ -88,13 +88,13 @@
                     <a href="#{{name}}_approve_tab_accounts" aria-controls="{{name}}_approve_tab_accounts" class="at_accounts" role="tab" data-fee-nxt-approval-addition="2" data-toggle="tab"><span class="label label-default"><i class="fa fa-gavel"></i></span> <span class="label label-warning"><i class="fa fa-group"></i></span></a>
                 </li>    
                 <li role="presentation" class="show_popover" data-toggle="popover" data-placement="top" data-content="Transaction has to be approved by accounts holding a certain amount of NXT" data-container="#{{name}}_approve_modal" data-i18n="[data-content]approve_modal_by_balance_tab_help">
-                    <a href="#{{name}}_approve_tab_balance" aria-controls="{{name}}_approve_tab_balance" class="at_balance" role="tab" data-fee-nxt-approval-addition="10" data-toggle="tab"><span class="label label-default"><i class="fa fa-gavel"></i></span> <span class="label label-warning"><i class="fa fa-money"></i></span></a>
+                    <a href="#{{name}}_approve_tab_balance" aria-controls="{{name}}_approve_tab_balance" class="at_balance" role="tab" data-fee-nxt-approval-addition="20" data-toggle="tab"><span class="label label-default"><i class="fa fa-gavel"></i></span> <span class="label label-warning"><i class="fa fa-money"></i></span></a>
                 </li>
                 <li role="presentation" class="show_popover" data-toggle="popover" data-placement="top" data-content="Transaction has to be approved by asset holders with a certain stake" data-container="#{{name}}_approve_modal" data-i18n="[data-content]approve_modal_by_asset_tab_help">
-                    <a href="#{{name}}_approve_tab_asset_holders" aria-controls="{{name}}_approve_tab_asset_holders" class="at_asset_holders" role="tab" data-fee-nxt-approval-addition="10" data-toggle="tab"><span class="label label-default"><i class="fa fa-gavel"></i></span> <span class="label label-warning"><i class="fa fa-signal"></i></span></a>
+                    <a href="#{{name}}_approve_tab_asset_holders" aria-controls="{{name}}_approve_tab_asset_holders" class="at_asset_holders" role="tab" data-fee-nxt-approval-addition="20" data-toggle="tab"><span class="label label-default"><i class="fa fa-gavel"></i></span> <span class="label label-warning"><i class="fa fa-signal"></i></span></a>
                 </li>
                 <li role="presentation" class="show_popover" data-toggle="popover" data-placement="top" data-content="Transaction has to be approved by currency holders with a certain stake" data-container="#{{name}}_approve_modal" data-i18n="[data-content]approve_modal_by_currency_tab_help">
-                    <a href="#{{name}}_approve_tab_currency_holders" aria-controls="{{name}}_approve_tab_currency_holders" class="at_currency_holders" role="tab" data-fee-nxt-approval-addition="10" data-toggle="tab"><span class="label label-default"><i class="fa fa-gavel"></i></span> <span class="label label-warning"><i class="fa fa-bank"></i></span></a>
+                    <a href="#{{name}}_approve_tab_currency_holders" aria-controls="{{name}}_approve_tab_currency_holders" class="at_currency_holders" role="tab" data-fee-nxt-approval-addition="20" data-toggle="tab"><span class="label label-default"><i class="fa fa-gavel"></i></span> <span class="label label-warning"><i class="fa fa-bank"></i></span></a>
                 </li>
             </ul>
 
@@ -115,15 +115,7 @@
                             </div>
                         </div>
                         <div class="col-xs-6">
-                            <div class="form-group pending_finish_height_group block_height_group">
-                                <div style="float:right;">
-                                    <span class="bhg_time_estimate"></span>
-                                    <i class="fa fa-question-circle modal-context-help" data-content="" data-toggle="popover" data-trigger="hover" data-container="body" data-i18n="[data-content]block_height_estimate_help"></i>
-                                </div>
-                                <label for="{{name}}_pending_finish_height" data-i18n="finish_height">Finish Height</label>
-                                <i class="fa fa-question-circle modal-context-help" data-content="" data-toggle="popover" data-trigger="hover" data-container="#{{name}}_approve_modal" data-i18n="[data-content]approve_transaction_finish_height_help"></i>
-                                <input type="text" name="phasingFinishHeight" id="{{name}}_pending_finish_height" class="form-control bhg_time_input" placeholder="Finish Height" data-i18n="finish_height" disabled />
-                            </div>
+                            <div class="form-group pending_finish_height_group" data-modal-ui-element="block_height_modal_ui_element"></div>
                         </div>
                     </div>
                     <input type="hidden" name="phased" value="true" disabled />
@@ -134,7 +126,7 @@
                 <div role="tabpanel" class="tab-pane tab_pane_approve" id="{{name}}_approve_tab_balance">
                     <div class="row">
                         <div class="col-xs-6">
-                            <div class="form-group pending_amount_nxt_group">
+                            <div class="form-group">
                                 <label data-i18n="approve_amount_nxt">Amount NXT</label>
                                 <i class="fa fa-question-circle modal-context-help" data-content="" data-toggle="popover" data-trigger="hover" data-container="#{{name}}_approve_modal" data-i18n="[data-content]approve_transaction_amount_help"></i>
                                 <div class="input-group">
@@ -144,15 +136,7 @@
                             </div>
                         </div>
                         <div class="col-xs-6">
-                            <div class="form-group pending_finish_height_group block_height_group">
-                                <div style="float:right;">
-                                    <span class="bhg_time_estimate"></span>
-                                    <i class="fa fa-question-circle modal-context-help" data-content="" data-toggle="popover" data-trigger="hover" data-container="body" data-i18n="[data-content]block_height_estimate_help"></i>
-                                </div>
-                                <label for="{{name}}_pending_finish_height" data-i18n="finish_height">Finish Height</label>
-                                <i class="fa fa-question-circle modal-context-help" data-content="" data-toggle="popover" data-trigger="hover" data-container="#{{name}}_approve_modal" data-i18n="[data-content]approve_transaction_finish_height_help"></i>
-                                <input type="text" name="phasingFinishHeight" id="{{name}}_pending_finish_height" class="form-control bhg_time_input" placeholder="Finish Height" data-i18n="finish_height" disabled />
-                            </div>
+                            <div class="form-group pending_finish_height_group" data-modal-ui-element="block_height_modal_ui_element"></div>
                         </div>
                     </div>
                     <input type="hidden" name="phased" value="true" disabled />
@@ -164,10 +148,21 @@
                     <div class="row">
                         <div class="col-xs-6">
                             <div class="form-group">
-                                <label data-i18n="asset_id">Asset ID</label>
-                                <i class="fa fa-question-circle modal-context-help" data-content="Asset ID." data-toggle="popover" data-trigger="hover" data-container="#{{name}}_approve_modal" data-i18n="[data-content]approve_tx_asset_id_help"></i>
-                                <input type="text"  class="form-control" name="phasingHolding" id="{{name}}_asset_id" placeholder="Asset ID" data-i18n="[placeholder]asset_id" tabindex="2" disabled/>
+                                <label data-i18n="asset_quantity">Asset Quantity</label>
+                                <i class="fa fa-question-circle modal-context-help" data-content="" data-toggle="popover" data-trigger="hover" data-container="#{{name}}_approve_modal" data-i18n="[data-content]approve_transaction_amount_help"></i>
+                                <div class="input-group">
+                                    <input type="text" name="phasingQuorumQNTf" step="any" min="0" class="form-control" placeholder="Asset Quantity" data-i18n="[placeholder]asset_quantity" tabindex="3" disabled>
+                                    <span class="input-group-addon">Quantity</span>
+                                </div>
                             </div>
+                        </div>
+                        <div class="col-xs-6">
+                            <div class="form-group pending_finish_height_group" data-modal-ui-element="block_height_modal_ui_element"></div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-xs-12">
+                            <div class="form-group" data-modal-ui-element="add_asset_modal_ui_element"></div>
                         </div>
                     </div>
                     <input type="hidden" name="phased" value="true" disabled />
@@ -179,10 +174,21 @@
                     <div class="row">
                         <div class="col-xs-6">
                             <div class="form-group">
-                                <label data-i18n="currency_id">Currency ID</label>
-                                <i class="fa fa-question-circle modal-context-help" data-content="Currency ID." data-toggle="popover" data-trigger="hover" data-container="#{{name}}_approve_modal" data-i18n="[data-content]approve_tx_asset_id_help"></i>
-                                <input type="text"  class="form-control" name="phasingHolding" id="{{name}}_asset_id" placeholder="Currency ID" data-i18n="[placeholder]currency_id" tabindex="2" disabled/>
+                                <label data-i18n="currency_units">Currency Units</label>
+                                <i class="fa fa-question-circle modal-context-help" data-content="" data-toggle="popover" data-trigger="hover" data-container="#{{name}}_approve_modal" data-i18n="[data-content]approve_transaction_amount_help"></i>
+                                <div class="input-group">
+                                    <input type="text" name="phasingQuorumQNTf" step="any" min="0" class="form-control" placeholder="Currency Units" data-i18n="[placeholder]currency_units" tabindex="3" disabled>
+                                    <span class="input-group-addon">Units</span>
+                                </div>
                             </div>
+                        </div>
+                        <div class="col-xs-6">
+                            <div class="form-group pending_finish_height_group" data-modal-ui-element="block_height_modal_ui_element"></div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-xs-6">
+                            <div class="form-group" data-modal-ui-element="add_currency_modal_ui_element"></div>
                         </div>
                     </div>
                     <input type="hidden" name="phased" value="true" disabled />

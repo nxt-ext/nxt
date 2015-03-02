@@ -1,0 +1,47 @@
+<div id="block_height_modal_ui_element">
+    <div style="float:right;">
+        <span class="bhm_ue_time_estimate"></span>
+        <i class="fa fa-question-circle modal-context-help" data-content="" data-toggle="popover" data-trigger="hover" data-container="body" data-i18n="[data-content]block_height_estimate_help"></i>
+    </div>
+    <label for="{{modalName}}_{{labelI18n}}" data-i18n="{{labelI18n}}">{{labelText}}</label>
+    <i class="fa fa-question-circle modal-context-help" data-content="" data-toggle="popover" data-trigger="hover" data-container="#{{modalId}}" data-i18n="[data-content]{{helpI18n}}"></i>
+    <div class="input-group">
+        <input type="text" name="{{inputName}}" id="{{modalName}}_{{labelI18n}}" class="form-control bhm_ue_time_input" value="{{initBlockHeight}}" placeholder="{{labelText}}" data-i18n="{{labelI18n}}" />
+        <span class="input-group-addon">
+            <span class="bhm_ue_current_block_height"></span>
+            <i class="fa fa-question-circle modal-context-help" data-content="" data-toggle="popover" data-trigger="hover" data-container="#{{modalId}}" data-i18n="[data-content]current_block_height_help"></i>
+        </span>
+        <span class="input-group-btn">
+            <button class="btn btn-default bhm_ue_reduce_height_btn" data-bhm-ue-num-blocks="{{changeHeightBlocks}}" type="button">-{{changeHeightBlocks}}</button>
+        </span>
+        <span class="input-group-btn">
+            <button class="btn btn-default bhm_ue_add_height_btn" data-bhm-ue-num-blocks="{{changeHeightBlocks}}" type="button">+{{changeHeightBlocks}}</button>
+        </span>
+    </div>
+</div>
+
+<div id="add_currency_modal_ui_element">
+    <label for="{{modalName}}_{{labelI18n}}" data-i18n="{{labelI18n}}">{{labelText}}</label>
+    <i class="fa fa-question-circle modal-context-help" data-content="" data-toggle="popover" data-trigger="hover" data-container="#{{modalId}}" data-i18n="[data-content]{{helpI18n}}"></i>
+    <div class="input-group">
+        <input type="text"  class="form-control acm_ue_currency_code_input" name="{{inputCodeName}}" size="5" maxlength="5" id="{{modalName}}_{{labelI18n}}" placeholder="Code" data-i18n="[placeholder]code" tabindex="2" />
+        <input type="hidden" class="acm_ue_currency_id_input" name="{{inputIdName}}" disabled>
+        <input type="hidden" class="acm_ue_currency_decimals_input" name="{{inputDecimalsName}}" disabled>
+        <span class="input-group-addon" style="min-width:220px;text-align:left;">
+            ID: <span class="acm_ue_currency_id">-</span>
+        </span>
+    </div>
+</div>
+
+<div id="add_asset_modal_ui_element">
+    <label for="{{modalName}}_{{labelI18n}}" data-i18n="{{labelI18n}}">{{labelText}}</label>
+    <i class="fa fa-question-circle modal-context-help" data-content="" data-toggle="popover" data-trigger="hover" data-container="#{{modalId}}" data-i18n="[data-content]{{helpI18n}}"></i>
+    <div class="input-group">
+        <input type="text"  class="form-control aam_ue_asset_id_input" name="{{inputIdName}}" size="20" maxlength="20" id="{{modalName}}_{{labelI18n}}" placeholder="Asset ID" data-i18n="[placeholder]asset_id" tabindex="2" />
+        <input type="hidden" class="aam_ue_asset_decimals_input" name="{{inputDecimalsName}}" disabled>
+        <span class="input-group-addon" style="min-width:440px;text-align:left;">
+            <span class="aam_ue_asset_name">-</span>
+        </span>
+    </div>
+</div>
+

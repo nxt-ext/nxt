@@ -443,16 +443,20 @@ var NRS = (function(NRS, $, undefined) {
 					var ut = unconfirmedTransactions[i];
 					if (ut.attachment && ut.attachment["version.PhasingVoteCasting"] && ut.attachment.transactionFullHashes && ut.attachment.transactionFullHashes.length > 0) {
 						if (ut.attachment.transactionFullHashes[0] == transaction.fullHash) {
-						disabledHTML = "disabled";
-					}
+							disabledHTML = "disabled";
+						}
 					}
 				}
 			}
-
+			if (t.attachment.phasingWhitelist.length > 0 || t.attachment.phasingVotingModel == 0) {
+				var fee = 1;
+			} else {
+				var fee = 2;
+			}
 			html += '<td style="vertical-align:middle;text-align:right;">';
 			html += "<a class='btn btn-xs btn-default approve_transaction_btn " + disabledHTML + "' href='#' data-toggle='modal' data-target='#approve_transaction_modal' ";
 			html += "data-transaction='" + String(transaction.transaction).escapeHTML() + "' data-full-hash='" + String(transaction.fullHash).escapeHTML() + "' ";
-			html += "data-i18n='approve' >Approve</a>";
+			html += "data-transaction-fee='" + String(fee) + "' data-i18n='approve' >Approve</a>";
 			html += "</td>";
 		}
 		html += "</tr>";
