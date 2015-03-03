@@ -645,6 +645,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     Genesis.CREATOR_PUBLIC_KEY, new byte[64], Genesis.GENESIS_BLOCK_SIGNATURE, null, transactions);
             genesisBlock.setPrevious(null);
             addBlock(genesisBlock);
+            scheduleScan(0, false);
         } catch (NxtException.ValidationException e) {
             Logger.logMessage(e.getMessage());
             throw new RuntimeException(e.toString(), e);
