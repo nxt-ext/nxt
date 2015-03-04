@@ -262,7 +262,7 @@ var NRS = (function(NRS, $, undefined) {
 		html += '<span class="label label-primary" style="font-size:12px;">' + iconHTML + '</span>';
 		return html;
 	}
-
+	
 	NRS.addPendingTransactionHTML = function(t) {
 		var html = "";
 		var $td = $('#tr_transaction_' + t.transaction + ' .td_transaction_pending');
@@ -285,19 +285,19 @@ var NRS = (function(NRS, $, undefined) {
 					var resultFormatted = "";
 					var quorumFormatted = "";
 					var unitFormattted = "";
-					var finishHeightFormatted = String(response.finishHeight);
-					var percentageFormatted = NRS.calculatePercentage(response.result, response.quorum) + "%";
-					var percentageProgressBar = Math.round(response.result * 100 / response.quorum);
+					var finishHeightFormatted = String(attachment.phasingFinishHeight);
+					var percentageFormatted = NRS.calculatePercentage(response.result, attachment.phasingQuorum) + "%";
+					var percentageProgressBar = Math.round(response.result * 100 / attachment.phasingQuorum);
 					var progressBarWidth = Math.round(percentageProgressBar / 2);
 
-					if (response.finished) {
-						var finishedFormatted = "Yes";
+					if (response.approved) {
+						var approvedFormatted = "Yes";
 					} else {
-						var finishedFormatted = "No";
+						var approvedFormatted = "No";
 					}
 
-					if (response.finished) {
-						if (response.result >= response.quorum) {
+					if (response.approved) {
+						if (response.result >= attachment.phasingQuorum) {
 							state = "success";
 							color = "#00a65a";	
 						} else {
@@ -311,32 +311,32 @@ var NRS = (function(NRS, $, undefined) {
 					if (vm == 0) {
 						icon = '<i class="fa fa-group"></i>';
 						resultFormatted = String(response.result);
-						quorumFormatted = String(response.quorum);
+						quorumFormatted = String(attachment.phasingQuorum);
 						unitFormattted = "";
 					}
 					if (vm == 1) {
 						icon = '<i class="fa fa-money"></i>';
 						resultFormatted = NRS.convertToNXT(response.result);
-						quorumFormatted = NRS.convertToNXT(response.quorum);
+						quorumFormatted = NRS.convertToNXT(attachment.phasingQuorum);
 						unitFormattted = "NXT";
 					}
 					if (vm == 2) {
 						icon = '<i class="fa fa-signal"></i>';
 						resultFormatted = String(response.result);
-						quorumFormatted = String(response.quorum);
+						quorumFormatted = String(attachment.phasingQuorum);
 						unitFormattted = "";
 					}
 					if (vm == 3) {
 						icon = '<i class="fa fa-bank"></i>';
 						resultFormatted = String(response.result);
-						quorumFormatted = String(response.quorum);
+						quorumFormatted = String(attachment.phasingQuorum);
 						unitFormattted = "";
 					}
 					var popover = "<table class='table table-striped'>";
 					popover += "<tr><td>Votes:</td><td>" + resultFormatted + " / " + quorumFormatted + " " + unitFormattted + "</td></tr>";
 					popover += "<tr><td>Percentage:</td><td>" + percentageFormatted + "</td></tr>";
 					popover += "<tr><td>Finish Height:</td><td>" + finishHeightFormatted + "</td></tr>";
-					popover += "<tr><td>Finished:</td><td>" + finishedFormatted + "</td></tr>";
+					popover += "<tr><td>Finished:</td><td>" + approvedFormatted + "</td></tr>";
 					popover += "</table>";
 
 					html += '<div class="show_popover" style="display:inline-block;min-width:94px;text-align:left;border:1px solid #e2e2e2;background-color:#fff;padding:3px;" ';
