@@ -375,10 +375,13 @@ var NRS = (function(NRS, $, undefined) {
                   break;
                case 9:
                   var data = {
-                     "type": $.t("transaction_approval"),
-                     "name": transaction.attachment.name,
-                     "description": transaction.attachment.description
+                     "type": $.t("transaction_approval")
                   };
+                  for (i=0; i<transaction.attachment.transactionFullHashes.length; i++) {
+                     var transactionBytes = converters.hexStringToByteArray(transaction.attachment.transactionFullHashes[i]);
+                     var transactionId = converters.byteArrayToBigInteger(transactionBytes, 0).toString().escapeHTML();
+                     data[$.t("transaction") + (i+1) + "_formatted_html"] = "<a href='#' data-transaction='" + transactionId + "'>" + transactionId + "</a>";
+                  }
 
                   $("#transaction_info_table").find("tbody").append(NRS.createInfoTable(data));
                   $("#transaction_info_table").show();
