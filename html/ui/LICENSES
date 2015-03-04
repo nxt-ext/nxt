@@ -7,7 +7,6 @@ font-awesome.css - MIT - http://fortawesome.github.io
 growl - MIT - https://github.com/mouse0270/bootstrap-growl
 ionicons.css - MIT - http://ionicons.com
 jquery.rss.js - MIT - https://github.com/sdepold/jquery-rss
-jquery.tablesorter.js - MIT - https://github.com/christianbach/tablesorter
 webdb.js - MIT - http://github.com/haas85/webdb
 passphrasegenerator.js - custom - based on https://github.com/michenriksen/diceware (UNLICENSE) and https://github.com/ggozad/mnemonic.js (MIT)
 seedrandom.js - MIT - https://github.com/davidbau/seedrandom
