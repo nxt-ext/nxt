@@ -1,5 +1,5 @@
 <div id="block_height_modal_ui_element">
-    <div style="float:right;">
+    <div style="float:right;font-size:12px;">
         <span class="bhm_ue_time_estimate"></span>
         <i class="fa fa-question-circle modal-context-help" data-content="" data-toggle="popover" data-trigger="hover" data-container="body" data-i18n="[data-content]block_height_estimate_help"></i>
     </div>
@@ -8,6 +8,7 @@
     <div class="input-group">
         <input type="text" name="{{inputName}}" id="{{modalName}}_{{labelI18n}}" class="form-control bhm_ue_time_input" value="{{initBlockHeight}}" placeholder="{{labelText}}" data-i18n="{{labelI18n}}" />
         <span class="input-group-addon">
+            <a href="#" class="bhm_ue_use_current_block_height" data-current-block-height="" style="color:#000;"><i class="fa fa-arrow-circle-left"></i></a> 
             <span class="bhm_ue_current_block_height"></span>
             <i class="fa fa-question-circle modal-context-help" data-content="" data-toggle="popover" data-trigger="hover" data-container="#{{modalId}}" data-i18n="[data-content]current_block_height_help"></i>
         </span>

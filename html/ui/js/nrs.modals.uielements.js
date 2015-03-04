@@ -44,11 +44,17 @@ var NRS = (function(NRS, $, undefined) {
 		$bhmElems.each(function(key, bhmElem) {
 			_updateBlockHeightEstimates($(bhmElem));
 			$(bhmElem).find(".bhm_ue_current_block_height").html(String(NRS.lastBlockHeight));
+			$(bhmElem).find(".bhm_ue_use_current_block_height").data('CurrentBlockHeight', NRS.lastBlockHeight);
 		});
 	});
 	$('body').on('keyup', '.modal div[data-modal-ui-element="block_height_modal_ui_element"] .bhm_ue_time_input', function(e) {
 		var $bhmElem = $(this).closest('div[data-modal-ui-element="block_height_modal_ui_element"]');
 		_updateBlockHeightEstimates($bhmElem);
+	});
+
+	$('body').on('click', '.modal div[data-modal-ui-element="block_height_modal_ui_element"] .bhm_ue_use_current_block_height', function(e) {
+		var $bhmElem = $(this).closest('div[data-modal-ui-element="block_height_modal_ui_element"]');
+		$bhmElem.find('.bhm_ue_time_input').val($(this).data('CurrentBlockHeight'));
 	});
 
 	$('body').on('click', '.modal div[data-modal-ui-element="block_height_modal_ui_element"] .bhm_ue_reduce_height_btn', function(e) {
