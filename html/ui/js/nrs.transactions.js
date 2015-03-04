@@ -285,6 +285,11 @@ var NRS = (function(NRS, $, undefined) {
 					var resultFormatted = "";
 					var quorumFormatted = "";
 					var unitFormattted = "";
+					if (attachment.phasingFinishHeight < NRS.lastBlockHeight) {
+						var finished = true;
+					} else {
+						var finished = false;
+					}
 					var finishHeightFormatted = String(attachment.phasingFinishHeight);
 					var percentageFormatted = NRS.calculatePercentage(response.result, attachment.phasingQuorum) + "%";
 					var percentageProgressBar = Math.round(response.result * 100 / attachment.phasingQuorum);
@@ -296,8 +301,8 @@ var NRS = (function(NRS, $, undefined) {
 						var approvedFormatted = "No";
 					}
 
-					if (response.approved) {
-						if (response.result >= attachment.phasingQuorum) {
+					if (finished) {
+						if (response.approved) {
 							state = "success";
 							color = "#00a65a";	
 						} else {
