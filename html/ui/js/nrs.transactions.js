@@ -262,7 +262,7 @@ var NRS = (function(NRS, $, undefined) {
 		html += '<span class="label label-primary" style="font-size:12px;">' + iconHTML + '</span>';
 		return html;
 	}
-	
+
 	NRS.addPendingTransactionHTML = function(t) {
 		var html = "";
 		var $td = $('#tr_transaction_' + t.transaction + ' .td_transaction_pending');
@@ -336,7 +336,7 @@ var NRS = (function(NRS, $, undefined) {
 					popover += "<tr><td>Votes:</td><td>" + resultFormatted + " / " + quorumFormatted + " " + unitFormattted + "</td></tr>";
 					popover += "<tr><td>Percentage:</td><td>" + percentageFormatted + "</td></tr>";
 					popover += "<tr><td>Finish Height:</td><td>" + finishHeightFormatted + "</td></tr>";
-					popover += "<tr><td>Finished:</td><td>" + approvedFormatted + "</td></tr>";
+					popover += "<tr><td>Approved:</td><td>" + approvedFormatted + "</td></tr>";
 					popover += "</table>";
 
 					html += '<div class="show_popover" style="display:inline-block;min-width:94px;text-align:left;border:1px solid #e2e2e2;background-color:#fff;padding:3px;" ';
