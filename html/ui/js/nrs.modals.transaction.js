@@ -1005,7 +1005,7 @@ var NRS = (function(NRS, $, undefined) {
             }
             if (!incorrect) {
                if (transaction.sender != NRS.account) {
-                  data["sender"] = NRS.getAccountTitle(transaction, "sender");
+                  data["sender"] = transaction.senderRS ? transaction.senderRS : transaction.sender;
                }
 
                $("#transaction_info_callout").html("");
