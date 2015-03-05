@@ -124,7 +124,8 @@ var NRS = (function(NRS, $, undefined) {
 				"asset": _assetId
 			}, function(response) {
 				if (response && response.asset) {
-					$(_aamElem).find('.aam_ue_asset_name').html(String(response.name));
+					var nameString = String(response.name) + "&nbsp; (" + $.t('decimals', 'Decimals') + ": " + String(response.decimals) + ")";
+					$(_aamElem).find('.aam_ue_asset_name').html(nameString);
 					$(_aamElem).find('.aam_ue_asset_decimals_input').val(String(response.decimals));
 					$(_aamElem).find('.aam_ue_asset_decimals_input').prop("disabled", false);
 				} else {
