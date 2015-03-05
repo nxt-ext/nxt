@@ -121,13 +121,14 @@ When adding new text/labeling visible in the UI do the following:
 
 #### Updating base translation file #####
 
-The basis for other translations is the **english translation** file in ``ui/locales/en/translation.json``. To update the file with the latest keys, english base translations do the following:
+The basis for other translations is the **english translation** file in ``ui/locales/en/translation.json``. From time to time it might be necessary to collect translation keys forgotten to be added by developers systematically by using the i18next parser. To update the file with the latest keys and english base translations do the following:
 
-1. Count the rows of the english translation file, e.g. ``wc -l ui/locales/en/translation.json``
-2. To avoid intervenings with 3rd party files create a temporary folder for files to be parsed ``ui/trans-tmp/`` (``cp -R ui/js ui/trans-tmp/``, ``cp -R ui/html/ ui/trans-tmp/``, ``cp ui/*.html ui/trans-tmp/``)
-3. Parse translation strings not yet included in the english translation file with the i18next parser (extra install) with ``i18next ui -r -l en -o ui/locales/`` (if there is a strange "reuseSuffix" entry at the top of the file: this is a bug, delete!)
-4. There are still some dynamic uses of the ``$.t()`` function in the code base (e.g. ``$.t(type + "_currency")``), causing ``i18next`` to not detect these keys. If there is a generated ``translation_old.json`` file, add these strings manually to the ``translation.json`` file (keep an eye on commatas at the end of the lines!)
-5. Search for empty translation strings in english translation file forgotten by devs (by searching for empty string ""), full-text search in client folders for associated key and manually fill-in english string to translation file.
+1. Make a backup of your ``locales`` folder
+2. Count the rows of the english translation file, e.g. ``wc -l ui/locales/en/translation.json``
+3. To avoid intervenings with 3rd party files create a temporary folder for files to be parsed ``ui/trans-tmp/`` (``cp -R ui/js ui/trans-tmp/``, ``cp -R ui/html/ ui/trans-tmp/``, ``cp ui/*.html ui/trans-tmp/``)
+4. Parse translation strings not yet included in the english translation file with the i18next parser (extra install) with ``i18next ui -r -l en -o ui/locales/`` (if there is a strange "reuseSuffix" entry at the top of the file: this is a bug, delete!)
+5. There are still some dynamic uses of the ``$.t()`` function in the code base (e.g. ``$.t(type + "_currency")``), causing ``i18next`` to not detect these keys. If there is a generated ``translation_old.json`` file, add these strings manually to the ``translation.json`` file (keep an eye on commatas at the end of the lines!)
+6. Search for empty translation strings in english translation file forgotten by devs (by searching for empty string ""), full-text search in client folders for associated key and manually fill-in english string to translation file.
 
 #### Publish new base translations ####
 

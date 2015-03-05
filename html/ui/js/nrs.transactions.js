@@ -264,7 +264,6 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.addPendingTransactionHTML = function(t) {
-		var html = "";
 		var $td = $('#tr_transaction_' + t.transaction + ' .td_transaction_pending');
 
 		if (t.attachment && t.attachment["version.Phasing"] && t.attachment.phasingVotingModel != undefined) {
@@ -284,20 +283,24 @@ var NRS = (function(NRS, $, undefined) {
 					var icon = "";
 					var resultFormatted = "";
 					var quorumFormatted = "";
-					var unitFormattted = "";
-					var finishHeightFormatted = String(response.finishHeight);
-					var percentageFormatted = NRS.calculatePercentage(response.result, response.quorum) + "%";
-					var percentageProgressBar = Math.round(response.result * 100 / response.quorum);
+					if (attachment.phasingFinishHeight < NRS.lastBlockHeight) {
+						var finished = true;
+					} else {
+						var finished = false;
+					}
+					var finishHeightFormatted = String(attachment.phasingFinishHeight);
+					var percentageFormatted = NRS.calculatePercentage(response.result, attachment.phasingQuorum) + "%";
+					var percentageProgressBar = Math.round(response.result * 100 / attachment.phasingQuorum);
 					var progressBarWidth = Math.round(percentageProgressBar / 2);
 
-					if (response.finished) {
-						var finishedFormatted = "Yes";
+					if (response.approved) {
+						var approvedFormatted = "Yes";
 					} else {
-						var finishedFormatted = "No";
+						var approvedFormatted = "No";
 					}
 
-					if (response.finished) {
-						if (response.result >= response.quorum) {
+					if (finished) {
+						if (response.approved) {
 							state = "success";
 							color = "#00a65a";	
 						} else {
@@ -308,62 +311,112 @@ var NRS = (function(NRS, $, undefined) {
 						state = "warning";
 						color = "#f39c12";
 					}
+
+					var $popoverTable = $("<table class='table table-striped'></table>");
+					var $popoverTypeTR = $("<tr><td></td><td></td></tr>");
+					var $popoverVotesTR = $("<tr><td>" + $.t('votes', 'Votes') + ":</td><td></td></tr>");
+					var $popoverPercentageTR = $("<tr><td>" + $.t('percentage', 'Percentage') + ":</td><td></td></tr>");
+					var $popoverFinishTR = $("<tr><td>" + $.t('finish_height', 'Finish Height') + ":</td><td></td></tr>");
+					var $popoverApprovedTR = $("<tr><td>" + $.t('approved', 'Approved') + ":</td><td></td></tr>");
+
+					$popoverTypeTR.appendTo($popoverTable);
+					$popoverVotesTR.appendTo($popoverTable);
+					$popoverPercentageTR.appendTo($popoverTable);
+					$popoverFinishTR.appendTo($popoverTable);
+					$popoverApprovedTR.appendTo($popoverTable);
+
+					$popoverPercentageTR.find("td:last").html(percentageFormatted);
+					$popoverFinishTR.find("td:last").html(finishHeightFormatted);
+					$popoverApprovedTR.find("td:last").html(approvedFormatted);
+
+					var template = '<div class="popover" style="min-width:260px;"><div class="arrow"></div><div class="popover-inner">';
+					template += '<h3 class="popover-title"></h3><div class="popover-content"><p></p></div></div></div>';
+
+					var popoverConfig = {
+						"html": true,
+						"trigger": "hover",
+						"placement": "top",
+						"template": template
+					}
+
 					if (vm == 0) {
 						icon = '<i class="fa fa-group"></i>';
-						resultFormatted = String(response.result);
-						quorumFormatted = String(response.quorum);
-						unitFormattted = "";
 					}
 					if (vm == 1) {
 						icon = '<i class="fa fa-money"></i>';
-						resultFormatted = NRS.convertToNXT(response.result);
-						quorumFormatted = NRS.convertToNXT(response.quorum);
-						unitFormattted = "NXT";
 					}
 					if (vm == 2) {
 						icon = '<i class="fa fa-signal"></i>';
-						resultFormatted = String(response.result);
-						quorumFormatted = String(response.quorum);
-						unitFormattted = "";
 					}
 					if (vm == 3) {
 						icon = '<i class="fa fa-bank"></i>';
-						resultFormatted = String(response.result);
-						quorumFormatted = String(response.quorum);
-						unitFormattted = "";
 					}
-					var popover = "<table class='table table-striped'>";
-					popover += "<tr><td>Votes:</td><td>" + resultFormatted + " / " + quorumFormatted + " " + unitFormattted + "</td></tr>";
-					popover += "<tr><td>Percentage:</td><td>" + percentageFormatted + "</td></tr>";
-					popover += "<tr><td>Finish Height:</td><td>" + finishHeightFormatted + "</td></tr>";
-					popover += "<tr><td>Finished:</td><td>" + finishedFormatted + "</td></tr>";
-					popover += "</table>";
 
-					html += '<div class="show_popover" style="display:inline-block;min-width:94px;text-align:left;border:1px solid #e2e2e2;background-color:#fff;padding:3px;" ';
- 				 	html += 'data-toggle="popover" data-placement="top" data-content="' + popover + '" data-container="body">';
-					html += "<div class='label label-" + state + "' style='display:inline-block;margin-right:5px;'>" + icon + "</div>";
+					var pendingDiv = "";
+					pendingDiv += '<div class="show_popover" style="display:inline-block;min-width:94px;text-align:left;border:1px solid #e2e2e2;background-color:#fff;padding:3px;" ';
+ 				 	pendingDiv += 'data-toggle="popover" data-container="body">';
+					pendingDiv += "<div class='label label-" + state + "' style='display:inline-block;margin-right:5px;'>" + icon + "</div>";
 					
 					if (vm == 0) {
-						html += '<span style="color:' + color + '">' + resultFormatted + '</span> / <span>' + quorumFormatted + '</span>';
+						pendingDiv += '<span style="color:' + color + '">' + String(response.result) + '</span> / <span>' + String(attachment.phasingQuorum) + '</span>';
 					} else {
-						html += '<div class="progress" style="display:inline-block;height:10px;width: 50px;">';
-    					html += '<div class="progress-bar progress-bar-' + state + '" role="progressbar" aria-valuenow="' + percentageProgressBar + '" ';
-    					html += 'aria-valuemin="0" aria-valuemax="100" style="height:10px;width: ' + progressBarWidth + 'px;">';
-      					html += '<span class="sr-only">' + percentageProgressBar + '% Complete</span>';
-    					html += '</div>';
-  						html += '</div> ';
+						pendingDiv += '<div class="progress" style="display:inline-block;height:10px;width: 50px;">';
+    					pendingDiv += '<div class="progress-bar progress-bar-' + state + '" role="progressbar" aria-valuenow="' + percentageProgressBar + '" ';
+    					pendingDiv += 'aria-valuemin="0" aria-valuemax="100" style="height:10px;width: ' + progressBarWidth + 'px;">';
+      					pendingDiv += '<span class="sr-only">' + percentageProgressBar + '% Complete</span>';
+    					pendingDiv += '</div>';
+  						pendingDiv += '</div> ';
   					}
+					pendingDiv += "</div>";
+					$pendingDiv = $(pendingDiv);
+					popoverConfig["content"] = $popoverTable;
+					$pendingDiv.popover(popoverConfig);
+					$pendingDiv.appendTo($td);
 
-					html += "</div>";
-					$td.html(html);
+					if (vm == 0) {
+						$popoverTypeTR.find("td:first").html($.t('accounts', 'Accounts') + ":");
+						$popoverTypeTR.find("td:last").html(String(attachment.phasingWhitelist.length));
+						var votesFormatted = String(response.result) + " / " + String(attachment.phasingQuorum);
+						$popoverVotesTR.find("td:last").html(votesFormatted);
+					}
+					if (vm == 1) {
+						$popoverTypeTR.find("td:first").html($.t('accounts', 'Accounts') + ":");
+						$popoverTypeTR.find("td:last").html(String(attachment.phasingWhitelist.length));
+						var votesFormatted = NRS.convertToNXT(response.result) + " / " + NRS.convertToNXT(attachment.phasingQuorum) + " NXT";
+						$popoverVotesTR.find("td:last").html(votesFormatted);
+					}
+					if (vm == 2) {
+						NRS.sendRequest("getAsset", {
+							"asset": attachment.phasingHolding
+						}, function(phResponse) {
+							if (phResponse && phResponse.asset) {
+								$popoverTypeTR.find("td:first").html($.t('asset', 'Asset') + ":");
+								$popoverTypeTR.find("td:last").html(String(phResponse.name));
+								var votesFormatted = NRS.convertToQNTf(response.result, phResponse.decimals) + " / ";
+								votesFormatted += NRS.convertToQNTf(attachment.phasingQuorum, phResponse.decimals) + " QNT";
+								$popoverVotesTR.find("td:last").html(votesFormatted);
+							}
+						});
+					}
+					if (vm == 3) {
+						NRS.sendRequest("getCurrency", {
+							"currency": attachment.phasingHolding
+						}, function(phResponse) {
+							if (phResponse && phResponse.currency) {
+								$popoverTypeTR.find("td:first").html($.t('currency', 'Currency') + ":");
+								$popoverTypeTR.find("td:last").html(String(phResponse.code));
+								var votesFormatted = NRS.convertToQNTf(response.result, phResponse.decimals) + " / ";
+								votesFormatted += NRS.convertToQNTf(attachment.phasingQuorum, phResponse.decimals) + " Units";
+								$popoverVotesTR.find("td:last").html(votesFormatted);
+							}
+						});
+					}
 				} else {
-					html = "&nbsp;";
-					$td.html(html);
+					$td.html("&nbsp;");
 				}
 			}, false);
 		} else {
-			html = "&nbsp;";
-			$td.html(html);
+			$td.html("&nbsp;");
 		}
 	}
 

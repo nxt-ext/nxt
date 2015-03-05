@@ -49,12 +49,14 @@ var NRS = (function(NRS, $, undefined) {
 			});
 			$markReadLink.appendTo($markReadDiv);
 			$popoverItem.append($markReadDiv);
+			document.title = $.t('app_title') + ' (' + String(totalCount) + ')';
 		} else {
 			$menuItem.find('span .nm_inner_subtype').css('backgroundColor', '#337ab7');
 			$menuItem.find('span .nm_inner_total').css('backgroundColor', '');
 			var html = "";
 			html += "<div style='text-align:center;padding:12px;'>" + $.t('no_notifications', 'No current notifications') + "</div>";
 			$popoverItem.append(html);
+			document.title = $.t('app_title');
 		}
 
 		$menuItem.find('span .nm_inner_subtype').html(String(subTypeCount));

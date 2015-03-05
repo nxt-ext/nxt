@@ -346,6 +346,7 @@ final class JSONData {
                 for (Vote vote : votes) {
                     JSONObject voterObject = new JSONObject();
                     putAccount(voterObject, "voter", vote.getVoterId());
+                    voterObject.put("transaction", Convert.toUnsignedLong(vote.getId()));
                     votersJson.add(voterObject);
                 }
             }
@@ -375,6 +376,7 @@ final class JSONData {
     static JSONObject vote(Poll poll, Vote vote){
         JSONObject json = new JSONObject();
         putAccount(json, "voter", vote.getVoterId());
+        json.put("transaction", Convert.toUnsignedLong(vote.getId()));
         String[] options = poll.getOptions();
 
         JSONArray votesJson = new JSONArray();
@@ -419,6 +421,7 @@ final class JSONData {
                 for (PhasingVote vote : votes) {
                     JSONObject voterObject = new JSONObject();
                     JSONData.putAccount(voterObject, "voter", vote.getVoterId());
+                    voterObject.put("transaction", Convert.toUnsignedLong(vote.getId()));
                     votersJson.add(voterObject);
                 }
             }
