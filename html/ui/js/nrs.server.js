@@ -387,32 +387,25 @@ var NRS = (function(NRS, $, undefined) {
 					if (!response.errorCode) {
 						response.errorCode = -1;
 					}
-				}
-
-				/*
-				if (response.errorCode && !response.errorDescription) {
-					response.errorDescription = (response.errorMessage ? response.errorMessage : $.t("error_unknown"));
-				} else if (response.error && !response.errorDescription) {
-					response.errorDescription = (typeof response.error == "string" ? response.error : $.t("error_unknown"));
-					if (!response.errorCode) {
-						response.errorCode = 1;
-					}
-				}
-				*/
-
-				if (response.broadcasted == false) {
-					NRS.showRawTransactionModal(response);
-				} else {
 					if (callback) {
-						if (extra) {
-							data["_extra"] = extra;
-						}
-						callback(response, data);
+						callback(response, data);	
 					}
-					if (data.referencedTransactionFullHash && !response.errorCode) {
-						$.growl($.t("info_referenced_transaction_hash"), {
-							"type": "info"
-						});
+					return;
+				} else {
+					if (response.broadcasted == false) {
+						NRS.showRawTransactionModal(response);
+					} else {
+						if (callback) {
+							if (extra) {
+								data["_extra"] = extra;
+							}
+							callback(response, data);
+						}
+						if (data.referencedTransactionFullHash && !response.errorCode) {
+							$.growl($.t("info_referenced_transaction_hash"), {
+								"type": "info"
+							});
+						}
 					}
 				}
 			}
