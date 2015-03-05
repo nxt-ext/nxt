@@ -107,7 +107,7 @@ var NRS = (function(NRS, $, undefined) {
 			}
 			return;
 		}
-		// convert currency decimal amount to base unit
+		// convert asset/currency decimal amount to base unit
 		try {
 			var currencyFields = [
 				["phasingQuorumQNTf", "phasingHoldingDecimals"]
