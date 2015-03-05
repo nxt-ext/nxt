@@ -87,9 +87,11 @@ var NRS = (function(NRS, $, undefined) {
 				"code": _currencyCode
 			}, function(response) {
 				if (response && response.currency) {
-					$(_acmElem).find('.acm_ue_currency_id').html(String(response.currency));
+					var idString = String(response.currency) + "&nbsp; (" + $.t('decimals', 'Decimals') + ": " + String(response.decimals) + ")";
+					$(_acmElem).find('.acm_ue_currency_id').html(idString);
 					$(_acmElem).find('.acm_ue_currency_id_input').val(String(response.currency));
 					$(_acmElem).find('.acm_ue_currency_id_input').prop("disabled", false);
+					$(_acmElem).find('.acm_ue_currency_decimals').html(String(response.decimals));
 					$(_acmElem).find('.acm_ue_currency_decimals_input').val(String(response.decimals));
 					$(_acmElem).find('.acm_ue_currency_decimals_input').prop("disabled", false);
 				} else {
