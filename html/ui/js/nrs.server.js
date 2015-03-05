@@ -119,7 +119,7 @@ var NRS = (function(NRS, $, undefined) {
 				var field = decimalUnitField.replace("QNTf", "");
 
 				if (decimalUnitField in data) {
-					data[field] = NRS.convertToQNT(parseInt(data[decimalUnitField]), parseInt(data[decimalsField]));
+					data[field] = NRS.convertToQNT(parseFloat(data[decimalUnitField]), parseInt(data[decimalsField]));
 					delete data[decimalUnitField];
 					delete data[decimalsField];
 				}
