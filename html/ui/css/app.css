@@ -3315,3 +3315,9 @@ input.masked {
   margin: 10px 0;
   vertical-align: top;
 }
+
+#alias_count_heading{
+	position: absolute; 
+	left: 105px; 
+	top: 17px;
+}

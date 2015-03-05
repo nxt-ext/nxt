@@ -3999,3 +3999,9 @@ hr {
   margin: 10px 0;
   vertical-align: top;
 }
+
+#alias_count_heading{
+	position: absolute; 
+	left: 120px; 
+	top: 15px;
+}
