@@ -218,7 +218,7 @@ public final class PhasingPoll extends AbstractPoll {
         }
     }
 
-    public static DbIterator<TransactionImpl> getHoldingPendingTransactions(long holdingId, VoteWeighting.VotingModel votingModel, int from, int to) {
+    public static DbIterator<TransactionImpl> getHoldingPendingTransactions(long holdingId, VoteWeighting.VotingModel votingModel, boolean withoutWhitelist, int from, int to) {
 
         Connection con = null;
         try {
@@ -229,6 +229,7 @@ public final class PhasingPoll extends AbstractPoll {
                     "AND phasing_poll.voting_model = ? " +
                     "AND phasing_poll.id = transaction.id " +
                     "AND phasing_poll.finish_height > ? " +
+                    (withoutWhitelist ? "AND phasing_poll.voter_count = 0 " : "") +
                     "ORDER BY transaction.height DESC, transaction.transaction_index DESC " +
                     DbUtils.limitsClause(from, to));
             int i = 0;
