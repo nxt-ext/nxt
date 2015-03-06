@@ -239,12 +239,12 @@ var NRS = (function(NRS, $, undefined) {
         $am = $(this).closest('.approve_modal');
         $am.find('.tab-pane input').prop('disabled', true);
         $am.find('.tab-pane.active input').prop('disabled', false);
-        if ($(this).hasClass("at_accounts") || $(this).hasClass("at_balance")) {
+        if ($(this).hasClass("at_no_approval")) {
+			$am.find('.approve_whitelist_accounts').hide();
+        	$am.find('.approve_whitelist_accounts input').prop('disabled', true);
+        } else {
         	$am.find('.approve_whitelist_accounts input').prop('disabled', false);
         	$am.find('.approve_whitelist_accounts').show();
-        } else {
-        	$am.find('.approve_whitelist_accounts').hide();
-        	$am.find('.approve_whitelist_accounts input').prop('disabled', true);
         }
     });
 

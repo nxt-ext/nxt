@@ -733,12 +733,14 @@ var NRS = (function(NRS, $, undefined) {
 		var multiValuedFields = ["phasingWhitelisted"];
 		for (var s in serialized) {
 			if (multiValuedFields.indexOf(serialized[s]["name"]) > -1) {
-				if (serialized[s]['name'] in data) {
-					var index = data[serialized[s]['name']].length;
-					data[serialized[s]['name']][index] = serialized[s]['value'];
+				if (serialized[s]['value'] != "") {
+					if (serialized[s]['name'] in data) {
+						var index = data[serialized[s]['name']].length;
+						data[serialized[s]['name']][index] = serialized[s]['value'];
 
-				} else {
-					data[serialized[s]['name']] = [serialized[s]['value']] //all data as list (traditional, to allow multiple values)
+					} else {
+						data[serialized[s]['name']] = [serialized[s]['value']] //all data as list (traditional, to allow multiple values)
+					}
 				}
 			} else {
 				data[serialized[s]['name']] = serialized[s]['value'];
