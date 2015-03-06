@@ -642,13 +642,16 @@ final class JSONData {
     }
 
     static void putException(JSONObject json, Exception e) {
-        putException(json, e, "error");
+        putException(json, e, "");
     }
 
     static void putException(JSONObject json, Exception e, String error) {
         json.put("errorCode", 4);
-        json.put("errorDescription", error + ": " + e.toString());
-        json.put("error", e.getMessage());
+        if (error.length() > 0) {
+            error += ": ";
+        }
+        json.put("error", e.toString());
+        json.put("errorDescription", error + e.getMessage());
     }
 
     static void putAccount(JSONObject json, String name, long accountId) {
