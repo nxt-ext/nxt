@@ -248,23 +248,6 @@ var NRS = (function(NRS, $, undefined) {
         }
     });
 
-    $(".add_account_btn").click(function(e) {
-    	var $accountBox = $(this).closest('.account_box');
-        var $clone = $accountBox.find(".form_group_accounts").first().clone();
-        $clone.find("input").val("");
-        $clone.find(".pas_contact_info").text("");
-        $accountBox.find(".added_account_list").append($clone);
-    });
-
-    $(".modal").on("click", "button.btn.remove_account_btn", function(e) {
-    	e.preventDefault();
-    	var $accountBox = $(this).closest('.account_box');
-    	if ($accountBox.find(".form_group_accounts").length == 1) {
-            return;
-        }
-        $(this).closest(".form_group_accounts").remove();
-    });
-
 	$(".advanced_info a").on("click", function(e) {
 		e.preventDefault();
 

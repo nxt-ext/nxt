@@ -118,6 +118,7 @@
                             <div class="form-group pending_finish_height_group" data-modal-ui-element="block_height_modal_ui_element"></div>
                         </div>
                     </div>
+                    <div class="form-group add_approval_whitelist_group" data-modal-ui-element="multi_accounts_modal_ui_element"></div>
                     <input type="hidden" name="phased" value="true" disabled />
                     <input type="hidden" name="phasingVotingModel" value="0" disabled />
                     <input type="hidden" name="phasingMinBalance" value="0" disabled/>
@@ -139,6 +140,7 @@
                             <div class="form-group pending_finish_height_group" data-modal-ui-element="block_height_modal_ui_element"></div>
                         </div>
                     </div>
+                    <div class="form-group add_approval_whitelist_group" data-modal-ui-element="multi_accounts_modal_ui_element"></div>
                     <input type="hidden" name="phased" value="true" disabled />
                     <input type="hidden" name="phasingVotingModel" value="1" disabled />
                     <input type="hidden" name="phasingMinBalance" value="0" disabled/>
@@ -165,6 +167,7 @@
                             <div class="form-group" data-modal-ui-element="add_asset_modal_ui_element"></div>
                         </div>
                     </div>
+                    <div class="form-group add_approval_whitelist_group" data-modal-ui-element="multi_accounts_modal_ui_element"></div>
                     <input type="hidden" name="phased" value="true" disabled />
                     <input type="hidden" name="phasingVotingModel" value="2" disabled />
                     <input type="hidden" name="phasingMinBalance" value="0" disabled/>
@@ -191,36 +194,10 @@
                             <div class="form-group" data-modal-ui-element="add_currency_modal_ui_element"></div>
                         </div>
                     </div>
+                    <div class="form-group add_approval_whitelist_group" data-modal-ui-element="multi_accounts_modal_ui_element"></div>
                     <input type="hidden" name="phased" value="true" disabled />
                     <input type="hidden" name="phasingVotingModel" value="3" disabled />
                     <input type="hidden" name="phasingMinBalance" value="0" disabled/>
-                </div>
-            </div>
-        </div>
-        
-        <div class="approve_whitelist_accounts account_box" style="display:none;">
-            <div class="row">
-                <div class="col-xs-12 added_account_list">
-                    <label data-i18n="accounts_whitelist">Accounts (Whitelist)</label>
-                    <i class="fa fa-question-circle modal-context-help" data-content="The following accounts will be requested to approve the transaction (mandatory for approvals by account)." data-toggle="popover" data-trigger="hover" data-container="#{{name}}_approve_modal" data-i18n="[data-content]approve_tx_accounts_requested_help"></i>
-                    <div class="form-group form_group_accounts">
-                        <div class="input-group">
-                            <input type="text" class="form-control plain_adress_selector_input" name="phasingWhitelisted" placeholder="Account" data-i18n="[placeholder]account" disabled />
-                            <div class="pas_contact_info">&nbsp;</div>
-                            <span class="input-group-btn">
-                                <button class="btn btn-default remove_account_btn" type="button"><i class="fa fa-minus"></i></button>
-                            </span>
-                            <span class="input-group-btn btn-group plain_adress_selector">
-                                <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown"><span class="glyphicon glyphicon-user"></span></button>
-                                <ul class="dropdown-menu scrollable-menu" role="menu" style="right:0;left:auto;"></ul>
-                            </span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="row form-group">
-                <div class="col-xs-12">
-                    <a href="#" class="btn btn-primary add_account_btn"><i class="fa fa-plus"></i> <span data-i18n="add_account">Add Account</span></a>
                 </div>
             </div>
         </div>

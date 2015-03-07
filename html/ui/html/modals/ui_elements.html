@@ -46,3 +46,30 @@
     </div>
 </div>
 
+<div id="multi_accounts_modal_ui_element">
+    <div class="row">
+        <div class="col-xs-12 multi_accounts_ue_added_account_list">
+            <label data-i18n="{{labelI18n}}">{{labelText}}</label>
+            <i class="fa fa-question-circle modal-context-help" data-content="" data-toggle="popover" data-trigger="hover" data-container="#{{modalId}}" data-i18n="[data-content]{{helpI18n}}"></i>
+            <div class="form-group form_group_multi_accounts_ue">
+                <div class="input-group">
+                    <input type="text" class="form-control plain_adress_selector_input" name="{{inputName}}" placeholder="Account" data-i18n="[placeholder]account" disabled />
+                    <div class="pas_contact_info">&nbsp;</div>
+                    <span class="input-group-btn">
+                        <button class="btn btn-default remove_account_btn" type="button"><i class="fa fa-minus"></i></button>
+                    </span>
+                    <span class="input-group-btn btn-group plain_adress_selector">
+                        <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown"><span class="glyphicon glyphicon-user"></span></button>
+                        <ul class="dropdown-menu scrollable-menu" role="menu" style="right:0;left:auto;"></ul>
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row form-group">
+        <div class="col-xs-12">
+            <a href="#" class="btn btn-primary add_account_btn"><i class="fa fa-plus"></i> <span data-i18n="add_account">Add Account</span></a>
+        </div>
+    </div>
+</div>
+

@@ -38,6 +38,15 @@ var NRS = (function(NRS, $, undefined) {
 		var $elems = NRS.initModalUIElement($modal, '.pending_finish_height_group', 'block_height_modal_ui_element', context);
 		$elems.find('input').prop("disabled", true);
 
+		var context = {
+			labelText: "Accounts (Whitelist)",
+			labelI18n: "accounts_whitelist",
+			helpI18n: "approve_transaction_accounts_requested_help",
+			inputName: "phasingWhitelisted"
+		}
+		var $elems = NRS.initModalUIElement($modal, '.add_approval_whitelist_group', 'multi_accounts_modal_ui_element', context);
+		$elems.find('input').prop("disabled", true);
+
 		context = {
 			labelText: "Asset",
 			labelI18n: "asset",
