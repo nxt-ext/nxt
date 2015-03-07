@@ -1,7 +1,16 @@
+<div id="simple_input_with_addon_modal_ui_element">
+    <label for="{{modalName}}_{{labelI18n}}" data-i18n="{{labelI18n}}">{{labelText}}</label>
+    <i class="fa fa-question-circle modal-context-help" data-content="" data-toggle="popover" data-trigger="hover" data-container="#{{modalId}}" data-i18n="[data-content]{{helpI18n}}"></i>
+    <div class="input-group">
+        <input type="text" name="{{inputName}}" class="form-control" placeholder="{{labelText}}" data-i18n="[placeholder]{{labelI18n}}" tabindex="3">
+        <span class="input-group-addon" data-i18n="{{addonI18n}}">{{addonText}}</span>
+    </div>
+</div>
+
 <div id="block_height_modal_ui_element">
     <div style="float:right;font-size:12px;">
         <span class="bhm_ue_time_estimate"></span>
-        <i class="fa fa-question-circle modal-context-help" data-content="" data-toggle="popover" data-trigger="hover" data-container="body" data-i18n="[data-content]block_height_estimate_help"></i>
+        <i class="fa fa-question-circle modal-context-help" data-content="" data-toggle="popover" data-trigger="hover" data-container="#{{modalId}}" data-i18n="[data-content]block_height_estimate_help"></i>
     </div>
     <label for="{{modalName}}_{{labelI18n}}" data-i18n="{{labelI18n}}">{{labelText}}</label>
     <i class="fa fa-question-circle modal-context-help" data-content="" data-toggle="popover" data-trigger="hover" data-container="#{{modalId}}" data-i18n="[data-content]{{helpI18n}}"></i>
@@ -71,5 +80,18 @@
             <a href="#" class="btn btn-primary add_account_btn"><i class="fa fa-plus"></i> <span data-i18n="add_account">Add Account</span></a>
         </div>
     </div>
+</div>
+
+<div id="min_balance_model_modal_ui_element">
+    <label for="{{modalName}}_{{labelI18n}}" data-i18n="{{labelI18n}}">{{labelText}}</label>
+    <i class="fa fa-question-circle modal-context-help" data-content="" data-toggle="popover" data-trigger="hover" data-container="#{{modalId}}" data-i18n="[data-content]{{helpI18n}}"></i>
+    <div class="input-group">
+        <select class="form-control" name="{{selectName}}" id="{{modalName}}_{{labelI18n}}">
+            <option value="0" selected data-i18n="min_balance_none">No min balance necessary</option>
+            <option value="1" data-i18n="min_balance_type_nxt">Min balance of NXT required</option>
+            <option value="2" data-i18n="min_balance_type_asset">Min balance of asset quantity required</option>
+            <option value="3" data-i18n="min_balance_type_currency">Min balance of currency units required</option>
+        </select>
+    </div>    
 </div>
 

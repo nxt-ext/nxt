@@ -70,6 +70,8 @@
   "approve_transaction_amount_help": "Necessary vote number or amount reached for the transaction to become valid.",
   "approve_transaction_finish_height_help": "Transaction will only become valid if approved until finish height.",
   "approve_transaction_accounts_requested_help": "The following accounts will be requested to approve the transaction (mandatory for approvals by account).",
+  "approve_transaction_min_balance_type_help": "Accounts can only approve transaction when holding a minimal balance of a certain type.",
+  "approve_transaction_min_balance_help": "Min balance to approve transaction.",
   "amount": "Amount",
   "amount_per_share": "Amount Per Share",
   "amount_per_unit": "Amount Per Unit",
