@@ -616,7 +616,7 @@ class NxtDbVersion extends DbVersion {
                         + "min_balance_model TINYINT, holding_id BIGINT, height INT NOT NULL)");
             case 237:
                 apply("CREATE TABLE IF NOT EXISTS poll_result (db_id IDENTITY, poll_id BIGINT NOT NULL, "
-                        + "option VARCHAR NOT NULL, result BIGINT NOT NULL,  height INT NOT NULL)");
+                        + "option VARCHAR NOT NULL, result BIGINT NOT NULL, height INT NOT NULL)");
             case 238:
                 apply("ALTER TABLE transaction ADD COLUMN IF NOT EXISTS phased BOOLEAN NOT NULL DEFAULT FALSE");
             case 239:
@@ -698,6 +698,8 @@ class NxtDbVersion extends DbVersion {
                 BlockchainProcessorImpl.getInstance().scheduleScan(0, false);
                 apply(null);
             case 273:
+                apply("ALTER TABLE poll_result DROP COLUMN IF EXISTS option");
+            case 274:
                 return;
             default:
                 throw new RuntimeException("Blockchain database inconsistent with code, probably trying to run older code on newer database");

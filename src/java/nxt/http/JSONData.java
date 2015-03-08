@@ -342,17 +342,17 @@ final class JSONData {
         return json;
     }
 
-    static JSONObject pollResults(Poll poll, List<Poll.PollResult> results) {
+    static JSONObject pollResults(Poll poll, List<Long> results) {
         JSONObject json = new JSONObject();
         json.put("poll", Convert.toUnsignedLong(poll.getId()));
         json.put("finished", poll.isFinished());
+        JSONArray options = new JSONArray();
+        Collections.addAll(options, poll.getOptions());
+        json.put("options", options);
 
         JSONArray resultsJson = new JSONArray();
-
-        for (Poll.PollResult result : results) {
-            JSONObject jsonPair = new JSONObject();
-            jsonPair.put(result.getOption(), String.valueOf(result.getResult()));
-            resultsJson.add(jsonPair);
+        for (Long result : results) {
+            resultsJson.add(String.valueOf(result));
         }
 
         json.put("results", resultsJson);
