@@ -700,6 +700,8 @@ class NxtDbVersion extends DbVersion {
             case 273:
                 apply("ALTER TABLE poll_result DROP COLUMN IF EXISTS option");
             case 274:
+                apply("ALTER TABLE phasing_poll ALTER COLUMN voter_count RENAME TO whitelist_size");
+            case 275:
                 return;
             default:
                 throw new RuntimeException("Blockchain database inconsistent with code, probably trying to run older code on newer database");
