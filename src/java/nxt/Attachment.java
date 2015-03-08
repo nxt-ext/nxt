@@ -418,7 +418,7 @@ public interface Attachment extends Appendix {
             this.maxRangeValue = ((Long) attachmentData.get("maxRangeValue")).byteValue();
 
             long minBalance = Convert.parseLong(attachmentData.get("minBalance"));
-            byte minBalanceModel = ((Long) attachmentData.get("minBalance")).byteValue();
+            byte minBalanceModel = ((Long) attachmentData.get("minBalanceModel")).byteValue();
             long holdingId = Convert.parseUnsignedLong((String) attachmentData.get("holding"));
             this.voteWeighting = new VoteWeighting(votingModel, holdingId, minBalance, minBalanceModel);
         }
