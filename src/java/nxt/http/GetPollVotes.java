@@ -13,7 +13,9 @@ import javax.servlet.http.HttpServletRequest;
 public class GetPollVotes extends APIServlet.APIRequestHandler  {
     static final GetPollVotes instance = new GetPollVotes();
 
-    private GetPollVotes() { super(new APITag[] {APITag.VS}, "poll", "firstIndex", "lastIndex"); }
+    private GetPollVotes() {
+        super(new APITag[] {APITag.VS}, "poll", "firstIndex", "lastIndex");
+    }
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {

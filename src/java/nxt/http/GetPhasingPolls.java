@@ -16,7 +16,7 @@ public final class GetPhasingPolls extends APIServlet.APIRequestHandler {
     static final GetPhasingPolls instance = new GetPhasingPolls();
 
     private GetPhasingPolls() {
-        super(new APITag[] {APITag.PHASING}, "transaction", "transaction", "transaction", "countVotes", "includeVoters"); // limit to 3 for testing
+        super(new APITag[] {APITag.PHASING}, "transaction", "transaction", "transaction", "countVotes"); // limit to 3 for testing
     }
 
     @Override
@@ -27,7 +27,6 @@ public final class GetPhasingPolls extends APIServlet.APIRequestHandler {
             return MISSING_TRANSACTION;
         }
         boolean countVotes = ParameterParser.getBoolean(req, "countVotes", false);
-        boolean includeVoters = ParameterParser.getBoolean(req, "includeVoters", false);
 
         JSONObject response = new JSONObject();
         JSONArray jsonArray = new JSONArray();
@@ -40,7 +39,7 @@ public final class GetPhasingPolls extends APIServlet.APIRequestHandler {
                 long transactionId = Convert.parseUnsignedLong(transactionIdValue);
                 PhasingPoll poll = PhasingPoll.getPoll(transactionId);
                 if (poll != null) {
-                    jsonArray.add(JSONData.phasingPoll(poll, countVotes, includeVoters));
+                    jsonArray.add(JSONData.phasingPoll(poll, countVotes));
                 } else {
                     PhasingPoll.PhasingPollResult pollResult = PhasingPoll.getResult(transactionId);
                     if (pollResult != null) {

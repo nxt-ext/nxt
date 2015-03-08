@@ -28,7 +28,6 @@ import nxt.Vote;
 import nxt.VoteWeighting;
 import nxt.crypto.Crypto;
 import nxt.crypto.EncryptedData;
-import nxt.db.DbIterator;
 import nxt.peer.Hallmark;
 import nxt.peer.Peer;
 import nxt.util.Convert;
@@ -376,7 +375,7 @@ final class JSONData {
         return json;
     }
 
-    static JSONObject phasingPoll(PhasingPoll poll, boolean countVotes, boolean includeVoters) {
+    static JSONObject phasingPoll(PhasingPoll poll, boolean countVotes) {
         JSONObject json = new JSONObject();
         json.put("transaction", Convert.toUnsignedLong(poll.getId()));
         json.put("transactionFullHash", Convert.toHexString(poll.getFullHash()));
@@ -394,18 +393,6 @@ final class JSONData {
         } else if (countVotes) {
             json.put("result", String.valueOf(PhasingVote.countVotes(poll)));
         }
-        if (includeVoters) {
-            JSONArray votersJson = new JSONArray();
-            try (DbIterator<PhasingVote> votes = PhasingVote.getByTransaction(poll.getId(), 0, Integer.MAX_VALUE)) {
-                for (PhasingVote vote : votes) {
-                    JSONObject voterObject = new JSONObject();
-                    JSONData.putAccount(voterObject, "voter", vote.getVoterId());
-                    voterObject.put("transaction", Convert.toUnsignedLong(vote.getId()));
-                    votersJson.add(voterObject);
-                }
-            }
-            json.put("voters", votersJson);
-        }
         return json;
     }
 
@@ -414,6 +401,13 @@ final class JSONData {
         json.put("transaction", Convert.toUnsignedLong(phasingPollResult.getId()));
         json.put("approved", phasingPollResult.isApproved());
         json.put("result", String.valueOf(phasingPollResult.getResult()));
+        return json;
+    }
+
+    static JSONObject phasingPollVote(PhasingVote vote) {
+        JSONObject json = new JSONObject();
+        JSONData.putAccount(json, "voter", vote.getVoterId());
+        json.put("transaction", Convert.toUnsignedLong(vote.getId()));
         return json;
     }
 
