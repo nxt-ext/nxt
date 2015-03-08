@@ -3,6 +3,7 @@ package nxt;
 import nxt.db.DbClause;
 import nxt.db.DbIterator;
 import nxt.db.DbKey;
+import nxt.db.DbUtils;
 import nxt.db.EntityDbTable;
 import nxt.db.ValuesDbTable;
 import nxt.util.Convert;
@@ -51,7 +52,8 @@ public final class Poll extends AbstractPoll {
 
         @Override
         protected Long load(Connection con, ResultSet rs) throws SQLException {
-            return rs.getLong("result");
+            long result = rs.getLong("result");
+            return rs.wasNull() ? null : result;
         }
 
         @Override
@@ -60,7 +62,7 @@ public final class Poll extends AbstractPoll {
                     + "result, height) VALUES (?, ?, ?)")) {
                 int i = 0;
                 pstmt.setLong(++i, poll.getId());
-                pstmt.setLong(++i, result);
+                DbUtils.setLong(pstmt, ++i, result);
                 pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
                 pstmt.executeUpdate();
             }
@@ -250,37 +252,36 @@ public final class Poll extends AbstractPoll {
     }
 
     private List<Long> countResults(VoteWeighting voteWeighting, int height) {
-        final long[] counts = new long[options.length];
+        final Long[] result = new Long[options.length];
         try (DbIterator<Vote> votes = Vote.getVotes(this.getId(), 0, -1)) {
             for (Vote vote : votes) {
-                long[] partialResult = countVote(voteWeighting, vote, height);
+                Long[] partialResult = countVote(voteWeighting, vote, height);
                 if (partialResult != null) {
                     for (int idx = 0; idx < partialResult.length; idx++) {
-                        counts[idx] = Convert.safeAdd(counts[idx], partialResult[idx]);
+                        if (partialResult[idx] != null) {
+                            result[idx] = result[idx] == null ? partialResult[idx] : Convert.safeAdd(result[idx], partialResult[idx]);
+                        }
                     }
                 }
             }
         }
-        return Convert.toList(counts);
+        return Arrays.asList(result);
     }
 
-    private long[] countVote(VoteWeighting voteWeighting, Vote vote, int height) {
-        final long[] partialResult = new long[options.length];
-
+    private Long[] countVote(VoteWeighting voteWeighting, Vote vote, int height) {
         final long weight = voteWeighting.calcWeight(vote.getVoterId(), height);
-
-        final byte[] optVals = vote.getVote();
-
-        if (weight > 0) {
-            for (int idx = 0; idx < optVals.length; idx++) {
-                if (optVals[idx] != Constants.VOTING_NO_VOTE_VALUE) {
-                    partialResult[idx] = Convert.safeMultiply(optVals[idx], weight);
-                }
-            }
-            return partialResult;
-        } else {
+        if (weight <= 0) {
             return null;
         }
+        final Long[] partialResult = new Long[options.length];
+        final byte[] optVals = vote.getVote();
+
+        for (int idx = 0; idx < optVals.length; idx++) {
+            if (optVals[idx] != Constants.VOTING_NO_VOTE_VALUE) {
+                partialResult[idx] = Convert.safeMultiply(optVals[idx], weight);
+            }
+        }
+        return partialResult;
     }
 
 }

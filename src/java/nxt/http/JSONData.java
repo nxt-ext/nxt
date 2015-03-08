@@ -352,7 +352,7 @@ final class JSONData {
 
         JSONArray resultsJson = new JSONArray();
         for (Long result : results) {
-            resultsJson.add(String.valueOf(result));
+            resultsJson.add(result == null ? "" : String.valueOf(result));
         }
 
         json.put("results", resultsJson);

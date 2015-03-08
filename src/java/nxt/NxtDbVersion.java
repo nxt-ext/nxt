@@ -695,13 +695,17 @@ class NxtDbVersion extends DbVersion {
             case 271:
                 apply("ALTER TABLE sell_offer ADD COLUMN IF NOT EXISTS transaction_height INT NOT NULL");
             case 272:
-                BlockchainProcessorImpl.getInstance().scheduleScan(0, false);
                 apply(null);
             case 273:
                 apply("ALTER TABLE poll_result DROP COLUMN IF EXISTS option");
             case 274:
                 apply("ALTER TABLE phasing_poll ALTER COLUMN voter_count RENAME TO whitelist_size");
             case 275:
+                apply("ALTER TABLE poll_result ALTER COLUMN result SET NULL");
+            case 276:
+                BlockchainProcessorImpl.getInstance().scheduleScan(0, false);
+                apply(null);
+            case 277:
                 return;
             default:
                 throw new RuntimeException("Blockchain database inconsistent with code, probably trying to run older code on newer database");
