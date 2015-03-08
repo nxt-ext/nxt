@@ -118,13 +118,15 @@ public final class Peers {
         if (Peers.myHallmark != null && Peers.myHallmark.length() > 0) {
             try {
                 Hallmark hallmark = Hallmark.parseHallmark(Peers.myHallmark);
-                if (!hallmark.isValid() || myAddress == null) {
+                if (!hallmark.isValid()) {
                     throw new RuntimeException();
                 }
-                URI uri = new URI("http://" + myAddress.trim());
-                String host = uri.getHost();
-                if (!hallmark.getHost().equals(host)) {
-                    throw new RuntimeException();
+                if (myAddress != null) {
+                    URI uri = new URI("http://" + myAddress.trim());
+                    String host = uri.getHost();
+                    if (!hallmark.getHost().equals(host)) {
+                        throw new RuntimeException();
+                    }
                 }
             } catch (RuntimeException | URISyntaxException e) {
                 Logger.logMessage("Your hallmark is invalid: " + Peers.myHallmark + " for your address: " + myAddress);
