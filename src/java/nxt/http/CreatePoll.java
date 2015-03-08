@@ -30,7 +30,7 @@ public final class CreatePoll extends CreateTransaction {
                 "minNumberOfOptions", "maxNumberOfOptions",
                 "minRangeValue", "maxRangeValue",
                 "minBalance", "minBalanceModel", "holding",
-                "option1", "option2", "option3");
+                "option00", "option01", "option02");
     }
 
     @Override
@@ -54,8 +54,9 @@ public final class CreatePoll extends CreateTransaction {
         }
 
         List<String> options = new ArrayList<>();
-        while (options.size() <= Constants.MAX_POLL_OPTION_COUNT) {
-            String optionValue = Convert.emptyToNull(req.getParameter("option" + (options.size() + 1)));
+        while (options.size() < Constants.MAX_POLL_OPTION_COUNT) {
+            int i = options.size();
+            String optionValue = Convert.emptyToNull(req.getParameter("option" + (i < 10 ? "0" + i : i)));
             if (optionValue == null) {
                 break;
             }

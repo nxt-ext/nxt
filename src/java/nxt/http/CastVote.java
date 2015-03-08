@@ -19,7 +19,7 @@ public final class CastVote extends CreateTransaction {
     static final CastVote instance = new CastVote();
 
     private CastVote() {
-        super(new APITag[]{APITag.VS, APITag.CREATE_TRANSACTION}, "poll", "vote1", "vote2", "vote3");
+        super(new APITag[]{APITag.VS, APITag.CREATE_TRANSACTION}, "poll", "vote00", "vote01", "vote02");
     }
 
     @Override
@@ -32,12 +32,15 @@ public final class CastVote extends CreateTransaction {
         int numberOfOptions = poll.getOptions().length;
         byte[] vote = new byte[numberOfOptions];
         try {
-            for (int i = 1; i <= numberOfOptions; i++) {
-                String voteValue = Convert.emptyToNull(req.getParameter("vote" + i));
+            for (int i = 0; i < numberOfOptions; i++) {
+                String voteValue = Convert.emptyToNull(req.getParameter("vote" + (i < 10 ? "0" + i : i)));
                 if (voteValue != null) {
-                    vote[i - 1] = Byte.parseByte(voteValue);
+                    vote[i] = Byte.parseByte(voteValue);
+                    if (vote[i] < poll.getMinRangeValue() || vote[i] > poll.getMaxRangeValue()) {
+                        return INCORRECT_VOTE;
+                    }
                 } else {
-                    vote[i - 1] = Constants.VOTING_NO_VOTE_VALUE;
+                    vote[i] = Constants.VOTING_NO_VOTE_VALUE;
                 }
             }
         } catch (NumberFormatException e) {
