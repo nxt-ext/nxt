@@ -324,7 +324,7 @@ final class JSONData {
         return json;
     }
 
-    static JSONObject poll(Poll poll, boolean includeVoters) {
+    static JSONObject poll(Poll poll) {
         JSONObject json = new JSONObject();
         putAccount(json, "account", poll.getAccountId());
         json.put("poll", Convert.toUnsignedLong(poll.getId()));
@@ -339,19 +339,6 @@ final class JSONData {
         json.put("minRangeValue", poll.getMinRangeValue());
         json.put("maxRangeValue", poll.getMaxRangeValue());
         putVoteWeighting(json, poll.getDefaultVoteWeighting());
-
-        if (includeVoters) {
-            JSONArray votersJson = new JSONArray();
-            try (DbIterator<Vote> votes = poll.getVotes()) {
-                for (Vote vote : votes) {
-                    JSONObject voterObject = new JSONObject();
-                    putAccount(voterObject, "voter", vote.getVoterId());
-                    voterObject.put("transaction", Convert.toUnsignedLong(vote.getId()));
-                    votersJson.add(voterObject);
-                }
-            }
-            json.put("voters", votersJson);
-        }
         json.put("finished", poll.isFinished());
         return json;
     }
@@ -373,25 +360,17 @@ final class JSONData {
         return json;
     }
 
-    static JSONObject vote(Poll poll, Vote vote){
+    static JSONObject vote(Vote vote){
         JSONObject json = new JSONObject();
         putAccount(json, "voter", vote.getVoterId());
         json.put("transaction", Convert.toUnsignedLong(vote.getId()));
-        String[] options = poll.getOptions();
-
         JSONArray votesJson = new JSONArray();
-        byte[] votes = vote.getVote();
-        for (int i=0; i<options.length; i++) {
-            String key = options[i];
-            String value;
-            if (votes[i] == Constants.VOTING_NO_VOTE_VALUE) {
-                value = "skipped";
+        for (byte v : vote.getVote()) {
+            if (v == Constants.VOTING_NO_VOTE_VALUE) {
+                votesJson.add("");
             } else {
-                value = Byte.toString(votes[i]);
+                votesJson.add(Byte.toString(v));
             }
-            JSONObject voteJson = new JSONObject();
-            voteJson.put(key, value);
-            votesJson.add(voteJson);
         }
         json.put("votes", votesJson);
         return json;

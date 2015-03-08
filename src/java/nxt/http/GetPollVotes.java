@@ -26,7 +26,7 @@ public class GetPollVotes extends APIServlet.APIRequestHandler  {
         JSONArray votesJson = new JSONArray();
         try (DbIterator<Vote> votes = Vote.getVotes(poll.getId(), firstIndex, lastIndex)) {
             for (Vote vote : votes) {
-                votesJson.add(JSONData.vote(poll, vote));
+                votesJson.add(JSONData.vote(vote));
             }
         }
         JSONObject response = new JSONObject();
