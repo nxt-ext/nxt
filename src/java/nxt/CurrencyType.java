@@ -65,8 +65,7 @@ public enum CurrencyType {
             if (transaction.getType() == MonetarySystem.CURRENCY_ISSUANCE) {
                 Attachment.MonetarySystemCurrencyIssuance attachment = (Attachment.MonetarySystemCurrencyIssuance) transaction.getAttachment();
                 int issuanceHeight = attachment.getIssuanceHeight();
-                Appendix.Phasing phasing = transaction.getPhasing();
-                int finishHeight = phasing == null ? Nxt.getBlockchain().getHeight() : phasing.getFinishHeight();
+                int finishHeight = transaction.getValidationHeight();
                 if  (issuanceHeight <= finishHeight) {
                     throw new NxtException.NotCurrentlyValidException(
                         String.format("Reservable currency activation height %d not higher than transaction apply height %d",

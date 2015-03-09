@@ -359,6 +359,11 @@ final class TransactionImpl implements Transaction {
     }
 
     @Override
+    public int getValidationHeight() {
+        return phasing == null ? Nxt.getBlockchain().getHeight() : phasing.getFinishHeight();
+    }
+
+    @Override
     public byte[] getSignature() {
         return signature;
     }
