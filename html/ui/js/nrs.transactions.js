@@ -24,6 +24,8 @@ var NRS = (function(NRS, $, undefined) {
 		if (confirmedTransactionIds.length || NRS.unconfirmedTransactionsChange) {
 			transactions.sort(NRS.sortArray);
 		}
+		//Bug with popovers staying permanent when being open
+		$('.td_transaction_pending div.show_popover').popover('hide');
 
 		//always refresh peers and unconfirmed transactions..
 		if (NRS.currentPage == "peers") {
@@ -220,6 +222,7 @@ var NRS = (function(NRS, $, undefined) {
 					callback(alreadyProcessed);
 				}
 				if (NRS.currentPage == 'transactions' || NRS.currentPage == 'dashboard') {
+					$('.td_transaction_pending div.show_popover').popover('hide');
 					NRS.incoming[NRS.currentPage]();
 				}
 
@@ -479,7 +482,7 @@ var NRS = (function(NRS, $, undefined) {
 					}
 				}
 			}
-			if (t.attachment.phasingWhitelist.length > 0 || t.attachment.phasingVotingModel == 0) {
+			if (transaction.attachment.phasingWhitelist.length > 0 || transaction.attachment.phasingVotingModel == 0) {
 				var fee = 1;
 			} else {
 				var fee = 2;
