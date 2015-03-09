@@ -109,28 +109,6 @@ var NRS = (function(NRS, $, undefined) {
 		});
 	}
 
-	NRS.handleInitialTransactions = function(transactions, transactionIds) {
-		if (transactions.length) {
-			var rows = "";
-
-			transactions.sort(NRS.sortArray);
-
-			if (transactionIds.length) {
-				NRS.lastTransactions = transactionIds.toString();
-			}
-
-			for (var i = 0; i < transactions.length; i++) {
-				var transaction = transactions[i];
-				rows += NRS.getTransactionRowHTML(transaction);
-			}
-
-			$("#dashboard_table tbody").empty().append(rows);
-			NRS.addPendingInfoToTransactionRows(transactions);
-		}
-
-		NRS.dataLoadFinished($("#dashboard_table"));
-	}
-
 	NRS.getInitialTransactions = function() {
 		NRS.sendRequest("getAccountTransactions", {
 			"account": NRS.account,
@@ -151,11 +129,11 @@ var NRS = (function(NRS, $, undefined) {
 				}
 
 				NRS.getUnconfirmedTransactions(function(unconfirmedTransactions) {
-					NRS.handleInitialTransactions(transactions.concat(unconfirmedTransactions), transactionIds);
+					NRS.loadPage('dashboard');
 				});
 			} else {
 				NRS.getUnconfirmedTransactions(function(unconfirmedTransactions) {
-					NRS.handleInitialTransactions(unconfirmedTransactions, []);
+					NRS.loadPage('dashboard');
 				});
 			}
 		});
@@ -264,7 +242,7 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.addPendingTransactionHTML = function(t) {
-		var $td = $('#tr_transaction_' + t.transaction + ' .td_transaction_pending');
+		var $td = $('#tr_transaction_' + t.transaction + ':visible .td_transaction_pending');
 
 		if (t.attachment && t.attachment["version.Phasing"] && t.attachment.phasingVotingModel != undefined) {
 			NRS.sendRequest("getPhasingPoll", {
@@ -396,7 +374,7 @@ var NRS = (function(NRS, $, undefined) {
 								votesFormatted += NRS.convertToQNTf(attachment.phasingQuorum, phResponse.decimals) + " QNT";
 								$popoverVotesTR.find("td:last").html(votesFormatted);
 							}
-						});
+						}, false);
 					}
 					if (vm == 3) {
 						NRS.sendRequest("getCurrency", {
@@ -409,7 +387,7 @@ var NRS = (function(NRS, $, undefined) {
 								votesFormatted += NRS.convertToQNTf(attachment.phasingQuorum, phResponse.decimals) + " Units";
 								$popoverVotesTR.find("td:last").html(votesFormatted);
 							}
-						});
+						}, false);
 					}
 				} else {
 					$td.html("&nbsp;");
