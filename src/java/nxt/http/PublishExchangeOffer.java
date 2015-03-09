@@ -10,7 +10,7 @@ import javax.servlet.http.HttpServletRequest;
 
 /**
  * Publish exchange offer for {@link nxt.CurrencyType#EXCHANGEABLE} currency
- * </p>
+ * <p>
  * Parameters
  * <ul>
  * <li>currency - currency id of an active currency
@@ -23,18 +23,18 @@ import javax.servlet.http.HttpServletRequest;
  * <li>expirationHeight - Blockchain height at which the offer is expired
  * </ul>
  *
- * </p>
+ * <p>
  * Publishing an exchange offer internally creates a buy offer and a counter sell offer linked together.
  * Typically the buyRateNQT specified would be less than the sellRateNQT thus allowing the publisher to make profit
  *
- * </p>
+ * <p>
  * Each {@link CurrencyBuy} transaction which matches this offer reduces the sell supply and increases the buy supply
  * Similarly, each {@link CurrencySell} transaction which matches this offer reduces the buy supply and increases the sell supply
  * Therefore the multiple buy/sell transaction can be issued against this offer during it's lifetime.
  * However, the total buy limit and sell limit stops exchanging based on this offer after the accumulated buy/sell limit is reached
  * after possibly multiple exchange operations.
  *
- * </p>
+ * <p>
  * Only one exchange offer is allowed per account. Publishing a new exchange offer when another exchange offer exists
  * for the account, removes the existing exchange offer and publishes the new exchange offer
  */

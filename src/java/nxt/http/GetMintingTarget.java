@@ -12,7 +12,7 @@ import java.math.BigInteger;
 
 /**
  * Currency miners can use this API to obtain their target hash value for minting currency units
- * </p>
+ * <p>
  * Parameters
  * <ul>
  * <li>currency - currency id

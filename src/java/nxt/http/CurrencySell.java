@@ -10,7 +10,7 @@ import javax.servlet.http.HttpServletRequest;
 
 /**
  * Sell currency for NXT
- * </p>
+ * <p>
  * Parameters
  * <ul>
  * <li>currency - currency id
@@ -18,7 +18,7 @@ import javax.servlet.http.HttpServletRequest;
  * <li>units - number of units to sell
  * </ul>
  *
- * </p>
+ * <p>
  * currency sell transaction attempts to match existing exchange offers. When a match is found, the minimum number of units
  * between the number of units offered and the units requested are exchanged at a rate matching the lowest buy offer<br>
  * A single transaction can match multiple buy offers or none.
