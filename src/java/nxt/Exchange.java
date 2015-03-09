@@ -6,7 +6,6 @@ import nxt.db.DbKey;
 import nxt.db.DbUtils;
 import nxt.db.EntityDbTable;
 import nxt.db.FilteringIterator;
-import nxt.util.Filter;
 import nxt.util.Listener;
 import nxt.util.Listeners;
 
@@ -118,12 +117,8 @@ public final class Exchange {
             pstmt.setByte(++i, MonetarySystem.EXCHANGE_BUY.getSubtype());
             pstmt.setByte(++i, MonetarySystem.EXCHANGE_SELL.getSubtype());
             return new FilteringIterator<>(BlockchainImpl.getInstance().getTransactions(con, pstmt),
-                    new Filter<TransactionImpl>() {
-                        @Override
-                        public boolean ok(TransactionImpl transaction) {
-                            return ((Attachment.MonetarySystemAttachment)transaction.getAttachment()).getCurrencyId() == currencyId;
-                        }
-                    }, from, to);
+                    transaction -> ((Attachment.MonetarySystemAttachment)transaction.getAttachment()).getCurrencyId() == currencyId,
+                    from, to);
         } catch (SQLException e) {
             DbUtils.close(con);
             throw new RuntimeException(e.toString(), e);

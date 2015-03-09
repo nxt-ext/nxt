@@ -34,24 +34,21 @@ public final class DigitalGoodsStore {
     }
 
     static {
-        Nxt.getBlockchainProcessor().addListener(new Listener<Block>() {
-            @Override
-            public void notify(Block block) {
-                if (block.getHeight() <= Constants.DIGITAL_GOODS_STORE_BLOCK) {
-                    return;
+        Nxt.getBlockchainProcessor().addListener(block -> {
+            if (block.getHeight() <= Constants.DIGITAL_GOODS_STORE_BLOCK) {
+                return;
+            }
+            List<Purchase> expiredPurchases = new ArrayList<>();
+            try (DbIterator<Purchase> iterator = Purchase.getExpiredPendingPurchases(block)) {
+                while (iterator.hasNext()) {
+                    expiredPurchases.add(iterator.next());
                 }
-                List<Purchase> expiredPurchases = new ArrayList<>();
-                try (DbIterator<Purchase> iterator = Purchase.getExpiredPendingPurchases(block)) {
-                    while (iterator.hasNext()) {
-                        expiredPurchases.add(iterator.next());
-                    }
-                }
-                for (Purchase purchase : expiredPurchases) {
-                    Account buyer = Account.getAccount(purchase.getBuyerId());
-                    buyer.addToUnconfirmedBalanceNQT(Math.multiplyExact((long) purchase.getQuantity(), purchase.getPriceNQT()));
-                    Goods.getGoods(purchase.getGoodsId()).changeQuantity(purchase.getQuantity());
-                    purchase.setPending(false);
-                }
+            }
+            for (Purchase purchase : expiredPurchases) {
+                Account buyer = Account.getAccount(purchase.getBuyerId());
+                buyer.addToUnconfirmedBalanceNQT(Math.multiplyExact((long) purchase.getQuantity(), purchase.getPriceNQT()));
+                Goods.getGoods(purchase.getGoodsId()).changeQuantity(purchase.getQuantity());
+                purchase.setPending(false);
             }
         }, BlockchainProcessor.Event.AFTER_BLOCK_APPLY);
     }

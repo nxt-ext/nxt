@@ -6,7 +6,6 @@ import nxt.db.DbKey;
 import nxt.db.DbUtils;
 import nxt.db.EntityDbTable;
 import nxt.db.ValuesDbTable;
-import nxt.util.Listener;
 import nxt.util.Logger;
 
 import java.sql.Connection;
@@ -107,13 +106,10 @@ public final class Poll extends AbstractPoll {
 
     static {
         if (Poll.isPollsProcessing) {
-            Nxt.getBlockchainProcessor().addListener(new Listener<Block>() {
-                @Override
-                public void notify(Block block) {
-                    int height = block.getHeight();
-                    if (height >= Constants.VOTING_SYSTEM_BLOCK) {
-                        Poll.checkPolls(height);
-                    }
+            Nxt.getBlockchainProcessor().addListener(block -> {
+                int height = block.getHeight();
+                if (height >= Constants.VOTING_SYSTEM_BLOCK) {
+                    Poll.checkPolls(height);
                 }
             }, BlockchainProcessor.Event.AFTER_BLOCK_APPLY);
         }

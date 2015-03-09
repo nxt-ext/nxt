@@ -2,7 +2,6 @@ package nxt;
 
 import nxt.db.DbIterator;
 import nxt.util.Convert;
-import nxt.util.Listener;
 import nxt.util.Logger;
 
 import java.io.BufferedWriter;
@@ -40,126 +39,36 @@ public final class DebugTrace {
             accountIds.add(Convert.parseUnsignedLong(accountId));
         }
         final DebugTrace debugTrace = addDebugTrace(accountIds, logName);
-        Nxt.getBlockchainProcessor().addListener(new Listener<Block>() {
-            @Override
-            public void notify(Block block) {
-                debugTrace.resetLog();
-            }
-        }, BlockchainProcessor.Event.RESCAN_BEGIN);
+        Nxt.getBlockchainProcessor().addListener(block -> debugTrace.resetLog(), BlockchainProcessor.Event.RESCAN_BEGIN);
         Logger.logDebugMessage("Debug tracing of " + (accountIdStrings.contains("*") ? "ALL"
                 : String.valueOf(accountIds.size())) + " accounts enabled");
     }
 
     public static DebugTrace addDebugTrace(Set<Long> accountIds, String logName) {
         final DebugTrace debugTrace = new DebugTrace(accountIds, logName);
-        Trade.addListener(new Listener<Trade>() {
-            @Override
-            public void notify(Trade trade) {
-                debugTrace.trace(trade);
-            }
-        }, Trade.Event.TRADE);
-        Exchange.addListener(new Listener<Exchange>() {
-            @Override
-            public void notify(Exchange exchange) {
-                debugTrace.trace(exchange);
-            }
-        }, Exchange.Event.EXCHANGE);
-        Currency.addListener(new Listener<Currency>() {
-            @Override
-            public void notify(Currency currency) {
-                debugTrace.crowdfunding(currency);
-            }
-        }, Currency.Event.BEFORE_DISTRIBUTE_CROWDFUNDING);
-        Currency.addListener(new Listener<Currency>() {
-            @Override
-            public void notify(Currency currency) {
-                debugTrace.undoCrowdfunding(currency);
-            }
-        }, Currency.Event.BEFORE_UNDO_CROWDFUNDING);
-        Currency.addListener(new Listener<Currency>() {
-            @Override
-            public void notify(Currency currency) {
-                debugTrace.delete(currency);
-            }
-        }, Currency.Event.BEFORE_DELETE);
-        CurrencyMint.addListener(new Listener<CurrencyMint.Mint>() {
-            @Override
-            public void notify(CurrencyMint.Mint mint) {
-                debugTrace.currencyMint(mint);
-            }
-        }, CurrencyMint.Event.CURRENCY_MINT);
-        Account.addListener(new Listener<Account>() {
-            @Override
-            public void notify(Account account) {
-                debugTrace.trace(account, false);
-            }
-        }, Account.Event.BALANCE);
+        Trade.addListener(debugTrace::trace, Trade.Event.TRADE);
+        Exchange.addListener(debugTrace::trace, Exchange.Event.EXCHANGE);
+        Currency.addListener(debugTrace::crowdfunding, Currency.Event.BEFORE_DISTRIBUTE_CROWDFUNDING);
+        Currency.addListener(debugTrace::undoCrowdfunding, Currency.Event.BEFORE_UNDO_CROWDFUNDING);
+        Currency.addListener(debugTrace::delete, Currency.Event.BEFORE_DELETE);
+        CurrencyMint.addListener(debugTrace::currencyMint, CurrencyMint.Event.CURRENCY_MINT);
+        Account.addListener(account -> debugTrace.trace(account, false), Account.Event.BALANCE);
         if (LOG_UNCONFIRMED) {
-            Account.addListener(new Listener<Account>() {
-                @Override
-                public void notify(Account account) {
-                    debugTrace.trace(account, true);
-                }
-            }, Account.Event.UNCONFIRMED_BALANCE);
+            Account.addListener(account -> debugTrace.trace(account, true), Account.Event.UNCONFIRMED_BALANCE);
         }
-        Account.addAssetListener(new Listener<Account.AccountAsset>() {
-            @Override
-            public void notify(Account.AccountAsset accountAsset) {
-                debugTrace.trace(accountAsset, false);
-            }
-        }, Account.Event.ASSET_BALANCE);
+        Account.addAssetListener(accountAsset -> debugTrace.trace(accountAsset, false), Account.Event.ASSET_BALANCE);
         if (LOG_UNCONFIRMED) {
-            Account.addAssetListener(new Listener<Account.AccountAsset>() {
-                @Override
-                public void notify(Account.AccountAsset accountAsset) {
-                    debugTrace.trace(accountAsset, true);
-                }
-            }, Account.Event.UNCONFIRMED_ASSET_BALANCE);
+            Account.addAssetListener(accountAsset -> debugTrace.trace(accountAsset, true), Account.Event.UNCONFIRMED_ASSET_BALANCE);
         }
-        Account.addCurrencyListener(new Listener<Account.AccountCurrency>() {
-            @Override
-            public void notify(Account.AccountCurrency accountCurrency) {
-                debugTrace.trace(accountCurrency, false);
-            }
-        }, Account.Event.CURRENCY_BALANCE);
+        Account.addCurrencyListener(accountCurrency -> debugTrace.trace(accountCurrency, false), Account.Event.CURRENCY_BALANCE);
         if (LOG_UNCONFIRMED) {
-            Account.addCurrencyListener(new Listener<Account.AccountCurrency>() {
-                @Override
-                public void notify(Account.AccountCurrency accountCurrency) {
-                    debugTrace.trace(accountCurrency, true);
-                }
-            }, Account.Event.UNCONFIRMED_CURRENCY_BALANCE);
+            Account.addCurrencyListener(accountCurrency -> debugTrace.trace(accountCurrency, true), Account.Event.UNCONFIRMED_CURRENCY_BALANCE);
         }
-        Account.addLeaseListener(new Listener<Account.AccountLease>() {
-            @Override
-            public void notify(Account.AccountLease accountLease) {
-                debugTrace.trace(accountLease, true);
-            }
-        }, Account.Event.LEASE_STARTED);
-        Account.addLeaseListener(new Listener<Account.AccountLease>() {
-            @Override
-            public void notify(Account.AccountLease accountLease) {
-                debugTrace.trace(accountLease, false);
-            }
-        }, Account.Event.LEASE_ENDED);
-        Nxt.getBlockchainProcessor().addListener(new Listener<Block>() {
-            @Override
-            public void notify(Block block) {
-                debugTrace.traceBeforeAccept(block);
-            }
-        }, BlockchainProcessor.Event.BEFORE_BLOCK_ACCEPT);
-        Nxt.getBlockchainProcessor().addListener(new Listener<Block>() {
-            @Override
-            public void notify(Block block) {
-                debugTrace.trace(block);
-            }
-        }, BlockchainProcessor.Event.BEFORE_BLOCK_APPLY);
-        Nxt.getTransactionProcessor().addListener(new Listener<List<? extends Transaction>>() {
-            @Override
-            public void notify(List<? extends Transaction> transactions) {
-                debugTrace.traceRelease(transactions.get(0));
-            }
-        }, TransactionProcessor.Event.RELEASE_PHASED_TRANSACTION);
+        Account.addLeaseListener(accountLease -> debugTrace.trace(accountLease, true), Account.Event.LEASE_STARTED);
+        Account.addLeaseListener(accountLease -> debugTrace.trace(accountLease, false), Account.Event.LEASE_ENDED);
+        Nxt.getBlockchainProcessor().addListener(debugTrace::traceBeforeAccept, BlockchainProcessor.Event.BEFORE_BLOCK_ACCEPT);
+        Nxt.getBlockchainProcessor().addListener(debugTrace::trace, BlockchainProcessor.Event.BEFORE_BLOCK_APPLY);
+        Nxt.getTransactionProcessor().addListener(transactions -> debugTrace.traceRelease(transactions.get(0)), TransactionProcessor.Event.RELEASE_PHASED_TRANSACTION);
         return debugTrace;
     }
 

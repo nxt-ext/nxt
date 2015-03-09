@@ -39,19 +39,7 @@ public final class SearchDGSGoods extends APIServlet.APIRequestHandler {
         JSONArray goodsJSON = new JSONArray();
         response.put("goods", goodsJSON);
 
-        Filter<DigitalGoodsStore.Goods> filter = hideDelisted ?
-                new Filter<DigitalGoodsStore.Goods>() {
-                    @Override
-                    public boolean ok(DigitalGoodsStore.Goods goods) {
-                        return ! goods.isDelisted();
-                    }
-                } :
-                new Filter<DigitalGoodsStore.Goods>() {
-                    @Override
-                    public boolean ok(DigitalGoodsStore.Goods goods) {
-                        return true;
-                    }
-                };
+        Filter<DigitalGoodsStore.Goods> filter = hideDelisted ? goods -> ! goods.isDelisted() : goods -> true;
 
         FilteringIterator<DigitalGoodsStore.Goods> iterator = null;
         try {
