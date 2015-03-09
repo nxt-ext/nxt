@@ -6,7 +6,6 @@ import nxt.db.DbKey;
 import nxt.db.DbUtils;
 import nxt.db.EntityDbTable;
 import nxt.db.FilteringIterator;
-import nxt.util.Convert;
 import nxt.util.Filter;
 import nxt.util.Listener;
 import nxt.util.Listeners;
@@ -242,8 +241,8 @@ public final class Exchange {
 
     @Override
     public String toString() {
-        return "Exchange currency: " + Convert.toUnsignedLong(currencyId) + " offer: " + Convert.toUnsignedLong(offerId)
-                + " rate: " + rate + " units: " + units + " height: " + height + " transaction: " + Convert.toUnsignedLong(transactionId);
+        return "Exchange currency: " + Long.toUnsignedString(currencyId) + " offer: " + Long.toUnsignedString(offerId)
+                + " rate: " + rate + " units: " + units + " height: " + height + " transaction: " + Long.toUnsignedString(transactionId);
     }
 
 }

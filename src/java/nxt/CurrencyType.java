@@ -1,7 +1,6 @@
 package nxt;
 
 import nxt.crypto.HashFunction;
-import nxt.util.Convert;
 
 import java.util.EnumSet;
 import java.util.Set;
@@ -74,7 +73,7 @@ public enum CurrencyType {
                 if (attachment.getMinReservePerUnitNQT() <= 0) {
                     throw new NxtException.NotValidException("Minimum reserve per unit must be > 0");
                 }
-                if (Convert.safeMultiply(attachment.getMinReservePerUnitNQT(), attachment.getReserveSupply()) > Constants.MAX_BALANCE_NQT) {
+                if (Math.multiplyExact(attachment.getMinReservePerUnitNQT(), attachment.getReserveSupply()) > Constants.MAX_BALANCE_NQT) {
                     throw new NxtException.NotValidException("Minimal reserve per unit is too large");
                 }
                 if (attachment.getReserveSupply() <= attachment.getInitialSupply()) {

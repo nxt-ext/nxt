@@ -3,7 +3,6 @@ package nxt.http;
 import nxt.NxtException;
 import nxt.Order;
 import nxt.db.DbIterator;
-import nxt.util.Convert;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
@@ -28,7 +27,7 @@ public final class GetAskOrderIds extends APIServlet.APIRequestHandler {
         JSONArray orderIds = new JSONArray();
         try (DbIterator<Order.Ask> askOrders = Order.Ask.getSortedOrders(assetId, firstIndex, lastIndex)) {
             while (askOrders.hasNext()) {
-                orderIds.add(Convert.toUnsignedLong(askOrders.next().getId()));
+                orderIds.add(Long.toUnsignedString(askOrders.next().getId()));
             }
         }
 

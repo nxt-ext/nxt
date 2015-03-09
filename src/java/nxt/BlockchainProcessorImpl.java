@@ -254,7 +254,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             while (true) {
                 JSONObject request = new JSONObject();
                 request.put("requestType", "getNextBlockIds");
-                request.put("blockId", Convert.toUnsignedLong(commonBlockId));
+                request.put("blockId", Long.toUnsignedString(commonBlockId));
                 JSONObject response = peer.send(JSON.prepareRequest(request));
                 if (response == null) {
                     return 0;
@@ -334,7 +334,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
 
             JSONObject request = new JSONObject();
             request.put("requestType", "getNextBlocks");
-            request.put("blockId", Convert.toUnsignedLong(curBlockId));
+            request.put("blockId", Long.toUnsignedString(curBlockId));
             JSONObject response = peer.send(JSON.prepareRequest(request), 192 * 1024 * 1024);
             if (response == null) {
                 return null;
@@ -1087,7 +1087,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         try {
             pushBlock(block);
             blockListeners.notify(block, Event.BLOCK_GENERATED);
-            Logger.logDebugMessage("Account " + Convert.toUnsignedLong(block.getGeneratorId()) + " generated block " + block.getStringId()
+            Logger.logDebugMessage("Account " + Long.toUnsignedString(block.getGeneratorId()) + " generated block " + block.getStringId()
                     + " at height " + block.getHeight() + " timestamp " + block.getTimestamp() + " fee " + ((float)block.getTotalFeeNQT())/Constants.ONE_NXT);
         } catch (TransactionNotAcceptedException e) {
             Logger.logDebugMessage("Generate block failed: " + e.getMessage());
@@ -1247,7 +1247,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                         } catch (NxtException | RuntimeException e) {
                             Db.db.rollbackTransaction();
                             Logger.logDebugMessage(e.toString(), e);
-                            Logger.logDebugMessage("Applying block " + Convert.toUnsignedLong(currentBlockId) + " at height "
+                            Logger.logDebugMessage("Applying block " + Long.toUnsignedString(currentBlockId) + " at height "
                                     + (currentBlock == null ? 0 : currentBlock.getHeight()) + " failed, deleting from database");
                             if (currentBlock != null) {
                                 transactionProcessor.processLater(currentBlock.getTransactions());

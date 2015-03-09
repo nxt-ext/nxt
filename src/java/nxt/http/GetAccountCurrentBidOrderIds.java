@@ -39,7 +39,7 @@ public final class GetAccountCurrentBidOrderIds extends APIServlet.APIRequestHan
         JSONArray orderIds = new JSONArray();
         try {
             while (bidOrders.hasNext()) {
-                orderIds.add(Convert.toUnsignedLong(bidOrders.next().getId()));
+                orderIds.add(Long.toUnsignedString(bidOrders.next().getId()));
             }
         } finally {
             bidOrders.close();

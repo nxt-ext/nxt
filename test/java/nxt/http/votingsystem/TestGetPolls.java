@@ -2,7 +2,6 @@ package nxt.http.votingsystem;
 
 import nxt.BlockchainTest;
 import nxt.http.APICall;
-import nxt.util.Convert;
 import nxt.util.Logger;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -15,7 +14,7 @@ public class TestGetPolls extends BlockchainTest {
     public void accountPollsIncrease() {
         APICall apiCall = new APICall.Builder("getPolls")
                 .param("includeVoters", "false")
-                .param("account", Convert.toUnsignedLong(id4))
+                .param("account", Long.toUnsignedString(id4))
                 .param("firstIndex", 0)
                 .param("lastIndex", 100)
                 .build();

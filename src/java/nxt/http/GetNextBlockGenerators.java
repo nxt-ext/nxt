@@ -4,7 +4,6 @@ import nxt.Block;
 import nxt.Constants;
 import nxt.Hub;
 import nxt.Nxt;
-import nxt.util.Convert;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
@@ -49,7 +48,7 @@ public final class GetNextBlockGenerators extends APIServlet.APIRequestHandler {
 
         JSONObject response = new JSONObject();
         response.put("time", Nxt.getEpochTime());
-        response.put("lastBlock", Convert.toUnsignedLong(curBlock.getId()));
+        response.put("lastBlock", Long.toUnsignedString(curBlock.getId()));
         JSONArray hubs = new JSONArray();
 
         int limit;
@@ -63,7 +62,7 @@ public final class GetNextBlockGenerators extends APIServlet.APIRequestHandler {
         while (iterator.hasNext() && hubs.size() < limit) {
             JSONObject hub = new JSONObject();
             Hub.Hit hit = iterator.next();
-            hub.put("account", Convert.toUnsignedLong(hit.hub.getAccountId()));
+            hub.put("account", Long.toUnsignedString(hit.hub.getAccountId()));
             hub.put("minFeePerByteNQT", hit.hub.getMinFeePerByteNQT());
             hub.put("time", hit.hitTime);
             JSONArray uris = new JSONArray();

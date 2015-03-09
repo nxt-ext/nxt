@@ -110,7 +110,7 @@ public final class SendMoney extends UserServlet.UserRequestHandler {
         }
 
         Account account = Account.getAccount(user.getPublicKey());
-        if (account == null || Convert.safeAdd(amountNQT, feeNQT) > account.getUnconfirmedBalanceNQT()) {
+        if (account == null || Math.addExact(amountNQT, feeNQT) > account.getUnconfirmedBalanceNQT()) {
 
             JSONObject response = new JSONObject();
             response.put("response", "notifyOfIncorrectTransaction");

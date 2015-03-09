@@ -6,7 +6,6 @@ import nxt.db.DbKey;
 import nxt.db.DbUtils;
 import nxt.db.EntityDbTable;
 import nxt.db.ValuesDbTable;
-import nxt.util.Convert;
 import nxt.util.Listener;
 import nxt.util.Logger;
 
@@ -125,9 +124,9 @@ public final class Poll extends AbstractPoll {
                 try {
                     List<Long> results = poll.countResults(poll.getDefaultVoteWeighting(), currentHeight);
                     pollResultsTable.insert(poll, results);
-                    Logger.logDebugMessage("Poll " + Convert.toUnsignedLong(poll.getId()) + " has been finished");
+                    Logger.logDebugMessage("Poll " + Long.toUnsignedString(poll.getId()) + " has been finished");
                 } catch (RuntimeException e) { // could happen e.g. because of overflow in safeMultiply
-                    Logger.logErrorMessage("Couldn't count votes for poll " + Convert.toUnsignedLong(poll.getId()));
+                    Logger.logErrorMessage("Couldn't count votes for poll " + Long.toUnsignedString(poll.getId()));
                 }
             }
         }
@@ -259,7 +258,7 @@ public final class Poll extends AbstractPoll {
                 if (partialResult != null) {
                     for (int idx = 0; idx < partialResult.length; idx++) {
                         if (partialResult[idx] != null) {
-                            result[idx] = result[idx] == null ? partialResult[idx] : Convert.safeAdd(result[idx], partialResult[idx]);
+                            result[idx] = result[idx] == null ? partialResult[idx] : Math.addExact(result[idx], partialResult[idx]);
                         }
                     }
                 }
@@ -278,7 +277,7 @@ public final class Poll extends AbstractPoll {
 
         for (int idx = 0; idx < optVals.length; idx++) {
             if (optVals[idx] != Constants.VOTING_NO_VOTE_VALUE) {
-                partialResult[idx] = Convert.safeMultiply(optVals[idx], weight);
+                partialResult[idx] = Math.multiplyExact((long) optVals[idx], weight);
             }
         }
         return partialResult;

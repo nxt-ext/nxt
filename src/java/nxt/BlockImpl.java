@@ -191,7 +191,7 @@ final class BlockImpl implements Block {
         if (stringId == null) {
             getId();
             if (stringId == null) {
-                stringId = Convert.toUnsignedLong(id);
+                stringId = Long.toUnsignedString(id);
             }
         }
         return stringId;
@@ -220,7 +220,7 @@ final class BlockImpl implements Block {
         JSONObject json = new JSONObject();
         json.put("version", version);
         json.put("timestamp", timestamp);
-        json.put("previousBlock", Convert.toUnsignedLong(previousBlockId));
+        json.put("previousBlock", Long.toUnsignedString(previousBlockId));
         json.put("totalAmountNQT", totalAmountNQT);
         json.put("totalFeeNQT", totalFeeNQT);
         json.put("payloadLength", payloadLength);

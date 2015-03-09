@@ -2,7 +2,6 @@ package nxt;
 
 import nxt.db.DbClause;
 import nxt.db.DbIterator;
-import nxt.util.Convert;
 import nxt.util.Listener;
 
 import java.sql.Connection;
@@ -87,10 +86,10 @@ public abstract class CurrencyExchangeOffer {
                 break;
             }
             long curUnits = Math.min(Math.min(remainingUnits, offer.getSupply()), offer.getLimit());
-            long curAmountNQT = Convert.safeMultiply(curUnits, offer.getRateNQT());
+            long curAmountNQT = Math.multiplyExact(curUnits, offer.getRateNQT());
 
-            extraAmountNQT = Convert.safeAdd(extraAmountNQT, curAmountNQT);
-            remainingUnits = Convert.safeSubtract(remainingUnits, curUnits);
+            extraAmountNQT = Math.addExact(extraAmountNQT, curAmountNQT);
+            remainingUnits = Math.subtractExact(remainingUnits, curUnits);
 
             offer.decreaseLimitAndSupply(curUnits);
             long excess = offer.getCounterOffer().increaseSupply(curUnits);
@@ -109,7 +108,7 @@ public abstract class CurrencyExchangeOffer {
 
     static void exchangeNXTForCurrency(Transaction transaction, Account account, final long currencyId, final long rateNQT, long units) {
         long extraUnits = 0;
-        long remainingAmountNQT = Convert.safeMultiply(units, rateNQT);
+        long remainingAmountNQT = Math.multiplyExact(units, rateNQT);
 
         List<CurrencySellOffer> currencySellOffers = new ArrayList<>();
         try (DbIterator<CurrencySellOffer> offers = CurrencySellOffer.getOffers(new ValidOffersDbClause(currencyId, rateNQT, false), 0, -1,
@@ -127,25 +126,23 @@ public abstract class CurrencyExchangeOffer {
             if (curUnits == 0) {
                 continue;
             }
-            long curAmountNQT = Convert.safeMultiply(curUnits, offer.getRateNQT());
+            long curAmountNQT = Math.multiplyExact(curUnits, offer.getRateNQT());
 
-            extraUnits = Convert.safeAdd(extraUnits, curUnits);
-            remainingAmountNQT = Convert.safeSubtract(remainingAmountNQT, curAmountNQT);
+            extraUnits = Math.addExact(extraUnits, curUnits);
+            remainingAmountNQT = Math.subtractExact(remainingAmountNQT, curAmountNQT);
 
             offer.decreaseLimitAndSupply(curUnits);
             long excess = offer.getCounterOffer().increaseSupply(curUnits);
 
             Account counterAccount = Account.getAccount(offer.getAccountId());
             counterAccount.addToBalanceNQT(curAmountNQT);
-            counterAccount.addToUnconfirmedBalanceNQT(Convert.safeAdd(
-                    Convert.safeMultiply(curUnits - excess, offer.getRateNQT() - offer.getCounterOffer().getRateNQT()),
-                    Convert.safeMultiply(excess, offer.getRateNQT())));
+            counterAccount.addToUnconfirmedBalanceNQT(Math.addExact(Math.multiplyExact(curUnits - excess, offer.getRateNQT() - offer.getCounterOffer().getRateNQT()), Math.multiplyExact(excess, offer.getRateNQT())));
             counterAccount.addToCurrencyUnits(currencyId, -curUnits);
             Exchange.addExchange(transaction, currencyId, offer, offer.getAccountId(), account.getId(), curUnits);
         }
 
         account.addToCurrencyAndUnconfirmedCurrencyUnits(currencyId, extraUnits);
-        account.addToBalanceNQT(-(Convert.safeMultiply(units, rateNQT) - remainingAmountNQT));
+        account.addToBalanceNQT(-(Math.multiplyExact(units, rateNQT) - remainingAmountNQT));
         account.addToUnconfirmedBalanceNQT(remainingAmountNQT);
     }
 
@@ -156,7 +153,7 @@ public abstract class CurrencyExchangeOffer {
         CurrencySellOffer.remove(sellOffer);
 
         Account account = Account.getAccount(buyOffer.getAccountId());
-        account.addToUnconfirmedBalanceNQT(Convert.safeMultiply(buyOffer.getSupply(), buyOffer.getRateNQT()));
+        account.addToUnconfirmedBalanceNQT(Math.multiplyExact(buyOffer.getSupply(), buyOffer.getRateNQT()));
         account.addToUnconfirmedCurrencyUnits(buyOffer.getCurrencyId(), sellOffer.getSupply());
     }
 
@@ -254,7 +251,7 @@ public abstract class CurrencyExchangeOffer {
     public abstract CurrencyExchangeOffer getCounterOffer();
 
     long increaseSupply(long delta) {
-        long excess = Math.max(Convert.safeAdd(supply, Convert.safeSubtract(delta, limit)), 0);
+        long excess = Math.max(Math.addExact(supply, Math.subtractExact(delta, limit)), 0);
         supply += delta - excess;
         return excess;
     }

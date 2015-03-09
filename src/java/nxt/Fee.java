@@ -1,7 +1,5 @@
 package nxt;
 
-import nxt.util.Convert;
-
 public interface Fee {
 
     long getFee(TransactionImpl transaction, Appendix appendage);
@@ -41,7 +39,7 @@ public interface Fee {
         // the first 1024 bytes are free
         @Override
         public final long getFee(TransactionImpl transaction, Appendix appendage) {
-            return Convert.safeMultiply(getSize(transaction, appendage) / 1024, feePerKByte);
+            return Math.multiplyExact((long) (getSize(transaction, appendage) / 1024), feePerKByte);
         }
 
         public abstract int getSize(TransactionImpl transaction, Appendix appendage);

@@ -61,7 +61,7 @@ public final class GetAccount extends APIServlet.APIRequestHandler {
                     JSONArray lessorInfo = new JSONArray();
                     while (lessors.hasNext()) {
                         Account lessor = lessors.next();
-                        lessorIds.add(Convert.toUnsignedLong(lessor.getId()));
+                        lessorIds.add(Long.toUnsignedString(lessor.getId()));
                         lessorIdsRS.add(Convert.rsAccount(lessor.getId()));
                         lessorInfo.add(JSONData.lessor(lessor));
                     }
@@ -79,11 +79,11 @@ public final class GetAccount extends APIServlet.APIRequestHandler {
                 while (accountAssets.hasNext()) {
                     Account.AccountAsset accountAsset = accountAssets.next();
                     JSONObject assetBalance = new JSONObject();
-                    assetBalance.put("asset", Convert.toUnsignedLong(accountAsset.getAssetId()));
+                    assetBalance.put("asset", Long.toUnsignedString(accountAsset.getAssetId()));
                     assetBalance.put("balanceQNT", String.valueOf(accountAsset.getQuantityQNT()));
                     assetBalances.add(assetBalance);
                     JSONObject unconfirmedAssetBalance = new JSONObject();
-                    unconfirmedAssetBalance.put("asset", Convert.toUnsignedLong(accountAsset.getAssetId()));
+                    unconfirmedAssetBalance.put("asset", Long.toUnsignedString(accountAsset.getAssetId()));
                     unconfirmedAssetBalance.put("unconfirmedBalanceQNT", String.valueOf(accountAsset.getUnconfirmedQuantityQNT()));
                     unconfirmedAssetBalances.add(unconfirmedAssetBalance);
                 }
