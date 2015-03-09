@@ -6,12 +6,7 @@ public interface Fee {
 
     public static final Fee DEFAULT_FEE = new Fee.ConstantFee(Constants.ONE_NXT);
 
-    public static final Fee NONE = new Fee() {
-        @Override
-        public long getFee(TransactionImpl transaction, Appendix appendage) {
-            return 0;
-        }
-    };
+    public static final Fee NONE = (transaction, appendage) -> 0;
 
     public static final class ConstantFee implements Fee {
 

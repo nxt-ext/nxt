@@ -88,7 +88,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
 
     };
 
-    private final Set<TransactionImpl> broadcastedTransactions = Collections.newSetFromMap(new ConcurrentHashMap<TransactionImpl,Boolean>());
+    private final Set<TransactionImpl> broadcastedTransactions = Collections.newSetFromMap(new ConcurrentHashMap<>());
     private final Listeners<List<? extends Transaction>,Event> transactionListeners = new Listeners<>();
     private final Set<UnconfirmedTransaction> lostTransactions = new HashSet<>();
     private final Map<TransactionType, Map<String, Boolean>> unconfirmedDuplicates = new HashMap<>();

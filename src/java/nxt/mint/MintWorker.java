@@ -55,11 +55,7 @@ import java.util.concurrent.Future;
 public class MintWorker {
 
     // Verify-all name verifier
-    private final static HostnameVerifier hostNameVerifier = new HostnameVerifier() {
-        public boolean verify(String hostname, SSLSession session) {
-            return true;
-        }
-    };
+    private final static HostnameVerifier hostNameVerifier = (hostname, session) -> true;
 
     // Trust-all socket factory
     private static final SSLSocketFactory sslSocketFactory;

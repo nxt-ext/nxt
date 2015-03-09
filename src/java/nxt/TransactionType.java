@@ -140,12 +140,9 @@ public abstract class TransactionType {
         }
     }
 
-    private static final Fee POLL_FEE = new Fee() {
-        @Override
-        public long getFee(TransactionImpl transaction, Appendix appendage) {
-            int numOptions = ((Attachment.MessagingPollCreation)appendage).getPollOptions().length;
-            return numOptions <= 20 ? 10 * Constants.ONE_NXT : (10 + numOptions - 20) * Constants.ONE_NXT;
-        }
+    private static final Fee POLL_FEE = (transaction, appendage) -> {
+        int numOptions = ((Attachment.MessagingPollCreation)appendage).getPollOptions().length;
+        return numOptions <= 20 ? 10 * Constants.ONE_NXT : (10 + numOptions - 20) * Constants.ONE_NXT;
     };
     private static final Fee ASSET_ISSUANCE_FEE = new Fee.ConstantFee(1000 * Constants.ONE_NXT);
     private static final Fee DGS_DELIVERY_FEE = new Fee.SizeBasedFee(Constants.ONE_NXT) {
