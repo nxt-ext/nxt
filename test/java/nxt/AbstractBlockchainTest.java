@@ -40,12 +40,9 @@ public abstract class AbstractBlockchainTest {
         blockchain = BlockchainImpl.getInstance();
         blockchainProcessor = BlockchainProcessorImpl.getInstance();
         blockchainProcessor.setGetMoreBlocks(false);
-        Listener<Block> countingListener = new Listener<Block>() {
-            @Override
-            public void notify(Block block) {
-                if (block.getHeight() % 1000 == 0) {
-                    Logger.logMessage("downloaded block " + block.getHeight());
-                }
+        Listener<Block> countingListener = block -> {
+            if (block.getHeight() % 1000 == 0) {
+                Logger.logMessage("downloaded block " + block.getHeight());
             }
         };
         blockchainProcessor.addListener(countingListener, BlockchainProcessor.Event.BLOCK_PUSHED);
@@ -64,16 +61,13 @@ public abstract class AbstractBlockchainTest {
             return;
         }
         Assert.assertTrue(blockchain.getHeight() < endHeight);
-        Listener<Block> stopListener = new Listener<Block>() {
-            @Override
-            public void notify(Block block) {
-                if (blockchain.getHeight() == endHeight) {
-                    synchronized (doneLock) {
-                        done = true;
-                        blockchainProcessor.setGetMoreBlocks(false);
-                        doneLock.notifyAll();
-                        throw new NxtException.StopException("Reached height " + endHeight);
-                    }
+        Listener<Block> stopListener = block -> {
+            if (blockchain.getHeight() == endHeight) {
+                synchronized (doneLock) {
+                    done = true;
+                    blockchainProcessor.setGetMoreBlocks(false);
+                    doneLock.notifyAll();
+                    throw new NxtException.StopException("Reached height " + endHeight);
                 }
             }
         };
@@ -99,15 +93,12 @@ public abstract class AbstractBlockchainTest {
             return;
         }
         Assert.assertTrue(blockchain.getHeight() < endHeight);
-        Listener<Block> stopListener = new Listener<Block>() {
-            @Override
-            public void notify(Block block) {
-                if (blockchain.getHeight() == endHeight) {
-                    synchronized (doneLock) {
-                        done = true;
-                        Generator.stopForging(secretPhrase);
-                        doneLock.notifyAll();
-                    }
+        Listener<Block> stopListener = block -> {
+            if (blockchain.getHeight() == endHeight) {
+                synchronized (doneLock) {
+                    done = true;
+                    Generator.stopForging(secretPhrase);
+                    doneLock.notifyAll();
                 }
             }
         };

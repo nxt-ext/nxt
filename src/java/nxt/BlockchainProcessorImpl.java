@@ -7,7 +7,6 @@ import nxt.db.FilteringIterator;
 import nxt.peer.Peer;
 import nxt.peer.Peers;
 import nxt.util.Convert;
-import nxt.util.Filter;
 import nxt.util.JSON;
 import nxt.util.Listener;
 import nxt.util.Listeners;
@@ -410,87 +409,67 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
 
     private BlockchainProcessorImpl() {
 
-        blockListeners.addListener(new Listener<Block>() {
-            @Override
-            public void notify(Block block) {
-                if (block.getHeight() % 5000 == 0) {
-                    Logger.logMessage("processed block " + block.getHeight());
-                }
+        blockListeners.addListener(block -> {
+            if (block.getHeight() % 5000 == 0) {
+                Logger.logMessage("processed block " + block.getHeight());
             }
         }, Event.BLOCK_SCANNED);
 
-        blockListeners.addListener(new Listener<Block>() {
-            @Override
-            public void notify(Block block) {
-                if (block.getHeight() % 5000 == 0) {
-                    Logger.logMessage("received block " + block.getHeight());
-                    Db.db.analyzeTables();
-                }
+        blockListeners.addListener(block -> {
+            if (block.getHeight() % 5000 == 0) {
+                Logger.logMessage("received block " + block.getHeight());
+                Db.db.analyzeTables();
             }
         }, Event.BLOCK_PUSHED);
 
         if (trimDerivedTables) {
-            blockListeners.addListener(new Listener<Block>() {
-                @Override
-                public void notify(Block block) {
-                    if (block.getHeight() % 1440 == 0) {
-                        lastTrimHeight = Math.max(block.getHeight() - Constants.MAX_ROLLBACK, 0);
-                        if (lastTrimHeight > 0) {
-                            for (DerivedDbTable table : derivedTables) {
-                                table.trim(lastTrimHeight);
-                            }
+            blockListeners.addListener(block -> {
+                if (block.getHeight() % 1440 == 0) {
+                    lastTrimHeight = Math.max(block.getHeight() - Constants.MAX_ROLLBACK, 0);
+                    if (lastTrimHeight > 0) {
+                        for (DerivedDbTable table : derivedTables) {
+                            table.trim(lastTrimHeight);
                         }
                     }
                 }
             }, Event.AFTER_BLOCK_APPLY);
         }
 
-        blockListeners.addListener(new Listener<Block>() {
-            @Override
-            public void notify(Block block) {
-                if (block.getHeight() == Constants.TRANSPARENT_FORGING_BLOCK && ! verifyChecksum(CHECKSUM_TRANSPARENT_FORGING)) {
-                    popOffTo(0);
-                }
-                if (block.getHeight() == Constants.NQT_BLOCK && ! verifyChecksum(CHECKSUM_NQT_BLOCK)) {
-                    popOffTo(Constants.TRANSPARENT_FORGING_BLOCK);
-                }
-                if (block.getHeight() == Constants.MONETARY_SYSTEM_BLOCK && ! verifyChecksum(CHECKSUM_MONETARY_SYSTEM_BLOCK)) {
-                    popOffTo(Constants.NQT_BLOCK);
-                }
+        blockListeners.addListener(block -> {
+            if (block.getHeight() == Constants.TRANSPARENT_FORGING_BLOCK && ! verifyChecksum(CHECKSUM_TRANSPARENT_FORGING)) {
+                popOffTo(0);
+            }
+            if (block.getHeight() == Constants.NQT_BLOCK && ! verifyChecksum(CHECKSUM_NQT_BLOCK)) {
+                popOffTo(Constants.TRANSPARENT_FORGING_BLOCK);
+            }
+            if (block.getHeight() == Constants.MONETARY_SYSTEM_BLOCK && ! verifyChecksum(CHECKSUM_MONETARY_SYSTEM_BLOCK)) {
+                popOffTo(Constants.NQT_BLOCK);
             }
         }, Event.BLOCK_PUSHED);
 
-        blockListeners.addListener(new Listener<Block>() {
-            @Override
-            public void notify(Block block) {
-                Db.db.analyzeTables();
-            }
-        }, Event.RESCAN_END);
+        blockListeners.addListener(block -> Db.db.analyzeTables(), Event.RESCAN_END);
 
-        ThreadPool.runBeforeStart(new Runnable() {
-            @Override
-            public void run() {
-                alreadyInitialized = true;
-                addGenesisBlock();
-                if (Nxt.getBooleanProperty("nxt.forceScan")) {
-                    scan(0, Nxt.getBooleanProperty("nxt.forceValidate"));
-                } else {
-                    boolean rescan;
-                    boolean validate;
-                    int height;
-                    try (Connection con = Db.db.getConnection();
-                         Statement stmt = con.createStatement();
-                         ResultSet rs = stmt.executeQuery("SELECT * FROM scan")) {
-                        rs.next();
-                        rescan = rs.getBoolean("rescan");
-                        validate = rs.getBoolean("validate");
-                        height = rs.getInt("height");
-                    } catch (SQLException e) {
-                        throw new RuntimeException(e.toString(), e);
-                    }
-                    if (rescan) {
-                        scan(height, validate);
-                    }
+        ThreadPool.runBeforeStart(() -> {
+            alreadyInitialized = true;
+            addGenesisBlock();
+            if (Nxt.getBooleanProperty("nxt.forceScan")) {
+                scan(0, Nxt.getBooleanProperty("nxt.forceValidate"));
+            } else {
+                boolean rescan;
+                boolean validate;
+                int height;
+                try (Connection con = Db.db.getConnection();
+                     Statement stmt = con.createStatement();
+                     ResultSet rs = stmt.executeQuery("SELECT * FROM scan")) {
+                    rs.next();
+                    rescan = rs.getBoolean("rescan");
+                    validate = rs.getBoolean("validate");
+                    height = rs.getInt("height");
+                } catch (SQLException e) {
+                    throw new RuntimeException(e.toString(), e);
+                }
+                if (rescan) {
+                    scan(height, validate);
                 }
             }
         }, false);
@@ -631,12 +610,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                         .build();
                 transactions.add(transaction);
             }
-            Collections.sort(transactions, new Comparator<TransactionImpl>() {
-                @Override
-                public int compare(TransactionImpl o1, TransactionImpl o2) {
-                    return Long.compare(o1.getId(), o2.getId());
-                }
-            });
+            Collections.sort(transactions, Comparator.comparingLong(Transaction::getId));
             MessageDigest digest = Crypto.sha256();
             for (Transaction transaction : transactions) {
                 digest.update(transaction.getBytes());
@@ -950,32 +924,17 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         }
     }
 
-    private static final Comparator<UnconfirmedTransaction> transactionArrivalComparator = new Comparator<UnconfirmedTransaction>() {
-        @Override
-        public int compare(UnconfirmedTransaction o1, UnconfirmedTransaction o2) {
-            int result = Long.compare(o1.getArrivalTimestamp(), o2.getArrivalTimestamp());
-            if (result != 0) {
-                return result;
-            }
-            result = Integer.compare(o1.getHeight(), o2.getHeight());
-            if (result != 0) {
-                return result;
-            }
-            return Long.compare(o1.getId(), o2.getId());
-        }
-    };
+    private static final Comparator<UnconfirmedTransaction> transactionArrivalComparator = Comparator
+            .comparingLong(UnconfirmedTransaction::getArrivalTimestamp)
+            .thenComparingInt(UnconfirmedTransaction::getHeight)
+            .thenComparingLong(UnconfirmedTransaction::getId);
 
     void generateBlock(String secretPhrase, int blockTimestamp) throws BlockNotAcceptedException {
 
         TransactionProcessorImpl transactionProcessor = TransactionProcessorImpl.getInstance();
         List<UnconfirmedTransaction> orderedUnconfirmedTransactions = new ArrayList<>();
         try (FilteringIterator<UnconfirmedTransaction> unconfirmedTransactions = new FilteringIterator<>(transactionProcessor.getAllUnconfirmedTransactions(),
-                new Filter<UnconfirmedTransaction>() {
-                    @Override
-                    public boolean ok(UnconfirmedTransaction transaction) {
-                        return hasAllReferencedTransactions(transaction, transaction.getTimestamp(), 0);
-                    }
-                })) {
+                transaction -> hasAllReferencedTransactions(transaction, transaction.getTimestamp(), 0))) {
             for (UnconfirmedTransaction unconfirmedTransaction : unconfirmedTransactions) {
                 orderedUnconfirmedTransactions.add(unconfirmedTransaction);
             }

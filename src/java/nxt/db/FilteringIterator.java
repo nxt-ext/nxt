@@ -21,12 +21,7 @@ public final class FilteringIterator<T> implements Iterator<T>, Iterable<T>, Aut
     }
 
     public FilteringIterator(DbIterator<T> dbIterator, int from, int to) {
-        this(dbIterator, new Filter<T>() {
-            @Override
-            public boolean ok(T t) {
-                return true;
-            }
-        }, from, to);
+        this(dbIterator, t -> true, from, to);
     }
 
     public FilteringIterator(DbIterator<T> dbIterator, Filter<T> filter, int from, int to) {

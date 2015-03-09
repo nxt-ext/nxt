@@ -2,7 +2,6 @@ package nxt;
 
 import nxt.db.DbClause;
 import nxt.db.DbIterator;
-import nxt.util.Listener;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -15,24 +14,19 @@ public abstract class CurrencyExchangeOffer {
 
     static {
 
-        Nxt.getBlockchainProcessor().addListener(new Listener<Block>() {
-
-            @Override
-            public void notify(Block block) {
-                if (block.getHeight() <= Constants.MONETARY_SYSTEM_BLOCK) {
-                    return;
-                }
-                List<CurrencyBuyOffer> expired = new ArrayList<>();
-                try (DbIterator<CurrencyBuyOffer> offers = CurrencyBuyOffer.getOffers(new DbClause.IntClause("expiration_height", block.getHeight()), 0, -1)) {
-                    for (CurrencyBuyOffer offer : offers) {
-                        expired.add(offer);
-                    }
-                }
-                for (CurrencyBuyOffer offer : expired) {
-                    removeOffer(offer);
+        Nxt.getBlockchainProcessor().addListener(block -> {
+            if (block.getHeight() <= Constants.MONETARY_SYSTEM_BLOCK) {
+                return;
+            }
+            List<CurrencyBuyOffer> expired = new ArrayList<>();
+            try (DbIterator<CurrencyBuyOffer> offers = CurrencyBuyOffer.getOffers(new DbClause.IntClause("expiration_height", block.getHeight()), 0, -1)) {
+                for (CurrencyBuyOffer offer : offers) {
+                    expired.add(offer);
                 }
             }
-
+            for (CurrencyBuyOffer offer : expired) {
+                removeOffer(offer);
+            }
         }, BlockchainProcessor.Event.AFTER_BLOCK_APPLY);
 
     }

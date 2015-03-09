@@ -35,7 +35,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
@@ -201,22 +200,19 @@ public final class Peers {
         cjdnsOnly = Nxt.getBooleanProperty("nxt.cjdnsOnly");
         ignorePeerAnnouncedAddress = Nxt.getBooleanProperty("nxt.ignorePeerAnnouncedAddress");
 
-        final List<Future<String>> unresolvedPeers = Collections.synchronizedList(new ArrayList<Future<String>>());
+        final List<Future<String>> unresolvedPeers = Collections.synchronizedList(new ArrayList<>());
 
         ThreadPool.runBeforeStart(new Runnable() {
 
             private void loadPeers(Collection<String> addresses) {
                 for (final String address : addresses) {
-                    Future<String> unresolvedAddress = peersService.submit(new Callable<String>() {
-                        @Override
-                        public String call() {
-                            PeerImpl peer = Peers.findOrCreatePeer(address, true);
-                            if (peer != null) {
-                                Peers.addPeer(peer);
-                                return null;
-                            }
-                            return address;
+                    Future<String> unresolvedAddress = peersService.submit(() -> {
+                        PeerImpl peer = Peers.findOrCreatePeer(address, true);
+                        if (peer != null) {
+                            Peers.addPeer(peer);
+                            return null;
                         }
+                        return address;
                     });
                     unresolvedPeers.add(unresolvedAddress);
                 }
@@ -234,24 +230,21 @@ public final class Peers {
             }
         }, false);
 
-        ThreadPool.runAfterStart(new Runnable() {
-            @Override
-            public void run() {
-                for (Future<String> unresolvedPeer : unresolvedPeers) {
-                    try {
-                        String badAddress = unresolvedPeer.get(5, TimeUnit.SECONDS);
-                        if (badAddress != null) {
-                            Logger.logDebugMessage("Failed to resolve peer address: " + badAddress);
-                        }
-                    } catch (InterruptedException e) {
-                        Thread.currentThread().interrupt();
-                    } catch (ExecutionException e) {
-                        Logger.logDebugMessage("Failed to add peer", e);
-                    } catch (TimeoutException e) {
+        ThreadPool.runAfterStart(() -> {
+            for (Future<String> unresolvedPeer : unresolvedPeers) {
+                try {
+                    String badAddress = unresolvedPeer.get(5, TimeUnit.SECONDS);
+                    if (badAddress != null) {
+                        Logger.logDebugMessage("Failed to resolve peer address: " + badAddress);
                     }
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                } catch (ExecutionException e) {
+                    Logger.logDebugMessage("Failed to add peer", e);
+                } catch (TimeoutException e) {
                 }
-                Logger.logDebugMessage("Known peers: " + peers.size());
             }
+            Logger.logDebugMessage("Known peers: " + peers.size());
         });
 
     }
@@ -293,16 +286,13 @@ public final class Peers {
 
                 peerServer.setHandler(peerHandler);
                 peerServer.setStopAtShutdown(true);
-                ThreadPool.runBeforeStart(new Runnable() {
-                    @Override
-                    public void run() {
-                        try {
-                            peerServer.start();
-                            Logger.logMessage("Started peer networking server at " + host + ":" + port);
-                        } catch (Exception e) {
-                            Logger.logErrorMessage("Failed to start peer networking server", e);
-                            throw new RuntimeException(e.toString(), e);
-                        }
+                ThreadPool.runBeforeStart(() -> {
+                    try {
+                        peerServer.start();
+                        Logger.logMessage("Started peer networking server at " + host + ":" + port);
+                    } catch (Exception e) {
+                        Logger.logErrorMessage("Failed to start peer networking server", e);
+                        throw new RuntimeException(e.toString(), e);
                     }
                 }, true);
             } else {
@@ -317,28 +307,23 @@ public final class Peers {
 
     }
 
-    private static final Runnable peerUnBlacklistingThread = new Runnable() {
+    private static final Runnable peerUnBlacklistingThread = () -> {
 
-        @Override
-        public void run() {
-
+        try {
             try {
-                try {
 
-                    long curTime = System.currentTimeMillis();
-                    for (PeerImpl peer : peers.values()) {
-                        peer.updateBlacklistedStatus(curTime);
-                    }
-
-                } catch (Exception e) {
-                    Logger.logDebugMessage("Error un-blacklisting peer", e);
+                long curTime = System.currentTimeMillis();
+                for (PeerImpl peer : peers.values()) {
+                    peer.updateBlacklistedStatus(curTime);
                 }
-            } catch (Throwable t) {
-                Logger.logMessage("CRITICAL ERROR. PLEASE REPORT TO THE DEVELOPERS.\n" + t.toString());
-                t.printStackTrace();
-                System.exit(1);
-            }
 
+            } catch (Exception e) {
+                Logger.logDebugMessage("Error un-blacklisting peer", e);
+            }
+        } catch (Throwable t) {
+            Logger.logMessage("CRITICAL ERROR. PLEASE REPORT TO THE DEVELOPERS.\n" + t.toString());
+            t.printStackTrace();
+            System.exit(1);
         }
 
     };
@@ -355,13 +340,10 @@ public final class Peers {
                     if (!hasEnoughConnectedPublicPeers(Peers.maxNumberOfConnectedPublicPeers)) {
                         List<Future> futures = new ArrayList<>();
                         for (int i = 0; i < 10; i++) {
-                            futures.add(peersService.submit(new Runnable() {
-                                @Override
-                                public void run() {
-                                    PeerImpl peer = (PeerImpl) getAnyPeer(ThreadLocalRandom.current().nextInt(2) == 0 ? Peer.State.NON_CONNECTED : Peer.State.DISCONNECTED, false);
-                                    if (peer != null && now - peer.getLastConnectAttempt() > 600) {
-                                        peer.connect();
-                                    }
+                            futures.add(peersService.submit(() -> {
+                                PeerImpl peer = (PeerImpl) getAnyPeer(ThreadLocalRandom.current().nextInt(2) == 0 ? Peer.State.NON_CONNECTED : Peer.State.DISCONNECTED, false);
+                                if (peer != null && now - peer.getLastConnectAttempt() > 600) {
+                                    peer.connect();
                                 }
                             }));
                         }
@@ -413,12 +395,7 @@ public final class Peers {
 
         private volatile boolean addedNewPeer;
         {
-            Peers.addListener(new Listener<Peer>() {
-                @Override
-                public void notify(Peer peer) {
-                    addedNewPeer = true;
-                }
-            }, Event.NEW_PEER);
+            Peers.addListener(peer -> addedNewPeer = true, Event.NEW_PEER);
         }
 
         @Override
@@ -512,13 +489,10 @@ public final class Peers {
     };
 
     static {
-        Account.addListener(new Listener<Account>() {
-            @Override
-            public void notify(Account account) {
-                for (PeerImpl peer : Peers.peers.values()) {
-                    if (peer.getHallmark() != null && peer.getHallmark().getAccountId() == account.getId()) {
-                        Peers.listeners.notify(peer, Peers.Event.WEIGHT);
-                    }
+        Account.addListener(account -> {
+            for (PeerImpl peer : Peers.peers.values()) {
+                if (peer.getHallmark() != null && peer.getHallmark().getAccountId() == account.getId()) {
+                    Peers.listeners.notify(peer, Event.WEIGHT);
                 }
             }
         }, Account.Event.BALANCE);
@@ -583,21 +557,11 @@ public final class Peers {
     }
 
     public static List<Peer> getActivePeers() {
-        return getPeers(new Filter<Peer>() {
-            @Override
-            public boolean ok(Peer peer) {
-                return peer.getState() != Peer.State.NON_CONNECTED;
-            }
-        });
+        return getPeers(peer -> peer.getState() != Peer.State.NON_CONNECTED);
     }
 
     public static List<Peer> getPeers(final Peer.State state) {
-        return getPeers(new Filter<Peer>() {
-            @Override
-            public boolean ok(Peer peer) {
-                return peer.getState() == state;
-            }
-        });
+        return getPeers(peer -> peer.getState() == state);
     }
 
     public static List<Peer> getPeers(Filter<Peer> filter) {
@@ -753,47 +717,39 @@ public final class Peers {
     }
 
     private static void sendToSomePeers(final JSONObject request) {
-        sendingService.submit(new Runnable() {
-            @Override
-            public void run() {
-                final JSONStreamAware jsonRequest = JSON.prepareRequest(request);
+        sendingService.submit(() -> {
+            final JSONStreamAware jsonRequest = JSON.prepareRequest(request);
 
-                int successful = 0;
-                List<Future<JSONObject>> expectedResponses = new ArrayList<>();
-                for (final Peer peer : peers.values()) {
+            int successful = 0;
+            List<Future<JSONObject>> expectedResponses = new ArrayList<>();
+            for (final Peer peer : peers.values()) {
 
-                    if (Peers.enableHallmarkProtection && peer.getWeight() < Peers.pushThreshold) {
-                        continue;
-                    }
+                if (Peers.enableHallmarkProtection && peer.getWeight() < Peers.pushThreshold) {
+                    continue;
+                }
 
-                    if (!peer.isBlacklisted() && peer.getState() == Peer.State.CONNECTED && peer.getAnnouncedAddress() != null) {
-                        Future<JSONObject> futureResponse = peersService.submit(new Callable<JSONObject>() {
-                            @Override
-                            public JSONObject call() {
-                                return peer.send(jsonRequest);
+                if (!peer.isBlacklisted() && peer.getState() == Peer.State.CONNECTED && peer.getAnnouncedAddress() != null) {
+                    Future<JSONObject> futureResponse = peersService.submit(() -> peer.send(jsonRequest));
+                    expectedResponses.add(futureResponse);
+                }
+                if (expectedResponses.size() >= Peers.sendToPeersLimit - successful) {
+                    for (Future<JSONObject> future : expectedResponses) {
+                        try {
+                            JSONObject response = future.get();
+                            if (response != null && response.get("error") == null) {
+                                successful += 1;
                             }
-                        });
-                        expectedResponses.add(futureResponse);
-                    }
-                    if (expectedResponses.size() >= Peers.sendToPeersLimit - successful) {
-                        for (Future<JSONObject> future : expectedResponses) {
-                            try {
-                                JSONObject response = future.get();
-                                if (response != null && response.get("error") == null) {
-                                    successful += 1;
-                                }
-                            } catch (InterruptedException e) {
-                                Thread.currentThread().interrupt();
-                            } catch (ExecutionException e) {
-                                Logger.logDebugMessage("Error in sendToSomePeers", e);
-                            }
-
+                        } catch (InterruptedException e) {
+                            Thread.currentThread().interrupt();
+                        } catch (ExecutionException e) {
+                            Logger.logDebugMessage("Error in sendToSomePeers", e);
                         }
-                        expectedResponses.clear();
+
                     }
-                    if (successful >= Peers.sendToPeersLimit) {
-                        return;
-                    }
+                    expectedResponses.clear();
+                }
+                if (successful >= Peers.sendToPeersLimit) {
+                    return;
                 }
             }
         });
@@ -804,13 +760,8 @@ public final class Peers {
     }
 
     public static List<Peer> getPublicPeers(final Peer.State state, final boolean applyPullThreshold) {
-        return getPeers(new Filter<Peer>() {
-            @Override
-            public boolean ok(Peer peer) {
-                return !peer.isBlacklisted() && peer.getState() == state && peer.getAnnouncedAddress() != null
-                        && (!applyPullThreshold || !Peers.enableHallmarkProtection || peer.getWeight() >= Peers.pullThreshold);
-            }
-        });
+        return getPeers(peer -> !peer.isBlacklisted() && peer.getState() == state && peer.getAnnouncedAddress() != null
+                && (!applyPullThreshold || !Peers.enableHallmarkProtection || peer.getWeight() >= Peers.pullThreshold));
     }
 
     public static Peer getWeightedPeer(List<Peer> selectedPeers) {
@@ -885,13 +836,8 @@ public final class Peers {
     }
 
     private static boolean hasEnoughConnectedPublicPeers(int limit) {
-        return getPeers(new Filter<Peer>() {
-            @Override
-            public boolean ok(Peer peer) {
-                return !peer.isBlacklisted() && peer.getState() == Peer.State.CONNECTED && peer.getAnnouncedAddress() != null
-                        && (! Peers.enableHallmarkProtection || peer.getWeight() > 0);
-            }
-        }, limit).size() >= limit;
+        return getPeers(peer -> !peer.isBlacklisted() && peer.getState() == Peer.State.CONNECTED && peer.getAnnouncedAddress() != null
+                && (! Peers.enableHallmarkProtection || peer.getWeight() > 0), limit).size() >= limit;
     }
 
     private Peers() {} // never
