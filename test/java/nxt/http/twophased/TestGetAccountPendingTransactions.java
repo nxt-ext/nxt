@@ -3,7 +3,6 @@ package nxt.http.twophased;
 
 import nxt.BlockchainTest;
 import nxt.http.APICall;
-import nxt.util.Convert;
 import nxt.util.Logger;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -14,7 +13,7 @@ public class TestGetAccountPendingTransactions extends BlockchainTest {
 
     static APICall pendingTransactionsApiCall(long id) {
         return new APICall.Builder("getAccountPendingTransactions")
-                .param("account", Convert.toUnsignedLong(id))
+                .param("account", Long.toUnsignedString(id))
                 .param("firstIndex", 0)
                 .param("lastIndex", 10)
                 .build();

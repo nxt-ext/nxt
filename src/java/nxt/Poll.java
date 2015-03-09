@@ -3,9 +3,9 @@ package nxt;
 import nxt.db.DbClause;
 import nxt.db.DbIterator;
 import nxt.db.DbKey;
+import nxt.db.DbUtils;
 import nxt.db.EntityDbTable;
 import nxt.db.ValuesDbTable;
-import nxt.util.Convert;
 import nxt.util.Listener;
 import nxt.util.Logger;
 
@@ -13,47 +13,10 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 public final class Poll extends AbstractPoll {
-
-    public static final class PollResult {
-
-        private final String option;
-        private final long result;
-
-        private PollResult(String option, long result) {
-            this.option = option;
-            this.result = result;
-        }
-
-        private PollResult(ResultSet rs) throws SQLException {
-            this.option = rs.getString("option");
-            this.result = rs.getLong("result");
-        }
-
-        private void save(Connection con, Poll poll) throws SQLException {
-            try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO poll_result (poll_id, "
-                    + "option, result, height) VALUES (?, ?, ?, ?)")) {
-                int i = 0;
-                pstmt.setLong(++i, poll.getId());
-                pstmt.setString(++i, getOption());
-                pstmt.setLong(++i, getResult());
-                pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
-                pstmt.executeUpdate();
-            }
-        }
-
-        public String getOption() {
-            return option;
-        }
-
-        public long getResult() {
-            return result;
-        }
-    }
 
     private static final boolean isPollsProcessing = Nxt.getBooleanProperty("nxt.processPolls");
 
@@ -84,16 +47,24 @@ public final class Poll extends AbstractPoll {
         }
     };
 
-    private static final ValuesDbTable<Poll, PollResult> pollResultsTable = new ValuesDbTable<Poll,PollResult>("poll_result", pollResultsDbKeyFactory) {
+    private static final ValuesDbTable<Poll, Long> pollResultsTable = new ValuesDbTable<Poll, Long>("poll_result", pollResultsDbKeyFactory) {
 
         @Override
-        protected PollResult load(Connection con, ResultSet rs) throws SQLException {
-            return new PollResult(rs);
+        protected Long load(Connection con, ResultSet rs) throws SQLException {
+            long result = rs.getLong("result");
+            return rs.wasNull() ? null : result;
         }
 
         @Override
-        protected void save(Connection con, Poll poll, PollResult pollResult) throws SQLException {
-            pollResult.save(con, poll);
+        protected void save(Connection con, Poll poll, Long result) throws SQLException {
+            try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO poll_result (poll_id, "
+                    + "result, height) VALUES (?, ?, ?)")) {
+                int i = 0;
+                pstmt.setLong(++i, poll.getId());
+                DbUtils.setLong(pstmt, ++i, result);
+                pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
+                pstmt.executeUpdate();
+            }
         }
     };
 
@@ -151,11 +122,11 @@ public final class Poll extends AbstractPoll {
         try (DbIterator<Poll> polls = getPollsFinishingAt(currentHeight)) {
             for (Poll poll : polls) {
                 try {
-                    List<PollResult> results = poll.countResults(poll.getDefaultVoteWeighting(), currentHeight);
+                    List<Long> results = poll.countResults(poll.getDefaultVoteWeighting(), currentHeight);
                     pollResultsTable.insert(poll, results);
-                    Logger.logDebugMessage("Poll " + Convert.toUnsignedLong(poll.getId()) + " has been finished");
+                    Logger.logDebugMessage("Poll " + Long.toUnsignedString(poll.getId()) + " has been finished");
                 } catch (RuntimeException e) { // could happen e.g. because of overflow in safeMultiply
-                    Logger.logErrorMessage("Couldn't count votes for poll " + Convert.toUnsignedLong(poll.getId()));
+                    Logger.logErrorMessage("Couldn't count votes for poll " + Long.toUnsignedString(poll.getId()));
                 }
             }
         }
@@ -221,7 +192,7 @@ public final class Poll extends AbstractPoll {
         }
     }
 
-    public List<PollResult> getResults(VoteWeighting voteWeighting) {
+    public List<Long> getResults(VoteWeighting voteWeighting) {
         if (defaultVoteWeighting.equals(voteWeighting)) {
             return getResults();
         } else {
@@ -230,7 +201,7 @@ public final class Poll extends AbstractPoll {
 
     }
 
-    public List<PollResult> getResults() {
+    public List<Long> getResults() {
         if (Poll.isPollsProcessing && isFinished()) {
             return pollResultsTable.get(pollResultsDbKeyFactory.newKey(id));
         } else {
@@ -271,7 +242,7 @@ public final class Poll extends AbstractPoll {
         return maxRangeValue;
     }
 
-    private List<PollResult> countResults(VoteWeighting voteWeighting) {
+    private List<Long> countResults(VoteWeighting voteWeighting) {
         int countHeight = Math.min(finishHeight, Nxt.getBlockchain().getHeight());
         if (countHeight < Nxt.getBlockchainProcessor().getMinRollbackHeight()) {
             return null;
@@ -279,44 +250,37 @@ public final class Poll extends AbstractPoll {
         return countResults(voteWeighting, countHeight);
     }
 
-    private List<PollResult> countResults(VoteWeighting voteWeighting, int height) {
-        final long[] counts = new long[options.length];
-
+    private List<Long> countResults(VoteWeighting voteWeighting, int height) {
+        final Long[] result = new Long[options.length];
         try (DbIterator<Vote> votes = Vote.getVotes(this.getId(), 0, -1)) {
             for (Vote vote : votes) {
-                long[] partialResult = countVote(voteWeighting, vote, height);
+                Long[] partialResult = countVote(voteWeighting, vote, height);
                 if (partialResult != null) {
                     for (int idx = 0; idx < partialResult.length; idx++) {
-                        counts[idx] = Convert.safeAdd(counts[idx], partialResult[idx]);
+                        if (partialResult[idx] != null) {
+                            result[idx] = result[idx] == null ? partialResult[idx] : Math.addExact(result[idx], partialResult[idx]);
+                        }
                     }
                 }
             }
         }
-
-        List<PollResult> results = new ArrayList<>(options.length);
-        for (int i = 0; i < options.length; i++) {
-            results.add(new PollResult(options[i], counts[i]));
-        }
-        return results;
+        return Arrays.asList(result);
     }
 
-    private long[] countVote(VoteWeighting voteWeighting, Vote vote, int height) {
-        final long[] partialResult = new long[options.length];
-
+    private Long[] countVote(VoteWeighting voteWeighting, Vote vote, int height) {
         final long weight = voteWeighting.calcWeight(vote.getVoterId(), height);
-
-        final byte[] optVals = vote.getVote();
-
-        if (weight > 0) {
-            for (int idx = 0; idx < optVals.length; idx++) {
-                if (optVals[idx] != Constants.VOTING_NO_VOTE_VALUE) {
-                    partialResult[idx] = Convert.safeMultiply(optVals[idx], weight);
-                }
-            }
-            return partialResult;
-        } else {
+        if (weight <= 0) {
             return null;
         }
+        final Long[] partialResult = new Long[options.length];
+        final byte[] optVals = vote.getVote();
+
+        for (int idx = 0; idx < optVals.length; idx++) {
+            if (optVals[idx] != Constants.VOTING_NO_VOTE_VALUE) {
+                partialResult[idx] = Math.multiplyExact((long) optVals[idx], weight);
+            }
+        }
+        return partialResult;
     }
 
 }

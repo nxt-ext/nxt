@@ -153,13 +153,13 @@ public class TestCurrencyReserveAndClaim extends BlockchainTest {
 
         JSONArray founders = (JSONArray)getFoundersResponse.get("founders");
         JSONObject founder1 = (JSONObject)founders.get(0);
-        Assert.assertTrue(Convert.toUnsignedLong(Account.getId(Crypto.getPublicKey(secret1))).equals(founder1.get("account")) ||
-                Convert.toUnsignedLong(Account.getId(Crypto.getPublicKey(secret2))).equals(founder1.get("account")));
+        Assert.assertTrue(Long.toUnsignedString(Account.getId(Crypto.getPublicKey(secret1))).equals(founder1.get("account")) ||
+                Long.toUnsignedString(Account.getId(Crypto.getPublicKey(secret2))).equals(founder1.get("account")));
         Assert.assertTrue(String.valueOf(3L + 5L).equals(founder1.get("amountPerUnitNQT")) || String.valueOf(2L).equals(founder1.get("amountPerUnitNQT")));
 
         JSONObject founder2 = (JSONObject)founders.get(1);
-        Assert.assertTrue(Convert.toUnsignedLong(Account.getId(Crypto.getPublicKey(secret1))).equals(founder2.get("account")) ||
-                Convert.toUnsignedLong(Account.getId(Crypto.getPublicKey(secret2))).equals(founder2.get("account")));
+        Assert.assertTrue(Long.toUnsignedString(Account.getId(Crypto.getPublicKey(secret1))).equals(founder2.get("account")) ||
+                Long.toUnsignedString(Account.getId(Crypto.getPublicKey(secret2))).equals(founder2.get("account")));
         Assert.assertTrue(String.valueOf(3L + 5L).equals(founder2.get("amountPerUnitNQT")) || String.valueOf(2L).equals(founder2.get("amountPerUnitNQT")));
     }
 

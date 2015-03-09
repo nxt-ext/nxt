@@ -179,7 +179,7 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
             }
             Transaction transaction = builder.build();
             try {
-                if (Convert.safeAdd(amountNQT, transaction.getFeeNQT()) > senderAccount.getUnconfirmedBalanceNQT()) {
+                if (Math.addExact(amountNQT, transaction.getFeeNQT()) > senderAccount.getUnconfirmedBalanceNQT()) {
                     return NOT_ENOUGH_FUNDS;
                 }
             } catch (ArithmeticException e) {
@@ -203,6 +203,9 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
         } catch (NxtException.NotYetEnabledException e) {
             return FEATURE_NOT_AVAILABLE;
         } catch (NxtException.ValidationException e) {
+            if (broadcast) {
+                response.clear();
+            }
             JSONData.putException(response, e);
         }
         return response;

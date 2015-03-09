@@ -87,6 +87,8 @@ public final class Peers {
     private static final boolean usePeersDb;
     private static final boolean savePeers;
     private static final String dumpPeersVersion;
+    static final boolean ignorePeerAnnouncedAddress;
+    static final boolean cjdnsOnly;
 
 
     static final JSONStreamAware myPeerInfoRequest;
@@ -118,13 +120,15 @@ public final class Peers {
         if (Peers.myHallmark != null && Peers.myHallmark.length() > 0) {
             try {
                 Hallmark hallmark = Hallmark.parseHallmark(Peers.myHallmark);
-                if (!hallmark.isValid() || myAddress == null) {
+                if (!hallmark.isValid()) {
                     throw new RuntimeException();
                 }
-                URI uri = new URI("http://" + myAddress.trim());
-                String host = uri.getHost();
-                if (!hallmark.getHost().equals(host)) {
-                    throw new RuntimeException();
+                if (myAddress != null) {
+                    URI uri = new URI("http://" + myAddress.trim());
+                    String host = uri.getHost();
+                    if (!hallmark.getHost().equals(host)) {
+                        throw new RuntimeException();
+                    }
                 }
             } catch (RuntimeException | URISyntaxException e) {
                 Logger.logMessage("Your hallmark is invalid: " + Peers.myHallmark + " for your address: " + myAddress);
@@ -194,6 +198,8 @@ public final class Peers {
         savePeers = usePeersDb && Nxt.getBooleanProperty("nxt.savePeers");
         getMorePeers = Nxt.getBooleanProperty("nxt.getMorePeers");
         dumpPeersVersion = Nxt.getStringProperty("nxt.dumpPeersVersion");
+        cjdnsOnly = Nxt.getBooleanProperty("nxt.cjdnsOnly");
+        ignorePeerAnnouncedAddress = Nxt.getBooleanProperty("nxt.ignorePeerAnnouncedAddress");
 
         final List<Future<String>> unresolvedPeers = Collections.synchronizedList(new ArrayList<Future<String>>());
 
@@ -647,6 +653,10 @@ public final class Peers {
     }
 
     static PeerImpl findOrCreatePeer(final String address, int port, final String announcedAddress, final boolean create) {
+
+	    if (Peers.cjdnsOnly && !address.substring(0,2).equals("fc")) {
+            return null;
+        }
 
         //re-add the [] to ipv6 addresses lost in getHostAddress() above
         String cleanAddress = address;

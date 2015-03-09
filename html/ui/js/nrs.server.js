@@ -86,7 +86,8 @@ var NRS = (function(NRS, $, undefined) {
 				["priceNXT", "NQT"],
 				["refundNXT", "NQT"],
 				["discountNXT", "NQT"],
-				["phasingQuorumNXT", ""]
+				["phasingQuorumNXT", ""],
+				["phasingMinBalanceNXT", ""]
 			];
 
 			for (var i = 0; i < nxtFields.length; i++) {
@@ -110,9 +111,10 @@ var NRS = (function(NRS, $, undefined) {
 		// convert asset/currency decimal amount to base unit
 		try {
 			var currencyFields = [
-				["phasingQuorumQNTf", "phasingHoldingDecimals"]
+				["phasingQuorumQNTf", "phasingHoldingDecimals"],
+				["phasingMinBalanceQNTf", "phasingHoldingDecimals"]
 			];
-
+			var toDelete = [];
 			for (var i = 0; i < currencyFields.length; i++) {
 				var decimalUnitField = currencyFields[i][0];
 				var decimalsField = currencyFields[i][1];
@@ -120,10 +122,13 @@ var NRS = (function(NRS, $, undefined) {
 
 				if (decimalUnitField in data) {
 					data[field] = NRS.convertToQNT(parseFloat(data[decimalUnitField]), parseInt(data[decimalsField]));
-					delete data[decimalUnitField];
-					delete data[decimalsField];
+					toDelete.push(decimalUnitField);
+					toDelete.push(decimalsField);
 				}
 			}
+			$(toDelete, function(key, value) {
+				delete data[value];
+			});
 		} catch (err) {
 			if (callback) {
 				callback({

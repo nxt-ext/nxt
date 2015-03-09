@@ -235,7 +235,7 @@ public class MintWorker {
     private JSONObject getMintingTarget(long currencyId, String rsAccount, long units) {
         Map<String, String> params = new HashMap<>();
         params.put("requestType", "getMintingTarget");
-        params.put("currency", Convert.toUnsignedLong(currencyId));
+        params.put("currency", Long.toUnsignedString(currencyId));
         params.put("account", rsAccount);
         params.put("units", Long.toString(units));
         return getJsonResponse(params);

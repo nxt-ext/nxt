@@ -231,40 +231,6 @@ var NRS = (function(NRS, $, undefined) {
 		}
 	});
 
-	$('.approve_tab_list a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
-        var feeAddition = $(this).data("feeNxtApprovalAddition");
-        $(this).closest(".modal").find("input[name='feeNXT_approval_addition']").val(feeAddition);
-        $(this).closest(".modal").find("span.feeNXT_approval_addition_info").html("+" + feeAddition);
-
-        $am = $(this).closest('.approve_modal');
-        $am.find('.tab-pane input').prop('disabled', true);
-        $am.find('.tab-pane.active input').prop('disabled', false);
-        if ($(this).hasClass("at_accounts") || $(this).hasClass("at_balance")) {
-        	$am.find('.approve_whitelist_accounts input').prop('disabled', false);
-        	$am.find('.approve_whitelist_accounts').show();
-        } else {
-        	$am.find('.approve_whitelist_accounts').hide();
-        	$am.find('.approve_whitelist_accounts input').prop('disabled', true);
-        }
-    });
-
-    $(".add_account_btn").click(function(e) {
-    	var $accountBox = $(this).closest('.account_box');
-        var $clone = $accountBox.find(".form_group_accounts").first().clone();
-        $clone.find("input").val("");
-        $clone.find(".pas_contact_info").text("");
-        $accountBox.find(".added_account_list").append($clone);
-    });
-
-    $(".modal").on("click", "button.btn.remove_account_btn", function(e) {
-    	e.preventDefault();
-    	var $accountBox = $(this).closest('.account_box');
-    	if ($accountBox.find(".form_group_accounts").length == 1) {
-            return;
-        }
-        $(this).closest(".form_group_accounts").remove();
-    });
-
 	$(".advanced_info a").on("click", function(e) {
 		e.preventDefault();
 

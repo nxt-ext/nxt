@@ -12,7 +12,7 @@ import java.math.BigInteger;
 
 /**
  * Currency miners can use this API to obtain their target hash value for minting currency units
- * </p>
+ * <p>
  * Parameters
  * <ul>
  * <li>currency - currency id
@@ -32,7 +32,7 @@ public final class GetMintingTarget extends APIServlet.APIRequestHandler {
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
         Currency currency = ParameterParser.getCurrency(req);
         JSONObject json = new JSONObject();
-        json.put("currency", Convert.toUnsignedLong(currency.getId()));
+        json.put("currency", Long.toUnsignedString(currency.getId()));
         long units = ParameterParser.getLong(req, "units", 1, currency.getMaxSupply() - currency.getReserveSupply(), true);
         BigInteger numericTarget = CurrencyMinting.getNumericTarget(currency, units);
         json.put("difficulty", String.valueOf(BigInteger.ZERO.equals(numericTarget) ? -1 : BigInteger.valueOf(2).pow(256).subtract(BigInteger.ONE).divide(numericTarget)));

@@ -4,7 +4,6 @@ import nxt.BlockchainTest;
 import nxt.Constants;
 import nxt.http.APICall;
 import nxt.http.twophased.TestCreateTwoPhased.TwoPhasedMoneyTransferBuilder;
-import nxt.util.Convert;
 import nxt.util.Logger;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -15,7 +14,7 @@ public class TestGetVoterPendingTransactions extends BlockchainTest {
 
     static APICall getVoterPendingTransactions() {
         return new APICall.Builder("getVoterPendingTransactions")
-                .param("account", Convert.toUnsignedLong(id3))
+                .param("account", Long.toUnsignedString(id3))
                 .param("firstIndex", 0)
                 .param("lastIndex", 10)
                 .build();

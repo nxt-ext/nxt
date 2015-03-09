@@ -4,7 +4,6 @@ import nxt.db.DbClause;
 import nxt.db.DbIterator;
 import nxt.db.DbKey;
 import nxt.db.VersionedEntityDbTable;
-import nxt.util.Convert;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -28,16 +27,16 @@ public abstract class Order {
 
             Trade trade = Trade.addTrade(assetId, askOrder, bidOrder);
 
-            askOrder.updateQuantityQNT(Convert.safeSubtract(askOrder.getQuantityQNT(), trade.getQuantityQNT()));
+            askOrder.updateQuantityQNT(Math.subtractExact(askOrder.getQuantityQNT(), trade.getQuantityQNT()));
             Account askAccount = Account.getAccount(askOrder.getAccountId());
-            askAccount.addToBalanceAndUnconfirmedBalanceNQT(Convert.safeMultiply(trade.getQuantityQNT(), trade.getPriceNQT()));
+            askAccount.addToBalanceAndUnconfirmedBalanceNQT(Math.multiplyExact(trade.getQuantityQNT(), trade.getPriceNQT()));
             askAccount.addToAssetBalanceQNT(assetId, -trade.getQuantityQNT());
 
-            bidOrder.updateQuantityQNT(Convert.safeSubtract(bidOrder.getQuantityQNT(), trade.getQuantityQNT()));
+            bidOrder.updateQuantityQNT(Math.subtractExact(bidOrder.getQuantityQNT(), trade.getQuantityQNT()));
             Account bidAccount = Account.getAccount(bidOrder.getAccountId());
             bidAccount.addToAssetAndUnconfirmedAssetBalanceQNT(assetId, trade.getQuantityQNT());
-            bidAccount.addToBalanceNQT(-Convert.safeMultiply(trade.getQuantityQNT(), trade.getPriceNQT()));
-            bidAccount.addToUnconfirmedBalanceNQT(Convert.safeMultiply(trade.getQuantityQNT(), (bidOrder.getPriceNQT() - trade.getPriceNQT())));
+            bidAccount.addToBalanceNQT(-Math.multiplyExact(trade.getQuantityQNT(), trade.getPriceNQT()));
+            bidAccount.addToUnconfirmedBalanceNQT(Math.multiplyExact(trade.getQuantityQNT(), (bidOrder.getPriceNQT() - trade.getPriceNQT())));
 
         }
 
@@ -132,8 +131,8 @@ public abstract class Order {
 
     @Override
     public String toString() {
-        return getClass().getSimpleName() + " id: " + Convert.toUnsignedLong(id) + " account: " + Convert.toUnsignedLong(accountId)
-                + " asset: " + Convert.toUnsignedLong(assetId) + " price: " + priceNQT + " quantity: " + quantityQNT
+        return getClass().getSimpleName() + " id: " + Long.toUnsignedString(id) + " account: " + Long.toUnsignedString(accountId)
+                + " asset: " + Long.toUnsignedString(assetId) + " price: " + priceNQT + " quantity: " + quantityQNT
                 + " height: " + creationHeight + " transactionIndex: " + transactionIndex + " transactionHeight: " + transactionHeight;
     }
 
@@ -269,7 +268,7 @@ public abstract class Order {
                 askOrderTable.delete(this);
             } else {
                 throw new IllegalArgumentException("Negative quantity: " + quantityQNT
-                        + " for order: " + Convert.toUnsignedLong(getId()));
+                        + " for order: " + Long.toUnsignedString(getId()));
             }
         }
 
@@ -398,7 +397,7 @@ public abstract class Order {
                 bidOrderTable.delete(this);
             } else {
                 throw new IllegalArgumentException("Negative quantity: " + quantityQNT
-                        + " for order: " + Convert.toUnsignedLong(getId()));
+                        + " for order: " + Long.toUnsignedString(getId()));
             }
         }
 

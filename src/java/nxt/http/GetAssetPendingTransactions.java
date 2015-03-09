@@ -16,7 +16,7 @@ public class GetAssetPendingTransactions extends APIServlet.APIRequestHandler {
     static final GetAssetPendingTransactions instance = new GetAssetPendingTransactions();
 
     private GetAssetPendingTransactions() {
-        super(new APITag[]{APITag.AE, APITag.PHASING}, "asset", "firstIndex", "lastIndex");
+        super(new APITag[]{APITag.AE, APITag.PHASING}, "asset", "withoutWhitelist", "firstIndex", "lastIndex");
     }
 
     @Override
@@ -24,12 +24,13 @@ public class GetAssetPendingTransactions extends APIServlet.APIRequestHandler {
         Asset asset = ParameterParser.getAsset(req);
         int firstIndex = ParameterParser.getFirstIndex(req);
         int lastIndex = ParameterParser.getLastIndex(req);
+        boolean withoutWhitelist = "true".equalsIgnoreCase(req.getParameter("withoutWhitelist"));
 
         long assetId = asset.getId();
 
         JSONArray transactions = new JSONArray();
         try (DbIterator<? extends Transaction> iterator =
-                     PhasingPoll.getHoldingPendingTransactions(assetId, VoteWeighting.VotingModel.ASSET, firstIndex, lastIndex)) {
+                     PhasingPoll.getHoldingPendingTransactions(assetId, VoteWeighting.VotingModel.ASSET, withoutWhitelist, firstIndex, lastIndex)) {
             while (iterator.hasNext()) {
                 Transaction transaction = iterator.next();
                 transactions.add(JSONData.transaction(transaction));

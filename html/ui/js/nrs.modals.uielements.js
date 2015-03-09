@@ -143,6 +143,24 @@ var NRS = (function(NRS, $, undefined) {
 		_delay(_loadAssetInfoForId, 1000 );
 	});
 
+	//multi_accounts_modal_ui_element
+	$('body').on('click', '.modal div[data-modal-ui-element="multi_accounts_modal_ui_element"] .add_account_btn', function(e) {
+    	var $accountBox = $(this).closest('div[data-modal-ui-element="multi_accounts_modal_ui_element"]');
+        var $clone = $accountBox.find(".form_group_multi_accounts_ue").first().clone();
+        $clone.find("input").val("");
+        $clone.find(".pas_contact_info").text("");
+        $accountBox.find(".multi_accounts_ue_added_account_list").append($clone);
+    });
+
+    $('body').on('click', '.modal div[data-modal-ui-element="multi_accounts_modal_ui_element"] .remove_account_btn', function(e) {
+    	e.preventDefault();
+    	var $accountBox = $(this).closest('div[data-modal-ui-element="multi_accounts_modal_ui_element"]');
+    	if ($accountBox.find(".form_group_multi_accounts_ue").length == 1) {
+            return;
+        }
+        $(this).closest(".form_group_multi_accounts_ue").remove();
+    });
+
 
 
 	return NRS;

@@ -616,7 +616,7 @@ class NxtDbVersion extends DbVersion {
                         + "min_balance_model TINYINT, holding_id BIGINT, height INT NOT NULL)");
             case 237:
                 apply("CREATE TABLE IF NOT EXISTS poll_result (db_id IDENTITY, poll_id BIGINT NOT NULL, "
-                        + "option VARCHAR NOT NULL, result BIGINT NOT NULL,  height INT NOT NULL)");
+                        + "option VARCHAR NOT NULL, result BIGINT NOT NULL, height INT NOT NULL)");
             case 238:
                 apply("ALTER TABLE transaction ADD COLUMN IF NOT EXISTS phased BOOLEAN NOT NULL DEFAULT FALSE");
             case 239:
@@ -695,9 +695,21 @@ class NxtDbVersion extends DbVersion {
             case 271:
                 apply("ALTER TABLE sell_offer ADD COLUMN IF NOT EXISTS transaction_height INT NOT NULL");
             case 272:
-                BlockchainProcessorImpl.getInstance().scheduleScan(0, false);
                 apply(null);
             case 273:
+                apply("ALTER TABLE poll_result DROP COLUMN IF EXISTS option");
+            case 274:
+                apply("ALTER TABLE phasing_poll ALTER COLUMN voter_count RENAME TO whitelist_size");
+            case 275:
+                apply("ALTER TABLE poll_result ALTER COLUMN result SET NULL");
+            case 276:
+                BlockchainProcessorImpl.getInstance().scheduleScan(0, false);
+                apply(null);
+            case 277:
+                apply("DROP INDEX IF EXISTS poll_result_poll_id_idx");
+            case 278:
+                apply("CREATE INDEX IF NOT EXISTS poll_result_poll_id_idx ON poll_result(poll_id)");
+            case 279:
                 return;
             default:
                 throw new RuntimeException("Blockchain database inconsistent with code, probably trying to run older code on newer database");

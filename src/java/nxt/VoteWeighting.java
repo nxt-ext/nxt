@@ -1,7 +1,5 @@
 package nxt;
 
-import nxt.util.Convert;
-
 public final class VoteWeighting {
 
     public enum VotingModel {
@@ -161,10 +159,10 @@ public final class VoteWeighting {
             throw new NxtException.NotValidException("No holdingId provided");
         }
         if (votingModel == VotingModel.CURRENCY && Currency.getCurrency(holdingId) == null) {
-            throw new NxtException.NotCurrentlyValidException("Currency " + Convert.toUnsignedLong(holdingId) + " not found");
+            throw new NxtException.NotCurrentlyValidException("Currency " + Long.toUnsignedString(holdingId) + " not found");
         }
         if (votingModel == VotingModel.ASSET && Asset.getAsset(holdingId) == null) {
-            throw new NxtException.NotCurrentlyValidException("Asset " + Convert.toUnsignedLong(holdingId) + " not found");
+            throw new NxtException.NotCurrentlyValidException("Asset " + Long.toUnsignedString(holdingId) + " not found");
         }
         if (minBalance < 0) {
             throw new NxtException.NotValidException("Invalid minBalance " + minBalance);
@@ -180,10 +178,10 @@ public final class VoteWeighting {
                 throw new NxtException.NotValidException("No holdingId provided");
             }
             if (minBalanceModel == MinBalanceModel.ASSET && Asset.getAsset(holdingId) == null) {
-                throw new NxtException.NotCurrentlyValidException("Invalid min balance asset: " + Convert.toUnsignedLong(holdingId));
+                throw new NxtException.NotCurrentlyValidException("Invalid min balance asset: " + Long.toUnsignedString(holdingId));
             }
             if (minBalanceModel == MinBalanceModel.CURRENCY && Currency.getCurrency(holdingId) == null) {
-                throw new NxtException.NotCurrentlyValidException("Invalid min balance currency: " + Convert.toUnsignedLong(holdingId));
+                throw new NxtException.NotCurrentlyValidException("Invalid min balance currency: " + Long.toUnsignedString(holdingId));
             }
         }
         if (minBalance == 0 && votingModel == VotingModel.ACCOUNT && holdingId != 0) {

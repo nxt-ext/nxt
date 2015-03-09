@@ -46,6 +46,14 @@ public final class DbUtils {
         }
     }
 
+    public static void setLong(PreparedStatement pstmt, int index, Long l) throws SQLException {
+        if (l != null) {
+            pstmt.setLong(index, l);
+        } else {
+            pstmt.setNull(index, Types.BIGINT);
+        }
+    }
+
     public static void setIntZeroToNull(PreparedStatement pstmt, int index, int n) throws SQLException {
         if (n != 0) {
             pstmt.setInt(index, n);

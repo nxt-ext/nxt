@@ -10,16 +10,16 @@ import javax.servlet.http.HttpServletRequest;
 
 /**
  * Claim currency units and receive back NXT invested into this currency before it became active
- * </p>
+ * <p>
  * Parameters
  * <ul>
  * <li>currency - currency id
  * <li>units - the number of currency units claimed<br>
  * This value is multiplied by current currency rate and the result is added to the sender NXT account balance.
  * </ul>
- * </p>
+ * <p>
  * Constraints
- * <This transaction is allowed only when the currency is {@link nxt.CurrencyType#CLAIMABLE} and is already active.<br>
+ * <p>This transaction is allowed only when the currency is {@link nxt.CurrencyType#CLAIMABLE} and is already active.<br>
  */
 public final class CurrencyReserveClaim extends CreateTransaction {
 

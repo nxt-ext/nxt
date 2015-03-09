@@ -5,7 +5,6 @@ import nxt.BlockchainTest;
 import nxt.Constants;
 import nxt.crypto.Crypto;
 import nxt.http.APICall;
-import nxt.util.Convert;
 import nxt.util.Logger;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -93,7 +92,7 @@ public class DeleteCurrencyTest extends BlockchainTest {
         // Transfer all units
         apiCall = new APICall.Builder("transferCurrency").
                 secretPhrase(secretPhrase1).feeNQT(Constants.ONE_NXT).
-                param("recipient", Convert.toUnsignedLong(Account.getAccount(Crypto.getPublicKey(secretPhrase2)).getId())).
+                param("recipient", Long.toUnsignedString(Account.getAccount(Crypto.getPublicKey(secretPhrase2)).getId())).
                 param("currency", currencyId).
                 param("code", code).
                 param("units", (String) currency.get("maxSupply")).

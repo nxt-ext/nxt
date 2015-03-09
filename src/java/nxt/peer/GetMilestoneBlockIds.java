@@ -62,7 +62,7 @@ final class GetMilestoneBlockIds extends PeerServlet.PeerRequestHandler {
             blockId = Nxt.getBlockchain().getBlockIdAtHeight(height);
 
             while (height > 0 && limit-- > 0) {
-                milestoneBlockIds.add(Convert.toUnsignedLong(blockId));
+                milestoneBlockIds.add(Long.toUnsignedString(blockId));
                 blockId = Nxt.getBlockchain().getBlockIdAtHeight(height);
                 height = height - jump;
             }
