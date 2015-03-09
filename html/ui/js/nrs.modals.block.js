@@ -56,7 +56,7 @@ var NRS = (function(NRS, $, undefined) {
 					transaction.fee = new BigInteger(transaction.feeNQT);
 				}
 
-				rows += "<tr><td><a href='#' data-transaction='" + String(transaction.transaction).escapeHTML() + "'>" + NRS.formatTimestamp(transaction.timestamp) + "</a></td><td>" + NRS.formatAmount(transaction.amount) + "</td><td>" + NRS.formatAmount(transaction.fee) + "</td><td>" + NRS.getAccountTitle(transaction, "recipient") + "</td><td>" + NRS.getAccountTitle(transaction, "sender") + "</td></tr>";
+				rows += "<tr><td><a href='#' class='show_transaction_modal_action' data-transaction='" + String(transaction.transaction).escapeHTML() + "'>" + NRS.formatTimestamp(transaction.timestamp) + "</a></td><td>" + NRS.formatAmount(transaction.amount) + "</td><td>" + NRS.formatAmount(transaction.fee) + "</td><td>" + NRS.getAccountTitle(transaction, "recipient") + "</td><td>" + NRS.getAccountTitle(transaction, "sender") + "</td></tr>";
 			}
 
 			$("#block_info_transactions_table tbody").empty().append(rows);

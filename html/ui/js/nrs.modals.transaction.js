@@ -3,7 +3,7 @@
  * @depends {nrs.modals.js}
  */
 var NRS = (function(NRS, $, undefined) {
-	$("#transactions_table, #dashboard_table, #transfer_history_table, #exchange_history_table, #currencies_table, #transaction_info_table, #ms_exchanges_history_table, #ms_exchange_requests_table, #user_info_modal_currencies, #block_info_transactions_table, #user_info_modal_transactions_table, #ms_open_buy_orders_table, #ms_open_sell_orders_table, #polls_table, #my_polls_table, #voted_polls_table, #phasing_info_details_table").on("click", "a[data-transaction]", function(e) {
+   $('body').on("click", ".show_transaction_modal_action", function(e) {
 		e.preventDefault();
 
 		var transactionId = $(this).data("transaction");
@@ -99,7 +99,7 @@ var NRS = (function(NRS, $, undefined) {
             phasingDetails.minBalance = transaction.attachment.phasingMinBalance;
             var votingModel = NRS.getVotingModel(parseInt(transaction.attachment.phasingVotingModel));
             phasingDetails.votingModel = $.t(votingModel.name);
-            var phasingTransactionLink = "<a href='#' data-transaction='" + String(transaction.attachment.phasingHolding).escapeHTML() + "'>" + transaction.attachment.phasingHolding + "</a>";
+            var phasingTransactionLink = "<a href='#' class='show_transaction_modal_action' data-transaction='" + String(transaction.attachment.phasingHolding).escapeHTML() + "'>" + transaction.attachment.phasingHolding + "</a>";
             if (votingModel == NRS.constants.VOTING_MODEL.ASSET) {
                phasingDetails.asset_formatted_html = phasingTransactionLink;
             } else if(votingModel == NRS.constants.VOTING_MODEL.CURRENCY) {
@@ -380,7 +380,7 @@ var NRS = (function(NRS, $, undefined) {
                   for (i=0; i<transaction.attachment.transactionFullHashes.length; i++) {
                      var transactionBytes = converters.hexStringToByteArray(transaction.attachment.transactionFullHashes[i]);
                      var transactionId = converters.byteArrayToBigInteger(transactionBytes, 0).toString().escapeHTML();
-                     data[$.t("transaction") + (i+1) + "_formatted_html"] = "<a href='#' data-transaction='" + transactionId + "'>" + transactionId + "</a>";
+                     data[$.t("transaction") + (i+1) + "_formatted_html"] = "<a href='#' class='show_transaction_modal_action' data-transaction='" + transactionId + "'>" + transactionId + "</a>";
                   }
 
                   $("#transaction_info_table").find("tbody").append(NRS.createInfoTable(data));
@@ -1124,7 +1124,7 @@ var NRS = (function(NRS, $, undefined) {
 					exchangedUnits = exchangedUnits.add(new BigInteger(exchange.units));
 					exchangedTotal = exchangedTotal.add(new BigInteger(exchange.units).multiply(new BigInteger(exchange.rateNQT)));
 					rows += "<tr>" +
-					"<td><a href='#' data-transaction='" + String(exchange.offer).escapeHTML() + "'>" + NRS.formatTimestamp(exchange.timestamp) + "</a>" +
+					"<td><a href='#' class='show_transaction_modal_action' data-transaction='" + String(exchange.offer).escapeHTML() + "'>" + NRS.formatTimestamp(exchange.timestamp) + "</a>" +
 					"<td>" + NRS.formatQuantity(exchange.units, exchange.decimals) + "</td>" +
 					"<td>" + NRS.calculateOrderPricePerWholeQNT(exchange.rateNQT, exchange.decimals) + "</td>" +
 					"<td>" + NRS.formatAmount(NRS.calculateOrderTotalNQT(exchange.units, exchange.rateNQT)) +
@@ -1191,7 +1191,7 @@ var NRS = (function(NRS, $, undefined) {
 						exchangeType = "Same";
 					}
 					rows += "<tr>" +
-					"<td><a href='#' data-transaction='" + String(exchange.transaction).escapeHTML() + "'>" + NRS.formatTimestamp(exchange.timestamp) + "</a>" +
+					"<td><a href='#' class='show_transaction_modal_action' data-transaction='" + String(exchange.transaction).escapeHTML() + "'>" + NRS.formatTimestamp(exchange.timestamp) + "</a>" +
 					"<td>" + exchangeType + "</td>" +
 					"<td>" + NRS.formatQuantity(exchange.units, exchange.decimals) + "</td>" +
 					"<td>" + NRS.calculateOrderPricePerWholeQNT(exchange.rateNQT, exchange.decimals) + "</td>" +

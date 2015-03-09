@@ -439,7 +439,7 @@ var NRS = (function(NRS, $, undefined) {
 		html += "<tr id='tr_transaction_" + transaction.transaction + "'>";
 		
 		html += "<td style='vertical-align:middle;'>";
-  		html += "<a href='#' data-timestamp='" + String(transaction.timestamp).escapeHTML() + "' ";
+  		html += "<a class='show_transaction_modal_action' href='#' data-timestamp='" + String(transaction.timestamp).escapeHTML() + "' ";
   		html += "data-transaction='" + String(transaction.transaction).escapeHTML() + "'>";
   		html += NRS.formatTimestamp(transaction.timestamp) + "</a>";
   		html += "</td>";
@@ -719,7 +719,7 @@ var NRS = (function(NRS, $, undefined) {
 					NRS.hasMorePages = true;
 					response.transactions.pop();
 				}
-				
+
 				for (var i = 0; i < response.transactions.length; i++) {
 					t = response.transactions[i];
 					t.confirmed = true;

@@ -1442,7 +1442,7 @@ var NRS = (function(NRS, $, undefined) {
 
 					var type = (transfers[i].recipientRS == NRS.accountRS ? "receive" : "send");
 
-					rows += "<tr><td><a href='#' data-transaction='" + String(transfers[i].assetTransfer).escapeHTML() + "'>" + String(transfers[i].assetTransfer).escapeHTML() + "</a></td><td><a href='#' data-goto-asset='" + String(transfers[i].asset).escapeHTML() + "'>" + String(transfers[i].name).escapeHTML() + "</a></td><td>" + NRS.formatTimestamp(transfers[i].timestamp) + "</td><td style='color:" + (type == "receive" ? "green" : "red") + "'>" + NRS.formatQuantity(transfers[i].quantityQNT, transfers[i].decimals) + "</td>" +
+					rows += "<tr><td><a href='#' class='show_transaction_modal_action' data-transaction='" + String(transfers[i].assetTransfer).escapeHTML() + "'>" + String(transfers[i].assetTransfer).escapeHTML() + "</a></td><td><a href='#' data-goto-asset='" + String(transfers[i].asset).escapeHTML() + "'>" + String(transfers[i].name).escapeHTML() + "</a></td><td>" + NRS.formatTimestamp(transfers[i].timestamp) + "</td><td style='color:" + (type == "receive" ? "green" : "red") + "'>" + NRS.formatQuantity(transfers[i].quantityQNT, transfers[i].decimals) + "</td>" +
 						"<td><a href='#' data-user='" + NRS.getAccountFormatted(transfers[i], "recipient") + "' class='user_info'>" + NRS.getAccountTitle(transfers[i], "recipient") + "</a></td>" +
 						"<td><a href='#' data-user='" + NRS.getAccountFormatted(transfers[i], "sender") + "' class='user_info'>" + NRS.getAccountTitle(transfers[i], "sender") + "</a></td>" +
 						"</tr>";
