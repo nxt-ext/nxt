@@ -457,7 +457,7 @@ var NRS = (function(NRS, $, undefined) {
 		html += "<td style='vertical-align:middle;" + (transaction.type == 0 && receiving ? " color:#006400;" : (!receiving && transaction.amount > 0 ? " color:red;" : "")) + "'>" + NRS.formatAmount(transaction.amount) + "</td>";
 		html += "<td style='vertical-align:middle;text-align:center;" + (!receiving ? " color:red;" : "") + "'>" + NRS.formatAmount(transaction.fee) + "</td>";
 
-		html += "<td>" + ((NRS.getAccountLink(transaction, "sender") == "/" && transaction.type == 2) ? "Asset Exchange" : NRS.getAccountLink(transaction, "sender")) + " ";
+		html += "<td style='vertical-align:middle;'>" + ((NRS.getAccountLink(transaction, "sender") == "/" && transaction.type == 2) ? "Asset Exchange" : NRS.getAccountLink(transaction, "sender")) + " ";
 		html += "<i class='fa fa-arrow-circle-right' style='color:#777;'></i> " + ((NRS.getAccountLink(transaction, "recipient") == "/" && transaction.type == 2) ? "Asset Exchange" : NRS.getAccountLink(transaction, "recipient")) + "</td>";
 
 		html += "<td class='td_transaction_pending' style='vertical-align:middle;text-align:center;'></td>";
