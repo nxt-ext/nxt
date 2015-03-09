@@ -13,6 +13,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -251,33 +252,39 @@ public final class Poll extends AbstractPoll {
     }
 
     private List<Long> countResults(VoteWeighting voteWeighting, int height) {
-        final Long[] result = new Long[options.length];
+        final long[] result = new long[options.length];
+        Arrays.fill(result, Long.MIN_VALUE);
         try (DbIterator<Vote> votes = Vote.getVotes(this.getId(), 0, -1)) {
             for (Vote vote : votes) {
-                Long[] partialResult = countVote(voteWeighting, vote, height);
+                long[] partialResult = countVote(voteWeighting, vote, height);
                 if (partialResult != null) {
                     for (int idx = 0; idx < partialResult.length; idx++) {
-                        if (partialResult[idx] != null) {
-                            result[idx] = result[idx] == null ? partialResult[idx] : Math.addExact(result[idx], partialResult[idx]);
+                        if (partialResult[idx] != Long.MIN_VALUE) {
+                            result[idx] = result[idx] == Long.MIN_VALUE ? partialResult[idx] : result[idx] + partialResult[idx];
                         }
                     }
                 }
             }
         }
-        return Arrays.asList(result);
+        List<Long> list = new ArrayList<>();
+        for (long r : result) {
+            list.add(r == Long.MIN_VALUE ? null : r);
+        }
+        return list;
     }
 
-    private Long[] countVote(VoteWeighting voteWeighting, Vote vote, int height) {
+    private long[] countVote(VoteWeighting voteWeighting, Vote vote, int height) {
         final long weight = voteWeighting.calcWeight(vote.getVoterId(), height);
         if (weight <= 0) {
             return null;
         }
-        final Long[] partialResult = new Long[options.length];
+        final long[] partialResult = new long[options.length];
         final byte[] optVals = vote.getVote();
-
         for (int idx = 0; idx < optVals.length; idx++) {
             if (optVals[idx] != Constants.VOTING_NO_VOTE_VALUE) {
-                partialResult[idx] = Math.multiplyExact((long) optVals[idx], weight);
+                partialResult[idx] = (long) optVals[idx] * weight;
+            } else {
+                partialResult[idx] = Long.MIN_VALUE;
             }
         }
         return partialResult;

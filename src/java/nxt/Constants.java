@@ -30,8 +30,8 @@ public final class Constants {
     public static final byte MAX_VOTES_PER_VOTING_TRANSACTION = 2;
 
     public static final byte VOTING_DEFAULT_MIN_NUMBER_OF_CHOICES = 1;
-    public static final byte VOTING_MIN_RANGE_VALUE_LIMIT = -100;
-    public static final byte VOTING_MAX_RANGE_VALUE_LIMIT = 100;
+    public static final byte VOTING_MIN_RANGE_VALUE_LIMIT = -92;
+    public static final byte VOTING_MAX_RANGE_VALUE_LIMIT = 92;
     public static final byte VOTING_NO_VOTE_VALUE = Byte.MIN_VALUE;
     public static final byte VOTING_MIN_VOTE_DURATION = 1;
     public static final int VOTING_MAX_VOTE_DURATION = 14 * 1440;
