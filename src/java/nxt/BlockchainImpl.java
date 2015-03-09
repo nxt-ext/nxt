@@ -144,12 +144,7 @@ final class BlockchainImpl implements Blockchain {
 
     @Override
     public DbIterator<BlockImpl> getBlocks(Connection con, PreparedStatement pstmt) {
-        return new DbIterator<>(con, pstmt, new DbIterator.ResultSetReader<BlockImpl>() {
-            @Override
-            public BlockImpl get(Connection con, ResultSet rs) throws NxtException.ValidationException {
-                return BlockDb.loadBlock(con, rs);
-            }
-        });
+        return new DbIterator<>(con, pstmt, BlockDb::loadBlock);
     }
 
     @Override
@@ -361,12 +356,7 @@ final class BlockchainImpl implements Blockchain {
 
     @Override
     public DbIterator<TransactionImpl> getTransactions(Connection con, PreparedStatement pstmt) {
-        return new DbIterator<>(con, pstmt, new DbIterator.ResultSetReader<TransactionImpl>() {
-            @Override
-            public TransactionImpl get(Connection con, ResultSet rs) throws NxtException.ValidationException {
-                return TransactionDb.loadTransaction(con, rs);
-            }
-        });
+        return new DbIterator<>(con, pstmt, TransactionDb::loadTransaction);
     }
 
 }

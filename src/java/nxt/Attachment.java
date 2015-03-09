@@ -631,10 +631,10 @@ public interface Attachment extends Appendix {
 
         MessagingPhasingVoteCasting(JSONObject attachmentData) {
             super(attachmentData);
-            JSONArray jsonArray = (JSONArray) (attachmentData.get("transactionFullHashes"));
-            transactionFullHashes = new ArrayList<>(jsonArray.size());
-            for (int i = 0; i < jsonArray.size(); i++) {
-                transactionFullHashes.add(Convert.parseHexString((String)jsonArray.get(i)));
+            JSONArray hashes = (JSONArray) (attachmentData.get("transactionFullHashes"));
+            transactionFullHashes = new ArrayList<>(hashes.size());
+            for (Object hash : hashes) {
+                transactionFullHashes.add(Convert.parseHexString((String) hash));
             }
         }
 

@@ -17,7 +17,6 @@ import org.json.simple.JSONValue;
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSession;
 import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
@@ -55,11 +54,7 @@ import java.util.concurrent.Future;
 public class MintWorker {
 
     // Verify-all name verifier
-    private final static HostnameVerifier hostNameVerifier = new HostnameVerifier() {
-        public boolean verify(String hostname, SSLSession session) {
-            return true;
-        }
-    };
+    private final static HostnameVerifier hostNameVerifier = (hostname, session) -> true;
 
     // Trust-all socket factory
     private static final SSLSocketFactory sslSocketFactory;

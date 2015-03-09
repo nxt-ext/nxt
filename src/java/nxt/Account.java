@@ -199,54 +199,6 @@ public final class Account {
 
     }
 
-    static {
-
-        Nxt.getBlockchainProcessor().addListener(new Listener<Block>() {
-            @Override
-            public void notify(Block block) {
-                int height = block.getHeight();
-                if (height < Constants.TRANSPARENT_FORGING_BLOCK_6) {
-                    return;
-                }
-                List<Account> leaseChangingAccounts = new ArrayList<>();
-                try (DbIterator<Account> accounts = getLeaseChangingAccounts(height)) {
-                    while (accounts.hasNext()) {
-                        leaseChangingAccounts.add(accounts.next());
-                    }
-                }
-                for (Account account : leaseChangingAccounts) {
-                    if (height == account.currentLeasingHeightFrom) {
-                        leaseListeners.notify(
-                                new AccountLease(account.getId(), account.currentLesseeId, height, account.currentLeasingHeightTo),
-                                Event.LEASE_STARTED);
-                    } else if (height == account.currentLeasingHeightTo) {
-                        leaseListeners.notify(
-                                new AccountLease(account.getId(), account.currentLesseeId, account.currentLeasingHeightFrom, height),
-                                Event.LEASE_ENDED);
-                        if (account.nextLeasingHeightFrom == Integer.MAX_VALUE) {
-                            account.currentLeasingHeightFrom = Integer.MAX_VALUE;
-                            account.currentLesseeId = 0;
-                            accountTable.insert(account);
-                        } else {
-                            account.currentLeasingHeightFrom = account.nextLeasingHeightFrom;
-                            account.currentLeasingHeightTo = account.nextLeasingHeightTo;
-                            account.currentLesseeId = account.nextLesseeId;
-                            account.nextLeasingHeightFrom = Integer.MAX_VALUE;
-                            account.nextLesseeId = 0;
-                            accountTable.insert(account);
-                            if (height == account.currentLeasingHeightFrom) {
-                                leaseListeners.notify(
-                                        new AccountLease(account.getId(), account.currentLesseeId, height, account.currentLeasingHeightTo),
-                                        Event.LEASE_STARTED);
-                            }
-                        }
-                    }
-                }
-            }
-        }, BlockchainProcessor.Event.AFTER_BLOCK_APPLY);
-
-    }
-
     private static final DbKey.LongKeyFactory<Account> accountDbKeyFactory = new DbKey.LongKeyFactory<Account>("id") {
 
         @Override
@@ -585,6 +537,51 @@ public final class Account {
     public static long getUnconfirmedCurrencyUnits(long accountId, long currencyId) {
         AccountCurrency accountCurrency = accountCurrencyTable.get(accountCurrencyDbKeyFactory.newKey(accountId, currencyId));
         return accountCurrency == null ? 0 : accountCurrency.unconfirmedUnits;
+    }
+
+    static {
+
+        Nxt.getBlockchainProcessor().addListener(block -> {
+            int height = block.getHeight();
+            if (height < Constants.TRANSPARENT_FORGING_BLOCK_6) {
+                return;
+            }
+            List<Account> leaseChangingAccounts = new ArrayList<>();
+            try (DbIterator<Account> accounts = getLeaseChangingAccounts(height)) {
+                while (accounts.hasNext()) {
+                    leaseChangingAccounts.add(accounts.next());
+                }
+            }
+            for (Account account : leaseChangingAccounts) {
+                if (height == account.currentLeasingHeightFrom) {
+                    leaseListeners.notify(
+                            new AccountLease(account.getId(), account.currentLesseeId, height, account.currentLeasingHeightTo),
+                            Event.LEASE_STARTED);
+                } else if (height == account.currentLeasingHeightTo) {
+                    leaseListeners.notify(
+                            new AccountLease(account.getId(), account.currentLesseeId, account.currentLeasingHeightFrom, height),
+                            Event.LEASE_ENDED);
+                    if (account.nextLeasingHeightFrom == Integer.MAX_VALUE) {
+                        account.currentLeasingHeightFrom = Integer.MAX_VALUE;
+                        account.currentLesseeId = 0;
+                        accountTable.insert(account);
+                    } else {
+                        account.currentLeasingHeightFrom = account.nextLeasingHeightFrom;
+                        account.currentLeasingHeightTo = account.nextLeasingHeightTo;
+                        account.currentLesseeId = account.nextLesseeId;
+                        account.nextLeasingHeightFrom = Integer.MAX_VALUE;
+                        account.nextLesseeId = 0;
+                        accountTable.insert(account);
+                        if (height == account.currentLeasingHeightFrom) {
+                            leaseListeners.notify(
+                                    new AccountLease(account.getId(), account.currentLesseeId, height, account.currentLeasingHeightTo),
+                                    Event.LEASE_STARTED);
+                        }
+                    }
+                }
+            }
+        }, BlockchainProcessor.Event.AFTER_BLOCK_APPLY);
+
     }
 
     static void init() {}

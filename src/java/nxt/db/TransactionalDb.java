@@ -36,7 +36,7 @@ public class TransactionalDb extends BasicDb {
             con.setAutoCommit(false);
             con = new DbConnection(con);
             localConnection.set((DbConnection)con);
-            transactionCaches.set(new HashMap<String, Map<DbKey, Object>>());
+            transactionCaches.set(new HashMap<>());
             return con;
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
