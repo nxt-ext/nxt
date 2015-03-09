@@ -11,7 +11,6 @@ import nxt.TransactionProcessor;
 import nxt.peer.Peer;
 import nxt.peer.Peers;
 import nxt.util.Convert;
-import nxt.util.Listener;
 import nxt.util.Logger;
 import nxt.util.ThreadPool;
 import org.eclipse.jetty.server.HttpConfiguration;

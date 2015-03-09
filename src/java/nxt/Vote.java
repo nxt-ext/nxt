@@ -61,9 +61,9 @@ public final class Vote {
         return voteTable.getManyBy(new DbClause.LongClause("poll_id", pollId), from, to);
     }
 
-    static boolean isVoteGiven(long pollId, long voterId){
+    public static Vote getVote(long pollId, long voterId){
         DbClause clause = new DbClause.LongClause("poll_id", pollId).and(new DbClause.LongClause("voter_id", voterId));
-        return voteTable.getCount(clause) > 0;
+        return voteTable.getBy(clause);
     }
 
     static Vote addVote(Transaction transaction, Attachment.MessagingVoteCasting attachment) {

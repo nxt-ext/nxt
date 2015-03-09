@@ -799,7 +799,7 @@ public abstract class TransactionType {
                     throw new NxtException.NotCurrentlyValidException("Invalid poll: " + Long.toUnsignedString(attachment.getPollId()));
                 }
 
-                if (Vote.isVoteGiven(pollId, transaction.getSenderId())) {
+                if (Vote.getVote(pollId, transaction.getSenderId()) != null) {
                     throw new NxtException.NotCurrentlyValidException("Double voting attempt");
                 }
 
@@ -912,7 +912,7 @@ public abstract class TransactionType {
                     if (!Arrays.equals(poll.getFullHash(), hash)) {
                         throw new NxtException.NotCurrentlyValidException("Hashes don't match");
                     }
-                    if (PhasingVote.isVoteGiven(pendingId, voterId)) {
+                    if (PhasingVote.getVote(pendingId, voterId) != null) {
                         throw new NxtException.NotCurrentlyValidException("Double voting attempt");
                     }
                     if (poll.isFinished()) {

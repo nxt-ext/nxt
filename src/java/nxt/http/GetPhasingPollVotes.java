@@ -27,7 +27,7 @@ public class GetPhasingPollVotes extends APIServlet.APIRequestHandler  {
         if (phasingPoll != null) {
             JSONObject response = new JSONObject();
             JSONArray votesJSON = new JSONArray();
-            try (DbIterator<PhasingVote> votes = PhasingVote.getByTransaction(transactionId, firstIndex, lastIndex)) {
+            try (DbIterator<PhasingVote> votes = PhasingVote.getTransactionVotes(transactionId, firstIndex, lastIndex)) {
                 for (PhasingVote vote : votes) {
                     votesJSON.add(JSONData.phasingPollVote(vote));
                 }
