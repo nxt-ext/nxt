@@ -2091,6 +2091,10 @@ var NRS = (function(NRS, $, undefined) {
 				var rows = "";
 
 				if (response.transactions && response.transactions.length > 0) {
+					if (response.transactions.length > NRS.itemsPerPage) {
+						NRS.hasMorePages = true;
+						response.transactions.pop();
+					}
 					for (var i = 0; i < response.transactions.length; i++) {
 						t = response.transactions[i];
 						t.confirmed = true;
