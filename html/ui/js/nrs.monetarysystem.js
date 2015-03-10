@@ -925,6 +925,7 @@ var NRS = (function(NRS, $, undefined) {
 		if (_selectedApprovalCurrency != "") {
 			var params = {
 				"currency": _selectedApprovalCurrency,
+				"withoutWhitelist": true,
 				"firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
 				"lastIndex": NRS.pageNumber * NRS.itemsPerPage
 			};

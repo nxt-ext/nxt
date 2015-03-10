@@ -2084,6 +2084,7 @@ var NRS = (function(NRS, $, undefined) {
 		if (_selectedApprovalAsset != "") {
 			var params = {
 				"asset": _selectedApprovalAsset,
+				"withoutWhitelist": true,
 				"firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
 				"lastIndex": NRS.pageNumber * NRS.itemsPerPage
 			};
