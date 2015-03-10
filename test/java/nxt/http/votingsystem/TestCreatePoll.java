@@ -15,6 +15,7 @@ public class TestCreatePoll extends BlockchainTest {
     static String issueCreatePoll(APICall apiCall, boolean shouldFail) {
         JSONObject createPollResponse = apiCall.invoke();
         Logger.logMessage("createPollResponse: " + createPollResponse.toJSONString());
+        Assert.assertNull(createPollResponse.get("errorCode"));
 
         generateBlock();
 
