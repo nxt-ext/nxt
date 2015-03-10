@@ -1225,8 +1225,17 @@ var NRS = (function(NRS, $, undefined) {
 	$(document).on("click", ".approve_transaction_btn", function(e) {
 		e.preventDefault();
 		$('#approve_transaction_modal .at_transaction_full_hash_display').text($(this).data("transaction"));
+      $('#approve_transaction_modal .at_transaction_timestamp').text($(this).data("transactionTimestamp"));
       $("#approve_transaction_button").data("transaction", $(this).data("transaction"));
 		$('#approve_transaction_modal #at_transaction_full_hash').val($(this).data("fullHash"));
+
+      var mbFormatted = $(this).data("minBalanceFormatted");
+      if (mbFormatted != "") {
+         $('#at_min_balance_warning .at_min_balance_amount').html(mbFormatted);
+         $('#at_min_balance_warning').show();
+      } else {
+         $('#at_min_balance_warning').hide();
+      }
 		$('#approve_transaction_modal .advanced_fee').html($(this).data("transactionFee") + " NXT");
 		$('#approve_transaction_modal input[name="feeNXT"]').val($(this).data("transactionFee"));
 	});

@@ -261,6 +261,10 @@ var NRS = (function(NRS, $, undefined) {
 						"transaction": t.transaction,
 						"account": NRS.accountRS
 					}, function(responseVote) {
+						var attachment = t.attachment;
+						var vm = attachment.phasingVotingModel;
+						var minBalance = parseFloat(attachment.phasingMinBalance);
+						var mbModel = attachment.phasingMinBalanceModel;
 
 						if ($approveBtn) {
 							var disabled = false;
@@ -288,14 +292,13 @@ var NRS = (function(NRS, $, undefined) {
 						if (!responsePoll.result) {
 							responsePoll.result = 0;
 						}
-						var attachment = t.attachment;
-						var vm = attachment.phasingVotingModel;
 
 						var state = "";
 						var color = "";
 						var icon = "";
 						var resultFormatted = "";
 						var quorumFormatted = "";
+						var minBalanceFormatted = "";
 						if (attachment.phasingFinishHeight < NRS.lastBlockHeight) {
 							var finished = true;
 						} else {
@@ -398,29 +401,51 @@ var NRS = (function(NRS, $, undefined) {
 							var votesFormatted = NRS.convertToNXT(responsePoll.result) + " / " + NRS.convertToNXT(attachment.phasingQuorum) + " NXT";
 							$popoverVotesTR.find("td:last").html(votesFormatted);
 						}
-						if (vm == 2) {
+						if (mbModel == 1) {
+							if (minBalance > 0) {
+								minBalanceFormatted = NRS.convertToNXT(minBalance) + "NXT";
+								$approveBtn.data('minBalanceFormatted', minBalanceFormatted.escapeHTML());
+							}
+						}
+						if (vm == 2 || mbModel == 2) {
 							NRS.sendRequest("getAsset", {
 								"asset": attachment.phasingHolding
 							}, function(phResponse) {
 								if (phResponse && phResponse.asset) {
-									$popoverTypeTR.find("td:first").html($.t('asset', 'Asset') + ":");
-									$popoverTypeTR.find("td:last").html(String(phResponse.name));
-									var votesFormatted = NRS.convertToQNTf(responsePoll.result, phResponse.decimals) + " / ";
-									votesFormatted += NRS.convertToQNTf(attachment.phasingQuorum, phResponse.decimals) + " QNT";
-									$popoverVotesTR.find("td:last").html(votesFormatted);
+									if (vm == 2) {
+										$popoverTypeTR.find("td:first").html($.t('asset', 'Asset') + ":");
+										$popoverTypeTR.find("td:last").html(String(phResponse.name));
+										var votesFormatted = NRS.convertToQNTf(responsePoll.result, phResponse.decimals) + " / ";
+										votesFormatted += NRS.convertToQNTf(attachment.phasingQuorum, phResponse.decimals) + " QNT";
+										$popoverVotesTR.find("td:last").html(votesFormatted);
+									}
+									if (mbModel == 2) {
+										if (minBalance > 0) {
+											minBalanceFormatted = NRS.convertToQNTf(minBalance, phResponse.decimals) + " QNT (" + phResponse.name + ")";
+											$approveBtn.data('minBalanceFormatted', minBalanceFormatted.escapeHTML());
+										}
+									}
 								}
 							}, false);
 						}
-						if (vm == 3) {
+						if (vm == 3 || mbModel == 3) {
 							NRS.sendRequest("getCurrency", {
 								"currency": attachment.phasingHolding
 							}, function(phResponse) {
 								if (phResponse && phResponse.currency) {
-									$popoverTypeTR.find("td:first").html($.t('currency', 'Currency') + ":");
-									$popoverTypeTR.find("td:last").html(String(phResponse.code));
-									var votesFormatted = NRS.convertToQNTf(responsePoll.result, phResponse.decimals) + " / ";
-									votesFormatted += NRS.convertToQNTf(attachment.phasingQuorum, phResponse.decimals) + " Units";
-									$popoverVotesTR.find("td:last").html(votesFormatted);
+									if (vm == 3) {
+										$popoverTypeTR.find("td:first").html($.t('currency', 'Currency') + ":");
+										$popoverTypeTR.find("td:last").html(String(phResponse.code));
+										var votesFormatted = NRS.convertToQNTf(responsePoll.result, phResponse.decimals) + " / ";
+										votesFormatted += NRS.convertToQNTf(attachment.phasingQuorum, phResponse.decimals) + " Units";
+										$popoverVotesTR.find("td:last").html(votesFormatted);
+									}
+									if (mbModel == 3) {
+										if (minBalance > 0) {
+											minBalanceFormatted = NRS.convertToQNTf(minBalance, phResponse.decimals) + " Units (" + phResponse.code + ")";
+											$approveBtn.data('minBalanceFormatted', minBalanceFormatted.escapeHTML());
+										}
+									}
 								}
 							}, false);
 						}
@@ -512,7 +537,8 @@ var NRS = (function(NRS, $, undefined) {
 				}
 				html += "<a class='btn btn-xs btn-default approve_transaction_btn' href='#' data-toggle='modal' data-target='#approve_transaction_modal' ";
 				html += "data-transaction='" + String(t.transaction).escapeHTML() + "' data-full-hash='" + String(t.fullHash).escapeHTML() + "' ";
-				html += "data-transaction-fee='" + fee + "' data-i18n='approve' >Approve</a>";
+				html += "data-transaction-timestamp='" + NRS.formatTimestamp(t.timestamp) + "' ";
+				html += "data-transaction-fee='" + fee + "' data-min-balance-formatted='' data-i18n='approve' >Approve</a>";
 			}
 			html += "</td>";
 		}
