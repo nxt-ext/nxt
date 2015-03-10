@@ -8,6 +8,7 @@ import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 final class GetNextBlocks extends PeerServlet.PeerRequestHandler {
 
@@ -20,15 +21,11 @@ final class GetNextBlocks extends PeerServlet.PeerRequestHandler {
     JSONStreamAware processRequest(JSONObject request, Peer peer) {
 
         JSONObject response = new JSONObject();
-        JSONArray nextBlocksArray = new JSONArray();
 
         long blockId = Convert.parseUnsignedLong((String) request.get("blockId"));
         List<? extends Block> blocks = Nxt.getBlockchain().getBlocksAfter(blockId, 720);
 
-        for (Block block : blocks) {
-            nextBlocksArray.add(block.getJSONObject());
-        }
-        response.put("nextBlocks", nextBlocksArray);
+        response.put("nextBlocks", blocks.stream().map(Block::getJSONObject).collect(Collectors.toCollection(JSONArray::new)));
 
         return response;
     }
