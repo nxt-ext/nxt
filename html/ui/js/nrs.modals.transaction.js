@@ -114,7 +114,7 @@ var NRS = (function(NRS, $, undefined) {
            				"</tr></thead><tbody>";
                for (i = 0; i < transaction.attachment.phasingWhitelist.length; i++) {
                   var account = NRS.convertNumericToRSAccountFormat(transaction.attachment.phasingWhitelist[i]);
-                  rows += "<tr><td><a href='#' data-user='" + String(account).escapeHTML() + "'>" + NRS.getAccountTitle(account) + "</a></td>";
+                  rows += "<tr><td><a href='#' data-user='" + String(account).escapeHTML() + "' class='show_account_modal_action'>" + NRS.getAccountTitle(account) + "</a></td>";
                }
                rows += "</tbody></table>";
             } else {
