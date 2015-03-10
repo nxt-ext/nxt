@@ -451,9 +451,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
         if (addedUnconfirmedTransactions.size() > 0) {
             transactionListeners.notify(addedUnconfirmedTransactions, Event.ADDED_UNCONFIRMED_TRANSACTIONS);
         }
-        for (TransactionImpl transaction : receivedTransactions) {
-            broadcastedTransactions.remove(transaction);
-        }
+        broadcastedTransactions.removeAll(receivedTransactions);
         if (!exceptions.isEmpty()) {
             throw new NxtException.NotValidException("Peer sends invalid transactions: " + exceptions.toString());
         }

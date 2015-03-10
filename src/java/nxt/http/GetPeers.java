@@ -9,6 +9,7 @@ import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.Collection;
+import java.util.stream.Collectors;
 
 public final class GetPeers extends APIServlet.APIRequestHandler {
 
@@ -26,13 +27,10 @@ public final class GetPeers extends APIServlet.APIRequestHandler {
         boolean includePeerInfo = "true".equalsIgnoreCase(req.getParameter("includePeerInfo"));
 
         Collection<? extends Peer> peers = active ? Peers.getActivePeers() : stateValue != null ? Peers.getPeers(Peer.State.valueOf(stateValue)) : Peers.getAllPeers();
-        JSONArray peersJSON = new JSONArray();
-        for (Peer peer : peers) {
-            peersJSON.add(includePeerInfo ? JSONData.peer(peer) : peer.getPeerAddress());
-        }
-
         JSONObject response = new JSONObject();
-        response.put("peers", peersJSON);
+        response.put("peers", peers.parallelStream().unordered()
+                .map(includePeerInfo ? JSONData::peer : Peer::getPeerAddress)
+                .collect(Collectors.toCollection(JSONArray::new)));
         return response;
     }
 

@@ -44,6 +44,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.stream.Collectors;
 
 public final class Peers {
 
@@ -352,11 +353,9 @@ public final class Peers {
                         }
                     }
 
-                    for (PeerImpl peer : peers.values()) {
-                        if (peer.getState() == Peer.State.CONNECTED && now - peer.getLastUpdated() > 3600) {
-                            peer.connect();
-                        }
-                    }
+                    peers.values().parallelStream().unordered()
+                            .filter(peer -> peer.getState() == Peer.State.CONNECTED && now - peer.getLastUpdated() > 3600)
+                            .forEach(PeerImpl::connect);
 
                     if (hasTooManyKnownPeers() && hasEnoughConnectedPublicPeers(Peers.maxNumberOfConnectedPublicPeers)) {
                         int initialSize = peers.size();
@@ -433,15 +432,13 @@ public final class Peers {
                         }
                     }
 
-                    JSONArray myPeers = new JSONArray();
-                    for (Peer myPeer : Peers.getAllPeers()) {
-                        if (! myPeer.isBlacklisted() && myPeer.getAnnouncedAddress() != null
-                                && myPeer.getState() == Peer.State.CONNECTED && myPeer.shareAddress()
-                                && ! addedAddresses.contains(myPeer.getAnnouncedAddress())
-                                && ! myPeer.getAnnouncedAddress().equals(peer.getAnnouncedAddress())) {
-                            myPeers.add(myPeer.getAnnouncedAddress());
-                        }
-                    }
+                    JSONArray myPeers = Peers.getAllPeers().parallelStream().unordered()
+                            .filter(myPeer -> !myPeer.isBlacklisted() && myPeer.getAnnouncedAddress() != null
+                                    && myPeer.getState() == Peer.State.CONNECTED && myPeer.shareAddress()
+                                    && !addedAddresses.contains(myPeer.getAnnouncedAddress())
+                                    && !myPeer.getAnnouncedAddress().equals(peer.getAnnouncedAddress()))
+                            .map(Peer::getAnnouncedAddress)
+                            .collect(Collectors.toCollection(JSONArray::new));
                     if (myPeers.size() > 0) {
                         JSONObject request = new JSONObject();
                         request.put("requestType", "addPeers");
@@ -462,12 +459,10 @@ public final class Peers {
 
         private void updateSavedPeers() {
             Set<String> oldPeers = new HashSet<>(PeerDb.loadPeers());
-            Set<String> currentPeers = new HashSet<>();
-            for (Peer peer : Peers.peers.values()) {
-                if (peer.getAnnouncedAddress() != null && ! peer.isBlacklisted()) {
-                    currentPeers.add(peer.getAnnouncedAddress());
-                }
-            }
+            Set<String> currentPeers = Peers.peers.values().parallelStream().unordered()
+                    .filter(peer -> peer.getAnnouncedAddress() != null && !peer.isBlacklisted())
+                    .map(Peer::getAnnouncedAddress)
+                    .collect(Collectors.toSet());
             Set<String> toDelete = new HashSet<>(oldPeers);
             toDelete.removeAll(currentPeers);
             try {
@@ -489,13 +484,9 @@ public final class Peers {
     };
 
     static {
-        Account.addListener(account -> {
-            for (PeerImpl peer : Peers.peers.values()) {
-                if (peer.getHallmark() != null && peer.getHallmark().getAccountId() == account.getId()) {
-                    Peers.listeners.notify(peer, Event.WEIGHT);
-                }
-            }
-        }, Account.Event.BALANCE);
+        Account.addListener(account -> peers.values().parallelStream().unordered()
+                .filter(peer -> peer.getHallmark() != null && peer.getHallmark().getAccountId() == account.getId())
+                .forEach(peer -> Peers.listeners.notify(peer, Event.WEIGHT)), Account.Event.BALANCE);
     }
 
     static {
@@ -569,16 +560,10 @@ public final class Peers {
     }
 
     public static List<Peer> getPeers(Filter<Peer> filter, int limit) {
-        List<Peer> peerList = new ArrayList<>();
-        for (PeerImpl peer : peers.values()) {
-            if (filter.ok(peer)) {
-                peerList.add(peer);
-                if (peerList.size() >= limit) {
-                    return peerList;
-                }
-            }
-        }
-        return peerList;
+        return peers.values().parallelStream().unordered()
+                .filter(filter::ok)
+                .limit(limit)
+                .collect(Collectors.toList());
     }
 
     public static Peer getPeer(String peerAddress) {
