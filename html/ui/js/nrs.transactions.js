@@ -25,6 +25,7 @@ var NRS = (function(NRS, $, undefined) {
 			transactions.sort(NRS.sortArray);
 		}
 		//Bug with popovers staying permanent when being open
+		$('div.popover').hide();
 		$('.td_transaction_pending div.show_popover').popover('hide');
 
 		//always refresh peers and unconfirmed transactions..
@@ -222,6 +223,7 @@ var NRS = (function(NRS, $, undefined) {
 					callback(alreadyProcessed);
 				}
 				if (NRS.currentPage == 'transactions' || NRS.currentPage == 'dashboard') {
+					$('div.popover').hide();
 					$('.td_transaction_pending div.show_popover').popover('hide');
 					NRS.incoming[NRS.currentPage]();
 				}
@@ -245,159 +247,190 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.addPendingTransactionHTML = function(t) {
-		var $td = $('#tr_transaction_' + t.transaction + ':visible .td_transaction_pending');
+		var $tr = $('#tr_transaction_' + t.transaction + ':visible');
+		var $tdPending = $tr.find('.td_transaction_pending');
+		var $approveBtn = $tr.find('.td_transaction_actions .approve_transaction_btn');
 
 		if (t.attachment && t.attachment["version.Phasing"] && t.attachment.phasingVotingModel != undefined) {
 			NRS.sendRequest("getPhasingPoll", {
 				"transaction": t.transaction,
 				"countVotes": true
-			}, function(response) {
-				if (response.transaction) {
-					if (!response.result) {
-						response.result = 0;
-					}
-					var attachment = t.attachment;
-					var vm = attachment.phasingVotingModel;
+			}, function(responsePoll) {
+				if (responsePoll.transaction) {
+					NRS.sendRequest("getPhasingPollVote", {
+						"transaction": t.transaction,
+						"account": NRS.accountRS
+					}, function(responseVote) {
 
-					var state = "";
-					var color = "";
-					var icon = "";
-					var resultFormatted = "";
-					var quorumFormatted = "";
-					if (attachment.phasingFinishHeight < NRS.lastBlockHeight) {
-						var finished = true;
-					} else {
-						var finished = false;
-					}
-					var finishHeightFormatted = String(attachment.phasingFinishHeight);
-					var percentageFormatted = NRS.calculatePercentage(response.result, attachment.phasingQuorum) + "%";
-					var percentageProgressBar = Math.round(response.result * 100 / attachment.phasingQuorum);
-					var progressBarWidth = Math.round(percentageProgressBar / 2);
+						if ($approveBtn) {
+							var disabled = false;
+							var unconfirmedTransactions = NRS.unconfirmedTransactions;
+							if (unconfirmedTransactions) {
+								for (var i = 0; i < unconfirmedTransactions.length; i++) {
+									var ut = unconfirmedTransactions[i];
+									if (ut.attachment && ut.attachment["version.PhasingVoteCasting"] && ut.attachment.transactionFullHashes && ut.attachment.transactionFullHashes.length > 0) {
+										if (ut.attachment.transactionFullHashes[0] == t.fullHash) {
+											disabled = true;
+											$approveBtn.attr('disabled', true);
+										}
+									}
+								}
+							}
+							if (!disabled) {
+								if (responseVote.transaction) {
+									$approveBtn.attr('disabled', true);
+								} else {
+									$approveBtn.attr('disabled', false);
+								}
+							}
+						};
 
-					if (response.approved) {
-						var approvedFormatted = "Yes";
-					} else {
-						var approvedFormatted = "No";
-					}
-
-					if (finished) {
-						if (response.approved) {
-							state = "success";
-							color = "#00a65a";	
-						} else {
-							state = "danger";
-							color = "#f56954";							
+						if (!responsePoll.result) {
+							responsePoll.result = 0;
 						}
-					} else {
-						state = "warning";
-						color = "#f39c12";
-					}
+						var attachment = t.attachment;
+						var vm = attachment.phasingVotingModel;
 
-					var $popoverTable = $("<table class='table table-striped'></table>");
-					var $popoverTypeTR = $("<tr><td></td><td></td></tr>");
-					var $popoverVotesTR = $("<tr><td>" + $.t('votes', 'Votes') + ":</td><td></td></tr>");
-					var $popoverPercentageTR = $("<tr><td>" + $.t('percentage', 'Percentage') + ":</td><td></td></tr>");
-					var $popoverFinishTR = $("<tr><td>" + $.t('finish_height', 'Finish Height') + ":</td><td></td></tr>");
-					var $popoverApprovedTR = $("<tr><td>" + $.t('approved', 'Approved') + ":</td><td></td></tr>");
+						var state = "";
+						var color = "";
+						var icon = "";
+						var resultFormatted = "";
+						var quorumFormatted = "";
+						if (attachment.phasingFinishHeight < NRS.lastBlockHeight) {
+							var finished = true;
+						} else {
+							var finished = false;
+						}
+						var finishHeightFormatted = String(attachment.phasingFinishHeight);
+						var percentageFormatted = NRS.calculatePercentage(responsePoll.result, attachment.phasingQuorum) + "%";
+						var percentageProgressBar = Math.round(responsePoll.result * 100 / attachment.phasingQuorum);
+						var progressBarWidth = Math.round(percentageProgressBar / 2);
 
-					$popoverTypeTR.appendTo($popoverTable);
-					$popoverVotesTR.appendTo($popoverTable);
-					$popoverPercentageTR.appendTo($popoverTable);
-					$popoverFinishTR.appendTo($popoverTable);
-					$popoverApprovedTR.appendTo($popoverTable);
+						if (responsePoll.approved) {
+							var approvedFormatted = "Yes";
+						} else {
+							var approvedFormatted = "No";
+						}
 
-					$popoverPercentageTR.find("td:last").html(percentageFormatted);
-					$popoverFinishTR.find("td:last").html(finishHeightFormatted);
-					$popoverApprovedTR.find("td:last").html(approvedFormatted);
-
-					var template = '<div class="popover" style="min-width:260px;"><div class="arrow"></div><div class="popover-inner">';
-					template += '<h3 class="popover-title"></h3><div class="popover-content"><p></p></div></div></div>';
-
-					var popoverConfig = {
-						"html": true,
-						"trigger": "hover",
-						"placement": "top",
-						"template": template
-					}
-
-					if (vm == 0) {
-						icon = '<i class="fa fa-group"></i>';
-					}
-					if (vm == 1) {
-						icon = '<i class="fa fa-money"></i>';
-					}
-					if (vm == 2) {
-						icon = '<i class="fa fa-signal"></i>';
-					}
-					if (vm == 3) {
-						icon = '<i class="fa fa-bank"></i>';
-					}
-
-					var pendingDiv = "";
-					pendingDiv += '<div class="show_popover" style="display:inline-block;min-width:94px;text-align:left;border:1px solid #e2e2e2;background-color:#fff;padding:3px;" ';
- 				 	pendingDiv += 'data-toggle="popover" data-container="body">';
-					pendingDiv += "<div class='label label-" + state + "' style='display:inline-block;margin-right:5px;'>" + icon + "</div>";
-					
-					if (vm == 0) {
-						pendingDiv += '<span style="color:' + color + '">' + String(response.result) + '</span> / <span>' + String(attachment.phasingQuorum) + '</span>';
-					} else {
-						pendingDiv += '<div class="progress" style="display:inline-block;height:10px;width: 50px;">';
-    					pendingDiv += '<div class="progress-bar progress-bar-' + state + '" role="progressbar" aria-valuenow="' + percentageProgressBar + '" ';
-    					pendingDiv += 'aria-valuemin="0" aria-valuemax="100" style="height:10px;width: ' + progressBarWidth + 'px;">';
-      					pendingDiv += '<span class="sr-only">' + percentageProgressBar + '% Complete</span>';
-    					pendingDiv += '</div>';
-  						pendingDiv += '</div> ';
-  					}
-					pendingDiv += "</div>";
-					$pendingDiv = $(pendingDiv);
-					popoverConfig["content"] = $popoverTable;
-					$pendingDiv.popover(popoverConfig);
-					$pendingDiv.appendTo($td);
-
-					if (vm == 0) {
-						$popoverTypeTR.find("td:first").html($.t('accounts', 'Accounts') + ":");
-						$popoverTypeTR.find("td:last").html(String(attachment.phasingWhitelist.length));
-						var votesFormatted = String(response.result) + " / " + String(attachment.phasingQuorum);
-						$popoverVotesTR.find("td:last").html(votesFormatted);
-					}
-					if (vm == 1) {
-						$popoverTypeTR.find("td:first").html($.t('accounts', 'Accounts') + ":");
-						$popoverTypeTR.find("td:last").html(String(attachment.phasingWhitelist.length));
-						var votesFormatted = NRS.convertToNXT(response.result) + " / " + NRS.convertToNXT(attachment.phasingQuorum) + " NXT";
-						$popoverVotesTR.find("td:last").html(votesFormatted);
-					}
-					if (vm == 2) {
-						NRS.sendRequest("getAsset", {
-							"asset": attachment.phasingHolding
-						}, function(phResponse) {
-							if (phResponse && phResponse.asset) {
-								$popoverTypeTR.find("td:first").html($.t('asset', 'Asset') + ":");
-								$popoverTypeTR.find("td:last").html(String(phResponse.name));
-								var votesFormatted = NRS.convertToQNTf(response.result, phResponse.decimals) + " / ";
-								votesFormatted += NRS.convertToQNTf(attachment.phasingQuorum, phResponse.decimals) + " QNT";
-								$popoverVotesTR.find("td:last").html(votesFormatted);
+						if (finished) {
+							if (responsePoll.approved) {
+								state = "success";
+								color = "#00a65a";	
+							} else {
+								state = "danger";
+								color = "#f56954";							
 							}
-						}, false);
-					}
-					if (vm == 3) {
-						NRS.sendRequest("getCurrency", {
-							"currency": attachment.phasingHolding
-						}, function(phResponse) {
-							if (phResponse && phResponse.currency) {
-								$popoverTypeTR.find("td:first").html($.t('currency', 'Currency') + ":");
-								$popoverTypeTR.find("td:last").html(String(phResponse.code));
-								var votesFormatted = NRS.convertToQNTf(response.result, phResponse.decimals) + " / ";
-								votesFormatted += NRS.convertToQNTf(attachment.phasingQuorum, phResponse.decimals) + " Units";
-								$popoverVotesTR.find("td:last").html(votesFormatted);
-							}
-						}, false);
-					}
+						} else {
+							state = "warning";
+							color = "#f39c12";
+						}
+
+						var $popoverTable = $("<table class='table table-striped'></table>");
+						var $popoverTypeTR = $("<tr><td></td><td></td></tr>");
+						var $popoverVotesTR = $("<tr><td>" + $.t('votes', 'Votes') + ":</td><td></td></tr>");
+						var $popoverPercentageTR = $("<tr><td>" + $.t('percentage', 'Percentage') + ":</td><td></td></tr>");
+						var $popoverFinishTR = $("<tr><td>" + $.t('finish_height', 'Finish Height') + ":</td><td></td></tr>");
+						var $popoverApprovedTR = $("<tr><td>" + $.t('approved', 'Approved') + ":</td><td></td></tr>");
+
+						$popoverTypeTR.appendTo($popoverTable);
+						$popoverVotesTR.appendTo($popoverTable);
+						$popoverPercentageTR.appendTo($popoverTable);
+						$popoverFinishTR.appendTo($popoverTable);
+						$popoverApprovedTR.appendTo($popoverTable);
+
+						$popoverPercentageTR.find("td:last").html(percentageFormatted);
+						$popoverFinishTR.find("td:last").html(finishHeightFormatted);
+						$popoverApprovedTR.find("td:last").html(approvedFormatted);
+
+						var template = '<div class="popover" style="min-width:260px;"><div class="arrow"></div><div class="popover-inner">';
+						template += '<h3 class="popover-title"></h3><div class="popover-content"><p></p></div></div></div>';
+
+						var popoverConfig = {
+							"html": true,
+							"trigger": "hover",
+							"placement": "top",
+							"template": template
+						}
+
+						if (vm == 0) {
+							icon = '<i class="fa fa-group"></i>';
+						}
+						if (vm == 1) {
+							icon = '<i class="fa fa-money"></i>';
+						}
+						if (vm == 2) {
+							icon = '<i class="fa fa-signal"></i>';
+						}
+						if (vm == 3) {
+							icon = '<i class="fa fa-bank"></i>';
+						}
+
+						var pendingDiv = "";
+						pendingDiv += '<div class="show_popover" style="display:inline-block;min-width:94px;text-align:left;border:1px solid #e2e2e2;background-color:#fff;padding:3px;" ';
+	 				 	pendingDiv += 'data-toggle="popover" data-container="body">';
+						pendingDiv += "<div class='label label-" + state + "' style='display:inline-block;margin-right:5px;'>" + icon + "</div>";
+						
+						if (vm == 0) {
+							pendingDiv += '<span style="color:' + color + '">' + String(responsePoll.result) + '</span> / <span>' + String(attachment.phasingQuorum) + '</span>';
+						} else {
+							pendingDiv += '<div class="progress" style="display:inline-block;height:10px;width: 50px;">';
+	    					pendingDiv += '<div class="progress-bar progress-bar-' + state + '" role="progressbar" aria-valuenow="' + percentageProgressBar + '" ';
+	    					pendingDiv += 'aria-valuemin="0" aria-valuemax="100" style="height:10px;width: ' + progressBarWidth + 'px;">';
+	      					pendingDiv += '<span class="sr-only">' + percentageProgressBar + '% Complete</span>';
+	    					pendingDiv += '</div>';
+	  						pendingDiv += '</div> ';
+	  					}
+						pendingDiv += "</div>";
+						$pendingDiv = $(pendingDiv);
+						popoverConfig["content"] = $popoverTable;
+						$pendingDiv.popover(popoverConfig);
+						$pendingDiv.appendTo($tdPending);
+
+						if (vm == 0) {
+							$popoverTypeTR.find("td:first").html($.t('accounts', 'Accounts') + ":");
+							$popoverTypeTR.find("td:last").html(String(attachment.phasingWhitelist.length));
+							var votesFormatted = String(responsePoll.result) + " / " + String(attachment.phasingQuorum);
+							$popoverVotesTR.find("td:last").html(votesFormatted);
+						}
+						if (vm == 1) {
+							$popoverTypeTR.find("td:first").html($.t('accounts', 'Accounts') + ":");
+							$popoverTypeTR.find("td:last").html(String(attachment.phasingWhitelist.length));
+							var votesFormatted = NRS.convertToNXT(responsePoll.result) + " / " + NRS.convertToNXT(attachment.phasingQuorum) + " NXT";
+							$popoverVotesTR.find("td:last").html(votesFormatted);
+						}
+						if (vm == 2) {
+							NRS.sendRequest("getAsset", {
+								"asset": attachment.phasingHolding
+							}, function(phResponse) {
+								if (phResponse && phResponse.asset) {
+									$popoverTypeTR.find("td:first").html($.t('asset', 'Asset') + ":");
+									$popoverTypeTR.find("td:last").html(String(phResponse.name));
+									var votesFormatted = NRS.convertToQNTf(responsePoll.result, phResponse.decimals) + " / ";
+									votesFormatted += NRS.convertToQNTf(attachment.phasingQuorum, phResponse.decimals) + " QNT";
+									$popoverVotesTR.find("td:last").html(votesFormatted);
+								}
+							}, false);
+						}
+						if (vm == 3) {
+							NRS.sendRequest("getCurrency", {
+								"currency": attachment.phasingHolding
+							}, function(phResponse) {
+								if (phResponse && phResponse.currency) {
+									$popoverTypeTR.find("td:first").html($.t('currency', 'Currency') + ":");
+									$popoverTypeTR.find("td:last").html(String(phResponse.code));
+									var votesFormatted = NRS.convertToQNTf(responsePoll.result, phResponse.decimals) + " / ";
+									votesFormatted += NRS.convertToQNTf(attachment.phasingQuorum, phResponse.decimals) + " Units";
+									$popoverVotesTR.find("td:last").html(votesFormatted);
+								}
+							}, false);
+						}
+					});
 				} else {
-					$td.html("&nbsp;");
+					$tdPending.html("&nbsp;");
 				}
 			}, false);
 		} else {
-			$td.html("&nbsp;");
+			$tdPending.html("&nbsp;");
 		}
 	}
 
@@ -409,88 +442,78 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 
-	NRS.getTransactionRowHTML = function(transaction, actions) {
-		var transactionType = $.t(NRS.transactionTypes[transaction.type]['subTypes'][transaction.subtype]['i18nKeyTitle']);
+	NRS.getTransactionRowHTML = function(t, actions) {
+		var transactionType = $.t(NRS.transactionTypes[t.type]['subTypes'][t.subtype]['i18nKeyTitle']);
 
-		if (transaction.type == 1 && transaction.subtype == 6 && transaction.attachment.priceNQT == "0") {
-			if (transaction.sender == NRS.account && transaction.recipient == NRS.account) {
+		if (t.type == 1 && t.subtype == 6 && t.attachment.priceNQT == "0") {
+			if (t.sender == NRS.account && t.recipient == NRS.account) {
 				transactionType = $.t("alias_sale_cancellation");
 			} else {
 				transactionType = $.t("alias_transfer");
 			}
 		}
 
-		var receiving = transaction.recipient == NRS.account;
+		var receiving = t.recipient == NRS.account;
 		var account = (receiving ? "sender" : "recipient");
 
-		if (transaction.amountNQT) {
-			transaction.amount = new BigInteger(transaction.amountNQT);
-			transaction.fee = new BigInteger(transaction.feeNQT);
+		if (t.amountNQT) {
+			t.amount = new BigInteger(t.amountNQT);
+			t.fee = new BigInteger(t.feeNQT);
 		}
 
 		var hasMessage = false;
 
-		if (transaction.attachment) {
-			if (transaction.attachment.encryptedMessage || transaction.attachment.message) {
+		if (t.attachment) {
+			if (t.attachment.encryptedMessage || t.attachment.message) {
 				hasMessage = true;
-			} else if (transaction.sender == NRS.account && transaction.attachment.encryptToSelfMessage) {
+			} else if (t.sender == NRS.account && t.attachment.encryptToSelfMessage) {
 				hasMessage = true;
 			}
 		}
 
 		var html = "";
-		html += "<tr id='tr_transaction_" + transaction.transaction + "'>";
+		html += "<tr id='tr_transaction_" + t.transaction + "'>";
 		
 		html += "<td style='vertical-align:middle;'>";
-  		html += "<a class='show_transaction_modal_action' href='#' data-timestamp='" + String(transaction.timestamp).escapeHTML() + "' ";
-  		html += "data-transaction='" + String(transaction.transaction).escapeHTML() + "'>";
-  		html += NRS.formatTimestamp(transaction.timestamp) + "</a>";
+  		html += "<a class='show_transaction_modal_action' href='#' data-timestamp='" + String(t.timestamp).escapeHTML() + "' ";
+  		html += "data-transaction='" + String(t.transaction).escapeHTML() + "'>";
+  		html += NRS.formatTimestamp(t.timestamp) + "</a>";
   		html += "</td>";
 
   		html += "<td style='vertical-align:middle;text-align:center;'>" + (hasMessage ? "&nbsp; <i class='fa fa-envelope-o'></i>&nbsp;" : "&nbsp;") + "</td>";
 		
 		
 		html += '<td style="vertical-align:middle;">';
-		html += NRS.getTransactionIconHTML(transaction.type, transaction.subtype) + '&nbsp; ';
+		html += NRS.getTransactionIconHTML(t.type, t.subtype) + '&nbsp; ';
 		html += '<span style="font-size:11px;display:inline-block;margin-top:5px;">' + transactionType + '</span>';
 		html += '</td>';
 		
 		html += "<td style='width:5px;padding-right:0;vertical-align:middle;'>";
-		html += (transaction.type == 0 ? (receiving ? "<i class='fa fa-plus-circle' style='color:#65C62E'></i>" : "<i class='fa fa-minus-circle' style='color:#E04434'></i>") : "") + "</td>";
-		html += "<td style='vertical-align:middle;" + (transaction.type == 0 && receiving ? " color:#006400;" : (!receiving && transaction.amount > 0 ? " color:red;" : "")) + "'>" + NRS.formatAmount(transaction.amount) + "</td>";
-		html += "<td style='vertical-align:middle;text-align:center;" + (!receiving ? " color:red;" : "") + "'>" + NRS.formatAmount(transaction.fee) + "</td>";
+		html += (t.type == 0 ? (receiving ? "<i class='fa fa-plus-circle' style='color:#65C62E'></i>" : "<i class='fa fa-minus-circle' style='color:#E04434'></i>") : "") + "</td>";
+		html += "<td style='vertical-align:middle;" + (t.type == 0 && receiving ? " color:#006400;" : (!receiving && t.amount > 0 ? " color:red;" : "")) + "'>" + NRS.formatAmount(t.amount) + "</td>";
+		html += "<td style='vertical-align:middle;text-align:center;" + (!receiving ? " color:red;" : "") + "'>" + NRS.formatAmount(t.fee) + "</td>";
 
-		html += "<td style='vertical-align:middle;'>" + ((NRS.getAccountLink(transaction, "sender") == "/" && transaction.type == 2) ? "Asset Exchange" : NRS.getAccountLink(transaction, "sender")) + " ";
-		html += "<i class='fa fa-arrow-circle-right' style='color:#777;'></i> " + ((NRS.getAccountLink(transaction, "recipient") == "/" && transaction.type == 2) ? "Asset Exchange" : NRS.getAccountLink(transaction, "recipient")) + "</td>";
+		html += "<td style='vertical-align:middle;'>" + ((NRS.getAccountLink(t, "sender") == "/" && t.type == 2) ? "Asset Exchange" : NRS.getAccountLink(t, "sender")) + " ";
+		html += "<i class='fa fa-arrow-circle-right' style='color:#777;'></i> " + ((NRS.getAccountLink(t, "recipient") == "/" && t.type == 2) ? "Asset Exchange" : NRS.getAccountLink(t, "recipient")) + "</td>";
 
 		html += "<td class='td_transaction_pending' style='vertical-align:middle;text-align:center;'></td>";
 
 		html += "<td class='confirmations' style='vertical-align:middle;text-align:center;font-size:12px;'>";
-		html += "<span class='show_popover' data-content='" + (transaction.confirmed ? NRS.formatAmount(transaction.confirmations) + " " + $.t("confirmations") : $.t("unconfirmed_transaction")) + "' ";
+		html += "<span class='show_popover' data-content='" + (t.confirmed ? NRS.formatAmount(t.confirmations) + " " + $.t("confirmations") : $.t("unconfirmed_transaction")) + "' ";
 		html += "data-container='body' data-placement='left'>";
-		html += (!transaction.confirmed ? "-" : (transaction.confirmations > 1440 ? "1440+" : NRS.formatAmount(transaction.confirmations))) + "</span></td>";
-		if (actions) {
-			var disabledHTML = "";
-			var unconfirmedTransactions = NRS.unconfirmedTransactions;
-			if (unconfirmedTransactions) {
-				for (var i = 0; i < unconfirmedTransactions.length; i++) {
-					var ut = unconfirmedTransactions[i];
-					if (ut.attachment && ut.attachment["version.PhasingVoteCasting"] && ut.attachment.transactionFullHashes && ut.attachment.transactionFullHashes.length > 0) {
-						if (ut.attachment.transactionFullHashes[0] == transaction.fullHash) {
-							disabledHTML = "disabled";
-						}
-					}
+		html += (!t.confirmed ? "-" : (t.confirmations > 1440 ? "1440+" : NRS.formatAmount(t.confirmations))) + "</span></td>";
+		if (actions && actions.length != undefined) {
+			html += '<td class="td_transaction_actions" style="vertical-align:middle;text-align:right;">';
+			if (actions.indexOf('approve') > -1) {
+				if (t.attachment.phasingWhitelist.length > 0 || t.attachment.phasingVotingModel == 0) {
+					var fee = 1;
+				} else {
+					var fee = 2;
 				}
+				html += "<a class='btn btn-xs btn-default approve_transaction_btn' href='#' data-toggle='modal' data-target='#approve_transaction_modal' ";
+				html += "data-transaction='" + String(t.transaction).escapeHTML() + "' data-full-hash='" + String(t.fullHash).escapeHTML() + "' ";
+				html += "data-transaction-fee='" + fee + "' data-i18n='approve' >Approve</a>";
 			}
-			if (transaction.attachment.phasingWhitelist.length > 0 || transaction.attachment.phasingVotingModel == 0) {
-				var fee = 1;
-			} else {
-				var fee = 2;
-			}
-			html += '<td style="vertical-align:middle;text-align:right;">';
-			html += "<a class='btn btn-xs btn-default approve_transaction_btn " + disabledHTML + "' href='#' data-toggle='modal' data-target='#approve_transaction_modal' ";
-			html += "data-transaction='" + String(transaction.transaction).escapeHTML() + "' data-full-hash='" + String(transaction.fullHash).escapeHTML() + "' ";
-			html += "data-transaction-fee='" + String(fee) + "' data-i18n='approve' >Approve</a>";
 			html += "</td>";
 		}
 		html += "</tr>";

@@ -1225,13 +1225,14 @@ var NRS = (function(NRS, $, undefined) {
 	$(document).on("click", ".approve_transaction_btn", function(e) {
 		e.preventDefault();
 		$('#approve_transaction_modal .at_transaction_full_hash_display').text($(this).data("transaction"));
+      $("#approve_transaction_button").data("transaction", $(this).data("transaction"));
 		$('#approve_transaction_modal #at_transaction_full_hash').val($(this).data("fullHash"));
 		$('#approve_transaction_modal .advanced_fee').html($(this).data("transactionFee") + " NXT");
 		$('#approve_transaction_modal input[name="feeNXT"]').val($(this).data("transactionFee"));
 	});
 
 	$("#approve_transaction_button").on("click", function(e) {
-		$('.approve_transaction_btn[data-full-hash="' + $("#at_transaction_full_hash").val() + '"]').addClass("disabled");
+      $('#tr_transaction_' + $(this).data("transaction") + ' .approve_transaction_btn').attr('disabled', true);
 	});
 
 	$("#transaction_info_modal").on("hide.bs.modal", function(e) {
