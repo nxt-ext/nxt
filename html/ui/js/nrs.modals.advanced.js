@@ -42,7 +42,7 @@ var NRS = (function(NRS, $, undefined) {
 			labelText: "Amount NXT",
 			labelI18n: "amount_nxt",
 			helpI18n: "approve_transaction_amount_help",
-			inputName: "phasingQuorumQNTf",
+			inputName: "phasingQuorumNXT",
 			addonText: "NXT",
 			addonI18n: "nxt_unit"
 		}
