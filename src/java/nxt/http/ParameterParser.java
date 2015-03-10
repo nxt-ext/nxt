@@ -359,7 +359,15 @@ final class ParameterParser {
     }
 
     static Account getAccount(HttpServletRequest req) throws ParameterException {
-        Account account = Account.getAccount(getAccountId(req, "account", true));
+        return getAccount(req, true);
+    }
+
+    static Account getAccount(HttpServletRequest req, boolean isMandatory) throws ParameterException {
+        long accountId = getAccountId(req, "account", isMandatory);
+        if (accountId == 0 && !isMandatory) {
+            return null;
+        }
+        Account account = Account.getAccount(accountId);
         if (account == null) {
             throw new ParameterException(UNKNOWN_ACCOUNT);
         }

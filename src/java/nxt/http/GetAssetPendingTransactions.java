@@ -1,6 +1,6 @@
 package nxt.http;
 
-
+import nxt.Account;
 import nxt.Asset;
 import nxt.PhasingPoll;
 import nxt.Transaction;
@@ -16,12 +16,13 @@ public class GetAssetPendingTransactions extends APIServlet.APIRequestHandler {
     static final GetAssetPendingTransactions instance = new GetAssetPendingTransactions();
 
     private GetAssetPendingTransactions() {
-        super(new APITag[]{APITag.AE, APITag.PHASING}, "asset", "withoutWhitelist", "firstIndex", "lastIndex");
+        super(new APITag[]{APITag.AE, APITag.PHASING}, "asset", "account", "withoutWhitelist", "firstIndex", "lastIndex");
     }
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws ParameterException {
         Asset asset = ParameterParser.getAsset(req);
+        Account account = ParameterParser.getAccount(req, false);
         int firstIndex = ParameterParser.getFirstIndex(req);
         int lastIndex = ParameterParser.getLastIndex(req);
         boolean withoutWhitelist = "true".equalsIgnoreCase(req.getParameter("withoutWhitelist"));
@@ -29,8 +30,8 @@ public class GetAssetPendingTransactions extends APIServlet.APIRequestHandler {
         long assetId = asset.getId();
 
         JSONArray transactions = new JSONArray();
-        try (DbIterator<? extends Transaction> iterator =
-                     PhasingPoll.getHoldingPendingTransactions(assetId, VoteWeighting.VotingModel.ASSET, withoutWhitelist, firstIndex, lastIndex)) {
+        try (DbIterator<? extends Transaction> iterator = PhasingPoll.getHoldingPendingTransactions(assetId, VoteWeighting.VotingModel.ASSET,
+                account, withoutWhitelist, firstIndex, lastIndex)) {
             while (iterator.hasNext()) {
                 Transaction transaction = iterator.next();
                 transactions.add(JSONData.transaction(transaction));

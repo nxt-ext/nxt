@@ -218,7 +218,8 @@ public final class PhasingPoll extends AbstractPoll {
         }
     }
 
-    public static DbIterator<TransactionImpl> getHoldingPendingTransactions(long holdingId, VoteWeighting.VotingModel votingModel, boolean withoutWhitelist, int from, int to) {
+    public static DbIterator<TransactionImpl> getHoldingPendingTransactions(long holdingId, VoteWeighting.VotingModel votingModel,
+                                                                            Account account, boolean withoutWhitelist, int from, int to) {
 
         Connection con = null;
         try {
@@ -229,6 +230,7 @@ public final class PhasingPoll extends AbstractPoll {
                     "AND phasing_poll.voting_model = ? " +
                     "AND phasing_poll.id = transaction.id " +
                     "AND phasing_poll.finish_height > ? " +
+                    (account != null ? "AND phasing_poll.account_id = ? " : "") +
                     (withoutWhitelist ? "AND phasing_poll.whitelist_size = 0 " : "") +
                     "ORDER BY transaction.height DESC, transaction.transaction_index DESC " +
                     DbUtils.limitsClause(from, to));
@@ -236,6 +238,9 @@ public final class PhasingPoll extends AbstractPoll {
             pstmt.setLong(++i, holdingId);
             pstmt.setByte(++i, votingModel.getCode());
             pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
+            if (account != null) {
+                pstmt.setLong(++i, account.getId());
+            }
             DbUtils.setLimits(++i, pstmt, from, to);
 
             return BlockchainImpl.getInstance().getTransactions(con, pstmt);
