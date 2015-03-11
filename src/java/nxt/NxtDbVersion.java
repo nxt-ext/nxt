@@ -703,7 +703,6 @@ class NxtDbVersion extends DbVersion {
             case 275:
                 apply("ALTER TABLE poll_result ALTER COLUMN result SET NULL");
             case 276:
-                BlockchainProcessorImpl.getInstance().scheduleScan(0, false);
                 apply(null);
             case 277:
                 apply("DROP INDEX IF EXISTS poll_result_poll_id_idx");
@@ -712,6 +711,13 @@ class NxtDbVersion extends DbVersion {
             case 279:
                 apply("CREATE INDEX IF NOT EXISTS phasing_vote_height_idx ON phasing_vote(height)");
             case 280:
+                apply("TRUNCATE TABLE poll_result");
+            case 281:
+                apply("ALTER TABLE poll_result ADD COLUMN IF NOT EXISTS weight BIGINT NOT NULL");
+            case 282:
+                BlockchainProcessorImpl.getInstance().scheduleScan(0, false);
+                apply(null);
+            case 283:
                 return;
             default:
                 throw new RuntimeException("Blockchain database inconsistent with code, probably trying to run older code on newer database");
