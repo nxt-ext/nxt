@@ -403,7 +403,7 @@ var NRS = (function(NRS, $, undefined) {
 						}
 						if (mbModel == 1) {
 							if (minBalance > 0) {
-								minBalanceFormatted = NRS.convertToNXT(minBalance) + "NXT";
+								minBalanceFormatted = NRS.convertToNXT(minBalance) + " NXT";
 								$approveBtn.data('minBalanceFormatted', minBalanceFormatted.escapeHTML());
 							}
 						}
