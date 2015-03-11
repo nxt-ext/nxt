@@ -25,3 +25,5 @@
 /dist
 /logs
 deploy.sh
+/resource/nxt.manifest.mf
+/resource/nxtservice.manifest.mf
