@@ -521,7 +521,7 @@ var NRS = (function(NRS, $, undefined) {
 		html += "<td style='vertical-align:middle;'>" + ((NRS.getAccountLink(t, "sender") == "/" && t.type == 2) ? "Asset Exchange" : NRS.getAccountLink(t, "sender")) + " ";
 		html += "<i class='fa fa-arrow-circle-right' style='color:#777;'></i> " + ((NRS.getAccountLink(t, "recipient") == "/" && t.type == 2) ? "Asset Exchange" : NRS.getAccountLink(t, "recipient")) + "</td>";
 
-		html += "<td class='td_transaction_pending' style='vertical-align:middle;text-align:center;'></td>";
+		html += "<td class='td_transaction_pending' style='min-width:100px;vertical-align:middle;text-align:center;'></td>";
 
 		html += "<td class='confirmations' style='vertical-align:middle;text-align:center;font-size:12px;'>";
 		html += "<span class='show_popover' data-content='" + (t.confirmed ? NRS.formatAmount(t.confirmations) + " " + $.t("confirmations") : $.t("unconfirmed_transaction")) + "' ";
