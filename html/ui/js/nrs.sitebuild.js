@@ -101,24 +101,26 @@ var NRS = (function(NRS, $, undefined) {
     }
 
 
-    function _appendToSidebar(menuHTML, desiredPosition) {
-        var inserted = false;
-        $.each($('#sidebar_menu > li'), function(key, elem) {
-            var compPos = $(elem).data("sidebarPosition");
-            if (!inserted && compPos && desiredPosition <= parseInt(compPos)) {
-                $(menuHTML).insertBefore(elem);
-                inserted = true;
+    function _appendToSidebar(menuHTML, id, desiredPosition) {
+        if ($('#' + id).length == 0) {
+            var inserted = false;
+            $.each($('#sidebar_menu > li'), function(key, elem) {
+                var compPos = $(elem).data("sidebarPosition");
+                if (!inserted && compPos && desiredPosition <= parseInt(compPos)) {
+                    $(menuHTML).insertBefore(elem);
+                    inserted = true;
+                }
+            });
+            if (!inserted) {
+                $('#sidebar_menu').append(menuHTML);
             }
-        });
-        if (!inserted) {
-            $('#sidebar_menu').append(menuHTML);
         }
     }
 
     NRS.addSimpleSidebarMenuItem = function(options) {
         var menuHTML = '<li id="' + options["id"] + '" class="sm_simple" data-sidebar-position="' + options["desiredPosition"] + '">';
         menuHTML += '<a href="#" data-page="' + options["page"] + '">' + options["titleHTML"] + '</a></li>';
-        _appendToSidebar(menuHTML, options["desiredPosition"]);
+        _appendToSidebar(menuHTML, options["id"], options["desiredPosition"]);
 
     }
 
@@ -127,7 +129,7 @@ var NRS = (function(NRS, $, undefined) {
         menuHTML += '<a href="#" data-page="' + options["page"] + '">' + options["titleHTML"] + '<i class="fa pull-right fa-angle-right" style="padding-top:3px"></i></a>';
         menuHTML += '<ul class="treeview-menu" style="display: none;"></ul>';
         menuHTML += '</li>';
-        _appendToSidebar(menuHTML, options["desiredPosition"]);
+        _appendToSidebar(menuHTML, options["id"], options["desiredPosition"]);
     }
     
     NRS.appendMenuItemToTSMenuItem = function(itemId, options) {
