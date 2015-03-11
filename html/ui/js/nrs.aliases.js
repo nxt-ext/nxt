@@ -124,27 +124,17 @@ var NRS = (function(NRS, $, undefined) {
 
 					rows += "<tr" + (alias.tentative ? " class='tentative'" : "") + " data-alias='" + String(alias.aliasName).toLowerCase().escapeHTML() + "'><td class='alias'>" + String(alias.aliasName).escapeHTML() + "</td><td class='uri'>" + (alias.aliasURI.indexOf("http") === 0 ? "<a href='" + alias.aliasURI + "' target='_blank'>" + alias.shortAliasURI + "</a>" : alias.shortAliasURI) + "</td><td class='status'>" + alias.status + "</td><td style='white-space:nowrap'><a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#register_alias_modal' data-alias='" + String(alias.aliasName).escapeHTML() + "'>" + $.t("edit") + "</a> <a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#transfer_alias_modal' data-alias='" + String(alias.aliasName).escapeHTML() + "'>" + $.t("transfer") + "</a> <a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#sell_alias_modal' data-alias='" + String(alias.aliasName).escapeHTML() + "'>" + $.t("sell") + "</a>" + (allowCancel ? " <a class='btn btn-xs btn-default cancel_alias_sale' href='#' data-toggle='modal' data-target='#cancel_alias_sale_modal' data-alias='" + String(alias.aliasName).escapeHTML() + "'>" + $.t("cancel_sale") + "</a>" : "") + " <a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#delete_alias_modal' data-alias='" + String(alias.aliasName).escapeHTML() + "'>" + $.t("delete") + "</a></td></tr>";
 
-					if (!alias.aliasURI) {
-						empty_alias_count++;
-					} else if (alias.aliasURI.indexOf("http") === 0) {
-						alias_uri_count++;
-					} else if (alias.aliasURI.indexOf("acct:") === 0 || alias.aliasURI.indexOf("nacc:") === 0) {
-						alias_account_count++;
-					}
 				}
 
 				$("#aliases_table tbody").empty().append(rows);
 				NRS.dataLoadFinished($("#aliases_table"));
 
-				$("#alias_account_count").html(alias_account_count).removeClass("loading_dots");
-				$("#alias_uri_count").html(alias_uri_count).removeClass("loading_dots");
-				$("#empty_alias_count").html(empty_alias_count).removeClass("loading_dots");
 				$("#alias_count").html(alias_count).removeClass("loading_dots");
 			} else {
 				$("#aliases_table tbody").empty();
 				NRS.dataLoadFinished($("#aliases_table"));
 
-				$("#alias_account_count, #alias_uri_count, #empty_alias_count, #alias_count").html("0").removeClass("loading_dots");
+				$("#alias_count").html("0").removeClass("loading_dots");
 			}
 
 			NRS.pageLoaded();

@@ -5,6 +5,13 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.newlyCreatedAccount = false;
 
 	NRS.allowLoginViaEnter = function() {
+		$("#login_account_other").keypress(function(e) {
+			if (e.which == '13') {
+				e.preventDefault();
+				var account = $("#login_account_other").val();
+				NRS.loginAccount(account);
+			}
+		});
 		$("#login_password").keypress(function(e) {
 			if (e.which == '13') {
 				e.preventDefault();
@@ -118,6 +125,164 @@ var NRS = (function(NRS, $, undefined) {
 			NRS.login(password);
 		}
 	});
+	
+	NRS.loginAccount = function(account, callback) {
+		NRS.sendRequest("getBlockchainStatus", function(response) {
+			if (response.errorCode) {
+				$.growl($.t("error_server_connect"), {
+					"type": "danger",
+					"offset": 10
+				});
+
+				return;
+			}
+
+			NRS.state = response;
+			NRS.sendRequest("getAccount", {
+				"account": account
+			}, function(response) {
+				if (!response.errorCode) {
+					NRS.account = String(response.account).escapeHTML();
+					NRS.accountRS = String(response.accountRS).escapeHTML();
+					NRS.publicKey = String(response.publicKey).escapeHTML();
+				}
+				if ($("#disable_all_plugins").length == 1 && !($("#disable_all_plugins").is(":checked"))) {
+					NRS.disableAllPlugins = false;
+				} else {
+					NRS.disableAllPlugins = true;
+				}
+				$("#account_id").html(String(NRS.accountRS).escapeHTML()).css("font-size", "12px");
+
+				if (NRS.state) {
+					NRS.checkBlockHeight();
+				}
+				
+				NRS.getAccountInfo(true, function() {
+					if (NRS.accountInfo.currentLeasingHeightFrom) {
+						NRS.isLeased = (NRS.lastBlockHeight >= NRS.accountInfo.currentLeasingHeightFrom && NRS.lastBlockHeight <= NRS.accountInfo.currentLeasingHeightTo);
+					} else {
+						NRS.isLeased = false;
+					}
+				});
+				
+				$("#forging_indicator").removeClass("forging");
+				$("#forging_indicator span").html($.t("not_forging")).attr("data-i18n", "not_forging");
+				$("#forging_indicator").show();
+				NRS.isForging = false;
+				
+				NRS.unlock();
+
+				if (NRS.isOutdated) {
+					$.growl($.t("nrs_update_available"), {
+						"type": "danger"
+					});
+				}
+
+				if (!NRS.downloadingBlockchain) {
+					NRS.checkIfOnAFork();
+				}
+				if(navigator.userAgent.indexOf('Safari') != -1 && navigator.userAgent.indexOf('Chrome') == -1) {
+					// Don't use account based DB in Safari due to a buggy indexedDB implementation (2015-02-24)
+					NRS.createDatabase("NRS_USER_DB");
+					$.growl($.t("nrs_safari_no_account_based_db"), {
+						"type": "danger"
+					});
+				} else {
+					NRS.createDatabase("NRS_USER_DB_" + String(NRS.account));
+				}
+
+				NRS.setupClipboardFunctionality();
+
+				if (callback) {
+					callback();
+				}
+
+				$.each(NRS.pages, function(key, value) {
+					if(key in NRS.setup) {
+						NRS.setup[key]();
+					}
+				});
+				
+				NRS.loadPlugins();
+				$(".sidebar .treeview").tree();
+				$('#dashboard_link a').addClass("ignore").click();
+
+				if ($("#remember_account").is(":checked")) {
+					if (NRS.getCookie("savedNxtAccounts") && NRS.getCookie("savedNxtAccounts")!=""){
+						var accounts=NRS.getCookie("savedNxtAccounts") + NRS.accountRS + ";";
+						NRS.setCookie("savedNxtAccounts",accounts,30);
+					}
+					else
+						NRS.setCookie("savedNxtAccounts",NRS.accountRS + ";",30);
+				}
+
+				$("[data-i18n]").i18n();
+
+				NRS.getInitialTransactions();
+				NRS.updateApprovalRequests();
+			});
+		});
+	}
+	
+	NRS.listAccounts = function() {
+		$('#login_account').empty();
+		if (NRS.getCookie("savedNxtAccounts") && NRS.getCookie("savedNxtAccounts")!=""){
+			$('#login_account_container').show();
+			$('#login_account_container_other').hide();
+			var accounts = NRS.getCookie("savedNxtAccounts").split(";");
+			$.each(accounts, function(index, account) {
+				if (account != ''){
+					$('#login_account')
+					.append($("<li></li>")
+						.append($("<a></a>")
+							.attr("href","#")
+							.attr("style","display: inline-block;width: 360px;")
+							.attr("onClick","NRS.loginAccount('"+account+"')")
+							.text(account))
+						.append($('<button aria-hidden="true" data-dismiss="modal" class="close" type="button">×</button>')
+							.attr("onClick","NRS.removeAccount('"+account+"')")
+							.attr("style","margin-right:5px"))
+					);
+				}
+			});
+			$('#login_account')
+			.append($("<li></li>")
+				.append($("<a></a>")
+					.attr("href","#")
+					.attr("style","display: inline-block;width: 380px;")
+					.attr("onClick","$('#login_account_container').hide();$('#login_account_container_other').show();")
+					.text("Other"))
+			);
+		}
+		else{
+			$('#login_account_container').hide();
+			$('#login_account_container_other').show();
+		}
+	}
+	
+	$("input:radio[name=loginType]").change(function(e) {
+		e.preventDefault();
+		if (this.value == 'account') {
+            NRS.listAccounts();
+			$('#login_password').parent().hide();
+			$('#remember_password_container').hide();
+        }
+        else {
+            $('#login_account_container').hide();
+			$('#login_account_container_other').hide();
+			$('#login_password').parent().show();
+			$('#remember_password_container').show();
+        }
+	});
+	
+	NRS.removeAccount = function(account) {
+		var accounts = NRS.getCookie("savedNxtAccounts").replace(account+';','');
+		if (accounts == '')
+			NRS.deleteCookie('savedNxtAccounts');
+		else 
+			NRS.setCookie("savedNxtAccounts",accounts,30);
+		NRS.listAccounts();
+	}
 
 	NRS.login = function(password, callback) {
 		if (!password.length) {
@@ -157,6 +322,17 @@ var NRS = (function(NRS, $, undefined) {
 					NRS.accountRS = String(response.accountRS).escapeHTML();
 					NRS.publicKey = NRS.getPublicKey(converters.stringToHexString(password));
 				}
+				
+				// Not used with current setup
+				/*if ($("#login_account_other").val() != ""){
+					if (NRS.accountRS != $("#login_account_other").val() && NRS.account != $("#login_account_other").val()) {
+						$.growl($.t("Password and NXT account do no match"), {
+							"type": "danger",
+							"offset": 10
+						});
+						return;
+					}
+				}*/
 
 				if (!NRS.account) {
 					$.growl($.t("error_find_account_id"), {
@@ -289,6 +465,16 @@ var NRS = (function(NRS, $, undefined) {
 					NRS.loadPlugins();
 					$(".sidebar .treeview").tree();
 					$('#dashboard_link a').addClass("ignore").click();
+
+					if ($("#remember_account").is(":checked")) {
+						if (NRS.getCookie("savedNxtAccounts") && NRS.getCookie("savedNxtAccounts")!=""){
+							var accounts=NRS.getCookie("savedNxtAccounts") + NRS.accountRS + ";";
+							NRS.setCookie("savedNxtAccounts",accounts,30);
+						}
+						else
+							NRS.setCookie("savedNxtAccounts",NRS.accountRS + ";",30);
+					}
+
 					$("[data-i18n]").i18n();
 
 					NRS.getInitialTransactions();
@@ -357,10 +543,9 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.showLockscreen = function() {
+		NRS.listAccounts();
 		if (NRS.hasLocalStorage && localStorage.getItem("logged_in")) {
-			setTimeout(function() {
-				$("#login_password").focus()
-			}, 10);
+			NRS.showLoginScreen();
 		} else {
 			NRS.showWelcomeScreen();
 		}
