@@ -742,6 +742,15 @@ var NRS = (function(NRS, $, undefined) {
 				}
 
 				break;
+         case "approveTransaction":
+            if (transaction.type !== 1 && transaction.subtype !== 9) {
+               return false;
+            }
+
+            transaction.transactionFullHash = converters.byteArrayToHexString(byteArray.slice(pos, pos + 32));
+
+            pos += 32;
+            break;
 			case "issueAsset":
 				if (transaction.type !== 2 || transaction.subtype !== 0) {
 					return false;
