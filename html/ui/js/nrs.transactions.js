@@ -299,7 +299,7 @@ var NRS = (function(NRS, $, undefined) {
 						var resultFormatted = "";
 						var quorumFormatted = "";
 						var minBalanceFormatted = "";
-						if (attachment.phasingFinishHeight < NRS.lastBlockHeight) {
+						if (attachment.phasingFinishHeight <= NRS.lastBlockHeight) {
 							var finished = true;
 						} else {
 							var finished = false;
