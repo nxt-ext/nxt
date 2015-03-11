@@ -40,14 +40,14 @@
                         <div class="input-group" id="login_account_container_other">
                             <input type="text" class="form-control" id="login_account_other" name="login_account_other" placeholder="Your NXT Account" data-i18n="[placeholder]your_account" autofocus />
                             <div class="input-group-btn" style="border:1px solid #fff;">
-                                <button class="btn btn-flat" onclick="NRS.loginAccount($('#login_account_other').val())"><i class="fa fa-arrow-right text-muted"></i></button>
+                                <button class="btn btn-flat" onclick="NRS.login(0,$('#login_account_other').val())"><i class="fa fa-arrow-right text-muted"></i></button>
                             </div>
                             <input type="hidden" name="check_password_length" id="login_check_password_length" value="1" />
                         </div>
                         <div class="input-group" style="display:none">
                             <input type="password" class="form-control" id="login_password" name="login_password" placeholder="Your Passphrase" data-i18n="[placeholder]your_passphrase" autofocus disabled />
                             <div class="input-group-btn" style="border:1px solid #fff;">
-                                <button class="btn btn-flat" onclick="NRS.login($('#login_password').val())"><i class="fa fa-arrow-right text-muted"></i></button>
+                                <button class="btn btn-flat" onclick="NRS.login(1,$('#login_password').val())"><i class="fa fa-arrow-right text-muted"></i></button>
                             </div>
                             <input type="hidden" name="check_password_length" id="login_check_password_length" value="1" />
                         </div>
