@@ -247,7 +247,7 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.addPendingTransactionHTML = function(t) {
-		var $tr = $('#tr_transaction_' + t.transaction + ':visible');
+		var $tr = $('.tr_transaction_' + t.transaction + ':visible');
 		var $tdPending = $tr.find('.td_transaction_pending');
 		var $approveBtn = $tr.find('.td_transaction_actions .approve_transaction_btn');
 
@@ -497,7 +497,7 @@ var NRS = (function(NRS, $, undefined) {
 		}
 
 		var html = "";
-		html += "<tr id='tr_transaction_" + t.transaction + "'>";
+		html += "<tr class='tr_transaction_" + t.transaction + "'>";
 		
 		html += "<td style='vertical-align:middle;'>";
   		html += "<a class='show_transaction_modal_action' href='#' data-timestamp='" + String(t.timestamp).escapeHTML() + "' ";
