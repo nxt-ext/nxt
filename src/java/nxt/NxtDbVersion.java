@@ -656,7 +656,7 @@ class NxtDbVersion extends DbVersion {
             case 252:
                 apply("CREATE INDEX IF NOT EXISTS phasing_poll_holding_id_idx ON phasing_poll(holding_id, height DESC)");
             case 253:
-                apply("CREATE UNIQUE INDEX IF NOT EXISTS phasing_vote_id_transaction_idx ON phasing_vote(id, transaction_id)");
+                apply(null);
             case 254:
                 apply("CREATE UNIQUE INDEX IF NOT EXISTS phasing_vote_transaction_voter_idx ON phasing_vote(transaction_id, voter_id)");
             case 255:
