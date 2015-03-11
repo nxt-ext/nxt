@@ -1241,7 +1241,7 @@ var NRS = (function(NRS, $, undefined) {
 	});
 
 	$("#approve_transaction_button").on("click", function(e) {
-      $('#tr_transaction_' + $(this).data("transaction") + ' .approve_transaction_btn').attr('disabled', true);
+      $('.tr_transaction_' + $(this).data("transaction") + ':visible .approve_transaction_btn').attr('disabled', true);
 	});
 
 	$("#transaction_info_modal").on("hide.bs.modal", function(e) {
