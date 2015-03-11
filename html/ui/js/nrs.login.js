@@ -139,7 +139,7 @@ var NRS = (function(NRS, $, undefined) {
 						.append($("<a></a>")
 							.attr("href","#")
 							.attr("style","display: inline-block;width: 360px;")
-							.attr("onClick","NRS.login('0,"+account+"')")
+							.attr("onClick","NRS.login(0,'"+account+"')")
 							.text(account))
 						.append($('<button aria-hidden="true" data-dismiss="modal" class="close" type="button">×</button>')
 							.attr("onClick","NRS.removeAccount('"+account+"')")
@@ -214,25 +214,24 @@ var NRS = (function(NRS, $, undefined) {
 
 				return;
 			}
-
+			
 			NRS.state = response;
 			if (passLogin) {
-				accountRequest = "getAccountId";
-				requestVariable = "secretPhrase";
+				var accountRequest = "getAccountId";
+				var requestVariable = {secretPhrase: password};
 			}
 			else {
-				accountRequest = "getAccount";
-				requestVariable = "account";
+				var accountRequest = "getAccount";
+				var requestVariable = {account: password};
 			}
+
 			//this is done locally..
-			NRS.sendRequest(accountRequest, {
-				requestVariable: password
-			}, function(response) {
+			NRS.sendRequest(accountRequest, requestVariable, function(response) {
 				if (!response.errorCode) {
 					NRS.account = String(response.account).escapeHTML();
 					NRS.accountRS = String(response.accountRS).escapeHTML();
-					//NRS.publicKey = NRS.getPublicKey(converters.stringToHexString(password));
-					NRS.publicKey = String(response.publicKey).escapeHTML();
+					if (passLogin) NRS.publicKey = NRS.getPublicKey(converters.stringToHexString(password));
+					else NRS.publicKey = String(response.publicKey).escapeHTML();
 				}
 
 				if (!NRS.account) {
@@ -252,7 +251,7 @@ var NRS = (function(NRS, $, undefined) {
 				NRS.sendRequest("getAccountPublicKey", {
 					"account": NRS.account
 				}, function(response) {
-					if (response && response.publicKey && response.publicKey != NRS.generatePublicKey(password)) {
+					if (response && response.publicKey && response.publicKey != NRS.generatePublicKey(password) && passLogin) {
 						$.growl($.t("error_account_taken"), {
 							"type": "danger",
 							"offset": 10
