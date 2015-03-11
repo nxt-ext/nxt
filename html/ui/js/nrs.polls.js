@@ -38,7 +38,7 @@ var NRS = (function(NRS, $, undefined) {
 											pollDescription = pollDescription.substring(0, 100) + "...";
 										}
 
-										rows += "<tr class='tentative'><td>" + String(unconfirmedTransaction.attachment.name).escapeHTML() + "</td><td>" + pollDescription.escapeHTML() + "</td><td>" + (unconfirmedTransaction.sender != NRS.genesis ? "<a href='#' data-user='" + NRS.getAccountFormatted(unconfirmedTransaction, "sender") + "' class='user_info'>" + NRS.getAccountTitle(unconfirmedTransaction, "sender") + "</a>" : "Genesis") + "</td><td>" + NRS.formatTimestamp(unconfirmedTransaction.timestamp) + "</td><td>" + String(unconfirmedTransaction.attachment.finishHeight - NRS.lastBlockHeight)  + "</td><td><a href='#'>Vote (todo)</td></tr>";
+										rows += "<tr class='tentative'><td>" + String(unconfirmedTransaction.attachment.name).escapeHTML() + "</td><td>" + pollDescription.escapeHTML() + "</td><td>" + (unconfirmedTransaction.sender != NRS.genesis ? "<a href='#' data-user='" + NRS.getAccountFormatted(unconfirmedTransaction, "sender") + "' class='show_account_modal_action user_info'>" + NRS.getAccountTitle(unconfirmedTransaction, "sender") + "</a>" : "Genesis") + "</td><td>" + NRS.formatTimestamp(unconfirmedTransaction.timestamp) + "</td><td>" + String(unconfirmedTransaction.attachment.finishHeight - NRS.lastBlockHeight)  + "</td><td><a href='#'>Vote (todo)</td></tr>";
 									}
 								}
 							}
@@ -55,7 +55,7 @@ var NRS = (function(NRS, $, undefined) {
 								if (pollDescription.length > 100) {
 									pollDescription = pollDescription.substring(0, 100) + "...";
 								}
-								rows += "<tr><td><a class='poll_list_title' href='#' data-transaction='"+poll.transaction+"'>" + String(poll.attachment.name).escapeHTML() + "</a></td><td>" + pollDescription.escapeHTML() + "</td><td>" + (poll.sender != NRS.genesis ? "<a href='#' data-user='" + NRS.getAccountFormatted(poll, "sender") + "' class='user_info'>" + NRS.getAccountTitle(poll, "sender") + "</a>" : "Genesis") + "</td><td>" + NRS.formatTimestamp(poll.timestamp) + "</td><td>" + String(poll.attachment.finishHeight - NRS.lastBlockHeight) + "</td><td><a href='#' class='vote_button' data-poll='" + poll.transaction +"'>Vote </td></tr>";
+								rows += "<tr><td><a class='poll_list_title show_transaction_modal_action' href='#' data-transaction='"+poll.transaction+"'>" + String(poll.attachment.name).escapeHTML() + "</a></td><td>" + pollDescription.escapeHTML() + "</td><td>" + (poll.sender != NRS.genesis ? "<a href='#' data-user='" + NRS.getAccountFormatted(poll, "sender") + "' class='show_account_modal_action user_info'>" + NRS.getAccountTitle(poll, "sender") + "</a>" : "Genesis") + "</td><td>" + NRS.formatTimestamp(poll.timestamp) + "</td><td>" + String(poll.attachment.finishHeight - NRS.lastBlockHeight) + "</td><td><a href='#' class='vote_button' data-poll='" + poll.transaction +"'>Vote </td></tr>";
 							}
 							NRS.dataLoaded(rows);
 						}
@@ -109,9 +109,9 @@ var NRS = (function(NRS, $, undefined) {
 									pollDescription = pollDescription.substring(0, 100) + "...";
 								}
 								rows += "<tr>"
-								rows += "<td><a class='poll_list_title' href='#' data-transaction='"+poll.transaction+"'>" + String(poll.attachment.name).escapeHTML() + "</a></td>";
+								rows += "<td><a class='poll_list_title show_transaction_modal_action' href='#'  data-transaction='"+poll.transaction+"'>" + String(poll.attachment.name).escapeHTML() + "</a></td>";
 								rows += "<td>" + pollDescription.escapeHTML() + "</td>";
-								rows += "<td>" + (poll.sender != NRS.genesis ? "<a href='#' data-user='" + NRS.getAccountFormatted(poll, "sender") + "' class='user_info'>" + NRS.getAccountTitle(poll, "sender") + "</a>" : "Genesis") + "</td>"
+								rows += "<td>" + (poll.sender != NRS.genesis ? "<a href='#' data-user='" + NRS.getAccountFormatted(poll, "sender") + "' class='show_account_modal_action user_info'>" + NRS.getAccountTitle(poll, "sender") + "</a>" : "Genesis") + "</td>"
 								rows += "<td>" + NRS.formatTimestamp(poll.timestamp) + "</td>";
 								if(poll.attachment.finishHeight > NRS.lastBlockHeight)
 								{
@@ -177,9 +177,9 @@ var NRS = (function(NRS, $, undefined) {
 									pollDescription = pollDescription.substring(0, 100) + "...";
 								}
 								rows += "<tr>"
-								rows += "<td><a class='poll_list_title' href='#' data-transaction='"+poll.transaction+"'>" + String(poll.attachment.name).escapeHTML() + "</a></td>";
+								rows += "<td><a class='poll_list_title show_transaction_modal_action' href='#' data-transaction='"+poll.transaction+"'>" + String(poll.attachment.name).escapeHTML() + "</a></td>";
 								rows += "<td>" + pollDescription.escapeHTML() + "</td>";
-								rows += "<td>" + (poll.sender != NRS.genesis ? "<a href='#' data-user='" + NRS.getAccountFormatted(poll, "sender") + "' class='user_info'>" + NRS.getAccountTitle(poll, "sender") + "</a>" : "Genesis") + "</td>"
+								rows += "<td>" + (poll.sender != NRS.genesis ? "<a href='#' data-user='" + NRS.getAccountFormatted(poll, "sender") + "' class='show_account_modal_action user_info'>" + NRS.getAccountTitle(poll, "sender") + "</a>" : "Genesis") + "</td>"
 								rows += "<td>" + NRS.formatTimestamp(poll.timestamp) + "</td>";
 								if(poll.attachment.finishHeight > NRS.lastBlockHeight)
 								{
@@ -558,7 +558,7 @@ $("#poll_results_modal ul.nav li").click(function(e) {
 
 			var now = parseInt(((new Date().getTime()) - date) / 1000, 10);
 
-			var rowToAdd = "<tr class='tentative'><td>" + String(data.name).escapeHTML() + " - <strong>" + $.t("pending") + "</strong></td><td>" + String(data.description).escapeHTML() + "</td><td><a href='#' data-user='" + NRS.getAccountFormatted(NRS.accountRS) + "' class='user_info'>" + NRS.getAccountTitle(NRS.accountRS) + "</a></td><td>" + NRS.formatTimestamp(now) + "</td><td>/</td></tr>";
+			var rowToAdd = "<tr class='tentative'><td>" + String(data.name).escapeHTML() + " - <strong>" + $.t("pending") + "</strong></td><td>" + String(data.description).escapeHTML() + "</td><td><a href='#' data-user='" + NRS.getAccountFormatted(NRS.accountRS) + "' class='show_account_modal_action user_info'>" + NRS.getAccountTitle(NRS.accountRS) + "</a></td><td>" + NRS.formatTimestamp(now) + "</td><td>/</td></tr>";
 
 			$table.prepend(rowToAdd);
 
@@ -1064,7 +1064,7 @@ $("#poll_results_modal ul.nav li").click(function(e) {
 				"scrollTop": 0
 			}, 0);
 
-			$("#asset_account").html("<a href='#' data-user='" + NRS.getAccountFormatted(asset, "account") + "' class='user_info'>" + NRS.getAccountTitle(asset, "account") + "</a>");
+			$("#asset_account").html("<a href='#' data-user='" + NRS.getAccountFormatted(asset, "account") + "' class='show_account_modal_action user_info'>" + NRS.getAccountTitle(asset, "account") + "</a>");
 			$("#asset_id").html(assetId.escapeHTML());
 			$("#asset_decimals").html(String(asset.decimals).escapeHTML());
 			$("#asset_name").html(String(asset.name).escapeHTML());
@@ -1239,7 +1239,7 @@ $("#poll_results_modal ul.nav li").click(function(e) {
 
 					var className = (order.account == NRS.account ? "your-order" : "") + (order.unconfirmed ? " tentative" : (NRS.isUserCancelledOrder(order) ? " tentative tentative-crossed" : ""));
 
-					rows += "<tr class='" + className + "' data-transaction='" + String(order.order).escapeHTML() + "' data-quantity='" + order.quantityQNT.toString().escapeHTML() + "' data-price='" + order.priceNQT.toString().escapeHTML() + "'><td>" + (order.unconfirmed ? "You - <strong>Pending</strong>" : (order.account == NRS.account ? "<strong>You</strong>" : "<a href='#' data-user='" + NRS.getAccountFormatted(order, "account") + "' class='user_info'>" + (order.account == NRS.currentAsset.account ? "Asset Issuer" : NRS.getAccountTitle(order, "account")) + "</a>")) + "</td><td>" + NRS.formatQuantity(order.quantityQNT, NRS.currentAsset.decimals) + "</td><td>" + NRS.formatOrderPricePerWholeQNT(order.priceNQT, NRS.currentAsset.decimals) + "</td><td>" + NRS.formatAmount(order.totalNQT) + "</tr>";
+					rows += "<tr class='" + className + "' data-transaction='" + String(order.order).escapeHTML() + "' data-quantity='" + order.quantityQNT.toString().escapeHTML() + "' data-price='" + order.priceNQT.toString().escapeHTML() + "'><td>" + (order.unconfirmed ? "You - <strong>Pending</strong>" : (order.account == NRS.account ? "<strong>You</strong>" : "<a href='#' data-user='" + NRS.getAccountFormatted(order, "account") + "' class='show_account_modal_action user_info'>" + (order.account == NRS.currentAsset.account ? "Asset Issuer" : NRS.getAccountTitle(order, "account")) + "</a>")) + "</td><td>" + NRS.formatQuantity(order.quantityQNT, NRS.currentAsset.decimals) + "</td><td>" + NRS.formatOrderPricePerWholeQNT(order.priceNQT, NRS.currentAsset.decimals) + "</td><td>" + NRS.formatAmount(order.totalNQT) + "</tr>";
 				}
 
 				$("#asset_exchange_" + type + "_orders_table tbody").empty().append(rows);

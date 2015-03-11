@@ -359,6 +359,11 @@ final class TransactionImpl implements Transaction {
     }
 
     @Override
+    public int getValidationHeight() {
+        return phasing == null ? Nxt.getBlockchain().getHeight() : phasing.getFinishHeight();
+    }
+
+    @Override
     public byte[] getSignature() {
         return signature;
     }
@@ -468,7 +473,7 @@ final class TransactionImpl implements Transaction {
         if (stringId == null) {
             getId();
             if (stringId == null) {
-                stringId = Convert.toUnsignedLong(id);
+                stringId = Long.toUnsignedString(id);
             }
         }
         return stringId;
@@ -649,7 +654,7 @@ final class TransactionImpl implements Transaction {
         json.put("deadline", deadline);
         json.put("senderPublicKey", Convert.toHexString(getSenderPublicKey()));
         if (type.canHaveRecipient()) {
-            json.put("recipient", Convert.toUnsignedLong(recipientId));
+            json.put("recipient", Long.toUnsignedString(recipientId));
         }
         json.put("amountNQT", amountNQT);
         json.put("feeNQT", feeNQT);
@@ -657,7 +662,7 @@ final class TransactionImpl implements Transaction {
             json.put("referencedTransactionFullHash", referencedTransactionFullHash);
         }
         json.put("ecBlockHeight", ecBlockHeight);
-        json.put("ecBlockId", Convert.toUnsignedLong(ecBlockId));
+        json.put("ecBlockId", Long.toUnsignedString(ecBlockId));
         json.put("signature", Convert.toHexString(signature));
         JSONObject attachmentJSON = new JSONObject();
         for (Appendix appendage : appendages) {
@@ -881,7 +886,7 @@ final class TransactionImpl implements Transaction {
                 return 0; // No need to validate fees before baseline block
             }
             Fee fee = blockchainHeight >= appendage.getNextFeeHeight() ? appendage.getNextFee(this) : appendage.getBaselineFee(this);
-            totalFee = Convert.safeAdd(totalFee, fee.getFee(this, appendage));
+            totalFee = Math.addExact(totalFee, fee.getFee(this, appendage));
         }
         return totalFee;
     }

@@ -218,7 +218,8 @@ public final class PhasingPoll extends AbstractPoll {
         }
     }
 
-    public static DbIterator<TransactionImpl> getHoldingPendingTransactions(long holdingId, VoteWeighting.VotingModel votingModel, int from, int to) {
+    public static DbIterator<TransactionImpl> getHoldingPendingTransactions(long holdingId, VoteWeighting.VotingModel votingModel,
+                                                                            Account account, boolean withoutWhitelist, int from, int to) {
 
         Connection con = null;
         try {
@@ -229,12 +230,17 @@ public final class PhasingPoll extends AbstractPoll {
                     "AND phasing_poll.voting_model = ? " +
                     "AND phasing_poll.id = transaction.id " +
                     "AND phasing_poll.finish_height > ? " +
+                    (account != null ? "AND phasing_poll.account_id = ? " : "") +
+                    (withoutWhitelist ? "AND phasing_poll.whitelist_size = 0 " : "") +
                     "ORDER BY transaction.height DESC, transaction.transaction_index DESC " +
                     DbUtils.limitsClause(from, to));
             int i = 0;
             pstmt.setLong(++i, holdingId);
             pstmt.setByte(++i, votingModel.getCode());
             pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
+            if (account != null) {
+                pstmt.setLong(++i, account.getId());
+            }
             DbUtils.setLimits(++i, pstmt, from, to);
 
             return BlockchainImpl.getInstance().getTransactions(con, pstmt);
@@ -295,8 +301,7 @@ public final class PhasingPoll extends AbstractPoll {
         super(rs);
         this.dbKey = phasingPollDbKeyFactory.newKey(this.id);
         this.quorum = rs.getLong("quorum");
-        byte voterCount = rs.getByte("voter_count");
-        this.whitelist = voterCount == 0 ? Convert.EMPTY_LONG : Convert.toArray(votersTable.get(votersDbKeyFactory.newKey(this)));
+        this.whitelist = rs.getByte("whitelist_size") == 0 ? Convert.EMPTY_LONG : Convert.toArray(votersTable.get(votersDbKeyFactory.newKey(this)));
         this.fullHash = rs.getBytes("full_hash");
     }
 
@@ -319,7 +324,7 @@ public final class PhasingPoll extends AbstractPoll {
 
     private void save(Connection con) throws SQLException {
         try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO phasing_poll (id, account_id, "
-                + "finish_height, voter_count, voting_model, quorum, min_balance, holding_id, "
+                + "finish_height, whitelist_size, voting_model, quorum, min_balance, holding_id, "
                 + "min_balance_model, full_hash, height) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
             int i = 0;
             pstmt.setLong(++i, id);

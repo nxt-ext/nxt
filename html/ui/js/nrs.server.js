@@ -86,7 +86,8 @@ var NRS = (function(NRS, $, undefined) {
 				["priceNXT", "NQT"],
 				["refundNXT", "NQT"],
 				["discountNXT", "NQT"],
-				["phasingQuorumNXT", ""]
+				["phasingQuorumNXT", ""],
+				["phasingMinBalanceNXT", ""]
 			];
 
 			for (var i = 0; i < nxtFields.length; i++) {
@@ -107,23 +108,27 @@ var NRS = (function(NRS, $, undefined) {
 			}
 			return;
 		}
-		// convert currency decimal amount to base unit
+		// convert asset/currency decimal amount to base unit
 		try {
 			var currencyFields = [
-				["phasingQuorumQNTf", "phasingHoldingDecimals"]
+				["phasingQuorumQNTf", "phasingHoldingDecimals"],
+				["phasingMinBalanceQNTf", "phasingHoldingDecimals"]
 			];
-
+			var toDelete = [];
 			for (var i = 0; i < currencyFields.length; i++) {
 				var decimalUnitField = currencyFields[i][0];
 				var decimalsField = currencyFields[i][1];
 				var field = decimalUnitField.replace("QNTf", "");
 
 				if (decimalUnitField in data) {
-					data[field] = NRS.convertToQNT(parseInt(data[decimalUnitField]), parseInt(data[decimalsField]));
-					delete data[decimalUnitField];
-					delete data[decimalsField];
+					data[field] = NRS.convertToQNT(parseFloat(data[decimalUnitField]), parseInt(data[decimalsField]));
+					toDelete.push(decimalUnitField);
+					toDelete.push(decimalsField);
 				}
 			}
+			$(toDelete, function(key, value) {
+				delete data[value];
+			});
 		} catch (err) {
 			if (callback) {
 				callback({
@@ -387,32 +392,25 @@ var NRS = (function(NRS, $, undefined) {
 					if (!response.errorCode) {
 						response.errorCode = -1;
 					}
-				}
-
-				/*
-				if (response.errorCode && !response.errorDescription) {
-					response.errorDescription = (response.errorMessage ? response.errorMessage : $.t("error_unknown"));
-				} else if (response.error && !response.errorDescription) {
-					response.errorDescription = (typeof response.error == "string" ? response.error : $.t("error_unknown"));
-					if (!response.errorCode) {
-						response.errorCode = 1;
-					}
-				}
-				*/
-
-				if (response.broadcasted == false) {
-					NRS.showRawTransactionModal(response);
-				} else {
 					if (callback) {
-						if (extra) {
-							data["_extra"] = extra;
-						}
-						callback(response, data);
+						callback(response, data);	
 					}
-					if (data.referencedTransactionFullHash && !response.errorCode) {
-						$.growl($.t("info_referenced_transaction_hash"), {
-							"type": "info"
-						});
+					return;
+				} else {
+					if (response.broadcasted == false) {
+						NRS.showRawTransactionModal(response);
+					} else {
+						if (callback) {
+							if (extra) {
+								data["_extra"] = extra;
+							}
+							callback(response, data);
+						}
+						if (data.referencedTransactionFullHash && !response.errorCode) {
+							$.growl($.t("info_referenced_transaction_hash"), {
+								"type": "info"
+							});
+						}
 					}
 				}
 			}

@@ -1,6 +1,5 @@
 package nxt.http;
 
-import nxt.util.Convert;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONValue;
 import org.junit.Assert;
@@ -68,7 +67,7 @@ public class APICall {
         }
 
         public Builder recipient(long id) {
-            params.put("recipient", Convert.toUnsignedLong(id));
+            params.put("recipient", Long.toUnsignedString(id));
             return this;
         }
 

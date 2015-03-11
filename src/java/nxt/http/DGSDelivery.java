@@ -48,7 +48,7 @@ public final class DGSDelivery extends CreateTransaction {
         }
         if (discountNQT < 0
                 || discountNQT > Constants.MAX_BALANCE_NQT
-                || discountNQT > Convert.safeMultiply(purchase.getPriceNQT(), purchase.getQuantity())) {
+                || discountNQT > Math.multiplyExact(purchase.getPriceNQT(), (long) purchase.getQuantity())) {
             return INCORRECT_DGS_DISCOUNT;
         }
 

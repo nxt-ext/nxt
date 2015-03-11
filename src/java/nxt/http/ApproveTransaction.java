@@ -38,8 +38,8 @@ public class ApproveTransaction extends CreateTransaction {
         }
 
         List<byte[]> pendingTransactionFullHashes = new ArrayList<>(pendingTransactionValues.length);
-        for (int i = 0; i < pendingTransactionValues.length; i++) {
-            byte[] hash = Convert.parseHexString(pendingTransactionValues[i]);
+        for (String pendingTransactionValue : pendingTransactionValues) {
+            byte[] hash = Convert.parseHexString(pendingTransactionValue);
             PhasingPoll phasingPoll = PhasingPoll.getPoll(Convert.fullHashToId(hash));
             if (phasingPoll == null) {
                 return UNKNOWN_TRANSACTION;

@@ -15,16 +15,13 @@ final class AddPeers extends PeerServlet.PeerRequestHandler {
     JSONStreamAware processRequest(JSONObject request, Peer peer) {
         final JSONArray peers = (JSONArray)request.get("peers");
         if (peers != null && Peers.getMorePeers && !Peers.hasTooManyKnownPeers()) {
-            Peers.peersService.submit(new Runnable() {
-                @Override
-                public void run() {
-                    for (Object announcedAddress : peers) {
-                        Peer peer = Peers.findOrCreatePeer((String) announcedAddress, true);
-                        if (peer != null) {
-                            Peers.addPeer(peer);
-                            if (Peers.hasTooManyKnownPeers()) {
-                                break;
-                            }
+            Peers.peersService.submit(() -> {
+                for (Object announcedAddress : peers) {
+                    Peer newPeer = Peers.findOrCreatePeer((String) announcedAddress, true);
+                    if (newPeer != null) {
+                        Peers.addPeer(newPeer);
+                        if (Peers.hasTooManyKnownPeers()) {
+                            break;
                         }
                     }
                 }

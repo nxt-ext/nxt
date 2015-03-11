@@ -616,7 +616,7 @@ class NxtDbVersion extends DbVersion {
                         + "min_balance_model TINYINT, holding_id BIGINT, height INT NOT NULL)");
             case 237:
                 apply("CREATE TABLE IF NOT EXISTS poll_result (db_id IDENTITY, poll_id BIGINT NOT NULL, "
-                        + "option VARCHAR NOT NULL, result BIGINT NOT NULL,  height INT NOT NULL)");
+                        + "option VARCHAR NOT NULL, result BIGINT NOT NULL, height INT NOT NULL)");
             case 238:
                 apply("ALTER TABLE transaction ADD COLUMN IF NOT EXISTS phased BOOLEAN NOT NULL DEFAULT FALSE");
             case 239:
@@ -656,7 +656,7 @@ class NxtDbVersion extends DbVersion {
             case 252:
                 apply("CREATE INDEX IF NOT EXISTS phasing_poll_holding_id_idx ON phasing_poll(holding_id, height DESC)");
             case 253:
-                apply("CREATE UNIQUE INDEX IF NOT EXISTS phasing_vote_id_transaction_idx ON phasing_vote(id, transaction_id)");
+                apply(null);
             case 254:
                 apply("CREATE UNIQUE INDEX IF NOT EXISTS phasing_vote_transaction_voter_idx ON phasing_vote(transaction_id, voter_id)");
             case 255:
@@ -695,9 +695,23 @@ class NxtDbVersion extends DbVersion {
             case 271:
                 apply("ALTER TABLE sell_offer ADD COLUMN IF NOT EXISTS transaction_height INT NOT NULL");
             case 272:
-                BlockchainProcessorImpl.getInstance().scheduleScan(0, false);
                 apply(null);
             case 273:
+                apply("ALTER TABLE poll_result DROP COLUMN IF EXISTS option");
+            case 274:
+                apply("ALTER TABLE phasing_poll ALTER COLUMN voter_count RENAME TO whitelist_size");
+            case 275:
+                apply("ALTER TABLE poll_result ALTER COLUMN result SET NULL");
+            case 276:
+                BlockchainProcessorImpl.getInstance().scheduleScan(0, false);
+                apply(null);
+            case 277:
+                apply("DROP INDEX IF EXISTS poll_result_poll_id_idx");
+            case 278:
+                apply("CREATE INDEX IF NOT EXISTS poll_result_poll_id_idx ON poll_result(poll_id)");
+            case 279:
+                apply("CREATE INDEX IF NOT EXISTS phasing_vote_height_idx ON phasing_vote(height)");
+            case 280:
                 return;
             default:
                 throw new RuntimeException("Blockchain database inconsistent with code, at update " + nextUpdate + ", probably trying to run older code on newer database");

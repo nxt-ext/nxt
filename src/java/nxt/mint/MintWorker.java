@@ -17,7 +17,6 @@ import org.json.simple.JSONValue;
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSession;
 import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
@@ -55,11 +54,7 @@ import java.util.concurrent.Future;
 public class MintWorker {
 
     // Verify-all name verifier
-    private final static HostnameVerifier hostNameVerifier = new HostnameVerifier() {
-        public boolean verify(String hostname, SSLSession session) {
-            return true;
-        }
-    };
+    private final static HostnameVerifier hostNameVerifier = (hostname, session) -> true;
 
     // Trust-all socket factory
     private static final SSLSocketFactory sslSocketFactory;
@@ -235,7 +230,7 @@ public class MintWorker {
     private JSONObject getMintingTarget(long currencyId, String rsAccount, long units) {
         Map<String, String> params = new HashMap<>();
         params.put("requestType", "getMintingTarget");
-        params.put("currency", Convert.toUnsignedLong(currencyId));
+        params.put("currency", Long.toUnsignedString(currencyId));
         params.put("account", rsAccount);
         params.put("units", Long.toString(units));
         return getJsonResponse(params);

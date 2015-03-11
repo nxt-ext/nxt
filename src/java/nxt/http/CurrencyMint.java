@@ -10,7 +10,7 @@ import javax.servlet.http.HttpServletRequest;
 
 /**
  * Generate new currency units
- * </p>
+ * <p>
  * Parameters
  * <ul>
  * <li>currency - currency id of the minted currency</li>

@@ -573,10 +573,10 @@ public interface Appendix {
             json.put("phasingQuorum", quorum);
             json.put("phasingMinBalance", voteWeighting.getMinBalance());
             json.put("phasingVotingModel", voteWeighting.getVotingModel().getCode());
-            json.put("phasingHolding", Convert.toUnsignedLong(voteWeighting.getHoldingId()));
+            json.put("phasingHolding", Long.toUnsignedString(voteWeighting.getHoldingId()));
             JSONArray whitelistJson = new JSONArray();
             for (long accountId : whitelist) {
-                whitelistJson.add(Convert.toUnsignedLong(accountId));
+                whitelistJson.add(Long.toUnsignedString(accountId));
             }
             json.put("phasingWhitelist", whitelistJson);
             json.put("phasingMinBalanceModel", voteWeighting.getMinBalanceModel().getCode());
@@ -600,7 +600,7 @@ public interface Appendix {
                     throw new NxtException.NotValidException("Invalid accountId 0 in whitelist");
                 }
                 if (accountId == previousAccountId) {
-                    throw new NxtException.NotValidException("Duplicate accountId " + Convert.toUnsignedLong(accountId) + " in whitelist");
+                    throw new NxtException.NotValidException("Duplicate accountId " + Long.toUnsignedString(accountId) + " in whitelist");
                 }
                 previousAccountId = accountId;
             }
@@ -615,7 +615,7 @@ public interface Appendix {
 
             if (finishHeight < currentHeight + Constants.VOTING_MIN_VOTE_DURATION
                     || finishHeight > currentHeight + Constants.VOTING_MAX_VOTE_DURATION) {
-                throw new NxtException.NotValidException("Invalid finish height");
+                throw new NxtException.NotCurrentlyValidException("Invalid finish height");
             }
 
             voteWeighting.validate();

@@ -592,7 +592,7 @@ var NRS = (function(NRS, $, undefined) {
 							message = $.t("error_alias_sale_different_account");
 						}
 					} else {
-						message = "<a href='#' data-user='" + NRS.getAccountFormatted(response, "account") + "'>" + $.t("view_owner_info_q") + "</a>";
+						message = "<a href='#' class='show_account_modal_action' data-user='" + NRS.getAccountFormatted(response, "account") + "'>" + $.t("view_owner_info_q") + "</a>";
 					}
 
 					$("#register_alias_modal").find(".error_message").html(errorDescription + ". " + message);

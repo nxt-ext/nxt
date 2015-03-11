@@ -105,7 +105,7 @@ public class TestCurrencyExchange extends BlockchainTest {
         apiCall = new APICall.Builder("transferCurrency").
                 secretPhrase(secretPhrase1).feeNQT(Constants.ONE_NXT).
                 param("currency", currencyId).
-                param("recipient", Convert.toUnsignedLong(initialSellerBalance.getAccountId())).
+                param("recipient", Long.toUnsignedString(initialSellerBalance.getAccountId())).
                 param("units", "2000").
                 build();
         apiCall.invoke();

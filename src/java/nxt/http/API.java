@@ -163,18 +163,15 @@ public final class API {
             apiServer.setHandler(apiHandlers);
             apiServer.setStopAtShutdown(true);
 
-            ThreadPool.runBeforeStart(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        apiServer.start();
-                        Logger.logMessage("Started API server at " + host + ":" + port);
-                    } catch (Exception e) {
-                        Logger.logErrorMessage("Failed to start API server", e);
-                        throw new RuntimeException(e.toString(), e);
-                    }
-
+            ThreadPool.runBeforeStart(() -> {
+                try {
+                    apiServer.start();
+                    Logger.logMessage("Started API server at " + host + ":" + port);
+                } catch (Exception e) {
+                    Logger.logErrorMessage("Failed to start API server", e);
+                    throw new RuntimeException(e.toString(), e);
                 }
+
             }, true);
 
         } else {

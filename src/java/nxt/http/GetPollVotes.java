@@ -13,7 +13,9 @@ import javax.servlet.http.HttpServletRequest;
 public class GetPollVotes extends APIServlet.APIRequestHandler  {
     static final GetPollVotes instance = new GetPollVotes();
 
-    private GetPollVotes() { super(new APITag[] {APITag.VS}, "poll"); }
+    private GetPollVotes() {
+        super(new APITag[] {APITag.VS}, "poll", "firstIndex", "lastIndex");
+    }
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
@@ -26,7 +28,7 @@ public class GetPollVotes extends APIServlet.APIRequestHandler  {
         JSONArray votesJson = new JSONArray();
         try (DbIterator<Vote> votes = Vote.getVotes(poll.getId(), firstIndex, lastIndex)) {
             for (Vote vote : votes) {
-                votesJson.add(JSONData.vote(poll, vote));
+                votesJson.add(JSONData.vote(vote));
             }
         }
         JSONObject response = new JSONObject();

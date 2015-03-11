@@ -5,7 +5,6 @@ import nxt.Constants;
 import nxt.Nxt;
 import nxt.VoteWeighting;
 import nxt.http.APICall;
-import nxt.util.Convert;
 import nxt.util.Logger;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -50,7 +49,7 @@ public class TestCreateTwoPhased extends BlockchainTest {
             param("phased", "true");
             param("phasingVotingModel", VoteWeighting.VotingModel.ACCOUNT.getCode());
             param("phasingQuorum", 1);
-            param("phasingWhitelisted", Convert.toUnsignedLong(id3));
+            param("phasingWhitelisted", Long.toUnsignedString(id3));
             param("phasingFinishHeight", height + 50);
         }
 
@@ -86,12 +85,12 @@ public class TestCreateTwoPhased extends BlockchainTest {
         }
 
         public TwoPhasedMoneyTransferBuilder whitelisted(long accountId) {
-            param("phasingWhitelisted", Convert.toUnsignedLong(accountId));
+            param("phasingWhitelisted", Long.toUnsignedString(accountId));
             return this;
         }
 
         public TwoPhasedMoneyTransferBuilder holding(long accountId) {
-            param("phasingHolding", Convert.toUnsignedLong(accountId));
+            param("phasingHolding", Long.toUnsignedString(accountId));
             return this;
         }
     }

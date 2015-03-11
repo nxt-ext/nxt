@@ -198,23 +198,20 @@ public abstract class EntityDbTable<T> extends DerivedDbTable {
 
     public final DbIterator<T> getManyBy(Connection con, PreparedStatement pstmt, boolean cache) {
         final boolean doCache = cache && db.isInTransaction();
-        return new DbIterator<>(con, pstmt, new DbIterator.ResultSetReader<T>() {
-            @Override
-            public T get(Connection con, ResultSet rs) throws Exception {
-                T t = null;
-                DbKey dbKey = null;
-                if (doCache) {
-                    dbKey = dbKeyFactory.newKey(rs);
-                    t = (T) db.getCache(table).get(dbKey);
-                }
-                if (t == null) {
-                    t = load(con, rs);
-                    if (doCache) {
-                        db.getCache(table).put(dbKey, t);
-                    }
-                }
-                return t;
+        return new DbIterator<>(con, pstmt, (connection, rs) -> {
+            T t = null;
+            DbKey dbKey = null;
+            if (doCache) {
+                dbKey = dbKeyFactory.newKey(rs);
+                t = (T) db.getCache(table).get(dbKey);
             }
+            if (t == null) {
+                t = load(connection, rs);
+                if (doCache) {
+                    db.getCache(table).put(dbKey, t);
+                }
+            }
+            return t;
         });
     }
 

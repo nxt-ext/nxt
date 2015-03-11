@@ -85,7 +85,7 @@
                 <li role="presentation" class="active show_popover" data-toggle="popover" data-delay="250" data-placement="top" data-content="Transaction don't need further approval to become valid" data-container="#{{name}}_approve_modal" data-i18n="[data-content]approve_modal_no_approval_tab_help">
                     <a href="#{{name}}_approve_tab_no_approval" aria-controls="{{name}}_approve_tab_no_approval" class="at_no_approval" role="tab" data-fee-nxt-approval-addition="0" data-toggle="tab"><span class="label label-default"><i class="fa fa-gavel"></i></span> <span class="label label-default"><i class="ion-close-circled"></i></span></a></li>
                 <li role="presentation" class="show_popover" data-toggle="popover" data-placement="top" data-content="Transaction has to be approved by a certain number of accounts" data-container="#{{name}}_approve_modal" data-i18n="[data-content]approve_modal_by_account_tab_help">
-                    <a href="#{{name}}_approve_tab_accounts" aria-controls="{{name}}_approve_tab_accounts" class="at_accounts" role="tab" data-fee-nxt-approval-addition="2" data-toggle="tab"><span class="label label-default"><i class="fa fa-gavel"></i></span> <span class="label label-warning"><i class="fa fa-group"></i></span></a>
+                    <a href="#{{name}}_approve_tab_accounts" aria-controls="{{name}}_approve_tab_accounts" class="at_accounts" role="tab" data-fee-nxt-approval-addition="1" data-toggle="tab"><span class="label label-default"><i class="fa fa-gavel"></i></span> <span class="label label-warning"><i class="fa fa-group"></i></span></a>
                 </li>    
                 <li role="presentation" class="show_popover" data-toggle="popover" data-placement="top" data-content="Transaction has to be approved by accounts holding a certain amount of NXT" data-container="#{{name}}_approve_modal" data-i18n="[data-content]approve_modal_by_balance_tab_help">
                     <a href="#{{name}}_approve_tab_balance" aria-controls="{{name}}_approve_tab_balance" class="at_balance" role="tab" data-fee-nxt-approval-addition="20" data-toggle="tab"><span class="label label-default"><i class="fa fa-gavel"></i></span> <span class="label label-warning"><i class="fa fa-money"></i></span></a>
@@ -118,43 +118,52 @@
                             <div class="form-group pending_finish_height_group" data-modal-ui-element="block_height_modal_ui_element"></div>
                         </div>
                     </div>
+                    <div class="form-group add_approval_whitelist_group" data-modal-ui-element="multi_accounts_modal_ui_element"></div>
+                    <div class="row">
+                        <div class="col-xs-6">
+                            <div class="form-group approve_min_balance_model_group approve_mb_accounts" data-modal-ui-element="min_balance_model_modal_ui_element"></div>
+                        </div>
+                        <div class="col-xs-6">
+                            <div class="form-group approve_mb_model_1 approve_min_balance_nxt" data-modal-ui-element="simple_input_with_addon_modal_ui_element"></div>
+                            <div class="form-group approve_mb_model_2 approve_min_balance_asset_quantity" data-modal-ui-element="simple_input_with_addon_modal_ui_element"></div>
+                            <div class="form-group approve_mb_model_3 approve_min_balance_currency_units" data-modal-ui-element="simple_input_with_addon_modal_ui_element"></div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-xs-12">
+                            <div class="form-group approve_holding_asset_optional approve_mb_model_2" data-modal-ui-element="add_asset_modal_ui_element"></div>
+                            <div class="form-group approve_holding_currency_optional approve_mb_model_3" data-modal-ui-element="add_currency_modal_ui_element"></div>
+                        </div>
+                    </div>
                     <input type="hidden" name="phased" value="true" disabled />
                     <input type="hidden" name="phasingVotingModel" value="0" disabled />
-                    <input type="hidden" name="phasingMinBalance" value="0" disabled/>
                 </div>
 
                 <div role="tabpanel" class="tab-pane tab_pane_approve" id="{{name}}_approve_tab_balance">
                     <div class="row">
                         <div class="col-xs-6">
-                            <div class="form-group">
-                                <label data-i18n="approve_amount_nxt">Amount NXT</label>
-                                <i class="fa fa-question-circle modal-context-help" data-content="" data-toggle="popover" data-trigger="hover" data-container="#{{name}}_approve_modal" data-i18n="[data-content]approve_transaction_amount_help"></i>
-                                <div class="input-group">
-                                    <input type="text" name="phasingQuorumNXT" step="any" min="0" class="form-control" placeholder="Amount" data-i18n="[placeholder]amount" tabindex="3" disabled>
-                                    <span class="input-group-addon">NXT</span>
-                                </div>
-                            </div>
+                            <div class="form-group approve_transaction_amount_nxt" data-modal-ui-element="simple_input_with_addon_modal_ui_element"></div>
                         </div>
                         <div class="col-xs-6">
                             <div class="form-group pending_finish_height_group" data-modal-ui-element="block_height_modal_ui_element"></div>
                         </div>
                     </div>
+                    <div class="form-group add_approval_whitelist_group" data-modal-ui-element="multi_accounts_modal_ui_element"></div>
+                    <div class="row">
+                        <div class="col-xs-6">
+                            <div class="form-group approve_min_balance_model_group approve_mb_balance" data-modal-ui-element="min_balance_model_modal_ui_element"></div>
+                        </div>
+                        <div class="col-xs-6">
+                        </div>
+                    </div>
                     <input type="hidden" name="phased" value="true" disabled />
                     <input type="hidden" name="phasingVotingModel" value="1" disabled />
-                    <input type="hidden" name="phasingMinBalance" value="0" disabled/>
                 </div>
 
                 <div role="tabpanel" class="tab-pane tab_pane_approve" id="{{name}}_approve_tab_asset_holders">
                     <div class="row">
                         <div class="col-xs-6">
-                            <div class="form-group">
-                                <label data-i18n="asset_quantity">Asset Quantity</label>
-                                <i class="fa fa-question-circle modal-context-help" data-content="" data-toggle="popover" data-trigger="hover" data-container="#{{name}}_approve_modal" data-i18n="[data-content]approve_transaction_amount_help"></i>
-                                <div class="input-group">
-                                    <input type="text" name="phasingQuorumQNTf" step="any" min="0" class="form-control" placeholder="Asset Quantity" data-i18n="[placeholder]asset_quantity" tabindex="3" disabled>
-                                    <span class="input-group-addon">Quantity</span>
-                                </div>
-                            </div>
+                            <div class="form-group approve_transaction_asset_quantity" data-modal-ui-element="simple_input_with_addon_modal_ui_element"></div>
                         </div>
                         <div class="col-xs-6">
                             <div class="form-group pending_finish_height_group" data-modal-ui-element="block_height_modal_ui_element"></div>
@@ -162,65 +171,47 @@
                     </div>
                     <div class="row">
                         <div class="col-xs-12">
-                            <div class="form-group" data-modal-ui-element="add_asset_modal_ui_element"></div>
+                            <div class="form-group approve_holding_asset" data-modal-ui-element="add_asset_modal_ui_element"></div>
+                        </div>
+                    </div>
+                    <div class="form-group add_approval_whitelist_group" data-modal-ui-element="multi_accounts_modal_ui_element"></div>
+                    <div class="row">
+                        <div class="col-xs-6">
+                            <div class="form-group approve_min_balance_model_group approve_mb_asset" data-modal-ui-element="min_balance_model_modal_ui_element"></div>
+                        </div>
+                        <div class="col-xs-6">
+                            <div class="form-group approve_mb_model_2 approve_min_balance_asset_quantity" data-modal-ui-element="simple_input_with_addon_modal_ui_element"></div>
                         </div>
                     </div>
                     <input type="hidden" name="phased" value="true" disabled />
                     <input type="hidden" name="phasingVotingModel" value="2" disabled />
-                    <input type="hidden" name="phasingMinBalance" value="0" disabled/>
                 </div>
 
                 <div role="tabpanel" class="tab-pane tab_pane_approve" id="{{name}}_approve_tab_currency_holders">
                     <div class="row">
                         <div class="col-xs-6">
-                            <div class="form-group">
-                                <label data-i18n="currency_units">Currency Units</label>
-                                <i class="fa fa-question-circle modal-context-help" data-content="" data-toggle="popover" data-trigger="hover" data-container="#{{name}}_approve_modal" data-i18n="[data-content]approve_transaction_amount_help"></i>
-                                <div class="input-group">
-                                    <input type="text" name="phasingQuorumQNTf" step="any" min="0" class="form-control" placeholder="Currency Units" data-i18n="[placeholder]currency_units" tabindex="3" disabled>
-                                    <span class="input-group-addon">Units</span>
-                                </div>
-                            </div>
+                            <div class="form-group approve_transaction_currency_units" data-modal-ui-element="simple_input_with_addon_modal_ui_element"></div>
                         </div>
                         <div class="col-xs-6">
                             <div class="form-group pending_finish_height_group" data-modal-ui-element="block_height_modal_ui_element"></div>
                         </div>
                     </div>
                     <div class="row">
+                        <div class="col-xs-12">
+                            <div class="form-group approve_holding_currency" data-modal-ui-element="add_currency_modal_ui_element"></div>
+                        </div>
+                    </div>
+                    <div class="form-group add_approval_whitelist_group" data-modal-ui-element="multi_accounts_modal_ui_element"></div>
+                    <div class="row">
                         <div class="col-xs-6">
-                            <div class="form-group" data-modal-ui-element="add_currency_modal_ui_element"></div>
+                            <div class="form-group approve_min_balance_model_group approve_mb_currency" data-modal-ui-element="min_balance_model_modal_ui_element"></div>
+                        </div>
+                        <div class="col-xs-6">
+                            <div class="form-group approve_mb_model_3 approve_min_balance_currency_units" data-modal-ui-element="simple_input_with_addon_modal_ui_element"></div>
                         </div>
                     </div>
                     <input type="hidden" name="phased" value="true" disabled />
                     <input type="hidden" name="phasingVotingModel" value="3" disabled />
-                    <input type="hidden" name="phasingMinBalance" value="0" disabled/>
-                </div>
-            </div>
-        </div>
-        
-        <div class="approve_whitelist_accounts account_box" style="display:none;">
-            <div class="row">
-                <div class="col-xs-12 added_account_list">
-                    <label data-i18n="accounts">Accounts</label>
-                    <i class="fa fa-question-circle modal-context-help" data-content="The following accounts will be requested to approve the transaction." data-toggle="popover" data-trigger="hover" data-container="#{{name}}_approve_modal" data-i18n="[data-content]approve_tx_accounts_requested_help"></i>
-                    <div class="form-group form_group_accounts">
-                        <div class="input-group">
-                            <input type="text" class="form-control plain_adress_selector_input" name="phasingWhitelisted" placeholder="Account" data-i18n="[placeholder]account" disabled />
-                            <div class="pas_contact_info">&nbsp;</div>
-                            <span class="input-group-btn">
-                                <button class="btn btn-default remove_account_btn" type="button"><i class="fa fa-minus"></i></button>
-                            </span>
-                            <span class="input-group-btn btn-group plain_adress_selector">
-                                <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown"><span class="glyphicon glyphicon-user"></span></button>
-                                <ul class="dropdown-menu scrollable-menu" role="menu" style="right:0;left:auto;"></ul>
-                            </span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="row form-group">
-                <div class="col-xs-12">
-                    <a href="#" class="btn btn-primary add_account_btn"><i class="fa fa-plus"></i> <span data-i18n="add_account">Add Account</span></a>
                 </div>
             </div>
         </div>
