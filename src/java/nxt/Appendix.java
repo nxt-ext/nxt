@@ -93,7 +93,7 @@ public interface Appendix {
         }
 
         @Override
-        public Fee getBaselineFee(Transaction transaction) throws NxtException.NotValidException {
+        public Fee getBaselineFee(Transaction transaction) {
             return Fee.NONE;
         }
 
@@ -103,7 +103,7 @@ public interface Appendix {
         }
 
         @Override
-        public Fee getNextFee(Transaction transaction) throws NxtException.NotValidException {
+        public Fee getNextFee(Transaction transaction) {
             return getBaselineFee(transaction);
         }
 
@@ -625,7 +625,7 @@ public interface Appendix {
         }
 
         @Override
-        public Fee getBaselineFee(Transaction transaction) throws NxtException.NotValidException {
+        public Fee getBaselineFee(Transaction transaction) {
             if (voteWeighting.isBalanceIndependent()) {
                 return Fee.DEFAULT_FEE;
             }

@@ -889,7 +889,7 @@ final class TransactionImpl implements Transaction {
         return type.isUnconfirmedDuplicate(this, duplicates);
     }
 
-    long getMinimumFeeNQT(int blockchainHeight) throws NxtException.NotValidException {
+    long getMinimumFeeNQT(int blockchainHeight) {
         long totalFee = 0;
         for (Appendix.AbstractAppendix appendage : appendages) {
             if (blockchainHeight < appendage.getBaselineFeeHeight()) {
