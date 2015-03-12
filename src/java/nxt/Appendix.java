@@ -318,7 +318,7 @@ public interface Appendix {
             return new EncryptedMessage(attachmentData);
         }
 
-        EncryptedMessage(ByteBuffer buffer, byte transactionVersion) throws NxtException.ValidationException {
+        EncryptedMessage(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
             super(buffer, transactionVersion);
         }
 
@@ -364,7 +364,7 @@ public interface Appendix {
             return new EncryptToSelfMessage(attachmentData);
         }
 
-        EncryptToSelfMessage(ByteBuffer buffer, byte transactionVersion) throws NxtException.ValidationException {
+        EncryptToSelfMessage(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
             super(buffer, transactionVersion);
         }
 

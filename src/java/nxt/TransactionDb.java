@@ -73,7 +73,7 @@ final class TransactionDb {
         }
     }
 
-    static TransactionImpl loadTransaction(Connection con, ResultSet rs) throws NxtException.ValidationException {
+    static TransactionImpl loadTransaction(Connection con, ResultSet rs) throws NxtException.NotValidException {
         try {
 
             byte type = rs.getByte("type");

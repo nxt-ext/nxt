@@ -293,11 +293,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 BlockImpl block;
                 try {
                     block = BlockImpl.parseBlock(blockData);
-                } catch (NxtException.NotCurrentlyValidException e) {
-                    Logger.logDebugMessage("Cannot validate block: " + e.toString()
-                            + ", will try again later", e);
-                    break;
-                } catch (RuntimeException | NxtException.ValidationException e) {
+                } catch (RuntimeException | NxtException.NotValidException e) {
                     Logger.logDebugMessage("Failed to parse block: " + e.toString(), e);
                     peer.blacklist(e);
                     return;

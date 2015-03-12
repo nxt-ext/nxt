@@ -41,7 +41,7 @@ final class BlockImpl implements Block {
 
     BlockImpl(int version, int timestamp, long previousBlockId, long totalAmountNQT, long totalFeeNQT, int payloadLength, byte[] payloadHash,
               byte[] generatorPublicKey, byte[] generationSignature, byte[] blockSignature, byte[] previousBlockHash, List<TransactionImpl> transactions)
-            throws NxtException.ValidationException {
+            throws NxtException.NotValidException {
 
         if (payloadLength > Constants.MAX_PAYLOAD_LENGTH || payloadLength < 0) {
             throw new NxtException.NotValidException("attempted to create a block with payloadLength " + payloadLength);
@@ -69,7 +69,7 @@ final class BlockImpl implements Block {
     BlockImpl(int version, int timestamp, long previousBlockId, long totalAmountNQT, long totalFeeNQT, int payloadLength,
               byte[] payloadHash, long generatorId, byte[] generationSignature, byte[] blockSignature,
               byte[] previousBlockHash, BigInteger cumulativeDifficulty, long baseTarget, long nextBlockId, int height, long id)
-            throws NxtException.ValidationException {
+            throws NxtException.NotValidException {
         this(version, timestamp, previousBlockId, totalAmountNQT, totalFeeNQT, payloadLength, payloadHash,
                 null, generationSignature, blockSignature, previousBlockHash, null);
         this.cumulativeDifficulty = cumulativeDifficulty;
@@ -239,7 +239,7 @@ final class BlockImpl implements Block {
         return json;
     }
 
-    static BlockImpl parseBlock(JSONObject blockData) throws NxtException.ValidationException {
+    static BlockImpl parseBlock(JSONObject blockData) throws NxtException.NotValidException {
         try {
             int version = ((Long) blockData.get("version")).intValue();
             int timestamp = ((Long) blockData.get("timestamp")).intValue();
@@ -258,7 +258,7 @@ final class BlockImpl implements Block {
             }
             return new BlockImpl(version, timestamp, previousBlock, totalAmountNQT, totalFeeNQT, payloadLength, payloadHash, generatorPublicKey,
                     generationSignature, blockSignature, previousBlockHash, blockTransactions);
-        } catch (NxtException.ValidationException|RuntimeException e) {
+        } catch (NxtException.NotValidException|RuntimeException e) {
             Logger.logDebugMessage("Failed to parse block: " + blockData.toJSONString());
             throw e;
         }
