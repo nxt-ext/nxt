@@ -505,9 +505,6 @@ public interface Appendix {
             for (int pvc = 0; pvc < whitelist.length; pvc++) {
                 whitelist[pvc] = buffer.getLong();
             }
-            if (whitelist.length > 0) {
-                Arrays.sort(whitelist);
-            }
             long holdingId = buffer.getLong();
             byte minBalanceModel = buffer.get();
             voteWeighting = new VoteWeighting(votingModel, holdingId, minBalance, minBalanceModel);
@@ -524,9 +521,6 @@ public interface Appendix {
             whitelist = new long[whitelistJson.size()];
             for (int i = 0; i < whitelist.length; i++) {
                 whitelist[i] = Convert.parseUnsignedLong((String) whitelistJson.get(i));
-            }
-            if (whitelist.length > 0) {
-                Arrays.sort(whitelist);
             }
             byte minBalanceModel = ((Long) attachmentData.get("phasingMinBalanceModel")).byteValue();
             voteWeighting = new VoteWeighting(votingModel, holdingId, minBalance, minBalanceModel);
@@ -598,6 +592,9 @@ public interface Appendix {
             for (long accountId : whitelist) {
                 if (accountId == 0) {
                     throw new NxtException.NotValidException("Invalid accountId 0 in whitelist");
+                }
+                if (previousAccountId != 0 && accountId < previousAccountId) {
+                    throw new NxtException.NotValidException("Whitelist not sorted " + Arrays.toString(whitelist));
                 }
                 if (accountId == previousAccountId) {
                     throw new NxtException.NotValidException("Duplicate accountId " + Long.toUnsignedString(accountId) + " in whitelist");

@@ -256,37 +256,45 @@ final class BlockImpl implements Block {
             for (Object transactionData : (JSONArray) blockData.get("transactions")) {
                 blockTransactions.add(TransactionImpl.parseTransaction((JSONObject) transactionData));
             }
-            return new BlockImpl(version, timestamp, previousBlock, totalAmountNQT, totalFeeNQT, payloadLength, payloadHash, generatorPublicKey,
+            BlockImpl block = new BlockImpl(version, timestamp, previousBlock, totalAmountNQT, totalFeeNQT, payloadLength, payloadHash, generatorPublicKey,
                     generationSignature, blockSignature, previousBlockHash, blockTransactions);
+            if (!block.checkSignature()) {
+                throw new NxtException.NotValidException("Invalid block signature");
+            }
+            return block;
         } catch (NxtException.NotValidException|RuntimeException e) {
             Logger.logDebugMessage("Failed to parse block: " + blockData.toJSONString());
             throw e;
         }
     }
 
+    private volatile byte[] bytes = null;
     byte[] getBytes() {
-        ByteBuffer buffer = ByteBuffer.allocate(4 + 4 + 8 + 4 + (version < 3 ? (4 + 4) : (8 + 8)) + 4 + 32 + 32 + (32 + 32) + 64);
-        buffer.order(ByteOrder.LITTLE_ENDIAN);
-        buffer.putInt(version);
-        buffer.putInt(timestamp);
-        buffer.putLong(previousBlockId);
-        buffer.putInt(getTransactions().size());
-        if (version < 3) {
-            buffer.putInt((int)(totalAmountNQT / Constants.ONE_NXT));
-            buffer.putInt((int)(totalFeeNQT / Constants.ONE_NXT));
-        } else {
-            buffer.putLong(totalAmountNQT);
-            buffer.putLong(totalFeeNQT);
+        if (bytes == null) {
+            ByteBuffer buffer = ByteBuffer.allocate(4 + 4 + 8 + 4 + (version < 3 ? (4 + 4) : (8 + 8)) + 4 + 32 + 32 + (32 + 32) + 64);
+            buffer.order(ByteOrder.LITTLE_ENDIAN);
+            buffer.putInt(version);
+            buffer.putInt(timestamp);
+            buffer.putLong(previousBlockId);
+            buffer.putInt(getTransactions().size());
+            if (version < 3) {
+                buffer.putInt((int) (totalAmountNQT / Constants.ONE_NXT));
+                buffer.putInt((int) (totalFeeNQT / Constants.ONE_NXT));
+            } else {
+                buffer.putLong(totalAmountNQT);
+                buffer.putLong(totalFeeNQT);
+            }
+            buffer.putInt(payloadLength);
+            buffer.put(payloadHash);
+            buffer.put(getGeneratorPublicKey());
+            buffer.put(generationSignature);
+            if (version > 1) {
+                buffer.put(previousBlockHash);
+            }
+            buffer.put(blockSignature);
+            bytes = buffer.array();
         }
-        buffer.putInt(payloadLength);
-        buffer.put(payloadHash);
-        buffer.put(getGeneratorPublicKey());
-        buffer.put(generationSignature);
-        if (version > 1) {
-            buffer.put(previousBlockHash);
-        }
-        buffer.put(blockSignature);
-        return buffer.array();
+        return Arrays.copyOf(bytes, bytes.length);
     }
 
     void sign(String secretPhrase) {
@@ -301,18 +309,20 @@ final class BlockImpl implements Block {
     }
 
     boolean verifyBlockSignature() {
-
         Account account = Account.getAccount(getGeneratorId());
-        if (account == null) {
-            return false;
+        return account != null && checkSignature() && account.setOrVerify(getGeneratorPublicKey());
+    }
+
+    private volatile boolean hasValidSignature = false;
+
+    private boolean checkSignature() {
+        if (! hasValidSignature) {
+            byte[] data = getBytes();
+            byte[] data2 = new byte[data.length - 64];
+            System.arraycopy(data, 0, data2, 0, data2.length);
+            hasValidSignature = blockSignature != null && Crypto.verify(blockSignature, data2, getGeneratorPublicKey(), version >= 3);
         }
-
-        byte[] data = getBytes();
-        byte[] data2 = new byte[data.length - 64];
-        System.arraycopy(data, 0, data2, 0, data2.length);
-
-        return Crypto.verify(blockSignature, data2, getGeneratorPublicKey(), version >= 3) && account.setOrVerify(getGeneratorPublicKey());
-
+        return hasValidSignature;
     }
 
     boolean verifyGenerationSignature() throws BlockchainProcessor.BlockOutOfOrderException {

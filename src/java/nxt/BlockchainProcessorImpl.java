@@ -34,6 +34,8 @@ import java.util.Map;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 
 final class BlockchainProcessorImpl implements BlockchainProcessor {
 
@@ -281,41 +283,52 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         }
 
         private void downloadBlockchain(final Peer peer, final Block commonBlock) {
-            JSONArray nextBlocks = getNextBlocks(peer, commonBlock.getId());
-            if (nextBlocks == null || nextBlocks.size() == 0) {
+            JSONArray nextBlocksJSON = getNextBlocks(peer, commonBlock.getId());
+            if (nextBlocksJSON == null || nextBlocksJSON.size() == 0) {
                 return;
             }
 
             List<BlockImpl> forkBlocks = new ArrayList<>();
-
-            for (Object o : nextBlocks) {
-                JSONObject blockData = (JSONObject) o;
-                BlockImpl block;
-                try {
-                    block = BlockImpl.parseBlock(blockData);
-                } catch (RuntimeException | NxtException.NotValidException e) {
-                    Logger.logDebugMessage("Failed to parse block: " + e.toString(), e);
-                    peer.blacklist(e);
-                    return;
-                }
-
-                if (blockchain.getLastBlock().getId() == block.getPreviousBlockId()) {
+            List<Future<BlockImpl>> futures = new ArrayList<>();
+            for (Object blockData : nextBlocksJSON) {
+                futures.add(ThreadPool.submit(() -> {
                     try {
-                        pushBlock(block);
-                        if (blockchain.getHeight() - commonBlock.getHeight() == 720 - 1) {
-                            break;
-                        }
-                    } catch (BlockNotAcceptedException e) {
+                        return BlockImpl.parseBlock((JSONObject) blockData);
+                    } catch (RuntimeException | NxtException.NotValidException e) {
+                        Logger.logDebugMessage("Failed to parse block: " + e.toString(), e);
                         peer.blacklist(e);
+                        return null;
+                    }
+                }));
+            }
+            try {
+                for (Future<BlockImpl> future : futures) {
+                    BlockImpl block = future.get();
+                    if (block == null) {
                         return;
                     }
-                } else {
-                    forkBlocks.add(block);
-                    if (forkBlocks.size() == 720 - 1) {
-                        break;
+                    if (blockchain.getLastBlock().getId() == block.getPreviousBlockId()) {
+                        try {
+                            pushBlock(block);
+                            if (blockchain.getHeight() - commonBlock.getHeight() == 720 - 1) {
+                                break;
+                            }
+                        } catch (BlockNotAcceptedException e) {
+                            peer.blacklist(e);
+                            return;
+                        }
+                    } else {
+                        forkBlocks.add(block);
+                        if (forkBlocks.size() == 720 - 1) {
+                            break;
+                        }
                     }
                 }
-
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new RuntimeException(e.getMessage(), e);
+            } catch (ExecutionException e) {
+                throw new RuntimeException(e.getMessage(), e);
             }
 
             if (forkBlocks.size() > 0 && blockchain.getHeight() - commonBlock.getHeight() < 720) {

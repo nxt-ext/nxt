@@ -150,6 +150,7 @@ final class TransactionDb {
         try (Connection con = Db.db.getConnection();
              PreparedStatement pstmt = con.prepareStatement("SELECT * FROM transaction WHERE block_id = ? ORDER BY transaction_index")) {
             pstmt.setLong(1, blockId);
+            pstmt.setFetchSize(50);
             try (ResultSet rs = pstmt.executeQuery()) {
                 List<TransactionImpl> list = new ArrayList<>();
                 while (rs.next()) {

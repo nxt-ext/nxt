@@ -526,48 +526,52 @@ final class TransactionImpl implements Transaction {
         return publicKeyAnnouncement;
     }
 
+    private volatile byte[] bytes = null;
     @Override
     public byte[] getBytes() {
-        try {
-            ByteBuffer buffer = ByteBuffer.allocate(getSize());
-            buffer.order(ByteOrder.LITTLE_ENDIAN);
-            buffer.put(type.getType());
-            buffer.put((byte) ((version << 4) | type.getSubtype()));
-            buffer.putInt(timestamp);
-            buffer.putShort(deadline);
-            buffer.put(getSenderPublicKey());
-            buffer.putLong(type.canHaveRecipient() ? recipientId : Genesis.CREATOR_ID);
-            if (useNQT()) {
-                buffer.putLong(amountNQT);
-                buffer.putLong(feeNQT);
-                if (referencedTransactionFullHash != null) {
-                    buffer.put(Convert.parseHexString(referencedTransactionFullHash));
+        if (bytes == null) {
+            try {
+                ByteBuffer buffer = ByteBuffer.allocate(getSize());
+                buffer.order(ByteOrder.LITTLE_ENDIAN);
+                buffer.put(type.getType());
+                buffer.put((byte) ((version << 4) | type.getSubtype()));
+                buffer.putInt(timestamp);
+                buffer.putShort(deadline);
+                buffer.put(getSenderPublicKey());
+                buffer.putLong(type.canHaveRecipient() ? recipientId : Genesis.CREATOR_ID);
+                if (useNQT()) {
+                    buffer.putLong(amountNQT);
+                    buffer.putLong(feeNQT);
+                    if (referencedTransactionFullHash != null) {
+                        buffer.put(Convert.parseHexString(referencedTransactionFullHash));
+                    } else {
+                        buffer.put(new byte[32]);
+                    }
                 } else {
-                    buffer.put(new byte[32]);
+                    buffer.putInt((int) (amountNQT / Constants.ONE_NXT));
+                    buffer.putInt((int) (feeNQT / Constants.ONE_NXT));
+                    if (referencedTransactionFullHash != null) {
+                        buffer.putLong(Convert.fullHashToId(Convert.parseHexString(referencedTransactionFullHash)));
+                    } else {
+                        buffer.putLong(0L);
+                    }
                 }
-            } else {
-                buffer.putInt((int) (amountNQT / Constants.ONE_NXT));
-                buffer.putInt((int) (feeNQT / Constants.ONE_NXT));
-                if (referencedTransactionFullHash != null) {
-                    buffer.putLong(Convert.fullHashToId(Convert.parseHexString(referencedTransactionFullHash)));
-                } else {
-                    buffer.putLong(0L);
+                buffer.put(signature != null ? signature : new byte[64]);
+                if (version > 0) {
+                    buffer.putInt(getFlags());
+                    buffer.putInt(ecBlockHeight);
+                    buffer.putLong(ecBlockId);
                 }
+                for (Appendix appendage : appendages) {
+                    appendage.putBytes(buffer);
+                }
+                bytes = buffer.array();
+            } catch (RuntimeException e) {
+                Logger.logDebugMessage("Failed to get transaction bytes for transaction: " + getJSONObject().toJSONString());
+                throw e;
             }
-            buffer.put(signature != null ? signature : new byte[64]);
-            if (version > 0) {
-                buffer.putInt(getFlags());
-                buffer.putInt(ecBlockHeight);
-                buffer.putLong(ecBlockId);
-            }
-            for (Appendix appendage : appendages) {
-                appendage.putBytes(buffer);
-            }
-            return buffer.array();
-        } catch (RuntimeException e) {
-            Logger.logDebugMessage("Failed to get transaction bytes for transaction: " + getJSONObject().toJSONString());
-            throw e;
         }
+        return Arrays.copyOf(bytes, bytes.length);
     }
 
     static TransactionImpl parseTransaction(byte[] bytes) throws NxtException.ValidationException {
@@ -719,7 +723,11 @@ final class TransactionImpl implements Transaction {
                 builder.encryptToSelfMessage(Appendix.EncryptToSelfMessage.parse(attachmentData));
                 builder.phasing(Appendix.Phasing.parse(attachmentData));
             }
-            return builder.build();
+            TransactionImpl transaction = builder.build();
+            if (signature != null && !transaction.checkSignature()) {
+                throw new NxtException.NotValidException("Invalid transaction signature");
+            }
+            return transaction;
         } catch (NxtException.NotValidException|RuntimeException e) {
             Logger.logDebugMessage("Failed to parse transaction: " + transactionData.toJSONString());
             throw e;
@@ -757,14 +765,16 @@ final class TransactionImpl implements Transaction {
 
     public boolean verifySignature() {
         Account account = Account.getAccount(getSenderId());
-        if (account == null) {
-            return false;
+        return account != null && checkSignature() && account.setOrVerify(getSenderPublicKey());
+    }
+
+    private volatile boolean hasValidSignature = false;
+
+    private boolean checkSignature() {
+        if (!hasValidSignature) {
+            hasValidSignature = signature != null && Crypto.verify(signature, zeroSignature(getBytes()), getSenderPublicKey(), useNQT());
         }
-        if (signature == null) {
-            return false;
-        }
-        byte[] data = zeroSignature(getBytes());
-        return Crypto.verify(signature, data, getSenderPublicKey(), useNQT()) && account.setOrVerify(getSenderPublicKey());
+        return hasValidSignature;
     }
 
     int getSize() {
