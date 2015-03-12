@@ -37,6 +37,7 @@ final class BlockImpl implements Block {
     private volatile long id;
     private volatile String stringId = null;
     private volatile long generatorId;
+    private volatile byte[] bytes = null;
 
 
     BlockImpl(int version, int timestamp, long previousBlockId, long totalAmountNQT, long totalFeeNQT, int payloadLength, byte[] payloadHash,
@@ -268,10 +269,9 @@ final class BlockImpl implements Block {
         }
     }
 
-    private volatile byte[] bytes = null;
     byte[] getBytes() {
         if (bytes == null) {
-            ByteBuffer buffer = ByteBuffer.allocate(4 + 4 + 8 + 4 + (version < 3 ? (4 + 4) : (8 + 8)) + 4 + 32 + 32 + (32 + 32) + 64);
+            ByteBuffer buffer = ByteBuffer.allocate(4 + 4 + 8 + 4 + (version < 3 ? (4 + 4) : (8 + 8)) + 4 + 32 + 32 + (32 + 32) + (blockSignature != null ? 64 : 0));
             buffer.order(ByteOrder.LITTLE_ENDIAN);
             buffer.putInt(version);
             buffer.putInt(timestamp);
@@ -291,21 +291,20 @@ final class BlockImpl implements Block {
             if (version > 1) {
                 buffer.put(previousBlockHash);
             }
-            buffer.put(blockSignature);
+            if (blockSignature != null) {
+                buffer.put(blockSignature);
+            }
             bytes = buffer.array();
         }
-        return Arrays.copyOf(bytes, bytes.length);
+        return bytes;
     }
 
     void sign(String secretPhrase) {
         if (blockSignature != null) {
             throw new IllegalStateException("Block already signed");
         }
-        blockSignature = new byte[64];
-        byte[] data = getBytes();
-        byte[] data2 = new byte[data.length - 64];
-        System.arraycopy(data, 0, data2, 0, data2.length);
-        blockSignature = Crypto.sign(data2, secretPhrase);
+        blockSignature = Crypto.sign(getBytes(), secretPhrase);
+        bytes = null;
     }
 
     boolean verifyBlockSignature() {
@@ -317,10 +316,8 @@ final class BlockImpl implements Block {
 
     private boolean checkSignature() {
         if (! hasValidSignature) {
-            byte[] data = getBytes();
-            byte[] data2 = new byte[data.length - 64];
-            System.arraycopy(data, 0, data2, 0, data2.length);
-            hasValidSignature = blockSignature != null && Crypto.verify(blockSignature, data2, getGeneratorPublicKey(), version >= 3);
+            byte[] data = Arrays.copyOf(getBytes(), bytes.length - 64);
+            hasValidSignature = blockSignature != null && Crypto.verify(blockSignature, data, getGeneratorPublicKey(), version >= 3);
         }
         return hasValidSignature;
     }

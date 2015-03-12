@@ -222,6 +222,8 @@ final class TransactionImpl implements Transaction {
     private volatile long senderId;
     private volatile String fullHash;
     private volatile DbKey dbKey;
+    private volatile byte[] bytes = null;
+
 
     private TransactionImpl(BuilderImpl builder) throws NxtException.NotValidException {
 
@@ -458,7 +460,7 @@ final class TransactionImpl implements Transaction {
                 digest.update(data);
                 hash = digest.digest(signatureHash);
             } else {
-                hash = Crypto.sha256().digest(getBytes());
+                hash = Crypto.sha256().digest(getBytesOrig());
             }
             BigInteger bigInteger = new BigInteger(1, new byte[] {hash[7], hash[6], hash[5], hash[4], hash[3], hash[2], hash[1], hash[0]});
             id = bigInteger.longValue();
@@ -526,9 +528,12 @@ final class TransactionImpl implements Transaction {
         return publicKeyAnnouncement;
     }
 
-    private volatile byte[] bytes = null;
     @Override
     public byte[] getBytes() {
+        return Arrays.copyOf(getBytesOrig(), bytes.length);
+    }
+
+    byte[] getBytesOrig() {
         if (bytes == null) {
             try {
                 ByteBuffer buffer = ByteBuffer.allocate(getSize());
@@ -571,7 +576,7 @@ final class TransactionImpl implements Transaction {
                 throw e;
             }
         }
-        return Arrays.copyOf(bytes, bytes.length);
+        return bytes;
     }
 
     static TransactionImpl parseTransaction(byte[] bytes) throws NxtException.ValidationException {
@@ -750,7 +755,8 @@ final class TransactionImpl implements Transaction {
         if (signature != null) {
             throw new IllegalStateException("Transaction already signed");
         }
-        signature = Crypto.sign(getBytes(), secretPhrase);
+        signature = Crypto.sign(getBytesOrig(), secretPhrase);
+        bytes = null;
     }
 
     @Override

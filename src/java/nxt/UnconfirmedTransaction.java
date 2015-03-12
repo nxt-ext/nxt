@@ -38,7 +38,7 @@ class UnconfirmedTransaction implements Transaction {
             pstmt.setInt(++i, transaction.getHeight());
             pstmt.setLong(++i, transaction.getFeeNQT() / transaction.getSize());
             pstmt.setInt(++i, transaction.getExpiration());
-            pstmt.setBytes(++i, transaction.getBytes());
+            pstmt.setBytes(++i, transaction.getBytesOrig());
             pstmt.setLong(++i, arrivalTimestamp);
             pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
             pstmt.executeUpdate();

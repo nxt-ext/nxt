@@ -621,8 +621,8 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             }
             Collections.sort(transactions, Comparator.comparingLong(Transaction::getId));
             MessageDigest digest = Crypto.sha256();
-            for (Transaction transaction : transactions) {
-                digest.update(transaction.getBytes());
+            for (TransactionImpl transaction : transactions) {
+                digest.update(transaction.getBytesOrig());
             }
             BlockImpl genesisBlock = new BlockImpl(-1, 0, 0, Constants.MAX_BALANCE_NQT, 0, transactions.size() * 128, digest.digest(),
                     Genesis.CREATOR_PUBLIC_KEY, new byte[64], Genesis.GENESIS_BLOCK_SIGNATURE, null, transactions);
@@ -769,7 +769,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
 
                     calculatedTotalFee += transaction.getFeeNQT();
 
-                    digest.update(transaction.getBytes());
+                    digest.update(transaction.getBytesOrig());
 
                 }
 
@@ -915,7 +915,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                      "SELECT * FROM transaction ORDER BY id ASC, timestamp ASC");
              DbIterator<TransactionImpl> iterator = blockchain.getTransactions(con, pstmt)) {
             while (iterator.hasNext()) {
-                digest.update(iterator.next().getBytes());
+                digest.update(iterator.next().getBytesOrig());
             }
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
@@ -1027,7 +1027,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         MessageDigest digest = Crypto.sha256();
         for (UnconfirmedTransaction unconfirmedTransaction : sortedTransactions) {
             blockTransactions.add(unconfirmedTransaction.getTransaction());
-            digest.update(unconfirmedTransaction.getBytes());
+            digest.update(unconfirmedTransaction.getTransaction().getBytesOrig());
         }
 
         byte[] payloadHash = digest.digest();
@@ -1196,13 +1196,13 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                                     if (transaction.getPhasing() == null && transaction.isDuplicate(duplicates)) {
                                         throw new NxtException.NotValidException("Transaction is a duplicate: " + transaction.getStringId());
                                     }
-                                    byte[] transactionBytes = transaction.getBytes();
+                                    byte[] transactionBytes = transaction.getBytesOrig();
                                     if (currentBlock.getHeight() > Constants.NQT_BLOCK
-                                            && !Arrays.equals(transactionBytes, transactionProcessor.parseTransaction(transactionBytes).getBytes())) {
+                                            && !Arrays.equals(transactionBytes, transactionProcessor.parseTransaction(transactionBytes).getBytesOrig())) {
                                         throw new NxtException.NotValidException("Transaction bytes cannot be parsed back to the same transaction");
                                     }
                                     JSONObject transactionJSON = (JSONObject) JSONValue.parse(transaction.getJSONObject().toJSONString());
-                                    if (!Arrays.equals(transactionBytes, transactionProcessor.parseTransaction(transactionJSON).getBytes())) {
+                                    if (!Arrays.equals(transactionBytes, transactionProcessor.parseTransaction(transactionJSON).getBytesOrig())) {
                                         throw new NxtException.NotValidException("Transaction JSON cannot be parsed back to the same transaction");
                                     }
                                 }
