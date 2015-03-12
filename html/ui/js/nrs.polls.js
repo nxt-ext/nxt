@@ -576,14 +576,14 @@ $("#poll_results_modal ul.nav li").click(function(e) {
 
 		$("#cast_vote_answers_entry div.answer_slider input").each(function() {
 			var option = $.trim($(this).val());
-			if(option == 0) option = -127;
+			if(option == 0) option = -128;
 			if (option) {
 				options.push(option);
 			}
 		});
 
 		$("#cast_vote_answers_entry div.answer_boxes input").each(function() {
-			var option = $(this).is(':checked') ? 1 : -127;
+			var option = $(this).is(':checked') ? 1 : -128;
 			options.push(option);
 		});
 
@@ -595,10 +595,10 @@ $("#poll_results_modal ul.nav li").click(function(e) {
 		};
 		for (var i = 0; i < options.length; i++) {
 			var number;
-			if(number<10)number = "0"+i;
+			if(i < 10) number = "0" + i;
 			else number = i;
 			alert(number);
-			data["vote" + number] = options[i];
+			data["vote" + (number)] = options[i];
 		}
 
 
