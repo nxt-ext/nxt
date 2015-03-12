@@ -37,11 +37,6 @@ var NRS = (function(NRS, $, undefined) {
 
 	NRS.database = null;
 	NRS.databaseSupport = false;
-	NRS.databaseFirstStart = false;
-
-	// Legacy database, don't use this for data storage
-	NRS.legacyDatabase = null;
-	NRS.legacyDatabaseWithData = false;
 
 	NRS.serverConnect = false;
 	NRS.peerConnect = false;
@@ -134,17 +129,14 @@ var NRS = (function(NRS, $, undefined) {
 		} catch (err) {
 			NRS.hasLocalStorage = false;
 		}
-		if(!(navigator.userAgent.indexOf('Safari') != -1 && navigator.userAgent.indexOf('Chrome') == -1)) {
-			// Not Safari
-			// Don't use account based DB in Safari due to a buggy indexedDB implementation (2015-02-24)
-			NRS.createLegacyDatabase();
-		}
 
 		if (NRS.getCookie("remember_passphrase")) {
 			$("#remember_password").prop("checked", true);
 		}
 
-		NRS.getSettings();
+		NRS.createDatabase(function() {
+			NRS.getSettings();
+		});
 
 		NRS.getState(function() {
 			setTimeout(function() {
@@ -540,197 +532,93 @@ var NRS = (function(NRS, $, undefined) {
 		NRS.pages[NRS.currentPage]();
 	};
 
-		
-
-	NRS.initUserDBSuccess = function() {
-		NRS.database.select("data", [{
-			"id": "asset_exchange_version"
-		}], function(error, result) {
-			if (!result || !result.length) {
-				NRS.database.delete("assets", [], function(error, affected) {
-					if (!error) {
-						NRS.database.insert("data", {
-							"id": "asset_exchange_version",
-							"contents": 2
-						});
-					}
-				});
+	NRS.createDatabase = function(callback) {
+		var schema = {
+			contacts: {
+				id: {
+					"primary": true,
+					"autoincrement": true,
+					"type": "NUMBER"
+				},
+				name: "VARCHAR(100) COLLATE NOCASE",
+				email: "VARCHAR(200)",
+				account: "VARCHAR(25)",
+				accountRS: "VARCHAR(25)",
+				description: "TEXT"
+			},
+			assets: {
+				account: "VARCHAR(25)",
+				accountRS: "VARCHAR(25)",
+				asset: {
+					"primary": true,
+					"type": "VARCHAR(25)"
+				},
+				description: "TEXT",
+				name: "VARCHAR(10)",
+				decimals: "NUMBER",
+				quantityQNT: "VARCHAR(15)",
+				groupName: "VARCHAR(30) COLLATE NOCASE"
+			},
+			data: {
+				id: {
+					"primary": true,
+					"type": "VARCHAR(40)"
+				},
+				contents: "TEXT"
 			}
-		});
-
-		NRS.database.select("data", [{
-			"id": "closed_groups"
-		}], function(error, result) {
-			if (result && result.length) {
-				NRS.closedGroups = result[0].contents.split("#");
-			} else {
-				NRS.database.insert("data", {
-					id: "closed_groups",
-					contents: ""
-				});
-			}
-		});
-
-		NRS.databaseSupport = true;
-		NRS.loadContacts();
-		NRS.getSettings();
-		NRS.updateNotifications();
-	}
-
-	NRS.initUserDBWithLegacyData = function() {
-		var legacyTables = ["contacts", "assets", "data"];
-		$.each(legacyTables, function(key, table) {
-			NRS.legacyDatabase.select(table, null, function(error, results) {
-				if (!error && results && results.length >= 0) {
-					NRS.database.insert(table, results, function(error, inserts) {});
-				}
-			});
-		});
-		setTimeout(function(){ NRS.initUserDBSuccess(); }, 1000);
-	}
-
-	NRS.initUserDBFail = function() {
-		NRS.database = null;
-		NRS.databaseSupport = false;
-		NRS.getSettings();
-		NRS.updateNotifications();
-	}
-
-	NRS.createLegacyDatabase = function() {
-		var schema = {}
-		var versionLegacyDB = 2;
-
-		// Legacy DB before switching to account based DBs, leave schema as is
-		schema["contacts"] = {
-			id: {
-				"primary": true,
-				"autoincrement": true,
-				"type": "NUMBER"
-			},
-			name: "VARCHAR(100) COLLATE NOCASE",
-			email: "VARCHAR(200)",
-			account: "VARCHAR(25)",
-			accountRS: "VARCHAR(25)",
-			description: "TEXT"
-		}
-		schema["assets"] = {
-			account: "VARCHAR(25)",
-			accountRS: "VARCHAR(25)",
-			asset: {
-				"primary": true,
-				"type": "VARCHAR(25)"
-			},
-			description: "TEXT",
-			name: "VARCHAR(10)",
-			decimals: "NUMBER",
-			quantityQNT: "VARCHAR(15)",
-			groupName: "VARCHAR(30) COLLATE NOCASE"
-		}
-		schema["polls"] = {
-			account: "VARCHAR(25)",
-			accountRS: "VARCHAR(25)",
-			name: "VARCHAR(100)",
-			description: "TEXT",
-			poll: "VARCHAR(25)",
-			finishHeight: "VARCHAR(25)"
-		}
-		schema["data"] = {
-			id: {
-				"primary": true,
-				"type": "VARCHAR(40)"
-			},
-			contents: "TEXT"
-		}
-		if (versionLegacyDB = NRS.constants.DB_VERSION) {
-			try {
-				NRS.legacyDatabase = new WebDB("NRS_USER_DB", schema, versionLegacyDB, 4, function(error, db) {
-					if (!error) {
-						NRS.legacyDatabase.select("data", [{
-							"id": "settings"
-						}], function(error, result) {
-							if (result && result.length > 0) {
-								NRS.legacyDatabaseWithData = true;
-							}
-						});
-					}
-				});
-			} catch (err) {
-			}		
-		}
-	};
-
-	NRS.createDatabase = function(dbName) {
-		var schema = {}
-
-		schema["contacts"] = {
-			id: {
-				"primary": true,
-				"autoincrement": true,
-				"type": "NUMBER"
-			},
-			name: "VARCHAR(100) COLLATE NOCASE",
-			email: "VARCHAR(200)",
-			account: "VARCHAR(25)",
-			accountRS: "VARCHAR(25)",
-			description: "TEXT"
-		}
-		schema["assets"] = {
-			account: "VARCHAR(25)",
-			accountRS: "VARCHAR(25)",
-			asset: {
-				"primary": true,
-				"type": "VARCHAR(25)"
-			},
-			description: "TEXT",
-			name: "VARCHAR(10)",
-			decimals: "NUMBER",
-			quantityQNT: "VARCHAR(15)",
-			groupName: "VARCHAR(30) COLLATE NOCASE"
-		}
-		schema["polls"] = {
-			account: "VARCHAR(25)",
-			accountRS: "VARCHAR(25)",
-			name: "VARCHAR(100)",
-			description: "TEXT",
-			poll: "VARCHAR(25)",
-			finishHeight: "VARCHAR(25)"
-		}
-		schema["data"] = {
-			id: {
-				"primary": true,
-				"type": "VARCHAR(40)"
-			},
-			contents: "TEXT"
-		}
+		};
 
 		NRS.assetTableKeys = ["account", "accountRS", "asset", "description", "name", "position", "decimals", "quantityQNT", "groupName"];
-		NRS.pollsTableKeys = ["account", "accountRS", "poll", "description", "name", "finishHeight"];
-
 
 		try {
-			NRS.database = new WebDB(dbName, schema, NRS.constants.DB_VERSION, 4, function(error, db) {
+			NRS.database = new WebDB("NRS_USER_DB", schema, 2, 4, function(error, db) {
 				if (!error) {
+					NRS.databaseSupport = true;
+
+					NRS.loadContacts();
+
 					NRS.database.select("data", [{
-						"id": "settings"
+						"id": "asset_exchange_version"
 					}], function(error, result) {
-						if (result && result.length > 0) {
-							NRS.databaseFirstStart = false;
-							NRS.initUserDBSuccess();
-						} else {
-							NRS.databaseFirstStart = true;
-							if (NRS.databaseFirstStart && NRS.legacyDatabaseWithData) {
-								NRS.initUserDBWithLegacyData();
-							} else {
-								NRS.initUserDBSuccess();
-							}
+						if (!result || !result.length) {
+							NRS.database.delete("assets", [], function(error, affected) {
+								if (!error) {
+									NRS.database.insert("data", {
+										"id": "asset_exchange_version",
+										"contents": 2
+									});
+								}
+							});
 						}
 					});
+
+					NRS.database.select("data", [{
+						"id": "closed_groups"
+					}], function(error, result) {
+						if (result && result.length) {
+							NRS.closedGroups = result[0].contents.split("#");
+						} else {
+							NRS.database.insert("data", {
+								id: "closed_groups",
+								contents: ""
+							});
+						}
+					});
+					if (callback) {
+						callback();
+					}
 				} else {
-					NRS.initUserDBFail();
+					if (callback) {
+						callback();
+					}
 				}
 			});
 		} catch (err) {
-			NRS.initUserDBFail();
+			NRS.database = null;
+			NRS.databaseSupport = false;
+			if (callback) {
+				callback();
+			}
 		}
 	};
 	
@@ -808,7 +696,7 @@ var NRS = (function(NRS, $, undefined) {
 
 				if (NRS.databaseSupport) {
 					NRS.database.select("data", [{
-						"id": "asset_balances"
+						"id": "asset_balances_" + NRS.account
 					}], function(error, asset_balance) {
 						if (asset_balance && asset_balance.length) {
 							var previous_balances = asset_balance[0].contents;
@@ -828,7 +716,7 @@ var NRS = (function(NRS, $, undefined) {
 								NRS.database.update("data", {
 									contents: current_balances
 								}, [{
-									id: "asset_balances"
+									id: "asset_balances_" + NRS.account
 								}]);
 								if (showAssetDifference) {
 									NRS.checkAssetDifferences(NRS.accountInfo.assetBalances, previous_balances);
@@ -836,7 +724,7 @@ var NRS = (function(NRS, $, undefined) {
 							}
 						} else {
 							NRS.database.insert("data", {
-								id: "asset_balances",
+								id: "asset_balances_" + NRS.account,
 								contents: JSON.stringify(NRS.accountInfo.assetBalances)
 							});
 						}
@@ -1072,7 +960,7 @@ var NRS = (function(NRS, $, undefined) {
 					nextTooltip = "Account " + NRS.getAccountTitle(lessorInfo.nextLesseeRS) +" from block " + lessorInfo.nextHeightFrom + " to block " + lessorInfo.nextHeightTo;
 				}
 				rows += "<tr>" +
-					"<td><a href='#' data-user='" + String(lessor).escapeHTML() + "' class='show_account_modal_action'>" + NRS.getAccountTitle(lessor) + "</a></td>" +
+					"<td><a href='#' data-user='" + String(lessor).escapeHTML() + "'>" + NRS.getAccountTitle(lessor) + "</a></td>" +
 					"<td>" + String(lessorInfo.effectiveBalanceNXT).escapeHTML() + "</td>" +
 					"<td><label>" + String(blocksLeft).escapeHTML() + " <i class='fa fa-question-circle show_popover' data-toggle='tooltip' title='" + blocksLeftTooltip + "' data-placement='right' style='color:#4CAA6E'></i></label></td>" +
 					"<td><label>" + String(nextLessee).escapeHTML() + " <i class='fa fa-question-circle show_popover' data-toggle='tooltip' title='" + nextTooltip + "' data-placement='right' style='color:#4CAA6E'></i></label></td>" +
@@ -1241,7 +1129,7 @@ var NRS = (function(NRS, $, undefined) {
 			if (NRS.state.lastBlockchainFeederHeight && NRS.state.numberOfBlocks <= NRS.state.lastBlockchainFeederHeight) {
 				percentageTotal = parseInt(Math.round((NRS.state.numberOfBlocks / NRS.state.lastBlockchainFeederHeight) * 100), 10);
 				blocksLeft = NRS.state.lastBlockchainFeederHeight - NRS.state.numberOfBlocks;
-				if (blocksLeft <= lastNumBlocks && NRS.state.lastBlockchainFeederHeight > lastNumBlocks) {
+				if (blocksLeft <= lastNumBlocks && NRS.state.lastBlockchainFeederHeight > lastNumBlocks) {
 					percentageLast = parseInt(Math.round(((lastNumBlocks - blocksLeft) / lastNumBlocks) * 100), 10);
 				}
 			}

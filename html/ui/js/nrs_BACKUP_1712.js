@@ -540,9 +540,8 @@ var NRS = (function(NRS, $, undefined) {
 		NRS.pages[NRS.currentPage]();
 	};
 
-		
 
-	NRS.initUserDBSuccess = function() {
+	NRS.initUserDBSuccess = function() {
 		NRS.database.select("data", [{
 			"id": "asset_exchange_version"
 		}], function(error, result) {
@@ -579,7 +578,7 @@ var NRS = (function(NRS, $, undefined) {
 
 	NRS.initUserDBWithLegacyData = function() {
 		var legacyTables = ["contacts", "assets", "data"];
-		$.each(legacyTables, function(key, table) {
+		$.each(legacyTables, function(key, table) {
 			NRS.legacyDatabase.select(table, null, function(error, results) {
 				if (!error && results && results.length >= 0) {
 					NRS.database.insert(table, results, function(error, inserts) {});
@@ -620,19 +619,12 @@ var NRS = (function(NRS, $, undefined) {
 				"primary": true,
 				"type": "VARCHAR(25)"
 			},
+<<<<<<< Updated upstream
 			description: "TEXT",
 			name: "VARCHAR(10)",
 			decimals: "NUMBER",
 			quantityQNT: "VARCHAR(15)",
 			groupName: "VARCHAR(30) COLLATE NOCASE"
-		}
-		schema["polls"] = {
-			account: "VARCHAR(25)",
-			accountRS: "VARCHAR(25)",
-			name: "VARCHAR(100)",
-			description: "TEXT",
-			poll: "VARCHAR(25)",
-			finishHeight: "VARCHAR(25)"
 		}
 		schema["data"] = {
 			id: {
@@ -687,14 +679,6 @@ var NRS = (function(NRS, $, undefined) {
 			quantityQNT: "VARCHAR(15)",
 			groupName: "VARCHAR(30) COLLATE NOCASE"
 		}
-		schema["polls"] = {
-			account: "VARCHAR(25)",
-			accountRS: "VARCHAR(25)",
-			name: "VARCHAR(100)",
-			description: "TEXT",
-			poll: "VARCHAR(25)",
-			finishHeight: "VARCHAR(25)"
-		}
 		schema["data"] = {
 			id: {
 				"primary": true,
@@ -702,10 +686,26 @@ var NRS = (function(NRS, $, undefined) {
 			},
 			contents: "TEXT"
 		}
+=======
+			polls: {
+				account: "VARCHAR(25)",
+				accountRS: "VARCHAR(25)",
+				poll: "VARCHAR(25)",
+				description: "TEXT",
+				name: "VARCHAR(10)",
+				finishHeight: "VARCHAR(15)",
+			},
+			data: {
+				id: {
+					"primary": true,
+					"type": "VARCHAR(40)"
+				},
+				contents: "TEXT"
+			}
+		};
+>>>>>>> Stashed changes
 
 		NRS.assetTableKeys = ["account", "accountRS", "asset", "description", "name", "position", "decimals", "quantityQNT", "groupName"];
-		NRS.pollsTableKeys = ["account", "accountRS", "poll", "description", "name", "finishHeight"];
-
 
 		try {
 			NRS.database = new WebDB(dbName, schema, NRS.constants.DB_VERSION, 4, function(error, db) {
@@ -1241,7 +1241,7 @@ var NRS = (function(NRS, $, undefined) {
 			if (NRS.state.lastBlockchainFeederHeight && NRS.state.numberOfBlocks <= NRS.state.lastBlockchainFeederHeight) {
 				percentageTotal = parseInt(Math.round((NRS.state.numberOfBlocks / NRS.state.lastBlockchainFeederHeight) * 100), 10);
 				blocksLeft = NRS.state.lastBlockchainFeederHeight - NRS.state.numberOfBlocks;
-				if (blocksLeft <= lastNumBlocks && NRS.state.lastBlockchainFeederHeight > lastNumBlocks) {
+				if (blocksLeft <= lastNumBlocks && NRS.state.lastBlockchainFeederHeight > lastNumBlocks) {
 					percentageLast = parseInt(Math.round(((lastNumBlocks - blocksLeft) / lastNumBlocks) * 100), 10);
 				}
 			}

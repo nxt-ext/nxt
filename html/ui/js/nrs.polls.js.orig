@@ -539,10 +539,7 @@ $("#poll_results_modal ul.nav li").click(function(e) {
 		}
 
 		for (var i = 0; i < options.length; i++) {
-			var number;
-			if(i < 10) number = "0" + i;
-			else number = i;
-			data["option" + (number)] = options[i];
+			data["option" + (i+1)] = options[i];
 		}
 
 
@@ -572,7 +569,7 @@ $("#poll_results_modal ul.nav li").click(function(e) {
 	}
 
 	NRS.forms.castVote = function($modal) {
-		var options = Array();
+		var options = new Array();
 
 		$("#cast_vote_answers_entry div.answer_slider input").each(function() {
 			var option = $.trim($(this).val());
@@ -583,7 +580,7 @@ $("#poll_results_modal ul.nav li").click(function(e) {
 		});
 
 		$("#cast_vote_answers_entry div.answer_boxes input").each(function() {
-			var option = $(this).is(':checked') ? 1 : -127;
+			var option = $(this).is(':checked') ? 1 : -128;
 			options.push(option);
 		});
 
@@ -594,11 +591,7 @@ $("#poll_results_modal ul.nav li").click(function(e) {
 			"secretPhrase": $("#cast_vote_password").val()
 		};
 		for (var i = 0; i < options.length; i++) {
-			var number;
-			if(number<10)number = "0"+i;
-			else number = i;
-			alert(number);
-			data["vote" + number] = options[i];
+			data["vote" + (i+1)] = options[i];
 		}
 
 
@@ -990,6 +983,33 @@ $("#poll_results_modal ul.nav li").click(function(e) {
 				"scrollTop": 0
 			}, 0);
 
+<<<<<<< Updated upstream
+			$("#asset_account").html("<a href='#' data-user='" + NRS.getAccountFormatted(asset, "account") + "' class='show_account_modal_action user_info'>" + NRS.getAccountTitle(asset, "account") + "</a>");
+			$("#asset_id").html(assetId.escapeHTML());
+			$("#asset_decimals").html(String(asset.decimals).escapeHTML());
+			$("#asset_name").html(String(asset.name).escapeHTML());
+			$("#asset_description").html(String(asset.description).autoLink());
+			$("#asset_quantity").html(NRS.formatQuantity(asset.quantityQNT, asset.decimals));
+			$(".asset_name").html(String(asset.name).escapeHTML());
+			$("#sell_asset_button").data("asset", assetId);
+			$("#buy_asset_button").data("asset", assetId);
+			$("#view_asset_distribution_link").data("asset", assetId);
+			$("#sell_asset_for_nxt").html($.t("sell_asset_for_nxt", {
+				"assetName": String(asset.name).escapeHTML()
+			}));
+			$("#buy_asset_with_nxt").html($.t("buy_asset_with_nxt", {
+				"assetName": String(asset.name).escapeHTML()
+			}));
+			$("#sell_asset_price, #buy_asset_price").val("");
+			$("#sell_asset_quantity, #sell_asset_total, #buy_asset_quantity, #buy_asset_total").val("0");
+
+			$("#asset_exchange_ask_orders_table tbody").empty();
+			$("#asset_exchange_bid_orders_table tbody").empty();
+			$("#asset_exchange_trade_history_table tbody").empty();
+			$("#asset_exchange_ask_orders_table").parent().addClass("data-loading").removeClass("data-empty");
+			$("#asset_exchange_bid_orders_table").parent().addClass("data-loading").removeClass("data-empty");
+			$("#asset_exchange_trade_history_table").parent().addClass("data-loading").removeClass("data-empty");
+=======
 			$("#poll_account").html("<a href='#' data-user='" + NRS.getAccountFormatted(poll, "account") + "' class='user_info'>" + NRS.getAccountTitle(poll, "account") + "</a>");
 			$("#poll_id").html(poll.poll.escapeHTML());
 
@@ -1002,6 +1022,7 @@ $("#poll_results_modal ul.nav li").click(function(e) {
 			$("#followed_polls_votes_cast tbody").empty();
 			$("#followed_polls_poll_results").parent().addClass("data-loading").removeClass("data-empty");
 			$("#followed_polls_votes_cast").parent().addClass("data-loading").removeClass("data-empty");
+>>>>>>> Stashed changes
 
 			$(".data-loading img.loading").hide();
 
@@ -1057,7 +1078,6 @@ $("#poll_results_modal ul.nav li").click(function(e) {
 			"poll": pollId
 		}, function(response, input) {
 			var results = response.results;
-			var options = response.options;
 
 			if (!results) {
 				results = [];
@@ -1066,81 +1086,87 @@ $("#poll_results_modal ul.nav li").click(function(e) {
 			if (results.length) {
 				var rows = "";
 
-				for (var i = 0; i < results.length; i++) {
-					var result = results[i];
-					rows += "<tr>";
-					rows += "<td>" + options[i] + "</td>";
-					rows += "<td>" + result.result/100000000 + "</td>";
-					rows += "<td>" + result.weight/100000000 + "</td>";					
-					rows += "</tr>";
+				for (var i = 0; i < orders.length; i++) {
+					var order = orders[i];
+
+					order.priceNQT = new BigInteger(order.priceNQT);
+					order.quantityQNT = new BigInteger(order.quantityQNT);
+					order.totalNQT = new BigInteger(NRS.calculateOrderTotalNQT(order.quantityQNT, order.priceNQT));
+
+					if (i == 0 && !refresh) {
+						$("#" + (type == "ask" ? "buy" : "sell") + "_asset_price").val(NRS.calculateOrderPricePerWholeQNT(order.priceNQT, NRS.currentAsset.decimals));
+					}
+
+					var className = (order.account == NRS.account ? "your-order" : "") + (order.unconfirmed ? " tentative" : (NRS.isUserCancelledOrder(order) ? " tentative tentative-crossed" : ""));
+
+					rows += "<tr class='" + className + "' data-transaction='" + String(order.order).escapeHTML() + "' data-quantity='" + order.quantityQNT.toString().escapeHTML() + "' data-price='" + order.priceNQT.toString().escapeHTML() + "'><td>" + (order.unconfirmed ? "You - <strong>Pending</strong>" : (order.account == NRS.account ? "<strong>You</strong>" : "<a href='#' data-user='" + NRS.getAccountFormatted(order, "account") + "' class='show_account_modal_action user_info'>" + (order.account == NRS.currentAsset.account ? "Asset Issuer" : NRS.getAccountTitle(order, "account")) + "</a>")) + "</td><td>" + NRS.formatQuantity(order.quantityQNT, NRS.currentAsset.decimals) + "</td><td>" + NRS.formatOrderPricePerWholeQNT(order.priceNQT, NRS.currentAsset.decimals) + "</td><td>" + NRS.formatAmount(order.totalNQT) + "</tr>";
 				}
 
-				$("#followed_polls_poll_results tbody").empty().append(rows);
-				} else {
-					$("#followed_polls_poll_results tbody").empty();
+				$("#asset_exchange_" + type + "_orders_table tbody").empty().append(rows);
+			} else {
+				$("#asset_exchange_" + type + "_orders_table tbody").empty();
+				if (!refresh) {
+					$("#" + (type == "ask" ? "buy" : "sell") + "_asset_price").val("0");
 				}
+				$("#" + (type == "ask" ? "sell" : "buy") + "_orders_count").html("");
+			}
 
-
-			NRS.dataLoadFinished($("#followed_polls_poll_results"), !refresh);
+			NRS.dataLoadFinished($("#asset_exchange_" + type + "_orders_table"), !refresh);
 		});
 	}
 
 	NRS.loadPollVotes = function(pollId, refresh)
 	{
-		NRS.sendRequest("getPoll+" + pollId, {
+		NRS.sendRequest("getPollVotes+" + pollId, {
 			"poll": pollId
-		}, function(polldata, input) {
+		}, function(response, input) {
+			var votes = response.votes;
 
-			NRS.sendRequest("getPollVotes+" + pollId, {
-				"poll": pollId
-			}, function(votesdata, input) {
+			if (!votes) {
+				votes = [];
+			}
 
-				var votes = votesdata.votes;
-
-				if (!votes) {
-					votes = [];
+			if (votes.length) {
+				
+				var head = "";
+				head += "<tr>";
+				head += "<th data-i18n=\"voter\">Voter</th>";
+				alert(JSON.stringify(votes));
+				var keys = Object.keys(votes[0].votes);
+				for(var b=0; b<votes[0].votes.length; b++)
+				{
+					head += "<th>"+String(Object.keys(votes[0].votes[b])[0]).escapeHTML() + "</th>";
 				}
+				head += "</tr>";
 
-				if (votes.length) {
-					
-					var head = "";
-					head += "<tr>";
-					head += "<th data-i18n=\"voter\">Voter</th>";
+				$("#followed_polls_votes_cast thead").empty().append(head);				
 
-					for(var b=0; b<polldata.options.length; b++)
+				$("#votes_cast_count").html("(" + votes.length + ")");
+
+				var rows = "";
+
+				for (var i = 0; i < votes.length; i++) {
+					rows += "<tr>";
+					var vote = votes[i];
+
+					rows += "<td><a href='#' class='user_info' data-user='" + vote.voter + "'>" + vote.voterRS + "</td>";
+
+					for(key in vote.votes)
 					{
-						head += "<th>"+String(polldata.options[b].escapeHTML()) + "</th>";
+						rows += "<td>" + key[Object.keys(key)[0]] + "</td>";
 					}
-					head += "</tr>";
-
-					$("#followed_polls_votes_cast thead").empty().append(head);				
-
-					$("#votes_cast_count").html("(" + votes.length + ")");
-
-					var rows = "";
-
-					for (var i = 0; i < votes.length; i++) {
-						rows += "<tr>";
-						var vote = votes[i];
-
-						rows += "<td><a href='#' class='user_info' data-user='" + NRS.getAccountFormatted(vote, "voter") + "'>" + NRS.getAccountTitle(vote, "voter") + "</td>";
-
-						for(var a=0;a<vote.votes.length;a++)
-						{
-							rows += "<td>" + vote.votes[a] + "</td>";
-						}
-					}
-
-					$("#followed_polls_votes_cast tbody").empty().append(rows);
-				} else {
-					$("#followed_polls_votes_cast tbody").empty();
-					$("#votes_cast_count").html("(0)");
-
 				}
 
-				NRS.dataLoadFinished($("#followed_polls_votes_cast"), !refresh);
-			});
-		})
+				$("#followed_polls_votes_cast tbody").empty().append(rows);
+			} else {
+				$("#followed_polls_votes_cast tbody").empty();
+				$("#votes_cast_count").html("(0)");
+
+			}
+
+			NRS.dataLoadFinished($("#followed_polls_votes_cast"), !refresh);
+		});
+
 	}
 
 
