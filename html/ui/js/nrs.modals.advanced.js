@@ -161,7 +161,8 @@ var NRS = (function(NRS, $, undefined) {
 
 	function _setApprovalFeeAddition() {
 		var feeAddition = $('.modal:visible .approve_tab_list li.active a').data("feeNxtApprovalAddition");
-		if($('.modal:visible .tab_pane_approve.active .approve_min_balance_model_group select').val() != "0") {
+		var $mbSelect = $('.modal:visible .tab_pane_approve.active .approve_min_balance_model_group select');
+		if($mbSelect.length > 0 && $mbSelect.val() != "0") {
 			feeAddition = String(20);
 		}
 

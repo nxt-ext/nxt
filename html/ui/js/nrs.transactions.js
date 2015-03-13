@@ -299,7 +299,7 @@ var NRS = (function(NRS, $, undefined) {
 						var resultFormatted = "";
 						var quorumFormatted = "";
 						var minBalanceFormatted = "";
-						if (attachment.phasingFinishHeight < NRS.lastBlockHeight) {
+						if (attachment.phasingFinishHeight <= NRS.lastBlockHeight) {
 							var finished = true;
 						} else {
 							var finished = false;
@@ -403,7 +403,7 @@ var NRS = (function(NRS, $, undefined) {
 						}
 						if (mbModel == 1) {
 							if (minBalance > 0) {
-								minBalanceFormatted = NRS.convertToNXT(minBalance) + "NXT";
+								minBalanceFormatted = NRS.convertToNXT(minBalance) + " NXT";
 								$approveBtn.data('minBalanceFormatted', minBalanceFormatted.escapeHTML());
 							}
 						}
@@ -521,7 +521,7 @@ var NRS = (function(NRS, $, undefined) {
 		html += "<td style='vertical-align:middle;'>" + ((NRS.getAccountLink(t, "sender") == "/" && t.type == 2) ? "Asset Exchange" : NRS.getAccountLink(t, "sender")) + " ";
 		html += "<i class='fa fa-arrow-circle-right' style='color:#777;'></i> " + ((NRS.getAccountLink(t, "recipient") == "/" && t.type == 2) ? "Asset Exchange" : NRS.getAccountLink(t, "recipient")) + "</td>";
 
-		html += "<td class='td_transaction_pending' style='vertical-align:middle;text-align:center;'></td>";
+		html += "<td class='td_transaction_pending' style='min-width:100px;vertical-align:middle;text-align:center;'></td>";
 
 		html += "<td class='confirmations' style='vertical-align:middle;text-align:center;font-size:12px;'>";
 		html += "<span class='show_popover' data-content='" + (t.confirmed ? NRS.formatAmount(t.confirmations) + " " + $.t("confirmations") : $.t("unconfirmed_transaction")) + "' ";

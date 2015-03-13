@@ -93,7 +93,7 @@ public interface Appendix {
         }
 
         @Override
-        public Fee getBaselineFee(Transaction transaction) throws NxtException.NotValidException {
+        public Fee getBaselineFee(Transaction transaction) {
             return Fee.NONE;
         }
 
@@ -103,7 +103,7 @@ public interface Appendix {
         }
 
         @Override
-        public Fee getNextFee(Transaction transaction) throws NxtException.NotValidException {
+        public Fee getNextFee(Transaction transaction) {
             return getBaselineFee(transaction);
         }
 
@@ -318,7 +318,7 @@ public interface Appendix {
             return new EncryptedMessage(attachmentData);
         }
 
-        EncryptedMessage(ByteBuffer buffer, byte transactionVersion) throws NxtException.ValidationException {
+        EncryptedMessage(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
             super(buffer, transactionVersion);
         }
 
@@ -364,7 +364,7 @@ public interface Appendix {
             return new EncryptToSelfMessage(attachmentData);
         }
 
-        EncryptToSelfMessage(ByteBuffer buffer, byte transactionVersion) throws NxtException.ValidationException {
+        EncryptToSelfMessage(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
             super(buffer, transactionVersion);
         }
 
@@ -505,9 +505,6 @@ public interface Appendix {
             for (int pvc = 0; pvc < whitelist.length; pvc++) {
                 whitelist[pvc] = buffer.getLong();
             }
-            if (whitelist.length > 0) {
-                Arrays.sort(whitelist);
-            }
             long holdingId = buffer.getLong();
             byte minBalanceModel = buffer.get();
             voteWeighting = new VoteWeighting(votingModel, holdingId, minBalance, minBalanceModel);
@@ -524,9 +521,6 @@ public interface Appendix {
             whitelist = new long[whitelistJson.size()];
             for (int i = 0; i < whitelist.length; i++) {
                 whitelist[i] = Convert.parseUnsignedLong((String) whitelistJson.get(i));
-            }
-            if (whitelist.length > 0) {
-                Arrays.sort(whitelist);
             }
             byte minBalanceModel = ((Long) attachmentData.get("phasingMinBalanceModel")).byteValue();
             voteWeighting = new VoteWeighting(votingModel, holdingId, minBalance, minBalanceModel);
@@ -599,6 +593,9 @@ public interface Appendix {
                 if (accountId == 0) {
                     throw new NxtException.NotValidException("Invalid accountId 0 in whitelist");
                 }
+                if (previousAccountId != 0 && accountId < previousAccountId) {
+                    throw new NxtException.NotValidException("Whitelist not sorted " + Arrays.toString(whitelist));
+                }
                 if (accountId == previousAccountId) {
                     throw new NxtException.NotValidException("Duplicate accountId " + Long.toUnsignedString(accountId) + " in whitelist");
                 }
@@ -628,7 +625,7 @@ public interface Appendix {
         }
 
         @Override
-        public Fee getBaselineFee(Transaction transaction) throws NxtException.NotValidException {
+        public Fee getBaselineFee(Transaction transaction) {
             if (voteWeighting.isBalanceIndependent()) {
                 return Fee.DEFAULT_FEE;
             }

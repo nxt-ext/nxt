@@ -136,7 +136,7 @@
     <section class="content-header">
         <h1 data-i18n="followed_polls">Followed Polls</h1>
         <div style="position:absolute;top:9px;right:9px;">
-            <button type="button" class="btn btn-sm btn-default" id="followed_polls_add_poll" data-toggle="modal" data-target="#follow_poll_modal" data-i18n="add_poll">Add Poll</button>
+            <button type="button" class="btn btn-sm btn-default" id="followed_polls_add_poll" data-toggle="modal" data-target="#add_followed_poll_modal" data-i18n="add_poll">Add Poll</button>
         </div>
     </section>
     <section class="content content-stretch" style="position:fixed;margin-top:3px;padding:0; width:100%; height:100%; height: calc(100% - 101px);overflow:hidden;">
@@ -171,9 +171,7 @@
                             <h3 style="margin-top:0" id="followed_polls_poll_name"></h3>
 
                             <div style="color:#838383;margin-bottom:5px">
-                                <strong data-i18n="start_date">Start Date</strong>: <span id="start_date"></span> | 
-                                <strong data-i18n="blocks_left">Blocks Left</strong>: <span id="blocks_left"></span> | 
-                                <span id="dividend_payment_link"> | <strong data-i18n="vote_in_poll">Vote In Poll</strong>: <a href="#" data-toggle="modal" data-target="#cast_vote_modal" data-i18n="vote">Vote</a></span>
+                                <span id="vote_poll_link"><strong data-i18n="vote_in_poll">Vote In Poll</strong>: <a href="#" id="vote_poll_link" data-toggle="modal" data-target="#cast_vote_modal" data-i18n="vote">Vote</a></span>
                             </div>
 
                             <div id="poll_description"></div>
@@ -183,7 +181,7 @@
                                 <div class="col-md-6">
                                     <div class="box box-danger" style="min-height:400px;max-height: 400px;overflow: auto;;">
                                         <div class="box-header">
-                                            <h3 class="box-title"><span data-i18n="poll_results">Poll Results</span> <span id="sell_orders_count"></span></h3>
+                                            <h3 class="box-title"><span data-i18n="poll_results">Poll  Results</span></h3>
                                         </div>
                                         <div class="box-body no-padding">
                                             <div class="data-container data-loading" data-no-padding="true">
@@ -191,7 +189,8 @@
                                                     <thead>
                                                     <tr>
                                                         <th data-i18n="option">Option</th>
-                                                        <th data-i18n="votes">Votes</th>
+                                                        <th data-i18n="result">Result</th>
+                                                        <th data-i18n="weight">Weight</th>
                                                     </tr>
                                                     </thead>
                                                     <tbody>
@@ -214,9 +213,7 @@
                                             <div class="data-container data-loading" data-no-padding="true">
                                                 <table class="table table-striped" id="followed_polls_votes_cast">
                                                     <thead>
-                                                    <tr class="followed_polls_votes_cast_table_head">
-                                                        <th data-i18n="voter">Voter</th>
-                                                    </tr>
+                                                    
                                                     </thead>
                                                     <tbody>
                                                     

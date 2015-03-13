@@ -85,7 +85,7 @@ public enum CurrencyType {
                 }
             }
             if (transaction.getType() == MonetarySystem.RESERVE_INCREASE) {
-                if (currency != null && currency.isActive()) {
+                if (currency != null && currency.getIssuanceHeight() <= transaction.getValidationHeight()) {
                     throw new NxtException.NotCurrentlyValidException("Cannot increase reserve for active currency");
                 }
             }
