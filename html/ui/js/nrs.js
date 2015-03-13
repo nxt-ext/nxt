@@ -626,14 +626,6 @@ var NRS = (function(NRS, $, undefined) {
 			quantityQNT: "VARCHAR(15)",
 			groupName: "VARCHAR(30) COLLATE NOCASE"
 		}
-		schema["polls"] = {
-			account: "VARCHAR(25)",
-			accountRS: "VARCHAR(25)",
-			name: "VARCHAR(100)",
-			description: "TEXT",
-			poll: "VARCHAR(25)",
-			finishHeight: "VARCHAR(25)"
-		}
 		schema["data"] = {
 			id: {
 				"primary": true,

@@ -73,7 +73,7 @@ final class TransactionDb {
         }
     }
 
-    static TransactionImpl loadTransaction(Connection con, ResultSet rs) throws NxtException.ValidationException {
+    static TransactionImpl loadTransaction(Connection con, ResultSet rs) throws NxtException.NotValidException {
         try {
 
             byte type = rs.getByte("type");
@@ -150,6 +150,7 @@ final class TransactionDb {
         try (Connection con = Db.db.getConnection();
              PreparedStatement pstmt = con.prepareStatement("SELECT * FROM transaction WHERE block_id = ? ORDER BY transaction_index")) {
             pstmt.setLong(1, blockId);
+            pstmt.setFetchSize(50);
             try (ResultSet rs = pstmt.executeQuery()) {
                 List<TransactionImpl> list = new ArrayList<>();
                 while (rs.next()) {

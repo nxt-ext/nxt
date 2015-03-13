@@ -576,14 +576,14 @@ $("#poll_results_modal ul.nav li").click(function(e) {
 
 		$("#cast_vote_answers_entry div.answer_slider input").each(function() {
 			var option = $.trim($(this).val());
-			if(option == 0) option = -127;
+			if(option == 0) option = -128;
 			if (option) {
 				options.push(option);
 			}
 		});
 
 		$("#cast_vote_answers_entry div.answer_boxes input").each(function() {
-			var option = $(this).is(':checked') ? 1 : -127;
+			var option = $(this).is(':checked') ? 1 : -128;
 			options.push(option);
 		});
 

@@ -5,6 +5,7 @@ import nxt.Nxt;
 import nxt.NxtException;
 import nxt.util.Convert;
 import nxt.util.JSON;
+import nxt.util.ThreadPool;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
@@ -21,7 +22,7 @@ final class ProcessBlock extends PeerServlet.PeerRequestHandler {
         if (lastBlock.getStringId().equals(previousBlockId) ||
                 (Convert.parseUnsignedLong(previousBlockId) == lastBlock.getPreviousBlockId()
                         && lastBlock.getTimestamp() > Convert.parseLong(request.get("timestamp")))) {
-            Peers.peersService.submit(() -> {
+            ThreadPool.submit(() -> {
                 try {
                     Nxt.getBlockchainProcessor().processPeerBlock(request);
                 } catch (NxtException | RuntimeException e) {

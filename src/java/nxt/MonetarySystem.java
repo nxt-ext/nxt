@@ -42,10 +42,6 @@ public abstract class MonetarySystem extends TransactionType {
         }
     }
 
-    private static final Fee FIVE_LETTER_CURRENCY_ISSUANCE_FEE = new Fee.ConstantFee(40 * Constants.ONE_NXT);
-    private static final Fee FOUR_LETTER_CURRENCY_ISSUANCE_FEE = new Fee.ConstantFee(1000 * Constants.ONE_NXT);
-    private static final Fee THREE_LETTER_CURRENCY_ISSUANCE_FEE = new Fee.ConstantFee(25000 * Constants.ONE_NXT);
-
     private MonetarySystem() {}
 
     @Override
@@ -68,6 +64,10 @@ public abstract class MonetarySystem extends TransactionType {
 
     public static final TransactionType CURRENCY_ISSUANCE = new MonetarySystem() {
 
+        private final Fee FIVE_LETTER_CURRENCY_ISSUANCE_FEE = new Fee.ConstantFee(40 * Constants.ONE_NXT);
+        private final Fee FOUR_LETTER_CURRENCY_ISSUANCE_FEE = new Fee.ConstantFee(1000 * Constants.ONE_NXT);
+        private final Fee THREE_LETTER_CURRENCY_ISSUANCE_FEE = new Fee.ConstantFee(25000 * Constants.ONE_NXT);
+
         @Override
         public byte getSubtype() {
             return SUBTYPE_MONETARY_SYSTEM_CURRENCY_ISSUANCE;
@@ -79,7 +79,7 @@ public abstract class MonetarySystem extends TransactionType {
         }
 
         @Override
-        public Fee getBaselineFee(Transaction transaction) throws NxtException.NotValidException {
+        public Fee getBaselineFee(Transaction transaction) {
             Attachment.MonetarySystemCurrencyIssuance attachment = (Attachment.MonetarySystemCurrencyIssuance) transaction.getAttachment();
             if (Currency.getCurrencyByCode(attachment.getCode()) != null || Currency.getCurrencyByCode(attachment.getName().toUpperCase()) != null
                     || Currency.getCurrencyByName(attachment.getName()) != null || Currency.getCurrencyByName(attachment.getCode()) != null) {
@@ -93,7 +93,8 @@ public abstract class MonetarySystem extends TransactionType {
                 case 5:
                     return FIVE_LETTER_CURRENCY_ISSUANCE_FEE;
                 default:
-                    throw new NxtException.NotValidException("Invalid currency code length");
+                    // never, invalid code length will be checked and caught later
+                    return THREE_LETTER_CURRENCY_ISSUANCE_FEE;
             }
         }
 
