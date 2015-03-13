@@ -8,6 +8,7 @@ import org.json.simple.JSONObject;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.regex.Pattern;
 
@@ -47,7 +48,7 @@ public interface Attachment extends Appendix {
         }
 
         @Override
-        public Fee getBaselineFee(Transaction transaction) throws NxtException.NotValidException {
+        public Fee getBaselineFee(Transaction transaction) {
             return getTransactionType().getBaselineFee(transaction);
         }
 
@@ -616,6 +617,9 @@ public interface Attachment extends Appendix {
     }
 
     public final static class MessagingPhasingVoteCasting extends AbstractAttachment {
+
+        private static final Comparator<byte[]> hashComparator = Comparator.comparingLong(Convert::fullHashToId);
+
         private final List<byte[]> transactionFullHashes;
 
         MessagingPhasingVoteCasting(ByteBuffer buffer, byte transactionVersion) {
@@ -640,6 +644,7 @@ public interface Attachment extends Appendix {
 
         public MessagingPhasingVoteCasting(List<byte[]> transactionFullHashes) {
             this.transactionFullHashes = transactionFullHashes;
+            Collections.sort(this.transactionFullHashes, hashComparator);
         }
 
         @Override

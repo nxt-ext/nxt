@@ -288,7 +288,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
     }
 
     @Override
-    public Transaction parseTransaction(byte[] bytes) throws NxtException.ValidationException {
+    public TransactionImpl parseTransaction(byte[] bytes) throws NxtException.ValidationException {
         return TransactionImpl.parseTransaction(bytes);
     }
 
