@@ -26,7 +26,7 @@
 
                 <div class="lockscreen-item">
                     <div class="lockscreen-credentials">
-                    	<div class="input-group" id="login_account_container" style="width: 100%;">
+                    	<div class="input-group" id="login_account_container" style="display:table;height:34px;width: 100%;">
                             <div class="dropdown" style="width: 100%;">
 							  <button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-expanded="true" style="width: 100%;">
 								Select an Account to Login with
@@ -62,15 +62,16 @@
 					<input type="radio" name="loginType" id="passwordLogin" value="passphrase" autocomplete="off" /><i class="fa fa-key"></i>
 				  </label>
 				</div>
-                
                 <div id="remember_account_container">
                     <input type="checkbox" name="remember_account" id="remember_account" value="1" /> <span></span><label for="remember_account" data-i18n="remember_account">Remember account on this computer</label>
                 </div>
-                <div id="remember_password_container" style="display: none;">
-                    <input type="checkbox" name="remember_password" id="remember_password" value="1" /> <span></span><label for="remember_password" data-i18n="remember_passphrase_during_session">Remember passphrase during session</label>
+                <div style="height:30px;">
+                    <div id="remember_password_container" style="display: none;">
+                        <input type="checkbox" name="remember_password" id="remember_password" value="1" /> <span></span><label for="remember_password" data-i18n="remember_passphrase_during_session">Remember passphrase during session</label>
+                    </div>
                 </div>
 
-                <div id="lockscreen_active_plugins_warning" style="margin-top:15px;display:none;">
+                <div id="lockscreen_active_plugins_warning" style="margin-top:7px;display:none;">
                 <div style="display:inline-block;max-width: 400px; min-width: 400px;">
                     <div style="margin-top:10px;margin-bottom:12px;">
                         <a href="#" id="lockscreen_active_plugins_overview" class="label label-default" data-content="" data-toggle="popover" data-placement="top" data-i18n="active_plugins">
