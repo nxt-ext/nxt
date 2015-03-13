@@ -356,23 +356,12 @@
                         </div>
                     </div>
                     <div data-replace-with-modal-template="secret_phrase_modal_template"></div>
-                    <div class="row">
-                        <div class="col-xs-6 col-sm-6 col-md-6 advanced">
-                            <div class="form-group">
-                                <label for="issue_currency_fee"><span data-i18n="fee">FEE</span> <i class="fa fa-exclamation-circle show_popover" data-container="body" style="color:red"></i></label>
-                                <div class="input-group">
-                                    <input type="number" name="feeNXT" id="exchange_offer_currency_fee" class="form-control" placeholder="Fee" step="any" min="1" data-default="1" value="1" tabindex="9">
-                                    <span class="input-group-addon">NXT</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-xs-6 col-sm-6 col-md-6 advanced">
-                            <div class="form-group">
-                                <label for="issue_currency_deadline" data-i18n="deadline_hours">DEADLINE (HOURS)</label>
-                                <input type="number" name="deadline" id="exchange_offer_deadline" class="form-control" placeholder="Deadline" data-i18n="deadline" min="1" data-default="24" value="24" tabindex="10">
-                            </div>
-                        </div>
-                    </div>
+                    <div data-replace-with-modal-template="advanced_fee_deadline_template"></div>
+                    <div data-replace-with-modal-template="advanced_approve_template"></div>
+                    <div data-replace-with-modal-template="advanced_rt_hash_template"></div>
+                    <div data-replace-with-modal-template="advanced_broadcast_template"></div>
+                    <div data-replace-with-modal-template="advanced_note_to_self_template"></div>
+                    
                     <input type="hidden" name="request_type" value="publishExchangeOffer" />
                 </form>
             </div>
