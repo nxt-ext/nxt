@@ -9,14 +9,14 @@ var NRS = (function(NRS, $, undefined) {
 			if (e.which == '13') {
 				e.preventDefault();
 				var account = $("#login_account_other").val();
-				NRS.login(0,account);
+				NRS.login(false,account);
 			}
 		});
 		$("#login_password").keypress(function(e) {
 			if (e.which == '13') {
 				e.preventDefault();
 				var password = $("#login_password").val();
-				NRS.login(1,password);
+				NRS.login(true,password);
 			}
 		});
 	}
@@ -95,7 +95,7 @@ var NRS = (function(NRS, $, undefined) {
 			$("#account_phrase_generator_panel .step_3 .callout").show();
 		} else {
 			NRS.newlyCreatedAccount = true;
-			NRS.login(password);
+			NRS.login(true,password);
 			PassPhraseGenerator.reset();
 			$("#account_phrase_generator_panel textarea").val("");
 			$("#account_phrase_generator_panel .step_3 .callout").hide();
@@ -122,7 +122,7 @@ var NRS = (function(NRS, $, undefined) {
 			$("#account_phrase_custom_panel .callout").first().removeClass("callout-info").addClass("callout-danger").html(error);
 		} else {
 			$("#registration_password, #registration_password_repeat").val("");
-			NRS.login(password);
+			NRS.login(true,password);
 		}
 	});
 	
@@ -139,7 +139,7 @@ var NRS = (function(NRS, $, undefined) {
 						.append($("<a></a>")
 							.attr("href","#")
 							.attr("style","display: inline-block;width: 360px;")
-							.attr("onClick","NRS.login(0,'"+account+"')")
+							.attr("onClick","NRS.login(false,'"+account+"')")
 							.text(account))
 						.append($('<button aria-hidden="true" data-dismiss="modal" class="close" type="button">×</button>')
 							.attr("onClick","NRS.removeAccount('"+account+"')")
@@ -186,7 +186,7 @@ var NRS = (function(NRS, $, undefined) {
 		NRS.listAccounts();
 	}
 
-	NRS.login = function(passLogin = 1, password, callback) {
+	NRS.login = function(passLogin, password, callback) {
 		if (passLogin){
 			if (!password.length) {
 				$.growl($.t("error_passphrase_required_login"), {
