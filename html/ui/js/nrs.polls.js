@@ -247,6 +247,10 @@ var NRS = (function(NRS, $, undefined) {
 			"modalId": 'create_poll_modal'
 		}
 		NRS.appendMenuItemToTSMenuItem(sidebarId, options);
+
+		$('#create_poll_modal input[name="feeNXT"]').attr('min', 10);
+		$('#create_poll_modal input[name="feeNXT"]').data('default', 10);
+		$('#create_poll_modal input[name="feeNXT"]').val(10);
 	}
 
 
