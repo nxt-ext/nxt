@@ -589,7 +589,7 @@ $("#poll_results_modal ul.nav li").click(function(e) {
 
 		var data = {
 			"poll": $("#cast_vote_poll").val(),
-			"feeNQT": (parseInt($("#cast_vote_fee").val())*100000000),
+			"feeNQT": String(parseInt($("#cast_vote_fee").val())*100000000),
 			"deadline": $("#cast_vote_deadline").val(),
 			"secretPhrase": $("#cast_vote_password").val()
 		};
