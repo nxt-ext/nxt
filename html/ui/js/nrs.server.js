@@ -558,32 +558,46 @@ var NRS = (function(NRS, $, undefined) {
 				pos += 2;
 				transaction.description = converters.byteArrayToString(byteArray, pos, descriptionLength);
 				pos += descriptionLength;
-				var nr_options = byteArray[pos];
+				transaction.finishHeight = converters.byteArrayToSignedInt32(byteArray, pos);
+            pos += 4;
+            var nr_options = byteArray[pos];
 				pos++;
 
 				for (var i = 0; i < nr_options; i++) {
 					var optionLength = converters.byteArrayToSignedShort(byteArray, pos);
 					pos += 2;
-					transaction["option" + i] = converters.byteArrayToString(byteArray, pos, optionLength);
+					transaction["option" + (i < 10 ? "0" + i : i)] = converters.byteArrayToString(byteArray, pos, optionLength);
 					pos += optionLength;
 				}
+				transaction.votingModel = String(byteArray[pos]);
+				pos++;
 				transaction.minNumberOfOptions = String(byteArray[pos]);
 				pos++;
 				transaction.maxNumberOfOptions = String(byteArray[pos]);
 				pos++;
-				transaction.optionsAreBinary = String(byteArray[pos]);
+				transaction.minRangeValue = String(byteArray[pos]);
 				pos++;
-				if (transaction.name !== data.name || transaction.description !== data.description || transaction.minNumberOfOptions !== data.minNumberOfOptions || transaction.maxNumberOfOptions !== data.maxNumberOfOptions || transaction.optionsAreBinary !== data.optionsAreBinary) {
+				transaction.maxRangeValue = String(byteArray[pos]);
+				pos++;
+            transaction.minBalance = String(converters.byteArrayToBigInteger(byteArray, pos));
+            pos += 8;
+            transaction.minBalanceModel = String(byteArray[pos]);
+            pos++;
+            transaction.holding = String(converters.byteArrayToBigInteger(byteArray, pos));
+            pos += 8;
+
+				if (transaction.name !== data.name || transaction.description !== data.description ||
+               transaction.minNumberOfOptions !== data.minNumberOfOptions || transaction.maxNumberOfOptions !== data.maxNumberOfOptions) {
 					return false;
 				}
 
 				for (var i = 0; i < nr_options; i++) {
-					if (transaction["option" + i] !== data["option" + i]) {
+					if (transaction["option" + (i < 10 ? "0" + i : i)] !== data["option" + (i < 10 ? "0" + i : i)]) {
 						return false;
 					}
 				}
 
-				if (("option" + i) in data) {
+				if (("option" + (i < 10 ? "0" + i : i)) in data) {
 					return false;
 				}
 				break;

@@ -500,13 +500,13 @@ $("#poll_results_modal ul.nav li").click(function(e) {
 		var data = {
 			"name": $("#create_poll_name").val(),
 			"description": $("#create_poll_description").val(),
-			"finishHeight": (parseInt(NRS.lastBlockHeight) + parseInt($("#create_poll_duration").val())),
+			"finishHeight": String(parseInt(NRS.lastBlockHeight) + parseInt($("#create_poll_duration").val())),
 			"minNumberOfOptions": $("#create_poll_min_options").val(),
 			"maxNumberOfOptions": $("#create_poll_max_options").val(),
 			"minRangeValue": $("#create_poll_min_range_value").val(),
 			"maxRangeValue": $("#create_poll_max_range_value").val(),
-			"minBalance": (parseInt($("#create_poll_min_balance").val())*100000000),
-			"feeNQT": (parseInt($("#create_poll_fee").val()) * 100000000),
+			"minBalance": String(parseInt($("#create_poll_min_balance").val())*100000000),
+			"feeNQT": String(parseInt($("#create_poll_fee").val()) * 100000000),
 			"deadline": $("#create_poll_deadline").val(),
 			"secretPhrase": $("#create_poll_password").val()
 		};
@@ -594,15 +594,8 @@ $("#poll_results_modal ul.nav li").click(function(e) {
 			"secretPhrase": $("#cast_vote_password").val()
 		};
 		for (var i = 0; i < options.length; i++) {
-			var number;
-			if(number<10)number = "0"+i;
-			else number = i;
-			alert(number);
-			data["vote" + number] = options[i];
+			data["vote" + (i < 10 ? "0" + i : i)] = options[i];
 		}
-
-
-
 		return {
 			"requestType": "castVote",
 			"data": data
