@@ -612,11 +612,13 @@ var NRS = (function(NRS, $, undefined) {
 				transaction.votes = [];
 
 				for (var i = 0; i < voteLength; i++) {
-					transaction.votes.push(byteArray[pos]);
+               transaction["vote" + (i < 10 ? "0" + i : i)] = byteArray[pos];
 					pos++;
 				}
-				return false;
-				break;
+            if (transaction.poll !== data.poll) {
+               return false;
+            }
+            break;
 			case "hubAnnouncement":
 				if (transaction.type !== 1 || transaction.subtype != 4) {
 					return false;
