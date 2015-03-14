@@ -1042,15 +1042,13 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         try {
 
             block = new BlockImpl(getBlockVersion(previousBlock.getHeight()), blockTimestamp, previousBlock.getId(), totalAmountNQT, totalFeeNQT, payloadLength,
-                    payloadHash, publicKey, generationSignature, null, previousBlockHash, blockTransactions);
+                    payloadHash, publicKey, generationSignature, previousBlockHash, blockTransactions, secretPhrase);
 
         } catch (NxtException.ValidationException e) {
             // shouldn't happen because all transactions are already validated
             Logger.logMessage("Error generating block", e);
             return;
         }
-
-        block.sign(secretPhrase);
 
         try {
             pushBlock(block);
@@ -1198,11 +1196,11 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                                     }
                                     byte[] transactionBytes = transaction.getBytesOrig();
                                     if (currentBlock.getHeight() > Constants.NQT_BLOCK
-                                            && !Arrays.equals(transactionBytes, transactionProcessor.parseTransaction(transactionBytes).getBytesOrig())) {
+                                            && !Arrays.equals(transactionBytes, TransactionImpl.newTransactionBuilder(transactionBytes).build().getBytesOrig())) {
                                         throw new NxtException.NotValidException("Transaction bytes cannot be parsed back to the same transaction");
                                     }
                                     JSONObject transactionJSON = (JSONObject) JSONValue.parse(transaction.getJSONObject().toJSONString());
-                                    if (!Arrays.equals(transactionBytes, transactionProcessor.parseTransaction(transactionJSON).getBytesOrig())) {
+                                    if (!Arrays.equals(transactionBytes, TransactionImpl.newTransactionBuilder(transactionJSON).build().getBytesOrig())) {
                                         throw new NxtException.NotValidException("Transaction JSON cannot be parsed back to the same transaction");
                                     }
                                 }

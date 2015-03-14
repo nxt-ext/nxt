@@ -41,6 +41,15 @@ final class BlockImpl implements Block {
 
 
     BlockImpl(int version, int timestamp, long previousBlockId, long totalAmountNQT, long totalFeeNQT, int payloadLength, byte[] payloadHash,
+              byte[] generatorPublicKey, byte[] generationSignature, byte[] previousBlockHash, List<TransactionImpl> transactions, String secretPhrase)
+            throws NxtException.NotValidException {
+        this(version, timestamp, previousBlockId, totalAmountNQT, totalFeeNQT, payloadLength, payloadHash,
+                generatorPublicKey, generationSignature, null, previousBlockHash, transactions);
+        blockSignature = Crypto.sign(getBytes(), secretPhrase);
+        bytes = null;
+    }
+
+    BlockImpl(int version, int timestamp, long previousBlockId, long totalAmountNQT, long totalFeeNQT, int payloadLength, byte[] payloadHash,
               byte[] generatorPublicKey, byte[] generationSignature, byte[] blockSignature, byte[] previousBlockHash, List<TransactionImpl> transactions)
             throws NxtException.NotValidException {
 
@@ -299,14 +308,6 @@ final class BlockImpl implements Block {
             bytes = buffer.array();
         }
         return bytes;
-    }
-
-    void sign(String secretPhrase) {
-        if (blockSignature != null) {
-            throw new IllegalStateException("Block already signed");
-        }
-        blockSignature = Crypto.sign(getBytes(), secretPhrase);
-        bytes = null;
     }
 
     boolean verifyBlockSignature() {
