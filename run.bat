@@ -25,7 +25,11 @@
         echo Java not found, please install Java JRE
         goto endProcess
     )
-	
+
+    if not defined javaVersion ( set "javaVersion=0" )
+
+    if not defined javaVersion32 ( set "javaVersion32=0" )
+
     rem test if a java version is compatible
     if not %javaVersion% geq 1.8 (
 		if not %javaVersion32% geq 1.8 (
