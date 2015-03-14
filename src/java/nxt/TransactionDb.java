@@ -11,6 +11,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 final class TransactionDb {
@@ -34,10 +35,11 @@ final class TransactionDb {
 
     static TransactionImpl findTransactionByFullHash(String fullHash) {
         try (Connection con = Db.db.getConnection();
-             PreparedStatement pstmt = con.prepareStatement("SELECT * FROM transaction WHERE full_hash = ?")) {
-            pstmt.setBytes(1, Convert.parseHexString(fullHash));
+             PreparedStatement pstmt = con.prepareStatement("SELECT * FROM transaction WHERE id = ?")) {
+            byte[] fullHashBytes = Convert.parseHexString(fullHash);
+            pstmt.setLong(1, Convert.fullHashToId(fullHashBytes));
             try (ResultSet rs = pstmt.executeQuery()) {
-                if (rs.next()) {
+                if (rs.next() && Arrays.equals(rs.getBytes("full_hash"), fullHashBytes)) {
                     return loadTransaction(con, rs);
                 }
                 return null;
@@ -63,10 +65,11 @@ final class TransactionDb {
 
     static boolean hasTransactionByFullHash(String fullHash) {
         try (Connection con = Db.db.getConnection();
-             PreparedStatement pstmt = con.prepareStatement("SELECT 1 FROM transaction WHERE full_hash = ?")) {
-            pstmt.setBytes(1, Convert.parseHexString(fullHash));
+             PreparedStatement pstmt = con.prepareStatement("SELECT full_hash FROM transaction WHERE id = ?")) {
+            byte[] fullHashBytes = Convert.parseHexString(fullHash);
+            pstmt.setLong(1, Convert.fullHashToId(fullHashBytes));
             try (ResultSet rs = pstmt.executeQuery()) {
-                return rs.next();
+                return rs.next() && Arrays.equals(rs.getBytes("full_hash"), fullHashBytes);
             }
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);

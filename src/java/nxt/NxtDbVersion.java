@@ -718,6 +718,8 @@ class NxtDbVersion extends DbVersion {
                 BlockchainProcessorImpl.getInstance().scheduleScan(0, false);
                 apply(null);
             case 283:
+                apply("DROP INDEX IF EXISTS transaction_full_hash_idx");
+            case 284:
                 return;
             default:
                 throw new RuntimeException("Blockchain database inconsistent with code, probably trying to run older code on newer database");
