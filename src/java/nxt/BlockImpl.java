@@ -69,7 +69,8 @@ final class BlockImpl implements Block {
 
     BlockImpl(int version, int timestamp, long previousBlockId, long totalAmountNQT, long totalFeeNQT, int payloadLength,
               byte[] payloadHash, long generatorId, byte[] generationSignature, byte[] blockSignature,
-              byte[] previousBlockHash, BigInteger cumulativeDifficulty, long baseTarget, long nextBlockId, int height, long id)
+              byte[] previousBlockHash, BigInteger cumulativeDifficulty, long baseTarget, long nextBlockId, int height, long id,
+              List<TransactionImpl> blockTransactions)
             throws NxtException.NotValidException {
         this(version, timestamp, previousBlockId, totalAmountNQT, totalFeeNQT, payloadLength, payloadHash,
                 null, generationSignature, blockSignature, previousBlockHash, null);
@@ -79,6 +80,7 @@ final class BlockImpl implements Block {
         this.height = height;
         this.id = id;
         this.generatorId = generatorId;
+        this.blockTransactions = blockTransactions;
     }
 
     @Override

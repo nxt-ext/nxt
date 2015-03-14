@@ -182,7 +182,7 @@ final class BlockchainImpl implements Blockchain {
             pstmt.setFetchSize(100);
             try (ResultSet rs = pstmt.executeQuery()) {
                 while (rs.next()) {
-                    result.add(BlockDb.loadBlock(con, rs));
+                    result.add(BlockDb.loadBlock(con, rs, true));
                 }
             }
             return result;

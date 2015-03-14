@@ -147,8 +147,15 @@ final class TransactionDb {
     }
 
     static List<TransactionImpl> findBlockTransactions(long blockId) {
-        try (Connection con = Db.db.getConnection();
-             PreparedStatement pstmt = con.prepareStatement("SELECT * FROM transaction WHERE block_id = ? ORDER BY transaction_index")) {
+        try (Connection con = Db.db.getConnection()) {
+            return findBlockTransactions(con, blockId);
+        } catch (SQLException e) {
+            throw new RuntimeException(e.toString(), e);
+        }
+    }
+
+    static List<TransactionImpl> findBlockTransactions(Connection con, long blockId) {
+        try (PreparedStatement pstmt = con.prepareStatement("SELECT * FROM transaction WHERE block_id = ? ORDER BY transaction_index")) {
             pstmt.setLong(1, blockId);
             pstmt.setFetchSize(50);
             try (ResultSet rs = pstmt.executeQuery()) {

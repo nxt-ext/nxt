@@ -9,6 +9,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.List;
 
 final class BlockDb {
 
@@ -113,6 +114,10 @@ final class BlockDb {
     }
 
     static BlockImpl loadBlock(Connection con, ResultSet rs) throws NxtException.NotValidException {
+        return loadBlock(con, rs, false);
+    }
+
+    static BlockImpl loadBlock(Connection con, ResultSet rs, boolean loadTransactions) throws NxtException.NotValidException {
         try {
             int version = rs.getInt("version");
             int timestamp = rs.getInt("timestamp");
@@ -132,7 +137,7 @@ final class BlockDb {
             long id = rs.getLong("id");
             return new BlockImpl(version, timestamp, previousBlockId, totalAmountNQT, totalFeeNQT, payloadLength, payloadHash,
                     generatorId, generationSignature, blockSignature, previousBlockHash,
-                    cumulativeDifficulty, baseTarget, nextBlockId, height, id);
+                    cumulativeDifficulty, baseTarget, nextBlockId, height, id, loadTransactions ? TransactionDb.findBlockTransactions(con, id) : null);
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
         }
