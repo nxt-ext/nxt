@@ -853,8 +853,8 @@ final class TransactionImpl implements Transaction {
         }
         long minimumFeeNQT = getMinimumFeeNQT(blockchainHeight);
         if (feeNQT < minimumFeeNQT) {
-            throw new NxtException.NotCurrentlyValidException(String.format("Transaction fee %d less than minimum fee %d at height %d",
-                    feeNQT, minimumFeeNQT, blockchainHeight));
+            throw new NxtException.NotCurrentlyValidException(String.format("Transaction fee %d NXT less than minimum fee %d NXT at height %d",
+                    feeNQT/Constants.ONE_NXT, minimumFeeNQT/Constants.ONE_NXT, blockchainHeight));
         }
         /*
         Account recipientAccount = Account.getAccount(recipientId);

@@ -1122,7 +1122,6 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 }
                 Db.db.commitTransaction();
                 Logger.logDebugMessage("Rolled back derived tables");
-                pstmtSelect.setInt(1, height);
                 BlockImpl currentBlock = BlockDb.findBlockAtHeight(height);
                 blockListeners.notify(currentBlock, Event.RESCAN_BEGIN);
                 long currentBlockId = currentBlock.getId();
@@ -1132,6 +1131,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 } else {
                     blockchain.setLastBlock(BlockDb.findBlockAtHeight(height - 1));
                 }
+                pstmtSelect.setInt(1, height);
                 try (ResultSet rs = pstmtSelect.executeQuery()) {
                     while (rs.next()) {
                         try {
@@ -1176,12 +1176,13 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                                     throw new NxtException.NotValidException("Block JSON cannot be parsed back to the same block");
                                 }
                                 for (TransactionImpl transaction : currentBlock.getTransactions()) {
-                                    if (!transaction.verifySignature()) {
-                                        throw new NxtException.NotValidException("Invalid transaction signature");
-                                    }
-                                    if (transaction.getVersion() != transactionProcessor.getTransactionVersion(blockchain.getHeight())) {
-                                        throw new NxtException.NotValidException("Invalid transaction version");
-                                    }
+                                    try {
+                                        if (!transaction.verifySignature()) {
+                                            throw new NxtException.NotValidException("Invalid transaction signature");
+                                        }
+                                        if (transaction.getVersion() != transactionProcessor.getTransactionVersion(blockchain.getHeight())) {
+                                            throw new NxtException.NotValidException("Invalid transaction version");
+                                        }
                                     /*
                                     if (!EconomicClustering.verifyFork(transaction)) {
                                         Logger.logDebugMessage("Found transaction that was generated on a fork: " + transaction.getStringId()
@@ -1190,18 +1191,22 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                                         //throw new NxtException.NotValidException("Invalid transaction fork");
                                     }
                                     */
-                                    transaction.validate();
-                                    if (transaction.getPhasing() == null && transaction.isDuplicate(duplicates)) {
-                                        throw new NxtException.NotValidException("Transaction is a duplicate: " + transaction.getStringId());
-                                    }
-                                    byte[] transactionBytes = transaction.getBytesOrig();
-                                    if (currentBlock.getHeight() > Constants.NQT_BLOCK
-                                            && !Arrays.equals(transactionBytes, TransactionImpl.newTransactionBuilder(transactionBytes).build().getBytesOrig())) {
-                                        throw new NxtException.NotValidException("Transaction bytes cannot be parsed back to the same transaction");
-                                    }
-                                    JSONObject transactionJSON = (JSONObject) JSONValue.parse(transaction.getJSONObject().toJSONString());
-                                    if (!Arrays.equals(transactionBytes, TransactionImpl.newTransactionBuilder(transactionJSON).build().getBytesOrig())) {
-                                        throw new NxtException.NotValidException("Transaction JSON cannot be parsed back to the same transaction");
+                                        transaction.validate();
+                                        if (transaction.getPhasing() == null && transaction.isDuplicate(duplicates)) {
+                                            throw new NxtException.NotValidException("Transaction is a duplicate");
+                                        }
+                                        byte[] transactionBytes = transaction.getBytesOrig();
+                                        if (currentBlock.getHeight() > Constants.NQT_BLOCK
+                                                && !Arrays.equals(transactionBytes, TransactionImpl.newTransactionBuilder(transactionBytes).build().getBytesOrig())) {
+                                            throw new NxtException.NotValidException("Transaction bytes cannot be parsed back to the same transaction");
+                                        }
+                                        JSONObject transactionJSON = (JSONObject) JSONValue.parse(transaction.getJSONObject().toJSONString());
+                                        if (!Arrays.equals(transactionBytes, TransactionImpl.newTransactionBuilder(transactionJSON).build().getBytesOrig())) {
+                                            throw new NxtException.NotValidException("Transaction JSON cannot be parsed back to the same transaction");
+                                        }
+                                    } catch (NxtException.ValidationException e) {
+                                        Logger.logErrorMessage("Invalid transaction: " + transaction.getJSONObject().toJSONString(), e);
+                                        throw e;
                                     }
                                 }
                             }
