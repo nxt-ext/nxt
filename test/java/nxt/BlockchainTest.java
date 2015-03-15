@@ -5,8 +5,10 @@ import nxt.util.Logger;
 import nxt.util.Time;
 
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.BeforeClass;
 
 import java.util.Properties;
 
@@ -27,6 +29,7 @@ public abstract class BlockchainTest extends AbstractBlockchainTest {
     protected static long id4;
 
     protected static boolean isNxtInitted = false;
+    protected static boolean needShutdownAfterClass = false;
 
     public static void initNxt() {
         if (!isNxtInitted) {
@@ -41,8 +44,9 @@ public abstract class BlockchainTest extends AbstractBlockchainTest {
         }
     }
     
-    @Before
-    public void init() {
+    @BeforeClass
+    public static void init() {
+        needShutdownAfterClass = !isNxtInitted;
         initNxt();
         
         Nxt.setTime(new Time.CounterTime(Nxt.getEpochTime()));
@@ -53,6 +57,13 @@ public abstract class BlockchainTest extends AbstractBlockchainTest {
         id2 = Account.getAccount(Crypto.getPublicKey(secretPhrase2)).getId();
         id3 = Account.getAccount(Crypto.getPublicKey(secretPhrase3)).getId();
         id4 = Account.getAccount(Crypto.getPublicKey(secretPhrase4)).getId();
+    }
+
+    @AfterClass
+    public static void shutdown() {
+        if (needShutdownAfterClass) {
+            Nxt.shutdown();
+        }
     }
 
     @After
