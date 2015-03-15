@@ -11,7 +11,7 @@ public final class Scan extends APIServlet.APIRequestHandler {
     static final Scan instance = new Scan();
 
     private Scan() {
-        super(new APITag[] {APITag.DEBUG}, "numBlocks", "height", "validate");
+        super(new APITag[] {APITag.DEBUG}, "numBlocks", "height", "validate", "shutdown");
     }
 
     @Override
@@ -19,6 +19,7 @@ public final class Scan extends APIServlet.APIRequestHandler {
         JSONObject response = new JSONObject();
         try {
             boolean validate = "true".equalsIgnoreCase(req.getParameter("validate"));
+            boolean shutdown = "true".equalsIgnoreCase(req.getParameter("shutdown"));
             int numBlocks = 0;
             try {
                 numBlocks = Integer.parseInt(req.getParameter("numBlocks"));
@@ -30,6 +31,9 @@ public final class Scan extends APIServlet.APIRequestHandler {
             long start = System.currentTimeMillis();
             try {
                 Nxt.getBlockchainProcessor().setGetMoreBlocks(false);
+                if (shutdown) {
+                    Nxt.getBlockchainProcessor().fullScanWithShutdown();
+                }
                 if (numBlocks > 0) {
                     Nxt.getBlockchainProcessor().scan(Nxt.getBlockchain().getHeight() - numBlocks + 1, validate);
                 } else if (height >= 0) {
@@ -38,7 +42,9 @@ public final class Scan extends APIServlet.APIRequestHandler {
                     return JSONResponses.missing("numBlocks", "height");
                 }
             } finally {
-                Nxt.getBlockchainProcessor().setGetMoreBlocks(true);
+                if (!shutdown) {
+                    Nxt.getBlockchainProcessor().setGetMoreBlocks(true);
+                }
             }
             long end = System.currentTimeMillis();
             response.put("done", true);

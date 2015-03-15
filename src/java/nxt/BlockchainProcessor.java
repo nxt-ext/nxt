@@ -30,6 +30,8 @@ public interface BlockchainProcessor extends Observable<Block,BlockchainProcesso
 
     void scan(int height, boolean validate);
 
+    void fullScanWithShutdown();
+
     void setGetMoreBlocks(boolean getMoreBlocks);
 
     List<? extends Block> popOffTo(int height);

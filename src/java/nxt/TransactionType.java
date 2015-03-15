@@ -1,7 +1,6 @@
 package nxt;
 
 import nxt.util.Convert;
-import nxt.util.Logger;
 import org.json.simple.JSONObject;
 
 import java.nio.ByteBuffer;
