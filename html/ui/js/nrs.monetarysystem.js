@@ -268,7 +268,7 @@ var NRS = (function(NRS, $, undefined) {
 					}
 					var accountRS = offer.accountRS || offer.senderRS;
                accountRS = String(accountRS).escapeHTML();
-					var accountLink = offer.unconfirmed ? "You - <strong>Pending</strong>" : (offer.account == NRS.account ? "<strong>You</strong>" : "<a href='#' class='show_account_modal_action user-info' data-user='" + accountRS + "'>" + accountRS + "</a>");
+					var accountLink = offer.unconfirmed ? "You - <strong>$.t('unconfirmed')</strong>" : (offer.account == NRS.account ? "<strong>You</strong>" : "<a href='#' class='show_account_modal_action user-info' data-user='" + accountRS + "'>" + accountRS + "</a>");
 					var supply = offer.supply || (type == "sell" ? offer.attachment.initialSellSupply : offer.attachment.initialBuySupply);
 					var limit = offer.limit || (type == "sell" ? offer.attachment.totalSellLimit : offer.attachment.totalBuyLimit);
                rows += "<tr>" +
@@ -531,7 +531,7 @@ var NRS = (function(NRS, $, undefined) {
 		}
 
 		if (rateNQT.toString() == "0" || unitsQNT.toString() == "0") {
-			$.growl($.t("error_amount_price_required"), {
+			$.growl($.t("error_unit_rate_required"), {
 				"type": "danger"
 			});
 			return e.preventDefault();
@@ -885,7 +885,7 @@ var NRS = (function(NRS, $, undefined) {
 	var _selectedApprovalCurrency = "";
 
 	NRS.buildApprovalRequestCurrencyNavi = function() {
-		$select = $('#approve_currency_select');
+		var $select = $('#approve_currency_select');
 		$select.empty();
 
 		var currencySelected = false;
@@ -917,7 +917,7 @@ var NRS = (function(NRS, $, undefined) {
 			}
       		$noneOption.prependTo($select);
       	});
-	}
+	};
 
 	NRS.pages.approval_requests_currency = function() {
 		NRS.buildApprovalRequestCurrencyNavi();
@@ -938,7 +938,7 @@ var NRS = (function(NRS, $, undefined) {
 						response.transactions.pop();
 					}
 					for (var i = 0; i < response.transactions.length; i++) {
-						t = response.transactions[i];
+						var t = response.transactions[i];
 						t.confirmed = true;
 						rows += NRS.getTransactionRowHTML(t, ['approve']);
 					}
@@ -952,7 +952,7 @@ var NRS = (function(NRS, $, undefined) {
 			$('#ar_currency_no_entries').html($.t('please_select_currency', 'Please select a currency'));
 			NRS.dataLoaded();
 		}
-	}
+	};
 
 	$('#approve_currency_select').on('change', function() {
 		_selectedApprovalCurrency = $(this).find('option:selected').val();
@@ -966,33 +966,33 @@ var NRS = (function(NRS, $, undefined) {
 			"titleHTML": '<i class="fa fa-bank"></i><span data-i18n="monetary_system">Monetary System</span>',
 			"page": 'monetary_system',
 			"desiredPosition": 40
-		}
+		};
 		NRS.addTreeviewSidebarMenuItem(options);
 		options = {
 			"titleHTML": '<span data-i18n="currencies">Currencies</span>',
 			"type": 'PAGE',
 			"page": 'currencies'
-		}
+		};
 		NRS.appendMenuItemToTSMenuItem(sidebarId, options);
 		options = {
 			"titleHTML": '<span data-i18n="exchange_history">Exchange History</span>',
 			"type": 'PAGE',
 			"page": 'exchange_history'
-		}
+		};
 		NRS.appendMenuItemToTSMenuItem(sidebarId, options);
 		options = {
 			"titleHTML": '<span data-i18n="approval_requests">Approval Requests</span>',
 			"type": 'PAGE',
 			"page": 'approval_requests_currency'
-		}
+		};
 		NRS.appendMenuItemToTSMenuItem(sidebarId, options);
 		options = {
 			"titleHTML": '<span data-i18n="issue_currency">Issue Currency</span></a>',
 			"type": 'MODAL',
 			"modalId": 'issue_currency_modal'
-		}
+		};
 		NRS.appendMenuItemToTSMenuItem(sidebarId, options);
-	}
+	};
 
 	/* Calculate correct fees based on currency code length */
 	var issueCurrencyCode = $("#issue_currency_code");
@@ -1080,11 +1080,13 @@ var NRS = (function(NRS, $, undefined) {
 		}
 	};
 
-   $("#currency_distribution_modal").on("show.bs.modal", function(e) {
+   var distributionTable = $("#currency_distribution_table");
+   var distributionModal = $("#currency_distribution_modal");
+   distributionModal.on("show.bs.modal", function(e) {
   		var $invoker = $(e.relatedTarget);
 
   		var code = $invoker.data("code");
-      var currency;
+      var currency = null;
       NRS.sendRequest("getCurrency", {
          "code": code
       }, function(response) {
@@ -1107,14 +1109,14 @@ var NRS = (function(NRS, $, undefined) {
   				}
   			}
 
-  			$("#currency_distribution_table tbody").empty().append(rows);
-  			NRS.dataLoadFinished($("#currency_distribution_table"));
+         distributionTable.find("tbody").empty().append(rows);
+  			NRS.dataLoadFinished(distributionTable);
   		});
   	});
 
-  	$("#currency_distribution_modal").on("hidden.bs.modal", function(e) {
-  		$("#currency_distribution_table tbody").empty();
-  		$("#currency_distribution_table").parent().addClass("data-loading");
+  	distributionModal.on("hidden.bs.modal", function() {
+  		distributionTable.find("tbody").empty();
+  		distributionTable.parent().addClass("data-loading");
   	});
 
 	/* TRANSFER CURRENCY FORM */

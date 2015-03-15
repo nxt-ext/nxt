@@ -1137,5 +1137,6 @@
   "current_units": "Current Units Supply",
   "current_reserve_per_unit": "Current Reserve Per Unit",
   "founders": "Founders",
-  "next_lessee_status": "The next lease period is scheduled from block __start__ to block __end__, the lessee account is <a href='#' data-user='__account__' class='user_info'>__account__</a>"
+  "next_lessee_status": "The next lease period is scheduled from block __start__ to block __end__, the lessee account is <a href='#' data-user='__account__' class='user_info'>__account__</a>",
+  "error_unit_rate_required": "Please fill in number of units and rate."
 }

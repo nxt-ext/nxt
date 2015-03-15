@@ -2044,7 +2044,7 @@ var NRS = (function(NRS, $, undefined) {
 	var _selectedApprovalAsset = "";
 
 	NRS.buildApprovalRequestAssetNavi = function() {
-		$select = $('#approve_asset_select');
+		var $select = $('#approve_asset_select');
 		$select.empty();
 
 		var assetSelected = false;
