@@ -206,8 +206,7 @@ public class MintWorker {
                 .ecBlockHeight(((Long) ecBlock.get("ecBlockHeight")).intValue())
                 .ecBlockId(Convert.parseUnsignedLong((String) ecBlock.get("ecBlockId")));
         try {
-            Transaction transaction = builder.build();
-            transaction.sign(secretPhrase);
+            Transaction transaction = builder.build(secretPhrase);
             Map<String, String> params = new HashMap<>();
             params.put("requestType", "broadcastTransaction");
             params.put("transactionBytes", Convert.toHexString(transaction.getBytes()));

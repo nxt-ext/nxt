@@ -33,7 +33,8 @@ var NRS = (function(NRS, $, undefined) {
 		$("#account_phrase_custom_panel, #account_phrase_generator_panel, #welcome_panel, #custom_passphrase_link").hide();
 		$("#account_phrase_custom_panel :input:not(:button):not([type=submit])").val("");
 		$("#account_phrase_generator_panel :input:not(:button):not([type=submit])").val("");
-
+        $("#login_account_other").mask("NXT-****-****-****-*****");
+        
 		$("#login_panel").show();
 		setTimeout(function() {
 			$("#login_password").focus()

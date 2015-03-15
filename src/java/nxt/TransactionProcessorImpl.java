@@ -288,16 +288,6 @@ final class TransactionProcessorImpl implements TransactionProcessor {
     }
 
     @Override
-    public TransactionImpl parseTransaction(byte[] bytes) throws NxtException.ValidationException {
-        return TransactionImpl.parseTransaction(bytes);
-    }
-
-    @Override
-    public TransactionImpl parseTransaction(JSONObject transactionData) throws NxtException.NotValidException {
-        return TransactionImpl.parseTransaction(transactionData);
-    }
-
-    @Override
     public void clearUnconfirmedTransactions() {
         synchronized (BlockchainImpl.getInstance()) {
             List<Transaction> removed = new ArrayList<>();
@@ -423,7 +413,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
         List<Exception> exceptions = new ArrayList<>();
         for (Object transactionData : transactionsData) {
             try {
-                TransactionImpl transaction = parseTransaction((JSONObject) transactionData);
+                TransactionImpl transaction = TransactionImpl.parseTransaction((JSONObject) transactionData);
                 receivedTransactions.add(transaction);
                 if (TransactionDb.hasTransaction(transaction.getId()) || unconfirmedTransactionTable.get(transaction.getDbKey()) != null) {
                     continue;

@@ -30,6 +30,8 @@ public interface Transaction {
 
         Transaction build() throws NxtException.NotValidException;
 
+        Transaction build(String secretPhrase) throws NxtException.NotValidException;
+
     }
 
     long getId();
@@ -73,8 +75,6 @@ public interface Transaction {
     TransactionType getType();
 
     Attachment getAttachment();
-
-    void sign(String secretPhrase);
 
     boolean verifySignature();
 
