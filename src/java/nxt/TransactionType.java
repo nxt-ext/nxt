@@ -894,8 +894,7 @@ public abstract class TransactionType {
 
                     PhasingPoll poll = PhasingPoll.getPoll(pendingId);
                     if (poll == null) {
-                        Logger.logDebugMessage("Wrong pending transaction: " + pendingId);
-                        throw new NxtException.NotCurrentlyValidException("Wrong pending transaction or poll is finished");
+                        throw new NxtException.NotCurrentlyValidException("Invalid pending transaction " + Long.toUnsignedString(pendingId) + ", or poll is finished");
                     }
                     long[] whitelist = poll.getWhitelist();
                     if (whitelist.length > 0 && Arrays.binarySearch(whitelist, voterId) == -1) {
