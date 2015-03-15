@@ -86,7 +86,6 @@ public final class Peers {
     private static final int sendToPeersLimit;
     private static final boolean usePeersDb;
     private static final boolean savePeers;
-    private static final String dumpPeersVersion;
     static final boolean ignorePeerAnnouncedAddress;
     static final boolean cjdnsOnly;
 
@@ -197,7 +196,6 @@ public final class Peers {
         usePeersDb = Nxt.getBooleanProperty("nxt.usePeersDb") && ! Constants.isOffline;
         savePeers = usePeersDb && Nxt.getBooleanProperty("nxt.savePeers");
         getMorePeers = Nxt.getBooleanProperty("nxt.getMorePeers");
-        dumpPeersVersion = Nxt.getStringProperty("nxt.dumpPeersVersion");
         cjdnsOnly = Nxt.getBooleanProperty("nxt.cjdnsOnly");
         ignorePeerAnnouncedAddress = Nxt.getBooleanProperty("nxt.ignorePeerAnnouncedAddress");
 
@@ -510,17 +508,6 @@ public final class Peers {
             } catch (Exception e) {
                 Logger.logShutdownMessage("Failed to stop peer server", e);
             }
-        }
-        if (dumpPeersVersion != null) {
-            StringBuilder buf = new StringBuilder();
-            for (Map.Entry<String,String> entry : announcedAddresses.entrySet()) {
-                Peer peer = peers.get(entry.getValue());
-                if (peer != null && peer.getState() == Peer.State.CONNECTED && peer.shareAddress() && !peer.isBlacklisted()
-                        && peer.getVersion() != null && peer.getVersion().startsWith(dumpPeersVersion)) {
-                    buf.append("('").append(entry.getKey()).append("'), ");
-                }
-            }
-            Logger.logShutdownMessage(buf.toString());
         }
         ThreadPool.shutdownExecutor(sendingService);
         ThreadPool.shutdownExecutor(peersService);
