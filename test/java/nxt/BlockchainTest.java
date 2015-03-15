@@ -3,6 +3,7 @@ package nxt;
 import nxt.crypto.Crypto;
 import nxt.util.Logger;
 import nxt.util.Time;
+
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -14,6 +15,7 @@ public abstract class BlockchainTest extends AbstractBlockchainTest {
     protected static int baseHeight;
 
     protected static final String forgerSecretPhrase = "aSykrgKGZNlSVOMDxkZZgbTvQqJPGtsBggb";
+    protected static final String forgerAccountId = "NXT-9KZM-KNYY-QBXZ-5TD8V";
     protected static final String secretPhrase1 = "hope peace happen touch easy pretend worthless talk them indeed wheel state";
     protected static final String secretPhrase2 = "rshw9abtpsa2";
     protected static final String secretPhrase3 = "eOdBVLMgySFvyiTy8xMuRXDTr45oTzB7L5J";
@@ -24,22 +26,33 @@ public abstract class BlockchainTest extends AbstractBlockchainTest {
     protected static long id3;
     protected static long id4;
 
+    protected static boolean isNxtInitted = false;
+
+    public static void initNxt() {
+        if (!isNxtInitted) {
+            Properties properties = ManualForgingTest.newTestProperties();
+            properties.setProperty("nxt.isTestnet", "true");
+            properties.setProperty("nxt.isOffline", "true");
+            properties.setProperty("nxt.enableFakeForging", "true");
+            properties.setProperty("nxt.fakeForgingAccount", forgerAccountId);
+            properties.setProperty("nxt.timeMultiplier", "1");
+            AbstractForgingTest.init(properties);
+            isNxtInitted = true;
+        }
+    }
+    
     @Before
     public void init() {
+        initNxt();
+        
+        Nxt.setTime(new Time.CounterTime(Nxt.getEpochTime()));
+        baseHeight = blockchain.getHeight();
+        Logger.logMessage("baseHeight: " + baseHeight);
+        
         id1 = Account.getAccount(Crypto.getPublicKey(secretPhrase1)).getId();
         id2 = Account.getAccount(Crypto.getPublicKey(secretPhrase2)).getId();
         id3 = Account.getAccount(Crypto.getPublicKey(secretPhrase3)).getId();
         id4 = Account.getAccount(Crypto.getPublicKey(secretPhrase4)).getId();
-
-        Properties properties = ManualForgingTest.newTestProperties();
-        properties.setProperty("nxt.isTestnet", "true");
-        properties.setProperty("nxt.isOffline", "true");
-        properties.setProperty("nxt.enableFakeForging", "true");
-        properties.setProperty("nxt.timeMultiplier", "1");
-        AbstractForgingTest.init(properties);
-        Nxt.setTime(new Time.CounterTime(Nxt.getEpochTime()));
-        baseHeight = blockchain.getHeight();
-        Logger.logMessage("baseHeight: " + baseHeight);
     }
 
     @After
