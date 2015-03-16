@@ -155,6 +155,7 @@ public final class Nxt {
             init();
         } catch (Throwable t) {
             System.out.println("Fatal error: " + t.toString());
+            t.printStackTrace();
         }
     }
 

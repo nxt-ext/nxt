@@ -356,10 +356,6 @@ final class TransactionProcessorImpl implements TransactionProcessor {
         }
     }
 
-    int getTransactionVersion(int previousBlockHeight) {
-        return previousBlockHeight < Constants.DIGITAL_GOODS_STORE_BLOCK ? 0 : 1;
-    }
-
     void processLater(Collection<TransactionImpl> transactions) {
         long currentTime = System.currentTimeMillis();
         synchronized (BlockchainImpl.getInstance()) {

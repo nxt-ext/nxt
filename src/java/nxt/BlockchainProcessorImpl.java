@@ -762,7 +762,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                             + " for transaction " + transaction.getStringId(), transaction);
                 }
             }
-            if (transaction.getVersion() != TransactionProcessorImpl.getInstance().getTransactionVersion(previousLastBlock.getHeight())) {
+            if (transaction.getVersion() != getTransactionVersion(previousLastBlock.getHeight())) {
                 throw new TransactionNotAcceptedException("Invalid transaction version " + transaction.getVersion()
                         + " at height " + previousLastBlock.getHeight(), transaction);
             }
@@ -901,10 +901,14 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         }
     }
 
-    int getBlockVersion(int previousBlockHeight) {
+    private int getBlockVersion(int previousBlockHeight) {
         return previousBlockHeight < Constants.TRANSPARENT_FORGING_BLOCK ? 1
                 : previousBlockHeight < Constants.NQT_BLOCK ? 2
                 : 3;
+    }
+
+    private int getTransactionVersion(int previousBlockHeight) {
+        return previousBlockHeight < Constants.DIGITAL_GOODS_STORE_BLOCK ? 0 : 1;
     }
 
     private boolean verifyChecksum(byte[] validChecksum) {
@@ -939,9 +943,8 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
 
     void generateBlock(String secretPhrase, int blockTimestamp) throws BlockNotAcceptedException {
 
-        TransactionProcessorImpl transactionProcessor = TransactionProcessorImpl.getInstance();
         List<UnconfirmedTransaction> orderedUnconfirmedTransactions = new ArrayList<>();
-        try (FilteringIterator<UnconfirmedTransaction> unconfirmedTransactions = new FilteringIterator<>(transactionProcessor.getAllUnconfirmedTransactions(),
+        try (FilteringIterator<UnconfirmedTransaction> unconfirmedTransactions = new FilteringIterator<>(TransactionProcessorImpl.getInstance().getAllUnconfirmedTransactions(),
                 transaction -> hasAllReferencedTransactions(transaction, transaction.getTimestamp(), 0))) {
             for (UnconfirmedTransaction unconfirmedTransaction : unconfirmedTransactions) {
                 orderedUnconfirmedTransactions.add(unconfirmedTransaction);
@@ -980,7 +983,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     continue;
                 }
 
-                if (unconfirmedTransaction.getVersion() != transactionProcessor.getTransactionVersion(previousBlock.getHeight())) {
+                if (unconfirmedTransaction.getVersion() != getTransactionVersion(previousBlock.getHeight())) {
                     continue;
                 }
 
@@ -993,7 +996,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 } catch (NxtException.NotCurrentlyValidException e) {
                     continue;
                 } catch (NxtException.ValidationException e) {
-                    transactionProcessor.removeUnconfirmedTransaction(unconfirmedTransaction.getTransaction());
+                    TransactionProcessorImpl.getInstance().removeUnconfirmedTransaction(unconfirmedTransaction.getTransaction());
                     continue;
                 }
 
@@ -1056,9 +1059,9 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     + " at height " + block.getHeight() + " timestamp " + block.getTimestamp() + " fee " + ((float)block.getTotalFeeNQT())/Constants.ONE_NXT);
         } catch (TransactionNotAcceptedException e) {
             Logger.logDebugMessage("Generate block failed: " + e.getMessage());
-            Transaction transaction = e.getTransaction();
+            TransactionImpl transaction = e.getTransaction();
             Logger.logDebugMessage("Removing invalid transaction: " + transaction.getStringId());
-            transactionProcessor.removeUnconfirmedTransaction((TransactionImpl) transaction);
+            TransactionProcessorImpl.getInstance().removeUnconfirmedTransaction(transaction);
             throw e;
         } catch (BlockNotAcceptedException e) {
             Logger.logDebugMessage("Generate block failed: " + e.getMessage());
@@ -1099,7 +1102,6 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
     private void scan(int height, boolean validate, boolean shutdown) {
         scheduleScan(height, validate);
         synchronized (blockchain) {
-            TransactionProcessorImpl transactionProcessor = TransactionProcessorImpl.getInstance();
             if (height > 0 && height < getMinRollbackHeight()) {
                 Logger.logMessage("Rollback of more than " + Constants.MAX_ROLLBACK + " blocks not supported, will do a full scan");
                 height = 0;
@@ -1209,12 +1211,12 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                             Logger.logDebugMessage("Applying block " + Long.toUnsignedString(currentBlockId) + " at height "
                                     + (currentBlock == null ? 0 : currentBlock.getHeight()) + " failed, deleting from database");
                             if (currentBlock != null) {
-                                transactionProcessor.processLater(currentBlock.getTransactions());
+                                TransactionProcessorImpl.getInstance().processLater(currentBlock.getTransactions());
                             }
                             while (rs.next()) {
                                 try {
                                     currentBlock = BlockDb.loadBlock(con, rs, true);
-                                    transactionProcessor.processLater(currentBlock.getTransactions());
+                                    TransactionProcessorImpl.getInstance().processLater(currentBlock.getTransactions());
                                 } catch (NxtException.ValidationException ignore) {
                                 }
                             }
