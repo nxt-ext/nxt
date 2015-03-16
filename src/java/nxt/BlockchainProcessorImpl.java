@@ -1109,7 +1109,6 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
     }
 
     private void scan(int height, boolean validate, boolean shutdown) {
-        scheduleScan(height, validate);
         synchronized (blockchain) {
             if (!Db.db.isInTransaction()) {
                 try {
@@ -1128,6 +1127,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 }
                 return;
             }
+            scheduleScan(height, validate);
             if (height > 0 && height < getMinRollbackHeight()) {
                 Logger.logMessage("Rollback of more than " + Constants.MAX_ROLLBACK + " blocks not supported, will do a full scan");
                 height = 0;
