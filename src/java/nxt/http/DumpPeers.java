@@ -3,7 +3,6 @@ package nxt.http;
 import nxt.peer.Peer;
 import nxt.peer.Peers;
 import nxt.util.Convert;
-import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
@@ -29,16 +28,11 @@ public final class DumpPeers extends APIServlet.APIRequestHandler {
                 .map(Peer::getAnnouncedAddress)
                 .collect(Collectors.toSet());
         StringBuilder buf = new StringBuilder();
-        StringBuilder buf2 = new StringBuilder();
         for (String address : addresses) {
-            buf.append("('").append(address).append("'), ");
-            buf2.append(address).append(";");
+            buf.append(address).append("; ");
         }
         JSONObject response = new JSONObject();
-        JSONArray jsonArray = new JSONArray();
-        jsonArray.add(buf.toString());
-        jsonArray.add(buf2.toString());
-        response.put("peers", jsonArray);
+        response.put("peers", buf.toString());
         return response;
     }
 

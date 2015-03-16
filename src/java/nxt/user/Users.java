@@ -193,9 +193,6 @@ public final class Users {
                 addedBlacklistedPeer.put("index", Users.getIndex(peer));
                 addedBlacklistedPeer.put("address", peer.getPeerAddress());
                 addedBlacklistedPeer.put("announcedAddress", Convert.truncate(peer.getAnnouncedAddress(), "-", 25, true));
-                if (peer.isWellKnown()) {
-                    addedBlacklistedPeer.put("wellKnown", true);
-                }
                 addedBlacklistedPeer.put("software", peer.getSoftware());
                 addedBlacklistedPeers.add(addedBlacklistedPeer);
                 response.put("addedBlacklistedPeers", addedBlacklistedPeers);
@@ -214,9 +211,6 @@ public final class Users {
                 addedKnownPeer.put("index", Users.getIndex(peer));
                 addedKnownPeer.put("address", peer.getPeerAddress());
                 addedKnownPeer.put("announcedAddress", Convert.truncate(peer.getAnnouncedAddress(), "-", 25, true));
-                if (peer.isWellKnown()) {
-                    addedKnownPeer.put("wellKnown", true);
-                }
                 addedKnownPeer.put("software", peer.getSoftware());
                 addedKnownPeers.add(addedKnownPeer);
                 response.put("addedKnownPeers", addedKnownPeers);
@@ -235,9 +229,6 @@ public final class Users {
                 addedKnownPeer.put("index", Users.getIndex(peer));
                 addedKnownPeer.put("address", peer.getPeerAddress());
                 addedKnownPeer.put("announcedAddress", Convert.truncate(peer.getAnnouncedAddress(), "-", 25, true));
-                if (peer.isWellKnown()) {
-                    addedKnownPeer.put("wellKnown", true);
-                }
                 addedKnownPeer.put("software", peer.getSoftware());
                 addedKnownPeers.add(addedKnownPeer);
                 response.put("addedKnownPeers", addedKnownPeers);
@@ -302,9 +293,6 @@ public final class Users {
                 }
                 addedActivePeer.put("address", peer.getPeerAddress());
                 addedActivePeer.put("announcedAddress", Convert.truncate(peer.getAnnouncedAddress(), "-", 25, true));
-                if (peer.isWellKnown()) {
-                    addedActivePeer.put("wellKnown", true);
-                }
                 addedActivePeer.put("weight", peer.getWeight());
                 addedActivePeer.put("downloaded", peer.getDownloadedVolume());
                 addedActivePeer.put("uploaded", peer.getUploadedVolume());
@@ -321,9 +309,6 @@ public final class Users {
                 changedActivePeer.put("index", Users.getIndex(peer));
                 changedActivePeer.put(peer.getState() == Peer.State.CONNECTED ? "connected" : "disconnected", true);
                 changedActivePeer.put("announcedAddress", Convert.truncate(peer.getAnnouncedAddress(), "-", 25, true));
-                if (peer.isWellKnown()) {
-                    changedActivePeer.put("wellKnown", true);
-                }
                 changedActivePeers.add(changedActivePeer);
                 response.put("changedActivePeers", changedActivePeers);
                 Users.sendNewDataToAll(response);
@@ -336,9 +321,6 @@ public final class Users {
                 addedKnownPeer.put("index", Users.getIndex(peer));
                 addedKnownPeer.put("address", peer.getPeerAddress());
                 addedKnownPeer.put("announcedAddress", Convert.truncate(peer.getAnnouncedAddress(), "-", 25, true));
-                if (peer.isWellKnown()) {
-                    addedKnownPeer.put("wellKnown", true);
-                }
                 addedKnownPeer.put("software", peer.getSoftware());
                 addedKnownPeers.add(addedKnownPeer);
                 response.put("addedKnownPeers", addedKnownPeers);

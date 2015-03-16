@@ -60,7 +60,6 @@ public final class Peers {
     static final int LOGGING_MASK_200_RESPONSES = 4;
     static final int communicationLoggingMask;
 
-    static final Set<String> wellKnownPeers;
     static final Set<String> knownBlacklistedPeers;
 
     static final int connectTimeout;
@@ -166,13 +165,10 @@ public final class Peers {
         json.put("requestType", "getInfo");
         myPeerInfoRequest = JSON.prepareRequest(json);
 
-        List<String> wellKnownPeersList = Constants.isTestnet ? Nxt.getStringListProperty("nxt.testnetPeers")
+        final List<String> defaultPeers = Constants.isTestnet ? Nxt.getStringListProperty("nxt.defaultTestnetPeers")
+                : Nxt.getStringListProperty("nxt.defaultPeers");
+        final List<String> wellKnownPeers = Constants.isTestnet ? Nxt.getStringListProperty("nxt.testnetPeers")
                 : Nxt.getStringListProperty("nxt.wellKnownPeers");
-        if (wellKnownPeersList.isEmpty() || Constants.isOffline) {
-            wellKnownPeers = Collections.emptySet();
-        } else {
-            wellKnownPeers = Collections.unmodifiableSet(new HashSet<>(wellKnownPeersList));
-        }
 
         List<String> knownBlacklistedPeersList = Nxt.getStringListProperty("nxt.knownBlacklistedPeers");
         if (knownBlacklistedPeersList.isEmpty()) {
@@ -201,33 +197,34 @@ public final class Peers {
 
         final List<Future<String>> unresolvedPeers = Collections.synchronizedList(new ArrayList<>());
 
-        ThreadPool.runBeforeStart(new Runnable() {
+        if (!Constants.isOffline) {
+            ThreadPool.runBeforeStart(new Runnable() {
 
-            private void loadPeers(Collection<String> addresses) {
-                for (final String address : addresses) {
-                    Future<String> unresolvedAddress = peersService.submit(() -> {
-                        PeerImpl peer = Peers.findOrCreatePeer(address, true);
-                        if (peer != null) {
-                            Peers.addPeer(peer);
-                            return null;
-                        }
-                        return address;
-                    });
-                    unresolvedPeers.add(unresolvedAddress);
+                private void loadPeers(Collection<String> addresses) {
+                    for (final String address : addresses) {
+                        Future<String> unresolvedAddress = peersService.submit(() -> {
+                            PeerImpl peer = Peers.findOrCreatePeer(address, true);
+                            if (peer != null) {
+                                Peers.addPeer(peer);
+                                return null;
+                            }
+                            return address;
+                        });
+                        unresolvedPeers.add(unresolvedAddress);
+                    }
                 }
-            }
 
-            @Override
-            public void run() {
-                if (! wellKnownPeers.isEmpty()) {
+                @Override
+                public void run() {
                     loadPeers(wellKnownPeers);
+                    if (usePeersDb) {
+                        loadPeers(defaultPeers);
+                        Logger.logDebugMessage("Loading known peers from the database...");
+                        loadPeers(PeerDb.loadPeers());
+                    }
                 }
-                if (usePeersDb) {
-                    Logger.logDebugMessage("Loading known peers from the database...");
-                    loadPeers(PeerDb.loadPeers());
-                }
-            }
-        }, false);
+            }, false);
+        }
 
         ThreadPool.runAfterStart(() -> {
             for (Future<String> unresolvedPeer : unresolvedPeers) {
