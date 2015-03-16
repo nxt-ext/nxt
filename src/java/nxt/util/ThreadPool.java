@@ -3,6 +3,7 @@ package nxt.util;
 import nxt.Nxt;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -21,7 +22,7 @@ public final class ThreadPool {
     private static Map<Runnable,Long> backgroundJobs = new HashMap<>();
     private static List<Runnable> beforeStartJobs = new ArrayList<>();
     private static List<Runnable> lastBeforeStartJobs = new ArrayList<>();
-    private static List<Runnable> afterStartJobs = new ArrayList<>();
+    private static List<Runnable> afterStartJobs = Collections.synchronizedList(new ArrayList<>());
 
     private static final ExecutorService executorService = new ThreadPoolExecutor(0, Runtime.getRuntime().availableProcessors(),
             60L, TimeUnit.SECONDS, new LinkedBlockingQueue<>());
@@ -38,7 +39,7 @@ public final class ThreadPool {
         }
     }
 
-    public static synchronized void runAfterStart(Runnable runnable) {
+    public static void runAfterStart(Runnable runnable) {
         afterStartJobs.add(runnable);
     }
 

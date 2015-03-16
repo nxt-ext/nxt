@@ -51,4 +51,13 @@ final class PeerDb {
         }
     }
 
+    static void deleteAll() {
+        try (Connection con = Db.db.getConnection();
+             PreparedStatement pstmt = con.prepareStatement("TRUNCATE TABLE peer")) {
+            pstmt.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException(e.toString(), e);
+        }
+    }
+
 }
