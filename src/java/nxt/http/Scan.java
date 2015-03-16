@@ -33,8 +33,7 @@ public final class Scan extends APIServlet.APIRequestHandler {
                 Nxt.getBlockchainProcessor().setGetMoreBlocks(false);
                 if (shutdown) {
                     Nxt.getBlockchainProcessor().fullScanWithShutdown();
-                }
-                if (numBlocks > 0) {
+                } else if (numBlocks > 0) {
                     Nxt.getBlockchainProcessor().scan(Nxt.getBlockchain().getHeight() - numBlocks + 1, validate);
                 } else if (height >= 0) {
                     Nxt.getBlockchainProcessor().scan(height, validate);

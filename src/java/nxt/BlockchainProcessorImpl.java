@@ -416,6 +416,18 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
 
     };
 
+    private final Listener<Block> checksumListener = block -> {
+        if (block.getHeight() == Constants.TRANSPARENT_FORGING_BLOCK && ! verifyChecksum(CHECKSUM_TRANSPARENT_FORGING, block.getHeight())) {
+            popOffTo(0);
+        }
+        if (block.getHeight() == Constants.NQT_BLOCK && ! verifyChecksum(CHECKSUM_NQT_BLOCK, block.getHeight())) {
+            popOffTo(Constants.TRANSPARENT_FORGING_BLOCK);
+        }
+        if (block.getHeight() == Constants.MONETARY_SYSTEM_BLOCK && ! verifyChecksum(CHECKSUM_MONETARY_SYSTEM_BLOCK, block.getHeight())) {
+            popOffTo(Constants.NQT_BLOCK);
+        }
+    };
+
     private BlockchainProcessorImpl() {
 
         blockListeners.addListener(block -> {
@@ -444,24 +456,15 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             }, Event.AFTER_BLOCK_APPLY);
         }
 
-        blockListeners.addListener(block -> {
-            if (block.getHeight() == Constants.TRANSPARENT_FORGING_BLOCK && ! verifyChecksum(CHECKSUM_TRANSPARENT_FORGING)) {
-                popOffTo(0);
-            }
-            if (block.getHeight() == Constants.NQT_BLOCK && ! verifyChecksum(CHECKSUM_NQT_BLOCK)) {
-                popOffTo(Constants.TRANSPARENT_FORGING_BLOCK);
-            }
-            if (block.getHeight() == Constants.MONETARY_SYSTEM_BLOCK && ! verifyChecksum(CHECKSUM_MONETARY_SYSTEM_BLOCK)) {
-                popOffTo(Constants.NQT_BLOCK);
-            }
-        }, Event.BLOCK_PUSHED);
+        blockListeners.addListener(checksumListener, Event.BLOCK_PUSHED);
 
         blockListeners.addListener(block -> Db.db.analyzeTables(), Event.RESCAN_END);
 
         ThreadPool.runBeforeStart(() -> {
             alreadyInitialized = true;
-            addGenesisBlock();
-            if (Nxt.getBooleanProperty("nxt.forceScan")) {
+            if (addGenesisBlock()) {
+                scan(0, false);
+            } else if (Nxt.getBooleanProperty("nxt.forceScan")) {
                 scan(0, Nxt.getBooleanProperty("nxt.forceValidate"));
             } else {
                 boolean rescan;
@@ -572,8 +575,9 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 scheduleScan(0, false);
                 //BlockDb.deleteBlock(Genesis.GENESIS_BLOCK_ID); // fails with stack overflow in H2
                 BlockDb.deleteAll();
-                addGenesisBlock();
-                scan(0, false);
+                if (addGenesisBlock()) {
+                    scan(0, false);
+                }
             } finally {
                 setGetMoreBlocks(true);
             }
@@ -594,14 +598,14 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         }
     }
 
-    private void addGenesisBlock() {
+    private boolean addGenesisBlock() {
         if (BlockDb.hasBlock(Genesis.GENESIS_BLOCK_ID, 0)) {
             Logger.logMessage("Genesis block already in database");
             BlockImpl lastBlock = BlockDb.findLastBlock();
             blockchain.setLastBlock(lastBlock);
             popOffTo(lastBlock);
             Logger.logMessage("Last block height: " + lastBlock.getHeight());
-            return;
+            return false;
         }
         Logger.logMessage("Genesis block not in database, starting from scratch");
         try {
@@ -628,7 +632,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     Genesis.CREATOR_PUBLIC_KEY, new byte[64], Genesis.GENESIS_BLOCK_SIGNATURE, null, transactions);
             genesisBlock.setPrevious(null);
             addBlock(genesisBlock);
-            scheduleScan(0, false);
+            return true;
         } catch (NxtException.ValidationException e) {
             Logger.logMessage(e.getMessage());
             throw new RuntimeException(e.toString(), e);
@@ -911,14 +915,16 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         return previousBlockHeight < Constants.DIGITAL_GOODS_STORE_BLOCK ? 0 : 1;
     }
 
-    private boolean verifyChecksum(byte[] validChecksum) {
+    private boolean verifyChecksum(byte[] validChecksum, int height) {
         MessageDigest digest = Crypto.sha256();
         try (Connection con = Db.db.getConnection();
              PreparedStatement pstmt = con.prepareStatement(
-                     "SELECT * FROM transaction ORDER BY id ASC, timestamp ASC");
-             DbIterator<TransactionImpl> iterator = blockchain.getTransactions(con, pstmt)) {
-            while (iterator.hasNext()) {
-                digest.update(iterator.next().getBytesOrig());
+                     "SELECT * FROM transaction WHERE height <= ? ORDER BY id ASC, timestamp ASC")) {
+            pstmt.setInt(1, height);
+            try (DbIterator<TransactionImpl> iterator = blockchain.getTransactions(con, pstmt)) {
+                while (iterator.hasNext()) {
+                    digest.update(iterator.next().getBytesOrig());
+                }
             }
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
@@ -1102,6 +1108,23 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
     private void scan(int height, boolean validate, boolean shutdown) {
         scheduleScan(height, validate);
         synchronized (blockchain) {
+            if (!Db.db.isInTransaction()) {
+                try {
+                    Db.db.beginTransaction();
+                    if (validate) {
+                        blockListeners.addListener(checksumListener, Event.BLOCK_SCANNED);
+                    }
+                    scan(height, validate, shutdown);
+                    Db.db.commitTransaction();
+                } catch (Exception e) {
+                    Db.db.rollbackTransaction();
+                    throw e;
+                } finally {
+                    Db.db.endTransaction();
+                    blockListeners.removeListener(checksumListener, Event.BLOCK_SCANNED);
+                }
+                return;
+            }
             if (height > 0 && height < getMinRollbackHeight()) {
                 Logger.logMessage("Rollback of more than " + Constants.MAX_ROLLBACK + " blocks not supported, will do a full scan");
                 height = 0;
@@ -1113,7 +1136,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             if (validate) {
                 Logger.logDebugMessage("Also verifying signatures and validating transactions...");
             }
-            try (Connection con = Db.db.beginTransaction();
+            try (Connection con = Db.db.getConnection();
                  PreparedStatement pstmtSelect = con.prepareStatement("SELECT * FROM block WHERE height >= ? ORDER BY db_id ASC");
                  PreparedStatement pstmtDone = con.prepareStatement("UPDATE scan SET rescan = FALSE, height = 0, validate = FALSE")) {
                 isScanning = true;
@@ -1153,7 +1176,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     while (rs.next()) {
                         try {
                             currentBlock = BlockDb.loadBlock(con, rs, true);
-                            if (currentBlock.getId() != currentBlockId) {
+                            if (currentBlock.getId() != currentBlockId || currentBlock.getHeight() > blockchain.getHeight() + 1) {
                                 throw new NxtException.NotValidException("Database blocks in the wrong order!");
                             }
                             Map<TransactionType, Map<String, Boolean>> duplicates = new HashMap<>();
@@ -1235,7 +1258,6 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             } catch (SQLException e) {
                 throw new RuntimeException(e.toString(), e);
             } finally {
-                Db.db.endTransaction();
                 isScanning = false;
             }
         } // synchronized
