@@ -33,6 +33,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -222,7 +223,7 @@ public final class Peers {
                         loadPeers(PeerDb.loadPeers());
                     }
                 }
-            }, true);
+            }, false);
         }
 
         ThreadPool.runAfterStart(() -> {
@@ -528,12 +529,6 @@ public final class Peers {
 
     public static Collection<? extends Peer> getAllPeers() {
         return allPeers;
-    }
-
-    public static void clear() {
-        peers.clear();
-        announcedAddresses.clear();
-        PeerDb.deleteAll();
     }
 
     public static List<Peer> getActivePeers() {

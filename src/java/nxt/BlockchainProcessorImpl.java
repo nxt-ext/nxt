@@ -428,38 +428,6 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         }
     };
 
-    private final Listener<Block> peerConfirmationListener = block -> {
-        if (block.getHeight() > Constants.MONETARY_SYSTEM_BLOCK && block.getHeight() % 719 == 0) {
-            int requiredConfirmations = defaultNumberOfForkConfirmations + 1;
-            List<Peer> connectedPublicPeers = Peers.getPublicPeers(Peer.State.CONNECTED, true);
-            if (connectedPublicPeers.size() < requiredConfirmations) {
-                return;
-            }
-            int confirmations = 0;
-            for (Peer peer : connectedPublicPeers) {
-                JSONObject milestoneBlockIdsRequest = new JSONObject();
-                milestoneBlockIdsRequest.put("requestType", "getMilestoneBlockIds");
-                milestoneBlockIdsRequest.put("lastBlockId", block.getStringId());
-                JSONObject response = peer.send(JSON.prepareRequest(milestoneBlockIdsRequest));
-                if (response == null) {
-                    continue;
-                }
-                JSONArray milestoneBlockIds = (JSONArray) response.get("milestoneBlockIds");
-                if (milestoneBlockIds == null) {
-                    continue;
-                }
-                if (milestoneBlockIds.isEmpty() || !block.getStringId().equals(milestoneBlockIds.get(0))) {
-                    continue;
-                }
-                if (++confirmations >= requiredConfirmations) {
-                    return;
-                }
-            }
-            Logger.logMessage("Got no confirmations for block " + block.getStringId() + ", will pop off last 720 blocks");
-            popOffTo(block.getHeight() - 720);
-        }
-    };
-
     private BlockchainProcessorImpl() {
 
         blockListeners.addListener(block -> {
@@ -513,17 +481,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     throw new RuntimeException(e.toString(), e);
                 }
                 if (rescan) {
-                    setGetMoreBlocks(false);
-                    if (validate) {
-                        Peers.clear();
-                    }
-                    ThreadPool.runAfterStart(() -> {
-                        try {
-                            scan(height, validate);
-                        } finally {
-                            setGetMoreBlocks(true);
-                        }
-                    });
+                    scan(height, validate);
                 }
             }
         }, false);
@@ -1158,9 +1116,6 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     Db.db.beginTransaction();
                     if (validate) {
                         blockListeners.addListener(checksumListener, Event.BLOCK_SCANNED);
-                        if (!Constants.isOffline) {
-                            blockListeners.addListener(peerConfirmationListener, Event.BLOCK_SCANNED);
-                        }
                     }
                     scan(height, validate, shutdown);
                     Db.db.commitTransaction();
@@ -1170,7 +1125,6 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 } finally {
                     Db.db.endTransaction();
                     blockListeners.removeListener(checksumListener, Event.BLOCK_SCANNED);
-                    blockListeners.removeListener(peerConfirmationListener, Event.BLOCK_SCANNED);
                 }
                 return;
             }
@@ -1184,9 +1138,6 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             Logger.logMessage("Scanning blockchain starting from height " + height + "...");
             if (validate) {
                 Logger.logDebugMessage("Also verifying signatures and validating transactions...");
-                if (height == 0) {
-                    Logger.logMessage("RUNNING FULL RESCAN WITH VALIDATION");
-                }
             }
             try (Connection con = Db.db.getConnection();
                  PreparedStatement pstmtSelect = con.prepareStatement("SELECT * FROM block WHERE height >= ? ORDER BY db_id ASC");
@@ -1217,7 +1168,6 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     blockchain.setLastBlock(BlockDb.findBlockAtHeight(height - 1));
                 }
                 if (shutdown) {
-                    Peers.clear();
                     Logger.logMessage("Scan will be performed at next start");
                     new Thread(() -> {
                         System.exit(0);
