@@ -662,28 +662,9 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 }
 
                 Map<TransactionType, Map<String, Boolean>> duplicates = new HashMap<>();
-
                 List<TransactionImpl> validPhasedTransactions = new ArrayList<>();
                 List<TransactionImpl> invalidPhasedTransactions = new ArrayList<>();
-                if (previousLastBlock.getHeight() >= Constants.VOTING_SYSTEM_BLOCK) {
-                    try (DbIterator<TransactionImpl> phasedTransactions = PhasingPoll.getFinishingTransactions(previousLastBlock.getHeight() + 1)) {
-                        for (TransactionImpl phasedTransaction : phasedTransactions) {
-                            try {
-                                phasedTransaction.validate();
-                                if (!phasedTransaction.isDuplicate(duplicates)) {
-                                    validPhasedTransactions.add(phasedTransaction);
-                                } else {
-                                    Logger.logDebugMessage("Phased transaction " + phasedTransaction.getStringId() + " is duplicate, will not apply");
-                                    invalidPhasedTransactions.add(phasedTransaction);
-                                }
-                            } catch (NxtException.ValidationException e) {
-                                Logger.logDebugMessage("Phased transaction " + phasedTransaction.getStringId() + " no longer passes validation, will not apply");
-                                invalidPhasedTransactions.add(phasedTransaction);
-                            }
-                        }
-                    }
-                }
-
+                processPhasedTransactions(previousLastBlock.getHeight(), validPhasedTransactions, invalidPhasedTransactions, duplicates);
                 validateTransactions(block, previousLastBlock, curTime, duplicates);
 
                 block.setPrevious(previousLastBlock);
@@ -708,6 +689,28 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             Peers.sendToSomePeers(block);
         }
 
+    }
+
+    private void processPhasedTransactions(int height, List<TransactionImpl> validPhasedTransactions, List<TransactionImpl> invalidPhasedTransactions,
+                                           Map<TransactionType, Map<String, Boolean>> duplicates) {
+        if (height >= Constants.VOTING_SYSTEM_BLOCK) {
+            try (DbIterator<TransactionImpl> phasedTransactions = PhasingPoll.getFinishingTransactions(height + 1)) {
+                for (TransactionImpl phasedTransaction : phasedTransactions) {
+                    try {
+                        phasedTransaction.validate();
+                        if (!phasedTransaction.isDuplicate(duplicates)) {
+                            validPhasedTransactions.add(phasedTransaction);
+                        } else {
+                            Logger.logDebugMessage("Phased transaction " + phasedTransaction.getStringId() + " is duplicate, will not apply");
+                            invalidPhasedTransactions.add(phasedTransaction);
+                        }
+                    } catch (NxtException.ValidationException e) {
+                        Logger.logDebugMessage("Phased transaction " + phasedTransaction.getStringId() + " no longer passes validation, will not apply");
+                        invalidPhasedTransactions.add(phasedTransaction);
+                    }
+                }
+            }
+        }
     }
 
     private void validate(BlockImpl block, BlockImpl previousLastBlock, int curTime) throws BlockNotAcceptedException {
@@ -1182,24 +1185,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                             Map<TransactionType, Map<String, Boolean>> duplicates = new HashMap<>();
                             List<TransactionImpl> validPhasedTransactions = new ArrayList<>();
                             List<TransactionImpl> invalidPhasedTransactions = new ArrayList<>();
-                            if (blockchain.getHeight() >= Constants.VOTING_SYSTEM_BLOCK) {
-                                try (DbIterator<TransactionImpl> phasedTransactions = PhasingPoll.getFinishingTransactions(blockchain.getHeight() + 1)) {
-                                    for (TransactionImpl phasedTransaction : phasedTransactions) {
-                                        try {
-                                            phasedTransaction.validate();
-                                            if (!phasedTransaction.isDuplicate(duplicates)) {
-                                                validPhasedTransactions.add(phasedTransaction);
-                                            } else {
-                                                Logger.logDebugMessage("Phased transaction " + phasedTransaction.getStringId() + " is duplicate, will not apply");
-                                                invalidPhasedTransactions.add(phasedTransaction);
-                                            }
-                                        } catch (NxtException.ValidationException e) {
-                                            Logger.logDebugMessage("Phased transaction " + phasedTransaction.getStringId() + " no longer passes validation, will not apply");
-                                            invalidPhasedTransactions.add(phasedTransaction);
-                                        }
-                                    }
-                                }
-                            }
+                            processPhasedTransactions(blockchain.getHeight(), validPhasedTransactions, invalidPhasedTransactions, duplicates);
                             if (validate && currentBlockId != Genesis.GENESIS_BLOCK_ID) {
                                 int curTime = Nxt.getEpochTime();
                                 validate(currentBlock, blockchain.getLastBlock(), curTime);
