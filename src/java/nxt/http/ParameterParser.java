@@ -453,14 +453,14 @@ final class ParameterParser {
         return -1;
     }
 
-    static Transaction parseTransaction(String transactionBytes, String transactionJSON) throws ParameterException {
+    static Transaction.Builder parseTransaction(String transactionBytes, String transactionJSON) throws ParameterException {
         if (transactionBytes == null && transactionJSON == null) {
             throw new ParameterException(MISSING_TRANSACTION_BYTES_OR_JSON);
         }
         if (transactionBytes != null) {
             try {
                 byte[] bytes = Convert.parseHexString(transactionBytes);
-                return Nxt.getTransactionProcessor().parseTransaction(bytes);
+                return Nxt.newTransactionBuilder(bytes);
             } catch (NxtException.ValidationException|RuntimeException e) {
                 Logger.logDebugMessage(e.getMessage(), e);
                 JSONObject response = new JSONObject();
@@ -470,7 +470,7 @@ final class ParameterParser {
         } else {
             try {
                 JSONObject json = (JSONObject) JSONValue.parseWithException(transactionJSON);
-                return Nxt.getTransactionProcessor().parseTransaction(json);
+                return Nxt.newTransactionBuilder(json);
             } catch (NxtException.ValidationException | RuntimeException | ParseException e) {
                 Logger.logDebugMessage(e.getMessage(), e);
                 JSONObject response = new JSONObject();

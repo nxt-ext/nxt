@@ -36,7 +36,7 @@ public final class CastVote extends CreateTransaction {
                 String voteValue = Convert.emptyToNull(req.getParameter("vote" + (i < 10 ? "0" + i : i)));
                 if (voteValue != null) {
                     vote[i] = Byte.parseByte(voteValue);
-                    if (vote[i] < poll.getMinRangeValue() || vote[i] > poll.getMaxRangeValue()) {
+                    if (vote[i] != Constants.VOTING_NO_VOTE_VALUE && (vote[i] < poll.getMinRangeValue() || vote[i] > poll.getMaxRangeValue())) {
                         return INCORRECT_VOTE;
                     }
                 } else {

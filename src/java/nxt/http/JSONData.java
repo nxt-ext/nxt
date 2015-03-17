@@ -342,7 +342,7 @@ final class JSONData {
         return json;
     }
 
-    static JSONObject pollResults(Poll poll, List<Long> results) {
+    static JSONObject pollResults(Poll poll, List<Poll.OptionResult> results) {
         JSONObject json = new JSONObject();
         json.put("poll", Long.toUnsignedString(poll.getId()));
         json.put("finished", poll.isFinished());
@@ -351,10 +351,17 @@ final class JSONData {
         json.put("options", options);
 
         JSONArray resultsJson = new JSONArray();
-        for (Long result : results) {
-            resultsJson.add(result == null ? "" : String.valueOf(result));
+        for (Poll.OptionResult option : results) {
+            JSONObject optionJSON = new JSONObject();
+            if (option != null) {
+                optionJSON.put("result", String.valueOf(option.getResult()));
+                optionJSON.put("weight", String.valueOf(option.getWeight()));
+            } else {
+                optionJSON.put("result", "");
+                optionJSON.put("weight", 0);
+            }
+            resultsJson.add(optionJSON);
         }
-
         json.put("results", resultsJson);
         return json;
     }

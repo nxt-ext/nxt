@@ -79,7 +79,7 @@ public final class API {
         if (enableAPIServer) {
             final int port = Constants.isTestnet ? TESTNET_API_PORT : Nxt.getIntProperty("nxt.apiServerPort");
             final String host = Nxt.getStringProperty("nxt.apiServerHost");
-            disableAdminPassword = Nxt.getBooleanProperty("nxt.disableAdminPassword") || "127.0.0.1".equals(host);
+            disableAdminPassword = Nxt.getBooleanProperty("nxt.disableAdminPassword") || ("127.0.0.1".equals(host) && adminPassword.isEmpty());
 
             apiServer = new Server();
             ServerConnector connector;

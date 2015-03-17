@@ -10,6 +10,7 @@ import nxt.util.Convert;
 import nxt.util.Logger;
 import nxt.util.ThreadPool;
 import nxt.util.Time;
+import org.json.simple.JSONObject;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -203,6 +204,14 @@ public final class Nxt {
         return new TransactionImpl.BuilderImpl((byte)1, senderPublicKey, amountNQT, feeNQT, deadline, (Attachment.AbstractAttachment)attachment);
     }
 
+    public static Transaction.Builder newTransactionBuilder(byte[] transactionBytes) throws NxtException.NotValidException {
+        return TransactionImpl.newTransactionBuilder(transactionBytes);
+    }
+
+    public static Transaction.Builder newTransactionBuilder(JSONObject transactionJSON) throws NxtException.NotValidException {
+        return TransactionImpl.newTransactionBuilder(transactionJSON);
+    }
+
     public static int getEpochTime() {
         return time.getTime();
     }
@@ -217,6 +226,7 @@ public final class Nxt {
             init();
         } catch (Throwable t) {
             System.out.println("Fatal error: " + t.toString());
+            t.printStackTrace();
         }
     }
 

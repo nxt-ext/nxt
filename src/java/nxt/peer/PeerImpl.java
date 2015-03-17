@@ -214,11 +214,6 @@ final class PeerImpl implements Peer {
     }
 
     @Override
-    public boolean isWellKnown() {
-        return announcedAddress != null && Peers.wellKnownPeers.contains(announcedAddress);
-    }
-
-    @Override
     public Hallmark getHallmark() {
         return hallmark;
     }
@@ -405,9 +400,13 @@ final class PeerImpl implements Peer {
                 }
                 Logger.logDebugMessage("Peer " + peerAddress + " responded with HTTP " + connection.getResponseCode());
                 deactivate();
+                connection.disconnect();
             }
         } catch (NxtException.NxtIOException e) {
             blacklist(e);
+            if (connection != null) {
+                connection.disconnect();
+            }
         } catch (RuntimeException|ParseException|IOException e) {
             if (! (e instanceof UnknownHostException || e instanceof SocketTimeoutException || e instanceof SocketException || Errors.END_OF_FILE.equals(e.toString()))) {
                 Logger.logDebugMessage("Error sending JSON request: " + e.toString());
@@ -417,14 +416,13 @@ final class PeerImpl implements Peer {
                 showLog = true;
             }
             deactivate();
+            if (connection != null) {
+                connection.disconnect();
+            }
         }
 
         if (showLog) {
             Logger.logMessage(log + "\n");
-        }
-
-        if (connection != null) {
-            connection.disconnect();
         }
 
         return response;

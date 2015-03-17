@@ -11,6 +11,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 final class TransactionDb {
@@ -34,10 +35,11 @@ final class TransactionDb {
 
     static TransactionImpl findTransactionByFullHash(String fullHash) {
         try (Connection con = Db.db.getConnection();
-             PreparedStatement pstmt = con.prepareStatement("SELECT * FROM transaction WHERE full_hash = ?")) {
-            pstmt.setBytes(1, Convert.parseHexString(fullHash));
+             PreparedStatement pstmt = con.prepareStatement("SELECT * FROM transaction WHERE id = ?")) {
+            byte[] fullHashBytes = Convert.parseHexString(fullHash);
+            pstmt.setLong(1, Convert.fullHashToId(fullHashBytes));
             try (ResultSet rs = pstmt.executeQuery()) {
-                if (rs.next()) {
+                if (rs.next() && Arrays.equals(rs.getBytes("full_hash"), fullHashBytes)) {
                     return loadTransaction(con, rs);
                 }
                 return null;
@@ -50,11 +52,15 @@ final class TransactionDb {
     }
 
     static boolean hasTransaction(long transactionId) {
+        return hasTransaction(transactionId, Integer.MAX_VALUE);
+    }
+
+    static boolean hasTransaction(long transactionId, int height) {
         try (Connection con = Db.db.getConnection();
-             PreparedStatement pstmt = con.prepareStatement("SELECT 1 FROM transaction WHERE id = ?")) {
+             PreparedStatement pstmt = con.prepareStatement("SELECT height FROM transaction WHERE id = ?")) {
             pstmt.setLong(1, transactionId);
             try (ResultSet rs = pstmt.executeQuery()) {
-                return rs.next();
+                return rs.next() && rs.getInt("height") <= height;
             }
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
@@ -63,17 +69,18 @@ final class TransactionDb {
 
     static boolean hasTransactionByFullHash(String fullHash) {
         try (Connection con = Db.db.getConnection();
-             PreparedStatement pstmt = con.prepareStatement("SELECT 1 FROM transaction WHERE full_hash = ?")) {
-            pstmt.setBytes(1, Convert.parseHexString(fullHash));
+             PreparedStatement pstmt = con.prepareStatement("SELECT full_hash FROM transaction WHERE id = ?")) {
+            byte[] fullHashBytes = Convert.parseHexString(fullHash);
+            pstmt.setLong(1, Convert.fullHashToId(fullHashBytes));
             try (ResultSet rs = pstmt.executeQuery()) {
-                return rs.next();
+                return rs.next() && Arrays.equals(rs.getBytes("full_hash"), fullHashBytes);
             }
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
         }
     }
 
-    static TransactionImpl loadTransaction(Connection con, ResultSet rs) throws NxtException.ValidationException {
+    static TransactionImpl loadTransaction(Connection con, ResultSet rs) throws NxtException.NotValidException {
         try {
 
             byte type = rs.getByte("type");
@@ -147,9 +154,17 @@ final class TransactionDb {
     }
 
     static List<TransactionImpl> findBlockTransactions(long blockId) {
-        try (Connection con = Db.db.getConnection();
-             PreparedStatement pstmt = con.prepareStatement("SELECT * FROM transaction WHERE block_id = ? ORDER BY transaction_index")) {
+        try (Connection con = Db.db.getConnection()) {
+            return findBlockTransactions(con, blockId);
+        } catch (SQLException e) {
+            throw new RuntimeException(e.toString(), e);
+        }
+    }
+
+    static List<TransactionImpl> findBlockTransactions(Connection con, long blockId) {
+        try (PreparedStatement pstmt = con.prepareStatement("SELECT * FROM transaction WHERE block_id = ? ORDER BY transaction_index")) {
             pstmt.setLong(1, blockId);
+            pstmt.setFetchSize(50);
             try (ResultSet rs = pstmt.executeQuery()) {
                 List<TransactionImpl> list = new ArrayList<>();
                 while (rs.next()) {

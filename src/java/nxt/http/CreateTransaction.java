@@ -177,7 +177,7 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
             if (phasing != null) {
                 builder.phasing(phasing);
             }
-            Transaction transaction = builder.build();
+            Transaction transaction = builder.build(secretPhrase);
             try {
                 if (Math.addExact(amountNQT, transaction.getFeeNQT()) > senderAccount.getUnconfirmedBalanceNQT()) {
                     return NOT_ENOUGH_FUNDS;
@@ -186,7 +186,6 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
                 return NOT_ENOUGH_FUNDS;
             }
             if (secretPhrase != null) {
-                transaction.sign(secretPhrase);
                 response.put("transaction", transaction.getStringId());
                 response.put("fullHash", transaction.getFullHash());
                 response.put("transactionBytes", Convert.toHexString(transaction.getBytes()));

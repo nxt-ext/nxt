@@ -27,7 +27,7 @@ public final class Constants {
     public static final int FORGING_DELAY = Nxt.getIntProperty("nxt.forgingDelay");
     public static final int FORGING_SPEEDUP = Nxt.getIntProperty("nxt.forgingSpeedup");
 
-    public static final byte MAX_VOTES_PER_VOTING_TRANSACTION = 2;
+    public static final byte MAX_VOTES_PER_VOTING_TRANSACTION = 20;
 
     public static final byte VOTING_DEFAULT_MIN_NUMBER_OF_CHOICES = 1;
     public static final byte VOTING_MIN_RANGE_VALUE_LIMIT = -92;

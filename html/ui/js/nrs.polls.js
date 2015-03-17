@@ -3,14 +3,14 @@
  */
 var NRS = (function(NRS, $, undefined) {
 	NRS.pages.polls = function() {
-		NRS.sendRequest("getPollIds+", function(response) {
-			if (response.pollIds && response.pollIds.length) {
+		NRS.sendRequest("getPolls+", function(response) {
+			if (response.polls && response.polls.length) {
 				var polls = {};
 				var nrPolls = 0;
 
-				for (var i = 0; i < response.pollIds.length; i++) {
+				for (var i = 0; i < response.polls.length; i++) {
 					NRS.sendRequest("getTransaction+", {
-						"transaction": response.pollIds[i]
+						"transaction": response.polls[i].poll
 					}, function(poll, input) {
 						if (NRS.currentPage != "polls") {
 							polls = {};
@@ -24,7 +24,7 @@ var NRS = (function(NRS, $, undefined) {
 						nrPolls++;
 
 
-						if (nrPolls == response.pollIds.length) {
+						if (nrPolls == response.polls.length) {
 							var rows = "";
 
 							if (NRS.unconfirmedTransactions.length) {
@@ -44,7 +44,7 @@ var NRS = (function(NRS, $, undefined) {
 							}
 
 							for (var i = 0; i < nrPolls; i++) {
-								var poll = polls[response.pollIds[i]];
+								var poll = polls[response.polls[i].poll];
 
 								if (!poll) {
 									continue;
@@ -72,14 +72,14 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.pages.my_polls = function() {
-		NRS.sendRequest("getPollIds+", {"account": NRS.account}, function(response) {
-			if (response.pollIds && response.pollIds.length) {
+		NRS.sendRequest("getPolls+", {"account": NRS.account}, function(response) {
+			if (response.polls && response.polls.length) {
 				var polls = {};
 				var nrPolls = 0;
 
-				for (var i = 0; i < response.pollIds.length; i++) {
+				for (var i = 0; i < response.polls.length; i++) {
 					NRS.sendRequest("getTransaction+", {
-						"transaction": response.pollIds[i]
+						"transaction": response.polls[i].poll
 					}, function(poll, input) {
 						if (NRS.currentPage != "my_polls") {
 							polls = {};
@@ -93,11 +93,11 @@ var NRS = (function(NRS, $, undefined) {
 						nrPolls++;
 
 
-						if (nrPolls == response.pollIds.length) {
+						if (nrPolls == response.polls.length) {
 							var rows = "";
 
 							for (var i = 0; i < nrPolls; i++) {
-								var poll = polls[response.pollIds[i]];
+								var poll = polls[response.polls[i].poll];
 
 								if (!poll) {
 									continue;
@@ -247,6 +247,10 @@ var NRS = (function(NRS, $, undefined) {
 			"modalId": 'create_poll_modal'
 		}
 		NRS.appendMenuItemToTSMenuItem(sidebarId, options);
+
+		$('#create_poll_modal input[name="feeNXT"]').attr('min', 10);
+		$('#create_poll_modal input[name="feeNXT"]').data('default', 10);
+		$('#create_poll_modal input[name="feeNXT"]').val(10);
 	}
 
 
@@ -500,13 +504,13 @@ $("#poll_results_modal ul.nav li").click(function(e) {
 		var data = {
 			"name": $("#create_poll_name").val(),
 			"description": $("#create_poll_description").val(),
-			"finishHeight": (parseInt(NRS.lastBlockHeight) + parseInt($("#create_poll_duration").val())),
+			"finishHeight": String(parseInt(NRS.lastBlockHeight) + parseInt($("#create_poll_duration").val())),
 			"minNumberOfOptions": $("#create_poll_min_options").val(),
 			"maxNumberOfOptions": $("#create_poll_max_options").val(),
 			"minRangeValue": $("#create_poll_min_range_value").val(),
 			"maxRangeValue": $("#create_poll_max_range_value").val(),
-			"minBalance": (parseInt($("#create_poll_min_balance").val())*100000000),
-			"feeNQT": (parseInt($("#create_poll_fee").val()) * 100000000),
+			"minBalance": String(parseInt($("#create_poll_min_balance").val())*100000000),
+			"feeNQT": String(parseInt($("#create_poll_fee").val()) * 100000000),
 			"deadline": $("#create_poll_deadline").val(),
 			"secretPhrase": $("#create_poll_password").val()
 		};
@@ -514,12 +518,12 @@ $("#poll_results_modal ul.nav li").click(function(e) {
 		if($("#create_poll_type").val() == "0")
 		{
 			data["votingModel"] = 1;
-			data["minBalanceModel"] = 0;
+			data["minBalanceModel"] = 1;
 		}
 		if($("#create_poll_type").val() == "1")
 		{
-			data["votingModel"] = 1;
-			var val = $('input:radio[name=minBalanceType]:checked').val();
+			data["votingModel"] = 0;
+			var val = $('input:radio[name=minBalanceType]:checked').val()+1;
 			data["minBalanceModel"] = val;
 
 			if(val == 2) data["holding"] = $("#create_poll_asset_id").val();
@@ -529,17 +533,20 @@ $("#poll_results_modal ul.nav li").click(function(e) {
 		{
 			data["votingModel"] = 2;
 			data["holding"] = $("#create_poll_asset_id").val();
-			data["minBalanceModel"] = 1;
+			data["minBalanceModel"] = 2;
 		}
 		else if($("#create_poll_type").val() == "3")
 		{
 			data["votingModel"] = 3;
 			data["holding"] = $("#create_poll_ms_currency").val();
-			data["minBalanceModel"] = 2;
+			data["minBalanceModel"] = 3;
 		}
 
 		for (var i = 0; i < options.length; i++) {
-			data["option" + (i+1)] = options[i];
+			var number;
+			if(i < 10) number = "0" + i;
+			else number = i;
+			data["option" + (number)] = options[i];
 		}
 
 
@@ -569,11 +576,11 @@ $("#poll_results_modal ul.nav li").click(function(e) {
 	}
 
 	NRS.forms.castVote = function($modal) {
-		var options = new Array();
+		var options = Array();
 
 		$("#cast_vote_answers_entry div.answer_slider input").each(function() {
 			var option = $.trim($(this).val());
-			if(option == 0) option = -127;
+			if(option == 0) option = -128;
 			if (option) {
 				options.push(option);
 			}
@@ -586,16 +593,13 @@ $("#poll_results_modal ul.nav li").click(function(e) {
 
 		var data = {
 			"poll": $("#cast_vote_poll").val(),
-			"feeNQT": (parseInt($("#cast_vote_fee").val())*100000000),
+			"feeNQT": String(parseInt($("#cast_vote_fee").val())*100000000),
 			"deadline": $("#cast_vote_deadline").val(),
 			"secretPhrase": $("#cast_vote_password").val()
 		};
 		for (var i = 0; i < options.length; i++) {
-			data["vote" + (i+1)] = options[i];
+			data["vote" + (i < 10 ? "0" + i : i)] = options[i];
 		}
-
-
-
 		return {
 			"requestType": "castVote",
 			"data": data
@@ -647,9 +651,12 @@ $("#poll_results_modal ul.nav li").click(function(e) {
 			"poll": String(poll.poll),
 			"name": String(poll.name).toLowerCase(),
 			"description": String(poll.description),
+			"account": String(poll.account),
+			"accountRS": String(poll.accountRS),
+			"finishHeight": String(poll.finishHeight)
 		};
 
-		NRS.polls.push(poll);
+		NRS.followedPolls.push(poll);
 	}
 
 	NRS.forms.addFollowedPoll = function($modal) {
@@ -733,9 +740,12 @@ $("#poll_results_modal ul.nav li").click(function(e) {
 
 		$.each(polls, function(key, poll) {
 			var newPoll = {
-				"poll": String(poll.asset),
+				"poll": String(poll.poll),
 				"name": String(poll.name),
+				"account": String(poll.account),
+				"accountRS": String(poll.accountRS),
 				"description": String(poll.description),
+				"finishHeight": String(poll.finishHeight)
 			};
 
 			newPolls.push(newPoll);
@@ -801,21 +811,20 @@ $("#poll_results_modal ul.nav li").click(function(e) {
 	NRS.loadFollowedPollsSidebar = function(callback) {
 		if (!NRS.followedPolls.length) {
 			NRS.pageLoaded(callback);
-			$("#asset_exchange_sidebar_content").empty();
-			$("#no_asset_selected, #loading_asset_data, #no_asset_search_results, #asset_details").hide();
-			$("#no_assets_available").show();
-			$("#asset_exchange_page").addClass("no_assets");
+			$("#followed_polls_sidebar_content").empty();
+			$("#no_poll_selected, #loading_poll_data, #no_poll_search_results, #poll_details").hide();
+			$("#no_polls_available").show();
+			$("#followed_polls_page").addClass("no_polls");
 			return;
 		}
 
 		var rows = "";
 
-		$("#asset_exchange_page").removeClass("no_assets");
+		$("#followed_polls_page").removeClass("no_polls");
 
-		NRS.positionAssetSidebar();
+		NRS.positionFollowedPollsSidebar();
 
-		NRS.assets.sort(function(a, b) {
-			if (!a.groupName && !b.groupName) {
+		NRS.followedPolls.sort(function(a, b) {
 				if (a.name > b.name) {
 					return 1;
 				} else if (a.name < b.name) {
@@ -823,124 +832,52 @@ $("#poll_results_modal ul.nav li").click(function(e) {
 				} else {
 					return 0;
 				}
-			} else if (!a.groupName) {
-				return 1;
-			} else if (!b.groupName) {
-				return -1;
-			} else if (a.groupName > b.groupName) {
-				return 1;
-			} else if (a.groupName < b.groupName) {
-				return -1;
-			} else {
-				if (a.name > b.name) {
-					return 1;
-				} else if (a.name < b.name) {
-					return -1;
-				} else {
-					return 0;
-				}
-			}
 		});
 
 		var lastGroup = "";
 		var ungrouped = true;
 		var isClosedGroup = false;
 
-		var isSearch = NRS.assetSearch !== false;
+		var isSearch = false;
 		var searchResults = 0;
 
-		for (var i = 0; i < NRS.assets.length; i++) {
-			var asset = NRS.assets[i];
+		for (var i = 0; i < NRS.followedPolls.length; i++) {
+			var poll = NRS.followedPolls[i];
 
-			if (isSearch) {
-				if (NRS.assetSearch.indexOf(asset.asset) == -1) {
-					continue;
-				} else {
-					searchResults++;
-				}
-			}
-
-			if (asset.groupName.toLowerCase() != lastGroup) {
-				var to_check = (asset.groupName ? asset.groupName : "undefined");
-
-				if (NRS.closedGroups.indexOf(to_check) != -1) {
-					isClosedGroup = true;
-				} else {
-					isClosedGroup = false;
-				}
-
-				if (asset.groupName) {
-					ungrouped = false;
-					rows += "<a href='#' class='list-group-item list-group-item-header" + (asset.groupName == "Ignore List" ? " no-context" : "") + "'" + (asset.groupName != "Ignore List" ? " data-context='asset_exchange_sidebar_group_context' " : "data-context=''") + " data-groupname='" + asset.groupName.escapeHTML() + "' data-closed='" + isClosedGroup + "'><h4 class='list-group-item-heading'>" + asset.groupName.toUpperCase().escapeHTML() + "</h4><i class='fa fa-angle-" + (isClosedGroup ? "right" : "down") + " group_icon'></i></h4></a>";
-				} else {
-					ungrouped = true;
-					rows += "<a href='#' class='list-group-item list-group-item-header no-context' data-closed='" + isClosedGroup + "'><h4 class='list-group-item-heading'>UNGROUPED <i class='fa pull-right fa-angle-" + (isClosedGroup ? "right" : "down") + "'></i></h4></a>";
-				}
-
-				lastGroup = asset.groupName.toLowerCase();
-			}
-
-			var ownsAsset = false;
-			var ownsQuantityQNT = 0;
-
-			if (NRS.accountInfo.assetBalances) {
-				$.each(NRS.accountInfo.assetBalances, function(key, assetBalance) {
-					if (assetBalance.asset == asset.asset && assetBalance.balanceQNT != "0") {
-						ownsAsset = true;
-						ownsQuantityQNT = assetBalance.balanceQNT;
-						return false;
-					}
-				});
-			}
-
-			rows += "<a href='#' class='list-group-item list-group-item-" + (ungrouped ? "ungrouped" : "grouped") + (ownsAsset ? " owns_asset" : " not_owns_asset") + "' ";
+			rows += "<a href='#' class='list-group-item list-group-item-" + "ungrouped" + " not_owns_asset" + "' ";
 			rows += "data-cache='" + i + "' ";
-			rows += "data-asset='" + String(asset.asset).escapeHTML() + "'" + (!ungrouped ? " data-groupname='" + asset.groupName.escapeHTML() + "'" : "");
+			rows += "data-poll='" + String(poll.poll).escapeHTML() + "'";
 			rows += (isClosedGroup ? " style='display:none'" : "") + " data-closed='" + isClosedGroup + "'>";
-			rows += "<h4 class='list-group-item-heading'>" + asset.name.escapeHTML() + "</h4>";
-			rows += "<p class='list-group-item-text'><span data-i18n=\"quantity\">Quantity</span>: " + NRS.formatQuantity(ownsQuantityQNT, asset.decimals) + "</p>";
+			rows += "<h4 class='list-group-item-heading'>" + poll.name.escapeHTML() + "</h4>";
+
+			if(NRS.lastBlockHeight > parseInt(poll.finishHeight))
+			{
+				rows += "<p class='list-group-item-text'><span data-i18n=\"completed\">Completed</span></p>";
+			}
+			else
+			{
+				rows += "<p class='list-group-item-text'><span data-i18n=\"blocks_left\">Blocks Left</span>: " + (parseInt(poll.finishHeight)-NRS.lastBlockHeight) + "</p>";
+			}
 			rows += "</a>";
 		}
 
-		var active = $("#asset_exchange_sidebar a.active");
+		var active = $("#followed_polls_sidebar a.active");
 
 
 		if (active.length) {
-			active = active.data("asset");
+			active = active.data("poll");
 		} else {
 			active = false;
 		}
 
-		$("#asset_exchange_sidebar_content").empty().append(rows);
-		$("#asset_exchange_sidebar_search").show();
+		$("#followed_polls_sidebar_content").empty().append(rows);
 
-		if (isSearch) {
-			if (active && NRS.assetSearch.indexOf(active) != -1) {
-				//check if currently selected asset is in search results, if so keep it at that
-				$("#asset_exchange_sidebar a[data-asset=" + active + "]").addClass("active");
-			} else if (NRS.assetSearch.length == 1) {
-				//if there is only 1 search result, click it
-				$("#asset_exchange_sidebar a[data-asset=" + NRS.assetSearch[0] + "]").addClass("active").trigger("click");
-			}
-		} else if (active) {
-			$("#asset_exchange_sidebar a[data-asset=" + active + "]").addClass("active");
+		if (active) {
+			$("#followed_polls_sidebar a[data-poll=" + active + "]").addClass("active");
 		}
 
-		if (isSearch || NRS.assets.length >= 10) {
-			$("#asset_exchange_sidebar_search").show();
-		} else {
-			$("#asset_exchange_sidebar_search").hide();
-		}
 
-		if (isSearch && NRS.assetSearch.length == 0) {
-			$("#no_asset_search_results").show();
-			$("#asset_details, #no_asset_selected, #no_assets_available").hide();
-		} else if (!$("#asset_exchange_sidebar a.active").length) {
-			$("#no_asset_selected").show();
-			$("#asset_details, #no_assets_available, #no_asset_search_results").hide();
-		} else if (active) {
-			$("#no_assets_available, #no_asset_selected, #no_asset_search_results").hide();
-		}
+		$("#followed_polls_sidebar_search").hide();
 
 		if (NRS.viewingAsset) {
 			$("#asset_exchange_bookmark_this_asset").show();
@@ -951,10 +888,10 @@ $("#poll_results_modal ul.nav li").click(function(e) {
 		NRS.pageLoaded(callback);
 	}
 
-	NRS.incoming.asset_exchange = function() {
-		if (!NRS.viewingAsset) {
+	NRS.incoming.followed_polls = function() {
+		if (!NRS.viewingPoll) {
 			//refresh active asset
-			var $active = $("#asset_exchange_sidebar a.active");
+			var $active = $("#followed_polls_sidebar a.active");
 
 			if ($active.length) {
 				$active.trigger("click", [{
@@ -962,25 +899,16 @@ $("#poll_results_modal ul.nav li").click(function(e) {
 				}]);
 			}
 		} else {
-			NRS.loadAsset(NRS.viewingAsset, true);
+			NRS.loadPoll(NRS.viewingPoll, true);
 		}
 
 		//update assets owned (colored)
-		$("#asset_exchange_sidebar a.list-group-item.owns_asset").removeClass("owns_asset").addClass("not_owns_asset");
-
-		if (NRS.accountInfo.assetBalances) {
-			$.each(NRS.accountInfo.assetBalances, function(key, assetBalance) {
-				if (assetBalance.balanceQNT != "0") {
-					$("#asset_exchange_sidebar a.list-group-item[data-asset=" + assetBalance.asset + "]").addClass("owns_asset").removeClass("not_owns_asset");
-				}
-			});
-		}
 	}
 
-	$("#asset_exchange_sidebar").on("click", "a", function(e, data) {
+	$("#followed_polls_sidebar").on("click", "a", function(e, data) {
 		e.preventDefault();
 
-		currentAssetID = String($(this).data("asset")).escapeHTML();
+		currentPollID = String($(this).data("poll")).escapeHTML();
 
 		//refresh is true if data is refreshed automatically by the system (when a new block arrives)
 		if (data && data.refresh) {
@@ -990,16 +918,12 @@ $("#poll_results_modal ul.nav li").click(function(e) {
 		}
 
 		//clicked on a group
-		if (!currentAssetID) {
+		if (!currentPollID) {
 			if (NRS.databaseSupport) {
 				var group = $(this).data("groupname");
 				var closed = $(this).data("closed");
 
-				if (!group) {
-					var $links = $("#asset_exchange_sidebar a.list-group-item-ungrouped");
-				} else {
-					var $links = $("#asset_exchange_sidebar a.list-group-item-grouped[data-groupname='" + group.escapeHTML() + "']");
-				}
+					var $links = $("#followed_polls_sidebar a.list-group-item-ungrouped");
 
 				if (!group) {
 					group = "undefined";
@@ -1031,64 +955,50 @@ $("#poll_results_modal ul.nav li").click(function(e) {
 		}
 
 		if (NRS.databaseSupport) {
-			NRS.database.select("assets", [{
-				"asset": currentAssetID
-			}], function(error, asset) {
-				if (asset && asset.length && asset[0].asset == currentAssetID) {
-					NRS.loadAsset(asset[0], refresh);
+			NRS.database.select("polls", [{
+				"poll": currentPollID
+			}], function(error, poll) {
+				if (poll && poll.length && poll[0].poll == currentPollID) {
+					NRS.loadPoll(poll[0], refresh);
 				}
 			});
 		} else {
-			NRS.sendRequest("getAsset+", {
-				"asset": currentAssetID
+			NRS.sendRequest("getPoll+", {
+				"poll": currentPollID
 			}, function(response, input) {
-				if (!response.errorCode && response.asset == currentAssetID) {
-					NRS.loadAsset(response, refresh);
+				if (!response.errorCode && response.poll == currentPollID) {
+					NRS.loadPoll(response, refresh);
 				}
 			});
 		}
 	});
 
-	NRS.loadAsset = function(asset, refresh) {
-		var assetId = asset.asset;
-
-		NRS.currentAsset = asset;
-		NRS.currentSubPage = assetId;
+	NRS.loadPoll = function(poll, refresh) {
+		var pollId = poll.poll;
+		NRS.currentPoll = poll;
+		NRS.currentSubPage = pollId;
 
 		if (!refresh) {
-			$("#asset_exchange_sidebar a.active").removeClass("active");
-			$("#asset_exchange_sidebar a[data-asset=" + assetId + "]").addClass("active");
+			$("#followed_polls_sidebar a.active").removeClass("active");
+			$("#followed_polls_sidebar a[data-poll=" + pollId + "]").addClass("active");
 
-			$("#no_asset_selected, #loading_asset_data, #no_assets_available, #no_asset_search_results").hide();
-			$("#asset_details").show().parent().animate({
+			$("#no_poll_selected, #loading_poll_data, #no_polls_available, #no_poll_search_results").hide();
+			$("#poll_details").show().parent().animate({
 				"scrollTop": 0
 			}, 0);
 
-			$("#asset_account").html("<a href='#' data-user='" + NRS.getAccountFormatted(asset, "account") + "' class='show_account_modal_action user_info'>" + NRS.getAccountTitle(asset, "account") + "</a>");
-			$("#asset_id").html(assetId.escapeHTML());
-			$("#asset_decimals").html(String(asset.decimals).escapeHTML());
-			$("#asset_name").html(String(asset.name).escapeHTML());
-			$("#asset_description").html(String(asset.description).autoLink());
-			$("#asset_quantity").html(NRS.formatQuantity(asset.quantityQNT, asset.decimals));
-			$(".asset_name").html(String(asset.name).escapeHTML());
-			$("#sell_asset_button").data("asset", assetId);
-			$("#buy_asset_button").data("asset", assetId);
-			$("#view_asset_distribution_link").data("asset", assetId);
-			$("#sell_asset_for_nxt").html($.t("sell_asset_for_nxt", {
-				"assetName": String(asset.name).escapeHTML()
-			}));
-			$("#buy_asset_with_nxt").html($.t("buy_asset_with_nxt", {
-				"assetName": String(asset.name).escapeHTML()
-			}));
-			$("#sell_asset_price, #buy_asset_price").val("");
-			$("#sell_asset_quantity, #sell_asset_total, #buy_asset_quantity, #buy_asset_total").val("0");
+			$("#poll_account").html("<a href='#' data-user='" + NRS.getAccountFormatted(poll, "account") + "' class='user_info'>" + NRS.getAccountTitle(poll, "account") + "</a>");
+			$("#poll_id").html(poll.poll.escapeHTML());
 
-			$("#asset_exchange_ask_orders_table tbody").empty();
-			$("#asset_exchange_bid_orders_table tbody").empty();
-			$("#asset_exchange_trade_history_table tbody").empty();
-			$("#asset_exchange_ask_orders_table").parent().addClass("data-loading").removeClass("data-empty");
-			$("#asset_exchange_bid_orders_table").parent().addClass("data-loading").removeClass("data-empty");
-			$("#asset_exchange_trade_history_table").parent().addClass("data-loading").removeClass("data-empty");
+			$("#followed_polls_poll_name").html(String(poll.name).escapeHTML());
+			$("#poll_description").html(String(poll.description).autoLink());
+			$(".poll_name").html(String(poll.name).escapeHTML());
+			$("#vote_poll_link a").data("poll", pollId);
+			
+			$("#followed_polls_poll_results tbody").empty();
+			$("#followed_polls_votes_cast tbody").empty();
+			$("#followed_polls_poll_results").parent().addClass("data-loading").removeClass("data-empty");
+			$("#followed_polls_votes_cast").parent().addClass("data-loading").removeClass("data-empty");
 
 			$(".data-loading img.loading").hide();
 
@@ -1096,30 +1006,18 @@ $("#poll_results_modal ul.nav li").click(function(e) {
 				$(".data-loading img.loading").fadeIn(200);
 			}, 200);
 
-			var nrDuplicates = 0;
-
-			$.each(NRS.assets, function(key, singleAsset) {
-				if (String(singleAsset.name).toLowerCase() == String(asset.name).toLowerCase() && singleAsset.asset != assetId) {
-					nrDuplicates++;
-				}
-			});
-
-			$("#asset_exchange_duplicates_warning").html($.t("asset_exchange_duplicates_warning", {
-				"count": nrDuplicates
-			}));
-
 			if (NRS.databaseSupport) {
-				NRS.sendRequest("getAsset", {
-					"asset": assetId
+				NRS.sendRequest("getPoll", {
+					"poll": pollId
 				}, function(response) {
 					if (!response.errorCode) {
-						if (response.asset != asset.asset || response.account != asset.account || response.accountRS != asset.accountRS || response.decimals != asset.decimals || response.description != asset.description || response.name != asset.name || response.quantityQNT != asset.quantityQNT) {
-							NRS.database.delete("assets", [{
-								"asset": asset.asset
+						if (response.poll != poll.poll || response.account != poll.account || response.accountRS != poll.accountRS || response.description != poll.description || response.name != poll.name) {
+							NRS.database.delete("polls", [{
+								"poll": poll.poll
 							}], function() {
 								setTimeout(function() {
-									NRS.loadPage("asset_exchange");
-									$.growl("Invalid asset.", {
+									NRS.loadPage("followed_polls");
+									$.growl("Invalid poll.", {
 										"type": "danger"
 									});
 								}, 50);
@@ -1129,130 +1027,117 @@ $("#poll_results_modal ul.nav li").click(function(e) {
 				});
 			}
 
-			if (asset.viewingAsset) {
-				$("#asset_exchange_bookmark_this_asset").show();
-				NRS.viewingAsset = asset;
+			if (poll.viewingPoll) {
+				$("#followed_polls_bookmark_this_poll").show();
+				NRS.viewingPoll = poll;
 			} else {
-				$("#asset_exchange_bookmark_this_asset").hide();
-				NRS.viewingAsset = false;
+				$("#followed_polls_bookmark_this_poll").hide();
+				NRS.viewingPoll = false;
 			}
 		}
+
 
 		// Only asset issuers have the ability to pay dividends.
-		if (asset.accountRS == NRS.accountRS) {
-         $("#dividend_payment_link").show();
+		if (poll.finishHeight < NRS.lastBlockHeight) {
+         $("#vote_poll_link").show();
 		} else {
-			$("#dividend_payment_link").hide();
+			$("#vote_poll_link").hide();
 		}
 
-		if (NRS.accountInfo.unconfirmedBalanceNQT == "0") {
-			$("#your_nxt_balance").html("0");
-			$("#buy_automatic_price").addClass("zero").removeClass("nonzero");
-		} else {
-			$("#your_nxt_balance").html(NRS.formatAmount(NRS.accountInfo.unconfirmedBalanceNQT));
-			$("#buy_automatic_price").addClass("nonzero").removeClass("zero");
-		}
-
-		if (NRS.accountInfo.unconfirmedAssetBalances) {
-			for (var i = 0; i < NRS.accountInfo.unconfirmedAssetBalances.length; i++) {
-				var balance = NRS.accountInfo.unconfirmedAssetBalances[i];
-
-				if (balance.asset == assetId) {
-					NRS.currentAsset.yourBalanceQNT = balance.unconfirmedBalanceQNT;
-					$("#your_asset_balance").html(NRS.formatQuantity(balance.unconfirmedBalanceQNT, NRS.currentAsset.decimals));
-					if (balance.unconfirmedBalanceQNT == "0") {
-						$("#sell_automatic_price").addClass("zero").removeClass("nonzero");
-					} else {
-						$("#sell_automatic_price").addClass("nonzero").removeClass("zero");
-					}
-					break;
-				}
-			}
-		}
-
-		if (!NRS.currentAsset.yourBalanceQNT) {
-			NRS.currentAsset.yourBalanceQNT = "0";
-			$("#your_asset_balance").html("0");
-		}
-
-		NRS.loadAssetOrders("ask", assetId, refresh);
-		NRS.loadAssetOrders("bid", assetId, refresh);
-
-		NRS.getAssetTradeHistory(assetId, refresh);
+		NRS.loadPollResults(pollId, refresh);
+		NRS.loadPollVotes(pollId, refresh);
 	}
 
-	NRS.loadAssetOrders = function(type, assetId, refresh) {
-		type = type.toLowerCase();
+	NRS.loadPollResults = function(pollId, refresh) {
 
-		NRS.sendRequest("get" + type.capitalize() + "Orders+" + assetId, {
-			"asset": assetId,
-			"firstIndex": 0,
-			"lastIndex": 50
+		NRS.sendRequest("getPollResult+" + pollId, {
+			"poll": pollId
 		}, function(response, input) {
-			var orders = response[type + "Orders"];
+			var results = response.results;
+			var options = response.options;
 
-			if (!orders) {
-				orders = [];
+			if (!results) {
+				results = [];
 			}
 
-			if (NRS.unconfirmedTransactions.length) {
-				var added = false;
-
-				for (var i = 0; i < NRS.unconfirmedTransactions.length; i++) {
-					var unconfirmedTransaction = NRS.unconfirmedTransactions[i];
-					unconfirmedTransaction.order = unconfirmedTransaction.transaction;
-
-					if (unconfirmedTransaction.type == 2 && (type == "ask" ? unconfirmedTransaction.subtype == 2 : unconfirmedTransaction.subtype == 3) && unconfirmedTransaction.asset == assetId) {
-						orders.push($.extend(true, {}, unconfirmedTransaction)); //make sure it's a deep copy
-						added = true;
-					}
-				}
-
-				if (added) {
-					orders.sort(function(a, b) {
-						if (type == "ask") {
-							//lowest price at the top
-							return new BigInteger(a.priceNQT).compareTo(new BigInteger(b.priceNQT));
-						} else {
-							//highest price at the top
-							return new BigInteger(b.priceNQT).compareTo(new BigInteger(a.priceNQT));
-						}
-					});
-				}
-			}
-
-			if (orders.length) {
-				$("#" + (type == "ask" ? "sell" : "buy") + "_orders_count").html("(" + orders.length + (orders.length == 50 ? "+" : "") + ")");
-
+			if (results.length) {
 				var rows = "";
 
-				for (var i = 0; i < orders.length; i++) {
-					var order = orders[i];
+				for (var i = 0; i < results.length; i++) {
+					var result = results[i];
+					rows += "<tr>";
+					rows += "<td>" + options[i] + "</td>";
+					rows += "<td>" + result.result/100000000 + "</td>";
+					rows += "<td>" + result.weight/100000000 + "</td>";					
+					rows += "</tr>";
+				}
 
-					order.priceNQT = new BigInteger(order.priceNQT);
-					order.quantityQNT = new BigInteger(order.quantityQNT);
-					order.totalNQT = new BigInteger(NRS.calculateOrderTotalNQT(order.quantityQNT, order.priceNQT));
+				$("#followed_polls_poll_results tbody").empty().append(rows);
+				} else {
+					$("#followed_polls_poll_results tbody").empty();
+				}
 
-					if (i == 0 && !refresh) {
-						$("#" + (type == "ask" ? "buy" : "sell") + "_asset_price").val(NRS.calculateOrderPricePerWholeQNT(order.priceNQT, NRS.currentAsset.decimals));
+
+			NRS.dataLoadFinished($("#followed_polls_poll_results"), !refresh);
+		});
+	}
+
+	NRS.loadPollVotes = function(pollId, refresh)
+	{
+		NRS.sendRequest("getPoll+" + pollId, {
+			"poll": pollId
+		}, function(polldata, input) {
+
+			NRS.sendRequest("getPollVotes+" + pollId, {
+				"poll": pollId
+			}, function(votesdata, input) {
+
+				var votes = votesdata.votes;
+
+				if (!votes) {
+					votes = [];
+				}
+
+				if (votes.length) {
+					
+					var head = "";
+					head += "<tr>";
+					head += "<th data-i18n=\"voter\">Voter</th>";
+
+					for(var b=0; b<polldata.options.length; b++)
+					{
+						head += "<th>"+String(polldata.options[b].escapeHTML()) + "</th>";
+					}
+					head += "</tr>";
+
+					$("#followed_polls_votes_cast thead").empty().append(head);				
+
+					$("#votes_cast_count").html("(" + votes.length + ")");
+
+					var rows = "";
+
+					for (var i = 0; i < votes.length; i++) {
+						rows += "<tr>";
+						var vote = votes[i];
+
+						rows += "<td><a href='#' class='user_info' data-user='" + NRS.getAccountFormatted(vote, "voter") + "'>" + NRS.getAccountTitle(vote, "voter") + "</td>";
+
+						for(var a=0;a<vote.votes.length;a++)
+						{
+							rows += "<td>" + vote.votes[a] + "</td>";
+						}
 					}
 
-					var className = (order.account == NRS.account ? "your-order" : "") + (order.unconfirmed ? " tentative" : (NRS.isUserCancelledOrder(order) ? " tentative tentative-crossed" : ""));
+					$("#followed_polls_votes_cast tbody").empty().append(rows);
+				} else {
+					$("#followed_polls_votes_cast tbody").empty();
+					$("#votes_cast_count").html("(0)");
 
-					rows += "<tr class='" + className + "' data-transaction='" + String(order.order).escapeHTML() + "' data-quantity='" + order.quantityQNT.toString().escapeHTML() + "' data-price='" + order.priceNQT.toString().escapeHTML() + "'><td>" + (order.unconfirmed ? "You - <strong>Pending</strong>" : (order.account == NRS.account ? "<strong>You</strong>" : "<a href='#' data-user='" + NRS.getAccountFormatted(order, "account") + "' class='show_account_modal_action user_info'>" + (order.account == NRS.currentAsset.account ? "Asset Issuer" : NRS.getAccountTitle(order, "account")) + "</a>")) + "</td><td>" + NRS.formatQuantity(order.quantityQNT, NRS.currentAsset.decimals) + "</td><td>" + NRS.formatOrderPricePerWholeQNT(order.priceNQT, NRS.currentAsset.decimals) + "</td><td>" + NRS.formatAmount(order.totalNQT) + "</tr>";
 				}
 
-				$("#asset_exchange_" + type + "_orders_table tbody").empty().append(rows);
-			} else {
-				$("#asset_exchange_" + type + "_orders_table tbody").empty();
-				if (!refresh) {
-					$("#" + (type == "ask" ? "buy" : "sell") + "_asset_price").val("0");
-				}
-				$("#" + (type == "ask" ? "sell" : "buy") + "_orders_count").html("");
-			}
-
-			NRS.dataLoadFinished($("#asset_exchange_" + type + "_orders_table"), !refresh);
-		});
+				NRS.dataLoadFinished($("#followed_polls_votes_cast"), !refresh);
+			});
+		})
 	}
 
 

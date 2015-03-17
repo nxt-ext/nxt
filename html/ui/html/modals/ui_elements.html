@@ -17,9 +17,7 @@
     <div class="input-group">
         <input type="text" name="{{inputName}}" id="{{modalName}}_{{labelI18n}}" class="form-control bhm_ue_time_input" value="{{initBlockHeight}}" placeholder="{{labelText}}" data-i18n="{{labelI18n}}" />
         <span class="input-group-addon">
-            <a href="#" class="bhm_ue_use_current_block_height" data-current-block-height="" style="color:#000;"><i class="fa fa-arrow-circle-left"></i></a> 
-            <span class="bhm_ue_current_block_height"></span>
-            <i class="fa fa-question-circle modal-context-help" data-content="" data-toggle="popover" data-trigger="hover" data-container="#{{modalId}}" data-i18n="[data-content]current_block_height_help"></i>
+            <a href="#" class="bhm_ue_use_current_block_height" data-current-block-height="" style="color:#000;" data-content="" data-toggle="popover" data-trigger="hover" data-container="#{{modalId}}" data-i18n="[data-content]current_block_height_help"><span class="bhm_ue_current_block_height"></span></a>
         </span>
         <span class="input-group-btn">
             <button class="btn btn-default bhm_ue_reduce_height_btn" data-bhm-ue-num-blocks="{{changeHeightBlocks}}" type="button">-{{changeHeightBlocks}}</button>

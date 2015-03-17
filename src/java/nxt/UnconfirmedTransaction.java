@@ -21,7 +21,7 @@ class UnconfirmedTransaction implements Transaction {
     UnconfirmedTransaction(ResultSet rs) throws SQLException {
         byte[] transactionBytes = rs.getBytes("transaction_bytes");
         try {
-            this.transaction = TransactionImpl.parseTransaction(transactionBytes);
+            this.transaction = TransactionImpl.newTransactionBuilder(transactionBytes).build();
             this.transaction.setHeight(rs.getInt("transaction_height"));
             this.arrivalTimestamp = rs.getLong("arrival_timestamp");
         } catch (NxtException.ValidationException e) {
@@ -38,7 +38,7 @@ class UnconfirmedTransaction implements Transaction {
             pstmt.setInt(++i, transaction.getHeight());
             pstmt.setLong(++i, transaction.getFeeNQT() / transaction.getSize());
             pstmt.setInt(++i, transaction.getExpiration());
-            pstmt.setBytes(++i, transaction.getBytes());
+            pstmt.setBytes(++i, transaction.getBytesOrig());
             pstmt.setLong(++i, arrivalTimestamp);
             pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
             pstmt.executeUpdate();
@@ -161,11 +161,6 @@ class UnconfirmedTransaction implements Transaction {
     @Override
     public Attachment getAttachment() {
         return transaction.getAttachment();
-    }
-
-    @Override
-    public void sign(String secretPhrase) {
-        transaction.sign(secretPhrase);
     }
 
     @Override

@@ -1939,7 +1939,8 @@ body > .header .logo .icon {
   -moz-border-radius: 4px;
   border-radius: 4px;
   margin: 10px auto;
-  width: 400px;
+  width: 320px;
+  display: inline-block;
 }
 .lockscreen-item:before,
 .lockscreen-item:after {
@@ -1992,14 +1993,15 @@ body > .header .logo .icon {
   text-decoration: none;
 }
 
-#login_panel #remember_password_container label, 
-#lockscreen_active_plugins_warning label {
-  opacity: 0.53;
-}
+#login_panel #remember_password_container label,
+#login_panel #remember_account_container label, 
+#lockscreen_active_plugins_warning label
+{ opacity: 0.53; }
+
 #login_panel #remember_password_container label:hover,
-#lockscreen_active_plugins_warning label:hover {
-  opacity: 1.0;
-}
+#login_panel #remember_account_container label:hover,
+#lockscreen_active_plugins_warning label:hover 
+{ opacity: 1.0; }
 
 /* 
     skin-blue 
@@ -2942,11 +2944,11 @@ label .popover-content {
   background-color: #3c8dbc;
   color: #f9f9f9;
 }
-#remember_password_container {
+#remember_password_container,#remember_account_container {
   color:#fff;
-	text-align:center;
+  text-align:center;
 }
-#remember_password_container label {
+#remember_password_container label,#remember_account_container label {
 	font-weight:normal;
 }
 .popover {
@@ -3083,9 +3085,9 @@ hr {
 }
 
 #testnet_login {
-  display:inline-block;
+  display:block;
   text-align:left;
-  margin-bottom:0px;
+  margin:auto auto 0px auto;
 }
 
 #login_error  {
@@ -3306,4 +3308,19 @@ input.masked {
 #sideBalance {
   display: block;
   margin-bottom: 5px;
+}
+
+#login_account_container {
+  display: none;
+}
+
+#loginButtons {
+  margin: 10px 0;
+  vertical-align: top;
+}
+
+#alias_count_heading{
+	position: absolute; 
+	left: 105px; 
+	top: 17px;
 }

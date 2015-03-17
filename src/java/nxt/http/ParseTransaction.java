@@ -22,7 +22,7 @@ public final class ParseTransaction extends APIServlet.APIRequestHandler {
 
         String transactionBytes = Convert.emptyToNull(req.getParameter("transactionBytes"));
         String transactionJSON = Convert.emptyToNull(req.getParameter("transactionJSON"));
-        Transaction transaction = ParameterParser.parseTransaction(transactionBytes, transactionJSON);
+        Transaction transaction = ParameterParser.parseTransaction(transactionBytes, transactionJSON).build();
         JSONObject response = JSONData.unconfirmedTransaction(transaction);
         try {
             transaction.validate();
