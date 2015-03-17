@@ -225,57 +225,21 @@ var NRS = (function(NRS, $, undefined) {
 			if (!offers) {
 				offers = [];
 			}
-			if (NRS.unconfirmedTransactions.length) {
-				var added = false;
-				for (var i = 0; i < NRS.unconfirmedTransactions.length; i++) {
-					var unconfirmedTransaction = NRS.unconfirmedTransactions[i];
-					unconfirmedTransaction.offer = unconfirmedTransaction.transaction;
-
-					if (unconfirmedTransaction.type == 5 && unconfirmedTransaction.subtype == 4 && unconfirmedTransaction.currency == currencyId) {
-						offers.push($.extend(true, {}, unconfirmedTransaction)); //make sure it's a deep copy
-						added = true;
-					}
-				}
-
-				if (added) {
-					offers.sort(function (a, b) {
-						if (type == "sell") {
-							//lowest price at the top
-							return new BigInteger(a.sellRateNQT).compareTo(new BigInteger(b.sellRateNQT));
-						} else {
-							//highest price at the top
-							return new BigInteger(b.buyRateNQT).compareTo(new BigInteger(a.buyRateNQT));
-						}
-					});
-				}
-			}
          if (response.offers && response.offers.length) {
 				var rows = "";
 				var decimals = parseInt($("#currency_decimals").text(), 10);
 				for (i = 0; i < response.offers.length; i++) {
 					var offer = response.offers[i];
-					var rateNQT = offer.rateNQT || (type == "sell" ? offer.attachment.sellRateNQT : offer.attachment.buyRateNQT);
+					var rateNQT = offer.rateNQT;
                if (i == 0 && !refresh) {
 						$("#" + (type == "sell" ? "buy" : "sell") + "_currency_price").val(NRS.calculateOrderPricePerWholeQNT(rateNQT, decimals));
 					}
-
-					// The offers collection contains both real offers and unconfirmed offers and the code below works for both types
-					var transactionLink;
-					if (offer.unconfirmed) {
-						transactionLink = "<a href='#' class='show_transaction_modal_action' data-transaction='" + String(offer.transaction).escapeHTML() + "'>/</a>";
-					} else {
-						transactionLink = "<a href='#' class='show_transaction_modal_action' data-transaction='" + String(offer.offer).escapeHTML() + "'>" + offer.height + "</a>";
-					}
-					var accountRS = offer.accountRS || offer.senderRS;
-               accountRS = String(accountRS).escapeHTML();
-					var accountLink = offer.unconfirmed ? "You - <strong>$.t('unconfirmed')</strong>" : (offer.account == NRS.account ? "<strong>You</strong>" : "<a href='#' class='show_account_modal_action user-info' data-user='" + accountRS + "'>" + accountRS + "</a>");
-					var supply = offer.supply || (type == "sell" ? offer.attachment.initialSellSupply : offer.attachment.initialBuySupply);
-					var limit = offer.limit || (type == "sell" ? offer.attachment.totalSellLimit : offer.attachment.totalBuyLimit);
+               var accountRS = String(offer.accountRS).escapeHTML();
                rows += "<tr>" +
-						"<td>" + transactionLink + "</td>" +
-						"<td>" + accountLink + "</td>" +
-						"<td>" + NRS.convertToQNTf(supply, decimals) + "</td>" +
-						"<td>" + NRS.convertToQNTf(limit, decimals) + "</td>" +
+						"<td>" + "<a href='#' class='show_transaction_modal_action' data-transaction='" + String(offer.offer).escapeHTML() + "'>" + offer.height + "</a>" + "</td>" +
+						"<td>" + NRS.getAccountLink(offer, "account") + "</td>" +
+						"<td>" + NRS.convertToQNTf(offer.supply, decimals) + "</td>" +
+						"<td>" + NRS.convertToQNTf(offer.limit, decimals) + "</td>" +
 						"<td>" + NRS.calculateOrderPricePerWholeQNT(rateNQT, decimals) + "</td>" +
 					"</tr>";
 				}
@@ -453,14 +417,6 @@ var NRS = (function(NRS, $, undefined) {
 			if (!exchangeRequests) {
 				exchangeRequests = [];
 			}
-			if (NRS.unconfirmedTransactions.length) {
-				for (var i = 0; i < NRS.unconfirmedTransactions.length; i++) {
-					var unconfirmedTransaction = NRS.unconfirmedTransactions[i];
-					if (unconfirmedTransaction.type == 5 && (unconfirmedTransaction.subtype == 5 || unconfirmedTransaction.subtype == 6) && unconfirmedTransaction.currency == currencyId) {
-						exchangeRequests.unshift($.extend(true, {}, unconfirmedTransaction)); //make sure it's a deep copy
-					}
-				}
-			}
 			if (response.exchangeRequests && response.exchangeRequests.length) {
 				if (response.exchangeRequests.length > NRS.itemsPerPage) {
 					NRS.hasMorePages = true;
@@ -470,8 +426,8 @@ var NRS = (function(NRS, $, undefined) {
 				var decimals = parseInt($("#currency_decimals").text(), 10);
 				for (i = 0; i < response.exchangeRequests.length; i++) {
 					var exchangeRequest = response.exchangeRequests[i];
-					var type = (exchangeRequest.subtype == 5 ? "buy" : (exchangeRequest.subtype == 6 ? "sell" : exchangeRequest.type));
-					rows += "<tr class='" + (exchangeRequest.hasOwnProperty('confirmed') && !exchangeRequest.confirmed ? "tentative-allow-links" : "confirmed") + "'>" +
+					var type = exchangeRequest.subtype == 5 ? "buy" : "sell";
+					rows += "<tr class=confirmed>" +
 						"<td>" +
 							"<a href='#' class='show_transaction_modal_action' data-transaction='" + String(exchangeRequest.transaction).escapeHTML() + "'>" + NRS.formatTimestamp(exchangeRequest.timestamp) + "</a>" +
 						"</td>" +
