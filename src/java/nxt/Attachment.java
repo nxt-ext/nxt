@@ -2494,7 +2494,7 @@ public interface Attachment extends Appendix {
 
         @Override
         void putMyJSON(JSONObject attachment) {
-            attachment.put("currency", Convert.toUnsignedLong(currencyId));
+            attachment.put("currency", Long.toUnsignedString(currencyId));
             attachment.put("amount", amount);
             attachment.put("participantCount", participantCount);
             attachment.put("cancellationHeight", cancellationHeight);
@@ -2556,7 +2556,7 @@ public interface Attachment extends Appendix {
 
         @Override
         void putMyJSON(JSONObject attachment) {
-            attachment.put("shuffling", Convert.toUnsignedLong(shufflingId));
+            attachment.put("shuffling", Long.toUnsignedString(shufflingId));
         }
 
         @Override
@@ -2612,7 +2612,7 @@ public interface Attachment extends Appendix {
 
         @Override
         void putMyJSON(JSONObject attachment) {
-            attachment.put("shuffling", Convert.toUnsignedLong(shufflingId));
+            attachment.put("shuffling", Long.toUnsignedString(shufflingId));
             attachment.put("data", Convert.toHexString(data));
         }
 
@@ -2665,7 +2665,7 @@ public interface Attachment extends Appendix {
 
         @Override
         void putMyJSON(JSONObject attachment) {
-            attachment.put("shuffling", Convert.toUnsignedLong(shufflingId));
+            attachment.put("shuffling",Long.toUnsignedString(shufflingId));
         }
 
         @Override
@@ -2713,7 +2713,7 @@ public interface Attachment extends Appendix {
 
         @Override
         void putMyJSON(JSONObject attachment) {
-            attachment.put("shuffling", Convert.toUnsignedLong(shufflingId));
+            attachment.put("shuffling", Long.toUnsignedString(shufflingId));
         }
 
         @Override
@@ -2762,7 +2762,7 @@ public interface Attachment extends Appendix {
 
         @Override
         void putMyJSON(JSONObject attachment) {
-            attachment.put("shuffling", Convert.toUnsignedLong(shufflingId));
+            attachment.put("shuffling", Long.toUnsignedString(shufflingId));
         }
 
         @Override

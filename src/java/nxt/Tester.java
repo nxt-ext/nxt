@@ -29,7 +29,7 @@ public class    Tester {
         this.publicKey = Crypto.getPublicKey(secretPhrase);
         this.publicKeyStr = Convert.toHexString(publicKey);
         this.id = Account.getId(publicKey);
-        this.strId = Convert.toUnsignedLong(id);
+        this.strId = Long.toUnsignedString(id);
         this.rsAccount = Convert.rsAccount(id);
         this.account = Account.getAccount(publicKey);
         if (account != null) {

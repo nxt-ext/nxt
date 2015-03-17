@@ -215,7 +215,7 @@ final class JSONData {
 
     static JSONObject shuffling(Shuffling shuffling) {
         JSONObject json = new JSONObject();
-        json.put("shuffling", Convert.toUnsignedLong(shuffling.getId()));
+        json.put("shuffling", Long.toUnsignedString(shuffling.getId()));
         putAccount(json, "issuer", shuffling.getIssuerId());
         json.put("currency", shuffling.getCurrencyId());
         putAccount(json, "assignee", shuffling.getAssigneeAccountId());
@@ -228,7 +228,7 @@ final class JSONData {
 
     static JSONObject participant(ShufflingParticipant participant) {
         JSONObject json = new JSONObject();
-        json.put("shuffling", Convert.toUnsignedLong(participant.getShufflingId()));
+        json.put("shuffling", Long.toUnsignedString(participant.getShufflingId()));
         putAccount(json, "account", participant.getAccountId());
         putAccount(json, "nextAccount", participant.getNextAccountId());
         putAccount(json, "recipient", participant.getRecipientId());

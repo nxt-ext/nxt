@@ -1,5 +1,6 @@
 package nxt;
 
+import nxt.util.Convert;
 import org.json.simple.JSONObject;
 
 import java.nio.ByteBuffer;
@@ -1063,7 +1064,7 @@ public abstract class MonetarySystem extends TransactionType {
                 return true;
             }
             Attachment.MonetarySystemShufflingDistribution attachment = (Attachment.MonetarySystemShufflingDistribution) transaction.getAttachment();
-            String key = Convert.toUnsignedLong(attachment.getShufflingId()) + "." + Convert.toUnsignedLong(transaction.getSenderId());
+            String key = Long.toUnsignedString(attachment.getShufflingId()) + "." + Long.toUnsignedString(transaction.getSenderId());
             return TransactionType.isDuplicate(SHUFFLING_DISTRIBUTION, key, duplicates, true);
         }
 
@@ -1133,7 +1134,7 @@ public abstract class MonetarySystem extends TransactionType {
                 return true;
             }
             Attachment.MonetarySystemShufflingCancellation attachment = (Attachment.MonetarySystemShufflingCancellation) transaction.getAttachment();
-            String key = Convert.toUnsignedLong(attachment.getShufflingId()) + "." + Convert.toUnsignedLong(transaction.getSenderId());
+            String key = Long.toUnsignedString(attachment.getShufflingId()) + "." + Long.toUnsignedString(transaction.getSenderId());
             return TransactionType.isDuplicate(SHUFFLING_CANCELLATION, key, duplicates, true);
         }
 

@@ -135,7 +135,7 @@ public final class ShufflingProcess extends CreateTransaction {
 
         // Calculate the token for the current sender by iteratively encrypting it using the public key of all the participants
         // which did not perform shuffle processing yet
-        EncryptedData encryptedData = new EncryptedData(Convert.toBytes(Convert.toUnsignedLong(recipientId)), new byte[]{});
+        EncryptedData encryptedData = new EncryptedData(Convert.toBytes(Long.toUnsignedString(recipientId)), new byte[]{});
         byte[] bytesToEncrypt = EncryptedData.marshalData(encryptedData);
         // If we are that last participant to process then we do not encrypt our recipient
         while (id != senderAccount.getId() && id != 0) {
