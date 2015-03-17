@@ -197,7 +197,7 @@ public final class Generator implements Comparable<Generator> {
     }
 
     static long getHitTime(Account account, Block block) {
-        return getHitTime(BigInteger.valueOf(account.getEffectiveBalanceNXT()), getHit(account.getPublicKey(), block), block);
+        return getHitTime(BigInteger.valueOf(account.getEffectiveBalanceNXT(block.getHeight())), getHit(account.getPublicKey(), block), block);
     }
 
     static boolean allowsFakeForging(byte[] publicKey) {

@@ -21,6 +21,8 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.regex.Pattern;
 
@@ -738,42 +740,80 @@ public final class Account {
     }
 
     public long getEffectiveBalanceNXT() {
+        return getEffectiveBalanceNXT(Nxt.getBlockchain().getHeight());
+    }
 
-        Block lastBlock = Nxt.getBlockchain().getLastBlock();
-        if (lastBlock.getHeight() >= Constants.TRANSPARENT_FORGING_BLOCK_6
-                && (keyHeight == 0 || lastBlock.getHeight() - keyHeight <= 1440)) {
+    public long getEffectiveBalanceNXT(int height) {
+
+        if (height >= Constants.TRANSPARENT_FORGING_BLOCK_6
+                && (keyHeight == 0 || height - keyHeight <= 1440)) {
             return 0; // cfb: Accounts with the public key revealed less than 1440 blocks ago are not allowed to generate blocks
         }
-        if (lastBlock.getHeight() < Constants.TRANSPARENT_FORGING_BLOCK_3
+        if (height < Constants.TRANSPARENT_FORGING_BLOCK_3
                 && this.creationHeight < Constants.TRANSPARENT_FORGING_BLOCK_2) {
             if (this.creationHeight == 0) {
-                return getBalanceNQT() / Constants.ONE_NXT;
+                return balanceNQT / Constants.ONE_NXT;
             }
-            if (lastBlock.getHeight() - this.creationHeight < 1440) {
+            if (height - this.creationHeight < 1440) {
                 return 0;
             }
             long receivedInlastBlock = 0;
-            for (Transaction transaction : lastBlock.getTransactions()) {
+            for (Transaction transaction : Nxt.getBlockchain().getBlockAtHeight(height).getTransactions()) {
                 if (id == transaction.getRecipientId()) {
                     receivedInlastBlock += transaction.getAmountNQT();
                 }
             }
-            return (getBalanceNQT() - receivedInlastBlock) / Constants.ONE_NXT;
+            return (balanceNQT - receivedInlastBlock) / Constants.ONE_NXT;
         }
-        if (lastBlock.getHeight() < currentLeasingHeightFrom) {
-            return (getGuaranteedBalanceNQT(1440) + getLessorsGuaranteedBalanceNQT()) / Constants.ONE_NXT;
+        if (height < currentLeasingHeightFrom) {
+            return (getGuaranteedBalanceNQT(1440, height) + getLessorsGuaranteedBalanceNQT(height)) / Constants.ONE_NXT;
         }
-        return getLessorsGuaranteedBalanceNQT() / Constants.ONE_NXT;
+        return getLessorsGuaranteedBalanceNQT(height) / Constants.ONE_NXT;
     }
 
-    private long getLessorsGuaranteedBalanceNQT() {
-        long lessorsGuaranteedBalanceNQT = 0;
-        try (DbIterator<Account> lessors = getLessors()) {
-            while (lessors.hasNext()) {
-                lessorsGuaranteedBalanceNQT += lessors.next().getGuaranteedBalanceNQT(1440);
+    private long getLessorsGuaranteedBalanceNQT(int height) {
+        List<Account> lessors = new ArrayList<>();
+        try (DbIterator<Account> iterator = getLessors()) {
+            while (iterator.hasNext()) {
+                lessors.add(iterator.next());
             }
         }
-        return lessorsGuaranteedBalanceNQT;
+        Long[] lessorIds = new Long[lessors.size()];
+        long[] guaranteedBalances = new long[lessors.size()];
+        for (int i = 0; i < lessors.size(); i++) {
+            lessorIds[i] = lessors.get(i).getId();
+            guaranteedBalances[i] = lessors.get(i).getBalanceNQT();
+        }
+        try (Connection con = Db.db.getConnection();
+             PreparedStatement pstmt = con.prepareStatement("SELECT account_id, SUM (additions) AS additions "
+                     + "FROM account_guaranteed_balance, TABLE (id BIGINT=?) T WHERE account_id = T.id AND height > ? "
+                             + (height < Nxt.getBlockchain().getHeight() ? " AND height <= ? " : "")
+                     + " GROUP BY account_id ORDER BY account_id")) {
+            pstmt.setObject(1, lessorIds);
+            pstmt.setInt(2, height - 1440);
+            if (height < Nxt.getBlockchain().getHeight()) {
+                pstmt.setInt(3, height);
+            }
+            long total = 0;
+            int i = 0;
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    long accountId = rs.getLong("account_id");
+                    while (lessorIds[i] < accountId && i < lessorIds.length) {
+                        total += guaranteedBalances[i++];
+                    }
+                    if (lessorIds[i] == accountId) {
+                        total += Math.max(guaranteedBalances[i++] - rs.getLong("additions"), 0);
+                    }
+                }
+            }
+            while (i < guaranteedBalances.length) {
+                total += guaranteedBalances[i++];
+            }
+            return total;
+        } catch (SQLException e) {
+            throw new RuntimeException(e.toString(), e);
+        }
     }
 
     private DbClause getLessorsClause(final int height) {
@@ -783,14 +823,14 @@ public final class Account {
     }
 
     public DbIterator<Account> getLessors() {
-        return accountTable.getManyBy(getLessorsClause(Nxt.getBlockchain().getHeight()), 0, -1);
+        return accountTable.getManyBy(getLessorsClause(Nxt.getBlockchain().getHeight()), 0, -1, " ORDER BY id ASC ");
     }
 
     public DbIterator<Account> getLessors(int height) {
         if (height < 0) {
             return getLessors();
         }
-        return accountTable.getManyBy(getLessorsClause(height), height, 0, -1);
+        return accountTable.getManyBy(getLessorsClause(height), height, 0, -1, " ORDER BY id ASC ");
     }
 
     public long getGuaranteedBalanceNQT(final int numberOfConfirmations) {
