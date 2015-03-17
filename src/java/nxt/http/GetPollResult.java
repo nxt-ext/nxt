@@ -23,7 +23,7 @@ public class GetPollResult extends APIServlet.APIRequestHandler {
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
         Poll poll = ParameterParser.getPoll(req);
-        List<Poll.PollResult> pollResults;
+        List<Poll.OptionResult> pollResults;
         if (Convert.emptyToNull(req.getParameter("votingModel")) == null) {
             pollResults = poll.getResults();
         } else {

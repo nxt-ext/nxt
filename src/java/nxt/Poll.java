@@ -5,57 +5,44 @@ import nxt.db.DbIterator;
 import nxt.db.DbKey;
 import nxt.db.EntityDbTable;
 import nxt.db.ValuesDbTable;
-import nxt.util.Convert;
-import nxt.util.Listener;
 import nxt.util.Logger;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
+import java.sql.Types;
 import java.util.Arrays;
 import java.util.List;
 
 public final class Poll extends AbstractPoll {
 
-    public static final class PollResult {
+    private static final boolean isPollsProcessing = Nxt.getBooleanProperty("nxt.processPolls");
 
-        private final String option;
-        private final long result;
+    public static final class OptionResult {
 
-        private PollResult(String option, long result) {
-            this.option = option;
+        private long result;
+        private long weight;
+
+        private OptionResult(long result, long weight) {
             this.result = result;
-        }
-
-        private PollResult(ResultSet rs) throws SQLException {
-            this.option = rs.getString("option");
-            this.result = rs.getLong("result");
-        }
-
-        private void save(Connection con, Poll poll) throws SQLException {
-            try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO poll_result (poll_id, "
-                    + "option, result, height) VALUES (?, ?, ?, ?)")) {
-                int i = 0;
-                pstmt.setLong(++i, poll.getId());
-                pstmt.setString(++i, getOption());
-                pstmt.setLong(++i, getResult());
-                pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
-                pstmt.executeUpdate();
-            }
-        }
-
-        public String getOption() {
-            return option;
+            this.weight = weight;
         }
 
         public long getResult() {
             return result;
         }
-    }
 
-    private static final boolean isPollsProcessing = Nxt.getBooleanProperty("nxt.processPolls");
+        public long getWeight() {
+            return weight;
+        }
+
+        private void add(long vote, long weight) {
+            this.result += vote;
+            this.weight += weight;
+        }
+
+    }
 
     private static final DbKey.LongKeyFactory<Poll> pollDbKeyFactory = new DbKey.LongKeyFactory<Poll>("id") {
         @Override
@@ -84,16 +71,30 @@ public final class Poll extends AbstractPoll {
         }
     };
 
-    private static final ValuesDbTable<Poll, PollResult> pollResultsTable = new ValuesDbTable<Poll,PollResult>("poll_result", pollResultsDbKeyFactory) {
+    private static final ValuesDbTable<Poll, OptionResult> pollResultsTable = new ValuesDbTable<Poll, OptionResult>("poll_result", pollResultsDbKeyFactory) {
 
         @Override
-        protected PollResult load(Connection con, ResultSet rs) throws SQLException {
-            return new PollResult(rs);
+        protected OptionResult load(Connection con, ResultSet rs) throws SQLException {
+            long weight = rs.getLong("weight");
+            return weight == 0 ? null : new OptionResult(rs.getLong("result"), weight);
         }
 
         @Override
-        protected void save(Connection con, Poll poll, PollResult pollResult) throws SQLException {
-            pollResult.save(con, poll);
+        protected void save(Connection con, Poll poll, OptionResult optionResult) throws SQLException {
+            try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO poll_result (poll_id, "
+                    + "result, weight, height) VALUES (?, ?, ?, ?)")) {
+                int i = 0;
+                pstmt.setLong(++i, poll.getId());
+                if (optionResult != null) {
+                    pstmt.setLong(++i, optionResult.result);
+                    pstmt.setLong(++i, optionResult.weight);
+                } else {
+                    pstmt.setNull(++i, Types.BIGINT);
+                    pstmt.setLong(++i, 0);
+                }
+                pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
+                pstmt.executeUpdate();
+            }
         }
     };
 
@@ -135,13 +136,10 @@ public final class Poll extends AbstractPoll {
 
     static {
         if (Poll.isPollsProcessing) {
-            Nxt.getBlockchainProcessor().addListener(new Listener<Block>() {
-                @Override
-                public void notify(Block block) {
-                    int height = block.getHeight();
-                    if (height >= Constants.VOTING_SYSTEM_BLOCK) {
-                        Poll.checkPolls(height);
-                    }
+            Nxt.getBlockchainProcessor().addListener(block -> {
+                int height = block.getHeight();
+                if (height >= Constants.VOTING_SYSTEM_BLOCK) {
+                    Poll.checkPolls(height);
                 }
             }, BlockchainProcessor.Event.AFTER_BLOCK_APPLY);
         }
@@ -151,11 +149,11 @@ public final class Poll extends AbstractPoll {
         try (DbIterator<Poll> polls = getPollsFinishingAt(currentHeight)) {
             for (Poll poll : polls) {
                 try {
-                    List<PollResult> results = poll.countResults(poll.getDefaultVoteWeighting(), currentHeight);
+                    List<OptionResult> results = poll.countResults(poll.getDefaultVoteWeighting(), currentHeight);
                     pollResultsTable.insert(poll, results);
-                    Logger.logDebugMessage("Poll " + Convert.toUnsignedLong(poll.getId()) + " has been finished");
+                    Logger.logDebugMessage("Poll " + Long.toUnsignedString(poll.getId()) + " has been finished");
                 } catch (RuntimeException e) { // could happen e.g. because of overflow in safeMultiply
-                    Logger.logErrorMessage("Couldn't count votes for poll " + Convert.toUnsignedLong(poll.getId()));
+                    Logger.logErrorMessage("Couldn't count votes for poll " + Long.toUnsignedString(poll.getId()));
                 }
             }
         }
@@ -221,11 +219,8 @@ public final class Poll extends AbstractPoll {
         }
     }
 
-    @Override
-    public boolean isFinished() { return getFinishHeight() < Nxt.getBlockchain().getHeight(); }
-
-    public List<PollResult> getResults(VoteWeighting voteWeighting) {
-        if (this.getDefaultVoteWeighting().equals(voteWeighting)) {
+    public List<OptionResult> getResults(VoteWeighting voteWeighting) {
+        if (defaultVoteWeighting.equals(voteWeighting)) {
             return getResults();
         } else {
             return countResults(voteWeighting);
@@ -233,11 +228,11 @@ public final class Poll extends AbstractPoll {
 
     }
 
-    public List<PollResult> getResults() {
+    public List<OptionResult> getResults() {
         if (Poll.isPollsProcessing && isFinished()) {
             return pollResultsTable.get(pollResultsDbKeyFactory.newKey(id));
         } else {
-            return countResults(getDefaultVoteWeighting());
+            return countResults(defaultVoteWeighting);
         }
     }
 
@@ -274,52 +269,48 @@ public final class Poll extends AbstractPoll {
         return maxRangeValue;
     }
 
-    private List<PollResult> countResults(VoteWeighting voteWeighting) {
-        int countHeight = Math.min(getFinishHeight(), Nxt.getBlockchain().getHeight());
+    private List<OptionResult> countResults(VoteWeighting voteWeighting) {
+        int countHeight = Math.min(finishHeight, Nxt.getBlockchain().getHeight());
         if (countHeight < Nxt.getBlockchainProcessor().getMinRollbackHeight()) {
             return null;
         }
         return countResults(voteWeighting, countHeight);
     }
 
-    private List<PollResult> countResults(VoteWeighting voteWeighting, int height) {
-        final long[] counts = new long[options.length];
-
+    private List<OptionResult> countResults(VoteWeighting voteWeighting, int height) {
+        final OptionResult[] result = new OptionResult[options.length];
         try (DbIterator<Vote> votes = Vote.getVotes(this.getId(), 0, -1)) {
             for (Vote vote : votes) {
-                long[] partialResult = countVote(voteWeighting, vote, height);
-                if (partialResult != null) {
-                    for (int idx = 0; idx < partialResult.length; idx++) {
-                        counts[idx] = Convert.safeAdd(counts[idx], partialResult[idx]);
+                long weight = voteWeighting.calcWeight(vote.getVoterId(), height);
+                if (weight <= 0) {
+                    continue;
+                }
+                long[] partialResult = countVote(vote, weight);
+                for (int i = 0; i < partialResult.length; i++) {
+                    if (partialResult[i] != Long.MIN_VALUE) {
+                        if (result[i] == null) {
+                            result[i] = new OptionResult(partialResult[i], weight);
+                        } else {
+                            result[i].add(partialResult[i], weight);
+                        }
                     }
                 }
             }
         }
-
-        List<PollResult> results = new ArrayList<>(options.length);
-        for (int i = 0; i < options.length; i++) {
-            results.add(new PollResult(options[i], counts[i]));
-        }
-        return results;
+        return Arrays.asList(result);
     }
 
-    private long[] countVote(VoteWeighting voteWeighting, Vote vote, int height) {
+    private long[] countVote(Vote vote, long weight) {
         final long[] partialResult = new long[options.length];
-
-        final long weight = voteWeighting.calcWeight(vote.getVoterId(), height);
-
         final byte[] optVals = vote.getVote();
-
-        if (weight > 0) {
-            for (int idx = 0; idx < optVals.length; idx++) {
-                if (optVals[idx] != Constants.VOTING_NO_VOTE_VALUE) {
-                    partialResult[idx] = Convert.safeMultiply(optVals[idx], weight);
-                }
+        for (int i = 0; i < optVals.length; i++) {
+            if (optVals[i] != Constants.VOTING_NO_VOTE_VALUE) {
+                partialResult[i] = (long) optVals[i] * weight;
+            } else {
+                partialResult[i] = Long.MIN_VALUE;
             }
-            return partialResult;
-        } else {
-            return null;
         }
+        return partialResult;
     }
 
 }

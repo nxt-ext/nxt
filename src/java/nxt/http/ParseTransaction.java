@@ -22,16 +22,14 @@ public final class ParseTransaction extends APIServlet.APIRequestHandler {
 
         String transactionBytes = Convert.emptyToNull(req.getParameter("transactionBytes"));
         String transactionJSON = Convert.emptyToNull(req.getParameter("transactionJSON"));
-        Transaction transaction = ParameterParser.parseTransaction(transactionBytes, transactionJSON);
+        Transaction transaction = ParameterParser.parseTransaction(transactionBytes, transactionJSON).build();
         JSONObject response = JSONData.unconfirmedTransaction(transaction);
         try {
             transaction.validate();
         } catch (NxtException.ValidationException|RuntimeException e) {
             Logger.logDebugMessage(e.getMessage(), e);
             response.put("validate", false);
-            response.put("errorCode", 4);
-            response.put("errorDescription", "Invalid transaction: " + e.toString());
-            response.put("error", e.getMessage());
+            JSONData.putException(response, e, "Invalid transaction");
         }
         response.put("verify", transaction.verifySignature());
         return response;

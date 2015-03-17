@@ -3,6 +3,8 @@
  */
 var NRS = (function(NRS, $, undefined) {
 
+    _modalUIElements = null;
+
     NRS.loadLockscreenHTML = function(path, options) {
     	jQuery.ajaxSetup({ async: false });
     	$.get(path, '', function (data) { $("body").prepend(data); });
@@ -59,6 +61,7 @@ var NRS = (function(NRS, $, undefined) {
         $.get("html/modals/templates.html", '', function (data) {
             _replaceModalHTMLTemplateDiv(data, 'recipient_modal_template');
             _replaceModalHTMLTemplateDiv(data, 'add_message_modal_template');
+            _replaceModalHTMLTemplateDiv(data, 'add_public_message_modal_template');
             _replaceModalHTMLTemplateDiv(data, 'secret_phrase_modal_template');
             _replaceModalHTMLTemplateDiv(data, 'advanced_fee_deadline_template');
             _replaceModalHTMLTemplateDiv(data, 'advanced_approve_template');
@@ -70,24 +73,54 @@ var NRS = (function(NRS, $, undefined) {
         jQuery.ajaxSetup({ async: true });
     }
 
-    function _appendToSidebar(menuHTML, desiredPosition) {
-        var inserted = false;
-        $.each($('#sidebar_menu > li'), function(key, elem) {
-            var compPos = $(elem).data("sidebarPosition");
-            if (!inserted && compPos && desiredPosition <= parseInt(compPos)) {
-                $(menuHTML).insertBefore(elem);
-                inserted = true;
-            }
+    NRS.preloadModalUIElements = function(options) {
+        jQuery.ajaxSetup({ async: false });
+        $.get("html/modals/ui_elements.html", '', function (data) {
+            _modalUIElements = data;
         });
-        if (!inserted) {
-            $('#sidebar_menu').append(menuHTML);
+        jQuery.ajaxSetup({ async: true });
+    }
+
+    NRS.initModalUIElement = function($modal, selector, elementName, context) {
+        var html = $(_modalUIElements).filter('div#' + elementName).html();
+        var template = Handlebars.compile(html);
+        var $elems = $modal.find("div[data-modal-ui-element='" + elementName + "']" + selector);
+        
+        var modalId = $modal.attr('id');
+        var modalName = modalId.replace('_modal', '');
+        context["modalId"] = modalId;
+        context["modalName"] = modalName;
+
+        $elems.each(function(i) {
+            $(this).empty();
+            $(this).append(template(context));
+        });
+
+        $("[data-i18n]").i18n();
+        return $elems;
+    }
+
+
+    function _appendToSidebar(menuHTML, id, desiredPosition) {
+        if ($('#' + id).length == 0) {
+            var inserted = false;
+            $.each($('#sidebar_menu > li'), function(key, elem) {
+                var compPos = $(elem).data("sidebarPosition");
+                if (!inserted && compPos && desiredPosition <= parseInt(compPos)) {
+                    $(menuHTML).insertBefore(elem);
+                    inserted = true;
+                }
+            });
+            if (!inserted) {
+                $('#sidebar_menu').append(menuHTML);
+            }
         }
     }
 
     NRS.addSimpleSidebarMenuItem = function(options) {
         var menuHTML = '<li id="' + options["id"] + '" class="sm_simple" data-sidebar-position="' + options["desiredPosition"] + '">';
         menuHTML += '<a href="#" data-page="' + options["page"] + '">' + options["titleHTML"] + '</a></li>';
-        _appendToSidebar(menuHTML, options["desiredPosition"]);
+        _appendToSidebar(menuHTML, options["id"], options["desiredPosition"]);
 
     }
 
@@ -96,10 +129,10 @@ var NRS = (function(NRS, $, undefined) {
         menuHTML += '<a href="#" data-page="' + options["page"] + '">' + options["titleHTML"] + '<i class="fa pull-right fa-angle-right" style="padding-top:3px"></i></a>';
         menuHTML += '<ul class="treeview-menu" style="display: none;"></ul>';
         menuHTML += '</li>';
-        _appendToSidebar(menuHTML, options["desiredPosition"]);
+        _appendToSidebar(menuHTML, options["id"], options["desiredPosition"]);
     }
     
-    NRS.appendToTSMenuItem = function(itemId, options) {
+    NRS.appendMenuItemToTSMenuItem = function(itemId, options) {
         var menuHTML ='<li class="sm_treeview_submenu"><a href="#" ';
         if (options["type"] == 'PAGE' && options["page"]) {
             menuHTML += 'data-page="' + options["page"] + '"';
@@ -110,6 +143,13 @@ var NRS = (function(NRS, $, undefined) {
         }
         menuHTML += '><i class="fa fa-angle-double-right"></i> ';
         menuHTML += options["titleHTML"] + ' <span class="badge" style="display:none;"></span></a></li>';
+        $('#' + itemId + ' ul.treeview-menu').append(menuHTML);
+    }
+
+    NRS.appendSubHeaderToTSMenuItem = function(itemId, options) {
+        var menuHTML ='<li class="sm_treeview_submenu" style="background-color:#eee;color:#777;padding-top:3px;padding-bottom:3px;">';
+        menuHTML += '<span class="sm_sub_header"><span style="display:inline-block;width:20px;">&nbsp;</span> ';
+        menuHTML += options["titleHTML"] + ' </span></li>';
         $('#' + itemId + ' ul.treeview-menu').append(menuHTML);
     }
 

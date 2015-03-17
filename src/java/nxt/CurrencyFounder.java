@@ -40,6 +40,11 @@ public class CurrencyFounder {
             currencyFounder.save(con);
         }
 
+        @Override
+        public String defaultSort() {
+            return " ORDER BY height DESC ";
+        }
+
     };
 
     static void init() {}
@@ -103,6 +108,10 @@ public class CurrencyFounder {
 
     public static DbIterator<CurrencyFounder> getCurrencyFounders(long currencyId, int from, int to) {
         return currencyFounderTable.getManyBy(new DbClause.LongClause("currency_id", currencyId), from, to);
+    }
+
+    public static DbIterator<CurrencyFounder> getFounderCurrencies(long accountId, int from, int to) {
+        return currencyFounderTable.getManyBy(new DbClause.LongClause("account_id", accountId), from, to);
     }
 
     static void remove(long currencyId) {

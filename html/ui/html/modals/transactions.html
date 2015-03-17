@@ -9,9 +9,18 @@
                 <form role="form" autocomplete="off">
                     <div class="callout callout-danger error_message" style="display:none"></div>
                     <div class="form-group">
-                        <label for="at_transaction_full_hash" data-i18n="transaction">Transaction</label>
-                        <p class="at_transaction_full_hash_display"></p>
+                        <p>
+                            <span>ID:</span> 
+                            <span class="at_transaction_full_hash_display"></span>&nbsp; 
+                            (<span class="at_transaction_timestamp"></span>)
+                        </p>
                         <input type="hidden" id="at_transaction_full_hash" name="transactionFullHash" value="" />
+                        <div class="alert alert-warning" id="at_min_balance_warning" role="alert" style="margin-left:0px;">
+                            <span data-i18n="approval_min_balance_needed_warning">
+                                For valid approval the following min balance is needed at finish height:
+                            </span><br>
+                            <span class="at_min_balance_amount"></span>
+                        </div>
                     </div>
                     <div data-replace-with-modal-template="secret_phrase_modal_template"></div>
                     <div data-replace-with-modal-template="advanced_fee_deadline_template"></div>
@@ -47,6 +56,7 @@
                         <li class="active"><a href="#transaction_info_tab" data-toggle="tab" id="transaction_info_tab_link" data-i18n="info">Info</a></li>
                         <li id="transaction_info_actions"><a href="#transaction_info_actions_tab" data-toggle="tab" data-i18n="actions">Actions</a></li>
                         <li><a href="#transaction_info_details_tab" data-toggle="tab" data-i18n="transaction_details">Transaction Details</a></li>
+                        <li id="phasing_info_details_link"><a href="#phasing_info_details_tab" data-toggle="tab" data-i18n="phasing_details">Phasing Details</a></li>
                     </ul>
                     <div class="tab-content">
                         <div class="tab-pane active" id="transaction_info_tab">
@@ -67,6 +77,7 @@
                             <div class="row">
                                 <div class="col-xs-8 col-md-8" style="margin-left:auto;margin-right:auto;float:none;">
                                     <button type="button" class="btn btn-default btn-lg btn-block" data-toggle="modal" data-target="#send_money_modal" data-account="" data-i18n="send_nxt_to_sender">Send NXT to Sender</button>
+                                    <button type="button" class="btn btn-default btn-lg btn-block" data-toggle="modal" data-target="#transfer_currency_modal" data-account="" data-i18n="send_currency_to_sender">Send Currency to Sender</button>
                                     <button type="button" class="btn btn-default btn-lg btn-block" data-toggle="modal" data-target="#send_message_modal" data-account="" data-i18n="send_message_to_sender">Send Message to Sender</button>
                                     <button type="button" id="transaction_info_modal_add_as_contact" class="btn btn-default btn-lg btn-block" data-toggle="modal" data-target="#add_contact_modal" data-account="" data-i18n="add_sender_as_contact">Add Sender as Contact</button>
                                 </div>
@@ -76,6 +87,13 @@
                             <table class="table table-striped" id="transaction_info_details_table" style="margin-bottom:0;table-layout:fixed;">
                                 <tbody>
                                     
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="tab-pane" id="phasing_info_details_tab" style="max-height:350px;overflow:auto;">
+                            <table class="table table-striped" id="phasing_info_details_table" style="margin-bottom:0;table-layout:fixed;">
+                                <tbody>
+
                                 </tbody>
                             </table>
                         </div>

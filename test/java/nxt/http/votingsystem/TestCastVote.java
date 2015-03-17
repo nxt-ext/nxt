@@ -20,8 +20,8 @@ public class TestCastVote extends BlockchainTest {
         apiCall = new APICall.Builder("castVote")
                 .param("secretPhrase", secretPhrase1)
                 .param("poll", poll)
-                .param("vote1", 1)
-                .param("vote2", 0)
+                .param("vote00", 1)
+                .param("vote01", 0)
                 .param("feeNQT", Constants.ONE_NXT)
                 .build();
 
@@ -34,9 +34,15 @@ public class TestCastVote extends BlockchainTest {
         JSONObject getPollResponse = apiCall.invoke();
         Logger.logMessage("getPollResultResponse:" + getPollResponse.toJSONString());
         JSONArray results = (JSONArray)getPollResponse.get("results");
-        JSONObject ringoVote = (JSONObject)results.get(0);
-        long ringoResult = (Long) ringoVote.get("Ringo");
+
+        long ringoResult = Long.parseLong((String) results.get(0));
         Assert.assertEquals(1, ringoResult);
+
+        long paulResult = Long.parseLong((String) results.get(1));
+        Assert.assertEquals(0, paulResult);
+
+        long johnResult = Long.parseLong((String) results.get(2));
+        Assert.assertEquals(0, johnResult);
     }
 
     @Test

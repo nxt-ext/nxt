@@ -45,6 +45,12 @@ final class BlockchainImpl implements Blockchain {
     }
 
     @Override
+    public int getLastBlockTimestamp() {
+        BlockImpl last = lastBlock.get();
+        return last == null ? 0 : last.getTimestamp();
+    }
+
+    @Override
     public BlockImpl getLastBlock(int timestamp) {
         BlockImpl block = lastBlock.get();
         if (timestamp >= block.getTimestamp()) {
@@ -138,12 +144,7 @@ final class BlockchainImpl implements Blockchain {
 
     @Override
     public DbIterator<BlockImpl> getBlocks(Connection con, PreparedStatement pstmt) {
-        return new DbIterator<>(con, pstmt, new DbIterator.ResultSetReader<BlockImpl>() {
-            @Override
-            public BlockImpl get(Connection con, ResultSet rs) throws NxtException.ValidationException {
-                return BlockDb.loadBlock(con, rs);
-            }
-        });
+        return new DbIterator<>(con, pstmt, BlockDb::loadBlock);
     }
 
     @Override
@@ -156,6 +157,7 @@ final class BlockchainImpl implements Blockchain {
             List<Long> result = new ArrayList<>();
             pstmt.setLong(1, blockId);
             pstmt.setInt(2, limit);
+            pstmt.setFetchSize(100);
             try (ResultSet rs = pstmt.executeQuery()) {
                 while (rs.next()) {
                     result.add(rs.getLong("id"));
@@ -177,9 +179,10 @@ final class BlockchainImpl implements Blockchain {
             List<BlockImpl> result = new ArrayList<>();
             pstmt.setLong(1, blockId);
             pstmt.setInt(2, limit);
+            pstmt.setFetchSize(100);
             try (ResultSet rs = pstmt.executeQuery()) {
                 while (rs.next()) {
-                    result.add(BlockDb.loadBlock(con, rs));
+                    result.add(BlockDb.loadBlock(con, rs, true));
                 }
             }
             return result;
@@ -355,12 +358,7 @@ final class BlockchainImpl implements Blockchain {
 
     @Override
     public DbIterator<TransactionImpl> getTransactions(Connection con, PreparedStatement pstmt) {
-        return new DbIterator<>(con, pstmt, new DbIterator.ResultSetReader<TransactionImpl>() {
-            @Override
-            public TransactionImpl get(Connection con, ResultSet rs) throws NxtException.ValidationException {
-                return TransactionDb.loadTransaction(con, rs);
-            }
-        });
+        return new DbIterator<>(con, pstmt, TransactionDb::loadTransaction);
     }
 
 }

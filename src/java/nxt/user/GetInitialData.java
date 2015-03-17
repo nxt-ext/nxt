@@ -37,10 +37,10 @@ public final class GetInitialData extends UserServlet.UserRequestHandler {
                 unconfirmedTransaction.put("index", Users.getIndex(transaction));
                 unconfirmedTransaction.put("timestamp", transaction.getTimestamp());
                 unconfirmedTransaction.put("deadline", transaction.getDeadline());
-                unconfirmedTransaction.put("recipient", Convert.toUnsignedLong(transaction.getRecipientId()));
+                unconfirmedTransaction.put("recipient", Long.toUnsignedString(transaction.getRecipientId()));
                 unconfirmedTransaction.put("amountNQT", transaction.getAmountNQT());
                 unconfirmedTransaction.put("feeNQT", transaction.getFeeNQT());
-                unconfirmedTransaction.put("sender", Convert.toUnsignedLong(transaction.getSenderId()));
+                unconfirmedTransaction.put("sender", Long.toUnsignedString(transaction.getSenderId()));
                 unconfirmedTransaction.put("id", transaction.getStringId());
 
                 unconfirmedTransactions.add(unconfirmedTransaction);
@@ -56,9 +56,6 @@ public final class GetInitialData extends UserServlet.UserRequestHandler {
                 blacklistedPeer.put("address", peer.getPeerAddress());
                 blacklistedPeer.put("announcedAddress", Convert.truncate(peer.getAnnouncedAddress(), "-", 25, true));
                 blacklistedPeer.put("software", peer.getSoftware());
-                if (peer.isWellKnown()) {
-                    blacklistedPeer.put("wellKnown", true);
-                }
                 blacklistedPeers.add(blacklistedPeer);
 
             } else if (peer.getState() == Peer.State.NON_CONNECTED) {
@@ -68,9 +65,6 @@ public final class GetInitialData extends UserServlet.UserRequestHandler {
                 knownPeer.put("address", peer.getPeerAddress());
                 knownPeer.put("announcedAddress", Convert.truncate(peer.getAnnouncedAddress(), "-", 25, true));
                 knownPeer.put("software", peer.getSoftware());
-                if (peer.isWellKnown()) {
-                    knownPeer.put("wellKnown", true);
-                }
                 knownPeers.add(knownPeer);
 
             } else {
@@ -86,9 +80,6 @@ public final class GetInitialData extends UserServlet.UserRequestHandler {
                 activePeer.put("downloaded", peer.getDownloadedVolume());
                 activePeer.put("uploaded", peer.getUploadedVolume());
                 activePeer.put("software", peer.getSoftware());
-                if (peer.isWellKnown()) {
-                    activePeer.put("wellKnown", true);
-                }
                 activePeers.add(activePeer);
             }
         }
@@ -102,7 +93,7 @@ public final class GetInitialData extends UserServlet.UserRequestHandler {
                 recentBlock.put("totalAmountNQT", block.getTotalAmountNQT());
                 recentBlock.put("totalFeeNQT", block.getTotalFeeNQT());
                 recentBlock.put("payloadLength", block.getPayloadLength());
-                recentBlock.put("generator", Convert.toUnsignedLong(block.getGeneratorId()));
+                recentBlock.put("generator", Long.toUnsignedString(block.getGeneratorId()));
                 recentBlock.put("height", block.getHeight());
                 recentBlock.put("version", block.getVersion());
                 recentBlock.put("block", block.getStringId());

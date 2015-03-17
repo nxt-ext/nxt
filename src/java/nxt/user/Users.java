@@ -11,7 +11,6 @@ import nxt.TransactionProcessor;
 import nxt.peer.Peer;
 import nxt.peer.Peers;
 import nxt.util.Convert;
-import nxt.util.Listener;
 import nxt.util.Logger;
 import nxt.util.ThreadPool;
 import org.eclipse.jetty.server.HttpConfiguration;
@@ -146,16 +145,13 @@ public final class Users {
             userServer.setHandler(userHandlers);
             userServer.setStopAtShutdown(true);
 
-            ThreadPool.runBeforeStart(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        userServer.start();
-                        Logger.logMessage("Started user interface server at " + host + ":" + port);
-                    } catch (Exception e) {
-                        Logger.logErrorMessage("Failed to start user interface server", e);
-                        throw new RuntimeException(e.toString(), e);
-                    }
+            ThreadPool.runBeforeStart(() -> {
+                try {
+                    userServer.start();
+                    Logger.logMessage("Started user interface server at " + host + ":" + port);
+                } catch (Exception e) {
+                    Logger.logErrorMessage("Failed to start user interface server", e);
+                    throw new RuntimeException(e.toString(), e);
                 }
             }, true);
 
@@ -168,335 +164,266 @@ public final class Users {
 
     static {
         if (userServer != null) {
-            Account.addListener(new Listener<Account>() {
-                @Override
-                public void notify(Account account) {
-                    JSONObject response = new JSONObject();
-                    response.put("response", "setBalance");
-                    response.put("balanceNQT", account.getUnconfirmedBalanceNQT());
-                    byte[] accountPublicKey = account.getPublicKey();
-                    for (User user : Users.users.values()) {
-                        if (user.getSecretPhrase() != null && Arrays.equals(user.getPublicKey(), accountPublicKey)) {
-                            user.send(response);
-                        }
+            Account.addListener(account -> {
+                JSONObject response = new JSONObject();
+                response.put("response", "setBalance");
+                response.put("balanceNQT", account.getUnconfirmedBalanceNQT());
+                byte[] accountPublicKey = account.getPublicKey();
+                for (User user : Users.users.values()) {
+                    if (user.getSecretPhrase() != null && Arrays.equals(user.getPublicKey(), accountPublicKey)) {
+                        user.send(response);
                     }
                 }
             }, Account.Event.UNCONFIRMED_BALANCE);
 
-            Peers.addListener(new Listener<Peer>() {
-                @Override
-                public void notify(Peer peer) {
-                    JSONObject response = new JSONObject();
-                    JSONArray removedActivePeers = new JSONArray();
-                    JSONObject removedActivePeer = new JSONObject();
-                    removedActivePeer.put("index", Users.getIndex(peer));
-                    removedActivePeers.add(removedActivePeer);
-                    response.put("removedActivePeers", removedActivePeers);
-                    JSONArray removedKnownPeers = new JSONArray();
-                    JSONObject removedKnownPeer = new JSONObject();
-                    removedKnownPeer.put("index", Users.getIndex(peer));
-                    removedKnownPeers.add(removedKnownPeer);
-                    response.put("removedKnownPeers", removedKnownPeers);
-                    JSONArray addedBlacklistedPeers = new JSONArray();
-                    JSONObject addedBlacklistedPeer = new JSONObject();
-                    addedBlacklistedPeer.put("index", Users.getIndex(peer));
-                    addedBlacklistedPeer.put("address", peer.getPeerAddress());
-                    addedBlacklistedPeer.put("announcedAddress", Convert.truncate(peer.getAnnouncedAddress(), "-", 25, true));
-                    if (peer.isWellKnown()) {
-                        addedBlacklistedPeer.put("wellKnown", true);
-                    }
-                    addedBlacklistedPeer.put("software", peer.getSoftware());
-                    addedBlacklistedPeers.add(addedBlacklistedPeer);
-                    response.put("addedBlacklistedPeers", addedBlacklistedPeers);
-                    Users.sendNewDataToAll(response);
-                }
+            Peers.addListener(peer -> {
+                JSONObject response = new JSONObject();
+                JSONArray removedActivePeers = new JSONArray();
+                JSONObject removedActivePeer = new JSONObject();
+                removedActivePeer.put("index", Users.getIndex(peer));
+                removedActivePeers.add(removedActivePeer);
+                response.put("removedActivePeers", removedActivePeers);
+                JSONArray removedKnownPeers = new JSONArray();
+                JSONObject removedKnownPeer = new JSONObject();
+                removedKnownPeer.put("index", Users.getIndex(peer));
+                removedKnownPeers.add(removedKnownPeer);
+                response.put("removedKnownPeers", removedKnownPeers);
+                JSONArray addedBlacklistedPeers = new JSONArray();
+                JSONObject addedBlacklistedPeer = new JSONObject();
+                addedBlacklistedPeer.put("index", Users.getIndex(peer));
+                addedBlacklistedPeer.put("address", peer.getPeerAddress());
+                addedBlacklistedPeer.put("announcedAddress", Convert.truncate(peer.getAnnouncedAddress(), "-", 25, true));
+                addedBlacklistedPeer.put("software", peer.getSoftware());
+                addedBlacklistedPeers.add(addedBlacklistedPeer);
+                response.put("addedBlacklistedPeers", addedBlacklistedPeers);
+                Users.sendNewDataToAll(response);
             }, Peers.Event.BLACKLIST);
 
-            Peers.addListener(new Listener<Peer>() {
-                @Override
-                public void notify(Peer peer) {
-                    JSONObject response = new JSONObject();
-                    JSONArray removedActivePeers = new JSONArray();
-                    JSONObject removedActivePeer = new JSONObject();
-                    removedActivePeer.put("index", Users.getIndex(peer));
-                    removedActivePeers.add(removedActivePeer);
-                    response.put("removedActivePeers", removedActivePeers);
-                    JSONArray addedKnownPeers = new JSONArray();
-                    JSONObject addedKnownPeer = new JSONObject();
-                    addedKnownPeer.put("index", Users.getIndex(peer));
-                    addedKnownPeer.put("address", peer.getPeerAddress());
-                    addedKnownPeer.put("announcedAddress", Convert.truncate(peer.getAnnouncedAddress(), "-", 25, true));
-                    if (peer.isWellKnown()) {
-                        addedKnownPeer.put("wellKnown", true);
-                    }
-                    addedKnownPeer.put("software", peer.getSoftware());
-                    addedKnownPeers.add(addedKnownPeer);
-                    response.put("addedKnownPeers", addedKnownPeers);
-                    Users.sendNewDataToAll(response);
-                }
+            Peers.addListener(peer -> {
+                JSONObject response = new JSONObject();
+                JSONArray removedActivePeers = new JSONArray();
+                JSONObject removedActivePeer = new JSONObject();
+                removedActivePeer.put("index", Users.getIndex(peer));
+                removedActivePeers.add(removedActivePeer);
+                response.put("removedActivePeers", removedActivePeers);
+                JSONArray addedKnownPeers = new JSONArray();
+                JSONObject addedKnownPeer = new JSONObject();
+                addedKnownPeer.put("index", Users.getIndex(peer));
+                addedKnownPeer.put("address", peer.getPeerAddress());
+                addedKnownPeer.put("announcedAddress", Convert.truncate(peer.getAnnouncedAddress(), "-", 25, true));
+                addedKnownPeer.put("software", peer.getSoftware());
+                addedKnownPeers.add(addedKnownPeer);
+                response.put("addedKnownPeers", addedKnownPeers);
+                Users.sendNewDataToAll(response);
             }, Peers.Event.DEACTIVATE);
 
-            Peers.addListener(new Listener<Peer>() {
-                @Override
-                public void notify(Peer peer) {
-                    JSONObject response = new JSONObject();
-                    JSONArray removedBlacklistedPeers = new JSONArray();
-                    JSONObject removedBlacklistedPeer = new JSONObject();
-                    removedBlacklistedPeer.put("index", Users.getIndex(peer));
-                    removedBlacklistedPeers.add(removedBlacklistedPeer);
-                    response.put("removedBlacklistedPeers", removedBlacklistedPeers);
-                    JSONArray addedKnownPeers = new JSONArray();
-                    JSONObject addedKnownPeer = new JSONObject();
-                    addedKnownPeer.put("index", Users.getIndex(peer));
-                    addedKnownPeer.put("address", peer.getPeerAddress());
-                    addedKnownPeer.put("announcedAddress", Convert.truncate(peer.getAnnouncedAddress(), "-", 25, true));
-                    if (peer.isWellKnown()) {
-                        addedKnownPeer.put("wellKnown", true);
-                    }
-                    addedKnownPeer.put("software", peer.getSoftware());
-                    addedKnownPeers.add(addedKnownPeer);
-                    response.put("addedKnownPeers", addedKnownPeers);
-                    Users.sendNewDataToAll(response);
-                }
+            Peers.addListener(peer -> {
+                JSONObject response = new JSONObject();
+                JSONArray removedBlacklistedPeers = new JSONArray();
+                JSONObject removedBlacklistedPeer = new JSONObject();
+                removedBlacklistedPeer.put("index", Users.getIndex(peer));
+                removedBlacklistedPeers.add(removedBlacklistedPeer);
+                response.put("removedBlacklistedPeers", removedBlacklistedPeers);
+                JSONArray addedKnownPeers = new JSONArray();
+                JSONObject addedKnownPeer = new JSONObject();
+                addedKnownPeer.put("index", Users.getIndex(peer));
+                addedKnownPeer.put("address", peer.getPeerAddress());
+                addedKnownPeer.put("announcedAddress", Convert.truncate(peer.getAnnouncedAddress(), "-", 25, true));
+                addedKnownPeer.put("software", peer.getSoftware());
+                addedKnownPeers.add(addedKnownPeer);
+                response.put("addedKnownPeers", addedKnownPeers);
+                Users.sendNewDataToAll(response);
             }, Peers.Event.UNBLACKLIST);
 
-            Peers.addListener(new Listener<Peer>() {
-                @Override
-                public void notify(Peer peer) {
-                    JSONObject response = new JSONObject();
-                    JSONArray removedKnownPeers = new JSONArray();
-                    JSONObject removedKnownPeer = new JSONObject();
-                    removedKnownPeer.put("index", Users.getIndex(peer));
-                    removedKnownPeers.add(removedKnownPeer);
-                    response.put("removedKnownPeers", removedKnownPeers);
-                    Users.sendNewDataToAll(response);
-                }
+            Peers.addListener(peer -> {
+                JSONObject response = new JSONObject();
+                JSONArray removedKnownPeers = new JSONArray();
+                JSONObject removedKnownPeer = new JSONObject();
+                removedKnownPeer.put("index", Users.getIndex(peer));
+                removedKnownPeers.add(removedKnownPeer);
+                response.put("removedKnownPeers", removedKnownPeers);
+                Users.sendNewDataToAll(response);
             }, Peers.Event.REMOVE);
 
-            Peers.addListener(new Listener<Peer>() {
-                @Override
-                public void notify(Peer peer) {
-                    JSONObject response = new JSONObject();
-                    JSONArray changedActivePeers = new JSONArray();
-                    JSONObject changedActivePeer = new JSONObject();
-                    changedActivePeer.put("index", Users.getIndex(peer));
-                    changedActivePeer.put("downloaded", peer.getDownloadedVolume());
-                    changedActivePeers.add(changedActivePeer);
-                    response.put("changedActivePeers", changedActivePeers);
-                    Users.sendNewDataToAll(response);
-                }
+            Peers.addListener(peer -> {
+                JSONObject response = new JSONObject();
+                JSONArray changedActivePeers = new JSONArray();
+                JSONObject changedActivePeer = new JSONObject();
+                changedActivePeer.put("index", Users.getIndex(peer));
+                changedActivePeer.put("downloaded", peer.getDownloadedVolume());
+                changedActivePeers.add(changedActivePeer);
+                response.put("changedActivePeers", changedActivePeers);
+                Users.sendNewDataToAll(response);
             }, Peers.Event.DOWNLOADED_VOLUME);
 
-            Peers.addListener(new Listener<Peer>() {
-                @Override
-                public void notify(Peer peer) {
-                    JSONObject response = new JSONObject();
-                    JSONArray changedActivePeers = new JSONArray();
-                    JSONObject changedActivePeer = new JSONObject();
-                    changedActivePeer.put("index", Users.getIndex(peer));
-                    changedActivePeer.put("uploaded", peer.getUploadedVolume());
-                    changedActivePeers.add(changedActivePeer);
-                    response.put("changedActivePeers", changedActivePeers);
-                    Users.sendNewDataToAll(response);
-                }
+            Peers.addListener(peer -> {
+                JSONObject response = new JSONObject();
+                JSONArray changedActivePeers = new JSONArray();
+                JSONObject changedActivePeer = new JSONObject();
+                changedActivePeer.put("index", Users.getIndex(peer));
+                changedActivePeer.put("uploaded", peer.getUploadedVolume());
+                changedActivePeers.add(changedActivePeer);
+                response.put("changedActivePeers", changedActivePeers);
+                Users.sendNewDataToAll(response);
             }, Peers.Event.UPLOADED_VOLUME);
 
-            Peers.addListener(new Listener<Peer>() {
-                @Override
-                public void notify(Peer peer) {
-                    JSONObject response = new JSONObject();
-                    JSONArray changedActivePeers = new JSONArray();
-                    JSONObject changedActivePeer = new JSONObject();
-                    changedActivePeer.put("index", Users.getIndex(peer));
-                    changedActivePeer.put("weight", peer.getWeight());
-                    changedActivePeers.add(changedActivePeer);
-                    response.put("changedActivePeers", changedActivePeers);
-                    Users.sendNewDataToAll(response);
-                }
+            Peers.addListener(peer -> {
+                JSONObject response = new JSONObject();
+                JSONArray changedActivePeers = new JSONArray();
+                JSONObject changedActivePeer = new JSONObject();
+                changedActivePeer.put("index", Users.getIndex(peer));
+                changedActivePeer.put("weight", peer.getWeight());
+                changedActivePeers.add(changedActivePeer);
+                response.put("changedActivePeers", changedActivePeers);
+                Users.sendNewDataToAll(response);
             }, Peers.Event.WEIGHT);
 
-            Peers.addListener(new Listener<Peer>() {
-                @Override
-                public void notify(Peer peer) {
-                    JSONObject response = new JSONObject();
-                    JSONArray removedKnownPeers = new JSONArray();
-                    JSONObject removedKnownPeer = new JSONObject();
-                    removedKnownPeer.put("index", Users.getIndex(peer));
-                    removedKnownPeers.add(removedKnownPeer);
-                    response.put("removedKnownPeers", removedKnownPeers);
-                    JSONArray addedActivePeers = new JSONArray();
-                    JSONObject addedActivePeer = new JSONObject();
-                    addedActivePeer.put("index", Users.getIndex(peer));
-                    if (peer.getState() != Peer.State.CONNECTED) {
-                        addedActivePeer.put("disconnected", true);
-                    }
-                    addedActivePeer.put("address", peer.getPeerAddress());
-                    addedActivePeer.put("announcedAddress", Convert.truncate(peer.getAnnouncedAddress(), "-", 25, true));
-                    if (peer.isWellKnown()) {
-                        addedActivePeer.put("wellKnown", true);
-                    }
-                    addedActivePeer.put("weight", peer.getWeight());
-                    addedActivePeer.put("downloaded", peer.getDownloadedVolume());
-                    addedActivePeer.put("uploaded", peer.getUploadedVolume());
-                    addedActivePeer.put("software", peer.getSoftware());
-                    addedActivePeers.add(addedActivePeer);
-                    response.put("addedActivePeers", addedActivePeers);
-                    Users.sendNewDataToAll(response);
+            Peers.addListener(peer -> {
+                JSONObject response = new JSONObject();
+                JSONArray removedKnownPeers = new JSONArray();
+                JSONObject removedKnownPeer = new JSONObject();
+                removedKnownPeer.put("index", Users.getIndex(peer));
+                removedKnownPeers.add(removedKnownPeer);
+                response.put("removedKnownPeers", removedKnownPeers);
+                JSONArray addedActivePeers = new JSONArray();
+                JSONObject addedActivePeer = new JSONObject();
+                addedActivePeer.put("index", Users.getIndex(peer));
+                if (peer.getState() != Peer.State.CONNECTED) {
+                    addedActivePeer.put("disconnected", true);
                 }
+                addedActivePeer.put("address", peer.getPeerAddress());
+                addedActivePeer.put("announcedAddress", Convert.truncate(peer.getAnnouncedAddress(), "-", 25, true));
+                addedActivePeer.put("weight", peer.getWeight());
+                addedActivePeer.put("downloaded", peer.getDownloadedVolume());
+                addedActivePeer.put("uploaded", peer.getUploadedVolume());
+                addedActivePeer.put("software", peer.getSoftware());
+                addedActivePeers.add(addedActivePeer);
+                response.put("addedActivePeers", addedActivePeers);
+                Users.sendNewDataToAll(response);
             }, Peers.Event.ADDED_ACTIVE_PEER);
 
-            Peers.addListener(new Listener<Peer>() {
-                @Override
-                public void notify(Peer peer) {
-                    JSONObject response = new JSONObject();
-                    JSONArray changedActivePeers = new JSONArray();
-                    JSONObject changedActivePeer = new JSONObject();
-                    changedActivePeer.put("index", Users.getIndex(peer));
-                    changedActivePeer.put(peer.getState() == Peer.State.CONNECTED ? "connected" : "disconnected", true);
-                    changedActivePeer.put("announcedAddress", Convert.truncate(peer.getAnnouncedAddress(), "-", 25, true));
-                    if (peer.isWellKnown()) {
-                        changedActivePeer.put("wellKnown", true);
-                    }
-                    changedActivePeers.add(changedActivePeer);
-                    response.put("changedActivePeers", changedActivePeers);
-                    Users.sendNewDataToAll(response);
-                }
+            Peers.addListener(peer -> {
+                JSONObject response = new JSONObject();
+                JSONArray changedActivePeers = new JSONArray();
+                JSONObject changedActivePeer = new JSONObject();
+                changedActivePeer.put("index", Users.getIndex(peer));
+                changedActivePeer.put(peer.getState() == Peer.State.CONNECTED ? "connected" : "disconnected", true);
+                changedActivePeer.put("announcedAddress", Convert.truncate(peer.getAnnouncedAddress(), "-", 25, true));
+                changedActivePeers.add(changedActivePeer);
+                response.put("changedActivePeers", changedActivePeers);
+                Users.sendNewDataToAll(response);
             }, Peers.Event.CHANGED_ACTIVE_PEER);
 
-            Peers.addListener(new Listener<Peer>() {
-                @Override
-                public void notify(Peer peer) {
-                    JSONObject response = new JSONObject();
-                    JSONArray addedKnownPeers = new JSONArray();
-                    JSONObject addedKnownPeer = new JSONObject();
-                    addedKnownPeer.put("index", Users.getIndex(peer));
-                    addedKnownPeer.put("address", peer.getPeerAddress());
-                    addedKnownPeer.put("announcedAddress", Convert.truncate(peer.getAnnouncedAddress(), "-", 25, true));
-                    if (peer.isWellKnown()) {
-                        addedKnownPeer.put("wellKnown", true);
-                    }
-                    addedKnownPeer.put("software", peer.getSoftware());
-                    addedKnownPeers.add(addedKnownPeer);
-                    response.put("addedKnownPeers", addedKnownPeers);
-                    Users.sendNewDataToAll(response);
-                }
+            Peers.addListener(peer -> {
+                JSONObject response = new JSONObject();
+                JSONArray addedKnownPeers = new JSONArray();
+                JSONObject addedKnownPeer = new JSONObject();
+                addedKnownPeer.put("index", Users.getIndex(peer));
+                addedKnownPeer.put("address", peer.getPeerAddress());
+                addedKnownPeer.put("announcedAddress", Convert.truncate(peer.getAnnouncedAddress(), "-", 25, true));
+                addedKnownPeer.put("software", peer.getSoftware());
+                addedKnownPeers.add(addedKnownPeer);
+                response.put("addedKnownPeers", addedKnownPeers);
+                Users.sendNewDataToAll(response);
             }, Peers.Event.NEW_PEER);
 
-            Nxt.getTransactionProcessor().addListener(new Listener<List<? extends Transaction>>() {
-                @Override
-                public void notify(List<? extends Transaction> transactions) {
-                    JSONObject response = new JSONObject();
-                    JSONArray removedUnconfirmedTransactions = new JSONArray();
-                    for (Transaction transaction : transactions) {
-                        JSONObject removedUnconfirmedTransaction = new JSONObject();
-                        removedUnconfirmedTransaction.put("index", Users.getIndex(transaction));
-                        removedUnconfirmedTransactions.add(removedUnconfirmedTransaction);
-                    }
-                    response.put("removedUnconfirmedTransactions", removedUnconfirmedTransactions);
-                    Users.sendNewDataToAll(response);
+            Nxt.getTransactionProcessor().addListener(transactions -> {
+                JSONObject response = new JSONObject();
+                JSONArray removedUnconfirmedTransactions = new JSONArray();
+                for (Transaction transaction : transactions) {
+                    JSONObject removedUnconfirmedTransaction = new JSONObject();
+                    removedUnconfirmedTransaction.put("index", Users.getIndex(transaction));
+                    removedUnconfirmedTransactions.add(removedUnconfirmedTransaction);
                 }
+                response.put("removedUnconfirmedTransactions", removedUnconfirmedTransactions);
+                Users.sendNewDataToAll(response);
             }, TransactionProcessor.Event.REMOVED_UNCONFIRMED_TRANSACTIONS);
 
-            Nxt.getTransactionProcessor().addListener(new Listener<List<? extends Transaction>>() {
-                @Override
-                public void notify(List<? extends Transaction> transactions) {
-                    JSONObject response = new JSONObject();
-                    JSONArray addedUnconfirmedTransactions = new JSONArray();
-                    for (Transaction transaction : transactions) {
-                        JSONObject addedUnconfirmedTransaction = new JSONObject();
-                        addedUnconfirmedTransaction.put("index", Users.getIndex(transaction));
-                        addedUnconfirmedTransaction.put("timestamp", transaction.getTimestamp());
-                        addedUnconfirmedTransaction.put("deadline", transaction.getDeadline());
-                        addedUnconfirmedTransaction.put("recipient", Convert.toUnsignedLong(transaction.getRecipientId()));
-                        addedUnconfirmedTransaction.put("amountNQT", transaction.getAmountNQT());
-                        addedUnconfirmedTransaction.put("feeNQT", transaction.getFeeNQT());
-                        addedUnconfirmedTransaction.put("sender", Convert.toUnsignedLong(transaction.getSenderId()));
-                        addedUnconfirmedTransaction.put("id", transaction.getStringId());
-                        addedUnconfirmedTransactions.add(addedUnconfirmedTransaction);
-                    }
-                    response.put("addedUnconfirmedTransactions", addedUnconfirmedTransactions);
-                    Users.sendNewDataToAll(response);
+            Nxt.getTransactionProcessor().addListener(transactions -> {
+                JSONObject response = new JSONObject();
+                JSONArray addedUnconfirmedTransactions = new JSONArray();
+                for (Transaction transaction : transactions) {
+                    JSONObject addedUnconfirmedTransaction = new JSONObject();
+                    addedUnconfirmedTransaction.put("index", Users.getIndex(transaction));
+                    addedUnconfirmedTransaction.put("timestamp", transaction.getTimestamp());
+                    addedUnconfirmedTransaction.put("deadline", transaction.getDeadline());
+                    addedUnconfirmedTransaction.put("recipient", Long.toUnsignedString(transaction.getRecipientId()));
+                    addedUnconfirmedTransaction.put("amountNQT", transaction.getAmountNQT());
+                    addedUnconfirmedTransaction.put("feeNQT", transaction.getFeeNQT());
+                    addedUnconfirmedTransaction.put("sender", Long.toUnsignedString(transaction.getSenderId()));
+                    addedUnconfirmedTransaction.put("id", transaction.getStringId());
+                    addedUnconfirmedTransactions.add(addedUnconfirmedTransaction);
                 }
+                response.put("addedUnconfirmedTransactions", addedUnconfirmedTransactions);
+                Users.sendNewDataToAll(response);
             }, TransactionProcessor.Event.ADDED_UNCONFIRMED_TRANSACTIONS);
 
-            Nxt.getTransactionProcessor().addListener(new Listener<List<? extends Transaction>>() {
-                @Override
-                public void notify(List<? extends Transaction> transactions) {
-                    JSONObject response = new JSONObject();
-                    JSONArray addedConfirmedTransactions = new JSONArray();
-                    for (Transaction transaction : transactions) {
-                        JSONObject addedConfirmedTransaction = new JSONObject();
-                        addedConfirmedTransaction.put("index", Users.getIndex(transaction));
-                        addedConfirmedTransaction.put("blockTimestamp", transaction.getBlockTimestamp());
-                        addedConfirmedTransaction.put("transactionTimestamp", transaction.getTimestamp());
-                        addedConfirmedTransaction.put("sender", Convert.toUnsignedLong(transaction.getSenderId()));
-                        addedConfirmedTransaction.put("recipient", Convert.toUnsignedLong(transaction.getRecipientId()));
-                        addedConfirmedTransaction.put("amountNQT", transaction.getAmountNQT());
-                        addedConfirmedTransaction.put("feeNQT", transaction.getFeeNQT());
-                        addedConfirmedTransaction.put("id", transaction.getStringId());
-                        addedConfirmedTransactions.add(addedConfirmedTransaction);
-                    }
-                    response.put("addedConfirmedTransactions", addedConfirmedTransactions);
-                    Users.sendNewDataToAll(response);
+            Nxt.getTransactionProcessor().addListener(transactions -> {
+                JSONObject response = new JSONObject();
+                JSONArray addedConfirmedTransactions = new JSONArray();
+                for (Transaction transaction : transactions) {
+                    JSONObject addedConfirmedTransaction = new JSONObject();
+                    addedConfirmedTransaction.put("index", Users.getIndex(transaction));
+                    addedConfirmedTransaction.put("blockTimestamp", transaction.getBlockTimestamp());
+                    addedConfirmedTransaction.put("transactionTimestamp", transaction.getTimestamp());
+                    addedConfirmedTransaction.put("sender", Long.toUnsignedString(transaction.getSenderId()));
+                    addedConfirmedTransaction.put("recipient", Long.toUnsignedString(transaction.getRecipientId()));
+                    addedConfirmedTransaction.put("amountNQT", transaction.getAmountNQT());
+                    addedConfirmedTransaction.put("feeNQT", transaction.getFeeNQT());
+                    addedConfirmedTransaction.put("id", transaction.getStringId());
+                    addedConfirmedTransactions.add(addedConfirmedTransaction);
                 }
+                response.put("addedConfirmedTransactions", addedConfirmedTransactions);
+                Users.sendNewDataToAll(response);
             }, TransactionProcessor.Event.ADDED_CONFIRMED_TRANSACTIONS);
 
-            Nxt.getBlockchainProcessor().addListener(new Listener<Block>() {
-                @Override
-                public void notify(Block block) {
-                    JSONObject response = new JSONObject();
-                    JSONArray addedOrphanedBlocks = new JSONArray();
-                    JSONObject addedOrphanedBlock = new JSONObject();
-                    addedOrphanedBlock.put("index", Users.getIndex(block));
-                    addedOrphanedBlock.put("timestamp", block.getTimestamp());
-                    addedOrphanedBlock.put("numberOfTransactions", block.getTransactions().size());
-                    addedOrphanedBlock.put("totalAmountNQT", block.getTotalAmountNQT());
-                    addedOrphanedBlock.put("totalFeeNQT", block.getTotalFeeNQT());
-                    addedOrphanedBlock.put("payloadLength", block.getPayloadLength());
-                    addedOrphanedBlock.put("generator", Convert.toUnsignedLong(block.getGeneratorId()));
-                    addedOrphanedBlock.put("height", block.getHeight());
-                    addedOrphanedBlock.put("version", block.getVersion());
-                    addedOrphanedBlock.put("block", block.getStringId());
-                    addedOrphanedBlock.put("baseTarget", BigInteger.valueOf(block.getBaseTarget()).multiply(BigInteger.valueOf(100000)).divide(BigInteger.valueOf(Constants.INITIAL_BASE_TARGET)));
-                    addedOrphanedBlocks.add(addedOrphanedBlock);
-                    response.put("addedOrphanedBlocks", addedOrphanedBlocks);
-                    Users.sendNewDataToAll(response);
-                }
+            Nxt.getBlockchainProcessor().addListener(block -> {
+                JSONObject response = new JSONObject();
+                JSONArray addedOrphanedBlocks = new JSONArray();
+                JSONObject addedOrphanedBlock = new JSONObject();
+                addedOrphanedBlock.put("index", Users.getIndex(block));
+                addedOrphanedBlock.put("timestamp", block.getTimestamp());
+                addedOrphanedBlock.put("numberOfTransactions", block.getTransactions().size());
+                addedOrphanedBlock.put("totalAmountNQT", block.getTotalAmountNQT());
+                addedOrphanedBlock.put("totalFeeNQT", block.getTotalFeeNQT());
+                addedOrphanedBlock.put("payloadLength", block.getPayloadLength());
+                addedOrphanedBlock.put("generator", Long.toUnsignedString(block.getGeneratorId()));
+                addedOrphanedBlock.put("height", block.getHeight());
+                addedOrphanedBlock.put("version", block.getVersion());
+                addedOrphanedBlock.put("block", block.getStringId());
+                addedOrphanedBlock.put("baseTarget", BigInteger.valueOf(block.getBaseTarget()).multiply(BigInteger.valueOf(100000)).divide(BigInteger.valueOf(Constants.INITIAL_BASE_TARGET)));
+                addedOrphanedBlocks.add(addedOrphanedBlock);
+                response.put("addedOrphanedBlocks", addedOrphanedBlocks);
+                Users.sendNewDataToAll(response);
             }, BlockchainProcessor.Event.BLOCK_POPPED);
 
-            Nxt.getBlockchainProcessor().addListener(new Listener<Block>() {
-                @Override
-                public void notify(Block block) {
-                    JSONObject response = new JSONObject();
-                    JSONArray addedRecentBlocks = new JSONArray();
-                    JSONObject addedRecentBlock = new JSONObject();
-                    addedRecentBlock.put("index", Users.getIndex(block));
-                    addedRecentBlock.put("timestamp", block.getTimestamp());
-                    addedRecentBlock.put("numberOfTransactions", block.getTransactions().size());
-                    addedRecentBlock.put("totalAmountNQT", block.getTotalAmountNQT());
-                    addedRecentBlock.put("totalFeeNQT", block.getTotalFeeNQT());
-                    addedRecentBlock.put("payloadLength", block.getPayloadLength());
-                    addedRecentBlock.put("generator", Convert.toUnsignedLong(block.getGeneratorId()));
-                    addedRecentBlock.put("height", block.getHeight());
-                    addedRecentBlock.put("version", block.getVersion());
-                    addedRecentBlock.put("block", block.getStringId());
-                    addedRecentBlock.put("baseTarget", BigInteger.valueOf(block.getBaseTarget()).multiply(BigInteger.valueOf(100000)).divide(BigInteger.valueOf(Constants.INITIAL_BASE_TARGET)));
-                    addedRecentBlocks.add(addedRecentBlock);
-                    response.put("addedRecentBlocks", addedRecentBlocks);
-                    Users.sendNewDataToAll(response);
-                }
+            Nxt.getBlockchainProcessor().addListener(block -> {
+                JSONObject response = new JSONObject();
+                JSONArray addedRecentBlocks = new JSONArray();
+                JSONObject addedRecentBlock = new JSONObject();
+                addedRecentBlock.put("index", Users.getIndex(block));
+                addedRecentBlock.put("timestamp", block.getTimestamp());
+                addedRecentBlock.put("numberOfTransactions", block.getTransactions().size());
+                addedRecentBlock.put("totalAmountNQT", block.getTotalAmountNQT());
+                addedRecentBlock.put("totalFeeNQT", block.getTotalFeeNQT());
+                addedRecentBlock.put("payloadLength", block.getPayloadLength());
+                addedRecentBlock.put("generator", Long.toUnsignedString(block.getGeneratorId()));
+                addedRecentBlock.put("height", block.getHeight());
+                addedRecentBlock.put("version", block.getVersion());
+                addedRecentBlock.put("block", block.getStringId());
+                addedRecentBlock.put("baseTarget", BigInteger.valueOf(block.getBaseTarget()).multiply(BigInteger.valueOf(100000)).divide(BigInteger.valueOf(Constants.INITIAL_BASE_TARGET)));
+                addedRecentBlocks.add(addedRecentBlock);
+                response.put("addedRecentBlocks", addedRecentBlocks);
+                Users.sendNewDataToAll(response);
             }, BlockchainProcessor.Event.BLOCK_PUSHED);
 
-            Generator.addListener(new Listener<Generator>() {
-                @Override
-                public void notify(Generator generator) {
-                    JSONObject response = new JSONObject();
-                    response.put("response", "setBlockGenerationDeadline");
-                    response.put("deadline", generator.getDeadline());
-                    for (User user : users.values()) {
-                        if (Arrays.equals(generator.getPublicKey(), user.getPublicKey())) {
-                            user.send(response);
-                        }
+            Generator.addListener(generator -> {
+                JSONObject response = new JSONObject();
+                response.put("response", "setBlockGenerationDeadline");
+                response.put("deadline", generator.getDeadline());
+                for (User user : users.values()) {
+                    if (Arrays.equals(generator.getPublicKey(), user.getPublicKey())) {
+                        user.send(response);
                     }
                 }
             }, Generator.Event.GENERATION_DEADLINE);

@@ -724,9 +724,30 @@ var NRS = (function(NRS, $, undefined) {
 		var serialized = $form.serializeArray();
 		var data = {};
 
+		/*
 		for (var s in serialized) {
 			data[serialized[s]['name']] = serialized[s]['value']
 		}
+		*/
+
+		var multiValuedFields = ["phasingWhitelisted"];
+		for (var s in serialized) {
+			if (multiValuedFields.indexOf(serialized[s]["name"]) > -1) {
+				if (serialized[s]['value'] != "") {
+					if (serialized[s]['name'] in data) {
+						var index = data[serialized[s]['name']].length;
+						data[serialized[s]['name']][index] = serialized[s]['value'];
+
+					} else {
+						data[serialized[s]['name']] = [serialized[s]['value']] //all data as list (traditional, to allow multiple values)
+					}
+				}
+			} else {
+				data[serialized[s]['name']] = serialized[s]['value'];
+			}
+			
+		}
+		
 
 		if (!unmodified) {
 			delete data.request_type;
@@ -755,7 +776,7 @@ var NRS = (function(NRS, $, undefined) {
 		if (typeof object[acc + "RS"] == "undefined") {
 			return "/";
 		} else {
-			return "<a href='#' data-user='" + String(object[acc + "RS"]).escapeHTML() + "' class='user-info'>" + NRS.getAccountTitle(object, acc) + "</a>";
+			return "<a href='#' data-user='" + String(object[acc + "RS"]).escapeHTML() + "' class='show_account_modal_action user-info'>" + NRS.getAccountTitle(object, acc) + "</a>";
 		}
 	}
 
@@ -838,13 +859,16 @@ var NRS = (function(NRS, $, undefined) {
 				});
 			});
 
-			clipboard.on("noflash", function(client, args) {
-				$("#account_id_dropdown .dropdown-menu, #asset_id_dropdown .dropdown-menu").remove();
-				$("#account_id_dropdown, #asset_id").data("toggle", "");
-				$.growl($.t("error_clipboard_copy_noflash"), {
-					"type": "danger"
+			if (!NRS.getCookie("clipboard_warning_shown")) {
+				clipboard.on("noflash", function(client, args) {
+					$("#account_id_dropdown .dropdown-menu, #asset_id_dropdown .dropdown-menu").remove();
+					$("#account_id_dropdown, #asset_id").data("toggle", "");
+					$.growl($.t("error_clipboard_copy_noflash"), {
+						"type": "danger"
+					});
 				});
-			});
+				NRS.setCookie("clipboard_warning_shown", "1", 30);
+			}
 
 			clipboard.on("wrongflash", function(client, args) {
 				$("#account_id_dropdown .dropdown-menu, #asset_id_dropdown .dropdown-menu").remove();
@@ -980,7 +1004,7 @@ var NRS = (function(NRS, $, undefined) {
 			} else if (key == "price" || key == "total" || key == "amount" || key == "fee" || key == "refund" || key == "discount") {
 				value = NRS.formatAmount(new BigInteger(String(value))) + " NXT";
 			} else if (key == "sender" || key == "recipient" || key == "account" || key == "seller" || key == "buyer") {
-				value = "<a href='#' data-user='" + String(value).escapeHTML() + "'>" + NRS.getAccountTitle(value) + "</a>";
+				value = "<a href='#' data-user='" + String(value).escapeHTML() + "' class='show_account_modal_action'>" + NRS.getAccountTitle(value) + "</a>";
 			} else if (key == "request_processing_time") { /* Skip from displaying request processing time */
 				continue;
 			} else {

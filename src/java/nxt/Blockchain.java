@@ -14,6 +14,8 @@ public interface Blockchain {
 
     int getHeight();
 
+    int getLastBlockTimestamp();
+
     Block getBlock(long blockId);
 
     Block getBlockAtHeight(int height);

@@ -359,7 +359,7 @@ var NRS = (function(NRS, $, undefined) {
 			} else {
 				$("#blocks_transactions_per_hour").html(Math.round(totalTransactions / (time / 60) * 60)).removeClass("loading_dots");
 			}
-			$("#blocks_average_generation_time").html(NRS.averageBlockGenerationTime + "s").removeClass("loading_dots");
+			$("#blocks_average_generation_time").html(Math.round(time / NRS.itemsPerPage) + "s").removeClass("loading_dots");
 			$("#blocks_average_fee").html(NRS.formatStyledAmount(averageFee)).removeClass("loading_dots");
 			$("#blocks_average_amount").parent().parent().css('visibility', 'visible');
 			$("#blocks_page .ion-stats-bars").parent().css('visibility', 'visible');

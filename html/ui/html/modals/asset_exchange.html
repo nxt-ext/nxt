@@ -188,6 +188,10 @@
                                 <label for="issue_asset_fee"><span data-i18n="fee">FEE</span> <i class="fa fa-exclamation-circle show_popover" data-content="The minimum fee to issue an asset is 1,000 Nxt." data-i18n="[data-content]asset_minimum_fee_help" data-container="body" style="color:red"></i></label>
                                 <div class="input-group">                                   
                                     <input type="number" name="feeNXT" id="issue_asset_fee" class="form-control" placeholder="Fee" step="any" min="1000" data-default="1000" value="1000" tabindex="6">
+                                    <span class="input-group-addon" style="min-width:50px;"><i class="fa fa-gavel"></i> 
+                                        <span id="{{name}}_feeNXT_addition_info" class="feeNXT_approval_addition_info">+0</span>
+                                    </span>
+                                    <input type="hidden" id="{{name}}_feeNXT_approval_addition" name="feeNXT_approval_addition" value="0" />
                                     <span class="input-group-addon">NXT</span>
                                 </div>
                             </div>
@@ -342,6 +346,7 @@
                             </div>
                         </div>
                     </div>
+                    <div data-replace-with-modal-template="add_public_message_modal_template"></div>
                     <div data-replace-with-modal-template="secret_phrase_modal_template"></div>
                     <div data-replace-with-modal-template="advanced_fee_deadline_template"></div>
                     <div data-replace-with-modal-template="advanced_approve_template"></div>

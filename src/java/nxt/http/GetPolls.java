@@ -17,7 +17,7 @@ public class GetPolls extends APIServlet.APIRequestHandler {
     static final GetPolls instance = new GetPolls();
 
     private GetPolls() {
-        super(new APITag[]{APITag.ACCOUNTS, APITag.VS}, "includeVoters", "account", "firstIndex", "lastIndex");
+        super(new APITag[]{APITag.ACCOUNTS, APITag.VS}, "account", "firstIndex", "lastIndex");
     }
 
     @Override
@@ -25,7 +25,6 @@ public class GetPolls extends APIServlet.APIRequestHandler {
         long accountId = ParameterParser.getAccountId(req, "account", false);
         int firstIndex = ParameterParser.getFirstIndex(req);
         int lastIndex = ParameterParser.getLastIndex(req);
-        boolean includeVoters = ParameterParser.getBoolean(req, "includeVoters", false);
 
         JSONArray pollsJson = new JSONArray();
         DbIterator<Poll> polls = null;
@@ -37,7 +36,7 @@ public class GetPolls extends APIServlet.APIRequestHandler {
             }
 
             while (polls.hasNext()) {
-                pollsJson.add(JSONData.poll(polls.next(), includeVoters));
+                pollsJson.add(JSONData.poll(polls.next()));
             }
         } finally {
             DbUtils.close(polls);

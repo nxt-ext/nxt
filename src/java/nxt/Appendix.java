@@ -8,6 +8,7 @@ import org.json.simple.JSONObject;
 
 import java.nio.ByteBuffer;
 import java.util.Arrays;
+import java.util.Collections;
 
 public interface Appendix {
 
@@ -92,7 +93,7 @@ public interface Appendix {
         }
 
         @Override
-        public Fee getBaselineFee(Transaction transaction) throws NxtException.NotValidException {
+        public Fee getBaselineFee(Transaction transaction) {
             return Fee.NONE;
         }
 
@@ -102,7 +103,7 @@ public interface Appendix {
         }
 
         @Override
-        public Fee getNextFee(Transaction transaction) throws NxtException.NotValidException {
+        public Fee getNextFee(Transaction transaction) {
             return getBaselineFee(transaction);
         }
 
@@ -317,7 +318,7 @@ public interface Appendix {
             return new EncryptedMessage(attachmentData);
         }
 
-        EncryptedMessage(ByteBuffer buffer, byte transactionVersion) throws NxtException.ValidationException {
+        EncryptedMessage(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
             super(buffer, transactionVersion);
         }
 
@@ -363,7 +364,7 @@ public interface Appendix {
             return new EncryptToSelfMessage(attachmentData);
         }
 
-        EncryptToSelfMessage(ByteBuffer buffer, byte transactionVersion) throws NxtException.ValidationException {
+        EncryptToSelfMessage(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
             super(buffer, transactionVersion);
         }
 
@@ -467,7 +468,7 @@ public interface Appendix {
         @Override
         void apply(Transaction transaction, Account senderAccount, Account recipientAccount) {
             if (recipientAccount.setOrVerify(publicKey)) {
-                recipientAccount.apply(this.publicKey, transaction.getHeight());
+                recipientAccount.apply(this.publicKey);
             }
         }
 
@@ -530,6 +531,9 @@ public interface Appendix {
             this.finishHeight = finishHeight;
             this.quorum = quorum;
             this.whitelist = Convert.nullToEmpty(whitelist);
+            if (this.whitelist.length > 0) {
+                Arrays.sort(this.whitelist);
+            }
             voteWeighting = new VoteWeighting(votingModel, holdingId, minBalance, minBalanceModel);
         }
 
@@ -563,10 +567,10 @@ public interface Appendix {
             json.put("phasingQuorum", quorum);
             json.put("phasingMinBalance", voteWeighting.getMinBalance());
             json.put("phasingVotingModel", voteWeighting.getVotingModel().getCode());
-            json.put("phasingHolding", Convert.toUnsignedLong(voteWeighting.getHoldingId()));
+            json.put("phasingHolding", Long.toUnsignedString(voteWeighting.getHoldingId()));
             JSONArray whitelistJson = new JSONArray();
             for (long accountId : whitelist) {
-                whitelistJson.add(Convert.toUnsignedLong(accountId));
+                whitelistJson.add(Long.toUnsignedString(accountId));
             }
             json.put("phasingWhitelist", whitelistJson);
             json.put("phasingMinBalanceModel", voteWeighting.getMinBalanceModel().getCode());
@@ -584,20 +588,34 @@ public interface Appendix {
                 throw new NxtException.NotValidException("Whitelist is too big");
             }
 
+            long previousAccountId = 0;
+            for (long accountId : whitelist) {
+                if (accountId == 0) {
+                    throw new NxtException.NotValidException("Invalid accountId 0 in whitelist");
+                }
+                if (previousAccountId != 0 && accountId < previousAccountId) {
+                    throw new NxtException.NotValidException("Whitelist not sorted " + Arrays.toString(whitelist));
+                }
+                if (accountId == previousAccountId) {
+                    throw new NxtException.NotValidException("Duplicate accountId " + Long.toUnsignedString(accountId) + " in whitelist");
+                }
+                previousAccountId = accountId;
+            }
+
             if (quorum <= 0) {
                 throw new NxtException.NotValidException("quorum <= 0");
             }
 
+            if (voteWeighting.getVotingModel() == VoteWeighting.VotingModel.ACCOUNT && whitelist.length > 0 && quorum > whitelist.length) {
+                throw new NxtException.NotValidException("Quorum of " + quorum + " cannot be achieved in by-account voting with whitelist of length " + whitelist.length);
+            }
+
             if (finishHeight < currentHeight + Constants.VOTING_MIN_VOTE_DURATION
                     || finishHeight > currentHeight + Constants.VOTING_MAX_VOTE_DURATION) {
-                throw new NxtException.NotValidException("Invalid finish height");
+                throw new NxtException.NotCurrentlyValidException("Invalid finish height");
             }
 
             voteWeighting.validate();
-
-            if (voteWeighting.getVotingModel() == VoteWeighting.VotingModel.ACCOUNT && whitelist.length == 0) {
-                throw new NxtException.NotValidException("By-account voting with empty whitelist");
-            }
 
         }
 
@@ -607,14 +625,14 @@ public interface Appendix {
         }
 
         @Override
-        public Fee getBaselineFee(Transaction transaction) throws NxtException.NotValidException {
+        public Fee getBaselineFee(Transaction transaction) {
             if (voteWeighting.isBalanceIndependent()) {
                 return Fee.DEFAULT_FEE;
             }
             return PHASING_FEE;
         }
 
-        void release(TransactionImpl transaction) {
+        private void release(TransactionImpl transaction) {
             Account senderAccount = Account.getAccount(transaction.getSenderId());
             Account recipientAccount = Account.getAccount(transaction.getRecipientId());
             //apply all attachments and appendixes, except the phasing itself
@@ -623,20 +641,26 @@ public interface Appendix {
                     appendage.apply(transaction, senderAccount, recipientAccount);
                 }
             }
+            TransactionProcessorImpl.getInstance().notifyListeners(Collections.singletonList(transaction), TransactionProcessor.Event.RELEASE_PHASED_TRANSACTION);
             Logger.logDebugMessage("Transaction " + transaction.getStringId() + " has been released");
         }
 
-        void finalVerification(TransactionImpl transaction) {
+        void reject(TransactionImpl transaction) {
+            Account senderAccount = Account.getAccount(transaction.getSenderId());
+            transaction.getType().undoAttachmentUnconfirmed(transaction, senderAccount);
+            senderAccount.addToUnconfirmedBalanceNQT(transaction.getAmountNQT());
+            TransactionProcessorImpl.getInstance().notifyListeners(Collections.singletonList(transaction), TransactionProcessor.Event.REJECT_PHASED_TRANSACTION);
+            Logger.logDebugMessage("Transaction " + transaction.getStringId() + " has been rejected");
+        }
+
+        void countVotes(TransactionImpl transaction) {
             PhasingPoll poll = PhasingPoll.getPoll(transaction.getId());
             long result = PhasingVote.countVotes(poll);
             poll.finish(result);
             if (result >= poll.getQuorum()) {
                 release(transaction);
             } else {
-                Account senderAccount = Account.getAccount(transaction.getSenderId());
-                transaction.getType().undoAttachmentUnconfirmed(transaction, senderAccount);
-                senderAccount.addToUnconfirmedBalanceNQT(transaction.getAmountNQT());
-                Logger.logDebugMessage("Transaction " + transaction.getStringId() + " has been refused");
+                reject(transaction);
             }
         }
 

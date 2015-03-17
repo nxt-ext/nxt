@@ -110,7 +110,7 @@ public final class SendMoney extends UserServlet.UserRequestHandler {
         }
 
         Account account = Account.getAccount(user.getPublicKey());
-        if (account == null || Convert.safeAdd(amountNQT, feeNQT) > account.getUnconfirmedBalanceNQT()) {
+        if (account == null || Math.addExact(amountNQT, feeNQT) > account.getUnconfirmedBalanceNQT()) {
 
             JSONObject response = new JSONObject();
             response.put("response", "notifyOfIncorrectTransaction");
@@ -125,8 +125,7 @@ public final class SendMoney extends UserServlet.UserRequestHandler {
         } else {
 
             final Transaction transaction = Nxt.newTransactionBuilder(user.getPublicKey(),
-                    amountNQT, feeNQT, deadline, Attachment.ORDINARY_PAYMENT).recipientId(recipient).build();
-            transaction.sign(user.getSecretPhrase());
+                    amountNQT, feeNQT, deadline, Attachment.ORDINARY_PAYMENT).recipientId(recipient).build(secretPhrase);
 
             Nxt.getTransactionProcessor().broadcast(transaction);
 

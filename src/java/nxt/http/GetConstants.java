@@ -7,7 +7,6 @@ import nxt.TransactionType;
 import nxt.VoteWeighting;
 import nxt.crypto.HashFunction;
 import nxt.peer.Peer;
-import nxt.util.Convert;
 import nxt.util.JSON;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
@@ -23,8 +22,8 @@ public final class GetConstants extends APIServlet.APIRequestHandler {
     static {
 
         JSONObject response = new JSONObject();
-        response.put("genesisBlockId", Convert.toUnsignedLong(Genesis.GENESIS_BLOCK_ID));
-        response.put("genesisAccountId", Convert.toUnsignedLong(Genesis.CREATOR_ID));
+        response.put("genesisBlockId", Long.toUnsignedString(Genesis.GENESIS_BLOCK_ID));
+        response.put("genesisAccountId", Long.toUnsignedString(Genesis.CREATOR_ID));
         response.put("maxBlockPayloadLength", Constants.MAX_PAYLOAD_LENGTH);
         response.put("maxArbitraryMessageLength", Constants.MAX_ARBITRARY_MESSAGE_LENGTH_2);
 
@@ -32,6 +31,7 @@ public final class GetConstants extends APIServlet.APIRequestHandler {
         outer:
         for (int type = 0; ; type++) {
             JSONObject typeJSON = new JSONObject();
+            JSONObject subtypesJSON = new JSONObject();
             for (int subtype = 0; ; subtype++) {
                 TransactionType transactionType = TransactionType.findTransactionType((byte)type, (byte)subtype);
                 if (transactionType == null) {
@@ -41,8 +41,13 @@ public final class GetConstants extends APIServlet.APIRequestHandler {
                         break;
                     }
                 }
-                typeJSON.put(subtype, transactionType.getName());
+                JSONObject subtypeJSON = new JSONObject();
+                subtypeJSON.put("name", transactionType.getName());
+                subtypeJSON.put("canHaveRecipient", transactionType.canHaveRecipient());
+                subtypeJSON.put("mustHaveRecipient", transactionType.mustHaveRecipient());
+                subtypesJSON.put(subtype, subtypeJSON);
             }
+            typeJSON.put("subtypes", subtypesJSON);
             transactionJSON.put(type, typeJSON);
         }
         response.put("transactionTypes", transactionJSON);

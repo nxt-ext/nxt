@@ -573,7 +573,7 @@ var NRS = (function(NRS, $, undefined) {
 				"scrollTop": 0
 			}, 0);
 
-			$("#asset_account").html("<a href='#' data-user='" + NRS.getAccountFormatted(asset, "account") + "' class='user_info'>" + NRS.getAccountTitle(asset, "account") + "</a>");
+			$("#asset_account").html("<a href='#' data-user='" + NRS.getAccountFormatted(asset, "account") + "' class='show_account_modal_action user_info'>" + NRS.getAccountTitle(asset, "account") + "</a>");
 			$("#asset_id").html(assetId.escapeHTML());
 			$("#asset_decimals").html(String(asset.decimals).escapeHTML());
 			$("#asset_name").html(String(asset.name).escapeHTML());
@@ -804,7 +804,7 @@ var NRS = (function(NRS, $, undefined) {
 					if (NRS.getAccountTitle(trades[i], "buyer") == "You") rows += "red"; 
 					else if (NRS.getAccountTitle(trades[i], "seller") == "You") rows += "green"; 
 					else rows += "black";
-					rows +=  "'>" + NRS.formatAmount(trades[i].totalNQT) + "</td><td><a href='#' data-user='" + NRS.getAccountFormatted(trades[i], "buyer") + "' class='user_info'>" + (trades[i].buyerRS == NRS.currentAsset.accountRS ? "Asset Issuer" : NRS.getAccountTitle(trades[i], "buyer")) + "</a></td>" +
+					rows +=  "'>" + NRS.formatAmount(trades[i].totalNQT) + "</td><td><a href='#' data-user='" + NRS.getAccountFormatted(trades[i], "buyer") + "' class='show_account_modal_action user_info'>" + (trades[i].buyerRS == NRS.currentAsset.accountRS ? "Asset Issuer" : NRS.getAccountTitle(trades[i], "buyer")) + "</a></td>" +
 						"<td><a href='#' data-user='" + NRS.getAccountFormatted(trades[i], "seller") + "' class='user_info'>" + (trades[i].sellerRS == NRS.currentAsset.accountRS ? "Asset Issuer" : NRS.getAccountTitle(trades[i], "seller")) + "</a></td>" +
 						"</tr>";
 				}
@@ -1408,8 +1408,8 @@ var NRS = (function(NRS, $, undefined) {
 					var type = (trades[i].buyerRS == NRS.accountRS ? "buy" : "sell");
 
 					rows += "<tr><td><a href='#' data-goto-asset='" + String(trades[i].asset).escapeHTML() + "'>" + String(trades[i].name).escapeHTML() + "</a></td><td>" + NRS.formatTimestamp(trades[i].timestamp) + "</td><td>" + $.t(trades[i].tradeType) + "</td><td>" + NRS.formatQuantity(trades[i].quantityQNT, trades[i].decimals) + "</td><td class='asset_price'>" + NRS.formatOrderPricePerWholeQNT(trades[i].priceNQT, trades[i].decimals) + "</td><td style='color:" + (type == "buy" ? "red" : "green") + "'>" + NRS.formatAmount(trades[i].totalNQT) + "</td>" +
-						"<td><a href='#' data-user='" + NRS.getAccountFormatted(trades[i], "buyer") + "' class='user_info'>" + NRS.getAccountTitle(trades[i], "buyer") + "</a></td>" +
-						"<td><a href='#' data-user='" + NRS.getAccountFormatted(trades[i], "seller") + "' class='user_info'>" + NRS.getAccountTitle(trades[i], "seller") + "</a></td>" +
+						"<td><a href='#' data-user='" + NRS.getAccountFormatted(trades[i], "buyer") + "' class='show_account_modal_action user_info'>" + NRS.getAccountTitle(trades[i], "buyer") + "</a></td>" +
+						"<td><a href='#' data-user='" + NRS.getAccountFormatted(trades[i], "seller") + "' class='show_account_modal_action user_info'>" + NRS.getAccountTitle(trades[i], "seller") + "</a></td>" +
 						"</tr>";
 				}
 
@@ -1442,9 +1442,9 @@ var NRS = (function(NRS, $, undefined) {
 
 					var type = (transfers[i].recipientRS == NRS.accountRS ? "receive" : "send");
 
-					rows += "<tr><td><a href='#' data-transaction='" + String(transfers[i].assetTransfer).escapeHTML() + "'>" + String(transfers[i].assetTransfer).escapeHTML() + "</a></td><td><a href='#' data-goto-asset='" + String(transfers[i].asset).escapeHTML() + "'>" + String(transfers[i].name).escapeHTML() + "</a></td><td>" + NRS.formatTimestamp(transfers[i].timestamp) + "</td><td style='color:" + (type == "receive" ? "green" : "red") + "'>" + NRS.formatQuantity(transfers[i].quantityQNT, transfers[i].decimals) + "</td>" +
-						"<td><a href='#' data-user='" + NRS.getAccountFormatted(transfers[i], "recipient") + "' class='user_info'>" + NRS.getAccountTitle(transfers[i], "recipient") + "</a></td>" +
-						"<td><a href='#' data-user='" + NRS.getAccountFormatted(transfers[i], "sender") + "' class='user_info'>" + NRS.getAccountTitle(transfers[i], "sender") + "</a></td>" +
+					rows += "<tr><td><a href='#' class='show_transaction_modal_action' data-transaction='" + String(transfers[i].assetTransfer).escapeHTML() + "'>" + String(transfers[i].assetTransfer).escapeHTML() + "</a></td><td><a href='#' data-goto-asset='" + String(transfers[i].asset).escapeHTML() + "'>" + String(transfers[i].name).escapeHTML() + "</a></td><td>" + NRS.formatTimestamp(transfers[i].timestamp) + "</td><td style='color:" + (type == "receive" ? "green" : "red") + "'>" + NRS.formatQuantity(transfers[i].quantityQNT, transfers[i].decimals) + "</td>" +
+						"<td><a href='#' data-user='" + NRS.getAccountFormatted(transfers[i], "recipient") + "' class='show_account_modal_action user_info'>" + NRS.getAccountTitle(transfers[i], "recipient") + "</a></td>" +
+						"<td><a href='#' data-user='" + NRS.getAccountFormatted(transfers[i], "sender") + "' class='show_account_modal_action user_info'>" + NRS.getAccountTitle(transfers[i], "sender") + "</a></td>" +
 						"</tr>";
 				}
 
@@ -1649,7 +1649,7 @@ var NRS = (function(NRS, $, undefined) {
 					var account = response.accountAssets[i];
 					var percentageAsset = NRS.calculatePercentage(account.quantityQNT, NRS.currentAsset.quantityQNT);
 
-					rows += "<tr><td><a href='#' data-user='" + NRS.getAccountFormatted(account, "account") + "' class='user_info'>" + (account.accountRS == NRS.currentAsset.accountRS ? "Asset Issuer" : NRS.getAccountTitle(account, "account")) + "</a></td><td>" + NRS.formatQuantity(account.quantityQNT, NRS.currentAsset.decimals) + "</td><td>" + percentageAsset + "%</td></tr>";
+					rows += "<tr><td><a href='#' data-user='" + NRS.getAccountFormatted(account, "account") + "' class='show_account_modal_action user_info'>" + (account.accountRS == NRS.currentAsset.accountRS ? "Asset Issuer" : NRS.getAccountTitle(account, "account")) + "</a></td><td>" + NRS.formatQuantity(account.quantityQNT, NRS.currentAsset.decimals) + "</td><td>" + percentageAsset + "%</td></tr>";
 				}
 			}
 
@@ -2041,6 +2041,83 @@ var NRS = (function(NRS, $, undefined) {
 		$("#open_orders_page tr[data-order=" + String(data.order).escapeHTML() + "]").addClass("tentative tentative-crossed").find("td.cancel").html("/");
 	}
 
+	var _selectedApprovalAsset = "";
+
+	NRS.buildApprovalRequestAssetNavi = function() {
+		var $select = $('#approve_asset_select');
+		$select.empty();
+
+		var assetSelected = false;
+		var $noneOption = $('<option value=""></option>');
+
+		NRS.sendRequest("getAccountAssets", {
+         	"account": NRS.accountRS
+      	}, function (response) {
+      		if (response.accountAssets) {
+      			if (response.accountAssets.length > 0) {
+					$noneOption.html($.t('no_asset_selected_for_approval', 'No Asset Selected'));
+					$.each(response.accountAssets, function(key, asset) {
+						var idString = String(asset.asset);
+						var $option = $('<option value="' + idString + '">' + String(asset.name).escapeHTML() + '</option>');
+						if (idString == _selectedApprovalAsset) {
+							$option.attr('selected', true);
+							assetSelected = true;
+						}
+						$option.appendTo($select);
+					});
+				} else {
+					$noneOption.html($.t('account_has_no_assets', 'Account has no assets'));
+				}
+      		} else {
+      			$noneOption.html($.t('no_connection'));
+      		}
+      		if (!_selectedApprovalAsset || !assetSelected) {
+				$noneOption.attr('selected', true);
+			}
+      		$noneOption.prependTo($select);
+      	});
+	}
+
+	NRS.pages.approval_requests_asset = function() {
+		NRS.buildApprovalRequestAssetNavi();
+
+		if (_selectedApprovalAsset != "") {
+			var params = {
+				"asset": _selectedApprovalAsset,
+				"withoutWhitelist": true,
+				"firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
+				"lastIndex": NRS.pageNumber * NRS.itemsPerPage
+			};
+			NRS.sendRequest("getAssetPendingTransactions", params, function(response) {
+				var rows = "";
+
+				if (response.transactions && response.transactions.length > 0) {
+					if (response.transactions.length > NRS.itemsPerPage) {
+						NRS.hasMorePages = true;
+						response.transactions.pop();
+					}
+					for (var i = 0; i < response.transactions.length; i++) {
+						t = response.transactions[i];
+						t.confirmed = true;
+						rows += NRS.getTransactionRowHTML(t, ['approve']);
+					}
+				} else {
+					$('#ar_asset_no_entries').html($.t('no_current_approval_requests', 'No current approval requests'));
+				}
+				NRS.dataLoaded(rows);
+				NRS.addPendingInfoToTransactionRows(response.transactions);	
+				});
+		} else {
+			$('#ar_asset_no_entries').html($.t('please_select_asset_for_approval', 'Please select an asset'));
+			NRS.dataLoaded();
+		}
+	}
+
+	$('#approve_asset_select').on('change', function() {
+		_selectedApprovalAsset = $(this).find('option:selected').val();
+		NRS.loadPage("approval_requests_asset");
+	});
+
 	NRS.setup.asset_exchange = function() {
 		var sidebarId = 'sidebar_asset_exchange';
 		var options = {
@@ -2055,37 +2132,43 @@ var NRS = (function(NRS, $, undefined) {
 			"type": 'PAGE',
 			"page": 'asset_exchange'
 		}
-		NRS.appendToTSMenuItem(sidebarId, options);
+		NRS.appendMenuItemToTSMenuItem(sidebarId, options);
 		options = {
 			"titleHTML": '<span data-i18n="trade_history">Trade History</span></a>',
 			"type": 'PAGE',
 			"page": 'trade_history'
 		}
-		NRS.appendToTSMenuItem(sidebarId, options);
+		NRS.appendMenuItemToTSMenuItem(sidebarId, options);
 		options = {
 			"titleHTML": '<span data-i18n="transfer_history">Transfer History</span>',
 			"type": 'PAGE',
 			"page": 'transfer_history'
 		}
-		NRS.appendToTSMenuItem(sidebarId, options);
+		NRS.appendMenuItemToTSMenuItem(sidebarId, options);
 		options = {
 			"titleHTML": '<span data-i18n="my_assets">My Assets</span></a>',
 			"type": 'PAGE',
 			"page": 'my_assets'
 		}
-		NRS.appendToTSMenuItem(sidebarId, options);
+		NRS.appendMenuItemToTSMenuItem(sidebarId, options);
 		options = {
 			"titleHTML": '<span data-i18n="open_orders">Open Orders</span>',
 			"type": 'PAGE',
 			"page": 'open_orders'
 		}
-		NRS.appendToTSMenuItem(sidebarId, options);
+		NRS.appendMenuItemToTSMenuItem(sidebarId, options);
+		options = {
+			"titleHTML": '<span data-i18n="approval_requests">Approval Requests</span>',
+			"type": 'PAGE',
+			"page": 'approval_requests_asset'
+		}
+		NRS.appendMenuItemToTSMenuItem(sidebarId, options);
 		options = {
 			"titleHTML": '<span data-i18n="issue_asset">Issue Asset</span>',
 			"type": 'MODAL',
 			"modalId": 'issue_asset_modal'
 		}
-		NRS.appendToTSMenuItem(sidebarId, options);
+		NRS.appendMenuItemToTSMenuItem(sidebarId, options);
 	}
 
 	return NRS;

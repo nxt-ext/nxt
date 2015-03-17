@@ -44,6 +44,8 @@ public final class API {
     private static final List<NetworkAddress> allowedBotNets;
     static final String adminPassword = Nxt.getStringProperty("nxt.adminPassword", "", true);
     static final boolean disableAdminPassword;
+    static final int maxRecords = Nxt.getIntProperty("nxt.maxAPIRecords");
+
     private static final Server apiServer;
 
     static {
@@ -74,7 +76,7 @@ public final class API {
         if (enableAPIServer) {
             final int port = Constants.isTestnet ? TESTNET_API_PORT : Nxt.getIntProperty("nxt.apiServerPort");
             final String host = Nxt.getStringProperty("nxt.apiServerHost");
-            disableAdminPassword = Nxt.getBooleanProperty("nxt.disableAdminPassword") || "127.0.0.1".equals(host);
+            disableAdminPassword = Nxt.getBooleanProperty("nxt.disableAdminPassword") || ("127.0.0.1".equals(host) && adminPassword.isEmpty());
 
             apiServer = new Server();
             ServerConnector connector;
@@ -154,18 +156,15 @@ public final class API {
             apiServer.setHandler(apiHandlers);
             apiServer.setStopAtShutdown(true);
 
-            ThreadPool.runBeforeStart(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        apiServer.start();
-                        Logger.logMessage("Started API server at " + host + ":" + port);
-                    } catch (Exception e) {
-                        Logger.logErrorMessage("Failed to start API server", e);
-                        throw new RuntimeException(e.toString(), e);
-                    }
-
+            ThreadPool.runBeforeStart(() -> {
+                try {
+                    apiServer.start();
+                    Logger.logMessage("Started API server at " + host + ":" + port);
+                } catch (Exception e) {
+                    Logger.logErrorMessage("Failed to start API server", e);
+                    throw new RuntimeException(e.toString(), e);
                 }
+
             }, true);
 
         } else {

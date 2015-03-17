@@ -38,18 +38,13 @@ public class TestApproveTransaction extends BlockchainTest {
         JSONObject response = apiCall.invoke();
         Logger.logMessage("approvePendingTransactionResponse:" + response.toJSONString());
         Assert.assertNotNull(response.get("transaction"));
-        generateBlock();
+        generateBlocks(duration);
 
         long updBalance1 = balanceById(id1);
         long updBalance2 = balanceById(id2);
         Assert.assertNotEquals("id1 balance: ", balance1, updBalance1);
         Assert.assertNotEquals("id2 balance: ", balance2, updBalance2);
         Assert.assertEquals("fee", fee, balance3 - balanceById(id3));
-
-        generateBlocks(duration);
-
-        Assert.assertEquals("id1 balance: ", updBalance1, balanceById(id1));
-        Assert.assertEquals("id2 balance: ", updBalance2, balanceById(id2));
     }
 
     @Test

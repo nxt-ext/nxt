@@ -2,7 +2,6 @@ package nxt.http;
 
 import nxt.Currency;
 import nxt.db.DbIterator;
-import nxt.util.Convert;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
@@ -26,7 +25,7 @@ public final class GetCurrencyIds extends APIServlet.APIRequestHandler {
         JSONArray currencyIds = new JSONArray();
         try (DbIterator<Currency> currencies = Currency.getAllCurrencies(firstIndex, lastIndex)) {
             for (Currency currency : currencies) {
-                currencyIds.add(Convert.toUnsignedLong(currency.getId()));
+                currencyIds.add(Long.toUnsignedString(currency.getId()));
             }
         }
         JSONObject response = new JSONObject();

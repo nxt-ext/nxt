@@ -16,6 +16,10 @@ public class TestCreatePoll extends BlockchainTest {
         JSONObject createPollResponse = apiCall.invoke();
         Logger.logMessage("createPollResponse: " + createPollResponse.toJSONString());
 
+        if(!shouldFail) {
+            Assert.assertNull(createPollResponse.get("errorCode"));
+        }
+
         generateBlock();
 
         try {
@@ -73,9 +77,9 @@ public class TestCreatePoll extends BlockchainTest {
             param("maxRangeValue", 1);
             param("minBalance", 10 * Constants.ONE_NXT);
             param("minBalanceModel", VoteWeighting.MinBalanceModel.NQT.getCode());
-            param("option1", "Ringo");
-            param("option2", "Paul");
-            param("option3", "John");
+            param("option00", "Ringo");
+            param("option01", "Paul");
+            param("option02", "John");
         }
 
         public CreatePollBuilder votingModel(byte votingModel) {

@@ -56,23 +56,11 @@ public final class Convert {
         return String.valueOf(chars);
     }
 
-    public static String toUnsignedLong(long objectId) {
-        if (objectId >= 0) {
-            return String.valueOf(objectId);
-        }
-        BigInteger id = BigInteger.valueOf(objectId).add(two64);
-        return id.toString();
-    }
-
     public static long parseUnsignedLong(String number) {
         if (number == null) {
             return 0;
         }
-        BigInteger bigInt = new BigInteger(number.trim());
-        if (bigInt.signum() < 0 || bigInt.compareTo(two64) != -1) {
-            throw new IllegalArgumentException("overflow: " + number);
-        }
-        return bigInt.longValue();
+        return Long.parseUnsignedLong(number);
     }
 
     public static long parseLong(Object o) {
@@ -88,14 +76,14 @@ public final class Convert {
     }
 
     public static long parseAccountId(String account) {
-        if (account == null) {
+        if (account == null || (account = account.trim()).isEmpty()) {
             return 0;
         }
         account = account.toUpperCase();
         if (account.startsWith("NXT-")) {
             return Crypto.rsDecode(account.substring(4));
         } else {
-            return parseUnsignedLong(account);
+            return Long.parseUnsignedLong(account);
         }
     }
 
@@ -243,60 +231,6 @@ public final class Convert {
         } catch (IOException e) {
             throw new RuntimeException(e.getMessage(), e);
         }
-    }
-
-    // overflow checking based on https://www.securecoding.cert.org/confluence/display/java/NUM00-J.+Detect+or+prevent+integer+overflow
-    public static long safeAdd(long left, long right)
-            throws ArithmeticException {
-        if (right > 0 ? left > Long.MAX_VALUE - right
-                : left < Long.MIN_VALUE - right) {
-            throw new ArithmeticException("Integer overflow");
-        }
-        return left + right;
-    }
-
-    public static long safeSubtract(long left, long right)
-            throws ArithmeticException {
-        if (right > 0 ? left < Long.MIN_VALUE + right
-                : left > Long.MAX_VALUE + right) {
-            throw new ArithmeticException("Integer overflow");
-        }
-        return left - right;
-    }
-
-    public static long safeMultiply(long left, long right)
-            throws ArithmeticException {
-        if (right > 0 ? left > Long.MAX_VALUE/right
-                || left < Long.MIN_VALUE/right
-                : (right < -1 ? left > Long.MIN_VALUE/right
-                || left < Long.MAX_VALUE/right
-                : right == -1
-                && left == Long.MIN_VALUE) ) {
-            throw new ArithmeticException("Integer overflow");
-        }
-        return left * right;
-    }
-
-    public static long safeDivide(long left, long right)
-            throws ArithmeticException {
-        if ((left == Long.MIN_VALUE) && (right == -1)) {
-            throw new ArithmeticException("Integer overflow");
-        }
-        return left / right;
-    }
-
-    public static long safeNegate(long a) throws ArithmeticException {
-        if (a == Long.MIN_VALUE) {
-            throw new ArithmeticException("Integer overflow");
-        }
-        return -a;
-    }
-
-    public static long safeAbs(long a) throws ArithmeticException {
-        if (a == Long.MIN_VALUE) {
-            throw new ArithmeticException("Integer overflow");
-        }
-        return Math.abs(a);
     }
 
 }

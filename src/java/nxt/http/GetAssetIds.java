@@ -2,7 +2,6 @@ package nxt.http;
 
 import nxt.Asset;
 import nxt.db.DbIterator;
-import nxt.util.Convert;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
@@ -26,7 +25,7 @@ public final class GetAssetIds extends APIServlet.APIRequestHandler {
         JSONArray assetIds = new JSONArray();
         try (DbIterator<Asset> assets = Asset.getAllAssets(firstIndex, lastIndex)) {
             while (assets.hasNext()) {
-                assetIds.add(Convert.toUnsignedLong(assets.next().getId()));
+                assetIds.add(Long.toUnsignedString(assets.next().getId()));
             }
         }
         JSONObject response = new JSONObject();

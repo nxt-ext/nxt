@@ -37,11 +37,21 @@ final class BlockImpl implements Block {
     private volatile long id;
     private volatile String stringId = null;
     private volatile long generatorId;
+    private volatile byte[] bytes = null;
 
 
     BlockImpl(int version, int timestamp, long previousBlockId, long totalAmountNQT, long totalFeeNQT, int payloadLength, byte[] payloadHash,
+              byte[] generatorPublicKey, byte[] generationSignature, byte[] previousBlockHash, List<TransactionImpl> transactions, String secretPhrase)
+            throws NxtException.NotValidException {
+        this(version, timestamp, previousBlockId, totalAmountNQT, totalFeeNQT, payloadLength, payloadHash,
+                generatorPublicKey, generationSignature, null, previousBlockHash, transactions);
+        blockSignature = Crypto.sign(getBytes(), secretPhrase);
+        bytes = null;
+    }
+
+    BlockImpl(int version, int timestamp, long previousBlockId, long totalAmountNQT, long totalFeeNQT, int payloadLength, byte[] payloadHash,
               byte[] generatorPublicKey, byte[] generationSignature, byte[] blockSignature, byte[] previousBlockHash, List<TransactionImpl> transactions)
-            throws NxtException.ValidationException {
+            throws NxtException.NotValidException {
 
         if (payloadLength > Constants.MAX_PAYLOAD_LENGTH || payloadLength < 0) {
             throw new NxtException.NotValidException("attempted to create a block with payloadLength " + payloadLength);
@@ -68,8 +78,9 @@ final class BlockImpl implements Block {
 
     BlockImpl(int version, int timestamp, long previousBlockId, long totalAmountNQT, long totalFeeNQT, int payloadLength,
               byte[] payloadHash, long generatorId, byte[] generationSignature, byte[] blockSignature,
-              byte[] previousBlockHash, BigInteger cumulativeDifficulty, long baseTarget, long nextBlockId, int height, long id)
-            throws NxtException.ValidationException {
+              byte[] previousBlockHash, BigInteger cumulativeDifficulty, long baseTarget, long nextBlockId, int height, long id,
+              List<TransactionImpl> blockTransactions)
+            throws NxtException.NotValidException {
         this(version, timestamp, previousBlockId, totalAmountNQT, totalFeeNQT, payloadLength, payloadHash,
                 null, generationSignature, blockSignature, previousBlockHash, null);
         this.cumulativeDifficulty = cumulativeDifficulty;
@@ -78,6 +89,7 @@ final class BlockImpl implements Block {
         this.height = height;
         this.id = id;
         this.generatorId = generatorId;
+        this.blockTransactions = blockTransactions;
     }
 
     @Override
@@ -191,7 +203,7 @@ final class BlockImpl implements Block {
         if (stringId == null) {
             getId();
             if (stringId == null) {
-                stringId = Convert.toUnsignedLong(id);
+                stringId = Long.toUnsignedString(id);
             }
         }
         return stringId;
@@ -220,7 +232,7 @@ final class BlockImpl implements Block {
         JSONObject json = new JSONObject();
         json.put("version", version);
         json.put("timestamp", timestamp);
-        json.put("previousBlock", Convert.toUnsignedLong(previousBlockId));
+        json.put("previousBlock", Long.toUnsignedString(previousBlockId));
         json.put("totalAmountNQT", totalAmountNQT);
         json.put("totalFeeNQT", totalFeeNQT);
         json.put("payloadLength", payloadLength);
@@ -239,7 +251,7 @@ final class BlockImpl implements Block {
         return json;
     }
 
-    static BlockImpl parseBlock(JSONObject blockData) throws NxtException.ValidationException {
+    static BlockImpl parseBlock(JSONObject blockData) throws NxtException.NotValidException {
         try {
             int version = ((Long) blockData.get("version")).intValue();
             int timestamp = ((Long) blockData.get("timestamp")).intValue();
@@ -256,63 +268,61 @@ final class BlockImpl implements Block {
             for (Object transactionData : (JSONArray) blockData.get("transactions")) {
                 blockTransactions.add(TransactionImpl.parseTransaction((JSONObject) transactionData));
             }
-            return new BlockImpl(version, timestamp, previousBlock, totalAmountNQT, totalFeeNQT, payloadLength, payloadHash, generatorPublicKey,
+            BlockImpl block = new BlockImpl(version, timestamp, previousBlock, totalAmountNQT, totalFeeNQT, payloadLength, payloadHash, generatorPublicKey,
                     generationSignature, blockSignature, previousBlockHash, blockTransactions);
-        } catch (NxtException.ValidationException|RuntimeException e) {
+            if (!block.checkSignature()) {
+                throw new NxtException.NotValidException("Invalid block signature");
+            }
+            return block;
+        } catch (NxtException.NotValidException|RuntimeException e) {
             Logger.logDebugMessage("Failed to parse block: " + blockData.toJSONString());
             throw e;
         }
     }
 
     byte[] getBytes() {
-        ByteBuffer buffer = ByteBuffer.allocate(4 + 4 + 8 + 4 + (version < 3 ? (4 + 4) : (8 + 8)) + 4 + 32 + 32 + (32 + 32) + 64);
-        buffer.order(ByteOrder.LITTLE_ENDIAN);
-        buffer.putInt(version);
-        buffer.putInt(timestamp);
-        buffer.putLong(previousBlockId);
-        buffer.putInt(getTransactions().size());
-        if (version < 3) {
-            buffer.putInt((int)(totalAmountNQT / Constants.ONE_NXT));
-            buffer.putInt((int)(totalFeeNQT / Constants.ONE_NXT));
-        } else {
-            buffer.putLong(totalAmountNQT);
-            buffer.putLong(totalFeeNQT);
+        if (bytes == null) {
+            ByteBuffer buffer = ByteBuffer.allocate(4 + 4 + 8 + 4 + (version < 3 ? (4 + 4) : (8 + 8)) + 4 + 32 + 32 + (32 + 32) + (blockSignature != null ? 64 : 0));
+            buffer.order(ByteOrder.LITTLE_ENDIAN);
+            buffer.putInt(version);
+            buffer.putInt(timestamp);
+            buffer.putLong(previousBlockId);
+            buffer.putInt(getTransactions().size());
+            if (version < 3) {
+                buffer.putInt((int) (totalAmountNQT / Constants.ONE_NXT));
+                buffer.putInt((int) (totalFeeNQT / Constants.ONE_NXT));
+            } else {
+                buffer.putLong(totalAmountNQT);
+                buffer.putLong(totalFeeNQT);
+            }
+            buffer.putInt(payloadLength);
+            buffer.put(payloadHash);
+            buffer.put(getGeneratorPublicKey());
+            buffer.put(generationSignature);
+            if (version > 1) {
+                buffer.put(previousBlockHash);
+            }
+            if (blockSignature != null) {
+                buffer.put(blockSignature);
+            }
+            bytes = buffer.array();
         }
-        buffer.putInt(payloadLength);
-        buffer.put(payloadHash);
-        buffer.put(getGeneratorPublicKey());
-        buffer.put(generationSignature);
-        if (version > 1) {
-            buffer.put(previousBlockHash);
-        }
-        buffer.put(blockSignature);
-        return buffer.array();
-    }
-
-    void sign(String secretPhrase) {
-        if (blockSignature != null) {
-            throw new IllegalStateException("Block already signed");
-        }
-        blockSignature = new byte[64];
-        byte[] data = getBytes();
-        byte[] data2 = new byte[data.length - 64];
-        System.arraycopy(data, 0, data2, 0, data2.length);
-        blockSignature = Crypto.sign(data2, secretPhrase);
+        return bytes;
     }
 
     boolean verifyBlockSignature() {
-
         Account account = Account.getAccount(getGeneratorId());
-        if (account == null) {
-            return false;
+        return account != null && checkSignature() && account.setOrVerify(getGeneratorPublicKey());
+    }
+
+    private volatile boolean hasValidSignature = false;
+
+    private boolean checkSignature() {
+        if (! hasValidSignature) {
+            byte[] data = Arrays.copyOf(getBytes(), bytes.length - 64);
+            hasValidSignature = blockSignature != null && Crypto.verify(blockSignature, data, getGeneratorPublicKey(), version >= 3);
         }
-
-        byte[] data = getBytes();
-        byte[] data2 = new byte[data.length - 64];
-        System.arraycopy(data, 0, data2, 0, data2.length);
-
-        return Crypto.verify(blockSignature, data2, getGeneratorPublicKey(), version >= 3) && account.setOrVerify(getGeneratorPublicKey());
-
+        return hasValidSignature;
     }
 
     boolean verifyGenerationSignature() throws BlockchainProcessor.BlockOutOfOrderException {
@@ -369,17 +379,9 @@ final class BlockImpl implements Block {
 
     void apply() throws BlockchainProcessor.TransactionNotAcceptedException {
         Account generatorAccount = Account.addOrGetAccount(getGeneratorId());
-        generatorAccount.apply(getGeneratorPublicKey(), this.height);
+        generatorAccount.apply(getGeneratorPublicKey());
         generatorAccount.addToBalanceAndUnconfirmedBalanceNQT(totalFeeNQT);
         generatorAccount.addToForgedBalanceNQT(totalFeeNQT);
-        for (TransactionImpl transaction : getTransactions()) {
-            try {
-                transaction.apply();
-            } catch (RuntimeException e) {
-                Logger.logErrorMessage(e.toString(), e);
-                throw new BlockchainProcessor.TransactionNotAcceptedException(e, transaction);
-            }
-        }
     }
 
     void setPrevious(BlockImpl block) {

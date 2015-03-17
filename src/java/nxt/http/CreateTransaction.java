@@ -7,7 +7,6 @@ import nxt.Constants;
 import nxt.Nxt;
 import nxt.NxtException;
 import nxt.Transaction;
-import nxt.VoteWeighting;
 import nxt.crypto.Crypto;
 import nxt.crypto.EncryptedData;
 import nxt.util.Convert;
@@ -20,9 +19,8 @@ import java.util.Arrays;
 import static nxt.http.JSONResponses.FEATURE_NOT_AVAILABLE;
 import static nxt.http.JSONResponses.INCORRECT_ARBITRARY_MESSAGE;
 import static nxt.http.JSONResponses.INCORRECT_DEADLINE;
-import static nxt.http.JSONResponses.INCORRECT_PENDING_WHITELIST;
+import static nxt.http.JSONResponses.INCORRECT_WHITELIST;
 import static nxt.http.JSONResponses.MISSING_DEADLINE;
-import static nxt.http.JSONResponses.MISSING_PENDING_HOLDING_ID;
 import static nxt.http.JSONResponses.MISSING_SECRET_PHRASE;
 import static nxt.http.JSONResponses.NOT_ENOUGH_FUNDS;
 
@@ -73,23 +71,19 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
 
         long holdingId = ParameterParser.getUnsignedLong(req, "phasingHolding", false);
 
-        if ((votingModel == VoteWeighting.VotingModel.ASSET.getCode() || votingModel == VoteWeighting.VotingModel.CURRENCY.getCode())
-                && holdingId == 0) {
-            throw new ParameterException(MISSING_PENDING_HOLDING_ID);
-        }
-
         long[] whitelist;
         String[] whitelistValues = req.getParameterValues("phasingWhitelisted");
         if (whitelistValues != null && whitelistValues.length > 0) {
             whitelist = new long[whitelistValues.length];
-            for (int i = 0; i < whitelist.length; i++) {
-                whitelist[i] = Convert.parseAccountId(whitelistValues[i]);
+            for (int i = 0; i < whitelistValues.length; i++) {
+                long accountId = Convert.parseAccountId(whitelistValues[i]);
+                if (accountId == 0) {
+                    throw new ParameterException(INCORRECT_WHITELIST);
+                }
+                whitelist[i] = accountId;
             }
         } else {
             whitelist = Convert.EMPTY_LONG;
-        }
-        if (votingModel == VoteWeighting.VotingModel.ACCOUNT.getCode() && whitelist.length == 0) {
-            throw new ParameterException(INCORRECT_PENDING_WHITELIST);
         }
 
         return new Appendix.Phasing(maxHeight, votingModel, holdingId, quorum, minBalance, minBalanceModel, whitelist);
@@ -102,7 +96,7 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
         String referencedTransactionFullHash = Convert.emptyToNull(req.getParameter("referencedTransactionFullHash"));
         String secretPhrase = Convert.emptyToNull(req.getParameter("secretPhrase"));
         String publicKeyValue = Convert.emptyToNull(req.getParameter("publicKey"));
-        boolean broadcast = !"false".equalsIgnoreCase(req.getParameter("broadcast"));
+        boolean broadcast = !"false".equalsIgnoreCase(req.getParameter("broadcast")) && secretPhrase != null;
         Appendix.EncryptedMessage encryptedMessage = null;
         if (attachment.getTransactionType().canHaveRecipient()) {
             EncryptedData encryptedData = ParameterParser.getEncryptedMessage(req, Account.getAccount(recipientId));
@@ -160,6 +154,8 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
         // shouldn't try to get publicKey from senderAccount as it may have not been set yet
         byte[] publicKey = secretPhrase != null ? Crypto.getPublicKey(secretPhrase) : Convert.parseHexString(publicKeyValue);
 
+        response.put("broadcasted", false);
+
         try {
             Transaction.Builder builder = Nxt.newTransactionBuilder(publicKey, amountNQT, feeNQT,
                     deadline, attachment).referencedTransactionFullHash(referencedTransactionFullHash);
@@ -181,38 +177,35 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
             if (phasing != null) {
                 builder.phasing(phasing);
             }
-            Transaction transaction = builder.build();
+            Transaction transaction = builder.build(secretPhrase);
             try {
-                if (Convert.safeAdd(amountNQT, transaction.getFeeNQT()) > senderAccount.getUnconfirmedBalanceNQT()) {
+                if (Math.addExact(amountNQT, transaction.getFeeNQT()) > senderAccount.getUnconfirmedBalanceNQT()) {
                     return NOT_ENOUGH_FUNDS;
                 }
             } catch (ArithmeticException e) {
                 return NOT_ENOUGH_FUNDS;
             }
             if (secretPhrase != null) {
-                transaction.sign(secretPhrase);
                 response.put("transaction", transaction.getStringId());
                 response.put("fullHash", transaction.getFullHash());
                 response.put("transactionBytes", Convert.toHexString(transaction.getBytes()));
                 response.put("signatureHash", Convert.toHexString(Crypto.sha256().digest(transaction.getSignature())));
-                if (broadcast) {
-                    Nxt.getTransactionProcessor().broadcast(transaction);
-                    response.put("broadcasted", true);
-                } else {
-                    transaction.validate();
-                    response.put("broadcasted", false);
-                }
-            } else {
-                transaction.validate();
-                response.put("broadcasted", false);
             }
             response.put("unsignedTransactionBytes", Convert.toHexString(transaction.getUnsignedBytes()));
             response.put("transactionJSON", JSONData.unconfirmedTransaction(transaction));
-
+            if (broadcast) {
+                Nxt.getTransactionProcessor().broadcast(transaction);
+                response.put("broadcasted", true);
+            } else {
+                transaction.validate();
+            }
         } catch (NxtException.NotYetEnabledException e) {
             return FEATURE_NOT_AVAILABLE;
         } catch (NxtException.ValidationException e) {
-            response.put("error", e.getMessage());
+            if (broadcast) {
+                response.clear();
+            }
+            JSONData.putException(response, e);
         }
         return response;
 

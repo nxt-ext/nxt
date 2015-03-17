@@ -20,7 +20,6 @@ public final class PopOff extends APIServlet.APIRequestHandler {
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) {
 
-        JSONObject response = new JSONObject();
         int numBlocks = 0;
         try {
             numBlocks = Integer.parseInt(req.getParameter("numBlocks"));
@@ -31,7 +30,6 @@ public final class PopOff extends APIServlet.APIRequestHandler {
         } catch (NumberFormatException e) {}
 
         List<? extends Block> blocks;
-        JSONArray blocksJSON = new JSONArray();
         try {
             Nxt.getBlockchainProcessor().setGetMoreBlocks(false);
             if (numBlocks > 0) {
@@ -39,15 +37,16 @@ public final class PopOff extends APIServlet.APIRequestHandler {
             } else if (height > 0) {
                 blocks = Nxt.getBlockchainProcessor().popOffTo(height);
             } else {
-                response.put("error", "invalid numBlocks or height");
-                return response;
+                return JSONResponses.missing("numBlocks", "height");
             }
         } finally {
             Nxt.getBlockchainProcessor().setGetMoreBlocks(true);
         }
+        JSONArray blocksJSON = new JSONArray();
         for (Block block : blocks) {
             blocksJSON.add(JSONData.block(block, true));
         }
+        JSONObject response = new JSONObject();
         response.put("blocks", blocksJSON);
         return response;
     }

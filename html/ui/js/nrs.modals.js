@@ -36,23 +36,6 @@ var NRS = (function(NRS, $, undefined) {
 		}
 	});
 
-	NRS.updateBlockHeightEstimates = function($fields) {
-		$fields.each(function(key, elem) {
-			var blockHeight = $(elem).val();
-			var $bhg = $elem.closest('.block_height_group');
-			var output = "<i class='fa fa-clock-o'></i> ";
-			if (blockHeight) {
-				var blockDiff = blockHeight - NRS.lastBlockHeight;
-				var diffSecs = blockDiff * NRS.averageBlockGenerationTime;
-				output += moment().add(diffSecs, 'seconds').format('DD/MM/YYYY HH:mm:ss') + " ";
-
-			} else {
-				output += '-';
-			}
-			$bhg.find(".bhg_time_estimate").html(output);
-		});
-	}
-
 	//Reset scroll position of tab when shown.
 	$('a[data-toggle="tab"]').on("shown.bs.tab", function(e) {
 		var target = $(e.target).attr("href");
@@ -121,7 +104,7 @@ var NRS = (function(NRS, $, undefined) {
 		$(this).find(".form-group").css("margin-bottom", "");
 
 		$(this).find('.approve_tab_list a:first').click();
-		NRS.initAdvancedModalFormValues();
+		NRS.initAdvancedModalFormValues($(this));
 		$(this).find(".pas_contact_info").text(" ");
 		// Activating context help popovers
 		$(function () { 
@@ -129,8 +112,6 @@ var NRS = (function(NRS, $, undefined) {
             	"html": true
             }); 
         });
-		NRS.updateBlockHeightEstimates($(this).find(".block_height_group .bhg_time_input"));
-
 	});
 
 	$(".modal").on("shown.bs.modal", function() {
@@ -249,40 +230,6 @@ var NRS = (function(NRS, $, undefined) {
 			$feeInfo.html(NRS.formatAmount(NRS.convertToNQT($(this).val())) + " NXT");
 		}
 	});
-
-	$('.modal .block_height_group .bhg_time_input').on('keyup', function(e) {
-		NRS.updateBlockHeightEstimates($(this));
-	});
-
-	$('.approve_tab_list a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
-        $am = $(this).closest('.approve_modal');
-        $am.find('.tab-pane input').prop('disabled', true);
-        $am.find('.tab-pane.active input').prop('disabled', false);
-        if ($(this).hasClass("at_accounts") || $(this).hasClass("at_balance")) {
-        	$am.find('.approve_whitelist_accounts input').prop('disabled', false);
-        	$am.find('.approve_whitelist_accounts').show();
-        } else {
-        	$am.find('.approve_whitelist_accounts').hide();
-        	$am.find('.approve_whitelist_accounts input').prop('disabled', true);
-        }
-    });
-
-    $(".add_account_btn").click(function(e) {
-    	var $accountBox = $(this).closest('.account_box');
-        var $clone = $accountBox.find(".form_group_accounts").first().clone();
-        $clone.find("input").val("");
-        $clone.find(".pas_contact_info").text("");
-        $accountBox.find(".added_account_list").append($clone);
-    });
-
-    $(".modal").on("click", "button.btn.remove_account_btn", function(e) {
-    	e.preventDefault();
-    	var $accountBox = $(this).closest('.account_box');
-    	if ($accountBox.find(".form_group_accounts").length == 1) {
-            return;
-        }
-        $(this).closest(".form_group_accounts").remove();
-    });
 
 	$(".advanced_info a").on("click", function(e) {
 		e.preventDefault();

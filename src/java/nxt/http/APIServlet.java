@@ -35,15 +35,15 @@ public final class APIServlet extends HttpServlet {
         private final Set<APITag> apiTags;
 
         APIRequestHandler(APITag[] apiTags, String... parameters) {
-            List<String> parametersList;
-            if (requirePassword() && ! API.disableAdminPassword) {
-                parametersList = new ArrayList<>(parameters.length + 1);
-                parametersList.add("adminPassword");
-                parametersList.addAll(Arrays.asList(parameters));
+            List<String> origParameters = Arrays.asList(parameters);
+            if ((requirePassword() || origParameters.contains("lastIndex")) && ! API.disableAdminPassword) {
+                List<String> newParameters = new ArrayList<>(parameters.length + 1);
+                newParameters.add("adminPassword");
+                newParameters.addAll(origParameters);
+                this.parameters = Collections.unmodifiableList(newParameters);
             } else {
-                parametersList = Arrays.asList(parameters);
+                this.parameters = origParameters;
             }
-            this.parameters = Collections.unmodifiableList(parametersList);
             this.apiTags = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(apiTags)));
         }
 
@@ -166,9 +166,12 @@ public final class APIServlet extends HttpServlet {
         map.put("getPeers", GetPeers.instance);
         map.put("getPhasingPoll", GetPhasingPoll.instance);
         map.put("getPhasingPolls", GetPhasingPolls.instance);
+        map.put("getPhasingPollVotes", GetPhasingPollVotes.instance);
+        map.put("getPhasingPollVote", GetPhasingPollVote.instance);
         map.put("getPoll", GetPoll.instance);
         map.put("getPollResult", GetPollResult.instance);
         map.put("getPollVotes", GetPollVotes.instance);
+        map.put("getPollVote", GetPollVote.instance);
         map.put("getState", GetState.instance);
         map.put("getTime", GetTime.instance);
         map.put("getTrades", GetTrades.instance);
@@ -244,6 +247,8 @@ public final class APIServlet extends HttpServlet {
         map.put("luceneReindex", LuceneReindex.instance);
         map.put("addPeer", AddPeer.instance);
         map.put("blacklistPeer", BlacklistPeer.instance);
+        map.put("dumpPeers", DumpPeers.instance);
+        map.put("shutdown", Shutdown.instance);
         
         apiRequestHandlers = Collections.unmodifiableMap(map);
     }

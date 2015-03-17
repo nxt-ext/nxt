@@ -34,7 +34,7 @@ public final class GetBlockId extends APIServlet.APIRequestHandler {
 
         try {
             JSONObject response = new JSONObject();
-            response.put("block", Convert.toUnsignedLong(Nxt.getBlockchain().getBlockIdAtHeight(height)));
+            response.put("block", Long.toUnsignedString(Nxt.getBlockchain().getBlockIdAtHeight(height)));
             return response;
         } catch (RuntimeException e) {
             return INCORRECT_HEIGHT;

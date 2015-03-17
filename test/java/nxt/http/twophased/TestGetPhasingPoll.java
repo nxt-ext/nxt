@@ -16,7 +16,7 @@ public class TestGetPhasingPoll extends BlockchainTest {
     public void transactionVotes() {
 
         APICall apiCall = new TestCreateTwoPhased.TwoPhasedMoneyTransferBuilder()
-                .quorum(3)
+                .quorum(1)
                 .build();
         JSONObject transactionJSON = TestCreateTwoPhased.issueCreateTwoPhased(apiCall, false);
         String fullHash = (String) transactionJSON.get("fullHash");
@@ -44,19 +44,6 @@ public class TestGetPhasingPoll extends BlockchainTest {
 
         Assert.assertNull(response.get("errorCode"));
         Assert.assertEquals(1, Integer.parseInt((String) response.get("result")));
-
-        apiCall = new APICall.Builder("getPhasingPoll")
-                .param("transaction", transactionId)
-                .param("includeVoters", "true")
-                .param("countVotes", "true")
-                .build();
-        response = apiCall.invoke();
-        Logger.logMessage("getPhasingPollResponse:" + response.toJSONString());
-
-        Assert.assertNull(response.get("errorCode"));
-        Assert.assertEquals(1, Integer.parseInt((String) response.get("result")));
-        Assert.assertNotNull(response.get("voters"));
-        Assert.assertEquals(1, ((JSONArray) response.get("voters")).size());
     }
 
 }

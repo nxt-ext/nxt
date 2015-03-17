@@ -50,6 +50,7 @@ public class BasicDb {
     private final int maxConnections;
     private final int loginTimeout;
     private final int defaultLockTimeout;
+    private volatile boolean initialized = false;
 
     public BasicDb(DbProperties dbProperties) {
         long maxCacheSize = dbProperties.maxCacheSize;
@@ -78,9 +79,13 @@ public class BasicDb {
             throw new RuntimeException(e.toString(), e);
         }
         dbVersion.init(this);
+        initialized = true;
     }
 
     public void shutdown() {
+        if (!initialized) {
+            return;
+        }
         try {
             Connection con = cp.getConnection();
             Statement stmt = con.createStatement();

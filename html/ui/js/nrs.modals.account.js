@@ -6,8 +6,8 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.userInfoModal = {
 		"user": 0
 	};
-
-	$("#blocks_table, #polls_table, #contacts_table, #transactions_table, #dashboard_table, #asset_account, #asset_exchange_ask_orders_table, #transfer_history_table, #asset_exchange_bid_orders_table, #alias_info_table, .dgs_page_contents, .modal-content, #register_alias_modal, #asset_exchange_trade_history_table, #trade_history_table, #ms_open_sell_orders_table, #ms_open_buy_orders_table, #ms_exchanges_history_table, #exchange_history_table").on("click", "a[data-user]", function(e) {
+	
+	$("body").on("click", ".show_account_modal_action, a[data-user].user_info", function(e) {
 		e.preventDefault();
 
 		var account = $(this).data("user");
@@ -258,7 +258,7 @@ var NRS = (function(NRS, $, undefined) {
 
 					var account = (receiving ? "sender" : "recipient");
 
-					rows += "<tr><td><a href='#' data-transaction='" + String(transaction.transaction).escapeHTML() + "'>" + NRS.formatTimestamp(transaction.timestamp) + "</a></td><td>" + transactionType + "</td><td style='width:5px;padding-right:0;'>" + (transaction.type == 0 ? (receiving ? "<i class='fa fa-plus-circle' style='color:#65C62E'></i>" : "<i class='fa fa-minus-circle' style='color:#E04434'></i>") : "") + "</td><td " + (transaction.type == 0 && receiving ? " style='color:#006400;'" : (!receiving && transaction.amount > 0 ? " style='color:red'" : "")) + ">" + NRS.formatAmount(transaction.amount) + "</td><td " + (!receiving ? " style='color:red'" : "") + ">" + NRS.formatAmount(transaction.fee) + "</td><td>" + NRS.getAccountTitle(transaction, account) + "</td></tr>";
+					rows += "<tr><td><a href='#' class='show_transaction_modal_action' data-transaction='" + String(transaction.transaction).escapeHTML() + "'>" + NRS.formatTimestamp(transaction.timestamp) + "</a></td><td>" + transactionType + "</td><td style='width:5px;padding-right:0;'>" + (transaction.type == 0 ? (receiving ? "<i class='fa fa-plus-circle' style='color:#65C62E'></i>" : "<i class='fa fa-minus-circle' style='color:#E04434'></i>") : "") + "</td><td " + (transaction.type == 0 && receiving ? " style='color:#006400;'" : (!receiving && transaction.amount > 0 ? " style='color:red'" : "")) + ">" + NRS.formatAmount(transaction.amount) + "</td><td " + (!receiving ? " style='color:red'" : "") + ">" + NRS.formatAmount(transaction.fee) + "</td><td>" + NRS.getAccountTitle(transaction, account) + "</td></tr>";
 				}
 
 				$("#user_info_modal_transactions_table tbody").empty().append(rows);

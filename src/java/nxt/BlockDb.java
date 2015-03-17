@@ -31,11 +31,15 @@ final class BlockDb {
     }
 
     static boolean hasBlock(long blockId) {
+        return hasBlock(blockId, Integer.MAX_VALUE);
+    }
+
+    static boolean hasBlock(long blockId, int height) {
         try (Connection con = Db.db.getConnection();
-             PreparedStatement pstmt = con.prepareStatement("SELECT 1 FROM block WHERE id = ?")) {
+             PreparedStatement pstmt = con.prepareStatement("SELECT height FROM block WHERE id = ?")) {
             pstmt.setLong(1, blockId);
             try (ResultSet rs = pstmt.executeQuery()) {
-                return rs.next();
+                return rs.next() && rs.getInt("height") <= height;
             }
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
@@ -112,7 +116,11 @@ final class BlockDb {
         }
     }
 
-    static BlockImpl loadBlock(Connection con, ResultSet rs) throws NxtException.ValidationException {
+    static BlockImpl loadBlock(Connection con, ResultSet rs) throws NxtException.NotValidException {
+        return loadBlock(con, rs, false);
+    }
+
+    static BlockImpl loadBlock(Connection con, ResultSet rs, boolean loadTransactions) throws NxtException.NotValidException {
         try {
             int version = rs.getInt("version");
             int timestamp = rs.getInt("timestamp");
@@ -132,7 +140,7 @@ final class BlockDb {
             long id = rs.getLong("id");
             return new BlockImpl(version, timestamp, previousBlockId, totalAmountNQT, totalFeeNQT, payloadLength, payloadHash,
                     generatorId, generationSignature, blockSignature, previousBlockHash,
-                    cumulativeDifficulty, baseTarget, nextBlockId, height, id);
+                    cumulativeDifficulty, baseTarget, nextBlockId, height, id, loadTransactions ? TransactionDb.findBlockTransactions(con, id) : null);
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
         }

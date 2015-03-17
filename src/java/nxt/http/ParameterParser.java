@@ -385,7 +385,15 @@ final class ParameterParser {
     }
 
     static Account getAccount(HttpServletRequest req) throws ParameterException {
-        Account account = Account.getAccount(getAccountId(req, "account", true));
+        return getAccount(req, true);
+    }
+
+    static Account getAccount(HttpServletRequest req, boolean isMandatory) throws ParameterException {
+        long accountId = getAccountId(req, "account", isMandatory);
+        if (accountId == 0 && !isMandatory) {
+            return null;
+        }
+        Account account = Account.getAccount(accountId);
         if (account == null) {
             throw new ParameterException(UNKNOWN_ACCOUNT);
         }
@@ -432,14 +440,19 @@ final class ParameterParser {
     }
 
     static int getLastIndex(HttpServletRequest req) {
+        int lastIndex = Integer.MAX_VALUE;
         try {
-            int lastIndex = Integer.parseInt(req.getParameter("lastIndex"));
+            lastIndex = Integer.parseInt(req.getParameter("lastIndex"));
             if (lastIndex < 0) {
-                return Integer.MAX_VALUE;
+                lastIndex = Integer.MAX_VALUE;
             }
+        } catch (NumberFormatException e) {}
+        try {
+            API.verifyPassword(req);
             return lastIndex;
-        } catch (NumberFormatException e) {
-            return Integer.MAX_VALUE;
+        } catch (ParameterException e) {
+            int firstIndex = Math.min(getFirstIndex(req), Integer.MAX_VALUE - API.maxRecords + 1);
+            return Math.min(lastIndex, firstIndex + API.maxRecords - 1);
         }
     }
 
@@ -466,30 +479,28 @@ final class ParameterParser {
         return -1;
     }
 
-    static Transaction parseTransaction(String transactionBytes, String transactionJSON) throws ParameterException {
+    static Transaction.Builder parseTransaction(String transactionBytes, String transactionJSON) throws ParameterException {
         if (transactionBytes == null && transactionJSON == null) {
             throw new ParameterException(MISSING_TRANSACTION_BYTES_OR_JSON);
         }
         if (transactionBytes != null) {
             try {
                 byte[] bytes = Convert.parseHexString(transactionBytes);
-                return Nxt.getTransactionProcessor().parseTransaction(bytes);
+                return Nxt.newTransactionBuilder(bytes);
             } catch (NxtException.ValidationException|RuntimeException e) {
                 Logger.logDebugMessage(e.getMessage(), e);
                 JSONObject response = new JSONObject();
-                response.put("errorCode", 4);
-                response.put("errorDescription", "Incorrect transactionBytes: " + e.toString());
+                JSONData.putException(response, e, "Incorrect transactionBytes");
                 throw new ParameterException(response);
             }
         } else {
             try {
                 JSONObject json = (JSONObject) JSONValue.parseWithException(transactionJSON);
-                return Nxt.getTransactionProcessor().parseTransaction(json);
+                return Nxt.newTransactionBuilder(json);
             } catch (NxtException.ValidationException | RuntimeException | ParseException e) {
                 Logger.logDebugMessage(e.getMessage(), e);
                 JSONObject response = new JSONObject();
-                response.put("errorCode", 4);
-                response.put("errorDescription", "Incorrect transactionJSON: " + e.toString());
+                JSONData.putException(response, e, "Incorrect transactionJSON");
                 throw new ParameterException(response);
             }
         }

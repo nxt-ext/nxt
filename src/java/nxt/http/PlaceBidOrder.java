@@ -4,7 +4,6 @@ import nxt.Account;
 import nxt.Asset;
 import nxt.Attachment;
 import nxt.NxtException;
-import nxt.util.Convert;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
@@ -29,7 +28,7 @@ public final class PlaceBidOrder extends CreateTransaction {
         Account account = ParameterParser.getSenderAccount(req);
 
         try {
-            if (Convert.safeAdd(feeNQT, Convert.safeMultiply(priceNQT, quantityQNT)) > account.getUnconfirmedBalanceNQT()) {
+            if (Math.addExact(feeNQT, Math.multiplyExact(priceNQT, quantityQNT)) > account.getUnconfirmedBalanceNQT()) {
                 return NOT_ENOUGH_FUNDS;
             }
         } catch (ArithmeticException e) {
