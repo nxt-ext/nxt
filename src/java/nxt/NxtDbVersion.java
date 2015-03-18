@@ -680,6 +680,14 @@ class NxtDbVersion extends DbVersion {
             case 283:
                 apply("DROP INDEX IF EXISTS transaction_full_hash_idx");
             case 284:
+                apply("ALTER TABLE phasing_poll ALTER COLUMN holding_id SET NULL");
+            case 285:
+                apply("ALTER TABLE phasing_poll ALTER COLUMN min_balance SET NULL");
+            case 286:
+                apply("ALTER TABLE phasing_poll ALTER COLUMN full_hash SET NULL");
+            case 287:
+                apply("ALTER TABLE phasing_poll ALTER COLUMN quorum SET NULL");
+            case 288:
                 return;
             default:
                 throw new RuntimeException("Blockchain database inconsistent with code, probably trying to run older code on newer database");

@@ -294,7 +294,7 @@ public final class PhasingPoll extends AbstractPoll {
         this.dbKey = phasingPollDbKeyFactory.newKey(this.id);
         this.quorum = appendix.getQuorum();
         this.whitelist = appendix.getWhitelist();
-        this.fullHash = Convert.parseHexString(transaction.getFullHash());
+        this.fullHash = voteWeighting.getVotingModel() == VoteWeighting.VotingModel.NONE ? null : Convert.parseHexString(transaction.getFullHash());
     }
 
     private PhasingPoll(ResultSet rs) throws SQLException {
@@ -332,11 +332,11 @@ public final class PhasingPoll extends AbstractPoll {
             pstmt.setInt(++i, finishHeight);
             pstmt.setByte(++i, (byte) whitelist.length);
             pstmt.setByte(++i, voteWeighting.getVotingModel().getCode());
-            pstmt.setLong(++i, quorum);
-            pstmt.setLong(++i, voteWeighting.getMinBalance());
-            pstmt.setLong(++i, voteWeighting.getHoldingId());
+            DbUtils.setLongZeroToNull(pstmt, ++i, quorum);
+            DbUtils.setLongZeroToNull(pstmt, ++i, voteWeighting.getMinBalance());
+            DbUtils.setLongZeroToNull(pstmt, ++i, voteWeighting.getHoldingId());
             pstmt.setByte(++i, voteWeighting.getMinBalanceModel().getCode());
-            pstmt.setBytes(++i, fullHash);
+            DbUtils.setBytes(pstmt, ++i, fullHash);
             pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
             pstmt.executeUpdate();
         }
