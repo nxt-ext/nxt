@@ -7,7 +7,6 @@ import java.util.TimeZone;
 
 public final class Constants {
 
-    public static final int BLOCK_HEADER_LENGTH = 232;
     public static final int MAX_NUMBER_OF_TRANSACTIONS = 255;
     public static final int MAX_PAYLOAD_LENGTH = MAX_NUMBER_OF_TRANSACTIONS * 176;
     public static final long MAX_BALANCE_NXT = 1000000000;
@@ -107,7 +106,7 @@ public final class Constants {
     public static final int MONETARY_SYSTEM_BLOCK = isTestnet ? 150000 : 330000;
     public static final int VOTING_SYSTEM_BLOCK = isTestnet ? 0 : Integer.MAX_VALUE;
 
-    public static final int LAST_KNOWN_BLOCK = isTestnet ? 150000 : 355000;
+    public static final int LAST_KNOWN_BLOCK = isTestnet ? 230000 : 382000;
 
     public static final int[] MIN_VERSION = new int[] {1, 4};
 
