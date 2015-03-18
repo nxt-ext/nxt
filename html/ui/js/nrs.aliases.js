@@ -377,9 +377,10 @@ var NRS = (function(NRS, $, undefined) {
 					});
 					NRS.fetchingModalData = false;
 				} else {
+					var aliasURI = [];
 					if (/http:\/\//i.test(response.aliasURI)) {
 						setAliasType("uri", response.aliasURI);
-					} else if (/acct:(.*)@nxt/.exec(response.aliasURI) || /nacc:(.*)/.exec(response.aliasURI)) {
+					} else if ((aliasURI = /acct:(.*)@nxt/.exec(response.aliasURI)) || (aliasURI = /nacc:(.*)/.exec(response.aliasURI))) {
                   setAliasType("account", response.aliasURI);
                   response.aliasURI = String(aliasURI[1]).toUpperCase();
                } else {
