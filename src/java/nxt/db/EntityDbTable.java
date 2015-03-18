@@ -40,6 +40,9 @@ public abstract class EntityDbTable<T> extends DerivedDbTable {
         if (multiversion && height < Nxt.getBlockchainProcessor().getMinRollbackHeight()) {
             throw new IllegalArgumentException("Historical data as of height " + height +" not available.");
         }
+        if (height > Nxt.getBlockchain().getHeight()) {
+            throw new IllegalArgumentException("Height " + height + " exceeds blockchain height " + Nxt.getBlockchain().getHeight());
+        }
     }
 
     public final T get(DbKey dbKey) {

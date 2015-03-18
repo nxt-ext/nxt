@@ -294,7 +294,12 @@ public final class Account {
 
         @Override
         public void checkAvailable(int height) {
-            super.checkAvailable(height + 1440);
+            if (height + 1440 < Nxt.getBlockchainProcessor().getMinRollbackHeight()) {
+                throw new IllegalArgumentException("Historical data as of height " + height +" not available.");
+            }
+            if (height > Nxt.getBlockchain().getHeight()) {
+                throw new IllegalArgumentException("Height " + height + " exceeds blockchain height " + Nxt.getBlockchain().getHeight());
+            }
         }
 
         @Override
