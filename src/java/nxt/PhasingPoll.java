@@ -331,11 +331,11 @@ public final class PhasingPoll extends AbstractPoll {
             pstmt.setLong(++i, accountId);
             pstmt.setInt(++i, finishHeight);
             pstmt.setByte(++i, (byte) whitelist.length);
-            pstmt.setByte(++i, defaultVoteWeighting.getVotingModel().getCode());
+            pstmt.setByte(++i, voteWeighting.getVotingModel().getCode());
             pstmt.setLong(++i, quorum);
-            pstmt.setLong(++i, defaultVoteWeighting.getMinBalance());
-            pstmt.setLong(++i, defaultVoteWeighting.getHoldingId());
-            pstmt.setByte(++i, defaultVoteWeighting.getMinBalanceModel().getCode());
+            pstmt.setLong(++i, voteWeighting.getMinBalance());
+            pstmt.setLong(++i, voteWeighting.getHoldingId());
+            pstmt.setByte(++i, voteWeighting.getMinBalanceModel().getCode());
             pstmt.setBytes(++i, fullHash);
             pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
             pstmt.executeUpdate();
