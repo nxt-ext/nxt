@@ -169,13 +169,23 @@ var NRS = (function(NRS, $, undefined) {
 		}
       data.aliasName = String(data.aliasName).escapeHTML();
 		if (data.priceNQT == "0") {
-         $.growl(
-            $.t("success_alias_transfer", {
-               "alias_name": data.aliasName
-            }), {
-               "type": "success"
-            }
-         );
+         if (data.recipient == NRS.account) {
+            $.growl(
+               $.t("cancelling_sale", {
+                  "alias_name": data.aliasName
+               }), {
+                  "type": "success"
+               }
+            );
+         } else {
+            $.growl(
+               $.t("success_alias_transfer", {
+                  "alias_name": data.aliasName
+               }), {
+                  "type": "success"
+               }
+            );
+         }
 		} else {
          $.growl(
             $.t("success_alias_sell", {

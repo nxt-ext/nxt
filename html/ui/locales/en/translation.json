@@ -150,7 +150,6 @@
   "cancel_my_order": "Cancel My Order",
   "cancel_sale": "Cancel Sale",
   "cancel_sale_q": "Cancel Sale?",
-  "cancelling_sale": "Cancelling Sale",
   "cast_vote": "Cast Vote",
   "change_group_name": "Change Group Name",
   "change_group_name_help": "Type a new group name.",
@@ -1140,8 +1139,9 @@
   "registered": "registered",
   "success_alias_register": "Alias <strong>__alias_name__</strong> registration request submitted.",
   "success_alias_update": "Alias <strong>__alias_name__</strong> update request submitted.",
-  "success_alias_sell": "Alias <strong>__alias_name__</strong>, price __price__, sell request submitted.",
-  "success_alias_buy": "Alias <strong>__alias_name__</strong>, price __price__, buy request submitted.",
+  "success_alias_sell": "Alias <strong>__alias_name__</strong>, price __price__ sell request submitted.",
+  "success_alias_buy": "Alias <strong>__alias_name__</strong>, price __price__ buy request submitted.",
   "success_alias_transfer": "Alias <strong>__alias_name__</strong> transfer request submitted.",
-  "success_alias_delete": "Alias <strong>__alias_name__</strong> delete request submitted."
+  "success_alias_delete": "Alias <strong>__alias_name__</strong> delete request submitted.",
+  "cancelling_sale": "Alias <strong>__alias_name__</strong> sell cancellation request submitted."
 }
