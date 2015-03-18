@@ -842,8 +842,6 @@
   "submit_forms_on_enter": "Submit Forms on Enter",
   "submit_forms_on_enter_help": "Be careful when choosing to submit forms via the enter key, submitting can't be undone.",
   "submitting": "Submitting...",
-  "success_alias_register": "Alias registered successfully.",
-  "success_alias_update": "Alias updated successfully.",
   "success_asset_bookmark_removal": "Asset removed from bookmarks successfully.",
   "success_asset_bookmarked": "Asset added successfully.",
   "success_asset_group_removal": "Asset removed from group successfully.",
@@ -1138,5 +1136,12 @@
   "current_reserve_per_unit": "Current Reserve Per Unit",
   "founders": "Founders",
   "next_lessee_status": "The next lease period is scheduled from block __start__ to block __end__, the lessee account is <a href='#' data-user='__account__' class='user_info'>__account__</a>",
-  "error_unit_rate_required": "Please fill in number of units and rate."
+  "error_unit_rate_required": "Please fill in number of units and rate.",
+  "registered": "registered",
+  "success_alias_register": "Alias <strong>__alias_name__</strong> registration request submitted.",
+  "success_alias_update": "Alias <strong>__alias_name__</strong> update request submitted.",
+  "success_alias_sell": "Alias <strong>__alias_name__</strong>, price __price__, sell request submitted.",
+  "success_alias_buy": "Alias <strong>__alias_name__</strong>, price __price__, buy request submitted.",
+  "success_alias_transfer": "Alias <strong>__alias_name__</strong> transfer request submitted.",
+  "success_alias_delete": "Alias <strong>__alias_name__</strong> delete request submitted."
 }

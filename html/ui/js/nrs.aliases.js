@@ -21,35 +21,6 @@ var NRS = (function(NRS, $, undefined) {
 				}
 
 				var aliases = response.aliases;
-
-				if (NRS.unconfirmedTransactions.length) {
-					for (var i = 0; i < NRS.unconfirmedTransactions.length; i++) {
-						var unconfirmedTransaction = NRS.unconfirmedTransactions[i];
-
-						if (unconfirmedTransaction.type == 1 && (unconfirmedTransaction.subtype == 1 || unconfirmedTransaction.subtype == 7)) {
-							var found = false;
-
-							for (var j = 0; j < aliases.length; j++) {
-								if (aliases[j].aliasName == unconfirmedTransaction.attachment.alias) {
-									aliases[j].aliasURI = unconfirmedTransaction.attachment.uri;
-									aliases[j].tentative = true;
-									found = true;
-									break;
-								}
-							}
-
-							if (!found) {
-								aliases.push({
-									"aliasName": unconfirmedTransaction.attachment.alias,
-									"aliasURI": (unconfirmedTransaction.attachment.uri ? unconfirmedTransaction.attachment.uri : ""),
-									"tentative": true
-								});
-							}
-						}
-					}
-				}
-
-
 				aliases.sort(function(a, b) {
 					if (a.aliasName.toLowerCase() > b.aliasName.toLowerCase()) {
 						return 1;
@@ -61,24 +32,9 @@ var NRS = (function(NRS, $, undefined) {
 				});
 
 				var rows = "";
-
             for (var i = 0; i < aliases.length; i++) {
 					var alias = aliases[i];
-
-					alias.status = "/";
-
-					var unconfirmedTransaction = NRS.getUnconfirmedTransactionFromCache(1, 6, {
-						"alias": alias.aliasName
-					});
-
-					if (unconfirmedTransaction) {
-						alias.tentative = true;
-						if (unconfirmedTransaction.recipient) {
-							alias.buyer = unconfirmedTransaction.recipient;
-						}
-						alias.priceNQT = unconfirmedTransaction.priceNQT;
-					}
-
+					alias.status = $.t("registered");
 					if (!alias.aliasURI) {
 						alias.aliasURI = "";
 					}
@@ -89,11 +45,9 @@ var NRS = (function(NRS, $, undefined) {
 					} else {
 						alias.shortAliasURI = alias.aliasURI.escapeHTML();
 					}
-
 					alias.aliasURI = alias.aliasURI.escapeHTML();
 
 					var allowCancel = false;
-
 					if ("priceNQT" in alias) {
 						if (alias.priceNQT == "0") {
 							if (alias.buyer == NRS.account) {
@@ -102,10 +56,7 @@ var NRS = (function(NRS, $, undefined) {
 								alias.status = $.t("transfer_in_progress");
 							}
 						} else {
-							if (!alias.tentative) {
-								allowCancel = true;
-							}
-
+                     allowCancel = true;
 							if (typeof alias.buyer != "undefined") {
 								alias.status = $.t("for_sale_direct");
 							} else {
@@ -117,19 +68,15 @@ var NRS = (function(NRS, $, undefined) {
 					if (alias.status != "/") {
 						alias.status = "<span class='label label-small label-info'>" + alias.status + "</span>";
 					}
-
-					rows += "<tr" + (alias.tentative ? " class='tentative'" : "") + " data-alias='" + String(alias.aliasName).toLowerCase().escapeHTML() + "'><td class='alias'>" + String(alias.aliasName).escapeHTML() + "</td><td class='uri'>" + (alias.aliasURI.indexOf("http") === 0 ? "<a href='" + alias.aliasURI + "' target='_blank'>" + alias.shortAliasURI + "</a>" : alias.shortAliasURI) + "</td><td class='status'>" + alias.status + "</td><td style='white-space:nowrap'><a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#register_alias_modal' data-alias='" + String(alias.aliasName).escapeHTML() + "'>" + $.t("edit") + "</a> <a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#transfer_alias_modal' data-alias='" + String(alias.aliasName).escapeHTML() + "'>" + $.t("transfer") + "</a> <a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#sell_alias_modal' data-alias='" + String(alias.aliasName).escapeHTML() + "'>" + $.t("sell") + "</a>" + (allowCancel ? " <a class='btn btn-xs btn-default cancel_alias_sale' href='#' data-toggle='modal' data-target='#cancel_alias_sale_modal' data-alias='" + String(alias.aliasName).escapeHTML() + "'>" + $.t("cancel_sale") + "</a>" : "") + " <a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#delete_alias_modal' data-alias='" + String(alias.aliasName).escapeHTML() + "'>" + $.t("delete") + "</a></td></tr>";
-
+					rows += "<tr data-alias='" + String(alias.aliasName).toLowerCase().escapeHTML() + "'><td class='alias'>" + String(alias.aliasName).escapeHTML() + "</td><td class='uri'>" + (alias.aliasURI.indexOf("http") === 0 ? "<a href='" + alias.aliasURI + "' target='_blank'>" + alias.shortAliasURI + "</a>" : alias.shortAliasURI) + "</td><td class='status'>" + alias.status + "</td><td style='white-space:nowrap'><a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#register_alias_modal' data-alias='" + String(alias.aliasName).escapeHTML() + "'>" + $.t("edit") + "</a> <a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#transfer_alias_modal' data-alias='" + String(alias.aliasName).escapeHTML() + "'>" + $.t("transfer") + "</a> <a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#sell_alias_modal' data-alias='" + String(alias.aliasName).escapeHTML() + "'>" + $.t("sell") + "</a>" + (allowCancel ? " <a class='btn btn-xs btn-default cancel_alias_sale' href='#' data-toggle='modal' data-target='#cancel_alias_sale_modal' data-alias='" + String(alias.aliasName).escapeHTML() + "'>" + $.t("cancel_sale") + "</a>" : "") + " <a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#delete_alias_modal' data-alias='" + String(alias.aliasName).escapeHTML() + "'>" + $.t("delete") + "</a></td></tr>";
 				}
 
 				aliasesTable.find("tbody").empty().append(rows);
 				NRS.dataLoadFinished(aliasesTable);
-
 				$("#alias_count").html(alias_count).removeClass("loading_dots");
 			} else {
 				aliasesTable.find("tbody").empty();
 				NRS.dataLoadFinished(aliasesTable);
-
 				$("#alias_count").html("0").removeClass("loading_dots");
 			}
 
@@ -220,25 +167,24 @@ var NRS = (function(NRS, $, undefined) {
 		if (response.alreadyProcessed) {
 			return;
 		}
-
-		var $row = $("#aliases_table").find("tr[data-alias=" + String(data.aliasName).toLowerCase().escapeHTML() + "]");
-
-		$row.addClass("tentative");
-
-		//transfer
+      data.aliasName = String(data.aliasName).escapeHTML();
 		if (data.priceNQT == "0") {
-			if (data.recipient == NRS.account) {
-				$row.find("td.status").html("<span class='label label-small label-info'>" + $.t("cancelling_sale") + "</span>");
-				$row.find("a.cancel_alias_sale").remove();
-			} else {
-				$row.find("td.status").html("<span class='label label-small label-info'>" + $.t("transfer_in_progress") + "</span>");
-			}
+         $.growl(
+            $.t("success_alias_transfer", {
+               "alias_name": data.aliasName
+            }), {
+               "type": "success"
+            }
+         );
 		} else {
-			if (data.recipient != NRS.genesis) {
-				$row.find("td.status").html("<span class='label label-small label-info'>" + $.t("for_sale_direct") + "</span>");
-			} else {
-				$row.find("td.status").html("<span class='label label-small label-info'>" + $.t("for_sale_indirect") + "</span>");
-			}
+         $.growl(
+            $.t("success_alias_sell", {
+               "alias_name": String(data.aliasName).escapeHTML(),
+               "price": NRS.convertToNXT(data.priceNQT).escapeHTML()
+            }), {
+               "type": "success"
+            }
+         );
 		}
 	};
 
@@ -259,9 +205,14 @@ var NRS = (function(NRS, $, undefined) {
 		if (response.alreadyProcessed) {
 			return;
 		}
-		var $row = $("#aliases_table").find("tr[data-alias=" + String(data.aliasName).toLowerCase().escapeHTML() + "]");
-		$row.addClass("tentative");
-		$row.find("td.status").html("<span class='label label-small label-info'>" + $.t("delete_alias") + "</span>");
+      data.aliasName = String(data.aliasName).escapeHTML();
+      $.growl(
+         $.t("success_alias_delete", {
+            "alias_name": data.aliasName
+         }), {
+            "type": "success"
+         }
+      );
 	};
 
 	$("#sell_alias_to_specific_account, #sell_alias_to_anyone").on("click", function(e) {
@@ -340,20 +291,15 @@ var NRS = (function(NRS, $, undefined) {
 		if (response.alreadyProcessed) {
 			return;
 		}
-
-		if (NRS.currentPage != "aliases") {
-			return;
-		}
-
-		data.aliasName = String(data.aliasName).escapeHTML();
-		data.aliasURI = "";
-
-      var aliasesTable = $("#aliases_table");
-      aliasesTable.find("tbody").prepend("<tr class='tentative' data-alias='" + data.aliasName.toLowerCase() + "'><td class='alias'>" + data.aliasName + "</td><td class='uri'>" + (data.aliasURI && data.aliasURI.indexOf("http") === 0 ? "<a href='" + data.aliasURI + "' target='_blank'>" + data.aliasURI + "</a>" : data.aliasURI) + "</td><td>/</td><td style='white-space:nowrap'><a class='btn btn-xs btn-default' href='#'>" + $.t("edit") + "</a> <a class='btn btn-xs btn-default' href='#'>" + $.t("transfer") + "</a> <a class='btn btn-xs btn-default' href='#'>" + $.t("sell") + "</a></td></tr>");
-
-		if (aliasesTable.parent().hasClass("data-empty")) {
-			aliasesTable.parent().removeClass("data-empty");
-		}
+      data.aliasName = String(data.aliasName).escapeHTML();
+      $.growl(
+         $.t("success_alias_buy", {
+            "alias_name": data.aliasName,
+            "price": NRS.convertToNXT(data.amountNQT).escapeHTML()
+         }), {
+            "type": "success"
+         }
+      );
 	};
 
 	$("#register_alias_modal").on("show.bs.modal", function(e) {
@@ -561,77 +507,34 @@ var NRS = (function(NRS, $, undefined) {
 		}
 	};
 
-	NRS.forms.setAliasComplete = function(response, data) {
-		if (response.alreadyProcessed) {
-			return;
-		}
-
-		if (NRS.currentPage == "aliases") {
-			data.aliasName = String(data.aliasName).escapeHTML();
-			data.aliasURI = String(data.aliasURI);
-
-			if (data.aliasURI.length > 100) {
-				data.shortAliasURI = data.aliasURI.substring(0, 100) + "...";
-				data.shortAliasURI = data.shortAliasURI.escapeHTML();
-			} else {
-				data.shortAliasURI = data.aliasURI.escapeHTML();
-			}
-
-			data.aliasURI = data.aliasURI.escapeHTML();
-
+   NRS.forms.setAliasComplete = function(response, data) {
+      if (response.alreadyProcessed) {
+         return;
+      }
+      data.aliasName = String(data.aliasName).escapeHTML();
+      if (NRS.currentPage == "aliases") {
          var aliasesTable = $("#aliases_table");
          var $table = aliasesTable.find("tbody");
-
 			var $row = $table.find("tr[data-alias=" + data.aliasName.toLowerCase() + "]");
-
 			if ($row.length) {
-				$row.addClass("tentative");
-				$row.find("td.alias").html(data.aliasName);
-
-				if (data.aliasURI && data.aliasURI.indexOf("http") === 0) {
-					$row.find("td.uri").html("<a href='" + data.aliasURI + "' target='_blank'>" + data.shortAliasURI + "</a>");
-				} else {
-					$row.find("td.uri").html(data.shortAliasURI);
-				}
-
-				$.growl($.t("success_alias_update"), {
-					"type": "success"
-				});
+            $.growl(
+               $.t("success_alias_update", {
+                  "alias_name": data.aliasName
+               }), {
+                  "type": "success"
+               }
+            );
 			} else {
-				var $rows = $table.find("tr");
-
-				var rowToAdd = "<tr class='tentative' data-alias='" + data.aliasName.toLowerCase() + "'><td class='alias'>" + data.aliasName + "</td><td class='uri'>" + (data.aliasURI && data.aliasURI.indexOf("http") === 0 ? "<a href='" + data.aliasURI + "' target='_blank'>" + data.shortAliasURI + "</a>" : data.shortAliasURI) + "</td><td>/</td><td style='white-space:nowrap'><a class='btn btn-xs btn-default' href='#'>" + $.t("edit") + "</a> <a class='btn btn-xs btn-default' href='#'>" + $.t("transfer") + "</a> <a class='btn btn-xs btn-default' href='#'>" + $.t("sell") + "</a></td></tr>";
-
-				var rowAdded = false;
-
-				var newAlias = data.aliasName.toLowerCase();
-
-				if ($rows.length) {
-					$rows.each(function() {
-						var alias = $(this).data("alias");
-
-						if (newAlias < alias) {
-							$(this).before(rowToAdd);
-							rowAdded = true;
-							return false;
-						}
-					});
-				}
-
-				if (!rowAdded) {
-					$table.append(rowToAdd);
-				}
-
-				if (aliasesTable.parent().hasClass("data-empty")) {
-					aliasesTable.parent().removeClass("data-empty");
-				}
-
-				$.growl($.t("success_alias_register"), {
-					"type": "success"
-				});
+            $.growl(
+               $.t("success_alias_register", {
+                  "alias_name": data.aliasName
+               }), {
+                  "type": "success"
+               }
+            );
 			}
 		}
-	};
+   };
 
 	$("#alias_search").on("submit", function(e) {
 		e.preventDefault();
