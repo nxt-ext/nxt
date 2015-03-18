@@ -658,7 +658,12 @@ public interface Appendix {
             long result = PhasingVote.countVotes(poll);
             poll.finish(result);
             if (result >= poll.getQuorum()) {
-                release(transaction);
+                try {
+                    release(transaction);
+                } catch (RuntimeException e) {
+                    Logger.logErrorMessage("Failed to release phased transaction " + transaction.getJSONObject().toJSONString(), e);
+                    reject(transaction);
+                }
             } else {
                 reject(transaction);
             }
