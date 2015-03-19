@@ -27,22 +27,6 @@ var NRS = (function(NRS, $, undefined) {
 						if (nrPolls == response.polls.length) {
 							var rows = "";
 
-							if (NRS.unconfirmedTransactions.length) {
-								for (var i = 0; i < NRS.unconfirmedTransactions.length; i++) {
-									var unconfirmedTransaction = NRS.unconfirmedTransactions[i];
-
-									if (unconfirmedTransaction.type == 1 && unconfirmedTransaction.subType == 2) {
-										var pollDescription = String(unconfirmedTransaction.attachment.description);
-
-										if (pollDescription.length > 100) {
-											pollDescription = pollDescription.substring(0, 100) + "...";
-										}
-
-										rows += "<tr class='tentative'><td>" + String(unconfirmedTransaction.attachment.name).escapeHTML() + "</td><td>" + pollDescription.escapeHTML() + "</td><td>" + (unconfirmedTransaction.sender != NRS.genesis ? "<a href='#' data-user='" + NRS.getAccountFormatted(unconfirmedTransaction, "sender") + "' class='show_account_modal_action user_info'>" + NRS.getAccountTitle(unconfirmedTransaction, "sender") + "</a>" : "Genesis") + "</td><td>" + NRS.formatTimestamp(unconfirmedTransaction.timestamp) + "</td><td>" + String(unconfirmedTransaction.attachment.finishHeight - NRS.lastBlockHeight)  + "</td><td><a href='#'>Vote (todo)</td></tr>";
-									}
-								}
-							}
-
 							for (var i = 0; i < nrPolls; i++) {
 								var poll = polls[response.polls[i].poll];
 
