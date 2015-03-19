@@ -679,6 +679,18 @@ var NRS = (function(NRS, $, undefined) {
 					return false;
 				}
 				break;
+			case "deleteAlias":
+				if (transaction.type !== 1 && transaction.subtype !== 8) {
+					return false;
+				}
+				var aliasLength = parseInt(byteArray[pos], 10);
+				pos++;
+				transaction.alias = converters.byteArrayToString(byteArray, pos, aliasLength);
+				pos += aliasLength;
+				if (transaction.alias !== data.aliasName) {
+					return false;
+				}
+				break;
          case "approveTransaction":
             if (transaction.type !== 1 && transaction.subtype !== 9) {
                return false;
