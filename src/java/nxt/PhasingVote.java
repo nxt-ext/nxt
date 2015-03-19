@@ -43,13 +43,16 @@ public class PhasingVote {
     }
 
     public static long countVotes(PhasingPoll poll) {
-        if (poll.getDefaultVoteWeighting().isBalanceIndependent()) {
+        if (poll.getVoteWeighting().getVotingModel() == VoteWeighting.VotingModel.NONE) {
+            return 0;
+        }
+        if (poll.getVoteWeighting().isBalanceIndependent()) {
             return phasingVoteTable.getCount(new DbClause.LongClause("transaction_id", poll.getId()));
         }
         long cumulativeWeight = 0;
         try (DbIterator<PhasingVote> votes = PhasingVote.getTransactionVotes(poll.getId(), 0, Integer.MAX_VALUE)) {
             for (PhasingVote vote : votes) {
-                cumulativeWeight += poll.getDefaultVoteWeighting().calcWeight(vote.getVoterId(), Math.min(poll.getFinishHeight(), Nxt.getBlockchain().getHeight()));
+                cumulativeWeight += poll.getVoteWeighting().calcWeight(vote.getVoterId(), Math.min(poll.getFinishHeight(), Nxt.getBlockchain().getHeight()));
             }
         }
         return cumulativeWeight;

@@ -602,8 +602,17 @@ public interface Appendix {
                 previousAccountId = accountId;
             }
 
-            if (quorum <= 0) {
+            if (quorum <= 0 && voteWeighting.getVotingModel() != VoteWeighting.VotingModel.NONE) {
                 throw new NxtException.NotValidException("quorum <= 0");
+            }
+
+            if (voteWeighting.getVotingModel() == VoteWeighting.VotingModel.NONE) {
+                if (quorum != 0) {
+                    throw new NxtException.NotValidException("Quorum must be 0 for no-voting phased transaction");
+                }
+                if (whitelist.length != 0) {
+                    throw new NxtException.NotValidException("No whitelist needed for no-voting phased transaction");
+                }
             }
 
             if (voteWeighting.getVotingModel() == VoteWeighting.VotingModel.ACCOUNT && whitelist.length > 0 && quorum > whitelist.length) {
@@ -658,7 +667,12 @@ public interface Appendix {
             long result = PhasingVote.countVotes(poll);
             poll.finish(result);
             if (result >= poll.getQuorum()) {
-                release(transaction);
+                try {
+                    release(transaction);
+                } catch (RuntimeException e) {
+                    Logger.logErrorMessage("Failed to release phased transaction " + transaction.getJSONObject().toJSONString(), e);
+                    reject(transaction);
+                }
             } else {
                 reject(transaction);
             }

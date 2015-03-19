@@ -3,6 +3,7 @@ package nxt;
 import nxt.db.DbClause;
 import nxt.db.DbIterator;
 import nxt.db.DbKey;
+import nxt.db.DbUtils;
 import nxt.db.EntityDbTable;
 import nxt.db.ValuesDbTable;
 import nxt.util.Logger;
@@ -149,7 +150,7 @@ public final class Poll extends AbstractPoll {
         try (DbIterator<Poll> polls = getPollsFinishingAt(currentHeight)) {
             for (Poll poll : polls) {
                 try {
-                    List<OptionResult> results = poll.countResults(poll.getDefaultVoteWeighting(), currentHeight);
+                    List<OptionResult> results = poll.countResults(poll.getVoteWeighting(), currentHeight);
                     pollResultsTable.insert(poll, results);
                     Logger.logDebugMessage("Poll " + Long.toUnsignedString(poll.getId()) + " has been finished");
                 } catch (RuntimeException e) { // could happen e.g. because of overflow in safeMultiply
@@ -206,10 +207,10 @@ public final class Poll extends AbstractPoll {
             pstmt.setString(++i, description);
             pstmt.setObject(++i, options);
             pstmt.setInt(++i, finishHeight);
-            pstmt.setByte(++i, defaultVoteWeighting.getVotingModel().getCode());
-            pstmt.setLong(++i, defaultVoteWeighting.getMinBalance());
-            pstmt.setByte(++i, defaultVoteWeighting.getMinBalanceModel().getCode());
-            pstmt.setLong(++i, defaultVoteWeighting.getHoldingId());
+            pstmt.setByte(++i, voteWeighting.getVotingModel().getCode());
+            DbUtils.setLongZeroToNull(pstmt, ++i, voteWeighting.getMinBalance());
+            pstmt.setByte(++i, voteWeighting.getMinBalanceModel().getCode());
+            DbUtils.setLongZeroToNull(pstmt, ++i, voteWeighting.getHoldingId());
             pstmt.setByte(++i, minNumberOfOptions);
             pstmt.setByte(++i, maxNumberOfOptions);
             pstmt.setByte(++i, minRangeValue);
@@ -220,7 +221,7 @@ public final class Poll extends AbstractPoll {
     }
 
     public List<OptionResult> getResults(VoteWeighting voteWeighting) {
-        if (defaultVoteWeighting.equals(voteWeighting)) {
+        if (this.voteWeighting.equals(voteWeighting)) {
             return getResults();
         } else {
             return countResults(voteWeighting);
@@ -232,7 +233,7 @@ public final class Poll extends AbstractPoll {
         if (Poll.isPollsProcessing && isFinished()) {
             return pollResultsTable.get(pollResultsDbKeyFactory.newKey(id));
         } else {
-            return countResults(defaultVoteWeighting);
+            return countResults(voteWeighting);
         }
     }
 

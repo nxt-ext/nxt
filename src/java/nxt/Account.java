@@ -21,8 +21,6 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.regex.Pattern;
 
@@ -294,7 +292,12 @@ public final class Account {
 
         @Override
         public void checkAvailable(int height) {
-            super.checkAvailable(height + 1440);
+            if (height + 1440 < Nxt.getBlockchainProcessor().getMinRollbackHeight()) {
+                throw new IllegalArgumentException("Historical data as of height " + height +" not available.");
+            }
+            if (height > Nxt.getBlockchain().getHeight()) {
+                throw new IllegalArgumentException("Height " + height + " exceeds blockchain height " + Nxt.getBlockchain().getHeight());
+            }
         }
 
         @Override

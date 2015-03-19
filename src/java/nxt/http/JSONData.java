@@ -337,7 +337,7 @@ final class JSONData {
         json.put("maxNumberOfOptions", poll.getMaxNumberOfOptions());
         json.put("minRangeValue", poll.getMinRangeValue());
         json.put("maxRangeValue", poll.getMaxRangeValue());
-        putVoteWeighting(json, poll.getDefaultVoteWeighting());
+        putVoteWeighting(json, poll.getVoteWeighting());
         json.put("finished", poll.isFinished());
         return json;
     }
@@ -390,7 +390,7 @@ final class JSONData {
         json.put("finishHeight", poll.getFinishHeight());
         json.put("quorum", String.valueOf(poll.getQuorum()));
         putAccount(json, "account", poll.getAccountId());
-        putVoteWeighting(json, poll.getDefaultVoteWeighting());
+        putVoteWeighting(json, poll.getVoteWeighting());
         if (poll.isFinished()) {
             PhasingPoll.PhasingPollResult phasingPollResult = PhasingPoll.getResult(poll.getId());
             if (phasingPollResult != null) {
