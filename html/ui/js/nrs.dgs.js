@@ -352,7 +352,7 @@ var NRS = (function(NRS, $, undefined) {
 		}
 		NRS.appendMenuItemToTSMenuItem(sidebarId, options);
 		options = {
-			"titleHTML": '<span data-i18n="my_store">My Store</span>',
+			"titleHTML": '<span data-i18n="my_store">My Store</span>'
 		}
 		NRS.appendSubHeaderToTSMenuItem(sidebarId, options);
 		options = {
@@ -475,9 +475,9 @@ var NRS = (function(NRS, $, undefined) {
 						var tentative = false;
 						var quantityFormatted = false;
 
-						var unconfirmedTransaction = NRS.getUnconfirmedTransactionFromCache(3, [1, 2, 3], {
+						var unconfirmedTransaction = NRS.getUnconfirmedTransactionsFromCache(3, [1, 2, 3], {
 							"goods": good.goods
-						});
+						}, true);
 
 						if (unconfirmedTransaction) {
 							if (unconfirmedTransaction.subtype == 1) {

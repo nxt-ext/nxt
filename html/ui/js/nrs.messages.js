@@ -1,7 +1,7 @@
 /**
  * @depends {nrs.js}
  */
-var NRS = (function(NRS, $, undefined) {
+var NRS = (function(NRS, $) {
 	var _messages = {};
 	var _latestMessages = {};
 
@@ -36,7 +36,7 @@ var NRS = (function(NRS, $, undefined) {
 				NRS.pageLoaded(callback);
 			}
 		});
-	}
+	};
 
 	NRS.setup.messages = function() {
 		var options = {
@@ -44,22 +44,21 @@ var NRS = (function(NRS, $, undefined) {
 			"titleHTML": '<i class="fa fa-envelope"></i> <span data-i18n="messages">Messages</span>',
 			"page": 'messages',
 			"desiredPosition": 90
-		}
+		};
 		NRS.addSimpleSidebarMenuItem(options);
-	}
+	};
 
 	function displayMessageSidebar(callback) {
 		var activeAccount = false;
 
-		var $active = $("#messages_sidebar a.active");
+      var messagesSidebar = $("#messages_sidebar");
+      var $active = messagesSidebar.find("a.active");
 
 		if ($active.length) {
 			activeAccount = $active.data("account");
 		}
 
 		var rows = "";
-		var menu = "";
-
 		var sortedMessages = [];
 
 		for (var otherUser in _messages) {
@@ -104,10 +103,10 @@ var NRS = (function(NRS, $, undefined) {
 			rows += "<a href='#' class='list-group-item' data-account='" + NRS.getAccountFormatted(sortedMessage, "user") + "' data-account-id='" + NRS.getAccountFormatted(sortedMessage.user) + "'" + extra + "><h4 class='list-group-item-heading'>" + NRS.getAccountTitle(sortedMessage, "user") + "</h4><p class='list-group-item-text'>" + NRS.formatTimestamp(sortedMessage.timestamp) + "</p></a>";
 		}
 
-		$("#messages_sidebar").empty().append(rows);
+		messagesSidebar.empty().append(rows);
 
 		if (activeAccount) {
-			$("#messages_sidebar a[data-account=" + activeAccount + "]").addClass("active").trigger("click");
+			messagesSidebar.find("a[data-account=" + activeAccount + "]").addClass("active").trigger("click");
 		}
 
 		NRS.pageLoaded(callback);
@@ -115,14 +114,6 @@ var NRS = (function(NRS, $, undefined) {
 
 	NRS.incoming.messages = function(transactions) {
 		if (NRS.hasTransactionUpdates(transactions)) {
-			//save current scrollTop    	
-			var activeAccount = $("#messages_sidebar a.active");
-
-			if (activeAccount.length) {
-				activeAccount = activeAccount.data("account");
-			} else {
-				activeAccount = -1;
-			}
 			if (transactions.length) {
 				for (var i=0; i<transactions.length; i++) {
 					var trans = transactions[i];
@@ -144,12 +135,12 @@ var NRS = (function(NRS, $, undefined) {
 				NRS.loadPage("messages");
 			}
 		}
-	}
+	};
 
 	$("#messages_sidebar").on("click", "a", function(e) {
 		e.preventDefault();
 
-		$("#messages_sidebar a.active").removeClass("active");
+		$("#messages_sidebar").find("a.active").removeClass("active");
 		$(this).addClass("active");
 
 		var otherUser = $(this).data("account-id");
@@ -163,9 +154,6 @@ var NRS = (function(NRS, $, undefined) {
 		var output = "<dl class='chat'>";
 
 		var messages = _messages[otherUser];
-
-		var sharedKey = null;
-
 		if (messages) {
 			for (var i = 0; i < messages.length; i++) {
 				var decoded = false;
@@ -247,8 +235,8 @@ var NRS = (function(NRS, $, undefined) {
 		for (var i = 0; i < unconfirmedTransactions.length; i++) {
 			var unconfirmedTransaction = unconfirmedTransactions[i];
 
-			var decoded = false;
-			var extra = "";
+			decoded = false;
+			extra = "";
 
 			if (!unconfirmedTransaction.attachment) {
 				decoded = $.t("message_empty");
@@ -294,7 +282,8 @@ var NRS = (function(NRS, $, undefined) {
 		output += "</dl>";
 
 		$("#message_details").empty().append(output);
-		$('#messages_page .content-splitter-right-inner').scrollTop($('#messages_page .content-splitter-right-inner')[0].scrollHeight);
+      var splitter = $('#messages_page').find('.content-splitter-right-inner');
+      splitter.scrollTop(splitter[0].scrollHeight);
 	});
 
 	$("#messages_sidebar_context").on("click", "a", function(e) {
@@ -337,37 +326,32 @@ var NRS = (function(NRS, $, undefined) {
 		e.preventDefault();
 		
 		var account = $(this).data("goto-messages-account");
-		NRS.goToPage("messages", function(){ $('#message_sidebar a[data-account=' + account + ']').trigger('click'); });
+		NRS.goToPage("messages", function(){ $('#message_sidebar').find('a[data-account=' + account + ']').trigger('click'); });
 	});
 
 	NRS.forms.sendMessage = function($modal) {
 		var data = NRS.getFormData($modal.find("form:first"));
-
 		var converted = $modal.find("input[name=converted_account_id]").val();
-
 		if (converted) {
 			data.recipient = converted;
 		}
-
-		var message = $.trim(data.message);
-
 		return {
 			"data": data
 		};
-	}
+	};
 
 	$("#inline_message_form").submit(function(e) {
 		e.preventDefault();
-
-		var data = {
+      var passpharse = $("#inline_message_password").val();
+      var data = {
 			"recipient": $.trim($("#inline_message_recipient").val()),
 			"feeNXT": "1",
 			"deadline": "1440",
-			"secretPhrase": $.trim($("#inline_message_password").val())
+			"secretPhrase": $.trim(passpharse)
 		};
 
 		if (!NRS.rememberPassword) {
-			if ($("#inline_message_password").val() == "") {
+			if (passpharse == "") {
 				$.growl($.t("error_passphrase_required"), {
 					"type": "danger"
 				});
@@ -400,7 +384,7 @@ var NRS = (function(NRS, $, undefined) {
 			try {
 				data = NRS.addMessageData(data, "sendMessage");
 			} catch (err) {
-				$.growl(String(err.message).escapeHTMl(), {
+				$.growl(String(err.message).escapeHTML(), {
 					"type": "danger"
 				});
 				return;
@@ -411,7 +395,7 @@ var NRS = (function(NRS, $, undefined) {
 			};
 		}
 
-		NRS.sendRequest(requestType, data, function(response, input) {
+		NRS.sendRequest(requestType, data, function(response) {
 			if (response.errorCode) {
 				$.growl(NRS.translateServerError(response).escapeHTML(), {
 					type: "danger"
@@ -431,8 +415,9 @@ var NRS = (function(NRS, $, undefined) {
 
 				NRS.addUnconfirmedTransaction(response.transaction, function(alreadyProcessed) {
 					if (!alreadyProcessed) {
-						$("#message_details dl.chat").append("<dd class='to tentative" + (data.encryptedMessageData ? " decrypted" : "") + "'><p>" + (data.encryptedMessageData ? "<i class='fa fa-lock'></i> " : "") + (!data["_extra"].message ? $.t("message_empty") : String(data["_extra"].message).escapeHTML()) + "</p></dd>");
-						$('#messages_page .content-splitter-right-inner').scrollTop($('#messages_page .content-splitter-right-inner')[0].scrollHeight);
+						$("#message_details").find("dl.chat").append("<dd class='to tentative" + (data.encryptedMessageData ? " decrypted" : "") + "'><p>" + (data.encryptedMessageData ? "<i class='fa fa-lock'></i> " : "") + (!data["_extra"].message ? $.t("message_empty") : String(data["_extra"].message).escapeHTML()) + "</p></dd>");
+                  var splitter = $('#messages_page').find('.content-splitter-right-inner');
+                  splitter.scrollTop(splitter[0].scrollHeight);
 					}
 				});
 
@@ -468,13 +453,9 @@ var NRS = (function(NRS, $, undefined) {
 
 		if (NRS.currentPage == "messages") {
 			var date = new Date(Date.UTC(2013, 10, 24, 12, 0, 0, 0)).getTime();
-
 			var now = parseInt(((new Date().getTime()) - date) / 1000, 10);
-
 			var $sidebar = $("#messages_sidebar");
-
 			var $existing = $sidebar.find("a.list-group-item[data-account=" + NRS.getAccountFormatted(data, "recipient") + "]");
-
 			if ($existing.length) {
 				if (response.alreadyProcesed) {
 					return;
@@ -485,7 +466,7 @@ var NRS = (function(NRS, $, undefined) {
 				var isEncrypted = (data.encryptedMessageData ? true : false);
 
 				if ($existing.hasClass("active")) {
-					$("#message_details dl.chat").append("<dd class='to tentative" + (isEncrypted ? " decrypted" : "") + "'><p>" + (isEncrypted ? "<i class='fa fa-lock'></i> " : "") + (data.message ? data.message.escapeHTML() : $.t("message_empty")) + "</p></dd>");
+					$("#message_details").find("dl.chat").append("<dd class='to tentative" + (isEncrypted ? " decrypted" : "") + "'><p>" + (isEncrypted ? "<i class='fa fa-lock'></i> " : "") + (data.message ? data.message.escapeHTML() : $.t("message_empty")) + "</p></dd>");
 				}
 			} else {
 				var accountTitle = NRS.getAccountTitle(data, "recipient");
@@ -497,28 +478,26 @@ var NRS = (function(NRS, $, undefined) {
 				}
 
 				var listGroupItem = "<a href='#' class='list-group-item' data-account='" + NRS.getAccountFormatted(data, "recipient") + "'" + extra + "><h4 class='list-group-item-heading'>" + accountTitle + "</h4><p class='list-group-item-text'>" + NRS.formatTimestamp(now) + "</p></a>";
-				$("#messages_sidebar").prepend(listGroupItem);
+            $sidebar.prepend(listGroupItem);
 			}
-			$('#messages_page .content-splitter-right-inner').scrollTop($('#messages_page .content-splitter-right-inner')[0].scrollHeight);
+         var splitter = $('#messages_page').find('.content-splitter-right-inner');
+         splitter.scrollTop(splitter[0].scrollHeight);
 		}
-	}
+	};
 
-	$("#message_details").on("click", "dd.to_decrypt", function(e) {
+	$("#message_details").on("click", "dd.to_decrypt", function() {
 		$("#messages_decrypt_modal").modal("show");
 	});
 
 	NRS.forms.decryptMessages = function($modal) {
 		var data = NRS.getFormData($modal.find("form:first"));
-
 		var success = false;
 
 		try {
 			var messagesToDecrypt = [];
-
 			for (var otherUser in _messages) {
 				for (var key in _messages[otherUser]) {
 					var message = _messages[otherUser][key];
-
 					if (message.attachment && message.attachment.encryptedMessage) {
 						messagesToDecrypt.push(message);
 					}
@@ -526,7 +505,6 @@ var NRS = (function(NRS, $, undefined) {
 			}
 
 			var unconfirmedMessages = NRS.getUnconfirmedTransactionsFromCache(1, 0);
-
 			if (unconfirmedMessages) {
 				for (var i = 0; i < unconfirmedMessages.length; i++) {
 					var unconfirmedMessage = unconfirmedMessages[i];
@@ -554,7 +532,7 @@ var NRS = (function(NRS, $, undefined) {
 			NRS.setDecryptionPassword(data.secretPhrase);
 		}
 
-		$("#messages_sidebar a.active").trigger("click");
+		$("#messages_sidebar").find("a.active").trigger("click");
 
 		if (success) {
 			$.growl($.t("success_messages_decrypt"), {
@@ -569,7 +547,7 @@ var NRS = (function(NRS, $, undefined) {
 		return {
 			"stop": true
 		};
-	}
+	};
 
 	return NRS;
 }(NRS || {}, jQuery));
