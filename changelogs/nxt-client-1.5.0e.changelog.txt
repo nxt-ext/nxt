@@ -25,6 +25,13 @@ Regardless of the nxt.processPolls setting, votes for polls that finished
 before the last trim height (1441 blocks by default) are deleted and only
 aggregate results, if processing is enabled, are kept.
 
+Votes are weighted based on the voting model selected, which can be by account,
+by balance, by asset balance or by currency balance, and a minimum balance
+cutoff can also be specified. The voting model is defined when the poll is
+created, however a different voting model can be specified when calling the
+getPollResult API, to calculate on the fly an alternative vote counting, as
+long as vote data is still available.
+
 The fee to create a poll is 10 NXT for a poll with up to 20 options, with 1 NXT
 additional fee for any additional option (max 100 options are possible).
 
@@ -44,6 +51,9 @@ only at finish height, if still valid and if the required quorum has been met.
 If not approved, or not valid at finish height, they remain in the blockchain
 but are never executed, and any changes they caused to the sender unconfirmed
 balance are reversed, except that the fee is not refunded.
+
+In addition to the voting models available in polls, phased transactions can
+use a whitelist of accounts (max 10) allowed to vote for the transaction.
 
 It is possible to vote for (approve) up to 20 phased transactions with a single
 approval transaction. This transaction will be accepted in the blockchain only
