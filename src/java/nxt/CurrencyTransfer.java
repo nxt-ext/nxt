@@ -69,7 +69,7 @@ public final class CurrencyTransfer {
         try {
             con = Db.db.getConnection();
             PreparedStatement pstmt = con.prepareStatement("SELECT * FROM currency_transfer WHERE sender_id = ?"
-                    + " UNION ALL SELECT * FROM currency_transfer WHERE recipient_id = ? AND sender_id <> ? ORDER BY height DESC"
+                    + " UNION ALL SELECT * FROM currency_transfer WHERE recipient_id = ? AND sender_id <> ? ORDER BY height DESC, db_id DESC"
                     + DbUtils.limitsClause(from, to));
             int i = 0;
             pstmt.setLong(++i, accountId);
@@ -88,7 +88,7 @@ public final class CurrencyTransfer {
         try {
             con = Db.db.getConnection();
             PreparedStatement pstmt = con.prepareStatement("SELECT * FROM currency_transfer WHERE sender_id = ? AND currency_id = ?"
-                    + " UNION ALL SELECT * FROM currency_transfer WHERE recipient_id = ? AND sender_id <> ? AND currency_id = ? ORDER BY height DESC"
+                    + " UNION ALL SELECT * FROM currency_transfer WHERE recipient_id = ? AND sender_id <> ? AND currency_id = ? ORDER BY height DESC, db_id DESC"
                     + DbUtils.limitsClause(from, to));
             int i = 0;
             pstmt.setLong(++i, accountId);

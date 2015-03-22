@@ -52,7 +52,7 @@ public final class Asset {
     }
 
     public static DbIterator<Asset> searchAssets(String query, int from, int to) {
-        return assetTable.search(query, DbClause.EMPTY_CLAUSE, from, to, " ORDER BY ft.score DESC, asset.height DESC ");
+        return assetTable.search(query, DbClause.EMPTY_CLAUSE, from, to, " ORDER BY ft.score DESC, asset.height DESC, asset.db_id DESC ");
     }
 
     static void addAsset(Transaction transaction, Attachment.ColoredCoinsAssetIssuance attachment) {

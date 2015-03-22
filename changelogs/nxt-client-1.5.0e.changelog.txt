@@ -53,6 +53,9 @@ If broadcast=true, those fields are returned only in case of successful
 transaction broadcast, otherwise only the error messages are returned.
 This change affects all APIs that end up creating a new transaction.
 
+GetOrderTrades - given an askOrder, bidOrder, or both, returns all trades that
+were executed as a result of this order.
+
 GetConstants - in addition to adding the new transaction types and subtypes,
 and the voting models, the format of the resulting json has been changed.
 

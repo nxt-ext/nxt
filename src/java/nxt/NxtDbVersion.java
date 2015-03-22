@@ -688,6 +688,12 @@ class NxtDbVersion extends DbVersion {
             case 287:
                 apply("ALTER TABLE phasing_poll ALTER COLUMN quorum SET NULL");
             case 288:
+                apply("DROP INDEX IF EXISTS trade_ask_bid_idx");
+            case 289:
+                apply("CREATE INDEX IF NOT EXISTS trade_ask_idx ON trade (ask_order_id, height DESC)");
+            case 290:
+                apply("CREATE INDEX IF NOT EXISTS trade_bid_idx ON trade (bid_order_id, height DESC)");
+            case 291:
                 return;
             default:
                 throw new RuntimeException("Blockchain database inconsistent with code, probably trying to run older code on newer database");

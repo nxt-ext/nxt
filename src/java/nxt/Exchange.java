@@ -70,7 +70,7 @@ public final class Exchange {
         try {
             con = Db.db.getConnection();
             PreparedStatement pstmt = con.prepareStatement("SELECT * FROM exchange WHERE seller_id = ?"
-                    + " UNION ALL SELECT * FROM exchange WHERE buyer_id = ? AND seller_id <> ? ORDER BY height DESC"
+                    + " UNION ALL SELECT * FROM exchange WHERE buyer_id = ? AND seller_id <> ? ORDER BY height DESC, db_id DESC"
                     + DbUtils.limitsClause(from, to));
             int i = 0;
             pstmt.setLong(++i, accountId);
@@ -89,7 +89,7 @@ public final class Exchange {
         try {
             con = Db.db.getConnection();
             PreparedStatement pstmt = con.prepareStatement("SELECT * FROM exchange WHERE seller_id = ? AND currency_id = ?"
-                    + " UNION ALL SELECT * FROM exchange WHERE buyer_id = ? AND seller_id <> ? AND currency_id = ? ORDER BY height DESC"
+                    + " UNION ALL SELECT * FROM exchange WHERE buyer_id = ? AND seller_id <> ? AND currency_id = ? ORDER BY height DESC, db_id DESC"
                     + DbUtils.limitsClause(from, to));
             int i = 0;
             pstmt.setLong(++i, accountId);
@@ -126,11 +126,11 @@ public final class Exchange {
     }
 
     public static DbIterator<Exchange> getExchanges(long transactionId) {
-        return exchangeTable.getManyBy(new DbClause.LongClause("transaction_id", transactionId), 0, -1, " ORDER BY height DESC ");
+        return exchangeTable.getManyBy(new DbClause.LongClause("transaction_id", transactionId), 0, -1);
     }
 
     public static DbIterator<Exchange> getOfferExchanges(long offerId, int from, int to) {
-        return exchangeTable.getManyBy(new DbClause.LongClause("offer_id", offerId), from, to, " ORDER BY height DESC ");
+        return exchangeTable.getManyBy(new DbClause.LongClause("offer_id", offerId), from, to);
     }
 
     public static int getExchangeCount(long currencyId) {

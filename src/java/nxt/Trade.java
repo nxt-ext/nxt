@@ -60,6 +60,10 @@ public final class Trade {
         return listeners.removeListener(listener, eventType);
     }
 
+    public static Trade getTrade(long askOrderId, long bidOrderId) {
+        return tradeTable.get(tradeDbKeyFactory.newKey(askOrderId, bidOrderId));
+    }
+
     public static DbIterator<Trade> getAssetTrades(long assetId, int from, int to) {
         return tradeTable.getManyBy(new DbClause.LongClause("asset_id", assetId), from, to);
     }
@@ -69,7 +73,7 @@ public final class Trade {
         try {
             con = Db.db.getConnection();
             PreparedStatement pstmt = con.prepareStatement("SELECT * FROM trade WHERE seller_id = ?"
-                    + " UNION ALL SELECT * FROM trade WHERE buyer_id = ? AND seller_id <> ? ORDER BY height DESC"
+                    + " UNION ALL SELECT * FROM trade WHERE buyer_id = ? AND seller_id <> ? ORDER BY height DESC, db_id DESC"
                     + DbUtils.limitsClause(from, to));
             int i = 0;
             pstmt.setLong(++i, accountId);
@@ -88,7 +92,7 @@ public final class Trade {
         try {
             con = Db.db.getConnection();
             PreparedStatement pstmt = con.prepareStatement("SELECT * FROM trade WHERE seller_id = ? AND asset_id = ?"
-                    + " UNION ALL SELECT * FROM trade WHERE buyer_id = ? AND seller_id <> ? AND asset_id = ? ORDER BY height DESC"
+                    + " UNION ALL SELECT * FROM trade WHERE buyer_id = ? AND seller_id <> ? AND asset_id = ? ORDER BY height DESC, db_id DESC"
                     + DbUtils.limitsClause(from, to));
             int i = 0;
             pstmt.setLong(++i, accountId);
@@ -102,6 +106,14 @@ public final class Trade {
             DbUtils.close(con);
             throw new RuntimeException(e.toString(), e);
         }
+    }
+
+    public static DbIterator<Trade> getAskOrderTrades(long askOrderId, int from, int to) {
+        return tradeTable.getManyBy(new DbClause.LongClause("ask_order_id", askOrderId), from, to);
+    }
+
+    public static DbIterator<Trade> getBidOrderTrades(long bidOrderId, int from, int to) {
+        return tradeTable.getManyBy(new DbClause.LongClause("bid_order_id", bidOrderId), from, to);
     }
 
     public static int getTradeCount(long assetId) {
