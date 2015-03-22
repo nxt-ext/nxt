@@ -810,8 +810,10 @@ public final class DigitalGoodsStore {
                 feedbackNotes = new ArrayList<>();
             }
             feedbackNotes.add(feedbackNote);
-            this.hasFeedbackNotes = true;
-            purchaseTable.insert(this);
+            if (!this.hasFeedbackNotes) {
+                this.hasFeedbackNotes = true;
+                purchaseTable.insert(this);
+            }
             feedbackTable.insert(this, feedbackNotes);
 		}
 
@@ -832,8 +834,10 @@ public final class DigitalGoodsStore {
                 publicFeedbacks = new ArrayList<>();
             }
             publicFeedbacks.add(publicFeedback);
-            this.hasPublicFeedbacks = true;
-            purchaseTable.insert(this);
+            if (!this.hasPublicFeedbacks) {
+                this.hasPublicFeedbacks = true;
+                purchaseTable.insert(this);
+            }
             publicFeedbackTable.insert(this, publicFeedbacks);
         }
 
@@ -841,7 +845,7 @@ public final class DigitalGoodsStore {
             return discountNQT;
         }
 
-        public void setDiscountNQT(long discountNQT) {
+        private void setDiscountNQT(long discountNQT) {
             this.discountNQT = discountNQT;
             purchaseTable.insert(this);
         }
@@ -850,7 +854,7 @@ public final class DigitalGoodsStore {
             return refundNQT;
         }
 
-        public void setRefundNQT(long refundNQT) {
+        private void setRefundNQT(long refundNQT) {
             this.refundNQT = refundNQT;
             purchaseTable.insert(this);
         }
