@@ -12,8 +12,21 @@ Voting System.
 
 Voting System API calls:
 
-CreatePoll, CastVote, GetPoll, GetPolls, GetPollResult, GetPollVote, GetPollVotes,
-SearchPolls.
+CreatePoll, CastVote, GetPoll, GetPolls, GetPollResult, GetPollVote,
+GetPollVotes, SearchPolls.
+
+Polls processing is optional. If nxt.processPolls=false (default is true), vote
+counting is not done and no poll results are stored. This can be used to reduce
+the load on lower performance nodes. It is still possible to get the results of
+a poll using getPollResult, as long as the required vote and balances data
+hasn't been trimmed yet.
+
+Regardless of the nxt.processPolls setting, votes for polls that finished
+before the last trim height (1441 blocks by default) are deleted and only
+aggregate results, if processing is enabled, are kept.
+
+The fee to create a poll is 10 NXT for a poll with up to 20 options, with 1 NXT
+additional fee for any additional option (max 100 options are possible).
 
 
 Phasing.
@@ -24,8 +37,42 @@ ApproveTransaction, GetAccountPendingTransactions, GetAssetPendingTransactions,
 GetCurrencyPendingTransactions, GetPhasingPoll, GetPhasingPolls,
 GetPhasingPollVote, GetPhasingPollVotes, GetVoterPendingTransactions.
 
+A transaction of any type can be phased by adding a phased=true and an
+appropriate set of phasing parameters. Phased transactions are accepted in the
+blockchain immediately (subject to all usual validations), but are executed
+only at finish height, if still valid and if the required quorum has been met.
+If not approved, or not valid at finish height, they remain in the blockchain
+but are never executed, and any changes they caused to the sender unconfirmed
+balance are reversed, except that the fee is not refunded.
 
-Variable size messages, encrypted messages, digital goods deliveries.
+It is possible to vote for (approve) up to 20 phased transactions with a single
+approval transaction. This transaction will be accepted in the blockchain only
+if all phased transactions it is voting for are already in it. This can be used
+to create coupling between phased transactions and some escrow schemes based on
+such coupling.
+
+It is also possible to make any transaction phased without needing voting for
+approval. This can be used to create transactions with deferred execution.
+
+Similar to voting, the phasing data for phased transaction that finished before
+the last trim height is also deleted and only the aggregate approval results
+are kept.
+
+The fee for making a transaction phased depends on the voting model selected.
+For by-account voting with no minimum balance, or no voting needed, it is 1 NXT
+in addition to the regular fee for that particular transaction type. For voting
+that depends on voter balances, the additional phasing fee is 20 NXT.
+
+The fee for approving a phased transaction is 1 NXT for each phased
+transaction included in the vote.
+
+
+Variable size messages, encrypted messages, digital goods deliveries. After VS
+block, messages and encrypted messages will be allowed to be up to 40 kbytes
+long instead of 1000 bytes, with 1 NXT fee for each 1024 bytes. Digital goods
+deliveries can also be up to 40 kbytes, with 1 NXT fee for each 1024 bytes
+after the first 10k. A single transaction is always limited not to exceed the
+maximum block payload length, currently 255 * 176 bytes.
 
 
 Other new APIs:
