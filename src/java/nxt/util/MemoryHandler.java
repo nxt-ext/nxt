@@ -84,7 +84,7 @@ public class MemoryHandler extends Handler {
      */
     @Override
     public void publish(LogRecord record) {
-        if (record.getLevel().intValue() >= level.intValue() && level.intValue() != OFF_VALUE) {
+        if (record != null && record.getLevel().intValue() >= level.intValue() && level.intValue() != OFF_VALUE) {
             synchronized(buffer) {
                 int ix = (start+count)%buffer.length;
                 buffer[ix] = record;
@@ -105,14 +105,16 @@ public class MemoryHandler extends Handler {
      * @return                      List of log messages
      */
     public List<String> getMessages(int msgCount) {
-        int rtnSize = Math.min(msgCount, count);
-        List<String> rtnList = new ArrayList<>(rtnSize);
-        int pos = (start + (count-rtnSize))%buffer.length;
-        Formatter formatter = getFormatter();
-        for (int i=0; i<rtnSize; i++) {
-            rtnList.add(formatter.format(buffer[pos++]));
-            if (pos == buffer.length)
-                pos = 0;
+        List<String> rtnList = new ArrayList<>(msgCount);
+        synchronized(buffer) {
+            int rtnSize = Math.min(msgCount, count);
+            int pos = (start + (count-rtnSize))%buffer.length;
+            Formatter formatter = getFormatter();
+            for (int i=0; i<rtnSize; i++) {
+                rtnList.add(formatter.format(buffer[pos++]));
+                if (pos == buffer.length)
+                    pos = 0;
+            }
         }
         return rtnList;
     }
