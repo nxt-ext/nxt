@@ -1042,10 +1042,6 @@ var NRS = (function(NRS, $, undefined) {
 		return amount;
 	}
 
-	NRS.getUnconfirmedTransactionFromCache = function(type, subtype, fields) {
-		return NRS.getUnconfirmedTransactionsFromCache(type, subtype, fields, true);
-	}
-
 	NRS.getUnconfirmedTransactionsFromCache = function(type, subtype, fields, single) {
 		if (!NRS.unconfirmedTransactions.length) {
 			return false;

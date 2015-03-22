@@ -214,11 +214,6 @@ final class PeerImpl implements Peer {
     }
 
     @Override
-    public boolean isWellKnown() {
-        return announcedAddress != null && Peers.wellKnownPeers.contains(announcedAddress);
-    }
-
-    @Override
     public Hallmark getHallmark() {
         return hallmark;
     }

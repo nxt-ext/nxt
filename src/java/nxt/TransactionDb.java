@@ -52,11 +52,15 @@ final class TransactionDb {
     }
 
     static boolean hasTransaction(long transactionId) {
+        return hasTransaction(transactionId, Integer.MAX_VALUE);
+    }
+
+    static boolean hasTransaction(long transactionId, int height) {
         try (Connection con = Db.db.getConnection();
-             PreparedStatement pstmt = con.prepareStatement("SELECT 1 FROM transaction WHERE id = ?")) {
+             PreparedStatement pstmt = con.prepareStatement("SELECT height FROM transaction WHERE id = ?")) {
             pstmt.setLong(1, transactionId);
             try (ResultSet rs = pstmt.executeQuery()) {
-                return rs.next();
+                return rs.next() && rs.getInt("height") <= height;
             }
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);

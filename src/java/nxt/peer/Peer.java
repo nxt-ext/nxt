@@ -29,8 +29,6 @@ public interface Peer extends Comparable<Peer> {
 
     boolean shareAddress();
 
-    boolean isWellKnown();
-
     boolean isBlacklisted();
 
     void blacklist(Exception cause);

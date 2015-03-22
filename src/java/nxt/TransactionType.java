@@ -1,7 +1,6 @@
 package nxt;
 
 import nxt.util.Convert;
-import nxt.util.Logger;
 import org.json.simple.JSONObject;
 
 import java.nio.ByteBuffer;
@@ -731,6 +730,10 @@ public abstract class TransactionType {
                     throw new NxtException.NotCurrentlyValidException("Invalid finishing height" + attachment.getJSONObject());
                 }
 
+                if (attachment.getVoteWeighting().getVotingModel() == VoteWeighting.VotingModel.NONE) {
+                    throw new NxtException.NotValidException("VotingModel NONE not valid for regular polls");
+                }
+
                 attachment.getVoteWeighting().validate();
 
             }
@@ -894,8 +897,10 @@ public abstract class TransactionType {
 
                     PhasingPoll poll = PhasingPoll.getPoll(pendingId);
                     if (poll == null) {
-                        Logger.logDebugMessage("Wrong pending transaction: " + pendingId);
-                        throw new NxtException.NotCurrentlyValidException("Wrong pending transaction or poll is finished");
+                        throw new NxtException.NotCurrentlyValidException("Invalid pending transaction " + Long.toUnsignedString(pendingId) + ", or poll is finished");
+                    }
+                    if (poll.getVoteWeighting().getVotingModel() == VoteWeighting.VotingModel.NONE) {
+                        throw new NxtException.NotValidException("This pending transaction does not require or accept voting");
                     }
                     long[] whitelist = poll.getWhitelist();
                     if (whitelist.length > 0 && Arrays.binarySearch(whitelist, voterId) == -1) {
@@ -1266,9 +1271,7 @@ public abstract class TransactionType {
             @Override
             void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
                 Attachment.ColoredCoinsAskOrderPlacement attachment = (Attachment.ColoredCoinsAskOrderPlacement) transaction.getAttachment();
-                if (Asset.getAsset(attachment.getAssetId()) != null) {
-                    Order.Ask.addOrder(transaction, attachment);
-                }
+                Order.Ask.addOrder(transaction, attachment);
             }
 
             @Override
@@ -1314,9 +1317,7 @@ public abstract class TransactionType {
             @Override
             void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
                 Attachment.ColoredCoinsBidOrderPlacement attachment = (Attachment.ColoredCoinsBidOrderPlacement) transaction.getAttachment();
-                if (Asset.getAsset(attachment.getAssetId()) != null) {
-                    Order.Bid.addOrder(transaction, attachment);
-                }
+                Order.Bid.addOrder(transaction, attachment);
             }
 
             @Override
@@ -1465,8 +1466,7 @@ public abstract class TransactionType {
             @Override
             boolean applyAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
                 Attachment.ColoredCoinsDividendPayment attachment = (Attachment.ColoredCoinsDividendPayment)transaction.getAttachment();
-                Asset asset = Asset.getAsset(attachment.getAssetId());
-                long quantityQNT = asset.getQuantityQNT()
+                long quantityQNT = Asset.getAsset(attachment.getAssetId()).getQuantityQNT()
                         - senderAccount.getAssetBalanceQNT(attachment.getAssetId(), attachment.getHeight())
                         - Account.getAssetBalanceQNT(Genesis.CREATOR_ID, attachment.getAssetId(), attachment.getHeight());
                 long totalDividendPayment = Math.multiplyExact(attachment.getAmountNQTPerQNT(), quantityQNT);
@@ -1489,7 +1489,8 @@ public abstract class TransactionType {
                 long quantityQNT = Asset.getAsset(attachment.getAssetId()).getQuantityQNT()
                         - senderAccount.getAssetBalanceQNT(attachment.getAssetId(), attachment.getHeight())
                         - Account.getAssetBalanceQNT(Genesis.CREATOR_ID, attachment.getAssetId(), attachment.getHeight());
-                senderAccount.addToUnconfirmedBalanceNQT(Math.multiplyExact(attachment.getAmountNQTPerQNT(), quantityQNT));
+                long totalDividendPayment = Math.multiplyExact(attachment.getAmountNQTPerQNT(), quantityQNT);
+                senderAccount.addToUnconfirmedBalanceNQT(totalDividendPayment);
             }
 
             @Override
@@ -1503,8 +1504,7 @@ public abstract class TransactionType {
                 if (asset.getAccountId() != transaction.getSenderId() || attachment.getAmountNQTPerQNT() <= 0) {
                     throw new NxtException.NotValidException("Invalid dividend payment sender or amount " + attachment.getJSONObject());
                 }
-                int finishHeight = transaction.getValidationHeight();
-                if (attachment.getHeight() > finishHeight || attachment.getHeight() <= finishHeight - Constants.MAX_ROLLBACK) {
+                if (attachment.getHeight() > Nxt.getBlockchain().getHeight() || attachment.getHeight() <= transaction.getValidationHeight() - Constants.MAX_ROLLBACK) {
                     throw new NxtException.NotCurrentlyValidException("Invalid dividend payment height: " + attachment.getHeight());
                 }
             }

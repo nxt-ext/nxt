@@ -23,7 +23,16 @@
                 <div class="callout callout-danger" id="testnet_login" style="max-width:400px;min-width:400px;display:none;" data-i18n="[html]testnet_login_warning">Log in with your <strong>TestNet</strong> account - not your real one!</div><div id="login_error" style="max-width:400px;min-width:400px;display:none">                        
                     <div class="callout callout-danger"></div>
                 </div>
-
+                
+				<div class="btn-group" id="loginButtons" data-toggle="buttons">
+				  <label class="btn btn-primary active">
+					<input type="radio" name="loginType" id="accountLogin" value="account" autocomplete="off" /><i class="fa fa-male"></i>
+				  </label>
+				  <label class="btn btn-primary">
+					<input type="radio" name="loginType" id="passwordLogin" value="passphrase" autocomplete="off" /><i class="fa fa-key"></i>
+				  </label>
+				</div>
+				
                 <div class="lockscreen-item">
                     <div class="lockscreen-credentials">
                     	<div class="input-group" id="login_account_container" style="display:table;height:34px;width: 100%;">
@@ -52,16 +61,8 @@
                             <input type="hidden" name="check_password_length" id="login_check_password_length" value="1" />
                         </div>
                     </div>
-                    
                 </div>  
-                <div class="btn-group" id="loginButtons" data-toggle="buttons">
-				  <label class="btn btn-primary active">
-					<input type="radio" name="loginType" id="accountLogin" value="account" autocomplete="off" /><i class="fa fa-user"></i>
-				  </label>
-				  <label class="btn btn-primary">
-					<input type="radio" name="loginType" id="passwordLogin" value="passphrase" autocomplete="off" /><i class="fa fa-key"></i>
-				  </label>
-				</div>
+                			
                 <div id="remember_account_container">
                     <input type="checkbox" name="remember_account" id="remember_account" value="1" /> <span></span><label for="remember_account" data-i18n="remember_account">Remember account on this computer</label>
                 </div>

@@ -31,11 +31,15 @@ final class BlockDb {
     }
 
     static boolean hasBlock(long blockId) {
+        return hasBlock(blockId, Integer.MAX_VALUE);
+    }
+
+    static boolean hasBlock(long blockId, int height) {
         try (Connection con = Db.db.getConnection();
-             PreparedStatement pstmt = con.prepareStatement("SELECT 1 FROM block WHERE id = ?")) {
+             PreparedStatement pstmt = con.prepareStatement("SELECT height FROM block WHERE id = ?")) {
             pstmt.setLong(1, blockId);
             try (ResultSet rs = pstmt.executeQuery()) {
-                return rs.next();
+                return rs.next() && rs.getInt("height") <= height;
             }
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);

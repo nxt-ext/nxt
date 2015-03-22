@@ -56,9 +56,6 @@ public final class GetInitialData extends UserServlet.UserRequestHandler {
                 blacklistedPeer.put("address", peer.getPeerAddress());
                 blacklistedPeer.put("announcedAddress", Convert.truncate(peer.getAnnouncedAddress(), "-", 25, true));
                 blacklistedPeer.put("software", peer.getSoftware());
-                if (peer.isWellKnown()) {
-                    blacklistedPeer.put("wellKnown", true);
-                }
                 blacklistedPeers.add(blacklistedPeer);
 
             } else if (peer.getState() == Peer.State.NON_CONNECTED) {
@@ -68,9 +65,6 @@ public final class GetInitialData extends UserServlet.UserRequestHandler {
                 knownPeer.put("address", peer.getPeerAddress());
                 knownPeer.put("announcedAddress", Convert.truncate(peer.getAnnouncedAddress(), "-", 25, true));
                 knownPeer.put("software", peer.getSoftware());
-                if (peer.isWellKnown()) {
-                    knownPeer.put("wellKnown", true);
-                }
                 knownPeers.add(knownPeer);
 
             } else {
@@ -86,9 +80,6 @@ public final class GetInitialData extends UserServlet.UserRequestHandler {
                 activePeer.put("downloaded", peer.getDownloadedVolume());
                 activePeer.put("uploaded", peer.getUploadedVolume());
                 activePeer.put("software", peer.getSoftware());
-                if (peer.isWellKnown()) {
-                    activePeer.put("wellKnown", true);
-                }
                 activePeers.add(activePeer);
             }
         }

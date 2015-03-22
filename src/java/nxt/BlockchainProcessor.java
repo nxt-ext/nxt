@@ -30,6 +30,8 @@ public interface BlockchainProcessor extends Observable<Block,BlockchainProcesso
 
     void scan(int height, boolean validate);
 
+    void fullScanWithShutdown();
+
     void setGetMoreBlocks(boolean getMoreBlocks);
 
     List<? extends Block> popOffTo(int height);
@@ -62,7 +64,7 @@ public interface BlockchainProcessor extends Observable<Block,BlockchainProcesso
             this.transaction = transaction;
         }
 
-        public Transaction getTransaction() {
+        public TransactionImpl getTransaction() {
             return transaction;
         }
 

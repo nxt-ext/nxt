@@ -337,7 +337,7 @@ public interface Attachment extends Appendix {
                 this.minRangeValue = minRangeValue;
                 this.maxRangeValue = maxRangeValue;
 
-                this.minBalanceModel = VoteWeighting.VotingModel.get(votingModel).defaultMinBalanceModel().getCode();
+                this.minBalanceModel = VoteWeighting.VotingModel.get(votingModel).getMinBalanceModel().getCode();
             }
 
             public PollBuilder minBalance(byte minBalanceModel, long minBalance) {
