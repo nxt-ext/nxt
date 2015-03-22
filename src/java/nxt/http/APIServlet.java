@@ -64,7 +64,7 @@ public final class APIServlet extends HttpServlet {
         boolean startDbTransaction() {
             return false;
         }
-        
+
         boolean requirePassword() {
         	return false;
         }
@@ -241,8 +241,10 @@ public final class APIServlet extends HttpServlet {
         map.put("addPeer", AddPeer.instance);
         map.put("blacklistPeer", BlacklistPeer.instance);
         map.put("dumpPeers", DumpPeers.instance);
+        map.put("getLog", GetLog.instance);
+        map.put("getStackTraces", GetStackTraces.instance);
         map.put("shutdown", Shutdown.instance);
-        
+
         apiRequestHandlers = Collections.unmodifiableMap(map);
     }
 
