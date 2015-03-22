@@ -402,9 +402,6 @@ public final class Currency {
     }
 
     public DbIterator<Account.AccountCurrency> getAccounts(int height, int from, int to) {
-        if (height < 0) {
-            return getAccounts(from, to);
-        }
         return Account.getCurrencyAccounts(this.currencyId, height, from, to);
     }
 

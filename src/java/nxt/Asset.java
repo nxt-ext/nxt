@@ -134,9 +134,6 @@ public final class Asset {
     }
 
     public DbIterator<Account.AccountAsset> getAccounts(int height, int from, int to) {
-        if (height < 0) {
-            return getAccounts(from, to);
-        }
         return Account.getAssetAccounts(this.assetId, height, from, to);
     }
 
