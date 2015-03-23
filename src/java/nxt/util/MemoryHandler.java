@@ -105,7 +105,7 @@ public class MemoryHandler extends Handler {
      * @return                      List of log messages
      */
     public List<String> getMessages(int msgCount) {
-        List<String> rtnList = new ArrayList<>(msgCount);
+        List<String> rtnList = new ArrayList<>(buffer.length);
         synchronized(buffer) {
             int rtnSize = Math.min(msgCount, count);
             int pos = (start + (count-rtnSize))%buffer.length;
