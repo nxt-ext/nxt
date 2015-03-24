@@ -15,7 +15,7 @@ import java.sql.SQLException;
 
 public final class CurrencyTransfer {
 
-    public static enum Event {
+    public enum Event {
         TRANSFER
     }
 

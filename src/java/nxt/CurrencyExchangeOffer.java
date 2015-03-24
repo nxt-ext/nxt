@@ -152,19 +152,19 @@ public abstract class CurrencyExchangeOffer {
     }
 
 
-    protected final long id;
-    protected final long currencyId;
-    protected final long accountId;
-    protected final long rateNQT;
-    protected long limit; // limit on the total sum of units for this offer across transactions
-    protected long supply; // total units supply for the offer
-    protected final int expirationHeight;
-    protected final int creationHeight;
-    protected final short transactionIndex;
-    protected final int transactionHeight;
+    final long id;
+    private final long currencyId;
+    private final long accountId;
+    private final long rateNQT;
+    private long limit; // limit on the total sum of units for this offer across transactions
+    private long supply; // total units supply for the offer
+    private final int expirationHeight;
+    private final int creationHeight;
+    private final short transactionIndex;
+    private final int transactionHeight;
 
-    protected CurrencyExchangeOffer(long id, long currencyId, long accountId, long rateNQT, long limit, long supply,
-                                    int expirationHeight, int transactionHeight, short transactionIndex) {
+    CurrencyExchangeOffer(long id, long currencyId, long accountId, long rateNQT, long limit, long supply,
+                          int expirationHeight, int transactionHeight, short transactionIndex) {
         this.id = id;
         this.currencyId = currencyId;
         this.accountId = accountId;
@@ -177,7 +177,7 @@ public abstract class CurrencyExchangeOffer {
         this.transactionHeight = transactionHeight;
     }
 
-    protected CurrencyExchangeOffer(ResultSet rs) throws SQLException {
+    CurrencyExchangeOffer(ResultSet rs) throws SQLException {
         this.id = rs.getLong("id");
         this.currencyId = rs.getLong("currency_id");
         this.accountId = rs.getLong("account_id");
@@ -190,7 +190,7 @@ public abstract class CurrencyExchangeOffer {
         this.transactionHeight = rs.getInt("transaction_height");
     }
 
-    protected void save(Connection con, String table) throws SQLException {
+    void save(Connection con, String table) throws SQLException {
         try (PreparedStatement pstmt = con.prepareStatement("MERGE INTO " + table + " (id, currency_id, account_id, "
                 + "rate, unit_limit, supply, expiration_height, creation_height, transaction_index, transaction_height, height, latest) "
                 + "KEY (id, height) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, TRUE)")) {

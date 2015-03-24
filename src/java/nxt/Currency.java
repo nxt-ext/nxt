@@ -17,7 +17,7 @@ import java.util.List;
 @SuppressWarnings("UnusedDeclaration")
 public final class Currency {
 
-    public static enum Event {
+    public enum Event {
         BEFORE_DISTRIBUTE_CROWDFUNDING, BEFORE_UNDO_CROWDFUNDING, BEFORE_DELETE
     }
 

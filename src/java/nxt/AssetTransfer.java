@@ -15,7 +15,7 @@ import java.sql.SQLException;
 
 public final class AssetTransfer {
 
-    public static enum Event {
+    public enum Event {
         ASSET_TRANSFER
     }
 
