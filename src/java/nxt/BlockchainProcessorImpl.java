@@ -35,7 +35,11 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 final class BlockchainProcessorImpl implements BlockchainProcessor {
 
@@ -70,6 +74,9 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
     private volatile boolean alreadyInitialized = false;
 
     private final Runnable getMoreBlocksThread = new Runnable() {
+
+        private final ExecutorService executorService = new ThreadPoolExecutor(0, Runtime.getRuntime().availableProcessors(),
+                60L, TimeUnit.SECONDS, new LinkedBlockingQueue<>());
 
         private final JSONStreamAware getCumulativeDifficultyRequest;
 
@@ -291,7 +298,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             List<BlockImpl> forkBlocks = new ArrayList<>();
             List<Future<BlockImpl>> futures = new ArrayList<>();
             for (Object blockData : nextBlocksJSON) {
-                futures.add(ThreadPool.submit(() -> {
+                futures.add(executorService.submit(() -> {
                     try {
                         return BlockImpl.parseBlock((JSONObject) blockData);
                     } catch (RuntimeException | NxtException.NotValidException e) {

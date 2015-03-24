@@ -102,6 +102,12 @@ tables on start. While this ensures validity of the blockchain and all tables,
 it cannot verify that this is the current consensus blockchain and not a fork,
 therefore providing such a database for download is still not trustless.
 
+GetLog - returns the most recent log messages, kept in a memory buffer.
+
+GetStackTraces - returns the stack traces of the currently running threads.
+
+Shutdown, getLog and getStackTraces require the admin password.
+
 
 Changed APIs:
 
@@ -145,6 +151,11 @@ only for cjdns users or multihomed nodes.
 Default initial peers are now stored in nxt.defaultPeers and
 nxt.testnetDefaultPeers instead of being populated by NxtDbVersion on database
 creation.
+
+Allow the API server to handle both http and https requests on different ports,
+if nxt.apiServerSSLPort is set to a port different from nxt.apiServerPort and
+nxt.apiSSL=true. If the SSL and non-SSL ports are configured to be the same,
+the nxt.apiSSL property determines whether SSL is used or not.
 
 This release requires Java 8 and will not run or compile with Java 7.
 
