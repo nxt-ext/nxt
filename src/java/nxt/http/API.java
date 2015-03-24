@@ -90,7 +90,7 @@ public final class API {
                 connector = new ServerConnector(apiServer);
                 connector.setPort(port);
                 connector.setHost(host);
-                connector.setIdleTimeout(Nxt.getIntProperty("nxt.apiServerIdlTimeout"));
+                connector.setIdleTimeout(Nxt.getIntProperty("nxt.apiServerIdleTimeout"));
                 connector.setReuseAddress(true);
                 apiServer.addConnector(connector);
                 Logger.logMessage("API server using HTTP port " + port);
@@ -172,7 +172,7 @@ public final class API {
             ThreadPool.runBeforeStart(() -> {
                 try {
                     apiServer.start();
-                    Logger.logMessage("Started API server at " + host + ":" + port);
+                    Logger.logMessage("Started API server at " + host + ":" + port + (enableSSL && port != sslPort ? ", " + host + ":" + sslPort : ""));
                 } catch (Exception e) {
                     Logger.logErrorMessage("Failed to start API server", e);
                     throw new RuntimeException(e.toString(), e);
