@@ -432,49 +432,13 @@ var NRS = (function(NRS, $, undefined) {
 
                   break;
                case 2:
-                  async = true;
-
-                  NRS.sendRequest("getAsset", {
-                     "asset": transaction.attachment.asset
-                  }, function(asset, input) {
-                     var data = {
-                        "type": $.t("ask_order_placement"),
-                        "asset_name": asset.name,
-                        "quantity": [transaction.attachment.quantityQNT, asset.decimals],
-                        "price_formatted_html": NRS.formatOrderPricePerWholeQNT(transaction.attachment.priceNQT, asset.decimals) + " NXT",
-                        "total_formatted_html": NRS.formatAmount(NRS.calculateOrderTotalNQT(transaction.attachment.quantityQNT, transaction.attachment.priceNQT)) + " NXT"
-                     };
-
-                     data["sender"] = transaction.senderRS ? transaction.senderRS : transaction.sender;
-                     $("#transaction_info_table").find("tbody").append(NRS.createInfoTable(data));
-                     $("#transaction_info_table").show();
-
-                     $("#transaction_info_modal").modal("show");
-                     NRS.fetchingModalData = false;
-                  });
-
-                  break;
                case 3:
                   async = true;
-
                   NRS.sendRequest("getAsset", {
                      "asset": transaction.attachment.asset
                   }, function(asset, input) {
-                     var data = {
-                        "type": $.t("bid_order_placement"),
-                        "asset_name": asset.name,
-                        "quantity": [transaction.attachment.quantityQNT, asset.decimals],
-                        "price_formatted_html": NRS.formatOrderPricePerWholeQNT(transaction.attachment.priceNQT, asset.decimals) + " NXT",
-                        "total_formatted_html": NRS.formatAmount(NRS.calculateOrderTotalNQT(transaction.attachment.quantityQNT, transaction.attachment.priceNQT)) + " NXT"
-                     };
-                     data["sender"] = transaction.senderRS ? transaction.senderRS : transaction.sender;
-                     $("#transaction_info_table").find("tbody").append(NRS.createInfoTable(data));
-                     $("#transaction_info_table").show();
-
-                     $("#transaction_info_modal").modal("show");
-                     NRS.fetchingModalData = false;
+                     NRS.formatAssetOrder(asset, transaction)
                   });
-
                   break;
                case 4:
                   async = true;
@@ -1096,6 +1060,63 @@ var NRS = (function(NRS, $, undefined) {
          throw e;
       }
 	};
+
+   NRS.formatAssetOrder = function(asset, transaction) {
+      var data = {
+         "type": (transaction.subtype == 2 ? $.t("ask_order_placement") : $.t("bid_order_placement")),
+         "asset_name": asset.name,
+         "quantity": [transaction.attachment.quantityQNT, asset.decimals],
+         "price_formatted_html": NRS.formatOrderPricePerWholeQNT(transaction.attachment.priceNQT, asset.decimals) + " NXT",
+         "total_formatted_html": NRS.formatAmount(NRS.calculateOrderTotalNQT(transaction.attachment.quantityQNT, transaction.attachment.priceNQT)) + " NXT"
+      };
+      data["sender"] = transaction.senderRS ? transaction.senderRS : transaction.sender;
+      var rows = "";
+      var params;
+      if (transaction.subtype == 2) {
+         params = { "askOrder": transaction.transaction };
+      } else {
+         params = { "bidOrder": transaction.transaction };
+      }
+      params["includeAssetInfo"] = "true";
+      var transactionField = (transaction.subtype == 2 ? "bidOrder" : "askOrder");
+      NRS.sendRequest("getOrderTrades", params, function(response) {
+         var tradeQuantity = BigInteger.ZERO;
+         var tradeTotal = BigInteger.ZERO;
+         if (response.trades && response.trades.length > 0) {
+            rows = "<table class='table table-striped'><thead><tr>" +
+            "<th>" + $.t("Date") + "</th>" +
+            "<th>" + $.t("Quantity") + "</th>" +
+            "<th>" + $.t("Price") + "</th>" +
+            "<th>" + $.t("Total") + "</th>" +
+            "<tr></thead><tbody>";
+            for (var i = 0; i < response.trades.length; i++) {
+               var trade = response.trades[i];
+               tradeQuantity = tradeQuantity.add(new BigInteger(trade.quantityQNT));
+               tradeTotal = tradeTotal.add(new BigInteger(trade.quantityQNT).multiply(new BigInteger(trade.priceNQT)));
+               rows += "<tr>" +
+               "<td><a href='#' class='show_transaction_modal_action' data-transaction='" + String(trade[transactionField]).escapeHTML() + "'>" + NRS.formatTimestamp(trade.timestamp) + "</a>" +
+               "<td>" + NRS.formatQuantity(trade.quantityQNT, trade.decimals) + "</td>" +
+               "<td>" + NRS.calculateOrderPricePerWholeQNT(trade.priceNQT, trade.decimals) + "</td>" +
+               "<td>" + NRS.formatAmount(NRS.calculateOrderTotalNQT(trade.quantityQNT, trade.priceNQT)) +
+               "</td>" +
+               "</tr>";
+            }
+            rows += "</tbody></table>";
+            data["trades_formatted_html"] = rows;
+         } else {
+            data["trades"] = $.t("no_matching_trade");
+         }
+         data["quantity_traded"] = [tradeQuantity, asset.decimals];
+         data["total_traded"] = NRS.formatAmount(tradeTotal, false, true) + " NXT";
+      }, null, false);
+
+      var infoTable = $("#transaction_info_table");
+      infoTable.find("tbody").append(NRS.createInfoTable(data));
+      infoTable.show();
+
+      $("#transaction_info_modal").modal("show");
+      NRS.fetchingModalData = false;
+   };
 
 	NRS.formatCurrencyExchange = function(currency, transaction, type) {
 		var rateUnitsStr = " [ " + currency.code + " / NXT ]";
