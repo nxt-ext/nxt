@@ -23,7 +23,7 @@ public final class GetOrderTrades extends APIServlet.APIRequestHandler {
 
         long askOrderId = ParameterParser.getUnsignedLong(req, "askOrder", false);
         long bidOrderId = ParameterParser.getUnsignedLong(req, "bidOrder", false);
-        boolean includeAssetInfo = !"false".equalsIgnoreCase(req.getParameter("includeAssetInfo"));
+        boolean includeAssetInfo = "true".equalsIgnoreCase(req.getParameter("includeAssetInfo"));
         int firstIndex = ParameterParser.getFirstIndex(req);
         int lastIndex = ParameterParser.getLastIndex(req);
 
