@@ -1143,5 +1143,9 @@
   "success_alias_buy": "Alias <strong>__alias_name__</strong>, price __price__ buy request submitted.",
   "success_alias_transfer": "Alias <strong>__alias_name__</strong> transfer request submitted.",
   "success_alias_delete": "Alias <strong>__alias_name__</strong> delete request submitted.",
-  "cancelling_sale": "Alias <strong>__alias_name__</strong> sell cancellation request submitted."
+  "cancelling_sale": "Alias <strong>__alias_name__</strong> sell cancellation request submitted.",
+  "trades": "Trades",
+  "quantity_traded": "Traded quantity",
+  "total_traded": "Total trades",
+  "no_matching_trade": "no matching trade"
 }
