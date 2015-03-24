@@ -1077,7 +1077,6 @@ var NRS = (function(NRS, $, undefined) {
       } else {
          params = { "bidOrder": transaction.transaction };
       }
-      params["includeAssetInfo"] = "true";
       var transactionField = (transaction.subtype == 2 ? "bidOrder" : "askOrder");
       NRS.sendRequest("getOrderTrades", params, function(response) {
          var tradeQuantity = BigInteger.ZERO;
@@ -1095,8 +1094,8 @@ var NRS = (function(NRS, $, undefined) {
                tradeTotal = tradeTotal.add(new BigInteger(trade.quantityQNT).multiply(new BigInteger(trade.priceNQT)));
                rows += "<tr>" +
                "<td><a href='#' class='show_transaction_modal_action' data-transaction='" + String(trade[transactionField]).escapeHTML() + "'>" + NRS.formatTimestamp(trade.timestamp) + "</a>" +
-               "<td>" + NRS.formatQuantity(trade.quantityQNT, trade.decimals) + "</td>" +
-               "<td>" + NRS.calculateOrderPricePerWholeQNT(trade.priceNQT, trade.decimals) + "</td>" +
+               "<td>" + NRS.formatQuantity(trade.quantityQNT, asset.decimals) + "</td>" +
+               "<td>" + NRS.calculateOrderPricePerWholeQNT(trade.priceNQT, asset.decimals) + "</td>" +
                "<td>" + NRS.formatAmount(NRS.calculateOrderTotalNQT(trade.quantityQNT, trade.priceNQT)) +
                "</td>" +
                "</tr>";
