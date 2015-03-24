@@ -82,20 +82,22 @@ public final class API {
 
             apiServer = new Server();
             ServerConnector connector;
+            boolean enableSSL = Nxt.getBooleanProperty("nxt.apiSSL");
             //
             // Create the HTTP connector
             //
-            connector = new ServerConnector(apiServer);
-            connector.setPort(port);
-            connector.setHost(host);
-            connector.setIdleTimeout(Nxt.getIntProperty("nxt.apiServerIdlTimeout"));
-            connector.setReuseAddress(true);
-            apiServer.addConnector(connector);
-            Logger.logMessage("API server using HTTP port " + port);
+            if (!enableSSL || port != sslPort) {
+                connector = new ServerConnector(apiServer);
+                connector.setPort(port);
+                connector.setHost(host);
+                connector.setIdleTimeout(Nxt.getIntProperty("nxt.apiServerIdlTimeout"));
+                connector.setReuseAddress(true);
+                apiServer.addConnector(connector);
+                Logger.logMessage("API server using HTTP port " + port);
+            }
             //
             // Create the HTTPS connector
             //
-            boolean enableSSL = Nxt.getBooleanProperty("nxt.apiSSL");
             if (enableSSL) {
                 HttpConfiguration https_config = new HttpConfiguration();
                 https_config.setSecureScheme("https");
