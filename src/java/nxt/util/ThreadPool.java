@@ -10,9 +10,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 public final class ThreadPool {
@@ -23,9 +21,7 @@ public final class ThreadPool {
     private static List<Runnable> lastBeforeStartJobs = new ArrayList<>();
     private static List<Runnable> afterStartJobs = new ArrayList<>();
 
-    private static final ExecutorService executorService = new ThreadPoolExecutor(0, Runtime.getRuntime().availableProcessors(),
-            60L, TimeUnit.SECONDS, new LinkedBlockingQueue<>());
-
+    private static final ExecutorService executorService = Executors.newCachedThreadPool();
 
     public static synchronized void runBeforeStart(Runnable runnable, boolean runLast) {
         if (scheduledThreadPool != null) {
