@@ -6,10 +6,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
@@ -20,8 +18,6 @@ public final class ThreadPool {
     private static List<Runnable> beforeStartJobs = new ArrayList<>();
     private static List<Runnable> lastBeforeStartJobs = new ArrayList<>();
     private static List<Runnable> afterStartJobs = new ArrayList<>();
-
-    private static final ExecutorService executorService = Executors.newCachedThreadPool();
 
     public static synchronized void runBeforeStart(Runnable runnable, boolean runLast) {
         if (scheduledThreadPool != null) {
@@ -85,19 +81,10 @@ public final class ThreadPool {
         thread.start();
     }
 
-    public static <T> Future<T> submit(Callable<T> callable) {
-        return executorService.submit(callable);
-    }
-
-    public static Future<?> submit(Runnable runnable) {
-        return executorService.submit(runnable);
-    }
-
     public static void shutdown() {
         if (scheduledThreadPool != null) {
 	        Logger.logShutdownMessage("Stopping background jobs...");
             shutdownExecutor(scheduledThreadPool);
-            shutdownExecutor(executorService);
             scheduledThreadPool = null;
         	Logger.logShutdownMessage("...Done");
         }
