@@ -26,10 +26,16 @@ import org.json.simple.JSONStreamAware;
  *   hash   - Lock identity hash code
  *   thread - Identifier of thread holding the lock
  *
+ * Monitor object:
+ *   name    - Monitor class name
+ *   hash    - Monitor identity hash
+ *   depth   - Stack depth where monitor locked
+ *   trace   - Stack element where monitor locked
+ *
  * Thread object:
  *   blocked - Lock object if thread is waiting on a lock
  *   id      - Thread identifier
- *   locks   - Array of lock objects for locks held by this thread
+ *   locks   - Array of monitor objects for locks held by this thread
  *   name    - Thread name
  *   state   - Thread state
  *   trace   - Array of stack trace elements
@@ -94,7 +100,8 @@ public class GetStackTraces extends APIServlet.APIRequestHandler {
                         JSONObject lockJSON = new JSONObject();
                         lockJSON.put("name", mInfo.getClassName());
                         lockJSON.put("hash", mInfo.getIdentityHashCode());
-                        lockJSON.put("thread", tInfo.getThreadId());
+                        lockJSON.put("depth", mInfo.getLockedStackDepth());
+                        lockJSON.put("trace", mInfo.getLockedStackFrame().toString());
                         monitorsJSON.add(lockJSON);
                     }
                     threadJSON.put("locks", monitorsJSON);
