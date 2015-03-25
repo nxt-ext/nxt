@@ -2,11 +2,9 @@ package nxt;
 
 import nxt.db.DbVersion;
 
-import java.sql.SQLException;
-
 class NxtDbVersion extends DbVersion {
 
-    protected void update(int nextUpdate) throws SQLException {
+    protected void update(int nextUpdate) {
         switch (nextUpdate) {
             case 1:
                 apply("CREATE TABLE IF NOT EXISTS block (db_id IDENTITY, id BIGINT NOT NULL, version INT NOT NULL, "
@@ -688,6 +686,12 @@ class NxtDbVersion extends DbVersion {
             case 287:
                 apply("ALTER TABLE phasing_poll ALTER COLUMN quorum SET NULL");
             case 288:
+                apply("DROP INDEX IF EXISTS trade_ask_bid_idx");
+            case 289:
+                apply("CREATE INDEX IF NOT EXISTS trade_ask_idx ON trade (ask_order_id, height DESC)");
+            case 290:
+                apply("CREATE INDEX IF NOT EXISTS trade_bid_idx ON trade (bid_order_id, height DESC)");
+            case 291:
                 return;
             default:
                 throw new RuntimeException("Blockchain database inconsistent with code, probably trying to run older code on newer database");

@@ -97,7 +97,7 @@ public final class Vote {
         this.voteBytes = rs.getBytes("vote_bytes");
     }
 
-    protected void save(Connection con) throws SQLException {
+    private void save(Connection con) throws SQLException {
         try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO vote (id, poll_id, voter_id, "
                 + "vote_bytes, height) VALUES (?, ?, ?, ?, ?)")) {
             int i = 0;

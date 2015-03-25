@@ -27,7 +27,7 @@ import java.util.regex.Pattern;
 @SuppressWarnings({"UnusedDeclaration", "SuspiciousNameCombination"})
 public final class Account {
 
-    public static enum Event {
+    public enum Event {
         BALANCE, UNCONFIRMED_BALANCE, ASSET_BALANCE, UNCONFIRMED_ASSET_BALANCE, CURRENCY_BALANCE, UNCONFIRMED_CURRENCY_BALANCE,
         LEASE_SCHEDULED, LEASE_STARTED, LEASE_ENDED
     }
@@ -508,9 +508,6 @@ public final class Account {
     }
 
     public static DbIterator<AccountCurrency> getCurrencyAccounts(long currencyId, int height, int from, int to) {
-        if (height < 0) {
-            return getCurrencyAccounts(currencyId, from, to);
-        }
         return accountCurrencyTable.getManyBy(new DbClause.LongClause("currency_id", currencyId), height, from, to);
     }
 
@@ -830,9 +827,6 @@ public final class Account {
     }
 
     public DbIterator<Account> getLessors(int height) {
-        if (height < 0) {
-            return getLessors();
-        }
         return accountTable.getManyBy(getLessorsClause(height), height, 0, -1, " ORDER BY id ASC ");
     }
 
@@ -870,9 +864,6 @@ public final class Account {
     }
 
     public DbIterator<AccountAsset> getAssets(int height, int from, int to) {
-        if (height < 0) {
-            return getAssets(from, to);
-        }
         return accountAssetTable.getManyBy(new DbClause.LongClause("account_id", this.id), height, from, to);
     }
 
@@ -925,9 +916,6 @@ public final class Account {
     }
 
     public DbIterator<AccountCurrency> getCurrencies(int height, int from, int to) {
-        if (height < 0) {
-            return getCurrencies(from, to);
-        }
         return accountCurrencyTable.getManyBy(new DbClause.LongClause("account_id", this.id), height, from, to);
     }
 

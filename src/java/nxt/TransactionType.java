@@ -231,7 +231,7 @@ public abstract class TransactionType {
         return Fee.DEFAULT_FEE;
     }
 
-    public Fee getNextFee(Transaction transaction) throws NxtException.NotValidException {
+    public Fee getNextFee(Transaction transaction) {
         return getBaselineFee(transaction);
     }
 

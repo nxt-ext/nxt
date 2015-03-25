@@ -19,7 +19,7 @@ import java.util.List;
  */
 public final class CurrencyMint {
 
-    public static enum Event {
+    public enum Event {
         CURRENCY_MINT
     }
 

@@ -64,7 +64,7 @@ public final class APIServlet extends HttpServlet {
         boolean startDbTransaction() {
             return false;
         }
-        
+
         boolean requirePassword() {
         	return false;
         }
@@ -201,6 +201,7 @@ public final class APIServlet extends HttpServlet {
         map.put("getBidOrder", GetBidOrder.instance);
         map.put("getBidOrderIds", GetBidOrderIds.instance);
         map.put("getBidOrders", GetBidOrders.instance);
+        map.put("getOrderTrades", GetOrderTrades.instance);
         map.put("getAccountExchangeRequests", GetAccountExchangeRequests.instance);
         map.put("getMintingTarget", GetMintingTarget.instance);
         map.put("issueAsset", IssueAsset.instance);
@@ -240,8 +241,10 @@ public final class APIServlet extends HttpServlet {
         map.put("addPeer", AddPeer.instance);
         map.put("blacklistPeer", BlacklistPeer.instance);
         map.put("dumpPeers", DumpPeers.instance);
+        map.put("getLog", GetLog.instance);
+        map.put("getStackTraces", GetStackTraces.instance);
         map.put("shutdown", Shutdown.instance);
-        
+
         apiRequestHandlers = Collections.unmodifiableMap(map);
     }
 

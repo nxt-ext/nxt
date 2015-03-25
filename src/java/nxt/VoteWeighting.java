@@ -59,7 +59,7 @@ public final class VoteWeighting {
 
         private final byte code;
 
-        private VotingModel(int code) {
+        VotingModel(int code) {
             this.code = (byte)code;
         }
 
@@ -109,7 +109,7 @@ public final class VoteWeighting {
 
         private final byte code;
 
-        private MinBalanceModel(int code) {
+        MinBalanceModel(int code) {
             this.code = (byte)code;
         }
 

@@ -121,7 +121,7 @@ public final class Poll extends AbstractPoll {
 
     public static DbIterator<Poll> searchPolls(String query, boolean includeFinished, int from, int to) {
         DbClause dbClause = includeFinished ? DbClause.EMPTY_CLAUSE : new DbClause.IntClause("finish_height", DbClause.Op.GT, Nxt.getBlockchain().getHeight());
-        return pollTable.search(query, dbClause, from, to, " ORDER BY ft.score DESC, poll.height DESC ");
+        return pollTable.search(query, dbClause, from, to, " ORDER BY ft.score DESC, poll.height DESC, poll.db_id DESC ");
     }
 
     public static int getCount() {
@@ -153,7 +153,7 @@ public final class Poll extends AbstractPoll {
                     List<OptionResult> results = poll.countResults(poll.getVoteWeighting(), currentHeight);
                     pollResultsTable.insert(poll, results);
                     Logger.logDebugMessage("Poll " + Long.toUnsignedString(poll.getId()) + " has been finished");
-                } catch (RuntimeException e) { // could happen e.g. because of overflow in safeMultiply
+                } catch (RuntimeException e) {
                     Logger.logErrorMessage("Couldn't count votes for poll " + Long.toUnsignedString(poll.getId()));
                 }
             }

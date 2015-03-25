@@ -17,10 +17,10 @@ public class Scrypt {
             throw new IllegalStateException(e);
         }
     }
-    private byte[] H = new byte[32];
-    private byte[] B = new byte[128 + 4];
-    private int[] X = new int[32];
-    private int[] V = new int[32 * 1024];
+    private final byte[] H = new byte[32];
+    private final byte[] B = new byte[128 + 4];
+    private final int[] X = new int[32];
+    private final int[] V = new int[32 * 1024];
 
     public byte[] hash(final byte input[]) {
         int i, j, k;

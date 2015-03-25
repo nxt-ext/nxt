@@ -4,11 +4,11 @@ public interface Fee {
 
     long getFee(TransactionImpl transaction, Appendix appendage);
 
-    public static final Fee DEFAULT_FEE = new Fee.ConstantFee(Constants.ONE_NXT);
+    Fee DEFAULT_FEE = new Fee.ConstantFee(Constants.ONE_NXT);
 
-    public static final Fee NONE = (transaction, appendage) -> 0;
+    Fee NONE = (transaction, appendage) -> 0;
 
-    public static final class ConstantFee implements Fee {
+    final class ConstantFee implements Fee {
 
         private final long fee;
 
@@ -23,7 +23,7 @@ public interface Fee {
 
     }
 
-    public static abstract class SizeBasedFee implements Fee {
+    abstract class SizeBasedFee implements Fee {
 
         private final long feePerKByte;
 

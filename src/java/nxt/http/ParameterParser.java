@@ -299,6 +299,9 @@ final class ParameterParser {
         }
         String secretPhrase = getSecretPhrase(req);
         Account senderAccount = Account.getAccount(Crypto.getPublicKey(secretPhrase));
+        if (senderAccount == null) {
+            throw new ParameterException(UNKNOWN_ACCOUNT);
+        }
         boolean isText = !"false".equalsIgnoreCase(req.getParameter("messageToEncryptToSelfIsText"));
         try {
             byte[] plainMessageBytes = isText ? Convert.toBytes(plainMessage) : Convert.parseHexString(plainMessage);
@@ -420,7 +423,7 @@ final class ParameterParser {
             if (lastIndex < 0) {
                 lastIndex = Integer.MAX_VALUE;
             }
-        } catch (NumberFormatException e) {}
+        } catch (NumberFormatException ignored) {}
         try {
             API.verifyPassword(req);
             return lastIndex;
