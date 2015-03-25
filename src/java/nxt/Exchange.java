@@ -16,7 +16,7 @@ import java.sql.SQLException;
 
 public final class Exchange {
 
-    public static enum Event {
+    public enum Event {
         EXCHANGE
     }
 

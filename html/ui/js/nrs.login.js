@@ -163,18 +163,20 @@ var NRS = (function(NRS, $, undefined) {
 		}
 	}
 	
-	$("input:radio[name=loginType]").change(function(e) {
+	$("#loginButtons").on('click',function(e) {
 		e.preventDefault();
-		if (this.value == 'account') {
+		if ($(this).attr('aria-pressed') == 'true') {
             NRS.listAccounts();
 			$('#login_password').parent().hide();
 			$('#remember_password_container').hide();
+			$(this).html('<input type="hidden" name="loginType" id="accountLogin" value="account" autocomplete="off" /><i class="fa fa-male"></i>');
         }
         else {
             $('#login_account_container').hide();
 			$('#login_account_container_other').hide();
 			$('#login_password').parent().show();
 			$('#remember_password_container').show();
+			$(this).html('<input type="hidden" name="loginType" id="accountLogin" value="passwordLogin" autocomplete="off" /><i class="fa fa-key"></i>');
         }
 	});
 	

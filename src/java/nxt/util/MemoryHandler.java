@@ -26,9 +26,6 @@ public class MemoryHandler extends Handler {
     /** Level OFF value */
     private static final int OFF_VALUE = Level.OFF.intValue();
 
-    /** Ring buffer size */
-    private int bufferSize;
-
     /** Ring buffer */
     private final LogRecord[] buffer;
 
@@ -51,6 +48,7 @@ public class MemoryHandler extends Handler {
         //
         // Allocate the ring buffer
         //
+        int bufferSize;
         try {
             value = manager.getProperty(cname+".size");
             if (value != null)

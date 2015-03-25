@@ -377,7 +377,7 @@ final class BlockImpl implements Block {
         Arrays.sort(badBlocks);
     }
 
-    void apply() throws BlockchainProcessor.TransactionNotAcceptedException {
+    void apply() {
         Account generatorAccount = Account.addOrGetAccount(getGeneratorId());
         generatorAccount.apply(getGeneratorPublicKey());
         generatorAccount.addToBalanceAndUnconfirmedBalanceNQT(totalFeeNQT);

@@ -21,7 +21,7 @@ final class TransactionImpl implements Transaction {
     static final class BuilderImpl implements Builder {
 
         private final short deadline;
-        private byte[] senderPublicKey;
+        private final byte[] senderPublicKey;
         private final long amountNQT;
         private final long feeNQT;
         private final TransactionType type;

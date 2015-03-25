@@ -11,7 +11,7 @@ public abstract class DbClause {
 
         private final String operator;
 
-        private Op(String operator) {
+        Op(String operator) {
             this.operator = operator;
         }
 

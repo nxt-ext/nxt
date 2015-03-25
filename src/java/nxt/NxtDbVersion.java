@@ -2,11 +2,9 @@ package nxt;
 
 import nxt.db.DbVersion;
 
-import java.sql.SQLException;
-
 class NxtDbVersion extends DbVersion {
 
-    protected void update(int nextUpdate) throws SQLException {
+    protected void update(int nextUpdate) {
         switch (nextUpdate) {
             case 1:
                 apply("CREATE TABLE IF NOT EXISTS block (db_id IDENTITY, id BIGINT NOT NULL, version INT NOT NULL, "

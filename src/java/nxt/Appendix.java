@@ -17,12 +17,12 @@ public interface Appendix {
     JSONObject getJSONObject();
     byte getVersion();
     int getBaselineFeeHeight();
-    Fee getBaselineFee(Transaction transaction) throws NxtException.NotValidException;
+    Fee getBaselineFee(Transaction transaction);
     int getNextFeeHeight();
-    Fee getNextFee(Transaction transaction) throws NxtException.NotValidException;
+    Fee getNextFee(Transaction transaction);
 
 
-    static abstract class AbstractAppendix implements Appendix {
+    abstract class AbstractAppendix implements Appendix {
 
         private final byte version;
 
@@ -113,7 +113,7 @@ public interface Appendix {
 
     }
 
-    public static class Message extends AbstractAppendix {
+    class Message extends AbstractAppendix {
 
         private static final Fee MESSAGE_FEE = new Fee.SizeBasedFee(Constants.ONE_NXT) {
             @Override
@@ -221,7 +221,7 @@ public interface Appendix {
         }
     }
 
-    abstract static class AbstractEncryptedMessage extends AbstractAppendix {
+    abstract class AbstractEncryptedMessage extends AbstractAppendix {
 
         private static final Fee ENCRYPTED_DATA_FEE = new Fee.SizeBasedFee(Constants.ONE_NXT) {
             @Override
@@ -309,9 +309,9 @@ public interface Appendix {
 
     }
 
-    public static class EncryptedMessage extends AbstractEncryptedMessage {
+    class EncryptedMessage extends AbstractEncryptedMessage {
 
-        static EncryptedMessage parse(JSONObject attachmentData) throws NxtException.NotValidException {
+        static EncryptedMessage parse(JSONObject attachmentData) {
             if (attachmentData.get("encryptedMessage") == null ) {
                 return null;
             }
@@ -355,9 +355,9 @@ public interface Appendix {
 
     }
 
-    public static class EncryptToSelfMessage extends AbstractEncryptedMessage {
+    class EncryptToSelfMessage extends AbstractEncryptedMessage {
 
-        static EncryptToSelfMessage parse(JSONObject attachmentData) throws NxtException.NotValidException {
+        static EncryptToSelfMessage parse(JSONObject attachmentData) {
             if (attachmentData.get("encryptToSelfMessage") == null ) {
                 return null;
             }
@@ -398,7 +398,7 @@ public interface Appendix {
 
     }
 
-    public static class PublicKeyAnnouncement extends AbstractAppendix {
+    class PublicKeyAnnouncement extends AbstractAppendix {
 
         static PublicKeyAnnouncement parse(JSONObject attachmentData) {
             if (attachmentData.get("recipientPublicKey") == null) {
@@ -478,7 +478,7 @@ public interface Appendix {
 
     }
 
-    public static class Phasing extends AbstractAppendix {
+    class Phasing extends AbstractAppendix {
 
         private static final Fee PHASING_FEE = new Fee.ConstantFee(20 * Constants.ONE_NXT);
 

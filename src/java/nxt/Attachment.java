@@ -16,7 +16,7 @@ public interface Attachment extends Appendix {
 
     TransactionType getTransactionType();
 
-    abstract static class AbstractAttachment extends Appendix.AbstractAppendix implements Attachment {
+    abstract class AbstractAttachment extends Appendix.AbstractAppendix implements Attachment {
 
         private AbstractAttachment(ByteBuffer buffer, byte transactionVersion) {
             super(buffer, transactionVersion);
@@ -54,7 +54,7 @@ public interface Attachment extends Appendix {
 
     }
 
-    abstract static class EmptyAttachment extends AbstractAttachment {
+    abstract class EmptyAttachment extends AbstractAttachment {
 
         private EmptyAttachment() {
             super(0);
@@ -80,7 +80,7 @@ public interface Attachment extends Appendix {
 
     }
 
-    public final static EmptyAttachment ORDINARY_PAYMENT = new EmptyAttachment() {
+    EmptyAttachment ORDINARY_PAYMENT = new EmptyAttachment() {
 
         @Override
         public TransactionType getTransactionType() {
@@ -90,7 +90,7 @@ public interface Attachment extends Appendix {
     };
 
     // the message payload is in the Appendix
-    public final static EmptyAttachment ARBITRARY_MESSAGE = new EmptyAttachment() {
+    EmptyAttachment ARBITRARY_MESSAGE = new EmptyAttachment() {
 
         @Override
         public TransactionType getTransactionType() {
@@ -99,7 +99,7 @@ public interface Attachment extends Appendix {
 
     };
 
-    public final static class MessagingAliasAssignment extends AbstractAttachment {
+    final class MessagingAliasAssignment extends AbstractAttachment {
 
         private final String aliasName;
         private final String aliasURI;
@@ -156,7 +156,7 @@ public interface Attachment extends Appendix {
         }
     }
 
-    public final static class MessagingAliasSell extends AbstractAttachment {
+    final class MessagingAliasSell extends AbstractAttachment {
 
         private final String aliasName;
         private final long priceNQT;
@@ -211,7 +211,7 @@ public interface Attachment extends Appendix {
         }
     }
 
-    public final static class MessagingAliasBuy extends AbstractAttachment {
+    final class MessagingAliasBuy extends AbstractAttachment {
 
         private final String aliasName;
 
@@ -256,7 +256,7 @@ public interface Attachment extends Appendix {
         }
     }
 
-    public final static class MessagingAliasDelete extends AbstractAttachment {
+    final class MessagingAliasDelete extends AbstractAttachment {
 
         private final String aliasName;
 
@@ -301,7 +301,7 @@ public interface Attachment extends Appendix {
         }
     }
 
-    public final static class MessagingPollCreation extends AbstractAttachment {
+    final class MessagingPollCreation extends AbstractAttachment {
 
         public final static class PollBuilder {
             private final String pollName;
@@ -315,7 +315,7 @@ public interface Attachment extends Appendix {
             private byte minBalanceModel;
 
             private byte minNumberOfOptions = Constants.VOTING_DEFAULT_MIN_NUMBER_OF_CHOICES;
-            private byte maxNumberOfOptions;
+            private final byte maxNumberOfOptions;
 
             private final byte minRangeValue;
             private final byte maxRangeValue;
@@ -547,7 +547,7 @@ public interface Attachment extends Appendix {
 
     }
 
-    public final static class MessagingVoteCasting extends AbstractAttachment {
+    final class MessagingVoteCasting extends AbstractAttachment {
 
         private final long pollId;
         private final byte[] pollVote;
@@ -616,7 +616,7 @@ public interface Attachment extends Appendix {
         }
     }
 
-    public final static class MessagingPhasingVoteCasting extends AbstractAttachment {
+    final class MessagingPhasingVoteCasting extends AbstractAttachment {
 
         private static final Comparator<byte[]> hashComparator = Comparator.comparingLong(Convert::fullHashToId);
 
@@ -679,7 +679,7 @@ public interface Attachment extends Appendix {
         }
     }
 
-    public final static class MessagingHubAnnouncement extends AbstractAttachment {
+    final class MessagingHubAnnouncement extends AbstractAttachment {
 
         private final long minFeePerByteNQT;
         private final String[] uris;
@@ -759,7 +759,7 @@ public interface Attachment extends Appendix {
 
     }
 
-    public final static class MessagingAccountInfo extends AbstractAttachment {
+    final class MessagingAccountInfo extends AbstractAttachment {
 
         private final String name;
         private final String description;
@@ -870,7 +870,7 @@ public interface Attachment extends Appendix {
 
     }
 
-    public final static class ColoredCoinsAssetIssuance extends AbstractAttachment {
+    final class ColoredCoinsAssetIssuance extends AbstractAttachment {
 
         private final String name;
         private final String description;
@@ -947,7 +947,7 @@ public interface Attachment extends Appendix {
         }
     }
 
-    public final static class ColoredCoinsAssetTransfer extends AbstractAttachment {
+    final class ColoredCoinsAssetTransfer extends AbstractAttachment {
 
         private final long assetId;
         private final long quantityQNT;
@@ -1017,7 +1017,7 @@ public interface Attachment extends Appendix {
 
     }
 
-    abstract static class ColoredCoinsOrderPlacement extends AbstractAttachment {
+    abstract class ColoredCoinsOrderPlacement extends AbstractAttachment {
 
         private final long assetId;
         private final long quantityQNT;
@@ -1075,7 +1075,7 @@ public interface Attachment extends Appendix {
         }
     }
 
-    public final static class ColoredCoinsAskOrderPlacement extends ColoredCoinsOrderPlacement {
+    final class ColoredCoinsAskOrderPlacement extends ColoredCoinsOrderPlacement {
 
         ColoredCoinsAskOrderPlacement(ByteBuffer buffer, byte transactionVersion) {
             super(buffer, transactionVersion);
@@ -1096,7 +1096,7 @@ public interface Attachment extends Appendix {
 
     }
 
-    public final static class ColoredCoinsBidOrderPlacement extends ColoredCoinsOrderPlacement {
+    final class ColoredCoinsBidOrderPlacement extends ColoredCoinsOrderPlacement {
 
         ColoredCoinsBidOrderPlacement(ByteBuffer buffer, byte transactionVersion) {
             super(buffer, transactionVersion);
@@ -1117,7 +1117,7 @@ public interface Attachment extends Appendix {
 
     }
 
-    abstract static class ColoredCoinsOrderCancellation extends AbstractAttachment {
+    abstract class ColoredCoinsOrderCancellation extends AbstractAttachment {
 
         private final long orderId;
 
@@ -1155,7 +1155,7 @@ public interface Attachment extends Appendix {
         }
     }
 
-    public final static class ColoredCoinsAskOrderCancellation extends ColoredCoinsOrderCancellation {
+    final class ColoredCoinsAskOrderCancellation extends ColoredCoinsOrderCancellation {
 
         ColoredCoinsAskOrderCancellation(ByteBuffer buffer, byte transactionVersion) {
             super(buffer, transactionVersion);
@@ -1176,7 +1176,7 @@ public interface Attachment extends Appendix {
 
     }
 
-    public final static class ColoredCoinsBidOrderCancellation extends ColoredCoinsOrderCancellation {
+    final class ColoredCoinsBidOrderCancellation extends ColoredCoinsOrderCancellation {
 
         ColoredCoinsBidOrderCancellation(ByteBuffer buffer, byte transactionVersion) {
             super(buffer, transactionVersion);
@@ -1197,7 +1197,7 @@ public interface Attachment extends Appendix {
 
     }
 
-    public final static class ColoredCoinsDividendPayment extends AbstractAttachment {
+    final class ColoredCoinsDividendPayment extends AbstractAttachment {
 
         private final long assetId;
         private final int height;
@@ -1261,7 +1261,7 @@ public interface Attachment extends Appendix {
 
     }
 
-    public final static class DigitalGoodsListing extends AbstractAttachment {
+    final class DigitalGoodsListing extends AbstractAttachment {
 
         private final String name;
         private final String description;
@@ -1342,7 +1342,7 @@ public interface Attachment extends Appendix {
 
     }
 
-    public final static class DigitalGoodsDelisting extends AbstractAttachment {
+    final class DigitalGoodsDelisting extends AbstractAttachment {
 
         private final long goodsId;
 
@@ -1384,7 +1384,7 @@ public interface Attachment extends Appendix {
 
     }
 
-    public final static class DigitalGoodsPriceChange extends AbstractAttachment {
+    final class DigitalGoodsPriceChange extends AbstractAttachment {
 
         private final long goodsId;
         private final long priceNQT;
@@ -1434,7 +1434,7 @@ public interface Attachment extends Appendix {
 
     }
 
-    public final static class DigitalGoodsQuantityChange extends AbstractAttachment {
+    final class DigitalGoodsQuantityChange extends AbstractAttachment {
 
         private final long goodsId;
         private final int deltaQuantity;
@@ -1484,7 +1484,7 @@ public interface Attachment extends Appendix {
 
     }
 
-    public final static class DigitalGoodsPurchase extends AbstractAttachment {
+    final class DigitalGoodsPurchase extends AbstractAttachment {
 
         private final long goodsId;
         private final int quantity;
@@ -1550,7 +1550,7 @@ public interface Attachment extends Appendix {
 
     }
 
-    public final static class DigitalGoodsDelivery extends AbstractAttachment {
+    final class DigitalGoodsDelivery extends AbstractAttachment {
 
         private final long purchaseId;
         private final EncryptedData goods;
@@ -1625,7 +1625,7 @@ public interface Attachment extends Appendix {
 
     }
 
-    public final static class DigitalGoodsFeedback extends AbstractAttachment {
+    final class DigitalGoodsFeedback extends AbstractAttachment {
 
         private final long purchaseId;
 
@@ -1667,7 +1667,7 @@ public interface Attachment extends Appendix {
 
     }
 
-    public final static class DigitalGoodsRefund extends AbstractAttachment {
+    final class DigitalGoodsRefund extends AbstractAttachment {
 
         private final long purchaseId;
         private final long refundNQT;
@@ -1717,7 +1717,7 @@ public interface Attachment extends Appendix {
 
     }
 
-    public final static class AccountControlEffectiveBalanceLeasing extends AbstractAttachment {
+    final class AccountControlEffectiveBalanceLeasing extends AbstractAttachment {
 
         private final short period;
 
@@ -1760,13 +1760,13 @@ public interface Attachment extends Appendix {
         }
     }
 
-    public static interface MonetarySystemAttachment {
+    interface MonetarySystemAttachment {
 
         long getCurrencyId();
 
     }
 
-    public final static class MonetarySystemCurrencyIssuance extends AbstractAttachment {
+    final class MonetarySystemCurrencyIssuance extends AbstractAttachment {
 
         private final String name;
         private final String code;
@@ -1948,7 +1948,7 @@ public interface Attachment extends Appendix {
         }
     }
 
-    public final static class MonetarySystemReserveIncrease extends AbstractAttachment implements MonetarySystemAttachment {
+    final class MonetarySystemReserveIncrease extends AbstractAttachment implements MonetarySystemAttachment {
 
         private final long currencyId;
         private final long amountPerUnitNQT;
@@ -2003,7 +2003,7 @@ public interface Attachment extends Appendix {
 
     }
 
-    public final static class MonetarySystemReserveClaim extends AbstractAttachment implements MonetarySystemAttachment {
+    final class MonetarySystemReserveClaim extends AbstractAttachment implements MonetarySystemAttachment {
 
         private final long currencyId;
         private final long units;
@@ -2058,7 +2058,7 @@ public interface Attachment extends Appendix {
 
     }
 
-    public final static class MonetarySystemCurrencyTransfer extends AbstractAttachment implements MonetarySystemAttachment {
+    final class MonetarySystemCurrencyTransfer extends AbstractAttachment implements MonetarySystemAttachment {
 
         private final long currencyId;
         private final long units;
@@ -2112,7 +2112,7 @@ public interface Attachment extends Appendix {
         }
     }
 
-    public final static class MonetarySystemPublishExchangeOffer extends AbstractAttachment implements MonetarySystemAttachment {
+    final class MonetarySystemPublishExchangeOffer extends AbstractAttachment implements MonetarySystemAttachment {
 
         private final long currencyId;
         private final long buyRateNQT;
@@ -2228,7 +2228,7 @@ public interface Attachment extends Appendix {
 
     }
 
-    abstract static class MonetarySystemExchange extends AbstractAttachment implements MonetarySystemAttachment {
+    abstract class MonetarySystemExchange extends AbstractAttachment implements MonetarySystemAttachment {
 
         private final long currencyId;
         private final long rateNQT;
@@ -2288,7 +2288,7 @@ public interface Attachment extends Appendix {
 
     }
 
-    public final static class MonetarySystemExchangeBuy extends MonetarySystemExchange {
+    final class MonetarySystemExchangeBuy extends MonetarySystemExchange {
 
         MonetarySystemExchangeBuy(ByteBuffer buffer, byte transactionVersion) {
             super(buffer, transactionVersion);
@@ -2309,7 +2309,7 @@ public interface Attachment extends Appendix {
 
     }
 
-    public final static class MonetarySystemExchangeSell extends MonetarySystemExchange {
+    final class MonetarySystemExchangeSell extends MonetarySystemExchange {
 
         MonetarySystemExchangeSell(ByteBuffer buffer, byte transactionVersion) {
             super(buffer, transactionVersion);
@@ -2330,7 +2330,7 @@ public interface Attachment extends Appendix {
 
     }
 
-    public final static class MonetarySystemCurrencyMinting extends AbstractAttachment implements MonetarySystemAttachment {
+    final class MonetarySystemCurrencyMinting extends AbstractAttachment implements MonetarySystemAttachment {
 
         private final long nonce;
         private final long currencyId;
@@ -2405,7 +2405,7 @@ public interface Attachment extends Appendix {
 
     }
 
-    public final static class MonetarySystemCurrencyDeletion extends AbstractAttachment implements MonetarySystemAttachment {
+    final class MonetarySystemCurrencyDeletion extends AbstractAttachment implements MonetarySystemAttachment {
 
         private final long currencyId;
 

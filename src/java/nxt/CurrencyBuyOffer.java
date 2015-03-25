@@ -110,10 +110,6 @@ public final class CurrencyBuyOffer extends CurrencyExchangeOffer {
         this.dbKey = buyOfferDbKeyFactory.newKey(super.id);
     }
 
-    protected void save(Connection con, String table) throws SQLException {
-        super.save(con, table);
-    }
-
     @Override
     public CurrencySellOffer getCounterOffer() {
         return CurrencySellOffer.getOffer(id);
