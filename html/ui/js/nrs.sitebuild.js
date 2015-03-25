@@ -85,7 +85,7 @@ var NRS = (function(NRS, $, undefined) {
         var html = $(_modalUIElements).filter('div#' + elementName).html();
         var template = Handlebars.compile(html);
         var $elems = $modal.find("div[data-modal-ui-element='" + elementName + "']" + selector);
-        
+
         var modalId = $modal.attr('id');
         var modalName = modalId.replace('_modal', '');
         context["modalId"] = modalId;
@@ -96,8 +96,8 @@ var NRS = (function(NRS, $, undefined) {
             $(this).append(template(context));
         });
 
-        $("[data-i18n]").i18n();
-        return $elems;
+       $('div[data-modal-ui-element]').find("[data-i18n]").i18n();
+       return $elems;
     }
 
 
