@@ -1,6 +1,10 @@
 package nxt;
 
+import nxt.Attachment.AbstractAttachment;
+import nxt.NxtException.NotValidException;
+import nxt.NxtException.ValidationException;
 import nxt.util.Convert;
+
 import org.json.simple.JSONObject;
 
 import java.nio.ByteBuffer;
@@ -50,7 +54,8 @@ public abstract class TransactionType {
     private static final byte SUBTYPE_DIGITAL_GOODS_REFUND = 7;
 
     private static final byte SUBTYPE_ACCOUNT_CONTROL_EFFECTIVE_BALANCE_LEASING = 0;
-
+    private static final byte SUBTYPE_ACCOUNT_CONTROL_PHASING_ONLY = 1;
+    
     public static TransactionType findTransactionType(byte type, byte subtype) {
         switch (type) {
             case TYPE_PAYMENT:
@@ -129,6 +134,8 @@ public abstract class TransactionType {
                 switch (subtype) {
                     case SUBTYPE_ACCOUNT_CONTROL_EFFECTIVE_BALANCE_LEASING:
                         return AccountControl.EFFECTIVE_BALANCE_LEASING;
+                    case SUBTYPE_ACCOUNT_CONTROL_PHASING_ONLY:
+                        return AccountControl.SET_PHASING_ONLY;
                     default:
                         return null;
                 }
@@ -2135,6 +2142,49 @@ public abstract class TransactionType {
 
         };
 
+        public static final TransactionType SET_PHASING_ONLY = new AccountControl(){
+
+            @Override
+            public byte getSubtype() {
+                return SUBTYPE_ACCOUNT_CONTROL_PHASING_ONLY;
+            }
+
+            @Override
+            AbstractAttachment parseAttachment(ByteBuffer buffer,
+                    byte transactionVersion) throws NotValidException {
+                return new Attachment.SetPhasingOnly(buffer, transactionVersion);
+            }
+
+            @Override
+            AbstractAttachment parseAttachment(JSONObject attachmentData)
+                    throws NotValidException {
+                return new Attachment.SetPhasingOnly(attachmentData);
+            }
+
+            @Override
+            void validateAttachment(Transaction transaction) throws ValidationException {
+                Attachment.SetPhasingOnly attachment = (Attachment.SetPhasingOnly)transaction.getAttachment();
+                attachment.getPhasingParams().validate();
+            }
+
+            @Override
+            void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
+                Attachment.SetPhasingOnly attachment = (Attachment.SetPhasingOnly)transaction.getAttachment();
+                AccountControlTxBlocking.PhasingOnly.set(transaction, attachment);
+            }
+
+            @Override
+            public boolean canHaveRecipient() {
+                return false;
+            }
+
+            @Override
+            public String getName() {
+                return "SetPhasingOnly";
+            }
+            
+        };
+        
     }
 
 }

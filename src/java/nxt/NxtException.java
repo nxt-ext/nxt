@@ -68,6 +68,20 @@ public abstract class NxtException extends Exception {
 
     }
 
+    public static class AccountControlException extends ValidationException {
+
+        private static final long serialVersionUID = 8481308766412568946L;
+
+        public AccountControlException(String message) {
+            super(message);
+        }
+
+        public AccountControlException(String message, Throwable cause) {
+            super(message, cause);
+        }
+        
+    }
+    
     public static final class StopException extends RuntimeException {
 
         public StopException(String message) {

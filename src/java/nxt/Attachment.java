@@ -2,6 +2,7 @@ package nxt;
 
 import nxt.crypto.EncryptedData;
 import nxt.util.Convert;
+
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
@@ -13,6 +14,8 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 public interface Attachment extends Appendix {
+
+    
 
     TransactionType getTransactionType();
 
@@ -2450,4 +2453,40 @@ public interface Attachment extends Appendix {
 
     }
 
+    public class SetPhasingOnly extends AbstractAttachment {
+
+        private final PhasingParams phasingParams;
+
+        public SetPhasingOnly(ByteBuffer buffer, byte transactionVersion) {
+            phasingParams = new PhasingParams(buffer);
+        }
+
+        public SetPhasingOnly(JSONObject attachmentData) {
+            phasingParams = new PhasingParams(attachmentData);
+        }
+
+        @Override
+        public TransactionType getTransactionType() {
+            return TransactionType.AccountControl.SET_PHASING_ONLY;
+        }
+
+        @Override
+        int getMySize() {
+            return phasingParams.getMySize();
+        }
+
+        @Override
+        void putMyBytes(ByteBuffer buffer) {
+            phasingParams.putMyBytes(buffer);
+        }
+
+        @Override
+        void putMyJSON(JSONObject json) {
+            phasingParams.putMyJSON(json);
+        }
+
+        public PhasingParams getPhasingParams() {
+            return phasingParams;
+        }
+    }
 }
