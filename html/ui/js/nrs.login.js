@@ -163,9 +163,17 @@ var NRS = (function(NRS, $, undefined) {
 		}
 	}
 	
+	NRS.switchAccount = function(account) {
+		NRS.setDecryptionPassword("");
+		NRS.setPassword("");
+		//window.location.reload();
+		NRS.init();
+		NRS.login(false,account);
+	}
+	
 	$("#loginButtons").on('click',function(e) {
 		e.preventDefault();
-		if ($(this).attr('aria-pressed') == 'true') {
+		if ($(this).hasClass('active')) {
             NRS.listAccounts();
 			$('#login_password').parent().hide();
 			$('#remember_password_container').hide();
@@ -380,6 +388,25 @@ var NRS = (function(NRS, $, undefined) {
 					}
 
 					$("[data-i18n]").i18n();
+					
+					/* Add accounts to dropdown for quick switching */
+					$("#account_id_dropdown .dropdown-menu .switchAccount").remove();
+					if (NRS.getCookie("savedNxtAccounts") && NRS.getCookie("savedNxtAccounts")!=""){
+						$("#account_id_dropdown .dropdown-menu").append("<li class='switchAccount' style='padding-left:2px;'><b>Switch Account to</b></li>")
+						var accounts = NRS.getCookie("savedNxtAccounts").split(";");
+						$.each(accounts, function(index, account) {
+							if (account != ''){
+								$('#account_id_dropdown .dropdown-menu')
+								.append($("<li class='switchAccount'></li>")
+									.append($("<a></a>")
+										.attr("href","#")
+										.attr("style","font-size: 85%;")
+										.attr("onClick","NRS.switchAccount('"+account+"')")
+										.text(account))
+								);
+							}
+						});
+					}
 
 					NRS.getInitialTransactions();
 					NRS.updateApprovalRequests();
