@@ -566,8 +566,8 @@ var NRS = (function(NRS, $, undefined) {
 		html += '<span data-i18n="unconfirmed">Unconfirmed</span></a></li>';
 		$('#transactions_type_navi').append(html);
 		html  = '<li role="presentation"><a href="#" data-transaction-type="pending" ';
-		html += 'data-toggle="popover" data-placement="top" data-content="Pending" data-container="body" data-i18n="[data-content]pending">';
-		html += '<i class="fa fa-gavel"></i>&nbsp; <span data-i18n="pending">Pending</span></a></li>';
+		html += 'data-toggle="popover" data-placement="top" data-content="Phasing" data-container="body" data-i18n="[data-content]phasing">';
+		html += '<i class="fa fa-gavel"></i>&nbsp; <span data-i18n="phasing">Phasing</span></a></li>';
 		$('#transactions_type_navi').append(html);
 
 		$('#transactions_type_navi a[data-toggle="popover"]').popover({
