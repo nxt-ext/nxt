@@ -418,8 +418,10 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	$("#logout_button_container").on("show.bs.dropdown", function(e) {
+		
 		if (!NRS.isForging) {
-			e.preventDefault();
+			//e.preventDefault();
+			$(this).find("[data-i18n='logout_stop_forging']").hide();
 		}
 	});
 
@@ -513,12 +515,12 @@ var NRS = (function(NRS, $, undefined) {
 		$(document.documentElement).scrollTop(0);
 	}
 
-	$("#logout_button").click(function(e) {
+	/*$("#logout_button").click(function(e) {
 		if (!NRS.isForging) {
 			e.preventDefault();
 			NRS.logout();
 		}
-	});
+	});*/
 
 	NRS.logout = function(stopForging) {
 		if (stopForging && NRS.isForging) {
