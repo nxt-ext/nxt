@@ -527,7 +527,8 @@ var NRS = (function(NRS, $, undefined) {
 		} else {
 			NRS.setDecryptionPassword("");
 			NRS.setPassword("");
-			window.location.reload();
+			//window.location.reload();
+			window.location.href = window.location.pathname;    
 		}
 	}
 
@@ -555,20 +556,5 @@ var NRS = (function(NRS, $, undefined) {
 		NRS.setEncryptionPassword(password);
 		NRS.setServerPassword(password);
 	}
-	
-	NRS.getUrlParameter = function(sParam){
-		var sPageURL = window.location.search.substring(1);
-		var sURLVariables = sPageURL.split('&');
-		for (var i = 0; i < sURLVariables.length; i++) 
-		{
-			var sParameterName = sURLVariables[i].split('=');
-			if (sParameterName[0] == sParam) 
-			{
-				return sParameterName[1];
-			}
-		}
-		return false;
-	}    
-	
 	return NRS;
 }(NRS || {}, jQuery));
