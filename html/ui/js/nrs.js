@@ -223,6 +223,10 @@ var NRS = (function(NRS, $, undefined) {
 		$("#dgs_search_account_top, #dgs_search_account_center").mask("NXT-****-****-****-*****", {
 			"unmask": false
 		});
+		
+		if (NRS.getUrlParameter("account")){
+			NRS.login(false,NRS.getUrlParameter("account"));
+		}
 
 		/*
 		$("#asset_exchange_search input[name=q]").addClear({

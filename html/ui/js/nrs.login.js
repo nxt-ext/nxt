@@ -166,9 +166,9 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.switchAccount = function(account) {
 		NRS.setDecryptionPassword("");
 		NRS.setPassword("");
-		//window.location.reload();
-		NRS.init();
-		NRS.login(false,account);
+		var url = window.location.pathname;    
+		url += '?account='+account;
+		window.location.href = url;
 	}
 	
 	$("#loginButtons").on('click',function(e) {
@@ -555,5 +555,20 @@ var NRS = (function(NRS, $, undefined) {
 		NRS.setEncryptionPassword(password);
 		NRS.setServerPassword(password);
 	}
+	
+	NRS.getUrlParameter = function(sParam){
+		var sPageURL = window.location.search.substring(1);
+		var sURLVariables = sPageURL.split('&');
+		for (var i = 0; i < sURLVariables.length; i++) 
+		{
+			var sParameterName = sURLVariables[i].split('=');
+			if (sParameterName[0] == sParam) 
+			{
+				return sParameterName[1];
+			}
+		}
+		return false;
+	}    
+	
 	return NRS;
 }(NRS || {}, jQuery));
