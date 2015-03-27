@@ -36,7 +36,7 @@ public final class GetOrderTrades extends APIServlet.APIRequestHandler {
         if (askOrderId != 0 && bidOrderId != 0) {
             Trade trade = Trade.getTrade(askOrderId, bidOrderId);
             if (trade != null) {
-                tradesData.add(JSONData.trade(trade, false));
+                tradesData.add(JSONData.trade(trade, includeAssetInfo));
             }
         } else {
             DbIterator<Trade> trades = null;

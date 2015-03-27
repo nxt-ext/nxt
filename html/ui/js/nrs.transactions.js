@@ -44,6 +44,7 @@ var NRS = (function(NRS, $, undefined) {
 			// always call incoming for messages to enable message notifications
 			NRS.incoming['messages'](transactions);
 			NRS.updateNotifications();
+			NRS.setPhasingNotifications();
 		}
 	}
 
@@ -87,6 +88,7 @@ var NRS = (function(NRS, $, undefined) {
 
 				if (unconfirmedTransactionIdString != NRS.unconfirmedTransactionIds) {
 					NRS.unconfirmedTransactionsChange = true;
+					NRS.setUnconfirmedNotifications();
 					NRS.unconfirmedTransactionIds = unconfirmedTransactionIdString;
 				} else {
 					NRS.unconfirmedTransactionsChange = false;
@@ -100,6 +102,7 @@ var NRS = (function(NRS, $, undefined) {
 
 				if (NRS.unconfirmedTransactionIds) {
 					NRS.unconfirmedTransactionsChange = true;
+					NRS.setUnconfirmedNotifications();
 				} else {
 					NRS.unconfirmedTransactionsChange = false;
 				}
@@ -562,12 +565,18 @@ var NRS = (function(NRS, $, undefined) {
 		});
 
 		html  = '<li role="presentation"><a href="#" data-transaction-type="unconfirmed" ';
-		html += 'data-toggle="popover" data-placement="top" data-content="Unconfirmed" data-container="body" data-i18n="[data-content]unconfirmed">';
-		html += '<span data-i18n="unconfirmed">Unconfirmed</span></a></li>';
+		html += 'data-toggle="popover" data-placement="top" data-content="Unconfirmed (Account)" data-container="body" data-i18n="[data-content]unconfirmed_account">';
+		html += '<i class="fa fa-circle-o"></i>&nbsp; <span data-i18n="unconfirmed">Unconfirmed</span></a></li>';
 		$('#transactions_type_navi').append(html);
+		
 		html  = '<li role="presentation"><a href="#" data-transaction-type="pending" ';
-		html += 'data-toggle="popover" data-placement="top" data-content="Pending" data-container="body" data-i18n="[data-content]pending">';
-		html += '<i class="fa fa-gavel"></i>&nbsp; <span data-i18n="pending">Pending</span></a></li>';
+		html += 'data-toggle="popover" data-placement="top" data-content="Phasing (Pending)" data-container="body" data-i18n="[data-content]phasing_pending">';
+		html += '<i class="fa fa-gavel"></i>&nbsp; <span data-i18n="phasing">Phasing</span></a></li>';
+		$('#transactions_type_navi').append(html);
+
+		html  = '<li role="presentation"><a href="#" data-transaction-type="all_unconfirmed" ';
+		html += 'data-toggle="popover" data-placement="top" data-content="Unconfirmed (Everyone)" data-container="body" data-i18n="[data-content]unconfirmed_everyone">';
+		html += '<i class="fa fa-circle-o"></i>&nbsp; <span data-i18n="all_unconfirmed">Unconfirmed (Everyone)</span></a></li>';
 		$('#transactions_type_navi').append(html);
 
 		$('#transactions_type_navi a[data-toggle="popover"]').popover({
@@ -582,7 +591,7 @@ var NRS = (function(NRS, $, undefined) {
 		$('#transactions_sub_type_navi').append(html);
 
 		var typeIndex = $('#transactions_type_navi li.active a').attr('data-transaction-type');
-		if (typeIndex && typeIndex != "unconfirmed" && typeIndex != "pending") {
+		if (typeIndex && typeIndex != "unconfirmed" && typeIndex != "all_unconfirmed" && typeIndex != "pending") {
 				var typeDict = NRS.transactionTypes[typeIndex];
 				$.each(typeDict["subTypes"], function(subTypeIndex, subTypeDict) {
 				subTitleString = $.t(subTypeDict.i18nKeyTitle);
@@ -593,8 +602,12 @@ var NRS = (function(NRS, $, undefined) {
 		}
 	}
 
-	NRS.displayUnconfirmedTransactions = function() {
-		NRS.sendRequest("getUnconfirmedTransactions", function(response) {
+	NRS.displayUnconfirmedTransactions = function(account) {
+		NRS.sendRequest("getUnconfirmedTransactions", {
+			"account": account,
+			"firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
+			"lastIndex": NRS.pageNumber * NRS.itemsPerPage
+		}, function(response) {
 			var rows = "";
 
 			if (response.unconfirmedTransactions && response.unconfirmedTransactions.length) {
@@ -665,10 +678,15 @@ var NRS = (function(NRS, $, undefined) {
 		NRS.loadPage("dashboard");
 	}
 
-	NRS.pages.transactions = function() {
+	NRS.pages.transactions = function(callback, subpage) {
 		if ($('#transactions_type_navi').children().length == 0) {
 			NRS.buildTransactionsTypeNavi();
 			NRS.buildTransactionsSubTypeNavi();
+		}
+
+		if (subpage) {
+			$('#transactions_type_navi li a[data-transaction-type="' + subpage + '"]').click();
+			return;
 		}
 
 		var selectedType = $('#transactions_type_navi li.active a').attr('data-transaction-type');
@@ -677,11 +695,15 @@ var NRS = (function(NRS, $, undefined) {
 			selectedSubType = "";
 		}
 		if (selectedType == "unconfirmed") {
-			NRS.displayUnconfirmedTransactions();
+			NRS.displayUnconfirmedTransactions(NRS.account);
 			return;
 		}
 		if (selectedType == "pending") {
 			NRS.displayPendingTransactions();
+			return;
+		}
+		if (selectedType == "all_unconfirmed") {
+			NRS.displayUnconfirmedTransactions("");
 			return;
 		}
 

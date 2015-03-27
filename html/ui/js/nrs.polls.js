@@ -487,18 +487,17 @@ $("#poll_results_modal ul.nav li").click(function(e) {
 
 		$("#create_poll_") //  idk why this is here, made by wesley.. -Jones
 
-		data["name"] = $("#create_poll_name").val(),
-		data["description"] = $("#create_poll_description").val(),
-		data["finishHeight"] = String(parseInt(NRS.lastBlockHeight) + parseInt($("#create_poll_duration").val())),
-		data["minNumberOfOptions"] = $("#create_poll_min_options").val(),
-		data["maxNumberOfOptions"] = $("#create_poll_max_options").val(),
-		data["minRangeValue"] = $("#create_poll_min_range_value").val(),
-		data["maxRangeValue"] = $("#create_poll_max_range_value").val(),
-		data["minBalance"] = String(parseInt($("#create_poll_min_balance").val())*100000000),
-		data["feeNQT"] = String(parseInt($("#create_poll_fee").val()) * 100000000),
-		data["deadline"] = $("#create_poll_deadline").val(),
-		data["secretPhrase"] = $("#create_poll_password").val()
-		};
+		data["name"] = $("#create_poll_name").val();
+		data["description"] = $("#create_poll_description").val();
+		data["finishHeight"] = String(parseInt(NRS.lastBlockHeight) + parseInt($("#create_poll_duration").val()));
+		data["minNumberOfOptions"] = $("#create_poll_min_options").val();
+		data["maxNumberOfOptions"] = $("#create_poll_max_options").val();
+		data["minRangeValue"] = $("#create_poll_min_range_value").val();
+		data["maxRangeValue"] = $("#create_poll_max_range_value").val();
+		data["minBalance"] = String(parseInt($("#create_poll_min_balance").val())*100000000);
+		data["feeNQT"] = String(parseInt($("#create_poll_fee").val()) * 100000000);
+		data["deadline"] = $("#create_poll_deadline").val();
+		data["secretPhrase"] = $("#create_poll_password").val();
 
 		if($("#create_poll_type").val() == "0")
 		{
@@ -579,11 +578,11 @@ $("#poll_results_modal ul.nav li").click(function(e) {
 		});
 
 		
-		data["poll"] $("#cast_vote_poll").val(),
-		data["feeNQT"] String(parseInt($("#cast_vote_fee").val())*100000000),
-		data["deadline"] $("#cast_vote_deadline").val(),
-		data["secretPhrase"] $("#cast_vote_password").val()
-		};
+		data["poll"] = $("#cast_vote_poll").val();
+		data["feeNQT"] = String(parseInt($("#cast_vote_fee").val())*100000000);
+		data["deadline"] = $("#cast_vote_deadline").val();
+		data["secretPhrase"] =  $("#cast_vote_password").val();
+		
 		for (var i = 0; i < options.length; i++) {
 			data["vote" + (i < 10 ? "0" + i : i)] = options[i];
 		}
