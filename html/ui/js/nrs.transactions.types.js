@@ -53,8 +53,8 @@ var NRS = (function(NRS, $, undefined) {
                     'iconHTML': "<i class='fa fa-info'></i>"
                 },
                 6: {
-                    'title': "Alias Sale",
-                    'i18nKeyTitle': 'alias_sale',
+                    'title': "Alias Sale/Transfer",
+                    'i18nKeyTitle': 'alias_sale_transfer',
                     'iconHTML': "<i class='fa fa-tag'></i>",
                     'receiverPage': "aliases"
                 },
