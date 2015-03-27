@@ -44,6 +44,7 @@ var NRS = (function(NRS, $, undefined) {
 			// always call incoming for messages to enable message notifications
 			NRS.incoming['messages'](transactions);
 			NRS.updateNotifications();
+			NRS.setPhasingNotifications();
 		}
 	}
 
@@ -87,6 +88,7 @@ var NRS = (function(NRS, $, undefined) {
 
 				if (unconfirmedTransactionIdString != NRS.unconfirmedTransactionIds) {
 					NRS.unconfirmedTransactionsChange = true;
+					NRS.setUnconfirmedNotifications();
 					NRS.unconfirmedTransactionIds = unconfirmedTransactionIdString;
 				} else {
 					NRS.unconfirmedTransactionsChange = false;
@@ -100,6 +102,7 @@ var NRS = (function(NRS, $, undefined) {
 
 				if (NRS.unconfirmedTransactionIds) {
 					NRS.unconfirmedTransactionsChange = true;
+					NRS.setUnconfirmedNotifications();
 				} else {
 					NRS.unconfirmedTransactionsChange = false;
 				}
@@ -563,7 +566,7 @@ var NRS = (function(NRS, $, undefined) {
 
 		html  = '<li role="presentation"><a href="#" data-transaction-type="unconfirmed" ';
 		html += 'data-toggle="popover" data-placement="top" data-content="Unconfirmed" data-container="body" data-i18n="[data-content]unconfirmed">';
-		html += '<span data-i18n="unconfirmed">Unconfirmed</span></a></li>';
+		html += '<i class="fa fa-circle-o"></i>&nbsp; <span data-i18n="unconfirmed">Unconfirmed</span></a></li>';
 		$('#transactions_type_navi').append(html);
 		html  = '<li role="presentation"><a href="#" data-transaction-type="pending" ';
 		html += 'data-toggle="popover" data-placement="top" data-content="Phasing" data-container="body" data-i18n="[data-content]phasing">';
@@ -665,10 +668,15 @@ var NRS = (function(NRS, $, undefined) {
 		NRS.loadPage("dashboard");
 	}
 
-	NRS.pages.transactions = function() {
+	NRS.pages.transactions = function(callback, subpage) {
 		if ($('#transactions_type_navi').children().length == 0) {
 			NRS.buildTransactionsTypeNavi();
 			NRS.buildTransactionsSubTypeNavi();
+		}
+
+		if (subpage) {
+			$('#transactions_type_navi li a[data-transaction-type="' + subpage + '"]').click();
+			return;
 		}
 
 		var selectedType = $('#transactions_type_navi li.active a').attr('data-transaction-type');
