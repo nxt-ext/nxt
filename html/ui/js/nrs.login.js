@@ -166,18 +166,19 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.switchAccount = function(account) {
 		NRS.setDecryptionPassword("");
 		NRS.setPassword("");
-		//window.location.reload();
-		NRS.init();
-		NRS.login(false,account);
+		var url = window.location.pathname;    
+		url += '?account='+account;
+		window.location.href = url;
 	}
 	
 	$("#loginButtons").on('click',function(e) {
 		e.preventDefault();
-		if ($(this).hasClass('active')) {
+		if ($(this).data( "login-type" ) == "password") {
             NRS.listAccounts();
 			$('#login_password').parent().hide();
 			$('#remember_password_container').hide();
 			$(this).html('<input type="hidden" name="loginType" id="accountLogin" value="account" autocomplete="off" /><i class="fa fa-male"></i>');
+			$(this).data( "login-type","account");
         }
         else {
             $('#login_account_container').hide();
@@ -185,6 +186,7 @@ var NRS = (function(NRS, $, undefined) {
 			$('#login_password').parent().show();
 			$('#remember_password_container').show();
 			$(this).html('<input type="hidden" name="loginType" id="accountLogin" value="passwordLogin" autocomplete="off" /><i class="fa fa-key"></i>');
+			$(this).data( "login-type","password");
         }
 	});
 	
@@ -553,5 +555,20 @@ var NRS = (function(NRS, $, undefined) {
 		NRS.setEncryptionPassword(password);
 		NRS.setServerPassword(password);
 	}
+	
+	NRS.getUrlParameter = function(sParam){
+		var sPageURL = window.location.search.substring(1);
+		var sURLVariables = sPageURL.split('&');
+		for (var i = 0; i < sURLVariables.length; i++) 
+		{
+			var sParameterName = sURLVariables[i].split('=');
+			if (sParameterName[0] == sParam) 
+			{
+				return sParameterName[1];
+			}
+		}
+		return false;
+	}    
+	
 	return NRS;
 }(NRS || {}, jQuery));
