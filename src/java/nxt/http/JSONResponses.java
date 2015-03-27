@@ -266,7 +266,7 @@ public final class JSONResponses {
         return incorrect(paramName, null);
     }
 
-    private static JSONStreamAware incorrect(String paramName, String details) {
+    static JSONStreamAware incorrect(String paramName, String details) {
         JSONObject response = new JSONObject();
         response.put("errorCode", 4);
         response.put("errorDescription", "Incorrect \"" + paramName + (details != null ? "\" " + details : "\""));
