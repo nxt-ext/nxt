@@ -570,7 +570,7 @@ var NRS = (function(NRS, $, undefined) {
 		$('#transactions_type_navi').append(html);
 		
 		html  = '<li role="presentation"><a href="#" data-transaction-type="pending" ';
-		html += 'data-toggle="popover" data-placement="top" data-content="Phasing" data-container="body" data-i18n="[data-content]phasing">';
+		html += 'data-toggle="popover" data-placement="top" data-content="Phasing (Pending)" data-container="body" data-i18n="[data-content]phasing_pending">';
 		html += '<i class="fa fa-gavel"></i>&nbsp; <span data-i18n="phasing">Phasing</span></a></li>';
 		$('#transactions_type_navi').append(html);
 
