@@ -1,123 +1,128 @@
 /**
  * @depends {nrs.js}
  */
-var NRS = (function(NRS, $) {
-   var level = 1;
+var NRS = (function (NRS, $) {
+    var level = 1;
 
-   NRS.logConsole = function(msg, isDateIncluded) {
-      if (window.console) {
-         try {
-            var prefix = "";
-            if (!isDateIncluded) {
-               var timeMs = NRS.timeMs();
-               prefix = "" + timeMs + "-";
+    NRS.logConsole = function (msg, isDateIncluded) {
+        if (window.console) {
+            try {
+                var prefix = "";
+                if (!isDateIncluded) {
+                    var timeExact = NRS.timeExact();
+                    var now = new Date();
+                    prefix = now.format("isoDateTime") + " " + timeExact + " ";
+                }
+                console.log(prefix + msg);
+            } catch (e) {
+                // IE11 when running in compatibility mode
             }
-            console.log(prefix + msg);
-         } catch (e) {
-            // IE11 when running in compatibility mode
-         }
 
-      }
-   };
+        }
+    };
 
-   NRS.isLogConsole = function(msgLevel) {
-      return msgLevel <= level;
-   };
+    NRS.isLogConsole = function (msgLevel) {
+        return msgLevel <= level;
+    };
 
-   NRS.setLogConsoleLevel = function(logLevel) {
-      level = logLevel;
-   };
+    NRS.setLogConsoleLevel = function (logLevel) {
+        level = logLevel;
+    };
 
-   NRS.timeMs = function () {
-      return window.performance.now() ||
-         window.performance.mozNow() ||
-         window.performance.msNow() ||
-         window.performance.oNow() ||
-         window.performance.webkitNow() ||
-         Date.now; // none found - fallback to browser default
-   };
+    NRS.logProperty = function(property) {
+        NRS.logConsole(property + " = " + eval(property));
+    };
 
-	NRS.showConsole = function() {
-		NRS.console = window.open("", "console", "width=750,height=400,menubar=no,scrollbars=yes,status=no,toolbar=no,resizable=yes");
-		$(NRS.console.document.head).html("<title>" + $.t("console") + "</title><style type='text/css'>body { background:black; color:white; font-family:courier-new,courier;font-size:14px; } pre { font-size:14px; } #console { padding-top:15px; }</style>");
-		$(NRS.console.document.body).html("<div style='position:fixed;top:0;left:0;right:0;padding:5px;background:#efefef;color:black;'>" + $.t("console_opened") + "<div style='float:right;text-decoration:underline;color:blue;font-weight:bold;cursor:pointer;' onclick='document.getElementById(\"console\").innerHTML=\"\"'>clear</div></div><div id='console'></div>");
-	};
+    NRS.timeExact = function () {
+        return window.performance.now() ||
+            window.performance.mozNow() ||
+            window.performance.msNow() ||
+            window.performance.oNow() ||
+            window.performance.webkitNow() ||
+            Date.now; // none found - fallback to browser default
+    };
 
-	NRS.addToConsole = function(url, type, data, response, error) {
-		if (!NRS.console) {
-			return;
-		}
+    NRS.showConsole = function () {
+        NRS.console = window.open("", "console", "width=750,height=400,menubar=no,scrollbars=yes,status=no,toolbar=no,resizable=yes");
+        $(NRS.console.document.head).html("<title>" + $.t("console") + "</title><style type='text/css'>body { background:black; color:white; font-family:courier-new,courier;font-size:14px; } pre { font-size:14px; } #console { padding-top:15px; }</style>");
+        $(NRS.console.document.body).html("<div style='position:fixed;top:0;left:0;right:0;padding:5px;background:#efefef;color:black;'>" + $.t("console_opened") + "<div style='float:right;text-decoration:underline;color:blue;font-weight:bold;cursor:pointer;' onclick='document.getElementById(\"console\").innerHTML=\"\"'>clear</div></div><div id='console'></div>");
+    };
 
-		if (!NRS.console.document || !NRS.console.document.body) {
-			NRS.console = null;
-			return;
-		}
+    NRS.addToConsole = function (url, type, data, response, error) {
+        if (!NRS.console) {
+            return;
+        }
 
-		url = url.replace(/&random=[\.\d]+/, "", url);
+        if (!NRS.console.document || !NRS.console.document.body) {
+            NRS.console = null;
+            return;
+        }
 
-		NRS.addToConsoleBody(url + " (" + type + ") " + new Date().toString(), "url");
+        url = url.replace(/&random=[\.\d]+/, "", url);
 
-		if (data) {
-			if (typeof data == "string") {
-				var d = NRS.queryStringToObject(data);
-				NRS.addToConsoleBody(JSON.stringify(d, null, "\t"), "post");
-			} else {
-				NRS.addToConsoleBody(JSON.stringify(data, null, "\t"), "post");
-			}
-		}
+        NRS.addToConsoleBody(url + " (" + type + ") " + new Date().toString(), "url");
 
-		if (error) {
-			NRS.addToConsoleBody(response, "error");
-		} else {
-			NRS.addToConsoleBody(JSON.stringify(response, null, "\t"), (response.errorCode ? "error" : ""));
-		}
-	};
+        if (data) {
+            if (typeof data == "string") {
+                var d = NRS.queryStringToObject(data);
+                NRS.addToConsoleBody(JSON.stringify(d, null, "\t"), "post");
+            } else {
+                NRS.addToConsoleBody(JSON.stringify(data, null, "\t"), "post");
+            }
+        }
 
-	NRS.addToConsoleBody = function(text, type) {
-		var color = "";
+        if (error) {
+            NRS.addToConsoleBody(response, "error");
+        } else {
+            NRS.addToConsoleBody(JSON.stringify(response, null, "\t"), (response.errorCode ? "error" : ""));
+        }
+    };
 
-		switch (type) {
-			case "url":
-				color = "#29FD2F";
-				break;
-			case "post":
-				color = "lightgray";
-				break;
-			case "error":
-				color = "red";
-				break;
-		}
-      if (NRS.isLogConsole(10)) {
-         NRS.logConsole(text, false);
-      }
-		$(NRS.console.document.body).find("#console").append("<pre" + (color ? " style='color:" + color + "'" : "") + ">" + text.escapeHTML() + "</pre>");
-	};
+    NRS.addToConsoleBody = function (text, type) {
+        var color = "";
 
-	NRS.queryStringToObject = function(qs) {
-		qs = qs.split("&");
+        switch (type) {
+            case "url":
+                color = "#29FD2F";
+                break;
+            case "post":
+                color = "lightgray";
+                break;
+            case "error":
+                color = "red";
+                break;
+        }
+        if (NRS.isLogConsole(10)) {
+            NRS.logConsole(text, true);
+        }
+        $(NRS.console.document.body).find("#console").append("<pre" + (color ? " style='color:" + color + "'" : "") + ">" + text.escapeHTML() + "</pre>");
+    };
 
-		if (!qs) {
-			return {};
-		}
+    NRS.queryStringToObject = function (qs) {
+        qs = qs.split("&");
 
-		var obj = {};
+        if (!qs) {
+            return {};
+        }
 
-		for (var i = 0; i < qs.length; ++i) {
-			var p = qs[i].split('=');
+        var obj = {};
 
-			if (p.length != 2) {
-				continue;
-			}
+        for (var i = 0; i < qs.length; ++i) {
+            var p = qs[i].split('=');
 
-			obj[p[0]] = decodeURIComponent(p[1].replace(/\+/g, " "));
-		}
+            if (p.length != 2) {
+                continue;
+            }
 
-		if ("secretPhrase" in obj) {
-			obj.secretPhrase = "***";
-		}
+            obj[p[0]] = decodeURIComponent(p[1].replace(/\+/g, " "));
+        }
 
-		return obj;
-	};
+        if ("secretPhrase" in obj) {
+            obj.secretPhrase = "***";
+        }
 
-	return NRS;
+        return obj;
+    };
+
+    return NRS;
 }(NRS || {}, jQuery));
