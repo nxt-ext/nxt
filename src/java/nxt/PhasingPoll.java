@@ -255,8 +255,7 @@ public final class PhasingPoll extends AbstractPoll {
         try {
             con = Db.db.getConnection();
             PreparedStatement pstmt = con.prepareStatement("SELECT transaction.* FROM transaction, phasing_poll  " +
-                    " WHERE transaction.phased = true AND (transaction.sender_id = ? OR transaction.recipient_id = ?) " +
-                    " AND phasing_poll.id = transaction.id " +
+                    " WHERE phasing_poll.id = transaction.id AND (transaction.sender_id = ? OR transaction.recipient_id = ?) " +
                     " AND phasing_poll.finish_height > ? ORDER BY transaction.height DESC, transaction.transaction_index DESC " +
                     DbUtils.limitsClause(from, to));
             int i = 0;
@@ -268,6 +267,24 @@ public final class PhasingPoll extends AbstractPoll {
             return BlockchainImpl.getInstance().getTransactions(con, pstmt);
         } catch (SQLException e) {
             DbUtils.close(con);
+            throw new RuntimeException(e.toString(), e);
+        }
+    }
+
+    public static int getAccountPendingTransactionCount(Account account) {
+        try (Connection con = Db.db.getConnection();
+             PreparedStatement pstmt = con.prepareStatement("SELECT COUNT(*) FROM transaction, phasing_poll  " +
+                     " WHERE phasing_poll.id = transaction.id AND (transaction.sender_id = ? OR transaction.recipient_id = ?) " +
+                     " AND phasing_poll.finish_height > ?")) {
+            int i = 0;
+            pstmt.setLong(++i, account.getId());
+            pstmt.setLong(++i, account.getId());
+            pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
+            try (ResultSet rs = pstmt.executeQuery()) {
+                rs.next();
+                return rs.getInt(1);
+            }
+        } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
         }
     }
