@@ -30,7 +30,7 @@ var NRS = (function (NRS, $) {
     };
 
     NRS.logProperty = function(property) {
-        NRS.logConsole(property + " = " + eval(property));
+        NRS.logConsole(property + " = " + eval(property.escapeHTML()));
     };
 
     NRS.timeExact = function () {
