@@ -395,28 +395,35 @@ var NRS = (function(NRS, $, undefined) {
 		if (NRS.pages[page]) {
 			NRS.pageLoading();
 			NRS.resetNotificationState(page);
-
-			if (data && data.callback) {
-				NRS.pages[page](data.callback);
-			} else if (data) {
-				NRS.pages[page](data);
+			if (data) {
+				if (data.callback) {
+					var callback = data.callback;	
+				} else {
+					var callback = data;
+				}
 			} else {
-				NRS.pages[page]();
+				var callback = undefined;
 			}
+			if (data && data.subpage) {
+				var subpage = data.subpage;
+			} else {
+				var subpage = undefined;
+			}
+			NRS.pages[page](callback, subpage);
 		}
 	});
 
 	$("button.goto-page, a.goto-page").click(function(event) {
 		event.preventDefault();
-		NRS.goToPage($(this).data("page"));
+		NRS.goToPage($(this).data("page"), undefined, $(this).data("subpage"));
 	});
 
-	NRS.loadPage = function(page, callback) {
+	NRS.loadPage = function(page, callback, subpage) {
 		NRS.pageLoading();
-		NRS.pages[page](callback);
+		NRS.pages[page](callback, subpage);
 	};
 
-	NRS.goToPage = function(page, callback) {
+	NRS.goToPage = function(page, callback, subpage) {
 		var $link = $("ul.sidebar-menu a[data-page=" + page + "]");
 
 		if ($link.length > 1) {
@@ -428,13 +435,10 @@ var NRS = (function(NRS, $, undefined) {
 		}
 
 		if ($link.length == 1) {
-			if (callback) {
-				$link.trigger("click", [{
-					"callback": callback
-				}]);
-			} else {
-				$link.trigger("click");
-			}
+			$link.trigger("click", [{
+				"callback": callback,
+				"subpage": subpage
+			}]);
 			NRS.resetNotificationState(page);
 		} else {
 			NRS.currentPage = page;
@@ -448,7 +452,7 @@ var NRS = (function(NRS, $, undefined) {
 			if (NRS.pages[page]) {
 				NRS.pageLoading();
 				NRS.resetNotificationState(page);
-				NRS.pages[page](callback);
+				NRS.pages[page](callback, subpage);
 			}
 		}
 	};
@@ -576,6 +580,8 @@ var NRS = (function(NRS, $, undefined) {
 		NRS.loadContacts();
 		NRS.getSettings();
 		NRS.updateNotifications();
+		NRS.setUnconfirmedNotifications();
+		NRS.setPhasingNotifications();
 	}
 
 	NRS.initUserDBWithLegacyData = function() {
@@ -595,6 +601,8 @@ var NRS = (function(NRS, $, undefined) {
 		NRS.databaseSupport = false;
 		NRS.getSettings();
 		NRS.updateNotifications();
+		NRS.setUnconfirmedNotifications();
+		NRS.setPhasingNotifications();
 	}
 
 	NRS.createLegacyDatabase = function() {

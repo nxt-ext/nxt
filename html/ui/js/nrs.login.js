@@ -173,11 +173,12 @@ var NRS = (function(NRS, $, undefined) {
 	
 	$("#loginButtons").on('click',function(e) {
 		e.preventDefault();
-		if ($(this).hasClass('active')) {
+		if ($(this).data( "login-type" ) == "password") {
             NRS.listAccounts();
 			$('#login_password').parent().hide();
 			$('#remember_password_container').hide();
 			$(this).html('<input type="hidden" name="loginType" id="accountLogin" value="account" autocomplete="off" /><i class="fa fa-male"></i>');
+			$(this).data( "login-type","account");
         }
         else {
             $('#login_account_container').hide();
@@ -185,6 +186,7 @@ var NRS = (function(NRS, $, undefined) {
 			$('#login_password').parent().show();
 			$('#remember_password_container').show();
 			$(this).html('<input type="hidden" name="loginType" id="accountLogin" value="passwordLogin" autocomplete="off" /><i class="fa fa-key"></i>');
+			$(this).data( "login-type","password");
         }
 	});
 	
