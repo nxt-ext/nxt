@@ -118,6 +118,7 @@ var NRS = (function(NRS, $, undefined) {
 			}
 			NRS.loadServerConstants();
 			NRS.initializePlugins();
+            NRS.printEnvInfo();
 		});
 		
 		if (!NRS.server) {
@@ -1296,6 +1297,23 @@ var NRS = (function(NRS, $, undefined) {
 			}
 		}
 	};
+
+    NRS.printEnvInfo = function() {
+        NRS.logProperty("navigator.userAgent");
+        NRS.logProperty("navigator.platform");
+        NRS.logProperty("navigator.appVersion");
+        NRS.logProperty("navigator.appName");
+        NRS.logProperty("navigator.appCodeName");
+        NRS.logProperty("navigator.hardwareConcurrency");
+        NRS.logProperty("navigator.maxTouchPoints");
+        NRS.logProperty("navigator.languages");
+        NRS.logProperty("navigator.language");
+        NRS.logProperty("navigator.cookieEnabled");
+        NRS.logProperty("navigator.onLine");
+        NRS.logProperty("NRS.isTestNet");
+        NRS.logProperty("NRS.isLocalHost");
+        NRS.logProperty("NRS.isForging");
+    };
 
 	$("#id_search").on("submit", function(e) {
 		e.preventDefault();
