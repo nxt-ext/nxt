@@ -673,7 +673,6 @@ class NxtDbVersion extends DbVersion {
             case 281:
                 apply("ALTER TABLE poll_result ADD COLUMN IF NOT EXISTS weight BIGINT NOT NULL");
             case 282:
-                BlockchainProcessorImpl.getInstance().scheduleScan(0, false);
                 apply(null);
             case 283:
                 apply("DROP INDEX IF EXISTS transaction_full_hash_idx");
@@ -697,8 +696,24 @@ class NxtDbVersion extends DbVersion {
                 }
                 apply(null);
             case 292:
-                apply("CALL FTL_CREATE_INDEX('PUBLIC', 'ACCOUNT', 'NAME,DESCRIPTION')");
+                apply("CREATE TABLE IF NOT EXISTS account_info (db_id IDENTITY, account_id BIGINT NOT NULL, "
+                        + "name VARCHAR, description VARCHAR, height INT NOT NULL, latest BOOLEAN NOT NULL DEFAULT TRUE)");
             case 293:
+                apply("CREATE UNIQUE INDEX IF NOT EXISTS account_info_id_height_idx ON account_info (account_id, height DESC)");
+            case 294:
+                apply("CREATE INDEX IF NOT EXISTS account_info_height_idx ON account_info (height)");
+            case 295:
+                apply("ALTER TABLE account DROP COLUMN IF EXISTS name");
+            case 296:
+                apply("ALTER TABLE account DROP COLUMN IF EXISTS description");
+            case 297:
+                apply("ALTER TABLE account DROP COLUMN IF EXISTS message_pattern_regex");
+            case 298:
+                apply("ALTER TABLE account DROP COLUMN IF EXISTS message_pattern_flags");
+            case 299:
+                BlockchainProcessorImpl.getInstance().scheduleScan(0, false);
+                apply(null);
+            case 300:
                 return;
             default:
                 throw new RuntimeException("Blockchain database inconsistent with code, probably trying to run older code on newer database");

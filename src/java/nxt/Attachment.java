@@ -10,7 +10,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.regex.Pattern;
 
 public interface Attachment extends Appendix {
 
@@ -763,62 +762,28 @@ public interface Attachment extends Appendix {
 
         private final String name;
         private final String description;
-        private final Pattern messagePattern;
 
         MessagingAccountInfo(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
             super(buffer, transactionVersion);
             this.name = Convert.readString(buffer, buffer.get(), Constants.MAX_ACCOUNT_NAME_LENGTH);
             this.description = Convert.readString(buffer, buffer.getShort(), Constants.MAX_ACCOUNT_DESCRIPTION_LENGTH);
-            if (getVersion() < 2) {
-                this.messagePattern = null;
-            } else {
-                String regex = Convert.readString(buffer, buffer.getShort(), Constants.MAX_ACCOUNT_MESSAGE_PATTERN_LENGTH);
-                if (regex.length() > 0) {
-                    int flags = buffer.getInt();
-                    this.messagePattern = Pattern.compile(regex, flags);
-                } else {
-                    this.messagePattern = null;
-                }
-            }
         }
 
         MessagingAccountInfo(JSONObject attachmentData) {
             super(attachmentData);
             this.name = Convert.nullToEmpty((String) attachmentData.get("name"));
             this.description = Convert.nullToEmpty((String) attachmentData.get("description"));
-            if (getVersion() < 2) {
-                this.messagePattern = null;
-            } else {
-                String regex = Convert.emptyToNull((String)attachmentData.get("messagePatternRegex"));
-                if (regex != null) {
-                    int flags = ((Long) attachmentData.get("messagePatternFlags")).intValue();
-                    this.messagePattern = Pattern.compile(regex, flags);
-                } else {
-                    this.messagePattern = null;
-                }
-            }
         }
 
         public MessagingAccountInfo(String name, String description) {
             super(1);
             this.name = name;
             this.description = description;
-            this.messagePattern = null;
         }
-
-        /*
-        public MessagingAccountInfo(String name, String description, Pattern messagePattern) {
-            super(messagePattern == null ? 1 : 2);
-            this.name = name;
-            this.description = description;
-            this.messagePattern = messagePattern;
-        }
-        */
 
         @Override
         int getMySize() {
-            return 1 + Convert.toBytes(name).length + 2 + Convert.toBytes(description).length +
-                    (getVersion() < 2 ? 0 : 2 + (messagePattern == null ? 0 : Convert.toBytes(messagePattern.pattern()).length + 4));
+            return 1 + Convert.toBytes(name).length + 2 + Convert.toBytes(description).length;
         }
 
         @Override
@@ -829,26 +794,12 @@ public interface Attachment extends Appendix {
             buffer.put(name);
             buffer.putShort((short) description.length);
             buffer.put(description);
-            if (getVersion() >=2 ) {
-                if (messagePattern == null) {
-                    buffer.putShort((short)0);
-                } else {
-                    byte[] regexBytes = Convert.toBytes(messagePattern.pattern());
-                    buffer.putShort((short) regexBytes.length);
-                    buffer.put(regexBytes);
-                    buffer.putInt(messagePattern.flags());
-                }
-            }
         }
 
         @Override
         void putMyJSON(JSONObject attachment) {
             attachment.put("name", name);
             attachment.put("description", description);
-            if (messagePattern != null) {
-                attachment.put("messagePatternRegex", messagePattern.pattern());
-                attachment.put("messagePatternFlags", messagePattern.flags());
-            }
         }
 
         @Override
@@ -862,10 +813,6 @@ public interface Attachment extends Appendix {
 
         public String getDescription() {
             return description;
-        }
-
-        public Pattern getMessagePattern() {
-            return messagePattern;
         }
 
     }

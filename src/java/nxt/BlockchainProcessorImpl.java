@@ -1259,6 +1259,9 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 Db.db.commitTransaction();
                 blockListeners.notify(currentBlock, Event.RESCAN_END);
                 Logger.logMessage("...done at height " + Nxt.getBlockchain().getHeight());
+                if (height == 0 && validate) {
+                    Logger.logMessage("SUCCESSFULLY PERFORMED FULL RESCAN WITH VALIDATION");
+                }
             } catch (SQLException e) {
                 throw new RuntimeException(e.toString(), e);
             } finally {

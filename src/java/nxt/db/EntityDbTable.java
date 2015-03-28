@@ -407,7 +407,7 @@ public abstract class EntityDbTable<T> extends DerivedDbTable {
     @Override
     public final void createSearchIndex(Connection con) throws SQLException {
         if (fullTextSearchColumns != null) {
-            Logger.logDebugMessage("Creating full search index on " + table + " (" + fullTextSearchColumns + ")");
+            Logger.logDebugMessage("Creating search index on " + table + " (" + fullTextSearchColumns + ")");
             FullTextLucene.createIndex(con, "PUBLIC", table.toUpperCase(), fullTextSearchColumns.toUpperCase());
         }
     }

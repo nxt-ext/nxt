@@ -49,10 +49,10 @@ public final class Currency {
 
     };
 
-    private static class CurrencySupply {
+    private static final class CurrencySupply {
 
         private final DbKey dbKey;
-        private long currencyId;
+        private final long currencyId;
         private long currentSupply;
         private long currentReservePerUnitNQT;
 

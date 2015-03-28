@@ -856,15 +856,6 @@ final class TransactionImpl implements Transaction {
             throw new NxtException.NotCurrentlyValidException(String.format("Transaction fee %d NXT less than minimum fee %d NXT at height %d",
                     feeNQT/Constants.ONE_NXT, minimumFeeNQT/Constants.ONE_NXT, blockchainHeight));
         }
-        /*
-        Account recipientAccount = Account.getAccount(recipientId);
-       	if (blockchainHeight >= Constants.MONETARY_SYSTEM_BLOCK && recipientAccount != null) {
-			if (recipientAccount.getMessagePattern() != null
-                    && (message == null || ! recipientAccount.getMessagePattern().matcher(Convert.toString(message.getMessage())).matches())) {
-                throw new NxtException.NotCurrentlyValidException("Recipient account requires a message attachment matching " + recipientAccount.getMessagePattern().pattern());
-               }
-         }
-         */
     }
 
     // returns false iff double spending
