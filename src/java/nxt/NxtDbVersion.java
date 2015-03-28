@@ -2,11 +2,9 @@ package nxt;
 
 import nxt.db.DbVersion;
 
-import java.sql.SQLException;
-
 class NxtDbVersion extends DbVersion {
 
-    protected void update(int nextUpdate) throws SQLException {
+    protected void update(int nextUpdate) {
         switch (nextUpdate) {
             case 1:
                 apply("CREATE TABLE IF NOT EXISTS block (db_id IDENTITY, id BIGINT NOT NULL, version INT NOT NULL, "
@@ -688,19 +686,30 @@ class NxtDbVersion extends DbVersion {
             case 287:
                 apply("ALTER TABLE phasing_poll ALTER COLUMN quorum SET NULL");
             case 288:
+                apply("DROP INDEX IF EXISTS trade_ask_bid_idx");
+            case 289:
+                apply("CREATE INDEX IF NOT EXISTS trade_ask_idx ON trade (ask_order_id, height DESC)");
+            case 290:
+                apply("CREATE INDEX IF NOT EXISTS trade_bid_idx ON trade (bid_order_id, height DESC)");
+            case 291:
+                if (Constants.isTestnet) {
+                    BlockchainProcessorImpl.getInstance().scheduleScan(0, true);
+                }
+                apply(null);
+            case 292:
                 apply("CREATE TABLE IF NOT EXISTS account_control_phasing (db_id IDENTITY, account_id BIGINT NOT NULL, "
                         + "whitelist_size TINYINT NOT NULL DEFAULT 0, "
                         + "voting_model TINYINT NOT NULL, quorum BIGINT, "
                         + "min_balance BIGINT, holding_id BIGINT, min_balance_model TINYINT, "
                         + "height INT NOT NULL, latest BOOLEAN NOT NULL DEFAULT TRUE)");
-            case 289:
+            case 293:
                 apply("CREATE TABLE IF NOT EXISTS account_control_phasing_voter (db_id IDENTITY, account_id BIGINT NOT NULL, "
                         + "voter_id BIGINT NOT NULL, "
                         + "height INT NOT NULL, latest BOOLEAN NOT NULL DEFAULT TRUE)");
                 
-            case 290:
+            case 294:
                 apply("ALTER TABLE account ADD COLUMN IF NOT EXISTS has_control_phasing BOOLEAN NOT NULL DEFAULT FALSE");
-            case 291:
+            case 295:
                 return;
             default:
                 throw new RuntimeException("Blockchain database inconsistent with code, probably trying to run older code on newer database");

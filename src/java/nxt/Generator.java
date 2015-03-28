@@ -21,7 +21,7 @@ import java.util.concurrent.TimeUnit;
 
 public final class Generator implements Comparable<Generator> {
 
-    public static enum Event {
+    public enum Event {
         GENERATION_DEADLINE, START_FORGING, STOP_FORGING
     }
 

@@ -89,13 +89,14 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
     
     private Appendix.Phasing parsePhasing(HttpServletRequest req) throws ParameterException {
         
+        PhasingParams phasingParams = parsePhasingParams(req, "phasingVotingModel", "phasingQuorum", "phasingMinBalance", 
+                "phasingMinBalanceModel", "phasingHolding", "phasingWhitelisted");
+                
         int finishHeight = ParameterParser.getInt(req, "phasingFinishHeight",
-                Nxt.getBlockchain().getHeight() + Constants.VOTING_MIN_VOTE_DURATION,
-                Nxt.getBlockchain().getHeight() + Constants.VOTING_MAX_VOTE_DURATION,
-                true);
+                Nxt.getBlockchain().getHeight() + phasingParams.getQuorum() > 0 ? 2 : 1,
+                        Nxt.getBlockchain().getHeight() + Constants.MAX_PHASING_DURATION + 1, true);
         
-        return new Appendix.Phasing(finishHeight, parsePhasingParams(req, "phasingVotingModel", "phasingQuorum", "phasingMinBalance", 
-                "phasingMinBalanceModel", "phasingHolding", "phasingWhitelisted"));
+        return new Appendix.Phasing(finishHeight, phasingParams);
     }
 
     final JSONStreamAware createTransaction(HttpServletRequest req, Account senderAccount, long recipientId,

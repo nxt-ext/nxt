@@ -205,7 +205,7 @@ public enum CurrencyType {
     
     private final int code;
 
-    private CurrencyType(int code) {
+    CurrencyType(int code) {
         this.code = code;
     }
 

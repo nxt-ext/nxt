@@ -6,7 +6,7 @@ import java.util.List;
 
 public interface Transaction {
 
-    public static interface Builder {
+    interface Builder {
 
         Builder recipientId(long recipientId);
 

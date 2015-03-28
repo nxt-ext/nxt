@@ -241,7 +241,7 @@ var NRS = (function(NRS, $, undefined) {
 			formattedVolume = digits[i] + formattedVolume;
 		}
 		return formattedVolume + " " + size;
-	}
+	};
 
 	NRS.formatWeight = function(weight) {
 		var digits = [],
@@ -258,13 +258,13 @@ var NRS = (function(NRS, $, undefined) {
 			formattedWeight = digits[i] + formattedWeight;
 		}
 		return formattedWeight.escapeHTML();
-	}
+	};
 
 	NRS.formatOrderPricePerWholeQNT = function(price, decimals) {
 		price = NRS.calculateOrderPricePerWholeQNT(price, decimals, true);
 
 		return NRS.format(price);
-	}
+	};
 
 	NRS.calculateOrderPricePerWholeQNT = function(price, decimals, returnAsObject) {
 		if (typeof price != "object") {
@@ -272,7 +272,7 @@ var NRS = (function(NRS, $, undefined) {
 		}
 
 		return NRS.convertToNXT(price.multiply(new BigInteger("" + Math.pow(10, decimals))), returnAsObject);
-	}
+	};
 
 	NRS.calculatePricePerWholeQNT = function(price, decimals) {
 		price = String(price);
@@ -289,7 +289,7 @@ var NRS = (function(NRS, $, undefined) {
 		} else {
 			return price;
 		}
-	}
+	};
 
 	NRS.calculateOrderTotalNQT = function(quantityQNT, priceNQT) {
 		if (typeof quantityQNT != "object") {
@@ -303,7 +303,7 @@ var NRS = (function(NRS, $, undefined) {
 		var orderTotal = quantityQNT.multiply(priceNQT);
 
 		return orderTotal.toString();
-	}
+	};
 
 	NRS.calculateOrderTotal = function(quantityQNT, priceNQT) {
 		if (typeof quantityQNT != "object") {
@@ -315,7 +315,7 @@ var NRS = (function(NRS, $, undefined) {
 		}
 
 		return NRS.convertToNXT(quantityQNT.multiply(priceNQT));
-	}
+	};
 
 	NRS.calculatePercentage = function(a, b) {
 		a = new Big(String(a));
@@ -324,7 +324,7 @@ var NRS = (function(NRS, $, undefined) {
 		var result = a.div(b).times(new Big("100")).toFixed(2);
 
 		return result.toString();
-	}
+	};
 
 	NRS.convertToNXT = function(amount, returnAsObject) {
 		var negative = "";
@@ -364,7 +364,7 @@ var NRS = (function(NRS, $, undefined) {
 		} else {
 			return negative + amount + afterComma;
 		}
-	}
+	};
 
 	NRS.amountToPrecision = function(amount, decimals) {
 		amount = String(amount);
@@ -386,7 +386,7 @@ var NRS = (function(NRS, $, undefined) {
 		} else {
 			throw $.t("error_invalid_input");
 		}
-	}
+	};
 
 	NRS.convertToNQT = function(currency) {
 		currency = String(currency);
@@ -427,7 +427,7 @@ var NRS = (function(NRS, $, undefined) {
 		}
 
 		return result;
-	}
+	};
 
 	NRS.convertToQNTf = function(quantity, decimals, returnAsObject) {
 		quantity = String(quantity);
@@ -463,7 +463,7 @@ var NRS = (function(NRS, $, undefined) {
 		} else {
 			return quantity + afterComma;
 		}
-	}
+	};
 
 	NRS.convertToQNT = function(quantity, decimals) {
 		quantity = String(quantity);
@@ -502,7 +502,7 @@ var NRS = (function(NRS, $, undefined) {
 
 		//remove leading zeroes
 		return qnt.replace(/^0+/, "");
-	}
+	};
 
 	NRS.format = function(params, no_escaping) {
 		if (typeof params != "object") {
@@ -537,11 +537,11 @@ var NRS = (function(NRS, $, undefined) {
 		}
 
 		return output;
-	}
+	};
 
 	NRS.formatQuantity = function(quantity, decimals, no_escaping) {
 		return NRS.format(NRS.convertToQNTf(quantity, decimals, true), no_escaping);
-	}
+	};
 
 	NRS.formatAmount = function(amount, round, no_escaping) {
 		if (typeof amount == "undefined") {
@@ -586,7 +586,7 @@ var NRS = (function(NRS, $, undefined) {
 			"amount": amount,
 			"afterComma": afterComma
 		}, no_escaping);
-	}
+	};
 
 	NRS.formatTimestamp = function(timestamp, date_only) {
 		if (typeof timestamp == "object") {
@@ -603,9 +603,7 @@ var NRS = (function(NRS, $, undefined) {
 			var yyyy = date.getFullYear();
 			var yy = new String(yyyy).substring(2);
 
-			var format = LOCALE_DATE_FORMAT;
-
-			var res = format
+         var res = LOCALE_DATE_FORMAT
 				.replace(/dd/g, dd)
 				.replace(/d/g, d)
 				.replace(/MM/g, MM)
@@ -642,7 +640,7 @@ var NRS = (function(NRS, $, undefined) {
 		} else {
 			return date.toLocaleString();
 		}
-	}
+	};
 
 	NRS.formatTime = function(timestamp) {
 		var date = new Date(Date.UTC(2013, 10, 24, 12, 0, 0, 0) + timestamp * 1000);
@@ -669,18 +667,15 @@ var NRS = (function(NRS, $, undefined) {
 		} else {
 			return date.toLocaleString();
 		}
-	}
+	};
 
 	NRS.isPrivateIP = function(ip) {
 		if (!/^\d+\.\d+\.\d+\.\d+$/.test(ip)) {
 			return false;
 		}
 		var parts = ip.split('.');
-		if (parts[0] === '10' || parts[0] == '127' || (parts[0] === '172' && (parseInt(parts[1], 10) >= 16 && parseInt(parts[1], 10) <= 31)) || (parts[0] === '192' && parts[1] === '168')) {
-			return true;
-		}
-		return false;
-	}
+      return parts[0] === '10' || parts[0] == '127' || parts[0] === '172' && (parseInt(parts[1], 10) >= 16 && parseInt(parts[1], 10) <= 31) || parts[0] === '192' && parts[1] === '168';
+	};
 
 	NRS.convertToHex16 = function(str) {
 		var hex, i;
@@ -691,7 +686,7 @@ var NRS = (function(NRS, $, undefined) {
 		}
 
 		return result;
-	}
+	};
 
 	NRS.convertFromHex16 = function(hex) {
 		var j;
@@ -702,7 +697,7 @@ var NRS = (function(NRS, $, undefined) {
 		}
 
 		return back;
-	}
+	};
 
 	NRS.convertFromHex8 = function(hex) {
 		var hex = hex.toString(); //force conversion
@@ -710,7 +705,7 @@ var NRS = (function(NRS, $, undefined) {
 		for (var i = 0; i < hex.length; i += 2)
 			str += String.fromCharCode(parseInt(hex.substr(i, 2), 16));
 		return str;
-	}
+	};
 
 	NRS.convertToHex8 = function(str) {
 		var hex = '';
@@ -718,7 +713,7 @@ var NRS = (function(NRS, $, undefined) {
 			hex += '' + str.charCodeAt(i).toString(16);
 		}
 		return hex;
-	}
+	};
 
 	NRS.getFormData = function($form, unmodified) {
 		var serialized = $form.serializeArray();
@@ -737,9 +732,8 @@ var NRS = (function(NRS, $, undefined) {
 					if (serialized[s]['name'] in data) {
 						var index = data[serialized[s]['name']].length;
 						data[serialized[s]['name']][index] = serialized[s]['value'];
-
 					} else {
-						data[serialized[s]['name']] = [serialized[s]['value']] //all data as list (traditional, to allow multiple values)
+						data[serialized[s]['name']] = [serialized[s]['value']]; //all data as list (traditional, to allow multiple values)
 					}
 				}
 			} else {
@@ -756,7 +750,7 @@ var NRS = (function(NRS, $, undefined) {
 		}
 
 		return data;
-	}
+	};
 
 	NRS.convertNumericToRSAccountFormat = function(account) {
 		if (/^NXT\-/i.test(account)) {
@@ -770,7 +764,7 @@ var NRS = (function(NRS, $, undefined) {
 				return "";
 			}
 		}
-	}
+	};
 
 	NRS.getAccountLink = function(object, acc) {
 		if (typeof object[acc + "RS"] == "undefined") {
@@ -778,7 +772,7 @@ var NRS = (function(NRS, $, undefined) {
 		} else {
 			return "<a href='#' data-user='" + String(object[acc + "RS"]).escapeHTML() + "' class='show_account_modal_action user-info'>" + NRS.getAccountTitle(object, acc) + "</a>";
 		}
-	}
+	};
 
 	NRS.getAccountTitle = function(object, acc) {
 		var type = typeof object;
@@ -803,7 +797,7 @@ var NRS = (function(NRS, $, undefined) {
 		} else {
 			return String(formattedAcc).escapeHTML();
 		}
-	}
+	};
 
 	NRS.getAccountFormatted = function(object, acc) {
 		var type = typeof object;
@@ -817,7 +811,7 @@ var NRS = (function(NRS, $, undefined) {
 				return String(object[acc + "RS"]).escapeHTML();
 			}
 		}
-	}
+	};
 
 	NRS.setupClipboardFunctionality = function() {
 		var elements = "#asset_id_dropdown .dropdown-menu a, #account_id_dropdown .dropdown-menu a";
@@ -876,7 +870,7 @@ var NRS = (function(NRS, $, undefined) {
 				$.growl($.t("error_clipboard_copy_wrongflash"));
 			});
 		}
-	}
+	};
 
 	NRS.getClipboardText = function(type) {
 		switch (type) {
@@ -899,7 +893,7 @@ var NRS = (function(NRS, $, undefined) {
 				return "";
 				break;
 		}
-	}
+	};
 
 	NRS.dataLoaded = function(data, noPageLoad) {
 		var $el = $("#" + NRS.currentPage + "_contents");
@@ -916,7 +910,7 @@ var NRS = (function(NRS, $, undefined) {
 		if (!noPageLoad) {
 			NRS.pageLoaded();
 		}
-	}
+	};
 
 	NRS.dataLoadFinished = function($el, fadeIn) {
 		var $parent = $el.parent();
@@ -967,7 +961,7 @@ var NRS = (function(NRS, $, undefined) {
 				$parent.show();
 			});
 		}
-	}
+	};
 
 	NRS.createInfoTable = function(data, fixed) {
 		var rows = "";
@@ -995,7 +989,7 @@ var NRS = (function(NRS, $, undefined) {
 				value = String(value).escapeHTML();
 			} else if ((key == "quantity" || key == "units" || key == "initial_buy_supply" || key == "initial_sell_supply" ||
 				key == "total_buy_limit" || key == "total_sell_limit" || key == "units_exchanged" || key == "total_exchanged" ||
-				key == "initial_units" || key == "reserve_units" || key == "max_units") && $.isArray(value)) {
+				key == "initial_units" || key == "reserve_units" || key == "max_units" || key == "quantity_traded") && $.isArray(value)) {
 				if ($.isArray(value)) {
 					value = NRS.formatQuantity(value[0], value[1]);
 				} else {
@@ -1015,7 +1009,7 @@ var NRS = (function(NRS, $, undefined) {
 		}
 
 		return rows;
-	}
+	};
 
 	NRS.getSelectedText = function() {
 		var t = "";
@@ -1027,7 +1021,7 @@ var NRS = (function(NRS, $, undefined) {
 			t = document.selection.createRange().text;
 		}
 		return t;
-	}
+	};
 
 	NRS.formatStyledAmount = function(amount, round) {
 		var amount = NRS.formatAmount(amount, round);
@@ -1040,7 +1034,7 @@ var NRS = (function(NRS, $, undefined) {
 		}
 
 		return amount;
-	}
+	};
 
 	NRS.getUnconfirmedTransactionsFromCache = function(type, subtype, fields, single) {
 		if (!NRS.unconfirmedTransactions.length) {
@@ -1092,7 +1086,7 @@ var NRS = (function(NRS, $, undefined) {
 
 			return unconfirmedTransactions;
 		}
-	}
+	};
 
 	NRS.completeUnconfirmedTransactionDetails = function(unconfirmedTransaction) {
 		if (unconfirmedTransaction.type == 3 && unconfirmedTransaction.subtype == 4 && !unconfirmedTransaction.name) {
@@ -1110,11 +1104,11 @@ var NRS = (function(NRS, $, undefined) {
 		}
 
 		return unconfirmedTransaction;
-	}
+	};
 
 	NRS.hasTransactionUpdates = function(transactions) {
 		return ((transactions && transactions.length) || NRS.unconfirmedTransactionsChange);
-	}
+	};
 
 	NRS.showMore = function($el) {
 		if (!$el) {
@@ -1146,12 +1140,12 @@ var NRS = (function(NRS, $, undefined) {
 				});
 			}
 		});
-	}
+	};
 
 	NRS.showFullDescription = function($el) {
 		$el.addClass("open").removeClass("closed");
 		$el.find(".description_toggle").text("Less...");
-	}
+	};
 
 	NRS.showPartialDescription = function($el) {
 		if ($el.hasClass("open") || $el.height() > 40) {
@@ -1160,7 +1154,7 @@ var NRS = (function(NRS, $, undefined) {
 		} else {
 			$el.find(".description_toggle").text("");
 		}
-	}
+	};
 
 	$("body").on(".description_toggle", "click", function(e) {
 		e.preventDefault();
@@ -1235,7 +1229,7 @@ var NRS = (function(NRS, $, undefined) {
 			expires = "";
 		}
 		document.cookie = escape(name) + "=" + escape(value) + expires + "; path=/";
-	}
+	};
 
 	NRS.getCookie = function(name) {
 		var nameEQ = escape(name) + "=";
@@ -1246,11 +1240,11 @@ var NRS = (function(NRS, $, undefined) {
 			if (c.indexOf(nameEQ) === 0) return unescape(c.substring(nameEQ.length, c.length));
 		}
 		return null;
-	}
+	};
 
 	NRS.deleteCookie = function(name) {
 		NRS.setCookie(name, "", -1);
-	}
+	};
 
 	NRS.translateServerError = function(response) {
 		if (!response.errorDescription) {
@@ -1489,7 +1483,7 @@ var NRS = (function(NRS, $, undefined) {
 				return response.errorDescription;
 				break;
 		}
-	}
+	};
 
 	NRS.getTranslatedFieldName = function(name) {
 		var nameKey = String(name).replace(/NQT|QNT|RS$/, "").replace(/\s+/g, "").replace(/([A-Z])/g, function($1) {
@@ -1505,7 +1499,7 @@ var NRS = (function(NRS, $, undefined) {
 		} else {
 			return nameKey.replace(/_/g, " ").escapeHTML();
 		}
-	}
+	};
 
 	NRS.isControlKey = function(charCode) {
 		return !(charCode >= 32 || charCode == 10 || charCode == 13);
@@ -1572,6 +1566,20 @@ var NRS = (function(NRS, $, undefined) {
 			return false;
 		}
 	};
+	
+	NRS.getUrlParameter = function(sParam){
+		var sPageURL = window.location.search.substring(1);
+		var sURLVariables = sPageURL.split('&');
+		for (var i = 0; i < sURLVariables.length; i++) 
+		{
+			var sParameterName = sURLVariables[i].split('=');
+			if (sParameterName[0] == sParam) 
+			{
+				return sParameterName[1];
+			}
+		}
+		return false;
+	}  
 
 	return NRS;
 }(NRS || {}, jQuery));

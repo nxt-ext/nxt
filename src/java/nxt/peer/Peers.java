@@ -47,7 +47,7 @@ import java.util.stream.Collectors;
 
 public final class Peers {
 
-    public static enum Event {
+    public enum Event {
         BLACKLIST, UNBLACKLIST, DEACTIVATE, REMOVE,
         DOWNLOADED_VOLUME, UPLOADED_VOLUME, WEIGHT,
         ADDED_ACTIVE_PEER, CHANGED_ACTIVE_PEER,

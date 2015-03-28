@@ -21,7 +21,7 @@ final class TransactionImpl implements Transaction {
     static final class BuilderImpl implements Builder {
 
         private final short deadline;
-        private byte[] senderPublicKey;
+        private final byte[] senderPublicKey;
         private final long amountNQT;
         private final long feeNQT;
         private final TransactionType type;
@@ -327,7 +327,7 @@ final class TransactionImpl implements Transaction {
             if (getSenderPublicKey() != null && ! Arrays.equals(senderPublicKey, Crypto.getPublicKey(secretPhrase))) {
                 throw new NxtException.NotValidException("Secret phrase doesn't match transaction sender public key");
             }
-            signature = Crypto.sign(getBytesOrig(), secretPhrase);
+            signature = Crypto.sign(bytes(), secretPhrase);
             bytes = null;
         } else {
             signature = null;
@@ -477,7 +477,7 @@ final class TransactionImpl implements Transaction {
                 digest.update(data);
                 hash = digest.digest(signatureHash);
             } else {
-                hash = Crypto.sha256().digest(getBytesOrig());
+                hash = Crypto.sha256().digest(bytes());
             }
             BigInteger bigInteger = new BigInteger(1, new byte[] {hash[7], hash[6], hash[5], hash[4], hash[3], hash[2], hash[1], hash[0]});
             id = bigInteger.longValue();
@@ -547,10 +547,10 @@ final class TransactionImpl implements Transaction {
 
     @Override
     public byte[] getBytes() {
-        return Arrays.copyOf(getBytesOrig(), bytes.length);
+        return Arrays.copyOf(bytes(), bytes.length);
     }
 
-    byte[] getBytesOrig() {
+    byte[] bytes() {
         if (bytes == null) {
             try {
                 ByteBuffer buffer = ByteBuffer.allocate(getSize());

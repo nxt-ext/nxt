@@ -73,16 +73,16 @@ public final class CreatePoll extends CreateTransaction {
 
         int currentHeight = Nxt.getBlockchain().getHeight();
         int finishHeight = ParameterParser.getInt(req, "finishHeight",
-                currentHeight + Constants.VOTING_MIN_VOTE_DURATION,
-                currentHeight + Constants.VOTING_MAX_VOTE_DURATION, true);
+                currentHeight + 2,
+                currentHeight + Constants.MAX_POLL_DURATION + 1, true);
 
         byte votingModel = ParameterParser.getByte(req, "votingModel", (byte)0, (byte)3, true);
 
         byte minNumberOfOptions = ParameterParser.getByte(req, "minNumberOfOptions", (byte) 1, optionsSize, true);
         byte maxNumberOfOptions = ParameterParser.getByte(req, "maxNumberOfOptions", minNumberOfOptions, optionsSize, true);
 
-        byte minRangeValue = ParameterParser.getByte(req, "minRangeValue", Constants.VOTING_MIN_RANGE_VALUE_LIMIT, Constants.VOTING_MAX_RANGE_VALUE_LIMIT, true);
-        byte maxRangeValue = ParameterParser.getByte(req, "maxRangeValue", minRangeValue, Constants.VOTING_MAX_RANGE_VALUE_LIMIT, true);
+        byte minRangeValue = ParameterParser.getByte(req, "minRangeValue", Constants.MIN_VOTE_VALUE, Constants.MAX_VOTE_VALUE, true);
+        byte maxRangeValue = ParameterParser.getByte(req, "maxRangeValue", minRangeValue, Constants.MAX_VOTE_VALUE, true);
 
         PollBuilder builder = new PollBuilder(nameValue.trim(), descriptionValue.trim(),
                 options.toArray(new String[options.size()]), finishHeight, votingModel,

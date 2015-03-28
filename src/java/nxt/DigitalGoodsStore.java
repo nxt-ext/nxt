@@ -28,7 +28,7 @@ import java.util.List;
 
 public final class DigitalGoodsStore {
 
-    public static enum Event {
+    public enum Event {
         GOODS_LISTED, GOODS_DELISTED, GOODS_PRICE_CHANGE, GOODS_QUANTITY_CHANGE,
         PURCHASE, DELIVERY, REFUND, FEEDBACK
     }
@@ -111,8 +111,10 @@ public final class DigitalGoodsStore {
             return tagTable.getCount();
         }
 
+        private static final DbClause inStockOnlyClause = new DbClause.FixedClause(" in_stock_count > 0 ");
+
         public static int getCountInStock() {
-            return tagTable.getCount(new DbClause.FixedClause(" in_stock_count > 0 "));
+            return tagTable.getCount(inStockOnlyClause);
         }
 
         public static DbIterator<Tag> getAllTags(int from, int to) {
@@ -120,7 +122,31 @@ public final class DigitalGoodsStore {
         }
 
         public static DbIterator<Tag> getInStockTags(int from, int to) {
-            return tagTable.getManyBy(new DbClause.FixedClause(" in_stock_count > 0 "), from, to);
+            return tagTable.getManyBy(inStockOnlyClause, from, to);
+        }
+
+        private static final class TagsLikeClause extends DbClause {
+
+            private final String prefix;
+
+            private TagsLikeClause(String prefix) {
+                super(" tag LIKE ? ");
+                this.prefix = prefix.replace("%", "\\%").replace("_", "\\_") + '%';
+            }
+
+            @Override
+            protected int set(PreparedStatement pstmt, int index) throws SQLException {
+                pstmt.setString(index, prefix);
+                return index + 1;
+            }
+        }
+
+        public static DbIterator<Tag> getTagsLike(String prefix, boolean inStockOnly, int from, int to) {
+            DbClause dbClause = new TagsLikeClause(prefix);
+            if (inStockOnly) {
+                dbClause = dbClause.and(inStockOnlyClause);
+            }
+            return tagTable.getManyBy(dbClause, from, to, " ORDER BY tag ");
         }
 
         private static void init() {}
@@ -810,8 +836,10 @@ public final class DigitalGoodsStore {
                 feedbackNotes = new ArrayList<>();
             }
             feedbackNotes.add(feedbackNote);
-            this.hasFeedbackNotes = true;
-            purchaseTable.insert(this);
+            if (!this.hasFeedbackNotes) {
+                this.hasFeedbackNotes = true;
+                purchaseTable.insert(this);
+            }
             feedbackTable.insert(this, feedbackNotes);
 		}
 
@@ -832,8 +860,10 @@ public final class DigitalGoodsStore {
                 publicFeedbacks = new ArrayList<>();
             }
             publicFeedbacks.add(publicFeedback);
-            this.hasPublicFeedbacks = true;
-            purchaseTable.insert(this);
+            if (!this.hasPublicFeedbacks) {
+                this.hasPublicFeedbacks = true;
+                purchaseTable.insert(this);
+            }
             publicFeedbackTable.insert(this, publicFeedbacks);
         }
 
@@ -841,7 +871,7 @@ public final class DigitalGoodsStore {
             return discountNQT;
         }
 
-        public void setDiscountNQT(long discountNQT) {
+        private void setDiscountNQT(long discountNQT) {
             this.discountNQT = discountNQT;
             purchaseTable.insert(this);
         }
@@ -850,7 +880,7 @@ public final class DigitalGoodsStore {
             return refundNQT;
         }
 
-        public void setRefundNQT(long refundNQT) {
+        private void setRefundNQT(long refundNQT) {
             this.refundNQT = refundNQT;
             purchaseTable.insert(this);
         }

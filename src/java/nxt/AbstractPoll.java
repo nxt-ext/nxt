@@ -9,10 +9,10 @@ import java.sql.SQLException;
 
 abstract class AbstractPoll {
 
-    protected final long id;
-    protected final VoteWeighting voteWeighting;
-    protected final long accountId;
-    protected final int finishHeight;
+    final long id;
+    final VoteWeighting voteWeighting;
+    final long accountId;
+    final int finishHeight;
 
     AbstractPoll(long id, long accountId, int finishHeight, VoteWeighting voteWeighting) {
         this.id = id;

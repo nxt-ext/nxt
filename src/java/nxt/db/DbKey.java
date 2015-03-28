@@ -6,7 +6,7 @@ import java.sql.SQLException;
 
 public interface DbKey {
 
-    public static abstract class Factory<T> {
+    abstract class Factory<T> {
 
         private final String pkClause;
         private final String pkColumns;
@@ -42,7 +42,7 @@ public interface DbKey {
     int setPK(PreparedStatement pstmt, int index) throws SQLException;
 
 
-    public static abstract class LongKeyFactory<T> extends Factory<T> {
+    abstract class LongKeyFactory<T> extends Factory<T> {
 
         private final String idColumn;
 
@@ -64,7 +64,7 @@ public interface DbKey {
 
     }
 
-    public static abstract class StringKeyFactory<T> extends Factory<T> {
+    abstract class StringKeyFactory<T> extends Factory<T> {
 
         private final String idColumn;
 
@@ -86,7 +86,7 @@ public interface DbKey {
 
     }
 
-    public static abstract class LinkKeyFactory<T> extends Factory<T> {
+    abstract class LinkKeyFactory<T> extends Factory<T> {
 
         private final String idColumnA;
         private final String idColumnB;
@@ -110,7 +110,7 @@ public interface DbKey {
 
     }
 
-    static final class LongKey implements DbKey {
+    final class LongKey implements DbKey {
 
         private final long id;
 
@@ -141,7 +141,7 @@ public interface DbKey {
 
     }
 
-    static final class StringKey implements DbKey {
+    final class StringKey implements DbKey {
 
         private final String id;
 
@@ -172,7 +172,7 @@ public interface DbKey {
 
     }
 
-    static final class LinkKey implements DbKey {
+    final class LinkKey implements DbKey {
 
         private final long idA;
         private final long idB;

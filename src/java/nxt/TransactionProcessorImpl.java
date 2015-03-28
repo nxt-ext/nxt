@@ -452,6 +452,9 @@ final class TransactionProcessorImpl implements TransactionProcessor {
         if (transaction.getVersion() < 1) {
             throw new NxtException.NotValidException("Invalid transaction version");
         }
+        if (transaction.getId() == 0L) {
+            throw new NxtException.NotValidException("Invalid transaction id 0");
+        }
 
         synchronized (BlockchainImpl.getInstance()) {
             try {

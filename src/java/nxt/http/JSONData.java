@@ -372,7 +372,7 @@ final class JSONData {
         json.put("transaction", Long.toUnsignedString(vote.getId()));
         JSONArray votesJson = new JSONArray();
         for (byte v : vote.getVote()) {
-            if (v == Constants.VOTING_NO_VOTE_VALUE) {
+            if (v == Constants.NO_VOTE_VALUE) {
                 votesJson.add("");
             } else {
                 votesJson.add(Byte.toString(v));
