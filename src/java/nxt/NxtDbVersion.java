@@ -697,6 +697,8 @@ class NxtDbVersion extends DbVersion {
                 }
                 apply(null);
             case 292:
+                apply("CALL FTL_CREATE_INDEX('PUBLIC', 'ACCOUNT', 'NAME,DESCRIPTION')");
+            case 293:
                 return;
             default:
                 throw new RuntimeException("Blockchain database inconsistent with code, probably trying to run older code on newer database");

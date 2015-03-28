@@ -125,24 +125,8 @@ public final class DigitalGoodsStore {
             return tagTable.getManyBy(inStockOnlyClause, from, to);
         }
 
-        private static final class TagsLikeClause extends DbClause {
-
-            private final String prefix;
-
-            private TagsLikeClause(String prefix) {
-                super(" tag LIKE ? ");
-                this.prefix = prefix.replace("%", "\\%").replace("_", "\\_") + '%';
-            }
-
-            @Override
-            protected int set(PreparedStatement pstmt, int index) throws SQLException {
-                pstmt.setString(index, prefix);
-                return index + 1;
-            }
-        }
-
         public static DbIterator<Tag> getTagsLike(String prefix, boolean inStockOnly, int from, int to) {
-            DbClause dbClause = new TagsLikeClause(prefix);
+            DbClause dbClause = new DbClause.LikeClause("tag", prefix);
             if (inStockOnly) {
                 dbClause = dbClause.and(inStockOnlyClause);
             }
@@ -228,7 +212,7 @@ public final class DigitalGoodsStore {
 
         };
 
-        private static final VersionedEntityDbTable<Goods> goodsTable = new VersionedEntityDbTable<Goods>("goods", goodsDbKeyFactory) {
+        private static final VersionedEntityDbTable<Goods> goodsTable = new VersionedEntityDbTable<Goods>("goods", goodsDbKeyFactory, "name,description,tags") {
 
             @Override
             protected Goods load(Connection con, ResultSet rs) throws SQLException {

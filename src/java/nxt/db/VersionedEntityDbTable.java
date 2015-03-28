@@ -13,7 +13,11 @@ import java.util.List;
 public abstract class VersionedEntityDbTable<T> extends EntityDbTable<T> {
 
     protected VersionedEntityDbTable(String table, DbKey.Factory<T> dbKeyFactory) {
-        super(table, dbKeyFactory, true);
+        super(table, dbKeyFactory, true, null);
+    }
+
+    protected VersionedEntityDbTable(String table, DbKey.Factory<T> dbKeyFactory, String fullTextSearchColumns) {
+        super(table, dbKeyFactory, true, fullTextSearchColumns);
     }
 
     @Override

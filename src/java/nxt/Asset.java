@@ -21,7 +21,7 @@ public final class Asset {
 
     };
 
-    private static final EntityDbTable<Asset> assetTable = new EntityDbTable<Asset>("asset", assetDbKeyFactory) {
+    private static final EntityDbTable<Asset> assetTable = new EntityDbTable<Asset>("asset", assetDbKeyFactory, "name,description") {
 
         @Override
         protected Asset load(Connection con, ResultSet rs) throws SQLException {

@@ -208,7 +208,7 @@ public final class Account {
 
     };
 
-    private static final VersionedEntityDbTable<Account> accountTable = new VersionedEntityDbTable<Account>("account", accountDbKeyFactory) {
+    private static final VersionedEntityDbTable<Account> accountTable = new VersionedEntityDbTable<Account>("account", accountDbKeyFactory, "name,description") {
 
         @Override
         protected Account load(Connection con, ResultSet rs) throws SQLException {
@@ -539,6 +539,10 @@ public final class Account {
     public static long getUnconfirmedCurrencyUnits(long accountId, long currencyId) {
         AccountCurrency accountCurrency = accountCurrencyTable.get(accountCurrencyDbKeyFactory.newKey(accountId, currencyId));
         return accountCurrency == null ? 0 : accountCurrency.unconfirmedUnits;
+    }
+
+    public static DbIterator<Account> searchAccounts(String query, int from, int to) {
+        return accountTable.search(query, DbClause.EMPTY_CLAUSE, from, to);
     }
 
     static {

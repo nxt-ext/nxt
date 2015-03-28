@@ -12,6 +12,7 @@ import nxt.util.Listener;
 import nxt.util.Listeners;
 import nxt.util.Logger;
 import nxt.util.ThreadPool;
+import org.h2.fulltext.FullTextLucene;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
@@ -1157,6 +1158,10 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     Db.db.commitTransaction();
                     return;
                 }
+                if (height == 0) {
+                    Logger.logDebugMessage("Dropping all full text search indexes");
+                    FullTextLucene.dropAll(con);
+                }
                 for (DerivedDbTable table : derivedTables) {
                     if (height == 0) {
                         table.truncate();
@@ -1243,6 +1248,11 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                             popOffTo(lastBlock);
                         }
                         blockListeners.notify(currentBlock, Event.BLOCK_SCANNED);
+                    }
+                }
+                if (height == 0) {
+                    for (DerivedDbTable table : derivedTables) {
+                        table.createSearchIndex(con);
                     }
                 }
                 pstmtDone.executeUpdate();
