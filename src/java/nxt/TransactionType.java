@@ -720,13 +720,13 @@ public abstract class TransactionType {
                     }
                 }
 
-                if (attachment.getMinRangeValue() < Constants.VOTING_MIN_RANGE_VALUE_LIMIT
-                        || attachment.getMaxRangeValue() > Constants.VOTING_MAX_RANGE_VALUE_LIMIT ){
+                if (attachment.getMinRangeValue() < Constants.MIN_VOTE_VALUE
+                        || attachment.getMaxRangeValue() > Constants.MAX_VOTE_VALUE){
                     throw new NxtException.NotValidException("Invalid range: " + attachment.getJSONObject());
                 }
 
-                if (attachment.getFinishHeight() < transaction.getValidationHeight() + Constants.VOTING_MIN_VOTE_DURATION
-                    || attachment.getFinishHeight() > transaction.getValidationHeight() + Constants.VOTING_MAX_VOTE_DURATION) {
+                if (attachment.getFinishHeight() <= transaction.getValidationHeight() + Constants.MIN_POLL_DURATION
+                    || attachment.getFinishHeight() >= transaction.getValidationHeight() + Constants.MAX_POLL_DURATION) {
                     throw new NxtException.NotCurrentlyValidException("Invalid finishing height" + attachment.getJSONObject());
                 }
 
@@ -803,10 +803,10 @@ public abstract class TransactionType {
                 byte[] votes = attachment.getPollVote();
                 int positiveCount = 0;
                 for (byte vote : votes) {
-                    if (vote != Constants.VOTING_NO_VOTE_VALUE && (vote < poll.getMinRangeValue() || vote > poll.getMaxRangeValue())) {
+                    if (vote != Constants.NO_VOTE_VALUE && (vote < poll.getMinRangeValue() || vote > poll.getMaxRangeValue())) {
                         throw new NxtException.NotValidException("Invalid vote: " + attachment.getJSONObject());
                     }
-                    if (vote != Constants.VOTING_NO_VOTE_VALUE) {
+                    if (vote != Constants.NO_VOTE_VALUE) {
                         positiveCount++;
                     }
                 }
@@ -876,8 +876,8 @@ public abstract class TransactionType {
 
                 Attachment.MessagingPhasingVoteCasting attachment = (Attachment.MessagingPhasingVoteCasting) transaction.getAttachment();
                 List<byte[]> pendingTransactionFullHashes = attachment.getTransactionFullHashes();
-                if (pendingTransactionFullHashes.size() > Constants.MAX_VOTES_PER_VOTING_TRANSACTION) {
-                    throw new NxtException.NotValidException("No more than " + Constants.MAX_VOTES_PER_VOTING_TRANSACTION + " votes allowed for two-phased multivoting");
+                if (pendingTransactionFullHashes.size() > Constants.MAX_PHASING_VOTE_TRANSACTIONS) {
+                    throw new NxtException.NotValidException("No more than " + Constants.MAX_PHASING_VOTE_TRANSACTIONS + " votes allowed for two-phased multivoting");
                 }
 
                 long previousPendingId = 0;
@@ -912,7 +912,7 @@ public abstract class TransactionType {
                     if (PhasingVote.getVote(pendingId, voterId) != null) {
                         throw new NxtException.NotCurrentlyValidException("Double voting attempt");
                     }
-                    if (poll.getFinishHeight() <= transaction.getValidationHeight()) {
+                    if (poll.getFinishHeight() <= transaction.getValidationHeight() - 1) {
                         throw new NxtException.NotCurrentlyValidException("Voting for this transaction finishes at " + poll.getFinishHeight());
                     }
                 }

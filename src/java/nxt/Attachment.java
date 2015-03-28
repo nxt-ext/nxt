@@ -314,7 +314,7 @@ public interface Attachment extends Appendix {
             private long minBalance = 0;
             private byte minBalanceModel;
 
-            private byte minNumberOfOptions = Constants.VOTING_DEFAULT_MIN_NUMBER_OF_CHOICES;
+            private final byte minNumberOfOptions;
             private final byte maxNumberOfOptions;
 
             private final byte minRangeValue;

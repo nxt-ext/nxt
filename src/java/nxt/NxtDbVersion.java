@@ -692,6 +692,11 @@ class NxtDbVersion extends DbVersion {
             case 290:
                 apply("CREATE INDEX IF NOT EXISTS trade_bid_idx ON trade (bid_order_id, height DESC)");
             case 291:
+                if (Constants.isTestnet) {
+                    BlockchainProcessorImpl.getInstance().scheduleScan(0, true);
+                }
+                apply(null);
+            case 292:
                 return;
             default:
                 throw new RuntimeException("Blockchain database inconsistent with code, probably trying to run older code on newer database");

@@ -1,12 +1,13 @@
 package nxt.http;
 
-import java.util.logging.Handler;
-import java.util.logging.Logger;
-import javax.servlet.http.HttpServletRequest;
+import nxt.util.MemoryHandler;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
-import nxt.util.MemoryHandler;
+
+import javax.servlet.http.HttpServletRequest;
+import java.util.logging.Handler;
+import java.util.logging.Logger;
 
 /**
  * The GetLog API will return log messages from the ring buffer

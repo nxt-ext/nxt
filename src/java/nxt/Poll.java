@@ -305,7 +305,7 @@ public final class Poll extends AbstractPoll {
         final long[] partialResult = new long[options.length];
         final byte[] optVals = vote.getVote();
         for (int i = 0; i < optVals.length; i++) {
-            if (optVals[i] != Constants.VOTING_NO_VOTE_VALUE) {
+            if (optVals[i] != Constants.NO_VOTE_VALUE) {
                 partialResult[i] = (long) optVals[i] * weight;
             } else {
                 partialResult[i] = Long.MIN_VALUE;

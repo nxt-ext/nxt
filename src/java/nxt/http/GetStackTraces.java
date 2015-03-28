@@ -1,14 +1,15 @@
 package nxt.http;
 
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.json.simple.JSONStreamAware;
+
+import javax.servlet.http.HttpServletRequest;
 import java.lang.management.LockInfo;
 import java.lang.management.ManagementFactory;
 import java.lang.management.MonitorInfo;
 import java.lang.management.ThreadInfo;
 import java.lang.management.ThreadMXBean;
-import javax.servlet.http.HttpServletRequest;
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
-import org.json.simple.JSONStreamAware;
 
 /**
  * The GetStackTraces API will return the current stack trace for

@@ -619,9 +619,9 @@ public interface Appendix {
                 throw new NxtException.NotValidException("Quorum of " + quorum + " cannot be achieved in by-account voting with whitelist of length " + whitelist.length);
             }
 
-            if (finishHeight < currentHeight + Constants.VOTING_MIN_VOTE_DURATION
-                    || finishHeight > currentHeight + Constants.VOTING_MAX_VOTE_DURATION) {
-                throw new NxtException.NotCurrentlyValidException("Invalid finish height");
+            if (PhasingPoll.getPoll(transaction.getId()) == null &&
+                    (finishHeight <= currentHeight + (quorum > 0 ? 2 : 1) || finishHeight >= currentHeight + Constants.MAX_PHASING_DURATION)) {
+                throw new NxtException.NotCurrentlyValidException("Invalid finish height " + finishHeight);
             }
 
             voteWeighting.validate();
