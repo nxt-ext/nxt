@@ -7,9 +7,15 @@ import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.json.simple.JSONObject;
+
+import nxt.Account.ControlType;
+import nxt.Appendix.Phasing;
 import nxt.NxtException.AccountControlException;
+import nxt.VoteWeighting.VotingModel;
 import nxt.db.DbKey;
 import nxt.db.DbUtils;
 import nxt.db.VersionedEntityDbTable;
@@ -18,7 +24,11 @@ import nxt.util.Convert;
 
 public class AccountControlTxBlocking {
     public static void checkTransaction(Transaction transaction) throws AccountControlException {
-        
+        Account senderAccount = Account.getAccount(transaction.getSenderId());
+        if (senderAccount.getControls().contains(Account.ControlType.PHASING_ONLY)) {
+            PhasingOnly phasingOnly = PhasingOnly.get(transaction.getSenderId());
+            phasingOnly.checkTransaction(transaction);
+        }
     }
     
     public static class PhasingOnly {
@@ -29,7 +39,7 @@ public class AccountControlTxBlocking {
         private PhasingOnly(long accountId, PhasingParams params){
             this.accountId = accountId;
             
-            dbKey = ruleDbKeyFactory.newKey(this.accountId);
+            dbKey = phasingControlDbKeyFactory.newKey(this.accountId);
             
             phasingParams = params;
         }
@@ -37,7 +47,7 @@ public class AccountControlTxBlocking {
         private PhasingOnly(ResultSet rs) throws SQLException {
             accountId = rs.getLong("account_id");
             
-            dbKey = ruleDbKeyFactory.newKey(this.accountId);
+            dbKey = phasingControlDbKeyFactory.newKey(this.accountId);
             
             List<Long> whitelistedVoters;
             if (rs.getByte("whitelist_size") == 0) {
@@ -53,7 +63,25 @@ public class AccountControlTxBlocking {
                     rs.getByte("min_balance_model"),
                     Convert.toArray(whitelistedVoters));
         }
-        
+
+        private void checkTransaction(Transaction transaction) throws AccountControlException {
+            Optional<? extends Appendix> appendixOptional = transaction.getAppendages().stream()
+                    .filter(a -> a instanceof Appendix.Phasing).findFirst();
+            if (appendixOptional.isPresent()) {
+                Appendix.Phasing phasingAppendix = (Phasing) appendixOptional.get();
+                if (!phasingParams.equals(phasingAppendix.getParams())) {
+                    JSONObject expectedParamsJson = new JSONObject();
+                    phasingParams.putMyJSON(expectedParamsJson);
+                    JSONObject actualParamsJson = new JSONObject();
+                    phasingAppendix.getParams().putMyJSON(actualParamsJson);
+                    throw new AccountControlException("Phasing parameters mismatch phasing account control. Expected " +
+                            expectedParamsJson.toJSONString() + ". Actual: " + actualParamsJson.toJSONString());
+                }
+            } else {
+                throw new AccountControlException("Non-phased transaction when phasing account control is enabled");
+            }
+        }
+
         private void save(Connection con) throws SQLException {
             try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO account_control_phasing "
                     + "(account_id, whitelist_size, voting_model, quorum, min_balance, holding_id, min_balance_model, height) "
@@ -73,19 +101,39 @@ public class AccountControlTxBlocking {
         }
         
         public static void set(Transaction transaction, Attachment.SetPhasingOnly attachment) {
-            //transaction.getSenderId()
-            //phasingControlTable.insert(new PhasingOnly(transaction.getSenderId(), attachment.getPhasingParams()));
+            PhasingParams phasingParams = attachment.getPhasingParams();
+            Account senderAccount = Account.getAccount(transaction.getSenderId());
+           
+            if (phasingParams.getVoteWeighting().getVotingModel() == VotingModel.NONE) {
+                //no voting - remove the control
+                senderAccount.removeControl(ControlType.PHASING_ONLY);
+                PhasingOnly phasingOnly = get(transaction.getSenderId());
+                if (phasingOnly != null) {
+                    if (phasingOnly.phasingParams.getWhitelist().length > 0) {
+                        phasingControlVoterTable.delete(phasingOnly);
+                    }
+                    phasingControlTable.delete(phasingOnly);
+                }
+            } else {
+                senderAccount.addControl(ControlType.PHASING_ONLY);
+                PhasingOnly phasingOnly = new PhasingOnly(transaction.getSenderId(), phasingParams);
+                phasingControlTable.insert(phasingOnly);
+            }
+        }
+        
+        private static PhasingOnly get(long accountId) {
+            return phasingControlTable.get(phasingControlDbKeyFactory.newKey(accountId));
         }
     }
     
-    private static final DbKey.LongKeyFactory<PhasingOnly> ruleDbKeyFactory = new DbKey.LongKeyFactory<PhasingOnly>("account_id") {
+    private static final DbKey.LongKeyFactory<PhasingOnly> phasingControlDbKeyFactory = new DbKey.LongKeyFactory<PhasingOnly>("account_id") {
         @Override
         public DbKey newKey(PhasingOnly rule) {
             return rule.dbKey;
         }
     };
     
-    private static final VersionedEntityDbTable<PhasingOnly> phasingControlTable = new VersionedEntityDbTable<PhasingOnly>("account_control_phasing", ruleDbKeyFactory) {
+    private static final VersionedEntityDbTable<PhasingOnly> phasingControlTable = new VersionedEntityDbTable<PhasingOnly>("account_control_phasing", phasingControlDbKeyFactory) {
 
         @Override
         protected PhasingOnly load(Connection con, ResultSet rs)
@@ -101,7 +149,7 @@ public class AccountControlTxBlocking {
     };
     
     private static final VersionedValuesDbTable<PhasingOnly, Long> phasingControlVoterTable = 
-            new VersionedValuesDbTable<PhasingOnly, Long>("account_control_phasing_voter", ruleDbKeyFactory) {
+            new VersionedValuesDbTable<PhasingOnly, Long>("account_control_phasing_voter", phasingControlDbKeyFactory) {
 
         @Override
         protected Long load(Connection con, ResultSet rs)

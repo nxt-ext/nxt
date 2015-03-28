@@ -21,7 +21,10 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.EnumSet;
 import java.util.List;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 @SuppressWarnings({"UnusedDeclaration", "SuspiciousNameCombination"})
@@ -30,6 +33,10 @@ public final class Account {
     public static enum Event {
         BALANCE, UNCONFIRMED_BALANCE, ASSET_BALANCE, UNCONFIRMED_ASSET_BALANCE, CURRENCY_BALANCE, UNCONFIRMED_CURRENCY_BALANCE,
         LEASE_SCHEDULED, LEASE_STARTED, LEASE_ENDED
+    }
+
+    public static enum ControlType {
+        PHASING_ONLY
     }
 
     public static class AccountAsset {
@@ -610,7 +617,8 @@ public final class Account {
     private String name;
     private String description;
     private Pattern messagePattern;
-
+    private final EnumSet<ControlType> controls;
+    
     private Account(long id) {
         if (id != Crypto.rsDecode(Crypto.rsEncode(id))) {
             Logger.logMessage("CRITICAL ERROR: Reed-Solomon encoding fails for " + id);
@@ -619,6 +627,7 @@ public final class Account {
         this.dbKey = accountDbKeyFactory.newKey(this.id);
         this.creationHeight = Nxt.getBlockchain().getHeight();
         currentLeasingHeightFrom = Integer.MAX_VALUE;
+        controls = EnumSet.noneOf(ControlType.class);
     }
 
     private Account(ResultSet rs) throws SQLException {
@@ -642,6 +651,10 @@ public final class Account {
             int flags = rs.getInt("message_pattern_flags");
             this.messagePattern = Pattern.compile(regex, flags);
         }
+        controls = EnumSet.noneOf(ControlType.class);
+        if (rs.getBoolean("has_control_phasing")) {
+            controls.add(ControlType.PHASING_ONLY);
+        }
     }
 
     private void save(Connection con) throws SQLException {
@@ -649,8 +662,9 @@ public final class Account {
                 + "key_height, balance, unconfirmed_balance, forged_balance, name, description, "
                 + "current_leasing_height_from, current_leasing_height_to, current_lessee_id, "
                 + "next_leasing_height_from, next_leasing_height_to, next_lessee_id, message_pattern_regex, message_pattern_flags, "
+                + "has_control_phasing, "
                 + "height, latest) "
-                + "KEY (id, height) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, TRUE)")) {
+                + "KEY (id, height) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, TRUE)")) {
             int i = 0;
             pstmt.setLong(++i, this.getId());
             pstmt.setInt(++i, this.getCreationHeight());
@@ -673,6 +687,7 @@ public final class Account {
                 pstmt.setNull(++i, Types.VARCHAR);
                 pstmt.setNull(++i, Types.INTEGER);
             }
+            pstmt.setBoolean(++i, controls.contains(ControlType.PHASING_ONLY));
             pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
             pstmt.executeUpdate();
         }
@@ -967,6 +982,10 @@ public final class Account {
         return nextLeasingHeightTo;
     }
 
+    public Set<ControlType> getControls() {
+        return Collections.unmodifiableSet(controls);
+    }
+
     void leaseEffectiveBalance(long lesseeId, short period) {
         Account lessee = Account.getAccount(lesseeId);
         if (lessee != null && lessee.getKeyHeight() > 0) {
@@ -993,6 +1012,20 @@ public final class Account {
                         Event.LEASE_SCHEDULED);
 
             }
+        }
+    }
+
+    public void addControl(ControlType control) {
+        if (!controls.contains(control)) {
+            controls.add(control);
+            accountTable.insert(this);
+        }
+    }
+
+    public void removeControl(ControlType control) {
+        if (controls.contains(control)) {
+            controls.remove(control);
+            accountTable.insert(this);
         }
     }
 

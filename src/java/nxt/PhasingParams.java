@@ -137,4 +137,25 @@ public class PhasingParams {
         return voteWeighting;
     }
     
+    @Override
+    public boolean equals(Object obj) {
+        if (!(obj instanceof PhasingParams)) {
+            return false;
+        }
+        PhasingParams other = (PhasingParams)obj;
+        return other.quorum == this.quorum
+                && other.voteWeighting.equals(this.voteWeighting)
+                && Arrays.equals(other.whitelist, this.whitelist);
+    }
+    
+    @Override
+    public int hashCode() {
+        int hashCode = 17;
+        hashCode = 31 * hashCode + Long.hashCode(quorum);
+        for (long voter : whitelist) {
+            hashCode = 31 * hashCode + Long.hashCode(voter);
+        }
+        hashCode = 31 * hashCode + voteWeighting.hashCode();
+        return hashCode;
+    }
 }

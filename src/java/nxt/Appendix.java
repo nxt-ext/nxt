@@ -615,5 +615,9 @@ public interface Appendix {
             return params.getVoteWeighting();
         }
 
+        public PhasingParams getParams() {
+            return params;
+        }
+
     }
 }
