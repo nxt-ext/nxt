@@ -52,7 +52,6 @@ public final class Constants {
     public static final int MAX_POLL_DESCRIPTION_LENGTH = 1000;
     public static final int MAX_POLL_OPTION_LENGTH = 100;
     public static final int MAX_POLL_OPTION_COUNT = 100;
-    public static final int MIN_POLL_DURATION = 1;
     public static final int MAX_POLL_DURATION = 14 * 1440;
 
     public static final byte MIN_VOTE_VALUE = -92;

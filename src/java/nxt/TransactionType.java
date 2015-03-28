@@ -757,7 +757,7 @@ public abstract class TransactionType {
                     throw new NxtException.NotValidException("Invalid range: " + attachment.getJSONObject());
                 }
 
-                if (attachment.getFinishHeight() <= transaction.getValidationHeight() + Constants.MIN_POLL_DURATION
+                if (attachment.getFinishHeight() <= transaction.getValidationHeight() + 1
                     || attachment.getFinishHeight() >= transaction.getValidationHeight() + Constants.MAX_POLL_DURATION) {
                     throw new NxtException.NotCurrentlyValidException("Invalid finishing height" + attachment.getJSONObject());
                 }

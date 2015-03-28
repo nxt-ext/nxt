@@ -73,7 +73,7 @@ public final class CreatePoll extends CreateTransaction {
 
         int currentHeight = Nxt.getBlockchain().getHeight();
         int finishHeight = ParameterParser.getInt(req, "finishHeight",
-                currentHeight + Constants.MIN_POLL_DURATION + 1,
+                currentHeight + 2,
                 currentHeight + Constants.MAX_POLL_DURATION + 1, true);
 
         byte votingModel = ParameterParser.getByte(req, "votingModel", (byte)0, (byte)3, true);
