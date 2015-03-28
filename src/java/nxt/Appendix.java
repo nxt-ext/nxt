@@ -579,49 +579,50 @@ public interface Appendix {
         @Override
         void validate(Transaction transaction) throws NxtException.ValidationException {
 
-            int currentHeight = Nxt.getBlockchain().getHeight();
-            if (currentHeight < Constants.VOTING_SYSTEM_BLOCK) {
-                throw new NxtException.NotYetEnabledException("Voting System not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
-            }
-
-            if (whitelist.length > Constants.MAX_PHASING_WHITELIST_SIZE) {
-                throw new NxtException.NotValidException("Whitelist is too big");
-            }
-
-            long previousAccountId = 0;
-            for (long accountId : whitelist) {
-                if (accountId == 0) {
-                    throw new NxtException.NotValidException("Invalid accountId 0 in whitelist");
+            if (PhasingPoll.getPoll(transaction.getId()) == null) {
+                int currentHeight = Nxt.getBlockchain().getHeight();
+                if (currentHeight < Constants.VOTING_SYSTEM_BLOCK) {
+                    throw new NxtException.NotYetEnabledException("Voting System not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
                 }
-                if (previousAccountId != 0 && accountId < previousAccountId) {
-                    throw new NxtException.NotValidException("Whitelist not sorted " + Arrays.toString(whitelist));
-                }
-                if (accountId == previousAccountId) {
-                    throw new NxtException.NotValidException("Duplicate accountId " + Long.toUnsignedString(accountId) + " in whitelist");
-                }
-                previousAccountId = accountId;
-            }
 
-            if (quorum <= 0 && voteWeighting.getVotingModel() != VoteWeighting.VotingModel.NONE) {
-                throw new NxtException.NotValidException("quorum <= 0");
-            }
-
-            if (voteWeighting.getVotingModel() == VoteWeighting.VotingModel.NONE) {
-                if (quorum != 0) {
-                    throw new NxtException.NotValidException("Quorum must be 0 for no-voting phased transaction");
+                if (whitelist.length > Constants.MAX_PHASING_WHITELIST_SIZE) {
+                    throw new NxtException.NotValidException("Whitelist is too big");
                 }
-                if (whitelist.length != 0) {
-                    throw new NxtException.NotValidException("No whitelist needed for no-voting phased transaction");
+
+                long previousAccountId = 0;
+                for (long accountId : whitelist) {
+                    if (accountId == 0) {
+                        throw new NxtException.NotValidException("Invalid accountId 0 in whitelist");
+                    }
+                    if (previousAccountId != 0 && accountId < previousAccountId) {
+                        throw new NxtException.NotValidException("Whitelist not sorted " + Arrays.toString(whitelist));
+                    }
+                    if (accountId == previousAccountId) {
+                        throw new NxtException.NotValidException("Duplicate accountId " + Long.toUnsignedString(accountId) + " in whitelist");
+                    }
+                    previousAccountId = accountId;
                 }
-            }
 
-            if (voteWeighting.getVotingModel() == VoteWeighting.VotingModel.ACCOUNT && whitelist.length > 0 && quorum > whitelist.length) {
-                throw new NxtException.NotValidException("Quorum of " + quorum + " cannot be achieved in by-account voting with whitelist of length " + whitelist.length);
-            }
+                if (quorum <= 0 && voteWeighting.getVotingModel() != VoteWeighting.VotingModel.NONE) {
+                    throw new NxtException.NotValidException("quorum <= 0");
+                }
 
-            if (PhasingPoll.getPoll(transaction.getId()) == null &&
-                    (finishHeight <= currentHeight + (quorum > 0 ? 2 : 1) || finishHeight >= currentHeight + Constants.MAX_PHASING_DURATION)) {
-                throw new NxtException.NotCurrentlyValidException("Invalid finish height " + finishHeight);
+                if (voteWeighting.getVotingModel() == VoteWeighting.VotingModel.NONE) {
+                    if (quorum != 0) {
+                        throw new NxtException.NotValidException("Quorum must be 0 for no-voting phased transaction");
+                    }
+                    if (whitelist.length != 0) {
+                        throw new NxtException.NotValidException("No whitelist needed for no-voting phased transaction");
+                    }
+                }
+
+                if (voteWeighting.getVotingModel() == VoteWeighting.VotingModel.ACCOUNT && whitelist.length > 0 && quorum > whitelist.length) {
+                    throw new NxtException.NotValidException("Quorum of " + quorum + " cannot be achieved in by-account voting with whitelist of length " + whitelist.length);
+                }
+
+                if (finishHeight <= currentHeight + (quorum > 0 ? 2 : 1) || finishHeight >= currentHeight + Constants.MAX_PHASING_DURATION) {
+                    throw new NxtException.NotCurrentlyValidException("Invalid finish height " + finishHeight);
+                }
             }
 
             voteWeighting.validate();
