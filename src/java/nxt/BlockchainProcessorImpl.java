@@ -633,7 +633,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             Collections.sort(transactions, Comparator.comparingLong(Transaction::getId));
             MessageDigest digest = Crypto.sha256();
             for (TransactionImpl transaction : transactions) {
-                digest.update(transaction.getBytesOrig());
+                digest.update(transaction.bytes());
             }
             BlockImpl genesisBlock = new BlockImpl(-1, 0, 0, Constants.MAX_BALANCE_NQT, 0, transactions.size() * 128, digest.digest(),
                     Genesis.CREATOR_PUBLIC_KEY, new byte[64], Genesis.GENESIS_BLOCK_SIGNATURE, null, transactions);
@@ -808,7 +808,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             }
             calculatedTotalAmount += transaction.getAmountNQT();
             calculatedTotalFee += transaction.getFeeNQT();
-            digest.update(transaction.getBytesOrig());
+            digest.update(transaction.bytes());
         }
         if (calculatedTotalAmount != block.getTotalAmountNQT() || calculatedTotalFee != block.getTotalFeeNQT()) {
             throw new BlockNotAcceptedException("Total amount or fee don't match transaction totals");
@@ -934,7 +934,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             pstmt.setInt(1, height);
             try (DbIterator<TransactionImpl> iterator = blockchain.getTransactions(con, pstmt)) {
                 while (iterator.hasNext()) {
-                    digest.update(iterator.next().getBytesOrig());
+                    digest.update(iterator.next().bytes());
                 }
             }
         } catch (SQLException e) {
@@ -1046,7 +1046,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         MessageDigest digest = Crypto.sha256();
         for (UnconfirmedTransaction unconfirmedTransaction : sortedTransactions) {
             blockTransactions.add(unconfirmedTransaction.getTransaction());
-            digest.update(unconfirmedTransaction.getTransaction().getBytesOrig());
+            digest.update(unconfirmedTransaction.getTransaction().bytes());
         }
 
         byte[] payloadHash = digest.digest();
@@ -1204,14 +1204,14 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                                 }
                                 validateTransactions(currentBlock, blockchain.getLastBlock(), curTime, duplicates);
                                 for (TransactionImpl transaction : currentBlock.getTransactions()) {
-                                    byte[] transactionBytes = transaction.getBytesOrig();
+                                    byte[] transactionBytes = transaction.bytes();
                                     if (currentBlock.getHeight() > Constants.NQT_BLOCK
-                                            && !Arrays.equals(transactionBytes, TransactionImpl.newTransactionBuilder(transactionBytes).build().getBytesOrig())) {
+                                            && !Arrays.equals(transactionBytes, TransactionImpl.newTransactionBuilder(transactionBytes).build().bytes())) {
                                         throw new NxtException.NotValidException("Transaction bytes cannot be parsed back to the same transaction: "
                                                 + transaction.getJSONObject().toJSONString());
                                     }
                                     JSONObject transactionJSON = (JSONObject) JSONValue.parse(transaction.getJSONObject().toJSONString());
-                                    if (!Arrays.equals(transactionBytes, TransactionImpl.newTransactionBuilder(transactionJSON).build().getBytesOrig())) {
+                                    if (!Arrays.equals(transactionBytes, TransactionImpl.newTransactionBuilder(transactionJSON).build().bytes())) {
                                         throw new NxtException.NotValidException("Transaction JSON cannot be parsed back to the same transaction: "
                                                 + transaction.getJSONObject().toJSONString());
                                     }
