@@ -327,9 +327,9 @@ class NxtDbVersion extends DbVersion {
             case 131:
                 apply("CALL FTL_INIT()");
             case 132:
-                apply("CALL FTL_CREATE_INDEX('PUBLIC', 'GOODS', 'NAME,DESCRIPTION,TAGS')");
+                apply(null);
             case 133:
-                apply("CALL FTL_CREATE_INDEX('PUBLIC', 'ASSET', 'NAME,DESCRIPTION')");
+                apply(null);
             case 134:
                 apply("CREATE TABLE IF NOT EXISTS tag (db_id IDENTITY, tag VARCHAR NOT NULL, in_stock_count INT NOT NULL, "
                         + "total_count INT NOT NULL, height INT NOT NULL, latest BOOLEAN NOT NULL DEFAULT TRUE)");
@@ -454,7 +454,7 @@ class NxtDbVersion extends DbVersion {
             case 182:
                 apply(null);
             case 183:
-                apply("CALL FTL_CREATE_INDEX('PUBLIC', 'CURRENCY', 'CODE,NAME,DESCRIPTION')");
+                apply(null);
             case 184:
                 apply("CREATE TABLE IF NOT EXISTS scan (rescan BOOLEAN NOT NULL DEFAULT FALSE, height INT NOT NULL DEFAULT 0, "
                         + "validate BOOLEAN NOT NULL DEFAULT FALSE)");
@@ -489,7 +489,7 @@ class NxtDbVersion extends DbVersion {
             case 198:
                 apply(null);
             case 199:
-                apply("CALL FTL_REINDEX()");
+                apply(null);
             case 200:
                 apply("CREATE TABLE IF NOT EXISTS public_key (db_id IDENTITY, account_id BIGINT NOT NULL, "
                         + "public_key BINARY(32), height INT NOT NULL, FOREIGN KEY (height) REFERENCES block (height) ON DELETE CASCADE)");
@@ -627,7 +627,7 @@ class NxtDbVersion extends DbVersion {
             case 258:
                 apply("CREATE INDEX IF NOT EXISTS phasing_poll_result_height_idx ON phasing_poll_result(height)");
             case 259:
-                apply("CALL FTL_CREATE_INDEX('PUBLIC', 'POLL', 'NAME,DESCRIPTION')");
+                apply(null);
             case 260:
                 apply("CREATE INDEX IF NOT EXISTS currency_founder_account_id_idx ON currency_founder (account_id, height DESC)");
             case 261:
