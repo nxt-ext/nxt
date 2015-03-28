@@ -62,6 +62,11 @@ public abstract class MonetarySystem extends TransactionType {
         return isDuplicate;
     }
 
+    @Override
+    public final boolean isPhasingSafe() {
+        return false;
+    }
+
     public static final TransactionType CURRENCY_ISSUANCE = new MonetarySystem() {
 
         private final Fee FIVE_LETTER_CURRENCY_ISSUANCE_FEE = new Fee.ConstantFee(40 * Constants.ONE_NXT);
