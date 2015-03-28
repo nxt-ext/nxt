@@ -3,7 +3,6 @@ package nxt;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 
-import nxt.NxtException.NotValidException;
 import nxt.NxtException.ValidationException;
 import nxt.util.Convert;
 
@@ -11,7 +10,7 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 /**
- * Class for handling phasing data shared between {@link Appendix.Phasing} and {@link AccountControlTxBlocking}
+ * Class for handling phasing parameters shared between {@link Appendix.Phasing} and {@link AccountControlTxBlocking.PhasingOnly}
  */
 public class PhasingParams {
     private final long quorum;
@@ -32,7 +31,7 @@ public class PhasingParams {
         voteWeighting = new VoteWeighting(votingModel, holdingId, minBalance, minBalanceModel);
     }
     
-    PhasingParams(JSONObject attachmentData) {
+    public PhasingParams(JSONObject attachmentData) {
         quorum = Convert.parseLong(attachmentData.get("phasingQuorum"));
         long minBalance = Convert.parseLong(attachmentData.get("phasingMinBalance"));
         byte votingModel = ((Long) attachmentData.get("phasingVotingModel")).byteValue();
@@ -72,7 +71,7 @@ public class PhasingParams {
         buffer.put(voteWeighting.getMinBalanceModel().getCode());
     }
     
-    void putMyJSON(JSONObject json) {
+    public void putMyJSON(JSONObject json) {
         json.put("phasingQuorum", quorum);
         json.put("phasingMinBalance", voteWeighting.getMinBalance());
         json.put("phasingVotingModel", voteWeighting.getVotingModel().getCode());
@@ -157,5 +156,12 @@ public class PhasingParams {
         }
         hashCode = 31 * hashCode + voteWeighting.hashCode();
         return hashCode;
+    }
+    
+    @Override
+    public String toString() {
+        JSONObject resultJson = new JSONObject();
+        putMyJSON(resultJson);
+        return resultJson.toJSONString();
     }
 }

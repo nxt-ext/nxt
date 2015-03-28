@@ -2457,11 +2457,17 @@ public interface Attachment extends Appendix {
 
         private final PhasingParams phasingParams;
 
+        public SetPhasingOnly(PhasingParams params) {
+            phasingParams = params;
+        }
+
         public SetPhasingOnly(ByteBuffer buffer, byte transactionVersion) {
+            super(buffer, transactionVersion);
             phasingParams = new PhasingParams(buffer);
         }
 
         public SetPhasingOnly(JSONObject attachmentData) {
+            super(attachmentData);
             phasingParams = new PhasingParams(attachmentData);
         }
 

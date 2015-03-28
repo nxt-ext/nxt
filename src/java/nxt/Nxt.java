@@ -192,6 +192,7 @@ public final class Nxt {
                 TransactionProcessorImpl.getInstance();
                 BlockchainProcessorImpl.getInstance();
                 Account.init();
+                AccountControlTxBlocking.init();
                 Alias.init();
                 Asset.init();
                 DigitalGoodsStore.init();

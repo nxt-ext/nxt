@@ -6,14 +6,17 @@ import nxt.Attachment;
 import nxt.Constants;
 import nxt.Nxt;
 import nxt.NxtException;
+import nxt.PhasingParams;
 import nxt.Transaction;
 import nxt.crypto.Crypto;
 import nxt.crypto.EncryptedData;
 import nxt.util.Convert;
+
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
+
 import java.util.Arrays;
 
 import static nxt.http.JSONResponses.FEATURE_NOT_AVAILABLE;
@@ -55,24 +58,20 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
         return createTransaction(req, senderAccount, recipientId, amountNQT, Attachment.ORDINARY_PAYMENT);
     }
 
-    private Appendix.Phasing parsePhasing(HttpServletRequest req) throws ParameterException {
-        byte votingModel = ParameterParser.getByte(req, "phasingVotingModel", (byte)-1, (byte)3, true);
+    protected PhasingParams parsePhasingParams(HttpServletRequest req, String votingModelName, String quorumName, 
+            String minBalanceName, String minBalanceModelName, String holdingName, String whitelistedName) throws ParameterException {
+        byte votingModel = ParameterParser.getByte(req, votingModelName, (byte)-1, (byte)3, true);
 
-        int finishHeight = ParameterParser.getInt(req, "phasingFinishHeight",
-                Nxt.getBlockchain().getHeight() + Constants.VOTING_MIN_VOTE_DURATION,
-                Nxt.getBlockchain().getHeight() + Constants.VOTING_MAX_VOTE_DURATION,
-                true);
+        long quorum = ParameterParser.getLong(req, quorumName, 0, Long.MAX_VALUE, false);
 
-        long quorum = ParameterParser.getLong(req, "phasingQuorum", 0, Long.MAX_VALUE, false);
+        long minBalance = ParameterParser.getLong(req, minBalanceName, 0, Long.MAX_VALUE, false);
 
-        long minBalance = ParameterParser.getLong(req, "phasingMinBalance", 0, Long.MAX_VALUE, false);
+        byte minBalanceModel = ParameterParser.getByte(req, minBalanceModelName, (byte)0, (byte)3, false);
 
-        byte minBalanceModel = ParameterParser.getByte(req, "phasingMinBalanceModel", (byte)0, (byte)3, false);
-
-        long holdingId = ParameterParser.getUnsignedLong(req, "phasingHolding", false);
+        long holdingId = ParameterParser.getUnsignedLong(req, holdingName, false);
 
         long[] whitelist;
-        String[] whitelistValues = req.getParameterValues("phasingWhitelisted");
+        String[] whitelistValues = req.getParameterValues(whitelistedName);
         if (whitelistValues != null && whitelistValues.length > 0) {
             whitelist = new long[whitelistValues.length];
             for (int i = 0; i < whitelistValues.length; i++) {
@@ -85,8 +84,18 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
         } else {
             whitelist = Convert.EMPTY_LONG;
         }
-
-        return new Appendix.Phasing(finishHeight, votingModel, holdingId, quorum, minBalance, minBalanceModel, whitelist);
+        return new PhasingParams(votingModel, holdingId, quorum, minBalance, minBalanceModel, whitelist);
+    }
+    
+    private Appendix.Phasing parsePhasing(HttpServletRequest req) throws ParameterException {
+        
+        int finishHeight = ParameterParser.getInt(req, "phasingFinishHeight",
+                Nxt.getBlockchain().getHeight() + Constants.VOTING_MIN_VOTE_DURATION,
+                Nxt.getBlockchain().getHeight() + Constants.VOTING_MAX_VOTE_DURATION,
+                true);
+        
+        return new Appendix.Phasing(finishHeight, parsePhasingParams(req, "phasingVotingModel", "phasingQuorum", "phasingMinBalance", 
+                "phasingMinBalanceModel", "phasingHolding", "phasingWhitelisted"));
     }
 
     final JSONStreamAware createTransaction(HttpServletRequest req, Account senderAccount, long recipientId,

@@ -504,10 +504,9 @@ public interface Appendix {
             params = new PhasingParams(attachmentData);
         }
 
-        public Phasing(int finishHeight, byte votingModel, long holdingId, long quorum,
-                       long minBalance, byte minBalanceModel, long[] whitelist) {
+        public Phasing(int finishHeight, PhasingParams phasingParams) {
             this.finishHeight = finishHeight;
-            params = new PhasingParams(votingModel, holdingId, quorum, minBalance, minBalanceModel, whitelist);
+            params = phasingParams;
         }
 
         @Override

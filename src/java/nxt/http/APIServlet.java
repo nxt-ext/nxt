@@ -241,6 +241,8 @@ public final class APIServlet extends HttpServlet {
         map.put("blacklistPeer", BlacklistPeer.instance);
         map.put("dumpPeers", DumpPeers.instance);
         map.put("shutdown", Shutdown.instance);
+        map.put("setPhasingOnlyControl", SetPhasingOnlyControl.instance);
+        map.put("getPhasingOnlyControl", GetPhasingOnlyControl.instance);
         
         apiRequestHandlers = Collections.unmodifiableMap(map);
     }

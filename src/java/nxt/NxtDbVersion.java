@@ -688,11 +688,10 @@ class NxtDbVersion extends DbVersion {
             case 287:
                 apply("ALTER TABLE phasing_poll ALTER COLUMN quorum SET NULL");
             case 288:
-                if (true) return;
                 apply("CREATE TABLE IF NOT EXISTS account_control_phasing (db_id IDENTITY, account_id BIGINT NOT NULL, "
                         + "whitelist_size TINYINT NOT NULL DEFAULT 0, "
-                        + "voting_model TINYINT NOT NULL, quorum BIGINT NOT NULL, "
-                        + "min_balance BIGINT NOT NULL, holding_id BIGINT NOT NULL, min_balance_model TINYINT, "
+                        + "voting_model TINYINT NOT NULL, quorum BIGINT, "
+                        + "min_balance BIGINT, holding_id BIGINT, min_balance_model TINYINT, "
                         + "height INT NOT NULL, latest BOOLEAN NOT NULL DEFAULT TRUE)");
             case 289:
                 apply("CREATE TABLE IF NOT EXISTS account_control_phasing_voter (db_id IDENTITY, account_id BIGINT NOT NULL, "

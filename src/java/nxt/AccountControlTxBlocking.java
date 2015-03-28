@@ -10,8 +10,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import org.json.simple.JSONObject;
-
 import nxt.Account.ControlType;
 import nxt.Appendix.Phasing;
 import nxt.NxtException.AccountControlException;
@@ -23,6 +21,9 @@ import nxt.db.VersionedValuesDbTable;
 import nxt.util.Convert;
 
 public class AccountControlTxBlocking {
+    static void init(){
+    }
+    
     public static void checkTransaction(Transaction transaction) throws AccountControlException {
         Account senderAccount = Account.getAccount(transaction.getSenderId());
         if (senderAccount.getControls().contains(Account.ControlType.PHASING_ONLY)) {
@@ -70,12 +71,8 @@ public class AccountControlTxBlocking {
             if (appendixOptional.isPresent()) {
                 Appendix.Phasing phasingAppendix = (Phasing) appendixOptional.get();
                 if (!phasingParams.equals(phasingAppendix.getParams())) {
-                    JSONObject expectedParamsJson = new JSONObject();
-                    phasingParams.putMyJSON(expectedParamsJson);
-                    JSONObject actualParamsJson = new JSONObject();
-                    phasingAppendix.getParams().putMyJSON(actualParamsJson);
                     throw new AccountControlException("Phasing parameters mismatch phasing account control. Expected " +
-                            expectedParamsJson.toJSONString() + ". Actual: " + actualParamsJson.toJSONString());
+                            phasingParams.toString() + ". Actual: " + phasingAppendix.getParams().toString());
                 }
             } else {
                 throw new AccountControlException("Non-phased transaction when phasing account control is enabled");
@@ -85,7 +82,7 @@ public class AccountControlTxBlocking {
         private void save(Connection con) throws SQLException {
             try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO account_control_phasing "
                     + "(account_id, whitelist_size, voting_model, quorum, min_balance, holding_id, min_balance_model, height) "
-                    + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
+                    + "VALUES (?, ?, ?, ?, ?, ?, ?, ?)")) {
                 int i = 0;
                 pstmt.setLong(++i, this.accountId);
                 pstmt.setByte(++i, (byte) phasingParams.getWhitelist().length);
@@ -98,6 +95,10 @@ public class AccountControlTxBlocking {
                 pstmt.executeUpdate();
             }
             phasingControlVoterTable.insert(this, Arrays.stream(phasingParams.getWhitelist()).boxed().collect(Collectors.toList()));
+        }
+        
+        public PhasingParams getPhasingParams() {
+            return phasingParams;
         }
         
         public static void set(Transaction transaction, Attachment.SetPhasingOnly attachment) {
@@ -121,7 +122,7 @@ public class AccountControlTxBlocking {
             }
         }
         
-        private static PhasingOnly get(long accountId) {
+        public static PhasingOnly get(long accountId) {
             return phasingControlTable.get(phasingControlDbKeyFactory.newKey(accountId));
         }
     }
