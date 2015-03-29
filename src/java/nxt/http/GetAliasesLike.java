@@ -15,7 +15,7 @@ public final class GetAliasesLike extends APIServlet.APIRequestHandler {
     static final GetAliasesLike instance = new GetAliasesLike();
 
     private GetAliasesLike() {
-        super(new APITag[] {APITag.ALIASES}, "aliasPrefix", "firstIndex", "lastIndex");
+        super(new APITag[] {APITag.ALIASES, APITag.SEARCH}, "aliasPrefix", "firstIndex", "lastIndex");
     }
 
     @Override
