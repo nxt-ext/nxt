@@ -113,6 +113,7 @@ var NRS = (function(NRS, $, undefined) {
 				NRS.isTestNet = true;
 				var testnetWarningDiv = $("#testnet_warning");
 				var warningText = testnetWarningDiv.text() + " The testnet peer port is " + peerPort + (isOffline ? ", the peer is working offline." : ".");
+                NRS.logConsole(warningText);
 				testnetWarningDiv.text(warningText);
 				$(".testnet_only, #testnet_login, #testnet_warning").show();
 			}
@@ -124,6 +125,7 @@ var NRS = (function(NRS, $, undefined) {
 		if (!NRS.server) {
 			var hostName = window.location.hostname.toLowerCase();
 			NRS.isLocalHost = hostName == "localhost" || hostName == "127.0.0.1" || NRS.isPrivateIP(hostName);
+            NRS.logProperty("NRS.isLocalHost");
 		}
 
 		if (!NRS.isLocalHost) {
@@ -577,6 +579,7 @@ var NRS = (function(NRS, $, undefined) {
 		});
 
 		NRS.databaseSupport = true;
+        NRS.logConsole("Browser database initialized");
 		NRS.loadContacts();
 		NRS.getSettings();
 		NRS.updateNotifications();
@@ -656,6 +659,7 @@ var NRS = (function(NRS, $, undefined) {
 					}
 				});
 			} catch (err) {
+                NRS.logConsole("error creating database " + err.message);
 			}		
 		}
 	};
@@ -1307,8 +1311,7 @@ var NRS = (function(NRS, $, undefined) {
         NRS.logProperty("navigator.cookieEnabled");
         NRS.logProperty("navigator.onLine");
         NRS.logProperty("NRS.isTestNet");
-        NRS.logProperty("NRS.isLocalHost");
-        NRS.logProperty("NRS.isForging");
+        NRS.logProperty("NRS.needsAdminPassword");
     };
 
 	$("#id_search").on("submit", function(e) {

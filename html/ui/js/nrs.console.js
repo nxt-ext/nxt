@@ -4,16 +4,18 @@
 var NRS = (function (NRS, $) {
     var level = 1;
 
-    NRS.logConsole = function (msg, isDateIncluded) {
+    NRS.logConsole = function (msg, isDateIncluded, isDisplayTimeExact) {
         if (window.console) {
             try {
                 var prefix = "";
                 if (!isDateIncluded) {
-                    var timeExact = NRS.timeExact();
-                    var now = new Date();
-                    prefix = now.format("isoDateTime") + " " + timeExact + " ";
+                    prefix = new Date().format("isoDateTime") + " ";
                 }
-                console.log(prefix + msg);
+                var postfix = "";
+                if (isDisplayTimeExact) {
+                    postfix = " (" + NRS.timeExact() + ")";
+                }
+                console.log(prefix + msg + postfix);
             } catch (e) {
                 // IE11 when running in compatibility mode
             }

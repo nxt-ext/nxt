@@ -481,11 +481,20 @@ var NRS = (function(NRS, $, undefined) {
 					});
 					NRS.settings = NRS.defaultSettings;
 				}
+                NRS.logConsole("User settings for account " + NRS.convertNumericToRSAccountFormat(NRS.account));
+                for (var setting in NRS.defaultSettings) {
+                    if (!NRS.defaultSettings.hasOwnProperty(setting)) {
+                        continue;
+                    }
+                    var status = (NRS.defaultSettings[setting] !== NRS.settings[setting] ? "modified" : "default");
+                    NRS.logConsole(setting + " = " + NRS.settings[setting] + " [" + status + "]");
+                }
 				NRS.applySettings();
 			});
 			} else {
 				if (NRS.hasLocalStorage) {
 					NRS.settings = $.extend({}, NRS.defaultSettings, JSON.parse(localStorage.getItem("settings")));
+                    NRS.logConsole("Loading settings from local storage");
 				} else {
 					NRS.settings = NRS.defaultSettings;
 				}

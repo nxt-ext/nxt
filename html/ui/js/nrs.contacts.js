@@ -10,6 +10,7 @@ var NRS = (function(NRS, $, undefined) {
 				$.each(contacts, function(index, contact) {
 					NRS.contacts[contact.account] = contact;
 				});
+                NRS.logConsole("Loaded " + contacts.length + " contacts");
 			}
 		});
 	}
