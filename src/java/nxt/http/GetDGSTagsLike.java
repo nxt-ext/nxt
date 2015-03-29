@@ -15,7 +15,7 @@ public final class GetDGSTagsLike extends APIServlet.APIRequestHandler {
     static final GetDGSTagsLike instance = new GetDGSTagsLike();
 
     private GetDGSTagsLike() {
-        super(new APITag[] {APITag.DGS}, "tagPrefix", "inStockOnly", "firstIndex", "lastIndex");
+        super(new APITag[] {APITag.DGS, APITag.SEARCH}, "tagPrefix", "inStockOnly", "firstIndex", "lastIndex");
     }
 
     @Override
@@ -27,8 +27,8 @@ public final class GetDGSTagsLike extends APIServlet.APIRequestHandler {
         if (prefix == null) {
             return JSONResponses.missing("tagPrefix");
         }
-        if (prefix.length() < 3) {
-            return JSONResponses.incorrect("tagPrefix", "tagPrefix must be at least 3 characters long");
+        if (prefix.length() < 2) {
+            return JSONResponses.incorrect("tagPrefix", "tagPrefix must be at least 2 characters long");
         }
 
         JSONObject response = new JSONObject();

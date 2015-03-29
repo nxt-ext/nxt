@@ -32,15 +32,10 @@ public final class GetAccount extends APIServlet.APIRequestHandler {
         if (account.getPublicKey() != null) {
             response.put("publicKey", Convert.toHexString(account.getPublicKey()));
         }
-        if (account.getName() != null) {
-            response.put("name", account.getName());
-        }
-        if (account.getDescription() != null) {
-            response.put("description", account.getDescription());
-        }
-        if (account.getMessagePattern() != null) {
-            response.put("messagePatternRegex", account.getMessagePattern().pattern());
-            response.put("messagePatternFlags", account.getMessagePattern().flags());
+        Account.AccountInfo accountInfo = account.getAccountInfo();
+        if (accountInfo != null) {
+            response.put("name", Convert.nullToEmpty(accountInfo.getName()));
+            response.put("description", Convert.nullToEmpty(accountInfo.getDescription()));
         }
         if (account.getCurrentLesseeId() != 0) {
             JSONData.putAccount(response, "currentLessee", account.getCurrentLesseeId());

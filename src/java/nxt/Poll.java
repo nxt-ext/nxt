@@ -52,7 +52,7 @@ public final class Poll extends AbstractPoll {
         }
     };
 
-    private final static EntityDbTable<Poll> pollTable = new EntityDbTable<Poll>("poll", pollDbKeyFactory) {
+    private final static EntityDbTable<Poll> pollTable = new EntityDbTable<Poll>("poll", pollDbKeyFactory, "name,description") {
 
         @Override
         protected Poll load(Connection con, ResultSet rs) throws SQLException {

@@ -12,6 +12,7 @@ import nxt.util.Listener;
 import nxt.util.Listeners;
 import nxt.util.Logger;
 import nxt.util.ThreadPool;
+import org.h2.fulltext.FullTextLucene;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
@@ -732,7 +733,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             throw new BlockOutOfOrderException("Invalid timestamp: " + block.getTimestamp()
                     + " current time is " + curTime + ", previous block timestamp is " + previousLastBlock.getTimestamp());
         }
-        if (block.getVersion() != 1 && !Arrays.equals(Crypto.sha256().digest(previousLastBlock.getBytes()), block.getPreviousBlockHash())) {
+        if (block.getVersion() != 1 && !Arrays.equals(Crypto.sha256().digest(previousLastBlock.bytes()), block.getPreviousBlockHash())) {
             throw new BlockNotAcceptedException("Previous block hash doesn't match");
         }
         if (block.getId() == 0L || BlockDb.hasBlock(block.getId(), previousLastBlock.getHeight())) {
@@ -1056,7 +1057,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         byte[] generationSignature = digest.digest(publicKey);
 
         BlockImpl block;
-        byte[] previousBlockHash = Crypto.sha256().digest(previousBlock.getBytes());
+        byte[] previousBlockHash = Crypto.sha256().digest(previousBlock.bytes());
 
         try {
 
@@ -1157,6 +1158,10 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     Db.db.commitTransaction();
                     return;
                 }
+                if (height == 0) {
+                    Logger.logDebugMessage("Dropping all full text search indexes");
+                    FullTextLucene.dropAll(con);
+                }
                 for (DerivedDbTable table : derivedTables) {
                     if (height == 0) {
                         table.truncate();
@@ -1197,9 +1202,9 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                             if (validate && currentBlockId != Genesis.GENESIS_BLOCK_ID) {
                                 int curTime = Nxt.getEpochTime();
                                 validate(currentBlock, blockchain.getLastBlock(), curTime);
-                                byte[] blockBytes = currentBlock.getBytes();
+                                byte[] blockBytes = currentBlock.bytes();
                                 JSONObject blockJSON = (JSONObject) JSONValue.parse(currentBlock.getJSONObject().toJSONString());
-                                if (!Arrays.equals(blockBytes, BlockImpl.parseBlock(blockJSON).getBytes())) {
+                                if (!Arrays.equals(blockBytes, BlockImpl.parseBlock(blockJSON).bytes())) {
                                     throw new NxtException.NotValidException("Block JSON cannot be parsed back to the same block");
                                 }
                                 validateTransactions(currentBlock, blockchain.getLastBlock(), curTime, duplicates);
@@ -1245,10 +1250,18 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                         blockListeners.notify(currentBlock, Event.BLOCK_SCANNED);
                     }
                 }
+                if (height == 0) {
+                    for (DerivedDbTable table : derivedTables) {
+                        table.createSearchIndex(con);
+                    }
+                }
                 pstmtDone.executeUpdate();
                 Db.db.commitTransaction();
                 blockListeners.notify(currentBlock, Event.RESCAN_END);
                 Logger.logMessage("...done at height " + Nxt.getBlockchain().getHeight());
+                if (height == 0 && validate) {
+                    Logger.logMessage("SUCCESSFULLY PERFORMED FULL RESCAN WITH VALIDATION");
+                }
             } catch (SQLException e) {
                 throw new RuntimeException(e.toString(), e);
             } finally {

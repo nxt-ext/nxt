@@ -30,7 +30,7 @@ public final class Currency {
 
     };
 
-    private static final VersionedEntityDbTable<Currency> currencyTable = new VersionedEntityDbTable<Currency>("currency", currencyDbKeyFactory) {
+    private static final VersionedEntityDbTable<Currency> currencyTable = new VersionedEntityDbTable<Currency>("currency", currencyDbKeyFactory, "code,name,description") {
 
         @Override
         protected Currency load(Connection con, ResultSet rs) throws SQLException {
@@ -49,10 +49,10 @@ public final class Currency {
 
     };
 
-    private static class CurrencySupply {
+    private static final class CurrencySupply {
 
         private final DbKey dbKey;
-        private long currencyId;
+        private final long currencyId;
         private long currentSupply;
         private long currentReservePerUnitNQT;
 

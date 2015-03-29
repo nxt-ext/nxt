@@ -1083,14 +1083,8 @@ public abstract class TransactionType {
             @Override
             void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
                 Attachment.MessagingAccountInfo attachment = (Attachment.MessagingAccountInfo)transaction.getAttachment();
-                //if (attachment.getVersion() >= 2 && Nxt.getBlockchain().getHeight() < Constants.MONETARY_SYSTEM_BLOCK) {
-                if (attachment.getMessagePattern() != null) {
-                    throw new NxtException.NotYetEnabledException("Message patterns not yet enabled");
-                }
                 if (attachment.getName().length() > Constants.MAX_ACCOUNT_NAME_LENGTH
-                        || attachment.getDescription().length() > Constants.MAX_ACCOUNT_DESCRIPTION_LENGTH
-                        || (attachment.getMessagePattern() != null && attachment.getMessagePattern().pattern().length() > Constants.MAX_ACCOUNT_MESSAGE_PATTERN_LENGTH)
-                        ) {
+                        || attachment.getDescription().length() > Constants.MAX_ACCOUNT_DESCRIPTION_LENGTH) {
                     throw new NxtException.NotValidException("Invalid account info issuance: " + attachment.getJSONObject());
                 }
             }
@@ -1098,7 +1092,7 @@ public abstract class TransactionType {
             @Override
             void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
                 Attachment.MessagingAccountInfo attachment = (Attachment.MessagingAccountInfo) transaction.getAttachment();
-                senderAccount.setAccountInfo(attachment.getName(), attachment.getDescription(), attachment.getMessagePattern());
+                senderAccount.setAccountInfo(attachment.getName(), attachment.getDescription());
             }
 
             @Override
