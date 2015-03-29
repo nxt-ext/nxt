@@ -227,6 +227,8 @@ public abstract class TransactionType {
         return canHaveRecipient();
     }
 
+    public abstract boolean isPhasingSafe();
+
     public Fee getBaselineFee(Transaction transaction) {
         return Fee.DEFAULT_FEE;
     }
@@ -267,6 +269,11 @@ public abstract class TransactionType {
 
         @Override
         public final boolean canHaveRecipient() {
+            return true;
+        }
+
+        @Override
+        public final boolean isPhasingSafe() {
             return true;
         }
 
@@ -369,6 +376,11 @@ public abstract class TransactionType {
                 return false;
             }
 
+            @Override
+            public boolean isPhasingSafe() {
+                return false;
+            }
+
         };
 
         public static final TransactionType ALIAS_ASSIGNMENT = new Messaging() {
@@ -427,6 +439,11 @@ public abstract class TransactionType {
 
             @Override
             public boolean canHaveRecipient() {
+                return false;
+            }
+
+            @Override
+            public boolean isPhasingSafe() {
                 return false;
             }
 
@@ -512,6 +529,11 @@ public abstract class TransactionType {
                 return false;
             }
 
+            @Override
+            public boolean isPhasingSafe() {
+                return false;
+            }
+
         };
 
         public static final TransactionType ALIAS_BUY = new Messaging() {
@@ -584,6 +606,11 @@ public abstract class TransactionType {
                 return true;
             }
 
+            @Override
+            public boolean isPhasingSafe() {
+                return false;
+            }
+
         };
 
         public static final TransactionType ALIAS_DELETE = new Messaging() {
@@ -640,6 +667,11 @@ public abstract class TransactionType {
 
             @Override
             public boolean canHaveRecipient() {
+                return false;
+            }
+
+            @Override
+            public boolean isPhasingSafe() {
                 return false;
             }
 
@@ -720,13 +752,13 @@ public abstract class TransactionType {
                     }
                 }
 
-                if (attachment.getMinRangeValue() < Constants.VOTING_MIN_RANGE_VALUE_LIMIT
-                        || attachment.getMaxRangeValue() > Constants.VOTING_MAX_RANGE_VALUE_LIMIT ){
+                if (attachment.getMinRangeValue() < Constants.MIN_VOTE_VALUE
+                        || attachment.getMaxRangeValue() > Constants.MAX_VOTE_VALUE){
                     throw new NxtException.NotValidException("Invalid range: " + attachment.getJSONObject());
                 }
 
-                if (attachment.getFinishHeight() < transaction.getValidationHeight() + Constants.VOTING_MIN_VOTE_DURATION
-                    || attachment.getFinishHeight() > transaction.getValidationHeight() + Constants.VOTING_MAX_VOTE_DURATION) {
+                if (attachment.getFinishHeight() <= transaction.getValidationHeight() + 1
+                    || attachment.getFinishHeight() >= transaction.getValidationHeight() + Constants.MAX_POLL_DURATION) {
                     throw new NxtException.NotCurrentlyValidException("Invalid finishing height" + attachment.getJSONObject());
                 }
 
@@ -740,6 +772,11 @@ public abstract class TransactionType {
 
             @Override
             public boolean canHaveRecipient() {
+                return false;
+            }
+
+            @Override
+            public boolean isPhasingSafe() {
                 return false;
             }
 
@@ -803,10 +840,10 @@ public abstract class TransactionType {
                 byte[] votes = attachment.getPollVote();
                 int positiveCount = 0;
                 for (byte vote : votes) {
-                    if (vote != Constants.VOTING_NO_VOTE_VALUE && (vote < poll.getMinRangeValue() || vote > poll.getMaxRangeValue())) {
+                    if (vote != Constants.NO_VOTE_VALUE && (vote < poll.getMinRangeValue() || vote > poll.getMaxRangeValue())) {
                         throw new NxtException.NotValidException("Invalid vote: " + attachment.getJSONObject());
                     }
-                    if (vote != Constants.VOTING_NO_VOTE_VALUE) {
+                    if (vote != Constants.NO_VOTE_VALUE) {
                         positiveCount++;
                     }
                 }
@@ -825,6 +862,11 @@ public abstract class TransactionType {
 
             @Override
             public boolean canHaveRecipient() {
+                return false;
+            }
+
+            @Override
+            public boolean isPhasingSafe() {
                 return false;
             }
 
@@ -876,8 +918,8 @@ public abstract class TransactionType {
 
                 Attachment.MessagingPhasingVoteCasting attachment = (Attachment.MessagingPhasingVoteCasting) transaction.getAttachment();
                 List<byte[]> pendingTransactionFullHashes = attachment.getTransactionFullHashes();
-                if (pendingTransactionFullHashes.size() > Constants.MAX_VOTES_PER_VOTING_TRANSACTION) {
-                    throw new NxtException.NotValidException("No more than " + Constants.MAX_VOTES_PER_VOTING_TRANSACTION + " votes allowed for two-phased multivoting");
+                if (pendingTransactionFullHashes.size() > Constants.MAX_PHASING_VOTE_TRANSACTIONS) {
+                    throw new NxtException.NotValidException("No more than " + Constants.MAX_PHASING_VOTE_TRANSACTIONS + " votes allowed for two-phased multivoting");
                 }
 
                 long previousPendingId = 0;
@@ -912,7 +954,7 @@ public abstract class TransactionType {
                     if (PhasingVote.getVote(pendingId, voterId) != null) {
                         throw new NxtException.NotCurrentlyValidException("Double voting attempt");
                     }
-                    if (poll.getFinishHeight() <= transaction.getValidationHeight()) {
+                    if (poll.getFinishHeight() <= transaction.getValidationHeight() - 1) {
                         throw new NxtException.NotCurrentlyValidException("Voting for this transaction finishes at " + poll.getFinishHeight());
                     }
                 }
@@ -941,6 +983,11 @@ public abstract class TransactionType {
                     PhasingPoll poll = PhasingPoll.getPoll(pendingTransactionId);
                     PhasingVote.addVote(poll, transaction);
                 }
+            }
+
+            @Override
+            public boolean isPhasingSafe() {
+                return false;
             }
 
         };
@@ -997,6 +1044,11 @@ public abstract class TransactionType {
                 return false;
             }
 
+            @Override
+            public boolean isPhasingSafe() {
+                return true;
+            }
+
         };
 
         public static final Messaging ACCOUNT_INFO = new Messaging() {
@@ -1024,14 +1076,8 @@ public abstract class TransactionType {
             @Override
             void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
                 Attachment.MessagingAccountInfo attachment = (Attachment.MessagingAccountInfo)transaction.getAttachment();
-                //if (attachment.getVersion() >= 2 && Nxt.getBlockchain().getHeight() < Constants.MONETARY_SYSTEM_BLOCK) {
-                if (attachment.getMessagePattern() != null) {
-                    throw new NxtException.NotYetEnabledException("Message patterns not yet enabled");
-                }
                 if (attachment.getName().length() > Constants.MAX_ACCOUNT_NAME_LENGTH
-                        || attachment.getDescription().length() > Constants.MAX_ACCOUNT_DESCRIPTION_LENGTH
-                        || (attachment.getMessagePattern() != null && attachment.getMessagePattern().pattern().length() > Constants.MAX_ACCOUNT_MESSAGE_PATTERN_LENGTH)
-                        ) {
+                        || attachment.getDescription().length() > Constants.MAX_ACCOUNT_DESCRIPTION_LENGTH) {
                     throw new NxtException.NotValidException("Invalid account info issuance: " + attachment.getJSONObject());
                 }
             }
@@ -1039,12 +1085,17 @@ public abstract class TransactionType {
             @Override
             void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
                 Attachment.MessagingAccountInfo attachment = (Attachment.MessagingAccountInfo) transaction.getAttachment();
-                senderAccount.setAccountInfo(attachment.getName(), attachment.getDescription(), attachment.getMessagePattern());
+                senderAccount.setAccountInfo(attachment.getName(), attachment.getDescription());
             }
 
             @Override
             public boolean canHaveRecipient() {
                 return false;
+            }
+
+            @Override
+            public boolean isPhasingSafe() {
+                return true;
             }
 
         };
@@ -1131,6 +1182,11 @@ public abstract class TransactionType {
                 return false;
             }
 
+            @Override
+            public boolean isPhasingSafe() {
+                return true;
+            }
+
         };
 
         public static final TransactionType ASSET_TRANSFER = new ColoredCoins() {
@@ -1207,6 +1263,11 @@ public abstract class TransactionType {
                 return true;
             }
 
+            @Override
+            public boolean isPhasingSafe() {
+                return true;
+            }
+
         };
 
         abstract static class ColoredCoinsOrderPlacement extends ColoredCoins {
@@ -1231,6 +1292,11 @@ public abstract class TransactionType {
             @Override
             public final boolean canHaveRecipient() {
                 return false;
+            }
+
+            @Override
+            public final boolean isPhasingSafe() {
+                return true;
             }
 
         }
@@ -1331,17 +1397,6 @@ public abstract class TransactionType {
         abstract static class ColoredCoinsOrderCancellation extends ColoredCoins {
 
             @Override
-            final void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
-                Attachment.ColoredCoinsOrderCancellation attachment = (Attachment.ColoredCoinsOrderCancellation) transaction.getAttachment();
-                if (attachment.getOrderId() == 0) {
-                    throw new NxtException.NotValidException("Invalid order cancellation attachment: " + attachment.getJSONObject());
-                }
-                doValidateAttachment(transaction);
-            }
-
-            abstract void doValidateAttachment(Transaction transaction) throws NxtException.ValidationException;
-
-            @Override
             final boolean applyAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
                 return true;
             }
@@ -1353,6 +1408,11 @@ public abstract class TransactionType {
             @Override
             public final boolean canHaveRecipient() {
                 return false;
+            }
+
+            @Override
+            public final boolean isPhasingSafe() {
+                return true;
             }
 
         }
@@ -1390,7 +1450,7 @@ public abstract class TransactionType {
             }
 
             @Override
-            void doValidateAttachment(Transaction transaction) throws NxtException.ValidationException {
+            void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
                 Attachment.ColoredCoinsAskOrderCancellation attachment = (Attachment.ColoredCoinsAskOrderCancellation) transaction.getAttachment();
                 if (Order.Ask.getAskOrder(attachment.getOrderId()) == null) {
                     throw new NxtException.NotCurrentlyValidException("Invalid ask order: " + Long.toUnsignedString(attachment.getOrderId()));
@@ -1432,7 +1492,7 @@ public abstract class TransactionType {
             }
 
             @Override
-            void doValidateAttachment(Transaction transaction) throws NxtException.ValidationException {
+            void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
                 Attachment.ColoredCoinsBidOrderCancellation attachment = (Attachment.ColoredCoinsBidOrderCancellation) transaction.getAttachment();
                 if (Order.Bid.getBidOrder(attachment.getOrderId()) == null) {
                     throw new NxtException.NotCurrentlyValidException("Invalid bid order: " + Long.toUnsignedString(attachment.getOrderId()));
@@ -1512,6 +1572,11 @@ public abstract class TransactionType {
             @Override
             public boolean canHaveRecipient() {
                 return false;
+            }
+
+            @Override
+            public boolean isPhasingSafe() {
+                return true;
             }
 
         };
@@ -1594,6 +1659,11 @@ public abstract class TransactionType {
                 return false;
             }
 
+            @Override
+            public boolean isPhasingSafe() {
+                return true;
+            }
+
         };
 
         public static final TransactionType DELISTING = new DigitalGoods() {
@@ -1646,6 +1716,11 @@ public abstract class TransactionType {
             @Override
             public boolean canHaveRecipient() {
                 return false;
+            }
+
+            @Override
+            public boolean isPhasingSafe() {
+                return true;
             }
 
         };
@@ -1704,6 +1779,11 @@ public abstract class TransactionType {
                 return false;
             }
 
+            @Override
+            public boolean isPhasingSafe() {
+                return false;
+            }
+
         };
 
         public static final TransactionType QUANTITY_CHANGE = new DigitalGoods() {
@@ -1758,6 +1838,11 @@ public abstract class TransactionType {
 
             @Override
             public boolean canHaveRecipient() {
+                return false;
+            }
+
+            @Override
+            public boolean isPhasingSafe() {
                 return false;
             }
 
@@ -1846,6 +1931,11 @@ public abstract class TransactionType {
                 return true;
             }
 
+            @Override
+            public boolean isPhasingSafe() {
+                return false;
+            }
+
         };
 
         public static final TransactionType DELIVERY = new DigitalGoods() {
@@ -1923,6 +2013,11 @@ public abstract class TransactionType {
                 return true;
             }
 
+            @Override
+            public boolean isPhasingSafe() {
+                return false;
+            }
+
         };
 
         public static final TransactionType FEEDBACK = new DigitalGoods() {
@@ -1979,6 +2074,11 @@ public abstract class TransactionType {
             @Override
             public boolean canHaveRecipient() {
                 return true;
+            }
+
+            @Override
+            public boolean isPhasingSafe() {
+                return false;
             }
 
         };
@@ -2057,6 +2157,11 @@ public abstract class TransactionType {
                 return true;
             }
 
+            @Override
+            public boolean isPhasingSafe() {
+                return false;
+            }
+
         };
 
     }
@@ -2130,6 +2235,11 @@ public abstract class TransactionType {
 
             @Override
             public boolean canHaveRecipient() {
+                return true;
+            }
+
+            @Override
+            public boolean isPhasingSafe() {
                 return true;
             }
 

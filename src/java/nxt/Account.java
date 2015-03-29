@@ -18,11 +18,9 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.regex.Pattern;
 
 @SuppressWarnings({"UnusedDeclaration", "SuspiciousNameCombination"})
 public final class Account {
@@ -32,7 +30,7 @@ public final class Account {
         LEASE_SCHEDULED, LEASE_STARTED, LEASE_ENDED
     }
 
-    public static class AccountAsset {
+    public static final class AccountAsset {
 
         private final long accountId;
         private final long assetId;
@@ -104,7 +102,7 @@ public final class Account {
     }
 
     @SuppressWarnings("UnusedDeclaration")
-    public static class AccountCurrency {
+    public static final class AccountCurrency {
 
         private final long accountId;
         private final long currencyId;
@@ -175,7 +173,7 @@ public final class Account {
 
     }
 
-    public static class AccountLease {
+    public static final class AccountLease {
 
         public final long lessorId;
         public final long lesseeId;
@@ -187,6 +185,62 @@ public final class Account {
             this.lesseeId = lesseeId;
             this.fromHeight = fromHeight;
             this.toHeight = toHeight;
+        }
+
+    }
+
+    public static final class AccountInfo {
+
+        private final long accountId;
+        private final DbKey dbKey;
+        private String name;
+        private String description;
+
+        private AccountInfo(long accountId, String name, String description) {
+            this.accountId = accountId;
+            this.dbKey = accountInfoDbKeyFactory.newKey(this.accountId);
+            this.name = name;
+            this.description = description;
+        }
+
+        private AccountInfo(ResultSet rs) throws SQLException {
+            this.accountId = rs.getLong("account_id");
+            this.dbKey = accountInfoDbKeyFactory.newKey(this.accountId);
+            this.name = rs.getString("name");
+            this.description = rs.getString("description");
+        }
+
+        private void save(Connection con) throws SQLException {
+            try (PreparedStatement pstmt = con.prepareStatement("MERGE INTO account_info "
+                    + "(account_id, name, description, height, latest) "
+                    + "KEY (account_id, height) VALUES (?, ?, ?, ?, TRUE)")) {
+                int i = 0;
+                pstmt.setLong(++i, this.accountId);
+                DbUtils.setString(pstmt, ++i, this.name);
+                DbUtils.setString(pstmt, ++i, this.description);
+                pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
+                pstmt.executeUpdate();
+            }
+        }
+
+        public long getAccountId() {
+            return accountId;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public String getDescription() {
+            return description;
+        }
+
+        private void save() {
+            if (this.name != null || this.description != null) {
+                accountInfoTable.insert(this);
+            } else {
+                accountInfoTable.delete(this);
+            }
         }
 
     }
@@ -218,6 +272,30 @@ public final class Account {
         @Override
         protected void save(Connection con, Account account) throws SQLException {
             account.save(con);
+        }
+
+    };
+
+    private static final DbKey.LongKeyFactory<AccountInfo> accountInfoDbKeyFactory = new DbKey.LongKeyFactory<AccountInfo>("account_id") {
+
+        @Override
+        public DbKey newKey(AccountInfo accountInfo) {
+            return accountInfo.dbKey;
+        }
+
+    };
+
+    private static final VersionedEntityDbTable<AccountInfo> accountInfoTable = new VersionedEntityDbTable<AccountInfo>("account_info",
+            accountInfoDbKeyFactory, "name,description") {
+
+        @Override
+        protected AccountInfo load(Connection con, ResultSet rs) throws SQLException {
+            return new AccountInfo(rs);
+        }
+
+        @Override
+        protected void save(Connection con, AccountInfo accountInfo) throws SQLException {
+            accountInfo.save(con);
         }
 
     };
@@ -541,6 +619,10 @@ public final class Account {
         return accountCurrency == null ? 0 : accountCurrency.unconfirmedUnits;
     }
 
+    public static DbIterator<AccountInfo> searchAccounts(String query, int from, int to) {
+        return accountInfoTable.search(query, DbClause.EMPTY_CLAUSE, from, to);
+    }
+
     static {
 
         Nxt.getBlockchainProcessor().addListener(block -> {
@@ -604,9 +686,6 @@ public final class Account {
     private int nextLeasingHeightFrom;
     private int nextLeasingHeightTo;
     private long nextLesseeId;
-    private String name;
-    private String description;
-    private Pattern messagePattern;
 
     private Account(long id) {
         if (id != Crypto.rsDecode(Crypto.rsEncode(id))) {
@@ -626,28 +705,21 @@ public final class Account {
         this.balanceNQT = rs.getLong("balance");
         this.unconfirmedBalanceNQT = rs.getLong("unconfirmed_balance");
         this.forgedBalanceNQT = rs.getLong("forged_balance");
-        this.name = rs.getString("name");
-        this.description = rs.getString("description");
         this.currentLeasingHeightFrom = rs.getInt("current_leasing_height_from");
         this.currentLeasingHeightTo = rs.getInt("current_leasing_height_to");
         this.currentLesseeId = rs.getLong("current_lessee_id");
         this.nextLeasingHeightFrom = rs.getInt("next_leasing_height_from");
         this.nextLeasingHeightTo = rs.getInt("next_leasing_height_to");
         this.nextLesseeId = rs.getLong("next_lessee_id");
-        String regex = rs.getString("message_pattern_regex");
-        if (regex != null) {
-            int flags = rs.getInt("message_pattern_flags");
-            this.messagePattern = Pattern.compile(regex, flags);
-        }
     }
 
     private void save(Connection con) throws SQLException {
         try (PreparedStatement pstmt = con.prepareStatement("MERGE INTO account (id, creation_height, "
-                + "key_height, balance, unconfirmed_balance, forged_balance, name, description, "
+                + "key_height, balance, unconfirmed_balance, forged_balance, "
                 + "current_leasing_height_from, current_leasing_height_to, current_lessee_id, "
-                + "next_leasing_height_from, next_leasing_height_to, next_lessee_id, message_pattern_regex, message_pattern_flags, "
+                + "next_leasing_height_from, next_leasing_height_to, next_lessee_id, "
                 + "height, latest) "
-                + "KEY (id, height) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, TRUE)")) {
+                + "KEY (id, height) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, TRUE)")) {
             int i = 0;
             pstmt.setLong(++i, this.getId());
             pstmt.setInt(++i, this.getCreationHeight());
@@ -655,21 +727,12 @@ public final class Account {
             pstmt.setLong(++i, this.getBalanceNQT());
             pstmt.setLong(++i, this.getUnconfirmedBalanceNQT());
             pstmt.setLong(++i, this.getForgedBalanceNQT());
-            DbUtils.setString(pstmt, ++i, this.getName());
-            DbUtils.setString(pstmt, ++i, this.getDescription());
             DbUtils.setIntZeroToNull(pstmt, ++i, this.getCurrentLeasingHeightFrom());
             DbUtils.setIntZeroToNull(pstmt, ++i, this.getCurrentLeasingHeightTo());
             DbUtils.setLongZeroToNull(pstmt, ++i, this.getCurrentLesseeId());
             DbUtils.setIntZeroToNull(pstmt, ++i, this.getNextLeasingHeightFrom());
             DbUtils.setIntZeroToNull(pstmt, ++i, this.getNextLeasingHeightTo());
             DbUtils.setLongZeroToNull(pstmt, ++i, this.getNextLesseeId());
-            if (messagePattern != null) {
-                pstmt.setString(++i, messagePattern.pattern());
-                pstmt.setInt(++i, messagePattern.flags());
-            } else {
-                pstmt.setNull(++i, Types.VARCHAR);
-                pstmt.setNull(++i, Types.INTEGER);
-            }
             pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
             pstmt.executeUpdate();
         }
@@ -679,23 +742,21 @@ public final class Account {
         return id;
     }
 
-    public String getName() {
-        return name;
+    public AccountInfo getAccountInfo() {
+        return accountInfoTable.get(accountInfoDbKeyFactory.newKey(this.id));
     }
 
-    public String getDescription() {
-        return description;
-    }
-
-    public Pattern getMessagePattern() {
-        return messagePattern;
-    }
-
-    void setAccountInfo(String name, String description, Pattern messagePattern) {
-        this.name = Convert.emptyToNull(name.trim());
-        this.description = Convert.emptyToNull(description.trim());
-        this.messagePattern = messagePattern;
-        accountTable.insert(this);
+    void setAccountInfo(String name, String description) {
+        name = Convert.emptyToNull(name.trim());
+        description = Convert.emptyToNull(description.trim());
+        AccountInfo accountInfo = getAccountInfo();
+        if (accountInfo == null) {
+            accountInfo = new AccountInfo(id, name, description);
+        } else {
+            accountInfo.name = name;
+            accountInfo.description = description;
+        }
+        accountInfo.save();
     }
 
     public byte[] getPublicKey() {

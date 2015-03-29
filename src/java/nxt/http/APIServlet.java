@@ -110,6 +110,7 @@ public final class APIServlet extends HttpServlet {
         map.put("getVoterPendingTransactions", GetVoterPendingTransactions.instance);
         map.put("getPolls", GetPolls.instance);
         map.put("getAccountPendingTransactions", GetAccountPendingTransactions.instance);
+        map.put("getAccountPendingTransactionCount", GetAccountPendingTransactionCount.instance);
         map.put("getAccountPublicKey", GetAccountPublicKey.instance);
         map.put("getAccountTransactionIds", GetAccountTransactionIds.instance);
         map.put("getAccountTransactions", GetAccountTransactions.instance);
@@ -123,6 +124,7 @@ public final class APIServlet extends HttpServlet {
         map.put("getAlias", GetAlias.instance);
         map.put("getAliasCount", GetAliasCount.instance);
         map.put("getAliases", GetAliases.instance);
+        map.put("getAliasesLike", GetAliasesLike.instance);
         map.put("getAllAssets", GetAllAssets.instance);
         map.put("getAllCurrencies", GetAllCurrencies.instance);
         map.put("getAsset", GetAsset.instance);
@@ -157,6 +159,7 @@ public final class APIServlet extends HttpServlet {
         map.put("getDGSPendingPurchases", GetDGSPendingPurchases.instance);
         map.put("getDGSTags", GetDGSTags.instance);
         map.put("getDGSTagCount", GetDGSTagCount.instance);
+        map.put("getDGSTagsLike", GetDGSTagsLike.instance);
         map.put("getGuaranteedBalance", GetGuaranteedBalance.instance);
         map.put("getECBlock", GetECBlock.instance);
         map.put("getPlugins", GetPlugins.instance);
@@ -233,6 +236,7 @@ public final class APIServlet extends HttpServlet {
         map.put("searchAssets", SearchAssets.instance);
         map.put("searchCurrencies", SearchCurrencies.instance);
         map.put("searchPolls", SearchPolls.instance);
+        map.put("searchAccounts", SearchAccounts.instance);
         map.put("clearUnconfirmedTransactions", ClearUnconfirmedTransactions.instance);
         map.put("fullReset", FullReset.instance);
         map.put("popOff", PopOff.instance);

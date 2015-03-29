@@ -33,7 +33,7 @@ public class ApproveTransaction extends CreateTransaction {
             return MISSING_TRANSACTION;
         }
 
-        if (pendingTransactionValues.length > Constants.MAX_VOTES_PER_VOTING_TRANSACTION) {
+        if (pendingTransactionValues.length > Constants.MAX_PHASING_VOTE_TRANSACTIONS) {
             return INCORRECT_TRANSACTION;
         }
 

@@ -26,16 +26,9 @@ public final class Constants {
     public static final int FORGING_DELAY = Nxt.getIntProperty("nxt.forgingDelay");
     public static final int FORGING_SPEEDUP = Nxt.getIntProperty("nxt.forgingSpeedup");
 
-    public static final byte MAX_VOTES_PER_VOTING_TRANSACTION = 20;
-
-    public static final byte VOTING_DEFAULT_MIN_NUMBER_OF_CHOICES = 1;
-    public static final byte VOTING_MIN_RANGE_VALUE_LIMIT = -92;
-    public static final byte VOTING_MAX_RANGE_VALUE_LIMIT = 92;
-    public static final byte VOTING_NO_VOTE_VALUE = Byte.MIN_VALUE;
-    public static final byte VOTING_MIN_VOTE_DURATION = 1;
-    public static final int VOTING_MAX_VOTE_DURATION = 14 * 1440;
-
+    public static final byte MAX_PHASING_VOTE_TRANSACTIONS = 20;
     public static final byte MAX_PHASING_WHITELIST_SIZE = 10;
+    public static final int MAX_PHASING_DURATION = 14 * 1440;
 
     public static final int MAX_ALIAS_URI_LENGTH = 1000;
     public static final int MAX_ALIAS_LENGTH = 100;
@@ -59,6 +52,11 @@ public final class Constants {
     public static final int MAX_POLL_DESCRIPTION_LENGTH = 1000;
     public static final int MAX_POLL_OPTION_LENGTH = 100;
     public static final int MAX_POLL_OPTION_COUNT = 100;
+    public static final int MAX_POLL_DURATION = 14 * 1440;
+
+    public static final byte MIN_VOTE_VALUE = -92;
+    public static final byte MAX_VOTE_VALUE = 92;
+    public static final byte NO_VOTE_VALUE = Byte.MIN_VALUE;
 
     public static final int MAX_DGS_LISTING_QUANTITY = 1000000000;
     public static final int MAX_DGS_LISTING_NAME_LENGTH = 100;
@@ -106,7 +104,7 @@ public final class Constants {
     public static final int MONETARY_SYSTEM_BLOCK = isTestnet ? 150000 : 330000;
     public static final int VOTING_SYSTEM_BLOCK = isTestnet ? 0 : Integer.MAX_VALUE;
 
-    public static final int LAST_KNOWN_BLOCK = isTestnet ? 230000 : 382000;
+    public static final int LAST_KNOWN_BLOCK = isTestnet ? 220000 : 382000;
 
     public static final int[] MIN_VERSION = new int[] {1, 4};
 

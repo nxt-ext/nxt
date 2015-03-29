@@ -1,11 +1,15 @@
 package nxt.http;
 
-import java.util.Map;
-import java.util.Set;
-import javax.servlet.http.HttpServletRequest;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
+
+import javax.servlet.http.HttpServletRequest;
+import java.lang.management.LockInfo;
+import java.lang.management.ManagementFactory;
+import java.lang.management.MonitorInfo;
+import java.lang.management.ThreadInfo;
+import java.lang.management.ThreadMXBean;
 
 /**
  * The GetStackTraces API will return the current stack trace for
@@ -13,15 +17,29 @@ import org.json.simple.JSONStreamAware;
  *
  * Request parameters:
  *   depth - Stack trace depth (minimum 1, defaults to full trace)
- *   id    - Thread identifier (defaults to all threads)
  *
  * Response parameters:
- *   threads - An array of thread trace objects
+ *   locks   - An array of lock objects for locks with waiters
+ *   threads - An array of thread objects
  *
- * Thread trace object:
- *   id    - The thread identifier
- *   name  - The thread name
- *   trace - An array of trace elements
+ * Lock object:
+ *   name   - Lock class name
+ *   hash   - Lock identity hash code
+ *   thread - Identifier of thread holding the lock
+ *
+ * Monitor object:
+ *   name    - Monitor class name
+ *   hash    - Monitor identity hash
+ *   depth   - Stack depth where monitor locked
+ *   trace   - Stack element where monitor locked
+ *
+ * Thread object:
+ *   blocked - Lock object if thread is waiting on a lock
+ *   id      - Thread identifier
+ *   locks   - Array of monitor objects for locks held by this thread
+ *   name    - Thread name
+ *   state   - Thread state
+ *   trace   - Array of stack trace elements
  */
 public class GetStackTraces extends APIServlet.APIRequestHandler {
 
@@ -32,7 +50,7 @@ public class GetStackTraces extends APIServlet.APIRequestHandler {
      * Create the GetStackTraces instance
      */
     private GetStackTraces() {
-        super(new APITag[] {APITag.DEBUG}, "id", "depth");
+        super(new APITag[] {APITag.DEBUG}, "depth");
     }
 
     /**
@@ -45,16 +63,6 @@ public class GetStackTraces extends APIServlet.APIRequestHandler {
     JSONStreamAware processRequest(HttpServletRequest req) {
         String value;
         //
-        // Get the thread identifier.  All threads will be dumped if
-        // no identifier is specified.
-        //
-        long threadId;
-        value  = req.getParameter("id");
-        if (value != null)
-            threadId = Long.valueOf(value);
-        else
-            threadId = -1;
-        //
         // Get the number of trace lines to return
         //
         int depth;
@@ -64,36 +72,84 @@ public class GetStackTraces extends APIServlet.APIRequestHandler {
         else
             depth = Integer.MAX_VALUE;
         //
-        // Get the stack traces
+        // Get the thread information
         //
         JSONArray threadsJSON = new JSONArray();
-        Map<Thread, StackTraceElement[]> stackTraces = Thread.getAllStackTraces();
-        if (stackTraces != null) {
-            Set<Map.Entry<Thread, StackTraceElement[]>> traceSet = stackTraces.entrySet();
-            traceSet.stream()
-                    .filter((entry) -> threadId==-1 || entry.getKey().getId()==threadId)
-                    .forEach((entry) -> {
-                JSONObject threadJSON = new JSONObject();
-                Thread thread = entry.getKey();
-                StackTraceElement[] elements = entry.getValue();
-                threadJSON.put("id", thread.getId());
-                threadJSON.put("name", thread.getName());
-                JSONArray traceJSON = new JSONArray();
-                int ix = 0;
-                for (StackTraceElement element : elements) {
-                    traceJSON.add(element.toString());
-                    if (++ix == depth)
-                        break;
+        JSONArray locksJSON = new JSONArray();
+        ThreadMXBean tmxBean = ManagementFactory.getThreadMXBean();
+        boolean tmxMI = tmxBean.isObjectMonitorUsageSupported();
+        ThreadInfo[] tList = tmxBean.dumpAllThreads(tmxMI, false);
+        //
+        // Generate the response
+        //
+        for (ThreadInfo tInfo : tList) {
+            JSONObject threadJSON = new JSONObject();
+            //
+            // General thread information
+            //
+            threadJSON.put("id", tInfo.getThreadId());
+            threadJSON.put("name", tInfo.getThreadName());
+            threadJSON.put("state", tInfo.getThreadState().toString());
+            //
+            // Gather lock usage
+            //
+            if (tmxMI) {
+                MonitorInfo[] mList = tInfo.getLockedMonitors();
+                if (mList.length > 0) {
+                    JSONArray monitorsJSON = new JSONArray();
+                    for (MonitorInfo mInfo : mList) {
+                        JSONObject lockJSON = new JSONObject();
+                        lockJSON.put("name", mInfo.getClassName());
+                        lockJSON.put("hash", mInfo.getIdentityHashCode());
+                        lockJSON.put("depth", mInfo.getLockedStackDepth());
+                        lockJSON.put("trace", mInfo.getLockedStackFrame().toString());
+                        monitorsJSON.add(lockJSON);
+                    }
+                    threadJSON.put("locks", monitorsJSON);
                 }
-                threadJSON.put("trace", traceJSON);
-                threadsJSON.add(threadJSON);
-            });
+                if (tInfo.getThreadState() == Thread.State.BLOCKED) {
+                    LockInfo lInfo = tInfo.getLockInfo();
+                    if (lInfo != null) {
+                        JSONObject lockJSON = new JSONObject();
+                        lockJSON.put("name", lInfo.getClassName());
+                        lockJSON.put("hash", lInfo.getIdentityHashCode());
+                        lockJSON.put("thread", tInfo.getLockOwnerId());
+                        threadJSON.put("blocked", lockJSON);
+                        boolean addLock = true;
+                        for (Object lock : locksJSON){
+                            if (((String)((JSONObject)lock).get("name")).equals(lInfo.getClassName())) {
+                                addLock = false;
+                                break;
+                            }
+                        }
+                        if (addLock)
+                            locksJSON.add(lockJSON);
+                    }
+                }
+            }
+            //
+            // Add the stack trace
+            //
+            StackTraceElement[] elements = tInfo.getStackTrace();
+            JSONArray traceJSON = new JSONArray();
+            int ix = 0;
+            for (StackTraceElement element : elements) {
+                traceJSON.add(element.toString());
+                if (++ix == depth)
+                    break;
+            }
+            threadJSON.put("trace", traceJSON);
+            //
+            // Add the thread to the response
+            //
+            threadsJSON.add(threadJSON);
         }
         //
         // Return the response
         //
         JSONObject response = new JSONObject();
         response.put("threads", threadsJSON);
+        response.put("locks", locksJSON);
         return response;
     }
 

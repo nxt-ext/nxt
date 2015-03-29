@@ -327,7 +327,7 @@ final class TransactionImpl implements Transaction {
             if (getSenderPublicKey() != null && ! Arrays.equals(senderPublicKey, Crypto.getPublicKey(secretPhrase))) {
                 throw new NxtException.NotValidException("Secret phrase doesn't match transaction sender public key");
             }
-            signature = Crypto.sign(getBytesOrig(), secretPhrase);
+            signature = Crypto.sign(bytes(), secretPhrase);
             bytes = null;
         } else {
             signature = null;
@@ -477,7 +477,7 @@ final class TransactionImpl implements Transaction {
                 digest.update(data);
                 hash = digest.digest(signatureHash);
             } else {
-                hash = Crypto.sha256().digest(getBytesOrig());
+                hash = Crypto.sha256().digest(bytes());
             }
             BigInteger bigInteger = new BigInteger(1, new byte[] {hash[7], hash[6], hash[5], hash[4], hash[3], hash[2], hash[1], hash[0]});
             id = bigInteger.longValue();
@@ -547,10 +547,10 @@ final class TransactionImpl implements Transaction {
 
     @Override
     public byte[] getBytes() {
-        return Arrays.copyOf(getBytesOrig(), bytes.length);
+        return Arrays.copyOf(bytes(), bytes.length);
     }
 
-    byte[] getBytesOrig() {
+    byte[] bytes() {
         if (bytes == null) {
             try {
                 ByteBuffer buffer = ByteBuffer.allocate(getSize());
@@ -856,15 +856,6 @@ final class TransactionImpl implements Transaction {
             throw new NxtException.NotCurrentlyValidException(String.format("Transaction fee %d NXT less than minimum fee %d NXT at height %d",
                     feeNQT/Constants.ONE_NXT, minimumFeeNQT/Constants.ONE_NXT, blockchainHeight));
         }
-        /*
-        Account recipientAccount = Account.getAccount(recipientId);
-       	if (blockchainHeight >= Constants.MONETARY_SYSTEM_BLOCK && recipientAccount != null) {
-			if (recipientAccount.getMessagePattern() != null
-                    && (message == null || ! recipientAccount.getMessagePattern().matcher(Convert.toString(message.getMessage())).matches())) {
-                throw new NxtException.NotCurrentlyValidException("Recipient account requires a message attachment matching " + recipientAccount.getMessagePattern().pattern());
-               }
-         }
-         */
     }
 
     // returns false iff double spending

@@ -40,7 +40,8 @@ Phasing.
 
 Phasing API calls:
 
-ApproveTransaction, GetAccountPendingTransactions, GetAssetPendingTransactions,
+ApproveTransaction, GetAccountPendingTransactions,
+GetAccountPendingTransactionCount, GetAssetPendingTransactions,
 GetCurrencyPendingTransactions, GetPhasingPoll, GetPhasingPolls,
 GetPhasingPollVote, GetPhasingPollVotes, GetVoterPendingTransactions.
 
@@ -89,6 +90,14 @@ Other new APIs:
 
 GetOrderTrades - given an askOrder, bidOrder, or both, returns all trades that
 were executed as a result of this order.
+
+GetDGSTagsLike - returns all Digital Goods Store tags starting with a given
+(at least 2 characters long) prefix.
+
+GetAliasesLike - returns all Aliases starting with a given (at least 2
+characters long) prefix.
+
+SearchAccounts - full text search on account info (name and description).
 
 GetPlugins - returns a list of all installed plugins.
 
@@ -147,7 +156,7 @@ New main sidebar item for the Voting System, modal to create the various types
 of polls, pages to find active polls and follow polls over time, list with own
 polls and votes casted.
 
-Generic notficiation system for incoming transactions showing the number
+Generic notification system for incoming transactions showing the number
 of transaction types and total new transactions.
 
 New account login feature for faster login just by Nxt account.

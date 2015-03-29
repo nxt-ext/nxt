@@ -127,6 +127,10 @@ public final class Alias {
         return aliasTable.getBy(new DbClause.StringClause("alias_name_lower", aliasName.toLowerCase()));
     }
 
+    public static DbIterator<Alias> getAliasesLike(String aliasName, int from, int to) {
+        return aliasTable.getManyBy(new DbClause.LikeClause("alias_name_lower", aliasName.toLowerCase()), from, to);
+    }
+
     public static Alias getAlias(long id) {
         return aliasTable.get(aliasDbKeyFactory.newKey(id));
     }

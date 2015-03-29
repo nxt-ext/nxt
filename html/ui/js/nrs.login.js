@@ -166,9 +166,9 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.switchAccount = function(account) {
 		NRS.setDecryptionPassword("");
 		NRS.setPassword("");
-		//window.location.reload();
-		NRS.init();
-		NRS.login(false,account);
+		var url = window.location.pathname;    
+		url += '?account='+account;
+		window.location.href = url;
 	}
 	
 	$("#loginButtons").on('click',function(e) {
@@ -418,8 +418,10 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	$("#logout_button_container").on("show.bs.dropdown", function(e) {
+		
 		if (!NRS.isForging) {
-			e.preventDefault();
+			//e.preventDefault();
+			$(this).find("[data-i18n='logout_stop_forging']").hide();
 		}
 	});
 
@@ -513,12 +515,12 @@ var NRS = (function(NRS, $, undefined) {
 		$(document.documentElement).scrollTop(0);
 	}
 
-	$("#logout_button").click(function(e) {
+	/*$("#logout_button").click(function(e) {
 		if (!NRS.isForging) {
 			e.preventDefault();
 			NRS.logout();
 		}
-	});
+	});*/
 
 	NRS.logout = function(stopForging) {
 		if (stopForging && NRS.isForging) {
@@ -527,7 +529,8 @@ var NRS = (function(NRS, $, undefined) {
 		} else {
 			NRS.setDecryptionPassword("");
 			NRS.setPassword("");
-			window.location.reload();
+			//window.location.reload();
+			window.location.href = window.location.pathname;    
 		}
 	}
 
