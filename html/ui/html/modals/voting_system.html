@@ -136,7 +136,7 @@
                 </form>
             </div>
             <div class="modal-footer" style="margin-top:0;">
-                <div class="advanced_info"><strong data-i18n="fee">Fee</strong>: <span class="advanced_fee">10 NXT</span> - <a href="#" data-i18n="advanced">advanced</a></div>
+                <div class="advanced_info"><strong data-i18n="fee">Fee</strong>: <span class="advanced_fee" id="create_poll_fee_text">10 NXT</span> - <a href="#" data-i18n="advanced">advanced</a></div>
 
                 <button type="button" class="btn btn-default" data-dismiss="modal" data-i18n="cancel">Cancel</button>
                 &nbsp;&nbsp;
@@ -205,32 +205,33 @@
             </div>
             <div class="modal-body">    
                 <ul class="nav nav-pills nav-justified" style="margin-bottom:10px">
-                    <li class="active" id="poll_results_statistics_nav" data-tab="statistics"><a href="#" data-i18n="poll_statistics">Poll Statistics</a></li>
-                    <li data-tab="voters"><a href="#" data-i18n="voters">Voters</a></li>
+                    <li class="active" id="poll_results_statistics_nav" data-tab="statistics"><a href="#" data-i18n="poll_results">Poll Results</a></li>
+                    <li data-tab="voters"><a href="#" data-i18n="votes_cast">Votes Cast</a></li>
                 </ul>
 
                 <div id="poll_results_modal_statistics" class="poll_results_modal_content" style="display:none">
                     <div class="callout callout-danger" id="poll_results_warning" style="display:none"></div>
     
                     <table class="table" id="poll_results_table" style="margin-bottom:0;table-layout:fixed;">
-                        <tbody id="poll_results_options">                                
-                            <!--<tr>
-                                <td style="font-weight: bold;width:180px;"><span data-i18n="number_of_voters">Number Of Voters</span>:</td><td><span id="poll_results_number_of_voters"></span></td>
-                            </tr>
+                        <thead>
                             <tr>
-                                <td style="font-weight: bold"><span data-i18n="percent_voted">Percent Voted </span>:</td><td><span id="poll_results_percent_voted"></span></td>
-                            </tr>-->
+                                <th data-i18n="option">Option</th>
+                                <th data-i18n="result">Result</th>
+                                <th data-i18n="weight">Weight</th>
+                            </tr>
+                        </thead>
+                        <tbody id="poll_results_options">                                
+
                         </tbody>
                     </table>
                  </div>
 
                 <div id="poll_results_modal_voters" class="poll_results_modal_content" style="display:none">     
                     <table class="table" id="poll_voters_table" style="margin-bottom:0;table-layout:fixed;">
-                        <thead id="poll_results_voters_head">
+                        <thead>
 
                         </thead>
-
-                        <tbody id="poll_results_voters_body">
+                        <tbody>
                             
                         </tbody>
                     </table>
@@ -251,7 +252,6 @@
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
                 <h4 class="modal-title" data-i18n="add_poll">Add Poll</h4>
-            </ >
             <div class="modal-body">            
                 <form role="form" autocomplete="off">
                     <div class="callout callout-danger error_message" style="display:none"></div>
