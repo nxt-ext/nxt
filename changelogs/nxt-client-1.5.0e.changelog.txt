@@ -213,8 +213,6 @@ if nxt.apiServerSSLPort is set to a port different from nxt.apiServerPort and
 nxt.apiSSL=true. If the SSL and non-SSL ports are configured to be the same,
 the nxt.apiSSL property determines whether SSL is used or not.
 
-The nxt.jar file is no longer included as part of the installation package.
-
 This release requires Java 8 and will not run or compile with Java 7.
 
 Updated Jetty to version 9.2.10 and Bouncy Castle to version 1.52. If unpacking
