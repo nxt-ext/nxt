@@ -493,7 +493,22 @@ var NRS = (function(NRS, $, undefined) {
 
 			}
 		});
-		
+
+		$("#polls_table, #my_polls_table, #voted_polls_table").on("click", "a[data-follow]", function(e) {
+			e.preventDefault();
+			var pollId = $(this).data("follow");
+
+			NRS.sendRequest("getPoll", {"poll": pollId}, function(response) 
+			{
+				if (response.errorCode) {
+					NRS.showModalError($.t("no_poll_found"), $modal);
+				} else {
+					NRS.saveFollowedPolls(new Array(response), NRS.forms.addFollowedPollsComplete);
+				}
+			});
+		});
+
+					
 
 $("#poll_results_modal").on("show.bs.modal", function(e) {
 
