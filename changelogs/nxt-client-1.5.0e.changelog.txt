@@ -58,9 +58,7 @@ use a whitelist of accounts (max 10) allowed to vote for the transaction.
 
 It is possible to vote for (approve) up to 20 phased transactions with a single
 approval transaction. This transaction will be accepted in the blockchain only
-if all phased transactions it is voting for are already in it. This can be used
-to create coupling between phased transactions and some escrow schemes based on
-such coupling.
+if all phased transactions it is voting for are already in it.
 
 It is also possible to make any transaction phased without needing voting for
 approval. This can be used to create transactions with deferred execution.
