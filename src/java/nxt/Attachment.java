@@ -2415,7 +2415,8 @@ public interface Attachment extends Appendix {
 
         public SetPhasingOnly(JSONObject attachmentData) {
             super(attachmentData);
-            phasingParams = new PhasingParams(attachmentData);
+            JSONObject phasingControlParams = (JSONObject) attachmentData.get("phasingControlParams");
+            phasingParams = new PhasingParams(phasingControlParams);
         }
 
         @Override
@@ -2435,7 +2436,9 @@ public interface Attachment extends Appendix {
 
         @Override
         void putMyJSON(JSONObject json) {
-            phasingParams.putMyJSON(json);
+            JSONObject phasingControlParams = new JSONObject();
+            phasingParams.putMyJSON(phasingControlParams);
+            json.put("phasingControlParams", phasingControlParams);
         }
 
         public PhasingParams getPhasingParams() {

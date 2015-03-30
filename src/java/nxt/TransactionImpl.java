@@ -856,6 +856,8 @@ final class TransactionImpl implements Transaction {
             throw new NxtException.NotCurrentlyValidException(String.format("Transaction fee %d NXT less than minimum fee %d NXT at height %d",
                     feeNQT/Constants.ONE_NXT, minimumFeeNQT/Constants.ONE_NXT, blockchainHeight));
         }
+        
+        AccountControlTxBlocking.checkTransaction(this);
     }
 
     // returns false iff double spending

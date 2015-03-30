@@ -1,8 +1,10 @@
 package nxt;
 
+import nxt.Account.ControlType;
 import nxt.Attachment.AbstractAttachment;
 import nxt.NxtException.NotValidException;
 import nxt.NxtException.ValidationException;
+import nxt.VoteWeighting.VotingModel;
 import nxt.util.Convert;
 
 import org.json.simple.JSONObject;
@@ -2275,6 +2277,13 @@ public abstract class TransactionType {
             void validateAttachment(Transaction transaction) throws ValidationException {
                 Attachment.SetPhasingOnly attachment = (Attachment.SetPhasingOnly)transaction.getAttachment();
                 attachment.getPhasingParams().validate();
+                Account senderAccount = Account.getAccount(transaction.getSenderId());
+                if (attachment.getPhasingParams().getVoteWeighting().getVotingModel() == VotingModel.NONE) {
+                    if (!senderAccount.getControls().contains(ControlType.PHASING_ONLY)) {
+                        new NxtException.NotCurrentlyValidException("Phasing only account control is not enabled for account " + transaction.getSenderId() +
+                                ", consequently cannot be removed");
+                    }
+                }
             }
 
             @Override
