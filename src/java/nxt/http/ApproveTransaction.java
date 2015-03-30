@@ -13,16 +13,16 @@ import javax.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
 import java.util.List;
 
-import static nxt.http.JSONResponses.INCORRECT_TRANSACTION;
-import static nxt.http.JSONResponses.MISSING_TRANSACTION;
-import static nxt.http.JSONResponses.UNKNOWN_TRANSACTION;
+import static nxt.http.JSONResponses.MISSING_TRANSACTION_FULL_HASH;
+import static nxt.http.JSONResponses.PHASING_TRANSACTION_FINISHED;
+import static nxt.http.JSONResponses.TOO_MANY_PHASING_VOTES;
+import static nxt.http.JSONResponses.UNKNOWN_TRANSACTION_FULL_HASH;
 
 public class ApproveTransaction extends CreateTransaction {
     static final ApproveTransaction instance = new ApproveTransaction();
 
     private ApproveTransaction() {
-        super(new APITag[]{APITag.CREATE_TRANSACTION,
-                APITag.PHASING}, "transactionFullHash");
+        super(new APITag[]{APITag.CREATE_TRANSACTION, APITag.PHASING}, "transactionFullHash");
     }
 
     @Override
@@ -30,11 +30,11 @@ public class ApproveTransaction extends CreateTransaction {
         String[] pendingTransactionValues = req.getParameterValues("transactionFullHash");
 
         if (pendingTransactionValues.length == 0) {
-            return MISSING_TRANSACTION;
+            return MISSING_TRANSACTION_FULL_HASH;
         }
 
         if (pendingTransactionValues.length > Constants.MAX_PHASING_VOTE_TRANSACTIONS) {
-            return INCORRECT_TRANSACTION;
+            return TOO_MANY_PHASING_VOTES;
         }
 
         List<byte[]> pendingTransactionFullHashes = new ArrayList<>(pendingTransactionValues.length);
@@ -42,10 +42,10 @@ public class ApproveTransaction extends CreateTransaction {
             byte[] hash = Convert.parseHexString(pendingTransactionValue);
             PhasingPoll phasingPoll = PhasingPoll.getPoll(Convert.fullHashToId(hash));
             if (phasingPoll == null) {
-                return UNKNOWN_TRANSACTION;
+                return UNKNOWN_TRANSACTION_FULL_HASH;
             }
             if (phasingPoll.isFinished()) {
-                return INCORRECT_TRANSACTION;
+                return PHASING_TRANSACTION_FINISHED;
             }
             pendingTransactionFullHashes.add(hash);
         }

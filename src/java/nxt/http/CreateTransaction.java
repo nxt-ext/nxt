@@ -154,8 +154,6 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
         // shouldn't try to get publicKey from senderAccount as it may have not been set yet
         byte[] publicKey = secretPhrase != null ? Crypto.getPublicKey(secretPhrase) : Convert.parseHexString(publicKeyValue);
 
-        response.put("broadcasted", false);
-
         try {
             Transaction.Builder builder = Nxt.newTransactionBuilder(publicKey, amountNQT, feeNQT,
                     deadline, attachment).referencedTransactionFullHash(referencedTransactionFullHash);
@@ -185,11 +183,14 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
             } catch (ArithmeticException e) {
                 return NOT_ENOUGH_FUNDS;
             }
+            JSONObject transactionJSON = JSONData.unconfirmedTransaction(transaction);
+            response.put("transactionJSON", transactionJSON);
+            response.put("unsignedTransactionBytes", Convert.toHexString(transaction.getUnsignedBytes()));
             if (secretPhrase != null) {
                 response.put("transaction", transaction.getStringId());
-                response.put("fullHash", transaction.getFullHash());
+                response.put("fullHash", transactionJSON.get("fullHash"));
                 response.put("transactionBytes", Convert.toHexString(transaction.getBytes()));
-                response.put("signatureHash", Convert.toHexString(Crypto.sha256().digest(transaction.getSignature())));
+                response.put("signatureHash", transactionJSON.get("signatureHash"));
             }
             response.put("unsignedTransactionBytes", Convert.toHexString(transaction.getUnsignedBytes()));
             response.put("transactionJSON", JSONData.unconfirmedTransaction(transaction));
@@ -198,6 +199,7 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
                 response.put("broadcasted", true);
             } else {
                 transaction.validate();
+                response.put("broadcasted", false);
             }
         } catch (NxtException.NotYetEnabledException e) {
             return FEATURE_NOT_AVAILABLE;
@@ -205,6 +207,7 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
             if (broadcast) {
                 response.clear();
             }
+            response.put("broadcasted", false);
             JSONData.putException(response, e);
         }
         return response;

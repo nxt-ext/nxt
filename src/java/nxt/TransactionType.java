@@ -153,9 +153,9 @@ public abstract class TransactionType {
     abstract void validateAttachment(Transaction transaction) throws NxtException.ValidationException;
 
     // return false iff double spending
-    final boolean applyUnconfirmed(Transaction transaction, Account senderAccount) {
+    final boolean applyUnconfirmed(TransactionImpl transaction, Account senderAccount) {
         long totalAmountNQT = Math.addExact(transaction.getAmountNQT(), transaction.getFeeNQT());
-        if (transaction.getReferencedTransactionFullHash() != null
+        if (transaction.referencedTransactionFullHash() != null
                 && transaction.getTimestamp() > Constants.REFERENCED_TRANSACTION_FULL_HASH_BLOCK_TIMESTAMP) {
             totalAmountNQT = Math.addExact(totalAmountNQT, Constants.UNCONFIRMED_POOL_DEPOSIT_NQT);
         }
@@ -188,10 +188,10 @@ public abstract class TransactionType {
 
     abstract void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount);
 
-    final void undoUnconfirmed(Transaction transaction, Account senderAccount) {
+    final void undoUnconfirmed(TransactionImpl transaction, Account senderAccount) {
         undoAttachmentUnconfirmed(transaction, senderAccount);
         senderAccount.addToUnconfirmedBalanceNQT(Math.addExact(transaction.getAmountNQT(), transaction.getFeeNQT()));
-        if (transaction.getReferencedTransactionFullHash() != null
+        if (transaction.referencedTransactionFullHash() != null
                 && transaction.getTimestamp() > Constants.REFERENCED_TRANSACTION_FULL_HASH_BLOCK_TIMESTAMP) {
             senderAccount.addToUnconfirmedBalanceNQT(Constants.UNCONFIRMED_POOL_DEPOSIT_NQT);
         }
@@ -979,9 +979,7 @@ public abstract class TransactionType {
                 Attachment.MessagingPhasingVoteCasting attachment = (Attachment.MessagingPhasingVoteCasting) transaction.getAttachment();
                 List<byte[]> pendingTransactionFullHashes = attachment.getTransactionFullHashes();
                 for (byte[] hash : pendingTransactionFullHashes) {
-                    long pendingTransactionId = Convert.fullHashToId(hash);
-                    PhasingPoll poll = PhasingPoll.getPoll(pendingTransactionId);
-                    PhasingVote.addVote(poll, transaction);
+                    PhasingVote.addVote(transaction, Convert.fullHashToId(hash));
                 }
             }
 

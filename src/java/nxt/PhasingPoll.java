@@ -311,7 +311,7 @@ public final class PhasingPoll extends AbstractPoll {
         this.dbKey = phasingPollDbKeyFactory.newKey(this.id);
         this.quorum = appendix.getQuorum();
         this.whitelist = appendix.getWhitelist();
-        this.fullHash = voteWeighting.getVotingModel() == VoteWeighting.VotingModel.NONE ? null : Convert.parseHexString(transaction.getFullHash());
+        this.fullHash = voteWeighting.getVotingModel() == VoteWeighting.VotingModel.NONE ? null : ((TransactionImpl)transaction).fullHash();
     }
 
     private PhasingPoll(ResultSet rs) throws SQLException {

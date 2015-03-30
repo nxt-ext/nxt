@@ -2,6 +2,7 @@ package nxt;
 
 import nxt.db.DbIterator;
 import nxt.db.DbUtils;
+import nxt.util.Convert;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -222,7 +223,7 @@ final class BlockchainImpl implements Blockchain {
 
     @Override
     public TransactionImpl getTransactionByFullHash(String fullHash) {
-        return TransactionDb.findTransactionByFullHash(fullHash);
+        return TransactionDb.findTransactionByFullHash(Convert.parseHexString(fullHash));
     }
 
     @Override

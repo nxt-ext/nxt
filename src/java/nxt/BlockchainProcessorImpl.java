@@ -768,9 +768,9 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                         + " is already in the blockchain", transaction);
             }
             //TODO: check that referenced transaction, if phased, has been applied?
-            if (transaction.getReferencedTransactionFullHash() != null) {
+            if (transaction.referencedTransactionFullHash() != null) {
                 if ((previousLastBlock.getHeight() < Constants.REFERENCED_TRANSACTION_FULL_HASH_BLOCK
-                        && !TransactionDb.hasTransaction(Convert.fullHashToId(transaction.getReferencedTransactionFullHash()), previousLastBlock.getHeight()))
+                        && !TransactionDb.hasTransaction(Convert.fullHashToId(transaction.referencedTransactionFullHash()), previousLastBlock.getHeight()))
                         || (previousLastBlock.getHeight() >= Constants.REFERENCED_TRANSACTION_FULL_HASH_BLOCK
                         && !hasAllReferencedTransactions(transaction, transaction.getTimestamp(), 0))) {
                     throw new TransactionNotAcceptedException("Missing or invalid referenced transaction "
@@ -963,7 +963,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
 
         List<UnconfirmedTransaction> orderedUnconfirmedTransactions = new ArrayList<>();
         try (FilteringIterator<UnconfirmedTransaction> unconfirmedTransactions = new FilteringIterator<>(TransactionProcessorImpl.getInstance().getAllUnconfirmedTransactions(),
-                transaction -> hasAllReferencedTransactions(transaction, transaction.getTimestamp(), 0))) {
+                transaction -> hasAllReferencedTransactions(transaction.getTransaction(), transaction.getTimestamp(), 0))) {
             for (UnconfirmedTransaction unconfirmedTransaction : unconfirmedTransactions) {
                 orderedUnconfirmedTransactions.add(unconfirmedTransaction);
             }
@@ -1087,12 +1087,14 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         }
     }
 
-    private boolean hasAllReferencedTransactions(Transaction transaction, int timestamp, int count) {
-        if (transaction.getReferencedTransactionFullHash() == null) {
+    private boolean hasAllReferencedTransactions(TransactionImpl transaction, int timestamp, int count) {
+        if (transaction.referencedTransactionFullHash() == null) {
             return timestamp - transaction.getTimestamp() < 60 * 1440 * 60 && count < 10;
         }
-        Transaction referencedTransaction = TransactionDb.findTransactionByFullHash(transaction.getReferencedTransactionFullHash());
-        return referencedTransaction != null && referencedTransaction.getHeight() < transaction.getHeight() && hasAllReferencedTransactions(referencedTransaction, timestamp, count + 1);
+        TransactionImpl referencedTransaction = TransactionDb.findTransactionByFullHash(transaction.referencedTransactionFullHash());
+        return referencedTransaction != null
+                && referencedTransaction.getHeight() < transaction.getHeight()
+                && hasAllReferencedTransactions(referencedTransaction, timestamp, count + 1);
     }
 
     void scheduleScan(int height, boolean validate) {

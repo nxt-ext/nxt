@@ -110,10 +110,11 @@ public final class JSONResponses {
     public static final JSONStreamAware MISSING_OFFER = missing("offer");
     public static final JSONStreamAware UNKNOWN_OFFER = unknown("offer");
     public static final JSONStreamAware INCORRECT_OFFER = incorrect("offer");
-    public static final JSONStreamAware INCORRECT_MESSAGE_PATTERN_REGEX = incorrect("messagePatternRegex");
-    public static final JSONStreamAware INCORRECT_MESSAGE_PATTERN_FLAGS = incorrect("messagePatternFlags");
     public static final JSONStreamAware INCORRECT_ADMIN_PASSWORD = incorrect("adminPassword", "(the specified password does not match nxt.adminPassword)");
     public static final JSONStreamAware OVERFLOW = error("overflow");
+    public static final JSONStreamAware MISSING_TRANSACTION_FULL_HASH = missing("transactionFullHash");
+    public static final JSONStreamAware UNKNOWN_TRANSACTION_FULL_HASH = unknown("transactionFullHash");
+    public static final JSONStreamAware INCORRECT_TRANSACTION_FULL_HASH = incorrect("transactionFullHash");
 
     public static final JSONStreamAware NOT_ENOUGH_FUNDS;
     static {
@@ -251,6 +252,30 @@ public final class JSONResponses {
         POLL_RESULTS_NOT_AVAILABLE = JSON.prepare(response);
     }
 
+    public static final JSONStreamAware POLL_FINISHED;
+    static {
+        JSONObject response = new JSONObject();
+        response.put("errorCode", 8);
+        response.put("errorDescription", "Poll has already finished");
+        POLL_FINISHED = JSON.prepare(response);
+    }
+
+    public static final JSONStreamAware PHASING_TRANSACTION_FINISHED;
+    static {
+        JSONObject response = new JSONObject();
+        response.put("errorCode", 8);
+        response.put("errorDescription", "Phasing transaction has already finished");
+        PHASING_TRANSACTION_FINISHED = JSON.prepare(response);
+    }
+
+    public static final JSONStreamAware TOO_MANY_PHASING_VOTES;
+    static {
+        JSONObject response = new JSONObject();
+        response.put("errorCode", 10);
+        response.put("errorDescription", "Can vote for at most " + Constants.MAX_PHASING_VOTE_TRANSACTIONS + " phased transactions at once");
+        TOO_MANY_PHASING_VOTES = JSON.prepare(response);
+    }
+
     static JSONStreamAware missing(String... paramNames) {
         JSONObject response = new JSONObject();
         response.put("errorCode", 3);
@@ -273,7 +298,7 @@ public final class JSONResponses {
         return JSON.prepare(response);
     }
 
-    private static JSONStreamAware unknown(String objectName) {
+    static JSONStreamAware unknown(String objectName) {
         JSONObject response = new JSONObject();
         response.put("errorCode", 5);
         response.put("errorDescription", "Unknown " + objectName);

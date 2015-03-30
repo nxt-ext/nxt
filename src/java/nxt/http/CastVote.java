@@ -10,8 +10,8 @@ import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
 
-import static nxt.http.JSONResponses.INCORRECT_POLL;
 import static nxt.http.JSONResponses.INCORRECT_VOTE;
+import static nxt.http.JSONResponses.POLL_FINISHED;
 
 
 public final class CastVote extends CreateTransaction {
@@ -26,7 +26,7 @@ public final class CastVote extends CreateTransaction {
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
         Poll poll = ParameterParser.getPoll(req);
         if (poll.isFinished()) {
-            return INCORRECT_POLL;
+            return POLL_FINISHED;
         }
 
         int numberOfOptions = poll.getOptions().length;

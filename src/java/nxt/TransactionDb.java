@@ -33,13 +33,12 @@ final class TransactionDb {
         }
     }
 
-    static TransactionImpl findTransactionByFullHash(String fullHash) {
+    static TransactionImpl findTransactionByFullHash(byte[] fullHash) {
         try (Connection con = Db.db.getConnection();
              PreparedStatement pstmt = con.prepareStatement("SELECT * FROM transaction WHERE id = ?")) {
-            byte[] fullHashBytes = Convert.parseHexString(fullHash);
-            pstmt.setLong(1, Convert.fullHashToId(fullHashBytes));
+            pstmt.setLong(1, Convert.fullHashToId(fullHash));
             try (ResultSet rs = pstmt.executeQuery()) {
-                if (rs.next() && Arrays.equals(rs.getBytes("full_hash"), fullHashBytes)) {
+                if (rs.next() && Arrays.equals(rs.getBytes("full_hash"), fullHash)) {
                     return loadTransaction(con, rs);
                 }
                 return null;
@@ -196,7 +195,7 @@ final class TransactionDb {
                     DbUtils.setLongZeroToNull(pstmt, ++i, transaction.getRecipientId());
                     pstmt.setLong(++i, transaction.getAmountNQT());
                     pstmt.setLong(++i, transaction.getFeeNQT());
-                    DbUtils.setBytes(pstmt, ++i, Convert.parseHexString(transaction.getReferencedTransactionFullHash()));
+                    DbUtils.setBytes(pstmt, ++i, transaction.referencedTransactionFullHash());
                     pstmt.setInt(++i, transaction.getHeight());
                     pstmt.setLong(++i, transaction.getBlockId());
                     pstmt.setBytes(++i, transaction.getSignature());
@@ -219,7 +218,7 @@ final class TransactionDb {
                         pstmt.setBytes(++i, buffer.array());
                     }
                     pstmt.setInt(++i, transaction.getBlockTimestamp());
-                    pstmt.setBytes(++i, Convert.parseHexString(transaction.getFullHash()));
+                    pstmt.setBytes(++i, transaction.fullHash());
                     pstmt.setByte(++i, transaction.getVersion());
                     pstmt.setBoolean(++i, transaction.getMessage() != null);
                     pstmt.setBoolean(++i, transaction.getEncryptedMessage() != null);

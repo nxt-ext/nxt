@@ -58,8 +58,8 @@ public class PhasingVote {
         return cumulativeWeight;
     }
 
-    static void addVote(PhasingPoll poll, Transaction transaction) {
-        phasingVoteTable.insert(new PhasingVote(transaction, poll.getId()));
+    static void addVote(Transaction transaction, long pendingTransactionId) {
+        phasingVoteTable.insert(new PhasingVote(transaction, pendingTransactionId));
     }
 
     static void init() {
@@ -100,9 +100,9 @@ public class PhasingVote {
         try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO phasing_vote (id, transaction_id, "
                 + "voter_id, height) VALUES (?, ?, ?, ?)")) {
             int i = 0;
-            pstmt.setLong(++i, this.getId());
-            pstmt.setLong(++i, this.getPendingTransactionId());
-            pstmt.setLong(++i, this.getVoterId());
+            pstmt.setLong(++i, this.id);
+            pstmt.setLong(++i, this.pendingTransactionId);
+            pstmt.setLong(++i, this.voterId);
             pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
             pstmt.executeUpdate();
         }
