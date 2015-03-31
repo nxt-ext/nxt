@@ -917,29 +917,21 @@ public abstract class TransactionType {
                 }
 
                 Attachment.MessagingPhasingVoteCasting attachment = (Attachment.MessagingPhasingVoteCasting) transaction.getAttachment();
-                List<byte[]> pendingTransactionFullHashes = attachment.getTransactionFullHashes();
-                if (pendingTransactionFullHashes.size() > Constants.MAX_PHASING_VOTE_TRANSACTIONS) {
+                List<byte[]> hashes = attachment.getTransactionFullHashes();
+                if (hashes.size() > Constants.MAX_PHASING_VOTE_TRANSACTIONS) {
                     throw new NxtException.NotValidException("No more than " + Constants.MAX_PHASING_VOTE_TRANSACTIONS + " votes allowed for two-phased multivoting");
                 }
 
-                long previousPendingId = 0;
                 long voterId = transaction.getSenderId();
-                for (byte[] hash : pendingTransactionFullHashes) {
-                    long pendingId = Convert.fullHashToId(hash);
-                    if (pendingId == 0) {
+                for (byte[] hash : hashes) {
+                    long phasedTransactionId = Convert.fullHashToId(hash);
+                    if (phasedTransactionId == 0) {
                         throw new NxtException.NotValidException("Invalid pendingTransactionFullHash " + Convert.toHexString(hash));
                     }
-                    if (previousPendingId != 0 && pendingId < previousPendingId) {
-                        throw new NxtException.NotValidException("pendingTransactionFullHashes not sorted " + pendingTransactionFullHashes.toString());
-                    }
-                    if (pendingId == previousPendingId) {
-                        throw new NxtException.NotValidException("Duplicate hash " + Convert.toHexString(hash));
-                    }
-                    previousPendingId = pendingId;
 
-                    PhasingPoll poll = PhasingPoll.getPoll(pendingId);
+                    PhasingPoll poll = PhasingPoll.getPoll(phasedTransactionId);
                     if (poll == null) {
-                        throw new NxtException.NotCurrentlyValidException("Invalid pending transaction " + Long.toUnsignedString(pendingId) + ", or poll is finished");
+                        throw new NxtException.NotCurrentlyValidException("Invalid pending transaction " + Long.toUnsignedString(phasedTransactionId) + ", or poll is finished");
                     }
                     if (poll.getVoteWeighting().getVotingModel() == VoteWeighting.VotingModel.NONE) {
                         throw new NxtException.NotValidException("This pending transaction does not require or accept voting");
@@ -951,9 +943,6 @@ public abstract class TransactionType {
                     if (!Arrays.equals(poll.getFullHash(), hash)) {
                         throw new NxtException.NotCurrentlyValidException("Hashes don't match");
                     }
-                    if (PhasingVote.getVote(pendingId, voterId) != null) {
-                        throw new NxtException.NotCurrentlyValidException("Double voting attempt");
-                    }
                     if (poll.getFinishHeight() <= transaction.getValidationHeight() - 1) {
                         throw new NxtException.NotCurrentlyValidException("Voting for this transaction finishes at " + poll.getFinishHeight());
                     }
@@ -961,31 +950,17 @@ public abstract class TransactionType {
             }
 
             @Override
-            boolean isDuplicate(Transaction transaction, Map<TransactionType, Map<String,Boolean>> duplicates) {
-                Attachment.MessagingPhasingVoteCasting attachment = (Attachment.MessagingPhasingVoteCasting) transaction.getAttachment();
-                String voter = Long.toUnsignedString(transaction.getSenderId());
-                List<byte[]> pendingTransactionFullHashes = attachment.getTransactionFullHashes();
-                for (byte[] hash : pendingTransactionFullHashes) {
-                    String compositeKey = voter + ":" + Convert.toHexString(hash);
-                    if (isDuplicate(Messaging.PHASING_VOTE_CASTING, compositeKey, duplicates, true)) {
-                        return true;
-                    }
-                }
-                return false;
-            }
-
-            @Override
             final void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
                 Attachment.MessagingPhasingVoteCasting attachment = (Attachment.MessagingPhasingVoteCasting) transaction.getAttachment();
-                List<byte[]> pendingTransactionFullHashes = attachment.getTransactionFullHashes();
-                for (byte[] hash : pendingTransactionFullHashes) {
-                    PhasingVote.addVote(transaction, Convert.fullHashToId(hash));
+                List<byte[]> hashes = attachment.getTransactionFullHashes();
+                for (byte[] hash : hashes) {
+                    PhasingVote.addVote(transaction, senderAccount, Convert.fullHashToId(hash));
                 }
             }
 
             @Override
             public boolean isPhasingSafe() {
-                return false;
+                return true;
             }
 
         };

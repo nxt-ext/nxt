@@ -617,8 +617,6 @@ public interface Attachment extends Appendix {
 
     final class MessagingPhasingVoteCasting extends AbstractAttachment {
 
-        private static final Comparator<byte[]> hashComparator = Comparator.comparingLong(Convert::fullHashToId);
-
         private final List<byte[]> transactionFullHashes;
 
         MessagingPhasingVoteCasting(ByteBuffer buffer, byte transactionVersion) {
@@ -643,7 +641,6 @@ public interface Attachment extends Appendix {
 
         public MessagingPhasingVoteCasting(List<byte[]> transactionFullHashes) {
             this.transactionFullHashes = transactionFullHashes;
-            Collections.sort(this.transactionFullHashes, hashComparator);
         }
 
         @Override

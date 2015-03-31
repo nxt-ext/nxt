@@ -414,7 +414,7 @@ final class JSONData {
     static JSONObject phasingPollVote(PhasingVote vote) {
         JSONObject json = new JSONObject();
         JSONData.putAccount(json, "voter", vote.getVoterId());
-        json.put("transaction", Long.toUnsignedString(vote.getId()));
+        json.put("transaction", Long.toUnsignedString(vote.getVoteId()));
         return json;
     }
 

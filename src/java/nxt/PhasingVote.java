@@ -12,15 +12,14 @@ import java.sql.SQLException;
 
 public class PhasingVote {
 
-    private static final DbKey.LinkKeyFactory<PhasingVote> voteDbKeyFactory =
-            new DbKey.LinkKeyFactory<PhasingVote>("transaction_id", "voter_id") {
-                @Override
-                public DbKey newKey(PhasingVote vote) {
-                    return vote.dbKey;
-                }
-            };
+    private static final DbKey.LinkKeyFactory<PhasingVote> phasingVoteDbKeyFactory = new DbKey.LinkKeyFactory<PhasingVote>("transaction_id", "voter_id") {
+        @Override
+        public DbKey newKey(PhasingVote vote) {
+            return vote.dbKey;
+        }
+    };
 
-    private static final EntityDbTable<PhasingVote> phasingVoteTable = new EntityDbTable<PhasingVote>("phasing_vote", voteDbKeyFactory) {
+    private static final EntityDbTable<PhasingVote> phasingVoteTable = new EntityDbTable<PhasingVote>("phasing_vote", phasingVoteDbKeyFactory) {
 
         @Override
         protected PhasingVote load(Connection con, ResultSet rs) throws SQLException {
@@ -34,12 +33,12 @@ public class PhasingVote {
 
     };
 
-    public static DbIterator<PhasingVote> getTransactionVotes(long pendingTransactionId, int from, int to) {
-        return phasingVoteTable.getManyBy(new DbClause.LongClause("transaction_id", pendingTransactionId), from, to);
+    public static DbIterator<PhasingVote> getTransactionVotes(long phasedTransactionId, int from, int to) {
+        return phasingVoteTable.getManyBy(new DbClause.LongClause("transaction_id", phasedTransactionId), from, to);
     }
 
-    public static PhasingVote getVote(long pendingTransactionId, long voterId) {
-        return phasingVoteTable.get(voteDbKeyFactory.newKey(pendingTransactionId, voterId));
+    public static PhasingVote getVote(long phasedTransactionId, long voterId) {
+        return phasingVoteTable.get(phasingVoteDbKeyFactory.newKey(phasedTransactionId, voterId));
     }
 
     public static long countVotes(PhasingPoll poll) {
@@ -58,50 +57,54 @@ public class PhasingVote {
         return cumulativeWeight;
     }
 
-    static void addVote(Transaction transaction, long pendingTransactionId) {
-        phasingVoteTable.insert(new PhasingVote(transaction, pendingTransactionId));
+    static void addVote(Transaction transaction, Account voter, long phasedTransactionId) {
+        PhasingVote phasingVote = phasingVoteTable.get(phasingVoteDbKeyFactory.newKey(phasedTransactionId, voter.getId()));
+        if (phasingVote == null) {
+            phasingVote = new PhasingVote(transaction, voter, phasedTransactionId);
+            phasingVoteTable.insert(phasingVote);
+        }
     }
 
     static void init() {
     }
 
-    private final long id;
-    private final DbKey dbKey;
-    private final long pendingTransactionId;
+    private final long phasedTransactionId;
     private final long voterId;
+    private final DbKey dbKey;
+    private long voteId;
 
-    private PhasingVote(Transaction transaction, long pendingTransactionId) {
-        this.id = transaction.getId();
-        this.pendingTransactionId = pendingTransactionId;
-        this.voterId = transaction.getSenderId();
-        this.dbKey = voteDbKeyFactory.newKey(this.pendingTransactionId, this.voterId);
+    private PhasingVote(Transaction transaction, Account voter, long phasedTransactionId) {
+        this.phasedTransactionId = phasedTransactionId;
+        this.voterId = voter.getId();
+        this.dbKey = phasingVoteDbKeyFactory.newKey(this.phasedTransactionId, this.voterId);
+        this.voteId = transaction.getId();
     }
 
     private PhasingVote(ResultSet rs) throws SQLException {
-        this.id = rs.getLong("id");
-        this.pendingTransactionId = rs.getLong("transaction_id");
+        this.phasedTransactionId = rs.getLong("transaction_id");
         this.voterId = rs.getLong("voter_id");
-        this.dbKey = voteDbKeyFactory.newKey(this.pendingTransactionId, this.voterId);
+        this.dbKey = phasingVoteDbKeyFactory.newKey(this.phasedTransactionId, this.voterId);
+        this.voteId = rs.getLong("vote_id");
     }
 
-    public long getId() {
-        return id;
-    }
-
-    public long getPendingTransactionId() {
-        return pendingTransactionId;
+    public long getPhasedTransactionId() {
+        return phasedTransactionId;
     }
 
     public long getVoterId() {
         return voterId;
     }
 
+    public long getVoteId() {
+        return voteId;
+    }
+
     private void save(Connection con) throws SQLException {
-        try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO phasing_vote (id, transaction_id, "
+        try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO phasing_vote (vote_id, transaction_id, "
                 + "voter_id, height) VALUES (?, ?, ?, ?)")) {
             int i = 0;
-            pstmt.setLong(++i, this.id);
-            pstmt.setLong(++i, this.pendingTransactionId);
+            pstmt.setLong(++i, this.voteId);
+            pstmt.setLong(++i, this.phasedTransactionId);
             pstmt.setLong(++i, this.voterId);
             pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
             pstmt.executeUpdate();

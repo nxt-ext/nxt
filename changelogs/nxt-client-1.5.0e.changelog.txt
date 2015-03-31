@@ -32,6 +32,8 @@ created, however a different voting model can be specified when calling the
 getPollResult API, to calculate on the fly an alternative vote counting, as
 long as vote data is still available.
 
+Voting multiple times, changing, or deleting votes is not allowed.
+
 The fee to create a poll is 10 NXT for a poll with up to 20 options, with 1 NXT
 additional fee for any additional option (max 100 options are possible).
 
@@ -59,6 +61,9 @@ use a whitelist of accounts (max 10) allowed to vote for the transaction.
 It is possible to vote for (approve) up to 20 phased transactions with a single
 approval transaction. This transaction will be accepted in the blockchain only
 if all phased transactions it is voting for are already in it.
+
+Voting multiple times is allowed but has no effect on vote counting, votes
+after the first vote from each account are ignored.
 
 It is also possible to make any transaction phased without needing voting for
 approval. This can be used to create transactions with deferred execution.
