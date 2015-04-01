@@ -617,7 +617,7 @@ var NRS = (function(NRS, $, undefined) {
 				var minutes = date.getMinutes();
 				var seconds = date.getSeconds();
 
-				if (!NRS.settings["24_hour_format"]) {
+				if (NRS.settings["24_hour_format"] == "0") {
 					hours = hours % 12;
 				}
 				if (hours < 10) {
@@ -631,7 +631,7 @@ var NRS = (function(NRS, $, undefined) {
 				}
 				res += " " + hours + ":" + minutes + ":" + seconds;
 
-				if (!NRS.settings["24_hour_format"]) {
+				if (NRS.settings["24_hour_format"] == "0") {
 					res += " " + (originalHours > 12 ? "PM" : "AM");
 				}
 			}
