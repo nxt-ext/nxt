@@ -443,6 +443,7 @@ var NRS = (function(NRS, $) {
 			if (formErrorFunction) {
 				formErrorFunction(false, data);
 			}
+            $("#" + $modal.attr('id').replace('_modal', '') + "_password").focus();
 			NRS.unlockForm($modal, $btn);
 			return;
 		}
