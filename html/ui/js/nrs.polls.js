@@ -438,8 +438,26 @@ var NRS = (function(NRS, $, undefined) {
 							var result = results[i];
 							rows += "<tr>";
 							rows += "<td>" + options[i] + "</td>";
-							rows += "<td>" + result.result/100000000 + "</td>";
-							rows += "<td>" + result.weight/100000000 + "</td>";					
+							if(polldata.minBalanceModel == 0)
+							{
+								rows += "<td>" + result.result/100000000 + "</td>";
+								rows += "<td>" + result.weight/100000000 + "</td>";		
+							}
+							else if(polldata.minBalanceModel == 1)
+							{
+								rows += "<td>" + result.result + "</td>";
+								rows += "<td>" + result.weight + "</td>";		
+							}
+							else if(polldata.minBalanceModel == 2)
+							{
+								rows += "<td>" + result.result + "</td>";
+								rows += "<td>" + result.weight + "</td>";
+							}
+							else if(polldata.minBalanceModel == 3)
+							{
+								rows += "<td>" + result.result + "</td>";
+								rows += "<td>" + result.weight + "</td>";
+							}				
 							rows += "</tr>";
 						}
 					}
@@ -578,11 +596,11 @@ $("#poll_results_modal ul.nav li").click(function(e) {
 		if($("#create_poll_type").val() == "1")
 		{
 			data["votingModel"] = 0;
-			var val = $('input:radio[name=minBalanceType]:checked').val()+1;
+			var val = parseInt($('input:radio[name=minBalanceType]:checked').val());
 			data["minBalanceModel"] = val;
 
 			if(val == 2) data["holding"] = $("#create_poll_asset_id").val();
-			else if(val == 3) data["holding"] = $("#create_poll_ms_currency").val();
+			else if(val == 3) data["holding"] = $("#create_poll_ms_id").val();
 		}
 		if($("#create_poll_type").val() == "2")
 		{
@@ -593,7 +611,7 @@ $("#poll_results_modal ul.nav li").click(function(e) {
 		else if($("#create_poll_type").val() == "3")
 		{
 			data["votingModel"] = 3;
-			data["holding"] = $("#create_poll_ms_currency").val();
+			data["holding"] = $("#create_poll_ms_id").val();
 			data["minBalanceModel"] = 3;
 		}
 
@@ -1112,36 +1130,59 @@ $("#poll_results_modal ul.nav li").click(function(e) {
 	}
 
 	NRS.loadPollResults = function(pollId, refresh) {
-
-		NRS.sendRequest("getPollResult+" + pollId, {
+		NRS.sendRequest("getPoll+" + pollId, {
 			"poll": pollId
-		}, function(response, input) {
-			var results = response.results;
-			var options = response.options;
+		}, function(polldata, input) {
 
-			if (!results) {
-				results = [];
-			}
+			NRS.sendRequest("getPollResult+" + pollId, {
+				"poll": pollId
+			}, function(response, input) {
+				var results = response.results;
+				var options = response.options;
 
-			if (results.length) {
-				var rows = "";
-
-				for (var i = 0; i < results.length; i++) {
-					var result = results[i];
-					rows += "<tr>";
-					rows += "<td>" + options[i] + "</td>";
-					rows += "<td>" + result.result/100000000 + "</td>";
-					rows += "<td>" + result.weight/100000000 + "</td>";					
-					rows += "</tr>";
+				if (!results) {
+					results = [];
 				}
 
-				$("#followed_polls_poll_results tbody").empty().append(rows);
-				} else {
-					$("#followed_polls_poll_results tbody").empty();
-				}
+				if (results.length) {
+					var rows = "";
+
+					for (var i = 0; i < results.length; i++) {
+						var result = results[i];
+						rows += "<tr>";
+						rows += "<td>" + options[i] + "</td>";
+						if(polldata.minBalanceModel == 0)
+						{
+							rows += "<td>" + result.result/100000000 + "</td>";
+							rows += "<td>" + result.weight/100000000 + "</td>";		
+						}
+						else if(polldata.minBalanceModel == 1)
+						{
+							rows += "<td>" + result.result + "</td>";
+							rows += "<td>" + result.weight + "</td>";		
+						}
+						else if(polldata.minBalanceModel == 2)
+						{
+							rows += "<td>" + result.result + "</td>";
+							rows += "<td>" + result.weight + "</td>";
+						}
+						else if(polldata.minBalanceModel == 3)
+						{
+							rows += "<td>" + result.result + "</td>";
+							rows += "<td>" + result.weight + "</td>";
+						}
+									
+						rows += "</tr>";
+					}
+
+					$("#followed_polls_poll_results tbody").empty().append(rows);
+					} else {
+						$("#followed_polls_poll_results tbody").empty();
+					}
 
 
-			NRS.dataLoadFinished($("#followed_polls_poll_results"), !refresh);
+				NRS.dataLoadFinished($("#followed_polls_poll_results"), !refresh);
+			});
 		});
 	}
 
