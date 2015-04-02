@@ -276,40 +276,6 @@ final class TransactionImpl implements Transaction {
             feeNQT = builder.feeNQT;
         }
 
-        if ((timestamp == 0 && Arrays.equals(getSenderPublicKey(), Genesis.CREATOR_PUBLIC_KEY))
-                ? (deadline != 0 || feeNQT != 0)
-                : (deadline < 1 || feeNQT <= 0)
-                || feeNQT > Constants.MAX_BALANCE_NQT
-                || amountNQT < 0
-                || amountNQT > Constants.MAX_BALANCE_NQT
-                || type == null) {
-            throw new NxtException.NotValidException("Invalid transaction parameters:\n type: " + type + ", timestamp: " + timestamp
-                    + ", deadline: " + deadline + ", fee: " + feeNQT + ", amount: " + amountNQT);
-        }
-
-        if (attachment == null || type != attachment.getTransactionType()) {
-            throw new NxtException.NotValidException("Invalid attachment " + attachment + " for transaction of type " + type);
-        }
-
-        if (! type.canHaveRecipient()) {
-            if (recipientId != 0 || getAmountNQT() != 0) {
-                throw new NxtException.NotValidException("Transactions of this type must have recipient == 0, amount == 0");
-            }
-        }
-
-        if (type.mustHaveRecipient() && version > 0) {
-            if (recipientId == 0) {
-                throw new NxtException.NotValidException("Transactions of this type must have a valid recipient");
-            }
-        }
-
-        for (Appendix.AbstractAppendix appendage : appendages) {
-            if (! appendage.verifyVersion(this.version)) {
-                throw new NxtException.NotValidException("Invalid attachment version " + appendage.getVersion()
-                        + " for transaction version " + this.version);
-            }
-        }
-
         if (builder.signature != null && secretPhrase != null) {
             throw new NxtException.NotValidException("Transaction is already signed");
         } else if (builder.signature != null) {
@@ -608,12 +574,9 @@ final class TransactionImpl implements Transaction {
             long recipientId = buffer.getLong();
             long amountNQT = buffer.getLong();
             long feeNQT = buffer.getLong();
-            String referencedTransactionFullHash = null;
-            byte[] referencedTransactionFullHashBytes = new byte[32];
-            buffer.get(referencedTransactionFullHashBytes);
-            if (Convert.emptyToNull(referencedTransactionFullHashBytes) != null) {
-                referencedTransactionFullHash = Convert.toHexString(referencedTransactionFullHashBytes);
-            }
+            byte[] referencedTransactionFullHash = new byte[32];
+            buffer.get(referencedTransactionFullHash);
+            referencedTransactionFullHash = Convert.emptyToNull(referencedTransactionFullHash);
             byte[] signature = new byte[64];
             buffer.get(signature);
             signature = Convert.emptyToNull(signature);
@@ -841,17 +804,53 @@ final class TransactionImpl implements Transaction {
 
     @Override
     public void validate() throws NxtException.ValidationException {
-        int blockchainHeight = Nxt.getBlockchain().getHeight();
+        if ((timestamp == 0 && Arrays.equals(getSenderPublicKey(), Genesis.CREATOR_PUBLIC_KEY))
+                ? (deadline != 0 || feeNQT != 0)
+                : (deadline < 1 || feeNQT <= 0)
+                || feeNQT > Constants.MAX_BALANCE_NQT
+                || amountNQT < 0
+                || amountNQT > Constants.MAX_BALANCE_NQT
+                || type == null) {
+            throw new NxtException.NotValidException("Invalid transaction parameters:\n type: " + type + ", timestamp: " + timestamp
+                    + ", deadline: " + deadline + ", fee: " + feeNQT + ", amount: " + amountNQT);
+        }
+
+        if (referencedTransactionFullHash != null && referencedTransactionFullHash.length != 32) {
+            throw new NxtException.NotValidException("Invalid referenced transaction full hash " + Convert.toHexString(referencedTransactionFullHash));
+        }
+
+        if (attachment == null || type != attachment.getTransactionType()) {
+            throw new NxtException.NotValidException("Invalid attachment " + attachment + " for transaction of type " + type);
+        }
+
+        if (! type.canHaveRecipient()) {
+            if (recipientId != 0 || getAmountNQT() != 0) {
+                throw new NxtException.NotValidException("Transactions of this type must have recipient == 0, amount == 0");
+            }
+        }
+
+        if (type.mustHaveRecipient() && version > 0) {
+            if (recipientId == 0) {
+                throw new NxtException.NotValidException("Transactions of this type must have a valid recipient");
+            }
+        }
+
         for (Appendix.AbstractAppendix appendage : appendages) {
+            if (! appendage.verifyVersion(this.version)) {
+                throw new NxtException.NotValidException("Invalid attachment version " + appendage.getVersion()
+                        + " for transaction version " + this.version);
+            }
             appendage.validate(this);
         }
+
         if (getSize() > Constants.MAX_PAYLOAD_LENGTH) {
             throw new NxtException.NotValidException("Transaction size " + getSize() + " exceeds maximum payload size");
         }
-        long minimumFeeNQT = getMinimumFeeNQT(blockchainHeight);
+
+        long minimumFeeNQT = getMinimumFeeNQT(Nxt.getBlockchain().getHeight());
         if (feeNQT < minimumFeeNQT) {
             throw new NxtException.NotCurrentlyValidException(String.format("Transaction fee %d NXT less than minimum fee %d NXT at height %d",
-                    feeNQT/Constants.ONE_NXT, minimumFeeNQT/Constants.ONE_NXT, blockchainHeight));
+                    feeNQT/Constants.ONE_NXT, minimumFeeNQT/Constants.ONE_NXT, Nxt.getBlockchain().getHeight()));
         }
     }
 
