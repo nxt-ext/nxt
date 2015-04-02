@@ -58,7 +58,7 @@ balance are reversed, except that the fee is not refunded.
 In addition to the voting models available in polls, phased transactions can
 use a whitelist of accounts (max 10) allowed to vote for the transaction.
 
-It is possible to vote for (approve) up to 20 phased transactions with a single
+It is possible to vote for (approve) up to 10 phased transactions with a single
 approval transaction. This transaction will be accepted in the blockchain only
 if all phased transactions it is voting for are already in it.
 
@@ -67,6 +67,15 @@ after the first vote from each account are ignored.
 
 It is also possible to make any transaction phased without needing voting for
 approval. This can be used to create transactions with deferred execution.
+
+Finally, it is possible to make a phased transaction that is released or
+rejected not on the basis of voting, but based on the presence of other
+transactions (linked transactions) in the blockchain at its finish height.
+To do that, up to 10 phasingLinkedFullHash transaction hashes can be defined
+when creating the phased transaction. Note that this does not create a
+dependency between the linked transactions themselves. This feature can be
+used to implement atomic execution of transactions of any type, provided the
+phased transaction is phasing safe.
 
 Similar to voting, the phasing data for phased transaction that finished before
 the last trim height is also deleted and only the aggregate approval results
