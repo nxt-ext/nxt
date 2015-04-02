@@ -66,13 +66,28 @@ final class TransactionDb {
         }
     }
 
-    static boolean hasTransactionByFullHash(String fullHash) {
+    static boolean hasTransactionByFullHash(byte[] fullHash) {
+        return Arrays.equals(fullHash, getFullHash(Convert.fullHashToId(fullHash)));
+    }
+
+    static boolean hasTransactionByFullHash(byte[] fullHash, int height) {
+        try (Connection con = Db.db.getConnection();
+             PreparedStatement pstmt = con.prepareStatement("SELECT full_hash, height FROM transaction WHERE id = ?")) {
+            pstmt.setLong(1, Convert.fullHashToId(fullHash));
+            try (ResultSet rs = pstmt.executeQuery()) {
+                return rs.next() && Arrays.equals(rs.getBytes("full_hash"), fullHash) && rs.getInt("height") <= height;
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e.toString(), e);
+        }
+    }
+
+    static byte[] getFullHash(long transactionId) {
         try (Connection con = Db.db.getConnection();
              PreparedStatement pstmt = con.prepareStatement("SELECT full_hash FROM transaction WHERE id = ?")) {
-            byte[] fullHashBytes = Convert.parseHexString(fullHash);
-            pstmt.setLong(1, Convert.fullHashToId(fullHashBytes));
+            pstmt.setLong(1, transactionId);
             try (ResultSet rs = pstmt.executeQuery()) {
-                return rs.next() && Arrays.equals(rs.getBytes("full_hash"), fullHashBytes);
+                return rs.next() ? rs.getBytes("full_hash") : null;
             }
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);

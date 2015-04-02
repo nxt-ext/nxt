@@ -233,7 +233,7 @@ final class BlockchainImpl implements Blockchain {
 
     @Override
     public boolean hasTransactionByFullHash(String fullHash) {
-        return TransactionDb.hasTransactionByFullHash(fullHash);
+        return TransactionDb.hasTransactionByFullHash(Convert.parseHexString(fullHash));
     }
 
     @Override
