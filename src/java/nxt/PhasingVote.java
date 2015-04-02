@@ -33,7 +33,7 @@ public class PhasingVote {
 
     };
 
-    public static DbIterator<PhasingVote> getTransactionVotes(long phasedTransactionId, int from, int to) {
+    public static DbIterator<PhasingVote> getVotes(long phasedTransactionId, int from, int to) {
         return phasingVoteTable.getManyBy(new DbClause.LongClause("transaction_id", phasedTransactionId), from, to);
     }
 
@@ -41,20 +41,8 @@ public class PhasingVote {
         return phasingVoteTable.get(phasingVoteDbKeyFactory.newKey(phasedTransactionId, voterId));
     }
 
-    public static long countVotes(PhasingPoll poll) {
-        if (poll.getVoteWeighting().getVotingModel() == VoteWeighting.VotingModel.NONE) {
-            return 0;
-        }
-        if (poll.getVoteWeighting().isBalanceIndependent()) {
-            return phasingVoteTable.getCount(new DbClause.LongClause("transaction_id", poll.getId()));
-        }
-        long cumulativeWeight = 0;
-        try (DbIterator<PhasingVote> votes = PhasingVote.getTransactionVotes(poll.getId(), 0, Integer.MAX_VALUE)) {
-            for (PhasingVote vote : votes) {
-                cumulativeWeight += poll.getVoteWeighting().calcWeight(vote.getVoterId(), Math.min(poll.getFinishHeight(), Nxt.getBlockchain().getHeight()));
-            }
-        }
-        return cumulativeWeight;
+    public static long getVoteCount(long phasedTransactionId) {
+        return phasingVoteTable.getCount(new DbClause.LongClause("transaction_id", phasedTransactionId));
     }
 
     static void addVote(Transaction transaction, Account voter, long phasedTransactionId) {

@@ -115,6 +115,7 @@ public final class JSONResponses {
     public static final JSONStreamAware MISSING_TRANSACTION_FULL_HASH = missing("transactionFullHash");
     public static final JSONStreamAware UNKNOWN_TRANSACTION_FULL_HASH = unknown("transactionFullHash");
     public static final JSONStreamAware INCORRECT_TRANSACTION_FULL_HASH = incorrect("transactionFullHash");
+    public static final JSONStreamAware INCORRECT_LINKED_FULL_HASH = incorrect("phasingLinkedFullHash");
 
     public static final JSONStreamAware NOT_ENOUGH_FUNDS;
     static {

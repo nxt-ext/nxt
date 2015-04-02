@@ -8,10 +8,13 @@ import nxt.db.EntityDbTable;
 import nxt.db.ValuesDbTable;
 import nxt.util.Convert;
 
+import java.sql.Array;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Types;
+import java.util.Arrays;
 
 public final class PhasingPoll extends AbstractPoll {
 
@@ -304,14 +307,14 @@ public final class PhasingPoll extends AbstractPoll {
     private final DbKey dbKey;
     private final long[] whitelist;
     private final long quorum;
-    private final byte[] fullHash;
+    private final byte[][] linkedFullHashes;
 
     private PhasingPoll(Transaction transaction, Appendix.Phasing appendix) {
         super(transaction.getId(), transaction.getSenderId(), appendix.getFinishHeight(), appendix.getVoteWeighting());
         this.dbKey = phasingPollDbKeyFactory.newKey(this.id);
         this.quorum = appendix.getQuorum();
         this.whitelist = appendix.getWhitelist();
-        this.fullHash = voteWeighting.getVotingModel() == VoteWeighting.VotingModel.NONE ? null : ((TransactionImpl)transaction).fullHash();
+        this.linkedFullHashes = appendix.getLinkedFullHashes();
     }
 
     private PhasingPoll(ResultSet rs) throws SQLException {
@@ -319,7 +322,13 @@ public final class PhasingPoll extends AbstractPoll {
         this.dbKey = phasingPollDbKeyFactory.newKey(this.id);
         this.quorum = rs.getLong("quorum");
         this.whitelist = rs.getByte("whitelist_size") == 0 ? Convert.EMPTY_LONG : Convert.toArray(votersTable.get(votersDbKeyFactory.newKey(this)));
-        this.fullHash = rs.getBytes("full_hash");
+        Array array = rs.getArray("linked_full_hashes");
+        if (array != null) {
+            Object[] hashes = (Object[]) array.getArray();
+            this.linkedFullHashes = Arrays.copyOf(hashes, hashes.length, byte[][].class);
+        } else {
+            this.linkedFullHashes = Convert.EMPTY_BYTES;
+        }
     }
 
     void finish(long result) {
@@ -336,13 +345,44 @@ public final class PhasingPoll extends AbstractPoll {
     }
 
     public byte[] getFullHash() {
-        return fullHash;
+        return TransactionDb.getFullHash(this.id);
+    }
+
+    public byte[][] getLinkedFullHashes() {
+        return linkedFullHashes;
+    }
+
+    public long getResult() {
+        if (voteWeighting.getVotingModel() == VoteWeighting.VotingModel.NONE) {
+            return 0;
+        }
+        int height = Math.min(this.finishHeight, Nxt.getBlockchain().getHeight());
+        if (voteWeighting.getVotingModel() == VoteWeighting.VotingModel.TRANSACTION) {
+            int count = 0;
+            for (byte[] hash : linkedFullHashes) {
+                if (TransactionDb.hasTransactionByFullHash(hash, height)) {
+                    count += 1;
+                }
+            }
+            return count;
+        }
+        if (voteWeighting.isBalanceIndependent()) {
+            return PhasingVote.getVoteCount(this.id);
+        }
+        VoteWeighting.VotingModel votingModel = voteWeighting.getVotingModel();
+        long cumulativeWeight = 0;
+        try (DbIterator<PhasingVote> votes = PhasingVote.getVotes(this.id, 0, Integer.MAX_VALUE)) {
+            for (PhasingVote vote : votes) {
+                cumulativeWeight += votingModel.calcWeight(voteWeighting, vote.getVoterId(), height);
+            }
+        }
+        return cumulativeWeight;
     }
 
     private void save(Connection con) throws SQLException {
         try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO phasing_poll (id, account_id, "
                 + "finish_height, whitelist_size, voting_model, quorum, min_balance, holding_id, "
-                + "min_balance_model, full_hash, height) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
+                + "min_balance_model, linked_full_hashes, height) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
             int i = 0;
             pstmt.setLong(++i, id);
             pstmt.setLong(++i, accountId);
@@ -353,7 +393,11 @@ public final class PhasingPoll extends AbstractPoll {
             DbUtils.setLongZeroToNull(pstmt, ++i, voteWeighting.getMinBalance());
             DbUtils.setLongZeroToNull(pstmt, ++i, voteWeighting.getHoldingId());
             pstmt.setByte(++i, voteWeighting.getMinBalanceModel().getCode());
-            DbUtils.setBytes(pstmt, ++i, fullHash);
+            if (linkedFullHashes.length > 0) {
+                pstmt.setObject(++i, linkedFullHashes);
+            } else {
+                pstmt.setNull(++i, Types.ARRAY);
+            }
             pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
             pstmt.executeUpdate();
         }

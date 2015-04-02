@@ -19,6 +19,7 @@ import java.util.Arrays;
 import static nxt.http.JSONResponses.FEATURE_NOT_AVAILABLE;
 import static nxt.http.JSONResponses.INCORRECT_ARBITRARY_MESSAGE;
 import static nxt.http.JSONResponses.INCORRECT_DEADLINE;
+import static nxt.http.JSONResponses.INCORRECT_LINKED_FULL_HASH;
 import static nxt.http.JSONResponses.INCORRECT_WHITELIST;
 import static nxt.http.JSONResponses.MISSING_DEADLINE;
 import static nxt.http.JSONResponses.MISSING_SECRET_PHRASE;
@@ -33,6 +34,7 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
             "messageToEncryptToSelf", "messageToEncryptToSelfIsText", "encryptToSelfMessageData", "encryptToSelfMessageNonce",
             "phased", "phasingFinishHeight", "phasingVotingModel", "phasingQuorum", "phasingMinBalance", "phasingHolding", "phasingMinBalanceModel",
             "phasingWhitelisted", "phasingWhitelisted", "phasingWhitelisted",
+            "phasingLinkedFullHash", "phasingLinkedFullHash", "phasingLinkedFullHash",
             "recipientPublicKey"};
 
     private static String[] addCommonParameters(String[] parameters) {
@@ -56,14 +58,14 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
     }
 
     private Appendix.Phasing parsePhasing(HttpServletRequest req) throws ParameterException {
-        byte votingModel = ParameterParser.getByte(req, "phasingVotingModel", (byte)-1, (byte)3, true);
+        byte votingModel = ParameterParser.getByte(req, "phasingVotingModel", (byte)-1, (byte)4, true);
 
         long quorum = ParameterParser.getLong(req, "phasingQuorum", 0, Long.MAX_VALUE, false);
 
         int finishHeight = ParameterParser.getInt(req, "phasingFinishHeight",
-        Nxt.getBlockchain().getHeight() + quorum > 0 ? 2 : 1,
-        Nxt.getBlockchain().getHeight() + Constants.MAX_PHASING_DURATION + 1,
-        true);
+                Nxt.getBlockchain().getHeight() + 1,
+                Nxt.getBlockchain().getHeight() + Constants.MAX_PHASING_DURATION + 1,
+                true);
 
         long minBalance = ParameterParser.getLong(req, "phasingMinBalance", 0, Long.MAX_VALUE, false);
 
@@ -71,22 +73,31 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
 
         long holdingId = ParameterParser.getUnsignedLong(req, "phasingHolding", false);
 
-        long[] whitelist;
+        long[] whitelist = null;
         String[] whitelistValues = req.getParameterValues("phasingWhitelisted");
         if (whitelistValues != null && whitelistValues.length > 0) {
             whitelist = new long[whitelistValues.length];
             for (int i = 0; i < whitelistValues.length; i++) {
-                long accountId = Convert.parseAccountId(whitelistValues[i]);
-                if (accountId == 0) {
+                whitelist[i] = Convert.parseAccountId(whitelistValues[i]);
+                if (whitelist[i] == 0) {
                     throw new ParameterException(INCORRECT_WHITELIST);
                 }
-                whitelist[i] = accountId;
             }
-        } else {
-            whitelist = Convert.EMPTY_LONG;
         }
 
-        return new Appendix.Phasing(finishHeight, votingModel, holdingId, quorum, minBalance, minBalanceModel, whitelist);
+        byte[][] linkedFullHashes = null;
+        String[] linkedFullHashesValues = req.getParameterValues("phasingLinkedFullHash");
+        if (linkedFullHashesValues != null && linkedFullHashesValues.length > 0) {
+            linkedFullHashes = new byte[linkedFullHashesValues.length][];
+            for (int i = 0; i < linkedFullHashes.length; i++) {
+                linkedFullHashes[i] = Convert.parseHexString(linkedFullHashesValues[i]);
+                if (Convert.emptyToNull(linkedFullHashes[i]) == null || linkedFullHashes[i].length != 32) {
+                    throw new ParameterException(INCORRECT_LINKED_FULL_HASH);
+                }
+            }
+        }
+
+        return new Appendix.Phasing(finishHeight, votingModel, holdingId, quorum, minBalance, minBalanceModel, whitelist, linkedFullHashes);
     }
 
     final JSONStreamAware createTransaction(HttpServletRequest req, Account senderAccount, long recipientId,

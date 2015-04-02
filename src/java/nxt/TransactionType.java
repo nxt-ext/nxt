@@ -762,8 +762,8 @@ public abstract class TransactionType {
                     throw new NxtException.NotCurrentlyValidException("Invalid finishing height" + attachment.getJSONObject());
                 }
 
-                if (attachment.getVoteWeighting().getVotingModel() == VoteWeighting.VotingModel.NONE) {
-                    throw new NxtException.NotValidException("VotingModel NONE not valid for regular polls");
+                if (! attachment.getVoteWeighting().acceptsVotes()) {
+                    throw new NxtException.NotValidException("VotingModel " + attachment.getVoteWeighting().getVotingModel() + " not valid for regular polls");
                 }
 
                 attachment.getVoteWeighting().validate();
@@ -933,7 +933,7 @@ public abstract class TransactionType {
                     if (poll == null) {
                         throw new NxtException.NotCurrentlyValidException("Invalid pending transaction " + Long.toUnsignedString(phasedTransactionId) + ", or poll is finished");
                     }
-                    if (poll.getVoteWeighting().getVotingModel() == VoteWeighting.VotingModel.NONE) {
+                    if (! poll.getVoteWeighting().acceptsVotes()) {
                         throw new NxtException.NotValidException("This pending transaction does not require or accept voting");
                     }
                     long[] whitelist = poll.getWhitelist();

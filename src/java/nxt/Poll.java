@@ -280,9 +280,10 @@ public final class Poll extends AbstractPoll {
 
     private List<OptionResult> countResults(VoteWeighting voteWeighting, int height) {
         final OptionResult[] result = new OptionResult[options.length];
+        VoteWeighting.VotingModel votingModel = voteWeighting.getVotingModel();
         try (DbIterator<Vote> votes = Vote.getVotes(this.getId(), 0, -1)) {
             for (Vote vote : votes) {
-                long weight = voteWeighting.calcWeight(vote.getVoterId(), height);
+                long weight = votingModel.calcWeight(voteWeighting, vote.getVoterId(), height);
                 if (weight <= 0) {
                     continue;
                 }

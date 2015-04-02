@@ -390,6 +390,18 @@ final class JSONData {
         json.put("finishHeight", poll.getFinishHeight());
         json.put("quorum", String.valueOf(poll.getQuorum()));
         putAccount(json, "account", poll.getAccountId());
+        JSONArray whitelistJson = new JSONArray();
+        for (long accountId : poll.getWhitelist()) {
+            JSONObject whitelisted = new JSONObject();
+            putAccount(whitelisted, "whitelisted", accountId);
+            whitelistJson.add(whitelisted);
+        }
+        json.put("whitelist", whitelistJson);
+        JSONArray linkedFullHashesJSON = new JSONArray();
+        for (byte[] hash : poll.getLinkedFullHashes()) {
+            linkedFullHashesJSON.add(Convert.toHexString(hash));
+        }
+        json.put("linkedFullHashes", linkedFullHashesJSON);
         putVoteWeighting(json, poll.getVoteWeighting());
         if (poll.isFinished()) {
             PhasingPoll.PhasingPollResult phasingPollResult = PhasingPoll.getResult(poll.getId());
@@ -398,7 +410,7 @@ final class JSONData {
                 json.put("result", String.valueOf(phasingPollResult.getResult()));
             }
         } else if (countVotes) {
-            json.put("result", String.valueOf(PhasingVote.countVotes(poll)));
+            json.put("result", String.valueOf(poll.getResult()));
         }
         return json;
     }

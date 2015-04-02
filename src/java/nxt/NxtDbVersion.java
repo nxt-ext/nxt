@@ -691,9 +691,6 @@ class NxtDbVersion extends DbVersion {
             case 290:
                 apply("CREATE INDEX IF NOT EXISTS trade_bid_idx ON trade (bid_order_id, height DESC)");
             case 291:
-                if (Constants.isTestnet) {
-                    BlockchainProcessorImpl.getInstance().scheduleScan(0, true);
-                }
                 apply(null);
             case 292:
                 apply("CREATE TABLE IF NOT EXISTS account_info (db_id IDENTITY, account_id BIGINT NOT NULL, "
@@ -716,6 +713,15 @@ class NxtDbVersion extends DbVersion {
             case 300:
                 apply("ALTER TABLE phasing_vote ALTER COLUMN id RENAME TO vote_id");
             case 301:
+                apply("ALTER TABLE phasing_poll DROP COLUMN IF EXISTS full_hash");
+            case 302:
+                apply("ALTER TABLE phasing_poll ADD COLUMN IF NOT EXISTS linked_full_hashes ARRAY");
+            case 303:
+                if (Constants.isTestnet) {
+                    BlockchainProcessorImpl.getInstance().scheduleScan(0, true);
+                }
+                apply(null);
+            case 304:
                 return;
             default:
                 throw new RuntimeException("Blockchain database inconsistent with code, probably trying to run older code on newer database");
