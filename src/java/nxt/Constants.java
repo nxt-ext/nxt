@@ -26,8 +26,9 @@ public final class Constants {
     public static final int FORGING_DELAY = Nxt.getIntProperty("nxt.forgingDelay");
     public static final int FORGING_SPEEDUP = Nxt.getIntProperty("nxt.forgingSpeedup");
 
-    public static final byte MAX_PHASING_VOTE_TRANSACTIONS = 20;
+    public static final byte MAX_PHASING_VOTE_TRANSACTIONS = 10;
     public static final byte MAX_PHASING_WHITELIST_SIZE = 10;
+    public static final byte MAX_PHASING_LINKED_TRANSACTIONS = 10;
     public static final int MAX_PHASING_DURATION = 14 * 1440;
 
     public static final int MAX_ALIAS_URI_LENGTH = 1000;
