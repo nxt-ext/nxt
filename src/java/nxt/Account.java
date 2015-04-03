@@ -834,7 +834,7 @@ public final class Account {
 
     private long getLessorsGuaranteedBalanceNQT(int height) {
         List<Account> lessors = new ArrayList<>();
-        try (DbIterator<Account> iterator = getLessors()) {
+        try (DbIterator<Account> iterator = getLessors(height)) {
             while (iterator.hasNext()) {
                 lessors.add(iterator.next());
             }
