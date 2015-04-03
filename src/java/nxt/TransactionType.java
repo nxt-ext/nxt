@@ -1537,7 +1537,8 @@ public abstract class TransactionType {
                 if (asset.getAccountId() != transaction.getSenderId() || attachment.getAmountNQTPerQNT() <= 0) {
                     throw new NxtException.NotValidException("Invalid dividend payment sender or amount " + attachment.getJSONObject());
                 }
-                if (attachment.getHeight() > Nxt.getBlockchain().getHeight() || attachment.getHeight() <= transaction.getValidationHeight() - Constants.MAX_ROLLBACK) {
+                if (attachment.getHeight() > Nxt.getBlockchain().getHeight()
+                        || attachment.getHeight() <= transaction.getValidationHeight() - Constants.MAX_DIVIDEND_PAYMENT_ROLLBACK) {
                     throw new NxtException.NotCurrentlyValidException("Invalid dividend payment height: " + attachment.getHeight());
                 }
             }
@@ -2192,7 +2193,7 @@ public abstract class TransactionType {
                 Account recipientAccount = Account.getAccount(transaction.getRecipientId());
                 if (transaction.getSenderId() == transaction.getRecipientId()
                         || transaction.getAmountNQT() != 0
-                        || attachment.getPeriod() < 1440) {
+                        || attachment.getPeriod() < Constants.LEASING_DELAY) {
                     throw new NxtException.NotValidException("Invalid effective balance leasing: "
                             + transaction.getJSONObject() + " transaction " + transaction.getStringId());
                 }

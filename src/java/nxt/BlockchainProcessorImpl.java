@@ -1140,7 +1140,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             }
             scheduleScan(height, validate);
             if (height > 0 && height < getMinRollbackHeight()) {
-                Logger.logMessage("Rollback of more than " + Constants.MAX_ROLLBACK + " blocks not supported, will do a full scan");
+                Logger.logMessage("Rollback of more than " + getMinRollbackHeight() + " blocks not supported, will do a full scan");
                 height = 0;
             }
             if (height < 0) {

@@ -70,7 +70,7 @@ final class JSONData {
             json.put("unconfirmedBalanceNQT", String.valueOf(account.getUnconfirmedBalanceNQT()));
             json.put("effectiveBalanceNXT", account.getEffectiveBalanceNXT());
             json.put("forgedBalanceNQT", String.valueOf(account.getForgedBalanceNQT()));
-            json.put("guaranteedBalanceNQT", String.valueOf(account.getGuaranteedBalanceNQT(1440)));
+            json.put("guaranteedBalanceNQT", String.valueOf(account.getGuaranteedBalanceNQT()));
         }
         return json;
     }
@@ -83,7 +83,7 @@ final class JSONData {
         json.put("nextLesseeRS", Convert.rsAccount(account.getNextLesseeId()));
         json.put("nextHeightFrom", String.valueOf(account.getNextLeasingHeightFrom()));
         json.put("nextHeightTo", String.valueOf(account.getNextLeasingHeightTo()));
-        json.put("effectiveBalanceNXT", String.valueOf(account.getGuaranteedBalanceNQT(1440) / Constants.ONE_NXT));
+        json.put("effectiveBalanceNXT", String.valueOf(account.getGuaranteedBalanceNQT() / Constants.ONE_NXT));
         return json;
     }
 

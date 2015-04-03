@@ -150,9 +150,6 @@ final class BlockchainImpl implements Blockchain {
 
     @Override
     public List<Long> getBlockIdsAfter(long blockId, int limit) {
-        if (limit > 1440) {
-            throw new IllegalArgumentException("Can't get more than 1440 blocks at a time");
-        }
         try (Connection con = Db.db.getConnection();
              PreparedStatement pstmt = con.prepareStatement("SELECT id FROM block WHERE db_id > (SELECT db_id FROM block WHERE id = ?) ORDER BY db_id ASC LIMIT ?")) {
             List<Long> result = new ArrayList<>();
@@ -172,9 +169,6 @@ final class BlockchainImpl implements Blockchain {
 
     @Override
     public List<BlockImpl> getBlocksAfter(long blockId, int limit) {
-        if (limit > 1440) {
-            throw new IllegalArgumentException("Can't get more than 1440 blocks at a time");
-        }
         try (Connection con = Db.db.getConnection();
              PreparedStatement pstmt = con.prepareStatement("SELECT * FROM block WHERE db_id > (SELECT db_id FROM block WHERE id = ?) ORDER BY db_id ASC LIMIT ?")) {
             List<BlockImpl> result = new ArrayList<>();

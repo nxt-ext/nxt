@@ -21,6 +21,8 @@ public final class Constants {
             throw new RuntimeException("nxt.maxRollback must be at least 1441");
         }
     }
+    public static final int GUARANTEED_BALANCE_CONFIRMATIONS = 1440;
+    public static final int LEASING_DELAY = 1440;
 
     public static final int MAX_TIMEDRIFT = 15; // allow up to 15 s clock difference
     public static final int FORGING_DELAY = Nxt.getIntProperty("nxt.forgingDelay");
@@ -47,6 +49,7 @@ public final class Constants {
     public static final int MAX_ASSET_NAME_LENGTH = 10;
     public static final int MAX_ASSET_DESCRIPTION_LENGTH = 1000;
     public static final int MAX_ASSET_TRANSFER_COMMENT_LENGTH = 1000;
+    public static final int MAX_DIVIDEND_PAYMENT_ROLLBACK = 1441;
 
     public static final int MAX_POLL_NAME_LENGTH = 100;
     public static final int MAX_POLL_DESCRIPTION_LENGTH = 1000;
