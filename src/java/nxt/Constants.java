@@ -1,7 +1,5 @@
 package nxt;
 
-import nxt.util.Logger;
-
 import java.util.Calendar;
 import java.util.TimeZone;
 
@@ -14,13 +12,7 @@ public final class Constants {
     public static final long MAX_BALANCE_NQT = MAX_BALANCE_NXT * ONE_NXT;
     public static final long INITIAL_BASE_TARGET = 153722867;
     public static final long MAX_BASE_TARGET = MAX_BALANCE_NXT * INITIAL_BASE_TARGET;
-    public static final int MAX_ROLLBACK = Nxt.getIntProperty("nxt.maxRollback");
-    static {
-        if (MAX_ROLLBACK < 1441) {
-            Logger.logErrorMessage("nxt.maxRollback must be at least 1441");
-            throw new RuntimeException("nxt.maxRollback must be at least 1441");
-        }
-    }
+    public static final int MAX_ROLLBACK = Math.max(Nxt.getIntProperty("nxt.maxRollback"), 720);
     public static final int GUARANTEED_BALANCE_CONFIRMATIONS = 1440;
     public static final int LEASING_DELAY = 1440;
 

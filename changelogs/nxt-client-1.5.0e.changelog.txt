@@ -225,6 +225,9 @@ if nxt.apiServerSSLPort is set to a port different from nxt.apiServerPort and
 nxt.apiSSL=true. If the SSL and non-SSL ports are configured to be the same,
 the nxt.apiSSL property determines whether SSL is used or not.
 
+Reduced the default nxt.maxRollback to 800. Also added a nxt.trimFrequency
+setting to control how often the trim is run, default 1000.
+
 This release requires Java 8 and will not run or compile with Java 7.
 
 Updated Jetty to version 9.2.10 and Bouncy Castle to version 1.52. If unpacking

@@ -308,7 +308,9 @@ public final class APIServlet extends HttpServlet {
                 response = e.getErrorResponse();
             } catch (NxtException |RuntimeException e) {
                 Logger.logDebugMessage("Error processing API request", e);
-                response = ERROR_INCORRECT_REQUEST;
+                JSONObject json = new JSONObject();
+                JSONData.putException(json, e);
+                response = JSON.prepare(json);
             } catch (ExceptionInInitializerError err) {
                 Logger.logErrorMessage("Initialization Error", (Exception) err.getCause());
                 response = ERROR_INCORRECT_REQUEST;

@@ -452,8 +452,9 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         }, Event.BLOCK_PUSHED);
 
         if (trimDerivedTables) {
+            final int trimFrequency = Nxt.getIntProperty("nxt.trimFrequency");
             blockListeners.addListener(block -> {
-                if (block.getHeight() % 1440 == 0) {
+                if (block.getHeight() % trimFrequency == 0) {
                     lastTrimHeight = Math.max(block.getHeight() - Constants.MAX_ROLLBACK, 0);
                     if (lastTrimHeight > 0) {
                         for (DerivedDbTable table : derivedTables) {
@@ -566,9 +567,6 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
     public List<BlockImpl> popOffTo(int height) {
         if (height <= 0) {
             fullReset();
-        } else if (height < getMinRollbackHeight()) {
-            popOffWithRescan(height + 1);
-            return Collections.emptyList();
         } else if (height < blockchain.getHeight()) {
             return popOffTo(blockchain.getBlockAtHeight(height));
         }
@@ -858,8 +856,9 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 }
             }
             if (commonBlock.getHeight() < getMinRollbackHeight()) {
-                throw new IllegalArgumentException("Rollback to height " + commonBlock.getHeight() + " not supported, "
-                        + "current height " + Nxt.getBlockchain().getHeight());
+                Logger.logMessage("Rollback to height " + commonBlock.getHeight() + " not supported, will do a full rescan");
+                popOffWithRescan(commonBlock.getHeight() + 1);
+                return Collections.emptyList();
             }
             if (! blockchain.hasBlock(commonBlock.getId())) {
                 Logger.logDebugMessage("Block " + commonBlock.getStringId() + " not found in blockchain, nothing to pop off");
