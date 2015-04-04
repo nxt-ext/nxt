@@ -68,6 +68,13 @@ after the first vote from each account are ignored.
 It is also possible to make any transaction phased without needing voting for
 approval. This can be used to create transactions with deferred execution.
 
+Pay on reveal secret is supported as a voting model for phased transactions.
+When this voting model is used, the phased transaction must include the
+sha256 hash of a secret chosen by the sender (up to 100 bytes long), and an
+approval transaction for it is only accepted if it includes the secret that
+results in this hash. It does not matter who the sender of the approval
+transaction is, unless a whitelist is also defined.
+
 Finally, it is possible to make a phased transaction that is released or
 rejected not on the basis of voting, but based on the presence of other
 transactions (linked transactions) in the blockchain at its finish height.
