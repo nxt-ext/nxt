@@ -445,8 +445,8 @@ var NRS = (function(NRS, $, undefined) {
 							}
 							else if(polldata.minBalanceModel == 1)
 							{
-								rows += "<td>" + result.result + "</td>";
-								rows += "<td>" + result.weight + "</td>";		
+								rows += "<td>" + NRS.formatAmount(result.result) + "</td>";
+								rows += "<td>" + NRS.formatAmount(result.weight) + "</td>";
 							}
 							else if(polldata.minBalanceModel == 2)
 							{
