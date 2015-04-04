@@ -1,6 +1,7 @@
 package nxt.http;
 
 import nxt.Constants;
+import nxt.util.Convert;
 import nxt.util.JSON;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
@@ -303,6 +304,15 @@ public final class JSONResponses {
         JSONObject response = new JSONObject();
         response.put("errorCode", 5);
         response.put("errorDescription", "Unknown " + objectName);
+        return JSON.prepare(response);
+    }
+
+    static JSONStreamAware unknownAccount(long id) {
+        JSONObject response = new JSONObject();
+        response.put("errorCode", 5);
+        response.put("errorDescription", "Unknown account");
+        response.put("account", Long.toUnsignedString(id));
+        response.put("accountRS", Convert.rsAccount(id));
         return JSON.prepare(response);
     }
 

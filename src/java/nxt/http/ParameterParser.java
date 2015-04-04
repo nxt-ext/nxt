@@ -24,7 +24,6 @@ import javax.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
 import java.util.List;
 
-import static nxt.http.JSONResponses.HEIGHT_NOT_AVAILABLE;
 import static nxt.http.JSONResponses.INCORRECT_ACCOUNT;
 import static nxt.http.JSONResponses.INCORRECT_ALIAS;
 import static nxt.http.JSONResponses.INCORRECT_DGS_ENCRYPTED_GOODS;
@@ -372,7 +371,7 @@ final class ParameterParser {
         }
         Account account = Account.getAccount(accountId);
         if (account == null) {
-            throw new ParameterException(UNKNOWN_ACCOUNT);
+            throw new ParameterException(JSONResponses.unknownAccount(accountId));
         }
         return account;
     }
