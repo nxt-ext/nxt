@@ -254,15 +254,31 @@ var NRS = (function(NRS, $, undefined) {
                   $("#transaction_info_table").show();
 
                   break;
-               case 3:
-                  var data = {
-                     "type": $.t("vote_casting")
-                  };
-                  data["sender"] = transaction.senderRS ? transaction.senderRS : transaction.sender;
-                  $("#transaction_info_table").find("tbody").append(NRS.createInfoTable(data));
-                  $("#transaction_info_table").show();
+                    case 3:
+                        var vote = "";
+                        var votes = transaction.attachment.vote;
+                        if (votes && votes.length > 0) {
+                            for (var i = 0; i < votes.length; i++) {
+                                if (votes[i] == -128) {
+                                    vote += "N/A";
+                                } else {
+                                    vote += votes[i];
+                                }
+                                if (i < votes.length - 1) {
+                                    vote += " , ";
+                                }
+                            }
+                        }
+                        var data = {
+                            "type": $.t("vote_casting"),
+                            "poll_formatted_html": "<a href='#' class='show_transaction_modal_action' data-transaction='" + transaction.attachment.poll + "'>" + transaction.attachment.poll + "</a>",
+                            "vote": vote
+                        };
+                        data["sender"] = transaction.senderRS ? transaction.senderRS : transaction.sender;
+                        $("#transaction_info_table").find("tbody").append(NRS.createInfoTable(data));
+                        $("#transaction_info_table").show();
 
-                  break;
+                        break;
                case 4:
                   var data = {
                      "type": $.t("hub_announcement")
