@@ -440,8 +440,8 @@ var NRS = (function(NRS, $, undefined) {
 							rows += "<td>" + options[i] + "</td>";
 							if(polldata.minBalanceModel == 0)
 							{
-								rows += "<td>" + result.result/100000000 + "</td>";
-								rows += "<td>" + result.weight/100000000 + "</td>";		
+								rows += "<td>" + result.result + "</td>";
+								rows += "<td>" + result.weight + "</td>";
 							}
 							else if(polldata.minBalanceModel == 1)
 							{
