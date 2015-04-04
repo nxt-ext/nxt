@@ -717,11 +717,15 @@ class NxtDbVersion extends DbVersion {
             case 302:
                 apply("ALTER TABLE phasing_poll ADD COLUMN IF NOT EXISTS linked_full_hashes ARRAY");
             case 303:
+                apply(null);
+            case 304:
+                apply("ALTER TABLE phasing_poll ADD COLUMN IF NOT EXISTS hashed_secret BINARY(32)");
+            case 305:
                 if (Constants.isTestnet) {
                     BlockchainProcessorImpl.getInstance().scheduleScan(0, true);
                 }
                 apply(null);
-            case 304:
+            case 306:
                 return;
             default:
                 throw new RuntimeException("Blockchain database inconsistent with code, probably trying to run older code on newer database");

@@ -73,6 +73,16 @@ public final class VoteWeighting {
             public final MinBalanceModel getMinBalanceModel() {
                 return MinBalanceModel.NONE;
             }
+        },
+        HASH(5) {
+            @Override
+            public final long calcWeight(VoteWeighting voteWeighting, long voterId, int height) {
+                return 1;
+            }
+            @Override
+            public final MinBalanceModel getMinBalanceModel() {
+                return MinBalanceModel.NONE;
+            }
         };
 
         private final byte code;
@@ -219,13 +229,13 @@ public final class VoteWeighting {
         if (minBalance == 0 && votingModel == VotingModel.ACCOUNT && holdingId != 0) {
             throw new NxtException.NotValidException("HoldingId cannot be used in by account voting with no min balance");
         }
-        if (!votingModel.acceptsVotes() && (holdingId != 0 || minBalance != 0 || minBalanceModel != MinBalanceModel.NONE)) {
+        if ((!votingModel.acceptsVotes() || votingModel == VotingModel.HASH) && (holdingId != 0 || minBalance != 0 || minBalanceModel != MinBalanceModel.NONE)) {
             throw new NxtException.NotValidException("With VotingModel " + votingModel + " no holdingId, minBalance, or minBalanceModel should be specified");
         }
     }
 
     public boolean isBalanceIndependent() {
-        return (votingModel == VotingModel.ACCOUNT && minBalance == 0) || !votingModel.acceptsVotes();
+        return (votingModel == VotingModel.ACCOUNT && minBalance == 0) || !votingModel.acceptsVotes() || votingModel == VotingModel.HASH;
     }
 
     public boolean acceptsVotes() {

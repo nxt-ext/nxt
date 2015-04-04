@@ -35,6 +35,7 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
             "phased", "phasingFinishHeight", "phasingVotingModel", "phasingQuorum", "phasingMinBalance", "phasingHolding", "phasingMinBalanceModel",
             "phasingWhitelisted", "phasingWhitelisted", "phasingWhitelisted",
             "phasingLinkedFullHash", "phasingLinkedFullHash", "phasingLinkedFullHash",
+            "phasingHashedSecret",
             "recipientPublicKey"};
 
     private static String[] addCommonParameters(String[] parameters) {
@@ -58,7 +59,7 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
     }
 
     private Appendix.Phasing parsePhasing(HttpServletRequest req) throws ParameterException {
-        byte votingModel = ParameterParser.getByte(req, "phasingVotingModel", (byte)-1, (byte)4, true);
+        byte votingModel = ParameterParser.getByte(req, "phasingVotingModel", (byte)-1, (byte)5, true);
 
         long quorum = ParameterParser.getLong(req, "phasingQuorum", 0, Long.MAX_VALUE, false);
 
@@ -97,7 +98,9 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
             }
         }
 
-        return new Appendix.Phasing(finishHeight, votingModel, holdingId, quorum, minBalance, minBalanceModel, whitelist, linkedFullHashes);
+        byte[] hashedSecret = Convert.parseHexString(Convert.emptyToNull(req.getParameter("phasingHashedSecret")));
+
+        return new Appendix.Phasing(finishHeight, votingModel, holdingId, quorum, minBalance, minBalanceModel, whitelist, linkedFullHashes, hashedSecret);
     }
 
     final JSONStreamAware createTransaction(HttpServletRequest req, Account senderAccount, long recipientId,

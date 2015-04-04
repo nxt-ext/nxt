@@ -397,11 +397,16 @@ final class JSONData {
             whitelistJson.add(whitelisted);
         }
         json.put("whitelist", whitelistJson);
-        JSONArray linkedFullHashesJSON = new JSONArray();
-        for (byte[] hash : poll.getLinkedFullHashes()) {
-            linkedFullHashesJSON.add(Convert.toHexString(hash));
+        if (poll.getLinkedFullHashes().length > 0) {
+            JSONArray linkedFullHashesJSON = new JSONArray();
+            for (byte[] hash : poll.getLinkedFullHashes()) {
+                linkedFullHashesJSON.add(Convert.toHexString(hash));
+            }
+            json.put("linkedFullHashes", linkedFullHashesJSON);
         }
-        json.put("linkedFullHashes", linkedFullHashesJSON);
+        if (poll.getHashedSecret() != null) {
+            json.put("hashedSecret", Convert.toHexString(poll.getHashedSecret()));
+        }
         putVoteWeighting(json, poll.getVoteWeighting());
         if (poll.isFinished()) {
             PhasingPoll.PhasingPollResult phasingPollResult = PhasingPoll.getResult(poll.getId());
@@ -434,8 +439,7 @@ final class JSONData {
         json.put("votingModel", voteWeighting.getVotingModel().getCode());
         json.put("minBalance", String.valueOf(voteWeighting.getMinBalance()));
         json.put("minBalanceModel", voteWeighting.getMinBalanceModel().getCode());
-        if (voteWeighting.getVotingModel() == VoteWeighting.VotingModel.ASSET
-                || voteWeighting.getVotingModel() == VoteWeighting.VotingModel.CURRENCY) {
+        if (voteWeighting.getHoldingId() != 0) {
             json.put("holding", Long.toUnsignedString(voteWeighting.getHoldingId()));
         }
     }

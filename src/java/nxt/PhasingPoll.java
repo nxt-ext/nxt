@@ -308,6 +308,7 @@ public final class PhasingPoll extends AbstractPoll {
     private final long[] whitelist;
     private final long quorum;
     private final byte[][] linkedFullHashes;
+    private final byte[] hashedSecret;
 
     private PhasingPoll(Transaction transaction, Appendix.Phasing appendix) {
         super(transaction.getId(), transaction.getSenderId(), appendix.getFinishHeight(), appendix.getVoteWeighting());
@@ -315,6 +316,7 @@ public final class PhasingPoll extends AbstractPoll {
         this.quorum = appendix.getQuorum();
         this.whitelist = appendix.getWhitelist();
         this.linkedFullHashes = appendix.getLinkedFullHashes();
+        this.hashedSecret = appendix.getHashedSecret();
     }
 
     private PhasingPoll(ResultSet rs) throws SQLException {
@@ -329,6 +331,7 @@ public final class PhasingPoll extends AbstractPoll {
         } else {
             this.linkedFullHashes = Convert.EMPTY_BYTES;
         }
+        hashedSecret = rs.getBytes("hashed_secret");
     }
 
     void finish(long result) {
@@ -350,6 +353,10 @@ public final class PhasingPoll extends AbstractPoll {
 
     public byte[][] getLinkedFullHashes() {
         return linkedFullHashes;
+    }
+
+    public byte[] getHashedSecret() {
+        return hashedSecret;
     }
 
     public long getResult() {
@@ -382,7 +389,7 @@ public final class PhasingPoll extends AbstractPoll {
     private void save(Connection con) throws SQLException {
         try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO phasing_poll (id, account_id, "
                 + "finish_height, whitelist_size, voting_model, quorum, min_balance, holding_id, "
-                + "min_balance_model, linked_full_hashes, height) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
+                + "min_balance_model, linked_full_hashes, hashed_secret, height) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
             int i = 0;
             pstmt.setLong(++i, id);
             pstmt.setLong(++i, accountId);
@@ -398,6 +405,7 @@ public final class PhasingPoll extends AbstractPoll {
             } else {
                 pstmt.setNull(++i, Types.ARRAY);
             }
+            DbUtils.setBytes(pstmt, ++i, hashedSecret);
             pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
             pstmt.executeUpdate();
         }

@@ -22,7 +22,8 @@ public class ApproveTransaction extends CreateTransaction {
     static final ApproveTransaction instance = new ApproveTransaction();
 
     private ApproveTransaction() {
-        super(new APITag[]{APITag.CREATE_TRANSACTION, APITag.PHASING}, "transactionFullHash");
+        super(new APITag[]{APITag.CREATE_TRANSACTION, APITag.PHASING}, "transactionFullHash", "transactionFullHash", "transactionFullHash",
+                "revealedSecret", "revealedSecretText");
     }
 
     @Override
@@ -50,8 +51,15 @@ public class ApproveTransaction extends CreateTransaction {
             pendingTransactionFullHashes.add(hash);
         }
 
+        byte[] secret = Convert.parseHexString(Convert.emptyToNull(req.getParameter("revealedSecret")));
+        if (secret == null) {
+            String secretText = Convert.emptyToNull(req.getParameter("revealedSecretText"));
+            if (secretText != null) {
+                secret = Convert.toBytes(secretText);
+            }
+        }
         Account account = ParameterParser.getSenderAccount(req);
-        Attachment attachment = new Attachment.MessagingPhasingVoteCasting(pendingTransactionFullHashes);
+        Attachment attachment = new Attachment.MessagingPhasingVoteCasting(pendingTransactionFullHashes, secret);
         return createTransaction(req, account, attachment);
     }
 }
