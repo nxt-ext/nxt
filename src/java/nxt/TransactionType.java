@@ -1,5 +1,6 @@
 package nxt;
 
+import nxt.crypto.Crypto;
 import nxt.util.Convert;
 import org.json.simple.JSONObject;
 
@@ -762,7 +763,7 @@ public abstract class TransactionType {
                     throw new NxtException.NotCurrentlyValidException("Invalid finishing height" + attachment.getJSONObject());
                 }
 
-                if (! attachment.getVoteWeighting().acceptsVotes()) {
+                if (! attachment.getVoteWeighting().acceptsVotes() || attachment.getVoteWeighting().getVotingModel() == VoteWeighting.VotingModel.HASH) {
                     throw new NxtException.NotValidException("VotingModel " + attachment.getVoteWeighting().getVotingModel() + " not valid for regular polls");
                 }
 
@@ -917,6 +918,13 @@ public abstract class TransactionType {
                 }
 
                 Attachment.MessagingPhasingVoteCasting attachment = (Attachment.MessagingPhasingVoteCasting) transaction.getAttachment();
+                byte[] revealedSecret = attachment.getRevealedSecret();
+                if (revealedSecret != null && revealedSecret.length > Constants.MAX_PHASING_REVEALED_SECRET_LENGTH) {
+                    throw new NxtException.NotValidException("Invalid revealed secret length " + revealedSecret.length);
+                }
+
+                byte[] hashedSecret = revealedSecret == null ? null : Crypto.sha256().digest(revealedSecret);
+
                 List<byte[]> hashes = attachment.getTransactionFullHashes();
                 if (hashes.size() > Constants.MAX_PHASING_VOTE_TRANSACTIONS) {
                     throw new NxtException.NotValidException("No more than " + Constants.MAX_PHASING_VOTE_TRANSACTIONS + " votes allowed for two-phased multivoting");
@@ -931,17 +939,26 @@ public abstract class TransactionType {
 
                     PhasingPoll poll = PhasingPoll.getPoll(phasedTransactionId);
                     if (poll == null) {
-                        throw new NxtException.NotCurrentlyValidException("Invalid pending transaction " + Long.toUnsignedString(phasedTransactionId) + ", or poll is finished");
+                        throw new NxtException.NotCurrentlyValidException("Invalid phased transaction " + Long.toUnsignedString(phasedTransactionId)
+                                + ", or phasing is finished");
                     }
                     if (! poll.getVoteWeighting().acceptsVotes()) {
-                        throw new NxtException.NotValidException("This pending transaction does not require or accept voting");
+                        throw new NxtException.NotValidException("This phased transaction does not require or accept voting");
                     }
                     long[] whitelist = poll.getWhitelist();
                     if (whitelist.length > 0 && Arrays.binarySearch(whitelist, voterId) == -1) {
                         throw new NxtException.NotValidException("Voter is not in the pending transaction whitelist");
                     }
+                    if (hashedSecret != null) {
+                        if (poll.getVoteWeighting().getVotingModel() != VoteWeighting.VotingModel.HASH) {
+                            throw new NxtException.NotValidException("Phased transaction " + Long.toUnsignedString(phasedTransactionId) + " does not accept by-hash voting");
+                        }
+                        if (!Arrays.equals(hashedSecret, poll.getHashedSecret())) {
+                            throw new NxtException.NotValidException("Revealed secret does not match phased transaction hashed secret");
+                        }
+                    }
                     if (!Arrays.equals(poll.getFullHash(), hash)) {
-                        throw new NxtException.NotCurrentlyValidException("Hashes don't match");
+                        throw new NxtException.NotCurrentlyValidException("Phased transaction hash does not match voting hash");
                     }
                     if (poll.getFinishHeight() <= transaction.getValidationHeight() - 1) {
                         throw new NxtException.NotCurrentlyValidException("Voting for this transaction finishes at " + poll.getFinishHeight());

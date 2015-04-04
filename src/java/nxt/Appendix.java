@@ -493,6 +493,7 @@ public interface Appendix {
         private final long quorum;
         private final long[] whitelist;
         private final byte[][] linkedFullHashes;
+        private final byte[] hashedSecret;
         private final VoteWeighting voteWeighting;
 
         Phasing(ByteBuffer buffer, byte transactionVersion) {
@@ -515,6 +516,9 @@ public interface Appendix {
                 linkedFullHashes[i] = new byte[32];
                 buffer.get(linkedFullHashes[i]);
             }
+            byte[] hashedSecret = new byte[32];
+            buffer.get(hashedSecret);
+            this.hashedSecret = Convert.emptyToNull(hashedSecret);
         }
 
         Phasing(JSONObject attachmentData) {
@@ -544,10 +548,11 @@ public interface Appendix {
             } else {
                 linkedFullHashes = Convert.EMPTY_BYTES;
             }
+            hashedSecret = Convert.emptyToNull(Convert.parseHexString(Convert.emptyToNull((String)attachmentData.get("phasingHashedSecret"))));
         }
 
         public Phasing(int finishHeight, byte votingModel, long holdingId, long quorum,
-                       long minBalance, byte minBalanceModel, long[] whitelist, byte[][] linkedFullHashes) {
+                       long minBalance, byte minBalanceModel, long[] whitelist, byte[][] linkedFullHashes, byte[] hashedSecret) {
             this.finishHeight = finishHeight;
             this.quorum = quorum;
             this.whitelist = Convert.nullToEmpty(whitelist);
@@ -556,6 +561,7 @@ public interface Appendix {
             }
             voteWeighting = new VoteWeighting(votingModel, holdingId, minBalance, minBalanceModel);
             this.linkedFullHashes = Convert.nullToEmpty(linkedFullHashes);
+            this.hashedSecret = Convert.emptyToNull(hashedSecret);
         }
 
         @Override
@@ -565,7 +571,7 @@ public interface Appendix {
 
         @Override
         int getMySize() {
-            return 4 + 1 + 8 + 8 + 1 + 8 * whitelist.length + 8 + 1 + 1 + 32 * linkedFullHashes.length;
+            return 4 + 1 + 8 + 8 + 1 + 8 * whitelist.length + 8 + 1 + 1 + 32 * linkedFullHashes.length + 32;
         }
 
         @Override
@@ -583,6 +589,11 @@ public interface Appendix {
             buffer.put((byte) linkedFullHashes.length);
             for (byte[] hash : linkedFullHashes) {
                 buffer.put(hash);
+            }
+            if (hashedSecret != null) {
+                buffer.put(hashedSecret);
+            } else {
+                buffer.put(new byte[32]);
             }
         }
 
@@ -607,6 +618,9 @@ public interface Appendix {
                     linkedFullHashesJson.add(Convert.toHexString(hash));
                 }
                 json.put("phasingLinkedFullHashes", linkedFullHashesJson);
+            }
+            if (hashedSecret != null) {
+                json.put("phasingHashedSecret", Convert.toHexString(hashedSecret));
             }
         }
 
@@ -671,6 +685,19 @@ public interface Appendix {
                 } else {
                     if (linkedFullHashes.length != 0) {
                         throw new NxtException.NotValidException("LinkedFullHashes can only be used with VotingModel.TRANSACTION");
+                    }
+                }
+
+                if (voteWeighting.getVotingModel() == VoteWeighting.VotingModel.HASH) {
+                    if (quorum != 1) {
+                        throw new NxtException.NotValidException("Quorum must be 1 for by-hash voting");
+                    }
+                    if (hashedSecret == null || hashedSecret.length != 32) {
+                        throw new NxtException.NotValidException("Invalid hashedSecret " + Convert.toHexString(hashedSecret));
+                    }
+                } else {
+                    if (hashedSecret != null) {
+                        throw new NxtException.NotValidException("HashedSecret can only be used with VotingModel.HASH");
                     }
                 }
 
@@ -752,6 +779,10 @@ public interface Appendix {
 
         public byte[][] getLinkedFullHashes() {
             return linkedFullHashes;
+        }
+
+        public byte[] getHashedSecret() {
+            return hashedSecret;
         }
 
     }
