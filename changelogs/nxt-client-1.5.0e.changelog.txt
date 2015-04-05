@@ -86,6 +86,10 @@ phased transaction is phasing safe. Transactions already in the blockchain
 before the acceptance of the phased transaction can also be linked, as long
 as they are not more than 60 days old, or themselves phased transactions.
 
+The deferred execution with no approval needed, pay on reveal secret, and
+linked transactions features are currently accessible using the API only, the
+UI for them will be completed in a later release.
+
 Similar to voting, the phasing data for phased transaction that finished before
 the last trim height is also deleted and only the aggregate approval results
 are kept.
