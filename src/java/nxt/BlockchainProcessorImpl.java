@@ -1088,7 +1088,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
 
     private boolean hasAllReferencedTransactions(TransactionImpl transaction, int timestamp, int count) {
         if (transaction.referencedTransactionFullHash() == null) {
-            return timestamp - transaction.getTimestamp() < 60 * 1440 * 60 && count < 10;
+            return timestamp - transaction.getTimestamp() < Constants.MAX_REFERENCED_TRANSACTION_TIMESPAN && count < 10;
         }
         TransactionImpl referencedTransaction = TransactionDb.findTransactionByFullHash(transaction.referencedTransactionFullHash());
         return referencedTransaction != null
