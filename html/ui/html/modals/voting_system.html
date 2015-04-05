@@ -24,20 +24,20 @@
                                     <option selected value="0">Vote By NXT Balance</option>
                                     <option value="1">One Vote Per Account</option>
                                     <option value="2">Vote By Asset</option>
-                                    <option value="3">Vote By MS Currency</option>
+                                    <option value="3">Vote By Currency</option>
                                 </select>
                             </div>
                         </div>
                         <div class="col-xs-6 col-sm-6 col-md-6" aria-hidden="true" id="create_poll_asset_id_group" style="display: none;">
                             <div class="form-group">
-                                <label for="create_poll_asset_id" data-i18n="poll_duration_nr_blocks">ASSET ID</label>
-                                <input type="text" name="assetId" id="create_poll_asset_id" class="form-control" placeholder="" tabindex="5">
+                                <label for="create_poll_asset_id" data-i18n="asset_id">ASSET ID</label>
+                                <input type="text" name="assetId" id="create_poll_asset_id" class="form-control" placeholder="Asset Id" tabindex="5">
                             </div>
                         </div>
                         <div class="col-xs-6 col-sm-6 col-md-6" aria-hidden="true" id="create_poll_ms_currency_group" style="display: none;">
                             <div class="form-group">
-                                <label for="create_poll_ms_id" data-i18n="poll_duration_nr_blocks">MS Coin ID</label>
-                                <input type="text" name="msId" id="create_poll_ms_id" class="form-control" placeholder="" tabindex="5">
+                                <label for="create_poll_ms_id" data-i18n="currency_id">CURRENCY ID</label>
+                                <input type="text" name="msId" id="create_poll_ms_id" class="form-control" placeholder="Currency Id" tabindex="5">
                             </div>
                         </div>
 
@@ -114,7 +114,7 @@
                     <div class="row">
                         <div class="col-xs-6 col-sm-6 col-md-6">
                             <div class="form-group">
-                                <label for="create_poll_range_value" data-i18n="minimum_range_value">MINIMUM RANGE VALUE</label>
+                                <label for="create_poll_min_range_value" data-i18n="minimum_range_value">MINIMUM RANGE VALUE</label>
                                 <input type="number" name="minRangeValue" id="create_poll_min_range_value" min="0" class="form-control" placeholder="" data-default="0" value="0" tabindex="8">
                             </div>
                         </div>
@@ -159,9 +159,9 @@
                 <form role="form" autocomplete="off">
                     <div class="callout callout-danger error_message" style="display:none"></div>
                     <div class="form-group">
-                        <label for="cast_vote_poll_name" data-i18n="poll_name">Poll Name: </label><br/>
+                        <label for="cast_vote_poll_name" data-i18n="poll_name">Poll Name</label><br/>
                         <input type="hidden" id="cast_vote_poll" name="poll" value=""/>
-                        <span id="cast_vote_poll_name" data-i18n="[placeholder]poll_name"></strong>
+                        <span id="cast_vote_poll_name" data-i18n="[placeholder]poll_name"></span>
                     </div>
                     <div class="form-group">
                         <label for="cast_vote_poll_description" data-i18n="description">DESCRIPTION</label><br/>
@@ -252,15 +252,16 @@
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
                 <h4 class="modal-title" data-i18n="add_poll">Add Poll</h4>
-            <div class="modal-body">            
-                <form role="form" autocomplete="off">
-                    <div class="callout callout-danger error_message" style="display:none"></div>
-                    <div class="form-group">
-                        <label for="add_followed_poll_id" data-i18n="poll_id">POLL ID</label> <i class="fa fa-question-circle show_popover" style="color:#4CAA6E" data-content="Find the ID on the issuer's website or announcement page." data-container="body" data-i18n="[data-content]find_asset_id_help"></i></label>
-                        <input type="text" class="form-control" name="id" id="add_followed_poll_id" placeholder="ID" autofocus tabindex="1" />
-                    </div>
-                    <input type="hidden" name="request_type" value="addFollowedPoll" />
-                </form>
+                <div class="modal-body">
+                    <form role="form" autocomplete="off">
+                        <div class="callout callout-danger error_message" style="display:none"></div>
+                        <div class="form-group">
+                            <label for="add_followed_poll_id" data-i18n="poll_id">POLL ID</label> <i class="fa fa-question-circle show_popover" style="color:#4CAA6E" data-content="Find the ID on the issuer's website or announcement page." data-container="body" data-i18n="[data-content]find_asset_id_help"></i>
+                            <input type="text" class="form-control" name="id" id="add_followed_poll_id" placeholder="ID" autofocus tabindex="1" />
+                        </div>
+                        <input type="hidden" name="request_type" value="addFollowedPoll" />
+                    </form>
+                </div>
             </div>
             <div class="modal-footer" style="margin-top:0;">
                 <button type="button" class="btn btn-default" data-dismiss="modal" data-i18n="cancel">Cancel</button>
