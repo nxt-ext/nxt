@@ -786,10 +786,16 @@ var NRS = (function(NRS, $, undefined) {
 					} else if (NRS.state && NRS.state.isScanning) {
 						$("#dashboard_message").addClass("alert-danger").removeClass("alert-success").html($.t("status_blockchain_rescanning")).show();
 					} else {
-						$("#dashboard_message").addClass("alert-success").removeClass("alert-danger").html($.t("status_new_account", {
-							"account_id": String(NRS.accountRS).escapeHTML(),
-							"public_key": String(NRS.publicKey).escapeHTML()
-						})).show();
+                        if (NRS.publicKey == "") {
+                            $("#dashboard_message").addClass("alert-success").removeClass("alert-danger").html($.t("status_new_account_no_pk", {
+                                "account_id": String(NRS.accountRS).escapeHTML(),
+                            })).show();
+                        } else {
+                            $("#dashboard_message").addClass("alert-success").removeClass("alert-danger").html($.t("status_new_account", {
+                                "account_id": String(NRS.accountRS).escapeHTML(),
+                                "public_key": String(NRS.publicKey).escapeHTML()
+                            })).show();
+                        }
 					}
 				} else {
 					$("#dashboard_message").addClass("alert-danger").removeClass("alert-success").html(NRS.accountInfo.errorDescription ? NRS.accountInfo.errorDescription.escapeHTML() : $.t("error_unknown")).show();

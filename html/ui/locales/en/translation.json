@@ -1147,5 +1147,6 @@
   "trades": "Trades",
   "quantity_traded": "Traded quantity",
   "total_traded": "Total trades",
-  "no_matching_trade": "no matching trade"
+  "no_matching_trade": "no matching trade",
+  "status_new_account_no_pk": "Welcome to your new NXT account. Your account ID is <strong>__account_id__</strong>"
 }
