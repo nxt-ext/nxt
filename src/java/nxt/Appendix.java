@@ -677,10 +677,13 @@ public interface Appendix {
                         if (Convert.emptyToNull(hash) == null || hash.length != 32) {
                             throw new NxtException.NotValidException("Invalid linkedFullHash " + Convert.toHexString(hash));
                         }
-                        if (TransactionDb.hasTransactionByFullHash(hash, currentHeight)) {
-                            TransactionImpl linkedTransaction = TransactionDb.findTransactionByFullHash(hash);
+                        TransactionImpl linkedTransaction = TransactionDb.findTransactionByFullHash(hash, currentHeight);
+                        if (linkedTransaction != null) {
                             if (transaction.getTimestamp() - linkedTransaction.getTimestamp() > Constants.MAX_REFERENCED_TRANSACTION_TIMESPAN) {
                                 throw new NxtException.NotValidException("Linked transaction cannot be more than 60 days older than the phased transaction");
+                            }
+                            if (linkedTransaction.getPhasing() != null) {
+                                throw new NxtException.NotCurrentlyValidException("Cannot link to an already existing phased transaction");
                             }
                         }
                     }
