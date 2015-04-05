@@ -222,22 +222,20 @@ var NRS = (function(NRS, $, undefined) {
                      "max_number_of_options": transaction.attachment.maxNumberOfOptions,
                      "min_range_value": transaction.attachment.minRangeValue,
                      "max_range_value": transaction.attachment.maxRangeValue,
-                     "min_balance": transaction.attachment.minBalance
+                     "min_balance": transaction.attachment.minBalance,
+                     "min_balance_model": transaction.attachment.minBalanceModel
                   };
 
-                  if(transaction.attachment.votingModel == "0")
-                  {
+                  if (transaction.attachment.votingModel == "0") {
                      data["voting_model"] = "Vote by NXT balance";
-
-                  }
-                  if(transaction.attachment.votingModel == "1")
-                  {
+                  } else if (transaction.attachment.votingModel == "1") {
                      data["voting_model"] = "Vote by Account";
-                  }
-                  if(transaction.attachment.votingModel == "2")
-                  {
+                  } else if(transaction.attachment.votingModel == "2") {
                      data["voting_model"] = "Vote by asset";
-                     data["asset_id"] = transaction.attachment.assetId;
+                     data["asset_id"] = transaction.attachment.holding;
+                  } else if(transaction.attachment.votingModel == "3") {
+                     data["voting_model"] = "Vote by currency";
+                     data["currency_id"] = transaction.attachment.holding;
                   }
 
 
