@@ -17,11 +17,15 @@ import java.util.List;
 final class TransactionDb {
 
     static TransactionImpl findTransaction(long transactionId) {
+        return findTransaction(transactionId, Integer.MAX_VALUE);
+    }
+
+    static TransactionImpl findTransaction(long transactionId, int height) {
         try (Connection con = Db.db.getConnection();
              PreparedStatement pstmt = con.prepareStatement("SELECT * FROM transaction WHERE id = ?")) {
             pstmt.setLong(1, transactionId);
             try (ResultSet rs = pstmt.executeQuery()) {
-                if (rs.next()) {
+                if (rs.next() && rs.getInt("height") <= height) {
                     return loadTransaction(con, rs);
                 }
                 return null;
@@ -34,11 +38,15 @@ final class TransactionDb {
     }
 
     static TransactionImpl findTransactionByFullHash(byte[] fullHash) {
+        return findTransactionByFullHash(fullHash, Integer.MAX_VALUE);
+    }
+
+    static TransactionImpl findTransactionByFullHash(byte[] fullHash, int height) {
         try (Connection con = Db.db.getConnection();
              PreparedStatement pstmt = con.prepareStatement("SELECT * FROM transaction WHERE id = ?")) {
             pstmt.setLong(1, Convert.fullHashToId(fullHash));
             try (ResultSet rs = pstmt.executeQuery()) {
-                if (rs.next() && Arrays.equals(rs.getBytes("full_hash"), fullHash)) {
+                if (rs.next() && Arrays.equals(rs.getBytes("full_hash"), fullHash) && rs.getInt("height") <= height) {
                     return loadTransaction(con, rs);
                 }
                 return null;
