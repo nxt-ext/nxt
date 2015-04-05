@@ -416,7 +416,7 @@ var NRS = (function(NRS, $, undefined) {
                 } else if (polldata.votingModel == 1) {
                     rows += "<td>" + NRS.formatAmount(result.result) + "</td>";
                     rows += "<td>" + NRS.formatAmount(result.weight) + "</td>";
-                } else if (resultsdata.holdingId) {
+                } else if (resultsdata.holding) {
                     rows += "<td>" + NRS.formatQuantity(result.result, resultsdata.decimals) + "</td>";
                     rows += "<td>" + NRS.formatQuantity(result.weight, resultsdata.decimals) + "</td>";
                 }
