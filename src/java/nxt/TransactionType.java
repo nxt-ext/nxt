@@ -842,7 +842,8 @@ public abstract class TransactionType {
                 int positiveCount = 0;
                 for (byte vote : votes) {
                     if (vote != Constants.NO_VOTE_VALUE && (vote < poll.getMinRangeValue() || vote > poll.getMaxRangeValue())) {
-                        throw new NxtException.NotValidException("Invalid vote: " + attachment.getJSONObject());
+                        throw new NxtException.NotValidException(String.format("Invalid vote %d, vote must be between %d and %d",
+                                vote, poll.getMinRangeValue(), poll.getMaxRangeValue()));
                     }
                     if (vote != Constants.NO_VOTE_VALUE) {
                         positiveCount++;
@@ -850,7 +851,8 @@ public abstract class TransactionType {
                 }
 
                 if (positiveCount < poll.getMinNumberOfOptions() || positiveCount > poll.getMaxNumberOfOptions()) {
-                    throw new NxtException.NotValidException("Invalid num of choices: " + attachment.getJSONObject());
+                    throw new NxtException.NotValidException(String.format("Invalid num of choices %d, number of choices must be between %d and %d",
+                            positiveCount, poll.getMinNumberOfOptions(), poll.getMaxNumberOfOptions()));
                 }
             }
 
