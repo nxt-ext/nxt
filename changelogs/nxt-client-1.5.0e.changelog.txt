@@ -82,7 +82,9 @@ To do that, up to 10 phasingLinkedFullHash transaction hashes can be defined
 when creating the phased transaction. Note that this does not create a
 dependency between the linked transactions themselves. This feature can be
 used to implement atomic execution of transactions of any type, provided the
-phased transaction is phasing safe.
+phased transaction is phasing safe. Transactions already in the blockchain
+before the acceptance of the phased transaction can also be linked, as long
+as they are not more than 60 days old, or themselves phased transactions.
 
 Similar to voting, the phasing data for phased transaction that finished before
 the last trim height is also deleted and only the aggregate approval results
