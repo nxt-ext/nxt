@@ -377,14 +377,14 @@ var NRS = (function(NRS, $, undefined) {
 				{
 					for(var b=0; b<response.attachment.options.length; b++)
 					{
-						$("#cast_vote_answers_entry").append("<div class='answer_slider'><label name='cast_vote_answer_"+b+"'>"+response.attachment.options[b]+"</label> &nbsp;&nbsp;<span class='badge'>"+response.attachment.minRangeValue+"</span><br/><input class='form-control' step='1' value='"+response.attachment.minRangeValue+"' max='"+response.attachment.maxRangeValue+"' min='"+response.attachment.minRangeValue+"' type='range'/></div>");
+						$("#cast_vote_answers_entry").append("<div class='answer_slider'><label name='cast_vote_answer_"+b+"'>"+String(response.attachment.options[b]).escapeHTML()+"</label> &nbsp;&nbsp;<span class='badge'>"+response.attachment.minRangeValue+"</span><br/><input class='form-control' step='1' value='"+response.attachment.minRangeValue+"' max='"+response.attachment.maxRangeValue+"' min='"+response.attachment.minRangeValue+"' type='range'/></div>");
 					}
 				}
 				else
 				{
 					for(var b=0; b<response.attachment.options.length; b++)
 					{
-						$("#cast_vote_answers_entry").append("<div class='answer_boxes'><label name='cast_vote_answer_"+b+"'><input type='checkbox'/>&nbsp;&nbsp;"+response.attachment.options[b]+"</label></div>");
+						$("#cast_vote_answers_entry").append("<div class='answer_boxes'><label name='cast_vote_answer_"+b+"'><input type='checkbox'/>&nbsp;&nbsp;"+String(response.attachment.options[b]).escapeHTML()+"</label></div>");
 					}
 				}
 				$("#cast_vote_modal").modal();
@@ -395,9 +395,38 @@ var NRS = (function(NRS, $, undefined) {
 			});
 
 			
-		});	
+		});
 
-		$("#my_polls_table, #voted_polls_table").on("click", "a[data-results]", function(e) {
+    function layoutPollResults(resultsdata, polldata) {
+        var results = resultsdata.results;
+        var options = polldata.options;
+
+        if (!results) {
+            results = [];
+        }
+        var rows = "";
+        if (results.length) {
+            for (var i = 0; i < results.length; i++) {
+                var result = results[i];
+                rows += "<tr>";
+                rows += "<td>" + String(options[i]).escapeHTML() + "</td>";
+                if (polldata.votingModel == 0) {
+                    rows += "<td>" + result.result + "</td>";
+                    rows += "<td>" + result.weight + "</td>";
+                } else if (polldata.votingModel == 1) {
+                    rows += "<td>" + NRS.formatAmount(result.result) + "</td>";
+                    rows += "<td>" + NRS.formatAmount(result.weight) + "</td>";
+                } else if (resultsdata.holdingId) {
+                    rows += "<td>" + NRS.formatQuantity(result.result, resultsdata.decimals) + "</td>";
+                    rows += "<td>" + NRS.formatQuantity(result.weight, resultsdata.decimals) + "</td>";
+                }
+                rows += "</tr>";
+            }
+        }
+        return rows;
+    }
+
+    $("#my_polls_table, #voted_polls_table").on("click", "a[data-results]", function(e) {
 			e.preventDefault();
 			var transactionId = $(this).data("results");
 
@@ -414,54 +443,17 @@ var NRS = (function(NRS, $, undefined) {
 
 				if(resultsdata !== undefined && votesdata !== undefined && polldata !== undefined)
 				{
-					$("#poll_results_options").append("<tr><td style='font-weight: bold;width:180px;'><span data-i18n='poll_name'>Poll Name</span>:</td><td><span id='poll_results_poll_name'>"+polldata.name+"</span></td></tr>");
+					$("#poll_results_options").append("<tr><td style='font-weight: bold;width:180px;'><span data-i18n='poll_name'>Poll Name</span>:</td><td><span id='poll_results_poll_name'>"+String(polldata.name).escapeHTML()+"</span></td></tr>");
 					$("#poll_results_options").append("<tr><td style='font-weight: bold;width:180px;'><span data-i18n='poll_id'>Poll Id</span>:</td><td><span id='poll_results_poll_id'>"+polldata.poll+"</span></td></tr>");
 
-					$("#poll_results_poll_name").text(polldata.name);
+					$("#poll_results_poll_name").text(String(polldata.name).escapeHTML());
 					$("#poll_results_poll_id").text(polldata.poll);
 
 					//$("#poll_results_number_of_voters").text(votesdata.votes.length);
 
 					$("#poll_results_modal").modal();
-
-					var results = resultsdata.results;
-					var options = polldata.options;
-
-					if (!results) {
-						results = [];
-					}
-
-					if (results.length) {
-						var rows = "";
-
-						for (var i = 0; i < results.length; i++) {
-							var result = results[i];
-							rows += "<tr>";
-							rows += "<td>" + options[i] + "</td>";
-							if(polldata.minBalanceModel == 0)
-							{
-								rows += "<td>" + result.result + "</td>";
-								rows += "<td>" + result.weight + "</td>";
-							}
-							else if(polldata.minBalanceModel == 1)
-							{
-								rows += "<td>" + NRS.formatAmount(result.result) + "</td>";
-								rows += "<td>" + NRS.formatAmount(result.weight) + "</td>";
-							}
-							else if(polldata.minBalanceModel == 2)
-							{
-								rows += "<td>" + result.result + "</td>";
-								rows += "<td>" + result.weight + "</td>";
-							}
-							else if(polldata.minBalanceModel == 3)
-							{
-								rows += "<td>" + result.result + "</td>";
-								rows += "<td>" + result.weight + "</td>";
-							}				
-							rows += "</tr>";
-						}
-					}
-					$("#poll_results_table tbody").empty().append(rows);
+                    var rows = layoutPollResults(resultsdata, polldata);
+                    $("#poll_results_table tbody").empty().append(rows);
 
 					var votes = votesdata.votes;
 
@@ -1137,50 +1129,8 @@ $("#poll_results_modal ul.nav li").click(function(e) {
 			NRS.sendRequest("getPollResult+" + pollId, {
 				"poll": pollId
 			}, function(response, input) {
-				var results = response.results;
-				var options = response.options;
-
-				if (!results) {
-					results = [];
-				}
-
-				if (results.length) {
-					var rows = "";
-
-					for (var i = 0; i < results.length; i++) {
-						var result = results[i];
-						rows += "<tr>";
-						rows += "<td>" + options[i] + "</td>";
-						if(polldata.minBalanceModel == 0)
-						{
-							rows += "<td>" + result.result/100000000 + "</td>";
-							rows += "<td>" + result.weight/100000000 + "</td>";		
-						}
-						else if(polldata.minBalanceModel == 1)
-						{
-							rows += "<td>" + result.result + "</td>";
-							rows += "<td>" + result.weight + "</td>";		
-						}
-						else if(polldata.minBalanceModel == 2)
-						{
-							rows += "<td>" + result.result + "</td>";
-							rows += "<td>" + result.weight + "</td>";
-						}
-						else if(polldata.minBalanceModel == 3)
-						{
-							rows += "<td>" + result.result + "</td>";
-							rows += "<td>" + result.weight + "</td>";
-						}
-									
-						rows += "</tr>";
-					}
-
-					$("#followed_polls_poll_results tbody").empty().append(rows);
-					} else {
-						$("#followed_polls_poll_results tbody").empty();
-					}
-
-
+                var rows = layoutPollResults(response, polldata);
+                $("#followed_polls_poll_results tbody").empty().append(rows);
 				NRS.dataLoadFinished($("#followed_polls_poll_results"), !refresh);
 			});
 		});
