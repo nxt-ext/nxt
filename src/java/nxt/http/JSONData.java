@@ -345,6 +345,15 @@ final class JSONData {
     static JSONObject pollResults(Poll poll, List<Poll.OptionResult> results) {
         JSONObject json = new JSONObject();
         json.put("poll", Long.toUnsignedString(poll.getId()));
+        if (poll.getVoteWeighting().getVotingModel() == VoteWeighting.VotingModel.ASSET) {
+            long holdingId = poll.getVoteWeighting().getHoldingId();
+            json.put("holdingId", holdingId);
+            json.put("decimals", Asset.getAsset(holdingId).getDecimals());
+        } else if(poll.getVoteWeighting().getVotingModel() == VoteWeighting.VotingModel.CURRENCY) {
+            long holdingId = poll.getVoteWeighting().getHoldingId();
+            json.put("holdingId", holdingId);
+            json.put("decimals", Currency.getCurrency(holdingId).getDecimals());
+        }
         json.put("finished", poll.isFinished());
         JSONArray options = new JSONArray();
         Collections.addAll(options, poll.getOptions());
