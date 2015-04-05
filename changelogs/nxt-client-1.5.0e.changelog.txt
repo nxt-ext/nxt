@@ -47,7 +47,7 @@ GetAccountPendingTransactionCount, GetAssetPendingTransactions,
 GetCurrencyPendingTransactions, GetPhasingPoll, GetPhasingPolls,
 GetPhasingPollVote, GetPhasingPollVotes, GetVoterPendingTransactions.
 
-A transaction of any type can be phased by adding a phased=true and an
+A transaction of any type can be phased by adding a phased=true parameter and an
 appropriate set of phasing parameters. Phased transactions are accepted in the
 blockchain immediately (subject to all usual validations), but are executed
 only at finish height, if still valid and if the required quorum has been met.
@@ -184,11 +184,24 @@ polls and votes casted.
 Generic notification system for incoming transactions showing the number
 of transaction types and total new transactions.
 
+Unconfirmed transactions are only displayed in the "Dashboard" and "My Transactions"
+pages and no longer appear in other tables.
+
+Transaction info dialog for AE Bid and Ask orders now displays a table containing
+the actual trades mathcing the specific order.
+
 New account login feature for faster login just by Nxt account.
 
 User specific client DB with new logout option to clear user data.
 
 Streamlined sidebar/navigation structure.
+
+Send Currency button added to the toolbar which invokes the transfer currency dialog
+
+Environment information, client settings and various diagnostic information is logged 
+to the browser's JavaScript console during startup and login.
+
+Phasing tab was added to the transaction info dialog of phased transactions.
 
 Various bug fixes.
 
@@ -242,6 +255,9 @@ Reduced the default nxt.maxRollback to 800. Also added a nxt.trimFrequency
 setting to control how often the trim is run, default 1000.
 
 This release requires Java 8 and will not run or compile with Java 7.
+
+run.bat has been updated to search for a Java 8 installation using the Windows
+registry.
 
 Updated Jetty to version 9.2.10 and Bouncy Castle to version 1.52. If unpacking
 on top of a previous installation, delete the old lib folder first.
