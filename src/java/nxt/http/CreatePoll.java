@@ -4,8 +4,10 @@ import nxt.Account;
 import nxt.Attachment;
 import nxt.Attachment.MessagingPollCreation.PollBuilder;
 import nxt.Constants;
+import nxt.Currency;
 import nxt.Nxt;
 import nxt.NxtException;
+import nxt.VoteWeighting;
 import nxt.util.Convert;
 import org.json.simple.JSONStreamAware;
 
@@ -95,7 +97,20 @@ public final class CreatePoll extends CreateTransaction {
             builder.minBalance(minBalanceModel, minBalance);
         }
 
-        long holdingId = ParameterParser.getUnsignedLong(req, "holding", false);
+        long holdingId = 0;
+        if (votingModel == VoteWeighting.VotingModel.ASSET.getCode()) {
+            holdingId = ParameterParser.getUnsignedLong(req, "holding", true);
+        } else if (votingModel == VoteWeighting.VotingModel.CURRENCY.getCode()) {
+            String code = req.getParameter("holding");
+            if (code != null) {
+                Currency currency = Currency.getCurrencyByCode(code);
+                if (currency != null) {
+                    holdingId = currency.getId();
+                } else {
+                    holdingId = Convert.parseUnsignedLong(code);
+                }
+            }
+        }
         if (holdingId != 0) {
             builder.holdingId(holdingId);
         }
