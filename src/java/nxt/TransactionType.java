@@ -1,6 +1,5 @@
 package nxt;
 
-import nxt.crypto.Crypto;
 import nxt.util.Convert;
 import org.json.simple.JSONObject;
 
@@ -921,11 +920,11 @@ public abstract class TransactionType {
 
                 Attachment.MessagingPhasingVoteCasting attachment = (Attachment.MessagingPhasingVoteCasting) transaction.getAttachment();
                 byte[] revealedSecret = attachment.getRevealedSecret();
-                if (revealedSecret != null && revealedSecret.length > Constants.MAX_PHASING_REVEALED_SECRET_LENGTH) {
+                if (revealedSecret.length > Constants.MAX_PHASING_REVEALED_SECRET_LENGTH) {
                     throw new NxtException.NotValidException("Invalid revealed secret length " + revealedSecret.length);
                 }
-
-                byte[] hashedSecret = revealedSecret == null ? null : Crypto.sha256().digest(revealedSecret);
+                byte[] hashedSecret = null;
+                byte algorithm = 0;
 
                 List<byte[]> hashes = attachment.getTransactionFullHashes();
                 if (hashes.size() > Constants.MAX_PHASING_VOTE_TRANSACTIONS) {
@@ -951,18 +950,26 @@ public abstract class TransactionType {
                     if (whitelist.length > 0 && Arrays.binarySearch(whitelist, voterId) == -1) {
                         throw new NxtException.NotValidException("Voter is not in the pending transaction whitelist");
                     }
-                    if (hashedSecret != null) {
+                    if (revealedSecret.length > 0) {
                         if (poll.getVoteWeighting().getVotingModel() != VoteWeighting.VotingModel.HASH) {
                             throw new NxtException.NotValidException("Phased transaction " + Long.toUnsignedString(phasedTransactionId) + " does not accept by-hash voting");
                         }
-                        if (!Arrays.equals(hashedSecret, poll.getHashedSecret())) {
+                        if (hashedSecret != null && !Arrays.equals(poll.getHashedSecret(), hashedSecret)) {
+                            throw new NxtException.NotValidException("Phased transaction " + Long.toUnsignedString(phasedTransactionId) + " is using a different hashedSecret");
+                        }
+                        if (algorithm != 0 && algorithm != poll.getAlgorithm()) {
+                            throw new NxtException.NotValidException("Phased transaction " + Long.toUnsignedString(phasedTransactionId) + " is using a different hashedSecretAlgorithm");
+                        }
+                        if (hashedSecret == null && ! poll.verifySecret(revealedSecret)) {
                             throw new NxtException.NotValidException("Revealed secret does not match phased transaction hashed secret");
                         }
+                        hashedSecret = poll.getHashedSecret();
+                        algorithm = poll.getAlgorithm();
                     }
                     if (!Arrays.equals(poll.getFullHash(), hash)) {
                         throw new NxtException.NotCurrentlyValidException("Phased transaction hash does not match voting hash");
                     }
-                    if (poll.getFinishHeight() <= transaction.getValidationHeight() - 1) {
+                    if (poll.getFinishHeight() <= transaction.getValidationHeight() + 1) {
                         throw new NxtException.NotCurrentlyValidException("Voting for this transaction finishes at " + poll.getFinishHeight());
                     }
                 }

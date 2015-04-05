@@ -1,5 +1,6 @@
 package nxt;
 
+import nxt.crypto.HashFunction;
 import nxt.db.DbClause;
 import nxt.db.DbIterator;
 import nxt.db.DbKey;
@@ -15,8 +16,21 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Arrays;
+import java.util.EnumSet;
 
 public final class PhasingPoll extends AbstractPoll {
+
+    private static final EnumSet<HashFunction> acceptedHashFunctions = EnumSet.of(HashFunction.SHA256, HashFunction.RIPEMD160, HashFunction.RIPEMD160_SHA256);
+
+    public static HashFunction getHashFunction(byte code) {
+        try {
+            HashFunction hashFunction = HashFunction.getHashFunction(code);
+            if (acceptedHashFunctions.contains(hashFunction)) {
+                return hashFunction;
+            }
+        } catch (IllegalArgumentException ignore) {}
+        return null;
+    }
 
     public static final class PhasingPollResult {
 
@@ -309,6 +323,7 @@ public final class PhasingPoll extends AbstractPoll {
     private final long quorum;
     private final byte[][] linkedFullHashes;
     private final byte[] hashedSecret;
+    private final byte algorithm;
 
     private PhasingPoll(Transaction transaction, Appendix.Phasing appendix) {
         super(transaction.getId(), transaction.getSenderId(), appendix.getFinishHeight(), appendix.getVoteWeighting());
@@ -317,6 +332,7 @@ public final class PhasingPoll extends AbstractPoll {
         this.whitelist = appendix.getWhitelist();
         this.linkedFullHashes = appendix.getLinkedFullHashes();
         this.hashedSecret = appendix.getHashedSecret();
+        this.algorithm = appendix.getAlgorithm();
     }
 
     private PhasingPoll(ResultSet rs) throws SQLException {
@@ -332,6 +348,7 @@ public final class PhasingPoll extends AbstractPoll {
             this.linkedFullHashes = Convert.EMPTY_BYTES;
         }
         hashedSecret = rs.getBytes("hashed_secret");
+        algorithm = rs.getByte("algorithm");
     }
 
     void finish(long result) {
@@ -357,6 +374,15 @@ public final class PhasingPoll extends AbstractPoll {
 
     public byte[] getHashedSecret() {
         return hashedSecret;
+    }
+
+    public byte getAlgorithm() {
+        return algorithm;
+    }
+
+    public boolean verifySecret(byte[] revealedSecret) {
+        HashFunction hashFunction = getHashFunction(algorithm);
+        return hashFunction != null && Arrays.equals(hashedSecret, hashFunction.hash(revealedSecret));
     }
 
     public long getResult() {
@@ -389,7 +415,7 @@ public final class PhasingPoll extends AbstractPoll {
     private void save(Connection con) throws SQLException {
         try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO phasing_poll (id, account_id, "
                 + "finish_height, whitelist_size, voting_model, quorum, min_balance, holding_id, "
-                + "min_balance_model, linked_full_hashes, hashed_secret, height) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
+                + "min_balance_model, linked_full_hashes, hashed_secret, algorithm, height) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
             int i = 0;
             pstmt.setLong(++i, id);
             pstmt.setLong(++i, accountId);
@@ -406,6 +432,7 @@ public final class PhasingPoll extends AbstractPoll {
                 pstmt.setNull(++i, Types.ARRAY);
             }
             DbUtils.setBytes(pstmt, ++i, hashedSecret);
+            pstmt.setByte(++i, algorithm);
             pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
             pstmt.executeUpdate();
         }

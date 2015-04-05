@@ -632,8 +632,12 @@ public interface Attachment extends Appendix {
             if (secretLength > Constants.MAX_PHASING_REVEALED_SECRET_LENGTH) {
                 throw new NxtException.NotValidException("Invalid revealed secret length " + secretLength);
             }
-            revealedSecret = new byte[secretLength];
-            buffer.get(revealedSecret);
+            if (secretLength > 0) {
+                revealedSecret = new byte[secretLength];
+                buffer.get(revealedSecret);
+            } else {
+                revealedSecret = Convert.EMPTY_BYTE;
+            }
         }
 
         MessagingPhasingVoteCasting(JSONObject attachmentData) {
@@ -643,7 +647,8 @@ public interface Attachment extends Appendix {
             for (Object hash : hashes) {
                 transactionFullHashes.add(Convert.parseHexString((String) hash));
             }
-            revealedSecret = Convert.parseHexString(Convert.emptyToNull((String) attachmentData.get("revealedSecret")));
+            String revealedSecret = Convert.emptyToNull((String) attachmentData.get("revealedSecret"));
+            this.revealedSecret = revealedSecret != null ? Convert.parseHexString(revealedSecret) : Convert.EMPTY_BYTE;
         }
 
         public MessagingPhasingVoteCasting(List<byte[]> transactionFullHashes, byte[] revealedSecret) {
@@ -653,7 +658,7 @@ public interface Attachment extends Appendix {
 
         @Override
         int getMySize() {
-            return 1 + 32 * transactionFullHashes.size() + 4 + (revealedSecret != null ? revealedSecret.length : 0);
+            return 1 + 32 * transactionFullHashes.size() + 4 + revealedSecret.length;
         }
 
         @Override
@@ -662,12 +667,8 @@ public interface Attachment extends Appendix {
             for (byte[] hash : transactionFullHashes) {
                 buffer.put(hash);
             }
-            if (revealedSecret != null) {
-                buffer.putInt(revealedSecret.length);
-                buffer.put(revealedSecret);
-            } else {
-                buffer.putInt(0);
-            }
+            buffer.putInt(revealedSecret.length);
+            buffer.put(revealedSecret);
         }
 
         @Override
@@ -677,7 +678,7 @@ public interface Attachment extends Appendix {
                 jsonArray.add(Convert.toHexString(hash));
             }
             attachment.put("transactionFullHashes", jsonArray);
-            if (revealedSecret != null) {
+            if (revealedSecret.length > 0) {
                 attachment.put("revealedSecret", Convert.toHexString(revealedSecret));
             }
         }

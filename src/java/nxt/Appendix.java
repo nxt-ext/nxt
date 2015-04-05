@@ -494,6 +494,7 @@ public interface Appendix {
         private final long[] whitelist;
         private final byte[][] linkedFullHashes;
         private final byte[] hashedSecret;
+        private final byte algorithm;
         private final VoteWeighting voteWeighting;
 
         Phasing(ByteBuffer buffer, byte transactionVersion) {
@@ -516,9 +517,14 @@ public interface Appendix {
                 linkedFullHashes[i] = new byte[32];
                 buffer.get(linkedFullHashes[i]);
             }
-            byte[] hashedSecret = new byte[32];
-            buffer.get(hashedSecret);
-            this.hashedSecret = Convert.emptyToNull(hashedSecret);
+            byte hashedSecretLength = buffer.get();
+            if (hashedSecretLength > 0) {
+                hashedSecret = new byte[hashedSecretLength];
+                buffer.get(hashedSecret);
+            } else {
+                hashedSecret = Convert.EMPTY_BYTE;
+            }
+            algorithm = buffer.get();
         }
 
         Phasing(JSONObject attachmentData) {
@@ -548,11 +554,18 @@ public interface Appendix {
             } else {
                 linkedFullHashes = Convert.EMPTY_BYTES;
             }
-            hashedSecret = Convert.emptyToNull(Convert.parseHexString(Convert.emptyToNull((String)attachmentData.get("phasingHashedSecret"))));
+            String hashedSecret = Convert.emptyToNull((String)attachmentData.get("phasingHashedSecret"));
+            if (hashedSecret != null) {
+                this.hashedSecret = Convert.parseHexString(hashedSecret);
+                this.algorithm = ((Long) attachmentData.get("phasingHashedSecretAlgorithm")).byteValue();
+            } else {
+                this.hashedSecret = Convert.EMPTY_BYTE;
+                this.algorithm = 0;
+            }
         }
 
         public Phasing(int finishHeight, byte votingModel, long holdingId, long quorum,
-                       long minBalance, byte minBalanceModel, long[] whitelist, byte[][] linkedFullHashes, byte[] hashedSecret) {
+                       long minBalance, byte minBalanceModel, long[] whitelist, byte[][] linkedFullHashes, byte[] hashedSecret, byte algorithm) {
             this.finishHeight = finishHeight;
             this.quorum = quorum;
             this.whitelist = Convert.nullToEmpty(whitelist);
@@ -561,7 +574,8 @@ public interface Appendix {
             }
             voteWeighting = new VoteWeighting(votingModel, holdingId, minBalance, minBalanceModel);
             this.linkedFullHashes = Convert.nullToEmpty(linkedFullHashes);
-            this.hashedSecret = Convert.emptyToNull(hashedSecret);
+            this.hashedSecret = hashedSecret != null ? hashedSecret : Convert.EMPTY_BYTE;
+            this.algorithm = algorithm;
         }
 
         @Override
@@ -571,7 +585,7 @@ public interface Appendix {
 
         @Override
         int getMySize() {
-            return 4 + 1 + 8 + 8 + 1 + 8 * whitelist.length + 8 + 1 + 1 + 32 * linkedFullHashes.length + 32;
+            return 4 + 1 + 8 + 8 + 1 + 8 * whitelist.length + 8 + 1 + 1 + 32 * linkedFullHashes.length + 1 + hashedSecret.length + 1;
         }
 
         @Override
@@ -590,11 +604,9 @@ public interface Appendix {
             for (byte[] hash : linkedFullHashes) {
                 buffer.put(hash);
             }
-            if (hashedSecret != null) {
-                buffer.put(hashedSecret);
-            } else {
-                buffer.put(new byte[32]);
-            }
+            buffer.put((byte)hashedSecret.length);
+            buffer.put(hashedSecret);
+            buffer.put(algorithm);
         }
 
         @Override
@@ -619,8 +631,9 @@ public interface Appendix {
                 }
                 json.put("phasingLinkedFullHashes", linkedFullHashesJson);
             }
-            if (hashedSecret != null) {
+            if (hashedSecret.length > 0) {
                 json.put("phasingHashedSecret", Convert.toHexString(hashedSecret));
+                json.put("phasingHashedSecretAlgorithm", algorithm);
             }
         }
 
@@ -701,12 +714,18 @@ public interface Appendix {
                     if (quorum != 1) {
                         throw new NxtException.NotValidException("Quorum must be 1 for by-hash voting");
                     }
-                    if (hashedSecret == null || hashedSecret.length != 32) {
+                    if (hashedSecret.length == 0 || hashedSecret.length > Byte.MAX_VALUE) {
                         throw new NxtException.NotValidException("Invalid hashedSecret " + Convert.toHexString(hashedSecret));
                     }
+                    if (PhasingPoll.getHashFunction(algorithm) == null) {
+                        throw new NxtException.NotValidException("Invalid hashedSecretAlgorithm " + algorithm);
+                    }
                 } else {
-                    if (hashedSecret != null) {
+                    if (hashedSecret.length != 0) {
                         throw new NxtException.NotValidException("HashedSecret can only be used with VotingModel.HASH");
+                    }
+                    if (algorithm != 0) {
+                        throw new NxtException.NotValidException("HashedSecretAlgorithm can only be used with VotingModel.HASH");
                     }
                 }
 
@@ -792,6 +811,10 @@ public interface Appendix {
 
         public byte[] getHashedSecret() {
             return hashedSecret;
+        }
+
+        public byte getAlgorithm() {
+            return algorithm;
         }
 
     }

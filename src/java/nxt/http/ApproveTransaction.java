@@ -45,9 +45,6 @@ public class ApproveTransaction extends CreateTransaction {
             if (phasingPoll == null) {
                 return UNKNOWN_TRANSACTION_FULL_HASH;
             }
-            if (phasingPoll.isFinished()) {
-                return PHASING_TRANSACTION_FINISHED;
-            }
             pendingTransactionFullHashes.add(hash);
         }
 

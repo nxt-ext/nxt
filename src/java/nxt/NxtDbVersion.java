@@ -726,6 +726,10 @@ class NxtDbVersion extends DbVersion {
                 }
                 apply(null);
             case 306:
+                apply("ALTER TABLE phasing_poll ALTER COLUMN hashed_secret VARBINARY");
+            case 307:
+                apply("ALTER TABLE phasing_poll ADD COLUMN IF NOT EXISTS algorithm TINYINT NOT NULL DEFAULT 0");
+            case 308:
                 return;
             default:
                 throw new RuntimeException("Blockchain database inconsistent with code, probably trying to run older code on newer database");

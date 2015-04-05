@@ -35,7 +35,7 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
             "phased", "phasingFinishHeight", "phasingVotingModel", "phasingQuorum", "phasingMinBalance", "phasingHolding", "phasingMinBalanceModel",
             "phasingWhitelisted", "phasingWhitelisted", "phasingWhitelisted",
             "phasingLinkedFullHash", "phasingLinkedFullHash", "phasingLinkedFullHash",
-            "phasingHashedSecret",
+            "phasingHashedSecret", "phasingHashedSecretAlgorithm",
             "recipientPublicKey"};
 
     private static String[] addCommonParameters(String[] parameters) {
@@ -99,8 +99,10 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
         }
 
         byte[] hashedSecret = Convert.parseHexString(Convert.emptyToNull(req.getParameter("phasingHashedSecret")));
+        byte algorithm = ParameterParser.getByte(req, "phasingHashedSecretAlgorithm", (byte) 0, Byte.MAX_VALUE, false);
 
-        return new Appendix.Phasing(finishHeight, votingModel, holdingId, quorum, minBalance, minBalanceModel, whitelist, linkedFullHashes, hashedSecret);
+        return new Appendix.Phasing(finishHeight, votingModel, holdingId, quorum, minBalance, minBalanceModel, whitelist,
+                linkedFullHashes, hashedSecret, algorithm);
     }
 
     final JSONStreamAware createTransaction(HttpServletRequest req, Account senderAccount, long recipientId,

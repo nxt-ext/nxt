@@ -47,9 +47,9 @@ GetAccountPendingTransactionCount, GetAssetPendingTransactions,
 GetCurrencyPendingTransactions, GetPhasingPoll, GetPhasingPolls,
 GetPhasingPollVote, GetPhasingPollVotes, GetVoterPendingTransactions.
 
-A transaction of any type can be phased by adding a phased=true parameter and an
-appropriate set of phasing parameters. Phased transactions are accepted in the
-blockchain immediately (subject to all usual validations), but are executed
+A transaction of any type can be phased by adding a phased=true parameter and
+an appropriate set of phasing parameters. Phased transactions are accepted in
+the blockchain immediately (subject to all usual validations), but are executed
 only at finish height, if still valid and if the required quorum has been met.
 If not approved, or not valid at finish height, they remain in the blockchain
 but are never executed, and any changes they caused to the sender unconfirmed
@@ -70,10 +70,12 @@ approval. This can be used to create transactions with deferred execution.
 
 Pay on reveal secret is supported as a voting model for phased transactions.
 When this voting model is used, the phased transaction must include the
-sha256 hash of a secret chosen by the sender (up to 100 bytes long), and an
-approval transaction for it is only accepted if it includes the secret that
-results in this hash. It does not matter who the sender of the approval
-transaction is, unless a whitelist is also defined.
+hash of a secret chosen by the sender (up to 100 bytes long), and an approval
+transaction for it is only accepted if it includes the secret that results in
+this hash. It does not matter who the sender of the approval transaction is,
+unless a whitelist is also defined. Supported hash functions currently are
+sha256, ripemd160, and sha256 followed by ripemd160. The codes to specify them
+as parameters are available from the getConstants API.
 
 Finally, it is possible to make a phased transaction that is released or
 rejected not on the basis of voting, but based on the presence of other
