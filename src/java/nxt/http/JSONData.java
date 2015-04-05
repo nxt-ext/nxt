@@ -347,11 +347,11 @@ final class JSONData {
         json.put("poll", Long.toUnsignedString(poll.getId()));
         if (poll.getVoteWeighting().getMinBalanceModel() == VoteWeighting.MinBalanceModel.ASSET) {
             long holdingId = poll.getVoteWeighting().getHoldingId();
-            json.put("holding", holdingId);
+            json.put("holding", Long.toUnsignedString(holdingId));
             json.put("decimals", Asset.getAsset(holdingId).getDecimals());
         } else if(poll.getVoteWeighting().getMinBalanceModel() == VoteWeighting.MinBalanceModel.CURRENCY) {
             long holdingId = poll.getVoteWeighting().getHoldingId();
-            json.put("holding", holdingId);
+            json.put("holding", Long.toUnsignedString(holdingId));
             json.put("decimals", Currency.getCurrency(holdingId).getDecimals());
         }
         json.put("finished", poll.isFinished());
