@@ -82,6 +82,8 @@ public final class GetState extends APIServlet.APIRequestHandler {
         response.put("isTestnet", Constants.isTestnet);
         response.put("isOffline", Constants.isOffline);
         response.put("needsAdminPassword", !API.disableAdminPassword);
+        response.put("maxRollback", Constants.MAX_ROLLBACK);
+        response.put("currentMinRollbackHeight", Nxt.getBlockchainProcessor().getMinRollbackHeight());
         return response;
     }
 
