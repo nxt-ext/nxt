@@ -1209,10 +1209,10 @@ var NRS = (function (NRS, $, undefined) {
                 $("#reserve_currency_decimals").val(decimals);
                 $("#reserve_currency_minReserve").val(minReserve);
 				var minReservePerUnitNQT = new BigInteger(minReserve).multiply(new BigInteger("" + Math.pow(10, decimals)));
-				$("#reserve_currency_minReserve_text").html(NRS.formatAmount(minReservePerUnitNQT));
+				$("#reserve_currency_minReserve_text").html(NRS.formatQuantity(NRS.convertToNXT(minReservePerUnitNQT.multiply(new BigInteger(resSupply))), decimals));
 				$("#reserve_currency_currentReserve").val(currentReserve);
                 var currentReservePerUnitNQT = new BigInteger(currentReserve).multiply(new BigInteger("" + Math.pow(10, decimals)));
-                $("#reserve_currency_currentReserve_text").html(NRS.formatAmount(currentReservePerUnitNQT));
+                $("#reserve_currency_currentReserve_text").html(NRS.formatQuantity(NRS.convertToNXT(currentReservePerUnitNQT.multiply(new BigInteger(resSupply))), decimals));
                 $("#reserve_currency_resSupply").val(resSupply);
                 $("#reserve_currency_resSupply_text").html(NRS.formatQuantity(resSupply, decimals));
                 $("#reserve_currency_initialSupply_text").html(NRS.formatQuantity(initialSupply, decimals));
@@ -1228,13 +1228,17 @@ var NRS = (function (NRS, $, undefined) {
         if (NRS.isControlKey(charCode) || e.ctrlKey || e.metaKey) {
             return;
         }
-        return NRS.validateDecimals(8 - decimals, charCode, $(this).val(), e);
+        return NRS.validateDecimals(8, charCode, $(this).val(), e);
     });
 
     reserveCurrencyAmount.blur(function () {
-        var resSupply = NRS.convertToQNTf($("#reserve_currency_resSupply").val(), $("#reserve_currency_decimals").val());
-        var unitAmountNQT = NRS.convertToNQT(this.value);
-        $("#reserve_currency_total").html(NRS.formatAmount(NRS.calculateOrderTotalNQT(unitAmountNQT, resSupply)));
+        var decimals = parseInt($("#reserve_currency_decimals").val());
+        var resSupply = NRS.convertToQNTf($("#reserve_currency_resSupply").val(), decimals);
+        var amountNQT = NRS.convertToNQT(this.value);
+        var unitAmountNQT = new BigInteger(amountNQT).divide(new BigInteger(resSupply));
+        var roundUnitAmountNQT = NRS.convertToNQT(NRS.amountToPrecision(NRS.convertToNXT(unitAmountNQT), decimals));
+        $("#reserve_currency_total").val(NRS.formatAmount(roundUnitAmountNQT));
+        reserveCurrencyAmount.val(NRS.convertToNXT(new BigInteger(roundUnitAmountNQT).multiply(new BigInteger(resSupply)).toString()));
     });
 
     NRS.forms.currencyReserveIncrease = function ($modal) {
