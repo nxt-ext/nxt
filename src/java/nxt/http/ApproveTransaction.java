@@ -53,6 +53,8 @@ public class ApproveTransaction extends CreateTransaction {
             String secretText = Convert.emptyToNull(req.getParameter("revealedSecretText"));
             if (secretText != null) {
                 secret = Convert.toBytes(secretText);
+            } else {
+                secret = Convert.EMPTY_BYTE;
             }
         }
         Account account = ParameterParser.getSenderAccount(req);
