@@ -12,11 +12,11 @@ import org.json.simple.JSONStreamAware;
 import javax.servlet.http.HttpServletRequest;
 
 
-public class GetVoterPendingTransactions extends APIServlet.APIRequestHandler {
+public class GetVoterPhasedTransactions extends APIServlet.APIRequestHandler {
 
-    static final GetVoterPendingTransactions instance = new GetVoterPendingTransactions();
+    static final GetVoterPhasedTransactions instance = new GetVoterPhasedTransactions();
 
-    private GetVoterPendingTransactions() {
+    private GetVoterPhasedTransactions() {
         super(new APITag[]{APITag.ACCOUNTS, APITag.PHASING}, "account", "firstIndex", "lastIndex");
     }
 
@@ -27,7 +27,7 @@ public class GetVoterPendingTransactions extends APIServlet.APIRequestHandler {
         int lastIndex = ParameterParser.getLastIndex(req);
 
         JSONArray transactions = new JSONArray();
-        try (DbIterator<? extends Transaction> iterator = PhasingPoll.getVoterPendingTransactions(account, firstIndex, lastIndex)) {
+        try (DbIterator<? extends Transaction> iterator = PhasingPoll.getVoterPhasedTransactions(account, firstIndex, lastIndex)) {
             while (iterator.hasNext()) {
                 Transaction transaction = iterator.next();
                 transactions.add(JSONData.transaction(transaction));

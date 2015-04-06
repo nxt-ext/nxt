@@ -1872,7 +1872,7 @@ var NRS = (function(NRS, $, undefined) {
 				"firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
 				"lastIndex": NRS.pageNumber * NRS.itemsPerPage
 			};
-			NRS.sendRequest("getAssetPendingTransactions", params, function(response) {
+			NRS.sendRequest("getAssetPhasedTransactions", params, function(response) {
 				var rows = "";
 
 				if (response.transactions && response.transactions.length > 0) {
@@ -1889,7 +1889,7 @@ var NRS = (function(NRS, $, undefined) {
 					$('#ar_asset_no_entries').html($.t('no_current_approval_requests', 'No current approval requests'));
 				}
 				NRS.dataLoaded(rows);
-				NRS.addPendingInfoToTransactionRows(response.transactions);	
+				NRS.addPhasingInfoToTransactionRows(response.transactions);
 				});
 		} else {
 			$('#ar_asset_no_entries').html($.t('please_select_asset_for_approval', 'Please select an asset'));

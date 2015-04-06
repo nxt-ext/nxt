@@ -90,8 +90,9 @@ var NRS = (function(NRS, $, undefined) {
             $("#transaction_info_actions").show();
             $("#transaction_info_actions_tab").find("button").data("account", accountButton);
          }
-         var finishHeight = transaction.attachment.phasingFinishHeight;
-         if (finishHeight) {
+
+         if (transaction.attachment && transaction.attachment.phasingFinishHeight) {
+            var finishHeight = transaction.attachment.phasingFinishHeight;
             var phasingDetails = {};
             phasingDetails.finishHeight = finishHeight;
             phasingDetails.finishIn = ((finishHeight - NRS.lastBlockHeight) > 0) ? (finishHeight - NRS.lastBlockHeight) + " " + $.t("blocks") : $.t("finished");

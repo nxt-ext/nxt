@@ -174,7 +174,7 @@ public final class PhasingPoll extends AbstractPoll {
         return resultTable.get(resultDbKeyFactory.newKey(id));
     }
 
-    public static int getPendingCount() {
+    public static int getPhasedCount() {
         return phasingPollTable.getCount(new DbClause.IntClause("finish_height", DbClause.Op.GT, Nxt.getBlockchain().getHeight()));
     }
 
@@ -211,7 +211,7 @@ public final class PhasingPoll extends AbstractPoll {
         }
     }
 
-    public static DbIterator<TransactionImpl> getVoterPendingTransactions(Account voter, int from, int to) {
+    public static DbIterator<TransactionImpl> getVoterPhasedTransactions(Account voter, int from, int to) {
         Connection con = null;
         try {
             con = Db.db.getConnection();
@@ -235,8 +235,8 @@ public final class PhasingPoll extends AbstractPoll {
         }
     }
 
-    public static DbIterator<TransactionImpl> getHoldingPendingTransactions(long holdingId, VoteWeighting.VotingModel votingModel,
-                                                                            Account account, boolean withoutWhitelist, int from, int to) {
+    public static DbIterator<TransactionImpl> getHoldingPhasedTransactions(long holdingId, VoteWeighting.VotingModel votingModel,
+                                                                           Account account, boolean withoutWhitelist, int from, int to) {
 
         Connection con = null;
         try {
@@ -267,7 +267,7 @@ public final class PhasingPoll extends AbstractPoll {
         }
     }
 
-    public static DbIterator<TransactionImpl> getAccountPendingTransactions(Account account, int from, int to) {
+    public static DbIterator<TransactionImpl> getAccountPhasedTransactions(Account account, int from, int to) {
         Connection con = null;
         try {
             con = Db.db.getConnection();
@@ -288,7 +288,7 @@ public final class PhasingPoll extends AbstractPoll {
         }
     }
 
-    public static int getAccountPendingTransactionCount(Account account) {
+    public static int getAccountPhasedTransactionCount(Account account) {
         try (Connection con = Db.db.getConnection();
              PreparedStatement pstmt = con.prepareStatement("SELECT COUNT(*) FROM transaction, phasing_poll  " +
                      " WHERE phasing_poll.id = transaction.id AND (transaction.sender_id = ? OR transaction.recipient_id = ?) " +

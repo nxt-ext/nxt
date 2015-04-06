@@ -25,7 +25,7 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.initAdvancedModalFormValues = function($modal) {
-		$(".pending_number_accounts_group").find("input[name=phasingQuorum]").val(1);
+		$(".phasing_number_accounts_group").find("input[name=phasingQuorum]").val(1);
 
 		var context = {
 			labelText: "Finish Height",
@@ -35,7 +35,7 @@ var NRS = (function(NRS, $, undefined) {
 			initBlockHeight: NRS.lastBlockHeight + 7000,
 			changeHeightBlocks: 500
 		}
-		var $elems = NRS.initModalUIElement($modal, '.pending_finish_height_group', 'block_height_modal_ui_element', context);
+		var $elems = NRS.initModalUIElement($modal, '.phasing_finish_height_group', 'block_height_modal_ui_element', context);
 		$elems.find('input').prop("disabled", true);
 
 		var context = {

@@ -210,11 +210,11 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.setPhasingNotifications = function() {
-		NRS.sendRequest("getAccountPendingTransactionCount", {
+		NRS.sendRequest("getAccountPhasedTransactionCount", {
 			"account": NRS.account
 		}, function(response) {
-			if (response.numberOfPendingTransactions != undefined) {
-				$('#phasing_notification_counter').html(String(response.numberOfPendingTransactions));
+			if (response.numberOfPhasedTransactions != undefined) {
+				$('#phasing_notification_counter').html(String(response.numberOfPhasedTransactions));
 				$('#phasing_notification_menu').show();
 			}
 		});
