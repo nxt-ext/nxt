@@ -254,7 +254,8 @@ creation.
 Allow the API server to handle both http and https requests on different ports,
 if nxt.apiServerSSLPort is set to a port different from nxt.apiServerPort and
 nxt.apiSSL=true. If the SSL and non-SSL ports are configured to be the same,
-the nxt.apiSSL property determines whether SSL is used or not.
+the nxt.apiSSL property determines whether SSL is used or not. On testnet,
+non-SSL port is hardcoded to 6876 and SSL, if enabled, to 6877.
 
 Reduced the default nxt.maxRollback to 800. Also added a nxt.trimFrequency
 setting to control how often the trim is run, default 1000.
