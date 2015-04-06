@@ -157,6 +157,7 @@ public final class APIServlet extends HttpServlet {
         map.put("getDGSPurchase", GetDGSPurchase.instance);
         map.put("getDGSPurchaseCount", GetDGSPurchaseCount.instance);
         map.put("getDGSPendingPurchases", GetDGSPendingPurchases.instance);
+        map.put("getDGSExpiredPurchases", GetDGSExpiredPurchases.instance);
         map.put("getDGSTags", GetDGSTags.instance);
         map.put("getDGSTagCount", GetDGSTagCount.instance);
         map.put("getDGSTagsLike", GetDGSTagsLike.instance);

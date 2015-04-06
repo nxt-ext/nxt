@@ -631,6 +631,13 @@ public final class DigitalGoodsStore {
             return purchaseTable.getManyBy(dbClause, from, to);
         }
 
+        public static DbIterator<Purchase> getExpiredSellerPurchases(final long sellerId, int from, int to) {
+            DbClause dbClause = new DbClause.LongClause("seller_id", sellerId)
+                    .and(new DbClause.FixedClause("pending = FALSE"))
+                    .and(new DbClause.FixedClause("goods IS NULL"));
+            return purchaseTable.getManyBy(dbClause, from, to);
+        }
+
         static Purchase getPendingPurchase(long purchaseId) {
             Purchase purchase = getPurchase(purchaseId);
             return purchase == null || ! purchase.isPending() ? null : purchase;
@@ -928,7 +935,8 @@ public final class DigitalGoodsStore {
     static void purchase(Transaction transaction,  Attachment.DigitalGoodsPurchase attachment) {
         Goods goods = Goods.goodsTable.get(Goods.goodsDbKeyFactory.newKey(attachment.getGoodsId()));
         if (! goods.isDelisted() && attachment.getQuantity() <= goods.getQuantity() && attachment.getPriceNQT() == goods.getPriceNQT()
-                && attachment.getDeliveryDeadlineTimestamp() > Nxt.getBlockchain().getLastBlockTimestamp()) {
+                && (attachment.getDeliveryDeadlineTimestamp() > Nxt.getBlockchain().getLastBlockTimestamp()
+                || Nxt.getBlockchain().getHeight() >= Constants.VOTING_SYSTEM_BLOCK)) { // temporary
             goods.changeQuantity(-attachment.getQuantity());
             Purchase purchase = new Purchase(transaction, attachment, goods.getSellerId());
             Purchase.purchaseTable.insert(purchase);
