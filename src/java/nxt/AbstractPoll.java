@@ -3,10 +3,6 @@ package nxt;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-/**
- * Abstract poll structure, parent for concrete poll implementations e.g. Poll or PendingTransactionPoll
- */
-
 abstract class AbstractPoll {
 
     final long id;

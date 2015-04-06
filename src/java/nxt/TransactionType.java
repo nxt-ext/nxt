@@ -935,7 +935,7 @@ public abstract class TransactionType {
                 for (byte[] hash : hashes) {
                     long phasedTransactionId = Convert.fullHashToId(hash);
                     if (phasedTransactionId == 0) {
-                        throw new NxtException.NotValidException("Invalid pendingTransactionFullHash " + Convert.toHexString(hash));
+                        throw new NxtException.NotValidException("Invalid phased transactionFullHash " + Convert.toHexString(hash));
                     }
 
                     PhasingPoll poll = PhasingPoll.getPoll(phasedTransactionId);
@@ -948,7 +948,7 @@ public abstract class TransactionType {
                     }
                     long[] whitelist = poll.getWhitelist();
                     if (whitelist.length > 0 && Arrays.binarySearch(whitelist, voterId) == -1) {
-                        throw new NxtException.NotValidException("Voter is not in the pending transaction whitelist");
+                        throw new NxtException.NotValidException("Voter is not in the phased transaction whitelist");
                     }
                     if (revealedSecret.length > 0) {
                         if (poll.getVoteWeighting().getVotingModel() != VoteWeighting.VotingModel.HASH) {
@@ -967,7 +967,7 @@ public abstract class TransactionType {
                         algorithm = poll.getAlgorithm();
                     }
                     if (!Arrays.equals(poll.getFullHash(), hash)) {
-                        throw new NxtException.NotCurrentlyValidException("Phased transaction hash does not match voting hash");
+                        throw new NxtException.NotCurrentlyValidException("Phased transaction hash does not match hash in voting transaction");
                     }
                     if (poll.getFinishHeight() <= transaction.getValidationHeight() + 1) {
                         throw new NxtException.NotCurrentlyValidException("Voting for this transaction finishes at " + poll.getFinishHeight());

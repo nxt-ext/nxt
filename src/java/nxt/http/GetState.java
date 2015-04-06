@@ -70,7 +70,7 @@ public final class GetState extends APIServlet.APIRequestHandler {
             response.put("numberOfTags", DigitalGoodsStore.Tag.getCount());
             response.put("numberOfPolls", Poll.getCount());
             response.put("numberOfVotes", Vote.getCount());
-            response.put("numberOfPendingTransactions", PhasingPoll.getPendingCount());
+            response.put("numberOfPhasedTransactions", PhasingPoll.getPhasedCount());
         }
         response.put("numberOfPeers", Peers.getAllPeers().size());
         response.put("numberOfUnlockedAccounts", Generator.getAllGenerators().size());

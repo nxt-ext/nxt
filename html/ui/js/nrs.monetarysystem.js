@@ -885,7 +885,7 @@ var NRS = (function(NRS, $, undefined) {
 				"firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
 				"lastIndex": NRS.pageNumber * NRS.itemsPerPage
 			};
-			NRS.sendRequest("getCurrencyPendingTransactions", params, function(response) {
+			NRS.sendRequest("getCurrencyPhasedTransactions", params, function(response) {
 				var rows = "";
 
 				if (response.transactions && response.transactions.length > 0) {
@@ -902,7 +902,7 @@ var NRS = (function(NRS, $, undefined) {
 					$('#ar_currency_no_entries').html($.t('no_current_approval_requests', 'No current approval requests'));
 				}
 				NRS.dataLoaded(rows);
-				NRS.addPendingInfoToTransactionRows(response.transactions);	
+				NRS.addPhasingInfoToTransactionRows(response.transactions);
 				});
 		} else {
 			$('#ar_currency_no_entries').html($.t('please_select_currency', 'Please select a currency'));

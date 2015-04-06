@@ -8,10 +8,10 @@ import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
 
-public class GetAccountPendingTransactionCount extends APIServlet.APIRequestHandler {
-    static final GetAccountPendingTransactionCount instance = new GetAccountPendingTransactionCount();
+public class GetAccountPhasedTransactionCount extends APIServlet.APIRequestHandler {
+    static final GetAccountPhasedTransactionCount instance = new GetAccountPhasedTransactionCount();
 
-    private GetAccountPendingTransactionCount() {
+    private GetAccountPhasedTransactionCount() {
         super(new APITag[]{APITag.ACCOUNTS, APITag.PHASING}, "account");
     }
 
@@ -19,7 +19,7 @@ public class GetAccountPendingTransactionCount extends APIServlet.APIRequestHand
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
         Account account = ParameterParser.getAccount(req);
         JSONObject response = new JSONObject();
-        response.put("numberOfPendingTransactions", PhasingPoll.getAccountPendingTransactionCount(account));
+        response.put("numberOfPhasedTransactions", PhasingPoll.getAccountPhasedTransactionCount(account));
         return response;
     }
 }

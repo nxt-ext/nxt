@@ -42,10 +42,10 @@ Phasing.
 
 Phasing API calls:
 
-ApproveTransaction, GetAccountPendingTransactions,
-GetAccountPendingTransactionCount, GetAssetPendingTransactions,
-GetCurrencyPendingTransactions, GetPhasingPoll, GetPhasingPolls,
-GetPhasingPollVote, GetPhasingPollVotes, GetVoterPendingTransactions.
+ApproveTransaction, GetAccountPhasedTransactions,
+GetAccountPhasedTransactionCount, GetAssetPhasedTransactions,
+GetCurrencyPhasedTransactions, GetPhasingPoll, GetPhasingPolls,
+GetPhasingPollVote, GetPhasingPollVotes, GetVoterPhasedTransactions.
 
 A transaction of any type can be phased by adding a phased=true parameter and
 an appropriate set of phasing parameters. Phased transactions are accepted in
