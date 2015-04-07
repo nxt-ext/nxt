@@ -394,13 +394,13 @@ var NRS = (function(NRS, $, undefined) {
 
 						if (vm == 0) {
 							$popoverTypeTR.find("td:first").html($.t('accounts', 'Accounts') + ":");
-							$popoverTypeTR.find("td:last").html(String(attachment.phasingWhitelist.length));
+							$popoverTypeTR.find("td:last").html(String(attachment.phasingWhitelist ? attachment.phasingWhitelist.length : ""));
 							var votesFormatted = String(responsePoll.result) + " / " + String(attachment.phasingQuorum);
 							$popoverVotesTR.find("td:last").html(votesFormatted);
 						}
 						if (vm == 1) {
 							$popoverTypeTR.find("td:first").html($.t('accounts', 'Accounts') + ":");
-							$popoverTypeTR.find("td:last").html(String(attachment.phasingWhitelist.length));
+							$popoverTypeTR.find("td:last").html(String(attachment.phasingWhitelist ? attachment.phasingWhitelist.length : ""));
 							var votesFormatted = NRS.convertToNXT(responsePoll.result) + " / " + NRS.convertToNXT(attachment.phasingQuorum) + " NXT";
 							$popoverVotesTR.find("td:last").html(votesFormatted);
 						}
@@ -533,7 +533,7 @@ var NRS = (function(NRS, $, undefined) {
 		if (actions && actions.length != undefined) {
 			html += '<td class="td_transaction_actions" style="vertical-align:middle;text-align:right;">';
 			if (actions.indexOf('approve') > -1) {
-				if (t.attachment.phasingWhitelist.length > 0 || t.attachment.phasingVotingModel == 0) {
+				if (t.attachment.phasingWhitelist && t.attachment.phasingWhitelist.length > 0 || t.attachment.phasingVotingModel == 0) {
 					var fee = 1;
 				} else {
 					var fee = 2;
