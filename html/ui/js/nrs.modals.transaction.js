@@ -227,16 +227,24 @@ var NRS = (function(NRS, $, undefined) {
                      "min_balance_model": transaction.attachment.minBalanceModel
                   };
 
-                  if (transaction.attachment.votingModel == "0") {
-                     data["voting_model"] = "Vote by NXT balance";
-                  } else if (transaction.attachment.votingModel == "1") {
-                     data["voting_model"] = "Vote by Account";
-                  } else if(transaction.attachment.votingModel == "2") {
-                     data["voting_model"] = "Vote by asset";
+                  if (transaction.attachment.votingModel == -1) {
+                     data["voting_model"] = $.t("vote_by_none");
+                  } else if (transaction.attachment.votingModel == 0) {
+                     data["voting_model"] = $.t("vote_by_account");
+                  } else if (transaction.attachment.votingModel == 1) {
+                     data["voting_model"] = $.t("vote_by_balance");
+                  } else if(transaction.attachment.votingModel == 2) {
+                     data["voting_model"] = $.t("vote_by_asset");
                      data["asset_id"] = transaction.attachment.holding;
-                  } else if(transaction.attachment.votingModel == "3") {
-                     data["voting_model"] = "Vote by currency";
+                  } else if(transaction.attachment.votingModel == 3) {
+                     data["voting_model"] = $.t("vote_by_currency");
                      data["currency_id"] = transaction.attachment.holding;
+                  } else if(transaction.attachment.votingModel == 4) {
+                     data["voting_model"] = $.t("vote_by_transaction");
+                  } else if(transaction.attachment.votingModel == 5) {
+                     data["voting_model"] = $.t("vote_by_hash");
+                  } else {
+                      data["voting_model"] = transaction.attachment.votingModel;
                   }
 
 
