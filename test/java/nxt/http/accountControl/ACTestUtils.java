@@ -2,6 +2,7 @@ package nxt.http.accountControl;
 
 import nxt.Constants;
 import nxt.http.APICall;
+import nxt.http.APICall.Builder;
 import nxt.http.monetarysystem.TestCurrencyIssuance;
 import nxt.util.Logger;
 
@@ -79,5 +80,14 @@ public class ACTestUtils {
         String errorMsg = (String) response.get("error");
         Assert.assertNotNull("Transaction should fail, but didn't", errorMsg);
         Assert.assertTrue(errorMsg.contains("nxt.NxtException$AccountControlException"));
+    }
+    
+    public static long getAccountBalance(long account, String balance) {
+        APICall.Builder builder = new APICall.Builder("getBalance").param("account", Long.toUnsignedString(account));
+        JSONObject response = builder.build().invoke();
+        
+        Logger.logMessage("getBalance response: " + response.toJSONString());
+        
+        return Long.parseLong(((String)response.get(balance)));
     }
 }

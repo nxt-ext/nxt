@@ -2,6 +2,7 @@ package nxt.http.accountControl;
 
 import java.util.Arrays;
 
+import nxt.AbstractBlockchainTest;
 import nxt.BlockchainTest;
 import nxt.Constants;
 import nxt.Nxt;
@@ -12,6 +13,7 @@ import nxt.http.APICall;
 import nxt.http.APICall.Builder;
 import nxt.util.Logger;
 
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.junit.Assert;
 import org.junit.Test;
@@ -76,6 +78,44 @@ public class PhasingOnlyTest extends BlockchainTest {
         generateBlock();
         
         assertNoPhasingOnlyControl();
+    }
+    
+    @Test
+    public void testRejectingPendingTransaction() throws Exception {
+
+        Builder builder = new ACTestUtils.Builder("sendMoney", secretPhrase1)
+            .recipient(id2)
+            .param("amountNQT", 1 * Constants.ONE_NXT);
+    
+        setTransactionPhasingParams(builder, 4, VotingModel.ACCOUNT, null, 1L, null, null, new long[] {id2, id3});
+        JSONObject sendMoneyJSON = ACTestUtils.assertTransactionSuccess(builder);
+        generateBlock();
+        
+        builder = new ACTestUtils.Builder("setPhasingOnlyControl", secretPhrase1);
+        
+        setControlPhasingParams(builder, VotingModel.ACCOUNT, null, 1L, null, null, new long[] {id4});
+        
+        ACTestUtils.assertTransactionSuccess(builder);
+        
+        generateBlock();
+        
+        long balanceBeforeTransactionRejection = ACTestUtils.getAccountBalance(id1, "unconfirmedBalanceNQT");
+        
+        String fullHash = (String) sendMoneyJSON.get("fullHash");
+        
+        //approve the pending transaction
+        builder = new ACTestUtils.Builder("approveTransaction", secretPhrase2)
+                .param("transactionFullHash", fullHash);
+        ACTestUtils.assertTransactionSuccess(builder);
+        
+        generateBlock();
+        
+        //the sendMoney finish height
+        generateBlock();
+        
+        //Assert the unconfirmed balance is recovered
+        Assert.assertEquals(balanceBeforeTransactionRejection + 1 * Constants.ONE_NXT, 
+                ACTestUtils.getAccountBalance(id1, "unconfirmedBalanceNQT"));
     }
     
     private void assertNoPhasingOnlyControl() {
