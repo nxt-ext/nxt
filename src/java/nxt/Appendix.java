@@ -640,7 +640,7 @@ public interface Appendix {
         @Override
         void validate(Transaction transaction) throws NxtException.ValidationException {
 
-            if (PhasingPoll.getPoll(transaction.getId()) == null) {
+            if (transaction.getSignature() == null || PhasingPoll.getPoll(transaction.getId()) == null) {
                 int currentHeight = Nxt.getBlockchain().getHeight();
                 if (currentHeight < Constants.VOTING_SYSTEM_BLOCK) {
                     throw new NxtException.NotYetEnabledException("Voting System not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
