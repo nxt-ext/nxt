@@ -156,7 +156,7 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
         short deadline;
         try {
             deadline = Short.parseShort(deadlineValue);
-            if (deadline < 1 || deadline > 1440) {
+            if (deadline < 1) {
                 return INCORRECT_DEADLINE;
             }
         } catch (NumberFormatException e) {
