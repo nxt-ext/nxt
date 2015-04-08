@@ -553,7 +553,7 @@ $("#poll_results_modal ul.nav li").click(function(e) {
 	NRS.forms.createPoll = function($modal) {
 		var data = NRS.getFormData($modal.find("form:first"));
 
-		var options = new Array();
+		var options = [];
 
 		$("#create_poll_answers input.create_poll_answers").each(function() {
 			var option = $.trim($(this).val());
@@ -561,12 +561,6 @@ $("#poll_results_modal ul.nav li").click(function(e) {
 				options.push(option);
 			}
 		});
-
-		if (!options.length) {
-			//...
-		}
-
-		$("#create_poll_") //  idk why this is here, made by wesley.. -Jones
 
 		data["name"] = $("#create_poll_name").val();
 		data["description"] = $("#create_poll_description").val();
@@ -580,28 +574,24 @@ $("#poll_results_modal ul.nav li").click(function(e) {
 		data["deadline"] = $("#create_poll_deadline").val();
 		data["secretPhrase"] = $("#create_poll_password").val();
 
-		if($("#create_poll_type").val() == "0")
-		{
+        var pollType = $("#create_poll_type");
+        if(pollType.val() == "0") {
 			data["votingModel"] = 1;
 			data["minBalanceModel"] = 1;
-		}
-		if($("#create_poll_type").val() == "1")
-		{
+		} else if(pollType.val() == "1") {
 			data["votingModel"] = 0;
-			var val = parseInt($('input:radio[name=minBalanceType]:checked').val());
-			data["minBalanceModel"] = val;
-
-			if(val == 2) data["holding"] = $("#create_poll_asset_id").val();
-			else if(val == 3) data["holding"] = $("#create_poll_ms_id").val();
-		}
-		if($("#create_poll_type").val() == "2")
-		{
+			var minBalanceModel = parseInt($('input:radio[name=minBalanceType]:checked').val());
+			data["minBalanceModel"] = minBalanceModel;
+			if(minBalanceModel == 2) {
+                data["holding"] = $("#create_poll_asset_id").val();
+            } else if(minBalanceModel == 3) {
+                data["holding"] = $("#create_poll_ms_id").val();
+            }
+		} else if(pollType.val() == "2") {
 			data["votingModel"] = 2;
 			data["holding"] = $("#create_poll_asset_id").val();
 			data["minBalanceModel"] = 2;
-		}
-		else if($("#create_poll_type").val() == "3")
-		{
+		} else if(pollType.val() == "3") {
 			data["votingModel"] = 3;
 			data["holding"] = $("#create_poll_ms_id").val();
 			data["minBalanceModel"] = 3;
@@ -609,18 +599,19 @@ $("#poll_results_modal ul.nav li").click(function(e) {
 
 		for (var i = 0; i < options.length; i++) {
 			var number;
-			if(i < 10) number = "0" + i;
-			else number = i;
+			if(i < 10) {
+                number = "0" + i;
+            } else {
+                number = i;
+            }
 			data["option" + (number)] = options[i];
 		}
-
-
 
 		return {
 			"requestType": "createPoll",
 			"data": data
 		};
-	}
+	};
 
 	NRS.forms.createPollComplete = function(response, data) {
 		if (NRS.currentPage == "polls") {
