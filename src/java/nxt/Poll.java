@@ -176,6 +176,7 @@ public final class Poll extends AbstractPoll {
     private final byte maxNumberOfOptions;
     private final byte minRangeValue;
     private final byte maxRangeValue;
+    private final int timestamp;
 
     private Poll(Transaction transaction, Attachment.MessagingPollCreation attachment) {
         super(transaction.getId(), transaction.getSenderId(), attachment.getFinishHeight(), attachment.getVoteWeighting());
@@ -187,6 +188,7 @@ public final class Poll extends AbstractPoll {
         this.maxNumberOfOptions = attachment.getMaxNumberOfOptions();
         this.minRangeValue = attachment.getMinRangeValue();
         this.maxRangeValue = attachment.getMaxRangeValue();
+        this.timestamp = Nxt.getBlockchain().getLastBlockTimestamp();
     }
 
     private Poll(ResultSet rs) throws SQLException {
@@ -201,13 +203,14 @@ public final class Poll extends AbstractPoll {
         this.maxNumberOfOptions = rs.getByte("max_num_options");
         this.minRangeValue = rs.getByte("min_range_value");
         this.maxRangeValue = rs.getByte("max_range_value");
+        this.timestamp = rs.getInt("timestamp");
     }
 
     private void save(Connection con) throws SQLException {
         try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO poll (id, account_id, "
                 + "name, description, options, finish_height, voting_model, min_balance, min_balance_model, "
-                + "holding_id, min_num_options, max_num_options, min_range_value, max_range_value, height) "
-                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
+                + "holding_id, min_num_options, max_num_options, min_range_value, max_range_value, timestamp, height) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
             int i = 0;
             pstmt.setLong(++i, id);
             pstmt.setLong(++i, accountId);
@@ -223,6 +226,7 @@ public final class Poll extends AbstractPoll {
             pstmt.setByte(++i, maxNumberOfOptions);
             pstmt.setByte(++i, minRangeValue);
             pstmt.setByte(++i, maxRangeValue);
+            pstmt.setInt(++i, timestamp);
             pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
             pstmt.executeUpdate();
         }
@@ -276,6 +280,10 @@ public final class Poll extends AbstractPoll {
 
     public byte getMaxRangeValue() {
         return maxRangeValue;
+    }
+
+    public int getTimestamp() {
+        return timestamp;
     }
 
     private List<OptionResult> countResults(VoteWeighting voteWeighting) {

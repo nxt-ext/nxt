@@ -339,6 +339,7 @@ final class JSONData {
         json.put("maxRangeValue", poll.getMaxRangeValue());
         putVoteWeighting(json, poll.getVoteWeighting());
         json.put("finished", poll.isFinished());
+        json.put("timestamp", poll.getTimestamp());
         return json;
     }
 
