@@ -407,16 +407,20 @@ var NRS = (function(NRS, $, undefined) {
                 var result = results[i];
                 rows += "<tr>";
                 rows += "<td>" + String(options[i]).escapeHTML() + "</td>";
+                var resultStr = "";
+                var weightStr = "";
                 if (polldata.votingModel == 0) {
-                    rows += "<td>" + result.result + "</td>";
-                    rows += "<td>" + result.weight + "</td>";
+                	resultStr = result.result;
+                	weightStr = result.weight;
                 } else if (polldata.votingModel == 1) {
-                    rows += "<td>" + NRS.formatAmount(result.result) + "</td>";
-                    rows += "<td>" + NRS.formatAmount(result.weight) + "</td>";
+                	resultStr = NRS.formatAmount(result.result);
+                	weightStr = NRS.formatAmount(result.weight);
                 } else if (resultsdata.holding) {
-                    rows += "<td>" + NRS.formatQuantity(result.result, resultsdata.decimals) + "</td>";
-                    rows += "<td>" + NRS.formatQuantity(result.weight, resultsdata.decimals) + "</td>";
+                	resultStr = NRS.formatQuantity(result.result, resultsdata.decimals);
+                	weightStr = NRS.formatQuantity(result.weight, resultsdata.decimals);
                 }
+                rows += "<td style='text-align:right;'>" + resultStr + "</td>";
+                rows += "<td style='text-align:right;'>" + weightStr + "</td>";
                 rows += "</tr>";
             }
         }
