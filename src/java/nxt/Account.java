@@ -720,18 +720,18 @@ public final class Account {
                 + "height, latest) "
                 + "KEY (id, height) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, TRUE)")) {
             int i = 0;
-            pstmt.setLong(++i, this.getId());
-            pstmt.setInt(++i, this.getCreationHeight());
-            pstmt.setInt(++i, this.getKeyHeight());
-            pstmt.setLong(++i, this.getBalanceNQT());
-            pstmt.setLong(++i, this.getUnconfirmedBalanceNQT());
-            pstmt.setLong(++i, this.getForgedBalanceNQT());
-            DbUtils.setIntZeroToNull(pstmt, ++i, this.getCurrentLeasingHeightFrom());
-            DbUtils.setIntZeroToNull(pstmt, ++i, this.getCurrentLeasingHeightTo());
-            DbUtils.setLongZeroToNull(pstmt, ++i, this.getCurrentLesseeId());
-            DbUtils.setIntZeroToNull(pstmt, ++i, this.getNextLeasingHeightFrom());
-            DbUtils.setIntZeroToNull(pstmt, ++i, this.getNextLeasingHeightTo());
-            DbUtils.setLongZeroToNull(pstmt, ++i, this.getNextLesseeId());
+            pstmt.setLong(++i, this.id);
+            pstmt.setInt(++i, this.creationHeight);
+            pstmt.setInt(++i, this.keyHeight);
+            pstmt.setLong(++i, this.balanceNQT);
+            pstmt.setLong(++i, this.unconfirmedBalanceNQT);
+            pstmt.setLong(++i, this.forgedBalanceNQT);
+            DbUtils.setIntZeroToNull(pstmt, ++i, this.currentLeasingHeightFrom);
+            DbUtils.setIntZeroToNull(pstmt, ++i, this.currentLeasingHeightTo);
+            DbUtils.setLongZeroToNull(pstmt, ++i, this.currentLesseeId);
+            DbUtils.setIntZeroToNull(pstmt, ++i, this.nextLeasingHeightFrom);
+            DbUtils.setIntZeroToNull(pstmt, ++i, this.nextLeasingHeightTo);
+            DbUtils.setLongZeroToNull(pstmt, ++i, this.nextLesseeId);
             pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
             pstmt.executeUpdate();
         }

@@ -94,12 +94,12 @@ public final class Asset {
         try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO asset (id, account_id, name, "
                 + "description, quantity, decimals, height) VALUES (?, ?, ?, ?, ?, ?, ?)")) {
             int i = 0;
-            pstmt.setLong(++i, this.getId());
-            pstmt.setLong(++i, this.getAccountId());
-            pstmt.setString(++i, this.getName());
-            pstmt.setString(++i, this.getDescription());
-            pstmt.setLong(++i, this.getQuantityQNT());
-            pstmt.setByte(++i, this.getDecimals());
+            pstmt.setLong(++i, this.assetId);
+            pstmt.setLong(++i, this.accountId);
+            pstmt.setString(++i, this.name);
+            pstmt.setString(++i, this.description);
+            pstmt.setLong(++i, this.quantityQNT);
+            pstmt.setByte(++i, this.decimals);
             pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
             pstmt.executeUpdate();
         }
