@@ -111,8 +111,16 @@ public final class Poll extends AbstractPoll {
         return pollTable.getAll(from, to);
     }
 
-    public static DbIterator<Poll> getPollsByAccount(long accountId, int from, int to) {
-        return pollTable.getManyBy(new DbClause.LongClause("account_id", accountId), from, to);
+    public static DbIterator<Poll> getActivePolls(int from, int to) {
+        return pollTable.getManyBy(new DbClause.IntClause("finish_height", DbClause.Op.GT, Nxt.getBlockchain().getHeight()), from, to);
+    }
+
+    public static DbIterator<Poll> getPollsByAccount(long accountId, boolean includeFinished, int from, int to) {
+        DbClause dbClause = new DbClause.LongClause("account_id", accountId);
+        if (!includeFinished) {
+            dbClause = dbClause.and(new DbClause.IntClause("finish_height", DbClause.Op.GT, Nxt.getBlockchain().getHeight()));
+        }
+        return pollTable.getManyBy(dbClause, from, to);
     }
 
     public static DbIterator<Poll> getPollsFinishingAt(int height) {
