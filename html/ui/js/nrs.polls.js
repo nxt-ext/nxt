@@ -2,6 +2,40 @@
  * @depends {nrs.js}
  */
 var NRS = (function(NRS, $, undefined) {
+	
+	var _voteCache = {};
+
+	function _setFollowButtonStates() {
+		if (NRS.databaseSupport) {
+			NRS.database.select("polls", null, function(error, polls) {
+				$.each(polls, function(index, poll) {
+					$('.follow_button:visible[data-follow="' + poll.poll + '"]').attr('disabled', true);
+				});
+			});
+		}
+	}
+
+	function _setVoteButtonStates() {
+		$('.vote_button:visible[data-poll]').each(function(index, btn) {
+			var pollID = $(btn).data('poll');
+			if (pollID in _voteCache) {
+				$(btn).attr('disabled', true);
+			} else {
+				NRS.sendRequest("getPollVote", {
+					"account": NRS.account,
+					"poll": pollID
+				}, function(response) {
+					if (response && response.voterRS) {
+						$(btn).attr('disabled', true);
+						_voteCache[pollID] = response;
+					} else {
+						$(btn).attr('disabled', false);
+					}
+				});
+			}
+		});
+	}
+
 	NRS.pages.polls = function() {
 		NRS.sendRequest("getPolls+", function(response) {
 			if (response.polls && response.polls.length) {
@@ -44,12 +78,14 @@ var NRS = (function(NRS, $, undefined) {
 								rows += "<td>" + pollDescription.escapeHTML() + "</td>";
 								rows += "<td>" + (poll.sender != NRS.genesis ? "<a href='#' data-user='" + NRS.getAccountFormatted(poll, "sender") + "' class='show_account_modal_action user_info'>" + NRS.getAccountTitle(poll, "sender") + "</a>" : "Genesis") + "</td>";
 								rows += "<td>" + NRS.formatTimestamp(poll.timestamp) + "</td>";
-								rows += "<td>" + String(poll.attachment.finishHeight - NRS.lastBlockHeight) + "</td>";
-								rows += "<td><a href='#' class='vote_button' data-poll='" + poll.transaction +"'>Vote </a></td>";
-								rows += "<td><a href='#' class='follow_button' data-follow='" + poll.transaction + "'>Follow </a></td>";
+								rows += "<td style='text-align:center;'>" + String(poll.attachment.finishHeight - NRS.lastBlockHeight) + "</td>";
+								rows += "<td style='text-align:center;'><nobr><a href='#' class='vote_button btn btn-xs btn-default' data-poll='" + poll.transaction +"'>Vote </a> ";
+								rows += "<a href='#' class='follow_button btn btn-xs btn-default' data-follow='" + poll.transaction + "'>Follow </a></nobr></td>";
 								rows += "</tr>";
 							}
 							NRS.dataLoaded(rows);
+							_setFollowButtonStates();
+							_setVoteButtonStates();
 						}
 					});
 				}
@@ -107,18 +143,20 @@ var NRS = (function(NRS, $, undefined) {
 								rows += "<td>" + NRS.formatTimestamp(poll.timestamp) + "</td>";
 								if(poll.attachment.finishHeight > NRS.lastBlockHeight)
 								{
-									rows += "<td>" + String(poll.attachment.finishHeight - NRS.lastBlockHeight) + "</td>";
+									rows += "<td style='text-align:center;'>" + String(poll.attachment.finishHeight - NRS.lastBlockHeight) + "</td>";
 									rows += "<td><a href='#' class='vote_button' data-poll='" + poll.transaction +"'>Vote </td>";
 								}
 								else
 								{
-									rows += "<td>Complete</td>";
+									rows += "<td style='text-align:center;'>Complete</td>";
 									rows += "<td><a href='#' class='results_button' data-results='" + poll.transaction +"'>Results </a></td>";
 								}
-								rows += "<td><a href='#' class='follow_button' data-follow='" + poll.transaction + "'>Follow </a></td>";
+								rows += "<td style='text-align:center;'><a href='#' class='follow_button btn btn-xs btn-default' data-follow='" + poll.transaction + "'>Follow </a></td>";
 								rows += "</tr>";
 							}
 							NRS.dataLoaded(rows);
+							_setFollowButtonStates();
+							_setVoteButtonStates();
 						}
 					});
 				}
@@ -175,19 +213,20 @@ var NRS = (function(NRS, $, undefined) {
 								rows += "<td>" + NRS.formatTimestamp(poll.timestamp) + "</td>";
 								if(poll.attachment.finishHeight > NRS.lastBlockHeight)
 								{
-									rows += "<td>" + String(poll.attachment.finishHeight - NRS.lastBlockHeight) + "</td>";
-									rows += "<td>Waiting... </td>";
+									rows += "<td style='text-align:center;'>" + String(poll.attachment.finishHeight - NRS.lastBlockHeight) + "</td>";
+									rows += "<td style='text-align:center;'>-</td>";
 
 								}
 								else
 								{
-									rows += "<td>Complete</td>";
-									rows += "<td><a href='#' class='results_button' data-results='" + poll.transaction +"'>Results </a></td>";
+									rows += "<td style='text-align:center;'>Complete</td>";
+									rows += "<td style='text-align:center;'><a href='#' class='results_button btn btn-xs btn-default' data-results='" + poll.transaction +"'>Results </a></td>";
 								}
-								rows += "<td><a href='#' class='follow_button' data-follow='" + poll.transaction + "'>Follow </a></td>";
+								rows += "<td style='text-align:center;'><a href='#' class='follow_button btn btn-xs btn-default' data-follow='" + poll.transaction + "'>Follow </a></td>";
 								rows += "</tr>";
 							}
 							NRS.dataLoaded(rows);
+							_setFollowButtonStates();
 						}
 					});
 				}
@@ -223,15 +262,15 @@ var NRS = (function(NRS, $, undefined) {
 		}
 		NRS.appendMenuItemToTSMenuItem(sidebarId, options);
 		options = {
-			"titleHTML": '<span data-i18n="my_polls">My Polls</span>',
-			"type": 'PAGE',
-			"page": 'my_polls'
-		}
-		NRS.appendMenuItemToTSMenuItem(sidebarId, options);
-		options = {
 			"titleHTML": '<span data-i18n="my_votes">My Votes</span>',
 			"type": 'PAGE',
 			"page": 'voted_polls'
+		}
+		NRS.appendMenuItemToTSMenuItem(sidebarId, options);
+		options = {
+			"titleHTML": '<span data-i18n="my_polls">My Polls</span>',
+			"type": 'PAGE',
+			"page": 'my_polls'
 		}
 		NRS.appendMenuItemToTSMenuItem(sidebarId, options);
 		options = {
@@ -246,6 +285,20 @@ var NRS = (function(NRS, $, undefined) {
 		$('#create_poll_modal input[name="feeNXT"]').val(10);
 	}
 
+	function _resetPollFee() {
+		var options = $(".create_poll_answers").length;
+		if(options > 20)
+		{
+			var fee = (options - 20) + 10;
+			$("#create_poll_fee").val(fee);
+			$("#create_poll_fee_text").text(fee + " NXT");
+		}
+		else 
+		{
+			$("#create_poll_fee").val("10");
+			$("#create_poll_fee_text").text("10 NXT");
+		}
+	}
 
 	$("#create_poll_answers").on("click", "button.btn.remove_answer", function(e) {
 		e.preventDefault();
@@ -255,19 +308,7 @@ var NRS = (function(NRS, $, undefined) {
 		}
 
 		$(this).closest("div.form-group").remove();
-		var options = $(".create_poll_answers").length;
-		if(options > 20)
-		{
-			var fee = (options - 20) + 10;
-			$("#create_poll_fee").text(fee + " NXT");
-			$("#create_poll_fee_text").text(fee + " NXT");
-
-		}
-		else
-		{ 
-			$("#create_poll_fee").text("10 NXT");
-			$("#create_poll_fee_text").text(fee + " NXT");
-		}
+		_resetPollFee();
 	});
 
 	$("#create_poll_answers_add").click(function(e) {
@@ -276,21 +317,7 @@ var NRS = (function(NRS, $, undefined) {
 		$clone.find("input").val("");
 
 		$clone.appendTo("#create_poll_answers");
-		var options = $(".create_poll_answers").length;
-		console.log(options);
-		if(options > 20)
-		{
-			var fee = (options - 20) + 10;
-			console.log(fee);
-			console.log($("#create_poll_fee").text())
-			$("#create_poll_fee").val(fee);
-			$("#create_poll_fee_text").text(fee + " NXT");
-		}
-		else 
-		{
-			$("#create_poll_fee").val("10");
-			$("#create_poll_fee_text").text(fee + " NXT");
-		}
+		_resetPollFee();
 	});
 
 	$("#create_poll_type").change(function() {
@@ -357,45 +384,55 @@ var NRS = (function(NRS, $, undefined) {
 	});
 
 
-		$("#polls_table, #my_polls_table").on("click", "a[data-poll]", function(e) {
-			e.preventDefault();
-			var transactionId = $(this).data("poll");
+	$("body").on("click", ".vote_button[data-poll]", function(e) {
+		e.preventDefault();
+		var transactionId = $(this).data("poll");
 
-			NRS.sendRequest("getTransaction", {
-				"transaction": transactionId
-			}, function(response, input) {
-				$("#cast_vote_poll_name").text(response.attachment.name);
-				$("#cast_vote_poll_description").text(response.attachment.description);
-				$("#cast_vote_answers_entry").text("");
-				if(response.attachment.minNumberOfOptions != response.attachment.maxNumberOfOptions)
-				$("#cast_vote_range").text("Select between " + response.attachment.minNumberOfOptions + " and " + response.attachment.maxNumberOfOptions + " options from below.")
-				else if(response.attachment.minNumberOfOptions != 1) $("#cast_vote_range").text("Select " + response.attachment.minNumberOfOptions +  " options from below.")
-				else $("#cast_vote_range").text("Select 1 option from below.")
+		NRS.sendRequest("getTransaction", {
+			"transaction": transactionId
+		}, function(response, input) {
+			$("#cast_vote_poll_name").text(response.attachment.name);
+			$("#cast_vote_poll_description").text(response.attachment.description);
+			$("#cast_vote_answers_entry").text("");
+			if(response.attachment.minNumberOfOptions != response.attachment.maxNumberOfOptions)
+			$("#cast_vote_range").text("Select between " + response.attachment.minNumberOfOptions + " and " + response.attachment.maxNumberOfOptions + " options from below.")
+			else if(response.attachment.minNumberOfOptions != 1) $("#cast_vote_range").text("Select " + response.attachment.minNumberOfOptions +  " options from below.")
+			else $("#cast_vote_range").text("Select 1 option from below.")
 
-				$("#cast_vote_poll").val(response.transaction);
-				if(response.attachment.maxRangeValue != 1)
+			$("#cast_vote_poll").val(response.transaction);
+			if(response.attachment.maxRangeValue != 1)
+			{
+				for(var b=0; b<response.attachment.options.length; b++)
 				{
-					for(var b=0; b<response.attachment.options.length; b++)
-					{
-						$("#cast_vote_answers_entry").append("<div class='answer_slider'><label name='cast_vote_answer_"+b+"'>"+String(response.attachment.options[b]).escapeHTML()+"</label> &nbsp;&nbsp;<span class='badge'>"+response.attachment.minRangeValue+"</span><br/><input class='form-control' step='1' value='"+response.attachment.minRangeValue+"' max='"+response.attachment.maxRangeValue+"' min='"+response.attachment.minRangeValue+"' type='range'/></div>");
-					}
+					var html = "<div class='answer_slider' style='padding:6px;background-color:#f9f9f9;border:1px solid #ddd;margin-bottom:4px;'>";
+					html += "<label name='cast_vote_answer_"+b+"'>"+String(response.attachment.options[b]).escapeHTML()+"</label> &nbsp;&nbsp;";
+					html += "<span class='cast_vote_value label label-default' style='float:right;'>"+response.attachment.minRangeValue+"</span><br/>";
+					html += "<input class='form-control' step='1' value='"+response.attachment.minRangeValue+"' max='"+response.attachment.maxRangeValue+"' min='"+response.attachment.minRangeValue+"' type='range'/>";
+					html += "</div>";
+					$("#cast_vote_answers_entry").append(html);
 				}
-				else
+			}
+			else
+			{
+				for(var b=0; b<response.attachment.options.length; b++)
 				{
-					for(var b=0; b<response.attachment.options.length; b++)
-					{
-						$("#cast_vote_answers_entry").append("<div class='answer_boxes'><label name='cast_vote_answer_"+b+"'><input type='checkbox'/>&nbsp;&nbsp;"+String(response.attachment.options[b]).escapeHTML()+"</label></div>");
-					}
+					$("#cast_vote_answers_entry").append("<div class='answer_boxes'><label name='cast_vote_answer_"+b+"'><input type='checkbox'/>&nbsp;&nbsp;"+String(response.attachment.options[b]).escapeHTML()+"</label></div>");
 				}
-				$("#cast_vote_modal").modal();
-				$("input[type='range']").on("change mousemove", function() {
-					$(this).parent().children(".badge").text($(this).val());
-
-				});
+			}
+			$("#cast_vote_modal").modal();
+			$("input[type='range']").on("change mousemove", function() {
+				$label = $(this).parent().children(".cast_vote_value.label");
+				if ($(this).val() > 0) {
+					$label.removeClass("label-default");
+					$label.addClass("label-primary");
+				} else {
+					$label.removeClass("label-primary");
+					$label.addClass("label-default");
+				}
+				$label.text($(this).val());
 			});
-
-			
 		});
+	});
 
     function layoutPollResults(resultsdata, polldata) {
         var results = resultsdata.results;
@@ -410,16 +447,20 @@ var NRS = (function(NRS, $, undefined) {
                 var result = results[i];
                 rows += "<tr>";
                 rows += "<td>" + String(options[i]).escapeHTML() + "</td>";
+                var resultStr = "";
+                var weightStr = "";
                 if (polldata.votingModel == 0) {
-                    rows += "<td>" + result.result + "</td>";
-                    rows += "<td>" + result.weight + "</td>";
+                	resultStr = result.result;
+                	weightStr = result.weight;
                 } else if (polldata.votingModel == 1) {
-                    rows += "<td>" + NRS.formatAmount(result.result) + "</td>";
-                    rows += "<td>" + NRS.formatAmount(result.weight) + "</td>";
+                	resultStr = NRS.formatAmount(result.result);
+                	weightStr = NRS.formatAmount(result.weight);
                 } else if (resultsdata.holding) {
-                    rows += "<td>" + NRS.formatQuantity(result.result, resultsdata.decimals) + "</td>";
-                    rows += "<td>" + NRS.formatQuantity(result.weight, resultsdata.decimals) + "</td>";
+                	resultStr = NRS.formatQuantity(result.result, resultsdata.decimals);
+                	weightStr = NRS.formatQuantity(result.weight, resultsdata.decimals);
                 }
+                rows += "<td style='text-align:right;'>" + resultStr + "</td>";
+                rows += "<td style='text-align:right;'>" + weightStr + "</td>";
                 rows += "</tr>";
             }
         }
@@ -427,106 +468,105 @@ var NRS = (function(NRS, $, undefined) {
     }
 
     $("#my_polls_table, #voted_polls_table").on("click", "a[data-results]", function(e) {
-			e.preventDefault();
-			var transactionId = $(this).data("results");
+		e.preventDefault();
+		var transactionId = $(this).data("results");
 
-			NRS.sendRequest("getPollResult", {"poll": transactionId, "req":"getPollResult"}, voteModal);
-			NRS.sendRequest("getPollVotes", {"poll": transactionId, "req":"getPollVotes"}, voteModal);
-			NRS.sendRequest("getPoll", {"poll": transactionId, "req": "getPoll"}, voteModal);
-			var resultsdata, votesdata, polldata;
+		NRS.sendRequest("getPollResult", {"poll": transactionId, "req":"getPollResult"}, voteModal);
+		NRS.sendRequest("getPollVotes", {"poll": transactionId, "req":"getPollVotes"}, voteModal);
+		NRS.sendRequest("getPoll", {"poll": transactionId, "req": "getPoll"}, voteModal);
+		var resultsdata, votesdata, polldata;
 
-			function voteModal(data, input)
+		function voteModal(data, input)
+		{
+			if(input.req=="getPollResult") resultsdata = data;
+			if(input.req=="getPollVotes") votesdata = data;
+			if(input.req=="getPoll") polldata = data;
+
+			if(resultsdata !== undefined && votesdata !== undefined && polldata !== undefined)
 			{
-				if(input.req=="getPollResult") resultsdata = data;
-				if(input.req=="getPollVotes") votesdata = data;
-				if(input.req=="getPoll") polldata = data;
+				$("#poll_results_options").append("<tr><td style='font-weight: bold;width:180px;'><span data-i18n='poll_name'>Poll Name</span>:</td><td><span id='poll_results_poll_name'>"+String(polldata.name).escapeHTML()+"</span></td></tr>");
+				$("#poll_results_options").append("<tr><td style='font-weight: bold;width:180px;'><span data-i18n='poll_id'>Poll Id</span>:</td><td><span id='poll_results_poll_id'>"+polldata.poll+"</span></td></tr>");
 
-				if(resultsdata !== undefined && votesdata !== undefined && polldata !== undefined)
+				$("#poll_results_poll_name").text(String(polldata.name).escapeHTML());
+				$("#poll_results_poll_id").text(polldata.poll);
+
+				//$("#poll_results_number_of_voters").text(votesdata.votes.length);
+
+				$("#poll_results_modal").modal();
+                var rows = layoutPollResults(resultsdata, polldata);
+                $("#poll_results_table tbody").empty().append(rows);
+
+				var votes = votesdata.votes;
+
+				if (!votes) {
+					votes = [];
+				}
+
+				if (votes.length) 
 				{
-					$("#poll_results_options").append("<tr><td style='font-weight: bold;width:180px;'><span data-i18n='poll_name'>Poll Name</span>:</td><td><span id='poll_results_poll_name'>"+String(polldata.name).escapeHTML()+"</span></td></tr>");
-					$("#poll_results_options").append("<tr><td style='font-weight: bold;width:180px;'><span data-i18n='poll_id'>Poll Id</span>:</td><td><span id='poll_results_poll_id'>"+polldata.poll+"</span></td></tr>");
+				
+					var head = "";
+					head += "<tr>";
+					head += "<th data-i18n=\"voter\">Voter</th>";
 
-					$("#poll_results_poll_name").text(String(polldata.name).escapeHTML());
-					$("#poll_results_poll_id").text(polldata.poll);
-
-					//$("#poll_results_number_of_voters").text(votesdata.votes.length);
-
-					$("#poll_results_modal").modal();
-                    var rows = layoutPollResults(resultsdata, polldata);
-                    $("#poll_results_table tbody").empty().append(rows);
-
-					var votes = votesdata.votes;
-
-					if (!votes) {
-						votes = [];
-					}
-
-					if (votes.length) 
+					for(var b=0; b<polldata.options.length; b++)
 					{
-					
-						var head = "";
-						head += "<tr>";
-						head += "<th data-i18n=\"voter\">Voter</th>";
+						head += "<th>"+String(polldata.options[b].escapeHTML()) + "</th>";
+					}
+					head += "</tr>";
 
-						for(var b=0; b<polldata.options.length; b++)
+					$("#poll_voters_table thead").empty().append(head);				
+
+					//$("#votes_cast_count").html("(" + votes.length + ")");
+
+					var rows = "";
+
+					for (var i = 0; i < votes.length; i++) {
+						rows += "<tr>";
+						var vote = votes[i];
+
+						rows += "<td><a href='#' class='user_info' data-user='" + NRS.getAccountFormatted(vote, "voter") + "'>" + NRS.getAccountTitle(vote, "voter") + "</td>";
+
+						for(var a=0;a<vote.votes.length;a++)
 						{
-							head += "<th>"+String(polldata.options[b].escapeHTML()) + "</th>";
+							rows += "<td>" + vote.votes[a] + "</td>";
 						}
-						head += "</tr>";
-
-						$("#poll_voters_table thead").empty().append(head);				
-
-						//$("#votes_cast_count").html("(" + votes.length + ")");
-
-						var rows = "";
-
-						for (var i = 0; i < votes.length; i++) {
-							rows += "<tr>";
-							var vote = votes[i];
-
-							rows += "<td><a href='#' class='user_info' data-user='" + NRS.getAccountFormatted(vote, "voter") + "'>" + NRS.getAccountTitle(vote, "voter") + "</td>";
-
-							for(var a=0;a<vote.votes.length;a++)
-							{
-								rows += "<td>" + vote.votes[a] + "</td>";
-							}
-						}
-
-						$("#poll_voters_table tbody").empty().append(rows);
 					}
-					else 
-					{
-						$("#poll_voters_table tbody").empty();
-						//$("#votes_cast_count").html("(0)");
-					}
+
+					$("#poll_voters_table tbody").empty().append(rows);
 				}
-
+				else 
+				{
+					$("#poll_voters_table tbody").empty();
+					//$("#votes_cast_count").html("(0)");
+				}
 			}
+
+		}
+	});
+
+	$("body").on("click", ".follow_button[data-follow]", function(e) {
+		e.preventDefault();
+		$btn = $(this);
+		var pollId = $(this).data("follow");
+
+		NRS.sendRequest("getPoll", {"poll": pollId}, function(response) 
+		{
+			if (response.errorCode) {
+				NRS.showModalError($.t("no_poll_found"), $modal);
+			} else {
+				NRS.saveFollowedPolls(new Array(response), NRS.forms.addFollowedPollsComplete);
+			}
+			$btn.attr('disabled', true);
 		});
+	});
 
-		$("#polls_table, #my_polls_table, #voted_polls_table").on("click", "a[data-follow]", function(e) {
-			e.preventDefault();
-			var pollId = $(this).data("follow");
-
-			NRS.sendRequest("getPoll", {"poll": pollId}, function(response) 
-			{
-				if (response.errorCode) {
-					NRS.showModalError($.t("no_poll_found"), $modal);
-				} else {
-					NRS.saveFollowedPolls(new Array(response), NRS.forms.addFollowedPollsComplete);
-				}
-			});
-		});
-
-					
-
-$("#poll_results_modal").on("show.bs.modal", function(e) {
-
+	$("#poll_results_modal").on("show.bs.modal", function(e) {
 		$("#poll_results_modal_statistics").show();
 		// now lets put the data in the correct place...
-});
+	});
 
-$("#poll_results_modal ul.nav li").click(function(e) {
+	$("#poll_results_modal ul.nav li").click(function(e) {
 		e.preventDefault();
 
 		var tab = $(this).data("tab");
@@ -546,9 +586,7 @@ $("#poll_results_modal ul.nav li").click(function(e) {
 		$(this).find("ul.nav li.active").removeClass("active");
 		$("#poll_results_statistics_nav").addClass("active");
 		$("#poll_results_options").text("");
-	});
-
-		
+	});	
 
 	NRS.forms.createPoll = function($modal) {
 		var data = NRS.getFormData($modal.find("form:first"));
@@ -621,7 +659,14 @@ $("#poll_results_modal ul.nav li").click(function(e) {
 
 			var now = parseInt(((new Date().getTime()) - date) / 1000, 10);
 
-			var rowToAdd = "<tr class='tentative'><td>" + String(data.name).escapeHTML() + " - <strong>" + $.t("pending") + "</strong></td><td>" + String(data.description).escapeHTML() + "</td><td><a href='#' data-user='" + NRS.getAccountFormatted(NRS.accountRS) + "' class='show_account_modal_action user_info'>" + NRS.getAccountTitle(NRS.accountRS) + "</a></td><td>" + NRS.formatTimestamp(now) + "</td><td>/</td></tr>";
+			var rowToAdd = "<tr class='tentative'>";
+			rowToAdd += "<td>" + String(data.name).escapeHTML() + " - <strong >" + $.t("pending") + "</strong></td>";
+			rowToAdd += "<td>" + String(data.description).escapeHTML() + "</td>";
+			rowToAdd += "<td><a href='#' data-user='" + NRS.getAccountFormatted(NRS.accountRS) + "' class='show_account_modal_action user_info'>";
+			rowToAdd += NRS.getAccountTitle(NRS.accountRS) + "</a></td>";
+			rowToAdd += "<td>" + NRS.formatTimestamp(now) + "</td>";
+			rowToAdd += "<td>/</td>";
+			rowToAdd += "</tr>";
 
 			$table.prepend(rowToAdd);
 
@@ -665,16 +710,15 @@ $("#poll_results_modal ul.nav li").click(function(e) {
 	}
 
 	NRS.forms.castVoteComplete = function(response, data) {
-		// don't think anything needs to go here
+		if (data.poll) {
+			$('.vote_button[data-poll="' + data.poll + '"]').attr('disabled', true);
+		}
 	}
-
-
 
 
 	// a lot of stuff in followed polls, lets put that here
 	NRS.followedPolls = [];
 	NRS.followedPollIds = [];
-	NRS.viewingAsset = false; //viewing non-bookmarked asset
 	NRS.currentPoll = {};
 	var currentPollId = 0;
 
@@ -746,17 +790,6 @@ $("#poll_results_modal ul.nav li").click(function(e) {
 		}
 	}
 
-	/*$("#asset_exchange_bookmark_this_asset").on("click", function() {
-		if (NRS.viewingAsset) {
-			NRS.saveAssetBookmarks(new Array(NRS.viewingAsset), function(newAssets) {
-				NRS.viewingAsset = false;
-				NRS.loadAssetExchangeSidebar(function() {
-					$("#asset_exchange_sidebar a[data-asset=" + newAssets[0].asset + "]").addClass("active").trigger("click");
-				});
-			});
-		}
-	});*/
-
 	NRS.forms.addFollowedPollsComplete = function(newPolls, submittedPolls) {
 		NRS.pollSearch = false;
 
@@ -773,12 +806,15 @@ $("#poll_results_modal ul.nav li").click(function(e) {
 		} else {
 			NRS.closeModal();
 
-			var message = $.t("success_poll_followed", {
-				"count": newPolls.length
-			});
+			var message = "";
+			if (newPolls.length == 1) {
+				message += $.t("success_poll_followed_one");
+			} else {
+				message += $.t("success_poll_followed", { "count": newPolls.length });
+			}
 
 			if (!NRS.databaseSupport) {
-				message += " " + $.t("error_polls_save_db");
+				message += " " + $.t("error_poll_save_db");
 			}
 
 			$.growl(message, {
@@ -921,27 +957,17 @@ $("#poll_results_modal ul.nav li").click(function(e) {
 
 		var active = $("#followed_polls_sidebar a.active");
 
-
 		if (active.length) {
 			active = active.data("poll");
 		} else {
 			active = false;
 		}
-
 		$("#followed_polls_sidebar_content").empty().append(rows);
 
 		if (active) {
 			$("#followed_polls_sidebar a[data-poll=" + active + "]").addClass("active");
 		}
-
-
 		$("#followed_polls_sidebar_search").hide();
-
-		if (NRS.viewingAsset) {
-			$("#asset_exchange_bookmark_this_asset").show();
-		} else {
-			$("#asset_exchange_bookmark_this_asset").hide();
-		}
 
 		NRS.pageLoaded(callback);
 	}
@@ -959,8 +985,6 @@ $("#poll_results_modal ul.nav li").click(function(e) {
 		} else {
 			NRS.loadPoll(NRS.viewingPoll, true);
 		}
-
-		//update assets owned (colored)
 	}
 
 	$("#followed_polls_sidebar").on("click", "a", function(e, data) {
@@ -980,8 +1004,7 @@ $("#poll_results_modal ul.nav li").click(function(e) {
 			if (NRS.databaseSupport) {
 				var group = $(this).data("groupname");
 				var closed = $(this).data("closed");
-
-					var $links = $("#followed_polls_sidebar a.list-group-item-ungrouped");
+				var $links = $("#followed_polls_sidebar a.list-group-item-ungrouped");
 
 				if (!group) {
 					group = "undefined";
@@ -1051,13 +1074,13 @@ $("#poll_results_modal ul.nav li").click(function(e) {
 			$("#followed_polls_poll_name").html(String(poll.name).escapeHTML());
 			$("#poll_description").html(String(poll.description).autoLink());
 			$(".poll_name").html(String(poll.name).escapeHTML());
-			if(poll.finishHeight > NRS.lastBlockHeight)
-			{
-				$("#vote_poll_link").removeClass('disabled');
-				$("#vote_poll_link").attr("data-poll", pollId);
-			}
-			else $("#vote_poll_link").addClass('disabled');
+			$("#vote_poll_link .vote_button").data("poll", pollId);
 
+			if(poll.finishHeight > NRS.lastBlockHeight) {
+				$("#vote_poll_link").show();
+			} else {
+				$("#vote_poll_link").hide();
+			}
 
 			$("#followed_polls_poll_results tbody").empty();
 			$("#followed_polls_votes_cast tbody").empty();
@@ -1100,16 +1123,9 @@ $("#poll_results_modal ul.nav li").click(function(e) {
 			}
 		}
 
-
-		// Only asset issuers have the ability to pay dividends.
-		if (poll.finishHeight < NRS.lastBlockHeight) {
-         $("#vote_poll_link").show();
-		} else {
-			$("#vote_poll_link").hide();
-		}
-
 		NRS.loadPollResults(pollId, refresh);
 		NRS.loadPollVotes(pollId, refresh);
+		_setVoteButtonStates();
 	}
 
 	NRS.loadPollResults = function(pollId, refresh) {
@@ -1132,9 +1148,11 @@ $("#poll_results_modal ul.nav li").click(function(e) {
 		NRS.sendRequest("getPoll+" + pollId, {
 			"poll": pollId
 		}, function(polldata, input) {
-
+			var maxVotes = 50;
 			NRS.sendRequest("getPollVotes+" + pollId, {
-				"poll": pollId
+				"poll": pollId,
+				"firstIndex": 0,
+				"lastIndex": maxVotes
 			}, function(votesdata, input) {
 
 				var votes = votesdata.votes;
@@ -1157,7 +1175,13 @@ $("#poll_results_modal ul.nav li").click(function(e) {
 
 					$("#followed_polls_votes_cast thead").empty().append(head);				
 
-					$("#votes_cast_count").html("(" + votes.length + ")");
+					if (votes.length > maxVotes) {
+						var lengthStr = String(maxVotes) + "+";
+						votes.pop();
+					} else {
+						var lengthStr = String(votes.length);
+					}
+					$("#votes_cast_count").html("(" + lengthStr + ")");
 
 					var rows = "";
 
@@ -1184,8 +1208,6 @@ $("#poll_results_modal ul.nav li").click(function(e) {
 			});
 		})
 	}
-
-
 
 	return NRS;
 }(NRS || {}, jQuery));

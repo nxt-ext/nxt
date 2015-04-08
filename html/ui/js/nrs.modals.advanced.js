@@ -157,17 +157,22 @@ var NRS = (function(NRS, $, undefined) {
 		$elems = NRS.initModalUIElement($modal, '.approve_holding_currency_optional', 'add_currency_modal_ui_element', context);
 		$elems.find('input').prop("disabled", true);
 		$elems.hide();
+
+		_setApprovalFeeAddition($modal);
 	}
 
-	function _setApprovalFeeAddition() {
-		var feeAddition = $('.modal:visible .approve_tab_list li.active a').data("feeNxtApprovalAddition");
-		var $mbSelect = $('.modal:visible .tab_pane_approve.active .approve_min_balance_model_group select');
+	function _setApprovalFeeAddition($modal) {
+		if (!$modal) {
+			$modal = $('.modal:visible');
+		}
+		var feeAddition = $modal.find('.approve_tab_list li.active a').data("feeNxtApprovalAddition");
+		var $mbSelect = $modal.find('.tab_pane_approve.active .approve_min_balance_model_group select');
 		if($mbSelect.length > 0 && $mbSelect.val() != "0") {
 			feeAddition = String(20);
 		}
 
-        $('.modal:visible').find("input[name='feeNXT_approval_addition']").val(feeAddition);
-        $('.modal:visible').find("span.feeNXT_approval_addition_info").html("+" + feeAddition);
+        $modal.find("input[name='feeNXT_approval_addition']").val(feeAddition);
+        $modal.find("span.feeNXT_approval_addition_info").html("+" + feeAddition);
 	}
 
 	$('.approve_tab_list a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
