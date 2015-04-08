@@ -167,6 +167,9 @@ final class TransactionDb {
             if (rs.getBoolean("phased")) {
                 builder.phasing(new Appendix.Phasing(buffer, version));
             }
+            if (rs.getBoolean("has_prunable_message")) {
+                builder.prunableMessage(new Appendix.PrunableMessageAppendix(buffer, version));
+            }
            
             return builder.build();
 
@@ -210,8 +213,8 @@ final class TransactionDb {
                         + "recipient_id, amount, fee, referenced_transaction_full_hash, height, "
                         + "block_id, signature, timestamp, type, subtype, sender_id, attachment_bytes, "
                         + "block_timestamp, full_hash, version, has_message, has_encrypted_message, has_public_key_announcement, "
-                        + "has_encrypttoself_message, phased, ec_block_height, ec_block_id, transaction_index) "
-                        + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
+                        + "has_encrypttoself_message, phased, has_prunable_message, ec_block_height, ec_block_id, transaction_index) "
+                        + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
                     int i = 0;
                     pstmt.setLong(++i, transaction.getId());
                     pstmt.setShort(++i, transaction.getDeadline());
@@ -248,6 +251,7 @@ final class TransactionDb {
                     pstmt.setBoolean(++i, transaction.getPublicKeyAnnouncement() != null);
                     pstmt.setBoolean(++i, transaction.getEncryptToSelfMessage() != null);
                     pstmt.setBoolean(++i, transaction.getPhasing() != null);
+                    pstmt.setBoolean(++i, transaction.hasPrunableMessage());
                     pstmt.setInt(++i, transaction.getECBlockHeight());
                     DbUtils.setLongZeroToNull(pstmt, ++i, transaction.getECBlockId());
                     pstmt.setShort(++i, index++);

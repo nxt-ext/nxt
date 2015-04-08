@@ -48,11 +48,15 @@ public final class ReadMessage extends APIServlet.APIRequestHandler {
         Appendix.Message message = transaction.getMessage();
         Appendix.EncryptedMessage encryptedMessage = transaction.getEncryptedMessage();
         Appendix.EncryptToSelfMessage encryptToSelfMessage = transaction.getEncryptToSelfMessage();
-        if (message == null && encryptedMessage == null && encryptToSelfMessage == null) {
+        Appendix.PrunableMessageAppendix prunableMessage = transaction.getPrunableMessage();
+        if (message == null && encryptedMessage == null && encryptToSelfMessage == null && prunableMessage == null) {
             return NO_MESSAGE;
         }
         if (message != null) {
-            response.put("message", message.isText() ? Convert.toString(message.getMessage()) : Convert.toHexString(message.getMessage()));
+            response.put("message", message.toString());
+        }
+        if (prunableMessage != null) {
+            response.put("prunableMessage", prunableMessage.toString());
         }
         String secretPhrase = Convert.emptyToNull(req.getParameter("secretPhrase"));
         if (secretPhrase != null) {

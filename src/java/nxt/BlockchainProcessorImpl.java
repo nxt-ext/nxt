@@ -743,9 +743,16 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         if (!block.verifyBlockSignature()) {
             throw new BlockNotAcceptedException("Block signature verification failed");
         }
+        if (block.getTransactions().size() > Constants.MAX_NUMBER_OF_TRANSACTIONS) {
+            throw new BlockNotAcceptedException("Invalid block transaction count " + block.getTransactions().size());
+        }
+        if (block.getPayloadLength() > Constants.MAX_PAYLOAD_LENGTH || block.getPayloadLength() < 0) {
+            throw new BlockNotAcceptedException("Invalid block payload length " + block.getPayloadLength());
+        }
     }
 
     private void validateTransactions(BlockImpl block, BlockImpl previousLastBlock, int curTime, Map<TransactionType, Map<String, Boolean>> duplicates) throws BlockNotAcceptedException {
+        long payloadLength = 0;
         long calculatedTotalAmount = 0;
         long calculatedTotalFee = 0;
         MessageDigest digest = Crypto.sha256();
@@ -807,6 +814,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             }
             calculatedTotalAmount += transaction.getAmountNQT();
             calculatedTotalFee += transaction.getFeeNQT();
+            payloadLength += transaction.getFullSize();
             digest.update(transaction.bytes());
         }
         if (calculatedTotalAmount != block.getTotalAmountNQT() || calculatedTotalFee != block.getTotalFeeNQT()) {
@@ -814,6 +822,9 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         }
         if (!Arrays.equals(digest.digest(), block.getPayloadHash())) {
             throw new BlockNotAcceptedException("Payload hash doesn't match");
+        }
+        if (payloadLength > block.getPayloadLength()) {
+            throw new BlockNotAcceptedException("Transaction payload length exceeds declared block payload length");
         }
     }
 
@@ -995,7 +1006,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
 
             for (UnconfirmedTransaction unconfirmedTransaction : orderedUnconfirmedTransactions) {
 
-                int transactionLength = unconfirmedTransaction.getTransaction().getSize();
+                int transactionLength = unconfirmedTransaction.getTransaction().getFullSize();
                 if (sortedTransactions.contains(unconfirmedTransaction) || payloadLength + transactionLength > Constants.MAX_PAYLOAD_LENGTH) {
                     continue;
                 }

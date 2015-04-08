@@ -1,6 +1,7 @@
 package nxt;
 
 import org.json.simple.JSONObject;
+import org.json.simple.JSONValue;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -19,9 +20,9 @@ class UnconfirmedTransaction implements Transaction {
     }
 
     UnconfirmedTransaction(ResultSet rs) throws SQLException {
-        byte[] transactionBytes = rs.getBytes("transaction_bytes");
+        String transactionJSON = rs.getString("transaction_json");
         try {
-            this.transaction = TransactionImpl.newTransactionBuilder(transactionBytes).build();
+            this.transaction = TransactionImpl.newTransactionBuilder((JSONObject)JSONValue.parse(transactionJSON)).build();
             this.transaction.setHeight(rs.getInt("transaction_height"));
             this.arrivalTimestamp = rs.getLong("arrival_timestamp");
         } catch (NxtException.ValidationException e) {
@@ -31,14 +32,14 @@ class UnconfirmedTransaction implements Transaction {
 
     void save(Connection con) throws SQLException {
         try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO unconfirmed_transaction (id, transaction_height, "
-                + "fee_per_byte, expiration, transaction_bytes, arrival_timestamp, height) "
+                + "fee_per_byte, expiration, transaction_json, arrival_timestamp, height) "
                 + "VALUES (?, ?, ?, ?, ?, ?, ?)")) {
             int i = 0;
             pstmt.setLong(++i, transaction.getId());
             pstmt.setInt(++i, transaction.getHeight());
-            pstmt.setLong(++i, transaction.getFeeNQT() / transaction.getSize());
+            pstmt.setLong(++i, transaction.getFeeNQT() / transaction.getFullSize());
             pstmt.setInt(++i, transaction.getExpiration());
-            pstmt.setBytes(++i, transaction.bytes());
+            pstmt.setString(++i, transaction.getJSONObject().toJSONString());
             pstmt.setLong(++i, arrivalTimestamp);
             pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
             pstmt.executeUpdate();
@@ -196,6 +197,11 @@ class UnconfirmedTransaction implements Transaction {
     @Override
     public Appendix.Message getMessage() {
         return transaction.getMessage();
+    }
+
+    @Override
+    public Appendix.PrunableMessageAppendix getPrunableMessage() {
+        return transaction.getPrunableMessage();
     }
 
     @Override
