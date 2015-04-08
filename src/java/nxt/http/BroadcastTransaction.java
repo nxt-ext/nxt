@@ -1,5 +1,6 @@
 package nxt.http;
 
+import nxt.Appendix;
 import nxt.Nxt;
 import nxt.NxtException;
 import nxt.Transaction;
@@ -10,12 +11,14 @@ import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
 
+import static nxt.http.JSONResponses.INCORRECT_PRUNABLE_MESSAGE;
+
 public final class BroadcastTransaction extends APIServlet.APIRequestHandler {
 
     static final BroadcastTransaction instance = new BroadcastTransaction();
 
     private BroadcastTransaction() {
-        super(new APITag[] {APITag.TRANSACTIONS}, "transactionBytes", "transactionJSON");
+        super(new APITag[] {APITag.TRANSACTIONS}, "transactionBytes", "transactionJSON", "message", "messageIsText", "messageIsPrunable");
     }
 
     @Override
@@ -23,7 +26,23 @@ public final class BroadcastTransaction extends APIServlet.APIRequestHandler {
 
         String transactionBytes = Convert.emptyToNull(req.getParameter("transactionBytes"));
         String transactionJSON = Convert.emptyToNull(req.getParameter("transactionJSON"));
-        Transaction transaction = ParameterParser.parseTransaction(transactionBytes, transactionJSON).build();
+        Appendix.PrunableMessageAppendix prunableMessageAppendix = null;
+        String messageValue = Convert.emptyToNull(req.getParameter("message"));
+        if (messageValue != null) {
+            boolean messageIsText = !"false".equalsIgnoreCase(req.getParameter("messageIsText"));
+            boolean messageIsPrunable = "true".equalsIgnoreCase(req.getParameter("messageIsPrunable"));
+            if (messageIsPrunable) {
+                try {
+                    prunableMessageAppendix = messageIsText ? new Appendix.PrunableMessageAppendix(messageValue)
+                            : new Appendix.PrunableMessageAppendix(Convert.parseHexString(messageValue));
+                } catch (RuntimeException e) {
+                    throw new ParameterException(INCORRECT_PRUNABLE_MESSAGE);
+                }
+            }
+        }
+        Transaction.Builder builder = ParameterParser.parseTransaction(transactionBytes, transactionJSON);
+        builder.prunableMessage(prunableMessageAppendix);
+        Transaction transaction = builder.build();
         JSONObject response = new JSONObject();
         try {
             Nxt.getTransactionProcessor().broadcast(transaction);
