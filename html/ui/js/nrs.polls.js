@@ -3,6 +3,8 @@
  */
 var NRS = (function(NRS, $, undefined) {
 	
+	var _voteCache = {};
+
 	function _setFollowButtonStates() {
 		if (NRS.databaseSupport) {
 			NRS.database.select("polls", null, function(error, polls) {
@@ -11,6 +13,25 @@ var NRS = (function(NRS, $, undefined) {
 				});
 			});
 		}
+	}
+
+	function _setVoteButtonStates() {
+		$('.vote_button:visible[data-poll]').each(function(index, btn) {
+			var pollID = $(btn).data('poll');
+			if (pollID in _voteCache) {
+				$(btn).attr('disabled', true);
+			} else {
+				NRS.sendRequest("getPollVote", {
+					"account": NRS.account,
+					"poll": pollID
+				}, function(response) {
+					if (response && response.voterRS) {
+						$(btn).attr('disabled', true);
+						_voteCache[pollID] = response;
+					}
+				});
+			}
+		});
 	}
 
 	NRS.pages.polls = function() {
@@ -62,6 +83,7 @@ var NRS = (function(NRS, $, undefined) {
 							}
 							NRS.dataLoaded(rows);
 							_setFollowButtonStates();
+							_setVoteButtonStates();
 						}
 					});
 				}
@@ -132,6 +154,7 @@ var NRS = (function(NRS, $, undefined) {
 							}
 							NRS.dataLoaded(rows);
 							_setFollowButtonStates();
+							_setVoteButtonStates();
 						}
 					});
 				}
@@ -371,7 +394,7 @@ var NRS = (function(NRS, $, undefined) {
 	});
 
 
-	$("#polls_table, #my_polls_table").on("click", "a[data-poll]", function(e) {
+	$("body").on("click", ".vote_button[data-poll]", function(e) {
 		e.preventDefault();
 		var transactionId = $(this).data("poll");
 
@@ -689,16 +712,15 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.forms.castVoteComplete = function(response, data) {
-		// don't think anything needs to go here
+		if (data.poll) {
+			$('.vote_button[data-poll="' + data.poll + '"]').attr('disabled', true);
+		}
 	}
-
-
 
 
 	// a lot of stuff in followed polls, lets put that here
 	NRS.followedPolls = [];
 	NRS.followedPollIds = [];
-	NRS.viewingAsset = false; //viewing non-bookmarked asset
 	NRS.currentPoll = {};
 	var currentPollId = 0;
 
@@ -937,27 +959,17 @@ var NRS = (function(NRS, $, undefined) {
 
 		var active = $("#followed_polls_sidebar a.active");
 
-
 		if (active.length) {
 			active = active.data("poll");
 		} else {
 			active = false;
 		}
-
 		$("#followed_polls_sidebar_content").empty().append(rows);
 
 		if (active) {
 			$("#followed_polls_sidebar a[data-poll=" + active + "]").addClass("active");
 		}
-
-
 		$("#followed_polls_sidebar_search").hide();
-
-		if (NRS.viewingAsset) {
-			$("#asset_exchange_bookmark_this_asset").show();
-		} else {
-			$("#asset_exchange_bookmark_this_asset").hide();
-		}
 
 		NRS.pageLoaded(callback);
 	}
