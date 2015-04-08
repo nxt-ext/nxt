@@ -223,15 +223,15 @@ var NRS = (function(NRS, $, undefined) {
 		}
 		NRS.appendMenuItemToTSMenuItem(sidebarId, options);
 		options = {
-			"titleHTML": '<span data-i18n="my_polls">My Polls</span>',
-			"type": 'PAGE',
-			"page": 'my_polls'
-		}
-		NRS.appendMenuItemToTSMenuItem(sidebarId, options);
-		options = {
 			"titleHTML": '<span data-i18n="my_votes">My Votes</span>',
 			"type": 'PAGE',
 			"page": 'voted_polls'
+		}
+		NRS.appendMenuItemToTSMenuItem(sidebarId, options);
+		options = {
+			"titleHTML": '<span data-i18n="my_polls">My Polls</span>',
+			"type": 'PAGE',
+			"page": 'my_polls'
 		}
 		NRS.appendMenuItemToTSMenuItem(sidebarId, options);
 		options = {
