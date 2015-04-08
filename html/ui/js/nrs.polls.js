@@ -2,6 +2,17 @@
  * @depends {nrs.js}
  */
 var NRS = (function(NRS, $, undefined) {
+	
+	function _setFollowButtonStates() {
+		if (NRS.databaseSupport) {
+			NRS.database.select("polls", null, function(error, polls) {
+				$.each(polls, function(index, poll) {
+					$('.follow_button:visible[data-follow="' + poll.poll + '"]').attr('disabled', true);
+				});
+			});
+		}
+	}
+
 	NRS.pages.polls = function() {
 		NRS.sendRequest("getPolls+", function(response) {
 			if (response.polls && response.polls.length) {
@@ -50,6 +61,7 @@ var NRS = (function(NRS, $, undefined) {
 								rows += "</tr>";
 							}
 							NRS.dataLoaded(rows);
+							_setFollowButtonStates();
 						}
 					});
 				}
@@ -119,6 +131,7 @@ var NRS = (function(NRS, $, undefined) {
 								rows += "</tr>";
 							}
 							NRS.dataLoaded(rows);
+							_setFollowButtonStates();
 						}
 					});
 				}
@@ -188,6 +201,7 @@ var NRS = (function(NRS, $, undefined) {
 								rows += "</tr>";
 							}
 							NRS.dataLoaded(rows);
+							_setFollowButtonStates();
 						}
 					});
 				}
@@ -505,8 +519,9 @@ var NRS = (function(NRS, $, undefined) {
 		}
 	});
 
-	$("#polls_table, #my_polls_table, #voted_polls_table").on("click", "a[data-follow]", function(e) {
+	$("body").on("click", ".follow_button[data-follow]", function(e) {
 		e.preventDefault();
+		$btn = $(this);
 		var pollId = $(this).data("follow");
 
 		NRS.sendRequest("getPoll", {"poll": pollId}, function(response) 
@@ -516,6 +531,7 @@ var NRS = (function(NRS, $, undefined) {
 			} else {
 				NRS.saveFollowedPolls(new Array(response), NRS.forms.addFollowedPollsComplete);
 			}
+			$btn.attr('disabled', true);
 		});
 	});
 
