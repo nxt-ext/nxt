@@ -782,12 +782,15 @@ $("#poll_results_modal ul.nav li").click(function(e) {
 		} else {
 			NRS.closeModal();
 
-			var message = $.t("success_poll_followed", {
-				"count": newPolls.length
-			});
+			var message = "";
+			if (newPolls.length == 1) {
+				message += $.t("success_poll_followed_one");
+			} else {
+				message += $.t("success_poll_followed", { "count": newPolls.length });
+			}
 
 			if (!NRS.databaseSupport) {
-				message += " " + $.t("error_polls_save_db");
+				message += " " + $.t("error_poll_save_db");
 			}
 
 			$.growl(message, {
