@@ -135,7 +135,7 @@ public interface Appendix {
         };
 
         static Message parse(JSONObject attachmentData) {
-            if (attachmentData.get("message") == null) {
+            if (attachmentData.get("message") == null || Boolean.TRUE.equals(attachmentData.get("messageIsPrunable"))) {
                 return null;
             }
             return new Message(attachmentData);
@@ -204,12 +204,6 @@ public interface Appendix {
 
         @Override
         void validate(Transaction transaction) throws NxtException.ValidationException {
-            if (this.isText && transaction.getVersion() == 0) {
-                throw new NxtException.NotValidException("Text messages not yet enabled");
-            }
-            if (transaction.getVersion() == 0 && transaction.getAttachment() != Attachment.ARBITRARY_MESSAGE) {
-                throw new NxtException.NotValidException("Message attachments not enabled for version 0 transactions");
-            }
             if (message.length > Constants.MAX_ARBITRARY_MESSAGE_LENGTH) {
                 throw new NxtException.NotCurrentlyValidException("Invalid arbitrary message length: " + message.length);
             }
@@ -242,7 +236,8 @@ public interface Appendix {
         };
 
         static PrunableMessageAppendix parse(JSONObject attachmentData) {
-            if (attachmentData.get("prunableMessage") == null && attachmentData.get("prunableMessageHash") == null) {
+            if ((attachmentData.get("message") == null && attachmentData.get("messageHash") == null)
+                    || !Boolean.TRUE.equals(attachmentData.get("messageIsPrunable"))) {
                 return null;
             }
             return new PrunableMessageAppendix(attachmentData);
@@ -263,16 +258,14 @@ public interface Appendix {
 
         PrunableMessageAppendix(JSONObject attachmentData) {
             super(attachmentData);
-            byte[] hash = Convert.parseHexString(Convert.emptyToNull((String) attachmentData.get("prunableMessageHash")));
-            if (hash != null) {
-                this.hash = hash;
+            this.hash = Convert.parseHexString(Convert.emptyToNull((String) attachmentData.get("messageHash")));
+            if (hash == null) {
+                String messageString = Convert.nullToEmpty((String) attachmentData.get("message"));
+                this.isText = Boolean.TRUE.equals(attachmentData.get("messageIsText"));
+                this.message = isText ? Convert.toBytes(messageString) : Convert.parseHexString(messageString);
+            } else {
                 this.message = null;
                 this.isText = false;
-            } else {
-                String messageString = Convert.nullToEmpty((String) attachmentData.get("prunableMessage"));
-                this.isText = Boolean.TRUE.equals(attachmentData.get("prunableMessageIsText"));
-                this.message = isText ? Convert.toBytes(messageString) : Convert.parseHexString(messageString);
-                this.hash = null;
             }
         }
 
@@ -323,13 +316,13 @@ public interface Appendix {
         @Override
         void putMyJSON(JSONObject json) {
             if (prunableMessage != null) {
-                json.put("prunableMessage", prunableMessage.toString());
-                json.put("prunableMessageIsText", isText);
+                json.put("message", prunableMessage.toString());
+                json.put("messageIsText", prunableMessage.isText());
             } else if (hash != null) {
-                json.put("prunableMessageHash", Convert.toHexString(hash));
+                json.put("messageHash", Convert.toHexString(hash));
             } else {
-                json.put("prunableMessage", this.toString());
-                json.put("prunableMessageIsText", isText);
+                json.put("message", this.toString());
+                json.put("messageIsText", isText);
             }
         }
 
@@ -337,6 +330,9 @@ public interface Appendix {
         void validate(Transaction transaction) throws NxtException.ValidationException {
             if (Nxt.getBlockchain().getHeight() < Constants.VOTING_SYSTEM_BLOCK) {
                 throw new NxtException.NotYetEnabledException("Prunable messages not yet enabled");
+            }
+            if (transaction.getMessage() != null) {
+                throw new NxtException.NotValidException("Cannot have both message and prunable message attachments");
             }
             if (getMessageLength() > Constants.MAX_PRUNABLE_MESSAGE_LENGTH) {
                 throw new NxtException.NotValidException("Invalid prunable message length: " + message.length);
@@ -351,19 +347,28 @@ public interface Appendix {
 
         @Override
         void apply(Transaction transaction, Account senderAccount, Account recipientAccount) {
-            nxt.PrunableMessage.add(transaction, this);
+            PrunableMessage.add(transaction, this);
         }
 
         public byte[] getMessage() {
+            if (prunableMessage != null) {
+                return prunableMessage.getMessage();
+            }
             return message;
         }
 
         public boolean isText() {
+            if (prunableMessage != null) {
+                return prunableMessage.isText();
+            }
             return isText;
         }
 
         @Override
         public String toString() {
+            if (prunableMessage != null) {
+                return prunableMessage.toString();
+            }
             return isText ? Convert.toString(message) : Convert.toHexString(message);
         }
 

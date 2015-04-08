@@ -30,8 +30,7 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
 
     private static final String[] commonParameters = new String[]{"secretPhrase", "publicKey", "feeNQT",
             "deadline", "referencedTransactionFullHash", "broadcast",
-            "prunableMessage", "prunableMessageIsText",
-            "message", "messageIsText",
+            "message", "messageIsText", "messageIsPrunable",
             "messageToEncrypt", "messageToEncryptIsText", "encryptedMessageData", "encryptedMessageNonce",
             "messageToEncryptToSelf", "messageToEncryptToSelfIsText", "encryptToSelfMessageData", "encryptToSelfMessageNonce",
             "phased", "phasingFinishHeight", "phasingVotingModel", "phasingQuorum", "phasingMinBalance", "phasingHolding", "phasingMinBalanceModel",
@@ -128,24 +127,24 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
             encryptToSelfMessage = new Appendix.EncryptToSelfMessage(encryptedToSelfData, !"false".equalsIgnoreCase(req.getParameter("messageToEncryptToSelfIsText")));
         }
         Appendix.Message message = null;
+        Appendix.PrunableMessageAppendix prunableMessageAppendix = null;
         String messageValue = Convert.emptyToNull(req.getParameter("message"));
         if (messageValue != null) {
             boolean messageIsText = !"false".equalsIgnoreCase(req.getParameter("messageIsText"));
-            try {
-                message = messageIsText ? new Appendix.Message(messageValue) : new Appendix.Message(Convert.parseHexString(messageValue));
-            } catch (RuntimeException e) {
-                throw new ParameterException(INCORRECT_ARBITRARY_MESSAGE);
-            }
-        }
-        Appendix.PrunableMessageAppendix prunableMessageAppendix = null;
-        String prunableMessageValue = Convert.emptyToNull(req.getParameter("prunableMessage"));
-        if (prunableMessageValue != null) {
-            boolean prunableMessageIsText = !"false".equalsIgnoreCase(req.getParameter("prunableMessageIsText"));
-            try {
-                prunableMessageAppendix = prunableMessageIsText ? new Appendix.PrunableMessageAppendix(prunableMessageValue)
-                        : new Appendix.PrunableMessageAppendix(Convert.parseHexString(prunableMessageValue));
-            } catch (RuntimeException e) {
-                throw new ParameterException(INCORRECT_PRUNABLE_MESSAGE);
+            boolean messageIsPrunable = "true".equalsIgnoreCase(req.getParameter("messageIsPrunable"));
+            if (messageIsPrunable) {
+                try {
+                    prunableMessageAppendix = messageIsText ? new Appendix.PrunableMessageAppendix(messageValue)
+                            : new Appendix.PrunableMessageAppendix(Convert.parseHexString(messageValue));
+                } catch (RuntimeException e) {
+                    throw new ParameterException(INCORRECT_PRUNABLE_MESSAGE);
+                }
+            } else {
+                try {
+                    message = messageIsText ? new Appendix.Message(messageValue) : new Appendix.Message(Convert.parseHexString(messageValue));
+                } catch (RuntimeException e) {
+                    throw new ParameterException(INCORRECT_ARBITRARY_MESSAGE);
+                }
             }
         }
         Appendix.PublicKeyAnnouncement publicKeyAnnouncement = null;
