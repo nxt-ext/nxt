@@ -404,7 +404,12 @@ var NRS = (function(NRS, $, undefined) {
 			{
 				for(var b=0; b<response.attachment.options.length; b++)
 				{
-					$("#cast_vote_answers_entry").append("<div class='answer_slider'><label name='cast_vote_answer_"+b+"'>"+String(response.attachment.options[b]).escapeHTML()+"</label> &nbsp;&nbsp;<span class='badge'>"+response.attachment.minRangeValue+"</span><br/><input class='form-control' step='1' value='"+response.attachment.minRangeValue+"' max='"+response.attachment.maxRangeValue+"' min='"+response.attachment.minRangeValue+"' type='range'/></div>");
+					var html = "<div class='answer_slider' style='padding:6px;background-color:#f9f9f9;border:1px solid #ddd;margin-bottom:4px;'>";
+					html += "<label name='cast_vote_answer_"+b+"'>"+String(response.attachment.options[b]).escapeHTML()+"</label> &nbsp;&nbsp;";
+					html += "<span class='cast_vote_value label label-default' style='float:right;'>"+response.attachment.minRangeValue+"</span><br/>";
+					html += "<input class='form-control' step='1' value='"+response.attachment.minRangeValue+"' max='"+response.attachment.maxRangeValue+"' min='"+response.attachment.minRangeValue+"' type='range'/>";
+					html += "</div>";
+					$("#cast_vote_answers_entry").append(html);
 				}
 			}
 			else
@@ -416,7 +421,15 @@ var NRS = (function(NRS, $, undefined) {
 			}
 			$("#cast_vote_modal").modal();
 			$("input[type='range']").on("change mousemove", function() {
-				$(this).parent().children(".badge").text($(this).val());
+				$label = $(this).parent().children(".cast_vote_value.label");
+				if ($(this).val() > 0) {
+					$label.removeClass("label-default");
+					$label.addClass("label-primary");
+				} else {
+					$label.removeClass("label-primary");
+					$label.addClass("label-default");
+				}
+				$label.text($(this).val());
 			});
 		});
 	});
