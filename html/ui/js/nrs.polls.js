@@ -1128,9 +1128,11 @@ var NRS = (function(NRS, $, undefined) {
 		NRS.sendRequest("getPoll+" + pollId, {
 			"poll": pollId
 		}, function(polldata, input) {
-
+			var maxVotes = 50;
 			NRS.sendRequest("getPollVotes+" + pollId, {
-				"poll": pollId
+				"poll": pollId,
+				"firstIndex": 0,
+				"lastIndex": maxVotes
 			}, function(votesdata, input) {
 
 				var votes = votesdata.votes;
@@ -1153,7 +1155,13 @@ var NRS = (function(NRS, $, undefined) {
 
 					$("#followed_polls_votes_cast thead").empty().append(head);				
 
-					$("#votes_cast_count").html("(" + votes.length + ")");
+					if (votes.length > maxVotes) {
+						var lengthStr = String(maxVotes) + "+";
+						votes.pop();
+					} else {
+						var lengthStr = String(votes.length);
+					}
+					$("#votes_cast_count").html("(" + lengthStr + ")");
 
 					var rows = "";
 
