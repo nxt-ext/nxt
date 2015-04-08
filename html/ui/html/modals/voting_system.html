@@ -20,11 +20,11 @@
                         <div class="col-xs-12 col-sm-12 col-md-12" id="create_poll_type_group">
                             <div class="form-group">
                                 <label for="create_poll_type" data-i18n="poll_by">POLL BY</label>
-                                <select name="votingModel" id="create_poll_type" class="form-control" data-default="0" value="0" tabindex="3">
-                                    <option selected value="0">Vote By NXT Balance</option>
-                                    <option value="1">One Vote Per Account</option>
-                                    <option value="2">Vote By Asset</option>
-                                    <option value="3">Vote By Currency</option>
+                                <select name="votingModel" id="create_poll_type" class="form-control" data-default="0" tabindex="3">
+                                    <option selected value="0" data-i18n="vote_by_account">Vote by Account</option>
+                                    <option value="1" data-i18n="vote_by_balance">Vote by Account Balance</option>
+                                    <option value="2" data-i18n="vote_by_asset">Vote by Asset Balance</option>
+                                    <option value="3" data-i18n="vote_by_currency">Vote by Currency Balance</option>
                                 </select>
                             </div>
                         </div>
@@ -44,17 +44,17 @@
                     </div>
 
                     <div class="row">
-                        <div class="col-xs-12 col-sm-12 col-md-12" aria-hidden="true" id="create_poll_min_balance_type_group" style="display: none;">
-                            <strong>Min Voting Balance Type: </strong>
-                            <div class="form-group">
-                                <label class="radio-inline">
-                                    <input type="radio" name="minBalanceType" id="create_poll_min_balance_type_1" value="1" selected> By Nxt Balance
+                        <div class="col-xs-12 col-sm-12 col-md-12" aria-hidden="true" id="create_poll_min_balance_type_group">
+                            <label for="create_poll_min_balance_type" data-i18n="min_balance_type">Min Balance Type</label>
+                            <div id="create_poll_min_balance_type" class="form-group">
+                                <label class="radio-inline" data-i18n="account_balance">
+                                    <input type="radio" name="minBalanceType" id="create_poll_min_balance_type_1" value="1"/><span> </span>Account Balance
                                 </label>
-                                <label class="radio-inline">
-                                    <input type="radio" name="minBalanceType" id="create_poll_min_balance_type_2" value="2"> By Asset
+                                <label class="radio-inline" data-i18n="asset_balance">
+                                    <input type="radio" name="minBalanceType" id="create_poll_min_balance_type_2" value="2"/><span> </span>Asset Balance
                                 </label>
-                                <label class="radio-inline">
-                                    <input type="radio" name="minBalanceType" id="create_poll_min_balance_type_3" value="3"> By MS Coin
+                                <label class="radio-inline" data-i18n="currency_balance">
+                                    <input type="radio" name="minBalanceType" id="create_poll_min_balance_type_3" value="3"/><span> </span>Currency Balance
                                 </label>
                             </div>
                         </div>

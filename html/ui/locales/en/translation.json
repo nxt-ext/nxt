@@ -1154,9 +1154,13 @@
   "status_new_account_no_pk": "Welcome to your new NXT account. Your account ID is <strong>__account_id__</strong>",
   "vote_by_none": "No Voting",
   "vote_by_account": "Vote by Account",
-  "vote_by_balance": "Vote by Balance",
-  "vote_by_asset": "Vote by Asset",
-  "vote_by_currency": "Vote by Currency",
+  "vote_by_balance": "Vote by Account Balance",
+  "vote_by_asset": "Vote by Asset Balance",
+  "vote_by_currency": "Vote by Currency Balance",
   "vote_by_transaction": "Vote by Transaction",
-  "vote_by_hash": "Vote by Hash"
+  "vote_by_hash": "Vote by Hash",
+  "min_balance_type": "Min Balance Type",
+  "account_balance": "Account Balance",
+  "asset_balance": "Asset Balance",
+  "currency_balance": "Currency Balance"
 }

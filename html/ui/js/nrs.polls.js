@@ -344,7 +344,7 @@ var NRS = (function(NRS, $, undefined) {
 			$("#create_poll_type_group").removeClass("col-md-6").addClass("col-md-12");
 		}
 
-		if($("#create_poll_type").val() == "1")
+		if($("#create_poll_type").val() == "0")
 		{
 			// ok now lets show the bottom things...
 			$("#create_poll_min_balance_type_group").css("display", "inline");
