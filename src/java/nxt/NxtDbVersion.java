@@ -677,6 +677,35 @@ class NxtDbVersion extends DbVersion {
                 BlockchainProcessorImpl.getInstance().scheduleScan(0, false);
                 apply(null);
             case 283:
+                apply("CREATE TABLE IF NOT EXISTS prunable_message (db_id IDENTITY, id BIGINT NOT NULL, sender_id BIGINT NOT NULL, "
+                        + "recipient_id BIGINT, message VARBINARY NOT NULL, is_text BOOLEAN NOT NULL, timestamp INT NOT NULL, "
+                        + "expiration INT NOT NULL, height INT NOT NULL)");
+            case 284:
+                apply("CREATE UNIQUE INDEX IF NOT EXISTS prunable_message_id_idx ON prunable_message (id)");
+            case 285:
+                apply("CREATE INDEX IF NOT EXISTS prunable_message_height_idx ON prunable_message (height)");
+            case 286:
+                apply("CREATE INDEX IF NOT EXISTS prunable_message_expiration_idx ON prunable_message (expiration DESC)");
+            case 287:
+                apply("ALTER TABLE transaction ADD COLUMN IF NOT EXISTS has_prunable_message BOOLEAN NOT NULL DEFAULT FALSE");
+            case 288:
+                if (Constants.isTestnet) {
+                    BlockchainProcessorImpl.getInstance().scheduleScan(0, true);
+                }
+                apply(null);
+            case 289:
+                apply("TRUNCATE TABLE unconfirmed_transaction");
+            case 290:
+                apply("ALTER TABLE unconfirmed_transaction DROP COLUMN IF EXISTS transaction_bytes");
+            case 291:
+                apply("ALTER TABLE unconfirmed_transaction ADD COLUMN IF NOT EXISTS transaction_json VARCHAR NOT NULL");
+            case 292:
+                apply("CREATE INDEX IF NOT EXISTS prunable_message_sender_idx ON prunable_message (sender)");
+            case 293:
+                apply("CREATE INDEX IF NOT EXISTS prunable_message_recipient_idx ON prunable_message (recipient)");
+            case 294:
+                apply("CREATE INDEX IF NOT EXISTS prunable_message_timestamp_idx ON prunable_message (timestamp DESC)");
+            case 295:
                 return;
             default:
                 throw new RuntimeException("Blockchain database inconsistent with code, probably trying to run older code on newer database");

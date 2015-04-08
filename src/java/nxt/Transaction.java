@@ -20,6 +20,8 @@ public interface Transaction {
 
         Builder publicKeyAnnouncement(Appendix.PublicKeyAnnouncement publicKeyAnnouncement);
 
+        Builder prunableMessage(Appendix.PrunableMessageAppendix prunableMessage);
+
         Builder timestamp(int timestamp);
 
         Builder ecBlockHeight(int height);
@@ -95,6 +97,8 @@ public interface Transaction {
     Appendix.EncryptToSelfMessage getEncryptToSelfMessage();
 
     Appendix.Phasing getPhasing();
+
+    Appendix.PrunableMessageAppendix getPrunableMessage();
 
     List<? extends Appendix> getAppendages();
 

@@ -52,11 +52,6 @@ final class BlockImpl implements Block {
     BlockImpl(int version, int timestamp, long previousBlockId, long totalAmountNQT, long totalFeeNQT, int payloadLength, byte[] payloadHash,
               byte[] generatorPublicKey, byte[] generationSignature, byte[] blockSignature, byte[] previousBlockHash, List<TransactionImpl> transactions)
             throws NxtException.NotValidException {
-
-        if (payloadLength > Constants.MAX_PAYLOAD_LENGTH || payloadLength < 0) {
-            throw new NxtException.NotValidException("attempted to create a block with payloadLength " + payloadLength);
-        }
-
         this.version = version;
         this.timestamp = timestamp;
         this.previousBlockId = previousBlockId;
@@ -70,9 +65,6 @@ final class BlockImpl implements Block {
         this.previousBlockHash = previousBlockHash;
         if (transactions != null) {
             this.blockTransactions = Collections.unmodifiableList(transactions);
-            if (blockTransactions.size() > Constants.MAX_NUMBER_OF_TRANSACTIONS) {
-                throw new NxtException.NotValidException("attempted to create a block with " + blockTransactions.size() + " transactions");
-            }
         }
     }
 

@@ -36,6 +36,7 @@ final class TransactionImpl implements Transaction {
         private Appendix.EncryptToSelfMessage encryptToSelfMessage;
         private Appendix.PublicKeyAnnouncement publicKeyAnnouncement;
         private Appendix.Phasing phasing;
+        private Appendix.PrunableMessageAppendix prunableMessage;
         private long blockId;
         private int height = Integer.MAX_VALUE;
         private long id;
@@ -114,6 +115,12 @@ final class TransactionImpl implements Transaction {
         @Override
         public BuilderImpl publicKeyAnnouncement(Appendix.PublicKeyAnnouncement publicKeyAnnouncement) {
             this.publicKeyAnnouncement = publicKeyAnnouncement;
+            return this;
+        }
+
+        @Override
+        public BuilderImpl prunableMessage(Appendix.PrunableMessageAppendix prunableMessage) {
+            this.prunableMessage = prunableMessage;
             return this;
         }
 
@@ -203,9 +210,11 @@ final class TransactionImpl implements Transaction {
     private final Appendix.EncryptToSelfMessage encryptToSelfMessage;
     private final Appendix.PublicKeyAnnouncement publicKeyAnnouncement;
     private final Appendix.Phasing phasing;
+    private final Appendix.PrunableMessageAppendix prunableMessage;
 
     private final List<Appendix.AbstractAppendix> appendages;
     private final int appendagesSize;
+    private final int appendagesFullSize;
 
     private volatile int height = Integer.MAX_VALUE;
     private volatile long blockId;
@@ -259,12 +268,18 @@ final class TransactionImpl implements Transaction {
         if ((this.phasing = builder.phasing) != null) {
             list.add(this.phasing);
         }
+        if ((this.prunableMessage = builder.prunableMessage) != null) {
+            list.add(this.prunableMessage);
+        }
         this.appendages = Collections.unmodifiableList(list);
         int appendagesSize = 0;
+        int appendagesFullSize = 0;
         for (Appendix appendage : appendages) {
             appendagesSize += appendage.getSize();
+            appendagesFullSize += appendage.getFullSize();
         }
         this.appendagesSize = appendagesSize;
+        this.appendagesFullSize = appendagesFullSize;
         if (builder.feeNQT <= 0) {
             int effectiveHeight = (height < Integer.MAX_VALUE ? height : Nxt.getBlockchain().getHeight());
             if (this.phasing == null) {
@@ -509,6 +524,18 @@ final class TransactionImpl implements Transaction {
     }
 
     @Override
+    public Appendix.PrunableMessageAppendix getPrunableMessage() {
+        if (prunableMessage != null) {
+            prunableMessage.loadPrunableMessage(this);
+        }
+        return prunableMessage;
+    }
+
+    boolean hasPrunableMessage() {
+        return prunableMessage != null;
+    }
+
+    @Override
     public byte[] getBytes() {
         return Arrays.copyOf(bytes(), bytes.length);
     }
@@ -619,6 +646,10 @@ final class TransactionImpl implements Transaction {
             if ((flags & position) != 0) {
                 builder.phasing(new Appendix.Phasing(buffer, version));
             }
+            position <<= 1;
+            if ((flags & position) != 0) {
+                builder.prunableMessage(new Appendix.PrunableMessageAppendix(buffer, version));
+            }
             return builder;
         } catch (NxtException.NotValidException|RuntimeException e) {
             Logger.logDebugMessage("Failed to parse transaction bytes: " + Convert.toHexString(bytes));
@@ -712,6 +743,7 @@ final class TransactionImpl implements Transaction {
                 builder.publicKeyAnnouncement((Appendix.PublicKeyAnnouncement.parse(attachmentData)));
                 builder.encryptToSelfMessage(Appendix.EncryptToSelfMessage.parse(attachmentData));
                 builder.phasing(Appendix.Phasing.parse(attachmentData));
+                builder.prunableMessage(Appendix.PrunableMessageAppendix.parse(attachmentData));
             }
             return builder;
         } catch (NxtException.NotValidException|RuntimeException e) {
@@ -759,6 +791,10 @@ final class TransactionImpl implements Transaction {
         return signatureOffset() + 64  + (version > 0 ? 4 + 4 + 8 : 0) + appendagesSize;
     }
 
+    int getFullSize() {
+        return getSize() - appendagesSize + appendagesFullSize;
+    }
+
     private int signatureOffset() {
         return 1 + 1 + 4 + 2 + 32 + 8 + (useNQT() ? 8 + 8 + 32 : 4 + 4 + 8);
     }
@@ -797,6 +833,10 @@ final class TransactionImpl implements Transaction {
         }
         position <<= 1;
         if (phasing != null) {
+            flags |= position;
+        }
+        position <<= 1;
+        if (prunableMessage != null) {
             flags |= position;
         }
         return flags;
@@ -841,8 +881,8 @@ final class TransactionImpl implements Transaction {
             appendage.validate(this);
         }
 
-        if (getSize() > Constants.MAX_PAYLOAD_LENGTH) {
-            throw new NxtException.NotValidException("Transaction size " + getSize() + " exceeds maximum payload size");
+        if (getFullSize() > Constants.MAX_PAYLOAD_LENGTH) {
+            throw new NxtException.NotValidException("Transaction size " + getFullSize() + " exceeds maximum payload size");
         }
 
         long minimumFeeNQT = getMinimumFeeNQT(Nxt.getBlockchain().getHeight());
