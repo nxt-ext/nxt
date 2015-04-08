@@ -28,6 +28,8 @@ var NRS = (function(NRS, $, undefined) {
 					if (response && response.voterRS) {
 						$(btn).attr('disabled', true);
 						_voteCache[pollID] = response;
+					} else {
+						$(btn).attr('disabled', false);
 					}
 				});
 			}
@@ -994,8 +996,7 @@ var NRS = (function(NRS, $, undefined) {
 			if (NRS.databaseSupport) {
 				var group = $(this).data("groupname");
 				var closed = $(this).data("closed");
-
-					var $links = $("#followed_polls_sidebar a.list-group-item-ungrouped");
+				var $links = $("#followed_polls_sidebar a.list-group-item-ungrouped");
 
 				if (!group) {
 					group = "undefined";
@@ -1065,13 +1066,13 @@ var NRS = (function(NRS, $, undefined) {
 			$("#followed_polls_poll_name").html(String(poll.name).escapeHTML());
 			$("#poll_description").html(String(poll.description).autoLink());
 			$(".poll_name").html(String(poll.name).escapeHTML());
-			if(poll.finishHeight > NRS.lastBlockHeight)
-			{
-				$("#vote_poll_link").removeClass('disabled');
-				$("#vote_poll_link").attr("data-poll", pollId);
-			}
-			else $("#vote_poll_link").addClass('disabled');
+			$("#vote_poll_link .vote_button").data("poll", pollId);
 
+			if(poll.finishHeight > NRS.lastBlockHeight) {
+				$("#vote_poll_link").show();
+			} else {
+				$("#vote_poll_link").hide();
+			}
 
 			$("#followed_polls_poll_results tbody").empty();
 			$("#followed_polls_votes_cast tbody").empty();
@@ -1114,14 +1115,9 @@ var NRS = (function(NRS, $, undefined) {
 			}
 		}
 
-		if (poll.finishHeight < NRS.lastBlockHeight) {
-         $("#vote_poll_link").show();
-		} else {
-			$("#vote_poll_link").hide();
-		}
-
 		NRS.loadPollResults(pollId, refresh);
 		NRS.loadPollVotes(pollId, refresh);
+		_setVoteButtonStates();
 	}
 
 	NRS.loadPollResults = function(pollId, refresh) {
