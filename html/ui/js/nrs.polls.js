@@ -44,9 +44,9 @@ var NRS = (function(NRS, $, undefined) {
 								rows += "<td>" + pollDescription.escapeHTML() + "</td>";
 								rows += "<td>" + (poll.sender != NRS.genesis ? "<a href='#' data-user='" + NRS.getAccountFormatted(poll, "sender") + "' class='show_account_modal_action user_info'>" + NRS.getAccountTitle(poll, "sender") + "</a>" : "Genesis") + "</td>";
 								rows += "<td>" + NRS.formatTimestamp(poll.timestamp) + "</td>";
-								rows += "<td>" + String(poll.attachment.finishHeight - NRS.lastBlockHeight) + "</td>";
-								rows += "<td><a href='#' class='vote_button' data-poll='" + poll.transaction +"'>Vote </a></td>";
-								rows += "<td><a href='#' class='follow_button' data-follow='" + poll.transaction + "'>Follow </a></td>";
+								rows += "<td style='text-align:center;'>" + String(poll.attachment.finishHeight - NRS.lastBlockHeight) + "</td>";
+								rows += "<td style='text-align:center;'><nobr><a href='#' class='vote_button btn btn-xs btn-default' data-poll='" + poll.transaction +"'>Vote </a> ";
+								rows += "<a href='#' class='follow_button btn btn-xs btn-default' data-follow='" + poll.transaction + "'>Follow </a></nobr></td>";
 								rows += "</tr>";
 							}
 							NRS.dataLoaded(rows);
@@ -630,7 +630,14 @@ $("#poll_results_modal ul.nav li").click(function(e) {
 
 			var now = parseInt(((new Date().getTime()) - date) / 1000, 10);
 
-			var rowToAdd = "<tr class='tentative'><td>" + String(data.name).escapeHTML() + " - <strong>" + $.t("pending") + "</strong></td><td>" + String(data.description).escapeHTML() + "</td><td><a href='#' data-user='" + NRS.getAccountFormatted(NRS.accountRS) + "' class='show_account_modal_action user_info'>" + NRS.getAccountTitle(NRS.accountRS) + "</a></td><td>" + NRS.formatTimestamp(now) + "</td><td>/</td></tr>";
+			var rowToAdd = "<tr class='tentative'>";
+			rowToAdd += "<td>" + String(data.name).escapeHTML() + " - <strong >" + $.t("pending") + "</strong></td>";
+			rowToAdd += "<td>" + String(data.description).escapeHTML() + "</td>";
+			rowToAdd += "<td><a href='#' data-user='" + NRS.getAccountFormatted(NRS.accountRS) + "' class='show_account_modal_action user_info'>";
+			rowToAdd += NRS.getAccountTitle(NRS.accountRS) + "</a></td>";
+			rowToAdd += "<td>" + NRS.formatTimestamp(now) + "</td>";
+			rowToAdd += "<td>/</td>";
+			rowToAdd += "</tr>";
 
 			$table.prepend(rowToAdd);
 
