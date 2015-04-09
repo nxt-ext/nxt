@@ -127,13 +127,6 @@ public interface Appendix {
 
     class Message extends AbstractAppendix {
 
-        private static final Fee MESSAGE_FEE = new Fee.SizeBasedFee(Constants.ONE_NXT) {
-            @Override
-            public int getSize(TransactionImpl transaction, Appendix appendix) {
-                return ((Message)appendix).getMessage().length;
-            }
-        };
-
         static Message parse(JSONObject attachmentData) {
             if (attachmentData.get("message") == null || Boolean.TRUE.equals(attachmentData.get("messageIsPrunable"))) {
                 return null;
@@ -181,11 +174,6 @@ public interface Appendix {
         }
 
         @Override
-        public Fee getBaselineFee(Transaction transaction) {
-            return MESSAGE_FEE;
-        }
-
-        @Override
         int getMySize() {
             return 4 + message.length;
         }
@@ -226,21 +214,21 @@ public interface Appendix {
         }
     }
 
-    class PrunableMessageAppendix extends Appendix.AbstractAppendix {
+    class PrunablePlainMessage extends Appendix.AbstractAppendix {
 
         private static final Fee PRUNABLE_MESSAGE_FEE = new Fee.SizeBasedFee(Constants.ONE_NXT/10) {
             @Override
             public int getSize(TransactionImpl transaction, Appendix appendix) {
-                return ((PrunableMessageAppendix)appendix).getMessageLength();
+                return ((PrunablePlainMessage)appendix).getMessageLength();
             }
         };
 
-        static PrunableMessageAppendix parse(JSONObject attachmentData) {
+        static PrunablePlainMessage parse(JSONObject attachmentData) {
             if ((attachmentData.get("message") == null && attachmentData.get("messageHash") == null)
                     || !Boolean.TRUE.equals(attachmentData.get("messageIsPrunable"))) {
                 return null;
             }
-            return new PrunableMessageAppendix(attachmentData);
+            return new PrunablePlainMessage(attachmentData);
         }
 
         private final byte[] hash;
@@ -248,7 +236,7 @@ public interface Appendix {
         private final boolean isText;
         private volatile PrunableMessage prunableMessage;
 
-        PrunableMessageAppendix(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
+        PrunablePlainMessage(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
             super(buffer, transactionVersion);
             this.hash = new byte[32];
             buffer.get(this.hash);
@@ -256,11 +244,11 @@ public interface Appendix {
             this.isText = false;
         }
 
-        PrunableMessageAppendix(JSONObject attachmentData) {
+        PrunablePlainMessage(JSONObject attachmentData) {
             super(attachmentData);
             this.hash = Convert.parseHexString(Convert.emptyToNull((String) attachmentData.get("messageHash")));
             if (hash == null) {
-                String messageString = Convert.nullToEmpty((String) attachmentData.get("message"));
+                String messageString = (String) attachmentData.get("message");
                 this.isText = Boolean.TRUE.equals(attachmentData.get("messageIsText"));
                 this.message = isText ? Convert.toBytes(messageString) : Convert.parseHexString(messageString);
             } else {
@@ -269,13 +257,13 @@ public interface Appendix {
             }
         }
 
-        public PrunableMessageAppendix(byte[] message) {
+        public PrunablePlainMessage(byte[] message) {
             this.message = message;
             this.isText = false;
             this.hash = null;
         }
 
-        public PrunableMessageAppendix(String string) {
+        public PrunablePlainMessage(String string) {
             this.message = Convert.toBytes(string);
             this.isText = true;
             this.hash = null;
@@ -331,16 +319,17 @@ public interface Appendix {
             if (Nxt.getBlockchain().getHeight() < Constants.VOTING_SYSTEM_BLOCK) {
                 throw new NxtException.NotYetEnabledException("Prunable messages not yet enabled");
             }
+            loadPrunableMessage(transaction);
             if (transaction.getMessage() != null) {
                 throw new NxtException.NotValidException("Cannot have both message and prunable message attachments");
             }
             if (getMessageLength() > Constants.MAX_PRUNABLE_MESSAGE_LENGTH) {
                 throw new NxtException.NotValidException("Invalid prunable message length: " + message.length);
             }
-            if (message != null && message.length <= 28) {
+            if (getMessage() != null && getMessageLength() <= 28) {
                 throw new NxtException.NotValidException("Prunable messages must be longer than 28 bytes");
             }
-            if (message == null && Nxt.getEpochTime() - transaction.getTimestamp() < Constants.MIN_PRUNABLE_LIFETIME) {
+            if (getMessage() == null && Nxt.getEpochTime() - transaction.getTimestamp() < Constants.MIN_PRUNABLE_LIFETIME) {
                 throw new NxtException.NotCurrentlyValidException("Message has been pruned prematurely");
             }
         }
@@ -376,8 +365,9 @@ public interface Appendix {
             return message == null ? 0 : message.length;
         }
 
-        void loadPrunableMessage(TransactionImpl transaction) {
-            if (message == null && prunableMessage == null && Nxt.getEpochTime() - transaction.getTimestamp() < Constants.MIN_PRUNABLE_LIFETIME) {
+        void loadPrunableMessage(Transaction transaction) {
+            if (message == null && prunableMessage == null
+                    && Nxt.getEpochTime() - transaction.getTimestamp() < Constants.MIN_PRUNABLE_LIFETIME) {
                 prunableMessage = PrunableMessage.getPrunableMessage(transaction.getId());
             }
         }
@@ -385,13 +375,6 @@ public interface Appendix {
     }
 
     abstract class AbstractEncryptedMessage extends AbstractAppendix {
-
-        private static final Fee ENCRYPTED_DATA_FEE = new Fee.SizeBasedFee(Constants.ONE_NXT) {
-            @Override
-            public int getSize(TransactionImpl transaction, Appendix appendix) {
-                return ((AbstractEncryptedMessage)appendix).getEncryptedData().getData().length;
-            }
-        };
 
         private final EncryptedData encryptedData;
         private final boolean isText;
@@ -403,7 +386,7 @@ public interface Appendix {
             if (length < 0) {
                 length &= Integer.MAX_VALUE;
             }
-            this.encryptedData = EncryptedData.readEncryptedData(buffer, length, Constants.MAX_ENCRYPTED_MESSAGE_LENGTH_2);
+            this.encryptedData = EncryptedData.readEncryptedData(buffer, length, Constants.MAX_ENCRYPTED_MESSAGE_LENGTH);
         }
 
         private AbstractEncryptedMessage(JSONObject attachmentJSON, JSONObject encryptedMessageJSON) {
@@ -417,11 +400,6 @@ public interface Appendix {
         private AbstractEncryptedMessage(EncryptedData encryptedData, boolean isText) {
             this.encryptedData = encryptedData;
             this.isText = isText;
-        }
-
-        @Override
-        public Fee getBaselineFee(Transaction transaction) {
-            return ENCRYPTED_DATA_FEE;
         }
 
         @Override
@@ -445,14 +423,8 @@ public interface Appendix {
 
         @Override
         void validate(Transaction transaction) throws NxtException.ValidationException {
-            if (Nxt.getBlockchain().getHeight() < Constants.VOTING_SYSTEM_BLOCK) {
-                if (encryptedData.getData().length > Constants.MAX_ENCRYPTED_MESSAGE_LENGTH) {
-                    throw new NxtException.NotCurrentlyValidException("Max encrypted message length exceeded");
-                }
-            } else {
-                if (encryptedData.getData().length > Constants.MAX_ENCRYPTED_MESSAGE_LENGTH_2) {
-                    throw new NxtException.NotValidException("Max encrypted message length exceeded");
-                }
+            if (encryptedData.getData().length > Constants.MAX_ENCRYPTED_MESSAGE_LENGTH) {
+                throw new NxtException.NotCurrentlyValidException("Max encrypted message length exceeded");
             }
             if ((encryptedData.getNonce().length != 32 && encryptedData.getData().length > 0)
                     || (encryptedData.getNonce().length != 0 && encryptedData.getData().length == 0)) {
@@ -460,6 +432,7 @@ public interface Appendix {
             }
         }
 
+        @Override
         void apply(Transaction transaction, Account senderAccount, Account recipientAccount) {}
 
         public final EncryptedData getEncryptedData() {
@@ -470,6 +443,170 @@ public interface Appendix {
             return isText;
         }
 
+    }
+
+    class PrunableEncryptedMessage extends AbstractAppendix {
+
+        private static final Fee PRUNABLE_ENCRYPTED_DATA_FEE = new Fee.SizeBasedFee(Constants.ONE_NXT/10) {
+            @Override
+            public int getSize(TransactionImpl transaction, Appendix appendix) {
+                return ((PrunableEncryptedMessage)appendix).getEncryptedDataLength();
+            }
+        };
+
+        static PrunableEncryptedMessage parse(JSONObject attachmentData) {
+            if ((attachmentData.get("encryptedMessage") == null && attachmentData.get("encryptedMessageHash") == null)
+                || !Boolean.TRUE.equals(attachmentData.get("encryptedMessageIsPrunable"))) {
+                return null;
+            }
+            return new PrunableEncryptedMessage(attachmentData);
+        }
+
+        private final byte[] hash;
+        private final EncryptedData encryptedData;
+        private final boolean isText;
+        private volatile PrunableMessage prunableMessage;
+
+        PrunableEncryptedMessage(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
+            super(buffer, transactionVersion);
+            this.hash = new byte[32];
+            buffer.get(this.hash);
+            this.encryptedData = null;
+            this.isText = false;
+        }
+
+        private PrunableEncryptedMessage(JSONObject attachmentJSON) {
+            super(attachmentJSON);
+            this.hash = Convert.parseHexString(Convert.emptyToNull((String) attachmentJSON.get("encryptedMessageHash")));
+            if (hash == null) {
+                JSONObject encryptedMessageJSON = (JSONObject) attachmentJSON.get("encryptedMessage");
+                byte[] data = Convert.parseHexString((String) encryptedMessageJSON.get("data"));
+                byte[] nonce = Convert.parseHexString((String) encryptedMessageJSON.get("nonce"));
+                this.encryptedData = new EncryptedData(data, nonce);
+                this.isText = Boolean.TRUE.equals(encryptedMessageJSON.get("isText"));
+            } else {
+                this.encryptedData = null;
+                this.isText = false;
+            }
+        }
+
+        public PrunableEncryptedMessage(EncryptedData encryptedData, boolean isText) {
+            this.encryptedData = encryptedData;
+            this.isText = isText;
+            this.hash = null;
+        }
+
+        @Override
+        public Fee getBaselineFee(Transaction transaction) {
+            return PRUNABLE_ENCRYPTED_DATA_FEE;
+        }
+
+        @Override
+        int getMySize() {
+            return 32;
+        }
+
+        @Override
+        int getMyFullSize() {
+            return getEncryptedDataLength();
+        }
+
+        @Override
+        void putMyBytes(ByteBuffer buffer) {
+            if (hash != null) {
+                buffer.put(hash);
+            } else {
+                MessageDigest digest = Crypto.sha256();
+                digest.update((byte)(isText ? 1 : 0));
+                digest.update(encryptedData.getData());
+                digest.update(encryptedData.getNonce());
+                buffer.put(digest.digest());
+            }
+        }
+
+        @Override
+        void putMyJSON(JSONObject json) {
+            if (prunableMessage != null) {
+                JSONObject encryptedMessageJSON = new JSONObject();
+                json.put("encryptedMessage", encryptedMessageJSON);
+                encryptedMessageJSON.put("data", Convert.toHexString(prunableMessage.getEncryptedData().getData()));
+                encryptedMessageJSON.put("nonce", Convert.toHexString(prunableMessage.getEncryptedData().getNonce()));
+                encryptedMessageJSON.put("isText", prunableMessage.isText());
+            } else if (hash != null) {
+                json.put("encryptedMessageHash", Convert.toHexString(hash));
+            } else {
+                JSONObject encryptedMessageJSON = new JSONObject();
+                json.put("encryptedMessage", encryptedMessageJSON);
+                encryptedMessageJSON.put("data", Convert.toHexString(encryptedData.getData()));
+                encryptedMessageJSON.put("nonce", Convert.toHexString(encryptedData.getNonce()));
+                encryptedMessageJSON.put("isText", isText);
+            }
+        }
+
+        @Override
+        String getAppendixName() {
+            return "PrunableEncryptedMessage";
+        }
+
+        @Override
+        void validate(Transaction transaction) throws NxtException.ValidationException {
+            if (Nxt.getBlockchain().getHeight() < Constants.VOTING_SYSTEM_BLOCK) {
+                throw new NxtException.NotYetEnabledException("Prunable encrypted messages not yet enabled");
+            }
+            loadPrunableMessage(transaction);
+            if (transaction.getEncryptedMessage() != null) {
+                throw new NxtException.NotValidException("Cannot have both encrypted and prunable encrypted message attachments");
+            }
+            if (transaction.getPrunablePlainMessage() != null) {
+                throw new NxtException.NotValidException("Cannot have both plan and encrypted prunable message attachments");
+            }
+            if (getEncryptedDataLength() > Constants.MAX_PRUNABLE_ENCRYPTED_MESSAGE_LENGTH) {
+                throw new NxtException.NotValidException("Max encrypted message length exceeded");
+            }
+            if (getEncryptedData() == null && Nxt.getEpochTime() - transaction.getTimestamp() < Constants.MIN_PRUNABLE_LIFETIME) {
+                throw new NxtException.NotCurrentlyValidException("Encrypted message has been pruned prematurely");
+            }
+            EncryptedData ed;
+            if ((ed = getEncryptedData()) != null) {
+                if ((ed.getNonce().length != 32 && ed.getData().length > 0)
+                        || (ed.getNonce().length != 0 && ed.getData().length == 0)) {
+                    throw new NxtException.NotValidException("Invalid nonce length " + ed.getNonce().length);
+                }
+            }
+            if (transaction.getRecipientId() == 0) {
+                throw new NxtException.NotValidException("Encrypted messages cannot be attached to transactions with no recipient");
+            }
+        }
+
+        @Override
+        void apply(Transaction transaction, Account senderAccount, Account recipientAccount) {
+            PrunableMessage.add(transaction, this);
+        }
+
+        public final EncryptedData getEncryptedData() {
+            if (prunableMessage != null) {
+                return prunableMessage.getEncryptedData();
+            }
+            return encryptedData;
+        }
+
+        public final boolean isText() {
+            if (prunableMessage != null) {
+                return prunableMessage.isText();
+            }
+            return isText;
+        }
+
+        private int getEncryptedDataLength() {
+            return encryptedData == null ? 0 : encryptedData.getData().length;
+        }
+
+        void loadPrunableMessage(Transaction transaction) {
+            if (encryptedData == null && prunableMessage == null
+                    && Nxt.getEpochTime() - transaction.getTimestamp() < Constants.MIN_PRUNABLE_LIFETIME) {
+                prunableMessage = PrunableMessage.getPrunableMessage(transaction.getId());
+            }
+        }
     }
 
     class EncryptedMessage extends AbstractEncryptedMessage {
@@ -511,9 +648,6 @@ public interface Appendix {
             if (transaction.getRecipientId() == 0) {
                 throw new NxtException.NotValidException("Encrypted messages cannot be attached to transactions with no recipient");
             }
-            if (transaction.getVersion() == 0) {
-                throw new NxtException.NotValidException("Encrypted message attachments not enabled for version 0 transactions");
-            }
         }
 
     }
@@ -549,14 +683,6 @@ public interface Appendix {
             JSONObject encryptToSelfMessageJSON = new JSONObject();
             super.putMyJSON(encryptToSelfMessageJSON);
             json.put("encryptToSelfMessage", encryptToSelfMessageJSON);
-        }
-
-        @Override
-        void validate(Transaction transaction) throws NxtException.ValidationException {
-            super.validate(transaction);
-            if (transaction.getVersion() == 0) {
-                throw new NxtException.NotValidException("Encrypt-to-self message attachments not enabled for version 0 transactions");
-            }
         }
 
     }
@@ -618,9 +744,6 @@ public interface Appendix {
             long recipientId = transaction.getRecipientId();
             if (Account.getId(this.publicKey) != recipientId) {
                 throw new NxtException.NotValidException("Announced public key does not match recipient accountId");
-            }
-            if (transaction.getVersion() == 0) {
-                throw new NxtException.NotValidException("Public key announcements not enabled for version 0 transactions");
             }
             Account recipientAccount = Account.getAccount(recipientId);
             if (recipientAccount != null && recipientAccount.getKeyHeight() > 0 && ! Arrays.equals(publicKey, recipientAccount.getPublicKey())) {

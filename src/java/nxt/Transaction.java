@@ -20,7 +20,9 @@ public interface Transaction {
 
         Builder publicKeyAnnouncement(Appendix.PublicKeyAnnouncement publicKeyAnnouncement);
 
-        Builder prunableMessage(Appendix.PrunableMessageAppendix prunableMessage);
+        Builder prunablePlainMessage(Appendix.PrunablePlainMessage prunablePlainMessage);
+
+        Builder prunableEncryptedMessage(Appendix.PrunableEncryptedMessage prunableEncryptedMessage);
 
         Builder timestamp(int timestamp);
 
@@ -98,7 +100,9 @@ public interface Transaction {
 
     Appendix.Phasing getPhasing();
 
-    Appendix.PrunableMessageAppendix getPrunableMessage();
+    Appendix.PrunablePlainMessage getPrunablePlainMessage();
+
+    Appendix.PrunableEncryptedMessage getPrunableEncryptedMessage();
 
     List<? extends Appendix> getAppendages();
 

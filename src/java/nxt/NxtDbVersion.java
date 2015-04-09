@@ -684,8 +684,8 @@ class NxtDbVersion extends DbVersion {
                 apply(null);
             case 286:
                 apply("CREATE TABLE IF NOT EXISTS prunable_message (db_id IDENTITY, id BIGINT NOT NULL, sender_id BIGINT NOT NULL, "
-                        + "recipient_id BIGINT, message VARBINARY NOT NULL, is_text BOOLEAN NOT NULL, timestamp INT NOT NULL, "
-                        + "expiration INT NOT NULL, height INT NOT NULL)");
+                        + "recipient_id BIGINT, message VARBINARY NOT NULL, is_text BOOLEAN NOT NULL, is_encrypted BOOLEAN NOT NULL, "
+                        + "timestamp INT NOT NULL, expiration INT NOT NULL, height INT NOT NULL)");
             case 287:
                 apply("CREATE UNIQUE INDEX IF NOT EXISTS prunable_message_id_idx ON prunable_message (id)");
             case 288:
@@ -702,15 +702,15 @@ class NxtDbVersion extends DbVersion {
             case 292:
                 apply("TRUNCATE TABLE unconfirmed_transaction");
             case 293:
-                apply("ALTER TABLE unconfirmed_transaction DROP COLUMN IF EXISTS transaction_bytes");
+                apply("ALTER TABLE unconfirmed_transaction ADD COLUMN IF NOT EXISTS prunable_json VARCHAR NOT NULL");
             case 294:
-                apply("ALTER TABLE unconfirmed_transaction ADD COLUMN IF NOT EXISTS transaction_json VARCHAR NOT NULL");
-            case 295:
                 apply("CREATE INDEX IF NOT EXISTS prunable_message_sender_idx ON prunable_message (sender)");
-            case 296:
+            case 295:
                 apply("CREATE INDEX IF NOT EXISTS prunable_message_recipient_idx ON prunable_message (recipient)");
-            case 297:
+            case 296:
                 apply("CREATE INDEX IF NOT EXISTS prunable_message_timestamp_idx ON prunable_message (timestamp DESC)");
+            case 297:
+                apply("ALTER TABLE transaction ADD COLUMN IF NOT EXISTS has_prunable_encrypted_message BOOLEAN NOT NULL DEFAULT FALSE");
             case 298:
                 return;
             default:

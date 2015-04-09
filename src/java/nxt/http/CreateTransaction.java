@@ -20,7 +20,6 @@ import static nxt.http.JSONResponses.FEATURE_NOT_AVAILABLE;
 import static nxt.http.JSONResponses.INCORRECT_ARBITRARY_MESSAGE;
 import static nxt.http.JSONResponses.INCORRECT_DEADLINE;
 import static nxt.http.JSONResponses.INCORRECT_LINKED_FULL_HASH;
-import static nxt.http.JSONResponses.INCORRECT_PRUNABLE_MESSAGE;
 import static nxt.http.JSONResponses.INCORRECT_WHITELIST;
 import static nxt.http.JSONResponses.MISSING_DEADLINE;
 import static nxt.http.JSONResponses.MISSING_SECRET_PHRASE;
@@ -31,7 +30,7 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
     private static final String[] commonParameters = new String[]{"secretPhrase", "publicKey", "feeNQT",
             "deadline", "referencedTransactionFullHash", "broadcast",
             "message", "messageIsText", "messageIsPrunable",
-            "messageToEncrypt", "messageToEncryptIsText", "encryptedMessageData", "encryptedMessageNonce",
+            "messageToEncrypt", "messageToEncryptIsText", "encryptedMessageData", "encryptedMessageNonce", "encryptedMessageIsPrunable",
             "messageToEncryptToSelf", "messageToEncryptToSelfIsText", "encryptToSelfMessageData", "encryptToSelfMessageNonce",
             "phased", "phasingFinishHeight", "phasingVotingModel", "phasingQuorum", "phasingMinBalance", "phasingHolding", "phasingMinBalanceModel",
             "phasingWhitelisted", "phasingWhitelisted", "phasingWhitelisted",
@@ -115,10 +114,16 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
         String publicKeyValue = Convert.emptyToNull(req.getParameter("publicKey"));
         boolean broadcast = !"false".equalsIgnoreCase(req.getParameter("broadcast")) && secretPhrase != null;
         Appendix.EncryptedMessage encryptedMessage = null;
+        Appendix.PrunableEncryptedMessage prunableEncryptedMessage = null;
         if (attachment.getTransactionType().canHaveRecipient()) {
             EncryptedData encryptedData = ParameterParser.getEncryptedMessage(req, Account.getAccount(recipientId));
+            boolean encryptedDataIsText = !"false".equalsIgnoreCase(req.getParameter("messageToEncryptIsText"));
             if (encryptedData != null) {
-                encryptedMessage = new Appendix.EncryptedMessage(encryptedData, !"false".equalsIgnoreCase(req.getParameter("messageToEncryptIsText")));
+                if ("true".equalsIgnoreCase(req.getParameter("encryptedMessageIsPrunable"))) {
+                    prunableEncryptedMessage = new Appendix.PrunableEncryptedMessage(encryptedData, encryptedDataIsText);
+                } else {
+                    encryptedMessage = new Appendix.EncryptedMessage(encryptedData, encryptedDataIsText);
+                }
             }
         }
         Appendix.EncryptToSelfMessage encryptToSelfMessage = null;
@@ -127,24 +132,19 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
             encryptToSelfMessage = new Appendix.EncryptToSelfMessage(encryptedToSelfData, !"false".equalsIgnoreCase(req.getParameter("messageToEncryptToSelfIsText")));
         }
         Appendix.Message message = null;
-        Appendix.PrunableMessageAppendix prunableMessageAppendix = null;
+        Appendix.PrunablePlainMessage prunablePlainMessage = null;
         String messageValue = Convert.emptyToNull(req.getParameter("message"));
         if (messageValue != null) {
             boolean messageIsText = !"false".equalsIgnoreCase(req.getParameter("messageIsText"));
-            boolean messageIsPrunable = "true".equalsIgnoreCase(req.getParameter("messageIsPrunable"));
-            if (messageIsPrunable) {
-                try {
-                    prunableMessageAppendix = messageIsText ? new Appendix.PrunableMessageAppendix(messageValue)
-                            : new Appendix.PrunableMessageAppendix(Convert.parseHexString(messageValue));
-                } catch (RuntimeException e) {
-                    throw new ParameterException(INCORRECT_PRUNABLE_MESSAGE);
-                }
-            } else {
-                try {
+            try {
+                if ("true".equalsIgnoreCase(req.getParameter("messageIsPrunable"))) {
+                    prunablePlainMessage = messageIsText ? new Appendix.PrunablePlainMessage(messageValue)
+                            : new Appendix.PrunablePlainMessage(Convert.parseHexString(messageValue));
+                } else {
                     message = messageIsText ? new Appendix.Message(messageValue) : new Appendix.Message(Convert.parseHexString(messageValue));
-                } catch (RuntimeException e) {
-                    throw new ParameterException(INCORRECT_ARBITRARY_MESSAGE);
                 }
+            } catch (RuntimeException e) {
+                throw new ParameterException(INCORRECT_ARBITRARY_MESSAGE);
             }
         }
         Appendix.PublicKeyAnnouncement publicKeyAnnouncement = null;
@@ -193,7 +193,8 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
             builder.publicKeyAnnouncement(publicKeyAnnouncement);
             builder.encryptToSelfMessage(encryptToSelfMessage);
             builder.phasing(phasing);
-            builder.prunableMessage(prunableMessageAppendix);
+            builder.prunablePlainMessage(prunablePlainMessage);
+            builder.prunableEncryptedMessage(prunableEncryptedMessage);
             Transaction transaction = builder.build(secretPhrase);
             try {
                 if (Math.addExact(amountNQT, transaction.getFeeNQT()) > senderAccount.getUnconfirmedBalanceNQT()) {

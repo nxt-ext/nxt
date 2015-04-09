@@ -65,7 +65,6 @@ public final class JSONResponses {
     public static final JSONStreamAware MISSING_MESSAGE = missing("message");
     public static final JSONStreamAware INCORRECT_RECIPIENT = incorrect("recipient");
     public static final JSONStreamAware INCORRECT_ARBITRARY_MESSAGE = incorrect("message");
-    public static final JSONStreamAware INCORRECT_PRUNABLE_MESSAGE = incorrect("prunableMessage");
     public static final JSONStreamAware MISSING_DESCRIPTION = missing("description");
     public static final JSONStreamAware INCORRECT_POLL_NAME_LENGTH = incorrect("name", "(length must be not longer than " + Constants.MAX_POLL_NAME_LENGTH + " characters)");
     public static final JSONStreamAware INCORRECT_POLL_DESCRIPTION_LENGTH = incorrect("description", "(length must be not longer than " + Constants.MAX_POLL_DESCRIPTION_LENGTH + " characters)");

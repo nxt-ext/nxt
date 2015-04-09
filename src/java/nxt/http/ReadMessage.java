@@ -5,6 +5,7 @@ import nxt.Appendix;
 import nxt.Nxt;
 import nxt.Transaction;
 import nxt.crypto.Crypto;
+import nxt.crypto.EncryptedData;
 import nxt.util.Convert;
 import nxt.util.Logger;
 import org.json.simple.JSONObject;
@@ -48,25 +49,38 @@ public final class ReadMessage extends APIServlet.APIRequestHandler {
         Appendix.Message message = transaction.getMessage();
         Appendix.EncryptedMessage encryptedMessage = transaction.getEncryptedMessage();
         Appendix.EncryptToSelfMessage encryptToSelfMessage = transaction.getEncryptToSelfMessage();
-        Appendix.PrunableMessageAppendix prunableMessage = transaction.getPrunableMessage();
+        Appendix.PrunablePlainMessage prunableMessage = transaction.getPrunablePlainMessage();
+        Appendix.PrunableEncryptedMessage prunableEncryptedMessage = transaction.getPrunableEncryptedMessage();
         if (message == null && encryptedMessage == null && encryptToSelfMessage == null && prunableMessage == null) {
             return NO_MESSAGE;
         }
         if (message != null) {
             response.put("message", message.toString());
-        }
-        if (prunableMessage != null) {
-            response.put("prunableMessage", prunableMessage.toString());
+            response.put("messageIsPrunable", false);
+        } else if (prunableMessage != null) {
+            response.put("message", prunableMessage.toString());
+            response.put("messageIsPrunable", true);
         }
         String secretPhrase = Convert.emptyToNull(req.getParameter("secretPhrase"));
         if (secretPhrase != null) {
+            EncryptedData encryptedData = null;
+            boolean isText = false;
             if (encryptedMessage != null) {
+                encryptedData = encryptedMessage.getEncryptedData();
+                isText = encryptedMessage.isText();
+                response.put("encryptedMessageIsPrunable", false);
+            } else if (prunableEncryptedMessage != null) {
+                encryptedData = prunableEncryptedMessage.getEncryptedData();
+                isText = prunableEncryptedMessage.isText();
+                response.put("encryptedMessageIsPrunable", true);
+            }
+            if (encryptedData != null) {
                 long readerAccountId = Account.getId(Crypto.getPublicKey(secretPhrase));
                 Account account = senderAccount.getId() == readerAccountId ? Account.getAccount(transaction.getRecipientId()) : senderAccount;
                 if (account != null) {
                     try {
-                        byte[] decrypted = account.decryptFrom(encryptedMessage.getEncryptedData(), secretPhrase);
-                        response.put("decryptedMessage", encryptedMessage.isText() ? Convert.toString(decrypted) : Convert.toHexString(decrypted));
+                        byte[] decrypted = account.decryptFrom(encryptedData, secretPhrase);
+                        response.put("decryptedMessage", isText ? Convert.toString(decrypted) : Convert.toHexString(decrypted));
                     } catch (RuntimeException e) {
                         Logger.logDebugMessage("Decryption of message to recipient failed: " + e.toString());
                     }

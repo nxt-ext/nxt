@@ -1,5 +1,6 @@
 package nxt;
 
+import nxt.crypto.EncryptedData;
 import nxt.db.DbKey;
 import nxt.db.DbUtils;
 import nxt.db.PrunableDbTable;
@@ -46,16 +47,30 @@ public class PrunableMessage {
     private final long senderId;
     private final long recipientId;
     private final byte[] message;
+    private final EncryptedData encryptedData;
     private final boolean isText;
     private final int expiration;
     private final int blockTimestamp;
 
-    private PrunableMessage(Transaction transaction, Appendix.PrunableMessageAppendix appendix) {
+    private PrunableMessage(Transaction transaction, Appendix.PrunablePlainMessage appendix) {
         this.id = transaction.getId();
         this.dbKey = prunableMessageKeyFactory.newKey(this.id);
         this.senderId = transaction.getSenderId();
         this.recipientId = transaction.getRecipientId();
         this.message = appendix.getMessage();
+        this.encryptedData = null;
+        this.isText = appendix.isText();
+        this.blockTimestamp = Nxt.getBlockchain().getLastBlockTimestamp();
+        this.expiration = transaction.getTimestamp() + Constants.MIN_PRUNABLE_LIFETIME;
+    }
+
+    private PrunableMessage(Transaction transaction, Appendix.PrunableEncryptedMessage appendix) {
+        this.id = transaction.getId();
+        this.dbKey = prunableMessageKeyFactory.newKey(this.id);
+        this.senderId = transaction.getSenderId();
+        this.recipientId = transaction.getRecipientId();
+        this.message = null;
+        this.encryptedData = appendix.getEncryptedData();
         this.isText = appendix.isText();
         this.blockTimestamp = Nxt.getBlockchain().getLastBlockTimestamp();
         this.expiration = transaction.getTimestamp() + Constants.MIN_PRUNABLE_LIFETIME;
@@ -66,7 +81,13 @@ public class PrunableMessage {
         this.dbKey = prunableMessageKeyFactory.newKey(this.id);
         this.senderId = rs.getLong("sender_id");
         this.recipientId = rs.getLong("recipient_id");
-        this.message = rs.getBytes("message");
+        if (rs.getBoolean("is_encrypted")) {
+            this.encryptedData = EncryptedData.readEncryptedData(rs.getBytes("message"));
+            this.message = null;
+        } else {
+            this.message = rs.getBytes("message");
+            this.encryptedData = null;
+        }
         this.isText = rs.getBoolean("is_text");
         this.blockTimestamp = rs.getInt("timestamp");
         this.expiration = rs.getInt("expiration");
@@ -74,12 +95,18 @@ public class PrunableMessage {
 
     private void save(Connection con) throws SQLException {
         try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO prunable_message (id, sender_id, recipient_id, "
-                + "message, is_text, timestamp, expiration, height) VALUES (?, ?, ?, ?, ?, ?, ?, ?)")) {
+                + "message, is_encrypted, is_text, timestamp, expiration, height) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
             int i = 0;
             pstmt.setLong(++i, this.id);
             pstmt.setLong(++i, this.senderId);
             DbUtils.setLongZeroToNull(pstmt, ++i, this.recipientId);
-            pstmt.setBytes(++i, message);
+            if (message != null) {
+                pstmt.setBytes(++i, message);
+                pstmt.setBoolean(++i, false);
+            } else {
+                pstmt.setBytes(++i, encryptedData.getBytes());
+                pstmt.setBoolean(++i, true);
+            }
             pstmt.setBoolean(++i, isText);
             pstmt.setInt(++i, blockTimestamp);
             pstmt.setInt(++i, expiration);
@@ -92,6 +119,10 @@ public class PrunableMessage {
         return message;
     }
 
+    public EncryptedData getEncryptedData() {
+        return encryptedData;
+    }
+
     public boolean isText() {
         return isText;
     }
@@ -101,7 +132,14 @@ public class PrunableMessage {
         return isText ? Convert.toString(message) : Convert.toHexString(message);
     }
 
-    static void add(Transaction transaction, Appendix.PrunableMessageAppendix appendix) {
+    static void add(Transaction transaction, Appendix.PrunablePlainMessage appendix) {
+        if (Nxt.getEpochTime() - transaction.getTimestamp() < Constants.MIN_PRUNABLE_LIFETIME) {
+            PrunableMessage prunableMessage = new PrunableMessage(transaction, appendix);
+            prunableMessageTable.insert(prunableMessage);
+        }
+    }
+
+    static void add(Transaction transaction, Appendix.PrunableEncryptedMessage appendix) {
         if (Nxt.getEpochTime() - transaction.getTimestamp() < Constants.MIN_PRUNABLE_LIFETIME) {
             PrunableMessage prunableMessage = new PrunableMessage(transaction, appendix);
             prunableMessageTable.insert(prunableMessage);

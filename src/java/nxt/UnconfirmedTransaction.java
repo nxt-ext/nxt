@@ -1,5 +1,6 @@
 package nxt;
 
+import nxt.db.DbUtils;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONValue;
 
@@ -20,9 +21,16 @@ class UnconfirmedTransaction implements Transaction {
     }
 
     UnconfirmedTransaction(ResultSet rs) throws SQLException {
-        String transactionJSON = rs.getString("transaction_json");
         try {
-            this.transaction = TransactionImpl.newTransactionBuilder((JSONObject)JSONValue.parse(transactionJSON)).build();
+            byte[] transactionBytes = rs.getBytes("transaction_bytes");
+            TransactionImpl.BuilderImpl builder = TransactionImpl.newTransactionBuilder(transactionBytes);
+            String prunableJSON = rs.getString("prunable_json");
+            if (prunableJSON != null) {
+                JSONObject attachmentData = (JSONObject)JSONValue.parse(prunableJSON);
+                builder.prunablePlainMessage(Appendix.PrunablePlainMessage.parse(attachmentData));
+                builder.prunableEncryptedMessage(Appendix.PrunableEncryptedMessage.parse(attachmentData));
+            }
+            this.transaction = builder.build();
             this.transaction.setHeight(rs.getInt("transaction_height"));
             this.arrivalTimestamp = rs.getLong("arrival_timestamp");
         } catch (NxtException.ValidationException e) {
@@ -32,14 +40,28 @@ class UnconfirmedTransaction implements Transaction {
 
     void save(Connection con) throws SQLException {
         try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO unconfirmed_transaction (id, transaction_height, "
-                + "fee_per_byte, expiration, transaction_json, arrival_timestamp, height) "
-                + "VALUES (?, ?, ?, ?, ?, ?, ?)")) {
+                + "fee_per_byte, expiration, transaction_bytes, prunable_json, arrival_timestamp, height) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?)")) {
             int i = 0;
             pstmt.setLong(++i, transaction.getId());
             pstmt.setInt(++i, transaction.getHeight());
             pstmt.setLong(++i, transaction.getFeeNQT() / transaction.getFullSize());
             pstmt.setInt(++i, transaction.getExpiration());
-            pstmt.setString(++i, transaction.getJSONObject().toJSONString());
+            pstmt.setBytes(++i, transaction.bytes());
+            String prunableJSON = null;
+            Appendix.PrunablePlainMessage prunablePlainMessage = transaction.getPrunablePlainMessage();
+            Appendix.PrunableEncryptedMessage prunableEncryptedMessage = transaction.getPrunableEncryptedMessage();
+            if (prunablePlainMessage != null || prunableEncryptedMessage != null) {
+                JSONObject json = new JSONObject();
+                if (prunablePlainMessage != null) {
+                    json.putAll(prunablePlainMessage.getJSONObject());
+                }
+                if (prunableEncryptedMessage != null) {
+                    json.putAll(prunableEncryptedMessage.getJSONObject());
+                }
+                prunableJSON = json.toJSONString();
+            }
+            DbUtils.setString(pstmt, ++i, prunableJSON);
             pstmt.setLong(++i, arrivalTimestamp);
             pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
             pstmt.executeUpdate();
@@ -200,8 +222,8 @@ class UnconfirmedTransaction implements Transaction {
     }
 
     @Override
-    public Appendix.PrunableMessageAppendix getPrunableMessage() {
-        return transaction.getPrunableMessage();
+    public Appendix.PrunablePlainMessage getPrunablePlainMessage() {
+        return transaction.getPrunablePlainMessage();
     }
 
     @Override
@@ -210,6 +232,10 @@ class UnconfirmedTransaction implements Transaction {
     }
 
     @Override
+    public Appendix.PrunableEncryptedMessage getPrunableEncryptedMessage() {
+        return transaction.getPrunableEncryptedMessage();
+    }
+
     public Appendix.EncryptToSelfMessage getEncryptToSelfMessage() {
         return transaction.getEncryptToSelfMessage();
     }

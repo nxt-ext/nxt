@@ -36,7 +36,8 @@ final class TransactionImpl implements Transaction {
         private Appendix.EncryptToSelfMessage encryptToSelfMessage;
         private Appendix.PublicKeyAnnouncement publicKeyAnnouncement;
         private Appendix.Phasing phasing;
-        private Appendix.PrunableMessageAppendix prunableMessage;
+        private Appendix.PrunablePlainMessage prunablePlainMessage;
+        private Appendix.PrunableEncryptedMessage prunableEncryptedMessage;
         private long blockId;
         private int height = Integer.MAX_VALUE;
         private long id;
@@ -119,8 +120,14 @@ final class TransactionImpl implements Transaction {
         }
 
         @Override
-        public BuilderImpl prunableMessage(Appendix.PrunableMessageAppendix prunableMessage) {
-            this.prunableMessage = prunableMessage;
+        public BuilderImpl prunablePlainMessage(Appendix.PrunablePlainMessage prunablePlainMessage) {
+            this.prunablePlainMessage = prunablePlainMessage;
+            return this;
+        }
+
+        @Override
+        public BuilderImpl prunableEncryptedMessage(Appendix.PrunableEncryptedMessage prunableEncryptedMessage) {
+            this.prunableEncryptedMessage = prunableEncryptedMessage;
             return this;
         }
 
@@ -210,7 +217,8 @@ final class TransactionImpl implements Transaction {
     private final Appendix.EncryptToSelfMessage encryptToSelfMessage;
     private final Appendix.PublicKeyAnnouncement publicKeyAnnouncement;
     private final Appendix.Phasing phasing;
-    private final Appendix.PrunableMessageAppendix prunableMessage;
+    private final Appendix.PrunablePlainMessage prunablePlainMessage;
+    private final Appendix.PrunableEncryptedMessage prunableEncryptedMessage;
 
     private final List<Appendix.AbstractAppendix> appendages;
     private final int appendagesSize;
@@ -268,8 +276,11 @@ final class TransactionImpl implements Transaction {
         if ((this.phasing = builder.phasing) != null) {
             list.add(this.phasing);
         }
-        if ((this.prunableMessage = builder.prunableMessage) != null) {
-            list.add(this.prunableMessage);
+        if ((this.prunablePlainMessage = builder.prunablePlainMessage) != null) {
+            list.add(this.prunablePlainMessage);
+        }
+        if ((this.prunableEncryptedMessage = builder.prunableEncryptedMessage) != null) {
+            list.add(this.prunableEncryptedMessage);
         }
         this.appendages = Collections.unmodifiableList(list);
         int appendagesSize = 0;
@@ -524,18 +535,29 @@ final class TransactionImpl implements Transaction {
     }
 
     @Override
-    public Appendix.PrunableMessageAppendix getPrunableMessage() {
-        if (prunableMessage != null) {
-            prunableMessage.loadPrunableMessage(this);
+    public Appendix.PrunablePlainMessage getPrunablePlainMessage() {
+        if (prunablePlainMessage != null) {
+            prunablePlainMessage.loadPrunableMessage(this);
         }
-        return prunableMessage;
+        return prunablePlainMessage;
     }
 
-    boolean hasPrunableMessage() {
-        return prunableMessage != null;
+    boolean hasPrunablePlainMessage() {
+        return prunablePlainMessage != null;
     }
 
     @Override
+    public Appendix.PrunableEncryptedMessage getPrunableEncryptedMessage() {
+        if (prunableEncryptedMessage != null) {
+            prunableEncryptedMessage.loadPrunableMessage(this);
+        }
+        return prunableEncryptedMessage;
+    }
+
+    boolean hasPrunableEncryptedMessage() {
+        return prunableEncryptedMessage != null;
+    }
+
     public byte[] getBytes() {
         return Arrays.copyOf(bytes(), bytes.length);
     }
@@ -648,7 +670,11 @@ final class TransactionImpl implements Transaction {
             }
             position <<= 1;
             if ((flags & position) != 0) {
-                builder.prunableMessage(new Appendix.PrunableMessageAppendix(buffer, version));
+                builder.prunablePlainMessage(new Appendix.PrunablePlainMessage(buffer, version));
+            }
+            position <<= 1;
+            if ((flags & position) != 0) {
+                builder.prunableEncryptedMessage(new Appendix.PrunableEncryptedMessage(buffer, version));
             }
             return builder;
         } catch (NxtException.NotValidException|RuntimeException e) {
@@ -664,6 +690,8 @@ final class TransactionImpl implements Transaction {
 
     @Override
     public JSONObject getJSONObject() {
+        getPrunablePlainMessage();
+        getPrunableEncryptedMessage();
         JSONObject json = new JSONObject();
         json.put("type", type.getType());
         json.put("subtype", type.getSubtype());
@@ -743,7 +771,8 @@ final class TransactionImpl implements Transaction {
                 builder.publicKeyAnnouncement((Appendix.PublicKeyAnnouncement.parse(attachmentData)));
                 builder.encryptToSelfMessage(Appendix.EncryptToSelfMessage.parse(attachmentData));
                 builder.phasing(Appendix.Phasing.parse(attachmentData));
-                builder.prunableMessage(Appendix.PrunableMessageAppendix.parse(attachmentData));
+                builder.prunablePlainMessage(Appendix.PrunablePlainMessage.parse(attachmentData));
+                builder.prunableEncryptedMessage(Appendix.PrunableEncryptedMessage.parse(attachmentData));
             }
             return builder;
         } catch (NxtException.NotValidException|RuntimeException e) {
@@ -836,7 +865,11 @@ final class TransactionImpl implements Transaction {
             flags |= position;
         }
         position <<= 1;
-        if (prunableMessage != null) {
+        if (prunablePlainMessage != null) {
+            flags |= position;
+        }
+        position <<= 1;
+        if (prunableEncryptedMessage != null) {
             flags |= position;
         }
         return flags;
