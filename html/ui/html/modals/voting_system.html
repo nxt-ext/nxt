@@ -28,17 +28,11 @@
                                 </select>
                             </div>
                         </div>
-                        <div class="col-xs-6 col-sm-6 col-md-6" aria-hidden="true" id="create_poll_asset_id_group" style="display: none;">
-                            <div class="form-group">
-                                <label for="create_poll_asset_id" data-i18n="asset_id">ASSET ID</label>
-                                <input type="text" name="assetId" id="create_poll_asset_id" class="form-control" placeholder="Asset Id" tabindex="5">
-                            </div>
+                        <div class="col-xs-12 col-sm-12 col-md-12" aria-hidden="true" id="create_poll_asset_id_group" style="display: none;">
+                            <div class="form-group poll_holding_asset" data-modal-ui-element="add_asset_modal_ui_element"></div>
                         </div>
-                        <div class="col-xs-6 col-sm-6 col-md-6" aria-hidden="true" id="create_poll_ms_currency_group" style="display: none;">
-                            <div class="form-group">
-                                <label for="create_poll_ms_id" data-i18n="currency_id">CURRENCY ID</label>
-                                <input type="text" name="msId" id="create_poll_ms_id" class="form-control" placeholder="Currency Id" tabindex="5">
-                            </div>
+                        <div class="col-xs-12 col-sm-12 col-md-12" aria-hidden="true" id="create_poll_ms_currency_group" style="display: none;">
+                            <div class="form-group poll_holding_currency" data-modal-ui-element="add_currency_modal_ui_element"></div>
                         </div>
 
                     </div>
@@ -47,14 +41,17 @@
                         <div class="col-xs-12 col-sm-12 col-md-12" aria-hidden="true" id="create_poll_min_balance_type_group">
                             <label for="create_poll_min_balance_type" data-i18n="min_balance_type">Min Balance Type</label>
                             <div id="create_poll_min_balance_type" class="form-group">
-                                <label class="radio-inline" data-i18n="account_balance">
-                                    <input type="radio" name="minBalanceType" id="create_poll_min_balance_type_1" value="1"/><span> </span>Account Balance
+                                <label class="radio-inline">
+                                    <input type="radio" name="minBalanceType" id="create_poll_min_balance_type_1" value="1"/><span> </span>
+                                    <span data-i18n="account_balance">Account Balance</span>
                                 </label>
-                                <label class="radio-inline" data-i18n="asset_balance">
-                                    <input type="radio" name="minBalanceType" id="create_poll_min_balance_type_2" value="2"/><span> </span>Asset Balance
+                                <label class="radio-inline">
+                                    <input type="radio" name="minBalanceType" id="create_poll_min_balance_type_2" value="2"/><span> </span>
+                                    <span data-i18n="asset_balance">Asset Balance</span>
                                 </label>
-                                <label class="radio-inline" data-i18n="currency_balance">
-                                    <input type="radio" name="minBalanceType" id="create_poll_min_balance_type_3" value="3"/><span> </span>Currency Balance
+                                <label class="radio-inline">
+                                    <input type="radio" name="minBalanceType" id="create_poll_min_balance_type_3" value="3"/><span> </span>
+                                    <span data-i18n="currency_balance">Currency Balance</span>
                                 </label>
                             </div>
                         </div>
@@ -68,10 +65,7 @@
                             </div> 
                         </div>
                         <div class="col-xs-6 col-sm-6 col-md-6">
-                            <div class="form-group">
-                                <label for="create_poll_duration" data-i18n="poll_duration_nr_blocks">POLL DURATION (NR BLOCKS)</label>
-                                <input type="number" name="pollDuration" id="create_poll_duration" min="10" class="form-control" placeholder="" data-default="10" value="10" tabindex="4">
-                            </div>
+                            <div class="form-group create_poll_finish_height" data-modal-ui-element="block_height_modal_ui_element"></div>
                         </div>
                     </div>
                     <div class="form-group" id="create_poll_answers">

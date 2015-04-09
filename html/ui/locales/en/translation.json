@@ -197,6 +197,7 @@
   "copy_send_nxt_link": "Copy 'Send NXT' Link",
   "counter": "Counter",
   "create_poll": "Create Poll",
+  "create_poll_finish_height_help": "Block height when poll will be finished.",
   "success_poll_followed_one": "Poll added successfully to followed polls.",
   "success_poll_followed": "__count__ polls added successfully to followed polls.",
   "error_poll_save_db": "Follow information for poll could not stored permanently in DB.",
