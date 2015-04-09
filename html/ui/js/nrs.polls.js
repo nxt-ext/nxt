@@ -347,7 +347,7 @@ var NRS = (function(NRS, $, undefined) {
 		if($("#create_poll_type").val() == "0")
 		{
 			// ok now lets show the bottom things...
-			$("#create_poll_min_balance_type_group").css("display", "inline");
+			$("#create_poll_min_balance_type_group").css("display", "block");
 		}
 		else
 		{
@@ -360,25 +360,25 @@ var NRS = (function(NRS, $, undefined) {
 		var value = $(this).val();
 
 		if(value == "2") {
-			$("#create_poll_asset_id_group").css("display", "inline");
+			$("#create_poll_asset_id_group").css("display", "block");
 			$("#create_poll_ms_currency_group").css("display", "none");
-			$("#create_poll_type_group").removeClass("col-xs-12").addClass("col-xs-6");
-			$("#create_poll_type_group").removeClass("col-sm-12").addClass("col-sm-6");
-			$("#create_poll_type_group").removeClass("col-md-12").addClass("col-md-6");
+			//$("#create_poll_type_group").removeClass("col-xs-12").addClass("col-xs-6");
+			//$("#create_poll_type_group").removeClass("col-sm-12").addClass("col-sm-6");
+			//$("#create_poll_type_group").removeClass("col-md-12").addClass("col-md-6");
 		}
 		else if(value == "3") {
 			$("#create_poll_asset_id_group").css("display", "none");
-			$("#create_poll_ms_currency_group").css("display", "inline");
-			$("#create_poll_type_group").removeClass("col-xs-12").addClass("col-xs-6");
-			$("#create_poll_type_group").removeClass("col-sm-12").addClass("col-sm-6");
-			$("#create_poll_type_group").removeClass("col-md-12").addClass("col-md-6");
+			$("#create_poll_ms_currency_group").css("display", "block");
+			//$("#create_poll_type_group").removeClass("col-xs-12").addClass("col-xs-6");
+			//$("#create_poll_type_group").removeClass("col-sm-12").addClass("col-sm-6");
+			//$("#create_poll_type_group").removeClass("col-md-12").addClass("col-md-6");
 		}
 		else {
 			$("#create_poll_asset_id_group").css("display", "none");
 			$("#create_poll_ms_currency_group").css("display", "none");
-			$("#create_poll_type_group").removeClass("col-xs-6").addClass("col-xs-12");
-			$("#create_poll_type_group").removeClass("col-sm-6").addClass("col-sm-12");
-			$("#create_poll_type_group").removeClass("col-md-6").addClass("col-md-12");
+			//$("#create_poll_type_group").removeClass("col-xs-6").addClass("col-xs-12");
+			//$("#create_poll_type_group").removeClass("col-sm-6").addClass("col-sm-12");
+			//$("#create_poll_type_group").removeClass("col-md-6").addClass("col-md-12");
 		}
 
 	});
