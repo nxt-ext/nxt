@@ -114,4 +114,9 @@ public final class EncryptedData {
         return buffer.array();
     }
 
+    @Override
+    public String toString() {
+        return "data: " + Convert.toHexString(data) + " nonce: " + Convert.toHexString(nonce);
+    }
+
 }

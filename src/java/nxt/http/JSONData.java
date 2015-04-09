@@ -21,6 +21,7 @@ import nxt.Order;
 import nxt.PhasingPoll;
 import nxt.PhasingVote;
 import nxt.Poll;
+import nxt.PrunableMessage;
 import nxt.Token;
 import nxt.Trade;
 import nxt.Transaction;
@@ -644,6 +645,35 @@ final class JSONData {
         response.put("hitTime", generator.getHitTime());
         response.put("remaining", Math.max(deadline - elapsedTime, 0));
         return response;
+    }
+
+    static JSONObject prunableMessage(PrunableMessage prunableMessage, long readerAccountId, String secretPhrase) {
+        JSONObject json = new JSONObject();
+        json.put("id", Long.toUnsignedString(prunableMessage.getId()));
+        json.put("isText", prunableMessage.isText());
+        putAccount(json, "sender", prunableMessage.getSenderId());
+        putAccount(json, "recipient", prunableMessage.getRecipientId());
+        json.put("expiration", prunableMessage.getExpiration());
+        json.put("timestamp", prunableMessage.getTimestamp());
+        EncryptedData encryptedData = prunableMessage.getEncryptedData();
+        if (encryptedData != null) {
+            json.put("encryptedMessage", encryptedData(prunableMessage.getEncryptedData()));
+            if (secretPhrase != null) {
+                Account account = prunableMessage.getSenderId() == readerAccountId
+                        ? Account.getAccount(prunableMessage.getRecipientId()) : Account.getAccount(prunableMessage.getSenderId());
+                if (account != null) {
+                    try {
+                        byte[] decrypted = account.decryptFrom(encryptedData, secretPhrase);
+                        json.put("decryptedMessage", prunableMessage.isText() ? Convert.toString(decrypted) : Convert.toHexString(decrypted));
+                    } catch (RuntimeException e) {
+                        putException(json, e, "Decryption failed");
+                    }
+                }
+            }
+        } else {
+            json.put("message", prunableMessage.toString());
+        }
+        return json;
     }
 
     static void putException(JSONObject json, Exception e) {

@@ -1,6 +1,7 @@
 package nxt;
 
 import nxt.crypto.EncryptedData;
+import nxt.db.DbIterator;
 import nxt.db.DbKey;
 import nxt.db.DbUtils;
 import nxt.db.PrunableDbTable;
@@ -38,6 +39,25 @@ public class PrunableMessage {
 
     public static PrunableMessage getPrunableMessage(long transactionId) {
         return prunableMessageTable.get(prunableMessageKeyFactory.newKey(transactionId));
+    }
+
+    public static DbIterator<PrunableMessage> getPrunableMessages(long accountId, int from, int to) {
+        Connection con = null;
+        try {
+            con = Db.db.getConnection();
+            PreparedStatement pstmt = con.prepareStatement("SELECT * FROM prunable_message WHERE sender_id = ?"
+                    + " UNION ALL SELECT * FROM prunable_message WHERE recipient_id = ? AND sender_id <> ? ORDER BY timestamp DESC, db_id DESC "
+                    + DbUtils.limitsClause(from, to));
+            int i = 0;
+            pstmt.setLong(++i, accountId);
+            pstmt.setLong(++i, accountId);
+            pstmt.setLong(++i, accountId);
+            DbUtils.setLimits(++i, pstmt, from, to);
+            return prunableMessageTable.getManyBy(con, pstmt, false);
+        } catch (SQLException e) {
+            DbUtils.close(con);
+            throw new RuntimeException(e.toString(), e);
+        }
     }
 
     static void init() {}
@@ -127,9 +147,29 @@ public class PrunableMessage {
         return isText;
     }
 
+    public long getId() {
+        return id;
+    }
+
+    public long getSenderId() {
+        return senderId;
+    }
+
+    public long getRecipientId() {
+        return recipientId;
+    }
+
+    public int getExpiration() {
+        return expiration;
+    }
+
+    public int getTimestamp() {
+        return blockTimestamp;
+    }
+
     @Override
     public String toString() {
-        return isText ? Convert.toString(message) : Convert.toHexString(message);
+        return message != null ? (isText ? Convert.toString(message) : Convert.toHexString(message)) : encryptedData.toString();
     }
 
     static void add(Transaction transaction, Appendix.PrunablePlainMessage appendix) {
