@@ -580,6 +580,16 @@ var NRS = (function(NRS, $, undefined) {
 			helpI18n: "add_asset_modal_help"
 		}
 		$elems = NRS.initModalUIElement($(this), '.poll_holding_asset', 'add_asset_modal_ui_element', context);
+
+		var context = {
+			labelText: "Finish Height",
+			labelI18n: "finish_height",
+			helpI18n: "create_poll_finish_height_help",
+			inputName: "create_poll_finish_height",
+			initBlockHeight: NRS.lastBlockHeight + 7000,
+			changeHeightBlocks: 500
+		}
+		var $elems = NRS.initModalUIElement($(this), '.create_poll_finish_height', 'block_height_modal_ui_element', context);
 	});
 
 
@@ -624,7 +634,7 @@ var NRS = (function(NRS, $, undefined) {
 
 		data["name"] = $("#create_poll_name").val();
 		data["description"] = $("#create_poll_description").val();
-		data["finishHeight"] = String(parseInt(NRS.lastBlockHeight) + parseInt($("#create_poll_duration").val()));
+		data["finishHeight"] = parseInt($("input[name='create_poll_finish_height']").val());
 		data["minNumberOfOptions"] = $("#create_poll_min_options").val();
 		data["maxNumberOfOptions"] = $("#create_poll_max_options").val();
 		data["minRangeValue"] = $("#create_poll_min_range_value").val();
