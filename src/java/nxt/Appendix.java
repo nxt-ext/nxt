@@ -340,7 +340,7 @@ public interface Appendix {
             if (getMessageLength() > Constants.MAX_PRUNABLE_MESSAGE_LENGTH) {
                 throw new NxtException.NotValidException("Invalid prunable message length: " + message.length);
             }
-            if (getMessage() != null && getMessageLength() <= 28) {
+            if (message != null && getMessageLength() <= 28) {
                 throw new NxtException.NotValidException("Prunable messages must be longer than 28 bytes");
             }
             if (getMessage() == null && Nxt.getEpochTime() - transaction.getTimestamp() < Constants.MIN_PRUNABLE_LIFETIME) {
@@ -376,7 +376,7 @@ public interface Appendix {
         }
 
         private int getMessageLength() {
-            return message == null ? 0 : message.length;
+            return getMessage() == null ? 0 : getMessage().length;
         }
 
         void loadPrunableMessage(Transaction transaction) {
@@ -613,7 +613,7 @@ public interface Appendix {
         }
 
         private int getEncryptedDataLength() {
-            return encryptedData == null ? 0 : encryptedData.getData().length;
+            return getEncryptedData() == null ? 0 : getEncryptedData().getData().length;
         }
 
         void loadPrunableMessage(Transaction transaction) {

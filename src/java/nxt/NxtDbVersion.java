@@ -674,7 +674,6 @@ class NxtDbVersion extends DbVersion {
             case 281:
                 apply("ALTER TABLE account DROP COLUMN IF EXISTS message_pattern_flags");
             case 282:
-                BlockchainProcessorImpl.getInstance().scheduleScan(0, false);
                 apply(null);
             case 283:
                 apply("TRUNCATE TABLE poll");
@@ -695,22 +694,20 @@ class NxtDbVersion extends DbVersion {
             case 290:
                 apply("ALTER TABLE transaction ADD COLUMN IF NOT EXISTS has_prunable_message BOOLEAN NOT NULL DEFAULT FALSE");
             case 291:
-                if (Constants.isTestnet) {
-                    BlockchainProcessorImpl.getInstance().scheduleScan(0, true);
-                }
-                apply(null);
-            case 292:
                 apply("TRUNCATE TABLE unconfirmed_transaction");
-            case 293:
+            case 292:
                 apply("ALTER TABLE unconfirmed_transaction ADD COLUMN IF NOT EXISTS prunable_json VARCHAR");
-            case 294:
+            case 293:
                 apply("CREATE INDEX IF NOT EXISTS prunable_message_sender_idx ON prunable_message (sender_id)");
-            case 295:
+            case 294:
                 apply("CREATE INDEX IF NOT EXISTS prunable_message_recipient_idx ON prunable_message (recipient_id)");
-            case 296:
+            case 295:
                 apply("CREATE INDEX IF NOT EXISTS prunable_message_timestamp_idx ON prunable_message (timestamp DESC)");
-            case 297:
+            case 296:
                 apply("ALTER TABLE transaction ADD COLUMN IF NOT EXISTS has_prunable_encrypted_message BOOLEAN NOT NULL DEFAULT FALSE");
+            case 297:
+                BlockchainProcessorImpl.getInstance().scheduleScan(0, false);
+                apply(null);
             case 298:
                 return;
             default:

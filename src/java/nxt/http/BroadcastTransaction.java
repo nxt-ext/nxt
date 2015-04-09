@@ -29,32 +29,32 @@ public final class BroadcastTransaction extends APIServlet.APIRequestHandler {
 
         String transactionBytes = Convert.emptyToNull(req.getParameter("transactionBytes"));
         String transactionJSON = Convert.emptyToNull(req.getParameter("transactionJSON"));
-        Appendix.PrunablePlainMessage prunablePlainMessage = null;
+
+        Transaction.Builder builder = ParameterParser.parseTransaction(transactionBytes, transactionJSON);
+
         String messageValue = Convert.emptyToNull(req.getParameter("message"));
         if (messageValue != null) {
             boolean messageIsText = !"false".equalsIgnoreCase(req.getParameter("messageIsText"));
             boolean messageIsPrunable = "true".equalsIgnoreCase(req.getParameter("messageIsPrunable"));
             if (messageIsPrunable) {
                 try {
-                    prunablePlainMessage = new Appendix.PrunablePlainMessage(messageValue, messageIsText);
+                    builder.appendix(new Appendix.PrunablePlainMessage(messageValue, messageIsText));
                 } catch (RuntimeException e) {
                     return INCORRECT_ARBITRARY_MESSAGE;
                 }
             }
         }
-        Appendix.PrunableEncryptedMessage prunableEncryptedMessage = null;
+
         EncryptedData encryptedData = ParameterParser.getEncryptedMessage(req, null);
         boolean encryptedDataIsText = !"false".equalsIgnoreCase(req.getParameter("messageToEncryptIsText"));
         if (encryptedData != null) {
             if ("true".equalsIgnoreCase(req.getParameter("encryptedMessageIsPrunable"))) {
-                prunableEncryptedMessage = new Appendix.PrunableEncryptedMessage(encryptedData, encryptedDataIsText);
+                builder.appendix(new Appendix.PrunableEncryptedMessage(encryptedData, encryptedDataIsText));
             }
         }
 
-        Transaction.Builder builder = ParameterParser.parseTransaction(transactionBytes, transactionJSON);
-        builder.appendix(prunablePlainMessage);
-        builder.appendix(prunableEncryptedMessage);
         Transaction transaction = builder.build();
+
         JSONObject response = new JSONObject();
         try {
             Nxt.getTransactionProcessor().broadcast(transaction);
