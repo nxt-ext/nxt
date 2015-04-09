@@ -623,10 +623,10 @@ var NRS = (function(NRS, $, undefined) {
 
         var pollType = $("#create_poll_type");
         if(pollType.val() == "0") {
-			data["votingModel"] = 1;
+			data["votingModel"] = 0;
 			data["minBalanceModel"] = 1;
 		} else if(pollType.val() == "1") {
-			data["votingModel"] = 0;
+			data["votingModel"] = 1;
 			var minBalanceModel = parseInt($('input:radio[name=minBalanceType]:checked').val());
 			data["minBalanceModel"] = minBalanceModel;
 			if(minBalanceModel == 2) {
