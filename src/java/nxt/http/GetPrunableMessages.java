@@ -39,9 +39,4 @@ public final class GetPrunableMessages extends APIServlet.APIRequestHandler {
         return response;
     }
 
-    @Override
-    public boolean startDbTransaction() {
-        return true;
-    }
-
 }
