@@ -365,7 +365,7 @@ final class JSONData {
                 optionJSON.put("weight", String.valueOf(option.getWeight()));
             } else {
                 optionJSON.put("result", "");
-                optionJSON.put("weight", 0);
+                optionJSON.put("weight", "0");
             }
             resultsJson.add(optionJSON);
         }
