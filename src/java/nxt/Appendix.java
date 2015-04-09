@@ -81,9 +81,7 @@ public interface Appendix {
         @Override
         public final JSONObject getJSONObject() {
             JSONObject json = new JSONObject();
-            if (version > 0) {
-                json.put("version." + getAppendixName(), version);
-            }
+            json.put("version." + getAppendixName(), version);
             putMyJSON(json);
             return json;
         }
@@ -125,10 +123,14 @@ public interface Appendix {
 
     }
 
+    static boolean hasAppendix(String appendixName, JSONObject attachmentData) {
+        return attachmentData.get("version." + appendixName) != null;
+    }
+
     class Message extends AbstractAppendix {
 
         static Message parse(JSONObject attachmentData) {
-            if (attachmentData.get("message") == null || Boolean.TRUE.equals(attachmentData.get("messageIsPrunable"))) {
+            if (!hasAppendix("Message", attachmentData)) {
                 return null;
             }
             return new Message(attachmentData);
@@ -216,6 +218,8 @@ public interface Appendix {
 
     class PrunablePlainMessage extends Appendix.AbstractAppendix {
 
+        private static final String appendixName = "PrunablePlainMessage";
+
         private static final Fee PRUNABLE_MESSAGE_FEE = new Fee.SizeBasedFee(Constants.ONE_NXT/10) {
             @Override
             public int getSize(TransactionImpl transaction, Appendix appendix) {
@@ -224,8 +228,7 @@ public interface Appendix {
         };
 
         static PrunablePlainMessage parse(JSONObject attachmentData) {
-            if ((attachmentData.get("message") == null && attachmentData.get("messageHash") == null)
-                    || !Boolean.TRUE.equals(attachmentData.get("messageIsPrunable"))) {
+            if (!hasAppendix(appendixName, attachmentData)) {
                 return null;
             }
             return new PrunablePlainMessage(attachmentData);
@@ -271,7 +274,7 @@ public interface Appendix {
 
         @Override
         String getAppendixName() {
-            return "PrunableMessage";
+            return appendixName;
         }
 
         @Override
@@ -312,7 +315,6 @@ public interface Appendix {
                 json.put("message", this.toString());
                 json.put("messageIsText", isText);
             }
-            json.put("messageIsPrunable", true);
         }
 
         @Override
@@ -448,6 +450,8 @@ public interface Appendix {
 
     class PrunableEncryptedMessage extends AbstractAppendix {
 
+        private static final String appendixName = "PrunableEncryptedMessage";
+
         private static final Fee PRUNABLE_ENCRYPTED_DATA_FEE = new Fee.SizeBasedFee(Constants.ONE_NXT/10) {
             @Override
             public int getSize(TransactionImpl transaction, Appendix appendix) {
@@ -456,8 +460,7 @@ public interface Appendix {
         };
 
         static PrunableEncryptedMessage parse(JSONObject attachmentData) {
-            if ((attachmentData.get("encryptedMessage") == null && attachmentData.get("encryptedMessageHash") == null)
-                || !Boolean.TRUE.equals(attachmentData.get("encryptedMessageIsPrunable"))) {
+            if (!hasAppendix(appendixName, attachmentData)) {
                 return null;
             }
             return new PrunableEncryptedMessage(attachmentData);
@@ -542,12 +545,11 @@ public interface Appendix {
                 encryptedMessageJSON.put("nonce", Convert.toHexString(encryptedData.getNonce()));
                 encryptedMessageJSON.put("isText", isText);
             }
-            json.put("encryptedMessageIsPrunable", true);
         }
 
         @Override
         String getAppendixName() {
-            return "PrunableEncryptedMessage";
+            return appendixName;
         }
 
         @Override
@@ -613,8 +615,10 @@ public interface Appendix {
 
     class EncryptedMessage extends AbstractEncryptedMessage {
 
+        private static final String appendixName = "EncryptedMessage";
+
         static EncryptedMessage parse(JSONObject attachmentData) {
-            if (attachmentData.get("encryptedMessage") == null ) {
+            if (!hasAppendix(appendixName, attachmentData)) {
                 return null;
             }
             return new EncryptedMessage(attachmentData);
@@ -634,7 +638,7 @@ public interface Appendix {
 
         @Override
         String getAppendixName() {
-            return "EncryptedMessage";
+            return appendixName;
         }
 
         @Override
@@ -656,8 +660,10 @@ public interface Appendix {
 
     class EncryptToSelfMessage extends AbstractEncryptedMessage {
 
+        private static final String appendixName = "EncryptToSelfMessage";
+
         static EncryptToSelfMessage parse(JSONObject attachmentData) {
-            if (attachmentData.get("encryptToSelfMessage") == null ) {
+            if (!hasAppendix(appendixName, attachmentData)) {
                 return null;
             }
             return new EncryptToSelfMessage(attachmentData);
@@ -677,7 +683,7 @@ public interface Appendix {
 
         @Override
         String getAppendixName() {
-            return "EncryptToSelfMessage";
+            return appendixName;
         }
 
         @Override
@@ -691,8 +697,10 @@ public interface Appendix {
 
     class PublicKeyAnnouncement extends AbstractAppendix {
 
+        private static final String appendixName = "PublicKeyAnnouncement";
+
         static PublicKeyAnnouncement parse(JSONObject attachmentData) {
-            if (attachmentData.get("recipientPublicKey") == null) {
+            if (!hasAppendix(appendixName, attachmentData)) {
                 return null;
             }
             return new PublicKeyAnnouncement(attachmentData);
@@ -717,7 +725,7 @@ public interface Appendix {
 
         @Override
         String getAppendixName() {
-            return "PublicKeyAnnouncement";
+            return appendixName;
         }
 
         @Override
@@ -768,10 +776,12 @@ public interface Appendix {
 
     class Phasing extends AbstractAppendix {
 
+        private static final String appendixName = "Phasing";
+
         private static final Fee PHASING_FEE = new Fee.ConstantFee(20 * Constants.ONE_NXT);
 
         static Phasing parse(JSONObject attachmentData) {
-            if (attachmentData.get("phasingFinishHeight") == null) {
+            if (!hasAppendix(appendixName, attachmentData)) {
                 return null;
             }
             return new Phasing(attachmentData);
@@ -868,7 +878,7 @@ public interface Appendix {
 
         @Override
         String getAppendixName() {
-            return "Phasing";
+            return appendixName;
         }
 
         @Override

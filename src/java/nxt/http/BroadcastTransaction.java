@@ -53,8 +53,8 @@ public final class BroadcastTransaction extends APIServlet.APIRequestHandler {
         }
 
         Transaction.Builder builder = ParameterParser.parseTransaction(transactionBytes, transactionJSON);
-        builder.prunablePlainMessage(prunablePlainMessage);
-        builder.prunableEncryptedMessage(prunableEncryptedMessage);
+        builder.appendix(prunablePlainMessage);
+        builder.appendix(prunableEncryptedMessage);
         Transaction transaction = builder.build();
         JSONObject response = new JSONObject();
         try {

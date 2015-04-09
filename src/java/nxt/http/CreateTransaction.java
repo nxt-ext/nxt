@@ -188,13 +188,13 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
             if (attachment.getTransactionType().canHaveRecipient()) {
                 builder.recipientId(recipientId);
             }
-            builder.encryptedMessage(encryptedMessage);
-            builder.message(message);
-            builder.publicKeyAnnouncement(publicKeyAnnouncement);
-            builder.encryptToSelfMessage(encryptToSelfMessage);
-            builder.phasing(phasing);
-            builder.prunablePlainMessage(prunablePlainMessage);
-            builder.prunableEncryptedMessage(prunableEncryptedMessage);
+            builder.appendix(encryptedMessage);
+            builder.appendix(message);
+            builder.appendix(publicKeyAnnouncement);
+            builder.appendix(encryptToSelfMessage);
+            builder.appendix(phasing);
+            builder.appendix(prunablePlainMessage);
+            builder.appendix(prunableEncryptedMessage);
             Transaction transaction = builder.build(secretPhrase);
             try {
                 if (Math.addExact(amountNQT, transaction.getFeeNQT()) > senderAccount.getUnconfirmedBalanceNQT()) {

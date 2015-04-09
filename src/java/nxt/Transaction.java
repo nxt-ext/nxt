@@ -12,25 +12,25 @@ public interface Transaction {
 
         Builder referencedTransactionFullHash(String referencedTransactionFullHash);
 
-        Builder message(Appendix.Message message);
+        Builder appendix(Appendix.Message message);
 
-        Builder encryptedMessage(Appendix.EncryptedMessage encryptedMessage);
+        Builder appendix(Appendix.EncryptedMessage encryptedMessage);
 
-        Builder encryptToSelfMessage(Appendix.EncryptToSelfMessage encryptToSelfMessage);
+        Builder appendix(Appendix.EncryptToSelfMessage encryptToSelfMessage);
 
-        Builder publicKeyAnnouncement(Appendix.PublicKeyAnnouncement publicKeyAnnouncement);
+        Builder appendix(Appendix.PublicKeyAnnouncement publicKeyAnnouncement);
 
-        Builder prunablePlainMessage(Appendix.PrunablePlainMessage prunablePlainMessage);
+        Builder appendix(Appendix.PrunablePlainMessage prunablePlainMessage);
 
-        Builder prunableEncryptedMessage(Appendix.PrunableEncryptedMessage prunableEncryptedMessage);
+        Builder appendix(Appendix.PrunableEncryptedMessage prunableEncryptedMessage);
+
+        Builder appendix(Appendix.Phasing phasing);
 
         Builder timestamp(int timestamp);
 
         Builder ecBlockHeight(int height);
 
         Builder ecBlockId(long blockId);
-
-        Builder phasing(Appendix.Phasing phasing);
 
         Transaction build() throws NxtException.NotValidException;
 
