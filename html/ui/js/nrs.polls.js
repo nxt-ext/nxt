@@ -334,23 +334,14 @@ var NRS = (function(NRS, $, undefined) {
 		if($("#create_poll_type").val() == "2") {
 			$("#create_poll_asset_id_group").css("display", "inline");
 			$("#create_poll_ms_currency_group").css("display", "none");
-			$("#create_poll_type_group").removeClass("col-xs-12").addClass("col-xs-6");
-			$("#create_poll_type_group").removeClass("col-sm-12").addClass("col-sm-6");
-			$("#create_poll_type_group").removeClass("col-md-12").addClass("col-md-6");
 		}
 		else if($("#create_poll_type").val() == "3") {
 			$("#create_poll_asset_id_group").css("display", "none");
 			$("#create_poll_ms_currency_group").css("display", "inline");
-			$("#create_poll_type_group").removeClass("col-xs-12").addClass("col-xs-6");
-			$("#create_poll_type_group").removeClass("col-sm-12").addClass("col-sm-6");
-			$("#create_poll_type_group").removeClass("col-md-12").addClass("col-md-6");
 		}
 		else {
 			$("#create_poll_asset_id_group").css("display", "none");
 			$("#create_poll_ms_currency_group").css("display", "none");
-			$("#create_poll_type_group").removeClass("col-xs-6").addClass("col-xs-12");
-			$("#create_poll_type_group").removeClass("col-sm-6").addClass("col-sm-12");
-			$("#create_poll_type_group").removeClass("col-md-6").addClass("col-md-12");
 		}
 
 		if($("#create_poll_type").val() == "0")
@@ -570,6 +561,28 @@ var NRS = (function(NRS, $, undefined) {
 		});
 	});
 
+	$("#create_poll_modal").on("show.bs.modal", function(e) {
+		context = {
+			labelText: "Currency",
+			labelI18n: "currency",
+			inputCodeName: "create_poll_ms_code",
+			inputIdName: "create_poll_ms_id",
+			inputDecimalsName: "create_poll_ms_decimals",
+			helpI18n: "add_currency_modal_help"
+		}
+		$elems = NRS.initModalUIElement($(this), '.poll_holding_currency', 'add_currency_modal_ui_element', context);
+
+		context = {
+			labelText: "Asset",
+			labelI18n: "asset",
+			inputIdName: "create_poll_asset_id",
+			inputDecimalsName: "create_poll_asset_decimals",
+			helpI18n: "add_asset_modal_help"
+		}
+		$elems = NRS.initModalUIElement($(this), '.poll_holding_asset', 'add_asset_modal_ui_element', context);
+	});
+
+
 	$("#poll_results_modal").on("show.bs.modal", function(e) {
 		$("#poll_results_modal_statistics").show();
 		// now lets put the data in the correct place...
@@ -630,17 +643,17 @@ var NRS = (function(NRS, $, undefined) {
 			var minBalanceModel = parseInt($('input:radio[name=minBalanceType]:checked').val());
 			data["minBalanceModel"] = minBalanceModel;
 			if(minBalanceModel == 2) {
-                data["holding"] = $("#create_poll_asset_id").val();
+                data["holding"] = $("input[name='create_poll_asset_id']").val();
             } else if(minBalanceModel == 3) {
-                data["holding"] = $("#create_poll_ms_id").val();
+                data["holding"] = $("input[name='create_poll_ms_id']").val();
             }
 		} else if(pollType.val() == "2") {
 			data["votingModel"] = 2;
-			data["holding"] = $("#create_poll_asset_id").val();
+			data["holding"] = $("input[name='create_poll_asset_id']").val();
 			data["minBalanceModel"] = 2;
 		} else if(pollType.val() == "3") {
 			data["votingModel"] = 3;
-			data["holding"] = $("#create_poll_ms_id").val();
+			data["holding"] = $("input[name='create_poll_ms_id']").val();
 			data["minBalanceModel"] = 3;
 		}
 
