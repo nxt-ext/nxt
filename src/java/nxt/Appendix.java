@@ -312,6 +312,7 @@ public interface Appendix {
                 json.put("message", this.toString());
                 json.put("messageIsText", isText);
             }
+            json.put("messageIsPrunable", true);
         }
 
         @Override
@@ -541,6 +542,7 @@ public interface Appendix {
                 encryptedMessageJSON.put("nonce", Convert.toHexString(encryptedData.getNonce()));
                 encryptedMessageJSON.put("isText", isText);
             }
+            json.put("encryptedMessageIsPrunable", true);
         }
 
         @Override
