@@ -29,11 +29,11 @@ var NRS = (function(NRS, $, undefined) {
 
 		var type = $modal.data('transactionType');
 		var subType = $modal.data('transactionSubtype');
-		if (type && subType) {
+		if (type != undefined && subType != undefined) {
 			if (NRS.transactionTypes[type]["subTypes"][subType]["serverConstants"]["isPhasingSafe"] == true) {
-				//console.log("Is phasing safe!");
+				$modal.find('.phasing_safe_alert').hide();
 			} else {
-				//console.log("Njet.");
+				$modal.find('.phasing_safe_alert').show();
 			}
 		}
 
