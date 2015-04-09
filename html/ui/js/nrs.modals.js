@@ -78,6 +78,7 @@ var NRS = (function(NRS, $, undefined) {
 
 	//hide modal when another one is activated.
 	$(".modal").on("show.bs.modal", function(e) {
+		
 		var $inputFields = $(this).find("input[name=recipient], input[name=account_id], input[name=phasingWhitelisted]").not("[type=hidden]");
 
 		$.each($inputFields, function() {

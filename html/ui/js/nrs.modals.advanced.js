@@ -27,6 +27,16 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.initAdvancedModalFormValues = function($modal) {
 		$(".phasing_number_accounts_group").find("input[name=phasingQuorum]").val(1);
 
+		var type = $modal.data('transactionType');
+		var subType = $modal.data('transactionSubtype');
+		if (type && subType) {
+			if (NRS.transactionTypes[type]["subTypes"][subType]["serverConstants"]["isPhasingSafe"] == true) {
+				//console.log("Is phasing safe!");
+			} else {
+				//console.log("Njet.");
+			}
+		}
+
 		var context = {
 			labelText: "Finish Height",
 			labelI18n: "finish_height",
