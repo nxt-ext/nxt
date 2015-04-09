@@ -2,6 +2,8 @@
  * @depends {nrs.js}
  */
 var NRS = (function(NRS, $, undefined) {
+    // If you add new mandatory attributes, please make sure to add them to
+    // NRS.loadTransactionTypeConstants as well (below)
     NRS.transactionTypes = {
         0: {
             'title': "Payment",
@@ -246,6 +248,33 @@ var NRS = (function(NRS, $, undefined) {
                 }
             }
         },
+    }
+
+    NRS.loadTransactionTypeConstants = function() {
+        NRS.sendRequest("getConstants", {}, function (response) {
+            if (response.genesisAccountId) {
+                $.each(response.transactionTypes, function(typeIndex, type) {
+                    if (!(typeIndex in NRS.transactionTypes)) {
+                        NRS.transactionTypes[typeIndex] = {
+                            'title': "Unknown",
+                            'i18nKeyTitle': 'unknown',
+                            'iconHTML': '<i class="fa fa-question-circle"></i>',
+                            'subTypes': {}
+                        }
+                    }
+                    $.each(type.subtypes, function(subTypeIndex, subType) {
+                        if (!(subTypeIndex in NRS.transactionTypes[typeIndex]["subTypes"])) {
+                            NRS.transactionTypes[typeIndex]["subTypes"][subTypeIndex] = {
+                                'title': "Unknown",
+                                'i18nKeyTitle': 'unknown',
+                                'iconHTML': '<i class="fa fa-question-circle"></i>'
+                            }
+                        }
+                        NRS.transactionTypes[typeIndex]["subTypes"][subTypeIndex]["serverConstants"] = subType;
+                    });
+                });
+            }
+        });
     }
     
     return NRS;

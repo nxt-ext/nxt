@@ -118,6 +118,7 @@ var NRS = (function(NRS, $, undefined) {
 				$(".testnet_only, #testnet_login, #testnet_warning").show();
 			}
 			NRS.loadServerConstants();
+			NRS.loadTransactionTypeConstants();
 			NRS.initializePlugins();
             NRS.printEnvInfo();
 		});
