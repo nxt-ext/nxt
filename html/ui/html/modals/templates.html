@@ -79,6 +79,10 @@
 
 <div id="advanced_approve_template">
     <div class="advanced approve_modal" id="{{name}}_approve_modal">
+        <div class="phasing_safe_alert alert alert-warning" role="alert" style="margin-left:0px;display:none;">
+            <span style="font-weight:bold;" data-i18n="warning">Warning</span>!
+            <span data-i18n="transaction_type_not_phasing_safe">Transaction type not safe for phasing/approval.</span>
+        </div>
         <div role="tabpanel" class="approve_tab_panel">
             <!-- Nav tabs -->
             <ul class="nav nav-tabs approve_tab_list" role="tablist">
