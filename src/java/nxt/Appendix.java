@@ -193,7 +193,7 @@ public interface Appendix {
         @Override
         void validate(Transaction transaction) throws NxtException.ValidationException {
             if (message.length > Constants.MAX_ARBITRARY_MESSAGE_LENGTH) {
-                throw new NxtException.NotCurrentlyValidException("Invalid arbitrary message length: " + message.length);
+                throw new NxtException.NotValidException("Invalid arbitrary message length: " + message.length);
             }
         }
 
@@ -424,7 +424,7 @@ public interface Appendix {
         @Override
         void validate(Transaction transaction) throws NxtException.ValidationException {
             if (encryptedData.getData().length > Constants.MAX_ENCRYPTED_MESSAGE_LENGTH) {
-                throw new NxtException.NotCurrentlyValidException("Max encrypted message length exceeded");
+                throw new NxtException.NotValidException("Max encrypted message length exceeded");
             }
             if ((encryptedData.getNonce().length != 32 && encryptedData.getData().length > 0)
                     || (encryptedData.getNonce().length != 0 && encryptedData.getData().length == 0)) {

@@ -704,9 +704,9 @@ class NxtDbVersion extends DbVersion {
             case 293:
                 apply("ALTER TABLE unconfirmed_transaction ADD COLUMN IF NOT EXISTS prunable_json VARCHAR NOT NULL");
             case 294:
-                apply("CREATE INDEX IF NOT EXISTS prunable_message_sender_idx ON prunable_message (sender)");
+                apply("CREATE INDEX IF NOT EXISTS prunable_message_sender_idx ON prunable_message (sender_id)");
             case 295:
-                apply("CREATE INDEX IF NOT EXISTS prunable_message_recipient_idx ON prunable_message (recipient)");
+                apply("CREATE INDEX IF NOT EXISTS prunable_message_recipient_idx ON prunable_message (recipient_id)");
             case 296:
                 apply("CREATE INDEX IF NOT EXISTS prunable_message_timestamp_idx ON prunable_message (timestamp DESC)");
             case 297:
