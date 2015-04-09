@@ -127,9 +127,8 @@ class NxtDbVersion extends DbVersion {
             case 54:
                 apply("ALTER TABLE transaction ALTER COLUMN recipient_id SET NULL");
             case 55:
-                apply("CREATE TABLE IF NOT EXISTS public_key (db_id IDENTITY, account_id BIGINT NOT NULL, "
-                        + "public_key BINARY(32), height INT NOT NULL, FOREIGN KEY (height) REFERENCES block (height) ON DELETE CASCADE)");
                 BlockDb.deleteAll();
+                apply(null);
             case 56:
                 apply("CREATE INDEX IF NOT EXISTS transaction_recipient_id_idx ON transaction (recipient_id)");
             case 57:
@@ -434,9 +433,8 @@ class NxtDbVersion extends DbVersion {
                 apply("CREATE INDEX IF NOT EXISTS unconfirmed_transaction_height_fee_timestamp_idx ON unconfirmed_transaction "
                         + "(transaction_height ASC, fee_per_byte DESC, arrival_timestamp ASC)");
             case 174:
-                apply("CREATE TABLE IF NOT EXISTS public_key (db_id IDENTITY, account_id BIGINT NOT NULL, "
-                        + "public_key BINARY(32), height INT NOT NULL, FOREIGN KEY (height) REFERENCES block (height) ON DELETE CASCADE)");
                 BlockDb.deleteAll();
+                apply(null);
             case 175:
                 apply("ALTER TABLE transaction ADD COLUMN IF NOT EXISTS transaction_index SMALLINT NOT NULL");
             case 176:
@@ -684,7 +682,8 @@ class NxtDbVersion extends DbVersion {
             case 286:
                 apply("CREATE TABLE IF NOT EXISTS prunable_message (db_id IDENTITY, id BIGINT NOT NULL, sender_id BIGINT NOT NULL, "
                         + "recipient_id BIGINT, message VARBINARY NOT NULL, is_text BOOLEAN NOT NULL, is_encrypted BOOLEAN NOT NULL, "
-                        + "timestamp INT NOT NULL, expiration INT NOT NULL, height INT NOT NULL)");
+                        + "timestamp INT NOT NULL, expiration INT NOT NULL, height INT NOT NULL, "
+                        + "FOREIGN KEY (height) REFERENCES block (height) ON DELETE CASCADE)");
             case 287:
                 apply("CREATE UNIQUE INDEX IF NOT EXISTS prunable_message_id_idx ON prunable_message (id)");
             case 288:

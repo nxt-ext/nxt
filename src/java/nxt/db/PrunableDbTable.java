@@ -32,4 +32,15 @@ public abstract class PrunableDbTable<T> extends EntityDbTable<T> {
         }
 
     }
+
+    @Override
+    public void rollback(int height) {
+        clearCache();
+    }
+
+    @Override
+    public void truncate() {
+        clearCache();
+    }
+
 }

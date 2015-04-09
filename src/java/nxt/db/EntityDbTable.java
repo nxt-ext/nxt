@@ -137,9 +137,6 @@ public abstract class EntityDbTable<T> extends DerivedDbTable {
                 t = (T) db.getCache(table).get(dbKey);
             }
             if (t == null) {
-                if (db.isInTransaction() && rs.getInt("height") > Nxt.getBlockchain().getHeight() && !"public_key".equals(table)) {
-                    throw new RuntimeException("Table " + table + " is at height " + rs.getInt("height") + " while blockchain is at " + Nxt.getBlockchain().getHeight());
-                }
                 t = load(con, rs);
                 if (doCache) {
                     db.getCache(table).put(dbKey, t);

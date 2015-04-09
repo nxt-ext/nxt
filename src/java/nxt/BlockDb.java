@@ -242,7 +242,12 @@ final class BlockDb {
                 stmt.executeUpdate("SET REFERENTIAL_INTEGRITY FALSE");
                 stmt.executeUpdate("TRUNCATE TABLE transaction");
                 stmt.executeUpdate("TRUNCATE TABLE block");
-                stmt.executeUpdate("TRUNCATE TABLE public_key");
+                try {
+                    stmt.executeUpdate("TRUNCATE TABLE public_key");
+                } catch (SQLException ignore) {}
+                try {
+                    stmt.executeUpdate("TRUNCATE TABLE prunable_message");
+                } catch (SQLException ignore) {}
                 stmt.executeUpdate("SET REFERENTIAL_INTEGRITY TRUE");
                 Db.db.commitTransaction();
             } catch (SQLException e) {
