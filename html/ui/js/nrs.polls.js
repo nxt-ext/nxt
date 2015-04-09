@@ -37,10 +37,19 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.pages.polls = function() {
-		NRS.sendRequest("getPolls+", function(response) {
+		NRS.sendRequest("getPolls+", {
+			"firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
+			"lastIndex": NRS.pageNumber * NRS.itemsPerPage,
+			"includeFinished": false
+		}, function(response) {
 			if (response.polls && response.polls.length) {
 				var polls = {};
 				var nrPolls = 0;
+
+				if (response.polls.length > NRS.itemsPerPage) {
+					NRS.hasMorePages = true;
+					response.polls.pop();
+				}
 
 				for (var i = 0; i < response.polls.length; i++) {
 					NRS.sendRequest("getTransaction+", {
@@ -51,7 +60,7 @@ var NRS = (function(NRS, $, undefined) {
 							return;
 						}
 
-						if (!poll.errorCode && poll.attachment.finishHeight >= NRS.lastBlockHeight) {
+						if (!poll.errorCode) {
 							polls[input.transaction] = poll;
 						}
 
