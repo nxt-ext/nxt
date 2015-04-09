@@ -83,6 +83,7 @@ public final class ReadMessage extends APIServlet.APIRequestHandler {
                         response.put("decryptedMessage", isText ? Convert.toString(decrypted) : Convert.toHexString(decrypted));
                     } catch (RuntimeException e) {
                         Logger.logDebugMessage("Decryption of message to recipient failed: " + e.toString());
+                        JSONData.putException(response, e, "Wrong secretPhrase");
                     }
                 }
             }

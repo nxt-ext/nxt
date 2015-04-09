@@ -1,6 +1,7 @@
 package nxt.db;
 
 import nxt.Nxt;
+import nxt.util.Logger;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -22,7 +23,10 @@ public abstract class PrunableDbTable<T> extends EntityDbTable<T> {
         try (Connection con = db.getConnection();
              PreparedStatement pstmt = con.prepareStatement("DELETE FROM " + table + " WHERE expiration < ?")) {
             pstmt.setInt(1, Nxt.getEpochTime());
-            pstmt.executeUpdate();
+            int deleted = pstmt.executeUpdate();
+            if (deleted > 0) {
+                Logger.logDebugMessage("Deleted " + deleted + " expired prunable data from " + table);
+            }
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
         }

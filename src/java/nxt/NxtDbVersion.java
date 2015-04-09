@@ -702,7 +702,7 @@ class NxtDbVersion extends DbVersion {
             case 292:
                 apply("TRUNCATE TABLE unconfirmed_transaction");
             case 293:
-                apply("ALTER TABLE unconfirmed_transaction ADD COLUMN IF NOT EXISTS prunable_json VARCHAR NOT NULL");
+                apply("ALTER TABLE unconfirmed_transaction ADD COLUMN IF NOT EXISTS prunable_json VARCHAR");
             case 294:
                 apply("CREATE INDEX IF NOT EXISTS prunable_message_sender_idx ON prunable_message (sender_id)");
             case 295:
