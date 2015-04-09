@@ -343,18 +343,15 @@ final class JSONData {
         return json;
     }
 
-    static JSONObject pollResults(Poll poll, List<Poll.OptionResult> results) {
+    static JSONObject pollResults(Poll poll, List<Poll.OptionResult> results, VoteWeighting voteWeighting) {
         JSONObject json = new JSONObject();
         json.put("poll", Long.toUnsignedString(poll.getId()));
-        if (poll.getVoteWeighting().getMinBalanceModel() == VoteWeighting.MinBalanceModel.ASSET) {
-            long holdingId = poll.getVoteWeighting().getHoldingId();
-            json.put("holding", Long.toUnsignedString(holdingId));
-            json.put("decimals", Asset.getAsset(holdingId).getDecimals());
-        } else if(poll.getVoteWeighting().getMinBalanceModel() == VoteWeighting.MinBalanceModel.CURRENCY) {
-            long holdingId = poll.getVoteWeighting().getHoldingId();
-            json.put("holding", Long.toUnsignedString(holdingId));
-            json.put("decimals", Currency.getCurrency(holdingId).getDecimals());
+        if (voteWeighting.getMinBalanceModel() == VoteWeighting.MinBalanceModel.ASSET) {
+            json.put("decimals", Asset.getAsset(voteWeighting.getHoldingId()).getDecimals());
+        } else if(voteWeighting.getMinBalanceModel() == VoteWeighting.MinBalanceModel.CURRENCY) {
+            json.put("decimals", Currency.getCurrency(voteWeighting.getHoldingId()).getDecimals());
         }
+        putVoteWeighting(json, voteWeighting);
         json.put("finished", poll.isFinished());
         JSONArray options = new JSONArray();
         Collections.addAll(options, poll.getOptions());
