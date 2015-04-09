@@ -5,6 +5,9 @@ import java.util.TimeZone;
 
 public final class Constants {
 
+    public static final boolean isTestnet = Nxt.getBooleanProperty("nxt.isTestnet");
+    public static final boolean isOffline = Nxt.getBooleanProperty("nxt.isOffline");
+
     public static final int MAX_NUMBER_OF_TRANSACTIONS = 255;
     public static final int MAX_PAYLOAD_LENGTH = MAX_NUMBER_OF_TRANSACTIONS * 176;
     public static final long MAX_BALANCE_NXT = 1000000000;
@@ -35,7 +38,7 @@ public final class Constants {
     public static final int MAX_PRUNABLE_MESSAGE_LENGTH = 42 * 1024;
     public static final int MAX_PRUNABLE_ENCRYPTED_MESSAGE_LENGTH = 42 * 1024;
 
-    public static final int MIN_PRUNABLE_LIFETIME = 14 * 1440 * 60;
+    public static final int MIN_PRUNABLE_LIFETIME = isTestnet ? 1440 * 60 : 14 * 1440 * 60;
 
     public static final int MAX_ACCOUNT_NAME_LENGTH = 100;
     public static final int MAX_ACCOUNT_DESCRIPTION_LENGTH = 1000;
@@ -80,9 +83,6 @@ public final class Constants {
     public static final short MIN_SHUFFLING_DELAY = 5;
     public static final short MAX_SHUFFLING_DELAY = 1440;
     public static final int MAX_SHUFFLING_RECIPIENTS_LENGTH = 10000;
-
-    public static final boolean isTestnet = Nxt.getBooleanProperty("nxt.isTestnet");
-    public static final boolean isOffline = Nxt.getBooleanProperty("nxt.isOffline");
 
     public static final int ALIAS_SYSTEM_BLOCK = 22000;
     public static final int TRANSPARENT_FORGING_BLOCK = 30000;
