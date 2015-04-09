@@ -170,6 +170,11 @@ public interface Appendix {
             this.isText = true;
         }
 
+        public Message(String string, boolean isText) {
+            this.message = isText ? Convert.toBytes(string) : Convert.parseHexString(string);
+            this.isText = isText;
+        }
+
         @Override
         String getAppendixName() {
             return "Message";
@@ -269,6 +274,12 @@ public interface Appendix {
         public PrunablePlainMessage(String string) {
             this.message = Convert.toBytes(string);
             this.isText = true;
+            this.hash = null;
+        }
+
+        public PrunablePlainMessage(String string, boolean isText) {
+            this.message = isText ? Convert.toBytes(string) : Convert.parseHexString(string);
+            this.isText = isText;
             this.hash = null;
         }
 

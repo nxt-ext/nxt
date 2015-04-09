@@ -36,10 +36,9 @@ public final class BroadcastTransaction extends APIServlet.APIRequestHandler {
             boolean messageIsPrunable = "true".equalsIgnoreCase(req.getParameter("messageIsPrunable"));
             if (messageIsPrunable) {
                 try {
-                    prunablePlainMessage = messageIsText ? new Appendix.PrunablePlainMessage(messageValue)
-                            : new Appendix.PrunablePlainMessage(Convert.parseHexString(messageValue));
+                    prunablePlainMessage = new Appendix.PrunablePlainMessage(messageValue, messageIsText);
                 } catch (RuntimeException e) {
-                    throw new ParameterException(INCORRECT_ARBITRARY_MESSAGE);
+                    return INCORRECT_ARBITRARY_MESSAGE;
                 }
             }
         }

@@ -138,13 +138,12 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
             boolean messageIsText = !"false".equalsIgnoreCase(req.getParameter("messageIsText"));
             try {
                 if ("true".equalsIgnoreCase(req.getParameter("messageIsPrunable"))) {
-                    prunablePlainMessage = messageIsText ? new Appendix.PrunablePlainMessage(messageValue)
-                            : new Appendix.PrunablePlainMessage(Convert.parseHexString(messageValue));
+                    prunablePlainMessage = new Appendix.PrunablePlainMessage(messageValue, messageIsText);
                 } else {
-                    message = messageIsText ? new Appendix.Message(messageValue) : new Appendix.Message(Convert.parseHexString(messageValue));
+                    message = new Appendix.Message(messageValue, messageIsText);
                 }
             } catch (RuntimeException e) {
-                throw new ParameterException(INCORRECT_ARBITRARY_MESSAGE);
+                return INCORRECT_ARBITRARY_MESSAGE;
             }
         }
         Appendix.PublicKeyAnnouncement publicKeyAnnouncement = null;
