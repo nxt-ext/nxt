@@ -54,8 +54,7 @@ public class SetPhasingOnlyControl extends CreateTransaction {
         
         Account account = ParameterParser.getSenderAccount(request);
         
-        PhasingParams phasingParams = parsePhasingParams(request, "controlVotingModel", "controlQuorum", "controlMinBalance", 
-                "controlMinBalanceModel", "controlHolding", "controlWhitelisted");
+        PhasingParams phasingParams = parsePhasingParams(request, "control");
         
         return createTransaction(request, account, new Attachment.SetPhasingOnly(phasingParams));
     }

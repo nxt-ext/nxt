@@ -1,7 +1,7 @@
 package nxt.http;
 
 import nxt.Account;
-import nxt.Currency;
+import nxt.Asset;
 import nxt.PhasingPoll;
 import nxt.Transaction;
 import nxt.VoteWeighting;
@@ -12,25 +12,25 @@ import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
 
-public class GetCurrencyPendingTransactions extends APIServlet.APIRequestHandler {
-    static final GetCurrencyPendingTransactions instance = new GetCurrencyPendingTransactions();
+public class GetAssetPhasedTransactions extends APIServlet.APIRequestHandler {
+    static final GetAssetPhasedTransactions instance = new GetAssetPhasedTransactions();
 
-    private GetCurrencyPendingTransactions() {
-        super(new APITag[]{APITag.AE, APITag.PHASING}, "currency", "account", "withoutWhitelist", "firstIndex", "lastIndex");
+    private GetAssetPhasedTransactions() {
+        super(new APITag[]{APITag.AE, APITag.PHASING}, "asset", "account", "withoutWhitelist", "firstIndex", "lastIndex");
     }
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws ParameterException {
-        Currency currency = ParameterParser.getCurrency(req);
+        Asset asset = ParameterParser.getAsset(req);
         Account account = ParameterParser.getAccount(req, false);
         int firstIndex = ParameterParser.getFirstIndex(req);
         int lastIndex = ParameterParser.getLastIndex(req);
         boolean withoutWhitelist = "true".equalsIgnoreCase(req.getParameter("withoutWhitelist"));
 
-        long currencyId = currency.getId();
+        long assetId = asset.getId();
 
         JSONArray transactions = new JSONArray();
-        try (DbIterator<? extends Transaction> iterator = PhasingPoll.getHoldingPendingTransactions(currencyId, VoteWeighting.VotingModel.CURRENCY,
+        try (DbIterator<? extends Transaction> iterator = PhasingPoll.getHoldingPhasedTransactions(assetId, VoteWeighting.VotingModel.ASSET,
                 account, withoutWhitelist, firstIndex, lastIndex)) {
             while (iterator.hasNext()) {
                 Transaction transaction = iterator.next();

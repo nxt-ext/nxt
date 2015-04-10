@@ -162,9 +162,9 @@ public abstract class TransactionType {
     abstract void validateAttachment(Transaction transaction) throws NxtException.ValidationException;
 
     // return false iff double spending
-    final boolean applyUnconfirmed(Transaction transaction, Account senderAccount) {
+    final boolean applyUnconfirmed(TransactionImpl transaction, Account senderAccount) {
         long totalAmountNQT = Math.addExact(transaction.getAmountNQT(), transaction.getFeeNQT());
-        if (transaction.getReferencedTransactionFullHash() != null
+        if (transaction.referencedTransactionFullHash() != null
                 && transaction.getTimestamp() > Constants.REFERENCED_TRANSACTION_FULL_HASH_BLOCK_TIMESTAMP) {
             totalAmountNQT = Math.addExact(totalAmountNQT, Constants.UNCONFIRMED_POOL_DEPOSIT_NQT);
         }
@@ -197,10 +197,10 @@ public abstract class TransactionType {
 
     abstract void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount);
 
-    final void undoUnconfirmed(Transaction transaction, Account senderAccount) {
+    final void undoUnconfirmed(TransactionImpl transaction, Account senderAccount) {
         undoAttachmentUnconfirmed(transaction, senderAccount);
         senderAccount.addToUnconfirmedBalanceNQT(Math.addExact(transaction.getAmountNQT(), transaction.getFeeNQT()));
-        if (transaction.getReferencedTransactionFullHash() != null
+        if (transaction.referencedTransactionFullHash() != null
                 && transaction.getTimestamp() > Constants.REFERENCED_TRANSACTION_FULL_HASH_BLOCK_TIMESTAMP) {
             senderAccount.addToUnconfirmedBalanceNQT(Constants.UNCONFIRMED_POOL_DEPOSIT_NQT);
         }
@@ -771,8 +771,8 @@ public abstract class TransactionType {
                     throw new NxtException.NotCurrentlyValidException("Invalid finishing height" + attachment.getJSONObject());
                 }
 
-                if (attachment.getVoteWeighting().getVotingModel() == VoteWeighting.VotingModel.NONE) {
-                    throw new NxtException.NotValidException("VotingModel NONE not valid for regular polls");
+                if (! attachment.getVoteWeighting().acceptsVotes() || attachment.getVoteWeighting().getVotingModel() == VoteWeighting.VotingModel.HASH) {
+                    throw new NxtException.NotValidException("VotingModel " + attachment.getVoteWeighting().getVotingModel() + " not valid for regular polls");
                 }
 
                 attachment.getVoteWeighting().validate();
@@ -850,7 +850,8 @@ public abstract class TransactionType {
                 int positiveCount = 0;
                 for (byte vote : votes) {
                     if (vote != Constants.NO_VOTE_VALUE && (vote < poll.getMinRangeValue() || vote > poll.getMaxRangeValue())) {
-                        throw new NxtException.NotValidException("Invalid vote: " + attachment.getJSONObject());
+                        throw new NxtException.NotValidException(String.format("Invalid vote %d, vote must be between %d and %d",
+                                vote, poll.getMinRangeValue(), poll.getMaxRangeValue()));
                     }
                     if (vote != Constants.NO_VOTE_VALUE) {
                         positiveCount++;
@@ -858,7 +859,8 @@ public abstract class TransactionType {
                 }
 
                 if (positiveCount < poll.getMinNumberOfOptions() || positiveCount > poll.getMaxNumberOfOptions()) {
-                    throw new NxtException.NotValidException("Invalid num of choices: " + attachment.getJSONObject());
+                    throw new NxtException.NotValidException(String.format("Invalid num of choices %d, number of choices must be between %d and %d",
+                            positiveCount, poll.getMinNumberOfOptions(), poll.getMaxNumberOfOptions()));
                 }
             }
 
@@ -926,77 +928,74 @@ public abstract class TransactionType {
                 }
 
                 Attachment.MessagingPhasingVoteCasting attachment = (Attachment.MessagingPhasingVoteCasting) transaction.getAttachment();
-                List<byte[]> pendingTransactionFullHashes = attachment.getTransactionFullHashes();
-                if (pendingTransactionFullHashes.size() > Constants.MAX_PHASING_VOTE_TRANSACTIONS) {
+                byte[] revealedSecret = attachment.getRevealedSecret();
+                if (revealedSecret.length > Constants.MAX_PHASING_REVEALED_SECRET_LENGTH) {
+                    throw new NxtException.NotValidException("Invalid revealed secret length " + revealedSecret.length);
+                }
+                byte[] hashedSecret = null;
+                byte algorithm = 0;
+
+                List<byte[]> hashes = attachment.getTransactionFullHashes();
+                if (hashes.size() > Constants.MAX_PHASING_VOTE_TRANSACTIONS) {
                     throw new NxtException.NotValidException("No more than " + Constants.MAX_PHASING_VOTE_TRANSACTIONS + " votes allowed for two-phased multivoting");
                 }
 
-                long previousPendingId = 0;
                 long voterId = transaction.getSenderId();
-                for (byte[] hash : pendingTransactionFullHashes) {
-                    long pendingId = Convert.fullHashToId(hash);
-                    if (pendingId == 0) {
-                        throw new NxtException.NotValidException("Invalid pendingTransactionFullHash " + Convert.toHexString(hash));
+                for (byte[] hash : hashes) {
+                    long phasedTransactionId = Convert.fullHashToId(hash);
+                    if (phasedTransactionId == 0) {
+                        throw new NxtException.NotValidException("Invalid phased transactionFullHash " + Convert.toHexString(hash));
                     }
-                    if (previousPendingId != 0 && pendingId < previousPendingId) {
-                        throw new NxtException.NotValidException("pendingTransactionFullHashes not sorted " + pendingTransactionFullHashes.toString());
-                    }
-                    if (pendingId == previousPendingId) {
-                        throw new NxtException.NotValidException("Duplicate hash " + Convert.toHexString(hash));
-                    }
-                    previousPendingId = pendingId;
 
-                    PhasingPoll poll = PhasingPoll.getPoll(pendingId);
+                    PhasingPoll poll = PhasingPoll.getPoll(phasedTransactionId);
                     if (poll == null) {
-                        throw new NxtException.NotCurrentlyValidException("Invalid pending transaction " + Long.toUnsignedString(pendingId) + ", or poll is finished");
+                        throw new NxtException.NotCurrentlyValidException("Invalid phased transaction " + Long.toUnsignedString(phasedTransactionId)
+                                + ", or phasing is finished");
                     }
-                    if (poll.getVoteWeighting().getVotingModel() == VoteWeighting.VotingModel.NONE) {
-                        throw new NxtException.NotValidException("This pending transaction does not require or accept voting");
+                    if (! poll.getVoteWeighting().acceptsVotes()) {
+                        throw new NxtException.NotValidException("This phased transaction does not require or accept voting");
                     }
                     long[] whitelist = poll.getWhitelist();
                     if (whitelist.length > 0 && Arrays.binarySearch(whitelist, voterId) == -1) {
-                        throw new NxtException.NotValidException("Voter is not in the pending transaction whitelist");
+                        throw new NxtException.NotValidException("Voter is not in the phased transaction whitelist");
+                    }
+                    if (revealedSecret.length > 0) {
+                        if (poll.getVoteWeighting().getVotingModel() != VoteWeighting.VotingModel.HASH) {
+                            throw new NxtException.NotValidException("Phased transaction " + Long.toUnsignedString(phasedTransactionId) + " does not accept by-hash voting");
+                        }
+                        if (hashedSecret != null && !Arrays.equals(poll.getHashedSecret(), hashedSecret)) {
+                            throw new NxtException.NotValidException("Phased transaction " + Long.toUnsignedString(phasedTransactionId) + " is using a different hashedSecret");
+                        }
+                        if (algorithm != 0 && algorithm != poll.getAlgorithm()) {
+                            throw new NxtException.NotValidException("Phased transaction " + Long.toUnsignedString(phasedTransactionId) + " is using a different hashedSecretAlgorithm");
+                        }
+                        if (hashedSecret == null && ! poll.verifySecret(revealedSecret)) {
+                            throw new NxtException.NotValidException("Revealed secret does not match phased transaction hashed secret");
+                        }
+                        hashedSecret = poll.getHashedSecret();
+                        algorithm = poll.getAlgorithm();
                     }
                     if (!Arrays.equals(poll.getFullHash(), hash)) {
-                        throw new NxtException.NotCurrentlyValidException("Hashes don't match");
+                        throw new NxtException.NotCurrentlyValidException("Phased transaction hash does not match hash in voting transaction");
                     }
-                    if (PhasingVote.getVote(pendingId, voterId) != null) {
-                        throw new NxtException.NotCurrentlyValidException("Double voting attempt");
-                    }
-                    if (poll.getFinishHeight() <= transaction.getValidationHeight() - 1) {
+                    if (poll.getFinishHeight() <= transaction.getValidationHeight() + 1) {
                         throw new NxtException.NotCurrentlyValidException("Voting for this transaction finishes at " + poll.getFinishHeight());
                     }
                 }
             }
 
             @Override
-            boolean isDuplicate(Transaction transaction, Map<TransactionType, Map<String,Boolean>> duplicates) {
-                Attachment.MessagingPhasingVoteCasting attachment = (Attachment.MessagingPhasingVoteCasting) transaction.getAttachment();
-                String voter = Long.toUnsignedString(transaction.getSenderId());
-                List<byte[]> pendingTransactionFullHashes = attachment.getTransactionFullHashes();
-                for (byte[] hash : pendingTransactionFullHashes) {
-                    String compositeKey = voter + ":" + Convert.toHexString(hash);
-                    if (isDuplicate(Messaging.PHASING_VOTE_CASTING, compositeKey, duplicates, true)) {
-                        return true;
-                    }
-                }
-                return false;
-            }
-
-            @Override
             final void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
                 Attachment.MessagingPhasingVoteCasting attachment = (Attachment.MessagingPhasingVoteCasting) transaction.getAttachment();
-                List<byte[]> pendingTransactionFullHashes = attachment.getTransactionFullHashes();
-                for (byte[] hash : pendingTransactionFullHashes) {
-                    long pendingTransactionId = Convert.fullHashToId(hash);
-                    PhasingPoll poll = PhasingPoll.getPoll(pendingTransactionId);
-                    PhasingVote.addVote(poll, transaction);
+                List<byte[]> hashes = attachment.getTransactionFullHashes();
+                for (byte[] hash : hashes) {
+                    PhasingVote.addVote(transaction, senderAccount, Convert.fullHashToId(hash));
                 }
             }
 
             @Override
             public boolean isPhasingSafe() {
-                return false;
+                return true;
             }
 
         };
@@ -1573,7 +1572,8 @@ public abstract class TransactionType {
                 if (asset.getAccountId() != transaction.getSenderId() || attachment.getAmountNQTPerQNT() <= 0) {
                     throw new NxtException.NotValidException("Invalid dividend payment sender or amount " + attachment.getJSONObject());
                 }
-                if (attachment.getHeight() > Nxt.getBlockchain().getHeight() || attachment.getHeight() <= transaction.getValidationHeight() - Constants.MAX_ROLLBACK) {
+                if (attachment.getHeight() > Nxt.getBlockchain().getHeight()
+                        || attachment.getHeight() <= transaction.getValidationHeight() - Constants.MAX_DIVIDEND_PAYMENT_ROLLBACK) {
                     throw new NxtException.NotCurrentlyValidException("Invalid dividend payment height: " + attachment.getHeight());
                 }
             }
@@ -2228,7 +2228,7 @@ public abstract class TransactionType {
                 Account recipientAccount = Account.getAccount(transaction.getRecipientId());
                 if (transaction.getSenderId() == transaction.getRecipientId()
                         || transaction.getAmountNQT() != 0
-                        || attachment.getPeriod() < 1440) {
+                        || attachment.getPeriod() < Constants.LEASING_DELAY) {
                     throw new NxtException.NotValidException("Invalid effective balance leasing: "
                             + transaction.getJSONObject() + " transaction " + transaction.getStringId());
                 }

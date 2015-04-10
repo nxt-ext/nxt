@@ -9,6 +9,7 @@ import org.bouncycastle.crypto.modes.CBCBlockCipher;
 import org.bouncycastle.crypto.paddings.PaddedBufferedBlockCipher;
 import org.bouncycastle.crypto.params.KeyParameter;
 import org.bouncycastle.crypto.params.ParametersWithIV;
+import org.bouncycastle.jcajce.provider.digest.RIPEMD160;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -37,6 +38,10 @@ public final class Crypto {
 
     public static MessageDigest sha256() {
         return getMessageDigest("SHA-256");
+    }
+
+    public static MessageDigest ripemd160() {
+        return new RIPEMD160.Digest();
     }
 
     public static byte[] getPublicKey(String secretPhrase) {

@@ -1,6 +1,7 @@
 package nxt.http;
 
 import nxt.Account;
+import nxt.Nxt;
 import nxt.NxtException;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
@@ -25,7 +26,7 @@ public final class GetGuaranteedBalance extends APIServlet.APIRequestHandler {
         if (account == null) {
             response.put("guaranteedBalanceNQT", "0");
         } else {
-            response.put("guaranteedBalanceNQT", String.valueOf(account.getGuaranteedBalanceNQT(numberOfConfirmations)));
+            response.put("guaranteedBalanceNQT", String.valueOf(account.getGuaranteedBalanceNQT(numberOfConfirmations, Nxt.getBlockchain().getHeight())));
         }
 
         return response;

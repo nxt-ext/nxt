@@ -18,16 +18,16 @@
 
 <div id="add_message_modal_template">
     <div class="form-group add_message_container">
-        <input type="checkbox" name="add_message" id="{{name}}_add_message" class="add_message" tabindex="6" /> <label for="{{name}}_add_message" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_message_q">Add a Message?</span></label>
+        <input type="checkbox" name="add_message" id="{{name}}_add_message" class="add_message" tabindex="101" /> <label for="{{name}}_add_message" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_message_q">Add a Message?</span></label>
     </div>
     <div class="form-group optional_message">
         <label for="{{name}}_message" data-i18n="message">MESSAGE</label>
-        <textarea class="form-control" id="{{name}}_message" name="message" rows="4" tabindex="3"></textarea>
+        <textarea class="form-control" id="{{name}}_message" name="message" rows="4" tabindex="102"></textarea>
          <div style="margin-top:3px" id="{{name}}_to_specific_account_message_options">
             <label for="{{name}}_encrypt_message" style="font-weight:normal;color:#666"><input type="checkbox" name="encrypt_message" id="{{name}}_encrypt_message" value="1" data-default="checked" checked="checked" /> <span data-i18n="encrypt_message">Encrypt Message</span></label>
         </div>
         <div style="margin-top:3px;display:none" id="{{name}}_to_anyone_message_options">
-            <label for="{{name}}_encrypt_message" style="font-weight:normal;color:#666" data-i18n="message_is_not_encrypted">This message is not encrypted.</span></label>
+            <label for="{{name}}_encrypt_message" style="font-weight:normal;color:#666" data-i18n="message_is_not_encrypted">This message is not encrypted.</label>
         </div>
     </div>
 </div>
@@ -35,11 +35,11 @@
 
 <div id="add_public_message_modal_template">
     <div class="form-group add_message_container">
-        <input type="checkbox" name="add_message" id="{{name}}_add_public_message" class="add_message" tabindex="6" /> <label for="{{name}}_add_public_message" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_message_q">Add a Message?</span></label>
+        <input type="checkbox" name="add_message" id="{{name}}_add_public_message" class="add_message" tabindex="101" /> <label for="{{name}}_add_public_message" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_message_q">Add a Message?</span></label>
     </div>
     <div class="form-group optional_message">
         <label for="{{name}}_public_message" data-i18n="message">MESSAGE</label>
-        <textarea class="form-control" id="{{name}}_public_message" name="message" rows="4" tabindex="3"></textarea>
+        <textarea class="form-control" id="{{name}}_public_message" name="message" rows="4" tabindex="102"></textarea>
     </div>
 </div>
 
@@ -47,7 +47,7 @@
 <div id="secret_phrase_modal_template">
     <div class="form-group secret_phrase">
         <label for="{{name}}_password" data-i18n="passphrase">PASSPHRASE</label>
-        <input type="password" name="secretPhrase" id="{{name}}_password" class="form-control" placeholder="" tabindex="5">
+        <input type="password" name="secretPhrase" id="{{name}}_password" class="form-control" placeholder="" tabindex="111">
     </div>
 </div>
 
@@ -58,7 +58,7 @@
             <div class="form-group">
                 <label for="{{name}}_fee" data-i18n="fee">FEE</label>
                 <div class="input-group">
-                    <input type="number" name="feeNXT" id="{{name}}_fee" class="form-control" step="any" min="1" placeholder="Fee" data-i18n="[placeholder]fee" data-default="1" value="1" tabindex="3">
+                    <input type="number" name="feeNXT" id="{{name}}_fee" class="form-control" step="any" min="1" placeholder="Fee" data-i18n="[placeholder]fee" data-default="1" value="1" tabindex="121">
                     <span class="input-group-addon" style="min-width:50px;"><i class="fa fa-gavel"></i> 
                         <span id="{{name}}_feeNXT_addition_info" class="feeNXT_approval_addition_info">+0</span>
                     </span>
@@ -70,7 +70,7 @@
         <div class="col-xs-6 col-sm-6 col-md-6">
             <div class="form-group">
                 <label for="{{name}}_deadline" data-i18n="deadline_hours">DEADLINE (HOURS)</label>
-                <input type="number" name="deadline" id="{{name}}_deadline" class="form-control" placeholder="Deadline" data-i18n="[placeholder]deadline" min="1" data-default="24" value="24" tabindex="4">
+                <input type="number" name="deadline" id="{{name}}_deadline" class="form-control" placeholder="Deadline" data-i18n="[placeholder]deadline" min="1" data-default="24" value="24" tabindex="122">
             </div>
         </div>
     </div>
@@ -79,6 +79,10 @@
 
 <div id="advanced_approve_template">
     <div class="advanced approve_modal" id="{{name}}_approve_modal">
+        <div class="phasing_safe_alert alert alert-warning" role="alert" style="margin-left:0px;display:none;">
+            <span style="font-weight:bold;" data-i18n="warning">Warning</span>!
+            <span data-i18n="transaction_type_not_phasing_safe">Transaction type not safe for phasing/approval.</span>
+        </div>
         <div role="tabpanel" class="approve_tab_panel">
             <!-- Nav tabs -->
             <ul class="nav nav-tabs approve_tab_list" role="tablist">
@@ -108,14 +112,14 @@
                 <div role="tabpanel" class="tab-pane tab_pane_approve" id="{{name}}_approve_tab_accounts">
                     <div class="row">
                         <div class="col-xs-6">
-                            <div class="form-group pending_number_accounts_group">
+                            <div class="form-group phasing_number_accounts_group">
                                 <label data-i18n="approve_number_accounts">Number Accounts</label>
                                 <i class="fa fa-question-circle modal-context-help" data-content="" data-toggle="popover" data-trigger="hover" data-container="#{{name}}_approve_modal" data-i18n="[data-content]approve_transaction_amount_help"></i>
                                 <input name="phasingQuorum" type="number" min="1" class="form-control" disabled />
                             </div>
                         </div>
                         <div class="col-xs-6">
-                            <div class="form-group pending_finish_height_group" data-modal-ui-element="block_height_modal_ui_element"></div>
+                            <div class="form-group phasing_finish_height_group" data-modal-ui-element="block_height_modal_ui_element"></div>
                         </div>
                     </div>
                     <div class="form-group add_approval_whitelist_group" data-modal-ui-element="multi_accounts_modal_ui_element"></div>
@@ -145,7 +149,7 @@
                             <div class="form-group approve_transaction_amount_nxt" data-modal-ui-element="simple_input_with_addon_modal_ui_element"></div>
                         </div>
                         <div class="col-xs-6">
-                            <div class="form-group pending_finish_height_group" data-modal-ui-element="block_height_modal_ui_element"></div>
+                            <div class="form-group phasing_finish_height_group" data-modal-ui-element="block_height_modal_ui_element"></div>
                         </div>
                     </div>
                     <div class="form-group add_approval_whitelist_group" data-modal-ui-element="multi_accounts_modal_ui_element"></div>
@@ -166,7 +170,7 @@
                             <div class="form-group approve_transaction_asset_quantity" data-modal-ui-element="simple_input_with_addon_modal_ui_element"></div>
                         </div>
                         <div class="col-xs-6">
-                            <div class="form-group pending_finish_height_group" data-modal-ui-element="block_height_modal_ui_element"></div>
+                            <div class="form-group phasing_finish_height_group" data-modal-ui-element="block_height_modal_ui_element"></div>
                         </div>
                     </div>
                     <div class="row">
@@ -193,7 +197,7 @@
                             <div class="form-group approve_transaction_currency_units" data-modal-ui-element="simple_input_with_addon_modal_ui_element"></div>
                         </div>
                         <div class="col-xs-6">
-                            <div class="form-group pending_finish_height_group" data-modal-ui-element="block_height_modal_ui_element"></div>
+                            <div class="form-group phasing_finish_height_group" data-modal-ui-element="block_height_modal_ui_element"></div>
                         </div>
                     </div>
                     <div class="row">
@@ -222,27 +226,27 @@
 <div id="advanced_rt_hash_template">
     <div class="form-group advanced">
         <label for="{{name}}_referenced_transaction" data-i18n="referenced_transaction_hash">REFERENCED TRANSACTION HASH</label>
-        <input type="text" class="form-control" name="referencedTransactionFullHash" id="{{name}}_referenced_transaction" placeholder="Referenced Transaction Full Hash" data-i18n="[placeholder]referenced_transaction_full_hash" tabindex="6" spellcheck="false" />
+        <input type="text" class="form-control" name="referencedTransactionFullHash" id="{{name}}_referenced_transaction" placeholder="Referenced Transaction Full Hash" data-i18n="[placeholder]referenced_transaction_full_hash" tabindex="131" spellcheck="false" />
     </div>
 </div>
 
 
 <div id="advanced_broadcast_template">
     <div class="form-group advanced" style="margin-bottom:0;">
-        <input type="checkbox" name="doNotBroadcast" id="{{name}}_do_not_broadcast" value="1" /> <label for="{{name}}_do_not_broadcast" style="font-weight:normal;" tabindex="7" data-i18n="do_not_broadcast">Do Not Broadcast</label>
+        <input type="checkbox" name="doNotBroadcast" id="{{name}}_do_not_broadcast" value="1" tabindex="141"/> <label for="{{name}}_do_not_broadcast" style="font-weight:normal;" data-i18n="do_not_broadcast">Do Not Broadcast</label>
     </div>
 </div>
 
 
 <div id="advanced_note_to_self_template">
     <div class="form-group advanced">
-        <input type="checkbox" name="add_note_to_self" id="{{name}}_add_note_to_self" class="add_note_to_self" tabindex="8" /> <label for="{{name}}_add_note_to_self" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_note_to_self">Add Note to Self?</span></label>
+        <input type="checkbox" name="add_note_to_self" id="{{name}}_add_note_to_self" class="add_note_to_self" tabindex="151" /> <label for="{{name}}_add_note_to_self" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_note_to_self">Add Note to Self?</span></label>
     </div>
     <div class="form-group advanced optional_note">
         <label for="{{name}}_note_to_self" data-i18n="note_to_self">Note to Self</label>
-        <textarea class="form-control" id="{{name}}_note_to_self" name="note_to_self" rows="4" tabindex="9"></textarea>
+        <textarea class="form-control" id="{{name}}_note_to_self" name="note_to_self" rows="4" tabindex="152"></textarea>
         <div style="margin-top:3px;">
-            <label style="font-weight:normal;color:#666" data-i18n="note_is_encrypted">This note is encrypted.</span></label>
+            <label style="font-weight:normal;color:#666" data-i18n="note_is_encrypted">This note is encrypted.</label>
         </div>
     </div>
 </div>

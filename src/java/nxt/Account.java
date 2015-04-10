@@ -369,15 +369,14 @@ public final class Account {
             accountAsset.save(con);
         }
 
-        // need to keep 1440 more than the default to support the dividend payment transaction
         @Override
         public void trim(int height) {
-            super.trim(Math.max(0, height - 1440));
+            super.trim(Math.max(0, height - Constants.MAX_DIVIDEND_PAYMENT_ROLLBACK));
         }
 
         @Override
         public void checkAvailable(int height) {
-            if (height + 1440 < Nxt.getBlockchainProcessor().getMinRollbackHeight()) {
+            if (height + Constants.MAX_DIVIDEND_PAYMENT_ROLLBACK < Nxt.getBlockchainProcessor().getMinRollbackHeight()) {
                 throw new IllegalArgumentException("Historical data as of height " + height +" not available.");
             }
             if (height > Nxt.getBlockchain().getHeight()) {
@@ -427,7 +426,7 @@ public final class Account {
             try (Connection con = Db.db.getConnection();
                  PreparedStatement pstmtDelete = con.prepareStatement("DELETE FROM account_guaranteed_balance "
                          + "WHERE height < ? AND height >= 0")) {
-                pstmtDelete.setInt(1, height - 1440);
+                pstmtDelete.setInt(1, height - Constants.GUARANTEED_BALANCE_CONFIRMATIONS);
                 pstmtDelete.executeUpdate();
             } catch (SQLException e) {
                 throw new RuntimeException(e.toString(), e);
@@ -736,18 +735,18 @@ public final class Account {
                 + "height, latest) "
                 + "KEY (id, height) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, TRUE)")) {
             int i = 0;
-            pstmt.setLong(++i, this.getId());
-            pstmt.setInt(++i, this.getCreationHeight());
-            pstmt.setInt(++i, this.getKeyHeight());
-            pstmt.setLong(++i, this.getBalanceNQT());
-            pstmt.setLong(++i, this.getUnconfirmedBalanceNQT());
-            pstmt.setLong(++i, this.getForgedBalanceNQT());
-            DbUtils.setIntZeroToNull(pstmt, ++i, this.getCurrentLeasingHeightFrom());
-            DbUtils.setIntZeroToNull(pstmt, ++i, this.getCurrentLeasingHeightTo());
-            DbUtils.setLongZeroToNull(pstmt, ++i, this.getCurrentLesseeId());
-            DbUtils.setIntZeroToNull(pstmt, ++i, this.getNextLeasingHeightFrom());
-            DbUtils.setIntZeroToNull(pstmt, ++i, this.getNextLeasingHeightTo());
-            DbUtils.setLongZeroToNull(pstmt, ++i, this.getNextLesseeId());
+            pstmt.setLong(++i, this.id);
+            pstmt.setInt(++i, this.creationHeight);
+            pstmt.setInt(++i, this.keyHeight);
+            pstmt.setLong(++i, this.balanceNQT);
+            pstmt.setLong(++i, this.unconfirmedBalanceNQT);
+            pstmt.setLong(++i, this.forgedBalanceNQT);
+            DbUtils.setIntZeroToNull(pstmt, ++i, this.currentLeasingHeightFrom);
+            DbUtils.setIntZeroToNull(pstmt, ++i, this.currentLeasingHeightTo);
+            DbUtils.setLongZeroToNull(pstmt, ++i, this.currentLesseeId);
+            DbUtils.setIntZeroToNull(pstmt, ++i, this.nextLeasingHeightFrom);
+            DbUtils.setIntZeroToNull(pstmt, ++i, this.nextLeasingHeightTo);
+            DbUtils.setLongZeroToNull(pstmt, ++i, this.nextLesseeId);
             pstmt.setBoolean(++i, controls.contains(ControlType.PHASING_ONLY));
             pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
             pstmt.executeUpdate();
@@ -843,14 +842,14 @@ public final class Account {
             return (balanceNQT - receivedInlastBlock) / Constants.ONE_NXT;
         }
         if (height < currentLeasingHeightFrom) {
-            return (getGuaranteedBalanceNQT(1440, height) + getLessorsGuaranteedBalanceNQT(height)) / Constants.ONE_NXT;
+            return (getGuaranteedBalanceNQT(Constants.GUARANTEED_BALANCE_CONFIRMATIONS, height) + getLessorsGuaranteedBalanceNQT(height)) / Constants.ONE_NXT;
         }
         return getLessorsGuaranteedBalanceNQT(height) / Constants.ONE_NXT;
     }
 
     private long getLessorsGuaranteedBalanceNQT(int height) {
         List<Account> lessors = new ArrayList<>();
-        try (DbIterator<Account> iterator = getLessors()) {
+        try (DbIterator<Account> iterator = getLessors(height)) {
             while (iterator.hasNext()) {
                 lessors.add(iterator.next());
             }
@@ -867,7 +866,7 @@ public final class Account {
                              + (height < Nxt.getBlockchain().getHeight() ? " AND height <= ? " : "")
                      + " GROUP BY account_id ORDER BY account_id")) {
             pstmt.setObject(1, lessorIds);
-            pstmt.setInt(2, height - 1440);
+            pstmt.setInt(2, height - Constants.GUARANTEED_BALANCE_CONFIRMATIONS);
             if (height < Nxt.getBlockchain().getHeight()) {
                 pstmt.setInt(3, height);
             }
@@ -907,18 +906,16 @@ public final class Account {
         return accountTable.getManyBy(getLessorsClause(height), height, 0, -1, " ORDER BY id ASC ");
     }
 
-    public long getGuaranteedBalanceNQT(final int numberOfConfirmations) {
-        return getGuaranteedBalanceNQT(numberOfConfirmations, Nxt.getBlockchain().getHeight());
+    public long getGuaranteedBalanceNQT() {
+        return getGuaranteedBalanceNQT(Constants.GUARANTEED_BALANCE_CONFIRMATIONS, Nxt.getBlockchain().getHeight());
     }
 
     public long getGuaranteedBalanceNQT(final int numberOfConfirmations, final int currentHeight) {
-        if (numberOfConfirmations >= currentHeight) {
-            return 0;
-        }
-        if (numberOfConfirmations > 2880 || numberOfConfirmations < 0) {
-            throw new IllegalArgumentException("Number of required confirmations must be between 0 and " + 2880);
-        }
         int height = currentHeight - numberOfConfirmations;
+        if (height + Constants.GUARANTEED_BALANCE_CONFIRMATIONS < Nxt.getBlockchainProcessor().getMinRollbackHeight()
+                || height > Nxt.getBlockchain().getHeight()) {
+            throw new IllegalArgumentException("Height " + height + " not available for guaranteed balance calculation");
+        }
         try (Connection con = Db.db.getConnection();
              PreparedStatement pstmt = con.prepareStatement("SELECT SUM (additions) AS additions "
                      + "FROM account_guaranteed_balance WHERE account_id = ? AND height > ? AND height <= ?")) {
@@ -1041,7 +1038,7 @@ public final class Account {
         if (lessee != null && lessee.getKeyHeight() > 0) {
             int height = Nxt.getBlockchain().getHeight();
             if (currentLeasingHeightFrom == Integer.MAX_VALUE) {
-                currentLeasingHeightFrom = height + 1440;
+                currentLeasingHeightFrom = height + Constants.LEASING_DELAY;
                 currentLeasingHeightTo = currentLeasingHeightFrom + period;
                 currentLesseeId = lesseeId;
                 nextLeasingHeightFrom = Integer.MAX_VALUE;
@@ -1050,7 +1047,7 @@ public final class Account {
                         new AccountLease(this.getId(), lesseeId, currentLeasingHeightFrom, currentLeasingHeightTo),
                         Event.LEASE_SCHEDULED);
             } else {
-                nextLeasingHeightFrom = height + 1440;
+                nextLeasingHeightFrom = height + Constants.LEASING_DELAY;
                 if (nextLeasingHeightFrom < currentLeasingHeightTo) {
                     nextLeasingHeightFrom = currentLeasingHeightTo;
                 }

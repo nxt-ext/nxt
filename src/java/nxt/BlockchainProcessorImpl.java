@@ -452,8 +452,9 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         }, Event.BLOCK_PUSHED);
 
         if (trimDerivedTables) {
+            final int trimFrequency = Nxt.getIntProperty("nxt.trimFrequency");
             blockListeners.addListener(block -> {
-                if (block.getHeight() % 1440 == 0) {
+                if (block.getHeight() % trimFrequency == 0) {
                     lastTrimHeight = Math.max(block.getHeight() - Constants.MAX_ROLLBACK, 0);
                     if (lastTrimHeight > 0) {
                         for (DerivedDbTable table : derivedTables) {
@@ -566,9 +567,6 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
     public List<BlockImpl> popOffTo(int height) {
         if (height <= 0) {
             fullReset();
-        } else if (height < getMinRollbackHeight()) {
-            popOffWithRescan(height + 1);
-            return Collections.emptyList();
         } else if (height < blockchain.getHeight()) {
             return popOffTo(blockchain.getBlockAtHeight(height));
         }
@@ -768,9 +766,9 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                         + " is already in the blockchain", transaction);
             }
             //TODO: check that referenced transaction, if phased, has been applied?
-            if (transaction.getReferencedTransactionFullHash() != null) {
+            if (transaction.referencedTransactionFullHash() != null) {
                 if ((previousLastBlock.getHeight() < Constants.REFERENCED_TRANSACTION_FULL_HASH_BLOCK
-                        && !TransactionDb.hasTransaction(Convert.fullHashToId(transaction.getReferencedTransactionFullHash()), previousLastBlock.getHeight()))
+                        && !TransactionDb.hasTransaction(Convert.fullHashToId(transaction.referencedTransactionFullHash()), previousLastBlock.getHeight()))
                         || (previousLastBlock.getHeight() >= Constants.REFERENCED_TRANSACTION_FULL_HASH_BLOCK
                         && !hasAllReferencedTransactions(transaction, transaction.getTimestamp(), 0))) {
                     throw new TransactionNotAcceptedException("Missing or invalid referenced transaction "
@@ -858,8 +856,9 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 }
             }
             if (commonBlock.getHeight() < getMinRollbackHeight()) {
-                throw new IllegalArgumentException("Rollback to height " + commonBlock.getHeight() + " not supported, "
-                        + "current height " + Nxt.getBlockchain().getHeight());
+                Logger.logMessage("Rollback to height " + commonBlock.getHeight() + " not supported, will do a full rescan");
+                popOffWithRescan(commonBlock.getHeight() + 1);
+                return Collections.emptyList();
             }
             if (! blockchain.hasBlock(commonBlock.getId())) {
                 Logger.logDebugMessage("Block " + commonBlock.getStringId() + " not found in blockchain, nothing to pop off");
@@ -963,7 +962,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
 
         List<UnconfirmedTransaction> orderedUnconfirmedTransactions = new ArrayList<>();
         try (FilteringIterator<UnconfirmedTransaction> unconfirmedTransactions = new FilteringIterator<>(TransactionProcessorImpl.getInstance().getAllUnconfirmedTransactions(),
-                transaction -> hasAllReferencedTransactions(transaction, transaction.getTimestamp(), 0))) {
+                transaction -> hasAllReferencedTransactions(transaction.getTransaction(), transaction.getTimestamp(), 0))) {
             for (UnconfirmedTransaction unconfirmedTransaction : unconfirmedTransactions) {
                 orderedUnconfirmedTransactions.add(unconfirmedTransaction);
             }
@@ -1087,12 +1086,14 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         }
     }
 
-    private boolean hasAllReferencedTransactions(Transaction transaction, int timestamp, int count) {
-        if (transaction.getReferencedTransactionFullHash() == null) {
-            return timestamp - transaction.getTimestamp() < 60 * 1440 * 60 && count < 10;
+    private boolean hasAllReferencedTransactions(TransactionImpl transaction, int timestamp, int count) {
+        if (transaction.referencedTransactionFullHash() == null) {
+            return timestamp - transaction.getTimestamp() < Constants.MAX_REFERENCED_TRANSACTION_TIMESPAN && count < 10;
         }
-        Transaction referencedTransaction = TransactionDb.findTransactionByFullHash(transaction.getReferencedTransactionFullHash());
-        return referencedTransaction != null && referencedTransaction.getHeight() < transaction.getHeight() && hasAllReferencedTransactions(referencedTransaction, timestamp, count + 1);
+        TransactionImpl referencedTransaction = TransactionDb.findTransactionByFullHash(transaction.referencedTransactionFullHash());
+        return referencedTransaction != null
+                && referencedTransaction.getHeight() < transaction.getHeight()
+                && hasAllReferencedTransactions(referencedTransaction, timestamp, count + 1);
     }
 
     void scheduleScan(int height, boolean validate) {
@@ -1138,7 +1139,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             }
             scheduleScan(height, validate);
             if (height > 0 && height < getMinRollbackHeight()) {
-                Logger.logMessage("Rollback of more than " + Constants.MAX_ROLLBACK + " blocks not supported, will do a full scan");
+                Logger.logMessage("Rollback of more than " + getMinRollbackHeight() + " blocks not supported, will do a full scan");
                 height = 0;
             }
             if (height < 0) {
@@ -1240,12 +1241,16 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                                     currentBlock = BlockDb.loadBlock(con, rs, true);
                                     TransactionProcessorImpl.getInstance().processLater(currentBlock.getTransactions());
                                 } catch (NxtException.ValidationException ignore) {
+                                } catch (RuntimeException e2) {
+                                    Logger.logErrorMessage(e2.toString(), e);
+                                    break;
                                 }
                             }
                             BlockDb.deleteBlocksFrom(currentBlockId);
                             BlockImpl lastBlock = BlockDb.findLastBlock();
                             blockchain.setLastBlock(lastBlock);
                             popOffTo(lastBlock);
+                            break;
                         }
                         blockListeners.notify(currentBlock, Event.BLOCK_SCANNED);
                     }

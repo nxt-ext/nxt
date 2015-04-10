@@ -243,10 +243,16 @@ var NRS = (function(NRS, $, undefined) {
 				if (!response.errorCode) {
 					NRS.account = String(response.account).escapeHTML();
 					NRS.accountRS = String(response.accountRS).escapeHTML();
-					if (passLogin) NRS.publicKey = NRS.getPublicKey(converters.stringToHexString(password));
-					else NRS.publicKey = String(response.publicKey).escapeHTML();
+					if (passLogin) {
+                        NRS.publicKey = NRS.getPublicKey(converters.stringToHexString(password));
+                    } else {
+                        NRS.publicKey = String(response.publicKey).escapeHTML();
+                    }
 				}
-
+				if (!passLogin && response.errorCode == 5) {
+					NRS.account = String(response.account).escapeHTML();
+					NRS.accountRS = String(response.accountRS).escapeHTML();
+				}
 				if (!NRS.account) {
 					$.growl($.t("error_find_account_id"), {
 						"type": "danger",

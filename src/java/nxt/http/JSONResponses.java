@@ -1,6 +1,7 @@
 package nxt.http;
 
 import nxt.Constants;
+import nxt.util.Convert;
 import nxt.util.JSON;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
@@ -20,9 +21,9 @@ public final class JSONResponses {
     public static final JSONStreamAware MISSING_ALIAS_NAME = missing("aliasName");
     public static final JSONStreamAware MISSING_ALIAS_OR_ALIAS_NAME = missing("alias", "aliasName");
     public static final JSONStreamAware MISSING_DEADLINE = missing("deadline");
-    public static final JSONStreamAware INCORRECT_PENDING_WHITELIST = incorrect("phasingWhitelisted");
+    public static final JSONStreamAware INCORRECT_PHASING_WHITELIST = incorrect("phasingWhitelisted");
     public static final JSONStreamAware INCORRECT_DEADLINE = incorrect("deadline");
-    public static final JSONStreamAware MISSING_PENDING_HOLDING_ID = missing("phasingHoldingId");
+    public static final JSONStreamAware MISSING_PHASING_HOLDING_ID = missing("phasingHoldingId");
     public static final JSONStreamAware INCORRECT_FEE = incorrect("fee");
     public static final JSONStreamAware MISSING_TRANSACTION_BYTES_OR_JSON = missing("transactionBytes", "transactionJSON");
     public static final JSONStreamAware INCORRECT_TRANSACTION_BYTES_OR_JSON = incorrect("transactionBytes or transactionJSON");
@@ -110,10 +111,12 @@ public final class JSONResponses {
     public static final JSONStreamAware MISSING_OFFER = missing("offer");
     public static final JSONStreamAware UNKNOWN_OFFER = unknown("offer");
     public static final JSONStreamAware INCORRECT_OFFER = incorrect("offer");
-    public static final JSONStreamAware INCORRECT_MESSAGE_PATTERN_REGEX = incorrect("messagePatternRegex");
-    public static final JSONStreamAware INCORRECT_MESSAGE_PATTERN_FLAGS = incorrect("messagePatternFlags");
     public static final JSONStreamAware INCORRECT_ADMIN_PASSWORD = incorrect("adminPassword", "(the specified password does not match nxt.adminPassword)");
     public static final JSONStreamAware OVERFLOW = error("overflow");
+    public static final JSONStreamAware MISSING_TRANSACTION_FULL_HASH = missing("transactionFullHash");
+    public static final JSONStreamAware UNKNOWN_TRANSACTION_FULL_HASH = unknown("transactionFullHash");
+    public static final JSONStreamAware INCORRECT_TRANSACTION_FULL_HASH = incorrect("transactionFullHash");
+    public static final JSONStreamAware INCORRECT_LINKED_FULL_HASH = incorrect("phasingLinkedFullHash");
 
     public static final JSONStreamAware NOT_ENOUGH_FUNDS;
     static {
@@ -251,6 +254,30 @@ public final class JSONResponses {
         POLL_RESULTS_NOT_AVAILABLE = JSON.prepare(response);
     }
 
+    public static final JSONStreamAware POLL_FINISHED;
+    static {
+        JSONObject response = new JSONObject();
+        response.put("errorCode", 8);
+        response.put("errorDescription", "Poll has already finished");
+        POLL_FINISHED = JSON.prepare(response);
+    }
+
+    public static final JSONStreamAware PHASING_TRANSACTION_FINISHED;
+    static {
+        JSONObject response = new JSONObject();
+        response.put("errorCode", 8);
+        response.put("errorDescription", "Phasing transaction has already finished");
+        PHASING_TRANSACTION_FINISHED = JSON.prepare(response);
+    }
+
+    public static final JSONStreamAware TOO_MANY_PHASING_VOTES;
+    static {
+        JSONObject response = new JSONObject();
+        response.put("errorCode", 10);
+        response.put("errorDescription", "Can vote for at most " + Constants.MAX_PHASING_VOTE_TRANSACTIONS + " phased transactions at once");
+        TOO_MANY_PHASING_VOTES = JSON.prepare(response);
+    }
+
     static JSONStreamAware missing(String... paramNames) {
         JSONObject response = new JSONObject();
         response.put("errorCode", 3);
@@ -273,10 +300,19 @@ public final class JSONResponses {
         return JSON.prepare(response);
     }
 
-    private static JSONStreamAware unknown(String objectName) {
+    static JSONStreamAware unknown(String objectName) {
         JSONObject response = new JSONObject();
         response.put("errorCode", 5);
         response.put("errorDescription", "Unknown " + objectName);
+        return JSON.prepare(response);
+    }
+
+    static JSONStreamAware unknownAccount(long id) {
+        JSONObject response = new JSONObject();
+        response.put("errorCode", 5);
+        response.put("errorDescription", "Unknown account");
+        response.put("account", Long.toUnsignedString(id));
+        response.put("accountRS", Convert.rsAccount(id));
         return JSON.prepare(response);
     }
 

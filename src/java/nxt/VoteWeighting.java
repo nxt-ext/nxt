@@ -5,6 +5,10 @@ public final class VoteWeighting {
     public enum VotingModel {
         NONE(-1) {
             @Override
+            public final boolean acceptsVotes() {
+                return false;
+            }
+            @Override
             public final long calcWeight(VoteWeighting voteWeighting, long voterId, int height) {
                 throw new UnsupportedOperationException("No voting possible for VotingModel.NONE");
             }
@@ -55,6 +59,30 @@ public final class VoteWeighting {
             public final MinBalanceModel getMinBalanceModel() {
                 return MinBalanceModel.CURRENCY;
             }
+        },
+        TRANSACTION(4) {
+            @Override
+            public final boolean acceptsVotes() {
+                return false;
+            }
+            @Override
+            public final long calcWeight(VoteWeighting voteWeighting, long voterId, int height) {
+                throw new UnsupportedOperationException("No voting possible for VotingModel.TRANSACTION");
+            }
+            @Override
+            public final MinBalanceModel getMinBalanceModel() {
+                return MinBalanceModel.NONE;
+            }
+        },
+        HASH(5) {
+            @Override
+            public final long calcWeight(VoteWeighting voteWeighting, long voterId, int height) {
+                return 1;
+            }
+            @Override
+            public final MinBalanceModel getMinBalanceModel() {
+                return MinBalanceModel.NONE;
+            }
         };
 
         private final byte code;
@@ -70,6 +98,10 @@ public final class VoteWeighting {
         public abstract long calcWeight(VoteWeighting voteWeighting, long voterId, int height);
 
         public abstract MinBalanceModel getMinBalanceModel();
+
+        public boolean acceptsVotes() {
+            return true;
+        }
 
         public static VotingModel get(byte code) {
             for (VotingModel votingModel : values()) {
@@ -197,17 +229,17 @@ public final class VoteWeighting {
         if (minBalance == 0 && votingModel == VotingModel.ACCOUNT && holdingId != 0) {
             throw new NxtException.NotValidException("HoldingId cannot be used in by account voting with no min balance");
         }
-        if (votingModel == VotingModel.NONE && (holdingId != 0 || minBalance != 0 || minBalanceModel != MinBalanceModel.NONE)) {
-            throw new NxtException.NotValidException("With VotingModel NONE, no holdingId, minBalance, or minBalanceModel should be specified");
+        if ((!votingModel.acceptsVotes() || votingModel == VotingModel.HASH) && (holdingId != 0 || minBalance != 0 || minBalanceModel != MinBalanceModel.NONE)) {
+            throw new NxtException.NotValidException("With VotingModel " + votingModel + " no holdingId, minBalance, or minBalanceModel should be specified");
         }
     }
 
-    public long calcWeight(long voterId, int height) {
-        return votingModel.calcWeight(this, voterId, height);
+    public boolean isBalanceIndependent() {
+        return (votingModel == VotingModel.ACCOUNT && minBalance == 0) || !votingModel.acceptsVotes() || votingModel == VotingModel.HASH;
     }
 
-    public boolean isBalanceIndependent() {
-        return (votingModel == VotingModel.ACCOUNT && minBalance == 0) || votingModel == VotingModel.NONE;
+    public boolean acceptsVotes() {
+        return votingModel.acceptsVotes();
     }
 
     @Override

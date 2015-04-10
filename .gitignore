@@ -22,4 +22,4 @@
 /test/classes/
 *.csv
 deploy.sh
-
+/nxt.pro

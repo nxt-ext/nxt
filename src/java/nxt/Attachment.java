@@ -9,7 +9,6 @@ import org.json.simple.JSONObject;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 
 public interface Attachment extends Appendix {
@@ -620,11 +619,10 @@ public interface Attachment extends Appendix {
 
     final class MessagingPhasingVoteCasting extends AbstractAttachment {
 
-        private static final Comparator<byte[]> hashComparator = Comparator.comparingLong(Convert::fullHashToId);
-
         private final List<byte[]> transactionFullHashes;
+        private final byte[] revealedSecret;
 
-        MessagingPhasingVoteCasting(ByteBuffer buffer, byte transactionVersion) {
+        MessagingPhasingVoteCasting(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
             super(buffer, transactionVersion);
             byte length = buffer.get();
             transactionFullHashes = new ArrayList<>(length);
@@ -633,25 +631,37 @@ public interface Attachment extends Appendix {
                 buffer.get(hash);
                 transactionFullHashes.add(hash);
             }
+            int secretLength = buffer.getInt();
+            if (secretLength > Constants.MAX_PHASING_REVEALED_SECRET_LENGTH) {
+                throw new NxtException.NotValidException("Invalid revealed secret length " + secretLength);
+            }
+            if (secretLength > 0) {
+                revealedSecret = new byte[secretLength];
+                buffer.get(revealedSecret);
+            } else {
+                revealedSecret = Convert.EMPTY_BYTE;
+            }
         }
 
         MessagingPhasingVoteCasting(JSONObject attachmentData) {
             super(attachmentData);
-            JSONArray hashes = (JSONArray) (attachmentData.get("transactionFullHashes"));
+            JSONArray hashes = (JSONArray) attachmentData.get("transactionFullHashes");
             transactionFullHashes = new ArrayList<>(hashes.size());
             for (Object hash : hashes) {
                 transactionFullHashes.add(Convert.parseHexString((String) hash));
             }
+            String revealedSecret = Convert.emptyToNull((String) attachmentData.get("revealedSecret"));
+            this.revealedSecret = revealedSecret != null ? Convert.parseHexString(revealedSecret) : Convert.EMPTY_BYTE;
         }
 
-        public MessagingPhasingVoteCasting(List<byte[]> transactionFullHashes) {
+        public MessagingPhasingVoteCasting(List<byte[]> transactionFullHashes, byte[] revealedSecret) {
             this.transactionFullHashes = transactionFullHashes;
-            Collections.sort(this.transactionFullHashes, hashComparator);
+            this.revealedSecret = revealedSecret;
         }
 
         @Override
         int getMySize() {
-            return 1 + 32 * transactionFullHashes.size();
+            return 1 + 32 * transactionFullHashes.size() + 4 + revealedSecret.length;
         }
 
         @Override
@@ -660,6 +670,8 @@ public interface Attachment extends Appendix {
             for (byte[] hash : transactionFullHashes) {
                 buffer.put(hash);
             }
+            buffer.putInt(revealedSecret.length);
+            buffer.put(revealedSecret);
         }
 
         @Override
@@ -669,6 +681,9 @@ public interface Attachment extends Appendix {
                 jsonArray.add(Convert.toHexString(hash));
             }
             attachment.put("transactionFullHashes", jsonArray);
+            if (revealedSecret.length > 0) {
+                attachment.put("revealedSecret", Convert.toHexString(revealedSecret));
+            }
         }
 
         @Override
@@ -678,6 +693,10 @@ public interface Attachment extends Appendix {
 
         public List<byte[]> getTransactionFullHashes() {
             return transactionFullHashes;
+        }
+
+        public byte[] getRevealedSecret() {
+            return revealedSecret;
         }
     }
 

@@ -101,10 +101,10 @@ public final class Vote {
         try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO vote (id, poll_id, voter_id, "
                 + "vote_bytes, height) VALUES (?, ?, ?, ?, ?)")) {
             int i = 0;
-            pstmt.setLong(++i, this.getId());
-            pstmt.setLong(++i, this.getPollId());
-            pstmt.setLong(++i, this.getVoterId());
-            pstmt.setBytes(++i, this.getVote());
+            pstmt.setLong(++i, this.id);
+            pstmt.setLong(++i, this.pollId);
+            pstmt.setLong(++i, this.voterId);
+            pstmt.setBytes(++i, this.voteBytes);
             pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
             pstmt.executeUpdate();
         }
@@ -114,10 +114,16 @@ public final class Vote {
         return id;
     }
 
-    public long getPollId() { return pollId; }
+    public long getPollId() {
+        return pollId;
+    }
 
-    public long getVoterId() { return voterId; }
+    public long getVoterId() {
+        return voterId;
+    }
 
-    public byte[] getVote() { return voteBytes; }
+    public byte[] getVoteBytes() {
+        return voteBytes;
+    }
 
 }

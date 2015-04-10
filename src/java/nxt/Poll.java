@@ -111,8 +111,16 @@ public final class Poll extends AbstractPoll {
         return pollTable.getAll(from, to);
     }
 
-    public static DbIterator<Poll> getPollsByAccount(long accountId, int from, int to) {
-        return pollTable.getManyBy(new DbClause.LongClause("account_id", accountId), from, to);
+    public static DbIterator<Poll> getActivePolls(int from, int to) {
+        return pollTable.getManyBy(new DbClause.IntClause("finish_height", DbClause.Op.GT, Nxt.getBlockchain().getHeight()), from, to);
+    }
+
+    public static DbIterator<Poll> getPollsByAccount(long accountId, boolean includeFinished, int from, int to) {
+        DbClause dbClause = new DbClause.LongClause("account_id", accountId);
+        if (!includeFinished) {
+            dbClause = dbClause.and(new DbClause.IntClause("finish_height", DbClause.Op.GT, Nxt.getBlockchain().getHeight()));
+        }
+        return pollTable.getManyBy(dbClause, from, to);
     }
 
     public static DbIterator<Poll> getPollsFinishingAt(int height) {
@@ -168,6 +176,7 @@ public final class Poll extends AbstractPoll {
     private final byte maxNumberOfOptions;
     private final byte minRangeValue;
     private final byte maxRangeValue;
+    private final int timestamp;
 
     private Poll(Transaction transaction, Attachment.MessagingPollCreation attachment) {
         super(transaction.getId(), transaction.getSenderId(), attachment.getFinishHeight(), attachment.getVoteWeighting());
@@ -179,6 +188,7 @@ public final class Poll extends AbstractPoll {
         this.maxNumberOfOptions = attachment.getMaxNumberOfOptions();
         this.minRangeValue = attachment.getMinRangeValue();
         this.maxRangeValue = attachment.getMaxRangeValue();
+        this.timestamp = Nxt.getBlockchain().getLastBlockTimestamp();
     }
 
     private Poll(ResultSet rs) throws SQLException {
@@ -193,13 +203,14 @@ public final class Poll extends AbstractPoll {
         this.maxNumberOfOptions = rs.getByte("max_num_options");
         this.minRangeValue = rs.getByte("min_range_value");
         this.maxRangeValue = rs.getByte("max_range_value");
+        this.timestamp = rs.getInt("timestamp");
     }
 
     private void save(Connection con) throws SQLException {
         try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO poll (id, account_id, "
                 + "name, description, options, finish_height, voting_model, min_balance, min_balance_model, "
-                + "holding_id, min_num_options, max_num_options, min_range_value, max_range_value, height) "
-                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
+                + "holding_id, min_num_options, max_num_options, min_range_value, max_range_value, timestamp, height) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
             int i = 0;
             pstmt.setLong(++i, id);
             pstmt.setLong(++i, accountId);
@@ -215,6 +226,7 @@ public final class Poll extends AbstractPoll {
             pstmt.setByte(++i, maxNumberOfOptions);
             pstmt.setByte(++i, minRangeValue);
             pstmt.setByte(++i, maxRangeValue);
+            pstmt.setInt(++i, timestamp);
             pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
             pstmt.executeUpdate();
         }
@@ -270,6 +282,10 @@ public final class Poll extends AbstractPoll {
         return maxRangeValue;
     }
 
+    public int getTimestamp() {
+        return timestamp;
+    }
+
     private List<OptionResult> countResults(VoteWeighting voteWeighting) {
         int countHeight = Math.min(finishHeight, Nxt.getBlockchain().getHeight());
         if (countHeight < Nxt.getBlockchainProcessor().getMinRollbackHeight()) {
@@ -280,9 +296,10 @@ public final class Poll extends AbstractPoll {
 
     private List<OptionResult> countResults(VoteWeighting voteWeighting, int height) {
         final OptionResult[] result = new OptionResult[options.length];
+        VoteWeighting.VotingModel votingModel = voteWeighting.getVotingModel();
         try (DbIterator<Vote> votes = Vote.getVotes(this.getId(), 0, -1)) {
             for (Vote vote : votes) {
-                long weight = voteWeighting.calcWeight(vote.getVoterId(), height);
+                long weight = votingModel.calcWeight(voteWeighting, vote.getVoterId(), height);
                 if (weight <= 0) {
                     continue;
                 }
@@ -303,7 +320,7 @@ public final class Poll extends AbstractPoll {
 
     private long[] countVote(Vote vote, long weight) {
         final long[] partialResult = new long[options.length];
-        final byte[] optVals = vote.getVote();
+        final byte[] optVals = vote.getVoteBytes();
         for (int i = 0; i < optVals.length; i++) {
             if (optVals[i] != Constants.NO_VOTE_VALUE) {
                 partialResult[i] = (long) optVals[i] * weight;

@@ -107,10 +107,10 @@ public final class APIServlet extends HttpServlet {
         map.put("getAccountBlockIds", GetAccountBlockIds.instance);
         map.put("getAccountBlocks", GetAccountBlocks.instance);
         map.put("getAccountId", GetAccountId.instance);
-        map.put("getVoterPendingTransactions", GetVoterPendingTransactions.instance);
+        map.put("getVoterPhasedTransactions", GetVoterPhasedTransactions.instance);
         map.put("getPolls", GetPolls.instance);
-        map.put("getAccountPendingTransactions", GetAccountPendingTransactions.instance);
-        map.put("getAccountPendingTransactionCount", GetAccountPendingTransactionCount.instance);
+        map.put("getAccountPhasedTransactions", GetAccountPhasedTransactions.instance);
+        map.put("getAccountPhasedTransactionCount", GetAccountPhasedTransactionCount.instance);
         map.put("getAccountPublicKey", GetAccountPublicKey.instance);
         map.put("getAccountTransactionIds", GetAccountTransactionIds.instance);
         map.put("getAccountTransactions", GetAccountTransactions.instance);
@@ -133,7 +133,7 @@ public final class APIServlet extends HttpServlet {
         map.put("getAssetsByIssuer", GetAssetsByIssuer.instance);
         map.put("getAssetAccounts", GetAssetAccounts.instance);
         map.put("getAssetAccountCount", GetAssetAccountCount.instance);
-        map.put("getAssetPendingTransactions", GetAssetPendingTransactions.instance);
+        map.put("getAssetPhasedTransactions", GetAssetPhasedTransactions.instance);
         map.put("getBalance", GetBalance.instance);
         map.put("getBlock", GetBlock.instance);
         map.put("getBlockId", GetBlockId.instance);
@@ -147,7 +147,7 @@ public final class APIServlet extends HttpServlet {
         map.put("getCurrenciesByIssuer", GetCurrenciesByIssuer.instance);
         map.put("getCurrencyAccounts", GetCurrencyAccounts.instance);
         map.put("getCurrencyAccountCount", GetCurrencyAccountCount.instance);
-        map.put("getCurrencyPendingTransactions", GetCurrencyPendingTransactions.instance);
+        map.put("getCurrencyPhasedTransactions", GetCurrencyPhasedTransactions.instance);
         map.put("getDGSGoods", GetDGSGoods.instance);
         map.put("getDGSGoodsCount", GetDGSGoodsCount.instance);
         map.put("getDGSGood", GetDGSGood.instance);
@@ -157,6 +157,7 @@ public final class APIServlet extends HttpServlet {
         map.put("getDGSPurchase", GetDGSPurchase.instance);
         map.put("getDGSPurchaseCount", GetDGSPurchaseCount.instance);
         map.put("getDGSPendingPurchases", GetDGSPendingPurchases.instance);
+        map.put("getDGSExpiredPurchases", GetDGSExpiredPurchases.instance);
         map.put("getDGSTags", GetDGSTags.instance);
         map.put("getDGSTagCount", GetDGSTagCount.instance);
         map.put("getDGSTagsLike", GetDGSTagsLike.instance);
@@ -310,7 +311,9 @@ public final class APIServlet extends HttpServlet {
                 response = e.getErrorResponse();
             } catch (NxtException |RuntimeException e) {
                 Logger.logDebugMessage("Error processing API request", e);
-                response = ERROR_INCORRECT_REQUEST;
+                JSONObject json = new JSONObject();
+                JSONData.putException(json, e);
+                response = JSON.prepare(json);
             } catch (ExceptionInInitializerError err) {
                 Logger.logErrorMessage("Initialization Error", (Exception) err.getCause());
                 response = ERROR_INCORRECT_REQUEST;

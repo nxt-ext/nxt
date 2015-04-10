@@ -23,8 +23,8 @@ public class PhasingParams {
         long minBalance = buffer.getLong();
         byte whitelistSize = buffer.get();
         whitelist = new long[whitelistSize];
-        for (int pvc = 0; pvc < whitelist.length; pvc++) {
-            whitelist[pvc] = buffer.getLong();
+        for (int i = 0; i < whitelistSize; i++) {
+            whitelist[i] = buffer.getLong();
         }
         long holdingId = buffer.getLong();
         byte minBalanceModel = buffer.get();
@@ -37,9 +37,13 @@ public class PhasingParams {
         byte votingModel = ((Long) attachmentData.get("phasingVotingModel")).byteValue();
         long holdingId = Convert.parseUnsignedLong((String) attachmentData.get("phasingHolding"));
         JSONArray whitelistJson = (JSONArray) (attachmentData.get("phasingWhitelist"));
-        whitelist = new long[whitelistJson.size()];
-        for (int i = 0; i < whitelist.length; i++) {
-            whitelist[i] = Convert.parseUnsignedLong((String) whitelistJson.get(i));
+        if (whitelistJson != null && whitelistJson.size() > 0) {
+            whitelist = new long[whitelistJson.size()];
+            for (int i = 0; i < whitelist.length; i++) {
+                whitelist[i] = Convert.parseUnsignedLong((String) whitelistJson.get(i));
+            }
+        } else {
+            whitelist = Convert.EMPTY_LONG;
         }
         byte minBalanceModel = ((Long) attachmentData.get("phasingMinBalanceModel")).byteValue();
         voteWeighting = new VoteWeighting(votingModel, holdingId, minBalance, minBalanceModel);
@@ -117,7 +121,8 @@ public class PhasingParams {
         }
 
         if (voteWeighting.getVotingModel() == VoteWeighting.VotingModel.ACCOUNT && whitelist.length > 0 && quorum > whitelist.length) {
-            throw new NxtException.NotValidException("Quorum of " + quorum + " cannot be achieved in by-account voting with whitelist of length " + whitelist.length);
+            throw new NxtException.NotValidException("Quorum of " + quorum + " cannot be achieved in by-account voting with whitelist of length "
+                    + whitelist.length);
         }
 
         voteWeighting.validate();

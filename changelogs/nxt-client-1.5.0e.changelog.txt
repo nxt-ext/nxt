@@ -32,6 +32,8 @@ created, however a different voting model can be specified when calling the
 getPollResult API, to calculate on the fly an alternative vote counting, as
 long as vote data is still available.
 
+Voting multiple times, changing, or deleting votes is not allowed.
+
 The fee to create a poll is 10 NXT for a poll with up to 20 options, with 1 NXT
 additional fee for any additional option (max 100 options are possible).
 
@@ -40,14 +42,14 @@ Phasing.
 
 Phasing API calls:
 
-ApproveTransaction, GetAccountPendingTransactions,
-GetAccountPendingTransactionCount, GetAssetPendingTransactions,
-GetCurrencyPendingTransactions, GetPhasingPoll, GetPhasingPolls,
-GetPhasingPollVote, GetPhasingPollVotes, GetVoterPendingTransactions.
+ApproveTransaction, GetAccountPhasedTransactions,
+GetAccountPhasedTransactionCount, GetAssetPhasedTransactions,
+GetCurrencyPhasedTransactions, GetPhasingPoll, GetPhasingPolls,
+GetPhasingPollVote, GetPhasingPollVotes, GetVoterPhasedTransactions.
 
-A transaction of any type can be phased by adding a phased=true and an
-appropriate set of phasing parameters. Phased transactions are accepted in the
-blockchain immediately (subject to all usual validations), but are executed
+A transaction of any type can be phased by adding a phased=true parameter and
+an appropriate set of phasing parameters. Phased transactions are accepted in
+the blockchain immediately (subject to all usual validations), but are executed
 only at finish height, if still valid and if the required quorum has been met.
 If not approved, or not valid at finish height, they remain in the blockchain
 but are never executed, and any changes they caused to the sender unconfirmed
@@ -56,14 +58,39 @@ balance are reversed, except that the fee is not refunded.
 In addition to the voting models available in polls, phased transactions can
 use a whitelist of accounts (max 10) allowed to vote for the transaction.
 
-It is possible to vote for (approve) up to 20 phased transactions with a single
+It is possible to vote for (approve) up to 10 phased transactions with a single
 approval transaction. This transaction will be accepted in the blockchain only
-if all phased transactions it is voting for are already in it. This can be used
-to create coupling between phased transactions and some escrow schemes based on
-such coupling.
+if all phased transactions it is voting for are already in it.
+
+Voting multiple times is allowed but has no effect on vote counting, votes
+after the first vote from each account are ignored.
 
 It is also possible to make any transaction phased without needing voting for
 approval. This can be used to create transactions with deferred execution.
+
+Pay on reveal secret is supported as a voting model for phased transactions.
+When this voting model is used, the phased transaction must include the
+hash of a secret chosen by the sender (up to 100 bytes long), and an approval
+transaction for it is only accepted if it includes the secret that results in
+this hash. It does not matter who the sender of the approval transaction is,
+unless a whitelist is also defined. Supported hash functions currently are
+sha256, ripemd160, and sha256 followed by ripemd160. The codes to specify them
+as parameters are available from the getConstants API.
+
+Finally, it is possible to make a phased transaction that is released or
+rejected not on the basis of voting, but based on the presence of other
+transactions (linked transactions) in the blockchain at its finish height.
+To do that, up to 10 phasingLinkedFullHash transaction hashes can be defined
+when creating the phased transaction. Note that this does not create a
+dependency between the linked transactions themselves. This feature can be
+used to implement atomic execution of transactions of any type, provided the
+phased transaction is phasing safe. Transactions already in the blockchain
+before the acceptance of the phased transaction can also be linked, as long
+as they are not more than 60 days old, or themselves phased transactions.
+
+The deferred execution with no approval needed, pay on reveal secret, and
+linked transactions features are currently accessible using the API only, the
+UI for them will be completed in a later release.
 
 Similar to voting, the phasing data for phased transaction that finished before
 the last trim height is also deleted and only the aggregate approval results
@@ -90,6 +117,9 @@ Other new APIs:
 
 GetOrderTrades - given an askOrder, bidOrder, or both, returns all trades that
 were executed as a result of this order.
+
+GetDGSExpiredPurchases - returns the purchases for a given seller which have
+expired without being delivered.
 
 GetDGSTagsLike - returns all Digital Goods Store tags starting with a given
 (at least 2 characters long) prefix.
@@ -159,11 +189,24 @@ polls and votes casted.
 Generic notification system for incoming transactions showing the number
 of transaction types and total new transactions.
 
+Unconfirmed transactions are only displayed in the "Dashboard" and "My Transactions"
+pages and no longer appear in other tables.
+
+Transaction info dialog for AE Bid and Ask orders now displays a table containing
+the actual trades mathcing the specific order.
+
 New account login feature for faster login just by Nxt account.
 
 User specific client DB with new logout option to clear user data.
 
 Streamlined sidebar/navigation structure.
+
+Send Currency button added to the toolbar which invokes the transfer currency dialog
+
+Environment information, client settings and various diagnostic information is logged 
+to the browser's JavaScript console during startup and login.
+
+Phasing tab was added to the transaction info dialog of phased transactions.
 
 Various bug fixes.
 
@@ -211,9 +254,16 @@ creation.
 Allow the API server to handle both http and https requests on different ports,
 if nxt.apiServerSSLPort is set to a port different from nxt.apiServerPort and
 nxt.apiSSL=true. If the SSL and non-SSL ports are configured to be the same,
-the nxt.apiSSL property determines whether SSL is used or not.
+the nxt.apiSSL property determines whether SSL is used or not. On testnet,
+non-SSL port is hardcoded to 6876 and SSL, if enabled, to 6877.
+
+Reduced the default nxt.maxRollback to 800. Also added a nxt.trimFrequency
+setting to control how often the trim is run, default 1000.
 
 This release requires Java 8 and will not run or compile with Java 7.
+
+run.bat has been updated to search for a Java 8 installation using the Windows
+registry.
 
 Updated Jetty to version 9.2.10 and Bouncy Castle to version 1.52. If unpacking
 on top of a previous installation, delete the old lib folder first.

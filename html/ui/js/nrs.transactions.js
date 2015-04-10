@@ -26,7 +26,7 @@ var NRS = (function(NRS, $, undefined) {
 		}
 		//Bug with popovers staying permanent when being open
 		$('div.popover').hide();
-		$('.td_transaction_pending div.show_popover').popover('hide');
+		$('.td_transaction_phasing div.show_popover').popover('hide');
 
 		//always refresh peers and unconfirmed transactions..
 		if (NRS.currentPage == "peers") {
@@ -227,7 +227,7 @@ var NRS = (function(NRS, $, undefined) {
 				}
 				if (NRS.currentPage == 'transactions' || NRS.currentPage == 'dashboard') {
 					$('div.popover').hide();
-					$('.td_transaction_pending div.show_popover').popover('hide');
+					$('.td_transaction_phasing div.show_popover').popover('hide');
 					NRS.incoming[NRS.currentPage]();
 				}
 
@@ -249,9 +249,9 @@ var NRS = (function(NRS, $, undefined) {
 		return html;
 	}
 
-	NRS.addPendingTransactionHTML = function(t) {
+	NRS.addPhasedTransactionHTML = function(t) {
 		var $tr = $('.tr_transaction_' + t.transaction + ':visible');
-		var $tdPending = $tr.find('.td_transaction_pending');
+		var $tdPhasing = $tr.find('.td_transaction_phasing');
 		var $approveBtn = $tr.find('.td_transaction_actions .approve_transaction_btn');
 
 		if (t.attachment && t.attachment["version.Phasing"] && t.attachment.phasingVotingModel != undefined) {
@@ -371,36 +371,36 @@ var NRS = (function(NRS, $, undefined) {
 							icon = '<i class="fa fa-bank"></i>';
 						}
 
-						var pendingDiv = "";
-						pendingDiv += '<div class="show_popover" style="display:inline-block;min-width:94px;text-align:left;border:1px solid #e2e2e2;background-color:#fff;padding:3px;" ';
-	 				 	pendingDiv += 'data-toggle="popover" data-container="body">';
-						pendingDiv += "<div class='label label-" + state + "' style='display:inline-block;margin-right:5px;'>" + icon + "</div>";
+						var phasingDiv = "";
+						phasingDiv += '<div class="show_popover" style="display:inline-block;min-width:94px;text-align:left;border:1px solid #e2e2e2;background-color:#fff;padding:3px;" ';
+	 				 	phasingDiv += 'data-toggle="popover" data-container="body">';
+						phasingDiv += "<div class='label label-" + state + "' style='display:inline-block;margin-right:5px;'>" + icon + "</div>";
 						
 						if (vm == 0) {
-							pendingDiv += '<span style="color:' + color + '">' + String(responsePoll.result) + '</span> / <span>' + String(attachment.phasingQuorum) + '</span>';
+							phasingDiv += '<span style="color:' + color + '">' + String(responsePoll.result) + '</span> / <span>' + String(attachment.phasingQuorum) + '</span>';
 						} else {
-							pendingDiv += '<div class="progress" style="display:inline-block;height:10px;width: 50px;">';
-	    					pendingDiv += '<div class="progress-bar progress-bar-' + state + '" role="progressbar" aria-valuenow="' + percentageProgressBar + '" ';
-	    					pendingDiv += 'aria-valuemin="0" aria-valuemax="100" style="height:10px;width: ' + progressBarWidth + 'px;">';
-	      					pendingDiv += '<span class="sr-only">' + percentageProgressBar + '% Complete</span>';
-	    					pendingDiv += '</div>';
-	  						pendingDiv += '</div> ';
+							phasingDiv += '<div class="progress" style="display:inline-block;height:10px;width: 50px;">';
+	    					phasingDiv += '<div class="progress-bar progress-bar-' + state + '" role="progressbar" aria-valuenow="' + percentageProgressBar + '" ';
+	    					phasingDiv += 'aria-valuemin="0" aria-valuemax="100" style="height:10px;width: ' + progressBarWidth + 'px;">';
+	      					phasingDiv += '<span class="sr-only">' + percentageProgressBar + '% Complete</span>';
+	    					phasingDiv += '</div>';
+	  						phasingDiv += '</div> ';
 	  					}
-						pendingDiv += "</div>";
-						$pendingDiv = $(pendingDiv);
+						phasingDiv += "</div>";
+						$phasingDiv = $(phasingDiv);
 						popoverConfig["content"] = $popoverTable;
-						$pendingDiv.popover(popoverConfig);
-						$pendingDiv.appendTo($tdPending);
+						$phasingDiv.popover(popoverConfig);
+						$phasingDiv.appendTo($tdPhasing);
 
 						if (vm == 0) {
 							$popoverTypeTR.find("td:first").html($.t('accounts', 'Accounts') + ":");
-							$popoverTypeTR.find("td:last").html(String(attachment.phasingWhitelist.length));
+							$popoverTypeTR.find("td:last").html(String(attachment.phasingWhitelist ? attachment.phasingWhitelist.length : ""));
 							var votesFormatted = String(responsePoll.result) + " / " + String(attachment.phasingQuorum);
 							$popoverVotesTR.find("td:last").html(votesFormatted);
 						}
 						if (vm == 1) {
 							$popoverTypeTR.find("td:first").html($.t('accounts', 'Accounts') + ":");
-							$popoverTypeTR.find("td:last").html(String(attachment.phasingWhitelist.length));
+							$popoverTypeTR.find("td:last").html(String(attachment.phasingWhitelist ? attachment.phasingWhitelist.length : ""));
 							var votesFormatted = NRS.convertToNXT(responsePoll.result) + " / " + NRS.convertToNXT(attachment.phasingQuorum) + " NXT";
 							$popoverVotesTR.find("td:last").html(votesFormatted);
 						}
@@ -454,18 +454,18 @@ var NRS = (function(NRS, $, undefined) {
 						}
 					});
 				} else {
-					$tdPending.html("&nbsp;");
+					$tdPhasing.html("&nbsp;");
 				}
 			}, false);
 		} else {
-			$tdPending.html("&nbsp;");
+			$tdPhasing.html("&nbsp;");
 		}
 	}
 
-	NRS.addPendingInfoToTransactionRows = function(transactions) {
+	NRS.addPhasingInfoToTransactionRows = function(transactions) {
 		for (var i = 0; i < transactions.length; i++) {
 			var transaction = transactions[i];
-			NRS.addPendingTransactionHTML(transaction);
+			NRS.addPhasedTransactionHTML(transaction);
 		}
 	}
 
@@ -524,7 +524,7 @@ var NRS = (function(NRS, $, undefined) {
 		html += "<td style='vertical-align:middle;'>" + ((NRS.getAccountLink(t, "sender") == "/" && t.type == 2) ? "Asset Exchange" : NRS.getAccountLink(t, "sender")) + " ";
 		html += "<i class='fa fa-arrow-circle-right' style='color:#777;'></i> " + ((NRS.getAccountLink(t, "recipient") == "/" && t.type == 2) ? "Asset Exchange" : NRS.getAccountLink(t, "recipient")) + "</td>";
 
-		html += "<td class='td_transaction_pending' style='min-width:100px;vertical-align:middle;text-align:center;'></td>";
+		html += "<td class='td_transaction_phasing' style='min-width:100px;vertical-align:middle;text-align:center;'></td>";
 
 		html += "<td class='confirmations' style='vertical-align:middle;text-align:center;font-size:12px;'>";
 		html += "<span class='show_popover' data-content='" + (t.confirmed ? NRS.formatAmount(t.confirmations) + " " + $.t("confirmations") : $.t("unconfirmed_transaction")) + "' ";
@@ -533,7 +533,7 @@ var NRS = (function(NRS, $, undefined) {
 		if (actions && actions.length != undefined) {
 			html += '<td class="td_transaction_actions" style="vertical-align:middle;text-align:right;">';
 			if (actions.indexOf('approve') > -1) {
-				if (t.attachment.phasingWhitelist.length > 0 || t.attachment.phasingVotingModel == 0) {
+				if (t.attachment.phasingWhitelist && t.attachment.phasingWhitelist.length > 0 || t.attachment.phasingVotingModel == 0) {
 					var fee = 1;
 				} else {
 					var fee = 2;
@@ -569,7 +569,7 @@ var NRS = (function(NRS, $, undefined) {
 		html += '<i class="fa fa-circle-o"></i>&nbsp; <span data-i18n="unconfirmed">Unconfirmed</span></a></li>';
 		$('#transactions_type_navi').append(html);
 		
-		html  = '<li role="presentation"><a href="#" data-transaction-type="pending" ';
+		html  = '<li role="presentation"><a href="#" data-transaction-type="phasing" ';
 		html += 'data-toggle="popover" data-placement="top" data-content="Phasing (Pending)" data-container="body" data-i18n="[data-content]phasing_pending">';
 		html += '<i class="fa fa-gavel"></i>&nbsp; <span data-i18n="phasing">Phasing</span></a></li>';
 		$('#transactions_type_navi').append(html);
@@ -591,7 +591,7 @@ var NRS = (function(NRS, $, undefined) {
 		$('#transactions_sub_type_navi').append(html);
 
 		var typeIndex = $('#transactions_type_navi li.active a').attr('data-transaction-type');
-		if (typeIndex && typeIndex != "unconfirmed" && typeIndex != "all_unconfirmed" && typeIndex != "pending") {
+		if (typeIndex && typeIndex != "unconfirmed" && typeIndex != "all_unconfirmed" && typeIndex != "phasing") {
 				var typeDict = NRS.transactionTypes[typeIndex];
 				$.each(typeDict["subTypes"], function(subTypeIndex, subTypeDict) {
 				subTitleString = $.t(subTypeDict.i18nKeyTitle);
@@ -619,13 +619,13 @@ var NRS = (function(NRS, $, undefined) {
 		});
 	}
 
-	NRS.displayPendingTransactions = function() {
+	NRS.displayPhasedTransactions = function() {
 		var params = {
 			"account": NRS.account,
 			"firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
 			"lastIndex": NRS.pageNumber * NRS.itemsPerPage
 		};
-		NRS.sendRequest("getAccountPendingTransactions", params, function(response) {
+		NRS.sendRequest("getAccountPhasedTransactions", params, function(response) {
 			var rows = "";
 
 			if (response.transactions && response.transactions.length) {
@@ -635,7 +635,7 @@ var NRS = (function(NRS, $, undefined) {
 					rows += NRS.getTransactionRowHTML(t);
 				}
 				NRS.dataLoaded(rows);
-				NRS.addPendingInfoToTransactionRows(response.transactions);
+				NRS.addPhasingInfoToTransactionRows(response.transactions);
 			} else {
 				NRS.dataLoaded(rows);
 			}
@@ -667,7 +667,7 @@ var NRS = (function(NRS, $, undefined) {
 				}
 
 				NRS.dataLoaded(rows);
-				NRS.addPendingInfoToTransactionRows(response.transactions);
+				NRS.addPhasingInfoToTransactionRows(response.transactions);
 			} else {
 				NRS.dataLoaded(rows);
 			}
@@ -698,8 +698,8 @@ var NRS = (function(NRS, $, undefined) {
 			NRS.displayUnconfirmedTransactions(NRS.account);
 			return;
 		}
-		if (selectedType == "pending") {
-			NRS.displayPendingTransactions();
+		if (selectedType == "phasing") {
+			NRS.displayPhasedTransactions();
 			return;
 		}
 		if (selectedType == "all_unconfirmed") {
@@ -745,7 +745,7 @@ var NRS = (function(NRS, $, undefined) {
 				}
 
 				NRS.dataLoaded(rows);
-				NRS.addPendingInfoToTransactionRows(response.transactions);
+				NRS.addPhasingInfoToTransactionRows(response.transactions);
 			} else {
 				NRS.dataLoaded(rows);
 			}
@@ -758,7 +758,7 @@ var NRS = (function(NRS, $, undefined) {
 			"firstIndex": 0,
 			"lastIndex": 20
 		};
-		NRS.sendRequest("getVoterPendingTransactions", params, function(response) {
+		NRS.sendRequest("getVoterPhasedTransactions", params, function(response) {
 			if (response.transactions && response.transactions.length != undefined) {
 				var $badge = $('#dashboard_link .sm_treeview_submenu a[data-page="approval_requests_account"] span.badge');
 				if (response.transactions.length == 0) {
@@ -785,7 +785,7 @@ var NRS = (function(NRS, $, undefined) {
 			"firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
 			"lastIndex": NRS.pageNumber * NRS.itemsPerPage
 		};
-		NRS.sendRequest("getVoterPendingTransactions", params, function(response) {
+		NRS.sendRequest("getVoterPhasedTransactions", params, function(response) {
 			var rows = "";
 
 			if (response.transactions && response.transactions.length != undefined) {
@@ -801,7 +801,7 @@ var NRS = (function(NRS, $, undefined) {
 				}
 			}
 			NRS.dataLoaded(rows);
-			NRS.addPendingInfoToTransactionRows(response.transactions);
+			NRS.addPhasingInfoToTransactionRows(response.transactions);
 		});
 	}
 
