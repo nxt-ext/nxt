@@ -48,9 +48,9 @@ public class ACTestUtils {
     
     public static class AssetBuilder extends APICall.Builder {
 
-        public AssetBuilder(String secretPhrase) {
+        public AssetBuilder(String secretPhrase, String assetName) {
             super("issueAsset");
-            param("name", "TestAsset");
+            param("name", assetName);
             param("description", "Unit tests asset");
             param("quantityQNT", 10000);
             param("decimals", 4);
