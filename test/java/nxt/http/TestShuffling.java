@@ -164,6 +164,7 @@ public class TestShuffling extends BlockchainTest {
         }
         for (Map.Entry<String, String> mapping : accountMapping.entrySet()) {
             Assert.assertTrue(accountMapping.get(mapping.getValue()) != null);
+            Logger.logMessage(String.format("account %s mapped to account %s", mapping.getValue(), accountMapping.get(mapping.getValue())));
         }
     }
 
