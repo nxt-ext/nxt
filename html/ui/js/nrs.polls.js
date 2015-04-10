@@ -576,7 +576,7 @@ var NRS = (function(NRS, $, undefined) {
 	$("#create_poll_modal").on("show.bs.modal", function(e) {
 		$('#create_poll_min_balance_type_group').show();
 		$('#create_poll_min_balance_type_0').click();
-		
+
 		context = {
 			labelText: "Currency",
 			labelI18n: "currency",
@@ -942,7 +942,7 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.loadFollowedPollsSidebar = function(callback) {
 		if (!NRS.followedPolls.length) {
 			NRS.pageLoaded(callback);
-			$("#followed_polls_sidebar_content").empty();
+			$("#followed_polls_xent").empty();
 			$("#no_poll_selected, #loading_poll_data, #no_poll_search_results, #poll_details").hide();
 			$("#no_polls_available").show();
 			$("#followed_polls_page").addClass("no_polls");
@@ -1087,6 +1087,26 @@ var NRS = (function(NRS, $, undefined) {
 				if (!response.errorCode && response.poll == currentPollID) {
 					NRS.loadPoll(response, refresh);
 				}
+			});
+		}
+	});
+
+	$("#followed_polls_sidebar_context").on("click", "a", function(e) {
+		e.preventDefault();
+		var pollId = NRS.selectedContext.data("poll");
+		var option = $(this).data("option");
+
+		NRS.closeContextMenu();
+		if (option == "remove_from_bookmarks") {
+			NRS.database.delete("polls", [{
+				"poll": pollId
+			}], function() {
+				setTimeout(function() {
+					NRS.loadPage("followed_polls");
+					$.growl($.t("success_poll_bookmark_removal"), {
+						"type": "success"
+					});
+				}, 50);
 			});
 		}
 	});
