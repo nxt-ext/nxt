@@ -18,7 +18,7 @@ public final class GetPrunableMessages extends APIServlet.APIRequestHandler {
     static final GetPrunableMessages instance = new GetPrunableMessages();
 
     private GetPrunableMessages() {
-        super(new APITag[] {APITag.MESSAGES}, "account", "otherAccountId", "secretPhrase", "firstIndex", "lastIndex");
+        super(new APITag[] {APITag.MESSAGES}, "account", "otherAccount", "secretPhrase", "firstIndex", "lastIndex");
     }
 
     @Override
@@ -28,7 +28,7 @@ public final class GetPrunableMessages extends APIServlet.APIRequestHandler {
         int firstIndex = ParameterParser.getFirstIndex(req);
         int lastIndex = ParameterParser.getLastIndex(req);
         long readerAccountId = secretPhrase == null ? 0 : Account.getId(Crypto.getPublicKey(secretPhrase));
-        long otherAccountId = ParameterParser.getAccountId(req, "otherAccountId", false);
+        long otherAccountId = ParameterParser.getAccountId(req, "otherAccount", false);
 
         DbIterator<PrunableMessage> messages = otherAccountId == 0 ? PrunableMessage.getPrunableMessages(account.getId(), firstIndex, lastIndex)
                 : PrunableMessage.getPrunableMessages(account.getId(), otherAccountId, firstIndex, lastIndex);
