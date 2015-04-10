@@ -447,6 +447,9 @@ final class TransactionImpl implements Transaction {
 
     @Override
     public List<Appendix.AbstractAppendix> getAppendages() {
+        for (Appendix.AbstractAppendix appendge : appendages) {
+            appendge.loadPrunable(this);
+        }
         return appendages;
     }
 
@@ -537,7 +540,7 @@ final class TransactionImpl implements Transaction {
     @Override
     public Appendix.PrunablePlainMessage getPrunablePlainMessage() {
         if (prunablePlainMessage != null) {
-            prunablePlainMessage.loadPrunableMessage(this);
+            prunablePlainMessage.loadPrunable(this);
         }
         return prunablePlainMessage;
     }
@@ -549,7 +552,7 @@ final class TransactionImpl implements Transaction {
     @Override
     public Appendix.PrunableEncryptedMessage getPrunableEncryptedMessage() {
         if (prunableEncryptedMessage != null) {
-            prunableEncryptedMessage.loadPrunableMessage(this);
+            prunableEncryptedMessage.loadPrunable(this);
         }
         return prunableEncryptedMessage;
     }
@@ -690,8 +693,6 @@ final class TransactionImpl implements Transaction {
 
     @Override
     public JSONObject getJSONObject() {
-        getPrunablePlainMessage();
-        getPrunableEncryptedMessage();
         JSONObject json = new JSONObject();
         json.put("type", type.getType());
         json.put("subtype", type.getSubtype());
@@ -710,7 +711,8 @@ final class TransactionImpl implements Transaction {
         json.put("ecBlockId", Long.toUnsignedString(ecBlockId));
         json.put("signature", Convert.toHexString(signature));
         JSONObject attachmentJSON = new JSONObject();
-        for (Appendix appendage : appendages) {
+        for (Appendix.AbstractAppendix appendage : appendages) {
+            appendage.loadPrunable(this);
             attachmentJSON.putAll(appendage.getJSONObject());
         }
         if (! attachmentJSON.isEmpty()) {
@@ -907,6 +909,7 @@ final class TransactionImpl implements Transaction {
         }
 
         for (Appendix.AbstractAppendix appendage : appendages) {
+            appendage.loadPrunable(this);
             if (! appendage.verifyVersion(this.version)) {
                 throw new NxtException.NotValidException("Invalid attachment version " + appendage.getVersion()
                         + " for transaction version " + this.version);
@@ -944,6 +947,7 @@ final class TransactionImpl implements Transaction {
         }
         if (phasing == null) {
             for (Appendix.AbstractAppendix appendage : appendages) {
+                appendage.loadPrunable(this);
                 appendage.apply(this, senderAccount, recipientAccount);
             }
         } else {
@@ -968,6 +972,7 @@ final class TransactionImpl implements Transaction {
     long getMinimumFeeNQT(int blockchainHeight) {
         long totalFee = 0;
         for (Appendix.AbstractAppendix appendage : appendages) {
+            appendage.loadPrunable(this);
             if (blockchainHeight < appendage.getBaselineFeeHeight()) {
                 return 0; // No need to validate fees before baseline block
             }

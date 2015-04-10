@@ -581,8 +581,6 @@ final class JSONData {
     }
 
     static JSONObject unconfirmedTransaction(Transaction transaction) {
-        transaction.getPrunablePlainMessage();
-        transaction.getPrunableEncryptedMessage();
         JSONObject json = new JSONObject();
         json.put("type", transaction.getType().getType());
         json.put("subtype", transaction.getType().getSubtype());

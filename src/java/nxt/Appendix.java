@@ -121,6 +121,10 @@ public interface Appendix {
 
         abstract void apply(Transaction transaction, Account senderAccount, Account recipientAccount);
 
+        boolean loadPrunable(Transaction transaction) {
+            return false;
+        }
+
     }
 
     static boolean hasAppendix(String appendixName, JSONObject attachmentData) {
@@ -334,7 +338,6 @@ public interface Appendix {
             if (Nxt.getBlockchain().getHeight() < Constants.VOTING_SYSTEM_BLOCK) {
                 throw new NxtException.NotYetEnabledException("Prunable messages not yet enabled");
             }
-            loadPrunableMessage(transaction);
             if (transaction.getMessage() != null) {
                 throw new NxtException.NotValidException("Cannot have both message and prunable message attachments");
             }
@@ -380,11 +383,13 @@ public interface Appendix {
             return getMessage() == null ? 0 : getMessage().length;
         }
 
-        void loadPrunableMessage(Transaction transaction) {
+        @Override
+        boolean loadPrunable(Transaction transaction) {
             if (message == null && prunableMessage == null
                     && Nxt.getEpochTime() - transaction.getTimestamp() < Constants.MIN_PRUNABLE_LIFETIME) {
                 prunableMessage = PrunableMessage.getPrunableMessage(transaction.getId());
             }
+            return true;
         }
 
     }
@@ -569,7 +574,6 @@ public interface Appendix {
             if (Nxt.getBlockchain().getHeight() < Constants.VOTING_SYSTEM_BLOCK) {
                 throw new NxtException.NotYetEnabledException("Prunable encrypted messages not yet enabled");
             }
-            loadPrunableMessage(transaction);
             if (transaction.getEncryptedMessage() != null) {
                 throw new NxtException.NotValidException("Cannot have both encrypted and prunable encrypted message attachments");
             }
@@ -617,11 +621,13 @@ public interface Appendix {
             return getEncryptedData() == null ? 0 : getEncryptedData().getData().length;
         }
 
-        void loadPrunableMessage(Transaction transaction) {
+        @Override
+        boolean loadPrunable(Transaction transaction) {
             if (encryptedData == null && prunableMessage == null
                     && Nxt.getEpochTime() - transaction.getTimestamp() < Constants.MIN_PRUNABLE_LIFETIME) {
                 prunableMessage = PrunableMessage.getPrunableMessage(transaction.getId());
             }
+            return true;
         }
     }
 

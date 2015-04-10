@@ -1,6 +1,5 @@
 package nxt;
 
-import nxt.db.DbUtils;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONValue;
 
@@ -8,6 +7,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Types;
 import java.util.List;
 
 class UnconfirmedTransaction implements Transaction {
@@ -48,20 +48,21 @@ class UnconfirmedTransaction implements Transaction {
             pstmt.setLong(++i, transaction.getFeeNQT() / transaction.getFullSize());
             pstmt.setInt(++i, transaction.getExpiration());
             pstmt.setBytes(++i, transaction.bytes());
-            String prunableJSON = null;
-            Appendix.PrunablePlainMessage prunablePlainMessage = transaction.getPrunablePlainMessage();
-            Appendix.PrunableEncryptedMessage prunableEncryptedMessage = transaction.getPrunableEncryptedMessage();
-            if (prunablePlainMessage != null || prunableEncryptedMessage != null) {
-                JSONObject json = new JSONObject();
-                if (prunablePlainMessage != null) {
-                    json.putAll(prunablePlainMessage.getJSONObject());
+            JSONObject prunableJSON = null;
+            for (Appendix.AbstractAppendix appendage : transaction.getAppendages()) {
+                if (appendage.loadPrunable(this)) {
+                    if (prunableJSON == null) {
+                        prunableJSON = appendage.getJSONObject();
+                    } else {
+                        prunableJSON.putAll(appendage.getJSONObject());
+                    }
                 }
-                if (prunableEncryptedMessage != null) {
-                    json.putAll(prunableEncryptedMessage.getJSONObject());
-                }
-                prunableJSON = json.toJSONString();
             }
-            DbUtils.setString(pstmt, ++i, prunableJSON);
+            if (prunableJSON != null) {
+                pstmt.setString(++i, prunableJSON.toJSONString());
+            } else {
+                pstmt.setNull(++i, Types.VARCHAR);
+            }
             pstmt.setLong(++i, arrivalTimestamp);
             pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
             pstmt.executeUpdate();
