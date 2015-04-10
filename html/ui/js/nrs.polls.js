@@ -329,6 +329,12 @@ var NRS = (function(NRS, $, undefined) {
 		_resetPollFee();
 	});
 
+	function _setMinBalanceForm() {
+		var pollType = $("#create_poll_type").val();
+		var mbType = $("input[name=minBalanceType]:radio").val();
+		console.log("PT:" + pollType + " MBT:" + mbType);
+	}
+
 	$("#create_poll_type").change(function() {
 		// poll type changed, lets see if we have to include/remove the asset id
 		if($("#create_poll_type").val() == "2") {
@@ -344,16 +350,12 @@ var NRS = (function(NRS, $, undefined) {
 			$("#create_poll_ms_currency_group").css("display", "none");
 		}
 
-		if($("#create_poll_type").val() == "0")
-		{
-			// ok now lets show the bottom things...
+		if($("#create_poll_type").val() == "0") {
 			$("#create_poll_min_balance_type_group").css("display", "block");
-		}
-		else
-		{
+		} else {
 			$("#create_poll_min_balance_type_group").css("display", "none");
 		}
-
+		_setMinBalanceForm();
 	});
 
 	$("input[name=minBalanceType]:radio").change(function () {
@@ -362,25 +364,16 @@ var NRS = (function(NRS, $, undefined) {
 		if(value == "2") {
 			$("#create_poll_asset_id_group").css("display", "block");
 			$("#create_poll_ms_currency_group").css("display", "none");
-			//$("#create_poll_type_group").removeClass("col-xs-12").addClass("col-xs-6");
-			//$("#create_poll_type_group").removeClass("col-sm-12").addClass("col-sm-6");
-			//$("#create_poll_type_group").removeClass("col-md-12").addClass("col-md-6");
 		}
 		else if(value == "3") {
 			$("#create_poll_asset_id_group").css("display", "none");
 			$("#create_poll_ms_currency_group").css("display", "block");
-			//$("#create_poll_type_group").removeClass("col-xs-12").addClass("col-xs-6");
-			//$("#create_poll_type_group").removeClass("col-sm-12").addClass("col-sm-6");
-			//$("#create_poll_type_group").removeClass("col-md-12").addClass("col-md-6");
 		}
 		else {
 			$("#create_poll_asset_id_group").css("display", "none");
 			$("#create_poll_ms_currency_group").css("display", "none");
-			//$("#create_poll_type_group").removeClass("col-xs-6").addClass("col-xs-12");
-			//$("#create_poll_type_group").removeClass("col-sm-6").addClass("col-sm-12");
-			//$("#create_poll_type_group").removeClass("col-md-6").addClass("col-md-12");
 		}
-
+		_setMinBalanceForm();
 	});
 
 
