@@ -42,19 +42,19 @@
                             <label for="create_poll_min_balance_type" data-i18n="min_balance_type">Min Balance Type</label>
                             <div id="create_poll_min_balance_type" class="form-group">
                                 <label class="radio-inline">
-                                    <input type="radio" name="minBalanceType" id="create_poll_min_balance_type_0" value="0" checked /><span> </span>
+                                    <input type="radio" name="minBalanceType" id="create_poll_min_balance_type_0" data-default="0" value="0" checked /><span> </span>
                                     <span data-i18n="none">None</span>
                                 </label>
                                 <label class="radio-inline">
-                                    <input type="radio" name="minBalanceType" id="create_poll_min_balance_type_1" value="1"/><span> </span>
+                                    <input type="radio" name="minBalanceType" id="create_poll_min_balance_type_1" data-default="1" value="1"/><span> </span>
                                     <span data-i18n="account_balance">Account Balance</span>
                                 </label>
                                 <label class="radio-inline">
-                                    <input type="radio" name="minBalanceType" id="create_poll_min_balance_type_2" value="2"/><span> </span>
+                                    <input type="radio" name="minBalanceType" id="create_poll_min_balance_type_2" data-default="2" value="2"/><span> </span>
                                     <span data-i18n="asset_balance">Asset Balance</span>
                                 </label>
                                 <label class="radio-inline">
-                                    <input type="radio" name="minBalanceType" id="create_poll_min_balance_type_3" value="3"/><span> </span>
+                                    <input type="radio" name="minBalanceType" id="create_poll_min_balance_type_3" data-default="3" value="3"/><span> </span>
                                     <span data-i18n="currency_balance">Currency Balance</span>
                                 </label>
                             </div>
@@ -64,9 +64,12 @@
                     <div class="row">
                         <div class="col-xs-6 col-sm-6 col-md-6">
                             <div class="form-group">
-                                <label for="create_poll_min_balance" data-i18n="min_voting_balance">Min Voting Balance</label>
-                                <input type="number" name="minBalance" id="create_poll_min_balance" min="0" class="form-control" placeholder="" data-default="0" value="0" tabindex="5">
-                            </div> 
+                                <label for="create_poll_min_balance">
+                                    <span data-i18n="min_voting_balance">Min Voting Balance</span> 
+                                    (<span data-i18n="none" id="min_voting_balance_label_unit">None</span>)
+                                </label>
+                                <input name="minBalance" id="create_poll_min_balance" min="0" disabled class="form-control" placeholder="" data-default="0" value="0" tabindex="5">
+                            </div>
                         </div>
                         <div class="col-xs-6 col-sm-6 col-md-6">
                             <div class="form-group create_poll_finish_height" data-modal-ui-element="block_height_modal_ui_element"></div>

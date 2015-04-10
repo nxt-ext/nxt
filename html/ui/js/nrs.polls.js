@@ -330,9 +330,28 @@ var NRS = (function(NRS, $, undefined) {
 	});
 
 	function _setMinBalanceForm() {
-		var pollType = $("#create_poll_type").val();
-		var mbType = $("input[name=minBalanceType]:radio").val();
+		var pollType = parseInt($("#create_poll_type").val());
+		var mbType = parseInt($("input[name=minBalanceType]:radio:checked").val());
 		console.log("PT:" + pollType + " MBT:" + mbType);
+
+		if (pollType == 0 && mbType == 0) {
+			$('#min_voting_balance_label_unit').html($.t('none'));
+			$('#create_poll_min_balance').attr('disabled', true);
+		} else {
+			$('#create_poll_min_balance').attr('disabled', false);
+		}
+		if ((pollType == 0 && mbType == 1) || pollType == 1) {
+			$('#min_voting_balance_label_unit').html($.t('nxt_capital_letters'));
+			$('#create_poll_min_balance').attr('name', 'minBalanceNXT');
+		}
+		if ((pollType == 0 && mbType == 2) || pollType == 2) {
+			$('#min_voting_balance_label_unit').html($.t('asset'));
+			$('#create_poll_min_balance').attr('name', 'minBalanceQNTf');
+		}
+		if ((pollType == 0 && mbType == 3) || pollType == 3) {
+			$('#min_voting_balance_label_unit').html($.t('currency'));
+			$('#create_poll_min_balance').attr('name', 'minBalanceQNTf');
+		}
 	}
 
 	$("#create_poll_type").change(function() {
@@ -555,6 +574,9 @@ var NRS = (function(NRS, $, undefined) {
 	});
 
 	$("#create_poll_modal").on("show.bs.modal", function(e) {
+		$('#create_poll_min_balance_type_group').show();
+		$('#create_poll_min_balance_type_0').click();
+		
 		context = {
 			labelText: "Currency",
 			labelI18n: "currency",
@@ -578,7 +600,7 @@ var NRS = (function(NRS, $, undefined) {
 			labelText: "Finish Height",
 			labelI18n: "finish_height",
 			helpI18n: "create_poll_finish_height_help",
-			inputName: "create_poll_finish_height",
+			inputName: "finishHeight",
 			initBlockHeight: NRS.lastBlockHeight + 7000,
 			changeHeightBlocks: 500
 		}
@@ -624,25 +646,11 @@ var NRS = (function(NRS, $, undefined) {
 				options.push(option);
 			}
 		});
-
-		data["name"] = $("#create_poll_name").val();
-		data["description"] = $("#create_poll_description").val();
-		data["finishHeight"] = parseInt($("input[name='create_poll_finish_height']").val());
-		data["minNumberOfOptions"] = $("#create_poll_min_options").val();
-		data["maxNumberOfOptions"] = $("#create_poll_max_options").val();
-		data["minRangeValue"] = $("#create_poll_min_range_value").val();
-		data["maxRangeValue"] = $("#create_poll_max_range_value").val();
-		data["minBalance"] = String(parseInt($("#create_poll_min_balance").val())*100000000);
-		data["feeNQT"] = String(parseInt($("#create_poll_fee").val()) * 100000000);
-		data["deadline"] = $("#create_poll_deadline").val();
-		data["secretPhrase"] = $("#create_poll_password").val();
+		//data["minBalance"] = String(parseInt($("#create_poll_min_balance").val())*100000000);
 
         var pollType = $("#create_poll_type");
         if(pollType.val() == "0") {
 			data["votingModel"] = 0;
-			data["minBalanceModel"] = 1;
-		} else if(pollType.val() == "1") {
-			data["votingModel"] = 1;
 			var minBalanceModel = parseInt($('input:radio[name=minBalanceType]:checked').val());
 			data["minBalanceModel"] = minBalanceModel;
 			if(minBalanceModel == 2) {
@@ -650,6 +658,9 @@ var NRS = (function(NRS, $, undefined) {
             } else if(minBalanceModel == 3) {
                 data["holding"] = $("input[name='create_poll_ms_id']").val();
             }
+		} else if(pollType.val() == "1") {
+			data["votingModel"] = 1;
+			data["minBalanceModel"] = 1;
 		} else if(pollType.val() == "2") {
 			data["votingModel"] = 2;
 			data["holding"] = $("input[name='create_poll_asset_id']").val();
@@ -690,7 +701,8 @@ var NRS = (function(NRS, $, undefined) {
 			rowToAdd += "<td><a href='#' data-user='" + NRS.getAccountFormatted(NRS.accountRS) + "' class='show_account_modal_action user_info'>";
 			rowToAdd += NRS.getAccountTitle(NRS.accountRS) + "</a></td>";
 			rowToAdd += "<td>" + NRS.formatTimestamp(now) + "</td>";
-			rowToAdd += "<td>/</td>";
+			rowToAdd += "<td>&nbsp;</td>";
+			rowToAdd += "<td>&nbsp;</td>";
 			rowToAdd += "</tr>";
 
 			$table.prepend(rowToAdd);
