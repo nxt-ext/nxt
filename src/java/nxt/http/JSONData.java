@@ -647,8 +647,9 @@ final class JSONData {
 
     static JSONObject prunableMessage(PrunableMessage prunableMessage, long readerAccountId, String secretPhrase) {
         JSONObject json = new JSONObject();
-        json.put("id", Long.toUnsignedString(prunableMessage.getId()));
+        json.put("transaction", Long.toUnsignedString(prunableMessage.getId()));
         json.put("isText", prunableMessage.isText());
+        json.put("isCompressed", prunableMessage.isCompressed());
         putAccount(json, "sender", prunableMessage.getSenderId());
         putAccount(json, "recipient", prunableMessage.getRecipientId());
         json.put("expiration", prunableMessage.getExpiration());
@@ -661,7 +662,7 @@ final class JSONData {
                         ? Account.getAccount(prunableMessage.getRecipientId()) : Account.getAccount(prunableMessage.getSenderId());
                 if (account != null) {
                     try {
-                        byte[] decrypted = account.decryptFrom(encryptedData, secretPhrase);
+                        byte[] decrypted = account.decryptFrom(encryptedData, secretPhrase, prunableMessage.isCompressed());
                         json.put("decryptedMessage", prunableMessage.isText() ? Convert.toString(decrypted) : Convert.toHexString(decrypted));
                     } catch (RuntimeException e) {
                         putException(json, e, "Decryption failed");

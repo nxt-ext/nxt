@@ -486,6 +486,7 @@ public interface Appendix {
         private final byte[] hash;
         private final EncryptedData encryptedData;
         private final boolean isText;
+        private final boolean isCompressed;
         private volatile PrunableMessage prunableMessage;
 
         PrunableEncryptedMessage(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
@@ -494,6 +495,7 @@ public interface Appendix {
             buffer.get(this.hash);
             this.encryptedData = null;
             this.isText = false;
+            this.isCompressed = false;
         }
 
         private PrunableEncryptedMessage(JSONObject attachmentJSON) {
@@ -505,15 +507,18 @@ public interface Appendix {
                 byte[] nonce = Convert.parseHexString((String) encryptedMessageJSON.get("nonce"));
                 this.encryptedData = new EncryptedData(data, nonce);
                 this.isText = Boolean.TRUE.equals(encryptedMessageJSON.get("isText"));
+                this.isCompressed = Boolean.TRUE.equals(encryptedMessageJSON.get("isCompressed"));
             } else {
                 this.encryptedData = null;
                 this.isText = false;
+                this.isCompressed = false;
             }
         }
 
-        public PrunableEncryptedMessage(EncryptedData encryptedData, boolean isText) {
+        public PrunableEncryptedMessage(EncryptedData encryptedData, boolean isText, boolean isCompressed) {
             this.encryptedData = encryptedData;
             this.isText = isText;
+            this.isCompressed = isCompressed;
             this.hash = null;
         }
 
@@ -539,6 +544,9 @@ public interface Appendix {
             } else {
                 MessageDigest digest = Crypto.sha256();
                 digest.update((byte)(isText ? 1 : 0));
+                if (!isCompressed) {
+                    digest.update((byte) (isCompressed ? 1 : 0));
+                }
                 digest.update(encryptedData.getData());
                 digest.update(encryptedData.getNonce());
                 buffer.put(digest.digest());
@@ -553,6 +561,7 @@ public interface Appendix {
                 encryptedMessageJSON.put("data", Convert.toHexString(prunableMessage.getEncryptedData().getData()));
                 encryptedMessageJSON.put("nonce", Convert.toHexString(prunableMessage.getEncryptedData().getNonce()));
                 encryptedMessageJSON.put("isText", prunableMessage.isText());
+                encryptedMessageJSON.put("isCompressed", prunableMessage.isCompressed());
             } else if (hash != null) {
                 json.put("encryptedMessageHash", Convert.toHexString(hash));
             } else {
@@ -561,6 +570,7 @@ public interface Appendix {
                 encryptedMessageJSON.put("data", Convert.toHexString(encryptedData.getData()));
                 encryptedMessageJSON.put("nonce", Convert.toHexString(encryptedData.getNonce()));
                 encryptedMessageJSON.put("isText", isText);
+                encryptedMessageJSON.put("isCompressed", isCompressed);
             }
         }
 
@@ -615,6 +625,13 @@ public interface Appendix {
                 return prunableMessage.isText();
             }
             return isText;
+        }
+
+        public final boolean isCompressed() {
+            if (prunableMessage != null) {
+                return prunableMessage.isCompressed();
+            }
+            return isCompressed;
         }
 
         private int getEncryptedDataLength() {

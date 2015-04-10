@@ -21,7 +21,7 @@ public final class BroadcastTransaction extends APIServlet.APIRequestHandler {
     private BroadcastTransaction() {
         super(new APITag[] {APITag.TRANSACTIONS}, "transactionBytes", "transactionJSON",
                 "message", "messageIsText", "messageIsPrunable",
-                "messageToEncryptIsText", "encryptedMessageData", "encryptedMessageNonce", "encryptedMessageIsPrunable");
+                "messageToEncryptIsText", "encryptedMessageData", "encryptedMessageNonce", "encryptedMessageIsPrunable", "compressMessageToEncrypt");
     }
 
     @Override
@@ -47,9 +47,10 @@ public final class BroadcastTransaction extends APIServlet.APIRequestHandler {
 
         EncryptedData encryptedData = ParameterParser.getEncryptedMessage(req, null);
         boolean encryptedDataIsText = !"false".equalsIgnoreCase(req.getParameter("messageToEncryptIsText"));
+        boolean isCompressed = !"false".equalsIgnoreCase(req.getParameter("compressMessageToEncrypt"));
         if (encryptedData != null) {
             if ("true".equalsIgnoreCase(req.getParameter("encryptedMessageIsPrunable"))) {
-                builder.appendix(new Appendix.PrunableEncryptedMessage(encryptedData, encryptedDataIsText));
+                builder.appendix(new Appendix.PrunableEncryptedMessage(encryptedData, encryptedDataIsText, isCompressed));
             }
         }
 

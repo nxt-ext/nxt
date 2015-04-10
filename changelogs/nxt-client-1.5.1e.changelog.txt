@@ -64,6 +64,14 @@ message, or a prunable plain message and a regular encrypted message.
 Prunable encrypt-to-self messages are not currently supported as there seems to
 be no good use case for them.
 
+Prunable encrypted messages can optionally be compressed before the encryption
+(default is to compress). The compression status is stored and does not need to
+be specified when decrypting. Regular encrypted messages are still compressed
+by default, but this compression can now optionally be disabled. For backwards
+compatibility, since their current bytes format does not store the compression
+status, this needs to be specified again when decrypting, else an error or
+unreadable data will be returned.
+
 
 New APIs:
 
@@ -87,12 +95,22 @@ messageIsPrunable or encryptedMessageIsPrunable boolean parameters (default
 false). If true, the message or encrypted message attachment, if any, is
 created as a prunable message.
 
+To control whether compression is performed before the encryption or not,
+the new compressMessageToEncrypt and compressMessageToEncryptToSelf parameters
+can be used (default true).
+
 Prunable messages, if not yet pruned, are also returned as part of the
 transaction json by the getAccountTransactions API, using the same fields as
 the corresponding regular messages, but adding a messageIsPrunable or
 encryptedMessageIsPrunable boolean flag.
 
-ReadMessage now also handles prunable message attachments, if any.
+ReadMessage now also handles prunable message attachments, if any. It takes
+an optional uncompressDecryptedMessage and uncompressDecryptedMessageToSelf
+(default true) parameters, only used for non-prunable messages (not needed
+for prunable ones).
+
+DecryptFrom accepts an optional uncompressDecryptedMessage parameter, and
+encryptTo accepts an optional compressMessageToEncrypt parameter, default true.
 
 
 INCOMPATIBLE change:

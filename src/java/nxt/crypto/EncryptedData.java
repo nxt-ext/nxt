@@ -22,10 +22,9 @@ public final class EncryptedData {
         if (plaintext.length == 0) {
             return EMPTY_DATA;
         }
-        byte[] compressedPlaintext = Convert.compress(plaintext);
         byte[] nonce = new byte[32];
         secureRandom.get().nextBytes(nonce);
-        byte[] data = Crypto.aesEncrypt(compressedPlaintext, myPrivateKey, theirPublicKey, nonce);
+        byte[] data = Crypto.aesEncrypt(plaintext, myPrivateKey, theirPublicKey, nonce);
         return new EncryptedData(data, nonce);
     }
 
@@ -91,7 +90,7 @@ public final class EncryptedData {
         if (data.length == 0) {
             return data;
         }
-        return Convert.uncompress(Crypto.aesDecrypt(data, myPrivateKey, theirPublicKey, nonce));
+        return Crypto.aesDecrypt(data, myPrivateKey, theirPublicKey, nonce);
     }
 
     public byte[] getData() {

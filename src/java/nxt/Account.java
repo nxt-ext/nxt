@@ -773,18 +773,25 @@ public final class Account {
         return keyHeight;
     }
 
-    public EncryptedData encryptTo(byte[] data, String senderSecretPhrase) {
+    public EncryptedData encryptTo(byte[] data, String senderSecretPhrase, boolean compress) {
         if (getPublicKey() == null) {
             throw new IllegalArgumentException("Recipient account doesn't have a public key set");
+        }
+        if (compress && data.length > 0) {
+            data = Convert.compress(data);
         }
         return EncryptedData.encrypt(data, Crypto.getPrivateKey(senderSecretPhrase), getPublicKey());
     }
 
-    public byte[] decryptFrom(EncryptedData encryptedData, String recipientSecretPhrase) {
+    public byte[] decryptFrom(EncryptedData encryptedData, String recipientSecretPhrase, boolean uncompress) {
         if (getPublicKey() == null) {
             throw new IllegalArgumentException("Sender account doesn't have a public key set");
         }
-        return encryptedData.decrypt(Crypto.getPrivateKey(recipientSecretPhrase), getPublicKey());
+        byte[] decrypted = encryptedData.decrypt(Crypto.getPrivateKey(recipientSecretPhrase), getPublicKey());
+        if (uncompress && decrypted.length > 0) {
+            decrypted = Convert.uncompress(decrypted);
+        }
+        return decrypted;
     }
 
     public long getBalanceNQT() {

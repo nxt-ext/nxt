@@ -274,9 +274,10 @@ final class ParameterParser {
         }
         String secretPhrase = getSecretPhrase(req);
         boolean isText = !"false".equalsIgnoreCase(req.getParameter("messageToEncryptIsText"));
+        boolean compress = !"false".equalsIgnoreCase(req.getParameter("compressMessageToEncrypt"));
         try {
             byte[] plainMessageBytes = isText ? Convert.toBytes(plainMessage) : Convert.parseHexString(plainMessage);
-            return recipientAccount.encryptTo(plainMessageBytes, secretPhrase);
+            return recipientAccount.encryptTo(plainMessageBytes, secretPhrase, compress);
         } catch (RuntimeException e) {
             throw new ParameterException(INCORRECT_PLAIN_MESSAGE);
         }
@@ -302,9 +303,10 @@ final class ParameterParser {
             throw new ParameterException(UNKNOWN_ACCOUNT);
         }
         boolean isText = !"false".equalsIgnoreCase(req.getParameter("messageToEncryptToSelfIsText"));
+        boolean compress = !"false".equalsIgnoreCase(req.getParameter("compressMessageToEncryptToSelf"));
         try {
             byte[] plainMessageBytes = isText ? Convert.toBytes(plainMessage) : Convert.parseHexString(plainMessage);
-            return senderAccount.encryptTo(plainMessageBytes, secretPhrase);
+            return senderAccount.encryptTo(plainMessageBytes, secretPhrase, compress);
         } catch (RuntimeException e) {
             throw new ParameterException(INCORRECT_PLAIN_MESSAGE);
         }

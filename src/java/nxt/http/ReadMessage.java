@@ -23,7 +23,7 @@ public final class ReadMessage extends APIServlet.APIRequestHandler {
     static final ReadMessage instance = new ReadMessage();
 
     private ReadMessage() {
-        super(new APITag[] {APITag.MESSAGES}, "transaction", "secretPhrase");
+        super(new APITag[] {APITag.MESSAGES}, "transaction", "uncompressDecryptedMessage", "uncompressDecryptedMessageToSelf", "secretPhrase");
     }
 
     @Override
@@ -51,7 +51,7 @@ public final class ReadMessage extends APIServlet.APIRequestHandler {
         Appendix.EncryptToSelfMessage encryptToSelfMessage = transaction.getEncryptToSelfMessage();
         Appendix.PrunablePlainMessage prunableMessage = transaction.getPrunablePlainMessage();
         Appendix.PrunableEncryptedMessage prunableEncryptedMessage = transaction.getPrunableEncryptedMessage();
-        if (message == null && encryptedMessage == null && encryptToSelfMessage == null && prunableMessage == null) {
+        if (message == null && encryptedMessage == null && encryptToSelfMessage == null && prunableMessage == null && prunableEncryptedMessage == null) {
             return NO_MESSAGE;
         }
         if (message != null) {
@@ -65,6 +65,7 @@ public final class ReadMessage extends APIServlet.APIRequestHandler {
         if (secretPhrase != null) {
             EncryptedData encryptedData = null;
             boolean isText = false;
+            boolean uncompress = !"false".equalsIgnoreCase(req.getParameter("uncompressDecryptedMessage"));
             if (encryptedMessage != null) {
                 encryptedData = encryptedMessage.getEncryptedData();
                 isText = encryptedMessage.isText();
@@ -72,6 +73,7 @@ public final class ReadMessage extends APIServlet.APIRequestHandler {
             } else if (prunableEncryptedMessage != null) {
                 encryptedData = prunableEncryptedMessage.getEncryptedData();
                 isText = prunableEncryptedMessage.isText();
+                uncompress = prunableEncryptedMessage.isCompressed();
                 response.put("encryptedMessageIsPrunable", true);
             }
             if (encryptedData != null) {
@@ -79,7 +81,7 @@ public final class ReadMessage extends APIServlet.APIRequestHandler {
                 Account account = senderAccount.getId() == readerAccountId ? Account.getAccount(transaction.getRecipientId()) : senderAccount;
                 if (account != null) {
                     try {
-                        byte[] decrypted = account.decryptFrom(encryptedData, secretPhrase);
+                        byte[] decrypted = account.decryptFrom(encryptedData, secretPhrase, uncompress);
                         response.put("decryptedMessage", isText ? Convert.toString(decrypted) : Convert.toHexString(decrypted));
                     } catch (RuntimeException e) {
                         Logger.logDebugMessage("Decryption of message to recipient failed: " + e.toString());
@@ -88,10 +90,11 @@ public final class ReadMessage extends APIServlet.APIRequestHandler {
                 }
             }
             if (encryptToSelfMessage != null) {
+                boolean uncompressToSelf = !"false".equalsIgnoreCase(req.getParameter("uncompressDecryptedMessageToSelf"));
                 Account account = Account.getAccount(Crypto.getPublicKey(secretPhrase));
                 if (account != null) {
                     try {
-                        byte[] decrypted = account.decryptFrom(encryptToSelfMessage.getEncryptedData(), secretPhrase);
+                        byte[] decrypted = account.decryptFrom(encryptToSelfMessage.getEncryptedData(), secretPhrase, uncompressToSelf);
                         response.put("decryptedMessageToSelf", encryptToSelfMessage.isText() ? Convert.toString(decrypted) : Convert.toHexString(decrypted));
                     } catch (RuntimeException e) {
                         Logger.logDebugMessage("Decryption of message to self failed: " + e.toString());

@@ -90,6 +90,7 @@ public class PrunableMessage {
     private final byte[] message;
     private final EncryptedData encryptedData;
     private final boolean isText;
+    private final boolean isCompressed;
     private final int expiration;
     private final int blockTimestamp;
 
@@ -101,6 +102,7 @@ public class PrunableMessage {
         this.message = appendix.getMessage();
         this.encryptedData = null;
         this.isText = appendix.isText();
+        this.isCompressed = false;
         this.blockTimestamp = Nxt.getBlockchain().getLastBlockTimestamp();
         this.expiration = transaction.getTimestamp() + Constants.MIN_PRUNABLE_LIFETIME;
     }
@@ -113,6 +115,7 @@ public class PrunableMessage {
         this.message = null;
         this.encryptedData = appendix.getEncryptedData();
         this.isText = appendix.isText();
+        this.isCompressed = appendix.isCompressed();
         this.blockTimestamp = Nxt.getBlockchain().getLastBlockTimestamp();
         this.expiration = transaction.getTimestamp() + Constants.MIN_PRUNABLE_LIFETIME;
     }
@@ -130,13 +133,14 @@ public class PrunableMessage {
             this.encryptedData = null;
         }
         this.isText = rs.getBoolean("is_text");
+        this.isCompressed = rs.getBoolean("is_compressed");
         this.blockTimestamp = rs.getInt("timestamp");
         this.expiration = rs.getInt("expiration");
     }
 
     private void save(Connection con) throws SQLException {
         try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO prunable_message (id, sender_id, recipient_id, "
-                + "message, is_encrypted, is_text, timestamp, expiration, height) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
+                + "message, is_encrypted, is_text, is_compressed, timestamp, expiration, height) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
             int i = 0;
             pstmt.setLong(++i, this.id);
             pstmt.setLong(++i, this.senderId);
@@ -149,6 +153,7 @@ public class PrunableMessage {
                 pstmt.setBoolean(++i, true);
             }
             pstmt.setBoolean(++i, isText);
+            pstmt.setBoolean(++i, isCompressed);
             pstmt.setInt(++i, blockTimestamp);
             pstmt.setInt(++i, expiration);
             pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
@@ -166,6 +171,10 @@ public class PrunableMessage {
 
     public boolean isText() {
         return isText;
+    }
+
+    public boolean isCompressed() {
+        return isCompressed;
     }
 
     public long getId() {

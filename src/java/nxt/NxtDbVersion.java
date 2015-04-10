@@ -681,8 +681,8 @@ class NxtDbVersion extends DbVersion {
                 apply(null);
             case 286:
                 apply("CREATE TABLE IF NOT EXISTS prunable_message (db_id IDENTITY, id BIGINT NOT NULL, sender_id BIGINT NOT NULL, "
-                        + "recipient_id BIGINT, message VARBINARY NOT NULL, is_text BOOLEAN NOT NULL, is_encrypted BOOLEAN NOT NULL, "
-                        + "timestamp INT NOT NULL, expiration INT NOT NULL, height INT NOT NULL, "
+                        + "recipient_id BIGINT, message VARBINARY NOT NULL, is_text BOOLEAN NOT NULL, "
+                        + "is_encrypted BOOLEAN NOT NULL, timestamp INT NOT NULL, expiration INT NOT NULL, height INT NOT NULL, "
                         + "FOREIGN KEY (height) REFERENCES block (height) ON DELETE CASCADE)");
             case 287:
                 apply("CREATE UNIQUE INDEX IF NOT EXISTS prunable_message_id_idx ON prunable_message (id)");
@@ -708,6 +708,8 @@ class NxtDbVersion extends DbVersion {
                 BlockchainProcessorImpl.getInstance().scheduleScan(0, false);
                 apply(null);
             case 298:
+                apply("ALTER TABLE prunable_message ADD COLUMN IF NOT EXISTS is_compressed BOOLEAN NOT NULL DEFAULT TRUE");
+            case 299:
                 return;
             default:
                 throw new RuntimeException("Blockchain database inconsistent with code, probably trying to run older code on newer database");

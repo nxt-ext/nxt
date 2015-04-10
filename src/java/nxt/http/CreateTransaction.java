@@ -30,8 +30,8 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
     private static final String[] commonParameters = new String[]{"secretPhrase", "publicKey", "feeNQT",
             "deadline", "referencedTransactionFullHash", "broadcast",
             "message", "messageIsText", "messageIsPrunable",
-            "messageToEncrypt", "messageToEncryptIsText", "encryptedMessageData", "encryptedMessageNonce", "encryptedMessageIsPrunable",
-            "messageToEncryptToSelf", "messageToEncryptToSelfIsText", "encryptToSelfMessageData", "encryptToSelfMessageNonce",
+            "messageToEncrypt", "messageToEncryptIsText", "encryptedMessageData", "encryptedMessageNonce", "encryptedMessageIsPrunable", "compressMessageToEncrypt",
+            "messageToEncryptToSelf", "messageToEncryptToSelfIsText", "encryptToSelfMessageData", "encryptToSelfMessageNonce", "compressMessageToEncryptToSelf",
             "phased", "phasingFinishHeight", "phasingVotingModel", "phasingQuorum", "phasingMinBalance", "phasingHolding", "phasingMinBalanceModel",
             "phasingWhitelisted", "phasingWhitelisted", "phasingWhitelisted",
             "phasingLinkedFullHash", "phasingLinkedFullHash", "phasingLinkedFullHash",
@@ -118,9 +118,10 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
         if (attachment.getTransactionType().canHaveRecipient()) {
             EncryptedData encryptedData = ParameterParser.getEncryptedMessage(req, Account.getAccount(recipientId));
             boolean encryptedDataIsText = !"false".equalsIgnoreCase(req.getParameter("messageToEncryptIsText"));
+            boolean isCompressed = !"false".equalsIgnoreCase(req.getParameter("compressMessageToEncrypt"));
             if (encryptedData != null) {
                 if ("true".equalsIgnoreCase(req.getParameter("encryptedMessageIsPrunable"))) {
-                    prunableEncryptedMessage = new Appendix.PrunableEncryptedMessage(encryptedData, encryptedDataIsText);
+                    prunableEncryptedMessage = new Appendix.PrunableEncryptedMessage(encryptedData, encryptedDataIsText, isCompressed);
                 } else {
                     encryptedMessage = new Appendix.EncryptedMessage(encryptedData, encryptedDataIsText);
                 }
