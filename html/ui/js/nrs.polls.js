@@ -479,6 +479,85 @@ var NRS = (function(NRS, $, undefined) {
         return rows;
     }
 
+    function layoutPollChart(resultsdata, polldata) {
+    	$('#followed_polls_poll_chart').empty();
+
+    	var color = d3.scale.category20();
+    	var content = [];
+    	for(var i=0; i<resultsdata.results.length; i++) {
+    		var result = resultsdata.results[i];
+    		content.push({
+    			"label": resultsdata.options[i],
+    			"value": parseInt(result["result"]),
+    			"color": color(i)
+    		});
+    	}
+
+		var pie = new d3pie("followed_polls_poll_chart", {
+			"header": {
+				"title": {
+					"fontSize": 24,
+					"font": "open sans"
+				},
+				"subtitle": {
+					"color": "#999999",
+					"fontSize": 12,
+					"font": "open sans"
+				},
+				"titleSubtitlePadding": 0
+			},
+			"footer": {
+				"color": "#999999",
+				"fontSize": 10,
+				"font": "open sans",
+				"location": "bottom-left"
+			},
+			"size": {
+				"canvasHeight": 340,
+				"canvasWidth": 350
+			},
+			"data": {
+				"sortOrder": "value-desc",
+				"smallSegmentGrouping": {
+					"enabled": true
+				},
+				"content": content
+			},
+			"labels": {
+				"outer": {
+					"pieDistance": 18
+				},
+				"inner": {
+					"hideWhenLessThanPercentage": 3
+				},
+				"mainLabel": {
+					"fontSize": 11
+				},
+				"percentage": {
+					"color": "#ffffff",
+					"decimalPlaces": 0
+				},
+				"value": {
+					"color": "#adadad",
+					"fontSize": 11
+				},
+				"lines": {
+					"enabled": true
+				}
+			},
+			"effects": {
+				"load": {
+					"effect": "none"
+				},
+				"pullOutSegmentOnClick": {
+					"effect": "none",
+					"speed": 400,
+					"size": 8
+				}
+			}
+		});
+    }
+
     $("#my_polls_table, #voted_polls_table").on("click", "a[data-results]", function(e) {
 		e.preventDefault();
 		var transactionId = $(this).data("results");
@@ -1194,6 +1273,7 @@ var NRS = (function(NRS, $, undefined) {
 				"poll": pollId
 			}, function(response, input) {
                 var rows = layoutPollResults(response, polldata);
+                layoutPollChart(response, polldata);
                 $("#followed_polls_poll_results tbody").empty().append(rows);
 				NRS.dataLoadFinished($("#followed_polls_poll_results"), !refresh);
 			});
