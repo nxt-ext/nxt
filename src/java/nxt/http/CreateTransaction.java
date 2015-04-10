@@ -211,8 +211,6 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
                 response.put("transactionBytes", Convert.toHexString(transaction.getBytes()));
                 response.put("signatureHash", transactionJSON.get("signatureHash"));
             }
-            response.put("unsignedTransactionBytes", Convert.toHexString(transaction.getUnsignedBytes()));
-            response.put("transactionJSON", JSONData.unconfirmedTransaction(transaction));
             if (broadcast) {
                 Nxt.getTransactionProcessor().broadcast(transaction);
                 response.put("broadcasted", true);
