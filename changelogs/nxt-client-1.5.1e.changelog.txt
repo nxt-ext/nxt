@@ -1,7 +1,8 @@
-This is an experimental release which adds the Prunable Messages feature.
+This is an experimental release which adds the Prunable Messages feature. It
+will be enabled at the same block as the Voting and Phasing features.
 
-It is a required update for all testnet nodes, but is also possible to run on
-main net.
+This is a required update for all testnet nodes, but is also possible to run
+on main net.
 
 
 New features:
@@ -10,12 +11,12 @@ Prunable plain and encrypted messages.
 
 Plain and encrypted messages can now be created as prunable. For a prunable
 message, the message data itself is never a part of the transaction bytes.
-Instead, only a 32 byte sha256 hash of the message data is included in the
-bytes that are being signed, used to verify the signature, or to generate
-the full transaction hash or transaction id. This makes it possible to
-completely remove the message data at a later time, keeping only that 32 byte
-hash, and still be able to verify the transaction signature and have the full
-transaction hash and id unaffected by the pruning.
+Instead, only a 32 byte sha256 hash of it is included in the bytes that are
+being signed, used to verify the signature, or to generate the full
+transaction hash or id. This makes it possible to completely remove the
+message data at a later time, keeping only that 32 byte hash, and still be
+able to verify the transaction signature and have the transaction hash and
+id unaffected by the pruning.
 
 Prunable messages have a predefined lifetime, after which their prunable parts
 are deleted from the blockchain. This lifetime is measured starting from the
@@ -76,7 +77,7 @@ unreadable data will be returned.
 New APIs:
 
 GetPrunableMessage - returns the prunable message for a given transaction id,
-optionally decrypting it if encrypted and a secretPhrase is supplied.
+optionally decrypting it if encrypted and if a secretPhrase is supplied.
 
 GetPrunableMessages - returns all prunable messages for a given account id,
 optionally limiting to only those with another account as recipient or sender,
