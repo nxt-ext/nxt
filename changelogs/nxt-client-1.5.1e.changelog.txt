@@ -27,7 +27,15 @@ transaction will still be accepted.
 
 Currently the lifetime of all prunable data is set to 24 h for testnet, to
 allow easier testing of this feature. For main net, it is tentatively set
-to two weeks, but this is subject to change before the stable release.
+to two weeks, but this is subject to change before the stable release. Note
+that pruning is performed at the same time as derived table trimming, which
+by default is every 1000 blocks, so the actual removal of the prunable data
+from the database will happen with some delay after their expiration time.
+
+If a transaction containing prunable attachments is phased, the prunable
+parts are nevertheless saved and available immediately, not at finish height.
+If their expiration deadline comes before the phasing finish height, they
+will be pruned and not available at finish height.
 
 Fees for prunable message attachments are set at 0.1 NXT per 1024 bytes, with
 the first 1024 bytes free (the regular transaction fee depending on its type
