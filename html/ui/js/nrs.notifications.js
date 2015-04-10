@@ -204,6 +204,22 @@ var NRS = (function(NRS, $, undefined) {
 		});
 	}
 
+	NRS.setUnconfirmedNotifications = function() {
+		$('#unconfirmed_notification_counter').html(String(NRS.unconfirmedTransactions.length));
+		$('#unconfirmed_notification_menu').show();
+	}
+
+	NRS.setPhasingNotifications = function() {
+		NRS.sendRequest("getAccountPhasedTransactionCount", {
+			"account": NRS.account
+		}, function(response) {
+			if (response.numberOfPhasedTransactions != undefined) {
+				$('#phasing_notification_counter').html(String(response.numberOfPhasedTransactions));
+				$('#phasing_notification_menu').show();
+			}
+		});
+	}
+
 
 	return NRS;
 }(NRS || {}, jQuery));

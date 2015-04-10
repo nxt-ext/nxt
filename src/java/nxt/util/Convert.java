@@ -23,6 +23,8 @@ public final class Convert {
 
     public static final BigInteger two64 = new BigInteger("18446744073709551616");
     public static final long[] EMPTY_LONG = new long[0];
+    public static final byte[] EMPTY_BYTE = new byte[0];
+    public static final byte[][] EMPTY_BYTES = new byte[0][];
 
     private Convert() {} //never
 
@@ -99,13 +101,6 @@ public final class Convert {
         return bigInteger.longValue();
     }
 
-    public static long fullHashToId(String hash) {
-        if (hash == null) {
-            return 0;
-        }
-        return fullHashToId(Convert.parseHexString(hash));
-    }
-
     public static long fromEpochTime(int epochTime) {
         return epochTime * 1000L + Constants.EPOCH_BEGINNING - 500L;
     }
@@ -128,6 +123,10 @@ public final class Convert {
             }
         }
         return null;
+    }
+
+    public static byte[][] nullToEmpty(byte[][] bytes) {
+        return bytes == null ? EMPTY_BYTES : bytes;
     }
 
     public static long[] nullToEmpty(long[] array) {

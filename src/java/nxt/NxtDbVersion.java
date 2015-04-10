@@ -2,11 +2,9 @@ package nxt;
 
 import nxt.db.DbVersion;
 
-import java.sql.SQLException;
-
 class NxtDbVersion extends DbVersion {
 
-    protected void update(int nextUpdate) throws SQLException {
+    protected void update(int nextUpdate) {
         switch (nextUpdate) {
             case 1:
                 apply("CREATE TABLE IF NOT EXISTS block (db_id IDENTITY, id BIGINT NOT NULL, version INT NOT NULL, "
@@ -329,9 +327,9 @@ class NxtDbVersion extends DbVersion {
             case 131:
                 apply("CALL FTL_INIT()");
             case 132:
-                apply("CALL FTL_CREATE_INDEX('PUBLIC', 'GOODS', 'NAME,DESCRIPTION,TAGS')");
+                apply(null);
             case 133:
-                apply("CALL FTL_CREATE_INDEX('PUBLIC', 'ASSET', 'NAME,DESCRIPTION')");
+                apply(null);
             case 134:
                 apply("CREATE TABLE IF NOT EXISTS tag (db_id IDENTITY, tag VARCHAR NOT NULL, in_stock_count INT NOT NULL, "
                         + "total_count INT NOT NULL, height INT NOT NULL, latest BOOLEAN NOT NULL DEFAULT TRUE)");
@@ -456,7 +454,7 @@ class NxtDbVersion extends DbVersion {
             case 182:
                 apply(null);
             case 183:
-                apply("CALL FTL_CREATE_INDEX('PUBLIC', 'CURRENCY', 'CODE,NAME,DESCRIPTION')");
+                apply(null);
             case 184:
                 apply("CREATE TABLE IF NOT EXISTS scan (rescan BOOLEAN NOT NULL DEFAULT FALSE, height INT NOT NULL DEFAULT 0, "
                         + "validate BOOLEAN NOT NULL DEFAULT FALSE)");
@@ -491,7 +489,7 @@ class NxtDbVersion extends DbVersion {
             case 198:
                 apply(null);
             case 199:
-                apply("CALL FTL_REINDEX()");
+                apply(null);
             case 200:
                 apply("CREATE TABLE IF NOT EXISTS public_key (db_id IDENTITY, account_id BIGINT NOT NULL, "
                         + "public_key BINARY(32), height INT NOT NULL, FOREIGN KEY (height) REFERENCES block (height) ON DELETE CASCADE)");
@@ -576,17 +574,17 @@ class NxtDbVersion extends DbVersion {
                         + "min_balance_model TINYINT, holding_id BIGINT, height INT NOT NULL)");
             case 237:
                 apply("CREATE TABLE IF NOT EXISTS poll_result (db_id IDENTITY, poll_id BIGINT NOT NULL, "
-                        + "option VARCHAR NOT NULL, result BIGINT NOT NULL, height INT NOT NULL)");
+                        + "result BIGINT, weight BIGINT NOT NULL, height INT NOT NULL)");
             case 238:
                 apply("ALTER TABLE transaction ADD COLUMN IF NOT EXISTS phased BOOLEAN NOT NULL DEFAULT FALSE");
             case 239:
                 apply("CREATE TABLE IF NOT EXISTS phasing_poll (db_id IDENTITY, id BIGINT NOT NULL, "
-                        + "account_id BIGINT NOT NULL, voter_count TINYINT NOT NULL DEFAULT 0, "
-                        + "finish_height INT NOT NULL, voting_model TINYINT NOT NULL, quorum BIGINT NOT NULL, "
-                        + "min_balance BIGINT NOT NULL, holding_id BIGINT NOT NULL, min_balance_model TINYINT, "
-                        + "full_hash BINARY(32) NOT NULL, height INT NOT NULL)");
+                        + "account_id BIGINT NOT NULL, whitelist_size TINYINT NOT NULL DEFAULT 0, "
+                        + "finish_height INT NOT NULL, voting_model TINYINT NOT NULL, quorum BIGINT, "
+                        + "min_balance BIGINT, holding_id BIGINT, min_balance_model TINYINT, "
+                        + "linked_full_hashes ARRAY, hashed_secret VARBINARY, algorithm TINYINT, height INT NOT NULL)");
             case 240:
-                apply("CREATE TABLE IF NOT EXISTS phasing_vote (db_id IDENTITY, id BIGINT NOT NULL, "
+                apply("CREATE TABLE IF NOT EXISTS phasing_vote (db_id IDENTITY, vote_id BIGINT NOT NULL, "
                         + "transaction_id BIGINT NOT NULL, voter_id BIGINT NOT NULL, "
                         + "height INT NOT NULL)");
             case 241:
@@ -604,7 +602,7 @@ class NxtDbVersion extends DbVersion {
             case 246:
                 apply("CREATE INDEX IF NOT EXISTS poll_finish_height_idx ON poll(finish_height DESC)");
             case 247:
-                apply("CREATE UNIQUE INDEX IF NOT EXISTS poll_result_poll_id_idx ON poll_result(poll_id)");
+                apply("CREATE INDEX IF NOT EXISTS poll_result_poll_id_idx ON poll_result(poll_id)");
             case 248:
                 apply("CREATE INDEX IF NOT EXISTS poll_result_height_idx ON poll_result(height)");
             case 249:
@@ -616,69 +614,70 @@ class NxtDbVersion extends DbVersion {
             case 252:
                 apply("CREATE INDEX IF NOT EXISTS phasing_poll_holding_id_idx ON phasing_poll(holding_id, height DESC)");
             case 253:
-                apply(null);
-            case 254:
                 apply("CREATE UNIQUE INDEX IF NOT EXISTS phasing_vote_transaction_voter_idx ON phasing_vote(transaction_id, voter_id)");
-            case 255:
+            case 254:
                 apply("CREATE UNIQUE INDEX IF NOT EXISTS phasing_poll_voter_transaction_voter_idx ON phasing_poll_voter(transaction_id, voter_id)");
-            case 256:
+            case 255:
                 apply("CREATE TABLE IF NOT EXISTS phasing_poll_result (db_id IDENTITY, id BIGINT NOT NULL, "
                         + "result BIGINT NOT NULL, approved BOOLEAN NOT NULL, height INT NOT NULL)");
-            case 257:
+            case 256:
                 apply("CREATE UNIQUE INDEX IF NOT EXISTS phasing_poll_result_id_idx ON phasing_poll_result(id)");
-            case 258:
+            case 257:
                 apply("CREATE INDEX IF NOT EXISTS phasing_poll_result_height_idx ON phasing_poll_result(height)");
-            case 259:
-                apply("CALL FTL_CREATE_INDEX('PUBLIC', 'POLL', 'NAME,DESCRIPTION')");
-            case 260:
+            case 258:
                 apply("CREATE INDEX IF NOT EXISTS currency_founder_account_id_idx ON currency_founder (account_id, height DESC)");
-            case 261:
+            case 259:
                 apply("TRUNCATE TABLE trade");
-            case 262:
+            case 260:
                 apply("ALTER TABLE trade ADD COLUMN IF NOT EXISTS is_buy BOOLEAN NOT NULL");
-            case 263:
+            case 261:
                 apply("CREATE INDEX IF NOT EXISTS phasing_poll_voter_height_idx ON phasing_poll_voter(height)");
-            case 264:
+            case 262:
                 apply("TRUNCATE TABLE ask_order");
-            case 265:
+            case 263:
                 apply("ALTER TABLE ask_order ADD COLUMN IF NOT EXISTS transaction_height INT NOT NULL");
-            case 266:
+            case 264:
                 apply("TRUNCATE TABLE bid_order");
-            case 267:
+            case 265:
                 apply("ALTER TABLE bid_order ADD COLUMN IF NOT EXISTS transaction_height INT NOT NULL");
-            case 268:
+            case 266:
                 apply("TRUNCATE TABLE buy_offer");
-            case 269:
+            case 267:
                 apply("ALTER TABLE buy_offer ADD COLUMN IF NOT EXISTS transaction_height INT NOT NULL");
-            case 270:
+            case 268:
                 apply("TRUNCATE TABLE sell_offer");
-            case 271:
+            case 269:
                 apply("ALTER TABLE sell_offer ADD COLUMN IF NOT EXISTS transaction_height INT NOT NULL");
-            case 272:
-                apply(null);
-            case 273:
-                apply("ALTER TABLE poll_result DROP COLUMN IF EXISTS option");
-            case 274:
-                apply("ALTER TABLE phasing_poll ALTER COLUMN voter_count RENAME TO whitelist_size");
-            case 275:
-                apply("ALTER TABLE poll_result ALTER COLUMN result SET NULL");
-            case 276:
-                apply(null);
-            case 277:
-                apply("DROP INDEX IF EXISTS poll_result_poll_id_idx");
-            case 278:
-                apply("CREATE INDEX IF NOT EXISTS poll_result_poll_id_idx ON poll_result(poll_id)");
-            case 279:
+            case 270:
                 apply("CREATE INDEX IF NOT EXISTS phasing_vote_height_idx ON phasing_vote(height)");
+            case 271:
+                apply("DROP INDEX IF EXISTS transaction_full_hash_idx");
+            case 272:
+                apply("DROP INDEX IF EXISTS trade_ask_bid_idx");
+            case 273:
+                apply("CREATE INDEX IF NOT EXISTS trade_ask_idx ON trade (ask_order_id, height DESC)");
+            case 274:
+                apply("CREATE INDEX IF NOT EXISTS trade_bid_idx ON trade (bid_order_id, height DESC)");
+            case 275:
+                apply("CREATE TABLE IF NOT EXISTS account_info (db_id IDENTITY, account_id BIGINT NOT NULL, "
+                        + "name VARCHAR, description VARCHAR, height INT NOT NULL, latest BOOLEAN NOT NULL DEFAULT TRUE)");
+            case 276:
+                apply("CREATE UNIQUE INDEX IF NOT EXISTS account_info_id_height_idx ON account_info (account_id, height DESC)");
+            case 277:
+                apply("CREATE INDEX IF NOT EXISTS account_info_height_idx ON account_info (height)");
+            case 278:
+                apply("ALTER TABLE account DROP COLUMN IF EXISTS name");
+            case 279:
+                apply("ALTER TABLE account DROP COLUMN IF EXISTS description");
             case 280:
-                apply("TRUNCATE TABLE poll_result");
+                apply("ALTER TABLE account DROP COLUMN IF EXISTS message_pattern_regex");
             case 281:
-                apply("ALTER TABLE poll_result ADD COLUMN IF NOT EXISTS weight BIGINT NOT NULL");
+                apply("ALTER TABLE account DROP COLUMN IF EXISTS message_pattern_flags");
             case 282:
                 BlockchainProcessorImpl.getInstance().scheduleScan(0, false);
                 apply(null);
             case 283:
-                apply("DROP INDEX IF EXISTS transaction_full_hash_idx");
+                apply("TRUNCATE TABLE poll");
             case 284:
                 apply("CREATE TABLE IF NOT EXISTS shuffling (db_id INT IDENTITY, id BIGINT NOT NULL, currency_id BIGINT NULL, "
                         + "issuer_id BIGINT NOT NULL, amount BIGINT NOT NULL, participant_count BIGINT NOT NULL, cancellation_height INT NOT NULL, "
@@ -698,6 +697,13 @@ class NxtDbVersion extends DbVersion {
             case 289:
                 apply("CREATE UNIQUE INDEX IF NOT EXISTS shuffling_participant_shuffling_id_account_id_idx ON shuffling_participant (shuffling_id, account_id, height DESC)");
             case 290:
+                apply("ALTER TABLE poll ADD COLUMN IF NOT EXISTS timestamp INT NOT NULL");
+            case 291:
+                if (Constants.isTestnet) {
+                    BlockchainProcessorImpl.getInstance().scheduleScan(0, false);
+                }
+                apply(null);
+            case 292:
                 return;
             default:
                 throw new RuntimeException("Blockchain database inconsistent with code, probably trying to run older code on newer database");

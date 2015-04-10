@@ -45,7 +45,7 @@ final class BlockImpl implements Block {
             throws NxtException.NotValidException {
         this(version, timestamp, previousBlockId, totalAmountNQT, totalFeeNQT, payloadLength, payloadHash,
                 generatorPublicKey, generationSignature, null, previousBlockHash, transactions);
-        blockSignature = Crypto.sign(getBytes(), secretPhrase);
+        blockSignature = Crypto.sign(bytes(), secretPhrase);
         bytes = null;
     }
 
@@ -190,7 +190,7 @@ final class BlockImpl implements Block {
             if (blockSignature == null) {
                 throw new IllegalStateException("Block is not signed yet");
             }
-            byte[] hash = Crypto.sha256().digest(getBytes());
+            byte[] hash = Crypto.sha256().digest(bytes());
             BigInteger bigInteger = new BigInteger(1, new byte[] {hash[7], hash[6], hash[5], hash[4], hash[3], hash[2], hash[1], hash[0]});
             id = bigInteger.longValue();
             stringId = bigInteger.toString();
@@ -280,7 +280,12 @@ final class BlockImpl implements Block {
         }
     }
 
-    byte[] getBytes() {
+    @Override
+    public byte[] getBytes() {
+        return Arrays.copyOf(bytes(), bytes.length);
+    }
+
+    byte[] bytes() {
         if (bytes == null) {
             ByteBuffer buffer = ByteBuffer.allocate(4 + 4 + 8 + 4 + (version < 3 ? (4 + 4) : (8 + 8)) + 4 + 32 + 32 + (32 + 32) + (blockSignature != null ? 64 : 0));
             buffer.order(ByteOrder.LITTLE_ENDIAN);
@@ -319,7 +324,7 @@ final class BlockImpl implements Block {
 
     private boolean checkSignature() {
         if (! hasValidSignature) {
-            byte[] data = Arrays.copyOf(getBytes(), bytes.length - 64);
+            byte[] data = Arrays.copyOf(bytes(), bytes.length - 64);
             hasValidSignature = blockSignature != null && Crypto.verify(blockSignature, data, getGeneratorPublicKey(), version >= 3);
         }
         return hasValidSignature;
@@ -377,7 +382,7 @@ final class BlockImpl implements Block {
         Arrays.sort(badBlocks);
     }
 
-    void apply() throws BlockchainProcessor.TransactionNotAcceptedException {
+    void apply() {
         Account generatorAccount = Account.addOrGetAccount(getGeneratorId());
         generatorAccount.apply(getGeneratorPublicKey());
         generatorAccount.addToBalanceAndUnconfirmedBalanceNQT(totalFeeNQT);

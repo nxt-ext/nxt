@@ -19,7 +19,7 @@ final class GetInfo extends PeerServlet.PeerRequestHandler {
             String announcedAddress = (String) request.get("announcedAddress");
             if (announcedAddress != null && (announcedAddress = announcedAddress.trim()).length() > 0) {
                 announcedAddress = Peers.addressWithPort(announcedAddress);
-                if (peerImpl.getAnnouncedAddress() != null && !announcedAddress.equals(peerImpl.getAnnouncedAddress())) {
+                if (peerImpl.getAnnouncedAddress() != null && !peerImpl.getAnnouncedAddress().equals(announcedAddress)) {
                     // force verification of changed announced address
                     Logger.logDebugMessage("Peer " + peer.getPeerAddress() + " changed announced address from " + peer.getAnnouncedAddress() + " to " + announcedAddress);
                     peerImpl.setState(Peer.State.NON_CONNECTED);

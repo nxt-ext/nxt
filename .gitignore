@@ -1,4 +1,6 @@
 /.idea/
+/.idea/dictionaries
+/html/ui/.idea
 /nxt.iml
 /nxt_db
 /webapps/
@@ -20,4 +22,4 @@
 /test/classes/
 *.csv
 deploy.sh
-
+/nxt.pro

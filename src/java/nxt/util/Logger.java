@@ -15,12 +15,12 @@ import java.util.logging.LogManager;
 public final class Logger {
 
     /** Log event types */
-    public static enum Event {
+    public enum Event {
         MESSAGE, EXCEPTION
     }
 
     /** Log levels */
-    public static enum Level {
+    public enum Level {
         DEBUG, INFO, WARN, ERROR
     }
 

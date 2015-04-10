@@ -72,7 +72,7 @@ final class JSONData {
             json.put("unconfirmedBalanceNQT", String.valueOf(account.getUnconfirmedBalanceNQT()));
             json.put("effectiveBalanceNXT", account.getEffectiveBalanceNXT());
             json.put("forgedBalanceNQT", String.valueOf(account.getForgedBalanceNQT()));
-            json.put("guaranteedBalanceNQT", String.valueOf(account.getGuaranteedBalanceNQT(1440)));
+            json.put("guaranteedBalanceNQT", String.valueOf(account.getGuaranteedBalanceNQT()));
         }
         return json;
     }
@@ -85,7 +85,7 @@ final class JSONData {
         json.put("nextLesseeRS", Convert.rsAccount(account.getNextLesseeId()));
         json.put("nextHeightFrom", String.valueOf(account.getNextLeasingHeightFrom()));
         json.put("nextHeightTo", String.valueOf(account.getNextLeasingHeightTo()));
-        json.put("effectiveBalanceNXT", String.valueOf(account.getGuaranteedBalanceNQT(1440) / Constants.ONE_NXT));
+        json.put("effectiveBalanceNXT", String.valueOf(account.getGuaranteedBalanceNQT() / Constants.ONE_NXT));
         return json;
     }
 
@@ -362,14 +362,21 @@ final class JSONData {
         json.put("maxNumberOfOptions", poll.getMaxNumberOfOptions());
         json.put("minRangeValue", poll.getMinRangeValue());
         json.put("maxRangeValue", poll.getMaxRangeValue());
-        putVoteWeighting(json, poll.getDefaultVoteWeighting());
+        putVoteWeighting(json, poll.getVoteWeighting());
         json.put("finished", poll.isFinished());
+        json.put("timestamp", poll.getTimestamp());
         return json;
     }
 
-    static JSONObject pollResults(Poll poll, List<Poll.OptionResult> results) {
+    static JSONObject pollResults(Poll poll, List<Poll.OptionResult> results, VoteWeighting voteWeighting) {
         JSONObject json = new JSONObject();
         json.put("poll", Long.toUnsignedString(poll.getId()));
+        if (voteWeighting.getMinBalanceModel() == VoteWeighting.MinBalanceModel.ASSET) {
+            json.put("decimals", Asset.getAsset(voteWeighting.getHoldingId()).getDecimals());
+        } else if(voteWeighting.getMinBalanceModel() == VoteWeighting.MinBalanceModel.CURRENCY) {
+            json.put("decimals", Currency.getCurrency(voteWeighting.getHoldingId()).getDecimals());
+        }
+        putVoteWeighting(json, voteWeighting);
         json.put("finished", poll.isFinished());
         JSONArray options = new JSONArray();
         Collections.addAll(options, poll.getOptions());
@@ -383,7 +390,7 @@ final class JSONData {
                 optionJSON.put("weight", String.valueOf(option.getWeight()));
             } else {
                 optionJSON.put("result", "");
-                optionJSON.put("weight", 0);
+                optionJSON.put("weight", "0");
             }
             resultsJson.add(optionJSON);
         }
@@ -396,8 +403,8 @@ final class JSONData {
         putAccount(json, "voter", vote.getVoterId());
         json.put("transaction", Long.toUnsignedString(vote.getId()));
         JSONArray votesJson = new JSONArray();
-        for (byte v : vote.getVote()) {
-            if (v == Constants.VOTING_NO_VOTE_VALUE) {
+        for (byte v : vote.getVoteBytes()) {
+            if (v == Constants.NO_VOTE_VALUE) {
                 votesJson.add("");
             } else {
                 votesJson.add(Byte.toString(v));
@@ -415,7 +422,24 @@ final class JSONData {
         json.put("finishHeight", poll.getFinishHeight());
         json.put("quorum", String.valueOf(poll.getQuorum()));
         putAccount(json, "account", poll.getAccountId());
-        putVoteWeighting(json, poll.getDefaultVoteWeighting());
+        JSONArray whitelistJson = new JSONArray();
+        for (long accountId : poll.getWhitelist()) {
+            JSONObject whitelisted = new JSONObject();
+            putAccount(whitelisted, "whitelisted", accountId);
+            whitelistJson.add(whitelisted);
+        }
+        json.put("whitelist", whitelistJson);
+        if (poll.getLinkedFullHashes().length > 0) {
+            JSONArray linkedFullHashesJSON = new JSONArray();
+            for (byte[] hash : poll.getLinkedFullHashes()) {
+                linkedFullHashesJSON.add(Convert.toHexString(hash));
+            }
+            json.put("linkedFullHashes", linkedFullHashesJSON);
+        }
+        if (poll.getHashedSecret() != null) {
+            json.put("hashedSecret", Convert.toHexString(poll.getHashedSecret()));
+        }
+        putVoteWeighting(json, poll.getVoteWeighting());
         if (poll.isFinished()) {
             PhasingPoll.PhasingPollResult phasingPollResult = PhasingPoll.getResult(poll.getId());
             if (phasingPollResult != null) {
@@ -423,7 +447,7 @@ final class JSONData {
                 json.put("result", String.valueOf(phasingPollResult.getResult()));
             }
         } else if (countVotes) {
-            json.put("result", String.valueOf(PhasingVote.countVotes(poll)));
+            json.put("result", String.valueOf(poll.getResult()));
         }
         return json;
     }
@@ -439,7 +463,7 @@ final class JSONData {
     static JSONObject phasingPollVote(PhasingVote vote) {
         JSONObject json = new JSONObject();
         JSONData.putAccount(json, "voter", vote.getVoterId());
-        json.put("transaction", Long.toUnsignedString(vote.getId()));
+        json.put("transaction", Long.toUnsignedString(vote.getVoteId()));
         return json;
     }
 
@@ -447,8 +471,7 @@ final class JSONData {
         json.put("votingModel", voteWeighting.getVotingModel().getCode());
         json.put("minBalance", String.valueOf(voteWeighting.getMinBalance()));
         json.put("minBalanceModel", voteWeighting.getMinBalanceModel().getCode());
-        if (voteWeighting.getVotingModel() == VoteWeighting.VotingModel.ASSET
-                || voteWeighting.getVotingModel() == VoteWeighting.VotingModel.CURRENCY) {
+        if (voteWeighting.getHoldingId() != 0) {
             json.put("holding", Long.toUnsignedString(voteWeighting.getHoldingId()));
         }
     }

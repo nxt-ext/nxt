@@ -163,18 +163,30 @@ var NRS = (function(NRS, $, undefined) {
 		}
 	}
 	
-	$("input:radio[name=loginType]").change(function(e) {
+	NRS.switchAccount = function(account) {
+		NRS.setDecryptionPassword("");
+		NRS.setPassword("");
+		var url = window.location.pathname;    
+		url += '?account='+account;
+		window.location.href = url;
+	}
+	
+	$("#loginButtons").on('click',function(e) {
 		e.preventDefault();
-		if (this.value == 'account') {
+		if ($(this).data( "login-type" ) == "password") {
             NRS.listAccounts();
 			$('#login_password').parent().hide();
 			$('#remember_password_container').hide();
+			$(this).html('<input type="hidden" name="loginType" id="accountLogin" value="account" autocomplete="off" /><i class="fa fa-male"></i>');
+			$(this).data( "login-type","account");
         }
         else {
             $('#login_account_container').hide();
 			$('#login_account_container_other').hide();
 			$('#login_password').parent().show();
 			$('#remember_password_container').show();
+			$(this).html('<input type="hidden" name="loginType" id="accountLogin" value="passwordLogin" autocomplete="off" /><i class="fa fa-key"></i>');
+			$(this).data( "login-type","password");
         }
 	});
 	
@@ -231,10 +243,16 @@ var NRS = (function(NRS, $, undefined) {
 				if (!response.errorCode) {
 					NRS.account = String(response.account).escapeHTML();
 					NRS.accountRS = String(response.accountRS).escapeHTML();
-					if (passLogin) NRS.publicKey = NRS.getPublicKey(converters.stringToHexString(password));
-					else NRS.publicKey = String(response.publicKey).escapeHTML();
+					if (passLogin) {
+                        NRS.publicKey = NRS.getPublicKey(converters.stringToHexString(password));
+                    } else {
+                        NRS.publicKey = String(response.publicKey).escapeHTML();
+                    }
 				}
-
+				if (!passLogin && response.errorCode == 5) {
+					NRS.account = String(response.account).escapeHTML();
+					NRS.accountRS = String(response.accountRS).escapeHTML();
+				}
 				if (!NRS.account) {
 					$.growl($.t("error_find_account_id"), {
 						"type": "danger",
@@ -378,6 +396,25 @@ var NRS = (function(NRS, $, undefined) {
 					}
 
 					$("[data-i18n]").i18n();
+					
+					/* Add accounts to dropdown for quick switching */
+					$("#account_id_dropdown .dropdown-menu .switchAccount").remove();
+					if (NRS.getCookie("savedNxtAccounts") && NRS.getCookie("savedNxtAccounts")!=""){
+						$("#account_id_dropdown .dropdown-menu").append("<li class='switchAccount' style='padding-left:2px;'><b>Switch Account to</b></li>")
+						var accounts = NRS.getCookie("savedNxtAccounts").split(";");
+						$.each(accounts, function(index, account) {
+							if (account != ''){
+								$('#account_id_dropdown .dropdown-menu')
+								.append($("<li class='switchAccount'></li>")
+									.append($("<a></a>")
+										.attr("href","#")
+										.attr("style","font-size: 85%;")
+										.attr("onClick","NRS.switchAccount('"+account+"')")
+										.text(account))
+								);
+							}
+						});
+					}
 
 					NRS.getInitialTransactions();
 					NRS.updateApprovalRequests();
@@ -387,8 +424,10 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	$("#logout_button_container").on("show.bs.dropdown", function(e) {
+		
 		if (!NRS.isForging) {
-			e.preventDefault();
+			//e.preventDefault();
+			$(this).find("[data-i18n='logout_stop_forging']").hide();
 		}
 	});
 
@@ -482,12 +521,12 @@ var NRS = (function(NRS, $, undefined) {
 		$(document.documentElement).scrollTop(0);
 	}
 
-	$("#logout_button").click(function(e) {
+	/*$("#logout_button").click(function(e) {
 		if (!NRS.isForging) {
 			e.preventDefault();
 			NRS.logout();
 		}
-	});
+	});*/
 
 	NRS.logout = function(stopForging) {
 		if (stopForging && NRS.isForging) {
@@ -496,7 +535,8 @@ var NRS = (function(NRS, $, undefined) {
 		} else {
 			NRS.setDecryptionPassword("");
 			NRS.setPassword("");
-			window.location.reload();
+			//window.location.reload();
+			window.location.href = window.location.pathname;    
 		}
 	}
 

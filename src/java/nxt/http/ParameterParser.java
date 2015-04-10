@@ -25,7 +25,6 @@ import javax.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
 import java.util.List;
 
-import static nxt.http.JSONResponses.HEIGHT_NOT_AVAILABLE;
 import static nxt.http.JSONResponses.INCORRECT_ACCOUNT;
 import static nxt.http.JSONResponses.INCORRECT_ALIAS;
 import static nxt.http.JSONResponses.INCORRECT_DGS_ENCRYPTED_GOODS;
@@ -325,6 +324,9 @@ final class ParameterParser {
         }
         String secretPhrase = getSecretPhrase(req);
         Account senderAccount = Account.getAccount(Crypto.getPublicKey(secretPhrase));
+        if (senderAccount == null) {
+            throw new ParameterException(UNKNOWN_ACCOUNT);
+        }
         boolean isText = !"false".equalsIgnoreCase(req.getParameter("messageToEncryptToSelfIsText"));
         try {
             byte[] plainMessageBytes = isText ? Convert.toBytes(plainMessage) : Convert.parseHexString(plainMessage);
@@ -395,7 +397,7 @@ final class ParameterParser {
         }
         Account account = Account.getAccount(accountId);
         if (account == null) {
-            throw new ParameterException(UNKNOWN_ACCOUNT);
+            throw new ParameterException(JSONResponses.unknownAccount(accountId));
         }
         return account;
     }
@@ -446,7 +448,7 @@ final class ParameterParser {
             if (lastIndex < 0) {
                 lastIndex = Integer.MAX_VALUE;
             }
-        } catch (NumberFormatException e) {}
+        } catch (NumberFormatException ignored) {}
         try {
             API.verifyPassword(req);
             return lastIndex;
@@ -467,9 +469,6 @@ final class ParameterParser {
                 int height = Integer.parseInt(heightValue);
                 if (height < 0 || height > Nxt.getBlockchain().getHeight()) {
                     throw new ParameterException(INCORRECT_HEIGHT);
-                }
-                if (height < Nxt.getBlockchainProcessor().getMinRollbackHeight()) {
-                    throw new ParameterException(HEIGHT_NOT_AVAILABLE);
                 }
                 return height;
             } catch (NumberFormatException e) {

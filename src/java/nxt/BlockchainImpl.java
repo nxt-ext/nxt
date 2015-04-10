@@ -2,6 +2,7 @@ package nxt;
 
 import nxt.db.DbIterator;
 import nxt.db.DbUtils;
+import nxt.util.Convert;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -149,9 +150,6 @@ final class BlockchainImpl implements Blockchain {
 
     @Override
     public List<Long> getBlockIdsAfter(long blockId, int limit) {
-        if (limit > 1440) {
-            throw new IllegalArgumentException("Can't get more than 1440 blocks at a time");
-        }
         try (Connection con = Db.db.getConnection();
              PreparedStatement pstmt = con.prepareStatement("SELECT id FROM block WHERE db_id > (SELECT db_id FROM block WHERE id = ?) ORDER BY db_id ASC LIMIT ?")) {
             List<Long> result = new ArrayList<>();
@@ -171,9 +169,6 @@ final class BlockchainImpl implements Blockchain {
 
     @Override
     public List<BlockImpl> getBlocksAfter(long blockId, int limit) {
-        if (limit > 1440) {
-            throw new IllegalArgumentException("Can't get more than 1440 blocks at a time");
-        }
         try (Connection con = Db.db.getConnection();
              PreparedStatement pstmt = con.prepareStatement("SELECT * FROM block WHERE db_id > (SELECT db_id FROM block WHERE id = ?) ORDER BY db_id ASC LIMIT ?")) {
             List<BlockImpl> result = new ArrayList<>();
@@ -222,7 +217,7 @@ final class BlockchainImpl implements Blockchain {
 
     @Override
     public TransactionImpl getTransactionByFullHash(String fullHash) {
-        return TransactionDb.findTransactionByFullHash(fullHash);
+        return TransactionDb.findTransactionByFullHash(Convert.parseHexString(fullHash));
     }
 
     @Override
@@ -232,7 +227,7 @@ final class BlockchainImpl implements Blockchain {
 
     @Override
     public boolean hasTransactionByFullHash(String fullHash) {
-        return TransactionDb.hasTransactionByFullHash(fullHash);
+        return TransactionDb.hasTransactionByFullHash(Convert.parseHexString(fullHash));
     }
 
     @Override
@@ -358,7 +353,7 @@ final class BlockchainImpl implements Blockchain {
 
     @Override
     public DbIterator<TransactionImpl> getTransactions(Connection con, PreparedStatement pstmt) {
-        return new DbIterator<>(con, pstmt, TransactionDb::loadTransaction);
+        return new DbIterator<TransactionImpl>(con, pstmt, TransactionDb::loadTransaction);
     }
 
 }

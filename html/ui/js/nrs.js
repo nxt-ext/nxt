@@ -113,16 +113,20 @@ var NRS = (function(NRS, $, undefined) {
 				NRS.isTestNet = true;
 				var testnetWarningDiv = $("#testnet_warning");
 				var warningText = testnetWarningDiv.text() + " The testnet peer port is " + peerPort + (isOffline ? ", the peer is working offline." : ".");
+                NRS.logConsole(warningText);
 				testnetWarningDiv.text(warningText);
 				$(".testnet_only, #testnet_login, #testnet_warning").show();
 			}
 			NRS.loadServerConstants();
+			NRS.loadTransactionTypeConstants();
 			NRS.initializePlugins();
+            NRS.printEnvInfo();
 		});
 		
 		if (!NRS.server) {
 			var hostName = window.location.hostname.toLowerCase();
 			NRS.isLocalHost = hostName == "localhost" || hostName == "127.0.0.1" || NRS.isPrivateIP(hostName);
+            NRS.logProperty("NRS.isLocalHost");
 		}
 
 		if (!NRS.isLocalHost) {
@@ -223,6 +227,10 @@ var NRS = (function(NRS, $, undefined) {
 		$("#dgs_search_account_top, #dgs_search_account_center").mask("NXT-****-****-****-*****", {
 			"unmask": false
 		});
+		
+		if (NRS.getUrlParameter("account")){
+			NRS.login(false,NRS.getUrlParameter("account"));
+		}
 
 		/*
 		$("#asset_exchange_search input[name=q]").addClear({
@@ -394,28 +402,35 @@ var NRS = (function(NRS, $, undefined) {
 		if (NRS.pages[page]) {
 			NRS.pageLoading();
 			NRS.resetNotificationState(page);
-
-			if (data && data.callback) {
-				NRS.pages[page](data.callback);
-			} else if (data) {
-				NRS.pages[page](data);
+			if (data) {
+				if (data.callback) {
+					var callback = data.callback;	
+				} else {
+					var callback = data;
+				}
 			} else {
-				NRS.pages[page]();
+				var callback = undefined;
 			}
+			if (data && data.subpage) {
+				var subpage = data.subpage;
+			} else {
+				var subpage = undefined;
+			}
+			NRS.pages[page](callback, subpage);
 		}
 	});
 
 	$("button.goto-page, a.goto-page").click(function(event) {
 		event.preventDefault();
-		NRS.goToPage($(this).data("page"));
+		NRS.goToPage($(this).data("page"), undefined, $(this).data("subpage"));
 	});
 
-	NRS.loadPage = function(page, callback) {
+	NRS.loadPage = function(page, callback, subpage) {
 		NRS.pageLoading();
-		NRS.pages[page](callback);
+		NRS.pages[page](callback, subpage);
 	};
 
-	NRS.goToPage = function(page, callback) {
+	NRS.goToPage = function(page, callback, subpage) {
 		var $link = $("ul.sidebar-menu a[data-page=" + page + "]");
 
 		if ($link.length > 1) {
@@ -427,13 +442,10 @@ var NRS = (function(NRS, $, undefined) {
 		}
 
 		if ($link.length == 1) {
-			if (callback) {
-				$link.trigger("click", [{
-					"callback": callback
-				}]);
-			} else {
-				$link.trigger("click");
-			}
+			$link.trigger("click", [{
+				"callback": callback,
+				"subpage": subpage
+			}]);
 			NRS.resetNotificationState(page);
 		} else {
 			NRS.currentPage = page;
@@ -447,7 +459,7 @@ var NRS = (function(NRS, $, undefined) {
 			if (NRS.pages[page]) {
 				NRS.pageLoading();
 				NRS.resetNotificationState(page);
-				NRS.pages[page](callback);
+				NRS.pages[page](callback, subpage);
 			}
 		}
 	};
@@ -572,9 +584,12 @@ var NRS = (function(NRS, $, undefined) {
 		});
 
 		NRS.databaseSupport = true;
+        NRS.logConsole("Browser database initialized");
 		NRS.loadContacts();
 		NRS.getSettings();
 		NRS.updateNotifications();
+		NRS.setUnconfirmedNotifications();
+		NRS.setPhasingNotifications();
 	}
 
 	NRS.initUserDBWithLegacyData = function() {
@@ -594,6 +609,8 @@ var NRS = (function(NRS, $, undefined) {
 		NRS.databaseSupport = false;
 		NRS.getSettings();
 		NRS.updateNotifications();
+		NRS.setUnconfirmedNotifications();
+		NRS.setPhasingNotifications();
 	}
 
 	NRS.createLegacyDatabase = function() {
@@ -647,6 +664,7 @@ var NRS = (function(NRS, $, undefined) {
 					}
 				});
 			} catch (err) {
+                NRS.logConsole("error creating database " + err.message);
 			}		
 		}
 	};
@@ -769,10 +787,16 @@ var NRS = (function(NRS, $, undefined) {
 					} else if (NRS.state && NRS.state.isScanning) {
 						$("#dashboard_message").addClass("alert-danger").removeClass("alert-success").html($.t("status_blockchain_rescanning")).show();
 					} else {
-						$("#dashboard_message").addClass("alert-success").removeClass("alert-danger").html($.t("status_new_account", {
-							"account_id": String(NRS.accountRS).escapeHTML(),
-							"public_key": String(NRS.publicKey).escapeHTML()
-						})).show();
+                        if (NRS.publicKey == "") {
+                            $("#dashboard_message").addClass("alert-success").removeClass("alert-danger").html($.t("status_new_account_no_pk", {
+                                "account_id": String(NRS.accountRS).escapeHTML(),
+                            })).show();
+                        } else {
+                            $("#dashboard_message").addClass("alert-success").removeClass("alert-danger").html($.t("status_new_account", {
+                                "account_id": String(NRS.accountRS).escapeHTML(),
+                                "public_key": String(NRS.publicKey).escapeHTML()
+                            })).show();
+                        }
 					}
 				} else {
 					$("#dashboard_message").addClass("alert-danger").removeClass("alert-success").html(NRS.accountInfo.errorDescription ? NRS.accountInfo.errorDescription.escapeHTML() : $.t("error_unknown")).show();
@@ -1284,6 +1308,22 @@ var NRS = (function(NRS, $, undefined) {
 			}
 		}
 	};
+
+    NRS.printEnvInfo = function() {
+        NRS.logProperty("navigator.userAgent");
+        NRS.logProperty("navigator.platform");
+        NRS.logProperty("navigator.appVersion");
+        NRS.logProperty("navigator.appName");
+        NRS.logProperty("navigator.appCodeName");
+        NRS.logProperty("navigator.hardwareConcurrency");
+        NRS.logProperty("navigator.maxTouchPoints");
+        NRS.logProperty("navigator.languages");
+        NRS.logProperty("navigator.language");
+        NRS.logProperty("navigator.cookieEnabled");
+        NRS.logProperty("navigator.onLine");
+        NRS.logProperty("NRS.isTestNet");
+        NRS.logProperty("NRS.needsAdminPassword");
+    };
 
 	$("#id_search").on("submit", function(e) {
 		e.preventDefault();

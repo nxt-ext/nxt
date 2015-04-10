@@ -21,7 +21,7 @@ public final class Asset {
 
     };
 
-    private static final EntityDbTable<Asset> assetTable = new EntityDbTable<Asset>("asset", assetDbKeyFactory) {
+    private static final EntityDbTable<Asset> assetTable = new EntityDbTable<Asset>("asset", assetDbKeyFactory, "name,description") {
 
         @Override
         protected Asset load(Connection con, ResultSet rs) throws SQLException {
@@ -52,7 +52,7 @@ public final class Asset {
     }
 
     public static DbIterator<Asset> searchAssets(String query, int from, int to) {
-        return assetTable.search(query, DbClause.EMPTY_CLAUSE, from, to, " ORDER BY ft.score DESC, asset.height DESC ");
+        return assetTable.search(query, DbClause.EMPTY_CLAUSE, from, to, " ORDER BY ft.score DESC, asset.height DESC, asset.db_id DESC ");
     }
 
     static void addAsset(Transaction transaction, Attachment.ColoredCoinsAssetIssuance attachment) {
@@ -94,12 +94,12 @@ public final class Asset {
         try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO asset (id, account_id, name, "
                 + "description, quantity, decimals, height) VALUES (?, ?, ?, ?, ?, ?, ?)")) {
             int i = 0;
-            pstmt.setLong(++i, this.getId());
-            pstmt.setLong(++i, this.getAccountId());
-            pstmt.setString(++i, this.getName());
-            pstmt.setString(++i, this.getDescription());
-            pstmt.setLong(++i, this.getQuantityQNT());
-            pstmt.setByte(++i, this.getDecimals());
+            pstmt.setLong(++i, this.assetId);
+            pstmt.setLong(++i, this.accountId);
+            pstmt.setString(++i, this.name);
+            pstmt.setString(++i, this.description);
+            pstmt.setLong(++i, this.quantityQNT);
+            pstmt.setByte(++i, this.decimals);
             pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
             pstmt.executeUpdate();
         }
@@ -134,9 +134,6 @@ public final class Asset {
     }
 
     public DbIterator<Account.AccountAsset> getAccounts(int height, int from, int to) {
-        if (height < 0) {
-            return getAccounts(from, to);
-        }
         return Account.getAssetAccounts(this.assetId, height, from, to);
     }
 

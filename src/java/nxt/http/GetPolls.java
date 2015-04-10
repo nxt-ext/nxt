@@ -11,18 +11,18 @@ import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
 
-//todo: filter to get only finished polls?
 public class GetPolls extends APIServlet.APIRequestHandler {
 
     static final GetPolls instance = new GetPolls();
 
     private GetPolls() {
-        super(new APITag[]{APITag.ACCOUNTS, APITag.VS}, "account", "firstIndex", "lastIndex");
+        super(new APITag[]{APITag.ACCOUNTS, APITag.VS}, "account", "firstIndex", "lastIndex", "includeFinished");
     }
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
         long accountId = ParameterParser.getAccountId(req, "account", false);
+        boolean includeFinished = "true".equalsIgnoreCase(req.getParameter("includeFinished"));
         int firstIndex = ParameterParser.getFirstIndex(req);
         int lastIndex = ParameterParser.getLastIndex(req);
 
@@ -30,9 +30,13 @@ public class GetPolls extends APIServlet.APIRequestHandler {
         DbIterator<Poll> polls = null;
         try {
             if (accountId == 0) {
-                polls = Poll.getAllPolls(firstIndex, lastIndex);
+                if (includeFinished) {
+                    polls = Poll.getAllPolls(firstIndex, lastIndex);
+                } else {
+                    polls = Poll.getActivePolls(firstIndex, lastIndex);
+                }
             } else {
-                polls = Poll.getPollsByAccount(accountId, firstIndex, lastIndex);
+                polls = Poll.getPollsByAccount(accountId, includeFinished, firstIndex, lastIndex);
             }
 
             while (polls.hasNext()) {

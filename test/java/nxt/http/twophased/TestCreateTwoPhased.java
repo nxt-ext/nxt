@@ -144,8 +144,8 @@ public class TestCreateTwoPhased extends BlockchainTest {
         APICall apiCall = new TwoPhasedMoneyTransferBuilder().build();
         JSONObject unconfirmed = apiCall.invoke();
 
-        JSONObject response = TestGetAccountPendingTransactions.pendingTransactionsApiCall().invoke();
-        Logger.logMessage("getAccountPendingTransactionsResponse:" + response.toJSONString());
+        JSONObject response = TestGetAccountPhasedTransactions.phasedTransactionsApiCall().invoke();
+        Logger.logMessage("getAccountPhasedTransactionsResponse:" + response.toJSONString());
         JSONArray transactionsJson = (JSONArray) response.get("transactions");
 
         for(String idString:transactionIds){

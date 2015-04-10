@@ -11,7 +11,7 @@ public abstract class DbClause {
 
         private final String operator;
 
-        private Op(String operator) {
+        Op(String operator) {
             this.operator = operator;
         }
 
@@ -67,11 +67,28 @@ public abstract class DbClause {
             this.value = value;
         }
 
+        @Override
         protected int set(PreparedStatement pstmt, int index) throws SQLException {
             pstmt.setString(index, value);
             return index + 1;
         }
 
+    }
+
+    public static final class LikeClause extends DbClause {
+
+        private final String prefix;
+
+        public LikeClause(String columnName, String prefix) {
+            super(" " + columnName + " LIKE ? ");
+            this.prefix = prefix.replace("%", "\\%").replace("_", "\\_") + '%';
+        }
+
+        @Override
+        protected int set(PreparedStatement pstmt, int index) throws SQLException {
+            pstmt.setString(index, prefix);
+            return index + 1;
+        }
     }
 
     public static final class LongClause extends DbClause {
@@ -88,6 +105,7 @@ public abstract class DbClause {
             this.value = value;
         }
 
+        @Override
         protected int set(PreparedStatement pstmt, int index) throws SQLException {
             pstmt.setLong(index, value);
             return index + 1;
@@ -108,6 +126,7 @@ public abstract class DbClause {
             this.value = value;
         }
 
+        @Override
         protected int set(PreparedStatement pstmt, int index) throws SQLException {
             pstmt.setInt(index, value);
             return index + 1;

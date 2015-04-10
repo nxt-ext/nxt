@@ -5,12 +5,16 @@ import nxt.Constants;
 import nxt.http.APICall;
 import nxt.http.votingsystem.TestCreatePoll.CreatePollBuilder;
 import nxt.util.Logger;
+
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.junit.Assert;
 import org.junit.Test;
 
 public class TestCastVote extends BlockchainTest {
+    private String getResult(JSONArray results, int index) {
+        return (String) ((JSONObject) results.get(index)).get("result");
+    }
     @Test
     public void validVoteCasting() {
         APICall apiCall = new CreatePollBuilder().build();
@@ -35,14 +39,14 @@ public class TestCastVote extends BlockchainTest {
         Logger.logMessage("getPollResultResponse:" + getPollResponse.toJSONString());
         JSONArray results = (JSONArray)getPollResponse.get("results");
 
-        long ringoResult = Long.parseLong((String) results.get(0));
+        long ringoResult = Long.parseLong(getResult(results, 0));
         Assert.assertEquals(1, ringoResult);
 
-        long paulResult = Long.parseLong((String) results.get(1));
+        long paulResult = Long.parseLong(getResult(results, 1));
         Assert.assertEquals(0, paulResult);
 
-        long johnResult = Long.parseLong((String) results.get(2));
-        Assert.assertEquals(0, johnResult);
+        //John's result is empty by spec
+        Assert.assertEquals("", getResult(results, 2));
     }
 
     @Test

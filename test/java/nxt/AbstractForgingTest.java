@@ -6,7 +6,7 @@ import java.util.Properties;
 
 public abstract class AbstractForgingTest extends AbstractBlockchainTest {
 
-    protected static final int minStartHeight = Constants.LAST_KNOWN_BLOCK;
+    protected static final int minStartHeight = 150000;
     protected static int startHeight;
     protected static String testForgingSecretPhrase;
 

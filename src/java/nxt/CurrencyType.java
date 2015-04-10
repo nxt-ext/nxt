@@ -156,8 +156,11 @@ public enum CurrencyType {
             if (transaction.getType() == MonetarySystem.CURRENCY_ISSUANCE) {
                 Attachment.MonetarySystemCurrencyIssuance issuanceAttachment = (Attachment.MonetarySystemCurrencyIssuance) transaction.getAttachment();
                 try {
-                    HashFunction.getHashFunction(issuanceAttachment.getAlgorithm());
-                } catch(IllegalArgumentException e) {
+                    HashFunction hashFunction = HashFunction.getHashFunction(issuanceAttachment.getAlgorithm());
+                    if (!acceptedHashFunctions.contains(hashFunction)) {
+                        throw new NxtException.NotValidException("Invalid minting algorithm " + hashFunction);
+                    }
+                } catch (IllegalArgumentException e) {
                     throw new NxtException.NotValidException("Illegal algorithm code specified" , e);
                 }
                 if (issuanceAttachment.getMinDifficulty() < 1 || issuanceAttachment.getMaxDifficulty() > 255 ||
@@ -204,10 +207,11 @@ public enum CurrencyType {
         }
     };
 
-    
+    private static final EnumSet<HashFunction> acceptedHashFunctions = EnumSet.of(HashFunction.SHA256, HashFunction.SHA3, HashFunction.SCRYPT, HashFunction.Keccak25);
+
     private final int code;
 
-    private CurrencyType(int code) {
+    CurrencyType(int code) {
         this.code = code;
     }
 

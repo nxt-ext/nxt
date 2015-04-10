@@ -1,6 +1,8 @@
 package nxt.db;
 
 import nxt.Nxt;
+import nxt.util.Logger;
+import org.h2.fulltext.FullTextLucene;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -12,16 +14,22 @@ public abstract class EntityDbTable<T> extends DerivedDbTable {
     private final boolean multiversion;
     protected final DbKey.Factory<T> dbKeyFactory;
     private final String defaultSort;
+    private final String fullTextSearchColumns;
 
     protected EntityDbTable(String table, DbKey.Factory<T> dbKeyFactory) {
-        this(table, dbKeyFactory, false);
+        this(table, dbKeyFactory, false, null);
     }
 
-    EntityDbTable(String table, DbKey.Factory<T> dbKeyFactory, boolean multiversion) {
+    protected EntityDbTable(String table, DbKey.Factory<T> dbKeyFactory, String fullTextSearchColumns) {
+        this(table, dbKeyFactory, false, fullTextSearchColumns);
+    }
+
+    EntityDbTable(String table, DbKey.Factory<T> dbKeyFactory, boolean multiversion, String fullTextSearchColumns) {
         super(table);
         this.dbKeyFactory = dbKeyFactory;
         this.multiversion = multiversion;
-        this.defaultSort = " ORDER BY " + (multiversion ? dbKeyFactory.getPKColumns() : " height DESC ");
+        this.defaultSort = " ORDER BY " + (multiversion ? dbKeyFactory.getPKColumns() : " height DESC, db_id DESC ");
+        this.fullTextSearchColumns = fullTextSearchColumns;
     }
 
     protected abstract T load(Connection con, ResultSet rs) throws SQLException;
@@ -39,6 +47,9 @@ public abstract class EntityDbTable<T> extends DerivedDbTable {
     public void checkAvailable(int height) {
         if (multiversion && height < Nxt.getBlockchainProcessor().getMinRollbackHeight()) {
             throw new IllegalArgumentException("Historical data as of height " + height +" not available.");
+        }
+        if (height > Nxt.getBlockchain().getHeight()) {
+            throw new IllegalArgumentException("Height " + height + " exceeds blockchain height " + Nxt.getBlockchain().getHeight());
         }
     }
 
@@ -391,6 +402,14 @@ public abstract class EntityDbTable<T> extends DerivedDbTable {
     public void truncate() {
         super.truncate();
         db.getCache(table).clear();
+    }
+
+    @Override
+    public final void createSearchIndex(Connection con) throws SQLException {
+        if (fullTextSearchColumns != null) {
+            Logger.logDebugMessage("Creating search index on " + table + " (" + fullTextSearchColumns + ")");
+            FullTextLucene.createIndex(con, "PUBLIC", table.toUpperCase(), fullTextSearchColumns.toUpperCase());
+        }
     }
 
 }

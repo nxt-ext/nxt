@@ -11,33 +11,31 @@ import org.json.simple.JSONObject;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class TestGetAssetPendingTransactions extends BlockchainTest {
-    private static String asset = "18055555436405339905";
+public class TestGetCurrencyPhasedTransactions extends BlockchainTest {
+    private static String currency = "17287739300802062230";
 
-    static APICall pendingTransactionsApiCall() {
-        return new APICall.Builder("getAssetPendingTransactions")
-                .param("asset", asset)
+    static APICall phasedTransactionsApiCall() {
+        return new APICall.Builder("getCurrencyPhasedTransactions")
+                .param("currency", currency)
                 .param("firstIndex", 0)
-                .param("lastIndex", 10)
+                .param("lastIndex", 20)
                 .build();
     }
 
-    private APICall byAssetApiCall() {
+    private APICall byCurrencyApiCall(){
         return new TestCreateTwoPhased.TwoPhasedMoneyTransferBuilder()
-                .votingModel(VoteWeighting.VotingModel.ASSET.getCode())
-                .holding(Convert.parseUnsignedLong(asset))
-                .minBalance(1, VoteWeighting.MinBalanceModel.ASSET.getCode())
+                .votingModel(VoteWeighting.VotingModel.CURRENCY.getCode())
+                .holding(Convert.parseUnsignedLong(currency))
+                .minBalance(1, VoteWeighting.MinBalanceModel.CURRENCY.getCode())
                 .fee(21 * Constants.ONE_NXT)
                 .build();
     }
 
-
     @Test
     public void simpleTransactionLookup() {
-        JSONObject transactionJSON = TestCreateTwoPhased.issueCreateTwoPhased(byAssetApiCall(), false);
-
-        JSONObject response = pendingTransactionsApiCall().invoke();
-        Logger.logMessage("getAssetPendingTransactionsResponse:" + response.toJSONString());
+        JSONObject transactionJSON = TestCreateTwoPhased.issueCreateTwoPhased(byCurrencyApiCall(), false);
+        JSONObject response = phasedTransactionsApiCall().invoke();
+        Logger.logMessage("getCurrencyPhasedTransactionsResponse:" + response.toJSONString());
         JSONArray transactionsJson = (JSONArray) response.get("transactions");
         Assert.assertTrue(TwoPhasedSuite.searchForTransactionId(transactionsJson, (String) transactionJSON.get("transaction")));
     }
@@ -45,11 +43,11 @@ public class TestGetAssetPendingTransactions extends BlockchainTest {
     @Test
     public void sorting() {
         for (int i = 0; i < 15; i++) {
-            TestCreateTwoPhased.issueCreateTwoPhased(byAssetApiCall(), false);
+            TestCreateTwoPhased.issueCreateTwoPhased(byCurrencyApiCall(), false);
         }
 
-        JSONObject response = pendingTransactionsApiCall().invoke();
-        Logger.logMessage("getAssetPendingTransactionsResponse:" + response.toJSONString());
+        JSONObject response = phasedTransactionsApiCall().invoke();
+        Logger.logMessage("getCurrencyPhasedTransactionsResponse:" + response.toJSONString());
         JSONArray transactionsJson = (JSONArray) response.get("transactions");
 
         //sorting check
@@ -61,4 +59,5 @@ public class TestGetAssetPendingTransactions extends BlockchainTest {
             prevHeight = height;
         }
     }
+
 }

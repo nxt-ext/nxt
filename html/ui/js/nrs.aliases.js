@@ -13,42 +13,14 @@ var NRS = (function(NRS, $, undefined) {
 			"firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
 			"lastIndex": NRS.pageNumber * NRS.itemsPerPage
 		}, function(response) {
-			if (response.aliases && response.aliases.length) {
+         var aliasesTable = $("#aliases_table");
+         if (response.aliases && response.aliases.length) {
 				if (response.aliases.length > NRS.itemsPerPage) {
 					NRS.hasMorePages = true;
 					response.aliases.pop();
 				}
 
 				var aliases = response.aliases;
-
-				if (NRS.unconfirmedTransactions.length) {
-					for (var i = 0; i < NRS.unconfirmedTransactions.length; i++) {
-						var unconfirmedTransaction = NRS.unconfirmedTransactions[i];
-
-						if (unconfirmedTransaction.type == 1 && (unconfirmedTransaction.subtype == 1 || unconfirmedTransaction.subtype == 7)) {
-							var found = false;
-
-							for (var j = 0; j < aliases.length; j++) {
-								if (aliases[j].aliasName == unconfirmedTransaction.attachment.alias) {
-									aliases[j].aliasURI = unconfirmedTransaction.attachment.uri;
-									aliases[j].tentative = true;
-									found = true;
-									break;
-								}
-							}
-
-							if (!found) {
-								aliases.push({
-									"aliasName": unconfirmedTransaction.attachment.alias,
-									"aliasURI": (unconfirmedTransaction.attachment.uri ? unconfirmedTransaction.attachment.uri : ""),
-									"tentative": true
-								});
-							}
-						}
-					}
-				}
-
-
 				aliases.sort(function(a, b) {
 					if (a.aliasName.toLowerCase() > b.aliasName.toLowerCase()) {
 						return 1;
@@ -60,29 +32,9 @@ var NRS = (function(NRS, $, undefined) {
 				});
 
 				var rows = "";
-
-				var alias_account_count = 0,
-					alias_uri_count = 0,
-					empty_alias_count = 0,
-					page_alias_count = aliases.length;
-
-				for (var i = 0; i < page_alias_count; i++) {
+            for (var i = 0; i < aliases.length; i++) {
 					var alias = aliases[i];
-
-					alias.status = "/";
-
-					var unconfirmedTransaction = NRS.getUnconfirmedTransactionFromCache(1, 6, {
-						"alias": alias.aliasName
-					});
-
-					if (unconfirmedTransaction) {
-						alias.tentative = true;
-						if (unconfirmedTransaction.recipient) {
-							alias.buyer = unconfirmedTransaction.recipient;
-						}
-						alias.priceNQT = unconfirmedTransaction.priceNQT;
-					}
-
+					alias.status = $.t("registered");
 					if (!alias.aliasURI) {
 						alias.aliasURI = "";
 					}
@@ -93,11 +45,9 @@ var NRS = (function(NRS, $, undefined) {
 					} else {
 						alias.shortAliasURI = alias.aliasURI.escapeHTML();
 					}
-
 					alias.aliasURI = alias.aliasURI.escapeHTML();
 
 					var allowCancel = false;
-
 					if ("priceNQT" in alias) {
 						if (alias.priceNQT == "0") {
 							if (alias.buyer == NRS.account) {
@@ -106,10 +56,7 @@ var NRS = (function(NRS, $, undefined) {
 								alias.status = $.t("transfer_in_progress");
 							}
 						} else {
-							if (!alias.tentative) {
-								allowCancel = true;
-							}
-
+                     allowCancel = true;
 							if (typeof alias.buyer != "undefined") {
 								alias.status = $.t("for_sale_direct");
 							} else {
@@ -121,25 +68,21 @@ var NRS = (function(NRS, $, undefined) {
 					if (alias.status != "/") {
 						alias.status = "<span class='label label-small label-info'>" + alias.status + "</span>";
 					}
-
-					rows += "<tr" + (alias.tentative ? " class='tentative'" : "") + " data-alias='" + String(alias.aliasName).toLowerCase().escapeHTML() + "'><td class='alias'>" + String(alias.aliasName).escapeHTML() + "</td><td class='uri'>" + (alias.aliasURI.indexOf("http") === 0 ? "<a href='" + alias.aliasURI + "' target='_blank'>" + alias.shortAliasURI + "</a>" : alias.shortAliasURI) + "</td><td class='status'>" + alias.status + "</td><td style='white-space:nowrap'><a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#register_alias_modal' data-alias='" + String(alias.aliasName).escapeHTML() + "'>" + $.t("edit") + "</a> <a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#transfer_alias_modal' data-alias='" + String(alias.aliasName).escapeHTML() + "'>" + $.t("transfer") + "</a> <a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#sell_alias_modal' data-alias='" + String(alias.aliasName).escapeHTML() + "'>" + $.t("sell") + "</a>" + (allowCancel ? " <a class='btn btn-xs btn-default cancel_alias_sale' href='#' data-toggle='modal' data-target='#cancel_alias_sale_modal' data-alias='" + String(alias.aliasName).escapeHTML() + "'>" + $.t("cancel_sale") + "</a>" : "") + " <a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#delete_alias_modal' data-alias='" + String(alias.aliasName).escapeHTML() + "'>" + $.t("delete") + "</a></td></tr>";
-
+					rows += "<tr data-alias='" + String(alias.aliasName).toLowerCase().escapeHTML() + "'><td class='alias'>" + String(alias.aliasName).escapeHTML() + "</td><td class='uri'>" + (alias.aliasURI.indexOf("http") === 0 ? "<a href='" + alias.aliasURI + "' target='_blank'>" + alias.shortAliasURI + "</a>" : alias.shortAliasURI) + "</td><td class='status'>" + alias.status + "</td><td style='white-space:nowrap'><a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#register_alias_modal' data-alias='" + String(alias.aliasName).escapeHTML() + "'>" + $.t("edit") + "</a> <a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#transfer_alias_modal' data-alias='" + String(alias.aliasName).escapeHTML() + "'>" + $.t("transfer") + "</a> <a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#sell_alias_modal' data-alias='" + String(alias.aliasName).escapeHTML() + "'>" + $.t("sell") + "</a>" + (allowCancel ? " <a class='btn btn-xs btn-default cancel_alias_sale' href='#' data-toggle='modal' data-target='#cancel_alias_sale_modal' data-alias='" + String(alias.aliasName).escapeHTML() + "'>" + $.t("cancel_sale") + "</a>" : "") + " <a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#delete_alias_modal' data-alias='" + String(alias.aliasName).escapeHTML() + "'>" + $.t("delete") + "</a></td></tr>";
 				}
 
-				$("#aliases_table tbody").empty().append(rows);
-				NRS.dataLoadFinished($("#aliases_table"));
-
+				aliasesTable.find("tbody").empty().append(rows);
+				NRS.dataLoadFinished(aliasesTable);
 				$("#alias_count").html(alias_count).removeClass("loading_dots");
 			} else {
-				$("#aliases_table tbody").empty();
-				NRS.dataLoadFinished($("#aliases_table"));
-
+				aliasesTable.find("tbody").empty();
+				NRS.dataLoadFinished(aliasesTable);
 				$("#alias_count").html("0").removeClass("loading_dots");
 			}
 
 			NRS.pageLoaded();
 		});
-	}
+	};
 
 	NRS.setup.aliases = function() {
 		var options = {
@@ -147,9 +90,9 @@ var NRS = (function(NRS, $, undefined) {
 			"titleHTML": '<i class="fa fa-bookmark"></i> <span data-i18n="aliases">Aliases</span>',
 			"page": 'aliases',
 			"desiredPosition": 100
-		}
+		};
 		NRS.addSimpleSidebarMenuItem(options);
-	}
+	};
 
 	$("#transfer_alias_modal, #sell_alias_modal, #cancel_alias_sale_modal, #delete_alias_modal").on("show.bs.modal", function(e) {
 		var $invoker = $(e.relatedTarget);
@@ -218,47 +161,47 @@ var NRS = (function(NRS, $, undefined) {
 			"successMessage": successMessage,
 			"errorMessage": errorMessage
 		};
-	}
+	};
 
 	NRS.forms.sellAliasComplete = function(response, data) {
 		if (response.alreadyProcessed) {
 			return;
 		}
-
-		var $row = $("#aliases_table tr[data-alias=" + String(data.aliasName).toLowerCase().escapeHTML() + "]");
-
-		$row.addClass("tentative");
-
-		//transfer
+      data.aliasName = String(data.aliasName).escapeHTML();
 		if (data.priceNQT == "0") {
-			if (data.recipient == NRS.account) {
-				$row.find("td.status").html("<span class='label label-small label-info'>" + $.t("cancelling_sale") + "</span>");
-				$row.find("a.cancel_alias_sale").remove();
-			} else {
-				$row.find("td.status").html("<span class='label label-small label-info'>" + $.t("transfer_in_progress") + "</span>");
-			}
+         if (data.recipient == NRS.account) {
+            $.growl(
+               $.t("cancelling_sale", {
+                  "alias_name": data.aliasName
+               }), {
+                  "type": "success"
+               }
+            );
+         } else {
+            $.growl(
+               $.t("success_alias_transfer", {
+                  "alias_name": data.aliasName
+               }), {
+                  "type": "success"
+               }
+            );
+         }
 		} else {
-			if (data.recipient != NRS.genesis) {
-				$row.find("td.status").html("<span class='label label-small label-info'>" + $.t("for_sale_direct") + "</span>");
-			} else {
-				$row.find("td.status").html("<span class='label label-small label-info'>" + $.t("for_sale_indirect") + "</span>");
-			}
+         $.growl(
+            $.t("success_alias_sell", {
+               "alias_name": String(data.aliasName).escapeHTML(),
+               "price": NRS.convertToNXT(data.priceNQT).escapeHTML()
+            }), {
+               "type": "success"
+            }
+         );
 		}
-	}
-
+	};
 
 	NRS.forms.deleteAlias = function($modal) {
 		var data = NRS.getFormData($modal.find("form:first"));
-
-		//var successMessage = "";
-		//var errorMessage = "";
-
-			successMessage = $.t("success_delete_alias");
-			errorMessage = $.t("error_delete_alias");
-
-		//	}
-		//}
-
+      var successMessage = $.t("success_delete_alias");
+      var errorMessage = $.t("error_delete_alias");
 		delete data.modal;
 
 		return {
@@ -266,35 +209,21 @@ var NRS = (function(NRS, $, undefined) {
 			"successMessage": successMessage,
 			"errorMessage": errorMessage
 		};
-	}
+	};
 
 	NRS.forms.deleteAliasComplete = function(response, data) {
 		if (response.alreadyProcessed) {
 			return;
 		}
-
-		var $row = $("#aliases_table tr[data-alias=" + String(data.aliasName).toLowerCase().escapeHTML() + "]");
-
-		$row.addClass("tentative");
-
-		
-		$row.find("td.status").html("<span class='label label-small label-info'>" + $.t("delete_alias") + "</span>");
-
-	}
-
-	/*
-	$("#sell_alias_add_message").on("change", function(e) {
-		var $modal = $(this).closest(".modal");
-		var $active = $modal.find(".nav li.active a").first();
-
-		if ($active.attr("id") == "sell_alias_to_anyone") {
-			$("#sell_alias_to_anyone_message_options").show();
-			$("#sell_alias_to_specific_account_message_options").hide();
-		} else {
-			$("#sell_alias_to_anyone_message_options").hide();
-			$("#sell_alias_to_specific_account_message_options").show();
-		}
-	});*/
+      data.aliasName = String(data.aliasName).escapeHTML();
+      $.growl(
+         $.t("success_alias_delete", {
+            "alias_name": data.aliasName
+         }), {
+            "type": "success"
+         }
+      );
+	};
 
 	$("#sell_alias_to_specific_account, #sell_alias_to_anyone").on("click", function(e) {
 		e.preventDefault();
@@ -366,31 +295,28 @@ var NRS = (function(NRS, $, undefined) {
 
 	NRS.forms.buyAliasError = function() {
 		$("#buy_alias_modal").find("input[name=priceNXT]").prop("readonly", false);
-	}
+	};
 
 	NRS.forms.buyAliasComplete = function(response, data) {
 		if (response.alreadyProcessed) {
 			return;
 		}
-
-		if (NRS.currentPage != "aliases") {
-			return;
-		}
-
-		data.aliasName = String(data.aliasName).escapeHTML();
-		data.aliasURI = "";
-
-		$("#aliases_table tbody").prepend("<tr class='tentative' data-alias='" + data.aliasName.toLowerCase() + "'><td class='alias'>" + data.aliasName + "</td><td class='uri'>" + (data.aliasURI && data.aliasURI.indexOf("http") === 0 ? "<a href='" + data.aliasURI + "' target='_blank'>" + data.aliasURI + "</a>" : data.aliasURI) + "</td><td>/</td><td style='white-space:nowrap'><a class='btn btn-xs btn-default' href='#'>" + $.t("edit") + "</a> <a class='btn btn-xs btn-default' href='#'>" + $.t("transfer") + "</a> <a class='btn btn-xs btn-default' href='#'>" + $.t("sell") + "</a></td></tr>");
-
-		if ($("#aliases_table").parent().hasClass("data-empty")) {
-			$("#aliases_table").parent().removeClass("data-empty");
-		}
-	}
+      data.aliasName = String(data.aliasName).escapeHTML();
+      $.growl(
+         $.t("success_alias_buy", {
+            "alias_name": data.aliasName,
+            "price": NRS.convertToNXT(data.amountNQT).escapeHTML()
+         }), {
+            "type": "success"
+         }
+      );
+	};
 
 	$("#register_alias_modal").on("show.bs.modal", function(e) {
 		var $invoker = $(e.relatedTarget);
 
 		var alias = $invoker.data("alias");
+      var registerAliasModal = $("#register_alias_modal");
 
 		if (alias) {
 			NRS.fetchingModalData = true;
@@ -407,27 +333,26 @@ var NRS = (function(NRS, $, undefined) {
 					});
 					NRS.fetchingModalData = false;
 				} else {
-					var aliasURI;
-
+					var aliasURI = [];
 					if (/http:\/\//i.test(response.aliasURI)) {
 						setAliasType("uri", response.aliasURI);
 					} else if ((aliasURI = /acct:(.*)@nxt/.exec(response.aliasURI)) || (aliasURI = /nacc:(.*)/.exec(response.aliasURI))) {
-						setAliasType("account", response.aliasURI);
-						response.aliasURI = String(aliasURI[1]).toUpperCase();
-					} else {
-						setAliasType("general", response.aliasURI);
-					}
+                  setAliasType("account", response.aliasURI);
+                  response.aliasURI = String(aliasURI[1]).toUpperCase();
+               } else {
+                  setAliasType("general", response.aliasURI);
+               }
 
-					$("#register_alias_modal h4.modal-title").html($.t("update_alias"));
-					$("#register_alias_modal .btn-primary").html($.t("update"));
+               registerAliasModal.find("h4.modal-title").html($.t("update_alias"));
+					registerAliasModal.find(".btn-primary").html($.t("update"));
 					$("#register_alias_alias").val(alias.escapeHTML()).hide();
 					$("#register_alias_alias_noneditable").html(alias.escapeHTML()).show();
 					$("#register_alias_alias_update").val(1);
 				}
 			}, false);
 		} else {
-			$("#register_alias_modal h4.modal-title").html($.t("register_alias"));
-			$("#register_alias_modal .btn-primary").html($.t("register"));
+         registerAliasModal.find("h4.modal-title").html($.t("register_alias"));
+			registerAliasModal.find(".btn-primary").html($.t("register"));
 
 			var prefill = $invoker.data("prefill-alias");
 
@@ -446,7 +371,7 @@ var NRS = (function(NRS, $, undefined) {
 		if (NRS.hasTransactionUpdates(transactions)) {
 			NRS.loadPage("aliases");
 		}
-	}
+	};
 
 	NRS.forms.setAlias = function($modal) {
 		var data = NRS.getFormData($modal.find("form:first"));
@@ -482,31 +407,32 @@ var NRS = (function(NRS, $, undefined) {
 		return {
 			"data": data
 		};
-	}
+	};
 
 	function setAliasType(type, uri) {
 		$("#register_alias_type").val(type);
 
-		if (type == "uri") {
+      var registerAliasUri = $("#register_alias_uri");
+      if (type == "uri") {
 			$("#register_alias_uri.masked").trigger("unmask", true);
 			$("#register_alias_uri_label").html($.t("uri"));
-			$("#register_alias_uri").prop("placeholder", $.t("uri"));
+			registerAliasUri.prop("placeholder", $.t("uri"));
 			if (uri) {
 				if (uri == NRS.accountRS) {
-					$("#register_alias_uri").val("http://");
+					registerAliasUri.val("http://");
 				} else if (!/https?:\/\//i.test(uri)) {
-					$("#register_alias_uri").val("http://" + uri);
+					registerAliasUri.val("http://" + uri);
 				} else {
-					$("#register_alias_uri").val(uri);
+					registerAliasUri.val(uri);
 				}
 			} else {
-				$("#register_alias_uri").val("http://");
+				registerAliasUri.val("http://");
 			}
 			$("#register_alias_help").hide();
 		} else if (type == "account") {
 			$("#register_alias_uri_label").html($.t("account_id"));
-			$("#register_alias_uri").prop("placeholder", $.t("account_id"));
-			$("#register_alias_uri").val("").mask("NXT-****-****-****-*****");
+			registerAliasUri.prop("placeholder", $.t("account_id"));
+			registerAliasUri.val("").mask("NXT-****-****-****-*****");
 
 			if (uri) {
 				var match = uri.match(/acct:(.*)@nxt/i);
@@ -532,22 +458,22 @@ var NRS = (function(NRS, $, undefined) {
 
 				uri = uri.toUpperCase();
 
-				$("#register_alias_uri").val(uri);
+				registerAliasUri.val(uri);
 			} else {
-				$("#register_alias_uri").val(NRS.accountRS);
+				registerAliasUri.val(NRS.accountRS);
 			}
 			$("#register_alias_help").html($.t("alias_account_help")).show();
 		} else {
 			$("#register_alias_uri.masked").trigger("unmask", true);
 			$("#register_alias_uri_label").html($.t("data"));
-			$("#register_alias_uri").prop("placeholder", $.t("data"));
+			registerAliasUri.prop("placeholder", $.t("data"));
 			if (uri) {
 				if (uri == NRS.accountRS) {
-					$("#register_alias_uri").val("");
+					registerAliasUri.val("");
 				} else if (uri == "http://") {
-					$("#register_alias_uri").val("");
+					registerAliasUri.val("");
 				} else {
-					$("#register_alias_uri").val(uri);
+					registerAliasUri.val(uri);
 				}
 			}
 			$("#register_alias_help").html($.t("alias_data_help")).show();
@@ -589,78 +515,36 @@ var NRS = (function(NRS, $, undefined) {
 				}
 			}, false);
 		}
-	}
+	};
 
-	NRS.forms.setAliasComplete = function(response, data) {
-		if (response.alreadyProcessed) {
-			return;
-		}
-
-		if (NRS.currentPage == "aliases") {
-			data.aliasName = String(data.aliasName).escapeHTML();
-			data.aliasURI = String(data.aliasURI);
-
-			if (data.aliasURI.length > 100) {
-				data.shortAliasURI = data.aliasURI.substring(0, 100) + "...";
-				data.shortAliasURI = data.shortAliasURI.escapeHTML();
-			} else {
-				data.shortAliasURI = data.aliasURI.escapeHTML();
-			}
-
-			data.aliasURI = data.aliasURI.escapeHTML();
-
-			var $table = $("#aliases_table tbody");
-
+   NRS.forms.setAliasComplete = function(response, data) {
+      if (response.alreadyProcessed) {
+         return;
+      }
+      data.aliasName = String(data.aliasName).escapeHTML();
+      if (NRS.currentPage == "aliases") {
+         var aliasesTable = $("#aliases_table");
+         var $table = aliasesTable.find("tbody");
 			var $row = $table.find("tr[data-alias=" + data.aliasName.toLowerCase() + "]");
-
 			if ($row.length) {
-				$row.addClass("tentative");
-				$row.find("td.alias").html(data.aliasName);
-
-				if (data.aliasURI && data.aliasURI.indexOf("http") === 0) {
-					$row.find("td.uri").html("<a href='" + data.aliasURI + "' target='_blank'>" + data.shortAliasURI + "</a>");
-				} else {
-					$row.find("td.uri").html(data.shortAliasURI);
-				}
-
-				$.growl($.t("success_alias_update"), {
-					"type": "success"
-				});
+            $.growl(
+               $.t("success_alias_update", {
+                  "alias_name": data.aliasName
+               }), {
+                  "type": "success"
+               }
+            );
 			} else {
-				var $rows = $table.find("tr");
-
-				var rowToAdd = "<tr class='tentative' data-alias='" + data.aliasName.toLowerCase() + "'><td class='alias'>" + data.aliasName + "</td><td class='uri'>" + (data.aliasURI && data.aliasURI.indexOf("http") === 0 ? "<a href='" + data.aliasURI + "' target='_blank'>" + data.shortAliasURI + "</a>" : data.shortAliasURI) + "</td><td>/</td><td style='white-space:nowrap'><a class='btn btn-xs btn-default' href='#'>" + $.t("edit") + "</a> <a class='btn btn-xs btn-default' href='#'>" + $.t("transfer") + "</a> <a class='btn btn-xs btn-default' href='#'>" + $.t("sell") + "</a></td></tr>";
-
-				var rowAdded = false;
-
-				var newAlias = data.aliasName.toLowerCase();
-
-				if ($rows.length) {
-					$rows.each(function() {
-						var alias = $(this).data("alias");
-
-						if (newAlias < alias) {
-							$(this).before(rowToAdd);
-							rowAdded = true;
-							return false;
-						}
-					});
-				}
-
-				if (!rowAdded) {
-					$table.append(rowToAdd);
-				}
-
-				if ($("#aliases_table").parent().hasClass("data-empty")) {
-					$("#aliases_table").parent().removeClass("data-empty");
-				}
-
-				$.growl($.t("success_alias_register"), {
-					"type": "success"
-				});
+            $.growl(
+               $.t("success_alias_register", {
+                  "alias_name": data.aliasName
+               }), {
+                  "type": "success"
+               }
+            );
 			}
 		}
-	}
+   };
 
 	$("#alias_search").on("submit", function(e) {
 		e.preventDefault();
@@ -671,13 +555,13 @@ var NRS = (function(NRS, $, undefined) {
 
 		NRS.fetchingModalData = true;
 
-		var alias = $.trim($("#alias_search input[name=q]").val());
+		var alias = $.trim($("#alias_search").find("input[name=q]").val());
 
-		$("#alias_info_table tbody").empty();
+		$("#alias_info_table").find("tbody").empty();
 
 		NRS.sendRequest("getAlias", {
 			"aliasName": alias
-		}, function(response, input) {
+		}, function(response) {
 			if (response.errorCode) {
 				$.growl($.t("error_alias_not_found") + " <a href='#' data-toggle='modal' data-target='#register_alias_modal' data-prefill-alias='" + String(alias).escapeHTML() + "'>" + $.t("register_q") + "</a>", {
 					"type": "danger"
@@ -690,7 +574,7 @@ var NRS = (function(NRS, $, undefined) {
 					"account": NRS.getAccountTitle(response, "account"),
 					"last_updated": NRS.formatTimestamp(response.timestamp),
 					"data_formatted_html": String(response.aliasURI).autoLink()
-				}
+				};
 
 				if ("priceNQT" in response) {
 					if (response.buyer == NRS.account) {
@@ -708,7 +592,7 @@ var NRS = (function(NRS, $, undefined) {
 					$("#alias_sale_callout").hide();
 				}
 
-				$("#alias_info_table tbody").append(NRS.createInfoTable(data));
+				$("#alias_info_table").find("tbody").append(NRS.createInfoTable(data));
 
 				$("#alias_info_modal").modal("show");
 				NRS.fetchingModalData = false;

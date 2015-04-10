@@ -23,11 +23,11 @@ public final class PopOff extends APIServlet.APIRequestHandler {
         int numBlocks = 0;
         try {
             numBlocks = Integer.parseInt(req.getParameter("numBlocks"));
-        } catch (NumberFormatException e) {}
+        } catch (NumberFormatException ignored) {}
         int height = 0;
         try {
             height = Integer.parseInt(req.getParameter("height"));
-        } catch (NumberFormatException e) {}
+        } catch (NumberFormatException ignored) {}
 
         List<? extends Block> blocks;
         try {

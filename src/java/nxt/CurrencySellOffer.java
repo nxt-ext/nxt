@@ -74,7 +74,7 @@ public final class CurrencySellOffer extends CurrencyExchangeOffer {
         return getOffer(currency.getId(), account.getId());
     }
 
-    static CurrencySellOffer getOffer(final long currencyId, final long accountId) {
+    public static CurrencySellOffer getOffer(final long currencyId, final long accountId) {
         return sellOfferTable.getBy(new DbClause.LongClause("currency_id", currencyId).and(new DbClause.LongClause("account_id", accountId)));
     }
 
@@ -108,10 +108,6 @@ public final class CurrencySellOffer extends CurrencyExchangeOffer {
     private CurrencySellOffer(ResultSet rs) throws SQLException {
         super(rs);
         this.dbKey = sellOfferDbKeyFactory.newKey(super.id);
-    }
-
-    protected void save(Connection con, String table) throws SQLException {
-        super.save(con, table);
     }
 
     @Override

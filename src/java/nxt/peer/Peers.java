@@ -33,7 +33,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -48,7 +47,7 @@ import java.util.stream.Collectors;
 
 public final class Peers {
 
-    public static enum Event {
+    public enum Event {
         BLACKLIST, UNBLACKLIST, DEACTIVATE, REMOVE,
         DOWNLOADED_VOLUME, UPLOADED_VOLUME, WEIGHT,
         ADDED_ACTIVE_PEER, CHANGED_ACTIVE_PEER,
@@ -70,7 +69,7 @@ public final class Peers {
     static final int MAX_RESPONSE_SIZE = 1024 * 1024;
 
     private static final int DEFAULT_PEER_PORT = 7874;
-    private static final int TESTNET_PEER_PORT = 2874;
+    private static final int TESTNET_PEER_PORT = 6874;
     private static final String myPlatform;
     private static final String myAddress;
     private static final int myPeerServerPort;

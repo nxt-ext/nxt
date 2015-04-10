@@ -17,7 +17,7 @@ import java.util.List;
 @SuppressWarnings("UnusedDeclaration")
 public final class Currency {
 
-    public static enum Event {
+    public enum Event {
         BEFORE_DISTRIBUTE_CROWDFUNDING, BEFORE_UNDO_CROWDFUNDING, BEFORE_DELETE
     }
 
@@ -30,7 +30,7 @@ public final class Currency {
 
     };
 
-    private static final VersionedEntityDbTable<Currency> currencyTable = new VersionedEntityDbTable<Currency>("currency", currencyDbKeyFactory) {
+    private static final VersionedEntityDbTable<Currency> currencyTable = new VersionedEntityDbTable<Currency>("currency", currencyDbKeyFactory, "code,name,description") {
 
         @Override
         protected Currency load(Connection con, ResultSet rs) throws SQLException {
@@ -49,10 +49,10 @@ public final class Currency {
 
     };
 
-    private static class CurrencySupply {
+    private static final class CurrencySupply {
 
         private final DbKey dbKey;
-        private long currencyId;
+        private final long currencyId;
         private long currentSupply;
         private long currentReservePerUnitNQT;
 
@@ -143,19 +143,19 @@ public final class Currency {
         return currencyTable.search(query, DbClause.EMPTY_CLAUSE, from, to, " ORDER BY ft.score DESC, currency.creation_height DESC ");
     }
 
-    static void addCurrency(Transaction transaction, Attachment.MonetarySystemCurrencyIssuance attachment) {
+    static void addCurrency(Transaction transaction, Account senderAccount, Attachment.MonetarySystemCurrencyIssuance attachment) {
         Currency oldCurrency;
         if ((oldCurrency = Currency.getCurrencyByCode(attachment.getCode())) != null) {
-            oldCurrency.delete(transaction.getSenderId());
+            oldCurrency.delete(senderAccount);
         }
         if ((oldCurrency = Currency.getCurrencyByCode(attachment.getName().toUpperCase())) != null) {
-            oldCurrency.delete(transaction.getSenderId());
+            oldCurrency.delete(senderAccount);
         }
         if ((oldCurrency = Currency.getCurrencyByName(attachment.getName())) != null) {
-            oldCurrency.delete(transaction.getSenderId());
+            oldCurrency.delete(senderAccount);
         }
         if ((oldCurrency = Currency.getCurrencyByName(attachment.getCode())) != null) {
-            oldCurrency.delete(transaction.getSenderId());
+            oldCurrency.delete(senderAccount);
         }
         Currency currency = new Currency(transaction, attachment);
         currencyTable.insert(currency);
@@ -402,9 +402,6 @@ public final class Currency {
     }
 
     public DbIterator<Account.AccountCurrency> getAccounts(int height, int from, int to) {
-        if (height < 0) {
-            return getAccounts(from, to);
-        }
         return Account.getCurrencyAccounts(this.currencyId, height, from, to);
     }
 
@@ -420,29 +417,28 @@ public final class Currency {
         return (this.type & type.getCode()) != 0;
     }
 
-    public boolean canBeDeletedBy(long ownerAccountId) {
+    public boolean canBeDeletedBy(long senderAccountId) {
         if (!isActive()) {
-            return ownerAccountId == accountId;
+            return senderAccountId == accountId;
         }
-        if (is(CurrencyType.MINTABLE) && getCurrentSupply() < maxSupply && ownerAccountId != accountId) {
+        if (is(CurrencyType.MINTABLE) && getCurrentSupply() < maxSupply && senderAccountId != accountId) {
             return false;
         }
         try (DbIterator<Account.AccountCurrency> accountCurrencies = Account.getCurrencyAccounts(this.currencyId, 0, -1)) {
-            return ! accountCurrencies.hasNext() || accountCurrencies.next().getAccountId() == ownerAccountId && ! accountCurrencies.hasNext();
+            return ! accountCurrencies.hasNext() || accountCurrencies.next().getAccountId() == senderAccountId && ! accountCurrencies.hasNext();
         }
     }
 
-    void delete(long ownerAccountId) {
-        if (!canBeDeletedBy(ownerAccountId)) {
+    void delete(Account senderAccount) {
+        if (!canBeDeletedBy(senderAccount.getId())) {
             // shouldn't happen as ownership has already been checked in validate, but as a safety check
-            throw new IllegalStateException("Currency " + Long.toUnsignedString(currencyId) + " not entirely owned by " + Long.toUnsignedString(ownerAccountId));
+            throw new IllegalStateException("Currency " + Long.toUnsignedString(currencyId) + " not entirely owned by " + Long.toUnsignedString(senderAccount.getId()));
         }
         listeners.notify(this, Event.BEFORE_DELETE);
-        Account ownerAccount = Account.getAccount(ownerAccountId);
         if (is(CurrencyType.RESERVABLE)) {
             if (is(CurrencyType.CLAIMABLE) && isActive()) {
-                ownerAccount.addToUnconfirmedCurrencyUnits(currencyId, -ownerAccount.getCurrencyUnits(currencyId));
-                Currency.claimReserve(ownerAccount, currencyId, ownerAccount.getCurrencyUnits(currencyId));
+                senderAccount.addToUnconfirmedCurrencyUnits(currencyId, -senderAccount.getCurrencyUnits(currencyId));
+                Currency.claimReserve(senderAccount, currencyId, senderAccount.getCurrencyUnits(currencyId));
             }
             if (!isActive()) {
                 try (DbIterator<CurrencyFounder> founders = CurrencyFounder.getCurrencyFounders(currencyId, 0, Integer.MAX_VALUE)) {
@@ -467,11 +463,11 @@ public final class Currency {
         if (is(CurrencyType.MINTABLE)) {
             CurrencyMint.deleteCurrency(this);
         }
-        if (is(CurrencyType.NON_SHUFFLEABLE)) {
+        if (!is(CurrencyType.NON_SHUFFLEABLE)) {
             Shuffling.cancelShuffling(currencyId);
         }
-        ownerAccount.addToUnconfirmedCurrencyUnits(currencyId, -ownerAccount.getUnconfirmedCurrencyUnits(currencyId));
-        ownerAccount.addToCurrencyUnits(currencyId, -ownerAccount.getCurrencyUnits(currencyId));
+        senderAccount.addToUnconfirmedCurrencyUnits(currencyId, -senderAccount.getUnconfirmedCurrencyUnits(currencyId));
+        senderAccount.addToCurrencyUnits(currencyId, -senderAccount.getCurrencyUnits(currencyId));
         currencyTable.delete(this);
     }
 

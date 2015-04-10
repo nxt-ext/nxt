@@ -118,6 +118,9 @@ public class BlockchainProcessorTest extends AbstractBlockchainTest {
     }
 
     private static void rescan(final int numBlocks) {
+        if (numBlocks > Constants.MAX_ROLLBACK) {
+            return;
+        }
         int endHeight = blockchain.getHeight();
         int rescanHeight = endHeight - numBlocks;
         blockchainProcessor.scan(rescanHeight, true);
@@ -128,6 +131,9 @@ public class BlockchainProcessorTest extends AbstractBlockchainTest {
     }
 
     private static void redownload(final int numBlocks, boolean preserveTransactions) {
+        if (numBlocks > Constants.MAX_ROLLBACK) {
+            return;
+        }
         int endHeight = blockchain.getHeight();
         List<List<Long>> allLessorsBefore = new ArrayList<>();
         List<List<Long>> allLessorBalancesBefore = new ArrayList<>();
@@ -143,7 +149,7 @@ public class BlockchainProcessorTest extends AbstractBlockchainTest {
             try (DbIterator<Account> iter = account.getLessors(endHeight - numBlocks)) {
                 for (Account lessor : iter) {
                     lessors.add(lessor.getId());
-                    balances.add(lessor.getGuaranteedBalanceNQT(1440, endHeight - numBlocks));
+                    balances.add(lessor.getGuaranteedBalanceNQT(Constants.GUARANTEED_BALANCE_CONFIRMATIONS, endHeight - numBlocks));
                 }
             }
         }
@@ -182,7 +188,7 @@ public class BlockchainProcessorTest extends AbstractBlockchainTest {
             try (DbIterator<Account> iter = account.getLessors()) {
                 for (Account lessor : iter) {
                     lessors.add(lessor.getId());
-                    balances.add(lessor.getGuaranteedBalanceNQT(1440));
+                    balances.add(lessor.getGuaranteedBalanceNQT());
                 }
             }
         }
