@@ -5,6 +5,7 @@ import nxt.NxtException;
 import nxt.PrunableMessage;
 import nxt.crypto.Crypto;
 import nxt.util.Convert;
+import nxt.util.JSON;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
@@ -24,8 +25,10 @@ public final class GetPrunableMessage extends APIServlet.APIRequestHandler {
         String secretPhrase = Convert.emptyToNull(req.getParameter("secretPhrase"));
         long readerAccountId = secretPhrase == null ? 0 : Account.getId(Crypto.getPublicKey(secretPhrase));
         PrunableMessage prunableMessage = PrunableMessage.getPrunableMessage(transactionId);
-        JSONObject response = JSONData.prunableMessage(prunableMessage, readerAccountId, secretPhrase);
-        return response;
+        if (prunableMessage != null) {
+            return JSONData.prunableMessage(prunableMessage, readerAccountId, secretPhrase);
+        }
+        return JSON.emptyJSON;
     }
 
 }
