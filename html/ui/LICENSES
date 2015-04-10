@@ -29,6 +29,7 @@ maskedinput.js - MIT - https://github.com/digitalBush/jquery.maskedinput
 i18next.js - MIT - https://github.com/jamuhl/i18next
 qrcode.js - MIT - https://github.com/jeromeetienne/jquery-qrcode/
 d3.js - BSD - http://d3js.org/
+d3pie.js - MIT - http://d3pie.org/
 highlight.js - BSD - https://github.com/isagalaev/highlight.js/
 handlebars.js - MIT - http://handlebarsjs.com/
 moment.js - MIT - http://momentjs.com/
