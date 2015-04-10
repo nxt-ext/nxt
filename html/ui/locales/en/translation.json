@@ -1,4 +1,5 @@
 {
+  "nxt_capital_letters": "NXT",
   "success_add_peer": "Peer added successfully!",
   "success_connect_peer": "Peer connected successfully!",
   "peer_already_added": "Peer already added!",
@@ -200,6 +201,7 @@
   "create_poll_finish_height_help": "Block height when poll will be finished.",
   "success_poll_followed_one": "Poll added successfully to followed polls.",
   "success_poll_followed": "__count__ polls added successfully to followed polls.",
+  "success_poll_bookmark_removal": "Poll removed from bookmarks successfully.",
   "error_poll_save_db": "Follow information for poll could not stored permanently in DB.",
   "create_your_account": "Create Your Account",
   "currencies": "Currencies",

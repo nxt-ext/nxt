@@ -87,7 +87,8 @@ var NRS = (function(NRS, $, undefined) {
 				["refundNXT", "NQT"],
 				["discountNXT", "NQT"],
 				["phasingQuorumNXT", ""],
-				["phasingMinBalanceNXT", ""]
+				["phasingMinBalanceNXT", ""],
+				["minBalanceNXT", ""]
 			];
 
 			for (var i = 0; i < nxtFields.length; i++) {
@@ -112,7 +113,9 @@ var NRS = (function(NRS, $, undefined) {
 		try {
 			var currencyFields = [
 				["phasingQuorumQNTf", "phasingHoldingDecimals"],
-				["phasingMinBalanceQNTf", "phasingHoldingDecimals"]
+				["phasingMinBalanceQNTf", "phasingHoldingDecimals"],
+				["minBalanceQNTf", "create_poll_asset_decimals"],
+				["minBalanceQNTf", "create_poll_ms_decimals"]
 			];
 			var toDelete = [];
 			for (var i = 0; i < currencyFields.length; i++) {
