@@ -60,6 +60,27 @@ public class PrunableMessage {
         }
     }
 
+    public static DbIterator<PrunableMessage> getPrunableMessages(long accountId, long otherAccountId, int from, int to) {
+        Connection con = null;
+        try {
+            con = Db.db.getConnection();
+            PreparedStatement pstmt = con.prepareStatement("SELECT * FROM prunable_message WHERE sender_id = ? AND recipient_id = ? "
+                    + "UNION ALL SELECT * FROM prunable_message WHERE sender_id = ? AND recipient_id = ? AND sender_id <> recipient_id "
+                    + "ORDER BY timestamp DESC, db_id DESC "
+                    + DbUtils.limitsClause(from, to));
+            int i = 0;
+            pstmt.setLong(++i, accountId);
+            pstmt.setLong(++i, otherAccountId);
+            pstmt.setLong(++i, otherAccountId);
+            pstmt.setLong(++i, accountId);
+            DbUtils.setLimits(++i, pstmt, from, to);
+            return prunableMessageTable.getManyBy(con, pstmt, false);
+        } catch (SQLException e) {
+            DbUtils.close(con);
+            throw new RuntimeException(e.toString(), e);
+        }
+    }
+
     static void init() {}
 
     private final long id;
