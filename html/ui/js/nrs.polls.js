@@ -942,7 +942,7 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.loadFollowedPollsSidebar = function(callback) {
 		if (!NRS.followedPolls.length) {
 			NRS.pageLoaded(callback);
-			$("#followed_polls_xent").empty();
+			$("#followed_polls_sidebar_content").empty();
 			$("#no_poll_selected, #loading_poll_data, #no_poll_search_results, #poll_details").hide();
 			$("#no_polls_available").show();
 			$("#followed_polls_page").addClass("no_polls");
