@@ -114,7 +114,7 @@ DecryptFrom accepts an optional uncompressDecryptedMessage parameter, and
 encryptTo accepts an optional compressMessageToEncrypt parameter, default true.
 
 
-INCOMPATIBLE change:
+INCOMPATIBLE changes:
 
 BroadcastTransaction has been modified to optionally accept all parameters that
 are needed to create a prunable plain or encrypted message (client side
@@ -128,6 +128,9 @@ parameters with which the transaction bytes have been created and signed.
 For non-prunable messages, broadcastTransaction behaves as before, but users
 are encouraged to start switching to prunable messages in view of the planned
 size restrictions and fee increases.
+
+The EncryptedData java class no longer handles compression internally, this is
+left to the caller of the encrypt and decrypt methods to do.
 
 
 Other changes:
