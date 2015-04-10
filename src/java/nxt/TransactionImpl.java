@@ -953,6 +953,11 @@ final class TransactionImpl implements Transaction {
         } else {
             senderAccount.addToBalanceNQT(-feeNQT);
             phasing.apply(this, senderAccount, recipientAccount);
+            for (Appendix.AbstractAppendix appendage : appendages) {
+                if (appendage.loadPrunable(this)) {
+                    appendage.apply(this, senderAccount, recipientAccount);
+                }
+            }
         }
     }
 
