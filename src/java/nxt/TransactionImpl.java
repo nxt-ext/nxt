@@ -945,18 +945,13 @@ final class TransactionImpl implements Transaction {
                 && timestamp > Constants.REFERENCED_TRANSACTION_FULL_HASH_BLOCK_TIMESTAMP) {
             senderAccount.addToUnconfirmedBalanceNQT(Constants.UNCONFIRMED_POOL_DEPOSIT_NQT);
         }
-        if (phasing == null) {
-            for (Appendix.AbstractAppendix appendage : appendages) {
+        if (phasing != null) {
+            senderAccount.addToBalanceNQT(-feeNQT);
+        }
+        for (Appendix.AbstractAppendix appendage : appendages) {
+            if (phasing == null || !appendage.isPhasable()) {
                 appendage.loadPrunable(this);
                 appendage.apply(this, senderAccount, recipientAccount);
-            }
-        } else {
-            senderAccount.addToBalanceNQT(-feeNQT);
-            phasing.apply(this, senderAccount, recipientAccount);
-            for (Appendix.AbstractAppendix appendage : appendages) {
-                if (appendage.loadPrunable(this)) {
-                    appendage.apply(this, senderAccount, recipientAccount);
-                }
             }
         }
     }

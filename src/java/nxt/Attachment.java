@@ -46,6 +46,11 @@ public interface Attachment extends Appendix {
         }
 
         @Override
+        final boolean isPhasable() {
+            return true;
+        }
+
+        @Override
         public Fee getBaselineFee(Transaction transaction) {
             return getTransactionType().getBaselineFee(transaction);
         }

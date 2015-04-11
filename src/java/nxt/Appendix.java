@@ -125,6 +125,10 @@ public interface Appendix {
             return false;
         }
 
+        boolean isPhasable() {
+            return true;
+        }
+
     }
 
     static boolean hasAppendix(String appendixName, JSONObject attachmentData) {
@@ -394,6 +398,10 @@ public interface Appendix {
             return true;
         }
 
+        @Override
+        boolean isPhasable() {
+            return false;
+        }
     }
 
     abstract class AbstractEncryptedMessage extends AbstractAppendix {
@@ -646,6 +654,12 @@ public interface Appendix {
             }
             return true;
         }
+
+        @Override
+        boolean isPhasable() {
+            return false;
+        }
+
     }
 
     class EncryptedMessage extends AbstractEncryptedMessage {
@@ -1078,6 +1092,11 @@ public interface Appendix {
         }
 
         @Override
+        boolean isPhasable() {
+            return false;
+        }
+
+        @Override
         public Fee getBaselineFee(Transaction transaction) {
             if (voteWeighting.isBalanceIndependent()) {
                 return Fee.DEFAULT_FEE;
@@ -1090,7 +1109,7 @@ public interface Appendix {
             Account recipientAccount = Account.getAccount(transaction.getRecipientId());
             //apply all attachments and appendixes, except the phasing itself
             for (Appendix.AbstractAppendix appendage : transaction.getAppendages()) {
-                if (appendage != transaction.getPhasing()) {
+                if (appendage.isPhasable()) {
                     appendage.apply(transaction, senderAccount, recipientAccount);
                 }
             }
