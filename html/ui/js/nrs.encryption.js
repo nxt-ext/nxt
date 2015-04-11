@@ -8,12 +8,6 @@ var NRS = (function(NRS, $, undefined) {
 	var _encryptedNote = null;
 	var _sharedKeys = {};
 
-	var _hash = {
-		init: SHA256_init,
-		update: SHA256_write,
-		getBytes: SHA256_finalize
-	};
-
 	NRS.generatePublicKey = function(secretPhrase) {
 		if (!secretPhrase) {
 			if (NRS.rememberPassword) {
@@ -51,9 +45,8 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.getPrivateKey = function(secretPhrase) {
-		SHA256_init();
-		SHA256_write(converters.stringToByteArray(secretPhrase));
-		return converters.shortArrayToHexString(curve25519_clamp(converters.byteArrayToShortArray(SHA256_finalize())));
+		var bytes = simpleHash(converters.stringToByteArray(secretPhrase));
+        return converters.shortArrayToHexString(curve25519_clamp(converters.byteArrayToShortArray(bytes)));
 	}
 
 	NRS.getAccountId = function(secretPhrase) {
@@ -68,11 +61,7 @@ var NRS = (function(NRS, $, undefined) {
 
 	NRS.getAccountIdFromPublicKey = function(publicKey, RSFormat) {
 		var hex = converters.hexStringToByteArray(publicKey);
-
-		_hash.init();
-		_hash.update(hex);
-
-		var account = _hash.getBytes();
+		var account = simpleHash(hex);
 
 		account = converters.byteArrayToHexString(account);
 
@@ -274,23 +263,11 @@ var NRS = (function(NRS, $, undefined) {
 
 		var digest = simpleHash(secretPhraseBytes);
 		var s = curve25519.keygen(digest).s;
-
 		var m = simpleHash(messageBytes);
-
-		_hash.init();
-		_hash.update(m);
-		_hash.update(s);
-		var x = _hash.getBytes();
-
+		var x = simpleHash(m, s);
 		var y = curve25519.keygen(x).p;
-
-		_hash.init();
-		_hash.update(m);
-		_hash.update(y);
-		var h = _hash.getBytes();
-
+		var h = simpleHash(m, y);
 		var v = curve25519.sign(h, x, s);
-
 		return converters.byteArrayToHexString(v.concat(h));
 	}
 
@@ -301,14 +278,8 @@ var NRS = (function(NRS, $, undefined) {
 		var v = signatureBytes.slice(0, 32);
 		var h = signatureBytes.slice(32);
 		var y = curve25519.verify(v, h, publicKeyBytes);
-
 		var m = simpleHash(messageBytes);
-
-		_hash.init();
-		_hash.update(m);
-		_hash.update(y);
-		var h2 = _hash.getBytes();
-
+		var h2 = simpleHash(m, y);
 		return areByteArraysEqual(h, h2);
 	}
 
@@ -645,10 +616,14 @@ var NRS = (function(NRS, $, undefined) {
 		}
 	}
 
-	function simpleHash(message) {
-		_hash.init();
-		_hash.update(message);
-		return _hash.getBytes();
+	function simpleHash(b1, b2) {
+		var sha256 = CryptoJS.algo.SHA256.create();
+		sha256.update(converters.byteArrayToWordArray(b1));
+		if (b2) {
+			sha256.update(converters.byteArrayToWordArray(b2));
+		}
+		var hash = sha256.finalize();
+		return converters.wordArrayToByteArrayImpl(hash, false);
 	}
 
 	function areByteArraysEqual(bytes1, bytes2) {
