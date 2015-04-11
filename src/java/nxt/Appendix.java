@@ -546,9 +546,7 @@ public interface Appendix {
             } else {
                 MessageDigest digest = Crypto.sha256();
                 digest.update((byte)(isText ? 1 : 0));
-                if (!isCompressed) {
-                    digest.update((byte) (isCompressed ? 1 : 0));
-                }
+                digest.update((byte)(isCompressed ? 1 : 0));
                 digest.update(encryptedData.getData());
                 digest.update(encryptedData.getNonce());
                 buffer.put(digest.digest());
