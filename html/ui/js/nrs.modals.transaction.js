@@ -156,7 +156,7 @@ var NRS = (function (NRS, $, undefined) {
 
                         if (transaction.attachment) {
                             if (transaction.attachment.message) {
-                                if (!transaction.attachment["version.Message"]) {
+                                if (!transaction.attachment["version.Message"] && !transaction.attachment["version.PrunablePlainMessage"]) {
                                     try {
                                         message = converters.hexStringToString(transaction.attachment.message);
                                     } catch (err) {
@@ -1019,7 +1019,7 @@ var NRS = (function (NRS, $, undefined) {
             if (!(transaction.type == 1 && transaction.subtype == 0)) {
                 if (transaction.attachment) {
                     if (transaction.attachment.message) {
-                        if (!transaction.attachment["version.Message"]) {
+                        if (!transaction.attachment["version.Message"] && !transaction.attachment["version.PrunablePlainMessage"]) {
                             try {
                                 message = converters.hexStringToString(transaction.attachment.message);
                             } catch (err) {
