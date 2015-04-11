@@ -159,3 +159,5 @@ bytes are prepared much earlier than the actual broadcasting of the transaction
 to the blockchain.
 
 This release will perform a database upgrade with a full rescan on first start.
+On testnet, it will cause a rollback to block 256935.
+
