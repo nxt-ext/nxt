@@ -38,6 +38,8 @@ public interface BlockchainProcessor extends Observable<Block,BlockchainProcesso
 
     void registerDerivedTable(DerivedDbTable table);
 
+    void trimDerivedTables();
+
     class BlockNotAcceptedException extends NxtException {
 
         BlockNotAcceptedException(String message) {

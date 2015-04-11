@@ -455,12 +455,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             final int trimFrequency = Nxt.getIntProperty("nxt.trimFrequency");
             blockListeners.addListener(block -> {
                 if (block.getHeight() % trimFrequency == 0) {
-                    lastTrimHeight = Math.max(block.getHeight() - Constants.MAX_ROLLBACK, 0);
-                    if (lastTrimHeight > 0) {
-                        for (DerivedDbTable table : derivedTables) {
-                            table.trim(lastTrimHeight);
-                        }
-                    }
+                    doTrimDerivedTables();
                 }
             }, Event.AFTER_BLOCK_APPLY);
         }
@@ -515,6 +510,30 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             throw new IllegalStateException("Too late to register table " + table + ", must have done it in Nxt.Init");
         }
         derivedTables.add(table);
+    }
+
+    @Override
+    public void trimDerivedTables() {
+        synchronized (blockchain) {
+            try {
+                Db.db.beginTransaction();
+                doTrimDerivedTables();
+                Db.db.commitTransaction();
+            } catch (Exception e) {
+                Db.db.rollbackTransaction();
+            } finally {
+                Db.db.endTransaction();
+            }
+        }
+    }
+
+    private void doTrimDerivedTables() {
+        lastTrimHeight = Math.max(blockchain.getHeight() - Constants.MAX_ROLLBACK, 0);
+        if (lastTrimHeight > 0) {
+            for (DerivedDbTable table : derivedTables) {
+                table.trim(lastTrimHeight);
+            }
+        }
     }
 
     @Override
@@ -1164,8 +1183,8 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                  PreparedStatement pstmtSelect = con.prepareStatement("SELECT * FROM block WHERE height >= ? ORDER BY db_id ASC");
                  PreparedStatement pstmtDone = con.prepareStatement("UPDATE scan SET rescan = FALSE, height = 0, validate = FALSE")) {
                 isScanning = true;
-                if (height > Nxt.getBlockchain().getHeight() + 1) {
-                    Logger.logMessage("Rollback height " + (height - 1) + " exceeds current blockchain height of " + Nxt.getBlockchain().getHeight() + ", no scan needed");
+                if (height > blockchain.getHeight() + 1) {
+                    Logger.logMessage("Rollback height " + (height - 1) + " exceeds current blockchain height of " + blockchain.getHeight() + ", no scan needed");
                     pstmtDone.executeUpdate();
                     Db.db.commitTransaction();
                     return;
@@ -1274,7 +1293,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 pstmtDone.executeUpdate();
                 Db.db.commitTransaction();
                 blockListeners.notify(currentBlock, Event.RESCAN_END);
-                Logger.logMessage("...done at height " + Nxt.getBlockchain().getHeight());
+                Logger.logMessage("...done at height " + blockchain);
                 if (height == 0 && validate) {
                     Logger.logMessage("SUCCESSFULLY PERFORMED FULL RESCAN WITH VALIDATION");
                 }

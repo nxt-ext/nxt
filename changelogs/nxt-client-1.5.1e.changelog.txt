@@ -88,6 +88,9 @@ APIs.
 
 The UI for those APIs will be implemented in a later release.
 
+TrimDerivedTables - a debug API to trigger a derived tables trim, and prunable
+tables pruning.
+
 
 Changed APIs:
 
