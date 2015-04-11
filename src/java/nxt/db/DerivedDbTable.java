@@ -53,7 +53,7 @@ public abstract class DerivedDbTable {
     }
 
     @Override
-    public String toString() {
+    public final String toString() {
         return table;
     }
 

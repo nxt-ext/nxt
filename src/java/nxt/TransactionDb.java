@@ -153,19 +153,25 @@ final class TransactionDb {
                 }
             }
             if (rs.getBoolean("has_message")) {
-                builder.message(new Appendix.Message(buffer, version));
+                builder.appendix(new Appendix.Message(buffer, version));
             }
             if (rs.getBoolean("has_encrypted_message")) {
-                builder.encryptedMessage(new Appendix.EncryptedMessage(buffer, version));
+                builder.appendix(new Appendix.EncryptedMessage(buffer, version));
             }
             if (rs.getBoolean("has_public_key_announcement")) {
-                builder.publicKeyAnnouncement(new Appendix.PublicKeyAnnouncement(buffer, version));
+                builder.appendix(new Appendix.PublicKeyAnnouncement(buffer, version));
             }
             if (rs.getBoolean("has_encrypttoself_message")) {
-                builder.encryptToSelfMessage(new Appendix.EncryptToSelfMessage(buffer, version));
+                builder.appendix(new Appendix.EncryptToSelfMessage(buffer, version));
             }
             if (rs.getBoolean("phased")) {
-                builder.phasing(new Appendix.Phasing(buffer, version));
+                builder.appendix(new Appendix.Phasing(buffer, version));
+            }
+            if (rs.getBoolean("has_prunable_message")) {
+                builder.appendix(new Appendix.PrunablePlainMessage(buffer, version));
+            }
+            if (rs.getBoolean("has_prunable_encrypted_message")) {
+                builder.appendix(new Appendix.PrunableEncryptedMessage(buffer, version));
             }
            
             return builder.build();
@@ -210,8 +216,9 @@ final class TransactionDb {
                         + "recipient_id, amount, fee, referenced_transaction_full_hash, height, "
                         + "block_id, signature, timestamp, type, subtype, sender_id, attachment_bytes, "
                         + "block_timestamp, full_hash, version, has_message, has_encrypted_message, has_public_key_announcement, "
-                        + "has_encrypttoself_message, phased, ec_block_height, ec_block_id, transaction_index) "
-                        + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
+                        + "has_encrypttoself_message, phased, has_prunable_message, has_prunable_encrypted_message, "
+                        + "ec_block_height, ec_block_id, transaction_index) "
+                        + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
                     int i = 0;
                     pstmt.setLong(++i, transaction.getId());
                     pstmt.setShort(++i, transaction.getDeadline());
@@ -248,6 +255,8 @@ final class TransactionDb {
                     pstmt.setBoolean(++i, transaction.getPublicKeyAnnouncement() != null);
                     pstmt.setBoolean(++i, transaction.getEncryptToSelfMessage() != null);
                     pstmt.setBoolean(++i, transaction.getPhasing() != null);
+                    pstmt.setBoolean(++i, transaction.hasPrunablePlainMessage());
+                    pstmt.setBoolean(++i, transaction.hasPrunableEncryptedMessage());
                     pstmt.setInt(++i, transaction.getECBlockHeight());
                     DbUtils.setLongZeroToNull(pstmt, ++i, transaction.getECBlockId());
                     pstmt.setShort(++i, index++);

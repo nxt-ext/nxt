@@ -285,7 +285,8 @@ final class BlockchainImpl implements Blockchain {
                 buf.append("AND height <= ? ");
             }
             if (withMessage) {
-                buf.append("AND (has_message = TRUE OR has_encrypted_message = TRUE) ");
+                buf.append("AND (has_message = TRUE OR has_encrypted_message = TRUE ");
+                buf.append("OR ((has_prunable_message = TRUE OR has_prunable_encrypted_message = TRUE) AND timestamp > ?)) ");
             }
             if (phased) {
                 buf.append("AND phased = TRUE ");
@@ -305,7 +306,8 @@ final class BlockchainImpl implements Blockchain {
                 buf.append("AND height <= ? ");
             }
             if (withMessage) {
-                buf.append("AND (has_message = TRUE OR has_encrypted_message = TRUE OR has_encrypttoself_message = TRUE) ");
+                buf.append("AND (has_message = TRUE OR has_encrypted_message = TRUE OR has_encrypttoself_message = TRUE ");
+                buf.append("OR ((has_prunable_message = TRUE OR has_prunable_encrypted_message = TRUE) AND timestamp > ?)) ");
             }
             if (phased) {
                 buf.append("AND phased = TRUE ");
@@ -330,6 +332,10 @@ final class BlockchainImpl implements Blockchain {
             if (height < Integer.MAX_VALUE) {
                 pstmt.setInt(++i, height);
             }
+            int prunableExpiration = Nxt.getEpochTime() - Constants.MIN_PRUNABLE_LIFETIME;
+            if (withMessage) {
+                pstmt.setInt(++i, prunableExpiration);
+            }
             pstmt.setLong(++i, account.getId());
             if (blockTimestamp > 0) {
                 pstmt.setInt(++i, blockTimestamp);
@@ -342,6 +348,9 @@ final class BlockchainImpl implements Blockchain {
             }
             if (height < Integer.MAX_VALUE) {
                 pstmt.setInt(++i, height);
+            }
+            if (withMessage) {
+                pstmt.setInt(++i, prunableExpiration);
             }
             DbUtils.setLimits(++i, pstmt, from, to);
             return getTransactions(con, pstmt);

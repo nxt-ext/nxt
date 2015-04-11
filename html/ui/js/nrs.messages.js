@@ -174,8 +174,8 @@ var NRS = (function(NRS, $) {
 							decoded = $.t("error_decryption_unknown");
 						}
 					}
-				} else {
-					if (!messages[i].attachment["version.Message"]) {
+				} else if (messages[i].attachment.message) {
+					if (!messages[i].attachment["version.Message"] && !messages[i].attachment["version.PrunablePlainMessage"]) {
 						try {
 							decoded = converters.hexStringToString(messages[i].attachment.message);
 						} catch (err) {
@@ -189,6 +189,10 @@ var NRS = (function(NRS, $) {
 					} else {
 						decoded = String(messages[i].attachment.message);
 					}
+				} else if (messages[i].attachment.messageHash || messages[i].attachment.encryptedMessageHash) {
+					decoded = $.t("message_pruned");
+				} else {
+					decoded = $.t("message_empty");
 				}
 
 				if (decoded !== false) {

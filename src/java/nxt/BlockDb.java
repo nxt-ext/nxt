@@ -1,6 +1,8 @@
 package nxt;
 
 import nxt.db.DbUtils;
+import nxt.db.DerivedDbTable;
+import nxt.db.PersistentDbTable;
 import nxt.util.Logger;
 
 import java.math.BigInteger;
@@ -242,7 +244,13 @@ final class BlockDb {
                 stmt.executeUpdate("SET REFERENTIAL_INTEGRITY FALSE");
                 stmt.executeUpdate("TRUNCATE TABLE transaction");
                 stmt.executeUpdate("TRUNCATE TABLE block");
-                stmt.executeUpdate("TRUNCATE TABLE public_key");
+                for (DerivedDbTable table : BlockchainProcessorImpl.getInstance().getDerivedTables()) {
+                    if (table instanceof PersistentDbTable) {
+                        try {
+                            stmt.executeUpdate("TRUNCATE TABLE " + table.toString());
+                        } catch (SQLException ignore) {}
+                    }
+                }
                 stmt.executeUpdate("SET REFERENTIAL_INTEGRITY TRUE");
                 Db.db.commitTransaction();
             } catch (SQLException e) {
