@@ -40,6 +40,13 @@ public final class Constants {
     public static final int MAX_PRUNABLE_ENCRYPTED_MESSAGE_LENGTH = 42 * 1024;
 
     public static final int MIN_PRUNABLE_LIFETIME = isTestnet ? 1440 * 60 : 14 * 1440 * 60;
+    public static final int MAX_PRUNABLE_LIFETIME;
+    public static final boolean ENABLE_PRUNING;
+    static {
+        int maxPrunableLifetime = Nxt.getIntProperty("nxt.maxPrunableLifetime");
+        ENABLE_PRUNING = maxPrunableLifetime >= 0;
+        MAX_PRUNABLE_LIFETIME = Math.max(maxPrunableLifetime, MIN_PRUNABLE_LIFETIME);
+    }
 
     public static final int MAX_ACCOUNT_NAME_LENGTH = 100;
     public static final int MAX_ACCOUNT_DESCRIPTION_LENGTH = 1000;

@@ -104,7 +104,7 @@ public class PrunableMessage {
         this.isText = appendix.isText();
         this.isCompressed = false;
         this.blockTimestamp = Nxt.getBlockchain().getLastBlockTimestamp();
-        this.expiration = transaction.getTimestamp() + Constants.MIN_PRUNABLE_LIFETIME;
+        this.expiration = transaction.getTimestamp() + Constants.MAX_PRUNABLE_LIFETIME;
     }
 
     private PrunableMessage(Transaction transaction, Appendix.PrunableEncryptedMessage appendix) {
@@ -117,7 +117,7 @@ public class PrunableMessage {
         this.isText = appendix.isText();
         this.isCompressed = appendix.isCompressed();
         this.blockTimestamp = Nxt.getBlockchain().getLastBlockTimestamp();
-        this.expiration = transaction.getTimestamp() + Constants.MIN_PRUNABLE_LIFETIME;
+        this.expiration = transaction.getTimestamp() + Constants.MAX_PRUNABLE_LIFETIME;
     }
 
     private PrunableMessage(ResultSet rs) throws SQLException {
@@ -203,7 +203,7 @@ public class PrunableMessage {
     }
 
     static void add(Transaction transaction, Appendix.PrunablePlainMessage appendix) {
-        if (Nxt.getEpochTime() - transaction.getTimestamp() < Constants.MIN_PRUNABLE_LIFETIME
+        if (Nxt.getEpochTime() - transaction.getTimestamp() < Constants.MAX_PRUNABLE_LIFETIME
                 && prunableMessageTable.get(prunableMessageKeyFactory.newKey(transaction.getId())) == null) {
             PrunableMessage prunableMessage = new PrunableMessage(transaction, appendix);
             prunableMessageTable.insert(prunableMessage);
@@ -211,7 +211,7 @@ public class PrunableMessage {
     }
 
     static void add(Transaction transaction, Appendix.PrunableEncryptedMessage appendix) {
-        if (Nxt.getEpochTime() - transaction.getTimestamp() < Constants.MIN_PRUNABLE_LIFETIME
+        if (Nxt.getEpochTime() - transaction.getTimestamp() < Constants.MAX_PRUNABLE_LIFETIME
                 && prunableMessageTable.get(prunableMessageKeyFactory.newKey(transaction.getId())) == null) {
             PrunableMessage prunableMessage = new PrunableMessage(transaction, appendix);
             prunableMessageTable.insert(prunableMessage);
