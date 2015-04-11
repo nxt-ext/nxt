@@ -166,17 +166,19 @@ public interface Appendix {
         }
 
         public Message(byte[] message) {
-            this.message = message;
-            this.isText = false;
+            this(message, false);
         }
 
         public Message(String string) {
-            this.message = Convert.toBytes(string);
-            this.isText = true;
+            this(Convert.toBytes(string), true);
         }
 
         public Message(String string, boolean isText) {
-            this.message = isText ? Convert.toBytes(string) : Convert.parseHexString(string);
+            this(isText ? Convert.toBytes(string) : Convert.parseHexString(string), isText);
+        }
+
+        public Message(byte[] message, boolean isText) {
+            this.message = message;
             this.isText = isText;
         }
 
@@ -271,19 +273,19 @@ public interface Appendix {
         }
 
         public PrunablePlainMessage(byte[] message) {
-            this.message = message;
-            this.isText = false;
-            this.hash = null;
+            this(message, false);
         }
 
         public PrunablePlainMessage(String string) {
-            this.message = Convert.toBytes(string);
-            this.isText = true;
-            this.hash = null;
+            this(Convert.toBytes(string), true);
         }
 
         public PrunablePlainMessage(String string, boolean isText) {
-            this.message = isText ? Convert.toBytes(string) : Convert.parseHexString(string);
+            this(isText ? Convert.toBytes(string) : Convert.parseHexString(string), isText);
+        }
+
+        public PrunablePlainMessage(byte[] message, boolean isText) {
+            this.message = message;
             this.isText = isText;
             this.hash = null;
         }
@@ -344,8 +346,8 @@ public interface Appendix {
             if (getMessageLength() > Constants.MAX_PRUNABLE_MESSAGE_LENGTH) {
                 throw new NxtException.NotValidException("Invalid prunable message length: " + message.length);
             }
-            if (message != null && getMessageLength() <= 28) {
-                throw new NxtException.NotValidException("Prunable messages must be longer than 28 bytes");
+            if (message != null && getMessageLength() < Constants.MIN_PRUNABLE_MESSAGE_LENGTH) {
+                throw new NxtException.NotValidException("Prunable messages must be at least 28 bytes");
             }
             if (getMessage() == null && Nxt.getEpochTime() - transaction.getTimestamp() < Constants.MIN_PRUNABLE_LIFETIME) {
                 throw new NxtException.NotCurrentlyValidException("Message has been pruned prematurely");
