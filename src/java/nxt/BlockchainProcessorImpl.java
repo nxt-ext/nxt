@@ -536,6 +536,10 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         }
     }
 
+    List<DerivedDbTable> getDerivedTables() {
+        return derivedTables;
+    }
+
     @Override
     public Peer getLastBlockchainFeeder() {
         return lastBlockchainFeeder;
@@ -1293,7 +1297,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 pstmtDone.executeUpdate();
                 Db.db.commitTransaction();
                 blockListeners.notify(currentBlock, Event.RESCAN_END);
-                Logger.logMessage("...done at height " + blockchain);
+                Logger.logMessage("...done at height " + blockchain.getHeight());
                 if (height == 0 && validate) {
                     Logger.logMessage("SUCCESSFULLY PERFORMED FULL RESCAN WITH VALIDATION");
                 }

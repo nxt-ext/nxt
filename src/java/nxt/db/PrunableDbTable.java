@@ -7,14 +7,14 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
-public abstract class PrunableDbTable<T> extends EntityDbTable<T> {
+public abstract class PrunableDbTable<T> extends PersistentDbTable<T> {
 
     protected PrunableDbTable(String table, DbKey.Factory<T> dbKeyFactory) {
-        super(table, dbKeyFactory, false, null);
+        super(table, dbKeyFactory);
     }
 
     protected PrunableDbTable(String table, DbKey.Factory<T> dbKeyFactory, String fullTextSearchColumns) {
-        super(table, dbKeyFactory, false, fullTextSearchColumns);
+        super(table, dbKeyFactory, fullTextSearchColumns);
     }
 
     @Override
@@ -31,16 +31,6 @@ public abstract class PrunableDbTable<T> extends EntityDbTable<T> {
             throw new RuntimeException(e.toString(), e);
         }
 
-    }
-
-    @Override
-    public void rollback(int height) {
-        clearCache();
-    }
-
-    @Override
-    public void truncate() {
-        clearCache();
     }
 
 }

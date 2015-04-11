@@ -7,7 +7,7 @@ import nxt.db.DbIterator;
 import nxt.db.DbKey;
 import nxt.db.DbUtils;
 import nxt.db.DerivedDbTable;
-import nxt.db.EntityDbTable;
+import nxt.db.PersistentDbTable;
 import nxt.db.VersionedEntityDbTable;
 import nxt.util.Convert;
 import nxt.util.Listener;
@@ -309,7 +309,7 @@ public final class Account {
 
     };
 
-    private static final EntityDbTable<byte[]> publicKeyTable = new EntityDbTable<byte[]>("public_key", publicKeyDbKeyFactory) {
+    private static final PersistentDbTable<byte[]> publicKeyTable = new PersistentDbTable<byte[]>("public_key", publicKeyDbKeyFactory) {
 
         @Override
         protected byte[] load(Connection con, ResultSet rs) throws SQLException {
@@ -326,17 +326,6 @@ public final class Account {
                 pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
                 pstmt.executeUpdate();
             }
-        }
-
-        // this table is special, rollback and truncate is handled by the BlockDb delete
-        @Override
-        public void rollback(int height) {
-            clearCache();
-        }
-
-        @Override
-        public void truncate() {
-            clearCache();
         }
 
     };
