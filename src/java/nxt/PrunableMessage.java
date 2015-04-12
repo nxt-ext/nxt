@@ -35,7 +35,20 @@ public class PrunableMessage {
             prunableMessage.save(con);
         }
 
+        @Override
+        protected String defaultSort() {
+            return " ORDER BY timestamp DESC, db_id DESC ";
+        }
+
     };
+
+    public static int getCount() {
+        return prunableMessageTable.getCount();
+    }
+
+    public static DbIterator<PrunableMessage> getAll(int from, int to) {
+        return prunableMessageTable.getAll(from, to);
+    }
 
     public static PrunableMessage getPrunableMessage(long transactionId) {
         return prunableMessageTable.get(prunableMessageKeyFactory.newKey(transactionId));
