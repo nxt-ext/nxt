@@ -1,7 +1,7 @@
 /**
  * @depends {nrs.js}
  */
-var NRS = (function(NRS, $, undefined) {
+var NRS = (function (NRS, $) {
 	var _password;
 	var _decryptionPassword;
 	var _decryptedTransactions = {};
@@ -18,7 +18,7 @@ var NRS = (function(NRS, $, undefined) {
 		}
 
 		return NRS.getPublicKey(converters.stringToHexString(secretPhrase));
-	}
+	};
 
 	NRS.getPublicKey = function(secretPhrase, isAccountNumber) {
 		if (isAccountNumber) {
@@ -42,22 +42,16 @@ var NRS = (function(NRS, $, undefined) {
 			var digest = simpleHash(secretPhraseBytes);
 			return converters.byteArrayToHexString(curve25519.keygen(digest).p);
 		}
-	}
+	};
 
 	NRS.getPrivateKey = function(secretPhrase) {
 		var bytes = simpleHash(converters.stringToByteArray(secretPhrase));
         return converters.shortArrayToHexString(curve25519_clamp(converters.byteArrayToShortArray(bytes)));
-	}
+	};
 
 	NRS.getAccountId = function(secretPhrase) {
 		return NRS.getAccountIdFromPublicKey(NRS.getPublicKey(converters.stringToHexString(secretPhrase)));
-
-		/*	
-		if (NRS.accountInfo && NRS.accountInfo.publicKey && publicKey != NRS.accountInfo.publicKey) {
-			return -1;
-		}
-		*/
-	}
+	};
 
 	NRS.getAccountIdFromPublicKey = function(publicKey, RSFormat) {
 		var hex = converters.hexStringToByteArray(publicKey);
@@ -80,7 +74,7 @@ var NRS = (function(NRS, $, undefined) {
 		} else {
 			return accountId;
 		}
-	}
+	};
 
 	NRS.encryptNote = function(message, options, secretPhrase) {
 		try {
@@ -146,14 +140,12 @@ var NRS = (function(NRS, $, undefined) {
 				};
 			}
 		}
-	}
+	};
 
 	NRS.decryptData = function(data, options, secretPhrase) {
 		try {
 			return NRS.decryptNote(message, options, secretPhrase);
 		} catch (err) {
-			var mesage = String(err.message ? err.message : err);
-
 			if (err.errorCode && err.errorCode == 1) {
 				return false;
 			} else {
@@ -171,7 +163,7 @@ var NRS = (function(NRS, $, undefined) {
 				}
 			}
 		}
-	}
+	};
 
 	NRS.decryptNote = function(message, options, secretPhrase) {
 		try {
@@ -218,7 +210,7 @@ var NRS = (function(NRS, $, undefined) {
 				};
 			}
 		}
-	}
+	};
 
 	NRS.getSharedKeyWithAccount = function(account) {
 		try {
@@ -255,7 +247,7 @@ var NRS = (function(NRS, $, undefined) {
 		} catch (err) {
 			throw err;
 		}
-	}
+	};
 
 	NRS.signBytes = function(message, secretPhrase) {
 		var messageBytes = converters.hexStringToByteArray(message);
@@ -269,7 +261,7 @@ var NRS = (function(NRS, $, undefined) {
 		var h = simpleHash(m, y);
 		var v = curve25519.sign(h, x, s);
 		return converters.byteArrayToHexString(v.concat(h));
-	}
+	};
 
 	NRS.verifyBytes = function(signature, message, publicKey) {
 		var signatureBytes = converters.hexStringToByteArray(signature);
@@ -281,21 +273,21 @@ var NRS = (function(NRS, $, undefined) {
 		var m = simpleHash(messageBytes);
 		var h2 = simpleHash(m, y);
 		return areByteArraysEqual(h, h2);
-	}
+	};
 
 	NRS.setEncryptionPassword = function(password) {
 		_password = password;
-	}
+	};
 
 	NRS.setDecryptionPassword = function(password) {
 		_decryptionPassword = password;
-	}
+	};
 
 	NRS.addDecryptedTransaction = function(identifier, content) {
 		if (!_decryptedTransactions[identifier]) {
 			_decryptedTransactions[identifier] = content;
 		}
-	}
+	};
 
 	NRS.tryToDecryptMessage = function(message) {
 		if (_decryptedTransactions && _decryptedTransactions[message.transaction]) {
@@ -316,7 +308,7 @@ var NRS = (function(NRS, $, undefined) {
 		} catch (err) {
 			throw err;
 		}
-	}
+	};
 
 	NRS.tryToDecrypt = function(transaction, fields, account, options) {
 		var showDecryptionForm = false;
@@ -389,7 +381,6 @@ var NRS = (function(NRS, $, undefined) {
 							"account": account
 						});
 					} catch (err) {
-						var mesage = String(err.message ? err.message : err);
 						if (err.errorCode && err.errorCode == 1) {
 							showDecryptionForm = true;
 							return false;
@@ -430,21 +421,23 @@ var NRS = (function(NRS, $, undefined) {
 			NRS.removeDecryptionForm();
 			$(outputEl).append(output).show();
 		}
-	}
+	};
 
 	NRS.removeDecryptionForm = function($modal) {
-		if (($modal && $modal.find("#decrypt_note_form_container").length) || (!$modal && $("#decrypt_note_form_container").length)) {
-			$("#decrypt_note_form_container input").val("");
-			$("#decrypt_note_form_container").find(".callout").html($.t("passphrase_required_to_decrypt_data"));
-			$("#decrypt_note_form_container").hide().detach().appendTo("body");
+		var noteFormContainer = $("#decrypt_note_form_container");
+        if (($modal && $modal.find("#decrypt_note_form_container").length) || (!$modal && noteFormContainer.length)) {
+			noteFormContainer.find("input").val("");
+			noteFormContainer.find(".callout").html($.t("passphrase_required_to_decrypt_data"));
+			noteFormContainer.hide().detach().appendTo("body");
 		}
-	}
+	};
 
-	$("#decrypt_note_form_container button.btn-primary").click(function() {
+	var noteFormContainer = $("#decrypt_note_form_container");
+	noteFormContainer.find("button.btn-primary").click(function() {
 		NRS.decryptNoteFormSubmit();
 	});
 
-	$("#decrypt_note_form_container").on("submit", function(e) {
+	noteFormContainer.on("submit", function(e) {
 		e.preventDefault();
 		NRS.decryptNoteFormSubmit();
 	});
@@ -483,9 +476,6 @@ var NRS = (function(NRS, $, undefined) {
 		var output = "";
 		var decryptionError = false;
 		var decryptedFields = {};
-
-		var inAttachment = ("attachment" in _encryptedNote.transaction);
-
 		var nrFields = Object.keys(_encryptedNote.fields).length;
 
 		$.each(_encryptedNote.fields, function(key, title) {
@@ -562,7 +552,7 @@ var NRS = (function(NRS, $, undefined) {
 		if (rememberPassword) {
 			_decryptionPassword = password;
 		}
-	}
+	};
 
 	NRS.decryptAllMessages = function(messages, password) {
 		if (!password) {
@@ -609,12 +599,13 @@ var NRS = (function(NRS, $, undefined) {
 			}
 		}
 
+		//noinspection RedundantIfStatementJS
 		if (success || !error) {
 			return true;
 		} else {
 			return false;
 		}
-	}
+	};
 
 	function simpleHash(b1, b2) {
 		var sha256 = CryptoJS.algo.SHA256.create();
@@ -645,7 +636,7 @@ var NRS = (function(NRS, $, undefined) {
 		return curve;
 	}
 
-	function byteArrayToBigInteger(byteArray, startIndex) {
+	function byteArrayToBigInteger(byteArray) {
 		var value = new BigInteger("0", 10);
 		var temp1, temp2;
 		for (var i = byteArray.length - 1; i >= 0; i--) {
@@ -667,11 +658,11 @@ var NRS = (function(NRS, $, undefined) {
 
 		// CryptoJS likes WordArray parameters
 		var text = converters.byteArrayToWordArray(plaintext);
-
+		var sharedKey;
 		if (!options.sharedKey) {
-			var sharedKey = getSharedKey(options.privateKey, options.publicKey);
+			sharedKey = getSharedKey(options.privateKey, options.publicKey);
 		} else {
-			var sharedKey = options.sharedKey.slice(0); //clone
+			sharedKey = options.sharedKey.slice(0); //clone
 		}
 
 		for (var i = 0; i < 32; i++) {
@@ -709,11 +700,11 @@ var NRS = (function(NRS, $, undefined) {
 
 		var iv = converters.byteArrayToWordArray(ivCiphertext.slice(0, 16));
 		var ciphertext = converters.byteArrayToWordArray(ivCiphertext.slice(16));
-
+		var sharedKey;
 		if (!options.sharedKey) {
-			var sharedKey = getSharedKey(options.privateKey, options.publicKey);
+			sharedKey = getSharedKey(options.privateKey, options.publicKey);
 		} else {
-			var sharedKey = options.sharedKey.slice(0); //clone
+			sharedKey = options.sharedKey.slice(0); //clone
 		}
 
 		for (var i = 0; i < 32; i++) {
@@ -732,9 +723,7 @@ var NRS = (function(NRS, $, undefined) {
 			iv: iv
 		});
 
-		var plaintext = converters.wordArrayToByteArray(decrypted);
-
-		return plaintext;
+		return converters.wordArrayToByteArray(decrypted);
 	}
 
 	function encryptData(plaintext, options) {
@@ -754,8 +743,10 @@ var NRS = (function(NRS, $, undefined) {
 		options.nonce = new Uint8Array(32);
 
 		if (window.crypto) {
+			//noinspection JSUnresolvedFunction
 			window.crypto.getRandomValues(options.nonce);
 		} else {
+			//noinspection JSUnresolvedFunction
 			window.msCrypto.getRandomValues(options.nonce);
 		}
 
@@ -773,12 +764,8 @@ var NRS = (function(NRS, $, undefined) {
 		}
 
 		var compressedPlaintext = aesDecrypt(data, options);
-
 		var binData = new Uint8Array(compressedPlaintext);
-
-		var data = pako.inflate(binData);
-
-		return converters.byteArrayToString(data);
+		return converters.byteArrayToString(pako.inflate(binData));
 	}
 
 	function getSharedKey(key1, key2) {
