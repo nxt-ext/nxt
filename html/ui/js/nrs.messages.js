@@ -62,6 +62,9 @@ var NRS = (function(NRS, $) {
 		var sortedMessages = [];
 
 		for (var otherUser in _messages) {
+			if (!_messages.hasOwnProperty(otherUser)) {
+				continue;
+			}
 			_messages[otherUser].sort(function(a, b) {
 				if (a.timestamp > b.timestamp) {
 					return 1;
@@ -402,7 +405,13 @@ var NRS = (function(NRS, $) {
 		try {
 			var messagesToDecrypt = [];
 			for (var otherUser in _messages) {
+				if (!_messages.hasOwnProperty(otherUser)) {
+					continue;
+				}
 				for (var key in _messages[otherUser]) {
+					if (!_messages[otherUser].hasOwnProperty(key)) {
+						continue;
+					}
 					var message = _messages[otherUser][key];
 					if (message.attachment && message.attachment.encryptedMessage) {
 						messagesToDecrypt.push(message);
