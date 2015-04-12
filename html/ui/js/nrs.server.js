@@ -1053,7 +1053,8 @@ var NRS = (function(NRS, $, undefined) {
 		var position = 1;
 
 		//non-encrypted message
-		if ((transaction.flags & position) != 0 || (requestType == "sendMessage" && data.message)) {
+		if ((transaction.flags & position) != 0 ||
+			((requestType == "sendMessage" && data.message && !(data.messageIsPrunable === "true")))) {
 			var attachmentVersion = byteArray[pos];
 			pos++;
 			var messageLength = converters.byteArrayToSignedInt32(byteArray, pos);
@@ -1161,7 +1162,15 @@ var NRS = (function(NRS, $, undefined) {
 			timeout: 30000,
 			async: true,
 			data: {
-				"transactionBytes": transactionData
+				"transactionBytes": transactionData,
+				"message": originalData.message,
+				"messageIsText": originalData.messageIsText,
+				"messageIsPrunable": originalData.messageIsPrunable,
+				"messageToEncryptIsText": originalData.messageToEncryptIsText,
+				"encryptedMessageData": originalData.encryptedMessageData,
+				"encryptedMessageNonce": originalData.encryptedMessageNonce,
+				"encryptedMessageIsPrunable": originalData.encryptedMessageIsPrunable,
+				"compressMessageToEncrypt": originalData.compressMessageToEncrypt
 			}
 		}).done(function(response, status, xhr) {
 			if (NRS.console) {
