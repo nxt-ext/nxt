@@ -123,10 +123,10 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                     } // synchronized
                 }
             } catch (Exception e) {
-                Logger.logDebugMessage("Error removing unconfirmed transactions", e);
+                Logger.logMessage("Error removing unconfirmed transactions", e);
             }
         } catch (Throwable t) {
-            Logger.logMessage("CRITICAL ERROR. PLEASE REPORT TO THE DEVELOPERS.\n" + t.toString());
+            Logger.logErrorMessage("CRITICAL ERROR. PLEASE REPORT TO THE DEVELOPERS.\n" + t.toString());
             t.printStackTrace();
             System.exit(1);
         }
@@ -152,10 +152,10 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                 }
 
             } catch (Exception e) {
-                Logger.logDebugMessage("Error in transaction re-broadcasting thread", e);
+                Logger.logMessage("Error in transaction re-broadcasting thread", e);
             }
         } catch (Throwable t) {
-            Logger.logMessage("CRITICAL ERROR. PLEASE REPORT TO THE DEVELOPERS.\n" + t.toString());
+            Logger.logErrorMessage("CRITICAL ERROR. PLEASE REPORT TO THE DEVELOPERS.\n" + t.toString());
             t.printStackTrace();
             System.exit(1);
         }
@@ -194,10 +194,10 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                         peer.blacklist(e);
                     }
                 } catch (Exception e) {
-                    Logger.logDebugMessage("Error processing unconfirmed transactions", e);
+                    Logger.logMessage("Error processing unconfirmed transactions", e);
                 }
             } catch (Throwable t) {
-                Logger.logMessage("CRITICAL ERROR. PLEASE REPORT TO THE DEVELOPERS.\n" + t.toString());
+                Logger.logErrorMessage("CRITICAL ERROR. PLEASE REPORT TO THE DEVELOPERS.\n" + t.toString());
                 t.printStackTrace();
                 System.exit(1);
             }
