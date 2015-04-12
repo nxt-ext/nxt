@@ -1165,5 +1165,6 @@
   "min_balance_type": "Min Balance Type",
   "account_balance": "Account Balance",
   "asset_balance": "Asset Balance",
-  "currency_balance": "Currency Balance"
+  "currency_balance": "Currency Balance",
+  "permanent_message": "Message is never deleted"
 }

@@ -103,13 +103,18 @@ var NRS = (function(NRS, $) {
 					data.encryptedMessageData = encrypted.message;
 					data.encryptedMessageNonce = encrypted.nonce;
 					data.messageToEncryptIsText = "true";
-
+					if (!data.permanent_message) {
+						data.encryptedMessageIsPrunable = "true";
+					}
 					delete data.message;
 				} catch (err) {
 					throw err;
 				}
 			} else {
 				data.messageIsText = "true";
+				if (!data.permanent_message) {
+					data.messageIsPrunable = "true";
+				}
 			}
 		} else {
 			delete data.message;

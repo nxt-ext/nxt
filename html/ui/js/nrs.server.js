@@ -1076,7 +1076,7 @@ var NRS = (function(NRS, $, undefined) {
 			if (transaction.message !== data.message) {
 				return false;
 			}
-		} else if (data.message) {
+		} else if (data.message && !(data.messageIsPrunable === "true")) {
 			return false;
 		}
 
@@ -1103,7 +1103,7 @@ var NRS = (function(NRS, $, undefined) {
 			if (transaction.encryptedMessageData !== data.encryptedMessageData || transaction.encryptedMessageNonce !== data.encryptedMessageNonce) {
 				return false;
 			}
-		} else if (data.encryptedMessageData) {
+		} else if (data.encryptedMessageData && !(data.encryptedMessageIsPrunable === "true")) {
 			return false;
 		}
 
@@ -1146,6 +1146,8 @@ var NRS = (function(NRS, $, undefined) {
 		} else if (data.encryptToSelfMessageData) {
 			return false;
 		}
+
+		// TODO add phasing, prunablePlainMessage, prunableEncryptedMessage appendix validation
 
 		return transactionBytes.substr(0, 192) + signature + transactionBytes.substr(320);
 	};
