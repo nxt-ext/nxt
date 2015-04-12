@@ -91,6 +91,13 @@ public final class Constants {
     public static final short MAX_SHUFFLING_DELAY = 1440;
     public static final int MAX_SHUFFLING_RECIPIENTS_LENGTH = 10000;
 
+    public static final int MAX_TAGGED_DATA_NAME_LENGTH = 100;
+    public static final int MAX_TAGGED_DATA_DESCRIPTION_LENGTH = 1000;
+    public static final int MAX_TAGGED_DATA_TAGS_LENGTH = 100;
+    public static final int MAX_TAGGED_DATA_TYPE_LENGTH = 100;
+    public static final int MAX_TAGGED_DATA_FILENAME_LENGTH = 100;
+    public static final int MAX_TAGGED_DATA_DATA_LENGTH = 42 * 1024;
+
     public static final int ALIAS_SYSTEM_BLOCK = 22000;
     public static final int TRANSPARENT_FORGING_BLOCK = 30000;
     public static final int ARBITRARY_MESSAGES_BLOCK = 40000;

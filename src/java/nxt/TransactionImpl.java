@@ -441,7 +441,7 @@ final class TransactionImpl implements Transaction {
     }
 
     @Override
-    public Attachment getAttachment() {
+    public Attachment.AbstractAttachment getAttachment() {
         return attachment;
     }
 
@@ -945,7 +945,7 @@ final class TransactionImpl implements Transaction {
                 && timestamp > Constants.REFERENCED_TRANSACTION_FULL_HASH_BLOCK_TIMESTAMP) {
             senderAccount.addToUnconfirmedBalanceNQT(Constants.UNCONFIRMED_POOL_DEPOSIT_NQT);
         }
-        if (phasing != null) {
+        if (phasing != null && attachment.isPhasable()) {
             senderAccount.addToBalanceNQT(-feeNQT);
         }
         for (Appendix.AbstractAppendix appendage : appendages) {

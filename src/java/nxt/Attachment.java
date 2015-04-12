@@ -1,11 +1,13 @@
 package nxt;
 
+import nxt.crypto.Crypto;
 import nxt.crypto.EncryptedData;
 import nxt.util.Convert;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 import java.nio.ByteBuffer;
+import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -42,12 +44,7 @@ public interface Attachment extends Appendix {
 
         @Override
         final void apply(Transaction transaction, Account senderAccount, Account recipientAccount) {
-            getTransactionType().apply(transaction, senderAccount, recipientAccount);
-        }
-
-        @Override
-        final boolean isPhasable() {
-            return true;
+            getTransactionType().apply((TransactionImpl)transaction, senderAccount, recipientAccount);
         }
 
         @Override
@@ -2420,5 +2417,194 @@ public interface Attachment extends Appendix {
         }
 
     }
+
+
+    final class TaggedDataUpload extends AbstractAttachment {
+
+        private final String name;
+        private final String description;
+        private final String tags;
+        private final String type;
+        private final boolean isText;
+        private final String filename;
+        private final byte[] data;
+        private final byte[] hash;
+        private volatile PrunableTaggedData taggedData;
+
+
+        TaggedDataUpload(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
+            super(buffer, transactionVersion);
+            this.hash = new byte[32];
+            buffer.get(hash);
+            this.name = null;
+            this.description = null;
+            this.tags = null;
+            this.type = null;
+            this.isText = false;
+            this.filename = null;
+            this.data = null;
+        }
+
+        TaggedDataUpload(JSONObject attachmentData) {
+            super(attachmentData);
+            this.hash = Convert.parseHexString(Convert.emptyToNull((String)attachmentData.get("hash")));
+            if (hash == null) {
+                this.name = (String) attachmentData.get("name");
+                this.description = (String) attachmentData.get("description");
+                this.tags = (String) attachmentData.get("tags");
+                this.type = (String) attachmentData.get("type");
+                this.isText = Boolean.TRUE.equals(attachmentData.get("isText"));
+                String data = (String) attachmentData.get("data");
+                this.data = isText ? Convert.toBytes(data) : Convert.parseHexString(data);
+                this.filename = (String) attachmentData.get("filename");
+            } else {
+                this.name = null;
+                this.description = null;
+                this.tags = null;
+                this.type = null;
+                this.isText = false;
+                this.filename = null;
+                this.data = null;
+            }
+        }
+
+        public TaggedDataUpload(String name, String description, String tags, String type, boolean isText, String filename, byte[] data) {
+            this.name = name;
+            this.description = description;
+            this.tags = tags;
+            this.type = type;
+            this.isText = isText;
+            this.data = data;
+            this.filename = filename;
+            this.hash = null;
+        }
+
+        @Override
+        int getMySize() {
+            return 32;
+        }
+
+        @Override
+        int getMyFullSize() {
+            if (data == null) {
+                return 0;
+            }
+            return Convert.toBytes(name).length + Convert.toBytes(description).length + Convert.toBytes(type).length
+                    + Convert.toBytes(tags).length + Convert.toBytes(filename).length + data.length;
+        }
+
+        @Override
+        void putMyBytes(ByteBuffer buffer) {
+            buffer.put(getHash());
+        }
+
+        @Override
+        void putMyJSON(JSONObject attachment) {
+            if (taggedData != null) {
+                attachment.put("name", taggedData.getName());
+                attachment.put("description", taggedData.getDescription());
+                attachment.put("tags", taggedData.getTags());
+                attachment.put("type", taggedData.getType());
+                attachment.put("isText", taggedData.isText());
+                attachment.put("filename", taggedData.getFilename());
+                attachment.put("data", taggedData.isText() ? Convert.toString(taggedData.getData()) : Convert.toHexString(taggedData.getData()));
+            } else if (hash != null) {
+                attachment.put("hash", Convert.toHexString(hash));
+            } else {
+                attachment.put("name", name);
+                attachment.put("description", description);
+                attachment.put("tags", tags);
+                attachment.put("type", type);
+                attachment.put("isText", isText);
+                attachment.put("filename", filename);
+                attachment.put("data", isText ? Convert.toString(data) : Convert.toHexString(data));
+            }
+        }
+
+        @Override
+        public TransactionType getTransactionType() {
+            return TransactionType.Data.TAGGED_DATA_UPLOAD; //TODO
+        }
+
+        public String getName() {
+            if (taggedData != null) {
+                return taggedData.getName();
+            }
+            return name;
+        }
+
+        public String getDescription() {
+            if (taggedData != null) {
+                return taggedData.getDescription();
+            }
+            return description;
+        }
+
+        public String getTags() {
+            if (taggedData != null) {
+                return taggedData.getTags();
+            }
+            return tags;
+        }
+
+        public String getType() {
+            if (taggedData != null) {
+                return taggedData.getType();
+            }
+            return type;
+        }
+
+        public boolean isText() {
+            if (taggedData != null) {
+                return taggedData.isText();
+            }
+            return isText;
+        }
+
+        public String getFilename() {
+            if (taggedData != null) {
+                return taggedData.getFilename();
+            }
+            return filename;
+        }
+
+        public byte[] getData() {
+            if (taggedData != null) {
+                return taggedData.getData();
+            }
+            return data;
+        }
+
+        public byte[] getHash() {
+            if (hash != null) {
+                return hash;
+            }
+            MessageDigest digest = Crypto.sha256();
+            digest.update(Convert.toBytes(name));
+            digest.update(Convert.toBytes(description));
+            digest.update(Convert.toBytes(tags));
+            digest.update(Convert.toBytes(type));
+            digest.update((byte)(isText ? 1 : 0));
+            digest.update(Convert.toBytes(filename));
+            digest.update(data);
+            return digest.digest();
+        }
+
+        @Override
+        boolean loadPrunable(Transaction transaction) {
+            if (data == null && taggedData == null
+                    && Nxt.getEpochTime() - transaction.getTimestamp() < Constants.MIN_PRUNABLE_LIFETIME) {
+                taggedData = PrunableTaggedData.getData(transaction.getId());
+            }
+            return true;
+        }
+
+        @Override
+        boolean isPhasable() {
+            return false;
+        }
+
+    }
+
 
 }

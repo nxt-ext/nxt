@@ -18,6 +18,7 @@ public abstract class TransactionType {
     private static final byte TYPE_DIGITAL_GOODS = 3;
     private static final byte TYPE_ACCOUNT_CONTROL = 4;
     static final byte TYPE_MONETARY_SYSTEM = 5;
+    private static final byte TYPE_DATA = 6;
 
     private static final byte SUBTYPE_PAYMENT_ORDINARY_PAYMENT = 0;
 
@@ -50,6 +51,8 @@ public abstract class TransactionType {
     private static final byte SUBTYPE_DIGITAL_GOODS_REFUND = 7;
 
     private static final byte SUBTYPE_ACCOUNT_CONTROL_EFFECTIVE_BALANCE_LEASING = 0;
+
+    private static final byte SUBTYPE_DATA_TAGGED_DATA_UPLOAD = 0;
 
     public static TransactionType findTransactionType(byte type, byte subtype) {
         switch (type) {
@@ -134,6 +137,11 @@ public abstract class TransactionType {
                 }
             case TYPE_MONETARY_SYSTEM:
                 return MonetarySystem.findTransactionType(subtype);
+            case (TYPE_DATA):
+                switch (subtype) {
+                    case SUBTYPE_DATA_TAGGED_DATA_UPLOAD:
+                        return Data.TAGGED_DATA_UPLOAD;
+                }
             default:
                 return null;
         }
@@ -173,9 +181,9 @@ public abstract class TransactionType {
 
     abstract boolean applyAttachmentUnconfirmed(Transaction transaction, Account senderAccount);
 
-    final void apply(Transaction transaction, Account senderAccount, Account recipientAccount) {
+    final void apply(TransactionImpl transaction, Account senderAccount, Account recipientAccount) {
         long amount = transaction.getAmountNQT();
-        if (transaction.getPhasing() == null) {
+        if (transaction.getPhasing() == null || !transaction.getAttachment().isPhasable()) {
             senderAccount.addToBalanceNQT(-Math.addExact(amount, transaction.getFeeNQT()));
         } else {
             senderAccount.addToBalanceNQT(-amount);
@@ -2238,6 +2246,110 @@ public abstract class TransactionType {
             @Override
             public boolean isPhasingSafe() {
                 return true;
+            }
+
+        };
+
+    }
+
+    public static abstract class Data extends TransactionType {
+
+        private Data() {
+        }
+
+        @Override
+        public final byte getType() {
+            return TransactionType.TYPE_DATA;
+        }
+
+        @Override
+        final boolean applyAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
+            return true;
+        }
+
+        @Override
+        final void undoAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
+        }
+
+        @Override
+        public final boolean canHaveRecipient() {
+            return false;
+        }
+
+        @Override
+        public final boolean isPhasingSafe() {
+            return false;
+        }
+
+        public static final TransactionType TAGGED_DATA_UPLOAD = new Data() {
+
+            private final Fee TAGGED_DATA_FEE = new Fee.SizeBasedFee(Constants.ONE_NXT/10) {
+                @Override
+                public int getSize(TransactionImpl transaction, Appendix appendix) {
+                    return appendix.getFullSize();
+                }
+            };
+
+            @Override
+            public byte getSubtype() {
+                return SUBTYPE_DATA_TAGGED_DATA_UPLOAD;
+            }
+
+            @Override
+            public Fee getBaselineFee(Transaction transaction) {
+                return TAGGED_DATA_FEE;
+            }
+
+            @Override
+            Attachment.TaggedDataUpload parseAttachment(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
+                return new Attachment.TaggedDataUpload(buffer, transactionVersion);
+            }
+
+            @Override
+            Attachment.TaggedDataUpload parseAttachment(JSONObject attachmentData) throws NxtException.NotValidException {
+                return new Attachment.TaggedDataUpload(attachmentData);
+            }
+
+            @Override
+            void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
+                if (Nxt.getBlockchain().getHeight() < Constants.VOTING_SYSTEM_BLOCK) {
+                    throw new NxtException.NotYetEnabledException("Prunable Tagged Data not yet enabled");
+                }
+                Attachment.TaggedDataUpload attachment = (Attachment.TaggedDataUpload) transaction.getAttachment();
+                if (attachment.getData() == null && Nxt.getEpochTime() - transaction.getTimestamp() < Constants.MIN_PRUNABLE_LIFETIME) {
+                    throw new NxtException.NotCurrentlyValidException("Data has been pruned prematurely");
+                }
+                if (attachment.getData() != null) {
+                    if (attachment.getName().length() == 0 || attachment.getName().length() > Constants.MAX_TAGGED_DATA_NAME_LENGTH) {
+                        throw new NxtException.NotValidException("Invalid name length: " + attachment.getName().length());
+                    }
+                    if (attachment.getDescription().length() > Constants.MAX_TAGGED_DATA_DESCRIPTION_LENGTH) {
+                        throw new NxtException.NotValidException("Invalid description length: " + attachment.getDescription().length());
+                    }
+                    if (attachment.getTags().length() > Constants.MAX_TAGGED_DATA_TAGS_LENGTH) {
+                        throw new NxtException.NotValidException("Invalid tags length: " + attachment.getTags().length());
+                    }
+                    if (attachment.getType().length() > Constants.MAX_TAGGED_DATA_TYPE_LENGTH) {
+                        throw new NxtException.NotValidException("Invalid type length: " + attachment.getType().length());
+                    }
+                    if (attachment.getFilename().length() > Constants.MAX_TAGGED_DATA_FILENAME_LENGTH) {
+                        throw new NxtException.NotValidException("Invalid filename length: " + attachment.getFilename().length());
+                    }
+                    if (attachment.getData().length == 0 || attachment.getData().length > Constants.MAX_TAGGED_DATA_DATA_LENGTH) {
+                        throw new NxtException.NotValidException("Invalid data length: " + attachment.getData().length);
+                    }
+                }
+            }
+
+            @Override
+            void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
+                Attachment.TaggedDataUpload attachment = (Attachment.TaggedDataUpload) transaction.getAttachment();
+                PrunableTaggedData.add(transaction, attachment);
+            }
+
+            @Override
+            public String getName() {
+                return "TaggedDataUpload";
             }
 
         };
