@@ -1166,4 +1166,5 @@
   "account_balance": "Account Balance",
   "asset_balance": "Asset Balance",
   "currency_balance": "Currency Balance"
+  "phasing_only": "Phasing Only"
 }
