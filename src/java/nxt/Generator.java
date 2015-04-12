@@ -89,10 +89,10 @@ public final class Generator implements Comparable<Generator> {
                         }
                     } // synchronized
                 } catch (Exception e) {
-                    Logger.logDebugMessage("Error in block generation thread", e);
+                    Logger.logMessage("Error in block generation thread", e);
                 }
             } catch (Throwable t) {
-                Logger.logMessage("CRITICAL ERROR. PLEASE REPORT TO THE DEVELOPERS.\n" + t.toString());
+                Logger.logErrorMessage("CRITICAL ERROR. PLEASE REPORT TO THE DEVELOPERS.\n" + t.toString());
                 t.printStackTrace();
                 System.exit(1);
             }

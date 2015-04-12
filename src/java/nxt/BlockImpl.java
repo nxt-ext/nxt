@@ -399,6 +399,13 @@ final class BlockImpl implements Block {
         }
     }
 
+    void loadTransactions() {
+        for (TransactionImpl transaction : getTransactions()) {
+            transaction.bytes();
+            transaction.getAppendages();
+        }
+    }
+
     private void calculateBaseTarget(BlockImpl previousBlock) {
 
         if ((this.getId() != Genesis.GENESIS_BLOCK_ID || previousBlockId != 0) && cumulativeDifficulty.equals(BigInteger.ZERO)) {

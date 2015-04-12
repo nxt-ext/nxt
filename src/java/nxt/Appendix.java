@@ -316,14 +316,7 @@ public interface Appendix {
 
         @Override
         void putMyBytes(ByteBuffer buffer) {
-            if (hash != null) {
-                buffer.put(hash);
-            } else {
-                MessageDigest digest = Crypto.sha256();
-                digest.update((byte)(isText ? 1 : 0));
-                digest.update(message);
-                buffer.put(digest.digest());
-            }
+            buffer.put(getHash());
         }
 
         @Override
@@ -375,6 +368,16 @@ public interface Appendix {
                 return prunableMessage.isText();
             }
             return isText;
+        }
+
+        public byte[] getHash() {
+            if (hash != null) {
+                return hash;
+            }
+            MessageDigest digest = Crypto.sha256();
+            digest.update((byte)(isText ? 1 : 0));
+            digest.update(message);
+            return digest.digest();
         }
 
         @Override
@@ -549,16 +552,7 @@ public interface Appendix {
 
         @Override
         void putMyBytes(ByteBuffer buffer) {
-            if (hash != null) {
-                buffer.put(hash);
-            } else {
-                MessageDigest digest = Crypto.sha256();
-                digest.update((byte)(isText ? 1 : 0));
-                digest.update((byte)(isCompressed ? 1 : 0));
-                digest.update(encryptedData.getData());
-                digest.update(encryptedData.getNonce());
-                buffer.put(digest.digest());
-            }
+            buffer.put(getHash());
         }
 
         @Override
@@ -640,6 +634,18 @@ public interface Appendix {
                 return prunableMessage.isCompressed();
             }
             return isCompressed;
+        }
+
+        public byte[] getHash() {
+            if (hash != null) {
+                return hash;
+            }
+            MessageDigest digest = Crypto.sha256();
+            digest.update((byte)(isText ? 1 : 0));
+            digest.update((byte)(isCompressed ? 1 : 0));
+            digest.update(encryptedData.getData());
+            digest.update(encryptedData.getNonce());
+            return digest.digest();
         }
 
         private int getEncryptedDataLength() {
