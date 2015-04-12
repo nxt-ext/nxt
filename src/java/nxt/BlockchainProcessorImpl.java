@@ -901,7 +901,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             List<BlockImpl> poppedOffBlocks = new ArrayList<>();
             try {
                 BlockImpl block = blockchain.getLastBlock();
-                block.getTransactions();
+                block.loadTransactions();
                 Logger.logDebugMessage("Rollback from block " + block.getStringId() + " at height " + block.getHeight()
                         + " to " + commonBlock.getStringId() + " at " + commonBlock.getHeight());
                 while (block.getId() != commonBlock.getId() && block.getId() != Genesis.GENESIS_BLOCK_ID) {
@@ -930,7 +930,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             throw new RuntimeException("Cannot pop off genesis block");
         }
         BlockImpl previousBlock = blockchain.getBlock(block.getPreviousBlockId());
-        previousBlock.getTransactions();
+        previousBlock.loadTransactions();
         blockchain.setLastBlock(block, previousBlock);
         BlockDb.deleteBlocksFrom(block.getId());
         blockListeners.notify(block, Event.BLOCK_POPPED);
