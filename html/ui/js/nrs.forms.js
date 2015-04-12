@@ -112,7 +112,7 @@ var NRS = (function(NRS, $) {
 				}
 			} else {
 				data.messageIsText = "true";
-				if (!data.permanent_message) {
+				if (!data.permanent_message && converters.stringToByteArray(data.message).length >= NRS.constants.MIN_PRUNABLE_MESSAGE_LENGTH) {
 					data.messageIsPrunable = "true";
 				}
 			}

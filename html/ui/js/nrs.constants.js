@@ -7,6 +7,7 @@ var NRS = (function (NRS, $, undefined) {
 
       'PLUGIN_VERSION': 1,
       'MAX_INT_JAVA': 2147483647,
+      'MIN_PRUNABLE_MESSAGE_LENGTH': 28,
 
       //Plugin launch status numbers
       'PL_RUNNING': 1,
