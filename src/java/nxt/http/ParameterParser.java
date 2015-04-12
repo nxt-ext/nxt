@@ -2,6 +2,7 @@ package nxt.http;
 
 import nxt.Account;
 import nxt.Alias;
+import nxt.Appendix;
 import nxt.Asset;
 import nxt.Constants;
 import nxt.Currency;
@@ -26,6 +27,7 @@ import java.util.List;
 
 import static nxt.http.JSONResponses.INCORRECT_ACCOUNT;
 import static nxt.http.JSONResponses.INCORRECT_ALIAS;
+import static nxt.http.JSONResponses.INCORRECT_ARBITRARY_MESSAGE;
 import static nxt.http.JSONResponses.INCORRECT_DGS_ENCRYPTED_GOODS;
 import static nxt.http.JSONResponses.INCORRECT_ENCRYPTED_MESSAGE;
 import static nxt.http.JSONResponses.INCORRECT_HEIGHT;
@@ -464,6 +466,34 @@ final class ParameterParser {
                 throw new ParameterException(response);
             }
         }
+    }
+
+    static Appendix.PrunablePlainMessage getPrunablePlainMessage(HttpServletRequest req) throws ParameterException {
+        String messageValue = Convert.emptyToNull(req.getParameter("message"));
+        if (messageValue != null) {
+            boolean messageIsText = !"false".equalsIgnoreCase(req.getParameter("messageIsText"));
+            boolean messageIsPrunable = "true".equalsIgnoreCase(req.getParameter("messageIsPrunable"));
+            if (messageIsPrunable) {
+                try {
+                    return new Appendix.PrunablePlainMessage(messageValue, messageIsText);
+                } catch (RuntimeException e) {
+                    throw new ParameterException(INCORRECT_ARBITRARY_MESSAGE);
+                }
+            }
+        }
+        return null;
+    }
+
+    static Appendix.PrunableEncryptedMessage getPrunableEncryptedMessage(HttpServletRequest req) throws ParameterException {
+        EncryptedData encryptedData = ParameterParser.getEncryptedMessage(req, null);
+        boolean encryptedDataIsText = !"false".equalsIgnoreCase(req.getParameter("messageToEncryptIsText"));
+        boolean isCompressed = !"false".equalsIgnoreCase(req.getParameter("compressMessageToEncrypt"));
+        if (encryptedData != null) {
+            if ("true".equalsIgnoreCase(req.getParameter("encryptedMessageIsPrunable"))) {
+                return new Appendix.PrunableEncryptedMessage(encryptedData, encryptedDataIsText, isCompressed);
+            }
+        }
+        return null;
     }
 
 

@@ -211,6 +211,7 @@ public final class APIServlet extends HttpServlet {
         map.put("getPrunableMessage", GetPrunableMessage.instance);
         map.put("getPrunableMessages", GetPrunableMessages.instance);
         map.put("getAllPrunableMessages", GetAllPrunableMessages.instance);
+        map.put("verifyPrunableMessage", VerifyPrunableMessage.instance);
         map.put("issueAsset", IssueAsset.instance);
         map.put("issueCurrency", IssueCurrency.instance);
         map.put("leaseBalance", LeaseBalance.instance);

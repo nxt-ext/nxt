@@ -1,18 +1,14 @@
 package nxt.http;
 
-import nxt.Appendix;
 import nxt.Nxt;
 import nxt.NxtException;
 import nxt.Transaction;
-import nxt.crypto.EncryptedData;
 import nxt.util.Convert;
 import nxt.util.Logger;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
-
-import static nxt.http.JSONResponses.INCORRECT_ARBITRARY_MESSAGE;
 
 public final class BroadcastTransaction extends APIServlet.APIRequestHandler {
 
@@ -31,29 +27,8 @@ public final class BroadcastTransaction extends APIServlet.APIRequestHandler {
         String transactionJSON = Convert.emptyToNull(req.getParameter("transactionJSON"));
 
         Transaction.Builder builder = ParameterParser.parseTransaction(transactionBytes, transactionJSON);
-
-        String messageValue = Convert.emptyToNull(req.getParameter("message"));
-        if (messageValue != null) {
-            boolean messageIsText = !"false".equalsIgnoreCase(req.getParameter("messageIsText"));
-            boolean messageIsPrunable = "true".equalsIgnoreCase(req.getParameter("messageIsPrunable"));
-            if (messageIsPrunable) {
-                try {
-                    builder.appendix(new Appendix.PrunablePlainMessage(messageValue, messageIsText));
-                } catch (RuntimeException e) {
-                    return INCORRECT_ARBITRARY_MESSAGE;
-                }
-            }
-        }
-
-        EncryptedData encryptedData = ParameterParser.getEncryptedMessage(req, null);
-        boolean encryptedDataIsText = !"false".equalsIgnoreCase(req.getParameter("messageToEncryptIsText"));
-        boolean isCompressed = !"false".equalsIgnoreCase(req.getParameter("compressMessageToEncrypt"));
-        if (encryptedData != null) {
-            if ("true".equalsIgnoreCase(req.getParameter("encryptedMessageIsPrunable"))) {
-                builder.appendix(new Appendix.PrunableEncryptedMessage(encryptedData, encryptedDataIsText, isCompressed));
-            }
-        }
-
+        builder.appendix(ParameterParser.getPrunablePlainMessage(req));
+        builder.appendix(ParameterParser.getPrunableEncryptedMessage(req));
         Transaction transaction = builder.build();
 
         JSONObject response = new JSONObject();
