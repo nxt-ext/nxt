@@ -332,7 +332,6 @@ var NRS = (function(NRS, $, undefined) {
 	function _setMinBalanceForm() {
 		var pollType = parseInt($("#create_poll_type").val());
 		var mbType = parseInt($("input[name=minBalanceType]:radio:checked").val());
-		console.log("PT:" + pollType + " MBT:" + mbType);
 
 		if (pollType == 0 && mbType == 0) {
 			$('#min_voting_balance_label_unit').html($.t('none'));
