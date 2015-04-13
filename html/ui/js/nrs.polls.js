@@ -153,14 +153,14 @@ var NRS = (function(NRS, $, undefined) {
 								if(poll.attachment.finishHeight > NRS.lastBlockHeight)
 								{
 									rows += "<td style='text-align:center;'>" + String(poll.attachment.finishHeight - NRS.lastBlockHeight) + "</td>";
-									rows += "<td><a href='#' class='vote_button' data-poll='" + poll.transaction +"'>Vote </td>";
+									rows += "<td style='text-align:center;'><a href='#' class='vote_button btn btn-xs btn-default' data-poll='" + poll.transaction +"'>Vote</a> ";
 								}
 								else
 								{
 									rows += "<td style='text-align:center;'>Complete</td>";
-									rows += "<td><a href='#' class='results_button' data-results='" + poll.transaction +"'>Results </a></td>";
+									rows += "<td style='text-align:center;'><a href='#' class='results_button btn btn-xs btn-default' data-results='" + poll.transaction +"'>Results</a> ";
 								}
-								rows += "<td style='text-align:center;'><a href='#' class='follow_button btn btn-xs btn-default' data-follow='" + poll.transaction + "'>Follow </a></td>";
+								rows += "<a href='#' class='follow_button btn btn-xs btn-default' data-follow='" + poll.transaction + "'>Follow </a></td>";
 								rows += "</tr>";
 							}
 							NRS.dataLoaded(rows);
