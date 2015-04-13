@@ -110,7 +110,7 @@
   "add_currency_modal_help": "Enter the currency code of a currency.",
   "add_asset_modal_help": "Enter the ID of an asset.",
   "block_height_estimate_help": "Estimation when block height entered will be reached.",
-  "current_block_height_help": "Current block height for orientation, click to take over.",
+  "current_block_height_help": "Current block height for orientation, click to use as input.",
   "avg_amount_per_block": "Avg. Amount Per Block",
   "avg_fee_per_block": "Avg. Fee Per Block",
   "balance": "Balance",
