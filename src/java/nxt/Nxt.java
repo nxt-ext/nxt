@@ -16,6 +16,7 @@ import org.json.simple.JSONObject;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
@@ -58,26 +59,32 @@ public final class Nxt {
         }
     }
 
-    private static void redirectSystemStreams(String stream) {
-        String isStandardRedirect = System.getProperty("nxt.redirect.system." + stream);
-        String fileName = null;
+    private static void redirectSystemStreams(String streamName) {
+        String isStandardRedirect = System.getProperty("nxt.redirect.system." + streamName);
+        Path path = null;
         if (isStandardRedirect != null) {
-            fileName = WindowsUserDirProvider.NXT_USER_HOME + File.separator + "system." + stream + ".log";
+            try {
+                path = Files.createTempFile("nxt.system." + streamName + ".", ".log");
+            } catch (IOException e) {
+                e.printStackTrace();
+                return;
+            }
         } else {
-            String explicitFileName = System.getProperty("nxt.system." + stream);
+            String explicitFileName = System.getProperty("nxt.system." + streamName);
             if (explicitFileName != null) {
-                fileName = explicitFileName;
+                Paths.get(explicitFileName);
             }
         }
-        if (fileName != null) {
+        if (path != null) {
             try {
-                if (stream.equals("out")) {
-                    System.setOut(new PrintStream(fileName));
+                PrintStream stream = new PrintStream(Files.newOutputStream(path));
+                if (streamName.equals("out")) {
+                    System.setOut(new PrintStream(stream));
                 } else {
-                    System.setErr(new PrintStream(fileName));
+                    System.setErr(new PrintStream(stream));
                 }
-            } catch (FileNotFoundException e) {
-                // ignore
+            } catch (IOException e) {
+                e.printStackTrace();
             }
         }
     }

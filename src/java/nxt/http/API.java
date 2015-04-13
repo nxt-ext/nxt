@@ -122,6 +122,12 @@ public final class API {
                 apiServer.addConnector(connector);
                 Logger.logMessage("API server using HTTPS port " + sslPort);
             }
+            try {
+                browserUri = new URI(enableSSL ? "https" : "http", null, "localhost", enableSSL ? sslPort : port, "/index.html", null, null);
+            } catch (URISyntaxException e) {
+                Logger.logInfoMessage("Cannot resolve browser URI", e);
+            }
+
             HandlerList apiHandlers = new HandlerList();
 
             ServletContextHandler apiHandler = new ServletContextHandler();
