@@ -242,6 +242,7 @@ public final class APIServlet extends HttpServlet {
         map.put("searchCurrencies", SearchCurrencies.instance);
         map.put("searchPolls", SearchPolls.instance);
         map.put("searchAccounts", SearchAccounts.instance);
+        map.put("uploadTaggedData", UploadTaggedData.instance);
         map.put("clearUnconfirmedTransactions", ClearUnconfirmedTransactions.instance);
         map.put("requeueAllUnconfirmedTransactions", RequeueUnconfirmedTransactions.instance);
         map.put("fullReset", FullReset.instance);

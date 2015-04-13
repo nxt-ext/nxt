@@ -117,6 +117,13 @@ public final class JSONResponses {
     public static final JSONStreamAware UNKNOWN_TRANSACTION_FULL_HASH = unknown("transactionFullHash");
     public static final JSONStreamAware INCORRECT_TRANSACTION_FULL_HASH = incorrect("transactionFullHash");
     public static final JSONStreamAware INCORRECT_LINKED_FULL_HASH = incorrect("phasingLinkedFullHash");
+    public static final JSONStreamAware INCORRECT_TAGGED_DATA_NAME = incorrect("name", "(length must be not longer than " + Constants.MAX_TAGGED_DATA_NAME_LENGTH + " characters)");
+    public static final JSONStreamAware INCORRECT_TAGGED_DATA_DESCRIPTION = incorrect("description", "(length must be not longer than " + Constants.MAX_TAGGED_DATA_DESCRIPTION_LENGTH + " characters)");
+    public static final JSONStreamAware INCORRECT_TAGGED_DATA_TAGS = incorrect("tags", "(length must be not longer than " + Constants.MAX_TAGGED_DATA_TAGS_LENGTH + " characters)");
+    public static final JSONStreamAware INCORRECT_TAGGED_DATA_FILENAME = incorrect("filename", "(length must be not longer than " + Constants.MAX_TAGGED_DATA_FILENAME_LENGTH + " characters)");
+    public static final JSONStreamAware INCORRECT_TAGGED_DATA_TYPE = incorrect("type", "(length must be not longer than " + Constants.MAX_TAGGED_DATA_TYPE_LENGTH + " characters)");
+    public static final JSONStreamAware MISSING_DATA = incorrect("data");
+    public static final JSONStreamAware INCORRECT_DATA = incorrect("data", "(length must be not longer than " + Constants.MAX_TAGGED_DATA_DATA_LENGTH + " bytes)");
 
     public static final JSONStreamAware NOT_ENOUGH_FUNDS;
     static {
