@@ -15,6 +15,10 @@ Changing the nxt.maxPrunableLifetime property now also affects existing
 prunable messages (next time pruning is run), as transaction timestamps instead
 of expiration timestamps are now used.
 
+Reverted DGS goods delivery maximum size to 10 kbytes, same as in 1.4. For
+goods of a larger size, a prunable encrypted message should be included in the
+delivery instead.
+
 Added support for prunable plain and encrypted messages in the client UI.
 
 Voting system UI improvements and bugfixes.
