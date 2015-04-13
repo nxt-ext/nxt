@@ -211,6 +211,7 @@ public final class Nxt {
                 CurrencyTransfer.init();
                 Exchange.init();
                 PrunableMessage.init();
+                TaggedData.init();
                 Peers.init();
                 Generator.init();
                 API.init();

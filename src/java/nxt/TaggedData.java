@@ -10,28 +10,28 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-public class PrunableTaggedData {
+public class TaggedData {
 
-    public static final DbKey.LongKeyFactory<PrunableTaggedData> taggedDataKeyFactory = new DbKey.LongKeyFactory<PrunableTaggedData>("id") {
+    public static final DbKey.LongKeyFactory<TaggedData> taggedDataKeyFactory = new DbKey.LongKeyFactory<TaggedData>("id") {
 
         @Override
-        public DbKey newKey(PrunableTaggedData prunableTaggedData) {
-            return prunableTaggedData.dbKey;
+        public DbKey newKey(TaggedData taggedData) {
+            return taggedData.dbKey;
         }
 
     };
 
-    public static final PrunableDbTable<PrunableTaggedData> taggedDataTable = new PrunableDbTable<PrunableTaggedData>(
-            "prunable_tagged_data", taggedDataKeyFactory, "NAME,DESCRIPTION,TAGS") {
+    public static final PrunableDbTable<TaggedData> taggedDataTable = new PrunableDbTable<TaggedData>(
+            "tagged_data", taggedDataKeyFactory, "name,description,tags") {
 
         @Override
-        protected PrunableTaggedData load(Connection con, ResultSet rs) throws SQLException {
-            return new PrunableTaggedData(rs);
+        protected TaggedData load(Connection con, ResultSet rs) throws SQLException {
+            return new TaggedData(rs);
         }
 
         @Override
-        protected void save(Connection con, PrunableTaggedData prunableTaggedData) throws SQLException {
-            prunableTaggedData.save(con);
+        protected void save(Connection con, TaggedData taggedData) throws SQLException {
+            taggedData.save(con);
         }
 
         @Override
@@ -45,26 +45,26 @@ public class PrunableTaggedData {
         return taggedDataTable.getCount();
     }
 
-    public static DbIterator<PrunableTaggedData> getAll(int from, int to) {
+    public static DbIterator<TaggedData> getAll(int from, int to) {
         return taggedDataTable.getAll(from, to);
     }
 
-    public static PrunableTaggedData getData(long transactionId) {
+    public static TaggedData getData(long transactionId) {
         return taggedDataTable.get(taggedDataKeyFactory.newKey(transactionId));
     }
 
-    public static DbIterator<PrunableTaggedData> getData(long accountId, int from, int to) {
-        return taggedDataTable.getManyBy(new DbClause.LongClause("account", accountId), from, to);
+    public static DbIterator<TaggedData> getData(long accountId, int from, int to) {
+        return taggedDataTable.getManyBy(new DbClause.LongClause("account_id", accountId), from, to);
     }
 
-    public static DbIterator<PrunableTaggedData> searchAccountData(String query, long accountId, int from, int to) {
-        return taggedDataTable.search(query, new DbClause.LongClause("account", accountId), from, to,
-                " ORDER BY ft.score DESC, prunable_tagged_data.block_timestamp DESC, prunable_tagged_data.db_id DESC ");
+    public static DbIterator<TaggedData> searchAccountData(String query, long accountId, int from, int to) {
+        return taggedDataTable.search(query, new DbClause.LongClause("account_id", accountId), from, to,
+                " ORDER BY ft.score DESC, tagged_data.block_timestamp DESC, tagged_data.db_id DESC ");
     }
 
-    public static DbIterator<PrunableTaggedData> searchData(String query, int from, int to) {
+    public static DbIterator<TaggedData> searchData(String query, int from, int to) {
         return taggedDataTable.search(query, DbClause.EMPTY_CLAUSE, from, to,
-                " ORDER BY ft.score DESC, prunable_tagged_data.block_timestamp DESC, prunable_tagged_data.db_id DESC ");
+                " ORDER BY ft.score DESC, tagged_data.block_timestamp DESC, tagged_data.db_id DESC ");
     }
 
 
@@ -83,7 +83,7 @@ public class PrunableTaggedData {
     private final int transactionTimestamp;
     private final int blockTimestamp;
 
-    private PrunableTaggedData(Transaction transaction, Attachment.TaggedDataUpload attachment) {
+    private TaggedData(Transaction transaction, Attachment.TaggedDataUpload attachment) {
         this.id = transaction.getId();
         this.dbKey = taggedDataKeyFactory.newKey(this.id);
         this.accountId = transaction.getSenderId();
@@ -98,7 +98,7 @@ public class PrunableTaggedData {
         this.transactionTimestamp = transaction.getTimestamp();
     }
 
-    private PrunableTaggedData(ResultSet rs) throws SQLException {
+    private TaggedData(ResultSet rs) throws SQLException {
         this.id = rs.getLong("id");
         this.dbKey = taggedDataKeyFactory.newKey(this.id);
         this.accountId = rs.getLong("account_id");
@@ -114,7 +114,7 @@ public class PrunableTaggedData {
     }
 
     private void save(Connection con) throws SQLException {
-        try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO prunable_tagged_data (id, account_id, name, description, tags, "
+        try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO tagged_data (id, account_id, name, description, tags, "
                 + "type, data, is_text, filename, block_timestamp, transaction_timestamp, height) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
             int i = 0;
             pstmt.setLong(++i, this.id);
@@ -135,6 +135,10 @@ public class PrunableTaggedData {
 
     public long getId() {
         return id;
+    }
+
+    public long getAccountId() {
+        return accountId;
     }
 
     public String getName() {
@@ -169,15 +173,15 @@ public class PrunableTaggedData {
         return transactionTimestamp;
     }
 
-    public int getTimestamp() {
+    public int getBlockTimestamp() {
         return blockTimestamp;
     }
 
     static void add(Transaction transaction, Attachment.TaggedDataUpload attachment) {
         if (Nxt.getEpochTime() - transaction.getTimestamp() < Constants.MAX_PRUNABLE_LIFETIME
                 && taggedDataTable.get(taggedDataKeyFactory.newKey(transaction.getId())) == null) {
-            PrunableTaggedData prunableTaggedData = new PrunableTaggedData(transaction, attachment);
-            taggedDataTable.insert(prunableTaggedData);
+            TaggedData taggedData = new TaggedData(transaction, attachment);
+            taggedDataTable.insert(taggedData);
         }
     }
 

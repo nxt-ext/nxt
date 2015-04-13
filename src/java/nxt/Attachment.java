@@ -2421,6 +2421,13 @@ public interface Attachment extends Appendix {
 
     final class TaggedDataUpload extends AbstractAttachment {
 
+        static TaggedDataUpload parse(JSONObject attachmentData) {
+            if (!Appendix.hasAppendix(TransactionType.Data.TAGGED_DATA_UPLOAD.getName(), attachmentData)) {
+                return null;
+            }
+            return new TaggedDataUpload(attachmentData);
+        }
+
         private final String name;
         private final String description;
         private final String tags;
@@ -2429,7 +2436,7 @@ public interface Attachment extends Appendix {
         private final String filename;
         private final byte[] data;
         private final byte[] hash;
-        private volatile PrunableTaggedData taggedData;
+        private volatile TaggedData taggedData;
 
 
         TaggedDataUpload(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
@@ -2594,7 +2601,7 @@ public interface Attachment extends Appendix {
         boolean loadPrunable(Transaction transaction) {
             if (data == null && taggedData == null
                     && Nxt.getEpochTime() - transaction.getTimestamp() < Constants.MIN_PRUNABLE_LIFETIME) {
-                taggedData = PrunableTaggedData.getData(transaction.getId());
+                taggedData = TaggedData.getData(transaction.getId());
             }
             return true;
         }

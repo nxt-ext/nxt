@@ -724,19 +724,21 @@ class NxtDbVersion extends DbVersion {
             case 305:
                 apply("DROP INDEX IF EXISTS public_key_height_idx");
             case 306:
-                apply("CREATE TABLE IF NOT EXISTS prunable_tagged_data (db_id IDENTITY, id BIGINT NOT NULL, account_id BIGINT NOT NULL, "
+                apply("CREATE TABLE IF NOT EXISTS tagged_data (db_id IDENTITY, id BIGINT NOT NULL, account_id BIGINT NOT NULL, "
                         + "name VARCHAR NOT NULL, description VARCHAR, tags VARCHAR, type VARCHAR, data VARBINARY NOT NULL, "
                         + "is_text BOOLEAN NOT NULL, filename VARCHAR, block_timestamp INT NOT NULL, transaction_timestamp INT NOT NULL, "
                         + "height INT NOT NULL, FOREIGN KEY (height) REFERENCES block (height) ON DELETE CASCADE)");
             case 307:
-                apply("CREATE UNIQUE INDEX IF NOT EXISTS prunable_tagged_data_id_idx ON prunable_tagged_data (id)");
+                apply("CREATE UNIQUE INDEX IF NOT EXISTS tagged_data_id_idx ON tagged_data (id)");
             case 308:
-                apply("CREATE INDEX IF NOT EXISTS prunable_tagged_data_expiration_idx ON prunable_tagged_data (transaction_timestamp DESC)");
+                apply("CREATE INDEX IF NOT EXISTS tagged_data_expiration_idx ON tagged_data (transaction_timestamp DESC)");
             case 309:
-                apply("CREATE INDEX IF NOT EXISTS prunable_tagged_data_account_idx ON prunable_tagged_data (account_id)");
+                apply("CREATE INDEX IF NOT EXISTS tagged_data_account_idx ON tagged_data (account_id)");
             case 310:
-                apply("CREATE INDEX IF NOT EXISTS prunable_tagged_data_block_timestamp_dbid_idx ON prunable_tagged_data (block_timestamp DESC, db_id DESC)");
+                apply("CREATE INDEX IF NOT EXISTS tagged_data_block_timestamp_dbid_idx ON tagged_data (block_timestamp DESC, db_id DESC)");
             case 311:
+                apply("CALL FTL_CREATE_INDEX('PUBLIC', 'TAGGED_DATA', 'NAME,DESCRIPTION,TAGS')");
+            case 312:
                 return;
             default:
                 throw new RuntimeException("Blockchain database inconsistent with code, probably trying to run older code on newer database");

@@ -29,8 +29,18 @@ class UnconfirmedTransaction implements Transaction {
             String prunableJSON = rs.getString("prunable_json");
             if (prunableJSON != null) {
                 JSONObject attachmentData = (JSONObject)JSONValue.parse(prunableJSON);
-                builder.appendix(Appendix.PrunablePlainMessage.parse(attachmentData));
-                builder.appendix(Appendix.PrunableEncryptedMessage.parse(attachmentData));
+                Attachment.TaggedDataUpload taggedDataUpload = Attachment.TaggedDataUpload.parse(attachmentData);
+                if (taggedDataUpload != null) {
+                    builder.appendix(taggedDataUpload);
+                }
+                Appendix.PrunablePlainMessage prunablePlainMessage = Appendix.PrunablePlainMessage.parse(attachmentData);
+                if (prunablePlainMessage != null) {
+                    builder.appendix(prunablePlainMessage);
+                }
+                Appendix.PrunableEncryptedMessage prunableEncryptedMessage = Appendix.PrunableEncryptedMessage.parse(attachmentData);
+                if (prunableEncryptedMessage != null) {
+                    builder.appendix(prunableEncryptedMessage);
+                }
             }
             this.transaction = builder.build();
             this.transaction.setHeight(rs.getInt("transaction_height"));

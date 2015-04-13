@@ -26,7 +26,7 @@ final class TransactionImpl implements Transaction {
         private final long feeNQT;
         private final TransactionType type;
         private final byte version;
-        private final Attachment.AbstractAttachment attachment;
+        private Attachment.AbstractAttachment attachment;
 
         private long recipientId;
         private byte[] referencedTransactionFullHash;
@@ -92,6 +92,11 @@ final class TransactionImpl implements Transaction {
 
         BuilderImpl referencedTransactionFullHash(byte[] referencedTransactionFullHash) {
             this.referencedTransactionFullHash = referencedTransactionFullHash;
+            return this;
+        }
+
+        BuilderImpl appendix(Attachment.AbstractAttachment attachment) {
+            this.attachment = attachment;
             return this;
         }
 
@@ -923,8 +928,8 @@ final class TransactionImpl implements Transaction {
 
         long minimumFeeNQT = getMinimumFeeNQT(Nxt.getBlockchain().getHeight());
         if (feeNQT < minimumFeeNQT) {
-            throw new NxtException.NotCurrentlyValidException(String.format("Transaction fee %d NXT less than minimum fee %d NXT at height %d",
-                    feeNQT/Constants.ONE_NXT, minimumFeeNQT/Constants.ONE_NXT, Nxt.getBlockchain().getHeight()));
+            throw new NxtException.NotCurrentlyValidException(String.format("Transaction fee %f NXT less than minimum fee %f NXT at height %d",
+                    ((double)feeNQT)/Constants.ONE_NXT, ((double)minimumFeeNQT)/Constants.ONE_NXT, Nxt.getBlockchain().getHeight()));
         }
     }
 

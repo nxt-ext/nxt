@@ -2283,7 +2283,7 @@ public abstract class TransactionType {
 
         public static final TransactionType TAGGED_DATA_UPLOAD = new Data() {
 
-            private final Fee TAGGED_DATA_FEE = new Fee.SizeBasedFee(Constants.ONE_NXT/10) {
+            private final Fee TAGGED_DATA_FEE = new Fee.SizeBasedFee(Constants.ONE_NXT, Constants.ONE_NXT/10) {
                 @Override
                 public int getSize(TransactionImpl transaction, Appendix appendix) {
                     return appendix.getFullSize();
@@ -2344,7 +2344,7 @@ public abstract class TransactionType {
             @Override
             void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
                 Attachment.TaggedDataUpload attachment = (Attachment.TaggedDataUpload) transaction.getAttachment();
-                PrunableTaggedData.add(transaction, attachment);
+                TaggedData.add(transaction, attachment);
             }
 
             @Override

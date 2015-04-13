@@ -15,6 +15,7 @@ import static nxt.http.JSONResponses.INCORRECT_TAGGED_DATA_FILENAME;
 import static nxt.http.JSONResponses.INCORRECT_TAGGED_DATA_NAME;
 import static nxt.http.JSONResponses.INCORRECT_TAGGED_DATA_TAGS;
 import static nxt.http.JSONResponses.INCORRECT_TAGGED_DATA_TYPE;
+import static nxt.http.JSONResponses.MISSING_DATA;
 import static nxt.http.JSONResponses.MISSING_NAME;
 
 public final class UploadTaggedData extends CreateTransaction {
@@ -35,7 +36,11 @@ public final class UploadTaggedData extends CreateTransaction {
         String type = Convert.nullToEmpty(req.getParameter("type"));
         boolean isText = !"false".equalsIgnoreCase(req.getParameter("isText"));
         String filename = Convert.nullToEmpty(req.getParameter("filename"));
-        byte[] data = Convert.parseHexString(Convert.emptyToNull(req.getParameter("data")));
+        String dataValue = Convert.emptyToNull(req.getParameter("data"));
+        if (dataValue == null) {
+            return MISSING_DATA;
+        }
+        byte[] data = isText ? Convert.toBytes(dataValue) : Convert.parseHexString(dataValue);
 
 
         if (name == null) {
@@ -58,7 +63,7 @@ public final class UploadTaggedData extends CreateTransaction {
             return INCORRECT_TAGGED_DATA_TYPE;
         }
 
-        if (data == null || data.length == 0 || data.length > Constants.MAX_TAGGED_DATA_DATA_LENGTH) {
+        if (data.length == 0 || data.length > Constants.MAX_TAGGED_DATA_DATA_LENGTH) {
             return INCORRECT_DATA;
         }
 
