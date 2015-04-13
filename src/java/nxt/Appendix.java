@@ -343,9 +343,6 @@ public interface Appendix {
             if (getMessageLength() > Constants.MAX_PRUNABLE_MESSAGE_LENGTH) {
                 throw new NxtException.NotValidException("Invalid prunable message length: " + message.length);
             }
-            if (message != null && getMessageLength() < Constants.MIN_PRUNABLE_MESSAGE_LENGTH) {
-                throw new NxtException.NotValidException("Prunable messages must be at least 28 bytes");
-            }
             if (getMessage() == null && Nxt.getEpochTime() - transaction.getTimestamp() < Constants.MIN_PRUNABLE_LIFETIME) {
                 throw new NxtException.NotCurrentlyValidException("Message has been pruned prematurely");
             }
