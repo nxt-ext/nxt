@@ -15,7 +15,9 @@ public final class BroadcastTransaction extends APIServlet.APIRequestHandler {
     static final BroadcastTransaction instance = new BroadcastTransaction();
 
     private BroadcastTransaction() {
-        super(new APITag[] {APITag.TRANSACTIONS}, "transactionBytes", "transactionJSON");
+        super(new APITag[] {APITag.TRANSACTIONS}, "transactionBytes", "transactionJSON",
+                "message", "messageIsText", "messageIsPrunable",
+                "messageToEncryptIsText", "encryptedMessageData", "encryptedMessageNonce", "encryptedMessageIsPrunable", "compressMessageToEncrypt");
     }
 
     @Override
@@ -23,7 +25,12 @@ public final class BroadcastTransaction extends APIServlet.APIRequestHandler {
 
         String transactionBytes = Convert.emptyToNull(req.getParameter("transactionBytes"));
         String transactionJSON = Convert.emptyToNull(req.getParameter("transactionJSON"));
-        Transaction transaction = ParameterParser.parseTransaction(transactionBytes, transactionJSON).build();
+
+        Transaction.Builder builder = ParameterParser.parseTransaction(transactionBytes, transactionJSON);
+        builder.appendix(ParameterParser.getPrunablePlainMessage(req));
+        builder.appendix(ParameterParser.getPrunableEncryptedMessage(req));
+        Transaction transaction = builder.build();
+
         JSONObject response = new JSONObject();
         try {
             Nxt.getTransactionProcessor().broadcast(transaction);

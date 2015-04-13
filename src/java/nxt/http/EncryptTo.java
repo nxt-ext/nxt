@@ -14,7 +14,7 @@ public final class EncryptTo extends APIServlet.APIRequestHandler {
     static final EncryptTo instance = new EncryptTo();
 
     private EncryptTo() {
-        super(new APITag[] {APITag.MESSAGES}, "recipient", "messageToEncrypt", "messageToEncryptIsText", "secretPhrase");
+        super(new APITag[] {APITag.MESSAGES}, "recipient", "messageToEncrypt", "messageToEncryptIsText", "compressMessageToEncrypt", "secretPhrase");
     }
 
     @Override

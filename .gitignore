@@ -1,5 +1,6 @@
 /.idea/
-/html/ui/.idea/
+/.idea/dictionaries
+/html/ui/.idea
 /nxt.iml
 /nxt_db
 /webapps/
@@ -27,3 +28,4 @@
 deploy.sh
 /resource/nxt.manifest.mf
 /resource/nxtservice.manifest.mf
+/nxt.pro

@@ -10,10 +10,10 @@ import org.json.simple.JSONObject;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class TestGetVoterPendingTransactions extends BlockchainTest {
+public class TestGetVoterPhasedTransactions extends BlockchainTest {
 
-    static APICall getVoterPendingTransactions() {
-        return new APICall.Builder("getVoterPendingTransactions")
+    static APICall getVoterPhasedTransactions() {
+        return new APICall.Builder("getVoterPhasedTransactions")
                 .param("account", Long.toUnsignedString(id3))
                 .param("firstIndex", 0)
                 .param("lastIndex", 10)
@@ -28,8 +28,8 @@ public class TestGetVoterPendingTransactions extends BlockchainTest {
 
         generateBlock();
 
-        JSONObject response = getVoterPendingTransactions().invoke();
-        Logger.logMessage("getVoterPendingTransactionsResponse:" + response.toJSONString());
+        JSONObject response = getVoterPhasedTransactions().invoke();
+        Logger.logMessage("getVoterPhasedTransactionsResponse:" + response.toJSONString());
         JSONArray transactionsJson = (JSONArray) response.get("transactions");
         Assert.assertTrue(TwoPhasedSuite.searchForTransactionId(transactionsJson, transactionId));
     }
@@ -51,12 +51,12 @@ public class TestGetVoterPendingTransactions extends BlockchainTest {
                 .param("feeNQT", fee)
                 .build();
         JSONObject response = apiCall.invoke();
-        Logger.logMessage("approvePendingTransactionResponse:" + response.toJSONString());
+        Logger.logMessage("approvePhasedTransactionResponse:" + response.toJSONString());
 
         generateBlock();
 
-        response = getVoterPendingTransactions().invoke();
-        Logger.logMessage("getVoterPendingTransactionsResponse:" + response.toJSONString());
+        response = getVoterPhasedTransactions().invoke();
+        Logger.logMessage("getVoterPhasedTransactionsResponse:" + response.toJSONString());
         JSONArray transactionsJson = (JSONArray) response.get("transactions");
         Assert.assertFalse(TwoPhasedSuite.searchForTransactionId(transactionsJson, transactionFullHash));
     }
@@ -68,8 +68,8 @@ public class TestGetVoterPendingTransactions extends BlockchainTest {
             TestCreateTwoPhased.issueCreateTwoPhased(apiCall, false);
         }
 
-        JSONObject response = getVoterPendingTransactions().invoke();
-        Logger.logMessage("getVoterPendingTransactionsResponse:" + response.toJSONString());
+        JSONObject response = getVoterPhasedTransactions().invoke();
+        Logger.logMessage("getVoterPhasedTransactionsResponse:" + response.toJSONString());
         JSONArray transactionsJson = (JSONArray) response.get("transactions");
 
         //sorting check

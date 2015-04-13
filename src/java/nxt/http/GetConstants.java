@@ -25,7 +25,7 @@ public final class GetConstants extends APIServlet.APIRequestHandler {
         response.put("genesisBlockId", Long.toUnsignedString(Genesis.GENESIS_BLOCK_ID));
         response.put("genesisAccountId", Long.toUnsignedString(Genesis.CREATOR_ID));
         response.put("maxBlockPayloadLength", Constants.MAX_PAYLOAD_LENGTH);
-        response.put("maxArbitraryMessageLength", Constants.MAX_ARBITRARY_MESSAGE_LENGTH_2);
+        response.put("maxArbitraryMessageLength", Constants.MAX_ARBITRARY_MESSAGE_LENGTH);
 
         JSONObject transactionJSON = new JSONObject();
         outer:
@@ -45,6 +45,7 @@ public final class GetConstants extends APIServlet.APIRequestHandler {
                 subtypeJSON.put("name", transactionType.getName());
                 subtypeJSON.put("canHaveRecipient", transactionType.canHaveRecipient());
                 subtypeJSON.put("mustHaveRecipient", transactionType.mustHaveRecipient());
+                subtypeJSON.put("isPhasingSafe", transactionType.isPhasingSafe());
                 subtypesJSON.put(subtype, subtypeJSON);
             }
             typeJSON.put("subtypes", subtypesJSON);

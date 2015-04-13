@@ -15,6 +15,7 @@ import nxt.Nxt;
 import nxt.Order;
 import nxt.PhasingPoll;
 import nxt.Poll;
+import nxt.PrunableMessage;
 import nxt.Trade;
 import nxt.Vote;
 import nxt.peer.Peers;
@@ -70,7 +71,8 @@ public final class GetState extends APIServlet.APIRequestHandler {
             response.put("numberOfTags", DigitalGoodsStore.Tag.getCount());
             response.put("numberOfPolls", Poll.getCount());
             response.put("numberOfVotes", Vote.getCount());
-            response.put("numberOfPendingTransactions", PhasingPoll.getPendingCount());
+            response.put("numberOfPhasedTransactions", PhasingPoll.getPhasedCount());
+            response.put("numberOfPrunableMessages", PrunableMessage.getCount());
         }
         response.put("numberOfPeers", Peers.getAllPeers().size());
         response.put("numberOfUnlockedAccounts", Generator.getAllGenerators().size());
@@ -79,7 +81,6 @@ public final class GetState extends APIServlet.APIRequestHandler {
         response.put("totalMemory", Runtime.getRuntime().totalMemory());
         response.put("freeMemory", Runtime.getRuntime().freeMemory());
         response.put("peerPort", Peers.getDefaultPeerPort());
-        response.put("isTestnet", Constants.isTestnet);
         response.put("isOffline", Constants.isOffline);
         response.put("needsAdminPassword", !API.disableAdminPassword);
         return response;

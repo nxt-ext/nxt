@@ -123,10 +123,10 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                     } // synchronized
                 }
             } catch (Exception e) {
-                Logger.logDebugMessage("Error removing unconfirmed transactions", e);
+                Logger.logMessage("Error removing unconfirmed transactions", e);
             }
         } catch (Throwable t) {
-            Logger.logMessage("CRITICAL ERROR. PLEASE REPORT TO THE DEVELOPERS.\n" + t.toString());
+            Logger.logErrorMessage("CRITICAL ERROR. PLEASE REPORT TO THE DEVELOPERS.\n" + t.toString());
             t.printStackTrace();
             System.exit(1);
         }
@@ -152,10 +152,10 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                 }
 
             } catch (Exception e) {
-                Logger.logDebugMessage("Error in transaction re-broadcasting thread", e);
+                Logger.logMessage("Error in transaction re-broadcasting thread", e);
             }
         } catch (Throwable t) {
-            Logger.logMessage("CRITICAL ERROR. PLEASE REPORT TO THE DEVELOPERS.\n" + t.toString());
+            Logger.logErrorMessage("CRITICAL ERROR. PLEASE REPORT TO THE DEVELOPERS.\n" + t.toString());
             t.printStackTrace();
             System.exit(1);
         }
@@ -194,10 +194,10 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                         peer.blacklist(e);
                     }
                 } catch (Exception e) {
-                    Logger.logDebugMessage("Error processing unconfirmed transactions", e);
+                    Logger.logMessage("Error processing unconfirmed transactions", e);
                 }
             } catch (Throwable t) {
-                Logger.logMessage("CRITICAL ERROR. PLEASE REPORT TO THE DEVELOPERS.\n" + t.toString());
+                Logger.logErrorMessage("CRITICAL ERROR. PLEASE REPORT TO THE DEVELOPERS.\n" + t.toString());
                 t.printStackTrace();
                 System.exit(1);
             }
@@ -378,7 +378,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                         iterator.remove();
                         addedUnconfirmedTransactions.add(unconfirmedTransaction.getTransaction());
                     } catch (NxtException.NotCurrentlyValidException ignore) {
-                        if (unconfirmedTransaction.getExpiration() < Nxt.getEpochTime()) {
+                        if (unconfirmedTransaction.getExpiration() < Nxt.getEpochTime() || lostTransactions.size() > 1000) {
                             iterator.remove();
                         }
                     } catch (NxtException.ValidationException|RuntimeException e) {
@@ -446,11 +446,14 @@ final class TransactionProcessorImpl implements TransactionProcessor {
     private void processTransaction(UnconfirmedTransaction unconfirmedTransaction) throws NxtException.ValidationException {
         TransactionImpl transaction = unconfirmedTransaction.getTransaction();
         int curTime = Nxt.getEpochTime();
-        if (transaction.getTimestamp() > curTime + Constants.MAX_TIMEDRIFT || transaction.getDeadline() > 1440 || transaction.getExpiration() < curTime) {
+        if (transaction.getTimestamp() > curTime + Constants.MAX_TIMEDRIFT || transaction.getExpiration() < curTime) {
             throw new NxtException.NotCurrentlyValidException("Invalid transaction timestamp");
         }
         if (transaction.getVersion() < 1) {
             throw new NxtException.NotValidException("Invalid transaction version");
+        }
+        if (transaction.getId() == 0L) {
+            throw new NxtException.NotValidException("Invalid transaction id 0");
         }
 
         synchronized (BlockchainImpl.getInstance()) {

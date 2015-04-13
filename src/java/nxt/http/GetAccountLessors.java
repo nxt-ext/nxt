@@ -1,6 +1,7 @@
 package nxt.http;
 
 import nxt.Account;
+import nxt.Constants;
 import nxt.Nxt;
 import nxt.NxtException;
 import nxt.db.DbIterator;
@@ -38,7 +39,7 @@ public final class GetAccountLessors extends APIServlet.APIRequestHandler {
                     Account lessor = lessors.next();
                     JSONObject lessorJSON = new JSONObject();
                     JSONData.putAccount(lessorJSON, "lessor", lessor.getId());
-                    lessorJSON.put("guaranteedBalanceNQT", String.valueOf(lessor.getGuaranteedBalanceNQT(1440, height)));
+                    lessorJSON.put("guaranteedBalanceNQT", String.valueOf(lessor.getGuaranteedBalanceNQT(Constants.GUARANTEED_BALANCE_CONFIRMATIONS, height)));
                     lessorsJSON.add(lessorJSON);
                 }
             }

@@ -64,7 +64,7 @@ public final class APIServlet extends HttpServlet {
         boolean startDbTransaction() {
             return false;
         }
-        
+
         boolean requirePassword() {
         	return false;
         }
@@ -107,9 +107,10 @@ public final class APIServlet extends HttpServlet {
         map.put("getAccountBlockIds", GetAccountBlockIds.instance);
         map.put("getAccountBlocks", GetAccountBlocks.instance);
         map.put("getAccountId", GetAccountId.instance);
-        map.put("getVoterPendingTransactions", GetVoterPendingTransactions.instance);
+        map.put("getVoterPhasedTransactions", GetVoterPhasedTransactions.instance);
         map.put("getPolls", GetPolls.instance);
-        map.put("getAccountPendingTransactions", GetAccountPendingTransactions.instance);
+        map.put("getAccountPhasedTransactions", GetAccountPhasedTransactions.instance);
+        map.put("getAccountPhasedTransactionCount", GetAccountPhasedTransactionCount.instance);
         map.put("getAccountPublicKey", GetAccountPublicKey.instance);
         map.put("getAccountTransactionIds", GetAccountTransactionIds.instance);
         map.put("getAccountTransactions", GetAccountTransactions.instance);
@@ -123,6 +124,7 @@ public final class APIServlet extends HttpServlet {
         map.put("getAlias", GetAlias.instance);
         map.put("getAliasCount", GetAliasCount.instance);
         map.put("getAliases", GetAliases.instance);
+        map.put("getAliasesLike", GetAliasesLike.instance);
         map.put("getAllAssets", GetAllAssets.instance);
         map.put("getAllCurrencies", GetAllCurrencies.instance);
         map.put("getAsset", GetAsset.instance);
@@ -131,7 +133,7 @@ public final class APIServlet extends HttpServlet {
         map.put("getAssetsByIssuer", GetAssetsByIssuer.instance);
         map.put("getAssetAccounts", GetAssetAccounts.instance);
         map.put("getAssetAccountCount", GetAssetAccountCount.instance);
-        map.put("getAssetPendingTransactions", GetAssetPendingTransactions.instance);
+        map.put("getAssetPhasedTransactions", GetAssetPhasedTransactions.instance);
         map.put("getBalance", GetBalance.instance);
         map.put("getBlock", GetBlock.instance);
         map.put("getBlockId", GetBlockId.instance);
@@ -145,7 +147,7 @@ public final class APIServlet extends HttpServlet {
         map.put("getCurrenciesByIssuer", GetCurrenciesByIssuer.instance);
         map.put("getCurrencyAccounts", GetCurrencyAccounts.instance);
         map.put("getCurrencyAccountCount", GetCurrencyAccountCount.instance);
-        map.put("getCurrencyPendingTransactions", GetCurrencyPendingTransactions.instance);
+        map.put("getCurrencyPhasedTransactions", GetCurrencyPhasedTransactions.instance);
         map.put("getDGSGoods", GetDGSGoods.instance);
         map.put("getDGSGoodsCount", GetDGSGoodsCount.instance);
         map.put("getDGSGood", GetDGSGood.instance);
@@ -155,8 +157,10 @@ public final class APIServlet extends HttpServlet {
         map.put("getDGSPurchase", GetDGSPurchase.instance);
         map.put("getDGSPurchaseCount", GetDGSPurchaseCount.instance);
         map.put("getDGSPendingPurchases", GetDGSPendingPurchases.instance);
+        map.put("getDGSExpiredPurchases", GetDGSExpiredPurchases.instance);
         map.put("getDGSTags", GetDGSTags.instance);
         map.put("getDGSTagCount", GetDGSTagCount.instance);
+        map.put("getDGSTagsLike", GetDGSTagsLike.instance);
         map.put("getGuaranteedBalance", GetGuaranteedBalance.instance);
         map.put("getECBlock", GetECBlock.instance);
         map.put("getPlugins", GetPlugins.instance);
@@ -201,8 +205,13 @@ public final class APIServlet extends HttpServlet {
         map.put("getBidOrder", GetBidOrder.instance);
         map.put("getBidOrderIds", GetBidOrderIds.instance);
         map.put("getBidOrders", GetBidOrders.instance);
+        map.put("getOrderTrades", GetOrderTrades.instance);
         map.put("getAccountExchangeRequests", GetAccountExchangeRequests.instance);
         map.put("getMintingTarget", GetMintingTarget.instance);
+        map.put("getPrunableMessage", GetPrunableMessage.instance);
+        map.put("getPrunableMessages", GetPrunableMessages.instance);
+        map.put("getAllPrunableMessages", GetAllPrunableMessages.instance);
+        map.put("verifyPrunableMessage", VerifyPrunableMessage.instance);
         map.put("issueAsset", IssueAsset.instance);
         map.put("issueCurrency", IssueCurrency.instance);
         map.put("leaseBalance", LeaseBalance.instance);
@@ -232,6 +241,7 @@ public final class APIServlet extends HttpServlet {
         map.put("searchAssets", SearchAssets.instance);
         map.put("searchCurrencies", SearchCurrencies.instance);
         map.put("searchPolls", SearchPolls.instance);
+        map.put("searchAccounts", SearchAccounts.instance);
         map.put("clearUnconfirmedTransactions", ClearUnconfirmedTransactions.instance);
         map.put("fullReset", FullReset.instance);
         map.put("popOff", PopOff.instance);
@@ -240,8 +250,11 @@ public final class APIServlet extends HttpServlet {
         map.put("addPeer", AddPeer.instance);
         map.put("blacklistPeer", BlacklistPeer.instance);
         map.put("dumpPeers", DumpPeers.instance);
+        map.put("getLog", GetLog.instance);
+        map.put("getStackTraces", GetStackTraces.instance);
         map.put("shutdown", Shutdown.instance);
-        
+        map.put("trimDerivedTables", TrimDerivedTables.instance);
+
         apiRequestHandlers = Collections.unmodifiableMap(map);
     }
 
@@ -301,7 +314,9 @@ public final class APIServlet extends HttpServlet {
                 response = e.getErrorResponse();
             } catch (NxtException |RuntimeException e) {
                 Logger.logDebugMessage("Error processing API request", e);
-                response = ERROR_INCORRECT_REQUEST;
+                JSONObject json = new JSONObject();
+                JSONData.putException(json, e);
+                response = JSON.prepare(json);
             } catch (ExceptionInInitializerError err) {
                 Logger.logErrorMessage("Initialization Error", (Exception) err.getCause());
                 response = ERROR_INCORRECT_REQUEST;

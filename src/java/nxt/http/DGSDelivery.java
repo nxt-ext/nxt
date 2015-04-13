@@ -68,7 +68,7 @@ public final class DGSDelivery extends CreateTransaction {
             } catch (RuntimeException e) {
                 return INCORRECT_DGS_GOODS;
             }
-            encryptedGoods = buyerAccount.encryptTo(goodsBytes, secretPhrase);
+            encryptedGoods = buyerAccount.encryptTo(goodsBytes, secretPhrase, true);
         }
 
         Attachment attachment = new Attachment.DigitalGoodsDelivery(purchase.getId(), encryptedGoods, goodsIsText, discountNQT);

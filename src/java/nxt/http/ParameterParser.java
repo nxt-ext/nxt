@@ -2,6 +2,7 @@ package nxt.http;
 
 import nxt.Account;
 import nxt.Alias;
+import nxt.Appendix;
 import nxt.Asset;
 import nxt.Constants;
 import nxt.Currency;
@@ -24,9 +25,9 @@ import javax.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
 import java.util.List;
 
-import static nxt.http.JSONResponses.HEIGHT_NOT_AVAILABLE;
 import static nxt.http.JSONResponses.INCORRECT_ACCOUNT;
 import static nxt.http.JSONResponses.INCORRECT_ALIAS;
+import static nxt.http.JSONResponses.INCORRECT_ARBITRARY_MESSAGE;
 import static nxt.http.JSONResponses.INCORRECT_DGS_ENCRYPTED_GOODS;
 import static nxt.http.JSONResponses.INCORRECT_ENCRYPTED_MESSAGE;
 import static nxt.http.JSONResponses.INCORRECT_HEIGHT;
@@ -147,21 +148,6 @@ final class ParameterParser {
         }
     }
 
-    static boolean getBoolean(HttpServletRequest req, String name, boolean isMandatory) throws ParameterException {
-        String paramValue = Convert.emptyToNull(req.getParameter(name));
-        if (paramValue == null) {
-            if (isMandatory) {
-                throw new ParameterException(missing(name));
-            }
-            return false;
-        }
-        try {
-            return Boolean.parseBoolean(paramValue);
-        } catch (RuntimeException e) {
-            throw new ParameterException(incorrect(name));
-        }
-    }
-
     static Alias getAlias(HttpServletRequest req) throws ParameterException {
         long aliasId;
         try {
@@ -275,9 +261,10 @@ final class ParameterParser {
         }
         String secretPhrase = getSecretPhrase(req);
         boolean isText = !"false".equalsIgnoreCase(req.getParameter("messageToEncryptIsText"));
+        boolean compress = !"false".equalsIgnoreCase(req.getParameter("compressMessageToEncrypt"));
         try {
             byte[] plainMessageBytes = isText ? Convert.toBytes(plainMessage) : Convert.parseHexString(plainMessage);
-            return recipientAccount.encryptTo(plainMessageBytes, secretPhrase);
+            return recipientAccount.encryptTo(plainMessageBytes, secretPhrase, compress);
         } catch (RuntimeException e) {
             throw new ParameterException(INCORRECT_PLAIN_MESSAGE);
         }
@@ -299,10 +286,14 @@ final class ParameterParser {
         }
         String secretPhrase = getSecretPhrase(req);
         Account senderAccount = Account.getAccount(Crypto.getPublicKey(secretPhrase));
+        if (senderAccount == null) {
+            throw new ParameterException(UNKNOWN_ACCOUNT);
+        }
         boolean isText = !"false".equalsIgnoreCase(req.getParameter("messageToEncryptToSelfIsText"));
+        boolean compress = !"false".equalsIgnoreCase(req.getParameter("compressMessageToEncryptToSelf"));
         try {
             byte[] plainMessageBytes = isText ? Convert.toBytes(plainMessage) : Convert.parseHexString(plainMessage);
-            return senderAccount.encryptTo(plainMessageBytes, secretPhrase);
+            return senderAccount.encryptTo(plainMessageBytes, secretPhrase, compress);
         } catch (RuntimeException e) {
             throw new ParameterException(INCORRECT_PLAIN_MESSAGE);
         }
@@ -369,7 +360,7 @@ final class ParameterParser {
         }
         Account account = Account.getAccount(accountId);
         if (account == null) {
-            throw new ParameterException(UNKNOWN_ACCOUNT);
+            throw new ParameterException(JSONResponses.unknownAccount(accountId));
         }
         return account;
     }
@@ -420,7 +411,7 @@ final class ParameterParser {
             if (lastIndex < 0) {
                 lastIndex = Integer.MAX_VALUE;
             }
-        } catch (NumberFormatException e) {}
+        } catch (NumberFormatException ignored) {}
         try {
             API.verifyPassword(req);
             return lastIndex;
@@ -441,9 +432,6 @@ final class ParameterParser {
                 int height = Integer.parseInt(heightValue);
                 if (height < 0 || height > Nxt.getBlockchain().getHeight()) {
                     throw new ParameterException(INCORRECT_HEIGHT);
-                }
-                if (height < Nxt.getBlockchainProcessor().getMinRollbackHeight()) {
-                    throw new ParameterException(HEIGHT_NOT_AVAILABLE);
                 }
                 return height;
             } catch (NumberFormatException e) {
@@ -478,6 +466,34 @@ final class ParameterParser {
                 throw new ParameterException(response);
             }
         }
+    }
+
+    static Appendix.PrunablePlainMessage getPrunablePlainMessage(HttpServletRequest req) throws ParameterException {
+        String messageValue = Convert.emptyToNull(req.getParameter("message"));
+        if (messageValue != null) {
+            boolean messageIsText = !"false".equalsIgnoreCase(req.getParameter("messageIsText"));
+            boolean messageIsPrunable = "true".equalsIgnoreCase(req.getParameter("messageIsPrunable"));
+            if (messageIsPrunable) {
+                try {
+                    return new Appendix.PrunablePlainMessage(messageValue, messageIsText);
+                } catch (RuntimeException e) {
+                    throw new ParameterException(INCORRECT_ARBITRARY_MESSAGE);
+                }
+            }
+        }
+        return null;
+    }
+
+    static Appendix.PrunableEncryptedMessage getPrunableEncryptedMessage(HttpServletRequest req) throws ParameterException {
+        EncryptedData encryptedData = ParameterParser.getEncryptedMessage(req, null);
+        boolean encryptedDataIsText = !"false".equalsIgnoreCase(req.getParameter("messageToEncryptIsText"));
+        boolean isCompressed = !"false".equalsIgnoreCase(req.getParameter("compressMessageToEncrypt"));
+        if (encryptedData != null) {
+            if ("true".equalsIgnoreCase(req.getParameter("encryptedMessageIsPrunable"))) {
+                return new Appendix.PrunableEncryptedMessage(encryptedData, encryptedDataIsText, isCompressed);
+            }
+        }
+        return null;
     }
 
 

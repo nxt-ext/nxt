@@ -38,9 +38,9 @@ public final class Alias {
             try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO alias_offer (id, price, buyer_id, "
                     + "height) VALUES (?, ?, ?, ?)")) {
                 int i = 0;
-                pstmt.setLong(++i, this.getId());
-                pstmt.setLong(++i, this.getPriceNQT());
-                DbUtils.setLongZeroToNull(pstmt, ++i, this.getBuyerId());
+                pstmt.setLong(++i, this.aliasId);
+                pstmt.setLong(++i, this.priceNQT);
+                DbUtils.setLongZeroToNull(pstmt, ++i, this.buyerId);
                 pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
                 pstmt.executeUpdate();
             }
@@ -125,6 +125,10 @@ public final class Alias {
 
     public static Alias getAlias(String aliasName) {
         return aliasTable.getBy(new DbClause.StringClause("alias_name_lower", aliasName.toLowerCase()));
+    }
+
+    public static DbIterator<Alias> getAliasesLike(String aliasName, int from, int to) {
+        return aliasTable.getManyBy(new DbClause.LikeClause("alias_name_lower", aliasName.toLowerCase()), from, to);
     }
 
     public static Alias getAlias(long id) {
@@ -218,11 +222,11 @@ public final class Alias {
                 + "alias_uri, timestamp, height) "
                 + "VALUES (?, ?, ?, ?, ?, ?)")) {
             int i = 0;
-            pstmt.setLong(++i, this.getId());
-            pstmt.setLong(++i, this.getAccountId());
-            pstmt.setString(++i, this.getAliasName());
-            pstmt.setString(++i, this.getAliasURI());
-            pstmt.setInt(++i, this.getTimestamp());
+            pstmt.setLong(++i, this.id);
+            pstmt.setLong(++i, this.accountId);
+            pstmt.setString(++i, this.aliasName);
+            pstmt.setString(++i, this.aliasURI);
+            pstmt.setInt(++i, this.timestamp);
             pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
             pstmt.executeUpdate();
         }

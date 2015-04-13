@@ -22,7 +22,7 @@ public final class Scan extends APIServlet.APIRequestHandler {
             int numBlocks = 0;
             try {
                 numBlocks = Integer.parseInt(req.getParameter("numBlocks"));
-            } catch (NumberFormatException e) {}
+            } catch (NumberFormatException ignored) {}
             int height = -1;
             try {
                 height = Integer.parseInt(req.getParameter("height"));

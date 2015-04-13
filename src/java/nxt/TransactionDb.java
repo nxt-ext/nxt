@@ -17,11 +17,15 @@ import java.util.List;
 final class TransactionDb {
 
     static TransactionImpl findTransaction(long transactionId) {
+        return findTransaction(transactionId, Integer.MAX_VALUE);
+    }
+
+    static TransactionImpl findTransaction(long transactionId, int height) {
         try (Connection con = Db.db.getConnection();
              PreparedStatement pstmt = con.prepareStatement("SELECT * FROM transaction WHERE id = ?")) {
             pstmt.setLong(1, transactionId);
             try (ResultSet rs = pstmt.executeQuery()) {
-                if (rs.next()) {
+                if (rs.next() && rs.getInt("height") <= height) {
                     return loadTransaction(con, rs);
                 }
                 return null;
@@ -33,13 +37,16 @@ final class TransactionDb {
         }
     }
 
-    static TransactionImpl findTransactionByFullHash(String fullHash) {
+    static TransactionImpl findTransactionByFullHash(byte[] fullHash) {
+        return findTransactionByFullHash(fullHash, Integer.MAX_VALUE);
+    }
+
+    static TransactionImpl findTransactionByFullHash(byte[] fullHash, int height) {
         try (Connection con = Db.db.getConnection();
              PreparedStatement pstmt = con.prepareStatement("SELECT * FROM transaction WHERE id = ?")) {
-            byte[] fullHashBytes = Convert.parseHexString(fullHash);
-            pstmt.setLong(1, Convert.fullHashToId(fullHashBytes));
+            pstmt.setLong(1, Convert.fullHashToId(fullHash));
             try (ResultSet rs = pstmt.executeQuery()) {
-                if (rs.next() && Arrays.equals(rs.getBytes("full_hash"), fullHashBytes)) {
+                if (rs.next() && Arrays.equals(rs.getBytes("full_hash"), fullHash) && rs.getInt("height") <= height) {
                     return loadTransaction(con, rs);
                 }
                 return null;
@@ -67,13 +74,28 @@ final class TransactionDb {
         }
     }
 
-    static boolean hasTransactionByFullHash(String fullHash) {
+    static boolean hasTransactionByFullHash(byte[] fullHash) {
+        return Arrays.equals(fullHash, getFullHash(Convert.fullHashToId(fullHash)));
+    }
+
+    static boolean hasTransactionByFullHash(byte[] fullHash, int height) {
+        try (Connection con = Db.db.getConnection();
+             PreparedStatement pstmt = con.prepareStatement("SELECT full_hash, height FROM transaction WHERE id = ?")) {
+            pstmt.setLong(1, Convert.fullHashToId(fullHash));
+            try (ResultSet rs = pstmt.executeQuery()) {
+                return rs.next() && Arrays.equals(rs.getBytes("full_hash"), fullHash) && rs.getInt("height") <= height;
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e.toString(), e);
+        }
+    }
+
+    static byte[] getFullHash(long transactionId) {
         try (Connection con = Db.db.getConnection();
              PreparedStatement pstmt = con.prepareStatement("SELECT full_hash FROM transaction WHERE id = ?")) {
-            byte[] fullHashBytes = Convert.parseHexString(fullHash);
-            pstmt.setLong(1, Convert.fullHashToId(fullHashBytes));
+            pstmt.setLong(1, transactionId);
             try (ResultSet rs = pstmt.executeQuery()) {
-                return rs.next() && Arrays.equals(rs.getBytes("full_hash"), fullHashBytes);
+                return rs.next() ? rs.getBytes("full_hash") : null;
             }
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
@@ -131,19 +153,25 @@ final class TransactionDb {
                 }
             }
             if (rs.getBoolean("has_message")) {
-                builder.message(new Appendix.Message(buffer, version));
+                builder.appendix(new Appendix.Message(buffer, version));
             }
             if (rs.getBoolean("has_encrypted_message")) {
-                builder.encryptedMessage(new Appendix.EncryptedMessage(buffer, version));
+                builder.appendix(new Appendix.EncryptedMessage(buffer, version));
             }
             if (rs.getBoolean("has_public_key_announcement")) {
-                builder.publicKeyAnnouncement(new Appendix.PublicKeyAnnouncement(buffer, version));
+                builder.appendix(new Appendix.PublicKeyAnnouncement(buffer, version));
             }
             if (rs.getBoolean("has_encrypttoself_message")) {
-                builder.encryptToSelfMessage(new Appendix.EncryptToSelfMessage(buffer, version));
+                builder.appendix(new Appendix.EncryptToSelfMessage(buffer, version));
             }
             if (rs.getBoolean("phased")) {
-                builder.phasing(new Appendix.Phasing(buffer, version));
+                builder.appendix(new Appendix.Phasing(buffer, version));
+            }
+            if (rs.getBoolean("has_prunable_message")) {
+                builder.appendix(new Appendix.PrunablePlainMessage(buffer, version));
+            }
+            if (rs.getBoolean("has_prunable_encrypted_message")) {
+                builder.appendix(new Appendix.PrunableEncryptedMessage(buffer, version));
             }
            
             return builder.build();
@@ -188,15 +216,16 @@ final class TransactionDb {
                         + "recipient_id, amount, fee, referenced_transaction_full_hash, height, "
                         + "block_id, signature, timestamp, type, subtype, sender_id, attachment_bytes, "
                         + "block_timestamp, full_hash, version, has_message, has_encrypted_message, has_public_key_announcement, "
-                        + "has_encrypttoself_message, phased, ec_block_height, ec_block_id, transaction_index) "
-                        + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
+                        + "has_encrypttoself_message, phased, has_prunable_message, has_prunable_encrypted_message, "
+                        + "ec_block_height, ec_block_id, transaction_index) "
+                        + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
                     int i = 0;
                     pstmt.setLong(++i, transaction.getId());
                     pstmt.setShort(++i, transaction.getDeadline());
                     DbUtils.setLongZeroToNull(pstmt, ++i, transaction.getRecipientId());
                     pstmt.setLong(++i, transaction.getAmountNQT());
                     pstmt.setLong(++i, transaction.getFeeNQT());
-                    DbUtils.setBytes(pstmt, ++i, Convert.parseHexString(transaction.getReferencedTransactionFullHash()));
+                    DbUtils.setBytes(pstmt, ++i, transaction.referencedTransactionFullHash());
                     pstmt.setInt(++i, transaction.getHeight());
                     pstmt.setLong(++i, transaction.getBlockId());
                     pstmt.setBytes(++i, transaction.getSignature());
@@ -219,13 +248,15 @@ final class TransactionDb {
                         pstmt.setBytes(++i, buffer.array());
                     }
                     pstmt.setInt(++i, transaction.getBlockTimestamp());
-                    pstmt.setBytes(++i, Convert.parseHexString(transaction.getFullHash()));
+                    pstmt.setBytes(++i, transaction.fullHash());
                     pstmt.setByte(++i, transaction.getVersion());
                     pstmt.setBoolean(++i, transaction.getMessage() != null);
                     pstmt.setBoolean(++i, transaction.getEncryptedMessage() != null);
                     pstmt.setBoolean(++i, transaction.getPublicKeyAnnouncement() != null);
                     pstmt.setBoolean(++i, transaction.getEncryptToSelfMessage() != null);
                     pstmt.setBoolean(++i, transaction.getPhasing() != null);
+                    pstmt.setBoolean(++i, transaction.hasPrunablePlainMessage());
+                    pstmt.setBoolean(++i, transaction.hasPrunableEncryptedMessage());
                     pstmt.setInt(++i, transaction.getECBlockHeight());
                     DbUtils.setLongZeroToNull(pstmt, ++i, transaction.getECBlockId());
                     pstmt.setShort(++i, index++);

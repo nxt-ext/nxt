@@ -87,7 +87,8 @@ var NRS = (function(NRS, $, undefined) {
 				["refundNXT", "NQT"],
 				["discountNXT", "NQT"],
 				["phasingQuorumNXT", ""],
-				["phasingMinBalanceNXT", ""]
+				["phasingMinBalanceNXT", ""],
+				["minBalanceNXT", ""]
 			];
 
 			for (var i = 0; i < nxtFields.length; i++) {
@@ -112,7 +113,9 @@ var NRS = (function(NRS, $, undefined) {
 		try {
 			var currencyFields = [
 				["phasingQuorumQNTf", "phasingHoldingDecimals"],
-				["phasingMinBalanceQNTf", "phasingHoldingDecimals"]
+				["phasingMinBalanceQNTf", "phasingHoldingDecimals"],
+				["minBalanceQNTf", "create_poll_asset_decimals"],
+				["minBalanceQNTf", "create_poll_ms_decimals"]
 			];
 			var toDelete = [];
 			for (var i = 0; i < currencyFields.length; i++) {
@@ -679,6 +682,18 @@ var NRS = (function(NRS, $, undefined) {
 					return false;
 				}
 				break;
+			case "deleteAlias":
+				if (transaction.type !== 1 && transaction.subtype !== 8) {
+					return false;
+				}
+				var aliasLength = parseInt(byteArray[pos], 10);
+				pos++;
+				transaction.alias = converters.byteArrayToString(byteArray, pos, aliasLength);
+				pos += aliasLength;
+				if (transaction.alias !== data.aliasName) {
+					return false;
+				}
+				break;
          case "approveTransaction":
             if (transaction.type !== 1 && transaction.subtype !== 9) {
                return false;
@@ -1038,7 +1053,8 @@ var NRS = (function(NRS, $, undefined) {
 		var position = 1;
 
 		//non-encrypted message
-		if ((transaction.flags & position) != 0 || (requestType == "sendMessage" && data.message)) {
+		if ((transaction.flags & position) != 0 ||
+			((requestType == "sendMessage" && data.message && !(data.messageIsPrunable === "true")))) {
 			var attachmentVersion = byteArray[pos];
 			pos++;
 			var messageLength = converters.byteArrayToSignedInt32(byteArray, pos);
@@ -1061,7 +1077,7 @@ var NRS = (function(NRS, $, undefined) {
 			if (transaction.message !== data.message) {
 				return false;
 			}
-		} else if (data.message) {
+		} else if (data.message && !(data.messageIsPrunable === "true")) {
 			return false;
 		}
 
@@ -1088,7 +1104,7 @@ var NRS = (function(NRS, $, undefined) {
 			if (transaction.encryptedMessageData !== data.encryptedMessageData || transaction.encryptedMessageNonce !== data.encryptedMessageNonce) {
 				return false;
 			}
-		} else if (data.encryptedMessageData) {
+		} else if (data.encryptedMessageData && !(data.encryptedMessageIsPrunable === "true")) {
 			return false;
 		}
 
@@ -1132,6 +1148,8 @@ var NRS = (function(NRS, $, undefined) {
 			return false;
 		}
 
+		// TODO add phasing, prunablePlainMessage, prunableEncryptedMessage appendix validation
+
 		return transactionBytes.substr(0, 192) + signature + transactionBytes.substr(320);
 	};
 
@@ -1144,7 +1162,15 @@ var NRS = (function(NRS, $, undefined) {
 			timeout: 30000,
 			async: true,
 			data: {
-				"transactionBytes": transactionData
+				"transactionBytes": transactionData,
+				"message": originalData.message,
+				"messageIsText": originalData.messageIsText,
+				"messageIsPrunable": originalData.messageIsPrunable,
+				"messageToEncryptIsText": originalData.messageToEncryptIsText,
+				"encryptedMessageData": originalData.encryptedMessageData,
+				"encryptedMessageNonce": originalData.encryptedMessageNonce,
+				"encryptedMessageIsPrunable": originalData.encryptedMessageIsPrunable,
+				"compressMessageToEncrypt": originalData.compressMessageToEncrypt
 			}
 		}).done(function(response, status, xhr) {
 			if (NRS.console) {

@@ -28,7 +28,7 @@ import java.util.List;
 
 public final class DigitalGoodsStore {
 
-    public static enum Event {
+    public enum Event {
         GOODS_LISTED, GOODS_DELISTED, GOODS_PRICE_CHANGE, GOODS_QUANTITY_CHANGE,
         PURCHASE, DELIVERY, REFUND, FEEDBACK
     }
@@ -111,8 +111,10 @@ public final class DigitalGoodsStore {
             return tagTable.getCount();
         }
 
+        private static final DbClause inStockOnlyClause = new DbClause.FixedClause(" in_stock_count > 0 ");
+
         public static int getCountInStock() {
-            return tagTable.getCount(new DbClause.FixedClause(" in_stock_count > 0 "));
+            return tagTable.getCount(inStockOnlyClause);
         }
 
         public static DbIterator<Tag> getAllTags(int from, int to) {
@@ -120,7 +122,15 @@ public final class DigitalGoodsStore {
         }
 
         public static DbIterator<Tag> getInStockTags(int from, int to) {
-            return tagTable.getManyBy(new DbClause.FixedClause(" in_stock_count > 0 "), from, to);
+            return tagTable.getManyBy(inStockOnlyClause, from, to);
+        }
+
+        public static DbIterator<Tag> getTagsLike(String prefix, boolean inStockOnly, int from, int to) {
+            DbClause dbClause = new DbClause.LikeClause("tag", prefix);
+            if (inStockOnly) {
+                dbClause = dbClause.and(inStockOnlyClause);
+            }
+            return tagTable.getManyBy(dbClause, from, to, " ORDER BY tag ");
         }
 
         private static void init() {}
@@ -202,7 +212,7 @@ public final class DigitalGoodsStore {
 
         };
 
-        private static final VersionedEntityDbTable<Goods> goodsTable = new VersionedEntityDbTable<Goods>("goods", goodsDbKeyFactory) {
+        private static final VersionedEntityDbTable<Goods> goodsTable = new VersionedEntityDbTable<Goods>("goods", goodsDbKeyFactory, "name,description,tags") {
 
             @Override
             protected Goods load(Connection con, ResultSet rs) throws SQLException {
@@ -621,6 +631,13 @@ public final class DigitalGoodsStore {
             return purchaseTable.getManyBy(dbClause, from, to);
         }
 
+        public static DbIterator<Purchase> getExpiredSellerPurchases(final long sellerId, int from, int to) {
+            DbClause dbClause = new DbClause.LongClause("seller_id", sellerId)
+                    .and(new DbClause.FixedClause("pending = FALSE"))
+                    .and(new DbClause.FixedClause("goods IS NULL"));
+            return purchaseTable.getManyBy(dbClause, from, to);
+        }
+
         static Purchase getPendingPurchase(long purchaseId) {
             Purchase purchase = getPurchase(purchaseId);
             return purchase == null || ! purchase.isPending() ? null : purchase;
@@ -810,8 +827,10 @@ public final class DigitalGoodsStore {
                 feedbackNotes = new ArrayList<>();
             }
             feedbackNotes.add(feedbackNote);
-            this.hasFeedbackNotes = true;
-            purchaseTable.insert(this);
+            if (!this.hasFeedbackNotes) {
+                this.hasFeedbackNotes = true;
+                purchaseTable.insert(this);
+            }
             feedbackTable.insert(this, feedbackNotes);
 		}
 
@@ -832,8 +851,10 @@ public final class DigitalGoodsStore {
                 publicFeedbacks = new ArrayList<>();
             }
             publicFeedbacks.add(publicFeedback);
-            this.hasPublicFeedbacks = true;
-            purchaseTable.insert(this);
+            if (!this.hasPublicFeedbacks) {
+                this.hasPublicFeedbacks = true;
+                purchaseTable.insert(this);
+            }
             publicFeedbackTable.insert(this, publicFeedbacks);
         }
 
@@ -841,7 +862,7 @@ public final class DigitalGoodsStore {
             return discountNQT;
         }
 
-        public void setDiscountNQT(long discountNQT) {
+        private void setDiscountNQT(long discountNQT) {
             this.discountNQT = discountNQT;
             purchaseTable.insert(this);
         }
@@ -850,7 +871,7 @@ public final class DigitalGoodsStore {
             return refundNQT;
         }
 
-        public void setRefundNQT(long refundNQT) {
+        private void setRefundNQT(long refundNQT) {
             this.refundNQT = refundNQT;
             purchaseTable.insert(this);
         }
@@ -914,7 +935,8 @@ public final class DigitalGoodsStore {
     static void purchase(Transaction transaction,  Attachment.DigitalGoodsPurchase attachment) {
         Goods goods = Goods.goodsTable.get(Goods.goodsDbKeyFactory.newKey(attachment.getGoodsId()));
         if (! goods.isDelisted() && attachment.getQuantity() <= goods.getQuantity() && attachment.getPriceNQT() == goods.getPriceNQT()
-                && attachment.getDeliveryDeadlineTimestamp() > Nxt.getBlockchain().getLastBlockTimestamp()) {
+                && (attachment.getDeliveryDeadlineTimestamp() > Nxt.getBlockchain().getLastBlockTimestamp()
+                || Nxt.getBlockchain().getHeight() >= Constants.VOTING_SYSTEM_BLOCK)) { // temporary
             goods.changeQuantity(-attachment.getQuantity());
             Purchase purchase = new Purchase(transaction, attachment, goods.getSellerId());
             Purchase.purchaseTable.insert(purchase);

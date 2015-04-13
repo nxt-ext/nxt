@@ -9,7 +9,7 @@ public enum APITag {
 
     private final String displayName;
 
-    private APITag(String displayName) {
+    APITag(String displayName) {
         this.displayName = displayName;
     }
 

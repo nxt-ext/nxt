@@ -2,6 +2,7 @@ package nxt;
 
 import nxt.db.DbIterator;
 import nxt.db.DbUtils;
+import nxt.util.Convert;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -149,9 +150,6 @@ final class BlockchainImpl implements Blockchain {
 
     @Override
     public List<Long> getBlockIdsAfter(long blockId, int limit) {
-        if (limit > 1440) {
-            throw new IllegalArgumentException("Can't get more than 1440 blocks at a time");
-        }
         try (Connection con = Db.db.getConnection();
              PreparedStatement pstmt = con.prepareStatement("SELECT id FROM block WHERE db_id > (SELECT db_id FROM block WHERE id = ?) ORDER BY db_id ASC LIMIT ?")) {
             List<Long> result = new ArrayList<>();
@@ -171,9 +169,6 @@ final class BlockchainImpl implements Blockchain {
 
     @Override
     public List<BlockImpl> getBlocksAfter(long blockId, int limit) {
-        if (limit > 1440) {
-            throw new IllegalArgumentException("Can't get more than 1440 blocks at a time");
-        }
         try (Connection con = Db.db.getConnection();
              PreparedStatement pstmt = con.prepareStatement("SELECT * FROM block WHERE db_id > (SELECT db_id FROM block WHERE id = ?) ORDER BY db_id ASC LIMIT ?")) {
             List<BlockImpl> result = new ArrayList<>();
@@ -222,7 +217,7 @@ final class BlockchainImpl implements Blockchain {
 
     @Override
     public TransactionImpl getTransactionByFullHash(String fullHash) {
-        return TransactionDb.findTransactionByFullHash(fullHash);
+        return TransactionDb.findTransactionByFullHash(Convert.parseHexString(fullHash));
     }
 
     @Override
@@ -232,7 +227,7 @@ final class BlockchainImpl implements Blockchain {
 
     @Override
     public boolean hasTransactionByFullHash(String fullHash) {
-        return TransactionDb.hasTransactionByFullHash(fullHash);
+        return TransactionDb.hasTransactionByFullHash(Convert.parseHexString(fullHash));
     }
 
     @Override
@@ -290,7 +285,8 @@ final class BlockchainImpl implements Blockchain {
                 buf.append("AND height <= ? ");
             }
             if (withMessage) {
-                buf.append("AND (has_message = TRUE OR has_encrypted_message = TRUE) ");
+                buf.append("AND (has_message = TRUE OR has_encrypted_message = TRUE ");
+                buf.append("OR ((has_prunable_message = TRUE OR has_prunable_encrypted_message = TRUE) AND timestamp > ?)) ");
             }
             if (phased) {
                 buf.append("AND phased = TRUE ");
@@ -310,7 +306,8 @@ final class BlockchainImpl implements Blockchain {
                 buf.append("AND height <= ? ");
             }
             if (withMessage) {
-                buf.append("AND (has_message = TRUE OR has_encrypted_message = TRUE OR has_encrypttoself_message = TRUE) ");
+                buf.append("AND (has_message = TRUE OR has_encrypted_message = TRUE OR has_encrypttoself_message = TRUE ");
+                buf.append("OR ((has_prunable_message = TRUE OR has_prunable_encrypted_message = TRUE) AND timestamp > ?)) ");
             }
             if (phased) {
                 buf.append("AND phased = TRUE ");
@@ -335,6 +332,10 @@ final class BlockchainImpl implements Blockchain {
             if (height < Integer.MAX_VALUE) {
                 pstmt.setInt(++i, height);
             }
+            int prunableExpiration = Nxt.getEpochTime() - Constants.MIN_PRUNABLE_LIFETIME;
+            if (withMessage) {
+                pstmt.setInt(++i, prunableExpiration);
+            }
             pstmt.setLong(++i, account.getId());
             if (blockTimestamp > 0) {
                 pstmt.setInt(++i, blockTimestamp);
@@ -348,6 +349,9 @@ final class BlockchainImpl implements Blockchain {
             if (height < Integer.MAX_VALUE) {
                 pstmt.setInt(++i, height);
             }
+            if (withMessage) {
+                pstmt.setInt(++i, prunableExpiration);
+            }
             DbUtils.setLimits(++i, pstmt, from, to);
             return getTransactions(con, pstmt);
         } catch (SQLException e) {
@@ -358,7 +362,7 @@ final class BlockchainImpl implements Blockchain {
 
     @Override
     public DbIterator<TransactionImpl> getTransactions(Connection con, PreparedStatement pstmt) {
-        return new DbIterator<>(con, pstmt, TransactionDb::loadTransaction);
+        return new DbIterator<TransactionImpl>(con, pstmt, TransactionDb::loadTransaction);
     }
 
 }

@@ -48,8 +48,12 @@ public abstract class DerivedDbTable {
         //nothing to trim
     }
 
+    public void createSearchIndex(Connection con) throws SQLException {
+        //implemented in EntityDbTable only
+    }
+
     @Override
-    public String toString() {
+    public final String toString() {
         return table;
     }
 

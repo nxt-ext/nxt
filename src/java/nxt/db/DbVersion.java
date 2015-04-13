@@ -70,6 +70,6 @@ public abstract class DbVersion {
         }
     }
 
-    protected abstract void update(int nextUpdate) throws SQLException;
+    protected abstract void update(int nextUpdate);
 
 }

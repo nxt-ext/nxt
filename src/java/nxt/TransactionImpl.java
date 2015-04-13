@@ -21,7 +21,7 @@ final class TransactionImpl implements Transaction {
     static final class BuilderImpl implements Builder {
 
         private final short deadline;
-        private byte[] senderPublicKey;
+        private final byte[] senderPublicKey;
         private final long amountNQT;
         private final long feeNQT;
         private final TransactionType type;
@@ -29,20 +29,22 @@ final class TransactionImpl implements Transaction {
         private final Attachment.AbstractAttachment attachment;
 
         private long recipientId;
-        private String referencedTransactionFullHash;
+        private byte[] referencedTransactionFullHash;
         private byte[] signature;
         private Appendix.Message message;
         private Appendix.EncryptedMessage encryptedMessage;
         private Appendix.EncryptToSelfMessage encryptToSelfMessage;
         private Appendix.PublicKeyAnnouncement publicKeyAnnouncement;
         private Appendix.Phasing phasing;
+        private Appendix.PrunablePlainMessage prunablePlainMessage;
+        private Appendix.PrunableEncryptedMessage prunableEncryptedMessage;
         private long blockId;
         private int height = Integer.MAX_VALUE;
         private long id;
         private long senderId;
         private int timestamp = Integer.MAX_VALUE;
         private int blockTimestamp = -1;
-        private String fullHash;
+        private byte[] fullHash;
         private boolean ecBlockSet = false;
         private int ecBlockHeight;
         private long ecBlockId;
@@ -84,38 +86,54 @@ final class TransactionImpl implements Transaction {
 
         @Override
         public BuilderImpl referencedTransactionFullHash(String referencedTransactionFullHash) {
-            this.referencedTransactionFullHash = referencedTransactionFullHash;
+            this.referencedTransactionFullHash = Convert.parseHexString(referencedTransactionFullHash);
             return this;
         }
 
         BuilderImpl referencedTransactionFullHash(byte[] referencedTransactionFullHash) {
-            if (referencedTransactionFullHash != null) {
-                this.referencedTransactionFullHash = Convert.toHexString(referencedTransactionFullHash);
-            }
+            this.referencedTransactionFullHash = referencedTransactionFullHash;
             return this;
         }
 
         @Override
-        public BuilderImpl message(Appendix.Message message) {
+        public BuilderImpl appendix(Appendix.Message message) {
             this.message = message;
             return this;
         }
 
         @Override
-        public BuilderImpl encryptedMessage(Appendix.EncryptedMessage encryptedMessage) {
+        public BuilderImpl appendix(Appendix.EncryptedMessage encryptedMessage) {
             this.encryptedMessage = encryptedMessage;
             return this;
         }
 
         @Override
-        public BuilderImpl encryptToSelfMessage(Appendix.EncryptToSelfMessage encryptToSelfMessage) {
+        public BuilderImpl appendix(Appendix.EncryptToSelfMessage encryptToSelfMessage) {
             this.encryptToSelfMessage = encryptToSelfMessage;
             return this;
         }
 
         @Override
-        public BuilderImpl publicKeyAnnouncement(Appendix.PublicKeyAnnouncement publicKeyAnnouncement) {
+        public BuilderImpl appendix(Appendix.PublicKeyAnnouncement publicKeyAnnouncement) {
             this.publicKeyAnnouncement = publicKeyAnnouncement;
+            return this;
+        }
+
+        @Override
+        public BuilderImpl appendix(Appendix.PrunablePlainMessage prunablePlainMessage) {
+            this.prunablePlainMessage = prunablePlainMessage;
+            return this;
+        }
+
+        @Override
+        public BuilderImpl appendix(Appendix.PrunableEncryptedMessage prunableEncryptedMessage) {
+            this.prunableEncryptedMessage = prunableEncryptedMessage;
+            return this;
+        }
+
+        @Override
+        public BuilderImpl appendix(Appendix.Phasing phasing) {
+            this.phasing = phasing;
             return this;
         }
 
@@ -136,12 +154,6 @@ final class TransactionImpl implements Transaction {
         public BuilderImpl ecBlockId(long blockId) {
             this.ecBlockId = blockId;
             this.ecBlockSet = true;
-            return this;
-        }
-
-        @Override
-        public Builder phasing(Appendix.Phasing phasing) {
-            this.phasing = phasing;
             return this;
         }
 
@@ -170,15 +182,8 @@ final class TransactionImpl implements Transaction {
             return this;
         }
 
-        BuilderImpl fullHash(String fullHash) {
-            this.fullHash = fullHash;
-            return this;
-        }
-
         BuilderImpl fullHash(byte[] fullHash) {
-            if (fullHash != null) {
-                this.fullHash = Convert.toHexString(fullHash);
-            }
+            this.fullHash = fullHash;
             return this;
         }
 
@@ -199,7 +204,7 @@ final class TransactionImpl implements Transaction {
     private final long recipientId;
     private final long amountNQT;
     private final long feeNQT;
-    private final String referencedTransactionFullHash;
+    private final byte[] referencedTransactionFullHash;
     private final TransactionType type;
     private final int ecBlockHeight;
     private final long ecBlockId;
@@ -212,9 +217,12 @@ final class TransactionImpl implements Transaction {
     private final Appendix.EncryptToSelfMessage encryptToSelfMessage;
     private final Appendix.PublicKeyAnnouncement publicKeyAnnouncement;
     private final Appendix.Phasing phasing;
+    private final Appendix.PrunablePlainMessage prunablePlainMessage;
+    private final Appendix.PrunableEncryptedMessage prunableEncryptedMessage;
 
     private final List<Appendix.AbstractAppendix> appendages;
     private final int appendagesSize;
+    private final int appendagesFullSize;
 
     private volatile int height = Integer.MAX_VALUE;
     private volatile long blockId;
@@ -224,7 +232,7 @@ final class TransactionImpl implements Transaction {
     private volatile long id;
     private volatile String stringId;
     private volatile long senderId;
-    private volatile String fullHash;
+    private volatile byte[] fullHash;
     private volatile DbKey dbKey;
     private volatile byte[] bytes = null;
 
@@ -268,12 +276,21 @@ final class TransactionImpl implements Transaction {
         if ((this.phasing = builder.phasing) != null) {
             list.add(this.phasing);
         }
+        if ((this.prunablePlainMessage = builder.prunablePlainMessage) != null) {
+            list.add(this.prunablePlainMessage);
+        }
+        if ((this.prunableEncryptedMessage = builder.prunableEncryptedMessage) != null) {
+            list.add(this.prunableEncryptedMessage);
+        }
         this.appendages = Collections.unmodifiableList(list);
         int appendagesSize = 0;
+        int appendagesFullSize = 0;
         for (Appendix appendage : appendages) {
             appendagesSize += appendage.getSize();
+            appendagesFullSize += appendage.getFullSize();
         }
         this.appendagesSize = appendagesSize;
+        this.appendagesFullSize = appendagesFullSize;
         if (builder.feeNQT <= 0) {
             int effectiveHeight = (height < Integer.MAX_VALUE ? height : Nxt.getBlockchain().getHeight());
             if (this.phasing == null) {
@@ -285,40 +302,6 @@ final class TransactionImpl implements Transaction {
             feeNQT = builder.feeNQT;
         }
 
-        if ((timestamp == 0 && Arrays.equals(getSenderPublicKey(), Genesis.CREATOR_PUBLIC_KEY))
-                ? (deadline != 0 || feeNQT != 0)
-                : (deadline < 1 || feeNQT <= 0)
-                || feeNQT > Constants.MAX_BALANCE_NQT
-                || amountNQT < 0
-                || amountNQT > Constants.MAX_BALANCE_NQT
-                || type == null) {
-            throw new NxtException.NotValidException("Invalid transaction parameters:\n type: " + type + ", timestamp: " + timestamp
-                    + ", deadline: " + deadline + ", fee: " + feeNQT + ", amount: " + amountNQT);
-        }
-
-        if (attachment == null || type != attachment.getTransactionType()) {
-            throw new NxtException.NotValidException("Invalid attachment " + attachment + " for transaction of type " + type);
-        }
-
-        if (! type.canHaveRecipient()) {
-            if (recipientId != 0 || getAmountNQT() != 0) {
-                throw new NxtException.NotValidException("Transactions of this type must have recipient == 0, amount == 0");
-            }
-        }
-
-        if (type.mustHaveRecipient() && version > 0) {
-            if (recipientId == 0) {
-                throw new NxtException.NotValidException("Transactions of this type must have a valid recipient");
-            }
-        }
-
-        for (Appendix.AbstractAppendix appendage : appendages) {
-            if (! appendage.verifyVersion(this.version)) {
-                throw new NxtException.NotValidException("Invalid attachment version " + appendage.getVersion()
-                        + " for transaction version " + this.version);
-            }
-        }
-
         if (builder.signature != null && secretPhrase != null) {
             throw new NxtException.NotValidException("Transaction is already signed");
         } else if (builder.signature != null) {
@@ -327,7 +310,7 @@ final class TransactionImpl implements Transaction {
             if (getSenderPublicKey() != null && ! Arrays.equals(senderPublicKey, Crypto.getPublicKey(secretPhrase))) {
                 throw new NxtException.NotValidException("Secret phrase doesn't match transaction sender public key");
             }
-            signature = Crypto.sign(getBytesOrig(), secretPhrase);
+            signature = Crypto.sign(bytes(), secretPhrase);
             bytes = null;
         } else {
             signature = null;
@@ -365,6 +348,10 @@ final class TransactionImpl implements Transaction {
 
     @Override
     public String getReferencedTransactionFullHash() {
+        return Convert.toHexString(referencedTransactionFullHash);
+    }
+
+    byte[] referencedTransactionFullHash() {
         return referencedTransactionFullHash;
     }
 
@@ -460,6 +447,9 @@ final class TransactionImpl implements Transaction {
 
     @Override
     public List<Appendix.AbstractAppendix> getAppendages() {
+        for (Appendix.AbstractAppendix appendge : appendages) {
+            appendge.loadPrunable(this);
+        }
         return appendages;
     }
 
@@ -469,20 +459,18 @@ final class TransactionImpl implements Transaction {
             if (signature == null) {
                 throw new IllegalStateException("Transaction is not signed yet");
             }
-            byte[] hash;
             if (useNQT()) {
                 byte[] data = zeroSignature(getBytes());
                 byte[] signatureHash = Crypto.sha256().digest(signature);
                 MessageDigest digest = Crypto.sha256();
                 digest.update(data);
-                hash = digest.digest(signatureHash);
+                fullHash = digest.digest(signatureHash);
             } else {
-                hash = Crypto.sha256().digest(getBytesOrig());
+                fullHash = Crypto.sha256().digest(bytes());
             }
-            BigInteger bigInteger = new BigInteger(1, new byte[] {hash[7], hash[6], hash[5], hash[4], hash[3], hash[2], hash[1], hash[0]});
+            BigInteger bigInteger = new BigInteger(1, new byte[] {fullHash[7], fullHash[6], fullHash[5], fullHash[4], fullHash[3], fullHash[2], fullHash[1], fullHash[0]});
             id = bigInteger.longValue();
             stringId = bigInteger.toString();
-            fullHash = Convert.toHexString(hash);
         }
         return id;
     }
@@ -500,6 +488,10 @@ final class TransactionImpl implements Transaction {
 
     @Override
     public String getFullHash() {
+        return Convert.toHexString(fullHash());
+    }
+
+    byte[] fullHash() {
         if (fullHash == null) {
             getId();
         }
@@ -546,11 +538,34 @@ final class TransactionImpl implements Transaction {
     }
 
     @Override
-    public byte[] getBytes() {
-        return Arrays.copyOf(getBytesOrig(), bytes.length);
+    public Appendix.PrunablePlainMessage getPrunablePlainMessage() {
+        if (prunablePlainMessage != null) {
+            prunablePlainMessage.loadPrunable(this);
+        }
+        return prunablePlainMessage;
     }
 
-    byte[] getBytesOrig() {
+    boolean hasPrunablePlainMessage() {
+        return prunablePlainMessage != null;
+    }
+
+    @Override
+    public Appendix.PrunableEncryptedMessage getPrunableEncryptedMessage() {
+        if (prunableEncryptedMessage != null) {
+            prunableEncryptedMessage.loadPrunable(this);
+        }
+        return prunableEncryptedMessage;
+    }
+
+    boolean hasPrunableEncryptedMessage() {
+        return prunableEncryptedMessage != null;
+    }
+
+    public byte[] getBytes() {
+        return Arrays.copyOf(bytes(), bytes.length);
+    }
+
+    byte[] bytes() {
         if (bytes == null) {
             try {
                 ByteBuffer buffer = ByteBuffer.allocate(getSize());
@@ -565,7 +580,7 @@ final class TransactionImpl implements Transaction {
                     buffer.putLong(amountNQT);
                     buffer.putLong(feeNQT);
                     if (referencedTransactionFullHash != null) {
-                        buffer.put(Convert.parseHexString(referencedTransactionFullHash));
+                        buffer.put(referencedTransactionFullHash);
                     } else {
                         buffer.put(new byte[32]);
                     }
@@ -573,7 +588,7 @@ final class TransactionImpl implements Transaction {
                     buffer.putInt((int) (amountNQT / Constants.ONE_NXT));
                     buffer.putInt((int) (feeNQT / Constants.ONE_NXT));
                     if (referencedTransactionFullHash != null) {
-                        buffer.putLong(Convert.fullHashToId(Convert.parseHexString(referencedTransactionFullHash)));
+                        buffer.putLong(Convert.fullHashToId(referencedTransactionFullHash));
                     } else {
                         buffer.putLong(0L);
                     }
@@ -611,12 +626,9 @@ final class TransactionImpl implements Transaction {
             long recipientId = buffer.getLong();
             long amountNQT = buffer.getLong();
             long feeNQT = buffer.getLong();
-            String referencedTransactionFullHash = null;
-            byte[] referencedTransactionFullHashBytes = new byte[32];
-            buffer.get(referencedTransactionFullHashBytes);
-            if (Convert.emptyToNull(referencedTransactionFullHashBytes) != null) {
-                referencedTransactionFullHash = Convert.toHexString(referencedTransactionFullHashBytes);
-            }
+            byte[] referencedTransactionFullHash = new byte[32];
+            buffer.get(referencedTransactionFullHash);
+            referencedTransactionFullHash = Convert.emptyToNull(referencedTransactionFullHash);
             byte[] signature = new byte[64];
             buffer.get(signature);
             signature = Convert.emptyToNull(signature);
@@ -641,23 +653,31 @@ final class TransactionImpl implements Transaction {
             }
             int position = 1;
             if ((flags & position) != 0 || (version == 0 && transactionType == TransactionType.Messaging.ARBITRARY_MESSAGE)) {
-                builder.message(new Appendix.Message(buffer, version));
+                builder.appendix(new Appendix.Message(buffer, version));
             }
             position <<= 1;
             if ((flags & position) != 0) {
-                builder.encryptedMessage(new Appendix.EncryptedMessage(buffer, version));
+                builder.appendix(new Appendix.EncryptedMessage(buffer, version));
             }
             position <<= 1;
             if ((flags & position) != 0) {
-                builder.publicKeyAnnouncement(new Appendix.PublicKeyAnnouncement(buffer, version));
+                builder.appendix(new Appendix.PublicKeyAnnouncement(buffer, version));
             }
             position <<= 1;
             if ((flags & position) != 0) {
-                builder.encryptToSelfMessage(new Appendix.EncryptToSelfMessage(buffer, version));
+                builder.appendix(new Appendix.EncryptToSelfMessage(buffer, version));
             }
             position <<= 1;
             if ((flags & position) != 0) {
-                builder.phasing(new Appendix.Phasing(buffer, version));
+                builder.appendix(new Appendix.Phasing(buffer, version));
+            }
+            position <<= 1;
+            if ((flags & position) != 0) {
+                builder.appendix(new Appendix.PrunablePlainMessage(buffer, version));
+            }
+            position <<= 1;
+            if ((flags & position) != 0) {
+                builder.appendix(new Appendix.PrunableEncryptedMessage(buffer, version));
             }
             return builder;
         } catch (NxtException.NotValidException|RuntimeException e) {
@@ -685,13 +705,14 @@ final class TransactionImpl implements Transaction {
         json.put("amountNQT", amountNQT);
         json.put("feeNQT", feeNQT);
         if (referencedTransactionFullHash != null) {
-            json.put("referencedTransactionFullHash", referencedTransactionFullHash);
+            json.put("referencedTransactionFullHash", Convert.toHexString(referencedTransactionFullHash));
         }
         json.put("ecBlockHeight", ecBlockHeight);
         json.put("ecBlockId", Long.toUnsignedString(ecBlockId));
         json.put("signature", Convert.toHexString(signature));
         JSONObject attachmentJSON = new JSONObject();
-        for (Appendix appendage : appendages) {
+        for (Appendix.AbstractAppendix appendage : appendages) {
+            appendage.loadPrunable(this);
             attachmentJSON.putAll(appendage.getJSONObject());
         }
         if (! attachmentJSON.isEmpty()) {
@@ -747,11 +768,13 @@ final class TransactionImpl implements Transaction {
                 builder.recipientId(recipientId);
             }
             if (attachmentData != null) {
-                builder.message(Appendix.Message.parse(attachmentData));
-                builder.encryptedMessage(Appendix.EncryptedMessage.parse(attachmentData));
-                builder.publicKeyAnnouncement((Appendix.PublicKeyAnnouncement.parse(attachmentData)));
-                builder.encryptToSelfMessage(Appendix.EncryptToSelfMessage.parse(attachmentData));
-                builder.phasing(Appendix.Phasing.parse(attachmentData));
+                builder.appendix(Appendix.Message.parse(attachmentData));
+                builder.appendix(Appendix.EncryptedMessage.parse(attachmentData));
+                builder.appendix((Appendix.PublicKeyAnnouncement.parse(attachmentData)));
+                builder.appendix(Appendix.EncryptToSelfMessage.parse(attachmentData));
+                builder.appendix(Appendix.Phasing.parse(attachmentData));
+                builder.appendix(Appendix.PrunablePlainMessage.parse(attachmentData));
+                builder.appendix(Appendix.PrunableEncryptedMessage.parse(attachmentData));
             }
             return builder;
         } catch (NxtException.NotValidException|RuntimeException e) {
@@ -799,6 +822,10 @@ final class TransactionImpl implements Transaction {
         return signatureOffset() + 64  + (version > 0 ? 4 + 4 + 8 : 0) + appendagesSize;
     }
 
+    int getFullSize() {
+        return getSize() - appendagesSize + appendagesFullSize;
+    }
+
     private int signatureOffset() {
         return 1 + 1 + 4 + 2 + 32 + 8 + (useNQT() ? 8 + 8 + 32 : 4 + 4 + 8);
     }
@@ -839,32 +866,66 @@ final class TransactionImpl implements Transaction {
         if (phasing != null) {
             flags |= position;
         }
+        position <<= 1;
+        if (prunablePlainMessage != null) {
+            flags |= position;
+        }
+        position <<= 1;
+        if (prunableEncryptedMessage != null) {
+            flags |= position;
+        }
         return flags;
     }
 
     @Override
     public void validate() throws NxtException.ValidationException {
-        int blockchainHeight = Nxt.getBlockchain().getHeight();
+        if (timestamp == 0 ? (deadline != 0 || feeNQT != 0) : (deadline < 1 || feeNQT <= 0)
+                || feeNQT > Constants.MAX_BALANCE_NQT
+                || amountNQT < 0
+                || amountNQT > Constants.MAX_BALANCE_NQT
+                || type == null) {
+            throw new NxtException.NotValidException("Invalid transaction parameters:\n type: " + type + ", timestamp: " + timestamp
+                    + ", deadline: " + deadline + ", fee: " + feeNQT + ", amount: " + amountNQT);
+        }
+
+        if (referencedTransactionFullHash != null && referencedTransactionFullHash.length != 32) {
+            throw new NxtException.NotValidException("Invalid referenced transaction full hash " + Convert.toHexString(referencedTransactionFullHash));
+        }
+
+        if (attachment == null || type != attachment.getTransactionType()) {
+            throw new NxtException.NotValidException("Invalid attachment " + attachment + " for transaction of type " + type);
+        }
+
+        if (! type.canHaveRecipient()) {
+            if (recipientId != 0 || getAmountNQT() != 0) {
+                throw new NxtException.NotValidException("Transactions of this type must have recipient == 0, amount == 0");
+            }
+        }
+
+        if (type.mustHaveRecipient() && version > 0) {
+            if (recipientId == 0) {
+                throw new NxtException.NotValidException("Transactions of this type must have a valid recipient");
+            }
+        }
+
         for (Appendix.AbstractAppendix appendage : appendages) {
+            appendage.loadPrunable(this);
+            if (! appendage.verifyVersion(this.version)) {
+                throw new NxtException.NotValidException("Invalid attachment version " + appendage.getVersion()
+                        + " for transaction version " + this.version);
+            }
             appendage.validate(this);
         }
-        if (getSize() > Constants.MAX_PAYLOAD_LENGTH) {
-            throw new NxtException.NotValidException("Transaction size " + getSize() + " exceeds maximum payload size");
+
+        if (getFullSize() > Constants.MAX_PAYLOAD_LENGTH) {
+            throw new NxtException.NotValidException("Transaction size " + getFullSize() + " exceeds maximum payload size");
         }
-        long minimumFeeNQT = getMinimumFeeNQT(blockchainHeight);
+
+        long minimumFeeNQT = getMinimumFeeNQT(Nxt.getBlockchain().getHeight());
         if (feeNQT < minimumFeeNQT) {
             throw new NxtException.NotCurrentlyValidException(String.format("Transaction fee %d NXT less than minimum fee %d NXT at height %d",
-                    feeNQT/Constants.ONE_NXT, minimumFeeNQT/Constants.ONE_NXT, blockchainHeight));
+                    feeNQT/Constants.ONE_NXT, minimumFeeNQT/Constants.ONE_NXT, Nxt.getBlockchain().getHeight()));
         }
-        /*
-        Account recipientAccount = Account.getAccount(recipientId);
-       	if (blockchainHeight >= Constants.MONETARY_SYSTEM_BLOCK && recipientAccount != null) {
-			if (recipientAccount.getMessagePattern() != null
-                    && (message == null || ! recipientAccount.getMessagePattern().matcher(Convert.toString(message.getMessage())).matches())) {
-                throw new NxtException.NotCurrentlyValidException("Recipient account requires a message attachment matching " + recipientAccount.getMessagePattern().pattern());
-               }
-         }
-         */
     }
 
     // returns false iff double spending
@@ -884,13 +945,14 @@ final class TransactionImpl implements Transaction {
                 && timestamp > Constants.REFERENCED_TRANSACTION_FULL_HASH_BLOCK_TIMESTAMP) {
             senderAccount.addToUnconfirmedBalanceNQT(Constants.UNCONFIRMED_POOL_DEPOSIT_NQT);
         }
-        if (phasing == null) {
-            for (Appendix.AbstractAppendix appendage : appendages) {
+        if (phasing != null) {
+            senderAccount.addToBalanceNQT(-feeNQT);
+        }
+        for (Appendix.AbstractAppendix appendage : appendages) {
+            if (phasing == null || !appendage.isPhasable()) {
+                appendage.loadPrunable(this);
                 appendage.apply(this, senderAccount, recipientAccount);
             }
-        } else {
-            senderAccount.addToBalanceNQT(-feeNQT);
-            phasing.apply(this, senderAccount, recipientAccount);
         }
     }
 
@@ -910,6 +972,7 @@ final class TransactionImpl implements Transaction {
     long getMinimumFeeNQT(int blockchainHeight) {
         long totalFee = 0;
         for (Appendix.AbstractAppendix appendage : appendages) {
+            appendage.loadPrunable(this);
             if (blockchainHeight < appendage.getBaselineFeeHeight()) {
                 return 0; // No need to validate fees before baseline block
             }

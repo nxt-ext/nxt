@@ -3,29 +3,25 @@ package nxt;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-/**
- * Abstract poll structure, parent for concrete poll implementations e.g. Poll or PendingTransactionPoll
- */
-
 abstract class AbstractPoll {
 
-    protected final long id;
-    protected final VoteWeighting defaultVoteWeighting;
-    protected final long accountId;
-    protected final int finishHeight;
+    final long id;
+    final VoteWeighting voteWeighting;
+    final long accountId;
+    final int finishHeight;
 
     AbstractPoll(long id, long accountId, int finishHeight, VoteWeighting voteWeighting) {
         this.id = id;
         this.accountId = accountId;
         this.finishHeight = finishHeight;
-        this.defaultVoteWeighting = voteWeighting;
+        this.voteWeighting = voteWeighting;
     }
 
     AbstractPoll(ResultSet rs) throws SQLException {
         this.id = rs.getLong("id");
         this.accountId = rs.getLong("account_id");
         this.finishHeight = rs.getInt("finish_height");
-        this.defaultVoteWeighting = new VoteWeighting(rs.getByte("voting_model"), rs.getLong("holding_id"),
+        this.voteWeighting = new VoteWeighting(rs.getByte("voting_model"), rs.getLong("holding_id"),
                 rs.getLong("min_balance"), rs.getByte("min_balance_model"));
     }
 
@@ -41,8 +37,8 @@ abstract class AbstractPoll {
         return finishHeight;
     }
 
-    public final VoteWeighting getDefaultVoteWeighting() {
-        return defaultVoteWeighting;
+    public final VoteWeighting getVoteWeighting() {
+        return voteWeighting;
     }
 
     public final boolean isFinished() {

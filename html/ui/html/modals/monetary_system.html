@@ -1,4 +1,4 @@
-<div class="modal fade" id="transfer_currency_modal" tabindex="-1" role="dialog" aria-hidden="true">
+<div class="modal fade" id="transfer_currency_modal" data-transaction-type="5" data-transaction-subtype="3" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
@@ -93,7 +93,7 @@
     </div>
 </div>
 
-<div class="modal fade" id="issue_currency_modal" tabindex="-1" role="dialog" aria-hidden="true">
+<div class="modal fade" id="issue_currency_modal" data-transaction-type="5" data-transaction-subtype="0" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
@@ -261,7 +261,7 @@
     </div>
 </div>
 
-<div class="modal fade" id="publish_exchange_offer_modal" tabindex="-1" role="dialog" aria-hidden="true">
+<div class="modal fade" id="publish_exchange_offer_modal" data-transaction-type="5" data-transaction-subtype="4" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
@@ -360,7 +360,7 @@
     </div>
 </div>
 
-<div class="modal fade" id="claim_currency_modal" tabindex="-1" role="dialog" aria-hidden="true">
+<div class="modal fade" id="claim_currency_modal" data-transaction-type="5" data-transaction-subtype="2" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
@@ -399,7 +399,7 @@
     </div>
 </div>
 
-<div class="modal fade" id="mine_currency_modal" tabindex="-1" role="dialog" aria-hidden="true">
+<div class="modal fade" id="mine_currency_modal" data-transaction-type="5" data-transaction-subtype="7" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
@@ -449,7 +449,7 @@
     </div>
 </div>
 
-<div class="modal fade" id="reserve_currency_modal" tabindex="-1" role="dialog" aria-hidden="true">
+<div class="modal fade" id="reserve_currency_modal" data-transaction-type="5" data-transaction-subtype="1" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
@@ -470,17 +470,17 @@
                         <label for="reserve_currency_initialSupply_text" data-i18n="initial_supply_included">Initial Supply Included</label> <i><span id="reserve_currency_initialSupply_text"></span></i>
                         </p>
                         <p>
-                        <label for="reserve_currency_minReserve_text" data-i18n="activation_per_unit_reserve">Activation Per Unit Reserve</label> <i><span id="reserve_currency_minReserve_text"></span></i>
-                        <label for="reserve_currency_currentReserve_text" data-i18n="current_per_unit_reserve">Current Per Unit Reserve</label> <i><span id="reserve_currency_currentReserve_text"></span></i>
+                        <label for="reserve_currency_minReserve_text" data-i18n="target_reserve">Target Amount [NXT]</label> <i><span id="reserve_currency_minReserve_text"></span></i>
+                        <label for="reserve_currency_currentReserve_text" data-i18n="current_reserve">Reserved Amount [NXT]</label> <i><span id="reserve_currency_currentReserve_text"></span></i>
                         </p>
                     </div>
                     <div class="form-group">
-                        <label for="reserve_currency_amount" data-i18n="amount_per_currency_unit">Amount of NXT per currency unit</label>
-                        <input type="text" class="form-control" name="amountPerUnitNQT" id="reserve_currency_amount" placeholder="NXT per unit" data-i18n="amount" tabindex="1" />
+                        <label for="reserve_currency_amount" data-i18n="amount_per_currency_unit">Amount of NXT to reserve</label>
+                        <input type="text" class="form-control" id="reserve_currency_amount" placeholder="NXT amount" data-i18n="amount" tabindex="1" />
                     </div>
                     <div class="form-group">
-                        <label for="reserve_currency_total" data-i18n="amount_nxt_reserved">Amount of NXT reserved</label>
-                        <span id="reserve_currency_total"></span>
+                        <label for="reserve_currency_total" data-i18n="amount_nxt_reserved">Reserve per Unit</label>
+                        <input id="reserve_currency_total" name="amountPerUnitNQT" readonly style="border: none"/>
                     </div>
                     <div data-replace-with-modal-template="secret_phrase_modal_template"></div>
                     <div data-replace-with-modal-template="advanced_fee_deadline_template"></div>
@@ -502,7 +502,7 @@
     </div>
 </div>
 
-<div class="modal fade" id="delete_currency_modal" tabindex="-1" role="dialog" aria-hidden="true">
+<div class="modal fade" id="delete_currency_modal" data-transaction-type="5" data-transaction-subtype="8" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
