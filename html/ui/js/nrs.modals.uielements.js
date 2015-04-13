@@ -19,7 +19,7 @@ var NRS = (function(NRS, $, undefined) {
 			if (blockHeight) {
 				var blockDiff = blockHeight - NRS.lastBlockHeight;
 				var diffSecs = blockDiff * NRS.averageBlockGenerationTime;
-				output += moment().add(diffSecs, 'seconds').format('lll') + " ";
+				output += moment().add(diffSecs, 'seconds').format("YYYY/MM/DD hh:mm a") + " ";
 
 			} else {
 				output += '-';
