@@ -481,6 +481,9 @@ var NRS = (function(NRS, $, undefined) {
 
     function layoutPollChart(resultsdata, polldata) {
     	$('#followed_polls_poll_chart').empty();
+    	if (!resultsdata.results) {
+    		return;
+    	}
 
     	var color = d3.scale.category20();
     	var content = [];
