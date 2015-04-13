@@ -3,6 +3,7 @@ package nxt;
 import nxt.env.DirProvider;
 import nxt.env.RuntimeEnvironment;
 import nxt.env.RuntimeMode;
+import nxt.env.WindowsUserDirProvider;
 import nxt.http.API;
 import nxt.peer.Peers;
 import nxt.user.Users;
@@ -12,9 +13,12 @@ import nxt.util.ThreadPool;
 import nxt.util.Time;
 import org.json.simple.JSONObject;
 
+import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.PrintStream;
 import java.lang.management.ManagementFactory;
 import java.net.URI;
 import java.nio.file.Files;
@@ -42,6 +46,8 @@ public final class Nxt {
 
     private static final Properties defaultProperties = new Properties();
     static {
+        redirectSystemStreams("out");
+        redirectSystemStreams("err");
         System.out.println("Initializing Nxt server version " + Nxt.VERSION);
         printCommandLineArguments();
         runtimeMode = RuntimeEnvironment.getRuntimeMode();
@@ -49,6 +55,30 @@ public final class Nxt {
         loadProperties(defaultProperties, NXT_DEFAULT_PROPERTIES, true);
         if (!VERSION.equals(Nxt.defaultProperties.getProperty("nxt.version"))) {
             throw new RuntimeException("Using an nxt-default.properties file from a version other than " + VERSION + " is not supported!!!");
+        }
+    }
+
+    private static void redirectSystemStreams(String stream) {
+        String isStandardRedirect = System.getProperty("nxt.redirect.system." + stream);
+        String fileName = null;
+        if (isStandardRedirect != null) {
+            fileName = WindowsUserDirProvider.NXT_USER_HOME + File.separator + "system." + stream + ".log";
+        } else {
+            String explicitFileName = System.getProperty("nxt.system." + stream);
+            if (explicitFileName != null) {
+                fileName = explicitFileName;
+            }
+        }
+        if (fileName != null) {
+            try {
+                if (stream.equals("out")) {
+                    System.setOut(new PrintStream(fileName));
+                } else {
+                    System.setErr(new PrintStream(fileName));
+                }
+            } catch (FileNotFoundException e) {
+                // ignore
+            }
         }
     }
 
