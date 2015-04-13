@@ -652,8 +652,8 @@ final class JSONData {
         json.put("isCompressed", prunableMessage.isCompressed());
         putAccount(json, "sender", prunableMessage.getSenderId());
         putAccount(json, "recipient", prunableMessage.getRecipientId());
-        json.put("expiration", prunableMessage.getExpiration());
-        json.put("timestamp", prunableMessage.getTimestamp());
+        json.put("transactionTimestamp", prunableMessage.getTransactionTimestamp());
+        json.put("blockTimestamp", prunableMessage.getBlockTimestamp());
         EncryptedData encryptedData = prunableMessage.getEncryptedData();
         if (encryptedData != null) {
             json.put("encryptedMessage", encryptedData(prunableMessage.getEncryptedData()));
