@@ -1,0 +1,25 @@
+This is an experimental release. It is a required update for all testnet nodes,
+but is also possible to run on main net.
+
+Added getAllPrunableMessages API, returning all currently available prunable
+messages in reverse block timestamp order.
+
+Added verifyPrunableMessage API, which can be used to verify that a prunable
+message obtained from another node (a service provider) matches the hash found
+in the blockchain, i.e. has not been tampered with.
+
+Show maxPrunableLifetime setting in getState and getBlockchainStatus. Show
+current number of prunable messages in getState.
+
+Changing the nxt.maxPrunableLifetime property now also affects existing
+prunable messages (next time pruning is run), as transaction timestamps instead
+of expiration timestamps are now used.
+
+Reverted DGS goods delivery maximum size to 10 kbytes, same as in 1.4. For
+goods of a larger size, a prunable encrypted message should be included in the
+delivery instead.
+
+Added support for prunable plain and encrypted messages in the client UI.
+
+Voting system UI improvements and bugfixes.
+

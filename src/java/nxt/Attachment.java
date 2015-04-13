@@ -1536,7 +1536,7 @@ public interface Attachment extends Appendix {
             if (length < 0) {
                 length &= Integer.MAX_VALUE;
             }
-            this.goods = EncryptedData.readEncryptedData(buffer, length, Constants.MAX_DGS_GOODS_LENGTH_2);
+            this.goods = EncryptedData.readEncryptedData(buffer, length, Constants.MAX_DGS_GOODS_LENGTH);
             this.discountNQT = buffer.getLong();
         }
 

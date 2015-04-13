@@ -1,5 +1,6 @@
 package nxt.http;
 
+import nxt.Appendix;
 import nxt.Nxt;
 import nxt.NxtException;
 import nxt.Transaction;
@@ -27,8 +28,14 @@ public final class BroadcastTransaction extends APIServlet.APIRequestHandler {
         String transactionJSON = Convert.emptyToNull(req.getParameter("transactionJSON"));
 
         Transaction.Builder builder = ParameterParser.parseTransaction(transactionBytes, transactionJSON);
-        builder.appendix(ParameterParser.getPrunablePlainMessage(req));
-        builder.appendix(ParameterParser.getPrunableEncryptedMessage(req));
+        Appendix.PrunablePlainMessage prunablePlainMessage = ParameterParser.getPrunablePlainMessage(req);
+        if (prunablePlainMessage != null) {
+            builder.appendix(prunablePlainMessage);
+        }
+        Appendix.PrunableEncryptedMessage prunableEncryptedMessage = ParameterParser.getPrunableEncryptedMessage(req);
+        if (prunableEncryptedMessage != null) {
+            builder.appendix(prunableEncryptedMessage);
+        }
         Transaction transaction = builder.build();
 
         JSONObject response = new JSONObject();

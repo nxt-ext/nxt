@@ -387,12 +387,20 @@ var NRS = (function(NRS, $, undefined) {
 					$('#dashboard_link a').addClass("ignore").click();
 
 					if ($("#remember_account").is(":checked")) {
-						if (NRS.getCookie("savedNxtAccounts") && NRS.getCookie("savedNxtAccounts")!=""){
-							var accounts=NRS.getCookie("savedNxtAccounts") + NRS.accountRS + ";";
-							NRS.setCookie("savedNxtAccounts",accounts,30);
+						var accounts = NRS.getCookie("savedNxtAccounts").split(";");
+						var accountExists = 0;
+						$.each(accounts, function(index, account) {
+							if (account == NRS.accountRS)
+								accountExists = 1;
+						});
+						if (!accountExists){
+							if (NRS.getCookie("savedNxtAccounts") && NRS.getCookie("savedNxtAccounts")!=""){
+								var accounts=NRS.getCookie("savedNxtAccounts") + NRS.accountRS + ";";
+								NRS.setCookie("savedNxtAccounts",accounts,30);
+							}
+							else
+								NRS.setCookie("savedNxtAccounts",NRS.accountRS + ";",30);
 						}
-						else
-							NRS.setCookie("savedNxtAccounts",NRS.accountRS + ";",30);
 					}
 
 					$("[data-i18n]").i18n();
