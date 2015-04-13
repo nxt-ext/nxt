@@ -109,7 +109,10 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.pages.my_polls = function() {
-		NRS.sendRequest("getPolls+", {"account": NRS.account}, function(response) {
+		NRS.sendRequest("getPolls+", {
+			"account": NRS.account,
+			"includeFinished": true
+		}, function(response) {
 			if (response.polls && response.polls.length) {
 				var polls = {};
 				var nrPolls = 0;
