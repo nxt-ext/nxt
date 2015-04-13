@@ -24,10 +24,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.PriorityQueue;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -35,6 +35,11 @@ final class TransactionProcessorImpl implements TransactionProcessor {
 
     private static final boolean enableTransactionRebroadcasting = Nxt.getBooleanProperty("nxt.enableTransactionRebroadcasting");
     private static final boolean testUnconfirmedTransactions = Nxt.getBooleanProperty("nxt.testUnconfirmedTransactions");
+    private static final int maxUnconfirmedTransactions;
+    static {
+        int n = Nxt.getIntProperty("nxt.maxUnconfirmedTransactions");
+        maxUnconfirmedTransactions = n <= 0 ? Integer.MAX_VALUE : n;
+    }
 
     private static final TransactionProcessorImpl instance = new TransactionProcessorImpl();
 
@@ -90,7 +95,37 @@ final class TransactionProcessorImpl implements TransactionProcessor {
 
     private final Set<TransactionImpl> broadcastedTransactions = Collections.newSetFromMap(new ConcurrentHashMap<>());
     private final Listeners<List<? extends Transaction>,Event> transactionListeners = new Listeners<>();
-    private final Set<UnconfirmedTransaction> lostTransactions = new HashSet<>();
+
+    private final PriorityQueue<UnconfirmedTransaction> lostTransactions = new PriorityQueue<UnconfirmedTransaction>(
+            (UnconfirmedTransaction o1, UnconfirmedTransaction o2) -> {
+                int result;
+                if ((result = Integer.compare(o2.getHeight(), o1.getHeight())) != 0) {
+                    return result;
+                }
+                if ((result = Long.compare(o1.getFeePerByte(), o2.getFeePerByte())) != 0) {
+                    return result;
+                }
+                if ((result = Long.compare(o2.getArrivalTimestamp(), o1.getArrivalTimestamp())) != 0) {
+                    return result;
+                }
+                return Long.compare(o2.getId(), o1.getId());
+            })
+    {
+
+        @Override
+        public boolean add(UnconfirmedTransaction unconfirmedTransaction) {
+            if (!super.add(unconfirmedTransaction)) {
+                return false;
+            }
+            if (size() > maxUnconfirmedTransactions) {
+                UnconfirmedTransaction removed = remove();
+                Logger.logDebugMessage("Dropped unconfirmed transaction " + removed.getJSONObject().toJSONString());
+            }
+            return true;
+        }
+
+    };
+
     private final Map<TransactionType, Map<String, Boolean>> unconfirmedDuplicates = new HashMap<>();
 
 
@@ -313,18 +348,37 @@ final class TransactionProcessorImpl implements TransactionProcessor {
         }
     }
 
-    void requeueAllUnconfirmedTransactions() {
-        List<Transaction> removed = new ArrayList<>();
-        try (DbIterator<UnconfirmedTransaction> unconfirmedTransactions = getAllUnconfirmedTransactions()) {
-            for (UnconfirmedTransaction unconfirmedTransaction : unconfirmedTransactions) {
-                unconfirmedTransaction.getTransaction().undoUnconfirmed();
-                removed.add(unconfirmedTransaction.getTransaction());
-                lostTransactions.add(unconfirmedTransaction);
+    @Override
+    public void requeueAllUnconfirmedTransactions() {
+        synchronized (BlockchainImpl.getInstance()) {
+            if (!Db.db.isInTransaction()) {
+                try {
+                    Db.db.beginTransaction();
+                    requeueAllUnconfirmedTransactions();
+                    Db.db.commitTransaction();
+                } catch (Exception e) {
+                    Logger.logErrorMessage(e.toString(), e);
+                    Db.db.rollbackTransaction();
+                    throw e;
+                } finally {
+                    Db.db.endTransaction();
+                }
+                return;
             }
+            List<Transaction> removed = new ArrayList<>();
+            try (DbIterator<UnconfirmedTransaction> unconfirmedTransactions = getAllUnconfirmedTransactions()) {
+                for (UnconfirmedTransaction unconfirmedTransaction : unconfirmedTransactions) {
+                    unconfirmedTransaction.getTransaction().undoUnconfirmed();
+                    if (removed.size() < maxUnconfirmedTransactions) {
+                        removed.add(unconfirmedTransaction.getTransaction());
+                    }
+                    lostTransactions.add(unconfirmedTransaction);
+                }
+            }
+            unconfirmedTransactionTable.truncate();
+            unconfirmedDuplicates.clear();
+            transactionListeners.notify(removed, Event.REMOVED_UNCONFIRMED_TRANSACTIONS);
         }
-        unconfirmedTransactionTable.truncate();
-        unconfirmedDuplicates.clear();
-        transactionListeners.notify(removed, Event.REMOVED_UNCONFIRMED_TRANSACTIONS);
     }
 
     void removeUnconfirmedTransaction(TransactionImpl transaction) {
@@ -378,7 +432,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                         iterator.remove();
                         addedUnconfirmedTransactions.add(unconfirmedTransaction.getTransaction());
                     } catch (NxtException.NotCurrentlyValidException ignore) {
-                        if (unconfirmedTransaction.getExpiration() < Nxt.getEpochTime() || lostTransactions.size() > 1000) {
+                        if (unconfirmedTransaction.getExpiration() < Nxt.getEpochTime()) {
                             iterator.remove();
                         }
                     } catch (NxtException.ValidationException|RuntimeException e) {

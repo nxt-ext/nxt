@@ -19,6 +19,14 @@ Reverted DGS goods delivery maximum size to 10 kbytes, same as in 1.4. For
 goods of a larger size, a prunable encrypted message should be included in the
 delivery instead.
 
+Limit the number of unconfirmed transactions that can be brought in memory to
+nxt.maxUnconfirmedTransactions, no limit by default. If set, transactions with
+lowest fee/size ratio are dropped from the unconfirmed pool first. The ordering
+is same as the one used when selecting which transactions to include in a new
+block.
+
+Added requeueUnconfirmedTransactions debug API.
+
 Added support for prunable plain and encrypted messages in the client UI.
 
 Voting system UI improvements and bugfixes.
