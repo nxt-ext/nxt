@@ -53,7 +53,8 @@ class UnconfirmedTransaction implements Transaction {
             pstmt.setBytes(++i, transaction.bytes());
             JSONObject prunableJSON = null;
             for (Appendix.AbstractAppendix appendage : transaction.getAppendages()) {
-                if (appendage.loadPrunable(this)) {
+                if (appendage instanceof Appendix.Prunable) {
+                    appendage.loadPrunable(transaction);
                     if (prunableJSON == null) {
                         prunableJSON = appendage.getJSONObject();
                     } else {
