@@ -10,16 +10,20 @@ import java.util.logging.Handler;
 import java.util.logging.Logger;
 
 /**
- * The GetLog API will return log messages from the ring buffer
+ * <p>The GetLog API will return log messages from the ring buffer
  * maintained by the MemoryHandler log handler.  The most recent
  * 'count' messages will be returned.  All log messages in the
- * ring buffer will be returned if 'count' is omitted.
+ * ring buffer will be returned if 'count' is omitted.</p>
  *
- * Request parameters:
- *   count - The number of log messages to return
+ * <p>Request parameters:</p>
+ * <ul>
+ * <li>count - The number of log messages to return</li>
+ * </ul>
  *
- * Response parameters:
- *   messages - An array of log messages
+ * <p>Response parameters:</p>
+ * <ul>
+ * <li>messages - An array of log messages</li>
+ * </ul>
  */
 public final class GetLog extends APIServlet.APIRequestHandler {
 
