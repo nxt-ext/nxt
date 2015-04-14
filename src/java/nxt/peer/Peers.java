@@ -67,6 +67,8 @@ public final class Peers {
     static final boolean getMorePeers;
     static final int MAX_REQUEST_SIZE = 1024 * 1024;
     static final int MAX_RESPONSE_SIZE = 1024 * 1024;
+    static final boolean useWebSockets;
+    static final int webSocketIdleTimeout;
 
     private static final int DEFAULT_PEER_PORT = 7874;
     private static final int TESTNET_PEER_PORT = 6874;
@@ -184,7 +186,8 @@ public final class Peers {
         enableHallmarkProtection = Nxt.getBooleanProperty("nxt.enableHallmarkProtection");
         pushThreshold = Nxt.getIntProperty("nxt.pushThreshold");
         pullThreshold = Nxt.getIntProperty("nxt.pullThreshold");
-
+        useWebSockets = Nxt.getBooleanProperty("nxt.useWebSockets");
+        webSocketIdleTimeout = Nxt.getIntProperty("nxt.webSocketIdleTimeout");
         blacklistingPeriod = Nxt.getIntProperty("nxt.blacklistingPeriod");
         communicationLoggingMask = Nxt.getIntProperty("nxt.communicationLoggingMask");
         sendToPeersLimit = Nxt.getIntProperty("nxt.sendToPeersLimit");
