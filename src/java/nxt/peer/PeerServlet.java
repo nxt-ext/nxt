@@ -1,11 +1,16 @@
 package nxt.peer;
 
-import nxt.util.CountingInputStream;
-import nxt.util.CountingOutputStream;
+import nxt.util.CountingInputReader;
+import nxt.util.CountingOutputWriter;
 import nxt.util.JSON;
 import nxt.util.Logger;
 import org.eclipse.jetty.server.Response;
 import org.eclipse.jetty.servlets.gzip.CompressedResponseWrapper;
+import org.eclipse.jetty.websocket.servlet.ServletUpgradeRequest;
+import org.eclipse.jetty.websocket.servlet.ServletUpgradeResponse;
+import org.eclipse.jetty.websocket.servlet.WebSocketCreator;
+import org.eclipse.jetty.websocket.servlet.WebSocketServlet;
+import org.eclipse.jetty.websocket.servlet.WebSocketServletFactory;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 import org.json.simple.JSONValue;
@@ -13,19 +18,17 @@ import org.json.simple.parser.ParseException;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
 import java.io.Reader;
-import java.io.Writer;
+import java.io.StringReader;
+import java.io.StringWriter;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-public final class PeerServlet extends HttpServlet {
+public final class PeerServlet extends WebSocketServlet {
 
     abstract static class PeerRequestHandler {
         abstract JSONStreamAware processRequest(JSONObject request, Peer peer);
@@ -84,48 +87,134 @@ public final class PeerServlet extends HttpServlet {
         isGzipEnabled = Boolean.parseBoolean(config.getInitParameter("isGzipEnabled"));
     }
 
+    /**
+     * Configure the WebSocket factory
+     *
+     * @param   factory             WebSocket factory
+     */
+    @Override
+    public void configure(WebSocketServletFactory factory) {
+        factory.getPolicy().setIdleTimeout(Peers.webSocketIdleTimeout);
+        factory.getPolicy().setMaxTextMessageSize(Math.max(Peers.MAX_REQUEST_SIZE, Peers.MAX_RESPONSE_SIZE));
+        factory.setCreator(new PeerSocketCreator());
+    }
+
+    /**
+     * Process HTTP POST request
+     *
+     * @param   req                 HTTP request
+     * @param   resp                HTTP response
+     * @throws  ServletException    Servlet processing error
+     * @throws  IOException         I/O error
+     */
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-
-        PeerImpl peer = null;
-        JSONStreamAware response;
-
+        JSONStreamAware jsonResponse;
+        //
+        // Process the peer request
+        //
+        PeerImpl peer = Peers.findOrCreatePeer(req.getRemoteAddr(), -1, null, true);
+        if (peer == null)
+            jsonResponse = UNKNOWN_PEER;
+        else
+            jsonResponse = process(peer, req.getReader());
+        //
+        // Return the response
+        //
+        resp.setContentType("text/plain; charset=UTF-8");
         try {
-            peer = Peers.findOrCreatePeer(req.getRemoteAddr(), -1, null, true);
-            if (peer == null) {
-                sendResponse(null, UNKNOWN_PEER, resp);
-                return;
+            long byteCount;
+            try (CountingOutputWriter writer = new CountingOutputWriter(resp.getWriter())) {
+                jsonResponse.writeJSONString(writer);
+                if (isGzipEnabled)
+                    byteCount = ((Response)((CompressedResponseWrapper)resp).getResponse()).getContentCount();
+                else
+                    byteCount = writer.getCount();
             }
-            if (peer.isBlacklisted()) {
-                JSONObject jsonObject = new JSONObject();
-                jsonObject.put("error", Errors.BLACKLISTED);
-                jsonObject.put("cause", peer.getBlacklistingCause());
-                sendResponse(peer, JSON.prepare(jsonObject), resp);
-                return;
-            } else {
-                Peers.addPeer(peer);
-            }
+            if (peer != null)
+                peer.updateUploadedVolume(byteCount);
+        } catch (RuntimeException | IOException e) {
+            if (peer != null)
+                peer.blacklist(e);
+            throw e;
+        }
+    }
 
+    /**
+     * Process WebSocket POST request
+     *
+     * @param   webSocket           WebSocket for the connection
+     * @param   requestId           Request identifier
+     * @param   request             Request message
+     */
+    void doPost(PeerWebSocket webSocket, long requestId, String request) {
+        JSONStreamAware jsonResponse;
+        //
+        // Process the peer request
+        //
+        String remoteAddr = webSocket.getSession().getRemoteAddress().getHostString();
+        PeerImpl peer = Peers.findOrCreatePeer(remoteAddr, -1, null, true);
+        if (peer == null)
+            jsonResponse = UNKNOWN_PEER;
+        else
+            jsonResponse = process(peer, new StringReader(request));
+        //
+        // Return the response
+        //
+        try {
+            StringWriter writer = new StringWriter(1000);
+            jsonResponse.writeJSONString(writer);
+            String response = writer.toString();
+            webSocket.sendResponse(requestId, response);
+            if (peer != null)
+                peer.updateUploadedVolume(response.length());
+        } catch (RuntimeException | IOException e) {
+            if (peer != null) {
+                if (e instanceof RuntimeException)
+                    Logger.logDebugMessage(String.format("Send failed to peer %s",
+                        peer.getAnnouncedAddress()!=null ? peer.getAnnouncedAddress() : peer.getPeerAddress()), e);
+                else
+                    Logger.logDebugMessage(String.format("Send failed to peer %s: %s",
+                        peer.getAnnouncedAddress()!=null ? peer.getAnnouncedAddress() : peer.getPeerAddress(),
+                        e.getMessage()!=null ? e.getMessage() : e.toString()));
+                if (!(e instanceof IOException))
+                    peer.blacklist(e);
+            }
+        }
+    }
+
+    /**
+     * Process the peer request
+     *
+     * @param   peer                Peer
+     * @param   inputReader         Input reader
+     * @return                      JSON response
+     */
+    private JSONStreamAware process(PeerImpl peer, Reader inputReader) {
+        JSONStreamAware response;
+        //
+        // Check for blacklisted peer
+        //
+        if (peer.isBlacklisted()) {
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.put("error", Errors.BLACKLISTED);
+            jsonObject.put("cause", peer.getBlacklistingCause());
+            return jsonObject;
+        }
+        Peers.addPeer(peer);
+        //
+        // Process the request
+        //
+        try {
             JSONObject request;
-            CountingInputStream cis = new CountingInputStream(req.getInputStream(), Peers.MAX_REQUEST_SIZE);
-            try (Reader reader = new InputStreamReader(cis, "UTF-8")) {
-                request = (JSONObject) JSONValue.parseWithException(reader);
+            try (CountingInputReader cr = new CountingInputReader(inputReader, Peers.MAX_REQUEST_SIZE)) {
+                request = (JSONObject)JSONValue.parseWithException(cr);
+                peer.updateDownloadedVolume(cr.getCount());
             }
-            peer.updateDownloadedVolume(cis.getCount());
             if (request == null) {
-                sendResponse(peer, UNSUPPORTED_REQUEST_TYPE, resp);
-                return;
-            }
-
-            if (peer.getState() == Peer.State.DISCONNECTED) {
-                peer.setState(Peer.State.CONNECTED);
-                if (peer.getAnnouncedAddress() != null) {
-                    Peers.addOrUpdate(peer);
-                }
-            }
-
-            if (request.get("protocol") != null && ((Number)request.get("protocol")).intValue() == 1) {
-                PeerRequestHandler peerRequestHandler = peerRequestHandlers.get(request.get("requestType"));
+                response = UNSUPPORTED_REQUEST_TYPE;
+            } else if (request.get("protocol") != null && ((Number)request.get("protocol")).intValue() == 1) {
+                PeerRequestHandler peerRequestHandler = peerRequestHandlers.get((String)request.get("requestType"));
                 if (peerRequestHandler != null) {
                     response = peerRequestHandler.processRequest(request, peer);
                 } else {
@@ -135,46 +224,30 @@ public final class PeerServlet extends HttpServlet {
                 Logger.logDebugMessage("Unsupported protocol " + request.get("protocol"));
                 response = UNSUPPORTED_PROTOCOL;
             }
-
         } catch (RuntimeException|ParseException|IOException e) {
-            if (peer != null) {
-                peer.blacklist(e);
-            }
             Logger.logDebugMessage("Error processing POST request: " + e.toString());
+            peer.blacklist(e);
             JSONObject json = new JSONObject();
             json.put("error", e.toString());
             response = json;
         }
-
-        sendResponse(peer, response, resp);
-
+        return response;
     }
 
-    private void sendResponse(PeerImpl peer, JSONStreamAware jsonResponse, HttpServletResponse httpResponse) throws IOException {
-        httpResponse.setContentType("text/plain; charset=UTF-8");
-        try {
-            long byteCount;
-            if (isGzipEnabled) {
-                try (Writer writer = new OutputStreamWriter(httpResponse.getOutputStream(), "UTF-8")) {
-                    jsonResponse.writeJSONString(writer);
-                }
-                byteCount = ((Response) ((CompressedResponseWrapper) httpResponse).getResponse()).getContentCount();
-            } else {
-                CountingOutputStream cos = new CountingOutputStream(httpResponse.getOutputStream());
-                try (Writer writer = new OutputStreamWriter(cos, "UTF-8")) {
-                    jsonResponse.writeJSONString(writer);
-                }
-                byteCount = cos.getCount();
-            }
-            if (peer != null) {
-                peer.updateUploadedVolume(byteCount);
-            }
-        } catch (RuntimeException|IOException e) {
-            if (peer != null) {
-                peer.blacklist(e);
-            }
-            throw e;
+    /**
+     * WebSocket creator for peer connections
+     */
+    private class PeerSocketCreator implements WebSocketCreator  {
+        /**
+         * Create a peer WebSocket
+         *
+         * @param   req             WebSocket upgrade request
+         * @param   resp            WebSocket upgrade response
+         * @return                  WebSocket
+         */
+        @Override
+        public Object createWebSocket(ServletUpgradeRequest req, ServletUpgradeResponse resp) {
+            return Peers.useWebSockets ? new PeerWebSocket(PeerServlet.this) : null;
         }
     }
-
 }
