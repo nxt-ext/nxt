@@ -22,6 +22,12 @@ delivery instead.
 Removed core restriction on 28 byte minimum prunable message length, this will
 be checked by the client UI only.
 
+Added nxt.includeExpiredPrunables property, to be able to force to still
+include the prunable parts in the returned transaction JSON, even if expired,
+as long as they are still available. Can be used to force an archival node to
+always return those, thus allowing another archival node that feeds from it to
+also get all of them.
+
 Limit the number of unconfirmed transactions that can be brought in memory to
 nxt.maxUnconfirmedTransactions, no limit by default. If set, transactions with
 lowest fee/size ratio are dropped from the unconfirmed pool first. The ordering

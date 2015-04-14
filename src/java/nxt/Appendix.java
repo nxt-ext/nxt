@@ -125,6 +125,10 @@ public interface Appendix {
             return false;
         }
 
+        boolean shouldLoadPrunable(Transaction transaction) {
+            return Constants.INCLUDE_EXPIRED_PRUNABLES || Nxt.getEpochTime() - transaction.getTimestamp() < Constants.MIN_PRUNABLE_LIFETIME;
+        }
+
         boolean isPhasable() {
             return true;
         }
@@ -391,8 +395,7 @@ public interface Appendix {
 
         @Override
         boolean loadPrunable(Transaction transaction) {
-            if (message == null && prunableMessage == null
-                    && Nxt.getEpochTime() - transaction.getTimestamp() < Constants.MIN_PRUNABLE_LIFETIME) {
+            if (message == null && prunableMessage == null && shouldLoadPrunable(transaction)) {
                 prunableMessage = PrunableMessage.getPrunableMessage(transaction.getId());
             }
             return true;
@@ -651,8 +654,7 @@ public interface Appendix {
 
         @Override
         boolean loadPrunable(Transaction transaction) {
-            if (encryptedData == null && prunableMessage == null
-                    && Nxt.getEpochTime() - transaction.getTimestamp() < Constants.MIN_PRUNABLE_LIFETIME) {
+            if (encryptedData == null && prunableMessage == null && shouldLoadPrunable(transaction)) {
                 prunableMessage = PrunableMessage.getPrunableMessage(transaction.getId());
             }
             return true;
