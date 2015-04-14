@@ -11,6 +11,8 @@ import org.json.simple.JSONStreamAware;
 import javax.servlet.http.HttpServletRequest;
 import java.util.Arrays;
 
+import static nxt.http.JSONResponses.EITHER_MESSAGE_ENCRYPTED_MESSAGE;
+import static nxt.http.JSONResponses.MISSING_MESSAGE_ENCRYPTED_MESSAGE;
 import static nxt.http.JSONResponses.UNKNOWN_TRANSACTION;
 
 public final class VerifyPrunableMessage extends APIServlet.APIRequestHandler {
@@ -31,14 +33,6 @@ public final class VerifyPrunableMessage extends APIServlet.APIRequestHandler {
         response.put("errorCode", 5);
         response.put("errorDescription", "This transaction has no encrypted message attachment");
         NO_SUCH_ENCRYPTED_MESSAGE = JSON.prepare(response);
-    }
-
-    private static final JSONStreamAware TOO_MANY_MESSAGES;
-    static {
-        JSONObject response = new JSONObject();
-        response.put("errorCode", 8);
-        response.put("errorDescription", "Cannot have both plain and encrypted message");
-        TOO_MANY_MESSAGES = JSON.prepare(response);
     }
 
     public static final JSONStreamAware HASHES_MISMATCH;
@@ -68,10 +62,10 @@ public final class VerifyPrunableMessage extends APIServlet.APIRequestHandler {
         Appendix.PrunableEncryptedMessage encryptedMessage = ParameterParser.getPrunableEncryptedMessage(req);
 
         if (plainMessage == null && encryptedMessage == null) {
-            return JSONResponses.missing("message", "encryptedMessageData");
+            return MISSING_MESSAGE_ENCRYPTED_MESSAGE;
         }
         if (plainMessage != null && encryptedMessage != null) {
-            return TOO_MANY_MESSAGES;
+            return EITHER_MESSAGE_ENCRYPTED_MESSAGE;
         }
 
         if (plainMessage != null) {
@@ -83,6 +77,7 @@ public final class VerifyPrunableMessage extends APIServlet.APIRequestHandler {
                 return HASHES_MISMATCH;
             }
             JSONObject response = myPlainMessage.getJSONObject();
+            response.put("messageHash", myPlainMessage.getHash());
             response.put("verify", true);
             return response;
         } else if (encryptedMessage != null) {
@@ -94,6 +89,7 @@ public final class VerifyPrunableMessage extends APIServlet.APIRequestHandler {
                 return HASHES_MISMATCH;
             }
             JSONObject response = myEncryptedMessage.getJSONObject();
+            response.put("encryptedMessageHash", myEncryptedMessage.getHash());
             response.put("verify", true);
             return response;
         }

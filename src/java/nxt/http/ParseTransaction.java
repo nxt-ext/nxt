@@ -14,7 +14,7 @@ public final class ParseTransaction extends APIServlet.APIRequestHandler {
     static final ParseTransaction instance = new ParseTransaction();
 
     private ParseTransaction() {
-        super(new APITag[] {APITag.TRANSACTIONS}, "transactionBytes", "transactionJSON");
+        super(new APITag[] {APITag.TRANSACTIONS}, "transactionJSON", "transactionBytes", "prunableAttachmentJSON");
     }
 
     @Override
@@ -22,7 +22,9 @@ public final class ParseTransaction extends APIServlet.APIRequestHandler {
 
         String transactionBytes = Convert.emptyToNull(req.getParameter("transactionBytes"));
         String transactionJSON = Convert.emptyToNull(req.getParameter("transactionJSON"));
-        Transaction transaction = ParameterParser.parseTransaction(transactionBytes, transactionJSON).build();
+        String prunableAttachmentJSON = Convert.emptyToNull(req.getParameter("prunableAttachmentJSON"));
+
+        Transaction transaction = ParameterParser.parseTransaction(transactionJSON, transactionBytes, prunableAttachmentJSON).build();
         JSONObject response = JSONData.unconfirmedTransaction(transaction);
         try {
             transaction.validate();

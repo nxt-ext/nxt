@@ -24,6 +24,13 @@ public interface Appendix {
     int getNextFeeHeight();
     Fee getNextFee(Transaction transaction);
 
+    interface Prunable {
+        byte[] getHash();
+        default boolean shouldLoadPrunable(Transaction transaction) {
+            return Constants.INCLUDE_EXPIRED_PRUNABLES || Nxt.getEpochTime() - transaction.getTimestamp() < Constants.MIN_PRUNABLE_LIFETIME;
+        }
+    }
+
 
     abstract class AbstractAppendix implements Appendix {
 
@@ -121,9 +128,7 @@ public interface Appendix {
 
         abstract void apply(Transaction transaction, Account senderAccount, Account recipientAccount);
 
-        boolean loadPrunable(Transaction transaction) {
-            return false;
-        }
+        void loadPrunable(Transaction transaction) {}
 
         boolean isPhasable() {
             return true;
@@ -232,7 +237,7 @@ public interface Appendix {
         }
     }
 
-    class PrunablePlainMessage extends Appendix.AbstractAppendix {
+    class PrunablePlainMessage extends Appendix.AbstractAppendix implements Prunable {
 
         private static final String appendixName = "PrunablePlainMessage";
 
@@ -265,14 +270,16 @@ public interface Appendix {
 
         PrunablePlainMessage(JSONObject attachmentData) {
             super(attachmentData);
-            this.hash = Convert.parseHexString(Convert.emptyToNull((String) attachmentData.get("messageHash")));
-            if (hash == null) {
-                String messageString = (String) attachmentData.get("message");
-                this.isText = Boolean.TRUE.equals(attachmentData.get("messageIsText"));
-                this.message = isText ? Convert.toBytes(messageString) : Convert.parseHexString(messageString);
-            } else {
+            String hashString = Convert.emptyToNull((String) attachmentData.get("messageHash"));
+            String messageString = Convert.emptyToNull((String) attachmentData.get("message"));
+            if (hashString != null && messageString == null) {
+                this.hash = Convert.parseHexString(hashString);
                 this.message = null;
                 this.isText = false;
+            } else {
+                this.hash = null;
+                this.isText = Boolean.TRUE.equals(attachmentData.get("messageIsText"));
+                this.message = isText ? Convert.toBytes(messageString) : Convert.parseHexString(messageString);
             }
         }
 
@@ -324,12 +331,11 @@ public interface Appendix {
             if (prunableMessage != null) {
                 json.put("message", prunableMessage.toString());
                 json.put("messageIsText", prunableMessage.isText());
-            } else if (hash != null) {
-                json.put("messageHash", Convert.toHexString(hash));
-            } else {
+            } else if (message != null) {
                 json.put("message", this.toString());
                 json.put("messageIsText", isText);
             }
+            json.put("messageHash", Convert.toHexString(getHash()));
         }
 
         @Override
@@ -342,9 +348,6 @@ public interface Appendix {
             }
             if (getMessageLength() > Constants.MAX_PRUNABLE_MESSAGE_LENGTH) {
                 throw new NxtException.NotValidException("Invalid prunable message length: " + message.length);
-            }
-            if (message != null && getMessageLength() < Constants.MIN_PRUNABLE_MESSAGE_LENGTH) {
-                throw new NxtException.NotValidException("Prunable messages must be at least 28 bytes");
             }
             if (getMessage() == null && Nxt.getEpochTime() - transaction.getTimestamp() < Constants.MIN_PRUNABLE_LIFETIME) {
                 throw new NxtException.NotCurrentlyValidException("Message has been pruned prematurely");
@@ -370,6 +373,7 @@ public interface Appendix {
             return isText;
         }
 
+        @Override
         public byte[] getHash() {
             if (hash != null) {
                 return hash;
@@ -393,16 +397,14 @@ public interface Appendix {
         }
 
         @Override
-        boolean loadPrunable(Transaction transaction) {
-            if (message == null && prunableMessage == null
-                    && Nxt.getEpochTime() - transaction.getTimestamp() < Constants.MIN_PRUNABLE_LIFETIME) {
+        void loadPrunable(Transaction transaction) {
+            if (message == null && prunableMessage == null && shouldLoadPrunable(transaction)) {
                 prunableMessage = PrunableMessage.getPrunableMessage(transaction.getId());
             }
-            return true;
         }
 
         @Override
-        boolean isPhasable() {
+        public boolean isPhasable() {
             return false;
         }
     }
@@ -411,6 +413,7 @@ public interface Appendix {
 
         private final EncryptedData encryptedData;
         private final boolean isText;
+        private final boolean isCompressed;
 
         private AbstractEncryptedMessage(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
             super(buffer, transactionVersion);
@@ -420,19 +423,24 @@ public interface Appendix {
                 length &= Integer.MAX_VALUE;
             }
             this.encryptedData = EncryptedData.readEncryptedData(buffer, length, Constants.MAX_ENCRYPTED_MESSAGE_LENGTH);
+            this.isCompressed = getVersion() != 2;
         }
 
         private AbstractEncryptedMessage(JSONObject attachmentJSON, JSONObject encryptedMessageJSON) {
             super(attachmentJSON);
             byte[] data = Convert.parseHexString((String)encryptedMessageJSON.get("data"));
-            byte[] nonce = Convert.parseHexString((String)encryptedMessageJSON.get("nonce"));
+            byte[] nonce = Convert.parseHexString((String) encryptedMessageJSON.get("nonce"));
             this.encryptedData = new EncryptedData(data, nonce);
             this.isText = Boolean.TRUE.equals(encryptedMessageJSON.get("isText"));
+            Object isCompressed = encryptedMessageJSON.get("isCompressed");
+            this.isCompressed = isCompressed == null || Boolean.TRUE.equals(isCompressed);
         }
 
-        private AbstractEncryptedMessage(EncryptedData encryptedData, boolean isText) {
+        private AbstractEncryptedMessage(EncryptedData encryptedData, boolean isText, boolean isCompressed) {
+            super(isCompressed ? 1 : 2);
             this.encryptedData = encryptedData;
             this.isText = isText;
+            this.isCompressed = isCompressed;
         }
 
         @Override
@@ -452,16 +460,23 @@ public interface Appendix {
             json.put("data", Convert.toHexString(encryptedData.getData()));
             json.put("nonce", Convert.toHexString(encryptedData.getNonce()));
             json.put("isText", isText);
+            json.put("isCompressed", isCompressed);
         }
 
         @Override
         void validate(Transaction transaction) throws NxtException.ValidationException {
+            if (getVersion() > 1 && Nxt.getBlockchain().getHeight() < Constants.VOTING_SYSTEM_BLOCK) {
+                throw new NxtException.NotYetEnabledException("Uncompressed regular encrypted messages not yet enabled");
+            }
             if (encryptedData.getData().length > Constants.MAX_ENCRYPTED_MESSAGE_LENGTH) {
                 throw new NxtException.NotValidException("Max encrypted message length exceeded");
             }
             if ((encryptedData.getNonce().length != 32 && encryptedData.getData().length > 0)
                     || (encryptedData.getNonce().length != 0 && encryptedData.getData().length == 0)) {
                 throw new NxtException.NotValidException("Invalid nonce length " + encryptedData.getNonce().length);
+            }
+            if ((getVersion() != 2 && !isCompressed) || (getVersion() == 2 && isCompressed)) {
+                throw new NxtException.NotValidException("Version mismatch - version " + getVersion() + ", isCompressed " + isCompressed);
             }
         }
 
@@ -476,9 +491,13 @@ public interface Appendix {
             return isText;
         }
 
+        public final boolean isCompressed() {
+            return isCompressed;
+        }
+
     }
 
-    class PrunableEncryptedMessage extends AbstractAppendix {
+    class PrunableEncryptedMessage extends AbstractAppendix implements Prunable {
 
         private static final String appendixName = "PrunableEncryptedMessage";
 
@@ -513,18 +532,20 @@ public interface Appendix {
 
         private PrunableEncryptedMessage(JSONObject attachmentJSON) {
             super(attachmentJSON);
-            this.hash = Convert.parseHexString(Convert.emptyToNull((String) attachmentJSON.get("encryptedMessageHash")));
-            if (hash == null) {
-                JSONObject encryptedMessageJSON = (JSONObject) attachmentJSON.get("encryptedMessage");
+            String hashString = Convert.emptyToNull((String) attachmentJSON.get("encryptedMessageHash"));
+            JSONObject encryptedMessageJSON = (JSONObject) attachmentJSON.get("encryptedMessage");
+            if (hashString != null && encryptedMessageJSON == null) {
+                this.hash = Convert.parseHexString(hashString);
+                this.encryptedData = null;
+                this.isText = false;
+                this.isCompressed = false;
+            } else {
+                this.hash = null;
                 byte[] data = Convert.parseHexString((String) encryptedMessageJSON.get("data"));
                 byte[] nonce = Convert.parseHexString((String) encryptedMessageJSON.get("nonce"));
                 this.encryptedData = new EncryptedData(data, nonce);
                 this.isText = Boolean.TRUE.equals(encryptedMessageJSON.get("isText"));
                 this.isCompressed = Boolean.TRUE.equals(encryptedMessageJSON.get("isCompressed"));
-            } else {
-                this.encryptedData = null;
-                this.isText = false;
-                this.isCompressed = false;
             }
         }
 
@@ -564,9 +585,7 @@ public interface Appendix {
                 encryptedMessageJSON.put("nonce", Convert.toHexString(prunableMessage.getEncryptedData().getNonce()));
                 encryptedMessageJSON.put("isText", prunableMessage.isText());
                 encryptedMessageJSON.put("isCompressed", prunableMessage.isCompressed());
-            } else if (hash != null) {
-                json.put("encryptedMessageHash", Convert.toHexString(hash));
-            } else {
+            } else if (encryptedData != null) {
                 JSONObject encryptedMessageJSON = new JSONObject();
                 json.put("encryptedMessage", encryptedMessageJSON);
                 encryptedMessageJSON.put("data", Convert.toHexString(encryptedData.getData()));
@@ -574,6 +593,7 @@ public interface Appendix {
                 encryptedMessageJSON.put("isText", isText);
                 encryptedMessageJSON.put("isCompressed", isCompressed);
             }
+            json.put("encryptedMessageHash", Convert.toHexString(getHash()));
         }
 
         @Override
@@ -636,6 +656,7 @@ public interface Appendix {
             return isCompressed;
         }
 
+        @Override
         public byte[] getHash() {
             if (hash != null) {
                 return hash;
@@ -653,16 +674,14 @@ public interface Appendix {
         }
 
         @Override
-        boolean loadPrunable(Transaction transaction) {
-            if (encryptedData == null && prunableMessage == null
-                    && Nxt.getEpochTime() - transaction.getTimestamp() < Constants.MIN_PRUNABLE_LIFETIME) {
+        void loadPrunable(Transaction transaction) {
+            if (encryptedData == null && prunableMessage == null && shouldLoadPrunable(transaction)) {
                 prunableMessage = PrunableMessage.getPrunableMessage(transaction.getId());
             }
-            return true;
         }
 
         @Override
-        boolean isPhasable() {
+        public boolean isPhasable() {
             return false;
         }
 
@@ -687,8 +706,8 @@ public interface Appendix {
             super(attachmentData, (JSONObject)attachmentData.get("encryptedMessage"));
         }
 
-        public EncryptedMessage(EncryptedData encryptedData, boolean isText) {
-            super(encryptedData, isText);
+        public EncryptedMessage(EncryptedData encryptedData, boolean isText, boolean isCompressed) {
+            super(encryptedData, isText, isCompressed);
         }
 
         @Override
@@ -732,8 +751,8 @@ public interface Appendix {
             super(attachmentData, (JSONObject)attachmentData.get("encryptToSelfMessage"));
         }
 
-        public EncryptToSelfMessage(EncryptedData encryptedData, boolean isText) {
-            super(encryptedData, isText);
+        public EncryptToSelfMessage(EncryptedData encryptedData, boolean isText, boolean isCompressed) {
+            super(encryptedData, isText, isCompressed);
         }
 
         @Override

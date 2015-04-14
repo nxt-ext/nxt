@@ -452,8 +452,8 @@ final class TransactionImpl implements Transaction {
 
     @Override
     public List<Appendix.AbstractAppendix> getAppendages() {
-        for (Appendix.AbstractAppendix appendge : appendages) {
-            appendge.loadPrunable(this);
+        for (Appendix.AbstractAppendix appendage : appendages) {
+            appendage.loadPrunable(this);
         }
         return appendages;
     }
@@ -691,7 +691,25 @@ final class TransactionImpl implements Transaction {
         }
     }
 
-    @Override
+    static TransactionImpl.BuilderImpl newTransactionBuilder(byte[] bytes, JSONObject prunableAttachments) throws NxtException.NotValidException {
+        BuilderImpl builder = newTransactionBuilder(bytes);
+        if (prunableAttachments != null) {
+            Attachment.TaggedDataUpload taggedDataUpload = Attachment.TaggedDataUpload.parse(prunableAttachments);
+            if (taggedDataUpload != null) {
+                builder.appendix(taggedDataUpload);
+            }
+            Appendix.PrunablePlainMessage prunablePlainMessage = Appendix.PrunablePlainMessage.parse(prunableAttachments);
+            if (prunablePlainMessage != null) {
+                builder.appendix(prunablePlainMessage);
+            }
+            Appendix.PrunableEncryptedMessage prunableEncryptedMessage = Appendix.PrunableEncryptedMessage.parse(prunableAttachments);
+            if (prunableEncryptedMessage != null) {
+                builder.appendix(prunableEncryptedMessage);
+            }
+        }
+        return builder;
+    }
+
     public byte[] getUnsignedBytes() {
         return zeroSignature(getBytes());
     }
@@ -725,6 +743,22 @@ final class TransactionImpl implements Transaction {
         }
         json.put("version", version);
         return json;
+    }
+
+    @Override
+    public JSONObject getPrunableAttachmentJSON() {
+        JSONObject prunableJSON = null;
+        for (Appendix.AbstractAppendix appendage : appendages) {
+            if (appendage instanceof Appendix.Prunable) {
+                appendage.loadPrunable(this);
+                if (prunableJSON == null) {
+                    prunableJSON = appendage.getJSONObject();
+                } else {
+                    prunableJSON.putAll(appendage.getJSONObject());
+                }
+            }
+        }
+        return prunableJSON;
     }
 
     static TransactionImpl parseTransaction(JSONObject transactionData) throws NxtException.NotValidException {

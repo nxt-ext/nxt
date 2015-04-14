@@ -35,7 +35,6 @@ public final class Constants {
     public static final int MAX_ARBITRARY_MESSAGE_LENGTH = 1000;
     public static final int MAX_ENCRYPTED_MESSAGE_LENGTH = 1000;
 
-    public static final int MIN_PRUNABLE_MESSAGE_LENGTH = 28;
     public static final int MAX_PRUNABLE_MESSAGE_LENGTH = 42 * 1024;
     public static final int MAX_PRUNABLE_ENCRYPTED_MESSAGE_LENGTH = 42 * 1024;
 
@@ -47,6 +46,7 @@ public final class Constants {
         ENABLE_PRUNING = maxPrunableLifetime >= 0;
         MAX_PRUNABLE_LIFETIME = Math.max(maxPrunableLifetime, MIN_PRUNABLE_LIFETIME);
     }
+    public static final boolean INCLUDE_EXPIRED_PRUNABLES = Nxt.getBooleanProperty("nxt.includeExpiredPrunables");
 
     public static final int MAX_ACCOUNT_NAME_LENGTH = 100;
     public static final int MAX_ACCOUNT_DESCRIPTION_LENGTH = 1000;

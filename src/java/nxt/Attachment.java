@@ -2419,7 +2419,7 @@ public interface Attachment extends Appendix {
     }
 
 
-    final class TaggedDataUpload extends AbstractAttachment {
+    final class TaggedDataUpload extends AbstractAttachment implements Prunable {
 
         static TaggedDataUpload parse(JSONObject attachmentData) {
             if (!Appendix.hasAppendix(TransactionType.Data.TAGGED_DATA_UPLOAD.getName(), attachmentData)) {
@@ -2454,17 +2454,10 @@ public interface Attachment extends Appendix {
 
         TaggedDataUpload(JSONObject attachmentData) {
             super(attachmentData);
-            this.hash = Convert.parseHexString(Convert.emptyToNull((String)attachmentData.get("hash")));
-            if (hash == null) {
-                this.name = (String) attachmentData.get("name");
-                this.description = (String) attachmentData.get("description");
-                this.tags = (String) attachmentData.get("tags");
-                this.type = (String) attachmentData.get("type");
-                this.isText = Boolean.TRUE.equals(attachmentData.get("isText"));
-                String data = (String) attachmentData.get("data");
-                this.data = isText ? Convert.toBytes(data) : Convert.parseHexString(data);
-                this.filename = (String) attachmentData.get("filename");
-            } else {
+            String hashString = Convert.emptyToNull((String)attachmentData.get("hash"));
+            String dataJSON = (String) attachmentData.get("data");
+            if (hashString != null && dataJSON == null) {
+                this.hash = Convert.parseHexString(hashString);
                 this.name = null;
                 this.description = null;
                 this.tags = null;
@@ -2472,6 +2465,15 @@ public interface Attachment extends Appendix {
                 this.isText = false;
                 this.filename = null;
                 this.data = null;
+            } else {
+                this.hash = null;
+                this.name = (String) attachmentData.get("name");
+                this.description = (String) attachmentData.get("description");
+                this.tags = (String) attachmentData.get("tags");
+                this.type = (String) attachmentData.get("type");
+                this.isText = Boolean.TRUE.equals(attachmentData.get("isText"));
+                this.data = isText ? Convert.toBytes(dataJSON) : Convert.parseHexString(dataJSON);
+                this.filename = (String) attachmentData.get("filename");
             }
         }
 
@@ -2515,9 +2517,7 @@ public interface Attachment extends Appendix {
                 attachment.put("isText", taggedData.isText());
                 attachment.put("filename", taggedData.getFilename());
                 attachment.put("data", taggedData.isText() ? Convert.toString(taggedData.getData()) : Convert.toHexString(taggedData.getData()));
-            } else if (hash != null) {
-                attachment.put("hash", Convert.toHexString(hash));
-            } else {
+            } else if (data != null) {
                 attachment.put("name", name);
                 attachment.put("description", description);
                 attachment.put("tags", tags);
@@ -2526,11 +2526,12 @@ public interface Attachment extends Appendix {
                 attachment.put("filename", filename);
                 attachment.put("data", isText ? Convert.toString(data) : Convert.toHexString(data));
             }
+            attachment.put("hash", Convert.toHexString(getHash()));
         }
 
         @Override
         public TransactionType getTransactionType() {
-            return TransactionType.Data.TAGGED_DATA_UPLOAD; //TODO
+            return TransactionType.Data.TAGGED_DATA_UPLOAD;
         }
 
         public String getName() {
@@ -2582,6 +2583,7 @@ public interface Attachment extends Appendix {
             return data;
         }
 
+        @Override
         public byte[] getHash() {
             if (hash != null) {
                 return hash;
@@ -2598,12 +2600,10 @@ public interface Attachment extends Appendix {
         }
 
         @Override
-        boolean loadPrunable(Transaction transaction) {
-            if (data == null && taggedData == null
-                    && Nxt.getEpochTime() - transaction.getTimestamp() < Constants.MIN_PRUNABLE_LIFETIME) {
+        void loadPrunable(Transaction transaction) {
+            if (data == null && taggedData == null && shouldLoadPrunable(transaction)) {
                 taggedData = TaggedData.getData(transaction.getId());
             }
-            return true;
         }
 
         @Override

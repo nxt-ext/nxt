@@ -690,6 +690,13 @@ final class JSONData {
         json.put("transactionTimestamp", taggedData.getTransactionTimestamp());
         json.put("blockTimestamp", taggedData.getBlockTimestamp());
         return json;
+	}
+
+    static void putPrunableAttachment(JSONObject json, Transaction transaction) {
+        JSONObject prunableAttachment = transaction.getPrunableAttachmentJSON();
+        if (prunableAttachment != null) {
+            json.put("prunableAttachmentJSON", prunableAttachment);
+        }
     }
 
     static void putException(JSONObject json, Exception e) {

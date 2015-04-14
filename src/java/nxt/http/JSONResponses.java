@@ -124,6 +124,8 @@ public final class JSONResponses {
     public static final JSONStreamAware INCORRECT_TAGGED_DATA_TYPE = incorrect("type", "(length must be not longer than " + Constants.MAX_TAGGED_DATA_TYPE_LENGTH + " characters)");
     public static final JSONStreamAware MISSING_DATA = incorrect("data");
     public static final JSONStreamAware INCORRECT_DATA = incorrect("data", "(length must be not longer than " + Constants.MAX_TAGGED_DATA_DATA_LENGTH + " bytes)");
+    static final JSONStreamAware MISSING_MESSAGE_ENCRYPTED_MESSAGE = missing("message", "encryptedMessageData");
+    static final JSONStreamAware EITHER_MESSAGE_ENCRYPTED_MESSAGE = either("message", "encryptedMessageData");
 
     public static final JSONStreamAware NOT_ENOUGH_FUNDS;
     static {
@@ -293,6 +295,13 @@ public final class JSONResponses {
         } else {
             response.put("errorDescription", "At least one of " + Arrays.toString(paramNames) + " must be specified");
         }
+        return JSON.prepare(response);
+    }
+
+    static JSONStreamAware either(String... paramNames) {
+        JSONObject response = new JSONObject();
+        response.put("errorCode", 6);
+        response.put("errorDescription", "Not more than one of " + Arrays.toString(paramNames) + " can be specified");
         return JSON.prepare(response);
     }
 
