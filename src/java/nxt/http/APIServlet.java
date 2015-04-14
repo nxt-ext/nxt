@@ -101,6 +101,8 @@ public final class APIServlet extends HttpServlet {
         map.put("decodeHallmark", DecodeHallmark.instance);
         map.put("decodeToken", DecodeToken.instance);
         map.put("encryptTo", EncryptTo.instance);
+        map.put("eventRegister", EventRegister.instance);
+        map.put("eventWait", EventWait.instance);
         map.put("generateToken", GenerateToken.instance);
         map.put("getAccount", GetAccount.instance);
         map.put("getAccountBlockCount", GetAccountBlockCount.instance);
@@ -270,10 +272,11 @@ public final class APIServlet extends HttpServlet {
     }
 
     private void process(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-
+        // Set response values now in case we create an asynchronous context
         resp.setHeader("Cache-Control", "no-cache, no-store, must-revalidate, private");
         resp.setHeader("Pragma", "no-cache");
         resp.setDateHeader("Expires", 0);
+        resp.setContentType("text/plain; charset=UTF-8");
 
         JSONStreamAware response = JSON.emptyJSON;
 
@@ -327,14 +330,16 @@ public final class APIServlet extends HttpServlet {
                 }
             }
 
-            if (response instanceof JSONObject) {
+            if (response != null && (response instanceof JSONObject)) {
                 ((JSONObject)response).put("requestProcessingTime", System.currentTimeMillis() - startTime);
             }
 
         } finally {
-            resp.setContentType("text/plain; charset=UTF-8");
-            try (Writer writer = resp.getWriter()) {
-                response.writeJSONString(writer);
+            // The response will be null if we created an asynchronous context
+            if (response != null) {
+                try (Writer writer = resp.getWriter()) {
+                    response.writeJSONString(writer);
+                }
             }
         }
 
