@@ -69,7 +69,7 @@ public class SetLogging extends APIServlet.APIRequestHandler {
      * Create the SetLogging instance
      */
     private SetLogging() {
-        super(new APITag[] {APITag.DEBUG}, "logLevel", "communicationEvent", "communicationEvent", "communication Event");
+        super(new APITag[] {APITag.DEBUG}, "logLevel", "communicationEvent", "communicationEvent", "communicationEvent");
     }
 
     /**
