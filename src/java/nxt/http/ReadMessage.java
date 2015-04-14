@@ -23,7 +23,7 @@ public final class ReadMessage extends APIServlet.APIRequestHandler {
     static final ReadMessage instance = new ReadMessage();
 
     private ReadMessage() {
-        super(new APITag[] {APITag.MESSAGES}, "transaction", "uncompressDecryptedMessage", "uncompressDecryptedMessageToSelf", "secretPhrase");
+        super(new APITag[] {APITag.MESSAGES}, "transaction", "secretPhrase");
     }
 
     @Override
@@ -65,10 +65,11 @@ public final class ReadMessage extends APIServlet.APIRequestHandler {
         if (secretPhrase != null) {
             EncryptedData encryptedData = null;
             boolean isText = false;
-            boolean uncompress = !"false".equalsIgnoreCase(req.getParameter("uncompressDecryptedMessage"));
+            boolean uncompress = true;
             if (encryptedMessage != null) {
                 encryptedData = encryptedMessage.getEncryptedData();
                 isText = encryptedMessage.isText();
+                uncompress = encryptedMessage.isCompressed();
                 response.put("encryptedMessageIsPrunable", false);
             } else if (prunableEncryptedMessage != null) {
                 encryptedData = prunableEncryptedMessage.getEncryptedData();
@@ -90,11 +91,10 @@ public final class ReadMessage extends APIServlet.APIRequestHandler {
                 }
             }
             if (encryptToSelfMessage != null) {
-                boolean uncompressToSelf = !"false".equalsIgnoreCase(req.getParameter("uncompressDecryptedMessageToSelf"));
                 Account account = Account.getAccount(Crypto.getPublicKey(secretPhrase));
                 if (account != null) {
                     try {
-                        byte[] decrypted = account.decryptFrom(encryptToSelfMessage.getEncryptedData(), secretPhrase, uncompressToSelf);
+                        byte[] decrypted = account.decryptFrom(encryptToSelfMessage.getEncryptedData(), secretPhrase, encryptToSelfMessage.isCompressed());
                         response.put("decryptedMessageToSelf", encryptToSelfMessage.isText() ? Convert.toString(decrypted) : Convert.toHexString(decrypted));
                     } catch (RuntimeException e) {
                         Logger.logDebugMessage("Decryption of message to self failed: " + e.toString());

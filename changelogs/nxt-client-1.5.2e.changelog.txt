@@ -36,6 +36,10 @@ block.
 
 Added requeueUnconfirmedTransactions debug API.
 
+Added support for uncompressed non-prunable encrypted messages and encrypted
+to self messages, as a new appendix version, to avoid the need to specify the
+compression status as a request parameter when reading them.
+
 Added support for prunable plain and encrypted messages in the client UI.
 
 Voting system UI improvements and bugfixes.

@@ -411,6 +411,7 @@ public interface Appendix {
 
         private final EncryptedData encryptedData;
         private final boolean isText;
+        private final boolean isCompressed;
 
         private AbstractEncryptedMessage(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
             super(buffer, transactionVersion);
@@ -420,19 +421,24 @@ public interface Appendix {
                 length &= Integer.MAX_VALUE;
             }
             this.encryptedData = EncryptedData.readEncryptedData(buffer, length, Constants.MAX_ENCRYPTED_MESSAGE_LENGTH);
+            this.isCompressed = getVersion() != 2;
         }
 
         private AbstractEncryptedMessage(JSONObject attachmentJSON, JSONObject encryptedMessageJSON) {
             super(attachmentJSON);
             byte[] data = Convert.parseHexString((String)encryptedMessageJSON.get("data"));
-            byte[] nonce = Convert.parseHexString((String)encryptedMessageJSON.get("nonce"));
+            byte[] nonce = Convert.parseHexString((String) encryptedMessageJSON.get("nonce"));
             this.encryptedData = new EncryptedData(data, nonce);
             this.isText = Boolean.TRUE.equals(encryptedMessageJSON.get("isText"));
+            Object isCompressed = encryptedMessageJSON.get("isCompressed");
+            this.isCompressed = isCompressed == null || Boolean.TRUE.equals(isCompressed);
         }
 
-        private AbstractEncryptedMessage(EncryptedData encryptedData, boolean isText) {
+        private AbstractEncryptedMessage(EncryptedData encryptedData, boolean isText, boolean isCompressed) {
+            super(isCompressed ? 1 : 2);
             this.encryptedData = encryptedData;
             this.isText = isText;
+            this.isCompressed = isCompressed;
         }
 
         @Override
@@ -452,16 +458,23 @@ public interface Appendix {
             json.put("data", Convert.toHexString(encryptedData.getData()));
             json.put("nonce", Convert.toHexString(encryptedData.getNonce()));
             json.put("isText", isText);
+            json.put("isCompressed", isCompressed);
         }
 
         @Override
         void validate(Transaction transaction) throws NxtException.ValidationException {
+            if (getVersion() > 1 && Nxt.getBlockchain().getHeight() < Constants.VOTING_SYSTEM_BLOCK) {
+                throw new NxtException.NotYetEnabledException("Uncompressed regular encrypted messages not yet enabled");
+            }
             if (encryptedData.getData().length > Constants.MAX_ENCRYPTED_MESSAGE_LENGTH) {
                 throw new NxtException.NotValidException("Max encrypted message length exceeded");
             }
             if ((encryptedData.getNonce().length != 32 && encryptedData.getData().length > 0)
                     || (encryptedData.getNonce().length != 0 && encryptedData.getData().length == 0)) {
                 throw new NxtException.NotValidException("Invalid nonce length " + encryptedData.getNonce().length);
+            }
+            if ((getVersion() != 2 && !isCompressed) || (getVersion() == 2 && isCompressed)) {
+                throw new NxtException.NotValidException("Version mismatch - version " + getVersion() + ", isCompressed " + isCompressed);
             }
         }
 
@@ -474,6 +487,10 @@ public interface Appendix {
 
         public final boolean isText() {
             return isText;
+        }
+
+        public final boolean isCompressed() {
+            return isCompressed;
         }
 
     }
@@ -686,8 +703,8 @@ public interface Appendix {
             super(attachmentData, (JSONObject)attachmentData.get("encryptedMessage"));
         }
 
-        public EncryptedMessage(EncryptedData encryptedData, boolean isText) {
-            super(encryptedData, isText);
+        public EncryptedMessage(EncryptedData encryptedData, boolean isText, boolean isCompressed) {
+            super(encryptedData, isText, isCompressed);
         }
 
         @Override
@@ -731,8 +748,8 @@ public interface Appendix {
             super(attachmentData, (JSONObject)attachmentData.get("encryptToSelfMessage"));
         }
 
-        public EncryptToSelfMessage(EncryptedData encryptedData, boolean isText) {
-            super(encryptedData, isText);
+        public EncryptToSelfMessage(EncryptedData encryptedData, boolean isText, boolean isCompressed) {
+            super(encryptedData, isText, isCompressed);
         }
 
         @Override
