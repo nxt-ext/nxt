@@ -1,6 +1,5 @@
 package nxt.http;
 
-import nxt.Appendix;
 import nxt.Nxt;
 import nxt.NxtException;
 import nxt.Transaction;
@@ -16,26 +15,17 @@ public final class BroadcastTransaction extends APIServlet.APIRequestHandler {
     static final BroadcastTransaction instance = new BroadcastTransaction();
 
     private BroadcastTransaction() {
-        super(new APITag[] {APITag.TRANSACTIONS}, "transactionBytes", "transactionJSON",
-                "message", "messageIsText", "messageIsPrunable",
-                "messageToEncryptIsText", "encryptedMessageData", "encryptedMessageNonce", "encryptedMessageIsPrunable", "compressMessageToEncrypt");
+        super(new APITag[] {APITag.TRANSACTIONS}, "transactionJSON", "transactionBytes", "prunableAttachmentJSON");
     }
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
 
-        String transactionBytes = Convert.emptyToNull(req.getParameter("transactionBytes"));
         String transactionJSON = Convert.emptyToNull(req.getParameter("transactionJSON"));
+        String transactionBytes = Convert.emptyToNull(req.getParameter("transactionBytes"));
+        String prunableAttachmentJSON = Convert.emptyToNull(req.getParameter("prunableAttachmentJSON"));
 
-        Transaction.Builder builder = ParameterParser.parseTransaction(transactionBytes, transactionJSON);
-        Appendix.PrunablePlainMessage prunablePlainMessage = ParameterParser.getPrunablePlainMessage(req);
-        if (prunablePlainMessage != null) {
-            builder.appendix(prunablePlainMessage);
-        }
-        Appendix.PrunableEncryptedMessage prunableEncryptedMessage = ParameterParser.getPrunableEncryptedMessage(req);
-        if (prunableEncryptedMessage != null) {
-            builder.appendix(prunableEncryptedMessage);
-        }
+        Transaction.Builder builder = ParameterParser.parseTransaction(transactionJSON, transactionBytes, prunableAttachmentJSON);
         Transaction transaction = builder.build();
 
         JSONObject response = new JSONObject();

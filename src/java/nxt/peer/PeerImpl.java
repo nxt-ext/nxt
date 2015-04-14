@@ -381,7 +381,7 @@ final class PeerImpl implements Peer {
                         }
                         log += " >>> " + responseValue;
                         showLog = true;
-                        response = (JSONObject) JSONValue.parse(responseValue);
+                        response = (JSONObject) JSONValue.parseWithException(responseValue);
                     } else {
                         try (Reader reader = new BufferedReader(new InputStreamReader(responseStream, "UTF-8"))) {
                             response = (JSONObject) JSONValue.parseWithException(reader);

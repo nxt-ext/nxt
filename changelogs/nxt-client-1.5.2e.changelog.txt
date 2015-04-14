@@ -46,6 +46,12 @@ the server.
 Added eventRegister and eventWait APIs, to be used for registering listeners
 and waiting for server events instead of polling.
 
+Changed the parameters accepted by broadcastTransaction. The prunable parts
+must be submitted either in the transactionJSON, or, if using transactionBytes,
+in a new prunableAttachmentJSON parameter, which has the same format as the
+transaction attachment json. The prunableAttachmentJSON is also returned by
+the signTransaction and getTransactionBytes APIs now.
+
 Added support for prunable plain and encrypted messages in the client UI.
 
 Voting system UI improvements and bugfixes.

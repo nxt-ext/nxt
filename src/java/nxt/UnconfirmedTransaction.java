@@ -25,13 +25,12 @@ class UnconfirmedTransaction implements Transaction {
     UnconfirmedTransaction(ResultSet rs) throws SQLException {
         try {
             byte[] transactionBytes = rs.getBytes("transaction_bytes");
-            TransactionImpl.BuilderImpl builder = TransactionImpl.newTransactionBuilder(transactionBytes);
+            JSONObject prunableAttachments = null;
             String prunableJSON = rs.getString("prunable_json");
             if (prunableJSON != null) {
-                JSONObject attachmentData = (JSONObject)JSONValue.parse(prunableJSON);
-                builder.appendix(Appendix.PrunablePlainMessage.parse(attachmentData));
-                builder.appendix(Appendix.PrunableEncryptedMessage.parse(attachmentData));
+                prunableAttachments = (JSONObject) JSONValue.parse(prunableJSON);
             }
+            TransactionImpl.BuilderImpl builder = TransactionImpl.newTransactionBuilder(transactionBytes, prunableAttachments);
             this.transaction = builder.build();
             this.transaction.setHeight(rs.getInt("transaction_height"));
             this.arrivalTimestamp = rs.getLong("arrival_timestamp");
@@ -51,17 +50,7 @@ class UnconfirmedTransaction implements Transaction {
             pstmt.setLong(++i, feePerByte);
             pstmt.setInt(++i, transaction.getExpiration());
             pstmt.setBytes(++i, transaction.bytes());
-            JSONObject prunableJSON = null;
-            for (Appendix.AbstractAppendix appendage : transaction.getAppendages()) {
-                if (appendage instanceof Appendix.Prunable) {
-                    appendage.loadPrunable(transaction);
-                    if (prunableJSON == null) {
-                        prunableJSON = appendage.getJSONObject();
-                    } else {
-                        prunableJSON.putAll(appendage.getJSONObject());
-                    }
-                }
-            }
+            JSONObject prunableJSON = transaction.getPrunableAttachmentJSON();
             if (prunableJSON != null) {
                 pstmt.setString(++i, prunableJSON.toJSONString());
             } else {
@@ -218,6 +207,11 @@ class UnconfirmedTransaction implements Transaction {
     @Override
     public JSONObject getJSONObject() {
         return transaction.getJSONObject();
+    }
+
+    @Override
+    public JSONObject getPrunableAttachmentJSON() {
+        return transaction.getPrunableAttachmentJSON();
     }
 
     @Override

@@ -117,6 +117,9 @@ public final class JSONResponses {
     public static final JSONStreamAware UNKNOWN_TRANSACTION_FULL_HASH = unknown("transactionFullHash");
     public static final JSONStreamAware INCORRECT_TRANSACTION_FULL_HASH = incorrect("transactionFullHash");
     public static final JSONStreamAware INCORRECT_LINKED_FULL_HASH = incorrect("phasingLinkedFullHash");
+    static final JSONStreamAware MISSING_MESSAGE_ENCRYPTED_MESSAGE = missing("message", "encryptedMessageData");
+    static final JSONStreamAware EITHER_MESSAGE_ENCRYPTED_MESSAGE = either("message", "encryptedMessageData");
+
 
     public static final JSONStreamAware NOT_ENOUGH_FUNDS;
     static {
@@ -286,6 +289,13 @@ public final class JSONResponses {
         } else {
             response.put("errorDescription", "At least one of " + Arrays.toString(paramNames) + " must be specified");
         }
+        return JSON.prepare(response);
+    }
+
+    static JSONStreamAware either(String... paramNames) {
+        JSONObject response = new JSONObject();
+        response.put("errorCode", 6);
+        response.put("errorDescription", "Not more than one of " + Arrays.toString(paramNames) + " can be specified");
         return JSON.prepare(response);
     }
 

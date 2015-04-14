@@ -90,6 +90,8 @@ public interface Transaction {
 
     JSONObject getJSONObject();
 
+    JSONObject getPrunableAttachmentJSON();
+
     byte getVersion();
 
     Appendix.Message getMessage();

@@ -441,21 +441,14 @@ final class ParameterParser {
         return -1;
     }
 
-    static Transaction.Builder parseTransaction(String transactionBytes, String transactionJSON) throws ParameterException {
+    static Transaction.Builder parseTransaction(String transactionJSON, String transactionBytes, String prunableAttachmentJSON) throws ParameterException {
         if (transactionBytes == null && transactionJSON == null) {
             throw new ParameterException(MISSING_TRANSACTION_BYTES_OR_JSON);
         }
-        if (transactionBytes != null) {
-            try {
-                byte[] bytes = Convert.parseHexString(transactionBytes);
-                return Nxt.newTransactionBuilder(bytes);
-            } catch (NxtException.ValidationException|RuntimeException e) {
-                Logger.logDebugMessage(e.getMessage(), e);
-                JSONObject response = new JSONObject();
-                JSONData.putException(response, e, "Incorrect transactionBytes");
-                throw new ParameterException(response);
-            }
-        } else {
+        if (prunableAttachmentJSON != null && transactionBytes == null) {
+            throw new ParameterException(JSONResponses.missing("transactionBytes"));
+        }
+        if (transactionJSON != null) {
             try {
                 JSONObject json = (JSONObject) JSONValue.parseWithException(transactionJSON);
                 return Nxt.newTransactionBuilder(json);
@@ -463,6 +456,17 @@ final class ParameterParser {
                 Logger.logDebugMessage(e.getMessage(), e);
                 JSONObject response = new JSONObject();
                 JSONData.putException(response, e, "Incorrect transactionJSON");
+                throw new ParameterException(response);
+            }
+        } else {
+            try {
+                byte[] bytes = Convert.parseHexString(transactionBytes);
+                JSONObject prunableAttachments = prunableAttachmentJSON == null ? null : (JSONObject)JSONValue.parseWithException(prunableAttachmentJSON);
+                return Nxt.newTransactionBuilder(bytes, prunableAttachments);
+            } catch (NxtException.ValidationException|RuntimeException | ParseException e) {
+                Logger.logDebugMessage(e.getMessage(), e);
+                JSONObject response = new JSONObject();
+                JSONData.putException(response, e, "Incorrect transactionBytes");
                 throw new ParameterException(response);
             }
         }
