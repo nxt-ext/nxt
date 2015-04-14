@@ -57,7 +57,7 @@ public final class Peers {
     static final int LOGGING_MASK_EXCEPTIONS = 1;
     static final int LOGGING_MASK_NON200_RESPONSES = 2;
     static final int LOGGING_MASK_200_RESPONSES = 4;
-    static int communicationLoggingMask;
+    static volatile int communicationLoggingMask;
 
     static final Set<String> knownBlacklistedPeers;
 
