@@ -3,11 +3,10 @@ package nxt.http;
 import nxt.peer.Peers;
 import nxt.util.JSON;
 import nxt.util.Logger;
-
-import javax.servlet.http.HttpServletRequest;
-
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
+
+import javax.servlet.http.HttpServletRequest;
 
 /**
  * <p>The SetLogging API will set the NRS log level for all log messages.

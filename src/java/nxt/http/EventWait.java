@@ -2,13 +2,12 @@ package nxt.http;
 
 import nxt.http.EventListener.EventListenerException;
 import nxt.http.EventListener.PendingEvent;
-
-import java.util.List;
-import javax.servlet.http.HttpServletRequest;
-
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
+
+import javax.servlet.http.HttpServletRequest;
+import java.util.List;
 
 /**
  * <p>The EventWait API will wait for one of the server events

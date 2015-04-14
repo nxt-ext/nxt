@@ -4,13 +4,12 @@ import nxt.BlockchainProcessor;
 import nxt.TransactionProcessor;
 import nxt.http.EventListener.EventListenerException;
 import nxt.peer.Peers;
-
-import java.util.ArrayList;
-import java.util.List;
-import javax.servlet.http.HttpServletRequest;
-
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
+
+import javax.servlet.http.HttpServletRequest;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * <p>The EventRegister API will create an event listener and register
