@@ -123,14 +123,16 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
                 if ("true".equalsIgnoreCase(req.getParameter("encryptedMessageIsPrunable"))) {
                     prunableEncryptedMessage = new Appendix.PrunableEncryptedMessage(encryptedData, encryptedDataIsText, isCompressed);
                 } else {
-                    encryptedMessage = new Appendix.EncryptedMessage(encryptedData, encryptedDataIsText);
+                    encryptedMessage = new Appendix.EncryptedMessage(encryptedData, encryptedDataIsText, isCompressed);
                 }
             }
         }
         Appendix.EncryptToSelfMessage encryptToSelfMessage = null;
         EncryptedData encryptedToSelfData = ParameterParser.getEncryptToSelfMessage(req);
         if (encryptedToSelfData != null) {
-            encryptToSelfMessage = new Appendix.EncryptToSelfMessage(encryptedToSelfData, !"false".equalsIgnoreCase(req.getParameter("messageToEncryptToSelfIsText")));
+            boolean isText = !"false".equalsIgnoreCase(req.getParameter("messageToEncryptToSelfIsText"));
+            boolean isCompressed = !"false".equalsIgnoreCase(req.getParameter("compressMessageToEncryptToSelf"));
+            encryptToSelfMessage = new Appendix.EncryptToSelfMessage(encryptedToSelfData, isText, isCompressed);
         }
         Appendix.Message message = null;
         Appendix.PrunablePlainMessage prunablePlainMessage = null;

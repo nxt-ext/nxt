@@ -328,6 +328,7 @@ final class PeerImpl implements Peer {
         String log = null;
         boolean showLog = false;
         HttpURLConnection connection = null;
+        int communicationLoggingMask = Peers.communicationLoggingMask;
 
         try {
 
@@ -341,7 +342,7 @@ final class PeerImpl implements Peer {
             buf.append("/nxt");
             URL url = new URL(buf.toString());
 
-            if (Peers.communicationLoggingMask != 0) {
+            if (communicationLoggingMask != 0) {
                 log = "\"" + url.toString() + "\": " + JSON.toString(request);
             }
 
@@ -365,7 +366,7 @@ final class PeerImpl implements Peer {
                     if ("gzip".equals(connection.getHeaderField("Content-Encoding"))) {
                         responseStream = new GZIPInputStream(cis);
                     }
-                    if ((Peers.communicationLoggingMask & Peers.LOGGING_MASK_200_RESPONSES) != 0) {
+                    if ((communicationLoggingMask & Peers.LOGGING_MASK_200_RESPONSES) != 0) {
                         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
                         byte[] buffer = new byte[1024];
                         int numberOfBytes;
@@ -380,7 +381,7 @@ final class PeerImpl implements Peer {
                         }
                         log += " >>> " + responseValue;
                         showLog = true;
-                        response = (JSONObject) JSONValue.parse(responseValue);
+                        response = (JSONObject) JSONValue.parseWithException(responseValue);
                     } else {
                         try (Reader reader = new BufferedReader(new InputStreamReader(responseStream, "UTF-8"))) {
                             response = (JSONObject) JSONValue.parseWithException(reader);
@@ -394,7 +395,7 @@ final class PeerImpl implements Peer {
                     }
                 }
             } else {
-                if ((Peers.communicationLoggingMask & Peers.LOGGING_MASK_NON200_RESPONSES) != 0) {
+                if ((communicationLoggingMask & Peers.LOGGING_MASK_NON200_RESPONSES) != 0) {
                     log += " >>> Peer responded with HTTP " + connection.getResponseCode() + " code!";
                     showLog = true;
                 }
@@ -411,7 +412,7 @@ final class PeerImpl implements Peer {
             if (! (e instanceof UnknownHostException || e instanceof SocketTimeoutException || e instanceof SocketException || Errors.END_OF_FILE.equals(e.toString()))) {
                 Logger.logDebugMessage("Error sending JSON request: " + e.toString());
             }
-            if ((Peers.communicationLoggingMask & Peers.LOGGING_MASK_EXCEPTIONS) != 0) {
+            if ((communicationLoggingMask & Peers.LOGGING_MASK_EXCEPTIONS) != 0) {
                 log += " >>> " + e.toString();
                 showLog = true;
             }

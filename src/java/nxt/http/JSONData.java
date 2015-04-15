@@ -675,6 +675,13 @@ final class JSONData {
         return json;
     }
 
+    static void putPrunableAttachment(JSONObject json, Transaction transaction) {
+        JSONObject prunableAttachment = transaction.getPrunableAttachmentJSON();
+        if (prunableAttachment != null) {
+            json.put("prunableAttachmentJSON", prunableAttachment);
+        }
+    }
+
     static void putException(JSONObject json, Exception e) {
         putException(json, e, "");
     }

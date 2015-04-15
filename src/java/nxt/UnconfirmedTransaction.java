@@ -14,25 +14,27 @@ class UnconfirmedTransaction implements Transaction {
 
     private final TransactionImpl transaction;
     private final long arrivalTimestamp;
+    private final long feePerByte;
 
     UnconfirmedTransaction(TransactionImpl transaction, long arrivalTimestamp) {
         this.transaction = transaction;
         this.arrivalTimestamp = arrivalTimestamp;
+        this.feePerByte = transaction.getFeeNQT() / transaction.getFullSize();
     }
 
     UnconfirmedTransaction(ResultSet rs) throws SQLException {
         try {
             byte[] transactionBytes = rs.getBytes("transaction_bytes");
-            TransactionImpl.BuilderImpl builder = TransactionImpl.newTransactionBuilder(transactionBytes);
+            JSONObject prunableAttachments = null;
             String prunableJSON = rs.getString("prunable_json");
             if (prunableJSON != null) {
-                JSONObject attachmentData = (JSONObject)JSONValue.parse(prunableJSON);
-                builder.appendix(Appendix.PrunablePlainMessage.parse(attachmentData));
-                builder.appendix(Appendix.PrunableEncryptedMessage.parse(attachmentData));
+                prunableAttachments = (JSONObject) JSONValue.parse(prunableJSON);
             }
+            TransactionImpl.BuilderImpl builder = TransactionImpl.newTransactionBuilder(transactionBytes, prunableAttachments);
             this.transaction = builder.build();
             this.transaction.setHeight(rs.getInt("transaction_height"));
             this.arrivalTimestamp = rs.getLong("arrival_timestamp");
+            this.feePerByte = rs.getLong("fee_per_byte");
         } catch (NxtException.ValidationException e) {
             throw new RuntimeException(e.toString(), e);
         }
@@ -45,19 +47,10 @@ class UnconfirmedTransaction implements Transaction {
             int i = 0;
             pstmt.setLong(++i, transaction.getId());
             pstmt.setInt(++i, transaction.getHeight());
-            pstmt.setLong(++i, transaction.getFeeNQT() / transaction.getFullSize());
+            pstmt.setLong(++i, feePerByte);
             pstmt.setInt(++i, transaction.getExpiration());
             pstmt.setBytes(++i, transaction.bytes());
-            JSONObject prunableJSON = null;
-            for (Appendix.AbstractAppendix appendage : transaction.getAppendages()) {
-                if (appendage.loadPrunable(this)) {
-                    if (prunableJSON == null) {
-                        prunableJSON = appendage.getJSONObject();
-                    } else {
-                        prunableJSON.putAll(appendage.getJSONObject());
-                    }
-                }
-            }
+            JSONObject prunableJSON = transaction.getPrunableAttachmentJSON();
             if (prunableJSON != null) {
                 pstmt.setString(++i, prunableJSON.toJSONString());
             } else {
@@ -75,6 +68,10 @@ class UnconfirmedTransaction implements Transaction {
 
     long getArrivalTimestamp() {
         return arrivalTimestamp;
+    }
+
+    long getFeePerByte() {
+        return feePerByte;
     }
 
     @Override
@@ -210,6 +207,11 @@ class UnconfirmedTransaction implements Transaction {
     @Override
     public JSONObject getJSONObject() {
         return transaction.getJSONObject();
+    }
+
+    @Override
+    public JSONObject getPrunableAttachmentJSON() {
+        return transaction.getPrunableAttachmentJSON();
     }
 
     @Override

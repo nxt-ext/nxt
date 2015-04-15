@@ -1163,14 +1163,7 @@ var NRS = (function(NRS, $, undefined) {
 			async: true,
 			data: {
 				"transactionBytes": transactionData,
-				"message": originalData.message,
-				"messageIsText": originalData.messageIsText,
-				"messageIsPrunable": originalData.messageIsPrunable,
-				"messageToEncryptIsText": originalData.messageToEncryptIsText,
-				"encryptedMessageData": originalData.encryptedMessageData,
-				"encryptedMessageNonce": originalData.encryptedMessageNonce,
-				"encryptedMessageIsPrunable": originalData.encryptedMessageIsPrunable,
-				"compressMessageToEncrypt": originalData.compressMessageToEncrypt
+				"prunableAttachmentJSON": JSON.stringify(originalResponse.transactionJSON.attachment)
 			}
 		}).done(function(response, status, xhr) {
 			if (NRS.console) {

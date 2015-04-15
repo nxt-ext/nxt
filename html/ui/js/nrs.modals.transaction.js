@@ -198,8 +198,13 @@ var NRS = (function (NRS, $, undefined) {
                         } else {
                             $output.append("<div style='padding-bottom:10px'>" + $.t("message_empty") + "</div>");
                         }
-
-                        $output.append("<table><tr><td><strong>" + $.t("from") + "</strong>:&nbsp;</td><td>" + NRS.getAccountLink(transaction, "sender") + "</td></tr><tr><td><strong>" + $.t("to") + "</strong>:&nbsp;</td><td>" + NRS.getAccountLink(transaction, "recipient") + "</td></tr></table>").show();
+                        var hash = transaction.attachment.messageHash ? ("<tr><td><strong>" + $.t("hash") + "</strong>:&nbsp;</td><td>" + transaction.attachment.messageHash + "</td></tr>") : "";
+                        $output.append("<table>" +
+                            "<tr><td><strong>" + $.t("from") + "</strong>:&nbsp;</td><td>" + NRS.getAccountLink(transaction, "sender") + "</td></tr>" +
+                            "<tr><td><strong>" + $.t("to") + "</strong>:&nbsp;</td><td>" + NRS.getAccountLink(transaction, "recipient") + "</td></tr>" +
+                            hash +
+                        "</table>");
+                        $output.show();
 
                         break;
                     case 1:

@@ -249,6 +249,10 @@ public final class Nxt {
         return TransactionImpl.newTransactionBuilder(transactionJSON);
     }
 
+    public static Transaction.Builder newTransactionBuilder(byte[] transactionBytes, JSONObject prunableAttachments) throws NxtException.NotValidException {
+        return TransactionImpl.newTransactionBuilder(transactionBytes, prunableAttachments);
+    }
+
     public static int getEpochTime() {
         return time.getTime();
     }
