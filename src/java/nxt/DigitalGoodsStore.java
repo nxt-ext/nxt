@@ -593,8 +593,12 @@ public final class DigitalGoodsStore {
             return purchaseTable.getCount(new SellerBuyerPurchasesClause(sellerId, buyerId, withPublicFeedbacksOnly, completedOnly));
         }
 
-        public static DbIterator<Purchase> getGoodsPurchases(long goodsId, boolean withPublicFeedbacksOnly, boolean completedOnly, int from, int to) {
-            return purchaseTable.getManyBy(new LongPurchasesClause("goods_id", goodsId, withPublicFeedbacksOnly, completedOnly), from, to);
+        public static DbIterator<Purchase> getGoodsPurchases(long goodsId, long buyerId, boolean withPublicFeedbacksOnly, boolean completedOnly, int from, int to) {
+            DbClause clause = new LongPurchasesClause("goods_id", goodsId, withPublicFeedbacksOnly, completedOnly);
+            if (buyerId != 0) {
+                clause = clause.and(new DbClause.LongClause("buyer_id", buyerId));
+            }
+            return purchaseTable.getManyBy(clause, from, to);
         }
 
         public static int getGoodsPurchaseCount(final long goodsId, boolean withPublicFeedbacksOnly, boolean completedOnly) {

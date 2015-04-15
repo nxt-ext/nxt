@@ -54,5 +54,7 @@ the signTransaction and getTransactionBytes APIs now.
 
 Added support for prunable plain and encrypted messages in the client UI.
 
+Added optional buyer parameter to getDGSGoodsPurchases API.
+
 Voting system UI improvements and bugfixes.
 

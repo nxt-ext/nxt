@@ -423,6 +423,9 @@ final class ParameterParser {
         if (transactionBytes == null && transactionJSON == null) {
             throw new ParameterException(MISSING_TRANSACTION_BYTES_OR_JSON);
         }
+        if (transactionBytes != null && transactionJSON != null) {
+            throw new ParameterException(either("transactionBytes", "transactionJSON"));
+        }
         if (prunableAttachmentJSON != null && transactionBytes == null) {
             throw new ParameterException(JSONResponses.missing("transactionBytes"));
         }
