@@ -25,6 +25,7 @@ public final class Convert {
     public static final long[] EMPTY_LONG = new long[0];
     public static final byte[] EMPTY_BYTE = new byte[0];
     public static final byte[][] EMPTY_BYTES = new byte[0][];
+    public static final String[] EMPTY_STRING = new String[0];
 
     private Convert() {} //never
 

@@ -4,11 +4,16 @@ import nxt.db.DbClause;
 import nxt.db.DbIterator;
 import nxt.db.DbKey;
 import nxt.db.PrunableDbTable;
+import nxt.db.VersionedEntityDbTable;
+import nxt.util.Logger;
+import nxt.util.Search;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Arrays;
+import java.util.Map;
 
 public class TaggedData {
 
@@ -39,7 +44,135 @@ public class TaggedData {
             return " ORDER BY block_timestamp DESC, db_id DESC ";
         }
 
+        @Override
+        public void trim(int height) {
+            if (Constants.ENABLE_PRUNING) {
+                try (Connection con = db.getConnection();
+                     PreparedStatement pstmtSelect = con.prepareStatement("SELECT * FROM " + table + " WHERE transaction_timestamp < ?");
+                     PreparedStatement pstmtDelete = con.prepareStatement("DELETE FROM " + table + " WHERE transaction_timestamp < ?")) {
+                    int expiration = Nxt.getEpochTime() - Constants.MAX_PRUNABLE_LIFETIME;
+                    pstmtSelect.setInt(1, expiration);
+                    try (ResultSet rs = pstmtSelect.executeQuery()) {
+
+                    }
+                    int deleted = pstmt.executeUpdate();
+                    if (deleted > 0) {
+                        Logger.logDebugMessage("Deleted " + deleted + " expired prunable data from " + table);
+                    }
+                } catch (SQLException e) {
+                    throw new RuntimeException(e.toString(), e);
+                }
+            }
+        }
+
     };
+
+
+    public static final class Tag {
+
+        private static final DbKey.StringKeyFactory<Tag> tagDbKeyFactory = new DbKey.StringKeyFactory<Tag>("tag") {
+            @Override
+            public DbKey newKey(Tag tag) {
+                return tag.dbKey;
+            }
+        };
+
+        private static final VersionedEntityDbTable<Tag> tagTable = new VersionedEntityDbTable<Tag>("data_tag", tagDbKeyFactory) {
+
+            @Override
+            protected Tag load(Connection con, ResultSet rs) throws SQLException {
+                return new Tag(rs);
+            }
+
+            @Override
+            protected void save(Connection con, Tag tag) throws SQLException {
+                tag.save(con);
+            }
+
+            @Override
+            public String defaultSort() {
+                return " ORDER BY tag_count DESC, tag ASC ";
+            }
+
+        };
+
+        public static int getTagCount() {
+            return tagTable.getCount();
+        }
+
+        public static DbIterator<Tag> getAllTags(int from, int to) {
+            return tagTable.getAll(from, to);
+        }
+
+        public static DbIterator<Tag> getTagsLike(String prefix, int from, int to) {
+            DbClause dbClause = new DbClause.LikeClause("tag", prefix);
+            return tagTable.getManyBy(dbClause, from, to, " ORDER BY tag ");
+        }
+
+        private static void init() {}
+
+        private static void add(TaggedData taggedData) {
+            for (String tagValue : taggedData.getParsedTags()) {
+                Tag tag = tagTable.get(tagDbKeyFactory.newKey(tagValue));
+                if (tag == null) {
+                    tag = new Tag(tagValue);
+                }
+                tag.count += 1;
+                tagTable.insert(tag);
+            }
+        }
+
+        private static void delete(Map<String,Integer> tagCounts) {
+            for (Map.Entry<String,Integer> entry : tagCounts.entrySet()) {
+                Tag tag = tagTable.get(tagDbKeyFactory.newKey(entry.getKey()));
+                if (tag == null) {
+                    throw new IllegalStateException("Unknown tag " + entry.getKey());
+                }
+                tag.count -= entry.getValue();
+                if (tag.count > 0) {
+                    tagTable.insert(tag);
+                } else {
+                    tagTable.delete(tag);
+                }
+            }
+        }
+
+        private final String tag;
+        private final DbKey dbKey;
+        private int count;
+
+        private Tag(String tag) {
+            this.tag = tag;
+            this.dbKey = tagDbKeyFactory.newKey(this.tag);
+        }
+
+        private Tag(ResultSet rs) throws SQLException {
+            this.tag = rs.getString("tag");
+            this.dbKey = tagDbKeyFactory.newKey(this.tag);
+            this.count = rs.getInt("tag_count");
+        }
+
+        private void save(Connection con) throws SQLException {
+            try (PreparedStatement pstmt = con.prepareStatement("MERGE INTO data_tag (tag, tag_count, height, latest) "
+                    + "KEY (tag, height) VALUES (?, ?, ?, TRUE)")) {
+                int i = 0;
+                pstmt.setString(++i, this.tag);
+                pstmt.setInt(++i, this.count);
+                pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
+                pstmt.executeUpdate();
+            }
+        }
+
+        public String getTag() {
+            return tag;
+        }
+
+        public int getCount() {
+            return count;
+        }
+
+    }
+
 
     public static int getCount() {
         return taggedDataTable.getCount();
@@ -68,7 +201,9 @@ public class TaggedData {
     }
 
 
-    static void init() {}
+    static void init() {
+        Tag.init();
+    }
 
     private final long id;
     private final DbKey dbKey;
@@ -76,6 +211,7 @@ public class TaggedData {
     private final String name;
     private final String description;
     private final String tags;
+    private final String[] parsedTags;
     private final byte[] data;
     private final String type;
     private final boolean isText;
@@ -90,6 +226,7 @@ public class TaggedData {
         this.name = attachment.getName();
         this.description = attachment.getDescription();
         this.tags = attachment.getTags();
+        this.parsedTags = Search.parseTags(tags, 3, 20, 5);
         this.data = attachment.getData();
         this.type = attachment.getType();
         this.isText = attachment.isText();
@@ -105,6 +242,8 @@ public class TaggedData {
         this.name = rs.getString("name");
         this.description = rs.getString("description");
         this.tags = rs.getString("tags");
+        Object[] array = (Object[])rs.getArray("parsed_tags").getArray();
+        this.parsedTags = Arrays.copyOf(array, array.length, String[].class);
         this.data = rs.getBytes("data");
         this.type = rs.getString("type");
         this.isText = rs.getBoolean("is_text");
@@ -114,14 +253,15 @@ public class TaggedData {
     }
 
     private void save(Connection con) throws SQLException {
-        try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO tagged_data (id, account_id, name, description, tags, "
-                + "type, data, is_text, filename, block_timestamp, transaction_timestamp, height) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
+        try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO tagged_data (id, account_id, name, description, tags, parsed_tags"
+                + "type, data, is_text, filename, block_timestamp, transaction_timestamp, height) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
             int i = 0;
             pstmt.setLong(++i, this.id);
             pstmt.setLong(++i, this.accountId);
             pstmt.setString(++i, this.name);
             pstmt.setString(++i, this.description);
             pstmt.setString(++i, this.tags);
+            pstmt.setObject(++i, this.parsedTags);
             pstmt.setString(++i, this.type);
             pstmt.setBytes(++i, this.data);
             pstmt.setBoolean(++i, this.isText);
@@ -153,6 +293,10 @@ public class TaggedData {
         return tags;
     }
 
+    public String[] getParsedTags() {
+        return parsedTags;
+    }
+
     public byte[] getData() {
         return data;
     }
@@ -181,6 +325,7 @@ public class TaggedData {
         if (Nxt.getEpochTime() - transaction.getTimestamp() < Constants.MAX_PRUNABLE_LIFETIME
                 && taggedDataTable.get(taggedDataKeyFactory.newKey(transaction.getId())) == null) {
             TaggedData taggedData = new TaggedData(transaction, attachment);
+            Tag.add(taggedData);
             taggedDataTable.insert(taggedData);
         }
     }

@@ -725,7 +725,7 @@ class NxtDbVersion extends DbVersion {
                 apply("DROP INDEX IF EXISTS public_key_height_idx");
             case 306:
                 apply("CREATE TABLE IF NOT EXISTS tagged_data (db_id IDENTITY, id BIGINT NOT NULL, account_id BIGINT NOT NULL, "
-                        + "name VARCHAR NOT NULL, description VARCHAR, tags VARCHAR, type VARCHAR, data VARBINARY NOT NULL, "
+                        + "name VARCHAR NOT NULL, description VARCHAR, tags VARCHAR, parsed_tags ARRAY, type VARCHAR, data VARBINARY NOT NULL, "
                         + "is_text BOOLEAN NOT NULL, filename VARCHAR, block_timestamp INT NOT NULL, transaction_timestamp INT NOT NULL, "
                         + "height INT NOT NULL, FOREIGN KEY (height) REFERENCES block (height) ON DELETE CASCADE)");
             case 307:
@@ -739,6 +739,13 @@ class NxtDbVersion extends DbVersion {
             case 311:
                 apply("CALL FTL_CREATE_INDEX('PUBLIC', 'TAGGED_DATA', 'NAME,DESCRIPTION,TAGS')");
             case 312:
+                apply("CREATE TABLE IF NOT EXISTS data_tag (db_id IDENTITY, tag VARCHAR NOT NULL, tag_count INT NOT NULL, "
+                        + "height INT NOT NULL, latest BOOLEAN NOT NULL DEFAULT TRUE)");
+            case 313:
+                apply("CREATE UNIQUE INDEX IF NOT EXISTS data_tag_tag_idx ON data_tag (tag, height DESC)");
+            case 314:
+                apply("CREATE INDEX IF NOT EXISTS data_tag_count_idx ON data_tag (tag_count DESC, height DESC)");
+            case 315:
                 return;
             default:
                 throw new RuntimeException("Blockchain database inconsistent with code, probably trying to run older code on newer database");
