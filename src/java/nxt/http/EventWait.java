@@ -145,6 +145,11 @@ public class EventWait extends APIServlet.APIRequestHandler {
         return response;
     }
 
+    @Override
+    final boolean requirePost() {
+        return true;
+    }
+
     /**
      * Format the EventWait response
      *
