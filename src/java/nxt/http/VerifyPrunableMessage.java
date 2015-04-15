@@ -77,7 +77,6 @@ public final class VerifyPrunableMessage extends APIServlet.APIRequestHandler {
                 return HASHES_MISMATCH;
             }
             JSONObject response = myPlainMessage.getJSONObject();
-            response.put("messageHash", myPlainMessage.getHash());
             response.put("verify", true);
             return response;
         } else if (encryptedMessage != null) {
@@ -89,17 +88,11 @@ public final class VerifyPrunableMessage extends APIServlet.APIRequestHandler {
                 return HASHES_MISMATCH;
             }
             JSONObject response = myEncryptedMessage.getJSONObject();
-            response.put("encryptedMessageHash", myEncryptedMessage.getHash());
             response.put("verify", true);
             return response;
         }
 
         return JSON.emptyJSON;
-    }
-
-    @Override
-    boolean requirePost() {
-        return true;
     }
 
 }
