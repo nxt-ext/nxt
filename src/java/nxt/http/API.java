@@ -207,8 +207,13 @@ public final class API {
         if (API.adminPassword.isEmpty()) {
             throw new ParameterException(NO_PASSWORD_IN_CONFIG);
         } else if (!API.adminPassword.equals(req.getParameter("adminPassword"))) {
+            Logger.logWarningMessage("Incorrect adminPassword");
             throw new ParameterException(INCORRECT_ADMIN_PASSWORD);
         }
+    }
+
+    static boolean checkPassword(HttpServletRequest req) {
+        return (API.disableAdminPassword || (!API.adminPassword.isEmpty() && API.adminPassword.equals(req.getParameter("adminPassword"))));
     }
 
     static boolean isAllowed(String remoteHost) {
