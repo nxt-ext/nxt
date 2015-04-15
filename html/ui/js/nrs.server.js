@@ -1163,7 +1163,7 @@ var NRS = (function(NRS, $, undefined) {
 			async: true,
 			data: {
 				"transactionBytes": transactionData,
-				"transactionJSON": JSON.stringify(originalResponse.transactionJSON)
+				"prunableAttachmentJSON": JSON.stringify(originalResponse.transactionJSON.attachment)
 			}
 		}).done(function(response, status, xhr) {
 			if (NRS.console) {
