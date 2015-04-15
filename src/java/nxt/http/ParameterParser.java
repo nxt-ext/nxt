@@ -47,6 +47,7 @@ import static nxt.http.JSONResponses.UNKNOWN_CURRENCY;
 import static nxt.http.JSONResponses.UNKNOWN_GOODS;
 import static nxt.http.JSONResponses.UNKNOWN_OFFER;
 import static nxt.http.JSONResponses.UNKNOWN_POLL;
+import static nxt.http.JSONResponses.either;
 import static nxt.http.JSONResponses.incorrect;
 import static nxt.http.JSONResponses.missing;
 
@@ -444,6 +445,9 @@ final class ParameterParser {
     static Transaction.Builder parseTransaction(String transactionJSON, String transactionBytes, String prunableAttachmentJSON) throws ParameterException {
         if (transactionBytes == null && transactionJSON == null) {
             throw new ParameterException(MISSING_TRANSACTION_BYTES_OR_JSON);
+        }
+        if (transactionBytes != null && transactionJSON != null) {
+            throw new ParameterException(either("transactionBytes", "transactionJSON"));
         }
         if (prunableAttachmentJSON != null && transactionBytes == null) {
             throw new ParameterException(JSONResponses.missing("transactionBytes"));
