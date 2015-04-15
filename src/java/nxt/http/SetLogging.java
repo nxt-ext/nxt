@@ -129,4 +129,10 @@ public class SetLogging extends APIServlet.APIRequestHandler {
     boolean requirePassword() {
         return true;
     }
+
+    @Override
+    final boolean requirePost() {
+        return true;
+    }
+
 }
