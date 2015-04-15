@@ -692,6 +692,13 @@ final class JSONData {
         return json;
 	}
 
+    static JSONObject dataTag(TaggedData.Tag tag) {
+        JSONObject json = new JSONObject();
+        json.put("tag", tag.getTag());
+        json.put("count", tag.getCount());
+        return json;
+    }
+
     static void putPrunableAttachment(JSONObject json, Transaction transaction) {
         JSONObject prunableAttachment = transaction.getPrunableAttachmentJSON();
         if (prunableAttachment != null) {

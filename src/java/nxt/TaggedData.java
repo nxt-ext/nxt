@@ -13,6 +13,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Map;
 
 public class TaggedData {
@@ -48,14 +49,27 @@ public class TaggedData {
         public void trim(int height) {
             if (Constants.ENABLE_PRUNING) {
                 try (Connection con = db.getConnection();
-                     PreparedStatement pstmtSelect = con.prepareStatement("SELECT * FROM " + table + " WHERE transaction_timestamp < ?");
-                     PreparedStatement pstmtDelete = con.prepareStatement("DELETE FROM " + table + " WHERE transaction_timestamp < ?")) {
+                     PreparedStatement pstmtSelect = con.prepareStatement("SELECT parsed_tags FROM tagged_data WHERE transaction_timestamp < ?");
+                     PreparedStatement pstmtDelete = con.prepareStatement("DELETE FROM tagged_data WHERE transaction_timestamp < ?")) {
                     int expiration = Nxt.getEpochTime() - Constants.MAX_PRUNABLE_LIFETIME;
                     pstmtSelect.setInt(1, expiration);
+                    Map<String,Integer> expiredTags = new HashMap<>();
                     try (ResultSet rs = pstmtSelect.executeQuery()) {
-
+                        while (rs.next()) {
+                            Object[] array = (Object[])rs.getArray("parsed_tags").getArray();
+                            for (Object tag : array) {
+                                Integer count = expiredTags.get(tag);
+                                if (count == null) {
+                                    expiredTags.put((String)tag, 1);
+                                } else {
+                                    expiredTags.put((String)tag, count + 1);
+                                }
+                            }
+                        }
                     }
-                    int deleted = pstmt.executeUpdate();
+                    Tag.delete(expiredTags);
+                    pstmtDelete.setInt(1, expiration);
+                    int deleted = pstmtDelete.executeUpdate();
                     if (deleted > 0) {
                         Logger.logDebugMessage("Deleted " + deleted + " expired prunable data from " + table);
                     }
@@ -122,18 +136,22 @@ public class TaggedData {
             }
         }
 
-        private static void delete(Map<String,Integer> tagCounts) {
-            for (Map.Entry<String,Integer> entry : tagCounts.entrySet()) {
-                Tag tag = tagTable.get(tagDbKeyFactory.newKey(entry.getKey()));
-                if (tag == null) {
-                    throw new IllegalStateException("Unknown tag " + entry.getKey());
+        private static void delete(Map<String,Integer> expiredTags) {
+            try (Connection con = Db.db.getConnection();
+                 PreparedStatement pstmt = con.prepareStatement("UPDATE data_tag SET tag_count = tag_count - ? WHERE tag = ?");
+                 PreparedStatement pstmtDelete = con.prepareStatement("DELETE FROM data_tag WHERE tag_count <= 0")) {
+                for (Map.Entry<String,Integer> entry : expiredTags.entrySet()) {
+                    pstmt.setInt(1, entry.getValue());
+                    pstmt.setString(2, entry.getKey());
+                    pstmt.executeUpdate();
+                    Logger.logDebugMessage("Reduced tag count for " + entry.getKey() + " by " + entry.getValue());
                 }
-                tag.count -= entry.getValue();
-                if (tag.count > 0) {
-                    tagTable.insert(tag);
-                } else {
-                    tagTable.delete(tag);
+                int deleted = pstmtDelete.executeUpdate();
+                if (deleted > 0) {
+                    Logger.logDebugMessage("Deleted " + deleted + " tags");
                 }
+            } catch (SQLException e) {
+                throw new RuntimeException(e.toString(), e);
             }
         }
 
@@ -253,7 +271,7 @@ public class TaggedData {
     }
 
     private void save(Connection con) throws SQLException {
-        try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO tagged_data (id, account_id, name, description, tags, parsed_tags"
+        try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO tagged_data (id, account_id, name, description, tags, parsed_tags, "
                 + "type, data, is_text, filename, block_timestamp, transaction_timestamp, height) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
             int i = 0;
             pstmt.setLong(++i, this.id);
@@ -322,11 +340,13 @@ public class TaggedData {
     }
 
     static void add(Transaction transaction, Attachment.TaggedDataUpload attachment) {
-        if (Nxt.getEpochTime() - transaction.getTimestamp() < Constants.MAX_PRUNABLE_LIFETIME
-                && taggedDataTable.get(taggedDataKeyFactory.newKey(transaction.getId())) == null) {
-            TaggedData taggedData = new TaggedData(transaction, attachment);
+        if (Nxt.getEpochTime() - transaction.getTimestamp() < Constants.MAX_PRUNABLE_LIFETIME) {
+            TaggedData taggedData = taggedDataTable.get(taggedDataKeyFactory.newKey(transaction.getId()));
+            if (taggedData == null) {
+                taggedData = new TaggedData(transaction, attachment);
+                taggedDataTable.insert(taggedData);
+            }
             Tag.add(taggedData);
-            taggedDataTable.insert(taggedData);
         }
     }
 

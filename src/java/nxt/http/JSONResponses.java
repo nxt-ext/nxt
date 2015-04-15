@@ -287,6 +287,14 @@ public final class JSONResponses {
         TOO_MANY_PHASING_VOTES = JSON.prepare(response);
     }
 
+    public static final JSONStreamAware HASHES_MISMATCH;
+    static {
+        JSONObject response = new JSONObject();
+        response.put("errorCode", 10);
+        response.put("errorDescription", "Hashes don't match. You should notify Jeff Garzik.");
+        HASHES_MISMATCH = JSON.prepare(response);
+    }
+
     static JSONStreamAware missing(String... paramNames) {
         JSONObject response = new JSONObject();
         response.put("errorCode", 3);

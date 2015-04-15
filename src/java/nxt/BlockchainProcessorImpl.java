@@ -520,7 +520,9 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 doTrimDerivedTables();
                 Db.db.commitTransaction();
             } catch (Exception e) {
+                Logger.logMessage(e.toString(), e);
                 Db.db.rollbackTransaction();
+                throw e;
             } finally {
                 Db.db.endTransaction();
             }
