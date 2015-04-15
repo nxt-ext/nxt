@@ -447,6 +447,7 @@ final class TransactionImpl implements Transaction {
 
     @Override
     public Attachment.AbstractAttachment getAttachment() {
+        attachment.loadPrunable(this);
         return attachment;
     }
 
