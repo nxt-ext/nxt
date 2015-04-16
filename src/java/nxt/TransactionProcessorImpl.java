@@ -243,22 +243,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
     private TransactionProcessorImpl() {
         ThreadPool.scheduleThread("ProcessTransactions", processTransactionsThread, 5);
         ThreadPool.scheduleThread("RemoveUnconfirmedTransactions", removeUnconfirmedTransactionsThread, 1);
-        ThreadPool.runAfterStart(new Runnable() {
-            @Override
-            public void run() {
-                synchronized (BlockchainImpl.getInstance()) {
-                    try (DbIterator<UnconfirmedTransaction> oldNonBroadcastedTransactions = getAllUnconfirmedTransactions()) {
-                        for (UnconfirmedTransaction unconfirmedTransaction : oldNonBroadcastedTransactions) {
-                            if (unconfirmedTransaction.getTransaction().isUnconfirmedDuplicate(unconfirmedDuplicates)) {
-                                Logger.logDebugMessage("Skipping duplicate unconfirmed transaction " + unconfirmedTransaction.getTransaction().getJSONObject().toString());
-                            } else if (enableTransactionRebroadcasting) {
-                                broadcastedTransactions.add(unconfirmedTransaction.getTransaction());
-                            }
-                        }
-                    }
-                }
-            }
-        });
+        ThreadPool.runAfterStart(this::rebroadcastAllUnconfirmedTransactions);
         if (enableTransactionRebroadcasting) {
             ThreadPool.scheduleThread("RebroadcastTransactions", rebroadcastTransactionsThread, 60);
         }
@@ -378,6 +363,21 @@ final class TransactionProcessorImpl implements TransactionProcessor {
             unconfirmedTransactionTable.truncate();
             unconfirmedDuplicates.clear();
             transactionListeners.notify(removed, Event.REMOVED_UNCONFIRMED_TRANSACTIONS);
+        }
+    }
+
+    @Override
+    public void rebroadcastAllUnconfirmedTransactions() {
+        synchronized (BlockchainImpl.getInstance()) {
+            try (DbIterator<UnconfirmedTransaction> oldNonBroadcastedTransactions = getAllUnconfirmedTransactions()) {
+                for (UnconfirmedTransaction unconfirmedTransaction : oldNonBroadcastedTransactions) {
+                    if (unconfirmedTransaction.getTransaction().isUnconfirmedDuplicate(unconfirmedDuplicates)) {
+                        Logger.logDebugMessage("Skipping duplicate unconfirmed transaction " + unconfirmedTransaction.getTransaction().getJSONObject().toString());
+                    } else if (enableTransactionRebroadcasting) {
+                        broadcastedTransactions.add(unconfirmedTransaction.getTransaction());
+                    }
+                }
+            }
         }
     }
 

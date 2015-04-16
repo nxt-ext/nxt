@@ -652,7 +652,9 @@ final class JSONData {
         json.put("isText", prunableMessage.isText());
         json.put("isCompressed", prunableMessage.isCompressed());
         putAccount(json, "sender", prunableMessage.getSenderId());
-        putAccount(json, "recipient", prunableMessage.getRecipientId());
+        if (prunableMessage.getRecipientId() != 0) {
+            putAccount(json, "recipient", prunableMessage.getRecipientId());
+        }
         json.put("transactionTimestamp", prunableMessage.getTransactionTimestamp());
         json.put("blockTimestamp", prunableMessage.getBlockTimestamp());
         EncryptedData encryptedData = prunableMessage.getEncryptedData();

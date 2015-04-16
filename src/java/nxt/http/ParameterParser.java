@@ -390,13 +390,11 @@ final class ParameterParser {
                 lastIndex = Integer.MAX_VALUE;
             }
         } catch (NumberFormatException ignored) {}
-        try {
-            API.verifyPassword(req);
-            return lastIndex;
-        } catch (ParameterException e) {
+        if (!API.checkPassword(req)) {
             int firstIndex = Math.min(getFirstIndex(req), Integer.MAX_VALUE - API.maxRecords + 1);
-            return Math.min(lastIndex, firstIndex + API.maxRecords - 1);
+            lastIndex = Math.min(lastIndex, firstIndex + API.maxRecords - 1);
         }
+        return lastIndex;
     }
 
     static int getNumberOfConfirmations(HttpServletRequest req) throws ParameterException {
