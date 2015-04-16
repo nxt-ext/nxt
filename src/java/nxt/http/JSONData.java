@@ -649,7 +649,6 @@ final class JSONData {
         JSONObject json = new JSONObject();
         json.put("transaction", Long.toUnsignedString(prunableMessage.getId()));
         json.put("isText", prunableMessage.isText());
-        json.put("isCompressed", prunableMessage.isCompressed());
         putAccount(json, "sender", prunableMessage.getSenderId());
         if (prunableMessage.getRecipientId() != 0) {
             putAccount(json, "recipient", prunableMessage.getRecipientId());
@@ -671,6 +670,7 @@ final class JSONData {
                     }
                 }
             }
+            json.put("isCompressed", prunableMessage.isCompressed());
         } else {
             json.put("message", prunableMessage.toString());
         }
