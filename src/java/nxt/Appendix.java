@@ -842,6 +842,11 @@ public interface Appendix {
             }
         }
 
+        @Override
+        boolean isPhasable() {
+            return false;
+        }
+
         public byte[] getPublicKey() {
             return publicKey;
         }
