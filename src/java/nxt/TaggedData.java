@@ -392,13 +392,15 @@ public class TaggedData {
     }
 
     static void add(Transaction transaction, Attachment.TaggedDataUpload attachment) {
-        if (Nxt.getEpochTime() - transaction.getTimestamp() < Constants.MIN_PRUNABLE_LIFETIME) {
+        if (Nxt.getEpochTime() - transaction.getTimestamp() < Constants.MAX_PRUNABLE_LIFETIME) {
             TaggedData taggedData = taggedDataTable.get(taggedDataKeyFactory.newKey(transaction.getId()));
-            if (taggedData == null) {
+            if (taggedData == null && attachment.getData() != null) {
                 taggedData = new TaggedData(transaction, attachment);
                 taggedDataTable.insert(taggedData);
             }
-            Tag.add(taggedData);
+            if (taggedData != null) {
+                Tag.add(taggedData);
+            }
         }
         Timestamp timestamp = new Timestamp(transaction.getId(), transaction.getTimestamp());
         timestampTable.insert(timestamp);
@@ -408,16 +410,18 @@ public class TaggedData {
         Timestamp timestamp = timestampTable.get(timestampKeyFactory.newKey(attachment.getTaggedDataId()));
         timestamp.timestamp += Math.max(Constants.MIN_PRUNABLE_LIFETIME, transaction.getTimestamp() - timestamp.timestamp);
         timestampTable.insert(timestamp);
-        if (Nxt.getEpochTime() - transaction.getTimestamp() < Constants.MIN_PRUNABLE_LIFETIME) {
+        if (Nxt.getEpochTime() - transaction.getTimestamp() < Constants.MAX_PRUNABLE_LIFETIME) {
             TaggedData taggedData = taggedDataTable.get(taggedDataKeyFactory.newKey(attachment.getTaggedDataId()));
-            if (taggedData == null) {
+            if (taggedData == null && attachment.getData() != null) {
                 TransactionImpl uploadTransaction = TransactionDb.findTransaction(attachment.getTaggedDataId());
                 taggedData = new TaggedData(uploadTransaction, attachment);
                 Tag.add(taggedData);
             }
-            taggedData.transactionTimestamp = timestamp.timestamp;
-            taggedData.blockTimestamp = Nxt.getBlockchain().getLastBlockTimestamp();
-            taggedDataTable.insert(taggedData);
+            if (taggedData != null) {
+                taggedData.transactionTimestamp = timestamp.timestamp;
+                taggedData.blockTimestamp = Nxt.getBlockchain().getLastBlockTimestamp();
+                taggedDataTable.insert(taggedData);
+            }
         }
     }
 
