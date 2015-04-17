@@ -746,6 +746,13 @@ class NxtDbVersion extends DbVersion {
             case 314:
                 apply("CREATE INDEX IF NOT EXISTS data_tag_count_height_idx ON data_tag (tag_count DESC, height DESC)");
             case 315:
+                apply("CREATE TABLE IF NOT EXISTS tagged_data_timestamp (db_id IDENTITY, id BIGINT NOT NULL, timestamp INT NOT NULL, "
+                        + "height INT NOT NULL, latest BOOLEAN NOT NULL DEFAULT TRUE)");
+            case 316:
+                apply("CREATE UNIQUE INDEX IF NOT EXISTS tagged_data_timestamp_id_height_idx ON tagged_data_timestamp (id, height DESC)");
+            case 317:
+                apply("CREATE INDEX IF NOT EXISTS tagged_data_timestamp_height_idx ON tagged_data_timestamp (height)");
+            case 318:
                 return;
             default:
                 throw new RuntimeException("Blockchain database inconsistent with code, probably trying to run older code on newer database");

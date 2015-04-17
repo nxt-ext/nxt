@@ -77,6 +77,62 @@ public class TaggedData {
 
     };
 
+    private static final class Timestamp {
+
+        private final long id;
+        private final DbKey dbKey;
+        private int timestamp;
+
+        private Timestamp(long id, int timestamp) {
+            this.id = id;
+            this.dbKey = timestampKeyFactory.newKey(this.id);
+            this.timestamp = timestamp;
+        }
+
+        private Timestamp(ResultSet rs) throws SQLException {
+            this.id = rs.getLong("id");
+            this.dbKey = timestampKeyFactory.newKey(this.id);
+            this.timestamp = rs.getInt("timestamp");
+        }
+
+        private void save(Connection con) throws SQLException {
+            try (PreparedStatement pstmt = con.prepareStatement("MERGE INTO timestamp (id, timestamp, height, latest) "
+                    + "KEY (id, height) VALUES (?, ?, ?, TRUE)")) {
+                int i = 0;
+                pstmt.setLong(++i, this.id);
+                pstmt.setInt(++i, this.timestamp);
+                pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
+                pstmt.executeUpdate();
+            }
+        }
+
+    }
+
+
+    public static final DbKey.LongKeyFactory<Timestamp> timestampKeyFactory = new DbKey.LongKeyFactory<Timestamp>("id") {
+
+        @Override
+        public DbKey newKey(Timestamp timestamp) {
+            return timestamp.dbKey;
+        }
+
+    };
+
+    public static final VersionedEntityDbTable<Timestamp> timestampTable = new VersionedEntityDbTable<Timestamp>(
+            "tagged_data_timestamp", timestampKeyFactory) {
+
+        @Override
+        protected Timestamp load(Connection con, ResultSet rs) throws SQLException {
+            return new Timestamp(rs);
+        }
+
+        @Override
+        protected void save(Connection con, Timestamp timestamp) throws SQLException {
+            timestamp.save(con);
+        }
+
+    };
+
     public static final class Tag {
 
         private static final DbKey.StringKeyFactory<Tag> tagDbKeyFactory = new DbKey.StringKeyFactory<Tag>("tag") {
@@ -232,7 +288,7 @@ public class TaggedData {
     private int transactionTimestamp;
     private int blockTimestamp;
 
-    private TaggedData(Transaction transaction, Attachment.TaggedDataAttachment attachment) {
+    public TaggedData(Transaction transaction, Attachment.TaggedDataAttachment attachment) {
         this.id = transaction.getId();
         this.dbKey = taggedDataKeyFactory.newKey(this.id);
         this.accountId = transaction.getSenderId();
@@ -336,7 +392,7 @@ public class TaggedData {
     }
 
     static void add(Transaction transaction, Attachment.TaggedDataUpload attachment) {
-        if (Nxt.getEpochTime() - transaction.getTimestamp() < Constants.MAX_PRUNABLE_LIFETIME) {
+        if (Nxt.getEpochTime() - transaction.getTimestamp() < Constants.MIN_PRUNABLE_LIFETIME) {
             TaggedData taggedData = taggedDataTable.get(taggedDataKeyFactory.newKey(transaction.getId()));
             if (taggedData == null) {
                 taggedData = new TaggedData(transaction, attachment);
@@ -344,20 +400,24 @@ public class TaggedData {
             }
             Tag.add(taggedData);
         }
+        Timestamp timestamp = new Timestamp(transaction.getId(), transaction.getTimestamp());
+        timestampTable.insert(timestamp);
     }
 
     static void extend(Transaction transaction, Attachment.TaggedDataExtend attachment) {
-        if (Nxt.getEpochTime() - transaction.getTimestamp() < Constants.MAX_PRUNABLE_LIFETIME) {
+        Timestamp timestamp = timestampTable.get(timestampKeyFactory.newKey(attachment.getTaggedDataId()));
+        timestamp.timestamp += Math.max(Constants.MIN_PRUNABLE_LIFETIME, transaction.getTimestamp() - timestamp.timestamp);
+        timestampTable.insert(timestamp);
+        if (Nxt.getEpochTime() - transaction.getTimestamp() < Constants.MIN_PRUNABLE_LIFETIME) {
             TaggedData taggedData = taggedDataTable.get(taggedDataKeyFactory.newKey(attachment.getTaggedDataId()));
             if (taggedData == null) {
-                taggedData = new TaggedData(transaction, attachment);
-                taggedDataTable.insert(taggedData);
+                TransactionImpl uploadTransaction = TransactionDb.findTransaction(attachment.getTaggedDataId());
+                taggedData = new TaggedData(uploadTransaction, attachment);
                 Tag.add(taggedData);
-            } else {
-                taggedData.transactionTimestamp = transaction.getTimestamp();
-                taggedData.blockTimestamp = Nxt.getBlockchain().getLastBlockTimestamp();
-                taggedDataTable.insert(taggedData);
             }
+            taggedData.transactionTimestamp = timestamp.timestamp;
+            taggedData.blockTimestamp = Nxt.getBlockchain().getLastBlockTimestamp();
+            taggedDataTable.insert(taggedData);
         }
     }
 

@@ -2393,10 +2393,6 @@ public abstract class TransactionType {
                     throw new NxtException.NotValidException("Transaction " + Long.toUnsignedString(attachment.getTaggedDataId())
                             + " is not a tagged data upload");
                 }
-                if (transaction.getTimestamp() < uploadTransaction.getTimestamp()) {
-                    throw new NxtException.NotValidException("Extend transaction timestamp " + transaction.getTimestamp()
-                            + " is before the upload timestamp " + uploadTransaction.getTimestamp());
-                }
                 if (attachment.getData() != null) {
                     Attachment.TaggedDataUpload taggedDataUpload = (Attachment.TaggedDataUpload)uploadTransaction.getAttachment();
                     if (!Arrays.equals(attachment.getHash(), taggedDataUpload.getHash())) {
