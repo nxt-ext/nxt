@@ -27,7 +27,7 @@ public interface Appendix {
     interface Prunable {
         byte[] getHash();
         default boolean shouldLoadPrunable(Transaction transaction) {
-            return Constants.INCLUDE_EXPIRED_PRUNABLES || Nxt.getEpochTime() - transaction.getTimestamp() < Constants.MIN_PRUNABLE_LIFETIME;
+            return Constants.INCLUDE_EXPIRED_PRUNABLE || Nxt.getEpochTime() - transaction.getTimestamp() < Constants.MIN_PRUNABLE_LIFETIME;
         }
     }
 

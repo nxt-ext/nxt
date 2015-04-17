@@ -46,7 +46,7 @@ public final class Constants {
         ENABLE_PRUNING = maxPrunableLifetime >= 0;
         MAX_PRUNABLE_LIFETIME = Math.max(maxPrunableLifetime, MIN_PRUNABLE_LIFETIME);
     }
-    public static final boolean INCLUDE_EXPIRED_PRUNABLES = Nxt.getBooleanProperty("nxt.includeExpiredPrunables");
+    public static final boolean INCLUDE_EXPIRED_PRUNABLE = Nxt.getBooleanProperty("nxt.includeExpiredPrunable");
 
     public static final int MAX_ACCOUNT_NAME_LENGTH = 100;
     public static final int MAX_ACCOUNT_DESCRIPTION_LENGTH = 1000;
