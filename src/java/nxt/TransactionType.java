@@ -53,6 +53,7 @@ public abstract class TransactionType {
     private static final byte SUBTYPE_ACCOUNT_CONTROL_EFFECTIVE_BALANCE_LEASING = 0;
 
     private static final byte SUBTYPE_DATA_TAGGED_DATA_UPLOAD = 0;
+    private static final byte SUBTYPE_DATA_TAGGED_DATA_EXTEND = 1;
 
     public static TransactionType findTransactionType(byte type, byte subtype) {
         switch (type) {
@@ -141,6 +142,10 @@ public abstract class TransactionType {
                 switch (subtype) {
                     case SUBTYPE_DATA_TAGGED_DATA_UPLOAD:
                         return Data.TAGGED_DATA_UPLOAD;
+                    case SUBTYPE_DATA_TAGGED_DATA_EXTEND:
+                        return Data.TAGGED_DATA_EXTEND;
+                    default:
+                        return null;
                 }
             default:
                 return null;
@@ -2254,12 +2259,24 @@ public abstract class TransactionType {
 
     public static abstract class Data extends TransactionType {
 
+        private static final Fee TAGGED_DATA_FEE = new Fee.SizeBasedFee(Constants.ONE_NXT, Constants.ONE_NXT/10) {
+            @Override
+            public int getSize(TransactionImpl transaction, Appendix appendix) {
+                return appendix.getFullSize();
+            }
+        };
+
         private Data() {
         }
 
         @Override
         public final byte getType() {
             return TransactionType.TYPE_DATA;
+        }
+
+        @Override
+        public final Fee getBaselineFee(Transaction transaction) {
+            return TAGGED_DATA_FEE;
         }
 
         @Override
@@ -2283,21 +2300,9 @@ public abstract class TransactionType {
 
         public static final TransactionType TAGGED_DATA_UPLOAD = new Data() {
 
-            private final Fee TAGGED_DATA_FEE = new Fee.SizeBasedFee(Constants.ONE_NXT, Constants.ONE_NXT/10) {
-                @Override
-                public int getSize(TransactionImpl transaction, Appendix appendix) {
-                    return appendix.getFullSize();
-                }
-            };
-
             @Override
             public byte getSubtype() {
                 return SUBTYPE_DATA_TAGGED_DATA_UPLOAD;
-            }
-
-            @Override
-            public Fee getBaselineFee(Transaction transaction) {
-                return TAGGED_DATA_FEE;
             }
 
             @Override
@@ -2350,6 +2355,66 @@ public abstract class TransactionType {
             @Override
             public String getName() {
                 return "TaggedDataUpload";
+            }
+
+        };
+
+        public static final TransactionType TAGGED_DATA_EXTEND = new Data() {
+
+            @Override
+            public byte getSubtype() {
+                return SUBTYPE_DATA_TAGGED_DATA_EXTEND;
+            }
+
+            @Override
+            Attachment.TaggedDataExtend parseAttachment(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
+                return new Attachment.TaggedDataExtend(buffer, transactionVersion);
+            }
+
+            @Override
+            Attachment.TaggedDataExtend parseAttachment(JSONObject attachmentData) throws NxtException.NotValidException {
+                return new Attachment.TaggedDataExtend(attachmentData);
+            }
+
+            @Override
+            void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
+                if (Nxt.getBlockchain().getHeight() < Constants.VOTING_SYSTEM_BLOCK) {
+                    throw new NxtException.NotYetEnabledException("Prunable Tagged Data not yet enabled");
+                }
+                Attachment.TaggedDataExtend attachment = (Attachment.TaggedDataExtend) transaction.getAttachment();
+                if (attachment.getData() == null && Nxt.getEpochTime() - transaction.getTimestamp() < Constants.MIN_PRUNABLE_LIFETIME) {
+                    throw new NxtException.NotCurrentlyValidException("Data has been pruned prematurely");
+                }
+                TransactionImpl uploadTransaction = TransactionDb.findTransaction(attachment.getTaggedDataId(), Nxt.getBlockchain().getHeight());
+                if (uploadTransaction == null) {
+                    throw new NxtException.NotCurrentlyValidException("No such tagged data upload " + Long.toUnsignedString(attachment.getTaggedDataId()));
+                }
+                if (uploadTransaction.getType() != TAGGED_DATA_UPLOAD) {
+                    throw new NxtException.NotValidException("Transaction " + Long.toUnsignedString(attachment.getTaggedDataId())
+                            + " is not a tagged data upload");
+                }
+                if (transaction.getTimestamp() < uploadTransaction.getTimestamp()) {
+                    throw new NxtException.NotValidException("Extend transaction timestamp " + transaction.getTimestamp()
+                            + " is before the upload timestamp " + uploadTransaction.getTimestamp());
+                }
+                if (attachment.getData() != null) {
+                    Attachment.TaggedDataUpload taggedDataUpload = (Attachment.TaggedDataUpload)uploadTransaction.getAttachment();
+                    if (!Arrays.equals(attachment.getHash(), taggedDataUpload.getHash())) {
+                        throw new NxtException.NotValidException("Hashes don't match! Extend hash: " + Convert.toHexString(attachment.getHash())
+                                + " upload hash " + Convert.toHexString(taggedDataUpload.getHash()));
+                    }
+                }
+            }
+
+            @Override
+            void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
+                Attachment.TaggedDataExtend attachment = (Attachment.TaggedDataExtend) transaction.getAttachment();
+                TaggedData.extend(transaction, attachment);
+            }
+
+            @Override
+            public String getName() {
+                return "TaggedDataExtend";
             }
 
         };

@@ -18,9 +18,17 @@ public abstract class PrunableDbTable<T> extends PersistentDbTable<T> {
         super(table, dbKeyFactory, fullTextSearchColumns);
     }
 
+    PrunableDbTable(String table, DbKey.Factory<T> dbKeyFactory, boolean multiversion, String fullTextSearchColumns) {
+        super(table, dbKeyFactory, multiversion, fullTextSearchColumns);
+    }
+
     @Override
-    public void trim(int height) {
+    public final void trim(int height) {
+        prune();
         super.trim(height);
+    }
+
+    protected void prune() {
         if (Constants.ENABLE_PRUNING) {
             try (Connection con = db.getConnection();
                  PreparedStatement pstmt = con.prepareStatement("DELETE FROM " + table + " WHERE transaction_timestamp < ?")) {

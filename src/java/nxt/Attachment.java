@@ -2418,15 +2418,7 @@ public interface Attachment extends Appendix {
 
     }
 
-
-    final class TaggedDataUpload extends AbstractAttachment implements Prunable {
-
-        static TaggedDataUpload parse(JSONObject attachmentData) {
-            if (!Appendix.hasAppendix(TransactionType.Data.TAGGED_DATA_UPLOAD.getName(), attachmentData)) {
-                return null;
-            }
-            return new TaggedDataUpload(attachmentData);
-        }
+    abstract class TaggedDataAttachment extends AbstractAttachment implements Prunable {
 
         private final String name;
         private final String description;
@@ -2435,14 +2427,10 @@ public interface Attachment extends Appendix {
         private final boolean isText;
         private final String filename;
         private final byte[] data;
-        private final byte[] hash;
         private volatile TaggedData taggedData;
 
-
-        TaggedDataUpload(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
+        private TaggedDataAttachment(ByteBuffer buffer, byte transactionVersion) {
             super(buffer, transactionVersion);
-            this.hash = new byte[32];
-            buffer.get(hash);
             this.name = null;
             this.description = null;
             this.tags = null;
@@ -2452,21 +2440,9 @@ public interface Attachment extends Appendix {
             this.data = null;
         }
 
-        TaggedDataUpload(JSONObject attachmentData) {
-            super(attachmentData);
-            String hashString = Convert.emptyToNull((String)attachmentData.get("hash"));
+        private TaggedDataAttachment(JSONObject attachmentData) {
             String dataJSON = (String) attachmentData.get("data");
-            if (hashString != null && dataJSON == null) {
-                this.hash = Convert.parseHexString(hashString);
-                this.name = null;
-                this.description = null;
-                this.tags = null;
-                this.type = null;
-                this.isText = false;
-                this.filename = null;
-                this.data = null;
-            } else {
-                this.hash = null;
+            if (dataJSON != null) {
                 this.name = (String) attachmentData.get("name");
                 this.description = (String) attachmentData.get("description");
                 this.tags = (String) attachmentData.get("tags");
@@ -2474,10 +2450,19 @@ public interface Attachment extends Appendix {
                 this.isText = Boolean.TRUE.equals(attachmentData.get("isText"));
                 this.data = isText ? Convert.toBytes(dataJSON) : Convert.parseHexString(dataJSON);
                 this.filename = (String) attachmentData.get("filename");
+            } else {
+                this.name = null;
+                this.description = null;
+                this.tags = null;
+                this.type = null;
+                this.isText = false;
+                this.filename = null;
+                this.data = null;
             }
+
         }
 
-        public TaggedDataUpload(String name, String description, String tags, String type, boolean isText, String filename, byte[] data) {
+        private TaggedDataAttachment(String name, String description, String tags, String type, boolean isText, String filename, byte[] data) {
             this.name = name;
             this.description = description;
             this.tags = tags;
@@ -2485,26 +2470,15 @@ public interface Attachment extends Appendix {
             this.isText = isText;
             this.data = data;
             this.filename = filename;
-            this.hash = null;
         }
 
         @Override
-        int getMySize() {
-            return 32;
-        }
-
-        @Override
-        int getMyFullSize() {
+        final int getMyFullSize() {
             if (data == null) {
                 return 0;
             }
             return Convert.toBytes(name).length + Convert.toBytes(description).length + Convert.toBytes(type).length
                     + Convert.toBytes(tags).length + Convert.toBytes(filename).length + data.length;
-        }
-
-        @Override
-        void putMyBytes(ByteBuffer buffer) {
-            buffer.put(getHash());
         }
 
         @Override
@@ -2526,67 +2500,12 @@ public interface Attachment extends Appendix {
                 attachment.put("filename", filename);
                 attachment.put("data", isText ? Convert.toString(data) : Convert.toHexString(data));
             }
-            attachment.put("hash", Convert.toHexString(getHash()));
-        }
-
-        @Override
-        public TransactionType getTransactionType() {
-            return TransactionType.Data.TAGGED_DATA_UPLOAD;
-        }
-
-        public String getName() {
-            if (taggedData != null) {
-                return taggedData.getName();
-            }
-            return name;
-        }
-
-        public String getDescription() {
-            if (taggedData != null) {
-                return taggedData.getDescription();
-            }
-            return description;
-        }
-
-        public String getTags() {
-            if (taggedData != null) {
-                return taggedData.getTags();
-            }
-            return tags;
-        }
-
-        public String getType() {
-            if (taggedData != null) {
-                return taggedData.getType();
-            }
-            return type;
-        }
-
-        public boolean isText() {
-            if (taggedData != null) {
-                return taggedData.isText();
-            }
-            return isText;
-        }
-
-        public String getFilename() {
-            if (taggedData != null) {
-                return taggedData.getFilename();
-            }
-            return filename;
-        }
-
-        public byte[] getData() {
-            if (taggedData != null) {
-                return taggedData.getData();
-            }
-            return data;
         }
 
         @Override
         public byte[] getHash() {
-            if (hash != null) {
-                return hash;
+            if (data == null) {
+                return null;
             }
             MessageDigest digest = Crypto.sha256();
             digest.update(Convert.toBytes(name));
@@ -2599,19 +2518,209 @@ public interface Attachment extends Appendix {
             return digest.digest();
         }
 
-        @Override
-        void loadPrunable(Transaction transaction) {
-            if (data == null && taggedData == null && shouldLoadPrunable(transaction)) {
-                taggedData = TaggedData.getData(transaction.getId());
+        public final String getName() {
+            if (taggedData != null) {
+                return taggedData.getName();
             }
+            return name;
+        }
+
+        public final String getDescription() {
+            if (taggedData != null) {
+                return taggedData.getDescription();
+            }
+            return description;
+        }
+
+        public final String getTags() {
+            if (taggedData != null) {
+                return taggedData.getTags();
+            }
+            return tags;
+        }
+
+        public final String getType() {
+            if (taggedData != null) {
+                return taggedData.getType();
+            }
+            return type;
+        }
+
+        public final boolean isText() {
+            if (taggedData != null) {
+                return taggedData.isText();
+            }
+            return isText;
+        }
+
+        public final String getFilename() {
+            if (taggedData != null) {
+                return taggedData.getFilename();
+            }
+            return filename;
+        }
+
+        public final byte[] getData() {
+            if (taggedData != null) {
+                return taggedData.getData();
+            }
+            return data;
         }
 
         @Override
-        boolean isPhasable() {
+        final boolean isPhasable() {
             return false;
+        }
+
+        @Override
+        void loadPrunable(Transaction transaction) {
+            if (data == null && taggedData == null && shouldLoadPrunable(transaction)) {
+                taggedData = TaggedData.getData(getTaggedDataId(transaction));
+            }
+        }
+
+        abstract long getTaggedDataId(Transaction transaction);
+
+    }
+
+    final class TaggedDataUpload extends TaggedDataAttachment {
+
+        static TaggedDataUpload parse(JSONObject attachmentData) {
+            if (!Appendix.hasAppendix(TransactionType.Data.TAGGED_DATA_UPLOAD.getName(), attachmentData)) {
+                return null;
+            }
+            return new TaggedDataUpload(attachmentData);
+        }
+
+        private final byte[] hash;
+
+        TaggedDataUpload(ByteBuffer buffer, byte transactionVersion) {
+            super(buffer, transactionVersion);
+            this.hash = new byte[32];
+            buffer.get(hash);
+        }
+
+        TaggedDataUpload(JSONObject attachmentData) {
+            super(attachmentData);
+            String dataJSON = (String) attachmentData.get("data");
+            if (dataJSON == null) {
+                this.hash = Convert.parseHexString(Convert.emptyToNull((String)attachmentData.get("hash")));
+            } else {
+                this.hash = null;
+            }
+        }
+
+        public TaggedDataUpload(String name, String description, String tags, String type, boolean isText, String filename, byte[] data) {
+            super(name, description, tags, type, isText, filename, data);
+            this.hash = null;
+        }
+
+        @Override
+        int getMySize() {
+            return 32;
+        }
+
+        @Override
+        void putMyBytes(ByteBuffer buffer) {
+            buffer.put(getHash());
+        }
+
+        @Override
+        void putMyJSON(JSONObject attachment) {
+            super.putMyJSON(attachment);
+            attachment.put("hash", Convert.toHexString(getHash()));
+        }
+
+        @Override
+        public TransactionType getTransactionType() {
+            return TransactionType.Data.TAGGED_DATA_UPLOAD;
+        }
+
+        @Override
+        public byte[] getHash() {
+            if (hash != null) {
+                return hash;
+            }
+            return super.getHash();
+        }
+
+        @Override
+        long getTaggedDataId(Transaction transaction) {
+            return transaction.getId();
         }
 
     }
 
+    final class TaggedDataExtend extends TaggedDataAttachment {
+
+        static TaggedDataExtend parse(JSONObject attachmentData) {
+            if (!Appendix.hasAppendix(TransactionType.Data.TAGGED_DATA_EXTEND.getName(), attachmentData)) {
+                return null;
+            }
+            return new TaggedDataExtend(attachmentData);
+        }
+
+        private volatile byte[] hash;
+        private final long taggedDataId;
+
+        TaggedDataExtend(ByteBuffer buffer, byte transactionVersion) {
+            super(buffer, transactionVersion);
+            this.taggedDataId = buffer.getLong();
+        }
+
+        TaggedDataExtend(JSONObject attachmentData) {
+            super(attachmentData);
+            this.taggedDataId = Convert.parseLong(attachmentData.get("taggedDataId"));
+        }
+
+        public TaggedDataExtend(TaggedData taggedData) {
+            super(taggedData.getName(), taggedData.getDescription(), taggedData.getTags(), taggedData.getType(),
+                    taggedData.isText(), taggedData.getFilename(), taggedData.getData());
+            this.taggedDataId = taggedData.getId();
+        }
+
+        @Override
+        int getMySize() {
+            return 8;
+        }
+
+        @Override
+        void putMyBytes(ByteBuffer buffer) {
+            buffer.putLong(taggedDataId);
+        }
+
+        @Override
+        void putMyJSON(JSONObject attachment) {
+            super.putMyJSON(attachment);
+            attachment.put("taggedDataId", Long.toUnsignedString(taggedDataId));
+        }
+
+        @Override
+        public TransactionType getTransactionType() {
+            return TransactionType.Data.TAGGED_DATA_UPLOAD;
+        }
+
+        public long getTaggedDataId() {
+            return taggedDataId;
+        }
+
+        @Override
+        public byte[] getHash() {
+            if (hash == null) {
+                hash = super.getHash();
+            }
+            if (hash == null) {
+                TaggedDataUpload taggedDataUpload = (TaggedDataUpload)TransactionDb.findTransaction(taggedDataId).getAttachment();
+                hash = taggedDataUpload.getHash();
+            }
+            return hash;
+        }
+
+        @Override
+        long getTaggedDataId(Transaction transaction) {
+            return taggedDataId;
+        }
+
+    }
 
 }

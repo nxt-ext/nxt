@@ -10,14 +10,7 @@ import nxt.util.Convert;
 import nxt.util.Listener;
 import nxt.util.Listeners;
 import nxt.util.Search;
-import org.apache.lucene.analysis.Analyzer;
-import org.apache.lucene.analysis.TokenStream;
-import org.apache.lucene.analysis.standard.StandardAnalyzer;
-import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
-import org.apache.lucene.util.Version;
 
-import java.io.IOException;
-import java.io.StringReader;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;

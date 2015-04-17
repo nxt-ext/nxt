@@ -89,9 +89,22 @@ public abstract class ValuesDbTable<T,V> extends DerivedDbTable {
     }
 
     @Override
-    public void rollback(int height) {
-        super.rollback(height);
-        db.getCache(table).clear();
+    public final void rollback(int height) {
+        if (multiversion) {
+            VersionedEntityDbTable.rollback(db, table, height, dbKeyFactory);
+        } else {
+            super.rollback(height);
+            db.getCache(table).clear();
+        }
+    }
+
+    @Override
+    public final void trim(int height) {
+        if (multiversion) {
+            VersionedEntityDbTable.trim(db, table, height, dbKeyFactory);
+        } else {
+            super.trim(height);
+        }
     }
 
     @Override

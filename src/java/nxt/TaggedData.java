@@ -3,8 +3,8 @@ package nxt;
 import nxt.db.DbClause;
 import nxt.db.DbIterator;
 import nxt.db.DbKey;
-import nxt.db.PrunableDbTable;
 import nxt.db.VersionedEntityDbTable;
+import nxt.db.VersionedPrunableDbTable;
 import nxt.util.Logger;
 import nxt.util.Search;
 
@@ -27,7 +27,7 @@ public class TaggedData {
 
     };
 
-    public static final PrunableDbTable<TaggedData> taggedDataTable = new PrunableDbTable<TaggedData>(
+    public static final VersionedPrunableDbTable<TaggedData> taggedDataTable = new VersionedPrunableDbTable<TaggedData>(
             "tagged_data", taggedDataKeyFactory, "name,description,tags") {
 
         @Override
@@ -42,15 +42,15 @@ public class TaggedData {
 
         @Override
         protected String defaultSort() {
-            return " ORDER BY block_timestamp DESC, db_id DESC ";
+            return " ORDER BY block_timestamp DESC, height DESC, db_id DESC ";
         }
 
         @Override
-        public void trim(int height) {
+        protected void prune() {
             if (Constants.ENABLE_PRUNING) {
                 try (Connection con = db.getConnection();
-                     PreparedStatement pstmtSelect = con.prepareStatement("SELECT parsed_tags FROM tagged_data WHERE transaction_timestamp < ?");
-                     PreparedStatement pstmtDelete = con.prepareStatement("DELETE FROM tagged_data WHERE transaction_timestamp < ?")) {
+                     PreparedStatement pstmtSelect = con.prepareStatement("SELECT parsed_tags "
+                             + "FROM tagged_data WHERE transaction_timestamp < ? AND latest = TRUE ")) {
                     int expiration = Nxt.getEpochTime() - Constants.MAX_PRUNABLE_LIFETIME;
                     pstmtSelect.setInt(1, expiration);
                     Map<String,Integer> expiredTags = new HashMap<>();
@@ -68,19 +68,14 @@ public class TaggedData {
                         }
                     }
                     Tag.delete(expiredTags);
-                    pstmtDelete.setInt(1, expiration);
-                    int deleted = pstmtDelete.executeUpdate();
-                    if (deleted > 0) {
-                        Logger.logDebugMessage("Deleted " + deleted + " expired prunable data from " + table);
-                    }
                 } catch (SQLException e) {
                     throw new RuntimeException(e.toString(), e);
                 }
             }
+            super.prune();
         }
 
     };
-
 
     public static final class Tag {
 
@@ -234,10 +229,10 @@ public class TaggedData {
     private final String type;
     private final boolean isText;
     private final String filename;
-    private final int transactionTimestamp;
-    private final int blockTimestamp;
+    private int transactionTimestamp;
+    private int blockTimestamp;
 
-    private TaggedData(Transaction transaction, Attachment.TaggedDataUpload attachment) {
+    private TaggedData(Transaction transaction, Attachment.TaggedDataAttachment attachment) {
         this.id = transaction.getId();
         this.dbKey = taggedDataKeyFactory.newKey(this.id);
         this.accountId = transaction.getSenderId();
@@ -271,8 +266,9 @@ public class TaggedData {
     }
 
     private void save(Connection con) throws SQLException {
-        try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO tagged_data (id, account_id, name, description, tags, parsed_tags, "
-                + "type, data, is_text, filename, block_timestamp, transaction_timestamp, height) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
+        try (PreparedStatement pstmt = con.prepareStatement("MERGE INTO tagged_data (id, account_id, name, description, tags, parsed_tags, "
+                + "type, data, is_text, filename, block_timestamp, transaction_timestamp, height, latest) "
+                + "KEY (id, height) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, TRUE)")) {
             int i = 0;
             pstmt.setLong(++i, this.id);
             pstmt.setLong(++i, this.accountId);
@@ -347,6 +343,21 @@ public class TaggedData {
                 taggedDataTable.insert(taggedData);
             }
             Tag.add(taggedData);
+        }
+    }
+
+    static void extend(Transaction transaction, Attachment.TaggedDataExtend attachment) {
+        if (Nxt.getEpochTime() - transaction.getTimestamp() < Constants.MAX_PRUNABLE_LIFETIME) {
+            TaggedData taggedData = taggedDataTable.get(taggedDataKeyFactory.newKey(attachment.getTaggedDataId()));
+            if (taggedData == null) {
+                taggedData = new TaggedData(transaction, attachment);
+                taggedDataTable.insert(taggedData);
+                Tag.add(taggedData);
+            } else {
+                taggedData.transactionTimestamp = transaction.getTimestamp();
+                taggedData.blockTimestamp = Nxt.getBlockchain().getLastBlockTimestamp();
+                taggedDataTable.insert(taggedData);
+            }
         }
     }
 
