@@ -77,7 +77,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                 pstmt.setInt(1, height);
                 try (ResultSet rs = pstmt.executeQuery()) {
                     while (rs.next()) {
-                        lostTransactions.add(load(con, rs));
+                        waitingTransactions.add(load(con, rs));
                     }
                 }
             } catch (SQLException e) {
@@ -97,12 +97,9 @@ final class TransactionProcessorImpl implements TransactionProcessor {
     private final Set<TransactionImpl> broadcastedTransactions = Collections.newSetFromMap(new ConcurrentHashMap<>());
     private final Listeners<List<? extends Transaction>,Event> transactionListeners = new Listeners<>();
 
-    private final PriorityQueue<UnconfirmedTransaction> lostTransactions = new PriorityQueue<UnconfirmedTransaction>(
+    private final PriorityQueue<UnconfirmedTransaction> waitingTransactions = new PriorityQueue<UnconfirmedTransaction>(
             (UnconfirmedTransaction o1, UnconfirmedTransaction o2) -> {
                 int result;
-                if ((result = Boolean.compare(o2.isNotCurrentlyValid(), o1.isNotCurrentlyValid())) != 0) {
-                    return result;
-                }
                 if ((result = Integer.compare(o2.getHeight(), o1.getHeight())) != 0) {
                     return result;
                 }
@@ -214,7 +211,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
         public void run() {
             try {
                 try {
-                    processLostTransactions();
+                    processWaitingTransactions();
                     Peer peer = Peers.getAnyPeer(Peer.State.CONNECTED, true);
                     if (peer == null) {
                         return;
@@ -278,12 +275,12 @@ final class TransactionProcessorImpl implements TransactionProcessor {
     }
 
     @Override
-    public UnconfirmedTransaction[] getAllLostTransactions() {
+    public UnconfirmedTransaction[] getAllWaitingTransactions() {
         UnconfirmedTransaction[] transactions;
         synchronized (BlockchainImpl.getInstance()) {
-            transactions = lostTransactions.toArray(new UnconfirmedTransaction[lostTransactions.size()]);
+            transactions = waitingTransactions.toArray(new UnconfirmedTransaction[waitingTransactions.size()]);
         }
-        Arrays.sort(transactions, lostTransactions.comparator());
+        Arrays.sort(transactions, waitingTransactions.comparator());
         return transactions;
     }
 
@@ -350,7 +347,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                 Db.db.endTransaction();
             }
             unconfirmedDuplicates.clear();
-            lostTransactions.clear();
+            waitingTransactions.clear();
             transactionListeners.notify(removed, Event.REMOVED_UNCONFIRMED_TRANSACTIONS);
         }
     }
@@ -379,7 +376,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                     if (removed.size() < maxUnconfirmedTransactions) {
                         removed.add(unconfirmedTransaction.getTransaction());
                     }
-                    lostTransactions.add(unconfirmedTransaction);
+                    waitingTransactions.add(unconfirmedTransaction);
                 }
             }
             unconfirmedTransactionTable.truncate();
@@ -437,17 +434,17 @@ final class TransactionProcessorImpl implements TransactionProcessor {
         synchronized (BlockchainImpl.getInstance()) {
             for (TransactionImpl transaction : transactions) {
                 transaction.unsetBlock();
-                lostTransactions.add(new UnconfirmedTransaction(transaction, Math.min(currentTime, Convert.fromEpochTime(transaction.getTimestamp()))));
+                waitingTransactions.add(new UnconfirmedTransaction(transaction, Math.min(currentTime, Convert.fromEpochTime(transaction.getTimestamp()))));
             }
         }
     }
 
-    private void processLostTransactions() {
+    private void processWaitingTransactions() {
         synchronized (BlockchainImpl.getInstance()) {
-            if (lostTransactions.size() > 0) {
+            if (waitingTransactions.size() > 0) {
+                int currentTime = Nxt.getEpochTime();
                 List<Transaction> addedUnconfirmedTransactions = new ArrayList<>();
-                List<UnconfirmedTransaction> notCurrentlyValid = new ArrayList<>();
-                Iterator<UnconfirmedTransaction> iterator = lostTransactions.iterator();
+                Iterator<UnconfirmedTransaction> iterator = waitingTransactions.iterator();
                 while (iterator.hasNext()) {
                     UnconfirmedTransaction unconfirmedTransaction = iterator.next();
                     try {
@@ -457,16 +454,14 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                     } catch (NxtException.ExistingTransactionException e) {
                         iterator.remove();
                     } catch (NxtException.NotCurrentlyValidException e) {
-                        if (unconfirmedTransaction.getExpiration() >= Nxt.getEpochTime()) {
-                            unconfirmedTransaction.setNotCurrentlyValid();
-                            notCurrentlyValid.add(unconfirmedTransaction);
+                        if (unconfirmedTransaction.getExpiration() < currentTime
+                                || currentTime - Convert.toEpochTime(unconfirmedTransaction.getArrivalTimestamp()) > 3600) {
+                            iterator.remove();
                         }
-                        iterator.remove();
                     } catch (NxtException.ValidationException|RuntimeException e) {
                         iterator.remove();
                     }
                 }
-                lostTransactions.addAll(notCurrentlyValid);
                 if (addedUnconfirmedTransactions.size() > 0) {
                     transactionListeners.notify(addedUnconfirmedTransactions, Event.ADDED_UNCONFIRMED_TRANSACTIONS);
                 }

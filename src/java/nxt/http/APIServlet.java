@@ -247,7 +247,7 @@ public final class APIServlet extends HttpServlet {
         map.put("clearUnconfirmedTransactions", ClearUnconfirmedTransactions.instance);
         map.put("requeueUnconfirmedTransactions", RequeueUnconfirmedTransactions.instance);
         map.put("rebroadcastUnconfirmedTransactions", RebroadcastUnconfirmedTransactions.instance);
-        map.put("getAllLostTransactions", GetAllLostTransactions.instance);
+        map.put("getAllWaitingTransactions", GetAllWaitingTransactions.instance);
         map.put("getAllBroadcastedTransactions", GetAllBroadcastedTransactions.instance);
         map.put("fullReset", FullReset.instance);
         map.put("popOff", PopOff.instance);

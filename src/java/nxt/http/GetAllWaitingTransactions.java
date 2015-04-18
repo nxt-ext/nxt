@@ -8,11 +8,11 @@ import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
 
-public final class GetAllLostTransactions extends APIServlet.APIRequestHandler {
+public final class GetAllWaitingTransactions extends APIServlet.APIRequestHandler {
 
-    static final GetAllLostTransactions instance = new GetAllLostTransactions();
+    static final GetAllWaitingTransactions instance = new GetAllWaitingTransactions();
 
-    private GetAllLostTransactions() {
+    private GetAllWaitingTransactions() {
         super(new APITag[] {APITag.DEBUG});
     }
 
@@ -21,7 +21,7 @@ public final class GetAllLostTransactions extends APIServlet.APIRequestHandler {
         JSONObject response = new JSONObject();
         JSONArray jsonArray = new JSONArray();
         response.put("transactions", jsonArray);
-        Transaction[] transactions = Nxt.getTransactionProcessor().getAllLostTransactions();
+        Transaction[] transactions = Nxt.getTransactionProcessor().getAllWaitingTransactions();
         for (Transaction transaction : transactions) {
             jsonArray.add(JSONData.unconfirmedTransaction(transaction));
         }

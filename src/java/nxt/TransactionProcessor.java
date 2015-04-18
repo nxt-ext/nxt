@@ -20,7 +20,7 @@ public interface TransactionProcessor extends Observable<List<? extends Transact
 
     Transaction getUnconfirmedTransaction(long transactionId);
 
-    Transaction[] getAllLostTransactions();
+    Transaction[] getAllWaitingTransactions();
 
     Transaction[] getAllBroadcastedTransactions();
 
