@@ -21,6 +21,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -76,7 +77,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                 pstmt.setInt(1, height);
                 try (ResultSet rs = pstmt.executeQuery()) {
                     while (rs.next()) {
-                        lostTransactions.add(load(con, rs));
+                        waitingTransactions.add(load(con, rs));
                     }
                 }
             } catch (SQLException e) {
@@ -96,7 +97,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
     private final Set<TransactionImpl> broadcastedTransactions = Collections.newSetFromMap(new ConcurrentHashMap<>());
     private final Listeners<List<? extends Transaction>,Event> transactionListeners = new Listeners<>();
 
-    private final PriorityQueue<UnconfirmedTransaction> lostTransactions = new PriorityQueue<UnconfirmedTransaction>(
+    private final PriorityQueue<UnconfirmedTransaction> waitingTransactions = new PriorityQueue<UnconfirmedTransaction>(
             (UnconfirmedTransaction o1, UnconfirmedTransaction o2) -> {
                 int result;
                 if ((result = Integer.compare(o2.getHeight(), o1.getHeight())) != 0) {
@@ -175,7 +176,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                 List<Transaction> transactionList = new ArrayList<>();
                 int curTime = Nxt.getEpochTime();
                 for (TransactionImpl transaction : broadcastedTransactions) {
-                    if (TransactionDb.hasTransaction(transaction.getId()) || transaction.getExpiration() < curTime) {
+                    if (transaction.getExpiration() < curTime || TransactionDb.hasTransaction(transaction.getId())) {
                         broadcastedTransactions.remove(transaction);
                     } else if (transaction.getTimestamp() < curTime - 30) {
                         transactionList.add(transaction);
@@ -210,7 +211,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
         public void run() {
             try {
                 try {
-                    processLostTransactions();
+                    processWaitingTransactions();
                     Peer peer = Peers.getAnyPeer(Peer.State.CONNECTED, true);
                     if (peer == null) {
                         return;
@@ -274,6 +275,23 @@ final class TransactionProcessorImpl implements TransactionProcessor {
     }
 
     @Override
+    public UnconfirmedTransaction[] getAllWaitingTransactions() {
+        UnconfirmedTransaction[] transactions;
+        synchronized (BlockchainImpl.getInstance()) {
+            transactions = waitingTransactions.toArray(new UnconfirmedTransaction[waitingTransactions.size()]);
+        }
+        Arrays.sort(transactions, waitingTransactions.comparator());
+        return transactions;
+    }
+
+    @Override
+    public TransactionImpl[] getAllBroadcastedTransactions() {
+        synchronized (BlockchainImpl.getInstance()) {
+            return broadcastedTransactions.toArray(new TransactionImpl[broadcastedTransactions.size()]);
+        }
+    }
+
+    @Override
     public void broadcast(Transaction transaction) throws NxtException.ValidationException {
         synchronized (BlockchainImpl.getInstance()) {
             if (TransactionDb.hasTransaction(transaction.getId())) {
@@ -329,6 +347,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                 Db.db.endTransaction();
             }
             unconfirmedDuplicates.clear();
+            waitingTransactions.clear();
             transactionListeners.notify(removed, Event.REMOVED_UNCONFIRMED_TRANSACTIONS);
         }
     }
@@ -357,7 +376,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                     if (removed.size() < maxUnconfirmedTransactions) {
                         removed.add(unconfirmedTransaction.getTransaction());
                     }
-                    lostTransactions.add(unconfirmedTransaction);
+                    waitingTransactions.add(unconfirmedTransaction);
                 }
             }
             unconfirmedTransactionTable.truncate();
@@ -415,24 +434,28 @@ final class TransactionProcessorImpl implements TransactionProcessor {
         synchronized (BlockchainImpl.getInstance()) {
             for (TransactionImpl transaction : transactions) {
                 transaction.unsetBlock();
-                lostTransactions.add(new UnconfirmedTransaction(transaction, Math.min(currentTime, Convert.fromEpochTime(transaction.getTimestamp()))));
+                waitingTransactions.add(new UnconfirmedTransaction(transaction, Math.min(currentTime, Convert.fromEpochTime(transaction.getTimestamp()))));
             }
         }
     }
 
-    private void processLostTransactions() {
+    private void processWaitingTransactions() {
         synchronized (BlockchainImpl.getInstance()) {
-            if (lostTransactions.size() > 0) {
+            if (waitingTransactions.size() > 0) {
+                int currentTime = Nxt.getEpochTime();
                 List<Transaction> addedUnconfirmedTransactions = new ArrayList<>();
-                Iterator<UnconfirmedTransaction> iterator = lostTransactions.iterator();
+                Iterator<UnconfirmedTransaction> iterator = waitingTransactions.iterator();
                 while (iterator.hasNext()) {
                     UnconfirmedTransaction unconfirmedTransaction = iterator.next();
                     try {
                         processTransaction(unconfirmedTransaction);
                         iterator.remove();
                         addedUnconfirmedTransactions.add(unconfirmedTransaction.getTransaction());
-                    } catch (NxtException.NotCurrentlyValidException ignore) {
-                        if (unconfirmedTransaction.getExpiration() < Nxt.getEpochTime()) {
+                    } catch (NxtException.ExistingTransactionException e) {
+                        iterator.remove();
+                    } catch (NxtException.NotCurrentlyValidException e) {
+                        if (unconfirmedTransaction.getExpiration() < currentTime
+                                || currentTime - Convert.toEpochTime(unconfirmedTransaction.getArrivalTimestamp()) > 3600) {
                             iterator.remove();
                         }
                     } catch (NxtException.ValidationException|RuntimeException e) {
@@ -465,7 +488,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
             try {
                 TransactionImpl transaction = TransactionImpl.parseTransaction((JSONObject) transactionData);
                 receivedTransactions.add(transaction);
-                if (TransactionDb.hasTransaction(transaction.getId()) || unconfirmedTransactionTable.get(transaction.getDbKey()) != null) {
+                if (unconfirmedTransactionTable.get(transaction.getDbKey()) != null || TransactionDb.hasTransaction(transaction.getId())) {
                     continue;
                 }
                 transaction.validate();
@@ -517,8 +540,8 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                     throw new NxtException.NotCurrentlyValidException("Blockchain not ready to accept transactions");
                 }
 
-                if (TransactionDb.hasTransaction(transaction.getId()) || unconfirmedTransactionTable.get(transaction.getDbKey()) != null) {
-                    throw new NxtException.NotCurrentlyValidException("Transaction already processed");
+                if (unconfirmedTransactionTable.get(transaction.getDbKey()) != null || TransactionDb.hasTransaction(transaction.getId())) {
+                    throw new NxtException.ExistingTransactionException("Transaction already processed");
                 }
 
                 if (! transaction.verifySignature()) {

@@ -106,6 +106,10 @@ public final class Convert {
         return epochTime * 1000L + Constants.EPOCH_BEGINNING - 500L;
     }
 
+    public static int toEpochTime(long currentTime) {
+        return (int)((currentTime - Constants.EPOCH_BEGINNING + 500) / 1000);
+    }
+
     public static String emptyToNull(String s) {
         return s == null || s.length() == 0 ? null : s;
     }
