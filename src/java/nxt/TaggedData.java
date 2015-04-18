@@ -4,6 +4,7 @@ import nxt.db.DbClause;
 import nxt.db.DbIterator;
 import nxt.db.DbKey;
 import nxt.db.VersionedEntityDbTable;
+import nxt.db.VersionedPersistentDbTable;
 import nxt.db.VersionedPrunableDbTable;
 import nxt.util.Logger;
 import nxt.util.Search;
@@ -142,7 +143,7 @@ public class TaggedData {
             }
         };
 
-        private static final VersionedEntityDbTable<Tag> tagTable = new VersionedEntityDbTable<Tag>("data_tag", tagDbKeyFactory) {
+        private static final VersionedPersistentDbTable<Tag> tagTable = new VersionedPersistentDbTable<Tag>("data_tag", tagDbKeyFactory) {
 
             @Override
             protected Tag load(Connection con, ResultSet rs) throws SQLException {
@@ -397,8 +398,6 @@ public class TaggedData {
             if (taggedData == null && attachment.getData() != null) {
                 taggedData = new TaggedData(transaction, attachment);
                 taggedDataTable.insert(taggedData);
-            }
-            if (taggedData != null) {
                 Tag.add(taggedData);
             }
         }
