@@ -15,6 +15,7 @@ class UnconfirmedTransaction implements Transaction {
     private final TransactionImpl transaction;
     private final long arrivalTimestamp;
     private final long feePerByte;
+    private volatile boolean notCurrentlyValid = false;
 
     UnconfirmedTransaction(TransactionImpl transaction, long arrivalTimestamp) {
         this.transaction = transaction;
@@ -72,6 +73,14 @@ class UnconfirmedTransaction implements Transaction {
 
     long getFeePerByte() {
         return feePerByte;
+    }
+
+    boolean isNotCurrentlyValid() {
+        return notCurrentlyValid;
+    }
+
+    void setNotCurrentlyValid() {
+        this.notCurrentlyValid = true;
     }
 
     @Override
