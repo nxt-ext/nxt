@@ -44,7 +44,7 @@ public final class Constants {
     static {
         int maxPrunableLifetime = Nxt.getIntProperty("nxt.maxPrunableLifetime");
         ENABLE_PRUNING = maxPrunableLifetime >= 0;
-        MAX_PRUNABLE_LIFETIME = Math.max(maxPrunableLifetime, MIN_PRUNABLE_LIFETIME);
+        MAX_PRUNABLE_LIFETIME = ENABLE_PRUNING ? Math.max(maxPrunableLifetime, MIN_PRUNABLE_LIFETIME) : Integer.MAX_VALUE;
     }
     public static final boolean INCLUDE_EXPIRED_PRUNABLE = Nxt.getBooleanProperty("nxt.includeExpiredPrunable");
 
