@@ -96,7 +96,7 @@ public class TaggedData {
         }
 
         private void save(Connection con) throws SQLException {
-            try (PreparedStatement pstmt = con.prepareStatement("MERGE INTO timestamp (id, timestamp, height, latest) "
+            try (PreparedStatement pstmt = con.prepareStatement("MERGE INTO tagged_data_timestamp (id, timestamp, height, latest) "
                     + "KEY (id, height) VALUES (?, ?, ?, TRUE)")) {
                 int i = 0;
                 pstmt.setLong(++i, this.id);

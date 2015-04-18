@@ -2697,7 +2697,7 @@ public interface Attachment extends Appendix {
 
         @Override
         public TransactionType getTransactionType() {
-            return TransactionType.Data.TAGGED_DATA_UPLOAD;
+            return TransactionType.Data.TAGGED_DATA_EXTEND;
         }
 
         public long getTaggedDataId() {
