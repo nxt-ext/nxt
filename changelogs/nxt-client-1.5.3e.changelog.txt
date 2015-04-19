@@ -58,3 +58,6 @@ There is no client UI support for any of these APIs. It is expected that
 specialized third party plugins will be developed for specific tagged data
 use cases, depending on file type and target user group.
 
+Currently the pruning of tagged data is controlled by the same configuration
+properties that are used for prunable messages expiration.
+
