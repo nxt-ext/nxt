@@ -1464,8 +1464,13 @@ public abstract class TransactionType {
             @Override
             void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
                 Attachment.ColoredCoinsAskOrderCancellation attachment = (Attachment.ColoredCoinsAskOrderCancellation) transaction.getAttachment();
-                if (Order.Ask.getAskOrder(attachment.getOrderId()) == null) {
+                Order ask = Order.Ask.getAskOrder(attachment.getOrderId());
+                if (ask == null) {
                     throw new NxtException.NotCurrentlyValidException("Invalid ask order: " + Long.toUnsignedString(attachment.getOrderId()));
+                }
+                if (ask.getAccountId() != transaction.getSenderId()) {
+                    throw new NxtException.NotValidException("Order " + Long.toUnsignedString(attachment.getOrderId()) + " was created by account "
+                            + Long.toUnsignedString(ask.getAccountId()));
                 }
             }
 
@@ -1506,8 +1511,13 @@ public abstract class TransactionType {
             @Override
             void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
                 Attachment.ColoredCoinsBidOrderCancellation attachment = (Attachment.ColoredCoinsBidOrderCancellation) transaction.getAttachment();
-                if (Order.Bid.getBidOrder(attachment.getOrderId()) == null) {
+                Order bid = Order.Bid.getBidOrder(attachment.getOrderId());
+                if (bid == null) {
                     throw new NxtException.NotCurrentlyValidException("Invalid bid order: " + Long.toUnsignedString(attachment.getOrderId()));
+                }
+                if (bid.getAccountId() != transaction.getSenderId()) {
+                    throw new NxtException.NotValidException("Order " + Long.toUnsignedString(attachment.getOrderId()) + " was created by account "
+                            + Long.toUnsignedString(bid.getAccountId()));
                 }
             }
 
