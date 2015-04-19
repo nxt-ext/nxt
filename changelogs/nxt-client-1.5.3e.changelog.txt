@@ -71,15 +71,26 @@ in the prunableAttachmentJSON parameter in case transactionBytes parameter is
 used. If submitting transactionJSON, it already has the prunable parts.
 
 
+New debug APIs:
+
+GetAllBroadcastedTransactions - if transaction rebroadcasting is enabled,
+returns the unconfirmed transactions that have been broadcasted from this node
+but have not yet been received back from a peer.
+
+GetAllWaitingTransactions - returns the unconfirmed transactions that are
+currently temporarily kept in memory during transaction processing.
+
+RebroadcastUnconfirmedTransactions - if transaction rebroadcasting is enabled,
+causes transactions currently in the unconfirmed pool to be broadcasted to
+peers again, until received back.
+
+
 Other changes and bugfixes:
 
 Improved handling of invalid transactions during block generation. Fixed
 validation of AE order cancellation transactions. Fixed a memory leak in
 processing of unconfirmed transactions. Set the default limit on waiting
 unconfirmed transactions nxt.maxUnconfirmedTransactions to 1000.
-
-Added getAllBroadcastedTransactions, getAllWaitingTransactions and
-rebroadcastUnconfirmedTransactions debug APIs.
 
 The DGS goods delivery data size will be limited to 1000 bytes after VS block.
 
