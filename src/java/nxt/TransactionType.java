@@ -960,7 +960,7 @@ public abstract class TransactionType {
                         throw new NxtException.NotValidException("This phased transaction does not require or accept voting");
                     }
                     long[] whitelist = poll.getWhitelist();
-                    if (whitelist.length > 0 && Arrays.binarySearch(whitelist, voterId) == -1) {
+                    if (whitelist.length > 0 && Arrays.binarySearch(whitelist, voterId) < 0) {
                         throw new NxtException.NotValidException("Voter is not in the phased transaction whitelist");
                     }
                     if (revealedSecret.length > 0) {
