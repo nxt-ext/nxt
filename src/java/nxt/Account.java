@@ -247,8 +247,8 @@ public final class Account {
 
     static class DoubleSpendingException extends RuntimeException {
 
-        DoubleSpendingException(String message) {
-            super(message);
+        DoubleSpendingException(String message, long accountId, long confirmed, long unconfirmed) {
+            super(message + " account: " + Long.toUnsignedString(accountId) + " confirmed: " + confirmed + " unconfirmed: " + unconfirmed);
         }
 
     }
@@ -1226,13 +1226,13 @@ public final class Account {
             return;
         }
         if (confirmed < 0) {
-            throw new DoubleSpendingException("Negative balance or quantity for account " + Long.toUnsignedString(accountId));
+            throw new DoubleSpendingException("Negative balance or quantity: ", accountId, confirmed, unconfirmed);
         }
         if (unconfirmed < 0) {
-            throw new DoubleSpendingException("Negative unconfirmed balance or quantity for account " + Long.toUnsignedString(accountId));
+            throw new DoubleSpendingException("Negative unconfirmed balance or quantity: ", accountId, confirmed, unconfirmed);
         }
         if (unconfirmed > confirmed) {
-            throw new DoubleSpendingException("Unconfirmed exceeds confirmed balance or quantity for account " + Long.toUnsignedString(accountId));
+            throw new DoubleSpendingException("Unconfirmed exceeds confirmed balance or quantity: ", accountId, confirmed, unconfirmed);
         }
     }
 
