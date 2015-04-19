@@ -1137,7 +1137,6 @@ public interface Appendix {
         private void release(TransactionImpl transaction) {
             Account senderAccount = Account.getAccount(transaction.getSenderId());
             Account recipientAccount = Account.getAccount(transaction.getRecipientId());
-            //apply all attachments and appendixes, except the phasing itself
             for (Appendix.AbstractAppendix appendage : transaction.getAppendages()) {
                 if (appendage.isPhasable()) {
                     appendage.apply(transaction, senderAccount, recipientAccount);

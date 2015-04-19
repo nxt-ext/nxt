@@ -244,6 +244,16 @@ public final class APIServlet extends HttpServlet {
         map.put("searchCurrencies", SearchCurrencies.instance);
         map.put("searchPolls", SearchPolls.instance);
         map.put("searchAccounts", SearchAccounts.instance);
+        map.put("searchTaggedData", SearchTaggedData.instance);
+        map.put("uploadTaggedData", UploadTaggedData.instance);
+        map.put("extendTaggedData", ExtendTaggedData.instance);
+        map.put("getAccountTaggedData", GetAccountTaggedData.instance);
+        map.put("getAllTaggedData", GetAllTaggedData.instance);
+        map.put("getTaggedData", GetTaggedData.instance);
+        map.put("getDataTags", GetDataTags.instance);
+        map.put("getDataTagCount", GetDataTagCount.instance);
+        map.put("getDataTagsLike", GetDataTagsLike.instance);
+        map.put("verifyTaggedData", VerifyTaggedData.instance);
         map.put("clearUnconfirmedTransactions", ClearUnconfirmedTransactions.instance);
         map.put("requeueUnconfirmedTransactions", RequeueUnconfirmedTransactions.instance);
         map.put("rebroadcastUnconfirmedTransactions", RebroadcastUnconfirmedTransactions.instance);

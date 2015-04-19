@@ -2,7 +2,6 @@ package nxt;
 
 import nxt.db.DbUtils;
 import nxt.db.DerivedDbTable;
-import nxt.db.PersistentDbTable;
 import nxt.util.Logger;
 
 import java.math.BigInteger;
@@ -245,7 +244,7 @@ final class BlockDb {
                 stmt.executeUpdate("TRUNCATE TABLE transaction");
                 stmt.executeUpdate("TRUNCATE TABLE block");
                 for (DerivedDbTable table : BlockchainProcessorImpl.getInstance().getDerivedTables()) {
-                    if (table instanceof PersistentDbTable) {
+                    if (table.isPersistent()) {
                         try {
                             stmt.executeUpdate("TRUNCATE TABLE " + table.toString());
                         } catch (SQLException ignore) {}

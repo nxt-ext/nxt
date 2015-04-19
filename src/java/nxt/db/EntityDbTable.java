@@ -391,8 +391,21 @@ public abstract class EntityDbTable<T> extends DerivedDbTable {
 
     @Override
     public void rollback(int height) {
-        super.rollback(height);
-        db.getCache(table).clear();
+        if (multiversion) {
+            VersionedEntityDbTable.rollback(db, table, height, dbKeyFactory);
+        } else {
+            super.rollback(height);
+            db.getCache(table).clear();
+        }
+    }
+
+    @Override
+    public void trim(int height) {
+        if (multiversion) {
+            VersionedEntityDbTable.trim(db, table, height, dbKeyFactory);
+        } else {
+            super.trim(height);
+        }
     }
 
     @Override

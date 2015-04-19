@@ -18,7 +18,7 @@ import java.util.Properties;
 
 public final class Nxt {
 
-    public static final String VERSION = "1.5.2e";
+    public static final String VERSION = "1.5.3e";
     public static final String APPLICATION = "NRS";
 
     private static volatile Time time = new Time.EpochTime();
@@ -215,6 +215,7 @@ public final class Nxt {
                 CurrencyTransfer.init();
                 Exchange.init();
                 PrunableMessage.init();
+                TaggedData.init();
                 Peers.init();
                 Generator.init();
                 API.init();

@@ -520,7 +520,9 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 doTrimDerivedTables();
                 Db.db.commitTransaction();
             } catch (Exception e) {
+                Logger.logMessage(e.toString(), e);
                 Db.db.rollbackTransaction();
+                throw e;
             } finally {
                 Db.db.endTransaction();
             }
@@ -1110,6 +1112,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     + " at height " + block.getHeight() + " timestamp " + block.getTimestamp() + " fee " + ((float)block.getTotalFeeNQT())/Constants.ONE_NXT);
         } catch (TransactionNotAcceptedException e) {
             Logger.logDebugMessage("Generate block failed: " + e.getMessage());
+            TransactionProcessorImpl.getInstance().processWaitingTransactions();
             TransactionImpl transaction = e.getTransaction();
             Logger.logDebugMessage("Removing invalid transaction: " + transaction.getStringId());
             TransactionProcessorImpl.getInstance().removeUnconfirmedTransaction(transaction);

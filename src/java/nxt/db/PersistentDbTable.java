@@ -10,14 +10,23 @@ public abstract class PersistentDbTable<T> extends EntityDbTable<T> {
         super(table, dbKeyFactory, false, fullTextSearchColumns);
     }
 
+    PersistentDbTable(String table, DbKey.Factory<T> dbKeyFactory, boolean multiversion, String fullTextSearchColumns) {
+        super(table, dbKeyFactory, multiversion, fullTextSearchColumns);
+    }
+
     @Override
-    public final void rollback(int height) {
+    public void rollback(int height) {
         clearCache();
     }
 
     @Override
     public final void truncate() {
         clearCache();
+    }
+
+    @Override
+    public final boolean isPersistent() {
+        return true;
     }
 
 }

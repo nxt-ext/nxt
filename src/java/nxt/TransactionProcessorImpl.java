@@ -439,7 +439,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
         }
     }
 
-    private void processWaitingTransactions() {
+    void processWaitingTransactions() {
         synchronized (BlockchainImpl.getInstance()) {
             if (waitingTransactions.size() > 0) {
                 int currentTime = Nxt.getEpochTime();

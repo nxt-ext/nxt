@@ -4,6 +4,7 @@ import nxt.Account;
 import nxt.Alias;
 import nxt.Appendix;
 import nxt.Asset;
+import nxt.Attachment;
 import nxt.Constants;
 import nxt.Currency;
 import nxt.CurrencyBuyOffer;
@@ -25,31 +26,7 @@ import javax.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
 import java.util.List;
 
-import static nxt.http.JSONResponses.INCORRECT_ACCOUNT;
-import static nxt.http.JSONResponses.INCORRECT_ALIAS;
-import static nxt.http.JSONResponses.INCORRECT_ARBITRARY_MESSAGE;
-import static nxt.http.JSONResponses.INCORRECT_DGS_ENCRYPTED_GOODS;
-import static nxt.http.JSONResponses.INCORRECT_ENCRYPTED_MESSAGE;
-import static nxt.http.JSONResponses.INCORRECT_HEIGHT;
-import static nxt.http.JSONResponses.INCORRECT_PLAIN_MESSAGE;
-import static nxt.http.JSONResponses.INCORRECT_PUBLIC_KEY;
-import static nxt.http.JSONResponses.INCORRECT_PURCHASE;
-import static nxt.http.JSONResponses.INCORRECT_RECIPIENT;
-import static nxt.http.JSONResponses.MISSING_ACCOUNT;
-import static nxt.http.JSONResponses.MISSING_ALIAS_OR_ALIAS_NAME;
-import static nxt.http.JSONResponses.MISSING_SECRET_PHRASE;
-import static nxt.http.JSONResponses.MISSING_SECRET_PHRASE_OR_PUBLIC_KEY;
-import static nxt.http.JSONResponses.MISSING_TRANSACTION_BYTES_OR_JSON;
-import static nxt.http.JSONResponses.UNKNOWN_ACCOUNT;
-import static nxt.http.JSONResponses.UNKNOWN_ALIAS;
-import static nxt.http.JSONResponses.UNKNOWN_ASSET;
-import static nxt.http.JSONResponses.UNKNOWN_CURRENCY;
-import static nxt.http.JSONResponses.UNKNOWN_GOODS;
-import static nxt.http.JSONResponses.UNKNOWN_OFFER;
-import static nxt.http.JSONResponses.UNKNOWN_POLL;
-import static nxt.http.JSONResponses.either;
-import static nxt.http.JSONResponses.incorrect;
-import static nxt.http.JSONResponses.missing;
+import static nxt.http.JSONResponses.*;
 
 final class ParameterParser {
 
@@ -500,6 +477,50 @@ final class ParameterParser {
             }
         }
         return null;
+    }
+
+    static Attachment.TaggedDataUpload getTaggedData(HttpServletRequest req) throws ParameterException {
+        String name = Convert.emptyToNull(req.getParameter("name"));
+        String description = Convert.nullToEmpty(req.getParameter("description"));
+        String tags = Convert.nullToEmpty(req.getParameter("tags"));
+        String type = Convert.nullToEmpty(req.getParameter("type"));
+        boolean isText = !"false".equalsIgnoreCase(req.getParameter("isText"));
+        String filename = Convert.nullToEmpty(req.getParameter("filename"));
+        String dataValue = Convert.emptyToNull(req.getParameter("data"));
+        if (dataValue == null) {
+            throw new ParameterException(MISSING_DATA);
+        }
+        byte[] data = isText ? Convert.toBytes(dataValue) : Convert.parseHexString(dataValue);
+
+
+        if (name == null) {
+            throw new ParameterException(MISSING_NAME);
+        }
+        name = name.trim();
+        if (name.length() > Constants.MAX_TAGGED_DATA_NAME_LENGTH) {
+            throw new ParameterException(INCORRECT_TAGGED_DATA_NAME);
+        }
+
+        if (description.length() > Constants.MAX_TAGGED_DATA_DESCRIPTION_LENGTH) {
+            throw new ParameterException(INCORRECT_TAGGED_DATA_DESCRIPTION);
+        }
+
+        if (tags.length() > Constants.MAX_TAGGED_DATA_TAGS_LENGTH) {
+            throw new ParameterException(INCORRECT_TAGGED_DATA_TAGS);
+        }
+
+        if (type.length() > Constants.MAX_TAGGED_DATA_TYPE_LENGTH) {
+            throw new ParameterException(INCORRECT_TAGGED_DATA_TYPE);
+        }
+
+        if (data.length == 0 || data.length > Constants.MAX_TAGGED_DATA_DATA_LENGTH) {
+            throw new ParameterException(INCORRECT_DATA);
+        }
+
+        if (filename.length() > Constants.MAX_TAGGED_DATA_FILENAME_LENGTH) {
+            throw new ParameterException(INCORRECT_TAGGED_DATA_FILENAME);
+        }
+        return new Attachment.TaggedDataUpload(name, description, tags, type, isText, filename, data);
     }
 
 
