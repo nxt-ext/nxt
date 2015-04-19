@@ -65,6 +65,11 @@ use cases, depending on file type and target user group.
 Currently the pruning of tagged data is controlled by the same configuration
 properties that are used for prunable messages expiration.
 
+Same as with prunable messages, when using broadcastTransaction API to submit
+an already signed tagged data upload transaction, the prunable parts must be
+in the prunableAttachmentJSON parameter in case transactionBytes parameter is
+used. If submitting transactionJSON, it already has the prunable parts.
+
 
 Other changes and bugfixes:
 
