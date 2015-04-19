@@ -1124,8 +1124,8 @@ public abstract class TransactionType {
                     throw new NxtException.NotCurrentlyValidException("Invalid ask order: " + Convert.toUnsignedLong(attachment.getOrderId()));
                 }
                 if (ask.getAccountId() != transaction.getSenderId()) {
-                    throw new NxtException.NotValidException("Order " + Long.toUnsignedString(attachment.getOrderId()) + " was created by account "
-                            + Long.toUnsignedString(ask.getAccountId()));
+                    throw new NxtException.NotValidException("Order " + Convert.toUnsignedLong(attachment.getOrderId()) + " was created by account "
+                            + Convert.toUnsignedLong(ask.getAccountId()));
                 }
             }
 
@@ -1166,8 +1166,8 @@ public abstract class TransactionType {
                     throw new NxtException.NotCurrentlyValidException("Invalid bid order: " + Convert.toUnsignedLong(attachment.getOrderId()));
                 }
                 if (bid.getAccountId() != transaction.getSenderId()) {
-                    throw new NxtException.NotValidException("Order " + Long.toUnsignedString(attachment.getOrderId()) + " was created by account "
-                            + Long.toUnsignedString(bid.getAccountId()));
+                    throw new NxtException.NotValidException("Order " + Convert.toUnsignedLong(attachment.getOrderId()) + " was created by account "
+                            + Convert.toUnsignedLong(bid.getAccountId()));
                 }
             }
 
