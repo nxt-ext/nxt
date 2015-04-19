@@ -96,3 +96,8 @@ The DGS goods delivery data size will be limited to 1000 bytes after VS block.
 
 Bugfixes in prunable messages processing.
 
+Fixed phasing with whitelisted approval accounts.
+
+On testnet, this release will perform a full rescan on first start with
+rollback to height 263895.
+
