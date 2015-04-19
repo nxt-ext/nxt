@@ -18,6 +18,10 @@ data itself: name (required), description, tags, type, isText, filename.
 Name, description and tags are indexed and searchable using Lucene. All data
 and metadata is prunable, after pruning only a single 32 byte hash remains.
 
+Fee for either uploading or extending tagged data is based on the total data
+size (including metadata), and is 1 NXT for up to 1k bytes, 0.1 NXT for each
+1k above, up to the limit of 42k.
+
 
 New APIs:
 
@@ -60,4 +64,19 @@ use cases, depending on file type and target user group.
 
 Currently the pruning of tagged data is controlled by the same configuration
 properties that are used for prunable messages expiration.
+
+
+Other changes and bugfixes:
+
+Improved handling of invalid transactions during block generation. Fixed
+validation of AE order cancellation transactions. Fixed a memory leak in
+processing of unconfirmed transactions. Set the default limit on waiting
+unconfirmed transactions nxt.maxUnconfirmedTransactions to 1000.
+
+Added getAllBroadcastedTransactions, getAllWaitingTransactions and
+rebroadcastUnconfirmedTransactions debug APIs.
+
+The DGS goods delivery data size will be limited to 1000 bytes after VS block.
+
+Bugfixes in prunable messages processing.
 
