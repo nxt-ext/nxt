@@ -44,6 +44,14 @@ public abstract class NxtException extends Exception {
 
     }
 
+    public static class ExistingTransactionException extends NotCurrentlyValidException {
+
+        public ExistingTransactionException(String message) {
+            super(message);
+        }
+
+    }
+
     public static final class NotYetEnabledException extends NotCurrentlyValidException {
 
         public NotYetEnabledException(String message) {

@@ -336,6 +336,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                 Db.db.endTransaction();
             }
             unconfirmedDuplicates.clear();
+            lostTransactions.clear();
             transactionListeners.notify(removed, Event.REMOVED_UNCONFIRMED_TRANSACTIONS);
         }
     }
@@ -408,6 +409,8 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                         processTransaction(unconfirmedTransaction);
                         iterator.remove();
                         addedUnconfirmedTransactions.add(unconfirmedTransaction.getTransaction());
+                    } catch (NxtException.ExistingTransactionException e) {
+                        iterator.remove();
                     } catch (NxtException.NotCurrentlyValidException ignore) {
                         if (unconfirmedTransaction.getExpiration() < Nxt.getEpochTime()) {
                             iterator.remove();
@@ -442,7 +445,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
             try {
                 TransactionImpl transaction = parseTransaction((JSONObject) transactionData);
                 receivedTransactions.add(transaction);
-                if (TransactionDb.hasTransaction(transaction.getId()) || unconfirmedTransactionTable.get(transaction.getDbKey()) != null) {
+                if (unconfirmedTransactionTable.get(transaction.getDbKey()) != null || TransactionDb.hasTransaction(transaction.getId())) {
                     continue;
                 }
                 transaction.validate();
@@ -493,8 +496,8 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                     throw new NxtException.NotCurrentlyValidException("Blockchain not ready to accept transactions");
                 }
 
-                if (TransactionDb.hasTransaction(transaction.getId()) || unconfirmedTransactionTable.get(transaction.getDbKey()) != null) {
-                    throw new NxtException.NotCurrentlyValidException("Transaction already processed");
+                if (unconfirmedTransactionTable.get(transaction.getDbKey()) != null || TransactionDb.hasTransaction(transaction.getId())) {
+                    throw new NxtException.ExistingTransactionException("Transaction already processed");
                 }
 
                 if (! transaction.verifySignature()) {
