@@ -132,7 +132,7 @@ public final class Currency {
     }
 
     public static Currency getCurrencyByCode(String code) {
-        return currencyTable.getBy(new DbClause.StringClause("code", code));
+        return currencyTable.getBy(new DbClause.StringClause("code", code.toUpperCase()));
     }
 
     public static DbIterator<Currency> getCurrencyIssuedBy(long accountId, int from, int to) {
@@ -148,7 +148,7 @@ public final class Currency {
         if ((oldCurrency = Currency.getCurrencyByCode(attachment.getCode())) != null) {
             oldCurrency.delete(senderAccount);
         }
-        if ((oldCurrency = Currency.getCurrencyByCode(attachment.getName().toUpperCase())) != null) {
+        if ((oldCurrency = Currency.getCurrencyByCode(attachment.getName())) != null) {
             oldCurrency.delete(senderAccount);
         }
         if ((oldCurrency = Currency.getCurrencyByName(attachment.getName())) != null) {
