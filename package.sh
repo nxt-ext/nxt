@@ -52,6 +52,11 @@ echo -e "Release $1\n" > ${CHANGELOG}
 echo -e "https://bitbucket.org/JeanLucPicard/nxt/downloads/${PACKAGE}.exe\n" >> ${CHANGELOG}
 echo -e "sha256:\n" >> ${CHANGELOG}
 sha256sum ${PACKAGE}.exe >> ${CHANGELOG}
+
+echo -e "https://bitbucket.org/JeanLucPicard/nxt/downloads/${PACKAGE}.jar\n" >> ${CHANGELOG}
+echo -e "sha256:\n" >> ${CHANGELOG}
+sha256sum ${PACKAGE}.jar >> ${CHANGELOG}
+
 if [ $2 == "obfuscate" ];
 then
 echo -e "\n\nThis is a development release for testing only. Source code is not provided." >> ${CHANGELOG}
