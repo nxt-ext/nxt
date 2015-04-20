@@ -79,13 +79,17 @@ final class JSONData {
 
     static JSONObject lessor(Account account) {
         JSONObject json = new JSONObject();
-        json.put("currentLesseeRS", Convert.rsAccount(account.getCurrentLesseeId()));
-        json.put("currentHeightFrom", String.valueOf(account.getCurrentLeasingHeightFrom()));
-        json.put("currentHeightTo", String.valueOf(account.getCurrentLeasingHeightTo()));
-        json.put("nextLesseeRS", Convert.rsAccount(account.getNextLesseeId()));
-        json.put("nextHeightFrom", String.valueOf(account.getNextLeasingHeightFrom()));
-        json.put("nextHeightTo", String.valueOf(account.getNextLeasingHeightTo()));
-        json.put("effectiveBalanceNXT", String.valueOf(account.getGuaranteedBalanceNQT() / Constants.ONE_NXT));
+        if (account.getCurrentLesseeId() != 0) {
+            putAccount(json, "currentLessee", account.getCurrentLesseeId());
+            json.put("currentHeightFrom", String.valueOf(account.getCurrentLeasingHeightFrom()));
+            json.put("currentHeightTo", String.valueOf(account.getCurrentLeasingHeightTo()));
+        }
+        if (account.getNextLesseeId() != 0) {
+            putAccount(json, "nextLessee", account.getNextLesseeId());
+            json.put("nextHeightFrom", String.valueOf(account.getNextLeasingHeightFrom()));
+            json.put("nextHeightTo", String.valueOf(account.getNextLeasingHeightTo()));
+            json.put("effectiveBalanceNXT", String.valueOf(account.getGuaranteedBalanceNQT() / Constants.ONE_NXT));
+        }
         return json;
     }
 
