@@ -44,9 +44,9 @@ public final class Constants {
     static {
         int maxPrunableLifetime = Nxt.getIntProperty("nxt.maxPrunableLifetime");
         ENABLE_PRUNING = maxPrunableLifetime >= 0;
-        MAX_PRUNABLE_LIFETIME = Math.max(maxPrunableLifetime, MIN_PRUNABLE_LIFETIME);
+        MAX_PRUNABLE_LIFETIME = ENABLE_PRUNING ? Math.max(maxPrunableLifetime, MIN_PRUNABLE_LIFETIME) : Integer.MAX_VALUE;
     }
-    public static final boolean INCLUDE_EXPIRED_PRUNABLES = Nxt.getBooleanProperty("nxt.includeExpiredPrunables");
+    public static final boolean INCLUDE_EXPIRED_PRUNABLE = Nxt.getBooleanProperty("nxt.includeExpiredPrunable");
 
     public static final int MAX_ACCOUNT_NAME_LENGTH = 100;
     public static final int MAX_ACCOUNT_DESCRIPTION_LENGTH = 1000;
@@ -73,6 +73,7 @@ public final class Constants {
     public static final int MAX_DGS_LISTING_DESCRIPTION_LENGTH = 1000;
     public static final int MAX_DGS_LISTING_TAGS_LENGTH = 100;
     public static final int MAX_DGS_GOODS_LENGTH = 10240;
+    public static final int MAX_DGS_GOODS_LENGTH_2 = 1000;
 
     public static final int MAX_HUB_ANNOUNCEMENT_URIS = 100;
     public static final int MAX_HUB_ANNOUNCEMENT_URI_LENGTH = 1000;
@@ -90,6 +91,13 @@ public final class Constants {
     public static final short MIN_SHUFFLING_DELAY = 5;
     public static final short MAX_SHUFFLING_DELAY = 1440;
     public static final int MAX_SHUFFLING_RECIPIENTS_LENGTH = 10000;
+
+    public static final int MAX_TAGGED_DATA_NAME_LENGTH = 100;
+    public static final int MAX_TAGGED_DATA_DESCRIPTION_LENGTH = 1000;
+    public static final int MAX_TAGGED_DATA_TAGS_LENGTH = 100;
+    public static final int MAX_TAGGED_DATA_TYPE_LENGTH = 100;
+    public static final int MAX_TAGGED_DATA_FILENAME_LENGTH = 100;
+    public static final int MAX_TAGGED_DATA_DATA_LENGTH = 42 * 1024;
 
     public static final int ALIAS_SYSTEM_BLOCK = 22000;
     public static final int TRANSPARENT_FORGING_BLOCK = 30000;
@@ -111,7 +119,7 @@ public final class Constants {
     public static final int MONETARY_SYSTEM_BLOCK = isTestnet ? 150000 : 330000;
     public static final int VOTING_SYSTEM_BLOCK = isTestnet ? 220000 : Integer.MAX_VALUE;
 
-    public static final int LAST_KNOWN_BLOCK = isTestnet ? 255000 : 400000;
+    public static final int LAST_KNOWN_BLOCK = isTestnet ? 263000 : 407000;
 
     public static final int[] MIN_VERSION = new int[] {1, 4};
 

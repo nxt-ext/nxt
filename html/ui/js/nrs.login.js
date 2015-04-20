@@ -387,12 +387,14 @@ var NRS = (function(NRS, $, undefined) {
 					$('#dashboard_link a').addClass("ignore").click();
 
 					if ($("#remember_account").is(":checked")) {
-						var accounts = NRS.getCookie("savedNxtAccounts").split(";");
 						var accountExists = 0;
-						$.each(accounts, function(index, account) {
-							if (account == NRS.accountRS)
-								accountExists = 1;
-						});
+						if (NRS.getCookie("savedNxtAccounts")){
+							var accounts = NRS.getCookie("savedNxtAccounts").split(";");
+							$.each(accounts, function(index, account) {
+								if (account == NRS.accountRS)
+									accountExists = 1;
+							});
+						}
 						if (!accountExists){
 							if (NRS.getCookie("savedNxtAccounts") && NRS.getCookie("savedNxtAccounts")!=""){
 								var accounts=NRS.getCookie("savedNxtAccounts") + NRS.accountRS + ";";

@@ -27,7 +27,7 @@ public interface Appendix {
     interface Prunable {
         byte[] getHash();
         default boolean shouldLoadPrunable(Transaction transaction) {
-            return Constants.INCLUDE_EXPIRED_PRUNABLES || Nxt.getEpochTime() - transaction.getTimestamp() < Constants.MIN_PRUNABLE_LIFETIME;
+            return Constants.INCLUDE_EXPIRED_PRUNABLE || Nxt.getEpochTime() - transaction.getTimestamp() < Constants.MIN_PRUNABLE_LIFETIME;
         }
     }
 
@@ -842,6 +842,11 @@ public interface Appendix {
             }
         }
 
+        @Override
+        boolean isPhasable() {
+            return false;
+        }
+
         public byte[] getPublicKey() {
             return publicKey;
         }
@@ -1132,7 +1137,6 @@ public interface Appendix {
         private void release(TransactionImpl transaction) {
             Account senderAccount = Account.getAccount(transaction.getSenderId());
             Account recipientAccount = Account.getAccount(transaction.getRecipientId());
-            //apply all attachments and appendixes, except the phasing itself
             for (Appendix.AbstractAppendix appendage : transaction.getAppendages()) {
                 if (appendage.isPhasable()) {
                     appendage.apply(transaction, senderAccount, recipientAccount);

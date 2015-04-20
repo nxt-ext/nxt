@@ -35,14 +35,6 @@ public final class VerifyPrunableMessage extends APIServlet.APIRequestHandler {
         NO_SUCH_ENCRYPTED_MESSAGE = JSON.prepare(response);
     }
 
-    public static final JSONStreamAware HASHES_MISMATCH;
-    static {
-        JSONObject response = new JSONObject();
-        response.put("errorCode", 10);
-        response.put("errorDescription", "Hashes don't match. You should notify Jeff Garzik.");
-        HASHES_MISMATCH = JSON.prepare(response);
-    }
-
     private VerifyPrunableMessage() {
         super(new APITag[] {APITag.MESSAGES}, "transaction",
                 "message", "messageIsText", "messageIsPrunable",
@@ -74,7 +66,7 @@ public final class VerifyPrunableMessage extends APIServlet.APIRequestHandler {
                 return NO_SUCH_PLAIN_MESSAGE;
             }
             if (!Arrays.equals(myPlainMessage.getHash(), plainMessage.getHash())) {
-                return HASHES_MISMATCH;
+                return JSONResponses.HASHES_MISMATCH;
             }
             JSONObject response = myPlainMessage.getJSONObject();
             response.put("verify", true);
@@ -85,7 +77,7 @@ public final class VerifyPrunableMessage extends APIServlet.APIRequestHandler {
                 return NO_SUCH_ENCRYPTED_MESSAGE;
             }
             if (!Arrays.equals(myEncryptedMessage.getHash(), encryptedMessage.getHash())) {
-                return HASHES_MISMATCH;
+                return JSONResponses.HASHES_MISMATCH;
             }
             JSONObject response = myEncryptedMessage.getJSONObject();
             response.put("verify", true);

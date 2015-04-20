@@ -22,6 +22,7 @@ import nxt.PhasingPoll;
 import nxt.PhasingVote;
 import nxt.Poll;
 import nxt.PrunableMessage;
+import nxt.TaggedData;
 import nxt.Token;
 import nxt.Trade;
 import nxt.Transaction;
@@ -649,9 +650,10 @@ final class JSONData {
         JSONObject json = new JSONObject();
         json.put("transaction", Long.toUnsignedString(prunableMessage.getId()));
         json.put("isText", prunableMessage.isText());
-        json.put("isCompressed", prunableMessage.isCompressed());
         putAccount(json, "sender", prunableMessage.getSenderId());
-        putAccount(json, "recipient", prunableMessage.getRecipientId());
+        if (prunableMessage.getRecipientId() != 0) {
+            putAccount(json, "recipient", prunableMessage.getRecipientId());
+        }
         json.put("transactionTimestamp", prunableMessage.getTransactionTimestamp());
         json.put("blockTimestamp", prunableMessage.getBlockTimestamp());
         EncryptedData encryptedData = prunableMessage.getEncryptedData();
@@ -669,9 +671,33 @@ final class JSONData {
                     }
                 }
             }
+            json.put("isCompressed", prunableMessage.isCompressed());
         } else {
             json.put("message", prunableMessage.toString());
         }
+        return json;
+    }
+
+    static JSONObject taggedData(TaggedData taggedData) {
+        JSONObject json = new JSONObject();
+        json.put("transaction", Long.toUnsignedString(taggedData.getId()));
+        putAccount(json, "account", taggedData.getAccountId());
+        json.put("name", taggedData.getName());
+        json.put("description", taggedData.getDescription());
+        json.put("tags", taggedData.getTags());
+        json.put("type", taggedData.getType());
+        json.put("filename", taggedData.getFilename());
+        json.put("isText", taggedData.isText());
+        json.put("data", taggedData.isText() ? Convert.toString(taggedData.getData()) : Convert.toHexString(taggedData.getData()));
+        json.put("transactionTimestamp", taggedData.getTransactionTimestamp());
+        json.put("blockTimestamp", taggedData.getBlockTimestamp());
+        return json;
+	}
+
+    static JSONObject dataTag(TaggedData.Tag tag) {
+        JSONObject json = new JSONObject();
+        json.put("tag", tag.getTag());
+        json.put("count", tag.getCount());
         return json;
     }
 
