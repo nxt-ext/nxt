@@ -90,6 +90,8 @@ final class PeerImpl implements Peer {
         if (this.state == state) {
             return;
         }
+        if (state != State.CONNECTED)
+            webSocket.close();
         if (this.state == State.NON_CONNECTED) {
             this.state = state;
             Peers.notifyListeners(this, Peers.Event.ADDED_ACTIVE_PEER);
@@ -454,9 +456,11 @@ final class PeerImpl implements Peer {
             if (connection != null)
                 connection.disconnect();
         } catch (RuntimeException|ParseException|IOException e) {
-            if (! (e instanceof UnknownHostException || e instanceof SocketTimeoutException ||
+            if (state == State.CONNECTED ||
+                    !(e instanceof UnknownHostException || e instanceof SocketTimeoutException ||
                                         e instanceof SocketException || Errors.END_OF_FILE.equals(e.getMessage()))) {
-                Logger.logDebugMessage("Error sending JSON request: " + e.toString());
+                Logger.logDebugMessage(String.format("Error sending JSON request to %s: %s",
+                                        address, e.getMessage()!=null ? e.getMessage() : e.toString()));
             }
             if ((communicationLoggingMask & Peers.LOGGING_MASK_EXCEPTIONS) != 0) {
                 log += " >>> " + e.toString();
