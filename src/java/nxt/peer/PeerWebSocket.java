@@ -12,6 +12,8 @@ import org.eclipse.jetty.websocket.client.ClientUpgradeRequest;
 import org.eclipse.jetty.websocket.client.WebSocketClient;
 
 import java.io.IOException;
+import java.net.ProtocolException;
+import java.net.SocketTimeoutException;
 import java.net.URI;
 import java.util.Map;
 import java.util.Set;
@@ -41,6 +43,9 @@ import java.util.concurrent.locks.ReentrantLock;
  */
 @WebSocket
 public class PeerWebSocket {
+
+    /** Maximum message size */
+    static final int MAX_MESSAGE_SIZE = 192*1024*1024;
 
     /** Our WebSocket message version */
     private static final int VERSION = 1;
@@ -80,7 +85,8 @@ public class PeerWebSocket {
      */
     public PeerWebSocket() {
         peerClient = new WebSocketClient();
-        peerClient.getPolicy().setMaxTextMessageSize(Math.max(Peers.MAX_REQUEST_SIZE, Peers.MAX_RESPONSE_SIZE));
+        peerClient.getPolicy().setIdleTimeout(Peers.webSocketIdleTimeout);
+        peerClient.getPolicy().setMaxTextMessageSize(MAX_MESSAGE_SIZE);
     }
 
     /**
@@ -134,7 +140,7 @@ public class PeerWebSocket {
                 Logger.logDebugMessage(String.format("WebSocket connection to %s failed", address), exc);
             }
         } catch (TimeoutException exc) {
-            Logger.logDebugMessage(String.format("WebSocket connection to %s timed out", address));
+            throw new SocketTimeoutException(String.format("WebSocket connection to %s timed out", address));
         } catch (Exception exc) {
             Logger.logDebugMessage(String.format("WebSocket connection to %s failed", address), exc);
         } finally {
@@ -177,6 +183,9 @@ public class PeerWebSocket {
      */
     public String doPost(String request) throws IOException {
         long requestId;
+        if (request.length() > MAX_MESSAGE_SIZE)
+            throw new ProtocolException(String.format("POST request length %d exceeds max message size %d",
+                                                      request.length(), MAX_MESSAGE_SIZE));
         //
         // Send the POST request
         //
@@ -214,6 +223,9 @@ public class PeerWebSocket {
      * @throws  IOException         I/O error occurred
      */
     public void sendResponse(long requestId, String response) throws IOException {
+        if (response.length() > MAX_MESSAGE_SIZE)
+            throw new ProtocolException(String.format("POST response length %d exceeds max message size %d",
+                                                      response.length(), MAX_MESSAGE_SIZE));
         lock.lock();
         try {
             if (session != null && session.isOpen()) {
