@@ -663,7 +663,11 @@ var NRS = (function (NRS, $, undefined) {
 
                                 if (purchase.errorCode) {
                                     if (purchase.errorCode == 4) {
-                                        callout = $.t("incorrect_purchase");
+                                        if (transactionDetails.block == "unconfirmed") {
+                                            callout = $.t("unconfirmed_transaction");
+                                        } else {
+                                            callout = $.t("incorrect_purchase");
+                                        }
                                     } else {
                                         callout = String(purchase.errorDescription).escapeHTML();
                                     }
