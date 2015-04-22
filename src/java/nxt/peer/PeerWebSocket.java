@@ -1,5 +1,6 @@
 package nxt.peer;
 
+import nxt.Nxt;
 import nxt.util.Logger;
 
 import org.eclipse.jetty.websocket.api.Session;
@@ -11,10 +12,14 @@ import org.eclipse.jetty.websocket.api.annotations.WebSocket;
 import org.eclipse.jetty.websocket.client.ClientUpgradeRequest;
 import org.eclipse.jetty.websocket.client.WebSocketClient;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.EOFException;
 import java.io.IOException;
 import java.net.ProtocolException;
 import java.net.SocketTimeoutException;
 import java.net.URI;
+import java.nio.ByteBuffer;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -26,6 +31,8 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 
 /**
  * PeerWebSocket represents an HTTP/HTTPS upgraded connection
@@ -36,16 +43,26 @@ import java.util.concurrent.locks.ReentrantLock;
  * begins with '(' and ends with ')' and consists of comma-separated
  * fields.
  *
- * The Version 1 message prefix has the following format: (version,id)
+ * The Version 1 message prefix has the following format: (version,id,flags,length)
  *   - 'version' is the message version (Integer)
- *   - 'id' is the request identifier (Long).  The response message
- *     must have the same identifier.
+ *   - 'id' is the request identifier (Long)
+ *   - 'flags' is a bit field of flags (Integer)
+ *   - 'length' is the uncompressed message length (Integer)
  */
 @WebSocket
 public class PeerWebSocket {
 
+    /** Message compression enabled */
+    private static final boolean isGzipEnabled = Nxt.getBooleanProperty("nxt.enablePeerServerGZIPFilter");
+
     /** Maximum message size */
     static final int MAX_MESSAGE_SIZE = 192*1024*1024;
+
+    /** Minimum compressed message size */
+    private static final int MIN_COMPRESS_SIZE = 256;
+
+    /** Compressed message flag */
+    private static final int FLAG_COMPRESSED = 1;
 
     /** Our WebSocket message version */
     private static final int VERSION = 1;
@@ -86,7 +103,7 @@ public class PeerWebSocket {
     public PeerWebSocket() {
         peerClient = new WebSocketClient();
         peerClient.getPolicy().setIdleTimeout(Peers.webSocketIdleTimeout);
-        peerClient.getPolicy().setMaxTextMessageSize(MAX_MESSAGE_SIZE);
+        peerClient.getPolicy().setMaxBinaryMessageSize(MAX_MESSAGE_SIZE);
     }
 
     /**
@@ -194,8 +211,25 @@ public class PeerWebSocket {
             if (session == null || !session.isOpen())
                 throw new IOException("WebSocket session is not open");
             requestId = nextRequestId++;
-            String requestMsg = String.format("(%d,%d)%s", version, requestId, request);
-            session.getRemote().sendString(requestMsg);
+            byte[] requestBytes = request.getBytes("UTF-8");
+            int requestLength = requestBytes.length;
+            int flags = 0;
+            if (isGzipEnabled && requestLength>=MIN_COMPRESS_SIZE) {
+                flags |= FLAG_COMPRESSED;
+                ByteArrayOutputStream outStream = new ByteArrayOutputStream(requestLength);
+                try (GZIPOutputStream gzipStream = new GZIPOutputStream(outStream)) {
+                    gzipStream.write(requestBytes);
+                }
+                requestBytes = outStream.toByteArray();
+            }
+            ByteBuffer buf = ByteBuffer.allocate(requestBytes.length+20);
+            buf.putInt(version)
+               .putLong(requestId)
+               .putInt(flags)
+               .putInt(requestLength)
+               .put(requestBytes)
+               .flip();
+            session.getRemote().sendBytes(buf);
         } finally {
             lock.unlock();
         }
@@ -229,8 +263,25 @@ public class PeerWebSocket {
         lock.lock();
         try {
             if (session != null && session.isOpen()) {
-                String responseMsg = String.format("(%d,%d)%s", version, requestId, response);
-                session.getRemote().sendString(responseMsg);
+                byte[] responseBytes = response.getBytes("UTF-8");
+                int responseLength = responseBytes.length;
+                int flags = 0;
+                if (isGzipEnabled && responseLength>=MIN_COMPRESS_SIZE) {
+                    flags |= FLAG_COMPRESSED;
+                    ByteArrayOutputStream outStream = new ByteArrayOutputStream(responseLength);
+                    try (GZIPOutputStream gzipStream = new GZIPOutputStream(outStream)) {
+                        gzipStream.write(responseBytes);
+                    }
+                    responseBytes = outStream.toByteArray();
+                }
+                ByteBuffer buf = ByteBuffer.allocate(responseBytes.length+20);
+                buf.putInt(version)
+                   .putLong(requestId)
+                   .putInt(flags)
+                   .putInt(responseLength)
+                   .put(responseBytes)
+                   .flip();
+                session.getRemote().sendBytes(buf);
             }
         } finally {
             lock.unlock();
@@ -240,40 +291,46 @@ public class PeerWebSocket {
     /**
      * Process a socket message
      *
-     * @param   message             Socket message
+     * @param   inbuf               Message buffer
+     * @param   off                 Starting offset
+     * @param   len                 Message length
      */
     @OnWebSocketMessage
-    public void OnMessage(String message) {
-        boolean msgProcessed = false;
+    public void OnMessage(byte[] inbuf, int off, int len) {
         lock.lock();
         try {
-            int sep = message.indexOf(')');
-            if (message.charAt(0) == '(' && sep >= 2 && sep < message.length()-2) {
-                String msgPrefix = message.substring(1, sep);
-                String jsonString = message.substring(sep+1);
-                String[] prefixParts = msgPrefix.split(",");
-                if (prefixParts.length >= 2) {
-                    version = Math.min(Integer.valueOf(prefixParts[0]), VERSION);
-                    Long requestId = Long.valueOf(prefixParts[1]);
-                    msgProcessed = true;
-                    if (peerServlet != null) {
-                        threadPool.execute(() -> peerServlet.doPost(this, requestId, jsonString));
-                    } else {
-                        PostRequest postRequest = requestMap.remove(requestId);
-                        if (postRequest != null)
-                            postRequest.complete(jsonString);
+            ByteBuffer buf = ByteBuffer.wrap(inbuf, off, len);
+            version = Math.min(buf.getInt(), VERSION);
+            Long requestId = buf.getLong();
+            int flags = buf.getInt();
+            int length = buf.getInt();
+            byte[] msgBytes = new byte[buf.remaining()];
+            buf.get(msgBytes);
+            if ((flags&FLAG_COMPRESSED) != 0) {
+                ByteArrayInputStream inStream = new ByteArrayInputStream(msgBytes);
+                try (GZIPInputStream gzipStream = new GZIPInputStream(inStream, 1024)) {
+                    msgBytes = new byte[length];
+                    int offset = 0;
+                    while (offset < msgBytes.length) {
+                        int count = gzipStream.read(msgBytes, offset, msgBytes.length-offset);
+                        if (count == 0)
+                            throw new EOFException("End-of-data reading compressed data");
+                        offset += count;
                     }
                 }
             }
-        } catch (NumberFormatException exc) {
+            String message = new String(msgBytes, "UTF-8");
+            if (peerServlet != null) {
+                threadPool.execute(() -> peerServlet.doPost(this, requestId, message));
+            } else {
+                PostRequest postRequest = requestMap.remove(requestId);
+                if (postRequest != null)
+                    postRequest.complete(message);
+            }
         } catch (Exception exc) {
             Logger.logDebugMessage("Exception while processing WebSocket message", exc);
         } finally {
             lock.unlock();
-        }
-        if (!msgProcessed) {
-            Logger.logDebugMessage(String.format("Peer %s: Invvalid WebSocket message: %s",
-                                   session.getRemoteAddress().getHostString(), message));
         }
     }
 
