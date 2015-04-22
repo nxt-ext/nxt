@@ -200,9 +200,6 @@ public class PeerWebSocket {
      */
     public String doPost(String request) throws IOException {
         long requestId;
-        if (request.length() > MAX_MESSAGE_SIZE)
-            throw new ProtocolException(String.format("POST request length %d exceeds max message size %d",
-                                                      request.length(), MAX_MESSAGE_SIZE));
         //
         // Send the POST request
         //
@@ -229,6 +226,8 @@ public class PeerWebSocket {
                .putInt(requestLength)
                .put(requestBytes)
                .flip();
+            if (buf.limit() > MAX_MESSAGE_SIZE)
+                throw new ProtocolException("POST request length exceeds max message size");
             session.getRemote().sendBytes(buf);
         } finally {
             lock.unlock();
@@ -257,9 +256,6 @@ public class PeerWebSocket {
      * @throws  IOException         I/O error occurred
      */
     public void sendResponse(long requestId, String response) throws IOException {
-        if (response.length() > MAX_MESSAGE_SIZE)
-            throw new ProtocolException(String.format("POST response length %d exceeds max message size %d",
-                                                      response.length(), MAX_MESSAGE_SIZE));
         lock.lock();
         try {
             if (session != null && session.isOpen()) {
@@ -281,6 +277,8 @@ public class PeerWebSocket {
                    .putInt(responseLength)
                    .put(responseBytes)
                    .flip();
+                if (buf.limit() > MAX_MESSAGE_SIZE)
+                    throw new ProtocolException("POST response length exceeds max message size");
                 session.getRemote().sendBytes(buf);
             }
         } finally {
