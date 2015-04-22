@@ -313,7 +313,7 @@ public class PeerWebSocket {
                     int offset = 0;
                     while (offset < msgBytes.length) {
                         int count = gzipStream.read(msgBytes, offset, msgBytes.length-offset);
-                        if (count == 0)
+                        if (count < 0)
                             throw new EOFException("End-of-data reading compressed data");
                         offset += count;
                     }
