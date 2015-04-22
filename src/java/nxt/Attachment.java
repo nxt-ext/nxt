@@ -2661,7 +2661,7 @@ public interface Attachment extends Appendix {
         }
 
         private volatile byte[] hash;
-        private final long taggedDataId;
+        private /*final*/ long taggedDataId;
 
         TaggedDataExtend(ByteBuffer buffer, byte transactionVersion) {
             super(buffer, transactionVersion);
@@ -2670,7 +2670,11 @@ public interface Attachment extends Appendix {
 
         TaggedDataExtend(JSONObject attachmentData) {
             super(attachmentData);
-            this.taggedDataId = Convert.parseLong(attachmentData.get("taggedDataId"));
+            this.taggedDataId = Convert.parseUnsignedLong((String)attachmentData.get("taggedData"));
+            //TODO: remove
+            if (this.taggedDataId == 0) {
+                this.taggedDataId = Convert.parseUnsignedLong((String)attachmentData.get("taggedDataId"));
+            }
         }
 
         public TaggedDataExtend(TaggedData taggedData) {
@@ -2692,6 +2696,8 @@ public interface Attachment extends Appendix {
         @Override
         void putMyJSON(JSONObject attachment) {
             super.putMyJSON(attachment);
+            attachment.put("taggedData", Long.toUnsignedString(taggedDataId));
+            //TODO: remove
             attachment.put("taggedDataId", Long.toUnsignedString(taggedDataId));
         }
 
