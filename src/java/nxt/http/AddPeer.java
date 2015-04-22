@@ -46,4 +46,14 @@ public class AddPeer extends APIRequestHandler {
         return response;
     }
 
+    @Override
+    final boolean requirePost() {
+        return true;
+    }
+
+    @Override
+    boolean requirePassword() {
+        return true;
+    }
+
 }
