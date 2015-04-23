@@ -5,4 +5,5 @@ Fixed processing of unconfirmed ExtendTaggedData transactions.
 
 AddPeer and BlacklistPeer APIs now require POST and admin password.
 
+This release will perform a full rescan on testnet.
 
