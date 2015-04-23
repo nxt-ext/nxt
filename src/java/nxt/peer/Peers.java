@@ -33,6 +33,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.PriorityQueue;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -364,6 +365,19 @@ public final class Peers {
                                 break;
                             }
                         }
+                        if (hasTooManyKnownPeers()) {
+                            PriorityQueue<PeerImpl> sortedPeers = new PriorityQueue<>(peers.values());
+                            int skipped = 0;
+                            while (skipped < Peers.minNumberOfKnownPeers) {
+                                if (sortedPeers.poll() == null) {
+                                    break;
+                                }
+                                skipped += 1;
+                            }
+                            while (!sortedPeers.isEmpty()) {
+                                sortedPeers.poll().remove();
+                            }
+                        }
                         Logger.logDebugMessage("Reduced peer pool size from " + initialSize + " to " + peers.size());
                     }
 
@@ -652,11 +666,19 @@ public final class Peers {
 
     static boolean addOrUpdate(PeerImpl peer) {
         if (peer.getAnnouncedAddress() != null) {
+            Peer oldPeer = peers.get(peer.getPeerAddress());
+            if (oldPeer != null) {
+                String oldAnnouncedAddress = oldPeer.getAnnouncedAddress();
+                if (oldAnnouncedAddress != null && !oldAnnouncedAddress.equals(peer.getAnnouncedAddress())) {
+                    Logger.logDebugMessage("Removing old announced address " + oldAnnouncedAddress + " for IP " + oldPeer.getPeerAddress());
+                    announcedAddresses.remove(oldAnnouncedAddress);
+                }
+            }
             String oldAddress = announcedAddresses.put(peer.getAnnouncedAddress(), peer.getPeerAddress());
             if (oldAddress != null && !peer.getPeerAddress().equals(oldAddress)) {
-                //Logger.logDebugMessage("Peer " + peer.getAnnouncedAddress() + " has changed address from " + oldAddress
-                //        + " to " + peer.getPeerAddress());
-                Peer oldPeer = peers.remove(oldAddress);
+                Logger.logDebugMessage("Peer " + peer.getAnnouncedAddress() + " has changed address from " + oldAddress
+                        + " to " + peer.getPeerAddress());
+                oldPeer = peers.remove(oldAddress);
                 if (oldPeer != null) {
                     Peers.notifyListeners(oldPeer, Peers.Event.REMOVE);
                 }
