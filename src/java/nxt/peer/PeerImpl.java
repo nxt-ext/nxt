@@ -87,11 +87,11 @@ final class PeerImpl implements Peer {
     }
 
     void setState(State state) {
+        if (state != State.CONNECTED)
+            webSocket.close();
         if (this.state == state) {
             return;
         }
-        if (state != State.CONNECTED)
-            webSocket.close();
         if (this.state == State.NON_CONNECTED) {
             this.state = state;
             Peers.notifyListeners(this, Peers.Event.ADDED_ACTIVE_PEER);
