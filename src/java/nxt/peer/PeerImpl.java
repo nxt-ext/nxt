@@ -454,6 +454,7 @@ final class PeerImpl implements Peer {
                     newAnnouncedAddress = Peers.addressWithPort(newAnnouncedAddress);
                     if (newAnnouncedAddress != null && !newAnnouncedAddress.equals(announcedAddress)) {
                         if (!verifyAnnouncedAddress(newAnnouncedAddress)) {
+                            remove(); // new announced address, removed old peer instance
                             return;
                         }
                         // force checking connectivity to new announced address
