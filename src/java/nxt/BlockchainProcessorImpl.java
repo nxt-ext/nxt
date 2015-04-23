@@ -838,13 +838,15 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             digest.update(transaction.bytes());
         }
         if (calculatedTotalAmount != block.getTotalAmountNQT() || calculatedTotalFee != block.getTotalFeeNQT()) {
-            throw new BlockNotAcceptedException("Total amount or fee don't match transaction totals");
+            throw new BlockNotAcceptedException(String.format("Total block amount %d or fee %d doesn't match transaction totals amount %d fee %d for block %s",
+                    block.getTotalAmountNQT(), block.getTotalFeeNQT(), calculatedTotalAmount, calculatedTotalFee, block.getStringId()));
         }
         if (!Arrays.equals(digest.digest(), block.getPayloadHash())) {
             throw new BlockNotAcceptedException("Payload hash doesn't match");
         }
         if (payloadLength > block.getPayloadLength()) {
-            throw new BlockNotAcceptedException("Transaction payload length exceeds declared block payload length");
+            throw new BlockNotAcceptedException(String.format("Transaction payload length %d exceeds declared block payload length %d for block %s",
+                    payloadLength, block.getPayloadLength(), block.getStringId()));
         }
     }
 
