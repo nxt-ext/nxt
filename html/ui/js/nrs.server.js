@@ -300,7 +300,7 @@ var NRS = (function(NRS, $, undefined) {
 			type = "POST";
 		}
 
-		if (requestType == "broadcastTransaction") {
+		if (requestType == "broadcastTransaction" || requestType == "addPeer" || requestType == "blacklistPeer") {
 			type = "POST";
 		}
 

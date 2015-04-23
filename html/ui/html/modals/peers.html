@@ -12,6 +12,7 @@
                         <label for="add_peer_address" data-i18n="address">ADDRESS</label>
                         <input type="text" class="form-control" name="peer" id="add_peer_address" placeholder="Peer Address" data-i18n="[placeholder]peer_address" autofocus tabindex="1" />
                     </div>
+                    <div data-replace-with-modal-template="admin_password_modal_template"></div>
                     <div class="callout account_info" style="display:none;margin-bottom: 0;"></div>
                     <input type="hidden" name="request_type" value="addPeer" />
                 </form>
@@ -34,8 +35,10 @@
             <div class="modal-body">
                 <div class="callout callout-danger never_hide" data-i18n="blacklist_peer_confirmation">Are you sure you want to blacklist this peer?</div>
                 <form role="form" autocomplete="off">
+                    <div class="callout callout-danger error_message" style="display:none"></div>
                     <p><strong data-i18n="name">Address</strong>: <span id="blacklist_peer_address"></span></p>
 
+                    <div data-replace-with-modal-template="admin_password_modal_template"></div>
                     <input type="hidden" name="peer" id="blacklist_peer_field_id" value="" />
                     <input type="hidden" name="request_type" value="blacklistPeer" />
                 </form>

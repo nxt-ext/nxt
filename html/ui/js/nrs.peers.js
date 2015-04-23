@@ -67,8 +67,7 @@ var NRS = (function(NRS, $, undefined) {
 					rows += "onClick='NRS.connectPeer(\"" + String(peer.announcedAddress).escapeHTML() +  "\");'>";
 					rows += $.t("connect") + "</a>";
 					rows += "<a class='btn btn-xs btn-default' href='#' data-toggle='modal' ";
-					rows += "data-target='#blacklist_peer_modal' " + (NRS.needsAdminPassword ? "disabled " : "");
-					rows += "data-peer='" + String(peer.announcedAddress).escapeHTML() + "'>" + $.t("blacklist") + "</a>";
+					rows += "data-target='#blacklist_peer_modal' data-peer='" + String(peer.announcedAddress).escapeHTML() + "'>" + $.t("blacklist") + "</a>";
 					rows += "</td>";
 					rows += "</tr>";
 				}
