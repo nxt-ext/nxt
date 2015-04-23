@@ -64,10 +64,14 @@ var NRS = (function(NRS, $, undefined) {
 
 					rows += "<td style='text-align:right;'>";
 					rows += "<a class='btn btn-xs btn-default' href='#' ";
-					rows += "onClick='NRS.connectPeer(\"" + String(peer.announcedAddress).escapeHTML() +  "\");'>";
+					if (NRS.needsAdminPassword) {
+						rows += "data-toggle='modal' data-target='#connect_peer_modal' data-peer='" + String(peer.announcedAddress).escapeHTML() + "'>";
+					} else {
+						rows += "onClick='NRS.connectPeer(\"" + String(peer.announcedAddress).escapeHTML() + "\");'>";
+					}
 					rows += $.t("connect") + "</a>";
-					rows += "<a class='btn btn-xs btn-default' href='#' data-toggle='modal' ";
-					rows += "data-target='#blacklist_peer_modal' data-peer='" + String(peer.announcedAddress).escapeHTML() + "'>" + $.t("blacklist") + "</a>";
+					rows += "<a class='btn btn-xs btn-default' href='#' ";
+					rows += "data-toggle='modal' data-target='#blacklist_peer_modal' data-peer='" + String(peer.announcedAddress).escapeHTML() + "'>" + $.t("blacklist") + "</a>";
 					rows += "</td>";
 					rows += "</tr>";
 				}
@@ -113,15 +117,27 @@ var NRS = (function(NRS, $, undefined) {
 		});
 		NRS.loadPage("peers");
 	}
+
+	$("#add_peer_modal").on("show.bs.modal", function(e) {
+		if (!NRS.needsAdminPassword) {
+			$("#add_peer_admin_password_wrapper").hide();
+		}
+	});
+
+	$("#connect_peer_modal").on("show.bs.modal", function(e) {
+		var $invoker = $(e.relatedTarget);
+		$("#connect_peer_address").html($invoker.data("peer"));
+		$("#connect_peer_field_id").val($invoker.data("peer"));
+	});
 	
 	$("#blacklist_peer_modal").on("show.bs.modal", function(e) {
 		var $invoker = $(e.relatedTarget);
-
-		var peerAddress = $invoker.data("peer");
-		
-		$("#blacklist_peer_address").html(peerAddress);
-		$("#blacklist_peer_field_id").val(peerAddress);
+		$("#blacklist_peer_address").html($invoker.data("peer"));
+		$("#blacklist_peer_field_id").val($invoker.data("peer"));
+		if (!NRS.needsAdminPassword) {
+			$("#blacklist_peer_admin_password_wrapper").hide();
+		}
 	});
-	
+
 	return NRS;
 }(NRS || {}, jQuery));

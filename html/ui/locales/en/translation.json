@@ -1167,5 +1167,6 @@
   "asset_balance": "Asset Balance",
   "currency_balance": "Currency Balance",
   "permanent_message": "Message is Never Deleted",
-  "admin_password": "Administrator Password"
+  "admin_password": "Administrator Password",
+  "connect_peer": "Connect Peer"
 }
