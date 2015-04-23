@@ -1225,6 +1225,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     while (rs.next()) {
                         try {
                             currentBlock = BlockDb.loadBlock(con, rs, true);
+                            currentBlock.loadTransactions();
                             if (currentBlock.getId() != currentBlockId || currentBlock.getHeight() > blockchain.getHeight() + 1) {
                                 throw new NxtException.NotValidException("Database blocks in the wrong order!");
                             }

@@ -227,7 +227,6 @@ final class TransactionImpl implements Transaction {
 
     private final List<Appendix.AbstractAppendix> appendages;
     private final int appendagesSize;
-    private final int appendagesFullSize;
 
     private volatile int height = Integer.MAX_VALUE;
     private volatile long blockId;
@@ -289,13 +288,10 @@ final class TransactionImpl implements Transaction {
         }
         this.appendages = Collections.unmodifiableList(list);
         int appendagesSize = 0;
-        int appendagesFullSize = 0;
         for (Appendix appendage : appendages) {
             appendagesSize += appendage.getSize();
-            appendagesFullSize += appendage.getFullSize();
         }
         this.appendagesSize = appendagesSize;
-        this.appendagesFullSize = appendagesFullSize;
         if (builder.feeNQT <= 0) {
             int effectiveHeight = (height < Integer.MAX_VALUE ? height : Nxt.getBlockchain().getHeight());
             if (this.phasing == null) {
@@ -867,7 +863,11 @@ final class TransactionImpl implements Transaction {
     }
 
     int getFullSize() {
-        return getSize() - appendagesSize + appendagesFullSize;
+        int fullSize = getSize() - appendagesSize;
+        for (Appendix.AbstractAppendix appendage : getAppendages()) {
+            fullSize += appendage.getFullSize();
+        }
+        return fullSize;
     }
 
     private int signatureOffset() {
