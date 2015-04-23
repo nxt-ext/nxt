@@ -142,9 +142,11 @@ public interface Appendix {
 
     class Message extends AbstractAppendix {
 
+        private static final String appendixName = "Message";
+
         static Message parse(JSONObject attachmentData) {
-            if (!hasAppendix("Message", attachmentData) &&
-                    (attachmentData.get("message") == null || hasAppendix("PrunablePlainMessage", attachmentData))) { //TODO: VOTING_SYSTEM_BLOCK
+            if (!hasAppendix(appendixName, attachmentData) &&
+                    (attachmentData.get("message") == null || hasAppendix(PrunablePlainMessage.appendixName, attachmentData))) { //TODO: VOTING_SYSTEM_BLOCK
                 return null;
             }
             return new Message(attachmentData);
@@ -193,7 +195,7 @@ public interface Appendix {
 
         @Override
         String getAppendixName() {
-            return "Message";
+            return appendixName;
         }
 
         @Override

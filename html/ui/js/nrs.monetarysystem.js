@@ -1116,6 +1116,7 @@ var NRS = (function (NRS, $, undefined) {
             delete data.add_message;
             delete data.message;
             delete data.encrypt_message;
+            delete data.permanent_message;
         }
 
         return {

@@ -1266,11 +1266,13 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                             Logger.logDebugMessage("Applying block " + Long.toUnsignedString(currentBlockId) + " at height "
                                     + (currentBlock == null ? 0 : currentBlock.getHeight()) + " failed, deleting from database");
                             if (currentBlock != null) {
+                                currentBlock.loadTransactions();
                                 TransactionProcessorImpl.getInstance().processLater(currentBlock.getTransactions());
                             }
                             while (rs.next()) {
                                 try {
                                     currentBlock = BlockDb.loadBlock(con, rs, true);
+                                    currentBlock.loadTransactions();
                                     TransactionProcessorImpl.getInstance().processLater(currentBlock.getTransactions());
                                 } catch (NxtException.ValidationException ignore) {
                                 } catch (RuntimeException e2) {

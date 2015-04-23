@@ -562,8 +562,8 @@ var NRS = (function(NRS, $, undefined) {
 				transaction.description = converters.byteArrayToString(byteArray, pos, descriptionLength);
 				pos += descriptionLength;
 				transaction.finishHeight = converters.byteArrayToSignedInt32(byteArray, pos);
-            pos += 4;
-            var nr_options = byteArray[pos];
+				pos += 4;
+				var nr_options = byteArray[pos];
 				pos++;
 
 				for (var i = 0; i < nr_options; i++) {
@@ -582,15 +582,15 @@ var NRS = (function(NRS, $, undefined) {
 				pos++;
 				transaction.maxRangeValue = String(byteArray[pos]);
 				pos++;
-            transaction.minBalance = String(converters.byteArrayToBigInteger(byteArray, pos));
-            pos += 8;
-            transaction.minBalanceModel = String(byteArray[pos]);
-            pos++;
-            transaction.holding = String(converters.byteArrayToBigInteger(byteArray, pos));
-            pos += 8;
+				transaction.minBalance = String(converters.byteArrayToBigInteger(byteArray, pos));
+				pos += 8;
+				transaction.minBalanceModel = String(byteArray[pos]);
+				pos++;
+				transaction.holding = String(converters.byteArrayToBigInteger(byteArray, pos));
+				pos += 8;
 
 				if (transaction.name !== data.name || transaction.description !== data.description ||
-               transaction.minNumberOfOptions !== data.minNumberOfOptions || transaction.maxNumberOfOptions !== data.maxNumberOfOptions) {
+					transaction.minNumberOfOptions !== data.minNumberOfOptions || transaction.maxNumberOfOptions !== data.maxNumberOfOptions) {
 					return false;
 				}
 
@@ -615,13 +615,13 @@ var NRS = (function(NRS, $, undefined) {
 				transaction.votes = [];
 
 				for (var i = 0; i < voteLength; i++) {
-               transaction["vote" + (i < 10 ? "0" + i : i)] = byteArray[pos];
+					transaction["vote" + (i < 10 ? "0" + i : i)] = byteArray[pos];
 					pos++;
 				}
-            if (transaction.poll !== data.poll) {
-               return false;
-            }
-            break;
+				if (transaction.poll !== data.poll) {
+				   return false;
+				}
+				break;
 			case "hubAnnouncement":
 				if (transaction.type !== 1 || transaction.subtype != 4) {
 					return false;
@@ -694,13 +694,18 @@ var NRS = (function(NRS, $, undefined) {
 					return false;
 				}
 				break;
-         case "approveTransaction":
-            if (transaction.type !== 1 && transaction.subtype !== 9) {
-               return false;
-            }
-            transaction.transactionFullHash = converters.byteArrayToHexString(byteArray.slice(pos, pos + 32));
-            pos += 32;
-            break;
+			case "approveTransaction":
+				if (transaction.type !== 1 && transaction.subtype !== 9) {
+				   return false;
+				}
+				var fullHashesLength = byteArray[pos];
+				pos ++;
+				transaction.transactionFullHash = converters.byteArrayToHexString(byteArray.slice(pos, pos + 32));
+				pos += 32;
+				if (transaction.transactionFullHash !== data.transactionFullHash) {
+					return false;
+				}
+				break;
 			case "issueAsset":
 				if (transaction.type !== 2 || transaction.subtype !== 0) {
 					return false;
@@ -1147,8 +1152,67 @@ var NRS = (function(NRS, $, undefined) {
 		} else if (data.encryptToSelfMessageData) {
 			return false;
 		}
+		position <<= 1;
 
-		// TODO add phasing, prunablePlainMessage, prunableEncryptedMessage appendix validation
+		if ((transaction.flags & position) != 0) {
+			var attachmentVersion = byteArray[pos];
+			pos++;
+			if (String(converters.byteArrayToSignedInt32(byteArray, pos)) !== data.phasingFinishHeight) {
+				return false;
+			}
+			pos += 4;
+			if (String(byteArray[pos]) !== data.phasingVotingModel) {
+				return false;
+			}
+			pos++;
+			if (String(converters.byteArrayToBigInteger(byteArray, pos)) !== data.phasingQuorum) {
+				return false;
+			}
+			pos += 8;
+			var minBalance = String(converters.byteArrayToBigInteger(byteArray, pos));
+            if (minBalance !== "0" && minBalance !== data.phasingMinBalance) {
+				return false;
+			}
+			pos += 8;
+			var whiteListLength = byteArray[pos];
+			pos++;
+			for (var i = 0; i < whiteListLength; i++) {
+				var accountId = NRS.convertNumericToRSAccountFormat(converters.byteArrayToBigInteger(byteArray, pos));
+				pos += 8;
+				if (String(accountId) !== data.phasingWhitelisted[i]) {
+					return false;
+				}
+			}
+			var holdingId = String(converters.byteArrayToBigInteger(byteArray, pos));
+            if (holdingId !== "0" && holdingId !== data.phasingHolding) {
+				return false;
+			}
+			pos += 8;
+			if (String(byteArray[pos]) !== data.phasingMinBalanceModel) {
+				return false;
+			}
+			pos++;
+			var linkedFullHashesLength = byteArray[pos];
+			pos++;
+			for (var i = 0; i < linkedFullHashesLength; i++) {
+				var fullHash = converters.byteArrayToHexString(byteArray.slice(pos, pos + 32));
+				pos += 32;
+				if (fullHash !== data.phasingLinkedFullHash[i]) {
+					return false;
+				}
+			}
+			var hashedSecretLength = byteArray[pos];
+			if (hashedSecretLength > 0 && converters.byteArrayToHexString(byteArray.slice(pos, pos + hashedSecretLength)) !== data.phasingHashedSecret) {
+				return false;
+			}
+			pos += hashedSecretLength;
+			var algorithm = String(byteArray[pos]);
+            if (algorithm !== "0" && algorithm !== data.phasingHashedSecretAlgorithm) {
+				return false;
+			}
+			pos++;
+		}
+		// TODO prunablePlainMessage, prunableEncryptedMessage appendix validation
 
 		return transactionBytes.substr(0, 192) + signature + transactionBytes.substr(320);
 	};
