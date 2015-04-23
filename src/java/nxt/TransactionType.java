@@ -2394,7 +2394,7 @@ public abstract class TransactionType {
                     throw new NxtException.NotYetEnabledException("Prunable Tagged Data not yet enabled");
                 }
                 Attachment.TaggedDataExtend attachment = (Attachment.TaggedDataExtend) transaction.getAttachment();
-                if (attachment.getData() == null && Nxt.getEpochTime() - transaction.getTimestamp() < Constants.MIN_PRUNABLE_LIFETIME) {
+                if ((attachment.jsonIsPruned() || attachment.getData() == null) && Nxt.getEpochTime() - transaction.getTimestamp() < Constants.MIN_PRUNABLE_LIFETIME) {
                     throw new NxtException.NotCurrentlyValidException("Data has been pruned prematurely");
                 }
                 TransactionImpl uploadTransaction = TransactionDb.findTransaction(attachment.getTaggedDataId(), Nxt.getBlockchain().getHeight());
@@ -2409,7 +2409,7 @@ public abstract class TransactionType {
                     Attachment.TaggedDataUpload taggedDataUpload = (Attachment.TaggedDataUpload)uploadTransaction.getAttachment();
                     if (!Arrays.equals(attachment.getHash(), taggedDataUpload.getHash())) {
                         throw new NxtException.NotValidException("Hashes don't match! Extend hash: " + Convert.toHexString(attachment.getHash())
-                                + " upload hash " + Convert.toHexString(taggedDataUpload.getHash()));
+                                + " upload hash: " + Convert.toHexString(taggedDataUpload.getHash()));
                     }
                 }
             }
