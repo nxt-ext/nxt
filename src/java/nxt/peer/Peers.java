@@ -33,6 +33,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.PriorityQueue;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -359,6 +360,19 @@ public final class Peers {
                             }
                             if (hasTooFewKnownPeers()) {
                                 break;
+                            }
+                        }
+                        if (hasTooManyKnownPeers()) {
+                            PriorityQueue<PeerImpl> sortedPeers = new PriorityQueue<>(peers.values());
+                            int skipped = 0;
+                            while (skipped < Peers.minNumberOfKnownPeers) {
+                                if (sortedPeers.poll() == null) {
+                                    break;
+                                }
+                                skipped += 1;
+                            }
+                            while (!sortedPeers.isEmpty()) {
+                                sortedPeers.poll().remove();
                             }
                         }
                         Logger.logDebugMessage("Reduced peer pool size from " + initialSize + " to " + peers.size());
