@@ -216,6 +216,11 @@ public final class PeerServlet extends WebSocketServlet {
             } else if (request.get("protocol") != null && ((Number)request.get("protocol")).intValue() == 1) {
                 PeerRequestHandler peerRequestHandler = peerRequestHandlers.get((String)request.get("requestType"));
                 if (peerRequestHandler != null) {
+                    if (peer.getState() == Peer.State.DISCONNECTED) {
+                        peer.setState(Peer.State.CONNECTED);
+                        if (peer.getAnnouncedAddress() != null)
+                            Peers.addOrUpdate(peer);
+                    }
                     response = peerRequestHandler.processRequest(request, peer);
                 } else {
                     response = UNSUPPORTED_REQUEST_TYPE;
