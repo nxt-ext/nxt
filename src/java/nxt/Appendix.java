@@ -246,7 +246,7 @@ public interface Appendix {
         private static final Fee PRUNABLE_MESSAGE_FEE = new Fee.SizeBasedFee(Constants.ONE_NXT/10) {
             @Override
             public int getSize(TransactionImpl transaction, Appendix appendix) {
-                return ((PrunablePlainMessage)appendix).getMessageLength();
+                return appendix.getFullSize();
             }
         };
 
@@ -270,7 +270,7 @@ public interface Appendix {
             this.isText = false;
         }
 
-        PrunablePlainMessage(JSONObject attachmentData) {
+        private PrunablePlainMessage(JSONObject attachmentData) {
             super(attachmentData);
             String hashString = Convert.emptyToNull((String) attachmentData.get("messageHash"));
             String messageString = Convert.emptyToNull((String) attachmentData.get("message"));
@@ -320,7 +320,7 @@ public interface Appendix {
 
         @Override
         int getMyFullSize() {
-            return getMessageLength();
+            return getMessage() == null ? 0 : getMessage().length;
         }
 
         @Override
@@ -348,10 +348,11 @@ public interface Appendix {
             if (transaction.getMessage() != null) {
                 throw new NxtException.NotValidException("Cannot have both message and prunable message attachments");
             }
-            if (getMessageLength() > Constants.MAX_PRUNABLE_MESSAGE_LENGTH) {
-                throw new NxtException.NotValidException("Invalid prunable message length: " + message.length);
+            byte[] msg = getMessage();
+            if (msg != null && msg.length > Constants.MAX_PRUNABLE_MESSAGE_LENGTH) {
+                throw new NxtException.NotValidException("Invalid prunable message length: " + msg.length);
             }
-            if (getMessage() == null && Nxt.getEpochTime() - transaction.getTimestamp() < Constants.MIN_PRUNABLE_LIFETIME) {
+            if (msg == null && Nxt.getEpochTime() - transaction.getTimestamp() < Constants.MIN_PRUNABLE_LIFETIME) {
                 throw new NxtException.NotCurrentlyValidException("Message has been pruned prematurely");
             }
         }
@@ -392,10 +393,6 @@ public interface Appendix {
                 return prunableMessage.toString();
             }
             return isText ? Convert.toString(message) : Convert.toHexString(message);
-        }
-
-        private int getMessageLength() {
-            return getMessage() == null ? 0 : getMessage().length;
         }
 
         @Override
@@ -506,7 +503,7 @@ public interface Appendix {
         private static final Fee PRUNABLE_ENCRYPTED_DATA_FEE = new Fee.SizeBasedFee(Constants.ONE_NXT/10) {
             @Override
             public int getSize(TransactionImpl transaction, Appendix appendix) {
-                return ((PrunableEncryptedMessage)appendix).getEncryptedDataLength();
+                return appendix.getFullSize();
             }
         };
 
@@ -570,7 +567,7 @@ public interface Appendix {
 
         @Override
         int getMyFullSize() {
-            return getEncryptedDataLength();
+            return getEncryptedData() == null ? 0 : getEncryptedData().getData().length;
         }
 
         @Override
@@ -614,14 +611,14 @@ public interface Appendix {
             if (transaction.getPrunablePlainMessage() != null) {
                 throw new NxtException.NotValidException("Cannot have both plan and encrypted prunable message attachments");
             }
-            if (getEncryptedDataLength() > Constants.MAX_PRUNABLE_ENCRYPTED_MESSAGE_LENGTH) {
-                throw new NxtException.NotValidException("Max encrypted message length exceeded");
-            }
-            if (getEncryptedData() == null && Nxt.getEpochTime() - transaction.getTimestamp() < Constants.MIN_PRUNABLE_LIFETIME) {
+            EncryptedData ed = getEncryptedData();
+            if (ed == null && Nxt.getEpochTime() - transaction.getTimestamp() < Constants.MIN_PRUNABLE_LIFETIME) {
                 throw new NxtException.NotCurrentlyValidException("Encrypted message has been pruned prematurely");
             }
-            EncryptedData ed;
-            if ((ed = getEncryptedData()) != null) {
+            if (ed != null) {
+                if (ed.getData().length > Constants.MAX_PRUNABLE_ENCRYPTED_MESSAGE_LENGTH) {
+                    throw new NxtException.NotValidException("Max encrypted message length exceeded");
+                }
                 if ((ed.getNonce().length != 32 && ed.getData().length > 0)
                         || (ed.getNonce().length != 0 && ed.getData().length == 0)) {
                     throw new NxtException.NotValidException("Invalid nonce length " + ed.getNonce().length);
@@ -669,10 +666,6 @@ public interface Appendix {
             digest.update(encryptedData.getData());
             digest.update(encryptedData.getNonce());
             return digest.digest();
-        }
-
-        private int getEncryptedDataLength() {
-            return getEncryptedData() == null ? 0 : getEncryptedData().getData().length;
         }
 
         @Override

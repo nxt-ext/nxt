@@ -227,11 +227,10 @@ final class TransactionImpl implements Transaction {
 
     private final List<Appendix.AbstractAppendix> appendages;
     private final int appendagesSize;
-    private final int appendagesFullSize;
 
     private volatile int height = Integer.MAX_VALUE;
     private volatile long blockId;
-    private volatile Block block;
+    private volatile BlockImpl block;
     private volatile int blockTimestamp = -1;
     private volatile short index = -1;
     private volatile long id;
@@ -289,13 +288,10 @@ final class TransactionImpl implements Transaction {
         }
         this.appendages = Collections.unmodifiableList(list);
         int appendagesSize = 0;
-        int appendagesFullSize = 0;
         for (Appendix appendage : appendages) {
             appendagesSize += appendage.getSize();
-            appendagesFullSize += appendage.getFullSize();
         }
         this.appendagesSize = appendagesSize;
-        this.appendagesFullSize = appendagesFullSize;
         if (builder.feeNQT <= 0) {
             int effectiveHeight = (height < Integer.MAX_VALUE ? height : Nxt.getBlockchain().getHeight());
             if (this.phasing == null) {
@@ -395,14 +391,14 @@ final class TransactionImpl implements Transaction {
     }
 
     @Override
-    public Block getBlock() {
+    public BlockImpl getBlock() {
         if (block == null && blockId != 0) {
-            block = Nxt.getBlockchain().getBlock(blockId);
+            block = BlockchainImpl.getInstance().getBlock(blockId);
         }
         return block;
     }
 
-    void setBlock(Block block) {
+    void setBlock(BlockImpl block) {
         this.block = block;
         this.blockId = block.getId();
         this.height = block.getHeight();
@@ -699,6 +695,10 @@ final class TransactionImpl implements Transaction {
             if (taggedDataUpload != null) {
                 builder.appendix(taggedDataUpload);
             }
+            Attachment.TaggedDataExtend taggedDataExtend = Attachment.TaggedDataExtend.parse(prunableAttachments);
+            if (taggedDataExtend != null) {
+                builder.appendix(taggedDataExtend);
+            }
             Appendix.PrunablePlainMessage prunablePlainMessage = Appendix.PrunablePlainMessage.parse(prunableAttachments);
             if (prunablePlainMessage != null) {
                 builder.appendix(prunablePlainMessage);
@@ -863,7 +863,11 @@ final class TransactionImpl implements Transaction {
     }
 
     int getFullSize() {
-        return getSize() - appendagesSize + appendagesFullSize;
+        int fullSize = getSize() - appendagesSize;
+        for (Appendix.AbstractAppendix appendage : getAppendages()) {
+            fullSize += appendage.getFullSize();
+        }
+        return fullSize;
     }
 
     private int signatureOffset() {

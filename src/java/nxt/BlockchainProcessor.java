@@ -42,12 +42,21 @@ public interface BlockchainProcessor extends Observable<Block,BlockchainProcesso
 
     class BlockNotAcceptedException extends NxtException {
 
-        BlockNotAcceptedException(String message) {
+        private final BlockImpl block;
+
+        BlockNotAcceptedException(String message, BlockImpl block) {
             super(message);
+            this.block = block;
         }
 
-        BlockNotAcceptedException(Throwable cause) {
+        BlockNotAcceptedException(Throwable cause, BlockImpl block) {
             super(cause);
+            this.block = block;
+        }
+
+        @Override
+        public String getMessage() {
+            return block == null ? super.getMessage() : super.getMessage() + ", block " + block.getStringId() + ": " + block.getJSONObject().toJSONString();
         }
 
     }
@@ -57,12 +66,12 @@ public interface BlockchainProcessor extends Observable<Block,BlockchainProcesso
         private final TransactionImpl transaction;
 
         TransactionNotAcceptedException(String message, TransactionImpl transaction) {
-            super(message);
+            super(message, transaction.getBlock());
             this.transaction = transaction;
         }
 
         TransactionNotAcceptedException(Throwable cause, TransactionImpl transaction) {
-            super(cause);
+            super(cause, transaction.getBlock());
             this.transaction = transaction;
         }
 
@@ -78,8 +87,8 @@ public interface BlockchainProcessor extends Observable<Block,BlockchainProcesso
 
     class BlockOutOfOrderException extends BlockNotAcceptedException {
 
-        BlockOutOfOrderException(String message) {
-            super(message);
+        BlockOutOfOrderException(String message, BlockImpl block) {
+            super(message, block);
         }
 
 	}
