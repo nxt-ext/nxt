@@ -689,7 +689,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                             + " current time " + curTime;
                     Logger.logDebugMessage(msg);
                     Generator.setDelay(-Constants.FORGING_SPEEDUP);
-                    throw new BlockOutOfOrderException(msg);
+                    throw new BlockOutOfOrderException(msg, block);
                 }
 
                 Map<TransactionType, Map<String, Boolean>> duplicates = new HashMap<>();
@@ -747,32 +747,32 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
 
     private void validate(BlockImpl block, BlockImpl previousLastBlock, int curTime) throws BlockNotAcceptedException {
         if (previousLastBlock.getId() != block.getPreviousBlockId()) {
-            throw new BlockOutOfOrderException("Previous block id doesn't match");
+            throw new BlockOutOfOrderException("Previous block id doesn't match", block);
         }
         if (block.getVersion() != getBlockVersion(previousLastBlock.getHeight())) {
-            throw new BlockNotAcceptedException("Invalid version " + block.getVersion());
+            throw new BlockNotAcceptedException("Invalid version " + block.getVersion(), block);
         }
         if (block.getTimestamp() > curTime + Constants.MAX_TIMEDRIFT || block.getTimestamp() <= previousLastBlock.getTimestamp()) {
             throw new BlockOutOfOrderException("Invalid timestamp: " + block.getTimestamp()
-                    + " current time is " + curTime + ", previous block timestamp is " + previousLastBlock.getTimestamp());
+                    + " current time is " + curTime + ", previous block timestamp is " + previousLastBlock.getTimestamp(), block);
         }
         if (block.getVersion() != 1 && !Arrays.equals(Crypto.sha256().digest(previousLastBlock.bytes()), block.getPreviousBlockHash())) {
-            throw new BlockNotAcceptedException("Previous block hash doesn't match");
+            throw new BlockNotAcceptedException("Previous block hash doesn't match", block);
         }
         if (block.getId() == 0L || BlockDb.hasBlock(block.getId(), previousLastBlock.getHeight())) {
-            throw new BlockNotAcceptedException("Duplicate block or invalid id");
+            throw new BlockNotAcceptedException("Duplicate block or invalid id", block);
         }
         if (!block.verifyGenerationSignature() && !Generator.allowsFakeForging(block.getGeneratorPublicKey())) {
-            throw new BlockNotAcceptedException("Generation signature verification failed");
+            throw new BlockNotAcceptedException("Generation signature verification failed", block);
         }
         if (!block.verifyBlockSignature()) {
-            throw new BlockNotAcceptedException("Block signature verification failed");
+            throw new BlockNotAcceptedException("Block signature verification failed", block);
         }
         if (block.getTransactions().size() > Constants.MAX_NUMBER_OF_TRANSACTIONS) {
-            throw new BlockNotAcceptedException("Invalid block transaction count " + block.getTransactions().size());
+            throw new BlockNotAcceptedException("Invalid block transaction count " + block.getTransactions().size(), block);
         }
         if (block.getPayloadLength() > Constants.MAX_PAYLOAD_LENGTH || block.getPayloadLength() < 0) {
-            throw new BlockNotAcceptedException("Invalid block payload length " + block.getPayloadLength());
+            throw new BlockNotAcceptedException("Invalid block payload length " + block.getPayloadLength(), block);
         }
     }
 
@@ -784,7 +784,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         for (TransactionImpl transaction : block.getTransactions()) {
             if (transaction.getTimestamp() > curTime + Constants.MAX_TIMEDRIFT) {
                 throw new BlockOutOfOrderException("Invalid transaction timestamp: " + transaction.getTimestamp()
-                        + ", current time is " + curTime);
+                        + ", current time is " + curTime, block);
             }
             // cfb: Block 303 contains a transaction which expired before the block timestamp
             if (transaction.getTimestamp() > block.getTimestamp() + Constants.MAX_TIMEDRIFT
@@ -838,13 +838,13 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             digest.update(transaction.bytes());
         }
         if (calculatedTotalAmount != block.getTotalAmountNQT() || calculatedTotalFee != block.getTotalFeeNQT()) {
-            throw new BlockNotAcceptedException("Total amount or fee don't match transaction totals");
+            throw new BlockNotAcceptedException("Total amount or fee don't match transaction totals", block);
         }
         if (!Arrays.equals(digest.digest(), block.getPayloadHash())) {
-            throw new BlockNotAcceptedException("Payload hash doesn't match");
+            throw new BlockNotAcceptedException("Payload hash doesn't match", block);
         }
         if (payloadLength > block.getPayloadLength()) {
-            throw new BlockNotAcceptedException("Transaction payload length exceeds declared block payload length");
+            throw new BlockNotAcceptedException("Transaction payload length " + payloadLength + " exceeds declared block payload length " + block.getPayloadLength(), block);
         }
     }
 
