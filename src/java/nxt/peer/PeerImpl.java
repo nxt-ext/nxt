@@ -453,7 +453,10 @@ final class PeerImpl implements Peer {
                 if (newAnnouncedAddress != null) {
                     newAnnouncedAddress = Peers.addressWithPort(newAnnouncedAddress);
                     if (newAnnouncedAddress != null && !newAnnouncedAddress.equals(announcedAddress)) {
-                        // force verification of changed announced address
+                        if (!verifyAnnouncedAddress(newAnnouncedAddress)) {
+                            return;
+                        }
+                        // force checking connectivity to new announced address
                         Logger.logDebugMessage("Peer " + peerAddress + " has new announced address " + newAnnouncedAddress + ", old is " + announcedAddress);
                         setState(Peer.State.NON_CONNECTED);
                         setAnnouncedAddress(newAnnouncedAddress);
@@ -466,7 +469,7 @@ final class PeerImpl implements Peer {
                 setAnnouncedAddress(peerAddress);
                 //Logger.logDebugMessage("Connected to peer without announced address, setting to " + peerAddress);
             }
-            analyzeHallmark(announcedAddress, (String)response.get("hallmark"));
+            analyzeHallmark(announcedAddress, (String) response.get("hallmark"));
             if (!isOldVersion) {
                 setState(State.CONNECTED);
                 Peers.addOrUpdate(this);
@@ -478,6 +481,26 @@ final class PeerImpl implements Peer {
             //Logger.logDebugMessage("Failed to connect to peer " + peerAddress);
             setState(State.NON_CONNECTED);
         }
+    }
+
+    boolean verifyAnnouncedAddress(String newAnnouncedAddress) {
+        boolean isValid = false;
+        try {
+            InetAddress address = InetAddress.getByName(peerAddress);
+            for (InetAddress inetAddress : InetAddress.getAllByName(new URI("http://" + newAnnouncedAddress).getHost())) {
+                if (inetAddress.equals(address)) {
+                    isValid = true;
+                    break;
+                }
+            }
+        } catch (UnknownHostException|URISyntaxException ignore) {} // remains invalid
+        if (!isValid) {
+            String error = "Peer announced address " + newAnnouncedAddress + " does not resolve to " + peerAddress;
+            Logger.logDebugMessage(error);
+            blacklist(error);
+            return false;
+        }
+        return true;
     }
 
     boolean analyzeHallmark(String address, final String hallmarkString) {
