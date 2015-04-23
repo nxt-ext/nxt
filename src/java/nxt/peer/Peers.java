@@ -649,11 +649,19 @@ public final class Peers {
 
     static boolean addOrUpdate(PeerImpl peer) {
         if (peer.getAnnouncedAddress() != null) {
+            Peer oldPeer = peers.get(peer.getPeerAddress());
+            if (oldPeer != null) {
+                String oldAnnouncedAddress = oldPeer.getAnnouncedAddress();
+                if (oldAnnouncedAddress != null && !oldAnnouncedAddress.equals(peer.getAnnouncedAddress())) {
+                    Logger.logDebugMessage("Removing old announced address " + oldAnnouncedAddress + " for IP " + oldPeer.getPeerAddress());
+                    announcedAddresses.remove(oldAnnouncedAddress);
+                }
+            }
             String oldAddress = announcedAddresses.put(peer.getAnnouncedAddress(), peer.getPeerAddress());
             if (oldAddress != null && !peer.getPeerAddress().equals(oldAddress)) {
-                //Logger.logDebugMessage("Peer " + peer.getAnnouncedAddress() + " has changed address from " + oldAddress
-                //        + " to " + peer.getPeerAddress());
-                Peer oldPeer = peers.remove(oldAddress);
+                Logger.logDebugMessage("Peer " + peer.getAnnouncedAddress() + " has changed address from " + oldAddress
+                        + " to " + peer.getPeerAddress());
+                oldPeer = peers.remove(oldAddress);
                 if (oldPeer != null) {
                     Peers.notifyListeners(oldPeer, Peers.Event.REMOVE);
                 }
