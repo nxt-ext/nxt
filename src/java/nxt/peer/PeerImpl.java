@@ -323,8 +323,11 @@ final class PeerImpl implements Peer {
     @Override
     public JSONObject send(final JSONStreamAware request, int maxResponseSize) {
 
-        JSONObject response = null;
+        if (announcedAddress != null && !verifyAnnouncedAddress(announcedAddress)) {
+            return null;
+        }
 
+        JSONObject response = null;
         String log = null;
         boolean showLog = false;
         HttpURLConnection connection = null;
@@ -454,7 +457,6 @@ final class PeerImpl implements Peer {
                     newAnnouncedAddress = Peers.addressWithPort(newAnnouncedAddress);
                     if (newAnnouncedAddress != null && !newAnnouncedAddress.equals(announcedAddress)) {
                         if (!verifyAnnouncedAddress(newAnnouncedAddress)) {
-                            remove(); // new announced address, removed old peer instance
                             return;
                         }
                         // force checking connectivity to new announced address
@@ -485,23 +487,20 @@ final class PeerImpl implements Peer {
     }
 
     boolean verifyAnnouncedAddress(String newAnnouncedAddress) {
-        boolean isValid = false;
         try {
             InetAddress address = InetAddress.getByName(new URI("http://" + peerAddress).getHost());
             for (InetAddress inetAddress : InetAddress.getAllByName(new URI("http://" + newAnnouncedAddress).getHost())) {
                 if (inetAddress.equals(address)) {
-                    isValid = true;
-                    break;
+                    return true;
                 }
             }
-        } catch (UnknownHostException|URISyntaxException ignore) {} // remains invalid
-        if (!isValid) {
-            String error = "Peer announced address " + newAnnouncedAddress + " does not resolve to " + peerAddress;
-            Logger.logDebugMessage(error);
-            blacklist(error);
-            return false;
+            Logger.logDebugMessage("Peer announced address " + newAnnouncedAddress + " does not resolve to " + peerAddress + ", removing");
+            remove();
+        } catch (UnknownHostException|URISyntaxException e) {
+            Logger.logDebugMessage(e.toString());
+            blacklist(e);
         }
-        return true;
+        return false;
     }
 
     boolean analyzeHallmark(String address, final String hallmarkString) {

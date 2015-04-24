@@ -1,6 +1,7 @@
 package nxt.peer;
 
 import nxt.Nxt;
+import nxt.util.JSON;
 import nxt.util.Logger;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
@@ -9,8 +10,14 @@ final class GetInfo extends PeerServlet.PeerRequestHandler {
 
     static final GetInfo instance = new GetInfo();
 
-    private GetInfo() {}
+    private static final JSONStreamAware INVALID_ANNOUNCED_ADDRESS;
+    static {
+        JSONObject response = new JSONObject();
+        response.put("error", Errors.INVALID_ANNOUNCED_ADDRESS);
+        INVALID_ANNOUNCED_ADDRESS = JSON.prepare(response);
+    }
 
+    private GetInfo() {}
 
     @Override
     JSONStreamAware processRequest(JSONObject request, Peer peer) {
@@ -21,8 +28,7 @@ final class GetInfo extends PeerServlet.PeerRequestHandler {
                 announcedAddress = Peers.addressWithPort(announcedAddress);
                 if (announcedAddress != null && !announcedAddress.equals(peerImpl.getAnnouncedAddress())) {
                     if (!peerImpl.verifyAnnouncedAddress(announcedAddress)) {
-                        // peer has been blacklisted
-                        return Peers.myPeerInfoResponse;
+                        return INVALID_ANNOUNCED_ADDRESS;
                     }
                     // force checking connectivity to new announced address
                     Logger.logDebugMessage("Peer " + peer.getPeerAddress() + " changed announced address from " + peer.getAnnouncedAddress() + " to " + announcedAddress);
