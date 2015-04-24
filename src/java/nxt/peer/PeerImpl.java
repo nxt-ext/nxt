@@ -335,9 +335,8 @@ final class PeerImpl implements Peer {
 
         try {
 
-            String address = announcedAddress != null ? announcedAddress : peerAddress;
             StringBuilder buf = new StringBuilder("http://");
-            buf.append(address);
+            buf.append(peerAddress);
             if (port <= 0) {
                 buf.append(':');
                 buf.append(Peers.getDefaultPeerPort());
