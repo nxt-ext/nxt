@@ -487,7 +487,7 @@ final class PeerImpl implements Peer {
     boolean verifyAnnouncedAddress(String newAnnouncedAddress) {
         boolean isValid = false;
         try {
-            InetAddress address = InetAddress.getByName(peerAddress);
+            InetAddress address = InetAddress.getByName(new URI("http://" + peerAddress).getHost());
             for (InetAddress inetAddress : InetAddress.getAllByName(new URI("http://" + newAnnouncedAddress).getHost())) {
                 if (inetAddress.equals(address)) {
                     isValid = true;
