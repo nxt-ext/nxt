@@ -1152,6 +1152,7 @@ var NRS = (function(NRS, $, undefined) {
 		} else if (data.encryptToSelfMessageData) {
 			return false;
 		}
+
 		position <<= 1;
 
 		if ((transaction.flags & position) != 0) {
@@ -1212,7 +1213,52 @@ var NRS = (function(NRS, $, undefined) {
 			}
 			pos++;
 		}
-		// TODO prunablePlainMessage, prunableEncryptedMessage appendix validation
+
+		position <<= 1;
+
+		if ((transaction.flags & position) != 0) {
+			var attachmentVersion = byteArray[pos];
+			pos++;
+			var serverHash = converters.byteArrayToHexString(byteArray.slice(pos, pos + 32));
+			pos += 32;
+			var sha256 = CryptoJS.algo.SHA256.create();
+			var isText = [];
+			if (data.messageIsText == "true") {
+				isText.push(1);
+			} else {
+				isText.push(0);
+			}
+			sha256.update(converters.byteArrayToWordArray(isText));
+			var utfBytes = NRS.getUtf8Bytes(data.message);
+			sha256.update(converters.byteArrayToWordArray(utfBytes));
+			var hashWords = sha256.finalize();
+			var calculatedHash = converters.wordArrayToByteArrayImpl(hashWords, true);
+			if (serverHash !== converters.byteArrayToHexString(calculatedHash)) {
+				return false;
+			}
+		}
+		position <<= 1;
+
+		if ((transaction.flags & position) != 0) {
+			var attachmentVersion = byteArray[pos];
+			pos++;
+			var serverHash = converters.byteArrayToHexString(byteArray.slice(pos, pos + 32));
+			pos += 32;
+			var sha256 = CryptoJS.algo.SHA256.create();
+			if (data.messageToEncryptIsText == "true") {
+				sha256.update(converters.byteArrayToWordArray([1]));
+			} else {
+				sha256.update(converters.byteArrayToWordArray([0]));
+			}
+			sha256.update(converters.byteArrayToWordArray([1])); // compression
+			sha256.update(converters.byteArrayToWordArray(converters.hexStringToByteArray(data.encryptedMessageData)));
+			sha256.update(converters.byteArrayToWordArray(converters.hexStringToByteArray(data.encryptedMessageNonce)));
+			var hashWords = sha256.finalize();
+			var calculatedHash = converters.wordArrayToByteArray(hashWords);
+			if (serverHash !== converters.byteArrayToHexString(calculatedHash)) {
+				return false;
+			}
+		}
 
 		return transactionBytes.substr(0, 192) + signature + transactionBytes.substr(320);
 	};
