@@ -25,13 +25,13 @@ final class GetInfo extends PeerServlet.PeerRequestHandler {
         if (!Peers.ignorePeerAnnouncedAddress) {
             String announcedAddress = (String) request.get("announcedAddress");
             if (announcedAddress != null && (announcedAddress = announcedAddress.trim()).length() > 0) {
-                announcedAddress = Peers.addressWithPort(announcedAddress);
+                announcedAddress = Peers.addressWithPort(announcedAddress.toLowerCase());
                 if (announcedAddress != null && !announcedAddress.equals(peerImpl.getAnnouncedAddress())) {
                     if (!peerImpl.verifyAnnouncedAddress(announcedAddress)) {
                         return INVALID_ANNOUNCED_ADDRESS;
                     }
                     // force checking connectivity to new announced address
-                    Logger.logDebugMessage("Peer " + peer.getPeerAddress() + " changed announced address from " + peer.getAnnouncedAddress() + " to " + announcedAddress);
+                    Logger.logDebugMessage("Peer " + peer.getHost() + " changed announced address from " + peer.getAnnouncedAddress() + " to " + announcedAddress);
                     peerImpl.setState(Peer.State.NON_CONNECTED);
                 }
                 peerImpl.setAnnouncedAddress(announcedAddress);
@@ -56,7 +56,7 @@ final class GetInfo extends PeerServlet.PeerRequestHandler {
         peerImpl.setPlatform(platform.trim());
 
         peerImpl.setShareAddress(Boolean.TRUE.equals(request.get("shareAddress")));
-        peerImpl.analyzeHallmark(peer.getPeerAddress(), (String)request.get("hallmark"));
+        peerImpl.analyzeHallmark((String)request.get("hallmark"));
         peerImpl.setLastUpdated(Nxt.getEpochTime());
 
         return Peers.myPeerInfoResponse;

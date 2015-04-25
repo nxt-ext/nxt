@@ -91,7 +91,7 @@ public final class PeerServlet extends HttpServlet {
         JSONStreamAware response;
 
         try {
-            peer = Peers.findOrCreatePeer(req.getRemoteAddr(), -1, null, true);
+            peer = Peers.findOrCreatePeer(req.getRemoteAddr());
             if (peer == null) {
                 sendResponse(null, UNKNOWN_PEER, resp);
                 return;

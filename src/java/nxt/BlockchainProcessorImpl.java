@@ -164,7 +164,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                             if (confirmations >= numberOfForkConfirmations) {
                                 break;
                             }
-                            if (peer.getPeerAddress().equals(otherPeer.getPeerAddress())) {
+                            if (peer.getHost().equals(otherPeer.getHost())) {
                                 continue;
                             }
                             long otherPeerCommonBlockId = getCommonBlockId(otherPeer, commonBlockId);
@@ -237,7 +237,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 }
                 // prevent overloading with blockIds
                 if (milestoneBlockIds.size() > 20) {
-                    Logger.logDebugMessage("Obsolete or rogue peer " + peer.getPeerAddress() + " sends too many milestoneBlockIds, blacklisting");
+                    Logger.logDebugMessage("Obsolete or rogue peer " + peer.getHost() + " sends too many milestoneBlockIds, blacklisting");
                     peer.blacklist("Too many milestoneBlockIds");
                     return 0;
                 }
@@ -274,7 +274,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 }
                 // prevent overloading with blockIds
                 if (nextBlockIds.size() > 1440) {
-                    Logger.logDebugMessage("Obsolete or rogue peer " + peer.getPeerAddress() + " sends too many nextBlockIds, blacklisting");
+                    Logger.logDebugMessage("Obsolete or rogue peer " + peer.getHost() + " sends too many nextBlockIds, blacklisting");
                     peer.blacklist("Too many nextBlockIds");
                     return 0;
                 }
@@ -362,7 +362,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             }
             // prevent overloading with blocks
             if (nextBlocks.size() > 720) {
-                Logger.logDebugMessage("Obsolete or rogue peer " + peer.getPeerAddress() + " sends too many nextBlocks, blacklisting");
+                Logger.logDebugMessage("Obsolete or rogue peer " + peer.getHost() + " sends too many nextBlocks, blacklisting");
                 peer.blacklist("Too many nextBlocks");
                 return null;
             }
@@ -393,7 +393,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             }
 
             if (pushedForkBlocks > 0 && blockchain.getLastBlock().getCumulativeDifficulty().compareTo(curCumulativeDifficulty) < 0) {
-                Logger.logDebugMessage("Pop off caused by peer " + peer.getPeerAddress() + ", blacklisting");
+                Logger.logDebugMessage("Pop off caused by peer " + peer.getHost() + ", blacklisting");
                 peer.blacklist("Pop off");
                 List<BlockImpl> peerPoppedOffBlocks = popOffTo(commonBlock);
                 pushedForkBlocks = 0;
