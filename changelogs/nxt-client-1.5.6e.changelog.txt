@@ -1,0 +1,15 @@
+This is an experimental release. It is a required update for all testnet nodes,
+but is also possible to run on main net.
+
+Peer networking improvements.
+
+Announced addresses are always verified to resolve back to the peer address and
+not accepted if they don't. Old peer instances and old announced addresses are
+removed when a peer with dynamic IP changes address.
+
+If nxt.maxNumberOfKnownPeers (default 2000) is exceeded, the peers pool size is
+reduced back to nxt.minNumberOfKnownPeers (default 1000), keeping the highest
+hallmarked peers first.
+
+Fixed the UI for AddPeer and BlacklistPeer to accept admin password if needed.
+

@@ -330,22 +330,22 @@ final class PeerImpl implements Peer {
 
     @Override
     public JSONObject send(final JSONStreamAware request, int maxResponseSize) {
-
         JSONObject response = null;
-
         String log = null;
         boolean showLog = false;
         HttpURLConnection connection = null;
-        String address = announcedAddress != null ? announcedAddress : peerAddress;
         int communicationLoggingMask = Peers.communicationLoggingMask;
+        String address = announcedAddress != null ? announcedAddress : peerAddress;
 
         try {
             //
             // Create a new WebSocket session if we don't have one
             //
             if (useWebSocket && (webSocket.getSession() == null || !webSocket.getSession().isOpen())) {
+                if (announcedAddress != null && !verifyAnnouncedAddress(announcedAddress))
+                    return null;
                 StringBuilder buf = new StringBuilder("ws://");
-                buf.append(address);
+                buf.append(peerAddress);
                 if (port <= 0)
                     buf.append(':').append(Peers.getDefaultPeerPort());
                 buf.append("/nxt");
@@ -379,8 +379,10 @@ final class PeerImpl implements Peer {
                 //
                 // Send the request using HTTP
                 //
+                if (announcedAddress != null && !verifyAnnouncedAddress(announcedAddress))
+                    return null;
                 StringBuilder buf = new StringBuilder("http://");
-                buf.append(address);
+                buf.append(peerAddress);
                 if (port <= 0)
                     buf.append(':').append(Peers.getDefaultPeerPort());
                 buf.append("/nxt");
@@ -530,23 +532,20 @@ final class PeerImpl implements Peer {
     }
 
     boolean verifyAnnouncedAddress(String newAnnouncedAddress) {
-        boolean isValid = false;
         try {
-            InetAddress address = InetAddress.getByName(peerAddress);
+            InetAddress address = InetAddress.getByName(new URI("http://" + peerAddress).getHost());
             for (InetAddress inetAddress : InetAddress.getAllByName(new URI("http://" + newAnnouncedAddress).getHost())) {
                 if (inetAddress.equals(address)) {
-                    isValid = true;
-                    break;
+                    return true;
                 }
             }
-        } catch (UnknownHostException|URISyntaxException ignore) {} // remains invalid
-        if (!isValid) {
-            String error = "Peer announced address " + newAnnouncedAddress + " does not resolve to " + peerAddress;
-            Logger.logDebugMessage(error);
-            blacklist(error);
-            return false;
+            Logger.logDebugMessage("Peer announced address " + newAnnouncedAddress + " does not resolve to " + peerAddress + ", removing");
+            remove();
+        } catch (UnknownHostException|URISyntaxException e) {
+            Logger.logDebugMessage(e.toString());
+            blacklist(e);
         }
-        return true;
+        return false;
     }
 
     boolean analyzeHallmark(String address, final String hallmarkString) {
