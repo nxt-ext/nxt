@@ -119,9 +119,6 @@ public final class PeerServlet extends HttpServlet {
 
             if (peer.getState() == Peer.State.DISCONNECTED) {
                 peer.setState(Peer.State.CONNECTED);
-                if (peer.getAnnouncedAddress() != null) {
-                    Peers.addOrUpdate(peer);
-                }
             }
 
             if (request.get("protocol") != null && ((Number)request.get("protocol")).intValue() == 1) {

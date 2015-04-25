@@ -11,5 +11,13 @@ If nxt.maxNumberOfKnownPeers (default 2000) is exceeded, the peers pool size is
 reduced back to nxt.minNumberOfKnownPeers (default 1000), keeping the highest
 hallmarked peers first.
 
+Peers are only identified by IP address now, not by address and port. Multiple
+nodes sharing the same IP address will be treated as one peer, with announced
+address and port as of the most recent GetInfo request or response sent out of
+or received from this address.
+
+Incompatible change: If using non-default port, the hallmark must also include
+that port.
+
 Fixed the UI for AddPeer and BlacklistPeer to accept admin password if needed.
 

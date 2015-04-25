@@ -291,6 +291,7 @@ final class JSONData {
         JSONObject json = new JSONObject();
         putAccount(json, "account", Account.getId(hallmark.getPublicKey()));
         json.put("host", hallmark.getHost());
+        json.put("port", hallmark.getPort());
         json.put("weight", hallmark.getWeight());
         String dateString = Hallmark.formatDate(hallmark.getDate());
         json.put("date", dateString);

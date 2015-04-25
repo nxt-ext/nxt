@@ -323,6 +323,7 @@ final class PeerImpl implements Peer {
     public JSONObject send(final JSONStreamAware request, int maxResponseSize) {
 
         if (announcedAddress != null && !verifyAnnouncedAddress(announcedAddress)) {
+            Logger.logDebugMessage("Will not send to " + host);
             return null;
         }
 
@@ -438,9 +439,11 @@ final class PeerImpl implements Peer {
         lastConnectAttempt = Nxt.getEpochTime();
         JSONObject response = send(Peers.myPeerInfoRequest);
         if (response != null && (application = (String)response.get("application")) != null) {
+            lastUpdated = lastConnectAttempt;
             setVersion((String) response.get("version"));
             platform = (String)response.get("platform");
             shareAddress = Boolean.TRUE.equals(response.get("shareAddress"));
+            analyzeHallmark((String) response.get("hallmark"));
 
             if (!Peers.ignorePeerAnnouncedAddress) {
                 String newAnnouncedAddress = Convert.emptyToNull((String) response.get("announcedAddress"));
@@ -448,6 +451,7 @@ final class PeerImpl implements Peer {
                     newAnnouncedAddress = Peers.addressWithPort(newAnnouncedAddress.toLowerCase());
                     if (newAnnouncedAddress != null && !newAnnouncedAddress.equals(announcedAddress)) {
                         if (!verifyAnnouncedAddress(newAnnouncedAddress)) {
+                            Logger.logDebugMessage("New announced address for " + host + " not accepted");
                             return;
                         }
                         // force checking connectivity to new announced address
@@ -460,17 +464,20 @@ final class PeerImpl implements Peer {
             }
 
             if (announcedAddress == null) {
-                this.announcedAddress = host;
-                Logger.logDebugMessage("Connected to peer without announced address, setting to " + host);
+                if (hallmark == null || hallmark.getPort() == Peers.getDefaultPeerPort()) {
+                    this.announcedAddress = host;
+                    Logger.logDebugMessage("Connected to peer without announced address, setting to " + host);
+                } else {
+                    setState(State.NON_CONNECTED);
+                    return;
+                }
             }
-            analyzeHallmark((String) response.get("hallmark"));
             if (!isOldVersion) {
                 setState(State.CONNECTED);
-                Peers.addOrUpdate(this);
+                Peers.addPeer(this);
             } else if (!isBlacklisted()) {
                 blacklist("Old version: " + version);
             }
-            lastUpdated = lastConnectAttempt;
         } else {
             //Logger.logDebugMessage("Failed to connect to peer " + peerAddress);
             setState(State.NON_CONNECTED);
@@ -479,14 +486,19 @@ final class PeerImpl implements Peer {
 
     boolean verifyAnnouncedAddress(String newAnnouncedAddress) {
         try {
+            URI uri = new URI("http://" + newAnnouncedAddress);
+            int announcedPort = uri.getPort() == -1 ? Peers.getDefaultPeerPort() : uri.getPort();
+            if (hallmark != null && announcedPort != hallmark.getPort()) {
+                Logger.logDebugMessage("Announced port " + announcedPort + " does not match hallmark port " + hallmark.getPort());
+                return false;
+            }
             InetAddress address = InetAddress.getByName(host);
-            for (InetAddress inetAddress : InetAddress.getAllByName(new URI("http://" + newAnnouncedAddress).getHost())) {
+            for (InetAddress inetAddress : InetAddress.getAllByName(uri.getHost())) {
                 if (inetAddress.equals(address)) {
                     return true;
                 }
             }
-            Logger.logDebugMessage("Peer announced address " + newAnnouncedAddress + " does not resolve to " + host + ", removing");
-            remove();
+            Logger.logDebugMessage("Announced address " + newAnnouncedAddress + " does not resolve to " + host);
         } catch (UnknownHostException|URISyntaxException e) {
             Logger.logDebugMessage(e.toString());
             blacklist(e);

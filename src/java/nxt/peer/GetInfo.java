@@ -22,12 +22,14 @@ final class GetInfo extends PeerServlet.PeerRequestHandler {
     @Override
     JSONStreamAware processRequest(JSONObject request, Peer peer) {
         PeerImpl peerImpl = (PeerImpl)peer;
+        peerImpl.analyzeHallmark((String)request.get("hallmark"));
         if (!Peers.ignorePeerAnnouncedAddress) {
             String announcedAddress = (String) request.get("announcedAddress");
             if (announcedAddress != null && (announcedAddress = announcedAddress.trim()).length() > 0) {
                 announcedAddress = Peers.addressWithPort(announcedAddress.toLowerCase());
                 if (announcedAddress != null && !announcedAddress.equals(peerImpl.getAnnouncedAddress())) {
                     if (!peerImpl.verifyAnnouncedAddress(announcedAddress)) {
+                        Logger.logDebugMessage("Ignoring invalid announced address for " + peerImpl.getHost());
                         return INVALID_ANNOUNCED_ADDRESS;
                     }
                     // force checking connectivity to new announced address
@@ -56,8 +58,9 @@ final class GetInfo extends PeerServlet.PeerRequestHandler {
         peerImpl.setPlatform(platform.trim());
 
         peerImpl.setShareAddress(Boolean.TRUE.equals(request.get("shareAddress")));
-        peerImpl.analyzeHallmark((String)request.get("hallmark"));
         peerImpl.setLastUpdated(Nxt.getEpochTime());
+
+        Peers.addPeer(peerImpl);
 
         return Peers.myPeerInfoResponse;
 

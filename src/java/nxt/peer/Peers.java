@@ -126,7 +126,11 @@ public final class Peers {
                     URI uri = new URI("http://" + myAddress);
                     String host = uri.getHost();
                     if (!hallmark.getHost().equals(host)) {
-                        throw new RuntimeException();
+                        throw new RuntimeException("Invalid hallmark host");
+                    }
+                    int myPort = uri.getPort() == -1 ? Peers.getDefaultPeerPort() : uri.getPort();
+                    if (myPort != hallmark.getPort()) {
+                        throw new RuntimeException("Invalid hallmark port");
                     }
                 }
             } catch (RuntimeException | URISyntaxException e) {
@@ -647,21 +651,6 @@ public final class Peers {
     }
 
     public static boolean addPeer(Peer peer) {
-        if (addOrUpdate((PeerImpl)peer)) {
-            listeners.notify(peer, Event.NEW_PEER);
-            return true;
-        }
-        return false;
-    }
-
-    static PeerImpl removePeer(PeerImpl peer) {
-        if (peer.getAnnouncedAddress() != null) {
-            announcedAddresses.remove(peer.getAnnouncedAddress());
-        }
-        return peers.remove(peer.getHost());
-    }
-
-    static boolean addOrUpdate(PeerImpl peer) {
         if (peer.getAnnouncedAddress() != null) {
             Peer oldPeer = peers.get(peer.getHost());
             if (oldPeer != null) {
@@ -677,11 +666,22 @@ public final class Peers {
                         + ", removing old peer " + oldHost);
                 oldPeer = peers.remove(oldHost);
                 if (oldPeer != null) {
-                    Peers.notifyListeners(oldPeer, Peers.Event.REMOVE);
+                    Peers.notifyListeners(oldPeer, Event.REMOVE);
                 }
             }
         }
-        return peers.put(peer.getHost(), peer) == null;
+        if (peers.put(peer.getHost(), (PeerImpl)peer) == null) {
+            listeners.notify(peer, Event.NEW_PEER);
+            return true;
+        }
+        return false;
+    }
+
+    static PeerImpl removePeer(PeerImpl peer) {
+        if (peer.getAnnouncedAddress() != null) {
+            announcedAddresses.remove(peer.getAnnouncedAddress());
+        }
+        return peers.remove(peer.getHost());
     }
 
     public static void connectPeer(Peer peer) {
