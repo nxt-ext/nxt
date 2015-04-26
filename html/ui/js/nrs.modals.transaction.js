@@ -101,6 +101,7 @@ var NRS = (function (NRS, $, undefined) {
                 approveTransactionButton.data("timestamp", transaction.timestamp);
                 approveTransactionButton.data("fee", NRS.getPhasingFee(transaction));
                 approveTransactionButton.data("minBalanceFormatted", "");
+                approveTransactionButton.data("votingmodel", transaction.attachment.phasingVotingModel);
             }
 
             $("#transaction_info_actions").show();
@@ -1308,6 +1309,12 @@ var NRS = (function (NRS, $, undefined) {
             minBalanceWarning.show();
         } else {
             minBalanceWarning.hide();
+        }
+        var revealSecretDiv = $("#at_revealed_secret_div");
+        if ($(this).data("votingmodel") == NRS.getVotingModelByName("hash").code) {
+            revealSecretDiv.show();
+        } else {
+            revealSecretDiv.hide();
         }
         approveTransactionModal.find('.advanced_fee').html($(this).data("fee") + " NXT");
         approveTransactionModal.find('input[name="feeNXT"]').val($(this).data("fee"));

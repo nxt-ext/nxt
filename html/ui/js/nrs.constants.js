@@ -70,6 +70,15 @@ var NRS = (function (NRS, $, undefined) {
       return -1;
    };
 
+   NRS.getVotingModelByName = function(name) {
+      for (var model in NRS.constants.VOTING_MODEL) {
+         if (name == NRS.constants.VOTING_MODEL[model].name) {
+            return NRS.constants.VOTING_MODEL[model];
+         }
+      }
+      return null;
+   };
+
    NRS.getMinBalanceModel = function(code) {
       for (var model in NRS.constants.MIN_BALANCE_MODEL) {
          if (code == NRS.constants.MIN_BALANCE_MODEL[model].code) {
