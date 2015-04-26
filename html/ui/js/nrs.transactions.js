@@ -470,7 +470,17 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 
-	NRS.getTransactionRowHTML = function(t, actions) {
+    NRS.getPhasingFee = function(transaction) {
+        var fee;
+        if (transaction.attachment.phasingWhitelist && transaction.attachment.phasingWhitelist.length > 0 || transaction.attachment.phasingVotingModel == 0) {
+            fee = 1;
+        } else {
+            fee = 2;
+        }
+        return fee;
+    };
+
+    NRS.getTransactionRowHTML = function(t, actions) {
 		var transactionType = $.t(NRS.transactionTypes[t.type]['subTypes'][t.subtype]['i18nKeyTitle']);
 
 		if (t.type == 1 && t.subtype == 6 && t.attachment.priceNQT == "0") {
@@ -533,15 +543,11 @@ var NRS = (function(NRS, $, undefined) {
 		if (actions && actions.length != undefined) {
 			html += '<td class="td_transaction_actions" style="vertical-align:middle;text-align:right;">';
 			if (actions.indexOf('approve') > -1) {
-				if (t.attachment.phasingWhitelist && t.attachment.phasingWhitelist.length > 0 || t.attachment.phasingVotingModel == 0) {
-					var fee = 1;
-				} else {
-					var fee = 2;
-				}
-				html += "<a class='btn btn-xs btn-default approve_transaction_btn' href='#' data-toggle='modal' data-target='#approve_transaction_modal' ";
-				html += "data-transaction='" + String(t.transaction).escapeHTML() + "' data-full-hash='" + String(t.fullHash).escapeHTML() + "' ";
-				html += "data-transaction-timestamp='" + NRS.formatTimestamp(t.timestamp) + "' ";
-				html += "data-transaction-fee='" + fee + "' data-min-balance-formatted='' data-i18n='approve' >Approve</a>";
+                var fee = NRS.getPhasingFee(t);
+                html += "<a class='btn btn-xs btn-default approve_transaction_btn' href='#' data-toggle='modal' data-target='#approve_transaction_modal' ";
+				html += "data-transaction='" + String(t.transaction).escapeHTML() + "' data-fullhash='" + String(t.fullHash).escapeHTML() + "' ";
+				html += "data-timestamp='" + t.timestamp + "' ";
+				html += "data-fee='" + fee + "' data-min-balance-formatted='' data-i18n='approve' >Approve</a>";
 			}
 			html += "</td>";
 		}

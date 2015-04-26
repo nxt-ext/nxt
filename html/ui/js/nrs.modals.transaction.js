@@ -75,21 +75,36 @@ var NRS = (function (NRS, $, undefined) {
             $("#transaction_info_table").find("tbody").empty();
 
             var incorrect = false;
-
             if (transaction.senderRS == NRS.accountRS) {
-                $("#transaction_info_actions").hide();
+                $("#transaction_info_modal_send_money").attr('disabled','disabled');
+                $("#transaction_info_modal_transfer_currency").attr('disabled','disabled');
+                $("#transaction_info_modal_send_message").attr('disabled','disabled');
             } else {
-                if (transaction.senderRS in NRS.contacts) {
-                    var accountButton = NRS.contacts[transaction.senderRS].name.escapeHTML();
-                    $("#transaction_info_modal_add_as_contact").hide();
-                } else {
-                    var accountButton = transaction.senderRS;
-                    $("#transaction_info_modal_add_as_contact").show();
-                }
-
-                $("#transaction_info_actions").show();
-                $("#transaction_info_actions_tab").find("button").data("account", accountButton);
+                $("#transaction_info_modal_send_money").removeAttr('disabled');
+                $("#transaction_info_modal_transfer_currency").removeAttr('disabled');
+                $("#transaction_info_modal_send_message").removeAttr('disabled');
             }
+            if (transaction.senderRS in NRS.contacts) {
+                var accountButton = NRS.contacts[transaction.senderRS].name.escapeHTML();
+                $("#transaction_info_modal_add_as_contact").attr('disabled','disabled');
+            } else {
+                var accountButton = transaction.senderRS;
+                $("#transaction_info_modal_add_as_contact").removeAttr('disabled');
+            }
+            var approveTransactionButton = $("#transaction_info_modal_approve_transaction");
+            if (!transaction.attachment || !transaction.attachment.phasingFinishHeight) {
+                approveTransactionButton.attr('disabled', 'disabled');
+            } else {
+                approveTransactionButton.removeAttr('disabled');
+                approveTransactionButton.data("transaction", transaction.transaction);
+                approveTransactionButton.data("fullhash", transaction.fullHash);
+                approveTransactionButton.data("timestamp", transaction.timestamp);
+                approveTransactionButton.data("fee", NRS.getPhasingFee(transaction));
+                approveTransactionButton.data("minBalanceFormatted", "");
+            }
+
+            $("#transaction_info_actions").show();
+            $("#transaction_info_actions_tab").find("button").data("account", accountButton);
 
             if (transaction.attachment && transaction.attachment.phasingFinishHeight) {
                 var finishHeight = transaction.attachment.phasingFinishHeight;
@@ -122,6 +137,10 @@ var NRS = (function (NRS, $, undefined) {
                     rows = "-";
                 }
                 phasingDetails.whitelist_formatted_html = rows;
+                if (transaction.attachment.phasingHashedSecret) {
+                    phasingDetails.hashedSecret = transaction.attachment.phasingHashedSecret;
+                    phasingDetails.hashAlgorithm = transaction.attachment.phasingHashedSecretAlgorithm;
+                }
                 $("#phasing_info_details_table").find("tbody").empty().append(NRS.createInfoTable(phasingDetails, true));
                 $("#phasing_info_details_link").show();
             } else {
@@ -1277,19 +1296,19 @@ var NRS = (function (NRS, $, undefined) {
     $(document).on("click", ".approve_transaction_btn", function (e) {
         e.preventDefault();
         $('#approve_transaction_modal .at_transaction_full_hash_display').text($(this).data("transaction"));
-        $('#approve_transaction_modal .at_transaction_timestamp').text($(this).data("transactionTimestamp"));
+        $('#approve_transaction_modal .at_transaction_timestamp').text(NRS.formatTimestamp($(this).data("timestamp")));
         $("#approve_transaction_button").data("transaction", $(this).data("transaction"));
-        $('#approve_transaction_modal #at_transaction_full_hash').val($(this).data("fullHash"));
+        $('#approve_transaction_modal #at_transaction_full_hash').val($(this).data("fullhash"));
 
         var mbFormatted = $(this).data("minBalanceFormatted");
-        if (mbFormatted != "") {
+        if (mbFormatted && mbFormatted != "") {
             $('#at_min_balance_warning .at_min_balance_amount').html(mbFormatted);
             $('#at_min_balance_warning').show();
         } else {
             $('#at_min_balance_warning').hide();
         }
-        $('#approve_transaction_modal .advanced_fee').html($(this).data("transactionFee") + " NXT");
-        $('#approve_transaction_modal input[name="feeNXT"]').val($(this).data("transactionFee"));
+        $('#approve_transaction_modal .advanced_fee').html($(this).data("fee") + " NXT");
+        $('#approve_transaction_modal input[name="feeNXT"]').val($(this).data("fee"));
     });
 
     $("#approve_transaction_button").on("click", function (e) {
