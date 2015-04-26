@@ -34,10 +34,13 @@ var NRS = (function (NRS, $, undefined) {
       'PNC_COMPATIBILITY_CLIENT_VERSION_TOO_OLD': 302,
 
       'VOTING_MODEL': {
+         NONE: {code: -1, name: "none"},
          ACCOUNT: {code: 0, name: "account"},
          NQT: {code: 1, name: "balance"},
          ASSET: {code: 2, name: "asset"},
-         CURRENCY: {code: 3, name: "currency"}
+         CURRENCY: {code: 3, name: "currency"},
+         TRANSACTION: {code: 4, name: "transaction"},
+         HASH: {code: 5, name: "hash"}
       },
 
       'MIN_BALANCE_MODEL': {
