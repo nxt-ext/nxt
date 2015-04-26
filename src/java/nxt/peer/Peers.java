@@ -96,7 +96,7 @@ public final class Peers {
     private static final Listeners<Peer,Event> listeners = new Listeners<>();
 
     private static final ConcurrentMap<String, PeerImpl> peers = new ConcurrentHashMap<>();
-    private static final ConcurrentMap<String, String> announcedAddresses = new ConcurrentHashMap<>();
+    private static final ConcurrentMap<String, String> selfAnnouncedAddresses = new ConcurrentHashMap<>();
 
     static final Collection<PeerImpl> allPeers = Collections.unmodifiableCollection(peers.values());
 
@@ -581,7 +581,7 @@ public final class Peers {
         if ((peer = peers.get(announcedAddress)) != null) {
             return peer;
         }
-        String host = announcedAddresses.get(announcedAddress);
+        String host = selfAnnouncedAddresses.get(announcedAddress);
         if (host != null && (peer = peers.get(host)) != null) {
             return peer;
         }
@@ -592,6 +592,10 @@ public final class Peers {
                 return null;
             }
             if ((peer = peers.get(host)) != null) {
+                return peer;
+            }
+            String host2 = selfAnnouncedAddresses.get(host);
+            if (host2 != null && (peer = peers.get(host2)) != null) {
                 return peer;
             }
             InetAddress inetAddress = InetAddress.getByName(host);
@@ -650,19 +654,19 @@ public final class Peers {
         return peer;
     }
 
-    public static boolean addPeer(Peer peer) {
-        if (peer.getAnnouncedAddress() != null) {
-            Peer oldPeer = peers.get(peer.getHost());
-            if (oldPeer != null) {
-                String oldAnnouncedAddress = oldPeer.getAnnouncedAddress();
-                if (oldAnnouncedAddress != null && !oldAnnouncedAddress.equals(peer.getAnnouncedAddress())) {
-                    Logger.logDebugMessage("Removing old announced address " + oldAnnouncedAddress + " for peer " + oldPeer.getHost());
-                    announcedAddresses.remove(oldAnnouncedAddress);
-                }
+    static void setAnnouncedAddress(PeerImpl peer, String newAnnouncedAddress) {
+        Peer oldPeer = peers.get(peer.getHost());
+        if (oldPeer != null) {
+            String oldAnnouncedAddress = oldPeer.getAnnouncedAddress();
+            if (oldAnnouncedAddress != null && !oldAnnouncedAddress.equals(newAnnouncedAddress)) {
+                Logger.logDebugMessage("Removing old announced address " + oldAnnouncedAddress + " for peer " + oldPeer.getHost());
+                selfAnnouncedAddresses.remove(oldAnnouncedAddress);
             }
-            String oldHost = announcedAddresses.put(peer.getAnnouncedAddress(), peer.getHost());
+        }
+        if (newAnnouncedAddress != null) {
+            String oldHost = selfAnnouncedAddresses.put(newAnnouncedAddress, peer.getHost());
             if (oldHost != null && !peer.getHost().equals(oldHost)) {
-                Logger.logDebugMessage("Announced address " + peer.getAnnouncedAddress() + " now maps to peer " + peer.getHost()
+                Logger.logDebugMessage("Announced address " + newAnnouncedAddress + " now maps to peer " + peer.getHost()
                         + ", removing old peer " + oldHost);
                 oldPeer = peers.remove(oldHost);
                 if (oldPeer != null) {
@@ -670,6 +674,15 @@ public final class Peers {
                 }
             }
         }
+        peer.setAnnouncedAddress(newAnnouncedAddress);
+    }
+
+    public static boolean addPeer(Peer peer, String newAnnouncedAddress) {
+        setAnnouncedAddress((PeerImpl)peer, newAnnouncedAddress.toLowerCase());
+        return addPeer(peer);
+    }
+
+    public static boolean addPeer(Peer peer) {
         if (peers.put(peer.getHost(), (PeerImpl)peer) == null) {
             listeners.notify(peer, Event.NEW_PEER);
             return true;
@@ -677,9 +690,9 @@ public final class Peers {
         return false;
     }
 
-    static PeerImpl removePeer(PeerImpl peer) {
+    public static PeerImpl removePeer(Peer peer) {
         if (peer.getAnnouncedAddress() != null) {
-            announcedAddresses.remove(peer.getAnnouncedAddress());
+            selfAnnouncedAddresses.remove(peer.getAnnouncedAddress());
         }
         return peers.remove(peer.getHost());
     }
@@ -783,8 +796,11 @@ public final class Peers {
     }
 
     static String addressWithPort(String address) {
+        if (address == null) {
+            return null;
+        }
         try {
-            URI uri = new URI("http://" + address.trim());
+            URI uri = new URI("http://" + address);
             String host = uri.getHost();
             int port = uri.getPort();
             return port > 0 && port != Peers.getDefaultPeerPort() ? host + ":" + port : host;

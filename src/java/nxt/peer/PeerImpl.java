@@ -26,7 +26,6 @@ import java.io.Reader;
 import java.io.Writer;
 import java.net.HttpURLConnection;
 import java.net.InetAddress;
-import java.net.MalformedURLException;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.net.URI;
@@ -64,8 +63,8 @@ final class PeerImpl implements Peer {
         this.host = host;
         this.announcedAddress = announcedAddress;
         try {
-            this.port = new URL("http://" + announcedAddress).getPort();
-        } catch (MalformedURLException ignore) {}
+            this.port = new URI("http://" + announcedAddress).getPort();
+        } catch (URISyntaxException ignore) {}
         this.state = State.NON_CONNECTED;
         this.shareAddress = true;
     }
@@ -202,8 +201,10 @@ final class PeerImpl implements Peer {
     void setAnnouncedAddress(String announcedAddress) {
         this.announcedAddress = announcedAddress;
         try {
-            this.port = new URL("http://" + announcedAddress).getPort();
-        } catch (MalformedURLException ignore) {}
+            this.port = new URI("http://" + announcedAddress).getPort();
+        } catch (URISyntaxException e) {
+            this.port = -1;
+        }
     }
 
     @Override
@@ -321,11 +322,6 @@ final class PeerImpl implements Peer {
 
     @Override
     public JSONObject send(final JSONStreamAware request, int maxResponseSize) {
-
-        if (announcedAddress != null && !verifyAnnouncedAddress(announcedAddress)) {
-            Logger.logDebugMessage("Will not send to " + host);
-            return null;
-        }
 
         JSONObject response = null;
         String log = null;
@@ -449,23 +445,35 @@ final class PeerImpl implements Peer {
                 String newAnnouncedAddress = Convert.emptyToNull((String) response.get("announcedAddress"));
                 if (newAnnouncedAddress != null) {
                     newAnnouncedAddress = Peers.addressWithPort(newAnnouncedAddress.toLowerCase());
-                    if (newAnnouncedAddress != null && !newAnnouncedAddress.equals(announcedAddress)) {
+                    if (newAnnouncedAddress != null) {
                         if (!verifyAnnouncedAddress(newAnnouncedAddress)) {
                             Logger.logDebugMessage("New announced address for " + host + " not accepted");
+                            if (!verifyAnnouncedAddress(announcedAddress)) {
+                                Logger.logDebugMessage("Old announced address for " + host + " no longer valid");
+                                Peers.setAnnouncedAddress(this, host);
+                            }
+                            setState(State.NON_CONNECTED);
                             return;
                         }
-                        // force checking connectivity to new announced address
-                        Logger.logDebugMessage("Peer " + host + " has new announced address " + newAnnouncedAddress + ", old is " + announcedAddress);
-                        setState(Peer.State.NON_CONNECTED);
-                        setAnnouncedAddress(newAnnouncedAddress);
-                        return;
+                        if (!newAnnouncedAddress.equals(announcedAddress)) {
+                            Logger.logDebugMessage("Peer " + host + " has new announced address " + newAnnouncedAddress + ", old is " + announcedAddress);
+                            int oldPort = getPort();
+                            Peers.setAnnouncedAddress(this, newAnnouncedAddress);
+                            if (getPort() != oldPort) {
+                                // force checking connectivity to new announced port
+                                setState(State.NON_CONNECTED);
+                                return;
+                            }
+                        }
                     }
+                } else {
+                    Peers.setAnnouncedAddress(this, host);
                 }
             }
 
             if (announcedAddress == null) {
                 if (hallmark == null || hallmark.getPort() == Peers.getDefaultPeerPort()) {
-                    this.announcedAddress = host;
+                    Peers.setAnnouncedAddress(this, host);
                     Logger.logDebugMessage("Connected to peer without announced address, setting to " + host);
                 } else {
                     setState(State.NON_CONNECTED);
@@ -474,7 +482,6 @@ final class PeerImpl implements Peer {
             }
             if (!isOldVersion) {
                 setState(State.CONNECTED);
-                Peers.addPeer(this);
             } else if (!isBlacklisted()) {
                 blacklist("Old version: " + version);
             }
@@ -485,12 +492,15 @@ final class PeerImpl implements Peer {
     }
 
     boolean verifyAnnouncedAddress(String newAnnouncedAddress) {
+        if (newAnnouncedAddress == null) {
+            return true;
+        }
         try {
             URI uri = new URI("http://" + newAnnouncedAddress);
             int announcedPort = uri.getPort() == -1 ? Peers.getDefaultPeerPort() : uri.getPort();
             if (hallmark != null && announcedPort != hallmark.getPort()) {
-                Logger.logDebugMessage("Announced port " + announcedPort + " does not match hallmark port " + hallmark.getPort());
-                return false;
+                Logger.logDebugMessage("Announced port " + announcedPort + " does not match hallmark " + hallmark.getPort() + ", ignoring hallmark");
+                hallmark = null;
             }
             InetAddress address = InetAddress.getByName(host);
             for (InetAddress inetAddress : InetAddress.getAllByName(uri.getHost())) {

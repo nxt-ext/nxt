@@ -102,9 +102,9 @@ public final class PeerServlet extends HttpServlet {
                 jsonObject.put("cause", peer.getBlacklistingCause());
                 sendResponse(peer, JSON.prepare(jsonObject), resp);
                 return;
-            } else {
-                Peers.addPeer(peer);
             }
+
+            Peers.addPeer(peer);
 
             JSONObject request;
             CountingInputStream cis = new CountingInputStream(req.getInputStream(), Peers.MAX_REQUEST_SIZE);
