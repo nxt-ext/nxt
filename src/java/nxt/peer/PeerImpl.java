@@ -499,7 +499,7 @@ final class PeerImpl implements Peer {
             URI uri = new URI("http://" + newAnnouncedAddress);
             int announcedPort = uri.getPort() == -1 ? Peers.getDefaultPeerPort() : uri.getPort();
             if (hallmark != null && announcedPort != hallmark.getPort()) {
-                Logger.logDebugMessage("Announced port " + announcedPort + " does not match hallmark " + hallmark.getPort() + ", ignoring hallmark");
+                Logger.logDebugMessage("Announced port " + announcedPort + " does not match hallmark " + hallmark.getPort() + ", ignoring hallmark for " + host);
                 hallmark = null;
             }
             InetAddress address = InetAddress.getByName(host);
