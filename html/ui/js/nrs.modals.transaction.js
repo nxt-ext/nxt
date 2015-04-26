@@ -1295,20 +1295,22 @@ var NRS = (function (NRS, $, undefined) {
 
     $(document).on("click", ".approve_transaction_btn", function (e) {
         e.preventDefault();
-        $('#approve_transaction_modal .at_transaction_full_hash_display').text($(this).data("transaction"));
-        $('#approve_transaction_modal .at_transaction_timestamp').text(NRS.formatTimestamp($(this).data("timestamp")));
+        var approveTransactionModal = $('#approve_transaction_modal');
+        approveTransactionModal.find('.at_transaction_full_hash_display').text($(this).data("transaction"));
+        approveTransactionModal.find('.at_transaction_timestamp').text(NRS.formatTimestamp($(this).data("timestamp")));
         $("#approve_transaction_button").data("transaction", $(this).data("transaction"));
-        $('#approve_transaction_modal #at_transaction_full_hash').val($(this).data("fullhash"));
+        approveTransactionModal.find('#at_transaction_full_hash').val($(this).data("fullhash"));
 
         var mbFormatted = $(this).data("minBalanceFormatted");
+        var minBalanceWarning = $('#at_min_balance_warning');
         if (mbFormatted && mbFormatted != "") {
-            $('#at_min_balance_warning .at_min_balance_amount').html(mbFormatted);
-            $('#at_min_balance_warning').show();
+            minBalanceWarning.find('.at_min_balance_amount').html(mbFormatted);
+            minBalanceWarning.show();
         } else {
-            $('#at_min_balance_warning').hide();
+            minBalanceWarning.hide();
         }
-        $('#approve_transaction_modal .advanced_fee').html($(this).data("fee") + " NXT");
-        $('#approve_transaction_modal input[name="feeNXT"]').val($(this).data("fee"));
+        approveTransactionModal.find('.advanced_fee').html($(this).data("fee") + " NXT");
+        approveTransactionModal.find('input[name="feeNXT"]').val($(this).data("fee"));
     });
 
     $("#approve_transaction_button").on("click", function (e) {
