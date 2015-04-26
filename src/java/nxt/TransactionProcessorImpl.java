@@ -348,6 +348,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
             }
             unconfirmedDuplicates.clear();
             waitingTransactions.clear();
+            broadcastedTransactions.clear();
             transactionListeners.notify(removed, Event.REMOVED_UNCONFIRMED_TRANSACTIONS);
         }
     }

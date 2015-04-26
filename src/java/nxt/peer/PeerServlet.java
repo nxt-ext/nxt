@@ -91,7 +91,7 @@ public final class PeerServlet extends HttpServlet {
         JSONStreamAware response;
 
         try {
-            peer = Peers.findOrCreatePeer(req.getRemoteAddr(), -1, null, true);
+            peer = Peers.findOrCreatePeer(req.getRemoteAddr());
             if (peer == null) {
                 sendResponse(null, UNKNOWN_PEER, resp);
                 return;
@@ -102,9 +102,9 @@ public final class PeerServlet extends HttpServlet {
                 jsonObject.put("cause", peer.getBlacklistingCause());
                 sendResponse(peer, JSON.prepare(jsonObject), resp);
                 return;
-            } else {
-                Peers.addPeer(peer);
             }
+
+            Peers.addPeer(peer);
 
             JSONObject request;
             CountingInputStream cis = new CountingInputStream(req.getInputStream(), Peers.MAX_REQUEST_SIZE);
@@ -119,9 +119,6 @@ public final class PeerServlet extends HttpServlet {
 
             if (peer.getState() == Peer.State.DISCONNECTED) {
                 peer.setState(Peer.State.CONNECTED);
-                if (peer.getAnnouncedAddress() != null) {
-                    Peers.addOrUpdate(peer);
-                }
             }
 
             if (request.get("protocol") != null && ((Number)request.get("protocol")).intValue() == 1) {

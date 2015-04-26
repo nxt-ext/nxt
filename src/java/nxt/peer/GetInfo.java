@@ -1,6 +1,7 @@
 package nxt.peer;
 
 import nxt.Nxt;
+import nxt.util.Convert;
 import nxt.util.JSON;
 import nxt.util.Logger;
 import org.json.simple.JSONObject;
@@ -22,19 +23,34 @@ final class GetInfo extends PeerServlet.PeerRequestHandler {
     @Override
     JSONStreamAware processRequest(JSONObject request, Peer peer) {
         PeerImpl peerImpl = (PeerImpl)peer;
+        peerImpl.setLastUpdated(Nxt.getEpochTime());
+        peerImpl.analyzeHallmark((String)request.get("hallmark"));
         if (!Peers.ignorePeerAnnouncedAddress) {
-            String announcedAddress = (String) request.get("announcedAddress");
-            if (announcedAddress != null && (announcedAddress = announcedAddress.trim()).length() > 0) {
-                announcedAddress = Peers.addressWithPort(announcedAddress);
-                if (announcedAddress != null && !announcedAddress.equals(peerImpl.getAnnouncedAddress())) {
+            String announcedAddress = Convert.emptyToNull((String) request.get("announcedAddress"));
+            if (announcedAddress != null) {
+                announcedAddress = Peers.addressWithPort(announcedAddress.toLowerCase());
+                if (announcedAddress != null) {
                     if (!peerImpl.verifyAnnouncedAddress(announcedAddress)) {
+                        Logger.logDebugMessage("GetInfo: ignoring invalid announced address for " + peerImpl.getHost());
+                        if (!peerImpl.verifyAnnouncedAddress(peerImpl.getAnnouncedAddress())) {
+                            Logger.logDebugMessage("GetInfo: old announced address for " + peerImpl.getHost() + " no longer valid");
+                            Peers.setAnnouncedAddress(peerImpl, null);
+                        }
+                        peerImpl.setState(Peer.State.NON_CONNECTED);
                         return INVALID_ANNOUNCED_ADDRESS;
                     }
-                    // force checking connectivity to new announced address
-                    Logger.logDebugMessage("Peer " + peer.getPeerAddress() + " changed announced address from " + peer.getAnnouncedAddress() + " to " + announcedAddress);
-                    peerImpl.setState(Peer.State.NON_CONNECTED);
+                    if (!announcedAddress.equals(peerImpl.getAnnouncedAddress())) {
+                        Logger.logDebugMessage("GetInfo: peer " + peer.getHost() + " changed announced address from " + peer.getAnnouncedAddress() + " to " + announcedAddress);
+                        int oldPort = peerImpl.getPort();
+                        Peers.setAnnouncedAddress(peerImpl, announcedAddress);
+                        if (peerImpl.getPort() != oldPort) {
+                            // force checking connectivity to new announced port
+                            peerImpl.setState(Peer.State.NON_CONNECTED);
+                        }
+                    }
+                } else {
+                    Peers.setAnnouncedAddress(peerImpl, null);
                 }
-                peerImpl.setAnnouncedAddress(announcedAddress);
             }
         }
         String application = (String)request.get("application");
@@ -56,8 +72,6 @@ final class GetInfo extends PeerServlet.PeerRequestHandler {
         peerImpl.setPlatform(platform.trim());
 
         peerImpl.setShareAddress(Boolean.TRUE.equals(request.get("shareAddress")));
-        peerImpl.analyzeHallmark(peer.getPeerAddress(), (String)request.get("hallmark"));
-        peerImpl.setLastUpdated(Nxt.getEpochTime());
 
         return Peers.myPeerInfoResponse;
 

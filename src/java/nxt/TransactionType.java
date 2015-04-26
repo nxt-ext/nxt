@@ -978,6 +978,8 @@ public abstract class TransactionType {
                         }
                         hashedSecret = poll.getHashedSecret();
                         algorithm = poll.getAlgorithm();
+                    } else if (poll.getVoteWeighting().getVotingModel() == VoteWeighting.VotingModel.HASH) {
+                        throw new NxtException.NotValidException("Phased transaction " + Long.toUnsignedString(phasedTransactionId) + " requires revealed secret for approval");
                     }
                     if (!Arrays.equals(poll.getFullHash(), hash)) {
                         throw new NxtException.NotCurrentlyValidException("Phased transaction hash does not match hash in voting transaction");

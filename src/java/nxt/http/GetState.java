@@ -78,6 +78,7 @@ public final class GetState extends APIServlet.APIRequestHandler {
             response.put("numberOfDataTags", TaggedData.Tag.getTagCount());
         }
         response.put("numberOfPeers", Peers.getAllPeers().size());
+        response.put("numberOfActivePeers", Peers.getActivePeers().size());
         response.put("numberOfUnlockedAccounts", Generator.getAllGenerators().size());
         response.put("availableProcessors", Runtime.getRuntime().availableProcessors());
         response.put("maxMemory", Runtime.getRuntime().maxMemory());
