@@ -433,6 +433,25 @@ final class PeerImpl implements Peer {
 
     void connect() {
         lastConnectAttempt = Nxt.getEpochTime();
+        if (!Peers.ignorePeerAnnouncedAddress) {
+            try {
+                URI uri = new URI("http://" + announcedAddress);
+                InetAddress inetAddress = InetAddress.getByName(uri.getHost());
+                if (!inetAddress.equals(InetAddress.getByName(host))) {
+                    Logger.logDebugMessage("Announced address " + announcedAddress + " now points to " + inetAddress.getHostAddress() + ", replacing peer");
+                    Peers.removePeer(this);
+                    PeerImpl newPeer = Peers.findOrCreatePeer(inetAddress, announcedAddress, true);
+                    if (newPeer != null) {
+                        Peers.addPeer(newPeer);
+                        newPeer.connect();
+                    }
+                    return;
+                }
+            } catch (URISyntaxException | UnknownHostException e) {
+                blacklist(e);
+                return;
+            }
+        }
         JSONObject response = send(Peers.myPeerInfoRequest);
         if (response != null && (application = (String)response.get("application")) != null) {
             lastUpdated = lastConnectAttempt;
@@ -447,16 +466,16 @@ final class PeerImpl implements Peer {
                     newAnnouncedAddress = Peers.addressWithPort(newAnnouncedAddress.toLowerCase());
                     if (newAnnouncedAddress != null) {
                         if (!verifyAnnouncedAddress(newAnnouncedAddress)) {
-                            Logger.logDebugMessage("New announced address for " + host + " not accepted");
+                            Logger.logDebugMessage("Connect: new announced address for " + host + " not accepted");
                             if (!verifyAnnouncedAddress(announcedAddress)) {
-                                Logger.logDebugMessage("Old announced address for " + host + " no longer valid");
+                                Logger.logDebugMessage("Connect: old announced address for " + host + " no longer valid");
                                 Peers.setAnnouncedAddress(this, host);
                             }
                             setState(State.NON_CONNECTED);
                             return;
                         }
                         if (!newAnnouncedAddress.equals(announcedAddress)) {
-                            Logger.logDebugMessage("Peer " + host + " has new announced address " + newAnnouncedAddress + ", old is " + announcedAddress);
+                            Logger.logDebugMessage("Connect: peer " + host + " has new announced address " + newAnnouncedAddress + ", old is " + announcedAddress);
                             int oldPort = getPort();
                             Peers.setAnnouncedAddress(this, newAnnouncedAddress);
                             if (getPort() != oldPort) {

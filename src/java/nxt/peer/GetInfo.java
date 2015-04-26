@@ -31,16 +31,16 @@ final class GetInfo extends PeerServlet.PeerRequestHandler {
                 announcedAddress = Peers.addressWithPort(announcedAddress.toLowerCase());
                 if (announcedAddress != null) {
                     if (!peerImpl.verifyAnnouncedAddress(announcedAddress)) {
-                        Logger.logDebugMessage("Ignoring invalid announced address for " + peerImpl.getHost());
+                        Logger.logDebugMessage("GetInfo: ignoring invalid announced address for " + peerImpl.getHost());
                         if (!peerImpl.verifyAnnouncedAddress(peerImpl.getAnnouncedAddress())) {
-                            Logger.logDebugMessage("Old announced address for " + peerImpl.getHost() + " no longer valid");
+                            Logger.logDebugMessage("GetInfo: old announced address for " + peerImpl.getHost() + " no longer valid");
                             Peers.setAnnouncedAddress(peerImpl, null);
                         }
                         peerImpl.setState(Peer.State.NON_CONNECTED);
                         return INVALID_ANNOUNCED_ADDRESS;
                     }
                     if (!announcedAddress.equals(peerImpl.getAnnouncedAddress())) {
-                        Logger.logDebugMessage("Peer " + peer.getHost() + " changed announced address from " + peer.getAnnouncedAddress() + " to " + announcedAddress);
+                        Logger.logDebugMessage("GetInfo: peer " + peer.getHost() + " changed announced address from " + peer.getAnnouncedAddress() + " to " + announcedAddress);
                         int oldPort = peerImpl.getPort();
                         Peers.setAnnouncedAddress(peerImpl, announcedAddress);
                         if (peerImpl.getPort() != oldPort) {
