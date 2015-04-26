@@ -114,16 +114,16 @@ var NRS = (function (NRS, $, undefined) {
                 phasingDetails.finishIn = ((finishHeight - NRS.lastBlockHeight) > 0) ? (finishHeight - NRS.lastBlockHeight) + " " + $.t("blocks") : $.t("finished");
                 phasingDetails.quorum = transaction.attachment.phasingQuorum;
                 phasingDetails.minBalance = transaction.attachment.phasingMinBalance;
-                var votingModel = NRS.getVotingModel(parseInt(transaction.attachment.phasingVotingModel));
-                phasingDetails.votingModel = $.t(votingModel.name);
+                var votingModel = NRS.getVotingModelName(parseInt(transaction.attachment.phasingVotingModel));
+                phasingDetails.votingModel = $.t(votingModel);
                 var phasingTransactionLink = "<a href='#' class='show_transaction_modal_action' data-transaction='" + String(transaction.attachment.phasingHolding).escapeHTML() + "'>" + transaction.attachment.phasingHolding + "</a>";
-                if (votingModel == NRS.constants.VOTING_MODEL.ASSET) {
+                if (NRS.constants.VOTING_MODELS[votingModel] == NRS.constants.VOTING_MODELS.ASSET) {
                     phasingDetails.asset_formatted_html = phasingTransactionLink;
-                } else if (votingModel == NRS.constants.VOTING_MODEL.CURRENCY) {
+                } else if (NRS.constants.VOTING_MODELS[votingModel] == NRS.constants.VOTING_MODELS.CURRENCY) {
                     phasingDetails.currency_formatted_html = phasingTransactionLink;
                 }
-                var minBalanceModel = NRS.getMinBalanceModel(parseInt(transaction.attachment.phasingMinBalanceModel));
-                phasingDetails.minBalanceModel = $.t(minBalanceModel.name);
+                var minBalanceModel = NRS.getMinBalanceModelName(parseInt(transaction.attachment.phasingMinBalanceModel));
+                phasingDetails.minBalanceModel = $.t(minBalanceModel);
                 var rows = "";
                 if (transaction.attachment.phasingWhitelist && transaction.attachment.phasingWhitelist.length > 0) {
                     rows = "<table class='table table-striped'><thead><tr>" +
@@ -1311,7 +1311,7 @@ var NRS = (function (NRS, $, undefined) {
             minBalanceWarning.hide();
         }
         var revealSecretDiv = $("#at_revealed_secret_div");
-        if ($(this).data("votingmodel") == NRS.getVotingModelByName("hash").code) {
+        if ($(this).data("votingmodel") == NRS.constants.VOTING_MODELS.HASH) {
             revealSecretDiv.show();
         } else {
             revealSecretDiv.hide();
