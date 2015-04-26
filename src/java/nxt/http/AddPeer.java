@@ -31,9 +31,8 @@ public class AddPeer extends APIRequestHandler {
         Peer peer = Peers.findOrCreatePeer(peerAddress, true);
         if (peer != null) {
             response = JSONData.peer(peer);
-            if (Peers.addPeer(peer, peerAddress)) {
-                response.put("isNewlyAdded", true);
-            }
+            boolean isNewlyAdded = Peers.addPeer(peer, peerAddress);
+            response.put("isNewlyAdded", isNewlyAdded);
             Peers.connectPeer(peer);
         } else {
             response.put("errorCode", 8);

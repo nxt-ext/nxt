@@ -17,7 +17,9 @@ address and port as of the most recent GetInfo request or response sent out of
 or received from this address.
 
 Incompatible change: If using non-default port, the hallmark must also include
-that port.
+that port, otherwise the hallmark is ignored.
 
 Fixed the UI for AddPeer and BlacklistPeer to accept admin password if needed.
+
+This release will perform a full rescan on test net.
 
