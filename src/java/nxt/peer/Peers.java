@@ -683,7 +683,7 @@ public final class Peers {
     }
 
     public static boolean addPeer(Peer peer) {
-        if (peers.put(peer.getHost(), (PeerImpl)peer) == null) {
+        if (peers.put(peer.getHost(), (PeerImpl) peer) == null) {
             listeners.notify(peer, Event.NEW_PEER);
             return true;
         }
@@ -708,15 +708,21 @@ public final class Peers {
         sendToSomePeers(request);
     }
 
+    private static final int sendTransactionsBatchSize = 10;
+
     public static void sendToSomePeers(List<? extends Transaction> transactions) {
-        JSONObject request = new JSONObject();
-        JSONArray transactionsData = new JSONArray();
-        for (Transaction transaction : transactions) {
-            transactionsData.add(transaction.getJSONObject());
+        int nextBatchStart = 0;
+        while (nextBatchStart < transactions.size()) {
+            JSONObject request = new JSONObject();
+            JSONArray transactionsData = new JSONArray();
+            for (int i = nextBatchStart; i < nextBatchStart + sendTransactionsBatchSize && i < transactions.size(); i++) {
+                transactionsData.add(transactions.get(i).getJSONObject());
+            }
+            request.put("requestType", "processTransactions");
+            request.put("transactions", transactionsData);
+            sendToSomePeers(request);
+            nextBatchStart += sendTransactionsBatchSize;
         }
-        request.put("requestType", "processTransactions");
-        request.put("transactions", transactionsData);
-        sendToSomePeers(request);
     }
 
     private static void sendToSomePeers(final JSONObject request) {

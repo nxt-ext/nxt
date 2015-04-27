@@ -19,6 +19,14 @@ or received from this address.
 Incompatible change: If using non-default port, the hallmark must also include
 that port, otherwise the hallmark is ignored.
 
+Optimizations in unconfirmed transaction propagation. When forwarding newly
+received unconfirmed transactions to peers, if their count exceeds 10, the
+broadcast is done in multiple batches of 10. When requesting unconfirmed
+transactions from a peer, the ids of the transactions currently in the pool
+are included in the request, so that the remote node does not need to include
+them in the response. The response size is also limited to 100 transactions in
+size, unless the requesting node does not provide such exclude parameter.
+
 Fixed the UI for AddPeer and BlacklistPeer to accept admin password if needed.
 
 This release will perform a full rescan on test net.

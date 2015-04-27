@@ -14,7 +14,6 @@ import nxt.util.Logger;
 import nxt.util.ThreadPool;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
-import org.json.simple.JSONStreamAware;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -198,45 +197,43 @@ final class TransactionProcessorImpl implements TransactionProcessor {
 
     };
 
-    private final Runnable processTransactionsThread = new Runnable() {
+    private final Runnable processTransactionsThread = () -> {
 
-        private final JSONStreamAware getUnconfirmedTransactionsRequest;
-        {
-            JSONObject request = new JSONObject();
-            request.put("requestType", "getUnconfirmedTransactions");
-            getUnconfirmedTransactionsRequest = JSON.prepareRequest(request);
-        }
-
-        @Override
-        public void run() {
+        try {
             try {
-                try {
-                    processWaitingTransactions();
-                    Peer peer = Peers.getAnyPeer(Peer.State.CONNECTED, true);
-                    if (peer == null) {
-                        return;
-                    }
-                    JSONObject response = peer.send(getUnconfirmedTransactionsRequest, 10 * 1024 * 1024);
-                    if (response == null) {
-                        return;
-                    }
-                    JSONArray transactionsData = (JSONArray)response.get("unconfirmedTransactions");
-                    if (transactionsData == null || transactionsData.size() == 0) {
-                        return;
-                    }
-                    try {
-                        processPeerTransactions(transactionsData);
-                    } catch (NxtException.ValidationException|RuntimeException e) {
-                        peer.blacklist(e);
-                    }
-                } catch (Exception e) {
-                    Logger.logMessage("Error processing unconfirmed transactions", e);
+                processWaitingTransactions();
+                Peer peer = Peers.getAnyPeer(Peer.State.CONNECTED, true);
+                if (peer == null) {
+                    return;
                 }
-            } catch (Throwable t) {
-                Logger.logErrorMessage("CRITICAL ERROR. PLEASE REPORT TO THE DEVELOPERS.\n" + t.toString());
-                t.printStackTrace();
-                System.exit(1);
+                JSONObject request = new JSONObject();
+                request.put("requestType", "getUnconfirmedTransactions");
+                JSONArray exclude = new JSONArray();
+                for (Long transactionId : getAllUnconfirmedTransactionIds()) {
+                    exclude.add(Long.toUnsignedString(transactionId));
+                }
+                Collections.sort(exclude);
+                request.put("exclude", exclude);
+                JSONObject response = peer.send(JSON.prepareRequest(request), 10 * 1024 * 1024);
+                if (response == null) {
+                    return;
+                }
+                JSONArray transactionsData = (JSONArray)response.get("unconfirmedTransactions");
+                if (transactionsData == null || transactionsData.size() == 0) {
+                    return;
+                }
+                try {
+                    processPeerTransactions(transactionsData);
+                } catch (NxtException.ValidationException|RuntimeException e) {
+                    peer.blacklist(e);
+                }
+            } catch (Exception e) {
+                Logger.logMessage("Error processing unconfirmed transactions", e);
             }
+        } catch (Throwable t) {
+            Logger.logErrorMessage("CRITICAL ERROR. PLEASE REPORT TO THE DEVELOPERS.\n" + t.toString());
+            t.printStackTrace();
+            System.exit(1);
         }
 
     };
@@ -272,6 +269,20 @@ final class TransactionProcessorImpl implements TransactionProcessor {
     @Override
     public Transaction getUnconfirmedTransaction(long transactionId) {
         return unconfirmedTransactionTable.get(unconfirmedTransactionDbKeyFactory.newKey(transactionId));
+    }
+
+    private List<Long> getAllUnconfirmedTransactionIds() {
+        List<Long> result = new ArrayList<>();
+        try (Connection con = Db.db.getConnection();
+             PreparedStatement pstmt = con.prepareStatement("SELECT DISTINCT id FROM unconfirmed_transaction");
+             ResultSet rs = pstmt.executeQuery()) {
+            while (rs.next()) {
+                result.add(rs.getLong("id"));
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e.toString(), e);
+        }
+        return result;
     }
 
     @Override
