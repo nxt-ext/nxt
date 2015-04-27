@@ -29,5 +29,11 @@ size, unless the requesting node does not provide such exclude parameter.
 
 Fixed the UI for AddPeer and BlacklistPeer to accept admin password if needed.
 
+Enhanced the /test page to accept and pre-fill the test forms with any parameter
+values supplied in the url, e.g.:
+
+http://localhost:7876/test?requestType=getBlocks&lastIndex=10&includeTransactions=true
+
+
 This release will perform a full rescan on test net.
 
