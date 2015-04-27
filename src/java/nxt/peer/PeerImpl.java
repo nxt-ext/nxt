@@ -200,9 +200,13 @@ final class PeerImpl implements Peer {
 
     void setAnnouncedAddress(String announcedAddress) {
         this.announcedAddress = announcedAddress;
-        try {
-            this.port = new URI("http://" + announcedAddress).getPort();
-        } catch (URISyntaxException e) {
+        if (announcedAddress != null) {
+            try {
+                this.port = new URI("http://" + announcedAddress).getPort();
+            } catch (URISyntaxException e) {
+                this.port = -1;
+            }
+        } else {
             this.port = -1;
         }
     }
@@ -433,7 +437,7 @@ final class PeerImpl implements Peer {
 
     void connect() {
         lastConnectAttempt = Nxt.getEpochTime();
-        if (!Peers.ignorePeerAnnouncedAddress) {
+        if (!Peers.ignorePeerAnnouncedAddress && announcedAddress != null) {
             try {
                 URI uri = new URI("http://" + announcedAddress);
                 InetAddress inetAddress = InetAddress.getByName(uri.getHost());
