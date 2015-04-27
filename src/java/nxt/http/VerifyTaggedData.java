@@ -20,7 +20,7 @@ public final class VerifyTaggedData extends APIServlet.APIRequestHandler {
 
     private VerifyTaggedData() {
         super(new APITag[]{APITag.DATA}, "transaction",
-                "name", "description", "tags", "type", "isText", "filename", "data");
+                "name", "description", "tags", "type", "channel", "isText", "filename", "data");
     }
 
     @Override

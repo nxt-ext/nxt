@@ -96,6 +96,7 @@ public final class Constants {
     public static final int MAX_TAGGED_DATA_DESCRIPTION_LENGTH = 1000;
     public static final int MAX_TAGGED_DATA_TAGS_LENGTH = 100;
     public static final int MAX_TAGGED_DATA_TYPE_LENGTH = 100;
+    public static final int MAX_TAGGED_DATA_CHANNEL_LENGTH = 100;
     public static final int MAX_TAGGED_DATA_FILENAME_LENGTH = 100;
     public static final int MAX_TAGGED_DATA_DATA_LENGTH = 42 * 1024;
 

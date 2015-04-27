@@ -27,6 +27,11 @@ are included in the request, so that the remote node does not need to include
 them in the response. The response size is also limited to 100 transactions in
 size, unless the requesting node does not provide such exclude parameter.
 
+Each tagged data can now also have a channel field. The searchTaggedData API
+can filter the search results by channel, and a new getChannelTaggedData API
+has been added to retrieve tagged data by channel, optionally filtered by
+account too.
+
 Fixed the UI for AddPeer and BlacklistPeer to accept admin password if needed.
 
 Enhanced the /test page to accept and pre-fill the test forms with any parameter
