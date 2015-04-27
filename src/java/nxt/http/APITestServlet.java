@@ -170,14 +170,14 @@ public class APITestServlet extends HttpServlet {
             APIServlet.APIRequestHandler requestHandler = APIServlet.apiRequestHandlers.get(requestType);
             StringBuilder bufJSCalls = new StringBuilder();
             if (requestHandler != null) {
-                writer.print(form(requestType, true, requestHandler.getClass().getName(), requestHandler.getParameters(), requestHandler.requirePost()));
+                writer.print(form(req, requestType, true, requestHandler.getClass().getName(), requestHandler.getParameters(), requestHandler.requirePost()));
                 bufJSCalls.append("ATS.apiCalls.push(\"").append(requestType).append("\");\n");
             } else if (!req.getParameterMap().containsKey("requestTypes")) {
                 String requestTag = Convert.nullToEmpty(req.getParameter("requestTag"));
                 Set<String> taggedTypes = requestTags.get(requestTag);
                 for (String type : (taggedTypes != null ? taggedTypes : allRequestTypes)) {
                     requestHandler = APIServlet.apiRequestHandlers.get(type);
-                    writer.print(form(type, false, requestHandler.getClass().getName(), APIServlet.apiRequestHandlers.get(type).getParameters(), 
+                    writer.print(form(req, type, false, requestHandler.getClass().getName(), APIServlet.apiRequestHandlers.get(type).getParameters(),
                                       APIServlet.apiRequestHandlers.get(type).requirePost()));
                     bufJSCalls.append("ATS.apiCalls.push(\"").append(type).append("\");\n");
                 }
@@ -187,7 +187,7 @@ public class APITestServlet extends HttpServlet {
                     Set<String> selectedRequestTypes = new TreeSet<>(Arrays.asList(requestTypes.split("_")));
                     for (String type: selectedRequestTypes) {
                         requestHandler = APIServlet.apiRequestHandlers.get(type);
-                        writer.print(form(type, false, requestHandler.getClass().getName(), APIServlet.apiRequestHandlers.get(type).getParameters(), 
+                        writer.print(form(req, type, false, requestHandler.getClass().getName(), APIServlet.apiRequestHandlers.get(type).getParameters(),
                                           APIServlet.apiRequestHandlers.get(type).requirePost()));
                         bufJSCalls.append("ATS.apiCalls.push(\"").append(type).append("\");\n");
                     }
@@ -206,7 +206,7 @@ public class APITestServlet extends HttpServlet {
         return "<div class=\"alert alert-" + msgType + "\" role=\"alert\">" + msg + "</div>";
     }
 
-    private static String form(String requestType, boolean singleView, String className, List<String> parameters, boolean requirePost) {
+    private static String form(HttpServletRequest req, String requestType, boolean singleView, String className, List<String> parameters, boolean requirePost) {
         StringBuilder buf = new StringBuilder();
         buf.append("<div class=\"panel panel-default api-call-All\" ");
         buf.append("id=\"api-call-").append(requestType).append("\">");
@@ -241,9 +241,13 @@ public class APITestServlet extends HttpServlet {
         for (String parameter : parameters) {
             buf.append("<tr class=\"api-call-input-tr\">");
             buf.append("<td>").append(parameter).append(":</td>");
-            buf.append("<td><input type=\"");
-            buf.append("secretPhrase".equals(parameter) || "adminPassword".equals(parameter) ? "password" : "text");
-            buf.append("\" name=\"").append(parameter).append("\" style=\"width:100%;min-width:200px;\"/></td>");
+            buf.append("<td><input type=\"").append("secretPhrase".equals(parameter) || "adminPassword".equals(parameter) ? "password" : "text").append("\" ");
+            buf.append("name=\"").append(parameter).append("\" ");
+            String value = Convert.emptyToNull(req.getParameter(parameter));
+            if (value != null) {
+                buf.append("value=\"").append(value.replace("\"", "&quot;")).append("\" ");
+            }
+            buf.append("style=\"width:100%;min-width:200px;\"/></td>");
             buf.append("</tr>");
         }
         buf.append("<tr>");
