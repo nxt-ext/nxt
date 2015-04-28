@@ -1224,10 +1224,6 @@ var NRS = (function(NRS, $, undefined) {
 
 				if ($modal) {
 					var account_id = String($.trim(hash[1]));
-					if (!/^\d+$/.test(account_id) && account_id.indexOf("@") !== 0) {
-						account_id = "@" + account_id;
-					}
-
 					$modal.find("input[name=recipient]").val(account_id.unescapeHTML()).trigger("blur");
 					if (password && typeof password == "string") {
 						$modal.find("input[name=secretPhrase]").val(password);

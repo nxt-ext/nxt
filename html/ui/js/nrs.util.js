@@ -878,10 +878,10 @@ var NRS = (function(NRS, $, undefined) {
 				return NRS.accountRS;
 				break;
 			case "message_link":
-				return document.URL.replace(/#.*$/, "") + "#message:" + NRS.account;
+				return document.URL.replace(/#.*$/, "") + "#message:" + encodeURIComponent(NRS.accountRS);
 				break;
 			case "send_link":
-				return document.URL.replace(/#.*$/, "") + "#send:" + NRS.account;
+				return document.URL.replace(/#.*$/, "") + "#send:" + encodeURIComponent(NRS.accountRS);
 				break;
 			case "asset_id":
 				return $("#asset_id").text();
