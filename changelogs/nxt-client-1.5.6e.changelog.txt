@@ -24,8 +24,8 @@ received unconfirmed transactions to peers, if their count exceeds 10, the
 broadcast is done in multiple batches of 10. When requesting unconfirmed
 transactions from a peer, the ids of the transactions currently in the pool
 are included in the request, so that the remote node does not need to include
-them in the response. The response size is also limited to 100 transactions in
-size, unless the requesting node does not provide such exclude parameter.
+them in the response. The response size is also limited to 100 transactions,
+unless the requesting node does not provide such exclude parameter.
 
 Each tagged data can now also have a channel field. The searchTaggedData API
 can filter the search results by channel, and a new getChannelTaggedData API
