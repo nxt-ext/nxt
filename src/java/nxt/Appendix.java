@@ -520,7 +520,7 @@ public interface Appendix {
         private final boolean isCompressed;
         private volatile PrunableMessage prunableMessage;
 
-        PrunableEncryptedMessage(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
+        PrunableEncryptedMessage(ByteBuffer buffer, byte transactionVersion) {
             super(buffer, transactionVersion);
             this.hash = new byte[32];
             buffer.get(this.hash);

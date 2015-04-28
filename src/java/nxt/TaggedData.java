@@ -19,7 +19,7 @@ import java.util.Map;
 
 public class TaggedData {
 
-    public static final DbKey.LongKeyFactory<TaggedData> taggedDataKeyFactory = new DbKey.LongKeyFactory<TaggedData>("id") {
+    private static final DbKey.LongKeyFactory<TaggedData> taggedDataKeyFactory = new DbKey.LongKeyFactory<TaggedData>("id") {
 
         @Override
         public DbKey newKey(TaggedData taggedData) {
@@ -28,7 +28,7 @@ public class TaggedData {
 
     };
 
-    public static final VersionedPrunableDbTable<TaggedData> taggedDataTable = new VersionedPrunableDbTable<TaggedData>(
+    private static final VersionedPrunableDbTable<TaggedData> taggedDataTable = new VersionedPrunableDbTable<TaggedData>(
             "tagged_data", taggedDataKeyFactory, "name,description,tags") {
 
         @Override
@@ -110,7 +110,7 @@ public class TaggedData {
     }
 
 
-    public static final DbKey.LongKeyFactory<Timestamp> timestampKeyFactory = new DbKey.LongKeyFactory<Timestamp>("id") {
+    private static final DbKey.LongKeyFactory<Timestamp> timestampKeyFactory = new DbKey.LongKeyFactory<Timestamp>("id") {
 
         @Override
         public DbKey newKey(Timestamp timestamp) {
@@ -119,7 +119,7 @@ public class TaggedData {
 
     };
 
-    public static final VersionedEntityDbTable<Timestamp> timestampTable = new VersionedEntityDbTable<Timestamp>(
+    private static final VersionedEntityDbTable<Timestamp> timestampTable = new VersionedEntityDbTable<Timestamp>(
             "tagged_data_timestamp", timestampKeyFactory) {
 
         @Override
