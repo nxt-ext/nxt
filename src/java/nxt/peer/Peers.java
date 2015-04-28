@@ -61,6 +61,7 @@ public final class Peers {
     static final int LOGGING_MASK_200_RESPONSES = 4;
     static volatile int communicationLoggingMask;
 
+    private static final List<String> wellKnownPeers;
     static final Set<String> knownBlacklistedPeers;
 
     static final int connectTimeout;
@@ -172,8 +173,8 @@ public final class Peers {
 
         final List<String> defaultPeers = Constants.isTestnet ? Nxt.getStringListProperty("nxt.defaultTestnetPeers")
                 : Nxt.getStringListProperty("nxt.defaultPeers");
-        final List<String> wellKnownPeers = Constants.isTestnet ? Nxt.getStringListProperty("nxt.testnetPeers")
-                : Nxt.getStringListProperty("nxt.wellKnownPeers");
+        wellKnownPeers = Collections.unmodifiableList(Constants.isTestnet ? Nxt.getStringListProperty("nxt.testnetPeers")
+                : Nxt.getStringListProperty("nxt.wellKnownPeers"));
 
         List<String> knownBlacklistedPeersList = Nxt.getStringListProperty("nxt.knownBlacklistedPeers");
         if (knownBlacklistedPeersList.isEmpty()) {
@@ -350,6 +351,14 @@ public final class Peers {
                         }
                         for (Future future : futures) {
                             future.get();
+                        }
+                    }
+
+                    for (String wellKnownPeer : wellKnownPeers) {
+                        Peer peer = findOrCreatePeer(wellKnownPeer, true);
+                        if (peer != null && now - peer.getLastUpdated() > 3600) {
+                            addPeer(peer);
+                            connectPeer(peer);
                         }
                     }
 
