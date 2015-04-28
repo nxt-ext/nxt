@@ -34,9 +34,14 @@ account too.
 
 Fixed the UI for AddPeer and BlacklistPeer to accept admin password if needed.
 
+"Approve Transaction" action is now available in the transaction info actions
+tab.
+
+"Reveal Secret" field is added to the "Approve Transaction" modal when voting
+model is "By Hash".
+
 Enhanced the /test page to accept and pre-fill the test forms with any parameter
 values supplied in the url, e.g.:
-
 http://localhost:7876/test?requestType=getBlocks&lastIndex=10&includeTransactions=true
 
 
