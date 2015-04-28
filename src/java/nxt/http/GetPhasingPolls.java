@@ -26,7 +26,7 @@ public final class GetPhasingPolls extends APIServlet.APIRequestHandler {
         if (transactions == null) {
             return MISSING_TRANSACTION;
         }
-        boolean countVotes = ParameterParser.getBoolean(req, "countVotes", false);
+        boolean countVotes = "true".equalsIgnoreCase(req.getParameter("countVotes"));
 
         JSONObject response = new JSONObject();
         JSONArray jsonArray = new JSONArray();

@@ -7,7 +7,7 @@ import nxt.db.DbIterator;
 import nxt.db.DbKey;
 import nxt.db.DbUtils;
 import nxt.db.DerivedDbTable;
-import nxt.db.EntityDbTable;
+import nxt.db.PersistentDbTable;
 import nxt.db.VersionedEntityDbTable;
 import nxt.util.Convert;
 import nxt.util.Listener;
@@ -254,8 +254,8 @@ public final class Account {
 
     static class DoubleSpendingException extends RuntimeException {
 
-        DoubleSpendingException(String message) {
-            super(message);
+        DoubleSpendingException(String message, long accountId, long confirmed, long unconfirmed) {
+            super(message + " account: " + Long.toUnsignedString(accountId) + " confirmed: " + confirmed + " unconfirmed: " + unconfirmed);
         }
 
     }
@@ -316,7 +316,7 @@ public final class Account {
 
     };
 
-    private static final EntityDbTable<byte[]> publicKeyTable = new EntityDbTable<byte[]>("public_key", publicKeyDbKeyFactory) {
+    private static final PersistentDbTable<byte[]> publicKeyTable = new PersistentDbTable<byte[]>("public_key", publicKeyDbKeyFactory) {
 
         @Override
         protected byte[] load(Connection con, ResultSet rs) throws SQLException {
@@ -333,17 +333,6 @@ public final class Account {
                 pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
                 pstmt.executeUpdate();
             }
-        }
-
-        // this table is special, rollback and truncate is handled by the BlockDb delete
-        @Override
-        public void rollback(int height) {
-            clearCache();
-        }
-
-        @Override
-        public void truncate() {
-            clearCache();
         }
 
     };
@@ -789,18 +778,25 @@ public final class Account {
         return keyHeight;
     }
 
-    public EncryptedData encryptTo(byte[] data, String senderSecretPhrase) {
+    public EncryptedData encryptTo(byte[] data, String senderSecretPhrase, boolean compress) {
         if (getPublicKey() == null) {
             throw new IllegalArgumentException("Recipient account doesn't have a public key set");
+        }
+        if (compress && data.length > 0) {
+            data = Convert.compress(data);
         }
         return EncryptedData.encrypt(data, Crypto.getPrivateKey(senderSecretPhrase), getPublicKey());
     }
 
-    public byte[] decryptFrom(EncryptedData encryptedData, String recipientSecretPhrase) {
+    public byte[] decryptFrom(EncryptedData encryptedData, String recipientSecretPhrase, boolean uncompress) {
         if (getPublicKey() == null) {
             throw new IllegalArgumentException("Sender account doesn't have a public key set");
         }
-        return encryptedData.decrypt(Crypto.getPrivateKey(recipientSecretPhrase), getPublicKey());
+        byte[] decrypted = encryptedData.decrypt(Crypto.getPrivateKey(recipientSecretPhrase), getPublicKey());
+        if (uncompress && decrypted.length > 0) {
+            decrypted = Convert.uncompress(decrypted);
+        }
+        return decrypted;
     }
 
     public long getBalanceNQT() {
@@ -1264,13 +1260,13 @@ public final class Account {
             return;
         }
         if (confirmed < 0) {
-            throw new DoubleSpendingException("Negative balance or quantity for account " + Long.toUnsignedString(accountId));
+            throw new DoubleSpendingException("Negative balance or quantity: ", accountId, confirmed, unconfirmed);
         }
         if (unconfirmed < 0) {
-            throw new DoubleSpendingException("Negative unconfirmed balance or quantity for account " + Long.toUnsignedString(accountId));
+            throw new DoubleSpendingException("Negative unconfirmed balance or quantity: ", accountId, confirmed, unconfirmed);
         }
         if (unconfirmed > confirmed) {
-            throw new DoubleSpendingException("Unconfirmed exceeds confirmed balance or quantity for account " + Long.toUnsignedString(accountId));
+            throw new DoubleSpendingException("Unconfirmed exceeds confirmed balance or quantity: ", accountId, confirmed, unconfirmed);
         }
     }
 

@@ -1,29 +1,40 @@
 package nxt;
 
 import org.json.simple.JSONObject;
+import org.json.simple.JSONValue;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Types;
 import java.util.List;
 
 class UnconfirmedTransaction implements Transaction {
 
     private final TransactionImpl transaction;
     private final long arrivalTimestamp;
+    private final long feePerByte;
 
     UnconfirmedTransaction(TransactionImpl transaction, long arrivalTimestamp) {
         this.transaction = transaction;
         this.arrivalTimestamp = arrivalTimestamp;
+        this.feePerByte = transaction.getFeeNQT() / transaction.getFullSize();
     }
 
     UnconfirmedTransaction(ResultSet rs) throws SQLException {
-        byte[] transactionBytes = rs.getBytes("transaction_bytes");
         try {
-            this.transaction = TransactionImpl.newTransactionBuilder(transactionBytes).build();
+            byte[] transactionBytes = rs.getBytes("transaction_bytes");
+            JSONObject prunableAttachments = null;
+            String prunableJSON = rs.getString("prunable_json");
+            if (prunableJSON != null) {
+                prunableAttachments = (JSONObject) JSONValue.parse(prunableJSON);
+            }
+            TransactionImpl.BuilderImpl builder = TransactionImpl.newTransactionBuilder(transactionBytes, prunableAttachments);
+            this.transaction = builder.build();
             this.transaction.setHeight(rs.getInt("transaction_height"));
             this.arrivalTimestamp = rs.getLong("arrival_timestamp");
+            this.feePerByte = rs.getLong("fee_per_byte");
         } catch (NxtException.ValidationException e) {
             throw new RuntimeException(e.toString(), e);
         }
@@ -31,14 +42,20 @@ class UnconfirmedTransaction implements Transaction {
 
     void save(Connection con) throws SQLException {
         try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO unconfirmed_transaction (id, transaction_height, "
-                + "fee_per_byte, expiration, transaction_bytes, arrival_timestamp, height) "
-                + "VALUES (?, ?, ?, ?, ?, ?, ?)")) {
+                + "fee_per_byte, expiration, transaction_bytes, prunable_json, arrival_timestamp, height) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?)")) {
             int i = 0;
             pstmt.setLong(++i, transaction.getId());
             pstmt.setInt(++i, transaction.getHeight());
-            pstmt.setLong(++i, transaction.getFeeNQT() / transaction.getSize());
+            pstmt.setLong(++i, feePerByte);
             pstmt.setInt(++i, transaction.getExpiration());
             pstmt.setBytes(++i, transaction.bytes());
+            JSONObject prunableJSON = transaction.getPrunableAttachmentJSON();
+            if (prunableJSON != null) {
+                pstmt.setString(++i, prunableJSON.toJSONString());
+            } else {
+                pstmt.setNull(++i, Types.VARCHAR);
+            }
             pstmt.setLong(++i, arrivalTimestamp);
             pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
             pstmt.executeUpdate();
@@ -51,6 +68,10 @@ class UnconfirmedTransaction implements Transaction {
 
     long getArrivalTimestamp() {
         return arrivalTimestamp;
+    }
+
+    long getFeePerByte() {
+        return feePerByte;
     }
 
     @Override
@@ -189,6 +210,11 @@ class UnconfirmedTransaction implements Transaction {
     }
 
     @Override
+    public JSONObject getPrunableAttachmentJSON() {
+        return transaction.getPrunableAttachmentJSON();
+    }
+
+    @Override
     public byte getVersion() {
         return transaction.getVersion();
     }
@@ -199,11 +225,20 @@ class UnconfirmedTransaction implements Transaction {
     }
 
     @Override
+    public Appendix.PrunablePlainMessage getPrunablePlainMessage() {
+        return transaction.getPrunablePlainMessage();
+    }
+
+    @Override
     public Appendix.EncryptedMessage getEncryptedMessage() {
         return transaction.getEncryptedMessage();
     }
 
     @Override
+    public Appendix.PrunableEncryptedMessage getPrunableEncryptedMessage() {
+        return transaction.getPrunableEncryptedMessage();
+    }
+
     public Appendix.EncryptToSelfMessage getEncryptToSelfMessage() {
         return transaction.getEncryptToSelfMessage();
     }

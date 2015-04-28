@@ -5,6 +5,9 @@ import java.util.TimeZone;
 
 public final class Constants {
 
+    public static final boolean isTestnet = Nxt.getBooleanProperty("nxt.isTestnet");
+    public static final boolean isOffline = Nxt.getBooleanProperty("nxt.isOffline");
+
     public static final int MAX_NUMBER_OF_TRANSACTIONS = 255;
     public static final int MAX_PAYLOAD_LENGTH = MAX_NUMBER_OF_TRANSACTIONS * 176;
     public static final long MAX_BALANCE_NXT = 1000000000;
@@ -30,9 +33,20 @@ public final class Constants {
     public static final int MAX_ALIAS_LENGTH = 100;
 
     public static final int MAX_ARBITRARY_MESSAGE_LENGTH = 1000;
-    public static final int MAX_ARBITRARY_MESSAGE_LENGTH_2 = 40 * 1024;
     public static final int MAX_ENCRYPTED_MESSAGE_LENGTH = 1000;
-    public static final int MAX_ENCRYPTED_MESSAGE_LENGTH_2 = 40 * 1024;
+
+    public static final int MAX_PRUNABLE_MESSAGE_LENGTH = 42 * 1024;
+    public static final int MAX_PRUNABLE_ENCRYPTED_MESSAGE_LENGTH = 42 * 1024;
+
+    public static final int MIN_PRUNABLE_LIFETIME = isTestnet ? 1440 * 60 : 14 * 1440 * 60;
+    public static final int MAX_PRUNABLE_LIFETIME;
+    public static final boolean ENABLE_PRUNING;
+    static {
+        int maxPrunableLifetime = Nxt.getIntProperty("nxt.maxPrunableLifetime");
+        ENABLE_PRUNING = maxPrunableLifetime >= 0;
+        MAX_PRUNABLE_LIFETIME = ENABLE_PRUNING ? Math.max(maxPrunableLifetime, MIN_PRUNABLE_LIFETIME) : Integer.MAX_VALUE;
+    }
+    public static final boolean INCLUDE_EXPIRED_PRUNABLE = Nxt.getBooleanProperty("nxt.includeExpiredPrunable");
 
     public static final int MAX_ACCOUNT_NAME_LENGTH = 100;
     public static final int MAX_ACCOUNT_DESCRIPTION_LENGTH = 1000;
@@ -59,7 +73,7 @@ public final class Constants {
     public static final int MAX_DGS_LISTING_DESCRIPTION_LENGTH = 1000;
     public static final int MAX_DGS_LISTING_TAGS_LENGTH = 100;
     public static final int MAX_DGS_GOODS_LENGTH = 10240;
-    public static final int MAX_DGS_GOODS_LENGTH_2 = 40 * 1024;
+    public static final int MAX_DGS_GOODS_LENGTH_2 = 1000;
 
     public static final int MAX_HUB_ANNOUNCEMENT_URIS = 100;
     public static final int MAX_HUB_ANNOUNCEMENT_URI_LENGTH = 1000;
@@ -78,8 +92,13 @@ public final class Constants {
     public static final short MAX_SHUFFLING_DELAY = 1440;
     public static final int MAX_SHUFFLING_RECIPIENTS_LENGTH = 10000;
 
-    public static final boolean isTestnet = Nxt.getBooleanProperty("nxt.isTestnet");
-    public static final boolean isOffline = Nxt.getBooleanProperty("nxt.isOffline");
+    public static final int MAX_TAGGED_DATA_NAME_LENGTH = 100;
+    public static final int MAX_TAGGED_DATA_DESCRIPTION_LENGTH = 1000;
+    public static final int MAX_TAGGED_DATA_TAGS_LENGTH = 100;
+    public static final int MAX_TAGGED_DATA_TYPE_LENGTH = 100;
+    public static final int MAX_TAGGED_DATA_CHANNEL_LENGTH = 100;
+    public static final int MAX_TAGGED_DATA_FILENAME_LENGTH = 100;
+    public static final int MAX_TAGGED_DATA_DATA_LENGTH = 42 * 1024;
 
     public static final int ALIAS_SYSTEM_BLOCK = 22000;
     public static final int TRANSPARENT_FORGING_BLOCK = 30000;
@@ -101,9 +120,9 @@ public final class Constants {
     public static final int MONETARY_SYSTEM_BLOCK = isTestnet ? 150000 : 330000;
     public static final int VOTING_SYSTEM_BLOCK = isTestnet ? 220000 : Integer.MAX_VALUE;
 
-    public static final int LAST_KNOWN_BLOCK = isTestnet ? 255000 : 397000;
+    public static final int LAST_KNOWN_BLOCK = isTestnet ? 272000 : 414000;
 
-    public static final int[] MIN_VERSION = new int[] {1, 4};
+    public static final int[] MIN_VERSION = isTestnet ? new int[] {1, 5} : new int[] {1, 4};
 
     static final long UNCONFIRMED_POOL_DEPOSIT_NQT = (isTestnet ? 50 : 100) * ONE_NXT;
 

@@ -1579,7 +1579,17 @@ var NRS = (function(NRS, $, undefined) {
 			}
 		}
 		return false;
-	}  
+	}
+
+	// http://stackoverflow.com/questions/12518830/java-string-getbytesutf8-javascript-analog
+	NRS.getUtf8Bytes = function(str) {
+	    var utf8 = unescape(encodeURIComponent(str));
+	    var arr = [];
+	    for (var i = 0; i < utf8.length; i++) {
+			arr[i] = utf8.charCodeAt(i);
+		}
+	    return arr;
+	};
 
 	return NRS;
 }(NRS || {}, jQuery));

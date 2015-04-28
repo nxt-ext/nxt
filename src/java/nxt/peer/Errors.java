@@ -7,6 +7,7 @@ final class Errors {
     final static String UNKNOWN_PEER = "Your peer address cannot be resolved";
     final static String UNSUPPORTED_REQUEST_TYPE = "Unsupported request type!";
     final static String UNSUPPORTED_PROTOCOL = "Unsupported protocol!";
+    final static String INVALID_ANNOUNCED_ADDRESS = "Invalid announced address";
 
     private Errors() {} // never
 }

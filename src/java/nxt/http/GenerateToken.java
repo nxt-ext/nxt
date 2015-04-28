@@ -34,7 +34,7 @@ public final class GenerateToken extends APIServlet.APIRequestHandler {
 
             String tokenString = Token.generateToken(secretPhrase, website.trim());
 
-            JSONObject response = new JSONObject();
+            JSONObject response = JSONData.token(Token.parseToken(tokenString, website));
             response.put("token", tokenString);
 
             return response;

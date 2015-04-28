@@ -109,7 +109,10 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.pages.my_polls = function() {
-		NRS.sendRequest("getPolls+", {"account": NRS.account}, function(response) {
+		NRS.sendRequest("getPolls+", {
+			"account": NRS.account,
+			"includeFinished": true
+		}, function(response) {
 			if (response.polls && response.polls.length) {
 				var polls = {};
 				var nrPolls = 0;
@@ -153,14 +156,14 @@ var NRS = (function(NRS, $, undefined) {
 								if(poll.attachment.finishHeight > NRS.lastBlockHeight)
 								{
 									rows += "<td style='text-align:center;'>" + String(poll.attachment.finishHeight - NRS.lastBlockHeight) + "</td>";
-									rows += "<td><a href='#' class='vote_button' data-poll='" + poll.transaction +"'>Vote </td>";
+									rows += "<td style='text-align:center;'><a href='#' class='vote_button btn btn-xs btn-default' data-poll='" + poll.transaction +"'>Vote</a> ";
 								}
 								else
 								{
 									rows += "<td style='text-align:center;'>Complete</td>";
-									rows += "<td><a href='#' class='results_button' data-results='" + poll.transaction +"'>Results </a></td>";
+									rows += "<td style='text-align:center;'><a href='#' class='results_button btn btn-xs btn-default' data-results='" + poll.transaction +"'>Results</a> ";
 								}
-								rows += "<td style='text-align:center;'><a href='#' class='follow_button btn btn-xs btn-default' data-follow='" + poll.transaction + "'>Follow </a></td>";
+								rows += "<a href='#' class='follow_button btn btn-xs btn-default' data-follow='" + poll.transaction + "'>Follow </a></td>";
 								rows += "</tr>";
 							}
 							NRS.dataLoaded(rows);
@@ -332,7 +335,6 @@ var NRS = (function(NRS, $, undefined) {
 	function _setMinBalanceForm() {
 		var pollType = parseInt($("#create_poll_type").val());
 		var mbType = parseInt($("input[name=minBalanceType]:radio:checked").val());
-		console.log("PT:" + pollType + " MBT:" + mbType);
 
 		if (pollType == 0 && mbType == 0) {
 			$('#min_voting_balance_label_unit').html($.t('none'));
@@ -481,6 +483,9 @@ var NRS = (function(NRS, $, undefined) {
 
     function layoutPollChart(resultsdata, polldata) {
     	$('#followed_polls_poll_chart').empty();
+    	if (!resultsdata.results) {
+    		return;
+    	}
 
     	var color = d3.scale.category20();
     	var content = [];

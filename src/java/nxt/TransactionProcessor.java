@@ -20,7 +20,15 @@ public interface TransactionProcessor extends Observable<List<? extends Transact
 
     Transaction getUnconfirmedTransaction(long transactionId);
 
+    Transaction[] getAllWaitingTransactions();
+
+    Transaction[] getAllBroadcastedTransactions();
+
     void clearUnconfirmedTransactions();
+
+    void requeueAllUnconfirmedTransactions();
+
+    void rebroadcastAllUnconfirmedTransactions();
 
     void broadcast(Transaction transaction) throws NxtException.ValidationException;
 

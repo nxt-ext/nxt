@@ -75,21 +75,37 @@ var NRS = (function (NRS, $, undefined) {
             $("#transaction_info_table").find("tbody").empty();
 
             var incorrect = false;
-
             if (transaction.senderRS == NRS.accountRS) {
-                $("#transaction_info_actions").hide();
+                $("#transaction_info_modal_send_money").attr('disabled','disabled');
+                $("#transaction_info_modal_transfer_currency").attr('disabled','disabled');
+                $("#transaction_info_modal_send_message").attr('disabled','disabled');
             } else {
-                if (transaction.senderRS in NRS.contacts) {
-                    var accountButton = NRS.contacts[transaction.senderRS].name.escapeHTML();
-                    $("#transaction_info_modal_add_as_contact").hide();
-                } else {
-                    var accountButton = transaction.senderRS;
-                    $("#transaction_info_modal_add_as_contact").show();
-                }
-
-                $("#transaction_info_actions").show();
-                $("#transaction_info_actions_tab").find("button").data("account", accountButton);
+                $("#transaction_info_modal_send_money").removeAttr('disabled');
+                $("#transaction_info_modal_transfer_currency").removeAttr('disabled');
+                $("#transaction_info_modal_send_message").removeAttr('disabled');
             }
+            if (transaction.senderRS in NRS.contacts) {
+                var accountButton = NRS.contacts[transaction.senderRS].name.escapeHTML();
+                $("#transaction_info_modal_add_as_contact").attr('disabled','disabled');
+            } else {
+                var accountButton = transaction.senderRS;
+                $("#transaction_info_modal_add_as_contact").removeAttr('disabled');
+            }
+            var approveTransactionButton = $("#transaction_info_modal_approve_transaction");
+            if (!transaction.attachment || !transaction.attachment.phasingFinishHeight) {
+                approveTransactionButton.attr('disabled', 'disabled');
+            } else {
+                approveTransactionButton.removeAttr('disabled');
+                approveTransactionButton.data("transaction", transaction.transaction);
+                approveTransactionButton.data("fullhash", transaction.fullHash);
+                approveTransactionButton.data("timestamp", transaction.timestamp);
+                approveTransactionButton.data("fee", NRS.getPhasingFee(transaction));
+                approveTransactionButton.data("minBalanceFormatted", "");
+                approveTransactionButton.data("votingmodel", transaction.attachment.phasingVotingModel);
+            }
+
+            $("#transaction_info_actions").show();
+            $("#transaction_info_actions_tab").find("button").data("account", accountButton);
 
             if (transaction.attachment && transaction.attachment.phasingFinishHeight) {
                 var finishHeight = transaction.attachment.phasingFinishHeight;
@@ -98,16 +114,16 @@ var NRS = (function (NRS, $, undefined) {
                 phasingDetails.finishIn = ((finishHeight - NRS.lastBlockHeight) > 0) ? (finishHeight - NRS.lastBlockHeight) + " " + $.t("blocks") : $.t("finished");
                 phasingDetails.quorum = transaction.attachment.phasingQuorum;
                 phasingDetails.minBalance = transaction.attachment.phasingMinBalance;
-                var votingModel = NRS.getVotingModel(parseInt(transaction.attachment.phasingVotingModel));
-                phasingDetails.votingModel = $.t(votingModel.name);
+                var votingModel = NRS.getVotingModelName(parseInt(transaction.attachment.phasingVotingModel));
+                phasingDetails.votingModel = $.t(votingModel);
                 var phasingTransactionLink = "<a href='#' class='show_transaction_modal_action' data-transaction='" + String(transaction.attachment.phasingHolding).escapeHTML() + "'>" + transaction.attachment.phasingHolding + "</a>";
-                if (votingModel == NRS.constants.VOTING_MODEL.ASSET) {
+                if (NRS.constants.VOTING_MODELS[votingModel] == NRS.constants.VOTING_MODELS.ASSET) {
                     phasingDetails.asset_formatted_html = phasingTransactionLink;
-                } else if (votingModel == NRS.constants.VOTING_MODEL.CURRENCY) {
+                } else if (NRS.constants.VOTING_MODELS[votingModel] == NRS.constants.VOTING_MODELS.CURRENCY) {
                     phasingDetails.currency_formatted_html = phasingTransactionLink;
                 }
-                var minBalanceModel = NRS.getMinBalanceModel(parseInt(transaction.attachment.phasingMinBalanceModel));
-                phasingDetails.minBalanceModel = $.t(minBalanceModel.name);
+                var minBalanceModel = NRS.getMinBalanceModelName(parseInt(transaction.attachment.phasingMinBalanceModel));
+                phasingDetails.minBalanceModel = $.t(minBalanceModel);
                 var rows = "";
                 if (transaction.attachment.phasingWhitelist && transaction.attachment.phasingWhitelist.length > 0) {
                     rows = "<table class='table table-striped'><thead><tr>" +
@@ -122,6 +138,10 @@ var NRS = (function (NRS, $, undefined) {
                     rows = "-";
                 }
                 phasingDetails.whitelist_formatted_html = rows;
+                if (transaction.attachment.phasingHashedSecret) {
+                    phasingDetails.hashedSecret = transaction.attachment.phasingHashedSecret;
+                    phasingDetails.hashAlgorithm = transaction.attachment.phasingHashedSecretAlgorithm;
+                }
                 $("#phasing_info_details_table").find("tbody").empty().append(NRS.createInfoTable(phasingDetails, true));
                 $("#phasing_info_details_link").show();
             } else {
@@ -156,7 +176,7 @@ var NRS = (function (NRS, $, undefined) {
 
                         if (transaction.attachment) {
                             if (transaction.attachment.message) {
-                                if (!transaction.attachment["version.Message"]) {
+                                if (!transaction.attachment["version.Message"] && !transaction.attachment["version.PrunablePlainMessage"]) {
                                     try {
                                         message = converters.hexStringToString(transaction.attachment.message);
                                     } catch (err) {
@@ -198,8 +218,13 @@ var NRS = (function (NRS, $, undefined) {
                         } else {
                             $output.append("<div style='padding-bottom:10px'>" + $.t("message_empty") + "</div>");
                         }
-
-                        $output.append("<table><tr><td><strong>" + $.t("from") + "</strong>:&nbsp;</td><td>" + NRS.getAccountLink(transaction, "sender") + "</td></tr><tr><td><strong>" + $.t("to") + "</strong>:&nbsp;</td><td>" + NRS.getAccountLink(transaction, "recipient") + "</td></tr></table>").show();
+                        var hash = transaction.attachment.messageHash ? ("<tr><td><strong>" + $.t("hash") + "</strong>:&nbsp;</td><td>" + transaction.attachment.messageHash + "</td></tr>") : "";
+                        $output.append("<table>" +
+                            "<tr><td><strong>" + $.t("from") + "</strong>:&nbsp;</td><td>" + NRS.getAccountLink(transaction, "sender") + "</td></tr>" +
+                            "<tr><td><strong>" + $.t("to") + "</strong>:&nbsp;</td><td>" + NRS.getAccountLink(transaction, "recipient") + "</td></tr>" +
+                            hash +
+                        "</table>");
+                        $output.show();
 
                         break;
                     case 1:
@@ -658,7 +683,11 @@ var NRS = (function (NRS, $, undefined) {
 
                                 if (purchase.errorCode) {
                                     if (purchase.errorCode == 4) {
-                                        callout = $.t("incorrect_purchase");
+                                        if (transactionDetails.block == "unconfirmed") {
+                                            callout = $.t("unconfirmed_transaction");
+                                        } else {
+                                            callout = $.t("incorrect_purchase");
+                                        }
                                     } else {
                                         callout = String(purchase.errorDescription).escapeHTML();
                                     }
@@ -1019,7 +1048,7 @@ var NRS = (function (NRS, $, undefined) {
             if (!(transaction.type == 1 && transaction.subtype == 0)) {
                 if (transaction.attachment) {
                     if (transaction.attachment.message) {
-                        if (!transaction.attachment["version.Message"]) {
+                        if (!transaction.attachment["version.Message"] && !transaction.attachment["version.PrunablePlainMessage"]) {
                             try {
                                 message = converters.hexStringToString(transaction.attachment.message);
                             } catch (err) {
@@ -1267,20 +1296,28 @@ var NRS = (function (NRS, $, undefined) {
 
     $(document).on("click", ".approve_transaction_btn", function (e) {
         e.preventDefault();
-        $('#approve_transaction_modal .at_transaction_full_hash_display').text($(this).data("transaction"));
-        $('#approve_transaction_modal .at_transaction_timestamp').text($(this).data("transactionTimestamp"));
+        var approveTransactionModal = $('#approve_transaction_modal');
+        approveTransactionModal.find('.at_transaction_full_hash_display').text($(this).data("transaction"));
+        approveTransactionModal.find('.at_transaction_timestamp').text(NRS.formatTimestamp($(this).data("timestamp")));
         $("#approve_transaction_button").data("transaction", $(this).data("transaction"));
-        $('#approve_transaction_modal #at_transaction_full_hash').val($(this).data("fullHash"));
+        approveTransactionModal.find('#at_transaction_full_hash').val($(this).data("fullhash"));
 
         var mbFormatted = $(this).data("minBalanceFormatted");
-        if (mbFormatted != "") {
-            $('#at_min_balance_warning .at_min_balance_amount').html(mbFormatted);
-            $('#at_min_balance_warning').show();
+        var minBalanceWarning = $('#at_min_balance_warning');
+        if (mbFormatted && mbFormatted != "") {
+            minBalanceWarning.find('.at_min_balance_amount').html(mbFormatted);
+            minBalanceWarning.show();
         } else {
-            $('#at_min_balance_warning').hide();
+            minBalanceWarning.hide();
         }
-        $('#approve_transaction_modal .advanced_fee').html($(this).data("transactionFee") + " NXT");
-        $('#approve_transaction_modal input[name="feeNXT"]').val($(this).data("transactionFee"));
+        var revealSecretDiv = $("#at_revealed_secret_div");
+        if ($(this).data("votingmodel") == NRS.constants.VOTING_MODELS.HASH) {
+            revealSecretDiv.show();
+        } else {
+            revealSecretDiv.hide();
+        }
+        approveTransactionModal.find('.advanced_fee').html($(this).data("fee") + " NXT");
+        approveTransactionModal.find('input[name="feeNXT"]').val($(this).data("fee"));
     });
 
     $("#approve_transaction_button").on("click", function (e) {

@@ -62,6 +62,9 @@ var NRS = (function(NRS, $) {
 		var sortedMessages = [];
 
 		for (var otherUser in _messages) {
+			if (!_messages.hasOwnProperty(otherUser)) {
+				continue;
+			}
 			_messages[otherUser].sort(function(a, b) {
 				if (a.timestamp > b.timestamp) {
 					return 1;
@@ -174,8 +177,8 @@ var NRS = (function(NRS, $) {
 							decoded = $.t("error_decryption_unknown");
 						}
 					}
-				} else {
-					if (!messages[i].attachment["version.Message"]) {
+				} else if (messages[i].attachment.message) {
+					if (!messages[i].attachment["version.Message"] && !messages[i].attachment["version.PrunablePlainMessage"]) {
 						try {
 							decoded = converters.hexStringToString(messages[i].attachment.message);
 						} catch (err) {
@@ -189,6 +192,10 @@ var NRS = (function(NRS, $) {
 					} else {
 						decoded = String(messages[i].attachment.message);
 					}
+				} else if (messages[i].attachment.messageHash || messages[i].attachment.encryptedMessageHash) {
+					decoded = $.t("message_pruned");
+				} else {
+					decoded = $.t("message_empty");
 				}
 
 				if (decoded !== false) {
@@ -398,7 +405,13 @@ var NRS = (function(NRS, $) {
 		try {
 			var messagesToDecrypt = [];
 			for (var otherUser in _messages) {
+				if (!_messages.hasOwnProperty(otherUser)) {
+					continue;
+				}
 				for (var key in _messages[otherUser]) {
+					if (!_messages[otherUser].hasOwnProperty(key)) {
+						continue;
+					}
 					var message = _messages[otherUser][key];
 					if (message.attachment && message.attachment.encryptedMessage) {
 						messagesToDecrypt.push(message);

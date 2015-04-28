@@ -21,6 +21,8 @@ import nxt.Order;
 import nxt.PhasingPoll;
 import nxt.PhasingVote;
 import nxt.Poll;
+import nxt.PrunableMessage;
+import nxt.TaggedData;
 import nxt.Token;
 import nxt.Trade;
 import nxt.Transaction;
@@ -77,13 +79,17 @@ final class JSONData {
 
     static JSONObject lessor(Account account) {
         JSONObject json = new JSONObject();
-        json.put("currentLesseeRS", Convert.rsAccount(account.getCurrentLesseeId()));
-        json.put("currentHeightFrom", String.valueOf(account.getCurrentLeasingHeightFrom()));
-        json.put("currentHeightTo", String.valueOf(account.getCurrentLeasingHeightTo()));
-        json.put("nextLesseeRS", Convert.rsAccount(account.getNextLesseeId()));
-        json.put("nextHeightFrom", String.valueOf(account.getNextLeasingHeightFrom()));
-        json.put("nextHeightTo", String.valueOf(account.getNextLeasingHeightTo()));
-        json.put("effectiveBalanceNXT", String.valueOf(account.getGuaranteedBalanceNQT() / Constants.ONE_NXT));
+        if (account.getCurrentLesseeId() != 0) {
+            putAccount(json, "currentLessee", account.getCurrentLesseeId());
+            json.put("currentHeightFrom", String.valueOf(account.getCurrentLeasingHeightFrom()));
+            json.put("currentHeightTo", String.valueOf(account.getCurrentLeasingHeightTo()));
+        }
+        if (account.getNextLesseeId() != 0) {
+            putAccount(json, "nextLessee", account.getNextLesseeId());
+            json.put("nextHeightFrom", String.valueOf(account.getNextLeasingHeightFrom()));
+            json.put("nextHeightTo", String.valueOf(account.getNextLeasingHeightTo()));
+            json.put("effectiveBalanceNXT", String.valueOf(account.getGuaranteedBalanceNQT() / Constants.ONE_NXT));
+        }
         return json;
     }
 
@@ -285,6 +291,7 @@ final class JSONData {
         JSONObject json = new JSONObject();
         putAccount(json, "account", Account.getId(hallmark.getPublicKey()));
         json.put("host", hallmark.getHost());
+        json.put("port", hallmark.getPort());
         json.put("weight", hallmark.getWeight());
         String dateString = Hallmark.formatDate(hallmark.getDate());
         json.put("date", dateString);
@@ -302,7 +309,8 @@ final class JSONData {
 
     static JSONObject peer(Peer peer) {
         JSONObject json = new JSONObject();
-        json.put("address", peer.getPeerAddress());
+        json.put("address", peer.getHost());
+        json.put("port", peer.getPort());
         json.put("state", peer.getState().ordinal());
         json.put("announcedAddress", peer.getAnnouncedAddress());
         json.put("shareAddress", peer.shareAddress());
@@ -642,6 +650,72 @@ final class JSONData {
         response.put("hitTime", generator.getHitTime());
         response.put("remaining", Math.max(deadline - elapsedTime, 0));
         return response;
+    }
+
+    static JSONObject prunableMessage(PrunableMessage prunableMessage, long readerAccountId, String secretPhrase) {
+        JSONObject json = new JSONObject();
+        json.put("transaction", Long.toUnsignedString(prunableMessage.getId()));
+        json.put("isText", prunableMessage.isText());
+        putAccount(json, "sender", prunableMessage.getSenderId());
+        if (prunableMessage.getRecipientId() != 0) {
+            putAccount(json, "recipient", prunableMessage.getRecipientId());
+        }
+        json.put("transactionTimestamp", prunableMessage.getTransactionTimestamp());
+        json.put("blockTimestamp", prunableMessage.getBlockTimestamp());
+        EncryptedData encryptedData = prunableMessage.getEncryptedData();
+        if (encryptedData != null) {
+            json.put("encryptedMessage", encryptedData(prunableMessage.getEncryptedData()));
+            if (secretPhrase != null) {
+                Account account = prunableMessage.getSenderId() == readerAccountId
+                        ? Account.getAccount(prunableMessage.getRecipientId()) : Account.getAccount(prunableMessage.getSenderId());
+                if (account != null) {
+                    try {
+                        byte[] decrypted = account.decryptFrom(encryptedData, secretPhrase, prunableMessage.isCompressed());
+                        json.put("decryptedMessage", prunableMessage.isText() ? Convert.toString(decrypted) : Convert.toHexString(decrypted));
+                    } catch (RuntimeException e) {
+                        putException(json, e, "Decryption failed");
+                    }
+                }
+            }
+            json.put("isCompressed", prunableMessage.isCompressed());
+        } else {
+            json.put("message", prunableMessage.toString());
+        }
+        return json;
+    }
+
+    static JSONObject taggedData(TaggedData taggedData) {
+        JSONObject json = new JSONObject();
+        json.put("transaction", Long.toUnsignedString(taggedData.getId()));
+        putAccount(json, "account", taggedData.getAccountId());
+        json.put("name", taggedData.getName());
+        json.put("description", taggedData.getDescription());
+        json.put("tags", taggedData.getTags());
+        JSONArray tagsJSON = new JSONArray();
+        Collections.addAll(tagsJSON, taggedData.getParsedTags());
+        json.put("parsedTags", tagsJSON);
+        json.put("type", taggedData.getType());
+        json.put("channel", taggedData.getChannel());
+        json.put("filename", taggedData.getFilename());
+        json.put("isText", taggedData.isText());
+        json.put("data", taggedData.isText() ? Convert.toString(taggedData.getData()) : Convert.toHexString(taggedData.getData()));
+        json.put("transactionTimestamp", taggedData.getTransactionTimestamp());
+        json.put("blockTimestamp", taggedData.getBlockTimestamp());
+        return json;
+	}
+
+    static JSONObject dataTag(TaggedData.Tag tag) {
+        JSONObject json = new JSONObject();
+        json.put("tag", tag.getTag());
+        json.put("count", tag.getCount());
+        return json;
+    }
+
+    static void putPrunableAttachment(JSONObject json, Transaction transaction) {
+        JSONObject prunableAttachment = transaction.getPrunableAttachmentJSON();
+        if (prunableAttachment != null) {
+            json.put("prunableAttachmentJSON", prunableAttachment);
+        }
     }
 
     static void putException(JSONObject json, Exception e) {

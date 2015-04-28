@@ -10,10 +10,14 @@
                     <div class="callout callout-danger error_message" style="display:none"></div>
                     <div class="form-group">
                         <p>
-                            <span>ID:</span> 
+                            <span data-i18n="transaction_id">Transaction ID</span>
                             <span class="at_transaction_full_hash_display"></span>&nbsp; 
                             (<span class="at_transaction_timestamp"></span>)
                         </p>
+                        <div id="at_revealed_secret_div" class="form-group">
+                            <label for="at_revealed_secret" data-i18n="reveal_secret">Reveal Secret</label>
+                            <input type="password" tabindex="1" id="at_revealed_secret" name="revealedSecretText" value=""/>
+                        </div>
                         <input type="hidden" id="at_transaction_full_hash" name="transactionFullHash" value="" />
                         <div class="alert alert-warning" id="at_min_balance_warning" role="alert" style="margin-left:0px;">
                             <span data-i18n="approval_min_balance_needed_warning">
@@ -76,10 +80,11 @@
                         <div class="tab-pane" id="transaction_info_actions_tab">
                             <div class="row">
                                 <div class="col-xs-8 col-md-8" style="margin-left:auto;margin-right:auto;float:none;">
-                                    <button type="button" class="btn btn-default btn-lg btn-block" data-toggle="modal" data-target="#send_money_modal" data-account="" data-i18n="send_nxt_to_sender">Send NXT to Sender</button>
-                                    <button type="button" class="btn btn-default btn-lg btn-block" data-toggle="modal" data-target="#transfer_currency_modal" data-account="" data-i18n="send_currency_to_sender">Send Currency to Sender</button>
-                                    <button type="button" class="btn btn-default btn-lg btn-block" data-toggle="modal" data-target="#send_message_modal" data-account="" data-i18n="send_message_to_sender">Send Message to Sender</button>
+                                    <button type="button" id="transaction_info_modal_send_money" class="btn btn-default btn-lg btn-block" data-toggle="modal" data-target="#send_money_modal" data-account="" data-i18n="send_nxt_to_sender">Send NXT to Sender</button>
+                                    <button type="button" id="transaction_info_modal_transfer_currency" class="btn btn-default btn-lg btn-block" data-toggle="modal" data-target="#transfer_currency_modal" data-account="" data-i18n="send_currency_to_sender">Send Currency to Sender</button>
+                                    <button type="button" id="transaction_info_modal_send_message" class="btn btn-default btn-lg btn-block" data-toggle="modal" data-target="#send_message_modal" data-account="" data-i18n="send_message_to_sender">Send Message to Sender</button>
                                     <button type="button" id="transaction_info_modal_add_as_contact" class="btn btn-default btn-lg btn-block" data-toggle="modal" data-target="#add_contact_modal" data-account="" data-i18n="add_sender_as_contact">Add Sender as Contact</button>
+                                    <button type="button" id="transaction_info_modal_approve_transaction" class="btn btn-default btn-lg btn-block approve_transaction_btn" data-toggle="modal" data-target="#approve_transaction_modal" data-i18n="approve_transaction">Approve Transaction</button>
                                 </div>
                             </div>
                         </div>

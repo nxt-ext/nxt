@@ -101,6 +101,8 @@ public final class APIServlet extends HttpServlet {
         map.put("decodeHallmark", DecodeHallmark.instance);
         map.put("decodeToken", DecodeToken.instance);
         map.put("encryptTo", EncryptTo.instance);
+        map.put("eventRegister", EventRegister.instance);
+        map.put("eventWait", EventWait.instance);
         map.put("generateToken", GenerateToken.instance);
         map.put("getAccount", GetAccount.instance);
         map.put("getAccountBlockCount", GetAccountBlockCount.instance);
@@ -208,6 +210,10 @@ public final class APIServlet extends HttpServlet {
         map.put("getOrderTrades", GetOrderTrades.instance);
         map.put("getAccountExchangeRequests", GetAccountExchangeRequests.instance);
         map.put("getMintingTarget", GetMintingTarget.instance);
+        map.put("getPrunableMessage", GetPrunableMessage.instance);
+        map.put("getPrunableMessages", GetPrunableMessages.instance);
+        map.put("getAllPrunableMessages", GetAllPrunableMessages.instance);
+        map.put("verifyPrunableMessage", VerifyPrunableMessage.instance);
         map.put("issueAsset", IssueAsset.instance);
         map.put("issueCurrency", IssueCurrency.instance);
         map.put("leaseBalance", LeaseBalance.instance);
@@ -238,7 +244,22 @@ public final class APIServlet extends HttpServlet {
         map.put("searchCurrencies", SearchCurrencies.instance);
         map.put("searchPolls", SearchPolls.instance);
         map.put("searchAccounts", SearchAccounts.instance);
+        map.put("searchTaggedData", SearchTaggedData.instance);
+        map.put("uploadTaggedData", UploadTaggedData.instance);
+        map.put("extendTaggedData", ExtendTaggedData.instance);
+        map.put("getAccountTaggedData", GetAccountTaggedData.instance);
+        map.put("getAllTaggedData", GetAllTaggedData.instance);
+        map.put("getChannelTaggedData", GetChannelTaggedData.instance);
+        map.put("getTaggedData", GetTaggedData.instance);
+        map.put("getDataTags", GetDataTags.instance);
+        map.put("getDataTagCount", GetDataTagCount.instance);
+        map.put("getDataTagsLike", GetDataTagsLike.instance);
+        map.put("verifyTaggedData", VerifyTaggedData.instance);
         map.put("clearUnconfirmedTransactions", ClearUnconfirmedTransactions.instance);
+        map.put("requeueUnconfirmedTransactions", RequeueUnconfirmedTransactions.instance);
+        map.put("rebroadcastUnconfirmedTransactions", RebroadcastUnconfirmedTransactions.instance);
+        map.put("getAllWaitingTransactions", GetAllWaitingTransactions.instance);
+        map.put("getAllBroadcastedTransactions", GetAllBroadcastedTransactions.instance);
         map.put("fullReset", FullReset.instance);
         map.put("popOff", PopOff.instance);
         map.put("scan", Scan.instance);
@@ -248,7 +269,10 @@ public final class APIServlet extends HttpServlet {
         map.put("dumpPeers", DumpPeers.instance);
         map.put("getLog", GetLog.instance);
         map.put("getStackTraces", GetStackTraces.instance);
+        map.put("setLogging", SetLogging.instance);
         map.put("shutdown", Shutdown.instance);
+        map.put("trimDerivedTables", TrimDerivedTables.instance);
+
         map.put("setPhasingOnlyControl", SetPhasingOnlyControl.instance);
         map.put("getPhasingOnlyControl", GetPhasingOnlyControl.instance);
         
@@ -266,10 +290,11 @@ public final class APIServlet extends HttpServlet {
     }
 
     private void process(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-
+        // Set response values now in case we create an asynchronous context
         resp.setHeader("Cache-Control", "no-cache, no-store, must-revalidate, private");
         resp.setHeader("Pragma", "no-cache");
         resp.setDateHeader("Expires", 0);
+        resp.setContentType("text/plain; charset=UTF-8");
 
         JSONStreamAware response = JSON.emptyJSON;
 
@@ -323,15 +348,17 @@ public final class APIServlet extends HttpServlet {
                 }
             }
 
-            if (response instanceof JSONObject) {
+            if (response != null && (response instanceof JSONObject)) {
                 ((JSONObject)response).put("requestProcessingTime", System.currentTimeMillis() - startTime);
             }
 
         } finally {
-            resp.setContentType("text/plain; charset=UTF-8");
+            // The response will be null if we created an asynchronous context
+            if (response != null) {
             try (Writer writer = resp.getWriter()) {
                 response.writeJSONString(writer);
             }
+        }
         }
 
     }

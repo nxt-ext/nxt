@@ -9,7 +9,9 @@ public interface Peer extends Comparable<Peer> {
         NON_CONNECTED, CONNECTED, DISCONNECTED
     }
 
-    String getPeerAddress();
+    String getHost();
+
+    int getPort();
 
     String getAnnouncedAddress();
 

@@ -9,14 +9,8 @@ import nxt.db.VersionedValuesDbTable;
 import nxt.util.Convert;
 import nxt.util.Listener;
 import nxt.util.Listeners;
-import org.apache.lucene.analysis.Analyzer;
-import org.apache.lucene.analysis.TokenStream;
-import org.apache.lucene.analysis.standard.StandardAnalyzer;
-import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
-import org.apache.lucene.util.Version;
+import nxt.util.Search;
 
-import java.io.IOException;
-import java.io.StringReader;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -293,7 +287,7 @@ public final class DigitalGoodsStore {
             this.name = attachment.getName();
             this.description = attachment.getDescription();
             this.tags = attachment.getTags();
-            this.parsedTags = parseTags(this.tags);
+            this.parsedTags = Search.parseTags(this.tags, 3, 20, 3);
             this.quantity = attachment.getQuantity();
             this.priceNQT = attachment.getPriceNQT();
             this.delisted = false;
@@ -402,28 +396,6 @@ public final class DigitalGoodsStore {
 
         public String[] getParsedTags() {
             return parsedTags;
-        }
-
-        private static final Analyzer analyzer = new StandardAnalyzer(Version.LUCENE_30);
-        private static final String[] emptyTags = new String[0];
-
-        private static String[] parseTags(String tags) {
-            if (tags.trim().length() == 0) {
-                return emptyTags;
-            }
-            List<String> list = new ArrayList<>();
-            try (TokenStream stream = analyzer.tokenStream(null, new StringReader(tags))) {
-                CharTermAttribute attribute = stream.addAttribute(CharTermAttribute.class);
-                String tag;
-                while (stream.incrementToken() && list.size() < 3 && (tag = attribute.toString()).length() <= 20 && tag.length() >= 3) {
-                    if (!list.contains(tag)) {
-                        list.add(tag);
-                    }
-                }
-            } catch (IOException e) {
-                throw new RuntimeException(e.toString(), e);
-            }
-            return list.toArray(new String[list.size()]);
         }
 
     }
@@ -614,8 +586,12 @@ public final class DigitalGoodsStore {
             return purchaseTable.getCount(new SellerBuyerPurchasesClause(sellerId, buyerId, withPublicFeedbacksOnly, completedOnly));
         }
 
-        public static DbIterator<Purchase> getGoodsPurchases(long goodsId, boolean withPublicFeedbacksOnly, boolean completedOnly, int from, int to) {
-            return purchaseTable.getManyBy(new LongPurchasesClause("goods_id", goodsId, withPublicFeedbacksOnly, completedOnly), from, to);
+        public static DbIterator<Purchase> getGoodsPurchases(long goodsId, long buyerId, boolean withPublicFeedbacksOnly, boolean completedOnly, int from, int to) {
+            DbClause clause = new LongPurchasesClause("goods_id", goodsId, withPublicFeedbacksOnly, completedOnly);
+            if (buyerId != 0) {
+                clause = clause.and(new DbClause.LongClause("buyer_id", buyerId));
+            }
+            return purchaseTable.getManyBy(clause, from, to);
         }
 
         public static int getGoodsPurchaseCount(final long goodsId, boolean withPublicFeedbacksOnly, boolean completedOnly) {

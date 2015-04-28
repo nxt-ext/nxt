@@ -229,6 +229,9 @@ public final class VoteWeighting {
         if (minBalance == 0 && votingModel == VotingModel.ACCOUNT && holdingId != 0) {
             throw new NxtException.NotValidException("HoldingId cannot be used in by account voting with no min balance");
         }
+        if ((votingModel == VotingModel.NQT || minBalanceModel == MinBalanceModel.NQT) && holdingId != 0) {
+            throw new NxtException.NotValidException("HoldingId cannot be used in by balance voting or with min balance in NQT");
+        }
         if ((!votingModel.acceptsVotes() || votingModel == VotingModel.HASH) && (holdingId != 0 || minBalance != 0 || minBalanceModel != MinBalanceModel.NONE)) {
             throw new NxtException.NotValidException("With VotingModel " + votingModel + " no holdingId, minBalance, or minBalanceModel should be specified");
         }

@@ -4,6 +4,7 @@ import nxt.NxtException;
 import nxt.http.APIServlet.APIRequestHandler;
 import nxt.peer.Peer;
 import nxt.peer.Peers;
+import nxt.util.Convert;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
@@ -22,28 +23,32 @@ public class AddPeer extends APIRequestHandler {
     @Override
     JSONStreamAware processRequest(HttpServletRequest request)
             throws NxtException {
-        final String peerAddress = request.getParameter("peer");
+        String peerAddress = Convert.emptyToNull(request.getParameter("peer"));
         if (peerAddress == null) {
             return MISSING_PEER;
         }
         JSONObject response = new JSONObject();
-        if (Peers.hasTooManyKnownPeers()) {
-            response.put("errorCode", 7);
-            response.put("errorDescription", "Too many known peers");
+        Peer peer = Peers.findOrCreatePeer(peerAddress, true);
+        if (peer != null) {
+            boolean isNewlyAdded = Peers.addPeer(peer, peerAddress);
+            Peers.connectPeer(peer);
+            response = JSONData.peer(peer);
+            response.put("isNewlyAdded", isNewlyAdded);
         } else {
-            Peer peer = Peers.findOrCreatePeer(peerAddress, true);
-            if (peer != null) {
-                Peers.connectPeer(peer);
-                response = JSONData.peer(peer);
-                if (Peers.addPeer(peer)) {
-                    response.put("isNewlyAdded", true);
-                }
-            } else {
-                response.put("errorCode", 8);
-                response.put("errorDescription", "Failed to add peer");
-            }
+            response.put("errorCode", 8);
+            response.put("errorDescription", "Failed to add peer");
         }
         return response;
+    }
+
+    @Override
+    final boolean requirePost() {
+        return true;
+    }
+
+    @Override
+    boolean requirePassword() {
+        return true;
     }
 
 }
