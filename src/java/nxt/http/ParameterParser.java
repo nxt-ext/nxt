@@ -484,6 +484,7 @@ final class ParameterParser {
         String description = Convert.nullToEmpty(req.getParameter("description"));
         String tags = Convert.nullToEmpty(req.getParameter("tags"));
         String type = Convert.nullToEmpty(req.getParameter("type"));
+        String channel = Convert.nullToEmpty(req.getParameter("channel"));
         boolean isText = !"false".equalsIgnoreCase(req.getParameter("isText"));
         String filename = Convert.nullToEmpty(req.getParameter("filename"));
         String dataValue = Convert.emptyToNull(req.getParameter("data"));
@@ -509,18 +510,25 @@ final class ParameterParser {
             throw new ParameterException(INCORRECT_TAGGED_DATA_TAGS);
         }
 
+        type = type.trim();
         if (type.length() > Constants.MAX_TAGGED_DATA_TYPE_LENGTH) {
             throw new ParameterException(INCORRECT_TAGGED_DATA_TYPE);
+        }
+
+        channel = channel.trim();
+        if (channel.length() > Constants.MAX_TAGGED_DATA_CHANNEL_LENGTH) {
+            throw new ParameterException(INCORRECT_TAGGED_DATA_CHANNEL);
         }
 
         if (data.length == 0 || data.length > Constants.MAX_TAGGED_DATA_DATA_LENGTH) {
             throw new ParameterException(INCORRECT_DATA);
         }
 
+        filename = filename.trim();
         if (filename.length() > Constants.MAX_TAGGED_DATA_FILENAME_LENGTH) {
             throw new ParameterException(INCORRECT_TAGGED_DATA_FILENAME);
         }
-        return new Attachment.TaggedDataUpload(name, description, tags, type, isText, filename, data);
+        return new Attachment.TaggedDataUpload(name, description, tags, type, channel, isText, filename, data);
     }
 
 

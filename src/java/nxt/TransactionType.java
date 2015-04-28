@@ -2352,6 +2352,9 @@ public abstract class TransactionType {
                     if (attachment.getType().length() > Constants.MAX_TAGGED_DATA_TYPE_LENGTH) {
                         throw new NxtException.NotValidException("Invalid type length: " + attachment.getType().length());
                     }
+                    if (attachment.getChannel().length() > Constants.MAX_TAGGED_DATA_CHANNEL_LENGTH) {
+                        throw new NxtException.NotValidException("Invalid channel length: " + attachment.getChannel().length());
+                    }
                     if (attachment.getFilename().length() > Constants.MAX_TAGGED_DATA_FILENAME_LENGTH) {
                         throw new NxtException.NotValidException("Invalid filename length: " + attachment.getFilename().length());
                     }

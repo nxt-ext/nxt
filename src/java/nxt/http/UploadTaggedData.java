@@ -13,7 +13,7 @@ public final class UploadTaggedData extends CreateTransaction {
 
     private UploadTaggedData() {
         super(new APITag[] {APITag.DATA, APITag.CREATE_TRANSACTION},
-                "name", "description", "tags", "type", "isText", "filename", "data");
+                "name", "description", "tags", "type", "channel", "isText", "filename", "data");
     }
 
     @Override

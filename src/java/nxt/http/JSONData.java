@@ -691,7 +691,11 @@ final class JSONData {
         json.put("name", taggedData.getName());
         json.put("description", taggedData.getDescription());
         json.put("tags", taggedData.getTags());
+        JSONArray tagsJSON = new JSONArray();
+        Collections.addAll(tagsJSON, taggedData.getParsedTags());
+        json.put("parsedTags", tagsJSON);
         json.put("type", taggedData.getType());
+        json.put("channel", taggedData.getChannel());
         json.put("filename", taggedData.getFilename());
         json.put("isText", taggedData.isText());
         json.put("data", taggedData.isText() ? Convert.toString(taggedData.getData()) : Convert.toHexString(taggedData.getData()));

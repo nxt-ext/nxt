@@ -858,7 +858,7 @@ final class TransactionImpl implements Transaction {
         return hasValidSignature;
     }
 
-    int getSize() {
+    private int getSize() {
         return signatureOffset() + 64  + (version > 0 ? 4 + 4 + 8 : 0) + appendagesSize;
     }
 
@@ -1013,7 +1013,7 @@ final class TransactionImpl implements Transaction {
         return type.isUnconfirmedDuplicate(this, duplicates);
     }
 
-    long getMinimumFeeNQT(int blockchainHeight) {
+    private long getMinimumFeeNQT(int blockchainHeight) {
         long totalFee = 0;
         for (Appendix.AbstractAppendix appendage : appendages) {
             appendage.loadPrunable(this);

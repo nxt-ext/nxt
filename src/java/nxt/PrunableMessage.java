@@ -14,7 +14,7 @@ import java.sql.SQLException;
 
 public final class PrunableMessage {
 
-    public static final DbKey.LongKeyFactory<PrunableMessage> prunableMessageKeyFactory = new DbKey.LongKeyFactory<PrunableMessage>("id") {
+    private static final DbKey.LongKeyFactory<PrunableMessage> prunableMessageKeyFactory = new DbKey.LongKeyFactory<PrunableMessage>("id") {
 
         @Override
         public DbKey newKey(PrunableMessage prunableMessage) {
@@ -23,7 +23,7 @@ public final class PrunableMessage {
 
     };
 
-    public static final PrunableDbTable<PrunableMessage> prunableMessageTable = new PrunableDbTable<PrunableMessage>("prunable_message", prunableMessageKeyFactory) {
+    private static final PrunableDbTable<PrunableMessage> prunableMessageTable = new PrunableDbTable<PrunableMessage>("prunable_message", prunableMessageKeyFactory) {
 
         @Override
         protected PrunableMessage load(Connection con, ResultSet rs) throws SQLException {
