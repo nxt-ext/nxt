@@ -22,8 +22,14 @@ import org.json.simple.JSONObject;
 import org.json.simple.JSONValue;
 import org.json.simple.parser.ParseException;
 
+import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.Part;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import static nxt.http.JSONResponses.*;
@@ -488,11 +494,44 @@ final class ParameterParser {
         boolean isText = !"false".equalsIgnoreCase(req.getParameter("isText"));
         String filename = Convert.nullToEmpty(req.getParameter("filename"));
         String dataValue = Convert.emptyToNull(req.getParameter("data"));
+        byte[] data = null;
         if (dataValue == null) {
-            throw new ParameterException(MISSING_DATA);
+            Collection<Part> parts;
+            try {
+                parts = req.getParts();
+            } catch (IOException | ServletException e) {
+                Logger.logDebugMessage("error in getParts", e);
+                throw new ParameterException(INCORRECT_TAGGED_DATA_FILE);
+            }
+            for (Part part : parts) {
+                if (part.getSubmittedFileName() == null) {
+                    // Parameter data not file data
+                    continue;
+                }
+                InputStream is;
+                try {
+                    is = part.getInputStream();
+                    int nRead;
+                    byte[] bytes = new byte[1024];
+                    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                    while ((nRead = is.read(bytes, 0, bytes.length)) != -1) {
+                        baos.write(bytes, 0, nRead);
+                    }
+                    data = baos.toByteArray();
+                    filename = part.getSubmittedFileName();
+                    if (name == null) {
+                        name = filename;
+                    }
+                    isText = false;
+                    break;
+                } catch (IOException e) {
+                    Logger.logDebugMessage("error in reading file data", e);
+                    throw new ParameterException(INCORRECT_TAGGED_DATA_FILE);
+                }
+            }
+        } else {
+            data = isText ? Convert.toBytes(dataValue) : Convert.parseHexString(dataValue);
         }
-        byte[] data = isText ? Convert.toBytes(dataValue) : Convert.parseHexString(dataValue);
-
 
         if (name == null) {
             throw new ParameterException(MISSING_NAME);
