@@ -272,6 +272,9 @@ final class PeerImpl implements Peer {
 
     @Override
     public void unBlacklist() {
+        if (blacklistingTime == 0 ) {
+            return;
+        }
         Logger.logDebugMessage("Unblacklisting " + host);
         setState(State.NON_CONNECTED);
         blacklistingTime = 0;
