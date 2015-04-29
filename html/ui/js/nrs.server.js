@@ -304,6 +304,29 @@ var NRS = (function (NRS, $, undefined) {
             type = "POST";
         }
 
+        var contentType;
+        var processData;
+        if (requestType == "uploadTaggedData") {
+            // inspired by http://stackoverflow.com/questions/5392344/sending-multipart-formdata-with-jquery-ajax
+            contentType = false;
+            processData = false;
+            // TODO works only for new browsers
+            var formData = new FormData();
+            for (var key in data) {
+                if (!data.hasOwnProperty(key)) {
+                    continue;
+                }
+                formData.append(key, data[key]);
+            }
+            formData.append("file", $('#upload_file')[0].files[0]); // file data
+            data = formData;
+            type = "POST";
+        } else {
+            // JQuery defaults
+            contentType = "application/x-www-form-urlencoded; charset=UTF-8";
+            processData = true;
+        }
+
         ajaxCall({
             url: url,
             crossDomain: true,
@@ -315,7 +338,9 @@ var NRS = (function (NRS, $, undefined) {
             currentSubPage: currentSubPage,
             shouldRetry: (type == "GET" ? 2 : undefined),
             traditional: true,
-            data: data
+            data: data,
+            contentType: contentType,
+            processData: processData
         }).done(function (response, status, xhr) {
             if (NRS.console) {
                 NRS.addToConsole(this.url, this.type, this.data, response);
@@ -1052,6 +1077,7 @@ var NRS = (function (NRS, $, undefined) {
                 break;
             default:
                 //invalid requestType..
+                // TODO support tagdata transactions
                 return false;
         }
 

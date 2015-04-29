@@ -1,3 +1,80 @@
+<div class="modal fade" id="send_message_modal" data-transaction-type="1" data-transaction-subtype="0" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title" data-i18n="send_message">Send Message</h4>
+            </div>
+            <div class="modal-body">
+                <form role="form" id="send_message_form" autocomplete="off">
+                    <div class="callout callout-danger error_message" style="display:none"></div>
+                    <div data-replace-with-modal-template="recipient_modal_template"></div>
+                    <div class="form-group">
+                        <label for="send_message_message" data-i18n="message">MESSAGE</label>
+                        <textarea class="form-control" id="send_message_message" name="message" rows="4" tabindex="3"></textarea>
+                        <div style="margin-top:3px">
+                            <label for="send_message_encrypt" style="font-weight:normal;color:#666"><input type="checkbox" name="encrypt_message" id="send_message_encrypt" value="1" data-default="checked" checked="checked" /> <span data-i18n="encrypt_message">Encrypt Message</span></label>
+                        </div>
+                        <div style="margin-top:3px">
+                            <label for="send_message_permanent" style="font-weight:normal;color:#666"><input type="checkbox" name="permanent_message" id="send_message_permanent" value="1" data-default="unchecked" /> <span data-i18n="permanent_message">Message is Never Deleted</span></label>
+                        </div>
+                    </div>
+                    <div data-replace-with-modal-template="secret_phrase_modal_template"></div>
+                    <div data-replace-with-modal-template="advanced_fee_deadline_template"></div>
+                    <div data-replace-with-modal-template="advanced_approve_template"></div>
+                    <div data-replace-with-modal-template="advanced_rt_hash_template"></div>
+                    <div data-replace-with-modal-template="advanced_broadcast_template"></div>
+                    <div data-replace-with-modal-template="advanced_note_to_self_template"></div>
+
+                    <div class="callout account_info" style="display:none;margin-bottom: 0;"></div>
+                    <input type="hidden" name="request_type" value="sendMessage" data-default="sendMessage" />
+                    <input type="hidden" name="converted_account_id" value="" />
+                </form>
+            </div>
+            <div class="modal-footer" style="margin-top:0;">
+                <div class="advanced_info"><strong data-i18n="fee">Fee</strong>: <span class="advanced_fee">1 NXT</span> - <a href="#" data-i18n="advanced">advanced</a></div>
+                <button type="button" class="btn btn-default" data-dismiss="modal" data-i18n="cancel">Cancel</button>
+                <button type="button" class="btn btn-primary" data-loading-text="Submitting..." data-i18n="send_message_button;[data-loading-text]submitting">Send Message</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="upload_data_modal" data-transaction-type="6" data-transaction-subtype="0" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title" data-i18n="upload_data">Upload Data</h4>
+            </div>
+            <div class="modal-body">
+                <form role="form" enctype="multipart/form-data" method="post" id="upload_data_form" autocomplete="off">
+                    <div class="callout callout-danger error_message" style="display:none"></div>
+                    <div class="form-group">
+                        <label for="upload_file" data-i18n="file">File</label>
+                        <input type="file" id="upload_file" class="form-control" name="upload" tabindex="1">
+                    </div>
+                    <div data-replace-with-modal-template="secret_phrase_modal_template"></div>
+                    <div data-replace-with-modal-template="advanced_fee_deadline_template"></div>
+                    <div data-replace-with-modal-template="advanced_approve_template"></div>
+                    <div data-replace-with-modal-template="advanced_rt_hash_template"></div>
+                    <div data-replace-with-modal-template="advanced_broadcast_template"></div>
+                    <div data-replace-with-modal-template="advanced_note_to_self_template"></div>
+
+                    <div class="callout account_info" style="display:none;margin-bottom: 0;"></div>
+                    <input type="hidden" name="request_type" value="uploadTaggedData" data-default="uploadTaggedData" />
+                    <input type="hidden" name="filename" value="" />
+                </form>
+            </div>
+            <div class="modal-footer" style="margin-top:0;">
+                <div class="advanced_info"><strong data-i18n="fee">Fee</strong>: <span class="advanced_fee">1 NXT</span> - <a href="#" data-i18n="advanced">advanced</a></div>
+                <button type="button" class="btn btn-default" data-dismiss="modal" data-i18n="cancel">Cancel</button>
+                <button type="button" class="btn btn-primary" data-loading-text="Submitting..." data-i18n="upload_file_button;[data-loading-text]submitting">Upload File</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="modal fade" id="messages_decrypt_modal" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">

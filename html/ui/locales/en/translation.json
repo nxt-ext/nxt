@@ -1169,5 +1169,6 @@
   "permanent_message": "Message is Never Deleted",
   "admin_password": "Administrator Password",
   "connect_peer": "Connect Peer",
-  "reveal_secret": "Reveal Secret"
+  "reveal_secret": "Reveal Secret",
+  "upload_file": "File Upload"
 }
