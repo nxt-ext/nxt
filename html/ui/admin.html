@@ -280,5 +280,26 @@
     </table>
     <div class="result"></div>
 </form>
+<hr>
+<b>Upload File:</b><br/>
+<form action="/nxt" enctype="multipart/form-data" method="POST">
+    <input type="hidden" name="requestType" value="uploadTaggedData"/>
+    <input type="hidden" name="deadline" value="1440"/>
+    <input type="hidden" name="feeNQT" value="500000000"/>
+    <table>
+        <tr>
+            <td>File:</td>
+            <td><input type="file" name="file"/></td>
+        </tr>
+        <tr>
+            <td>Secret Phrase:</td>
+            <td><input type="password" name="secretPhrase"/></td>
+        </tr>
+        <tr>
+            <td colspan="2"><input type="submit" value="submit"/></td>
+        </tr>
+    </table>
+    <div class="result"></div>
+</form>
 </body>
 </html>
