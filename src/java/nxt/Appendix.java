@@ -220,6 +220,9 @@ public interface Appendix {
             if (message.length > Constants.MAX_ARBITRARY_MESSAGE_LENGTH) {
                 throw new NxtException.NotValidException("Invalid arbitrary message length: " + message.length);
             }
+            if (isText && !Arrays.equals(message, Convert.toBytes(Convert.toString(message)))) {
+                throw new NxtException.NotValidException("Message is not UTF-8 text");
+            }
         }
 
         @Override
@@ -354,6 +357,9 @@ public interface Appendix {
             }
             if (msg == null && Nxt.getEpochTime() - transaction.getTimestamp() < Constants.MIN_PRUNABLE_LIFETIME) {
                 throw new NxtException.NotCurrentlyValidException("Message has been pruned prematurely");
+            }
+            if (msg != null && isText && !Arrays.equals(msg, Convert.toBytes(Convert.toString(msg)))) {
+                throw new NxtException.NotValidException("Message is not UTF-8 text");
             }
         }
 

@@ -2361,6 +2361,9 @@ public abstract class TransactionType {
                     if (attachment.getData().length == 0 || attachment.getData().length > Constants.MAX_TAGGED_DATA_DATA_LENGTH) {
                         throw new NxtException.NotValidException("Invalid data length: " + attachment.getData().length);
                     }
+                    if (attachment.isText() && !Arrays.equals(attachment.getData(), Convert.toBytes(Convert.toString(attachment.getData())))) {
+                        throw new NxtException.NotValidException("Data is not UTF-8 text");
+                    }
                 }
             }
 
