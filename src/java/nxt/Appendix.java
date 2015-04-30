@@ -188,7 +188,7 @@ public interface Appendix {
             this(isText ? Convert.toBytes(string) : Convert.parseHexString(string), isText);
         }
 
-        public Message(byte[] message, boolean isText) {
+        private Message(byte[] message, boolean isText) {
             this.message = message;
             this.isText = isText;
         }
@@ -219,9 +219,6 @@ public interface Appendix {
         void validate(Transaction transaction) throws NxtException.ValidationException {
             if (message.length > Constants.MAX_ARBITRARY_MESSAGE_LENGTH) {
                 throw new NxtException.NotValidException("Invalid arbitrary message length: " + message.length);
-            }
-            if (isText && !Arrays.equals(message, Convert.toBytes(Convert.toString(message)))) {
-                throw new NxtException.NotValidException("Message is not UTF-8 text");
             }
         }
 
@@ -300,7 +297,7 @@ public interface Appendix {
             this(isText ? Convert.toBytes(string) : Convert.parseHexString(string), isText);
         }
 
-        public PrunablePlainMessage(byte[] message, boolean isText) {
+        private PrunablePlainMessage(byte[] message, boolean isText) {
             this.message = message;
             this.isText = isText;
             this.hash = null;
@@ -357,9 +354,6 @@ public interface Appendix {
             }
             if (msg == null && Nxt.getEpochTime() - transaction.getTimestamp() < Constants.MIN_PRUNABLE_LIFETIME) {
                 throw new NxtException.NotCurrentlyValidException("Message has been pruned prematurely");
-            }
-            if (msg != null && isText && !Arrays.equals(msg, Convert.toBytes(Convert.toString(msg)))) {
-                throw new NxtException.NotValidException("Message is not UTF-8 text");
             }
         }
 

@@ -500,7 +500,7 @@ final class ParameterParser {
         return null;
     }
 
-    static Attachment.TaggedDataUpload getTaggedData(HttpServletRequest req) throws ParameterException {
+    static Attachment.TaggedDataUpload getTaggedData(HttpServletRequest req) throws ParameterException, NxtException.NotValidException {
         String name = Convert.emptyToNull(req.getParameter("name"));
         String description = Convert.nullToEmpty(req.getParameter("description"));
         String tags = Convert.nullToEmpty(req.getParameter("tags"));

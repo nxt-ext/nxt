@@ -9,6 +9,7 @@ import org.json.simple.JSONObject;
 import java.nio.ByteBuffer;
 import java.security.MessageDigest;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -2625,9 +2626,13 @@ public interface Attachment extends Appendix {
             }
         }
 
-        public TaggedDataUpload(String name, String description, String tags, String type, String channel, boolean isText, String filename, byte[] data) {
+        public TaggedDataUpload(String name, String description, String tags, String type, String channel, boolean isText,
+                                String filename, byte[] data) throws NxtException.NotValidException {
             super(name, description, tags, type, channel, isText, filename, data);
             this.hash = null;
+            if (isText && !Arrays.equals(data, Convert.toBytes(Convert.toString(data)))) {
+                throw new NxtException.NotValidException("Data is not UTF-8 text");
+            }
         }
 
         @Override
