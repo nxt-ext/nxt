@@ -27,7 +27,7 @@ public final class SearchDGSGoods extends APIServlet.APIRequestHandler {
         String query = Convert.nullToEmpty(req.getParameter("query")).trim();
         String tag = Convert.emptyToNull(req.getParameter("tag"));
         if (tag != null) {
-            query = "TAGS:" + tag + (query.equals("") ? "" : (" AND (" + query + ")"));
+            query = "TAGS:\"" + tag + (query.equals("") ? "\"" : ("\" AND (" + query + ")"));
         }
         int firstIndex = ParameterParser.getFirstIndex(req);
         int lastIndex = ParameterParser.getLastIndex(req);
