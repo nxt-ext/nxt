@@ -18,6 +18,7 @@ import nxt.crypto.Crypto;
 import nxt.crypto.EncryptedData;
 import nxt.util.Convert;
 import nxt.util.Logger;
+import nxt.util.Search;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONValue;
 import org.json.simple.parser.ParseException;
@@ -31,6 +32,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.StringJoiner;
 
 import static nxt.http.JSONResponses.*;
 
@@ -421,6 +423,19 @@ final class ParameterParser {
             }
         }
         return -1;
+    }
+
+    static String getSearchQuery(HttpServletRequest req) {
+        String query = Convert.nullToEmpty(req.getParameter("query")).trim();
+        String tags = Convert.emptyToNull(req.getParameter("tag"));
+        if (tags != null && (tags = tags.trim()).length() > 0) {
+            StringJoiner stringJoiner = new StringJoiner(" AND TAGS:", "TAGS:", "");
+            for (String tag : Search.parseTags(tags, 0, Integer.MAX_VALUE, Integer.MAX_VALUE)) {
+                stringJoiner.add(tag);
+            }
+            query = stringJoiner.toString() + (query.equals("") ? "" : (" AND (" + query + ")"));
+        }
+        return query;
     }
 
     static Transaction.Builder parseTransaction(String transactionJSON, String transactionBytes, String prunableAttachmentJSON) throws ParameterException {

@@ -5,7 +5,6 @@ import nxt.NxtException;
 import nxt.db.DbIterator;
 import nxt.db.DbUtils;
 import nxt.db.FilteringIterator;
-import nxt.util.Convert;
 import nxt.util.Filter;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -24,11 +23,7 @@ public final class SearchDGSGoods extends APIServlet.APIRequestHandler {
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
         long sellerId = ParameterParser.getAccountId(req, "seller", false);
-        String query = Convert.nullToEmpty(req.getParameter("query")).trim();
-        String tag = Convert.emptyToNull(req.getParameter("tag"));
-        if (tag != null) {
-            query = "TAGS:\"" + tag + (query.equals("") ? "\"" : ("\" AND (" + query + ")"));
-        }
+        String query = ParameterParser.getSearchQuery(req);
         int firstIndex = ParameterParser.getFirstIndex(req);
         int lastIndex = ParameterParser.getLastIndex(req);
         boolean inStockOnly = !"false".equalsIgnoreCase(req.getParameter("inStockOnly"));

@@ -21,11 +21,7 @@ public final class SearchTaggedData extends APIServlet.APIRequestHandler {
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
         long accountId = ParameterParser.getAccountId(req, "account", false);
-        String query = Convert.nullToEmpty(req.getParameter("query")).trim();
-        String tag = Convert.emptyToNull(req.getParameter("tag"));
-        if (tag != null) {
-            query = "TAGS:\"" + tag + (query.equals("") ? "\"" : ("\" AND (" + query + ")"));
-        }
+        String query = ParameterParser.getSearchQuery(req);
         String channel = Convert.emptyToNull(req.getParameter("channel"));
         int firstIndex = ParameterParser.getFirstIndex(req);
         int lastIndex = ParameterParser.getLastIndex(req);
