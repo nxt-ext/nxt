@@ -59,20 +59,24 @@ final class JSONData {
         return json;
     }
 
-    static JSONObject accountBalance(Account account) {
+    static JSONObject accountBalance(Account account, boolean includeEffectiveBalance) {
         JSONObject json = new JSONObject();
         if (account == null) {
             json.put("balanceNQT", "0");
             json.put("unconfirmedBalanceNQT", "0");
-            json.put("effectiveBalanceNXT", "0");
             json.put("forgedBalanceNQT", "0");
-            json.put("guaranteedBalanceNQT", "0");
+            if (includeEffectiveBalance) {
+                json.put("effectiveBalanceNXT", "0");
+                json.put("guaranteedBalanceNQT", "0");
+            }
         } else {
             json.put("balanceNQT", String.valueOf(account.getBalanceNQT()));
             json.put("unconfirmedBalanceNQT", String.valueOf(account.getUnconfirmedBalanceNQT()));
-            json.put("effectiveBalanceNXT", account.getEffectiveBalanceNXT());
             json.put("forgedBalanceNQT", String.valueOf(account.getForgedBalanceNQT()));
-            json.put("guaranteedBalanceNQT", String.valueOf(account.getGuaranteedBalanceNQT()));
+            if (includeEffectiveBalance) {
+                json.put("effectiveBalanceNXT", account.getEffectiveBalanceNXT());
+                json.put("guaranteedBalanceNQT", String.valueOf(account.getGuaranteedBalanceNQT()));
+            }
         }
         return json;
     }
@@ -88,7 +92,6 @@ final class JSONData {
             putAccount(json, "nextLessee", account.getNextLesseeId());
             json.put("nextHeightFrom", String.valueOf(account.getNextLeasingHeightFrom()));
             json.put("nextHeightTo", String.valueOf(account.getNextLeasingHeightTo()));
-            json.put("effectiveBalanceNXT", String.valueOf(account.getGuaranteedBalanceNQT() / Constants.ONE_NXT));
         }
         return json;
     }

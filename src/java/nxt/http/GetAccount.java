@@ -15,7 +15,7 @@ public final class GetAccount extends APIServlet.APIRequestHandler {
     static final GetAccount instance = new GetAccount();
 
     private GetAccount() {
-        super(new APITag[] {APITag.ACCOUNTS}, "account", "includeLessors", "includeAssets", "includeCurrencies");
+        super(new APITag[] {APITag.ACCOUNTS}, "account", "includeLessors", "includeAssets", "includeCurrencies", "includeEffectiveBalance");
     }
 
     @Override
@@ -25,8 +25,9 @@ public final class GetAccount extends APIServlet.APIRequestHandler {
         boolean includeLessors = !"false".equalsIgnoreCase(req.getParameter("includeLessors"));
         boolean includeAssets = !"false".equalsIgnoreCase(req.getParameter("includeAssets"));
         boolean includeCurrencies = !"false".equalsIgnoreCase(req.getParameter("includeCurrencies"));
+        boolean includeEffectiveBalance = !"false".equalsIgnoreCase(req.getParameter("includeEffectiveBalance"));
 
-        JSONObject response = JSONData.accountBalance(account);
+        JSONObject response = JSONData.accountBalance(account, includeEffectiveBalance);
         JSONData.putAccount(response, "account", account.getId());
 
         if (account.getPublicKey() != null) {
