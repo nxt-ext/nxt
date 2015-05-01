@@ -355,7 +355,9 @@ public final class Peers {
                     }
 
                     peers.values().parallelStream().unordered()
-                            .filter(peer -> peer.getState() == Peer.State.CONNECTED && now - peer.getLastUpdated() > 3600)
+                            .filter(peer -> peer.getState() == Peer.State.CONNECTED
+                                    && now - peer.getLastUpdated() > 3600
+                                    && now - peer.getLastConnectAttempt() > 600)
                             .forEach(PeerImpl::connect);
 
                     if (hasTooManyKnownPeers() && hasEnoughConnectedPublicPeers(Peers.maxNumberOfConnectedPublicPeers)) {
@@ -385,13 +387,13 @@ public final class Peers {
                     }
 
                     for (String wellKnownPeer : wellKnownPeers) {
-                        peersService.submit(() -> {
-                            Peer peer = findOrCreatePeer(wellKnownPeer, true);
-                            if (peer != null && now - peer.getLastUpdated() > 3600) {
+                        PeerImpl peer = findOrCreatePeer(wellKnownPeer, true);
+                        if (peer != null && now - peer.getLastUpdated() > 3600 && now - peer.getLastConnectAttempt() > 600) {
+                            peersService.submit(() -> {
                                 addPeer(peer);
                                 connectPeer(peer);
-                            }
-                        });
+                            });
+                        }
                     }
 
                 } catch (Exception e) {
