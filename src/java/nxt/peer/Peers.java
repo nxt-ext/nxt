@@ -354,14 +354,6 @@ public final class Peers {
                         }
                     }
 
-                    for (String wellKnownPeer : wellKnownPeers) {
-                        Peer peer = findOrCreatePeer(wellKnownPeer, true);
-                        if (peer != null && now - peer.getLastUpdated() > 3600) {
-                            addPeer(peer);
-                            connectPeer(peer);
-                        }
-                    }
-
                     peers.values().parallelStream().unordered()
                             .filter(peer -> peer.getState() == Peer.State.CONNECTED && now - peer.getLastUpdated() > 3600)
                             .forEach(PeerImpl::connect);
@@ -390,6 +382,16 @@ public final class Peers {
                             }
                         }
                         Logger.logDebugMessage("Reduced peer pool size from " + initialSize + " to " + peers.size());
+                    }
+
+                    for (String wellKnownPeer : wellKnownPeers) {
+                        peersService.submit(() -> {
+                            Peer peer = findOrCreatePeer(wellKnownPeer, true);
+                            if (peer != null && now - peer.getLastUpdated() > 3600) {
+                                addPeer(peer);
+                                connectPeer(peer);
+                            }
+                        });
                     }
 
                 } catch (Exception e) {
