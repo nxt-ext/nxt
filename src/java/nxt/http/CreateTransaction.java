@@ -17,7 +17,6 @@ import javax.servlet.http.HttpServletRequest;
 import java.util.Arrays;
 
 import static nxt.http.JSONResponses.FEATURE_NOT_AVAILABLE;
-import static nxt.http.JSONResponses.INCORRECT_ARBITRARY_MESSAGE;
 import static nxt.http.JSONResponses.INCORRECT_DEADLINE;
 import static nxt.http.JSONResponses.INCORRECT_LINKED_FULL_HASH;
 import static nxt.http.JSONResponses.INCORRECT_WHITELIST;
@@ -116,15 +115,10 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
         Appendix.EncryptedMessage encryptedMessage = null;
         Appendix.PrunableEncryptedMessage prunableEncryptedMessage = null;
         if (attachment.getTransactionType().canHaveRecipient()) {
-            EncryptedData encryptedData = ParameterParser.getEncryptedMessage(req, Account.getAccount(recipientId));
-            boolean encryptedDataIsText = !"false".equalsIgnoreCase(req.getParameter("messageToEncryptIsText"));
-            boolean isCompressed = !"false".equalsIgnoreCase(req.getParameter("compressMessageToEncrypt"));
-            if (encryptedData != null) {
-                if ("true".equalsIgnoreCase(req.getParameter("encryptedMessageIsPrunable"))) {
-                    prunableEncryptedMessage = new Appendix.PrunableEncryptedMessage(encryptedData, encryptedDataIsText, isCompressed);
-                } else {
-                    encryptedMessage = new Appendix.EncryptedMessage(encryptedData, encryptedDataIsText, isCompressed);
-                }
+            if ("true".equalsIgnoreCase(req.getParameter("encryptedMessageIsPrunable"))) {
+                prunableEncryptedMessage = (Appendix.PrunableEncryptedMessage) ParameterParser.getEncryptedMessage(req, true);
+            } else {
+                encryptedMessage = (Appendix.EncryptedMessage) ParameterParser.getEncryptedMessage(req, false);
             }
         }
         Appendix.EncryptToSelfMessage encryptToSelfMessage = null;
@@ -136,18 +130,10 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
         }
         Appendix.Message message = null;
         Appendix.PrunablePlainMessage prunablePlainMessage = null;
-        String messageValue = Convert.emptyToNull(req.getParameter("message"));
-        if (messageValue != null) {
-            boolean messageIsText = !"false".equalsIgnoreCase(req.getParameter("messageIsText"));
-            try {
-                if ("true".equalsIgnoreCase(req.getParameter("messageIsPrunable"))) {
-                    prunablePlainMessage = new Appendix.PrunablePlainMessage(messageValue, messageIsText);
-                } else {
-                    message = new Appendix.Message(messageValue, messageIsText);
-                }
-            } catch (RuntimeException e) {
-                return INCORRECT_ARBITRARY_MESSAGE;
-            }
+        if ("true".equalsIgnoreCase(req.getParameter("messageIsPrunable"))) {
+            prunablePlainMessage = (Appendix.PrunablePlainMessage) ParameterParser.getPlainMessage(req, true);
+        } else {
+            message = (Appendix.Message) ParameterParser.getPlainMessage(req, false);
         }
         Appendix.PublicKeyAnnouncement publicKeyAnnouncement = null;
         String recipientPublicKey = Convert.emptyToNull(req.getParameter("recipientPublicKey"));

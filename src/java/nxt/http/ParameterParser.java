@@ -472,29 +472,32 @@ final class ParameterParser {
         }
     }
 
-    static Appendix.PrunablePlainMessage getPrunablePlainMessage(HttpServletRequest req) throws ParameterException {
+    static Appendix getPlainMessage(HttpServletRequest req, boolean prunable) throws ParameterException {
         String messageValue = Convert.emptyToNull(req.getParameter("message"));
         if (messageValue != null) {
             boolean messageIsText = !"false".equalsIgnoreCase(req.getParameter("messageIsText"));
-            boolean messageIsPrunable = "true".equalsIgnoreCase(req.getParameter("messageIsPrunable"));
-            if (messageIsPrunable) {
-                try {
+            try {
+                if (prunable) {
                     return new Appendix.PrunablePlainMessage(messageValue, messageIsText);
-                } catch (RuntimeException e) {
-                    throw new ParameterException(INCORRECT_ARBITRARY_MESSAGE);
+                } else {
+                    return new Appendix.Message(messageValue, messageIsText);
                 }
+            } catch (RuntimeException e) {
+                throw new ParameterException(INCORRECT_ARBITRARY_MESSAGE);
             }
         }
         return null;
     }
 
-    static Appendix.PrunableEncryptedMessage getPrunableEncryptedMessage(HttpServletRequest req) throws ParameterException {
+    static Appendix getEncryptedMessage(HttpServletRequest req, boolean prunable) throws ParameterException {
         EncryptedData encryptedData = ParameterParser.getEncryptedMessage(req, null);
-        boolean encryptedDataIsText = !"false".equalsIgnoreCase(req.getParameter("messageToEncryptIsText"));
-        boolean isCompressed = !"false".equalsIgnoreCase(req.getParameter("compressMessageToEncrypt"));
         if (encryptedData != null) {
-            if ("true".equalsIgnoreCase(req.getParameter("encryptedMessageIsPrunable"))) {
+            boolean encryptedDataIsText = !"false".equalsIgnoreCase(req.getParameter("messageToEncryptIsText"));
+            boolean isCompressed = !"false".equalsIgnoreCase(req.getParameter("compressMessageToEncrypt"));
+            if (prunable) {
                 return new Appendix.PrunableEncryptedMessage(encryptedData, encryptedDataIsText, isCompressed);
+            } else {
+                return new Appendix.EncryptedMessage(encryptedData, encryptedDataIsText, isCompressed);
             }
         }
         return null;
