@@ -59,7 +59,7 @@ public final class GetAccount extends APIServlet.APIRequestHandler {
                         Account lessor = lessors.next();
                         lessorIds.add(Long.toUnsignedString(lessor.getId()));
                         lessorIdsRS.add(Convert.rsAccount(lessor.getId()));
-                        lessorInfo.add(JSONData.lessor(lessor));
+                        lessorInfo.add(JSONData.lessor(lessor, includeEffectiveBalance));
                     }
                     response.put("lessors", lessorIds);
                     response.put("lessorsRS", lessorIdsRS);

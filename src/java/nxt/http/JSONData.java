@@ -81,12 +81,15 @@ final class JSONData {
         return json;
     }
 
-    static JSONObject lessor(Account account) {
+    static JSONObject lessor(Account account, boolean includeEffectiveBalance) {
         JSONObject json = new JSONObject();
         if (account.getCurrentLesseeId() != 0) {
             putAccount(json, "currentLessee", account.getCurrentLesseeId());
             json.put("currentHeightFrom", String.valueOf(account.getCurrentLeasingHeightFrom()));
             json.put("currentHeightTo", String.valueOf(account.getCurrentLeasingHeightTo()));
+            if (includeEffectiveBalance) {
+                json.put("effectiveBalanceNXT", String.valueOf(account.getGuaranteedBalanceNQT() / Constants.ONE_NXT));
+            }
         }
         if (account.getNextLesseeId() != 0) {
             putAccount(json, "nextLessee", account.getNextLesseeId());
