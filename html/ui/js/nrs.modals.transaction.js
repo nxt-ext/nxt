@@ -887,6 +887,16 @@ var NRS = (function (NRS, $, undefined) {
                         $("#transaction_info_table").show();
 
                         break;
+                    case 1:
+                        var data = {
+                            "type": $.t("phasing_only"),
+                            "todo": "TODO"
+                        };
+
+                        $("#transaction_info_table").find("tbody").append(NRS.createInfoTable(data));
+                        $("#transaction_info_table").show();
+
+                        break;
 
                     default:
                         incorrect = true;

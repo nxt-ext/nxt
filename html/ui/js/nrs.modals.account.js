@@ -212,6 +212,9 @@ var NRS = (function(NRS, $, undefined) {
 							case 0:
 								transactionType = $.t("balance_leasing");
 								break;
+							case 1:
+								transactionType = $.t("phasing_only");
+								break;
 						}
 					} else if (transaction.type == 5) {
 						switch (transaction.subtype) {
