@@ -247,8 +247,10 @@ var NRS = (function(NRS, $, undefined) {
                     'iconHTML': '<i class="fa fa-times"></i>'
                 }
             }
-        },
-    }
+        }
+    };
+
+    NRS.subtype = {};
 
     NRS.loadTransactionTypeConstants = function() {
         NRS.sendRequest("getConstants", {}, function (response) {
@@ -273,9 +275,10 @@ var NRS = (function(NRS, $, undefined) {
                         NRS.transactionTypes[typeIndex]["subTypes"][subTypeIndex]["serverConstants"] = subType;
                     });
                 });
+                NRS.subtype = response.transactionSubTypes;
             }
         });
-    }
+    };
     
     return NRS;
 }(NRS || {}, jQuery));

@@ -1044,7 +1044,26 @@ var NRS = (function (NRS, $, undefined) {
                     }
                     NRS.fetchingModalData = false;
                 }
+            } else if (transaction.type == 6) {
+                switch (transaction.subtype) {
+                    case 0:
+                        var data = {
+                            "type": $.t("tagged_data_upload"),
+                            "name": transaction.attachment.name,
+                            "hash": transaction.attachment.hash
+                        };
+
+                        $("#transaction_info_table").find("tbody").append(NRS.createInfoTable(data));
+                        $("#transaction_info_table").show();
+
+                        break;
+
+                    default:
+                        incorrect = true;
+                        break;
+                }
             }
+
             if (!(transaction.type == 1 && transaction.subtype == 0)) {
                 if (transaction.attachment) {
                     if (transaction.attachment.message) {

@@ -74,7 +74,7 @@ var NRS = (function (NRS, $, undefined) {
         for (var i = 0; i < nxtAdditionFields.length; i++) {
             var nxtAdditionField = nxtAdditionFields[i];
             if (nxtAdditionField in data && "feeNXT" in data && parseInt(data[nxtAdditionField]) >= 0) {
-                data["feeNXT"] = String(parseInt(data["feeNXT"]) + parseInt(data[nxtAdditionField]));
+                data["feeNXT"] = String(parseFloat(data["feeNXT"]) + parseFloat(data[nxtAdditionField]));
                 delete data[nxtAdditionField];
             }
         }
@@ -306,6 +306,7 @@ var NRS = (function (NRS, $, undefined) {
 
         var contentType;
         var processData;
+        var formData = null;
         if (requestType == "uploadTaggedData") {
             // inspired by http://stackoverflow.com/questions/5392344/sending-multipart-formdata-with-jquery-ajax
             contentType = false;
@@ -319,7 +320,6 @@ var NRS = (function (NRS, $, undefined) {
                 formData.append(key, data[key]);
             }
             formData.append("file", $('#upload_file')[0].files[0]); // file data
-            data = formData;
             type = "POST";
         } else {
             // JQuery defaults
@@ -338,7 +338,7 @@ var NRS = (function (NRS, $, undefined) {
             currentSubPage: currentSubPage,
             shouldRetry: (type == "GET" ? 2 : undefined),
             traditional: true,
-            data: data,
+            data: (formData != null ? formData : data),
             contentType: contentType,
             processData: processData
         }).done(function (response, status, xhr) {
@@ -1074,6 +1074,22 @@ var NRS = (function (NRS, $, undefined) {
                 }
                 transaction.currencyId = String(converters.byteArrayToBigInteger(byteArray, pos));
                 pos += 8;
+                break;
+            case "uploadTaggedData":
+                if (transaction.type !== 6 && transaction.subtype !== 0) {
+                    return false;
+                }
+                var serverHash = converters.byteArrayToHexString(byteArray.slice(pos, pos + 32));
+                pos += 32;
+                // TODO verify hash
+                break;
+            case "extendTaggedData":
+                if (transaction.type !== 6 && transaction.subtype !== 1) {
+                    return false;
+                }
+                var serverHash = converters.byteArrayToHexString(byteArray.slice(pos, pos + 32));
+                pos += 32;
+                // TODO verify hash
                 break;
             default:
                 //invalid requestType..
