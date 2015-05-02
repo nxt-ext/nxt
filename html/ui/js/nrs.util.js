@@ -725,7 +725,7 @@ var NRS = (function(NRS, $, undefined) {
 		}
 		*/
 
-		var multiValuedFields = ["phasingWhitelisted"];
+		var multiValuedFields = ["phasingWhitelisted", "controlWhitelisted"];
 		for (var s in serialized) {
 			if (multiValuedFields.indexOf(serialized[s]["name"]) > -1) {
 				if (serialized[s]['value'] != "") {

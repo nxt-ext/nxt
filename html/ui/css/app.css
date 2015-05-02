@@ -3242,7 +3242,7 @@ table.purchase td {
   background-color:#f2f2f2;
 }
 
-.approve_modal {
+.approve_modal, .phasing_only_modal {
   border-bottom: 1px solid #ddd;
   padding: 6px 0px 12px 0px;
   margin-top: 3px;
