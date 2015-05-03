@@ -1050,6 +1050,13 @@ var NRS = (function (NRS, $, undefined) {
                         var data = {
                             "type": $.t("tagged_data_upload"),
                             "name": transaction.attachment.name,
+                            "description": transaction.attachment.description,
+                            "tags": transaction.attachment.tags,
+                            "mime_type": transaction.attachment.type,
+                            "channel": transaction.attachment.channel,
+                            "is_text": transaction.attachment.isText,
+                            "filename": transaction.attachment.filename,
+                            "data_size": converters.hexStringToByteArray(transaction.attachment.data).length,
                             "hash": transaction.attachment.hash
                         };
 

@@ -1170,5 +1170,14 @@
   "admin_password": "Administrator Password",
   "connect_peer": "Connect Peer",
   "reveal_secret": "Reveal Secret",
-  "upload_file": "File Upload"
+  "upload_file": "File Upload",
+  "data_tags_help": "Choose up to 3 tags, separate them with comma's.",
+  "mime_type": "Mime Type",
+  "mime_type_placeholder": "Enter Mime Type",
+  "channel": "Channel",
+  "channel_placeholder": "Enter channel",
+  "entity_name": "Entity Name",
+  "is_text": "Is Text",
+  "filename": "filename",
+  "data_size": "Data Size"
 }
