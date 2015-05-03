@@ -113,6 +113,8 @@ public final class JSONResponses {
     public static final JSONStreamAware INCORRECT_OFFER = incorrect("offer");
     public static final JSONStreamAware INCORRECT_ADMIN_PASSWORD = incorrect("adminPassword", "(the specified password does not match nxt.adminPassword)");
     public static final JSONStreamAware OVERFLOW = error("overflow");
+    public static final JSONStreamAware RESPONSE_STREAM_ERROR = responseError("responseOutputStream");
+    public static final JSONStreamAware RESPONSE_WRITE_ERROR = responseError("responseWrite");
     public static final JSONStreamAware MISSING_TRANSACTION_FULL_HASH = missing("transactionFullHash");
     public static final JSONStreamAware UNKNOWN_TRANSACTION_FULL_HASH = unknown("transactionFullHash");
     public static final JSONStreamAware INCORRECT_TRANSACTION_FULL_HASH = incorrect("transactionFullHash");
@@ -352,6 +354,13 @@ public final class JSONResponses {
     private static JSONStreamAware error(String error) {
         JSONObject response = new JSONObject();
         response.put("errorCode", 11);
+        response.put("errorDescription", error);
+        return JSON.prepare(response);
+    }
+
+    private static JSONStreamAware responseError(String error) {
+        JSONObject response = new JSONObject();
+        response.put("errorCode", 12);
         response.put("errorDescription", error);
         return JSON.prepare(response);
     }
