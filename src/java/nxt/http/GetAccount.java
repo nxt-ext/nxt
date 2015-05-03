@@ -9,6 +9,8 @@ import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.Arrays;
+import java.util.stream.Collectors;
 
 public final class GetAccount extends APIServlet.APIRequestHandler {
 
@@ -46,6 +48,11 @@ public final class GetAccount extends APIServlet.APIRequestHandler {
                 response.put("nextLeasingHeightFrom", account.getNextLeasingHeightFrom());
                 response.put("nextLeasingHeightTo", account.getNextLeasingHeightTo());
             }
+        }
+
+        if (!account.getControls().isEmpty()) {
+            JSONArray accountControlsJson = account.getControls().stream().map(Account.ControlType::toString).collect(Collectors.toCollection(JSONArray::new));
+            response.put("accountControls", accountControlsJson);
         }
 
         if (includeLessors) {

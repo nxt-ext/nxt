@@ -35,7 +35,7 @@ public class AccountControlTxBlocking {
     public static class PhasingOnly {
         private final DbKey dbKey;
         private final long accountId;
-        private final PhasingParams phasingParams;
+        private PhasingParams phasingParams;
         
         private PhasingOnly(long accountId, PhasingParams params){
             this.accountId = accountId;
@@ -117,7 +117,12 @@ public class AccountControlTxBlocking {
                 }
             } else {
                 senderAccount.addControl(ControlType.PHASING_ONLY);
-                PhasingOnly phasingOnly = new PhasingOnly(transaction.getSenderId(), phasingParams);
+                PhasingOnly phasingOnly = get(transaction.getSenderId());
+                if (phasingOnly == null) {
+                    phasingOnly = new PhasingOnly(transaction.getSenderId(), phasingParams);
+                } else {
+                    phasingOnly.phasingParams = phasingParams;
+                }
                 phasingControlTable.insert(phasingOnly);
             }
         }
