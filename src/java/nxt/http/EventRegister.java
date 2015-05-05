@@ -68,6 +68,8 @@ import java.util.List;
  * <li>Peer.BLACKLIST</li>
  * <li>Peer.CHANGED_ACTIVE_PEER</li>
  * <li>Peer.DEACTIVATE</li>
+ * <li>Peer.NEW_PEER</li>
+ * <li>Peer.REMOVE</li>
  * <li>Peer.REMOVE_INBOUND</li>
  * <li>Peer.UNBLACKLIST</li>
  * <li>Transaction.ADDED_CONFIRMED_TRANSACTIONS</li>

@@ -81,6 +81,8 @@ class EventListener implements Runnable, AsyncListener {
         peerEvents.add(Peers.Event.BLACKLIST);
         peerEvents.add(Peers.Event.CHANGED_ACTIVE_PEER);
         peerEvents.add(Peers.Event.DEACTIVATE);
+        peerEvents.add(Peers.Event.NEW_PEER);
+        peerEvents.add(Peers.Event.REMOVE);
         peerEvents.add(Peers.Event.REMOVE_INBOUND);
         peerEvents.add(Peers.Event.UNBLACKLIST);
     }
