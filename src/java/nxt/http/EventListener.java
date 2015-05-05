@@ -76,10 +76,12 @@ class EventListener implements Runnable, AsyncListener {
     /** Peer events - update API comments for EventRegister and EventWait if changed */
     static final List<Peers.Event> peerEvents = new ArrayList<>();
     static {
+        peerEvents.add(Peers.Event.ADD_INBOUND);
         peerEvents.add(Peers.Event.ADDED_ACTIVE_PEER);
         peerEvents.add(Peers.Event.BLACKLIST);
         peerEvents.add(Peers.Event.CHANGED_ACTIVE_PEER);
         peerEvents.add(Peers.Event.DEACTIVATE);
+        peerEvents.add(Peers.Event.REMOVE_INBOUND);
         peerEvents.add(Peers.Event.UNBLACKLIST);
     }
 
