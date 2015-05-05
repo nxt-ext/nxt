@@ -519,18 +519,18 @@ final class ParameterParser {
                 if (part == null) {
                     throw new ParameterException(INCORRECT_TAGGED_DATA_FILE);
                 }
-                InputStream is;
-                is = part.getInputStream();
-                int nRead;
-                byte[] bytes = new byte[1024];
-                ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                while ((nRead = is.read(bytes, 0, bytes.length)) != -1) {
-                    baos.write(bytes, 0, nRead);
-                }
-                data = baos.toByteArray();
-                filename = part.getSubmittedFileName();
-                if (name == null) {
-                    name = filename;
+                try (InputStream is = part.getInputStream()) {
+                    int nRead;
+                    byte[] bytes = new byte[1024];
+                    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                    while ((nRead = is.read(bytes, 0, bytes.length)) != -1) {
+                        baos.write(bytes, 0, nRead);
+                    }
+                    data = baos.toByteArray();
+                    filename = part.getSubmittedFileName();
+                    if (name == null) {
+                        name = filename;
+                    }
                 }
             } catch (IOException | ServletException e) {
                 Logger.logDebugMessage("error in reading file data", e);

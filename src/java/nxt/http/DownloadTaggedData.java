@@ -28,16 +28,14 @@ public final class DownloadTaggedData extends APIServlet.APIRequestHandler {
             response.setContentType("application/octet-stream");
         }
         response.setHeader("Content-Disposition", "attachment; filename=" + taggedData.getFilename());
-        OutputStream out;
-        try {
-            out = response.getOutputStream();
+        try (OutputStream out = response.getOutputStream()) {
+            try {
+                out.write(data);
+            } catch (IOException e) {
+                throw new ParameterException(JSONResponses.RESPONSE_WRITE_ERROR);
+            }
         } catch (IOException e) {
             throw new ParameterException(JSONResponses.RESPONSE_STREAM_ERROR);
-        }
-        try {
-            out.write(data);
-        } catch (IOException e) {
-            throw new ParameterException(JSONResponses.RESPONSE_WRITE_ERROR);
         }
         return null;
     }
