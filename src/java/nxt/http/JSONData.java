@@ -363,7 +363,14 @@ final class JSONData {
         if (voteWeighting.getMinBalanceModel() == VoteWeighting.MinBalanceModel.ASSET) {
             json.put("decimals", Asset.getAsset(voteWeighting.getHoldingId()).getDecimals());
         } else if(voteWeighting.getMinBalanceModel() == VoteWeighting.MinBalanceModel.CURRENCY) {
-            json.put("decimals", Currency.getCurrency(voteWeighting.getHoldingId()).getDecimals());
+            Currency currency = Currency.getCurrency(voteWeighting.getHoldingId());
+            if (currency != null) {
+                json.put("decimals", currency.getDecimals());
+            } else {
+                Transaction currencyIssuance = Nxt.getBlockchain().getTransaction(voteWeighting.getHoldingId());
+                Attachment.MonetarySystemCurrencyIssuance currencyIssuanceAttachment = (Attachment.MonetarySystemCurrencyIssuance) currencyIssuance.getAttachment();
+                json.put("decimals", currencyIssuanceAttachment.getDecimals());
+            }
         }
         putVoteWeighting(json, voteWeighting);
         json.put("finished", poll.isFinished());
