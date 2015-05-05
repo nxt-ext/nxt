@@ -989,7 +989,7 @@ final class TransactionImpl implements Transaction {
                 && timestamp > Constants.REFERENCED_TRANSACTION_FULL_HASH_BLOCK_TIMESTAMP) {
             senderAccount.addToUnconfirmedBalanceNQT(Constants.UNCONFIRMED_POOL_DEPOSIT_NQT);
         }
-        if (phasing != null && attachment.isPhasable()) {
+        if (phasing != null && type.isPhasable()) {
             senderAccount.addToBalanceNQT(-feeNQT);
         }
         for (Appendix.AbstractAppendix appendage : appendages) {

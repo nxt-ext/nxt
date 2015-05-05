@@ -188,7 +188,7 @@ public abstract class TransactionType {
 
     final void apply(TransactionImpl transaction, Account senderAccount, Account recipientAccount) {
         long amount = transaction.getAmountNQT();
-        if (transaction.getPhasing() == null || !transaction.getAttachment().isPhasable()) {
+        if (transaction.getPhasing() == null || !isPhasable()) {
             senderAccount.addToBalanceNQT(-Math.addExact(amount, transaction.getFeeNQT()));
         } else {
             senderAccount.addToBalanceNQT(-amount);
@@ -241,6 +241,10 @@ public abstract class TransactionType {
     }
 
     public abstract boolean isPhasingSafe();
+
+    boolean isPhasable() {
+        return true;
+    }
 
     public Fee getBaselineFee(Transaction transaction) {
         return Fee.DEFAULT_FEE;
@@ -2310,6 +2314,11 @@ public abstract class TransactionType {
 
         @Override
         public final boolean isPhasingSafe() {
+            return false;
+        }
+
+        @Override
+        final boolean isPhasable() {
             return false;
         }
 
