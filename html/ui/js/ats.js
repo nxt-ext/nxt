@@ -133,11 +133,38 @@ var ATS = (function(ATS, $, undefined) {
                 }
             }
         }
+        var contentType;
+        var processData;
+        var formData = null;
+        if (params["requestType"] == "uploadTaggedData") {
+            // inspired by http://stackoverflow.com/questions/5392344/sending-multipart-formdata-with-jquery-ajax
+            contentType = false;
+            processData = false;
+            // TODO works only for new browsers
+            var formData = new FormData();
+            for (var key in params) {
+                if (!params.hasOwnProperty(key)) {
+                    continue;
+                }
+                formData.append(key, params[key]);
+            }
+            formData.append("file", $("input[name='file']")[0].files[0]); // file data
+        } else if (params["requestType"] == "downloadTaggedData") {
+            window.location = url + "?requestType=downloadTaggedData&transaction=" + params["transaction"];
+            return false;
+        } else {
+            // JQuery defaults
+            contentType = "application/x-www-form-urlencoded; charset=UTF-8";
+            processData = true;
+        }
         $.ajax({
             url: url,
             type: 'POST',
             data: params,
-            traditional: true // "true" needed for duplicate params
+            traditional: true, // "true" needed for duplicate params
+            data: (formData != null ? formData : params),
+            contentType: contentType,
+            processData: processData
         })
         .done(function(result) {
             var resultStr = JSON.stringify(JSON.parse(result), null, 4);
