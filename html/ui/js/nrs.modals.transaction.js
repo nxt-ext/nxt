@@ -1049,18 +1049,9 @@ var NRS = (function (NRS, $, undefined) {
                     case 0:
                         var data = {
                             "type": $.t("tagged_data_upload"),
+                            "name": transaction.attachment.name,
                             "hash": transaction.attachment.hash
                         };
-                        if (transaction.attachment.data) {
-                            data["name"] = transaction.attachment.name;
-                            data["description"] = transaction.attachment.description;
-                            data["tags"] = transaction.attachment.tags;
-                            data["mime_type"] = transaction.attachment.type;
-                            data["channel"] = transaction.attachment.channel;
-                            data["is_text"] = transaction.attachment.isText;
-                            data["filename"] = transaction.attachment.filename;
-                            data["data_size"] = converters.hexStringToByteArray(transaction.attachment.data).length;
-                        }
 
                         $("#transaction_info_table").find("tbody").append(NRS.createInfoTable(data));
                         $("#transaction_info_table").show();
