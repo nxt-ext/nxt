@@ -18,12 +18,7 @@ public final class DownloadTaggedData extends APIServlet.APIRequestHandler {
     }
 
     @Override
-    boolean modifyHttpResponse() {
-        return true;
-    }
-
-    @Override
-    void processRequest(HttpServletRequest request, HttpServletResponse response) throws NxtException  {
+    JSONStreamAware processRequest(HttpServletRequest request, HttpServletResponse response) throws NxtException  {
         long transactionId = ParameterParser.getUnsignedLong(request, "transaction", true);
         TaggedData taggedData = TaggedData.getData(transactionId);
         byte[] data = taggedData.getData();
@@ -44,6 +39,7 @@ public final class DownloadTaggedData extends APIServlet.APIRequestHandler {
         } catch (IOException e) {
             throw new ParameterException(JSONResponses.RESPONSE_WRITE_ERROR);
         }
+        return null;
     }
 
     @Override

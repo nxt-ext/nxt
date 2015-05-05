@@ -19,7 +19,7 @@ public final class VerifyTaggedData extends APIServlet.APIRequestHandler {
     static final VerifyTaggedData instance = new VerifyTaggedData();
 
     private VerifyTaggedData() {
-        super(new APITag[]{APITag.DATA}, "transaction",
+        super("file", new APITag[]{APITag.DATA}, "transaction",
                 "name", "description", "tags", "type", "channel", "isText", "filename", "data");
     }
 

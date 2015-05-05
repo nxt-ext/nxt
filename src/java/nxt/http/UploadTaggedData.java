@@ -12,7 +12,7 @@ public final class UploadTaggedData extends CreateTransaction {
     static final UploadTaggedData instance = new UploadTaggedData();
 
     private UploadTaggedData() {
-        super(new APITag[] {APITag.DATA, APITag.CREATE_TRANSACTION},
+        super("file", new APITag[] {APITag.DATA, APITag.CREATE_TRANSACTION},
                 "name", "description", "tags", "type", "channel", "isText", "filename", "data");
     }
 
