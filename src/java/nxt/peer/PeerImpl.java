@@ -308,6 +308,7 @@ final class PeerImpl implements Peer {
 
     @Override
     public void remove() {
+        webSocket.close();
         Peers.removePeer(this);
         Peers.notifyListeners(this, Peers.Event.REMOVE);
     }
