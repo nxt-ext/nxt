@@ -8,6 +8,7 @@ import nxt.VoteWeighting;
 import nxt.crypto.HashFunction;
 import nxt.peer.Peer;
 import nxt.util.JSON;
+import nxt.util.Logger;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
@@ -47,6 +48,7 @@ public final class GetConstants extends APIServlet.APIRequestHandler {
                     subtypeJSON.put("canHaveRecipient", transactionType.canHaveRecipient());
                     subtypeJSON.put("mustHaveRecipient", transactionType.mustHaveRecipient());
                     subtypeJSON.put("isPhasingSafe", transactionType.isPhasingSafe());
+                    subtypeJSON.put("isPhasable", transactionType.isPhasable());
                     subtypeJSON.put("type", type);
                     subtypeJSON.put("subtype", subtype);
                     subtypesJSON.put(subtype, subtypeJSON);
@@ -89,9 +91,9 @@ public final class GetConstants extends APIServlet.APIRequestHandler {
             response.put("peerStates", peerStates);
 
             CONSTANTS = JSON.prepare(response);
-        } catch (Throwable t) {
-            t.printStackTrace();
-            throw t;
+        } catch (Exception e) {
+            Logger.logErrorMessage(e.toString(), e);
+            throw e;
         }
     }
 

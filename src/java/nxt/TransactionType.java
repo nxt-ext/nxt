@@ -242,7 +242,7 @@ public abstract class TransactionType {
 
     public abstract boolean isPhasingSafe();
 
-    boolean isPhasable() {
+    public boolean isPhasable() {
         return true;
     }
 
@@ -2318,7 +2318,7 @@ public abstract class TransactionType {
         }
 
         @Override
-        final boolean isPhasable() {
+        public final boolean isPhasable() {
             return false;
         }
 
