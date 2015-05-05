@@ -47,6 +47,10 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
         super(apiTags, addCommonParameters(parameters));
     }
 
+    CreateTransaction(String fileParameter, APITag[] apiTags, String... parameters) {
+        super(fileParameter, apiTags, addCommonParameters(parameters));
+    }
+
     final JSONStreamAware createTransaction(HttpServletRequest req, Account senderAccount, Attachment attachment)
             throws NxtException {
         return createTransaction(req, senderAccount, 0, 0, attachment);

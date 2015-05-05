@@ -53,6 +53,11 @@ public interface Attachment extends Appendix {
             return getTransactionType().getBaselineFee(transaction);
         }
 
+        @Override
+        final boolean isPhasable() {
+            return getTransactionType().isPhasable();
+        }
+
     }
 
     abstract class EmptyAttachment extends AbstractAttachment {
@@ -2581,11 +2586,6 @@ public interface Attachment extends Appendix {
                 return taggedData.getData();
             }
             return data;
-        }
-
-        @Override
-        final boolean isPhasable() {
-            return false;
         }
 
         @Override

@@ -512,23 +512,14 @@ final class ParameterParser {
         boolean isText = !"false".equalsIgnoreCase(req.getParameter("isText"));
         String filename = Convert.nullToEmpty(req.getParameter("filename"));
         String dataValue = Convert.emptyToNull(req.getParameter("data"));
-        byte[] data = null;
+        byte[] data;
         if (dataValue == null) {
-            Collection<Part> parts;
             try {
-                parts = req.getParts();
-            } catch (IOException | ServletException e) {
-                Logger.logDebugMessage("error in getParts", e);
-                throw new ParameterException(INCORRECT_TAGGED_DATA_FILE);
-            }
-            for (Part part : parts) {
-                if (part.getSubmittedFileName() == null) {
-                    // Parameter data not file data
-                    continue;
+                Part part = req.getPart("file");
+                if (part == null) {
+                    throw new ParameterException(INCORRECT_TAGGED_DATA_FILE);
                 }
-                InputStream is;
-                try {
-                    is = part.getInputStream();
+                try (InputStream is = part.getInputStream()) {
                     int nRead;
                     byte[] bytes = new byte[1024];
                     ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -540,12 +531,10 @@ final class ParameterParser {
                     if (name == null) {
                         name = filename;
                     }
-                    isText = false;
-                    break;
-                } catch (IOException e) {
-                    Logger.logDebugMessage("error in reading file data", e);
-                    throw new ParameterException(INCORRECT_TAGGED_DATA_FILE);
                 }
+            } catch (IOException | ServletException e) {
+                Logger.logDebugMessage("error in reading file data", e);
+                throw new ParameterException(INCORRECT_TAGGED_DATA_FILE);
             }
         } else {
             data = isText ? Convert.toBytes(dataValue) : Convert.parseHexString(dataValue);
