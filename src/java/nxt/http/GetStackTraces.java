@@ -127,7 +127,7 @@ public class GetStackTraces extends APIServlet.APIRequestHandler {
                         threadJSON.put("blocked", lockJSON);
                         boolean addLock = true;
                         for (Object lock : locksJSON){
-                            if (((String)((JSONObject)lock).get("name")).equals(lInfo.getClassName())) {
+                            if (((JSONObject)lock).get("name").equals(lInfo.getClassName())) {
                                 addLock = false;
                                 break;
                             }

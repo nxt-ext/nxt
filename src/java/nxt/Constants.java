@@ -96,6 +96,7 @@ public final class Constants {
     public static final int MAX_TAGGED_DATA_DESCRIPTION_LENGTH = 1000;
     public static final int MAX_TAGGED_DATA_TAGS_LENGTH = 100;
     public static final int MAX_TAGGED_DATA_TYPE_LENGTH = 100;
+    public static final int MAX_TAGGED_DATA_CHANNEL_LENGTH = 100;
     public static final int MAX_TAGGED_DATA_FILENAME_LENGTH = 100;
     public static final int MAX_TAGGED_DATA_DATA_LENGTH = 42 * 1024;
 
@@ -119,9 +120,9 @@ public final class Constants {
     public static final int MONETARY_SYSTEM_BLOCK = isTestnet ? 150000 : 330000;
     public static final int VOTING_SYSTEM_BLOCK = isTestnet ? 220000 : Integer.MAX_VALUE;
 
-    public static final int LAST_KNOWN_BLOCK = isTestnet ? 263000 : 407000;
+    public static final int LAST_KNOWN_BLOCK = isTestnet ? 272000 : 414000;
 
-    public static final int[] MIN_VERSION = new int[] {1, 4};
+    public static final int[] MIN_VERSION = isTestnet ? new int[] {1, 5} : new int[] {1, 4};
 
     static final long UNCONFIRMED_POOL_DEPOSIT_NQT = (isTestnet ? 50 : 100) * ONE_NXT;
 

@@ -57,6 +57,8 @@ public final class APIServlet extends HttpServlet {
 
         abstract JSONStreamAware processRequest(HttpServletRequest request) throws NxtException;
 
+        void processRequest(HttpServletRequest request, HttpServletResponse response) throws NxtException {}
+
         boolean requirePost() {
             return false;
         }
@@ -66,6 +68,10 @@ public final class APIServlet extends HttpServlet {
         }
 
         boolean requirePassword() {
+        	return false;
+        }
+
+        boolean modifyHttpResponse() {
         	return false;
         }
     }
@@ -218,6 +224,7 @@ public final class APIServlet extends HttpServlet {
         map.put("issueCurrency", IssueCurrency.instance);
         map.put("leaseBalance", LeaseBalance.instance);
         map.put("longConvert", LongConvert.instance);
+        map.put("hexConvert", HexConvert.instance);
         map.put("markHost", MarkHost.instance);
         map.put("parseTransaction", ParseTransaction.instance);
         map.put("placeAskOrder", PlaceAskOrder.instance);
@@ -249,7 +256,9 @@ public final class APIServlet extends HttpServlet {
         map.put("extendTaggedData", ExtendTaggedData.instance);
         map.put("getAccountTaggedData", GetAccountTaggedData.instance);
         map.put("getAllTaggedData", GetAllTaggedData.instance);
+        map.put("getChannelTaggedData", GetChannelTaggedData.instance);
         map.put("getTaggedData", GetTaggedData.instance);
+        map.put("downloadTaggedData", DownloadTaggedData.instance);
         map.put("getDataTags", GetDataTags.instance);
         map.put("getDataTagCount", GetDataTagCount.instance);
         map.put("getDataTagsLike", GetDataTagsLike.instance);
@@ -327,7 +336,12 @@ public final class APIServlet extends HttpServlet {
                 if (apiRequestHandler.startDbTransaction()) {
                     Db.db.beginTransaction();
                 }
-                response = apiRequestHandler.processRequest(req);
+                if (apiRequestHandler.modifyHttpResponse()) {
+                    apiRequestHandler.processRequest(req, resp);
+                    response = null;
+                } else {
+                    response = apiRequestHandler.processRequest(req);
+                }
             } catch (ParameterException e) {
                 response = e.getErrorResponse();
             } catch (NxtException |RuntimeException e) {

@@ -452,5 +452,13 @@ var NRS = (function(NRS, $) {
 		};
 	};
 
+    $('#upload_file').bind('change', function () {
+        // this.files[0].size gets the size of your file.
+        // size / 1024 * 0.1
+        // TODO include the rest of the attachment fields in the calculation
+        var dataFee = parseInt(new BigInteger("" + this.files[0].size).divide(new BigInteger("1024")).toString()) * 0.1;
+        $('#upload_data_fee').val(1 + dataFee);
+    });
+
 	return NRS;
 }(NRS || {}, jQuery));

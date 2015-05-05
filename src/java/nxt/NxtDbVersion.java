@@ -755,11 +755,17 @@ class NxtDbVersion extends DbVersion {
             case 318:
                 apply(null);
             case 319:
+                apply(null);
+            case 320:
                 if (Constants.isTestnet) {
                     BlockchainProcessorImpl.getInstance().scheduleScan(0, true);
                 }
                 apply(null);
-            case 320:
+            case 321:
+                apply("ALTER TABLE tagged_data ADD COLUMN IF NOT EXISTS channel VARCHAR");
+            case 322:
+                apply("CREATE INDEX IF NOT EXISTS tagged_data_channel_idx ON tagged_data (channel, height DESC)");
+            case 323:
                 return;
             default:
                 throw new RuntimeException("Blockchain database inconsistent with code, probably trying to run older code on newer database");

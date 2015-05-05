@@ -22,6 +22,7 @@ import org.eclipse.jetty.servlets.CrossOriginFilter;
 import org.eclipse.jetty.servlets.GzipFilter;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 
+import javax.servlet.MultipartConfigElement;
 import javax.servlet.http.HttpServletRequest;
 import java.math.BigInteger;
 import java.net.Inet4Address;
@@ -146,7 +147,8 @@ public final class API {
                 apiHandlers.addHandler(contextHandler);
             }
 
-            apiHandler.addServlet(APIServlet.class, "/nxt");
+            ServletHolder servletHolder = apiHandler.addServlet(APIServlet.class, "/nxt");
+            servletHolder.getRegistration().setMultipartConfig(new MultipartConfigElement(""));
             if (Nxt.getBooleanProperty("nxt.enableAPIServerGZIPFilter")) {
                 FilterHolder gzipFilterHolder = apiHandler.addFilter(GzipFilter.class, "/nxt", null);
                 gzipFilterHolder.setInitParameter("methods", "GET,POST");

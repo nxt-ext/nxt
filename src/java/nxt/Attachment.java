@@ -9,6 +9,7 @@ import org.json.simple.JSONObject;
 import java.nio.ByteBuffer;
 import java.security.MessageDigest;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -2424,6 +2425,7 @@ public interface Attachment extends Appendix {
         private final String description;
         private final String tags;
         private final String type;
+        private final String channel;
         private final boolean isText;
         private final String filename;
         private final byte[] data;
@@ -2435,6 +2437,7 @@ public interface Attachment extends Appendix {
             this.description = null;
             this.tags = null;
             this.type = null;
+            this.channel = null;
             this.isText = false;
             this.filename = null;
             this.data = null;
@@ -2447,6 +2450,7 @@ public interface Attachment extends Appendix {
                 this.description = (String) attachmentData.get("description");
                 this.tags = (String) attachmentData.get("tags");
                 this.type = (String) attachmentData.get("type");
+                this.channel = Convert.nullToEmpty((String) attachmentData.get("channel"));
                 this.isText = Boolean.TRUE.equals(attachmentData.get("isText"));
                 this.data = isText ? Convert.toBytes(dataJSON) : Convert.parseHexString(dataJSON);
                 this.filename = (String) attachmentData.get("filename");
@@ -2455,6 +2459,7 @@ public interface Attachment extends Appendix {
                 this.description = null;
                 this.tags = null;
                 this.type = null;
+                this.channel = null;
                 this.isText = false;
                 this.filename = null;
                 this.data = null;
@@ -2462,11 +2467,12 @@ public interface Attachment extends Appendix {
 
         }
 
-        private TaggedDataAttachment(String name, String description, String tags, String type, boolean isText, String filename, byte[] data) {
+        private TaggedDataAttachment(String name, String description, String tags, String type, String channel, boolean isText, String filename, byte[] data) {
             this.name = name;
             this.description = description;
             this.tags = tags;
             this.type = type;
+            this.channel = channel;
             this.isText = isText;
             this.data = data;
             this.filename = filename;
@@ -2478,7 +2484,7 @@ public interface Attachment extends Appendix {
                 return 0;
             }
             return Convert.toBytes(getName()).length + Convert.toBytes(getDescription()).length + Convert.toBytes(getType()).length
-                    + Convert.toBytes(getTags()).length + Convert.toBytes(getFilename()).length + getData().length;
+                    + Convert.toBytes(getChannel()).length + Convert.toBytes(getTags()).length + Convert.toBytes(getFilename()).length + getData().length;
         }
 
         @Override
@@ -2488,6 +2494,7 @@ public interface Attachment extends Appendix {
                 attachment.put("description", taggedData.getDescription());
                 attachment.put("tags", taggedData.getTags());
                 attachment.put("type", taggedData.getType());
+                attachment.put("channel", taggedData.getChannel());
                 attachment.put("isText", taggedData.isText());
                 attachment.put("filename", taggedData.getFilename());
                 attachment.put("data", taggedData.isText() ? Convert.toString(taggedData.getData()) : Convert.toHexString(taggedData.getData()));
@@ -2496,6 +2503,7 @@ public interface Attachment extends Appendix {
                 attachment.put("description", description);
                 attachment.put("tags", tags);
                 attachment.put("type", type);
+                attachment.put("channel", channel);
                 attachment.put("isText", isText);
                 attachment.put("filename", filename);
                 attachment.put("data", isText ? Convert.toString(data) : Convert.toHexString(data));
@@ -2512,6 +2520,7 @@ public interface Attachment extends Appendix {
             digest.update(Convert.toBytes(description));
             digest.update(Convert.toBytes(tags));
             digest.update(Convert.toBytes(type));
+            digest.update(Convert.toBytes(channel));
             digest.update((byte)(isText ? 1 : 0));
             digest.update(Convert.toBytes(filename));
             digest.update(data);
@@ -2544,6 +2553,13 @@ public interface Attachment extends Appendix {
                 return taggedData.getType();
             }
             return type;
+        }
+
+        public final String getChannel() {
+            if (taggedData != null) {
+                return taggedData.getChannel();
+            }
+            return channel;
         }
 
         public final boolean isText() {
@@ -2610,9 +2626,13 @@ public interface Attachment extends Appendix {
             }
         }
 
-        public TaggedDataUpload(String name, String description, String tags, String type, boolean isText, String filename, byte[] data) {
-            super(name, description, tags, type, isText, filename, data);
+        public TaggedDataUpload(String name, String description, String tags, String type, String channel, boolean isText,
+                                String filename, byte[] data) throws NxtException.NotValidException {
+            super(name, description, tags, type, channel, isText, filename, data);
             this.hash = null;
+            if (isText && !Arrays.equals(data, Convert.toBytes(Convert.toString(data)))) {
+                throw new NxtException.NotValidException("Data is not UTF-8 text");
+            }
         }
 
         @Override
@@ -2678,7 +2698,7 @@ public interface Attachment extends Appendix {
 
         public TaggedDataExtend(TaggedData taggedData) {
             super(taggedData.getName(), taggedData.getDescription(), taggedData.getTags(), taggedData.getType(),
-                    taggedData.isText(), taggedData.getFilename(), taggedData.getData());
+                    taggedData.getChannel(), taggedData.isText(), taggedData.getFilename(), taggedData.getData());
             this.taggedDataId = taggedData.getId();
             this.jsonIsPruned = false;
         }

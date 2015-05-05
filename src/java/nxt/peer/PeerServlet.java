@@ -113,7 +113,7 @@ public final class PeerServlet extends WebSocketServlet {
         //
         // Process the peer request
         //
-        PeerImpl peer = Peers.findOrCreatePeer(req.getRemoteAddr(), -1, null, true);
+        PeerImpl peer = Peers.findOrCreatePeer(req.getRemoteAddr());
         if (peer == null)
             jsonResponse = UNKNOWN_PEER;
         else
@@ -153,7 +153,7 @@ public final class PeerServlet extends WebSocketServlet {
         // Process the peer request
         //
         String remoteAddr = webSocket.getSession().getRemoteAddress().getHostString();
-        PeerImpl peer = Peers.findOrCreatePeer(remoteAddr, -1, null, true);
+        PeerImpl peer = Peers.findOrCreatePeer(remoteAddr);
         if (peer == null)
             jsonResponse = UNKNOWN_PEER;
         else
@@ -170,15 +170,13 @@ public final class PeerServlet extends WebSocketServlet {
                 peer.updateUploadedVolume(response.length());
         } catch (RuntimeException | IOException e) {
             if (peer != null) {
-                if (e instanceof RuntimeException)
-                    Logger.logDebugMessage(String.format("Send failed to peer %s",
-                        peer.getAnnouncedAddress()!=null ? peer.getAnnouncedAddress() : peer.getPeerAddress()), e);
-                else
-                    Logger.logDebugMessage(String.format("Send failed to peer %s: %s",
-                        peer.getAnnouncedAddress()!=null ? peer.getAnnouncedAddress() : peer.getPeerAddress(),
-                        e.getMessage()!=null ? e.getMessage() : e.toString()));
-                if (!(e instanceof IOException))
+                if (e instanceof RuntimeException) {
+                    Logger.logDebugMessage("Error sending response to peer " + peer.getHost(), e);
+                } else {
+                    Logger.logDebugMessage(String.format("Error sending response to peer %s: %s",
+                        peer.getHost(), e.getMessage()!=null ? e.getMessage() : e.toString()));
                     peer.blacklist(e);
+                }
             }
         }
     }
@@ -216,11 +214,8 @@ public final class PeerServlet extends WebSocketServlet {
             } else if (request.get("protocol") != null && ((Number)request.get("protocol")).intValue() == 1) {
                 PeerRequestHandler peerRequestHandler = peerRequestHandlers.get((String)request.get("requestType"));
                 if (peerRequestHandler != null) {
-                    if (peer.getState() == Peer.State.DISCONNECTED) {
+                    if (peer.getState() == Peer.State.DISCONNECTED)
                         peer.setState(Peer.State.CONNECTED);
-                        if (peer.getAnnouncedAddress() != null)
-                            Peers.addOrUpdate(peer);
-                    }
                     response = peerRequestHandler.processRequest(request, peer);
                 } else {
                     response = UNSUPPORTED_REQUEST_TYPE;

@@ -59,36 +59,42 @@ final class JSONData {
         return json;
     }
 
-    static JSONObject accountBalance(Account account) {
+    static JSONObject accountBalance(Account account, boolean includeEffectiveBalance) {
         JSONObject json = new JSONObject();
         if (account == null) {
             json.put("balanceNQT", "0");
             json.put("unconfirmedBalanceNQT", "0");
-            json.put("effectiveBalanceNXT", "0");
             json.put("forgedBalanceNQT", "0");
-            json.put("guaranteedBalanceNQT", "0");
+            if (includeEffectiveBalance) {
+                json.put("effectiveBalanceNXT", "0");
+                json.put("guaranteedBalanceNQT", "0");
+            }
         } else {
             json.put("balanceNQT", String.valueOf(account.getBalanceNQT()));
             json.put("unconfirmedBalanceNQT", String.valueOf(account.getUnconfirmedBalanceNQT()));
-            json.put("effectiveBalanceNXT", account.getEffectiveBalanceNXT());
             json.put("forgedBalanceNQT", String.valueOf(account.getForgedBalanceNQT()));
-            json.put("guaranteedBalanceNQT", String.valueOf(account.getGuaranteedBalanceNQT()));
+            if (includeEffectiveBalance) {
+                json.put("effectiveBalanceNXT", account.getEffectiveBalanceNXT());
+                json.put("guaranteedBalanceNQT", String.valueOf(account.getGuaranteedBalanceNQT()));
+            }
         }
         return json;
     }
 
-    static JSONObject lessor(Account account) {
+    static JSONObject lessor(Account account, boolean includeEffectiveBalance) {
         JSONObject json = new JSONObject();
         if (account.getCurrentLesseeId() != 0) {
             putAccount(json, "currentLessee", account.getCurrentLesseeId());
             json.put("currentHeightFrom", String.valueOf(account.getCurrentLeasingHeightFrom()));
             json.put("currentHeightTo", String.valueOf(account.getCurrentLeasingHeightTo()));
+            if (includeEffectiveBalance) {
+                json.put("effectiveBalanceNXT", String.valueOf(account.getGuaranteedBalanceNQT() / Constants.ONE_NXT));
+            }
         }
         if (account.getNextLesseeId() != 0) {
             putAccount(json, "nextLessee", account.getNextLesseeId());
             json.put("nextHeightFrom", String.valueOf(account.getNextLeasingHeightFrom()));
             json.put("nextHeightTo", String.valueOf(account.getNextLeasingHeightTo()));
-            json.put("effectiveBalanceNXT", String.valueOf(account.getGuaranteedBalanceNQT() / Constants.ONE_NXT));
         }
         return json;
     }
@@ -291,6 +297,7 @@ final class JSONData {
         JSONObject json = new JSONObject();
         putAccount(json, "account", Account.getId(hallmark.getPublicKey()));
         json.put("host", hallmark.getHost());
+        json.put("port", hallmark.getPort());
         json.put("weight", hallmark.getWeight());
         String dateString = Hallmark.formatDate(hallmark.getDate());
         json.put("date", dateString);
@@ -308,7 +315,8 @@ final class JSONData {
 
     static JSONObject peer(Peer peer) {
         JSONObject json = new JSONObject();
-        json.put("address", peer.getPeerAddress());
+        json.put("address", peer.getHost());
+        json.put("port", peer.getPort());
         json.put("state", peer.getState().ordinal());
         json.put("announcedAddress", peer.getAnnouncedAddress());
         json.put("shareAddress", peer.shareAddress());
@@ -689,7 +697,11 @@ final class JSONData {
         json.put("name", taggedData.getName());
         json.put("description", taggedData.getDescription());
         json.put("tags", taggedData.getTags());
+        JSONArray tagsJSON = new JSONArray();
+        Collections.addAll(tagsJSON, taggedData.getParsedTags());
+        json.put("parsedTags", tagsJSON);
         json.put("type", taggedData.getType());
+        json.put("channel", taggedData.getChannel());
         json.put("filename", taggedData.getFilename());
         json.put("isText", taggedData.isText());
         json.put("data", taggedData.isText() ? Convert.toString(taggedData.getData()) : Convert.toHexString(taggedData.getData()));

@@ -978,12 +978,15 @@ public abstract class TransactionType {
                         }
                         hashedSecret = poll.getHashedSecret();
                         algorithm = poll.getAlgorithm();
+                    } else if (poll.getVoteWeighting().getVotingModel() == VoteWeighting.VotingModel.HASH) {
+                        throw new NxtException.NotValidException("Phased transaction " + Long.toUnsignedString(phasedTransactionId) + " requires revealed secret for approval");
                     }
                     if (!Arrays.equals(poll.getFullHash(), hash)) {
                         throw new NxtException.NotCurrentlyValidException("Phased transaction hash does not match hash in voting transaction");
                     }
                     if (poll.getFinishHeight() <= transaction.getValidationHeight() + 1) {
-                        throw new NxtException.NotCurrentlyValidException("Voting for this transaction finishes at " + poll.getFinishHeight());
+                        throw new NxtException.NotCurrentlyValidException(String.format("Poll voting finishes at height %d before transaction validation height %d",
+                                poll.getFinishHeight(), transaction.getValidationHeight() + 1));
                     }
                 }
             }
@@ -2348,6 +2351,9 @@ public abstract class TransactionType {
                     }
                     if (attachment.getType().length() > Constants.MAX_TAGGED_DATA_TYPE_LENGTH) {
                         throw new NxtException.NotValidException("Invalid type length: " + attachment.getType().length());
+                    }
+                    if (attachment.getChannel().length() > Constants.MAX_TAGGED_DATA_CHANNEL_LENGTH) {
+                        throw new NxtException.NotValidException("Invalid channel length: " + attachment.getChannel().length());
                     }
                     if (attachment.getFilename().length() > Constants.MAX_TAGGED_DATA_FILENAME_LENGTH) {
                         throw new NxtException.NotValidException("Invalid filename length: " + attachment.getFilename().length());

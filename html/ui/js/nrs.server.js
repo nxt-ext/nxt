@@ -74,7 +74,7 @@ var NRS = (function (NRS, $, undefined) {
         for (var i = 0; i < nxtAdditionFields.length; i++) {
             var nxtAdditionField = nxtAdditionFields[i];
             if (nxtAdditionField in data && "feeNXT" in data && parseInt(data[nxtAdditionField]) >= 0) {
-                data["feeNXT"] = String(parseInt(data["feeNXT"]) + parseInt(data[nxtAdditionField]));
+                data["feeNXT"] = String(parseFloat(data["feeNXT"]) + parseFloat(data[nxtAdditionField]));
                 delete data[nxtAdditionField];
             }
         }
@@ -304,6 +304,29 @@ var NRS = (function (NRS, $, undefined) {
             type = "POST";
         }
 
+        var contentType;
+        var processData;
+        var formData = null;
+        if (requestType == "uploadTaggedData") {
+            // inspired by http://stackoverflow.com/questions/5392344/sending-multipart-formdata-with-jquery-ajax
+            contentType = false;
+            processData = false;
+            // TODO works only for new browsers
+            var formData = new FormData();
+            for (var key in data) {
+                if (!data.hasOwnProperty(key)) {
+                    continue;
+                }
+                formData.append(key, data[key]);
+            }
+            formData.append("file", $('#upload_file')[0].files[0]); // file data
+            type = "POST";
+        } else {
+            // JQuery defaults
+            contentType = "application/x-www-form-urlencoded; charset=UTF-8";
+            processData = true;
+        }
+
         ajaxCall({
             url: url,
             crossDomain: true,
@@ -315,7 +338,9 @@ var NRS = (function (NRS, $, undefined) {
             currentSubPage: currentSubPage,
             shouldRetry: (type == "GET" ? 2 : undefined),
             traditional: true,
-            data: data
+            data: (formData != null ? formData : data),
+            contentType: contentType,
+            processData: processData
         }).done(function (response, status, xhr) {
             if (NRS.console) {
                 NRS.addToConsole(this.url, this.type, this.data, response);
@@ -1050,8 +1075,25 @@ var NRS = (function (NRS, $, undefined) {
                 transaction.currencyId = String(converters.byteArrayToBigInteger(byteArray, pos));
                 pos += 8;
                 break;
+            case "uploadTaggedData":
+                if (transaction.type !== 6 && transaction.subtype !== 0) {
+                    return false;
+                }
+                var serverHash = converters.byteArrayToHexString(byteArray.slice(pos, pos + 32));
+                pos += 32;
+                // TODO verify hash
+                break;
+            case "extendTaggedData":
+                if (transaction.type !== 6 && transaction.subtype !== 1) {
+                    return false;
+                }
+                var serverHash = converters.byteArrayToHexString(byteArray.slice(pos, pos + 32));
+                pos += 32;
+                // TODO verify hash
+                break;
             default:
                 //invalid requestType..
+                // TODO support tagdata transactions
                 return false;
         }
 

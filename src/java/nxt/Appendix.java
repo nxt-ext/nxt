@@ -167,6 +167,9 @@ public interface Appendix {
             }
             this.message = new byte[messageLength];
             buffer.get(this.message);
+            if (isText && !Arrays.equals(message, Convert.toBytes(Convert.toString(message)))) {
+                throw new NxtException.NotValidException("Message is not UTF-8 text");
+            }
         }
 
         Message(JSONObject attachmentData) {
@@ -188,7 +191,7 @@ public interface Appendix {
             this(isText ? Convert.toBytes(string) : Convert.parseHexString(string), isText);
         }
 
-        public Message(byte[] message, boolean isText) {
+        private Message(byte[] message, boolean isText) {
             this.message = message;
             this.isText = isText;
         }
@@ -297,7 +300,7 @@ public interface Appendix {
             this(isText ? Convert.toBytes(string) : Convert.parseHexString(string), isText);
         }
 
-        public PrunablePlainMessage(byte[] message, boolean isText) {
+        private PrunablePlainMessage(byte[] message, boolean isText) {
             this.message = message;
             this.isText = isText;
             this.hash = null;
@@ -520,7 +523,7 @@ public interface Appendix {
         private final boolean isCompressed;
         private volatile PrunableMessage prunableMessage;
 
-        PrunableEncryptedMessage(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
+        PrunableEncryptedMessage(ByteBuffer buffer, byte transactionVersion) {
             super(buffer, transactionVersion);
             this.hash = new byte[32];
             buffer.get(this.hash);
@@ -609,7 +612,7 @@ public interface Appendix {
                 throw new NxtException.NotValidException("Cannot have both encrypted and prunable encrypted message attachments");
             }
             if (transaction.getPrunablePlainMessage() != null) {
-                throw new NxtException.NotValidException("Cannot have both plan and encrypted prunable message attachments");
+                throw new NxtException.NotValidException("Cannot have both plain and encrypted prunable message attachments");
             }
             EncryptedData ed = getEncryptedData();
             if (ed == null && Nxt.getEpochTime() - transaction.getTimestamp() < Constants.MIN_PRUNABLE_LIFETIME) {
@@ -617,7 +620,8 @@ public interface Appendix {
             }
             if (ed != null) {
                 if (ed.getData().length > Constants.MAX_PRUNABLE_ENCRYPTED_MESSAGE_LENGTH) {
-                    throw new NxtException.NotValidException("Max encrypted message length exceeded");
+                    throw new NxtException.NotValidException(String.format("Message length %d exceeds max prunable encrypted message length %d",
+                            ed.getData().length, Constants.MAX_PRUNABLE_ENCRYPTED_MESSAGE_LENGTH));
                 }
                 if ((ed.getNonce().length != 32 && ed.getData().length > 0)
                         || (ed.getNonce().length != 0 && ed.getData().length == 0)) {

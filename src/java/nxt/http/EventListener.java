@@ -557,7 +557,7 @@ class EventListener implements Runnable, AsyncListener {
         public void notify(Peer peer) {
             lock.lock();
             try {
-                pendingEvents.add(new PendingEvent("Peer."+event.name(), peer.getPeerAddress()));
+                pendingEvents.add(new PendingEvent("Peer."+event.name(), peer.getHost()));
                 if (!pendingWaits.isEmpty() && !dispatched) {
                     dispatched = true;
                     threadPool.submit(EventListener.this);
