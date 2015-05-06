@@ -136,21 +136,7 @@ var ATS = (function(ATS, $, undefined) {
         var contentType;
         var processData;
         var formData = null;
-        if (params["requestType"] == "uploadTaggedData") {
-            // inspired by http://stackoverflow.com/questions/5392344/sending-multipart-formdata-with-jquery-ajax
-            contentType = false;
-            processData = false;
-            // TODO works only for new browsers
-            formData = new FormData();
-            for (key in params) {
-                if (!params.hasOwnProperty(key)) {
-                    continue;
-                }
-                formData.append(key, params[key]);
-            }
-            var fileData = $("input[name='file']")[0].files[0];
-            formData.append("file", fileData); // file data
-        } else if (params["requestType"] == "downloadTaggedData") {
+        if (params["requestType"] == "downloadTaggedData") {
             window.location = url + "?requestType=downloadTaggedData&transaction=" + params["transaction"];
             return false;
         } else {
