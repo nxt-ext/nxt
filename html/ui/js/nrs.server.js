@@ -319,7 +319,20 @@ var NRS = (function (NRS, $, undefined) {
                 }
                 formData.append(key, data[key]);
             }
-            formData.append("file", $('#upload_file')[0].files[0]); // file data
+            var file = $('#upload_file')[0].files[0];
+            if (file.size > NRS.constants.MAX_TAGGED_DATA_DATA_LENGTH) {
+                if (callback) {
+                    callback({
+                        "errorCode": 3,
+                        "errorDescription": $.t("error_file_too_big", {
+                            "size": file.size,
+                            "allowed": NRS.constants.MAX_TAGGED_DATA_DATA_LENGTH
+                        })
+                    }, data);
+                }
+                return;
+            }
+            formData.append("file", file); // file data
             type = "POST";
         } else {
             // JQuery defaults

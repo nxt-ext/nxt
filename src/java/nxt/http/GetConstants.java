@@ -89,6 +89,7 @@ public final class GetConstants extends APIServlet.APIRequestHandler {
                 peerStates.put(peerState.toString(), peerState.ordinal());
             }
             response.put("peerStates", peerStates);
+            response.put("maxTaggedDataDataLength", Constants.MAX_TAGGED_DATA_DATA_LENGTH);
 
             CONSTANTS = JSON.prepare(response);
         } catch (Exception e) {
