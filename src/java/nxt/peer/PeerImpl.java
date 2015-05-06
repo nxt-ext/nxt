@@ -441,7 +441,7 @@ final class PeerImpl implements Peer {
             if (response != null && response.get("error") != null) {
                 Logger.logDebugMessage("Peer " + host + " version " + version + " returned error: " +
                                        response.toJSONString() + ", request was: " + JSON.toString(request) +
-                                       ", diconnecting");
+                                       ", disconnecting");
                 deactivate();
                 if (connection != null)
                     connection.disconnect();
