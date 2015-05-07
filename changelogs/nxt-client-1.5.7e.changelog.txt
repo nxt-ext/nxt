@@ -1,0 +1,35 @@
+This is an experimental release. It is a required update for all testnet nodes,
+but is also possible to run on main net.
+
+Added file upload using multipart form requests to the UploadTaggedData,
+ExtendTaggedData and VerifyTaggedData APIs. Added upload file button to the
+corresponding forms on the /test page.
+
+Added DownloadTaggedData API, to download tagged data as a file.
+
+Added optional includeData boolean parameter to all GetTaggedData APIs, default
+true, to allow omitting the actual data from the result for saving bandwith,
+since it can now be retrieved separately using the DownloadTaggedData API.
+
+Improved search by tags. Improved validation of tagged data.
+
+Added includeEffectiveBalance to getAccount and getBalance API, default true.
+If false, effective balance and guaranteed balance are not included in the
+response, which should improve performance for these APIs.
+
+Added HexConvert utility API.
+
+Improved GetConstants JSON to include an alternative transaction type JSON
+representation.
+
+Peers in the nxt.wellKnownPeers list are always kept connected, regardless of
+the number of connected public peers or the total number of know peers.
+
+
+Client UI improvements:
+
+Implemented client side signing of the tagged data transactions.
+
+Added File Upload form, accessible from the settings menu. Allow extending a
+tagged data transaction from the transaction info modal.
+
