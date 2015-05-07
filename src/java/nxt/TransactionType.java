@@ -1970,14 +1970,6 @@ public abstract class TransactionType {
 
         public static final TransactionType DELIVERY = new DigitalGoods() {
 
-            private final Fee DGS_DELIVERY_FEE = new Fee.SizeBasedFee(Constants.ONE_NXT) {
-                @Override
-                public int getSize(TransactionImpl transaction, Appendix attachment) {
-                    int length = ((Attachment.DigitalGoodsDelivery)attachment).getGoods().getData().length;
-                    return length <= 10240 ? 1024 : (length - 8 * 1024);
-                }
-            };
-
             @Override
             public final byte getSubtype() {
                 return TransactionType.SUBTYPE_DIGITAL_GOODS_DELIVERY;
@@ -1986,11 +1978,6 @@ public abstract class TransactionType {
             @Override
             public String getName() {
                 return "DigitalGoodsDelivery";
-            }
-
-            @Override
-            public Fee getBaselineFee(Transaction transaction) {
-                return DGS_DELIVERY_FEE;
             }
 
             @Override
