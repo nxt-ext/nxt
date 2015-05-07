@@ -453,11 +453,17 @@ var NRS = (function(NRS, $) {
 	};
 
     $('#upload_file').bind('change', function () {
-        // this.files[0].size gets the size of your file.
-        // size / 1024 * 0.1
-        // TODO include the rest of the attachment fields in the calculation
-        var dataFee = parseInt(new BigInteger("" + this.files[0].size).divide(new BigInteger("1024")).toString()) * 0.1;
+        // Mimics the server side SizeBasedFee calculation
+        var size = this.files[0].size;
+        size += NRS.getUtf8Bytes($('#tagged_data_name').val()).length;
+        size += NRS.getUtf8Bytes($('#tagged_data_description').val()).length;
+        size += NRS.getUtf8Bytes($('#tagged_data_tags').val()).length;
+        size += NRS.getUtf8Bytes($('#tagged_data_type').val()).length;
+        size += NRS.getUtf8Bytes($('#tagged_data_channel').val()).length;
+        size += NRS.getUtf8Bytes(this.files[0].name).length;
+        var dataFee = parseInt(new BigInteger("" + size).divide(new BigInteger("1024")).toString()) * 0.1;
         $('#upload_data_fee').val(1 + dataFee);
+        $('#tagged_data_fee_label').html(String(1 + dataFee) + " NXT");
     });
 
 	return NRS;
