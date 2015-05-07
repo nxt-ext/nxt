@@ -25,6 +25,9 @@ representation.
 Peers in the nxt.wellKnownPeers list are always kept connected, regardless of
 the number of connected public peers or the total number of know peers.
 
+Added GetInboundPeers API, to return all peers that have sent a request to this
+peer in the last 30 min.
+
 
 Client UI improvements:
 
