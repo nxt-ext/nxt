@@ -148,7 +148,7 @@ public final class API {
             }
 
             ServletHolder servletHolder = apiHandler.addServlet(APIServlet.class, "/nxt");
-            servletHolder.getRegistration().setMultipartConfig(new MultipartConfigElement(""));
+            servletHolder.getRegistration().setMultipartConfig(new MultipartConfigElement(null, Constants.MAX_TAGGED_DATA_DATA_LENGTH, -1L, 0));
             if (Nxt.getBooleanProperty("nxt.enableAPIServerGZIPFilter")) {
                 FilterHolder gzipFilterHolder = apiHandler.addFilter(GzipFilter.class, "/nxt", null);
                 gzipFilterHolder.setInitParameter("methods", "GET,POST");
