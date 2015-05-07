@@ -319,7 +319,20 @@ var NRS = (function (NRS, $, undefined) {
                 }
                 formData.append(key, data[key]);
             }
-            formData.append("file", $('#upload_file')[0].files[0]); // file data
+            var file = $('#upload_file')[0].files[0];
+            if (file.size > NRS.constants.MAX_TAGGED_DATA_DATA_LENGTH) {
+                if (callback) {
+                    callback({
+                        "errorCode": 3,
+                        "errorDescription": $.t("error_file_too_big", {
+                            "size": file.size,
+                            "allowed": NRS.constants.MAX_TAGGED_DATA_DATA_LENGTH
+                        })
+                    }, data);
+                }
+                return;
+            }
+            formData.append("file", file); // file data
             type = "POST";
         } else {
             // JQuery defaults
@@ -380,7 +393,7 @@ var NRS = (function (NRS, $, undefined) {
                         });
                     }
                 } else {
-                    var payload = NRS.verifyAndSignTransactionBytes(response.unsignedTransactionBytes, signature, requestType, data);
+                    var payload = NRS.verifyAndSignTransactionBytes(response.unsignedTransactionBytes, response.transactionJSON, signature, requestType, data);
 
                     if (!payload) {
                         if (callback) {
@@ -466,7 +479,7 @@ var NRS = (function (NRS, $, undefined) {
         });
     };
 
-    NRS.verifyAndSignTransactionBytes = function (transactionBytes, signature, requestType, data) {
+    NRS.verifyAndSignTransactionBytes = function (transactionBytes, transactionJSON, signature, requestType, data) {
         var transaction = {};
 
         var byteArray = converters.hexStringToByteArray(transactionBytes);
@@ -1081,7 +1094,38 @@ var NRS = (function (NRS, $, undefined) {
                 }
                 var serverHash = converters.byteArrayToHexString(byteArray.slice(pos, pos + 32));
                 pos += 32;
-                // TODO verify hash
+                var sha256 = CryptoJS.algo.SHA256.create();
+                var utfBytes = NRS.getUtf8Bytes(data.name);
+                sha256.update(converters.byteArrayToWordArray(utfBytes));
+                utfBytes = NRS.getUtf8Bytes(data.description);
+                sha256.update(converters.byteArrayToWordArray(utfBytes));
+                utfBytes = NRS.getUtf8Bytes(data.tags);
+                sha256.update(converters.byteArrayToWordArray(utfBytes));
+                utfBytes = NRS.getUtf8Bytes(data.type);
+                sha256.update(converters.byteArrayToWordArray(utfBytes));
+                utfBytes = NRS.getUtf8Bytes(data.channel);
+                sha256.update(converters.byteArrayToWordArray(utfBytes));
+                var isText = [];
+                if (data.isText == "true") {
+                    isText.push(1);
+                } else {
+                    isText.push(0);
+                }
+                sha256.update(converters.byteArrayToWordArray(isText));
+                var utfBytes = NRS.getUtf8Bytes(transactionJSON.attachment.filename);
+                sha256.update(converters.byteArrayToWordArray(utfBytes));
+                var dataBytes;
+                if (data.isText == "true") {
+                    dataBytes = NRS.getUtf8Bytes(transactionJSON.attachment.data);
+                } else {
+                    dataBytes = converters.hexStringToByteArray(transactionJSON.attachment.data);
+                }
+                sha256.update(converters.byteArrayToWordArray(dataBytes));
+                var hashWords = sha256.finalize();
+                var calculatedHash = converters.wordArrayToByteArrayImpl(hashWords, true);
+                if (serverHash !== converters.byteArrayToHexString(calculatedHash)) {
+                    return false;
+                }
                 break;
             case "extendTaggedData":
                 if (transaction.type !== 6 && transaction.subtype !== 1) {

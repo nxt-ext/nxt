@@ -32,9 +32,14 @@ public final class APIServlet extends HttpServlet {
     abstract static class APIRequestHandler {
 
         private final List<String> parameters;
+        private final String fileParameter;
         private final Set<APITag> apiTags;
 
         APIRequestHandler(APITag[] apiTags, String... parameters) {
+            this(null, apiTags, parameters);
+        }
+
+        APIRequestHandler(String fileParameter, APITag[] apiTags, String... parameters) {
             List<String> origParameters = Arrays.asList(parameters);
             if ((requirePassword() || origParameters.contains("lastIndex")) && ! API.disableAdminPassword) {
                 List<String> newParameters = new ArrayList<>(parameters.length + 1);
@@ -45,6 +50,7 @@ public final class APIServlet extends HttpServlet {
                 this.parameters = origParameters;
             }
             this.apiTags = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(apiTags)));
+            this.fileParameter = fileParameter;
         }
 
         final List<String> getParameters() {
@@ -55,9 +61,15 @@ public final class APIServlet extends HttpServlet {
             return apiTags;
         }
 
+        final String getFileParameter() {
+            return fileParameter;
+        }
+
         abstract JSONStreamAware processRequest(HttpServletRequest request) throws NxtException;
 
-        void processRequest(HttpServletRequest request, HttpServletResponse response) throws NxtException {}
+        JSONStreamAware processRequest(HttpServletRequest request, HttpServletResponse response) throws NxtException {
+            return processRequest(request);
+        }
 
         boolean requirePost() {
             return false;
@@ -71,9 +83,6 @@ public final class APIServlet extends HttpServlet {
         	return false;
         }
 
-        boolean modifyHttpResponse() {
-        	return false;
-        }
     }
 
     private static final boolean enforcePost = Nxt.getBooleanProperty("nxt.apiServerEnforcePOST");
@@ -337,12 +346,7 @@ public final class APIServlet extends HttpServlet {
                 if (apiRequestHandler.startDbTransaction()) {
                     Db.db.beginTransaction();
                 }
-                if (apiRequestHandler.modifyHttpResponse()) {
-                    apiRequestHandler.processRequest(req, resp);
-                    response = null;
-                } else {
-                    response = apiRequestHandler.processRequest(req);
-                }
+                response = apiRequestHandler.processRequest(req, resp);
             } catch (ParameterException e) {
                 response = e.getErrorResponse();
             } catch (NxtException |RuntimeException e) {

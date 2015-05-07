@@ -170,15 +170,14 @@ public class APITestServlet extends HttpServlet {
             APIServlet.APIRequestHandler requestHandler = APIServlet.apiRequestHandlers.get(requestType);
             StringBuilder bufJSCalls = new StringBuilder();
             if (requestHandler != null) {
-                writer.print(form(req, requestType, true, requestHandler.getClass().getName(), requestHandler.getParameters(), requestHandler.requirePost()));
+                writer.print(form(req, requestType, true, requestHandler));
                 bufJSCalls.append("ATS.apiCalls.push(\"").append(requestType).append("\");\n");
             } else if (!req.getParameterMap().containsKey("requestTypes")) {
                 String requestTag = Convert.nullToEmpty(req.getParameter("requestTag"));
                 Set<String> taggedTypes = requestTags.get(requestTag);
                 for (String type : (taggedTypes != null ? taggedTypes : allRequestTypes)) {
                     requestHandler = APIServlet.apiRequestHandlers.get(type);
-                    writer.print(form(req, type, false, requestHandler.getClass().getName(), APIServlet.apiRequestHandlers.get(type).getParameters(),
-                                      APIServlet.apiRequestHandlers.get(type).requirePost()));
+                    writer.print(form(req, type, false, requestHandler));
                     bufJSCalls.append("ATS.apiCalls.push(\"").append(type).append("\");\n");
                 }
             } else {
@@ -187,8 +186,7 @@ public class APITestServlet extends HttpServlet {
                     Set<String> selectedRequestTypes = new TreeSet<>(Arrays.asList(requestTypes.split("_")));
                     for (String type: selectedRequestTypes) {
                         requestHandler = APIServlet.apiRequestHandlers.get(type);
-                        writer.print(form(req, type, false, requestHandler.getClass().getName(), APIServlet.apiRequestHandlers.get(type).getParameters(),
-                                          APIServlet.apiRequestHandlers.get(type).requirePost()));
+                        writer.print(form(req, type, false, requestHandler));
                         bufJSCalls.append("ATS.apiCalls.push(\"").append(type).append("\");\n");
                     }
                 } else {
@@ -206,7 +204,11 @@ public class APITestServlet extends HttpServlet {
         return "<div class=\"alert alert-" + msgType + "\" role=\"alert\">" + msg + "</div>";
     }
 
-    private static String form(HttpServletRequest req, String requestType, boolean singleView, String className, List<String> parameters, boolean requirePost) {
+    private static String form(HttpServletRequest req, String requestType, boolean singleView, APIServlet.APIRequestHandler requestHandler) {
+        String className = requestHandler.getClass().getName();
+        List<String> parameters = requestHandler.getParameters();
+        boolean requirePost = requestHandler.requirePost();
+        String fileParameter = requestHandler.getFileParameter();
         StringBuilder buf = new StringBuilder();
         buf.append("<div class=\"panel panel-default api-call-All\" ");
         buf.append("id=\"api-call-").append(requestType).append("\">");
@@ -222,7 +224,7 @@ public class APITestServlet extends HttpServlet {
             buf.append(" &nbsp;&nbsp;");
         }
         buf.append("<a style=\"font-weight:normal;font-size:14px;color:#777;\" href=\"/doc/");
-        buf.append(className.replace('.','/')).append(".html\" target=\"_blank\">javadoc</a>&nbsp;&nbsp;");
+        buf.append(className.replace('.', '/')).append(".html\" target=\"_blank\">javadoc</a>&nbsp;&nbsp;");
         buf.append("&nbsp;&nbsp;&nbsp;<input type=\"checkbox\" class=\"api-call-sel-ALL\" ");
         buf.append("id=\"api-call-sel-").append(requestType).append("\">");
         buf.append("</span>");
@@ -234,10 +236,22 @@ public class APITestServlet extends HttpServlet {
         }
         buf.append("\">");
         buf.append("<div class=\"panel-body\">");
-        buf.append("<form action=\"/nxt\" method=\"POST\" onsubmit=\"return ATS.submitForm(this);\">");
+        buf.append("<form action=\"/nxt\" method=\"POST\" ");
+        if (fileParameter != null) {
+            buf.append("enctype=\"multipart/form-data\">");
+        } else {
+            buf.append(" onsubmit=\"return ATS.submitForm(this);\">");
+        }
         buf.append("<input type=\"hidden\" name=\"requestType\" value=\"").append(requestType).append("\"/>");
         buf.append("<div class=\"col-xs-12 col-lg-6\" style=\"min-width: 40%;\">");
         buf.append("<table class=\"table\">");
+        if (fileParameter != null) {
+            buf.append("<tr class=\"api-call-input-tr\">");
+            buf.append("<td>").append(fileParameter).append(":</td>");
+            buf.append("<td><input type=\"file\" name=\"").append(fileParameter).append("\" ");
+            buf.append("style=\"width:100%;min-width:200px;\"/></td>");
+            buf.append("</tr>");
+        }
         for (String parameter : parameters) {
             buf.append("<tr class=\"api-call-input-tr\">");
             buf.append("<td>").append(parameter).append(":</td>");

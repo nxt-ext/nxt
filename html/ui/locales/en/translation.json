@@ -1179,5 +1179,6 @@
   "entity_name": "Entity Name",
   "is_text": "Is Text",
   "filename": "filename",
-  "data_size": "Data Size"
+  "data_size": "Data Size",
+  "error_file_too_big": "File size __size__ [bytes] bigger than __allowed__ [bytes]"
 }

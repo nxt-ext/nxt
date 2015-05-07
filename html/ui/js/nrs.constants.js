@@ -37,7 +37,8 @@ var NRS = (function (NRS, $, undefined) {
 
         'MIN_BALANCE_MODELS': {},
 
-        'SERVER': {}
+        'SERVER': {},
+        'MAX_TAGGED_DATA_DATA_LENGTH': 0
     };
 
     NRS.loadServerConstants = function () {
@@ -46,6 +47,7 @@ var NRS = (function (NRS, $, undefined) {
                 NRS.constants.SERVER = response;
                 NRS.constants.VOTING_MODELS = response.votingModels;
                 NRS.constants.MIN_BALANCE_MODELS = response.minBalanceModels;
+                NRS.constants.MAX_TAGGED_DATA_DATA_LENGTH = response.maxTaggedDataDataLength;
             }
         });
     };
