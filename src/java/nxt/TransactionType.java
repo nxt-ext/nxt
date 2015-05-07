@@ -188,7 +188,7 @@ public abstract class TransactionType {
 
     final void apply(TransactionImpl transaction, Account senderAccount, Account recipientAccount) {
         long amount = transaction.getAmountNQT();
-        if (transaction.getPhasing() == null || !transaction.getAttachment().isPhasable()) {
+        if (transaction.getPhasing() == null || !isPhasable()) {
             senderAccount.addToBalanceNQT(-Math.addExact(amount, transaction.getFeeNQT()));
         } else {
             senderAccount.addToBalanceNQT(-amount);
@@ -241,6 +241,10 @@ public abstract class TransactionType {
     }
 
     public abstract boolean isPhasingSafe();
+
+    public boolean isPhasable() {
+        return true;
+    }
 
     public Fee getBaselineFee(Transaction transaction) {
         return Fee.DEFAULT_FEE;
@@ -927,8 +931,8 @@ public abstract class TransactionType {
             @Override
             void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
 
-                if (Nxt.getBlockchain().getHeight() < Constants.VOTING_SYSTEM_BLOCK) {
-                    throw new NxtException.NotYetEnabledException("Voting System not yet enabled at height " + Nxt.getBlockchain().getHeight());
+                if (Nxt.getBlockchain().getHeight() < Constants.PHASING_BLOCK) {
+                    throw new NxtException.NotYetEnabledException("Phasing not yet enabled at height " + Nxt.getBlockchain().getHeight());
                 }
 
                 Attachment.MessagingPhasingVoteCasting attachment = (Attachment.MessagingPhasingVoteCasting) transaction.getAttachment();
@@ -1966,14 +1970,6 @@ public abstract class TransactionType {
 
         public static final TransactionType DELIVERY = new DigitalGoods() {
 
-            private final Fee DGS_DELIVERY_FEE = new Fee.SizeBasedFee(Constants.ONE_NXT) {
-                @Override
-                public int getSize(TransactionImpl transaction, Appendix attachment) {
-                    int length = ((Attachment.DigitalGoodsDelivery)attachment).getGoods().getData().length;
-                    return length <= 10240 ? 1024 : (length - 8 * 1024);
-                }
-            };
-
             @Override
             public final byte getSubtype() {
                 return TransactionType.SUBTYPE_DIGITAL_GOODS_DELIVERY;
@@ -1982,11 +1978,6 @@ public abstract class TransactionType {
             @Override
             public String getName() {
                 return "DigitalGoodsDelivery";
-            }
-
-            @Override
-            public Fee getBaselineFee(Transaction transaction) {
-                return DGS_DELIVERY_FEE;
             }
 
             @Override
@@ -2310,6 +2301,11 @@ public abstract class TransactionType {
 
         @Override
         public final boolean isPhasingSafe() {
+            return false;
+        }
+
+        @Override
+        public final boolean isPhasable() {
             return false;
         }
 

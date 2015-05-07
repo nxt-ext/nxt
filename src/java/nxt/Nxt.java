@@ -176,8 +176,8 @@ public final class Nxt {
         Logger.logShutdownMessage("Shutting down...");
         API.shutdown();
         Users.shutdown();
-        Peers.shutdown();
         ThreadPool.shutdown();
+        Peers.shutdown();
         Db.shutdown();
         Logger.logShutdownMessage("Nxt server " + VERSION + " stopped.");
         Logger.shutdown();

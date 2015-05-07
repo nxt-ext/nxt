@@ -263,7 +263,7 @@ var NRS = (function (NRS, $) {
 		return converters.byteArrayToHexString(v.concat(h));
 	};
 
-	NRS.verifyBytes = function(signature, message, publicKey) {
+	NRS.verifySignature = function(signature, message, publicKey) {
 		var signatureBytes = converters.hexStringToByteArray(signature);
 		var messageBytes = converters.hexStringToByteArray(message);
 		var publicKeyBytes = converters.hexStringToByteArray(publicKey);

@@ -53,7 +53,7 @@ public final class Peers {
         BLACKLIST, UNBLACKLIST, DEACTIVATE, REMOVE,
         DOWNLOADED_VOLUME, UPLOADED_VOLUME, WEIGHT,
         ADDED_ACTIVE_PEER, CHANGED_ACTIVE_PEER,
-        NEW_PEER
+        NEW_PEER, ADD_INBOUND, REMOVE_INBOUND
     }
 
     static final int LOGGING_MASK_EXCEPTIONS = 1;
@@ -399,6 +399,13 @@ public final class Peers {
                         }
                     }
 
+                    peers.values().parallelStream().unordered()
+                            .filter(peer -> peer.getLastInboundRequest()!=0 && now-peer.getLastInboundRequest() > 1800)
+                            .forEach(peer -> {
+                                peer.setLastInboundRequest(0);
+                                notifyListeners(peer, Event.REMOVE_INBOUND);
+                            });
+
                 } catch (Exception e) {
                     Logger.logDebugMessage("Error connecting to peer", e);
                 }
@@ -540,9 +547,8 @@ public final class Peers {
                 Logger.logShutdownMessage("Failed to stop peer server", e);
             }
         }
-        ThreadPool.shutdownExecutor(sendingService);
-        ThreadPool.shutdownExecutor(peersService);
-
+        ThreadPool.shutdownExecutor("peersService", peersService);
+        ThreadPool.shutdownExecutor("sendingService", sendingService);
     }
 
     public static boolean addListener(Listener<Peer> listener, Event eventType) {
@@ -586,6 +592,12 @@ public final class Peers {
 
     public static Peer getPeer(String host) {
         return peers.get(host);
+    }
+
+    public static Collection<? extends Peer> getInboundPeers() {
+        return peers.values().parallelStream().unordered()
+                .filter(peer -> peer.getLastInboundRequest() != 0)
+                .collect(Collectors.toList());
     }
 
     public static PeerImpl findOrCreatePeer(String announcedAddress, boolean create) {

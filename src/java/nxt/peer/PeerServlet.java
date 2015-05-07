@@ -2,6 +2,9 @@ package nxt.peer;
 
 import nxt.util.CountingInputReader;
 import nxt.util.CountingOutputWriter;
+import nxt.Nxt;
+import nxt.util.CountingInputStream;
+import nxt.util.CountingOutputStream;
 import nxt.util.JSON;
 import nxt.util.Logger;
 import org.eclipse.jetty.server.Response;
@@ -216,6 +219,9 @@ public final class PeerServlet extends WebSocketServlet {
                 if (peerRequestHandler != null) {
                     if (peer.getState() == Peer.State.DISCONNECTED)
                         peer.setState(Peer.State.CONNECTED);
+                    if (peer.getLastInboundRequest() == 0)
+                        Peers.notifyListeners(peer, Peers.Event.ADD_INBOUND);
+                    peer.setLastInboundRequest(Nxt.getEpochTime());
                     response = peerRequestHandler.processRequest(request, peer);
                 } else {
                     response = UNSUPPORTED_REQUEST_TYPE;

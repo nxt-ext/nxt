@@ -30,7 +30,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.StringJoiner;
 
@@ -228,7 +227,7 @@ final class ParameterParser {
         return getInt(req, "quantity", 0, Constants.MAX_DGS_LISTING_QUANTITY, true);
     }
 
-    static EncryptedData getEncryptedMessage(HttpServletRequest req, Account recipientAccount) throws ParameterException {
+    static EncryptedData getEncryptedData(HttpServletRequest req, Account recipientAccount) throws ParameterException {
         String data = Convert.emptyToNull(req.getParameter("encryptedMessageData"));
         String nonce = Convert.emptyToNull(req.getParameter("encryptedMessageNonce"));
         if (data != null && nonce != null) {
@@ -490,7 +489,11 @@ final class ParameterParser {
     }
 
     static Appendix getEncryptedMessage(HttpServletRequest req, boolean prunable) throws ParameterException {
-        EncryptedData encryptedData = ParameterParser.getEncryptedMessage(req, null);
+        return getEncryptedMessage(req, null, prunable);
+    }
+
+    static Appendix getEncryptedMessage(HttpServletRequest req, Account recipient, boolean prunable) throws ParameterException {
+        EncryptedData encryptedData = ParameterParser.getEncryptedData(req, recipient);
         if (encryptedData != null) {
             boolean encryptedDataIsText = !"false".equalsIgnoreCase(req.getParameter("messageToEncryptIsText"));
             boolean isCompressed = !"false".equalsIgnoreCase(req.getParameter("compressMessageToEncrypt"));
@@ -512,23 +515,14 @@ final class ParameterParser {
         boolean isText = !"false".equalsIgnoreCase(req.getParameter("isText"));
         String filename = Convert.nullToEmpty(req.getParameter("filename"));
         String dataValue = Convert.emptyToNull(req.getParameter("data"));
-        byte[] data = null;
+        byte[] data;
         if (dataValue == null) {
-            Collection<Part> parts;
             try {
-                parts = req.getParts();
-            } catch (IOException | ServletException e) {
-                Logger.logDebugMessage("error in getParts", e);
-                throw new ParameterException(INCORRECT_TAGGED_DATA_FILE);
-            }
-            for (Part part : parts) {
-                if (part.getSubmittedFileName() == null) {
-                    // Parameter data not file data
-                    continue;
+                Part part = req.getPart("file");
+                if (part == null) {
+                    throw new ParameterException(INCORRECT_TAGGED_DATA_FILE);
                 }
-                InputStream is;
-                try {
-                    is = part.getInputStream();
+                try (InputStream is = part.getInputStream()) {
                     int nRead;
                     byte[] bytes = new byte[1024];
                     ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -540,12 +534,10 @@ final class ParameterParser {
                     if (name == null) {
                         name = filename;
                     }
-                    isText = false;
-                    break;
-                } catch (IOException e) {
-                    Logger.logDebugMessage("error in reading file data", e);
-                    throw new ParameterException(INCORRECT_TAGGED_DATA_FILE);
                 }
+            } catch (IOException | ServletException e) {
+                Logger.logDebugMessage("error in reading file data", e);
+                throw new ParameterException(INCORRECT_TAGGED_DATA_FILE);
             }
         } else {
             data = isText ? Convert.toBytes(dataValue) : Convert.parseHexString(dataValue);

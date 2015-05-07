@@ -60,6 +60,7 @@ final class PeerImpl implements Peer {
     private volatile long uploadedVolume;
     private volatile int lastUpdated;
     private volatile int lastConnectAttempt;
+    private volatile int lastInboundRequest;
     private volatile long hallmarkBalance = -1;
     private volatile int hallmarkBalanceHeight;
 
@@ -161,6 +162,7 @@ final class PeerImpl implements Peer {
             if (isOldVersion) {
                 Logger.logDebugMessage(String.format("Blacklisting %s version %s", host, version));
                 blacklistingCause = "Old version: " + version;
+                lastInboundRequest = 0;
                 setState(State.NON_CONNECTED);
                 Peers.notifyListeners(this, Peers.Event.BLACKLIST);
             }
@@ -275,6 +277,7 @@ final class PeerImpl implements Peer {
         blacklistingTime = System.currentTimeMillis();
         blacklistingCause = cause;
         setState(State.NON_CONNECTED);
+        lastInboundRequest = 0;
         Peers.notifyListeners(this, Peers.Event.BLACKLIST);
     }
 
@@ -320,6 +323,14 @@ final class PeerImpl implements Peer {
 
     void setLastUpdated(int lastUpdated) {
         this.lastUpdated = lastUpdated;
+    }
+
+    int getLastInboundRequest() {
+        return lastInboundRequest;
+    }
+
+    void setLastInboundRequest(int now) {
+        lastInboundRequest = now;
     }
 
     @Override
