@@ -463,8 +463,22 @@ var NRS = (function(NRS, $) {
         size += NRS.getUtf8Bytes(this.files[0].name).length;
         var dataFee = parseInt(new BigInteger("" + size).divide(new BigInteger("1024")).toString()) * 0.1;
         $('#upload_data_fee').val(1 + dataFee);
-        $('#tagged_data_fee_label').html(String(1 + dataFee) + " NXT");
+        $('#upload_data_fee_label').html(String(1 + dataFee) + " NXT");
     });
+
+    $("#extend_data_modal").on("show.bs.modal", function (e) {
+        var $invoker = $(e.relatedTarget);
+        var transaction = $invoker.data("transaction");
+        $("#extend_data_transaction").val(transaction);
+        NRS.sendRequest("getTransaction", {
+            "transaction": transaction
+        }, function (response) {
+            var fee = NRS.convertToNXT(String(response.feeNQT).escapeHTML());
+            $('#extend_data_fee').val(fee);
+            $('#extend_data_fee_label').html(String(fee) + " NXT");
+        })
+    });
+
 
 	return NRS;
 }(NRS || {}, jQuery));
