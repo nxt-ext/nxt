@@ -30,7 +30,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.StringJoiner;
 
@@ -228,7 +227,7 @@ final class ParameterParser {
         return getInt(req, "quantity", 0, Constants.MAX_DGS_LISTING_QUANTITY, true);
     }
 
-    static EncryptedData getEncryptedMessage(HttpServletRequest req, Account recipientAccount) throws ParameterException {
+    static EncryptedData getEncryptedData(HttpServletRequest req, Account recipientAccount) throws ParameterException {
         String data = Convert.emptyToNull(req.getParameter("encryptedMessageData"));
         String nonce = Convert.emptyToNull(req.getParameter("encryptedMessageNonce"));
         if (data != null && nonce != null) {
@@ -490,7 +489,11 @@ final class ParameterParser {
     }
 
     static Appendix getEncryptedMessage(HttpServletRequest req, boolean prunable) throws ParameterException {
-        EncryptedData encryptedData = ParameterParser.getEncryptedMessage(req, null);
+        return getEncryptedMessage(req, null, prunable);
+    }
+
+    static Appendix getEncryptedMessage(HttpServletRequest req, Account recipient, boolean prunable) throws ParameterException {
+        EncryptedData encryptedData = ParameterParser.getEncryptedData(req, recipient);
         if (encryptedData != null) {
             boolean encryptedDataIsText = !"false".equalsIgnoreCase(req.getParameter("messageToEncryptIsText"));
             boolean isCompressed = !"false".equalsIgnoreCase(req.getParameter("compressMessageToEncrypt"));
