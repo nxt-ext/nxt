@@ -1183,5 +1183,6 @@
   "error_file_too_big": "File size __size__ [bytes] bigger than __allowed__ [bytes]",
   "upload_tagged_data": "Upload Tagged Data",
   "extend_tagged_data": "Extend Tagged Data",
-  "tagged_data": "Tagged Data"
+  "tagged_data": "Tagged Data",
+  "alias_sale_transfer": "Alias Sell Or Transfer"
 }
