@@ -38,7 +38,9 @@ var NRS = (function (NRS, $, undefined) {
         'MIN_BALANCE_MODELS': {},
 
         'SERVER': {},
-        'MAX_TAGGED_DATA_DATA_LENGTH': 0
+        'MAX_TAGGED_DATA_DATA_LENGTH': 0,
+        "GENESIS": "",
+        "GENESIS_RS": ""
     };
 
     NRS.loadServerConstants = function () {
@@ -48,6 +50,8 @@ var NRS = (function (NRS, $, undefined) {
                 NRS.constants.VOTING_MODELS = response.votingModels;
                 NRS.constants.MIN_BALANCE_MODELS = response.minBalanceModels;
                 NRS.constants.MAX_TAGGED_DATA_DATA_LENGTH = response.maxTaggedDataDataLength;
+                NRS.constants.GENESIS = response.genesisAccountId;
+                NRS.constants.GENESIS_RS = NRS.convertNumericToRSAccountFormat(response.genesisAccountId);
             }
         });
     };

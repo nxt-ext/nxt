@@ -14,13 +14,14 @@ public final class GetAllTaggedData extends APIServlet.APIRequestHandler {
     static final GetAllTaggedData instance = new GetAllTaggedData();
 
     private GetAllTaggedData() {
-        super(new APITag[] {APITag.DATA}, "firstIndex", "lastIndex");
+        super(new APITag[] {APITag.DATA}, "firstIndex", "lastIndex", "includeData");
     }
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
         int firstIndex = ParameterParser.getFirstIndex(req);
         int lastIndex = ParameterParser.getLastIndex(req);
+        boolean includeData = !"false".equalsIgnoreCase(req.getParameter("includeData"));
 
         JSONObject response = new JSONObject();
         JSONArray jsonArray = new JSONArray();
@@ -28,7 +29,7 @@ public final class GetAllTaggedData extends APIServlet.APIRequestHandler {
 
         try (DbIterator<TaggedData> data = TaggedData.getAll(firstIndex, lastIndex)) {
             while (data.hasNext()) {
-                jsonArray.add(JSONData.taggedData(data.next()));
+                jsonArray.add(JSONData.taggedData(data.next(), includeData));
             }
         }
         return response;
