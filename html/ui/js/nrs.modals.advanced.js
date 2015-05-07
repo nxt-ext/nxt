@@ -187,48 +187,53 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	function _setMandatoryApproval($modal) {
-		if (NRS.accountInfo.accountControls && $.inArray('PHASING_ONLY', NRS.accountInfo.accountControls) > -1) {
-			NRS.sendRequest("getPhasingOnlyControl", {
-				"account": NRS.account
-			}, function(response) {
-				if (response && response.phasingVotingModel >= 0) {
-					$modal.find(".advanced").show(); //show the advanced stuff by default
-					switch (response.phasingVotingModel) {
-						case 0:
-							$modal.find('.at_accounts').trigger('click');
-							$modal.find('.tab-content input[name="phasingQuorum"]').val(response.phasingQuorum);
-							break;
-						case 1:
-							$modal.find('.at_balance').trigger('click');
-							break;
-						case 2:
-							$modal.find('.at_asset_holders').trigger('click');
-							break;
-						case 3:
-							$modal.find('.at_currency_holders').trigger('click');
-							break;
-					}
-
-					if (response.phasingWhitelist && response.phasingWhitelist.length > 0) {
-
-						for (var i = 0; i < response.phasingWhitelist.length - 1 && i < $modal.find('.tab-content input[name="phasingWhitelisted"]').length ; i++) {
-							//add empty fields for the whitelisted accounts if necessary
-							$modal.find('.add_account_btn').trigger('click');
+		$modal.one('shown.bs.modal', function (e) {
+			if (NRS.accountInfo.accountControls && $.inArray('PHASING_ONLY', NRS.accountInfo.accountControls) > -1) {
+				NRS.sendRequest("getPhasingOnlyControl", {
+					"account": NRS.account
+				}, function (response) {
+					if (response && response.phasingVotingModel >= 0) {
+						$modal.find(".advanced").show(); //show the advanced stuff by default
+						var $approveModal = $modal.find(".approve_modal");
+						switch (response.phasingVotingModel) {
+							case 0:
+								$approveModal.find('.at_accounts').trigger('click');
+								$approveModal.find('.tab-pane.active input[name="phasingQuorum"]').val(response.phasingQuorum);
+								break;
+							case 1:
+								$approveModal.find('.at_balance').trigger('click');
+								$approveModal.find('.tab-pane.active input[name="phasingQuorumNXT"]').val(NRS.convertToNXT(response.phasingQuorum));
+								break;
+							case 2:
+								$approveModal.find('.at_asset_holders').trigger('click');
+								break;
+							case 3:
+								$approveModal.find('.at_currency_holders').trigger('click');
+								break;
 						}
 
-						//fill the fields
-						$modal.find('.tab-content input[name="phasingWhitelisted"]').each(function( index, elem ) {
-							if (index < response.phasingWhitelist.length) {
-								$(elem).val(NRS.convertNumericToRSAccountFormat(response.phasingWhitelist[index]));
-								//$(elem).trigger('show');
-							}
-						});
-					}
-				} else {
+						$activeTabPane = $approveModal.find('.tab-pane.active');
 
-				}
-			});
-		}
+						if (response.phasingWhitelist && response.phasingWhitelist.length > 0) {
+							for (var i = 0; i < response.phasingWhitelist.length - 1 && $activeTabPane.find('input[name="phasingWhitelisted"]').length < response.phasingWhitelist.length; i++) {
+								//add empty fields for the whitelisted accounts if necessary
+								$activeTabPane.find('.add_account_btn').trigger('click');
+							}
+
+							//fill the fields
+							$activeTabPane.find('input[name="phasingWhitelisted"]').each(function (index, elem) {
+								if (index < response.phasingWhitelist.length) {
+									$(elem).val(NRS.convertNumericToRSAccountFormat(response.phasingWhitelist[index]));
+									//$(elem).trigger('show');
+								}
+							});
+						}
+					} else {
+
+					}
+				});
+			}
+		});
 	}
 
 	$('.approve_tab_list a[data-toggle="tab"]').on('shown.bs.tab', function (e) {

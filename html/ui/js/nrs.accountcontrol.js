@@ -27,7 +27,6 @@ var NRS = (function(NRS, $) {
 	$("#set_mandatory_approval_modal").on("show.bs.modal", function(e) {
 		var $modal = $(this);
 
-		//$(this).find(".advanced").show(); //because the advanced stuff is hidden by default
 		$(".phasing_only_number_accounts_group").find("input[name=controlQuorum]").val(1);
 
 		var context = {
@@ -38,7 +37,7 @@ var NRS = (function(NRS, $) {
 			addonText: "NXT",
 			addonI18n: "nxt_unit"
 		}
-		var $elems = NRS.initModalUIElement($modal, '.phasing_only_transaction_amount_nxt', 'simple_input_with_addon_modal_ui_element', context);
+		var $elems = NRS.initModalUIElement($modal, '.phasing_only_amount_nxt', 'simple_input_with_addon_modal_ui_element', context);
 		$elems.find('input').prop("disabled", true);
 
 		var context = {
@@ -149,9 +148,11 @@ var NRS = (function(NRS, $) {
 		$elems = NRS.initModalUIElement($modal, '.phasing_only_holding_currency_optional', 'add_currency_modal_ui_element', context);
 		$elems.find('input').prop("disabled", true);
 		$elems.hide();
+
+		$(this).find('.mandatory_approve_tab_list a:first').click();
 	});
 
-	$('.approve_tab_list a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
+	$('.mandatory_approve_tab_list a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
 		var $am = $(this).closest('.phasing_only_modal');
 		$am.find('.tab-pane input, .tab-pane select').prop('disabled', true);
 		$am.find('.tab-pane.active input, .tab-pane.active select').prop('disabled', false);

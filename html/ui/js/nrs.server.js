@@ -88,6 +88,8 @@ var NRS = (function (NRS, $, undefined) {
                 ["discountNXT", "NQT"],
                 ["phasingQuorumNXT", ""],
                 ["phasingMinBalanceNXT", ""],
+                ["controlQuorumNXT", ""],
+                ["controlMinBalanceNXT", ""],
                 ["minBalanceNXT", ""]
             ];
 
