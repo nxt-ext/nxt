@@ -1018,8 +1018,8 @@ public interface Appendix {
 
             if (transaction.getSignature() == null || PhasingPoll.getPoll(transaction.getId()) == null) {
                 int currentHeight = Nxt.getBlockchain().getHeight();
-                if (currentHeight < Constants.VOTING_SYSTEM_BLOCK) {
-                    throw new NxtException.NotYetEnabledException("Voting System not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
+                if (currentHeight < Constants.PHASING_BLOCK) {
+                    throw new NxtException.NotYetEnabledException("Phasing not yet enabled at height " + currentHeight);
                 }
 
                 if (whitelist.length > Constants.MAX_PHASING_WHITELIST_SIZE) {
