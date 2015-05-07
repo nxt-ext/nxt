@@ -15,7 +15,7 @@ public final class SearchTaggedData extends APIServlet.APIRequestHandler {
     static final SearchTaggedData instance = new SearchTaggedData();
 
     private SearchTaggedData() {
-        super(new APITag[] {APITag.DATA, APITag.SEARCH}, "query", "tag", "channel", "account", "firstIndex", "lastIndex");
+        super(new APITag[] {APITag.DATA, APITag.SEARCH}, "query", "tag", "channel", "account", "firstIndex", "lastIndex", "includeData");
     }
 
     @Override
@@ -25,13 +25,14 @@ public final class SearchTaggedData extends APIServlet.APIRequestHandler {
         String channel = Convert.emptyToNull(req.getParameter("channel"));
         int firstIndex = ParameterParser.getFirstIndex(req);
         int lastIndex = ParameterParser.getLastIndex(req);
+        boolean includeData = !"false".equalsIgnoreCase(req.getParameter("includeData"));
 
         JSONObject response = new JSONObject();
         JSONArray jsonArray = new JSONArray();
         response.put("data", jsonArray);
         try (DbIterator<TaggedData> data = TaggedData.searchData(query, channel, accountId, firstIndex, lastIndex)) {
             while (data.hasNext()) {
-                jsonArray.add(JSONData.taggedData(data.next()));
+                jsonArray.add(JSONData.taggedData(data.next(), includeData));
             }
         }
 
