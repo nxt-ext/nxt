@@ -63,10 +63,14 @@ import java.util.List;
  * <li>Block.BLOCK_GENERATED</li>
  * <li>Block.BLOCK_POPPED</li>
  * <li>Block.BLOCK_PUSHED</li>
+ * <li>Peer.ADD_INBOUND</li>
  * <li>Peer.ADDED_ACTIVE_PEER</li>
  * <li>Peer.BLACKLIST</li>
  * <li>Peer.CHANGED_ACTIVE_PEER</li>
  * <li>Peer.DEACTIVATE</li>
+ * <li>Peer.NEW_PEER</li>
+ * <li>Peer.REMOVE</li>
+ * <li>Peer.REMOVE_INBOUND</li>
  * <li>Peer.UNBLACKLIST</li>
  * <li>Transaction.ADDED_CONFIRMED_TRANSACTIONS</li>
  * <li>Transaction.ADDED_UNCONFIRMED_TRANSACTIONS</li>
@@ -228,5 +232,5 @@ public class EventRegister extends APIServlet.APIRequestHandler {
     final boolean requirePost() {
         return true;
     }
-    
+
 }

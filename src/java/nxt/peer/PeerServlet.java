@@ -1,5 +1,6 @@
 package nxt.peer;
 
+import nxt.Nxt;
 import nxt.util.CountingInputStream;
 import nxt.util.CountingOutputStream;
 import nxt.util.JSON;
@@ -124,6 +125,9 @@ public final class PeerServlet extends HttpServlet {
             if (request.get("protocol") != null && ((Number)request.get("protocol")).intValue() == 1) {
                 PeerRequestHandler peerRequestHandler = peerRequestHandlers.get(request.get("requestType"));
                 if (peerRequestHandler != null) {
+                    if (peer.getLastInboundRequest() == 0)
+                        Peers.notifyListeners(peer, Peers.Event.ADD_INBOUND);
+                    peer.setLastInboundRequest(Nxt.getEpochTime());
                     response = peerRequestHandler.processRequest(request, peer);
                 } else {
                     response = UNSUPPORTED_REQUEST_TYPE;
