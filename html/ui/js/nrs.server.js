@@ -49,15 +49,16 @@ var NRS = (function (NRS, $, undefined) {
 
     NRS.sendRequest = function (requestType, data, callback, async) {
         if (requestType == undefined) {
+            NRS.logConsole("Undefined request type");
             return;
         }
-
-        if ($.isFunction(data)) {
-            async = callback;
-            callback = data;
-            data = {};
-        } else {
-            data = data || {};
+        if (data == undefined) {
+            NRS.logConsole("Undefined data for " + requestType);
+            return;
+        }
+        if (callback == undefined) {
+            NRS.logConsole("Undefined callback function for " + requestType);
+            return;
         }
 
         $.each(data, function (key, val) {
@@ -101,12 +102,10 @@ var NRS = (function (NRS, $, undefined) {
                 }
             }
         } catch (err) {
-            if (callback) {
-                callback({
-                    "errorCode": 1,
-                    "errorDescription": err + " (" + $.t(field) + ")"
-                });
-            }
+            callback({
+                "errorCode": 1,
+                "errorDescription": err + " (" + $.t(field) + ")"
+            });
             return;
         }
         // convert asset/currency decimal amount to base unit
@@ -133,12 +132,10 @@ var NRS = (function (NRS, $, undefined) {
                 delete data[value];
             });
         } catch (err) {
-            if (callback) {
-                callback({
-                    "errorCode": 1,
-                    "errorDescription": err + " (" + $.t(field) + ")"
-                });
-            }
+            callback({
+                "errorCode": 1,
+                "errorDescription": err + " (" + $.t(field) + ")"
+            });
             return;
         }
 
@@ -161,12 +158,10 @@ var NRS = (function (NRS, $, undefined) {
                 var accountRS = "";
             }
 
-            if (callback) {
-                callback({
-                    "account": accountId,
-                    "accountRS": accountRS
-                });
-            }
+            callback({
+                "account": accountId,
+                "accountRS": accountRS
+            });
             return;
         }
 
@@ -174,12 +169,10 @@ var NRS = (function (NRS, $, undefined) {
         if ("secretPhrase" in data) {
             var accountId = NRS.getAccountId(NRS.rememberPassword ? _password : data.secretPhrase);
             if (accountId != NRS.account) {
-                if (callback) {
-                    callback({
-                        "errorCode": 1,
-                        "errorDescription": $.t("error_passphrase_incorrect")
-                    });
-                }
+                callback({
+                    "errorCode": 1,
+                    "errorDescription": $.t("error_passphrase_incorrect")
+                });
             } else {
                 //ok, accountId matches..continue with the real request.
                 NRS.processAjaxRequest(requestType, data, callback, async);
@@ -238,31 +231,19 @@ var NRS = (function (NRS, $, undefined) {
 
         //unknown account..
         if (type == "POST" && (NRS.accountInfo.errorCode && NRS.accountInfo.errorCode == 5)) {
-            if (callback) {
-                callback({
-                    "errorCode": 2,
-                    "errorDescription": $.t("error_new_account")
-                }, data);
-            } else {
-                $.growl($.t("error_new_account"), {
-                    "type": "danger"
-                });
-            }
+            callback({
+                "errorCode": 2,
+                "errorDescription": $.t("error_new_account")
+            }, data);
             return;
         }
 
         if (data.referencedTransactionFullHash) {
             if (!/^[a-z0-9]{64}$/.test(data.referencedTransactionFullHash)) {
-                if (callback) {
-                    callback({
-                        "errorCode": -1,
-                        "errorDescription": $.t("error_invalid_referenced_transaction_hash")
-                    }, data);
-                } else {
-                    $.growl($.t("error_invalid_referenced_transaction_hash"), {
-                        "type": "danger"
-                    });
-                }
+                callback({
+                    "errorCode": -1,
+                    "errorDescription": $.t("error_invalid_referenced_transaction_hash")
+                }, data);
                 return;
             }
         }
@@ -321,15 +302,13 @@ var NRS = (function (NRS, $, undefined) {
             }
             var file = $('#upload_file')[0].files[0];
             if (file.size > NRS.constants.MAX_TAGGED_DATA_DATA_LENGTH) {
-                if (callback) {
-                    callback({
-                        "errorCode": 3,
-                        "errorDescription": $.t("error_file_too_big", {
-                            "size": file.size,
-                            "allowed": NRS.constants.MAX_TAGGED_DATA_DATA_LENGTH
-                        })
-                    }, data);
-                }
+                callback({
+                    "errorCode": 3,
+                    "errorDescription": $.t("error_file_too_big", {
+                        "size": file.size,
+                        "allowed": NRS.constants.MAX_TAGGED_DATA_DATA_LENGTH
+                    })
+                }, data);
                 return;
             }
             formData.append("file", file); // file data
@@ -381,45 +360,28 @@ var NRS = (function (NRS, $, undefined) {
                 var publicKey = NRS.generatePublicKey(secretPhrase);
                 var signature = NRS.signBytes(response.unsignedTransactionBytes, converters.stringToHexString(secretPhrase));
 
-                if (!NRS.verifyBytes(signature, response.unsignedTransactionBytes, publicKey)) {
-                    if (callback) {
-                        callback({
-                            "errorCode": 1,
-                            "errorDescription": $.t("error_signature_verification_client")
-                        }, data);
-                    } else {
-                        $.growl($.t("error_signature_verification_client"), {
-                            "type": "danger"
-                        });
-                    }
+                if (!NRS.verifySignature(signature, response.unsignedTransactionBytes, publicKey)) {
+                    callback({
+                        "errorCode": 1,
+                        "errorDescription": $.t("error_signature_verification_client")
+                    }, data);
                 } else {
                     var payload = NRS.verifyAndSignTransactionBytes(response.unsignedTransactionBytes, response.transactionJSON, signature, requestType, data);
 
                     if (!payload) {
-                        if (callback) {
-                            callback({
-                                "errorCode": 1,
-                                "errorDescription": $.t("error_signature_verification_server")
-                            }, data);
-                        } else {
-                            $.growl($.t("error_signature_verification_server"), {
-                                "type": "danger"
-                            });
-                        }
+                        callback({
+                            "errorCode": 1,
+                            "errorDescription": $.t("error_signature_verification_server")
+                        }, data);
                     } else {
                         if (data.broadcast == "false") {
                             response.transactionBytes = payload;
                             NRS.showRawTransactionModal(response);
                         } else {
-                            if (callback) {
-                                if (extra) {
-                                    data["_extra"] = extra;
-                                }
-
-                                NRS.broadcastTransactionBytes(payload, callback, response, data);
-                            } else {
-                                NRS.broadcastTransactionBytes(payload, null, response, data);
+                            if (extra) {
+                                data["_extra"] = extra;
                             }
+                            NRS.broadcastTransactionBytes(payload, callback, response, data);
                         }
                     }
                 }
@@ -430,19 +392,15 @@ var NRS = (function (NRS, $, undefined) {
                     if (!response.errorCode) {
                         response.errorCode = -1;
                     }
-                    if (callback) {
-                        callback(response, data);
-                    }
+                    callback(response, data);
                 } else {
                     if (response.broadcasted == false) {
                         NRS.showRawTransactionModal(response);
                     } else {
-                        if (callback) {
-                            if (extra) {
-                                data["_extra"] = extra;
-                            }
-                            callback(response, data);
+                        if (extra) {
+                            data["_extra"] = extra;
                         }
+                        callback(response, data);
                         if (data.referencedTransactionFullHash && !response.errorCode) {
                             $.growl($.t("info_referenced_transaction_hash"), {
                                 "type": "info"
@@ -466,29 +424,30 @@ var NRS = (function (NRS, $, undefined) {
             }
 
             if (error != "abort") {
-                if (callback) {
-                    if (error == "timeout") {
-                        error = $.t("error_request_timeout");
-                    }
-                    callback({
-                        "errorCode": -1,
-                        "errorDescription": error
-                    }, {});
+                if (error == "timeout") {
+                    error = $.t("error_request_timeout");
                 }
+                callback({
+                    "errorCode": -1,
+                    "errorDescription": error
+                }, {});
             }
         });
     };
 
     NRS.verifyAndSignTransactionBytes = function (transactionBytes, transactionJSON, signature, requestType, data) {
-        var transaction = {};
-
         var byteArray = converters.hexStringToByteArray(transactionBytes);
+        if (!NRS.verifyTransactionBytes(byteArray, transactionJSON, requestType, data)) {
+            return false;
+        }
+        return transactionBytes.substr(0, 192) + signature + transactionBytes.substr(320);
+    };
 
+    NRS.verifyTransactionBytes = function (byteArray, transactionJSON, requestType, data) {
+        var transaction = {};
         transaction.type = byteArray[0];
-
         transaction.version = (byteArray[1] & 0xF0) >> 4;
         transaction.subtype = byteArray[1] & 0x0F;
-
         transaction.timestamp = String(converters.byteArrayToSignedInt32(byteArray, 2));
         transaction.deadline = String(converters.byteArrayToSignedShort(byteArray, 6));
         transaction.publicKey = converters.byteArrayToHexString(byteArray.slice(8, 40));
@@ -1346,7 +1305,7 @@ var NRS = (function (NRS, $, undefined) {
             }
         }
 
-        return transactionBytes.substr(0, 192) + signature + transactionBytes.substr(320);
+        return true;
     };
 
     NRS.broadcastTransactionBytes = function (transactionData, callback, originalResponse, originalData) {
@@ -1366,29 +1325,27 @@ var NRS = (function (NRS, $, undefined) {
                 NRS.addToConsole(this.url, this.type, this.data, response);
             }
 
-            if (callback) {
-                if (response.errorCode) {
-                    if (!response.errorDescription) {
-                        response.errorDescription = (response.errorMessage ? response.errorMessage : "Unknown error occurred.");
-                    }
-                    callback(response, originalData);
-                } else if (response.error) {
-                    response.errorCode = 1;
-                    response.errorDescription = response.error;
-                    callback(response, originalData);
-                } else {
-                    if ("transactionBytes" in originalResponse) {
-                        delete originalResponse.transactionBytes;
-                    }
-                    originalResponse.broadcasted = true;
-                    originalResponse.transaction = response.transaction;
-                    originalResponse.fullHash = response.fullHash;
-                    callback(originalResponse, originalData);
-                    if (originalData.referencedTransactionFullHash) {
-                        $.growl($.t("info_referenced_transaction_hash"), {
-                            "type": "info"
-                        });
-                    }
+            if (response.errorCode) {
+                if (!response.errorDescription) {
+                    response.errorDescription = (response.errorMessage ? response.errorMessage : "Unknown error occurred.");
+                }
+                callback(response, originalData);
+            } else if (response.error) {
+                response.errorCode = 1;
+                response.errorDescription = response.error;
+                callback(response, originalData);
+            } else {
+                if ("transactionBytes" in originalResponse) {
+                    delete originalResponse.transactionBytes;
+                }
+                originalResponse.broadcasted = true;
+                originalResponse.transaction = response.transaction;
+                originalResponse.fullHash = response.fullHash;
+                callback(originalResponse, originalData);
+                if (originalData.referencedTransactionFullHash) {
+                    $.growl($.t("info_referenced_transaction_hash"), {
+                        "type": "info"
+                    });
                 }
             }
         }).fail(function (xhr, textStatus, error) {
@@ -1396,15 +1353,13 @@ var NRS = (function (NRS, $, undefined) {
                 NRS.addToConsole(this.url, this.type, this.data, error, true);
             }
 
-            if (callback) {
-                if (error == "timeout") {
-                    error = $.t("error_request_timeout");
-                }
-                callback({
-                    "errorCode": -1,
-                    "errorDescription": error
-                }, {});
+            if (error == "timeout") {
+                error = $.t("error_request_timeout");
             }
+            callback({
+                "errorCode": -1,
+                "errorDescription": error
+            }, {});
         });
     };
 

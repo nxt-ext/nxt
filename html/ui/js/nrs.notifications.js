@@ -110,7 +110,7 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.resetNotificationState = function(page) {
-		NRS.sendRequest("getTime", function(response) {
+		NRS.sendRequest("getTime", {}, function(response) {
 			if (response.time) {
 				$.each(NRS.transactionTypes, function(typeIndex, typeDict) {
 					$.each(typeDict["subTypes"], function(subTypeIndex, subTypeDict) {
@@ -183,7 +183,7 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.updateNotifications = function() {
-		NRS.sendRequest("getTime", function(response) {
+		NRS.sendRequest("getTime", {}, function(response) {
 			if (response.time) {
 				var tsDictString = "";
 				if (NRS.databaseSupport) {

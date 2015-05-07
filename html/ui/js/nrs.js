@@ -278,7 +278,7 @@ var NRS = (function(NRS, $, undefined) {
 	};
 
 	NRS.getState = function(callback) {
-		NRS.sendRequest("getBlockchainStatus", function(response) {
+		NRS.sendRequest("getBlockchainStatus", {}, function(response) {
 			if (response.errorCode) {
 				NRS.serverConnect = false;
 				//todo
@@ -789,7 +789,7 @@ var NRS = (function(NRS, $, undefined) {
 					} else {
                         if (NRS.publicKey == "") {
                             $("#dashboard_message").addClass("alert-success").removeClass("alert-danger").html($.t("status_new_account_no_pk", {
-                                "account_id": String(NRS.accountRS).escapeHTML(),
+                                "account_id": String(NRS.accountRS).escapeHTML()
                             })).show();
                         } else {
                             $("#dashboard_message").addClass("alert-success").removeClass("alert-danger").html($.t("status_new_account", {
@@ -1362,7 +1362,7 @@ var NRS = (function(NRS, $, undefined) {
 						} else {
 							NRS.sendRequest("getBlock", {
 								"block": id,
-                        "includeTransactions": "true"
+                                "includeTransactions": "true"
 							}, function(response, input) {
 								if (!response.errorCode) {
 									response.block = input.block;
