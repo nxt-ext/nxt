@@ -219,8 +219,9 @@ public final class PeerServlet extends WebSocketServlet {
                 if (peerRequestHandler != null) {
                     if (peer.getState() == Peer.State.DISCONNECTED)
                         peer.setState(Peer.State.CONNECTED);
-                    if (peer.getLastInboundRequest() == 0)
+                    if (!peer.isInbound()) {
                         Peers.notifyListeners(peer, Peers.Event.ADD_INBOUND);
+                    }
                     peer.setLastInboundRequest(Nxt.getEpochTime());
                     response = peerRequestHandler.processRequest(request, peer);
                 } else {

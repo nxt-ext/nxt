@@ -400,7 +400,7 @@ public final class Peers {
                     }
 
                     peers.values().parallelStream().unordered()
-                            .filter(peer -> peer.getLastInboundRequest()!=0 && now-peer.getLastInboundRequest() > 1800)
+                            .filter(peer -> peer.getLastInboundRequest() != 0 && now - peer.getLastInboundRequest() > 1800)
                             .forEach(peer -> {
                                 peer.setLastInboundRequest(0);
                                 notifyListeners(peer, Event.REMOVE_INBOUND);
@@ -594,10 +594,8 @@ public final class Peers {
         return peers.get(host);
     }
 
-    public static Collection<? extends Peer> getInboundPeers() {
-        return peers.values().parallelStream().unordered()
-                .filter(peer -> peer.getLastInboundRequest() != 0)
-                .collect(Collectors.toList());
+    public static List<Peer> getInboundPeers() {
+        return getPeers(Peer::isInbound);
     }
 
     public static PeerImpl findOrCreatePeer(String announcedAddress, boolean create) {

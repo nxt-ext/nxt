@@ -331,6 +331,7 @@ final class JSONData {
         json.put("platform", peer.getPlatform());
         json.put("blacklisted", peer.isBlacklisted());
         json.put("lastUpdated", peer.getLastUpdated());
+        json.put("inbound", peer.isInbound());
         if (peer.isBlacklisted()) {
             json.put("blacklistingCause", peer.getBlacklistingCause());
         }

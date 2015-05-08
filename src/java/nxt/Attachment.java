@@ -369,7 +369,7 @@ public interface Attachment extends Appendix {
         private final int finishHeight;
 
         private final byte minNumberOfOptions;
-        private final byte maxNumberOfOptions; //only for choice voting
+        private final byte maxNumberOfOptions;
         private final byte minRangeValue;
         private final byte maxRangeValue;
         private final VoteWeighting voteWeighting;

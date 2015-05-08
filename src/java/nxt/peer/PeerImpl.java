@@ -325,6 +325,11 @@ final class PeerImpl implements Peer {
         this.lastUpdated = lastUpdated;
     }
 
+    @Override
+    public boolean isInbound() {
+        return lastInboundRequest != 0;
+    }
+
     int getLastInboundRequest() {
         return lastInboundRequest;
     }
