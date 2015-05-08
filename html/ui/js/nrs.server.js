@@ -476,8 +476,8 @@ var NRS = (function (NRS, $, undefined) {
 
         if (!("recipient" in data)) {
             //recipient == genesis
-            data.recipient = "1739068987193023818";
-            data.recipientRS = "NXT-MRCC-2YLS-8M54-3CMAJ";
+            data.recipient = NRS.constants.GENESIS;
+            data.recipientRS = NRS.constants.GENESIS_RS;
         }
 
         if (transaction.publicKey != NRS.accountInfo.publicKey) {
@@ -489,7 +489,7 @@ var NRS = (function (NRS, $, undefined) {
         }
 
         if (transaction.recipient !== data.recipient) {
-            if (data.recipient == "1739068987193023818" && transaction.recipient == "0") {
+            if (data.recipient == NRS.constants.GENESIS && transaction.recipient == "0") {
                 //ok
             } else {
                 return false;
