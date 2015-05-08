@@ -225,6 +225,9 @@ public class APITestServlet extends HttpServlet {
         }
         buf.append("<a style=\"font-weight:normal;font-size:14px;color:#777;\" href=\"/doc/");
         buf.append(className.replace('.', '/')).append(".html\" target=\"_blank\">javadoc</a>&nbsp;&nbsp;");
+        buf.append("<a style=\"font-weight:normal;font-size:14px;color:#777;\" href=\"https://wiki.nxtcrypto.org/wiki/Nxt_API#");
+        appendWikiLink(className.substring(className.lastIndexOf('.') + 1), buf);
+        buf.append("\" target=\"_blank\">wiki</a>&nbsp;&nbsp;");
         buf.append("&nbsp;&nbsp;&nbsp;<input type=\"checkbox\" class=\"api-call-sel-ALL\" ");
         buf.append("id=\"api-call-sel-").append(requestType).append("\">");
         buf.append("</span>");
@@ -285,6 +288,20 @@ public class APITestServlet extends HttpServlet {
         buf.append("</div> <!-- panel-collapse -->");
         buf.append("</div> <!-- panel -->");
         return buf.toString();
+    }
+
+    private static void appendWikiLink(String className, StringBuilder buf) {
+        for (int i = 0; i < className.length(); i++) {
+            char c = className.charAt(i);
+            if (i == 0) {
+                c = Character.toUpperCase(c);
+            }
+            buf.append(c);
+            if (i < className.length() - 2 && Character.isUpperCase(className.charAt(i + 1))
+                    && (Character.isLowerCase(c) || Character.isLowerCase(className.charAt(i + 2)))) {
+                buf.append('_');
+            }
+        }
     }
 
 }
