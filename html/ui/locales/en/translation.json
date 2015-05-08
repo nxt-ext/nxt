@@ -1184,5 +1184,6 @@
   "upload_tagged_data": "Upload Tagged Data",
   "extend_tagged_data": "Extend Tagged Data",
   "tagged_data": "Tagged Data",
-  "alias_sale_transfer": "Alias Sell Or Transfer"
+  "alias_sale_transfer": "Alias Sell Or Transfer",
+  "error_bytes_validation_server": "Could not validate unsigned bytes returned by the server."
 }

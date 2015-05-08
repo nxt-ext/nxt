@@ -263,7 +263,7 @@ var NRS = (function (NRS, $) {
 		return converters.byteArrayToHexString(v.concat(h));
 	};
 
-	NRS.verifySignature = function(signature, message, publicKey) {
+	NRS.verifySignature = function(signature, message, publicKey, callback) {
 		var signatureBytes = converters.hexStringToByteArray(signature);
 		var messageBytes = converters.hexStringToByteArray(message);
 		var publicKeyBytes = converters.hexStringToByteArray(publicKey);
@@ -272,7 +272,14 @@ var NRS = (function (NRS, $) {
 		var y = curve25519.verify(v, h, publicKeyBytes);
 		var m = simpleHash(messageBytes);
 		var h2 = simpleHash(m, y);
-		return areByteArraysEqual(h, h2);
+		if (!areByteArraysEqual(h, h2)) {
+            callback({
+                "errorCode": 1,
+                "errorDescription": $.t("error_signature_verification_client")
+            }, data);
+            return false;
+        }
+        return true;
 	};
 
 	NRS.setEncryptionPassword = function(password) {
