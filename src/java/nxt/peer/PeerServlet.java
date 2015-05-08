@@ -1,10 +1,8 @@
 package nxt.peer;
 
+import nxt.Nxt;
 import nxt.util.CountingInputReader;
 import nxt.util.CountingOutputWriter;
-import nxt.Nxt;
-import nxt.util.CountingInputStream;
-import nxt.util.CountingOutputStream;
 import nxt.util.JSON;
 import nxt.util.Logger;
 import org.eclipse.jetty.server.Response;
@@ -125,15 +123,13 @@ public final class PeerServlet extends WebSocketServlet {
         // Return the response
         //
         resp.setContentType("text/plain; charset=UTF-8");
-        try {
+        try (CountingOutputWriter writer = new CountingOutputWriter(resp.getWriter())) {
+            jsonResponse.writeJSONString(writer);
             long byteCount;
-            try (CountingOutputWriter writer = new CountingOutputWriter(resp.getWriter())) {
-                jsonResponse.writeJSONString(writer);
-                if (isGzipEnabled)
-                    byteCount = ((Response)((CompressedResponseWrapper)resp).getResponse()).getContentCount();
-                else
-                    byteCount = writer.getCount();
-            }
+            if (isGzipEnabled)
+                byteCount = ((Response)((CompressedResponseWrapper)resp).getResponse()).getContentCount();
+            else
+                byteCount = writer.getCount();
             if (peer != null)
                 peer.updateUploadedVolume(byteCount);
         } catch (RuntimeException | IOException e) {
@@ -192,7 +188,6 @@ public final class PeerServlet extends WebSocketServlet {
      * @return                      JSON response
      */
     private JSONStreamAware process(PeerImpl peer, Reader inputReader) {
-        JSONStreamAware response;
         //
         // Check for blacklisted peer
         //
@@ -206,39 +201,32 @@ public final class PeerServlet extends WebSocketServlet {
         //
         // Process the request
         //
-        try {
-            JSONObject request;
-            try (CountingInputReader cr = new CountingInputReader(inputReader, Peers.MAX_REQUEST_SIZE)) {
-                request = (JSONObject)JSONValue.parseWithException(cr);
-                peer.updateDownloadedVolume(cr.getCount());
-            }
-            if (request == null) {
-                response = UNSUPPORTED_REQUEST_TYPE;
-            } else if (request.get("protocol") != null && ((Number)request.get("protocol")).intValue() == 1) {
-                PeerRequestHandler peerRequestHandler = peerRequestHandlers.get((String)request.get("requestType"));
-                if (peerRequestHandler != null) {
-                    if (peer.getState() == Peer.State.DISCONNECTED)
-                        peer.setState(Peer.State.CONNECTED);
-                    if (!peer.isInbound()) {
-                        Peers.notifyListeners(peer, Peers.Event.ADD_INBOUND);
-                    }
-                    peer.setLastInboundRequest(Nxt.getEpochTime());
-                    response = peerRequestHandler.processRequest(request, peer);
-                } else {
-                    response = UNSUPPORTED_REQUEST_TYPE;
-                }
-            } else {
+        try (CountingInputReader cr = new CountingInputReader(inputReader, Peers.MAX_REQUEST_SIZE)) {
+            JSONObject request = (JSONObject)JSONValue.parseWithException(cr);
+            peer.updateDownloadedVolume(cr.getCount());
+            if (request.get("protocol") == null || ((Number)request.get("protocol")).intValue() != 1) {
                 Logger.logDebugMessage("Unsupported protocol " + request.get("protocol"));
-                response = UNSUPPORTED_PROTOCOL;
+                return UNSUPPORTED_PROTOCOL;
             }
+            PeerRequestHandler peerRequestHandler = peerRequestHandlers.get((String)request.get("requestType"));
+            if (peerRequestHandler == null) {
+                return UNSUPPORTED_REQUEST_TYPE;
+            }
+            if (peer.getState() == Peer.State.DISCONNECTED) {
+                peer.setState(Peer.State.CONNECTED);
+            }
+            if (!peer.isInbound()) {
+                Peers.notifyListeners(peer, Peers.Event.ADD_INBOUND);
+            }
+            peer.setLastInboundRequest(Nxt.getEpochTime());
+            return peerRequestHandler.processRequest(request, peer);
         } catch (RuntimeException|ParseException|IOException e) {
             Logger.logDebugMessage("Error processing POST request: " + e.toString());
             peer.blacklist(e);
             JSONObject json = new JSONObject();
             json.put("error", e.toString());
-            response = json;
+            return json;
         }
-        return response;
     }
 
     /**

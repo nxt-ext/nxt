@@ -2,7 +2,6 @@ package nxt.peer;
 
 import nxt.Nxt;
 import nxt.util.Logger;
-
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.UpgradeException;
 import org.eclipse.jetty.websocket.api.annotations.OnWebSocketClose;
@@ -28,8 +27,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeoutException;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
@@ -80,10 +79,10 @@ public class PeerWebSocket {
     private Session session;
 
     /** WebSocket endpoint - set for an accepted connection */
-    private PeerServlet peerServlet;
+    private final PeerServlet peerServlet;
 
     /** WebSocket client - set for an initiated connection */
-    private WebSocketClient peerClient;
+    private final WebSocketClient peerClient;
 
     /** WebSocket lock */
     private final ReentrantLock lock = new ReentrantLock();
@@ -104,6 +103,7 @@ public class PeerWebSocket {
         peerClient = new WebSocketClient();
         peerClient.getPolicy().setIdleTimeout(Peers.webSocketIdleTimeout);
         peerClient.getPolicy().setMaxBinaryMessageSize(MAX_MESSAGE_SIZE);
+        peerServlet = null;
     }
 
     /**
@@ -113,6 +113,7 @@ public class PeerWebSocket {
      */
     public PeerWebSocket(PeerServlet peerServlet) {
         this.peerServlet = peerServlet;
+        peerClient = null;
     }
 
     /**
@@ -175,10 +176,15 @@ public class PeerWebSocket {
      */
     @OnWebSocketConnect
     public void onConnect(Session session) {
-        this.session = session;
-        Logger.logDebugMessage(String.format("%s WebSocket connection with %s completed",
-                                             peerServlet!=null ? "Inbound" : "Outbound",
-                                             session.getRemoteAddress().getHostString()));
+        lock.lock();
+        try {
+            this.session = session;
+            Logger.logDebugMessage(String.format("%s WebSocket connection with %s completed",
+                    peerServlet != null ? "Inbound" : "Outbound",
+                    session.getRemoteAddress().getHostString()));
+        } finally {
+            lock.unlock();
+        }
     }
 
     /**
@@ -187,7 +193,12 @@ public class PeerWebSocket {
      * @return                      WebSocket session or null if there is no session
      */
     public Session getSession() {
-        return session;
+        lock.lock();
+        try {
+            return session;
+        } finally {
+            lock.unlock();
+        }
     }
 
     /**
@@ -295,7 +306,7 @@ public class PeerWebSocket {
      * @param   len                 Message length
      */
     @OnWebSocketMessage
-    public void OnMessage(byte[] inbuf, int off, int len) {
+    public void onMessage(byte[] inbuf, int off, int len) {
         lock.lock();
         try {
             ByteBuffer buf = ByteBuffer.wrap(inbuf, off, len);
@@ -431,10 +442,10 @@ public class PeerWebSocket {
          *
          * The caller must hold the lock for the request condition
          *
-         * @param   IOException             I/O exception
+         * @param   exception             I/O exception
          */
-        public void complete(IOException exc) {
-            exception = exc;
+        public void complete(IOException exception) {
+            this.exception = exception;
             latch.countDown();
         }
     }

@@ -6,11 +6,12 @@ import nxt.Constants;
 import nxt.Nxt;
 import nxt.NxtException;
 import nxt.util.Convert;
-import nxt.util.CountingInputStream;
 import nxt.util.CountingInputReader;
+import nxt.util.CountingInputStream;
 import nxt.util.CountingOutputWriter;
 import nxt.util.JSON;
 import nxt.util.Logger;
+import org.eclipse.jetty.websocket.api.Session;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 import org.json.simple.JSONValue;
@@ -43,7 +44,7 @@ final class PeerImpl implements Peer {
 
     private final String host;
     private final PeerWebSocket webSocket;
-    private boolean useWebSocket;
+    private volatile boolean useWebSocket;
     private volatile String announcedAddress;
     private volatile int port;
     private volatile boolean shareAddress;
@@ -364,14 +365,15 @@ final class PeerImpl implements Peer {
             //
             // Create a new WebSocket session if we don't have one
             //
-            if (useWebSocket && (webSocket.getSession() == null || !webSocket.getSession().isOpen()))
+            Session session;
+            if (useWebSocket && ((session = webSocket.getSession()) == null || !session.isOpen()))
                 useWebSocket = webSocket.startClient(URI.create("ws://" + host + ":" + getPort() + "/nxt"));
             //
             // Send the request and process the response
             //
             if (useWebSocket) {
                 //
-                // Send the request using theWebSocket session
+                // Send the request using the WebSocket session
                 //
                 StringWriter wsWriter = new StringWriter(1000);
                 request.writeJSONString(wsWriter);
@@ -456,8 +458,8 @@ final class PeerImpl implements Peer {
             //
             if (response != null && response.get("error") != null) {
                 Logger.logDebugMessage("Peer " + host + " version " + version + " returned error: " +
-                                       response.toJSONString() + ", request was: " + JSON.toString(request) +
-                                       ", disconnecting");
+                        response.toJSONString() + ", request was: " + JSON.toString(request) +
+                        ", disconnecting");
                 deactivate();
                 if (connection != null)
                     connection.disconnect();

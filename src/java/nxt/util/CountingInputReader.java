@@ -2,8 +2,8 @@ package nxt.util;
 
 import nxt.NxtException.NxtIOException;
 
-import java.io.IOException;
 import java.io.FilterReader;
+import java.io.IOException;
 import java.io.Reader;
 
 /**
