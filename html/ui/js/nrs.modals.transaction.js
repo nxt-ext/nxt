@@ -44,6 +44,39 @@ var NRS = (function (NRS, $, undefined) {
         }
     };
 
+    function _getPhasingDetails(phasingDetails, phasingParams) {
+        phasingDetails.quorum = phasingParams.phasingQuorum;
+        phasingDetails.minBalance = phasingParams.phasingMinBalance;
+        var votingModel = NRS.getVotingModelName(parseInt(phasingParams.phasingVotingModel));
+        phasingDetails.votingModel = $.t(votingModel);
+        var phasingTransactionLink = "<a href='#' class='show_transaction_modal_action' data-transaction='" + String(phasingParams.phasingHolding).escapeHTML() + "'>" + phasingParams.phasingHolding + "</a>";
+        if (NRS.constants.VOTING_MODELS[votingModel] == NRS.constants.VOTING_MODELS.ASSET) {
+            phasingDetails.asset_formatted_html = phasingTransactionLink;
+        } else if (NRS.constants.VOTING_MODELS[votingModel] == NRS.constants.VOTING_MODELS.CURRENCY) {
+            phasingDetails.currency_formatted_html = phasingTransactionLink;
+        }
+        var minBalanceModel = NRS.getMinBalanceModelName(parseInt(phasingParams.phasingMinBalanceModel));
+        phasingDetails.minBalanceModel = $.t(minBalanceModel);
+        var rows = "";
+        if (phasingParams.phasingWhitelist && phasingParams.phasingWhitelist.length > 0) {
+            rows = "<table class='table table-striped'><thead><tr>" +
+                "<th>" + $.t("Account") + "</th>" +
+                "</tr></thead><tbody>";
+            for (i = 0; i < phasingParams.phasingWhitelist.length; i++) {
+                var account = NRS.convertNumericToRSAccountFormat(phasingParams.phasingWhitelist[i]);
+                rows += "<tr><td><a href='#' data-user='" + String(account).escapeHTML() + "' class='show_account_modal_action'>" + NRS.getAccountTitle(account) + "</a></td>";
+            }
+            rows += "</tbody></table>";
+        } else {
+            rows = "-";
+        }
+        phasingDetails.whitelist_formatted_html = rows;
+        if (phasingParams.phasingHashedSecret) {
+            phasingDetails.hashedSecret = phasingParams.phasingHashedSecret;
+            phasingDetails.hashAlgorithm = phasingParams.phasingHashedSecretAlgorithm;
+        }
+    }
+
     NRS.processTransactionModalData = function (transaction, isModalVisible) {
         try {
             var async = false;
@@ -112,36 +145,7 @@ var NRS = (function (NRS, $, undefined) {
                 var phasingDetails = {};
                 phasingDetails.finishHeight = finishHeight;
                 phasingDetails.finishIn = ((finishHeight - NRS.lastBlockHeight) > 0) ? (finishHeight - NRS.lastBlockHeight) + " " + $.t("blocks") : $.t("finished");
-                phasingDetails.quorum = transaction.attachment.phasingQuorum;
-                phasingDetails.minBalance = transaction.attachment.phasingMinBalance;
-                var votingModel = NRS.getVotingModelName(parseInt(transaction.attachment.phasingVotingModel));
-                phasingDetails.votingModel = $.t(votingModel);
-                var phasingTransactionLink = "<a href='#' class='show_transaction_modal_action' data-transaction='" + String(transaction.attachment.phasingHolding).escapeHTML() + "'>" + transaction.attachment.phasingHolding + "</a>";
-                if (NRS.constants.VOTING_MODELS[votingModel] == NRS.constants.VOTING_MODELS.ASSET) {
-                    phasingDetails.asset_formatted_html = phasingTransactionLink;
-                } else if (NRS.constants.VOTING_MODELS[votingModel] == NRS.constants.VOTING_MODELS.CURRENCY) {
-                    phasingDetails.currency_formatted_html = phasingTransactionLink;
-                }
-                var minBalanceModel = NRS.getMinBalanceModelName(parseInt(transaction.attachment.phasingMinBalanceModel));
-                phasingDetails.minBalanceModel = $.t(minBalanceModel);
-                var rows = "";
-                if (transaction.attachment.phasingWhitelist && transaction.attachment.phasingWhitelist.length > 0) {
-                    rows = "<table class='table table-striped'><thead><tr>" +
-                    "<th>" + $.t("Account") + "</th>" +
-                    "</tr></thead><tbody>";
-                    for (i = 0; i < transaction.attachment.phasingWhitelist.length; i++) {
-                        var account = NRS.convertNumericToRSAccountFormat(transaction.attachment.phasingWhitelist[i]);
-                        rows += "<tr><td><a href='#' data-user='" + String(account).escapeHTML() + "' class='show_account_modal_action'>" + NRS.getAccountTitle(account) + "</a></td>";
-                    }
-                    rows += "</tbody></table>";
-                } else {
-                    rows = "-";
-                }
-                phasingDetails.whitelist_formatted_html = rows;
-                if (transaction.attachment.phasingHashedSecret) {
-                    phasingDetails.hashedSecret = transaction.attachment.phasingHashedSecret;
-                    phasingDetails.hashAlgorithm = transaction.attachment.phasingHashedSecretAlgorithm;
-                }
+                _getPhasingDetails(phasingDetails, transaction.attachment);
                 $("#phasing_info_details_table").find("tbody").empty().append(NRS.createInfoTable(phasingDetails, true));
                 $("#phasing_info_details_link").show();
             } else {
@@ -889,9 +893,10 @@ var NRS = (function (NRS, $, undefined) {
                         break;
                     case 1:
                         var data = {
-                            "type": $.t("phasing_only"),
-                            "todo": "TODO"
+                            "type": $.t("phasing_only")
                         };
+
+                        _getPhasingDetails(data, transaction.attachment.phasingControlParams);
 
                         $("#transaction_info_table").find("tbody").append(NRS.createInfoTable(data));
                         $("#transaction_info_table").show();
