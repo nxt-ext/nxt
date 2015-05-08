@@ -180,6 +180,7 @@ public final class APIServlet extends HttpServlet {
         map.put("getDGSTagsLike", GetDGSTagsLike.instance);
         map.put("getGuaranteedBalance", GetGuaranteedBalance.instance);
         map.put("getECBlock", GetECBlock.instance);
+        map.put("getInboundPeers", GetInboundPeers.instance);
         map.put("getPlugins", GetPlugins.instance);
         map.put("getMyInfo", GetMyInfo.instance);
         //map.put("getNextBlockGenerators", GetNextBlockGenerators.instance);

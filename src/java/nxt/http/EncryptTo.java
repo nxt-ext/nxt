@@ -26,7 +26,7 @@ public final class EncryptTo extends APIServlet.APIRequestHandler {
             return INCORRECT_RECIPIENT;
         }
 
-        EncryptedData encryptedData = ParameterParser.getEncryptedMessage(req, recipientAccount);
+        EncryptedData encryptedData = ParameterParser.getEncryptedData(req, recipientAccount);
         return JSONData.encryptedData(encryptedData);
 
     }
