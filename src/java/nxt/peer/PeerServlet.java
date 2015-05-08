@@ -125,8 +125,9 @@ public final class PeerServlet extends HttpServlet {
             if (request.get("protocol") != null && ((Number)request.get("protocol")).intValue() == 1) {
                 PeerRequestHandler peerRequestHandler = peerRequestHandlers.get(request.get("requestType"));
                 if (peerRequestHandler != null) {
-                    if (peer.getLastInboundRequest() == 0)
+                    if (!peer.isInbound()) {
                         Peers.notifyListeners(peer, Peers.Event.ADD_INBOUND);
+                    }
                     peer.setLastInboundRequest(Nxt.getEpochTime());
                     response = peerRequestHandler.processRequest(request, peer);
                 } else {

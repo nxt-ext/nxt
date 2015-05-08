@@ -2,13 +2,12 @@ package nxt.http;
 
 import nxt.peer.Peer;
 import nxt.peer.Peers;
-
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.Collection;
+import java.util.List;
 
 /**
  * <p>The GetInboundPeers API will return a list of inbound peers.
@@ -53,7 +52,7 @@ public final class GetInboundPeers extends APIServlet.APIRequestHandler {
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) {
         boolean includePeerInfo = "true".equalsIgnoreCase(req.getParameter("includePeerInfo"));
-        Collection<? extends Peer> peers = Peers.getInboundPeers();
+        List<Peer> peers = Peers.getInboundPeers();
         JSONArray peersJSON = new JSONArray();
         peers.stream().forEach(peer -> peersJSON.add(includePeerInfo ? JSONData.peer(peer) : peer.getHost()));
         JSONObject response = new JSONObject();
