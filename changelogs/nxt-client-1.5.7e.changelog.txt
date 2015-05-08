@@ -1,6 +1,10 @@
 This is an experimental release. It is a required update for all testnet nodes,
 but is also possible to run on main net.
 
+Added WebSockets support in the peer to peer networking. When connecting to
+peers that do not support WebSockets, HTTP is still used. WebSockets can be
+disabled by setting nxt.useWebSockets to false (default is enabled).
+
 Added file upload using multipart form requests to the UploadTaggedData,
 ExtendTaggedData and VerifyTaggedData APIs. Added upload file button to the
 corresponding forms on the /test page.
