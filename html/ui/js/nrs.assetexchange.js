@@ -1071,7 +1071,9 @@ var NRS = (function(NRS, $, undefined) {
 			};
 		} else {
 			data.quantityQNT = String(data.quantity);
-
+            if (data.decimals == "") {
+                data.decimals = "0";
+            }
 			if (data.decimals > 0) {
 				for (var i = 0; i < data.decimals; i++) {
 					data.quantityQNT += "0";
