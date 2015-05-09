@@ -500,6 +500,10 @@ var NRS = (function(NRS, $, undefined) {
 			throw $.t("error_invalid_input_numbers");
 		}
 
+        if (qnt === "0") {
+            return qnt;
+        }
+
 		//remove leading zeroes
 		return qnt.replace(/^0+/, "");
 	};

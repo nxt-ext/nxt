@@ -934,39 +934,63 @@ var NRS = (function (NRS, $, undefined) {
                 pos++;
                 transaction.decimals = String(byteArray[pos]);
                 pos++;
+                if (transaction.name !== data.name || transaction.code !== data.code || transaction.description !== data.description ||
+                    transaction.type != data.type || transaction.initialSupply !== data.initialSupply || transaction.reserveSupply !== data.reserveSupply ||
+                    transaction.maxSupply !== data.maxSupply || transaction.issuanceHeight !== data.issuanceHeight ||
+                    transaction.ruleset !== data.ruleset || transaction.algorithm !== data.algorithm || transaction.decimals !== data.decimals) {
+                    return false;
+                }
+                if (transaction.minReservePerUnitNQT !== "0" && transaction.minReservePerUnitNQT !== data.minReservePerUnitNQT) {
+                    return false;
+                }
+                if (transaction.minDifficulty !== "0" && transaction.minDifficulty !== data.minDifficulty) {
+                    return false;
+                }
+                if (transaction.maxDifficulty !== "0" && transaction.maxDifficulty !== data.maxDifficulty) {
+                    return false;
+                }
                 break;
             case "currencyReserveIncrease":
                 if (transaction.type !== 5 && transaction.subtype !== 1) {
                     return false;
                 }
-                transaction.currencyId = String(converters.byteArrayToBigInteger(byteArray, pos));
+                transaction.currency = String(converters.byteArrayToBigInteger(byteArray, pos));
                 pos += 8;
                 transaction.amountPerUnitNQT = String(converters.byteArrayToBigInteger(byteArray, pos));
                 pos += 8;
+                if (transaction.currency !== data.currency || transaction.amountPerUnitNQT !== data.amountPerUnitNQT) {
+                    return false;
+                }
                 break;
             case "currencyReserveClaim":
                 if (transaction.type !== 5 && transaction.subtype !== 2) {
                     return false;
                 }
-                transaction.currencyId = String(converters.byteArrayToBigInteger(byteArray, pos));
+                transaction.currency = String(converters.byteArrayToBigInteger(byteArray, pos));
                 pos += 8;
                 transaction.units = String(converters.byteArrayToBigInteger(byteArray, pos));
                 pos += 8;
+                if (transaction.currency !== data.currency || transaction.units !== data.units) {
+                    return false;
+                }
                 break;
             case "transferCurrency":
                 if (transaction.type !== 5 && transaction.subtype !== 3) {
                     return false;
                 }
-                transaction.currencyId = String(converters.byteArrayToBigInteger(byteArray, pos));
+                transaction.currency = String(converters.byteArrayToBigInteger(byteArray, pos));
                 pos += 8;
                 transaction.units = String(converters.byteArrayToBigInteger(byteArray, pos));
                 pos += 8;
+                if (transaction.currency !== data.currency || transaction.units !== data.units) {
+                    return false;
+                }
                 break;
             case "publishExchangeOffer":
                 if (transaction.type !== 5 && transaction.subtype !== 4) {
                     return false;
                 }
-                transaction.currencyId = String(converters.byteArrayToBigInteger(byteArray, pos));
+                transaction.currency = String(converters.byteArrayToBigInteger(byteArray, pos));
                 pos += 8;
                 transaction.buyRateNQT = String(converters.byteArrayToBigInteger(byteArray, pos));
                 pos += 8;
@@ -982,34 +1006,45 @@ var NRS = (function (NRS, $, undefined) {
                 pos += 8;
                 transaction.expirationHeight = String(converters.byteArrayToSignedInt32(byteArray, pos));
                 pos += 4;
+                if (transaction.currency !== data.currency || transaction.buyRateNQT !== data.buyRateNQT || transaction.sellRateNQT !== data.sellRateNQT ||
+                    transaction.totalBuyLimit !== data.totalBuyLimit || transaction.totalSellLimit !== data.totalSellLimit ||
+                    transaction.initialBuySupply !== data.initialBuySupply || transaction.initialSellSupply !== data.initialSellSupply || transaction.expirationHeight !== data.expirationHeight) {
+                    return false;
+                }
                 break;
             case "currencyBuy":
                 if (transaction.type !== 5 && transaction.subtype !== 5) {
                     return false;
                 }
-                transaction.currencyId = String(converters.byteArrayToBigInteger(byteArray, pos));
+                transaction.currency = String(converters.byteArrayToBigInteger(byteArray, pos));
                 pos += 8;
                 transaction.rateNQT = String(converters.byteArrayToBigInteger(byteArray, pos));
                 pos += 8;
                 transaction.units = String(converters.byteArrayToBigInteger(byteArray, pos));
                 pos += 8;
+                if (transaction.currency !== data.currency || transaction.rateNQT !== data.rateNQT || transaction.units !== data.units) {
+                    return false;
+                }
                 break;
             case "currencySell":
                 if (transaction.type !== 5 && transaction.subtype !== 6) {
                     return false;
                 }
-                transaction.currencyId = String(converters.byteArrayToBigInteger(byteArray, pos));
+                transaction.currency = String(converters.byteArrayToBigInteger(byteArray, pos));
                 pos += 8;
                 transaction.rateNQT = String(converters.byteArrayToBigInteger(byteArray, pos));
                 pos += 8;
                 transaction.units = String(converters.byteArrayToBigInteger(byteArray, pos));
                 pos += 8;
+                if (transaction.currency !== data.currency || transaction.rateNQT !== data.rateNQT || transaction.units !== data.units) {
+                    return false;
+                }
                 break;
             case "currencyMint":
                 if (transaction.type !== 5 && transaction.subtype !== 7) {
                     return false;
                 }
-                transaction.currencyId = String(converters.byteArrayToBigInteger(byteArray, pos));
+                transaction.currency = String(converters.byteArrayToBigInteger(byteArray, pos));
                 pos += 8;
                 transaction.nonce = String(converters.byteArrayToBigInteger(byteArray, pos));
                 pos += 8;
@@ -1017,13 +1052,20 @@ var NRS = (function (NRS, $, undefined) {
                 pos += 8;
                 transaction.counter = String(converters.byteArrayToBigInteger(byteArray, pos));
                 pos += 8;
+                if (transaction.currency !== data.currency || transaction.nonce !== data.nonce || transaction.units !== data.units ||
+                    transaction.counter !== data.counter) {
+                    return false;
+                }
                 break;
             case "deleteCurrency":
                 if (transaction.type !== 5 && transaction.subtype !== 8) {
                     return false;
                 }
-                transaction.currencyId = String(converters.byteArrayToBigInteger(byteArray, pos));
+                transaction.currency = String(converters.byteArrayToBigInteger(byteArray, pos));
                 pos += 8;
+                if (transaction.currency !== data.currency) {
+                    return false;
+                }
                 break;
             case "uploadTaggedData":
                 if (transaction.type !== 6 && transaction.subtype !== 0) {

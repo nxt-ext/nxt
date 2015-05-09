@@ -989,12 +989,25 @@ var NRS = (function (NRS, $, undefined) {
             data.minReservePerUnitNQT = NRS.convertToNQT(data.minReservePerUnitNQT);
             data.minReservePerUnitNQT = NRS.convertToQNTf(data.minReservePerUnitNQT, data.decimals);
         }
-        if (!data.initialSupply) {
+        if (!data.initialSupply || data.initialSupply == "") {
             data.initialSupply = "0";
         }
-        if (!data.reserveSupply) {
+        if (!data.reserveSupply || data.reserveSupply == "") {
             data.reserveSupply = "0";
         }
+        if (!data.issuanceHeight) {
+            data.issuanceHeight = "0";
+        }
+        if (!data.ruleset || data.ruleset == "") {
+            data.ruleset = "0";
+        }
+        if (!data.algorithm || data.algorithm == "") {
+            data.algorithm = "0";
+        }
+        if (!data.decimals || data.decimals == "") {
+            data.decimals = "0";
+        }
+
         data.type = 0;
         $("[name='type']:checked").each(function () {
             data.type += parseInt($(this).val(), 10);
