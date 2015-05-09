@@ -80,6 +80,8 @@ public final class Peers {
     private static final int myPeerServerPort;
     private static final String myHallmark;
     private static final boolean shareMyAddress;
+    private static final int maxNumberOfInboundConnections;
+    private static final int maxNumberOfOutboundConnections;
     private static final int maxNumberOfConnectedPublicPeers;
     private static final int maxNumberOfKnownPeers;
     private static final int minNumberOfKnownPeers;
@@ -185,6 +187,8 @@ public final class Peers {
             knownBlacklistedPeers = Collections.unmodifiableSet(new HashSet<>(knownBlacklistedPeersList));
         }
 
+        maxNumberOfInboundConnections = Nxt.getIntProperty("nxt.maxNumberOfInboundConnections");
+        maxNumberOfOutboundConnections = Nxt.getIntProperty("nxt.maxNumberOfOutboundConnections");
         maxNumberOfConnectedPublicPeers = Nxt.getIntProperty("nxt.maxNumberOfConnectedPublicPeers");
         maxNumberOfKnownPeers = Nxt.getIntProperty("nxt.maxNumberOfKnownPeers");
         minNumberOfKnownPeers = Nxt.getIntProperty("nxt.minNumberOfKnownPeers");
@@ -347,8 +351,16 @@ public final class Peers {
                         for (int i = 0; i < 10; i++) {
                             futures.add(peersService.submit(() -> {
                                 PeerImpl peer = (PeerImpl) getAnyPeer(ThreadLocalRandom.current().nextInt(2) == 0 ? Peer.State.NON_CONNECTED : Peer.State.DISCONNECTED, false);
-                                if (peer != null && now - peer.getLastConnectAttempt() > 600) {
+                                if (peer != null &&
+                                            now - peer.getLastConnectAttempt() > 600 &&
+                                            (!enableHallmarkProtection || peer.getVersion() == null || peer.getWeight() > 0)) {
                                     peer.connect();
+                                    if (peer.getState() == Peer.State.CONNECTED &&
+                                            enableHallmarkProtection && peer.getWeight() == 0 &&
+                                            hasTooManyOutboundConnections()) {
+                                        Logger.logDebugMessage("Too many outbound connections, deactivating peer "+peer.getHost());
+                                        peer.deactivate();
+                                    }
                                 }
                             }));
                         }
@@ -527,10 +539,10 @@ public final class Peers {
 
     static {
         if (! Constants.isOffline) {
-            ThreadPool.scheduleThread("PeerConnecting", Peers.peerConnectingThread, 5);
-            ThreadPool.scheduleThread("PeerUnBlacklisting", Peers.peerUnBlacklistingThread, 1);
+            ThreadPool.scheduleThread("PeerConnecting", Peers.peerConnectingThread, 60);
+            ThreadPool.scheduleThread("PeerUnBlacklisting", Peers.peerUnBlacklistingThread, 60);
             if (Peers.getMorePeers) {
-                ThreadPool.scheduleThread("GetMorePeers", Peers.getMorePeersThread, 5);
+                ThreadPool.scheduleThread("GetMorePeers", Peers.getMorePeersThread, 60);
             }
         }
     }
@@ -596,6 +608,18 @@ public final class Peers {
 
     public static List<Peer> getInboundPeers() {
         return getPeers(Peer::isInbound);
+    }
+
+    public static boolean hasTooManyInboundPeers() {
+        return peers.values().parallelStream().unordered()
+                .filter(Peer::isInbound)
+                .count() >= maxNumberOfInboundConnections;
+    }
+
+    public static boolean hasTooManyOutboundConnections() {
+        return peers.values().parallelStream().unordered()
+                .filter(peer -> !peer.isBlacklisted() && peer.getState() == Peer.State.CONNECTED && peer.getAnnouncedAddress() != null)
+                .count() >= maxNumberOfOutboundConnections;
     }
 
     public static PeerImpl findOrCreatePeer(String announcedAddress, boolean create) {

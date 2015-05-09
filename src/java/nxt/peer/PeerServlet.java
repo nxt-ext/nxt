@@ -67,18 +67,25 @@ public final class PeerServlet extends WebSocketServlet {
         UNSUPPORTED_PROTOCOL = JSON.prepare(response);
     }
 
-    private static final JSONStreamAware BLACKLISTED;
-    static {
-        JSONObject response = new JSONObject();
-        response.put("error", Errors.BLACKLISTED);
-        BLACKLISTED = JSON.prepare(response);
-    }
-
     private static final JSONStreamAware UNKNOWN_PEER;
     static {
         JSONObject response = new JSONObject();
         response.put("error", Errors.UNKNOWN_PEER);
         UNKNOWN_PEER = JSON.prepare(response);
+    }
+
+    private static final JSONStreamAware SEQUENCE_ERROR;
+    static {
+        JSONObject response = new JSONObject();
+        response.put("error", Errors.SEQUENCE_ERROR);
+        SEQUENCE_ERROR = JSON.prepare(response);
+    }
+
+    private static final JSONStreamAware MAX_INBOUND_CONNECTIONS;
+    static {
+        JSONObject response = new JSONObject();
+        response.put("error", Errors.MAX_INBOUND_CONNECTIONS);
+        MAX_INBOUND_CONNECTIONS = JSON.prepare(response);
     }
 
     private boolean isGzipEnabled;
@@ -221,7 +228,13 @@ public final class PeerServlet extends WebSocketServlet {
             if (peer.getState() == Peer.State.DISCONNECTED) {
                 peer.setState(Peer.State.CONNECTED);
             }
+            if (peer.getVersion() == null && !"getInfo".equals(request.get("requestType"))) {
+                return SEQUENCE_ERROR;
+            }
             if (!peer.isInbound()) {
+                if (Peers.hasTooManyInboundPeers()) {
+                    return MAX_INBOUND_CONNECTIONS;
+                }
                 Peers.notifyListeners(peer, Peers.Event.ADD_INBOUND);
             }
             peer.setLastInboundRequest(Nxt.getEpochTime());
