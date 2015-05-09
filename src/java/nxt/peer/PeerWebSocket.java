@@ -76,7 +76,7 @@ public class PeerWebSocket {
                                    60, TimeUnit.SECONDS, new LinkedBlockingQueue<>());
 
     /** WebSocket session */
-    private Session session;
+    private volatile Session session;
 
     /** WebSocket endpoint - set for an accepted connection */
     private final PeerServlet peerServlet;
@@ -176,15 +176,10 @@ public class PeerWebSocket {
      */
     @OnWebSocketConnect
     public void onConnect(Session session) {
-        lock.lock();
-        try {
-            this.session = session;
-            Logger.logDebugMessage(String.format("%s WebSocket connection with %s completed",
-                    peerServlet != null ? "Inbound" : "Outbound",
-                    session.getRemoteAddress().getHostString()));
-        } finally {
-            lock.unlock();
-        }
+        this.session = session;
+        Logger.logDebugMessage(String.format("%s WebSocket connection with %s completed",
+                peerServlet != null ? "Inbound" : "Outbound",
+                session.getRemoteAddress().getHostString()));
     }
 
     /**
@@ -193,12 +188,7 @@ public class PeerWebSocket {
      * @return                      WebSocket session or null if there is no session
      */
     public Session getSession() {
-        lock.lock();
-        try {
-            return session;
-        } finally {
-            lock.unlock();
-        }
+        return session;
     }
 
     /**
