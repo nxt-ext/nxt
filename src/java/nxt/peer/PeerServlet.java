@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
 import java.io.StringWriter;
+import java.net.InetSocketAddress;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -151,12 +152,17 @@ public final class PeerServlet extends WebSocketServlet {
         //
         // Process the peer request
         //
-        String remoteAddr = webSocket.getSession().getRemoteAddress().getHostString();
+        InetSocketAddress socketAddr = webSocket.getRemoteAddress();
+        if (socketAddr == null)
+            return;
+        String remoteAddr = socketAddr.getHostString();
         PeerImpl peer = Peers.findOrCreatePeer(remoteAddr);
-        if (peer == null)
+        if (peer == null) {
             jsonResponse = UNKNOWN_PEER;
-        else
+        } else {
+            peer.setInboundWebSocket(webSocket);
             jsonResponse = process(peer, new StringReader(request));
+        }
         //
         // Return the response
         //

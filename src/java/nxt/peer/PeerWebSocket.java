@@ -15,6 +15,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.EOFException;
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.net.ProtocolException;
 import java.net.SocketTimeoutException;
 import java.net.URI;
@@ -144,7 +145,7 @@ public class PeerWebSocket {
                 peerClient.setConnectTimeout(Peers.connectTimeout);
                 ClientUpgradeRequest req = new ClientUpgradeRequest();
                 Future<Session> conn = peerClient.connect(this, uri, req);
-                session = conn.get(Peers.connectTimeout+100, TimeUnit.MILLISECONDS);
+                conn.get(Peers.connectTimeout+100, TimeUnit.MILLISECONDS);
                 useWebSocket = true;
             }
         } catch (ExecutionException exc) {
@@ -183,12 +184,23 @@ public class PeerWebSocket {
     }
 
     /**
-     * Return the WebSocket session for this connection
+     * Check if we have a WebSocket connection
      *
-     * @return                      WebSocket session or null if there is no session
+     * @return                      TRUE if we have a WebSocket connection
      */
-    public Session getSession() {
-        return session;
+    public boolean isOpen() {
+        Session s;
+        return ((s=session) != null && s.isOpen());
+    }
+
+    /**
+     * Return the remote address for this connection
+     *
+     * @return                      Remote address or null if the connection is closed
+     */
+    public InetSocketAddress getRemoteAddress() {
+        Session s;
+        return ((s=session) != null && s.isOpen() ? s.getRemoteAddress() : null);
     }
 
     /**

@@ -11,7 +11,6 @@ import nxt.util.CountingInputStream;
 import nxt.util.CountingOutputWriter;
 import nxt.util.JSON;
 import nxt.util.Logger;
-import org.eclipse.jetty.websocket.api.Session;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 import org.json.simple.JSONValue;
@@ -44,6 +43,7 @@ final class PeerImpl implements Peer {
 
     private final String host;
     private final PeerWebSocket webSocket;
+    private volatile PeerWebSocket inboundSocket;
     private volatile boolean useWebSocket;
     private volatile String announcedAddress;
     private volatile int port;
@@ -339,6 +339,21 @@ final class PeerImpl implements Peer {
         lastInboundRequest = now;
     }
 
+    void setInboundWebSocket(PeerWebSocket inboundSocket) {
+        this.inboundSocket = inboundSocket;
+    }
+
+    @Override
+    public boolean isInboundWebSocket() {
+        PeerWebSocket s;
+        return ((s=inboundSocket) != null && s.isOpen());
+    }
+
+    @Override
+    public boolean isOutboundWebSocket() {
+        return webSocket.isOpen();
+    }
+
     @Override
     public String getBlacklistingCause() {
         return blacklistingCause == null ? "unknown" : blacklistingCause;
@@ -365,8 +380,7 @@ final class PeerImpl implements Peer {
             //
             // Create a new WebSocket session if we don't have one
             //
-            Session session;
-            if (useWebSocket && ((session = webSocket.getSession()) == null || !session.isOpen()))
+            if (useWebSocket && !webSocket.isOpen())
                 useWebSocket = webSocket.startClient(URI.create("ws://" + host + ":" + getPort() + "/nxt"));
             //
             // Send the request and process the response
