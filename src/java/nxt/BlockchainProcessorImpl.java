@@ -107,13 +107,15 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     if (blockchain.getHeight() == chainHeight)
                         break;
                 }
+            } catch (InterruptedException e) {
+                Logger.logDebugMessage("Blockchain download thread interrupted");
             } catch (Throwable t) {
                 Logger.logErrorMessage("CRITICAL ERROR. PLEASE REPORT TO THE DEVELOPERS.\n" + t.toString(), t);
                 System.exit(1);
             }
         }
 
-        private void downloadPeer() {
+        private void downloadPeer() throws InterruptedException {
             try {
                 int numberOfForkConfirmations = blockchain.getHeight() > Constants.MONETARY_SYSTEM_BLOCK - 720 ?
                         defaultNumberOfForkConfirmations : Math.min(1, defaultNumberOfForkConfirmations);
@@ -217,8 +219,9 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     }
                 } // synchronized
 
-            } catch (NxtException.StopException | InterruptedException e) {
+            } catch (NxtException.StopException e) {
                 Logger.logMessage("Blockchain download stopped: " + e.getMessage());
+                throw new InterruptedException("Blockchain download stopped");
             } catch (Exception e) {
                 Logger.logMessage("Error in blockchain download thread", e);
             }
