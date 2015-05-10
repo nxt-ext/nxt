@@ -30,10 +30,12 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import java.util.concurrent.Callable;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -76,8 +78,8 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
 
     private final Runnable getMoreBlocksThread = new Runnable() {
 
-        private final ExecutorService executorService = new ThreadPoolExecutor(0, Runtime.getRuntime().availableProcessors(),
-                60L, TimeUnit.SECONDS, new LinkedBlockingQueue<>());
+        private final ExecutorService networkService = new ThreadPoolExecutor(0, 20, 60L, TimeUnit.SECONDS,
+                new LinkedBlockingQueue<>());
 
         private final JSONStreamAware getCumulativeDifficultyRequest;
 
@@ -88,127 +90,138 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         }
 
         private boolean peerHasMore;
+        private List<Peer> connectedPublicPeers;
+        private List<Long> chainBlockIds;
 
         @Override
         public void run() {
-
             try {
-                try {
-                    if (!getMoreBlocks) {
+                //
+                // Download blocks until we are up-to-date
+                //
+                while (true) {
+                    if (!getMoreBlocks)
                         return;
-                    }
-                    int numberOfForkConfirmations = blockchain.getHeight() > Constants.MONETARY_SYSTEM_BLOCK - 720 ?
-                            defaultNumberOfForkConfirmations : Math.min(1, defaultNumberOfForkConfirmations);
-                    List<Peer> connectedPublicPeers = Peers.getPublicPeers(Peer.State.CONNECTED, true);
-                    if (connectedPublicPeers.size() <= numberOfForkConfirmations) {
-                        return;
-                    }
-                    peerHasMore = true;
-                    final Peer peer = Peers.getWeightedPeer(connectedPublicPeers);
-                    if (peer == null) {
-                        return;
-                    }
-                    JSONObject response = peer.send(getCumulativeDifficultyRequest);
-                    if (response == null) {
-                        return;
-                    }
-                    BigInteger curCumulativeDifficulty = blockchain.getLastBlock().getCumulativeDifficulty();
-                    String peerCumulativeDifficulty = (String) response.get("cumulativeDifficulty");
-                    if (peerCumulativeDifficulty == null) {
-                        return;
-                    }
-                    BigInteger betterCumulativeDifficulty = new BigInteger(peerCumulativeDifficulty);
-                    if (betterCumulativeDifficulty.compareTo(curCumulativeDifficulty) < 0) {
-                        return;
-                    }
-                    if (response.get("blockchainHeight") != null) {
-                        lastBlockchainFeeder = peer;
-                        lastBlockchainFeederHeight = ((Long) response.get("blockchainHeight")).intValue();
-                    }
-                    if (betterCumulativeDifficulty.equals(curCumulativeDifficulty)) {
-                        return;
-                    }
-
-                    long commonMilestoneBlockId = Genesis.GENESIS_BLOCK_ID;
-
-                    if (blockchain.getLastBlock().getId() != Genesis.GENESIS_BLOCK_ID) {
-                        commonMilestoneBlockId = getCommonMilestoneBlockId(peer);
-                    }
-                    if (commonMilestoneBlockId == 0 || !peerHasMore) {
-                        return;
-                    }
-
-                    final long commonBlockId = getCommonBlockId(peer, commonMilestoneBlockId);
-                    if (commonBlockId == 0 || !peerHasMore) {
-                        return;
-                    }
-
-                    final Block commonBlock = blockchain.getBlock(commonBlockId);
-                    if (commonBlock == null || blockchain.getHeight() - commonBlock.getHeight() >= 720) {
-                        return;
-                    }
-
-                    synchronized (blockchain) {
-                        if (betterCumulativeDifficulty.compareTo(blockchain.getLastBlock().getCumulativeDifficulty()) <= 0) {
-                            return;
-                        }
-                        long lastBlockId = blockchain.getLastBlock().getId();
-                        downloadBlockchain(peer, commonBlock);
-
-                        if (blockchain.getHeight() - commonBlock.getHeight() <= 10) {
-                            return;
-                        }
-
-                        int confirmations = 0;
-                        for (Peer otherPeer : connectedPublicPeers) {
-                            if (confirmations >= numberOfForkConfirmations) {
-                                break;
-                            }
-                            if (peer.getHost().equals(otherPeer.getHost())) {
-                                continue;
-                            }
-                            long otherPeerCommonBlockId = getCommonBlockId(otherPeer, commonBlockId);
-                            if (otherPeerCommonBlockId == 0) {
-                                continue;
-                            }
-                            if (otherPeerCommonBlockId == blockchain.getLastBlock().getId()) {
-                                confirmations++;
-                                continue;
-                            }
-                            if (blockchain.getHeight() - blockchain.getBlock(otherPeerCommonBlockId).getHeight() >= 720) {
-                                continue;
-                            }
-                            String otherPeerCumulativeDifficulty;
-                            JSONObject otherPeerResponse = peer.send(getCumulativeDifficultyRequest);
-                            if (otherPeerResponse == null || (otherPeerCumulativeDifficulty = (String) response.get("cumulativeDifficulty")) == null) {
-                                continue;
-                            }
-                            if (new BigInteger(otherPeerCumulativeDifficulty).compareTo(blockchain.getLastBlock().getCumulativeDifficulty()) <= 0) {
-                                continue;
-                            }
-                            Logger.logDebugMessage("Found a peer with better difficulty");
-                            downloadBlockchain(otherPeer, commonBlock); // not otherPeerCommonBlock
-                        }
-                        Logger.logDebugMessage("Got " + confirmations + " confirmations");
-
-                        if (blockchain.getLastBlock().getId() != lastBlockId) {
-                            Logger.logDebugMessage("Downloaded " + (blockchain.getHeight() - commonBlock.getHeight()) + " blocks");
-                        } else {
-                            Logger.logDebugMessage("Did not accept peer's blocks, back to our own fork");
-                        }
-                    } // synchronized
-
-                } catch (NxtException.StopException e) {
-                    Logger.logMessage("Blockchain download stopped: " + e.getMessage());
-                } catch (Exception e) {
-                    Logger.logMessage("Error in blockchain download thread", e);
+                    int chainHeight = blockchain.getHeight();
+                    downloadPeer();
+                    if (blockchain.getHeight() == chainHeight)
+                        break;
                 }
             } catch (Throwable t) {
-                Logger.logErrorMessage("CRITICAL ERROR. PLEASE REPORT TO THE DEVELOPERS.\n" + t.toString());
-                t.printStackTrace();
+                Logger.logErrorMessage("CRITICAL ERROR. PLEASE REPORT TO THE DEVELOPERS.\n" + t.toString(), t);
                 System.exit(1);
             }
+        }
 
+        private void downloadPeer() {
+            try {
+                int numberOfForkConfirmations = blockchain.getHeight() > Constants.MONETARY_SYSTEM_BLOCK - 720 ?
+                        defaultNumberOfForkConfirmations : Math.min(1, defaultNumberOfForkConfirmations);
+                connectedPublicPeers = Peers.getPublicPeers(Peer.State.CONNECTED, true);
+                if (connectedPublicPeers.size() <= numberOfForkConfirmations) {
+                    return;
+                }
+                peerHasMore = true;
+                final Peer peer = Peers.getWeightedPeer(connectedPublicPeers);
+                if (peer == null) {
+                    return;
+                }
+                JSONObject response = peer.send(getCumulativeDifficultyRequest);
+                if (response == null) {
+                    return;
+                }
+                BigInteger curCumulativeDifficulty = blockchain.getLastBlock().getCumulativeDifficulty();
+                String peerCumulativeDifficulty = (String) response.get("cumulativeDifficulty");
+                if (peerCumulativeDifficulty == null) {
+                    return;
+                }
+                BigInteger betterCumulativeDifficulty = new BigInteger(peerCumulativeDifficulty);
+                if (betterCumulativeDifficulty.compareTo(curCumulativeDifficulty) < 0) {
+                    return;
+                }
+                if (response.get("blockchainHeight") != null) {
+                    lastBlockchainFeeder = peer;
+                    lastBlockchainFeederHeight = ((Long) response.get("blockchainHeight")).intValue();
+                }
+                if (betterCumulativeDifficulty.equals(curCumulativeDifficulty)) {
+                    return;
+                }
+
+                long commonMilestoneBlockId = Genesis.GENESIS_BLOCK_ID;
+
+                if (blockchain.getLastBlock().getId() != Genesis.GENESIS_BLOCK_ID) {
+                    commonMilestoneBlockId = getCommonMilestoneBlockId(peer);
+                }
+                if (commonMilestoneBlockId == 0 || !peerHasMore) {
+                    return;
+                }
+
+                chainBlockIds = getCommonBlockId(peer, commonMilestoneBlockId);
+                if (chainBlockIds.isEmpty() || !peerHasMore) {
+                    return;
+                }
+
+                final long commonBlockId = chainBlockIds.get(0);
+                final Block commonBlock = blockchain.getBlock(commonBlockId);
+                if (commonBlock == null || blockchain.getHeight() - commonBlock.getHeight() >= 720) {
+                    return;
+                }
+
+                synchronized (blockchain) {
+                    if (betterCumulativeDifficulty.compareTo(blockchain.getLastBlock().getCumulativeDifficulty()) <= 0) {
+                        return;
+                    }
+                    long lastBlockId = blockchain.getLastBlock().getId();
+                    downloadBlockchain(peer, commonBlock);
+
+                    if (blockchain.getHeight() - commonBlock.getHeight() <= 10) {
+                        return;
+                    }
+
+                    int confirmations = 0;
+                    for (Peer otherPeer : connectedPublicPeers) {
+                        if (confirmations >= numberOfForkConfirmations) {
+                            break;
+                        }
+                        if (peer.getHost().equals(otherPeer.getHost())) {
+                            continue;
+                        }
+                        chainBlockIds = getCommonBlockId(otherPeer, commonBlockId);
+                        if (chainBlockIds.isEmpty())
+                            continue;
+                        long otherPeerCommonBlockId = chainBlockIds.get(0);
+                        if (otherPeerCommonBlockId == blockchain.getLastBlock().getId()) {
+                            confirmations++;
+                            continue;
+                        }
+                        if (blockchain.getHeight() - blockchain.getBlock(otherPeerCommonBlockId).getHeight() >= 720) {
+                            continue;
+                        }
+                        String otherPeerCumulativeDifficulty;
+                        JSONObject otherPeerResponse = peer.send(getCumulativeDifficultyRequest);
+                        if (otherPeerResponse == null || (otherPeerCumulativeDifficulty = (String) response.get("cumulativeDifficulty")) == null) {
+                            continue;
+                        }
+                        if (new BigInteger(otherPeerCumulativeDifficulty).compareTo(blockchain.getLastBlock().getCumulativeDifficulty()) <= 0) {
+                            continue;
+                        }
+                        Logger.logDebugMessage("Found a peer with better difficulty");
+                        downloadBlockchain(otherPeer, commonBlock); // not otherPeerCommonBlock
+                    }
+                    Logger.logDebugMessage("Got " + confirmations + " confirmations");
+
+                    if (blockchain.getLastBlock().getId() != lastBlockId) {
+                        Logger.logDebugMessage("Downloaded " + (blockchain.getHeight() - commonBlock.getHeight()) + " blocks");
+                    } else {
+                        Logger.logDebugMessage("Did not accept peer's blocks, back to our own fork");
+                    }
+                } // synchronized
+
+            } catch (NxtException.StopException | InterruptedException e) {
+                Logger.logMessage("Blockchain download stopped: " + e.getMessage());
+            } catch (Exception e) {
+                Logger.logMessage("Error in blockchain download thread", e);
+            }
         }
 
         private long getCommonMilestoneBlockId(Peer peer) {
@@ -258,117 +271,145 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
 
         }
 
-        private long getCommonBlockId(Peer peer, long commonBlockId) {
-
+        private List<Long> getCommonBlockId(Peer peer, long commonBlockId) {
+            long matchId = commonBlockId;
+            List<Long> blockList = new ArrayList<>(720);
             while (true) {
                 JSONObject request = new JSONObject();
                 request.put("requestType", "getNextBlockIds");
-                request.put("blockId", Long.toUnsignedString(commonBlockId));
+                request.put("blockId", Long.toUnsignedString(matchId));
                 JSONObject response = peer.send(JSON.prepareRequest(request));
                 if (response == null) {
-                    return 0;
+                    return blockList;
                 }
                 JSONArray nextBlockIds = (JSONArray) response.get("nextBlockIds");
                 if (nextBlockIds == null || nextBlockIds.size() == 0) {
-                    return 0;
+                    return blockList;
                 }
                 // prevent overloading with blockIds
                 if (nextBlockIds.size() > 1440) {
                     Logger.logDebugMessage("Obsolete or rogue peer " + peer.getHost() + " sends too many nextBlockIds, blacklisting");
                     peer.blacklist("Too many nextBlockIds");
-                    return 0;
+                    return null;
                 }
-
+                boolean matching = true;
                 for (Object nextBlockId : nextBlockIds) {
-                    long blockId = Convert.parseUnsignedLong((String) nextBlockId);
-                    if (! BlockDb.hasBlock(blockId)) {
-                        return commonBlockId;
-                    }
-                    commonBlockId = blockId;
-                }
-            }
-
-        }
-
-        private void downloadBlockchain(final Peer peer, final Block commonBlock) {
-            JSONArray nextBlocksJSON = getNextBlocks(peer, commonBlock.getId());
-            if (nextBlocksJSON == null || nextBlocksJSON.size() == 0) {
-                return;
-            }
-
-            List<BlockImpl> forkBlocks = new ArrayList<>();
-            List<Future<BlockImpl>> futures = new ArrayList<>();
-            for (Object blockData : nextBlocksJSON) {
-                futures.add(executorService.submit(() -> {
-                    try {
-                        return BlockImpl.parseBlock((JSONObject) blockData);
-                    } catch (RuntimeException | NxtException.NotValidException e) {
-                        Logger.logDebugMessage("Failed to parse block: " + e.toString(), e);
-                        peer.blacklist(e);
-                        return null;
-                    }
-                }));
-            }
-            try {
-                for (Future<BlockImpl> future : futures) {
-                    BlockImpl block = future.get();
-                    if (block == null) {
-                        return;
-                    }
-                    if (blockchain.getLastBlock().getId() == block.getPreviousBlockId()) {
-                        try {
-                            pushBlock(block);
-                            if (blockchain.getHeight() - commonBlock.getHeight() == 720 - 1) {
-                                break;
-                            }
-                        } catch (BlockNotAcceptedException e) {
-                            peer.blacklist(e);
-                            return;
+                    long blockId = Convert.parseUnsignedLong((String)nextBlockId);
+                    if (matching) {
+                        if (BlockDb.hasBlock(blockId)) {
+                            matchId = blockId;
+                        } else {
+                            blockList.add(matchId);
+                            blockList.add(blockId);
+                            matching = false;
                         }
                     } else {
-                        forkBlocks.add(block);
-                        if (forkBlocks.size() == 720 - 1) {
+                        blockList.add(blockId);
+                        if (blockList.size() >= 720)
                             break;
-                        }
                     }
                 }
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                throw new RuntimeException(e.getMessage(), e);
-            } catch (ExecutionException e) {
-                throw new RuntimeException(e.getMessage(), e);
+                if (!matching)
+                    break;
             }
-
-            if (forkBlocks.size() > 0 && blockchain.getHeight() - commonBlock.getHeight() < 720) {
-                Logger.logDebugMessage("Will process a fork of " + forkBlocks.size() + " blocks");
-                processFork(peer, forkBlocks, commonBlock);
-            }
-
+            return blockList;
         }
 
-        private JSONArray getNextBlocks(Peer peer, long curBlockId) {
-
-            JSONObject request = new JSONObject();
-            request.put("requestType", "getNextBlocks");
-            request.put("blockId", Long.toUnsignedString(curBlockId));
-            JSONObject response = peer.send(JSON.prepareRequest(request), 192 * 1024 * 1024);
-            if (response == null) {
-                return null;
+        /**
+         * Download the block chain
+         *
+         * @param   feederPeer              Peer supplying the blocks list
+         * @param   commonBlock             Common block
+         * @throws  InterruptedException    Download interrupted
+         */
+        private void downloadBlockchain(Peer feederPeer, Block commonBlock) throws InterruptedException {
+            Map<Long, PeerBlock> blockMap = new HashMap<>();
+            //
+            // Break the download into multiple segments.  The first block in each segment
+            // is the common block for that segment.
+            //
+            List<GetNextBlocks> getList = new ArrayList<>();
+            int segSize = (blockchain.getHeight() >= nxt.Constants.PHASING_BLOCK ? 36 : 720);
+            int stop = chainBlockIds.size()-1;
+            for (int start=0; start<stop; start+=segSize)
+                getList.add(new GetNextBlocks(chainBlockIds, start, Math.min(start+segSize, stop)));
+            //
+            // Issue the getNextBlocks requests and get the results.  We will repeat
+            // a request if the peer didn't respond or returned a partial block list.
+            // The download will be aborted if we are unable to get a segment after
+            // retrying with different peers.
+            //
+            while (!getList.isEmpty()) {
+                //
+                // Submit threads to issue 'getNextBlocks' requests.  We will cancel the
+                // download if we are unable to get a segment after trying 1/4 of the
+                // connected peers (we assume the feeder peer is on a fork if this happens)
+                //
+                for (GetNextBlocks nextBlocks : getList) {
+                    if (nextBlocks.getRequestCount() >= connectedPublicPeers.size()/4 + 1)
+                        return;
+                    Peer peer = Peers.getWeightedPeer(connectedPublicPeers);
+                    if (peer == null)
+                        return;
+                    nextBlocks.setPeer(peer);
+                    Future<List<BlockImpl>> future = networkService.submit(nextBlocks);
+                    nextBlocks.setFuture(future);
+                }
+                //
+                // Get the results.  A peer is on a different fork if a returned
+                // block is not in the block identifier list.
+                //
+                Iterator<GetNextBlocks> it = getList.iterator();
+                while (it.hasNext()) {
+                    GetNextBlocks nextBlocks = it.next();
+                    List<BlockImpl> blockList;
+                    try {
+                        blockList = nextBlocks.getFuture().get();
+                    } catch (ExecutionException exc) {
+                        throw new RuntimeException(exc.getMessage(), exc);
+                    }
+                    if (blockList == null)
+                        continue;
+                    Peer peer = nextBlocks.getPeer();
+                    int index = nextBlocks.getStart()+1;
+                    for (BlockImpl block : blockList) {
+                        if (block.getId() != chainBlockIds.get(index))
+                            break;
+                        blockMap.put(block.getId(), new PeerBlock(peer, block));
+                        index++;
+                    }
+                    if (index > nextBlocks.getStop())
+                        it.remove();
+                    else
+                        nextBlocks.setStart(index-1);
+                }
             }
-
-            JSONArray nextBlocks = (JSONArray) response.get("nextBlocks");
-            if (nextBlocks == null) {
-                return null;
+            //
+            // Add the new blocks to the blockchain
+            //
+            List<BlockImpl> forkBlocks = new ArrayList<>();
+            for (int index=1; index<chainBlockIds.size(); index++) {
+                PeerBlock peerBlock = blockMap.get(chainBlockIds.get(index));
+                if (peerBlock == null)
+                    break;
+                BlockImpl block = peerBlock.getBlock();
+                if (blockchain.getLastBlock().getId() == block.getPreviousBlockId()) {
+                    try {
+                        pushBlock(block);
+                    } catch (BlockNotAcceptedException e) {
+                        peerBlock.getPeer().blacklist(e);
+                    }
+                } else {
+                    forkBlocks.add(block);
+                }
             }
-            // prevent overloading with blocks
-            if (nextBlocks.size() > 720) {
-                Logger.logDebugMessage("Obsolete or rogue peer " + peer.getHost() + " sends too many nextBlocks, blacklisting");
-                peer.blacklist("Too many nextBlocks");
-                return null;
+            //
+            // Process a fork
+            //
+            if (!forkBlocks.isEmpty() && blockchain.getHeight() - commonBlock.getHeight() < 720) {
+                Logger.logDebugMessage("Will process a fork of " + forkBlocks.size() + " blocks");
+                processFork(feederPeer, forkBlocks, commonBlock);
             }
-
-            return nextBlocks;
-
         }
 
         private void processFork(Peer peer, final List<BlockImpl> forkBlocks, final Block commonBlock) {
@@ -423,6 +464,209 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         }
 
     };
+
+    /**
+     * Callable method to get the next block segment from the selected peer
+     */
+    private static class GetNextBlocks implements Callable<List<BlockImpl>> {
+
+        /** Callable future */
+        private Future<List<BlockImpl>> future;
+
+        /** Peer */
+        private Peer peer;
+
+        /** Block identifier list */
+        private final List<Long> blockIds;
+
+        /** Start index */
+        private int start;
+
+        /** Stop index */
+        private final int stop;
+
+        /** Request count */
+        private int requestCount;
+
+        /**
+         * Create the callable future
+         *
+         * @param   blockIds            Block identifier list
+         * @param   start               Start index within the list
+         * @param   stop                Stop index within the list
+         */
+        public GetNextBlocks(List<Long> blockIds, int start, int stop) {
+            this.blockIds = blockIds;
+            this.start = start;
+            this.stop = stop;
+            this.requestCount = 0;
+        }
+
+        /**
+         * Return the result
+         *
+         * @return                      List of blocks or null if an error occurred
+         */
+        @Override
+        public List<BlockImpl> call() {
+            requestCount++;
+            //
+            // Build the block request list
+            //
+            JSONArray idList = new JSONArray();
+            for (int i=start+1; i<=stop; i++)
+                idList.add(Long.toUnsignedString(blockIds.get(i)));
+            //
+            // Issue the getNextBlocks request and specify block 'blockIds' and 'blockId'.
+            // This will allow the request to be processed by both old and new nodes.
+            //
+            JSONObject request = new JSONObject();
+            request.put("requestType", "getNextBlocks");
+            request.put("blockIds", idList);
+            request.put("blockId", Long.toUnsignedString(blockIds.get(start)));
+            JSONObject response = peer.send(JSON.prepareRequest(request), 192 * 1024 * 1024);
+            if (response == null)
+                return null;
+            //
+            // Get the list of blocks
+            //
+            List<JSONObject> nextBlocks = (List<JSONObject>)response.get("nextBlocks");
+            if (nextBlocks == null)
+                return null;
+            if (nextBlocks.size() > 720) {
+                Logger.logDebugMessage("Obsolete or rogue peer " + peer.getHost() + " sends too many nextBlocks, blacklisting");
+                peer.blacklist("Too many nextBlocks");
+                return null;
+            }
+            List<BlockImpl> blockList = new ArrayList<>(nextBlocks.size());
+            try {
+                int count = stop - start;
+                for (JSONObject blockData : nextBlocks) {
+                    blockList.add(BlockImpl.parseBlock(blockData));
+                    if (--count <= 0)
+                        break;
+                }
+            } catch (RuntimeException | NxtException.NotValidException e) {
+                Logger.logDebugMessage("Failed to parse block: " + e.toString(), e);
+                peer.blacklist(e);
+                return null;
+            }
+            return blockList;
+        }
+
+        /**
+         * Return the callable future
+         *
+         * @return                      Callable future
+         */
+        public Future<List<BlockImpl>> getFuture() {
+            return future;
+        }
+
+        /**
+         * Set the callable future
+         *
+         * @param   future              Callable future
+         */
+        public void setFuture(Future<List<BlockImpl>> future) {
+            this.future = future;
+        }
+
+        /**
+         * Return the peer
+         *
+         * @return                      Peer
+         */
+        public Peer getPeer() {
+            return peer;
+        }
+
+        /**
+         * Set the peer
+         *
+         * @param   peer                Peer
+         */
+        public void setPeer(Peer peer) {
+            this.peer = peer;
+        }
+
+        /**
+         * Return the start index
+         *
+         * @return                      Start index
+         */
+        public int getStart() {
+            return start;
+        }
+
+        /**
+         * Set the start index
+         *
+         * @param   start               Start index
+         */
+        public void setStart(int start) {
+            this.start = start;
+        }
+
+        /**
+         * Return the stop index
+         *
+         * @return                      Stop index
+         */
+        public int getStop() {
+            return stop;
+        }
+
+        /**
+         * Return the request count
+         *
+         * @return                      Request count
+         */
+        public int getRequestCount() {
+            return requestCount;
+        }
+    }
+
+    /**
+     * Block returned by a peer
+     */
+    private static class PeerBlock {
+
+        /** Peer */
+        private final Peer peer;
+
+        /** Block */
+        private final BlockImpl block;
+
+        /**
+         * Create the peer block
+         *
+         * @param   peer                Peer
+         * @param   block               Block
+         */
+        public PeerBlock(Peer peer, BlockImpl block) {
+            this.peer = peer;
+            this.block = block;
+        }
+
+        /**
+         * Return the peer
+         *
+         * @return                      Peer
+         */
+        public Peer getPeer() {
+            return peer;
+        }
+
+        /**
+         * Return the block
+         *
+         * @return                      Block
+         */
+        public BlockImpl getBlock() {
+            return block;
+        }
+    }
 
     private final Listener<Block> checksumListener = block -> {
         if (block.getHeight() == Constants.TRANSPARENT_FORGING_BLOCK && ! verifyChecksum(CHECKSUM_TRANSPARENT_FORGING, block.getHeight())) {
@@ -490,7 +734,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             }
         }, false);
 
-        ThreadPool.scheduleThread("GetMoreBlocks", getMoreBlocksThread, 1);
+        ThreadPool.scheduleThread("GetMoreBlocks", getMoreBlocksThread, 15);
 
     }
 
