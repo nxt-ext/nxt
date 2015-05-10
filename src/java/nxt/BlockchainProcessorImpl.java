@@ -388,7 +388,9 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 }
             }
             //
-            // Add the new blocks to the blockchain
+            // Add the new blocks to the blockchain.  We will stop if we encounter
+            // a missing block (this will happen if an invalid block is encountered
+            // when downloading the blocks)
             //
             List<BlockImpl> forkBlocks = new ArrayList<>();
             for (int index=1; index<chainBlockIds.size(); index++) {
@@ -486,7 +488,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         private int start;
 
         /** Stop index */
-        private final int stop;
+        private int stop;
 
         /** Request count */
         private int requestCount;
@@ -531,7 +533,9 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             if (response == null)
                 return null;
             //
-            // Get the list of blocks
+            // Get the list of blocks.  We will stop parsing blocks if we encounter
+            // an invalid block.  We will return the valid blocks and reset the stop
+            // index so no more blocks will be processed.
             //
             List<JSONObject> nextBlocks = (List<JSONObject>)response.get("nextBlocks");
             if (nextBlocks == null)
@@ -552,7 +556,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             } catch (RuntimeException | NxtException.NotValidException e) {
                 Logger.logDebugMessage("Failed to parse block: " + e.toString(), e);
                 peer.blacklist(e);
-                return null;
+                stop = start + blockList.size();
             }
             return blockList;
         }
