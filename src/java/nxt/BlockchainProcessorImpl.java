@@ -361,6 +361,8 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                         if (peer == null)
                             peer = feederPeer;
                     }
+                    if (nextBlocks.getPeer() == peer)
+                        break;
                     nextBlocks.setPeer(peer);
                     Future<List<BlockImpl>> future = networkService.submit(nextBlocks);
                     nextBlocks.setFuture(future);
