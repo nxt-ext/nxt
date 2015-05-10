@@ -34,6 +34,7 @@
                             <div class="tab-content">
                                 <div role="tabpanel" class="tab-pane tab_pane_approve active" id="mandatory_approval_tab_no_approval">
                                     <span data-i18n="process_without_approval">Process without approval.</span>
+                                    <input type="hidden" name="controlVotingModel" value="-1" />
                                 </div>
 
                                 <div role="tabpanel" class="tab-pane tab_pane_approve" id="mandatory_approval_tab_accounts">
@@ -60,7 +61,7 @@
                                     <div class="row">
                                         <div class="col-xs-12">
                                             <div class="form-group phasing_only_holding_asset_optional approve_mb_model_2" data-modal-ui-element="add_asset_modal_ui_element"></div>
-                                            <div class="form-group approve_holding_currency_optional approve_mb_model_3" data-modal-ui-element="add_currency_modal_ui_element"></div>
+                                            <div class="form-group phasing_only_holding_currency_optional approve_mb_model_3" data-modal-ui-element="add_currency_modal_ui_element"></div>
                                         </div>
                                     </div>
                                     <input type="hidden" name="controlVotingModel" value="0" disabled />
@@ -100,7 +101,7 @@
                                             <div class="form-group phasing_only_min_balance_model_group approve_mb_asset" data-modal-ui-element="min_balance_model_modal_ui_element"></div>
                                         </div>
                                         <div class="col-xs-6">
-                                            <div class="form-group approve_mb_model_2 approve_min_balance_asset_quantity" data-modal-ui-element="simple_input_with_addon_modal_ui_element"></div>
+                                            <div class="form-group approve_mb_model_2 phasing_only_min_balance_asset_quantity" data-modal-ui-element="simple_input_with_addon_modal_ui_element"></div>
                                         </div>
                                     </div>
                                     <input type="hidden" name="controlVotingModel" value="2" disabled />
@@ -114,7 +115,7 @@
                                     </div>
                                     <div class="row">
                                         <div class="col-xs-12">
-                                            <div class="form-group phasgin_only_holding_currency" data-modal-ui-element="add_currency_modal_ui_element"></div>
+                                            <div class="form-group phasing_only_holding_currency" data-modal-ui-element="add_currency_modal_ui_element"></div>
                                         </div>
                                     </div>
                                     <div class="form-group add_phasing_only_whitelist_group" data-modal-ui-element="multi_accounts_modal_ui_element"></div>
@@ -123,7 +124,7 @@
                                             <div class="form-group phasing_only_min_balance_model_group approve_mb_currency" data-modal-ui-element="min_balance_model_modal_ui_element"></div>
                                         </div>
                                         <div class="col-xs-6">
-                                            <div class="form-group approve_mb_model_3 approve_min_balance_currency_units" data-modal-ui-element="simple_input_with_addon_modal_ui_element"></div>
+                                            <div class="form-group approve_mb_model_3 phasing_only_min_balance_currency_units" data-modal-ui-element="simple_input_with_addon_modal_ui_element"></div>
                                         </div>
                                     </div>
                                     <input type="hidden" name="controlVotingModel" value="3" disabled />
@@ -144,6 +145,8 @@
                 </form>
             </div>
             <div class="modal-footer" style="margin-top:0;">
+                <div class="advanced_info"><strong data-i18n="fee">Fee</strong>: <span class="advanced_fee">1 NXT</span> - <a href="#" data-i18n="advanced">advanced</a></div>
+
                 <button type="button" class="btn btn-default" data-dismiss="modal" data-i18n="cancel">Cancel</button>
                 <button type="button" class="btn btn-primary" data-loading-text="Submitting..." data-i18n="submit;[placeholder]submitting">Submit</button>
             </div>

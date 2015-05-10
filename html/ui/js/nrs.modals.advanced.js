@@ -192,9 +192,7 @@ var NRS = (function(NRS, $, undefined) {
 				NRS.sendRequest("getPhasingOnlyControl", {
 					"account": NRS.account
 				}, function (response) {
-					if (response && response.phasingVotingModel >= 0) {
-						$modal.find(".advanced").show(); //show the advanced stuff by default
-						var $approveModal = $modal.find(".approve_modal");
+					function completeFieldsSetup(asset, currency) {
 						switch (response.phasingVotingModel) {
 							case 0:
 								$approveModal.find('.at_accounts').trigger('click');
@@ -206,13 +204,35 @@ var NRS = (function(NRS, $, undefined) {
 								break;
 							case 2:
 								$approveModal.find('.at_asset_holders').trigger('click');
+								$approveModal.find('.tab-pane.active input[name="phasingQuorumQNTf"]').val(NRS.convertToQNTf(response.phasingQuorum, asset.decimals));
+								$approveModal.find('.tab-pane.active input[name="phasingHolding"]').val(response.phasingHolding);
 								break;
 							case 3:
 								$approveModal.find('.at_currency_holders').trigger('click');
+								$approveModal.find('.tab-pane.active input[name="phasingQuorumQNTf"]').val(NRS.convertToQNTf(response.phasingQuorum, currency.decimals));
+								$approveModal.find('.tab-pane.active input[name="phasingHoldingCurrencyCode"]').val(currency.code);
+								$approveModal.find('.tab-pane.active input[name="phasingHolding"]').val(response.phasingHolding);
 								break;
 						}
 
 						$activeTabPane = $approveModal.find('.tab-pane.active');
+
+						if (asset) {
+							var nameString = String(asset.name) + "&nbsp; (" + $.t('decimals', 'Decimals') + ": " + String(asset.decimals) + ")";
+							$activeTabPane.find('.aam_ue_asset_name').html(nameString);
+							$activeTabPane.find('.aam_ue_asset_decimals_input').val(String(asset.decimals));
+							$activeTabPane.find('.aam_ue_asset_decimals_input').prop("disabled", false);
+						}
+
+						if (currency) {
+							var idString = String(currency.currency) + "&nbsp; (" + $.t('decimals', 'Decimals') + ": " + String(currency.decimals) + ")";
+							$activeTabPane.find('.acm_ue_currency_id').html(idString);
+							$activeTabPane.find('.acm_ue_currency_id_input').val(String(currency.currency));
+							$activeTabPane.find('.acm_ue_currency_id_input').prop("disabled", false);
+							$activeTabPane.find('.acm_ue_currency_decimals').html(String(currency.decimals));
+							$activeTabPane.find('.acm_ue_currency_decimals_input').val(String(currency.decimals));
+							$activeTabPane.find('.acm_ue_currency_decimals_input').prop("disabled", false);
+						}
 
 						if (response.phasingWhitelist && response.phasingWhitelist.length > 0) {
 							for (var i = 0; i < response.phasingWhitelist.length - 1 && $activeTabPane.find('input[name="phasingWhitelisted"]').length < response.phasingWhitelist.length; i++) {
@@ -225,6 +245,55 @@ var NRS = (function(NRS, $, undefined) {
 								if (index < response.phasingWhitelist.length) {
 									$(elem).val(NRS.convertNumericToRSAccountFormat(response.phasingWhitelist[index]));
 									//$(elem).trigger('show');
+								}
+							});
+						}
+
+						var $mbSelect = $('.modal .approve_modal .approve_min_balance_model_group:visible select');
+						$mbSelect.val(parseInt(response.phasingMinBalanceModel));
+
+						switch (response.phasingMinBalanceModel) {
+							case 1:
+								$approveModal.find('.tab-pane.active input[name="phasingMinBalanceNXT"]').val(NRS.convertToNXT(response.phasingMinBalance));
+								break;
+							case 2:
+								$approveModal.find('.tab-pane.active input[name="phasingMinBalanceQNTf"]').val(NRS.convertToQNTf(response.phasingMinBalance, asset.decimals));
+								$approveModal.find('.tab-pane.active input[name="phasingHolding"]').val(response.phasingHolding);
+								break;
+							case 3:
+								$approveModal.find('.tab-pane.active input[name="phasingMinBalanceQNTf"]').val(NRS.convertToQNTf(response.phasingMinBalance, currency.decimals));
+								$approveModal.find('.tab-pane.active input[name="phasingHoldingCurrencyCode"]').val(currency.code);
+								$approveModal.find('.tab-pane.active input[name="phasingHolding"]').val(response.phasingHolding);
+								break;
+						}
+						$mbSelect.trigger('change');
+					}
+
+					if (response && response.phasingVotingModel >= 0) {
+
+						$modal.find('.phasing_safe_alert').hide();
+						$modal.find('.phasing_only_enabled_info').show();
+						$modal.find(".advanced").show(); //show the advanced stuff by default
+						$modal.find(".advanced_info").hide(); //hide the button for switching to basic view
+
+						var $approveModal = $modal.find(".approve_modal");
+
+						if (response.phasingVotingModel == 2 || response.phasingMinBalanceModel == 2) {
+							NRS.sendRequest("getAsset", {
+								"asset": response.phasingHolding
+							}, function (phResponse) {
+								if (phResponse && phResponse.asset) {
+									completeFieldsSetup(phResponse);
+								}
+							});
+						}
+
+						if (response.phasingVotingModel == 3 || response.phasingMinBalanceModel == 3) {
+							NRS.sendRequest("getCurrency", {
+								"currency": response.phasingHolding
+							}, function(phResponse) {
+								if (phResponse && phResponse.currency) {
+									completeFieldsSetup(null, phResponse);
 								}
 							});
 						}

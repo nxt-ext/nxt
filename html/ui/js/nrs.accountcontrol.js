@@ -143,7 +143,7 @@ var NRS = (function(NRS, $) {
 			inputDecimalsName: "controlHoldingDecimals",
 			helpI18n: "add_currency_modal_help"
 		}
-		$elems = NRS.initModalUIElement($modal, '.phasgin_only_holding_currency', 'add_currency_modal_ui_element', context);
+		$elems = NRS.initModalUIElement($modal, '.phasing_only_holding_currency', 'add_currency_modal_ui_element', context);
 		$elems.find('input').prop("disabled", true);
 		$elems = NRS.initModalUIElement($modal, '.phasing_only_holding_currency_optional', 'add_currency_modal_ui_element', context);
 		$elems.find('input').prop("disabled", true);
