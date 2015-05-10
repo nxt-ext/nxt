@@ -724,7 +724,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
 
     private void validatePhasedTransactions(int height, List<TransactionImpl> validPhasedTransactions, List<TransactionImpl> invalidPhasedTransactions,
                                             Map<TransactionType, Map<String, Boolean>> duplicates) {
-        if (height >= Constants.VOTING_SYSTEM_BLOCK) {
+        if (height >= Constants.PHASING_BLOCK) {
             try (DbIterator<TransactionImpl> phasedTransactions = PhasingPoll.getFinishingTransactions(height + 1)) {
                 for (TransactionImpl phasedTransaction : phasedTransactions) {
                     try {
@@ -1004,7 +1004,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         SortedSet<UnconfirmedTransaction> sortedTransactions = new TreeSet<>(transactionArrivalComparator);
 
         Map<TransactionType, Map<String, Boolean>> duplicates = new HashMap<>();
-        if (blockchain.getHeight() >= Constants.VOTING_SYSTEM_BLOCK) {
+        if (blockchain.getHeight() >= Constants.PHASING_BLOCK) {
             try (DbIterator<TransactionImpl> phasedTransactions = PhasingPoll.getFinishingTransactions(blockchain.getHeight() + 1)) {
                 for (TransactionImpl phasedTransaction : phasedTransactions) {
                     try {

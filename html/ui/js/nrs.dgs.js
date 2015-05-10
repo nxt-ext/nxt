@@ -288,7 +288,7 @@ var NRS = (function(NRS, $) {
 			"firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
 			"lastIndex": NRS.pageNumber * NRS.itemsPerPage
 		}, function(response) {
-         var content = "";
+            var content = "";
 			if (response.purchases && response.purchases.length) {
 				if (response.purchases.length > NRS.itemsPerPage) {
 					NRS.hasMorePages = true;

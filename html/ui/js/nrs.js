@@ -27,9 +27,6 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.server = "";
 	NRS.state = {};
 	NRS.blocks = [];
-	NRS.genesis = "1739068987193023818";
-	NRS.genesisRS = "NXT-MRCC-2YLS-8M54-3CMAJ";
-
 	NRS.account = "";
 	NRS.accountRS = "";
 	NRS.publicKey = "";
@@ -278,7 +275,7 @@ var NRS = (function(NRS, $, undefined) {
 	};
 
 	NRS.getState = function(callback) {
-		NRS.sendRequest("getBlockchainStatus", function(response) {
+		NRS.sendRequest("getBlockchainStatus", {}, function(response) {
 			if (response.errorCode) {
 				NRS.serverConnect = false;
 				//todo
@@ -789,7 +786,7 @@ var NRS = (function(NRS, $, undefined) {
 					} else {
                         if (NRS.publicKey == "") {
                             $("#dashboard_message").addClass("alert-success").removeClass("alert-danger").html($.t("status_new_account_no_pk", {
-                                "account_id": String(NRS.accountRS).escapeHTML(),
+                                "account_id": String(NRS.accountRS).escapeHTML()
                             })).show();
                         } else {
                             $("#dashboard_message").addClass("alert-success").removeClass("alert-danger").html($.t("status_new_account", {
@@ -1224,10 +1221,6 @@ var NRS = (function(NRS, $, undefined) {
 
 				if ($modal) {
 					var account_id = String($.trim(hash[1]));
-					if (!/^\d+$/.test(account_id) && account_id.indexOf("@") !== 0) {
-						account_id = "@" + account_id;
-					}
-
 					$modal.find("input[name=recipient]").val(account_id.unescapeHTML()).trigger("blur");
 					if (password && typeof password == "string") {
 						$modal.find("input[name=secretPhrase]").val(password);
@@ -1366,7 +1359,7 @@ var NRS = (function(NRS, $, undefined) {
 						} else {
 							NRS.sendRequest("getBlock", {
 								"block": id,
-                        "includeTransactions": "true"
+                                "includeTransactions": "true"
 							}, function(response, input) {
 								if (!response.errorCode) {
 									response.block = input.block;

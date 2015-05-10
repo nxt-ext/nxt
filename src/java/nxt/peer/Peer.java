@@ -49,6 +49,12 @@ public interface Peer extends Comparable<Peer> {
 
     int getLastUpdated();
 
+    boolean isInbound();
+
+    boolean isInboundWebSocket();
+
+    boolean isOutboundWebSocket();
+
     String getBlacklistingCause();
 
     JSONObject send(JSONStreamAware request);

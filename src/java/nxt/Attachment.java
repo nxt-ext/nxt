@@ -10,6 +10,7 @@ import org.json.simple.JSONObject;
 import java.nio.ByteBuffer;
 import java.security.MessageDigest;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -53,6 +54,11 @@ public interface Attachment extends Appendix {
         @Override
         public Fee getBaselineFee(Transaction transaction) {
             return getTransactionType().getBaselineFee(transaction);
+        }
+
+        @Override
+        final boolean isPhasable() {
+            return getTransactionType().isPhasable();
         }
 
     }
@@ -366,7 +372,7 @@ public interface Attachment extends Appendix {
         private final int finishHeight;
 
         private final byte minNumberOfOptions;
-        private final byte maxNumberOfOptions; //only for choice voting
+        private final byte maxNumberOfOptions;
         private final byte minRangeValue;
         private final byte maxRangeValue;
         private final VoteWeighting voteWeighting;
@@ -2586,11 +2592,6 @@ public interface Attachment extends Appendix {
         }
 
         @Override
-        final boolean isPhasable() {
-            return false;
-        }
-
-        @Override
         void loadPrunable(Transaction transaction) {
             if (data == null && taggedData == null && shouldLoadPrunable(transaction)) {
                 taggedData = TaggedData.getData(getTaggedDataId(transaction));
@@ -2628,9 +2629,13 @@ public interface Attachment extends Appendix {
             }
         }
 
-        public TaggedDataUpload(String name, String description, String tags, String type, String channel, boolean isText, String filename, byte[] data) {
+        public TaggedDataUpload(String name, String description, String tags, String type, String channel, boolean isText,
+                                String filename, byte[] data) throws NxtException.NotValidException {
             super(name, description, tags, type, channel, isText, filename, data);
             this.hash = null;
+            if (isText && !Arrays.equals(data, Convert.toBytes(Convert.toString(data)))) {
+                throw new NxtException.NotValidException("Data is not UTF-8 text");
+            }
         }
 
         @Override

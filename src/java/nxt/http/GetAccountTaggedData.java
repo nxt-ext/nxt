@@ -14,7 +14,7 @@ public final class GetAccountTaggedData extends APIServlet.APIRequestHandler {
     static final GetAccountTaggedData instance = new GetAccountTaggedData();
 
     private GetAccountTaggedData() {
-        super(new APITag[] {APITag.DATA}, "account", "firstIndex", "lastIndex");
+        super(new APITag[] {APITag.DATA}, "account", "firstIndex", "lastIndex", "includeData");
     }
 
     @Override
@@ -22,13 +22,14 @@ public final class GetAccountTaggedData extends APIServlet.APIRequestHandler {
         long accountId = ParameterParser.getAccountId(req, "account", true);
         int firstIndex = ParameterParser.getFirstIndex(req);
         int lastIndex = ParameterParser.getLastIndex(req);
+        boolean includeData = !"false".equalsIgnoreCase(req.getParameter("includeData"));
 
         JSONObject response = new JSONObject();
         JSONArray jsonArray = new JSONArray();
         response.put("data", jsonArray);
         try (DbIterator<TaggedData> data = TaggedData.getData(null, accountId, firstIndex, lastIndex)) {
             while (data.hasNext()) {
-                jsonArray.add(JSONData.taggedData(data.next()));
+                jsonArray.add(JSONData.taggedData(data.next(), includeData));
             }
         }
         return response;

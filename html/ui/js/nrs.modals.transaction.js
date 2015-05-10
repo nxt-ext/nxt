@@ -136,6 +136,13 @@ var NRS = (function (NRS, $, undefined) {
                 approveTransactionButton.data("minBalanceFormatted", "");
                 approveTransactionButton.data("votingmodel", transaction.attachment.phasingVotingModel);
             }
+            var extendDataButton = $("#transaction_info_modal_extend_data");
+            if (transaction.type == NRS.subtype.TaggedDataUpload.type && transaction.subtype == NRS.subtype.TaggedDataUpload.subtype) {
+                extendDataButton.removeAttr('disabled');
+                extendDataButton.data("transaction", transaction.transaction);
+            } else {
+                extendDataButton.attr('disabled','disabled');
+            }
 
             $("#transaction_info_actions").show();
             $("#transaction_info_actions_tab").find("button").data("account", accountButton);
@@ -1059,7 +1066,27 @@ var NRS = (function (NRS, $, undefined) {
                     }
                     NRS.fetchingModalData = false;
                 }
+            } else if (transaction.type == 6) {
+                switch (transaction.subtype) {
+                    case 0:
+                        var data = NRS.getTaggedData(transaction.attachment, 0);
+                        $("#transaction_info_table").find("tbody").append(NRS.createInfoTable(data));
+                        $("#transaction_info_table").show();
+
+                        break;
+                    case 1:
+                        var data = NRS.getTaggedData(transaction.attachment, 1);
+                        $("#transaction_info_table").find("tbody").append(NRS.createInfoTable(data));
+                        $("#transaction_info_table").show();
+
+                        break;
+
+                    default:
+                        incorrect = true;
+                        break;
+                }
             }
+
             if (!(transaction.type == 1 && transaction.subtype == 0)) {
                 if (transaction.attachment) {
                     if (transaction.attachment.message) {
@@ -1306,6 +1333,28 @@ var NRS = (function (NRS, $, undefined) {
             "type": transaction.type,
             "subType": transaction.subtype
         };
+        return data;
+    };
+
+    NRS.getTaggedData = function (attachment, subtype) {
+        var data = {
+            "type": $.t(NRS.transactionTypes[6].subTypes[subtype].i18nKeyTitle),
+            "hash": attachment.hash
+        };
+        if (attachment.data) {
+            data["name"] = attachment.name;
+            data["description"] = attachment.description;
+            data["tags"] = attachment.tags;
+            data["mime_type"] = attachment.type;
+            data["channel"] = attachment.channel;
+            data["is_text"] = attachment.isText;
+            data["filename"] = attachment.filename;
+            if (attachment.isText == "true") {
+                data["data_size"] = NRS.getUtf8Bytes(attachment.data).length;
+            } else {
+                data["data_size"] = converters.hexStringToByteArray(attachment.data).length;
+            }
+        }
         return data;
     };
 

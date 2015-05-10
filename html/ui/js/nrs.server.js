@@ -49,15 +49,16 @@ var NRS = (function (NRS, $, undefined) {
 
     NRS.sendRequest = function (requestType, data, callback, async) {
         if (requestType == undefined) {
+            NRS.logConsole("Undefined request type");
             return;
         }
-
-        if ($.isFunction(data)) {
-            async = callback;
-            callback = data;
-            data = {};
-        } else {
-            data = data || {};
+        if (data == undefined) {
+            NRS.logConsole("Undefined data for " + requestType);
+            return;
+        }
+        if (callback == undefined) {
+            NRS.logConsole("Undefined callback function for " + requestType);
+            return;
         }
 
         $.each(data, function (key, val) {
@@ -74,7 +75,7 @@ var NRS = (function (NRS, $, undefined) {
         for (var i = 0; i < nxtAdditionFields.length; i++) {
             var nxtAdditionField = nxtAdditionFields[i];
             if (nxtAdditionField in data && "feeNXT" in data && parseInt(data[nxtAdditionField]) >= 0) {
-                data["feeNXT"] = String(parseInt(data["feeNXT"]) + parseInt(data[nxtAdditionField]));
+                data["feeNXT"] = String(parseFloat(data["feeNXT"]) + parseFloat(data[nxtAdditionField]));
                 delete data[nxtAdditionField];
             }
         }
@@ -103,12 +104,10 @@ var NRS = (function (NRS, $, undefined) {
                 }
             }
         } catch (err) {
-            if (callback) {
-                callback({
-                    "errorCode": 1,
-                    "errorDescription": err + " (" + $.t(field) + ")"
-                });
-            }
+            callback({
+                "errorCode": 1,
+                "errorDescription": err + " (" + $.t(field) + ")"
+            });
             return;
         }
         // convert asset/currency decimal amount to base unit
@@ -137,12 +136,10 @@ var NRS = (function (NRS, $, undefined) {
                 delete data[value];
             });
         } catch (err) {
-            if (callback) {
-                callback({
-                    "errorCode": 1,
-                    "errorDescription": err + " (" + $.t(field) + ")"
-                });
-            }
+            callback({
+                "errorCode": 1,
+                "errorDescription": err + " (" + $.t(field) + ")"
+            });
             return;
         }
 
@@ -165,12 +162,10 @@ var NRS = (function (NRS, $, undefined) {
                 var accountRS = "";
             }
 
-            if (callback) {
-                callback({
-                    "account": accountId,
-                    "accountRS": accountRS
-                });
-            }
+            callback({
+                "account": accountId,
+                "accountRS": accountRS
+            });
             return;
         }
 
@@ -178,12 +173,10 @@ var NRS = (function (NRS, $, undefined) {
         if ("secretPhrase" in data) {
             var accountId = NRS.getAccountId(NRS.rememberPassword ? _password : data.secretPhrase);
             if (accountId != NRS.account) {
-                if (callback) {
-                    callback({
-                        "errorCode": 1,
-                        "errorDescription": $.t("error_passphrase_incorrect")
-                    });
-                }
+                callback({
+                    "errorCode": 1,
+                    "errorDescription": $.t("error_passphrase_incorrect")
+                });
             } else {
                 //ok, accountId matches..continue with the real request.
                 NRS.processAjaxRequest(requestType, data, callback, async);
@@ -242,31 +235,19 @@ var NRS = (function (NRS, $, undefined) {
 
         //unknown account..
         if (type == "POST" && (NRS.accountInfo.errorCode && NRS.accountInfo.errorCode == 5)) {
-            if (callback) {
-                callback({
-                    "errorCode": 2,
-                    "errorDescription": $.t("error_new_account")
-                }, data);
-            } else {
-                $.growl($.t("error_new_account"), {
-                    "type": "danger"
-                });
-            }
+            callback({
+                "errorCode": 2,
+                "errorDescription": $.t("error_new_account")
+            }, data);
             return;
         }
 
         if (data.referencedTransactionFullHash) {
             if (!/^[a-z0-9]{64}$/.test(data.referencedTransactionFullHash)) {
-                if (callback) {
-                    callback({
-                        "errorCode": -1,
-                        "errorDescription": $.t("error_invalid_referenced_transaction_hash")
-                    }, data);
-                } else {
-                    $.growl($.t("error_invalid_referenced_transaction_hash"), {
-                        "type": "danger"
-                    });
-                }
+                callback({
+                    "errorCode": -1,
+                    "errorDescription": $.t("error_invalid_referenced_transaction_hash")
+                }, data);
                 return;
             }
         }
@@ -308,6 +289,40 @@ var NRS = (function (NRS, $, undefined) {
             type = "POST";
         }
 
+        var contentType;
+        var processData;
+        var formData = null;
+        if (requestType == "uploadTaggedData") {
+            // inspired by http://stackoverflow.com/questions/5392344/sending-multipart-formdata-with-jquery-ajax
+            contentType = false;
+            processData = false;
+            // TODO works only for new browsers
+            var formData = new FormData();
+            for (var key in data) {
+                if (!data.hasOwnProperty(key)) {
+                    continue;
+                }
+                formData.append(key, data[key]);
+            }
+            var file = $('#upload_file')[0].files[0];
+            if (file && file.size > NRS.constants.MAX_TAGGED_DATA_DATA_LENGTH) {
+                callback({
+                    "errorCode": 3,
+                    "errorDescription": $.t("error_file_too_big", {
+                        "size": file.size,
+                        "allowed": NRS.constants.MAX_TAGGED_DATA_DATA_LENGTH
+                    })
+                }, data);
+                return;
+            }
+            formData.append("file", file); // file data
+            type = "POST";
+        } else {
+            // JQuery defaults
+            contentType = "application/x-www-form-urlencoded; charset=UTF-8";
+            processData = true;
+        }
+
         ajaxCall({
             url: url,
             crossDomain: true,
@@ -319,75 +334,32 @@ var NRS = (function (NRS, $, undefined) {
             currentSubPage: currentSubPage,
             shouldRetry: (type == "GET" ? 2 : undefined),
             traditional: true,
-            data: data
+            data: (formData != null ? formData : data),
+            contentType: contentType,
+            processData: processData
         }).done(function (response, status, xhr) {
             if (NRS.console) {
                 NRS.addToConsole(this.url, this.type, this.data, response);
             }
-
-            if (typeof data == "object" && "recipient" in data) {
-                if (/^NXT\-/i.test(data.recipient)) {
-                    data.recipientRS = data.recipient;
-
-                    var address = new NxtAddress();
-
-                    if (address.set(data.recipient)) {
-                        data.recipient = address.account_id();
-                    }
-                } else {
-                    var address = new NxtAddress();
-
-                    if (address.set(data.recipient)) {
-                        data.recipientRS = address.toString();
-                    }
-                }
-            }
-
+            addAddressData(data);
             if (secretPhrase && response.unsignedTransactionBytes && !response.errorCode && !response.error) {
                 var publicKey = NRS.generatePublicKey(secretPhrase);
                 var signature = NRS.signBytes(response.unsignedTransactionBytes, converters.stringToHexString(secretPhrase));
 
-                if (!NRS.verifyBytes(signature, response.unsignedTransactionBytes, publicKey)) {
-                    if (callback) {
-                        callback({
-                            "errorCode": 1,
-                            "errorDescription": $.t("error_signature_verification_client")
-                        }, data);
-                    } else {
-                        $.growl($.t("error_signature_verification_client"), {
-                            "type": "danger"
-                        });
-                    }
+                if (!NRS.verifySignature(signature, response.unsignedTransactionBytes, publicKey, callback)) {
+                    return;
+                }
+                addMissingData(data);
+                if (file) {
+                    var r = new FileReader();
+                    r.onload = function (e) {
+                        data.filebytes = e.target.result;
+                        data.filename = file.name;
+                        NRS.verifyAndSignTransactionBytes(response.unsignedTransactionBytes, signature, requestType, data, callback, response, extra);
+                    };
+                    r.readAsArrayBuffer(file);
                 } else {
-                    var payload = NRS.verifyAndSignTransactionBytes(response.unsignedTransactionBytes, signature, requestType, data);
-
-                    if (!payload) {
-                        if (callback) {
-                            callback({
-                                "errorCode": 1,
-                                "errorDescription": $.t("error_signature_verification_server")
-                            }, data);
-                        } else {
-                            $.growl($.t("error_signature_verification_server"), {
-                                "type": "danger"
-                            });
-                        }
-                    } else {
-                        if (data.broadcast == "false") {
-                            response.transactionBytes = payload;
-                            NRS.showRawTransactionModal(response);
-                        } else {
-                            if (callback) {
-                                if (extra) {
-                                    data["_extra"] = extra;
-                                }
-
-                                NRS.broadcastTransactionBytes(payload, callback, response, data);
-                            } else {
-                                NRS.broadcastTransactionBytes(payload, null, response, data);
-                            }
-                        }
-                    }
+                    NRS.verifyAndSignTransactionBytes(response.unsignedTransactionBytes, signature, requestType, data, callback, response, extra);
                 }
             } else {
                 if (response.errorCode || response.errorDescription || response.errorMessage || response.error) {
@@ -396,19 +368,15 @@ var NRS = (function (NRS, $, undefined) {
                     if (!response.errorCode) {
                         response.errorCode = -1;
                     }
-                    if (callback) {
-                        callback(response, data);
-                    }
+                    callback(response, data);
                 } else {
                     if (response.broadcasted == false) {
                         NRS.showRawTransactionModal(response);
                     } else {
-                        if (callback) {
-                            if (extra) {
-                                data["_extra"] = extra;
-                            }
-                            callback(response, data);
+                        if (extra) {
+                            data["_extra"] = extra;
                         }
+                        callback(response, data);
                         if (data.referencedTransactionFullHash && !response.errorCode) {
                             $.growl($.t("info_referenced_transaction_hash"), {
                                 "type": "info"
@@ -432,29 +400,43 @@ var NRS = (function (NRS, $, undefined) {
             }
 
             if (error != "abort") {
-                if (callback) {
-                    if (error == "timeout") {
-                        error = $.t("error_request_timeout");
-                    }
-                    callback({
-                        "errorCode": -1,
-                        "errorDescription": error
-                    }, {});
+                if (error == "timeout") {
+                    error = $.t("error_request_timeout");
                 }
+                callback({
+                    "errorCode": -1,
+                    "errorDescription": error
+                }, {});
             }
         });
     };
 
-    NRS.verifyAndSignTransactionBytes = function (transactionBytes, signature, requestType, data) {
-        var transaction = {};
-
+    NRS.verifyAndSignTransactionBytes = function (transactionBytes, signature, requestType, data, callback, response, extra) {
         var byteArray = converters.hexStringToByteArray(transactionBytes);
+        if (!NRS.verifyTransactionBytes(byteArray, requestType, data)) {
+            callback({
+                "errorCode": 1,
+                "errorDescription": $.t("error_bytes_validation_server")
+            }, data);
+            return;
+        }
+        var payload = transactionBytes.substr(0, 192) + signature + transactionBytes.substr(320);
+        if (data.broadcast == "false") {
+            response.transactionBytes = payload;
+            NRS.showRawTransactionModal(response);
+        } else {
+            if (extra) {
+                data["_extra"] = extra;
+            }
+            NRS.broadcastTransactionBytes(payload, callback, response, data);
+        }
+    };
 
+    NRS.verifyTransactionBytes = function (byteArray, requestType, data) {
+        var transaction = {};
         transaction.type = byteArray[0];
-
         transaction.version = (byteArray[1] & 0xF0) >> 4;
         transaction.subtype = byteArray[1] & 0x0F;
-
         transaction.timestamp = String(converters.byteArrayToSignedInt32(byteArray, 2));
         transaction.deadline = String(converters.byteArrayToSignedShort(byteArray, 6));
         transaction.publicKey = converters.byteArrayToHexString(byteArray.slice(8, 40));
@@ -477,16 +459,6 @@ var NRS = (function (NRS, $, undefined) {
             transaction.ecBlockId = String(converters.byteArrayToBigInteger(byteArray, 168));
         }
 
-        if (!("amountNQT" in data)) {
-            data.amountNQT = "0";
-        }
-
-        if (!("recipient" in data)) {
-            //recipient == genesis
-            data.recipient = "1739068987193023818";
-            data.recipientRS = "NXT-MRCC-2YLS-8M54-3CMAJ";
-        }
-
         if (transaction.publicKey != NRS.accountInfo.publicKey) {
             return false;
         }
@@ -496,7 +468,7 @@ var NRS = (function (NRS, $, undefined) {
         }
 
         if (transaction.recipient !== data.recipient) {
-            if (data.recipient == "1739068987193023818" && transaction.recipient == "0") {
+            if (data.recipient == NRS.constants.GENESIS && transaction.recipient == "0") {
                 //ok
             } else {
                 return false;
@@ -525,7 +497,10 @@ var NRS = (function (NRS, $, undefined) {
         } else {
             var pos = 160;
         }
+        return NRS.verifyTransactionTypes(byteArray, transaction, requestType, data, pos);
+    };
 
+    NRS.verifyTransactionTypes = function (byteArray, transaction, requestType, data, pos) {
         switch (requestType) {
             case "sendMoney":
                 if (transaction.type !== 0 || transaction.subtype !== 0) {
@@ -963,39 +938,63 @@ var NRS = (function (NRS, $, undefined) {
                 pos++;
                 transaction.decimals = String(byteArray[pos]);
                 pos++;
+                if (transaction.name !== data.name || transaction.code !== data.code || transaction.description !== data.description ||
+                    transaction.type != data.type || transaction.initialSupply !== data.initialSupply || transaction.reserveSupply !== data.reserveSupply ||
+                    transaction.maxSupply !== data.maxSupply || transaction.issuanceHeight !== data.issuanceHeight ||
+                    transaction.ruleset !== data.ruleset || transaction.algorithm !== data.algorithm || transaction.decimals !== data.decimals) {
+                    return false;
+                }
+                if (transaction.minReservePerUnitNQT !== "0" && transaction.minReservePerUnitNQT !== data.minReservePerUnitNQT) {
+                    return false;
+                }
+                if (transaction.minDifficulty !== "0" && transaction.minDifficulty !== data.minDifficulty) {
+                    return false;
+                }
+                if (transaction.maxDifficulty !== "0" && transaction.maxDifficulty !== data.maxDifficulty) {
+                    return false;
+                }
                 break;
             case "currencyReserveIncrease":
                 if (transaction.type !== 5 && transaction.subtype !== 1) {
                     return false;
                 }
-                transaction.currencyId = String(converters.byteArrayToBigInteger(byteArray, pos));
+                transaction.currency = String(converters.byteArrayToBigInteger(byteArray, pos));
                 pos += 8;
                 transaction.amountPerUnitNQT = String(converters.byteArrayToBigInteger(byteArray, pos));
                 pos += 8;
+                if (transaction.currency !== data.currency || transaction.amountPerUnitNQT !== data.amountPerUnitNQT) {
+                    return false;
+                }
                 break;
             case "currencyReserveClaim":
                 if (transaction.type !== 5 && transaction.subtype !== 2) {
                     return false;
                 }
-                transaction.currencyId = String(converters.byteArrayToBigInteger(byteArray, pos));
+                transaction.currency = String(converters.byteArrayToBigInteger(byteArray, pos));
                 pos += 8;
                 transaction.units = String(converters.byteArrayToBigInteger(byteArray, pos));
                 pos += 8;
+                if (transaction.currency !== data.currency || transaction.units !== data.units) {
+                    return false;
+                }
                 break;
             case "transferCurrency":
                 if (transaction.type !== 5 && transaction.subtype !== 3) {
                     return false;
                 }
-                transaction.currencyId = String(converters.byteArrayToBigInteger(byteArray, pos));
+                transaction.currency = String(converters.byteArrayToBigInteger(byteArray, pos));
                 pos += 8;
                 transaction.units = String(converters.byteArrayToBigInteger(byteArray, pos));
                 pos += 8;
+                if (transaction.currency !== data.currency || transaction.units !== data.units) {
+                    return false;
+                }
                 break;
             case "publishExchangeOffer":
                 if (transaction.type !== 5 && transaction.subtype !== 4) {
                     return false;
                 }
-                transaction.currencyId = String(converters.byteArrayToBigInteger(byteArray, pos));
+                transaction.currency = String(converters.byteArrayToBigInteger(byteArray, pos));
                 pos += 8;
                 transaction.buyRateNQT = String(converters.byteArrayToBigInteger(byteArray, pos));
                 pos += 8;
@@ -1011,34 +1010,45 @@ var NRS = (function (NRS, $, undefined) {
                 pos += 8;
                 transaction.expirationHeight = String(converters.byteArrayToSignedInt32(byteArray, pos));
                 pos += 4;
+                if (transaction.currency !== data.currency || transaction.buyRateNQT !== data.buyRateNQT || transaction.sellRateNQT !== data.sellRateNQT ||
+                    transaction.totalBuyLimit !== data.totalBuyLimit || transaction.totalSellLimit !== data.totalSellLimit ||
+                    transaction.initialBuySupply !== data.initialBuySupply || transaction.initialSellSupply !== data.initialSellSupply || transaction.expirationHeight !== data.expirationHeight) {
+                    return false;
+                }
                 break;
             case "currencyBuy":
                 if (transaction.type !== 5 && transaction.subtype !== 5) {
                     return false;
                 }
-                transaction.currencyId = String(converters.byteArrayToBigInteger(byteArray, pos));
+                transaction.currency = String(converters.byteArrayToBigInteger(byteArray, pos));
                 pos += 8;
                 transaction.rateNQT = String(converters.byteArrayToBigInteger(byteArray, pos));
                 pos += 8;
                 transaction.units = String(converters.byteArrayToBigInteger(byteArray, pos));
                 pos += 8;
+                if (transaction.currency !== data.currency || transaction.rateNQT !== data.rateNQT || transaction.units !== data.units) {
+                    return false;
+                }
                 break;
             case "currencySell":
                 if (transaction.type !== 5 && transaction.subtype !== 6) {
                     return false;
                 }
-                transaction.currencyId = String(converters.byteArrayToBigInteger(byteArray, pos));
+                transaction.currency = String(converters.byteArrayToBigInteger(byteArray, pos));
                 pos += 8;
                 transaction.rateNQT = String(converters.byteArrayToBigInteger(byteArray, pos));
                 pos += 8;
                 transaction.units = String(converters.byteArrayToBigInteger(byteArray, pos));
                 pos += 8;
+                if (transaction.currency !== data.currency || transaction.rateNQT !== data.rateNQT || transaction.units !== data.units) {
+                    return false;
+                }
                 break;
             case "currencyMint":
                 if (transaction.type !== 5 && transaction.subtype !== 7) {
                     return false;
                 }
-                transaction.currencyId = String(converters.byteArrayToBigInteger(byteArray, pos));
+                transaction.currency = String(converters.byteArrayToBigInteger(byteArray, pos));
                 pos += 8;
                 transaction.nonce = String(converters.byteArrayToBigInteger(byteArray, pos));
                 pos += 8;
@@ -1046,13 +1056,64 @@ var NRS = (function (NRS, $, undefined) {
                 pos += 8;
                 transaction.counter = String(converters.byteArrayToBigInteger(byteArray, pos));
                 pos += 8;
+                if (transaction.currency !== data.currency || transaction.nonce !== data.nonce || transaction.units !== data.units ||
+                    transaction.counter !== data.counter) {
+                    return false;
+                }
                 break;
             case "deleteCurrency":
                 if (transaction.type !== 5 && transaction.subtype !== 8) {
                     return false;
                 }
-                transaction.currencyId = String(converters.byteArrayToBigInteger(byteArray, pos));
+                transaction.currency = String(converters.byteArrayToBigInteger(byteArray, pos));
                 pos += 8;
+                if (transaction.currency !== data.currency) {
+                    return false;
+                }
+                break;
+            case "uploadTaggedData":
+                if (transaction.type !== 6 && transaction.subtype !== 0) {
+                    return false;
+                }
+                var serverHash = converters.byteArrayToHexString(byteArray.slice(pos, pos + 32));
+                pos += 32;
+                var sha256 = CryptoJS.algo.SHA256.create();
+                var utfBytes = NRS.getUtf8Bytes(data.name);
+                sha256.update(converters.byteArrayToWordArray(utfBytes));
+                utfBytes = NRS.getUtf8Bytes(data.description);
+                sha256.update(converters.byteArrayToWordArray(utfBytes));
+                utfBytes = NRS.getUtf8Bytes(data.tags);
+                sha256.update(converters.byteArrayToWordArray(utfBytes));
+                utfBytes = NRS.getUtf8Bytes(data.type);
+                sha256.update(converters.byteArrayToWordArray(utfBytes));
+                utfBytes = NRS.getUtf8Bytes(data.channel);
+                sha256.update(converters.byteArrayToWordArray(utfBytes));
+                var isText = [];
+                if (data.isText == "true") {
+                    isText.push(1);
+                } else {
+                    isText.push(0);
+                }
+                sha256.update(converters.byteArrayToWordArray(isText));
+                var utfBytes = NRS.getUtf8Bytes(data.filename);
+                sha256.update(converters.byteArrayToWordArray(utfBytes));
+                var dataBytes = new Int8Array(data.filebytes);
+                sha256.update(converters.byteArrayToWordArray(dataBytes));
+                var hashWords = sha256.finalize();
+                var calculatedHash = converters.wordArrayToByteArrayImpl(hashWords, true);
+                if (serverHash !== converters.byteArrayToHexString(calculatedHash)) {
+                    return false;
+                }
+                break;
+            case "extendTaggedData":
+                if (transaction.type !== 6 && transaction.subtype !== 1) {
+                    return false;
+                }
+                transaction.taggedDataId = String(converters.byteArrayToBigInteger(byteArray, pos));
+                pos += 8;
+                if (transaction.taggedDataId !== data.transaction) {
+                    return false;
+                }
                 break;
             default:
                 //invalid requestType..
@@ -1264,7 +1325,7 @@ var NRS = (function (NRS, $, undefined) {
             }
         }
 
-        return transactionBytes.substr(0, 192) + signature + transactionBytes.substr(320);
+        return true;
     };
 
     NRS.broadcastTransactionBytes = function (transactionData, callback, originalResponse, originalData) {
@@ -1284,29 +1345,27 @@ var NRS = (function (NRS, $, undefined) {
                 NRS.addToConsole(this.url, this.type, this.data, response);
             }
 
-            if (callback) {
-                if (response.errorCode) {
-                    if (!response.errorDescription) {
-                        response.errorDescription = (response.errorMessage ? response.errorMessage : "Unknown error occurred.");
-                    }
-                    callback(response, originalData);
-                } else if (response.error) {
-                    response.errorCode = 1;
-                    response.errorDescription = response.error;
-                    callback(response, originalData);
-                } else {
-                    if ("transactionBytes" in originalResponse) {
-                        delete originalResponse.transactionBytes;
-                    }
-                    originalResponse.broadcasted = true;
-                    originalResponse.transaction = response.transaction;
-                    originalResponse.fullHash = response.fullHash;
-                    callback(originalResponse, originalData);
-                    if (originalData.referencedTransactionFullHash) {
-                        $.growl($.t("info_referenced_transaction_hash"), {
-                            "type": "info"
-                        });
-                    }
+            if (response.errorCode) {
+                if (!response.errorDescription) {
+                    response.errorDescription = (response.errorMessage ? response.errorMessage : "Unknown error occurred.");
+                }
+                callback(response, originalData);
+            } else if (response.error) {
+                response.errorCode = 1;
+                response.errorDescription = response.error;
+                callback(response, originalData);
+            } else {
+                if ("transactionBytes" in originalResponse) {
+                    delete originalResponse.transactionBytes;
+                }
+                originalResponse.broadcasted = true;
+                originalResponse.transaction = response.transaction;
+                originalResponse.fullHash = response.fullHash;
+                callback(originalResponse, originalData);
+                if (originalData.referencedTransactionFullHash) {
+                    $.growl($.t("info_referenced_transaction_hash"), {
+                        "type": "info"
+                    });
                 }
             }
         }).fail(function (xhr, textStatus, error) {
@@ -1314,17 +1373,42 @@ var NRS = (function (NRS, $, undefined) {
                 NRS.addToConsole(this.url, this.type, this.data, error, true);
             }
 
-            if (callback) {
-                if (error == "timeout") {
-                    error = $.t("error_request_timeout");
-                }
-                callback({
-                    "errorCode": -1,
-                    "errorDescription": error
-                }, {});
+            if (error == "timeout") {
+                error = $.t("error_request_timeout");
             }
+            callback({
+                "errorCode": -1,
+                "errorDescription": error
+            }, {});
         });
     };
+
+    function addAddressData(data) {
+        if (typeof data == "object" && ("recipient" in data)) {
+            if (/^NXT\-/i.test(data.recipient)) {
+                data.recipientRS = data.recipient;
+                var address = new NxtAddress();
+                if (address.set(data.recipient)) {
+                    data.recipient = address.account_id();
+                }
+            } else {
+                var address = new NxtAddress();
+                if (address.set(data.recipient)) {
+                    data.recipientRS = address.toString();
+                }
+            }
+        }
+    }
+
+    function addMissingData(data) {
+        if (!("amountNQT" in data)) {
+            data.amountNQT = "0";
+        }
+        if (!("recipient" in data)) {
+            data.recipient = NRS.constants.GENESIS;
+            data.recipientRS = NRS.constants.GENESIS_RS;
+        }
+    }
 
     return NRS;
 }(NRS || {}, jQuery));

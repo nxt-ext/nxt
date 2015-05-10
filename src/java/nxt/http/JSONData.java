@@ -59,36 +59,42 @@ final class JSONData {
         return json;
     }
 
-    static JSONObject accountBalance(Account account) {
+    static JSONObject accountBalance(Account account, boolean includeEffectiveBalance) {
         JSONObject json = new JSONObject();
         if (account == null) {
             json.put("balanceNQT", "0");
             json.put("unconfirmedBalanceNQT", "0");
-            json.put("effectiveBalanceNXT", "0");
             json.put("forgedBalanceNQT", "0");
-            json.put("guaranteedBalanceNQT", "0");
+            if (includeEffectiveBalance) {
+                json.put("effectiveBalanceNXT", "0");
+                json.put("guaranteedBalanceNQT", "0");
+            }
         } else {
             json.put("balanceNQT", String.valueOf(account.getBalanceNQT()));
             json.put("unconfirmedBalanceNQT", String.valueOf(account.getUnconfirmedBalanceNQT()));
-            json.put("effectiveBalanceNXT", account.getEffectiveBalanceNXT());
             json.put("forgedBalanceNQT", String.valueOf(account.getForgedBalanceNQT()));
-            json.put("guaranteedBalanceNQT", String.valueOf(account.getGuaranteedBalanceNQT()));
+            if (includeEffectiveBalance) {
+                json.put("effectiveBalanceNXT", account.getEffectiveBalanceNXT());
+                json.put("guaranteedBalanceNQT", String.valueOf(account.getGuaranteedBalanceNQT()));
+            }
         }
         return json;
     }
 
-    static JSONObject lessor(Account account) {
+    static JSONObject lessor(Account account, boolean includeEffectiveBalance) {
         JSONObject json = new JSONObject();
         if (account.getCurrentLesseeId() != 0) {
             putAccount(json, "currentLessee", account.getCurrentLesseeId());
             json.put("currentHeightFrom", String.valueOf(account.getCurrentLeasingHeightFrom()));
             json.put("currentHeightTo", String.valueOf(account.getCurrentLeasingHeightTo()));
+            if (includeEffectiveBalance) {
+                json.put("effectiveBalanceNXT", String.valueOf(account.getGuaranteedBalanceNQT() / Constants.ONE_NXT));
+            }
         }
         if (account.getNextLesseeId() != 0) {
             putAccount(json, "nextLessee", account.getNextLesseeId());
             json.put("nextHeightFrom", String.valueOf(account.getNextLeasingHeightFrom()));
             json.put("nextHeightTo", String.valueOf(account.getNextLeasingHeightTo()));
-            json.put("effectiveBalanceNXT", String.valueOf(account.getGuaranteedBalanceNQT() / Constants.ONE_NXT));
         }
         return json;
     }
@@ -325,6 +331,9 @@ final class JSONData {
         json.put("platform", peer.getPlatform());
         json.put("blacklisted", peer.isBlacklisted());
         json.put("lastUpdated", peer.getLastUpdated());
+        json.put("inbound", peer.isInbound());
+        json.put("inboundWebSocket", peer.isInboundWebSocket());
+        json.put("outboundWebSocket", peer.isOutboundWebSocket());
         if (peer.isBlacklisted()) {
             json.put("blacklistingCause", peer.getBlacklistingCause());
         }
@@ -357,7 +366,14 @@ final class JSONData {
         if (voteWeighting.getMinBalanceModel() == VoteWeighting.MinBalanceModel.ASSET) {
             json.put("decimals", Asset.getAsset(voteWeighting.getHoldingId()).getDecimals());
         } else if(voteWeighting.getMinBalanceModel() == VoteWeighting.MinBalanceModel.CURRENCY) {
-            json.put("decimals", Currency.getCurrency(voteWeighting.getHoldingId()).getDecimals());
+            Currency currency = Currency.getCurrency(voteWeighting.getHoldingId());
+            if (currency != null) {
+                json.put("decimals", currency.getDecimals());
+            } else {
+                Transaction currencyIssuance = Nxt.getBlockchain().getTransaction(voteWeighting.getHoldingId());
+                Attachment.MonetarySystemCurrencyIssuance currencyIssuanceAttachment = (Attachment.MonetarySystemCurrencyIssuance) currencyIssuance.getAttachment();
+                json.put("decimals", currencyIssuanceAttachment.getDecimals());
+            }
         }
         putVoteWeighting(json, voteWeighting);
         json.put("finished", poll.isFinished());
@@ -684,7 +700,7 @@ final class JSONData {
         return json;
     }
 
-    static JSONObject taggedData(TaggedData taggedData) {
+    static JSONObject taggedData(TaggedData taggedData, boolean includeData) {
         JSONObject json = new JSONObject();
         json.put("transaction", Long.toUnsignedString(taggedData.getId()));
         putAccount(json, "account", taggedData.getAccountId());
@@ -698,7 +714,9 @@ final class JSONData {
         json.put("channel", taggedData.getChannel());
         json.put("filename", taggedData.getFilename());
         json.put("isText", taggedData.isText());
-        json.put("data", taggedData.isText() ? Convert.toString(taggedData.getData()) : Convert.toHexString(taggedData.getData()));
+        if (includeData) {
+            json.put("data", taggedData.isText() ? Convert.toString(taggedData.getData()) : Convert.toHexString(taggedData.getData()));
+        }
         json.put("transactionTimestamp", taggedData.getTransactionTimestamp());
         json.put("blockTimestamp", taggedData.getBlockTimestamp());
         return json;
