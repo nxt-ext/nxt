@@ -38,6 +38,8 @@ public interface Blockchain {
 
     List<? extends Block> getBlocksAfter(long blockId, int limit);
 
+    List<? extends Block> getBlocksAfter(long blockId, List<Long> blockList);
+
     long getBlockIdAtHeight(int height);
 
     Transaction getTransaction(long transactionId);

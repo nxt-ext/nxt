@@ -187,6 +187,31 @@ final class BlockchainImpl implements Blockchain {
     }
 
     @Override
+    public List<BlockImpl> getBlocksAfter(long blockId, List<Long> blockList) {
+        List<BlockImpl> result = new ArrayList<>();
+        if (blockList.isEmpty())
+            return result;
+        try (Connection con = Db.db.getConnection();
+             PreparedStatement pstmt = con.prepareStatement("SELECT * FROM block WHERE db_id > (SELECT db_id FROM block WHERE id = ?) ORDER BY db_id ASC LIMIT ?")) {
+            pstmt.setLong(1, blockId);
+            pstmt.setInt(2, blockList.size());
+            pstmt.setFetchSize(100);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                int index = 0;
+                while (rs.next()) {
+                    BlockImpl block = BlockDb.loadBlock(con, rs, true);
+                    if (block.getId() != blockList.get(index++))
+                        break;
+                    result.add(block);
+                }
+            }
+            return result;
+        } catch (NxtException.ValidationException|SQLException e) {
+            throw new RuntimeException(e.toString(), e);
+        }
+    }
+
+    @Override
     public long getBlockIdAtHeight(int height) {
         Block block = lastBlock.get();
         if (height > block.getHeight()) {
