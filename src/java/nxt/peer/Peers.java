@@ -561,8 +561,8 @@ public final class Peers {
                 Logger.logShutdownMessage("Failed to stop peer server", e);
             }
         }
-        ThreadPool.shutdownExecutor("peersService", peersService);
-        ThreadPool.shutdownExecutor("sendingService", sendingService);
+        ThreadPool.shutdownExecutor("sendingService", sendingService, 2);
+        ThreadPool.shutdownExecutor("peersService", peersService, 5);
     }
 
     public static boolean addListener(Listener<Peer> listener, Event eventType) {

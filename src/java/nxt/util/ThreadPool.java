@@ -84,17 +84,17 @@ public final class ThreadPool {
     public static void shutdown() {
         if (scheduledThreadPool != null) {
 	        Logger.logShutdownMessage("Stopping background jobs...");
-            shutdownExecutor("scheduledThreadPool", scheduledThreadPool);
+            shutdownExecutor("scheduledThreadPool", scheduledThreadPool, 10);
             scheduledThreadPool = null;
         	Logger.logShutdownMessage("...Done");
         }
     }
 
-    public static void shutdownExecutor(String name, ExecutorService executor) {
+    public static void shutdownExecutor(String name, ExecutorService executor, int timeout) {
         Logger.logShutdownMessage("shutting down " + name);
         executor.shutdown();
         try {
-            executor.awaitTermination(10, TimeUnit.SECONDS);
+            executor.awaitTermination(timeout, TimeUnit.SECONDS);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
