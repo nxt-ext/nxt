@@ -267,6 +267,9 @@ var NRS = (function(NRS, $, undefined) {
 								break;
 						}
 						$mbSelect.trigger('change');
+
+						// Close accidentally triggered popovers
+						$(".show_popover").popover("hide");
 					}
 
 					if (response && response.phasingVotingModel >= 0) {
@@ -286,9 +289,7 @@ var NRS = (function(NRS, $, undefined) {
 									completeFieldsSetup(phResponse);
 								}
 							});
-						}
-
-						if (response.phasingVotingModel == 3 || response.phasingMinBalanceModel == 3) {
+						} else if (response.phasingVotingModel == 3 || response.phasingMinBalanceModel == 3) {
 							NRS.sendRequest("getCurrency", {
 								"currency": response.phasingHolding
 							}, function(phResponse) {
@@ -296,6 +297,8 @@ var NRS = (function(NRS, $, undefined) {
 									completeFieldsSetup(null, phResponse);
 								}
 							});
+						} else {
+							completeFieldsSetup(null, null);
 						}
 					} else {
 
