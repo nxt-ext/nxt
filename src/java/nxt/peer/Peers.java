@@ -233,7 +233,9 @@ public final class Peers {
                     if (usePeersDb) {
                         loadPeers(defaultPeers);
                         Logger.logDebugMessage("Loading known peers from the database...");
-                        loadPeers(PeerDb.loadPeers());
+                        if (savePeers) {
+                            loadPeers(PeerDb.loadPeers());
+                        }
                     }
                 }
             }, false);
@@ -539,10 +541,10 @@ public final class Peers {
 
     static {
         if (! Constants.isOffline) {
-            ThreadPool.scheduleThread("PeerConnecting", Peers.peerConnectingThread, 60);
+            ThreadPool.scheduleThread("PeerConnecting", Peers.peerConnectingThread, 20);
             ThreadPool.scheduleThread("PeerUnBlacklisting", Peers.peerUnBlacklistingThread, 60);
             if (Peers.getMorePeers) {
-                ThreadPool.scheduleThread("GetMorePeers", Peers.getMorePeersThread, 60);
+                ThreadPool.scheduleThread("GetMorePeers", Peers.getMorePeersThread, 20);
             }
         }
     }
