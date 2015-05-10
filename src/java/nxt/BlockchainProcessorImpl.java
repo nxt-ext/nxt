@@ -344,16 +344,23 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             //
             while (!getList.isEmpty()) {
                 //
-                // Submit threads to issue 'getNextBlocks' requests.  We will cancel the
-                // download if we are unable to get a segment after trying 1/4 of the
-                // connected peers (we assume the feeder peer is on a fork if this happens)
+                // Submit threads to issue 'getNextBlocks' requests.  The first segment
+                // will always be sent to the feeder peer.  Subsequent segments will
+                // be sent to the feeder peer if we failed trying to download the blocks
+                // from another peer.  We will stop the download and process any pending
+                // blocks if we are unable to download a segment from the feeder peer.
                 //
                 for (GetNextBlocks nextBlocks : getList) {
-                    if (nextBlocks.getRequestCount() >= connectedPublicPeers.size()/4 + 1)
-                        return;
-                    Peer peer = Peers.getWeightedPeer(connectedPublicPeers);
-                    if (peer == null)
-                        return;
+                    Peer peer;
+                    if (nextBlocks.getRequestCount() > 1)
+                        break;
+                    if (nextBlocks.getStart() == 0 || nextBlocks.getRequestCount() != 0) {
+                        peer = feederPeer;
+                    } else {
+                        peer = Peers.getWeightedPeer(connectedPublicPeers);
+                        if (peer == null)
+                            peer = feederPeer;
+                    }
                     nextBlocks.setPeer(peer);
                     Future<List<BlockImpl>> future = networkService.submit(nextBlocks);
                     nextBlocks.setFuture(future);
