@@ -342,7 +342,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             // The download will be aborted if we are unable to get a segment after
             // retrying with different peers.
             //
-            while (!getList.isEmpty()) {
+            download: while (!getList.isEmpty()) {
                 //
                 // Submit threads to issue 'getNextBlocks' requests.  The first segment
                 // will always be sent to the feeder peer.  Subsequent segments will
@@ -353,7 +353,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 for (GetNextBlocks nextBlocks : getList) {
                     Peer peer;
                     if (nextBlocks.getRequestCount() > 1)
-                        break;
+                        break download;
                     if (nextBlocks.getStart() == 0 || nextBlocks.getRequestCount() != 0) {
                         peer = feederPeer;
                     } else {
@@ -362,7 +362,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                             peer = feederPeer;
                     }
                     if (nextBlocks.getPeer() == peer)
-                        break;
+                        break download;
                     nextBlocks.setPeer(peer);
                     Future<List<BlockImpl>> future = networkService.submit(nextBlocks);
                     nextBlocks.setFuture(future);
