@@ -88,8 +88,8 @@ var NRS = (function(NRS, $, undefined) {
 								rows += "<td>" + (poll.sender != NRS.constants.GENESIS ? "<a href='#' data-user='" + NRS.getAccountFormatted(poll, "sender") + "' class='show_account_modal_action user_info'>" + NRS.getAccountTitle(poll, "sender") + "</a>" : "Genesis") + "</td>";
 								rows += "<td>" + NRS.formatTimestamp(poll.timestamp) + "</td>";
 								rows += "<td style='text-align:center;'>" + String(poll.attachment.finishHeight - NRS.lastBlockHeight) + "</td>";
-								rows += "<td style='text-align:center;'><nobr><a href='#' class='vote_button btn btn-xs btn-default' data-poll='" + poll.transaction +"'>Vote </a> ";
-								rows += "<a href='#' class='follow_button btn btn-xs btn-default' data-follow='" + poll.transaction + "'>Follow </a></nobr></td>";
+								rows += "<td style='text-align:center;'><nobr><a href='#' class='vote_button btn btn-xs btn-default' data-poll='" + poll.transaction +"'>" + $.t('vote_btn_short') + "</a> ";
+								rows += "<a href='#' class='follow_button btn btn-xs btn-default' data-follow='" + poll.transaction + "'>" + $.t('vote_follow_btn_short') + "</a></nobr></td>";
 								rows += "</tr>";
 							}
 							NRS.dataLoaded(rows);
@@ -156,14 +156,14 @@ var NRS = (function(NRS, $, undefined) {
 								if(poll.attachment.finishHeight > NRS.lastBlockHeight)
 								{
 									rows += "<td style='text-align:center;'>" + String(poll.attachment.finishHeight - NRS.lastBlockHeight) + "</td>";
-									rows += "<td style='text-align:center;'><a href='#' class='vote_button btn btn-xs btn-default' data-poll='" + poll.transaction +"'>Vote</a> ";
+									rows += "<td style='text-align:center;'><a href='#' class='vote_button btn btn-xs btn-default' data-poll='" + poll.transaction +"'>" + $.t('vote_btn_short') + "</a> ";
 								}
 								else
 								{
-									rows += "<td style='text-align:center;'>Complete</td>";
-									rows += "<td style='text-align:center;'><a href='#' class='results_button btn btn-xs btn-default' data-results='" + poll.transaction +"'>Results</a> ";
+									rows += "<td style='text-align:center;'>" + $.t('complete') + "</td>";
+									rows += "<td style='text-align:center;'><a href='#' class='results_button btn btn-xs btn-default' data-results='" + poll.transaction +"'>" + $.t('vote_results_btn_short') + "</a> ";
 								}
-								rows += "<a href='#' class='follow_button btn btn-xs btn-default' data-follow='" + poll.transaction + "'>Follow </a></td>";
+								rows += "<a href='#' class='follow_button btn btn-xs btn-default' data-follow='" + poll.transaction + "'>" + $.t('vote_follow_btn_short') + "</a></td>";
 								rows += "</tr>";
 							}
 							NRS.dataLoaded(rows);
@@ -231,10 +231,10 @@ var NRS = (function(NRS, $, undefined) {
 								}
 								else
 								{
-									rows += "<td style='text-align:center;'>Complete</td>";
-									rows += "<td style='text-align:center;'><a href='#' class='results_button btn btn-xs btn-default' data-results='" + poll.transaction +"'>Results </a></td>";
+									rows += "<td style='text-align:center;'>" + $.t('complete') + "</td>";
+									rows += "<td style='text-align:center;'><a href='#' class='results_button btn btn-xs btn-default' data-results='" + poll.transaction +"'>" + $.t('vote_results_btn_short') + "</a></td>";
 								}
-								rows += "<td style='text-align:center;'><a href='#' class='follow_button btn btn-xs btn-default' data-follow='" + poll.transaction + "'>Follow </a></td>";
+								rows += "<td style='text-align:center;'><a href='#' class='follow_button btn btn-xs btn-default' data-follow='" + poll.transaction + "'>" + $.t('vote_follow_btn_short') + "</a></td>";
 								rows += "</tr>";
 							}
 							NRS.dataLoaded(rows);
@@ -408,10 +408,21 @@ var NRS = (function(NRS, $, undefined) {
 			$("#cast_vote_poll_name").text(response.attachment.name);
 			$("#cast_vote_poll_description").text(response.attachment.description);
 			$("#cast_vote_answers_entry").text("");
-			if(response.attachment.minNumberOfOptions != response.attachment.maxNumberOfOptions)
-			$("#cast_vote_range").text("Select between " + response.attachment.minNumberOfOptions + " and " + response.attachment.maxNumberOfOptions + " options from below.")
-			else if(response.attachment.minNumberOfOptions != 1) $("#cast_vote_range").text("Select " + response.attachment.minNumberOfOptions +  " options from below.")
-			else $("#cast_vote_range").text("Select 1 option from below.")
+			if(response.attachment.minNumberOfOptions != response.attachment.maxNumberOfOptions) {
+				var selectText = $.t('poll_select_min_max_options', {
+					'min': response.attachment.minNumberOfOptions,
+					'max': response.attachment.maxNumberOfOptions
+				});
+				$("#cast_vote_range").text(selectText);
+			} else if (response.attachment.minNumberOfOptions != 1) {
+				var selectText = $.t('poll_select_num_options', {
+					'num': response.attachment.minNumberOfOptions
+				});
+				$("#cast_vote_range").text(selectText);
+			} else {
+				var selectText = $.t('poll_select_one_option');
+				$("#cast_vote_range").text(selectText);
+			}
 
 			$("#cast_vote_poll").val(response.transaction);
 			if(response.attachment.maxRangeValue != 1)

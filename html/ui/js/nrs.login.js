@@ -148,14 +148,14 @@ var NRS = (function(NRS, $, undefined) {
 					);
 				}
 			});
-			$('#login_account')
-			.append($("<li></li>")
-				.append($("<a></a>")
-					.attr("href","#")
-					.attr("style","display: inline-block;width: 380px;")
-					.attr("onClick","$('#login_account_container').hide();$('#login_account_container_other').show();")
-					.text("Other"))
-			);
+			var otherHTML = "<li><a href='#' style='display: inline-block;width: 380px;' ";
+			otherHTML += "data-i18n='other'>Other</a></li>";
+			var $otherHTML = $(otherHTML);
+			$otherHTML.click(function(e) {
+				$('#login_account_container').hide();
+				$('#login_account_container_other').show();
+			});
+			$otherHTML.appendTo($('#login_account'));
 		}
 		else{
 			$('#login_account_container').hide();
@@ -471,13 +471,8 @@ var NRS = (function(NRS, $, undefined) {
 			html += "</p>";
 			html += "<p data-i18n='plugin_security_notice_trusted_sources'>";
 			html += "Make sure to only run plugins downloaded from trusted sources, otherwise ";
-			html += "you can loose your NXT! In doubt don't log into the client with an account ";
-			html += "used to store larger amounts of NXT now or in the future while plugins ";
-			html += "are active."
-			html += "</p>";
-			html += "<p data-i18n='plugin_security_notice_remember_passphrase'>";
-			html += "Logging into the client without remembering the passphrase won't make ";
-			html += "the process more secure.";
+			html += "you can loose your NXT! In doubt don't run plugins with accounts ";
+			html += "used to store larger amounts of NXT now or in the future.";
 			html += "</p>";
 			html += "</div>";
 

@@ -5,7 +5,6 @@ import nxt.Constants;
 import nxt.CurrencyType;
 import nxt.http.APICall;
 import nxt.util.Logger;
-import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.junit.Assert;
 import org.junit.Test;
@@ -20,17 +19,15 @@ public class TestCurrencyIssuance extends BlockchainTest {
 
     @Test
     public void issueMultipleCurrencies() {
-        APICall apiCall = new Builder().naming("aaa", "AAA", "Currency A").build();
+        APICall apiCall = new Builder().naming("axc", "AXC", "Currency A").build();
         issueCurrencyApi(apiCall);
-        apiCall = new Builder().naming("bbbb", "BBBB", "Currency B").feeNQT(1000 * Constants.ONE_NXT).build();
+        apiCall = new Builder().naming("bXbx", "BXBX", "Currency B").feeNQT(1000 * Constants.ONE_NXT).build();
         issueCurrencyApi(apiCall);
-        apiCall = new Builder().naming("ccccc", "CCCCC", "Currency C").feeNQT(40 * Constants.ONE_NXT).build();
+        apiCall = new Builder().naming("ccXcc", "CCCXC", "Currency C").feeNQT(40 * Constants.ONE_NXT).build();
         issueCurrencyApi(apiCall);
-        apiCall = new APICall.Builder("getAllCurrencies").build();
+        apiCall = new APICall.Builder("getCurrency").param("code", "BXBX").build();
         JSONObject response = apiCall.invoke();
-        Logger.logDebugMessage(response.toJSONString());
-        JSONArray currencies = (JSONArray)response.get("currencies");
-        Assert.assertEquals(3, currencies.size());
+        Assert.assertEquals("bXbx", response.get("name"));
     }
 
     static String issueCurrencyApi(APICall apiCall) {
@@ -60,11 +57,7 @@ public class TestCurrencyIssuance extends BlockchainTest {
             param("maxSupply", 100000);
             param("initialSupply", 100000);
             param("issuanceHeight", 0);
-            param("minReservePerUnitNQT", 1);
-            param("minDifficulty", (byte) 0);
-            param("maxDifficulty", (byte) 0);
             param("algorithm", (byte)0);
-
         }
 
         public Builder naming(String name, String code, String description) {
