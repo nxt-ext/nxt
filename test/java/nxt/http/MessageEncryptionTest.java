@@ -47,12 +47,12 @@ public class MessageEncryptionTest extends BlockchainTest {
 
     private EncryptedData encrypt(byte[] data) {
         Account recipient = Account.getAccount(Crypto.getPublicKey(secretPhrase2));
-        return recipient.encryptTo(data, secretPhrase1);
+        return recipient.encryptTo(data, secretPhrase1, false);
     }
 
     private byte[] decrypt(EncryptedData encryptedData) {
         Account sender = testers.get(1).getAccount();
-        return sender.decryptFrom(encryptedData, secretPhrase2);
+        return sender.decryptFrom(encryptedData, secretPhrase2, false);
     }
 
 }

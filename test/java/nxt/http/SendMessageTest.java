@@ -62,7 +62,7 @@ public class SendMessageTest extends BlockchainTest {
 
     @Test
     public void sendClientEncryptedMessage() {
-        EncryptedData encryptedData = testers.get(2).getAccount().encryptTo(Convert.toBytes("hello world"), testers.get(1).getSecretPhrase());
+        EncryptedData encryptedData = testers.get(2).getAccount().encryptTo(Convert.toBytes("hello world"), testers.get(1).getSecretPhrase(), false);
         JSONObject response = new APICall.Builder("sendMessage").
                 param("secretPhrase", testers.get(1).getSecretPhrase()).
                 param("recipient", testers.get(2).getStrId()).
@@ -110,7 +110,7 @@ public class SendMessageTest extends BlockchainTest {
 
     @Test
     public void sendClientEncryptedMessageToSelf() {
-        EncryptedData encryptedData = testers.get(1).getAccount().encryptTo(Convert.toBytes("hello world"), testers.get(1).getSecretPhrase());
+        EncryptedData encryptedData = testers.get(1).getAccount().encryptTo(Convert.toBytes("hello world"), testers.get(1).getSecretPhrase(), false);
         JSONObject response = new APICall.Builder("sendMessage").
                 param("secretPhrase", testers.get(1).getSecretPhrase()).
                 param("recipient", testers.get(2).getStrId()).

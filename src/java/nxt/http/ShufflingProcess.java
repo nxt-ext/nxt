@@ -98,7 +98,7 @@ public final class ShufflingProcess extends CreateTransaction {
                             Arrays.toString(encryptedData.getData()), Arrays.toString(encryptedData.getNonce())));
                 }
                 try {
-                    decryptedBytes = publicKeyAccount.decryptFrom(encryptedData, secretPhrase);
+                    decryptedBytes = publicKeyAccount.decryptFrom(encryptedData, secretPhrase, false);
                 } catch (Exception e) {
                     Throwable cause = e.getCause();
                     if (cause instanceof InvalidCipherTextException) {
@@ -144,7 +144,7 @@ public final class ShufflingProcess extends CreateTransaction {
                 Logger.logDebugMessage(String.format("encryptTo %s by %s bytes %s",
                         Convert.rsAccount(account.getId()), Convert.rsAccount(senderAccount.getId()), Arrays.toString(bytesToEncrypt)));
             }
-            encryptedData = account.encryptTo(bytesToEncrypt, secretPhrase);
+            encryptedData = account.encryptTo(bytesToEncrypt, secretPhrase, false);
             bytesToEncrypt = EncryptedData.marshalData(encryptedData);
             if (Logger.isDebugEnabled()) {
                 Logger.logDebugMessage(String.format("encryptTo data %s nonce %s",
