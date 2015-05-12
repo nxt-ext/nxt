@@ -148,15 +148,14 @@ var NRS = (function(NRS, $, undefined) {
 					);
 				}
 			});
-			var text = $.t("other", "Other");
-			$('#login_account')
-			.append($("<li></li>")
-				.append($("<a></a>")
-					.attr("href","#")
-					.attr("style","display: inline-block;width: 380px;")
-					.attr("onClick","$('#login_account_container').hide();$('#login_account_container_other').show();")
-					.text(text))
-			);
+			var otherHTML = "<li><a href='#' style='display: inline-block;width: 380px;' ";
+			otherHTML += "data-i18n='other'>Other</a></li>";
+			var $otherHTML = $(otherHTML);
+			$otherHTML.click(function(e) {
+				$('#login_account_container').hide();
+				$('#login_account_container_other').show();
+			});
+			$otherHTML.appendTo($('#login_account'));
 		}
 		else{
 			$('#login_account_container').hide();
