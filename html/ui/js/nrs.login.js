@@ -42,7 +42,7 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.showWelcomeScreen = function() {
-		$("#login_panel, account_phrase_custom_panel, #account_phrase_generator_panel, #account_phrase_custom_panel, #welcome_panel, #custom_passphrase_link").hide();
+		$("#login_panel, #account_phrase_generator_panel, #account_phrase_custom_panel, #welcome_panel, #custom_passphrase_link").hide();
 		$("#welcome_panel").show();
 	}
 
@@ -57,7 +57,7 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.registerAccount = function() {
 		$("#login_panel, #welcome_panel").hide();
 		$("#account_phrase_generator_panel").show();
-		$("#account_phrase_generator_panel step_3 .callout").hide();
+		$("#account_phrase_generator_panel .step_3 .callout").hide();
 
 		var $loading = $("#account_phrase_generator_loading");
 		var $loaded = $("#account_phrase_generator_loaded");
@@ -218,7 +218,7 @@ var NRS = (function(NRS, $, undefined) {
 			$("#login_check_password_length").val(1);
 		}
 
-		NRS.sendRequest("getBlockchainStatus", function(response) {
+		NRS.sendRequest("getBlockchainStatus", {}, function(response) {
 			if (response.errorCode) {
 				$.growl($.t("error_server_connect"), {
 					"type": "danger",
@@ -387,12 +387,22 @@ var NRS = (function(NRS, $, undefined) {
 					$('#dashboard_link a').addClass("ignore").click();
 
 					if ($("#remember_account").is(":checked")) {
-						if (NRS.getCookie("savedNxtAccounts") && NRS.getCookie("savedNxtAccounts")!=""){
-							var accounts=NRS.getCookie("savedNxtAccounts") + NRS.accountRS + ";";
-							NRS.setCookie("savedNxtAccounts",accounts,30);
+						var accountExists = 0;
+						if (NRS.getCookie("savedNxtAccounts")){
+							var accounts = NRS.getCookie("savedNxtAccounts").split(";");
+							$.each(accounts, function(index, account) {
+								if (account == NRS.accountRS)
+									accountExists = 1;
+							});
 						}
-						else
-							NRS.setCookie("savedNxtAccounts",NRS.accountRS + ";",30);
+						if (!accountExists){
+							if (NRS.getCookie("savedNxtAccounts") && NRS.getCookie("savedNxtAccounts")!=""){
+								var accounts=NRS.getCookie("savedNxtAccounts") + NRS.accountRS + ";";
+								NRS.setCookie("savedNxtAccounts",accounts,30);
+							}
+							else
+								NRS.setCookie("savedNxtAccounts",NRS.accountRS + ";",30);
+						}
 					}
 
 					$("[data-i18n]").i18n();

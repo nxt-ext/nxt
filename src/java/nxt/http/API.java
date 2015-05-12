@@ -22,6 +22,7 @@ import org.eclipse.jetty.servlets.CrossOriginFilter;
 import org.eclipse.jetty.servlets.GzipFilter;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 
+import javax.servlet.MultipartConfigElement;
 import javax.servlet.http.HttpServletRequest;
 import java.math.BigInteger;
 import java.net.Inet4Address;
@@ -146,7 +147,8 @@ public final class API {
                 apiHandlers.addHandler(contextHandler);
             }
 
-            apiHandler.addServlet(APIServlet.class, "/nxt");
+            ServletHolder servletHolder = apiHandler.addServlet(APIServlet.class, "/nxt");
+            servletHolder.getRegistration().setMultipartConfig(new MultipartConfigElement(null, Constants.MAX_TAGGED_DATA_DATA_LENGTH, -1L, 0));
             if (Nxt.getBooleanProperty("nxt.enableAPIServerGZIPFilter")) {
                 FilterHolder gzipFilterHolder = apiHandler.addFilter(GzipFilter.class, "/nxt", null);
                 gzipFilterHolder.setInitParameter("methods", "GET,POST");
@@ -207,8 +209,13 @@ public final class API {
         if (API.adminPassword.isEmpty()) {
             throw new ParameterException(NO_PASSWORD_IN_CONFIG);
         } else if (!API.adminPassword.equals(req.getParameter("adminPassword"))) {
+            Logger.logWarningMessage("Incorrect adminPassword");
             throw new ParameterException(INCORRECT_ADMIN_PASSWORD);
         }
+    }
+
+    static boolean checkPassword(HttpServletRequest req) {
+        return (API.disableAdminPassword || (!API.adminPassword.isEmpty() && API.adminPassword.equals(req.getParameter("adminPassword"))));
     }
 
     static boolean isAllowed(String remoteHost) {

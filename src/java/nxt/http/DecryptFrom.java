@@ -18,7 +18,7 @@ public final class DecryptFrom extends APIServlet.APIRequestHandler {
     static final DecryptFrom instance = new DecryptFrom();
 
     private DecryptFrom() {
-        super(new APITag[] {APITag.MESSAGES}, "account", "data", "nonce", "decryptedMessageIsText", "secretPhrase");
+        super(new APITag[] {APITag.MESSAGES}, "account", "data", "nonce", "decryptedMessageIsText", "uncompressDecryptedMessage", "secretPhrase");
     }
 
     @Override
@@ -33,8 +33,9 @@ public final class DecryptFrom extends APIServlet.APIRequestHandler {
         byte[] nonce = Convert.parseHexString(Convert.nullToEmpty(req.getParameter("nonce")));
         EncryptedData encryptedData = new EncryptedData(data, nonce);
         boolean isText = !"false".equalsIgnoreCase(req.getParameter("decryptedMessageIsText"));
+        boolean uncompress = !"false".equalsIgnoreCase(req.getParameter("uncompressDecryptedMessage"));
         try {
-            byte[] decrypted = account.decryptFrom(encryptedData, secretPhrase);
+            byte[] decrypted = account.decryptFrom(encryptedData, secretPhrase, uncompress);
             JSONObject response = new JSONObject();
             response.put("decryptedMessage", isText ? Convert.toString(decrypted) : Convert.toHexString(decrypted));
             return response;

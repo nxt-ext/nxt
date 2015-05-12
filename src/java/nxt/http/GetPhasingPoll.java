@@ -17,7 +17,7 @@ public class GetPhasingPoll extends APIServlet.APIRequestHandler {
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
         long transactionId = ParameterParser.getUnsignedLong(req, "transaction", true);
-        boolean countVotes = ParameterParser.getBoolean(req, "countVotes", false);
+        boolean countVotes = "true".equalsIgnoreCase(req.getParameter("countVotes"));
         PhasingPoll phasingPoll = PhasingPoll.getPoll(transactionId);
         if (phasingPoll != null) {
             return JSONData.phasingPoll(phasingPoll, countVotes);

@@ -19,7 +19,7 @@ var NRS = (function(NRS, $, undefined) {
 			if (blockHeight) {
 				var blockDiff = blockHeight - NRS.lastBlockHeight;
 				var diffSecs = blockDiff * NRS.averageBlockGenerationTime;
-				output += moment().add(diffSecs, 'seconds').format('lll') + " ";
+				output += moment().add(diffSecs, 'seconds').format("YYYY/MM/DD hh:mm a") + " ";
 
 			} else {
 				output += '-';
@@ -55,6 +55,7 @@ var NRS = (function(NRS, $, undefined) {
 	$('body').on('click', '.modal div[data-modal-ui-element="block_height_modal_ui_element"] .bhm_ue_use_current_block_height', function(e) {
 		var $bhmElem = $(this).closest('div[data-modal-ui-element="block_height_modal_ui_element"]');
 		$bhmElem.find('.bhm_ue_time_input').val($(this).data('CurrentBlockHeight'));
+		_updateBlockHeightEstimates($bhmElem);
 	});
 
 	$('body').on('click', '.modal div[data-modal-ui-element="block_height_modal_ui_element"] .bhm_ue_reduce_height_btn', function(e) {

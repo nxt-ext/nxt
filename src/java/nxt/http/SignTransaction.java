@@ -17,15 +17,17 @@ public final class SignTransaction extends APIServlet.APIRequestHandler {
     static final SignTransaction instance = new SignTransaction();
 
     private SignTransaction() {
-        super(new APITag[] {APITag.TRANSACTIONS}, "unsignedTransactionBytes", "unsignedTransactionJSON", "secretPhrase", "validate");
+        super(new APITag[] {APITag.TRANSACTIONS}, "unsignedTransactionJSON", "unsignedTransactionBytes", "prunableAttachmentJSON", "secretPhrase", "validate");
     }
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
 
-        String transactionBytes = Convert.emptyToNull(req.getParameter("unsignedTransactionBytes"));
         String transactionJSON = Convert.emptyToNull(req.getParameter("unsignedTransactionJSON"));
-        Transaction.Builder builder = ParameterParser.parseTransaction(transactionBytes, transactionJSON);
+        String transactionBytes = Convert.emptyToNull(req.getParameter("unsignedTransactionBytes"));
+        String prunableAttachmentJSON = Convert.emptyToNull(req.getParameter("prunableAttachmentJSON"));
+
+        Transaction.Builder builder = ParameterParser.parseTransaction(transactionJSON, transactionBytes, prunableAttachmentJSON);
 
         String secretPhrase = Convert.emptyToNull(req.getParameter("secretPhrase"));
         if (secretPhrase == null) {
@@ -43,6 +45,7 @@ public final class SignTransaction extends APIServlet.APIRequestHandler {
             response.put("transaction", transaction.getStringId());
             response.put("fullHash", transaction.getFullHash());
             response.put("transactionBytes", Convert.toHexString(transaction.getBytes()));
+            JSONData.putPrunableAttachment(response, transaction);
             response.put("signatureHash", Convert.toHexString(Crypto.sha256().digest(transaction.getSignature())));
             response.put("verify", transaction.verifySignature());
         } catch (NxtException.ValidationException|RuntimeException e) {

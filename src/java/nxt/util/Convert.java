@@ -25,6 +25,7 @@ public final class Convert {
     public static final long[] EMPTY_LONG = new long[0];
     public static final byte[] EMPTY_BYTE = new byte[0];
     public static final byte[][] EMPTY_BYTES = new byte[0][];
+    public static final String[] EMPTY_STRING = new String[0];
 
     private Convert() {} //never
 
@@ -103,6 +104,10 @@ public final class Convert {
 
     public static long fromEpochTime(int epochTime) {
         return epochTime * 1000L + Constants.EPOCH_BEGINNING - 500L;
+    }
+
+    public static int toEpochTime(long currentTime) {
+        return (int)((currentTime - Constants.EPOCH_BEGINNING + 500) / 1000);
     }
 
     public static String emptyToNull(String s) {

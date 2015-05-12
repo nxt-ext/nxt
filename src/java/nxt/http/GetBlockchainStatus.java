@@ -2,6 +2,7 @@ package nxt.http;
 
 import nxt.Block;
 import nxt.BlockchainProcessor;
+import nxt.Constants;
 import nxt.Nxt;
 import nxt.peer.Peer;
 import org.json.simple.JSONObject;
@@ -31,6 +32,11 @@ public final class GetBlockchainStatus extends APIServlet.APIRequestHandler {
         response.put("lastBlockchainFeeder", lastBlockchainFeeder == null ? null : lastBlockchainFeeder.getAnnouncedAddress());
         response.put("lastBlockchainFeederHeight", blockchainProcessor.getLastBlockchainFeederHeight());
         response.put("isScanning", blockchainProcessor.isScanning());
+        response.put("maxRollback", Constants.MAX_ROLLBACK);
+        response.put("currentMinRollbackHeight", Nxt.getBlockchainProcessor().getMinRollbackHeight());
+        response.put("isTestnet", Constants.isTestnet);
+        response.put("maxPrunableLifetime", Constants.MAX_PRUNABLE_LIFETIME);
+        response.put("includeExpiredPrunable", Constants.INCLUDE_EXPIRED_PRUNABLE);
         return response;
     }
 

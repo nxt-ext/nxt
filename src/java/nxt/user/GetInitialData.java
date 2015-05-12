@@ -53,7 +53,7 @@ public final class GetInitialData extends UserServlet.UserRequestHandler {
 
                 JSONObject blacklistedPeer = new JSONObject();
                 blacklistedPeer.put("index", Users.getIndex(peer));
-                blacklistedPeer.put("address", peer.getPeerAddress());
+                blacklistedPeer.put("address", peer.getHost());
                 blacklistedPeer.put("announcedAddress", Convert.truncate(peer.getAnnouncedAddress(), "-", 25, true));
                 blacklistedPeer.put("software", peer.getSoftware());
                 blacklistedPeers.add(blacklistedPeer);
@@ -62,7 +62,7 @@ public final class GetInitialData extends UserServlet.UserRequestHandler {
 
                 JSONObject knownPeer = new JSONObject();
                 knownPeer.put("index", Users.getIndex(peer));
-                knownPeer.put("address", peer.getPeerAddress());
+                knownPeer.put("address", peer.getHost());
                 knownPeer.put("announcedAddress", Convert.truncate(peer.getAnnouncedAddress(), "-", 25, true));
                 knownPeer.put("software", peer.getSoftware());
                 knownPeers.add(knownPeer);
@@ -74,7 +74,7 @@ public final class GetInitialData extends UserServlet.UserRequestHandler {
                 if (peer.getState() == Peer.State.DISCONNECTED) {
                     activePeer.put("disconnected", true);
                 }
-                activePeer.put("address", peer.getPeerAddress());
+                activePeer.put("address", peer.getHost());
                 activePeer.put("announcedAddress", Convert.truncate(peer.getAnnouncedAddress(), "-", 25, true));
                 activePeer.put("weight", peer.getWeight());
                 activePeer.put("downloaded", peer.getDownloadedVolume());

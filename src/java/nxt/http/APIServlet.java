@@ -32,9 +32,14 @@ public final class APIServlet extends HttpServlet {
     abstract static class APIRequestHandler {
 
         private final List<String> parameters;
+        private final String fileParameter;
         private final Set<APITag> apiTags;
 
         APIRequestHandler(APITag[] apiTags, String... parameters) {
+            this(null, apiTags, parameters);
+        }
+
+        APIRequestHandler(String fileParameter, APITag[] apiTags, String... parameters) {
             List<String> origParameters = Arrays.asList(parameters);
             if ((requirePassword() || origParameters.contains("lastIndex")) && ! API.disableAdminPassword) {
                 List<String> newParameters = new ArrayList<>(parameters.length + 1);
@@ -45,6 +50,7 @@ public final class APIServlet extends HttpServlet {
                 this.parameters = origParameters;
             }
             this.apiTags = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(apiTags)));
+            this.fileParameter = fileParameter;
         }
 
         final List<String> getParameters() {
@@ -55,7 +61,15 @@ public final class APIServlet extends HttpServlet {
             return apiTags;
         }
 
+        final String getFileParameter() {
+            return fileParameter;
+        }
+
         abstract JSONStreamAware processRequest(HttpServletRequest request) throws NxtException;
+
+        JSONStreamAware processRequest(HttpServletRequest request, HttpServletResponse response) throws NxtException {
+            return processRequest(request);
+        }
 
         boolean requirePost() {
             return false;
@@ -68,6 +82,7 @@ public final class APIServlet extends HttpServlet {
         boolean requirePassword() {
         	return false;
         }
+
     }
 
     private static final boolean enforcePost = Nxt.getBooleanProperty("nxt.apiServerEnforcePOST");
@@ -101,6 +116,8 @@ public final class APIServlet extends HttpServlet {
         map.put("decodeHallmark", DecodeHallmark.instance);
         map.put("decodeToken", DecodeToken.instance);
         map.put("encryptTo", EncryptTo.instance);
+        map.put("eventRegister", EventRegister.instance);
+        map.put("eventWait", EventWait.instance);
         map.put("generateToken", GenerateToken.instance);
         map.put("getAccount", GetAccount.instance);
         map.put("getAccountBlockCount", GetAccountBlockCount.instance);
@@ -163,6 +180,7 @@ public final class APIServlet extends HttpServlet {
         map.put("getDGSTagsLike", GetDGSTagsLike.instance);
         map.put("getGuaranteedBalance", GetGuaranteedBalance.instance);
         map.put("getECBlock", GetECBlock.instance);
+        map.put("getInboundPeers", GetInboundPeers.instance);
         map.put("getPlugins", GetPlugins.instance);
         map.put("getMyInfo", GetMyInfo.instance);
         //map.put("getNextBlockGenerators", GetNextBlockGenerators.instance);
@@ -210,10 +228,15 @@ public final class APIServlet extends HttpServlet {
         map.put("getMintingTarget", GetMintingTarget.instance);
         map.put("getShuffling", GetShuffling.instance);
         map.put("getShufflingParticipants", GetShufflingParticipants.instance);
+        map.put("getPrunableMessage", GetPrunableMessage.instance);
+        map.put("getPrunableMessages", GetPrunableMessages.instance);
+        map.put("getAllPrunableMessages", GetAllPrunableMessages.instance);
+        map.put("verifyPrunableMessage", VerifyPrunableMessage.instance);
         map.put("issueAsset", IssueAsset.instance);
         map.put("issueCurrency", IssueCurrency.instance);
         map.put("leaseBalance", LeaseBalance.instance);
         map.put("longConvert", LongConvert.instance);
+        map.put("hexConvert", HexConvert.instance);
         map.put("markHost", MarkHost.instance);
         map.put("parseTransaction", ParseTransaction.instance);
         map.put("placeAskOrder", PlaceAskOrder.instance);
@@ -246,7 +269,23 @@ public final class APIServlet extends HttpServlet {
         map.put("searchCurrencies", SearchCurrencies.instance);
         map.put("searchPolls", SearchPolls.instance);
         map.put("searchAccounts", SearchAccounts.instance);
+        map.put("searchTaggedData", SearchTaggedData.instance);
+        map.put("uploadTaggedData", UploadTaggedData.instance);
+        map.put("extendTaggedData", ExtendTaggedData.instance);
+        map.put("getAccountTaggedData", GetAccountTaggedData.instance);
+        map.put("getAllTaggedData", GetAllTaggedData.instance);
+        map.put("getChannelTaggedData", GetChannelTaggedData.instance);
+        map.put("getTaggedData", GetTaggedData.instance);
+        map.put("downloadTaggedData", DownloadTaggedData.instance);
+        map.put("getDataTags", GetDataTags.instance);
+        map.put("getDataTagCount", GetDataTagCount.instance);
+        map.put("getDataTagsLike", GetDataTagsLike.instance);
+        map.put("verifyTaggedData", VerifyTaggedData.instance);
         map.put("clearUnconfirmedTransactions", ClearUnconfirmedTransactions.instance);
+        map.put("requeueUnconfirmedTransactions", RequeueUnconfirmedTransactions.instance);
+        map.put("rebroadcastUnconfirmedTransactions", RebroadcastUnconfirmedTransactions.instance);
+        map.put("getAllWaitingTransactions", GetAllWaitingTransactions.instance);
+        map.put("getAllBroadcastedTransactions", GetAllBroadcastedTransactions.instance);
         map.put("fullReset", FullReset.instance);
         map.put("popOff", PopOff.instance);
         map.put("scan", Scan.instance);
@@ -256,7 +295,9 @@ public final class APIServlet extends HttpServlet {
         map.put("dumpPeers", DumpPeers.instance);
         map.put("getLog", GetLog.instance);
         map.put("getStackTraces", GetStackTraces.instance);
+        map.put("setLogging", SetLogging.instance);
         map.put("shutdown", Shutdown.instance);
+        map.put("trimDerivedTables", TrimDerivedTables.instance);
 
         apiRequestHandlers = Collections.unmodifiableMap(map);
     }
@@ -272,10 +313,11 @@ public final class APIServlet extends HttpServlet {
     }
 
     private void process(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-
+        // Set response values now in case we create an asynchronous context
         resp.setHeader("Cache-Control", "no-cache, no-store, must-revalidate, private");
         resp.setHeader("Pragma", "no-cache");
         resp.setDateHeader("Expires", 0);
+        resp.setContentType("text/plain; charset=UTF-8");
 
         JSONStreamAware response = JSON.emptyJSON;
 
@@ -312,7 +354,7 @@ public final class APIServlet extends HttpServlet {
                 if (apiRequestHandler.startDbTransaction()) {
                     Db.db.beginTransaction();
                 }
-                response = apiRequestHandler.processRequest(req);
+                response = apiRequestHandler.processRequest(req, resp);
             } catch (ParameterException e) {
                 response = e.getErrorResponse();
             } catch (NxtException |RuntimeException e) {
@@ -329,14 +371,16 @@ public final class APIServlet extends HttpServlet {
                 }
             }
 
-            if (response instanceof JSONObject) {
+            if (response != null && (response instanceof JSONObject)) {
                 ((JSONObject)response).put("requestProcessingTime", System.currentTimeMillis() - startTime);
             }
 
         } finally {
-            resp.setContentType("text/plain; charset=UTF-8");
-            try (Writer writer = resp.getWriter()) {
-                response.writeJSONString(writer);
+            // The response will be null if we created an asynchronous context
+            if (response != null) {
+                try (Writer writer = resp.getWriter()) {
+                    response.writeJSONString(writer);
+                }
             }
         }
 

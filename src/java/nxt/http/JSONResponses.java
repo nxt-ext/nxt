@@ -117,10 +117,23 @@ public final class JSONResponses {
     public static final JSONStreamAware UNKNOWN_SHUFFLING = unknown("shuffling");
     public static final JSONStreamAware INCORRECT_SHUFFLING = incorrect("shuffling");
     public static final JSONStreamAware INCORRECT_SHUFFLING_STATE = incorrect("shuffling");
+    public static final JSONStreamAware RESPONSE_STREAM_ERROR = responseError("responseOutputStream");
+    public static final JSONStreamAware RESPONSE_WRITE_ERROR = responseError("responseWrite");
     public static final JSONStreamAware MISSING_TRANSACTION_FULL_HASH = missing("transactionFullHash");
     public static final JSONStreamAware UNKNOWN_TRANSACTION_FULL_HASH = unknown("transactionFullHash");
     public static final JSONStreamAware INCORRECT_TRANSACTION_FULL_HASH = incorrect("transactionFullHash");
     public static final JSONStreamAware INCORRECT_LINKED_FULL_HASH = incorrect("phasingLinkedFullHash");
+    public static final JSONStreamAware INCORRECT_TAGGED_DATA_NAME = incorrect("name", "(length must be not longer than " + Constants.MAX_TAGGED_DATA_NAME_LENGTH + " characters)");
+    public static final JSONStreamAware INCORRECT_TAGGED_DATA_DESCRIPTION = incorrect("description", "(length must be not longer than " + Constants.MAX_TAGGED_DATA_DESCRIPTION_LENGTH + " characters)");
+    public static final JSONStreamAware INCORRECT_TAGGED_DATA_TAGS = incorrect("tags", "(length must be not longer than " + Constants.MAX_TAGGED_DATA_TAGS_LENGTH + " characters)");
+    public static final JSONStreamAware INCORRECT_TAGGED_DATA_FILENAME = incorrect("filename", "(length must be not longer than " + Constants.MAX_TAGGED_DATA_FILENAME_LENGTH + " characters)");
+    public static final JSONStreamAware INCORRECT_TAGGED_DATA_TYPE = incorrect("type", "(length must be not longer than " + Constants.MAX_TAGGED_DATA_TYPE_LENGTH + " characters)");
+    public static final JSONStreamAware INCORRECT_TAGGED_DATA_CHANNEL = incorrect("channel", "(length must be not longer than " + Constants.MAX_TAGGED_DATA_CHANNEL_LENGTH + " characters)");
+    public static final JSONStreamAware INCORRECT_TAGGED_DATA_FILE = incorrect("data", "cannot read file data");
+    public static final JSONStreamAware MISSING_DATA = incorrect("data");
+    public static final JSONStreamAware INCORRECT_DATA = incorrect("data", "(length must be not longer than " + Constants.MAX_TAGGED_DATA_DATA_LENGTH + " bytes)");
+    static final JSONStreamAware MISSING_MESSAGE_ENCRYPTED_MESSAGE = missing("message", "encryptedMessageData");
+    static final JSONStreamAware EITHER_MESSAGE_ENCRYPTED_MESSAGE = either("message", "encryptedMessageData");
 
     public static final JSONStreamAware NOT_ENOUGH_FUNDS;
     static {
@@ -282,6 +295,14 @@ public final class JSONResponses {
         TOO_MANY_PHASING_VOTES = JSON.prepare(response);
     }
 
+    public static final JSONStreamAware HASHES_MISMATCH;
+    static {
+        JSONObject response = new JSONObject();
+        response.put("errorCode", 10);
+        response.put("errorDescription", "Hashes don't match. You should notify Jeff Garzik.");
+        HASHES_MISMATCH = JSON.prepare(response);
+    }
+
     static JSONStreamAware missing(String... paramNames) {
         JSONObject response = new JSONObject();
         response.put("errorCode", 3);
@@ -290,6 +311,13 @@ public final class JSONResponses {
         } else {
             response.put("errorDescription", "At least one of " + Arrays.toString(paramNames) + " must be specified");
         }
+        return JSON.prepare(response);
+    }
+
+    static JSONStreamAware either(String... paramNames) {
+        JSONObject response = new JSONObject();
+        response.put("errorCode", 6);
+        response.put("errorDescription", "Not more than one of " + Arrays.toString(paramNames) + " can be specified");
         return JSON.prepare(response);
     }
 
@@ -330,6 +358,13 @@ public final class JSONResponses {
     private static JSONStreamAware error(String error) {
         JSONObject response = new JSONObject();
         response.put("errorCode", 11);
+        response.put("errorDescription", error);
+        return JSON.prepare(response);
+    }
+
+    private static JSONStreamAware responseError(String error) {
+        JSONObject response = new JSONObject();
+        response.put("errorCode", 12);
         response.put("errorDescription", error);
         return JSON.prepare(response);
     }

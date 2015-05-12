@@ -12,34 +12,44 @@ import java.lang.management.ThreadInfo;
 import java.lang.management.ThreadMXBean;
 
 /**
- * The GetStackTraces API will return the current stack trace for
- * each Nxt thread.
+ * <p>The GetStackTraces API will return the current stack trace for
+ * each Nxt thread.</p>
  *
- * Request parameters:
- *   depth - Stack trace depth (minimum 1, defaults to full trace)
+ * <p>Request parameters:</p>
+ * <ul>
+ * <li>depth - Stack trace depth (minimum 1, defaults to full trace)</li>
+ * </ul>
  *
- * Response parameters:
- *   locks   - An array of lock objects for locks with waiters
- *   threads - An array of thread objects
+ * <p>Response parameters:</p>
+ * <ul>
+ * <li>locks   - An array of lock objects for locks with waiters</li>
+ * <li>threads - An array of thread objects</li>
+ * </ul>
  *
- * Lock object:
- *   name   - Lock class name
- *   hash   - Lock identity hash code
- *   thread - Identifier of thread holding the lock
+ * <p>Lock object:</p>
+ * <ul>
+ * <li>name   - Lock class name</li>
+ * <li>hash   - Lock identity hash code</li>
+ * <li>thread - Identifier of thread holding the lock</li>
+ * </ul>
  *
- * Monitor object:
- *   name    - Monitor class name
- *   hash    - Monitor identity hash
- *   depth   - Stack depth where monitor locked
- *   trace   - Stack element where monitor locked
+ * <p>Monitor object:</p>
+ * <ul>
+ * <li>name    - Monitor class name</li>
+ * <li>hash    - Monitor identity hash</li>
+ * <li>depth   - Stack depth where monitor locked</li>
+ * <li>trace   - Stack element where monitor locked</li>
+ * </ul>
  *
- * Thread object:
- *   blocked - Lock object if thread is waiting on a lock
- *   id      - Thread identifier
- *   locks   - Array of monitor objects for locks held by this thread
- *   name    - Thread name
- *   state   - Thread state
- *   trace   - Array of stack trace elements
+ * <p>Thread object:</p>
+ * <ul>
+ * <li>blocked - Lock object if thread is waiting on a lock</li>
+ * <li>id      - Thread identifier</li>
+ * <li>locks   - Array of monitor objects for locks held by this thread</li>
+ * <li>name    - Thread name</li>
+ * <li>state   - Thread state</li>
+ * <li>  trace   - Array of stack trace elements</li>
+ * </ul>
  */
 public class GetStackTraces extends APIServlet.APIRequestHandler {
 
@@ -117,7 +127,7 @@ public class GetStackTraces extends APIServlet.APIRequestHandler {
                         threadJSON.put("blocked", lockJSON);
                         boolean addLock = true;
                         for (Object lock : locksJSON){
-                            if (((String)((JSONObject)lock).get("name")).equals(lInfo.getClassName())) {
+                            if (((JSONObject)lock).get("name").equals(lInfo.getClassName())) {
                                 addLock = false;
                                 break;
                             }

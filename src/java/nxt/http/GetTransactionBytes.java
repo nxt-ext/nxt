@@ -48,6 +48,7 @@ public final class GetTransactionBytes extends APIServlet.APIRequestHandler {
         }
         response.put("transactionBytes", Convert.toHexString(transaction.getBytes()));
         response.put("unsignedTransactionBytes", Convert.toHexString(transaction.getUnsignedBytes()));
+        JSONData.putPrunableAttachment(response, transaction);
         return response;
 
     }

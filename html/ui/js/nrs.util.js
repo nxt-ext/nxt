@@ -500,6 +500,10 @@ var NRS = (function(NRS, $, undefined) {
 			throw $.t("error_invalid_input_numbers");
 		}
 
+        if (qnt === "0") {
+            return qnt;
+        }
+
 		//remove leading zeroes
 		return qnt.replace(/^0+/, "");
 	};
@@ -878,10 +882,10 @@ var NRS = (function(NRS, $, undefined) {
 				return NRS.accountRS;
 				break;
 			case "message_link":
-				return document.URL.replace(/#.*$/, "") + "#message:" + NRS.account;
+				return document.URL.replace(/#.*$/, "") + "#message:" + encodeURIComponent(NRS.accountRS);
 				break;
 			case "send_link":
-				return document.URL.replace(/#.*$/, "") + "#send:" + NRS.account;
+				return document.URL.replace(/#.*$/, "") + "#send:" + encodeURIComponent(NRS.accountRS);
 				break;
 			case "asset_id":
 				return $("#asset_id").text();
@@ -1579,7 +1583,17 @@ var NRS = (function(NRS, $, undefined) {
 			}
 		}
 		return false;
-	}  
+	}
+
+	// http://stackoverflow.com/questions/12518830/java-string-getbytesutf8-javascript-analog
+	NRS.getUtf8Bytes = function(str) {
+	    var utf8 = unescape(encodeURIComponent(str));
+	    var arr = [];
+	    for (var i = 0; i < utf8.length; i++) {
+			arr[i] = utf8.charCodeAt(i);
+		}
+	    return arr;
+	};
 
 	return NRS;
 }(NRS || {}, jQuery));

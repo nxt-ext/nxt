@@ -10,7 +10,7 @@ var NRS = (function(NRS, $, undefined) {
 
 		NRS.fetchingModalData = true;
 
-		NRS.sendRequest("getState", function(state) {
+		NRS.sendRequest("getState", {}, function(state) {
 			for (var key in state) {
 				var el = $("#nrs_node_state_" + key);
 				if (el.length) {

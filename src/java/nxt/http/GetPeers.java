@@ -28,7 +28,7 @@ public final class GetPeers extends APIServlet.APIRequestHandler {
         Collection<? extends Peer> peers = active ? Peers.getActivePeers() : stateValue != null ? Peers.getPeers(Peer.State.valueOf(stateValue)) : Peers.getAllPeers();
         JSONArray peersJSON = new JSONArray();
         for (Peer peer : peers) {
-            peersJSON.add(includePeerInfo ? JSONData.peer(peer) : peer.getPeerAddress());
+            peersJSON.add(includePeerInfo ? JSONData.peer(peer) : peer.getHost());
         }
 
         JSONObject response = new JSONObject();

@@ -5,6 +5,8 @@ import nxt.Constants;
 import nxt.crypto.Crypto;
 import nxt.util.Convert;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.concurrent.ThreadLocalRandom;
@@ -79,13 +81,17 @@ public final class Hallmark {
 
         boolean isValid = host.length() < 100 && weight > 0 && weight <= Constants.MAX_BALANCE_NXT
                 && Crypto.verify(signature, data, publicKey, true);
-
-        return new Hallmark(hallmarkString, publicKey, signature, host, weight, date, isValid);
+        try {
+            return new Hallmark(hallmarkString, publicKey, signature, host, weight, date, isValid);
+        } catch (URISyntaxException e) {
+            throw new RuntimeException(e.toString(), e);
+        }
 
     }
 
     private final String hallmarkString;
     private final String host;
+    private final int port;
     private final int weight;
     private final int date;
     private final byte[] publicKey;
@@ -93,9 +99,12 @@ public final class Hallmark {
     private final byte[] signature;
     private final boolean isValid;
 
-    private Hallmark(String hallmarkString, byte[] publicKey, byte[] signature, String host, int weight, int date, boolean isValid) {
+    private Hallmark(String hallmarkString, byte[] publicKey, byte[] signature, String host, int weight, int date, boolean isValid)
+            throws URISyntaxException {
         this.hallmarkString = hallmarkString;
-        this.host = host;
+        URI uri = new URI("http://" + host);
+        this.host = uri.getHost();
+        this.port = uri.getPort() == -1 ? Peers.getDefaultPeerPort() : uri.getPort();
         this.publicKey = publicKey;
         this.accountId = Account.getId(publicKey);
         this.signature = signature;
@@ -110,6 +119,10 @@ public final class Hallmark {
 
     public String getHost() {
         return host;
+    }
+
+    public int getPort() {
+        return port;
     }
 
     public int getWeight() {

@@ -20,11 +20,6 @@ public abstract class VersionedEntityDbTable<T> extends EntityDbTable<T> {
         super(table, dbKeyFactory, true, fullTextSearchColumns);
     }
 
-    @Override
-    public void rollback(int height) {
-        rollback(db, table, height, dbKeyFactory);
-    }
-
     public final boolean delete(T t) {
         if (t == null) {
             return false;
@@ -61,11 +56,6 @@ public abstract class VersionedEntityDbTable<T> extends EntityDbTable<T> {
         } finally {
             db.getCache(table).remove(dbKey);
         }
-    }
-
-    @Override
-    public void trim(int height) {
-        trim(db, table, height, dbKeyFactory);
     }
 
     static void rollback(final TransactionalDb db, final String table, final int height, final DbKey.Factory dbKeyFactory) {

@@ -26,8 +26,8 @@ public final class GetAccountTransactionIds extends APIServlet.APIRequestHandler
         Account account = ParameterParser.getAccount(req);
         int timestamp = ParameterParser.getTimestamp(req);
         int numberOfConfirmations = ParameterParser.getNumberOfConfirmations(req);
-        boolean withMessage = ParameterParser.getBoolean(req, "withMessage", false);
-        boolean phased = ParameterParser.getBoolean(req, "phased", false);
+        boolean withMessage = "true".equalsIgnoreCase(req.getParameter("withMessage"));
+        boolean phased = "true".equalsIgnoreCase(req.getParameter("phased"));
 
         byte type;
         byte subtype;

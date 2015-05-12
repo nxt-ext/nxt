@@ -1,7 +1,5 @@
 package nxt.util;
 
-import nxt.Constants;
-
 import java.util.concurrent.atomic.AtomicInteger;
 
 public interface Time {
@@ -11,7 +9,7 @@ public interface Time {
     final class EpochTime implements Time {
 
         public int getTime() {
-            return (int)((System.currentTimeMillis() - Constants.EPOCH_BEGINNING + 500) / 1000);
+            return Convert.toEpochTime(System.currentTimeMillis());
         }
 
     }

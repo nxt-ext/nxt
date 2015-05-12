@@ -15,6 +15,8 @@ import nxt.Nxt;
 import nxt.Order;
 import nxt.PhasingPoll;
 import nxt.Poll;
+import nxt.PrunableMessage;
+import nxt.TaggedData;
 import nxt.Trade;
 import nxt.Vote;
 import nxt.peer.Peers;
@@ -71,19 +73,20 @@ public final class GetState extends APIServlet.APIRequestHandler {
             response.put("numberOfPolls", Poll.getCount());
             response.put("numberOfVotes", Vote.getCount());
             response.put("numberOfPhasedTransactions", PhasingPoll.getPhasedCount());
+            response.put("numberOfPrunableMessages", PrunableMessage.getCount());
+            response.put("numberOfTaggedData", TaggedData.getCount());
+            response.put("numberOfDataTags", TaggedData.Tag.getTagCount());
         }
         response.put("numberOfPeers", Peers.getAllPeers().size());
+        response.put("numberOfActivePeers", Peers.getActivePeers().size());
         response.put("numberOfUnlockedAccounts", Generator.getAllGenerators().size());
         response.put("availableProcessors", Runtime.getRuntime().availableProcessors());
         response.put("maxMemory", Runtime.getRuntime().maxMemory());
         response.put("totalMemory", Runtime.getRuntime().totalMemory());
         response.put("freeMemory", Runtime.getRuntime().freeMemory());
         response.put("peerPort", Peers.getDefaultPeerPort());
-        response.put("isTestnet", Constants.isTestnet);
         response.put("isOffline", Constants.isOffline);
         response.put("needsAdminPassword", !API.disableAdminPassword);
-        response.put("maxRollback", Constants.MAX_ROLLBACK);
-        response.put("currentMinRollbackHeight", Nxt.getBlockchainProcessor().getMinRollbackHeight());
         return response;
     }
 

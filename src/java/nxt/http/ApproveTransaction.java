@@ -14,7 +14,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static nxt.http.JSONResponses.MISSING_TRANSACTION_FULL_HASH;
-import static nxt.http.JSONResponses.PHASING_TRANSACTION_FINISHED;
 import static nxt.http.JSONResponses.TOO_MANY_PHASING_VOTES;
 import static nxt.http.JSONResponses.UNKNOWN_TRANSACTION_FULL_HASH;
 

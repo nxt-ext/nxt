@@ -23,11 +23,14 @@
     <div class="form-group optional_message">
         <label for="{{name}}_message" data-i18n="message">MESSAGE</label>
         <textarea class="form-control" id="{{name}}_message" name="message" rows="4" tabindex="102"></textarea>
-         <div style="margin-top:3px" id="{{name}}_to_specific_account_message_options">
+        <div style="margin-top:3px" id="{{name}}_to_specific_account_message_options">
             <label for="{{name}}_encrypt_message" style="font-weight:normal;color:#666"><input type="checkbox" name="encrypt_message" id="{{name}}_encrypt_message" value="1" data-default="checked" checked="checked" /> <span data-i18n="encrypt_message">Encrypt Message</span></label>
         </div>
         <div style="margin-top:3px;display:none" id="{{name}}_to_anyone_message_options">
             <label for="{{name}}_encrypt_message" style="font-weight:normal;color:#666" data-i18n="message_is_not_encrypted">This message is not encrypted.</label>
+        </div>
+        <div style="margin-top:3px">
+            <label for="{{name}}_message_permanent" style="font-weight:normal;color:#666"><input type="checkbox" name="permanent_message" id="{{name}}_message_permanent" value="1" data-default="unchecked" /> <span data-i18n="permanent_message">Message is Never Deleted</span></label>
         </div>
     </div>
 </div>
@@ -48,6 +51,14 @@
     <div class="form-group secret_phrase">
         <label for="{{name}}_password" data-i18n="passphrase">PASSPHRASE</label>
         <input type="password" name="secretPhrase" id="{{name}}_password" class="form-control" placeholder="" tabindex="111">
+    </div>
+</div>
+
+
+<div id="admin_password_modal_template">
+    <div class="form-group">
+        <label for="{{name}}_admin_password" data-i18n="admin_password">ADMIN PASSWORD</label>
+        <input type="password" name="adminPassword" id="{{name}}_admin_password" class="form-control" placeholder="" tabindex="112">
     </div>
 </div>
 

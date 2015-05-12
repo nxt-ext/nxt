@@ -42,6 +42,11 @@ public class BlacklistPeer extends APIRequestHandler {
     }
 
     @Override
+    final boolean requirePost() {
+        return true;
+    }
+
+    @Override
     boolean requirePassword() {
         return true;
     }

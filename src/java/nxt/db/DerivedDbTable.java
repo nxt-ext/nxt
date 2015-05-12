@@ -52,8 +52,12 @@ public abstract class DerivedDbTable {
         //implemented in EntityDbTable only
     }
 
+    public boolean isPersistent() {
+        return false;
+    }
+
     @Override
-    public String toString() {
+    public final String toString() {
         return table;
     }
 

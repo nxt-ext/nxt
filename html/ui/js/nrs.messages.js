@@ -62,6 +62,9 @@ var NRS = (function(NRS, $) {
 		var sortedMessages = [];
 
 		for (var otherUser in _messages) {
+			if (!_messages.hasOwnProperty(otherUser)) {
+				continue;
+			}
 			_messages[otherUser].sort(function(a, b) {
 				if (a.timestamp > b.timestamp) {
 					return 1;
@@ -174,8 +177,8 @@ var NRS = (function(NRS, $) {
 							decoded = $.t("error_decryption_unknown");
 						}
 					}
-				} else {
-					if (!messages[i].attachment["version.Message"]) {
+				} else if (messages[i].attachment.message) {
+					if (!messages[i].attachment["version.Message"] && !messages[i].attachment["version.PrunablePlainMessage"]) {
 						try {
 							decoded = converters.hexStringToString(messages[i].attachment.message);
 						} catch (err) {
@@ -189,6 +192,10 @@ var NRS = (function(NRS, $) {
 					} else {
 						decoded = String(messages[i].attachment.message);
 					}
+				} else if (messages[i].attachment.messageHash || messages[i].attachment.encryptedMessageHash) {
+					decoded = $.t("message_pruned");
+				} else {
+					decoded = $.t("message_empty");
 				}
 
 				if (decoded !== false) {
@@ -398,7 +405,13 @@ var NRS = (function(NRS, $) {
 		try {
 			var messagesToDecrypt = [];
 			for (var otherUser in _messages) {
+				if (!_messages.hasOwnProperty(otherUser)) {
+					continue;
+				}
 				for (var key in _messages[otherUser]) {
+					if (!_messages[otherUser].hasOwnProperty(key)) {
+						continue;
+					}
 					var message = _messages[otherUser][key];
 					if (message.attachment && message.attachment.encryptedMessage) {
 						messagesToDecrypt.push(message);
@@ -438,6 +451,34 @@ var NRS = (function(NRS, $) {
 			"stop": true
 		};
 	};
+
+    $('#upload_file').bind('change', function () {
+        // Mimics the server side SizeBasedFee calculation
+        var size = this.files[0].size;
+        size += NRS.getUtf8Bytes($('#tagged_data_name').val()).length;
+        size += NRS.getUtf8Bytes($('#tagged_data_description').val()).length;
+        size += NRS.getUtf8Bytes($('#tagged_data_tags').val()).length;
+        size += NRS.getUtf8Bytes($('#tagged_data_type').val()).length;
+        size += NRS.getUtf8Bytes($('#tagged_data_channel').val()).length;
+        size += NRS.getUtf8Bytes(this.files[0].name).length;
+        var dataFee = parseInt(new BigInteger("" + size).divide(new BigInteger("1024")).toString()) * 0.1;
+        $('#upload_data_fee').val(1 + dataFee);
+        $('#upload_data_fee_label').html(String(1 + dataFee) + " NXT");
+    });
+
+    $("#extend_data_modal").on("show.bs.modal", function (e) {
+        var $invoker = $(e.relatedTarget);
+        var transaction = $invoker.data("transaction");
+        $("#extend_data_transaction").val(transaction);
+        NRS.sendRequest("getTransaction", {
+            "transaction": transaction
+        }, function (response) {
+            var fee = NRS.convertToNXT(String(response.feeNQT).escapeHTML());
+            $('#extend_data_fee').val(fee);
+            $('#extend_data_fee_label').html(String(fee) + " NXT");
+        })
+    });
+
 
 	return NRS;
 }(NRS || {}, jQuery));

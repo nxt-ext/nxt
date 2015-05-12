@@ -9,7 +9,9 @@ public interface Peer extends Comparable<Peer> {
         NON_CONNECTED, CONNECTED, DISCONNECTED
     }
 
-    String getPeerAddress();
+    String getHost();
+
+    int getPort();
 
     String getAnnouncedAddress();
 
@@ -46,6 +48,12 @@ public interface Peer extends Comparable<Peer> {
     long getUploadedVolume();
 
     int getLastUpdated();
+
+    boolean isInbound();
+
+    boolean isInboundWebSocket();
+
+    boolean isOutboundWebSocket();
 
     String getBlacklistingCause();
 

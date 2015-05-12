@@ -101,7 +101,7 @@ var ATS = (function(ATS, $, undefined) {
             e.preventDefault();
         });
 
-    }
+    };
 
     ATS.performSearch = function(searchStr) {
         if (searchStr == '') {
@@ -116,12 +116,12 @@ var ATS = (function(ATS, $, undefined) {
                 }
             }
         }
-    }
+    };
 
     ATS.submitForm = function(form) {
         var url = '/nxt';
         var params = {};
-        for (i = 0; i < form.elements.length; i++) {
+        for (var i = 0; i < form.elements.length; i++) {
             if (form.elements[i].type != 'button' && form.elements[i].value && form.elements[i].value != 'submit') {
                 var key = form.elements[i].name;
                 var value = form.elements[i].value;
@@ -133,11 +133,24 @@ var ATS = (function(ATS, $, undefined) {
                 }
             }
         }
+        var contentType;
+        var processData;
+        var formData = null;
+        if (params["requestType"] == "downloadTaggedData") {
+            window.location = url + "?requestType=downloadTaggedData&transaction=" + params["transaction"];
+            return false;
+        } else {
+            // JQuery defaults
+            contentType = "application/x-www-form-urlencoded; charset=UTF-8";
+            processData = true;
+        }
         $.ajax({
             url: url,
             type: 'POST',
-            data: params,
-            traditional: true // "true" needed for duplicate params
+            data: (formData != null ? formData : params),
+            traditional: true, // "true" needed for duplicate params
+            contentType: contentType,
+            processData: processData
         })
         .done(function(result) {
             var resultStr = JSON.stringify(JSON.parse(result), null, 4);
@@ -150,18 +163,18 @@ var ATS = (function(ATS, $, undefined) {
         });
         if ($(form).has('.uri-link').length > 0) { 
             var uri = '/nxt?' + jQuery.param(params, true);
-            var html = '<a href="' + uri + '" target="_blank" style="font-size:12px;font-weight:normal;">Open GET URL</a>';
-            form.getElementsByClassName("uri-link")[0].innerHTML = html;
+            form.getElementsByClassName("uri-link")[0].innerHTML = '<a href="' + uri + '" target="_blank" style="font-size:12px;font-weight:normal;">Open GET URL</a>';
         }
         return false;
-    }
+    };
 
     ATS.selectedApiCallsChange = function() {
         var newUrl = '/test?requestTypes=' + encodeURIComponent(ATS.selectedApiCalls.join('_'));
-        $('#navi-selected').attr('href', newUrl);
-        $('#navi-selected').text('SELECTED (' + ATS.selectedApiCalls.length + ')');
+        var navi = $('#navi-selected');
+        navi.attr('href', newUrl);
+        navi.text('SELECTED (' + ATS.selectedApiCalls.length + ')');
         ATS.setCookie('selected_api_calls', ATS.selectedApiCalls.join('_'), 30);
-    }
+    };
 
     ATS.setSelectedApiCalls = function() {
         var calls = [];
@@ -176,7 +189,7 @@ var ATS = (function(ATS, $, undefined) {
             $('#api-call-sel-' + calls[i]).prop('checked', true);
         }
         return calls;
-    } 
+    };
     
     ATS.addToSelected = function(elem) {
         var type=elem.attr('id').substr(13);
@@ -185,7 +198,7 @@ var ATS = (function(ATS, $, undefined) {
             ATS.selectedApiCalls.push(type);
             ATS.selectedApiCallsChange();
         }
-    }
+    };
     
     ATS.removeFromSelected = function(elem) {
         var type=elem.attr('id').substr(13);
@@ -195,7 +208,7 @@ var ATS = (function(ATS, $, undefined) {
             ATS.selectedApiCalls.splice(index, 1);
             ATS.selectedApiCallsChange();
         }
-    }
+    };
 
     return ATS;
 }(ATS || {}, jQuery));

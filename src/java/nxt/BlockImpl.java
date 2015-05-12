@@ -50,13 +50,7 @@ final class BlockImpl implements Block {
     }
 
     BlockImpl(int version, int timestamp, long previousBlockId, long totalAmountNQT, long totalFeeNQT, int payloadLength, byte[] payloadHash,
-              byte[] generatorPublicKey, byte[] generationSignature, byte[] blockSignature, byte[] previousBlockHash, List<TransactionImpl> transactions)
-            throws NxtException.NotValidException {
-
-        if (payloadLength > Constants.MAX_PAYLOAD_LENGTH || payloadLength < 0) {
-            throw new NxtException.NotValidException("attempted to create a block with payloadLength " + payloadLength);
-        }
-
+              byte[] generatorPublicKey, byte[] generationSignature, byte[] blockSignature, byte[] previousBlockHash, List<TransactionImpl> transactions) {
         this.version = version;
         this.timestamp = timestamp;
         this.previousBlockId = previousBlockId;
@@ -70,9 +64,6 @@ final class BlockImpl implements Block {
         this.previousBlockHash = previousBlockHash;
         if (transactions != null) {
             this.blockTransactions = Collections.unmodifiableList(transactions);
-            if (blockTransactions.size() > Constants.MAX_NUMBER_OF_TRANSACTIONS) {
-                throw new NxtException.NotValidException("attempted to create a block with " + blockTransactions.size() + " transactions");
-            }
         }
     }
 
@@ -336,7 +327,7 @@ final class BlockImpl implements Block {
 
             BlockImpl previousBlock = BlockchainImpl.getInstance().getBlock(getPreviousBlockId());
             if (previousBlock == null) {
-                throw new BlockchainProcessor.BlockOutOfOrderException("Can't verify signature because previous block is missing");
+                throw new BlockchainProcessor.BlockOutOfOrderException("Can't verify signature because previous block is missing", this);
             }
 
             if (version == 1 && !Crypto.verify(generationSignature, previousBlock.generationSignature, getGeneratorPublicKey(), version >= 3)) {
@@ -404,6 +395,13 @@ final class BlockImpl implements Block {
         for (TransactionImpl transaction : getTransactions()) {
             transaction.setBlock(this);
             transaction.setIndex(index++);
+        }
+    }
+
+    void loadTransactions() {
+        for (TransactionImpl transaction : getTransactions()) {
+            transaction.bytes();
+            transaction.getAppendages();
         }
     }
 

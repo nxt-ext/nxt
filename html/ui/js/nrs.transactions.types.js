@@ -248,7 +248,26 @@ var NRS = (function(NRS, $, undefined) {
                 }
             }
         },
-    }
+        6: {
+            'title': "Tagged Data",
+            'i18nKeyTitle': 'tagged_data',
+            'iconHTML': '<i class="fa fa-dashboard"></i>',
+            'subTypes': {
+                0: {
+                    'title': "Upload Tagged Data",
+                    'i18nKeyTitle': 'upload_tagged_data',
+                    'iconHTML': '<i class="fa fa-upload"></i>'
+                },
+                1: {
+                    'title': "Extend Tagged Data",
+                    'i18nKeyTitle': 'extend_tagged_data',
+                    'iconHTML': '<i class="fa fa-expand"></i>'
+                }
+            }
+        }
+    };
+
+    NRS.subtype = {};
 
     NRS.loadTransactionTypeConstants = function() {
         NRS.sendRequest("getConstants", {}, function (response) {
@@ -273,9 +292,10 @@ var NRS = (function(NRS, $, undefined) {
                         NRS.transactionTypes[typeIndex]["subTypes"][subTypeIndex]["serverConstants"] = subType;
                     });
                 });
+                NRS.subtype = response.transactionSubTypes;
             }
         });
-    }
+    };
     
     return NRS;
 }(NRS || {}, jQuery));

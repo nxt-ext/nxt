@@ -95,6 +95,9 @@ public final class Logger {
         logInfoMessage("logging enabled");
     }
 
+    /**
+     * Logger initialization
+     */
     public static void init() {}
 
     /**
@@ -103,6 +106,29 @@ public final class Logger {
     public static void shutdown() {
         if (LogManager.getLogManager() instanceof NxtLogManager) {
             ((NxtLogManager) LogManager.getLogManager()).nxtShutdown();
+        }
+    }
+
+    /**
+     * Set the log level
+     *
+     * @param       level               Desired log level
+     */
+    public static void setLevel(Level level) {
+        java.util.logging.Logger jdkLogger = java.util.logging.Logger.getLogger(log.getName());
+        switch (level) {
+            case DEBUG:
+                jdkLogger.setLevel(java.util.logging.Level.FINE);
+                break;
+            case INFO:
+                jdkLogger.setLevel(java.util.logging.Level.INFO);
+                break;
+            case WARN:
+                jdkLogger.setLevel(java.util.logging.Level.WARNING);
+                break;
+            case ERROR:
+                jdkLogger.setLevel(java.util.logging.Level.SEVERE);
+                break;
         }
     }
 
