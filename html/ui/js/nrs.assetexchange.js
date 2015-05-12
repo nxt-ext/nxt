@@ -375,10 +375,16 @@ var NRS = (function (NRS, $, undefined) {
                 isClosedGroup = NRS.closedGroups.indexOf(to_check) != -1;
                 if (asset.groupName) {
                     ungrouped = false;
-                    rows += "<a href='#' class='list-group-item list-group-item-header" + (asset.groupName == "Ignore List" ? " no-context" : "") + "'" + (asset.groupName != "Ignore List" ? " data-context='asset_exchange_sidebar_group_context' " : "data-context=''") + " data-groupname='" + asset.groupName.escapeHTML() + "' data-closed='" + isClosedGroup + "'><h4 class='list-group-item-heading'>" + asset.groupName.toUpperCase().escapeHTML() + "</h4><i class='fa fa-angle-" + (isClosedGroup ? "right" : "down") + " group_icon'></i></h4></a>";
+                    rows += "<a href='#' class='list-group-item list-group-item-header" + (asset.groupName == "Ignore List" ? " no-context" : "") + "'";
+                    rows += (asset.groupName != "Ignore List" ? " data-context='asset_exchange_sidebar_group_context' " : "data-context=''");
+                    rows += " data-groupname='" + asset.groupName.escapeHTML() + "' data-closed='" + isClosedGroup + "'>";
+                    rows += "<h4 class='list-group-item-heading'>" + asset.groupName.toUpperCase().escapeHTML() + "</h4>";
+                    rows += "<i class='fa fa-angle-" + (isClosedGroup ? "right" : "down") + " group_icon'></i></h4></a>";
                 } else {
                     ungrouped = true;
-                    rows += "<a href='#' class='list-group-item list-group-item-header no-context' data-closed='" + isClosedGroup + "'><h4 class='list-group-item-heading'>UNGROUPED <i class='fa pull-right fa-angle-" + (isClosedGroup ? "right" : "down") + "'></i></h4></a>";
+                    rows += "<a href='#' class='list-group-item list-group-item-header no-context' data-closed='" + isClosedGroup + "'>";
+                    rows += "<h4 class='list-group-item-heading'>UNGROUPED <i class='fa pull-right fa-angle-" + (isClosedGroup ? "right" : "down") + "'></i></h4>";
+                    rows += "</a>";
                 }
 
                 lastGroup = asset.groupName.toLowerCase();
@@ -402,7 +408,7 @@ var NRS = (function (NRS, $, undefined) {
             rows += "data-asset='" + String(asset.asset).escapeHTML() + "'" + (!ungrouped ? " data-groupname='" + asset.groupName.escapeHTML() + "'" : "");
             rows += (isClosedGroup ? " style='display:none'" : "") + " data-closed='" + isClosedGroup + "'>";
             rows += "<h4 class='list-group-item-heading'>" + asset.name.escapeHTML() + "</h4>";
-            rows += "<p class='list-group-item-text'><span data-i18n=\"quantity\">Quantity</span>: " + NRS.formatQuantity(ownsQuantityQNT, asset.decimals) + "</p>";
+            rows += "<p class='list-group-item-text'><span>" + $.t('quantity') + "</span>: " + NRS.formatQuantity(ownsQuantityQNT, asset.decimals) + "</p>";
             rows += "</a>";
         }
 
