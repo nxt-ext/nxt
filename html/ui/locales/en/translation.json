@@ -86,7 +86,7 @@
   "application": "Application",
   "approval_min_balance_needed_warning": "",
   "approval_requests": "",
-  "approve": "",
+  "approve": "Approve",
   "approve_modal_by_account_tab_help": "",
   "approve_modal_by_asset_tab_help": "",
   "approve_modal_by_balance_tab_help": "",

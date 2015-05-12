@@ -280,7 +280,7 @@ var NRS = (function(NRS, $, undefined) {
 
         var websiteHTML = "&nbsp;";
         if (manifest) {
-            websiteHTML = "<a href='" + encodeURI(String(manifest['infoUrl'])) + "' target='_blank'><span data-i18n='website'>Website</span></a>";
+            websiteHTML = "<a href='" + encodeURI(String(manifest['infoUrl'])) + "' target='_blank'><span>" + $.t('website') + "</span></a>";
         }
         html += "<td>" + websiteHTML + "</td>";
 
