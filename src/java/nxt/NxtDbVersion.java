@@ -784,8 +784,6 @@ class NxtDbVersion extends DbVersion {
             case 328:
                 apply("CREATE UNIQUE INDEX IF NOT EXISTS shuffling_participant_shuffling_id_account_id_idx ON shuffling_participant (shuffling_id, account_id, height DESC)");
             case 329:
-                apply("ALTER TABLE poll ADD COLUMN IF NOT EXISTS timestamp INT NOT NULL");
-            case 330:
                 return;
             default:
                 throw new RuntimeException("Blockchain database inconsistent with code, probably trying to run older code on newer database");
