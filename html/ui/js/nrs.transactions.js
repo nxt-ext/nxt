@@ -588,6 +588,7 @@ var NRS = (function(NRS, $, undefined) {
 		$('#transactions_type_navi a[data-toggle="popover"]').popover({
 			"trigger": "hover"
 		});
+		$("#transactions_type_navi [data-i18n]").i18n();
 	}
 
 	NRS.buildTransactionsSubTypeNavi = function() {

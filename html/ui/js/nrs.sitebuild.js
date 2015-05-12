@@ -115,6 +115,7 @@ var NRS = (function(NRS, $, undefined) {
             if (!inserted) {
                 $('#sidebar_menu').append(menuHTML);
             }
+            $("#sidebar_menu [data-i18n]").i18n();
         }
     }
 
