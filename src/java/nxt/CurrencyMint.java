@@ -152,9 +152,7 @@ public final class CurrencyMint {
                 currencyMints.add(mints.next());
             }
         }
-        for (CurrencyMint mint : currencyMints) {
-            currencyMintTable.delete(mint);
-        }
+        currencyMints.forEach(currencyMintTable::delete);
     }
 
 }

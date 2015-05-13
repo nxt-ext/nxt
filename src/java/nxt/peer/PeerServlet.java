@@ -159,11 +159,11 @@ public final class PeerServlet extends WebSocketServlet {
         //
         // Process the peer request
         //
-        InetSocketAddress socketAddr = webSocket.getRemoteAddress();
-        if (socketAddr == null)
+        InetSocketAddress socketAddress = webSocket.getRemoteAddress();
+        if (socketAddress == null)
             return;
-        String remoteAddr = socketAddr.getHostString();
-        PeerImpl peer = Peers.findOrCreatePeer(remoteAddr);
+        String remoteAddress = socketAddress.getHostString();
+        PeerImpl peer = Peers.findOrCreatePeer(remoteAddress);
         if (peer == null) {
             jsonResponse = UNKNOWN_PEER;
         } else {
@@ -221,7 +221,7 @@ public final class PeerServlet extends WebSocketServlet {
                 Logger.logDebugMessage("Unsupported protocol " + request.get("protocol"));
                 return UNSUPPORTED_PROTOCOL;
             }
-            PeerRequestHandler peerRequestHandler = peerRequestHandlers.get((String)request.get("requestType"));
+            PeerRequestHandler peerRequestHandler = peerRequestHandlers.get(request.get("requestType"));
             if (peerRequestHandler == null) {
                 return UNSUPPORTED_REQUEST_TYPE;
             }

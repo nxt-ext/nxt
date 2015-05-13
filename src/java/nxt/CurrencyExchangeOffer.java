@@ -24,9 +24,7 @@ public abstract class CurrencyExchangeOffer {
                     expired.add(offer);
                 }
             }
-            for (CurrencyBuyOffer offer : expired) {
-                removeOffer(offer);
-            }
+            expired.forEach(CurrencyExchangeOffer::removeOffer);
         }, BlockchainProcessor.Event.AFTER_BLOCK_APPLY);
 
     }

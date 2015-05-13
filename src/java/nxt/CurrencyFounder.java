@@ -121,8 +121,6 @@ public class CurrencyFounder {
                 founders.add(founder);
             }
         }
-        for (CurrencyFounder founder : founders) {
-            currencyFounderTable.delete(founder);
-        }
+        founders.forEach(currencyFounderTable::delete);
     }
 }

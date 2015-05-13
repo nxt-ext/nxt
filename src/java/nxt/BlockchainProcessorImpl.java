@@ -293,7 +293,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 if (nextBlockIds.size() > 1440) {
                     Logger.logDebugMessage("Obsolete or rogue peer " + peer.getHost() + " sends too many nextBlockIds, blacklisting");
                     peer.blacklist("Too many nextBlockIds");
-                    return null;
+                    return Collections.emptyList();
                 }
                 boolean matching = true;
                 for (Object nextBlockId : nextBlockIds) {
@@ -531,7 +531,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             for (int i=start+1; i<=stop; i++)
                 idList.add(Long.toUnsignedString(blockIds.get(i)));
             //
-            // Issue the getNextBlocks request and specify block 'blockIds' and 'blockId'.
+            // Issue the getNextBlocks request and specify both 'blockIds' and 'blockId'.
             // This will allow the request to be processed by both old and new nodes.
             //
             JSONObject request = new JSONObject();
@@ -1347,19 +1347,10 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         final byte[] publicKey = Crypto.getPublicKey(secretPhrase);
         byte[] generationSignature = digest.digest(publicKey);
 
-        BlockImpl block;
         byte[] previousBlockHash = Crypto.sha256().digest(previousBlock.bytes());
 
-        try {
-
-            block = new BlockImpl(getBlockVersion(previousBlock.getHeight()), blockTimestamp, previousBlock.getId(), totalAmountNQT, totalFeeNQT, payloadLength,
-                    payloadHash, publicKey, generationSignature, previousBlockHash, blockTransactions, secretPhrase);
-
-        } catch (NxtException.NotValidException e) {
-            // shouldn't happen because all transactions are already validated
-            Logger.logMessage("Error generating block", e);
-            return;
-        }
+        BlockImpl block = new BlockImpl(getBlockVersion(previousBlock.getHeight()), blockTimestamp, previousBlock.getId(), totalAmountNQT, totalFeeNQT, payloadLength,
+                payloadHash, publicKey, generationSignature, previousBlockHash, blockTransactions, secretPhrase);
 
         try {
             pushBlock(block);

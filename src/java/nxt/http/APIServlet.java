@@ -355,7 +355,7 @@ public final class APIServlet extends HttpServlet {
                 JSONData.putException(json, e);
                 response = JSON.prepare(json);
             } catch (ExceptionInInitializerError err) {
-                Logger.logErrorMessage("Initialization Error", (Exception) err.getCause());
+                Logger.logErrorMessage("Initialization Error", err.getCause());
                 response = ERROR_INCORRECT_REQUEST;
             } finally {
                 if (apiRequestHandler.startDbTransaction()) {

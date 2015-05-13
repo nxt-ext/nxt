@@ -387,7 +387,7 @@ final class BlockchainImpl implements Blockchain {
 
     @Override
     public DbIterator<TransactionImpl> getTransactions(Connection con, PreparedStatement pstmt) {
-        return new DbIterator<TransactionImpl>(con, pstmt, TransactionDb::loadTransaction);
+        return new DbIterator<>(con, pstmt, TransactionDb::loadTransaction);
     }
 
 }

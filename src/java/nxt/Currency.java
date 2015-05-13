@@ -456,9 +456,7 @@ public final class Currency {
                     buyOffers.add(offers.next());
                 }
             }
-            for (CurrencyBuyOffer offer : buyOffers) {
-                CurrencyExchangeOffer.removeOffer(offer);
-            }
+            buyOffers.forEach(CurrencyExchangeOffer::removeOffer);
         }
         if (is(CurrencyType.MINTABLE)) {
             CurrencyMint.deleteCurrency(this);

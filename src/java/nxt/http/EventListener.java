@@ -65,7 +65,7 @@ class EventListener implements Runnable, AsyncListener {
                 listeners.addAll(eventListeners.values());
                 listeners.stream()
                          .filter(listener -> listener.getTimestamp() < oldestTime)
-                         .forEach(listener -> listener.deactivateListener());
+                         .forEach(EventListener::deactivateListener);
             }
         }, eventTimeout*500, eventTimeout*500);
     }
@@ -707,7 +707,7 @@ class EventListener implements Runnable, AsyncListener {
         @Override
         public void notify(List<? extends Transaction> txList) {
             List<String> idList = new ArrayList<>();
-            txList.forEach((tx)->idList.add(tx.getStringId()));
+            txList.forEach((tx) -> idList.add(tx.getStringId()));
             lock.lock();
             try {
                 pendingEvents.add(new PendingEvent("Transaction."+event.name(), idList));
