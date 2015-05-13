@@ -209,9 +209,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                 JSONObject request = new JSONObject();
                 request.put("requestType", "getUnconfirmedTransactions");
                 JSONArray exclude = new JSONArray();
-                for (Long transactionId : getAllUnconfirmedTransactionIds()) {
-                    exclude.add(Long.toUnsignedString(transactionId));
-                }
+                getAllUnconfirmedTransactionIds().forEach(transactionId -> exclude.add(Long.toUnsignedString(transactionId)));
                 Collections.sort(exclude);
                 request.put("exclude", exclude);
                 JSONObject response = peer.send(JSON.prepareRequest(request), 10 * 1024 * 1024);

@@ -162,7 +162,7 @@ public class EventWait extends APIServlet.APIRequestHandler {
      */
     static JSONObject formatResponse(List<PendingEvent> events) {
         JSONArray eventsJSON = new JSONArray();
-        events.stream().forEach(event -> {
+        events.forEach(event -> {
             JSONArray idsJSON = new JSONArray();
             idsJSON.addAll(event.getIdList());
             JSONObject eventJSON = new JSONObject();

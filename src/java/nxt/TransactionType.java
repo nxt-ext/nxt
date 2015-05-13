@@ -945,7 +945,7 @@ public abstract class TransactionType {
 
                 List<byte[]> hashes = attachment.getTransactionFullHashes();
                 if (hashes.size() > Constants.MAX_PHASING_VOTE_TRANSACTIONS) {
-                    throw new NxtException.NotValidException("No more than " + Constants.MAX_PHASING_VOTE_TRANSACTIONS + " votes allowed for two-phased multivoting");
+                    throw new NxtException.NotValidException("No more than " + Constants.MAX_PHASING_VOTE_TRANSACTIONS + " votes allowed for two-phased multi-voting");
                 }
 
                 long voterId = transaction.getSenderId();

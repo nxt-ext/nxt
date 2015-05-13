@@ -106,8 +106,7 @@ public final class PhasingPoll extends AbstractPoll {
                  PreparedStatement pstmt2 = con.prepareStatement("DELETE FROM phasing_poll_voter WHERE transaction_id = ?");
                  PreparedStatement pstmt3 = con.prepareStatement("DELETE FROM phasing_vote WHERE transaction_id = ?")) {
                 while (pollsToTrim.hasNext()) {
-                    PhasingPoll polltoTrim = pollsToTrim.next();
-                    long id = polltoTrim.getId();
+                    long id = pollsToTrim.next().getId();
                     pstmt1.setLong(1, id);
                     pstmt1.executeUpdate();
                     pstmt2.setLong(1, id);

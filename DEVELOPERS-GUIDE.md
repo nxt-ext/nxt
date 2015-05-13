@@ -125,7 +125,7 @@ The basis for other translations is the **english translation** file in ``ui/loc
 
 1. Make a permanent backup of your ``locales`` folder outside of your Git repository
 2. Count the rows of the english translation file, e.g. ``wc -l ui/locales/en/translation.json``
-3. To avoid intervenings with 3rd party files create a temporary folder for files to be parsed ``ui/trans-tmp/`` (``cp ui/js/*.* ui/trans-tmp/``, ``cp -R ui/html ui/trans-tmp/``, ``cp ui/*.html ui/trans-tmp/``)
+3. To avoid intervenings with 3rd party files create a temporary folder for files to be parsed ``mkdir ui/trans-tmp/`` (``cp ui/js/*.* ui/trans-tmp/``, ``cp -R ui/html ui/trans-tmp/``, ``cp ui/*.html ui/trans-tmp/``)
 4. Parse translation strings not yet included in the english translation file with the i18next parser (extra install) with ``i18next ui/trans-tmp -r -l en -o ui/locales/`` (if there is a strange "reuseSuffix" entry at the top of the file: this is a bug, delete!)
 5. There are dynamic uses of the ``$.t()`` function in the code base causing ``i18next`` to not detect all keys. If there is a generated ``translation_old.json`` file, don't throw these away. Instead add these strings manually to the ``translation.json`` file (keep an eye on commatas at the end of the lines!)
 6. Search for empty translation strings in english translation file forgotten by devs (by searching for empty string ""), full-text search in client folders for associated key and manually fill-in english string to translation file.
@@ -143,9 +143,9 @@ For providing new translation strings on the platform for the community to trans
 #### Integrating new translations into the client ####
 
 1. Build/download the latest translation files from Crowdin (permissions needed) and replace the language folders like ``fa``, ``pt-BR``,... with the folders downloaded. Please make sure to NOT touch the english folder ``en``.
-2. Make some consistency checks (lengths of old/new files, "git diff" on language files)
-3. Rename all folder names to lowercase, e.g. ``es-ES`` to ``es-es``.
-4. New languages can be added to ``NRS.languages`` in ``ui/js/nrs.settings.js`` file. Review the status of the languages (70-80%+ Beta, 90-95%+ Stable), eventually add new languages
+2. Rename all folder names to lowercase, e.g. ``es-ES`` to ``es-es``.
+3. Make some consistency checks (lengths of old/new files, "git diff" on language files)
+4. New languages can be added to ``NRS.languages`` in ``ui/js/nrs.settings.js`` file. Review the status of the languages (40-50%+ Experimental, 70-80%+ Beta, 90-95%+ Stable), eventually add new languages
 
 
 

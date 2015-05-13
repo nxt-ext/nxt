@@ -95,9 +95,9 @@ var NRS = (function(NRS, $, undefined) {
         $elems.each(function(i) {
             $(this).empty();
             $(this).append(template(context));
+            $(this).parent().find("[data-i18n]").i18n();
         });
 
-       $('div[data-modal-ui-element]').find("[data-i18n]").i18n();
        return $elems;
     }
 
@@ -115,6 +115,7 @@ var NRS = (function(NRS, $, undefined) {
             if (!inserted) {
                 $('#sidebar_menu').append(menuHTML);
             }
+            $("#sidebar_menu [data-i18n]").i18n();
         }
     }
 
