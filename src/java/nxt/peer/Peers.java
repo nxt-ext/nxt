@@ -190,7 +190,7 @@ public final class Peers {
         maxNumberOfInboundConnections = Nxt.getIntProperty("nxt.maxNumberOfInboundConnections");
         maxNumberOfOutboundConnections = Nxt.getIntProperty("nxt.maxNumberOfOutboundConnections");
         maxNumberOfConnectedPublicPeers = Math.min(Nxt.getIntProperty("nxt.maxNumberOfConnectedPublicPeers"),
-                                                   maxNumberOfOutboundConnections);
+                maxNumberOfOutboundConnections);
         maxNumberOfKnownPeers = Nxt.getIntProperty("nxt.maxNumberOfKnownPeers");
         minNumberOfKnownPeers = Nxt.getIntProperty("nxt.minNumberOfKnownPeers");
         connectTimeout = Nxt.getIntProperty("nxt.connectTimeout");
@@ -614,15 +614,12 @@ public final class Peers {
     }
 
     public static boolean hasTooManyInboundPeers() {
-        return peers.values().parallelStream().unordered()
-                .filter(Peer::isInbound)
-                .count() >= maxNumberOfInboundConnections;
+        return getPeers(Peer::isInbound, maxNumberOfInboundConnections).size() >= maxNumberOfInboundConnections;
     }
 
     public static boolean hasTooManyOutboundConnections() {
-        return peers.values().parallelStream().unordered()
-                .filter(peer -> !peer.isBlacklisted() && peer.getState() == Peer.State.CONNECTED && peer.getAnnouncedAddress() != null)
-                .count() >= maxNumberOfOutboundConnections;
+        return getPeers(peer -> !peer.isBlacklisted() && peer.getState() == Peer.State.CONNECTED && peer.getAnnouncedAddress() != null,
+                maxNumberOfOutboundConnections).size() >= maxNumberOfOutboundConnections;
     }
 
     public static PeerImpl findOrCreatePeer(String announcedAddress, boolean create) {

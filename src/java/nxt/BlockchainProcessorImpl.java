@@ -538,6 +538,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             request.put("requestType", "getNextBlocks");
             request.put("blockIds", idList);
             request.put("blockId", Long.toUnsignedString(blockIds.get(start)));
+            //TODO: after Constants.PHASING_BLOCK has passed, reduce the maxResponseSize
             JSONObject response = peer.send(JSON.prepareRequest(request), 192 * 1024 * 1024);
             if (response == null)
                 return null;
