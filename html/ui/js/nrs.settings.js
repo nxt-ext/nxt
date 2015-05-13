@@ -30,22 +30,24 @@ var NRS = (function(NRS, $) {
 		"es-es": "Español",              // spanish
 		"fi": "Suomi (Beta)",            // finnish
 		"fr": "Français",                // french
-		"gl": "Galego (Beta)",           // galician
-		"sh": "Hrvatski (Beta)",         // croatian
-		"id": "Bahasa Indonesia",        // indonesian
-		"it": "Italiano",                // italian
-		"ja": "日本語 (Beta)",            // japanese
+		"gl": "Galego (Experimental)",   // galician
+		"sh": "Hrvatski (Experimental)", // croatian
+		"hi": "हिन्दी (Experimental)",  // hindi
+		"id": "Bahasa Indonesia (Beta)", // indonesian
+		"it": "Italiano (Beta)",         // italian
+		"ja": "日本語 (Experimental)",    // japanese
 		"lt": "Lietuviškai",             // lithuanian
-		"nl": "Nederlands",              // dutch
+		"nl": "Nederlands (Beta)",       // dutch
+		"cs": "Čeština (Experimental)",  // czech
 		"sk": "Slovensky (Beta)",        // slovakian
-		"pt-pt": "Português (Beta)",     // portugese
+		"pt-pt": "Português",            // portugese
 		"pt-br": "Português Brasileiro", // portugese, brazilian
 		"sr": "Српски (Beta)",           // serbian, cyrillic
 		"sr-cs": "Srpski (Beta)",        // serbian, latin
 		"uk": "Yкраiнска",               // ukrainian
 		"ru": "Русский",                 // russian
-		"zh-cn": "中文 (simplified)",     // chinese simplified
-		"zh-tw": "中文 (traditional)"     // chinese traditional
+		"zh-cn": "中文 simplified",      // chinese simplified
+		"zh-tw": "中文 traditional"      // chinese traditional
 	};
 
 	var userStyles = {};
