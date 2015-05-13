@@ -209,7 +209,7 @@
   "contact_account_link":"Der Kontakt ist mit dem Konto <strong>__account_id__<\/strong> verknüpft.",
   "contact_name":"Kontaktname",
   "contacts":"Kontakte",
-  "contacts_local_storage_help":"<strong>Denken Sie daran<\/strong>: Kontakte werden lokal gespeichert, nicht in der Blockchain.",
+  "contacts_local_storage_help":"<a href='#' onclick='alert(\"Test\");'>Denken Sie daran<\/a>: Kontakte werden lokal gespeichert, nicht in der Blockchain.",
   "contacts_no_db":"Ihr Browser unterstützt keinen Datenbank-Zugriff, ohne den die Kontakte nicht erstellt werden können.",
   "continue":"",
   "continue_forging":"Blockgenerierung fortsetzen",
