@@ -308,7 +308,7 @@ var NRS = (function(NRS, $, undefined) {
 							var finished = false;
 						}
 						var finishHeightFormatted = String(attachment.phasingFinishHeight);
-						var percentageFormatted = NRS.calculatePercentage(responsePoll.result, attachment.phasingQuorum) + "%";
+						var percentageFormatted = NRS.calculatePercentage(responsePoll.result, attachment.phasingQuorum, 0) + "%";
 						var percentageProgressBar = Math.round(responsePoll.result * 100 / attachment.phasingQuorum);
 						var progressBarWidth = Math.round(percentageProgressBar / 2);
 
