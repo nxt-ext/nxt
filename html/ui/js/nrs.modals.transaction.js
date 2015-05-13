@@ -64,7 +64,7 @@ var NRS = (function (NRS, $, undefined) {
             if (transactionDetails.height == NRS.constants.MAX_INT_JAVA) {
                 transactionDetails.height = "unknown";
             } else {
-                transactionDetails.height_formatted_html = "<a href='#' data-block='" + String(transactionDetails.height).escapeHTML() + "'>" + String(transactionDetails.height).escapeHTML() + "</a>";
+                transactionDetails.height_formatted_html = "<a href='#' class='block show_block_modal_action' data-block='" + String(transactionDetails.height).escapeHTML() + "'>" + String(transactionDetails.height).escapeHTML() + "</a>";
                 delete transactionDetails.height;
             }
             $("#transaction_info_modal_transaction").html(String(transaction.transaction).escapeHTML());
