@@ -813,13 +813,13 @@ public final class Account {
             if (height - this.creationHeight < 1440) {
                 return 0;
             }
-            long receivedInlastBlock = 0;
+            long receivedInLastBlock = 0;
             for (Transaction transaction : Nxt.getBlockchain().getBlockAtHeight(height).getTransactions()) {
                 if (id == transaction.getRecipientId()) {
-                    receivedInlastBlock += transaction.getAmountNQT();
+                    receivedInLastBlock += transaction.getAmountNQT();
                 }
             }
-            return (balanceNQT - receivedInlastBlock) / Constants.ONE_NXT;
+            return (balanceNQT - receivedInLastBlock) / Constants.ONE_NXT;
         }
         if (height < currentLeasingHeightFrom) {
             return (getGuaranteedBalanceNQT(Constants.GUARANTEED_BALANCE_CONFIRMATIONS, height) + getLessorsGuaranteedBalanceNQT(height)) / Constants.ONE_NXT;

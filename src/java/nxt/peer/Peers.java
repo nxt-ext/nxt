@@ -192,7 +192,8 @@ public final class Peers {
 
         maxNumberOfInboundConnections = Nxt.getIntProperty("nxt.maxNumberOfInboundConnections");
         maxNumberOfOutboundConnections = Nxt.getIntProperty("nxt.maxNumberOfOutboundConnections");
-        maxNumberOfConnectedPublicPeers = Nxt.getIntProperty("nxt.maxNumberOfConnectedPublicPeers");
+        maxNumberOfConnectedPublicPeers = Math.min(Nxt.getIntProperty("nxt.maxNumberOfConnectedPublicPeers"),
+                maxNumberOfOutboundConnections);
         maxNumberOfKnownPeers = Nxt.getIntProperty("nxt.maxNumberOfKnownPeers");
         minNumberOfKnownPeers = Nxt.getIntProperty("nxt.minNumberOfKnownPeers");
         connectTimeout = Nxt.getIntProperty("nxt.connectTimeout");
@@ -612,8 +613,8 @@ public final class Peers {
                 Logger.logShutdownMessage("Failed to stop peer server", e);
             }
         }
-        ThreadPool.shutdownExecutor("peersService", peersService);
-        ThreadPool.shutdownExecutor("sendingService", sendingService);
+        ThreadPool.shutdownExecutor("sendingService", sendingService, 2);
+        ThreadPool.shutdownExecutor("peersService", peersService, 5);
     }
 
     public static boolean addListener(Listener<Peer> listener, Event eventType) {
@@ -664,15 +665,12 @@ public final class Peers {
     }
 
     public static boolean hasTooManyInboundPeers() {
-        return peers.values().parallelStream().unordered()
-                .filter(Peer::isInbound)
-                .count() >= maxNumberOfInboundConnections;
+        return getPeers(Peer::isInbound, maxNumberOfInboundConnections).size() >= maxNumberOfInboundConnections;
     }
 
     public static boolean hasTooManyOutboundConnections() {
-        return peers.values().parallelStream().unordered()
-                .filter(peer -> !peer.isBlacklisted() && peer.getState() == Peer.State.CONNECTED && peer.getAnnouncedAddress() != null)
-                .count() >= maxNumberOfOutboundConnections;
+        return getPeers(peer -> !peer.isBlacklisted() && peer.getState() == Peer.State.CONNECTED && peer.getAnnouncedAddress() != null,
+                maxNumberOfOutboundConnections).size() >= maxNumberOfOutboundConnections;
     }
 
     public static PeerImpl findOrCreatePeer(String announcedAddress, boolean create) {

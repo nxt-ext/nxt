@@ -34,6 +34,7 @@ public class DeleteCurrencyTest extends BlockchainTest {
         generateBlock();
         apiCall = new APICall.Builder("getCurrency").param("code", code).build();
         response = apiCall.invoke();
+        Logger.logDebugMessage("getCurrencyResponse:" + response);
         Assert.assertEquals((long)5, response.get("errorCode"));
         Assert.assertEquals("Unknown currency", response.get("errorDescription"));
 

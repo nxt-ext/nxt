@@ -317,11 +317,15 @@ var NRS = (function(NRS, $, undefined) {
 		return NRS.convertToNXT(quantityQNT.multiply(priceNQT));
 	};
 
-	NRS.calculatePercentage = function(a, b) {
+	NRS.calculatePercentage = function(a, b, rounding_mode) {
+		if (rounding_mode != undefined) { // Rounding mode from Big.js
+			Big.RM = rounding_mode;
+		}
 		a = new Big(String(a));
 		b = new Big(String(b));
 
 		var result = a.div(b).times(new Big("100")).toFixed(2);
+		Big.RM = 1;
 
 		return result.toString();
 	};
