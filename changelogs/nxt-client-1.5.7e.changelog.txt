@@ -69,6 +69,6 @@ tagged data transaction from the transaction info modal.
 
 Integration of current status of client translations for new 1.5 features,
 new "experimental" state for languages with translation status at 40-50%+,
-added Czech, Hindi translations in experimental state, updated translation
+added Czech, Greek, Hindi translations in experimental state, updated translation
 state for other languages (Beta: 70-80%+, Stable: 90-95%+).
 
