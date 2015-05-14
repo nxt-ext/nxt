@@ -116,8 +116,9 @@ When adding new text/labeling visible in the UI do the following:
 - Use one of the methods outlined above, choose an appropriate translation key
 - Add both the key and the english text to the top of the english translation file
 - Please don't use namespaces in your keys (e.g. not ``namespace.mynewkey``) since this is complicating the filestructure of translation files when created automatically and cause problems when importing files to translation service
-- Don't use the ``$.t()`` function in a dynamic way (e.g. ``$.t(type + "_currency")``), otherwise translation keys can't be extracted from the code
+- If possible, don't use the ``$.t()`` function in a dynamic way (e.g. ``$.t(type + "_currency")``), otherwise translation keys can't be extracted from the code
 - If you later change the english text in the HTML please also change the text within the english translation file, otherwise the new english text is overwritten with the old english text from translation file
+- DON'T USE TRANSLATION TEXTS CONTAINING HTML (TAGGED WITH ``[html]``) FOR SECURITY REASONS!
 
 #### Updating base translation file #####
 

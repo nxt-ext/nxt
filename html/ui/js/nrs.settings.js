@@ -25,12 +25,13 @@ var NRS = (function(NRS, $) {
 	};
 
 	NRS.languages = {
-		"de": "Deutsch (Beta)",          // german
+		"de": "Deutsch (Experimental)",  // german
 		"en": "English",                 // english
 		"es-es": "Español",              // spanish
-		"fi": "Suomi (Beta)",            // finnish
+		"fi": "Suomi (Experimental)",    // finnish
 		"fr": "Français",                // french
 		"gl": "Galego (Experimental)",   // galician
+		"el": "Ελληνικά (Experimental)",  // greek
 		"sh": "Hrvatski (Experimental)", // croatian
 		"hi": "हिन्दी (Experimental)",  // hindi
 		"id": "Bahasa Indonesia (Beta)", // indonesian
@@ -39,11 +40,11 @@ var NRS = (function(NRS, $) {
 		"lt": "Lietuviškai",             // lithuanian
 		"nl": "Nederlands (Beta)",       // dutch
 		"cs": "Čeština (Experimental)",  // czech
-		"sk": "Slovensky (Beta)",        // slovakian
+		"sk": "Slovensky (Experimental)",// slovakian
 		"pt-pt": "Português",            // portugese
 		"pt-br": "Português Brasileiro", // portugese, brazilian
-		"sr": "Српски (Beta)",           // serbian, cyrillic
-		"sr-cs": "Srpski (Beta)",        // serbian, latin
+		"sr": "Српски (Experimental)",   // serbian, cyrillic
+		"sr-cs": "Srpski (Experimental)",// serbian, latin
 		"uk": "Yкраiнска",               // ukrainian
 		"ru": "Русский",                 // russian
 		"zh-cn": "中文 simplified",      // chinese simplified

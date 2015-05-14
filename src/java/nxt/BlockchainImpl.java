@@ -281,13 +281,16 @@ final class BlockchainImpl implements Blockchain {
 
     @Override
     public DbIterator<TransactionImpl> getTransactions(Account account, byte type, byte subtype, int blockTimestamp) {
-        return getTransactions(account, 0, type, subtype, blockTimestamp, false, false, 0, -1);
+        return getTransactions(account, 0, type, subtype, blockTimestamp, false, false, false, 0, -1);
     }
 
     @Override
     public DbIterator<TransactionImpl> getTransactions(Account account, int numberOfConfirmations, byte type, byte subtype,
-                                                       int blockTimestamp, boolean withMessage, boolean phased,
+                                                       int blockTimestamp, boolean withMessage, boolean phasedOnly, boolean nonPhasedOnly,
                                                        int from, int to) {
+        if (phasedOnly && nonPhasedOnly) {
+            throw new IllegalArgumentException("At least one of phasedOnly or nonPhasedOnly must be false");
+        }
         int height = numberOfConfirmations > 0 ? getHeight() - numberOfConfirmations : Integer.MAX_VALUE;
         if (height < 0) {
             throw new IllegalArgumentException("Number of confirmations required " + numberOfConfirmations
@@ -313,8 +316,10 @@ final class BlockchainImpl implements Blockchain {
                 buf.append("AND (has_message = TRUE OR has_encrypted_message = TRUE ");
                 buf.append("OR ((has_prunable_message = TRUE OR has_prunable_encrypted_message = TRUE) AND timestamp > ?)) ");
             }
-            if (phased) {
+            if (phasedOnly) {
                 buf.append("AND phased = TRUE ");
+            } else if (nonPhasedOnly) {
+                buf.append("AND phased = FALSE ");
             }
 
             buf.append("UNION ALL SELECT * FROM transaction WHERE sender_id = ? ");
@@ -334,9 +339,12 @@ final class BlockchainImpl implements Blockchain {
                 buf.append("AND (has_message = TRUE OR has_encrypted_message = TRUE OR has_encrypttoself_message = TRUE ");
                 buf.append("OR ((has_prunable_message = TRUE OR has_prunable_encrypted_message = TRUE) AND timestamp > ?)) ");
             }
-            if (phased) {
+            if (phasedOnly) {
                 buf.append("AND phased = TRUE ");
+            } else if (nonPhasedOnly) {
+                buf.append("AND phased = FALSE ");
             }
+
             buf.append("ORDER BY block_timestamp DESC, transaction_index DESC");
             buf.append(DbUtils.limitsClause(from, to));
             con = Db.db.getConnection();

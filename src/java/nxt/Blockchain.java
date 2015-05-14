@@ -57,7 +57,7 @@ public interface Blockchain {
     DbIterator<? extends Transaction> getTransactions(Account account, byte type, byte subtype, int blockTimestamp);
 
     DbIterator<? extends Transaction> getTransactions(Account account, int numberOfConfirmations, byte type, byte subtype,
-                                                      int blockTimestamp, boolean withMessage, boolean phased,
+                                                      int blockTimestamp, boolean withMessage, boolean phasedOnly, boolean nonPhasedOnly,
                                                       int from, int to);
 
     DbIterator<? extends Transaction> getTransactions(Connection con, PreparedStatement pstmt);
