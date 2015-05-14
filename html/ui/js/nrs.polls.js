@@ -183,7 +183,7 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.pages.voted_polls = function() {
-		NRS.sendRequest("getAccountTransactions",{"account": NRS.accountRS, "type": 1, "subtype": 3}, function(response) {
+		NRS.sendRequest("getBlockchainTransactions",{"account": NRS.accountRS, "type": 1, "subtype": 3}, function(response) {
 			
 			if (response.transactions && response.transactions.length > 0) {
 				var polls = {};

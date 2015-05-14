@@ -134,7 +134,7 @@ var NRS = (function(NRS, $, undefined) {
 
 	NRS.initNotificationCounts = function(time) {
 		var fromTS = time - 60 * 60 * 24 * 14;
-		NRS.sendRequest("getAccountTransactions+", {
+		NRS.sendRequest("getBlockchainTransactions+", {
 			"account": NRS.account,
 			"timestamp": fromTS,
 			"firstIndex": 0,

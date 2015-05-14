@@ -10,7 +10,7 @@ var NRS = (function(NRS, $) {
 
 		$(".content.content-stretch:visible").width($(".page:visible").width());
 
-		NRS.sendRequest("getAccountTransactions+", {
+		NRS.sendRequest("getBlockchainTransactions+", {
 			"account": NRS.account,
 			"firstIndex": 0,
 			"lastIndex": 75,
