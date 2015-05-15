@@ -274,6 +274,8 @@ var NRS = (function(NRS, $, undefined) {
 		}, 1000 * seconds);
 	};
 
+	var _firstTimeAfterLoginRun = false;
+
 	NRS.getState = function(callback) {
 		NRS.sendRequest("getBlockchainStatus", {}, function(response) {
 			if (response.errorCode) {
@@ -318,6 +320,10 @@ var NRS = (function(NRS, $, undefined) {
 							NRS.handleIncomingTransactions(unconfirmedTransactions, false);
 						});
 					}
+				}
+				if (NRS.account && !_firstTimeAfterLoginRun) {
+					//Executed ~30 secs after login, can be used for tasks needing this condition state
+					_firstTimeAfterLoginRun = true;
 				}
 
 				if (callback) {

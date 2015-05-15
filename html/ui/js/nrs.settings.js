@@ -14,6 +14,7 @@ var NRS = (function(NRS, $) {
 		"24_hour_format": "1",
 		"remember_passphrase": "0",
 		"language": "en",
+		"enable_plugins": "0",
 		"items_page": "15",
 		"themeChoice": "default"
 	};
@@ -233,6 +234,9 @@ var NRS = (function(NRS, $) {
 
 		if (NRS.inApp) {
 			$("#settings_console_log_div").hide();
+		}
+		if ((NRS.database && NRS.database["name"] == "NRS_USER_DB") || (!NRS.databaseSupport)) {
+			$("#settings_db_warning").show();
 		}
 
 		NRS.pageLoaded();

@@ -286,9 +286,9 @@ var NRS = (function(NRS, $, undefined) {
 						$(".hide_secret_phrase").show();
 					}
 					if ($("#disable_all_plugins").length == 1 && !($("#disable_all_plugins").is(":checked"))) {
-						NRS.disableAllPlugins = false;
+						NRS.disablePluginsDuringSession = false;
 					} else {
-						NRS.disableAllPlugins = true;
+						NRS.disablePluginsDuringSession = true;
 					}
 
 					$("#account_id").html(String(NRS.accountRS).escapeHTML()).css("font-size", "12px");
@@ -382,7 +382,8 @@ var NRS = (function(NRS, $, undefined) {
 						}
 					});
 					
-					NRS.loadPlugins();
+					setTimeout(function () { NRS.loadPlugins(); }, 1500);
+					
 					$(".sidebar .treeview").tree();
 					$('#dashboard_link a').addClass("ignore").click();
 
