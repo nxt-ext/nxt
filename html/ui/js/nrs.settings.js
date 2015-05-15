@@ -26,7 +26,7 @@ var NRS = (function(NRS, $) {
 	};
 
 	NRS.languages = {
-		"de": "Deutsch (Experimental)",  // german
+		"de": "Deutsch",                 // german
 		"en": "English",                 // english
 		"es-es": "Español",              // spanish
 		"fi": "Suomi (Experimental)",    // finnish
