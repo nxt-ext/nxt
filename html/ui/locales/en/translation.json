@@ -609,7 +609,7 @@
   "marketplace_tags_help": "Choose up to 3 tags, separate them with comma's.",
   "max_amount_warning": "Max Amount Warning",
   "max_asset_transfer_warning": "Max Asset Transfer Warning",
-  "max_currency_transfer_warning": "max_currency_transfer_warning",
+  "max_currency_transfer_warning": "Max Currency Transfer Warning",
   "max_difficulty": "Maximum Difficulty",
   "max_fee_warning": "Max Fee Warning",
   "max_memory": "Max Memory",
