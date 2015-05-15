@@ -1,19 +1,19 @@
 package nxt;
 
-import nxt.crypto.Crypto;
 import nxt.util.Logger;
 import nxt.util.Time;
-
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.BeforeClass;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
 
 public abstract class BlockchainTest extends AbstractBlockchainTest {
 
+    protected static List<Tester> testers = new ArrayList<>();
     protected static int baseHeight;
 
     protected static final String forgerSecretPhrase = "aSykrgKGZNlSVOMDxkZZgbTvQqJPGtsBggb";
@@ -39,6 +39,8 @@ public abstract class BlockchainTest extends AbstractBlockchainTest {
             properties.setProperty("nxt.enableFakeForging", "true");
             properties.setProperty("nxt.fakeForgingAccount", forgerAccountId);
             properties.setProperty("nxt.timeMultiplier", "1");
+            properties.setProperty("nxt.testnetGuaranteedBalanceConfirmations", "1");
+            properties.setProperty("nxt.testnetLeasingDelay", "1");
             AbstractForgingTest.init(properties);
             isNxtInitted = true;
         }
@@ -52,11 +54,15 @@ public abstract class BlockchainTest extends AbstractBlockchainTest {
         Nxt.setTime(new Time.CounterTime(Nxt.getEpochTime()));
         baseHeight = blockchain.getHeight();
         Logger.logMessage("baseHeight: " + baseHeight);
-        
-        id1 = Account.getAccount(Crypto.getPublicKey(secretPhrase1)).getId();
-        id2 = Account.getAccount(Crypto.getPublicKey(secretPhrase2)).getId();
-        id3 = Account.getAccount(Crypto.getPublicKey(secretPhrase3)).getId();
-        id4 = Account.getAccount(Crypto.getPublicKey(secretPhrase4)).getId();
+        testers.add(new Tester(forgerSecretPhrase));
+        testers.add(new Tester(secretPhrase1));
+        testers.add(new Tester(secretPhrase2));
+        testers.add(new Tester(secretPhrase3));
+        testers.add(new Tester(secretPhrase4));
+        id1 = testers.get(1).getId();
+        id2 = testers.get(2).getId();
+        id3 = testers.get(3).getId();
+        id4 = testers.get(4).getId();
     }
 
     @AfterClass
