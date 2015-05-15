@@ -35,7 +35,7 @@ var NRS = (function(NRS, $) {
 		"el": "Ελληνικά (Experimental)",  // greek
 		"sh": "Hrvatski (Experimental)", // croatian
 		"hi": "हिन्दी (Experimental)",  // hindi
-		"id": "Bahasa Indonesia (Beta)", // indonesian
+		"id": "Bahasa Indonesia",        // indonesian
 		"it": "Italiano (Beta)",         // italian
 		"ja": "日本語 (Experimental)",    // japanese
 		"lt": "Lietuviškai",             // lithuanian
