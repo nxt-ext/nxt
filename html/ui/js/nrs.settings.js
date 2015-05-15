@@ -14,6 +14,7 @@ var NRS = (function(NRS, $) {
 		"24_hour_format": "1",
 		"remember_passphrase": "0",
 		"language": "en",
+		"enable_plugins": "0",
 		"items_page": "15",
 		"themeChoice": "default"
 	};
@@ -25,7 +26,7 @@ var NRS = (function(NRS, $) {
 	};
 
 	NRS.languages = {
-		"de": "Deutsch (Experimental)",  // german
+		"de": "Deutsch",                 // german
 		"en": "English",                 // english
 		"es-es": "Español",              // spanish
 		"fi": "Suomi (Experimental)",    // finnish
@@ -34,7 +35,7 @@ var NRS = (function(NRS, $) {
 		"el": "Ελληνικά (Experimental)",  // greek
 		"sh": "Hrvatski (Experimental)", // croatian
 		"hi": "हिन्दी (Experimental)",  // hindi
-		"id": "Bahasa Indonesia (Beta)", // indonesian
+		"id": "Bahasa Indonesia",        // indonesian
 		"it": "Italiano (Beta)",         // italian
 		"ja": "日本語 (Experimental)",    // japanese
 		"lt": "Lietuviškai",             // lithuanian
@@ -233,6 +234,9 @@ var NRS = (function(NRS, $) {
 
 		if (NRS.inApp) {
 			$("#settings_console_log_div").hide();
+		}
+		if ((NRS.database && NRS.database["name"] == "NRS_USER_DB") || (!NRS.databaseSupport)) {
+			$("#settings_db_warning").show();
 		}
 
 		NRS.pageLoaded();
