@@ -1,5 +1,6 @@
 package nxt.http;
 
+import nxt.util.Logger;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONValue;
 import org.junit.Assert;
@@ -113,7 +114,9 @@ public class APICall {
         } catch (ServletException | IOException e) {
             Assert.fail();
         }
-        return (JSONObject)JSONValue.parse(new InputStreamReader(new ByteArrayInputStream(out.toByteArray())));
+        JSONObject response = (JSONObject) JSONValue.parse(new InputStreamReader(new ByteArrayInputStream(out.toByteArray())));
+        Logger.logDebugMessage(String.format("%s: %s", params.get("requestType"), response));
+        return response;
     }
 
 }

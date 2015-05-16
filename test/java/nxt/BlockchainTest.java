@@ -14,6 +14,11 @@ import java.util.Properties;
 public abstract class BlockchainTest extends AbstractBlockchainTest {
 
     protected static List<Tester> testers = new ArrayList<>();
+    protected static Tester FORGY;
+    protected static Tester ALICE;
+    protected static Tester BOB;
+    protected static Tester CHUCK;
+    protected static Tester DAVE;
     protected static int baseHeight;
 
     protected static final String forgerSecretPhrase = "aSykrgKGZNlSVOMDxkZZgbTvQqJPGtsBggb";
@@ -54,11 +59,11 @@ public abstract class BlockchainTest extends AbstractBlockchainTest {
         Nxt.setTime(new Time.CounterTime(Nxt.getEpochTime()));
         baseHeight = blockchain.getHeight();
         Logger.logMessage("baseHeight: " + baseHeight);
-        testers.add(new Tester(forgerSecretPhrase));
-        testers.add(new Tester(secretPhrase1));
-        testers.add(new Tester(secretPhrase2));
-        testers.add(new Tester(secretPhrase3));
-        testers.add(new Tester(secretPhrase4));
+        testers.add(FORGY = new Tester(forgerSecretPhrase));
+        testers.add(ALICE = new Tester(secretPhrase1));
+        testers.add(BOB = new Tester(secretPhrase2));
+        testers.add(CHUCK = new Tester(secretPhrase3));
+        testers.add(DAVE = new Tester(secretPhrase4));
         id1 = testers.get(1).getId();
         id2 = testers.get(2).getId();
         id3 = testers.get(3).getId();
