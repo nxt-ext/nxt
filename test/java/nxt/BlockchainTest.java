@@ -7,31 +7,25 @@ import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Properties;
 
 public abstract class BlockchainTest extends AbstractBlockchainTest {
 
-    protected static List<Tester> testers = new ArrayList<>();
     protected static Tester FORGY;
     protected static Tester ALICE;
     protected static Tester BOB;
     protected static Tester CHUCK;
     protected static Tester DAVE;
+
     protected static int baseHeight;
 
-    protected static final String forgerSecretPhrase = "aSykrgKGZNlSVOMDxkZZgbTvQqJPGtsBggb";
-    protected static final String forgerAccountId = "NXT-9KZM-KNYY-QBXZ-5TD8V";
-    protected static final String secretPhrase1 = "hope peace happen touch easy pretend worthless talk them indeed wheel state";
-    protected static final String secretPhrase2 = "rshw9abtpsa2";
-    protected static final String secretPhrase3 = "eOdBVLMgySFvyiTy8xMuRXDTr45oTzB7L5J";
-    protected static final String secretPhrase4 = "t9G2ymCmDsQij7VtYinqrbGCOAtDDA3WiNr";
+    private static final String forgerSecretPhrase = "aSykrgKGZNlSVOMDxkZZgbTvQqJPGtsBggb";
+    private static final String forgerAccountId = "NXT-9KZM-KNYY-QBXZ-5TD8V";
 
-    protected static long id1;
-    protected static long id2;
-    protected static long id3;
-    protected static long id4;
+    private static final String aliceSecretPhrase = "hope peace happen touch easy pretend worthless talk them indeed wheel state";
+    private static final String bobSecretPhrase2 = "rshw9abtpsa2";
+    private static final String chuckSecretPhrase = "eOdBVLMgySFvyiTy8xMuRXDTr45oTzB7L5J";
+    private static final String daveSecretPhrase = "t9G2ymCmDsQij7VtYinqrbGCOAtDDA3WiNr";
 
     protected static boolean isNxtInitted = false;
     protected static boolean needShutdownAfterClass = false;
@@ -59,15 +53,11 @@ public abstract class BlockchainTest extends AbstractBlockchainTest {
         Nxt.setTime(new Time.CounterTime(Nxt.getEpochTime()));
         baseHeight = blockchain.getHeight();
         Logger.logMessage("baseHeight: " + baseHeight);
-        testers.add(FORGY = new Tester(forgerSecretPhrase));
-        testers.add(ALICE = new Tester(secretPhrase1));
-        testers.add(BOB = new Tester(secretPhrase2));
-        testers.add(CHUCK = new Tester(secretPhrase3));
-        testers.add(DAVE = new Tester(secretPhrase4));
-        id1 = testers.get(1).getId();
-        id2 = testers.get(2).getId();
-        id3 = testers.get(3).getId();
-        id4 = testers.get(4).getId();
+        FORGY = new Tester(forgerSecretPhrase);
+        ALICE = new Tester(aliceSecretPhrase);
+        BOB = new Tester(bobSecretPhrase2);
+        CHUCK = new Tester(chuckSecretPhrase);
+        DAVE = new Tester(daveSecretPhrase);
     }
 
     @AfterClass
@@ -96,10 +86,4 @@ public abstract class BlockchainTest extends AbstractBlockchainTest {
             generateBlock();
         }
     }
-
-    protected long balanceById(long id) {
-        return Account.getAccount(id).getBalanceNQT();
-    }
-
-
 }

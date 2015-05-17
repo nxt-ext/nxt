@@ -7,7 +7,8 @@ import org.junit.runners.Suite;
 @Suite.SuiteClasses({
         SendMoneyTest.class,
         SendMessageTest.class,
-        LeaseTest.class
+        LeaseTest.class,
+        MessageEncryptionTest.class
 })
 
 public class PaymentAndMessagesSuite extends AbstractHttpApiSuite {}

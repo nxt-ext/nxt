@@ -73,10 +73,6 @@ public class APICall {
             return param("recipient", Long.toUnsignedString(id));
         }
 
-        public String getParam(String key) {
-            return params.get(key).get(0);
-        }
-
         public APICall build() {
             return new APICall(this);
         }
@@ -97,6 +93,7 @@ public class APICall {
     }
     
     public JSONObject invoke() {
+        Logger.logDebugMessage("%s: request %s", params.get("requestType"), params);
         HttpServletRequest req = mock(HttpServletRequest.class);
         HttpServletResponse resp = mock(HttpServletResponse.class);
         when(req.getRemoteHost()).thenReturn("localhost");
@@ -115,7 +112,7 @@ public class APICall {
             Assert.fail();
         }
         JSONObject response = (JSONObject) JSONValue.parse(new InputStreamReader(new ByteArrayInputStream(out.toByteArray())));
-        Logger.logDebugMessage(String.format("%s: %s", params.get("requestType"), response));
+        Logger.logDebugMessage("%s: response %s", params.get("requestType"), response);
         return response;
     }
 

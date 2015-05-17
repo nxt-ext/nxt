@@ -18,8 +18,8 @@ public class TestCurrencyExchange extends BlockchainTest {
     public void buyCurrency() {
         APICall apiCall1 = new TestCurrencyIssuance.Builder().type(CurrencyType.EXCHANGEABLE.getCode()).build();
         String currencyId = TestCurrencyIssuance.issueCurrencyApi(apiCall1);
-        AccountCurrencyBalance initialSellerBalance = new AccountCurrencyBalance(secretPhrase1, currencyId);
-        AccountCurrencyBalance initialBuyerBalance = new AccountCurrencyBalance(secretPhrase2, currencyId);
+        AccountCurrencyBalance initialSellerBalance = new AccountCurrencyBalance(ALICE.getSecretPhrase(), currencyId);
+        AccountCurrencyBalance initialBuyerBalance = new AccountCurrencyBalance(BOB.getSecretPhrase(), currencyId);
 
         Assert.assertEquals(100000, initialSellerBalance.getCurrencyUnits());
         Assert.assertEquals(100000, initialSellerBalance.getUnconfirmedCurrencyUnits());
@@ -36,13 +36,13 @@ public class TestCurrencyExchange extends BlockchainTest {
 
         // The buy offer reduces the unconfirmed balance but does not change the confirmed balance
         // The sell offer reduces the unconfirmed currency units and confirmed units
-        AccountCurrencyBalance afterOfferSellerBalance = new AccountCurrencyBalance(secretPhrase1, currencyId);
+        AccountCurrencyBalance afterOfferSellerBalance = new AccountCurrencyBalance(ALICE.getSecretPhrase(), currencyId);
         Assert.assertEquals(new AccountCurrencyBalance(-1000*95 - Constants.ONE_NXT, -Constants.ONE_NXT, -500, 0),
                 afterOfferSellerBalance.diff(initialSellerBalance));
 
         // buy at rate higher than sell offer results in selling at sell offer
         apiCall = new APICall.Builder("currencyBuy").
-                secretPhrase(secretPhrase2).feeNQT(Constants.ONE_NXT).
+                secretPhrase(BOB.getSecretPhrase()).feeNQT(Constants.ONE_NXT).
                 param("currency", currencyId).
                 param("rateNQT", "" + 106).
                 param("units", "200").
@@ -55,11 +55,11 @@ public class TestCurrencyExchange extends BlockchainTest {
         // However the price was 105 so he got only 201 units 21105 NXT
         // The seller now has 201 less confirmed units but its unconfirmed units did not change because
         // the offer is still valid so he is still committed to sell 500-201=299 units
-        AccountCurrencyBalance afterBuySellerBalance = new AccountCurrencyBalance(secretPhrase1, currencyId);
+        AccountCurrencyBalance afterBuySellerBalance = new AccountCurrencyBalance(ALICE.getSecretPhrase(), currencyId);
         Assert.assertEquals(new AccountCurrencyBalance(2010, 201 * 105, 0, -201),
                 afterBuySellerBalance.diff(afterOfferSellerBalance)); // TODO need to confirm the 2010 unconfirmed balance diff
 
-        AccountCurrencyBalance afterBuyBuyerBalance = new AccountCurrencyBalance(secretPhrase2, currencyId);
+        AccountCurrencyBalance afterBuyBuyerBalance = new AccountCurrencyBalance(BOB.getSecretPhrase(), currencyId);
         Assert.assertEquals(new AccountCurrencyBalance(-201*105 - Constants.ONE_NXT, -201*105 - Constants.ONE_NXT, 201, 201),
                 afterBuyBuyerBalance.diff(initialBuyerBalance));
 
@@ -79,8 +79,8 @@ public class TestCurrencyExchange extends BlockchainTest {
     public void sellCurrency() {
         APICall apiCall1 = new TestCurrencyIssuance.Builder().type(CurrencyType.EXCHANGEABLE.getCode()).build();
         String currencyId = TestCurrencyIssuance.issueCurrencyApi(apiCall1);
-        AccountCurrencyBalance initialBuyerBalance = new AccountCurrencyBalance(secretPhrase1, currencyId);
-        AccountCurrencyBalance initialSellerBalance = new AccountCurrencyBalance(secretPhrase2, currencyId);
+        AccountCurrencyBalance initialBuyerBalance = new AccountCurrencyBalance(ALICE.getSecretPhrase(), currencyId);
+        AccountCurrencyBalance initialSellerBalance = new AccountCurrencyBalance(BOB.getSecretPhrase(), currencyId);
 
         Assert.assertEquals(100000, initialBuyerBalance.getCurrencyUnits());
         Assert.assertEquals(100000, initialBuyerBalance.getUnconfirmedCurrencyUnits());
@@ -97,13 +97,13 @@ public class TestCurrencyExchange extends BlockchainTest {
 
         // The buy offer reduces the unconfirmed balance but does not change the confirmed balance
         // The sell offer reduces the unconfirmed currency units and confirmed units
-        AccountCurrencyBalance afterOfferBuyerBalance = new AccountCurrencyBalance(secretPhrase1, currencyId);
+        AccountCurrencyBalance afterOfferBuyerBalance = new AccountCurrencyBalance(ALICE.getSecretPhrase(), currencyId);
         Assert.assertEquals(new AccountCurrencyBalance(-1000 * 95 - Constants.ONE_NXT, -Constants.ONE_NXT, -500, 0),
                 afterOfferBuyerBalance.diff(initialBuyerBalance));
 
         // We now transfer 2000 units to the 2nd account so that this account can sell them for NXT
         apiCall = new APICall.Builder("transferCurrency").
-                secretPhrase(secretPhrase1).feeNQT(Constants.ONE_NXT).
+                secretPhrase(ALICE.getSecretPhrase()).feeNQT(Constants.ONE_NXT).
                 param("currency", currencyId).
                 param("recipient", Long.toUnsignedString(initialSellerBalance.getAccountId())).
                 param("units", "2000").
@@ -111,17 +111,17 @@ public class TestCurrencyExchange extends BlockchainTest {
         apiCall.invoke();
         generateBlock();
 
-        AccountCurrencyBalance afterTransferBuyerBalance = new AccountCurrencyBalance(secretPhrase1, currencyId);
+        AccountCurrencyBalance afterTransferBuyerBalance = new AccountCurrencyBalance(ALICE.getSecretPhrase(), currencyId);
         Assert.assertEquals(new AccountCurrencyBalance(-Constants.ONE_NXT, -Constants.ONE_NXT, -2000, -2000),
                 afterTransferBuyerBalance.diff(afterOfferBuyerBalance));
 
-        AccountCurrencyBalance afterTransferSellerBalance = new AccountCurrencyBalance(secretPhrase2, currencyId);
+        AccountCurrencyBalance afterTransferSellerBalance = new AccountCurrencyBalance(BOB.getSecretPhrase(), currencyId);
         Assert.assertEquals(new AccountCurrencyBalance(0, 0, 2000, 2000),
                 afterTransferSellerBalance.diff(initialSellerBalance));
 
         // sell at rate lower than buy offer results in selling at buy offer rate (95)
         apiCall = new APICall.Builder("currencySell").
-                secretPhrase(secretPhrase2).feeNQT(Constants.ONE_NXT).
+                secretPhrase(BOB.getSecretPhrase()).feeNQT(Constants.ONE_NXT).
                 param("currency", currencyId).
                 param("rateNQT", "" + 90).
                 param("units", "200").
@@ -131,11 +131,11 @@ public class TestCurrencyExchange extends BlockchainTest {
         generateBlock();
 
         // the seller receives 200*95=19000 for 200 units
-        AccountCurrencyBalance afterBuyBuyerBalance = new AccountCurrencyBalance(secretPhrase1, currencyId);
+        AccountCurrencyBalance afterBuyBuyerBalance = new AccountCurrencyBalance(ALICE.getSecretPhrase(), currencyId);
         Assert.assertEquals(new AccountCurrencyBalance(0, -19000, 0, 200),
                 afterBuyBuyerBalance.diff(afterTransferBuyerBalance));
 
-        AccountCurrencyBalance afterBuySellerBalance = new AccountCurrencyBalance(secretPhrase2, currencyId);
+        AccountCurrencyBalance afterBuySellerBalance = new AccountCurrencyBalance(BOB.getSecretPhrase(), currencyId);
         Assert.assertEquals(new AccountCurrencyBalance(19000-Constants.ONE_NXT, 19000-Constants.ONE_NXT, -200, -200),
                 afterBuySellerBalance.diff(afterTransferSellerBalance));
 
@@ -153,7 +153,7 @@ public class TestCurrencyExchange extends BlockchainTest {
 
     private JSONObject publishExchangeOffer(String currencyId) {
         APICall apiCall = new APICall.Builder("publishExchangeOffer").
-                secretPhrase(secretPhrase1).feeNQT(Constants.ONE_NXT).
+                secretPhrase(ALICE.getSecretPhrase()).feeNQT(Constants.ONE_NXT).
                 param("deadline", "1440").
                 param("currency", currencyId).
                 param("buyRateNQT", "" + 95). // buy currency for NXT

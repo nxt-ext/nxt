@@ -24,7 +24,7 @@ public class TestApproveTransaction extends BlockchainTest {
         generateBlock();
 
         apiCall = new APICall.Builder("approveTransaction")
-                .param("secretPhrase", secretPhrase3)
+                .param("secretPhrase", CHUCK.getSecretPhrase())
                 .param("transactionFullHash", (String) transactionJSON.get("fullHash"))
                 .param("feeNQT", Constants.ONE_NXT)
                 .build();

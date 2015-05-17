@@ -22,17 +22,11 @@ public class TestCreateTwoPhased extends BlockchainTest {
         Logger.logMessage("two-phased sendMoney: " + twoPhased.toJSONString());
 
         generateBlock();
-
-        try {
-            String transactionId = (String) twoPhased.get("transaction");
-
-            if ((!shouldFail && transactionId == null)
-                    || (shouldFail && transactionId != null)) Assert.fail();
-            return twoPhased;
-        } catch (Throwable t) {
-            if (!shouldFail) Assert.fail(t.getMessage());
-            return null;
+        String transactionId = (String)twoPhased.get("transaction");
+        if (!shouldFail && transactionId == null || shouldFail && transactionId != null) {
+            Assert.fail();
         }
+        return twoPhased;
     }
 
     public static class TwoPhasedMoneyTransferBuilder extends APICall.Builder {
@@ -42,14 +36,14 @@ public class TestCreateTwoPhased extends BlockchainTest {
 
             int height = Nxt.getBlockchain().getHeight();
 
-            secretPhrase(secretPhrase1);
+            secretPhrase(ALICE.getSecretPhrase());
             feeNQT(2*Constants.ONE_NXT);
-            recipient(id2);
+            recipient(BOB.getId());
             param("amountNQT", 50 * Constants.ONE_NXT);
             param("phased", "true");
             param("phasingVotingModel", VoteWeighting.VotingModel.ACCOUNT.getCode());
             param("phasingQuorum", 1);
-            param("phasingWhitelisted", Long.toUnsignedString(id3));
+            param("phasingWhitelisted", CHUCK.getStrId());
             param("phasingFinishHeight", height + 50);
         }
 
@@ -63,7 +57,7 @@ public class TestCreateTwoPhased extends BlockchainTest {
             return this;
         }
 
-        public TwoPhasedMoneyTransferBuilder maxHeight(int maxHeight) {
+        public TwoPhasedMoneyTransferBuilder finishHeight(int maxHeight) {
             param("phasingFinishHeight", maxHeight);
             return this;
         }
@@ -106,10 +100,10 @@ public class TestCreateTwoPhased extends BlockchainTest {
     public void invalidMoneyTransfer() {
         int height = Nxt.getBlockchain().getHeight();
 
-        APICall apiCall = new TwoPhasedMoneyTransferBuilder().maxHeight(height + 5).build();
+        APICall apiCall = new TwoPhasedMoneyTransferBuilder().finishHeight(height).build();
         issueCreateTwoPhased(apiCall, true);
 
-        apiCall = new TwoPhasedMoneyTransferBuilder().maxHeight(height + 100000).build();
+        apiCall = new TwoPhasedMoneyTransferBuilder().finishHeight(height + 100000).build();
         issueCreateTwoPhased(apiCall, true);
 
         apiCall = new TwoPhasedMoneyTransferBuilder().quorum(0).build();
@@ -142,7 +136,7 @@ public class TestCreateTwoPhased extends BlockchainTest {
         }
 
         APICall apiCall = new TwoPhasedMoneyTransferBuilder().build();
-        JSONObject unconfirmed = apiCall.invoke();
+        apiCall.invoke();
 
         JSONObject response = TestGetAccountPhasedTransactions.phasedTransactionsApiCall().invoke();
         Logger.logMessage("getAccountPhasedTransactionsResponse:" + response.toJSONString());

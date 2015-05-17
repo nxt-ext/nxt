@@ -13,7 +13,6 @@ public class Tester {
     private final byte[] privateKey;
     private final byte[] publicKey;
     private final String publicKeyStr;
-    private final Account account;
     private final long id;
     private final String strId;
     private final String rsAccount;
@@ -33,7 +32,7 @@ public class Tester {
         this.id = Account.getId(publicKey);
         this.strId = Long.toUnsignedString(id);
         this.rsAccount = Convert.rsAccount(id);
-        this.account = Account.getAccount(publicKey);
+        Account account = Account.getAccount(publicKey);
         if (account != null) {
             this.initialBalance = account.getBalanceNQT();
             this.initialUnconfirmedBalance = account.getUnconfirmedBalanceNQT();
@@ -72,7 +71,7 @@ public class Tester {
     }
 
     public Account getAccount() {
-        return account;
+        return Account.getAccount(publicKey);
     }
 
     public long getId() {
@@ -99,6 +98,10 @@ public class Tester {
         return initialBalance;
     }
 
+    public long getBalance() {
+        return getAccount().getBalanceNQT();
+    }
+
     public long getInitialUnconfirmedBalance() {
         return initialUnconfirmedBalance;
     }
@@ -115,11 +118,15 @@ public class Tester {
         return initialUnconfirmedAssetQuantity.get(assetId);
     }
 
-    public long getInitialCurrencyUnits(long assetId) {
-        return initialCurrencyUnits.get(assetId);
+    public long getInitialCurrencyUnits(long currencyId) {
+        return initialCurrencyUnits.get(currencyId);
     }
 
-    public long getInitialUnconfirmedCurrencyUnits(long assetId) {
-        return initialUnconfirmedCurrencyUnits.get(assetId);
+    public long getCurrencyUnits(long currencyId) {
+        return getAccount().getCurrencyUnits(currencyId);
+    }
+
+    public long getInitialUnconfirmedCurrencyUnits(long currencyId) {
+        return initialUnconfirmedCurrencyUnits.get(currencyId);
     }
 }
