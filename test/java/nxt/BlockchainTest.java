@@ -40,6 +40,7 @@ public abstract class BlockchainTest extends AbstractBlockchainTest {
             properties.setProperty("nxt.timeMultiplier", "1");
             properties.setProperty("nxt.testnetGuaranteedBalanceConfirmations", "1");
             properties.setProperty("nxt.testnetLeasingDelay", "1");
+            properties.setProperty("nxt.disableProcessTransactionsThread", "true");
             AbstractForgingTest.init(properties);
             isNxtInitted = true;
         }
