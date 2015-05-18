@@ -36,10 +36,10 @@ var NRS = (function(NRS, $) {
 		"sh": "Hrvatski (Experimental)", // croatian
 		"hi": "हिन्दी (Experimental)",  // hindi
 		"id": "Bahasa Indonesia",        // indonesian
-		"it": "Italiano (Beta)",         // italian
+		"it": "Italiano",                // italian
 		"ja": "日本語 (Experimental)",    // japanese
 		"lt": "Lietuviškai",             // lithuanian
-		"nl": "Nederlands (Beta)",       // dutch
+		"nl": "Nederlands",              // dutch
 		"cs": "Čeština (Experimental)",  // czech
 		"sk": "Slovensky (Experimental)",// slovakian
 		"pt-pt": "Português",            // portugese
