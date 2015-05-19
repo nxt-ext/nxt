@@ -239,7 +239,7 @@ public abstract class TransactionType {
     }
 
     final int getFinishValidationHeight(Transaction transaction) {
-        return transaction.getPhasing() == null ? Nxt.getBlockchain().getHeight() : transaction.getPhasing().getFinishHeight();
+        return transaction.getPhasing() == null ? Nxt.getBlockchain().getHeight() : (transaction.getPhasing().getFinishHeight() - 1);
     }
 
     public abstract boolean canHaveRecipient();
