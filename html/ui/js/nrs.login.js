@@ -320,27 +320,29 @@ var NRS = (function(NRS, $, undefined) {
 
 						//forging requires password to be sent to the server, so we don't do it automatically if not localhost
                         var forgingIndicator = $("#forging_indicator");
-                        if (!NRS.accountInfo.publicKey || NRS.accountInfo.effectiveBalanceNXT == 0 || !NRS.isLocalHost || NRS.downloadingBlockchain || NRS.isLeased) {
+                        if (!NRS.accountInfo.publicKey || NRS.accountInfo.effectiveBalanceNXT == 0 ||
+                            !NRS.isLocalHost || !passLogin ||
+                            NRS.downloadingBlockchain || NRS.isLeased) {
                             forgingIndicator.removeClass("forging");
 							forgingIndicator.find("span").html($.t("not_forging")).attr("data-i18n", "not_forging");
 							forgingIndicator.show();
 							NRS.isForging = false;
-						} else if (NRS.isLocalHost && passLogin) {
-							NRS.sendRequest("startForging", {
-								"secretPhrase": password
-							}, function(response) {
-								if ("deadline" in response) {
-                                    forgingIndicator.addClass("forging");
-                                    forgingIndicator.find("span").html($.t("forging")).attr("data-i18n", "forging");
-									NRS.isForging = true;
-								} else {
-                                    forgingIndicator.removeClass("forging");
-                                    forgingIndicator.find("span").html($.t("not_forging")).attr("data-i18n", "not_forging");
-									NRS.isForging = false;
-								}
-                                forgingIndicator.show();
-							});
+                            return;
 						}
+                        NRS.sendRequest("startForging", {
+                            "secretPhrase": password
+                        }, function(response) {
+                            if ("deadline" in response) {
+                                forgingIndicator.addClass("forging");
+                                forgingIndicator.find("span").html($.t("forging")).attr("data-i18n", "forging");
+                                NRS.isForging = true;
+                            } else {
+                                forgingIndicator.removeClass("forging");
+                                forgingIndicator.find("span").html($.t("not_forging")).attr("data-i18n", "not_forging");
+                                NRS.isForging = false;
+                            }
+                            forgingIndicator.show();
+                        });
 					});
 
 					//NRS.getAccountAliases();
