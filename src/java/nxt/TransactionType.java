@@ -535,7 +535,7 @@ public abstract class TransactionType {
                 }
                 final Alias alias = Alias.getAlias(aliasName);
                 if (alias == null) {
-                    throw new NxtException.NotCurrentlyValidException("Alias hasn't been registered yet: " + aliasName);
+                    throw new NxtException.NotCurrentlyValidException("No such alias: " + aliasName);
                 } else if (alias.getAccountId() != transaction.getSenderId()) {
                     throw new NxtException.NotCurrentlyValidException("Alias doesn't belong to sender: " + aliasName);
                 }
@@ -605,7 +605,7 @@ public abstract class TransactionType {
                 final String aliasName = attachment.getAliasName();
                 final Alias alias = Alias.getAlias(aliasName);
                 if (alias == null) {
-                    throw new NxtException.NotCurrentlyValidException("Alias hasn't been registered yet: " + aliasName);
+                    throw new NxtException.NotCurrentlyValidException("No such alias: " + aliasName);
                 } else if (alias.getAccountId() != transaction.getRecipientId()) {
                     throw new NxtException.NotCurrentlyValidException("Alias is owned by account other than recipient: "
                             + Long.toUnsignedString(alias.getAccountId()));
@@ -684,7 +684,7 @@ public abstract class TransactionType {
                 }
                 final Alias alias = Alias.getAlias(aliasName);
                 if (alias == null) {
-                    throw new NxtException.NotCurrentlyValidException("Alias hasn't been registered yet: " + aliasName);
+                    throw new NxtException.NotCurrentlyValidException("No such alias: " + aliasName);
                 } else if (alias.getAccountId() != transaction.getSenderId()) {
                     throw new NxtException.NotCurrentlyValidException("Alias doesn't belong to sender: " + aliasName);
                 }
@@ -997,7 +997,7 @@ public abstract class TransactionType {
                         throw new NxtException.NotCurrentlyValidException("Phased transaction hash does not match hash in voting transaction");
                     }
                     if (poll.getFinishHeight() <= getFinishValidationHeight(transaction) + 1) {
-                        throw new NxtException.NotCurrentlyValidException(String.format("Poll voting finishes at height %d before transaction validation height %d",
+                        throw new NxtException.NotCurrentlyValidException(String.format("Phased transaction finishes at height %d which is before approval transaction height %d",
                                 poll.getFinishHeight(), getFinishValidationHeight(transaction) + 1));
                     }
                 }
