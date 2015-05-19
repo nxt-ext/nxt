@@ -50,8 +50,6 @@ public interface Transaction {
 
     int getHeight();
 
-    int getValidationHeight();
-
     long getBlockId();
 
     Block getBlock();
