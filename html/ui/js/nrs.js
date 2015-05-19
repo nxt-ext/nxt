@@ -1054,9 +1054,10 @@ var NRS = (function(NRS, $, undefined) {
 		}
 
 		if (NRS.accountInfo.effectiveBalanceNXT == 0) {
-			$("#forging_indicator").removeClass("forging");
-			$("#forging_indicator span").html($.t("not_forging")).attr("data-i18n", "not_forging");
-			$("#forging_indicator").show();
+            var forgingIndicator = $("#forging_indicator");
+            forgingIndicator.removeClass("forging");
+			forgingIndicator.find("span").html($.t("not_forging")).attr("data-i18n", "not_forging");
+			forgingIndicator.show();
 			NRS.isForging = false;
 		}
 

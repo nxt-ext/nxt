@@ -562,10 +562,11 @@ var NRS = (function(NRS, $) {
 		}
 
 		if (!key || key == "animate_forging") {
-			if (NRS.settings["animate_forging"] == "1") {
-				$("#forging_indicator").addClass("animated");
+            var forgingIndicator = $("#forging_indicator");
+            if (NRS.settings["animate_forging"] == "1") {
+				forgingIndicator.addClass("animated");
 			} else {
-				$("#forging_indicator").removeClass("animated");
+				forgingIndicator.removeClass("animated");
 			}
 		}
 
