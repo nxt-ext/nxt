@@ -503,10 +503,11 @@ var NRS = (function(NRS, $, undefined) {
 		if (!/^\d+$/.test(qnt)) {
 			throw $.t("error_invalid_input_numbers");
 		}
-
-        if (qnt === "0") {
-            return qnt;
-        }
+        try {
+            if (parseInt(qnt) === 0) {
+                return "0";
+            }
+        } catch(e) {}
 
 		//remove leading zeroes
 		return qnt.replace(/^0+/, "");
@@ -1410,11 +1411,11 @@ var NRS = (function(NRS, $, undefined) {
 				}
 				break;
 			case 4:
-				var match = response.errorDescription.match(/Incorrect "([^"]+)"/i);
-
-				if (match && match[1]) {
-					return $.t("error_incorrect_name", {
-						"name": NRS.getTranslatedFieldName(match[1]).toLowerCase()
+				var match = response.errorDescription.match(/Incorrect "(.*)"(.*)/i);
+				if (match && match[1] && match[2]) {
+                    return $.t("error_incorrect_name", {
+						"name": NRS.getTranslatedFieldName(match[1]).toLowerCase(),
+                        "reason": match[2]
 					}).capitalize();
 				} else {
 					return response.errorDescription;
