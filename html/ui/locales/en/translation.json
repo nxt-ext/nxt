@@ -380,7 +380,7 @@
   "error_goods_not_yet_delivered": "The goods have not yet been delivered.",
   "error_group_name": "Only alphanumerical characters can be used in the group name.",
   "error_hash_verification": "The downloaded version hash does not compare to the specified hash in the blockchain. DO NOT PROCEED.",
-  "error_incorrect_name": "Incorrect __name__.",
+  "error_incorrect_name": "Incorrect __name__. __reason__",
   "error_incorrect_passphrase": "Incorrect passphrase.",
   "error_incorrect_quantity_plus": "Incorrect quantity: __err__",
   "error_incorrect_request": "Incorrect request.",
