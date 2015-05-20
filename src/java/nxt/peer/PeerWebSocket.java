@@ -83,7 +83,7 @@ public class PeerWebSocket {
     private final PeerServlet peerServlet;
 
     /** WebSocket client - set for an initiated connection */
-    private final WebSocketClient peerClient;
+    private WebSocketClient peerClient = null;
 
     /** WebSocket lock */
     private final ReentrantLock lock = new ReentrantLock();
@@ -101,9 +101,6 @@ public class PeerWebSocket {
      * Create a client socket
      */
     public PeerWebSocket() {
-        peerClient = new WebSocketClient();
-        peerClient.getPolicy().setIdleTimeout(Peers.webSocketIdleTimeout);
-        peerClient.getPolicy().setMaxBinaryMessageSize(MAX_MESSAGE_SIZE);
         peerServlet = null;
     }
 
@@ -114,7 +111,6 @@ public class PeerWebSocket {
      */
     public PeerWebSocket(PeerServlet peerServlet) {
         this.peerServlet = peerServlet;
-        peerClient = null;
     }
 
     /**
@@ -140,8 +136,14 @@ public class PeerWebSocket {
                 useWebSocket = true;
             } else if (System.currentTimeMillis() > connectTime+10*1000) {
                 connectTime = System.currentTimeMillis();
-                if (!peerClient.isStarting() && !peerClient.isStarted())
+                if (peerClient == null) {
+                    peerClient = new WebSocketClient();
+                    peerClient.getPolicy().setIdleTimeout(Peers.webSocketIdleTimeout);
+                    peerClient.getPolicy().setMaxBinaryMessageSize(MAX_MESSAGE_SIZE);
                     peerClient.start();
+                } else if (!peerClient.isStarting() && !peerClient.isStarted()) {
+                    peerClient.start();
+                }
                 peerClient.setConnectTimeout(Peers.connectTimeout);
                 ClientUpgradeRequest req = new ClientUpgradeRequest();
                 Future<Session> conn = peerClient.connect(this, uri, req);
@@ -379,8 +381,11 @@ public class PeerWebSocket {
         try {
             if (session != null && session.isOpen())
                 session.close();
-            if (peerClient != null && (peerClient.isStarting() || peerClient.isStarted()))
-                peerClient.stop();
+            if (peerClient != null) {
+                if (peerClient.isStarting() || peerClient.isStarted())
+                    peerClient.stop();
+                peerClient = null;
+            }
         } catch (Exception exc) {
             Logger.logDebugMessage("Exception while closing WebSocket", exc);
         } finally {
