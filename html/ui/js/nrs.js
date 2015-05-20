@@ -1124,13 +1124,13 @@ var NRS = (function(NRS, $, undefined) {
 		var current_balances_ = {};
 		var previous_balances_ = {};
 
-		if (previous_balances.length) {
+		if (previous_balances && previous_balances.length) {
 			for (var k in previous_balances) {
 				previous_balances_[previous_balances[k].asset] = previous_balances[k].balanceQNT;
 			}
 		}
 
-		if (current_balances.length) {
+		if (current_balances && current_balances.length) {
 			for (var k in current_balances) {
 				current_balances_[current_balances[k].asset] = current_balances[k].balanceQNT;
 			}
