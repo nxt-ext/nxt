@@ -28,7 +28,7 @@ public final class Logger {
     private static final Listeners<String, Event> messageListeners = new Listeners<>();
 
     /** Exception listeners */
-    private static final Listeners<Exception, Event> exceptionListeners = new Listeners<>();
+    private static final Listeners<Throwable, Event> exceptionListeners = new Listeners<>();
 
     /** Our logger instance */
     private static final org.slf4j.Logger log;
@@ -150,7 +150,7 @@ public final class Logger {
      * @param       eventType           Notification event type
      * @return                          TRUE if listener added
      */
-    public static boolean addExceptionListener(Listener<Exception> listener, Event eventType) {
+    public static boolean addExceptionListener(Listener<Throwable> listener, Event eventType) {
         return exceptionListeners.addListener(listener, eventType);
     }
 
@@ -172,7 +172,7 @@ public final class Logger {
      * @param       eventType           Notification event type
      * @return                          TRUE if listener removed
      */
-    public static boolean removeExceptionListener(Listener<Exception> listener, Event eventType) {
+    public static boolean removeExceptionListener(Listener<Throwable> listener, Event eventType) {
         return exceptionListeners.removeListener(listener, eventType);
     }
 
@@ -231,7 +231,7 @@ public final class Logger {
      * @param       message             Message
      * @param       exc                 Exception
      */
-    public static void logErrorMessage(String message, Exception exc) {
+    public static void logErrorMessage(String message, Throwable exc) {
         doLog(Level.ERROR, message, exc);
     }
 
@@ -254,7 +254,7 @@ public final class Logger {
      * @param       message             Message
      * @param       exc                 Exception
      */
-    public static void logWarningMessage(String message, Exception exc) {
+    public static void logWarningMessage(String message, Throwable exc) {
         doLog(Level.WARN, message, exc);
     }
 
@@ -287,7 +287,7 @@ public final class Logger {
      * @param       message             Message
      * @param       exc                 Exception
      */
-    public static void logInfoMessage(String message, Exception exc) {
+    public static void logInfoMessage(String message, Throwable exc) {
         doLog(Level.INFO, message, exc);
     }
 
@@ -320,7 +320,7 @@ public final class Logger {
      * @param       message             Message
      * @param       exc                 Exception
      */
-    public static void logDebugMessage(String message, Exception exc) {
+    public static void logDebugMessage(String message, Throwable exc) {
         doLog(Level.DEBUG, message, exc);
     }
 
@@ -331,9 +331,9 @@ public final class Logger {
      * @param       message             Message
      * @param       exc                 Exception
      */
-    private static void doLog(Level level, String message, Exception exc) {
+    private static void doLog(Level level, String message, Throwable exc) {
         String logMessage = message;
-        Exception e = exc;
+        Throwable e = exc;
         //
         // Add caller class and method if enabled
         //

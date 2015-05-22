@@ -14,7 +14,8 @@ import org.junit.runners.Suite;
         TestGetPhasingPoll.class,
         TestGetAccountPhasedTransactions.class,
         TestGetAssetPhasedTransactions.class,
-        TestGetCurrencyPhasedTransactions.class
+        TestGetCurrencyPhasedTransactions.class,
+        TestTrustlessAssetSwap.class
 })
 
 public class TwoPhasedSuite extends AbstractHttpApiSuite {

@@ -48,11 +48,11 @@ final class ParameterParser {
         try {
             byte value = Byte.parseByte(paramValue);
             if (value < min || value > max) {
-                throw new ParameterException(incorrect(name));
+                throw new ParameterException(incorrect(name, String.format("value %d not in range [%d-%d]", value, min, max)));
             }
             return value;
         } catch (RuntimeException e) {
-            throw new ParameterException(incorrect(name));
+            throw new ParameterException(incorrect(name, String.format("value %s is not numeric", paramValue)));
         }
     }
 
@@ -67,11 +67,11 @@ final class ParameterParser {
         try {
             int value = Integer.parseInt(paramValue);
             if (value < min || value > max) {
-                throw new ParameterException(incorrect(name));
+                throw new ParameterException(incorrect(name, String.format("value %d not in range [%d-%d]", value, min, max)));
             }
             return value;
         } catch (RuntimeException e) {
-            throw new ParameterException(incorrect(name));
+            throw new ParameterException(incorrect(name, String.format("value %s is not numeric", paramValue)));
         }
     }
 
@@ -87,11 +87,11 @@ final class ParameterParser {
         try {
             long value = Long.parseLong(paramValue);
             if (value < min || value > max) {
-                throw new ParameterException(incorrect(name));
+                throw new ParameterException(incorrect(name, String.format("value %d not in range [%d-%d]", value, min, max)));
             }
             return value;
         } catch (RuntimeException e) {
-            throw new ParameterException(incorrect(name));
+            throw new ParameterException(incorrect(name, String.format("value %s is not numeric", paramValue)));
         }
     }
 

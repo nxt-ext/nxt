@@ -126,6 +126,10 @@ public interface Appendix {
 
         abstract void validate(Transaction transaction) throws NxtException.ValidationException;
 
+        void validateAtFinish(Transaction transaction) throws NxtException.ValidationException {
+            validate(transaction);
+        }
+
         abstract void apply(Transaction transaction, Account senderAccount, Account recipientAccount);
 
         void loadPrunable(Transaction transaction) {}
@@ -358,6 +362,10 @@ public interface Appendix {
             if (msg == null && Nxt.getEpochTime() - transaction.getTimestamp() < Constants.MIN_PRUNABLE_LIFETIME) {
                 throw new NxtException.NotCurrentlyValidException("Message has been pruned prematurely");
             }
+        }
+
+        @Override
+        void validateAtFinish(Transaction transaction) {
         }
 
         @Override
@@ -633,6 +641,10 @@ public interface Appendix {
             }
         }
 
+        @Override
+        void validateAtFinish(Transaction transaction) {
+        }
+        
         @Override
         void apply(Transaction transaction, Account senderAccount, Account recipientAccount) {
             PrunableMessage.add(transaction, this);
@@ -966,7 +978,6 @@ public interface Appendix {
         @Override
         void validate(Transaction transaction) throws NxtException.ValidationException {
 
-            if (transaction.getSignature() == null || PhasingPoll.getPoll(transaction.getId()) == null) {
                 int currentHeight = Nxt.getBlockchain().getHeight();
                 if (currentHeight < Constants.PHASING_BLOCK) {
                     throw new NxtException.NotYetEnabledException("Phasing not yet enabled at height " + currentHeight);
@@ -1023,10 +1034,13 @@ public interface Appendix {
                         || finishHeight >= currentHeight + Constants.MAX_PHASING_DURATION) {
                     throw new NxtException.NotCurrentlyValidException("Invalid finish height " + finishHeight);
                 }
-            }
 
-            
+            params.getVoteWeighting().validate();
+        }
 
+        @Override
+        void validateAtFinish(Transaction transaction) throws NxtException.ValidationException {
+            params.getVoteWeighting().validate();
         }
 
         @Override

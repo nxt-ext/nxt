@@ -250,8 +250,10 @@ final class JSONData {
         }
         json.put("blockSignature", Convert.toHexString(block.getBlockSignature()));
         JSONArray transactions = new JSONArray();
-        for (Transaction transaction : block.getTransactions()) {
-            transactions.add(includeTransactions ? transaction(transaction) : Long.toUnsignedString(transaction.getId()));
+        if (includeTransactions) {
+            block.getTransactions().forEach(transaction -> transactions.add(transaction(transaction)));
+        } else {
+            block.getTransactions().forEach(transaction -> transactions.add(transaction.getStringId()));
         }
         json.put("transactions", transactions);
         return json;

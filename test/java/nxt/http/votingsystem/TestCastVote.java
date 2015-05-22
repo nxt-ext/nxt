@@ -22,7 +22,7 @@ public class TestCastVote extends BlockchainTest {
         generateBlock();
 
         apiCall = new APICall.Builder("castVote")
-                .param("secretPhrase", secretPhrase1)
+                .param("secretPhrase", ALICE.getSecretPhrase())
                 .param("poll", poll)
                 .param("vote00", 1)
                 .param("vote01", 0)
@@ -56,7 +56,7 @@ public class TestCastVote extends BlockchainTest {
         generateBlock();
 
         apiCall = new APICall.Builder("castVote")
-                .param("secretPhrase", secretPhrase1)
+                .param("secretPhrase", ALICE.getSecretPhrase())
                 .param("poll", poll)
                 .param("vote1", 1)
                 .param("vote2", 1)

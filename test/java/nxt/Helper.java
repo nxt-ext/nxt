@@ -2,7 +2,7 @@ package nxt;
 
 
 import nxt.util.Listener;
-
+import nxt.util.Logger;
 import org.h2.tools.Shell;
 
 import java.io.ByteArrayOutputStream;
@@ -45,7 +45,7 @@ public class Helper {
     public static class BlockListener implements Listener<Block> {
         @Override
         public void notify(Block block) {
-            System.out.printf("Block Generated at height %d with %d transactions\n", block.getHeight(), block.getTransactions().size());
+            Logger.logDebugMessage("Block Generated at height %d with %d transactions\n", block.getHeight(), block.getTransactions().size());
         }
     }
     

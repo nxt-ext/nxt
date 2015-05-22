@@ -14,6 +14,7 @@ var NRS = (function(NRS, $) {
 		"24_hour_format": "1",
 		"remember_passphrase": "0",
 		"language": "en",
+		"enable_plugins": "0",
 		"items_page": "15",
 		"themeChoice": "default"
 	};
@@ -25,27 +26,30 @@ var NRS = (function(NRS, $) {
 	};
 
 	NRS.languages = {
-		"de": "Deutsch (Beta)",          // german
+		"de": "Deutsch",                 // german
 		"en": "English",                 // english
 		"es-es": "Español",              // spanish
-		"fi": "Suomi (Beta)",            // finnish
+		"fi": "Suomi (Experimental)",    // finnish
 		"fr": "Français",                // french
-		"gl": "Galego (Beta)",           // galician
-		"sh": "Hrvatski (Beta)",         // croatian
+		"gl": "Galego (Experimental)",   // galician
+		"el": "Ελληνικά (Experimental)",  // greek
+		"sh": "Hrvatski (Experimental)", // croatian
+		"hi": "हिन्दी (Experimental)",  // hindi
 		"id": "Bahasa Indonesia",        // indonesian
 		"it": "Italiano",                // italian
-		"ja": "日本語 (Beta)",            // japanese
+		"ja": "日本語 (Experimental)",    // japanese
 		"lt": "Lietuviškai",             // lithuanian
 		"nl": "Nederlands",              // dutch
-		"sk": "Slovensky (Beta)",        // slovakian
-		"pt-pt": "Português (Beta)",     // portugese
+		"cs": "Čeština (Experimental)",  // czech
+		"sk": "Slovensky (Experimental)",// slovakian
+		"pt-pt": "Português",            // portugese
 		"pt-br": "Português Brasileiro", // portugese, brazilian
-		"sr": "Српски (Beta)",           // serbian, cyrillic
-		"sr-cs": "Srpski (Beta)",        // serbian, latin
+		"sr": "Српски (Experimental)",   // serbian, cyrillic
+		"sr-cs": "Srpski (Experimental)",// serbian, latin
 		"uk": "Yкраiнска",               // ukrainian
 		"ru": "Русский",                 // russian
-		"zh-cn": "中文 (simplified)",     // chinese simplified
-		"zh-tw": "中文 (traditional)"     // chinese traditional
+		"zh-cn": "中文 simplified",      // chinese simplified
+		"zh-tw": "中文 traditional"      // chinese traditional
 	};
 
 	var userStyles = {};
@@ -230,6 +234,9 @@ var NRS = (function(NRS, $) {
 
 		if (NRS.inApp) {
 			$("#settings_console_log_div").hide();
+		}
+		if ((NRS.database && NRS.database["name"] == "NRS_USER_DB") || (!NRS.databaseSupport)) {
+			$("#settings_db_warning").show();
 		}
 
 		NRS.pageLoaded();
@@ -555,10 +562,11 @@ var NRS = (function(NRS, $) {
 		}
 
 		if (!key || key == "animate_forging") {
-			if (NRS.settings["animate_forging"] == "1") {
-				$("#forging_indicator").addClass("animated");
+            var forgingIndicator = $("#forging_indicator");
+            if (NRS.settings["animate_forging"] == "1") {
+				forgingIndicator.addClass("animated");
 			} else {
-				$("#forging_indicator").removeClass("animated");
+				forgingIndicator.removeClass("animated");
 			}
 		}
 

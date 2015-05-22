@@ -4,8 +4,9 @@
 var NRS = (function(NRS, $, undefined) {
 
 	NRS.plugins = {}
-    NRS.disableAllPlugins = true;
+    NRS.disablePluginsDuringSession = true;
 	NRS.activePlugins = false;
+    NRS.numRunningPlugins = 0;
 
 
 	NRS.checkForPluginManifest = function(pluginId) {
@@ -203,54 +204,57 @@ var NRS = (function(NRS, $, undefined) {
         var manifest = NRS.plugins[pluginId]['manifest'];
         var pluginPath = 'plugins/' + pluginId + '/';
 
+        $.ajaxSetup({async:false});
         $.getScript(pluginPath + 'js/nrs.' + pluginId + '.js')
-            .done(function(script, textStatus) {
-                NRS.loadPageHTML(pluginPath + 'html/pages/' + pluginId + '.html');
-                NRS.loadPageHTML(pluginPath + 'html/modals/' + pluginId + '.html');
+        .done(function(script, textStatus) {
+            NRS.loadPageHTML(pluginPath + 'html/pages/' + pluginId + '.html');
+            NRS.loadPageHTML(pluginPath + 'html/modals/' + pluginId + '.html');
 
-                if (!manifest['sidebarOptOut']) {
-                    var sidebarId = 'sidebar_plugins';
-                    if ($('#' + sidebarId).length == 0) {
-                        var options = {
-                            "id": sidebarId,
-                            "titleHTML": '<i class="fa fa-plug"></i> <span data-i18n="plugins">Plugins</span>',
-                            "page": 'plugins',
-                            "desiredPosition": 110
-                        }
-                        NRS.addTreeviewSidebarMenuItem(options);
+            if (!manifest['sidebarOptOut']) {
+                var sidebarId = 'sidebar_plugins';
+                if ($('#' + sidebarId).length == 0) {
+                    var options = {
+                        "id": sidebarId,
+                        "titleHTML": '<i class="fa fa-plug"></i> <span data-i18n="plugins">Plugins</span>',
+                        "page": 'plugins',
+                        "desiredPosition": 110
                     }
+                    NRS.addTreeviewSidebarMenuItem(options);
+                }
 
-                    options = {
-                        "titleHTML": manifest['name'].escapeHTML(),
-                        "type": 'PAGE',
-                        "page": manifest['startPage']
-                    }
-                    NRS.appendMenuItemToTSMenuItem(sidebarId, options);
-                    $(".sidebar .treeview").tree();
+                options = {
+                    "titleHTML": manifest['name'].escapeHTML(),
+                    "type": 'PAGE',
+                    "page": manifest['startPage']
                 }
-                var cssURL = pluginPath + 'css/' + pluginId + '.css';
-                if (document.createStyleSheet) {
-                    document.createStyleSheet(cssURL);
-                } else {
-                    $('<link rel="stylesheet" type="text/css" href="' + cssURL + '" />').appendTo('head');
-                }
-                plugin['launch_status'] = NRS.constants.PL_RUNNING;
-                plugin['launch_status_msg'] = $.t('plugin_running', 'Running');
-                if(manifest['startPage'] && manifest['startPage'] in NRS.setup) {
-                    NRS.setup[manifest['startPage']]();
-                }
-            })
-            .fail(function(jqxhr, settings, exception) {
-                plugin['launch_status'] = NRS.constants.PL_HALTED;
-                plugin['launch_status_msg'] = $.t('plugin_halted', 'Halted');
-                plugin['validity'] = NRS.constants.PV_INVALID_JAVASCRIPT_FILE;
-                plugin['validity_msg'] = $.t('plugin_invalid_javascript_file', 'Invalid javascript file');
-            });
-        }
+                NRS.appendMenuItemToTSMenuItem(sidebarId, options);
+                $(".sidebar .treeview").tree();
+            }
+            var cssURL = pluginPath + 'css/' + pluginId + '.css';
+            if (document.createStyleSheet) {
+                document.createStyleSheet(cssURL);
+            } else {
+                $('<link rel="stylesheet" type="text/css" href="' + cssURL + '" />').appendTo('head');
+            }
+            plugin['launch_status'] = NRS.constants.PL_RUNNING;
+            plugin['launch_status_msg'] = $.t('plugin_running', 'Running');
+            if(manifest['startPage'] && manifest['startPage'] in NRS.setup) {
+                NRS.setup[manifest['startPage']]();
+            }
+            NRS.numRunningPlugins += 1;
+        })
+        .fail(function(jqxhr, settings, exception) {
+            plugin['launch_status'] = NRS.constants.PL_HALTED;
+            plugin['launch_status_msg'] = $.t('plugin_halted', 'Halted');
+            plugin['validity'] = NRS.constants.PV_INVALID_JAVASCRIPT_FILE;
+            plugin['validity_msg'] = $.t('plugin_invalid_javascript_file', 'Invalid javascript file');
+        });
+        $.ajaxSetup({async:true});
+    }
 
     NRS.loadPlugins = function() {
         $.each(NRS.plugins, function(pluginId, pluginDict) {
-            if (NRS.disableAllPlugins && pluginDict['launch_status'] == NRS.constants.PL_PAUSED) {
+            if ((NRS.settings["enable_plugins"] == "0" || NRS.disablePluginsDuringSession) && pluginDict['launch_status'] == NRS.constants.PL_PAUSED) {
                 pluginDict['launch_status'] = NRS.constants.PL_DEACTIVATED;
                 pluginDict['launch_status_msg'] = $.t('plugin_deactivated', 'Deactivated');
             }
@@ -258,6 +262,27 @@ var NRS = (function(NRS, $, undefined) {
                 NRS.loadPlugin(pluginId);
             }
         });
+        if (NRS.disablePluginsDuringSession) {
+            $.growl($.t('plugins_disabled_for_session_msg'), {
+                "type": "warning"
+            });
+        } else if (NRS.settings["enable_plugins"] == "0") {
+            $.growl($.t('plugins_disabled_for_account_msg'), {
+                "type": "warning"
+            });
+        } else {
+            if (NRS.numRunningPlugins == 1) {
+                var msg = $.t('one_plugin_active_and_running_msg');
+            } else {
+                var msg = $.t('plugins_active_and_running_msg', {
+                    'num': String(NRS.numRunningPlugins)
+                });
+            }
+            $.growl(msg, {
+                "type": "success"
+            });
+        }
+
         NRS.loadPageHTMLTemplates();
         NRS.loadModalHTMLTemplates();
     }
@@ -280,7 +305,7 @@ var NRS = (function(NRS, $, undefined) {
 
         var websiteHTML = "&nbsp;";
         if (manifest) {
-            websiteHTML = "<a href='" + encodeURI(String(manifest['infoUrl'])) + "' target='_blank'><span data-i18n='website'>Website</span></a>";
+            websiteHTML = "<a href='" + encodeURI(String(manifest['infoUrl'])) + "' target='_blank'><span>" + $.t('website') + "</span></a>";
         }
         html += "<td>" + websiteHTML + "</td>";
 

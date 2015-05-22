@@ -418,7 +418,7 @@ public abstract class MonetarySystem extends TransactionType {
                 || attachment.getTotalSellLimit() < attachment.getInitialSellSupply()) {
                 throw new NxtException.NotValidException("Initial supplies must not exceed total limits");
             }
-            if (attachment.getExpirationHeight() <= transaction.getValidationHeight()) {
+            if (attachment.getExpirationHeight() <= getFinishValidationHeight(transaction)) {
                 throw new NxtException.NotCurrentlyValidException("Expiration height must be after transaction execution height");
             }
             Currency currency = Currency.getCurrency(attachment.getCurrencyId());

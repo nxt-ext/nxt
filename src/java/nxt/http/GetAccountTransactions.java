@@ -11,13 +11,21 @@ import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
 
+/**
+ * <p>This API is deprecated and will be removed in 1.6. It does not include the phased transactions
+ * that an account may have. To retrieve both phased and non-phased transactions, the new
+ * getBlockchainTransactions API must be used. Do not simply switch from getAccountTransactions to
+ * getBlockchainTransactions without a detailed understanding of how phased transactions work,
+ * and without being prepared to analyze them correctly.</p>
+ */
+@Deprecated
 public final class GetAccountTransactions extends APIServlet.APIRequestHandler {
 
     static final GetAccountTransactions instance = new GetAccountTransactions();
 
     private GetAccountTransactions() {
         super(new APITag[] {APITag.ACCOUNTS, APITag.TRANSACTIONS}, "account", "timestamp", "type", "subtype",
-                "firstIndex", "lastIndex", "numberOfConfirmations", "withMessage", "phased");
+                "firstIndex", "lastIndex", "numberOfConfirmations", "withMessage");
     }
 
     @Override
@@ -27,7 +35,6 @@ public final class GetAccountTransactions extends APIServlet.APIRequestHandler {
         int timestamp = ParameterParser.getTimestamp(req);
         int numberOfConfirmations = ParameterParser.getNumberOfConfirmations(req);
         boolean withMessage = "true".equalsIgnoreCase(req.getParameter("withMessage"));
-        boolean phased = "true".equalsIgnoreCase(req.getParameter("phased"));
 
         byte type;
         byte subtype;
@@ -47,7 +54,7 @@ public final class GetAccountTransactions extends APIServlet.APIRequestHandler {
 
         JSONArray transactions = new JSONArray();
         try (DbIterator<? extends Transaction> iterator = Nxt.getBlockchain().getTransactions(account, numberOfConfirmations, type, subtype, timestamp,
-                withMessage, phased, firstIndex, lastIndex)) {
+                withMessage, false, true, firstIndex, lastIndex)) {
             while (iterator.hasNext()) {
                 Transaction transaction = iterator.next();
                 transactions.add(JSONData.transaction(transaction));
@@ -56,6 +63,7 @@ public final class GetAccountTransactions extends APIServlet.APIRequestHandler {
 
         JSONObject response = new JSONObject();
         response.put("transactions", transactions);
+        response.put("WARNING", "The getAccountTransactions API is deprecated and will be removed in 1.6");
         return response;
 
     }

@@ -156,6 +156,7 @@ public final class APIServlet extends HttpServlet {
         map.put("getBlockId", GetBlockId.instance);
         map.put("getBlocks", GetBlocks.instance);
         map.put("getBlockchainStatus", GetBlockchainStatus.instance);
+        map.put("getBlockchainTransactions", GetBlockchainTransactions.instance);
         map.put("getConstants", GetConstants.instance);
         map.put("getCurrency", GetCurrency.instance);
         map.put("getCurrencies", GetCurrencies.instance);
@@ -358,7 +359,7 @@ public final class APIServlet extends HttpServlet {
                 JSONData.putException(json, e);
                 response = JSON.prepare(json);
             } catch (ExceptionInInitializerError err) {
-                Logger.logErrorMessage("Initialization Error", (Exception) err.getCause());
+                Logger.logErrorMessage("Initialization Error", err.getCause());
                 response = ERROR_INCORRECT_REQUEST;
             } finally {
                 if (apiRequestHandler.startDbTransaction()) {

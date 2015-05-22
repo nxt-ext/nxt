@@ -23,11 +23,7 @@ final class GetNextBlockIds extends PeerServlet.PeerRequestHandler {
         JSONArray nextBlockIds = new JSONArray();
         long blockId = Convert.parseUnsignedLong((String) request.get("blockId"));
         List<Long> ids = Nxt.getBlockchain().getBlockIdsAfter(blockId, 1440);
-
-        for (Long id : ids) {
-            nextBlockIds.add(Long.toUnsignedString(id));
-        }
-
+        ids.forEach(id -> nextBlockIds.add(Long.toUnsignedString(id)));
         response.put("nextBlockIds", nextBlockIds);
 
         return response;

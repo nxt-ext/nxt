@@ -366,11 +366,6 @@ final class TransactionImpl implements Transaction {
     }
 
     @Override
-    public int getValidationHeight() {
-        return phasing == null ? Nxt.getBlockchain().getHeight() : phasing.getFinishHeight();
-    }
-
-    @Override
     public byte[] getSignature() {
         return signature;
     }
@@ -952,13 +947,18 @@ final class TransactionImpl implements Transaction {
             }
         }
 
+        boolean validatingAtFinish = phasing != null && getSignature() != null && PhasingPoll.getPoll(getId()) != null;
         for (Appendix.AbstractAppendix appendage : appendages) {
             appendage.loadPrunable(this);
             if (! appendage.verifyVersion(this.version)) {
                 throw new NxtException.NotValidException("Invalid attachment version " + appendage.getVersion()
                         + " for transaction version " + this.version);
             }
-            appendage.validate(this);
+            if (validatingAtFinish) {
+                appendage.validateAtFinish(this);
+            } else {
+                appendage.validate(this);
+            }
         }
 
         if (getFullSize() > Constants.MAX_PAYLOAD_LENGTH) {

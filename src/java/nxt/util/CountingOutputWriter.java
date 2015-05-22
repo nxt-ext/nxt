@@ -5,7 +5,7 @@ import java.io.IOException;
 import java.io.Writer;
 
 /**
- * CountingOutputWriter extends Writerr to count the number of characters written
+ * CountingOutputWriter extends Writer to count the number of characters written
  */
 public class CountingOutputWriter extends FilterWriter {
 

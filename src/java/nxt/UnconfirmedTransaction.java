@@ -115,11 +115,6 @@ class UnconfirmedTransaction implements Transaction {
     }
 
     @Override
-    public int getValidationHeight() {
-        return transaction.getValidationHeight();
-    }
-    
-    @Override
     public long getBlockId() {
         return transaction.getBlockId();
     }

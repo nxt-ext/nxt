@@ -20,7 +20,7 @@
             <center><img src="img/nxt_logo.png" alt="Nxt" width="320" height="320" style="margin-bottom:40px;" /></center>
 
             <div id="login_panel">   
-                <div class="callout callout-danger" id="testnet_login" style="max-width:400px;min-width:400px;display:none;" data-i18n="[html]testnet_login_warning">Log in with your <strong>TestNet</strong> account - not your real one!</div><div id="login_error" style="max-width:400px;min-width:400px;display:none">                        
+                <div class="callout callout-danger" id="testnet_login" style="max-width:400px;min-width:400px;display:none;" data-i18n="testnet_login_warning">Log in with your TestNet account - not your real one!</div><div id="login_error" style="max-width:400px;min-width:400px;display:none">                        
                     <div class="callout callout-danger"></div>
                 </div>
                 
@@ -33,7 +33,7 @@
                     	<div class="input-group" id="login_account_container" style="display:table;height:34px;width: 100%;">
                             <div class="dropdown" style="width: 100%;">
 							  <button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-expanded="true" style="width: 100%;">
-								Select an Account to Login with
+								<span data-i18n="select_account_to_login">Select an Account to Login with</span>
 								<span class="caret"></span>
 							  </button>
 							  <ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu1" id="login_account">
@@ -79,7 +79,7 @@
                     </div>
                     <div>
                         <span style="color:#fff;opacity:0.96;">
-                            <input type="checkbox" name="disable_all_plugins" id="disable_all_plugins" value="1" /> <label for="disable_all_plugins" style="font-weight:normal;" data-i18n="disable_plugins">Disable Plugins</label>
+                            <input type="checkbox" name="disable_all_plugins" id="disable_all_plugins" value="1" /> <label for="disable_all_plugins" style="font-weight:normal;" data-i18n="disable_plugins">Disable Plugins during Session</label>
                         </span>
                     </div>
                 </div>
@@ -113,7 +113,15 @@
                     <form class="form-horizontal" role="form" method="post" autocomplete="off">
                         <div class="callout callout-info" style="max-width:500px;" data-i18n="passphrase_length_warning">Your passphrase must be at least 35 characters long.</div>
                         
-                        <div class="callout callout-danger" data-i18n="[html]passphrase_warning"><strong>Attention</strong>: The passphrase is everything that stands between your account and the rest of the world. Do not use any meaningful sentence, especially any that appears in song or literature.<br /><br />Don't ever disclose your passphrase. If you lose it you lose access to your account!</div>
+                        <div class="callout callout-danger" style="word-break:inherit;">
+                            <span data-i18n="attention">Attention</span>:<br><br>
+                            <span data-i18n="passphrase_warning_unique">
+                                The passphrase is everything that stands between your account and the rest of the world. Do not use any meaningful sentence, especially any that appears in song or literature.
+                            </span><br><br>
+                            <span data-i18n="passphrase_warning_disclose">
+                                Don't ever disclose your passphrase. If you lose it you lose access to your account!
+                            </span>
+                        </div>
 
                         <div class="form-group">
                             <label for="registration_password" class="col-sm-3 control-label" data-i18n="passphrase">Passphrase</label>
@@ -169,7 +177,12 @@
                             
                                 <p data-i18n="memorize_passphrase_help">Please write down or memorize these 12 words (their order and capitalization matters - always lowercase). This passphrase is needed in order to access your Nxt account.</p>
                                             
-                                <div class="callout callout-danger" data-i18n="[html]assphrase_disclosure_warning"><strong>Attention</strong>: Don't ever disclose your passphrase. If you lose it you lose access to your account!</div>
+                                <div class="callout callout-danger">
+                                    <strong><span data-i18n="attention">Attention</span></strong>: 
+                                    <span data-i18n="passphrase_warning_disclose">
+                                        Don't ever disclose your passphrase. If you lose it you lose access to your account!
+                                    </span>
+                                </div>
                             
                                 <div style="text-align:right">
                                     <input type="submit" class="btn btn-primary btn-sm" value="Next" data-i18n="[value]next" onclick="$('.step_2').hide();$('.step_3').show();return false;" />&nbsp;&nbsp;<button class="btn btn-sm btn-default" id="registration_cancel" onclick="NRS.showLoginOrWelcomeScreen();return false;" data-i18n="cancel">Cancel</button>

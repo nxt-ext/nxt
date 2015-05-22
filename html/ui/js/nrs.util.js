@@ -317,11 +317,15 @@ var NRS = (function(NRS, $, undefined) {
 		return NRS.convertToNXT(quantityQNT.multiply(priceNQT));
 	};
 
-	NRS.calculatePercentage = function(a, b) {
+	NRS.calculatePercentage = function(a, b, rounding_mode) {
+		if (rounding_mode != undefined) { // Rounding mode from Big.js
+			Big.RM = rounding_mode;
+		}
 		a = new Big(String(a));
 		b = new Big(String(b));
 
 		var result = a.div(b).times(new Big("100")).toFixed(2);
+		Big.RM = 1;
 
 		return result.toString();
 	};
@@ -499,10 +503,11 @@ var NRS = (function(NRS, $, undefined) {
 		if (!/^\d+$/.test(qnt)) {
 			throw $.t("error_invalid_input_numbers");
 		}
-
-        if (qnt === "0") {
-            return qnt;
-        }
+        try {
+            if (parseInt(qnt) === 0) {
+                return "0";
+            }
+        } catch(e) {}
 
 		//remove leading zeroes
 		return qnt.replace(/^0+/, "");
@@ -1406,11 +1411,11 @@ var NRS = (function(NRS, $, undefined) {
 				}
 				break;
 			case 4:
-				var match = response.errorDescription.match(/Incorrect "([^"]+)"/i);
-
-				if (match && match[1]) {
-					return $.t("error_incorrect_name", {
-						"name": NRS.getTranslatedFieldName(match[1]).toLowerCase()
+				var match = response.errorDescription.match(/Incorrect "(.*)"(.*)/i);
+				if (match && match[1] && match[2]) {
+                    return $.t("error_incorrect_name", {
+						"name": NRS.getTranslatedFieldName(match[1]).toLowerCase(),
+                        "reason": match[2]
 					}).capitalize();
 				} else {
 					return response.errorDescription;

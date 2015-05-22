@@ -274,6 +274,8 @@ var NRS = (function(NRS, $, undefined) {
 		}, 1000 * seconds);
 	};
 
+	var _firstTimeAfterLoginRun = false;
+
 	NRS.getState = function(callback) {
 		NRS.sendRequest("getBlockchainStatus", {}, function(response) {
 			if (response.errorCode) {
@@ -318,6 +320,10 @@ var NRS = (function(NRS, $, undefined) {
 							NRS.handleIncomingTransactions(unconfirmedTransactions, false);
 						});
 					}
+				}
+				if (NRS.account && !_firstTimeAfterLoginRun) {
+					//Executed ~30 secs after login, can be used for tasks needing this condition state
+					_firstTimeAfterLoginRun = true;
 				}
 
 				if (callback) {
@@ -913,7 +919,7 @@ var NRS = (function(NRS, $, undefined) {
 				}
 
 				/* Display message count in top and limit to 100 for now because of possible performance issues*/	
-				NRS.sendRequest("getAccountTransactions+", {
+				NRS.sendRequest("getBlockchainTransactions+", {
 					"account": NRS.account,
 					"type": 1,
 					"subtype": 0,
@@ -1048,9 +1054,10 @@ var NRS = (function(NRS, $, undefined) {
 		}
 
 		if (NRS.accountInfo.effectiveBalanceNXT == 0) {
-			$("#forging_indicator").removeClass("forging");
-			$("#forging_indicator span").html($.t("not_forging")).attr("data-i18n", "not_forging");
-			$("#forging_indicator").show();
+            var forgingIndicator = $("#forging_indicator");
+            forgingIndicator.removeClass("forging");
+			forgingIndicator.find("span").html($.t("not_forging")).attr("data-i18n", "not_forging");
+			forgingIndicator.show();
 			NRS.isForging = false;
 		}
 
@@ -1117,13 +1124,13 @@ var NRS = (function(NRS, $, undefined) {
 		var current_balances_ = {};
 		var previous_balances_ = {};
 
-		if (previous_balances.length) {
+		if (previous_balances && previous_balances.length) {
 			for (var k in previous_balances) {
 				previous_balances_[previous_balances[k].asset] = previous_balances[k].balanceQNT;
 			}
 		}
 
-		if (current_balances.length) {
+		if (current_balances && current_balances.length) {
 			for (var k in current_balances) {
 				current_balances_[current_balances[k].asset] = current_balances[k].balanceQNT;
 			}

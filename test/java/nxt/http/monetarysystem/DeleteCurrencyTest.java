@@ -26,7 +26,7 @@ public class DeleteCurrencyTest extends BlockchainTest {
 
         // Delete the currency
         apiCall = new APICall.Builder("deleteCurrency").
-                secretPhrase(secretPhrase1).feeNQT(Constants.ONE_NXT).
+                secretPhrase(ALICE.getSecretPhrase()).feeNQT(Constants.ONE_NXT).
                 param("currency", currencyId).
                 build();
         response = apiCall.invoke();
@@ -34,6 +34,7 @@ public class DeleteCurrencyTest extends BlockchainTest {
         generateBlock();
         apiCall = new APICall.Builder("getCurrency").param("code", code).build();
         response = apiCall.invoke();
+        Logger.logDebugMessage("getCurrencyResponse:" + response);
         Assert.assertEquals((long)5, response.get("errorCode"));
         Assert.assertEquals("Unknown currency", response.get("errorDescription"));
 
@@ -63,7 +64,7 @@ public class DeleteCurrencyTest extends BlockchainTest {
 
         // Delete the currency
         apiCall = new APICall.Builder("deleteCurrency").
-                secretPhrase(secretPhrase2).feeNQT(Constants.ONE_NXT).
+                secretPhrase(BOB.getSecretPhrase()).feeNQT(Constants.ONE_NXT).
                 param("currency", currencyId).
                 build();
         response = apiCall.invoke();
@@ -91,8 +92,8 @@ public class DeleteCurrencyTest extends BlockchainTest {
 
         // Transfer all units
         apiCall = new APICall.Builder("transferCurrency").
-                secretPhrase(secretPhrase1).feeNQT(Constants.ONE_NXT).
-                param("recipient", Long.toUnsignedString(Account.getAccount(Crypto.getPublicKey(secretPhrase2)).getId())).
+                secretPhrase(ALICE.getSecretPhrase()).feeNQT(Constants.ONE_NXT).
+                param("recipient", Long.toUnsignedString(BOB.getId())).
                 param("currency", currencyId).
                 param("code", code).
                 param("units", (String) currency.get("maxSupply")).
@@ -103,7 +104,7 @@ public class DeleteCurrencyTest extends BlockchainTest {
 
         // Delete the currency
         apiCall = new APICall.Builder("deleteCurrency").
-                secretPhrase(secretPhrase2).feeNQT(Constants.ONE_NXT).
+                secretPhrase(BOB.getSecretPhrase()).feeNQT(Constants.ONE_NXT).
                 param("currency", currencyId).
                 build();
         response = apiCall.invoke();

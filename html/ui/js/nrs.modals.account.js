@@ -109,7 +109,7 @@ var NRS = (function(NRS, $, undefined) {
 
 	/*some duplicate methods here...*/
 	NRS.userInfoModal.transactions = function(type) {
-		NRS.sendRequest("getAccountTransactions", {
+		NRS.sendRequest("getBlockchainTransactions", {
 			"account": NRS.userInfoModal.user,
 			"firstIndex": 0,
 			"lastIndex": 100

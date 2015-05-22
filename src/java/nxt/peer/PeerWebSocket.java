@@ -364,7 +364,7 @@ public class PeerWebSocket {
             }
             IOException exc = new IOException("WebSocket connection closed");
             Set<Map.Entry<Long, PostRequest>> requests = requestMap.entrySet();
-            requests.stream().forEach((entry) -> entry.getValue().complete(exc));
+            requests.forEach((entry) -> entry.getValue().complete(exc));
             requestMap.clear();
         } finally {
             lock.unlock();

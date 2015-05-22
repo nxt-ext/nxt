@@ -174,6 +174,10 @@ public abstract class TransactionType {
 
     abstract void validateAttachment(Transaction transaction) throws NxtException.ValidationException;
 
+    void validateAttachmentAtFinish(Transaction transaction) throws NxtException.ValidationException {
+        validateAttachment(transaction);
+    }
+
     // return false iff double spending
     final boolean applyUnconfirmed(TransactionImpl transaction, Account senderAccount) {
         long totalAmountNQT = Math.addExact(transaction.getAmountNQT(), transaction.getFeeNQT());
@@ -241,6 +245,10 @@ public abstract class TransactionType {
             return false;
         }
         return hasExclusive || exclusive;
+    }
+
+    final int getFinishValidationHeight(Transaction transaction) {
+        return transaction.getPhasing() == null ? Nxt.getBlockchain().getHeight() : (transaction.getPhasing().getFinishHeight() - 1);
     }
 
     public abstract boolean canHaveRecipient();
@@ -536,7 +544,7 @@ public abstract class TransactionType {
                 }
                 final Alias alias = Alias.getAlias(aliasName);
                 if (alias == null) {
-                    throw new NxtException.NotCurrentlyValidException("Alias hasn't been registered yet: " + aliasName);
+                    throw new NxtException.NotCurrentlyValidException("No such alias: " + aliasName);
                 } else if (alias.getAccountId() != transaction.getSenderId()) {
                     throw new NxtException.NotCurrentlyValidException("Alias doesn't belong to sender: " + aliasName);
                 }
@@ -606,7 +614,7 @@ public abstract class TransactionType {
                 final String aliasName = attachment.getAliasName();
                 final Alias alias = Alias.getAlias(aliasName);
                 if (alias == null) {
-                    throw new NxtException.NotCurrentlyValidException("Alias hasn't been registered yet: " + aliasName);
+                    throw new NxtException.NotCurrentlyValidException("No such alias: " + aliasName);
                 } else if (alias.getAccountId() != transaction.getRecipientId()) {
                     throw new NxtException.NotCurrentlyValidException("Alias is owned by account other than recipient: "
                             + Long.toUnsignedString(alias.getAccountId()));
@@ -685,7 +693,7 @@ public abstract class TransactionType {
                 }
                 final Alias alias = Alias.getAlias(aliasName);
                 if (alias == null) {
-                    throw new NxtException.NotCurrentlyValidException("Alias hasn't been registered yet: " + aliasName);
+                    throw new NxtException.NotCurrentlyValidException("No such alias: " + aliasName);
                 } else if (alias.getAccountId() != transaction.getSenderId()) {
                     throw new NxtException.NotCurrentlyValidException("Alias doesn't belong to sender: " + aliasName);
                 }
@@ -783,8 +791,8 @@ public abstract class TransactionType {
                     throw new NxtException.NotValidException("Invalid range: " + attachment.getJSONObject());
                 }
 
-                if (attachment.getFinishHeight() <= transaction.getValidationHeight() + 1
-                    || attachment.getFinishHeight() >= transaction.getValidationHeight() + Constants.MAX_POLL_DURATION) {
+                if (attachment.getFinishHeight() <= getFinishValidationHeight(transaction) + 1
+                    || attachment.getFinishHeight() >= getFinishValidationHeight(transaction) + Constants.MAX_POLL_DURATION) {
                     throw new NxtException.NotCurrentlyValidException("Invalid finishing height" + attachment.getJSONObject());
                 }
 
@@ -859,7 +867,7 @@ public abstract class TransactionType {
                     throw new NxtException.NotCurrentlyValidException("Double voting attempt");
                 }
 
-                if (poll.getFinishHeight() <= transaction.getValidationHeight()) {
+                if (poll.getFinishHeight() <= getFinishValidationHeight(transaction)) {
                     throw new NxtException.NotCurrentlyValidException("Voting for this poll finishes at " + poll.getFinishHeight());
                 }
 
@@ -954,7 +962,7 @@ public abstract class TransactionType {
 
                 List<byte[]> hashes = attachment.getTransactionFullHashes();
                 if (hashes.size() > Constants.MAX_PHASING_VOTE_TRANSACTIONS) {
-                    throw new NxtException.NotValidException("No more than " + Constants.MAX_PHASING_VOTE_TRANSACTIONS + " votes allowed for two-phased multivoting");
+                    throw new NxtException.NotValidException("No more than " + Constants.MAX_PHASING_VOTE_TRANSACTIONS + " votes allowed for two-phased multi-voting");
                 }
 
                 long voterId = transaction.getSenderId();
@@ -997,9 +1005,9 @@ public abstract class TransactionType {
                     if (!Arrays.equals(poll.getFullHash(), hash)) {
                         throw new NxtException.NotCurrentlyValidException("Phased transaction hash does not match hash in voting transaction");
                     }
-                    if (poll.getFinishHeight() <= transaction.getValidationHeight() + 1) {
-                        throw new NxtException.NotCurrentlyValidException(String.format("Poll voting finishes at height %d before transaction validation height %d",
-                                poll.getFinishHeight(), transaction.getValidationHeight() + 1));
+                    if (poll.getFinishHeight() <= getFinishValidationHeight(transaction) + 1) {
+                        throw new NxtException.NotCurrentlyValidException(String.format("Phased transaction finishes at height %d which is before approval transaction height %d",
+                                poll.getFinishHeight(), getFinishValidationHeight(transaction) + 1));
                     }
                 }
             }
@@ -1603,7 +1611,7 @@ public abstract class TransactionType {
                     throw new NxtException.NotValidException("Invalid dividend payment sender or amount " + attachment.getJSONObject());
                 }
                 if (attachment.getHeight() > Nxt.getBlockchain().getHeight()
-                        || attachment.getHeight() <= transaction.getValidationHeight() - Constants.MAX_DIVIDEND_PAYMENT_ROLLBACK) {
+                        || attachment.getHeight() <= getFinishValidationHeight(transaction) - Constants.MAX_DIVIDEND_PAYMENT_ROLLBACK) {
                     throw new NxtException.NotCurrentlyValidException("Invalid dividend payment height: " + attachment.getHeight());
                 }
             }
@@ -2356,6 +2364,10 @@ public abstract class TransactionType {
 
         @Override
         final void undoAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
+        }
+
+        @Override
+        final void validateAttachmentAtFinish(Transaction transaction) {
         }
 
         @Override

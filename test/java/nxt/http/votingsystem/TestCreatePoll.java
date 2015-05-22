@@ -65,7 +65,7 @@ public class TestCreatePoll extends BlockchainTest {
 
         public CreatePollBuilder() {
             super("createPoll");
-            secretPhrase(secretPhrase1);
+            secretPhrase(ALICE.getSecretPhrase());
             feeNQT(10 * Constants.ONE_NXT);
             param("name", "Test1");
             param("description", "The most cool Beatles guy?");
