@@ -33,12 +33,12 @@ var NRS = (function(NRS, $) {
 		"fi": "Suomi (Experimental)",    // finnish
 		"fr": "Français",                // french
 		"gl": "Galego (Experimental)",   // galician
-		"el": "Ελληνικά (Experimental)",  // greek
+		"el": "Ελληνικά (Experimental)", // greek
 		"sh": "Hrvatski (Experimental)", // croatian
 		"hi": "हिन्दी (Experimental)",  // hindi
 		"id": "Bahasa Indonesia",        // indonesian
 		"it": "Italiano",                // italian
-		"ja": "日本語 (Experimental)",    // japanese
+		"ja": "日本語",                   // japanese
 		"lt": "Lietuviškai",             // lithuanian
 		"nl": "Nederlands",              // dutch
 		"cs": "Čeština (Experimental)",  // czech
