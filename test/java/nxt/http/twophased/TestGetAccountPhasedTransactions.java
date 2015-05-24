@@ -20,7 +20,7 @@ public class TestGetAccountPhasedTransactions extends BlockchainTest {
     }
 
     static APICall phasedTransactionsApiCall() {
-        return phasedTransactionsApiCall(id1);
+        return phasedTransactionsApiCall(ALICE.getId());
     }
 
     @Test
@@ -34,7 +34,7 @@ public class TestGetAccountPhasedTransactions extends BlockchainTest {
         JSONArray transactionsJson = (JSONArray) response.get("transactions");
         Assert.assertTrue(TwoPhasedSuite.searchForTransactionId(transactionsJson, (String) transactionJSON.get("transaction")));
 
-        response = phasedTransactionsApiCall(id3).invoke();
+        response = phasedTransactionsApiCall(CHUCK.getId()).invoke();
         Logger.logMessage("getAccountPhasedTransactionsResponse:" + response.toJSONString());
         transactionsJson = (JSONArray) response.get("transactions");
         Assert.assertFalse(TwoPhasedSuite.searchForTransactionId(transactionsJson, (String) transactionJSON.get("transaction")));
@@ -46,17 +46,16 @@ public class TestGetAccountPhasedTransactions extends BlockchainTest {
         JSONObject transactionJSON = TestCreateTwoPhased.issueCreateTwoPhased(apiCall, false);
         generateBlock();
 
-        JSONObject response = phasedTransactionsApiCall(id2).invoke();
+        JSONObject response = phasedTransactionsApiCall(BOB.getId()).invoke();
         Logger.logMessage("getAccountPhasedTransactionsResponse:" + response.toJSONString());
         JSONArray transactionsJson = (JSONArray) response.get("transactions");
         Assert.assertTrue(TwoPhasedSuite.searchForTransactionId(transactionsJson, (String) transactionJSON.get("transaction")));
 
-        response = phasedTransactionsApiCall(id3).invoke();
+        response = phasedTransactionsApiCall(CHUCK.getId()).invoke();
         Logger.logMessage("getAccountPhasedTransactionsResponse:" + response.toJSONString());
         transactionsJson = (JSONArray) response.get("transactions");
         Assert.assertFalse(TwoPhasedSuite.searchForTransactionId(transactionsJson, (String) transactionJSON.get("transaction")));
     }
-
 
     @Test
     public void multiple() {

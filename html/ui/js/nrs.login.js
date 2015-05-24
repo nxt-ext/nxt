@@ -286,9 +286,9 @@ var NRS = (function(NRS, $, undefined) {
 						$(".hide_secret_phrase").show();
 					}
 					if ($("#disable_all_plugins").length == 1 && !($("#disable_all_plugins").is(":checked"))) {
-						NRS.disableAllPlugins = false;
+						NRS.disablePluginsDuringSession = false;
 					} else {
-						NRS.disableAllPlugins = true;
+						NRS.disablePluginsDuringSession = true;
 					}
 
 					$("#account_id").html(String(NRS.accountRS).escapeHTML()).css("font-size", "12px");
@@ -319,27 +319,30 @@ var NRS = (function(NRS, $, undefined) {
 						}
 
 						//forging requires password to be sent to the server, so we don't do it automatically if not localhost
-						if (!NRS.accountInfo.publicKey || NRS.accountInfo.effectiveBalanceNXT == 0 || !NRS.isLocalHost || NRS.downloadingBlockchain || NRS.isLeased) {
-							$("#forging_indicator").removeClass("forging");
-							$("#forging_indicator span").html($.t("not_forging")).attr("data-i18n", "not_forging");
-							$("#forging_indicator").show();
+                        var forgingIndicator = $("#forging_indicator");
+                        if (!NRS.accountInfo.publicKey || NRS.accountInfo.effectiveBalanceNXT == 0 ||
+                            !NRS.isLocalHost || !passLogin ||
+                            NRS.downloadingBlockchain || NRS.isLeased) {
+                            forgingIndicator.removeClass("forging");
+							forgingIndicator.find("span").html($.t("not_forging")).attr("data-i18n", "not_forging");
+							forgingIndicator.show();
 							NRS.isForging = false;
-						} else if (NRS.isLocalHost && passLogin) {
-							NRS.sendRequest("startForging", {
-								"secretPhrase": password
-							}, function(response) {
-								if ("deadline" in response) {
-									$("#forging_indicator").addClass("forging");
-									$("#forging_indicator span").html($.t("forging")).attr("data-i18n", "forging");
-									NRS.isForging = true;
-								} else {
-									$("#forging_indicator").removeClass("forging");
-									$("#forging_indicator span").html($.t("not_forging")).attr("data-i18n", "not_forging");
-									NRS.isForging = false;
-								}
-								$("#forging_indicator").show();
-							});
+                            return;
 						}
+                        NRS.sendRequest("startForging", {
+                            "secretPhrase": password
+                        }, function(response) {
+                            if ("deadline" in response) {
+                                forgingIndicator.addClass("forging");
+                                forgingIndicator.find("span").html($.t("forging")).attr("data-i18n", "forging");
+                                NRS.isForging = true;
+                            } else {
+                                forgingIndicator.removeClass("forging");
+                                forgingIndicator.find("span").html($.t("not_forging")).attr("data-i18n", "not_forging");
+                                NRS.isForging = false;
+                            }
+                            forgingIndicator.show();
+                        });
 					});
 
 					//NRS.getAccountAliases();
@@ -382,7 +385,8 @@ var NRS = (function(NRS, $, undefined) {
 						}
 					});
 					
-					NRS.loadPlugins();
+					setTimeout(function () { NRS.loadPlugins(); }, 1500);
+					
 					$(".sidebar .treeview").tree();
 					$('#dashboard_link a').addClass("ignore").click();
 

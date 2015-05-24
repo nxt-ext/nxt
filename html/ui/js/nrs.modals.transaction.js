@@ -92,7 +92,9 @@ var NRS = (function (NRS, $, undefined) {
                 $("#transaction_info_modal_add_as_contact").removeAttr('disabled');
             }
             var approveTransactionButton = $("#transaction_info_modal_approve_transaction");
-            if (!transaction.attachment || !transaction.attachment.phasingFinishHeight) {
+            if (!transaction.attachment || !transaction.block ||
+                !transaction.attachment.phasingFinishHeight ||
+                transaction.attachment.phasingFinishHeight <= NRS.lastBlockHeight) {
                 approveTransactionButton.attr('disabled', 'disabled');
             } else {
                 approveTransactionButton.removeAttr('disabled');

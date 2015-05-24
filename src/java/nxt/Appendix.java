@@ -126,6 +126,10 @@ public interface Appendix {
 
         abstract void validate(Transaction transaction) throws NxtException.ValidationException;
 
+        void validateAtFinish(Transaction transaction) throws NxtException.ValidationException {
+            validate(transaction);
+        }
+
         abstract void apply(Transaction transaction, Account senderAccount, Account recipientAccount);
 
         void loadPrunable(Transaction transaction) {}
@@ -358,6 +362,10 @@ public interface Appendix {
             if (msg == null && Nxt.getEpochTime() - transaction.getTimestamp() < Constants.MIN_PRUNABLE_LIFETIME) {
                 throw new NxtException.NotCurrentlyValidException("Message has been pruned prematurely");
             }
+        }
+
+        @Override
+        void validateAtFinish(Transaction transaction) {
         }
 
         @Override
@@ -633,6 +641,10 @@ public interface Appendix {
             }
         }
 
+        @Override
+        void validateAtFinish(Transaction transaction) {
+        }
+        
         @Override
         void apply(Transaction transaction, Account senderAccount, Account recipientAccount) {
             PrunableMessage.add(transaction, this);
@@ -1016,103 +1028,105 @@ public interface Appendix {
         @Override
         void validate(Transaction transaction) throws NxtException.ValidationException {
 
-            if (transaction.getSignature() == null || PhasingPoll.getPoll(transaction.getId()) == null) {
-                int currentHeight = Nxt.getBlockchain().getHeight();
-                if (currentHeight < Constants.PHASING_BLOCK) {
-                    throw new NxtException.NotYetEnabledException("Phasing not yet enabled at height " + currentHeight);
-                }
+            int currentHeight = Nxt.getBlockchain().getHeight();
+            if (currentHeight < Constants.PHASING_BLOCK) {
+                throw new NxtException.NotYetEnabledException("Phasing not yet enabled at height " + currentHeight);
+            }
 
-                if (whitelist.length > Constants.MAX_PHASING_WHITELIST_SIZE) {
-                    throw new NxtException.NotValidException("Whitelist is too big");
-                }
+            if (whitelist.length > Constants.MAX_PHASING_WHITELIST_SIZE) {
+                throw new NxtException.NotValidException("Whitelist is too big");
+            }
 
-                long previousAccountId = 0;
-                for (long accountId : whitelist) {
-                    if (accountId == 0) {
-                        throw new NxtException.NotValidException("Invalid accountId 0 in whitelist");
-                    }
-                    if (previousAccountId != 0 && accountId < previousAccountId) {
-                        throw new NxtException.NotValidException("Whitelist not sorted " + Arrays.toString(whitelist));
-                    }
-                    if (accountId == previousAccountId) {
-                        throw new NxtException.NotValidException("Duplicate accountId " + Long.toUnsignedString(accountId) + " in whitelist");
-                    }
-                    previousAccountId = accountId;
+            long previousAccountId = 0;
+            for (long accountId : whitelist) {
+                if (accountId == 0) {
+                    throw new NxtException.NotValidException("Invalid accountId 0 in whitelist");
                 }
-
-                if (quorum <= 0 && voteWeighting.getVotingModel() != VoteWeighting.VotingModel.NONE) {
-                    throw new NxtException.NotValidException("quorum <= 0");
+                if (previousAccountId != 0 && accountId < previousAccountId) {
+                    throw new NxtException.NotValidException("Whitelist not sorted " + Arrays.toString(whitelist));
                 }
-
-                if (voteWeighting.getVotingModel() == VoteWeighting.VotingModel.NONE) {
-                    if (quorum != 0) {
-                        throw new NxtException.NotValidException("Quorum must be 0 for no-voting phased transaction");
-                    }
-                    if (whitelist.length != 0) {
-                        throw new NxtException.NotValidException("No whitelist needed for no-voting phased transaction");
-                    }
+                if (accountId == previousAccountId) {
+                    throw new NxtException.NotValidException("Duplicate accountId " + Long.toUnsignedString(accountId) + " in whitelist");
                 }
+                previousAccountId = accountId;
+            }
 
-                if (voteWeighting.getVotingModel() == VoteWeighting.VotingModel.ACCOUNT && whitelist.length > 0 && quorum > whitelist.length) {
-                    throw new NxtException.NotValidException("Quorum of " + quorum + " cannot be achieved in by-account voting with whitelist of length "
-                            + whitelist.length);
+            if (quorum <= 0 && voteWeighting.getVotingModel() != VoteWeighting.VotingModel.NONE) {
+                throw new NxtException.NotValidException("quorum <= 0");
+            }
+
+            if (voteWeighting.getVotingModel() == VoteWeighting.VotingModel.NONE) {
+                if (quorum != 0) {
+                    throw new NxtException.NotValidException("Quorum must be 0 for no-voting phased transaction");
                 }
-
-                if (voteWeighting.getVotingModel() == VoteWeighting.VotingModel.TRANSACTION) {
-                    if (linkedFullHashes.length == 0 || linkedFullHashes.length > Constants.MAX_PHASING_LINKED_TRANSACTIONS) {
-                        throw new NxtException.NotValidException("Invalid number of linkedFullHashes " + linkedFullHashes.length);
-                    }
-                    for (byte[] hash : linkedFullHashes) {
-                        if (Convert.emptyToNull(hash) == null || hash.length != 32) {
-                            throw new NxtException.NotValidException("Invalid linkedFullHash " + Convert.toHexString(hash));
-                        }
-                        TransactionImpl linkedTransaction = TransactionDb.findTransactionByFullHash(hash, currentHeight);
-                        if (linkedTransaction != null) {
-                            if (transaction.getTimestamp() - linkedTransaction.getTimestamp() > Constants.MAX_REFERENCED_TRANSACTION_TIMESPAN) {
-                                throw new NxtException.NotValidException("Linked transaction cannot be more than 60 days older than the phased transaction");
-                            }
-                            if (linkedTransaction.getPhasing() != null) {
-                                throw new NxtException.NotCurrentlyValidException("Cannot link to an already existing phased transaction");
-                            }
-                        }
-                    }
-                    if (quorum > linkedFullHashes.length) {
-                        throw new NxtException.NotValidException("Quorum of " + quorum + " cannot be achieved in by-transaction voting with "
-                                + linkedFullHashes.length + " linked full hashes only");
-                    }
-                } else {
-                    if (linkedFullHashes.length != 0) {
-                        throw new NxtException.NotValidException("LinkedFullHashes can only be used with VotingModel.TRANSACTION");
-                    }
-                }
-
-                if (voteWeighting.getVotingModel() == VoteWeighting.VotingModel.HASH) {
-                    if (quorum != 1) {
-                        throw new NxtException.NotValidException("Quorum must be 1 for by-hash voting");
-                    }
-                    if (hashedSecret.length == 0 || hashedSecret.length > Byte.MAX_VALUE) {
-                        throw new NxtException.NotValidException("Invalid hashedSecret " + Convert.toHexString(hashedSecret));
-                    }
-                    if (PhasingPoll.getHashFunction(algorithm) == null) {
-                        throw new NxtException.NotValidException("Invalid hashedSecretAlgorithm " + algorithm);
-                    }
-                } else {
-                    if (hashedSecret.length != 0) {
-                        throw new NxtException.NotValidException("HashedSecret can only be used with VotingModel.HASH");
-                    }
-                    if (algorithm != 0) {
-                        throw new NxtException.NotValidException("HashedSecretAlgorithm can only be used with VotingModel.HASH");
-                    }
-                }
-
-                if (finishHeight <= currentHeight + (voteWeighting.acceptsVotes() ? 2 : 1)
-                        || finishHeight >= currentHeight + Constants.MAX_PHASING_DURATION) {
-                    throw new NxtException.NotCurrentlyValidException("Invalid finish height " + finishHeight);
+                if (whitelist.length != 0) {
+                    throw new NxtException.NotValidException("No whitelist needed for no-voting phased transaction");
                 }
             }
 
-            voteWeighting.validate();
+            if (voteWeighting.getVotingModel() == VoteWeighting.VotingModel.ACCOUNT && whitelist.length > 0 && quorum > whitelist.length) {
+                throw new NxtException.NotValidException("Quorum of " + quorum + " cannot be achieved in by-account voting with whitelist of length "
+                        + whitelist.length);
+            }
 
+            if (voteWeighting.getVotingModel() == VoteWeighting.VotingModel.TRANSACTION) {
+                if (linkedFullHashes.length == 0 || linkedFullHashes.length > Constants.MAX_PHASING_LINKED_TRANSACTIONS) {
+                    throw new NxtException.NotValidException("Invalid number of linkedFullHashes " + linkedFullHashes.length);
+                }
+                for (byte[] hash : linkedFullHashes) {
+                    if (Convert.emptyToNull(hash) == null || hash.length != 32) {
+                        throw new NxtException.NotValidException("Invalid linkedFullHash " + Convert.toHexString(hash));
+                    }
+                    TransactionImpl linkedTransaction = TransactionDb.findTransactionByFullHash(hash, currentHeight);
+                    if (linkedTransaction != null) {
+                        if (transaction.getTimestamp() - linkedTransaction.getTimestamp() > Constants.MAX_REFERENCED_TRANSACTION_TIMESPAN) {
+                            throw new NxtException.NotValidException("Linked transaction cannot be more than 60 days older than the phased transaction");
+                        }
+                        if (linkedTransaction.getPhasing() != null) {
+                            throw new NxtException.NotCurrentlyValidException("Cannot link to an already existing phased transaction");
+                        }
+                    }
+                }
+                if (quorum > linkedFullHashes.length) {
+                    throw new NxtException.NotValidException("Quorum of " + quorum + " cannot be achieved in by-transaction voting with "
+                            + linkedFullHashes.length + " linked full hashes only");
+                }
+            } else {
+                if (linkedFullHashes.length != 0) {
+                    throw new NxtException.NotValidException("LinkedFullHashes can only be used with VotingModel.TRANSACTION");
+                }
+            }
+
+            if (voteWeighting.getVotingModel() == VoteWeighting.VotingModel.HASH) {
+                if (quorum != 1) {
+                    throw new NxtException.NotValidException("Quorum must be 1 for by-hash voting");
+                }
+                if (hashedSecret.length == 0 || hashedSecret.length > Byte.MAX_VALUE) {
+                    throw new NxtException.NotValidException("Invalid hashedSecret " + Convert.toHexString(hashedSecret));
+                }
+                if (PhasingPoll.getHashFunction(algorithm) == null) {
+                    throw new NxtException.NotValidException("Invalid hashedSecretAlgorithm " + algorithm);
+                }
+            } else {
+                if (hashedSecret.length != 0) {
+                    throw new NxtException.NotValidException("HashedSecret can only be used with VotingModel.HASH");
+                }
+                if (algorithm != 0) {
+                    throw new NxtException.NotValidException("HashedSecretAlgorithm can only be used with VotingModel.HASH");
+                }
+            }
+
+            if (finishHeight <= currentHeight + (voteWeighting.acceptsVotes() ? 2 : 1)
+                    || finishHeight >= currentHeight + Constants.MAX_PHASING_DURATION) {
+                throw new NxtException.NotCurrentlyValidException("Invalid finish height " + finishHeight);
+            }
+
+            voteWeighting.validate();
+        }
+
+        @Override
+        void validateAtFinish(Transaction transaction) throws NxtException.ValidationException {
+            voteWeighting.validate();
         }
 
         @Override

@@ -26,7 +26,7 @@ public class TestGetPhasingPoll extends BlockchainTest {
 
         long fee = Constants.ONE_NXT;
         apiCall = new APICall.Builder("approveTransaction")
-                .param("secretPhrase", secretPhrase3)
+                .param("secretPhrase", CHUCK.getSecretPhrase())
                 .param("transactionFullHash", fullHash)
                 .param("feeNQT", fee)
                 .build();

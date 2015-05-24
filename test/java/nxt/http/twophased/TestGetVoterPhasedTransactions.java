@@ -14,7 +14,7 @@ public class TestGetVoterPhasedTransactions extends BlockchainTest {
 
     static APICall getVoterPhasedTransactions() {
         return new APICall.Builder("getVoterPhasedTransactions")
-                .param("account", Long.toUnsignedString(id3))
+                .param("account", Long.toUnsignedString(CHUCK.getId()))
                 .param("firstIndex", 0)
                 .param("lastIndex", 10)
                 .build();
@@ -46,7 +46,7 @@ public class TestGetVoterPhasedTransactions extends BlockchainTest {
 
         long fee = Constants.ONE_NXT;
         apiCall = new APICall.Builder("approveTransaction")
-                .param("secretPhrase", secretPhrase3)
+                .param("secretPhrase", CHUCK.getSecretPhrase())
                 .param("transactionFullHash", transactionFullHash)
                 .param("feeNQT", fee)
                 .build();

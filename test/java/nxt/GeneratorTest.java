@@ -1,6 +1,5 @@
 package nxt;
 
-import nxt.crypto.Crypto;
 import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -15,14 +14,14 @@ public class GeneratorTest extends BlockchainTest {
     @Ignore
     @Test
     public void forge() {
-        byte[] publicKey = Crypto.getPublicKey(secretPhrase1);
+        byte[] publicKey = ALICE.getPublicKey();
         BlockImpl lastBlock = blockchain.getLastBlock();
         BigInteger hit = Generator.getHit(publicKey, lastBlock);
         Account account = Account.getAccount(publicKey);
         BigInteger effectiveBalance = BigInteger.valueOf(account == null || account.getEffectiveBalanceNXT() <= 0 ? 0 : account.getEffectiveBalanceNXT());
         long hitTime = Generator.getHitTime(effectiveBalance, hit, lastBlock);
         long deadline = hitTime - lastBlock.getTimestamp();
-        Generator generator = Generator.startForging(secretPhrase1);
+        Generator generator = Generator.startForging(ALICE.getSecretPhrase());
         int i=1;
         try {
             while (i<deadline) {
