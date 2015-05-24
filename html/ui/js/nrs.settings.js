@@ -29,6 +29,7 @@ var NRS = (function(NRS, $) {
 		"de": "Deutsch",                 // german
 		"en": "English",                 // english
 		"es-es": "Español",              // spanish
+		"ca": "Català (Experimental)",   // catalan
 		"fi": "Suomi (Experimental)",    // finnish
 		"fr": "Français",                // french
 		"gl": "Galego (Experimental)",   // galician
