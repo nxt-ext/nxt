@@ -32,8 +32,10 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -45,6 +47,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public final class Peers {
@@ -215,10 +218,12 @@ public final class Peers {
             ThreadPool.runBeforeStart(new Runnable() {
 
                 private void loadPeers(Collection<String> addresses) {
+                    int now = Nxt.getEpochTime();
                     for (final String address : addresses) {
                         Future<String> unresolvedAddress = peersService.submit(() -> {
                             PeerImpl peer = Peers.findOrCreatePeer(address, true);
                             if (peer != null) {
+                                peer.setLastUpdated(now);
                                 Peers.addPeer(peer);
                                 return null;
                             }
@@ -232,10 +237,23 @@ public final class Peers {
                 public void run() {
                     loadPeers(wellKnownPeers);
                     if (usePeersDb) {
-                        loadPeers(defaultPeers);
                         Logger.logDebugMessage("Loading known peers from the database...");
+                        loadPeers(defaultPeers);
                         if (savePeers) {
-                            loadPeers(PeerDb.loadPeers());
+                            List<PeerDb.Entry> dbPeers = PeerDb.loadPeers();
+                            for (PeerDb.Entry dbPeer : dbPeers) {
+                                Future<String> unresolvedAddress = peersService.submit(() -> {
+                                    PeerImpl peer = Peers.findOrCreatePeer(dbPeer.getAddress(), true);
+                                    if (peer != null) {
+                                        if (peer.getLastUpdated() == 0)
+                                            peer.setLastUpdated(dbPeer.getLastUpdated());
+                                        Peers.addPeer(peer);
+                                        return null;
+                                    }
+                                    return dbPeer.getAddress();
+                                });
+                                unresolvedPeers.add(unresolvedAddress);
+                            }
                         }
                     }
                 }
@@ -443,10 +461,7 @@ public final class Peers {
             getPeersRequest = JSON.prepareRequest(request);
         }
 
-        private volatile boolean addedNewPeer;
-        {
-            Peers.addListener(peer -> addedNewPeer = true, Event.NEW_PEER);
-        }
+        private volatile boolean updatedPeer;
 
         @Override
         public void run() {
@@ -467,9 +482,14 @@ public final class Peers {
                     JSONArray peers = (JSONArray)response.get("peers");
                     Set<String> addedAddresses = new HashSet<>();
                     if (peers != null) {
+                        int now = Nxt.getEpochTime();
                         for (Object announcedAddress : peers) {
                             PeerImpl newPeer = findOrCreatePeer((String) announcedAddress, true);
                             if (newPeer != null) {
+                                if (now - newPeer.getLastUpdated() > 24 * 3600) {
+                                    newPeer.setLastUpdated(now);
+                                    updatedPeer = true;
+                                }
                                 Peers.addPeer(newPeer);
                                 addedAddresses.add((String) announcedAddress);
                                 if (hasTooManyKnownPeers()) {
@@ -477,9 +497,9 @@ public final class Peers {
                                 }
                             }
                         }
-                        if (savePeers && addedNewPeer) {
+                        if (savePeers && updatedPeer) {
                             updateSavedPeers();
-                            addedNewPeer = false;
+                            updatedPeer = false;
                         }
                     }
 
@@ -509,20 +529,52 @@ public final class Peers {
         }
 
         private void updateSavedPeers() {
-            Set<String> oldPeers = new HashSet<>(PeerDb.loadPeers());
-            Set<String> currentPeers = Peers.peers.values().parallelStream().unordered()
-                    .filter(peer -> peer.getAnnouncedAddress() != null && !peer.isBlacklisted())
-                    .map(Peer::getAnnouncedAddress)
-                    .collect(Collectors.toSet());
-            Set<String> toDelete = new HashSet<>(oldPeers);
-            toDelete.removeAll(currentPeers);
+            int now = Nxt.getEpochTime();
+            //
+            // Load the current database entries and map the announced address to database entry
+            //
+            List<PeerDb.Entry> oldPeers = PeerDb.loadPeers();
+            Map<String, PeerDb.Entry> oldMap = new HashMap<>();
+            oldPeers.forEach(entry -> oldMap.put(entry.getAddress(), entry));
+            //
+            // Create the current peer map (note that there can be duplicate peer entries with
+            // the same announced address)
+            //
+            Map<String, PeerDb.Entry> currentPeers = new HashMap<>();
+            Peers.peers.values().forEach(peer -> {
+                if (peer.getAnnouncedAddress() != null && !peer.isBlacklisted() && now - peer.getLastUpdated() < 7*24*3600)
+                    currentPeers.put(peer.getAnnouncedAddress(), new PeerDb.Entry(peer.getAnnouncedAddress(), peer.getLastUpdated()));
+            });
+            //
+            // Build toDelete, toUpdate and toAdd lists
+            //
+            List<PeerDb.Entry> toDelete = new ArrayList<>(oldPeers.size());
+            oldPeers.forEach(entry -> {
+                if (currentPeers.get(entry.getAddress()) == null)
+                    toDelete.add(entry);
+            });
+            List<PeerDb.Entry> toUpdate = new ArrayList<>(currentPeers.size());
+            List<PeerDb.Entry> toAdd = new ArrayList<>(currentPeers.size());
+            currentPeers.values().forEach(entry -> {
+                PeerDb.Entry oldEntry = oldMap.get(entry.getAddress());
+                if (oldEntry == null)
+                    toAdd.add(entry);
+                else if (entry.getLastUpdated() - oldEntry.getLastUpdated() > 24*3600)
+                    toUpdate.add(entry);
+            });
+            //
+            // Nothing to do if all of the lists are empty
+            //
+            if (toDelete.isEmpty() && toUpdate.isEmpty() && toAdd.isEmpty())
+                return;
+            //
+            // Update the peer database
+            //
             try {
                 Db.db.beginTransaction();
                 PeerDb.deletePeers(toDelete);
-	            //Logger.logDebugMessage("Deleted " + toDelete.size() + " peers from the peers database");
-                currentPeers.removeAll(oldPeers);
-                PeerDb.addPeers(currentPeers);
-	            //Logger.logDebugMessage("Added " + currentPeers.size() + " peers to the peers database");
+                PeerDb.updatePeers(toUpdate);
+                PeerDb.addPeers(toAdd);
                 Db.db.commitTransaction();
             } catch (Exception e) {
                 Db.db.rollbackTransaction();
