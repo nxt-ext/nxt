@@ -2,7 +2,7 @@ This is a list of the third party components used by the server-side code,
 and distributed with this software inside the lib directory.
 
 The licenses for third party works used by the UI code are listed separately
-under html/ui/LICENSES.
+under /html/ui/3RD-PARTY-LICENSES.txt.
 
 
 H2:
