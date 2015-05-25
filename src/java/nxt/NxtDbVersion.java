@@ -766,7 +766,7 @@ class NxtDbVersion extends DbVersion {
             case 322:
                 apply("CREATE INDEX IF NOT EXISTS tagged_data_channel_idx ON tagged_data (channel, height DESC)");
             case 323:
-                apply("ALTER TABLE peer ADD COLUMN IF NOT EXISTS last_updated INTEGER");
+                apply("ALTER TABLE peer ADD COLUMN IF NOT EXISTS last_updated INT");
             case 324:
                 return;
             default:

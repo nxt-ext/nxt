@@ -218,11 +218,12 @@ public final class Peers {
             ThreadPool.runBeforeStart(new Runnable() {
 
                 private void loadPeers(Collection<String> addresses) {
+                    int now = Nxt.getEpochTime();
                     for (final String address : addresses) {
                         Future<String> unresolvedAddress = peersService.submit(() -> {
                             PeerImpl peer = Peers.findOrCreatePeer(address, true);
                             if (peer != null) {
-                                peer.setLastUpdated(Nxt.getEpochTime());
+                                peer.setLastUpdated(now);
                                 Peers.addPeer(peer);
                                 return null;
                             }
