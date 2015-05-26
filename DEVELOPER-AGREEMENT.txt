@@ -46,11 +46,11 @@ ensure that an unreachable copyright holder cannot prevent the active
 development team from making licensing decisions, each copyright holder
 who leaves the development team shall provide an Nxt account number in
 the AUTHORS.txt file, at which he can be contacted to discuss such
-decisions. Lack of any type of response to a re-licensing permission
-request after more than 28 days, as recorded in the Nxt blockchain,
-shall be interpreted as an irrevocable permission to the then active
-development team to perform the specific re-licensing for which such a
-permission has been sought.
+decisions. Lack of such contact info, or lack of any type of response to
+a re-licensing permission request after more than 28 days, as recorded
+in the Nxt blockchain, shall be interpreted as an irrevocable permission
+to the then active development team to perform the specific re-licensing
+for which such a permission has been sought.
 
 
 5. Pseudonymous developers.
